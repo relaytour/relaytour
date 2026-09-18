@@ -24,6 +24,8 @@ yarn workspace @relaytour/server edition:creer 2027 "Rencontres 2027" 2027-06-05
 yarn workspace @relaytour/server planification:lancer rappels|resumes         # lancer une tâche planifiée tout de suite
 yarn check        # lint, types, build
 yarn test         # tests unitaires
+yarn workspace @relaytour/server test:integration   # base locale, worker arrêté
+yarn workspace @relaytour/server orga:exporter      # reverse les fiches modifiées dans l'application vers le dossier de contenu
 yarn codegen      # contrats commités
 yarn versionner valider
 ```

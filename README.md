@@ -39,7 +39,7 @@ yarn workspace @relaytour/server admin:creer adresse@exemple.org "Prénom Nom"  
 yarn workspace @relaytour/server edition:creer 2027 "Rencontres 2027" 2027-06-05 2027-06-06   # première édition
 ```
 
-Services locaux : MariaDB (4410), Redis (4411), Mailpit (SMTP 4415, interface http://localhost:4416).
+Services locaux : MariaDB (4410), Valkey (4411), Mailpit (SMTP 4415, interface http://localhost:4416). Adminer (http://localhost:4417) démarre avec `COMPOSE_PROFILES=outils yarn db:up`.
 
 ## Importer votre contenu
 
@@ -55,9 +55,11 @@ La structure attendue est décrite dans [content/exemple/README.md](content/exem
 ```bash
 yarn check        # lint, types, build
 yarn test         # tests unitaires
+yarn workspace @relaytour/server test:integration   # tests sur la base locale (worker arrêté)
 yarn codegen      # schema.graphql, gabarits de mail et types GraphQL (contrats commités)
 yarn db:migrate   # nouvelle migration Prisma
 yarn workspace @relaytour/server courriel:essai adresse@exemple.org   # mail d'essai (worker requis)
+yarn workspace @relaytour/server orga:exporter --dossier /chemin/vers/votre/contenu   # reverse les fiches modifiées dans l'application
 ```
 
 ## Licence
