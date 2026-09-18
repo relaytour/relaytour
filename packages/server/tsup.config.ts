@@ -6,7 +6,10 @@ export default defineConfig({
     worker: 'src/worker.ts',
     // Compilé pour exister dans l'image, qui n'embarque ni tsx ni scripts/.
     'creer-admin': 'scripts/creer-admin.ts',
+    'orga-valider': 'scripts/orga-valider.ts',
     'orga-importer': 'scripts/orga-importer.ts',
+    'orga-exporter': 'scripts/orga-exporter.ts',
+    'essai-courriel': 'scripts/essai-courriel.ts',
     'planification-lancer': 'scripts/planification-lancer.ts',
   },
   format: ['esm'],

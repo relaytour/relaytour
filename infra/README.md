@@ -22,7 +22,10 @@ L'espace organisateur est un site statique (`packages/orga/dist`) servi par Cadd
 3. **DNS.** Deux hôtes vers la machine : l'API et l'espace organisateur (par exemple `api.exemple.org` et `orga.exemple.org`).
 4. **Dossiers.** `/srv/relaytour` avec `docker-compose.yml` (copié depuis `compose/`), un `.env` créé depuis `compose/.env.example` (droits 640), et `/srv/relaytour/orga` pour les fichiers de l'espace organisateur.
 5. **Image.** `docker login ghcr.io` si l'image est privée, puis `IMAGE_TAG` dans le `.env`. L'image est publiée par le workflow `image.yml` à chaque poussée sur `main`, sous le tag `main` et sous le SHA court du commit.
-6. **Mail.** Un fournisseur SMTP et les enregistrements SPF, DKIM et DMARC de votre domaine (voir `docs/courriel.md`).
+6. **Mail.** Un fournisseur SMTP et les enregistrements SPF, DKIM et DMARC de votre domaine (voir `docs/courriel.md`). Une fois la pile démarrée, un mail d'essai vérifie la chaîne :
+    ```bash
+    docker compose --env-file .env exec worker node dist/essai-courriel.js adresse@exemple.org
+    ```
 7. **Caddy.** Copier `caddy/Caddyfile.example` dans `/etc/caddy/Caddyfile`, remplacer les hôtes, recharger Caddy.
 8. **Démarrage.** `docker compose --env-file .env up -d`, puis vérifier `https://api.exemple.org/health`.
 9. **Espace organisateur.** Construire `packages/orga` (`yarn workspace @relaytour/orga build`) et copier `dist/` dans `/srv/relaytour/orga`, en envoyant `index.html` en dernier.

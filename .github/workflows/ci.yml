@@ -111,6 +111,14 @@ jobs:
           yarn workspace @relaytour/server build
           yarn workspace @relaytour/orga build
 
+      - name: Garde-fou — chaque commande attendue est dans dist/
+        run: |
+          DIST=packages/server/dist
+          for nom in server worker creer-admin orga-valider orga-importer orga-exporter essai-courriel planification-lancer; do
+            [ -f "$DIST/$nom.js" ] || { echo "::error::$DIST/$nom.js absent : ajouter l'entrée dans tsup.config.ts"; exit 1; }
+          done
+          echo "✔ toutes les commandes sont dans dist/"
+
       - name: Garde-fou — aucune carte ne porte le texte des sources
         run: |
           DIST=packages/server/dist
