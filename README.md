@@ -20,6 +20,7 @@ Relaytour est un logiciel libre (AGPL-3.0). Vous pouvez l'héberger vous-même. 
 | `infra/` | Déploiement de référence : Docker Compose, Caddyfile d'exemple et étapes pour s'auto-héberger. |
 | `outils/versionner.mjs` | Notes de version et trains de version. |
 | `docs/adr/` | Décisions d'architecture. |
+| `docs/feuille-de-route.md` | Évolutions envisagées après la première version. |
 
 Les règles du dépôt (décisions, invariants, style d'écriture) sont dans [CONTRIBUTING.md](CONTRIBUTING.md).
 
