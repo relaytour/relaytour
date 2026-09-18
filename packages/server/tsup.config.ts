@@ -6,6 +6,7 @@ export default defineConfig({
     worker: 'src/worker.ts',
     // Compilé pour exister dans l'image, qui n'embarque ni tsx ni scripts/.
     'creer-admin': 'scripts/creer-admin.ts',
+    'creer-edition': 'scripts/creer-edition.ts',
     'orga-valider': 'scripts/orga-valider.ts',
     'orga-importer': 'scripts/orga-importer.ts',
     'orga-exporter': 'scripts/orga-exporter.ts',

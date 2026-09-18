@@ -33,14 +33,18 @@ L'espace organisateur est un site statique (`packages/orga/dist`) servi par Cadd
     ```bash
     docker compose --env-file .env exec server node dist/creer-admin.js adresse@exemple.org "Prénom Nom"
     ```
-11. **Contenu de l'organisation.** Cloner votre dépôt d'organisation (créé depuis `relaytour/organisation-modele`) dans `/srv/relaytour/contenu`, puis :
+11. **Première édition.** L'import des tâches types exige une édition, créée ici ou plus tard dans l'espace organisateur :
+    ```bash
+    docker compose --env-file .env exec server node dist/creer-edition.js 2027 "Rencontres 2027" 2027-06-05 2027-06-06
+    ```
+12. **Contenu de l'organisation.** Cloner votre dépôt d'organisation (créé depuis `relaytour/organisation-modele`) dans `/srv/relaytour/contenu`, puis :
     ```bash
     docker compose --env-file .env run --rm -v /srv/relaytour/contenu/contenu:/contenu:ro server \
       node dist/orga-importer.js --dossier /contenu --edition 2027 --simulation
     docker compose --env-file .env run --rm -v /srv/relaytour/contenu/contenu:/contenu:ro server \
       node dist/orga-importer.js --dossier /contenu --edition 2027
     ```
-12. **Sauvegarde.** Un dump quotidien de la base (`mariadb-dump` dans le conteneur `db`) copié hors de la machine, et une restauration testée avant l'ouverture.
+13. **Sauvegarde.** Un dump quotidien de la base (`mariadb-dump` dans le conteneur `db`) copié hors de la machine, et une restauration testée avant l'ouverture.
 
 ## Mettre à jour
 

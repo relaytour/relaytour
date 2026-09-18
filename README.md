@@ -36,6 +36,7 @@ cp packages/server/.env.example packages/server/.env
 yarn setup        # installation, services Docker, client Prisma, migrations, contrats
 yarn dev          # API sur http://localhost:4400/graphql, worker et espace organisateur sur http://localhost:5305
 yarn workspace @relaytour/server admin:creer adresse@exemple.org "Prénom Nom"   # premier compte admin
+yarn workspace @relaytour/server edition:creer 2027 "Rencontres 2027" 2027-06-05 2027-06-06   # première édition
 ```
 
 Services locaux : MariaDB (4410), Redis (4411), Mailpit (SMTP 4415, interface http://localhost:4416).

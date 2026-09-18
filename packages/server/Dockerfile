@@ -58,7 +58,7 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build     /app/packages/server/dist ./packages/server/dist
 COPY packages/server/package.json ./packages/server/package.json
 COPY --from=notes /sortie ./packages/server/notes-de-version
-# Commandes disponibles dans dist/ : creer-admin, orga-valider, orga-importer,
+# Commandes disponibles dans dist/ : creer-admin, creer-edition, orga-valider, orga-importer,
 # orga-exporter, essai-courriel, planification-lancer (liste tenue par tsup.config.ts).
 # Le contenu d'une organisation ne fait pas partie de l'image : montez-le en volume
 # et lancez `node dist/orga-importer.js --dossier /contenu --edition <année>`.

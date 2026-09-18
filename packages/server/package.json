@@ -11,6 +11,7 @@
     "gabarits:print": "tsx scripts/gabarits-courriel.ts",
     "courriel:essai": "tsx --env-file=.env scripts/essai-courriel.ts",
     "admin:creer": "tsx --env-file=.env scripts/creer-admin.ts",
+    "edition:creer": "tsx --env-file=.env scripts/creer-edition.ts",
     "orga:importer": "tsx --env-file=.env scripts/orga-importer.ts",
     "orga:exporter": "tsx --env-file=.env scripts/orga-exporter.ts",
     "orga:valider": "tsx --env-file-if-exists=.env scripts/orga-valider.ts",

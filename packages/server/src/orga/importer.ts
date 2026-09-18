@@ -49,7 +49,7 @@ export async function importerModeles(
       : await prisma.edition.findUnique({ where: { annee: options.annee } })
   if (options.annee !== undefined && edition === null) {
     throw new Error(
-      `L'édition ${options.annee} n'existe pas. Créez-la d'abord dans l'espace organisateur.`
+      `L'édition ${options.annee} n'existe pas. Créez-la d'abord dans l'espace organisateur ou avec edition:creer (dist/creer-edition.js dans l'image).`
     )
   }
 

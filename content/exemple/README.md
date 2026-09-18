@@ -9,7 +9,7 @@ yarn workspace @relaytour/server orga:valider /chemin/vers/votre/contenu
 yarn workspace @relaytour/server orga:importer --dossier /chemin/vers/votre/contenu --edition 2027
 ```
 
-Sans argument, les commandes lisent ce dossier d'exemple. La variable `CONTENU_ORGA` fixe un autre dossier par défaut.
+Sans argument, les commandes lisent ce dossier d'exemple. La variable `CONTENU_ORGA` fixe un autre dossier par défaut. L'import des tâches exige une édition, créée dans l'espace organisateur ou avec `edition:creer`.
 
 ## Structure
 

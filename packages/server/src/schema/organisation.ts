@@ -1,6 +1,6 @@
 import { prisma, StatutEdition, TypePerimetre } from '@relaytour/database'
 
-import { erreurSaisie } from '../lib/erreurs.ts'
+import { validerDates, validerEdition } from '../lib/editions.ts'
 import {
   couleurValide,
   sansDoublon,
@@ -78,12 +78,6 @@ builder.queryFields(t => ({
 
 // ── Administration ───────────────────────────────────────────────────────────
 
-function datesValides(debut: Date, fin: Date) {
-  if (debut > fin) {
-    throw erreurSaisie('La date de fin doit suivre la date de début.')
-  }
-}
-
 builder.mutationFields(t => ({
   creerEdition: t.prismaField({
     type: EditionRef,
@@ -95,20 +89,9 @@ builder.mutationFields(t => ({
       fin: t.arg({ type: 'Date', required: true }),
     },
     resolve: (query, _root, args) => {
-      if (args.annee < 2020 || args.annee > 2100) {
-        throw erreurSaisie('L’année doit être comprise entre 2020 et 2100.')
-      }
-      datesValides(args.debut, args.fin)
+      const edition = validerEdition(args)
       return sansDoublon(
-        prisma.edition.create({
-          ...query,
-          data: {
-            annee: args.annee,
-            nom: texteRequis(args.nom, 'Le nom'),
-            debut: args.debut,
-            fin: args.fin,
-          },
-        }),
+        prisma.edition.create({ ...query, data: edition }),
         `Une édition existe déjà pour ${args.annee}.`
       )
     },
@@ -125,7 +108,7 @@ builder.mutationFields(t => ({
       statut: t.arg({ type: StatutEditionEnum, required: true }),
     },
     resolve: (query, _root, args) => {
-      datesValides(args.debut, args.fin)
+      validerDates(args.debut, args.fin)
       return prisma.edition.update({
         ...query,
         where: { id: String(args.id) },
