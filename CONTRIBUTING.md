@@ -13,6 +13,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `outils/verifier-licences.mjs` et `outils/verifier-publication.mjs` : contrôles de CI sur les licences des dépendances et sur l'absence de traces privées.
 - `outils/versionner.mjs` et `notes/` : notes de version.
 - `docs/adr/` : décisions d'architecture.
+- `docs/feuille-de-route.md` et `docs/publication.md` : évolutions envisagées, liste de publication.
 
 ## Commandes
 
@@ -102,7 +103,7 @@ Un seul mot par notion.
 
 ## Branches et CI
 
-- Tant que la version minimale n'est pas fixée, le travail se fait sur `main`, et son historique peut être réécrit. Les PR viendront ensuite : une PR part de sa branche parente réelle et vise `develop`.
+- Tant que le dépôt est privé et que la version minimale n'est pas fixée, le travail se fait sur `main`, et son historique peut être réécrit. L'ouverture publique fige l'historique (`docs/publication.md`). Les PR viendront ensuite : une PR part de sa branche parente réelle et vise `develop`.
 - Avant chaque poussée : `yarn versionner valider`. Un changement visible porte son fragment de note de version.
 - Pousser avec `git push origin <branche>`.
 - Un correctif de CI s'ajoute comme étape de `ci.yml`, jamais comme job.
