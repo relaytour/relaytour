@@ -93,6 +93,15 @@ const EnvSchema = z
         message: 'CORS_ORIGIN contient localhost hors du poste local.',
       })
     }
+    // Sans origine, les liens des mails et l'origine de confiance de la connexion
+    // pointeraient sur un hôte d'exemple : le démarrage refuse plutôt que deviner.
+    if (v.APP_ENV !== 'local' && v.ORIGINE_ORGA === undefined) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['ORIGINE_ORGA'],
+        message: 'ORIGINE_ORGA est requis hors du poste local.',
+      })
+    }
     if (v.APP_ENV !== 'local' && v.BETTER_AUTH_SECRET.includes('local')) {
       ctx.addIssue({
         code: 'custom',
@@ -186,13 +195,7 @@ export function resoudreEnv(source: NodeJS.ProcessEnv) {
   return {
     ...brut,
     LOG_LEVEL: brut.LOG_LEVEL ?? (brut.APP_ENV === 'local' ? 'debug' : 'info'),
-    ORIGINE_ORGA:
-      brut.ORIGINE_ORGA ??
-      (brut.APP_ENV === 'prod'
-        ? 'https://orga.exemple.org'
-        : brut.APP_ENV === 'recette'
-          ? 'https://orga.recette.exemple.org'
-          : 'http://localhost:5305'),
+    ORIGINE_ORGA: brut.ORIGINE_ORGA ?? 'http://localhost:5305',
     // Voie principale : le SMTP réel s'il est renseigné, sinon Mailpit, sinon rien.
     COURRIEL: smtp ?? mailpit,
     // Voie de capture : existe seulement pendant un essai de délivrabilité hors production.

@@ -23,6 +23,7 @@ describe('resoudreEnv', () => {
       ...BASE,
       APP_ENV: 'prod',
       CORS_ORIGIN: 'https://orga.exemple.org',
+      ORIGINE_ORGA: 'https://orga.exemple.org',
     })
     expect(env.COURRIEL).toBeNull()
     expect(env.COURRIEL_CAPTURE).toBeNull()
@@ -34,6 +35,7 @@ describe('resoudreEnv', () => {
         ...BASE,
         APP_ENV: 'recette',
         CORS_ORIGIN: 'https://orga.recette.exemple.org',
+        ORIGINE_ORGA: 'https://orga.recette.exemple.org',
         COURRIEL_SMTP_HOTE: 'ssl0.ovh.net',
         COURRIEL_SMTP_UTILISATEUR: 'u',
         COURRIEL_SMTP_MOT_DE_PASSE: 'p',
@@ -59,9 +61,24 @@ describe('resoudreEnv', () => {
         ...BASE,
         APP_ENV: 'recette',
         CORS_ORIGIN: 'https://orga.recette.exemple.org',
+        ORIGINE_ORGA: 'https://orga.recette.exemple.org',
         BETTER_AUTH_SECRET: 'secret-du-poste-local-a-remplacer-0123',
       })
     ).toThrow(/BETTER_AUTH_SECRET/)
+  })
+
+  it('exige ORIGINE_ORGA hors du poste local', () => {
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        APP_ENV: 'prod',
+        CORS_ORIGIN: 'https://orga.exemple.org',
+      })
+    ).toThrow(/ORIGINE_ORGA/)
+  })
+
+  it('retombe sur le poste local sans ORIGINE_ORGA', () => {
+    expect(resoudreEnv({ ...BASE }).ORIGINE_ORGA).toBe('http://localhost:5305')
   })
 
   it('déduit secure du port 465', () => {
@@ -69,6 +86,7 @@ describe('resoudreEnv', () => {
       ...BASE,
       APP_ENV: 'prod',
       CORS_ORIGIN: 'https://orga.exemple.org',
+      ORIGINE_ORGA: 'https://orga.exemple.org',
       COURRIEL_SMTP_HOTE: 'ssl0.ovh.net',
       COURRIEL_SMTP_UTILISATEUR: 'u',
       COURRIEL_SMTP_MOT_DE_PASSE: 'p',
