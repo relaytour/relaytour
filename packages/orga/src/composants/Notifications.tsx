@@ -1,6 +1,5 @@
 import { BellOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
-import { colors } from '@relaytour/tokens'
 import { Badge, Button, Drawer, Empty, Skeleton, Typography } from 'antd'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -110,10 +109,11 @@ export default function Notifications({ compact }: { compact: boolean }) {
                     display: 'block',
                     width: '100%',
                     padding: '12px 12px 12px 16px',
-                    borderRadius: 8,
+                    borderRadius: 'var(--rt-rayon-chip)',
                     marginBottom: 4,
-                    background: n.lue ? 'transparent' : colors.papier,
-                    borderInlineStart: `4px solid ${n.lue ? 'transparent' : colors.corail}`,
+                    background: n.lue
+                      ? 'transparent'
+                      : 'var(--rt-accent-clair)',
                   }}
                 >
                   <Typography.Text strong={!n.lue} style={{ display: 'block' }}>

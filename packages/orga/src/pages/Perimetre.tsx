@@ -115,7 +115,7 @@ export default function Perimetre() {
     <>
       <div
         style={{
-          borderInlineStart: `8px solid ${perimetre.couleur ?? '#2F6B4F'}`,
+          borderInlineStart: `8px solid ${perimetre.couleur ?? 'var(--rt-primaire)'}`,
           paddingInlineStart: 16,
         }}
       >

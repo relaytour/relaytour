@@ -24,7 +24,7 @@ export default function Avancement({
       <Progress
         percent={pourcentage}
         size={compact ? 'small' : 'medium'}
-        strokeColor="#2F6B4F"
+        strokeColor="var(--rt-primaire)"
         format={() => `${avancement.faites} / ${utiles}`}
       />
       <Space size={[6, 6]} wrap>

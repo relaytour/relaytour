@@ -1,14 +1,409 @@
-/* Fond et police de base, avant le chargement d'antd. */
+/*
+ * Le matériau de Relaytour : sol, verre, rayons, ombres, mouvement. Il ne
+ * change pas d'une organisation à l'autre. Les variables de thème (--rt-encre,
+ * --rt-primaire, polices…) sont posées sur :root par appliquerTheme avant le
+ * premier rendu ; les valeurs ci-dessous sont celles du thème par défaut et
+ * servent de repli.
+ */
+:root {
+  --rt-encre: #1b2730;
+  --rt-encre-rgb: 27, 39, 48;
+  --rt-primaire: #1e5a63;
+  --rt-primaire-rgb: 30, 90, 99;
+  --rt-primaire-clair: #dceaeb;
+  --rt-accent: #ad412b;
+  --rt-accent-rgb: 173, 65, 43;
+  --rt-accent-clair: #f6e1db;
+  --rt-succes: #3a7042;
+  --rt-succes-clair: #e3f0e4;
+  --rt-alerte: #8a5a0e;
+  --rt-alerte-clair: #fbf0d8;
+  --rt-erreur: #a23a2c;
+  --rt-erreur-clair: #f8e3df;
+  --rt-sol-1: #ffffff;
+  --rt-sol-2: #f4f6f7;
+  --rt-sol-3: #e9eef0;
+  --rt-police: 'Hanken Grotesk Variable', system-ui, sans-serif;
+  --rt-police-titre: 'Hanken Grotesk Variable', system-ui, sans-serif;
+  --rt-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --rt-titre-graisse: 600;
+  --rt-corps-graisse: 400;
+  --rt-titre-espacement: -0.02em;
+  --rt-titre-echelle: 1;
+
+  /* Dérivés du thème */
+  --rt-encre-70: rgba(var(--rt-encre-rgb), 0.68);
+  --rt-encre-55: rgba(var(--rt-encre-rgb), 0.52);
+  --rt-encre-40: rgba(var(--rt-encre-rgb), 0.38);
+  --rt-encre-14: rgba(var(--rt-encre-rgb), 0.12);
+  --rt-encre-08: rgba(var(--rt-encre-rgb), 0.07);
+  --rt-sol: linear-gradient(
+    138deg,
+    var(--rt-sol-1) 0%,
+    var(--rt-sol-1) 18%,
+    var(--rt-sol-2) 46%,
+    var(--rt-sol-3) 60%,
+    var(--rt-sol-2) 78%,
+    var(--rt-sol-1) 100%
+  );
+  --rt-halo-1: rgba(var(--rt-primaire-rgb), 0.18);
+  --rt-halo-2: rgba(var(--rt-accent-rgb), 0.13);
+  --rt-verre-teinte:
+    linear-gradient(
+      155deg,
+      rgba(255, 255, 255, 0.62),
+      rgba(255, 255, 255, 0.18)
+    ),
+    rgba(var(--rt-primaire-rgb), 0.16);
+  --rt-ombre-flottante:
+    0 2px 10px rgba(var(--rt-encre-rgb), 0.05),
+    0 6px 18px rgba(var(--rt-encre-rgb), 0.045);
+  --rt-ombre-verre: 0 8px 30px rgba(var(--rt-encre-rgb), 0.08);
+  --rt-ombre-verre-lg: 0 20px 56px rgba(var(--rt-encre-rgb), 0.12);
+  --rt-ombre-primaire: 0 6px 18px rgba(var(--rt-primaire-rgb), 0.28);
+  --rt-ombre-accent: 0 6px 18px rgba(var(--rt-accent-rgb), 0.28);
+  --rt-anneau-focus: 0 0 0 4px rgba(var(--rt-encre-rgb), 0.12);
+
+  /* Matériau fixe */
+  --rt-rayon-champ: 10px;
+  --rt-rayon-chip: 14px;
+  --rt-rayon-carte: 20px;
+  --rt-rayon-panneau: 28px;
+  --rt-rayon-barre: 36px;
+  --rt-flou: blur(22px) saturate(1.6);
+  --rt-flou-lg: blur(38px) saturate(1.7);
+  --rt-verre: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0.44)
+  );
+  --rt-verre-barre: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.76),
+    rgba(255, 255, 255, 0.54)
+  );
+  --rt-liseret:
+    inset 0 1px 1px rgba(255, 255, 255, 0.85),
+    inset 0 -1px 2px rgba(255, 255, 255, 0.3);
+  --rt-ease-fluide: cubic-bezier(0.32, 0.72, 0, 1);
+  --rt-duree: 240ms;
+}
+
 html,
 body {
   margin: 0;
-  background: #f6ebdd;
-  color: #2F6B4F;
+  min-height: 100%;
+  background: var(--rt-sol);
+  background-attachment: fixed;
+  color: var(--rt-encre);
   color-scheme: light;
-  font-family:
-    Quicksand,
-    -apple-system,
-    'Segoe UI',
-    sans-serif;
+  font-family: var(--rt-police);
+  font-weight: var(--rt-corps-graisse);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Les surfaces de verre : aucune bordure, un liseré blanc et une ombre d'encre. */
+.rt-verre {
+  background: var(--rt-verre);
+  backdrop-filter: var(--rt-flou);
+  -webkit-backdrop-filter: var(--rt-flou);
+  border-radius: var(--rt-rayon-panneau);
+  box-shadow: var(--rt-ombre-verre), var(--rt-liseret);
+}
+
+.rt-verre-barre {
+  background: var(--rt-verre-barre);
+  backdrop-filter: var(--rt-flou-lg);
+  -webkit-backdrop-filter: var(--rt-flou-lg);
+  border-radius: var(--rt-rayon-barre);
+  box-shadow: var(--rt-ombre-verre), var(--rt-liseret);
+}
+
+.rt-verre-teinte {
+  background: var(--rt-verre-teinte);
+  backdrop-filter: var(--rt-flou);
+  -webkit-backdrop-filter: var(--rt-flou);
+  border-radius: var(--rt-rayon-panneau);
+  box-shadow: var(--rt-ombre-verre), var(--rt-liseret);
+}
+
+/* Deux halos dans les couleurs du thème, pour que le verre ait quelque chose à réfracter. */
+.rt-halo {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  pointer-events: none;
+  z-index: -1;
+}
+
+.rt-halo-1 {
+  width: 560px;
+  height: 560px;
+  right: -120px;
+  top: -220px;
+  background: var(--rt-halo-1);
+}
+
+.rt-halo-2 {
+  width: 460px;
+  height: 460px;
+  left: 120px;
+  bottom: -260px;
+  background: var(--rt-halo-2);
+}
+
+/* Titres : la famille, la graisse et l'échelle viennent du thème. */
+.rt-titre {
+  font-family: var(--rt-police-titre);
+  font-weight: var(--rt-titre-graisse);
+  letter-spacing: var(--rt-titre-espacement);
+  line-height: 1.1;
+  margin: 0;
+}
+
+.rt-mono {
+  font-family: var(--rt-mono);
+  letter-spacing: 0.02em;
+}
+
+.rt-libelle {
+  font-family: var(--rt-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rt-encre-55);
+}
+
+/* Mise en page de l'espace organisateur (Coquille). */
+.rt-page {
+  min-height: 100vh;
+  box-sizing: border-box;
+  padding: 16px;
+  display: flex;
+  gap: 16px;
+  align-items: flex-start;
+}
+
+.rt-barre-laterale {
+  width: 248px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 16px;
+  height: calc(100vh - 32px);
+  box-sizing: border-box;
+  padding: 24px 12px 20px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.rt-barre-laterale .ant-menu {
+  flex: 1;
+  overflow-y: auto;
+  background: transparent;
+  border-inline-end: none !important;
+}
+
+.rt-barre-laterale .ant-menu-item-group-title {
+  font-family: var(--rt-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--rt-encre-55);
+}
+
+.rt-barre-laterale .ant-menu-item-selected {
+  box-shadow: 0 4px 14px rgba(var(--rt-encre-rgb), 0.16);
+}
+
+.rt-pied-marque {
+  margin-top: auto;
+  padding: 12px 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--rt-encre-55);
+}
+
+.rt-principal {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.rt-barre-haute {
+  position: sticky;
+  top: 16px;
+  z-index: 10;
+  min-height: 64px;
+  box-sizing: border-box;
+  padding: 8px 12px 8px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-radius: 999px;
+}
+
+/* Sans min-width 0, un tableau large élargit toute la page au-delà de l'écran. */
+.rt-contenu {
+  min-width: 0;
+  width: 100%;
+  max-width: 1180px;
+  box-sizing: border-box;
+  padding: 8px 12px 24px;
+}
+
+@media (max-width: 767px) {
+  .rt-page {
+    padding: 12px;
+    gap: 12px;
+  }
+  .rt-barre-haute {
+    top: 12px;
+    padding: 8px 10px 8px 12px;
+  }
+  .rt-contenu {
+    padding: 4px 0 16px;
+  }
+}
+
+/* La marque : pictogramme et nom. */
+.rt-marque {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 10px 20px;
+  color: var(--rt-encre);
+  text-decoration: none;
+}
+
+.rt-marque-nom {
+  font-family: var(--rt-police-titre);
+  font-weight: var(--rt-titre-graisse);
+  letter-spacing: var(--rt-titre-espacement);
+  font-size: calc(22px * var(--rt-titre-echelle));
+  line-height: 1;
+  white-space: nowrap;
+}
+
+/* Les conteneurs antd deviennent des surfaces de verre. En antd 6, le conteneur
+   du tiroir s'appelle .ant-drawer-section, celui de la fenêtre modale reste
+   .ant-modal-content. */
+.ant-card,
+.ant-drawer .ant-drawer-section,
+.ant-modal .ant-modal-content {
+  background: var(--rt-verre);
+  backdrop-filter: var(--rt-flou);
+  -webkit-backdrop-filter: var(--rt-flou);
+  box-shadow: var(--rt-ombre-verre), var(--rt-liseret);
+}
+
+.ant-card {
+  border: none;
+}
+
+.ant-drawer .ant-drawer-section {
+  border-radius: var(--rt-rayon-panneau) 0 0 var(--rt-rayon-panneau);
+}
+
+.ant-drawer-left .ant-drawer-section {
+  border-radius: 0 var(--rt-rayon-panneau) var(--rt-rayon-panneau) 0;
+}
+
+.ant-table-wrapper .ant-table {
+  background: transparent;
+}
+
+/* Le focus : un anneau d'encre, jamais un bleu vif. */
+:focus-visible {
+  outline: none;
+  box-shadow: var(--rt-anneau-focus);
+}
+
+/* Rendu Markdown des fiches. */
+.rt-markdown {
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--rt-encre);
+}
+
+.rt-markdown h1,
+.rt-markdown h2 {
+  font-family: var(--rt-police-titre);
+  font-weight: var(--rt-titre-graisse);
+  letter-spacing: var(--rt-titre-espacement);
+  margin: 1.6em 0 0.4em;
+  line-height: 1.15;
+}
+
+.rt-markdown h1 {
+  font-size: calc(28px * var(--rt-titre-echelle));
+}
+
+.rt-markdown h2 {
+  font-size: calc(23px * var(--rt-titre-echelle));
+  border-bottom: 1px solid var(--rt-encre-14);
+  padding-bottom: 6px;
+}
+
+.rt-markdown h3 {
+  font-size: 18px;
   font-weight: 600;
+  margin: 1.2em 0 0.3em;
+}
+
+.rt-markdown > :first-child {
+  margin-top: 0;
+}
+
+.rt-markdown ul,
+.rt-markdown ol {
+  padding-inline-start: 1.4em;
+}
+
+.rt-markdown li {
+  margin: 0.25em 0;
+}
+
+.rt-markdown a {
+  color: var(--rt-primaire);
+  text-decoration: underline;
+}
+
+.rt-markdown blockquote {
+  margin: 1em 0;
+  padding: 0.7em 1em;
+  background: var(--rt-primaire-clair);
+  border-radius: var(--rt-rayon-chip);
+}
+
+.rt-markdown code {
+  font-family: var(--rt-mono);
+  font-size: 0.9em;
+  background: var(--rt-encre-08);
+  padding: 1px 5px;
+  border-radius: 6px;
+}
+
+.rt-markdown table {
+  border-collapse: collapse;
+  display: block;
+  overflow-x: auto;
+}
+
+.rt-markdown th,
+.rt-markdown td {
+  border: 1px solid var(--rt-encre-14);
+  padding: 6px 10px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+  }
 }

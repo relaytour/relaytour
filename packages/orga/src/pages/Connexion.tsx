@@ -1,9 +1,9 @@
 import { useApolloClient } from '@apollo/client/react'
-import { colors, fonts } from '@relaytour/tokens'
 import { Alert, Button, Card, Form, Input, Typography } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
+import Marque from '../composants/Marque'
 import {
   adresseMemorisee,
   demanderCode,
@@ -88,25 +88,25 @@ export default function Connexion() {
         display: 'grid',
         placeItems: 'center',
         padding: 16,
-        background: `linear-gradient(160deg, ${colors.marine} 0%, ${colors.indigo} 100%)`,
       }}
     >
+      <div className="rt-halo rt-halo-1" aria-hidden="true" />
+      <div className="rt-halo rt-halo-2" aria-hidden="true" />
       <Card
-        style={{ width: '100%', maxWidth: 420 }}
+        style={{ width: '100%', maxWidth: 440 }}
         styles={{ body: { padding: 32 } }}
       >
+        <Marque taille={30} />
         <h1
+          className="rt-titre"
           style={{
-            fontFamily: fonts.display,
-            fontWeight: 400,
-            fontSize: 48,
-            lineHeight: 1,
-            margin: '0 0 4px',
+            fontSize: 'calc(30px * var(--rt-titre-echelle))',
+            margin: '0 0 6px',
           }}
         >
           Espace organisateur
         </h1>
-        <Typography.Paragraph style={{ fontWeight: 600, opacity: 0.8 }}>
+        <Typography.Paragraph style={{ color: 'var(--rt-encre-70)' }}>
           Organisez votre événement d’une édition à l’autre.
         </Typography.Paragraph>
 

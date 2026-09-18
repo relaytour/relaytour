@@ -113,7 +113,7 @@ export default function TacheCarte({
     <Card
       size="small"
       style={{
-        borderInlineStart: `4px solid ${tache.perimetre.couleur ?? '#2F6B4F'}`,
+        borderInlineStart: `4px solid ${tache.perimetre.couleur ?? 'var(--rt-primaire)'}`,
         opacity: tache.statut === 'ABANDONNEE' ? 0.6 : 1,
       }}
     >

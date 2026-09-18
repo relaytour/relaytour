@@ -95,7 +95,7 @@ export default function AvancementGlobal() {
                   value={totaux.enRetard}
                   styles={
                     totaux.enRetard > 0
-                      ? { content: { color: '#c94a43' } }
+                      ? { content: { color: 'var(--rt-erreur)' } }
                       : undefined
                   }
                 />
@@ -121,7 +121,7 @@ export default function AvancementGlobal() {
                     hoverable
                     title={perimetre.nom}
                     style={{
-                      borderTop: `6px solid ${perimetre.couleur ?? '#2F6B4F'}`,
+                      borderTop: `6px solid ${perimetre.couleur ?? 'var(--rt-primaire)'}`,
                       height: '100%',
                     }}
                   >

@@ -1,6 +1,5 @@
 import { InfoCircleOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
-import { colors, fonts } from '@relaytour/tokens'
 import {
   Button,
   Card,
@@ -46,11 +45,10 @@ export default function Contribution({ editionId }: { editionId: string }) {
       <Row gutter={[24, 16]} align="middle">
         <Col xs={24} sm={8}>
           <div
+            className="rt-titre"
             style={{
-              fontFamily: fonts.display,
-              fontSize: 64,
-              lineHeight: 1,
-              color: colors.marine,
+              fontSize: 'calc(56px * var(--rt-titre-echelle))',
+              color: 'var(--rt-primaire)',
             }}
           >
             {score.points}

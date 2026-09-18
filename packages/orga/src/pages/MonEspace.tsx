@@ -137,7 +137,7 @@ export default function MonEspace() {
                       <Card
                         hoverable
                         style={{
-                          borderTop: `6px solid ${perimetre.couleur ?? '#2F6B4F'}`,
+                          borderTop: `6px solid ${perimetre.couleur ?? 'var(--rt-primaire)'}`,
                         }}
                         title={perimetre.nom}
                         extra={

@@ -181,7 +181,7 @@ export default function Perimetres() {
                   height: 14,
                   borderRadius: 7,
                   background: c ?? 'transparent',
-                  border: '1px solid rgba(3,37,101,.2)',
+                  border: '1px solid var(--rt-encre-14)',
                 }}
               />
             ),

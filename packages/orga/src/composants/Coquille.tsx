@@ -15,13 +15,13 @@ import {
   TeamOutlined,
 } from '@ant-design/icons'
 import { useApolloClient, useQuery } from '@apollo/client/react'
-import { colors, fonts } from '@relaytour/tokens'
-import { Button, Drawer, Grid, Layout, Menu, Result, Spin } from 'antd'
+import { Button, Drawer, Grid, Menu, Result, Spin } from 'antd'
 import { useState } from 'react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 
 import { seDeconnecter } from '../lib/connexion'
 
+import Marque, { Pictogramme } from './Marque'
 import Notifications from './Notifications'
 import { graphql } from '../gql'
 import { MOI } from '../lib/requetes'
@@ -42,10 +42,9 @@ const MENU_PERIMETRES = graphql(`
   }
 `)
 
-const { Header, Sider, Content } = Layout
-
-// Mise en page des écrans connectés. Sans session, elle renvoie vers la connexion ;
-// les écrans d'admin exigent en plus le droit d'admin.
+// Mise en page des écrans connectés : une barre latérale et une barre haute en
+// verre, détachées des bords, posées sur le sol du thème. Sans session, elle
+// renvoie vers la connexion ; les écrans d'admin exigent en plus le droit d'admin.
 export default function Coquille({
   adminSeulement = false,
 }: {
@@ -156,104 +155,92 @@ export default function Coquille({
     navigate('/connexion', { replace: true })
   }
 
+  const navigation = (
+    <Menu
+      mode="inline"
+      selectedKeys={[pathname.startsWith('/fiches') ? '/fiches' : pathname]}
+      items={entrees}
+      onClick={({ key }) => {
+        setTiroirOuvert(false)
+        navigate(key)
+      }}
+    />
+  )
+
+  const pied = (
+    <div className="rt-pied-marque">
+      <span style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}>
+        <Pictogramme taille={14} monochrome />
+      </span>
+      Propulsé par Relaytour
+    </div>
+  )
+
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Header
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 16,
-          paddingInline: ecrans.md ? 24 : 16,
-        }}
-      >
-        {!ecrans.md && (
+    <div className="rt-page">
+      <div className="rt-halo rt-halo-1" aria-hidden="true" />
+      <div className="rt-halo rt-halo-2" aria-hidden="true" />
+      {ecrans.md ? (
+        <nav
+          className="rt-verre-barre rt-barre-laterale"
+          aria-label="Navigation principale"
+        >
+          <Marque />
+          {navigation}
+          {pied}
+        </nav>
+      ) : (
+        <Drawer
+          placement="left"
+          size={280}
+          open={tiroirOuvert}
+          onClose={() => setTiroirOuvert(false)}
+          title={<Marque taille={24} />}
+          styles={{
+            body: { padding: 12, display: 'flex', flexDirection: 'column' },
+          }}
+        >
+          {navigation}
+          {pied}
+        </Drawer>
+      )}
+      <div className="rt-principal">
+        <header className="rt-verre-barre rt-barre-haute">
+          {!ecrans.md && (
+            <Button
+              icon={<MenuOutlined />}
+              aria-label="Ouvrir le menu"
+              onClick={() => setTiroirOuvert(true)}
+            />
+          )}
+          {!ecrans.md && (
+            <span style={{ display: 'inline-flex', marginInlineStart: 4 }}>
+              <Pictogramme taille={24} />
+            </span>
+          )}
+          <span style={{ flex: 1 }} />
+          {ecrans.sm && (
+            <span style={{ fontWeight: 600, color: 'var(--rt-encre)' }}>
+              {moi.nom}
+            </span>
+          )}
+          <Notifications compact={!ecrans.md} />
           <Button
-            icon={<MenuOutlined />}
-            aria-label="Ouvrir le menu"
-            onClick={() => setTiroirOuvert(true)}
-          />
-        )}
-        <span
-          style={{
-            fontFamily: fonts.display,
-            fontSize: 30,
-            color: colors.blanc,
-            letterSpacing: '.04em',
-            whiteSpace: 'nowrap',
-          }}
-        >
-          Relay<span style={{ color: colors.corail }}>tour</span>
-        </span>
-        <span style={{ flex: 1 }} />
-        {ecrans.sm && (
-          <span style={{ color: colors.blanc, fontWeight: 600 }}>
-            {moi.nom}
-          </span>
-        )}
-        <Notifications compact={!ecrans.md} />
-        <Button
-          icon={<LogoutOutlined />}
-          aria-label="Se déconnecter"
-          onClick={() => void deconnecter()}
-        >
-          {ecrans.sm ? 'Se déconnecter' : null}
-        </Button>
-      </Header>
-      <Layout>
-        {ecrans.md ? (
-          <Sider width={240} theme="light">
-            <Menu
-              mode="inline"
-              selectedKeys={[
-                pathname.startsWith('/fiches') ? '/fiches' : pathname,
-              ]}
-              items={entrees}
-              onClick={({ key }) => {
-                setTiroirOuvert(false)
-                navigate(key)
-              }}
-              style={{ borderInlineEnd: 'none', paddingTop: 12 }}
-            />
-          </Sider>
-        ) : (
-          <Drawer
-            placement="left"
-            size={280}
-            open={tiroirOuvert}
-            onClose={() => setTiroirOuvert(false)}
-            title="Menu"
-            styles={{ body: { padding: 0 } }}
+            icon={<LogoutOutlined />}
+            aria-label="Se déconnecter"
+            onClick={() => void deconnecter()}
           >
-            <Menu
-              mode="inline"
-              selectedKeys={[
-                pathname.startsWith('/fiches') ? '/fiches' : pathname,
-              ]}
-              items={entrees}
-              onClick={({ key }) => {
-                setTiroirOuvert(false)
-                navigate(key)
-              }}
-              style={{ borderInlineEnd: 'none', paddingTop: 12 }}
-            />
-          </Drawer>
-        )}
-        <Content
-          style={{
-            // Élément flex : sans min-width 0, un tableau large pousse la page hors de l'écran.
-            minWidth: 0,
-            padding: ecrans.md ? 32 : 16,
-            maxWidth: 1100,
-            width: '100%',
-          }}
-        >
+            {ecrans.sm ? 'Se déconnecter' : null}
+          </Button>
+        </header>
+        <main className="rt-contenu">
           {adminSeulement && !moi.estAdmin ? (
             <Result status="403" title="Cette page est réservée aux admins." />
           ) : (
             <Outlet />
           )}
-        </Content>
-      </Layout>
-    </Layout>
+        </main>
+      </div>
+    </div>
   )
 }

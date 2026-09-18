@@ -288,7 +288,7 @@ export default function Postes() {
                   value={totalAPourvoir}
                   styles={
                     totalAPourvoir > 0
-                      ? { content: { color: '#c94a43' } }
+                      ? { content: { color: 'var(--rt-erreur)' } }
                       : undefined
                   }
                 />
@@ -301,7 +301,7 @@ export default function Postes() {
                   value={sansPersonne}
                   styles={
                     sansPersonne > 0
-                      ? { content: { color: '#c94a43' } }
+                      ? { content: { color: 'var(--rt-erreur)' } }
                       : undefined
                   }
                 />
@@ -389,7 +389,7 @@ export default function Postes() {
                         )
                       }
                       style={{
-                        borderTop: `6px solid ${perimetre.couleur ?? '#2F6B4F'}`,
+                        borderTop: `6px solid ${perimetre.couleur ?? 'var(--rt-primaire)'}`,
                         height: '100%',
                       }}
                     >

@@ -365,7 +365,7 @@ export default function Personnes() {
                     <Tag
                       key={a.id}
                       style={{
-                        borderInlineStart: `4px solid ${a.perimetre.couleur ?? '#2F6B4F'}`,
+                        borderInlineStart: `4px solid ${a.perimetre.couleur ?? 'var(--rt-primaire)'}`,
                       }}
                     >
                       {a.perimetre.nom}
@@ -391,7 +391,7 @@ export default function Personnes() {
                         ) : undefined
                       }
                       style={{
-                        borderInlineStart: `4px solid ${souhait.perimetre.couleur ?? '#2F6B4F'}`,
+                        borderInlineStart: `4px solid ${souhait.perimetre.couleur ?? 'var(--rt-primaire)'}`,
                       }}
                     >
                       {souhait.perimetre.nom}

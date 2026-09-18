@@ -1,23 +1,98 @@
-import { colors, fonts } from '@relaytour/tokens'
+import { rayons, rgb, variablesCss, type Theme } from '@relaytour/tokens'
 import type { ThemeConfig } from 'antd'
 
-// Identité 2027 appliquée à un outil de travail : fond papier, texte marine,
-// marine pour les actions. Le corail reste réservé à l'engagement (design system).
-export const theme: ThemeConfig = {
-  token: {
-    colorPrimary: colors.marine,
-    colorLink: colors.marine,
-    colorText: colors.marine,
-    colorBgLayout: colors.papier,
-    colorError: colors.corailDeep,
-    fontFamily: `${fonts.text}`,
-    fontSize: 15,
-    borderRadius: 10,
-  },
-  components: {
-    Layout: { headerBg: colors.marine, siderBg: colors.blanc },
-    Menu: { itemSelectedBg: colors.sable, itemSelectedColor: colors.marine },
-    Button: { fontWeight: 700, primaryShadow: 'none' },
-    Table: { headerBg: colors.sable },
-  },
+/**
+ * Pose les variables CSS du thème sur `:root`. Appelé avant le premier rendu
+ * pour que le sol et les surfaces aient leurs couleurs dès le premier pixel.
+ */
+export function appliquerTheme(theme: Theme): void {
+  const racine = document.documentElement
+  for (const [nom, valeur] of Object.entries(variablesCss(theme))) {
+    racine.style.setProperty(nom, valeur)
+  }
+}
+
+/**
+ * Configuration Ant Design construite depuis le thème. Le verre n'est pas un
+ * jeton antd : `global.css` le pose sur le corps, la Coquille et les conteneurs.
+ * ConfigProvider ne reçoit que la palette, les polices et les rayons.
+ */
+export function construireTheme(theme: Theme): ThemeConfig {
+  const c = theme.couleurs
+  const encre = rgb(c.encre)
+  return {
+    token: {
+      colorPrimary: c.primaire,
+      colorLink: c.primaire,
+      colorText: c.encre,
+      colorTextSecondary: `rgba(${encre}, 0.68)`,
+      colorTextTertiary: `rgba(${encre}, 0.52)`,
+      colorTextQuaternary: `rgba(${encre}, 0.38)`,
+      colorError: c.erreur,
+      colorSuccess: c.succes,
+      colorWarning: c.alerte,
+      colorBgLayout: 'transparent',
+      colorBgContainer: 'rgba(255, 255, 255, 0.62)',
+      colorBgElevated: 'rgba(255, 255, 255, 0.9)',
+      colorBorder: `rgba(${encre}, 0.12)`,
+      colorBorderSecondary: `rgba(${encre}, 0.07)`,
+      colorFillSecondary: `rgba(${encre}, 0.07)`,
+      fontFamily: theme.polices.texte,
+      fontFamilyCode: theme.polices.mono,
+      fontSize: 15,
+      borderRadius: rayons.champ,
+      borderRadiusSM: 8,
+      borderRadiusLG: rayons.carte,
+      boxShadow: `0 8px 30px rgba(${encre}, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.85)`,
+      boxShadowSecondary: `0 20px 56px rgba(${encre}, 0.12), inset 0 1px 1px rgba(255, 255, 255, 0.85)`,
+      controlHeight: 40,
+      motionEaseOut: 'cubic-bezier(0.32, 0.72, 0, 1)',
+      motionDurationMid: '0.24s',
+    },
+    components: {
+      Menu: {
+        itemBg: 'transparent',
+        itemSelectedBg: c.encre,
+        itemSelectedColor: '#ffffff',
+        itemHoverBg: `rgba(${encre}, 0.07)`,
+        itemBorderRadius: rayons.chip,
+        itemHeight: 42,
+        itemMarginInline: 0,
+        itemMarginBlock: 3,
+        groupTitleFontSize: 11,
+        iconSize: 16,
+      },
+      Button: {
+        borderRadius: rayons.pilule,
+        borderRadiusLG: rayons.pilule,
+        borderRadiusSM: rayons.pilule,
+        fontWeight: 600,
+        primaryShadow: `0 6px 18px rgba(${rgb(c.primaire)}, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.25)`,
+        defaultShadow: `0 2px 10px rgba(${encre}, 0.05), 0 6px 18px rgba(${encre}, 0.045)`,
+        defaultBg: 'rgba(255, 255, 255, 0.7)',
+        defaultBorderColor: 'transparent',
+      },
+      Card: {
+        borderRadiusLG: rayons.panneau,
+        colorBorderSecondary: 'transparent',
+      },
+      Drawer: { colorBgElevated: 'transparent' },
+      Modal: { borderRadiusLG: rayons.panneau, contentBg: 'transparent' },
+      Table: {
+        headerBg: c.primaireClair,
+        borderColor: `rgba(${encre}, 0.07)`,
+        headerBorderRadius: rayons.chip,
+      },
+      Tag: { borderRadiusSM: rayons.pilule, defaultBg: `rgba(${encre}, 0.07)` },
+      Input: {
+        colorBgContainer: 'rgba(255, 255, 255, 0.55)',
+        activeShadow: `0 0 0 4px rgba(${encre}, 0.12)`,
+      },
+      Select: { colorBgContainer: 'rgba(255, 255, 255, 0.55)' },
+      Progress: {
+        defaultColor: c.primaire,
+        remainingColor: `rgba(${encre}, 0.07)`,
+      },
+    },
+  }
 }

@@ -1,7 +1,6 @@
-import { fonts } from '@relaytour/tokens'
 import type { ReactNode } from 'react'
 
-// Titre de page en Bebas Neue, comme les titres du site 2027.
+// Titre de page : la famille, la graisse et l'échelle viennent du thème.
 export default function Titre({
   children,
   sousTitre,
@@ -12,19 +11,13 @@ export default function Titre({
   return (
     <header style={{ marginBottom: 24 }}>
       <h1
-        style={{
-          fontFamily: fonts.display,
-          fontWeight: 400,
-          fontSize: 44,
-          lineHeight: 1,
-          margin: 0,
-          letterSpacing: '.01em',
-        }}
+        className="rt-titre"
+        style={{ fontSize: 'calc(30px * var(--rt-titre-echelle))' }}
       >
         {children}
       </h1>
       {sousTitre && (
-        <p style={{ margin: '8px 0 0', opacity: 0.75, fontWeight: 600 }}>
+        <p style={{ margin: '6px 0 0', color: 'var(--rt-encre-70)' }}>
           {sousTitre}
         </p>
       )}

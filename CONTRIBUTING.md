@@ -6,7 +6,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 
 - `packages/server` : API GraphQL (Express, Apollo Server 4, Pothos, un seul schéma), connexion Better Auth et worker BullMQ.
 - `packages/orga` : espace organisateur, SPA React 19 + Vite + React Router 7 + Apollo Client 4 + antd 6. Types GraphQL générés dans `src/gql/`.
-- `packages/tokens` : couleurs et polices du thème par défaut, un thème parmi d'autres à terme (ADR 0006).
+- `packages/tokens` : modèle de thème (palette, polices, typographie des titres), thème par défaut « bleu-vert » et thème alternatif « encre-lagon », vérification des contrastes. Le matériau (verre, rayons, ombres) vit dans `packages/orga/src/global.css`. Identité décrite dans `docs/identite.md`.
 - `content/exemple` : organisation d'exemple, fictive et anonyme. Le contenu réel d'une organisation vit hors du dépôt (voir son README).
 - `packages/database` : Prisma 6 sur MariaDB 11.8. Le client généré (`src/generated/`) n'est jamais commité.
 - `infra/` : déploiement de référence minimal (Compose, Caddyfile d'exemple, étapes). L'exploitation réelle vit hors du dépôt (ADR 0007).
@@ -119,7 +119,10 @@ Un seul mot par notion.
 - Prettier reformate le texte des requêtes `graphql()` : relancer `yarn workspace @relaytour/orga codegen` après un formatage, sinon les types deviennent `unknown`.
 - Dans `Coquille`, le contenu principal porte `minWidth: 0` : sans lui, un tableau large élargit toute la page au-delà de l'écran.
 - antd 6.6 déprécie aussi `List` : utiliser une liste HTML simple.
-- Prettier ne lit `.prettierignore` que dans le dossier courant : le lancer depuis la racine, sinon il reformate `packages/orga/src/gql` et `packages/tokens/src`.
+- antd 6 nomme `.ant-drawer-section` le conteneur du tiroir (plus `.ant-drawer-content`) ; la fenêtre modale garde `.ant-modal-content`. Le verre de `global.css` les cible ainsi.
+- Prettier ne lit `.prettierignore` que dans le dossier courant : le lancer depuis la racine, sinon il reformate `packages/orga/src/gql`.
+- Aucune couleur en dur dans `packages/orga` : les composants lisent les variables `--rt-*` (`var(--rt-primaire)`, `var(--rt-erreur)`, `var(--rt-encre-08)`…). Une couleur d'un périmètre vient de son contenu.
+- Aucune police servie par un tiers : une famille s'ajoute par paquet fontsource dans `packages/orga/src/polices.ts` et dans `POLICES_DISPONIBLES`.
 - Les tests d'intégration partagent la base de développement : une fonction qui parcourt toute la base (comme `genererRappels`) doit être restreinte aux données du test, sinon elle crée des notifications sur les données locales.
 - Les tests d'intégration mettent de vrais jobs dans le Redis local. Un worker lancé en même temps les traite et journalise « Aucun destinataire » pour les comptes de test déjà supprimés.
 - Le mode de développement de Vite recharge les requêtes `graphql()` avant la fin de `yarn workspace @relaytour/orga codegen` : une erreur « Expecting a parsed GraphQL document » disparaît au rechargement.

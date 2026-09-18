@@ -62,7 +62,7 @@ export default function Fiche() {
     <>
       <div
         style={{
-          borderInlineStart: `8px solid ${fiche.perimetre?.couleur ?? '#FC685F'}`,
+          borderInlineStart: `8px solid ${fiche.perimetre?.couleur ?? 'var(--rt-accent)'}`,
           paddingInlineStart: 16,
         }}
       >
@@ -162,7 +162,7 @@ export default function Fiche() {
                     gap: 8,
                     alignItems: 'center',
                     padding: '12px 0',
-                    borderBottom: '1px solid rgba(3,37,101,.08)',
+                    borderBottom: '1px solid var(--rt-encre-08)',
                   }}
                 >
                   <div style={{ flex: '1 1 240px' }}>

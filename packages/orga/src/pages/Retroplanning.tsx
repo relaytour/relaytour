@@ -59,8 +59,8 @@ type Tache = RetroplanningQuery['retroplanning'][number]
 type FiltreType = 'tous' | TypePerimetre
 type FiltreStatut = 'ouvertes' | 'toutes'
 
-const ROUGE_RETARD = '#c94a43'
-const MARINE = '#2F6B4F'
+const ROUGE_RETARD = 'var(--rt-erreur)'
+const PRIMAIRE = 'var(--rt-primaire)'
 
 const estOuverte = (tache: Tache) =>
   tache.statut === 'A_FAIRE' || tache.statut === 'EN_COURS'
@@ -308,7 +308,7 @@ function LigneTache({
         gap: '4px 16px',
         padding: '10px 12px',
         borderInlineStart: `4px solid ${tache.enRetard ? ROUGE_RETARD : 'transparent'}`,
-        borderTop: premiere ? undefined : '1px solid rgba(3, 37, 101, 0.1)',
+        borderTop: premiere ? undefined : '1px solid var(--rt-encre-08)',
         opacity: tache.statut === 'ABANDONNEE' ? 0.6 : 1,
       }}
     >
@@ -345,7 +345,7 @@ function LigneTache({
         <Space size={[6, 6]} wrap style={{ minWidth: 0 }}>
           <Tag
             style={{
-              borderInlineStart: `4px solid ${tache.perimetre.couleur ?? MARINE}`,
+              borderInlineStart: `4px solid ${tache.perimetre.couleur ?? PRIMAIRE}`,
               marginInlineEnd: 0,
             }}
           >
