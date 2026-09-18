@@ -1293,6 +1293,34 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource-variable/hanken-grotesk@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/hanken-grotesk@npm:5.3.0"
+  checksum: 10/ee3e37054627cd747a578d3e1eee2f773f01274df08e6d08f80f7752de43a1f812e4f4d94fd1098ff94f8905dca6023587773978b9db06a981990560eb1a8a65
+  languageName: node
+  linkType: hard
+
+"@fontsource-variable/quicksand@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource-variable/quicksand@npm:5.3.0"
+  checksum: 10/84ad978e37e7be8dbc376e93bffbe5ac6ee732f90535753be468f349e6567fa7f24665f43dbb9770a577616f3aa01f9371402ebf5adacf5175822d25427b0db1
+  languageName: node
+  linkType: hard
+
+"@fontsource/bebas-neue@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/bebas-neue@npm:5.3.0"
+  checksum: 10/2926327cdfc2d5f6bb49e663f5a3ada6708b4515e6be23eac7f5bd23f0719e8b125b13e33204842c3b89a434671eb74657a0cf4cf59494383eb811c4f8c9ba4b
+  languageName: node
+  linkType: hard
+
+"@fontsource/ibm-plex-mono@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/ibm-plex-mono@npm:5.3.0"
+  checksum: 10/4ad2ff968664aa4ccb3d80c961bc24ea94a94b5f56a21a2367faee7c7347a775b0abfbdae7a06f5aabcd9ec96789d7da21514ee4c34d3e94319f7fb4e4cfc343
+  languageName: node
+  linkType: hard
+
 "@graphql-codegen/add@npm:^7.1.0":
   version: 7.1.0
   resolution: "@graphql-codegen/add@npm:7.1.0"
@@ -3332,6 +3360,10 @@ __metadata:
     "@ant-design/icons": "npm:^6.3.4"
     "@apollo/client": "npm:^4.3.0"
     "@eslint/js": "npm:^9.39.0"
+    "@fontsource-variable/hanken-grotesk": "npm:^5.3.0"
+    "@fontsource-variable/quicksand": "npm:^5.3.0"
+    "@fontsource/bebas-neue": "npm:^5.3.0"
+    "@fontsource/ibm-plex-mono": "npm:^5.3.0"
     "@graphql-codegen/cli": "npm:^7.4.1"
     "@graphql-codegen/client-preset": "npm:^6.2.0"
     "@relaytour/tokens": "workspace:*"
@@ -3396,6 +3428,7 @@ __metadata:
   resolution: "@relaytour/tokens@workspace:packages/tokens"
   dependencies:
     typescript: "npm:~5.9.0"
+    vitest: "npm:^4.1.10"
   languageName: unknown
   linkType: soft
 
