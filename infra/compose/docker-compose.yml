@@ -127,18 +127,21 @@ services:
       COURRIEL_SMTP_MOT_DE_PASSE: '${COURRIEL_SMTP_MOT_DE_PASSE:-}'
       COURRIEL_EXPEDITEUR: '${COURRIEL_EXPEDITEUR:-}'
       COURRIEL_DELIVRABILITE: '${COURRIEL_DELIVRABILITE:-}'
+      WORKER_HEALTH_PORT: 4401
     healthcheck:
       test:
         - CMD
         - node
         - -e
-        - "fetch('http://127.0.0.1:4401').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+        - "fetch('http://127.0.0.1:'+(process.env.WORKER_HEALTH_PORT||4401)).then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
       interval: 30s
       timeout: 5s
       start_period: 20s
       retries: 3
     stop_grace_period: 20s
     depends_on:
+      migrate:
+        condition: service_completed_successfully
       db:
         condition: service_healthy
       cache:
