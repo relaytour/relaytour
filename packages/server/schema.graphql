@@ -129,7 +129,6 @@ type Mutation {
   retirerAffectation(id: ID!): Boolean!
   retirerDroitRedaction(id: ID!): Boolean!
   retirerSouhait(id: ID!): Boolean!
-  subscribeNewsletter(email: String!): Boolean!
 }
 
 type Notification {
@@ -212,7 +211,6 @@ type Query {
   mesTaches(editionId: ID!): [Tache!]!
   moi: Personne
   monScore(editionId: ID!): Score!
-  nombreAbonnesNewsletter: Int!
   nombreNotificationsNonLues: Int!
   notifications(limite: Int = 30, nonLuesSeulement: Boolean = false): [Notification!]!
   perimetre(slug: String!): Perimetre

@@ -65,7 +65,6 @@ afterAll(async () => {
 describe('requêtes réservées aux admins', () => {
   const REQUETES = [
     '{ personnes { id } }',
-    '{ nombreAbonnesNewsletter }',
     'query ($e: ID!) { affectations(editionId: $e) { id } }',
     'query ($e: ID!) { postesAPourvoir(editionId: $e) { etat } }',
     'query ($e: ID!) { appelPostes(editionId: $e) }',

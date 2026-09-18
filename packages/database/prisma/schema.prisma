@@ -20,6 +20,9 @@ datasource db {
 
 // Règle des migrations : additives seulement. Un sens nouveau prend un nom de champ nouveau.
 
+// Table héritée du projet précédent, sans usage dans Relaytour (ADR 0006 : la
+// newsletter est hors du périmètre publié). Sa suppression est une migration
+// destructive, décidée à part.
 model Newsletter {
   id        String   @id @default(cuid())
   email     String   @unique

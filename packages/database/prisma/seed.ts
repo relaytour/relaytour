@@ -1,14 +1,15 @@
 import { prisma } from '../src/client.ts'
 
 // Données de démonstration du poste local. Rien ici ne part en recette ni en production.
-async function main() {
-  const email = 'demo@exemple.org'
-  await prisma.newsletter.upsert({
-    where: { email },
-    update: {},
-    create: { email },
-  })
-  console.log('✔ Données de démonstration posées.')
+// Le contenu d'une organisation s'importe avec orga:importer, pas par ce script.
+function main() {
+  console.log(
+    'Aucune donnée de démonstration : importez content/exemple avec orga:importer.'
+  )
 }
 
-await main().finally(() => prisma.$disconnect())
+try {
+  main()
+} finally {
+  await prisma.$disconnect()
+}

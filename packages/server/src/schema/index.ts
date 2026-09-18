@@ -1,5 +1,4 @@
 import './health.ts'
-import './newsletter.ts'
 import './organisation.ts'
 import './personnes.ts'
 import './taches.ts'
