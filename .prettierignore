@@ -9,5 +9,3 @@ packages/server/schema.graphql
 *.md
 *.mjml
 packages/orga/src/gql
-# Copie exacte du fichier du site 2027 (vérifiée en CI) : ne pas la reformater.
-packages/tokens/src
