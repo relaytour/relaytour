@@ -12,6 +12,9 @@ const origine = optionnelle
   })
   .transform(s => s?.replace(/\/$/, ''))
 
+// Variables lues hors de ce schéma, volontairement : DOMAINES_COURRIEL_AUTORISES
+// (lib/contenu.ts) et CONTENU_ORGA (scripts orga-*). Elles servent à des scripts qui
+// tournent sans base ni `.env` complet, comme `orga:valider` en CI (invariant 12).
 const EnvSchema = z
   .object({
     NODE_ENV: z

@@ -13,7 +13,7 @@
     "admin:creer": "tsx --env-file=.env scripts/creer-admin.ts",
     "orga:importer": "tsx --env-file=.env scripts/orga-importer.ts",
     "orga:exporter": "tsx --env-file=.env scripts/orga-exporter.ts",
-    "orga:valider": "tsx scripts/orga-valider.ts",
+    "orga:valider": "tsx --env-file-if-exists=.env scripts/orga-valider.ts",
     "planification:lancer": "tsx --env-file=.env scripts/planification-lancer.ts",
     "build": "tsup",
     "start": "node --enable-source-maps dist/server.js",

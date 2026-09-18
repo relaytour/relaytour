@@ -4,7 +4,7 @@ import path from 'node:path'
 import type { PrismaClient } from '@relaytour/database'
 import { stringify } from 'yaml'
 
-import { donneesPersonnelles } from '../lib/fiches.ts'
+import { donneesPersonnelles } from '../lib/contenu.ts'
 
 export interface RapportExport {
   ecrites: string[]

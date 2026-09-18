@@ -4,7 +4,7 @@ import path from 'node:path'
 import { parse } from 'yaml'
 import { z } from 'zod'
 
-import { donneesPersonnelles, normaliserContenu } from '../lib/fiches.ts'
+import { donneesPersonnelles, normaliserContenu } from '../lib/contenu.ts'
 
 // Lecture et validation du dossier content/orga (ADR 0003).
 //

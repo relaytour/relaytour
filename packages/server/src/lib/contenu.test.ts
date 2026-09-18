@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { donneesPersonnelles, empreinte, normaliserContenu } from './fiches.ts'
+import {
+  domainesAutorises,
+  donneesPersonnelles,
+  empreinte,
+  normaliserContenu,
+} from './contenu.ts'
 
 describe('empreinte', () => {
   it('ignore les fins de ligne Windows et les espaces de fin de ligne', () => {
@@ -20,7 +25,7 @@ describe('normaliserContenu', () => {
 
 describe('donneesPersonnelles', () => {
   it('relève une adresse personnelle et un numéro de téléphone', () => {
-    const texte = 'Écrire à jean.dupont@exemple.org ou appeler le 06 12 34 56 78.'
+    const texte = 'Écrire à prenom.nom@courriel-perso.example ou appeler le 06 12 34 56 78.'
     expect(donneesPersonnelles(texte)).toHaveLength(2)
   })
 
@@ -42,6 +47,18 @@ describe('donneesPersonnelles', () => {
   })
 
   it('masque les valeurs relevées', () => {
-    expect(donneesPersonnelles('jean.dupont@exemple.org')[0]).toBe('jea…')
+    expect(donneesPersonnelles('prenom.nom@courriel-perso.example')[0]).toBe('pre…')
+  })
+})
+
+describe('domainesAutorises', () => {
+  it('lit une liste séparée par des virgules, en minuscules, sans blancs', () => {
+    expect(
+      domainesAutorises({ DOMAINES_COURRIEL_AUTORISES: ' Exemple.org, asso.fr ' })
+    ).toEqual(['exemple.org', 'asso.fr'])
+  })
+
+  it('renvoie une liste vide sans variable', () => {
+    expect(domainesAutorises({})).toEqual([])
   })
 })
