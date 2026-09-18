@@ -1,0 +1,17 @@
+# Tâches types de la course à pied.
+taches:
+  - modele: declarer-le-parcours
+    titre: Déclarer le parcours en mairie
+    description: >-
+      Les référent·es déposent le tracé et l'horaire de la course auprès de la commune et demandent les arrêtés nécessaires.
+    echeance: J-150
+  - modele: organiser-le-balisage
+    titre: Organiser le balisage et les postes de sécurité
+    description: >-
+      Les référent·es listent les points de balisage et les postes de signaleurs, puis demandent les bénévoles au pôle Bénévoles.
+    echeance: J-45
+  - modele: publier-les-resultats
+    titre: Publier les résultats
+    description: >-
+      Les référent·es vérifient le chronométrage et transmettent le classement au pôle Communication.
+    echeance: J+1

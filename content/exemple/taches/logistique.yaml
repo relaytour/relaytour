@@ -1,0 +1,17 @@
+# Tâches types du pôle Logistique.
+taches:
+  - modele: inventorier-le-materiel
+    titre: Inventorier le matériel disponible
+    description: >-
+      Les référent·es comptent le matériel stocké (tables, barnums, sonorisation) et listent ce qui manque pour chaque sport.
+    echeance: J-120
+  - modele: commander-le-materiel-manquant
+    titre: Commander ou louer le matériel manquant
+    description: >-
+      Les référent·es demandent les devis, les font valider par la trésorerie et confirment les livraisons.
+    echeance: J-60
+  - modele: planifier-le-montage
+    titre: Planifier le montage et le démontage
+    description: >-
+      Les référent·es fixent les créneaux de montage et de démontage et demandent les bénévoles au pôle Bénévoles.
+    echeance: J-14

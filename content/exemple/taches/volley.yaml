@@ -1,0 +1,17 @@
+# Tâches types du volley.
+taches:
+  - modele: reserver-le-gymnase
+    titre: Réserver le gymnase
+    description: >-
+      Les référent·es demandent le gymnase et ses vestiaires au service des sports de la commune, par écrit.
+    echeance: J-180
+  - modele: ouvrir-les-inscriptions
+    titre: Ouvrir les inscriptions des équipes
+    description: >-
+      Les référent·es publient le formulaire d'inscription avec le pôle Communication et fixent la date de clôture.
+    echeance: J-120
+  - modele: etablir-le-planning-des-matchs
+    titre: Établir le planning des matchs
+    description: >-
+      Les référent·es construisent les poules et le planning à partir des inscriptions closes, puis le transmettent aux équipes.
+    echeance: J-21

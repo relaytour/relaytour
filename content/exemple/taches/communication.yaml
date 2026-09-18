@@ -1,0 +1,17 @@
+# Tâches types du pôle Communication.
+taches:
+  - modele: annoncer-les-dates
+    titre: Annoncer les dates de l'édition
+    description: >-
+      Les référent·es publient les dates sur le site et les réseaux de l'organisation dès que la coordination les a fixées.
+    echeance: J-150
+  - modele: preparer-l-affiche
+    titre: Préparer l'affiche et le programme
+    description: >-
+      Les référent·es rassemblent les horaires de chaque sport, font relire l'affiche par la coordination et lancent l'impression.
+    echeance: J-45
+  - modele: publier-le-bilan
+    titre: Publier le bilan de l'édition
+    description: >-
+      Les référent·es rassemblent les résultats et les photos de chaque sport et publient un retour sur l'édition.
+    echeance: J+7
