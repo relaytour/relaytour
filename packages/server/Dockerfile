@@ -1,0 +1,74 @@
+# Image de l'API et du worker Relaytour. Construite depuis la racine du dépôt :
+#   docker build -f packages/server/Dockerfile -t relaytour-server .
+# La cible `migrator` applique les migrations avant le démarrage de l'API.
+
+FROM node:24-bookworm-slim AS base
+RUN apt-get update \
+  && apt-get install -y --no-install-recommends openssl ca-certificates \
+  && rm -rf /var/lib/apt/lists/*
+ENV COREPACK_ENABLE_DOWNLOAD_PROMPT=0
+RUN corepack enable
+WORKDIR /app
+
+FROM base AS deps
+COPY .yarnrc.yml package.json yarn.lock ./
+# Yarn exige la présence de chaque workspace déclaré, même non installé.
+COPY packages/server/package.json   packages/server/
+COPY packages/database/package.json packages/database/
+COPY packages/orga/package.json     packages/orga/
+COPY packages/tokens/package.json   packages/tokens/
+RUN --mount=type=cache,target=/root/.yarn/berry/cache \
+  yarn workspaces focus @relaytour/server @relaytour/database
+
+FROM deps AS build
+COPY tsconfig.base.json ./
+COPY packages/database packages/database
+COPY packages/server   packages/server
+# Prisma exige une URL à la génération ; aucune connexion n'est ouverte ici.
+ARG DATABASE_URL=mysql://build:build@127.0.0.1:3306/build
+RUN yarn workspace @relaytour/database generate
+RUN yarn workspace @relaytour/server build
+RUN cp packages/database/src/generated/client/libquery_engine-*.node \
+       packages/server/dist/libquery_engine.node
+
+FROM deps AS prod-deps
+RUN --mount=type=cache,target=/root/.yarn/berry/cache \
+  yarn workspaces focus @relaytour/server @relaytour/database --production
+
+FROM base AS notes
+COPY versions.json ./
+COPY outils outils
+COPY notes notes
+ARG ENV_CIBLE=prod
+ENV ENV_CIBLE=$ENV_CIBLE
+ARG GIT_SHA=local
+ENV GITHUB_SHA=$GIT_SHA
+RUN node outils/versionner.mjs compiler --sortie /sortie
+
+# Applique les migrations (image -migrate). Placée avant `runtime`, qui reste la cible par défaut.
+FROM build AS migrator
+WORKDIR /app
+CMD ["yarn", "workspace", "@relaytour/database", "migrate-deploy"]
+
+FROM base AS runtime
+ENV NODE_ENV=production \
+    PORT=4400 \
+    PRISMA_QUERY_ENGINE_LIBRARY=/app/packages/server/dist/libquery_engine.node
+COPY --from=prod-deps /app/node_modules ./node_modules
+COPY --from=build     /app/packages/server/dist ./packages/server/dist
+COPY packages/server/package.json ./packages/server/package.json
+COPY --from=notes /sortie ./packages/server/notes-de-version
+# Le contenu d'une organisation ne fait pas partie de l'image : montez-le en volume
+# et lancez `node dist/orga-importer.js --dossier /contenu --edition <année>`.
+USER node
+WORKDIR /app/packages/server
+EXPOSE 4400
+# Les constantes de version sont en dernier : elles changent à chaque build et
+# invalideraient le cache des couches suivantes.
+ARG VERSION=0.0.0-local
+ARG GIT_SHA=inconnu
+ARG BUILT_AT=inconnu
+ENV APP_VERSION=$VERSION APP_GIT_SHA=$GIT_SHA APP_BUILT_AT=$BUILT_AT
+HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
+  CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||4400)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+CMD ["node", "--enable-source-maps", "dist/server.js"]

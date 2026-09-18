@@ -1,0 +1,8 @@
+<mj-section padding="8px 0 0">
+  <mj-column>
+    <mj-text font-size="14px" letter-spacing="4px" color="#2F6B4F" text-transform="uppercase"
+             font-weight="700" align="center" padding="0 0 24px">
+      Relaytour
+    </mj-text>
+  </mj-column>
+</mj-section>

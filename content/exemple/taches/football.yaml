@@ -1,0 +1,27 @@
+# Tâches types du football.
+taches:
+  - modele: reserver-les-terrains
+    titre: Réserver les terrains
+    description: >-
+      Les référent·es demandent les terrains au service des sports de la commune, par écrit.
+    echeance: J-180
+  - modele: ouvrir-les-inscriptions
+    titre: Ouvrir les inscriptions des équipes
+    description: >-
+      Les référent·es publient le formulaire d'inscription avec le pôle Communication.
+    echeance: J-120
+  - modele: recruter-les-arbitres
+    titre: Recruter les arbitres
+    description: >-
+      Les référent·es sollicitent les clubs partenaires et fixent la rémunération ou le défraiement avec le bureau.
+    echeance: J-90
+  - modele: etablir-le-planning-des-matchs
+    titre: Établir le planning des matchs
+    description: >-
+      Les référent·es construisent les poules et le planning à partir des inscriptions closes.
+    echeance: J-21
+  - modele: transmettre-les-resultats
+    titre: Transmettre les résultats au pôle Communication
+    description: >-
+      Les référent·es envoient le classement et quelques photos dès la fin des matchs.
+    echeance: J+1

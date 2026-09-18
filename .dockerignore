@@ -1,0 +1,15 @@
+# Le contexte de build ne contient ni secrets, ni dépendances, ni builds, ni données.
+**/node_modules
+**/dist
+**/dist-*
+**/.env
+**/.env.*
+!**/.env.example
+**/generated
+**/*.sql.gz
+**/sauvegardes
+.git
+.yarn/cache
+.claude
+packages/orga/src
+packages/orga/public

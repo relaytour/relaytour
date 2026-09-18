@@ -1,0 +1,27 @@
+<mjml>
+  <mj-head>
+    <mj-title>Essai d’envoi du serveur Relaytour</mj-title>
+    <mj-preview>Ce message vérifie la chaîne d’envoi des mails.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Quicksand, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#2F6B4F" padding="0 0 16px" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#F3F5FA" width="480px">
+    <mj-include path="./_entete.mjml" />
+
+    <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
+      <mj-column>
+        <mj-text font-size="20px" line-height="28px" font-weight="700">
+          Essai d’envoi
+        </mj-text>
+        <mj-text>
+          Ce message vérifie la chaîne d’envoi des mails du serveur Relaytour. Vous n’avez rien à faire.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_pied.mjml" />
+  </mj-body>
+</mjml>

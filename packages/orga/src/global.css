@@ -1,0 +1,14 @@
+/* Fond et police de base, avant le chargement d'antd. */
+html,
+body {
+  margin: 0;
+  background: #f6ebdd;
+  color: #2F6B4F;
+  color-scheme: light;
+  font-family:
+    Quicksand,
+    -apple-system,
+    'Segoe UI',
+    sans-serif;
+  font-weight: 600;
+}

@@ -1,0 +1,47 @@
+<mjml>
+  <mj-head>
+    <mj-title>Votre résumé Relaytour</mj-title>
+    <mj-preview>L’activité de vos périmètres et vos prochaines échéances.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Quicksand, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#2F6B4F" padding="0 0 16px" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#F3F5FA" width="480px">
+    <mj-include path="./_entete.mjml" />
+
+    <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
+      <mj-column>
+        <mj-text font-size="20px" line-height="28px" font-weight="700">
+          Bonjour {{nom}},
+        </mj-text>
+        <mj-text>
+          Voici l’activité de vos périmètres {{periode}}.
+        </mj-text>
+        <mj-text font-size="17px" font-weight="700" padding="8px 0 8px">
+          Activité non lue
+        </mj-text>
+        <mj-text>
+          {{activite}}
+        </mj-text>
+        <mj-text font-size="17px" font-weight="700" padding="8px 0 8px">
+          Vos échéances des 14 prochains jours
+        </mj-text>
+        <mj-text>
+          {{echeances}}
+        </mj-text>
+        <mj-button href="{{lienConnexion}}" background-color="#2F6B4F" color="#FFFFFF"
+                   border-radius="10px" font-size="15px" font-weight="700"
+                   padding="8px 0 16px" inner-padding="13px 24px">
+          Ouvrir mon espace
+        </mj-button>
+        <mj-text font-size="13px" line-height="20px" color="#4A5A7A" padding="0">
+          Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences : {{lienPreferences}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_pied.mjml" />
+  </mj-body>
+</mjml>

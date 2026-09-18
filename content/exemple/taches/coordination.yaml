@@ -1,0 +1,34 @@
+# Tâches types du pôle Coordination.
+taches:
+  - modele: fixer-les-dates-de-l-edition
+    titre: Fixer les dates et les sites de l'édition
+    description: >-
+      Le pôle propose les dates au bureau de l'association et vérifie la disponibilité des sites.
+    echeance: J-365
+  - modele: nommer-les-referentes-et-referents
+    titre: Nommer les référentes et référents de chaque périmètre
+    description: >-
+      Le pôle recueille les candidatures et propose les affectations au bureau.
+    echeance: J-300
+  - modele: reunion-de-lancement
+    titre: Réunir toutes les référentes et tous les référents
+    description: >-
+      Le pôle présente le calendrier, les fiches méthode et les outils de l'édition.
+    echeance: J-240
+  - modele: point-d-avancement-mensuel
+    titre: Tenir le point d'avancement mensuel
+    description: >-
+      Le pôle passe en revue l'avancement de chaque périmètre et les tâches en retard.
+    echeance: J-30
+  - modele: reunion-de-bilan
+    titre: Animer la réunion de bilan
+    description: >-
+      Le pôle réunit les périmètres et recueille les retours de l'édition.
+    echeance: J+14
+    fiche: preparer-le-bilan
+  - modele: mettre-a-jour-les-fiches
+    titre: Vérifier la mise à jour des fiches méthode
+    description: >-
+      Le pôle relit les fiches modifiées après le bilan et exporte le contenu vers le dépôt de l'organisation.
+    echeance: J+30
+    fiche: preparer-le-bilan

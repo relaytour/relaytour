@@ -1,0 +1,442 @@
+generator client {
+  provider               = "prisma-client"
+  output                 = "../src/generated/client"
+  runtime                = "nodejs"
+  moduleFormat           = "esm"
+  generatedFileExtension = "ts"
+  importFileExtension    = "ts"
+}
+
+generator pothos {
+  provider     = "prisma-pothos-types"
+  clientOutput = "./client"
+  output       = "../src/generated/pothos-types.ts"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// Règle des migrations : additives seulement. Un sens nouveau prend un nom de champ nouveau.
+
+model Newsletter {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}
+
+// ── Authentification (Better Auth) ────────────────────────────────────────────
+// Les champs de ces quatre tables suivent les conventions de Better Auth 1.7.
+// `isAdmin` et `archivedAt` sont des champs supplémentaires déclarés dans auth.ts.
+
+model User {
+  id            String    @id
+  name          String
+  email         String    @unique
+  emailVerified Boolean   @default(false)
+  image         String?   @db.Text
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  isAdmin       Boolean   @default(false)
+  // Un compte archivé ne peut plus se connecter. Il reste pour l'historique des éditions.
+  archivedAt    DateTime?
+
+  sessions           Session[]
+  accounts           Account[]
+  affectations       Affectation[]           @relation("AffectationUtilisateur")
+  affectationsCreees Affectation[]           @relation("AffectationAuteur")
+  tachesCreees       Tache[]                 @relation("TacheAuteur")
+  tachesCloturees    Tache[]                 @relation("TacheCloture")
+  tachesRealisees    Tache[]                 @relation("TacheRealisation")
+  versionsFiches     FicheVersion[]
+  droitsRedaction    DroitRedaction[]        @relation("DroitRedactionPersonne")
+  droitsAccordes     DroitRedaction[]        @relation("DroitRedactionAuteur")
+  notifications      Notification[]          @relation("NotificationDestinataire")
+  preferences        PreferenceNotification?
+  assignations       TacheAssignation[]
+  activites          Activite[]              @relation("ActiviteActeur")
+  souhaits           Souhait[]
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?  @db.Text
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?   @db.Text
+  refreshToken          String?   @db.Text
+  idToken               String?   @db.Text
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?   @db.Text
+  password              String?   @db.Text
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String   @db.Text
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+model RateLimit {
+  id          String @id
+  key         String @unique
+  count       Int
+  lastRequest BigInt
+}
+
+// ── Organisation ─────────────────────────────────────────────────────────────
+
+enum StatutEdition {
+  PREPARATION
+  EN_COURS
+  ARCHIVEE
+}
+
+// Une année du tournoi. Ses dates servent de référence aux échéances relatives des tâches.
+model Edition {
+  id        String        @id @default(cuid())
+  annee     Int           @unique
+  nom       String
+  debut     DateTime      @db.Date
+  fin       DateTime      @db.Date
+  statut    StatutEdition @default(PREPARATION)
+  createdAt DateTime      @default(now())
+  updatedAt DateTime      @updatedAt
+
+  affectations Affectation[]
+  taches       Tache[]
+  activites    Activite[]
+  effectifs    EffectifPerimetre[]
+  souhaits     Souhait[]
+}
+
+enum TypePerimetre {
+  SPORT
+  POLE
+}
+
+// Un sport ou un pôle transverse. Il est stable d'une édition à l'autre.
+model Perimetre {
+  id         String        @id @default(cuid())
+  slug       String        @unique
+  nom        String
+  type       TypePerimetre
+  couleur    String?
+  ordre      Int           @default(0)
+  archivedAt DateTime?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+
+  affectations    Affectation[]
+  taches          Tache[]
+  activites       Activite[]
+  fiches          Fiche[]
+  droitsRedaction DroitRedaction[]
+  effectifs       EffectifPerimetre[]
+  souhaits        Souhait[]
+}
+
+// Une personne désignée pour un périmètre et une édition.
+// Les suppressions sont bloquées (Restrict) : l'historique des éditions reste intact.
+model Affectation {
+  id          String   @id @default(cuid())
+  userId      String
+  perimetreId String
+  editionId   String
+  creeParId   String?
+  createdAt   DateTime @default(now())
+
+  user      User      @relation("AffectationUtilisateur", fields: [userId], references: [id], onDelete: Restrict)
+  perimetre Perimetre @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  edition   Edition   @relation(fields: [editionId], references: [id], onDelete: Restrict)
+  creePar   User?     @relation("AffectationAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, perimetreId, editionId])
+  @@index([perimetreId, editionId])
+  @@index([editionId])
+}
+
+// Nombre de référentes et de référents souhaité pour un périmètre et une édition.
+// La valeur par défaut vient de content/orga/perimetres.yaml : l'import d'une édition
+// la crée si elle manque et ne la remplace jamais. Les admins la modifient dans l'app.
+// Réglage sans historique : il suit la suppression du périmètre ou de l'édition (Cascade).
+model EffectifPerimetre {
+  id          String   @id @default(cuid())
+  perimetreId String
+  editionId   String
+  effectif    Int
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  perimetre Perimetre @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  edition   Edition   @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
+  @@unique([perimetreId, editionId])
+  @@index([editionId])
+}
+
+// Intérêt d'une personne pour un périmètre d'une édition, noté par un admin.
+// Un souhait ne donne aucun accès : seule l'affectation ouvre les droits.
+// Il est satisfait quand l'affectation correspondante existe ; l'affectation ne le
+// modifie pas. Visible des admins seulement, jamais exporté dans Git.
+// Cascade : un souhait n'a pas d'historique propre et suit la suppression de ses parents.
+model Souhait {
+  id          String   @id @default(cuid())
+  userId      String
+  perimetreId String
+  editionId   String
+  createdAt   DateTime @default(now())
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  perimetre Perimetre @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  edition   Edition   @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, perimetreId, editionId])
+  @@index([perimetreId, editionId])
+  @@index([editionId])
+}
+
+// ── Tâches ───────────────────────────────────────────────────────────────────
+
+enum StatutTache {
+  A_FAIRE
+  EN_COURS
+  FAITE
+  ABANDONNEE
+}
+
+// Action datée d'un périmètre pour une édition. Une tâche ne se supprime pas :
+// elle s'abandonne, pour garder l'historique.
+model Tache {
+  id            String      @id @default(cuid())
+  editionId     String
+  perimetreId   String
+  titre         String
+  description   String?     @db.Text
+  echeance      DateTime?   @db.Date
+  statut        StatutTache @default(A_FAIRE)
+  // Identifiant du modèle Git d'origine (phase 3), null pour une tâche créée dans l'app.
+  modeleSlug    String?
+  ficheId       String?
+  creeParId     String?
+  // Personne qui a coché la tâche, et personne qui l'a réalisée si elle l'a indiqué.
+  // Ces deux champs ne sont lisibles que par la personne qui a coché et par les admins.
+  termineeLe    DateTime?
+  clotureeParId String?
+  realiseeParId String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  edition       Edition            @relation(fields: [editionId], references: [id], onDelete: Restrict)
+  perimetre     Perimetre          @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  creePar       User?              @relation("TacheAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  clotureePar   User?              @relation("TacheCloture", fields: [clotureeParId], references: [id], onDelete: SetNull)
+  realiseePar   User?              @relation("TacheRealisation", fields: [realiseeParId], references: [id], onDelete: SetNull)
+  fiche         Fiche?             @relation(fields: [ficheId], references: [id], onDelete: SetNull)
+  assignations  TacheAssignation[]
+  activites     Activite[]
+  notifications Notification[]
+
+  @@index([editionId, perimetreId])
+  @@index([editionId, echeance])
+}
+
+model TacheAssignation {
+  id        String   @id @default(cuid())
+  tacheId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  tache Tache @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([tacheId, userId])
+  @@index([userId])
+}
+
+enum TypeActivite {
+  TACHE_CREEE
+  TACHE_MODIFIEE
+  TACHE_ASSIGNEE
+  TACHE_DESASSIGNEE
+  TACHE_STATUT
+  FICHE_CREEE
+  FICHE_MODIFIEE
+}
+
+// Journal : qui a fait quoi, et quand. Il alimentera les notifications (phase 4)
+// et le score (phase 5).
+model Activite {
+  id            String       @id @default(cuid())
+  type          TypeActivite
+  acteurId      String
+  // Nuls pour une action sur une fiche commune, qui n'appartient à aucun périmètre ni édition.
+  editionId     String?
+  perimetreId   String?
+  tacheId       String?
+  ficheId       String?
+  // Pour TACHE_ASSIGNEE et TACHE_DESASSIGNEE : la personne concernée.
+  personneId    String?
+  // Pour TACHE_STATUT : le nouveau statut.
+  statut        StatutTache?
+  realiseeParId String?
+  createdAt     DateTime     @default(now())
+
+  acteur    User       @relation("ActiviteActeur", fields: [acteurId], references: [id], onDelete: Restrict)
+  edition   Edition?   @relation(fields: [editionId], references: [id], onDelete: Restrict)
+  perimetre Perimetre? @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  tache     Tache?     @relation(fields: [tacheId], references: [id], onDelete: SetNull)
+  fiche     Fiche?     @relation(fields: [ficheId], references: [id], onDelete: SetNull)
+
+  @@index([acteurId, createdAt])
+  @@index([editionId, perimetreId, createdAt])
+}
+
+// ── Fiches méthode ───────────────────────────────────────────────────────────
+
+enum SourceFiche {
+  GIT
+  APP
+}
+
+// Fiche « comment faire » d'un périmètre, ou fiche commune (perimetreId null).
+// Son contenu vit dans ses versions ; la fiche pointe vers la version courante.
+model Fiche {
+  id                String    @id @default(cuid())
+  slug              String    @unique
+  perimetreId       String?
+  versionCouranteId String?   @unique
+  archivedAt        DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  perimetre       Perimetre?     @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  versionCourante FicheVersion?  @relation("FicheVersionCourante", fields: [versionCouranteId], references: [id], onDelete: SetNull)
+  versions        FicheVersion[] @relation("FicheVersions")
+  taches          Tache[]
+  activites       Activite[]
+
+  @@index([perimetreId])
+}
+
+// Une version ne se modifie ni ne se supprime. Restaurer une version en crée une nouvelle.
+model FicheVersion {
+  id        String      @id @default(cuid())
+  ficheId   String
+  titre     String
+  contenu   String      @db.MediumText
+  // SHA-256 du titre et du contenu : l'import compare les empreintes.
+  empreinte String      @db.Char(64)
+  source    SourceFiche
+  resume    String?
+  auteurId  String?
+  createdAt DateTime    @default(now())
+
+  fiche         Fiche  @relation("FicheVersions", fields: [ficheId], references: [id], onDelete: Cascade)
+  ficheCourante Fiche? @relation("FicheVersionCourante")
+  auteur        User?  @relation(fields: [auteurId], references: [id], onDelete: SetNull)
+
+  @@index([ficheId, createdAt])
+}
+
+// Droit d'écrire les fiches, accordé par un admin : pour un périmètre, ou pour
+// toutes les fiches (perimetreId null), fiches communes comprises.
+model DroitRedaction {
+  id           String   @id @default(cuid())
+  userId       String
+  perimetreId  String?
+  accordeParId String?
+  createdAt    DateTime @default(now())
+
+  user       User       @relation("DroitRedactionPersonne", fields: [userId], references: [id], onDelete: Cascade)
+  perimetre  Perimetre? @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  accordePar User?      @relation("DroitRedactionAuteur", fields: [accordeParId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+// ── Notifications ────────────────────────────────────────────────────────────
+
+enum TypeNotification {
+  TACHE_CREEE
+  TACHE_MODIFIEE
+  TACHE_ASSIGNEE
+  TACHE_DESASSIGNEE
+  ECHEANCE_PROCHE
+  TACHE_EN_RETARD
+}
+
+// Une notification ne stocke que des identifiants : le texte se compose à la lecture,
+// à partir des titres et des noms à jour.
+model Notification {
+  id          String           @id @default(cuid())
+  userId      String
+  type        TypeNotification
+  acteurId    String?
+  tacheId     String?
+  perimetreId String?
+  // Pour TACHE_ASSIGNEE et TACHE_DESASSIGNEE : la personne concernée.
+  personneId  String?
+  // Pour ECHEANCE_PROCHE : le nombre de jours avant l'échéance.
+  jours       Int?
+  // Empêche de créer deux fois le même rappel (type, tâche, personne, échéance).
+  cle         String?          @unique
+  lueLe       DateTime?
+  // Date d'envoi du mail immédiat, s'il y en a eu un.
+  envoyeeLe   DateTime?
+  // Date d'inclusion dans un résumé par mail.
+  resumeeLe   DateTime?
+  createdAt   DateTime         @default(now())
+
+  user  User   @relation("NotificationDestinataire", fields: [userId], references: [id], onDelete: Cascade)
+  tache Tache? @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+
+  @@index([userId, lueLe, createdAt])
+  @@index([userId, resumeeLe])
+}
+
+enum FrequenceResume {
+  QUOTIDIEN
+  HEBDOMADAIRE
+  AUCUN
+}
+
+// Préférences d'une personne. Sans ligne, les valeurs par défaut s'appliquent.
+model PreferenceNotification {
+  userId           String          @id
+  frequenceResume  FrequenceResume @default(HEBDOMADAIRE)
+  // Mail immédiat quand une autre personne modifie une de vos tâches.
+  mailModification Boolean         @default(true)
+  // Mail immédiat pour les échéances à 7 jours, à 1 jour, et les retards.
+  mailEcheance     Boolean         @default(true)
+  dernierResumeLe  DateTime?
+  updatedAt        DateTime        @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}

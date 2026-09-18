@@ -1,0 +1,70 @@
+# Dépendances
+node_modules/
+.pnp.*
+
+# Yarn
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+
+# Builds
+dist/
+dist-*/
+*.tsbuildinfo
+.eslintcache
+
+# Code généré (régénérable : yarn generate)
+packages/database/src/generated/
+
+# Environnement
+.env
+.env.*
+!.env.example
+
+# Données : aucune sauvegarde ni aucun export ne vit dans Git
+packages/database/sauvegardes/
+*.sql.gz
+/exports
+
+# Tests
+coverage/
+
+# Système
+.DS_Store
+Thumbs.db
+*.log
+
+# Éditeurs et IDE, propres au poste
+.vscode/
+.idea/
+.fleet/
+.zed/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+.history/
+
+# Assistants et agents d'IA, propres au poste
+.claude/
+CLAUDE.md
+AGENTS.md
+GEMINI.md
+.cursor/
+.cursorrules
+.cursorignore
+.windsurf/
+.windsurfrules
+.aider*
+.codex/
+.copilot/
+.github/copilot-instructions.md
+.continue/
+.cline/
+.clinerules
+.roo/
+.kiro/
+.junie/
+.trae/

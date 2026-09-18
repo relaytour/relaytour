@@ -1,0 +1,18 @@
+Relaytour
+
+Échéances de vos tâches
+
+Ces tâches vous sont assignées et demandent votre attention :
+
+{{rappels}}
+
+Ouvrir mon espace : {{lienConnexion}}
+
+Vous pouvez désactiver ces rappels dans vos préférences : {{lienPreferences}}
+
+--
+Vous recevez ce message parce que votre adresse est enregistrée dans un espace
+organisateur Relaytour. Pour toute question, répondez à ce mail.
+
+Relaytour, logiciel libre pour les organisations bénévoles.
+https://github.com/relaytour/relaytour

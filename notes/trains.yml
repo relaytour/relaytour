@@ -1,0 +1,17 @@
+# Les noms d'affiche des trains de version, écrits à la main.
+#
+# « 0.1 » ne dit rien, « Espace organisateur » dit tout : un train sans nom est un
+# changelog que personne ne lit. `versionner promouvoir` REFUSE une version
+# mineure dont le train n'a pas de nom ici — c'est un acte produit, il se
+# demande à un humain.
+#
+# Aucune clé tant qu'aucune version n'est sortie. Ne PAS écrire `serveur: {}`
+# pour « faire propre » : l'analyseur refuse le style de flux.
+#
+# La forme, une fois qu'il y aura une sortie :
+#
+# serveur:
+#   "0.1":
+#     nom: Premiers pas
+#     prerelease: true
+#     resumeCorrectifs: …

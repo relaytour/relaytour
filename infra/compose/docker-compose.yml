@@ -1,0 +1,150 @@
+# Pile Relaytour du déploiement de référence : une installation, un .env. Voir infra/README.md.
+# Pour adapter cette pile à votre hébergement, ajoutez un fichier de surcharge
+# (docker compose -f docker-compose.yml -f compose.local.yml …) plutôt que de modifier celui-ci.
+#
+# Tous les ports sont publiés sur 127.0.0.1 : les règles NAT de Docker contournent ufw.
+# Seul Caddy, sur l'hôte, écoute sur 80 et 443.
+
+x-journal: &journal
+  driver: json-file
+  options:
+    max-size: 10m
+    max-file: '3'
+
+x-environnement-app: &environnement-app
+  NODE_ENV: production
+  APP_ENV: '${APP_ENV:?requis}'
+  DATABASE_URL: '${DATABASE_URL:?requis}'
+  BETTER_AUTH_SECRET: '${BETTER_AUTH_SECRET:?requis}'
+  REDIS_URL: redis://cache:6379
+  CORS_ORIGIN: '${CORS_ORIGIN:?requis}'
+  ORIGINE_ORGA: '${ORIGINE_ORGA:-}'
+  LOG_LEVEL: '${LOG_LEVEL:-}'
+  ORGANISATION_NOM: '${ORGANISATION_NOM:-}'
+  DOMAINES_COURRIEL_AUTORISES: '${DOMAINES_COURRIEL_AUTORISES:-}'
+  CONTACT_RECRUTEMENT: '${CONTACT_RECRUTEMENT:-}'
+  PAGE_EQUIPE: '${PAGE_EQUIPE:-}'
+
+services:
+  db:
+    image: mariadb:11.8
+    restart: unless-stopped
+    logging: *journal
+    environment:
+      MARIADB_ROOT_PASSWORD: '${MARIADB_ROOT_PASSWORD:?requis}'
+      MARIADB_DATABASE: '${MARIADB_DATABASE:?requis}'
+      MARIADB_USER: '${MARIADB_USER:?requis}'
+      MARIADB_PASSWORD: '${MARIADB_PASSWORD:?requis}'
+    ports:
+      - '127.0.0.1:${MARIADB_PORT:?requis}:3306'
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: ['CMD', 'healthcheck.sh', '--connect', '--innodb_initialized']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  # Valkey (BSD) remplace Redis, dont la licence n'est plus libre depuis la version 7.4.
+  cache:
+    image: valkey/valkey:8-alpine
+    restart: unless-stopped
+    logging: *journal
+    command:
+      [
+        'valkey-server',
+        '--appendonly',
+        'yes',
+        '--maxmemory-policy',
+        'noeviction',
+      ]
+    ports:
+      - '127.0.0.1:${REDIS_PORT:?requis}:6379'
+    volumes:
+      - cachedata:/data
+    healthcheck:
+      test: ['CMD', 'valkey-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  # Recette seulement : le profil `courriel` n'est jamais activé en production.
+  mailpit:
+    image: axllent/mailpit:v1.27
+    profiles: ['courriel']
+    restart: unless-stopped
+    logging: *journal
+    environment:
+      MP_SMTP_AUTH_ACCEPT_ANY: '1'
+      MP_SMTP_AUTH_ALLOW_INSECURE: '1'
+      MP_MAX_MESSAGES: '500'
+      MP_DATABASE: /data/mailpit.db
+    volumes:
+      - mailpitdata:/data
+    ports:
+      - '127.0.0.1:${MAILPIT_WEB_PORT:-4465}:8025'
+
+  migrate:
+    image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}-migrate'
+    restart: 'no'
+    logging: *journal
+    environment:
+      DATABASE_URL: '${DATABASE_URL:?requis}'
+    depends_on:
+      db:
+        condition: service_healthy
+
+  server:
+    image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}'
+    restart: unless-stopped
+    init: true
+    logging: *journal
+    environment:
+      <<: *environnement-app
+      PORT: 4400
+    ports:
+      - '127.0.0.1:${API_PORT:?requis}:4400'
+    stop_grace_period: 20s
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+
+  worker:
+    image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}'
+    command: ['node', '--enable-source-maps', 'dist/worker.js']
+    restart: unless-stopped
+    init: true
+    logging: *journal
+    environment:
+      <<: *environnement-app
+      COURRIEL_SMTP_HOTE: '${COURRIEL_SMTP_HOTE:-}'
+      COURRIEL_SMTP_PORT: '${COURRIEL_SMTP_PORT:-465}'
+      COURRIEL_SMTP_UTILISATEUR: '${COURRIEL_SMTP_UTILISATEUR:-}'
+      COURRIEL_SMTP_MOT_DE_PASSE: '${COURRIEL_SMTP_MOT_DE_PASSE:-}'
+      COURRIEL_EXPEDITEUR: '${COURRIEL_EXPEDITEUR:-}'
+      COURRIEL_DELIVRABILITE: '${COURRIEL_DELIVRABILITE:-}'
+    healthcheck:
+      test:
+        - CMD
+        - node
+        - -e
+        - "fetch('http://127.0.0.1:4401').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+    stop_grace_period: 20s
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_healthy
+
+volumes:
+  dbdata:
+  cachedata:
+  mailpitdata:

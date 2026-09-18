@@ -1,0 +1,13 @@
+<mj-section padding="24px 0 8px">
+  <mj-column>
+    <mj-divider border-width="1px" border-color="#C9D3E6" padding="0 0 16px" />
+    <mj-text font-size="12px" line-height="18px" color="#4A5A7A" padding="0 0 10px">
+      Vous recevez ce message parce que votre adresse est enregistrée dans un
+      espace organisateur Relaytour. Pour toute question, répondez à ce mail.
+    </mj-text>
+    <mj-text font-size="11px" line-height="17px" color="#6B7A96" padding="0">
+      Relaytour, logiciel libre pour les organisations bénévoles.<br />
+      <a href="https://github.com/relaytour/relaytour" style="color:#6B7A96">github.com/relaytour/relaytour</a>
+    </mj-text>
+  </mj-column>
+</mj-section>

@@ -1,0 +1,36 @@
+{
+  "name": "@relaytour/database",
+  "private": true,
+  "license": "AGPL-3.0-only",
+  "version": "0.1.0",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "docker": "docker compose --env-file .env up -d --wait",
+    "docker:down": "docker compose --env-file .env down",
+    "generate": "prisma generate",
+    "migrate-dev": "prisma migrate dev",
+    "migrate-deploy": "prisma migrate deploy",
+    "reset": "prisma migrate reset",
+    "seed": "prisma db seed",
+    "studio": "prisma studio --port 5544",
+    "typecheck": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "tsx prisma/seed.ts"
+  },
+  "dependencies": {
+    "@prisma/client": "^6.19.0"
+  },
+  "devDependencies": {
+    "@pothos/core": "^4.13.0",
+    "@pothos/plugin-prisma": "^4.14.0",
+    "@types/node": "^24.13.0",
+    "graphql": "^16.14.0",
+    "prisma": "^6.19.0",
+    "tsx": "^4.23.0",
+    "typescript": "~5.9.0"
+  }
+}

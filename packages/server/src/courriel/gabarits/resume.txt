@@ -1,0 +1,24 @@
+Relaytour
+
+Bonjour {{nom}},
+
+Voici l’activité de vos périmètres {{periode}}.
+
+Activité non lue
+
+{{activite}}
+
+Vos échéances des 14 prochains jours
+
+{{echeances}}
+
+Ouvrir mon espace : {{lienConnexion}}
+
+Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences : {{lienPreferences}}
+
+--
+Vous recevez ce message parce que votre adresse est enregistrée dans un espace
+organisateur Relaytour. Pour toute question, répondez à ce mail.
+
+Relaytour, logiciel libre pour les organisations bénévoles.
+https://github.com/relaytour/relaytour

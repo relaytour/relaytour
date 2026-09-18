@@ -1,0 +1,355 @@
+import { randomUUID } from 'node:crypto'
+import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import path from 'node:path'
+
+import { ApolloServer } from '@apollo/server'
+import { prisma } from '@relaytour/database'
+import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+
+import { buildContext, type AppContext } from '../context.ts'
+import { exporterFiches } from '../orga/exporter.ts'
+import { importerModeles } from '../orga/importer.ts'
+import { lireModeles } from '../orga/modeles.ts'
+
+import { schema } from './index.ts'
+
+const s = randomUUID().slice(0, 8)
+const apollo = new ApolloServer<AppContext>({ schema })
+const ids = { admin: '', redactrice: '', referent: '', autre: '', edition: '' }
+const annee = 2900 + Math.floor(Math.random() * 90)
+const racine = mkdtempSync(path.join(tmpdir(), 'relaytour-import-'))
+
+function ecrire(chemin: string, contenu: string) {
+  mkdirSync(path.dirname(path.join(racine, chemin)), { recursive: true })
+  writeFileSync(path.join(racine, chemin), contenu)
+}
+
+function ecrirePerimetres(effectifs: { natation?: number; basket?: number }) {
+  const ligne = (effectif: number | undefined) =>
+    effectif === undefined ? '' : `    effectif: ${effectif}\n`
+  ecrire(
+    'perimetres.yaml',
+    `perimetres:\n  - slug: natation-${s}\n    nom: Natation\n    type: SPORT\n${ligne(effectifs.natation)}  - slug: basket-${s}\n    nom: Basket\n    type: SPORT\n${ligne(effectifs.basket)}`
+  )
+}
+
+async function executer(
+  userId: string,
+  query: string,
+  variables: Record<string, unknown> = {}
+) {
+  const r = await apollo.executeOperation(
+    { query, variables },
+    { contextValue: await buildContext('127.0.0.1', userId) }
+  )
+  if (r.body.kind !== 'single')
+    throw new Error('Réponse incrémentale inattendue.')
+  return r.body.singleResult
+}
+const code = (r: Awaited<ReturnType<typeof executer>>) =>
+  r.errors?.[0]?.extensions?.code
+
+beforeAll(async () => {
+  await apollo.start()
+  for (const [cle, estAdmin] of [
+    ['admin', true],
+    ['redactrice', false],
+    ['referent', false],
+    ['autre', false],
+  ] as const) {
+    ids[cle] = randomUUID()
+    await prisma.user.create({
+      data: {
+        id: ids[cle],
+        email: `${cle}-${s}@exemple.fr`,
+        name: cle,
+        isAdmin: estAdmin,
+      },
+    })
+  }
+  ids.edition = (
+    await prisma.edition.create({
+      data: {
+        annee,
+        nom: `Essai ${s}`,
+        debut: new Date('2027-08-27'),
+        fin: new Date('2027-08-29'),
+      },
+    })
+  ).id
+
+  ecrirePerimetres({ natation: 2 })
+  ecrire(
+    `fiches/natation-${s}/piscine-${s}.md`,
+    `---\nslug: piscine-${s}\ntitre: Réserver la piscine\n---\n\n## Objectif\n\nRéserver.\n`
+  )
+  ecrire(
+    `fiches/communes/accueil-${s}.md`,
+    `---\nslug: accueil-${s}\ntitre: Accueillir\n---\n\n## Objectif\n\nAccueillir.\n`
+  )
+  ecrire(
+    `taches/natation-${s}.yaml`,
+    `taches:\n  - modele: piscine\n    titre: Réserver les lignes\n    echeance: J-10\n    fiche: piscine-${s}\n`
+  )
+})
+
+afterAll(async () => {
+  const perimetres = await prisma.perimetre.findMany({
+    where: { slug: { endsWith: `-${s}` } },
+  })
+  const pids = perimetres.map(p => p.id)
+  await prisma.tache.deleteMany({ where: { editionId: ids.edition } })
+  await prisma.effectifPerimetre.deleteMany({
+    where: { OR: [{ editionId: ids.edition }, { perimetreId: { in: pids } }] },
+  })
+  await prisma.activite.deleteMany({
+    where: { acteurId: { in: Object.values(ids) } },
+  })
+  await prisma.affectation.deleteMany({ where: { editionId: ids.edition } })
+  await prisma.fiche.updateMany({
+    where: { slug: { endsWith: `-${s}` } },
+    data: { versionCouranteId: null },
+  })
+  await prisma.fiche.deleteMany({ where: { slug: { endsWith: `-${s}` } } })
+  await prisma.droitRedaction.deleteMany({
+    where: { perimetreId: { in: pids } },
+  })
+  await prisma.droitRedaction.deleteMany({
+    where: { userId: { in: Object.values(ids) } },
+  })
+  await prisma.perimetre.deleteMany({ where: { id: { in: pids } } })
+  await prisma.edition.delete({ where: { id: ids.edition } })
+  await prisma.user.deleteMany({
+    where: { email: { endsWith: `-${s}@exemple.fr` } },
+  })
+  await apollo.stop()
+  await prisma.$disconnect()
+})
+
+describe('import des modèles', () => {
+  it('ne touche à rien en simulation', async () => {
+    const rapport = await importerModeles(prisma, lireModeles(racine), {
+      annee,
+      simulation: true,
+    })
+    expect(rapport.fiches.creees).toHaveLength(2)
+    expect(rapport.effectifs.crees).toEqual([`natation-${s} (2)`])
+    expect(
+      await prisma.fiche.count({ where: { slug: { endsWith: `-${s}` } } })
+    ).toBe(0)
+    expect(
+      await prisma.effectifPerimetre.count({
+        where: { editionId: ids.edition },
+      })
+    ).toBe(0)
+  })
+
+  it('crée périmètres, fiches et tâches, avec l’échéance relative', async () => {
+    const rapport = await importerModeles(prisma, lireModeles(racine), {
+      annee,
+    })
+    expect(rapport.perimetres.crees.sort()).toEqual([
+      `basket-${s}`,
+      `natation-${s}`,
+    ])
+    const tache = await prisma.tache.findFirstOrThrow({
+      where: { editionId: ids.edition, modeleSlug: 'piscine' },
+      include: { fiche: true },
+    })
+    expect(tache.echeance?.toISOString().slice(0, 10)).toBe('2027-08-17')
+    expect(tache.fiche?.slug).toBe(`piscine-${s}`)
+    const effectifs = await prisma.effectifPerimetre.findMany({
+      where: { editionId: ids.edition },
+      include: { perimetre: { select: { slug: true } } },
+    })
+    expect(effectifs.map(e => [e.perimetre.slug, e.effectif])).toEqual([
+      [`natation-${s}`, 2],
+    ])
+  })
+
+  it('ne recrée rien au second import', async () => {
+    const rapport = await importerModeles(prisma, lireModeles(racine), {
+      annee,
+    })
+    expect(rapport.fiches.inchangees).toHaveLength(2)
+    expect(rapport.effectifs).toEqual({
+      crees: [],
+      dejaPresents: [`natation-${s}`],
+    })
+    expect(rapport.taches.dejaPresentes).toEqual([`natation-${s}/piscine`])
+  })
+
+  it('ne remplace pas un effectif modifié dans l’application', async () => {
+    // L'admin passe l'effectif à 4, puis le dépôt indique 3.
+    await prisma.effectifPerimetre.updateMany({
+      where: { editionId: ids.edition },
+      data: { effectif: 4 },
+    })
+    ecrirePerimetres({ natation: 3 })
+    const rapport = await importerModeles(prisma, lireModeles(racine), {
+      annee,
+    })
+    expect(rapport.effectifs.dejaPresents).toEqual([`natation-${s}`])
+    const effectif = await prisma.effectifPerimetre.findFirstOrThrow({
+      where: { editionId: ids.edition },
+    })
+    expect(effectif.effectif).toBe(4)
+  })
+
+  it('ne crée aucun effectif sans édition', async () => {
+    ecrirePerimetres({ natation: 3, basket: 1 })
+    const rapport = await importerModeles(prisma, lireModeles(racine))
+    expect(rapport.effectifs).toEqual({ crees: [], dejaPresents: [] })
+    expect(
+      await prisma.effectifPerimetre.count({
+        where: { perimetre: { slug: `basket-${s}` } },
+      })
+    ).toBe(0)
+  })
+
+  it('ajoute une version quand le dépôt change', async () => {
+    ecrire(
+      `fiches/communes/accueil-${s}.md`,
+      `---\nslug: accueil-${s}\ntitre: Accueillir\n---\n\n## Objectif\n\nAccueillir chaque personne.\n`
+    )
+    const rapport = await importerModeles(prisma, lireModeles(racine))
+    expect(rapport.fiches.nouvellesVersions).toEqual([`accueil-${s}`])
+  })
+})
+
+describe('droits sur les fiches', () => {
+  const MODIFIER = `mutation ($id: ID!, $c: String!) { modifierFiche(id: $id, titre: "Réserver la piscine", contenu: $c) { id source } }`
+  let piscine = ''
+  let accueil = ''
+  let natation = ''
+
+  beforeAll(async () => {
+    piscine = (
+      await prisma.fiche.findUniqueOrThrow({ where: { slug: `piscine-${s}` } })
+    ).id
+    accueil = (
+      await prisma.fiche.findUniqueOrThrow({ where: { slug: `accueil-${s}` } })
+    ).id
+    natation = (
+      await prisma.perimetre.findUniqueOrThrow({
+        where: { slug: `natation-${s}` },
+      })
+    ).id
+    await prisma.affectation.createMany({
+      data: [
+        {
+          userId: ids.redactrice,
+          perimetreId: natation,
+          editionId: ids.edition,
+        },
+        { userId: ids.referent, perimetreId: natation, editionId: ids.edition },
+      ],
+    })
+    await prisma.droitRedaction.create({
+      data: { userId: ids.redactrice, perimetreId: natation },
+    })
+  })
+
+  it('refuse la lecture d’une fiche de périmètre à une personne non affectée', async () => {
+    const r = await executer(
+      ids.autre,
+      `query ($s: String!) { fiche(slug: $s) { contenu } }`,
+      { s: `piscine-${s}` }
+    )
+    expect(code(r)).toBe('FORBIDDEN')
+  })
+
+  it('ouvre les fiches communes à toute personne connectée', async () => {
+    const r = await executer(
+      ids.autre,
+      `query ($s: String!) { fiche(slug: $s) { titre } }`,
+      { s: `accueil-${s}` }
+    )
+    expect(r.errors).toBeUndefined()
+  })
+
+  it('refuse la modification à un référent sans droit de rédaction', async () => {
+    expect(
+      code(
+        await executer(ids.referent, MODIFIER, {
+          id: piscine,
+          c: 'Autre texte',
+        })
+      )
+    ).toBe('FORBIDDEN')
+  })
+
+  it('refuse une fiche commune à une rédactrice limitée à son périmètre', async () => {
+    expect(
+      code(
+        await executer(ids.redactrice, MODIFIER, {
+          id: accueil,
+          c: 'Autre texte',
+        })
+      )
+    ).toBe('FORBIDDEN')
+  })
+
+  it('refuse l’historique à une rédactrice', async () => {
+    const r = await executer(
+      ids.redactrice,
+      `query ($s: String!) { fiche(slug: $s) { versions { id } } }`,
+      {
+        s: `piscine-${s}`,
+      }
+    )
+    expect(code(r)).toBe('FORBIDDEN')
+  })
+
+  it('crée une version APP, puis l’import signale le conflit sans remplacer', async () => {
+    const r = await executer(ids.redactrice, MODIFIER, {
+      id: piscine,
+      c: '## Objectif\n\nRéserver tôt.',
+    })
+    expect(r.errors).toBeUndefined()
+    ecrire(
+      `fiches/natation-${s}/piscine-${s}.md`,
+      `---\nslug: piscine-${s}\ntitre: Réserver la piscine\n---\n\n## Objectif\n\nVersion du dépôt.\n`
+    )
+    const rapport = await importerModeles(prisma, lireModeles(racine))
+    expect(rapport.fiches.conflits).toEqual([`piscine-${s}`])
+    const fiche = await prisma.fiche.findUniqueOrThrow({
+      where: { id: piscine },
+      include: { versionCourante: true },
+    })
+    expect(fiche.versionCourante?.contenu).toBe(
+      '## Objectif\n\nRéserver tôt.\n'
+    )
+  })
+
+  it('restaure une version en créant une nouvelle version', async () => {
+    const versions = await prisma.ficheVersion.findMany({
+      where: { ficheId: piscine },
+      orderBy: { createdAt: 'asc' },
+    })
+    const r = await executer(
+      ids.admin,
+      `mutation ($v: ID!) { restaurerVersionFiche(versionId: $v) { contenu } }`,
+      {
+        v: versions[0]!.id,
+      }
+    )
+    expect(r.errors).toBeUndefined()
+    expect(
+      await prisma.ficheVersion.count({ where: { ficheId: piscine } })
+    ).toBe(versions.length + 1)
+  })
+
+  it('refuse d’exporter une fiche qui contient des données personnelles', async () => {
+    await executer(ids.redactrice, MODIFIER, {
+      id: piscine,
+      c: 'Appeler le 06 12 34 56 78.',
+    })
+    const sortie = mkdtempSync(path.join(tmpdir(), 'relaytour-export-'))
+    const rapport = await exporterFiches(prisma, sortie)
+    expect(rapport.refusees.map(r => r.fichier)).toContain(
+      path.join('fiches', `natation-${s}`, `piscine-${s}.md`)
+    )
+  })
+})

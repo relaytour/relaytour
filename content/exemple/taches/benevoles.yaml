@@ -1,0 +1,43 @@
+# Tâches types du pôle Bénévoles.
+# Échéances comptées depuis le premier jour de l'édition.
+taches:
+  - modele: recueillir-les-besoins-en-benevoles
+    titre: Recueillir les besoins en bénévoles de chaque sport
+    description: >-
+      Le pôle recueille les besoins de chaque sport et de chaque pôle, par site et par créneau.
+      Il rassemble ces besoins dans un tableau unique.
+    echeance: J-150
+    fiche: planifier-les-creneaux
+  - modele: lancer-l-appel-aux-benevoles
+    titre: Lancer l'appel aux bénévoles
+    description: >-
+      Le pôle diffuse l'appel avec le pôle Communication.
+      Les bénévoles s'inscrivent dans un outil de l'association.
+    echeance: J-120
+    fiche: planifier-les-creneaux
+  - modele: planifier-les-creneaux-des-benevoles
+    titre: Planifier les créneaux des bénévoles
+    description: >-
+      Le pôle remplit le tableau de présence par site et par créneau.
+      Il signale les créneaux vides aux sports et aux pôles concernés.
+    echeance: J-60
+    fiche: planifier-les-creneaux
+  - modele: confirmer-la-presence-des-benevoles
+    titre: Confirmer la présence de chaque bénévole
+    description: >-
+      Le pôle demande à chaque bénévole de confirmer ses créneaux.
+      Il comble les absences avec une réserve de personnes disponibles.
+    echeance: J-21
+    fiche: planifier-les-creneaux
+  - modele: envoyer-le-planning-aux-benevoles
+    titre: Envoyer le planning et les consignes aux bénévoles
+    description: >-
+      Le pôle envoie à chaque bénévole ses créneaux, son lieu et son heure d'arrivée.
+    echeance: J-10
+    fiche: planifier-les-creneaux
+  - modele: remercier-les-benevoles
+    titre: Remercier les bénévoles
+    description: >-
+      Le pôle envoie un message de remerciement à chaque bénévole et recueille les retours.
+      Il transmet la synthèse au pôle Coordination pour le bilan.
+    echeance: J+14

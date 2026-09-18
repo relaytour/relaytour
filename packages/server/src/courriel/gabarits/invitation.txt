@@ -1,0 +1,18 @@
+Relaytour
+
+Bonjour {{nom}},
+
+L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez
+vos périmètres, vos tâches et les fiches méthode des éditions précédentes.
+
+L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre
+adresse et vous recevez un code par mail.
+
+Se connecter : {{lienConnexion}}
+
+--
+Vous recevez ce message parce que votre adresse est enregistrée dans un espace
+organisateur Relaytour. Pour toute question, répondez à ce mail.
+
+Relaytour, logiciel libre pour les organisations bénévoles.
+https://github.com/relaytour/relaytour

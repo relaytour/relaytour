@@ -1,0 +1,17 @@
+Relaytour
+
+Une de vos tâches a été modifiée
+
+{{acteur}} a modifié la tâche « {{titre}} » du périmètre {{perimetre}}.
+{{changement}}
+
+Vous recevez ce message parce que cette tâche vous est assignée.
+
+Voir le périmètre : {{lienPerimetre}}
+
+--
+Vous recevez ce message parce que votre adresse est enregistrée dans un espace
+organisateur Relaytour. Pour toute question, répondez à ce mail.
+
+Relaytour, logiciel libre pour les organisations bénévoles.
+https://github.com/relaytour/relaytour

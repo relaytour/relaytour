@@ -1,0 +1,46 @@
+# Périmètres des Rencontres de la Vallée : les sports et les pôles transverses.
+# Le slug ne change jamais : il relie les fiches, les tâches types et l'historique.
+
+perimetres:
+  - slug: football
+    nom: Football
+    type: SPORT
+    couleur: '#8FC9B7'
+    ordre: 1
+    effectif: 2
+  - slug: volley
+    nom: Volley
+    type: SPORT
+    couleur: '#F32988'
+    ordre: 2
+    effectif: 2
+  - slug: course
+    nom: Course à pied
+    type: SPORT
+    couleur: '#FB8B36'
+    ordre: 3
+    effectif: 2
+  - slug: coordination
+    nom: Coordination
+    type: POLE
+    couleur: '#2F6B4F'
+    ordre: 10
+    effectif: 2
+  - slug: benevoles
+    nom: Bénévoles
+    type: POLE
+    couleur: '#FC685F'
+    ordre: 11
+    effectif: 2
+  - slug: logistique
+    nom: Logistique
+    type: POLE
+    couleur: '#6F4AA3'
+    ordre: 12
+    effectif: 1
+  - slug: communication
+    nom: Communication
+    type: POLE
+    couleur: '#02ADB8'
+    ordre: 13
+    effectif: 1

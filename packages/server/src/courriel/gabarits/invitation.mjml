@@ -1,0 +1,37 @@
+<mjml>
+  <mj-head>
+    <mj-title>Votre accès à l’espace organisateur</mj-title>
+    <mj-preview>L’équipe d’organisation vous a ouvert un accès à l’espace organisateur.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Quicksand, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#2F6B4F" padding="0 0 16px" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#F3F5FA" width="480px">
+    <mj-include path="./_entete.mjml" />
+
+    <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
+      <mj-column>
+        <mj-text font-size="20px" line-height="28px" font-weight="700">
+          Bonjour {{nom}},
+        </mj-text>
+        <mj-text>
+          L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez
+          vos périmètres, vos tâches et les fiches méthode des éditions précédentes.
+        </mj-text>
+        <mj-text>
+          L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre
+          adresse et vous recevez un code par mail.
+        </mj-text>
+        <mj-button href="{{lienConnexion}}" background-color="#FC685F" color="#FFFFFF"
+                   border-radius="10px" font-size="15px" font-weight="700"
+                   padding="8px 0 16px" inner-padding="13px 24px">
+          Se connecter
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_pied.mjml" />
+  </mj-body>
+</mjml>

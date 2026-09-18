@@ -1,0 +1,122 @@
+name: Vérifications
+
+# Un seul job : GitHub facture chaque job arrondi à la minute supérieure.
+# Un contrôle nouveau s'ajoute comme étape, jamais comme job.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_call:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verifier:
+    name: Lint, types, tests, build
+    runs-on: ubuntu-latest
+    # Les brouillons ne consomment pas de CI.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    services:
+      mariadb:
+        image: mariadb:11.8
+        env:
+          MARIADB_DATABASE: relaytour_test
+          MARIADB_ROOT_PASSWORD: test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="healthcheck.sh --connect --innodb_initialized"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=12
+      redis:
+        image: valkey/valkey:8-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="valkey-cli ping"
+          --health-interval=5s
+          --health-timeout=3s
+          --health-retries=10
+    env:
+      DATABASE_URL: mysql://root:test@127.0.0.1:3306/relaytour_test
+      REDIS_URL: redis://127.0.0.1:6379
+      BETTER_AUTH_SECRET: secret-de-la-ci-local-0123456789abcdef
+      PUPPETEER_SKIP_DOWNLOAD: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+
+      - name: Activer Yarn 4
+        run: corepack enable
+
+      - name: Cache Yarn
+        uses: actions/cache@v4
+        with:
+          path: ~/.yarn/berry/cache
+          key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
+          restore-keys: yarn-${{ runner.os }}-
+
+      - name: Installer
+        run: yarn install --immutable
+
+      - name: Générer le client de base
+        run: yarn generate
+
+      - name: Lint
+        run: yarn lint
+
+      - name: Types
+        run: yarn typecheck
+
+      - name: Contrats commités
+        run: |
+          yarn codegen
+          node outils/versionner.mjs valider
+          node outils/versionner.mjs compiler
+          yarn workspace @relaytour/server orga:valider
+          git diff --exit-code \
+            packages/server/schema.graphql \
+            packages/server/src/courriel/gabarits.genere.ts \
+            packages/orga/src/gql \
+            notes/
+
+      - name: Licences des dépendances
+        run: node outils/verifier-licences.mjs
+
+      - name: Rien de privé dans le dépôt
+        run: node outils/verifier-publication.mjs
+
+      - name: Tests unitaires
+        run: yarn test
+
+      - name: Migrations et tests d'intégration
+        run: |
+          yarn workspace @relaytour/database migrate-deploy
+          # La base migrée ne doit pas différer du schéma : sinon une migration manque.
+          yarn workspace @relaytour/database prisma migrate diff \
+            --from-url "$DATABASE_URL" \
+            --to-schema-datamodel prisma/schema.prisma --exit-code \
+            || { echo "::error::schema.prisma diffère des migrations : lancer yarn db:migrate"; exit 1; }
+          yarn workspace @relaytour/server test:integration
+
+      - name: Build du serveur et de l'espace organisateur
+        run: |
+          yarn workspace @relaytour/server build
+          yarn workspace @relaytour/orga build
+
+      - name: Garde-fou — aucune carte ne porte le texte des sources
+        run: |
+          DIST=packages/server/dist
+          [ -d "$DIST" ] || { echo "::error::$DIST absent"; exit 1; }
+          if grep -l '"sourcesContent"' "$DIST"/*.map; then
+            echo "::error::ces cartes portent le texte des sources"
+            exit 1
+          fi
+          echo "✔ aucune carte ne porte le texte des sources"

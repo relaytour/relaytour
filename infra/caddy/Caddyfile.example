@@ -1,0 +1,35 @@
+# Exemple de /etc/caddy/Caddyfile pour une installation (Caddy sur l'hôte).
+# Remplacez les hôtes d'exemple par les vôtres. Caddy obtient et renouvelle les certificats.
+
+(entetes-securite) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options nosniff
+		Referrer-Policy strict-origin-when-cross-origin
+		-Server
+	}
+}
+
+api.exemple.org {
+	import entetes-securite
+	reverse_proxy 127.0.0.1:4400
+}
+
+# L'espace organisateur relaie la connexion et GraphQL vers l'API : le navigateur ne parle
+# qu'à une seule origine, et le cookie de session reste de première partie (ADR 0002).
+orga.exemple.org {
+	@api path /api/auth/* /graphql
+	handle @api {
+		reverse_proxy 127.0.0.1:4400
+	}
+	handle {
+		root * /srv/relaytour/orga
+		encode zstd gzip
+		import entetes-securite
+		header X-Frame-Options DENY
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		try_files {path} /index.html
+		file_server
+	}
+}

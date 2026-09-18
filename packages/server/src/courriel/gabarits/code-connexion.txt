@@ -1,0 +1,19 @@
+Relaytour
+
+Votre code de connexion
+
+Saisissez ce code dans l’espace organisateur. Il est valable {{validite}}.
+
+    {{code}}
+
+Se connecter avec ce code : {{lienConnexion}}
+
+Si vous n’avez pas demandé ce code, ignorez ce message. Personne ne peut se connecter
+sans accès à votre boîte mail.
+
+--
+Vous recevez ce message parce que votre adresse est enregistrée dans un espace
+organisateur Relaytour. Pour toute question, répondez à ce mail.
+
+Relaytour, logiciel libre pour les organisations bénévoles.
+https://github.com/relaytour/relaytour

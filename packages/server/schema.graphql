@@ -1,0 +1,297 @@
+type Affectation {
+  creeLe: DateTime!
+  edition: Edition!
+  id: ID!
+  perimetre: Perimetre!
+  personne: Personne!
+}
+
+type Avancement {
+  aFaire: Int!
+  abandonnees: Int!
+  enCours: Int!
+  enRetard: Int!
+  faites: Int!
+  sansPersonne: Int!
+  total: Int!
+}
+
+type AvancementPerimetre {
+  avancement: Avancement!
+  perimetre: Perimetre!
+}
+
+type BaremeScore {
+  bonusATemps: Int!
+  ficheCreee: Int!
+  ficheModifiee: Int!
+  tacheCreee: Int!
+  tacheRealisee: Int!
+}
+
+"""
+A date string, such as 2007-12-03, compliant with the `full-date` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar Date
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
+"""
+scalar DateTime
+
+type DroitRedaction {
+  accordeLe: DateTime!
+  id: ID!
+  perimetre: Perimetre
+  personne: Personne!
+}
+
+type Edition {
+  annee: Int!
+  debut: Date!
+  fin: Date!
+  id: ID!
+  nom: String!
+  statut: StatutEdition!
+}
+
+enum EtatPostes {
+  COMPLET
+  INCOMPLET
+  SANS_PERSONNE
+}
+
+type Fiche {
+  archive: Boolean!
+  contenu: String!
+  donneesPersonnelles: [String!]!
+  id: ID!
+  modifieeLe: DateTime!
+  modifieePar: String
+  perimetre: Perimetre
+  peutModifier: Boolean!
+  slug: String!
+  source: SourceFiche
+  titre: String!
+  versionCouranteId: ID
+  versions: [FicheVersion!]!
+}
+
+type FicheVersion {
+  auteur: Personne
+  contenu: String!
+  creeLe: DateTime!
+  id: ID!
+  resume: String
+  source: SourceFiche!
+  titre: String!
+}
+
+enum FrequenceResume {
+  AUCUN
+  HEBDOMADAIRE
+  QUOTIDIEN
+}
+
+type LigneClassement {
+  personne: Personne!
+  rang: Int!
+  score: Score!
+}
+
+type Mutation {
+  accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
+  affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
+  archiverFiche(archive: Boolean!, id: ID!): Fiche!
+  archiverPersonne(archive: Boolean!, id: ID!): Personne!
+  assignerTache(assigne: Boolean!, id: ID!, personneId: ID): Tache!
+  changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!): Tache!
+  creerEdition(annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
+  creerFiche(contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
+  creerPerimetre(couleur: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre!): Perimetre!
+  creerTache(description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
+  definirEffectif(editionId: ID!, effectif: Int!, perimetreId: ID!): Int!
+
+  """Remplace l’ensemble des souhaits d’une personne pour une édition."""
+  definirSouhaits(editionId: ID!, perimetreIds: [ID!]!, personneId: ID!): [Souhait!]!
+  inviterPersonne(editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresSouhaites: [ID!]): Personne!
+
+  """Sans identifiants, marque toutes les notifications comme lues."""
+  marquerNotificationsLues(ids: [ID!]): Int!
+  modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
+  modifierFiche(contenu: String!, id: ID!, resume: String, titre: String!): Fiche!
+  modifierPerimetre(archive: Boolean!, couleur: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre!): Perimetre!
+  modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
+  modifierPreferencesNotification(frequenceResume: FrequenceResume!, mailEcheance: Boolean!, mailModification: Boolean!): PreferencesNotification!
+  modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String!): Tache!
+  renvoyerInvitation(id: ID!): Boolean!
+  restaurerVersionFiche(versionId: ID!): Fiche!
+  retirerAffectation(id: ID!): Boolean!
+  retirerDroitRedaction(id: ID!): Boolean!
+  retirerSouhait(id: ID!): Boolean!
+  subscribeNewsletter(email: String!): Boolean!
+}
+
+type Notification {
+  creeLe: DateTime!
+  id: ID!
+  lien: String!
+  lue: Boolean!
+  message: String!
+  type: TypeNotification!
+}
+
+type Perimetre {
+  archive: Boolean!
+  avancement(editionId: ID!): Avancement!
+  couleur: String
+  fiches: [Fiche!]!
+  id: ID!
+  nom: String!
+  ordre: Int!
+  peutModifier(editionId: ID!): Boolean!
+  peutRedigerFiches: Boolean!
+  referents(editionId: ID!): [Personne!]!
+  slug: String!
+  taches(editionId: ID!): [Tache!]!
+  type: TypePerimetre!
+}
+
+type Personne {
+  affectations(editionId: ID): [Affectation!]!
+  archive: Boolean!
+  creeLe: DateTime!
+  email: String!
+  estAdmin: Boolean!
+  id: ID!
+  nom: String!
+  souhaits(editionId: ID): [Souhait!]!
+}
+
+type PostesPerimetre {
+  aPourvoir: Int!
+  affectations: [Affectation!]!
+
+  """
+  Vaut null tant que l’effectif n’a été ni importé ni défini pour cette édition.
+  """
+  effectif: Int
+  etat: EtatPostes!
+  perimetre: Perimetre!
+
+  """
+  Souhaits en attente : la personne n’est pas encore affectée à ce périmètre. Les comptes archivés sont exclus.
+  """
+  souhaits: [Souhait!]!
+}
+
+type PreferencesNotification {
+  frequenceResume: FrequenceResume!
+  mailEcheance: Boolean!
+  mailModification: Boolean!
+}
+
+type Query {
+  affectations(editionId: ID!): [Affectation!]!
+
+  """
+  Message à diffuser pour trouver des référentes et des référents. Vaut null quand aucun périmètre n’est à pourvoir.
+  """
+  appelPostes(editionId: ID!): String
+  avancementGlobal(editionId: ID!): [AvancementPerimetre!]!
+  baremeScore: BaremeScore!
+  classement(editionId: ID!): [LigneClassement!]!
+  droitsRedaction: [DroitRedaction!]!
+  editionCourante: Edition
+  editions: [Edition!]!
+  fiche(slug: String!): Fiche
+  fiches(inclureArchives: Boolean = false): [Fiche!]!
+  health: String!
+  mesPerimetres: [Perimetre!]!
+  mesPreferencesNotification: PreferencesNotification!
+  mesTaches(editionId: ID!): [Tache!]!
+  moi: Personne
+  monScore(editionId: ID!): Score!
+  nombreAbonnesNewsletter: Int!
+  nombreNotificationsNonLues: Int!
+  notifications(limite: Int = 30, nonLuesSeulement: Boolean = false): [Notification!]!
+  perimetre(slug: String!): Perimetre
+  perimetres(inclureArchives: Boolean = false): [Perimetre!]!
+  personnes(inclureArchives: Boolean = false): [Personne!]!
+  peutRedigerFichesCommunes: Boolean!
+  postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
+  retroplanning(editionId: ID!): [Tache!]!
+  tachesAPrendre(editionId: ID!): [Tache!]!
+}
+
+type Score {
+  fichesCreees: Int!
+  fichesModifiees: Int!
+  points: Int!
+  tachesATemps: Int!
+  tachesCreees: Int!
+  tachesRealisees: Int!
+}
+
+type Souhait {
+  creeLe: DateTime!
+  edition: Edition!
+  id: ID!
+  perimetre: Perimetre!
+  personne: Personne!
+
+  """
+  Vaut vrai quand la personne est affectée à ce périmètre pour cette édition.
+  """
+  satisfait: Boolean!
+}
+
+enum SourceFiche {
+  APP
+  GIT
+}
+
+enum StatutEdition {
+  ARCHIVEE
+  EN_COURS
+  PREPARATION
+}
+
+enum StatutTache {
+  ABANDONNEE
+  A_FAIRE
+  EN_COURS
+  FAITE
+}
+
+type Tache {
+  assignes: [Personne!]!
+  clotureePar: Personne
+  creeLe: DateTime!
+  description: String
+  echeance: Date
+  edition: Edition!
+  enRetard: Boolean!
+  fiche: Fiche
+  id: ID!
+  modifieeLe: DateTime!
+  perimetre: Perimetre!
+  realiseePar: Personne
+  statut: StatutTache!
+  termineeLe: DateTime
+  titre: String!
+}
+
+enum TypeNotification {
+  ECHEANCE_PROCHE
+  TACHE_ASSIGNEE
+  TACHE_CREEE
+  TACHE_DESASSIGNEE
+  TACHE_EN_RETARD
+  TACHE_MODIFIEE
+}
+
+enum TypePerimetre {
+  POLE
+  SPORT
+}
