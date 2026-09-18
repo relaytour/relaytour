@@ -43,7 +43,6 @@ jobs:
       DATABASE_URL: mysql://root:test@127.0.0.1:3306/relaytour_test
       REDIS_URL: redis://127.0.0.1:6379
       BETTER_AUTH_SECRET: secret-de-la-ci-local-0123456789abcdef
-      PUPPETEER_SKIP_DOWNLOAD: '1'
     steps:
       - uses: actions/checkout@v4
         with:

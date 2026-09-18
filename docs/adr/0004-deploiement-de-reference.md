@@ -3,7 +3,6 @@
 - **Statut** : acceptée
 - **Date** : 2026-09-15
 - Complétée par l'ADR 0007 : le dossier `infra/` se limite à une installation et à une liste d'étapes ; l'exploitation vit hors du dépôt.
-- Complétée par l'ADR 0007 : le dossier `infra/` se limite à une installation et à une liste d'étapes ; l'exploitation vit hors du dépôt.
 
 ## Contexte
 

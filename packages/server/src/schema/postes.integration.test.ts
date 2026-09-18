@@ -5,6 +5,7 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { env } from '../env.ts'
 
 import { schema } from './index.ts'
 
@@ -326,7 +327,7 @@ describe('postesAPourvoir', () => {
     )
     expect(r.errors).toBeUndefined()
     const appel = (r.data as { appelPostes: string | null }).appelPostes ?? ''
-    expect(appel).toContain(`Relaytour ${annee}`)
+    expect(appel).toContain(`${env.ORGANISATION_NOM} ${annee}`)
     expect(appel).toContain(`- Natation ${s}`)
     expect(appel).toContain(`- Volley ${s}`)
     expect(appel).toContain(`- Communication ${s}`)

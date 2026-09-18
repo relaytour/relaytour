@@ -5,7 +5,7 @@ import { prisma } from '@relaytour/database'
 
 import { exporterFiches } from '../src/orga/exporter.ts'
 
-// Écrit les fiches modifiées dans l'application vers le dossier de contenu (content/exemple par défaut)/fiches.
+// Écrit les fiches modifiées dans l'application vers le sous-dossier fiches/ du dossier de contenu (content/exemple par défaut).
 //   yarn workspace @relaytour/server orga:exporter [--dossier chemin]
 
 const { values } = parseArgs({ options: { dossier: { type: 'string' } } })

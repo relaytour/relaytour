@@ -8,7 +8,7 @@ import { ErreurModeles, lireModeles } from '../src/orga/modeles.ts'
 
 // Importe le dossier de contenu (content/exemple par défaut) en base.
 //   yarn workspace @relaytour/server orga:importer [--edition 2027] [--simulation] [--dossier chemin]
-// Dans le conteneur : node dist/orga-importer.js --dossier /app/le dossier de contenu (content/exemple par défaut) --edition 2027
+// Dans le conteneur : node dist/orga-importer.js --dossier /contenu --edition 2027
 
 const { values } = parseArgs({
   options: {

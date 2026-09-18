@@ -8,8 +8,8 @@ const API = process.env.RELAYTOUR_API ?? 'http://localhost:4400'
 
 export default defineConfig({
   plugins: [react()],
-  // Le site public utilise React 18 à la racine du dépôt : une dépendance remontée
-  // à la racine ne doit jamais charger une seconde copie de React dans cette SPA.
+  // Une dépendance remontée à la racine du monorepo ne doit jamais charger une
+  // seconde copie de React dans cette SPA.
   resolve: { dedupe: ['react', 'react-dom'] },
   server: {
     proxy: {
