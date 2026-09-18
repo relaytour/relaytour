@@ -9,26 +9,27 @@ Ce dossier décrit le déploiement de référence (ADR 0004) : une machine sous 
 | `db` | MariaDB 11.8, publiée sur `127.0.0.1` seulement |
 | `cache` | Valkey 8, file des mails et des rappels |
 | `migrate` | Applique les migrations avant le démarrage de l'API |
+| `orga` | Copie l'espace organisateur (site statique) dans `ORGA_DIR` à chaque démarrage |
 | `server` | API GraphQL, port 4400 sur `127.0.0.1` |
 | `worker` | Mails, rappels et résumés |
 | `mailpit` | Boîte de test, profil `courriel`, pour une recette seulement |
 
-L'espace organisateur est un site statique (`packages/orga/dist`) servi par Caddy, qui relaie `/api/auth/*` et `/graphql` vers l'API.
+L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*` et `/graphql` vers l'API. Aucun outil Node n'est nécessaire sur le serveur.
 
 ## Étapes
 
 1. **Machine.** Un serveur au nom de votre organisation, Debian ou Ubuntu, avec Docker Engine, le plugin Compose et Caddy installés depuis leurs dépôts officiels.
 2. **Durcissement.** Un utilisateur sans sudo pour le déploiement, SSH par clé seulement, un pare-feu qui n'ouvre que SSH, 80 et 443, les mises à jour de sécurité automatiques. Tous les ports Docker sont publiés sur `127.0.0.1` : Caddy seul écoute sur 80 et 443.
 3. **DNS.** Deux hôtes vers la machine : l'API et l'espace organisateur (par exemple `api.exemple.org` et `orga.exemple.org`).
-4. **Dossiers.** `/srv/relaytour` avec `docker-compose.yml` (copié depuis `compose/`), un `.env` créé depuis `compose/.env.example` (droits 640), et `/srv/relaytour/orga` pour les fichiers de l'espace organisateur.
-5. **Image.** `docker login ghcr.io` si l'image est privée, puis `IMAGE_TAG` dans le `.env`. L'image est publiée par le workflow `image.yml` à chaque poussée sur `main`, sous le tag `main` et sous le SHA court du commit.
+4. **Dossiers.** `/srv/relaytour` avec `docker-compose.yml` (copié depuis `compose/`), un `.env` créé depuis `compose/.env.example` (droits 640), et `/srv/relaytour/orga` (`ORGA_DIR`) pour les fichiers de l'espace organisateur.
+5. **Image.** `docker login ghcr.io` si l'image est privée, puis `IMAGE_TAG` dans le `.env`. Le workflow `image.yml` publie trois images à chaque poussée sur `main`, sous le tag `main` et sous le SHA court du commit : l'API et le worker (`<tag>`), les migrations (`<tag>-migrate`) et l'espace organisateur (`<tag>-orga`).
 6. **Mail.** Un fournisseur SMTP et les enregistrements SPF, DKIM et DMARC de votre domaine (voir `docs/courriel.md`). Une fois la pile démarrée, un mail d'essai vérifie la chaîne :
     ```bash
     docker compose --env-file .env exec worker node dist/essai-courriel.js adresse@exemple.org
     ```
 7. **Caddy.** Copier `caddy/Caddyfile.example` dans `/etc/caddy/Caddyfile`, remplacer les hôtes, recharger Caddy.
 8. **Démarrage.** `docker compose --env-file .env up -d`, puis vérifier `https://api.exemple.org/health`.
-9. **Espace organisateur.** Construire `packages/orga` (`yarn workspace @relaytour/orga build`) et copier `dist/` dans `/srv/relaytour/orga`, en envoyant `index.html` en dernier.
+9. **Espace organisateur.** Rien à faire : le service `orga` a déposé les fichiers dans `ORGA_DIR` au démarrage, et Caddy les sert.
 10. **Premier compte admin.**
     ```bash
     docker compose --env-file .env exec server node dist/creer-admin.js adresse@exemple.org "Prénom Nom"
@@ -48,7 +49,7 @@ L'espace organisateur est un site statique (`packages/orga/dist`) servi par Cadd
 
 ## Mettre à jour
 
-Changer `IMAGE_TAG` dans le `.env`, puis `docker compose --env-file .env up -d`. Le service `migrate` applique les migrations, puis l'API redémarre. Reconstruire et recopier l'espace organisateur à chaque mise à jour.
+Changer `IMAGE_TAG` dans le `.env`, puis `docker compose --env-file .env up -d`. Le service `migrate` applique les migrations, le service `orga` dépose la nouvelle version de l'espace organisateur, puis l'API redémarre. Les anciens fichiers `assets/` restent dans `ORGA_DIR` ; un nettoyage périodique du dossier reste à votre charge.
 
 ## Adapter la pile à votre hébergement
 

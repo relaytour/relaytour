@@ -15,7 +15,7 @@ jobs:
     uses: ./.github/workflows/ci.yml
 
   publier:
-    name: Image du serveur
+    name: Images du serveur et de l'espace organisateur
     needs: verifier
     runs-on: ubuntu-latest
     permissions:
@@ -69,4 +69,16 @@ jobs:
           tags: |
             ${{ env.IMAGE_REPO }}:${{ steps.version.outputs.tag }}-migrate
             ${{ env.IMAGE_REPO }}:main-migrate
+          cache-from: type=gha
+
+      - name: Construire et pousser l'image de l'espace organisateur
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: packages/server/Dockerfile
+          target: orga
+          push: true
+          tags: |
+            ${{ env.IMAGE_REPO }}:${{ steps.version.outputs.tag }}-orga
+            ${{ env.IMAGE_REPO }}:main-orga
           cache-from: type=gha

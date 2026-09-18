@@ -1,6 +1,8 @@
 # Image de l'API et du worker Relaytour. Construite depuis la racine du dépôt :
 #   docker build -f packages/server/Dockerfile -t relaytour-server .
 # La cible `migrator` applique les migrations avant le démarrage de l'API.
+# La cible `orga` livre l'espace organisateur (site statique) dans une image minimale
+# qui le copie vers un volume de l'hôte, servi ensuite par Caddy.
 
 FROM node:24-bookworm-slim AS base
 RUN apt-get update \
@@ -49,6 +51,26 @@ RUN node outils/versionner.mjs compiler --sortie /sortie
 FROM build AS migrator
 WORKDIR /app
 CMD ["yarn", "workspace", "@relaytour/database", "migrate-deploy"]
+
+# Espace organisateur : construit avec Vite, sans variable d'environnement, donc un
+# seul build pour toutes les installations.
+FROM deps AS orga-deps
+RUN --mount=type=cache,target=/root/.yarn/berry/cache \
+  yarn workspaces focus @relaytour/orga @relaytour/tokens
+
+FROM orga-deps AS orga-build
+COPY tsconfig.base.json ./
+COPY packages/tokens packages/tokens
+COPY packages/orga   packages/orga
+# Le gabarit d'une fiche est importé tel quel par l'éditeur de fiches.
+COPY content/exemple/modeles/fiche.md content/exemple/modeles/fiche.md
+RUN yarn workspace @relaytour/orga build
+
+FROM alpine:3 AS orga
+COPY --from=orga-build /app/packages/orga/dist /orga
+# Copie les ressources d'abord et index.html en dernier : une page chargée pendant
+# la copie trouve toujours ses ressources.
+CMD ["sh", "-c", "mkdir -p /cible && cd /orga && tar cf - --exclude=./index.html . | tar xf - -C /cible && cp index.html /cible/index.html && echo 'Espace organisateur copié dans /cible.'"]
 
 FROM base AS runtime
 ENV NODE_ENV=production \

@@ -94,6 +94,15 @@ services:
       db:
         condition: service_healthy
 
+  # Copie l'espace organisateur (site statique) dans ORGA_DIR, que Caddy sert sur l'hôte.
+  # Le service s'exécute une fois à chaque `up`, comme migrate.
+  orga:
+    image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}-orga'
+    restart: 'no'
+    logging: *journal
+    volumes:
+      - '${ORGA_DIR:?requis}:/cible'
+
   server:
     image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}'
     restart: unless-stopped
@@ -107,6 +116,8 @@ services:
     stop_grace_period: 20s
     depends_on:
       migrate:
+        condition: service_completed_successfully
+      orga:
         condition: service_completed_successfully
       db:
         condition: service_healthy

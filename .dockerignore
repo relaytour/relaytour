@@ -11,5 +11,3 @@
 .git
 .yarn/cache
 .claude
-packages/orga/src
-packages/orga/public
