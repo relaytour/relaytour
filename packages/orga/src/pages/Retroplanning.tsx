@@ -14,6 +14,7 @@ import {
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
+import PastillePerimetre from '../composants/PastillePerimetre'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import type { RetroplanningQuery, TypePerimetre } from '../gql/graphql'
@@ -106,10 +107,16 @@ export default function Retroplanning() {
         label: groupe.label,
         options: presents
           .filter(p => p.type === groupe.type)
-          .map(p => ({ value: p.id, label: p.nom })),
+          .map(p => ({ value: p.id, label: p.nom, couleur: p.couleur })),
       }))
       .filter(groupe => groupe.options.length > 0)
   }, [toutes])
+
+  const couleurDe = useMemo(
+    () =>
+      new Map((toutes ?? []).map(t => [t.perimetre.id, t.perimetre.couleur])),
+    [toutes]
+  )
 
   const affectes = useMemo(
     () => new Set((moi?.affectations ?? []).map(a => a.perimetre.id)),
@@ -195,6 +202,19 @@ export default function Retroplanning() {
           onChange={setPerimetres}
           options={options}
           optionFilterProp="label"
+          optionRender={option => (
+            <PastillePerimetre
+              nom={String(option.label)}
+              couleur={(option.data as { couleur?: string | null }).couleur}
+            />
+          )}
+          tagRender={({ value, label, closable, onClose }) => (
+            <PastillePerimetre
+              nom={String(label)}
+              couleur={couleurDe.get(String(value))}
+              fermer={closable ? onClose : undefined}
+            />
+          )}
         />
       </div>
 

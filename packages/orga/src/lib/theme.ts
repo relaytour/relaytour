@@ -1,4 +1,10 @@
-import { rayons, rgb, variablesCss, type Theme } from '@relaytour/tokens'
+import {
+  contraste,
+  rayons,
+  rgb,
+  variablesCss,
+  type Theme,
+} from '@relaytour/tokens'
 import type { ThemeConfig } from 'antd'
 
 /**
@@ -95,4 +101,11 @@ export function construireTheme(theme: Theme): ThemeConfig {
       },
     },
   }
+}
+
+/** Le texte le plus lisible sur une couleur pleine : blanc ou noir, au meilleur contraste. */
+export function texteSur(fond: string): string {
+  const blanc = '#FFFFFF'
+  const noir = '#111111'
+  return contraste(blanc, fond) >= contraste(noir, fond) ? blanc : noir
 }
