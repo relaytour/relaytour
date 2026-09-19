@@ -1,11 +1,12 @@
 import SchemaBuilder from '@pothos/core'
+import ComplexityPlugin from '@pothos/plugin-complexity'
 import PrismaPlugin from '@pothos/plugin-prisma'
 import ScopeAuthPlugin from '@pothos/plugin-scope-auth'
 import { getDatamodel, prisma, type PrismaTypes } from '@relaytour/database'
 import { DateResolver, DateTimeResolver } from 'graphql-scalars'
 
 import type { AppContext } from '../context.ts'
-import { accesRefuse } from '../lib/erreurs.ts'
+import { accesRefuse, requeteTropLourde } from '../lib/erreurs.ts'
 
 export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes
@@ -20,7 +21,7 @@ export const builder = new SchemaBuilder<{
     admin: boolean
   }
 }>({
-  plugins: [ScopeAuthPlugin, PrismaPlugin],
+  plugins: [ScopeAuthPlugin, ComplexityPlugin, PrismaPlugin],
   defaultFieldNullability: false,
   prisma: {
     client: prisma,
@@ -32,6 +33,18 @@ export const builder = new SchemaBuilder<{
       admin: ctx.personne?.estAdmin === true,
     }),
     unauthorizedError: () => accesRefuse(),
+  },
+  // Le schéma comporte des cycles (périmètre ↔ tâches, personne → affectations → périmètre).
+  // Ces limites bornent le coût d'une requête imbriquée avant tout résolveur.
+  complexity: {
+    defaultComplexity: 1,
+    defaultListMultiplier: 10,
+    limit: {
+      depth: 8,
+      breadth: 100,
+      complexity: 2_000,
+    },
+    complexityError: (nature, mesure) => requeteTropLourde(nature, mesure),
   },
 })
 

@@ -5,6 +5,18 @@
   "version": "0.3.0",
   "notes": [
     {
+      "id": "2026-09-19-serveur-une-nouvelle-demande-de-code-renvoie-le-code-en-cours",
+      "date": "2026-09-19",
+      "type": "securite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Une nouvelle demande de code renvoie le code en cours",
+        "texte": "Si vous demandez un nouveau code alors que le précédent est encore valable, vous recevez le même code et sa validité repart de 10 minutes. Une personne qui demande des codes sur votre adresse ne peut plus invalider celui que vous attendez. Les codes envoyés avant la mise à jour ne sont plus acceptés : demandez un nouveau code.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-serveur-les-mails-portent-le-nom-et-les-couleurs-de-votre-organisation",
       "date": "2026-09-19",
       "type": "fonctionnalite",
@@ -73,6 +85,18 @@
       "fr": {
         "titre": "La base et le cache de la pile de référence ne publient plus de port",
         "texte": "Dans la pile Compose de référence, MariaDB et Valkey ne sont plus joignables que par les conteneurs de la pile. La file des mails contient des codes de connexion en clair pendant quelques minutes, et un port publié les rendait lisibles par tout processus de la machine.",
+        "migration": null
+      }
+    },
+    {
+      "id": "2026-09-19-serveur-l-api-refuse-les-requetes-trop-profondes",
+      "date": "2026-09-19",
+      "type": "securite",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "L'API refuse les requêtes trop profondes",
+        "texte": "L'API rejette désormais une requête GraphQL trop profonde, trop large ou trop coûteuse avant d'exécuter le moindre résolveur. Le schéma comporte des cycles (périmètre et tâches, personne et affectations) qu'une personne connectée pouvait exploiter pour saturer le serveur avec une requête imbriquée. Les requêtes de l'espace organisateur restent bien en dessous des limites.",
         "migration": null
       }
     },

@@ -2509,6 +2509,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@pothos/plugin-complexity@npm:^4.2.3":
+  version: 4.2.3
+  resolution: "@pothos/plugin-complexity@npm:4.2.3"
+  peerDependencies:
+    "@pothos/core": "*"
+    graphql: ^16.10.0 || ^17.0.0
+  checksum: 10/3687b844a38c43b2490ae818821ed59950239e88b73e24812d9b413248bd2dbb5a41e2d9b461ff8cd0d1b22b640b80f71dcfbc6bd27ffbaaedfc3bdc5c70d5c7
+  languageName: node
+  linkType: hard
+
 "@pothos/plugin-prisma@npm:^4.14.0":
   version: 4.17.0
   resolution: "@pothos/plugin-prisma@npm:4.17.0"
@@ -3394,6 +3404,7 @@ __metadata:
   dependencies:
     "@apollo/server": "npm:^4.12.0"
     "@pothos/core": "npm:^4.13.0"
+    "@pothos/plugin-complexity": "npm:^4.2.3"
     "@pothos/plugin-prisma": "npm:^4.14.0"
     "@pothos/plugin-scope-auth": "npm:^4.2.1"
     "@prisma/client": "npm:^6.19.0"

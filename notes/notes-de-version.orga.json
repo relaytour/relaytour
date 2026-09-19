@@ -5,6 +5,18 @@
   "version": "0.1.0",
   "notes": [
     {
+      "id": "2026-09-19-orga-un-lien-de-connexion-ne-connecte-plus-sans-votre-accord",
+      "date": "2026-09-19",
+      "type": "securite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Un lien de connexion ne connecte plus sans votre accord",
+        "texte": "Le lien du mail de code vous connecte sans clic seulement dans l'onglet où vous avez demandé le code, avec la même adresse. Ouvert ailleurs, il préremplit l'adresse et le code, et vous validez vous-même. Un lien forgé par une autre personne ne peut plus vous connecter à son compte à votre insu.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-orga-les-listes-de-liens-deviennent-des-lignes-cliquables",
       "date": "2026-09-19",
       "type": "fonctionnalite",
@@ -48,7 +60,7 @@
       "etat": "prevu",
       "fr": {
         "titre": "Le lien du mail de code remplit l'adresse et le code",
-        "texte": "Le bouton « Se connecter avec ce code » du mail ouvre l'espace organisateur avec l'adresse et le code déjà remplis, et la connexion part aussitôt. Auparavant, seul le code était rempli, et l'adresse seulement si elle avait été saisie dans le même onglet.",
+        "texte": "Le bouton « Se connecter avec ce code » du mail ouvre l'espace organisateur avec l'adresse et le code déjà remplis. Dans l'onglet où vous avez demandé le code, la connexion part aussitôt. Auparavant, seul le code était rempli, et l'adresse seulement si elle avait été saisie dans le même onglet.",
         "migration": null
       }
     },
