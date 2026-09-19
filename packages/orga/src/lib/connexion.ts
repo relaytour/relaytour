@@ -65,6 +65,25 @@ export function adresseMemorisee(): string {
   return sessionStorage.getItem(CLE_ADRESSE) ?? ''
 }
 
+/**
+ * Donne l'adresse avec laquelle la connexion peut partir sans clic, ou `null`.
+ *
+ * Un lien peut être forgé : une personne qui demande un code sur son propre compte
+ * peut envoyer le lien à une autre et la faire travailler dans ce compte. La
+ * connexion automatique exige donc que l'adresse du lien soit celle saisie dans
+ * cet onglet. Sans adresse dans le lien, l'adresse mémorisée sert. Dans les autres
+ * cas, la personne valide le code elle-même.
+ */
+export function adresseConnexionAutomatique(
+  lien: LienConnexion,
+  memorisee: string
+): string | null {
+  const connue = memorisee.trim().toLowerCase()
+  if (connue === '') return null
+  if (lien.adresse === null) return connue
+  return lien.adresse.trim().toLowerCase() === connue ? connue : null
+}
+
 export interface LienConnexion {
   code: string
   /** L'adresse du compte, quand le lien vient du mail de code. */

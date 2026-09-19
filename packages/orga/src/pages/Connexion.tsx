@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router'
 
 import Marque from '../composants/Marque'
 import {
+  adresseConnexionAutomatique,
   adresseMemorisee,
   demanderCode,
   ErreurConnexion,
@@ -54,15 +55,18 @@ export default function Connexion() {
     }
   }
 
-  // Lien reçu par mail : il porte le code et l'adresse, la connexion est immédiate.
-  // Sans adresse dans le lien, celle saisie dans cet onglet sert ; sinon la personne
-  // saisit son adresse et le code reste prérempli.
+  // Lien reçu par mail : la connexion part sans clic seulement si l'adresse du lien
+  // est celle saisie dans cet onglet pour demander le code (sans adresse dans le
+  // lien, l'adresse mémorisée sert). Sinon, le code et l'adresse restent préremplis
+  // et la personne valide elle-même : un lien forgé par un tiers ne connecte
+  // personne à son insu.
   useEffect(() => {
     if (lienTraite.current) return
     lienTraite.current = true
     const lien = lienUneFois()
-    const adresseConnue = lien?.adresse ?? adresseMemorisee()
-    if (lien !== null && adresseConnue !== '') {
+    if (lien === null) return
+    const adresseConnue = adresseConnexionAutomatique(lien, adresseMemorisee())
+    if (adresseConnue !== null) {
       // Le lien du mail est une source externe : la connexion part au montage, une seule fois.
       // eslint-disable-next-line react-hooks/set-state-in-effect
       void valider(adresseConnue, lien.code)
