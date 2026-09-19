@@ -11,7 +11,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `packages/database` : Prisma 6 sur MariaDB 11.8. Le client généré (`src/generated/`) n'est jamais commité.
 - `infra/` : déploiement de référence minimal (Compose, Caddyfile d'exemple, étapes). L'exploitation réelle vit hors du dépôt (ADR 0007).
 - `outils/verifier-licences.mjs` et `outils/verifier-publication.mjs` : contrôles de CI sur les licences des dépendances et sur l'absence de traces privées.
-- `outils/versionner.mjs` et `notes/` : notes de version.
+- `outils/versionner.mjs` et `notes/` : journal des changements (`noter`, `valider`, `compiler`).
 - `docs/adr/` : décisions d'architecture.
 - `docs/feuille-de-route.md` et `docs/publication.md` : évolutions envisagées, liste de publication.
 
@@ -29,6 +29,7 @@ yarn workspace @relaytour/server test:integration   # base locale, worker arrêt
 yarn workspace @relaytour/server orga:exporter      # reverse les fiches modifiées dans l'application vers le dossier de contenu
 yarn codegen      # contrats commités
 yarn versionner valider
+yarn versionner compiler   # journaux commités
 ```
 
 ## Décisions arrêtées
@@ -59,8 +60,8 @@ Chaque règle vient d'un incident réel ou d'un risque constaté.
 
 1. **Aucune liste de participant·es, d'abonné·es ou de référent·es n'atteint un navigateur sans contrôle d'accès serveur.** Un fichier d'adresses publié par erreur reste accessible tant que personne ne le cherche.
 2. **Aucune donnée personnelle dans Git** (dump SQL, export, CSV), ni dans l'historique. Le contenu d'une organisation n'entre pas non plus dans ce dépôt.
-3. **L'environnement se lit dans `APP_ENV` (`local`, `recette`, `prod`), jamais dans `NODE_ENV`.** Les deux environnements déployés tournent en `NODE_ENV=production`.
-4. **Pas de variable négative ni de booléen pour laisser sortir les mails.** Hors production, `COURRIEL_DELIVRABILITE` est une liste d'adresses. L'ancien `DISABLE_MAIL_CATCH=false` produisait des envois réels.
+3. **L'environnement se lit dans `APP_ENV` (`local`, `prod`), jamais dans `NODE_ENV`.** Toute installation déployée tourne en `NODE_ENV=production`, y compris une installation d'essai.
+4. **Aucune variable ne bascule la sortie des mails.** Le transport se déduit de `APP_ENV` et de `COURRIEL_SMTP_HOTE` : Mailpit sur le poste local, le SMTP renseigné ailleurs, rien sinon. L'ancien `DISABLE_MAIL_CATCH=false` produisait des envois réels.
 5. **Les mails passent par la file BullMQ.** `mettreEnFile` ne lève jamais. La charge utile ne contient ni corps ni jeton, sauf l'exception documentée du code de connexion (ADR 0002).
 6. **Le journal ne contient ni adresse complète, ni code, ni jeton.** Utiliser l'identifiant utilisateur, ou `courrielTronque`.
 7. **Tout port Docker est publié sur `127.0.0.1`.** Les règles NAT de Docker contournent ufw.
@@ -106,7 +107,7 @@ Un seul mot par notion.
 ## Branches et CI
 
 - Tant que le dépôt est privé et que la version minimale n'est pas fixée, le travail se fait sur `main`, et son historique peut être réécrit. L'ouverture publique fige l'historique (`docs/publication.md`). Les PR viendront ensuite : une PR part de sa branche parente réelle et vise `develop`.
-- Avant chaque poussée : `yarn versionner valider`. Un changement visible porte son fragment de note de version.
+- Avant chaque poussée : `yarn versionner valider` puis `yarn versionner compiler`. Un changement visible porte son fragment de note de version (`yarn versionner noter`), avec une audience parmi `organisateurs`, `interne` et `public`.
 - Pousser avec `git push origin <branche>`.
 - Un correctif de CI s'ajoute comme étape de `ci.yml`, jamais comme job.
 - Deux arrêts obligatoires : une migration destructive, et tout geste sur les secrets ou la production.
