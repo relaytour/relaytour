@@ -49,7 +49,7 @@ const TELEPHONE = /(?:\+33[\s.-]?|0)[1-9](?:[\s.-]?\d{2}){4}/g
  */
 export function donneesPersonnelles(
   texte: string,
-  domaines: string[] = domainesAutorises()
+  domaines: string[]
 ): string[] {
   const trouvees: string[] = []
   for (const m of texte.matchAll(ADRESSE)) {

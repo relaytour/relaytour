@@ -1,6 +1,5 @@
 import type { PrismaClient } from '@relaytour/database'
 
-import { env } from '../env.ts'
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
 import { aujourdhuiParis } from '../lib/droits.ts'
@@ -9,6 +8,7 @@ import {
   preferencesDe,
   type NotificationAComposer,
 } from '../lib/notifications.ts'
+import { configurationOrganisation } from '../lib/organisation.ts'
 
 import { rendre, type Variables } from './rendu.ts'
 
@@ -19,13 +19,16 @@ const LIBELLES_STATUT: Record<string, string> = {
   ABANDONNEE: 'Abandonnée',
 }
 
-const SUJETS: Record<SorteCourriel, string> = {
-  essai: 'Essai d’envoi du serveur Relaytour',
-  invitation: `Votre accès à l’espace organisateur ${env.ORGANISATION_NOM}`,
-  'code-connexion': `Votre code de connexion ${env.ORGANISATION_NOM}`,
-  'tache-modifiee': 'Une de vos tâches a été modifiée',
-  'rappels-echeance': `Échéances de vos tâches ${env.ORGANISATION_NOM}`,
-  resume: `Votre résumé ${env.ORGANISATION_NOM}`,
+/** Les sujets, composés à l'envoi avec le nom court de l'organisation. */
+export function sujets(nomCourt: string): Record<SorteCourriel, string> {
+  return {
+    essai: 'Essai d’envoi du serveur Relaytour',
+    invitation: `Votre accès à l’espace organisateur ${nomCourt}`,
+    'code-connexion': `Votre code de connexion ${nomCourt}`,
+    'tache-modifiee': 'Une de vos tâches a été modifiée',
+    'rappels-echeance': `Échéances de vos tâches ${nomCourt}`,
+    resume: `Votre résumé ${nomCourt}`,
+  }
 }
 
 export interface MessageCompose {
@@ -82,7 +85,9 @@ export async function composer(
   const variables: Variables = {}
   let desabonnement: string | undefined
   let apresEnvoi: (() => Promise<void>) | undefined
-  const lienPreferences = `${env.ORIGINE_ORGA}/preferences`
+  const configuration = await configurationOrganisation()
+  const origine = configuration.origineOrga
+  const lienPreferences = `${origine}/preferences`
 
   if (job.sorte === 'invitation') {
     const user = await prisma.user.findUniqueOrThrow({
@@ -90,7 +95,7 @@ export async function composer(
       select: { name: true },
     })
     variables.nom = user.name
-    variables.lienConnexion = `${env.ORIGINE_ORGA}/connexion`
+    variables.lienConnexion = `${origine}/connexion`
   }
 
   if (job.sorte === 'code-connexion') {
@@ -101,7 +106,7 @@ export async function composer(
     variables.validite = `${CODE_VALIDITE_SECONDES / 60} minutes`
     // Le code est placé après « # » : le navigateur ne l'envoie jamais au serveur,
     // et l'adresse ne figure pas dans le lien.
-    variables.lienConnexion = `${env.ORIGINE_ORGA}/connexion#code=${job.code}`
+    variables.lienConnexion = `${origine}/connexion#code=${job.code}`
   }
 
   if (job.sorte === 'tache-modifiee') {
@@ -135,7 +140,7 @@ export async function composer(
       job.tache.changement === 'statut'
         ? `Le nouveau statut de la tâche est « ${LIBELLES_STATUT[tache.statut]} ».`
         : 'Le titre, la description ou l’échéance de la tâche ont changé.'
-    variables.lienPerimetre = `${env.ORIGINE_ORGA}/perimetres/${tache.perimetre.slug}`
+    variables.lienPerimetre = `${origine}/perimetres/${tache.perimetre.slug}`
     const notificationId = job.notificationId
     if (notificationId) {
       apresEnvoi = async () => {
@@ -164,7 +169,7 @@ export async function composer(
     variables.rappels = notifications.map(n =>
       messageNotification(n, noms, job.userId!)
     )
-    variables.lienConnexion = `${env.ORIGINE_ORGA}/`
+    variables.lienConnexion = `${origine}/`
     variables.lienPreferences = lienPreferences
     desabonnement = lienPreferences
     apresEnvoi = async () => {
@@ -232,7 +237,7 @@ export async function composer(
             return `${date} : ${t.titre} (${t.perimetre.nom})${retard}`
           })
         : ['Aucune échéance.']
-    variables.lienConnexion = `${env.ORIGINE_ORGA}/`
+    variables.lienConnexion = `${origine}/`
     variables.lienPreferences = lienPreferences
     desabonnement = lienPreferences
     apresEnvoi = async () => {
@@ -250,5 +255,11 @@ export async function composer(
   }
 
   const { html, texte } = rendre(job.sorte, variables)
-  return { sujet: SUJETS[job.sorte], html, texte, desabonnement, apresEnvoi }
+  return {
+    sujet: sujets(configuration.nomCourt)[job.sorte],
+    html,
+    texte,
+    desabonnement,
+    apresEnvoi,
+  }
 }

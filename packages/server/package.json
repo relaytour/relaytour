@@ -30,6 +30,7 @@
     "@pothos/plugin-scope-auth": "^4.2.1",
     "@prisma/client": "^6.19.0",
     "@relaytour/database": "workspace:*",
+    "@relaytour/tokens": "workspace:*",
     "better-auth": "1.7.5",
     "bullmq": "^5.80.0",
     "cors": "^2.8.5",

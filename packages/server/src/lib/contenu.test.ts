@@ -26,28 +26,28 @@ describe('normaliserContenu', () => {
 describe('donneesPersonnelles', () => {
   it('relève une adresse personnelle et un numéro de téléphone', () => {
     const texte = 'Écrire à prenom.nom@courriel-perso.example ou appeler le 06 12 34 56 78.'
-    expect(donneesPersonnelles(texte)).toHaveLength(2)
+    expect(donneesPersonnelles(texte, [])).toHaveLength(2)
   })
 
   it('accepte les boîtes partagées des domaines autorisés', () => {
     expect(
       donneesPersonnelles('Écrire à contact@exemple.org.', ['exemple.org'])
     ).toEqual([])
-    expect(donneesPersonnelles('Écrire à contact@exemple.org.')).toHaveLength(1)
+    expect(donneesPersonnelles('Écrire à contact@exemple.org.', [])).toHaveLength(1)
   })
 
   it('relève un numéro au format international', () => {
-    expect(donneesPersonnelles('+33 6 12 34 56 78')).toHaveLength(1)
+    expect(donneesPersonnelles('+33 6 12 34 56 78', [])).toHaveLength(1)
   })
 
   it('ne confond pas une date ou une année avec un numéro', () => {
     expect(
-      donneesPersonnelles('Le 27/08/2027, de 9 h à 18 h, pour 2027 personnes.')
+      donneesPersonnelles('Le 27/08/2027, de 9 h à 18 h, pour 2027 personnes.', [])
     ).toEqual([])
   })
 
   it('masque les valeurs relevées', () => {
-    expect(donneesPersonnelles('prenom.nom@courriel-perso.example')[0]).toBe('pre…')
+    expect(donneesPersonnelles('prenom.nom@courriel-perso.example', [])[0]).toBe('pre…')
   })
 })
 

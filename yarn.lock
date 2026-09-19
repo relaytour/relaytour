@@ -3398,6 +3398,7 @@ __metadata:
     "@pothos/plugin-scope-auth": "npm:^4.2.1"
     "@prisma/client": "npm:^6.19.0"
     "@relaytour/database": "workspace:*"
+    "@relaytour/tokens": "workspace:*"
     "@types/cors": "npm:^2.8.17"
     "@types/express": "npm:^4.17.21"
     "@types/mjml": "npm:^5.0.0"

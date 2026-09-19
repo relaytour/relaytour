@@ -5,6 +5,7 @@ import {
   type Souhait,
 } from '@relaytour/database'
 
+import { configurationOrganisation } from '../lib/organisation.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import {
@@ -131,15 +132,14 @@ builder.queryFields(t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }) => {
       const { annee, postes } = await chargerPostes(String(editionId))
-      // Import paresseux : le schéma ne charge pas env.ts (invariant 12).
-      const { env } = await import('../env.ts')
+      const configuration = await configurationOrganisation()
       return texteAppel(
         annee,
         postes.filter(p => p.aPourvoir > 0).map(p => p.perimetre),
         {
-          nom: env.ORGANISATION_NOM,
-          contact: env.CONTACT_RECRUTEMENT,
-          pageEquipe: env.PAGE_EQUIPE,
+          nom: configuration.nomCourt,
+          contact: configuration.contactRecrutement,
+          pageEquipe: configuration.pageEquipe,
         }
       )
     },

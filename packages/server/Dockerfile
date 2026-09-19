@@ -20,11 +20,12 @@ COPY packages/database/package.json packages/database/
 COPY packages/orga/package.json     packages/orga/
 COPY packages/tokens/package.json   packages/tokens/
 RUN --mount=type=cache,target=/root/.yarn/berry/cache \
-  yarn workspaces focus @relaytour/server @relaytour/database
+  yarn workspaces focus @relaytour/server @relaytour/database @relaytour/tokens
 
 FROM deps AS build
 COPY tsconfig.base.json ./
 COPY packages/database packages/database
+COPY packages/tokens   packages/tokens
 COPY packages/server   packages/server
 # Prisma exige une URL à la génération ; aucune connexion n'est ouverte ici.
 ARG DATABASE_URL=mysql://build:build@127.0.0.1:3306/build
@@ -35,7 +36,7 @@ RUN cp packages/database/src/generated/client/libquery_engine-*.node \
 
 FROM deps AS prod-deps
 RUN --mount=type=cache,target=/root/.yarn/berry/cache \
-  yarn workspaces focus @relaytour/server @relaytour/database --production
+  yarn workspaces focus @relaytour/server @relaytour/database @relaytour/tokens --production
 
 FROM base AS notes
 COPY versions.json ./

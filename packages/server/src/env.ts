@@ -58,11 +58,10 @@ const EnvSchema = z
     COURRIEL_SMTP_PORT: z.coerce.number().int().positive().default(465),
     COURRIEL_SMTP_UTILISATEUR: optionnelle,
     COURRIEL_SMTP_MOT_DE_PASSE: optionnelle,
-    COURRIEL_EXPEDITEUR: optionnelle.transform(
-      s => s ?? 'Relaytour <relaytour@localhost>'
-    ),
-    // Nom de l'organisation, dans les sujets de mail et l'appel aux référent·es.
-    // Une configuration par organisation remplacera ces trois variables (ADR 0006).
+    // Sans expéditeur, la configuration compose « <nom court> <relaytour@localhost> ».
+    COURRIEL_EXPEDITEUR: optionnelle,
+    // Amorçage de la configuration d'organisation (lib/organisation.ts) avant le
+    // premier import d'organisation.yaml. La ligne en base prend ensuite le relais (ADR 0006).
     ORGANISATION_NOM: optionnelle.transform(s => s ?? 'Relaytour'),
     CONTACT_RECRUTEMENT: optionnelle,
     PAGE_EQUIPE: optionnelle,

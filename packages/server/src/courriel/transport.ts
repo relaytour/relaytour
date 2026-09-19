@@ -2,6 +2,7 @@ import { createTransport, type Transporter } from 'nodemailer'
 
 import { env, type ReglageSmtp } from '../env.ts'
 import { courrielTronque, journal } from '../lib/journal.ts'
+import { configurationOrganisation } from '../lib/organisation.ts'
 
 export interface Message {
   destinataire: string
@@ -109,7 +110,7 @@ export async function expedier(
   }
   try {
     const info = (await voie.transport.sendMail({
-      from: env.COURRIEL_EXPEDITEUR,
+      from: (await configurationOrganisation()).expediteur,
       to: message.destinataire,
       subject: message.sujet,
       html: message.html,

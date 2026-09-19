@@ -10,6 +10,7 @@ import {
   peutLireFiche,
   peutRedigerFiche,
 } from '../lib/fiches.ts'
+import { configurationOrganisation } from '../lib/organisation.ts'
 import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
@@ -72,7 +73,11 @@ export const FicheRef = builder.prismaObject('Fiche', {
     // pas être reversée dans Git (yarn orga:exporter la refuse).
     donneesPersonnelles: t.stringList({
       select: { versionCourante: { select: { contenu: true } } },
-      resolve: f => donneesPersonnelles(f.versionCourante?.contenu ?? ''),
+      resolve: async f =>
+        donneesPersonnelles(
+          f.versionCourante?.contenu ?? '',
+          (await configurationOrganisation()).domainesCourrielAutorises
+        ),
     }),
     peutModifier: t.boolean({
       resolve: (f, _args, ctx) => peutRedigerFiche(ctx, f.perimetreId),

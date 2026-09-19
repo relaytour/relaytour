@@ -4,7 +4,11 @@ import path from 'node:path'
 import { parse } from 'yaml'
 import { z } from 'zod'
 
-import { donneesPersonnelles, normaliserContenu } from '../lib/contenu.ts'
+import {
+  domainesAutorises,
+  donneesPersonnelles,
+  normaliserContenu,
+} from '../lib/contenu.ts'
 
 // Lecture et validation du dossier content/orga (ADR 0003).
 //
@@ -109,6 +113,7 @@ function fichiers(dossier: string, extension: string): string[] {
 
 export function lireModeles(racine: string): Modeles {
   const erreurs: string[] = []
+  const domaines = domainesAutorises()
   const relatif = (f: string) => path.relative(racine, f)
 
   // Périmètres
@@ -168,7 +173,8 @@ export function lireModeles(racine: string): Modeles {
       if (contenu.trim().length === 0)
         erreurs.push(`${nom} : le contenu est vide`)
       const personnelles = donneesPersonnelles(
-        `${entete.data.titre}\n${contenu}`
+        `${entete.data.titre}\n${contenu}`,
+        domaines
       )
       if (personnelles.length > 0) {
         erreurs.push(
@@ -224,7 +230,8 @@ export function lireModeles(racine: string): Modeles {
         )
       }
       const personnelles = donneesPersonnelles(
-        `${tache.titre}\n${tache.description ?? ''}`
+        `${tache.titre}\n${tache.description ?? ''}`,
+        domaines
       )
       if (personnelles.length > 0) {
         erreurs.push(

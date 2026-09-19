@@ -5,6 +5,7 @@ import type { PrismaClient } from '@relaytour/database'
 import { stringify } from 'yaml'
 
 import { donneesPersonnelles } from '../lib/contenu.ts'
+import { configurationOrganisation } from '../lib/organisation.ts'
 
 export interface RapportExport {
   ecrites: string[]
@@ -23,6 +24,7 @@ export async function exporterFiches(
   racine: string
 ): Promise<RapportExport> {
   const rapport: RapportExport = { ecrites: [], refusees: [] }
+  const { domainesCourrielAutorises } = await configurationOrganisation()
   const fiches = await prisma.fiche.findMany({
     where: { archivedAt: null, versionCourante: { source: 'APP' } },
     include: {
@@ -38,7 +40,8 @@ export async function exporterFiches(
     const dossier = fiche.perimetre?.slug ?? 'communes'
     const fichier = path.join('fiches', dossier, `${fiche.slug}.md`)
     const personnelles = donneesPersonnelles(
-      `${version.titre}\n${version.contenu}`
+      `${version.titre}\n${version.contenu}`,
+      domainesCourrielAutorises
     )
     if (personnelles.length > 0) {
       rapport.refusees.push({
