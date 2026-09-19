@@ -11,7 +11,7 @@ Relaytour est un logiciel conçu et écrit par Quentin Fremeaux, qui en détient
 
 - Le code est publié sous **AGPL-3.0**. Toute personne peut l'utiliser, le modifier et l'héberger. Une personne qui le modifie pour un service en ligne publie ses modifications.
 - **Un seul code.** La gestion de plusieurs organisations (ADR 0006) fait partie du code publié. Il n'existe ni version privée ni couche réservée.
-- Le nom Relaytour et son identité visuelle ne sont pas couverts par la licence du code.
+- Le nom Relaytour et son identité visuelle ne sont pas couverts par la licence du code. Le fichier `MARQUE.md` précise ce qui reste permis.
 - Le contenu d'une organisation (périmètres, fiches, tâches types) n'entre jamais dans ce dépôt. Le dépôt ne contient qu'une organisation d'exemple, fictive et anonyme (`content/exemple`).
 - Toute contribution extérieure est acceptée sous AGPL-3.0, sans accord de contribution.
 

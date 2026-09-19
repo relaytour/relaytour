@@ -65,4 +65,4 @@ yarn workspace @relaytour/server orga:exporter --dossier /chemin/vers/votre/cont
 
 ## Licence
 
-Relaytour est distribué sous licence [GNU AGPL-3.0](LICENSE). Copyright Quentin Fremeaux.
+Relaytour est distribué sous licence [GNU AGPL-3.0](LICENSE). Copyright Quentin Fremeaux. Le nom et le pictogramme ne sont pas couverts par cette licence ([MARQUE.md](MARQUE.md)).
