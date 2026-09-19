@@ -81,7 +81,7 @@ Chaque règle vient d'un incident réel ou d'un risque constaté.
 
 - **Style neutre** pour tout texte : copie, mails, docs, commits, PR. Chaque phrase a un sujet et un verbe conjugué, une idée par phrase, 25 mots au plus, « vous » pour l'utilisateur, « nous » pour l'organisation, pas de « on », pas de tiret d'incise.
 - **Écriture inclusive obligatoire**, sur toutes les éditions : doublet dans une phrase (« les référentes et référents »), point médian seulement là où la place manque (« Devenir référent·e »), un seul point médian par mot, jamais de point simple. Préférer une tournure épicène quand elle existe.
-- Commentaires et messages de commit en français, commits conventionnels (`feat(server):`, `fix(orga):`), sans mention d'outil ni de co-auteur automatique.
+- Commentaires et messages de commit en français, commits conventionnels (`feat(server):`, `fix(orga):`).
 
 ### Glossaire
 

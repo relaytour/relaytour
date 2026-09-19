@@ -11,7 +11,6 @@ Ce document liste ce qui précède l'ouverture publique de `relaytour/relaytour`
    git log -p | grep -oE '[[:alnum:]._%+-]+@[[:alnum:].-]+\.[a-z]{2,}' | sort -u
    ```
    La liste ne contient que des domaines d'exemple (`exemple.org`, `.example`) et l'adresse `noreply` de GitHub.
-
 4. Les commits portent l'adresse `noreply` de GitHub de leur auteur.
 5. Sur GitHub : dépôt public, branche `main` protégée, signalement privé de vulnérabilités activé (`SECURITY.md` y renvoie).
 6. Le paquet `ghcr.io/relaytour/relaytour-server` passe en visibilité publique. Jusque-là, les dépôts d'organisation lisent l'image avec un jeton en lecture seule (`RELAYTOUR_IMAGE_TOKEN`). Après l'ouverture, ce jeton disparaît des workflows `valider.yml` et du gabarit `relaytour/organisation-modele`.
