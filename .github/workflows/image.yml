@@ -6,6 +6,10 @@ on:
   push:
     branches: [main]
 
+# Par défaut, le jeton ne fait que lire le dépôt ; seul le job de publication écrit sur ghcr.
+permissions:
+  contents: read
+
 concurrency:
   group: image-${{ github.ref_name }}
   cancel-in-progress: false
@@ -24,7 +28,7 @@ jobs:
     env:
       IMAGE_REPO: ghcr.io/${{ github.repository_owner }}/relaytour-server
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
 
       - name: Calculer la version
         id: version
@@ -34,16 +38,16 @@ jobs:
           echo "version=${PROCHAINE}-dev.${SHA7}" >> "$GITHUB_OUTPUT"
           echo "tag=$SHA7" >> "$GITHUB_OUTPUT"
 
-      - uses: docker/setup-buildx-action@v3
+      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
 
-      - uses: docker/login-action@v3
+      - uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3.7.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Construire et pousser l'image
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: packages/server/Dockerfile
@@ -60,7 +64,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Construire et pousser l'image de migration
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: packages/server/Dockerfile
@@ -72,7 +76,7 @@ jobs:
           cache-from: type=gha
 
       - name: Construire et pousser l'image de l'espace organisateur
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6.19.2
         with:
           context: .
           file: packages/server/Dockerfile

@@ -1,0 +1,8 @@
+# Dependabot ne suit que les actions GitHub : une action épinglée par SHA ne se met pas à jour seule.
+# Les dépendances npm restent hors de son périmètre.
+version: 2
+updates:
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly

@@ -7,6 +7,10 @@ on:
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_call:
 
+# Le jeton de la CI ne fait que lire le dépôt.
+permissions:
+  contents: read
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -44,11 +48,11 @@ jobs:
       REDIS_URL: redis://127.0.0.1:6379
       BETTER_AUTH_SECRET: secret-de-la-ci-local-0123456789abcdef
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version-file: .nvmrc
 
@@ -56,7 +60,7 @@ jobs:
         run: corepack enable
 
       - name: Cache Yarn
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: ~/.yarn/berry/cache
           key: yarn-${{ runner.os }}-${{ hashFiles('yarn.lock') }}
