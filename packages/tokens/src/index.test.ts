@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   contraste,
+  contrastePercu,
+  texteSurCouleur,
   fusionnerTheme,
   themeAlternatif,
   themeParDefaut,
@@ -78,5 +80,24 @@ describe('variablesCss', () => {
     expect(variables['--rt-encre-rgb']).toBe('27, 39, 48')
     expect(variables['--rt-titre-graisse']).toBe('600')
     expect(Object.keys(variables).every(k => k.startsWith('--rt-'))).toBe(true)
+  })
+})
+
+describe('texteSurCouleur', () => {
+  it.each([
+    ['#02ADB8', '#FFFFFF'], // turquoise : le blanc se lit mieux, WCAG 2 disait noir
+    ['#F32988', '#FFFFFF'], // rose vif
+    ['#FC685F', '#FFFFFF'], // corail
+    ['#2F6B4F', '#FFFFFF'], // marine
+    ['#FBBB50', '#111111'], // jaune
+    ['#8FC9B7', '#111111'], // menthe
+    ['#FB8B36', '#111111'], // orange clair
+  ])('choisit le texte le plus lisible sur %s', (fond, attendu) => {
+    expect(texteSurCouleur(fond)).toBe(attendu)
+  })
+
+  it('mesure le contraste perçu comme APCA 0.0.98G', () => {
+    expect(contrastePercu('#111111', '#FFFFFF')).toBeCloseTo(104.9, 0)
+    expect(contrastePercu('#FFFFFF', '#000000')).toBeCloseTo(107.9, 0)
   })
 })

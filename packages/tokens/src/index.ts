@@ -15,7 +15,12 @@
  * variables CSS `--rt-*` posées par `variablesCss`.
  */
 
-export { contraste, verifierAccessibilite } from './contraste.ts'
+export {
+  contraste,
+  contrastePercu,
+  texteSurCouleur,
+  verifierAccessibilite,
+} from './contraste.ts'
 export type { Manquement } from './contraste.ts'
 
 /** Les couleurs d'un thème. Toutes en hexadécimal `#RRGGBB`. */

@@ -344,11 +344,63 @@ body {
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 13px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 18px;
+  letter-spacing: 0.01em;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+a .rt-pastille {
+  transition: filter var(--rt-duree) var(--rt-ease-fluide);
+}
+
+a:hover .rt-pastille {
+  filter: brightness(0.92);
+}
+
+/* Une ligne cliquable (lien vers une fiche, un périmètre) : un liseré de verre
+   la signale, et le survol assombrit son fond. Sans bord, un lien posé sur du
+   verre ne se distingue pas d'un texte. */
+.rt-liste-liens {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-ligne-lien {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 14px;
+  border: 1px solid rgba(var(--rt-encre-rgb), 0.1);
+  border-radius: var(--rt-rayon-chip);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  color: var(--rt-encre);
+  font-weight: 600;
+  text-decoration: none;
+  transition:
+    background var(--rt-duree) var(--rt-ease-fluide),
+    border-color var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-ligne-lien:hover {
+  border-color: rgba(var(--rt-encre-rgb), 0.2);
+  background: rgba(var(--rt-encre-rgb), 0.06);
+  color: var(--rt-encre);
+}
+
+.rt-ligne-lien::after {
+  content: '›';
+  font-size: 18px;
+  line-height: 1;
+  color: rgba(var(--rt-encre-rgb), 0.4);
 }
 
 .ant-select-selection-overflow .rt-pastille {

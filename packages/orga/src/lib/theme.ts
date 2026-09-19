@@ -1,7 +1,7 @@
 import {
-  contraste,
   rayons,
   rgb,
+  texteSurCouleur,
   variablesCss,
   type Theme,
 } from '@relaytour/tokens'
@@ -75,8 +75,17 @@ export function construireTheme(theme: Theme): ThemeConfig {
         fontWeight: 600,
         primaryShadow: `0 6px 18px rgba(${rgb(c.primaire)}, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.25)`,
         defaultShadow: `0 2px 10px rgba(${encre}, 0.05), 0 6px 18px rgba(${encre}, 0.045)`,
+        // Un bouton sans fond plein garde un liseré de verre pour se lire comme
+        // cliquable ; le survol assombrit légèrement son fond (docs/identite.md).
         defaultBg: 'rgba(255, 255, 255, 0.7)',
-        defaultBorderColor: 'transparent',
+        defaultBorderColor: `rgba(${encre}, 0.14)`,
+        defaultColor: c.encre,
+        defaultHoverBg: `rgba(${encre}, 0.07)`,
+        defaultHoverBorderColor: `rgba(${encre}, 0.22)`,
+        defaultHoverColor: c.encre,
+        defaultActiveBg: `rgba(${encre}, 0.12)`,
+        defaultActiveBorderColor: `rgba(${encre}, 0.28)`,
+        defaultActiveColor: c.encre,
       },
       Card: {
         borderRadiusLG: rayons.panneau,
@@ -103,9 +112,11 @@ export function construireTheme(theme: Theme): ThemeConfig {
   }
 }
 
-/** Le texte le plus lisible sur une couleur pleine : blanc ou noir, au meilleur contraste. */
+/**
+ * Le texte le plus lisible sur une couleur pleine : blanc ou presque noir, au
+ * meilleur contraste perçu (APCA). La formule WCAG 2 choisissait le noir sur
+ * les teintes saturées moyennes, où il se lit mal.
+ */
 export function texteSur(fond: string): string {
-  const blanc = '#FFFFFF'
-  const noir = '#111111'
-  return contraste(blanc, fond) >= contraste(noir, fond) ? blanc : noir
+  return texteSurCouleur(fond)
 }

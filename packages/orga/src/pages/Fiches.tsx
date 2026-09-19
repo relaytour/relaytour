@@ -1,9 +1,10 @@
 import { PlusOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
-import { Button, Card, Empty, Input, Skeleton, Space, Typography } from 'antd'
+import { Button, Card, Empty, Input, Skeleton, Space } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate } from 'react-router'
 
+import PastillePerimetre from '../composants/PastillePerimetre'
 import Titre from '../composants/Titre'
 import type { ListeFichesQuery } from '../gql/graphql'
 import { LISTE_FICHES } from '../lib/fiches'
@@ -20,7 +21,12 @@ export default function Fiches() {
     const filtre = normaliser(recherche.trim())
     const map = new Map<
       string,
-      { nom: string; slug: string | null; fiches: FicheListe[] }
+      {
+        nom: string
+        slug: string | null
+        couleur: string | null
+        fiches: FicheListe[]
+      }
     >()
     for (const fiche of data?.fiches ?? []) {
       if (filtre && !normaliser(fiche.titre).includes(filtre)) continue
@@ -28,6 +34,7 @@ export default function Fiches() {
       const groupe = map.get(cle) ?? {
         nom: fiche.perimetre?.nom ?? 'Fiches communes',
         slug: fiche.perimetre?.slug ?? null,
+        couleur: fiche.perimetre?.couleur ?? null,
         fiches: [],
       }
       groupe.fiches.push(fiche)
@@ -92,17 +99,28 @@ export default function Fiches() {
               size="small"
               title={
                 groupe.slug ? (
-                  <Link to={`/perimetres/${groupe.slug}`}>{groupe.nom}</Link>
+                  <Link
+                    to={`/perimetres/${groupe.slug}`}
+                    aria-label={`Périmètre ${groupe.nom}`}
+                  >
+                    <PastillePerimetre
+                      nom={groupe.nom}
+                      couleur={groupe.couleur}
+                    />
+                  </Link>
                 ) : (
                   groupe.nom
                 )
               }
             >
-              <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+              <ul className="rt-liste-liens">
                 {groupe.fiches.map(fiche => (
-                  <li key={fiche.id} style={{ padding: '8px 0' }}>
-                    <Link to={`/fiches/${fiche.slug}`}>
-                      <Typography.Text strong>{fiche.titre}</Typography.Text>
+                  <li key={fiche.id}>
+                    <Link
+                      className="rt-ligne-lien"
+                      to={`/fiches/${fiche.slug}`}
+                    >
+                      {fiche.titre}
                     </Link>
                   </li>
                 ))}
