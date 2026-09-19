@@ -119,6 +119,7 @@ export default function AvancementGlobal() {
                 <Link to={`/perimetres/${perimetre.slug}?edition=${editionId}`}>
                   <Card
                     hoverable
+                    className="rt-carte-lien"
                     title={perimetre.nom}
                     style={{
                       borderTop: `6px solid ${perimetre.couleur ?? 'var(--rt-primaire)'}`,

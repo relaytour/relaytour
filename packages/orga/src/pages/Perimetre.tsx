@@ -199,15 +199,15 @@ export default function Perimetre() {
             Aucune fiche pour ce périmètre.
           </Typography.Text>
         ) : (
-          <Space size={[8, 8]} wrap>
+          <ul className="rt-liste-liens">
             {perimetre.fiches.map(f => (
-              <Link key={f.id} to={`/fiches/${f.slug}`}>
-                <Button size="small" type="dashed">
+              <li key={f.id}>
+                <Link className="rt-ligne-lien" to={`/fiches/${f.slug}`}>
                   {f.titre}
-                </Button>
-              </Link>
+                </Link>
+              </li>
             ))}
-          </Space>
+          </ul>
         )}
       </Card>
 

@@ -136,6 +136,7 @@ export default function MonEspace() {
                     <Link to={`/perimetres/${perimetre.slug}`}>
                       <Card
                         hoverable
+                        className="rt-carte-lien"
                         style={{
                           borderTop: `6px solid ${perimetre.couleur ?? 'var(--rt-primaire)'}`,
                         }}

@@ -396,6 +396,53 @@ a:hover .rt-pastille {
   color: var(--rt-encre);
 }
 
+/* La même ligne, portée par un bouton (notifications). */
+button.rt-ligne-lien {
+  width: 100%;
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+/* Une notification non lue garde son fond d'accent, assombri au survol. */
+.rt-ligne-lien.rt-non-lue {
+  background: var(--rt-accent-clair);
+}
+
+.rt-ligne-lien.rt-non-lue:hover {
+  background:
+    linear-gradient(
+      rgba(var(--rt-encre-rgb), 0.05),
+      rgba(var(--rt-encre-rgb), 0.05)
+    ),
+    var(--rt-accent-clair);
+}
+
+/* Une ligne en retard porte un liseré d'erreur à gauche. */
+.rt-ligne-lien.rt-en-retard {
+  border-inline-start: 4px solid var(--rt-erreur);
+}
+
+/* Une carte entière cliquable (périmètre dans Mon espace, Avancement) : même
+   liseré de verre et même survol que les lignes. */
+.ant-card.rt-carte-lien {
+  border: 1px solid rgba(var(--rt-encre-rgb), 0.1);
+  transition:
+    background var(--rt-duree) var(--rt-ease-fluide),
+    border-color var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.ant-card.rt-carte-lien:hover {
+  border-color: rgba(var(--rt-encre-rgb), 0.2);
+  background:
+    linear-gradient(
+      rgba(var(--rt-encre-rgb), 0.05),
+      rgba(var(--rt-encre-rgb), 0.05)
+    ),
+    var(--rt-verre);
+}
+
 .rt-ligne-lien::after {
   content: '›';
   font-size: 18px;

@@ -92,36 +92,32 @@ export default function Notifications({ compact }: { compact: boolean }) {
         ) : (liste.data?.notifications ?? []).length === 0 ? (
           <Empty description="Aucune notification." />
         ) : (
-          <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+          <ul className="rt-liste-liens">
             {liste.data!.notifications.map(n => (
               <li key={n.id}>
                 <button
                   type="button"
+                  className={`rt-ligne-lien${n.lue ? '' : ' rt-non-lue'}`}
                   onClick={() => {
                     if (!n.lue) void marquer({ variables: { ids: [n.id] } })
                     setOuvert(false)
                     navigate(n.lien)
                   }}
-                  style={{
-                    all: 'unset',
-                    boxSizing: 'border-box',
-                    cursor: 'pointer',
-                    display: 'block',
-                    width: '100%',
-                    padding: '12px 12px 12px 16px',
-                    borderRadius: 'var(--rt-rayon-chip)',
-                    marginBottom: 4,
-                    background: n.lue
-                      ? 'transparent'
-                      : 'var(--rt-accent-clair)',
-                  }}
                 >
-                  <Typography.Text strong={!n.lue} style={{ display: 'block' }}>
-                    {n.message}
-                  </Typography.Text>
-                  <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                    {ilYA(n.creeLe)}
-                  </Typography.Text>
+                  <span style={{ minWidth: 0 }}>
+                    <Typography.Text
+                      strong={!n.lue}
+                      style={{
+                        display: 'block',
+                        fontWeight: n.lue ? 400 : 700,
+                      }}
+                    >
+                      {n.message}
+                    </Typography.Text>
+                    <Typography.Text type="secondary" style={{ fontSize: 13 }}>
+                      {ilYA(n.creeLe)}
+                    </Typography.Text>
+                  </span>
                 </button>
               </li>
             ))}
