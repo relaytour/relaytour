@@ -1,10 +1,13 @@
 import type { PrismaClient } from '@relaytour/database'
 
 import { empreinte } from '../lib/fiches.ts'
+import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
 import { dateEcheance, type Modeles } from './modeles.ts'
 
 export interface RapportImport {
+  /** La ligne Organisation créée ou mise à jour depuis organisation.yaml. */
+  organisation: { slug: string; etat: 'creee' | 'mise-a-jour' }
   perimetres: { crees: string[]; modifies: string[]; absentsDuDepot: string[] }
   fiches: {
     creees: string[]
@@ -36,6 +39,7 @@ export async function importerModeles(
   options: { annee?: number; simulation?: boolean } = {}
 ): Promise<RapportImport> {
   const rapport: RapportImport = {
+    organisation: { slug: modeles.organisation.slug, etat: 'creee' },
     perimetres: { crees: [], modifies: [], absentsDuDepot: [] },
     fiches: { creees: [], nouvellesVersions: [], inchangees: [], conflits: [] },
     effectifs: { crees: [], dejaPresents: [] },
@@ -55,6 +59,47 @@ export async function importerModeles(
 
   await prisma.$transaction(
     async tx => {
+      // Organisation : une seule ligne par installation (lot commun). Elle est créée
+      // au premier import, puis mise à jour à chaque import, slug compris.
+      const lignes = await tx.organisation.findMany({
+        select: { id: true, slug: true },
+        orderBy: { createdAt: 'asc' },
+      })
+      if (lignes.length > 1) {
+        throw new Error(
+          'Plusieurs organisations existent en base : précisez laquelle importer (lot multi à venir).'
+        )
+      }
+      const declaration = modeles.organisation
+      const donneesOrganisation = {
+        slug: declaration.slug,
+        nom: declaration.nom,
+        sigle: declaration.sigle ?? null,
+        fuseauHoraire: declaration.fuseauHoraire,
+        configuration: declaration,
+      }
+      let organisationId: string
+      if (lignes[0] === undefined) {
+        rapport.organisation.etat = 'creee'
+        organisationId = ecrire
+          ? (await tx.organisation.create({ data: donneesOrganisation })).id
+          : ''
+      } else {
+        if (lignes[0].slug !== 'defaut' && lignes[0].slug !== declaration.slug) {
+          throw new Error(
+            `L'installation appartient à l'organisation « ${lignes[0].slug} » ; le dépôt déclare « ${declaration.slug} ». Import refusé.`
+          )
+        }
+        rapport.organisation.etat = 'mise-a-jour'
+        organisationId = lignes[0].id
+        if (ecrire) {
+          await tx.organisation.update({
+            where: { id: organisationId },
+            data: donneesOrganisation,
+          })
+        }
+      }
+
       // Périmètres
       const existants = new Map(
         (await tx.perimetre.findMany()).map(p => [p.slug, p])
@@ -72,7 +117,7 @@ export async function importerModeles(
           rapport.perimetres.crees.push(modele.slug)
           if (ecrire) {
             const cree = await tx.perimetre.create({
-              data: { slug: modele.slug, ...donnees },
+              data: { slug: modele.slug, organisationId, ...donnees },
             })
             idsPerimetres.set(modele.slug, cree.id)
           }
@@ -116,7 +161,7 @@ export async function importerModeles(
           rapport.fiches.creees.push(modele.slug)
           if (!ecrire) continue
           const fiche = await tx.fiche.create({
-            data: { slug: modele.slug, perimetreId },
+            data: { slug: modele.slug, perimetreId, organisationId },
           })
           const version = await tx.ficheVersion.create({
             data: {
@@ -233,5 +278,6 @@ export async function importerModeles(
     { timeout: 60_000 }
   )
 
+  invaliderConfigurationOrganisation()
   return rapport
 }

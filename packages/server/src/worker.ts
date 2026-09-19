@@ -15,6 +15,7 @@ import {
 import { courrielProcessor } from './jobs/processors/courriel.processor.ts'
 import { planificationProcessor } from './jobs/processors/planification.processor.ts'
 import { journal } from './lib/journal.ts'
+import { assurerOrganisationParDefaut } from './lib/organisation.ts'
 
 // Deux envois simultanés au plus, comme le pool SMTP.
 const postier = new Worker<CourrielJobData>(COURRIEL_QUEUE, courrielProcessor, {
@@ -29,6 +30,7 @@ const planificateur = new Worker<
 const workers = [postier, planificateur]
 
 void verifierTransport()
+await assurerOrganisationParDefaut()
 
 // La planification vit ici et nulle part ailleurs. `upsertJobScheduler` est idempotent :
 // redémarrer le worker ne crée pas de doublon. Les heures sont celles de Paris.

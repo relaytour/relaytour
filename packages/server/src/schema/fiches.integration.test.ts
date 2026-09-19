@@ -9,6 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 import { exporterFiches } from '../orga/exporter.ts'
+import { assurerOrganisationParDefaut } from '../lib/organisation.ts'
 import { importerModeles } from '../orga/importer.ts'
 import { lireModeles } from '../orga/modeles.ts'
 
@@ -52,6 +53,16 @@ const code = (r: Awaited<ReturnType<typeof executer>>) =>
 
 beforeAll(async () => {
   await apollo.start()
+  // Les tests partagent la base locale : l'organisation importée reprend l'identité
+  // déjà en base, pour ne pas la renommer (l'import met la ligne à jour, slug compris).
+  await assurerOrganisationParDefaut()
+  const organisation = await prisma.organisation.findFirstOrThrow({
+    orderBy: { createdAt: 'asc' },
+  })
+  ecrire(
+    'organisation.yaml',
+    `slug: ${organisation.slug}\nnom: ${JSON.stringify(organisation.nom)}\n${organisation.sigle ? `sigle: ${JSON.stringify(organisation.sigle)}\n` : ''}`
+  )
   for (const [cle, estAdmin] of [
     ['admin', true],
     ['redactrice', false],

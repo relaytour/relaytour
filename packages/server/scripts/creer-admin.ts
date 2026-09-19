@@ -4,6 +4,7 @@ import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../src/courriel/file.ts'
 import { connection, courrielQueue } from '../src/jobs/queues.ts'
+import { assurerOrganisationParDefaut } from '../src/lib/organisation.ts'
 
 // Crée le premier compte admin, ou donne les droits d'admin à un compte existant,
 // puis met en file le mail d'invitation. Le worker doit tourner pour l'envoyer.
@@ -22,6 +23,7 @@ if (
   process.exit(1)
 }
 
+await assurerOrganisationParDefaut()
 const personne = await prisma.user.upsert({
   where: { email: adresse },
   update: { isAdmin: true, archivedAt: null },

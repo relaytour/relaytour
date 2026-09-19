@@ -6,6 +6,7 @@ import type {
 
 import { aujourdhuiParis } from '../lib/droits.ts'
 import { journal } from '../lib/journal.ts'
+import { organisationParDefaut } from '../lib/organisation.ts'
 
 // Tâches planifiées de la phase 4 : elles tournent dans le worker, une fois par jour.
 // Les fonctions reçoivent `maintenant` pour être testables à une date donnée.
@@ -96,6 +97,7 @@ export async function genererRappels(
       try {
         const notification = await prisma.notification.create({
           data: {
+            organisationId: await organisationParDefaut(),
             userId,
             type,
             tacheId: tache.id,

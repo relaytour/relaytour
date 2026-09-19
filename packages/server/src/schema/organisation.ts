@@ -17,6 +17,7 @@ import {
 
 import {
   configurationOrganisation,
+  organisationParDefaut,
   type ConfigurationOrganisation,
 } from '../lib/organisation.ts'
 
@@ -100,10 +101,13 @@ builder.mutationFields(t => ({
       debut: t.arg({ type: 'Date', required: true }),
       fin: t.arg({ type: 'Date', required: true }),
     },
-    resolve: (query, _root, args) => {
+    resolve: async (query, _root, args) => {
       const edition = validerEdition(args)
       return sansDoublon(
-        prisma.edition.create({ ...query, data: edition }),
+        prisma.edition.create({
+          ...query,
+          data: { ...edition, organisationId: await organisationParDefaut() },
+        }),
         `Une édition existe déjà pour ${args.annee}.`
       )
     },
@@ -144,11 +148,12 @@ builder.mutationFields(t => ({
       couleur: t.arg.string(),
       ordre: t.arg.int({ defaultValue: 0 }),
     },
-    resolve: (query, _root, args) =>
+    resolve: async (query, _root, args) =>
       sansDoublon(
         prisma.perimetre.create({
           ...query,
           data: {
+            organisationId: await organisationParDefaut(),
             slug: slugValide(args.slug),
             nom: texteRequis(args.nom, 'Le nom'),
             type: args.type,

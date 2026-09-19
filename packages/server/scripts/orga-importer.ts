@@ -35,6 +35,9 @@ function afficher(titre: string, liste: string[]) {
 }
 
 function imprimer(rapport: RapportImport) {
+  console.log(
+    `Organisation : ${rapport.organisation.slug} (${rapport.organisation.etat === 'creee' ? 'créée' : 'mise à jour'})`
+  )
   console.log('Périmètres')
   afficher('créés', rapport.perimetres.crees)
   afficher('modifiés', rapport.perimetres.modifies)

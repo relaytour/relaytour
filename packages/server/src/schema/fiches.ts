@@ -10,7 +10,10 @@ import {
   peutLireFiche,
   peutRedigerFiche,
 } from '../lib/fiches.ts'
-import { configurationOrganisation } from '../lib/organisation.ts'
+import {
+  configurationOrganisation,
+  organisationParDefaut,
+} from '../lib/organisation.ts'
 import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
@@ -241,7 +244,13 @@ builder.mutationFields(t => ({
       const slug = slugValide(args.slug)
       return sansDoublon(
         prisma.$transaction(async tx => {
-          const fiche = await tx.fiche.create({ data: { slug, perimetreId } })
+          const fiche = await tx.fiche.create({
+            data: {
+              slug,
+              perimetreId,
+              organisationId: await organisationParDefaut(),
+            },
+          })
           const version = await tx.ficheVersion.create({
             data: {
               ficheId: fiche.id,

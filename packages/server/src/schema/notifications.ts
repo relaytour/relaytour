@@ -7,6 +7,7 @@ import {
 } from '../lib/notifications.ts'
 
 import { builder } from './builder.ts'
+import { organisationParDefaut } from '../lib/organisation.ts'
 
 const TypeNotificationEnum = builder.enumType(TypeNotification, {
   name: 'TypeNotification',
@@ -145,7 +146,7 @@ builder.mutationFields(t => ({
       mailModification: t.arg.boolean({ required: true }),
       mailEcheance: t.arg.boolean({ required: true }),
     },
-    resolve: (_root, args, ctx) => {
+    resolve: async (_root, args, ctx) => {
       const donnees = {
         frequenceResume: args.frequenceResume,
         mailModification: args.mailModification,
@@ -154,7 +155,11 @@ builder.mutationFields(t => ({
       return prisma.preferenceNotification.upsert({
         where: { userId: ctx.personne!.id },
         update: donnees,
-        create: { userId: ctx.personne!.id, ...donnees },
+        create: {
+          userId: ctx.personne!.id,
+          organisationId: await organisationParDefaut(),
+          ...donnees,
+        },
       })
     },
   }),

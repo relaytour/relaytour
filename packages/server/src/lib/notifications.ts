@@ -3,6 +3,7 @@ import type { PrismaClient, TypeNotification } from '@relaytour/database'
 import { mettreEnFile } from '../courriel/file.ts'
 
 import { journal } from './journal.ts'
+import { organisationParDefaut } from './organisation.ts'
 
 export const PREFERENCES_PAR_DEFAUT = {
   frequenceResume: 'HEBDOMADAIRE',
@@ -67,6 +68,7 @@ export async function notifier(
     for (const userId of destinataires) {
       const creee = await prisma.notification.create({
         data: {
+          organisationId: await organisationParDefaut(),
           userId,
           type: notification.type,
           acteurId: notification.acteurId,

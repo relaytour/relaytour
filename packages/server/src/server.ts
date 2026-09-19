@@ -11,6 +11,7 @@ import { auth } from './auth.ts'
 import { buildContext, type AppContext } from './context.ts'
 import { env } from './env.ts'
 import { journal } from './lib/journal.ts'
+import { assurerOrganisationParDefaut } from './lib/organisation.ts'
 import { writeSchemaFile } from './lib/print-schema.ts'
 import { sonderDependances } from './lib/sante.ts'
 import { schema } from './schema/index.ts'
@@ -32,6 +33,9 @@ const apollo = new ApolloServer<AppContext>({
     }),
   ],
 })
+
+// La ligne Organisation existe dès le premier démarrage (ADR 0006, lot commun).
+await assurerOrganisationParDefaut()
 
 await apollo.start()
 

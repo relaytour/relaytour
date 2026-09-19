@@ -10,6 +10,7 @@ import {
 } from '../lib/notifications.ts'
 import {
   configurationOrganisation,
+  organisationParDefaut,
   variablesOrganisation,
 } from '../lib/organisation.ts'
 
@@ -252,7 +253,11 @@ export async function composer(
       await prisma.preferenceNotification.upsert({
         where: { userId },
         update: { dernierResumeLe: maintenant },
-        create: { userId, dernierResumeLe: maintenant },
+        create: {
+          userId,
+          dernierResumeLe: maintenant,
+          organisationId: await organisationParDefaut(),
+        },
       })
     }
   }

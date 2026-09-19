@@ -1,6 +1,7 @@
 import { prisma } from '@relaytour/database'
 
 import { validerEdition } from '../src/lib/editions.ts'
+import { organisationParDefaut } from '../src/lib/organisation.ts'
 
 // Crée une édition sans passer par l'espace organisateur, pour amorcer une
 // installation avant le premier import. Ne modifie jamais une édition existante.
@@ -37,7 +38,9 @@ try {
   if (existante !== null) {
     console.log(`= Édition ${edition.annee} déjà présente (« ${existante.nom} »), rien à faire.`)
   } else {
-    await prisma.edition.create({ data: edition })
+    await prisma.edition.create({
+      data: { ...edition, organisationId: await organisationParDefaut() },
+    })
     console.log(`✔ Édition ${edition.annee} créée : « ${edition.nom} », du ${debutBrut} au ${finBrute}.`)
   }
 } catch (erreur) {

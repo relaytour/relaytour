@@ -241,22 +241,114 @@ export function variablesOrganisation(configuration: ConfigurationOrganisation) 
 
 const DUREE_CACHE_MS = 60_000
 let cache: { valeur: ConfigurationOrganisation; expire: number } | null = null
+let idParDefaut: string | null = null
 
 /** Oublie la configuration en cache : à appeler après un import ou une modification. */
 export function invaliderConfigurationOrganisation(): void {
   cache = null
+  idParDefaut = null
+}
+
+interface LigneOrganisation {
+  id: string
+  slug: string
+  configuration: unknown
+}
+
+/** La déclaration portée par une ligne, ou null si sa configuration est vide ou invalide. */
+function declarationDeLaLigne(ligne: LigneOrganisation): DeclarationOrganisation | null {
+  const r = DeclarationOrganisationSchema.safeParse(ligne.configuration)
+  return r.success ? r.data : null
 }
 
 /**
- * La configuration courante, en cache une minute. Lot commun : une seule
- * organisation par installation, lue dans l'environnement ; la ligne en base
- * prendra le relais avec la table Organisation.
+ * La configuration courante, en cache une minute : la ligne Organisation en base
+ * si elle porte une déclaration valide, sinon l'amorçage de l'environnement.
+ * Lot commun : une seule organisation par installation.
  */
 export async function configurationOrganisation(): Promise<ConfigurationOrganisation> {
   const maintenant = Date.now()
   if (cache !== null && cache.expire > maintenant) return cache.valeur
-  const { env } = await import('../env.ts')
-  const valeur = resoudreConfiguration(env, declarationDepuisEnv(env))
+  // Imports paresseux : ce module est chargé par la validation de contenu, sans base ni .env.
+  const [{ env }, { prisma }] = await Promise.all([
+    import('../env.ts'),
+    import('@relaytour/database'),
+  ])
+  const ligne = await prisma.organisation.findFirst({
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, slug: true, configuration: true },
+  })
+  const declaration =
+    (ligne === null ? null : declarationDeLaLigne(ligne)) ??
+    declarationDepuisEnv(env)
+  const valeur = resoudreConfiguration(env, declaration, ligne?.id ?? null)
   cache = { valeur, expire: maintenant + DUREE_CACHE_MS }
   return valeur
+}
+
+/**
+ * Garantit la ligne Organisation de l'installation et y rattache les données
+ * qui n'ont pas encore de clé d'organisation. Appelée au démarrage de l'API et
+ * du worker, et par les scripts qui écrivent en base.
+ *
+ * Sans ligne, elle en crée une depuis l'environnement (slug « defaut »). Une
+ * ligne à la configuration vide (posée par une migration) est complétée de même.
+ * L'import d'organisation.yaml remplace ensuite ces valeurs d'amorçage.
+ */
+export async function assurerOrganisationParDefaut(): Promise<string> {
+  const [{ env }, { prisma }] = await Promise.all([
+    import('../env.ts'),
+    import('@relaytour/database'),
+  ])
+  let ligne = await prisma.organisation.findFirst({
+    orderBy: { createdAt: 'asc' },
+    select: { id: true, slug: true, configuration: true },
+  })
+  if (ligne === null) {
+    const declaration = declarationDepuisEnv(env)
+    ligne = await prisma.organisation.create({
+      data: {
+        slug: declaration.slug,
+        nom: declaration.nom,
+        sigle: declaration.sigle ?? null,
+        fuseauHoraire: declaration.fuseauHoraire,
+        configuration: declaration,
+      },
+      select: { id: true, slug: true, configuration: true },
+    })
+  } else if (declarationDeLaLigne(ligne) === null) {
+    const declaration = declarationDepuisEnv(env)
+    await prisma.organisation.update({
+      where: { id: ligne.id },
+      data: {
+        nom: declaration.nom,
+        sigle: declaration.sigle ?? null,
+        fuseauHoraire: declaration.fuseauHoraire,
+        configuration: declaration,
+      },
+    })
+  }
+  const organisationId = ligne.id
+  const ou = { where: { organisationId: null }, data: { organisationId } }
+  await prisma.$transaction([
+    prisma.edition.updateMany(ou),
+    prisma.perimetre.updateMany(ou),
+    prisma.fiche.updateMany(ou),
+    prisma.notification.updateMany(ou),
+    prisma.preferenceNotification.updateMany(ou),
+  ])
+  invaliderConfigurationOrganisation()
+  idParDefaut = organisationId
+  return organisationId
+}
+
+/**
+ * L'identifiant de l'organisation de l'installation, pour les écritures.
+ * Lot commun : une seule organisation. Le lot multi remplacera chaque appel par
+ * l'organisation du contexte de la requête ; `grep organisationParDefaut` liste
+ * alors le travail restant.
+ */
+export async function organisationParDefaut(): Promise<string> {
+  if (idParDefaut !== null) return idParDefaut
+  return assurerOrganisationParDefaut()
 }
