@@ -1,6 +1,6 @@
 # ADR 0006 — Plusieurs organisations dans une même installation
 
-- **Statut** : proposée (dépend de l'ADR 0005)
+- **Statut** : acceptée ; lot commun réalisé le 19 septembre 2026, lot multi à venir
 - **Date** : 2026-09-17
 
 ## Contexte
@@ -75,3 +75,19 @@ Le lot commun a une valeur seul : il rend l'installation mono-association livrab
 - Chaque test d'intégration crée son organisation et la supprime. Les fonctions qui parcouraient toute la base n'ont plus besoin du paramètre `filtre` réservé aux tests.
 - L'invariant 11 s'étend : un contrôle d'accès se prouve aussi par le refus avec la session d'une autre organisation.
 - Les trois règles de code de l'ADR 0005 figurent dans `CONTRIBUTING.md`.
+
+## Mise en œuvre
+
+### Lot commun (réalisé le 19 septembre 2026)
+
+- **Configuration en un seul objet** : `packages/server/src/lib/organisation.ts`. `DeclarationOrganisationSchema` valide ce qu'une organisation déclare (slug, nom, sigle, fuseau horaire, domaines de mail autorisés, contact de recrutement, page équipe, logo, favicon, thème partiel). La validation refuse une clé inconnue, un contact hors des domaines, une police absente de l'espace organisateur et un thème dont une couleur de texte passe sous 4,5:1 de contraste. `resoudreConfiguration` ajoute les valeurs d'hébergement lues dans l'environnement (`COURRIEL_EXPEDITEUR`, `ORIGINE_ORGA`) et le thème complet, fusionné avec le thème par défaut de `packages/tokens`.
+- **Sources** : la ligne `Organisation` en base quand elle porte une déclaration valide, sinon les variables d'amorçage `ORGANISATION_NOM`, `DOMAINES_COURRIEL_AUTORISES`, `CONTACT_RECRUTEMENT` et `PAGE_EQUIPE`. Le démarrage de l'API, du worker et des scripts garantit la ligne (`assurerOrganisationParDefaut`). L'import d'`organisation.yaml` la crée ou la met à jour, slug compris, et refuse le contenu d'une autre organisation que celle de l'installation.
+- **Contenu** : `organisation.yaml` est obligatoire dans le dossier de contenu (`content/exemple`, gabarit `relaytour/organisation-modele`). La validation en tire les domaines autorisés, sans variable d'environnement.
+- **Mails** : sujets composés à l'envoi avec le nom court ; en-tête, pied et couleurs (encre, primaire, accent, sol) rendus avec les variables de l'organisation, par des couleurs sentinelles remplacées après compilation MJML ; crédit « propulsé par Relaytour » conservé dans le pied ; aucune police web.
+- **Espace organisateur** : la requête publique `organisation` sert le nom, le sigle, le logo, le favicon et le thème complet. Un fournisseur de contexte applique le thème avant le premier rendu, construit la configuration Ant Design et met à jour le titre de l'onglet et le favicon. Un seul build sert toutes les installations.
+- **Modèle** : table `Organisation` et clé obligatoire sur `Edition`, `Perimetre`, `Fiche`, `Notification` et `PreferenceNotification` (migrations `organisation` puis `organisation_obligatoire`, cette dernière rattache les lignes existantes à la première organisation). `RateLimit` reste global : Better Auth écrit cette table seul, avec une clé par adresse ou par IP. Les contraintes d'unicité globales restent en place jusqu'au lot multi, qui les remplacera par des contraintes par organisation.
+- Chaque écriture passe par `organisationParDefaut()` : le lot multi remplacera chaque appel par l'organisation du contexte de la requête, et `grep organisationParDefaut` listera le travail restant.
+
+### Lot multi (à venir)
+
+Comptes globaux à appartenances multiples, contexte et filtrage obligatoire de toutes les requêtes, worker par organisation, préfixes de jobs et de clés, score et agrégats par organisation, sélection d'organisation dans l'interface, preuves de refus croisés. `TypePerimetre` (`SPORT`, `POLE`) reste sportif : un type générique se décidera avec la première organisation hors sport.

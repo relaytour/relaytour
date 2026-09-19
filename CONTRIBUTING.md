@@ -6,8 +6,8 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 
 - `packages/server` : API GraphQL (Express, Apollo Server 4, Pothos, un seul schéma), connexion Better Auth et worker BullMQ.
 - `packages/orga` : espace organisateur, SPA React 19 + Vite + React Router 7 + Apollo Client 4 + antd 6. Types GraphQL générés dans `src/gql/`.
-- `packages/tokens` : modèle de thème (palette, polices, typographie des titres), thème par défaut « bleu-vert » et thème alternatif « encre-lagon », vérification des contrastes. Le matériau (verre, rayons, ombres) vit dans `packages/orga/src/global.css`. Identité décrite dans `docs/identite.md`.
-- `content/exemple` : organisation d'exemple, fictive et anonyme. Le contenu réel d'une organisation vit hors du dépôt (voir son README).
+- `packages/tokens` : modèle de thème, thème par défaut et thème alternatif de Relaytour, contraste. Le serveur le lit pour valider et compléter le thème d'une organisation ; l'espace organisateur le lit pour le thème de repli (ADR 0006).
+- `content/exemple` : organisation d'exemple, fictive et anonyme (`organisation.yaml`, périmètres, fiches, tâches types). Le contenu réel d'une organisation vit hors du dépôt (voir son README).
 - `packages/database` : Prisma 6 sur MariaDB 11.8. Le client généré (`src/generated/`) n'est jamais commité.
 - `infra/` : déploiement de référence minimal (Compose, Caddyfile d'exemple, étapes). L'exploitation réelle vit hors du dépôt (ADR 0007).
 - `outils/verifier-licences.mjs` et `outils/verifier-publication.mjs` : contrôles de CI sur les licences des dépendances et sur l'absence de traces privées.
@@ -44,6 +44,7 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 | Contenu d'une organisation | Un dépôt par organisation, créé depuis `relaytour/organisation-modele`, rattaché par un chemin (`CONTENU_ORGA`), un volume ou la CI de l'organisation | ADR 0003, 0007 |
 | Dépendances | Licences compatibles avec l'AGPL seulement, liste blanche dans `outils/verifier-licences.mjs`. Valkey et non Redis. | ADR 0007 |
 | Licence | AGPL-3.0, un seul code, multi-organisation à venir. Le contenu d'une organisation n'entre jamais dans le dépôt. | ADR 0005, 0006 |
+| Configuration d'organisation | Un seul objet (`packages/server/src/lib/organisation.ts`), lu dans la ligne `Organisation` en base, sinon dans les variables d'amorçage. `organisation.yaml` du dépôt d'organisation la porte ; l'import la met à jour. L'expéditeur des mails et l'origine de l'espace organisateur restent dans l'environnement. | ADR 0006 |
 | Rôles V1 | Admin et référent·e. Le rôle bénévole viendra après la V1. | ADR 0006 |
 | Score d'activité | Visible par la personne concernée et par les admins seulement. Calculé à partir de l'état actuel (une tâche rouverte perd ses points) : tâche réalisée 3 points (+1 à temps, crédités à la personne réalisatrice indiquée, sinon à celle qui a coché), tâche créée 1, fiche créée 3, fiche modifiée 2 une fois par jour. Un palmarès public se décide en fin d'édition. Barème validé le 16 septembre 2026. | `packages/server/src/lib/score.ts` |
 | Tâches | Une tâche ne se supprime pas, elle s'abandonne. Modifier la tâche d'une autre personne exige une confirmation et la prévient par mail. Qui a coché et qui a réalisé une tâche n'est visible que par la personne qui a coché et par les admins. | `packages/server/src/schema/taches.ts` |
@@ -88,7 +89,8 @@ Un seul mot par notion.
 
 | Mot | Sens |
 |---|---|
-| édition | Une année du tournoi (2025, 2027). |
+| organisation | L'association ou le collectif qui utilise une installation de Relaytour. Une seule par installation aujourd'hui (ADR 0006, lot commun). |
+| édition | Une année de l'événement (2025, 2027). |
 | périmètre | Un sport ou un pôle transverse (logistique, communication…). |
 | pôle | Périmètre transverse à tous les sports (coordination, logistique, trésorerie…). Les pôles sont listés dans le `perimetres.yaml` de l'organisation. |
 | référent·e | Personne membre de l'organisation, désignée pour un périmètre et une édition. |

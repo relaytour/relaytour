@@ -15,8 +15,8 @@ Relaytour est un logiciel libre (AGPL-3.0). Vous pouvez l'héberger vous-même. 
 | `packages/server` | API GraphQL (Express, Apollo, Pothos), connexion Better Auth et worker (BullMQ, mails). |
 | `packages/orga` | Espace organisateur (React, Vite, antd). |
 | `packages/database` | Schéma Prisma, migrations et services Docker du poste local. |
-| `packages/tokens` | Couleurs et polices du thème par défaut. |
-| `content/exemple` | Organisation d'exemple : périmètres, fiches méthode et tâches types. |
+| `packages/tokens` | Modèle de thème et thème par défaut de Relaytour. Chaque organisation déclare le sien dans `organisation.yaml`. |
+| `content/exemple` | Organisation d'exemple : identité et thème, périmètres, fiches méthode et tâches types. |
 | `infra/` | Déploiement de référence : Docker Compose, Caddyfile d'exemple et étapes pour s'auto-héberger. |
 | `outils/versionner.mjs` | Notes de version et trains de version. |
 | `docs/adr/` | Décisions d'architecture. |

@@ -38,7 +38,7 @@ L'espace organisateur est un site statique, livré par l'image `-orga` et servi 
     ```bash
     docker compose --env-file .env exec server node dist/creer-edition.js 2027 "Rencontres 2027" 2027-06-05 2027-06-06
     ```
-12. **Contenu de l'organisation.** Cloner votre dépôt d'organisation (créé depuis `relaytour/organisation-modele`) dans `/srv/relaytour/contenu`, puis :
+12. **Contenu de l'organisation.** Cloner votre dépôt d'organisation (créé depuis `relaytour/organisation-modele`) dans `/srv/relaytour/contenu`, puis importer. L'import lit `organisation.yaml` : le nom, le thème et les domaines de mail de votre organisation remplacent les valeurs d'amorçage du `.env`.
     ```bash
     docker compose --env-file .env run --rm -v /srv/relaytour/contenu/contenu:/contenu:ro server \
       node dist/orga-importer.js --dossier /contenu --edition 2027 --simulation
