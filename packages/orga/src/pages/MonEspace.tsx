@@ -1,13 +1,16 @@
+import { ArrowRightOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
-import { Card, Col, Empty, Row, Skeleton, Space, Tag, Typography } from 'antd'
-import { Link } from 'react-router'
+import { Button, Empty, Skeleton } from 'antd'
+import { Link, useNavigate } from 'react-router'
 
 import Avancement from '../composants/Avancement'
 import Contribution from '../composants/Contribution'
+import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import TacheCarte from '../composants/TacheCarte'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import { dateCourte } from '../lib/erreurs'
+import { prenom } from '../lib/personnes'
 import { EDITION_COURANTE, MOI } from '../lib/requetes'
 
 const MES_TACHES = graphql(`
@@ -45,7 +48,11 @@ const MES_TACHES = graphql(`
   }
 `)
 
+const pluriel = (n: number, un: string, plusieurs: string) =>
+  `${n} ${n > 1 ? plusieurs : un}`
+
 export default function MonEspace() {
+  const navigate = useNavigate()
   const { data: session } = useQuery(MOI)
   const { data: courante, loading: chargementEdition } =
     useQuery(EDITION_COURANTE)
@@ -57,110 +64,157 @@ export default function MonEspace() {
   const moiId = session?.moi?.id ?? ''
   const estAdmin = session?.moi?.estAdmin ?? false
   const affectations = data?.moi?.affectations ?? []
+  const mesTaches = data?.mesTaches ?? []
+  const aPrendre = data?.tachesAPrendre ?? []
+  const enRetard = mesTaches.filter(t => t.enRetard).length
   const referentsDe = (perimetreId: string) =>
     affectations.find(a => a.perimetre.id === perimetreId)?.perimetre
       .referents ?? []
+
+  const sousTitre = edition
+    ? `${edition.nom}, du ${dateCourte(edition.debut)} au ${dateCourte(edition.fin)}.`
+    : chargementEdition
+      ? ' '
+      : 'Aucune édition n’est en préparation.'
 
   return (
     <>
       <Titre
         sousTitre={
-          edition
-            ? `${edition.nom}, du ${dateCourte(edition.debut)} au ${dateCourte(edition.fin)}`
-            : chargementEdition
-              ? ' '
-              : 'Aucune édition n’est en préparation.'
+          data && edition
+            ? `${sousTitre} ${pluriel(mesTaches.length, 'tâche ouverte vous est assignée', 'tâches ouvertes vous sont assignées')}.`
+            : sousTitre
+        }
+        actions={
+          edition && (
+            <Button
+              icon={<ArrowRightOutlined />}
+              iconPlacement="end"
+              onClick={() => navigate('/retroplanning')}
+            >
+              Voir le rétroplanning
+            </Button>
+          )
         }
       >
-        Bonjour {session?.moi?.nom}
+        Bonjour {prenom(session?.moi?.nom)}
       </Titre>
 
       {loading || chargementEdition ? (
         <Skeleton active />
       ) : !edition ? null : (
-        <Space orientation="vertical" size={32} style={{ width: '100%' }}>
-          <section>
-            <Typography.Title level={4}>Vos tâches</Typography.Title>
-            {(data?.mesTaches ?? []).length === 0 ? (
-              <Card>
-                <Empty description="Aucune tâche ouverte ne vous est assignée." />
-              </Card>
-            ) : (
-              <Space orientation="vertical" size={12} style={{ width: '100%' }}>
-                {data!.mesTaches.map(tache => (
-                  <TacheCarte
-                    key={tache.id}
-                    tache={tache}
-                    moiId={moiId}
-                    peutModifier
-                    referents={referentsDe(tache.perimetre.id)}
-                    estAdmin={estAdmin}
-                    afficherPerimetre
-                  />
-                ))}
-              </Space>
-            )}
-          </section>
-
-          {(data?.tachesAPrendre ?? []).length > 0 && (
-            <section>
-              <Typography.Title level={4}>
-                À prendre dans vos périmètres
-              </Typography.Title>
-              <Space orientation="vertical" size={12} style={{ width: '100%' }}>
-                {data!.tachesAPrendre.map(tache => (
-                  <TacheCarte
-                    key={tache.id}
-                    tache={tache}
-                    moiId={moiId}
-                    peutModifier
-                    referents={referentsDe(tache.perimetre.id)}
-                    estAdmin={estAdmin}
-                    afficherPerimetre
-                  />
-                ))}
-              </Space>
-            </section>
-          )}
-
-          <section>
-            <Typography.Title level={4}>Vos périmètres</Typography.Title>
-            {affectations.length === 0 ? (
-              <Card>
-                <Empty description="Vous n’êtes affecté·e à aucun périmètre pour cette édition. Les admins gèrent les affectations." />
-              </Card>
-            ) : (
-              <Row gutter={[16, 16]}>
-                {affectations.map(({ id, perimetre }) => (
-                  <Col key={id} xs={24} sm={12} lg={8}>
-                    <Link to={`/perimetres/${perimetre.slug}`}>
-                      <Card
-                        hoverable
-                        className="rt-carte-lien"
+        <DeuxColonnes
+          cote={
+            <>
+              <Panneau
+                titre="Vos périmètres"
+                extra={<span className="rt-compte">{edition.annee}</span>}
+              >
+                {affectations.length === 0 ? (
+                  <p className="rt-texte-secondaire">
+                    Vous n’êtes affecté·e à aucun périmètre pour cette édition.
+                    Les admins gèrent les affectations.
+                  </p>
+                ) : (
+                  affectations.map(({ id, perimetre }) => (
+                    <Link
+                      key={id}
+                      to={`/perimetres/${perimetre.slug}`}
+                      className="rt-bloc-lien"
+                    >
+                      <span
                         style={{
-                          borderTop: `6px solid ${perimetre.couleur ?? 'var(--rt-primaire)'}`,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 10,
                         }}
-                        title={perimetre.nom}
-                        extra={
-                          <Tag>
-                            {perimetre.type === 'SPORT' ? 'Sport' : 'Pôle'}
-                          </Tag>
-                        }
                       >
-                        <Avancement avancement={perimetre.avancement} compact />
-                      </Card>
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 9,
+                            fontSize: 15,
+                            fontWeight: 600,
+                          }}
+                        >
+                          <span
+                            className="rt-point"
+                            style={{
+                              background:
+                                perimetre.couleur ?? 'var(--rt-primaire)',
+                            }}
+                          />
+                          {perimetre.nom}
+                        </span>
+                        <span className="rt-libelle">
+                          {perimetre.type === 'SPORT' ? 'Sport' : 'Pôle'}
+                        </span>
+                      </span>
+                      <Avancement
+                        avancement={perimetre.avancement}
+                        couleur={perimetre.couleur ?? undefined}
+                        compact
+                      />
                     </Link>
-                  </Col>
-                ))}
-              </Row>
+                  ))
+                )}
+              </Panneau>
+              <Contribution
+                editionId={edition.id}
+                nomEdition={String(edition.annee)}
+              />
+            </>
+          }
+        >
+          <Section
+            titre="Vos tâches"
+            compte={`${pluriel(mesTaches.length, 'ouverte', 'ouvertes')}${enRetard > 0 ? ` · ${enRetard} en retard` : ''}`}
+          >
+            {mesTaches.length === 0 ? (
+              <div className="rt-verre rt-panneau">
+                <Empty description="Aucune tâche ouverte ne vous est assignée." />
+              </div>
+            ) : (
+              mesTaches.map(tache => (
+                <TacheCarte
+                  key={tache.id}
+                  tache={tache}
+                  moiId={moiId}
+                  peutModifier
+                  referents={referentsDe(tache.perimetre.id)}
+                  estAdmin={estAdmin}
+                  afficherPerimetre
+                />
+              ))
             )}
-          </section>
+          </Section>
 
-          <section>
-            <Typography.Title level={4}>Votre contribution</Typography.Title>
-            <Contribution editionId={edition.id} />
-          </section>
-        </Space>
+          {aPrendre.length > 0 && (
+            <Section
+              titre="À prendre dans vos périmètres"
+              compte={pluriel(
+                aPrendre.length,
+                'tâche sans personne',
+                'tâches sans personne'
+              )}
+            >
+              {aPrendre.map(tache => (
+                <TacheCarte
+                  key={tache.id}
+                  tache={tache}
+                  moiId={moiId}
+                  peutModifier
+                  referents={referentsDe(tache.perimetre.id)}
+                  estAdmin={estAdmin}
+                  afficherPerimetre
+                  teinte
+                />
+              ))}
+            </Section>
+          )}
+        </DeuxColonnes>
       )}
     </>
   )

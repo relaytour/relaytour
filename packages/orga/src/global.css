@@ -576,6 +576,877 @@ button.rt-ligne-lien {
   padding: 6px 10px;
 }
 
+/* ── Composants de l'espace organisateur ──────────────────────────────────
+   Les écrans publics et l'administration partagent ces classes. Chaque bloc
+   nomme le composant React qui le porte. */
+
+/* Mise en page à deux colonnes : le contenu, puis une colonne de panneaux
+   (DeuxColonnes). Sous 1100 px, la colonne passe sous le contenu. */
+.rt-deux-colonnes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 20px;
+  align-items: start;
+}
+
+.rt-colonne {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 1099px) {
+  .rt-deux-colonnes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* En-tête de page (Titre) : titre et sous-titre à gauche, actions à droite. */
+.rt-entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 22px;
+}
+
+.rt-entete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+
+/* Titre de section : un titre, puis un compte en mono (Section). */
+.rt-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.rt-section-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 12px;
+  padding: 0 6px;
+}
+
+.rt-section-titre h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.rt-compte {
+  font-family: var(--rt-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--rt-encre-55);
+}
+
+/* Panneau de verre de la colonne de droite (Panneau). */
+.rt-panneau {
+  border-radius: var(--rt-rayon-panneau);
+  padding: 22px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+.rt-panneau-titre {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.rt-panneau-titre h2 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rt-panneau p {
+  margin: 0;
+}
+
+.rt-texte-secondaire {
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--rt-encre-70);
+}
+
+.rt-note {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--rt-encre-55);
+}
+
+/* Puces de filtre (Puces, PuceBascule). Une puce d'un groupe exclusif active
+   se lit en encre pleine ; une bascule active se lit en primaire clair. */
+.rt-puces {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.rt-puce {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  height: 36px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+  color: var(--rt-encre-70);
+  background: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.9),
+    rgba(255, 255, 255, 0.55)
+  );
+  box-shadow: var(--rt-ombre-flottante), var(--rt-liseret);
+  transition:
+    background var(--rt-duree) var(--rt-ease-fluide),
+    color var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-puce:hover {
+  color: var(--rt-encre);
+  background: rgba(var(--rt-encre-rgb), 0.07);
+}
+
+.rt-puce[aria-pressed='true'],
+.rt-puce[aria-checked='true'] {
+  color: #ffffff;
+  background: var(--rt-encre);
+  box-shadow: 0 4px 14px rgba(var(--rt-encre-rgb), 0.18);
+}
+
+.rt-puce.rt-puce-bascule[aria-pressed='true'] {
+  color: var(--rt-primaire);
+  background: var(--rt-primaire-clair);
+  box-shadow: var(--rt-ombre-flottante), var(--rt-liseret);
+}
+
+.rt-puce-compte {
+  font-family: var(--rt-mono);
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 0.75;
+}
+
+.rt-puces-separateur {
+  width: 1px;
+  height: 22px;
+  margin: 0 4px;
+  background: var(--rt-encre-14);
+}
+
+/* Pastille d'état : un point et un libellé (PastilleEtat, PastilleStatut). */
+.rt-etat {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  max-width: 100%;
+  padding: 4px 11px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--rt-encre);
+  background: rgba(var(--rt-encre-rgb), 0.06);
+}
+
+.rt-etat::before {
+  content: '';
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: rgba(var(--rt-encre-rgb), 0.3);
+}
+
+.rt-etat.rt-sans-point::before {
+  display: none;
+}
+
+.rt-etat-en-cours {
+  color: var(--rt-primaire);
+  background: var(--rt-primaire-clair);
+}
+
+.rt-etat-en-cours::before {
+  background: var(--rt-primaire);
+}
+
+.rt-etat-faite {
+  color: var(--rt-succes);
+  background: var(--rt-succes-clair);
+}
+
+.rt-etat-faite::before {
+  background: var(--rt-succes);
+}
+
+.rt-etat-abandonnee {
+  color: var(--rt-encre-55);
+}
+
+.rt-etat-abandonnee::before {
+  background: rgba(var(--rt-encre-rgb), 0.2);
+}
+
+.rt-etat-retard {
+  color: var(--rt-erreur);
+  background: var(--rt-erreur-clair);
+}
+
+.rt-etat-retard::before {
+  background: var(--rt-erreur);
+}
+
+.rt-etat-alerte {
+  color: var(--rt-alerte);
+  background: var(--rt-alerte-clair);
+}
+
+.rt-etat-alerte::before {
+  background: var(--rt-alerte);
+}
+
+a.rt-etat:hover {
+  filter: brightness(0.95);
+}
+
+/* Étiquette de périmètre (EtiquettePerimetre) : la couleur du périmètre teinte
+   le fond ; le texte reprend la couleur assombrie pour rester lisible. */
+.rt-etiquette {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 12.5px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-decoration: none;
+}
+
+a.rt-etiquette:hover {
+  filter: brightness(0.95);
+}
+
+.rt-point {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+/* Initiales d'une personne (Avatar) et personne nommée (PersonneNommee). */
+.rt-avatar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  color: var(--rt-primaire);
+  background: var(--rt-primaire-clair);
+}
+
+.rt-avatar-encre {
+  color: #ffffff;
+  background: var(--rt-encre);
+}
+
+.rt-personne {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--rt-encre-70);
+}
+
+.rt-personne-retirable {
+  padding: 2px 4px 2px 2px;
+  border-radius: 999px;
+  color: var(--rt-encre);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: var(--rt-liseret);
+}
+
+.rt-personne-retirer {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--rt-encre-55);
+  cursor: pointer;
+}
+
+.rt-personne-retirer:hover {
+  color: var(--rt-erreur);
+  background: var(--rt-erreur-clair);
+}
+
+/* Carte de tâche (TacheCarte) : un rail de couleur, le contenu, les actions. */
+.rt-carte-tache {
+  border-radius: 22px;
+  padding: 16px 20px 16px 18px;
+  display: grid;
+  grid-template-columns: 6px minmax(0, 1fr) auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.rt-carte-tache.rt-abandonnee {
+  opacity: 0.6;
+}
+
+.rt-rail {
+  align-self: stretch;
+  width: 6px;
+  min-height: 36px;
+  border-radius: 999px;
+}
+
+.rt-carte-tache-corps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.rt-carte-tache-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  font-size: 16px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rt-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.rt-date {
+  font-family: var(--rt-mono);
+  font-size: 12.5px;
+  letter-spacing: 0.02em;
+  color: var(--rt-encre-70);
+}
+
+.rt-date-retard {
+  color: var(--rt-erreur);
+}
+
+.rt-date-proche {
+  color: var(--rt-alerte);
+}
+
+.rt-carte-tache-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+@media (max-width: 767px) {
+  .rt-carte-tache {
+    grid-template-columns: 6px minmax(0, 1fr);
+  }
+  .rt-carte-tache-actions {
+    grid-column: 2;
+    justify-content: flex-start;
+  }
+}
+
+/* Bouton d'engagement : la couleur d'accent porte « Je m'en occupe ». */
+.ant-btn.rt-bouton-engagement,
+.ant-btn.rt-bouton-engagement:not(:disabled):hover {
+  color: #ffffff;
+  border-color: transparent;
+  background: var(--rt-accent);
+  box-shadow:
+    var(--rt-ombre-accent),
+    inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.ant-btn.rt-bouton-engagement:not(:disabled):hover {
+  filter: brightness(0.94);
+}
+
+/* Ligne de rétroplanning (LigneTache) : toute la ligne mène au périmètre. */
+.rt-ligne-tache {
+  display: grid;
+  grid-template-columns: 6px 118px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 18px 12px 16px;
+  border-radius: 18px;
+  color: var(--rt-encre);
+  text-decoration: none;
+  transition: background var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-ligne-tache:hover {
+  color: var(--rt-encre);
+  background:
+    linear-gradient(
+      rgba(var(--rt-encre-rgb), 0.05),
+      rgba(var(--rt-encre-rgb), 0.05)
+    ),
+    var(--rt-verre);
+}
+
+.rt-ligne-tache .rt-rail {
+  min-height: 32px;
+}
+
+.rt-ligne-tache-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  min-width: 0;
+  font-size: 15px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rt-ligne-tache-fin {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
+}
+
+.rt-ligne-tache.rt-abandonnee {
+  opacity: 0.6;
+}
+
+.rt-ligne-tache.rt-abandonnee .rt-ligne-tache-titre > span:first-child {
+  text-decoration: line-through;
+}
+
+@media (max-width: 767px) {
+  .rt-ligne-tache {
+    grid-template-columns: 6px minmax(0, 1fr);
+  }
+  .rt-ligne-tache > :nth-child(n + 3) {
+    grid-column: 2;
+  }
+  .rt-ligne-tache-fin {
+    justify-content: flex-start;
+  }
+}
+
+/* Barre d'avancement empilée et sa légende (Avancement). */
+.rt-barre-empilee {
+  display: flex;
+  gap: 2px;
+  height: 10px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--rt-encre-08);
+}
+
+.rt-barre-simple {
+  height: 8px;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--rt-encre-08);
+}
+
+.rt-barre-simple > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+}
+
+.rt-legende {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+}
+
+.rt-legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.rt-grand-nombre {
+  font-family: var(--rt-police-titre);
+  font-weight: var(--rt-titre-graisse);
+  letter-spacing: var(--rt-titre-espacement);
+  font-size: calc(40px * var(--rt-titre-echelle));
+  line-height: 1;
+}
+
+/* Tuiles de chiffres (Contribution). */
+.rt-tuiles {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.rt-tuile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: var(--rt-liseret);
+}
+
+.rt-tuile-valeur {
+  font-family: var(--rt-mono);
+  font-size: 20px;
+  font-weight: 500;
+}
+
+/* Bloc cliquable posé dans un panneau (périmètre de Mon espace). */
+.rt-bloc-lien {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  color: var(--rt-encre);
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: var(--rt-liseret);
+  transition: background var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-bloc-lien:hover {
+  color: var(--rt-encre);
+  background: rgba(var(--rt-encre-rgb), 0.06);
+}
+
+/* Fiches : grille de cartes, ou liste condensée à la bascule. */
+.rt-grille-fiches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-carte-fiche {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: 100%;
+  min-height: 104px;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border-radius: var(--rt-rayon-carte);
+  color: var(--rt-encre);
+  text-decoration: none;
+  transition: background var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-carte-fiche:hover {
+  color: var(--rt-encre);
+  background:
+    linear-gradient(
+      rgba(var(--rt-encre-rgb), 0.05),
+      rgba(var(--rt-encre-rgb), 0.05)
+    ),
+    var(--rt-verre);
+}
+
+.rt-carte-fiche-titre {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.rt-icone-fiche {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+}
+
+.rt-carte-fiche .rt-date {
+  margin-top: auto;
+  font-size: 12px;
+  color: var(--rt-encre-55);
+}
+
+.rt-liste-condensee {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  border-radius: var(--rt-rayon-carte);
+  overflow: hidden;
+}
+
+.rt-liste-condensee li + li {
+  border-top: 1px solid var(--rt-encre-08);
+}
+
+.rt-liste-condensee .rt-carte-fiche {
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 0;
+  padding: 10px 16px;
+  border-radius: 0;
+  background: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+.rt-liste-condensee .rt-carte-fiche:hover {
+  background: rgba(var(--rt-encre-rgb), 0.05);
+}
+
+.rt-liste-condensee .rt-carte-fiche-titre {
+  align-items: center;
+  font-size: 14.5px;
+}
+
+.rt-liste-condensee .rt-icone-fiche {
+  width: 24px;
+  height: 24px;
+  border-radius: 8px;
+}
+
+.rt-liste-condensee .rt-carte-fiche .rt-date {
+  margin-top: 0;
+  white-space: nowrap;
+}
+
+/* Choix exclusif présenté en cartes (Préférences). */
+.rt-choix .ant-radio-group {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 10px;
+  width: 100%;
+}
+
+.rt-choix .ant-radio-wrapper {
+  margin: 0;
+  padding: 14px 16px;
+  border-radius: 18px;
+  align-items: flex-start;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: var(--rt-liseret);
+  transition: background var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-choix .ant-radio-wrapper-checked {
+  background: var(--rt-primaire-clair);
+  box-shadow: inset 0 0 0 2px var(--rt-primaire);
+}
+
+.rt-choix-titre {
+  display: block;
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.rt-choix-detail {
+  display: block;
+  margin-top: 4px;
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--rt-encre-70);
+}
+
+/* Réglage à bascule : le texte à gauche, l'interrupteur à droite. */
+.rt-reglage {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 16px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: var(--rt-liseret);
+}
+
+.rt-reglage label {
+  cursor: pointer;
+}
+
+/* Description en deux colonnes : un libellé, une valeur (À propos). */
+.rt-description {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 10px 16px;
+  margin: 0;
+  font-size: 13.5px;
+}
+
+.rt-description dt {
+  color: var(--rt-encre-55);
+}
+
+.rt-description dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+/* Fil d'Ariane au-dessus d'un titre. */
+.rt-ariane {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  font-size: 13.5px;
+  color: var(--rt-encre-55);
+}
+
+.rt-ariane a {
+  font-weight: 600;
+  color: var(--rt-primaire);
+}
+
+/* Sélecteur d'édition en pilule (ChoixEdition). */
+.rt-choix-edition {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Recherche globale de la barre haute (Recherche). */
+.rt-recherche {
+  flex: 0 1 460px;
+  min-width: 0;
+}
+
+.rt-recherche .ant-select-selector,
+.rt-recherche .ant-input-affix-wrapper {
+  border-radius: 999px !important;
+}
+
+.rt-resultat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+
+.rt-resultat-titre {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+/* Bouton rond et sans fond de la barre haute (cloche, compte). */
+.ant-btn.rt-bouton-barre {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ant-btn.rt-bouton-barre:not(:disabled):hover {
+  background: rgba(var(--rt-encre-rgb), 0.07);
+}
+
+.rt-compte-bouton {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  height: 44px;
+  padding: 0 12px 0 4px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  font: inherit;
+  font-size: 14.5px;
+  font-weight: 600;
+  color: var(--rt-encre);
+  cursor: pointer;
+}
+
+.rt-compte-bouton:hover {
+  background: rgba(var(--rt-encre-rgb), 0.07);
+}
+
+.rt-compte-bouton .rt-avatar {
+  width: 36px;
+  height: 36px;
+  font-size: 13px;
+}
+
+/* Texte lu par les lecteurs d'écran seulement. */
+.rt-sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Point de couleur d'un périmètre dans le menu latéral. */
+.rt-barre-laterale .ant-menu-item .rt-point {
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
+}
+
 @media (prefers-reduced-motion: reduce) {
   * {
     transition-duration: 0.01ms !important;

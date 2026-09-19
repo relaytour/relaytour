@@ -1,27 +1,21 @@
 import { BookOutlined, PlusOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
-import {
-  Alert,
-  Button,
-  Card,
-  Empty,
-  Result,
-  Segmented,
-  Select,
-  Skeleton,
-  Space,
-  Typography,
-} from 'antd'
+import { Alert, Button, Empty, Result, Skeleton } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import Avancement from '../composants/Avancement'
+import ChoixEdition from '../composants/ChoixEdition'
+import { DeuxColonnes, Panneau } from '../composants/Panneau'
+import { Avatar, PersonneNommee } from '../composants/Personne'
+import { Puces } from '../composants/Puces'
 import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import type { TacheChampsFragment } from '../gql/graphql'
 import { EDITION_COURANTE, EDITIONS, MOI } from '../lib/requetes'
+import { estOuverte } from '../lib/taches'
 
 const PAGE = graphql(`
   query PagePerimetre($slug: String!, $editionId: ID!) {
@@ -99,6 +93,17 @@ export default function Perimetre() {
     [perimetre, filtre]
   )
 
+  // Le nombre de tâches ouvertes de chaque personne affectée au périmètre.
+  const chargeDe = useMemo(() => {
+    const charge = new Map<string, number>()
+    for (const tache of perimetre?.taches ?? []) {
+      if (!estOuverte(tache)) continue
+      for (const p of tache.assignes)
+        charge.set(p.id, (charge.get(p.id) ?? 0) + 1)
+    }
+    return charge
+  }, [perimetre])
+
   if (error) {
     return <Result status="403" title="Vous n’avez pas accès à ce périmètre." />
   }
@@ -109,57 +114,85 @@ export default function Perimetre() {
   if (!perimetre || !data.moi)
     return <Result status="404" title="Ce périmètre est introuvable." />
 
+  const moiId = data.moi.id
   const edition = editions?.editions.find(e => e.id === editionId)
+  const a = perimetre.avancement
 
   return (
     <>
-      <div
-        style={{
-          borderInlineStart: `8px solid ${perimetre.couleur ?? 'var(--rt-primaire)'}`,
-          paddingInlineStart: 16,
-        }}
-      >
-        <Titre
-          sousTitre={
-            perimetre.referents.length > 0
-              ? `Référent·es : ${perimetre.referents.map(r => r.nom).join(', ')}`
-              : 'Aucune personne n’est affectée à ce périmètre pour cette édition.'
-          }
-        >
-          {perimetre.nom}
-        </Titre>
-      </div>
-
-      <Space
-        wrap
-        style={{
-          marginBottom: 16,
-          width: '100%',
-          justifyContent: 'space-between',
-        }}
-      >
-        <Space>
-          <span>Édition</span>
-          <Select
-            style={{ minWidth: 180 }}
-            value={editionId}
-            onChange={id => setParametres({ edition: id })}
-            options={(editions?.editions ?? []).map(e => ({
-              value: e.id,
-              label: e.nom,
-            }))}
-          />
-        </Space>
-        {perimetre.peutModifier && (
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setEnEdition('nouvelle')}
+      <div style={{ display: 'flex', gap: 16, alignItems: 'stretch' }}>
+        <span
+          className="rt-rail"
+          style={{
+            width: 8,
+            marginBottom: 22,
+            background: perimetre.couleur ?? 'var(--rt-primaire)',
+          }}
+          aria-hidden="true"
+        />
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <Titre
+            sousTitre={
+              perimetre.referents.length > 0 ? (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: '6px 12px',
+                  }}
+                >
+                  <span>Référent·es :</span>
+                  {perimetre.referents.map(r => (
+                    <PersonneNommee
+                      key={r.id}
+                      nom={r.id === moiId ? 'Vous' : r.nom}
+                      initialesDe={r.nom}
+                    />
+                  ))}
+                </span>
+              ) : (
+                'Aucune personne n’est affectée à ce périmètre pour cette édition.'
+              )
+            }
+            actions={
+              <>
+                <ChoixEdition
+                  valeur={editionId}
+                  onChange={id => setParametres({ edition: id })}
+                />
+                {perimetre.peutModifier && (
+                  <Button
+                    type="primary"
+                    size="large"
+                    icon={<PlusOutlined />}
+                    onClick={() => setEnEdition('nouvelle')}
+                  >
+                    Nouvelle tâche
+                  </Button>
+                )}
+              </>
+            }
           >
-            Nouvelle tâche
-          </Button>
-        )}
-      </Space>
+            <span
+              style={{
+                display: 'inline-flex',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                gap: 12,
+              }}
+            >
+              {perimetre.nom}
+              <span
+                className="rt-libelle rt-verre"
+                style={{ padding: '4px 10px', borderRadius: 999 }}
+              >
+                {perimetre.type === 'SPORT' ? 'Sport' : 'Pôle'}
+              </span>
+            </span>
+          </Titre>
+        </div>
+      </div>
 
       {!perimetre.peutModifier && edition?.statut === 'ARCHIVEE' && (
         <Alert
@@ -170,88 +203,152 @@ export default function Perimetre() {
         />
       )}
 
-      <Card style={{ marginBottom: 16 }}>
-        <Avancement avancement={perimetre.avancement} />
-      </Card>
-
-      <Card
-        size="small"
-        style={{ marginBottom: 16 }}
-        title={
-          <Space>
-            <BookOutlined />
-            Fiches méthode
-          </Space>
-        }
-        extra={
-          perimetre.peutRedigerFiches && (
-            <Button
-              size="small"
-              onClick={() => navigate(`/fiches/nouvelle?perimetre=${slug}`)}
+      <DeuxColonnes
+        cote={
+          <>
+            <Panneau
+              titre="Avancement"
+              extra={<span className="rt-compte">{edition?.annee}</span>}
             >
-              Nouvelle fiche
-            </Button>
-          )
+              <Avancement avancement={a} />
+            </Panneau>
+
+            <Panneau
+              titre="Fiches méthode"
+              icone={<BookOutlined aria-hidden />}
+              extra={
+                perimetre.peutRedigerFiches && (
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() =>
+                      navigate(`/fiches/nouvelle?perimetre=${slug}`)
+                    }
+                  >
+                    Nouvelle fiche
+                  </Button>
+                )
+              }
+            >
+              {perimetre.fiches.length === 0 ? (
+                <p className="rt-texte-secondaire">
+                  Aucune fiche pour ce périmètre.
+                </p>
+              ) : (
+                <ul className="rt-liste-liens">
+                  {perimetre.fiches.map(f => (
+                    <li key={f.id}>
+                      <Link
+                        className="rt-ligne-lien"
+                        style={{ fontSize: 13.5 }}
+                        to={`/fiches/${f.slug}`}
+                      >
+                        {f.titre}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Panneau>
+
+            {perimetre.referents.length > 0 && (
+              <Panneau titre="Personnes affectées">
+                <ul
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10,
+                    margin: 0,
+                    padding: 0,
+                    listStyle: 'none',
+                  }}
+                >
+                  {perimetre.referents.map(r => {
+                    const charge = chargeDe.get(r.id) ?? 0
+                    return (
+                      <li
+                        key={r.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          fontSize: 14,
+                        }}
+                      >
+                        <Avatar nom={r.nom} taille={28} />
+                        <span style={{ fontWeight: 600 }}>
+                          {r.id === moiId ? 'Vous' : r.nom}
+                        </span>
+                        <span
+                          className="rt-compte"
+                          style={{ marginInlineStart: 'auto' }}
+                        >
+                          {charge} {charge > 1 ? 'tâches' : 'tâche'}
+                        </span>
+                      </li>
+                    )
+                  })}
+                </ul>
+                <p className="rt-note">
+                  Le nombre compte les tâches ouvertes assignées à chaque
+                  personne.
+                </p>
+              </Panneau>
+            )}
+          </>
         }
       >
-        {perimetre.fiches.length === 0 ? (
-          <Typography.Text type="secondary">
-            Aucune fiche pour ce périmètre.
-          </Typography.Text>
+        <div
+          className="rt-puces"
+          style={{ justifyContent: 'space-between', rowGap: 10 }}
+        >
+          <Puces<Filtre>
+            libelle="Statut des tâches"
+            valeur={filtre}
+            onChange={setFiltre}
+            options={[
+              {
+                valeur: 'ouvertes',
+                libelle: 'Ouvertes',
+                compte: a.aFaire + a.enCours,
+              },
+              { valeur: 'faites', libelle: 'Faites', compte: a.faites },
+              {
+                valeur: 'abandonnees',
+                libelle: 'Abandonnées',
+                compte: a.abandonnees,
+              },
+              { valeur: 'toutes', libelle: 'Toutes', compte: a.total },
+            ]}
+          />
+          <span className="rt-note">Triées par échéance</span>
+        </div>
+
+        {taches.length === 0 ? (
+          <div className="rt-verre rt-panneau">
+            <Empty description="Aucune tâche dans cette catégorie." />
+          </div>
         ) : (
-          <ul className="rt-liste-liens">
-            {perimetre.fiches.map(f => (
-              <li key={f.id}>
-                <Link className="rt-ligne-lien" to={`/fiches/${f.slug}`}>
-                  {f.titre}
-                </Link>
-              </li>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+            {taches.map(tache => (
+              <TacheCarte
+                key={tache.id}
+                tache={tache}
+                moiId={moiId}
+                peutModifier={perimetre.peutModifier}
+                referents={perimetre.referents}
+                estAdmin={session?.moi?.estAdmin ?? false}
+                onModifier={setEnEdition}
+              />
             ))}
-          </ul>
+          </div>
         )}
-      </Card>
 
-      <div style={{ overflowX: 'auto', marginBottom: 16 }}>
-        <Segmented<Filtre>
-          value={filtre}
-          onChange={setFiltre}
-          options={[
-            {
-              value: 'ouvertes',
-              label: `Ouvertes (${perimetre.avancement.aFaire + perimetre.avancement.enCours})`,
-            },
-            {
-              value: 'faites',
-              label: `Faites (${perimetre.avancement.faites})`,
-            },
-            {
-              value: 'abandonnees',
-              label: `Abandonnées (${perimetre.avancement.abandonnees})`,
-            },
-            { value: 'toutes', label: 'Toutes' },
-          ]}
-        />
-      </div>
-
-      {taches.length === 0 ? (
-        <Card>
-          <Empty description="Aucune tâche dans cette catégorie." />
-        </Card>
-      ) : (
-        <Space orientation="vertical" size={12} style={{ width: '100%' }}>
-          {taches.map(tache => (
-            <TacheCarte
-              key={tache.id}
-              tache={tache}
-              moiId={data.moi!.id}
-              peutModifier={perimetre.peutModifier}
-              referents={perimetre.referents}
-              estAdmin={session?.moi?.estAdmin ?? false}
-              onModifier={setEnEdition}
-            />
-          ))}
-        </Space>
-      )}
+        <p className="rt-note" style={{ margin: '0 6px' }}>
+          Les tâches sont triées par échéance. Une tâche ne se supprime pas :
+          elle s’abandonne.
+        </p>
+      </DeuxColonnes>
 
       {editionId && (
         <TacheFormulaire
@@ -265,13 +362,6 @@ export default function Perimetre() {
           onEnregistree={() => setEnEdition(null)}
         />
       )}
-      <Typography.Paragraph
-        type="secondary"
-        style={{ marginTop: 24, fontSize: 13 }}
-      >
-        Les tâches sont triées par échéance. Une tâche ne se supprime pas : elle
-        s’abandonne.
-      </Typography.Paragraph>
     </>
   )
 }

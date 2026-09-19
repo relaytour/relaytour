@@ -1,4 +1,5 @@
 import {
+  contraste,
   rayons,
   rgb,
   texteSurCouleur,
@@ -119,4 +120,34 @@ export function construireTheme(theme: Theme): ThemeConfig {
  */
 export function texteSur(fond: string): string {
   return texteSurCouleur(fond)
+}
+
+function versRgb(hex: string): [number, number, number] {
+  const n = parseInt(hex.replace('#', ''), 16)
+  return [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+}
+
+function versHex([r, g, b]: [number, number, number]): string {
+  return `#${[r, g, b].map(v => Math.round(v).toString(16).padStart(2, '0')).join('')}`
+}
+
+/**
+ * La couleur d'un périmètre, assombrie vers l'encre jusqu'à tenir 4,5:1 sur
+ * blanc. Elle sert de texte sur le fond teinté d'une étiquette.
+ */
+export function teinteLisible(couleur: string, encre: string): string {
+  if (!/^#[0-9a-fA-F]{6}$/.test(couleur)) return encre
+  const depart = versRgb(couleur)
+  const arrivee = versRgb(encre)
+  for (let part = 0; part <= 1; part += 0.05) {
+    const melange = versHex(
+      depart.map((v, i) => v + (arrivee[i]! - v) * part) as [
+        number,
+        number,
+        number,
+      ]
+    )
+    if (contraste(melange, '#FFFFFF') >= 4.5) return melange
+  }
+  return encre
 }

@@ -21,11 +21,33 @@ export const FICHE = graphql(`
       modifieePar
       peutModifier
       donneesPersonnelles
+      nombreVersions
       perimetre {
         id
         slug
         nom
         couleur
+      }
+    }
+  }
+`)
+
+export const TACHES_FICHE = graphql(`
+  query TachesFiche($slug: String!, $editionId: ID!) {
+    fiche(slug: $slug) {
+      id
+      taches(editionId: $editionId) {
+        id
+        titre
+        echeance
+        statut
+        enRetard
+        perimetre {
+          id
+          slug
+          nom
+          couleur
+        }
       }
     }
   }
@@ -59,6 +81,8 @@ export const LISTE_FICHES = graphql(`
       slug
       titre
       modifieeLe
+      modifieePar
+      source
       perimetre {
         id
         slug

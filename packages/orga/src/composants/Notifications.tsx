@@ -44,7 +44,7 @@ function ilYA(iso: string): string {
 }
 
 /** Cloche de l'en-tête : nombre de notifications non lues et tiroir de consultation. */
-export default function Notifications({ compact }: { compact: boolean }) {
+export default function Notifications() {
   const navigate = useNavigate()
   const [ouvert, setOuvert] = useState(false)
   // Le nombre se rafraîchit chaque minute : les notifications viennent d'autres personnes.
@@ -58,8 +58,10 @@ export default function Notifications({ compact }: { compact: boolean }) {
 
   return (
     <>
-      <Badge count={nonLues} size="small" offset={[-4, 4]}>
+      <Badge dot={nonLues > 0} offset={[-9, 9]} color="var(--rt-accent)">
         <Button
+          shape="circle"
+          className="rt-bouton-barre"
           icon={<BellOutlined />}
           aria-label={
             nonLues > 0
@@ -67,9 +69,7 @@ export default function Notifications({ compact }: { compact: boolean }) {
               : 'Notifications'
           }
           onClick={() => setOuvert(true)}
-        >
-          {compact ? null : 'Notifications'}
-        </Button>
+        />
       </Badge>
       <Drawer
         open={ouvert}

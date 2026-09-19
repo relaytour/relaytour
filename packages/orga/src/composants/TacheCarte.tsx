@@ -1,41 +1,40 @@
 import {
   BookOutlined,
   CheckOutlined,
-  CloseOutlined,
   EditOutlined,
   MoreOutlined,
   UndoOutlined,
+  UserAddOutlined,
 } from '@ant-design/icons'
 import { useMutation } from '@apollo/client/react'
-import {
-  Button,
-  Card,
-  Dropdown,
-  Form,
-  Modal,
-  Select,
-  Space,
-  Tag,
-  Typography,
-} from 'antd'
+import { Button, Dropdown, Form, Modal, Select, Typography } from 'antd'
 import { useState } from 'react'
-import { Link } from 'react-router'
 
 import type { TacheChampsFragment } from '../gql/graphql'
 import { dateCourte } from '../lib/erreurs'
 import {
   ASSIGNER_TACHE,
   CHANGER_STATUT,
-  STATUTS,
+  estOuverte,
+  etatEcheance,
   useActionTache,
   VUES_TACHES,
 } from '../lib/taches'
+
+import EtiquettePerimetre from './EtiquettePerimetre'
+import { PastilleEtat, PastilleStatut } from './Etat'
+import { PersonneNommee } from './Personne'
 
 export interface Referent {
   id: string
   nom: string
 }
 
+/**
+ * Une tâche et ses actions : prise en charge, statut, assignation (admins),
+ * modification. Le rail porte la couleur du périmètre. `teinte` met en avant
+ * une tâche à prendre.
+ */
 export default function TacheCarte({
   tache,
   moiId,
@@ -43,6 +42,7 @@ export default function TacheCarte({
   referents,
   estAdmin = false,
   afficherPerimetre = false,
+  teinte = false,
   onModifier,
 }: {
   tache: TacheChampsFragment
@@ -51,6 +51,7 @@ export default function TacheCarte({
   referents: Referent[]
   estAdmin?: boolean
   afficherPerimetre?: boolean
+  teinte?: boolean
   onModifier?: (tache: TacheChampsFragment) => void
 }) {
   const executer = useActionTache()
@@ -62,9 +63,10 @@ export default function TacheCarte({
   })
   const [cloture, setCloture] = useState(false)
   const [realiseeParId, setRealiseeParId] = useState<string | null>(null)
+  const [choixAssignation, setChoixAssignation] = useState(false)
 
   const assignee = tache.assignes.some(p => p.id === moiId)
-  const ouverte = tache.statut === 'A_FAIRE' || tache.statut === 'EN_COURS'
+  const ouverte = estOuverte(tache)
   const enAction = assignation.loading || changement.loading
   // Le serveur refuse d'assigner une personne non affectée au périmètre pour l'édition.
   const affectee = referents.some(r => r.id === moiId)
@@ -73,6 +75,7 @@ export default function TacheCarte({
   const assignables = referents.filter(
     r => !tache.assignes.some(p => p.id === r.id)
   )
+  const echeance = etatEcheance(tache)
 
   const assignerPersonne = (
     personneId: string,
@@ -110,200 +113,217 @@ export default function TacheCarte({
   }
 
   return (
-    <Card
-      size="small"
-      style={{
-        borderInlineStart: `4px solid ${tache.perimetre.couleur ?? 'var(--rt-primaire)'}`,
-        opacity: tache.statut === 'ABANDONNEE' ? 0.6 : 1,
-      }}
+    <article
+      className={`${teinte ? 'rt-verre-teinte' : 'rt-verre'} rt-carte-tache${tache.statut === 'ABANDONNEE' ? ' rt-abandonnee' : ''}`}
     >
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          gap: 12,
-          alignItems: 'flex-start',
-        }}
-      >
-        <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+      <span
+        className="rt-rail"
+        style={{ background: tache.perimetre.couleur ?? 'var(--rt-primaire)' }}
+        aria-hidden="true"
+      />
+      <div className="rt-carte-tache-corps">
+        <div className="rt-carte-tache-titre">
           <Typography.Text
-            strong
             delete={tache.statut === 'ABANDONNEE'}
-            style={{ fontSize: 16, display: 'block' }}
+            style={{ fontSize: 16, fontWeight: 600 }}
           >
             {tache.titre}
           </Typography.Text>
-          {tache.description && (
-            <Typography.Paragraph
-              type="secondary"
-              ellipsis={{
-                rows: 2,
-                expandable: 'collapsible',
-                symbol: e => (e ? 'Réduire' : 'Lire la suite'),
-              }}
-              style={{ margin: '4px 0 0', whiteSpace: 'pre-line' }}
-            >
-              {tache.description}
-            </Typography.Paragraph>
+          {afficherPerimetre && (
+            <EtiquettePerimetre
+              nom={tache.perimetre.nom}
+              couleur={tache.perimetre.couleur}
+              lien={`/perimetres/${tache.perimetre.slug}`}
+            />
           )}
-          <Space size={[6, 6]} wrap style={{ marginTop: 8 }}>
-            {afficherPerimetre && (
-              <Link to={`/perimetres/${tache.perimetre.slug}`}>
-                <Tag>{tache.perimetre.nom}</Tag>
-              </Link>
-            )}
-            <Tag color={STATUTS[tache.statut].couleur}>
-              {STATUTS[tache.statut].libelle}
-            </Tag>
-            {tache.fiche && (
-              <Link to={`/fiches/${tache.fiche.slug}`}>
-                <Tag icon={<BookOutlined />} color="gold">
-                  {tache.fiche.titre}
-                </Tag>
-              </Link>
-            )}
-            {tache.echeance && (
-              <Tag color={tache.enRetard ? 'red' : undefined}>
-                {tache.enRetard ? 'En retard : ' : 'Échéance : '}
-                {dateCourte(tache.echeance)}
-              </Tag>
-            )}
-            {tache.assignes.length === 0 && ouverte ? (
-              <Tag color="orange">Personne n’est assigné·e</Tag>
-            ) : (
-              tache.assignes.map(p => (
-                <Tag
-                  key={p.id}
-                  closable={gererAssignes}
-                  closeIcon={<CloseOutlined aria-label={`Retirer ${p.nom}`} />}
-                  onClose={e => {
-                    e.preventDefault()
-                    void assignerPersonne(
-                      p.id,
-                      false,
-                      p.id === moiId
-                        ? 'Vous êtes retiré·e de la tâche.'
-                        : 'La personne est retirée de la tâche.'
-                    )
-                  }}
-                >
-                  {p.id === moiId ? 'Vous' : p.nom}
-                </Tag>
-              ))
-            )}
-          </Space>
-          {tache.statut === 'FAITE' &&
-            (tache.clotureePar || tache.realiseePar) && (
-              <Typography.Paragraph
-                type="secondary"
-                style={{ margin: '8px 0 0', fontSize: 13 }}
-              >
-                {tache.clotureePar &&
-                  `Cochée par ${tache.clotureePar.id === moiId ? 'vous' : tache.clotureePar.nom}. `}
-                {tache.realiseePar &&
-                  `Réalisée par ${tache.realiseePar.id === moiId ? 'vous' : tache.realiseePar.nom}.`}
-              </Typography.Paragraph>
-            )}
         </div>
+        {tache.description && (
+          <Typography.Paragraph
+            type="secondary"
+            ellipsis={{
+              rows: 2,
+              expandable: 'collapsible',
+              symbol: e => (e ? 'Réduire' : 'Lire la suite'),
+            }}
+            style={{ margin: 0, fontSize: 13.5, whiteSpace: 'pre-line' }}
+          >
+            {tache.description}
+          </Typography.Paragraph>
+        )}
+        <div className="rt-meta">
+          <PastilleStatut statut={tache.statut} />
+          {tache.fiche && (
+            <PastilleEtat
+              variante="alerte"
+              icone={<BookOutlined aria-hidden />}
+              lien={`/fiches/${tache.fiche.slug}`}
+            >
+              {tache.fiche.titre}
+            </PastilleEtat>
+          )}
+          {tache.echeance && (
+            <span
+              className={`rt-date${echeance === 'retard' ? ' rt-date-retard' : echeance === 'proche' ? ' rt-date-proche' : ''}`}
+            >
+              {echeance === 'retard' ? 'En retard : ' : 'Échéance '}
+              {dateCourte(tache.echeance)}
+            </span>
+          )}
+          {tache.assignes.length === 0 && ouverte ? (
+            <PastilleEtat variante="alerte" sansPoint>
+              Personne n’est assigné·e
+            </PastilleEtat>
+          ) : (
+            tache.assignes.map(p => (
+              <PersonneNommee
+                key={p.id}
+                nom={p.id === moiId ? 'Vous' : p.nom}
+                initialesDe={p.nom}
+                desactive={enAction}
+                retirer={
+                  gererAssignes
+                    ? () =>
+                        void assignerPersonne(
+                          p.id,
+                          false,
+                          p.id === moiId
+                            ? 'Vous êtes retiré·e de la tâche.'
+                            : 'La personne est retirée de la tâche.'
+                        )
+                    : undefined
+                }
+              />
+            ))
+          )}
+        </div>
+        {tache.statut === 'FAITE' &&
+          (tache.clotureePar || tache.realiseePar) && (
+            <p className="rt-note" style={{ margin: 0 }}>
+              {tache.clotureePar &&
+                `Cochée par ${tache.clotureePar.id === moiId ? 'vous' : tache.clotureePar.nom}. `}
+              {tache.realiseePar &&
+                `Réalisée par ${tache.realiseePar.id === moiId ? 'vous' : tache.realiseePar.nom}.`}
+            </p>
+          )}
+      </div>
 
-        {peutModifier && (
-          <Space wrap style={{ justifyContent: 'flex-end' }}>
-            {gererAssignes && assignables.length > 0 && (
+      {peutModifier && (
+        <div className="rt-carte-tache-actions">
+          {gererAssignes &&
+            assignables.length > 0 &&
+            (choixAssignation ? (
               <Select
                 size="small"
                 showSearch
+                autoFocus
+                defaultOpen
                 value={null}
                 placeholder="Assigner une personne"
                 optionFilterProp="label"
                 style={{ minWidth: 190 }}
                 disabled={enAction}
+                onBlur={() => setChoixAssignation(false)}
                 options={assignables.map(r => ({
                   value: r.id,
                   label: r.id === moiId ? 'Vous' : r.nom,
                 }))}
-                onChange={(personneId: string) =>
+                onChange={(personneId: string) => {
+                  setChoixAssignation(false)
                   void assignerPersonne(personneId, true, 'Tâche assignée.')
-                }
+                }}
               />
-            )}
-            {ouverte && (assignee || affectee) && (
-              <Button
-                size="small"
-                loading={assignation.loading}
-                onClick={() =>
-                  void executer(
-                    () =>
-                      assigner({
-                        variables: { id: tache.id, assigne: !assignee },
-                      }),
-                    assignee
-                      ? 'Vous êtes retiré·e de la tâche.'
-                      : 'La tâche vous est assignée.'
-                  )
-                }
-              >
-                {assignee ? 'Me retirer' : 'Je m’en occupe'}
-              </Button>
-            )}
-            {ouverte ? (
-              <Button
-                size="small"
-                type="primary"
-                icon={<CheckOutlined />}
-                disabled={enAction}
-                onClick={() => setCloture(true)}
-              >
-                Faite
-              </Button>
             ) : (
               <Button
                 size="small"
-                icon={<UndoOutlined />}
+                icon={<UserAddOutlined />}
                 disabled={enAction}
-                onClick={() => void statut('A_FAIRE', 'Tâche rouverte.')}
+                onClick={() => setChoixAssignation(true)}
               >
-                Rouvrir
+                Assigner
               </Button>
-            )}
-            <Dropdown
-              trigger={['click']}
-              menu={{
-                items: [
-                  {
-                    key: 'modifier',
-                    icon: <EditOutlined />,
-                    label: 'Modifier',
-                  },
-                  ...(tache.statut === 'A_FAIRE'
-                    ? [{ key: 'EN_COURS', label: 'Marquer en cours' }]
-                    : []),
-                  ...(tache.statut === 'EN_COURS'
-                    ? [{ key: 'A_FAIRE', label: 'Remettre à faire' }]
-                    : []),
-                  ...(ouverte
-                    ? [{ key: 'ABANDONNEE', label: 'Abandonner', danger: true }]
-                    : []),
-                ],
-                onClick: ({ key }) => {
-                  if (key === 'modifier') onModifier?.(tache)
-                  if (key === 'EN_COURS')
-                    void statut('EN_COURS', 'Tâche marquée en cours.')
-                  if (key === 'A_FAIRE')
-                    void statut('A_FAIRE', 'Tâche remise à faire.')
-                  if (key === 'ABANDONNEE')
-                    void statut('ABANDONNEE', 'Tâche abandonnée.')
-                },
-              }}
+            ))}
+          {ouverte && (assignee || affectee) && (
+            <Button
+              size="small"
+              className={assignee ? undefined : 'rt-bouton-engagement'}
+              loading={assignation.loading}
+              onClick={() =>
+                void executer(
+                  () =>
+                    assigner({
+                      variables: { id: tache.id, assigne: !assignee },
+                    }),
+                  assignee
+                    ? 'Vous êtes retiré·e de la tâche.'
+                    : 'La tâche vous est assignée.'
+                )
+              }
             >
-              <Button
-                size="small"
-                icon={<MoreOutlined />}
-                aria-label="Autres actions"
-              />
-            </Dropdown>
-          </Space>
-        )}
-      </div>
+              {assignee ? 'Me retirer' : 'Je m’en occupe'}
+            </Button>
+          )}
+          {ouverte ? (
+            <Button
+              size="small"
+              type="primary"
+              icon={<CheckOutlined />}
+              disabled={enAction}
+              onClick={() => setCloture(true)}
+            >
+              Faite
+            </Button>
+          ) : (
+            <Button
+              size="small"
+              icon={<UndoOutlined />}
+              disabled={enAction}
+              onClick={() => void statut('A_FAIRE', 'Tâche rouverte.')}
+            >
+              Rouvrir
+            </Button>
+          )}
+          <Dropdown
+            trigger={['click']}
+            menu={{
+              items: [
+                ...(onModifier
+                  ? [
+                      {
+                        key: 'modifier',
+                        icon: <EditOutlined />,
+                        label: 'Modifier',
+                      },
+                    ]
+                  : []),
+                ...(tache.statut === 'A_FAIRE'
+                  ? [{ key: 'EN_COURS', label: 'Marquer en cours' }]
+                  : []),
+                ...(tache.statut === 'EN_COURS'
+                  ? [{ key: 'A_FAIRE', label: 'Remettre à faire' }]
+                  : []),
+                ...(ouverte
+                  ? [{ key: 'ABANDONNEE', label: 'Abandonner', danger: true }]
+                  : []),
+              ],
+              onClick: ({ key }) => {
+                if (key === 'modifier') onModifier?.(tache)
+                if (key === 'EN_COURS')
+                  void statut('EN_COURS', 'Tâche marquée en cours.')
+                if (key === 'A_FAIRE')
+                  void statut('A_FAIRE', 'Tâche remise à faire.')
+                if (key === 'ABANDONNEE')
+                  void statut('ABANDONNEE', 'Tâche abandonnée.')
+              },
+            }}
+          >
+            <Button
+              size="small"
+              icon={<MoreOutlined />}
+              aria-label="Autres actions"
+            />
+          </Dropdown>
+        </div>
+      )}
 
       <Modal
         open={cloture}
@@ -334,6 +354,6 @@ export default function TacheCarte({
           </Form.Item>
         </Form>
       </Modal>
-    </Card>
+    </article>
   )
 }

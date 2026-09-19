@@ -4,9 +4,7 @@ import {
   BookOutlined,
   CalendarOutlined,
   EditOutlined,
-  FlagOutlined,
   HomeOutlined,
-  LogoutOutlined,
   MenuOutlined,
   ScheduleOutlined,
   SettingOutlined,
@@ -14,17 +12,18 @@ import {
   TrophyOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
-import { useApolloClient, useQuery } from '@apollo/client/react'
+import { useQuery } from '@apollo/client/react'
 import { Button, Drawer, Grid, Menu, Result, Spin } from 'antd'
 import { useState } from 'react'
 import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
 
-import { seDeconnecter } from '../lib/connexion'
-
-import Marque, { Pictogramme } from './Marque'
-import Notifications from './Notifications'
 import { graphql } from '../gql'
 import { MOI } from '../lib/requetes'
+
+import Marque, { Pictogramme } from './Marque'
+import MenuCompte from './MenuCompte'
+import Notifications from './Notifications'
+import Recherche from './Recherche'
 
 const MENU_PERIMETRES = graphql(`
   query MenuPerimetres {
@@ -36,6 +35,7 @@ const MENU_PERIMETRES = graphql(`
           id
           slug
           nom
+          couleur
         }
       }
     }
@@ -52,7 +52,6 @@ export default function Coquille({
 }) {
   const { data, loading, error } = useQuery(MOI)
   const { data: menu } = useQuery(MENU_PERIMETRES, { skip: !data?.moi })
-  const apollo = useApolloClient()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const ecrans = Grid.useBreakpoint()
@@ -96,7 +95,13 @@ export default function Coquille({
             label: 'Mes périmètres',
             children: perimetres.map(p => ({
               key: `/perimetres/${p.slug}`,
-              icon: <FlagOutlined />,
+              icon: (
+                <span
+                  className="rt-point"
+                  style={{ background: p.couleur ?? 'var(--rt-primaire)' }}
+                  aria-hidden="true"
+                />
+              ),
               label: p.nom,
             })),
           },
@@ -148,12 +153,6 @@ export default function Coquille({
         ]
       : []),
   ]
-
-  const deconnecter = async () => {
-    await seDeconnecter().catch(() => undefined)
-    await apollo.clearStore()
-    navigate('/connexion', { replace: true })
-  }
 
   const navigation = (
     <Menu
@@ -218,20 +217,10 @@ export default function Coquille({
               <Pictogramme taille={24} />
             </span>
           )}
+          <Recherche estAdmin={moi.estAdmin} />
           <span style={{ flex: 1 }} />
-          {ecrans.sm && (
-            <span style={{ fontWeight: 600, color: 'var(--rt-encre)' }}>
-              {moi.nom}
-            </span>
-          )}
-          <Notifications compact={!ecrans.md} />
-          <Button
-            icon={<LogoutOutlined />}
-            aria-label="Se déconnecter"
-            onClick={() => void deconnecter()}
-          >
-            {ecrans.sm ? 'Se déconnecter' : null}
-          </Button>
+          <Notifications />
+          <MenuCompte nom={moi.nom} afficherNom={Boolean(ecrans.sm)} />
         </header>
         <main className="rt-contenu">
           {adminSeulement && !moi.estAdmin ? (
