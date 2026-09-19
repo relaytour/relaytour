@@ -97,6 +97,15 @@
   --rt-flou-depoli: blur(28px) saturate(1.8);
   /* Verre plus dense des cartes qui portent du texte (tâches, lignes du
      rétroplanning) : le fond et les halos ne gênent plus la lecture. */
+  /* Surface interne : un bloc posé dans un panneau de verre (choix, réglage,
+     tuile, ligne cliquable). Sur un panneau presque blanc, un fond blanc ne se
+     distingue pas : la surface porte un voile d'encre, un bord et une ombre. */
+  --rt-surface-interne: rgba(var(--rt-encre-rgb), 0.035);
+  --rt-surface-interne-survol: rgba(var(--rt-encre-rgb), 0.07);
+  --rt-bord-interne: 1px solid rgba(var(--rt-encre-rgb), 0.1);
+  --rt-ombre-interne:
+    0 1px 2px rgba(var(--rt-encre-rgb), 0.05),
+    0 4px 12px rgba(var(--rt-encre-rgb), 0.04);
   --rt-verre-carte: linear-gradient(
     155deg,
     rgba(255, 255, 255, 0.92),
@@ -403,10 +412,10 @@ a:hover .rt-pastille {
   justify-content: space-between;
   gap: 12px;
   padding: 11px 14px;
-  border: 1px solid rgba(var(--rt-encre-rgb), 0.1);
+  border: var(--rt-bord-interne);
   border-radius: var(--rt-rayon-chip);
-  background: rgba(255, 255, 255, 0.55);
-  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85);
+  background: var(--rt-surface-interne);
+  box-shadow: var(--rt-ombre-interne);
   color: var(--rt-encre);
   font-weight: 600;
   text-decoration: none;
@@ -417,7 +426,7 @@ a:hover .rt-pastille {
 
 .rt-ligne-lien:hover {
   border-color: rgba(var(--rt-encre-rgb), 0.2);
-  background: rgba(var(--rt-encre-rgb), 0.06);
+  background: var(--rt-surface-interne-survol);
   color: var(--rt-encre);
 }
 
@@ -912,10 +921,10 @@ a.rt-etiquette:hover {
 
 .rt-personne-retirable {
   padding: 2px 4px 2px 2px;
+  border: var(--rt-bord-interne);
   border-radius: 999px;
   color: var(--rt-encre);
-  background: rgba(255, 255, 255, 0.55);
-  box-shadow: var(--rt-liseret);
+  background: var(--rt-surface-interne);
 }
 
 .rt-personne-retirer {
@@ -1173,9 +1182,9 @@ a.rt-etiquette:hover {
   flex-direction: column;
   gap: 2px;
   padding: 12px 14px;
+  border: var(--rt-bord-interne);
   border-radius: 16px;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: var(--rt-liseret);
+  background: var(--rt-surface-interne);
 }
 
 .rt-tuile-valeur {
@@ -1190,17 +1199,21 @@ a.rt-etiquette:hover {
   flex-direction: column;
   gap: 10px;
   padding: 14px 16px;
+  border: var(--rt-bord-interne);
   border-radius: 18px;
   color: var(--rt-encre);
   text-decoration: none;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: var(--rt-liseret);
-  transition: background var(--rt-duree) var(--rt-ease-fluide);
+  background: var(--rt-surface-interne);
+  box-shadow: var(--rt-ombre-interne);
+  transition:
+    background var(--rt-duree) var(--rt-ease-fluide),
+    border-color var(--rt-duree) var(--rt-ease-fluide);
 }
 
 .rt-bloc-lien:hover {
   color: var(--rt-encre);
-  background: rgba(var(--rt-encre-rgb), 0.06);
+  border-color: rgba(var(--rt-encre-rgb), 0.2);
+  background: var(--rt-surface-interne-survol);
 }
 
 /* Fiches : grille de cartes, ou liste condensée à la bascule. */
@@ -1318,16 +1331,28 @@ a.rt-etiquette:hover {
 .rt-choix .ant-radio-wrapper {
   margin: 0;
   padding: 14px 16px;
+  border: var(--rt-bord-interne);
   border-radius: 18px;
   align-items: flex-start;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: var(--rt-liseret);
-  transition: background var(--rt-duree) var(--rt-ease-fluide);
+  background: var(--rt-surface-interne);
+  box-shadow: var(--rt-ombre-interne);
+  transition:
+    background var(--rt-duree) var(--rt-ease-fluide),
+    border-color var(--rt-duree) var(--rt-ease-fluide);
 }
 
-.rt-choix .ant-radio-wrapper-checked {
+.rt-choix .ant-radio-wrapper:hover {
+  border-color: rgba(var(--rt-encre-rgb), 0.2);
+  background: var(--rt-surface-interne-survol);
+}
+
+.rt-choix .ant-radio-wrapper-checked,
+.rt-choix .ant-radio-wrapper-checked:hover {
+  border-color: var(--rt-primaire);
   background: var(--rt-primaire-clair);
-  box-shadow: inset 0 0 0 2px var(--rt-primaire);
+  box-shadow:
+    inset 0 0 0 1px var(--rt-primaire),
+    var(--rt-ombre-interne);
 }
 
 .rt-choix-titre {
@@ -1351,9 +1376,10 @@ a.rt-etiquette:hover {
   justify-content: space-between;
   gap: 20px;
   padding: 14px 16px;
+  border: var(--rt-bord-interne);
   border-radius: 18px;
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: var(--rt-liseret);
+  background: var(--rt-surface-interne);
+  box-shadow: var(--rt-ombre-interne);
 }
 
 .rt-reglage label {

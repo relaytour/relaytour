@@ -137,7 +137,7 @@ export default function Preferences() {
                 </span>
               }
               name="frequenceResume"
-              extra="Le résumé regroupe l’activité non lue de vos périmètres et vos échéances des 14 prochains jours. Il part à 7 h."
+              extra="Le résumé regroupe l’activité non lue de vos périmètres et vos échéances des 14 prochains jours. Il part à 7 h."
             >
               <Radio.Group>
                 <Radio value="QUOTIDIEN">
