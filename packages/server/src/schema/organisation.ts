@@ -1,5 +1,12 @@
 import { prisma, StatutEdition, TypePerimetre } from '@relaytour/database'
 
+import type {
+  CouleursTheme,
+  PolicesTheme,
+  Theme,
+  TypographieTheme,
+} from '@relaytour/tokens'
+
 import { validerDates, validerEdition } from '../lib/editions.ts'
 import {
   couleurValide,
@@ -7,6 +14,11 @@ import {
   slugValide,
   texteRequis,
 } from '../lib/saisie.ts'
+
+import {
+  configurationOrganisation,
+  type ConfigurationOrganisation,
+} from '../lib/organisation.ts'
 
 import { builder } from './builder.ts'
 
@@ -179,3 +191,89 @@ builder.mutationFields(t => ({
     },
   }),
 }))
+
+// ── Configuration publique de l'organisation (ADR 0006) ─────────────────────
+//
+// Servie sans session : l'écran de connexion a besoin du nom et du thème.
+// Le type n'expose que des champs publics (invariant 14) : ni expéditeur, ni
+// domaines de mail, ni contact de recrutement.
+
+const CouleursThemeRef = builder
+  .objectRef<CouleursTheme>('CouleursTheme')
+  .implement({
+    fields: t => ({
+      encre: t.exposeString('encre'),
+      primaire: t.exposeString('primaire'),
+      primaireClair: t.exposeString('primaireClair'),
+      accent: t.exposeString('accent'),
+      accentClair: t.exposeString('accentClair'),
+      succes: t.exposeString('succes'),
+      succesClair: t.exposeString('succesClair'),
+      alerte: t.exposeString('alerte'),
+      alerteClair: t.exposeString('alerteClair'),
+      erreur: t.exposeString('erreur'),
+      erreurClair: t.exposeString('erreurClair'),
+      sol1: t.exposeString('sol1'),
+      sol2: t.exposeString('sol2'),
+      sol3: t.exposeString('sol3'),
+    }),
+  })
+
+const PolicesThemeRef = builder
+  .objectRef<PolicesTheme>('PolicesTheme')
+  .implement({
+    description: 'Piles CSS complètes, prêtes pour font-family.',
+    fields: t => ({
+      texte: t.exposeString('texte'),
+      titre: t.exposeString('titre'),
+      mono: t.exposeString('mono'),
+    }),
+  })
+
+const TypographieThemeRef = builder
+  .objectRef<TypographieTheme>('TypographieTheme')
+  .implement({
+    fields: t => ({
+      graisseTitre: t.exposeInt('graisseTitre'),
+      graisseCorps: t.exposeInt('graisseCorps'),
+      espacementTitre: t.exposeString('espacementTitre'),
+      echelleTitre: t.exposeFloat('echelleTitre'),
+    }),
+  })
+
+const ThemeRef = builder.objectRef<Theme>('Theme').implement({
+  description:
+    'Le thème complet de l’organisation, fusionné avec le thème par défaut de Relaytour.',
+  fields: t => ({
+    couleurs: t.field({ type: CouleursThemeRef, resolve: th => th.couleurs }),
+    polices: t.field({ type: PolicesThemeRef, resolve: th => th.polices }),
+    typographie: t.field({
+      type: TypographieThemeRef,
+      resolve: th => th.typographie,
+    }),
+  }),
+})
+
+const OrganisationRef = builder
+  .objectRef<ConfigurationOrganisation>('Organisation')
+  .implement({
+    description:
+      'Identité publique de l’organisation qui utilise cette installation.',
+    fields: t => ({
+      slug: t.exposeString('slug'),
+      nom: t.exposeString('nom'),
+      sigle: t.exposeString('sigle', { nullable: true }),
+      logoUrl: t.exposeString('logoUrl', { nullable: true }),
+      faviconUrl: t.exposeString('faviconUrl', { nullable: true }),
+      pageEquipe: t.exposeString('pageEquipe', { nullable: true }),
+      theme: t.field({ type: ThemeRef, resolve: o => o.theme }),
+    }),
+  })
+
+builder.queryField('organisation', t =>
+  t.field({
+    type: OrganisationRef,
+    description: 'Nom, sigle et thème de l’organisation. Lisible sans session.',
+    resolve: () => configurationOrganisation(),
+  })
+)

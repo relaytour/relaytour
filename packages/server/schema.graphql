@@ -29,6 +29,23 @@ type BaremeScore {
   tacheRealisee: Int!
 }
 
+type CouleursTheme {
+  accent: String!
+  accentClair: String!
+  alerte: String!
+  alerteClair: String!
+  encre: String!
+  erreur: String!
+  erreurClair: String!
+  primaire: String!
+  primaireClair: String!
+  sol1: String!
+  sol2: String!
+  sol3: String!
+  succes: String!
+  succesClair: String!
+}
+
 """
 A date string, such as 2007-12-03, compliant with the `full-date` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
@@ -140,6 +157,17 @@ type Notification {
   type: TypeNotification!
 }
 
+"""Identité publique de l’organisation qui utilise cette installation."""
+type Organisation {
+  faviconUrl: String
+  logoUrl: String
+  nom: String!
+  pageEquipe: String
+  sigle: String
+  slug: String!
+  theme: Theme!
+}
+
 type Perimetre {
   archive: Boolean!
   avancement(editionId: ID!): Avancement!
@@ -165,6 +193,13 @@ type Personne {
   id: ID!
   nom: String!
   souhaits(editionId: ID): [Souhait!]!
+}
+
+"""Piles CSS complètes, prêtes pour font-family."""
+type PolicesTheme {
+  mono: String!
+  texte: String!
+  titre: String!
 }
 
 type PostesPerimetre {
@@ -213,6 +248,9 @@ type Query {
   monScore(editionId: ID!): Score!
   nombreNotificationsNonLues: Int!
   notifications(limite: Int = 30, nonLuesSeulement: Boolean = false): [Notification!]!
+
+  """Nom, sigle et thème de l’organisation. Lisible sans session."""
+  organisation: Organisation!
   perimetre(slug: String!): Perimetre
   perimetres(inclureArchives: Boolean = false): [Perimetre!]!
   personnes(inclureArchives: Boolean = false): [Personne!]!
@@ -280,6 +318,15 @@ type Tache {
   titre: String!
 }
 
+"""
+Le thème complet de l’organisation, fusionné avec le thème par défaut de Relaytour.
+"""
+type Theme {
+  couleurs: CouleursTheme!
+  polices: PolicesTheme!
+  typographie: TypographieTheme!
+}
+
 enum TypeNotification {
   ECHEANCE_PROCHE
   TACHE_ASSIGNEE
@@ -292,4 +339,11 @@ enum TypeNotification {
 enum TypePerimetre {
   POLE
   SPORT
+}
+
+type TypographieTheme {
+  echelleTitre: Float!
+  espacementTitre: String!
+  graisseCorps: Int!
+  graisseTitre: Int!
 }
