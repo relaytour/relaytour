@@ -1,7 +1,7 @@
 ---
 cible: orga
 type: fonctionnalite
-audience: staff
+audience: organisateurs
 etat: prevu
 fr:
   titre: >-

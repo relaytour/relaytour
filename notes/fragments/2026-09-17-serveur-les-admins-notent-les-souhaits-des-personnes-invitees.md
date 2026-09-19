@@ -1,7 +1,7 @@
 ---
 cible: serveur
 type: fonctionnalite
-audience: staff
+audience: organisateurs
 etat: prevu
 fr:
   titre: >-

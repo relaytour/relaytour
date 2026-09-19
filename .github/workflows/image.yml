@@ -29,7 +29,7 @@ jobs:
       - name: Calculer la version
         id: version
         run: |
-          PROCHAINE=$(node -p "require('./versions.json').cibles.serveur.prochaine")
+          PROCHAINE=$(node -p "require('./packages/server/package.json').version")
           SHA7=$(git rev-parse --short=7 HEAD)
           echo "version=${PROCHAINE}-dev.${SHA7}" >> "$GITHUB_OUTPUT"
           echo "tag=$SHA7" >> "$GITHUB_OUTPUT"

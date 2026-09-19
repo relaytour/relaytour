@@ -38,16 +38,6 @@ FROM deps AS prod-deps
 RUN --mount=type=cache,target=/root/.yarn/berry/cache \
   yarn workspaces focus @relaytour/server @relaytour/database @relaytour/tokens --production
 
-FROM base AS notes
-COPY versions.json ./
-COPY outils outils
-COPY notes notes
-ARG ENV_CIBLE=prod
-ENV ENV_CIBLE=$ENV_CIBLE
-ARG GIT_SHA=local
-ENV GITHUB_SHA=$GIT_SHA
-RUN node outils/versionner.mjs compiler --sortie /sortie
-
 # Applique les migrations (image -migrate). Placée avant `runtime`, qui reste la cible par défaut.
 FROM build AS migrator
 WORKDIR /app
@@ -80,7 +70,6 @@ ENV NODE_ENV=production \
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build     /app/packages/server/dist ./packages/server/dist
 COPY packages/server/package.json ./packages/server/package.json
-COPY --from=notes /sortie ./packages/server/notes-de-version
 # Commandes disponibles dans dist/ : creer-admin, creer-edition, orga-valider, orga-importer,
 # orga-exporter, essai-courriel, planification-lancer (liste tenue par tsup.config.ts).
 # Le contenu d'une organisation ne fait pas partie de l'image : montez-le en volume

@@ -1,7 +1,7 @@
 ---
 cible: orga
 type: correctif
-audience: staff
+audience: organisateurs
 etat: prevu
 fr:
   titre: >-
