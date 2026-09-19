@@ -104,10 +104,27 @@ type FicheVersion {
   titre: String!
 }
 
+"""Le fond du thème, en plus des trois arrêts du sol."""
+type FondTheme {
+  halo1: HaloTheme!
+  halo2: HaloTheme!
+
+  """L’arrêt à 18 % du dégradé du sol, entre sol1 et sol2."""
+  transition: String!
+}
+
 enum FrequenceResume {
   AUCUN
   HEBDOMADAIRE
   QUOTIDIEN
+}
+
+"""Une tache de couleur floue derrière le verre."""
+type HaloTheme {
+  couleur: String!
+
+  """Opacité, de 0 à 0,35."""
+  intensite: Float!
 }
 
 type LigneClassement {
@@ -323,6 +340,7 @@ Le thème complet de l’organisation, fusionné avec le thème par défaut de R
 """
 type Theme {
   couleurs: CouleursTheme!
+  fond: FondTheme!
   polices: PolicesTheme!
   typographie: TypographieTheme!
 }

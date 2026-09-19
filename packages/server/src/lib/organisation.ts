@@ -1,5 +1,6 @@
 import {
   fusionnerTheme,
+  INTENSITE_HALO_MAX,
   pile,
   POLICES_DISPONIBLES,
   themeParDefaut,
@@ -49,12 +50,28 @@ const CLES_COULEURS = [
   'sol3',
 ] as const satisfies readonly (keyof CouleursTheme)[]
 
+const Halo = z.strictObject({
+  couleur: Couleur.optional(),
+  intensite: z
+    .number()
+    .min(0)
+    .max(INTENSITE_HALO_MAX, `intensité entre 0 et ${INTENSITE_HALO_MAX}`)
+    .optional(),
+})
+
 /** Un thème tel qu'une organisation le déclare : polices nommées, valeurs partielles. */
 export const ThemeDeclareSchema = z.strictObject({
   couleurs: z
     .strictObject(
       Object.fromEntries(CLES_COULEURS.map(cle => [cle, Couleur.optional()]))
     )
+    .optional(),
+  fond: z
+    .strictObject({
+      transition: Couleur.optional(),
+      halo1: Halo.optional(),
+      halo2: Halo.optional(),
+    })
     .optional(),
   polices: z
     .strictObject({
@@ -92,7 +109,7 @@ export function resoudreTheme(declare: ThemeDeclare | undefined): Theme {
   const typographie = Object.fromEntries(
     Object.entries(declare.typographie ?? {}).filter(([, v]) => v !== undefined)
   )
-  return fusionnerTheme({ couleurs, polices, typographie })
+  return fusionnerTheme({ couleurs, fond: declare.fond, polices, typographie })
 }
 
 function fuseauValide(fuseau: string): boolean {

@@ -1,5 +1,4 @@
 import { ApolloServer } from '@apollo/server'
-import { themeParDefaut } from '@relaytour/tokens'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
@@ -32,20 +31,24 @@ afterAll(async () => {
 describe('organisation', () => {
   it('répond sans session avec le nom et le thème complet', async () => {
     const r = await executer(
-      '{ organisation { slug nom sigle theme { couleurs { primaire sol3 } polices { texte } typographie { echelleTitre } } } }'
+      '{ organisation { slug nom sigle theme { couleurs { primaire sol3 } fond { transition halo1 { couleur intensite } } polices { texte } typographie { echelleTitre } } } }'
     )
     expect(r.errors).toBeUndefined()
     const configuration = await configurationOrganisation()
     const organisation = (r.data as { organisation: Record<string, unknown> })
       .organisation
     expect(organisation.nom).toBe(configuration.nom)
+    // Le thème servi est celui de la configuration résolue : celui de
+    // l'organisation importée sur ce poste, sinon celui de Relaytour.
+    const theme = configuration.theme
     expect(organisation.theme).toEqual({
       couleurs: {
-        primaire: themeParDefaut.couleurs.primaire,
-        sol3: themeParDefaut.couleurs.sol3,
+        primaire: theme.couleurs.primaire,
+        sol3: theme.couleurs.sol3,
       },
-      polices: { texte: themeParDefaut.polices.texte },
-      typographie: { echelleTitre: themeParDefaut.typographie.echelleTitre },
+      fond: { transition: theme.fond.transition, halo1: theme.fond.halo1 },
+      polices: { texte: theme.polices.texte },
+      typographie: { echelleTitre: theme.typographie.echelleTitre },
     })
   })
 

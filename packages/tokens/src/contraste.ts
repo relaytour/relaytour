@@ -47,7 +47,7 @@ export function verifierAccessibilite(theme: Theme): Manquement[] {
     'alerte',
     'erreur',
   ] as const
-  const fonds = ['#FFFFFF', c.sol3]
+  const fonds = ['#FFFFFF', c.sol3, theme.fond.transition]
   const manquements: Manquement[] = []
   for (const nom of textes) {
     for (const fond of fonds) {

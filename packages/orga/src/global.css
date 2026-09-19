@@ -23,6 +23,7 @@
   --rt-sol-1: #ffffff;
   --rt-sol-2: #f4f6f7;
   --rt-sol-3: #e9eef0;
+  --rt-sol-transition: #ffffff;
   --rt-police: 'Hanken Grotesk Variable', system-ui, sans-serif;
   --rt-police-titre: 'Hanken Grotesk Variable', system-ui, sans-serif;
   --rt-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
@@ -40,7 +41,7 @@
   --rt-sol: linear-gradient(
     138deg,
     var(--rt-sol-1) 0%,
-    var(--rt-sol-1) 18%,
+    var(--rt-sol-transition) 18%,
     var(--rt-sol-2) 46%,
     var(--rt-sol-3) 60%,
     var(--rt-sol-2) 78%,
@@ -102,13 +103,20 @@ html,
 body {
   margin: 0;
   min-height: 100%;
-  background: var(--rt-sol);
-  background-attachment: fixed;
   color: var(--rt-encre);
   color-scheme: light;
   font-family: var(--rt-police);
   font-weight: var(--rt-corps-graisse);
   -webkit-font-smoothing: antialiased;
+}
+
+/*
+ * Le sol se pose sur html seul. Un fond sur body se peindrait au-dessus des
+ * halos, qui sont en z-index -1 : ils resteraient invisibles.
+ */
+html {
+  background: var(--rt-sol);
+  background-attachment: fixed;
 }
 
 /* Les surfaces de verre : aucune bordure, un liseré blanc et une ombre d'encre. */

@@ -7,8 +7,8 @@
  * 1. Le MATÉRIAU appartient à Relaytour et ne change pas d'une organisation à
  *    l'autre : verre, rayons, ombres, flou, mouvement. Il vit dans la feuille
  *    de style de l'espace organisateur (`global.css`) et dans `rayons` ci-dessous.
- * 2. Le THÈME vient de l'organisation (ADR 0006) : sa palette, ses polices et
- *    la typographie de ses titres. Une organisation peut ne donner qu'une
+ * 2. Le THÈME vient de l'organisation (ADR 0006) : sa palette, son fond (arrêt
+ *    de transition du sol et halos), ses polices et la typographie de ses titres. Une organisation peut ne donner qu'une
  *    partie des valeurs ; `fusionnerTheme` complète avec le thème par défaut.
  *
  * Les composants ne lisent jamais une couleur en dur : ils lisent les
@@ -64,8 +64,29 @@ export interface TypographieTheme {
   echelleTitre: number
 }
 
+/** Un halo du fond : une tache de couleur floue, fixe, derrière le verre. */
+export interface HaloTheme {
+  /** Hexadécimal `#RRGGBB`. */
+  couleur: string
+  /** Opacité de 0 à `INTENSITE_HALO_MAX`. Un halo reste un décor. */
+  intensite: number
+}
+
+/**
+ * Le fond d'un thème, en plus des trois arrêts du sol. Sans déclaration, il se
+ * dérive des couleurs (`fondDerive`) : transition = sol1, halos en primaire et
+ * en accent.
+ */
+export interface FondTheme {
+  /** L'arrêt à 18 % du dégradé du sol, entre sol1 et sol2 (un blanc crème, par exemple). */
+  transition: string
+  halo1: HaloTheme
+  halo2: HaloTheme
+}
+
 export interface Theme {
   couleurs: CouleursTheme
+  fond: FondTheme
   polices: PolicesTheme
   typographie: TypographieTheme
 }
@@ -73,8 +94,28 @@ export interface Theme {
 /** Un thème partiel, tel qu'une organisation peut le décrire. */
 export interface ThemePartiel {
   couleurs?: Partial<CouleursTheme>
+  fond?: {
+    transition?: string
+    halo1?: Partial<HaloTheme>
+    halo2?: Partial<HaloTheme>
+  }
   polices?: Partial<PolicesTheme>
   typographie?: Partial<TypographieTheme>
+}
+
+/** L'intensité maximale d'un halo : au-delà, il gênerait la lecture du texte posé sur le verre. */
+export const INTENSITE_HALO_MAX = 0.35
+
+/**
+ * Le fond qu'un thème reçoit quand il ne déclare rien : l'arrêt de transition
+ * reprend sol1, le premier halo la primaire à 18 %, le second l'accent à 13 %.
+ */
+export function fondDerive(couleurs: CouleursTheme): FondTheme {
+  return {
+    transition: couleurs.sol1,
+    halo1: { couleur: couleurs.primaire, intensite: 0.18 },
+    halo2: { couleur: couleurs.accent, intensite: 0.13 },
+  }
 }
 
 /**
@@ -141,6 +182,11 @@ export const themeParDefaut: Theme = {
     sol2: '#F4F6F7',
     sol3: '#E9EEF0',
   },
+  fond: {
+    transition: '#FFFFFF',
+    halo1: { couleur: '#1E5A63', intensite: 0.18 },
+    halo2: { couleur: '#AD412B', intensite: 0.13 },
+  },
   polices: POLICES_RELAYTOUR,
   typographie: TYPOGRAPHIE_RELAYTOUR,
 }
@@ -149,14 +195,17 @@ export const themeParDefaut: Theme = {
  * Thème alternatif de Relaytour : les actions en encre, un seul accent lagon.
  * Le plus neutre des deux ; une organisation peut le demander tel quel.
  */
+const COULEURS_ALTERNATIVES: CouleursTheme = {
+  ...themeParDefaut.couleurs,
+  primaire: '#1B2730',
+  primaireClair: '#E6E9EB',
+  accent: '#136D6C',
+  accentClair: '#DCEFEE',
+}
+
 export const themeAlternatif: Theme = {
-  couleurs: {
-    ...themeParDefaut.couleurs,
-    primaire: '#1B2730',
-    primaireClair: '#E6E9EB',
-    accent: '#136D6C',
-    accentClair: '#DCEFEE',
-  },
+  couleurs: COULEURS_ALTERNATIVES,
+  fond: fondDerive(COULEURS_ALTERNATIVES),
   polices: POLICES_RELAYTOUR,
   typographie: TYPOGRAPHIE_RELAYTOUR,
 }
@@ -169,13 +218,31 @@ export const THEMES = {
 
 export type NomTheme = keyof typeof THEMES
 
-/** Complète un thème partiel avec le thème par défaut. */
+function sansIndefinis<T extends object>(objet: T | undefined): Partial<T> {
+  return Object.fromEntries(
+    Object.entries(objet ?? {}).filter(([, v]) => v !== undefined)
+  ) as Partial<T>
+}
+
+/**
+ * Complète un thème partiel avec le thème de base. Le fond se dérive des
+ * couleurs fusionnées (`fondDerive`), puis reçoit les valeurs déclarées : une
+ * organisation qui ne change que sa primaire obtient un halo de sa primaire.
+ */
 export function fusionnerTheme(
   partiel: ThemePartiel,
   base: Theme = themeParDefaut
 ): Theme {
+  const couleurs = { ...base.couleurs, ...sansIndefinis(partiel.couleurs) }
+  const derive = fondDerive(couleurs)
+  const fond = partiel.fond
   return {
-    couleurs: { ...base.couleurs, ...partiel.couleurs },
+    couleurs,
+    fond: {
+      transition: fond?.transition ?? derive.transition,
+      halo1: { ...derive.halo1, ...sansIndefinis(fond?.halo1) },
+      halo2: { ...derive.halo2, ...sansIndefinis(fond?.halo2) },
+    },
     polices: { ...base.polices, ...partiel.polices },
     typographie: { ...base.typographie, ...partiel.typographie },
   }
@@ -222,6 +289,9 @@ export function variablesCss(theme: Theme): Record<string, string> {
     '--rt-sol-1': c.sol1,
     '--rt-sol-2': c.sol2,
     '--rt-sol-3': c.sol3,
+    '--rt-sol-transition': theme.fond.transition,
+    '--rt-halo-1': `rgba(${rgb(theme.fond.halo1.couleur)}, ${theme.fond.halo1.intensite})`,
+    '--rt-halo-2': `rgba(${rgb(theme.fond.halo2.couleur)}, ${theme.fond.halo2.intensite})`,
     '--rt-police': theme.polices.texte,
     '--rt-police-titre': theme.polices.titre,
     '--rt-mono': theme.polices.mono,

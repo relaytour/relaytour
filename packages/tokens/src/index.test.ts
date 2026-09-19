@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest'
 import {
   contraste,
   contrastePercu,
+  fondDerive,
   texteSurCouleur,
   fusionnerTheme,
   themeAlternatif,
@@ -99,5 +100,47 @@ describe('texteSurCouleur', () => {
   it('mesure le contraste perçu comme APCA 0.0.98G', () => {
     expect(contrastePercu('#111111', '#FFFFFF')).toBeCloseTo(104.9, 0)
     expect(contrastePercu('#FFFFFF', '#000000')).toBeCloseTo(107.9, 0)
+  })
+})
+
+describe('fond', () => {
+  it('le fond des thèmes livrés est celui que dérivent leurs couleurs', () => {
+    for (const theme of Object.values(THEMES)) {
+      expect(theme.fond).toEqual(fondDerive(theme.couleurs))
+    }
+  })
+
+  it('le thème par défaut garde un sol blanc à 18 % et ses halos d’origine', () => {
+    const variables = variablesCss(themeParDefaut)
+    expect(variables['--rt-sol-transition']).toBe('#FFFFFF')
+    expect(variables['--rt-halo-1']).toBe('rgba(30, 90, 99, 0.18)')
+    expect(variables['--rt-halo-2']).toBe('rgba(173, 65, 43, 0.13)')
+  })
+
+  it('sans fond déclaré, les halos suivent la primaire et l’accent fusionnés', () => {
+    const theme = fusionnerTheme({
+      couleurs: { primaire: '#032565', sol1: '#FFFDF8' },
+    })
+    expect(theme.fond.halo1).toEqual({ couleur: '#032565', intensite: 0.18 })
+    expect(theme.fond.transition).toBe('#FFFDF8')
+  })
+
+  it('garde l’arrêt de transition et les halos déclarés, champ par champ', () => {
+    const theme = fusionnerTheme({
+      fond: {
+        transition: '#FDF9F3',
+        halo1: { couleur: '#FBBB50', intensite: 0.28 },
+        halo2: { intensite: 0.2 },
+      },
+    })
+    expect(theme.fond.transition).toBe('#FDF9F3')
+    expect(theme.fond.halo1).toEqual({ couleur: '#FBBB50', intensite: 0.28 })
+    expect(theme.fond.halo2).toEqual({
+      couleur: themeParDefaut.couleurs.accent,
+      intensite: 0.2,
+    })
+    const variables = variablesCss(theme)
+    expect(variables['--rt-sol-transition']).toBe('#FDF9F3')
+    expect(variables['--rt-halo-1']).toBe('rgba(251, 187, 80, 0.28)')
   })
 })

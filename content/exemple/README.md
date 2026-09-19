@@ -34,10 +34,14 @@ contactRecrutement: contact@exemple.org    # facultatif, dans un domaine autoris
 pageEquipe: https://exemple.org/equipe     # facultatif
 theme:                          # facultatif : chaque valeur absente prend celle de Relaytour
   couleurs: { primaire: '#1E5A63' }
+  fond:                                    # facultatif : sans lui, le fond suit les couleurs
+    transition: '#FFFFFF'                  # arrêt à 18 % du dégradé du sol
+    halo1: { couleur: '#1E5A63', intensite: 0.18 }   # intensité de 0 à 0,35
+    halo2: { couleur: '#AD412B', intensite: 0.13 }
   polices: { titre: Hanken Grotesk }       # parmi les polices embarquées
 ```
 
-La validation refuse une clé inconnue, un thème dont une couleur de texte passe sous 4,5:1 de contraste, une police absente de l'espace organisateur et un contact hors des domaines autorisés. Le thème complet est décrit dans `docs/identite.md` du dépôt de Relaytour.
+La validation refuse une clé inconnue, un halo dont l'intensité dépasse 0,35, un thème dont une couleur de texte passe sous 4,5:1 de contraste, une police absente de l'espace organisateur et un contact hors des domaines autorisés. Le thème complet est décrit dans `docs/identite.md` du dépôt de Relaytour.
 
 ## Périmètres
 

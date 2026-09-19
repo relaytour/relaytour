@@ -5,6 +5,18 @@
   "version": "0.1.0",
   "notes": [
     {
+      "id": "2026-09-19-orga-votre-organisation-choisit-le-fond-de-son-espace",
+      "date": "2026-09-19",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Votre organisation choisit le fond de son espace",
+        "texte": "Le thème de votre organisation peut maintenant décrire le fond de l'espace organisateur. Vous choisissez la couleur de transition du dégradé et la couleur et l'intensité de ses deux halos. Sans ces valeurs, le fond suit les couleurs de votre thème, comme avant.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-orga-un-lien-de-connexion-ne-connecte-plus-sans-votre-accord",
       "date": "2026-09-19",
       "type": "securite",

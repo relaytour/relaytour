@@ -2,6 +2,8 @@ import { prisma, StatutEdition, TypePerimetre } from '@relaytour/database'
 
 import type {
   CouleursTheme,
+  FondTheme,
+  HaloTheme,
   PolicesTheme,
   Theme,
   TypographieTheme,
@@ -224,6 +226,27 @@ const CouleursThemeRef = builder
     }),
   })
 
+const HaloThemeRef = builder.objectRef<HaloTheme>('HaloTheme').implement({
+  description: 'Une tache de couleur floue derrière le verre.',
+  fields: t => ({
+    couleur: t.exposeString('couleur'),
+    intensite: t.exposeFloat('intensite', {
+      description: 'Opacité, de 0 à 0,35.',
+    }),
+  }),
+})
+
+const FondThemeRef = builder.objectRef<FondTheme>('FondTheme').implement({
+  description: 'Le fond du thème, en plus des trois arrêts du sol.',
+  fields: t => ({
+    transition: t.exposeString('transition', {
+      description: 'L’arrêt à 18 % du dégradé du sol, entre sol1 et sol2.',
+    }),
+    halo1: t.field({ type: HaloThemeRef, resolve: f => f.halo1 }),
+    halo2: t.field({ type: HaloThemeRef, resolve: f => f.halo2 }),
+  }),
+})
+
 const PolicesThemeRef = builder
   .objectRef<PolicesTheme>('PolicesTheme')
   .implement({
@@ -251,6 +274,7 @@ const ThemeRef = builder.objectRef<Theme>('Theme').implement({
     'Le thème complet de l’organisation, fusionné avec le thème par défaut de Relaytour.',
   fields: t => ({
     couleurs: t.field({ type: CouleursThemeRef, resolve: th => th.couleurs }),
+    fond: t.field({ type: FondThemeRef, resolve: th => th.fond }),
     polices: t.field({ type: PolicesThemeRef, resolve: th => th.polices }),
     typographie: t.field({
       type: TypographieThemeRef,

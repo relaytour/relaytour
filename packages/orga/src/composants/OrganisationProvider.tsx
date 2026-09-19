@@ -32,6 +32,7 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
       pageEquipe: o.pageEquipe ?? null,
       theme: {
         couleurs: o.theme.couleurs,
+        fond: o.theme.fond,
         polices: o.theme.polices,
         typographie: o.theme.typographie,
       },

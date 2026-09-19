@@ -33,6 +33,17 @@ export const ORGANISATION = graphql(`
           sol2
           sol3
         }
+        fond {
+          transition
+          halo1 {
+            couleur
+            intensite
+          }
+          halo2 {
+            couleur
+            intensite
+          }
+        }
         polices {
           texte
           titre

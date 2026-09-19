@@ -24,9 +24,18 @@ Décision de Quentin du 18 septembre 2026, après une planche de fondations et u
 | erreur | `#A23A2C` / `#F8E3DF` | retard ; une brique sourde, jamais un rouge vif |
 | sol | `#FFFFFF`, `#F4F6F7`, `#E9EEF0` | dégradé fixe à 138°, bande dense au milieu |
 
-Chaque couleur de texte atteint 4,5:1 sur le blanc et sur la bande dense du sol. Le test `packages/tokens/src/index.test.ts` le vérifie.
+Chaque couleur de texte atteint 4,5:1 sur le blanc, sur la bande dense du sol et sur l'arrêt de transition. Le test `packages/tokens/src/index.test.ts` le vérifie.
 
 Le thème alternatif « encre-lagon » garde la même palette avec les actions en encre (`#1B2730`) et un seul accent lagon (`#136D6C`). Il est livré avec l'application ; une organisation peut le demander tel quel.
+
+## Fond
+
+Le fond d'un thème se compose du dégradé du sol et de deux halos.
+
+- Le dégradé part de `sol1`, passe par l'arrêt de `transition` à 18 %, par `sol2` à 46 %, `sol3` à 60 %, `sol2` à 78 % et revient à `sol1`. L'arrêt de transition permet un blanc crème entre le blanc et la bande claire.
+- Les deux halos sont des taches floues et fixes derrière le verre. Chacun a une couleur et une intensité, de 0 à 0,35 : au-delà, un halo gênerait la lecture.
+- Une organisation déclare ces valeurs dans le bloc `fond` de son thème. Sans déclaration, la transition reprend `sol1`, le premier halo la primaire à 18 % et le second l'accent à 13 %.
+- Le thème par défaut garde un blanc pur à 18 % et ces halos dérivés.
 
 ## Polices
 

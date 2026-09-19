@@ -110,6 +110,22 @@ describe('DeclarationOrganisationSchema', () => {
     })
     expect(r.success).toBe(true)
   })
+
+  it('accepte un fond déclaré et refuse un halo trop intense ou une clé inconnue', () => {
+    const avec = (fond: unknown) =>
+      DeclarationOrganisationSchema.safeParse({ ...base, theme: { fond } }).success
+    expect(
+      avec({
+        transition: '#FDF9F3',
+        halo1: { couleur: '#FBBB50', intensite: 0.28 },
+        halo2: { couleur: '#F32988', intensite: 0.14 },
+      })
+    ).toBe(true)
+    expect(avec({ halo1: { intensite: 0.5 } })).toBe(false)
+    expect(avec({ halo1: { intensite: -0.1 } })).toBe(false)
+    expect(avec({ transition: 'crème' })).toBe(false)
+    expect(avec({ halo3: { couleur: '#FFFFFF' } })).toBe(false)
+  })
 })
 
 describe('resoudreTheme', () => {
@@ -119,5 +135,18 @@ describe('resoudreTheme', () => {
     expect(t.polices.texte).toBe(themeParDefaut.polices.texte)
     expect(t.couleurs.primaire).toBe('#2F6B4F')
     expect(t.couleurs.sol3).toBe(themeParDefaut.couleurs.sol3)
+  })
+
+  it('garde le fond dérivé sans déclaration et applique le fond déclaré', () => {
+    expect(resoudreTheme({ couleurs: { primaire: '#2F6B4F' } }).fond.halo1).toEqual({
+      couleur: '#2F6B4F',
+      intensite: 0.18,
+    })
+    const t = resoudreTheme({
+      fond: { transition: '#FDF9F3', halo2: { couleur: '#F32988', intensite: 0.14 } },
+    })
+    expect(t.fond.transition).toBe('#FDF9F3')
+    expect(t.fond.halo1).toEqual(themeParDefaut.fond.halo1)
+    expect(t.fond.halo2).toEqual({ couleur: '#F32988', intensite: 0.14 })
   })
 })

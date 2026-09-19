@@ -125,6 +125,7 @@ Un seul mot par notion.
 - antd 6.6 déprécie aussi `List` : utiliser une liste HTML simple.
 - antd 6.6 nomme `.ant-drawer-section` le conteneur du tiroir et `.ant-modal-container` celui de la fenêtre modale ; `.ant-drawer-content` et `.ant-modal-content` n'existent plus. Le verre dépoli de `global.css` les cible ainsi. Après une montée de version d'antd, vérifier ces classes dans le navigateur.
 - Prettier ne lit `.prettierignore` que dans le dossier courant : le lancer depuis la racine, sinon il reformate `packages/orga/src/gql`.
+- Le sol se pose sur `html` seul, jamais sur `body` : un fond sur `body` se peint au-dessus des halos en `z-index: -1` et les cache.
 - Aucune couleur en dur dans `packages/orga` : les composants lisent les variables `--rt-*` (`var(--rt-primaire)`, `var(--rt-erreur)`, `var(--rt-encre-08)`…). Une couleur d'un périmètre vient de son contenu.
 - Aucune police servie par un tiers : une famille s'ajoute par paquet fontsource dans `packages/orga/src/polices.ts` et dans `POLICES_DISPONIBLES`.
 - Les tests d'intégration partagent la base de développement : une fonction qui parcourt toute la base (comme `genererRappels`) doit être restreinte aux données du test, sinon elle crée des notifications sur les données locales.
