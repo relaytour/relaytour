@@ -1,8 +1,8 @@
 import http from 'node:http'
 
 import { ApolloServer } from '@apollo/server'
-import { expressMiddleware } from '@apollo/server/express4'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
+import { expressMiddleware } from '@as-integrations/express5'
 import cors from 'cors'
 import express from 'express'
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
@@ -69,7 +69,7 @@ app.get('/ready', (_req, res) => {
 
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)
-app.all('/api/auth/*', (req, res) => {
+app.all('/api/auth/*splat', (req, res) => {
   void gestionnaireAuth(req, res)
 })
 

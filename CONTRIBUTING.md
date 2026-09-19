@@ -4,7 +4,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 
 ## Paquets
 
-- `packages/server` : API GraphQL (Express, Apollo Server 4, Pothos, un seul schéma), connexion Better Auth et worker BullMQ.
+- `packages/server` : API GraphQL (Express 5, Apollo Server 5, Pothos, un seul schéma), connexion Better Auth et worker BullMQ.
 - `packages/orga` : espace organisateur, SPA React 19 + Vite + React Router 7 + Apollo Client 4 + antd 6. Types GraphQL générés dans `src/gql/`.
 - `packages/tokens` : modèle de thème, thème par défaut et thème alternatif de Relaytour, contraste. Le serveur le lit pour valider et compléter le thème d'une organisation ; l'espace organisateur le lit pour le thème de repli (ADR 0006).
 - `content/exemple` : organisation d'exemple, fictive et anonyme (`organisation.yaml`, périmètres, fiches, tâches types). Le contenu réel d'une organisation vit hors du dépôt (voir son README).

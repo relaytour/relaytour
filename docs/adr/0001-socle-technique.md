@@ -10,7 +10,7 @@ Relaytour a besoin d'une authentification, d'une file de mails, de tâches plani
 ## Décision
 
 - Yarn 4 via corepack, Node 24, TypeScript 5.9, ESLint 9 (configuration plate), Prettier, Vitest.
-- Serveur : Express, Apollo Server 4, Pothos, **un seul schéma GraphQL sans gateway**, build tsup en ESM, cartes de sources sans `sourcesContent`.
+- Serveur : Express 5, Apollo Server 5, Pothos, **un seul schéma GraphQL sans gateway**, build tsup en ESM, cartes de sources sans `sourcesContent`.
 - Environnement validé par Zod à l'import, `APP_ENV=local|prod`.
 - Prisma 6 sur MariaDB 11.8, client généré hors Git.
 - BullMQ sur Redis dans un worker séparé ; gabarits MJML précompilés et commités ; Mailpit sur le poste local.

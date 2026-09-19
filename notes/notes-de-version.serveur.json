@@ -101,6 +101,18 @@
       }
     },
     {
+      "id": "2026-09-19-serveur-l-api-passe-sur-apollo-server-5-et-express-5",
+      "date": "2026-09-19",
+      "type": "securite",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "L'API passe sur Apollo Server 5 et Express 5",
+        "texte": "L'API tourne sur Apollo Server 5 et Express 5, deux versions maintenues. Apollo Server 4 n'est plus maintenu depuis janvier 2026. Ce passage retire de l'image de production les bibliothèques form-data, path-to-regexp et qs, signalées par l'audit, et corrige sha.js. Les routes, le contrôle CSRF et l'arrêt propre fonctionnent comme avant.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-serveur-chaque-organisation-decrit-son-identite-dans-son-depot",
       "date": "2026-09-19",
       "type": "fonctionnalite",
