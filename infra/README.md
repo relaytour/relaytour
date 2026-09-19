@@ -12,7 +12,6 @@ Ce dossier décrit le déploiement de référence (ADR 0004) : une machine sous 
 | `orga` | Copie l'espace organisateur (site statique) dans `ORGA_DIR` à chaque démarrage |
 | `server` | API GraphQL, port 4400 sur `127.0.0.1` |
 | `worker` | Mails, rappels et résumés |
-| `mailpit` | Boîte de test, profil `courriel`, pour une recette seulement |
 
 L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*` et `/graphql` vers l'API. Aucun outil Node n'est nécessaire sur le serveur.
 

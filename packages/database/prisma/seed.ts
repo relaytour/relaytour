@@ -1,6 +1,6 @@
 import { prisma } from '../src/client.ts'
 
-// Données de démonstration du poste local. Rien ici ne part en recette ni en production.
+// Données de démonstration du poste local. Rien ici ne part sur une installation déployée.
 // Le contenu d'une organisation s'importe avec orga:importer, pas par ce script.
 function main() {
   console.log(

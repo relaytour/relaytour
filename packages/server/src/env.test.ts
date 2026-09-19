@@ -15,7 +15,6 @@ describe('resoudreEnv', () => {
       port: 4415,
       secure: false,
     })
-    expect(env.COURRIEL_CAPTURE).toBeNull()
   })
 
   it('reste muet en production sans SMTP', () => {
@@ -26,27 +25,34 @@ describe('resoudreEnv', () => {
       ORIGINE_ORGA: 'https://orga.exemple.org',
     })
     expect(env.COURRIEL).toBeNull()
-    expect(env.COURRIEL_CAPTURE).toBeNull()
   })
 
-  it('refuse un SMTP réel en recette sans liste de délivrabilité', () => {
-    expect(() =>
-      resoudreEnv({
-        ...BASE,
-        APP_ENV: 'recette',
-        CORS_ORIGIN: 'https://orga.recette.exemple.org',
-        ORIGINE_ORGA: 'https://orga.recette.exemple.org',
-        COURRIEL_SMTP_HOTE: 'ssl0.ovh.net',
-        COURRIEL_SMTP_UTILISATEUR: 'u',
-        COURRIEL_SMTP_MOT_DE_PASSE: 'p',
-      })
-    ).toThrow(/COURRIEL_DELIVRABILITE/)
+  it('préfère le SMTP renseigné au Mailpit du poste local', () => {
+    const env = resoudreEnv({
+      ...BASE,
+      APP_ENV: 'local',
+      COURRIEL_SMTP_HOTE: 'smtp.exemple.org',
+      COURRIEL_SMTP_PORT: '1025',
+      COURRIEL_SMTP_UTILISATEUR: 'u',
+      COURRIEL_SMTP_MOT_DE_PASSE: 'p',
+    })
+    expect(env.COURRIEL).toEqual({
+      hote: 'smtp.exemple.org',
+      port: 1025,
+      secure: false,
+      utilisateur: 'u',
+      motDePasse: 'p',
+    })
   })
 
-  it('refuse un booléen à la place de la liste de délivrabilité', () => {
+  it('refuse un SMTP renseigné à moitié', () => {
     expect(() =>
-      resoudreEnv({ ...BASE, COURRIEL_DELIVRABILITE: 'true' })
-    ).toThrow(/liste/)
+      resoudreEnv({ ...BASE, COURRIEL_SMTP_HOTE: 'smtp.exemple.org' })
+    ).toThrow(/se renseignent ensemble/)
+  })
+
+  it('refuse une valeur d’APP_ENV inconnue', () => {
+    expect(() => resoudreEnv({ ...BASE, APP_ENV: 'essai' })).toThrow()
   })
 
   it('refuse localhost dans CORS_ORIGIN hors du poste local', () => {
@@ -59,9 +65,9 @@ describe('resoudreEnv', () => {
     expect(() =>
       resoudreEnv({
         ...BASE,
-        APP_ENV: 'recette',
-        CORS_ORIGIN: 'https://orga.recette.exemple.org',
-        ORIGINE_ORGA: 'https://orga.recette.exemple.org',
+        APP_ENV: 'prod',
+        CORS_ORIGIN: 'https://orga.exemple.org',
+        ORIGINE_ORGA: 'https://orga.exemple.org',
         BETTER_AUTH_SECRET: 'secret-du-poste-local-a-remplacer-0123',
       })
     ).toThrow(/BETTER_AUTH_SECRET/)

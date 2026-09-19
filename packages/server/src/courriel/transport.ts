@@ -36,21 +36,12 @@ function ouvrir(reglage: ReglageSmtp): Transporter {
   })
 }
 
+// Un seul transport, mutualisé entre les envois du worker (env.COURRIEL).
 let principal: Transporter | null = null
-let capture: Transporter | null = null
 
-function voiePour(destinataire: string): {
-  transport: Transporter | null
-  hote?: string
-} {
+function transportPrincipal(): Transporter | null {
   principal ??= env.COURRIEL === null ? null : ouvrir(env.COURRIEL)
-  capture ??=
-    env.COURRIEL_CAPTURE === null ? null : ouvrir(env.COURRIEL_CAPTURE)
-  const voiePrincipale = { transport: principal, hote: env.COURRIEL?.hote }
-  if (capture === null) return voiePrincipale
-  return env.COURRIEL_DELIVRABILITE.includes(destinataire.trim().toLowerCase())
-    ? voiePrincipale
-    : { transport: capture, hote: env.COURRIEL_CAPTURE?.hote }
+  return principal
 }
 
 /** Vérifie le SMTP au démarrage du worker, sans bloquer les autres files. */
@@ -62,17 +53,9 @@ export async function verifierTransport(): Promise<void> {
     )
     return
   }
-  principal ??= ouvrir(env.COURRIEL)
-  if (env.COURRIEL_CAPTURE !== null) {
-    journal.warn(
-      {
-        evenement: 'courriel-sortie-ouverte',
-        nommees: env.COURRIEL_DELIVRABILITE.map(courrielTronque),
-      },
-      'Essai de délivrabilité : seules les adresses nommées reçoivent vraiment, le reste va dans Mailpit.'
-    )
-  }
-  await principal.verify().then(
+  const transport = transportPrincipal()
+  if (transport === null) return
+  await transport.verify().then(
     () => {
       journal.info(
         { evenement: 'courriel-transport-pret', hote: env.COURRIEL?.hote },
@@ -97,7 +80,9 @@ export async function expedier(
   transport?: Transporter | null
 ): Promise<Issue> {
   const voie =
-    transport === undefined ? voiePour(message.destinataire) : { transport }
+    transport === undefined
+      ? { transport: transportPrincipal(), hote: env.COURRIEL?.hote }
+      : { transport }
   if (voie.transport === null) {
     journal.debug(
       {

@@ -18,6 +18,6 @@ Une association qui auto-héberge Relaytour a besoin d'un chemin de déploiement
 
 ## Conséquences
 
-- Une panne de la machine arrête la production et la recette ensemble. Ce risque est accepté au regard du coût.
-- La recette ne doit jamais contenir de données réelles.
+- Une panne de la machine arrête toutes les installations qu'elle héberge. Ce risque est accepté au regard du coût.
+- Une installation d'essai ne contient jamais de données réelles.
 - Un hébergeur qui sert plusieurs organisations sur une même installation relève de l'ADR 0006.

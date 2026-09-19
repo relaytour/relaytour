@@ -68,22 +68,6 @@ services:
       timeout: 3s
       retries: 10
 
-  # Recette seulement : le profil `courriel` n'est jamais activé en production.
-  mailpit:
-    image: axllent/mailpit:v1.27
-    profiles: ['courriel']
-    restart: unless-stopped
-    logging: *journal
-    environment:
-      MP_SMTP_AUTH_ACCEPT_ANY: '1'
-      MP_SMTP_AUTH_ALLOW_INSECURE: '1'
-      MP_MAX_MESSAGES: '500'
-      MP_DATABASE: /data/mailpit.db
-    volumes:
-      - mailpitdata:/data
-    ports:
-      - '127.0.0.1:${MAILPIT_WEB_PORT:-4465}:8025'
-
   migrate:
     image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}-migrate'
     restart: 'no'
@@ -137,7 +121,6 @@ services:
       COURRIEL_SMTP_UTILISATEUR: '${COURRIEL_SMTP_UTILISATEUR:-}'
       COURRIEL_SMTP_MOT_DE_PASSE: '${COURRIEL_SMTP_MOT_DE_PASSE:-}'
       COURRIEL_EXPEDITEUR: '${COURRIEL_EXPEDITEUR:-}'
-      COURRIEL_DELIVRABILITE: '${COURRIEL_DELIVRABILITE:-}'
       WORKER_HEALTH_PORT: 4401
     healthcheck:
       test:
@@ -161,4 +144,3 @@ services:
 volumes:
   dbdata:
   cachedata:
-  mailpitdata:

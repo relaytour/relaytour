@@ -20,9 +20,9 @@ const EnvSchema = z
     NODE_ENV: z
       .enum(['development', 'test', 'production'])
       .default('development'),
-    // L'environnement se lit ici et jamais dans NODE_ENV : la recette et la production
-    // tournent toutes deux en NODE_ENV=production.
-    APP_ENV: z.enum(['local', 'recette', 'prod']).default('local'),
+    // L'environnement se lit ici et jamais dans NODE_ENV : une installation déployée
+    // tourne en NODE_ENV=production quel que soit son usage.
+    APP_ENV: z.enum(['local', 'prod']).default('local'),
     LOG_LEVEL: optionnelle.refine(
       s =>
         s === undefined ||
@@ -65,21 +65,6 @@ const EnvSchema = z
     ORGANISATION_NOM: optionnelle.transform(s => s ?? 'Relaytour'),
     CONTACT_RECRUTEMENT: optionnelle,
     PAGE_EQUIPE: optionnelle,
-    // Hors production, la liste des adresses qui reçoivent vraiment les mails.
-    // C'est une liste et jamais un booléen : le reste part dans Mailpit.
-    COURRIEL_DELIVRABILITE: optionnelle
-      .transform(s =>
-        s === undefined
-          ? []
-          : s
-              .split(',')
-              .map(a => a.trim().toLowerCase())
-              .filter(Boolean)
-      )
-      .refine(liste => liste.every(a => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(a)), {
-        message:
-          'COURRIEL_DELIVRABILITE est une liste d’adresses séparées par des virgules, pas un booléen.',
-      }),
   })
   .superRefine((v, ctx) => {
     if (
@@ -129,35 +114,6 @@ const EnvSchema = z
           'COURRIEL_SMTP_HOTE, COURRIEL_SMTP_UTILISATEUR et COURRIEL_SMTP_MOT_DE_PASSE se renseignent ensemble.',
       })
     }
-    if (
-      v.APP_ENV !== 'prod' &&
-      v.COURRIEL_SMTP_HOTE !== undefined &&
-      v.COURRIEL_DELIVRABILITE.length === 0
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['COURRIEL_DELIVRABILITE'],
-        message:
-          'Un SMTP réel hors production exige COURRIEL_DELIVRABILITE, sinon tous les comptes de test recevraient les mails.',
-      })
-    }
-    if (
-      v.COURRIEL_DELIVRABILITE.length > 0 &&
-      v.COURRIEL_SMTP_HOTE === undefined
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['COURRIEL_DELIVRABILITE'],
-        message: 'COURRIEL_DELIVRABILITE ne sert à rien sans SMTP réel.',
-      })
-    }
-    if (v.APP_ENV === 'prod' && v.COURRIEL_DELIVRABILITE.length > 0) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['COURRIEL_DELIVRABILITE'],
-        message: 'COURRIEL_DELIVRABILITE n’a pas de sens en production.',
-      })
-    }
   })
 
 export type ReglageSmtp = {
@@ -171,13 +127,11 @@ export type ReglageSmtp = {
 export function resoudreEnv(source: NodeJS.ProcessEnv) {
   const brut = EnvSchema.parse(source)
 
-  // Mailpit n'existe qu'en local et en recette : la capture est impossible en production.
+  // Le Mailpit du poste local (packages/database/docker-compose.yml) reçoit tout sans SMTP.
   const mailpit: ReglageSmtp | null =
     brut.APP_ENV === 'local'
       ? { hote: '127.0.0.1', port: 4415, secure: false }
-      : brut.APP_ENV === 'recette'
-        ? { hote: 'mailpit', port: 1025, secure: false }
-        : null
+      : null
 
   const smtp: ReglageSmtp | null =
     brut.COURRIEL_SMTP_HOTE === undefined
@@ -195,10 +149,9 @@ export function resoudreEnv(source: NodeJS.ProcessEnv) {
     ...brut,
     LOG_LEVEL: brut.LOG_LEVEL ?? (brut.APP_ENV === 'local' ? 'debug' : 'info'),
     ORIGINE_ORGA: brut.ORIGINE_ORGA ?? 'http://localhost:5305',
-    // Voie principale : le SMTP réel s'il est renseigné, sinon Mailpit, sinon rien.
+    // Un seul transport : le SMTP renseigné, sinon le Mailpit du poste local, sinon rien.
+    // En production sans SMTP, les mails sont mis en file puis ignorés (courriel-sans-transport).
     COURRIEL: smtp ?? mailpit,
-    // Voie de capture : existe seulement pendant un essai de délivrabilité hors production.
-    COURRIEL_CAPTURE: smtp === null ? null : mailpit,
   }
 }
 

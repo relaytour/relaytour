@@ -2,9 +2,13 @@
 
 Relaytour envoie des mails transactionnels : codes de connexion, invitations, rappels d'échéance, résumés. Il ne contient pas de serveur de mail et n'en aura pas : faire tourner un serveur d'envoi demande une surveillance de réputation qu'une association n'a pas à porter. L'application parle à un service SMTP fourni par l'organisation.
 
-## Sur un poste et en recette
+## Sur un poste
 
-Mailpit reçoit tous les mails sans rien envoyer. Hors production, `COURRIEL_DELIVRABILITE` liste les seules adresses qui reçoivent vraiment un mail quand un SMTP réel est configuré ; le reste part dans Mailpit. Cette variable est une liste, jamais un booléen.
+En `APP_ENV=local` sans SMTP renseigné, le serveur envoie tout au Mailpit du poste (`127.0.0.1:4415`, interface sur `http://localhost:4416`). Mailpit reçoit les mails sans rien envoyer. Aucune variable ne bascule ce comportement : le choix du transport se déduit de `APP_ENV` et de `COURRIEL_SMTP_HOTE`.
+
+## Sur une installation d'essai
+
+Une installation d'essai est une installation ordinaire (`APP_ENV=prod`) sans données réelles. Pour qu'elle n'envoie rien, pointez `COURRIEL_SMTP_HOTE` sur un Mailpit que vous hébergez à côté de la pile, ou laissez le SMTP vide : le worker met alors les mails en file puis les ignore.
 
 ## En production
 
