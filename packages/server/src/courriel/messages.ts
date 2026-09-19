@@ -108,9 +108,17 @@ export async function composer(
     }
     variables.code = job.code
     variables.validite = `${CODE_VALIDITE_SECONDES / 60} minutes`
-    // Le code est placé après « # » : le navigateur ne l'envoie jamais au serveur,
-    // et l'adresse ne figure pas dans le lien.
-    variables.lienConnexion = `${origine}/connexion#code=${job.code}`
+    // Le code et l'adresse sont placés après « # » : le navigateur ne les envoie
+    // jamais au serveur, et l'écran de connexion remplit les deux champs.
+    const compte = job.userId
+      ? await prisma.user.findUnique({
+          where: { id: job.userId },
+          select: { email: true },
+        })
+      : null
+    const fragment = new URLSearchParams({ code: job.code })
+    if (compte !== null) fragment.set('adresse', compte.email)
+    variables.lienConnexion = `${origine}/connexion#${fragment.toString()}`
   }
 
   if (job.sorte === 'tache-modifiee') {

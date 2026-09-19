@@ -8,28 +8,31 @@ import {
   adresseMemorisee,
   demanderCode,
   ErreurConnexion,
-  lireCodeDuLien,
+  lireLienConnexion,
   seConnecter,
+  type LienConnexion,
 } from '../lib/connexion'
 
 type Etape = 'adresse' | 'code'
 
-// Le code du lien se lit une seule fois par chargement de page : la lecture efface
+// Le lien se lit une seule fois par chargement de page : la lecture efface
 // le fragment de la barre d'adresse.
-let codeDuLien: string | null | undefined
-function codeDuLienUneFois(): string | null {
-  if (codeDuLien === undefined) codeDuLien = lireCodeDuLien()
-  return codeDuLien
+let lienLu: LienConnexion | null | undefined
+function lienUneFois(): LienConnexion | null {
+  if (lienLu === undefined) lienLu = lireLienConnexion()
+  return lienLu
 }
 
 export default function Connexion() {
   const navigate = useNavigate()
   const apollo = useApolloClient()
   const [etape, setEtape] = useState<Etape>(() =>
-    codeDuLienUneFois() === null ? 'adresse' : 'code'
+    lienUneFois() === null ? 'adresse' : 'code'
   )
-  const [adresse, setAdresse] = useState(adresseMemorisee)
-  const [code, setCode] = useState(() => codeDuLienUneFois() ?? '')
+  const [adresse, setAdresse] = useState(
+    () => lienUneFois()?.adresse ?? adresseMemorisee()
+  )
+  const [code, setCode] = useState(() => lienUneFois()?.code ?? '')
   const [envoiEnCours, setEnvoiEnCours] = useState(false)
   const [erreur, setErreur] = useState<string | null>(null)
   const lienTraite = useRef(false)
@@ -51,17 +54,18 @@ export default function Connexion() {
     }
   }
 
-  // Lien reçu par mail : si l'adresse a été saisie dans cet onglet, la connexion est
-  // immédiate ; sinon, la personne saisit son adresse et le code reste prérempli.
+  // Lien reçu par mail : il porte le code et l'adresse, la connexion est immédiate.
+  // Sans adresse dans le lien, celle saisie dans cet onglet sert ; sinon la personne
+  // saisit son adresse et le code reste prérempli.
   useEffect(() => {
     if (lienTraite.current) return
     lienTraite.current = true
-    const codeLu = codeDuLienUneFois()
-    const memorisee = adresseMemorisee()
-    if (codeLu !== null && memorisee !== '') {
+    const lien = lienUneFois()
+    const adresseConnue = lien?.adresse ?? adresseMemorisee()
+    if (lien !== null && adresseConnue !== '') {
       // Le lien du mail est une source externe : la connexion part au montage, une seule fois.
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      void valider(memorisee, codeLu)
+      void valider(adresseConnue, lien.code)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])

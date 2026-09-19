@@ -65,11 +65,23 @@ export function adresseMemorisee(): string {
   return sessionStorage.getItem(CLE_ADRESSE) ?? ''
 }
 
-/** Lit le code placé après « # » dans le lien du mail, puis l'efface de la barre d'adresse. */
-export function lireCodeDuLien(): string | null {
-  const code = new URLSearchParams(window.location.hash.slice(1)).get('code')
+export interface LienConnexion {
+  code: string
+  /** L'adresse du compte, quand le lien vient du mail de code. */
+  adresse: string | null
+}
+
+/**
+ * Lit le code et l'adresse placés après « # » dans le lien du mail, puis les efface
+ * de la barre d'adresse. Le fragment n'atteint jamais le serveur.
+ */
+export function lireLienConnexion(): LienConnexion | null {
+  const fragment = new URLSearchParams(window.location.hash.slice(1))
+  const code = fragment.get('code')
+  const adresse = fragment.get('adresse')?.trim().toLowerCase() ?? null
   if (code !== null) {
     history.replaceState(null, '', window.location.pathname)
   }
-  return code !== null && /^\d{6}$/.test(code) ? code : null
+  if (code === null || !/^\d{6}$/.test(code)) return null
+  return { code, adresse: adresse && adresse.includes('@') ? adresse : null }
 }

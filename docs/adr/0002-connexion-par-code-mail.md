@@ -36,7 +36,7 @@ La charge utile d'un job de mail ne contient normalement aucun jeton. Better Aut
 
 Trois points diffèrent de la décision initiale. Ils ont été tranchés pendant la mise en œuvre.
 
-1. **Pas de plugin `magicLink`.** Un seul mail contient le code et un lien `https://orga…/connexion#code=123456`. Le code est placé après `#` : le navigateur ne l'envoie jamais au serveur, et l'adresse ne figure pas dans l'URL. Si l'adresse a été saisie dans le même onglet, la connexion est immédiate ; sinon, la personne saisit son adresse et le code reste prérempli. Deux plugins auraient produit deux mails et deux jetons pour une même demande.
+1. **Pas de plugin `magicLink`.** Un seul mail contient le code et un lien `https://orga…/connexion#code=123456&adresse=…`. Le code et l'adresse sont placés après `#` : le navigateur ne les envoie jamais au serveur et ils n'entrent dans aucun journal. L'écran de connexion remplit les deux champs et la connexion part aussitôt, même dans un nouvel onglet (mise à jour du 19 septembre 2026). Deux plugins auraient produit deux mails et deux jetons pour une même demande.
 2. **Une seule origine pour le navigateur.** L'espace organisateur relaie `/api/auth/*` et `/graphql` vers l'API (Caddy en production, Vite en local). Le cookie `relaytour.session_token` est donc un cookie de première partie, sans CORS ni domaine partagé.
 3. **Limitation de débit en base, plus une limite par adresse dans Redis.** Better Auth stocke ses compteurs par IP dans la table `RateLimit`. Un hook ajoute une limite de 5 codes par adresse sur 15 minutes, dans Redis.
 
