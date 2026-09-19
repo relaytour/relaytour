@@ -5,6 +5,18 @@
   "version": "0.3.0",
   "notes": [
     {
+      "id": "2026-09-19-serveur-une-recherche-globale-trouve-taches-fiches-et-personnes",
+      "date": "2026-09-19",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Une recherche globale trouve les tâches, les fiches et les personnes",
+        "texte": "La barre haute de l'espace organisateur propose une recherche. Elle trouve les tâches de l'édition en cours, les fiches et les personnes de vos périmètres. Vous ne trouvez que ce que vous pouvez déjà consulter. La page d'une fiche liste aussi les tâches qui la citent.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-serveur-une-nouvelle-demande-de-code-renvoie-le-code-en-cours",
       "date": "2026-09-19",
       "type": "securite",

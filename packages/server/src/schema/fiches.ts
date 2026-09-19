@@ -19,6 +19,7 @@ import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
+import { TacheRef } from './taches.ts'
 
 export const SourceFicheEnum = builder.enumType(SourceFiche, {
   name: 'SourceFiche',
@@ -159,6 +160,37 @@ builder.prismaObjectFields('Tache', t => ({
       })
       return fiche !== null && (await peutLireFiche(ctx, fiche)) ? fiche : null
     },
+  }),
+}))
+
+// ── Champs ajoutés à la fiche ────────────────────────────────────────────────
+
+builder.prismaObjectFields(FicheRef, t => ({
+  // Les tâches d'une édition liées à la fiche, dans les périmètres lisibles.
+  taches: t.prismaField({
+    type: [TacheRef],
+    args: { editionId: t.arg.id({ required: true }) },
+    resolve: async (query, fiche, { editionId }, ctx) => {
+      const lisibles = await perimetresLisibles(ctx)
+      return prisma.tache.findMany({
+        ...query,
+        where: {
+          ficheId: fiche.id,
+          editionId: String(editionId),
+          perimetre: { archivedAt: null },
+          ...(lisibles === null ? {} : { perimetreId: { in: lisibles } }),
+        },
+        orderBy: [{ echeance: { sort: 'asc', nulls: 'last' } }],
+      })
+    },
+  }),
+  // Le nombre de versions suit la règle de l'historique : les autres lisent null.
+  nombreVersions: t.int({
+    nullable: true,
+    resolve: (fiche, _args, ctx) =>
+      ctx.personne?.estAdmin
+        ? prisma.ficheVersion.count({ where: { ficheId: fiche.id } })
+        : null,
   }),
 }))
 
