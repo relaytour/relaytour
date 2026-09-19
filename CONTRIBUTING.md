@@ -122,7 +122,7 @@ Un seul mot par notion.
 - Prettier reformate le texte des requêtes `graphql()` : relancer `yarn workspace @relaytour/orga codegen` après un formatage, sinon les types deviennent `unknown`.
 - Dans `Coquille`, le contenu principal porte `minWidth: 0` : sans lui, un tableau large élargit toute la page au-delà de l'écran.
 - antd 6.6 déprécie aussi `List` : utiliser une liste HTML simple.
-- antd 6 nomme `.ant-drawer-section` le conteneur du tiroir (plus `.ant-drawer-content`) ; la fenêtre modale garde `.ant-modal-content`. Le verre de `global.css` les cible ainsi.
+- antd 6.6 nomme `.ant-drawer-section` le conteneur du tiroir et `.ant-modal-container` celui de la fenêtre modale ; `.ant-drawer-content` et `.ant-modal-content` n'existent plus. Le verre dépoli de `global.css` les cible ainsi. Après une montée de version d'antd, vérifier ces classes dans le navigateur.
 - Prettier ne lit `.prettierignore` que dans le dossier courant : le lancer depuis la racine, sinon il reformate `packages/orga/src/gql`.
 - Aucune couleur en dur dans `packages/orga` : les composants lisent les variables `--rt-*` (`var(--rt-primaire)`, `var(--rt-erreur)`, `var(--rt-encre-08)`…). Une couleur d'un périmètre vient de son contenu.
 - Aucune police servie par un tiers : une famille s'ajoute par paquet fontsource dans `packages/orga/src/polices.ts` et dans `POLICES_DISPONIBLES`.

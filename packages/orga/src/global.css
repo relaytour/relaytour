@@ -82,6 +82,15 @@
     rgba(255, 255, 255, 0.76),
     rgba(255, 255, 255, 0.54)
   );
+  /* Verre blanc dépoli des surfaces posées au-dessus de la page : fenêtres
+     modales, tiroirs, listes déroulantes, bulles. Presque opaque et très flou,
+     pour que le contenu du dessous ne gêne jamais la lecture. */
+  --rt-verre-depoli: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.94),
+    rgba(255, 255, 255, 0.86)
+  );
+  --rt-flou-depoli: blur(28px) saturate(1.8);
   --rt-liseret:
     inset 0 1px 1px rgba(255, 255, 255, 0.85),
     inset 0 -1px 2px rgba(255, 255, 255, 0.3);
@@ -291,16 +300,74 @@ body {
   white-space: nowrap;
 }
 
-/* Les conteneurs antd deviennent des surfaces de verre. En antd 6, le conteneur
-   du tiroir s'appelle .ant-drawer-section, celui de la fenêtre modale reste
-   .ant-modal-content. */
-.ant-card,
-.ant-drawer .ant-drawer-section,
-.ant-modal .ant-modal-content {
+/* Les cartes, posées dans la page, sont en verre clair. */
+.ant-card {
   background: var(--rt-verre);
   backdrop-filter: var(--rt-flou);
   -webkit-backdrop-filter: var(--rt-flou);
   box-shadow: var(--rt-ombre-verre), var(--rt-liseret);
+}
+
+/* Tout ce qui se pose au-dessus de la page est en verre blanc dépoli : fenêtres
+   modales, tiroirs, listes déroulantes, menus, bulles, messages. En antd 6.6, le
+   conteneur de la fenêtre modale s'appelle .ant-modal-container et celui du
+   tiroir .ant-drawer-section ; .ant-modal-content n'existe plus. */
+.ant-drawer .ant-drawer-section,
+.ant-modal .ant-modal-container,
+.ant-select-dropdown,
+.ant-cascader-dropdown,
+.ant-dropdown .ant-dropdown-menu,
+.ant-popover .ant-popover-container,
+.ant-picker-dropdown .ant-picker-panel-container,
+.ant-message .ant-message-notice,
+.ant-notification .ant-notification-notice {
+  background: var(--rt-verre-depoli);
+  backdrop-filter: var(--rt-flou-depoli);
+  -webkit-backdrop-filter: var(--rt-flou-depoli);
+  box-shadow: var(--rt-ombre-verre-lg), var(--rt-liseret);
+}
+
+/* Le voile sous une fenêtre modale ou un tiroir floute la page au lieu de l'assombrir. */
+.ant-modal-mask,
+.ant-drawer-mask {
+  background: rgba(var(--rt-encre-rgb), 0.16);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+/* Le nom d'un périmètre sur sa couleur pleine (PastillePerimetre). */
+.rt-pastille {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 18px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ant-select-selection-overflow .rt-pastille {
+  margin: 2px 4px 2px 0;
+}
+
+.rt-pastille-fermer {
+  padding: 0 0 0 2px;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.rt-pastille-fermer:hover {
+  opacity: 1;
 }
 
 .ant-card {
