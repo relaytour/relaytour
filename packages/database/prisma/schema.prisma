@@ -20,6 +20,28 @@ datasource db {
 
 // Règle des migrations : additives seulement. Un sens nouveau prend un nom de champ nouveau.
 
+// ── Organisation (ADR 0006) ───────────────────────────────────────────────────
+// Racine des données d'une organisation. Lot commun : une seule ligne par
+// installation ; le lot multi ajoutera les appartenances et le filtrage par requête.
+model Organisation {
+  id            String   @id @default(cuid())
+  slug          String   @unique
+  nom           String
+  sigle         String?
+  fuseauHoraire String   @default("Europe/Paris")
+  // Déclaration complète (organisation.yaml), validée par DeclarationOrganisationSchema
+  // dans packages/server/src/lib/organisation.ts.
+  configuration Json
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  editions      Edition[]
+  perimetres    Perimetre[]
+  fiches        Fiche[]
+  notifications Notification[]
+  preferences   PreferenceNotification[]
+}
+
 // Table héritée du projet précédent, sans usage dans Relaytour (ADR 0006 : la
 // newsletter est hors du périmètre publié). Sa suppression est une migration
 // destructive, décidée à part.
@@ -123,20 +145,24 @@ enum StatutEdition {
 
 // Une année du tournoi. Ses dates servent de référence aux échéances relatives des tâches.
 model Edition {
-  id        String        @id @default(cuid())
-  annee     Int           @unique
-  nom       String
-  debut     DateTime      @db.Date
-  fin       DateTime      @db.Date
-  statut    StatutEdition @default(PREPARATION)
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  organisationId String?
+  annee          Int           @unique
+  nom            String
+  debut          DateTime      @db.Date
+  fin            DateTime      @db.Date
+  statut         StatutEdition @default(PREPARATION)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
+  organisation Organisation?       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   affectations Affectation[]
   taches       Tache[]
   activites    Activite[]
   effectifs    EffectifPerimetre[]
   souhaits     Souhait[]
+
+  @@index([organisationId])
 }
 
 enum TypePerimetre {
@@ -146,16 +172,18 @@ enum TypePerimetre {
 
 // Un sport ou un pôle transverse. Il est stable d'une édition à l'autre.
 model Perimetre {
-  id         String        @id @default(cuid())
-  slug       String        @unique
-  nom        String
-  type       TypePerimetre
-  couleur    String?
-  ordre      Int           @default(0)
-  archivedAt DateTime?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+  id             String        @id @default(cuid())
+  organisationId String?
+  slug           String        @unique
+  nom            String
+  type           TypePerimetre
+  couleur        String?
+  ordre          Int           @default(0)
+  archivedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
+  organisation    Organisation?       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   affectations    Affectation[]
   taches          Tache[]
   activites       Activite[]
@@ -163,6 +191,8 @@ model Perimetre {
   droitsRedaction DroitRedaction[]
   effectifs       EffectifPerimetre[]
   souhaits        Souhait[]
+
+  @@index([organisationId])
 }
 
 // Une personne désignée pour un périmètre et une édition.
@@ -332,6 +362,7 @@ enum SourceFiche {
 // Son contenu vit dans ses versions ; la fiche pointe vers la version courante.
 model Fiche {
   id                String    @id @default(cuid())
+  organisationId    String?
   slug              String    @unique
   perimetreId       String?
   versionCouranteId String?   @unique
@@ -339,6 +370,7 @@ model Fiche {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
+  organisation    Organisation?  @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   perimetre       Perimetre?     @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
   versionCourante FicheVersion?  @relation("FicheVersionCourante", fields: [versionCouranteId], references: [id], onDelete: SetNull)
   versions        FicheVersion[] @relation("FicheVersions")
@@ -346,6 +378,7 @@ model Fiche {
   activites       Activite[]
 
   @@index([perimetreId])
+  @@index([organisationId])
 }
 
 // Une version ne se modifie ni ne se supprime. Restaurer une version en crée une nouvelle.
@@ -398,30 +431,33 @@ enum TypeNotification {
 // Une notification ne stocke que des identifiants : le texte se compose à la lecture,
 // à partir des titres et des noms à jour.
 model Notification {
-  id          String           @id @default(cuid())
-  userId      String
-  type        TypeNotification
-  acteurId    String?
-  tacheId     String?
-  perimetreId String?
+  id             String           @id @default(cuid())
+  organisationId String?
+  userId         String
+  type           TypeNotification
+  acteurId       String?
+  tacheId        String?
+  perimetreId    String?
   // Pour TACHE_ASSIGNEE et TACHE_DESASSIGNEE : la personne concernée.
-  personneId  String?
+  personneId     String?
   // Pour ECHEANCE_PROCHE : le nombre de jours avant l'échéance.
-  jours       Int?
+  jours          Int?
   // Empêche de créer deux fois le même rappel (type, tâche, personne, échéance).
-  cle         String?          @unique
-  lueLe       DateTime?
+  cle            String?          @unique
+  lueLe          DateTime?
   // Date d'envoi du mail immédiat, s'il y en a eu un.
-  envoyeeLe   DateTime?
+  envoyeeLe      DateTime?
   // Date d'inclusion dans un résumé par mail.
-  resumeeLe   DateTime?
-  createdAt   DateTime         @default(now())
+  resumeeLe      DateTime?
+  createdAt      DateTime         @default(now())
 
-  user  User   @relation("NotificationDestinataire", fields: [userId], references: [id], onDelete: Cascade)
-  tache Tache? @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+  organisation Organisation? @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  user         User          @relation("NotificationDestinataire", fields: [userId], references: [id], onDelete: Cascade)
+  tache        Tache?        @relation(fields: [tacheId], references: [id], onDelete: Cascade)
 
   @@index([userId, lueLe, createdAt])
   @@index([userId, resumeeLe])
+  @@index([organisationId])
 }
 
 enum FrequenceResume {
@@ -433,6 +469,7 @@ enum FrequenceResume {
 // Préférences d'une personne. Sans ligne, les valeurs par défaut s'appliquent.
 model PreferenceNotification {
   userId           String          @id
+  organisationId   String?
   frequenceResume  FrequenceResume @default(HEBDOMADAIRE)
   // Mail immédiat quand une autre personne modifie une de vos tâches.
   mailModification Boolean         @default(true)
@@ -441,5 +478,8 @@ model PreferenceNotification {
   dernierResumeLe  DateTime?
   updatedAt        DateTime        @updatedAt
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisation Organisation? @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId])
 }
