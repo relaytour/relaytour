@@ -1,4 +1,4 @@
-Relaytour
+{{organisation}}
 
 Bonjour {{nom}},
 
@@ -17,8 +17,8 @@ Ouvrir mon espace : {{lienConnexion}}
 Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences : {{lienPreferences}}
 
 --
-Vous recevez ce message parce que votre adresse est enregistrée dans un espace
-organisateur Relaytour. Pour toute question, répondez à ce mail.
+Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}. Pour toute question, répondez à ce mail.
 
-Relaytour, logiciel libre pour les organisations bénévoles.
+Cet espace est propulsé par Relaytour, logiciel libre.
 https://github.com/relaytour/relaytour

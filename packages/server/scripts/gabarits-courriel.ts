@@ -16,13 +16,43 @@ const CIBLE = path.resolve(
   '../src/courriel/gabarits.genere.ts'
 )
 
-// Mentions qui prouvent que le pied de page a bien été inclus.
-const MARQUEURS_PIED = ['github.com/relaytour/relaytour']
+// Mentions qui prouvent que l'en-tête et le pied de page ont bien été inclus.
+const MARQUEURS = ['{{organisation}}', 'github.com/relaytour/relaytour']
+
+// MJML strict refuse une variable dans un attribut de couleur. Les gabarits écrivent
+// des couleurs sentinelles, remplacées ici par une variable après compilation.
+// L'organisation fournit les valeurs à l'envoi (lib/organisation.ts, variablesOrganisation).
+const COULEURS_SENTINELLES: Record<string, string> = {
+  '#010101': 'couleurEncre',
+  '#020202': 'couleurPrimaire',
+  '#030303': 'couleurAccent',
+  '#040404': 'couleurSol',
+}
+
+// Variables fournies par l'organisation, hors de la parité HTML / texte et hors
+// de la liste des variables métier du gabarit.
+const VARIABLES_ORGANISATION = new Set([
+  'organisation',
+  ...Object.values(COULEURS_SENTINELLES),
+])
 
 function variables(source: string): string[] {
   return [
     ...new Set([...source.matchAll(/\{\{(\w+)\}\}/g)].map(m => m[1] ?? '')),
-  ].sort()
+  ]
+    .filter(v => !VARIABLES_ORGANISATION.has(v))
+    .sort()
+}
+
+function poserSentinelles(html: string): string {
+  let resultat = html
+  for (const [sentinelle, variable] of Object.entries(COULEURS_SENTINELLES)) {
+    resultat = resultat.replaceAll(
+      new RegExp(sentinelle, 'gi'),
+      `{{${variable}}}`
+    )
+  }
+  return resultat
 }
 
 // MJML 5 remplace en silence une inclusion refusée par un commentaire.
@@ -47,7 +77,7 @@ const entrees = await Promise.all(
     const source = path.join(DOSSIER, `${nom}.mjml`)
     // mjml2html est asynchrone en version 5, alors que ses types le décrivent synchrone.
     // Sans await, `errors` vaudrait undefined et le contrôle ne vérifierait rien.
-    const { html, errors } = await Promise.resolve(
+    const { html: htmlCompile, errors } = await Promise.resolve(
       mjml2html(assembler(readFileSync(source, 'utf8')), {
         filePath: source,
         validationLevel: 'strict',
@@ -60,16 +90,17 @@ const entrees = await Promise.all(
         `${nom}.mjml : ${errors.map(e => e.formattedMessage).join(' · ')}`
       )
     }
+    const html = poserSentinelles(htmlCompile)
     const texte = readFileSync(path.join(DOSSIER, `${nom}.txt`), 'utf8')
 
     for (const [partie, contenu] of [
       ['html', html],
       ['texte', texte],
     ] as const) {
-      for (const marqueur of MARQUEURS_PIED) {
+      for (const marqueur of MARQUEURS) {
         if (!contenu.includes(marqueur)) {
           throw new Error(
-            `${nom} (${partie}) : le pied de page manque (« ${marqueur} » absent).`
+            `${nom} (${partie}) : l'en-tête ou le pied de page manque (« ${marqueur} » absent).`
           )
         }
       }

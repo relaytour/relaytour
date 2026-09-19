@@ -112,6 +112,7 @@ Un seul mot par notion.
 ## Pièges connus
 
 - MJML 5 remplace en silence une inclusion refusée : `scripts/gabarits-courriel.ts` assemble les fragments lui-même et vérifie la présence du pied de page.
+- MJML strict refuse une variable dans un attribut de couleur : les gabarits écrivent des couleurs sentinelles (`#010101` encre, `#020202` primaire, `#030303` accent, `#040404` sol), que `scripts/gabarits-courriel.ts` remplace par `{{couleur…}}` après compilation. Ne jamais utiliser ces quatre valeurs comme vraies couleurs.
 - `mjml2html` est asynchrone en version 5 alors que ses types le décrivent synchrone.
 - Sans `--target`, un `docker build` construit la dernière étape du Dockerfile : `runtime` doit rester la dernière.
 - BullMQ refuse `:` dans un `jobId`.

@@ -3,12 +3,12 @@
     <mj-title>Échéances de vos tâches</mj-title>
     <mj-preview>Des tâches qui vous sont assignées arrivent à échéance.</mj-preview>
     <mj-attributes>
-      <mj-all font-family="Quicksand, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
-      <mj-text font-size="15px" line-height="24px" color="#2F6B4F" padding="0 0 16px" />
+      <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
     </mj-attributes>
   </mj-head>
 
-  <mj-body background-color="#F3F5FA" width="480px">
+  <mj-body background-color="#040404" width="480px">
     <mj-include path="./_entete.mjml" />
 
     <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
@@ -22,12 +22,12 @@
         <mj-text>
           {{rappels}}
         </mj-text>
-        <mj-button href="{{lienConnexion}}" background-color="#2F6B4F" color="#FFFFFF"
+        <mj-button href="{{lienConnexion}}" background-color="#010101" color="#FFFFFF"
                    border-radius="10px" font-size="15px" font-weight="700"
                    padding="8px 0 16px" inner-padding="13px 24px">
           Ouvrir mon espace
         </mj-button>
-        <mj-text font-size="13px" line-height="20px" color="#4A5A7A" padding="0">
+        <mj-text font-size="13px" line-height="20px" color="#5B6670" padding="0">
           Vous pouvez désactiver ces rappels dans vos préférences : {{lienPreferences}}
         </mj-text>
       </mj-column>

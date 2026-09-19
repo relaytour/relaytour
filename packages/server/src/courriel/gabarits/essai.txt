@@ -1,12 +1,12 @@
-Relaytour
+{{organisation}}
 
 Essai d’envoi
 
 Ce message vérifie la chaîne d’envoi des mails du serveur Relaytour. Vous n’avez rien à faire.
 
 --
-Vous recevez ce message parce que votre adresse est enregistrée dans un espace
-organisateur Relaytour. Pour toute question, répondez à ce mail.
+Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}. Pour toute question, répondez à ce mail.
 
-Relaytour, logiciel libre pour les organisations bénévoles.
+Cet espace est propulsé par Relaytour, logiciel libre.
 https://github.com/relaytour/relaytour

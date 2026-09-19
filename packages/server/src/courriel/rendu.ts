@@ -12,6 +12,17 @@ export interface Rendu {
 
 export type Variables = Record<string, string | string[]>
 
+/** Ce que l'organisation apporte à chaque mail : son nom court et ses couleurs. */
+export interface VariablesOrganisation {
+  organisation: string
+  couleurEncre: string
+  couleurPrimaire: string
+  couleurAccent: string
+  couleurSol: string
+}
+
+const COULEUR = /^#[0-9A-F]{6}$/i
+
 /**
  * Remplit un gabarit précompilé. Les valeurs sont échappées dans la partie HTML
  * et laissées telles quelles dans la partie texte.
@@ -19,7 +30,11 @@ export type Variables = Record<string, string | string[]>
  * Une valeur de type tableau devient une liste : `<ul>` dans la partie HTML, lignes
  * « - » dans la partie texte. Chaque élément est échappé séparément.
  */
-export function rendre(nom: NomGabarit, variables: Variables = {}): Rendu {
+export function rendre(
+  nom: NomGabarit,
+  variables: Variables,
+  organisation: VariablesOrganisation
+): Rendu {
   const gabarit = GABARITS[nom]
   const manquantes = gabarit.variables.filter(v => !(v in variables))
   if (manquantes.length > 0) {
@@ -35,13 +50,25 @@ export function rendre(nom: NomGabarit, variables: Variables = {}): Rendu {
       )
     }
   }
+  // Une couleur entre dans un attribut style : l'échappement HTML ne suffit pas.
+  for (const [cle, valeur] of Object.entries(organisation) as [
+    string,
+    string,
+  ][]) {
+    if (cle.startsWith('couleur') && !COULEUR.test(valeur)) {
+      throw new Error(
+        `Gabarit « ${nom} » : la couleur « ${cle} » doit avoir la forme #RRGGBB.`
+      )
+    }
+  }
+  const toutes: Variables = { ...organisation, ...variables }
   const poser = (
     source: string,
     texte: (v: string) => string,
     liste: (v: string[]) => string
   ): string =>
     source.replaceAll(/\{\{(\w+)\}\}/g, (_m, cle: string) => {
-      const valeur = variables[cle] ?? ''
+      const valeur = toutes[cle] ?? ''
       return typeof valeur === 'string' ? texte(valeur) : liste(valeur)
     })
   return {

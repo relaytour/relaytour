@@ -1,14 +1,14 @@
 <mjml>
   <mj-head>
-    <mj-title>Votre code de connexion </mj-title>
+    <mj-title>Votre code de connexion</mj-title>
     <mj-preview>Votre code de connexion est valable {{validite}}.</mj-preview>
     <mj-attributes>
-      <mj-all font-family="Quicksand, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
-      <mj-text font-size="15px" line-height="24px" color="#2F6B4F" padding="0 0 16px" />
+      <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
     </mj-attributes>
   </mj-head>
 
-  <mj-body background-color="#F3F5FA" width="480px">
+  <mj-body background-color="#040404" width="480px">
     <mj-include path="./_entete.mjml" />
 
     <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
@@ -23,12 +23,12 @@
                  align="center" padding="8px 0 20px">
           {{code}}
         </mj-text>
-        <mj-button href="{{lienConnexion}}" background-color="#2F6B4F" color="#FFFFFF"
+        <mj-button href="{{lienConnexion}}" background-color="#010101" color="#FFFFFF"
                    border-radius="10px" font-size="15px" font-weight="700"
                    padding="0 0 16px" inner-padding="13px 24px">
           Se connecter avec ce code
         </mj-button>
-        <mj-text font-size="13px" line-height="20px" color="#4A5A7A" padding="0">
+        <mj-text font-size="13px" line-height="20px" color="#5B6670" padding="0">
           Si vous n’avez pas demandé ce code, ignorez ce message. Personne ne peut se connecter
           sans accès à votre boîte mail.
         </mj-text>

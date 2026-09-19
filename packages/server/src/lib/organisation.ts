@@ -227,6 +227,18 @@ export function resoudreConfiguration(
   }
 }
 
+/** Les variables qu'un mail reçoit de l'organisation : nom court et couleurs. */
+export function variablesOrganisation(configuration: ConfigurationOrganisation) {
+  const c = configuration.theme.couleurs
+  return {
+    organisation: configuration.nomCourt,
+    couleurEncre: c.encre,
+    couleurPrimaire: c.primaire,
+    couleurAccent: c.accent,
+    couleurSol: c.sol2,
+  }
+}
+
 const DUREE_CACHE_MS = 60_000
 let cache: { valeur: ConfigurationOrganisation; expire: number } | null = null
 

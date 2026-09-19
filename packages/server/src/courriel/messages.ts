@@ -8,7 +8,10 @@ import {
   preferencesDe,
   type NotificationAComposer,
 } from '../lib/notifications.ts'
-import { configurationOrganisation } from '../lib/organisation.ts'
+import {
+  configurationOrganisation,
+  variablesOrganisation,
+} from '../lib/organisation.ts'
 
 import { rendre, type Variables } from './rendu.ts'
 
@@ -254,7 +257,11 @@ export async function composer(
     }
   }
 
-  const { html, texte } = rendre(job.sorte, variables)
+  const { html, texte } = rendre(
+    job.sorte,
+    variables,
+    variablesOrganisation(configuration)
+  )
   return {
     sujet: sujets(configuration.nomCourt)[job.sorte],
     html,
