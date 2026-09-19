@@ -1,7 +1,6 @@
 import { ApolloProvider } from '@apollo/client/react'
 import { themeParDefaut } from '@relaytour/tokens'
-import { App as AntdApp, ConfigProvider } from 'antd'
-import frFR from 'antd/locale/fr_FR'
+import { App as AntdApp } from 'antd'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 
@@ -9,20 +8,21 @@ import './polices'
 import './global.css'
 import Application from './App'
 import { apollo } from './lib/apollo'
-import { appliquerTheme, construireTheme } from './lib/theme'
+import { OrganisationProvider } from './composants/OrganisationProvider'
+import { appliquerTheme } from './lib/theme'
 
-// Le thème s'applique avant le premier rendu : aucun éclair de couleurs de repli.
-// Le thème de l'organisation, servi par l'API, remplacera cet appel (ADR 0006).
+// Le thème par défaut s'applique avant le premier rendu : aucun éclair de couleurs
+// de repli. Le thème de l'organisation, servi par l'API, le remplace dès sa réponse.
 appliquerTheme(themeParDefaut)
 
 createRoot(document.getElementById('racine')!).render(
   <StrictMode>
     <ApolloProvider client={apollo}>
-      <ConfigProvider locale={frFR} theme={construireTheme(themeParDefaut)}>
+      <OrganisationProvider>
         <AntdApp>
           <Application />
         </AntdApp>
-      </ConfigProvider>
+      </OrganisationProvider>
     </ApolloProvider>
   </StrictMode>
 )

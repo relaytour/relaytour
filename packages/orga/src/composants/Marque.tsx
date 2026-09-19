@@ -1,3 +1,5 @@
+import { useOrganisation } from '../lib/organisation'
+
 // Le pictogramme de Relaytour : deux arcs qui se passent le relais. Le premier
 // prend la primaire du thème, le second son accent. Il reste lisible à 16 px.
 export function Pictogramme({
@@ -35,21 +37,32 @@ export function Pictogramme({
 }
 
 /**
- * La marque affichée dans la barre latérale et sur l'écran de connexion. Le
- * nom viendra de la configuration de l'organisation servie par l'API
- * (ADR 0006) ; d'ici là, il vaut « Relaytour ».
+ * La marque affichée dans la barre latérale et sur l'écran de connexion : le
+ * logo de l'organisation s'il en fournit un, sinon le pictogramme de Relaytour,
+ * puis le nom court de l'organisation servi par l'API (ADR 0006).
  */
 export default function Marque({
-  nom = 'Relaytour',
+  nom,
   taille = 28,
 }: {
   nom?: string
   taille?: number
 }) {
+  const organisation = useOrganisation()
+  const libelle = nom ?? organisation.nomCourt
   return (
     <span className="rt-marque">
-      <Pictogramme taille={taille} />
-      <span className="rt-marque-nom">{nom}</span>
+      {organisation.logoUrl !== null ? (
+        <img
+          src={organisation.logoUrl}
+          alt=""
+          height={taille}
+          style={{ display: 'block', maxWidth: taille * 3 }}
+        />
+      ) : (
+        <Pictogramme taille={taille} />
+      )}
+      <span className="rt-marque-nom">{libelle}</span>
     </span>
   )
 }
