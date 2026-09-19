@@ -96,11 +96,12 @@ export default function Coquille({
             children: perimetres.map(p => ({
               key: `/perimetres/${p.slug}`,
               icon: (
-                <span
-                  className="rt-point"
-                  style={{ background: p.couleur ?? 'var(--rt-primaire)' }}
-                  aria-hidden="true"
-                />
+                <span className="rt-icone-point" aria-hidden="true">
+                  <span
+                    className="rt-point"
+                    style={{ background: p.couleur ?? 'var(--rt-primaire)' }}
+                  />
+                </span>
               ),
               label: p.nom,
             })),

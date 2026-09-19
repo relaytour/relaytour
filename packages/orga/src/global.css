@@ -33,8 +33,11 @@
   --rt-titre-echelle: 1;
 
   /* Dérivés du thème */
-  --rt-encre-70: rgba(var(--rt-encre-rgb), 0.68);
-  --rt-encre-55: rgba(var(--rt-encre-rgb), 0.52);
+  /* Les gris de texte sont relevés (0,84, 0,78 et 0,64) : sur le verre teinté,
+     les valeurs d'origine (0,68 et 0,52) manquaient de contraste à la lecture. */
+  --rt-encre-80: rgba(var(--rt-encre-rgb), 0.84);
+  --rt-encre-70: rgba(var(--rt-encre-rgb), 0.78);
+  --rt-encre-55: rgba(var(--rt-encre-rgb), 0.64);
   --rt-encre-40: rgba(var(--rt-encre-rgb), 0.38);
   --rt-encre-14: rgba(var(--rt-encre-rgb), 0.12);
   --rt-encre-08: rgba(var(--rt-encre-rgb), 0.07);
@@ -92,6 +95,20 @@
     rgba(255, 255, 255, 0.86)
   );
   --rt-flou-depoli: blur(28px) saturate(1.8);
+  /* Verre plus dense des cartes qui portent du texte (tâches, lignes du
+     rétroplanning) : le fond et les halos ne gênent plus la lecture. */
+  --rt-verre-carte: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.92),
+    rgba(255, 255, 255, 0.76)
+  );
+  --rt-verre-carte-teinte:
+    linear-gradient(
+      155deg,
+      rgba(255, 255, 255, 0.88),
+      rgba(255, 255, 255, 0.7)
+    ),
+    rgba(var(--rt-primaire-rgb), 0.14);
   --rt-liseret:
     inset 0 1px 1px rgba(255, 255, 255, 0.85),
     inset 0 -1px 2px rgba(255, 255, 255, 0.3);
@@ -645,7 +662,7 @@ button.rt-ligne-lien {
   font-family: var(--rt-mono);
   font-size: 12.5px;
   letter-spacing: 0.02em;
-  color: var(--rt-encre-55);
+  color: var(--rt-encre-70);
 }
 
 /* Panneau de verre de la colonne de droite (Panneau). */
@@ -930,6 +947,24 @@ a.rt-etiquette:hover {
   align-items: start;
 }
 
+.rt-carte-tache.rt-verre,
+.rt-ligne-tache.rt-verre {
+  background: var(--rt-verre-carte);
+}
+
+.rt-carte-tache.rt-verre-teinte {
+  background: var(--rt-verre-carte-teinte);
+}
+
+/* La description d'une tâche se lit comme un texte courant. */
+.ant-typography.rt-description-tache {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-line;
+  color: var(--rt-encre-80);
+}
+
 .rt-carte-tache.rt-abandonnee {
   opacity: 0.6;
 }
@@ -969,7 +1004,7 @@ a.rt-etiquette:hover {
   font-family: var(--rt-mono);
   font-size: 12.5px;
   letter-spacing: 0.02em;
-  color: var(--rt-encre-70);
+  color: var(--rt-encre-80);
 }
 
 .rt-date-retard {
@@ -1442,8 +1477,18 @@ a.rt-etiquette:hover {
   white-space: nowrap;
 }
 
-/* Point de couleur d'un périmètre dans le menu latéral. */
-.rt-barre-laterale .ant-menu-item .rt-point {
+/* Point de couleur d'un périmètre dans le menu. antd pose sa classe d'icône
+   et une largeur minimale sur l'enveloppe : le point reste à l'intérieur,
+   sinon il s'étire en ovale. */
+.ant-menu .rt-icone-point {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  min-width: 16px;
+}
+
+.ant-menu .rt-icone-point .rt-point {
   box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.7);
 }
 

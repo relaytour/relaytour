@@ -139,13 +139,12 @@ export default function TacheCarte({
         </div>
         {tache.description && (
           <Typography.Paragraph
-            type="secondary"
+            className="rt-description-tache"
             ellipsis={{
               rows: 2,
               expandable: 'collapsible',
               symbol: e => (e ? 'Réduire' : 'Lire la suite'),
             }}
-            style={{ margin: 0, fontSize: 13.5, whiteSpace: 'pre-line' }}
           >
             {tache.description}
           </Typography.Paragraph>
