@@ -8,15 +8,7 @@ Mailpit reçoit tous les mails sans rien envoyer. Hors production, `COURRIEL_DEL
 
 ## En production
 
-Vous choisissez un service SMTP : la boîte mail de votre hébergeur de domaine, un service d'envoi transactionnel ou le SMTP de votre suite bureautique.
-
-
-|---|---|---|
-
-
-
-
-Dans tous les cas, renseignez `COURRIEL_SMTP_HOTE`, `COURRIEL_SMTP_PORT` (465 pour TLS implicite), `COURRIEL_SMTP_UTILISATEUR`, `COURRIEL_SMTP_MOT_DE_PASSE` et `COURRIEL_EXPEDITEUR` dans le `.env` du serveur. L'expéditeur doit appartenir à un domaine que vous contrôlez.
+Vous choisissez un service SMTP : la boîte mail de votre hébergeur de domaine, un service d'envoi transactionnel ou le SMTP de votre suite bureautique. Un service transactionnel devient nécessaire dès que les rappels et les résumés concernent plusieurs dizaines de personnes. Renseignez `COURRIEL_SMTP_HOTE`, `COURRIEL_SMTP_PORT` (465 pour TLS implicite), `COURRIEL_SMTP_UTILISATEUR`, `COURRIEL_SMTP_MOT_DE_PASSE` et `COURRIEL_EXPEDITEUR` dans le `.env` du serveur. L'expéditeur doit appartenir à un domaine que vous contrôlez.
 
 ## Délivrabilité
 
@@ -26,7 +18,7 @@ Avant l'ouverture, publiez sur le domaine de l'expéditeur :
 2. **DKIM** : la clé publique fournie par votre fournisseur, qui signe chaque mail.
 3. **DMARC** : un enregistrement TXT `v=DMARC1; p=quarantine` avec une adresse de rapport.
 
-Vérifiez la délivrabilité avant l'ouverture avec un service d'analyse d'en-têtes.
+Vérifiez la délivrabilité avant l'ouverture avec un service d'analyse d'en-têtes : un mail classé indésirable prive les bénévoles de leur code de connexion.
 
 ## Ce qui reste hors du dépôt
 
