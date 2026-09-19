@@ -146,7 +146,7 @@ enum StatutEdition {
 // Une année du tournoi. Ses dates servent de référence aux échéances relatives des tâches.
 model Edition {
   id             String        @id @default(cuid())
-  organisationId String?
+  organisationId String
   annee          Int           @unique
   nom            String
   debut          DateTime      @db.Date
@@ -173,7 +173,7 @@ enum TypePerimetre {
 // Un sport ou un pôle transverse. Il est stable d'une édition à l'autre.
 model Perimetre {
   id             String        @id @default(cuid())
-  organisationId String?
+  organisationId String
   slug           String        @unique
   nom            String
   type           TypePerimetre
@@ -362,7 +362,7 @@ enum SourceFiche {
 // Son contenu vit dans ses versions ; la fiche pointe vers la version courante.
 model Fiche {
   id                String    @id @default(cuid())
-  organisationId    String?
+  organisationId    String
   slug              String    @unique
   perimetreId       String?
   versionCouranteId String?   @unique
@@ -370,7 +370,7 @@ model Fiche {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  organisation    Organisation?  @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  organisation    Organisation   @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   perimetre       Perimetre?     @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
   versionCourante FicheVersion?  @relation("FicheVersionCourante", fields: [versionCouranteId], references: [id], onDelete: SetNull)
   versions        FicheVersion[] @relation("FicheVersions")
@@ -432,7 +432,7 @@ enum TypeNotification {
 // à partir des titres et des noms à jour.
 model Notification {
   id             String           @id @default(cuid())
-  organisationId String?
+  organisationId String
   userId         String
   type           TypeNotification
   acteurId       String?
@@ -451,9 +451,9 @@ model Notification {
   resumeeLe      DateTime?
   createdAt      DateTime         @default(now())
 
-  organisation Organisation? @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  user         User          @relation("NotificationDestinataire", fields: [userId], references: [id], onDelete: Cascade)
-  tache        Tache?        @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  user         User         @relation("NotificationDestinataire", fields: [userId], references: [id], onDelete: Cascade)
+  tache        Tache?       @relation(fields: [tacheId], references: [id], onDelete: Cascade)
 
   @@index([userId, lueLe, createdAt])
   @@index([userId, resumeeLe])
@@ -469,7 +469,7 @@ enum FrequenceResume {
 // Préférences d'une personne. Sans ligne, les valeurs par défaut s'appliquent.
 model PreferenceNotification {
   userId           String          @id
-  organisationId   String?
+  organisationId   String
   frequenceResume  FrequenceResume @default(HEBDOMADAIRE)
   // Mail immédiat quand une autre personne modifie une de vos tâches.
   mailModification Boolean         @default(true)
@@ -478,8 +478,8 @@ model PreferenceNotification {
   dernierResumeLe  DateTime?
   updatedAt        DateTime        @updatedAt
 
-  organisation Organisation? @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([organisationId])
 }

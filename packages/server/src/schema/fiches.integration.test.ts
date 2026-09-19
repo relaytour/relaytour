@@ -14,6 +14,7 @@ import { importerModeles } from '../orga/importer.ts'
 import { lireModeles } from '../orga/modeles.ts'
 
 import { schema } from './index.ts'
+import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)
 const apollo = new ApolloServer<AppContext>({ schema })
@@ -51,7 +52,10 @@ async function executer(
 const code = (r: Awaited<ReturnType<typeof executer>>) =>
   r.errors?.[0]?.extensions?.code
 
+let ORGANISATION = ''
+
 beforeAll(async () => {
+  ORGANISATION = await organisationParDefaut()
   await apollo.start()
   // Les tests partagent la base locale : l'organisation importée reprend l'identité
   // déjà en base, pour ne pas la renommer (l'import met la ligne à jour, slug compris).
@@ -82,6 +86,7 @@ beforeAll(async () => {
   ids.edition = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),

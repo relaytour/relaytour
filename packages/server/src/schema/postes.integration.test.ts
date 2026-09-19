@@ -8,6 +8,7 @@ import { buildContext, type AppContext } from '../context.ts'
 import { env } from '../env.ts'
 
 import { schema } from './index.ts'
+import { organisationParDefaut } from '../lib/organisation.ts'
 
 // Postes à pourvoir et effectifs. Les contrôles d'accès se prouvent par le refus.
 // La base de développement est partagée : les assertions ne portent que sur les
@@ -72,7 +73,10 @@ interface LignePostes {
 const effectifsDe = (perimetreId: string) =>
   prisma.effectifPerimetre.count({ where: { perimetreId } })
 
+let ORGANISATION = ''
+
 beforeAll(async () => {
+  ORGANISATION = await organisationParDefaut()
   await apollo.start()
   for (const [cle, estAdmin, archive] of [
     ['admin', true, false],
@@ -95,6 +99,7 @@ beforeAll(async () => {
   ids.edition = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),
@@ -105,6 +110,7 @@ beforeAll(async () => {
   ids.archivee = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee: annee - 1,
         nom: `Archive ${s}`,
         debut: new Date('2025-08-27'),
@@ -123,7 +129,8 @@ beforeAll(async () => {
     ids[cle] = (
       await prisma.perimetre.create({
         data: {
-          slug: `${cle}-${s}`,
+          organisationId: ORGANISATION,
+        slug: `${cle}-${s}`,
           nom: `${nom} ${s}`,
           type,
           ordre,

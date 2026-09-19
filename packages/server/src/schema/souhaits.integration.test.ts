@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 
 import { schema } from './index.ts'
+import { organisationParDefaut } from '../lib/organisation.ts'
 
 // Souhaits des personnes. Les contrôles d'accès se prouvent par le refus, et les
 // refus sont testés en premier. La base de développement est partagée : les
@@ -111,7 +112,10 @@ async function souhaitsEnAttente(perimetreId: string) {
 const souhaitsEnBase = (userId: string) =>
   prisma.souhait.count({ where: { userId, editionId: ids.edition } })
 
+let ORGANISATION = ''
+
 beforeAll(async () => {
+  ORGANISATION = await organisationParDefaut()
   await apollo.start()
   for (const [cle, estAdmin, archive] of [
     ['admin', true, false],
@@ -134,6 +138,7 @@ beforeAll(async () => {
   ids.edition = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),
@@ -144,6 +149,7 @@ beforeAll(async () => {
   ids.archivee = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee: annee - 1,
         nom: `Archive ${s}`,
         debut: new Date('2025-08-27'),
@@ -161,7 +167,8 @@ beforeAll(async () => {
     ids[cle] = (
       await prisma.perimetre.create({
         data: {
-          slug: `${cle}-${s}`,
+          organisationId: ORGANISATION,
+        slug: `${cle}-${s}`,
           nom: `${cle} ${s}`,
           type,
           archivedAt: archive ? new Date() : null,

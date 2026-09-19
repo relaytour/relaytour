@@ -9,6 +9,7 @@ import { composer } from '../courriel/messages.ts'
 import { genererRappels, personnesAResumer } from '../jobs/planification.ts'
 
 import { schema } from './index.ts'
+import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)
 const apollo = new ApolloServer<AppContext>({ schema })
@@ -45,7 +46,10 @@ const notificationsDe = (userId: string, tacheId: string) =>
     orderBy: { createdAt: 'asc' },
   })
 
+let ORGANISATION = ''
+
 beforeAll(async () => {
+  ORGANISATION = await organisationParDefaut()
   await apollo.start()
   for (const cle of ['alice', 'bruno', 'chloe', 'david'] as const) {
     ids[cle] = randomUUID()
@@ -61,6 +65,7 @@ beforeAll(async () => {
   ids.edition = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),
@@ -71,6 +76,7 @@ beforeAll(async () => {
   ids.archivee = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee: annee - 1,
         nom: `Archive ${s}`,
         debut: new Date('2025-08-27'),
@@ -81,12 +87,12 @@ beforeAll(async () => {
   ).id
   ids.natation = (
     await prisma.perimetre.create({
-      data: { slug: `natation-${s}`, nom: 'Natation', type: 'SPORT' },
+      data: { organisationId: ORGANISATION, slug: `natation-${s}`, nom: 'Natation', type: 'SPORT' },
     })
   ).id
   ids.basket = (
     await prisma.perimetre.create({
-      data: { slug: `basket-${s}`, nom: 'Basket', type: 'SPORT' },
+      data: { organisationId: ORGANISATION, slug: `basket-${s}`, nom: 'Basket', type: 'SPORT' },
     })
   ).id
   await prisma.affectation.createMany({
@@ -278,7 +284,7 @@ describe('rappels d’échéance', () => {
     expect(message?.desabonnement).toMatch(/\/preferences$/)
 
     await prisma.preferenceNotification.create({
-      data: { userId: ids.bruno, mailEcheance: false },
+      data: { organisationId: ORGANISATION, userId: ids.bruno, mailEcheance: false },
     })
     expect(
       await composer(prisma, {
@@ -298,12 +304,12 @@ describe('résumés', () => {
     await prisma.preferenceNotification.upsert({
       where: { userId: ids.chloe },
       update: { frequenceResume: 'QUOTIDIEN' },
-      create: { userId: ids.chloe, frequenceResume: 'QUOTIDIEN' },
+      create: { organisationId: ORGANISATION, userId: ids.chloe, frequenceResume: 'QUOTIDIEN' },
     })
     await prisma.preferenceNotification.upsert({
       where: { userId: ids.david },
       update: { frequenceResume: 'AUCUN' },
-      create: { userId: ids.david, frequenceResume: 'AUCUN' },
+      create: { organisationId: ORGANISATION, userId: ids.david, frequenceResume: 'AUCUN' },
     })
     const lundiIds = await personnesAResumer(prisma, lundi)
     const mardiIds = await personnesAResumer(prisma, mardi)

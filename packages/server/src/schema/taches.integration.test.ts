@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 
 import { schema } from './index.ts'
+import { organisationParDefaut } from '../lib/organisation.ts'
 
 // Règles d'accès et de collaboration sur les tâches, prouvées par le refus.
 
@@ -58,7 +59,10 @@ async function creerTache(userId: string, titre: string, mAssigner = true) {
     .creerTache
 }
 
+let ORGANISATION = ''
+
 beforeAll(async () => {
+  ORGANISATION = await organisationParDefaut()
   await apollo.start()
   for (const [cle, estAdmin] of [
     ['admin', true],
@@ -82,6 +86,7 @@ beforeAll(async () => {
   ids.edition = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee,
         nom: `Essai ${suffixe}`,
         debut: new Date('2027-08-27'),
@@ -92,6 +97,7 @@ beforeAll(async () => {
   ids.archivee = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee: annee - 1,
         nom: `Archive ${suffixe}`,
         debut: new Date('2025-08-27'),
@@ -102,12 +108,12 @@ beforeAll(async () => {
   ).id
   ids.natation = (
     await prisma.perimetre.create({
-      data: { slug: `natation-${suffixe}`, nom: 'Natation', type: 'SPORT' },
+      data: { organisationId: ORGANISATION, slug: `natation-${suffixe}`, nom: 'Natation', type: 'SPORT' },
     })
   ).id
   ids.basket = (
     await prisma.perimetre.create({
-      data: { slug: `basket-${suffixe}`, nom: 'Basket', type: 'SPORT' },
+      data: { organisationId: ORGANISATION, slug: `basket-${suffixe}`, nom: 'Basket', type: 'SPORT' },
     })
   ).id
   await prisma.affectation.createMany({
@@ -425,7 +431,8 @@ describe('rétroplanning', () => {
     ids.escrime = (
       await prisma.perimetre.create({
         data: {
-          slug: `escrime-${suffixe}`,
+          organisationId: ORGANISATION,
+        slug: `escrime-${suffixe}`,
           nom: 'Escrime',
           type: 'SPORT',
           archivedAt: new Date(),

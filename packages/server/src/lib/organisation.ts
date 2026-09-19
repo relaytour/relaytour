@@ -287,9 +287,8 @@ export async function configurationOrganisation(): Promise<ConfigurationOrganisa
 }
 
 /**
- * Garantit la ligne Organisation de l'installation et y rattache les données
- * qui n'ont pas encore de clé d'organisation. Appelée au démarrage de l'API et
- * du worker, et par les scripts qui écrivent en base.
+ * Garantit la ligne Organisation de l'installation. Appelée au démarrage de
+ * l'API et du worker, et par les scripts qui écrivent en base.
  *
  * Sans ligne, elle en crée une depuis l'environnement (slug « defaut »). Une
  * ligne à la configuration vide (posée par une migration) est complétée de même.
@@ -328,18 +327,11 @@ export async function assurerOrganisationParDefaut(): Promise<string> {
       },
     })
   }
-  const organisationId = ligne.id
-  const ou = { where: { organisationId: null }, data: { organisationId } }
-  await prisma.$transaction([
-    prisma.edition.updateMany(ou),
-    prisma.perimetre.updateMany(ou),
-    prisma.fiche.updateMany(ou),
-    prisma.notification.updateMany(ou),
-    prisma.preferenceNotification.updateMany(ou),
-  ])
+  // Le rattachement des lignes sans clé a eu lieu dans la migration
+  // `organisation_obligatoire` : la clé est obligatoire depuis.
   invaliderConfigurationOrganisation()
-  idParDefaut = organisationId
-  return organisationId
+  idParDefaut = ligne.id
+  return ligne.id
 }
 
 /**

@@ -8,6 +8,7 @@ import { buildContext, type AppContext } from '../context.ts'
 import { calculerScores } from '../lib/score.ts'
 
 import { schema } from './index.ts'
+import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)
 const apollo = new ApolloServer<AppContext>({ schema })
@@ -57,7 +58,10 @@ async function tacheFaite(donnees: {
   })
 }
 
+let ORGANISATION = ''
+
 beforeAll(async () => {
+  ORGANISATION = await organisationParDefaut()
   await apollo.start()
   for (const [cle, estAdmin] of [
     ['admin', true],
@@ -79,6 +83,7 @@ beforeAll(async () => {
   ids.edition = (
     await prisma.edition.create({
       data: {
+        organisationId: ORGANISATION,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2099-08-27'),
@@ -88,12 +93,12 @@ beforeAll(async () => {
   ).id
   ids.perimetre = (
     await prisma.perimetre.create({
-      data: { slug: `natation-${s}`, nom: 'Natation', type: 'SPORT' },
+      data: { organisationId: ORGANISATION, slug: `natation-${s}`, nom: 'Natation', type: 'SPORT' },
     })
   ).id
   ids.fiche = (
     await prisma.fiche.create({
-      data: { slug: `fiche-${s}`, perimetreId: ids.perimetre },
+      data: { organisationId: ORGANISATION, slug: `fiche-${s}`, perimetreId: ids.perimetre },
     })
   ).id
 })
