@@ -35,8 +35,6 @@ services:
       MARIADB_DATABASE: '${MARIADB_DATABASE:?requis}'
       MARIADB_USER: '${MARIADB_USER:?requis}'
       MARIADB_PASSWORD: '${MARIADB_PASSWORD:?requis}'
-    ports:
-      - '127.0.0.1:${MARIADB_PORT:?requis}:3306'
     volumes:
       - dbdata:/var/lib/mysql
     healthcheck:
@@ -58,8 +56,6 @@ services:
         '--maxmemory-policy',
         'noeviction',
       ]
-    ports:
-      - '127.0.0.1:${REDIS_PORT:?requis}:6379'
     volumes:
       - cachedata:/data
     healthcheck:

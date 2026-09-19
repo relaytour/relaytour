@@ -6,8 +6,8 @@ Ce dossier décrit le déploiement de référence (ADR 0004) : une machine sous 
 
 | Service | Rôle |
 |---|---|
-| `db` | MariaDB 11.8, publiée sur `127.0.0.1` seulement |
-| `cache` | Valkey 8, file des mails et des rappels |
+| `db` | MariaDB 11.8, joignable par les seuls conteneurs de la pile |
+| `cache` | Valkey 8, file des mails et des rappels, joignable par les seuls conteneurs de la pile |
 | `migrate` | Applique les migrations avant le démarrage de l'API |
 | `orga` | Copie l'espace organisateur (site statique) dans `ORGA_DIR` à chaque démarrage |
 | `server` | API GraphQL, port 4400 sur `127.0.0.1` |
@@ -52,7 +52,7 @@ Changer `IMAGE_TAG` dans le `.env`, puis `docker compose --env-file .env up -d`.
 
 ## Adapter la pile à votre hébergement
 
-Ne modifiez pas `docker-compose.yml` : ajoutez un fichier de surcharge, par exemple `compose.local.yml`, et lancez `docker compose -f docker-compose.yml -f compose.local.yml …`. C'est là que vont vos ports, vos limites mémoire, vos volumes et votre supervision. Si une adaptation exige un changement dans l'application, proposez-le dans le dépôt de Relaytour sous une forme générique.
+Ne modifiez pas `docker-compose.yml` : ajoutez un fichier de surcharge, par exemple `compose.local.yml`, et lancez `docker compose -f docker-compose.yml -f compose.local.yml …`. C'est là que vont vos ports, vos limites mémoire, vos volumes et votre supervision. La base et le cache ne publient aucun port : la file des mails contient des codes de connexion en clair pendant quelques minutes, et tout processus de la machine pourrait les lire. Pour administrer la base, passez par `docker compose exec db mariadb -u root -p`. Si un outil de la machine doit joindre la base, publiez le port dans votre surcharge, sur `127.0.0.1` seulement. Si une adaptation exige un changement dans l'application, proposez-le dans le dépôt de Relaytour sous une forme générique.
 
 ## Tâches planifiées
 

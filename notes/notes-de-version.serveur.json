@@ -65,6 +65,18 @@
       }
     },
     {
+      "id": "2026-09-19-serveur-la-base-et-le-cache-de-la-pile-de-reference-ne-publient-plus",
+      "date": "2026-09-19",
+      "type": "securite",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "La base et le cache de la pile de référence ne publient plus de port",
+        "texte": "Dans la pile Compose de référence, MariaDB et Valkey ne sont plus joignables que par les conteneurs de la pile. La file des mails contient des codes de connexion en clair pendant quelques minutes, et un port publié les rendait lisibles par tout processus de la machine.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-serveur-chaque-organisation-decrit-son-identite-dans-son-depot",
       "date": "2026-09-19",
       "type": "fonctionnalite",
