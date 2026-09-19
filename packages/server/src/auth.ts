@@ -118,7 +118,14 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
         otpLength: 6,
         expiresIn: CODE_VALIDITE_SECONDES,
         allowedAttempts: 5,
-        storeOTP: 'hashed',
+        // Le code est chiffré en base (XChaCha20-Poly1305, clé dérivée de
+        // BETTER_AUTH_SECRET) et non haché : Better Auth ne réutilise un code en cours
+        // que s'il peut le relire. Avec `reuse`, une nouvelle demande pendant la
+        // validité renvoie le même code et prolonge sa validité, tant qu'il n'a pas
+        // épuisé ses essais. Un tiers qui demande des codes sur l'adresse d'une autre
+        // personne n'invalide donc plus le code qu'elle attend.
+        storeOTP: 'encrypted',
+        resendStrategy: 'reuse',
         // Inscription fermée : une adresse inconnue reçoit la même réponse et aucun mail.
         disableSignUp: true,
         async sendVerificationOTP({ email, otp, type }) {
