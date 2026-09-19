@@ -53,7 +53,7 @@ L'application est aujourd'hui écrite pour une seule organisation. L'inventaire 
 Deux lots, dans cet ordre.
 
 | Lot | Chantier |
-|---|---|---|
+|---|---|
 | Commun | Configuration d'organisation en un seul objet, lue dans l'environnement d'abord |
 | Commun | Gabarits et sujets de mail rendus avec variables |
 | Commun | Espace organisateur sans marque figée, configuration servie par l'API |
@@ -65,7 +65,6 @@ Deux lots, dans cet ordre.
 | Multi | Score et agrégats par organisation |
 | Multi | Sélection d'organisation dans l'interface |
 | Multi | Preuves de refus croisés entre organisations (invariant 11), revue de sécurité |
-
 
 Le lot commun a une valeur seul : il rend l'installation mono-association livrable à une autre association.
 
