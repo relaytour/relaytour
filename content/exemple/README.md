@@ -14,12 +14,30 @@ Sans argument, les commandes lisent ce dossier d'exemple. La variable `CONTENU_O
 ## Structure
 
 ```
+organisation.yaml             nom, sigle, domaines de mail, contact, thème
 perimetres.yaml               sports et pôles
 modeles/fiche.md              gabarit commun d'une fiche
 fiches/communes/<slug>.md     fiches communes à tous les périmètres
 fiches/<perimetre>/<slug>.md  fiches d'un périmètre
 taches/<perimetre>.yaml       tâches types d'un périmètre
 ```
+
+## Organisation
+
+```yaml
+slug: rencontres-de-la-vallee   # identifiant stable
+nom: Les Rencontres de la Vallée
+sigle: Rencontres               # facultatif : nom court affiché dans l'espace organisateur et les mails
+fuseauHoraire: Europe/Paris     # facultatif
+domainesCourrielAutorises: [exemple.org]   # boîtes partagées admises dans les fiches
+contactRecrutement: contact@exemple.org    # facultatif, dans un domaine autorisé
+pageEquipe: https://exemple.org/equipe     # facultatif
+theme:                          # facultatif : chaque valeur absente prend celle de Relaytour
+  couleurs: { primaire: '#1E5A63' }
+  polices: { titre: Hanken Grotesk }       # parmi les polices embarquées
+```
+
+La validation refuse une clé inconnue, un thème dont une couleur de texte passe sous 4,5:1 de contraste, une police absente de l'espace organisateur et un contact hors des domaines autorisés. Le thème complet est décrit dans `docs/identite.md` du dépôt de Relaytour.
 
 ## Périmètres
 

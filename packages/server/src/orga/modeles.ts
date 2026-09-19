@@ -4,11 +4,11 @@ import path from 'node:path'
 import { parse } from 'yaml'
 import { z } from 'zod'
 
+import { donneesPersonnelles, normaliserContenu } from '../lib/contenu.ts'
 import {
-  domainesAutorises,
-  donneesPersonnelles,
-  normaliserContenu,
-} from '../lib/contenu.ts'
+  DeclarationOrganisationSchema,
+  type DeclarationOrganisation,
+} from '../lib/organisation.ts'
 
 // Lecture et validation du dossier content/orga (ADR 0003).
 //
@@ -73,6 +73,8 @@ export interface FicheModele {
 }
 
 export interface Modeles {
+  /** Identité et thème de l'organisation (organisation.yaml). */
+  organisation: DeclarationOrganisation
   perimetres: PerimetreModele[]
   fiches: FicheModele[]
   /** Tâches types par slug de périmètre. */
@@ -113,7 +115,24 @@ function fichiers(dossier: string, extension: string): string[] {
 
 export function lireModeles(racine: string): Modeles {
   const erreurs: string[] = []
-  const domaines = domainesAutorises()
+
+  // Organisation : nom, domaines de mail autorisés, contact, thème.
+  // Les domaines autorisés dans les fiches viennent d'ici, pas de l'environnement :
+  // la validation en CI du dépôt d'organisation n'a besoin d'aucune variable.
+  let organisation: DeclarationOrganisation | null = null
+  const fichierOrganisation = path.join(racine, 'organisation.yaml')
+  if (!existsSync(fichierOrganisation)) {
+    erreurs.push(
+      'organisation.yaml est absent (slug, nom, domainesCourrielAutorises au minimum)'
+    )
+  } else {
+    const r = DeclarationOrganisationSchema.safeParse(
+      parse(readFileSync(fichierOrganisation, 'utf8'))
+    )
+    if (r.success) organisation = r.data
+    else erreurs.push(...formaterZod('organisation.yaml', r.error))
+  }
+  const domaines = organisation?.domainesCourrielAutorises ?? []
   const relatif = (f: string) => path.relative(racine, f)
 
   // Périmètres
@@ -242,8 +261,9 @@ export function lireModeles(racine: string): Modeles {
     taches.set(perimetre, r.data.taches)
   }
 
-  if (erreurs.length > 0) throw new ErreurModeles(erreurs)
-  return { perimetres, fiches, taches }
+  if (erreurs.length > 0 || organisation === null)
+    throw new ErreurModeles(erreurs)
+  return { organisation, perimetres, fiches, taches }
 }
 
 /** Calcule la date d'une échéance relative (J-120) à partir du premier jour de l'édition. */

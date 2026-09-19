@@ -1,0 +1,8 @@
+# Identité de l'organisation d'exemple. Le thème absent vaut celui de Relaytour.
+slug: rencontres-de-la-vallee
+nom: Les Rencontres de la Vallée
+sigle: Rencontres
+fuseauHoraire: Europe/Paris
+domainesCourrielAutorises: [exemple.org]
+contactRecrutement: contact@exemple.org
+pageEquipe: https://exemple.org/equipe

@@ -6,9 +6,18 @@ import { describe, expect, it } from 'vitest'
 
 import { dateEcheance, ErreurModeles, lireModeles } from './modeles.ts'
 
+const ORGANISATION = `slug: club
+nom: Club nautique
+domainesCourrielAutorises: [club.example]
+`
+
+// Chaque dossier d'essai reçoit une organisation valide, sauf si le test en fournit une.
 function dossier(fichiers: Record<string, string>): string {
   const racine = mkdtempSync(path.join(tmpdir(), 'relaytour-modeles-'))
-  for (const [chemin, contenu] of Object.entries(fichiers)) {
+  for (const [chemin, contenu] of Object.entries({
+    'organisation.yaml': ORGANISATION,
+    ...fichiers,
+  })) {
     mkdirSync(path.dirname(path.join(racine, chemin)), { recursive: true })
     writeFileSync(path.join(racine, chemin), contenu)
   }
@@ -50,6 +59,46 @@ describe('lireModeles', () => {
       ['reserver', 'natation'],
     ])
     expect(modeles.taches.get('natation')).toHaveLength(1)
+    expect(modeles.organisation.nom).toBe('Club nautique')
+    expect(modeles.organisation.fuseauHoraire).toBe('Europe/Paris')
+  })
+
+  it('exige organisation.yaml', () => {
+    const racine = mkdtempSync(path.join(tmpdir(), 'relaytour-modeles-'))
+    writeFileSync(path.join(racine, 'perimetres.yaml'), PERIMETRES)
+    expect(erreurs(racine).join()).toMatch(/organisation\.yaml est absent/)
+  })
+
+  it('refuse une organisation avec une clé inconnue ou un contact hors domaine', () => {
+    expect(
+      erreurs(
+        dossier({
+          'organisation.yaml': `${ORGANISATION}couleur: bleu\n`,
+          'perimetres.yaml': PERIMETRES,
+        })
+      ).join()
+    ).toMatch(/organisation\.yaml/)
+    expect(
+      erreurs(
+        dossier({
+          'organisation.yaml': `${ORGANISATION}contactRecrutement: contact@autre.example\n`,
+          'perimetres.yaml': PERIMETRES,
+        })
+      ).join()
+    ).toMatch(/contactRecrutement/)
+  })
+
+  it('admet les boîtes des domaines déclarés dans organisation.yaml', () => {
+    const modeles = lireModeles(
+      dossier({
+        'perimetres.yaml': PERIMETRES,
+        'fiches/natation/reserver.md': fiche(
+          'reserver',
+          'Écrire à natation@club.example.'
+        ),
+      })
+    )
+    expect(modeles.fiches).toHaveLength(1)
   })
 
   it('lit un effectif facultatif', () => {
