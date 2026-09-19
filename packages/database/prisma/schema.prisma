@@ -42,15 +42,6 @@ model Organisation {
   preferences   PreferenceNotification[]
 }
 
-// Table héritée du projet précédent, sans usage dans Relaytour (ADR 0006 : la
-// newsletter est hors du périmètre publié). Sa suppression est une migration
-// destructive, décidée à part.
-model Newsletter {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  createdAt DateTime @default(now())
-}
-
 // ── Authentification (Better Auth) ────────────────────────────────────────────
 // Les champs de ces quatre tables suivent les conventions de Better Auth 1.7.
 // `isAdmin` et `archivedAt` sont des champs supplémentaires déclarés dans auth.ts.
