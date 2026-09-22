@@ -2,7 +2,7 @@
  * Thème de Relaytour : le modèle d'un thème, le thème par défaut et le thème
  * alternatif de l'application.
  *
- * Deux couches (docs/identite.md) :
+ * Deux couches (docs/design-system.md) :
  *
  * 1. Le MATÉRIAU appartient à Relaytour et ne change pas d'une organisation à
  *    l'autre : verre, rayons, ombres, flou, mouvement. Il vit dans la feuille
@@ -163,7 +163,7 @@ const TYPOGRAPHIE_RELAYTOUR: TypographieTheme = {
 
 /**
  * Thème par défaut de Relaytour : bleu-vert et terre cuite sur un sol froid.
- * Validé le 18 septembre 2026 (docs/identite.md).
+ * Validé le 18 septembre 2026 (docs/design-system.md).
  */
 export const themeParDefaut: Theme = {
   couleurs: {

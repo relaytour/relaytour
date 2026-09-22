@@ -12,7 +12,8 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `infra/` : déploiement de référence minimal (Compose, Caddyfile d'exemple, étapes). L'exploitation réelle vit hors du dépôt (ADR 0007).
 - `outils/verifier-licences.mjs` et `outils/verifier-publication.mjs` : contrôles de CI sur les licences des dépendances et sur l'absence de traces privées.
 - `outils/versionner.mjs` et `notes/` : journal des changements (`noter`, `valider`, `compiler`).
-- `docs/adr/` : décisions d'architecture.
+- `docs/adr/` : décisions d'architecture. `docs/design-system.md` : identité, matériau et composants.
+- `site/` : site de présentation publié sur GitHub Pages. `outils/site.mjs` y écrit les jetons, les palettes et les polices ; la CI vérifie qu'il est à jour.
 - `docs/feuille-de-route.md` et `docs/publication.md` : évolutions envisagées, liste de publication.
 
 ## Commandes
@@ -28,6 +29,8 @@ yarn test         # tests unitaires
 yarn workspace @relaytour/server test:integration   # base locale, worker arrêté
 yarn workspace @relaytour/server orga:exporter      # reverse les fiches modifiées dans l'application vers le dossier de contenu
 yarn codegen      # contrats commités
+node outils/site.mjs   # site de présentation, après un changement des jetons
+node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif
 yarn versionner valider
 yarn versionner compiler   # journaux commités
 ```
@@ -45,9 +48,11 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 | Contenu d'une organisation | Un dépôt par organisation, créé depuis `relaytour/organisation-modele`, rattaché par un chemin (`CONTENU_ORGA`), un volume ou la CI de l'organisation | ADR 0003, 0007 |
 | Dépendances | Licences compatibles avec l'AGPL seulement, liste blanche dans `outils/verifier-licences.mjs`. Valkey et non Redis. | ADR 0007 |
 | Licence | AGPL-3.0, un seul code, multi-organisation à venir. Le contenu d'une organisation n'entre jamais dans le dépôt. | ADR 0005, 0006 |
+| Activités et administration de l'installation | Une organisation porte une ou plusieurs activités (événement, saison, mandat), chacune avec ses périodes, ses périmètres rangés en groupes déclarés dans le contenu, ses fiches et ses tâches types. Les appartenances sont par organisation. L'administration de l'installation (créer, suspendre, limiter, exporter une organisation) passe par un script ou un jeton, sans accès aux données. À réaliser, un chantier par session. | ADR 0008 |
+| Extensions | Aucun chargeur de modules dans le serveur. Un besoin d'hébergeur entre par l'API d'administration de l'installation ; portail client, paiement et paliers restent chez l'hébergeur. | ADR 0007, 0008 |
 | Configuration d'organisation | Un seul objet (`packages/server/src/lib/organisation.ts`), lu dans la ligne `Organisation` en base, sinon dans les variables d'amorçage. `organisation.yaml` du dépôt d'organisation la porte ; l'import la met à jour. L'expéditeur des mails et l'origine de l'espace organisateur restent dans l'environnement. | ADR 0006 |
 | Rôles V1 | Admin et référent·e. Le rôle bénévole viendra après la V1. | ADR 0006 |
-| Score d'activité | Visible par la personne concernée et par les admins seulement. Calculé à partir de l'état actuel (une tâche rouverte perd ses points) : tâche réalisée 3 points (+1 à temps, crédités à la personne réalisatrice indiquée, sinon à celle qui a coché), tâche créée 1, fiche créée 3, fiche modifiée 2 une fois par jour. Un palmarès public se décide en fin d'édition. Barème validé le 16 septembre 2026. | `packages/server/src/lib/score.ts` |
+| Score de participation | Visible par la personne concernée et par les admins seulement. Calculé à partir de l'état actuel (une tâche rouverte perd ses points) : tâche réalisée 3 points (+1 à temps, crédités à la personne réalisatrice indiquée, sinon à celle qui a coché), tâche créée 1, fiche créée 3, fiche modifiée 2 une fois par jour. Un palmarès public se décide en fin d'édition. Barème validé le 16 septembre 2026. | `packages/server/src/lib/score.ts` |
 | Tâches | Une tâche ne se supprime pas, elle s'abandonne. Modifier la tâche d'une autre personne exige une confirmation et la prévient par mail. Qui a coché et qui a réalisé une tâche n'est visible que par la personne qui a coché et par les admins. | `packages/server/src/schema/taches.ts` |
 | Fiches | Une version ne se modifie ni ne se supprime ; restaurer crée une nouvelle version. L'historique est réservé aux admins. Rédiger exige un droit accordé par un admin (un périmètre, ou toutes les fiches). | `packages/server/src/schema/fiches.ts` |
 | Notifications | Une notification ne stocke que des identifiants ; son texte se compose à la lecture. Mail immédiat : modification d'une tâche assignée, rappels à 7 jours et à la veille, retards. Le reste passe par le résumé (hebdomadaire par défaut, le lundi à 7 h, valeur validée le 16 septembre 2026). Le worker vérifie les préférences au moment de l'envoi. | `packages/server/src/lib/notifications.ts`, `src/jobs/planification.ts` |
@@ -76,7 +81,7 @@ Chaque règle vient d'un incident réel ou d'un risque constaté.
 16. **Aucune coordonnée personnelle dans un dossier de contenu.** La validation (`orga:valider`) et l'export refusent les adresses et numéros hors des domaines listés dans `DOMAINES_COURRIEL_AUTORISES` ; les contacts s'écrivent sous forme de rôles.
 17. **Tout appel à Redis sur le chemin d'une requête est borné dans le temps** (`lib/delai.ts`). La connexion de BullMQ attend Redis sans limite : la première CI, sans Redis, a bloqué deux tests jusqu'à leur délai de 30 s.
 
-18. **Aucune nouvelle contrainte d'unicité globale sans clé d'organisation, aucune nouvelle requête qui parcourt toute la base sans filtre, aucune marque en dur** (ADR 0005 et 0006).
+18. **Aucune nouvelle contrainte d'unicité globale sans clé d'organisation ou d'activité, aucune nouvelle requête qui parcourt toute la base sans filtre, aucune marque en dur** (ADR 0005, 0006 et 0008).
 
 ## Écriture
 
@@ -90,10 +95,13 @@ Un seul mot par notion.
 
 | Mot | Sens |
 |---|---|
-| organisation | L'association ou le collectif qui utilise une installation de Relaytour. Une seule par installation aujourd'hui (ADR 0006, lot commun). |
-| édition | Une année de l'événement (2025, 2027). |
-| périmètre | Un sport ou un pôle transverse (logistique, communication…). |
-| pôle | Périmètre transverse à tous les sports (coordination, logistique, trésorerie…). Les pôles sont listés dans le `perimetres.yaml` de l'organisation. |
+| organisation | L'association ou le collectif qui utilise une installation de Relaytour. Elle porte une ou plusieurs activités. Une seule par installation tant que l'ADR 0008 n'est pas réalisée. |
+| activité | Ce qu'une organisation fait dans la durée : un événement, une section, une instance. Une activité porte ses périodes, ses périmètres, ses fiches et ses tâches types (ADR 0008). |
+| nature | Événement, saison ou mandat. La nature d'une activité fixe le libellé de sa période. |
+| édition | Une période d'une activité : l'édition d'un événement (2025, 2027), la saison d'une section, le mandat d'une instance. `Edition` reste le nom technique. |
+| périmètre | Une sous-partie d'une activité (un sport, un pôle, une commission…), rangée dans un groupe. |
+| groupe | Catégorie de périmètre déclarée par l'activité dans son contenu. Le gabarit propose sport et pôle. |
+| pôle | Groupe de périmètres transverses (coordination, logistique, trésorerie…), proposé par défaut. Les pôles sont listés dans le `perimetres.yaml` de l'activité. |
 | référent·e | Personne membre de l'organisation, désignée pour un périmètre et une édition. |
 | affectation | Lien entre une personne, un périmètre et une édition. |
 | effectif | Nombre de référentes et de référents souhaité pour un périmètre et une édition. |
@@ -101,7 +109,10 @@ Un seul mot par notion.
 | souhait | Intérêt d'une personne pour un périmètre d'une édition, noté par un admin. |
 | tâche | Action datée d'un périmètre pour une édition. |
 | fiche | Fiche méthode (« comment faire ») d'un périmètre ou commune. |
-| admin | Membre du bureau qui voit l'avancement global et gère les affectations. |
+| admin | Membre du bureau qui voit l'avancement global et gère les affectations. Le rôle vaut pour une organisation et toutes ses activités. |
+| journal | Trace de qui a fait quoi, et quand. Le journal alimente les notifications et le score de participation. |
+| administration de l'installation | Actions d'hébergement, par script ou par jeton, sans accès aux données : créer, suspendre, limiter, exporter une organisation. |
+| limites | Plafonds d'une organisation (nombre d'activités), fixés par l'administration de l'installation. Une organisation auto-hébergée n'en a aucune. |
 | bénévole | Personne qui aide pendant le tournoi sans être référent·e. |
 
 ## Branches et CI

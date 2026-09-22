@@ -1,0 +1,61 @@
+/* Fichier généré par outils/site.mjs à partir de packages/tokens. Ne pas modifier. */
+
+:root {
+  --rt-encre: #1B2730;
+  --rt-encre-rgb: 27, 39, 48;
+  --rt-primaire: #1E5A63;
+  --rt-primaire-rgb: 30, 90, 99;
+  --rt-primaire-clair: #DCEAEB;
+  --rt-accent: #AD412B;
+  --rt-accent-rgb: 173, 65, 43;
+  --rt-accent-clair: #F6E1DB;
+  --rt-succes: #3A7042;
+  --rt-succes-clair: #E3F0E4;
+  --rt-alerte: #8A5A0E;
+  --rt-alerte-clair: #FBF0D8;
+  --rt-erreur: #A23A2C;
+  --rt-erreur-clair: #F8E3DF;
+  --rt-sol-1: #FFFFFF;
+  --rt-sol-2: #F4F6F7;
+  --rt-sol-3: #E9EEF0;
+  --rt-sol-transition: #FFFFFF;
+  --rt-halo-1: rgba(30, 90, 99, 0.18);
+  --rt-halo-2: rgba(173, 65, 43, 0.13);
+  --rt-police: 'Hanken Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --rt-police-titre: 'Hanken Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --rt-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --rt-titre-graisse: 600;
+  --rt-corps-graisse: 400;
+  --rt-titre-espacement: -0.02em;
+  --rt-titre-echelle: 1;
+}
+
+[data-theme='encre-lagon'] {
+  --rt-encre: #1B2730;
+  --rt-encre-rgb: 27, 39, 48;
+  --rt-primaire: #1B2730;
+  --rt-primaire-rgb: 27, 39, 48;
+  --rt-primaire-clair: #E6E9EB;
+  --rt-accent: #136D6C;
+  --rt-accent-rgb: 19, 109, 108;
+  --rt-accent-clair: #DCEFEE;
+  --rt-succes: #3A7042;
+  --rt-succes-clair: #E3F0E4;
+  --rt-alerte: #8A5A0E;
+  --rt-alerte-clair: #FBF0D8;
+  --rt-erreur: #A23A2C;
+  --rt-erreur-clair: #F8E3DF;
+  --rt-sol-1: #FFFFFF;
+  --rt-sol-2: #F4F6F7;
+  --rt-sol-3: #E9EEF0;
+  --rt-sol-transition: #FFFFFF;
+  --rt-halo-1: rgba(27, 39, 48, 0.18);
+  --rt-halo-2: rgba(19, 109, 108, 0.13);
+  --rt-police: 'Hanken Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --rt-police-titre: 'Hanken Grotesk Variable', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --rt-mono: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  --rt-titre-graisse: 600;
+  --rt-corps-graisse: 400;
+  --rt-titre-espacement: -0.02em;
+  --rt-titre-echelle: 1;
+}

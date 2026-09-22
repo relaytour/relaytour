@@ -1,0 +1,436 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Design system · Relaytour</title>
+    <meta
+      name="description"
+      content="Les fondations visuelles de Relaytour : logo, polices, palettes, hiérarchie du texte, verre, surfaces et composants de l'espace organisateur."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="jetons.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="./">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          Relaytour
+        </a>
+        <ul class="liens">
+          <li><a href="./">Présentation</a></li>
+          <li><a href="design-system.html" aria-current="page">Design system</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="etiquette">Design system · fondations</span>
+        <h1>Une identité neutre, un matériau de verre, une palette par organisation</h1>
+        <p class="chapo">
+          Le verre, les rayons, les ombres et le mouvement appartiennent à Relaytour et ne changent pas. Chaque organisation fournit sa palette, ses polices et son fond. Les couleurs de cette page viennent directement des jetons du code.
+        </p>
+        <p class="note">
+          La référence écrite est dans <a href="https://github.com/relaytour/relaytour/blob/main/docs/design-system.md"><code>docs/design-system.md</code></a>.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-logo">
+        <div class="entete">
+          <span class="etiquette">01</span>
+          <h2 id="t-logo">Logo · deux arcs qui se passent le relais</h2>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <div class="marque" style="font-size: 1.6rem">
+              <svg width="48" height="48" viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+                <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+              </svg>
+              Relaytour
+            </div>
+            <p>Le premier arc prend la primaire, le second l'accent de l'organisation. Le pictogramme reste lisible à 16 pixels.</p>
+          </div>
+          <div class="verre panneau">
+            <div class="marque" style="font-size: 1.6rem">
+              <svg width="48" height="48" viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-encre)" stroke-width="8" stroke-linecap="round" />
+                <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-encre)" stroke-opacity="0.55" stroke-width="8" stroke-linecap="round" />
+              </svg>
+              Relaytour
+            </div>
+            <p>La version monochrome sert les pieds de page et la mention « Propulsé par Relaytour ».</p>
+          </div>
+          <div class="panneau" style="background: var(--rt-encre)">
+            <div class="marque" style="font-size: 1.6rem; color: #ffffff">
+              <svg width="48" height="48" viewBox="0 0 64 64" aria-hidden="true">
+                <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" />
+                <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="#E8A28F" stroke-width="8" stroke-linecap="round" />
+              </svg>
+              Relaytour
+            </div>
+            <p style="color: rgba(255, 255, 255, 0.82)">Sur l'encre, le premier arc passe en blanc et le second en accent éclairci.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-polices">
+        <div class="entete">
+          <span class="etiquette">02</span>
+          <h2 id="t-polices">Polices · Hanken Grotesk et IBM Plex Mono</h2>
+        </div>
+        <div class="grille-2">
+          <div class="verre panneau">
+            <span style="font-size: 2rem; font-weight: 600; letter-spacing: -0.02em; line-height: 1.1">Titre de page · 30 / 600</span>
+            <span style="font-size: 1.3rem; font-weight: 600">Titre de section · 19 / 600</span>
+            <span>Corps · 16 / 400. Les membres confirment leurs tâches depuis leur espace.</span>
+            <span style="font-size: 0.9rem; color: var(--rt-encre-70)">Texte secondaire · 14. Les libellés et les métadonnées.</span>
+          </div>
+          <div class="verre panneau">
+            <span class="etiquette">IBM Plex Mono · valeurs techniques</span>
+            <span class="mono">12 févr. 2027 · J-120</span>
+            <span class="mono">accueil-des-participants</span>
+            <p>Dates, heures, identifiants et comptes. Jamais un titre. Les deux familles sont embarquées, sous licence OFL. Aucune police n'est servie par un tiers.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-palettes">
+        <div class="entete">
+          <span class="etiquette">03</span>
+          <h2 id="t-palettes">Palettes · contrastes mesurés sur le blanc et sur le sol</h2>
+          <p class="texte">
+            Le tableau est calculé depuis les jetons à chaque génération du site. Chaque couleur de texte atteint au moins 4,5:1 sur le blanc et sur la bande dense du sol.
+          </p>
+        </div>
+        <div class="grille-2">
+    <!-- palettes:debut (généré par outils/site.mjs) -->
+    <div class="verre panneau">
+      <h3>A · bleu-vert et terre cuite, par défaut</h3>
+      <div class="defilement">
+      <table class="tableau" data-palette="bleu-vert">
+        <thead>
+          <tr><th scope="col">Rôle</th><th scope="col">Valeur</th><th scope="col">Sur blanc</th><th scope="col">Sur le sol</th><th scope="col">Niveau</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #1B2730"></span>Encre</th>
+          <td class="mono">#1B2730</td>
+          <td class="mono">15,2:1</td>
+          <td class="mono">13,0:1</td>
+          <td><span class="niveau">AAA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #1E5A63"></span>Primaire</th>
+          <td class="mono">#1E5A63</td>
+          <td class="mono">7,8:1</td>
+          <td class="mono">6,7:1</td>
+          <td><span class="niveau">AA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #AD412B"></span>Accent</th>
+          <td class="mono">#AD412B</td>
+          <td class="mono">5,9:1</td>
+          <td class="mono">5,0:1</td>
+          <td><span class="niveau">AA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #3A7042"></span>Succès</th>
+          <td class="mono">#3A7042</td>
+          <td class="mono">5,9:1</td>
+          <td class="mono">5,0:1</td>
+          <td><span class="niveau">AA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #8A5A0E"></span>Alerte</th>
+          <td class="mono">#8A5A0E</td>
+          <td class="mono">5,9:1</td>
+          <td class="mono">5,1:1</td>
+          <td><span class="niveau">AA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #A23A2C"></span>Erreur</th>
+          <td class="mono">#A23A2C</td>
+          <td class="mono">6,6:1</td>
+          <td class="mono">5,6:1</td>
+          <td><span class="niveau">AA</span></td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <div class="verre panneau">
+      <h3>B · encre et lagon, alternatif</h3>
+      <div class="defilement">
+      <table class="tableau" data-palette="encre-lagon">
+        <thead>
+          <tr><th scope="col">Rôle</th><th scope="col">Valeur</th><th scope="col">Sur blanc</th><th scope="col">Sur le sol</th><th scope="col">Niveau</th></tr>
+        </thead>
+        <tbody>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #1B2730"></span>Encre</th>
+          <td class="mono">#1B2730</td>
+          <td class="mono">15,2:1</td>
+          <td class="mono">13,0:1</td>
+          <td><span class="niveau">AAA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #1B2730"></span>Primaire</th>
+          <td class="mono">#1B2730</td>
+          <td class="mono">15,2:1</td>
+          <td class="mono">13,0:1</td>
+          <td><span class="niveau">AAA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #136D6C"></span>Accent</th>
+          <td class="mono">#136D6C</td>
+          <td class="mono">6,1:1</td>
+          <td class="mono">5,2:1</td>
+          <td><span class="niveau">AA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #3A7042"></span>Succès</th>
+          <td class="mono">#3A7042</td>
+          <td class="mono">5,9:1</td>
+          <td class="mono">5,0:1</td>
+          <td><span class="niveau">AA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #8A5A0E"></span>Alerte</th>
+          <td class="mono">#8A5A0E</td>
+          <td class="mono">5,9:1</td>
+          <td class="mono">5,1:1</td>
+          <td><span class="niveau">AA</span></td>
+        </tr>
+        <tr>
+          <th scope="row"><span class="nuancier" style="background: #A23A2C"></span>Erreur</th>
+          <td class="mono">#A23A2C</td>
+          <td class="mono">6,6:1</td>
+          <td class="mono">5,6:1</td>
+          <td><span class="niveau">AA</span></td>
+        </tr>
+        </tbody>
+      </table>
+      </div>
+    </div>
+    <!-- palettes:fin -->
+        </div>
+        <div class="grille-2">
+          <div class="verre panneau">
+            <span class="etiquette">Hiérarchie du texte · encre seule</span>
+            <div class="gamme" aria-hidden="true">
+              <span style="background: var(--rt-encre)"></span>
+              <span style="background: var(--rt-encre-80)"></span>
+              <span style="background: var(--rt-encre-70)"></span>
+              <span style="background: var(--rt-encre-55)"></span>
+              <span style="background: var(--rt-encre-40)"></span>
+              <span style="background: var(--rt-encre-14)"></span>
+              <span style="background: var(--rt-encre-08)"></span>
+            </div>
+            <span class="mono note">100 · 84 · 78 · 64 · 38 · 12 · 7 %</span>
+            <p>Le texte d'une carte, le texte secondaire, le texte muet et les filets sont des transparences de l'encre, jamais des gris nouveaux.</p>
+          </div>
+          <div class="verre panneau">
+            <span class="etiquette">Une couleur, un périmètre</span>
+            <div class="rangee">
+              <span class="etiquette-perimetre" style="background: color-mix(in srgb, #1e5a63 13%, transparent); color: #1e5a63">Accueil</span>
+              <span class="etiquette-perimetre" style="background: color-mix(in srgb, #ad412b 13%, transparent); color: #a23a2c">Restauration</span>
+              <span class="etiquette-perimetre" style="background: color-mix(in srgb, #c8861f 13%, transparent); color: #7e5210">Logistique</span>
+              <span class="etiquette-perimetre" style="background: color-mix(in srgb, #3a7042 13%, transparent); color: #2f6438">Sécurité</span>
+            </div>
+            <p>La couleur d'un périmètre vient du contenu de l'organisation. Le texte reprend cette couleur, assombrie vers l'encre jusqu'à 4,5:1.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-materiau">
+        <div class="entete">
+          <span class="etiquette">04</span>
+          <h2 id="t-materiau">Matériau · des verres et une surface interne</h2>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Verre panneau</h3>
+            <p>Panneaux, cartes de fiche, formulaires. Blanc de 80 à 44 %, flou de 22 px, liseré blanc et ombre d'encre.</p>
+            <span class="mono note">--rt-verre</span>
+          </div>
+          <div class="panneau" style="background: var(--rt-verre-carte); box-shadow: var(--rt-ombre-verre), var(--rt-liseret)">
+            <h3>Verre carte</h3>
+            <p>Cartes de tâche et lignes du rétroplanning. Blanc de 92 à 76 %, pour que le sol ne gêne pas la lecture.</p>
+            <span class="mono note">--rt-verre-carte</span>
+          </div>
+          <div class="verre-teinte panneau">
+            <h3>Verre teinté</h3>
+            <p>Un seul élément mis en avant par écran. Un voile blanc posé sur la primaire à 16 %.</p>
+            <span class="mono note">--rt-verre-teinte</span>
+          </div>
+        </div>
+        <div class="grille-2">
+          <div class="verre panneau">
+            <span class="etiquette">Surface interne · un bloc dans un panneau</span>
+            <div class="grille-2" style="gap: 10px">
+              <div class="surface-interne"><strong>Chaque lundi</strong><span>Un seul mail pour la semaine.</span></div>
+              <div class="surface-interne active"><strong>Chaque jour</strong><span>Le choix actif.</span></div>
+            </div>
+            <p>Un fond blanc disparaît sur le verre. La surface prend un voile d'encre à 3,5 %, un filet à 10 % et une ombre douce.</p>
+          </div>
+          <div class="verre panneau">
+            <span class="etiquette">Rayons · ombres · mouvement</span>
+            <div class="rayons" aria-hidden="true">
+              <span style="width: 40px; height: 40px; border-radius: 10px"></span>
+              <span style="width: 48px; height: 48px; border-radius: 14px"></span>
+              <span style="width: 56px; height: 56px; border-radius: 20px"></span>
+              <span style="width: 64px; height: 64px; border-radius: 28px"></span>
+              <span style="width: 72px; height: 72px; border-radius: 36px"></span>
+            </div>
+            <span class="mono note">10 · 14 · 20 · 28 · 36 · pilule</span>
+            <p>Les ombres prennent la teinte de l'encre. Le mouvement suit une courbe fluide, sans rebond, de 140 à 400 ms.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-composants">
+        <div class="entete">
+          <span class="etiquette">05</span>
+          <h2 id="t-composants">Composants de l'espace organisateur</h2>
+          <p class="texte">
+            Ces composants servent les écrans des membres et ceux de l'administration. Ils habillent les composants d'Ant Design sans les réécrire.
+          </p>
+        </div>
+        <div class="grille-2">
+          <div class="verre panneau">
+            <span class="etiquette">Boutons</span>
+            <div class="actions">
+              <span class="bouton bouton-primaire">Nouvelle tâche</span>
+              <span class="bouton bouton-accent">Je m'en occupe</span>
+              <span class="bouton bouton-verre">Me retirer</span>
+              <span class="bouton bouton-texte">Annuler</span>
+            </div>
+            <p>La primaire crée et valide. L'accent est réservé à l'engagement d'une personne.</p>
+          </div>
+          <div class="verre panneau">
+            <span class="etiquette">Filtres</span>
+            <div class="rangee">
+              <span class="puce" aria-pressed="true">Ouvertes <span class="mono">4</span></span>
+              <span class="puce" aria-pressed="false">Faites <span class="mono">6</span></span>
+              <span class="puce bascule" aria-pressed="true">✓ Mes périmètres</span>
+            </div>
+            <p>Un groupe exclusif se lit en encre pleine. Une bascule active se lit en primaire clair.</p>
+          </div>
+          <div class="verre panneau">
+            <span class="etiquette">Pastilles d'état</span>
+            <div class="rangee">
+              <span class="etat">À faire</span>
+              <span class="etat etat-en-cours">En cours</span>
+              <span class="etat etat-faite">Faite</span>
+              <span class="etat etat-abandonnee">Abandonnée</span>
+              <span class="etat etat-retard">En retard</span>
+              <span class="etat etat-alerte">Échéance proche</span>
+            </div>
+            <p>Un point et un libellé sur un fond clair de la même teinte. Le retard reste une brique sourde.</p>
+          </div>
+          <div class="verre panneau">
+            <span class="etiquette">Avancement</span>
+            <div style="display: flex; align-items: baseline; gap: 8px">
+              <span style="font-size: 2.2rem; font-weight: 600; letter-spacing: -0.02em">60 %</span>
+              <span class="note">des tâches faites</span>
+            </div>
+            <div style="display: flex; gap: 2px; height: 10px; border-radius: 999px; overflow: hidden; background: var(--rt-encre-08)" aria-hidden="true">
+              <span style="width: 60%; background: var(--rt-succes)"></span>
+              <span style="width: 10%; background: var(--rt-primaire)"></span>
+            </div>
+            <p>La barre empile les tâches faites et en cours. Sa légende compte chaque statut.</p>
+          </div>
+        </div>
+        <div class="verre panneau">
+          <span class="etiquette">Carte de tâche</span>
+          <article class="carte-tache">
+            <span class="rail" style="background: #1e5a63" aria-hidden="true"></span>
+            <div class="corps">
+              <div class="titre">
+                Commander les dossards
+                <span class="etiquette-perimetre" style="background: color-mix(in srgb, #1e5a63 13%, transparent); color: #1e5a63">Accueil</span>
+              </div>
+              <p class="description">Les quantités dépendent des inscriptions closes le 10 février.</p>
+              <div class="rangee">
+                <span class="etat">À faire</span>
+                <span class="etat etat-alerte">Accueil des participants</span>
+                <span class="date">Échéance 17 février 2027</span>
+                <span class="avatar" aria-hidden="true">CM</span><span class="note">Vous</span>
+              </div>
+            </div>
+            <div class="actions">
+              <span class="bouton bouton-verre">Me retirer</span>
+              <span class="bouton bouton-primaire">✓ Faite</span>
+            </div>
+          </article>
+          <article class="carte-tache a-prendre">
+            <span class="rail" style="background: #c8861f" aria-hidden="true"></span>
+            <div class="corps">
+              <div class="titre">
+                Réserver les navettes du dimanche
+                <span class="etiquette-perimetre" style="background: color-mix(in srgb, #c8861f 13%, transparent); color: #7e5210">Logistique</span>
+              </div>
+              <p class="description">Deux navettes entre la gare et le site, de 7 h à 10 h.</p>
+              <div class="rangee">
+                <span class="etat">À faire</span>
+                <span class="etat etat-alerte">Personne n'est assigné·e</span>
+                <span class="date">Échéance 26 février 2027</span>
+              </div>
+            </div>
+            <div class="actions">
+              <span class="bouton bouton-accent">Je m'en occupe</span>
+            </div>
+          </article>
+          <p>Le rail porte la couleur du périmètre. Une tâche à prendre reçoit le verre teinté et l'action d'engagement.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-antd">
+        <div class="entete">
+          <span class="etiquette">06</span>
+          <h2 id="t-antd">Correspondance avec Ant Design 6</h2>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th scope="col">Jeton</th><th scope="col">Valeur</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row" class="mono">colorPrimary</th><td>primaire du thème</td></tr>
+              <tr><th scope="row" class="mono">colorText</th><td>encre</td></tr>
+              <tr><th scope="row" class="mono">colorTextSecondary / Tertiary</th><td>encre à 78 % / 64 %</td></tr>
+              <tr><th scope="row" class="mono">colorBgContainer</th><td>blanc à 62 %, verre panneau</td></tr>
+              <tr><th scope="row" class="mono">borderRadius / LG</th><td>10 / 20</td></tr>
+              <tr><th scope="row" class="mono">Button.borderRadius</th><td>pilule, ombre colorée à 28 % sur la primaire</td></tr>
+              <tr><th scope="row" class="mono">Menu.itemSelectedBg</th><td>encre, texte blanc</td></tr>
+              <tr><th scope="row" class="mono">Card</th><td>verre panneau, sans bordure</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-theme">
+        <div class="entete">
+          <span class="etiquette">07</span>
+          <h2 id="t-theme">Le thème d'une organisation</h2>
+          <p class="texte">
+            Une organisation déclare son thème dans son fichier <code>organisation.yaml</code>. Elle choisit ses couleurs, ses polices parmi les familles embarquées, la typographie de ses titres et son fond. La validation refuse une couleur de texte sous 4,5:1 et un halo trop intense.
+          </p>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour est un logiciel libre distribué sous licence GNU AGPL-3.0. Les polices Hanken Grotesk et IBM Plex Mono sont distribuées sous licence SIL Open Font License 1.1.
+      </footer>
+    </main>
+  </body>
+</html>

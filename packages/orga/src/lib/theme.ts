@@ -77,7 +77,7 @@ export function construireTheme(theme: Theme): ThemeConfig {
         primaryShadow: `0 6px 18px rgba(${rgb(c.primaire)}, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.25)`,
         defaultShadow: `0 2px 10px rgba(${encre}, 0.05), 0 6px 18px rgba(${encre}, 0.045)`,
         // Un bouton sans fond plein garde un liseré de verre pour se lire comme
-        // cliquable ; le survol assombrit légèrement son fond (docs/identite.md).
+        // cliquable ; le survol assombrit légèrement son fond (docs/design-system.md).
         defaultBg: 'rgba(255, 255, 255, 0.7)',
         defaultBorderColor: `rgba(${encre}, 0.14)`,
         defaultColor: c.encre,
