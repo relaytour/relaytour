@@ -1,6 +1,7 @@
 <!--
 Le titre de la PR suit le format des commits conventionnels, en français :
-feat(orga): …, fix(server): …, docs: …. Il devient le message du commit fusionné.
+feat(orga): …, fix(server): …, docs: …. Avec la fusion en squash, la méthode par
+défaut, il devient le message du commit fusionné.
 -->
 
 ## Résumé

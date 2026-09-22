@@ -110,14 +110,18 @@ Relaytour accueille les contributions : correctifs, évolutions, documentation, 
 
 1. Travaillez dans un fork ou, pour les personnes mainteneuses, dans une branche du dépôt. Nommez la branche `type/sujet`, par exemple `fix/recherche-sans-edition` ou `feat/export-calendrier`.
 2. Partez de `develop` et visez `develop`. `main` n'avance qu'à la publication d'une version.
-3. Donnez à la PR un titre au format des commits conventionnels, en français : `feat(orga): …`, `fix(server): …`, `docs: …`. Ce titre devient le message du commit fusionné.
+3. Donnez à la PR un titre au format des commits conventionnels, en français : `feat(orga): …`, `fix(server): …`, `docs: …`. Avec la fusion en squash, ce titre devient le message du commit fusionné.
 4. Traitez un seul sujet par PR. Une PR courte se relit et se fusionne plus vite.
 5. Remplissez le modèle de PR. Il rappelle les vérifications et les règles d'écriture.
 
 ### Ce que chaque PR apporte
 
 - `yarn check` et `yarn test` passent sur votre poste. Un changement du serveur passe aussi `yarn workspace @relaytour/server test:integration`.
-- Un changement visible porte son fragment de note de version (`yarn versionner noter`), avec une audience parmi `organisateurs`, `interne` et `public`. Lancez ensuite `yarn versionner valider` puis `yarn versionner compiler`.
+- Un changement visible porte son fragment de note de version, avec une audience parmi `organisateurs`, `interne` et `public`. Lancez ensuite `yarn versionner valider` puis `yarn versionner compiler`.
+  ```bash
+  yarn versionner noter --cible orga --type fonctionnalite --audience organisateurs --titre "Les fiches s'affichent en liste condensée"
+  ```
+  La cible vaut `serveur` ou `orga`. Le type vaut `fonctionnalite`, `correctif`, `rupture`, `securite`, `performance` ou `interne`. Complétez ensuite le texte du fragment créé dans `notes/fragments/`.
 - Un changement d'interface joint une capture de l'écran, faite avec le contenu d'exemple (`content/exemple`) et des comptes fictifs.
 - Un changement de contrôle d'accès joint un test qui prouve le refus (invariant 11).
 - Les contrats générés sont à jour (`yarn codegen`, invariant 9).
