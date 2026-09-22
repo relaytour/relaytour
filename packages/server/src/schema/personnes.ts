@@ -67,7 +67,60 @@ export const AffectationRef = builder.prismaObject('Affectation', {
   }),
 })
 
+interface OrganisationDeLaPersonne {
+  slug: string
+  nom: string
+  sigle: string | null
+  role: 'ADMIN' | 'MEMBRE'
+  statut: string
+  active: boolean
+}
+
+const OrganisationDeLaPersonneRef = builder
+  .objectRef<OrganisationDeLaPersonne>('OrganisationDeLaPersonne')
+  .implement({
+    description:
+      'Une organisation dont la personne connectée est membre, avec son rôle.',
+    fields: t => ({
+      slug: t.exposeString('slug'),
+      nom: t.exposeString('nom'),
+      sigle: t.exposeString('sigle', { nullable: true }),
+      estAdmin: t.boolean({ resolve: o => o.role === 'ADMIN' }),
+      statut: t.exposeString('statut'),
+      active: t.exposeBoolean('active', {
+        description: 'Vrai pour l’organisation active de la requête.',
+      }),
+    }),
+  })
+
 builder.queryFields(t => ({
+  // Les organisations de la personne, pour le choix de l'organisation active
+  // (ADR 0008). Une organisation suspendue ou archivée n'y figure pas.
+  mesOrganisations: t.field({
+    type: [OrganisationDeLaPersonneRef],
+    authScopes: { authentifie: true },
+    resolve: async (_root, _args, ctx) => {
+      const appartenances = await prisma.appartenance.findMany({
+        where: {
+          userId: ctx.personne!.id,
+          organisation: { statut: { in: ['ACTIVE', 'LECTURE_SEULE'] } },
+        },
+        select: {
+          role: true,
+          organisation: {
+            select: { slug: true, nom: true, sigle: true, statut: true },
+          },
+        },
+        orderBy: { organisation: { nom: 'asc' } },
+      })
+      return appartenances.map(a => ({
+        ...a.organisation,
+        role: a.role,
+        active: a.organisation.slug === ctx.organisation?.slug,
+      }))
+    },
+  }),
+
   moi: t.prismaField({
     type: PersonneRef,
     nullable: true,
@@ -190,7 +243,11 @@ builder.mutationFields(t => ({
         },
         'Une personne a été invitée.'
       )
-      await mettreEnFile('invitation', { userId: personne.id })
+      await mettreEnFile(
+        'invitation',
+        { userId: personne.id },
+        { organisationId }
+      )
       return personne
     },
   }),
@@ -207,7 +264,11 @@ builder.mutationFields(t => ({
       if (personne === null || personne.archivedAt !== null) {
         throw erreurSaisie('Ce compte est introuvable ou archivé.')
       }
-      await mettreEnFile('invitation', { userId: personne.id })
+      await mettreEnFile(
+        'invitation',
+        { userId: personne.id },
+        { organisationId: ctx.organisation!.id }
+      )
       return true
     },
   }),

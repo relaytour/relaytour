@@ -16,6 +16,7 @@ import { graphql } from '../gql'
 import type { TacheChampsFragment } from '../gql/graphql'
 import { EDITION_COURANTE, EDITIONS, MOI } from '../lib/requetes'
 import { estOuverte } from '../lib/taches'
+import { useActivite } from '../lib/activite'
 
 const PAGE = graphql(`
   query PagePerimetre($slug: String!, $editionId: ID!) {
@@ -25,7 +26,7 @@ const PAGE = graphql(`
     perimetre(slug: $slug) {
       id
       nom
-      type
+      groupe
       couleur
       peutModifier(editionId: $editionId)
       referents(editionId: $editionId) {
@@ -71,6 +72,7 @@ const FILTRES: Record<Filtre, (t: TacheChampsFragment) => boolean> = {
 }
 
 export default function Perimetre() {
+  const { lien, periode, libelleGroupe } = useActivite()
   const { slug = '' } = useParams()
   const [parametres, setParametres] = useSearchParams()
   const navigate = useNavigate()
@@ -108,7 +110,9 @@ export default function Perimetre() {
     return <Result status="403" title="Vous n’avez pas accès à ce périmètre." />
   }
   if (editionId === undefined && courante && !courante.editionCourante) {
-    return <Result status="info" title="Aucune édition n’est en préparation." />
+    return (
+      <Result status="info" title={`${periode.Aucune} n’est en préparation.`} />
+    )
   }
   if (loading || !data) return <Skeleton active />
   if (!perimetre || !data.moi)
@@ -152,7 +156,7 @@ export default function Perimetre() {
                   ))}
                 </span>
               ) : (
-                'Aucune personne n’est affectée à ce périmètre pour cette édition.'
+                `Aucune personne n’est affectée à ce périmètre pour ${periode.cette}.`
               )
             }
             actions={
@@ -187,7 +191,7 @@ export default function Perimetre() {
                 className="rt-libelle rt-verre"
                 style={{ padding: '4px 10px', borderRadius: 999 }}
               >
-                {perimetre.type === 'SPORT' ? 'Sport' : 'Pôle'}
+                {libelleGroupe(perimetre.groupe)}
               </span>
             </span>
           </Titre>
@@ -199,7 +203,7 @@ export default function Perimetre() {
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="Cette édition est archivée. Ses tâches sont consultables en lecture seule."
+          title={`${periode.cette.charAt(0).toUpperCase()}${periode.cette.slice(1)} est ${periode.archivee}. Ses tâches sont consultables en lecture seule.`}
         />
       )}
 
@@ -222,7 +226,7 @@ export default function Perimetre() {
                     size="small"
                     type="link"
                     onClick={() =>
-                      navigate(`/fiches/nouvelle?perimetre=${slug}`)
+                      navigate(lien(`/fiches/nouvelle?perimetre=${slug}`))
                     }
                   >
                     Nouvelle fiche
@@ -241,7 +245,7 @@ export default function Perimetre() {
                       <Link
                         className="rt-ligne-lien"
                         style={{ fontSize: 13.5 }}
-                        to={`/fiches/${f.slug}`}
+                        to={lien(`/fiches/${f.slug}`)}
                       >
                         {f.titre}
                       </Link>

@@ -115,7 +115,7 @@ export default function Preferences() {
               <Panneau teinte titre="Les notifications dans l’espace">
                 <p className="rt-texte-secondaire">
                   Quel que soit votre choix, la cloche de la barre haute affiche
-                  l’activité de vos périmètres. Elle se rafraîchit chaque
+                  les nouvelles de vos périmètres. Elle se rafraîchit chaque
                   minute.
                 </p>
               </Panneau>
@@ -137,7 +137,7 @@ export default function Preferences() {
                 </span>
               }
               name="frequenceResume"
-              extra="Le résumé regroupe l’activité non lue de vos périmètres et vos échéances des 14 prochains jours. Il part à 7 h."
+              extra="Le résumé regroupe les nouvelles non lues de vos périmètres et vos échéances des 14 prochains jours. Il part à 7 h, à l’heure de votre organisation."
             >
               <Radio.Group>
                 <Radio value="QUOTIDIEN">

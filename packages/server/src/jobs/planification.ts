@@ -4,12 +4,18 @@ import type {
   TypeNotification,
 } from '@relaytour/database'
 
-import { aujourdhuiParis } from '../lib/droits.ts'
+import { aujourdhui } from '../lib/droits.ts'
 import { journal } from '../lib/journal.ts'
-import { organisationParDefaut } from '../lib/organisation.ts'
 
-// Tâches planifiées de la phase 4 : elles tournent dans le worker, une fois par jour.
-// Les fonctions reçoivent `maintenant` pour être testables à une date donnée.
+// Tâches planifiées : elles tournent dans le worker, une fois par jour et par
+// organisation, dans le fuseau de l'organisation (ADR 0008). Les fonctions reçoivent
+// `maintenant` pour être testables à une date donnée.
+
+/** L'organisation pour laquelle une tâche planifiée tourne. */
+export interface OrganisationPlanifiee {
+  id: string
+  fuseauHoraire: string
+}
 
 const JOUR = 24 * 3600 * 1000
 
@@ -42,19 +48,21 @@ export interface RappelsParPersonne {
  */
 export async function genererRappels(
   prisma: PrismaClient,
+  organisation: OrganisationPlanifiee,
   maintenant = new Date(),
   // Restreint les tâches examinées. Sert aux tests, qui partagent la base de développement.
   filtre: Prisma.TacheWhereInput = {}
 ): Promise<RappelsParPersonne[]> {
-  const aujourdhui = dateUtc(aujourdhuiParis(maintenant))
-  const dansSeptJours = new Date(aujourdhui.getTime() + 7 * JOUR)
+  const jour = dateUtc(aujourdhui(maintenant, organisation.fuseauHoraire))
+  const dansSeptJours = new Date(jour.getTime() + 7 * JOUR)
 
   const taches = await prisma.tache.findMany({
     where: {
+      ...filtre,
       statut: { in: ['A_FAIRE', 'EN_COURS'] },
       echeance: { not: null, lte: dansSeptJours },
       edition: { statut: { not: 'ARCHIVEE' } },
-      ...filtre,
+      perimetre: { organisationId: organisation.id },
     },
     select: {
       id: true,
@@ -71,7 +79,7 @@ export async function genererRappels(
   const parPersonne = new Map<string, string[]>()
   for (const tache of taches) {
     const echeance = tache.echeance!
-    const jours = joursEntre(aujourdhui, echeance)
+    const jours = joursEntre(jour, echeance)
     const [type, palier]: [TypeNotification, string] =
       jours < 0
         ? ['TACHE_EN_RETARD', 'retard']
@@ -97,7 +105,7 @@ export async function genererRappels(
       try {
         const notification = await prisma.notification.create({
           data: {
-            organisationId: await organisationParDefaut(),
+            organisationId: organisation.id,
             userId,
             type,
             tacheId: tache.id,
@@ -125,6 +133,7 @@ export async function genererRappels(
   journal.info(
     {
       evenement: 'rappels-generes',
+      organisationId: organisation.id,
       personnes: resultat.length,
       notifications: resultat.reduce((n, r) => n + r.notificationIds.length, 0),
     },
@@ -133,23 +142,44 @@ export async function genererRappels(
   return resultat
 }
 
+/** Date du dernier résumé d'une organisation, lue dans la colonne JSON des préférences. */
+export function dernierResumeDe(
+  preferences: { derniersResumes: unknown; dernierResumeLe: Date | null },
+  organisationId: string
+): Date | null {
+  const derniers = preferences.derniersResumes
+  if (typeof derniers === 'object' && derniers !== null) {
+    // Une organisation absente de la liste n'a jamais envoyé de résumé.
+    const valeur = (derniers as Record<string, unknown>)[organisationId]
+    return typeof valeur === 'string' ? new Date(valeur) : null
+  }
+  // Avant l'ADR 0008, une seule date par personne.
+  return preferences.dernierResumeLe
+}
+
 /**
- * Les personnes qui reçoivent un résumé aujourd'hui : fréquence quotidienne, ou
- * hebdomadaire le lundi (valeur par défaut), et pas déjà servies aujourd'hui.
+ * Les membres d'une organisation qui reçoivent son résumé aujourd'hui : fréquence
+ * quotidienne, ou hebdomadaire le lundi (valeur par défaut), et pas déjà servis
+ * aujourd'hui pour cette organisation. Le jour et le lundi se lisent dans le fuseau
+ * de l'organisation.
  */
 export async function personnesAResumer(
   prisma: PrismaClient,
+  organisation: OrganisationPlanifiee,
   maintenant = new Date()
 ): Promise<string[]> {
-  const aujourdhui = aujourdhuiParis(maintenant)
+  const jour = aujourdhui(maintenant, organisation.fuseauHoraire)
   const lundi =
     new Intl.DateTimeFormat('en-GB', {
-      timeZone: 'Europe/Paris',
+      timeZone: organisation.fuseauHoraire,
       weekday: 'short',
     }).format(maintenant) === 'Mon'
 
   const personnes = await prisma.user.findMany({
-    where: { archivedAt: null },
+    where: {
+      archivedAt: null,
+      appartenances: { some: { organisationId: organisation.id } },
+    },
     select: { id: true, preferences: true },
   })
   return personnes
@@ -157,11 +187,13 @@ export async function personnesAResumer(
       const frequence = preferences?.frequenceResume ?? 'HEBDOMADAIRE'
       if (frequence === 'AUCUN') return false
       if (frequence === 'HEBDOMADAIRE' && !lundi) return false
-      const dernier = preferences?.dernierResumeLe
+      const dernier =
+        preferences === null
+          ? null
+          : dernierResumeDe(preferences, organisation.id)
       return (
         dernier === null ||
-        dernier === undefined ||
-        aujourdhuiParis(dernier) !== aujourdhui
+        aujourdhui(dernier, organisation.fuseauHoraire) !== jour
       )
     })
     .map(p => p.id)

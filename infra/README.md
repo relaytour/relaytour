@@ -13,7 +13,7 @@ Ce dossier décrit le déploiement de référence (ADR 0004) : une machine sous 
 | `server` | API GraphQL, port 4400 sur `127.0.0.1` |
 | `worker` | Mails, rappels et résumés |
 
-L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*` et `/graphql` vers l'API. Aucun outil Node n'est nécessaire sur le serveur.
+L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*`, `/graphql` et `/medias/*` vers l'API. `/medias/*` sert les logos et les favicons des organisations (ADR 0009). Aucun outil Node n'est nécessaire sur le serveur.
 
 ## Étapes
 
@@ -72,14 +72,16 @@ Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses m
     docker compose --env-file .env cp server:/exports ./exports
     ```
     Le fichier contient des noms et des adresses : remettez-le à l'organisation et supprimez-le du serveur ensuite.
+5. **Code source.** L'espace organisateur lie le code source de la version exécutée, comme l'AGPL l'exige (article 13). Par défaut, le lien mène au dépôt public. Un hébergeur qui modifie Relaytour indique son propre dépôt dans `CODE_SOURCE_URL`.
+6. **Identité et contenu.** Les admins d'une organisation modifient son nom, ses contacts, son logo et son thème dans l'espace organisateur, et téléchargent son contenu en archive. Le portail d'un hébergeur ne gère que le statut et les limites (ADR 0009).
 
 ## Tâches planifiées
 
-Le worker planifie deux tâches, à l'heure de Paris : à 6 h 30 les rappels d'échéance (7 jours, veille) et le signalement des retards ; à 7 h les résumés par mail. Pour en lancer une tout de suite :
+Le worker planifie deux tâches pour chaque organisation active, à l'heure de son fuseau (ADR 0008) : à 6 h 30 les rappels d'échéance (7 jours, veille) et le signalement des retards ; à 7 h les résumés par mail. Il ajuste ces planifications à son démarrage, puis chaque heure : une organisation créée ou suspendue est prise en compte dans l'heure. Pour lancer une tâche tout de suite :
 
 ```bash
 docker compose --env-file .env exec worker node dist/planification-lancer.js rappels
-docker compose --env-file .env exec worker node dist/planification-lancer.js resumes
+docker compose --env-file .env exec worker node dist/planification-lancer.js resumes --organisation rencontres
 ```
 
-Un rappel n'est jamais créé deux fois et un résumé ne part qu'une fois par jour : relancer est sans risque.
+Sans `--organisation`, la tâche part pour toutes les organisations actives. Un rappel n'est jamais créé deux fois et un résumé ne part qu'une fois par jour et par organisation : relancer est sans risque.

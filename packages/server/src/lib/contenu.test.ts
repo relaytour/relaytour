@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  adresseDeRole,
   domainesAutorises,
   donneesPersonnelles,
+  messagerieGrandPublic,
   empreinte,
   normaliserContenu,
 } from './contenu.ts'
@@ -25,40 +27,89 @@ describe('normaliserContenu', () => {
 
 describe('donneesPersonnelles', () => {
   it('relève une adresse personnelle et un numéro de téléphone', () => {
-    const texte = 'Écrire à prenom.nom@courriel-perso.example ou appeler le 06 12 34 56 78.'
-    expect(donneesPersonnelles(texte, [])).toHaveLength(2)
+    const texte =
+      'Écrire à prenom.nom@courriel-perso.example ou appeler le 06 12 34 56 78.'
+    expect(donneesPersonnelles(texte, { domaines: [] })).toHaveLength(2)
   })
 
   it('accepte les boîtes partagées des domaines autorisés', () => {
     expect(
-      donneesPersonnelles('Écrire à contact@exemple.org.', ['exemple.org'])
+      donneesPersonnelles('Écrire à contact@exemple.org.', {
+        domaines: ['exemple.org'],
+      })
     ).toEqual([])
-    expect(donneesPersonnelles('Écrire à contact@exemple.org.', [])).toHaveLength(1)
+    expect(
+      donneesPersonnelles('Écrire à contact@exemple.org.', { domaines: [] })
+    ).toHaveLength(1)
   })
 
   it('relève un numéro au format international', () => {
-    expect(donneesPersonnelles('+33 6 12 34 56 78', [])).toHaveLength(1)
+    expect(
+      donneesPersonnelles('+33 6 12 34 56 78', { domaines: [] })
+    ).toHaveLength(1)
   })
 
   it('ne confond pas une date ou une année avec un numéro', () => {
     expect(
-      donneesPersonnelles('Le 27/08/2027, de 9 h à 18 h, pour 2027 personnes.', [])
+      donneesPersonnelles(
+        'Le 27/08/2027, de 9 h à 18 h, pour 2027 personnes.',
+        { domaines: [] }
+      )
     ).toEqual([])
   })
 
   it('masque les valeurs relevées', () => {
-    expect(donneesPersonnelles('prenom.nom@courriel-perso.example', [])[0]).toBe('pre…')
+    expect(
+      donneesPersonnelles('prenom.nom@courriel-perso.example', {
+        domaines: [],
+      })[0]
+    ).toBe('pre…')
   })
 })
 
 describe('domainesAutorises', () => {
   it('lit une liste séparée par des virgules, en minuscules, sans blancs', () => {
     expect(
-      domainesAutorises({ DOMAINES_COURRIEL_AUTORISES: ' Exemple.org, asso.fr ' })
+      domainesAutorises({
+        DOMAINES_COURRIEL_AUTORISES: ' Exemple.org, asso.fr ',
+      })
     ).toEqual(['exemple.org', 'asso.fr'])
   })
 
   it('renvoie une liste vide sans variable', () => {
     expect(domainesAutorises({})).toEqual([])
+  })
+})
+
+describe('adresses de rôle', () => {
+  it('admet une adresse complète déclarée en exception, et elle seule', () => {
+    const role = {
+      domaines: ['exemple.org'],
+      adresses: ['club.exemple@messagerie.example'],
+    }
+    expect(adresseDeRole('Club.Exemple@Messagerie.example', role)).toBe(true)
+    expect(adresseDeRole('autre@messagerie.example', role)).toBe(false)
+    expect(adresseDeRole('bureau@exemple.org', role)).toBe(true)
+    expect(
+      donneesPersonnelles(
+        'Écrire à club.exemple@messagerie.example ou à autre@messagerie.example.',
+        role
+      )
+    ).toHaveLength(1)
+  })
+
+  it('reconnaît les messageries grand public et leurs sous-domaines', () => {
+    expect(messagerieGrandPublic('gmail.com')).toBe(true)
+    expect(messagerieGrandPublic('Orange.fr')).toBe(true)
+    expect(messagerieGrandPublic('mail.yahoo.fr')).toBe(true)
+    expect(messagerieGrandPublic('exemple.org')).toBe(false)
+  })
+
+  it('ignore une messagerie grand public dans les domaines d’amorçage', () => {
+    expect(
+      domainesAutorises({
+        DOMAINES_COURRIEL_AUTORISES: 'exemple.org, gmail.com',
+      })
+    ).toEqual(['exemple.org'])
   })
 })

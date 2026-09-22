@@ -93,6 +93,7 @@ export async function notifier(
               changement: notification.changement ?? 'contenu',
             },
             notificationId: creee.id,
+            organisationId,
           }
         )
       }
@@ -119,7 +120,7 @@ export interface NotificationAComposer {
   tache: {
     titre: string
     echeance: Date | null
-    perimetre: { nom: string; slug: string }
+    perimetre: { nom: string; slug: string; activite: { slug: string } }
   } | null
 }
 
@@ -176,6 +177,9 @@ export function messageNotification(
 }
 
 /** Chemin de l'espace organisateur vers lequel renvoie une notification. */
+/** Le lien d'une notification, sous le slug de l'activité du périmètre (ADR 0008). */
 export function lienNotification(n: NotificationAComposer): string {
-  return n.tache ? `/perimetres/${n.tache.perimetre.slug}` : '/'
+  return n.tache
+    ? `/${n.tache.perimetre.activite.slug}/perimetres/${n.tache.perimetre.slug}`
+    : '/'
 }

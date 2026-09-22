@@ -1,4 +1,4 @@
-import type { TypePerimetre } from '@relaytour/database'
+import { GROUPES_PAR_DEFAUT, type GroupePerimetres } from './activites.ts'
 
 // Postes à pourvoir : places de référent·e encore libres pour une édition.
 //
@@ -37,22 +37,26 @@ export function etatPostes(
 
 /**
  * Ordre d'affichage : les périmètres sans personne, puis incomplets, puis complets ;
- * ensuite le plus grand nombre de postes à pourvoir ; enfin les sports avant les pôles,
- * l'ordre du périmètre et son nom. La liste d'origine n'est pas modifiée.
+ * ensuite le plus grand nombre de postes à pourvoir ; enfin l'ordre des groupes de
+ * l'activité (sport puis pôle par défaut), l'ordre du périmètre et son nom. La liste
+ * d'origine n'est pas modifiée.
  */
 export function trierPostes<
   T extends {
     etat: EtatPostes
     aPourvoir: number
-    perimetre: { type: string; ordre: number; nom: string }
+    perimetre: { groupe: string; ordre: number; nom: string }
   },
->(liste: T[]): T[] {
-  const rangType = (type: string) => (type === 'SPORT' ? 0 : 1)
+>(liste: T[], groupes: string[] = GROUPES_PAR_DEFAUT.map(g => g.cle)): T[] {
+  const rangGroupe = (groupe: string) => {
+    const rang = groupes.indexOf(groupe)
+    return rang === -1 ? groupes.length : rang
+  }
   return [...liste].sort(
     (a, b) =>
       RANG_ETAT[a.etat] - RANG_ETAT[b.etat] ||
       b.aPourvoir - a.aPourvoir ||
-      rangType(a.perimetre.type) - rangType(b.perimetre.type) ||
+      rangGroupe(a.perimetre.groupe) - rangGroupe(b.perimetre.groupe) ||
       a.perimetre.ordre - b.perimetre.ordre ||
       a.perimetre.nom.localeCompare(b.perimetre.nom, 'fr')
   )
@@ -60,21 +64,20 @@ export function trierPostes<
 
 /**
  * Message d'appel à diffuser, sans aucun chiffre en dehors de l'année.
- * Renvoie null quand aucun périmètre n'est à pourvoir. Un groupe vide est omis.
+ * Renvoie null quand aucun périmètre n'est à pourvoir. Les périmètres se rangent
+ * par groupe de l'activité, sous son libellé pluriel ; un groupe vide est omis.
  */
 export function texteAppel(
   annee: number,
-  perimetres: { nom: string; type: TypePerimetre }[],
-  organisation: OrganisationAppel
+  perimetres: { nom: string; groupe: string }[],
+  organisation: OrganisationAppel,
+  groupesActivite: GroupePerimetres[] = GROUPES_PAR_DEFAUT
 ): string | null {
   if (perimetres.length === 0) return null
-  const groupes = [
-    { titre: 'Sports', type: 'SPORT' },
-    { titre: 'Pôles', type: 'POLE' },
-  ]
-    .map(({ titre, type }) => ({
-      titre,
-      noms: perimetres.filter(p => p.type === type).map(p => p.nom),
+  const groupes = groupesActivite
+    .map(({ libellePluriel, cle }) => ({
+      titre: libellePluriel,
+      noms: perimetres.filter(p => p.groupe === cle).map(p => p.nom),
     }))
     .filter(g => g.noms.length > 0)
     .map(g => [g.titre, ...g.noms.map(nom => `- ${nom}`)].join('\n'))

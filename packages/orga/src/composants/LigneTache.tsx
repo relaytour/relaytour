@@ -1,6 +1,7 @@
 import { Link } from 'react-router'
 
 import type { StatutTache } from '../gql/graphql'
+import { useActivite } from '../lib/activite'
 import { dateCourte } from '../lib/erreurs'
 import { estOuverte, etatEcheance } from '../lib/taches'
 
@@ -31,6 +32,7 @@ export default function LigneTache({
   moiId: string
   editionId: string
 }) {
+  const { lien } = useActivite()
   const echeance = etatEcheance(tache)
   const personnes = tache.assignes
     .map(p => (p.id === moiId ? 'Vous' : p.nom))
@@ -38,7 +40,7 @@ export default function LigneTache({
   return (
     <li>
       <Link
-        to={`/perimetres/${tache.perimetre.slug}?edition=${editionId}`}
+        to={lien(`/perimetres/${tache.perimetre.slug}?edition=${editionId}`)}
         className={`rt-verre rt-ligne-tache${tache.statut === 'ABANDONNEE' ? ' rt-abandonnee' : ''}`}
       >
         <span

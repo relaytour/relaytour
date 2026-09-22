@@ -6,7 +6,8 @@ import {
 } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
-import { configurationOrganisation } from '../lib/organisation.ts'
+import { lireGroupes, type GroupePerimetres } from '../lib/activites.ts'
+import { configurationActivite } from '../lib/organisation.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import {
@@ -72,9 +73,26 @@ const PostesPerimetreRef = builder
 async function chargerPostes(
   ctx: AppContext,
   editionIdBrut: string | number
-): Promise<{ annee: number; postes: PostesPerimetre[] }> {
+): Promise<{
+  annee: number
+  postes: PostesPerimetre[]
+  activite: {
+    id: string
+    nom: string
+    sigle: string | null
+    groupes: GroupePerimetres[]
+  }
+}> {
   const edition = await ctx.exigerEdition(editionIdBrut)
   const editionId = edition.id
+  const ligneActivite = await prisma.activite.findUniqueOrThrow({
+    where: { id: edition.activiteId },
+    select: { id: true, nom: true, sigle: true, groupes: true },
+  })
+  const activite = {
+    ...ligneActivite,
+    groupes: lireGroupes(ligneActivite.groupes),
+  }
 
   const [perimetres, affectations, effectifs, souhaits] = await Promise.all([
     prisma.perimetre.findMany({
@@ -116,7 +134,14 @@ async function chargerPostes(
       ...etatPostes(effectif, duPerimetre.length),
     }
   })
-  return { annee: edition.annee, postes: trierPostes(postes) }
+  return {
+    annee: edition.annee,
+    postes: trierPostes(
+      postes,
+      activite.groupes.map(g => g.cle)
+    ),
+    activite,
+  }
 }
 
 builder.queryFields(t => ({
@@ -135,18 +160,20 @@ builder.queryFields(t => ({
     authScopes: { admin: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
-      const { annee, postes } = await chargerPostes(ctx, editionId)
-      const configuration = await configurationOrganisation(
-        ctx.organisation!.id
-      )
+      const { annee, postes, activite } = await chargerPostes(ctx, editionId)
+      // Les contacts de l'activité l'emportent sur ceux de l'organisation (ADR 0009).
+      const configuration = await configurationActivite(activite.id)
+      // L'appel porte le nom court de l'activité (ADR 0008) : pour l'activité
+      // implicite d'un dépôt plat, c'est celui de l'organisation.
       return texteAppel(
         annee,
         postes.filter(p => p.aPourvoir > 0).map(p => p.perimetre),
         {
-          nom: configuration.nomCourt,
+          nom: activite.sigle ?? activite.nom,
           contact: configuration.contactRecrutement,
           pageEquipe: configuration.pageEquipe,
-        }
+        },
+        activite.groupes
       )
     },
   }),

@@ -1,6 +1,6 @@
 # ADR 0008 — Activités d'une organisation et administration de l'installation
 
-- **Statut** : acceptée
+- **Statut** : acceptée ; réalisée le 22 septembre 2026, en huit PR empilées (#10 à #17)
 - **Date** : 2026-09-22
 - Complète l'ADR 0006. Remplace son choix du module « organization » de Better Auth et sa réserve sur `TypePerimetre`.
 
@@ -86,6 +86,7 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 ### Contenu
 
 - La disposition plate actuelle reste valide. Elle décrit une activité implicite, de nature `EVENEMENT`, au slug de l'organisation, avec les groupes `sport` et `pole`.
+- Au premier import d'un dépôt en disposition `activites/`, l'activité d'amorçage `defaut` créée par la migration est retirée si elle est vide et que le dépôt ne la décrit pas.
 - Plusieurs activités se déclarent dans `contenu/activites/<slug>/`, avec `activite.yaml` (slug, nom, sigle, nature, groupes, ordre), `perimetres.yaml`, `fiches/` et `taches/`. Les deux dispositions ne se mélangent pas.
 - `perimetres.yaml` accepte `groupe`. `type` reste accepté et converti.
 - `orga:importer` exige `--organisation <slug>` dès que plusieurs organisations existent, accepte `--activite <slug>` et refuse une activité au-delà des limites. `orga:exporter` filtre par organisation et écrit dans la disposition du dépôt cible.
@@ -93,7 +94,11 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 
 ### Espace organisateur
 
-- Les routes prennent l'activité en préfixe (`/:activite/…`). Les anciens liens et les liens des mails sont redirigés.
+- Les routes prennent l'activité en préfixe (`/:activite/…`). Une adresse sans activité (l'accueil, une adresse d'avant, un lien de mail) mène à la même page de l'activité par défaut : la dernière affichée par le navigateur, sinon la première ouverte. Les liens des mails portent le slug de l'activité.
+- L'espace organisateur envoie l'activité affichée dans l'en-tête `X-Relaytour-Activite`. Une requête qui ne précise pas d'activité porte sur celle-ci, sinon sur la première activité ouverte. Changer d'activité ou d'organisation vide le cache du client.
+- Un slug d'activité ne peut pas prendre un premier segment d'adresse de l'espace organisateur (`admin`, `fiches`, `perimetres`, `preferences`, `retroplanning`, `connexion`, `api`, `assets`, `graphql`).
+- La requête `mesOrganisations`, ouverte à toute personne connectée même sans organisation active, liste ses organisations. Sans organisation active, l'espace organisateur fait choisir l'organisation.
+- Sans session, la requête publique `organisation(slug)` sert le thème de l'organisation que le navigateur a mémorisée. Une installation à plusieurs organisations, sans slug connu, sert l'identité d'amorçage de l'environnement : l'écran de connexion n'affiche la marque d'aucune organisation.
 - L'organisation active se choisit dans le menu du compte et part dans l'en-tête de chaque requête. Le sélecteur reste masqué avec une seule appartenance. Le sélecteur d'activité reste masqué avec une seule activité.
 - Le choix de période lit `editions(activiteId)` et affiche le libellé de la nature. Les groupes de périmètres se rendent depuis `activite.groupes`.
 - Une page d'administration liste, crée, modifie et archive les activités. Elle affiche le message de limite atteinte, comme la création d'une période quand `periodesOuvertes` est atteint.
@@ -101,7 +106,9 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 
 ### Worker
 
-- Un seul préfixe BullMQ existe par installation. Les identifiants de jobs et les clés de limite portent l'organisation.
+- Un seul préfixe BullMQ existe par installation. Les identifiants des jobs planifiés et des résumés portent l'organisation. Les clés de limite de la connexion restent par adresse : la connexion vaut pour le compte, pas pour une organisation.
+- Un mail porte le nom et les couleurs de l'organisation de son job, sinon de l'unique organisation de la personne, sinon de la première organisation de l'installation.
+- Une personne membre de plusieurs organisations reçoit le résumé de chacune. La date du dernier résumé se note par organisation (migration `resumes_par_organisation`).
 - Un planificateur horaire crée et retire un scheduler `rappels` et un scheduler `resumes` par organisation active, avec son fuseau horaire.
 - `genererRappels` et `personnesAResumer` reçoivent une organisation. `periodeEdition` cherche la période précédente dans la même activité. `aujourdhuiParis` devient `aujourdhui(fuseau)`.
 
@@ -113,18 +120,30 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 
 ### Migrations
 
-Quatre migrations additives (invariant 8), dans cet ordre :
+Cinq migrations additives (invariant 8), dans cet ordre :
 
 1. `activites` : renommage du journal, table `Activite`, table `Appartenance`, `Organisation.statut` et `Organisation.limites`, colonnes `activiteId` et `Perimetre.groupe` nullables.
 2. `activites_remplissage` : une activité `EVENEMENT` par organisation, remplissage des clés, `groupe` tiré de `type`, appartenances créées depuis `isAdmin`.
 3. `activites_obligatoire` : `activiteId` obligatoire, retrait des trois contraintes uniques globales, contraintes composées. Élargir une contrainte est l'assouplissement prévu par l'ADR 0006, pas un changement de sens.
 4. `droits_redaction_organisation` : clé d'organisation du droit de rédaction, remplie depuis le périmètre ou la première appartenance de la personne, puis obligatoire.
+5. `resumes_par_organisation` : date du dernier résumé par organisation, colonne JSON nullable.
 
 ### Tests
 
 - Chaque test d'intégration crée son organisation, son activité et sa période.
 - Un test de refus croisés vérifie chaque opération avec la session d'une autre organisation, puis avec une autre activité et avec une organisation suspendue. Il vérifie aussi le jeton sur une requête de données, le jeton absent sur `creerOrganisation`, la création d'une activité ou d'une période au-delà des limites, et une mutation en lecture seule. L'export par jeton réussit dans tous les statuts.
 - Le worker et l'importateur ont leurs preuves. Les rappels d'une organisation n'ont aucun effet sur l'autre. Les dispositions plate et `activites/` s'importent avec leurs groupes.
+
+### Revue de sécurité
+
+La revue du 22 septembre 2026 a parcouru chaque accès par identifiant des résolveurs. Chacun passe par un contrôle d'organisation préalable : `exigerEdition`, `exigerActivite`, `exigerEcriture`, `exigerMembre`, une lecture filtrée par organisation, ou le jeton d'administration. Le fichier `refus-croises.integration.test.ts` appelle chaque requête et chaque mutation qui reçoit un identifiant avec les identifiants d'une autre organisation. Il vérifie le refus et l'absence de tout changement. Un garde-fou du même fichier échoue si une opération nouvelle qui reçoit un identifiant n'entre pas dans la table.
+
+Limites connues, acceptées :
+
+- Une session vaut pour le compte, pas pour une organisation. Les en-têtes `X-Relaytour-Organisation` et `X-Relaytour-Activite` choisissent parmi les appartenances ; ils ne donnent aucun droit.
+- La requête publique `organisation(slug)` sert le nom et le thème d'une organisation non archivée à qui connaît son slug. Ces champs sont publics par nature : l'écran de connexion les affiche.
+- Le jeton d'administration est un secret unique par installation. Il se change par l'environnement et un redémarrage de l'API.
+- Le fichier d'export contient des noms et des adresses. Il reste sur le serveur jusqu'à sa remise à l'organisation.
 
 ## Plan de mise en œuvre
 
@@ -146,7 +165,7 @@ Un chantier par session, dans cet ordre.
 - L'ADR 0006 reste acceptée : son lot multi se réalise ici, avec l'activité en plus.
 - Le glossaire gagne activité, nature, groupe, journal, administration de l'installation et limites. L'invariant 18 couvre la clé d'activité.
 - Les URL de l'espace organisateur changent. La redirection et le générateur de liens des mails se livrent ensemble.
-- Une personne membre de plusieurs organisations garde une seule cadence de résumé : `PreferenceNotification` reste par personne.
+- Une personne membre de plusieurs organisations garde une seule cadence de résumé, commune à ses organisations : `PreferenceNotification` reste par personne.
 - Le retrait de trois index uniques sur une base en service demande une courte interruption. Le remplissage précède toujours l'obligation.
 - La décision sur le type générique de périmètre, différée par l'ADR 0006, est prise : les groupes sont du contenu.
 - `CONTACT_HEBERGEUR` rejoint `infra/compose/.env.example`, vide par défaut.
