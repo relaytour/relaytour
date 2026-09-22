@@ -34,7 +34,7 @@ Ce code s'applique dans tous les espaces du projet : dépôt, tickets, PR, wiki 
 
 ## Signalement
 
-Vous pouvez signaler un comportement contraire à ce code à l'équipe de modération : [ADRESSE DE MODÉRATION À COMPLÉTER].
+Vous pouvez signaler un comportement contraire à ce code à l'équipe de modération, à l'adresse [moderation@relaytour.org](mailto:moderation@relaytour.org).
 
 Chaque signalement est examiné rapidement et avec équité. L'équipe de modération respecte la vie privée et la sécurité de la personne qui signale.
 
