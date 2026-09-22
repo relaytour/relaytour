@@ -2,10 +2,10 @@
   "schemaVersion": 3,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.5.0",
       "notes": [
         {
           "id": "2026-09-22-serveur-les-reponses-aux-mails-arrivent-au-contact-de-l-activite",
