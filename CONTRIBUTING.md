@@ -112,7 +112,7 @@ Un seul mot par notion.
 | admin | Membre du bureau qui voit l'avancement global et gère les affectations. Le rôle vaut pour une organisation et toutes ses activités. |
 | journal | Trace de qui a fait quoi, et quand. Le journal alimente les notifications et le score de participation. |
 | administration de l'installation | Actions d'hébergement, par script ou par jeton, sans accès aux données : créer, suspendre, limiter, exporter une organisation. |
-| limites | Plafonds d'une organisation (nombre d'activités), fixés par l'administration de l'installation. Une organisation auto-hébergée n'en a aucune. |
+| limites | Plafonds d'une organisation (nombre d'activités, nombre de périodes ouvertes), fixés par l'administration de l'installation. Une limite ne bloque jamais la lecture ni l'export. Une organisation auto-hébergée n'en a aucune. |
 | bénévole | Personne qui aide pendant le tournoi sans être référent·e. |
 
 ## Proposer une modification

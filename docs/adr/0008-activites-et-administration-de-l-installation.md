@@ -1,0 +1,146 @@
+# ADR 0008 — Activités d'une organisation et administration de l'installation
+
+- **Statut** : acceptée
+- **Date** : 2026-09-22
+- Complète l'ADR 0006. Remplace son choix du module « organization » de Better Auth et sa réserve sur `TypePerimetre`.
+
+## Contexte
+
+Une association ne porte pas qu'un événement. Elle organise souvent plusieurs manifestations. Elle anime aussi des sections sportives ou culturelles et des instances, comme un conseil d'administration. Ces activités ont le même besoin. Chacune enchaîne des périodes, confie des périmètres à des personnes responsables, et s'appuie sur des fiches méthode et des tâches types à échéance relative.
+
+Le modèle actuel ne le permet pas. L'inventaire du 22 septembre 2026 relève :
+
+- `Edition` est « une année de l'événement » : `annee` est unique dans toute la base, et `editionCourante` comme `periodeEdition` supposent une seule suite d'années. Deux périodes 2027 sont impossibles.
+- `Perimetre.slug` et `Fiche.slug` sont uniques dans toute la base. Un périmètre « natation » ne peut pas exister dans deux activités.
+- `TypePerimetre` ne connaît que `SPORT` et `POLE`. Le tri des postes, l'appel à candidatures et huit libellés de l'espace organisateur les lisent.
+- Aucune table d'appartenance n'existe : `User.isAdmin` est un booléen global. `organisationParDefaut()` a sept points d'appel en production.
+- Aucun rôle d'installation n'existe. Un hébergeur qui sert plusieurs organisations ne peut ni créer, ni suspendre, ni exporter une organisation sans accéder à la base.
+- Le mot « activité » désigne aujourd'hui le journal (`model Activite`). À l'écran, il n'apparaît que dans « score d'activité ».
+
+Un hébergeur a aussi besoin d'un portail client, d'une facturation et de paliers. L'ADR 0007 interdit tout correctif privé et demande une forme générique dans le dépôt public.
+
+## Décision
+
+### Activité
+
+- Une **activité** est ce qu'une organisation fait dans la durée : un événement, une section sportive ou culturelle, une instance. Elle porte ses périodes, ses périmètres, ses fiches et ses tâches types.
+- Sa **nature** fixe le libellé de la période : `EVENEMENT` (édition), `SAISON` (saison), `MANDAT` (mandat). La mécanique ne change pas : rétroplanning, échéances `J-n` depuis le début de la période, affectations, droits.
+- Modèle : `Activite { id, organisationId, slug, nom, sigle?, nature, groupes, ordre, archivedAt }`, unique sur `(organisationId, slug)`.
+- Relaytour ne gère ni adhésions, ni licences, ni cotisations. Une section y suit sa saison comme un événement suit son édition.
+
+### Période
+
+- Le modèle `Edition` reste le nom technique de la période. `annee` est l'année de début ; `debut` et `fin` couvrent une saison ou un mandat de plusieurs années ; `nom` est libre.
+- `Edition.activiteId` est obligatoire. `annee` est unique par activité.
+
+### Groupes de périmètres
+
+- Chaque activité déclare ses **groupes** de périmètres, ordonnés, dans son contenu : clé, libellé, libellé pluriel. Chaque périmètre porte un `groupe`.
+- Le gabarit propose `sport` et `pole`. Un conseil d'administration déclare par exemple `commission` et `bureau` ; une section déclare `equipe` et `pole`.
+- Le tri des postes, l'appel à candidatures et les libellés de l'espace organisateur lisent les groupes de l'activité. `TypePerimetre` reste en base, rempli, sans lecture.
+- `Perimetre.activiteId` est obligatoire et `slug` est unique par activité. `Fiche.activiteId` est obligatoire et `slug` reste unique par organisation, pour laisser la place à des fiches d'organisation.
+
+### Journal
+
+- Le journal `model Activite` devient `model Journal`, et `TypeActivite` devient `TypeJournal`. Une migration écrite à la main renomme la table (`RENAME TABLE`), sans perte. L'enum MySQL est un type de colonne sans objet nommé.
+- Le « score d'activité » devient « score de participation » dans la copie et les mails.
+
+### Appartenances
+
+- Un compte reste global. Une table `Appartenance { userId, organisationId, role }`, unique sur `(userId, organisationId)`, porte le rôle `ADMIN` ou `MEMBRE` par organisation.
+- Le module « organization » de Better Auth n'est pas retenu : il ouvrirait des routes (invariant 15) et doublerait le flux d'invitation existant.
+- `User.isAdmin` reste en base, rempli, sans lecture. Un admin voit toutes les activités de son organisation. Un membre voit les périmètres où il est affecté, activité par activité.
+
+### Contexte et droits
+
+- `buildContext` reçoit l'organisation active : l'en-tête `X-Relaytour-Organisation`, sinon l'unique appartenance de la personne. Une organisation suspendue ou archivée ne donne aucun contexte. Une organisation en lecture seule donne le contexte sans le droit d'écrire.
+- Trois scopes existent : `connecte` (personne et organisation actives), `admin` (rôle `ADMIN`), `administration` (jeton, voir plus bas).
+- `perimetresLisibles` devient un filtre Prisma sans branche `null` : un admin lit les périmètres de son organisation, pas toute la base.
+- L'activité se déduit de `editionId` partout où il existe. Les opérations `editions`, `editionCourante`, `perimetres`, `fiches`, `recherche`, `creerEdition`, `creerPerimetre` et `creerFiche` reçoivent un argument `activiteId`.
+- Les opérations `activites`, `creerActivite`, `modifierActivite` et `archiverActivite` sont réservées aux admins.
+- `organisationParDefaut()` disparaît. Un test vérifie qu'aucun point d'appel ne subsiste.
+
+### Administration de l'installation
+
+- L'**administration de l'installation** regroupe les actions d'un hébergeur. Il crée une organisation, invite son premier admin, la suspend ou l'archive, fixe ses limites et demande son export. Elle n'accède à aucune donnée : ni personne, ni tâche, ni fiche.
+- Un script `organisation:creer <slug> "<nom>" [--fuseau] [--domaines] [--limite-activites n] [--admin adresse "Nom"]` remplace l'amorçage par variables d'environnement. `admin:creer` reçoit `--organisation`.
+- Un jeton `JETON_ADMINISTRATION`, facultatif dans l'environnement, ouvre les mêmes actions par GraphQL. La requête `organisations` renvoie slug, nom, statut, limites et date de création. Elle liste aussi les activités et leurs périodes non archivées (nom, statut, début, fin). Aucune donnée personnelle n'y figure. Les mutations sont `creerOrganisation`, `inviterPremierAdmin`, `modifierOrganisationInstallation` et `demanderExport`.
+- Le serveur compare le jeton en temps constant. Une requête porteuse du jeton ignore toute session. Aucune route de Better Auth ne s'ouvre. Ces champs ne sont pas publics (invariant 14).
+- `Organisation.statut` prend `ACTIVE`, `LECTURE_SEULE`, `SUSPENDUE` ou `ARCHIVEE`. En lecture seule, les membres lisent fiches et périodes, et aucune mutation de données ne passe. L'export par l'administration reste possible dans tous les statuts.
+
+### Limites
+
+- `Organisation.limites` est un objet JSON (`{ activites?: number, periodesOuvertes?: number }`), nul par défaut. Une valeur nulle ou vide signifie qu'aucune limite ne s'applique. Seule l'administration de l'installation le modifie.
+- `activites` plafonne le nombre d'activités non archivées. `periodesOuvertes` plafonne le nombre de périodes non archivées, toutes activités confondues. Un hébergeur peut ainsi vendre l'ouverture d'une période plutôt qu'un abonnement au mois ou à l'année.
+- `creerActivite`, `creerEdition` et l'import refusent une création au-delà d'une limite. Le message renvoie vers `CONTACT_HEBERGEUR`, adresse ou URL facultative de l'installation. Sans cette variable, le message renvoie vers un admin.
+- Une limite ne bloque jamais la lecture. Les périodes archivées, les fiches et l'historique restent consultables, et l'export reste possible. Le plafond porte sur l'ouverture, pas sur la consultation.
+- L'organisation garde la main sur les noms et les dates de ses périodes. L'administration de l'installation ne fixe que des nombres.
+- Une organisation auto-hébergée n'a aucune limite. Les limites sont une option générique au sens de l'ADR 0007 : le logiciel reste le même pour tout le monde.
+
+### Contenu
+
+- La disposition plate actuelle reste valide. Elle décrit une activité implicite, de nature `EVENEMENT`, au slug de l'organisation, avec les groupes `sport` et `pole`.
+- Plusieurs activités se déclarent dans `contenu/activites/<slug>/`, avec `activite.yaml` (slug, nom, sigle, nature, groupes, ordre), `perimetres.yaml`, `fiches/` et `taches/`. Les deux dispositions ne se mélangent pas.
+- `perimetres.yaml` accepte `groupe`. `type` reste accepté et converti.
+- `orga:importer` exige `--organisation <slug>` dès que plusieurs organisations existent, accepte `--activite <slug>` et refuse une activité au-delà des limites. `orga:exporter` filtre par organisation et écrit dans la disposition du dépôt cible.
+- `content/exemple` gagne une activité de nature `SAISON`. Le gabarit `relaytour/organisation-modele` documente `activites/` et les natures.
+
+### Espace organisateur
+
+- Les routes prennent l'activité en préfixe (`/:activite/…`). Les anciens liens et les liens des mails sont redirigés.
+- L'organisation active se choisit dans le menu du compte et part dans l'en-tête de chaque requête. Le sélecteur reste masqué avec une seule appartenance. Le sélecteur d'activité reste masqué avec une seule activité.
+- Le choix de période lit `editions(activiteId)` et affiche le libellé de la nature. Les groupes de périmètres se rendent depuis `activite.groupes`.
+- Une page d'administration liste, crée, modifie et archive les activités. Elle affiche le message de limite atteinte, comme la création d'une période quand `periodesOuvertes` est atteint.
+- En lecture seule, l'espace organisateur affiche un bandeau et masque les actions d'écriture.
+
+### Worker
+
+- Un seul préfixe BullMQ existe par installation. Les identifiants de jobs et les clés de limite portent l'organisation.
+- Un planificateur horaire crée et retire un scheduler `rappels` et un scheduler `resumes` par organisation active, avec son fuseau horaire.
+- `genererRappels` et `personnesAResumer` reçoivent une organisation. `periodeEdition` cherche la période précédente dans la même activité. `aujourdhuiParis` devient `aujourdhui(fuseau)`.
+
+### Frontière des extensions
+
+- Le serveur ne charge aucun module tiers. Un module chargé dans le processus formerait une œuvre combinée, et serait la couche réservée que l'ADR 0005 refuse.
+- Un besoin d'hébergeur entre dans le dépôt public par l'API d'administration de l'installation, sous forme générique.
+- Un portail client, une facturation, un paiement ou des paliers sont des programmes séparés. Ils parlent à Relaytour par cette API et vivent chez chaque hébergeur, sous la licence de son choix.
+
+### Migrations
+
+Trois migrations additives (invariant 8), dans cet ordre :
+
+1. `activites` : renommage du journal, table `Activite`, table `Appartenance`, `Organisation.statut` et `Organisation.limites`, colonnes `activiteId` et `Perimetre.groupe` nullables.
+2. `activites_remplissage` : une activité `EVENEMENT` par organisation, remplissage des clés, `groupe` tiré de `type`, appartenances créées depuis `isAdmin`.
+3. `activites_obligatoire` : `activiteId` obligatoire, retrait des trois contraintes uniques globales, contraintes composées. Élargir une contrainte est l'assouplissement prévu par l'ADR 0006, pas un changement de sens.
+
+### Tests
+
+- Chaque test d'intégration crée son organisation, son activité et sa période.
+- Un test de refus croisés vérifie chaque opération avec la session d'une autre organisation, puis avec une autre activité et avec une organisation suspendue. Il vérifie aussi le jeton sur une requête de données, le jeton absent sur `creerOrganisation`, la création d'une activité ou d'une période au-delà des limites, et une mutation en lecture seule. L'export par jeton réussit dans tous les statuts.
+- Le worker et l'importateur ont leurs preuves. Les rappels d'une organisation n'ont aucun effet sur l'autre. Les dispositions plate et `activites/` s'importent avec leurs groupes.
+
+## Plan de mise en œuvre
+
+Un chantier par session, dans cet ordre.
+
+| Chantier |
+|---|
+| Schéma, renommage du journal, trois migrations, régénération des contrats |
+| Contexte, scopes, droits, filtre sur tous les résolveurs, limites |
+| Appartenances, invitations, `organisation:creer`, jeton, compteurs |
+| Modèles, importateur, exportateur, validation, groupes, gabarit, exemple |
+| Worker, planification, score, clés de limite |
+| Espace organisateur : routes, sélecteurs, groupes, libellés de période, page des activités |
+| Preuves de refus croisés, worker, importateur, revue de sécurité |
+| Documentation, glossaire, notes de version |
+
+## Conséquences
+
+- L'ADR 0006 reste acceptée : son lot multi se réalise ici, avec l'activité en plus.
+- Le glossaire gagne activité, nature, groupe, journal, administration de l'installation et limites. L'invariant 18 couvre la clé d'activité.
+- Les URL de l'espace organisateur changent. La redirection et le générateur de liens des mails se livrent ensemble.
+- Une personne membre de plusieurs organisations garde une seule cadence de résumé : `PreferenceNotification` reste par personne.
+- Le retrait de trois index uniques sur une base en service demande une courte interruption. Le remplissage précède toujours l'obligation.
+- La décision sur le type générique de périmètre, différée par l'ADR 0006, est prise : les groupes sont du contenu.
+- `CONTACT_HEBERGEUR` rejoint `infra/compose/.env.example`, vide par défaut.
+- La transmission d'une période à la suivante (feuille de route) devient le premier chantier après celui-ci : elle donne sa valeur à la période.
