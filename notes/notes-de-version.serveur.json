@@ -5,6 +5,18 @@
   "version": "0.3.0",
   "notes": [
     {
+      "id": "2026-09-22-serveur-un-hebergeur-administre-les-organisations-sans-acces-aux-donnees",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Un hébergeur administre les organisations sans accès à leurs données",
+        "texte": "Un script et une API à jeton créent une organisation et sa première activité, invitent son premier admin, changent son statut ou ses limites et écrivent son export complet sur le serveur. Le jeton ne donne accès à aucune donnée d'une organisation, et l'export ne transite jamais par l'API.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-22-serveur-les-activites-et-les-appartenances-entrent-dans-le-schema",
       "date": "2026-09-22",
       "type": "interne",
