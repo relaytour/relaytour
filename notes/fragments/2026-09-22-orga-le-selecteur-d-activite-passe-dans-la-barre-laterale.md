@@ -1,8 +1,9 @@
 ---
 cible: orga
-type: fonctionnalite
+type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.4.1
 fr:
   titre: >-
     Le sélecteur d'activité passe dans la barre latérale
