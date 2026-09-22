@@ -1,0 +1,18 @@
+# Tâches types du groupe débutants. Échéances comptées depuis le premier jour de la saison.
+taches:
+  - modele: preparer-le-calendrier
+    titre: Préparer le calendrier des séances
+    description: >-
+      Les référentes et référents fixent les jours, les horaires et les lieux des séances de la saison.
+    echeance: J-30
+  - modele: accueillir-les-nouvelles-personnes
+    titre: Organiser l'accueil des nouvelles personnes
+    description: >-
+      Les référentes et référents désignent une personne de référence pour chaque séance de septembre.
+    echeance: J-7
+    fiche: accueillir-une-nouvelle-personne
+  - modele: faire-le-bilan-de-saison
+    titre: Faire le bilan de la saison
+    description: >-
+      Les référentes et référents recueillent l'avis du groupe et transmettent le bilan au pôle Vie du club.
+    echeance: J+300

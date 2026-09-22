@@ -6,3 +6,12 @@ fuseauHoraire: Europe/Paris
 domainesCourrielAutorises: [exemple.org]
 contactRecrutement: contact@exemple.org
 pageEquipe: https://exemple.org/equipe
+# Adresses de rôle hébergées chez une messagerie grand public : elles s'autorisent
+# une par une, jamais par leur domaine (ADR 0009).
+adressesRoleAutorisees: [club.course.rencontres@messagerie.example]
+# Images du dossier, relatives à ce fichier. Le PNG est obligatoire : les mails
+# n'affichent pas le SVG.
+logo:
+  png: medias/logo.png
+  svg: medias/logo.svg
+favicon: medias/favicon.png

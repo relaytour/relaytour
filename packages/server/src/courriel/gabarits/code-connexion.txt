@@ -1,4 +1,4 @@
-{{organisation}}
+{{marque}}
 
 Votre code de connexion
 

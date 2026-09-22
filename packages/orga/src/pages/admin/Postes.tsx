@@ -27,6 +27,7 @@ import { graphql } from '../../gql'
 import type { EtatPostes } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
 import { EDITIONS } from '../../lib/requetes'
+import { useActivite } from '../../lib/activite'
 
 const POSTES = graphql(`
   query PostesAPourvoir($editionId: ID!) {
@@ -38,7 +39,7 @@ const POSTES = graphql(`
         id
         slug
         nom
-        type
+        groupe
         couleur
       }
       affectations {
@@ -184,6 +185,7 @@ function ChampEffectif({
 }
 
 export default function Postes() {
+  const { periode, libelleGroupe } = useActivite()
   const { message } = App.useApp()
   const { data: editions } = useQuery(EDITIONS)
   const [choix, setChoix] = useState<string | undefined>()
@@ -245,12 +247,12 @@ export default function Postes() {
       </Titre>
       <Space wrap size={[16, 12]} style={{ marginBottom: 24 }}>
         <Space>
-          <span>Édition</span>
+          <span>{periode.Nom}</span>
           <Select
             style={{ minWidth: 200 }}
             value={editionId}
             onChange={setChoix}
-            placeholder="Choisir une édition"
+            placeholder={`Choisir ${periode.une}`}
             options={(editions?.editions ?? []).map(e => ({
               value: e.id,
               label: e.nom,
@@ -275,7 +277,7 @@ export default function Postes() {
       </Space>
 
       {editionId === undefined ? (
-        <Empty description="Créez d’abord une édition." />
+        <Empty description={`Créez d’abord ${periode.une}.`} />
       ) : loading && data === undefined ? (
         <Skeleton active />
       ) : (
@@ -376,9 +378,7 @@ export default function Postes() {
                       title={
                         <Space wrap size={8}>
                           <span>{perimetre.nom}</span>
-                          <Tag>
-                            {perimetre.type === 'SPORT' ? 'Sport' : 'Pôle'}
-                          </Tag>
+                          <Tag>{libelleGroupe(perimetre.groupe)}</Tag>
                         </Space>
                       }
                       extra={

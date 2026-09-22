@@ -68,6 +68,26 @@ const EnvSchema = z
     // Adresse ou URL de l'hébergeur, citée quand une limite d'organisation est
     // atteinte (ADR 0008). Absente en auto-hébergement : le message renvoie vers un admin.
     CONTACT_HEBERGEUR: optionnelle,
+    // Administration de l'installation (ADR 0008) : jeton d'un hébergeur pour créer,
+    // suspendre, limiter et exporter les organisations, sans accès aux données.
+    // Absent, l'API d'administration est fermée ; seuls les scripts l'exercent.
+    JETON_ADMINISTRATION: optionnelle.refine(
+      s => s === undefined || s.length >= 32,
+      'JETON_ADMINISTRATION : 32 caractères au moins'
+    ),
+    // Dossier du serveur où s'écrivent les exports d'organisation.
+    EXPORTS_DIR: optionnelle,
+    // Code source de la version exécutée, lié depuis l'espace organisateur (AGPL,
+    // article 13). Un hébergeur qui modifie Relaytour y indique son propre dépôt.
+    CODE_SOURCE_URL: z.preprocess(
+      v => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+      z
+        .string()
+        .trim()
+        .url()
+        .regex(/^https:\/\//, 'CODE_SOURCE_URL : adresse https attendue')
+        .default('https://github.com/relaytour/relaytour')
+    ),
   })
   .superRefine((v, ctx) => {
     if (

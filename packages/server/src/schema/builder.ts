@@ -3,7 +3,11 @@ import ComplexityPlugin from '@pothos/plugin-complexity'
 import PrismaPlugin from '@pothos/plugin-prisma'
 import ScopeAuthPlugin from '@pothos/plugin-scope-auth'
 import { getDatamodel, prisma, type PrismaTypes } from '@relaytour/database'
-import { DateResolver, DateTimeResolver } from 'graphql-scalars'
+import {
+  DateResolver,
+  DateTimeResolver,
+  JSONObjectResolver,
+} from 'graphql-scalars'
 
 import type { AppContext } from '../context.ts'
 import {
@@ -18,12 +22,18 @@ export const builder = new SchemaBuilder<{
   Scalars: {
     Date: { Input: Date; Output: Date }
     DateTime: { Input: Date; Output: Date }
+    JSONObject: {
+      Input: Record<string, unknown>
+      Output: Record<string, unknown>
+    }
   }
   DefaultFieldNullability: false
   AuthScopes: {
+    authentifie: boolean
     connecte: boolean
     admin: boolean
     ecriture: boolean
+    administration: boolean
   }
 }>({
   plugins: [ScopeAuthPlugin, ComplexityPlugin, PrismaPlugin],
@@ -37,12 +47,16 @@ export const builder = new SchemaBuilder<{
     // rôle ADMIN dans cette organisation ; ecriture, une organisation qui n'est pas
     // en lecture seule. Le type Mutation exige ecriture pour chacun de ses champs.
     authScopes: ctx => ({
+      // Une personne connectée, avec ou sans organisation active : elle peut choisir
+      // l'organisation où elle travaille.
+      authentifie: ctx.personne !== null,
       connecte: ctx.personne !== null && ctx.organisation !== null,
       admin:
         ctx.personne !== null &&
         ctx.organisation !== null &&
         ctx.organisation.role === 'ADMIN',
       ecriture: ctx.organisation?.statut !== 'LECTURE_SEULE',
+      administration: ctx.administration,
     }),
     unauthorizedError: (_parent, ctx, info) =>
       info.parentType.name === 'Mutation' &&
@@ -66,6 +80,8 @@ export const builder = new SchemaBuilder<{
 
 builder.addScalarType('Date', DateResolver, {})
 builder.addScalarType('DateTime', DateTimeResolver, {})
+// Un thème déclaré : un objet que le serveur valide avec son schéma zod.
+builder.addScalarType('JSONObject', JSONObjectResolver, {})
 
 builder.queryType({})
 builder.mutationType({ authScopes: { ecriture: true } })

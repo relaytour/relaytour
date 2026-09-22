@@ -5,6 +5,54 @@
   "version": "0.3.0",
   "notes": [
     {
+      "id": "2026-09-22-serveur-une-table-prouve-les-refus-entre-organisations",
+      "date": "2026-09-22",
+      "type": "securite",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Une table prouve les refus entre organisations",
+        "texte": "Chaque requête et chaque mutation qui reçoit un identifiant est éprouvée avec les identifiants d'une autre organisation : elle refuse, et aucune donnée ne change. Un garde-fou exige qu'une opération nouvelle entre dans la table.",
+        "migration": null
+      }
+    },
+    {
+      "id": "2026-09-22-serveur-un-hebergeur-administre-les-organisations-sans-acces-aux-donnees",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Un hébergeur administre les organisations sans accès à leurs données",
+        "texte": "Un script et une API à jeton créent une organisation et sa première activité, invitent son premier admin, changent son statut ou ses limites et écrivent son export complet sur le serveur. Le jeton ne donne accès à aucune donnée d'une organisation, et l'export ne transite jamais par l'API.",
+        "migration": null
+      }
+    },
+    {
+      "id": "2026-09-22-serveur-un-depot-d-organisation-decrit-plusieurs-activites",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Un dépôt d'organisation décrit plusieurs activités",
+        "texte": "Un dépôt d'organisation peut décrire plusieurs activités dans un dossier activites/, chacune avec sa nature, ses groupes de périmètres, ses fiches et ses tâches types. La disposition plate reste valide pour une seule activité. Un périmètre déclare son groupe ; le type SPORT ou POLE reste accepté.",
+        "migration": null
+      }
+    },
+    {
+      "id": "2026-09-22-serveur-rappels-et-resumes-suivent-chaque-organisation",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Les rappels et les résumés suivent chaque organisation",
+        "texte": "Chaque organisation reçoit ses rappels d'échéance et ses résumés à l'heure de son fuseau. Un mail porte le nom et les couleurs de son organisation. Une personne membre de plusieurs organisations reçoit le résumé de chacune, limité à ses tâches et à ses notifications.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-22-serveur-les-activites-et-les-appartenances-entrent-dans-le-schema",
       "date": "2026-09-22",
       "type": "interne",
@@ -13,6 +61,30 @@
       "fr": {
         "titre": "Les activités et les appartenances entrent dans le schéma",
         "texte": "Une organisation porte désormais une ou plusieurs activités. Chaque période, périmètre et fiche appartient à une activité, et chaque périmètre à un groupe. Une table d'appartenances porte le rôle de chaque compte dans une organisation. L'application utilise encore une seule activité par organisation (ADR 0008, premier chantier).",
+        "migration": null
+      }
+    },
+    {
+      "id": "2026-09-22-serveur-l-application-porte-le-contenu-et-l-identite-des-activites",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Chaque activité a son identité, et l'export reprend tout le contenu",
+        "texte": "Une activité peut avoir son propre logo, ses couleurs, son contact de recrutement et sa page d'équipe. Les mails d'une tâche prennent l'identité de son activité. L'export écrit tout le contenu de l'organisation, et un import ne remplace plus une modification faite dans l'application.",
+        "migration": null
+      }
+    },
+    {
+      "id": "2026-09-22-serveur-l-api-sert-le-choix-d-organisation-et-d-activite",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "L'API sert le choix d'organisation et d'activité de l'espace organisateur",
+        "texte": "L'API liste les organisations de la personne connectée, suit l'activité désignée par un en-tête et range un périmètre dans un groupe de son activité. Les liens des mails portent l'activité, et le résumé parle des nouvelles de vos périmètres.",
         "migration": null
       }
     },

@@ -37,6 +37,9 @@ export interface CourrielJobData {
   notificationId?: string
   // Pour `rappels-echeance` : les notifications regroupées dans le mail.
   notificationIds?: string[]
+  // Organisation dont le mail porte le nom et les couleurs (ADR 0008). Sans elle,
+  // l'unique organisation de la personne, sinon celle de l'installation.
+  organisationId?: string
 }
 
 export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {
@@ -50,14 +53,20 @@ export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {
   },
 })
 
-// Les tâches planifiées : rappels d'échéance et résumés, une fois par jour.
-// La planification vit dans le worker, et nulle part ailleurs.
+// Les tâches planifiées : rappels d'échéance et résumés, une fois par jour et par
+// organisation, à l'heure de son fuseau (ADR 0008). `synchro` ajuste chaque heure les
+// planifications aux organisations actives. La planification vit dans le worker, et
+// nulle part ailleurs.
 export const PLANIFICATION_QUEUE = 'planification'
 
-export type TachePlanifiee = 'rappels' | 'resumes'
+export type TachePlanifiee = 'rappels' | 'resumes' | 'synchro'
+
+export interface PlanificationJobData {
+  organisationId?: string
+}
 
 export const planificationQueue = new Queue<
-  Record<string, never>,
+  PlanificationJobData,
   unknown,
   TachePlanifiee
 >(PLANIFICATION_QUEUE, {

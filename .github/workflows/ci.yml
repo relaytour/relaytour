@@ -119,7 +119,7 @@ jobs:
       - name: Garde-fou — chaque commande attendue est dans dist/
         run: |
           DIST=packages/server/dist
-          for nom in server worker creer-admin creer-edition orga-valider orga-importer orga-exporter essai-courriel planification-lancer; do
+          for nom in server worker creer-admin creer-edition creer-organisation exporter-organisation orga-valider orga-importer orga-exporter essai-courriel planification-lancer; do
             [ -f "$DIST/$nom.js" ] || { echo "::error::$DIST/$nom.js absent : ajouter l'entrée dans tsup.config.ts"; exit 1; }
           done
           echo "✔ toutes les commandes sont dans dist/"

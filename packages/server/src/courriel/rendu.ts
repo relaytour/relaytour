@@ -12,9 +12,11 @@ export interface Rendu {
 
 export type Variables = Record<string, string | string[]>
 
-/** Ce que l'organisation apporte à chaque mail : son nom court et ses couleurs. */
+/** Ce que l'organisation apporte à chaque mail : son nom court, son logo et ses couleurs. */
 export interface VariablesOrganisation {
   organisation: string
+  /** Logo PNG en adresse https, ou chaîne vide : l'en-tête affiche alors le nom. */
+  logoUrl: string
   couleurEncre: string
   couleurPrimaire: string
   couleurAccent: string
@@ -61,6 +63,17 @@ export function rendre(
       )
     }
   }
+  if (organisation.logoUrl !== '' && !LIEN_ATTENDU.test(organisation.logoUrl)) {
+    throw new Error(
+      `Gabarit « ${nom} » : le logo doit avoir une adresse https.`
+    )
+  }
+  // La marque de l'en-tête HTML se compose ici, jamais depuis une valeur saisie :
+  // l'adresse du logo et le nom sont échappés.
+  const marque =
+    organisation.logoUrl === ''
+      ? echapperHtml(organisation.organisation)
+      : `<img src="${echapperHtml(organisation.logoUrl)}" alt="${echapperHtml(organisation.organisation)}" height="48" style="display:inline-block;height:48px;max-width:200px;border:0" />`
   const toutes: Variables = { ...organisation, ...variables }
   const poser = (
     source: string,
@@ -68,6 +81,8 @@ export function rendre(
     liste: (v: string[]) => string
   ): string =>
     source.replaceAll(/\{\{(\w+)\}\}/g, (_m, cle: string) => {
+      if (cle === 'marque')
+        return texte === echapperHtml ? marque : organisation.organisation
       const valeur = toutes[cle] ?? ''
       return typeof valeur === 'string' ? texte(valeur) : liste(valeur)
     })

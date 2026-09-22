@@ -9,9 +9,13 @@ import type {
   TypographieTheme,
 } from '@relaytour/tokens'
 
-import { groupeDepuisType } from '../lib/activites.ts'
+import {
+  groupeDepuisType,
+  lireGroupes,
+  typeDepuisGroupe,
+} from '../lib/activites.ts'
 import { validerDates, validerEdition } from '../lib/editions.ts'
-import { accesRefuse } from '../lib/erreurs.ts'
+import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import {
   couleurValide,
   sansDoublon,
@@ -19,11 +23,12 @@ import {
   texteRequis,
 } from '../lib/saisie.ts'
 
-import { exigerPlacePeriode } from '../lib/limites.ts'
+import { exigerPlacePeriode, sousVerrouOrganisation } from '../lib/limites.ts'
 import {
-  configurationOrganisation,
+  configurationPublique,
   type ConfigurationOrganisation,
 } from '../lib/organisation.ts'
+import { marquerContenuModifie } from '../lib/synchronisation.ts'
 
 import { builder } from './builder.ts'
 
@@ -113,6 +118,32 @@ builder.queryFields(t => ({
 
 // ── Administration ───────────────────────────────────────────────────────────
 
+/**
+ * Le groupe d'un périmètre : celui demandé s'il figure parmi les groupes de
+ * l'activité, sinon celui du type d'avant l'ADR 0008.
+ */
+async function groupeDuPerimetre(
+  activiteId: string,
+  groupe: string | null | undefined,
+  type: TypePerimetre | null | undefined
+): Promise<string> {
+  const demande = groupe?.trim() || (type ? groupeDepuisType(type) : undefined)
+  if (demande === undefined) {
+    throw erreurSaisie('Choisissez le groupe du périmètre.')
+  }
+  const activite = await prisma.activite.findUniqueOrThrow({
+    where: { id: activiteId },
+    select: { groupes: true },
+  })
+  const groupes = lireGroupes(activite.groupes)
+  if (!groupes.some(g => g.cle === demande)) {
+    throw erreurSaisie(
+      `L’activité ne déclare pas le groupe « ${demande} » (${groupes.map(g => g.cle).join(', ')}).`
+    )
+  }
+  return demande
+}
+
 builder.mutationFields(t => ({
   creerEdition: t.prismaField({
     type: EditionRef,
@@ -128,14 +159,16 @@ builder.mutationFields(t => ({
       const edition = validerEdition(args)
       const activiteId = await ctx.exigerActivite(args.activiteId)
       const organisationId = ctx.organisation!.id
-      await exigerPlacePeriode(organisationId)
-      return sansDoublon(
-        prisma.edition.create({
-          ...query,
-          data: { ...edition, organisationId, activiteId },
-        }),
-        `Une édition existe déjà pour ${args.annee}.`
-      )
+      return sousVerrouOrganisation(organisationId, async tx => {
+        await exigerPlacePeriode(organisationId, tx)
+        return sansDoublon(
+          tx.edition.create({
+            ...query,
+            data: { ...edition, organisationId, activiteId },
+          }),
+          `Une édition existe déjà pour ${args.annee}.`
+        )
+      })
     },
   }),
 
@@ -152,19 +185,22 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       validerDates(args.debut, args.fin)
       const actuelle = await ctx.exigerEdition(args.id)
-      // Rouvrir une période archivée compte dans la limite des périodes ouvertes.
-      if (actuelle.statut === 'ARCHIVEE' && args.statut !== 'ARCHIVEE') {
-        await exigerPlacePeriode(ctx.organisation!.id)
-      }
-      return prisma.edition.update({
-        ...query,
-        where: { id: String(args.id) },
-        data: {
-          nom: texteRequis(args.nom, 'Le nom'),
-          debut: args.debut,
-          fin: args.fin,
-          statut: args.statut,
-        },
+      const organisationId = ctx.organisation!.id
+      return sousVerrouOrganisation(organisationId, async tx => {
+        // Rouvrir une période archivée compte dans la limite des périodes ouvertes.
+        if (actuelle.statut === 'ARCHIVEE' && args.statut !== 'ARCHIVEE') {
+          await exigerPlacePeriode(organisationId, tx)
+        }
+        return tx.edition.update({
+          ...query,
+          where: { id: String(args.id) },
+          data: {
+            nom: texteRequis(args.nom, 'Le nom'),
+            debut: args.debut,
+            fin: args.fin,
+            statut: args.statut,
+          },
+        })
       })
     },
   }),
@@ -176,27 +212,34 @@ builder.mutationFields(t => ({
       activiteId: t.arg.id(),
       slug: t.arg.string({ required: true }),
       nom: t.arg.string({ required: true }),
-      type: t.arg({ type: TypePerimetreEnum, required: true }),
+      // Le groupe, parmi ceux de l'activité ; à défaut, le type d'avant l'ADR 0008.
+      groupe: t.arg.string(),
+      type: t.arg({ type: TypePerimetreEnum }),
       couleur: t.arg.string(),
       ordre: t.arg.int({ defaultValue: 0 }),
     },
-    resolve: async (query, _root, args, ctx) =>
-      sansDoublon(
+    resolve: async (query, _root, args, ctx) => {
+      const activiteId = await ctx.exigerActivite(args.activiteId)
+      const groupe = await groupeDuPerimetre(activiteId, args.groupe, args.type)
+      const perimetre = await sansDoublon(
         prisma.perimetre.create({
           ...query,
           data: {
             organisationId: ctx.organisation!.id,
-            activiteId: await ctx.exigerActivite(args.activiteId),
+            activiteId,
             slug: slugValide(args.slug),
             nom: texteRequis(args.nom, 'Le nom'),
-            type: args.type,
-            groupe: groupeDepuisType(args.type),
+            type: typeDepuisGroupe(groupe),
+            groupe,
             couleur: couleurValide(args.couleur),
             ordre: args.ordre ?? 0,
           },
         }),
         'Un périmètre utilise déjà cet identifiant.'
-      ),
+      )
+      await marquerContenuModifie(ctx.organisation!.id)
+      return perimetre
+    },
   }),
 
   modifierPerimetre: t.prismaField({
@@ -205,7 +248,8 @@ builder.mutationFields(t => ({
     args: {
       id: t.arg.id({ required: true }),
       nom: t.arg.string({ required: true }),
-      type: t.arg({ type: TypePerimetreEnum, required: true }),
+      groupe: t.arg.string(),
+      type: t.arg({ type: TypePerimetreEnum }),
       couleur: t.arg.string(),
       ordre: t.arg.int({ required: true }),
       archive: t.arg.boolean({ required: true }),
@@ -213,22 +257,28 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       const actuel = await prisma.perimetre.findFirst({
         where: { id: String(args.id), organisationId: ctx.organisation!.id },
-        select: { archivedAt: true },
+        select: { archivedAt: true, activiteId: true, groupe: true },
       })
       if (actuel === null) throw accesRefuse()
-      return prisma.perimetre.update({
+      const groupe =
+        args.groupe || args.type
+          ? await groupeDuPerimetre(actuel.activiteId, args.groupe, args.type)
+          : actuel.groupe
+      const perimetre = await prisma.perimetre.update({
         ...query,
         where: { id: String(args.id) },
         data: {
           nom: texteRequis(args.nom, 'Le nom'),
-          type: args.type,
-          groupe: groupeDepuisType(args.type),
+          type: typeDepuisGroupe(groupe),
+          groupe,
           couleur: couleurValide(args.couleur),
           ordre: args.ordre,
           // La date d'archivage d'origine est conservée.
           archivedAt: args.archive ? (actuel.archivedAt ?? new Date()) : null,
         },
       })
+      await marquerContenuModifie(ctx.organisation!.id)
+      return perimetre
     },
   }),
 }))
@@ -303,7 +353,7 @@ const TypographieThemeRef = builder
     }),
   })
 
-const ThemeRef = builder.objectRef<Theme>('Theme').implement({
+export const ThemeRef = builder.objectRef<Theme>('Theme').implement({
   description:
     'Le thème complet de l’organisation, fusionné avec le thème par défaut de Relaytour.',
   fields: t => ({
@@ -330,6 +380,11 @@ const OrganisationRef = builder
       faviconUrl: t.exposeString('faviconUrl', { nullable: true }),
       pageEquipe: t.exposeString('pageEquipe', { nullable: true }),
       theme: t.field({ type: ThemeRef, resolve: o => o.theme }),
+      codeSource: t.string({
+        description:
+          'Adresse du code source de l’installation, que l’AGPL oblige à proposer aux personnes qui l’utilisent.',
+        resolve: async () => (await import('../env.ts')).env.CODE_SOURCE_URL,
+      }),
     }),
   })
 
@@ -337,8 +392,9 @@ builder.queryField('organisation', t =>
   t.field({
     type: OrganisationRef,
     description:
-      'Nom, sigle et thème de l’organisation active, ou de la première organisation de l’installation sans session. Lisible sans session.',
-    resolve: (_root, _args, ctx) =>
-      configurationOrganisation(ctx.organisation?.id),
+      'Nom, sigle et thème de l’organisation active. Sans session : l’organisation désignée par son slug, sinon l’unique organisation de l’installation, sinon une identité neutre. Lisible sans session.',
+    args: { slug: t.arg.string() },
+    resolve: (_root, { slug }, ctx) =>
+      configurationPublique(ctx.organisation?.id, slug ?? undefined),
   })
 )

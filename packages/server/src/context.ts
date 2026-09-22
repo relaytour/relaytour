@@ -19,6 +19,12 @@ import { accesRefuse, erreurSaisie } from './lib/erreurs.ts'
 /** En-tête HTTP qui désigne l'organisation active, par son slug. */
 export const ENTETE_ORGANISATION = 'x-relaytour-organisation'
 
+/**
+ * En-tête HTTP qui désigne l'activité affichée, par son slug. Une requête qui ne
+ * précise pas d'activité porte sur celle-ci, sinon sur la première activité ouverte.
+ */
+export const ENTETE_ACTIVITE = 'x-relaytour-activite'
+
 export interface PersonneConnectee {
   id: string
   nom: string
@@ -45,6 +51,11 @@ export interface EditionDuContexte {
 
 export interface AppContext {
   ip: string | undefined
+  /**
+   * Requête porteuse du jeton d'administration de l'installation (ADR 0008). Elle n'a
+   * ni personne ni organisation : seuls les champs réservés à l'administration répondent.
+   */
+  administration: boolean
   personne: PersonneConnectee | null
   /** Null sans session, sans appartenance, ou pour une organisation suspendue ou archivée. */
   organisation: OrganisationActive | null
@@ -95,10 +106,13 @@ export function choisirOrganisation(
 export async function buildContext(
   ip: string | undefined,
   userId: string | null,
-  organisationDemandee: string | null = null
+  organisationDemandee: string | null = null,
+  administration = false,
+  activiteDemandee: string | null = null
 ): Promise<AppContext> {
+  // Le jeton d'administration ignore toute session.
   const user =
-    userId === null
+    userId === null || administration
       ? null
       : await prisma.user.findUnique({
           where: { id: userId },
@@ -186,12 +200,24 @@ export async function buildContext(
       if (activite === null) throw accesRefuse()
       return activite.id
     }
-    parDefaut ??= prisma.activite
-      .findFirst({
-        where: { organisationId: organisation.id, archivedAt: null },
-        orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
-        select: { id: true },
-      })
+    // L'activité affichée par l'espace organisateur, sinon la première ouverte.
+    parDefaut ??= (
+      activiteDemandee === null
+        ? Promise.resolve(null)
+        : prisma.activite.findFirst({
+            where: { organisationId: organisation.id, slug: activiteDemandee },
+            select: { id: true },
+          })
+    )
+      .then(
+        demandee =>
+          demandee ??
+          prisma.activite.findFirst({
+            where: { organisationId: organisation.id, archivedAt: null },
+            orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+            select: { id: true },
+          })
+      )
       .then(a => a?.id ?? null)
     const id = await parDefaut
     if (id === null)
@@ -218,6 +244,7 @@ export async function buildContext(
 
   return {
     ip,
+    administration,
     personne,
     organisation,
     perimetresAffectes,

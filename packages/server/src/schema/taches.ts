@@ -3,7 +3,7 @@ import { GraphQLError } from 'graphql'
 
 import type { AppContext } from '../context.ts'
 import {
-  aujourdhuiParis,
+  aujourdhui,
   estEnRetard,
   exigerEcriture,
   exigerLecture,
@@ -31,7 +31,14 @@ export const TacheRef = builder.prismaObject('Tache', {
     description: t.exposeString('description', { nullable: true }),
     echeance: t.expose('echeance', { type: 'Date', nullable: true }),
     statut: t.expose('statut', { type: StatutTacheEnum }),
-    enRetard: t.boolean({ resolve: tache => estEnRetard(tache) }),
+    // Le retard se juge au jour du fuseau de l'organisation.
+    enRetard: t.boolean({
+      resolve: (tache, _args, ctx) =>
+        estEnRetard(
+          tache,
+          aujourdhui(new Date(), ctx.organisation?.fuseauHoraire)
+        ),
+    }),
     termineeLe: t.expose('termineeLe', { type: 'DateTime', nullable: true }),
     creeLe: t.expose('createdAt', { type: 'DateTime' }),
     modifieeLe: t.expose('updatedAt', { type: 'DateTime' }),
@@ -100,7 +107,10 @@ const AvancementRef = builder
     }),
   })
 
-async function calculerAvancement(where: Prisma.TacheWhereInput) {
+async function calculerAvancement(
+  where: Prisma.TacheWhereInput,
+  fuseau: string | undefined
+) {
   const taches = await prisma.tache.findMany({
     where,
     select: {
@@ -110,7 +120,7 @@ async function calculerAvancement(where: Prisma.TacheWhereInput) {
       _count: { select: { assignations: true } },
     },
   })
-  const aujourdhui = aujourdhuiParis()
+  const jour = aujourdhui(new Date(), fuseau)
   const parPerimetre = new Map<string, ReturnType<typeof avancementVide>>()
   for (const tache of taches) {
     const a = parPerimetre.get(tache.perimetreId) ?? avancementVide()
@@ -119,7 +129,7 @@ async function calculerAvancement(where: Prisma.TacheWhereInput) {
     if (tache.statut === 'EN_COURS') a.enCours += 1
     if (tache.statut === 'FAITE') a.faites += 1
     if (tache.statut === 'ABANDONNEE') a.abandonnees += 1
-    if (estEnRetard(tache, aujourdhui)) a.enRetard += 1
+    if (estEnRetard(tache, jour)) a.enRetard += 1
     const ouverte = tache.statut === 'A_FAIRE' || tache.statut === 'EN_COURS'
     if (ouverte && tache._count.assignations === 0) a.sansPersonne += 1
     parPerimetre.set(tache.perimetreId, a)
@@ -208,10 +218,10 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     resolve: async (perimetre, { editionId }, ctx) => {
       await exigerLecture(ctx, perimetre.id)
       const edition = await ctx.exigerEdition(editionId)
-      const resultat = await calculerAvancement({
-        perimetreId: perimetre.id,
-        editionId: edition.id,
-      })
+      const resultat = await calculerAvancement(
+        { perimetreId: perimetre.id, editionId: edition.id },
+        ctx.organisation?.fuseauHoraire
+      )
       return resultat.get(perimetre.id) ?? avancementVide()
     },
   }),
@@ -350,7 +360,10 @@ builder.queryFields(t => ({
           select: { id: true },
           orderBy: [{ type: 'asc' }, { ordre: 'asc' }, { nom: 'asc' }],
         }),
-        calculerAvancement({ editionId: edition.id }),
+        calculerAvancement(
+          { editionId: edition.id },
+          ctx.organisation?.fuseauHoraire
+        ),
       ])
       return perimetres.map(p => ({
         perimetreId: p.id,
