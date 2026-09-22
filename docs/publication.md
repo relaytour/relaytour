@@ -20,6 +20,6 @@ Ce document liste ce qui précède l'ouverture publique de `relaytour/relaytour`
 
 ## Après l'ouverture, toujours
 
-- L'historique de `main` ne se réécrit plus. Les changements arrivent par PR vers `develop`.
+- L'historique de `main` et de `develop` ne se réécrit plus. Les changements arrivent par PR vers `develop`, fusionnées en squash ; `main` avance jusqu'à `develop` à chaque version (CONTRIBUTING.md, « Proposer une modification »).
 - Aucune donnée personnelle, aucun export, aucun secret, aucun contenu d'organisation n'entre dans le dépôt (CONTRIBUTING.md, invariant 2).
 - Un changement demandé par un hébergeur entre sous une forme générique (ADR 0007).

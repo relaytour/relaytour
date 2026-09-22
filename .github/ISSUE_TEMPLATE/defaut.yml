@@ -1,0 +1,51 @@
+name: Signaler un défaut
+description: Un comportement de Relaytour ne correspond pas à ce qui est attendu.
+title: 'Défaut : '
+labels: ['défaut']
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Merci de votre signalement. N'indiquez ni nom, ni adresse, ni contenu réel
+        de votre organisation : décrivez le défaut avec des exemples fictifs.
+  - type: textarea
+    id: constat
+    attributes:
+      label: Ce qui se passe
+      description: Décrivez le comportement observé.
+    validations:
+      required: true
+  - type: textarea
+    id: attendu
+    attributes:
+      label: Ce qui était attendu
+    validations:
+      required: true
+  - type: textarea
+    id: etapes
+    attributes:
+      label: Étapes pour reproduire
+      placeholder: |
+        1. Ouvrir le rétroplanning
+        2. Filtrer sur « Mes périmètres »
+        3. …
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: La version de l'image ou le commit utilisé, si vous le connaissez.
+  - type: dropdown
+    id: partie
+    attributes:
+      label: Partie concernée
+      options:
+        - Espace organisateur
+        - Administration
+        - Mails
+        - Installation et exploitation
+        - Import du contenu d'une organisation
+        - Autre
+    validations:
+      required: true

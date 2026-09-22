@@ -104,10 +104,46 @@ Un seul mot par notion.
 | admin | Membre du bureau qui voit l'avancement global et gère les affectations. |
 | bénévole | Personne qui aide pendant le tournoi sans être référent·e. |
 
+## Proposer une modification
+
+Relaytour accueille les contributions : correctifs, évolutions, documentation, traductions de la documentation. Ouvrez d'abord un ticket pour une évolution importante, afin d'en discuter avant d'écrire le code.
+
+1. Travaillez dans un fork ou, pour les personnes mainteneuses, dans une branche du dépôt. Nommez la branche `type/sujet`, par exemple `fix/recherche-sans-edition` ou `feat/export-calendrier`.
+2. Partez de `develop` et visez `develop`. `main` n'avance qu'à la publication d'une version.
+3. Donnez à la PR un titre au format des commits conventionnels, en français : `feat(orga): …`, `fix(server): …`, `docs: …`. Ce titre devient le message du commit fusionné.
+4. Traitez un seul sujet par PR. Une PR courte se relit et se fusionne plus vite.
+5. Remplissez le modèle de PR. Il rappelle les vérifications et les règles d'écriture.
+
+### Ce que chaque PR apporte
+
+- `yarn check` et `yarn test` passent sur votre poste. Un changement du serveur passe aussi `yarn workspace @relaytour/server test:integration`.
+- Un changement visible porte son fragment de note de version (`yarn versionner noter`), avec une audience parmi `organisateurs`, `interne` et `public`. Lancez ensuite `yarn versionner valider` puis `yarn versionner compiler`.
+- Un changement d'interface joint une capture de l'écran, faite avec le contenu d'exemple (`content/exemple`) et des comptes fictifs.
+- Un changement de contrôle d'accès joint un test qui prouve le refus (invariant 11).
+- Les contrats générés sont à jour (`yarn codegen`, invariant 9).
+- Aucun contenu d'organisation, aucune donnée personnelle, aucun secret (invariants 1 et 2).
+
+### Revue et fusion
+
+- La CI (« Lint, types, tests, build ») doit passer.
+- Tous les fils de discussion doivent être résolus : la règle de `develop` bloque la fusion sinon.
+- Copilot relit chaque PR. Sa revue est consultative : une remarque écartée reçoit une réponse qui explique le choix, puis son fil est résolu.
+- Une personne mainteneuse fusionne en **squash** : une PR donne un commit sur `develop`. Le rebase reste réservé aux PR de mainteneur dont chaque commit est propre et utile seul.
+- `develop` et `main` gardent un historique linéaire. Aucune poussée forcée, aucune suppression de ces branches.
+
+### Publier une version
+
+- Avant une version, une PR vers `develop` commite les journaux : `yarn versionner valider` puis `yarn versionner compiler`.
+- Une personne mainteneuse avance ensuite `main` jusqu'à `develop` en avance rapide, une fois la CI de `develop` au vert :
+  ```bash
+  git push origin develop:main
+  ```
+  Une fusion de PR par GitHub réécrirait les commits en rebase comme en squash, et `main` divergerait de `develop`. Seul le rôle d'administration contourne la règle de PR de `main`.
+- Un tag de version (`serveur-x.y.z`, `orga-x.y.z`) reprend ensuite le champ `version` du `package.json` de chaque cible.
+
 ## Branches et CI
 
-- Tant que le dépôt est privé et que la version minimale n'est pas fixée, le travail se fait sur `main`, et son historique peut être réécrit. L'ouverture publique fige l'historique (`docs/publication.md`). Les PR viendront ensuite : une PR part de sa branche parente réelle et vise `develop`.
-- Avant chaque poussée : `yarn versionner valider` puis `yarn versionner compiler`. Un changement visible porte son fragment de note de version (`yarn versionner noter`), avec une audience parmi `organisateurs`, `interne` et `public`.
+- `develop` est la branche d'intégration. `main` porte la dernière version publiée. L'historique de ces deux branches ne se réécrit pas.
 - Pousser avec `git push origin <branche>`.
 - Un correctif de CI s'ajoute comme étape de `ci.yml`, jamais comme job.
 - Deux arrêts obligatoires : une migration destructive, et tout geste sur les secrets ou la production.
