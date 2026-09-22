@@ -25,5 +25,6 @@ feat(orga): …, fix(server): …, docs: …. Il devient le message du commit fu
 - [ ] Un changement de contrôle d'accès est prouvé par un test de refus.
 - [ ] Les contrats générés sont à jour (`yarn codegen`).
 - [ ] Un changement visible porte son fragment de note de version, validé et compilé.
+- [ ] La PR ne modifie pas le champ `version` des `package.json`, sauf s'il s'agit d'une PR de publication.
 - [ ] Les textes suivent le style neutre et l'écriture inclusive de `CONTRIBUTING.md`.
 - [ ] La PR ne contient aucun contenu d'organisation, aucune donnée personnelle et aucun secret.

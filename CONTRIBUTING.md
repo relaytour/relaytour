@@ -122,6 +122,7 @@ Relaytour accueille les contributions : correctifs, évolutions, documentation, 
 - Un changement de contrôle d'accès joint un test qui prouve le refus (invariant 11).
 - Les contrats générés sont à jour (`yarn codegen`, invariant 9).
 - Aucun contenu d'organisation, aucune donnée personnelle, aucun secret (invariants 1 et 2).
+- Le champ `version` des `package.json` ne change pas : seule la PR de publication le relève (voir « Versions »).
 
 ### Revue et fusion
 
@@ -131,15 +132,43 @@ Relaytour accueille les contributions : correctifs, évolutions, documentation, 
 - Une personne mainteneuse fusionne en **squash** : une PR donne un commit sur `develop`. Le rebase reste réservé aux PR de mainteneur dont chaque commit est propre et utile seul.
 - `develop` et `main` gardent un historique linéaire. Aucune poussée forcée, aucune suppression de ces branches.
 
+## Versions
+
+### Ce qui porte un numéro
+
+- Deux cibles se publient, chacune avec son propre numéro : le serveur (`packages/server/package.json`) et l'espace organisateur (`packages/orga/package.json`).
+- `packages/tokens` et `packages/database` sont internes au dépôt. Leur numéro ne se publie pas.
+- Le journal `notes/notes-de-version.<cible>.json` reprend le numéro de sa cible et les fragments de `notes/fragments/`.
+
+### Numérotation
+
+- Les numéros suivent la forme `x.y.z` du versionnage sémantique.
+- Avant la version 1.0, une fonctionnalité fait monter le deuxième chiffre (0.3.0 devient 0.4.0) et un correctif le troisième (0.4.0 devient 0.4.1).
+- Une rupture (fragment de type `rupture`) fait aussi monter le deuxième chiffre avant la 1.0. Son fragment porte une consigne de migration.
+- Une cible sans changement depuis sa dernière version garde son numéro.
+
+### Une PR ordinaire ne change pas de numéro
+
+Une PR de correctif ou d'évolution apporte seulement son fragment de note. Elle ne modifie jamais le champ `version` d'un `package.json`. Deux PR ouvertes en même temps se disputeraient sinon le même numéro.
+
 ### Publier une version
 
-- Avant une version, une PR vers `develop` commite les journaux : `yarn versionner valider` puis `yarn versionner compiler`.
-- Une personne mainteneuse avance ensuite `main` jusqu'à `develop` en avance rapide, une fois la CI de `develop` au vert :
-  ```bash
-  git push origin develop:main
-  ```
-  Une fusion de PR par GitHub réécrirait les commits en rebase comme en squash, et `main` divergerait de `develop`. Seul le rôle d'administration contourne la règle de PR de `main`.
-- Un tag de version (`serveur-x.y.z`, `orga-x.y.z`) reprend ensuite le champ `version` du `package.json` de chaque cible.
+1. Une PR `chore(version): serveur x.y.z, orga x.y.z` vers `develop` relève le numéro de chaque cible qui a changé. Elle lance `yarn versionner valider` puis `yarn versionner compiler`, et commite les journaux.
+2. Après sa fusion, une personne mainteneuse avance `main` jusqu'à `develop` en avance rapide, une fois la CI de `develop` au vert :
+   ```bash
+   git push origin develop:main
+   ```
+   Une fusion de PR par GitHub réécrirait les commits, en rebase comme en squash, et `main` divergerait de `develop`. Seul le rôle d'administration contourne la règle de PR de `main`.
+3. Elle pose ensuite un tag par cible publiée, sur le commit de `main` :
+   ```bash
+   git tag serveur-x.y.z && git tag orga-x.y.z && git push origin --tags
+   ```
+
+### Ce qui reste à outiller
+
+- Aujourd'hui, chaque poussée sur `main` publie l'image du serveur sous l'empreinte du commit (`ghcr.io/relaytour/relaytour-server:<sha7>`), avec la version `x.y.z-dev.<sha7>` dans ses métadonnées.
+- Trois outils restent à écrire : le rattachement de chaque note à la version qui la publie, une release GitHub rédigée depuis les notes à chaque tag, et une image marquée du numéro de version.
+- En attendant, une installation suit une image par son empreinte de commit, et la release se rédige à la main à partir du journal.
 
 ## Branches et CI
 
