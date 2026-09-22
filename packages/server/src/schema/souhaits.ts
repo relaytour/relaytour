@@ -68,20 +68,29 @@ export const SouhaitRef = builder.prismaObject('Souhait', {
 })
 
 builder.prismaObjectFields(PersonneRef, t => ({
-  souhaits: t.relation('souhaits', {
-    authScopes: { admin: true },
+  // Les souhaits d'une personne, dans les activités que la personne qui lit
+  // administre (ADR 0010).
+  souhaits: t.prismaField({
+    type: [SouhaitRef],
+    authScopes: { gestion: true },
     args: { editionId: t.arg.id() },
-    query: (args, ctx) => ({
-      where: {
-        perimetre: { organisationId: ctx.organisation?.id ?? '' },
-        ...(args.editionId ? { editionId: String(args.editionId) } : {}),
-      },
-      orderBy: [
-        { perimetre: { type: 'asc' } },
-        { perimetre: { ordre: 'asc' } },
-        { perimetre: { nom: 'asc' } },
-      ],
-    }),
+    resolve: async (query, personne, args, ctx) =>
+      prisma.souhait.findMany({
+        ...query,
+        where: {
+          userId: personne.id,
+          perimetre: {
+            organisationId: ctx.organisation?.id ?? '',
+            activiteId: { in: [...(await ctx.activitesAdministrees())] },
+          },
+          ...(args.editionId ? { editionId: String(args.editionId) } : {}),
+        },
+        orderBy: [
+          { perimetre: { type: 'asc' } },
+          { perimetre: { ordre: 'asc' } },
+          { perimetre: { nom: 'asc' } },
+        ],
+      }),
   }),
 }))
 
@@ -90,7 +99,7 @@ builder.mutationFields(t => ({
     type: [SouhaitRef],
     description:
       'Remplace l’ensemble des souhaits d’une personne pour une édition.',
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       personneId: t.arg.id({ required: true }),
       editionId: t.arg.id({ required: true }),
@@ -107,6 +116,7 @@ builder.mutationFields(t => ({
         throw erreurSaisie('Ce compte est introuvable ou archivé.')
       }
       const edition = await exigerEditionOuverte(ctx, args.editionId)
+      await ctx.exigerAdminDe(edition.activiteId)
       const editionId = edition.id
       const perimetreIds = await perimetresSouhaitesValides(
         args.perimetreIds,
@@ -149,7 +159,7 @@ builder.mutationFields(t => ({
   }),
 
   retirerSouhait: t.boolean({
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, { id }, ctx) => {
       const souhait = await prisma.souhait.findFirst({
@@ -157,9 +167,19 @@ builder.mutationFields(t => ({
           id: String(id),
           perimetre: { organisationId: ctx.organisation!.id },
         },
-        select: { id: true, userId: true, editionId: true },
+        select: {
+          id: true,
+          userId: true,
+          editionId: true,
+          perimetre: { select: { activiteId: true } },
+        },
       })
-      if (souhait === null) return false
+      if (
+        souhait === null ||
+        !(await ctx.estAdminDe(souhait.perimetre.activiteId))
+      ) {
+        return false
+      }
       await exigerEditionOuverte(ctx, souhait.editionId)
       const { count } = await prisma.souhait.deleteMany({
         where: { id: souhait.id },

@@ -7,7 +7,7 @@ import {
   slugActiviteValide,
   type GroupePerimetres,
 } from '../lib/activites.ts'
-import { erreurSaisie } from '../lib/erreurs.ts'
+import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { exigerPlaceActivite, sousVerrouOrganisation } from '../lib/limites.ts'
 import { sansDoublon, texteRequis } from '../lib/saisie.ts'
 import { marquerContenuModifie } from '../lib/synchronisation.ts'
@@ -15,8 +15,9 @@ import { marquerContenuModifie } from '../lib/synchronisation.ts'
 import { builder } from './builder.ts'
 
 // Activités d'une organisation (ADR 0008) : un événement, une section, une instance.
-// Toutes les personnes connectées lisent les activités de leur organisation ; seuls
-// les admins les créent, les modifient et les archivent.
+// Une personne ne lit que les activités qu'elle voit (ADR 0010) : celles qu'elle
+// administre et celles où elle a été affectée. Un admin de l'organisation crée et
+// archive les activités ; l'admin d'une activité la modifie.
 
 export const NatureActiviteEnum = builder.enumType(NatureActivite, {
   name: 'NatureActivite',
@@ -56,6 +57,10 @@ export const ActiviteRef = builder.prismaObject('Activite', {
     }),
     ordre: t.exposeInt('ordre'),
     archive: t.boolean({ resolve: a => a.archivedAt !== null }),
+    // Vrai quand la personne connectée administre l'activité (ADR 0010).
+    estAdministree: t.boolean({
+      resolve: (a, _args, ctx) => ctx.estAdminDe(a.id),
+    }),
   }),
 })
 
@@ -76,11 +81,12 @@ builder.queryFields(t => ({
     type: [ActiviteRef],
     authScopes: { connecte: true },
     args: { inclureArchives: t.arg.boolean({ defaultValue: false }) },
-    resolve: (query, _root, { inclureArchives }, ctx) =>
+    resolve: async (query, _root, { inclureArchives }, ctx) =>
       prisma.activite.findMany({
         ...query,
         where: {
           organisationId: ctx.organisation!.id,
+          id: { in: [...(await ctx.activitesVisibles())] },
           ...(inclureArchives ? {} : { archivedAt: null }),
         },
         orderBy: [{ ordre: 'asc' }, { nom: 'asc' }],
@@ -127,7 +133,7 @@ builder.mutationFields(t => ({
 
   modifierActivite: t.prismaField({
     type: ActiviteRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       id: t.arg.id({ required: true }),
       nom: t.arg.string({ required: true }),
@@ -142,6 +148,16 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       const organisationId = ctx.organisation!.id
       const id = await ctx.exigerActivite(args.id)
+      await ctx.exigerAdminDe(id)
+      // Archiver ou rouvrir une activité touche aux limites de l'organisation :
+      // seul un admin de l'organisation le fait.
+      if (
+        args.archive !== null &&
+        args.archive !== undefined &&
+        !ctx.personne!.estAdmin
+      ) {
+        throw accesRefuse()
+      }
       const groupes = groupesValides(args.groupes)
       // Un groupe encore porté par un périmètre ne disparaît pas.
       const utilises = await prisma.perimetre.findMany({

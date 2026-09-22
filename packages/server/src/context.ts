@@ -29,7 +29,10 @@ export interface PersonneConnectee {
   id: string
   nom: string
   email: string
-  /** Rôle ADMIN dans l'organisation active. Faux sans organisation active. */
+  /**
+   * Rôle ADMIN dans l'organisation active : admin de toutes ses activités. Faux sans
+   * organisation active. L'admin d'une seule activité se lit par `estAdminDe`.
+   */
   estAdmin: boolean
 }
 
@@ -64,11 +67,29 @@ export interface AppContext {
   /** Identifiants des périmètres de l'organisation où la personne a été affectée, toutes éditions confondues. */
   perimetresConnus: () => Promise<Set<string>>
   /**
-   * L'activité demandée si elle appartient à l'organisation active, sinon un refus.
-   * Sans identifiant, la première activité non archivée de l'organisation.
+   * Activités que la personne administre (ADR 0010) : toutes celles de
+   * l'organisation pour un admin de l'organisation, celles où elle est nommée admin
+   * sinon.
+   */
+  activitesAdministrees: () => Promise<Set<string>>
+  /**
+   * Activités que la personne voit : celles qu'elle administre, et celles où elle a
+   * été affectée à un périmètre, toutes périodes confondues. Une activité hors de
+   * cette liste n'existe pas pour elle : le serveur la refuse comme une activité
+   * d'une autre organisation.
+   */
+  activitesVisibles: () => Promise<Set<string>>
+  /** Vrai pour un admin de l'organisation, ou un admin de cette activité. */
+  estAdminDe: (activiteId: string) => Promise<boolean>
+  /** Refuse la requête si la personne n'administre pas cette activité. */
+  exigerAdminDe: (activiteId: string) => Promise<void>
+  /**
+   * L'activité demandée si la personne la voit, sinon un refus. Sans identifiant,
+   * l'activité de l'en-tête si elle est visible, sinon la première activité visible
+   * et ouverte.
    */
   exigerActivite: (activiteId?: string | number | null) => Promise<string>
-  /** L'édition si elle appartient à l'organisation active, sinon un refus. */
+  /** L'édition si elle appartient à une activité visible, sinon un refus. */
   exigerEdition: (editionId: string | number) => Promise<EditionDuContexte>
 }
 
@@ -189,23 +210,82 @@ export async function buildContext(
     return connus
   }
 
+  let administrees: Promise<Set<string>> | undefined
+  const activitesAdministrees = () => {
+    if (personne === null || organisation === null)
+      return Promise.resolve(new Set<string>())
+    administrees ??= (
+      personne.estAdmin
+        ? prisma.activite
+            .findMany({
+              where: { organisationId: organisation.id },
+              select: { id: true },
+            })
+            .then(lignes => lignes.map(l => l.id))
+        : prisma.adminActivite
+            .findMany({
+              where: {
+                userId: personne.id,
+                organisationId: organisation.id,
+                activite: { organisationId: organisation.id },
+              },
+              select: { activiteId: true },
+            })
+            .then(lignes => lignes.map(l => l.activiteId))
+    ).then(ids => new Set(ids))
+    return administrees
+  }
+
+  let visibles: Promise<Set<string>> | undefined
+  const activitesVisibles = () => {
+    if (personne === null || organisation === null)
+      return Promise.resolve(new Set<string>())
+    visibles ??= Promise.all([
+      activitesAdministrees(),
+      personne.estAdmin
+        ? Promise.resolve([])
+        : prisma.perimetre.findMany({
+            where: {
+              organisationId: organisation.id,
+              affectations: { some: { userId: personne.id } },
+            },
+            select: { activiteId: true },
+            distinct: ['activiteId'],
+          }),
+    ]).then(
+      ([admin, affectees]) =>
+        new Set([...admin, ...affectees.map(p => p.activiteId)])
+    )
+    return visibles
+  }
+
+  const estAdminDe = async (activiteId: string) =>
+    (await activitesAdministrees()).has(activiteId)
+
+  const exigerAdminDe = async (activiteId: string) => {
+    if (!(await estAdminDe(activiteId))) throw accesRefuse()
+  }
+
   let parDefaut: Promise<string | null> | undefined
   const exigerActivite = async (activiteId?: string | number | null) => {
     if (organisation === null) throw accesRefuse()
+    const visiblesIci = await activitesVisibles()
     if (activiteId !== undefined && activiteId !== null && activiteId !== '') {
-      const activite = await prisma.activite.findFirst({
-        where: { id: String(activiteId), organisationId: organisation.id },
-        select: { id: true },
-      })
-      if (activite === null) throw accesRefuse()
-      return activite.id
+      // Une activité invisible vaut une activité d'une autre organisation.
+      if (!visiblesIci.has(String(activiteId))) throw accesRefuse()
+      return String(activiteId)
     }
-    // L'activité affichée par l'espace organisateur, sinon la première ouverte.
+    // L'activité affichée par l'espace organisateur si elle est visible, sinon la
+    // première activité visible et ouverte.
     parDefaut ??= (
       activiteDemandee === null
         ? Promise.resolve(null)
         : prisma.activite.findFirst({
-            where: { organisationId: organisation.id, slug: activiteDemandee },
+            where: {
+              organisationId: organisation.id,
+              slug: activiteDemandee,
+              id: { in: [...visiblesIci] },
+            },
             select: { id: true },
           })
     )
@@ -213,15 +293,22 @@ export async function buildContext(
         demandee =>
           demandee ??
           prisma.activite.findFirst({
-            where: { organisationId: organisation.id, archivedAt: null },
+            where: {
+              organisationId: organisation.id,
+              archivedAt: null,
+              id: { in: [...visiblesIci] },
+            },
             orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
             select: { id: true },
           })
       )
       .then(a => a?.id ?? null)
     const id = await parDefaut
+    // Sans aucune activité visible, la requête est refusée comme une requête
+    // interdite : elle ne dit rien des activités qui existent.
+    if (visiblesIci.size === 0) throw accesRefuse()
     if (id === null)
-      throw erreurSaisie('Cette organisation n’a aucune activité.')
+      throw erreurSaisie('Aucune activité ouverte ne vous est accessible.')
     return id
   }
 
@@ -239,6 +326,9 @@ export async function buildContext(
     }
     const edition = await resultat
     if (edition === null) throw accesRefuse()
+    // Une édition d'une activité invisible vaut une édition inconnue.
+    if (!(await activitesVisibles()).has(edition.activiteId))
+      throw accesRefuse()
     return edition
   }
 
@@ -249,6 +339,10 @@ export async function buildContext(
     organisation,
     perimetresAffectes,
     perimetresConnus,
+    activitesAdministrees,
+    activitesVisibles,
+    estAdminDe,
+    exigerAdminDe,
     exigerActivite,
     exigerEdition,
   }

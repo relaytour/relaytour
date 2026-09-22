@@ -64,6 +64,7 @@ model Organisation {
   preferences     PreferenceNotification[]
   droitsRedaction DroitRedaction[]
   medias          Media[]
+  adminsActivite  AdminActivite[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -107,6 +108,26 @@ model Appartenance {
   @@index([organisationId])
 }
 
+// Admin d'une activité (ADR 0010) : les droits d'un admin, limités à cette
+// activité. Un admin de l'organisation (Appartenance.role ADMIN) les a sur toutes.
+// La personne reste membre de l'organisation.
+model AdminActivite {
+  id             String   @id @default(cuid())
+  userId         String
+  activiteId     String
+  organisationId String
+  nommeParId     String?
+  createdAt      DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, activiteId])
+  @@index([organisationId])
+  @@index([activiteId])
+}
+
 // La nature fixe le libellé de la période : édition, saison ou mandat.
 enum NatureActivite {
   EVENEMENT
@@ -135,10 +156,11 @@ model Activite {
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  organisation Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   editions     Edition[]
   perimetres   Perimetre[]
   fiches       Fiche[]
+  admins       AdminActivite[]
 
   @@unique([organisationId, slug])
 }
@@ -175,6 +197,7 @@ model User {
   journal            Journal[]               @relation("JournalActeur")
   souhaits           Souhait[]
   appartenances      Appartenance[]
+  adminsActivite     AdminActivite[]
 }
 
 model Session {

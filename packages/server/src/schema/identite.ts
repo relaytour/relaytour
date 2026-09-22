@@ -309,9 +309,10 @@ builder.queryFields(t => ({
 // ── Mutations ──────────────────────────────────────────────────────────────
 
 builder.mutationFields(t => ({
+  // Un admin d'activité téléverse le logo de son activité.
   televerserMedia: t.field({
     type: MediaTeleverseRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     description:
       'Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.',
     args: {
@@ -431,7 +432,7 @@ builder.mutationFields(t => ({
 
   modifierIdentiteActivite: t.prismaField({
     type: ActiviteRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     description:
       'Remplace l’identité propre d’une activité. Un champ vide reprend la valeur de l’organisation.',
     args: {
@@ -445,6 +446,7 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       const organisationId = ctx.organisation!.id
       const id = await ctx.exigerActivite(args.id)
+      await ctx.exigerAdminDe(id)
       const logoPng = await exigerMedia(organisationId, args.logoPng, 'png')
       const logoSvg = await exigerMedia(organisationId, args.logoSvg, 'svg')
       if (logoSvg !== undefined && logoPng === undefined) {

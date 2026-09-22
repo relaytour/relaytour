@@ -76,6 +76,10 @@ describe('perimetresLisibles', () => {
     organisation: active,
     perimetresAffectes: () => Promise.resolve(new Set(['natation'])),
     perimetresConnus: () => Promise.resolve(new Set(['natation', 'basket'])),
+    activitesAdministrees: () => Promise.resolve(new Set<string>()),
+    activitesVisibles: () => Promise.resolve(new Set<string>()),
+    estAdminDe: () => Promise.resolve(personne?.estAdmin ?? false),
+    exigerAdminDe: () => Promise.reject(new Error('Non utilisé.')),
     exigerActivite: () => Promise.reject(new Error('Non utilisé.')),
     exigerEdition: () => Promise.reject(new Error('Non utilisé.')),
   })

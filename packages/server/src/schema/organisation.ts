@@ -147,7 +147,7 @@ async function groupeDuPerimetre(
 builder.mutationFields(t => ({
   creerEdition: t.prismaField({
     type: EditionRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       activiteId: t.arg.id(),
       annee: t.arg.int({ required: true }),
@@ -158,6 +158,7 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       const edition = validerEdition(args)
       const activiteId = await ctx.exigerActivite(args.activiteId)
+      await ctx.exigerAdminDe(activiteId)
       const organisationId = ctx.organisation!.id
       return sousVerrouOrganisation(organisationId, async tx => {
         await exigerPlacePeriode(organisationId, tx)
@@ -174,7 +175,7 @@ builder.mutationFields(t => ({
 
   modifierEdition: t.prismaField({
     type: EditionRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       id: t.arg.id({ required: true }),
       nom: t.arg.string({ required: true }),
@@ -185,6 +186,7 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       validerDates(args.debut, args.fin)
       const actuelle = await ctx.exigerEdition(args.id)
+      await ctx.exigerAdminDe(actuelle.activiteId)
       const organisationId = ctx.organisation!.id
       return sousVerrouOrganisation(organisationId, async tx => {
         // Rouvrir une période archivée compte dans la limite des périodes ouvertes.
@@ -207,7 +209,7 @@ builder.mutationFields(t => ({
 
   creerPerimetre: t.prismaField({
     type: PerimetreRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       activiteId: t.arg.id(),
       slug: t.arg.string({ required: true }),
@@ -220,6 +222,7 @@ builder.mutationFields(t => ({
     },
     resolve: async (query, _root, args, ctx) => {
       const activiteId = await ctx.exigerActivite(args.activiteId)
+      await ctx.exigerAdminDe(activiteId)
       const groupe = await groupeDuPerimetre(activiteId, args.groupe, args.type)
       const perimetre = await sansDoublon(
         prisma.perimetre.create({
@@ -244,7 +247,7 @@ builder.mutationFields(t => ({
 
   modifierPerimetre: t.prismaField({
     type: PerimetreRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       id: t.arg.id({ required: true }),
       nom: t.arg.string({ required: true }),
@@ -260,6 +263,7 @@ builder.mutationFields(t => ({
         select: { archivedAt: true, activiteId: true, groupe: true },
       })
       if (actuel === null) throw accesRefuse()
+      await ctx.exigerAdminDe(actuel.activiteId)
       const groupe =
         args.groupe || args.type
           ? await groupeDuPerimetre(actuel.activiteId, args.groupe, args.type)

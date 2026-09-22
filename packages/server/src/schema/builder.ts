@@ -32,6 +32,7 @@ export const builder = new SchemaBuilder<{
     authentifie: boolean
     connecte: boolean
     admin: boolean
+    gestion: boolean
     ecriture: boolean
     administration: boolean
   }
@@ -46,6 +47,8 @@ export const builder = new SchemaBuilder<{
     // ADR 0008 : connecte exige une personne et une organisation active ; admin, le
     // rôle ADMIN dans cette organisation ; ecriture, une organisation qui n'est pas
     // en lecture seule. Le type Mutation exige ecriture pour chacun de ses champs.
+    // ADR 0010 : gestion ouvre la porte aux admins d'au moins une activité ; chaque
+    // résolveur vérifie ensuite l'activité concernée (ctx.exigerAdminDe).
     authScopes: ctx => ({
       // Une personne connectée, avec ou sans organisation active : elle peut choisir
       // l'organisation où elle travaille.
@@ -55,6 +58,10 @@ export const builder = new SchemaBuilder<{
         ctx.personne !== null &&
         ctx.organisation !== null &&
         ctx.organisation.role === 'ADMIN',
+      gestion: async () =>
+        ctx.personne !== null &&
+        ctx.organisation !== null &&
+        (await ctx.activitesAdministrees()).size > 0,
       ecriture: ctx.organisation?.statut !== 'LECTURE_SEULE',
       administration: ctx.administration,
     }),
