@@ -3,6 +3,8 @@ import { randomUUID } from 'node:crypto'
 import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
+import { exigerMembre } from '../lib/appartenances.ts'
+import { exigerEcriture } from '../lib/droits.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import { adresseValide, sansDoublon, texteRequis } from '../lib/saisie.ts'
@@ -28,14 +30,27 @@ export const PersonneRef = builder.prismaObject('User', {
     id: t.exposeID('id'),
     nom: t.exposeString('name'),
     email: t.exposeString('email', { authScopes: soiOuAdmin }),
-    estAdmin: t.exposeBoolean('isAdmin'),
+    // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global.
+    estAdmin: t.boolean({
+      select: (_args, ctx) => ({
+        appartenances: {
+          where: { organisationId: ctx.organisation?.id ?? '' },
+          select: { role: true },
+        },
+      }),
+      resolve: u => u.appartenances[0]?.role === 'ADMIN',
+    }),
     archive: t.boolean({ resolve: u => u.archivedAt !== null }),
     creeLe: t.expose('createdAt', { type: 'DateTime' }),
     affectations: t.relation('affectations', {
       authScopes: soiOuAdmin,
       args: { editionId: t.arg.id() },
-      query: args => ({
-        where: args.editionId ? { editionId: String(args.editionId) } : {},
+      // Seules les affectations de l'organisation active sont visibles.
+      query: (args, ctx) => ({
+        where: {
+          perimetre: { organisationId: ctx.organisation?.id ?? '' },
+          ...(args.editionId ? { editionId: String(args.editionId) } : {}),
+        },
         orderBy: { createdAt: 'asc' },
       }),
     }),
@@ -66,10 +81,13 @@ builder.queryFields(t => ({
     type: [PersonneRef],
     authScopes: { admin: true },
     args: { inclureArchives: t.arg.boolean({ defaultValue: false }) },
-    resolve: (query, _root, { inclureArchives }) =>
+    resolve: (query, _root, { inclureArchives }, ctx) =>
       prisma.user.findMany({
         ...query,
-        where: inclureArchives ? {} : { archivedAt: null },
+        where: {
+          appartenances: { some: { organisationId: ctx.organisation!.id } },
+          ...(inclureArchives ? {} : { archivedAt: null }),
+        },
         orderBy: { name: 'asc' },
       }),
   }),
@@ -78,10 +96,10 @@ builder.queryFields(t => ({
     type: [AffectationRef],
     authScopes: { admin: true },
     args: { editionId: t.arg.id({ required: true }) },
-    resolve: (query, _root, { editionId }) =>
+    resolve: async (query, _root, { editionId }, ctx) =>
       prisma.affectation.findMany({
         ...query,
-        where: { editionId: String(editionId) },
+        where: { editionId: (await ctx.exigerEdition(editionId)).id },
         orderBy: [{ perimetre: { ordre: 'asc' } }, { createdAt: 'asc' }],
       }),
   }),
@@ -108,30 +126,65 @@ builder.mutationFields(t => ({
         if (!args.editionId) {
           throw erreurSaisie('Choisissez l’édition des périmètres souhaités.')
         }
-        const editionId = String(args.editionId)
-        await exigerEditionOuverte(editionId)
+        const edition = await exigerEditionOuverte(ctx, args.editionId)
         const perimetreIds = await perimetresSouhaitesValides(
-          args.perimetresSouhaites ?? []
+          args.perimetresSouhaites ?? [],
+          edition.activiteId
         )
-        souhaits = perimetreIds.map(perimetreId => ({ perimetreId, editionId }))
+        souhaits = perimetreIds.map(perimetreId => ({
+          perimetreId,
+          editionId: edition.id,
+        }))
+      }
+      const organisationId = ctx.organisation!.id
+      const role = args.estAdmin ? 'ADMIN' : 'MEMBRE'
+      // Un compte est global (ADR 0008) : une adresse déjà connue d'une autre
+      // organisation reçoit une appartenance à celle-ci, sans nouveau compte.
+      const existant = await prisma.user.findUnique({
+        where: { email },
+        select: {
+          id: true,
+          archivedAt: true,
+          appartenances: { where: { organisationId }, select: { id: true } },
+        },
+      })
+      if (existant !== null && existant.appartenances.length > 0) {
+        throw erreurSaisie('Un compte existe déjà pour cette adresse.')
+      }
+      if (existant !== null && existant.archivedAt !== null) {
+        throw erreurSaisie('Cette adresse ne peut pas être invitée.')
       }
       const personne = await sansDoublon(
-        prisma.user.create({
-          ...query,
-          data: {
-            id: randomUUID(),
-            email,
-            name,
-            isAdmin: args.estAdmin ?? false,
-            ...(souhaits.length > 0 ? { souhaits: { create: souhaits } } : {}),
-          },
-        }),
+        existant === null
+          ? prisma.user.create({
+              ...query,
+              data: {
+                id: randomUUID(),
+                email,
+                name,
+                appartenances: { create: { organisationId, role } },
+                ...(souhaits.length > 0
+                  ? { souhaits: { create: souhaits } }
+                  : {}),
+              },
+            })
+          : prisma.user.update({
+              ...query,
+              where: { id: existant.id },
+              data: {
+                appartenances: { create: { organisationId, role } },
+                ...(souhaits.length > 0
+                  ? { souhaits: { create: souhaits } }
+                  : {}),
+              },
+            }),
         'Un compte existe déjà pour cette adresse.'
       )
       journal.info(
         {
           evenement: 'personne-invitee',
           userId: personne.id,
+          compteExistant: existant !== null,
           souhaits: souhaits.length,
           par: ctx.personne?.id,
         },
@@ -145,7 +198,8 @@ builder.mutationFields(t => ({
   renvoyerInvitation: t.boolean({
     authScopes: { admin: true },
     args: { id: t.arg.id({ required: true }) },
-    resolve: async (_root, { id }) => {
+    resolve: async (_root, { id }, ctx) => {
+      await exigerMembre(ctx, String(id))
       const personne = await prisma.user.findUnique({
         where: { id: String(id) },
         select: { id: true, archivedAt: true },
@@ -166,17 +220,43 @@ builder.mutationFields(t => ({
       nom: t.arg.string({ required: true }),
       estAdmin: t.arg.boolean({ required: true }),
     },
-    resolve: (query, _root, args, ctx) => {
+    resolve: async (query, _root, args, ctx) => {
+      const id = String(args.id)
       // Un admin ne retire pas ses propres droits : il ne pourrait plus les rétablir.
-      if (String(args.id) === ctx.personne?.id && !args.estAdmin) {
+      if (id === ctx.personne?.id && !args.estAdmin) {
         throw erreurSaisie(
           'Vous ne pouvez pas retirer vos propres droits d’admin.'
         )
       }
+      const membre = await exigerMembre(ctx, id)
+      const nom = texteRequis(args.nom, 'Le nom')
+      const actuel = await prisma.user.findUniqueOrThrow({
+        where: { id },
+        select: { name: true },
+      })
+      // Le nom appartient au compte, commun à toutes ses organisations.
+      if (nom !== actuel.name && membre.autresOrganisations > 0) {
+        throw erreurSaisie(
+          'Ce compte appartient aussi à une autre organisation : seule la personne peut changer son nom.'
+        )
+      }
       return prisma.user.update({
         ...query,
-        where: { id: String(args.id) },
-        data: { name: texteRequis(args.nom, 'Le nom'), isAdmin: args.estAdmin },
+        where: { id },
+        data: {
+          name: nom,
+          appartenances: {
+            update: {
+              where: {
+                userId_organisationId: {
+                  userId: id,
+                  organisationId: ctx.organisation!.id,
+                },
+              },
+              data: { role: args.estAdmin ? 'ADMIN' : 'MEMBRE' },
+            },
+          },
+        },
       })
     },
   }),
@@ -192,6 +272,14 @@ builder.mutationFields(t => ({
       const id = String(args.id)
       if (id === ctx.personne?.id) {
         throw erreurSaisie('Vous ne pouvez pas archiver votre propre compte.')
+      }
+      // L'archivage porte sur le compte, commun à toutes ses organisations : un admin
+      // n'archive pas le compte d'une personne qui appartient aussi à une autre.
+      const membre = await exigerMembre(ctx, id)
+      if (membre.autresOrganisations > 0) {
+        throw erreurSaisie(
+          'Ce compte appartient aussi à une autre organisation : il ne peut pas être archivé depuis la vôtre.'
+        )
       }
       // L'archivage ferme aussitôt toutes les sessions ouvertes du compte.
       const [personne] = await prisma.$transaction([
@@ -224,27 +312,38 @@ builder.mutationFields(t => ({
       perimetreId: t.arg.id({ required: true }),
       editionId: t.arg.id({ required: true }),
     },
-    resolve: (query, _root, args, ctx) =>
-      sansDoublon(
+    resolve: async (query, _root, args, ctx) => {
+      const userId = String(args.personneId)
+      const perimetreId = String(args.perimetreId)
+      const editionId = String(args.editionId)
+      await exigerMembre(ctx, userId)
+      // Même contrôle qu'une écriture : périmètre et édition de la même activité de
+      // l'organisation, édition non archivée.
+      await exigerEcriture(ctx, perimetreId, editionId)
+      return sansDoublon(
         prisma.affectation.create({
           ...query,
           data: {
-            userId: String(args.personneId),
-            perimetreId: String(args.perimetreId),
-            editionId: String(args.editionId),
+            userId,
+            perimetreId,
+            editionId,
             creeParId: ctx.personne?.id ?? null,
           },
         }),
         'Cette personne est déjà affectée à ce périmètre pour cette édition.'
-      ),
+      )
+    },
   }),
 
   retirerAffectation: t.boolean({
     authScopes: { admin: true },
     args: { id: t.arg.id({ required: true }) },
-    resolve: async (_root, { id }) => {
+    resolve: async (_root, { id }, ctx) => {
       const { count } = await prisma.affectation.deleteMany({
-        where: { id: String(id) },
+        where: {
+          id: String(id),
+          perimetre: { organisationId: ctx.organisation!.id },
+        },
       })
       return count === 1
     },

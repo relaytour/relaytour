@@ -1,3 +1,14 @@
+type Activite {
+  archive: Boolean!
+  groupes: [GroupePerimetres!]!
+  id: ID!
+  nature: NatureActivite!
+  nom: String!
+  ordre: Int!
+  sigle: String
+  slug: String!
+}
+
 type Affectation {
   creeLe: DateTime!
   edition: Edition!
@@ -64,6 +75,7 @@ type DroitRedaction {
 }
 
 type Edition {
+  activite: Activite!
   annee: Int!
   debut: Date!
   fin: Date!
@@ -121,6 +133,19 @@ enum FrequenceResume {
   QUOTIDIEN
 }
 
+"""Catégorie de périmètres déclarée par une activité."""
+type GroupePerimetres {
+  cle: String!
+  libelle: String!
+  libellePluriel: String!
+}
+
+input GroupePerimetresInput {
+  cle: String!
+  libelle: String!
+  libellePluriel: String!
+}
+
 """Une tache de couleur floue derrière le verre."""
 type HaloTheme {
   couleur: String!
@@ -138,13 +163,15 @@ type LigneClassement {
 type Mutation {
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
+  archiverActivite(archive: Boolean!, id: ID!): Activite!
   archiverFiche(archive: Boolean!, id: ID!): Fiche!
   archiverPersonne(archive: Boolean!, id: ID!): Personne!
   assignerTache(assigne: Boolean!, id: ID!, personneId: ID): Tache!
   changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!): Tache!
-  creerEdition(annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
-  creerFiche(contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
-  creerPerimetre(couleur: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre!): Perimetre!
+  creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, sigle: String, slug: String!): Activite!
+  creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
+  creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
+  creerPerimetre(activiteId: ID, couleur: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre!): Perimetre!
   creerTache(description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
   definirEffectif(editionId: ID!, effectif: Int!, perimetreId: ID!): Int!
 
@@ -154,6 +181,7 @@ type Mutation {
 
   """Sans identifiants, marque toutes les notifications comme lues."""
   marquerNotificationsLues(ids: [ID!]): Int!
+  modifierActivite(groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String): Activite!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
   modifierFiche(contenu: String!, id: ID!, resume: String, titre: String!): Fiche!
   modifierPerimetre(archive: Boolean!, couleur: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre!): Perimetre!
@@ -165,6 +193,15 @@ type Mutation {
   retirerAffectation(id: ID!): Boolean!
   retirerDroitRedaction(id: ID!): Boolean!
   retirerSouhait(id: ID!): Boolean!
+}
+
+"""
+Fixe le libellé de la période : édition pour un événement, saison pour une section, mandat pour une instance.
+"""
+enum NatureActivite {
+  EVENEMENT
+  MANDAT
+  SAISON
 }
 
 type Notification {
@@ -188,10 +225,12 @@ type Organisation {
 }
 
 type Perimetre {
+  activite: Activite!
   archive: Boolean!
   avancement(editionId: ID!): Avancement!
   couleur: String
   fiches: [Fiche!]!
+  groupe: String!
   id: ID!
   nom: String!
   ordre: Int!
@@ -254,6 +293,7 @@ type PreferencesNotification {
 }
 
 type Query {
+  activites(inclureArchives: Boolean = false): [Activite!]!
   affectations(editionId: ID!): [Affectation!]!
 
   """
@@ -264,12 +304,12 @@ type Query {
   baremeScore: BaremeScore!
   classement(editionId: ID!): [LigneClassement!]!
   droitsRedaction: [DroitRedaction!]!
-  editionCourante: Edition
-  editions: [Edition!]!
+  editionCourante(activiteId: ID): Edition
+  editions(activiteId: ID): [Edition!]!
   fiche(slug: String!): Fiche
-  fiches(inclureArchives: Boolean = false): [Fiche!]!
+  fiches(activiteId: ID, inclureArchives: Boolean = false): [Fiche!]!
   health: String!
-  mesPerimetres: [Perimetre!]!
+  mesPerimetres(activiteId: ID): [Perimetre!]!
   mesPreferencesNotification: PreferencesNotification!
   mesTaches(editionId: ID!): [Tache!]!
   moi: Personne
@@ -277,10 +317,12 @@ type Query {
   nombreNotificationsNonLues: Int!
   notifications(limite: Int = 30, nonLuesSeulement: Boolean = false): [Notification!]!
 
-  """Nom, sigle et thème de l’organisation. Lisible sans session."""
+  """
+  Nom, sigle et thème de l’organisation active, ou de la première organisation de l’installation sans session. Lisible sans session.
+  """
   organisation: Organisation!
-  perimetre(slug: String!): Perimetre
-  perimetres(inclureArchives: Boolean = false): [Perimetre!]!
+  perimetre(activiteId: ID, slug: String!): Perimetre
+  perimetres(activiteId: ID, inclureArchives: Boolean = false): [Perimetre!]!
   personnes(inclureArchives: Boolean = false): [Personne!]!
   peutRedigerFichesCommunes: Boolean!
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!

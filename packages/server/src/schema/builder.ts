@@ -6,7 +6,11 @@ import { getDatamodel, prisma, type PrismaTypes } from '@relaytour/database'
 import { DateResolver, DateTimeResolver } from 'graphql-scalars'
 
 import type { AppContext } from '../context.ts'
-import { accesRefuse, requeteTropLourde } from '../lib/erreurs.ts'
+import {
+  accesRefuse,
+  organisationEnLectureSeule,
+  requeteTropLourde,
+} from '../lib/erreurs.ts'
 
 export const builder = new SchemaBuilder<{
   PrismaTypes: PrismaTypes
@@ -19,6 +23,7 @@ export const builder = new SchemaBuilder<{
   AuthScopes: {
     connecte: boolean
     admin: boolean
+    ecriture: boolean
   }
 }>({
   plugins: [ScopeAuthPlugin, ComplexityPlugin, PrismaPlugin],
@@ -28,11 +33,22 @@ export const builder = new SchemaBuilder<{
     dmmf: getDatamodel(),
   },
   scopeAuth: {
+    // ADR 0008 : connecte exige une personne et une organisation active ; admin, le
+    // rôle ADMIN dans cette organisation ; ecriture, une organisation qui n'est pas
+    // en lecture seule. Le type Mutation exige ecriture pour chacun de ses champs.
     authScopes: ctx => ({
-      connecte: ctx.personne !== null,
-      admin: ctx.personne?.estAdmin === true,
+      connecte: ctx.personne !== null && ctx.organisation !== null,
+      admin:
+        ctx.personne !== null &&
+        ctx.organisation !== null &&
+        ctx.organisation.role === 'ADMIN',
+      ecriture: ctx.organisation?.statut !== 'LECTURE_SEULE',
     }),
-    unauthorizedError: () => accesRefuse(),
+    unauthorizedError: (_parent, ctx, info) =>
+      info.parentType.name === 'Mutation' &&
+      ctx.organisation?.statut === 'LECTURE_SEULE'
+        ? organisationEnLectureSeule()
+        : accesRefuse(),
   },
   // Le schéma comporte des cycles (périmètre ↔ tâches, personne → affectations → périmètre).
   // Ces limites bornent le coût d'une requête imbriquée avant tout résolveur.
@@ -52,4 +68,4 @@ builder.addScalarType('Date', DateResolver, {})
 builder.addScalarType('DateTime', DateTimeResolver, {})
 
 builder.queryType({})
-builder.mutationType({})
+builder.mutationType({ authScopes: { ecriture: true } })

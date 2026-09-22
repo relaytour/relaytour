@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import type { AppContext, PersonneConnectee } from '../context.ts'
+import type {
+  AppContext,
+  OrganisationActive,
+  PersonneConnectee,
+} from '../context.ts'
 
 import {
   aujourdhuiParis,
@@ -48,11 +52,24 @@ describe('estEnRetard', () => {
 describe('perimetresLisibles', () => {
   // Le faux contexte connaît deux périmètres même sans session : la règle doit
   // vérifier la session avant de les consulter.
-  const contexte = (personne: PersonneConnectee | null): AppContext => ({
+  const organisation: OrganisationActive = {
+    id: 'o1',
+    slug: 'rencontres',
+    role: 'MEMBRE',
+    statut: 'ACTIVE',
+    fuseauHoraire: 'Europe/Paris',
+  }
+  const contexte = (
+    personne: PersonneConnectee | null,
+    active: OrganisationActive | null = organisation
+  ): AppContext => ({
     ip: undefined,
     personne,
+    organisation: active,
     perimetresAffectes: () => Promise.resolve(new Set(['natation'])),
     perimetresConnus: () => Promise.resolve(new Set(['natation', 'basket'])),
+    exigerActivite: () => Promise.reject(new Error('Non utilisé.')),
+    exigerEdition: () => Promise.reject(new Error('Non utilisé.')),
   })
   const personne = (estAdmin: boolean): PersonneConnectee => ({
     id: 'u1',
@@ -73,9 +90,9 @@ describe('perimetresLisibles', () => {
     expect(await peutLirePerimetre(ctx, 'escalade')).toBe(false)
   })
 
-  it('renvoie null pour un admin, qui lit tous les périmètres', async () => {
-    const ctx = contexte(personne(true))
-    expect(await perimetresLisibles(ctx)).toBeNull()
-    expect(await peutLirePerimetre(ctx, 'escalade')).toBe(true)
+  it('ne renvoie aucun périmètre sans organisation active', async () => {
+    const ctx = contexte(personne(false), null)
+    expect(await perimetresLisibles(ctx)).toEqual([])
+    expect(await peutLirePerimetre(ctx, 'natation')).toBe(false)
   })
 })

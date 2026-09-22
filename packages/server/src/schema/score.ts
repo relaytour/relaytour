@@ -49,7 +49,8 @@ builder.queryFields(t => ({
     authScopes: { connecte: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
-      const scores = await calculerScores(prisma, String(editionId))
+      const edition = await ctx.exigerEdition(editionId)
+      const scores = await calculerScores(prisma, edition.id)
       return (
         scores.get(ctx.personne!.id) ?? {
           userId: ctx.personne!.id,
@@ -74,10 +75,9 @@ builder.queryFields(t => ({
     type: [LigneClassementRef],
     authScopes: { admin: true },
     args: { editionId: t.arg.id({ required: true }) },
-    resolve: async (_root, { editionId }) => {
-      const scores = [
-        ...(await calculerScores(prisma, String(editionId))).values(),
-      ]
+    resolve: async (_root, { editionId }, ctx) => {
+      const edition = await ctx.exigerEdition(editionId)
+      const scores = [...(await calculerScores(prisma, edition.id)).values()]
         .filter(s => s.points > 0)
         .sort((a, b) => b.points - a.points)
       // Les personnes se chargent en une seule requête, pas une par ligne.

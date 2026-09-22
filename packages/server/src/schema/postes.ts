@@ -5,8 +5,9 @@ import {
   type Souhait,
 } from '@relaytour/database'
 
+import type { AppContext } from '../context.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
-import { erreurSaisie } from '../lib/erreurs.ts'
+import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import {
   EFFECTIF_MAX,
@@ -64,18 +65,21 @@ const PostesPerimetreRef = builder
     }),
   })
 
-/** Postes de chaque périmètre non archivé d'une édition, dans l'ordre d'affichage. */
+/**
+ * Postes de chaque périmètre non archivé de l'activité d'une édition, dans l'ordre
+ * d'affichage. L'édition appartient à l'organisation active.
+ */
 async function chargerPostes(
-  editionId: string
+  ctx: AppContext,
+  editionIdBrut: string | number
 ): Promise<{ annee: number; postes: PostesPerimetre[] }> {
-  const edition = await prisma.edition.findUnique({
-    where: { id: editionId },
-    select: { annee: true },
-  })
-  if (edition === null) throw erreurSaisie('Cette édition est introuvable.')
+  const edition = await ctx.exigerEdition(editionIdBrut)
+  const editionId = edition.id
 
   const [perimetres, affectations, effectifs, souhaits] = await Promise.all([
-    prisma.perimetre.findMany({ where: { archivedAt: null } }),
+    prisma.perimetre.findMany({
+      where: { activiteId: edition.activiteId, archivedAt: null },
+    }),
     // Un compte archivé ne tient plus son périmètre : il ne compte pas comme poste pourvu.
     prisma.affectation.findMany({
       where: { editionId, user: { archivedAt: null } },
@@ -120,8 +124,8 @@ builder.queryFields(t => ({
     type: [PostesPerimetreRef],
     authScopes: { admin: true },
     args: { editionId: t.arg.id({ required: true }) },
-    resolve: async (_root, { editionId }) =>
-      (await chargerPostes(String(editionId))).postes,
+    resolve: async (_root, { editionId }, ctx) =>
+      (await chargerPostes(ctx, editionId)).postes,
   }),
 
   appelPostes: t.string({
@@ -130,9 +134,11 @@ builder.queryFields(t => ({
       'Message à diffuser pour trouver des référentes et des référents. Vaut null quand aucun périmètre n’est à pourvoir.',
     authScopes: { admin: true },
     args: { editionId: t.arg.id({ required: true }) },
-    resolve: async (_root, { editionId }) => {
-      const { annee, postes } = await chargerPostes(String(editionId))
-      const configuration = await configurationOrganisation()
+    resolve: async (_root, { editionId }, ctx) => {
+      const { annee, postes } = await chargerPostes(ctx, editionId)
+      const configuration = await configurationOrganisation(
+        ctx.organisation!.id
+      )
       return texteAppel(
         annee,
         postes.filter(p => p.aPourvoir > 0).map(p => p.perimetre),
@@ -165,20 +171,13 @@ builder.mutationFields(t => ({
         )
       }
       const perimetreId = String(args.perimetreId)
-      const editionId = String(args.editionId)
-      const [perimetre, edition] = await Promise.all([
-        prisma.perimetre.findUnique({
-          where: { id: perimetreId },
-          select: { id: true },
-        }),
-        prisma.edition.findUnique({
-          where: { id: editionId },
-          select: { statut: true },
-        }),
-      ])
-      if (perimetre === null || edition === null) {
-        throw erreurSaisie('Ce périmètre ou cette édition est introuvable.')
-      }
+      const edition = await ctx.exigerEdition(args.editionId)
+      const editionId = edition.id
+      const perimetre = await prisma.perimetre.findFirst({
+        where: { id: perimetreId, activiteId: edition.activiteId },
+        select: { id: true },
+      })
+      if (perimetre === null) throw accesRefuse()
       if (edition.statut === 'ARCHIVEE') {
         throw erreurSaisie(
           'Cette édition est archivée : ses effectifs ne se modifient plus.'

@@ -1,10 +1,12 @@
 // Activités d'une organisation (ADR 0008).
-// Premier chantier : le schéma porte les activités, l'application en utilise une
-// seule par organisation. Le chantier « contexte » remplacera `activiteParDefaut()`
-// par l'activité de la requête ; `grep activiteParDefaut` liste alors le travail restant.
+// Les requêtes GraphQL passent par `ctx.exigerActivite()`. `activiteParDefaut()`
+// reste pour les scripts et le worker, jusqu'à leur passage par organisation ;
+// `grep activiteParDefaut` liste le travail restant.
 
 import { prisma, type TypePerimetre } from '@relaytour/database'
+import { erreurSaisie } from './erreurs.ts'
 import { organisationParDefaut } from './organisation.ts'
+import { slugValide, texteRequis } from './saisie.ts'
 
 // Un type plutôt qu'une interface : Prisma exige une valeur JSON indexable.
 export type GroupePerimetres = {
@@ -68,4 +70,51 @@ export async function activiteParDefaut(): Promise<string> {
   })
   idParDefaut = creee.id
   return creee.id
+}
+
+export const GROUPES_MAX = 10
+
+/**
+ * Valide les groupes d'une activité : entre un et dix groupes, une clé de la forme
+ * d'un identifiant, unique dans l'activité, et deux libellés non vides.
+ */
+export function groupesValides(
+  groupes: readonly GroupePerimetres[]
+): GroupePerimetres[] {
+  if (groupes.length === 0 || groupes.length > GROUPES_MAX) {
+    throw erreurSaisie(
+      `Une activité déclare entre 1 et ${GROUPES_MAX} groupes de périmètres.`
+    )
+  }
+  const cles = new Set<string>()
+  return groupes.map(groupe => {
+    const cle = slugValide(groupe.cle)
+    if (cles.has(cle)) {
+      throw erreurSaisie(`Le groupe « ${cle} » est déclaré deux fois.`)
+    }
+    cles.add(cle)
+    return {
+      cle,
+      libelle: texteRequis(groupe.libelle, 'Le libellé du groupe', 60),
+      libellePluriel: texteRequis(
+        groupe.libellePluriel,
+        'Le libellé pluriel du groupe',
+        60
+      ),
+    }
+  })
+}
+
+/** Les groupes portés par la colonne JSON, ou les groupes par défaut s'ils sont illisibles. */
+export function lireGroupes(brut: unknown): GroupePerimetres[] {
+  if (!Array.isArray(brut)) return GROUPES_PAR_DEFAUT
+  const groupes = brut.filter(
+    (g): g is GroupePerimetres =>
+      typeof g === 'object' &&
+      g !== null &&
+      typeof (g as GroupePerimetres).cle === 'string' &&
+      typeof (g as GroupePerimetres).libelle === 'string' &&
+      typeof (g as GroupePerimetres).libellePluriel === 'string'
+  )
+  return groupes.length === 0 ? GROUPES_PAR_DEFAUT : groupes
 }

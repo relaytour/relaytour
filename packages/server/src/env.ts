@@ -65,6 +65,9 @@ const EnvSchema = z
     ORGANISATION_NOM: optionnelle.transform(s => s ?? 'Relaytour'),
     CONTACT_RECRUTEMENT: optionnelle,
     PAGE_EQUIPE: optionnelle,
+    // Adresse ou URL de l'hébergeur, citée quand une limite d'organisation est
+    // atteinte (ADR 0008). Absente en auto-hébergement : le message renvoie vers un admin.
+    CONTACT_HEBERGEUR: optionnelle,
   })
   .superRefine((v, ctx) => {
     if (

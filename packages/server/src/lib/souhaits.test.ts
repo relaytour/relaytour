@@ -28,6 +28,6 @@ describe('identifiantsSouhaites', () => {
 describe('perimetresSouhaitesValides', () => {
   it('renvoie une liste vide sans lire la base', async () => {
     // La configuration des tests unitaires pointe vers une base injoignable.
-    await expect(perimetresSouhaitesValides([])).resolves.toEqual([])
+    await expect(perimetresSouhaitesValides([], 'a1')).resolves.toEqual([])
   })
 })

@@ -23,12 +23,20 @@ if (
   process.exit(1)
 }
 
-await assurerOrganisationParDefaut()
+const organisationId = await assurerOrganisationParDefaut()
 const personne = await prisma.user.upsert({
   where: { email: adresse },
   update: { isAdmin: true, archivedAt: null },
   create: { id: randomUUID(), email: adresse, name: nom.trim(), isAdmin: true },
   select: { id: true },
+})
+// Le rôle d'admin vaut dans une organisation (ADR 0008) : celle de l'installation.
+await prisma.appartenance.upsert({
+  where: {
+    userId_organisationId: { userId: personne.id, organisationId },
+  },
+  update: { role: 'ADMIN' },
+  create: { userId: personne.id, organisationId, role: 'ADMIN' },
 })
 
 await mettreEnFile('invitation', { userId: personne.id })

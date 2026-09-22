@@ -9,8 +9,9 @@ import type {
   TypographieTheme,
 } from '@relaytour/tokens'
 
-import { activiteParDefaut, groupeDepuisType } from '../lib/activites.ts'
+import { groupeDepuisType } from '../lib/activites.ts'
 import { validerDates, validerEdition } from '../lib/editions.ts'
+import { accesRefuse } from '../lib/erreurs.ts'
 import {
   couleurValide,
   sansDoublon,
@@ -18,9 +19,9 @@ import {
   texteRequis,
 } from '../lib/saisie.ts'
 
+import { exigerPlacePeriode } from '../lib/limites.ts'
 import {
   configurationOrganisation,
-  organisationParDefaut,
   type ConfigurationOrganisation,
 } from '../lib/organisation.ts'
 
@@ -58,12 +59,20 @@ export const PerimetreRef = builder.prismaObject('Perimetre', {
 
 // ── Lecture ──────────────────────────────────────────────────────────────────
 
+// Sans `activiteId`, les requêtes portent sur la première activité non archivée de
+// l'organisation active (ADR 0008).
+
 builder.queryFields(t => ({
   editions: t.prismaField({
     type: [EditionRef],
     authScopes: { connecte: true },
-    resolve: query =>
-      prisma.edition.findMany({ ...query, orderBy: { annee: 'desc' } }),
+    args: { activiteId: t.arg.id() },
+    resolve: async (query, _root, { activiteId }, ctx) =>
+      prisma.edition.findMany({
+        ...query,
+        where: { activiteId: await ctx.exigerActivite(activiteId) },
+        orderBy: { annee: 'desc' },
+      }),
   }),
 
   // L'édition en cours de préparation ou de déroulement la plus récente.
@@ -71,10 +80,14 @@ builder.queryFields(t => ({
     type: EditionRef,
     nullable: true,
     authScopes: { connecte: true },
-    resolve: query =>
+    args: { activiteId: t.arg.id() },
+    resolve: async (query, _root, { activiteId }, ctx) =>
       prisma.edition.findFirst({
         ...query,
-        where: { statut: { not: 'ARCHIVEE' } },
+        where: {
+          activiteId: await ctx.exigerActivite(activiteId),
+          statut: { not: 'ARCHIVEE' },
+        },
         orderBy: { annee: 'desc' },
       }),
   }),
@@ -82,11 +95,17 @@ builder.queryFields(t => ({
   perimetres: t.prismaField({
     type: [PerimetreRef],
     authScopes: { connecte: true },
-    args: { inclureArchives: t.arg.boolean({ defaultValue: false }) },
-    resolve: (query, _root, { inclureArchives }) =>
+    args: {
+      activiteId: t.arg.id(),
+      inclureArchives: t.arg.boolean({ defaultValue: false }),
+    },
+    resolve: async (query, _root, { activiteId, inclureArchives }, ctx) =>
       prisma.perimetre.findMany({
         ...query,
-        where: inclureArchives ? {} : { archivedAt: null },
+        where: {
+          activiteId: await ctx.exigerActivite(activiteId),
+          ...(inclureArchives ? {} : { archivedAt: null }),
+        },
         orderBy: [{ type: 'asc' }, { ordre: 'asc' }, { nom: 'asc' }],
       }),
   }),
@@ -99,21 +118,21 @@ builder.mutationFields(t => ({
     type: EditionRef,
     authScopes: { admin: true },
     args: {
+      activiteId: t.arg.id(),
       annee: t.arg.int({ required: true }),
       nom: t.arg.string({ required: true }),
       debut: t.arg({ type: 'Date', required: true }),
       fin: t.arg({ type: 'Date', required: true }),
     },
-    resolve: async (query, _root, args) => {
+    resolve: async (query, _root, args, ctx) => {
       const edition = validerEdition(args)
+      const activiteId = await ctx.exigerActivite(args.activiteId)
+      const organisationId = ctx.organisation!.id
+      await exigerPlacePeriode(organisationId)
       return sansDoublon(
         prisma.edition.create({
           ...query,
-          data: {
-            ...edition,
-            organisationId: await organisationParDefaut(),
-            activiteId: await activiteParDefaut(),
-          },
+          data: { ...edition, organisationId, activiteId },
         }),
         `Une édition existe déjà pour ${args.annee}.`
       )
@@ -130,8 +149,13 @@ builder.mutationFields(t => ({
       fin: t.arg({ type: 'Date', required: true }),
       statut: t.arg({ type: StatutEditionEnum, required: true }),
     },
-    resolve: (query, _root, args) => {
+    resolve: async (query, _root, args, ctx) => {
       validerDates(args.debut, args.fin)
+      const actuelle = await ctx.exigerEdition(args.id)
+      // Rouvrir une période archivée compte dans la limite des périodes ouvertes.
+      if (actuelle.statut === 'ARCHIVEE' && args.statut !== 'ARCHIVEE') {
+        await exigerPlacePeriode(ctx.organisation!.id)
+      }
       return prisma.edition.update({
         ...query,
         where: { id: String(args.id) },
@@ -149,19 +173,20 @@ builder.mutationFields(t => ({
     type: PerimetreRef,
     authScopes: { admin: true },
     args: {
+      activiteId: t.arg.id(),
       slug: t.arg.string({ required: true }),
       nom: t.arg.string({ required: true }),
       type: t.arg({ type: TypePerimetreEnum, required: true }),
       couleur: t.arg.string(),
       ordre: t.arg.int({ defaultValue: 0 }),
     },
-    resolve: async (query, _root, args) =>
+    resolve: async (query, _root, args, ctx) =>
       sansDoublon(
         prisma.perimetre.create({
           ...query,
           data: {
-            organisationId: await organisationParDefaut(),
-            activiteId: await activiteParDefaut(),
+            organisationId: ctx.organisation!.id,
+            activiteId: await ctx.exigerActivite(args.activiteId),
             slug: slugValide(args.slug),
             nom: texteRequis(args.nom, 'Le nom'),
             type: args.type,
@@ -185,11 +210,12 @@ builder.mutationFields(t => ({
       ordre: t.arg.int({ required: true }),
       archive: t.arg.boolean({ required: true }),
     },
-    resolve: async (query, _root, args) => {
-      const actuel = await prisma.perimetre.findUniqueOrThrow({
-        where: { id: String(args.id) },
+    resolve: async (query, _root, args, ctx) => {
+      const actuel = await prisma.perimetre.findFirst({
+        where: { id: String(args.id), organisationId: ctx.organisation!.id },
         select: { archivedAt: true },
       })
+      if (actuel === null) throw accesRefuse()
       return prisma.perimetre.update({
         ...query,
         where: { id: String(args.id) },
@@ -310,7 +336,9 @@ const OrganisationRef = builder
 builder.queryField('organisation', t =>
   t.field({
     type: OrganisationRef,
-    description: 'Nom, sigle et thème de l’organisation. Lisible sans session.',
-    resolve: () => configurationOrganisation(),
+    description:
+      'Nom, sigle et thème de l’organisation active, ou de la première organisation de l’installation sans session. Lisible sans session.',
+    resolve: (_root, _args, ctx) =>
+      configurationOrganisation(ctx.organisation?.id),
   })
 )

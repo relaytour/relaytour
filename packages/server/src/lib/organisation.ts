@@ -257,12 +257,16 @@ export function variablesOrganisation(configuration: ConfigurationOrganisation) 
 }
 
 const DUREE_CACHE_MS = 60_000
-let cache: { valeur: ConfigurationOrganisation; expire: number } | null = null
+// Une entrée par organisation ; la clé vide désigne la première organisation.
+const cache = new Map<
+  string,
+  { valeur: ConfigurationOrganisation; expire: number }
+>()
 let idParDefaut: string | null = null
 
 /** Oublie la configuration en cache : à appeler après un import ou une modification. */
 export function invaliderConfigurationOrganisation(): void {
-  cache = null
+  cache.clear()
   idParDefaut = null
 }
 
@@ -279,27 +283,40 @@ function declarationDeLaLigne(ligne: LigneOrganisation): DeclarationOrganisation
 }
 
 /**
- * La configuration courante, en cache une minute : la ligne Organisation en base
- * si elle porte une déclaration valide, sinon l'amorçage de l'environnement.
- * Lot commun : une seule organisation par installation.
+ * La configuration d'une organisation, en cache une minute : la ligne Organisation
+ * en base si elle porte une déclaration valide, sinon l'amorçage de l'environnement.
+ * Sans identifiant, la première organisation de l'installation (worker et scripts,
+ * jusqu'à leur passage par organisation).
  */
-export async function configurationOrganisation(): Promise<ConfigurationOrganisation> {
+export async function configurationOrganisation(
+  organisationId?: string
+): Promise<ConfigurationOrganisation> {
   const maintenant = Date.now()
-  if (cache !== null && cache.expire > maintenant) return cache.valeur
+  const cle = organisationId ?? ''
+  const enCache = cache.get(cle)
+  if (enCache !== undefined && enCache.expire > maintenant)
+    return enCache.valeur
   // Imports paresseux : ce module est chargé par la validation de contenu, sans base ni .env.
   const [{ env }, { prisma }] = await Promise.all([
     import('../env.ts'),
     import('@relaytour/database'),
   ])
-  const ligne = await prisma.organisation.findFirst({
-    orderBy: { createdAt: 'asc' },
-    select: { id: true, slug: true, configuration: true },
-  })
+  const selection = { id: true, slug: true, configuration: true } as const
+  const ligne =
+    organisationId === undefined
+      ? await prisma.organisation.findFirst({
+          orderBy: { createdAt: 'asc' },
+          select: selection,
+        })
+      : await prisma.organisation.findUnique({
+          where: { id: organisationId },
+          select: selection,
+        })
   const declaration =
     (ligne === null ? null : declarationDeLaLigne(ligne)) ??
     declarationDepuisEnv(env)
   const valeur = resoudreConfiguration(env, declaration, ligne?.id ?? null)
-  cache = { valeur, expire: maintenant + DUREE_CACHE_MS }
+  cache.set(cle, { valeur, expire: maintenant + DUREE_CACHE_MS })
   return valeur
 }
 

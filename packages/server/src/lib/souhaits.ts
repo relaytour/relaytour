@@ -1,5 +1,7 @@
 import { prisma } from '@relaytour/database'
 
+import type { AppContext, EditionDuContexte } from '../context.ts'
+
 import { erreurSaisie } from './erreurs.ts'
 
 // Souhaits : intérêt d'une personne pour un périmètre d'une édition, noté par un admin.
@@ -12,18 +14,18 @@ import { erreurSaisie } from './erreurs.ts'
 
 export const SOUHAITS_MAX = 30
 
-/** Refuse une édition inconnue ou archivée. */
-export async function exigerEditionOuverte(editionId: string): Promise<void> {
-  const edition = await prisma.edition.findUnique({
-    where: { id: editionId },
-    select: { statut: true },
-  })
-  if (edition === null) throw erreurSaisie('Cette édition est introuvable.')
+/** L'édition de l'organisation active. Refuse une édition d'ailleurs ou archivée. */
+export async function exigerEditionOuverte(
+  ctx: AppContext,
+  editionId: string | number
+): Promise<EditionDuContexte> {
+  const edition = await ctx.exigerEdition(editionId)
   if (edition.statut === 'ARCHIVEE') {
     throw erreurSaisie(
       'Cette édition est archivée : ses souhaits ne se modifient plus.'
     )
   }
+  return edition
 }
 
 /** Retire les doublons et vérifie le nombre de périmètres, sans lire la base. */
@@ -38,16 +40,18 @@ export function identifiantsSouhaites(
 }
 
 /**
- * Identifiants de périmètres souhaités, sans doublon. Refuse un périmètre inconnu
- * ou archivé. Une liste vide ne lit pas la base.
+ * Identifiants de périmètres souhaités, sans doublon. Refuse un périmètre inconnu,
+ * archivé ou d'une autre activité que celle de l'édition. Une liste vide ne lit pas
+ * la base.
  */
 export async function perimetresSouhaitesValides(
-  ids: readonly (string | number)[]
+  ids: readonly (string | number)[],
+  activiteId: string
 ): Promise<string[]> {
   const uniques = identifiantsSouhaites(ids)
   if (uniques.length === 0) return uniques
   const valides = await prisma.perimetre.count({
-    where: { id: { in: uniques }, archivedAt: null },
+    where: { id: { in: uniques }, activiteId, archivedAt: null },
   })
   if (valides !== uniques.length) {
     throw erreurSaisie('Un périmètre choisi est introuvable ou archivé.')

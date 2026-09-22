@@ -8,7 +8,11 @@ import express from 'express'
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
 
 import { auth } from './auth.ts'
-import { buildContext, type AppContext } from './context.ts'
+import {
+  buildContext,
+  ENTETE_ORGANISATION,
+  type AppContext,
+} from './context.ts'
 import { env } from './env.ts'
 import { journal } from './lib/journal.ts'
 import { assurerOrganisationParDefaut } from './lib/organisation.ts'
@@ -82,7 +86,13 @@ app.use(
       const session = await auth.api.getSession({
         headers: fromNodeHeaders(req.headers),
       })
-      return buildContext(req.ip, session?.user.id ?? null)
+      // L'espace organisateur désigne l'organisation active par un en-tête ; sans
+      // lui, l'unique appartenance de la personne fait foi (ADR 0008).
+      return buildContext(
+        req.ip,
+        session?.user.id ?? null,
+        req.get(ENTETE_ORGANISATION)?.trim() || null
+      )
     },
   })
 )

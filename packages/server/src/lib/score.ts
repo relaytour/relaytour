@@ -53,22 +53,26 @@ function scoreVide(userId: string): Score {
   }
 }
 
-/** Période d'une édition pour les contributions qui n'en dépendent pas. */
+/**
+ * Période d'une édition pour les contributions qui n'en dépendent pas. L'édition
+ * précédente se cherche dans la même activité (ADR 0008).
+ */
 export async function periodeEdition(
   prisma: PrismaClient,
   editionId: string
-): Promise<{ debut: Date | null; fin: Date }> {
+): Promise<{ debut: Date | null; fin: Date; activiteId: string }> {
   const edition = await prisma.edition.findUniqueOrThrow({
     where: { id: editionId },
   })
   const precedente = await prisma.edition.findFirst({
-    where: { annee: { lt: edition.annee } },
+    where: { activiteId: edition.activiteId, annee: { lt: edition.annee } },
     orderBy: { annee: 'desc' },
   })
   return {
     // Fin (exclue) de la période précédente : aucun jour n'est perdu entre deux éditions.
     debut: precedente ? new Date(precedente.fin.getTime() + 31 * JOUR) : null,
     fin: new Date(edition.fin.getTime() + 31 * JOUR),
+    activiteId: edition.activiteId,
   }
 }
 
@@ -126,6 +130,8 @@ export async function calculerScores(
   const activites = await prisma.journal.findMany({
     where: {
       type: { in: ['FICHE_CREEE', 'FICHE_MODIFIEE'] },
+      // Seules les fiches de l'activité de l'édition comptent.
+      fiche: { activiteId: periode.activiteId },
       createdAt: {
         ...(periode.debut ? { gte: periode.debut } : {}),
         lt: periode.fin,

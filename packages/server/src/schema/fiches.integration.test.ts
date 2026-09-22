@@ -7,7 +7,8 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { contexteDeTest } from '../test/contexte.ts'
 import { exporterFiches } from '../orga/exporter.ts'
 import { assurerOrganisationParDefaut } from '../lib/organisation.ts'
 import { importerModeles } from '../orga/importer.ts'
@@ -44,7 +45,7 @@ async function executer(
 ) {
   const r = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -283,7 +284,11 @@ describe('droits sur les fiches', () => {
       ],
     })
     await prisma.droitRedaction.create({
-      data: { userId: ids.redactrice, perimetreId: natation },
+      data: {
+        organisationId: ORGANISATION,
+        userId: ids.redactrice,
+        perimetreId: natation,
+      },
     })
   })
 

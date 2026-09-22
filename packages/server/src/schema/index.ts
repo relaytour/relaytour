@@ -1,5 +1,6 @@
 import './health.ts'
 import './organisation.ts'
+import './activites.ts'
 import './personnes.ts'
 import './taches.ts'
 import './fiches.ts'

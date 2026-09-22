@@ -18,6 +18,19 @@ const contexteConnecte: AppContext = {
   perimetresConnus: () => {
     throw new Error('Un résolveur a été appelé.')
   },
+  organisation: {
+    id: 'o1',
+    slug: 'rencontres',
+    role: 'MEMBRE',
+    statut: 'ACTIVE',
+    fuseauHoraire: 'Europe/Paris',
+  },
+  exigerActivite: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
+  exigerEdition: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
 }
 
 /** `perimetre { taches { perimetre { … } } }` sur `niveaux` niveaux de sélection. */

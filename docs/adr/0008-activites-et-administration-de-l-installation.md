@@ -50,12 +50,15 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 - Un compte reste global. Une table `Appartenance { userId, organisationId, role }`, unique sur `(userId, organisationId)`, porte le rôle `ADMIN` ou `MEMBRE` par organisation.
 - Le module « organization » de Better Auth n'est pas retenu : il ouvrirait des routes (invariant 15) et doublerait le flux d'invitation existant.
 - `User.isAdmin` reste en base, rempli, sans lecture. Un admin voit toutes les activités de son organisation. Un membre voit les périmètres où il est affecté, activité par activité.
+- Inviter une adresse déjà connue d'une autre organisation ajoute une appartenance au compte existant, sans nouveau compte.
+- Le nom et l'archivage appartiennent au compte, commun à toutes ses organisations. Un admin ne les modifie pas quand le compte appartient aussi à une autre organisation.
+- Le droit de rédaction porte une clé d'organisation : un droit sans périmètre vaut pour toutes les fiches de cette organisation seulement.
 
 ### Contexte et droits
 
 - `buildContext` reçoit l'organisation active : l'en-tête `X-Relaytour-Organisation`, sinon l'unique appartenance de la personne. Une organisation suspendue ou archivée ne donne aucun contexte. Une organisation en lecture seule donne le contexte sans le droit d'écrire.
 - Trois scopes existent : `connecte` (personne et organisation actives), `admin` (rôle `ADMIN`), `administration` (jeton, voir plus bas).
-- `perimetresLisibles` devient un filtre Prisma sans branche `null` : un admin lit les périmètres de son organisation, pas toute la base.
+- `perimetresLisibles` renvoie toujours une liste, sans branche `null` : un admin lit tous les périmètres de son organisation, pas toute la base.
 - L'activité se déduit de `editionId` partout où il existe. Les opérations `editions`, `editionCourante`, `perimetres`, `fiches`, `recherche`, `creerEdition`, `creerPerimetre` et `creerFiche` reçoivent un argument `activiteId`.
 - Les opérations `activites`, `creerActivite`, `modifierActivite` et `archiverActivite` sont réservées aux admins.
 - `organisationParDefaut()` disparaît. Un test vérifie qu'aucun point d'appel ne subsiste.
@@ -107,11 +110,12 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 
 ### Migrations
 
-Trois migrations additives (invariant 8), dans cet ordre :
+Quatre migrations additives (invariant 8), dans cet ordre :
 
 1. `activites` : renommage du journal, table `Activite`, table `Appartenance`, `Organisation.statut` et `Organisation.limites`, colonnes `activiteId` et `Perimetre.groupe` nullables.
 2. `activites_remplissage` : une activité `EVENEMENT` par organisation, remplissage des clés, `groupe` tiré de `type`, appartenances créées depuis `isAdmin`.
 3. `activites_obligatoire` : `activiteId` obligatoire, retrait des trois contraintes uniques globales, contraintes composées. Élargir une contrainte est l'assouplissement prévu par l'ADR 0006, pas un changement de sens.
+4. `droits_redaction_organisation` : clé d'organisation du droit de rédaction, remplie depuis le périmètre ou la première appartenance de la personne, puis obligatoire.
 
 ### Tests
 

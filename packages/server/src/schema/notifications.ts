@@ -7,7 +7,6 @@ import {
 } from '../lib/notifications.ts'
 
 import { builder } from './builder.ts'
-import { organisationParDefaut } from '../lib/organisation.ts'
 
 const TypeNotificationEnum = builder.enumType(TypeNotification, {
   name: 'TypeNotification',
@@ -97,6 +96,7 @@ builder.queryFields(t => ({
         ...query,
         where: {
           userId: ctx.personne!.id,
+          organisationId: ctx.organisation!.id,
           ...(args.nonLuesSeulement ? { lueLe: null } : {}),
         },
         orderBy: { createdAt: 'desc' },
@@ -108,7 +108,11 @@ builder.queryFields(t => ({
     authScopes: { connecte: true },
     resolve: (_root, _args, ctx) =>
       prisma.notification.count({
-        where: { userId: ctx.personne!.id, lueLe: null },
+        where: {
+          userId: ctx.personne!.id,
+          organisationId: ctx.organisation!.id,
+          lueLe: null,
+        },
       }),
   }),
 
@@ -129,6 +133,7 @@ builder.mutationFields(t => ({
       const { count } = await prisma.notification.updateMany({
         where: {
           userId: ctx.personne!.id,
+          organisationId: ctx.organisation!.id,
           lueLe: null,
           ...(ids ? { id: { in: ids.map(String) } } : {}),
         },
@@ -157,7 +162,7 @@ builder.mutationFields(t => ({
         update: donnees,
         create: {
           userId: ctx.personne!.id,
-          organisationId: await organisationParDefaut(),
+          organisationId: ctx.organisation!.id,
           ...donnees,
         },
       })
