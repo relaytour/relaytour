@@ -5,6 +5,18 @@
   "version": "0.1.0",
   "notes": [
     {
+      "id": "2026-09-22-orga-l-espace-organisateur-suit-l-organisation-et-l-activite",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "L'espace organisateur suit l'organisation et l'activité choisies",
+        "texte": "Les pages d'une activité vivent sous son identifiant, par exemple /rencontres/retroplanning. Un sélecteur change d'activité, et le menu du compte change d'organisation pour une personne qui en a plusieurs. Les périmètres se rangent dans les groupes de l'activité, et la période prend le nom d'édition, de saison ou de mandat. Les admins gèrent les activités dans une nouvelle page.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-orga-votre-organisation-choisit-le-fond-de-son-espace",
       "date": "2026-09-19",
       "type": "fonctionnalite",

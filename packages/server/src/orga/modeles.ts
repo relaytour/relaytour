@@ -4,6 +4,7 @@ import path from 'node:path'
 import { parse } from 'yaml'
 import { z } from 'zod'
 
+import { SLUGS_RESERVES } from '../lib/activites.ts'
 import { donneesPersonnelles, normaliserContenu } from '../lib/contenu.ts'
 import {
   DeclarationOrganisationSchema,
@@ -34,7 +35,10 @@ const GROUPES_PAR_DEFAUT = [
 
 // activites/<slug>/activite.yaml (ADR 0008).
 const ActiviteDeclaree = z.strictObject({
-  slug: Slug,
+  // Les premiers segments d'adresse de l'espace organisateur sont réservés.
+  slug: Slug.refine(s => !SLUGS_RESERVES.has(s), {
+    message: 'identifiant réservé par l’espace organisateur',
+  }),
   nom: z.string().trim().min(1).max(120),
   sigle: z.string().trim().min(1).max(20).optional(),
   nature: z.enum(['EVENEMENT', 'SAISON', 'MANDAT']).default('EVENEMENT'),

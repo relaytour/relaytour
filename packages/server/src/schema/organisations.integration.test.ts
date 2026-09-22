@@ -44,11 +44,20 @@ async function executer(
   userId: string | null,
   query: string,
   variables: Record<string, unknown> = {},
-  organisation: string | null = null
+  organisation: string | null = null,
+  activite: string | null = null
 ) {
   const reponse = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId, organisation) }
+    {
+      contextValue: await buildContext(
+        '127.0.0.1',
+        userId,
+        organisation,
+        false,
+        activite
+      ),
+    }
   )
   if (reponse.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -543,5 +552,114 @@ describe('limites', () => {
       annee: 2028,
     })
     expect(r.errors).toBeUndefined()
+  })
+})
+
+describe('espace organisateur : organisation et activité choisies', () => {
+  it('liste les organisations d’une personne, sans organisation active sans en-tête', async () => {
+    const r = await executer(
+      ids.double,
+      '{ mesOrganisations { slug estAdmin active } }'
+    )
+    expect(r.errors).toBeUndefined()
+    expect(r.data?.mesOrganisations).toEqual(
+      expect.arrayContaining([
+        { slug: slugA, estAdmin: false, active: false },
+        { slug: slugB, estAdmin: true, active: false },
+      ])
+    )
+    const avecEntete = await executer(
+      ids.double,
+      '{ mesOrganisations { slug active } }',
+      {},
+      slugB
+    )
+    expect(avecEntete.data?.mesOrganisations).toEqual(
+      expect.arrayContaining([{ slug: slugB, active: true }])
+    )
+  })
+
+  it('refuse la liste des organisations sans session', async () => {
+    const r = await executer(null, '{ mesOrganisations { slug } }')
+    expect(code(r)).toBe('FORBIDDEN')
+  })
+
+  it('suit l’activité de l’en-tête quand la requête n’en précise pas', async () => {
+    const sansEntete = await executer(
+      ids.adminA,
+      '{ perimetre(slug: "natation") { id } }'
+    )
+    expect(sansEntete.data?.perimetre).toEqual({ id: ids.perimetreA1 })
+    const avecEntete = await executer(
+      ids.adminA,
+      '{ perimetre(slug: "natation") { id } }',
+      {},
+      null,
+      `a2-${s}`
+    )
+    expect(avecEntete.data?.perimetre).toEqual({ id: ids.perimetreA2 })
+  })
+
+  it('ignore une activité d’en-tête inconnue de l’organisation', async () => {
+    const r = await executer(
+      ids.adminA,
+      '{ perimetre(slug: "natation") { id } }',
+      {},
+      null,
+      `b-${s}`
+    )
+    expect(r.data?.perimetre).toEqual({ id: ids.perimetreA1 })
+  })
+
+  it('refuse un slug d’activité réservé par l’espace organisateur', async () => {
+    const r = await executer(
+      ids.adminA,
+      'mutation { creerActivite(slug: "admin", nom: "Admin", nature: MANDAT) { id } }'
+    )
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+  })
+
+  it('range un périmètre dans un groupe de son activité seulement', async () => {
+    const CREER = `mutation ($g: String!, $slug: String!) {
+      creerPerimetre(slug: $slug, nom: "Essai", groupe: $g) { id groupe type }
+    }`
+    const refus = await executer(ids.adminA, CREER, {
+      g: 'commission',
+      slug: `essai-${s}`,
+    })
+    expect(code(refus)).toBe('SAISIE_INVALIDE')
+    const accord = await executer(ids.adminA, CREER, {
+      g: 'sport',
+      slug: `essai-${s}`,
+    })
+    expect(accord.data?.creerPerimetre).toMatchObject({
+      groupe: 'sport',
+      type: 'SPORT',
+    })
+  })
+
+  it('sert sans session le thème de l’organisation désignée, ou une identité neutre', async () => {
+    // Une déclaration valide, comme après l'import d'organisation.yaml.
+    await prisma.organisation.update({
+      where: { id: ids.orgB },
+      data: {
+        configuration: {
+          slug: slugB,
+          nom: 'Organisation B',
+          domainesCourrielAutorises: [],
+        },
+      },
+    })
+    invaliderConfigurationOrganisation()
+    const designee = await executer(
+      null,
+      'query ($s: String) { organisation(slug: $s) { slug } }',
+      { s: slugB }
+    )
+    expect(designee.data?.organisation).toEqual({ slug: slugB })
+    // Plusieurs organisations existent : sans slug, aucune n'impose sa marque.
+    const neutre = await executer(null, '{ organisation { slug } }')
+    expect(neutre.data?.organisation).not.toEqual({ slug: slugA })
+    expect(neutre.data?.organisation).not.toEqual({ slug: slugB })
   })
 })

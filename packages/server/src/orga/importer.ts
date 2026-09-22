@@ -28,6 +28,11 @@ export interface RapportImport {
   activites: RapportActivite[]
   /** Activités en base que le dépôt ne décrit pas : signalées, jamais archivées. */
   activitesAbsentesDuDepot: string[]
+  /**
+   * Activité d'amorçage « defaut », vide, retirée au premier import d'un dépôt en
+   * disposition activites/ qui ne la décrit pas.
+   */
+  amorcageRetire: boolean
 }
 
 export interface OptionsImport {
@@ -171,6 +176,7 @@ export async function importerModeles(
         },
         activites: [],
         activitesAbsentesDuDepot: [],
+        amorcageRetire: false,
       }
 
       const enBase =
@@ -209,10 +215,30 @@ export async function importerModeles(
         }
       }
       const retrouvees = new Set([...correspondance.values()].map(l => l.id))
+      // La migration a créé une activité « defaut » pour chaque organisation. Un
+      // dépôt en disposition activites/ qui ne la décrit pas la retire, si elle est
+      // vide : elle deviendrait sinon l'activité affichée par défaut.
+      const amorcage = enBase.find(
+        a => a.slug === 'defaut' && !retrouvees.has(a.id)
+      )
+      if (
+        amorcage !== undefined &&
+        modeles.disposition === 'activites' &&
+        options.activite === undefined &&
+        (await activiteVide(tx, amorcage.id))
+      ) {
+        rapport.amorcageRetire = true
+        if (ecrire) await tx.activite.delete({ where: { id: amorcage.id } })
+      }
       rapport.activitesAbsentesDuDepot =
         options.activite === undefined
           ? enBase
-              .filter(a => !retrouvees.has(a.id) && a.archivedAt === null)
+              .filter(
+                a =>
+                  !retrouvees.has(a.id) &&
+                  a.archivedAt === null &&
+                  !(rapport.amorcageRetire && a.id === amorcage?.id)
+              )
               .map(a => a.slug)
               .sort()
           : []
@@ -244,6 +270,16 @@ export async function importerModeles(
 
   invaliderConfigurationOrganisation()
   return rapport
+}
+
+/** Une activité sans période, sans périmètre ni fiche. */
+async function activiteVide(tx: Transaction, activiteId: string) {
+  const [periodes, perimetres, fiches] = await Promise.all([
+    tx.edition.count({ where: { activiteId } }),
+    tx.perimetre.count({ where: { activiteId } }),
+    tx.fiche.count({ where: { activiteId } }),
+  ])
+  return periodes + perimetres + fiches === 0
 }
 
 async function importerActivite(

@@ -86,6 +86,7 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 ### Contenu
 
 - La disposition plate actuelle reste valide. Elle décrit une activité implicite, de nature `EVENEMENT`, au slug de l'organisation, avec les groupes `sport` et `pole`.
+- Au premier import d'un dépôt en disposition `activites/`, l'activité d'amorçage `defaut` créée par la migration est retirée si elle est vide et que le dépôt ne la décrit pas.
 - Plusieurs activités se déclarent dans `contenu/activites/<slug>/`, avec `activite.yaml` (slug, nom, sigle, nature, groupes, ordre), `perimetres.yaml`, `fiches/` et `taches/`. Les deux dispositions ne se mélangent pas.
 - `perimetres.yaml` accepte `groupe`. `type` reste accepté et converti.
 - `orga:importer` exige `--organisation <slug>` dès que plusieurs organisations existent, accepte `--activite <slug>` et refuse une activité au-delà des limites. `orga:exporter` filtre par organisation et écrit dans la disposition du dépôt cible.
@@ -93,7 +94,11 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 
 ### Espace organisateur
 
-- Les routes prennent l'activité en préfixe (`/:activite/…`). Les anciens liens et les liens des mails sont redirigés.
+- Les routes prennent l'activité en préfixe (`/:activite/…`). Une adresse sans activité (l'accueil, une adresse d'avant, un lien de mail) mène à la même page de l'activité par défaut : la dernière affichée par le navigateur, sinon la première ouverte. Les liens des mails portent le slug de l'activité.
+- L'espace organisateur envoie l'activité affichée dans l'en-tête `X-Relaytour-Activite`. Une requête qui ne précise pas d'activité porte sur celle-ci, sinon sur la première activité ouverte. Changer d'activité ou d'organisation vide le cache du client.
+- Un slug d'activité ne peut pas prendre un premier segment d'adresse de l'espace organisateur (`admin`, `fiches`, `perimetres`, `preferences`, `retroplanning`, `connexion`, `api`, `assets`, `graphql`).
+- La requête `mesOrganisations`, ouverte à toute personne connectée même sans organisation active, liste ses organisations. Sans organisation active, l'espace organisateur fait choisir l'organisation.
+- Sans session, la requête publique `organisation(slug)` sert le thème de l'organisation que le navigateur a mémorisée. Une installation à plusieurs organisations, sans slug connu, sert l'identité d'amorçage de l'environnement : l'écran de connexion n'affiche la marque d'aucune organisation.
 - L'organisation active se choisit dans le menu du compte et part dans l'en-tête de chaque requête. Le sélecteur reste masqué avec une seule appartenance. Le sélecteur d'activité reste masqué avec une seule activité.
 - Le choix de période lit `editions(activiteId)` et affiche le libellé de la nature. Les groupes de périmètres se rendent depuis `activite.groupes`.
 - Une page d'administration liste, crée, modifie et archive les activités. Elle affiche le message de limite atteinte, comme la création d'une période quand `periodesOuvertes` est atteint.

@@ -1,7 +1,7 @@
 <mjml>
   <mj-head>
     <mj-title>Votre résumé</mj-title>
-    <mj-preview>L’activité de vos périmètres et vos prochaines échéances.</mj-preview>
+    <mj-preview>Les nouvelles de vos périmètres et vos prochaines échéances.</mj-preview>
     <mj-attributes>
       <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
       <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
@@ -17,13 +17,13 @@
           Bonjour {{nom}},
         </mj-text>
         <mj-text>
-          Voici l’activité de vos périmètres {{periode}}.
+          Voici les nouvelles de vos périmètres {{periode}}.
         </mj-text>
         <mj-text font-size="17px" font-weight="700" padding="8px 0 8px">
-          Activité non lue
+          Nouvelles non lues
         </mj-text>
         <mj-text>
-          {{activite}}
+          {{nouvelles}}
         </mj-text>
         <mj-text font-size="17px" font-weight="700" padding="8px 0 8px">
           Vos échéances des 14 prochains jours

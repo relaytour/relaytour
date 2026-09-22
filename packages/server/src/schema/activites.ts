@@ -4,11 +4,12 @@ import {
   GROUPES_PAR_DEFAUT,
   groupesValides,
   lireGroupes,
+  slugActiviteValide,
   type GroupePerimetres,
 } from '../lib/activites.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { exigerPlaceActivite } from '../lib/limites.ts'
-import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
+import { sansDoublon, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
 
@@ -65,6 +66,9 @@ builder.prismaObjectFields('Perimetre', t => ({
   activite: t.relation('activite', { type: ActiviteRef }),
   groupe: t.exposeString('groupe'),
 }))
+builder.prismaObjectFields('Fiche', t => ({
+  activite: t.relation('activite', { type: ActiviteRef }),
+}))
 
 builder.queryFields(t => ({
   activites: t.prismaField({
@@ -99,7 +103,7 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
       const donnees = {
         organisationId,
-        slug: slugValide(args.slug),
+        slug: slugActiviteValide(args.slug),
         nom: texteRequis(args.nom, 'Le nom'),
         sigle: args.sigle?.trim()
           ? texteRequis(args.sigle, 'Le sigle', 20)

@@ -17,7 +17,8 @@ import { useState } from 'react'
 
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
-import type { PerimetresQuery, TypePerimetre } from '../../gql/graphql'
+import type { PerimetresQuery } from '../../gql/graphql'
+import { useActivite } from '../../lib/activite'
 import { messageErreur } from '../../lib/erreurs'
 import { PERIMETRES } from '../../lib/requetes'
 
@@ -25,14 +26,14 @@ const CREER = graphql(`
   mutation CreerPerimetre(
     $slug: String!
     $nom: String!
-    $type: TypePerimetre!
+    $groupe: String!
     $couleur: String
     $ordre: Int
   ) {
     creerPerimetre(
       slug: $slug
       nom: $nom
-      type: $type
+      groupe: $groupe
       couleur: $couleur
       ordre: $ordre
     ) {
@@ -45,7 +46,7 @@ const MODIFIER = graphql(`
   mutation ModifierPerimetre(
     $id: ID!
     $nom: String!
-    $type: TypePerimetre!
+    $groupe: String!
     $couleur: String
     $ordre: Int!
     $archive: Boolean!
@@ -53,7 +54,7 @@ const MODIFIER = graphql(`
     modifierPerimetre(
       id: $id
       nom: $nom
-      type: $type
+      groupe: $groupe
       couleur: $couleur
       ordre: $ordre
       archive: $archive
@@ -68,19 +69,20 @@ type Perimetre = PerimetresQuery['perimetres'][number]
 interface Valeurs {
   slug: string
   nom: string
-  type: TypePerimetre
+  groupe: string
   couleur: string | null
   ordre: number
   archive: boolean
 }
 
-const TYPES = [
-  { value: 'SPORT', label: 'Sport' },
-  { value: 'POLE', label: 'Pôle' },
-]
-
 export default function Perimetres() {
   const { message } = App.useApp()
+  // Les groupes de périmètres viennent de l'activité (ADR 0008).
+  const { activite, periode, libelleGroupe } = useActivite()
+  const groupes = activite.groupes.map(g => ({
+    value: g.cle,
+    label: g.libelle,
+  }))
   const { data, loading } = useQuery(PERIMETRES, {
     variables: { inclureArchives: true },
   })
@@ -97,7 +99,7 @@ export default function Perimetres() {
         ? {
             slug: '',
             nom: '',
-            type: 'SPORT',
+            groupe: activite.groupes[0]?.cle ?? '',
             couleur: null,
             ordre: 0,
             archive: false,
@@ -119,7 +121,7 @@ export default function Perimetres() {
           variables: {
             slug: v.slug,
             nom: v.nom,
-            type: v.type,
+            groupe: v.groupe,
             couleur,
             ordre: v.ordre,
           },
@@ -130,7 +132,7 @@ export default function Perimetres() {
           variables: {
             id: enEdition.id,
             nom: v.nom,
-            type: v.type,
+            groupe: v.groupe,
             couleur,
             ordre: v.ordre,
             archive: v.archive,
@@ -146,7 +148,9 @@ export default function Perimetres() {
 
   return (
     <>
-      <Titre sousTitre="Un périmètre est un sport ou un pôle transverse. Il reste le même d’une édition à l’autre.">
+      <Titre
+        sousTitre={`Un périmètre est une partie de l’activité, rangée dans un groupe. Il reste le même ${periode.dUneALAutre}.`}
+      >
         Périmètres
       </Titre>
       <Button
@@ -189,9 +193,9 @@ export default function Perimetres() {
           { title: 'Nom', dataIndex: 'nom' },
           { title: 'Identifiant', dataIndex: 'slug' },
           {
-            title: 'Type',
-            dataIndex: 'type',
-            render: (t: TypePerimetre) => (t === 'SPORT' ? 'Sport' : 'Pôle'),
+            title: 'Groupe',
+            dataIndex: 'groupe',
+            render: (g: string) => libelleGroupe(g),
           },
           { title: 'Ordre', dataIndex: 'ordre', width: 80 },
           {
@@ -244,8 +248,12 @@ export default function Perimetres() {
           >
             <Input placeholder="natation" disabled={enEdition !== 'nouveau'} />
           </Form.Item>
-          <Form.Item label="Type" name="type">
-            <Segmented options={TYPES} />
+          <Form.Item
+            label="Groupe"
+            name="groupe"
+            rules={[{ required: true, message: 'Choisissez un groupe.' }]}
+          >
+            <Segmented options={groupes} />
           </Form.Item>
           <Form.Item label="Couleur" name="couleur">
             <ColorPicker format="hex" allowClear />

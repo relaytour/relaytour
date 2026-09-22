@@ -9,9 +9,13 @@ import type {
   TypographieTheme,
 } from '@relaytour/tokens'
 
-import { groupeDepuisType } from '../lib/activites.ts'
+import {
+  groupeDepuisType,
+  lireGroupes,
+  typeDepuisGroupe,
+} from '../lib/activites.ts'
 import { validerDates, validerEdition } from '../lib/editions.ts'
-import { accesRefuse } from '../lib/erreurs.ts'
+import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import {
   couleurValide,
   sansDoublon,
@@ -21,7 +25,7 @@ import {
 
 import { exigerPlacePeriode } from '../lib/limites.ts'
 import {
-  configurationOrganisation,
+  configurationPublique,
   type ConfigurationOrganisation,
 } from '../lib/organisation.ts'
 
@@ -113,6 +117,32 @@ builder.queryFields(t => ({
 
 // ── Administration ───────────────────────────────────────────────────────────
 
+/**
+ * Le groupe d'un périmètre : celui demandé s'il figure parmi les groupes de
+ * l'activité, sinon celui du type d'avant l'ADR 0008.
+ */
+async function groupeDuPerimetre(
+  activiteId: string,
+  groupe: string | null | undefined,
+  type: TypePerimetre | null | undefined
+): Promise<string> {
+  const demande = groupe?.trim() || (type ? groupeDepuisType(type) : undefined)
+  if (demande === undefined) {
+    throw erreurSaisie('Choisissez le groupe du périmètre.')
+  }
+  const activite = await prisma.activite.findUniqueOrThrow({
+    where: { id: activiteId },
+    select: { groupes: true },
+  })
+  const groupes = lireGroupes(activite.groupes)
+  if (!groupes.some(g => g.cle === demande)) {
+    throw erreurSaisie(
+      `L’activité ne déclare pas le groupe « ${demande} » (${groupes.map(g => g.cle).join(', ')}).`
+    )
+  }
+  return demande
+}
+
 builder.mutationFields(t => ({
   creerEdition: t.prismaField({
     type: EditionRef,
@@ -176,27 +206,32 @@ builder.mutationFields(t => ({
       activiteId: t.arg.id(),
       slug: t.arg.string({ required: true }),
       nom: t.arg.string({ required: true }),
-      type: t.arg({ type: TypePerimetreEnum, required: true }),
+      // Le groupe, parmi ceux de l'activité ; à défaut, le type d'avant l'ADR 0008.
+      groupe: t.arg.string(),
+      type: t.arg({ type: TypePerimetreEnum }),
       couleur: t.arg.string(),
       ordre: t.arg.int({ defaultValue: 0 }),
     },
-    resolve: async (query, _root, args, ctx) =>
-      sansDoublon(
+    resolve: async (query, _root, args, ctx) => {
+      const activiteId = await ctx.exigerActivite(args.activiteId)
+      const groupe = await groupeDuPerimetre(activiteId, args.groupe, args.type)
+      return sansDoublon(
         prisma.perimetre.create({
           ...query,
           data: {
             organisationId: ctx.organisation!.id,
-            activiteId: await ctx.exigerActivite(args.activiteId),
+            activiteId,
             slug: slugValide(args.slug),
             nom: texteRequis(args.nom, 'Le nom'),
-            type: args.type,
-            groupe: groupeDepuisType(args.type),
+            type: typeDepuisGroupe(groupe),
+            groupe,
             couleur: couleurValide(args.couleur),
             ordre: args.ordre ?? 0,
           },
         }),
         'Un périmètre utilise déjà cet identifiant.'
-      ),
+      )
+    },
   }),
 
   modifierPerimetre: t.prismaField({
@@ -205,7 +240,8 @@ builder.mutationFields(t => ({
     args: {
       id: t.arg.id({ required: true }),
       nom: t.arg.string({ required: true }),
-      type: t.arg({ type: TypePerimetreEnum, required: true }),
+      groupe: t.arg.string(),
+      type: t.arg({ type: TypePerimetreEnum }),
       couleur: t.arg.string(),
       ordre: t.arg.int({ required: true }),
       archive: t.arg.boolean({ required: true }),
@@ -213,16 +249,20 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       const actuel = await prisma.perimetre.findFirst({
         where: { id: String(args.id), organisationId: ctx.organisation!.id },
-        select: { archivedAt: true },
+        select: { archivedAt: true, activiteId: true, groupe: true },
       })
       if (actuel === null) throw accesRefuse()
+      const groupe =
+        args.groupe || args.type
+          ? await groupeDuPerimetre(actuel.activiteId, args.groupe, args.type)
+          : actuel.groupe
       return prisma.perimetre.update({
         ...query,
         where: { id: String(args.id) },
         data: {
           nom: texteRequis(args.nom, 'Le nom'),
-          type: args.type,
-          groupe: groupeDepuisType(args.type),
+          type: typeDepuisGroupe(groupe),
+          groupe,
           couleur: couleurValide(args.couleur),
           ordre: args.ordre,
           // La date d'archivage d'origine est conservée.
@@ -337,8 +377,9 @@ builder.queryField('organisation', t =>
   t.field({
     type: OrganisationRef,
     description:
-      'Nom, sigle et thème de l’organisation active, ou de la première organisation de l’installation sans session. Lisible sans session.',
-    resolve: (_root, _args, ctx) =>
-      configurationOrganisation(ctx.organisation?.id),
+      'Nom, sigle et thème de l’organisation active. Sans session : l’organisation désignée par son slug, sinon l’unique organisation de l’installation, sinon une identité neutre. Lisible sans session.',
+    args: { slug: t.arg.string() },
+    resolve: (_root, { slug }, ctx) =>
+      configurationPublique(ctx.organisation?.id, slug ?? undefined),
   })
 )

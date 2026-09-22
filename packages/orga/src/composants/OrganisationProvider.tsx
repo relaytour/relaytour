@@ -9,6 +9,7 @@ import {
   ORGANISATION_PAR_DEFAUT,
   type Organisation,
 } from '../lib/organisation'
+import { organisationChoisie } from '../lib/selection'
 import { appliquerTheme, construireTheme } from '../lib/theme'
 
 /**
@@ -17,7 +18,9 @@ import { appliquerTheme, construireTheme } from '../lib/theme'
  * couvre l'écran ; si elle ne répond pas, le thème de Relaytour reste en place.
  */
 export function OrganisationProvider({ children }: { children: ReactNode }) {
-  const { data, loading } = useQuery(ORGANISATION)
+  const { data, loading } = useQuery(ORGANISATION, {
+    variables: { slug: organisationChoisie() },
+  })
 
   const organisation = useMemo<Organisation>(() => {
     if (!data) return ORGANISATION_PAR_DEFAUT

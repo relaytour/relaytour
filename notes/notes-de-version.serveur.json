@@ -53,6 +53,18 @@
       }
     },
     {
+      "id": "2026-09-22-serveur-l-api-sert-le-choix-d-organisation-et-d-activite",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "L'API sert le choix d'organisation et d'activité de l'espace organisateur",
+        "texte": "L'API liste les organisations de la personne connectée, suit l'activité désignée par un en-tête et range un périmètre dans un groupe de son activité. Les liens des mails portent l'activité, et le résumé parle des nouvelles de vos périmètres.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-22-serveur-chaque-requete-se-limite-a-l-organisation-active",
       "date": "2026-09-22",
       "type": "interne",

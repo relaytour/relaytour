@@ -158,7 +158,13 @@ export async function composer(
         select: {
           titre: true,
           statut: true,
-          perimetre: { select: { nom: true, slug: true } },
+          perimetre: {
+            select: {
+              nom: true,
+              slug: true,
+              activite: { select: { slug: true } },
+            },
+          },
         },
       }),
       prisma.user.findUniqueOrThrow({
@@ -173,7 +179,8 @@ export async function composer(
       job.tache.changement === 'statut'
         ? `Le nouveau statut de la tâche est « ${LIBELLES_STATUT[tache.statut]} ».`
         : 'Le titre, la description ou l’échéance de la tâche ont changé.'
-    variables.lienPerimetre = `${origine}/perimetres/${tache.perimetre.slug}`
+    // Les pages d'un périmètre vivent sous le slug de son activité (ADR 0008).
+    variables.lienPerimetre = `${origine}/${tache.perimetre.activite.slug}/perimetres/${tache.perimetre.slug}`
     const notificationId = job.notificationId
     if (notificationId) {
       apresEnvoi = async () => {
@@ -265,10 +272,10 @@ export async function composer(
       preferences.frequenceResume === 'QUOTIDIEN'
         ? 'depuis hier'
         : 'de la semaine'
-    variables.activite =
+    variables.nouvelles =
       notifications.length > 0
         ? notifications.map(n => messageNotification(n, noms, userId))
-        : ['Aucune nouvelle activité.']
+        : ['Aucune nouvelle.']
     variables.echeances =
       taches.length > 0
         ? taches.map(t => {

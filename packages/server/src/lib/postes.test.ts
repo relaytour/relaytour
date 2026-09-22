@@ -31,20 +31,20 @@ describe('trierPostes', () => {
     nom: string,
     etat: EtatPostes,
     aPourvoir: number,
-    type: 'SPORT' | 'POLE',
+    groupe: 'sport' | 'pole',
     ordre = 0
-  ) => ({ etat, aPourvoir, perimetre: { nom, type, ordre } })
+  ) => ({ etat, aPourvoir, perimetre: { nom, groupe, ordre } })
 
   it('place les périmètres sans personne en premier, puis les incomplets', () => {
     const liste = [
-      poste('Complet', 'COMPLET', 0, 'SPORT'),
-      poste('Incomplet', 'INCOMPLET', 1, 'SPORT'),
-      poste('Pôle vide', 'SANS_PERSONNE', 1, 'POLE'),
-      poste('Sport vide', 'SANS_PERSONNE', 1, 'SPORT', 2),
-      poste('Autre sport vide', 'SANS_PERSONNE', 1, 'SPORT', 1),
-      poste('Grand manque', 'SANS_PERSONNE', 3, 'POLE'),
-      poste('Basket', 'COMPLET', 0, 'POLE', 5),
-      poste('Athlétisme', 'COMPLET', 0, 'POLE', 5),
+      poste('Complet', 'COMPLET', 0, 'sport'),
+      poste('Incomplet', 'INCOMPLET', 1, 'sport'),
+      poste('Pôle vide', 'SANS_PERSONNE', 1, 'pole'),
+      poste('Sport vide', 'SANS_PERSONNE', 1, 'sport', 2),
+      poste('Autre sport vide', 'SANS_PERSONNE', 1, 'sport', 1),
+      poste('Grand manque', 'SANS_PERSONNE', 3, 'pole'),
+      poste('Basket', 'COMPLET', 0, 'pole', 5),
+      poste('Athlétisme', 'COMPLET', 0, 'pole', 5),
     ]
     expect(trierPostes(liste).map(p => p.perimetre.nom)).toEqual([
       'Grand manque',
@@ -60,6 +60,26 @@ describe('trierPostes', () => {
   })
 })
 
+describe('trierPostes avec les groupes d’une activité', () => {
+  it('suit l’ordre des groupes que déclare l’activité', () => {
+    const liste = [
+      {
+        etat: 'COMPLET' as const,
+        aPourvoir: 0,
+        perimetre: { nom: 'Bureau', groupe: 'bureau', ordre: 0 },
+      },
+      {
+        etat: 'COMPLET' as const,
+        aPourvoir: 0,
+        perimetre: { nom: 'Finances', groupe: 'commission', ordre: 0 },
+      },
+    ]
+    expect(
+      trierPostes(liste, ['commission', 'bureau']).map(p => p.perimetre.nom)
+    ).toEqual(['Finances', 'Bureau'])
+  })
+})
+
 describe('texteAppel', () => {
   const organisation = {
     nom: 'Les Rencontres de la Vallée',
@@ -69,8 +89,8 @@ describe('texteAppel', () => {
   const texte = texteAppel(
     2027,
     [
-      { nom: 'Natation', type: 'SPORT' },
-      { nom: 'Communication', type: 'POLE' },
+      { nom: 'Natation', groupe: 'sport' },
+      { nom: 'Communication', groupe: 'pole' },
     ],
     organisation
   )
@@ -97,7 +117,7 @@ https://exemple.org/equipe`)
   it('omet un groupe vide', () => {
     const sansPole = texteAppel(
       2027,
-      [{ nom: 'Natation', type: 'SPORT' }],
+      [{ nom: 'Natation', groupe: 'sport' }],
       organisation
     )
     expect(sansPole).toContain('Sports\n- Natation')
@@ -126,5 +146,23 @@ https://exemple.org/equipe`)
       expect(phrase.split(/\s+/).length).toBeLessThanOrEqual(25)
     }
     expect(texte).not.toMatch(/(^|[^\p{L}])on([^\p{L}]|$)/iu)
+  })
+})
+
+describe('texteAppel avec les groupes d’une activité', () => {
+  it('titre chaque groupe par son libellé pluriel', () => {
+    const texte = texteAppel(
+      2026,
+      [{ nom: 'Finances', groupe: 'commission' }],
+      { nom: 'Conseil', contact: undefined, pageEquipe: undefined },
+      [
+        {
+          cle: 'commission',
+          libelle: 'Commission',
+          libellePluriel: 'Commissions',
+        },
+      ]
+    )
+    expect(texte).toContain('Commissions\n- Finances')
   })
 })

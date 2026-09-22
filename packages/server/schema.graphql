@@ -101,6 +101,7 @@ enum EtatPostes {
 }
 
 type Fiche {
+  activite: Activite!
   archive: Boolean!
   contenu: String!
   donneesPersonnelles: [String!]!
@@ -198,7 +199,7 @@ type Mutation {
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
   creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, nom: String!, sigle: String, slug: String!): OrganisationInstallation!
-  creerPerimetre(activiteId: ID, couleur: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre!): Perimetre!
+  creerPerimetre(activiteId: ID, couleur: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
   creerTache(description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
   definirEffectif(editionId: ID!, effectif: Int!, perimetreId: ID!): Int!
 
@@ -222,7 +223,7 @@ type Mutation {
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
   modifierFiche(contenu: String!, id: ID!, resume: String, titre: String!): Fiche!
   modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
-  modifierPerimetre(archive: Boolean!, couleur: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre!): Perimetre!
+  modifierPerimetre(archive: Boolean!, couleur: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre): Perimetre!
   modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
   modifierPreferencesNotification(frequenceResume: FrequenceResume!, mailEcheance: Boolean!, mailModification: Boolean!): PreferencesNotification!
   modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String!): Tache!
@@ -260,6 +261,17 @@ type Organisation {
   sigle: String
   slug: String!
   theme: Theme!
+}
+
+"""Une organisation dont la personne connectée est membre, avec son rôle."""
+type OrganisationDeLaPersonne {
+  """Vrai pour l’organisation active de la requête."""
+  active: Boolean!
+  estAdmin: Boolean!
+  nom: String!
+  sigle: String
+  slug: String!
+  statut: String!
 }
 
 """
@@ -368,6 +380,7 @@ type Query {
   fiche(slug: String!): Fiche
   fiches(activiteId: ID, inclureArchives: Boolean = false): [Fiche!]!
   health: String!
+  mesOrganisations: [OrganisationDeLaPersonne!]!
   mesPerimetres(activiteId: ID): [Perimetre!]!
   mesPreferencesNotification: PreferencesNotification!
   mesTaches(editionId: ID!): [Tache!]!
@@ -377,9 +390,9 @@ type Query {
   notifications(limite: Int = 30, nonLuesSeulement: Boolean = false): [Notification!]!
 
   """
-  Nom, sigle et thème de l’organisation active, ou de la première organisation de l’installation sans session. Lisible sans session.
+  Nom, sigle et thème de l’organisation active. Sans session : l’organisation désignée par son slug, sinon l’unique organisation de l’installation, sinon une identité neutre. Lisible sans session.
   """
-  organisation: Organisation!
+  organisation(slug: String): Organisation!
   organisations: [OrganisationInstallation!]!
   perimetre(activiteId: ID, slug: String!): Perimetre
   perimetres(activiteId: ID, inclureArchives: Boolean = false): [Perimetre!]!

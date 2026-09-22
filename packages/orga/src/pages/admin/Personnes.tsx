@@ -23,6 +23,7 @@ import type { PersonnesQuery } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
 import { normaliser } from '../../lib/recherche'
 import { EDITIONS, MOI, PERIMETRES } from '../../lib/requetes'
+import { useActivite } from '../../lib/activite'
 
 const PERSONNES = graphql(`
   query Personnes($inclureArchives: Boolean, $editionId: ID) {
@@ -132,6 +133,7 @@ function memesIdentifiants(a: string[], b: string[]): boolean {
 }
 
 export default function Personnes() {
+  const { activite, periode } = useActivite()
   const { message } = App.useApp()
   const [inclureArchives, setInclureArchives] = useState(false)
   const [recherche, setRecherche] = useState('')
@@ -187,18 +189,15 @@ export default function Personnes() {
   )
   const optionsPerimetres = useMemo(
     () =>
-      [
-        { label: 'Sports', type: 'SPORT' },
-        { label: 'Pôles', type: 'POLE' },
-      ]
-        .map(({ label, type }) => ({
-          label,
+      activite.groupes
+        .map(groupe => ({
+          label: groupe.libellePluriel,
           options: (perimetres?.perimetres ?? [])
-            .filter(p => p.type === type)
+            .filter(p => p.groupe === groupe.cle)
             .map(p => ({ value: p.id, label: p.nom })),
         }))
         .filter(groupe => groupe.options.length > 0),
-    [perimetres]
+    [perimetres, activite.groupes]
   )
 
   // Souhaits de la personne pour l'édition choisie, limités aux périmètres non archivés.
@@ -312,12 +311,12 @@ export default function Personnes() {
           onChange={e => setRecherche(e.target.value)}
         />
         <Space>
-          <span>Édition</span>
+          <span>{periode.Nom}</span>
           <Select
             style={{ minWidth: 200 }}
             value={editionId}
             onChange={setChoix}
-            placeholder="Choisir une édition"
+            placeholder={`Choisir ${periode.une}`}
             options={(editions?.editions ?? []).map(e => ({
               value: e.id,
               label: e.nom,
@@ -329,7 +328,7 @@ export default function Personnes() {
           disabled={editionId === undefined}
           onChange={e => setSansAffectation(e.target.checked)}
         >
-          Sans affectation pour cette édition
+          Sans affectation pour {periode.cette}
         </Checkbox>
       </Space>
 

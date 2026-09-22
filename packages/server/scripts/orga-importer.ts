@@ -80,6 +80,11 @@ function imprimer(rapport: RapportImport) {
     `Organisation : ${rapport.organisation.slug} (${rapport.organisation.etat === 'creee' ? 'créée' : 'mise à jour'})`
   )
   for (const activite of rapport.activites) imprimerActivite(activite)
+  if (rapport.amorcageRetire) {
+    console.log(
+      'Activité d’amorçage « defaut », vide, retirée : le dépôt décrit ses activités.'
+    )
+  }
   if (rapport.activitesAbsentesDuDepot.length > 0) {
     console.log(
       `Activités en base mais absentes du dépôt (non modifiées) : ${rapport.activitesAbsentesDuDepot.join(', ')}`

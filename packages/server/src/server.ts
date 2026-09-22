@@ -10,6 +10,7 @@ import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
 import { auth } from './auth.ts'
 import {
   buildContext,
+  ENTETE_ACTIVITE,
   ENTETE_ORGANISATION,
   type AppContext,
 } from './context.ts'
@@ -107,7 +108,9 @@ app.use(
       return buildContext(
         req.ip,
         session?.user.id ?? null,
-        req.get(ENTETE_ORGANISATION)?.trim() || null
+        req.get(ENTETE_ORGANISATION)?.trim() || null,
+        false,
+        req.get(ENTETE_ACTIVITE)?.trim() || null
       )
     },
   })

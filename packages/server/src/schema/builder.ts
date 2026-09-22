@@ -21,6 +21,7 @@ export const builder = new SchemaBuilder<{
   }
   DefaultFieldNullability: false
   AuthScopes: {
+    authentifie: boolean
     connecte: boolean
     admin: boolean
     ecriture: boolean
@@ -38,6 +39,9 @@ export const builder = new SchemaBuilder<{
     // rôle ADMIN dans cette organisation ; ecriture, une organisation qui n'est pas
     // en lecture seule. Le type Mutation exige ecriture pour chacun de ses champs.
     authScopes: ctx => ({
+      // Une personne connectée, avec ou sans organisation active : elle peut choisir
+      // l'organisation où elle travaille.
+      authentifie: ctx.personne !== null,
       connecte: ctx.personne !== null && ctx.organisation !== null,
       admin:
         ctx.personne !== null &&

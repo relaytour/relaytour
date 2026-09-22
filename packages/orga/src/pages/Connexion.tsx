@@ -115,7 +115,8 @@ export default function Connexion() {
           Espace organisateur
         </h1>
         <Typography.Paragraph style={{ color: 'var(--rt-encre-70)' }}>
-          Organisez votre événement d’une édition à l’autre.
+          Transmettez le savoir-faire de votre organisation d’une période à
+          l’autre.
         </Typography.Paragraph>
 
         {erreur && (

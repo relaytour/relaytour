@@ -208,6 +208,27 @@ describe('import en disposition activites/', () => {
   })
 })
 
+describe('activité d’amorçage', () => {
+  it('retire l’activité « defaut » vide qu’un dépôt en activites/ ne décrit pas', async () => {
+    await prisma.activite.create({
+      data: {
+        organisationId,
+        slug: 'defaut',
+        nom: 'Amorçage',
+        groupes: [{ cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' }],
+      },
+    })
+    const rapport = await importerModeles(prisma, lireModeles(racine), {
+      organisation: slug,
+    })
+    expect(rapport.amorcageRetire).toBe(true)
+    expect(rapport.activitesAbsentesDuDepot).not.toContain('defaut')
+    expect(
+      await prisma.activite.count({ where: { organisationId, slug: 'defaut' } })
+    ).toBe(0)
+  })
+})
+
 describe('export en disposition activites/', () => {
   it('écrit une fiche modifiée dans le dossier de son activité', async () => {
     const saison = await prisma.fiche.findFirstOrThrow({

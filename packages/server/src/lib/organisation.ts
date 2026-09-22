@@ -321,6 +321,35 @@ export async function configurationOrganisation(
 }
 
 /**
+ * La configuration publique servie sans session (écran de connexion) : celle de
+ * l'organisation active, sinon de l'organisation désignée par son slug, sinon de
+ * l'unique organisation de l'installation. Une installation à plusieurs
+ * organisations, sans slug connu, sert l'identité d'amorçage de l'environnement :
+ * elle n'affiche la marque d'aucune organisation.
+ */
+export async function configurationPublique(
+  organisationId: string | undefined,
+  slug: string | undefined
+): Promise<ConfigurationOrganisation> {
+  if (organisationId !== undefined)
+    return configurationOrganisation(organisationId)
+  const [{ env }, { prisma }] = await Promise.all([
+    import('../env.ts'),
+    import('@relaytour/database'),
+  ])
+  if (slug !== undefined) {
+    const designee = await prisma.organisation.findFirst({
+      where: { slug, statut: { not: 'ARCHIVEE' } },
+      select: { id: true },
+    })
+    if (designee !== null) return configurationOrganisation(designee.id)
+  }
+  const nombre = await prisma.organisation.count()
+  if (nombre <= 1) return configurationOrganisation()
+  return resoudreConfiguration(env, declarationDepuisEnv(env))
+}
+
+/**
  * Garantit la ligne Organisation de l'installation. Appelée au démarrage de
  * l'API et du worker, et par les scripts qui écrivent en base.
  *

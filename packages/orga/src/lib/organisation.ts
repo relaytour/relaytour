@@ -5,11 +5,12 @@ import { graphql } from '../gql'
 
 // L'identité de l'organisation, servie par l'API sans session (ADR 0006). Elle
 // alimente le thème, la marque de la barre latérale, le titre de l'onglet et le
-// favicon. Un seul build sert toutes les installations.
+// favicon. Un seul build sert toutes les installations. Avant la connexion, le slug
+// de l'organisation mémorisée par le navigateur désigne le thème (ADR 0008).
 
 export const ORGANISATION = graphql(`
-  query Organisation {
-    organisation {
+  query Organisation($slug: String) {
+    organisation(slug: $slug) {
       slug
       nom
       sigle
