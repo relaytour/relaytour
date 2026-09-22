@@ -75,8 +75,8 @@ export default function Marque({
 
 /**
  * La signature de Relaytour, en pied de la barre latérale et de l'écran de
- * connexion : le logiciel libre qui fait tourner l'espace, et le lien vers son
- * code source, que l'AGPL oblige à proposer (article 13).
+ * connexion : le logiciel libre qui fait tourner l'espace. Son nom porte le lien
+ * vers le code source, que l'AGPL oblige à proposer (article 13).
  */
 export function SignatureRelaytour() {
   const { codeSource } = useOrganisation()
@@ -86,14 +86,15 @@ export function SignatureRelaytour() {
         <Pictogramme taille={14} monochrome />
       </span>
       <span>
-        Propulsé par Relaytour ·{' '}
+        Propulsé par{' '}
         <a
           href={codeSource}
           target="_blank"
           rel="noreferrer"
+          title="Code source de Relaytour"
           style={{ color: 'inherit', textDecoration: 'underline' }}
         >
-          code source
+          Relaytour
         </a>
       </span>
     </div>
