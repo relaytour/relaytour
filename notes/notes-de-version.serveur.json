@@ -5,6 +5,18 @@
   "version": "0.3.0",
   "notes": [
     {
+      "id": "2026-09-22-serveur-une-table-prouve-les-refus-entre-organisations",
+      "date": "2026-09-22",
+      "type": "securite",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Une table prouve les refus entre organisations",
+        "texte": "Chaque requête et chaque mutation qui reçoit un identifiant est éprouvée avec les identifiants d'une autre organisation : elle refuse, et aucune donnée ne change. Un garde-fou exige qu'une opération nouvelle entre dans la table.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-22-serveur-un-hebergeur-administre-les-organisations-sans-acces-aux-donnees",
       "date": "2026-09-22",
       "type": "fonctionnalite",
