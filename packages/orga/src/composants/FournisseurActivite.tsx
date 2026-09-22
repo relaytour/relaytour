@@ -1,5 +1,5 @@
 import { useApolloClient, useQuery } from '@apollo/client/react'
-import { Result, Spin } from 'antd'
+import { ConfigProvider, Result, Spin } from 'antd'
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router'
 
@@ -8,7 +8,9 @@ import {
   construireContexte,
   ContexteActivite,
 } from '../lib/activite'
+import { themeDepuisApi, useOrganisation } from '../lib/organisation'
 import { ACTIVITES } from '../lib/requetes'
+import { appliquerTheme, construireTheme } from '../lib/theme'
 import { activiteAffichee, afficherActivite } from '../lib/selection'
 
 // Premiers segments des adresses d'avant l'ADR 0008, sans activité : une adresse
@@ -82,6 +84,23 @@ export default function FournisseurActivite({
     [trouvee, activites]
   )
 
+  // Le thème de l'activité surcharge les couleurs et le fond de l'organisation
+  // (ADR 0009). En quittant l'activité, le thème de l'organisation revient.
+  const organisation = useOrganisation()
+  const theme = useMemo(
+    () => (trouvee === undefined ? null : themeDepuisApi(trouvee.theme)),
+    [trouvee]
+  )
+  useEffect(() => {
+    if (theme === null) return
+    appliquerTheme(theme)
+    return () => appliquerTheme(organisation.theme)
+  }, [theme, organisation.theme])
+  const configuration = useMemo(
+    () => (theme === null ? null : construireTheme(theme)),
+    [theme]
+  )
+
   if (loading && data === undefined) {
     return <Spin fullscreen description="Chargement" />
   }
@@ -99,8 +118,10 @@ export default function FournisseurActivite({
     )
   }
   return (
-    <ContexteActivite.Provider value={valeur}>
-      {children}
-    </ContexteActivite.Provider>
+    <ConfigProvider theme={configuration ?? undefined}>
+      <ContexteActivite.Provider value={valeur}>
+        {children}
+      </ContexteActivite.Provider>
+    </ConfigProvider>
   )
 }

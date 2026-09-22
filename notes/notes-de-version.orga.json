@@ -5,6 +5,18 @@
   "version": "0.1.0",
   "notes": [
     {
+      "id": "2026-09-22-orga-les-admins-modifient-l-identite-de-l-organisation",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Les admins modifient l'identité de l'organisation et de ses activités",
+        "texte": "La page « Organisation » permet de changer le nom, les contacts, les adresses de rôle, le logo, le favicon et le thème. Elle télécharge aussi le contenu de l'organisation en archive. Chaque activité peut recevoir son logo, ses couleurs et ses contacts ; ses écrans prennent son thème.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-22-orga-l-espace-organisateur-suit-l-organisation-et-l-activite",
       "date": "2026-09-22",
       "type": "fonctionnalite",

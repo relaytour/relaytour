@@ -1,6 +1,6 @@
 # ADR 0008 — Activités d'une organisation et administration de l'installation
 
-- **Statut** : acceptée
+- **Statut** : acceptée ; réalisée le 22 septembre 2026, en huit PR empilées (#10 à #17)
 - **Date** : 2026-09-22
 - Complète l'ADR 0006. Remplace son choix du module « organization » de Better Auth et sa réserve sur `TypePerimetre`.
 
@@ -133,6 +133,17 @@ Cinq migrations additives (invariant 8), dans cet ordre :
 - Chaque test d'intégration crée son organisation, son activité et sa période.
 - Un test de refus croisés vérifie chaque opération avec la session d'une autre organisation, puis avec une autre activité et avec une organisation suspendue. Il vérifie aussi le jeton sur une requête de données, le jeton absent sur `creerOrganisation`, la création d'une activité ou d'une période au-delà des limites, et une mutation en lecture seule. L'export par jeton réussit dans tous les statuts.
 - Le worker et l'importateur ont leurs preuves. Les rappels d'une organisation n'ont aucun effet sur l'autre. Les dispositions plate et `activites/` s'importent avec leurs groupes.
+
+### Revue de sécurité
+
+La revue du 22 septembre 2026 a parcouru chaque accès par identifiant des résolveurs. Chacun passe par un contrôle d'organisation préalable : `exigerEdition`, `exigerActivite`, `exigerEcriture`, `exigerMembre`, une lecture filtrée par organisation, ou le jeton d'administration. Le fichier `refus-croises.integration.test.ts` appelle chaque requête et chaque mutation qui reçoit un identifiant avec les identifiants d'une autre organisation. Il vérifie le refus et l'absence de tout changement. Un garde-fou du même fichier échoue si une opération nouvelle qui reçoit un identifiant n'entre pas dans la table.
+
+Limites connues, acceptées :
+
+- Une session vaut pour le compte, pas pour une organisation. Les en-têtes `X-Relaytour-Organisation` et `X-Relaytour-Activite` choisissent parmi les appartenances ; ils ne donnent aucun droit.
+- La requête publique `organisation(slug)` sert le nom et le thème d'une organisation non archivée à qui connaît son slug. Ces champs sont publics par nature : l'écran de connexion les affiche.
+- Le jeton d'administration est un secret unique par installation. Il se change par l'environnement et un redémarrage de l'API.
+- Le fichier d'export contient des noms et des adresses. Il reste sur le serveur jusqu'à sa remise à l'organisation.
 
 ## Plan de mise en œuvre
 

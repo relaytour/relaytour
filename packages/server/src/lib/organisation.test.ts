@@ -4,8 +4,11 @@ import { describe, expect, it } from 'vitest'
 import {
   DeclarationOrganisationSchema,
   declarationDepuisEnv,
+  fusionnerThemesDeclares,
+  manquementsIdentiteActivite,
   resoudreConfiguration,
   resoudreTheme,
+  surchargerParActivite,
 } from './organisation.ts'
 
 const ENV = {
@@ -148,5 +151,76 @@ describe('resoudreTheme', () => {
     expect(t.fond.transition).toBe('#FDF9F3')
     expect(t.fond.halo1).toEqual(themeParDefaut.fond.halo1)
     expect(t.fond.halo2).toEqual({ couleur: '#F32988', intensite: 0.14 })
+  })
+})
+
+describe('identité d’une activité (ADR 0009)', () => {
+  const declaration = DeclarationOrganisationSchema.parse({
+    slug: 'exemple',
+    nom: 'Exemple',
+    domainesCourrielAutorises: ['exemple.org'],
+    adressesRoleAutorisees: ['club.exemple@messagerie.example'],
+    contactRecrutement: 'contact@exemple.org',
+    theme: { couleurs: { accent: '#AD412B' }, polices: { titre: 'Quicksand' } },
+  })
+  const organisation = resoudreConfiguration(ENV, declaration, 'org')
+
+  it('refuse un slug d’organisation réservé par l’espace organisateur', () => {
+    const r = DeclarationOrganisationSchema.safeParse({ slug: 'admin', nom: 'X' })
+    expect(r.success).toBe(false)
+  })
+
+  it('refuse une messagerie grand public comme domaine de rôle', () => {
+    const r = DeclarationOrganisationSchema.safeParse({
+      slug: 'exemple',
+      nom: 'Exemple',
+      domainesCourrielAutorises: ['orange.fr'],
+    })
+    expect(r.success).toBe(false)
+    expect(JSON.stringify(r.error?.issues)).toContain('adresse complète')
+  })
+
+  it('reprend chaque valeur absente de l’organisation', () => {
+    const c = surchargerParActivite(
+      organisation,
+      { id: 'a', slug: 'club', nom: 'Club', sigle: null },
+      {}
+    )
+    expect(c.contactRecrutement).toBe('contact@exemple.org')
+    expect(c.theme).toBe(organisation.theme)
+    expect(c.activite.nomCourt).toBe('Club')
+  })
+
+  it('surcharge les couleurs et garde les polices de l’organisation', () => {
+    const c = surchargerParActivite(
+      organisation,
+      { id: 'a', slug: 'club', nom: 'Club', sigle: 'CC' },
+      {
+        contactRecrutement: 'club.exemple@messagerie.example',
+        theme: { couleurs: { primaire: '#2E5B3B' } },
+      }
+    )
+    expect(c.contactRecrutement).toBe('club.exemple@messagerie.example')
+    expect(c.theme.couleurs.primaire).toBe('#2E5B3B')
+    expect(c.theme.couleurs.accent).toBe('#AD412B')
+    expect(c.theme.polices.titre).toBe(organisation.theme.polices.titre)
+  })
+
+  it('signale un contact d’activité hors des adresses de rôle', () => {
+    expect(
+      manquementsIdentiteActivite(
+        { contactRecrutement: 'prenom@messagerie.example' },
+        declaration
+      ).map(m => m.path.join('.'))
+    ).toEqual(['contactRecrutement'])
+  })
+
+  it('fusionne les halos champ par champ', () => {
+    expect(
+      fusionnerThemesDeclares(
+        { fond: { halo1: { couleur: '#111111', intensite: 0.2 } } },
+        { fond: { halo1: { intensite: 0.1 } } }
+      )?.fond?.halo1
+    ).toEqual({ couleur: '#111111', intensite: 0.1 })
   })
 })

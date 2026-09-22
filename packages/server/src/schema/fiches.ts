@@ -75,12 +75,13 @@ export const FicheRef = builder.prismaObject('Fiche', {
     // pas être reversée dans Git (yarn orga:exporter la refuse).
     donneesPersonnelles: t.stringList({
       select: { versionCourante: { select: { contenu: true } } },
-      resolve: async f =>
-        donneesPersonnelles(
-          f.versionCourante?.contenu ?? '',
-          (await configurationOrganisation(f.organisationId))
-            .domainesCourrielAutorises
-        ),
+      resolve: async f => {
+        const configuration = await configurationOrganisation(f.organisationId)
+        return donneesPersonnelles(f.versionCourante?.contenu ?? '', {
+          domaines: configuration.domainesCourrielAutorises,
+          adresses: configuration.adressesRoleAutorisees,
+        })
+      },
     }),
     peutModifier: t.boolean({
       resolve: (f, _args, ctx) => peutRedigerFiche(ctx, f.perimetreId),
@@ -227,14 +228,19 @@ builder.queryFields(t => ({
     type: FicheRef,
     nullable: true,
     authScopes: { connecte: true },
-    args: { slug: t.arg.string({ required: true }) },
-    resolve: async (query, _root, { slug }, ctx) => {
-      const fiche = await prisma.fiche.findUnique({
+    // La fiche d'une activité : celle de l'argument, sinon celle que l'espace
+    // organisateur affiche. Une fiche d'une autre activité vaut une fiche absente,
+    // pour que /<activité>/fiches/<slug> n'ouvre jamais la fiche d'une autre.
+    args: { slug: t.arg.string({ required: true }), activiteId: t.arg.id() },
+    resolve: async (query, _root, { slug, activiteId }, ctx) => {
+      const activite = await ctx.exigerActivite(activiteId)
+      const trouvee = await prisma.fiche.findUnique({
         ...query,
         where: {
           organisationId_slug: { organisationId: ctx.organisation!.id, slug },
         },
       })
+      const fiche = trouvee?.activiteId === activite ? trouvee : null
       if (fiche === null) {
         if (ctx.personne?.estAdmin) return null
         throw accesRefuse()

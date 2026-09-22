@@ -25,6 +25,7 @@ x-environnement-app: &environnement-app
   CONTACT_RECRUTEMENT: '${CONTACT_RECRUTEMENT:-}'
   PAGE_EQUIPE: '${PAGE_EQUIPE:-}'
   CONTACT_HEBERGEUR: '${CONTACT_HEBERGEUR:-}'
+  CODE_SOURCE_URL: '${CODE_SOURCE_URL:-}'
   # Les exports d'organisation s'écrivent dans le volume exports (ADR 0008).
   EXPORTS_DIR: /exports
 

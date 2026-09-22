@@ -12,10 +12,12 @@ import { ErreurModeles, lireModeles } from '../src/orga/modeles.ts'
 
 // Importe le dossier de contenu (content/exemple par défaut) en base.
 //   yarn workspace @relaytour/server orga:importer [--edition 2027] [--simulation] [--dossier chemin]
-//     [--organisation slug] [--activite slug]
+//     [--organisation slug] [--activite slug] [--forcer]
 // Dans le conteneur : node dist/orga-importer.js --dossier /contenu --edition 2027
 // --organisation est obligatoire quand l'installation porte plusieurs organisations
-// (ADR 0008). --activite restreint l'import à une activité du dépôt.
+// (ADR 0008). --activite restreint l'import à une activité du dépôt. L'import
+// refuse d'écraser une modification faite dans l'application depuis le dernier
+// export ; --forcer l'écrase (ADR 0009).
 
 const { values } = parseArgs({
   options: {
@@ -24,6 +26,7 @@ const { values } = parseArgs({
     dossier: { type: 'string' },
     organisation: { type: 'string' },
     activite: { type: 'string' },
+    forcer: { type: 'boolean', default: false },
   },
 })
 
@@ -79,10 +82,16 @@ function imprimer(rapport: RapportImport) {
   console.log(
     `Organisation : ${rapport.organisation.slug} (${rapport.organisation.etat === 'creee' ? 'créée' : 'mise à jour'})`
   )
+  afficher('Images enregistrées', rapport.medias.enregistrees)
+  if (rapport.modifieDansApplication !== null) {
+    console.log(
+      `Attention : des admins ont modifié le contenu dans l’application le ${rapport.modifieDansApplication.toISOString()}. Exportez d’abord (orga:exporter), ou importez avec --forcer pour écraser ces modifications.`
+    )
+  }
   for (const activite of rapport.activites) imprimerActivite(activite)
   if (rapport.amorcageRetire) {
     console.log(
-      'Activité d’amorçage « defaut », vide, retirée : le dépôt décrit ses activités.'
+      'Activité d’amorçage, vide, retirée : le dépôt décrit ses activités.'
     )
   }
   if (rapport.activitesAbsentesDuDepot.length > 0) {
@@ -99,6 +108,7 @@ try {
     simulation: values.simulation,
     organisation: values.organisation,
     activite: values.activite,
+    forcer: values.forcer,
   })
   console.log(
     values.simulation
@@ -108,7 +118,7 @@ try {
   imprimer(rapport)
   if (rapport.activites.some(a => a.fiches.conflits.length > 0)) {
     console.log(
-      '\nPour résoudre un conflit : exporter les fiches (orga:exporter), reporter les changements dans Git, puis relancer l’import.'
+      '\nPour résoudre un conflit : exporter le contenu (orga:exporter), reporter les changements dans Git, puis relancer l’import.'
     )
   }
 } catch (erreur) {

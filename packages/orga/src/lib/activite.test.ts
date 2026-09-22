@@ -1,3 +1,4 @@
+import { themeParDefaut } from '@relaytour/tokens'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -19,6 +20,18 @@ const activite = (slug: string, options: Partial<Activite> = {}): Activite => ({
     { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },
     { cle: 'pole', libelle: 'Pôle', libellePluriel: 'Pôles' },
   ],
+  logoUrl: null,
+  contactRecrutement: null,
+  pageEquipe: null,
+  theme: themeParDefaut as Activite['theme'],
+  identite: {
+    contactRecrutement: null,
+    pageEquipe: null,
+    logoPng: null,
+    logoSvg: null,
+    logoUrl: null,
+    theme: null,
+  },
   ...options,
 })
 

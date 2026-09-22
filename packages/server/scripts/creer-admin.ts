@@ -5,8 +5,10 @@ import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../src/courriel/file.ts'
 import { connection, courrielQueue } from '../src/jobs/queues.ts'
-import { organisationParSlug } from '../src/lib/installation.ts'
-import { assurerOrganisationParDefaut } from '../src/lib/organisation.ts'
+import {
+  organisationParSlug,
+  organisationUnique,
+} from '../src/lib/installation.ts'
 
 // Crée le premier compte admin, ou donne les droits d'admin à un compte existant,
 // puis met en file le mail d'invitation. Le worker doit tourner pour l'envoyer.
@@ -34,9 +36,11 @@ if (
   process.exit(1)
 }
 
+// Sans --organisation, l'unique organisation de l'installation ; plusieurs
+// organisations exigent le slug.
 const organisationId =
   values.organisation === undefined
-    ? await assurerOrganisationParDefaut()
+    ? await organisationUnique()
     : (await organisationParSlug(values.organisation)).id
 const personne = await prisma.user.upsert({
   where: { email: adresse },

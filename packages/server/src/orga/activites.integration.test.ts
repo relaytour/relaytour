@@ -17,7 +17,7 @@ import { empreinte } from '../lib/fiches.ts'
 import { creerOrganisation } from '../lib/installation.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
-import { exporterFiches } from './exporter.ts'
+import { exporterContenu } from './exporter.ts'
 import { importerModeles } from './importer.ts'
 import { lireModeles } from './modeles.ts'
 
@@ -91,6 +91,7 @@ afterAll(async () => {
   await prisma.edition.deleteMany({ where: { organisationId } })
   await prisma.perimetre.deleteMany({ where: { organisationId } })
   await prisma.activite.deleteMany({ where: { organisationId } })
+  await prisma.media.deleteMany({ where: { organisationId } })
   await prisma.organisation.delete({ where: { id: organisationId } })
   invaliderConfigurationOrganisation()
   rmSync(racine, { recursive: true, force: true })
@@ -130,7 +131,7 @@ describe('import en disposition activites/', () => {
     }
   })
 
-  it('crée les activités et signale celle que le dépôt ne décrit pas', async () => {
+  it('crée les activités et retire l’activité vide créée avec l’organisation', async () => {
     const rapport = await importerModeles(prisma, lireModeles(racine), {
       organisation: slug,
     })
@@ -138,8 +139,13 @@ describe('import en disposition activites/', () => {
       [`section-${s}`, 'creee'],
       [`tournoi-${s}`, 'creee'],
     ])
-    // L'activité créée avec l'organisation reste en base, signalée.
-    expect(rapport.activitesAbsentesDuDepot).toEqual([slug])
+    // L'activité créée avec l'organisation, vide et absente du dépôt, disparaît :
+    // elle deviendrait sinon l'activité affichée par défaut.
+    expect(rapport.amorcageRetire).toBe(true)
+    expect(rapport.activitesAbsentesDuDepot).toEqual([])
+    expect(
+      await prisma.activite.count({ where: { organisationId, slug } })
+    ).toBe(0)
     const section = await prisma.activite.findFirstOrThrow({
       where: { organisationId, slug: `section-${s}` },
       include: { perimetres: true },
@@ -230,7 +236,7 @@ describe('activité d’amorçage', () => {
 })
 
 describe('export en disposition activites/', () => {
-  it('écrit une fiche modifiée dans le dossier de son activité', async () => {
+  it('réécrit seulement la fiche modifiée, dans le dossier de son activité', async () => {
     const saison = await prisma.fiche.findFirstOrThrow({
       where: { organisationId, slug: `saison-${s}` },
     })
@@ -248,9 +254,15 @@ describe('export en disposition activites/', () => {
       where: { id: saison.id },
       data: { versionCouranteId: version.id },
     })
-    const rapport = await exporterFiches(prisma, racine, slug)
+    const rapport = await exporterContenu(prisma, racine, slug)
     const attendu = `activites/section-${s}/fiches/communes/saison-${s}.md`
+    // Les fichiers du dossier disent la même chose, sauf la fiche : ils restent
+    // intacts.
     expect(rapport.ecrites).toEqual([attendu])
+    expect(rapport.inchangees).toContain('organisation.yaml')
+    expect(rapport.inchangees).toContain(
+      `activites/tournoi-${s}/taches/natation.yaml`
+    )
     expect(readFileSync(path.join(racine, attendu), 'utf8')).toContain(
       'avec les équipes'
     )
@@ -258,7 +270,7 @@ describe('export en disposition activites/', () => {
     expect(() => lireModeles(racine)).not.toThrow()
   })
 
-  it('refuse un dossier plat quand les fiches viennent de plusieurs activités', async () => {
+  it('refuse un dossier plat quand l’organisation porte plusieurs activités', async () => {
     const piscine = await prisma.fiche.findFirstOrThrow({
       where: { organisationId, slug: `piscine-${s}` },
     })
@@ -277,9 +289,10 @@ describe('export en disposition activites/', () => {
       data: { versionCouranteId: version.id },
     })
     const plat = mkdtempSync(path.join(tmpdir(), 'relaytour-plat-'))
+    writeFileSync(path.join(plat, 'perimetres.yaml'), 'perimetres: []\n')
     try {
-      await expect(exporterFiches(prisma, plat, slug)).rejects.toThrow(
-        /disposition plate/
+      await expect(exporterContenu(prisma, plat, slug)).rejects.toThrow(
+        /disposition activites/
       )
       expect(existsSync(path.join(plat, 'fiches'))).toBe(false)
     } finally {

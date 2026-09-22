@@ -224,6 +224,18 @@ describe('cycle de vie d’une organisation', () => {
     expect(ctx.personne?.estAdmin).toBe(true)
   })
 
+  it('refuse un second premier admin : le jeton ne promeut personne', async () => {
+    const r = await executer(
+      'administration',
+      `mutation ($o: String!, $e: String!) { inviterPremierAdmin(organisation: $o, email: $e, nom: "Seconde Admin") }`,
+      { o: slugA, e: `seconde-${s}@exemple.fr` }
+    )
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(
+      await prisma.user.count({ where: { email: `seconde-${s}@exemple.fr` } })
+    ).toBe(0)
+  })
+
   it('change le statut et retire une limite', async () => {
     const r = await executer(
       'administration',
