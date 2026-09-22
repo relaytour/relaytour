@@ -36,15 +36,21 @@ export const PersonneRef = builder.prismaObject('User', {
     id: t.exposeID('id'),
     nom: t.exposeString('name'),
     email: t.exposeString('email', { authScopes: soiOuGestion }),
-    // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global.
+    // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global. Il se
+    // lit par la personne elle-même et par les admins de l'organisation ; un admin
+    // d'activité lit null (ADR 0010).
     estAdmin: t.boolean({
+      nullable: true,
       select: (_args, ctx) => ({
         appartenances: {
           where: { organisationId: ctx.organisation?.id ?? '' },
           select: { role: true },
         },
       }),
-      resolve: u => u.appartenances[0]?.role === 'ADMIN',
+      resolve: (u, _args, ctx) =>
+        ctx.personne?.id === u.id || ctx.personne?.estAdmin === true
+          ? u.appartenances[0]?.role === 'ADMIN'
+          : null,
     }),
     archive: t.boolean({ resolve: u => u.archivedAt !== null }),
     creeLe: t.expose('createdAt', { type: 'DateTime' }),

@@ -58,10 +58,12 @@ export const builder = new SchemaBuilder<{
         ctx.personne !== null &&
         ctx.organisation !== null &&
         ctx.organisation.role === 'ADMIN',
+      // Un admin de l'organisation y entre toujours, même sans aucune activité.
       gestion: async () =>
         ctx.personne !== null &&
         ctx.organisation !== null &&
-        (await ctx.activitesAdministrees()).size > 0,
+        (ctx.organisation.role === 'ADMIN' ||
+          (await ctx.activitesAdministrees()).size > 0),
       ecriture: ctx.organisation?.statut !== 'LECTURE_SEULE',
       administration: ctx.administration,
     }),

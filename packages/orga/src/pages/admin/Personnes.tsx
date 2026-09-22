@@ -263,7 +263,7 @@ export default function Personnes() {
         : {
             email: personne.email,
             nom: personne.nom,
-            estAdmin: personne.estAdmin,
+            estAdmin: personne.estAdmin ?? false,
             activitesAdministrees: personne.activitesAdministrees,
             perimetresSouhaites: souhaitsInitiaux(personne),
           }

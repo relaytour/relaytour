@@ -99,7 +99,7 @@ export type FicheQueryVariables = Exact<{
 }>;
 
 
-export type FicheQuery = { moi: { id: string, estAdmin: boolean } | null, fiche: { id: string, slug: string, titre: string, contenu: string, source: SourceFiche | null, archive: boolean, modifieeLe: string, modifieePar: string | null, peutModifier: boolean, donneesPersonnelles: Array<string>, nombreVersions: number | null, perimetre: { id: string, slug: string, nom: string, couleur: string | null } | null } | null };
+export type FicheQuery = { moi: { id: string, estAdmin: boolean | null } | null, fiche: { id: string, slug: string, titre: string, contenu: string, source: SourceFiche | null, archive: boolean, modifieeLe: string, modifieePar: string | null, peutModifier: boolean, donneesPersonnelles: Array<string>, nombreVersions: number | null, perimetre: { id: string, slug: string, nom: string, couleur: string | null } | null } | null };
 
 export type TachesFicheQueryVariables = Exact<{
   slug: string;
@@ -168,7 +168,7 @@ export type OrganisationQuery = { organisation: { slug: string, nom: string, sig
 export type MoiQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type MoiQuery = { moi: { id: string, nom: string, email: string, estAdmin: boolean } | null };
+export type MoiQuery = { moi: { id: string, nom: string, email: string, estAdmin: boolean | null } | null };
 
 export type EditionCouranteQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -289,7 +289,7 @@ export type RetroplanningQueryVariables = Exact<{
 }>;
 
 
-export type RetroplanningQuery = { moi: { id: string, estAdmin: boolean, affectations: Array<{ id: string, perimetre: { id: string } }> } | null, retroplanning: Array<{ id: string, titre: string, echeance: string | null, statut: StatutTache, enRetard: boolean, perimetre: { id: string, slug: string, nom: string, groupe: string, couleur: string | null }, assignes: Array<{ id: string, nom: string }> }> };
+export type RetroplanningQuery = { moi: { id: string, estAdmin: boolean | null, affectations: Array<{ id: string, perimetre: { id: string } }> } | null, retroplanning: Array<{ id: string, titre: string, echeance: string | null, statut: StatutTache, enRetard: boolean, perimetre: { id: string, slug: string, nom: string, groupe: string, couleur: string | null }, assignes: Array<{ id: string, nom: string }> }> };
 
 export type CreerActiviteMutationVariables = Exact<{
   slug: string;
@@ -418,7 +418,7 @@ export type PersonnesQueryVariables = Exact<{
 }>;
 
 
-export type PersonnesQuery = { personnes: Array<{ id: string, nom: string, email: string, estAdmin: boolean, activitesAdministrees: Array<string>, archive: boolean, affectations: Array<{ id: string, perimetre: { id: string, nom: string, couleur: string | null } }>, souhaits: Array<{ id: string, satisfait: boolean, perimetre: { id: string, nom: string, couleur: string | null } }> }> };
+export type PersonnesQuery = { personnes: Array<{ id: string, nom: string, email: string, estAdmin: boolean | null, activitesAdministrees: Array<string>, archive: boolean, affectations: Array<{ id: string, perimetre: { id: string, nom: string, couleur: string | null } }>, souhaits: Array<{ id: string, satisfait: boolean, perimetre: { id: string, nom: string, couleur: string | null } }> }> };
 
 export type InviterPersonneMutationVariables = Exact<{
   email: string;
@@ -438,7 +438,7 @@ export type ModifierPersonneMutationVariables = Exact<{
 }>;
 
 
-export type ModifierPersonneMutation = { modifierPersonne: { id: string, nom: string, estAdmin: boolean } };
+export type ModifierPersonneMutation = { modifierPersonne: { id: string, nom: string, estAdmin: boolean | null } };
 
 export type ArchiverPersonneMutationVariables = Exact<{
   id: string | number;

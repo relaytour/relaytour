@@ -57,9 +57,11 @@ export const TacheRef = builder.prismaObject('Tache', {
     }),
     // Qui a coché la tâche et qui l'a réalisée : ces informations ne sont lisibles que
     // par la personne qui a coché et par les admins. Les autres lisent null.
+    // L'activité se charge avec la tâche : aucune requête de plus par tâche.
     clotureePar: t.field({
       type: PersonneRef,
       nullable: true,
+      select: { perimetre: { select: { activiteId: true } } },
       resolve: async (tache, _args, ctx) =>
         tache.clotureeParId !== null && (await voitLaCloture(ctx, tache))
           ? prisma.user.findUnique({ where: { id: tache.clotureeParId } })
@@ -68,6 +70,7 @@ export const TacheRef = builder.prismaObject('Tache', {
     realiseePar: t.field({
       type: PersonneRef,
       nullable: true,
+      select: { perimetre: { select: { activiteId: true } } },
       resolve: async (tache, _args, ctx) =>
         tache.realiseeParId !== null && (await voitLaCloture(ctx, tache))
           ? prisma.user.findUnique({ where: { id: tache.realiseeParId } })
@@ -79,15 +82,12 @@ export const TacheRef = builder.prismaObject('Tache', {
 /** Qui a coché et qui a réalisé : la personne qui a coché, et les admins de l'activité. */
 async function voitLaCloture(
   ctx: AppContext,
-  tache: { clotureeParId: string | null; perimetreId: string }
+  tache: { clotureeParId: string | null; perimetre: { activiteId: string } }
 ) {
   if (ctx.personne === null) return false
   if (ctx.personne.id === tache.clotureeParId) return true
-  const perimetre = await prisma.perimetre.findUnique({
-    where: { id: tache.perimetreId },
-    select: { activiteId: true },
-  })
-  return perimetre !== null && ctx.estAdminDe(perimetre.activiteId)
+  // Les activités administrées se calculent une fois par requête.
+  return ctx.estAdminDe(tache.perimetre.activiteId)
 }
 
 const AvancementRef = builder

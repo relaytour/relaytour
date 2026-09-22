@@ -421,7 +421,7 @@ type Personne {
   archive: Boolean!
   creeLe: DateTime!
   email: String!
-  estAdmin: Boolean!
+  estAdmin: Boolean
   id: ID!
   nom: String!
   souhaits(editionId: ID): [Souhait!]!

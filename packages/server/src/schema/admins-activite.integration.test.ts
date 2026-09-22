@@ -242,6 +242,16 @@ describe('admin d’une activité', () => {
     expect(membre?.affectations).toEqual([])
   })
 
+  it('ne lit pas le rôle d’organisation des autres membres', async () => {
+    const r = await executer(ids.adminA1, 'query { personnes { id estAdmin } }')
+    const personnes = r.data?.personnes as {
+      id: string
+      estAdmin: boolean | null
+    }[]
+    expect(personnes.find(p => p.id === ids.adminOrg)?.estAdmin).toBeNull()
+    expect(personnes.find(p => p.id === ids.adminA1)?.estAdmin).toBe(false)
+  })
+
   it('refuse de gérer une autre activité', async () => {
     expect(
       code(
