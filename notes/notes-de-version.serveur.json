@@ -5,6 +5,18 @@
   "version": "0.3.0",
   "notes": [
     {
+      "id": "2026-09-22-serveur-les-activites-et-les-appartenances-entrent-dans-le-schema",
+      "date": "2026-09-22",
+      "type": "interne",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Les activités et les appartenances entrent dans le schéma",
+        "texte": "Une organisation porte désormais une ou plusieurs activités. Chaque période, périmètre et fiche appartient à une activité, et chaque périmètre à un groupe. Une table d'appartenances porte le rôle de chaque compte dans une organisation. L'application utilise encore une seule activité par organisation (ADR 0008, premier chantier).",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-serveur-une-recherche-globale-trouve-taches-fiches-et-personnes",
       "date": "2026-09-19",
       "type": "fonctionnalite",
