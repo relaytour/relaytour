@@ -22,7 +22,7 @@ Relaytour est un logiciel libre (AGPL-3.0). Vous pouvez l'héberger vous-même. 
 | `docs/adr/` | Décisions d'architecture. |
 | `docs/feuille-de-route.md` | Évolutions envisagées après la première version. |
 
-Les règles du dépôt (décisions, invariants, style d'écriture) sont dans [CONTRIBUTING.md](CONTRIBUTING.md).
+Les règles du dépôt (décisions, invariants, style d'écriture, proposition d'une PR) sont dans [CONTRIBUTING.md](CONTRIBUTING.md). Chaque participation suit le [code de conduite](CODE_OF_CONDUCT.md). Une faille de sécurité se signale en privé ([SECURITY.md](SECURITY.md)).
 
 ## Prérequis
 

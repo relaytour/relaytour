@@ -1,0 +1,30 @@
+name: Proposer une évolution
+description: Une idée pour mieux préparer un événement avec Relaytour.
+title: 'Évolution : '
+labels: ['évolution']
+body:
+  - type: textarea
+    id: besoin
+    attributes:
+      label: Le besoin
+      description: Quelle difficulté rencontrez-vous aujourd'hui, et qui la rencontre ?
+    validations:
+      required: true
+  - type: textarea
+    id: proposition
+    attributes:
+      label: La proposition
+      description: Ce que Relaytour pourrait faire. Une maquette ou un exemple fictif aide.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Les solutions actuelles
+      description: Comment faites-vous sans cette évolution ?
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: Je peux participer à la réalisation de cette évolution.

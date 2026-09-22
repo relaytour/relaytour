@@ -115,10 +115,79 @@ Un seul mot par notion.
 | limites | Plafonds d'une organisation (nombre d'activités), fixés par l'administration de l'installation. Une organisation auto-hébergée n'en a aucune. |
 | bénévole | Personne qui aide pendant le tournoi sans être référent·e. |
 
+## Proposer une modification
+
+Relaytour accueille les contributions : correctifs, évolutions, documentation, traductions de la documentation. Ouvrez d'abord un ticket pour une évolution importante, afin d'en discuter avant d'écrire le code.
+
+1. Travaillez dans un fork ou, pour les personnes mainteneuses, dans une branche du dépôt. Nommez la branche `type/sujet`, par exemple `fix/recherche-sans-edition` ou `feat/export-calendrier`.
+2. Partez de `develop` et visez `develop`. `main` n'avance qu'à la publication d'une version.
+3. Donnez à la PR un titre au format des commits conventionnels, en français : `feat(orga): …`, `fix(server): …`, `docs: …`. Avec la fusion en squash, ce titre devient le message du commit fusionné.
+4. Traitez un seul sujet par PR. Une PR courte se relit et se fusionne plus vite.
+5. Remplissez le modèle de PR. Il rappelle les vérifications et les règles d'écriture.
+
+### Ce que chaque PR apporte
+
+- `yarn check` et `yarn test` passent sur votre poste. Un changement du serveur passe aussi `yarn workspace @relaytour/server test:integration`.
+- Un changement visible porte son fragment de note de version, avec une audience parmi `organisateurs`, `interne` et `public`. Lancez ensuite `yarn versionner valider` puis `yarn versionner compiler`.
+  ```bash
+  yarn versionner noter --cible orga --type fonctionnalite --audience organisateurs --titre "Les fiches s'affichent en liste condensée"
+  ```
+  La cible vaut `serveur` ou `orga`. Le type vaut `fonctionnalite`, `correctif`, `rupture`, `securite`, `performance` ou `interne`. Complétez ensuite le texte du fragment créé dans `notes/fragments/`.
+- Un changement d'interface joint une capture de l'écran, faite avec le contenu d'exemple (`content/exemple`) et des comptes fictifs.
+- Un changement de contrôle d'accès joint un test qui prouve le refus (invariant 11).
+- Les contrats générés sont à jour (`yarn codegen`, invariant 9).
+- Aucun contenu d'organisation, aucune donnée personnelle, aucun secret (invariants 1 et 2).
+- Le champ `version` des `package.json` ne change pas : seule la PR de publication le relève (voir « Versions »).
+
+### Revue et fusion
+
+- La CI (« Lint, types, tests, build ») doit passer.
+- Tous les fils de discussion doivent être résolus : la règle de `develop` bloque la fusion sinon.
+- Copilot relit chaque PR. Sa revue est consultative : une remarque écartée reçoit une réponse qui explique le choix, puis son fil est résolu.
+- Une personne mainteneuse fusionne en **squash** : une PR donne un commit sur `develop`. Le rebase reste réservé aux PR de mainteneur dont chaque commit est propre et utile seul.
+- `develop` et `main` gardent un historique linéaire. Aucune poussée forcée, aucune suppression de ces branches.
+
+## Versions
+
+### Ce qui porte un numéro
+
+- Deux cibles se publient, chacune avec son propre numéro : le serveur (`packages/server/package.json`) et l'espace organisateur (`packages/orga/package.json`).
+- `packages/tokens` et `packages/database` sont internes au dépôt. Leur numéro ne se publie pas.
+- Le journal `notes/notes-de-version.<cible>.json` reprend le numéro de sa cible et les fragments de `notes/fragments/`.
+
+### Numérotation
+
+- Les numéros suivent la forme `x.y.z` du versionnage sémantique.
+- Avant la version 1.0, une fonctionnalité fait monter le deuxième chiffre (0.3.0 devient 0.4.0) et un correctif le troisième (0.4.0 devient 0.4.1).
+- Une rupture (fragment de type `rupture`) fait aussi monter le deuxième chiffre avant la 1.0. Son fragment porte une consigne de migration.
+- Une cible sans changement depuis sa dernière version garde son numéro.
+
+### Une PR ordinaire ne change pas de numéro
+
+Une PR de correctif ou d'évolution apporte seulement son fragment de note. Elle ne modifie jamais le champ `version` d'un `package.json`. Deux PR ouvertes en même temps se disputeraient sinon le même numéro.
+
+### Publier une version
+
+1. Une PR `chore(version): serveur x.y.z, orga x.y.z` vers `develop` relève le numéro de chaque cible qui a changé. Elle lance `yarn versionner valider` puis `yarn versionner compiler`, et commite les journaux.
+2. Après sa fusion, une personne mainteneuse avance `main` jusqu'à `develop` en avance rapide, une fois la CI de `develop` au vert :
+   ```bash
+   git push origin develop:main
+   ```
+   Une fusion de PR par GitHub réécrirait les commits, en rebase comme en squash, et `main` divergerait de `develop`. Seul le rôle d'administration contourne la règle de PR de `main`.
+3. Elle pose ensuite un tag par cible publiée, sur le commit de `main` :
+   ```bash
+   git tag serveur-x.y.z && git tag orga-x.y.z && git push origin --tags
+   ```
+
+### Ce qui reste à outiller
+
+- Aujourd'hui, chaque poussée sur `main` publie l'image du serveur sous l'empreinte du commit (`ghcr.io/relaytour/relaytour-server:<sha7>`), avec la version `x.y.z-dev.<sha7>` dans ses métadonnées.
+- Trois outils restent à écrire : le rattachement de chaque note à la version qui la publie, une release GitHub rédigée depuis les notes à chaque tag, et une image marquée du numéro de version.
+- En attendant, une installation suit une image par son empreinte de commit, et la release se rédige à la main à partir du journal.
+
 ## Branches et CI
 
-- Tant que le dépôt est privé et que la version minimale n'est pas fixée, le travail se fait sur `main`, et son historique peut être réécrit. L'ouverture publique fige l'historique (`docs/publication.md`). Les PR viendront ensuite : une PR part de sa branche parente réelle et vise `develop`.
-- Avant chaque poussée : `yarn versionner valider` puis `yarn versionner compiler`. Un changement visible porte son fragment de note de version (`yarn versionner noter`), avec une audience parmi `organisateurs`, `interne` et `public`.
+- `develop` est la branche d'intégration. `main` porte la dernière version publiée. L'historique de ces deux branches ne se réécrit pas.
 - Pousser avec `git push origin <branche>`.
 - Un correctif de CI s'ajoute comme étape de `ci.yml`, jamais comme job.
 - Deux arrêts obligatoires : une migration destructive, et tout geste sur les secrets ou la production.
