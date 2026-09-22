@@ -6,11 +6,18 @@ import { mettreEnFile } from '../courriel/file.ts'
 
 import { GROUPES_PAR_DEFAUT } from './activites.ts'
 import { erreurSaisie } from './erreurs.ts'
-import { LimitesSchema, lireLimites, type Limites } from './limites.ts'
 import {
+  LimitesSchema,
+  lireLimites,
+  sousVerrouOrganisation,
+  type Limites,
+} from './limites.ts'
+import {
+  assurerOrganisationParDefaut,
   DeclarationOrganisationSchema,
   invaliderConfigurationOrganisation,
 } from './organisation.ts'
+import { adresseValide, sansDoublon, texteRequis } from './saisie.ts'
 
 // Administration de l'installation (ADR 0008).
 //
@@ -58,33 +65,31 @@ export async function creerOrganisation(
     throw erreurSaisie(messageValidation(limites.error.issues))
   }
   const d = declaration.data
-  const existante = await prisma.organisation.findUnique({
-    where: { slug: d.slug },
-    select: { id: true },
-  })
-  if (existante !== null) {
-    throw erreurSaisie('Une organisation utilise déjà cet identifiant.')
-  }
-  const organisation = await prisma.organisation.create({
-    data: {
-      slug: d.slug,
-      nom: d.nom,
-      sigle: d.sigle ?? null,
-      fuseauHoraire: d.fuseauHoraire,
-      configuration: d,
-      limites: limites.data,
-      activites: {
-        create: {
-          slug: d.slug,
-          nom: d.nom,
-          sigle: d.sigle ?? null,
-          nature: 'EVENEMENT',
-          groupes: GROUPES_PAR_DEFAUT,
+  // La contrainte d'unicité tranche : deux créations simultanées du même slug
+  // donnent une erreur de saisie, jamais une erreur de base.
+  const organisation = await sansDoublon(
+    prisma.organisation.create({
+      data: {
+        slug: d.slug,
+        nom: d.nom,
+        sigle: d.sigle ?? null,
+        fuseauHoraire: d.fuseauHoraire,
+        configuration: d,
+        limites: limites.data,
+        activites: {
+          create: {
+            slug: d.slug,
+            nom: d.nom,
+            sigle: d.sigle ?? null,
+            nature: 'EVENEMENT',
+            groupes: GROUPES_PAR_DEFAUT,
+          },
         },
       },
-    },
-    select: { id: true },
-  })
+      select: { id: true },
+    }),
+    'Une organisation utilise déjà cet identifiant.'
+  )
   return organisation.id
 }
 
@@ -100,21 +105,16 @@ export async function organisationParSlug(slug: string) {
 }
 
 /**
- * Donne le rôle d'admin d'une organisation à une adresse, en créant le compte s'il
- * n'existe pas, puis met en file le mail d'invitation. Un compte archivé est refusé :
- * le rétablir lui rendrait l'accès à ses autres organisations.
+ * Vérifie une invitation avant toute écriture : adresse valide, nom de 120
+ * caractères au plus, compte non archivé. Un compte archivé est refusé : le
+ * rétablir lui rendrait l'accès à ses autres organisations.
  */
-export async function inviterAdmin(
-  slugOrganisation: string,
+export async function validerInvitation(
   adresse: string,
   nom: string
-): Promise<string> {
-  const { id: organisationId } = await organisationParSlug(slugOrganisation)
-  const email = adresse.trim().toLowerCase()
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 191) {
-    throw erreurSaisie('L’adresse mail n’est pas valide.')
-  }
-  if (nom.trim().length === 0) throw erreurSaisie('Le nom est obligatoire.')
+): Promise<{ email: string; nom: string }> {
+  const email = adresseValide(adresse)
+  const nomValide = texteRequis(nom, 'Le nom', 120)
   const existant = await prisma.user.findUnique({
     where: { email },
     select: { archivedAt: true },
@@ -122,21 +122,51 @@ export async function inviterAdmin(
   if (existant !== null && existant.archivedAt !== null) {
     throw erreurSaisie('Cette adresse ne peut pas être invitée.')
   }
-  const personne = await prisma.user.upsert({
-    where: { email },
-    update: {},
-    create: { id: randomUUID(), email, name: nom.trim() },
-    select: { id: true },
+  return { email, nom: nomValide }
+}
+
+/**
+ * Invite le premier admin d'une organisation. L'opération ne vaut qu'une fois :
+ * dès qu'un admin existe, les admins de l'organisation invitent les autres
+ * personnes, et le jeton de l'installation ne peut promouvoir personne.
+ */
+export async function inviterAdmin(
+  slugOrganisation: string,
+  adresse: string,
+  nom: string
+): Promise<string> {
+  const { id: organisationId } = await organisationParSlug(slugOrganisation)
+  const invitation = await validerInvitation(adresse, nom)
+  const userId = await sousVerrouOrganisation(organisationId, async tx => {
+    const admins = await tx.appartenance.count({
+      where: { organisationId, role: 'ADMIN' },
+    })
+    if (admins > 0) {
+      throw erreurSaisie(
+        'Cette organisation a déjà un admin : ses admins invitent les autres personnes.'
+      )
+    }
+    const personne = await tx.user.upsert({
+      where: { email: invitation.email },
+      update: {},
+      create: {
+        id: randomUUID(),
+        email: invitation.email,
+        name: invitation.nom,
+      },
+      select: { id: true },
+    })
+    await tx.appartenance.upsert({
+      where: {
+        userId_organisationId: { userId: personne.id, organisationId },
+      },
+      update: { role: 'ADMIN' },
+      create: { userId: personne.id, organisationId, role: 'ADMIN' },
+    })
+    return personne.id
   })
-  await prisma.appartenance.upsert({
-    where: {
-      userId_organisationId: { userId: personne.id, organisationId },
-    },
-    update: { role: 'ADMIN' },
-    create: { userId: personne.id, organisationId, role: 'ADMIN' },
-  })
-  await mettreEnFile('invitation', { userId: personne.id }, { organisationId })
-  return personne.id
+  await mettreEnFile('invitation', { userId }, { organisationId })
+  return userId
 }
 
 /** Change le statut ou les limites d'une organisation. Une limite nulle se retire. */
@@ -264,25 +294,33 @@ export async function organisationsInstallation(): Promise<
  * seule organisation de l'installation ; plusieurs organisations exigent le slug.
  * Sans slug d'activité, la première activité non archivée de l'organisation.
  */
+/**
+ * L'organisation d'un script lancé sans --organisation : l'unique organisation de
+ * l'installation. Une installation vide amorce la sienne ; une installation à
+ * plusieurs organisations exige le slug, sans jamais deviner.
+ */
+export async function organisationUnique(): Promise<string> {
+  const organisations = await prisma.organisation.findMany({
+    select: { id: true },
+    take: 2,
+  })
+  if (organisations.length === 0) return assurerOrganisationParDefaut()
+  if (organisations.length > 1 || organisations[0] === undefined) {
+    throw erreurSaisie(
+      'Plusieurs organisations existent : précisez --organisation <slug>.'
+    )
+  }
+  return organisations[0].id
+}
+
 export async function organisationEtActivite(
   slugOrganisation: string | undefined,
   slugActivite: string | undefined
 ): Promise<{ organisationId: string; activiteId: string }> {
-  let organisationId: string
-  if (slugOrganisation === undefined) {
-    const organisations = await prisma.organisation.findMany({
-      select: { id: true },
-      take: 2,
-    })
-    if (organisations.length !== 1 || organisations[0] === undefined) {
-      throw erreurSaisie(
-        'Plusieurs organisations existent : précisez --organisation <slug>.'
-      )
-    }
-    organisationId = organisations[0].id
-  } else {
-    organisationId = (await organisationParSlug(slugOrganisation)).id
-  }
+  const organisationId =
+    slugOrganisation === undefined
+      ? await organisationUnique()
+      : (await organisationParSlug(slugOrganisation)).id
   const activite = await prisma.activite.findFirst({
     where: {
       organisationId,

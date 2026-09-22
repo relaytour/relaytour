@@ -25,7 +25,7 @@ yarn workspace @relaytour/server admin:creer adresse@exemple.org "Prénom Nom"  
 yarn workspace @relaytour/server edition:creer 2027 "Rencontres 2027" 2027-06-05 2027-06-06   # première édition
 yarn workspace @relaytour/server organisation:creer rencontres "Les Rencontres" --admin adresse@exemple.org --admin-nom "Prénom Nom"   # autre organisation (ADR 0008)
 yarn workspace @relaytour/server organisation:exporter rencontres --dossier /tmp/exports   # export complet d'une organisation
-yarn workspace @relaytour/server planification:lancer rappels|resumes [--organisation slug]   # lancer une tâche planifiée tout de suite
+yarn workspace @relaytour/server planification:lancer rappels|resumes|synchro [--organisation slug]   # lancer une tâche planifiée tout de suite ; synchro réaligne les planifications
 yarn check        # lint, types, build
 yarn test         # tests unitaires
 yarn workspace @relaytour/server test:integration   # base locale, worker arrêté

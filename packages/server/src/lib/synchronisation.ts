@@ -1,4 +1,4 @@
-import { prisma } from '@relaytour/database'
+import { prisma, type Prisma } from '@relaytour/database'
 
 // Source de vérité du contenu (ADR 0009). Une modification du contenu faite dans
 // l'application (identité, activités, périmètres) se date : un import du dossier
@@ -7,9 +7,11 @@ import { prisma } from '@relaytour/database'
 // fiche modifiée dans l'application et ne la remplace pas.
 
 export async function marquerContenuModifie(
-  organisationId: string
+  organisationId: string,
+  // Sous le verrou de l'organisation, la transaction qui le détient.
+  db: Prisma.TransactionClient | typeof prisma = prisma
 ): Promise<void> {
-  await prisma.organisation.update({
+  await db.organisation.update({
     where: { id: organisationId },
     data: { contenuModifieLe: new Date() },
   })

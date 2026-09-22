@@ -228,14 +228,19 @@ builder.queryFields(t => ({
     type: FicheRef,
     nullable: true,
     authScopes: { connecte: true },
-    args: { slug: t.arg.string({ required: true }) },
-    resolve: async (query, _root, { slug }, ctx) => {
-      const fiche = await prisma.fiche.findUnique({
+    // La fiche d'une activité : celle de l'argument, sinon celle que l'espace
+    // organisateur affiche. Une fiche d'une autre activité vaut une fiche absente,
+    // pour que /<activité>/fiches/<slug> n'ouvre jamais la fiche d'une autre.
+    args: { slug: t.arg.string({ required: true }), activiteId: t.arg.id() },
+    resolve: async (query, _root, { slug, activiteId }, ctx) => {
+      const activite = await ctx.exigerActivite(activiteId)
+      const trouvee = await prisma.fiche.findUnique({
         ...query,
         where: {
           organisationId_slug: { organisationId: ctx.organisation!.id, slug },
         },
       })
+      const fiche = trouvee?.activiteId === activite ? trouvee : null
       if (fiche === null) {
         if (ctx.personne?.estAdmin) return null
         throw accesRefuse()

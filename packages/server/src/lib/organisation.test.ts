@@ -165,6 +165,11 @@ describe('identité d’une activité (ADR 0009)', () => {
   })
   const organisation = resoudreConfiguration(ENV, declaration, 'org')
 
+  it('refuse un slug d’organisation réservé par l’espace organisateur', () => {
+    const r = DeclarationOrganisationSchema.safeParse({ slug: 'admin', nom: 'X' })
+    expect(r.success).toBe(false)
+  })
+
   it('refuse une messagerie grand public comme domaine de rôle', () => {
     const r = DeclarationOrganisationSchema.safeParse({
       slug: 'exemple',

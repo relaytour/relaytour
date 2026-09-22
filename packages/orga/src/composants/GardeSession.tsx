@@ -27,9 +27,11 @@ export default function GardeSession({
 }) {
   const apollo = useApolloClient()
   const { data, loading, error } = useQuery(MOI)
-  const { data: orgs, loading: chargementOrgs } = useQuery(MES_ORGANISATIONS, {
-    skip: !data?.moi,
-  })
+  const {
+    data: orgs,
+    loading: chargementOrgs,
+    error: erreurOrgs,
+  } = useQuery(MES_ORGANISATIONS, { skip: !data?.moi })
   const organisations = orgs?.mesOrganisations ?? []
   const choisie = organisationChoisie()
   const choixPerime =
@@ -47,7 +49,8 @@ export default function GardeSession({
   if (loading || chargementOrgs || choixPerime) {
     return <Spin fullscreen description="Chargement" />
   }
-  if (error) {
+  // Une erreur sur la liste des organisations ne se lit pas comme une liste vide.
+  if (error || erreurOrgs) {
     return (
       <Result
         status="warning"

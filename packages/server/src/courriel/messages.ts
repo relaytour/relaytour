@@ -55,7 +55,9 @@ const SELECTION_NOTIFICATION = {
     select: {
       titre: true,
       echeance: true,
-      perimetre: { select: { nom: true, slug: true } },
+      perimetre: {
+        select: { nom: true, slug: true, activite: { select: { slug: true } } },
+      },
     },
   },
 } as const
@@ -303,28 +305,29 @@ export async function composer(
         data: { resumeeLe: maintenant },
       })
       // La date du résumé se note pour cette organisation : une personne membre de
-      // plusieurs organisations reçoit le résumé de chacune.
-      const actuelles = await prisma.preferenceNotification.findUnique({
-        where: { userId },
-        select: { derniersResumes: true },
-      })
-      const derniersResumes = {
-        ...(typeof actuelles?.derniersResumes === 'object' &&
-        actuelles.derniersResumes !== null
-          ? (actuelles.derniersResumes as Record<string, string>)
-          : {}),
-        [idOrganisation]: maintenant.toISOString(),
+      // plusieurs organisations reçoit le résumé de chacune. Deux résumés envoyés
+      // en même temps écrivent chacun leur clé par JSON_SET, en une seule requête :
+      // aucun des deux n'efface la date de l'autre.
+      try {
+        await prisma.preferenceNotification.upsert({
+          where: { userId },
+          update: {},
+          create: { userId, organisationId: idOrganisation },
+        })
+      } catch (erreur) {
+        // Une création simultanée a déjà posé la ligne : la mise à jour suit.
+        if ((erreur as { code?: string }).code !== 'P2002') throw erreur
       }
-      await prisma.preferenceNotification.upsert({
-        where: { userId },
-        update: { dernierResumeLe: maintenant, derniersResumes },
-        create: {
-          userId,
-          dernierResumeLe: maintenant,
-          derniersResumes,
-          organisationId: idOrganisation,
-        },
-      })
+      await prisma.$executeRaw`
+        UPDATE PreferenceNotification
+        SET dernierResumeLe = ${maintenant},
+            derniersResumes = JSON_SET(
+              COALESCE(derniersResumes, JSON_OBJECT()),
+              ${`$."${idOrganisation}"`},
+              ${maintenant.toISOString()}
+            ),
+            updatedAt = ${maintenant}
+        WHERE userId = ${userId}`
     }
   }
 

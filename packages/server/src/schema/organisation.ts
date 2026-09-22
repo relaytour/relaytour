@@ -23,7 +23,7 @@ import {
   texteRequis,
 } from '../lib/saisie.ts'
 
-import { exigerPlacePeriode } from '../lib/limites.ts'
+import { exigerPlacePeriode, sousVerrouOrganisation } from '../lib/limites.ts'
 import {
   configurationPublique,
   type ConfigurationOrganisation,
@@ -159,14 +159,16 @@ builder.mutationFields(t => ({
       const edition = validerEdition(args)
       const activiteId = await ctx.exigerActivite(args.activiteId)
       const organisationId = ctx.organisation!.id
-      await exigerPlacePeriode(organisationId)
-      return sansDoublon(
-        prisma.edition.create({
-          ...query,
-          data: { ...edition, organisationId, activiteId },
-        }),
-        `Une édition existe déjà pour ${args.annee}.`
-      )
+      return sousVerrouOrganisation(organisationId, async tx => {
+        await exigerPlacePeriode(organisationId, tx)
+        return sansDoublon(
+          tx.edition.create({
+            ...query,
+            data: { ...edition, organisationId, activiteId },
+          }),
+          `Une édition existe déjà pour ${args.annee}.`
+        )
+      })
     },
   }),
 
@@ -183,19 +185,22 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       validerDates(args.debut, args.fin)
       const actuelle = await ctx.exigerEdition(args.id)
-      // Rouvrir une période archivée compte dans la limite des périodes ouvertes.
-      if (actuelle.statut === 'ARCHIVEE' && args.statut !== 'ARCHIVEE') {
-        await exigerPlacePeriode(ctx.organisation!.id)
-      }
-      return prisma.edition.update({
-        ...query,
-        where: { id: String(args.id) },
-        data: {
-          nom: texteRequis(args.nom, 'Le nom'),
-          debut: args.debut,
-          fin: args.fin,
-          statut: args.statut,
-        },
+      const organisationId = ctx.organisation!.id
+      return sousVerrouOrganisation(organisationId, async tx => {
+        // Rouvrir une période archivée compte dans la limite des périodes ouvertes.
+        if (actuelle.statut === 'ARCHIVEE' && args.statut !== 'ARCHIVEE') {
+          await exigerPlacePeriode(organisationId, tx)
+        }
+        return tx.edition.update({
+          ...query,
+          where: { id: String(args.id) },
+          data: {
+            nom: texteRequis(args.nom, 'Le nom'),
+            debut: args.debut,
+            fin: args.fin,
+            statut: args.statut,
+          },
+        })
       })
     },
   }),

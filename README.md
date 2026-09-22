@@ -8,7 +8,7 @@ Relaytour aide une association ou un collectif bénévole à organiser ses activ
 - **Tâches** : des tâches types à échéance relative au premier jour (J-120, J+14), recréées à chaque période, puis suivies dans un rétroplanning.
 - **Fiches méthode** : le « comment faire » de chaque périmètre, versionné et transmis à la période suivante.
 - **Postes à pourvoir, souhaits, notifications** : ce qu'il faut pour constituer l'équipe et tenir les échéances.
-- **Plusieurs organisations** : une installation peut servir plusieurs associations. Un hébergeur les administre par script ou par API, sans accès à leurs données (ADR 0008).
+- **Plusieurs organisations** : une installation peut servir plusieurs associations. Un hébergeur les administre par script ou par API. L'API ne renvoie aucune donnée d'une organisation ; seul l'export d'une organisation, écrit sur le serveur, contient ses noms et ses adresses (ADR 0008).
 
 Relaytour est un logiciel libre (AGPL-3.0). Vous pouvez l'héberger vous-même. Le contenu de votre organisation reste chez vous : le dépôt ne contient qu'une organisation d'exemple.
 
@@ -51,7 +51,7 @@ yarn workspace @relaytour/server orga:valider /chemin/vers/votre/contenu
 yarn workspace @relaytour/server orga:importer --dossier /chemin/vers/votre/contenu --edition 2027
 ```
 
-Une installation qui porte plusieurs organisations exige `--organisation <slug>`. La structure attendue, en disposition plate ou en disposition `activites/`, est décrite dans [content/exemple/README.md](content/exemple/README.md). Le plus simple est de créer votre dépôt d'organisation depuis le gabarit `relaytour/organisation-modele`, qui documente les trois façons de le rattacher à Relaytour. Le choix du fournisseur de mail est décrit dans [docs/courriel.md](docs/courriel.md).
+Une installation qui porte plusieurs organisations exige `--organisation <slug>`, pour l'import comme pour l'export. La structure attendue, en disposition plate ou en disposition `activites/`, est décrite dans [content/exemple/README.md](content/exemple/README.md). Le plus simple est de créer votre dépôt d'organisation depuis le gabarit `relaytour/organisation-modele`, qui documente les trois façons de le rattacher à Relaytour. Le choix du fournisseur de mail est décrit dans [docs/courriel.md](docs/courriel.md).
 
 ## Commandes
 

@@ -616,6 +616,13 @@ async function importerActivite(
       continue
     }
     idsFiches.set(fiche.slug, existante.id)
+    const inchangee = existante.versionCourante?.empreinte === nouvelleEmpreinte
+    // Une fiche en conflit reste entière où elle est : ni son contenu, ni son
+    // activité, ni son périmètre ne changent tant que le conflit dure.
+    if (!inchangee && existante.versionCourante?.source === 'APP') {
+      rapport.fiches.conflits.push(fiche.slug)
+      continue
+    }
     if (
       ecrire &&
       (existante.activiteId !== activiteId ||
@@ -626,12 +633,8 @@ async function importerActivite(
         data: { activiteId, perimetreId },
       })
     }
-    if (existante.versionCourante?.empreinte === nouvelleEmpreinte) {
+    if (inchangee) {
       rapport.fiches.inchangees.push(fiche.slug)
-      continue
-    }
-    if (existante.versionCourante?.source === 'APP') {
-      rapport.fiches.conflits.push(fiche.slug)
       continue
     }
     rapport.fiches.nouvellesVersions.push(fiche.slug)

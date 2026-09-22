@@ -300,7 +300,7 @@ type Mutation {
 
   """Sans identifiants, marque toutes les notifications comme lues."""
   marquerNotificationsLues(ids: [ID!]): Int!
-  modifierActivite(groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String): Activite!
+  modifierActivite(archive: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String): Activite!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
   modifierFiche(contenu: String!, id: ID!, resume: String, titre: String!): Fiche!
 
@@ -478,7 +478,7 @@ type Query {
   editionCourante(activiteId: ID): Edition
   editions(activiteId: ID): [Edition!]!
   exportContenu: ArchiveContenu!
-  fiche(slug: String!): Fiche
+  fiche(activiteId: ID, slug: String!): Fiche
   fiches(activiteId: ID, inclureArchives: Boolean = false): [Fiche!]!
   health: String!
   identiteOrganisation: IdentiteOrganisation!

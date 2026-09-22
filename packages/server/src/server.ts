@@ -129,7 +129,9 @@ app.use(
   expressMiddleware(apollo, {
     context: async ({ req }) => {
       // Le jeton d'administration de l'installation ignore toute session (ADR 0008).
-      const porteur = /^Bearer\s+(.+)$/i.exec(req.get('authorization') ?? '')
+      // Un en-tête Bearer, même vide ou malformé, écarte la session : un jeton
+      // faux rend la requête anonyme.
+      const porteur = /^Bearer\b\s*(.*)$/i.exec(req.get('authorization') ?? '')
       if (porteur !== null) {
         const valide = jetonAdministrationValide((porteur[1] ?? '').trim())
         if (!valide) {

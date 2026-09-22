@@ -12,6 +12,7 @@ import { z } from 'zod'
 
 import type { Env } from '../env.ts'
 
+import { GROUPES_PAR_DEFAUT, SLUGS_RESERVES } from './activites.ts'
 import {
   adresseDeRole,
   domainesAutorises,
@@ -218,10 +219,15 @@ function fuseauValide(fuseau: string): boolean {
  */
 export const DeclarationOrganisationSchema = z
   .strictObject({
+    // L'activité implicite d'une organisation prend son slug : il ne peut pas être
+    // un segment réservé de l'espace organisateur (ADR 0008).
     slug: z
       .string()
       .regex(SLUG, 'minuscules, chiffres et tirets seulement')
-      .max(60),
+      .max(60)
+      .refine(s => !SLUGS_RESERVES.has(s), {
+        message: 'identifiant réservé par l’espace organisateur',
+      }),
     nom: z.string().trim().min(1).max(120),
     sigle: z.string().trim().min(1).max(20).optional(),
     fuseauHoraire: z
@@ -642,6 +648,28 @@ export async function assurerOrganisationParDefaut(): Promise<string> {
         sigle: declaration.sigle ?? null,
         fuseauHoraire: declaration.fuseauHoraire,
         configuration: declaration,
+      },
+    })
+  }
+  // Une installation neuve reçoit aussi sa première activité : un événement au slug
+  // de l'organisation, que le premier import en disposition activites/ retire s'il
+  // reste vide. Sans elle, edition:creer n'aurait aucune activité où créer la période.
+  const activites = await prisma.activite.count({
+    where: { organisationId: ligne.id },
+  })
+  if (activites === 0) {
+    const organisation = await prisma.organisation.findUniqueOrThrow({
+      where: { id: ligne.id },
+      select: { slug: true, nom: true, sigle: true },
+    })
+    await prisma.activite.create({
+      data: {
+        organisationId: ligne.id,
+        slug: organisation.slug,
+        nom: organisation.nom,
+        sigle: organisation.sigle,
+        nature: 'EVENEMENT',
+        groupes: GROUPES_PAR_DEFAUT,
       },
     })
   }

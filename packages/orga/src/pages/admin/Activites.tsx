@@ -1,4 +1,4 @@
-import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
+import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import {
   Alert,
@@ -65,6 +65,7 @@ const MODIFIER = graphql(`
     $nature: NatureActivite!
     $groupes: [GroupePerimetresInput!]!
     $ordre: Int!
+    $archive: Boolean
   ) {
     modifierActivite(
       id: $id
@@ -73,6 +74,7 @@ const MODIFIER = graphql(`
       nature: $nature
       groupes: $groupes
       ordre: $ordre
+      archive: $archive
     ) {
       id
     }
@@ -97,15 +99,6 @@ const MODIFIER_IDENTITE = graphql(`
       theme: $theme
     ) {
       id
-    }
-  }
-`)
-
-const ARCHIVER = graphql(`
-  mutation ArchiverActivite($id: ID!, $archive: Boolean!) {
-    archiverActivite(id: $id, archive: $archive) {
-      id
-      archive
     }
   }
 `)
@@ -187,10 +180,11 @@ export default function Activites() {
   const [enEdition, setEnEdition] = useState<Activite | 'nouvelle' | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
   const [form] = Form.useForm<Valeurs>()
-  const rafraichir = { refetchQueries: [ACTIVITES] }
+  // La navigation vers une activité créée attend la liste à jour : sinon le
+  // fournisseur d'activité ne la connaît pas encore et renvoie ailleurs.
+  const rafraichir = { refetchQueries: [ACTIVITES], awaitRefetchQueries: true }
   const [creer, creation] = useMutation(CREER, rafraichir)
   const [modifier, modification] = useMutation(MODIFIER, rafraichir)
-  const [archiver, archivage] = useMutation(ARCHIVER, rafraichir)
   const [modifierIdentite, modificationIdentite] = useMutation(
     MODIFIER_IDENTITE,
     rafraichir
@@ -283,6 +277,11 @@ export default function Activites() {
         return
       }
       if (enEdition) {
+        // L'identité se vérifie d'abord. La modification et l'archivage suivent
+        // dans une seule transaction : une limite atteinte annule les deux.
+        await modifierIdentite({
+          variables: identite(enEdition.id, enEdition),
+        })
         await modifier({
           variables: {
             id: enEdition.id,
@@ -291,16 +290,9 @@ export default function Activites() {
             nature: v.nature,
             groupes,
             ordre: v.ordre,
+            archive: v.archive === enEdition.archive ? null : v.archive,
           },
         })
-        await modifierIdentite({
-          variables: identite(enEdition.id, enEdition),
-        })
-        if (v.archive !== enEdition.archive) {
-          await archiver({
-            variables: { id: enEdition.id, archive: v.archive },
-          })
-        }
         message.success('Activité enregistrée.')
         setEnEdition(null)
       }
@@ -363,6 +355,23 @@ export default function Activites() {
             render: (archive: boolean) =>
               archive ? <Tag>Archivée</Tag> : <Tag color="green">Ouverte</Tag>,
           },
+          {
+            title: '',
+            key: 'modifier',
+            // Un bouton rend la modification accessible au clavier ; le clic sur
+            // la ligne reste un raccourci.
+            render: (_, a) => (
+              <Button
+                size="small"
+                icon={<EditOutlined />}
+                aria-label={`Modifier ${a.nom}`}
+                onClick={e => {
+                  e.stopPropagation()
+                  ouvrir(a)
+                }}
+              />
+            ),
+          },
         ]}
       />
 
@@ -376,7 +385,6 @@ export default function Activites() {
         confirmLoading={
           creation.loading ||
           modification.loading ||
-          archivage.loading ||
           modificationIdentite.loading
         }
         onOk={() => form.submit()}

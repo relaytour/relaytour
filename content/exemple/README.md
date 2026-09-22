@@ -138,7 +138,7 @@ taches:
 ## Règles de l'import
 
 - L'import crée les activités, les périmètres et les fiches, puis les effectifs et les tâches de la période demandée, dans chaque activité qui en a une.
-- Une activité, un périmètre ou une fiche absents du dépôt sont signalés, jamais archivés.
+- Une activité ou un périmètre absents du dépôt sont signalés, jamais archivés. Une fiche absente du dépôt reste en base, sans signalement.
 - Une activité nouvelle respecte la limite d'activités de l'organisation, s'il y en a une.
 - Une fiche modifiée dans l'application n'est jamais remplacée : l'import signale un conflit.
 - Une modification faite dans l'application depuis le dernier export bloque l'import. Exportez d'abord le contenu, ou relancez l'import avec `--forcer`.

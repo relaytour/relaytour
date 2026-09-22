@@ -510,6 +510,7 @@ const CAS: Cas[] = [
     [
       ['editionCourante', 'editionCourante(activiteId: $a) { id }'],
       ['editions', 'editions(activiteId: $a) { id }'],
+      ['fiche', 'fiche(slug: "piscine", activiteId: $a) { id }'],
       ['fiches', 'fiches(activiteId: $a) { id }'],
       ['mesPerimetres', 'mesPerimetres(activiteId: $a) { id }'],
       ['perimetre', 'perimetre(slug: "natation", activiteId: $a) { id }'],

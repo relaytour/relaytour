@@ -388,6 +388,36 @@ describe('refus entre activités d’une même organisation', () => {
     )
     expect(r.data?.perimetre).toEqual({ id: ids.perimetreA2 })
   })
+
+  it('ne sert une fiche que dans son activité', async () => {
+    const requete =
+      'query ($s: String!, $a: ID) { fiche(slug: $s, activiteId: $a) { id } }'
+    const ailleurs = await executer(ids.adminA, requete, {
+      s: `fiche-${s}`,
+      a: ids.activiteA2,
+    })
+    expect(ailleurs.data?.fiche).toBeNull()
+    const chezElle = await executer(ids.adminA, requete, {
+      s: `fiche-${s}`,
+      a: ids.activiteA1,
+    })
+    expect(chezElle.data?.fiche).toEqual({ id: ids.ficheA })
+  })
+
+  it('annule toute la modification quand l’archivage est refusé', async () => {
+    const r = await executer(
+      ids.adminB,
+      'mutation ($id: ID!) { modifierActivite(id: $id, nom: "Renommée", nature: EVENEMENT, groupes: [{ cle: "sport", libelle: "Sport", libellePluriel: "Sports" }], ordre: 0, archive: true) { id } }',
+      { id: ids.activiteB }
+    )
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    const activite = await prisma.activite.findUniqueOrThrow({
+      where: { id: ids.activiteB },
+      select: { nom: true, archivedAt: true },
+    })
+    expect(activite.nom).not.toBe('Renommée')
+    expect(activite.archivedAt).toBeNull()
+  })
 })
 
 describe('personne membre de deux organisations', () => {

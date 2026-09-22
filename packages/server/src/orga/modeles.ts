@@ -77,6 +77,18 @@ const PerimetreDeclare = z
     message: 'groupe attendu (ou type pour un contenu antérieur)',
     path: ['groupe'],
   })
+  // Un périmètre qui déclare les deux garde un type cohérent avec son groupe :
+  // SPORT pour le groupe sport, POLE pour tout autre groupe.
+  .refine(
+    p =>
+      p.groupe === undefined ||
+      p.type === undefined ||
+      p.type === (p.groupe === 'sport' ? 'SPORT' : 'POLE'),
+    {
+      message: 'type incohérent avec le groupe : retirez le type',
+      path: ['type'],
+    }
+  )
   .transform(p => ({
     ...p,
     groupe: p.groupe ?? (p.type === 'SPORT' ? 'sport' : 'pole'),
