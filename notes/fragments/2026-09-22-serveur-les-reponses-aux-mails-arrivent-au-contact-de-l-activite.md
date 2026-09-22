@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.5.0
 fr:
   titre: >-
     Les réponses aux mails arrivent au contact de l'activité

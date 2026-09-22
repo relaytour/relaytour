@@ -2,7 +2,7 @@
   "schemaVersion": 3,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "versions": [
     {
       "version": "0.4.1",
