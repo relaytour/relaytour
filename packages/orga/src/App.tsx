@@ -51,7 +51,11 @@ const routeur = createBrowserRouter([
           { path: 'avancement', element: <AvancementGlobal /> },
           { path: 'classement', element: <Classement /> },
           { path: 'editions', element: <Editions /> },
-          { path: 'organisation', element: <Organisation /> },
+          {
+            path: 'organisation',
+            element: <ReserveAdmin organisation />,
+            children: [{ index: true, element: <Organisation /> }],
+          },
           { path: 'perimetres', element: <Perimetres /> },
           { path: 'personnes', element: <Personnes /> },
           { path: 'postes', element: <Postes /> },

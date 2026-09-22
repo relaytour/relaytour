@@ -59,7 +59,7 @@ function titreGroupe(mois: string | null): string {
 }
 
 export default function Retroplanning() {
-  const { lien, periode, activite } = useActivite()
+  const { lien, periode, activite, gere } = useActivite()
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
@@ -365,7 +365,7 @@ export default function Retroplanning() {
           }
         >
           {affectes.size === 0 &&
-          (mesPerimetres || (!moi.estAdmin && toutes?.length === 0)) ? (
+          (mesPerimetres || (!gere && toutes?.length === 0)) ? (
             <div className="rt-verre rt-panneau">
               <Empty
                 description={`Vous n’êtes affecté·e à aucun périmètre pour ${periode.cette}.`}

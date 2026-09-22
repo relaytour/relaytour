@@ -14,7 +14,7 @@ import TacheFormulaire from '../composants/TacheFormulaire'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import type { TacheChampsFragment } from '../gql/graphql'
-import { EDITION_COURANTE, EDITIONS, MOI } from '../lib/requetes'
+import { EDITION_COURANTE, EDITIONS } from '../lib/requetes'
 import { estOuverte } from '../lib/taches'
 import { useActivite } from '../lib/activite'
 
@@ -72,11 +72,10 @@ const FILTRES: Record<Filtre, (t: TacheChampsFragment) => boolean> = {
 }
 
 export default function Perimetre() {
-  const { lien, periode, libelleGroupe } = useActivite()
+  const { lien, periode, libelleGroupe, gere } = useActivite()
   const { slug = '' } = useParams()
   const [parametres, setParametres] = useSearchParams()
   const navigate = useNavigate()
-  const { data: session } = useQuery(MOI)
   const { data: courante } = useQuery(EDITION_COURANTE)
   const { data: editions } = useQuery(EDITIONS)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
@@ -341,7 +340,7 @@ export default function Perimetre() {
                 moiId={moiId}
                 peutModifier={perimetre.peutModifier}
                 referents={perimetre.referents}
-                estAdmin={session?.moi?.estAdmin ?? false}
+                estAdmin={gere}
                 onModifier={setEnEdition}
               />
             ))}

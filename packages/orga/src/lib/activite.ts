@@ -84,6 +84,11 @@ export function formesPeriode(nature: NatureActivite): FormesPeriode {
 
 export interface ContexteActiviteValeur {
   activite: Activite
+  /**
+   * Vrai quand la personne administre l'activité affichée : admin de l'organisation,
+   * ou admin de cette activité (ADR 0010). Le serveur vérifie chaque opération.
+   */
+  gere: boolean
   /** Les activités ouvertes de l'organisation, pour le sélecteur. */
   activites: Activite[]
   periode: FormesPeriode
@@ -113,6 +118,7 @@ export function construireContexte(
   const groupes = new Map(activite.groupes.map(g => [g.cle, g]))
   return {
     activite,
+    gere: activite.estAdministree,
     activites: activites.filter(a => !a.archive || a.id === activite.id),
     periode: formesPeriode(activite.nature),
     lien: chemin =>

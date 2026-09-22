@@ -53,7 +53,7 @@ const pluriel = (n: number, un: string, plusieurs: string) =>
   `${n} ${n > 1 ? plusieurs : un}`
 
 export default function MonEspace() {
-  const { lien, periode, libelleGroupe } = useActivite()
+  const { lien, periode, libelleGroupe, gere } = useActivite()
   const navigate = useNavigate()
   const { data: session } = useQuery(MOI)
   const { data: courante, loading: chargementEdition } =
@@ -64,7 +64,8 @@ export default function MonEspace() {
     skip: !edition,
   })
   const moiId = session?.moi?.id ?? ''
-  const estAdmin = session?.moi?.estAdmin ?? false
+  // Les admins de l'activité gèrent les assignations de toute personne.
+  const estAdmin = gere
   const affectations = data?.moi?.affectations ?? []
   const mesTaches = data?.mesTaches ?? []
   const aPrendre = data?.tachesAPrendre ?? []

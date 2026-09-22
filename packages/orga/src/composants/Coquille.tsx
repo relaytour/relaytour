@@ -70,7 +70,7 @@ export default function Coquille() {
 
 function Mise({ session }: { session: Session }) {
   const { moi, active } = session
-  const { activite, activites, lien, periode } = useActivite()
+  const { activite, activites, lien, periode, gere } = useActivite()
   const { data: menu } = useQuery(MENU_PERIMETRES)
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -120,17 +120,23 @@ function Mise({ session }: { session: Session }) {
           },
         ]
       : []),
-    ...(moi.estAdmin
+    // L'administration d'une activité s'ouvre à ses admins ; la page de
+    // l'organisation, aux admins de l'organisation seulement (ADR 0010).
+    ...(gere
       ? [
           {
             type: 'group' as const,
             label: 'Administration',
             children: [
-              {
-                key: lien('/admin/organisation'),
-                icon: <BankOutlined />,
-                label: 'Organisation',
-              },
+              ...(moi.estAdmin
+                ? [
+                    {
+                      key: lien('/admin/organisation'),
+                      icon: <BankOutlined />,
+                      label: 'Organisation',
+                    },
+                  ]
+                : []),
               {
                 key: lien('/admin/activites'),
                 icon: <ApartmentOutlined />,
@@ -244,7 +250,7 @@ function Mise({ session }: { session: Session }) {
               options={activites.map(a => ({ value: a.slug, label: a.nom }))}
             />
           )}
-          <Recherche estAdmin={moi.estAdmin} />
+          <Recherche estAdmin={gere} />
           <span style={{ flex: 1 }} />
           <Notifications />
           <MenuCompte nom={moi.nom} afficherNom={Boolean(ecrans.sm)} />

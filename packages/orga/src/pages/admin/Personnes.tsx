@@ -22,7 +22,7 @@ import { graphql } from '../../gql'
 import type { PersonnesQuery } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
 import { normaliser } from '../../lib/recherche'
-import { EDITIONS, MOI, PERIMETRES } from '../../lib/requetes'
+import { ACTIVITES, EDITIONS, MOI, PERIMETRES } from '../../lib/requetes'
 import { useActivite } from '../../lib/activite'
 
 const PERSONNES = graphql(`
@@ -32,6 +32,7 @@ const PERSONNES = graphql(`
       nom
       email
       estAdmin
+      activitesAdministrees
       archive
       affectations(editionId: $editionId) {
         id
@@ -109,6 +110,20 @@ const DEFINIR_SOUHAITS = graphql(`
   }
 `)
 
+const DEFINIR_ADMIN_ACTIVITE = graphql(`
+  mutation DefinirAdminActivite(
+    $personneId: ID!
+    $activiteId: ID!
+    $admin: Boolean!
+  ) {
+    definirAdminActivite(
+      personneId: $personneId
+      activiteId: $activiteId
+      admin: $admin
+    )
+  }
+`)
+
 const RENVOYER = graphql(`
   mutation RenvoyerInvitation($id: ID!) {
     renvoyerInvitation(id: $id)
@@ -121,6 +136,8 @@ interface Valeurs {
   email: string
   nom: string
   estAdmin: boolean
+  /** Activités dont la personne est admin (ADR 0010). */
+  activitesAdministrees?: string[]
   perimetresSouhaites?: string[]
 }
 
@@ -162,7 +179,33 @@ export default function Personnes() {
     rafraichir
   )
   const [renvoyer] = useMutation(RENVOYER)
+  const [definirAdminActivite] = useMutation(DEFINIR_ADMIN_ACTIVITE, rafraichir)
+  const { data: toutesActivites } = useQuery(ACTIVITES)
   const moiId = session?.moi?.id
+  // Les rôles, le nom et l'archivage d'un compte relèvent des admins de
+  // l'organisation. Un admin d'activité invite, affecte et note les souhaits.
+  const gereOrganisation = session?.moi?.estAdmin ?? false
+  const nomsActivites = new Map(
+    (toutesActivites?.activites ?? []).map(a => [a.id, a.nom])
+  )
+
+  /** Nomme ou retire les admins d'activité pour aller de `avant` à `apres`. */
+  const ajusterAdminsActivite = async (
+    personneId: string,
+    avant: string[],
+    apres: string[]
+  ) => {
+    for (const activiteId of apres.filter(id => !avant.includes(id))) {
+      await definirAdminActivite({
+        variables: { personneId, activiteId, admin: true },
+      })
+    }
+    for (const activiteId of avant.filter(id => !apres.includes(id))) {
+      await definirAdminActivite({
+        variables: { personneId, activiteId, admin: false },
+      })
+    }
+  }
   // Un compte archivé ne reçoit plus de souhaits.
   const champSouhaits =
     souhaitsModifiables &&
@@ -210,11 +253,18 @@ export default function Personnes() {
     setEnEdition(personne)
     form.setFieldsValue(
       personne === 'nouvelle'
-        ? { email: '', nom: '', estAdmin: false, perimetresSouhaites: [] }
+        ? {
+            email: '',
+            nom: '',
+            estAdmin: false,
+            activitesAdministrees: [],
+            perimetresSouhaites: [],
+          }
         : {
             email: personne.email,
             nom: personne.nom,
             estAdmin: personne.estAdmin,
+            activitesAdministrees: personne.activitesAdministrees,
             perimetresSouhaites: souhaitsInitiaux(personne),
           }
     )
@@ -235,28 +285,37 @@ export default function Personnes() {
     const souhaites = champSouhaits ? (v.perimetresSouhaites ?? []) : []
     const ok =
       enEdition === 'nouvelle'
-        ? await executer(
-            () =>
-              inviter({
-                variables: {
-                  email: v.email,
-                  nom: v.nom,
-                  estAdmin: v.estAdmin,
-                  editionId: souhaites.length > 0 ? editionId : null,
-                  perimetresSouhaites: souhaites,
-                },
-              }),
-            'Invitation envoyée. La personne reçoit un mail avec le lien de connexion.'
-          )
+        ? await executer(async () => {
+            const r = await inviter({
+              variables: {
+                email: v.email,
+                nom: v.nom,
+                estAdmin: gereOrganisation && v.estAdmin,
+                editionId: souhaites.length > 0 ? editionId : null,
+                perimetresSouhaites: souhaites,
+              },
+            })
+            const id = r.data?.inviterPersonne.id
+            if (gereOrganisation && id !== undefined) {
+              await ajusterAdminsActivite(id, [], v.activitesAdministrees ?? [])
+            }
+          }, 'Invitation envoyée. La personne reçoit un mail avec le lien de connexion.')
         : enEdition
           ? await executer(async () => {
-              await modifier({
-                variables: {
-                  id: enEdition.id,
-                  nom: v.nom,
-                  estAdmin: v.estAdmin,
-                },
-              })
+              if (gereOrganisation) {
+                await modifier({
+                  variables: {
+                    id: enEdition.id,
+                    nom: v.nom,
+                    estAdmin: v.estAdmin,
+                  },
+                })
+                await ajusterAdminsActivite(
+                  enEdition.id,
+                  enEdition.activitesAdministrees,
+                  v.activitesAdministrees ?? []
+                )
+              }
               // Les souhaits ne sont envoyés que si l'ensemble a changé.
               if (
                 champSouhaits &&
@@ -402,14 +461,26 @@ export default function Personnes() {
           {
             title: 'Rôle',
             dataIndex: 'estAdmin',
-            render: (a: boolean) =>
-              a ? <Tag color="blue">Admin</Tag> : <Tag>Référent·e</Tag>,
+            render: (a: boolean, p) =>
+              a ? (
+                <Tag color="blue">Admin de l’organisation</Tag>
+              ) : p.activitesAdministrees.length > 0 ? (
+                <Space size={4} wrap>
+                  {p.activitesAdministrees.map(id => (
+                    <Tag key={id} color="geekblue">
+                      Admin · {nomsActivites.get(id) ?? 'activité'}
+                    </Tag>
+                  ))}
+                </Space>
+              ) : (
+                <Tag>Référent·e</Tag>
+              ),
           },
           {
             title: 'Actions',
             key: 'actions',
             render: (_, p) =>
-              p.archive ? (
+              p.archive && !gereOrganisation ? null : p.archive ? (
                 <Button
                   size="small"
                   onClick={() =>
@@ -436,7 +507,7 @@ export default function Personnes() {
                   >
                     Renvoyer l’invitation
                   </Button>
-                  {p.id !== moiId && (
+                  {p.id !== moiId && gereOrganisation && (
                     <Popconfirm
                       title="Archiver ce compte ?"
                       description="La personne est déconnectée et ne peut plus se connecter. Son historique reste conservé."
@@ -492,7 +563,10 @@ export default function Personnes() {
             name="nom"
             rules={[{ required: true, message: 'Saisissez un nom.' }]}
           >
-            <Input autoComplete="off" />
+            <Input
+              autoComplete="off"
+              disabled={enEdition !== 'nouvelle' && !gereOrganisation}
+            />
           </Form.Item>
           <Form.Item
             label="Adresse mail"
@@ -511,16 +585,35 @@ export default function Personnes() {
               disabled={enEdition !== 'nouvelle'}
             />
           </Form.Item>
-          <Form.Item
-            label="Admin"
-            name="estAdmin"
-            valuePropName="checked"
-            extra="Les admins voient l’avancement global et gèrent les comptes et les affectations."
-          >
-            <Switch
-              disabled={enEdition !== 'nouvelle' && enEdition?.id === moiId}
-            />
-          </Form.Item>
+          {gereOrganisation && (
+            <>
+              <Form.Item
+                label="Admin de l’organisation"
+                name="estAdmin"
+                valuePropName="checked"
+                extra="Un admin de l’organisation gère toutes les activités, les comptes et l’identité de l’organisation."
+              >
+                <Switch
+                  disabled={enEdition !== 'nouvelle' && enEdition?.id === moiId}
+                />
+              </Form.Item>
+              <Form.Item
+                label="Admin des activités"
+                name="activitesAdministrees"
+                extra="Un admin d’activité gère ses périodes, ses périmètres, ses affectations et ses fiches. Il ne voit pas les autres activités."
+              >
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="Aucune activité"
+                  options={(toutesActivites?.activites ?? []).map(a => ({
+                    value: a.id,
+                    label: a.nom,
+                  }))}
+                />
+              </Form.Item>
+            </>
+          )}
           {champSouhaits && (
             <Form.Item
               label={`Périmètres souhaités pour ${edition.nom}`}
