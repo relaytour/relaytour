@@ -10,14 +10,11 @@ import {
   peutLireFiche,
   peutRedigerFiche,
 } from '../lib/fiches.ts'
-import {
-  configurationOrganisation,
-  organisationParDefaut,
-} from '../lib/organisation.ts'
+import { exigerMembre } from '../lib/appartenances.ts'
+import { configurationOrganisation } from '../lib/organisation.ts'
 import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
 import { PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
 import { TacheRef } from './taches.ts'
@@ -78,11 +75,13 @@ export const FicheRef = builder.prismaObject('Fiche', {
     // pas être reversée dans Git (yarn orga:exporter la refuse).
     donneesPersonnelles: t.stringList({
       select: { versionCourante: { select: { contenu: true } } },
-      resolve: async f =>
-        donneesPersonnelles(
-          f.versionCourante?.contenu ?? '',
-          (await configurationOrganisation()).domainesCourrielAutorises
-        ),
+      resolve: async f => {
+        const configuration = await configurationOrganisation(f.organisationId)
+        return donneesPersonnelles(f.versionCourante?.contenu ?? '', {
+          domaines: configuration.domainesCourrielAutorises,
+          adresses: configuration.adressesRoleAutorisees,
+        })
+      },
     }),
     peutModifier: t.boolean({
       resolve: (f, _args, ctx) => peutRedigerFiche(ctx, f.perimetreId),
@@ -107,7 +106,7 @@ const DroitRedactionRef = builder.prismaObject('DroitRedaction', {
 
 async function exigerLectureFiche(
   ctx: AppContext,
-  fiche: { perimetreId: string | null }
+  fiche: { perimetreId: string | null; organisationId: string }
 ) {
   if (!(await peutLireFiche(ctx, fiche))) throw accesRefuse()
 }
@@ -172,14 +171,15 @@ builder.prismaObjectFields(FicheRef, t => ({
     type: [TacheRef],
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, fiche, { editionId }, ctx) => {
+      const edition = await ctx.exigerEdition(editionId)
       const lisibles = await perimetresLisibles(ctx)
       return prisma.tache.findMany({
         ...query,
         where: {
           ficheId: fiche.id,
-          editionId: String(editionId),
+          editionId: edition.id,
           perimetre: { archivedAt: null },
-          ...(lisibles === null ? {} : { perimetreId: { in: lisibles } }),
+          perimetreId: { in: lisibles },
         },
         orderBy: [{ echeance: { sort: 'asc', nulls: 'last' } }],
       })
@@ -198,27 +198,26 @@ builder.prismaObjectFields(FicheRef, t => ({
 // ── Lecture ──────────────────────────────────────────────────────────────────
 
 builder.queryFields(t => ({
-  // Les fiches lisibles : les fiches communes, puis celles des périmètres accessibles.
+  // Les fiches lisibles d'une activité : ses fiches communes, puis celles des
+  // périmètres accessibles. Sans `activiteId`, la première activité de l'organisation.
   fiches: t.prismaField({
     type: [FicheRef],
     authScopes: { connecte: true },
-    args: { inclureArchives: t.arg.boolean({ defaultValue: false }) },
-    resolve: async (query, _root, { inclureArchives }, ctx) => {
+    args: {
+      activiteId: t.arg.id(),
+      inclureArchives: t.arg.boolean({ defaultValue: false }),
+    },
+    resolve: async (query, _root, { activiteId, inclureArchives }, ctx) => {
+      const activite = await ctx.exigerActivite(activiteId)
       const perimetres = await perimetresLisibles(ctx)
       return prisma.fiche.findMany({
         ...query,
         where: {
+          activiteId: activite,
           ...(inclureArchives && ctx.personne?.estAdmin
             ? {}
             : { archivedAt: null }),
-          ...(perimetres === null
-            ? {}
-            : {
-                OR: [
-                  { perimetreId: null },
-                  { perimetreId: { in: perimetres } },
-                ],
-              }),
+          OR: [{ perimetreId: null }, { perimetreId: { in: perimetres } }],
         },
         orderBy: [{ perimetreId: 'asc' }, { slug: 'asc' }],
       })
@@ -229,17 +228,19 @@ builder.queryFields(t => ({
     type: FicheRef,
     nullable: true,
     authScopes: { connecte: true },
-    args: { slug: t.arg.string({ required: true }) },
-    resolve: async (query, _root, { slug }, ctx) => {
-      const fiche = await prisma.fiche.findUnique({
+    // La fiche d'une activité : celle de l'argument, sinon celle que l'espace
+    // organisateur affiche. Une fiche d'une autre activité vaut une fiche absente,
+    // pour que /<activité>/fiches/<slug> n'ouvre jamais la fiche d'une autre.
+    args: { slug: t.arg.string({ required: true }), activiteId: t.arg.id() },
+    resolve: async (query, _root, { slug, activiteId }, ctx) => {
+      const activite = await ctx.exigerActivite(activiteId)
+      const trouvee = await prisma.fiche.findUnique({
         ...query,
         where: {
-          organisationId_slug: {
-            organisationId: await organisationParDefaut(),
-            slug,
-          },
+          organisationId_slug: { organisationId: ctx.organisation!.id, slug },
         },
       })
+      const fiche = trouvee?.activiteId === activite ? trouvee : null
       if (fiche === null) {
         if (ctx.personne?.estAdmin) return null
         throw accesRefuse()
@@ -257,9 +258,10 @@ builder.queryFields(t => ({
   droitsRedaction: t.prismaField({
     type: [DroitRedactionRef],
     authScopes: { admin: true },
-    resolve: query =>
+    resolve: (query, _root, _args, ctx) =>
       prisma.droitRedaction.findMany({
         ...query,
+        where: { organisationId: ctx.organisation!.id },
         orderBy: { createdAt: 'asc' },
       }),
   }),
@@ -276,10 +278,21 @@ builder.mutationFields(t => ({
       titre: t.arg.string({ required: true }),
       contenu: t.arg.string({ required: true }),
       perimetreId: t.arg.id(),
+      // Pour une fiche commune ; une fiche de périmètre suit l'activité du périmètre.
+      activiteId: t.arg.id(),
     },
     resolve: async (query, _root, args, ctx) => {
       const perimetreId = args.perimetreId ? String(args.perimetreId) : null
       const auteur = await exigerRedaction(ctx, perimetreId)
+      const activiteId =
+        perimetreId === null
+          ? await ctx.exigerActivite(args.activiteId)
+          : (
+              await prisma.perimetre.findUniqueOrThrow({
+                where: { id: perimetreId },
+                select: { activiteId: true },
+              })
+            ).activiteId
       const titre = texteRequis(args.titre, 'Le titre', 200)
       const contenu = contenuValide(args.contenu)
       const slug = slugValide(args.slug)
@@ -289,8 +302,8 @@ builder.mutationFields(t => ({
             data: {
               slug,
               perimetreId,
-              organisationId: await organisationParDefaut(),
-              activiteId: await activiteParDefaut(),
+              organisationId: ctx.organisation!.id,
+              activiteId,
             },
           })
           const version = await tx.ficheVersion.create({
@@ -332,8 +345,8 @@ builder.mutationFields(t => ({
       resume: t.arg.string(),
     },
     resolve: async (query, _root, args, ctx) => {
-      const fiche = await prisma.fiche.findUnique({
-        where: { id: String(args.id) },
+      const fiche = await prisma.fiche.findFirst({
+        where: { id: String(args.id), organisationId: ctx.organisation!.id },
         include: { versionCourante: { select: { empreinte: true } } },
       })
       if (fiche === null) throw accesRefuse()
@@ -384,8 +397,11 @@ builder.mutationFields(t => ({
     authScopes: { admin: true },
     args: { versionId: t.arg.id({ required: true }) },
     resolve: async (query, _root, { versionId }, ctx) => {
-      const ancienne = await prisma.ficheVersion.findUnique({
-        where: { id: String(versionId) },
+      const ancienne = await prisma.ficheVersion.findFirst({
+        where: {
+          id: String(versionId),
+          fiche: { organisationId: ctx.organisation!.id },
+        },
       })
       if (ancienne === null)
         throw erreurSaisie('Cette version est introuvable.')
@@ -420,12 +436,18 @@ builder.mutationFields(t => ({
       id: t.arg.id({ required: true }),
       archive: t.arg.boolean({ required: true }),
     },
-    resolve: (query, _root, { id, archive }) =>
-      prisma.fiche.update({
+    resolve: async (query, _root, { id, archive }, ctx) => {
+      const fiche = await prisma.fiche.findFirst({
+        where: { id: String(id), organisationId: ctx.organisation!.id },
+        select: { id: true },
+      })
+      if (fiche === null) throw accesRefuse()
+      return prisma.fiche.update({
         ...query,
-        where: { id: String(id) },
+        where: { id: fiche.id },
         data: { archivedAt: archive ? new Date() : null },
-      }),
+      })
+    },
   }),
 
   accorderDroitRedaction: t.prismaField({
@@ -435,17 +457,31 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       const userId = String(args.personneId)
       const perimetreId = args.perimetreId ? String(args.perimetreId) : null
+      const organisationId = ctx.organisation!.id
+      await exigerMembre(ctx, userId)
+      if (perimetreId !== null) {
+        const perimetre = await prisma.perimetre.findFirst({
+          where: { id: perimetreId, organisationId },
+          select: { id: true },
+        })
+        if (perimetre === null) throw accesRefuse()
+      }
       // MariaDB ne rend pas un index unique efficace sur une colonne nulle :
       // le doublon se vérifie ici.
       const existant = await prisma.droitRedaction.findFirst({
-        where: { userId, perimetreId },
+        where: { userId, perimetreId, organisationId },
       })
       if (existant !== null) {
         throw erreurSaisie('Cette personne a déjà ce droit de rédaction.')
       }
       return prisma.droitRedaction.create({
         ...query,
-        data: { userId, perimetreId, accordeParId: ctx.personne!.id },
+        data: {
+          organisationId,
+          userId,
+          perimetreId,
+          accordeParId: ctx.personne!.id,
+        },
       })
     },
   }),
@@ -453,9 +489,9 @@ builder.mutationFields(t => ({
   retirerDroitRedaction: t.boolean({
     authScopes: { admin: true },
     args: { id: t.arg.id({ required: true }) },
-    resolve: async (_root, { id }) => {
+    resolve: async (_root, { id }, ctx) => {
       const { count } = await prisma.droitRedaction.deleteMany({
-        where: { id: String(id) },
+        where: { id: String(id), organisationId: ctx.organisation!.id },
       })
       return count === 1
     },

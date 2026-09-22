@@ -1,9 +1,49 @@
+type Activite {
+  archive: Boolean!
+  contactRecrutement: String
+  groupes: [GroupePerimetres!]!
+  id: ID!
+  identite: IdentiteActivite!
+
+  """Le logo de l’activité, sinon celui de l’organisation."""
+  logoUrl: String
+  nature: NatureActivite!
+  nom: String!
+  ordre: Int!
+  pageEquipe: String
+  sigle: String
+  slug: String!
+
+  """
+  Le thème de l’organisation, dont l’activité surcharge les couleurs et le fond.
+  """
+  theme: Theme!
+}
+
+type ActiviteInstallation {
+  archive: Boolean!
+  nature: String!
+  nom: String!
+
+  """Périodes non archivées, celles que compte la limite."""
+  periodesOuvertes: [PeriodeInstallation!]!
+  slug: String!
+}
+
 type Affectation {
   creeLe: DateTime!
   edition: Edition!
   id: ID!
   perimetre: Perimetre!
   personne: Personne!
+}
+
+"""
+Dossier de contenu de l’organisation, en archive zip encodée en base64. Il ne contient aucune donnée personnelle.
+"""
+type ArchiveContenu {
+  donnees: String!
+  nomFichier: String!
 }
 
 type Avancement {
@@ -64,6 +104,7 @@ type DroitRedaction {
 }
 
 type Edition {
+  activite: Activite!
   annee: Int!
   debut: Date!
   fin: Date!
@@ -79,6 +120,7 @@ enum EtatPostes {
 }
 
 type Fiche {
+  activite: Activite!
   archive: Boolean!
   contenu: String!
   donneesPersonnelles: [String!]!
@@ -115,10 +157,28 @@ type FondTheme {
   transition: String!
 }
 
+enum FormatMedia {
+  PNG
+  SVG
+}
+
 enum FrequenceResume {
   AUCUN
   HEBDOMADAIRE
   QUOTIDIEN
+}
+
+"""Catégorie de périmètres déclarée par une activité."""
+type GroupePerimetres {
+  cle: String!
+  libelle: String!
+  libellePluriel: String!
+}
+
+input GroupePerimetresInput {
+  cle: String!
+  libelle: String!
+  libellePluriel: String!
 }
 
 """Une tache de couleur floue derrière le verre."""
@@ -129,34 +189,132 @@ type HaloTheme {
   intensite: Float!
 }
 
+"""
+Identité propre d’une activité. Chaque champ absent reprend la valeur de l’organisation.
+"""
+type IdentiteActivite {
+  contactRecrutement: String
+  logoPng: String
+  logoSvg: String
+  logoUrl: String
+  pageEquipe: String
+
+  """Couleurs et fond qui surchargent le thème de l’organisation."""
+  theme: JSONObject
+}
+
+"""
+Identité de l’organisation telle que ses admins la déclarent. Réservée aux admins.
+"""
+type IdentiteOrganisation {
+  """
+  Adresses de rôle hébergées chez une messagerie grand public, autorisées une par une.
+  """
+  adressesRoleAutorisees: [String!]!
+  contactRecrutement: String
+  contenuModifieLe: DateTime
+  contenuSynchroniseLe: DateTime
+
+  """
+  Domaines des adresses de rôle. Une adresse de ces domaines passe pour institutionnelle. Ils ne limitent pas les invitations.
+  """
+  domainesCourrielAutorises: [String!]!
+  favicon: String
+  faviconUrl: String
+  logoPng: String
+  logoSvg: String
+  logoUrl: String
+  nom: String!
+  pageEquipe: String
+  sigle: String
+  slug: String!
+
+  """
+  Thème déclaré, partiel : le thème par défaut complète les valeurs absentes.
+  """
+  theme: JSONObject
+}
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
+
 type LigneClassement {
   personne: Personne!
   rang: Int!
   score: Score!
 }
 
+"""
+Plafonds d’une organisation. Un champ nul signifie aucune limite. Une limite bloque une création, jamais la lecture ni l’export.
+"""
+type LimitesOrganisation {
+  activites: Int
+  periodesOuvertes: Int
+}
+
+"""
+Une valeur nulle retire la limite ; un champ absent la laisse telle quelle.
+"""
+input LimitesOrganisationInput {
+  activites: Int
+  periodesOuvertes: Int
+}
+
+"""Image enregistrée pour l’organisation, désignée par son empreinte."""
+type MediaTeleverse {
+  empreinte: String!
+  url: String!
+}
+
 type Mutation {
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
+  archiverActivite(archive: Boolean!, id: ID!): Activite!
   archiverFiche(archive: Boolean!, id: ID!): Fiche!
   archiverPersonne(archive: Boolean!, id: ID!): Personne!
   assignerTache(assigne: Boolean!, id: ID!, personneId: ID): Tache!
   changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!): Tache!
-  creerEdition(annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
-  creerFiche(contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
-  creerPerimetre(couleur: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre!): Perimetre!
+  creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, sigle: String, slug: String!): Activite!
+  creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
+  creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
+  creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, nom: String!, sigle: String, slug: String!): OrganisationInstallation!
+  creerPerimetre(activiteId: ID, couleur: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
   creerTache(description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
   definirEffectif(editionId: ID!, effectif: Int!, perimetreId: ID!): Int!
 
   """Remplace l’ensemble des souhaits d’une personne pour une édition."""
   definirSouhaits(editionId: ID!, perimetreIds: [ID!]!, personneId: ID!): [Souhait!]!
+
+  """
+  Écrit l’export complet d’une organisation dans le dossier EXPORTS_DIR du serveur et renvoie le nom du fichier. Le contenu ne transite jamais par l’API.
+  """
+  demanderExport(organisation: String!): String!
   inviterPersonne(editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresSouhaites: [ID!]): Personne!
+
+  """
+  Donne le rôle d’admin d’une organisation à une adresse et lui envoie une invitation. La réponse ne renvoie aucune donnée du compte.
+  """
+  inviterPremierAdmin(email: String!, nom: String!, organisation: String!): Boolean!
 
   """Sans identifiants, marque toutes les notifications comme lues."""
   marquerNotificationsLues(ids: [ID!]): Int!
+  modifierActivite(archive: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String): Activite!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
   modifierFiche(contenu: String!, id: ID!, resume: String, titre: String!): Fiche!
-  modifierPerimetre(archive: Boolean!, couleur: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre!): Perimetre!
+
+  """
+  Remplace l’identité propre d’une activité. Un champ vide reprend la valeur de l’organisation.
+  """
+  modifierIdentiteActivite(contactRecrutement: String, id: ID!, logoPng: String, logoSvg: String, pageEquipe: String, theme: JSONObject): Activite!
+
+  """
+  Remplace l’identité de l’organisation. Le slug, le fuseau horaire, le statut et les limites ne changent pas ici.
+  """
+  modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, domainesCourrielAutorises: [String!]!, favicon: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
+  modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
+  modifierPerimetre(archive: Boolean!, couleur: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre): Perimetre!
   modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
   modifierPreferencesNotification(frequenceResume: FrequenceResume!, mailEcheance: Boolean!, mailModification: Boolean!): PreferencesNotification!
   modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String!): Tache!
@@ -165,6 +323,20 @@ type Mutation {
   retirerAffectation(id: ID!): Boolean!
   retirerDroitRedaction(id: ID!): Boolean!
   retirerSouhait(id: ID!): Boolean!
+
+  """
+  Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.
+  """
+  televerserMedia(donnees: String!, format: FormatMedia!): MediaTeleverse!
+}
+
+"""
+Fixe le libellé de la période : édition pour un événement, saison pour une section, mandat pour une instance.
+"""
+enum NatureActivite {
+  EVENEMENT
+  MANDAT
+  SAISON
 }
 
 type Notification {
@@ -178,6 +350,10 @@ type Notification {
 
 """Identité publique de l’organisation qui utilise cette installation."""
 type Organisation {
+  """
+  Adresse du code source de l’installation, que l’AGPL oblige à proposer aux personnes qui l’utilisent.
+  """
+  codeSource: String!
   faviconUrl: String
   logoUrl: String
   nom: String!
@@ -187,11 +363,37 @@ type Organisation {
   theme: Theme!
 }
 
+"""Une organisation dont la personne connectée est membre, avec son rôle."""
+type OrganisationDeLaPersonne {
+  """Vrai pour l’organisation active de la requête."""
+  active: Boolean!
+  estAdmin: Boolean!
+  nom: String!
+  sigle: String
+  slug: String!
+  statut: String!
+}
+
+"""
+Une organisation vue par l’administration de l’installation : identité, statut, limites et compteurs, sans aucune donnée de ses membres.
+"""
+type OrganisationInstallation {
+  activites: [ActiviteInstallation!]!
+  creeLe: DateTime!
+  limites: LimitesOrganisation!
+  nom: String!
+  nombreMembres: Int!
+  slug: String!
+  statut: StatutOrganisation!
+}
+
 type Perimetre {
+  activite: Activite!
   archive: Boolean!
   avancement(editionId: ID!): Avancement!
   couleur: String
   fiches: [Fiche!]!
+  groupe: String!
   id: ID!
   nom: String!
   ordre: Int!
@@ -201,6 +403,14 @@ type Perimetre {
   slug: String!
   taches(editionId: ID!): [Tache!]!
   type: TypePerimetre!
+}
+
+type PeriodeInstallation {
+  annee: Int!
+  debut: Date!
+  fin: Date!
+  nom: String!
+  statut: String!
 }
 
 type Personne {
@@ -254,6 +464,7 @@ type PreferencesNotification {
 }
 
 type Query {
+  activites(inclureArchives: Boolean = false): [Activite!]!
   affectations(editionId: ID!): [Affectation!]!
 
   """
@@ -264,12 +475,15 @@ type Query {
   baremeScore: BaremeScore!
   classement(editionId: ID!): [LigneClassement!]!
   droitsRedaction: [DroitRedaction!]!
-  editionCourante: Edition
-  editions: [Edition!]!
-  fiche(slug: String!): Fiche
-  fiches(inclureArchives: Boolean = false): [Fiche!]!
+  editionCourante(activiteId: ID): Edition
+  editions(activiteId: ID): [Edition!]!
+  exportContenu: ArchiveContenu!
+  fiche(activiteId: ID, slug: String!): Fiche
+  fiches(activiteId: ID, inclureArchives: Boolean = false): [Fiche!]!
   health: String!
-  mesPerimetres: [Perimetre!]!
+  identiteOrganisation: IdentiteOrganisation!
+  mesOrganisations: [OrganisationDeLaPersonne!]!
+  mesPerimetres(activiteId: ID): [Perimetre!]!
   mesPreferencesNotification: PreferencesNotification!
   mesTaches(editionId: ID!): [Tache!]!
   moi: Personne
@@ -277,10 +491,13 @@ type Query {
   nombreNotificationsNonLues: Int!
   notifications(limite: Int = 30, nonLuesSeulement: Boolean = false): [Notification!]!
 
-  """Nom, sigle et thème de l’organisation. Lisible sans session."""
-  organisation: Organisation!
-  perimetre(slug: String!): Perimetre
-  perimetres(inclureArchives: Boolean = false): [Perimetre!]!
+  """
+  Nom, sigle et thème de l’organisation active. Sans session : l’organisation désignée par son slug, sinon l’unique organisation de l’installation, sinon une identité neutre. Lisible sans session.
+  """
+  organisation(slug: String): Organisation!
+  organisations: [OrganisationInstallation!]!
+  perimetre(activiteId: ID, slug: String!): Perimetre
+  perimetres(activiteId: ID, inclureArchives: Boolean = false): [Perimetre!]!
   personnes(inclureArchives: Boolean = false): [Personne!]!
   peutRedigerFichesCommunes: Boolean!
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
@@ -326,6 +543,16 @@ enum StatutEdition {
   ARCHIVEE
   EN_COURS
   PREPARATION
+}
+
+"""
+ACTIVE : tout est permis. LECTURE_SEULE : les membres lisent, personne n’écrit. SUSPENDUE et ARCHIVEE : plus aucun accès.
+"""
+enum StatutOrganisation {
+  ACTIVE
+  ARCHIVEE
+  LECTURE_SEULE
+  SUSPENDUE
 }
 
 enum StatutTache {

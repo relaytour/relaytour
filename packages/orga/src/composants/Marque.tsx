@@ -1,3 +1,6 @@
+import { useContext } from 'react'
+
+import { ContexteActivite } from '../lib/activite'
 import { useOrganisation } from '../lib/organisation'
 
 // Le pictogramme de Relaytour : deux arcs qui se passent le relais. Le premier
@@ -38,8 +41,9 @@ export function Pictogramme({
 
 /**
  * La marque affichée dans la barre latérale et sur l'écran de connexion : le
- * logo de l'organisation s'il en fournit un, sinon le pictogramme de Relaytour,
- * puis le nom court de l'organisation servi par l'API (ADR 0006).
+ * logo de l'activité affichée, sinon celui de l'organisation, sinon le
+ * pictogramme de Relaytour (ADR 0009), puis le nom court de l'organisation servi
+ * par l'API (ADR 0006).
  */
 export default function Marque({
   nom,
@@ -49,12 +53,14 @@ export default function Marque({
   taille?: number
 }) {
   const organisation = useOrganisation()
+  const activite = useContext(ContexteActivite)?.activite
   const libelle = nom ?? organisation.nomCourt
+  const logo = activite?.logoUrl ?? organisation.logoUrl
   return (
     <span className="rt-marque">
-      {organisation.logoUrl !== null ? (
+      {logo !== null ? (
         <img
-          src={organisation.logoUrl}
+          src={logo}
           alt=""
           height={taille}
           style={{ display: 'block', maxWidth: taille * 3 }}
@@ -64,5 +70,32 @@ export default function Marque({
       )}
       <span className="rt-marque-nom">{libelle}</span>
     </span>
+  )
+}
+
+/**
+ * La signature de Relaytour, en pied de la barre latérale et de l'écran de
+ * connexion : le logiciel libre qui fait tourner l'espace, et le lien vers son
+ * code source, que l'AGPL oblige à proposer (article 13).
+ */
+export function SignatureRelaytour() {
+  const { codeSource } = useOrganisation()
+  return (
+    <div className="rt-pied-marque">
+      <span style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}>
+        <Pictogramme taille={14} monochrome />
+      </span>
+      <span>
+        Propulsé par Relaytour ·{' '}
+        <a
+          href={codeSource}
+          target="_blank"
+          rel="noreferrer"
+          style={{ color: 'inherit', textDecoration: 'underline' }}
+        >
+          code source
+        </a>
+      </span>
+    </div>
   )
 }

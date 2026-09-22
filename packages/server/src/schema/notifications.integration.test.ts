@@ -4,12 +4,12 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 import { composer } from '../courriel/messages.ts'
 import { genererRappels, personnesAResumer } from '../jobs/planification.ts'
 
 import { schema } from './index.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)
@@ -32,7 +32,7 @@ async function executer(
 ) {
   const r = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -50,6 +50,9 @@ const notificationsDe = (userId: string, tacheId: string) =>
 let ORGANISATION = ''
 let ACTIVITE = ''
 
+/** L'organisation par défaut, telle que le worker la planifie. */
+const planifiee = () => ({ id: ORGANISATION, fuseauHoraire: 'Europe/Paris' })
+
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
   ACTIVITE = await activiteParDefaut()
@@ -61,6 +64,8 @@ beforeAll(async () => {
         id: ids[cle],
         email: `${cle}-${s}@exemple.fr`,
         name: cle.charAt(0).toUpperCase() + cle.slice(1),
+        // Membres de l'organisation : les résumés ne concernent que ses membres.
+        appartenances: { create: { organisationId: ORGANISATION } },
       },
     })
   }
@@ -256,10 +261,10 @@ describe('rappels d’échéance', () => {
       },
     })
 
-    const premier = await genererRappels(prisma, maintenant, {
+    const premier = await genererRappels(prisma, planifiee(), maintenant, {
       editionId: { in: [ids.edition, ids.archivee] },
     })
-    const second = await genererRappels(prisma, maintenant, {
+    const second = await genererRappels(prisma, planifiee(), maintenant, {
       editionId: { in: [ids.edition, ids.archivee] },
     })
     expect(second.flatMap(r => r.notificationIds)).toEqual([])
@@ -342,8 +347,8 @@ describe('résumés', () => {
         frequenceResume: 'AUCUN',
       },
     })
-    const lundiIds = await personnesAResumer(prisma, lundi)
-    const mardiIds = await personnesAResumer(prisma, mardi)
+    const lundiIds = await personnesAResumer(prisma, planifiee(), lundi)
+    const mardiIds = await personnesAResumer(prisma, planifiee(), mardi)
     expect(lundiIds).toEqual(expect.arrayContaining([ids.alice, ids.chloe]))
     expect(lundiIds).not.toContain(ids.david)
     expect(mardiIds).toContain(ids.chloe)
@@ -359,6 +364,8 @@ describe('résumés', () => {
     await message?.apresEnvoi?.()
     const apres = await composer(prisma, { sorte: 'resume', userId: ids.chloe })
     expect(apres?.texte ?? '').not.toContain('Bruno s’occupe de la tâche')
-    expect(await personnesAResumer(prisma, new Date())).not.toContain(ids.chloe)
+    expect(
+      await personnesAResumer(prisma, planifiee(), new Date())
+    ).not.toContain(ids.chloe)
   })
 })

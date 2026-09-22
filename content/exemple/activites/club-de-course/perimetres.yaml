@@ -1,0 +1,21 @@
+# Périmètres du club de course. Une saison commence en septembre.
+
+perimetres:
+  - slug: debutants
+    nom: Groupe débutants
+    groupe: groupe
+    couleur: '#FB8B36'
+    ordre: 1
+    effectif: 2
+  - slug: confirmes
+    nom: Groupe confirmés
+    groupe: groupe
+    couleur: '#F32988'
+    ordre: 2
+    effectif: 1
+  - slug: vie-du-club
+    nom: Vie du club
+    groupe: pole
+    couleur: '#2F6B4F'
+    ordre: 10
+    effectif: 1

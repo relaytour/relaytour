@@ -1,18 +1,29 @@
 import { describe, expect, it } from 'vitest'
 
-import type { AppContext, PersonneConnectee } from '../context.ts'
+import type {
+  AppContext,
+  OrganisationActive,
+  PersonneConnectee,
+} from '../context.ts'
 
 import {
-  aujourdhuiParis,
+  aujourdhui,
   estEnRetard,
   peutLirePerimetre,
   perimetresLisibles,
 } from './droits.ts'
 
-describe('aujourdhuiParis', () => {
+describe('aujourdhui', () => {
   it('passe au lendemain à minuit heure de Paris, pas à minuit UTC', () => {
     // 23 h 30 UTC le 26 août 2027 = 1 h 30 à Paris le 27 août.
-    expect(aujourdhuiParis(new Date('2027-08-26T23:30:00Z'))).toBe('2027-08-27')
+    expect(aujourdhui(new Date('2027-08-26T23:30:00Z'))).toBe('2027-08-27')
+  })
+
+  it('suit le fuseau de l’organisation', () => {
+    // 23 h 30 UTC le 26 août 2027 = 19 h 30 à Montréal, encore le 26 août.
+    expect(
+      aujourdhui(new Date('2027-08-26T23:30:00Z'), 'America/Montreal')
+    ).toBe('2027-08-26')
   })
 })
 
@@ -48,11 +59,25 @@ describe('estEnRetard', () => {
 describe('perimetresLisibles', () => {
   // Le faux contexte connaît deux périmètres même sans session : la règle doit
   // vérifier la session avant de les consulter.
-  const contexte = (personne: PersonneConnectee | null): AppContext => ({
+  const organisation: OrganisationActive = {
+    id: 'o1',
+    slug: 'rencontres',
+    role: 'MEMBRE',
+    statut: 'ACTIVE',
+    fuseauHoraire: 'Europe/Paris',
+  }
+  const contexte = (
+    personne: PersonneConnectee | null,
+    active: OrganisationActive | null = organisation
+  ): AppContext => ({
     ip: undefined,
+    administration: false,
     personne,
+    organisation: active,
     perimetresAffectes: () => Promise.resolve(new Set(['natation'])),
     perimetresConnus: () => Promise.resolve(new Set(['natation', 'basket'])),
+    exigerActivite: () => Promise.reject(new Error('Non utilisé.')),
+    exigerEdition: () => Promise.reject(new Error('Non utilisé.')),
   })
   const personne = (estAdmin: boolean): PersonneConnectee => ({
     id: 'u1',
@@ -73,9 +98,9 @@ describe('perimetresLisibles', () => {
     expect(await peutLirePerimetre(ctx, 'escalade')).toBe(false)
   })
 
-  it('renvoie null pour un admin, qui lit tous les périmètres', async () => {
-    const ctx = contexte(personne(true))
-    expect(await perimetresLisibles(ctx)).toBeNull()
-    expect(await peutLirePerimetre(ctx, 'escalade')).toBe(true)
+  it('ne renvoie aucun périmètre sans organisation active', async () => {
+    const ctx = contexte(personne(false), null)
+    expect(await perimetresLisibles(ctx)).toEqual([])
+    expect(await peutLirePerimetre(ctx, 'natation')).toBe(false)
   })
 })

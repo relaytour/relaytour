@@ -3,7 +3,7 @@ import { Alert, Button, Card, Form, Input, Typography } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import Marque from '../composants/Marque'
+import Marque, { SignatureRelaytour } from '../composants/Marque'
 import {
   adresseConnexionAutomatique,
   adresseMemorisee,
@@ -115,7 +115,8 @@ export default function Connexion() {
           Espace organisateur
         </h1>
         <Typography.Paragraph style={{ color: 'var(--rt-encre-70)' }}>
-          Organisez votre événement d’une édition à l’autre.
+          Transmettez le savoir-faire de votre organisation d’une période à
+          l’autre.
         </Typography.Paragraph>
 
         {erreur && (
@@ -224,6 +225,9 @@ export default function Connexion() {
             </Button>
           </Form>
         )}
+        <div style={{ marginTop: 24 }}>
+          <SignatureRelaytour />
+        </div>
       </Card>
     </main>
   )

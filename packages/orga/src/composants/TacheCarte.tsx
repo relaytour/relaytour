@@ -11,6 +11,7 @@ import { Button, Dropdown, Form, Modal, Select, Typography } from 'antd'
 import { useState } from 'react'
 
 import type { TacheChampsFragment } from '../gql/graphql'
+import { useActivite } from '../lib/activite'
 import { dateCourte } from '../lib/erreurs'
 import {
   ASSIGNER_TACHE,
@@ -55,6 +56,7 @@ export default function TacheCarte({
   onModifier?: (tache: TacheChampsFragment) => void
 }) {
   const executer = useActionTache()
+  const { lien } = useActivite()
   const [assigner, assignation] = useMutation(ASSIGNER_TACHE, {
     refetchQueries: VUES_TACHES,
   })
@@ -149,7 +151,7 @@ export default function TacheCarte({
             <EtiquettePerimetre
               nom={tache.perimetre.nom}
               couleur={tache.perimetre.couleur}
-              lien={`/perimetres/${tache.perimetre.slug}`}
+              lien={lien(`/perimetres/${tache.perimetre.slug}`)}
             />
           )}
         </div>
@@ -171,7 +173,7 @@ export default function TacheCarte({
             <PastilleEtat
               variante="alerte"
               icone={<BookOutlined aria-hidden />}
-              lien={`/fiches/${tache.fiche.slug}`}
+              lien={lien(`/fiches/${tache.fiche.slug}`)}
             >
               {tache.fiche.titre}
             </PastilleEtat>

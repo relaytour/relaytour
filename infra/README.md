@@ -13,7 +13,7 @@ Ce dossier décrit le déploiement de référence (ADR 0004) : une machine sous 
 | `server` | API GraphQL, port 4400 sur `127.0.0.1` |
 | `worker` | Mails, rappels et résumés |
 
-L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*` et `/graphql` vers l'API. Aucun outil Node n'est nécessaire sur le serveur.
+L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*`, `/graphql` et `/medias/*` vers l'API. `/medias/*` sert les logos et les favicons des organisations (ADR 0009). Aucun outil Node n'est nécessaire sur le serveur.
 
 ## Étapes
 
@@ -54,13 +54,34 @@ Changer `IMAGE_TAG` dans le `.env`, puis `docker compose --env-file .env up -d`.
 
 Ne modifiez pas `docker-compose.yml` : ajoutez un fichier de surcharge, par exemple `compose.local.yml`, et lancez `docker compose -f docker-compose.yml -f compose.local.yml …`. C'est là que vont vos ports, vos limites mémoire, vos volumes et votre supervision. La base et le cache ne publient aucun port : la file des mails contient des codes de connexion en clair pendant quelques minutes, et tout processus de la machine pourrait les lire. Pour administrer la base, passez par `docker compose exec db mariadb -u root -p`. Si un outil de la machine doit joindre la base, publiez le port dans votre surcharge, sur `127.0.0.1` seulement. Si une adaptation exige un changement dans l'application, proposez-le dans le dépôt de Relaytour sous une forme générique.
 
+## Héberger plusieurs organisations
+
+Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses membres, ses activités et son thème ; aucune ne voit les données d'une autre.
+
+1. **Créer une organisation** et inviter son premier admin :
+    ```bash
+    docker compose --env-file .env exec server node dist/creer-organisation.js rencontres "Les Rencontres" \
+      --domaines exemple.org --admin adresse@exemple.org --admin-nom "Prénom Nom"
+    ```
+    Les options `--limite-activites` et `--limite-periodes` plafonnent le nombre d'activités et de périodes ouvertes. Sans elles, l'organisation n'a aucune limite.
+2. **Désigner l'organisation** dans les autres scripts avec `--organisation <slug>` : `creer-admin.js`, `creer-edition.js` (et `--activite <slug>`).
+3. **Administrer par API** (facultatif) : un jeton `JETON_ADMINISTRATION` d'au moins 32 caractères, dans le `.env`, ouvre les requêtes `organisations` et les mutations `creerOrganisation`, `inviterPremierAdmin`, `modifierOrganisationInstallation` et `demanderExport` sur `/graphql`, avec l'en-tête `Authorization: Bearer <jeton>`. Ce jeton ne donne accès à aucune donnée d'une organisation. `CONTACT_HEBERGEUR` indique à qui s'adresser quand une limite est atteinte.
+4. **Exporter une organisation** : le fichier s'écrit dans le volume `exports`.
+    ```bash
+    docker compose --env-file .env exec server node dist/exporter-organisation.js rencontres
+    docker compose --env-file .env cp server:/exports ./exports
+    ```
+    Le fichier contient des noms et des adresses : remettez-le à l'organisation et supprimez-le du serveur ensuite.
+5. **Code source.** L'espace organisateur lie le code source de la version exécutée, comme l'AGPL l'exige (article 13). Par défaut, le lien mène au dépôt public. Un hébergeur qui modifie Relaytour indique son propre dépôt dans `CODE_SOURCE_URL`.
+6. **Identité et contenu.** Les admins d'une organisation modifient son nom, ses contacts, son logo et son thème dans l'espace organisateur, et téléchargent son contenu en archive. Le portail d'un hébergeur ne gère que le statut et les limites (ADR 0009).
+
 ## Tâches planifiées
 
-Le worker planifie deux tâches, à l'heure de Paris : à 6 h 30 les rappels d'échéance (7 jours, veille) et le signalement des retards ; à 7 h les résumés par mail. Pour en lancer une tout de suite :
+Le worker planifie deux tâches pour chaque organisation active, à l'heure de son fuseau (ADR 0008) : à 6 h 30 les rappels d'échéance (7 jours, veille) et le signalement des retards ; à 7 h les résumés par mail. Il ajuste ces planifications à son démarrage, puis chaque heure : une organisation créée ou suspendue est prise en compte dans l'heure. Pour lancer une tâche tout de suite :
 
 ```bash
 docker compose --env-file .env exec worker node dist/planification-lancer.js rappels
-docker compose --env-file .env exec worker node dist/planification-lancer.js resumes
+docker compose --env-file .env exec worker node dist/planification-lancer.js resumes --organisation rencontres
 ```
 
-Un rappel n'est jamais créé deux fois et un résumé ne part qu'une fois par jour : relancer est sans risque.
+Sans `--organisation`, la tâche part pour toutes les organisations actives. Un rappel n'est jamais créé deux fois et un résumé ne part qu'une fois par jour et par organisation : relancer est sans risque.

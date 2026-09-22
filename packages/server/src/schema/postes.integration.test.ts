@@ -4,11 +4,11 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 import { env } from '../env.ts'
 
 import { schema } from './index.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 // Postes à pourvoir et effectifs. Les contrôles d'accès se prouvent par le refus.
@@ -39,7 +39,7 @@ async function executer(
 ) {
   const r = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -237,14 +237,14 @@ describe('definirEffectif', () => {
     expect(await effectifsDe(ids.volley)).toBe(0)
   })
 
+  // Un périmètre inconnu et un périmètre d'une autre organisation donnent le même refus.
   it('refuse un périmètre inconnu', async () => {
     const r = await executer(ids.admin, DEFINIR, {
       p: `inconnu-${s}`,
       e: ids.edition,
       n: 2,
     })
-    expect(code(r)).toBe('SAISIE_INVALIDE')
-    expect(r.errors?.[0]?.message).toMatch(/introuvable/)
+    expect(code(r)).toBe('FORBIDDEN')
   })
 
   it('met à jour la ligne existante sans créer de doublon', async () => {
@@ -288,9 +288,10 @@ describe('postesAPourvoir', () => {
     expect(code(r)).toBe('FORBIDDEN')
   })
 
+  // Une édition inconnue et une édition d'une autre organisation donnent le même refus.
   it('refuse une édition inconnue', async () => {
     const r = await executer(ids.admin, POSTES, { e: `inconnue-${s}` })
-    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(code(r)).toBe('FORBIDDEN')
   })
 
   it('trie par état, postes à pourvoir, type puis ordre', () => {

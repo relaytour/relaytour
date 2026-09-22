@@ -4,10 +4,10 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 
 import { schema } from './index.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 // Souhaits des personnes. Les contrôles d'accès se prouvent par le refus, et les
@@ -38,7 +38,7 @@ async function executer(
 ) {
   const r = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -134,6 +134,13 @@ beforeAll(async () => {
         name: `${cle} ${s}`,
         isAdmin: estAdmin,
         archivedAt: archive ? new Date() : null,
+        // Tous les comptes du test sont membres de l'organisation (ADR 0008).
+        appartenances: {
+          create: {
+            organisationId: ORGANISATION,
+            role: estAdmin ? 'ADMIN' : 'MEMBRE',
+          },
+        },
       },
     })
   }
@@ -353,15 +360,23 @@ describe('saisies invalides', () => {
     expect(await prisma.souhait.count({ where: { id: ancien.id } })).toBe(1)
   })
 
-  it('refuse une personne archivée ou inconnue', async () => {
-    for (const u of [ids.ancienne, `inconnue-${s}`]) {
-      const r = await executer(ids.admin, DEFINIR, {
-        u,
-        e: ids.edition,
-        p: [ids.natation],
-      })
-      expect(code(r)).toBe('SAISIE_INVALIDE')
-    }
+  it('refuse une personne archivée', async () => {
+    const r = await executer(ids.admin, DEFINIR, {
+      u: ids.ancienne,
+      e: ids.edition,
+      p: [ids.natation],
+    })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+  })
+
+  // Un compte inconnu et un compte d'une autre organisation donnent le même refus.
+  it('refuse une personne inconnue comme une personne d’ailleurs', async () => {
+    const r = await executer(ids.admin, DEFINIR, {
+      u: `inconnue-${s}`,
+      e: ids.edition,
+      p: [ids.natation],
+    })
+    expect(code(r)).toBe('FORBIDDEN')
   })
 })
 

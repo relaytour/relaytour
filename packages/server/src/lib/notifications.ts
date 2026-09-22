@@ -3,7 +3,6 @@ import type { PrismaClient, TypeNotification } from '@relaytour/database'
 import { mettreEnFile } from '../courriel/file.ts'
 
 import { journal } from './journal.ts'
-import { organisationParDefaut } from './organisation.ts'
 
 export const PREFERENCES_PAR_DEFAUT = {
   frequenceResume: 'HEBDOMADAIRE',
@@ -65,10 +64,15 @@ export async function notifier(
   )
   if (destinataires.length === 0) return
   try {
+    // La notification appartient à l'organisation du périmètre (ADR 0008).
+    const { organisationId } = await prisma.perimetre.findUniqueOrThrow({
+      where: { id: notification.perimetreId },
+      select: { organisationId: true },
+    })
     for (const userId of destinataires) {
       const creee = await prisma.notification.create({
         data: {
-          organisationId: await organisationParDefaut(),
+          organisationId,
           userId,
           type: notification.type,
           acteurId: notification.acteurId,
@@ -89,6 +93,7 @@ export async function notifier(
               changement: notification.changement ?? 'contenu',
             },
             notificationId: creee.id,
+            organisationId,
           }
         )
       }
@@ -115,7 +120,7 @@ export interface NotificationAComposer {
   tache: {
     titre: string
     echeance: Date | null
-    perimetre: { nom: string; slug: string }
+    perimetre: { nom: string; slug: string; activite: { slug: string } }
   } | null
 }
 
@@ -172,6 +177,9 @@ export function messageNotification(
 }
 
 /** Chemin de l'espace organisateur vers lequel renvoie une notification. */
+/** Le lien d'une notification, sous le slug de l'activité du périmètre (ADR 0008). */
 export function lienNotification(n: NotificationAComposer): string {
-  return n.tache ? `/perimetres/${n.tache.perimetre.slug}` : '/'
+  return n.tache
+    ? `/${n.tache.perimetre.activite.slug}/perimetres/${n.tache.perimetre.slug}`
+    : '/'
 }

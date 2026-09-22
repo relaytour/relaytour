@@ -12,7 +12,12 @@ import { z } from 'zod'
 
 import type { Env } from '../env.ts'
 
-import { domainesAutorises } from './contenu.ts'
+import { GROUPES_PAR_DEFAUT, SLUGS_RESERVES } from './activites.ts'
+import {
+  adresseDeRole,
+  domainesAutorises,
+  messagerieGrandPublic,
+} from './contenu.ts'
 
 // Configuration de l'organisation (ADR 0006, lot commun). Un seul objet, lu par
 // l'API, les mails et les scripts. Sources, dans l'ordre : la ligne `Organisation`
@@ -95,6 +100,53 @@ export const ThemeDeclareSchema = z.strictObject({
 
 export type ThemeDeclare = z.infer<typeof ThemeDeclareSchema>
 
+/**
+ * Ce qu'une activité peut surcharger dans le thème de son organisation : les
+ * couleurs et le fond. Les polices et la typographie restent celles de
+ * l'organisation, pour une identité cohérente entre ses activités (ADR 0009).
+ */
+export const ThemeActiviteSchema = ThemeDeclareSchema.pick({
+  couleurs: true,
+  fond: true,
+})
+
+export type ThemeActivite = z.infer<typeof ThemeActiviteSchema>
+
+/** Fusionne deux déclarations de thème : la seconde l'emporte, champ par champ. */
+export function fusionnerThemesDeclares(
+  base: ThemeDeclare | undefined,
+  surcharge: ThemeActivite | undefined
+): ThemeDeclare | undefined {
+  if (surcharge === undefined) return base
+  if (base === undefined) return surcharge
+  const fond =
+    base.fond === undefined && surcharge.fond === undefined
+      ? undefined
+      : {
+          ...base.fond,
+          ...surcharge.fond,
+          halo1: fusionnerObjets(base.fond?.halo1, surcharge.fond?.halo1),
+          halo2: fusionnerObjets(base.fond?.halo2, surcharge.fond?.halo2),
+        }
+  return {
+    ...base,
+    couleurs:
+      base.couleurs === undefined && surcharge.couleurs === undefined
+        ? undefined
+        : { ...base.couleurs, ...surcharge.couleurs },
+    fond,
+  }
+}
+
+function fusionnerObjets<T extends object>(
+  a: T | undefined,
+  b: T | undefined
+): T | undefined {
+  if (a === undefined) return b
+  if (b === undefined) return a
+  return { ...a, ...b }
+}
+
 /** Le thème complet d'une déclaration partielle, polices converties en piles CSS. */
 export function resoudreTheme(declare: ThemeDeclare | undefined): Theme {
   if (declare === undefined) return themeParDefaut
@@ -112,6 +164,46 @@ export function resoudreTheme(declare: ThemeDeclare | undefined): Theme {
   return fusionnerTheme({ couleurs, fond: declare.fond, polices, typographie })
 }
 
+/** Les manquements de contraste d'un thème déclaré, chacun avec son chemin. */
+function manquementsContraste(theme: ThemeDeclare | undefined) {
+  return verifierAccessibilite(resoudreTheme(theme)).map(m => ({
+    path: ['theme', 'couleurs', m.couleur],
+    message: `contraste ${m.rapport.toFixed(2)} sur ${m.fond}, 4,5 attendu`,
+  }))
+}
+
+const Adresse = z
+  .string()
+  .trim()
+  .toLowerCase()
+  .regex(ADRESSE, 'adresse mail attendue')
+
+/**
+ * Une image de l'organisation ou d'une activité. Dans le dossier de contenu, un
+ * chemin relatif au fichier qui la déclare ; en base, l'empreinte du média.
+ */
+const ReferenceImage = z.string().trim().min(1).max(200)
+
+/** Un logo : le PNG sert partout, y compris dans les mails ; le SVG, à l'écran. */
+export const LogoSchema = z.strictObject({
+  png: ReferenceImage,
+  svg: ReferenceImage.optional(),
+})
+
+export type Logo = z.infer<typeof LogoSchema>
+
+const EMPREINTE = /^[0-9a-f]{64}$/
+
+/** L'adresse publique d'un média, ou undefined si la référence n'est pas une empreinte. */
+export function urlMedia(
+  empreinte: string | undefined,
+  extension: 'png' | 'svg',
+  origine = ''
+): string | undefined {
+  if (empreinte === undefined || !EMPREINTE.test(empreinte)) return undefined
+  return `${origine}/medias/${empreinte}.${extension}`
+}
+
 function fuseauValide(fuseau: string): boolean {
   try {
     new Intl.DateTimeFormat('fr-FR', { timeZone: fuseau })
@@ -127,44 +219,130 @@ function fuseauValide(fuseau: string): boolean {
  */
 export const DeclarationOrganisationSchema = z
   .strictObject({
-    slug: z.string().regex(SLUG, 'minuscules, chiffres et tirets seulement').max(60),
+    // L'activité implicite d'une organisation prend son slug : il ne peut pas être
+    // un segment réservé de l'espace organisateur (ADR 0008).
+    slug: z
+      .string()
+      .regex(SLUG, 'minuscules, chiffres et tirets seulement')
+      .max(60)
+      .refine(s => !SLUGS_RESERVES.has(s), {
+        message: 'identifiant réservé par l’espace organisateur',
+      }),
     nom: z.string().trim().min(1).max(120),
     sigle: z.string().trim().min(1).max(20).optional(),
     fuseauHoraire: z
       .string()
       .default('Europe/Paris')
       .refine(fuseauValide, 'fuseau horaire inconnu (forme Europe/Paris)'),
+    // Domaines des adresses de rôle : une adresse de ces domaines passe pour
+    // institutionnelle. Aucune messagerie grand public (ADR 0009).
     domainesCourrielAutorises: z
-      .array(z.string().trim().toLowerCase().regex(DOMAINE, 'domaine attendu'))
+      .array(
+        z
+          .string()
+          .trim()
+          .toLowerCase()
+          .regex(DOMAINE, 'domaine attendu')
+          .refine(d => !messagerieGrandPublic(d), {
+            message:
+              'messagerie grand public refusée : déclarez plutôt l’adresse complète dans adressesRoleAutorisees',
+          })
+      )
+      .max(20)
       .default([]),
-    contactRecrutement: z.string().trim().toLowerCase().regex(ADRESSE, 'adresse mail attendue').optional(),
+    // Exceptions : boîtes partagées hébergées chez une messagerie grand public.
+    adressesRoleAutorisees: z.array(Adresse).max(20).default([]),
+    contactRecrutement: Adresse.optional(),
     pageEquipe: z.string().trim().url().optional(),
-    logoUrl: z.string().trim().regex(URL_PUBLIQUE, 'adresse https ou chemin absolu').optional(),
-    faviconUrl: z.string().trim().regex(URL_PUBLIQUE, 'adresse https ou chemin absolu').optional(),
+    logo: LogoSchema.optional(),
+    favicon: ReferenceImage.optional(),
+    logoUrl: z
+      .string()
+      .trim()
+      .regex(URL_PUBLIQUE, 'adresse https ou chemin absolu')
+      .optional(),
+    faviconUrl: z
+      .string()
+      .trim()
+      .regex(URL_PUBLIQUE, 'adresse https ou chemin absolu')
+      .optional(),
     theme: ThemeDeclareSchema.optional(),
   })
   .superRefine((v, ctx) => {
-    if (v.contactRecrutement !== undefined) {
-      const domaine = ADRESSE.exec(v.contactRecrutement)?.[1] ?? ''
-      if (!v.domainesCourrielAutorises.includes(domaine)) {
-        ctx.addIssue({
-          code: 'custom',
-          path: ['contactRecrutement'],
-          message: `le domaine ${domaine} n'est pas dans domainesCourrielAutorises`,
-        })
-      }
+    const role = {
+      domaines: v.domainesCourrielAutorises,
+      adresses: v.adressesRoleAutorisees,
     }
-    const manquements = verifierAccessibilite(resoudreTheme(v.theme))
-    for (const m of manquements) {
+    if (
+      v.contactRecrutement !== undefined &&
+      !adresseDeRole(v.contactRecrutement, role)
+    ) {
       ctx.addIssue({
         code: 'custom',
-        path: ['theme', 'couleurs', m.couleur],
-        message: `contraste ${m.rapport.toFixed(2)} sur ${m.fond}, 4,5 attendu`,
+        path: ['contactRecrutement'],
+        message: `le domaine ${v.contactRecrutement.split('@')[1] ?? ''} n'est pas dans domainesCourrielAutorises, et l'adresse n'est pas dans adressesRoleAutorisees`,
       })
+    }
+    for (const m of manquementsContraste(v.theme)) {
+      ctx.addIssue({ code: 'custom', ...m })
     }
   })
 
-export type DeclarationOrganisation = z.infer<typeof DeclarationOrganisationSchema>
+export type DeclarationOrganisation = z.infer<
+  typeof DeclarationOrganisationSchema
+>
+
+/**
+ * L'identité propre d'une activité (ADR 0009). Chaque champ absent reprend la
+ * valeur de l'organisation. Le thème ne surcharge que les couleurs et le fond.
+ */
+export const IdentiteActiviteSchema = z.strictObject({
+  contactRecrutement: Adresse.optional(),
+  pageEquipe: z.string().trim().url().optional(),
+  logo: LogoSchema.optional(),
+  theme: ThemeActiviteSchema.optional(),
+})
+
+export type IdentiteActivite = z.infer<typeof IdentiteActiviteSchema>
+
+/**
+ * Ce que l'identité d'une activité enfreint dans le cadre de son organisation :
+ * un contact hors des adresses de rôle, un contraste insuffisant une fois les deux
+ * thèmes fusionnés.
+ */
+export function manquementsIdentiteActivite(
+  identite: IdentiteActivite,
+  organisation: Pick<
+    DeclarationOrganisation,
+    'domainesCourrielAutorises' | 'adressesRoleAutorisees' | 'theme'
+  >
+): { path: (string | number)[]; message: string }[] {
+  const manquements: { path: (string | number)[]; message: string }[] = []
+  if (
+    identite.contactRecrutement !== undefined &&
+    !adresseDeRole(identite.contactRecrutement, {
+      domaines: organisation.domainesCourrielAutorises,
+      adresses: organisation.adressesRoleAutorisees,
+    })
+  ) {
+    manquements.push({
+      path: ['contactRecrutement'],
+      message: `le domaine ${identite.contactRecrutement.split('@')[1] ?? ''} n'est pas dans les domainesCourrielAutorises de l'organisation, et l'adresse n'est pas dans ses adressesRoleAutorisees`,
+    })
+  }
+  manquements.push(
+    ...manquementsContraste(
+      fusionnerThemesDeclares(organisation.theme, identite.theme)
+    )
+  )
+  return manquements
+}
+
+/** L'identité d'une activité lue en base, vide si elle est absente ou invalide. */
+export function lireIdentiteActivite(valeur: unknown): IdentiteActivite {
+  const r = IdentiteActiviteSchema.safeParse(valeur ?? {})
+  return r.success ? r.data : {}
+}
 
 /** La configuration résolue, jamais partielle. */
 export interface ConfigurationOrganisation {
@@ -179,10 +357,16 @@ export interface ConfigurationOrganisation {
   expediteur: string
   origineOrga: string
   domainesCourrielAutorises: string[]
+  adressesRoleAutorisees: string[]
   contactRecrutement: string | undefined
   pageEquipe: string | undefined
+  /** Le logo à l'écran : SVG, sinon PNG, sinon l'adresse déclarée. */
   logoUrl: string | undefined
+  /** Le logo PNG en adresse absolue, pour les mails. */
+  logoMailUrl: string | undefined
   faviconUrl: string | undefined
+  /** La déclaration du thème, avant résolution : base de la fusion d'une activité. */
+  themeDeclare: ThemeDeclare | undefined
   theme: Theme
 }
 
@@ -209,6 +393,7 @@ export function declarationDepuisEnv(
     sigle: undefined,
     fuseauHoraire: 'Europe/Paris',
     domainesCourrielAutorises: domaines,
+    adressesRoleAutorisees: [],
     // Un contact hors des domaines autorisés ne vaut rien : la validation le refuserait.
     contactRecrutement:
       contact && domaines.includes(domaineContact) ? contact : undefined,
@@ -236,19 +421,93 @@ export function resoudreConfiguration(
     expediteur: env.COURRIEL_EXPEDITEUR ?? `${nomCourt} <relaytour@localhost>`,
     origineOrga: env.ORIGINE_ORGA,
     domainesCourrielAutorises: declaration.domainesCourrielAutorises,
+    adressesRoleAutorisees: declaration.adressesRoleAutorisees,
     contactRecrutement: declaration.contactRecrutement,
     pageEquipe: declaration.pageEquipe,
-    logoUrl: declaration.logoUrl,
-    faviconUrl: declaration.faviconUrl,
+    logoUrl:
+      urlMedia(declaration.logo?.svg, 'svg') ??
+      urlMedia(declaration.logo?.png, 'png') ??
+      declaration.logoUrl,
+    logoMailUrl: urlMedia(declaration.logo?.png, 'png', env.ORIGINE_ORGA),
+    faviconUrl: urlMedia(declaration.favicon, 'png') ?? declaration.faviconUrl,
+    themeDeclare: declaration.theme,
     theme: resoudreTheme(declaration.theme),
   }
 }
 
-/** Les variables qu'un mail reçoit de l'organisation : nom court et couleurs. */
-export function variablesOrganisation(configuration: ConfigurationOrganisation) {
+/** La configuration d'une activité : celle de son organisation, surchargée par son identité. */
+export interface ConfigurationActivite extends ConfigurationOrganisation {
+  activite: { id: string; slug: string; nom: string; nomCourt: string }
+}
+
+/** Applique l'identité d'une activité à la configuration de son organisation. */
+export function surchargerParActivite(
+  organisation: ConfigurationOrganisation,
+  activite: { id: string; slug: string; nom: string; sigle: string | null },
+  identite: IdentiteActivite
+): ConfigurationActivite {
+  const themeDeclare = fusionnerThemesDeclares(
+    organisation.themeDeclare,
+    identite.theme
+  )
+  return {
+    ...organisation,
+    activite: {
+      id: activite.id,
+      slug: activite.slug,
+      nom: activite.nom,
+      nomCourt: activite.sigle ?? activite.nom,
+    },
+    contactRecrutement:
+      identite.contactRecrutement ?? organisation.contactRecrutement,
+    pageEquipe: identite.pageEquipe ?? organisation.pageEquipe,
+    logoUrl:
+      urlMedia(identite.logo?.svg, 'svg') ??
+      urlMedia(identite.logo?.png, 'png') ??
+      organisation.logoUrl,
+    logoMailUrl:
+      urlMedia(identite.logo?.png, 'png', organisation.origineOrga) ??
+      organisation.logoMailUrl,
+    themeDeclare,
+    theme:
+      identite.theme === undefined
+        ? organisation.theme
+        : resoudreTheme(themeDeclare),
+  }
+}
+
+/** La configuration d'une activité, lue en base ; celle de son organisation l'encadre. */
+export async function configurationActivite(
+  activiteId: string
+): Promise<ConfigurationActivite> {
+  const { prisma } = await import('@relaytour/database')
+  const activite = await prisma.activite.findUniqueOrThrow({
+    where: { id: activiteId },
+    select: {
+      id: true,
+      slug: true,
+      nom: true,
+      sigle: true,
+      identite: true,
+      organisationId: true,
+    },
+  })
+  const organisation = await configurationOrganisation(activite.organisationId)
+  return surchargerParActivite(
+    organisation,
+    activite,
+    lireIdentiteActivite(activite.identite)
+  )
+}
+
+/** Les variables qu'un mail reçoit de l'organisation : nom court, logo et couleurs. */
+export function variablesOrganisation(
+  configuration: ConfigurationOrganisation
+) {
   const c = configuration.theme.couleurs
   return {
     organisation: configuration.nomCourt,
+    logoUrl: configuration.logoMailUrl ?? '',
     couleurEncre: c.encre,
     couleurPrimaire: c.primaire,
     couleurAccent: c.accent,
@@ -257,12 +516,16 @@ export function variablesOrganisation(configuration: ConfigurationOrganisation) 
 }
 
 const DUREE_CACHE_MS = 60_000
-let cache: { valeur: ConfigurationOrganisation; expire: number } | null = null
+// Une entrée par organisation ; la clé vide désigne la première organisation.
+const cache = new Map<
+  string,
+  { valeur: ConfigurationOrganisation; expire: number }
+>()
 let idParDefaut: string | null = null
 
 /** Oublie la configuration en cache : à appeler après un import ou une modification. */
 export function invaliderConfigurationOrganisation(): void {
-  cache = null
+  cache.clear()
   idParDefaut = null
 }
 
@@ -273,34 +536,78 @@ interface LigneOrganisation {
 }
 
 /** La déclaration portée par une ligne, ou null si sa configuration est vide ou invalide. */
-function declarationDeLaLigne(ligne: LigneOrganisation): DeclarationOrganisation | null {
+function declarationDeLaLigne(
+  ligne: LigneOrganisation
+): DeclarationOrganisation | null {
   const r = DeclarationOrganisationSchema.safeParse(ligne.configuration)
   return r.success ? r.data : null
 }
 
 /**
- * La configuration courante, en cache une minute : la ligne Organisation en base
- * si elle porte une déclaration valide, sinon l'amorçage de l'environnement.
- * Lot commun : une seule organisation par installation.
+ * La configuration d'une organisation, en cache une minute : la ligne Organisation
+ * en base si elle porte une déclaration valide, sinon l'amorçage de l'environnement.
+ * Sans identifiant, la première organisation de l'installation (worker et scripts,
+ * jusqu'à leur passage par organisation).
  */
-export async function configurationOrganisation(): Promise<ConfigurationOrganisation> {
+export async function configurationOrganisation(
+  organisationId?: string
+): Promise<ConfigurationOrganisation> {
   const maintenant = Date.now()
-  if (cache !== null && cache.expire > maintenant) return cache.valeur
+  const cle = organisationId ?? ''
+  const enCache = cache.get(cle)
+  if (enCache !== undefined && enCache.expire > maintenant)
+    return enCache.valeur
   // Imports paresseux : ce module est chargé par la validation de contenu, sans base ni .env.
   const [{ env }, { prisma }] = await Promise.all([
     import('../env.ts'),
     import('@relaytour/database'),
   ])
-  const ligne = await prisma.organisation.findFirst({
-    orderBy: { createdAt: 'asc' },
-    select: { id: true, slug: true, configuration: true },
-  })
+  const selection = { id: true, slug: true, configuration: true } as const
+  const ligne =
+    organisationId === undefined
+      ? await prisma.organisation.findFirst({
+          orderBy: { createdAt: 'asc' },
+          select: selection,
+        })
+      : await prisma.organisation.findUnique({
+          where: { id: organisationId },
+          select: selection,
+        })
   const declaration =
     (ligne === null ? null : declarationDeLaLigne(ligne)) ??
     declarationDepuisEnv(env)
   const valeur = resoudreConfiguration(env, declaration, ligne?.id ?? null)
-  cache = { valeur, expire: maintenant + DUREE_CACHE_MS }
+  cache.set(cle, { valeur, expire: maintenant + DUREE_CACHE_MS })
   return valeur
+}
+
+/**
+ * La configuration publique servie sans session (écran de connexion) : celle de
+ * l'organisation active, sinon de l'organisation désignée par son slug, sinon de
+ * l'unique organisation de l'installation. Une installation à plusieurs
+ * organisations, sans slug connu, sert l'identité d'amorçage de l'environnement :
+ * elle n'affiche la marque d'aucune organisation.
+ */
+export async function configurationPublique(
+  organisationId: string | undefined,
+  slug: string | undefined
+): Promise<ConfigurationOrganisation> {
+  if (organisationId !== undefined)
+    return configurationOrganisation(organisationId)
+  const [{ env }, { prisma }] = await Promise.all([
+    import('../env.ts'),
+    import('@relaytour/database'),
+  ])
+  if (slug !== undefined) {
+    const designee = await prisma.organisation.findFirst({
+      where: { slug, statut: { not: 'ARCHIVEE' } },
+      select: { id: true },
+    })
+    if (designee !== null) return configurationOrganisation(designee.id)
+  }
+  const nombre = await prisma.organisation.count()
+  if (nombre <= 1) return configurationOrganisation()
+  return resoudreConfiguration(env, declarationDepuisEnv(env))
 }
 
 /**
@@ -341,6 +648,28 @@ export async function assurerOrganisationParDefaut(): Promise<string> {
         sigle: declaration.sigle ?? null,
         fuseauHoraire: declaration.fuseauHoraire,
         configuration: declaration,
+      },
+    })
+  }
+  // Une installation neuve reçoit aussi sa première activité : un événement au slug
+  // de l'organisation, que le premier import en disposition activites/ retire s'il
+  // reste vide. Sans elle, edition:creer n'aurait aucune activité où créer la période.
+  const activites = await prisma.activite.count({
+    where: { organisationId: ligne.id },
+  })
+  if (activites === 0) {
+    const organisation = await prisma.organisation.findUniqueOrThrow({
+      where: { id: ligne.id },
+      select: { slug: true, nom: true, sigle: true },
+    })
+    await prisma.activite.create({
+      data: {
+        organisationId: ligne.id,
+        slug: organisation.slug,
+        nom: organisation.nom,
+        sigle: organisation.sigle,
+        nature: 'EVENEMENT',
+        groupes: GROUPES_PAR_DEFAUT,
       },
     })
   }

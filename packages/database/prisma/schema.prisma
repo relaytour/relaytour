@@ -34,29 +34,55 @@ enum StatutOrganisation {
 
 // Racine des données d'une organisation. Elle porte une ou plusieurs activités.
 model Organisation {
-  id            String             @id @default(cuid())
-  slug          String             @unique
-  nom           String
-  sigle         String?
-  fuseauHoraire String             @default("Europe/Paris")
+  id                   String             @id @default(cuid())
+  slug                 String             @unique
+  nom                  String
+  sigle                String?
+  fuseauHoraire        String             @default("Europe/Paris")
   // Déclaration complète (organisation.yaml), validée par DeclarationOrganisationSchema
   // dans packages/server/src/lib/organisation.ts.
-  configuration Json
-  statut        StatutOrganisation @default(ACTIVE)
+  configuration        Json
+  statut               StatutOrganisation @default(ACTIVE)
   // Plafonds fixés par l'administration de l'installation (ADR 0008) :
   // { activites?: number, periodesOuvertes?: number }. Nul ou vide : aucune limite.
   // Une limite bloque une création, jamais la lecture ni l'export.
-  limites       Json?
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
+  limites              Json?
+  // Source de vérité du contenu (ADR 0009) : dernière modification faite dans
+  // l'application, et dernier import ou export du dossier de contenu. Un import
+  // refuse d'écraser une modification plus récente que la dernière synchronisation.
+  contenuModifieLe     DateTime?
+  contenuSynchroniseLe DateTime?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
-  activites     Activite[]
-  appartenances Appartenance[]
-  editions      Edition[]
-  perimetres    Perimetre[]
-  fiches        Fiche[]
-  notifications Notification[]
-  preferences   PreferenceNotification[]
+  activites       Activite[]
+  appartenances   Appartenance[]
+  editions        Edition[]
+  perimetres      Perimetre[]
+  fiches          Fiche[]
+  notifications   Notification[]
+  preferences     PreferenceNotification[]
+  droitsRedaction DroitRedaction[]
+  medias          Media[]
+}
+
+// Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
+// fichier vit en base, avec les sauvegardes, et se sert par son empreinte.
+model Media {
+  id             String   @id @default(cuid())
+  organisationId String
+  // SHA-256 du fichier, en hexadécimal : l'adresse publique de l'image.
+  empreinte      String
+  // image/png ou image/svg+xml.
+  type           String
+  octets         Int
+  donnees        Bytes    @db.MediumBlob
+  createdAt      DateTime @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+
+  @@unique([organisationId, empreinte])
+  @@index([empreinte])
 }
 
 enum RoleOrganisation {
@@ -102,6 +128,9 @@ model Activite {
   // [{ cle, libelle, libellePluriel }]. Le gabarit propose sport et pole.
   groupes        Json
   ordre          Int            @default(0)
+  // Identité propre à l'activité (ADR 0009) : contacts, logo, couleurs et fond.
+  // Chaque champ absent reprend la valeur de l'organisation.
+  identite       Json?
   archivedAt     DateTime?
   createdAt      DateTime       @default(now())
   updatedAt      DateTime       @updatedAt
@@ -243,18 +272,23 @@ enum TypePerimetre {
 // un groupe déclaré par l'activité. Il est stable d'une période à l'autre.
 // `type` reste rempli pour l'historique ; `groupe` le remplace (ADR 0008).
 model Perimetre {
-  id             String        @id @default(cuid())
-  organisationId String
-  activiteId     String
-  slug           String
-  nom            String
-  type           TypePerimetre
-  groupe         String
-  couleur        String?
-  ordre          Int           @default(0)
-  archivedAt     DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  organisationId    String
+  activiteId        String
+  slug              String
+  nom               String
+  type              TypePerimetre
+  groupe            String
+  couleur           String?
+  ordre             Int           @default(0)
+  // Effectif déclaré dans le contenu, repris pour chaque nouvelle période.
+  effectifParDefaut Int?
+  // Tâches types du périmètre, telles que le contenu les déclare (ADR 0009) :
+  // l'export les réécrit sans les reconstituer depuis les tâches d'une période.
+  tachesTypes       Json?
+  archivedAt        DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   organisation    Organisation?       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   activite        Activite            @relation(fields: [activiteId], references: [id], onDelete: Restrict)
@@ -481,19 +515,23 @@ model FicheVersion {
 }
 
 // Droit d'écrire les fiches, accordé par un admin : pour un périmètre, ou pour
-// toutes les fiches (perimetreId null), fiches communes comprises.
+// toutes les fiches de l'organisation (perimetreId null), fiches communes comprises.
+// La clé d'organisation borne le droit global à une organisation (ADR 0008).
 model DroitRedaction {
-  id           String   @id @default(cuid())
-  userId       String
-  perimetreId  String?
-  accordeParId String?
-  createdAt    DateTime @default(now())
+  id             String   @id @default(cuid())
+  organisationId String
+  userId         String
+  perimetreId    String?
+  accordeParId   String?
+  createdAt      DateTime @default(now())
 
-  user       User       @relation("DroitRedactionPersonne", fields: [userId], references: [id], onDelete: Cascade)
-  perimetre  Perimetre? @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
-  accordePar User?      @relation("DroitRedactionAuteur", fields: [accordeParId], references: [id], onDelete: SetNull)
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  user         User         @relation("DroitRedactionPersonne", fields: [userId], references: [id], onDelete: Cascade)
+  perimetre    Perimetre?   @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  accordePar   User?        @relation("DroitRedactionAuteur", fields: [accordeParId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+  @@index([organisationId])
 }
 
 // ── Notifications ────────────────────────────────────────────────────────────
@@ -555,6 +593,9 @@ model PreferenceNotification {
   // Mail immédiat pour les échéances à 7 jours, à 1 jour, et les retards.
   mailEcheance     Boolean         @default(true)
   dernierResumeLe  DateTime?
+  // Date du dernier résumé envoyé pour chaque organisation : { [organisationId]: ISO }.
+  // Une personne membre de plusieurs organisations reçoit le résumé de chacune (ADR 0008).
+  derniersResumes  Json?
   updatedAt        DateTime        @updatedAt
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)

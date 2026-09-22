@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -7,14 +7,18 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
-import { exporterFiches } from '../orga/exporter.ts'
+import type { AppContext } from '../context.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
+import { exporterContenu } from '../orga/exporter.ts'
 import { assurerOrganisationParDefaut } from '../lib/organisation.ts'
-import { importerModeles } from '../orga/importer.ts'
+import {
+  importerModeles,
+  type RapportActivite,
+  type RapportImport,
+} from '../orga/importer.ts'
 import { lireModeles } from '../orga/modeles.ts'
 
 import { schema } from './index.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)
@@ -44,7 +48,7 @@ async function executer(
 ) {
   const r = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -54,6 +58,11 @@ const code = (r: Awaited<ReturnType<typeof executer>>) =>
   r.errors?.[0]?.extensions?.code
 
 let ORGANISATION = ''
+let SLUG_ORGANISATION = ''
+
+/** Le rapport de l'unique activité du dossier, en disposition plate. */
+const activite = (rapport: RapportImport): RapportActivite =>
+  rapport.activites[0]!
 let ACTIVITE = ''
 
 beforeAll(async () => {
@@ -66,6 +75,7 @@ beforeAll(async () => {
   const organisation = await prisma.organisation.findFirstOrThrow({
     orderBy: { createdAt: 'asc' },
   })
+  SLUG_ORGANISATION = organisation.slug
   ecrire(
     'organisation.yaml',
     `slug: ${organisation.slug}\nnom: ${JSON.stringify(organisation.nom)}\n${organisation.sigle ? `sigle: ${JSON.stringify(organisation.sigle)}\n` : ''}`
@@ -150,11 +160,12 @@ afterAll(async () => {
 describe('import des modèles', () => {
   it('ne touche à rien en simulation', async () => {
     const rapport = await importerModeles(prisma, lireModeles(racine), {
+      organisation: SLUG_ORGANISATION,
       annee,
       simulation: true,
     })
-    expect(rapport.fiches.creees).toHaveLength(2)
-    expect(rapport.effectifs.crees).toEqual([`natation-${s} (2)`])
+    expect(activite(rapport).fiches.creees).toHaveLength(2)
+    expect(activite(rapport).effectifs.crees).toEqual([`natation-${s} (2)`])
     expect(
       await prisma.fiche.count({ where: { slug: { endsWith: `-${s}` } } })
     ).toBe(0)
@@ -167,9 +178,10 @@ describe('import des modèles', () => {
 
   it('crée périmètres, fiches et tâches, avec l’échéance relative', async () => {
     const rapport = await importerModeles(prisma, lireModeles(racine), {
+      organisation: SLUG_ORGANISATION,
       annee,
     })
-    expect(rapport.perimetres.crees.sort()).toEqual([
+    expect(activite(rapport).perimetres.crees.sort()).toEqual([
       `basket-${s}`,
       `natation-${s}`,
     ])
@@ -190,14 +202,17 @@ describe('import des modèles', () => {
 
   it('ne recrée rien au second import', async () => {
     const rapport = await importerModeles(prisma, lireModeles(racine), {
+      organisation: SLUG_ORGANISATION,
       annee,
     })
-    expect(rapport.fiches.inchangees).toHaveLength(2)
-    expect(rapport.effectifs).toEqual({
+    expect(activite(rapport).fiches.inchangees).toHaveLength(2)
+    expect(activite(rapport).effectifs).toEqual({
       crees: [],
       dejaPresents: [`natation-${s}`],
     })
-    expect(rapport.taches.dejaPresentes).toEqual([`natation-${s}/piscine`])
+    expect(activite(rapport).taches.dejaPresentes).toEqual([
+      `natation-${s}/piscine`,
+    ])
   })
 
   it('ne remplace pas un effectif modifié dans l’application', async () => {
@@ -208,9 +223,10 @@ describe('import des modèles', () => {
     })
     ecrirePerimetres({ natation: 3 })
     const rapport = await importerModeles(prisma, lireModeles(racine), {
+      organisation: SLUG_ORGANISATION,
       annee,
     })
-    expect(rapport.effectifs.dejaPresents).toEqual([`natation-${s}`])
+    expect(activite(rapport).effectifs.dejaPresents).toEqual([`natation-${s}`])
     const effectif = await prisma.effectifPerimetre.findFirstOrThrow({
       where: { editionId: ids.edition },
     })
@@ -219,8 +235,10 @@ describe('import des modèles', () => {
 
   it('ne crée aucun effectif sans édition', async () => {
     ecrirePerimetres({ natation: 3, basket: 1 })
-    const rapport = await importerModeles(prisma, lireModeles(racine))
-    expect(rapport.effectifs).toEqual({ crees: [], dejaPresents: [] })
+    const rapport = await importerModeles(prisma, lireModeles(racine), {
+      organisation: SLUG_ORGANISATION,
+    })
+    expect(activite(rapport).effectifs).toEqual({ crees: [], dejaPresents: [] })
     expect(
       await prisma.effectifPerimetre.count({
         where: { perimetre: { slug: `basket-${s}` } },
@@ -233,8 +251,10 @@ describe('import des modèles', () => {
       `fiches/communes/accueil-${s}.md`,
       `---\nslug: accueil-${s}\ntitre: Accueillir\n---\n\n## Objectif\n\nAccueillir chaque personne.\n`
     )
-    const rapport = await importerModeles(prisma, lireModeles(racine))
-    expect(rapport.fiches.nouvellesVersions).toEqual([`accueil-${s}`])
+    const rapport = await importerModeles(prisma, lireModeles(racine), {
+      organisation: SLUG_ORGANISATION,
+    })
+    expect(activite(rapport).fiches.nouvellesVersions).toEqual([`accueil-${s}`])
   })
 })
 
@@ -283,7 +303,11 @@ describe('droits sur les fiches', () => {
       ],
     })
     await prisma.droitRedaction.create({
-      data: { userId: ids.redactrice, perimetreId: natation },
+      data: {
+        organisationId: ORGANISATION,
+        userId: ids.redactrice,
+        perimetreId: natation,
+      },
     })
   })
 
@@ -348,8 +372,10 @@ describe('droits sur les fiches', () => {
       `fiches/natation-${s}/piscine-${s}.md`,
       `---\nslug: piscine-${s}\ntitre: Réserver la piscine\n---\n\n## Objectif\n\nVersion du dépôt.\n`
     )
-    const rapport = await importerModeles(prisma, lireModeles(racine))
-    expect(rapport.fiches.conflits).toEqual([`piscine-${s}`])
+    const rapport = await importerModeles(prisma, lireModeles(racine), {
+      organisation: SLUG_ORGANISATION,
+    })
+    expect(activite(rapport).fiches.conflits).toEqual([`piscine-${s}`])
     const fiche = await prisma.fiche.findUniqueOrThrow({
       where: { id: piscine },
       include: { versionCourante: true },
@@ -383,9 +409,16 @@ describe('droits sur les fiches', () => {
       c: 'Appeler le 06 12 34 56 78.',
     })
     const sortie = mkdtempSync(path.join(tmpdir(), 'relaytour-export-'))
-    const rapport = await exporterFiches(prisma, sortie)
-    expect(rapport.refusees.map(r => r.fichier)).toContain(
-      path.join('fiches', `natation-${s}`, `piscine-${s}.md`)
-    )
+    try {
+      const rapport = await exporterContenu(prisma, sortie, SLUG_ORGANISATION)
+      expect(rapport.refusees.map(r => r.fichier)).toContainEqual(
+        expect.stringMatching(
+          new RegExp(`fiches/natation-${s}/piscine-${s}\\.md$`)
+        )
+      )
+      expect(rapport.ecrites.join(' ')).not.toContain(`piscine-${s}.md`)
+    } finally {
+      rmSync(sortie, { recursive: true, force: true })
+    }
   })
 })

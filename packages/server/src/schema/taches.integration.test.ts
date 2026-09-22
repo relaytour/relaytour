@@ -4,10 +4,10 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 
 import { schema } from './index.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 // Règles d'accès et de collaboration sur les tâches, prouvées par le refus.
@@ -34,7 +34,7 @@ async function executer(
 ) {
   const reponse = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (reponse.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
