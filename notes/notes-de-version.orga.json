@@ -1,284 +1,289 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.1.0",
-  "notes": [
+  "version": "0.3.0",
+  "versions": [
     {
-      "id": "2026-09-22-orga-les-admins-modifient-l-identite-de-l-organisation",
-      "date": "2026-09-22",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les admins modifient l'identité de l'organisation et de ses activités",
-        "texte": "La page « Organisation » permet de changer le nom, les contacts, les adresses de rôle, le logo, le favicon et le thème. Elle télécharge aussi le contenu de l'organisation en archive. Chaque activité peut recevoir son logo, ses couleurs et ses contacts ; ses écrans prennent son thème.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-orga-l-espace-organisateur-suit-le-role-de-chaque-activite",
-      "date": "2026-09-22",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'espace organisateur suit le rôle de chaque personne dans chaque activité",
-        "texte": "Le sélecteur ne montre que vos activités. Le menu d'administration s'ouvre dans les activités que vous administrez. La page « Personnes » permet aux admins de l'organisation de nommer les admins de chaque activité.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-orga-l-espace-organisateur-suit-l-organisation-et-l-activite",
-      "date": "2026-09-22",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'espace organisateur suit l'organisation et l'activité choisies",
-        "texte": "Les pages d'une activité vivent sous son identifiant, par exemple /rencontres/retroplanning. Un sélecteur change d'activité, et le menu du compte change d'organisation pour une personne qui en a plusieurs. Les périmètres se rangent dans les groupes de l'activité, et la période prend le nom d'édition, de saison ou de mandat. Les admins gèrent les activités dans une nouvelle page.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-orga-votre-organisation-choisit-le-fond-de-son-espace",
-      "date": "2026-09-19",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Votre organisation choisit le fond de son espace",
-        "texte": "Le thème de votre organisation peut maintenant décrire le fond de l'espace organisateur. Vous choisissez la couleur de transition du dégradé et la couleur et l'intensité de ses deux halos. Sans ces valeurs, le fond suit les couleurs de votre thème, comme avant.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-orga-un-lien-de-connexion-ne-connecte-plus-sans-votre-accord",
-      "date": "2026-09-19",
-      "type": "securite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Un lien de connexion ne connecte plus sans votre accord",
-        "texte": "Le lien du mail de code vous connecte sans clic seulement dans l'onglet où vous avez demandé le code, avec la même adresse. Ouvert ailleurs, il préremplit l'adresse et le code, et vous validez vous-même. Un lien forgé par une autre personne ne peut plus vous connecter à son compte à votre insu.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-orga-les-listes-de-liens-deviennent-des-lignes-cliquables",
-      "date": "2026-09-19",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les listes de liens deviennent des lignes cliquables",
-        "texte": "Les tâches du rétroplanning, les fiches d'un périmètre et les notifications s'affichent comme des lignes bordées, dont le fond s'assombrit au survol. Dans le rétroplanning, toute la ligne mène au périmètre de la tâche. Les cartes de périmètre de « Mon espace » et de « Avancement » portent le même liseré et le même survol. La barre de navigation ne change pas.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-orga-les-fenetres-et-les-listes-sont-en-verre-blanc-depoli",
-      "date": "2026-09-19",
-      "type": "correctif",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les fenêtres et les listes s'affichent en verre blanc dépoli",
-        "texte": "Les fenêtres modales, les tiroirs, les listes déroulantes, les menus, les bulles et les messages s'affichent sur un verre blanc presque opaque et très flou. Le contenu de la page ne gêne plus la lecture. Le voile sous une fenêtre floute la page au lieu de l'assombrir.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-orga-les-elements-cliquables-et-les-pastilles-se-lisent-mieux",
-      "date": "2026-09-19",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les éléments cliquables et les pastilles se lisent mieux",
-        "texte": "Les boutons sans fond plein portent un liseré de verre, et leur fond s'assombrit au survol. Dans la page Fiches, chaque fiche s'affiche comme une ligne cliquable, et chaque sport ou pôle comme une pastille à sa couleur. Le texte des pastilles passe en gras et suit le contraste perçu plutôt que la formule WCAG 2.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-orga-les-ecrans-de-l-espace-organisateur-changent-d-allure",
-      "date": "2026-09-19",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les écrans de l'espace organisateur changent d'allure",
-        "texte": "Mon espace, le rétroplanning, les fiches, les périmètres et les préférences suivent le nouveau design system. Une colonne de droite résume l'avancement, vos périmètres et votre contribution. Les fiches s'affichent en cartes ou en liste condensée, selon votre choix. Chaque périmètre indique ses personnes affectées et leur nombre de tâches ouvertes.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-orga-le-lien-du-mail-de-code-remplit-l-adresse-et-le-code",
-      "date": "2026-09-19",
-      "type": "correctif",
-      "audience": "public",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Le lien du mail de code remplit l'adresse et le code",
-        "texte": "Le bouton « Se connecter avec ce code » du mail ouvre l'espace organisateur avec l'adresse et le code déjà remplis. Dans l'onglet où vous avez demandé le code, la connexion part aussitôt. Auparavant, seul le code était rempli, et l'adresse seulement si elle avait été saisie dans le même onglet.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-orga-le-filtre-du-retroplanning-montre-la-couleur-de-chaque-perimetre",
-      "date": "2026-09-19",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Le filtre du rétroplanning montre la couleur de chaque périmètre",
-        "texte": "Dans le filtre des périmètres du rétroplanning, chaque périmètre s'affiche sur sa couleur pleine, dans la liste comme dans le champ. Le texte passe en blanc ou en noir selon le contraste le plus lisible.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-orga-l-espace-organisateur-prend-le-nom-et-le-theme-de-votre-organisation",
-      "date": "2026-09-19",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'espace organisateur prend le nom et le thème de votre organisation",
-        "texte": "La barre latérale, l'écran de connexion et le titre de l'onglet affichent le nom court de votre organisation, et son logo si elle en fournit un. Ses couleurs et ses polices s'appliquent dès la réponse de l'API. Un seul build de l'espace organisateur sert toutes les installations.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-18-orga-l-espace-organisateur-se-deploie-depuis-l-image",
-      "date": "2026-09-18",
-      "type": "fonctionnalite",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'espace organisateur se déploie depuis l'image",
-        "texte": "Le dépôt publie une troisième image, suffixée -orga, qui contient le site statique de l'espace organisateur. Dans la pile de référence, un service la copie vers un dossier de l'hôte à chaque démarrage. Un hébergeur n'a plus besoin de Node ni de Yarn sur son serveur pour mettre à jour.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-18-orga-l-espace-organisateur-prend-l-identite-de-relaytour",
-      "date": "2026-09-18",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'espace organisateur prend l'identité de Relaytour",
-        "texte": "L'espace organisateur adopte une identité neutre : un logo, une palette bleu-vert et terre cuite, la police Hanken Grotesk et des surfaces de verre posées sur un fond clair. Les couleurs de vos périmètres restent celles de votre organisation. Aucune police n'est chargée depuis un site tiers.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-17-orga-les-souhaits-guident-les-affectations",
-      "date": "2026-09-17",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les souhaits guident les affectations",
-        "texte": "L'invitation d'une personne accepte un ou plusieurs périmètres souhaités. La page « Postes à pourvoir » affiche ces souhaits sur chaque périmètre, avec un bouton « Affecter ». La page des personnes montre les souhaits de l'édition choisie.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-17-orga-les-postes-a-pourvoir-s-affichent-perimetre-par-perimetre",
-      "date": "2026-09-17",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les postes à pourvoir s'affichent périmètre par périmètre",
-        "texte": "La page « Postes à pourvoir » place en premier les périmètres qui manquent de référentes et de référents. Vous modifiez l'effectif souhaité et affectez une personne sans changer de page. Le bouton « Copier l'appel » prépare un message qui liste les périmètres à pourvoir. La page des personnes gagne une recherche et un filtre.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-17-orga-les-admins-assignent-une-tache-a-une-autre-personne",
-      "date": "2026-09-17",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les admins assignent une tâche à une autre personne",
-        "texte": "Sur la carte d'une tâche, les admins choisissent une personne parmi les référentes et référents du périmètre. Les admins peuvent aussi retirer une personne de la tâche. La personne concernée le voit dans ses notifications.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-17-orga-le-retroplanning-montre-les-echeances-d-une-edition",
-      "date": "2026-09-17",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Le rétroplanning montre les échéances d'une édition",
-        "texte": "La page « Rétroplanning » regroupe les tâches par mois, de la plus proche à la plus lointaine. Vous filtrez par périmètre, par type ou par statut, ou gardez seulement vos périmètres et vos tâches. Les tâches en retard ressortent en rouge.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-orga-votre-contribution-et-le-classement-des-admins-s-affichent",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Votre contribution et le classement des admins s'affichent",
-        "texte": "« Mon espace » affiche vos points de l'édition, le détail de vos contributions et le barème. Les admins consultent le classement de chaque édition. Sur toutes les pages, un tableau large ne déborde plus de l'écran.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-orga-les-notifications-et-les-preferences-de-mail-arrivent-dans-l",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les notifications et les préférences de mail arrivent dans l'espace organisateur",
-        "texte": "Une cloche indique le nombre de notifications non lues et ouvre leur liste ; un clic mène au périmètre concerné. La page « Préférences » règle la fréquence du résumé et les mails immédiats.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-orga-les-fiches-methode-se-lisent-et-se-redigent-dans-l-espace-or",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les fiches méthode se lisent et se rédigent dans l'espace organisateur",
-        "texte": "La page « Fiches » regroupe les fiches communes et celles de vos périmètres. Les personnes qui ont le droit de rédaction écrivent en Markdown avec un aperçu, à partir du gabarit commun. Une tâche peut renvoyer vers sa fiche, et les admins consultent l'historique de chaque fiche.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-orga-l-espace-organisateur-ouvre-ses-premiers-ecrans",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'espace organisateur ouvre ses premiers écrans",
-        "texte": "Vous vous connectez avec un code reçu par mail, ou en un clic depuis le lien du mail. L'écran « Mon espace » affiche vos périmètres de l'édition en cours. Les admins gèrent les éditions, les périmètres, les personnes et les affectations.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-orga-chaque-perimetre-a-sa-liste-de-taches-et-son-avancement",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Chaque périmètre a sa liste de tâches et son avancement",
-        "texte": "La page d'un périmètre affiche ses tâches, triées par échéance, et la progression de l'édition. Vous prenez une tâche, la marquez comme faite et indiquez si besoin qui l'a réalisée. « Mon espace » regroupe vos tâches et celles à prendre, et les admins suivent l'avancement de tous les périmètres.",
-        "migration": null
-      }
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-22-orga-les-admins-modifient-l-identite-de-l-organisation",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins modifient l'identité de l'organisation et de ses activités",
+            "texte": "La page « Organisation » permet de changer le nom, les contacts, les adresses de rôle, le logo, le favicon et le thème. Elle télécharge aussi le contenu de l'organisation en archive. Chaque activité peut recevoir son logo, ses couleurs et ses contacts ; ses écrans prennent son thème.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-orga-l-espace-organisateur-suit-le-role-de-chaque-activite",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'espace organisateur suit le rôle de chaque personne dans chaque activité",
+            "texte": "Le sélecteur ne montre que vos activités. Le menu d'administration s'ouvre dans les activités que vous administrez. La page « Personnes » permet aux admins de l'organisation de nommer les admins de chaque activité.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-orga-l-espace-organisateur-suit-l-organisation-et-l-activite",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'espace organisateur suit l'organisation et l'activité choisies",
+            "texte": "Les pages d'une activité vivent sous son identifiant, par exemple /rencontres/retroplanning. Un sélecteur change d'activité, et le menu du compte change d'organisation pour une personne qui en a plusieurs. Les périmètres se rangent dans les groupes de l'activité, et la période prend le nom d'édition, de saison ou de mandat. Les admins gèrent les activités dans une nouvelle page.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-orga-votre-organisation-choisit-le-fond-de-son-espace",
+          "date": "2026-09-19",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Votre organisation choisit le fond de son espace",
+            "texte": "Le thème de votre organisation peut maintenant décrire le fond de l'espace organisateur. Vous choisissez la couleur de transition du dégradé et la couleur et l'intensité de ses deux halos. Sans ces valeurs, le fond suit les couleurs de votre thème, comme avant.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-orga-un-lien-de-connexion-ne-connecte-plus-sans-votre-accord",
+          "date": "2026-09-19",
+          "type": "securite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un lien de connexion ne connecte plus sans votre accord",
+            "texte": "Le lien du mail de code vous connecte sans clic seulement dans l'onglet où vous avez demandé le code, avec la même adresse. Ouvert ailleurs, il préremplit l'adresse et le code, et vous validez vous-même. Un lien forgé par une autre personne ne peut plus vous connecter à son compte à votre insu.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-orga-les-listes-de-liens-deviennent-des-lignes-cliquables",
+          "date": "2026-09-19",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les listes de liens deviennent des lignes cliquables",
+            "texte": "Les tâches du rétroplanning, les fiches d'un périmètre et les notifications s'affichent comme des lignes bordées, dont le fond s'assombrit au survol. Dans le rétroplanning, toute la ligne mène au périmètre de la tâche. Les cartes de périmètre de « Mon espace » et de « Avancement » portent le même liseré et le même survol. La barre de navigation ne change pas.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-orga-les-fenetres-et-les-listes-sont-en-verre-blanc-depoli",
+          "date": "2026-09-19",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les fenêtres et les listes s'affichent en verre blanc dépoli",
+            "texte": "Les fenêtres modales, les tiroirs, les listes déroulantes, les menus, les bulles et les messages s'affichent sur un verre blanc presque opaque et très flou. Le contenu de la page ne gêne plus la lecture. Le voile sous une fenêtre floute la page au lieu de l'assombrir.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-orga-les-elements-cliquables-et-les-pastilles-se-lisent-mieux",
+          "date": "2026-09-19",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les éléments cliquables et les pastilles se lisent mieux",
+            "texte": "Les boutons sans fond plein portent un liseré de verre, et leur fond s'assombrit au survol. Dans la page Fiches, chaque fiche s'affiche comme une ligne cliquable, et chaque sport ou pôle comme une pastille à sa couleur. Le texte des pastilles passe en gras et suit le contraste perçu plutôt que la formule WCAG 2.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-orga-les-ecrans-de-l-espace-organisateur-changent-d-allure",
+          "date": "2026-09-19",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les écrans de l'espace organisateur changent d'allure",
+            "texte": "Mon espace, le rétroplanning, les fiches, les périmètres et les préférences suivent le nouveau design system. Une colonne de droite résume l'avancement, vos périmètres et votre contribution. Les fiches s'affichent en cartes ou en liste condensée, selon votre choix. Chaque périmètre indique ses personnes affectées et leur nombre de tâches ouvertes.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-orga-le-lien-du-mail-de-code-remplit-l-adresse-et-le-code",
+          "date": "2026-09-19",
+          "type": "correctif",
+          "audience": "public",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le lien du mail de code remplit l'adresse et le code",
+            "texte": "Le bouton « Se connecter avec ce code » du mail ouvre l'espace organisateur avec l'adresse et le code déjà remplis. Dans l'onglet où vous avez demandé le code, la connexion part aussitôt. Auparavant, seul le code était rempli, et l'adresse seulement si elle avait été saisie dans le même onglet.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-orga-le-filtre-du-retroplanning-montre-la-couleur-de-chaque-perimetre",
+          "date": "2026-09-19",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le filtre du rétroplanning montre la couleur de chaque périmètre",
+            "texte": "Dans le filtre des périmètres du rétroplanning, chaque périmètre s'affiche sur sa couleur pleine, dans la liste comme dans le champ. Le texte passe en blanc ou en noir selon le contraste le plus lisible.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-orga-l-espace-organisateur-prend-le-nom-et-le-theme-de-votre-organisation",
+          "date": "2026-09-19",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'espace organisateur prend le nom et le thème de votre organisation",
+            "texte": "La barre latérale, l'écran de connexion et le titre de l'onglet affichent le nom court de votre organisation, et son logo si elle en fournit un. Ses couleurs et ses polices s'appliquent dès la réponse de l'API. Un seul build de l'espace organisateur sert toutes les installations.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-18-orga-l-espace-organisateur-se-deploie-depuis-l-image",
+          "date": "2026-09-18",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'espace organisateur se déploie depuis l'image",
+            "texte": "Le dépôt publie une troisième image, suffixée -orga, qui contient le site statique de l'espace organisateur. Dans la pile de référence, un service la copie vers un dossier de l'hôte à chaque démarrage. Un hébergeur n'a plus besoin de Node ni de Yarn sur son serveur pour mettre à jour.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-18-orga-l-espace-organisateur-prend-l-identite-de-relaytour",
+          "date": "2026-09-18",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'espace organisateur prend l'identité de Relaytour",
+            "texte": "L'espace organisateur adopte une identité neutre : un logo, une palette bleu-vert et terre cuite, la police Hanken Grotesk et des surfaces de verre posées sur un fond clair. Les couleurs de vos périmètres restent celles de votre organisation. Aucune police n'est chargée depuis un site tiers.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-17-orga-les-souhaits-guident-les-affectations",
+          "date": "2026-09-17",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les souhaits guident les affectations",
+            "texte": "L'invitation d'une personne accepte un ou plusieurs périmètres souhaités. La page « Postes à pourvoir » affiche ces souhaits sur chaque périmètre, avec un bouton « Affecter ». La page des personnes montre les souhaits de l'édition choisie.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-17-orga-les-postes-a-pourvoir-s-affichent-perimetre-par-perimetre",
+          "date": "2026-09-17",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les postes à pourvoir s'affichent périmètre par périmètre",
+            "texte": "La page « Postes à pourvoir » place en premier les périmètres qui manquent de référentes et de référents. Vous modifiez l'effectif souhaité et affectez une personne sans changer de page. Le bouton « Copier l'appel » prépare un message qui liste les périmètres à pourvoir. La page des personnes gagne une recherche et un filtre.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-17-orga-les-admins-assignent-une-tache-a-une-autre-personne",
+          "date": "2026-09-17",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins assignent une tâche à une autre personne",
+            "texte": "Sur la carte d'une tâche, les admins choisissent une personne parmi les référentes et référents du périmètre. Les admins peuvent aussi retirer une personne de la tâche. La personne concernée le voit dans ses notifications.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-17-orga-le-retroplanning-montre-les-echeances-d-une-edition",
+          "date": "2026-09-17",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le rétroplanning montre les échéances d'une édition",
+            "texte": "La page « Rétroplanning » regroupe les tâches par mois, de la plus proche à la plus lointaine. Vous filtrez par périmètre, par type ou par statut, ou gardez seulement vos périmètres et vos tâches. Les tâches en retard ressortent en rouge.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-orga-votre-contribution-et-le-classement-des-admins-s-affichent",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Votre contribution et le classement des admins s'affichent",
+            "texte": "« Mon espace » affiche vos points de l'édition, le détail de vos contributions et le barème. Les admins consultent le classement de chaque édition. Sur toutes les pages, un tableau large ne déborde plus de l'écran.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-orga-les-notifications-et-les-preferences-de-mail-arrivent-dans-l",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les notifications et les préférences de mail arrivent dans l'espace organisateur",
+            "texte": "Une cloche indique le nombre de notifications non lues et ouvre leur liste ; un clic mène au périmètre concerné. La page « Préférences » règle la fréquence du résumé et les mails immédiats.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-orga-les-fiches-methode-se-lisent-et-se-redigent-dans-l-espace-or",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les fiches méthode se lisent et se rédigent dans l'espace organisateur",
+            "texte": "La page « Fiches » regroupe les fiches communes et celles de vos périmètres. Les personnes qui ont le droit de rédaction écrivent en Markdown avec un aperçu, à partir du gabarit commun. Une tâche peut renvoyer vers sa fiche, et les admins consultent l'historique de chaque fiche.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-orga-l-espace-organisateur-ouvre-ses-premiers-ecrans",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'espace organisateur ouvre ses premiers écrans",
+            "texte": "Vous vous connectez avec un code reçu par mail, ou en un clic depuis le lien du mail. L'écran « Mon espace » affiche vos périmètres de l'édition en cours. Les admins gèrent les éditions, les périmètres, les personnes et les affectations.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-orga-chaque-perimetre-a-sa-liste-de-taches-et-son-avancement",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque périmètre a sa liste de tâches et son avancement",
+            "texte": "La page d'un périmètre affiche ses tâches, triées par échéance, et la progression de l'édition. Vous prenez une tâche, la marquez comme faite et indiquez si besoin qui l'a réalisée. « Mon espace » regroupe vos tâches et celles à prendre, et les admins suivent l'avancement de tous les périmètres.",
+            "migration": null
+          }
+        }
+      ]
     }
   ]
 }

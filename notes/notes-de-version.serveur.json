@@ -1,440 +1,457 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "projet": "relaytour",
   "cible": "serveur",
   "version": "0.3.0",
-  "notes": [
+  "versions": [
     {
-      "id": "2026-09-22-serveur-une-table-prouve-les-refus-entre-organisations",
-      "date": "2026-09-22",
-      "type": "securite",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Une table prouve les refus entre organisations",
-        "texte": "Chaque requête et chaque mutation qui reçoit un identifiant est éprouvée avec les identifiants d'une autre organisation : elle refuse, et aucune donnée ne change. Un garde-fou exige qu'une opération nouvelle entre dans la table.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-serveur-un-hebergeur-administre-les-organisations-sans-acces-aux-donnees",
-      "date": "2026-09-22",
-      "type": "fonctionnalite",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Un hébergeur administre les organisations sans accès à leurs données",
-        "texte": "Un script et une API à jeton créent une organisation et sa première activité, invitent son premier admin, changent son statut ou ses limites et écrivent son export complet sur le serveur. Le jeton ne donne accès à aucune donnée d'une organisation, et l'export ne transite jamais par l'API.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-serveur-un-depot-d-organisation-decrit-plusieurs-activites",
-      "date": "2026-09-22",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Un dépôt d'organisation décrit plusieurs activités",
-        "texte": "Un dépôt d'organisation peut décrire plusieurs activités dans un dossier activites/, chacune avec sa nature, ses groupes de périmètres, ses fiches et ses tâches types. La disposition plate reste valide pour une seule activité. Un périmètre déclare son groupe ; le type SPORT ou POLE reste accepté.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-serveur-rappels-et-resumes-suivent-chaque-organisation",
-      "date": "2026-09-22",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les rappels et les résumés suivent chaque organisation",
-        "texte": "Chaque organisation reçoit ses rappels d'échéance et ses résumés à l'heure de son fuseau. Un mail porte le nom et les couleurs de son organisation. Une personne membre de plusieurs organisations reçoit le résumé de chacune, limité à ses tâches et à ses notifications.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-serveur-les-activites-et-les-appartenances-entrent-dans-le-schema",
-      "date": "2026-09-22",
-      "type": "interne",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les activités et les appartenances entrent dans le schéma",
-        "texte": "Une organisation porte désormais une ou plusieurs activités. Chaque période, périmètre et fiche appartient à une activité, et chaque périmètre à un groupe. Une table d'appartenances porte le rôle de chaque compte dans une organisation. L'application utilise encore une seule activité par organisation (ADR 0008, premier chantier).",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-serveur-l-application-porte-le-contenu-et-l-identite-des-activites",
-      "date": "2026-09-22",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Chaque activité a son identité, et l'export reprend tout le contenu",
-        "texte": "Une activité peut avoir son propre logo, ses couleurs, son contact de recrutement et sa page d'équipe. Les mails d'une tâche prennent l'identité de son activité. L'export écrit tout le contenu de l'organisation, et un import ne remplace plus une modification faite dans l'application.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-serveur-l-api-sert-le-choix-d-organisation-et-d-activite",
-      "date": "2026-09-22",
-      "type": "fonctionnalite",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'API sert le choix d'organisation et d'activité de l'espace organisateur",
-        "texte": "L'API liste les organisations de la personne connectée, suit l'activité désignée par un en-tête et range un périmètre dans un groupe de son activité. Les liens des mails portent l'activité, et le résumé parle des nouvelles de vos périmètres.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-serveur-chaque-requete-se-limite-a-l-organisation-active",
-      "date": "2026-09-22",
-      "type": "interne",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Chaque requête se limite à l'organisation active",
-        "texte": "Le contexte porte l'organisation active, choisie par un en-tête ou par l'unique appartenance de la personne. Le rôle d'admin vaut dans cette organisation. Toute lecture et toute écriture se limitent à ses données, et une organisation en lecture seule refuse les modifications. Les activités se lisent et se gèrent par l'API, dans les limites fixées par l'hébergeur.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-22-serveur-chaque-activite-a-ses-admins",
-      "date": "2026-09-22",
-      "type": "securite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Chaque activité peut avoir ses admins, et chacun ne voit que ses activités",
-        "texte": "Un admin de l'organisation nomme des admins pour une activité. Ils gèrent ses périodes, ses périmètres, ses affectations et ses fiches, sans voir les autres activités. Une personne ne voit que les activités où elle est affectée.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-une-recherche-globale-trouve-taches-fiches-et-personnes",
-      "date": "2026-09-19",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Une recherche globale trouve les tâches, les fiches et les personnes",
-        "texte": "La barre haute de l'espace organisateur propose une recherche. Elle trouve les tâches de l'édition en cours, les fiches et les personnes de vos périmètres. Vous ne trouvez que ce que vous pouvez déjà consulter. La page d'une fiche liste aussi les tâches qui la citent.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-une-nouvelle-demande-de-code-renvoie-le-code-en-cours",
-      "date": "2026-09-19",
-      "type": "securite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Une nouvelle demande de code renvoie le code en cours",
-        "texte": "Si vous demandez un nouveau code alors que le précédent est encore valable, vous recevez le même code et sa validité repart de 10 minutes. Une personne qui demande des codes sur votre adresse ne peut plus invalider celui que vous attendez. Les codes envoyés avant la mise à jour ne sont plus acceptés : demandez un nouveau code.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-les-mails-portent-le-nom-et-les-couleurs-de-votre-organisation",
-      "date": "2026-09-19",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les mails portent le nom et les couleurs de votre organisation",
-        "texte": "L'en-tête, les sujets et le pied de chaque mail affichent le nom court de votre organisation. Le texte, les boutons et le fond reprennent les couleurs de son thème. Le pied garde un crédit « propulsé par Relaytour, logiciel libre ». Les mails n'appellent aucune police web.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-le-mode-recette-quitte-le-logiciel",
-      "date": "2026-09-19",
-      "type": "rupture",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Le mode recette quitte le logiciel",
-        "texte": "APP_ENV ne connaît plus que local et prod. Les variables COURRIEL_DELIVRABILITE et COURRIEL_CAPTURE disparaissent, ainsi que le service Mailpit de la pile de référence. Hors du poste local, l'application parle au SMTP renseigné, et à rien d'autre.",
-        "migration": "Une installation d'essai passe en APP_ENV=prod et pointe COURRIEL_SMTP_HOTE sur une boîte de capture qu'elle déclare elle-même, dans sa surcharge Compose. Retirer COURRIEL_DELIVRABILITE du .env."
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-la-table-organisation-devient-la-racine-des-donnees",
-      "date": "2026-09-19",
-      "type": "interne",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "La table Organisation devient la racine des données",
-        "texte": "Une ligne Organisation porte le slug, le nom, le sigle, le fuseau horaire et la déclaration complète de l'organisation. Les éditions, périmètres, fiches, notifications et préférences reçoivent sa clé. L'import crée ou met à jour cette ligne depuis organisation.yaml ; l'API, les mails et l'espace organisateur lisent désormais la configuration en base.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-la-table-newsletter-est-supprimee",
-      "date": "2026-09-19",
-      "type": "rupture",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "La table Newsletter est supprimée",
-        "texte": "La table Newsletter, héritée du projet précédent et sans usage dans Relaytour, disparaît du schéma. La migration la supprime avec les adresses qu'elle contient encore.",
-        "migration": "Exporter la table Newsletter avant de déployer si ses adresses doivent être conservées ailleurs. La migration exécute DROP TABLE."
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-la-configuration-de-l-organisation-se-lit-en-un-seul-objet",
-      "date": "2026-09-19",
-      "type": "interne",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "La configuration de l'organisation se lit en un seul objet",
-        "texte": "Le nom, le sigle, les domaines de mail, le contact, la page équipe et le thème de l'organisation forment une configuration unique, validée par un schéma strict. Les sujets de mail, l'expéditeur, l'appel aux référentes et référents et la détection des données personnelles la lisent. Les variables d'environnement restent un amorçage avant le premier import.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-la-base-et-le-cache-de-la-pile-de-reference-ne-publient-plus",
-      "date": "2026-09-19",
-      "type": "securite",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "La base et le cache de la pile de référence ne publient plus de port",
-        "texte": "Dans la pile Compose de référence, MariaDB et Valkey ne sont plus joignables que par les conteneurs de la pile. La file des mails contient des codes de connexion en clair pendant quelques minutes, et un port publié les rendait lisibles par tout processus de la machine.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-l-api-refuse-les-requetes-trop-profondes",
-      "date": "2026-09-19",
-      "type": "securite",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'API refuse les requêtes trop profondes",
-        "texte": "L'API rejette désormais une requête GraphQL trop profonde, trop large ou trop coûteuse avant d'exécuter le moindre résolveur. Le schéma comporte des cycles (périmètre et tâches, personne et affectations) qu'une personne connectée pouvait exploiter pour saturer le serveur avec une requête imbriquée. Les requêtes de l'espace organisateur restent bien en dessous des limites.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-l-api-passe-sur-apollo-server-5-et-express-5",
-      "date": "2026-09-19",
-      "type": "securite",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'API passe sur Apollo Server 5 et Express 5",
-        "texte": "L'API tourne sur Apollo Server 5 et Express 5, deux versions maintenues. Apollo Server 4 n'est plus maintenu depuis janvier 2026. Ce passage retire de l'image de production les bibliothèques form-data, path-to-regexp et qs, signalées par l'audit, et corrige sha.js. Les routes, le contrôle CSRF et l'arrêt propre fonctionnent comme avant.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-19-serveur-chaque-organisation-decrit-son-identite-dans-son-depot",
-      "date": "2026-09-19",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Chaque organisation décrit son identité dans son dépôt",
-        "texte": "Le dossier de contenu porte un fichier organisation.yaml : nom, sigle, fuseau horaire, domaines de mail autorisés, contact de recrutement, page équipe et thème. La validation le lit avec les périmètres, les fiches et les tâches types, et n'a plus besoin de variable d'environnement pour les domaines autorisés.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-18-serveur-une-edition-se-cree-aussi-en-ligne-de-commande",
-      "date": "2026-09-18",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Une édition se crée aussi en ligne de commande",
-        "texte": "La commande edition:creer crée une édition avec son année, son nom et ses dates, sans passer par l'espace organisateur. Une installation neuve peut ainsi importer ses tâches types dès le premier démarrage. Une édition déjà présente n'est jamais modifiée.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-18-serveur-le-serveur-refuse-de-demarrer-sans-origine-hors-du-poste-local",
-      "date": "2026-09-18",
-      "type": "correctif",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Le serveur refuse de démarrer sans ORIGINE_ORGA hors du poste local",
-        "texte": "En recette et en production, une origine absente faisait pointer les liens des mails et l'origine de confiance de la connexion sur un hôte d'exemple, sans avertissement. Le démarrage exige désormais la variable.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-18-serveur-le-deploiement-de-reference-demarre-le-worker-apres-les-migrations",
-      "date": "2026-09-18",
-      "type": "correctif",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Le déploiement de référence démarre le worker après les migrations",
-        "texte": "Dans la pile Compose de référence, le worker attendait seulement la base et le cache : il pouvait démarrer sur un schéma pas encore migré. Il attend désormais la fin du service de migration, comme l'API. Sa sonde de vie lit le port configuré au lieu d'une valeur en dur.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-18-serveur-la-validation-d-un-dossier-de-contenu-tourne-dans-l-image",
-      "date": "2026-09-18",
-      "type": "correctif",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "La validation et l'export d'un dossier de contenu tournent dans l'image",
-        "texte": "L'image Docker embarque désormais orga-valider, orga-exporter et essai-courriel, en plus des commandes déjà livrées. Le workflow de validation d'un dépôt d'organisation et l'export des fiches en fin d'édition fonctionnent sans installer Node sur le serveur.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-18-serveur-la-newsletter-quitte-le-perimetre-publie",
-      "date": "2026-09-18",
-      "type": "rupture",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "La newsletter quitte le périmètre publié",
-        "texte": "La mutation d'inscription à la newsletter et le compteur d'abonnés, hérités du projet précédent, disparaissent de l'API. La table reste en base sans usage ; sa suppression fera l'objet d'une migration à part.",
-        "migration": "Un client qui appelait subscribeNewsletter ou nombreAbonnesNewsletter doit retirer ces appels. Aucune action en base."
-      }
-    },
-    {
-      "id": "2026-09-18-serveur-l-organisation-d-exemple-a-des-taches-types-pour-chaque-perimetre",
-      "date": "2026-09-18",
-      "type": "interne",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "L'organisation d'exemple a des tâches types pour chaque périmètre",
-        "texte": "Les périmètres volley, course à pied, logistique et communication de l'organisation d'exemple reçoivent chacun trois tâches types. Un premier import donne un rétroplanning complet sur les sept périmètres.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-17-serveur-les-poles-les-fiches-et-les-taches-types-de-l-edition-sont-p",
-      "date": "2026-09-17",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les pôles, les fiches et les tâches types de l'édition sont prêts à importer",
-        "texte": "L'espace organisateur compte désormais onze pôles en plus des huit sports, dont un pôle Inclusion et accueil. Chaque périmètre dispose de fiches méthode issues du bilan de l'édition 2025 et d'une liste de tâches datées. Après l'import d'une édition, les référentes et référents retrouvent ces tâches avec leurs échéances.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-17-serveur-les-admins-notent-les-souhaits-des-personnes-invitees",
-      "date": "2026-09-17",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les admins notent les souhaits des personnes invitées",
-        "texte": "Un souhait indique qu'une personne s'intéresse à un périmètre pour une édition. Les admins sont les seules personnes à le voir, et il ne donne aucun accès. L'affectation de la personne à ce périmètre satisfait le souhait.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-17-serveur-les-admins-fixent-l-effectif-de-chaque-perimetre",
-      "date": "2026-09-17",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les admins fixent l'effectif de chaque périmètre",
-        "texte": "Chaque périmètre peut indiquer dans le dépôt le nombre de référentes et de référents souhaité. L'import d'une édition crée cette valeur si elle manque et ne la remplace jamais. Les admins la modifient ensuite dans l'espace organisateur.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-17-serveur-le-retroplanning-respecte-les-droits-de-lecture",
-      "date": "2026-09-17",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Le rétroplanning respecte les droits de lecture",
-        "texte": "Les tâches d'une édition se lisent en une fois, triées par échéance. Chaque personne reçoit seulement les tâches des périmètres qu'elle peut consulter.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-serveur-les-referentes-et-referents-suivent-les-taches-de-leurs-peri",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les référentes et référents suivent les tâches de leurs périmètres",
-        "texte": "Chaque périmètre a ses tâches pour une édition, avec une échéance, un statut et les personnes qui s'en occupent. Modifier la tâche d'une autre personne demande une confirmation, et cette personne reçoit un mail. Les éditions archivées restent consultables en lecture seule.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-serveur-les-referentes-et-referents-sont-prevenus-de-l-activite-et-d",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les référentes et référents sont prévenus de l'activité et des échéances",
-        "texte": "Chaque création, prise en charge ou modification de tâche prévient les autres personnes du périmètre. Un mail part tout de suite quand une autre personne modifie une de vos tâches, et chaque matin pour les échéances à 7 jours, à la veille et les retards. Un résumé regroupe le reste, chaque lundi ou chaque jour.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-serveur-les-fiches-methode-sont-versionnees-et-importees-depuis-le-d",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les fiches méthode sont versionnées et importées depuis le dépôt",
-        "texte": "Chaque fiche garde toutes ses versions, et les admins peuvent en restaurer une. Les admins accordent le droit de rédiger les fiches d'un périmètre ou toutes les fiches. Les modèles du dépôt (périmètres, fiches, tâches types) s'importent pour chaque édition, sans jamais écraser une fiche modifiée dans l'application.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-serveur-les-admins-invitent-les-referentes-et-referents",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Les admins invitent les référentes et référents",
-        "texte": "Les admins créent les comptes, les éditions, les périmètres et les affectations. Chaque personne invitée reçoit un mail, puis se connecte avec un code reçu par mail, sans mot de passe. Un compte archivé perd aussitôt l'accès.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-16-serveur-chaque-contribution-compte-dans-un-score-d-activite",
-      "date": "2026-09-16",
-      "type": "fonctionnalite",
-      "audience": "organisateurs",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Chaque contribution compte dans un score d'activité",
-        "texte": "Les tâches réalisées, les tâches créées et le travail sur les fiches donnent des points pour chaque édition. Une tâche faite à temps rapporte un point de plus, et une tâche rouverte perd ses points. Chaque personne voit son propre score ; seuls les admins voient le classement.",
-        "migration": null
-      }
-    },
-    {
-      "id": "2026-09-15-serveur-le-serveur-repart-sur-un-socle-maintenu",
-      "date": "2026-09-15",
-      "type": "interne",
-      "audience": "interne",
-      "etat": "prevu",
-      "fr": {
-        "titre": "Le serveur repose sur un socle maintenu",
-        "texte": "L'API tourne sur Node 24 avec un seul schéma GraphQL, une file de mails et une sonde de santé. Aucune liste de personnes n'est lisible sans authentification. Cette base porte l'espace organisateur.",
-        "migration": null
-      }
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-22-serveur-une-table-prouve-les-refus-entre-organisations",
+          "date": "2026-09-22",
+          "type": "securite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une table prouve les refus entre organisations",
+            "texte": "Chaque requête et chaque mutation qui reçoit un identifiant est éprouvée avec les identifiants d'une autre organisation : elle refuse, et aucune donnée ne change. Un garde-fou exige qu'une opération nouvelle entre dans la table.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-serveur-un-hebergeur-administre-les-organisations-sans-acces-aux-donnees",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un hébergeur administre les organisations sans accès à leurs données",
+            "texte": "Un script et une API à jeton créent une organisation et sa première activité, invitent son premier admin, changent son statut ou ses limites et écrivent son export complet sur le serveur. Le jeton ne donne accès à aucune donnée d'une organisation, et l'export ne transite jamais par l'API.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-serveur-un-depot-d-organisation-decrit-plusieurs-activites",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un dépôt d'organisation décrit plusieurs activités",
+            "texte": "Un dépôt d'organisation peut décrire plusieurs activités dans un dossier activites/, chacune avec sa nature, ses groupes de périmètres, ses fiches et ses tâches types. La disposition plate reste valide pour une seule activité. Un périmètre déclare son groupe ; le type SPORT ou POLE reste accepté.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-serveur-rappels-et-resumes-suivent-chaque-organisation",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les rappels et les résumés suivent chaque organisation",
+            "texte": "Chaque organisation reçoit ses rappels d'échéance et ses résumés à l'heure de son fuseau. Un mail porte le nom et les couleurs de son organisation. Une personne membre de plusieurs organisations reçoit le résumé de chacune, limité à ses tâches et à ses notifications.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-serveur-les-activites-et-les-appartenances-entrent-dans-le-schema",
+          "date": "2026-09-22",
+          "type": "interne",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les activités et les appartenances entrent dans le schéma",
+            "texte": "Une organisation porte désormais une ou plusieurs activités. Chaque période, périmètre et fiche appartient à une activité, et chaque périmètre à un groupe. Une table d'appartenances porte le rôle de chaque compte dans une organisation. L'application utilise encore une seule activité par organisation (ADR 0008, premier chantier).",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-serveur-l-application-porte-le-contenu-et-l-identite-des-activites",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque activité a son identité, et l'export reprend tout le contenu",
+            "texte": "Une activité peut avoir son propre logo, ses couleurs, son contact de recrutement et sa page d'équipe. Les mails d'une tâche prennent l'identité de son activité. L'export écrit tout le contenu de l'organisation, et un import ne remplace plus une modification faite dans l'application.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-serveur-l-api-sert-le-choix-d-organisation-et-d-activite",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'API sert le choix d'organisation et d'activité de l'espace organisateur",
+            "texte": "L'API liste les organisations de la personne connectée, suit l'activité désignée par un en-tête et range un périmètre dans un groupe de son activité. Les liens des mails portent l'activité, et le résumé parle des nouvelles de vos périmètres.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-serveur-chaque-version-se-publie-depuis-main-avec-ses-images-et-sa-r",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque version se publie depuis main, avec ses images et sa release",
+            "texte": "Relaytour porte désormais un seul numéro de version. Chaque version publiée reçoit un tag, une release GitHub rédigée depuis les notes, et trois images marquées de son numéro. Une installation suit une version (IMAGE_TAG=x.y.z) ou la série de ses correctifs (IMAGE_TAG=x.y), au lieu de suivre l'empreinte d'un commit.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-serveur-chaque-requete-se-limite-a-l-organisation-active",
+          "date": "2026-09-22",
+          "type": "interne",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque requête se limite à l'organisation active",
+            "texte": "Le contexte porte l'organisation active, choisie par un en-tête ou par l'unique appartenance de la personne. Le rôle d'admin vaut dans cette organisation. Toute lecture et toute écriture se limitent à ses données, et une organisation en lecture seule refuse les modifications. Les activités se lisent et se gèrent par l'API, dans les limites fixées par l'hébergeur.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-22-serveur-chaque-activite-a-ses-admins",
+          "date": "2026-09-22",
+          "type": "securite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque activité peut avoir ses admins, et chacun ne voit que ses activités",
+            "texte": "Un admin de l'organisation nomme des admins pour une activité. Ils gèrent ses périodes, ses périmètres, ses affectations et ses fiches, sans voir les autres activités. Une personne ne voit que les activités où elle est affectée.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-une-recherche-globale-trouve-taches-fiches-et-personnes",
+          "date": "2026-09-19",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une recherche globale trouve les tâches, les fiches et les personnes",
+            "texte": "La barre haute de l'espace organisateur propose une recherche. Elle trouve les tâches de l'édition en cours, les fiches et les personnes de vos périmètres. Vous ne trouvez que ce que vous pouvez déjà consulter. La page d'une fiche liste aussi les tâches qui la citent.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-une-nouvelle-demande-de-code-renvoie-le-code-en-cours",
+          "date": "2026-09-19",
+          "type": "securite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une nouvelle demande de code renvoie le code en cours",
+            "texte": "Si vous demandez un nouveau code alors que le précédent est encore valable, vous recevez le même code et sa validité repart de 10 minutes. Une personne qui demande des codes sur votre adresse ne peut plus invalider celui que vous attendez. Les codes envoyés avant la mise à jour ne sont plus acceptés : demandez un nouveau code.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-les-mails-portent-le-nom-et-les-couleurs-de-votre-organisation",
+          "date": "2026-09-19",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les mails portent le nom et les couleurs de votre organisation",
+            "texte": "L'en-tête, les sujets et le pied de chaque mail affichent le nom court de votre organisation. Le texte, les boutons et le fond reprennent les couleurs de son thème. Le pied garde un crédit « propulsé par Relaytour, logiciel libre ». Les mails n'appellent aucune police web.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-le-mode-recette-quitte-le-logiciel",
+          "date": "2026-09-19",
+          "type": "rupture",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le mode recette quitte le logiciel",
+            "texte": "APP_ENV ne connaît plus que local et prod. Les variables COURRIEL_DELIVRABILITE et COURRIEL_CAPTURE disparaissent, ainsi que le service Mailpit de la pile de référence. Hors du poste local, l'application parle au SMTP renseigné, et à rien d'autre.",
+            "migration": "Une installation d'essai passe en APP_ENV=prod et pointe COURRIEL_SMTP_HOTE sur une boîte de capture qu'elle déclare elle-même, dans sa surcharge Compose. Retirer COURRIEL_DELIVRABILITE du .env."
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-la-table-organisation-devient-la-racine-des-donnees",
+          "date": "2026-09-19",
+          "type": "interne",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La table Organisation devient la racine des données",
+            "texte": "Une ligne Organisation porte le slug, le nom, le sigle, le fuseau horaire et la déclaration complète de l'organisation. Les éditions, périmètres, fiches, notifications et préférences reçoivent sa clé. L'import crée ou met à jour cette ligne depuis organisation.yaml ; l'API, les mails et l'espace organisateur lisent désormais la configuration en base.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-la-table-newsletter-est-supprimee",
+          "date": "2026-09-19",
+          "type": "rupture",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La table Newsletter est supprimée",
+            "texte": "La table Newsletter, héritée du projet précédent et sans usage dans Relaytour, disparaît du schéma. La migration la supprime avec les adresses qu'elle contient encore.",
+            "migration": "Exporter la table Newsletter avant de déployer si ses adresses doivent être conservées ailleurs. La migration exécute DROP TABLE."
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-la-configuration-de-l-organisation-se-lit-en-un-seul-objet",
+          "date": "2026-09-19",
+          "type": "interne",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La configuration de l'organisation se lit en un seul objet",
+            "texte": "Le nom, le sigle, les domaines de mail, le contact, la page équipe et le thème de l'organisation forment une configuration unique, validée par un schéma strict. Les sujets de mail, l'expéditeur, l'appel aux référentes et référents et la détection des données personnelles la lisent. Les variables d'environnement restent un amorçage avant le premier import.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-la-base-et-le-cache-de-la-pile-de-reference-ne-publient-plus",
+          "date": "2026-09-19",
+          "type": "securite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La base et le cache de la pile de référence ne publient plus de port",
+            "texte": "Dans la pile Compose de référence, MariaDB et Valkey ne sont plus joignables que par les conteneurs de la pile. La file des mails contient des codes de connexion en clair pendant quelques minutes, et un port publié les rendait lisibles par tout processus de la machine.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-l-api-refuse-les-requetes-trop-profondes",
+          "date": "2026-09-19",
+          "type": "securite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'API refuse les requêtes trop profondes",
+            "texte": "L'API rejette désormais une requête GraphQL trop profonde, trop large ou trop coûteuse avant d'exécuter le moindre résolveur. Le schéma comporte des cycles (périmètre et tâches, personne et affectations) qu'une personne connectée pouvait exploiter pour saturer le serveur avec une requête imbriquée. Les requêtes de l'espace organisateur restent bien en dessous des limites.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-l-api-passe-sur-apollo-server-5-et-express-5",
+          "date": "2026-09-19",
+          "type": "securite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'API passe sur Apollo Server 5 et Express 5",
+            "texte": "L'API tourne sur Apollo Server 5 et Express 5, deux versions maintenues. Apollo Server 4 n'est plus maintenu depuis janvier 2026. Ce passage retire de l'image de production les bibliothèques form-data, path-to-regexp et qs, signalées par l'audit, et corrige sha.js. Les routes, le contrôle CSRF et l'arrêt propre fonctionnent comme avant.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-19-serveur-chaque-organisation-decrit-son-identite-dans-son-depot",
+          "date": "2026-09-19",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque organisation décrit son identité dans son dépôt",
+            "texte": "Le dossier de contenu porte un fichier organisation.yaml : nom, sigle, fuseau horaire, domaines de mail autorisés, contact de recrutement, page équipe et thème. La validation le lit avec les périmètres, les fiches et les tâches types, et n'a plus besoin de variable d'environnement pour les domaines autorisés.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-18-serveur-une-edition-se-cree-aussi-en-ligne-de-commande",
+          "date": "2026-09-18",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une édition se crée aussi en ligne de commande",
+            "texte": "La commande edition:creer crée une édition avec son année, son nom et ses dates, sans passer par l'espace organisateur. Une installation neuve peut ainsi importer ses tâches types dès le premier démarrage. Une édition déjà présente n'est jamais modifiée.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-18-serveur-le-serveur-refuse-de-demarrer-sans-origine-hors-du-poste-local",
+          "date": "2026-09-18",
+          "type": "correctif",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le serveur refuse de démarrer sans ORIGINE_ORGA hors du poste local",
+            "texte": "En recette et en production, une origine absente faisait pointer les liens des mails et l'origine de confiance de la connexion sur un hôte d'exemple, sans avertissement. Le démarrage exige désormais la variable.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-18-serveur-le-deploiement-de-reference-demarre-le-worker-apres-les-migrations",
+          "date": "2026-09-18",
+          "type": "correctif",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le déploiement de référence démarre le worker après les migrations",
+            "texte": "Dans la pile Compose de référence, le worker attendait seulement la base et le cache : il pouvait démarrer sur un schéma pas encore migré. Il attend désormais la fin du service de migration, comme l'API. Sa sonde de vie lit le port configuré au lieu d'une valeur en dur.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-18-serveur-la-validation-d-un-dossier-de-contenu-tourne-dans-l-image",
+          "date": "2026-09-18",
+          "type": "correctif",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La validation et l'export d'un dossier de contenu tournent dans l'image",
+            "texte": "L'image Docker embarque désormais orga-valider, orga-exporter et essai-courriel, en plus des commandes déjà livrées. Le workflow de validation d'un dépôt d'organisation et l'export des fiches en fin d'édition fonctionnent sans installer Node sur le serveur.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-18-serveur-la-newsletter-quitte-le-perimetre-publie",
+          "date": "2026-09-18",
+          "type": "rupture",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La newsletter quitte le périmètre publié",
+            "texte": "La mutation d'inscription à la newsletter et le compteur d'abonnés, hérités du projet précédent, disparaissent de l'API. La table reste en base sans usage ; sa suppression fera l'objet d'une migration à part.",
+            "migration": "Un client qui appelait subscribeNewsletter ou nombreAbonnesNewsletter doit retirer ces appels. Aucune action en base."
+          }
+        },
+        {
+          "id": "2026-09-18-serveur-l-organisation-d-exemple-a-des-taches-types-pour-chaque-perimetre",
+          "date": "2026-09-18",
+          "type": "interne",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'organisation d'exemple a des tâches types pour chaque périmètre",
+            "texte": "Les périmètres volley, course à pied, logistique et communication de l'organisation d'exemple reçoivent chacun trois tâches types. Un premier import donne un rétroplanning complet sur les sept périmètres.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-17-serveur-les-poles-les-fiches-et-les-taches-types-de-l-edition-sont-p",
+          "date": "2026-09-17",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les pôles, les fiches et les tâches types de l'édition sont prêts à importer",
+            "texte": "L'espace organisateur compte désormais onze pôles en plus des huit sports, dont un pôle Inclusion et accueil. Chaque périmètre dispose de fiches méthode issues du bilan de l'édition 2025 et d'une liste de tâches datées. Après l'import d'une édition, les référentes et référents retrouvent ces tâches avec leurs échéances.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-17-serveur-les-admins-notent-les-souhaits-des-personnes-invitees",
+          "date": "2026-09-17",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins notent les souhaits des personnes invitées",
+            "texte": "Un souhait indique qu'une personne s'intéresse à un périmètre pour une édition. Les admins sont les seules personnes à le voir, et il ne donne aucun accès. L'affectation de la personne à ce périmètre satisfait le souhait.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-17-serveur-les-admins-fixent-l-effectif-de-chaque-perimetre",
+          "date": "2026-09-17",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins fixent l'effectif de chaque périmètre",
+            "texte": "Chaque périmètre peut indiquer dans le dépôt le nombre de référentes et de référents souhaité. L'import d'une édition crée cette valeur si elle manque et ne la remplace jamais. Les admins la modifient ensuite dans l'espace organisateur.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-17-serveur-le-retroplanning-respecte-les-droits-de-lecture",
+          "date": "2026-09-17",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le rétroplanning respecte les droits de lecture",
+            "texte": "Les tâches d'une édition se lisent en une fois, triées par échéance. Chaque personne reçoit seulement les tâches des périmètres qu'elle peut consulter.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-serveur-les-referentes-et-referents-suivent-les-taches-de-leurs-peri",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les référentes et référents suivent les tâches de leurs périmètres",
+            "texte": "Chaque périmètre a ses tâches pour une édition, avec une échéance, un statut et les personnes qui s'en occupent. Modifier la tâche d'une autre personne demande une confirmation, et cette personne reçoit un mail. Les éditions archivées restent consultables en lecture seule.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-serveur-les-referentes-et-referents-sont-prevenus-de-l-activite-et-d",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les référentes et référents sont prévenus de l'activité et des échéances",
+            "texte": "Chaque création, prise en charge ou modification de tâche prévient les autres personnes du périmètre. Un mail part tout de suite quand une autre personne modifie une de vos tâches, et chaque matin pour les échéances à 7 jours, à la veille et les retards. Un résumé regroupe le reste, chaque lundi ou chaque jour.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-serveur-les-fiches-methode-sont-versionnees-et-importees-depuis-le-d",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les fiches méthode sont versionnées et importées depuis le dépôt",
+            "texte": "Chaque fiche garde toutes ses versions, et les admins peuvent en restaurer une. Les admins accordent le droit de rédiger les fiches d'un périmètre ou toutes les fiches. Les modèles du dépôt (périmètres, fiches, tâches types) s'importent pour chaque édition, sans jamais écraser une fiche modifiée dans l'application.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-serveur-les-admins-invitent-les-referentes-et-referents",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins invitent les référentes et référents",
+            "texte": "Les admins créent les comptes, les éditions, les périmètres et les affectations. Chaque personne invitée reçoit un mail, puis se connecte avec un code reçu par mail, sans mot de passe. Un compte archivé perd aussitôt l'accès.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-16-serveur-chaque-contribution-compte-dans-un-score-d-activite",
+          "date": "2026-09-16",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque contribution compte dans un score d'activité",
+            "texte": "Les tâches réalisées, les tâches créées et le travail sur les fiches donnent des points pour chaque édition. Une tâche faite à temps rapporte un point de plus, et une tâche rouverte perd ses points. Chaque personne voit son propre score ; seuls les admins voient le classement.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-09-15-serveur-le-serveur-repart-sur-un-socle-maintenu",
+          "date": "2026-09-15",
+          "type": "interne",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le serveur repose sur un socle maintenu",
+            "texte": "L'API tourne sur Node 24 avec un seul schéma GraphQL, une file de mails et une sonde de santé. Aucune liste de personnes n'est lisible sans authentification. Cette base porte l'espace organisateur.",
+            "migration": null
+          }
+        }
+      ]
     }
   ]
 }
