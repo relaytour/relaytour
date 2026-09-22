@@ -2,15 +2,15 @@
   "schemaVersion": 3,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "versions": [
     {
-      "version": null,
+      "version": "0.4.1",
       "notes": [
         {
           "id": "2026-09-22-orga-le-selecteur-d-activite-passe-dans-la-barre-laterale",
           "date": "2026-09-22",
-          "type": "fonctionnalite",
+          "type": "correctif",
           "audience": "organisateurs",
           "etat": "prevu",
           "fr": {
