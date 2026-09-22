@@ -5,6 +5,23 @@
   "version": "0.8.1",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-22-orga-les-souhaits-se-notent-dans-chaque-activite",
+          "date": "2026-09-22",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les souhaits se notent dans chaque activité",
+            "texte": "Dans une organisation qui porte plusieurs activités, la fenêtre d'invitation et de modification d'un compte propose un champ de souhaits par activité que vous administrez. Chaque champ porte sur l'édition en cours de son activité et liste ses propres périmètres. Auparavant, seuls les périmètres de l'activité affichée étaient proposés.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.1",
       "notes": [
         {

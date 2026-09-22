@@ -15,15 +15,15 @@ import {
   Tag,
   Typography,
 } from 'antd'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
-import type { PersonnesQuery } from '../../gql/graphql'
+import type { EditionsQuery, PersonnesQuery } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
 import { normaliser } from '../../lib/recherche'
-import { ACTIVITES, EDITIONS, MOI, PERIMETRES } from '../../lib/requetes'
-import { useActivite } from '../../lib/activite'
+import { type Activite, useActivite } from '../../lib/activite'
+import { ACTIVITES, EDITIONS, MOI } from '../../lib/requetes'
 
 const PERSONNES = graphql(`
   query Personnes($inclureArchives: Boolean, $editionId: ID) {
@@ -49,6 +49,37 @@ const PERSONNES = graphql(`
           id
           nom
           couleur
+        }
+      }
+    }
+  }
+`)
+
+// L'édition en cours et les périmètres d'une activité, pour noter des souhaits
+// dans chaque activité administrée.
+const SOUHAITS_ACTIVITE = graphql(`
+  query SouhaitsActivite($activiteId: ID!) {
+    editionCourante(activiteId: $activiteId) {
+      id
+      nom
+    }
+    perimetres(activiteId: $activiteId) {
+      id
+      nom
+      groupe
+    }
+  }
+`)
+
+// Les souhaits d'une édition, lus à l'ouverture du formulaire pour le préremplir.
+const SOUHAITS_EDITION = graphql(`
+  query SouhaitsEdition($editionId: ID!) {
+    personnes {
+      id
+      souhaits(editionId: $editionId) {
+        id
+        perimetre {
+          id
         }
       }
     }
@@ -138,15 +169,95 @@ interface Valeurs {
   estAdmin: boolean
   /** Activités dont la personne est admin (ADR 0010). */
   activitesAdministrees?: string[]
-  perimetresSouhaites?: string[]
+  /** Périmètres souhaités, par identifiant d'édition. */
+  souhaits?: Record<string, string[] | undefined>
 }
 
 const SOUHAITS_MAX = 30
 
-/** Deux listes d'identifiants contiennent les mêmes éléments, dans n'importe quel ordre. */
-function memesIdentifiants(a: string[], b: string[]): boolean {
-  const ensemble = new Set(a)
-  return ensemble.size === new Set(b).size && b.every(id => ensemble.has(id))
+/**
+ * Champ des périmètres souhaités pour une activité. L'activité affichée passe
+ * l'édition choisie sur la page ; les autres activités utilisent leur édition en cours.
+ */
+function ChampSouhaits({
+  activite,
+  edition: editionChoisie,
+  personne,
+  seul,
+  extra,
+}: {
+  activite: Activite
+  edition?: Pick<EditionsQuery['editions'][number], 'id' | 'nom'>
+  personne: Personne | 'nouvelle'
+  /** Vrai quand le formulaire ne propose qu'une activité. */
+  seul: boolean
+  extra?: string
+}) {
+  const form = Form.useFormInstance<Valeurs>()
+  const { data } = useQuery(SOUHAITS_ACTIVITE, {
+    variables: { activiteId: activite.id },
+  })
+  const edition = editionChoisie ?? data?.editionCourante ?? undefined
+  const editionId = edition?.id
+  const nouvelle = personne === 'nouvelle'
+  const personneId = nouvelle ? undefined : personne.id
+  // Lecture fraîche à chaque ouverture : la liste de la page ne porte que les
+  // souhaits de l'édition affichée.
+  const { data: existants } = useQuery(SOUHAITS_EDITION, {
+    variables: { editionId: editionId ?? '' },
+    skip: nouvelle || editionId === undefined,
+    fetchPolicy: 'network-only',
+  })
+  // Souhaits de la personne, limités aux périmètres non archivés.
+  const initiaux =
+    data === undefined || editionId === undefined
+      ? undefined
+      : nouvelle
+        ? []
+        : existants?.personnes
+            .find(p => p.id === personneId)
+            ?.souhaits.map(souhait => souhait.perimetre.id)
+            .filter(id => data.perimetres.some(p => p.id === id))
+  const pret = initiaux !== undefined
+  useEffect(() => {
+    if (editionId !== undefined && initiaux !== undefined) {
+      form.setFieldValue(['souhaits', editionId], initiaux)
+    }
+    // Le champ se remplit une fois, quand les souhaits sont lus.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [form, editionId, pret])
+
+  if (edition === undefined) return null
+  const options = activite.groupes
+    .map(groupe => ({
+      label: groupe.libellePluriel,
+      options: (data?.perimetres ?? [])
+        .filter(p => p.groupe === groupe.cle)
+        .map(p => ({ value: p.id, label: p.nom })),
+    }))
+    .filter(groupe => groupe.options.length > 0)
+  return (
+    <Form.Item
+      label={
+        seul
+          ? `Périmètres souhaités pour ${edition.nom}`
+          : `${activite.nom} (${edition.nom})`
+      }
+      name={['souhaits', edition.id]}
+      extra={extra}
+    >
+      <Select
+        mode="multiple"
+        allowClear
+        placeholder="Choisir des périmètres"
+        optionFilterProp="label"
+        maxCount={SOUHAITS_MAX}
+        options={options}
+        loading={!pret}
+        disabled={!pret}
+      />
+    </Form.Item>
+  )
 }
 
 export default function Personnes() {
@@ -158,7 +269,6 @@ export default function Personnes() {
   const [sansAffectation, setSansAffectation] = useState(false)
   const { data: session } = useQuery(MOI)
   const { data: editions } = useQuery(EDITIONS)
-  const { data: perimetres } = useQuery(PERIMETRES)
   const editionId =
     choix ?? editions?.editions.find(e => e.statut !== 'ARCHIVEE')?.id
   const edition = editions?.editions.find(e => e.id === editionId)
@@ -169,6 +279,9 @@ export default function Personnes() {
     variables: { inclureArchives, editionId: editionId ?? null },
   })
   const [enEdition, setEnEdition] = useState<Personne | 'nouvelle' | null>(null)
+  // Compteur d'ouvertures : la fenêtre reste montée d'une ouverture à l'autre, et
+  // les champs de souhaits doivent relire les souhaits à chaque fois.
+  const [ouverture, setOuverture] = useState(0)
   const [form] = Form.useForm<Valeurs>()
   const rafraichir = { refetchQueries: [PERSONNES] }
   const [inviter, invitation] = useMutation(INVITER, rafraichir)
@@ -208,9 +321,12 @@ export default function Personnes() {
   }
   // Un compte archivé ne reçoit plus de souhaits.
   const champSouhaits =
-    souhaitsModifiables &&
-    enEdition !== null &&
-    (enEdition === 'nouvelle' || !enEdition.archive)
+    enEdition !== null && (enEdition === 'nouvelle' || !enEdition.archive)
+  // Les souhaits se notent dans chaque activité administrée, l'activité affichée
+  // en premier.
+  const activitesSouhaits = (toutesActivites?.activites ?? [])
+    .filter(a => a.estAdministree && !a.archive)
+    .sort((a, b) => Number(b.id === activite.id) - Number(a.id === activite.id))
 
   // Recherche insensible aux accents et à la casse, sur le nom et l'adresse.
   const personnes = useMemo(() => {
@@ -226,31 +342,11 @@ export default function Personnes() {
     )
   }, [data, recherche, sansAffectation, editionId])
 
-  const perimetresConnus = useMemo(
-    () => new Set((perimetres?.perimetres ?? []).map(p => p.id)),
-    [perimetres]
-  )
-  const optionsPerimetres = useMemo(
-    () =>
-      activite.groupes
-        .map(groupe => ({
-          label: groupe.libellePluriel,
-          options: (perimetres?.perimetres ?? [])
-            .filter(p => p.groupe === groupe.cle)
-            .map(p => ({ value: p.id, label: p.nom })),
-        }))
-        .filter(groupe => groupe.options.length > 0),
-    [perimetres, activite.groupes]
-  )
-
-  // Souhaits de la personne pour l'édition choisie, limités aux périmètres non archivés.
-  const souhaitsInitiaux = (personne: Personne) =>
-    personne.souhaits
-      .map(souhait => souhait.perimetre.id)
-      .filter(id => perimetresConnus.has(id))
-
   const ouvrir = (personne: Personne | 'nouvelle') => {
     setEnEdition(personne)
+    setOuverture(n => n + 1)
+    // Les souhaits d'une ouverture précédente ne doivent pas rester dans le formulaire.
+    form.resetFields()
     form.setFieldsValue(
       personne === 'nouvelle'
         ? {
@@ -258,14 +354,12 @@ export default function Personnes() {
             nom: '',
             estAdmin: false,
             activitesAdministrees: [],
-            perimetresSouhaites: [],
           }
         : {
             email: personne.email,
             nom: personne.nom,
             estAdmin: personne.estAdmin ?? false,
             activitesAdministrees: personne.activitesAdministrees,
-            perimetresSouhaites: souhaitsInitiaux(personne),
           }
     )
   }
@@ -282,7 +376,15 @@ export default function Personnes() {
   }
 
   const enregistrer = async (v: Valeurs) => {
-    const souhaites = champSouhaits ? (v.perimetresSouhaites ?? []) : []
+    // Souhaits saisis, par édition. L'invitation porte ceux de la première édition
+    // renseignée ; les autres suivent une fois le compte créé.
+    const souhaits = champSouhaits
+      ? Object.entries(v.souhaits ?? {}).map(([editionId, ids]) => ({
+          editionId,
+          ids: ids ?? [],
+        }))
+      : []
+    const premiers = souhaits.find(s => s.ids.length > 0)
     const ok =
       enEdition === 'nouvelle'
         ? await executer(async () => {
@@ -291,13 +393,24 @@ export default function Personnes() {
                 email: v.email,
                 nom: v.nom,
                 estAdmin: gereOrganisation && v.estAdmin,
-                editionId: souhaites.length > 0 ? editionId : null,
-                perimetresSouhaites: souhaites,
+                editionId: premiers?.editionId ?? null,
+                perimetresSouhaites: premiers?.ids ?? [],
               },
             })
             const id = r.data?.inviterPersonne.id
-            if (gereOrganisation && id !== undefined) {
+            if (id === undefined) return
+            if (gereOrganisation) {
               await ajusterAdminsActivite(id, [], v.activitesAdministrees ?? [])
+            }
+            for (const s of souhaits) {
+              if (s === premiers || s.ids.length === 0) continue
+              await definirSouhaits({
+                variables: {
+                  personneId: id,
+                  editionId: s.editionId,
+                  perimetreIds: s.ids,
+                },
+              })
             }
           }, 'Invitation envoyée. La personne reçoit un mail avec le lien de connexion.')
         : enEdition
@@ -316,17 +429,14 @@ export default function Personnes() {
                   v.activitesAdministrees ?? []
                 )
               }
-              // Les souhaits ne sont envoyés que si l'ensemble a changé.
-              if (
-                champSouhaits &&
-                editionId !== undefined &&
-                !memesIdentifiants(souhaites, souhaitsInitiaux(enEdition))
-              ) {
+              // Les souhaits d'une édition ne sont envoyés que si le champ a été modifié.
+              for (const s of souhaits) {
+                if (!form.isFieldTouched(['souhaits', s.editionId])) continue
                 await definirSouhaits({
                   variables: {
                     personneId: enEdition.id,
-                    editionId,
-                    perimetreIds: souhaites,
+                    editionId: s.editionId,
+                    perimetreIds: s.ids,
                   },
                 })
               }
@@ -614,22 +724,28 @@ export default function Personnes() {
               </Form.Item>
             </>
           )}
-          {champSouhaits && (
-            <Form.Item
-              label={`Périmètres souhaités pour ${edition.nom}`}
-              name="perimetresSouhaites"
-              extra="Seuls les admins voient les souhaits. Un souhait ne donne aucun accès."
-            >
-              <Select
-                mode="multiple"
-                allowClear
-                placeholder="Choisir des périmètres"
-                optionFilterProp="label"
-                maxCount={SOUHAITS_MAX}
-                options={optionsPerimetres}
-              />
-            </Form.Item>
+          {champSouhaits && activitesSouhaits.length > 1 && (
+            <Typography.Title level={5}>Périmètres souhaités</Typography.Title>
           )}
+          {champSouhaits &&
+            activitesSouhaits.map((a, i) => (
+              <ChampSouhaits
+                key={`${a.id}-${ouverture}`}
+                activite={a}
+                edition={
+                  a.id === activite.id && souhaitsModifiables
+                    ? edition
+                    : undefined
+                }
+                personne={enEdition}
+                seul={activitesSouhaits.length === 1}
+                extra={
+                  i === activitesSouhaits.length - 1
+                    ? 'Seuls les admins voient les souhaits. Un souhait ne donne aucun accès.'
+                    : undefined
+                }
+              />
+            ))}
         </Form>
       </Modal>
     </>
