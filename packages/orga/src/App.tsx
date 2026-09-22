@@ -8,6 +8,7 @@ import Activites from './pages/admin/Activites'
 import AvancementGlobal from './pages/admin/AvancementGlobal'
 import Classement from './pages/admin/Classement'
 import Editions from './pages/admin/Editions'
+import Organisation from './pages/admin/Organisation'
 import Perimetres from './pages/admin/Perimetres'
 import Personnes from './pages/admin/Personnes'
 import Postes from './pages/admin/Postes'
@@ -50,6 +51,7 @@ const routeur = createBrowserRouter([
           { path: 'avancement', element: <AvancementGlobal /> },
           { path: 'classement', element: <Classement /> },
           { path: 'editions', element: <Editions /> },
+          { path: 'organisation', element: <Organisation /> },
           { path: 'perimetres', element: <Perimetres /> },
           { path: 'personnes', element: <Personnes /> },
           { path: 'postes', element: <Postes /> },

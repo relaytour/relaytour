@@ -5,6 +5,7 @@ import {
   App,
   Button,
   Col,
+  Divider,
   Form,
   Input,
   InputNumber,
@@ -18,11 +19,14 @@ import {
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
+import ChampCouleur from '../../composants/ChampCouleur'
+import ChampImage from '../../composants/ChampImage'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { NatureActivite } from '../../gql/graphql'
 import { formesPeriode, useActivite, type Activite } from '../../lib/activite'
 import { messageErreur } from '../../lib/erreurs'
+import { useOrganisation } from '../../lib/organisation'
 import { ACTIVITES } from '../../lib/requetes'
 
 // Les activités de l'organisation (ADR 0008) : un événement, une section, une
@@ -75,6 +79,28 @@ const MODIFIER = graphql(`
   }
 `)
 
+const MODIFIER_IDENTITE = graphql(`
+  mutation ModifierIdentiteActivite(
+    $id: ID!
+    $contactRecrutement: String
+    $pageEquipe: String
+    $logoPng: String
+    $logoSvg: String
+    $theme: JSONObject
+  ) {
+    modifierIdentiteActivite(
+      id: $id
+      contactRecrutement: $contactRecrutement
+      pageEquipe: $pageEquipe
+      logoPng: $logoPng
+      logoSvg: $logoSvg
+      theme: $theme
+    ) {
+      id
+    }
+  }
+`)
+
 const ARCHIVER = graphql(`
   mutation ArchiverActivite($id: ID!, $archive: Boolean!) {
     archiverActivite(id: $id, archive: $archive) {
@@ -116,6 +142,35 @@ interface Valeurs {
   ordre: number
   groupes: Groupe[]
   archive: boolean
+  // Identité propre de l'activité (ADR 0009) : un champ vide reprend la valeur
+  // de l'organisation.
+  contactRecrutement?: string
+  pageEquipe?: string
+  logoPng: string | null
+  primaire: string | null
+  accent: string | null
+}
+
+type ThemeActivite = {
+  couleurs?: Record<string, string>
+  [cle: string]: unknown
+}
+
+/** Le thème de l'activité, avec la primaire et l'accent du formulaire. */
+function themeActivite(
+  actuel: ThemeActivite | null | undefined,
+  primaire: string | null,
+  accent: string | null
+): ThemeActivite | null {
+  const couleurs = Object.fromEntries(
+    Object.entries({ ...actuel?.couleurs, primaire, accent }).filter(
+      ([, v]) => typeof v === 'string' && v !== ''
+    )
+  ) as Record<string, string>
+  const theme: ThemeActivite = { ...actuel }
+  if (Object.keys(couleurs).length > 0) theme.couleurs = couleurs
+  else delete theme.couleurs
+  return Object.keys(theme).length > 0 ? theme : null
 }
 
 const GROUPES_PAR_DEFAUT: Groupe[] = [
@@ -127,6 +182,7 @@ export default function Activites() {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const { activite: affichee } = useActivite()
+  const organisation = useOrganisation()
   const { data, loading } = useQuery(ACTIVITES)
   const [enEdition, setEnEdition] = useState<Activite | 'nouvelle' | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
@@ -135,6 +191,10 @@ export default function Activites() {
   const [creer, creation] = useMutation(CREER, rafraichir)
   const [modifier, modification] = useMutation(MODIFIER, rafraichir)
   const [archiver, archivage] = useMutation(ARCHIVER, rafraichir)
+  const [modifierIdentite, modificationIdentite] = useMutation(
+    MODIFIER_IDENTITE,
+    rafraichir
+  )
 
   const ouvrir = (activite: Activite | 'nouvelle') => {
     setErreur(null)
@@ -149,6 +209,11 @@ export default function Activites() {
             ordre: (data?.activites.length ?? 0) + 1,
             groupes: GROUPES_PAR_DEFAUT,
             archive: false,
+            contactRecrutement: '',
+            pageEquipe: '',
+            logoPng: null,
+            primaire: null,
+            accent: null,
           }
         : {
             slug: activite.slug,
@@ -158,6 +223,15 @@ export default function Activites() {
             ordre: activite.ordre,
             groupes: activite.groupes.map(g => ({ ...g })),
             archive: activite.archive,
+            contactRecrutement: activite.identite.contactRecrutement ?? '',
+            pageEquipe: activite.identite.pageEquipe ?? '',
+            logoPng: activite.identite.logoPng ?? null,
+            primaire:
+              (activite.identite.theme as ThemeActivite | null)?.couleurs
+                ?.primaire ?? null,
+            accent:
+              (activite.identite.theme as ThemeActivite | null)?.couleurs
+                ?.accent ?? null,
           }
     )
   }
@@ -170,6 +244,22 @@ export default function Activites() {
       libellePluriel: g.libellePluriel.trim(),
     }))
     const sigle = v.sigle?.trim() || null
+    const identite = (id: string, actuel?: Activite) => ({
+      id,
+      contactRecrutement: v.contactRecrutement?.trim() || null,
+      pageEquipe: v.pageEquipe?.trim() || null,
+      logoPng: v.logoPng,
+      // Le SVG ne se choisit pas ici : il suit le PNG tant que ce dernier reste.
+      logoSvg:
+        v.logoPng !== null && v.logoPng === actuel?.identite.logoPng
+          ? (actuel.identite.logoSvg ?? null)
+          : null,
+      theme: themeActivite(
+        actuel?.identite.theme as ThemeActivite | null,
+        v.primaire,
+        v.accent
+      ),
+    })
     try {
       if (enEdition === 'nouvelle') {
         const r = await creer({
@@ -182,9 +272,13 @@ export default function Activites() {
             ordre: v.ordre,
           },
         })
+        const creee = r.data?.creerActivite
+        if (creee) {
+          await modifierIdentite({ variables: identite(creee.id) })
+        }
         message.success('Activité créée.')
         setEnEdition(null)
-        const slug = r.data?.creerActivite.slug
+        const slug = creee?.slug
         if (slug) navigate(`/${slug}/`)
         return
       }
@@ -198,6 +292,9 @@ export default function Activites() {
             groupes,
             ordre: v.ordre,
           },
+        })
+        await modifierIdentite({
+          variables: identite(enEdition.id, enEdition),
         })
         if (v.archive !== enEdition.archive) {
           await archiver({
@@ -277,7 +374,10 @@ export default function Activites() {
         okText="Enregistrer"
         cancelText="Annuler"
         confirmLoading={
-          creation.loading || modification.loading || archivage.loading
+          creation.loading ||
+          modification.loading ||
+          archivage.loading ||
+          modificationIdentite.loading
         }
         onOk={() => form.submit()}
         onCancel={() => setEnEdition(null)}
@@ -427,6 +527,43 @@ export default function Activites() {
               )}
             </Form.List>
           </Form.Item>
+          <Divider titlePlacement="start" plain>
+            Identité propre (facultatif)
+          </Divider>
+          <p className="rt-texte-secondaire">
+            Un champ vide reprend la valeur de l’organisation. Le contact reste
+            une adresse de rôle de l’organisation.
+          </p>
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item
+                label="Contact de recrutement"
+                name="contactRecrutement"
+              >
+                <Input type="email" placeholder="Celui de l’organisation" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Page de l’équipe" name="pageEquipe">
+                <Input type="url" placeholder="https://" />
+              </Form.Item>
+            </Col>
+          </Row>
+          <Form.Item label="Logo PNG" name="logoPng">
+            <ChampImage format="PNG" libelle="Logo de l’activité" />
+          </Form.Item>
+          <Row gutter={16}>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Couleur primaire" name="primaire">
+                <ChampCouleur heritee={organisation.theme.couleurs.primaire} />
+              </Form.Item>
+            </Col>
+            <Col xs={24} sm={12}>
+              <Form.Item label="Couleur d’accent" name="accent">
+                <ChampCouleur heritee={organisation.theme.couleurs.accent} />
+              </Form.Item>
+            </Col>
+          </Row>
           {enEdition !== 'nouvelle' && (
             <Form.Item
               label="Archivée"

@@ -7,6 +7,7 @@ import {
   ContexteOrganisation,
   ORGANISATION,
   ORGANISATION_PAR_DEFAUT,
+  themeDepuisApi,
   type Organisation,
 } from '../lib/organisation'
 import { organisationChoisie } from '../lib/selection'
@@ -33,12 +34,8 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
       logoUrl: o.logoUrl ?? null,
       faviconUrl: o.faviconUrl ?? null,
       pageEquipe: o.pageEquipe ?? null,
-      theme: {
-        couleurs: o.theme.couleurs,
-        fond: o.theme.fond,
-        polices: o.theme.polices,
-        typographie: o.theme.typographie,
-      },
+      codeSource: o.codeSource,
+      theme: themeDepuisApi(o.theme),
     }
   }, [data])
 
