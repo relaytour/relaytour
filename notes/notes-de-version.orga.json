@@ -5,6 +5,23 @@
   "version": "0.4.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-22-orga-le-selecteur-d-activite-passe-dans-la-barre-laterale",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le sélecteur d'activité passe dans la barre latérale",
+            "texte": "La barre latérale affiche le logo et le sigle de l'activité que vous consultez. Un bouton à côté du sigle ouvre la liste des autres activités de votre organisation, sur ordinateur comme dans le menu de la vue mobile. La barre de recherche occupe de nouveau toute la largeur de la barre haute. Le nom de votre organisation reste rappelé au-dessus de l'activité, et la signature du pied tient en trois mots, « Propulsé par Relaytour », dont le nom mène au code source.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.0",
       "notes": [
         {

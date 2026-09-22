@@ -15,7 +15,7 @@ import {
   TeamOutlined,
 } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
-import { Alert, Button, Drawer, Grid, Menu, Select } from 'antd'
+import { Alert, Button, Drawer, Grid, Menu } from 'antd'
 import { useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
@@ -23,9 +23,10 @@ import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
 import { ContexteSession, type Session } from '../lib/session'
 
+import ChoixActivite from './ChoixActivite'
 import FournisseurActivite from './FournisseurActivite'
 import GardeSession from './GardeSession'
-import Marque, { Pictogramme, SignatureRelaytour } from './Marque'
+import { Pictogramme, SignatureRelaytour } from './Marque'
 import MenuCompte from './MenuCompte'
 import Notifications from './Notifications'
 import Recherche from './Recherche'
@@ -70,7 +71,7 @@ export default function Coquille() {
 
 function Mise({ session }: { session: Session }) {
   const { moi, active } = session
-  const { activite, activites, lien, periode, gere } = useActivite()
+  const { activite, lien, periode, gere } = useActivite()
   const { data: menu } = useQuery(MENU_PERIMETRES)
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -208,7 +209,7 @@ function Mise({ session }: { session: Session }) {
           className="rt-verre-barre rt-barre-laterale"
           aria-label="Navigation principale"
         >
-          <Marque />
+          <ChoixActivite />
           {navigation}
           {pied}
         </nav>
@@ -218,7 +219,9 @@ function Mise({ session }: { session: Session }) {
           size={280}
           open={tiroirOuvert}
           onClose={() => setTiroirOuvert(false)}
-          title={<Marque taille={24} />}
+          title={
+            <ChoixActivite taille={24} apresChoix={() => setTiroirOuvert(false)} />
+          }
           styles={{
             body: { padding: 12, display: 'flex', flexDirection: 'column' },
           }}
@@ -240,15 +243,6 @@ function Mise({ session }: { session: Session }) {
             <span style={{ display: 'inline-flex', marginInlineStart: 4 }}>
               <Pictogramme taille={24} />
             </span>
-          )}
-          {activites.length > 1 && (
-            <Select
-              aria-label="Activité"
-              value={activite.slug}
-              style={{ minWidth: 180 }}
-              onChange={slug => navigate(`/${slug}/`)}
-              options={activites.map(a => ({ value: a.slug, label: a.nom }))}
-            />
           )}
           <Recherche estAdmin={gere} />
           <span style={{ flex: 1 }} />

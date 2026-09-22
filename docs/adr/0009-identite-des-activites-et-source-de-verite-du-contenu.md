@@ -50,7 +50,7 @@ Un point touche aussi la protection des données. `domainesCourrielAutorises` d�
 ### Relaytour reste en signature
 
 - L'en-tête affiche le logo de l'activité, sinon celui de l'organisation, sinon le pictogramme de Relaytour.
-- Le pied de la barre latérale et de l'écran de connexion garde la signature « Propulsé par Relaytour », avec un lien vers le code source. L'article 13 de l'AGPL impose d'offrir le code source aux personnes qui utilisent le logiciel par le réseau.
+- Le pied de la barre latérale et de l'écran de connexion garde la signature « Propulsé par Relaytour ». Le mot « Relaytour » porte le lien vers le code source, ce qui tient la ligne en trois mots. L'article 13 de l'AGPL impose d'offrir le code source aux personnes qui utilisent le logiciel par le réseau.
 - `CODE_SOURCE_URL` fixe ce lien. Par défaut, il mène au dépôt public. Un hébergeur qui modifie le logiciel y indique son propre dépôt.
 
 ### L'autonomie des organisations et la place de l'hébergeur

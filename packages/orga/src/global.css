@@ -316,6 +316,47 @@ html {
 }
 
 /* La marque : pictogramme et nom. */
+.rt-entete-panneau {
+  padding-bottom: 20px;
+}
+
+/* Rappel de l'organisation au-dessus de l'activité, dans le ton de la signature. */
+.rt-rappel-organisation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  padding: 0 10px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--rt-encre-55);
+}
+
+.rt-rappel-organisation img {
+  display: block;
+  opacity: 0.8;
+}
+
+.rt-entete-activite {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.rt-entete-activite .rt-marque {
+  /* La marque prend la place restante : le bouton reste collé à droite, même
+     derrière un sigle court, et un nom trop long se tronque. */
+  flex: 1 1 0;
+  padding-bottom: 0;
+  min-width: 0;
+}
+
+.rt-entete-activite .rt-marque-nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .rt-marque {
   display: inline-flex;
   align-items: center;
