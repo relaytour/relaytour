@@ -17,6 +17,18 @@
       }
     },
     {
+      "id": "2026-09-22-serveur-chaque-requete-se-limite-a-l-organisation-active",
+      "date": "2026-09-22",
+      "type": "interne",
+      "audience": "interne",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Chaque requête se limite à l'organisation active",
+        "texte": "Le contexte porte l'organisation active, choisie par un en-tête ou par l'unique appartenance de la personne. Le rôle d'admin vaut dans cette organisation. Toute lecture et toute écriture se limitent à ses données, et une organisation en lecture seule refuse les modifications. Les activités se lisent et se gèrent par l'API, dans les limites fixées par l'hébergeur.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-serveur-une-recherche-globale-trouve-taches-fiches-et-personnes",
       "date": "2026-09-19",
       "type": "fonctionnalite",
