@@ -5,6 +5,23 @@
   "version": "0.4.1",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-22-serveur-les-reponses-aux-mails-arrivent-au-contact-de-l-activite",
+          "date": "2026-09-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les réponses aux mails arrivent au contact de l'activité",
+            "texte": "Quand un membre répond à une invitation ou à un mail de tâche, sa réponse arrive au contact de l'activité concernée. Les mails de toute l'organisation renvoient les réponses au contact de l'organisation. Sans contact déclaré, les réponses arrivent toujours à l'adresse d'expédition.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.0",
       "notes": [
         {

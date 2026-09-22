@@ -37,6 +37,7 @@ Un point touche aussi la protection des données. `domainesCourrielAutorises` d�
 - Le contact d'une activité reste une adresse de rôle de l'organisation.
 - L'écran de connexion, le choix d'organisation et le favicon gardent l'identité de l'organisation. Les écrans d'une activité prennent son thème et son logo.
 - Un mail qui concerne une seule activité, comme la modification d'une tâche, prend son identité. Le résumé et les rappels, qui couvrent plusieurs activités, gardent celle de l'organisation. L'appel aux référentes et référents cite les contacts de l'activité.
+- Le contact de l'activité ou de l'organisation reçoit les réponses aux mails, par l'en-tête `Reply-To` (ajouté en 0.5.0, voir `docs/courriel.md`).
 
 ### Des images stockées par Relaytour
 

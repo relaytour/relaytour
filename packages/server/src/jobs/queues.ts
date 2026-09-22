@@ -40,6 +40,9 @@ export interface CourrielJobData {
   // Organisation dont le mail porte le nom et les couleurs (ADR 0008). Sans elle,
   // l'unique organisation de la personne, sinon celle de l'installation.
   organisationId?: string
+  // Activité qui porte le mail (ADR 0009) : son identité et son contact, qui reçoit
+  // les réponses.
+  activiteId?: string
 }
 
 export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {

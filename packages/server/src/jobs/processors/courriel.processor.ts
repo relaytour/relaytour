@@ -56,13 +56,14 @@ export async function courrielProcessor(
     )
     return
   }
-  const { sujet, html, texte, desabonnement } = message
+  const { sujet, html, texte, desabonnement, repondreA } = message
   const issue = await expedier({
     destinataire,
     sujet,
     html,
     texte,
     desabonnement,
+    repondreA,
   })
   if (issue === 'parti') await message.apresEnvoi?.()
 

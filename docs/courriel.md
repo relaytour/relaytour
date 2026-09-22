@@ -14,6 +14,12 @@ Une installation d'essai est une installation ordinaire (`APP_ENV=prod`) sans do
 
 Vous choisissez un service SMTP : la boîte mail de votre hébergeur de domaine, un service d'envoi transactionnel ou le SMTP de votre suite bureautique. Un service transactionnel devient nécessaire dès que les rappels et les résumés concernent plusieurs dizaines de personnes. Renseignez `COURRIEL_SMTP_HOTE`, `COURRIEL_SMTP_PORT` (465 pour TLS implicite), `COURRIEL_SMTP_UTILISATEUR`, `COURRIEL_SMTP_MOT_DE_PASSE` et `COURRIEL_EXPEDITEUR` dans le `.env` du serveur. L'expéditeur doit appartenir à un domaine que vous contrôlez.
 
+## Réponses des membres
+
+Un mail qui concerne une activité porte l'en-tête `Reply-To` avec le contact de cette activité (`contactRecrutement` de `activite.yaml`). Un mail qui concerne toute l'organisation porte le contact de l'organisation. Sans contact déclaré, les réponses arrivent à l'expéditeur. Les codes de connexion et le mail d'essai n'ont pas d'en-tête `Reply-To`.
+
+Une invitation concerne une activité quand la personne invitée y a un souhait, une affectation ou un rôle d'admin, et dans aucune autre activité. Une invitation envoyée par un admin d'activité, sans autre lien, concerne l'activité qu'il administre.
+
 ## Délivrabilité
 
 Avant l'ouverture, publiez sur le domaine de l'expéditeur :
