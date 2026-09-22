@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     L'API sert le choix d'organisation et d'activité de l'espace organisateur

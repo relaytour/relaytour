@@ -3,6 +3,7 @@ cible: serveur
 type: correctif
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     La validation et l'export d'un dossier de contenu tournent dans l'image

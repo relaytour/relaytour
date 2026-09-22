@@ -3,6 +3,7 @@ cible: serveur
 type: correctif
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Le serveur refuse de démarrer sans ORIGINE_ORGA hors du poste local

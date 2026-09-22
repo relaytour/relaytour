@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     L'API refuse les requêtes trop profondes

@@ -3,6 +3,7 @@ cible: orga
 type: securite
 audience: organisateurs
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Un lien de connexion ne connecte plus sans votre accord

@@ -3,6 +3,7 @@ cible: serveur
 type: interne
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Les activités et les appartenances entrent dans le schéma

@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Chaque version se publie depuis main, avec ses images et sa release
