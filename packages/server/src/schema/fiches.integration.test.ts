@@ -14,6 +14,7 @@ import { importerModeles } from '../orga/importer.ts'
 import { lireModeles } from '../orga/modeles.ts'
 
 import { schema } from './index.ts'
+import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)
@@ -53,9 +54,11 @@ const code = (r: Awaited<ReturnType<typeof executer>>) =>
   r.errors?.[0]?.extensions?.code
 
 let ORGANISATION = ''
+let ACTIVITE = ''
 
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
+  ACTIVITE = await activiteParDefaut()
   await apollo.start()
   // Les tests partagent la base locale : l'organisation importée reprend l'identité
   // déjà en base, pour ne pas la renommer (l'import met la ligne à jour, slug compris).
@@ -87,6 +90,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),
@@ -119,7 +123,7 @@ afterAll(async () => {
   await prisma.effectifPerimetre.deleteMany({
     where: { OR: [{ editionId: ids.edition }, { perimetreId: { in: pids } }] },
   })
-  await prisma.activite.deleteMany({
+  await prisma.journal.deleteMany({
     where: { acteurId: { in: Object.values(ids) } },
   })
   await prisma.affectation.deleteMany({ where: { editionId: ids.edition } })
@@ -242,14 +246,30 @@ describe('droits sur les fiches', () => {
 
   beforeAll(async () => {
     piscine = (
-      await prisma.fiche.findUniqueOrThrow({ where: { slug: `piscine-${s}` } })
+      await prisma.fiche.findUniqueOrThrow({
+        where: {
+          organisationId_slug: {
+            organisationId: ORGANISATION,
+            slug: `piscine-${s}`,
+          },
+        },
+      })
     ).id
     accueil = (
-      await prisma.fiche.findUniqueOrThrow({ where: { slug: `accueil-${s}` } })
+      await prisma.fiche.findUniqueOrThrow({
+        where: {
+          organisationId_slug: {
+            organisationId: ORGANISATION,
+            slug: `accueil-${s}`,
+          },
+        },
+      })
     ).id
     natation = (
       await prisma.perimetre.findUniqueOrThrow({
-        where: { slug: `natation-${s}` },
+        where: {
+          activiteId_slug: { activiteId: ACTIVITE, slug: `natation-${s}` },
+        },
       })
     ).id
     await prisma.affectation.createMany({

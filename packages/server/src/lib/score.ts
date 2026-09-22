@@ -2,7 +2,7 @@ import type { PrismaClient } from '@relaytour/database'
 
 import { aujourdhuiParis } from './droits.ts'
 
-// Score d'activité d'une édition (phase 5).
+// Score de participation d'une édition (phase 5).
 //
 // Le score se calcule à partir de l'état actuel des données, pas du journal brut :
 // rouvrir une tâche lui retire ses points, et répéter une action n'en rapporte pas
@@ -123,7 +123,7 @@ export async function calculerScores(
   }
 
   const periode = await periodeEdition(prisma, editionId)
-  const activites = await prisma.activite.findMany({
+  const activites = await prisma.journal.findMany({
     where: {
       type: { in: ['FICHE_CREEE', 'FICHE_MODIFIEE'] },
       createdAt: {

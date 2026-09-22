@@ -5,6 +5,7 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 import { schema } from './index.ts'
@@ -67,6 +68,7 @@ async function chercher(userId: string | null, texte: string) {
 
 beforeAll(async () => {
   const organisation = await organisationParDefaut()
+  const activite = await activiteParDefaut()
   await apollo.start()
   for (const [cle, estAdmin] of [
     ['admin', true],
@@ -89,6 +91,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: organisation,
+        activiteId: activite,
         annee: 2100 + Math.floor(Math.random() * 800),
         nom: `Essai ${suffixe}`,
         debut: new Date('2027-08-27'),
@@ -102,7 +105,14 @@ beforeAll(async () => {
   ] as const) {
     ids[cle] = (
       await prisma.perimetre.create({
-        data: { organisationId: organisation, slug, nom, type: 'SPORT' },
+        data: {
+          organisationId: organisation,
+          activiteId: activite,
+          groupe: 'sport',
+          slug,
+          nom,
+          type: 'SPORT',
+        },
       })
     ).id
   }
@@ -110,6 +120,8 @@ beforeAll(async () => {
     await prisma.perimetre.create({
       data: {
         organisationId: organisation,
+        activiteId: activite,
+        groupe: 'sport',
         slug: `escrime-${suffixe}`,
         nom: 'Escrime',
         type: 'SPORT',
@@ -132,6 +144,7 @@ beforeAll(async () => {
     const fiche = await prisma.fiche.create({
       data: {
         organisationId: organisation,
+        activiteId: activite,
         slug: `${cle.toLowerCase()}-${suffixe}`,
         perimetreId,
       },

@@ -9,6 +9,7 @@ import type {
   TypographieTheme,
 } from '@relaytour/tokens'
 
+import { activiteParDefaut, groupeDepuisType } from '../lib/activites.ts'
 import { validerDates, validerEdition } from '../lib/editions.ts'
 import {
   couleurValide,
@@ -108,7 +109,11 @@ builder.mutationFields(t => ({
       return sansDoublon(
         prisma.edition.create({
           ...query,
-          data: { ...edition, organisationId: await organisationParDefaut() },
+          data: {
+            ...edition,
+            organisationId: await organisationParDefaut(),
+            activiteId: await activiteParDefaut(),
+          },
         }),
         `Une édition existe déjà pour ${args.annee}.`
       )
@@ -156,9 +161,11 @@ builder.mutationFields(t => ({
           ...query,
           data: {
             organisationId: await organisationParDefaut(),
+            activiteId: await activiteParDefaut(),
             slug: slugValide(args.slug),
             nom: texteRequis(args.nom, 'Le nom'),
             type: args.type,
+            groupe: groupeDepuisType(args.type),
             couleur: couleurValide(args.couleur),
             ordre: args.ordre ?? 0,
           },
@@ -189,6 +196,7 @@ builder.mutationFields(t => ({
         data: {
           nom: texteRequis(args.nom, 'Le nom'),
           type: args.type,
+          groupe: groupeDepuisType(args.type),
           couleur: couleurValide(args.couleur),
           ordre: args.ordre,
           // La date d'archivage d'origine est conservée.

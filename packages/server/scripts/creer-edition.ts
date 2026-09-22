@@ -1,6 +1,7 @@
 import { prisma } from '@relaytour/database'
 
 import { validerEdition } from '../src/lib/editions.ts'
+import { activiteParDefaut } from '../src/lib/activites.ts'
 import { organisationParDefaut } from '../src/lib/organisation.ts'
 
 // Crée une édition sans passer par l'espace organisateur, pour amorcer une
@@ -20,7 +21,9 @@ if (
   !DATE.test(debutBrut) ||
   !DATE.test(finBrute)
 ) {
-  console.error('Usage : creer-edition <annee> "<nom>" <debut AAAA-MM-JJ> <fin AAAA-MM-JJ>')
+  console.error(
+    'Usage : creer-edition <annee> "<nom>" <debut AAAA-MM-JJ> <fin AAAA-MM-JJ>'
+  )
   process.exit(1)
 }
 
@@ -31,17 +34,26 @@ try {
     debut: new Date(debutBrut),
     fin: new Date(finBrute),
   })
+  const activiteId = await activiteParDefaut()
   const existante = await prisma.edition.findUnique({
-    where: { annee: edition.annee },
+    where: { activiteId_annee: { activiteId, annee: edition.annee } },
     select: { nom: true },
   })
   if (existante !== null) {
-    console.log(`= Édition ${edition.annee} déjà présente (« ${existante.nom} »), rien à faire.`)
+    console.log(
+      `= Édition ${edition.annee} déjà présente (« ${existante.nom} »), rien à faire.`
+    )
   } else {
     await prisma.edition.create({
-      data: { ...edition, organisationId: await organisationParDefaut() },
+      data: {
+        ...edition,
+        organisationId: await organisationParDefaut(),
+        activiteId,
+      },
     })
-    console.log(`✔ Édition ${edition.annee} créée : « ${edition.nom} », du ${debutBrut} au ${finBrute}.`)
+    console.log(
+      `✔ Édition ${edition.annee} créée : « ${edition.nom} », du ${debutBrut} au ${finBrute}.`
+    )
   }
 } catch (erreur) {
   console.error(erreur instanceof Error ? erreur.message : erreur)

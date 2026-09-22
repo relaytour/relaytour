@@ -1,6 +1,11 @@
 import type { PrismaClient } from '@relaytour/database'
 
 import { empreinte } from '../lib/fiches.ts'
+import {
+  GROUPES_PAR_DEFAUT,
+  groupeDepuisType,
+  invaliderActiviteParDefaut,
+} from '../lib/activites.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
 import { dateEcheance, type Modeles } from './modeles.ts'
@@ -47,16 +52,6 @@ export async function importerModeles(
   }
   const ecrire = options.simulation !== true
 
-  const edition =
-    options.annee === undefined
-      ? null
-      : await prisma.edition.findUnique({ where: { annee: options.annee } })
-  if (options.annee !== undefined && edition === null) {
-    throw new Error(
-      `L'édition ${options.annee} n'existe pas. Créez-la d'abord dans l'espace organisateur ou avec edition:creer (dist/creer-edition.js dans l'image).`
-    )
-  }
-
   await prisma.$transaction(
     async tx => {
       // Organisation : une seule ligne par installation (lot commun). Elle est créée
@@ -85,7 +80,10 @@ export async function importerModeles(
           ? (await tx.organisation.create({ data: donneesOrganisation })).id
           : ''
       } else {
-        if (lignes[0].slug !== 'defaut' && lignes[0].slug !== declaration.slug) {
+        if (
+          lignes[0].slug !== 'defaut' &&
+          lignes[0].slug !== declaration.slug
+        ) {
           throw new Error(
             `L'installation appartient à l'organisation « ${lignes[0].slug} » ; le dépôt déclare « ${declaration.slug} ». Import refusé.`
           )
@@ -100,9 +98,62 @@ export async function importerModeles(
         }
       }
 
+      // Activité (ADR 0008). La disposition plate du contenu décrit une activité
+      // implicite qui reprend le slug, le nom et le sigle de l'organisation.
+      // Ses groupes et sa nature ne changent pas à l'import.
+      const donneesActivite = {
+        slug: declaration.slug,
+        nom: declaration.nom,
+        sigle: declaration.sigle ?? null,
+      }
+      const activite =
+        organisationId === ''
+          ? null
+          : await tx.activite.findFirst({
+              where: { organisationId },
+              orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+              select: { id: true },
+            })
+      let activiteId = activite?.id ?? ''
+      if (ecrire) {
+        activiteId =
+          activite === null
+            ? (
+                await tx.activite.create({
+                  data: {
+                    organisationId,
+                    ...donneesActivite,
+                    nature: 'EVENEMENT',
+                    groupes: GROUPES_PAR_DEFAUT,
+                  },
+                })
+              ).id
+            : (
+                await tx.activite.update({
+                  where: { id: activite.id },
+                  data: donneesActivite,
+                })
+              ).id
+      }
+
+      const edition =
+        options.annee === undefined || activiteId === ''
+          ? null
+          : await tx.edition.findUnique({
+              where: { activiteId_annee: { activiteId, annee: options.annee } },
+            })
+      if (options.annee !== undefined && edition === null) {
+        throw new Error(
+          `L'édition ${options.annee} n'existe pas. Créez-la d'abord dans l'espace organisateur ou avec edition:creer (dist/creer-edition.js dans l'image).`
+        )
+      }
+
       // Périmètres
       const existants = new Map(
-        (await tx.perimetre.findMany()).map(p => [p.slug, p])
+        (await tx.perimetre.findMany({ where: { activiteId } })).map(p => [
+          p.slug,
+          p,
+        ])
       )
       const idsPerimetres = new Map<string, string>()
       for (const modele of modeles.perimetres) {
@@ -110,6 +161,7 @@ export async function importerModeles(
         const donnees = {
           nom: modele.nom,
           type: modele.type,
+          groupe: groupeDepuisType(modele.type),
           couleur: modele.couleur?.toUpperCase() ?? null,
           ordre: modele.ordre,
         }
@@ -117,7 +169,12 @@ export async function importerModeles(
           rapport.perimetres.crees.push(modele.slug)
           if (ecrire) {
             const cree = await tx.perimetre.create({
-              data: { slug: modele.slug, organisationId, ...donnees },
+              data: {
+                slug: modele.slug,
+                organisationId,
+                activiteId,
+                ...donnees,
+              },
             })
             idsPerimetres.set(modele.slug, cree.id)
           }
@@ -126,6 +183,7 @@ export async function importerModeles(
           const change =
             existant.nom !== donnees.nom ||
             existant.type !== donnees.type ||
+            existant.groupe !== donnees.groupe ||
             existant.couleur !== donnees.couleur ||
             existant.ordre !== donnees.ordre
           if (change) {
@@ -152,7 +210,7 @@ export async function importerModeles(
             : (idsPerimetres.get(modele.perimetre) ?? null)
         const nouvelleEmpreinte = empreinte(modele.titre, modele.contenu)
         const existante = await tx.fiche.findUnique({
-          where: { slug: modele.slug },
+          where: { organisationId_slug: { organisationId, slug: modele.slug } },
           include: {
             versionCourante: { select: { empreinte: true, source: true } },
           },
@@ -161,7 +219,12 @@ export async function importerModeles(
           rapport.fiches.creees.push(modele.slug)
           if (!ecrire) continue
           const fiche = await tx.fiche.create({
-            data: { slug: modele.slug, perimetreId, organisationId },
+            data: {
+              slug: modele.slug,
+              perimetreId,
+              organisationId,
+              activiteId,
+            },
           })
           const version = await tx.ficheVersion.create({
             data: {
@@ -279,5 +342,6 @@ export async function importerModeles(
   )
 
   invaliderConfigurationOrganisation()
+  invaliderActiviteParDefaut()
   return rapport
 }

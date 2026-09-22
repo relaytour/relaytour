@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 
 import { schema } from './index.ts'
+import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 // Souhaits des personnes. Les contrôles d'accès se prouvent par le refus, et les
@@ -113,9 +114,11 @@ const souhaitsEnBase = (userId: string) =>
   prisma.souhait.count({ where: { userId, editionId: ids.edition } })
 
 let ORGANISATION = ''
+let ACTIVITE = ''
 
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
+  ACTIVITE = await activiteParDefaut()
   await apollo.start()
   for (const [cle, estAdmin, archive] of [
     ['admin', true, false],
@@ -139,6 +142,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),
@@ -150,6 +154,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee: annee - 1,
         nom: `Archive ${s}`,
         debut: new Date('2025-08-27'),
@@ -168,7 +173,9 @@ beforeAll(async () => {
       await prisma.perimetre.create({
         data: {
           organisationId: ORGANISATION,
-        slug: `${cle}-${s}`,
+          activiteId: ACTIVITE,
+          groupe: type.toLowerCase(),
+          slug: `${cle}-${s}`,
           nom: `${cle} ${s}`,
           type,
           archivedAt: archive ? new Date() : null,
@@ -377,9 +384,7 @@ describe('cas nominaux', () => {
     )
     expect(personne.souhaits.every(x => !x.satisfait)).toBe(true)
     expect(await souhaitsEnBase(invitee)).toBe(2)
-    expect(await prisma.activite.count({ where: { acteurId: invitee } })).toBe(
-      0
-    )
+    expect(await prisma.journal.count({ where: { acteurId: invitee } })).toBe(0)
     expect(
       await prisma.notification.count({ where: { userId: invitee } })
     ).toBe(0)

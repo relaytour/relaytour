@@ -9,6 +9,7 @@ import { composer } from '../courriel/messages.ts'
 import { genererRappels, personnesAResumer } from '../jobs/planification.ts'
 
 import { schema } from './index.ts'
+import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)
@@ -47,9 +48,11 @@ const notificationsDe = (userId: string, tacheId: string) =>
   })
 
 let ORGANISATION = ''
+let ACTIVITE = ''
 
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
+  ACTIVITE = await activiteParDefaut()
   await apollo.start()
   for (const cle of ['alice', 'bruno', 'chloe', 'david'] as const) {
     ids[cle] = randomUUID()
@@ -66,6 +69,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),
@@ -77,6 +81,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee: annee - 1,
         nom: `Archive ${s}`,
         debut: new Date('2025-08-27'),
@@ -87,12 +92,26 @@ beforeAll(async () => {
   ).id
   ids.natation = (
     await prisma.perimetre.create({
-      data: { organisationId: ORGANISATION, slug: `natation-${s}`, nom: 'Natation', type: 'SPORT' },
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        groupe: 'sport',
+        slug: `natation-${s}`,
+        nom: 'Natation',
+        type: 'SPORT',
+      },
     })
   ).id
   ids.basket = (
     await prisma.perimetre.create({
-      data: { organisationId: ORGANISATION, slug: `basket-${s}`, nom: 'Basket', type: 'SPORT' },
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        groupe: 'sport',
+        slug: `basket-${s}`,
+        nom: 'Basket',
+        type: 'SPORT',
+      },
     })
   ).id
   await prisma.affectation.createMany({
@@ -110,7 +129,7 @@ afterAll(async () => {
   const editions = [ids.edition, ids.archivee]
   const users = [ids.alice, ids.bruno, ids.chloe, ids.david]
   await prisma.notification.deleteMany({ where: { userId: { in: users } } })
-  await prisma.activite.deleteMany({ where: { editionId: { in: editions } } })
+  await prisma.journal.deleteMany({ where: { editionId: { in: editions } } })
   await prisma.tache.deleteMany({ where: { editionId: { in: editions } } })
   await prisma.affectation.deleteMany({
     where: { editionId: { in: editions } },
@@ -284,7 +303,11 @@ describe('rappels d’échéance', () => {
     expect(message?.desabonnement).toMatch(/\/preferences$/)
 
     await prisma.preferenceNotification.create({
-      data: { organisationId: ORGANISATION, userId: ids.bruno, mailEcheance: false },
+      data: {
+        organisationId: ORGANISATION,
+        userId: ids.bruno,
+        mailEcheance: false,
+      },
     })
     expect(
       await composer(prisma, {
@@ -304,12 +327,20 @@ describe('résumés', () => {
     await prisma.preferenceNotification.upsert({
       where: { userId: ids.chloe },
       update: { frequenceResume: 'QUOTIDIEN' },
-      create: { organisationId: ORGANISATION, userId: ids.chloe, frequenceResume: 'QUOTIDIEN' },
+      create: {
+        organisationId: ORGANISATION,
+        userId: ids.chloe,
+        frequenceResume: 'QUOTIDIEN',
+      },
     })
     await prisma.preferenceNotification.upsert({
       where: { userId: ids.david },
       update: { frequenceResume: 'AUCUN' },
-      create: { organisationId: ORGANISATION, userId: ids.david, frequenceResume: 'AUCUN' },
+      create: {
+        organisationId: ORGANISATION,
+        userId: ids.david,
+        frequenceResume: 'AUCUN',
+      },
     })
     const lundiIds = await personnesAResumer(prisma, lundi)
     const mardiIds = await personnesAResumer(prisma, mardi)

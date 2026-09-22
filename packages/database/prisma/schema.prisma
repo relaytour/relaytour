@@ -20,26 +20,98 @@ datasource db {
 
 // Règle des migrations : additives seulement. Un sens nouveau prend un nom de champ nouveau.
 
-// ── Organisation (ADR 0006) ───────────────────────────────────────────────────
-// Racine des données d'une organisation. Lot commun : une seule ligne par
-// installation ; le lot multi ajoutera les appartenances et le filtrage par requête.
+// ── Organisation (ADR 0006 et 0008) ──────────────────────────────────────────
+
+// ACTIVE : tout est permis. LECTURE_SEULE : les membres lisent, personne n'écrit.
+// SUSPENDUE et ARCHIVEE : aucun contexte. L'export par l'administration de
+// l'installation reste possible dans tous les statuts.
+enum StatutOrganisation {
+  ACTIVE
+  LECTURE_SEULE
+  SUSPENDUE
+  ARCHIVEE
+}
+
+// Racine des données d'une organisation. Elle porte une ou plusieurs activités.
 model Organisation {
-  id            String   @id @default(cuid())
-  slug          String   @unique
+  id            String             @id @default(cuid())
+  slug          String             @unique
   nom           String
   sigle         String?
-  fuseauHoraire String   @default("Europe/Paris")
+  fuseauHoraire String             @default("Europe/Paris")
   // Déclaration complète (organisation.yaml), validée par DeclarationOrganisationSchema
   // dans packages/server/src/lib/organisation.ts.
   configuration Json
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  statut        StatutOrganisation @default(ACTIVE)
+  // Plafonds fixés par l'administration de l'installation (ADR 0008) :
+  // { activites?: number, periodesOuvertes?: number }. Nul ou vide : aucune limite.
+  // Une limite bloque une création, jamais la lecture ni l'export.
+  limites       Json?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
+  activites     Activite[]
+  appartenances Appartenance[]
   editions      Edition[]
   perimetres    Perimetre[]
   fiches        Fiche[]
   notifications Notification[]
   preferences   PreferenceNotification[]
+}
+
+enum RoleOrganisation {
+  ADMIN
+  MEMBRE
+}
+
+// Un compte est global ; il appartient à une ou plusieurs organisations, avec un
+// rôle par organisation (ADR 0008). Le rôle vaut pour toutes les activités.
+model Appartenance {
+  id             String           @id @default(cuid())
+  userId         String
+  organisationId String
+  role           RoleOrganisation @default(MEMBRE)
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+
+  @@unique([userId, organisationId])
+  @@index([organisationId])
+}
+
+// La nature fixe le libellé de la période : édition, saison ou mandat.
+enum NatureActivite {
+  EVENEMENT
+  SAISON
+  MANDAT
+}
+
+// Ce qu'une organisation fait dans la durée : un événement, une section, une
+// instance (ADR 0008). Elle porte ses périodes (Edition), ses périmètres, ses
+// fiches et ses tâches types.
+model Activite {
+  id             String         @id @default(cuid())
+  organisationId String
+  slug           String
+  nom            String
+  sigle          String?
+  nature         NatureActivite @default(EVENEMENT)
+  // Groupes de périmètres déclarés dans le contenu, dans l'ordre d'affichage :
+  // [{ cle, libelle, libellePluriel }]. Le gabarit propose sport et pole.
+  groupes        Json
+  ordre          Int            @default(0)
+  archivedAt     DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  editions     Edition[]
+  perimetres   Perimetre[]
+  fiches       Fiche[]
+
+  @@unique([organisationId, slug])
 }
 
 // ── Authentification (Better Auth) ────────────────────────────────────────────
@@ -71,8 +143,9 @@ model User {
   notifications      Notification[]          @relation("NotificationDestinataire")
   preferences        PreferenceNotification?
   assignations       TacheAssignation[]
-  activites          Activite[]              @relation("ActiviteActeur")
+  journal            Journal[]               @relation("JournalActeur")
   souhaits           Souhait[]
+  appartenances      Appartenance[]
 }
 
 model Session {
@@ -134,11 +207,14 @@ enum StatutEdition {
   ARCHIVEE
 }
 
-// Une année du tournoi. Ses dates servent de référence aux échéances relatives des tâches.
+// Une période d'une activité : l'édition d'un événement, la saison d'une section,
+// le mandat d'une instance. `annee` est l'année de début. Ses dates servent de
+// référence aux échéances relatives des tâches.
 model Edition {
   id             String        @id @default(cuid())
   organisationId String
-  annee          Int           @unique
+  activiteId     String
+  annee          Int
   nom            String
   debut          DateTime      @db.Date
   fin            DateTime      @db.Date
@@ -147,12 +223,14 @@ model Edition {
   updatedAt      DateTime      @updatedAt
 
   organisation Organisation?       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite            @relation(fields: [activiteId], references: [id], onDelete: Restrict)
   affectations Affectation[]
   taches       Tache[]
-  activites    Activite[]
+  journal      Journal[]
   effectifs    EffectifPerimetre[]
   souhaits     Souhait[]
 
+  @@unique([activiteId, annee])
   @@index([organisationId])
 }
 
@@ -161,13 +239,17 @@ enum TypePerimetre {
   POLE
 }
 
-// Un sport ou un pôle transverse. Il est stable d'une édition à l'autre.
+// Une sous-partie d'une activité (un sport, un pôle, une commission…), rangée dans
+// un groupe déclaré par l'activité. Il est stable d'une période à l'autre.
+// `type` reste rempli pour l'historique ; `groupe` le remplace (ADR 0008).
 model Perimetre {
   id             String        @id @default(cuid())
   organisationId String
-  slug           String        @unique
+  activiteId     String
+  slug           String
   nom            String
   type           TypePerimetre
+  groupe         String
   couleur        String?
   ordre          Int           @default(0)
   archivedAt     DateTime?
@@ -175,14 +257,16 @@ model Perimetre {
   updatedAt      DateTime      @updatedAt
 
   organisation    Organisation?       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite        Activite            @relation(fields: [activiteId], references: [id], onDelete: Restrict)
   affectations    Affectation[]
   taches          Tache[]
-  activites       Activite[]
+  journal         Journal[]
   fiches          Fiche[]
   droitsRedaction DroitRedaction[]
   effectifs       EffectifPerimetre[]
   souhaits        Souhait[]
 
+  @@unique([activiteId, slug])
   @@index([organisationId])
 }
 
@@ -284,7 +368,7 @@ model Tache {
   realiseePar   User?              @relation("TacheRealisation", fields: [realiseeParId], references: [id], onDelete: SetNull)
   fiche         Fiche?             @relation(fields: [ficheId], references: [id], onDelete: SetNull)
   assignations  TacheAssignation[]
-  activites     Activite[]
+  journal       Journal[]
   notifications Notification[]
 
   @@index([editionId, perimetreId])
@@ -304,7 +388,7 @@ model TacheAssignation {
   @@index([userId])
 }
 
-enum TypeActivite {
+enum TypeJournal {
   TACHE_CREEE
   TACHE_MODIFIEE
   TACHE_ASSIGNEE
@@ -314,11 +398,11 @@ enum TypeActivite {
   FICHE_MODIFIEE
 }
 
-// Journal : qui a fait quoi, et quand. Il alimentera les notifications (phase 4)
-// et le score (phase 5).
-model Activite {
+// Journal : qui a fait quoi, et quand. Il alimente les notifications et le score
+// de participation. Nommé Activite jusqu'à l'ADR 0008, qui donne ce mot aux activités.
+model Journal {
   id            String       @id @default(cuid())
-  type          TypeActivite
+  type          TypeJournal
   acteurId      String
   // Nuls pour une action sur une fiche commune, qui n'appartient à aucun périmètre ni édition.
   editionId     String?
@@ -332,7 +416,7 @@ model Activite {
   realiseeParId String?
   createdAt     DateTime     @default(now())
 
-  acteur    User       @relation("ActiviteActeur", fields: [acteurId], references: [id], onDelete: Restrict)
+  acteur    User       @relation("JournalActeur", fields: [acteurId], references: [id], onDelete: Restrict)
   edition   Edition?   @relation(fields: [editionId], references: [id], onDelete: Restrict)
   perimetre Perimetre? @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
   tache     Tache?     @relation(fields: [tacheId], references: [id], onDelete: SetNull)
@@ -354,7 +438,8 @@ enum SourceFiche {
 model Fiche {
   id                String    @id @default(cuid())
   organisationId    String
-  slug              String    @unique
+  activiteId        String
+  slug              String
   perimetreId       String?
   versionCouranteId String?   @unique
   archivedAt        DateTime?
@@ -362,14 +447,17 @@ model Fiche {
   updatedAt         DateTime  @updatedAt
 
   organisation    Organisation   @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite        Activite       @relation(fields: [activiteId], references: [id], onDelete: Restrict)
   perimetre       Perimetre?     @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
   versionCourante FicheVersion?  @relation("FicheVersionCourante", fields: [versionCouranteId], references: [id], onDelete: SetNull)
   versions        FicheVersion[] @relation("FicheVersions")
   taches          Tache[]
-  activites       Activite[]
+  journal         Journal[]
 
+  @@unique([organisationId, slug])
   @@index([perimetreId])
   @@index([organisationId])
+  @@index([activiteId])
 }
 
 // Une version ne se modifie ni ne se supprime. Restaurer une version en crée une nouvelle.

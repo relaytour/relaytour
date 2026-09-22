@@ -8,6 +8,7 @@ import { buildContext, type AppContext } from '../context.ts'
 import { env } from '../env.ts'
 
 import { schema } from './index.ts'
+import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 // Postes à pourvoir et effectifs. Les contrôles d'accès se prouvent par le refus.
@@ -74,9 +75,11 @@ const effectifsDe = (perimetreId: string) =>
   prisma.effectifPerimetre.count({ where: { perimetreId } })
 
 let ORGANISATION = ''
+let ACTIVITE = ''
 
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
+  ACTIVITE = await activiteParDefaut()
   await apollo.start()
   for (const [cle, estAdmin, archive] of [
     ['admin', true, false],
@@ -100,6 +103,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),
@@ -111,6 +115,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee: annee - 1,
         nom: `Archive ${s}`,
         debut: new Date('2025-08-27'),
@@ -130,7 +135,9 @@ beforeAll(async () => {
       await prisma.perimetre.create({
         data: {
           organisationId: ORGANISATION,
-        slug: `${cle}-${s}`,
+          activiteId: ACTIVITE,
+          groupe: type.toLowerCase(),
+          slug: `${cle}-${s}`,
           nom: `${nom} ${s}`,
           type,
           ordre,

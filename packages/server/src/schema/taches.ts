@@ -15,6 +15,7 @@ import { notifier, referentsSauf } from '../lib/notifications.ts'
 import { texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
+import { activiteParDefaut } from '../lib/activites.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
 
@@ -231,7 +232,9 @@ builder.queryFields(t => ({
     resolve: async (query, _root, { slug }, ctx) => {
       const perimetre = await prisma.perimetre.findUnique({
         ...query,
-        where: { slug },
+        where: {
+          activiteId_slug: { activiteId: await activiteParDefaut(), slug },
+        },
       })
       // Un périmètre inconnu et un périmètre interdit donnent la même réponse.
       if (perimetre === null) {
@@ -462,7 +465,7 @@ builder.mutationFields(t => ({
               : {}),
           },
         })
-        await tx.activite.create({
+        await tx.journal.create({
           data: {
             type: 'TACHE_CREEE',
             acteurId: acteur.id,
@@ -524,7 +527,7 @@ builder.mutationFields(t => ({
             ficheId,
           },
         })
-        await tx.activite.create({
+        await tx.journal.create({
           data: {
             type: 'TACHE_MODIFIEE',
             acteurId: acteur.id,
@@ -589,7 +592,7 @@ builder.mutationFields(t => ({
             realiseeParId,
           },
         })
-        await tx.activite.create({
+        await tx.journal.create({
           data: {
             type: 'TACHE_STATUT',
             acteurId: acteur.id,
@@ -649,7 +652,7 @@ builder.mutationFields(t => ({
             : prisma.tacheAssignation.deleteMany({
                 where: { tacheId: tache.id, userId: personneId },
               }),
-          prisma.activite.create({
+          prisma.journal.create({
             data: {
               type: args.assigne ? 'TACHE_ASSIGNEE' : 'TACHE_DESASSIGNEE',
               acteurId: acteur.id,

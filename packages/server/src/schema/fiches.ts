@@ -17,6 +17,7 @@ import {
 import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
+import { activiteParDefaut } from '../lib/activites.ts'
 import { PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
 import { TacheRef } from './taches.ts'
@@ -230,7 +231,15 @@ builder.queryFields(t => ({
     authScopes: { connecte: true },
     args: { slug: t.arg.string({ required: true }) },
     resolve: async (query, _root, { slug }, ctx) => {
-      const fiche = await prisma.fiche.findUnique({ ...query, where: { slug } })
+      const fiche = await prisma.fiche.findUnique({
+        ...query,
+        where: {
+          organisationId_slug: {
+            organisationId: await organisationParDefaut(),
+            slug,
+          },
+        },
+      })
       if (fiche === null) {
         if (ctx.personne?.estAdmin) return null
         throw accesRefuse()
@@ -281,6 +290,7 @@ builder.mutationFields(t => ({
               slug,
               perimetreId,
               organisationId: await organisationParDefaut(),
+              activiteId: await activiteParDefaut(),
             },
           })
           const version = await tx.ficheVersion.create({
@@ -293,7 +303,7 @@ builder.mutationFields(t => ({
               auteurId: auteur.id,
             },
           })
-          await tx.activite.create({
+          await tx.journal.create({
             data: {
               type: 'FICHE_CREEE',
               acteurId: auteur.id,
@@ -351,7 +361,7 @@ builder.mutationFields(t => ({
             auteurId: auteur.id,
           },
         })
-        await tx.activite.create({
+        await tx.journal.create({
           data: {
             type: 'FICHE_MODIFIEE',
             acteurId: auteur.id,
