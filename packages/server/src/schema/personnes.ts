@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import { prisma } from '@relaytour/database'
 
+import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
 import { exigerMembre } from '../lib/appartenances.ts'
 import {
@@ -207,6 +208,46 @@ builder.queryFields(t => ({
   }),
 }))
 
+/**
+ * L'activité qui porte une invitation (ADR 0009) : son identité habille le mail et son
+ * contact reçoit les réponses. C'est l'unique activité où la personne a un souhait,
+ * une affectation ou un rôle d'admin. Sans lien, un admin d'activité invite pour
+ * l'activité affichée qu'il administre. Sinon, l'invitation reste celle de
+ * l'organisation.
+ */
+async function activiteDeLInvitation(
+  ctx: AppContext,
+  userId: string
+): Promise<string | undefined> {
+  const organisationId = ctx.organisation!.id
+  const dansLOrganisation = { perimetre: { organisationId } }
+  const [souhaits, affectations, admins] = await Promise.all([
+    prisma.souhait.findMany({
+      where: { userId, ...dansLOrganisation },
+      select: { perimetre: { select: { activiteId: true } } },
+    }),
+    prisma.affectation.findMany({
+      where: { userId, ...dansLOrganisation },
+      select: { perimetre: { select: { activiteId: true } } },
+    }),
+    prisma.adminActivite.findMany({
+      where: { userId, organisationId },
+      select: { activiteId: true },
+    }),
+  ])
+  const liees = new Set([
+    ...[...souhaits, ...affectations].map(l => l.perimetre.activiteId),
+    ...admins.map(a => a.activiteId),
+  ])
+  if (liees.size > 0) return liees.size === 1 ? [...liees][0] : undefined
+  if (ctx.personne!.estAdmin) return undefined
+  // Le compte existe déjà : l'absence d'activité ouverte ne bloque pas l'invitation.
+  const affichee = await ctx.exigerActivite().catch(() => null)
+  return affichee !== null && (await ctx.estAdminDe(affichee))
+    ? affichee
+    : undefined
+}
+
 builder.mutationFields(t => ({
   inviterPersonne: t.prismaField({
     type: PersonneRef,
@@ -298,7 +339,10 @@ builder.mutationFields(t => ({
       await mettreEnFile(
         'invitation',
         { userId: personne.id },
-        { organisationId }
+        {
+          organisationId,
+          activiteId: await activiteDeLInvitation(ctx, personne.id),
+        }
       )
       return personne
     },
@@ -343,7 +387,10 @@ builder.mutationFields(t => ({
       await mettreEnFile(
         'invitation',
         { userId: personne.id },
-        { organisationId: ctx.organisation!.id }
+        {
+          organisationId: ctx.organisation!.id,
+          activiteId: await activiteDeLInvitation(ctx, personne.id),
+        }
       )
       return true
     },

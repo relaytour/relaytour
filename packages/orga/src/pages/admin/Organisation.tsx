@@ -297,9 +297,9 @@ export default function Organisation() {
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
-                label="Contact de recrutement (facultatif)"
+                label="Contact de l’organisation (facultatif)"
                 name="contactRecrutement"
-                extra="Une adresse de rôle, citée dans l’appel aux référentes et référents."
+                extra="Une adresse de rôle, citée dans l’appel aux référentes et référents. Elle reçoit les réponses aux mails de l’organisation."
               >
                 <Input type="email" />
               </Form.Item>

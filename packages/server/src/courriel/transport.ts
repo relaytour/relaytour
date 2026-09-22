@@ -12,6 +12,9 @@ export interface Message {
   texte: string
   // Page de réglage des mails, pour l'en-tête List-Unsubscribe des résumés.
   desabonnement?: string
+  // Adresse de rôle qui reçoit les réponses (Reply-To) : le contact de l'activité ou
+  // de l'organisation. Sans elle, les réponses vont à l'expéditeur.
+  repondreA?: string
 }
 
 // parti : accepté par le serveur SMTP ; refuse : refus définitif (5xx) ;
@@ -97,6 +100,7 @@ export async function expedier(
     const info = (await voie.transport.sendMail({
       from: (await configurationOrganisation()).expediteur,
       to: message.destinataire,
+      ...(message.repondreA ? { replyTo: message.repondreA } : {}),
       subject: message.sujet,
       html: message.html,
       text: message.texte,

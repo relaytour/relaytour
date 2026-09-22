@@ -553,8 +553,9 @@ export default function Activites() {
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
-                label="Contact de recrutement"
+                label="Contact de l’activité"
                 name="contactRecrutement"
+                extra="Cette adresse reçoit les réponses aux mails de l’activité."
               >
                 <Input type="email" placeholder="Celui de l’organisation" />
               </Form.Item>

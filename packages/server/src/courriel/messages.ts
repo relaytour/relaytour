@@ -36,11 +36,15 @@ export function sujets(nomCourt: string): Record<SorteCourriel, string> {
   }
 }
 
+const SANS_REPONSE = new Set<SorteCourriel>(['essai', 'code-connexion'])
+
 export interface MessageCompose {
   sujet: string
   html: string
   texte: string
   desabonnement?: string
+  /** Contact de l'activité ou de l'organisation, en Reply-To. */
+  repondreA?: string
   /** Appelé après le départ du mail : dates d'envoi et de résumé. */
   apresEnvoi?: () => Promise<void>
 }
@@ -116,7 +120,9 @@ export async function composer(
   const organisationId = await organisationDuMail(prisma, job)
   // Un mail qui concerne une seule activité prend son identité (ADR 0009).
   let configuration: ConfigurationOrganisation =
-    await configurationOrganisation(organisationId)
+    job.activiteId === undefined
+      ? await configurationOrganisation(organisationId)
+      : await configurationActivite(job.activiteId)
   const origine = configuration.origineOrga
   const lienPreferences = `${origine}/preferences`
 
@@ -341,6 +347,10 @@ export async function composer(
     html,
     texte,
     desabonnement,
+    // Un code de connexion et un essai n'appellent pas de réponse.
+    repondreA: SANS_REPONSE.has(job.sorte)
+      ? undefined
+      : configuration.contactRecrutement,
     apresEnvoi,
   }
 }
