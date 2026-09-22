@@ -1,18 +1,15 @@
 import type { PrismaClient } from '@relaytour/database'
 
+import { invaliderActiviteParDefaut } from '../lib/activites.ts'
 import { empreinte } from '../lib/fiches.ts'
-import {
-  GROUPES_PAR_DEFAUT,
-  groupeDepuisType,
-  invaliderActiviteParDefaut,
-} from '../lib/activites.ts'
+import { lireLimites } from '../lib/limites.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
-import { dateEcheance, type Modeles } from './modeles.ts'
+import { dateEcheance, type ActiviteModele, type Modeles } from './modeles.ts'
 
-export interface RapportImport {
-  /** La ligne Organisation créée ou mise à jour depuis organisation.yaml. */
-  organisation: { slug: string; etat: 'creee' | 'mise-a-jour' }
+export interface RapportActivite {
+  slug: string
+  etat: 'creee' | 'mise-a-jour'
   perimetres: { crees: string[]; modifies: string[]; absentsDuDepot: string[] }
   fiches: {
     creees: string[]
@@ -20,328 +17,495 @@ export interface RapportImport {
     inchangees: string[]
     conflits: string[]
   }
+  /** Période de l'année demandée : importée, absente, ou null sans année. */
+  periode: 'importee' | 'absente' | null
   effectifs: { crees: string[]; dejaPresents: string[] }
   taches: { creees: string[]; dejaPresentes: string[] }
+}
+
+export interface RapportImport {
+  /** La ligne Organisation créée ou mise à jour depuis organisation.yaml. */
+  organisation: { slug: string; etat: 'creee' | 'mise-a-jour' }
+  activites: RapportActivite[]
+  /** Activités en base que le dépôt ne décrit pas : signalées, jamais archivées. */
+  activitesAbsentesDuDepot: string[]
+}
+
+export interface OptionsImport {
+  /** Année de la période dont les tâches types et les effectifs s'importent. */
+  annee?: number
+  simulation?: boolean
+  /**
+   * Slug de l'organisation visée, obligatoire quand l'installation en porte
+   * plusieurs. Il doit être celui d'organisation.yaml.
+   */
+  organisation?: string
+  /** Restreint l'import à une activité du dépôt. */
+  activite?: string
+}
+
+function rapportActiviteVide(
+  slug: string,
+  etat: RapportActivite['etat']
+): RapportActivite {
+  return {
+    slug,
+    etat,
+    perimetres: { crees: [], modifies: [], absentsDuDepot: [] },
+    fiches: { creees: [], nouvellesVersions: [], inchangees: [], conflits: [] },
+    periode: null,
+    effectifs: { crees: [], dejaPresents: [] },
+    taches: { creees: [], dejaPresentes: [] },
+  }
+}
+
+type Transaction = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0]
+
+/**
+ * L'organisation de la déclaration, créée ou mise à jour. Une installation sans
+ * organisation la crée ; une installation dont l'unique organisation porte le slug
+ * d'amorçage « defaut » la renomme. Dans les autres cas, l'organisation doit
+ * exister : organisation:creer la crée.
+ */
+async function resoudreOrganisation(
+  tx: Transaction,
+  modeles: Modeles,
+  options: OptionsImport,
+  ecrire: boolean
+): Promise<{ id: string; etat: 'creee' | 'mise-a-jour' }> {
+  const declaration = modeles.organisation
+  if (
+    options.organisation !== undefined &&
+    options.organisation !== declaration.slug
+  ) {
+    throw new Error(
+      `Le dépôt déclare l'organisation « ${declaration.slug} », pas « ${options.organisation} ». Import refusé.`
+    )
+  }
+  const lignes = await tx.organisation.findMany({
+    select: { id: true, slug: true },
+    orderBy: { createdAt: 'asc' },
+  })
+  if (lignes.length > 1 && options.organisation === undefined) {
+    throw new Error(
+      'Plusieurs organisations existent en base : précisez --organisation <slug>.'
+    )
+  }
+  const donnees = {
+    slug: declaration.slug,
+    nom: declaration.nom,
+    sigle: declaration.sigle ?? null,
+    fuseauHoraire: declaration.fuseauHoraire,
+    configuration: declaration,
+  }
+  const cible =
+    lignes.find(l => l.slug === declaration.slug) ??
+    (lignes.length === 1 && lignes[0]?.slug === 'defaut' ? lignes[0] : null)
+  if (cible === null) {
+    if (lignes.length > 0) {
+      throw new Error(
+        lignes.length === 1 && options.organisation === undefined
+          ? `L'installation appartient à l'organisation « ${lignes[0]?.slug} » ; le dépôt déclare « ${declaration.slug} ». Import refusé.`
+          : `L'organisation « ${declaration.slug} » n'existe pas : créez-la d'abord avec organisation:creer. Import refusé.`
+      )
+    }
+    const id = ecrire
+      ? (await tx.organisation.create({ data: donnees, select: { id: true } }))
+          .id
+      : ''
+    return { id, etat: 'creee' }
+  }
+  if (ecrire) {
+    await tx.organisation.update({ where: { id: cible.id }, data: donnees })
+  }
+  return { id: cible.id, etat: 'mise-a-jour' }
 }
 
 /**
  * Importe les modèles Git en base.
  *
- * - Les périmètres sont créés ou mis à jour par slug. Un périmètre absent du dépôt
- *   est signalé, jamais archivé.
+ * - Chaque activité du dépôt est créée ou mise à jour par slug. L'activité implicite
+ *   de la disposition plate suit le slug, le nom et le sigle de l'organisation. Une
+ *   activité en base absente du dépôt est signalée, jamais archivée. Une activité
+ *   nouvelle respecte la limite d'activités de l'organisation.
+ * - Les périmètres sont créés ou mis à jour par slug dans leur activité. Un périmètre
+ *   absent du dépôt est signalé, jamais archivé.
  * - Une fiche reçoit une version `GIT` seulement si son contenu diffère. Si la version
  *   courante vient de l'application, l'import signale un conflit et ne remplace rien.
- * - L'effectif souhaité d'un périmètre est créé pour l'édition demandée s'il manque,
+ * - L'effectif souhaité d'un périmètre est créé pour la période demandée s'il manque,
  *   jamais remplacé : les admins le modifient ensuite dans l'app.
- * - Les tâches types sont créées pour l'édition demandée, une seule fois par modèle :
+ * - Les tâches types sont créées pour la période demandée, une seule fois par modèle :
  *   une tâche déjà importée n'est jamais modifiée, car elle a pu évoluer dans l'app.
+ *   Une activité sans période pour cette année est signalée ; si aucune activité n'en
+ *   a, l'import échoue.
  *
  * Avec `simulation`, le rapport est calculé sans rien écrire.
  */
 export async function importerModeles(
   prisma: PrismaClient,
   modeles: Modeles,
-  options: { annee?: number; simulation?: boolean } = {}
+  options: OptionsImport = {}
 ): Promise<RapportImport> {
-  const rapport: RapportImport = {
-    organisation: { slug: modeles.organisation.slug, etat: 'creee' },
-    perimetres: { crees: [], modifies: [], absentsDuDepot: [] },
-    fiches: { creees: [], nouvellesVersions: [], inchangees: [], conflits: [] },
-    effectifs: { crees: [], dejaPresents: [] },
-    taches: { creees: [], dejaPresentes: [] },
-  }
   const ecrire = options.simulation !== true
+  const aImporter =
+    options.activite === undefined
+      ? modeles.activites
+      : modeles.activites.filter(a => a.declaration.slug === options.activite)
+  if (aImporter.length === 0) {
+    throw new Error(
+      `Le dépôt ne décrit aucune activité « ${options.activite} ». Import refusé.`
+    )
+  }
 
-  await prisma.$transaction(
+  const rapport = await prisma.$transaction(
     async tx => {
-      // Organisation : une seule ligne par installation (lot commun). Elle est créée
-      // au premier import, puis mise à jour à chaque import, slug compris.
-      const lignes = await tx.organisation.findMany({
-        select: { id: true, slug: true },
-        orderBy: { createdAt: 'asc' },
-      })
-      if (lignes.length > 1) {
-        throw new Error(
-          'Plusieurs organisations existent en base : précisez laquelle importer (lot multi à venir).'
+      const organisation = await resoudreOrganisation(
+        tx,
+        modeles,
+        options,
+        ecrire
+      )
+      const rapport: RapportImport = {
+        organisation: {
+          slug: modeles.organisation.slug,
+          etat: organisation.etat,
+        },
+        activites: [],
+        activitesAbsentesDuDepot: [],
+      }
+
+      const enBase =
+        organisation.id === ''
+          ? []
+          : await tx.activite.findMany({
+              where: { organisationId: organisation.id },
+              orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+              select: { id: true, slug: true, archivedAt: true },
+            })
+
+      // Chaque activité du dépôt retrouve sa ligne. L'activité implicite retrouve la
+      // première activité de l'organisation, dont le slug a pu rester « defaut ».
+      const correspondance = new Map<ActiviteModele, (typeof enBase)[number]>()
+      for (const activite of aImporter) {
+        const ligne =
+          enBase.find(a => a.slug === activite.declaration.slug) ??
+          (activite.implicite ? enBase[0] : undefined)
+        if (ligne !== undefined) correspondance.set(activite, ligne)
+      }
+      const nouvelles = aImporter.filter(a => !correspondance.has(a))
+      if (nouvelles.length > 0 && organisation.id !== '') {
+        const { activites: limite } = lireLimites(
+          (
+            await tx.organisation.findUniqueOrThrow({
+              where: { id: organisation.id },
+              select: { limites: true },
+            })
+          ).limites
         )
-      }
-      const declaration = modeles.organisation
-      const donneesOrganisation = {
-        slug: declaration.slug,
-        nom: declaration.nom,
-        sigle: declaration.sigle ?? null,
-        fuseauHoraire: declaration.fuseauHoraire,
-        configuration: declaration,
-      }
-      let organisationId: string
-      if (lignes[0] === undefined) {
-        rapport.organisation.etat = 'creee'
-        organisationId = ecrire
-          ? (await tx.organisation.create({ data: donneesOrganisation })).id
-          : ''
-      } else {
-        if (
-          lignes[0].slug !== 'defaut' &&
-          lignes[0].slug !== declaration.slug
-        ) {
+        const ouvertes = enBase.filter(a => a.archivedAt === null).length
+        if (limite !== undefined && ouvertes + nouvelles.length > limite) {
           throw new Error(
-            `L'installation appartient à l'organisation « ${lignes[0].slug} » ; le dépôt déclare « ${declaration.slug} ». Import refusé.`
+            `Le dépôt ajoute ${nouvelles.length} activité(s) : l'organisation dépasserait sa limite de ${limite} activité(s). Import refusé.`
           )
         }
-        rapport.organisation.etat = 'mise-a-jour'
-        organisationId = lignes[0].id
-        if (ecrire) {
-          await tx.organisation.update({
-            where: { id: organisationId },
-            data: donneesOrganisation,
-          })
-        }
       }
+      const retrouvees = new Set([...correspondance.values()].map(l => l.id))
+      rapport.activitesAbsentesDuDepot =
+        options.activite === undefined
+          ? enBase
+              .filter(a => !retrouvees.has(a.id) && a.archivedAt === null)
+              .map(a => a.slug)
+              .sort()
+          : []
 
-      // Activité (ADR 0008). La disposition plate du contenu décrit une activité
-      // implicite qui reprend le slug, le nom et le sigle de l'organisation.
-      // Ses groupes et sa nature ne changent pas à l'import.
-      const donneesActivite = {
-        slug: declaration.slug,
-        nom: declaration.nom,
-        sigle: declaration.sigle ?? null,
+      let periodesTrouvees = 0
+      for (const activite of aImporter) {
+        const ligne = correspondance.get(activite)
+        const resultat = await importerActivite(
+          tx,
+          organisation.id,
+          modeles,
+          activite,
+          ligne?.id ?? null,
+          options.annee,
+          ecrire
+        )
+        if (resultat.periode === 'importee') periodesTrouvees += 1
+        rapport.activites.push(resultat)
       }
-      const activite =
-        organisationId === ''
-          ? null
-          : await tx.activite.findFirst({
-              where: { organisationId },
-              orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-              select: { id: true },
-            })
-      let activiteId = activite?.id ?? ''
-      if (ecrire) {
-        activiteId =
-          activite === null
-            ? (
-                await tx.activite.create({
-                  data: {
-                    organisationId,
-                    ...donneesActivite,
-                    nature: 'EVENEMENT',
-                    groupes: GROUPES_PAR_DEFAUT,
-                  },
-                })
-              ).id
-            : (
-                await tx.activite.update({
-                  where: { id: activite.id },
-                  data: donneesActivite,
-                })
-              ).id
-      }
-
-      const edition =
-        options.annee === undefined || activiteId === ''
-          ? null
-          : await tx.edition.findUnique({
-              where: { activiteId_annee: { activiteId, annee: options.annee } },
-            })
-      if (options.annee !== undefined && edition === null) {
+      if (options.annee !== undefined && periodesTrouvees === 0) {
         throw new Error(
-          `L'édition ${options.annee} n'existe pas. Créez-la d'abord dans l'espace organisateur ou avec edition:creer (dist/creer-edition.js dans l'image).`
+          `Aucune activité n'a de période ${options.annee}. Créez-la d'abord dans l'espace organisateur ou avec edition:creer (dist/creer-edition.js dans l'image).`
         )
       }
-
-      // Périmètres
-      const existants = new Map(
-        (await tx.perimetre.findMany({ where: { activiteId } })).map(p => [
-          p.slug,
-          p,
-        ])
-      )
-      const idsPerimetres = new Map<string, string>()
-      for (const modele of modeles.perimetres) {
-        const existant = existants.get(modele.slug)
-        const donnees = {
-          nom: modele.nom,
-          type: modele.type,
-          groupe: groupeDepuisType(modele.type),
-          couleur: modele.couleur?.toUpperCase() ?? null,
-          ordre: modele.ordre,
-        }
-        if (existant === undefined) {
-          rapport.perimetres.crees.push(modele.slug)
-          if (ecrire) {
-            const cree = await tx.perimetre.create({
-              data: {
-                slug: modele.slug,
-                organisationId,
-                activiteId,
-                ...donnees,
-              },
-            })
-            idsPerimetres.set(modele.slug, cree.id)
-          }
-        } else {
-          idsPerimetres.set(modele.slug, existant.id)
-          const change =
-            existant.nom !== donnees.nom ||
-            existant.type !== donnees.type ||
-            existant.groupe !== donnees.groupe ||
-            existant.couleur !== donnees.couleur ||
-            existant.ordre !== donnees.ordre
-          if (change) {
-            rapport.perimetres.modifies.push(modele.slug)
-            if (ecrire)
-              await tx.perimetre.update({
-                where: { id: existant.id },
-                data: donnees,
-              })
-          }
-        }
-      }
-      const slugsModeles = new Set(modeles.perimetres.map(p => p.slug))
-      rapport.perimetres.absentsDuDepot = [...existants.keys()]
-        .filter(slug => !slugsModeles.has(slug))
-        .sort()
-
-      // Fiches
-      const idsFiches = new Map<string, string>()
-      for (const modele of modeles.fiches) {
-        const perimetreId =
-          modele.perimetre === null
-            ? null
-            : (idsPerimetres.get(modele.perimetre) ?? null)
-        const nouvelleEmpreinte = empreinte(modele.titre, modele.contenu)
-        const existante = await tx.fiche.findUnique({
-          where: { organisationId_slug: { organisationId, slug: modele.slug } },
-          include: {
-            versionCourante: { select: { empreinte: true, source: true } },
-          },
-        })
-        if (existante === null) {
-          rapport.fiches.creees.push(modele.slug)
-          if (!ecrire) continue
-          const fiche = await tx.fiche.create({
-            data: {
-              slug: modele.slug,
-              perimetreId,
-              organisationId,
-              activiteId,
-            },
-          })
-          const version = await tx.ficheVersion.create({
-            data: {
-              ficheId: fiche.id,
-              titre: modele.titre,
-              contenu: modele.contenu,
-              empreinte: nouvelleEmpreinte,
-              source: 'GIT',
-              resume: 'Import depuis le dépôt',
-            },
-          })
-          await tx.fiche.update({
-            where: { id: fiche.id },
-            data: { versionCouranteId: version.id },
-          })
-          idsFiches.set(modele.slug, fiche.id)
-          continue
-        }
-        idsFiches.set(modele.slug, existante.id)
-        if (existante.versionCourante?.empreinte === nouvelleEmpreinte) {
-          rapport.fiches.inchangees.push(modele.slug)
-          continue
-        }
-        if (existante.versionCourante?.source === 'APP') {
-          rapport.fiches.conflits.push(modele.slug)
-          continue
-        }
-        rapport.fiches.nouvellesVersions.push(modele.slug)
-        if (!ecrire) continue
-        const version = await tx.ficheVersion.create({
-          data: {
-            ficheId: existante.id,
-            titre: modele.titre,
-            contenu: modele.contenu,
-            empreinte: nouvelleEmpreinte,
-            source: 'GIT',
-            resume: 'Import depuis le dépôt',
-          },
-        })
-        await tx.fiche.update({
-          where: { id: existante.id },
-          data: { versionCouranteId: version.id, perimetreId },
-        })
-      }
-
-      if (edition === null) return
-
-      // Effectifs de l'édition
-      const effectifsExistants = new Set(
-        (
-          await tx.effectifPerimetre.findMany({
-            where: { editionId: edition.id },
-            select: { perimetreId: true },
-          })
-        ).map(e => e.perimetreId)
-      )
-      for (const modele of modeles.perimetres) {
-        if (modele.effectif === undefined) continue
-        const perimetreId = idsPerimetres.get(modele.slug)
-        if (perimetreId !== undefined && effectifsExistants.has(perimetreId)) {
-          rapport.effectifs.dejaPresents.push(modele.slug)
-          continue
-        }
-        rapport.effectifs.crees.push(`${modele.slug} (${modele.effectif})`)
-        if (!ecrire || perimetreId === undefined) continue
-        await tx.effectifPerimetre.create({
-          data: {
-            perimetreId,
-            editionId: edition.id,
-            effectif: modele.effectif,
-          },
-        })
-      }
-
-      // Tâches types
-      for (const [slugPerimetre, taches] of modeles.taches) {
-        const perimetreId = idsPerimetres.get(slugPerimetre)
-        for (const modele of taches) {
-          const cle = `${slugPerimetre}/${modele.modele}`
-          const existante =
-            perimetreId === undefined
-              ? null
-              : await tx.tache.findFirst({
-                  where: {
-                    editionId: edition.id,
-                    perimetreId,
-                    modeleSlug: modele.modele,
-                  },
-                  select: { id: true },
-                })
-          if (existante !== null) {
-            rapport.taches.dejaPresentes.push(cle)
-            continue
-          }
-          rapport.taches.creees.push(cle)
-          if (!ecrire || perimetreId === undefined) continue
-          await tx.tache.create({
-            data: {
-              editionId: edition.id,
-              perimetreId,
-              modeleSlug: modele.modele,
-              titre: modele.titre,
-              description: modele.description?.trim() || null,
-              echeance: dateEcheance(modele.echeance, edition.debut),
-              ficheId:
-                modele.fiche === undefined
-                  ? null
-                  : (idsFiches.get(modele.fiche) ?? null),
-            },
-          })
-        }
-      }
+      return rapport
     },
     { timeout: 60_000 }
   )
 
   invaliderConfigurationOrganisation()
   invaliderActiviteParDefaut()
+  return rapport
+}
+
+async function importerActivite(
+  tx: Transaction,
+  organisationId: string,
+  modeles: Modeles,
+  modele: ActiviteModele,
+  ligneId: string | null,
+  annee: number | undefined,
+  ecrire: boolean
+): Promise<RapportActivite> {
+  const declaration = modele.implicite
+    ? {
+        slug: modeles.organisation.slug,
+        nom: modeles.organisation.nom,
+        sigle: modeles.organisation.sigle ?? null,
+      }
+    : {
+        slug: modele.declaration.slug,
+        nom: modele.declaration.nom,
+        sigle: modele.declaration.sigle ?? null,
+        nature: modele.declaration.nature,
+        groupes: modele.declaration.groupes,
+        ordre: modele.declaration.ordre,
+      }
+  const rapport = rapportActiviteVide(
+    declaration.slug,
+    ligneId === null ? 'creee' : 'mise-a-jour'
+  )
+
+  // Activité. L'activité implicite garde sa nature et ses groupes.
+  let activiteId = ligneId ?? ''
+  if (ecrire && organisationId !== '') {
+    activiteId =
+      ligneId === null
+        ? (
+            await tx.activite.create({
+              data: {
+                organisationId,
+                nature: 'EVENEMENT',
+                groupes: modele.declaration.groupes,
+                ...declaration,
+              },
+              select: { id: true },
+            })
+          ).id
+        : (
+            await tx.activite.update({
+              where: { id: ligneId },
+              data: declaration,
+              select: { id: true },
+            })
+          ).id
+  }
+
+  const periode =
+    annee === undefined || activiteId === ''
+      ? null
+      : await tx.edition.findUnique({
+          where: { activiteId_annee: { activiteId, annee } },
+        })
+  rapport.periode =
+    annee === undefined ? null : periode === null ? 'absente' : 'importee'
+
+  // Périmètres
+  const existants = new Map(
+    (activiteId === ''
+      ? []
+      : await tx.perimetre.findMany({ where: { activiteId } })
+    ).map(p => [p.slug, p])
+  )
+  const idsPerimetres = new Map<string, string>()
+  for (const perimetre of modele.perimetres) {
+    const existant = existants.get(perimetre.slug)
+    const donnees = {
+      nom: perimetre.nom,
+      type: perimetre.type,
+      groupe: perimetre.groupe,
+      couleur: perimetre.couleur?.toUpperCase() ?? null,
+      ordre: perimetre.ordre,
+    }
+    if (existant === undefined) {
+      rapport.perimetres.crees.push(perimetre.slug)
+      if (ecrire) {
+        const cree = await tx.perimetre.create({
+          data: {
+            slug: perimetre.slug,
+            organisationId,
+            activiteId,
+            ...donnees,
+          },
+        })
+        idsPerimetres.set(perimetre.slug, cree.id)
+      }
+      continue
+    }
+    idsPerimetres.set(perimetre.slug, existant.id)
+    const change =
+      existant.nom !== donnees.nom ||
+      existant.type !== donnees.type ||
+      existant.groupe !== donnees.groupe ||
+      existant.couleur !== donnees.couleur ||
+      existant.ordre !== donnees.ordre
+    if (change) {
+      rapport.perimetres.modifies.push(perimetre.slug)
+      if (ecrire)
+        await tx.perimetre.update({ where: { id: existant.id }, data: donnees })
+    }
+  }
+  const slugsModeles = new Set(modele.perimetres.map(p => p.slug))
+  rapport.perimetres.absentsDuDepot = [...existants.keys()]
+    .filter(slug => !slugsModeles.has(slug))
+    .sort()
+
+  // Fiches. Le slug est unique dans l'organisation : une fiche passée d'une activité
+  // à une autre dans le dépôt suit ce changement.
+  const idsFiches = new Map<string, string>()
+  for (const fiche of modele.fiches) {
+    const perimetreId =
+      fiche.perimetre === null
+        ? null
+        : (idsPerimetres.get(fiche.perimetre) ?? null)
+    const nouvelleEmpreinte = empreinte(fiche.titre, fiche.contenu)
+    const existante =
+      organisationId === ''
+        ? null
+        : await tx.fiche.findUnique({
+            where: {
+              organisationId_slug: { organisationId, slug: fiche.slug },
+            },
+            include: {
+              versionCourante: { select: { empreinte: true, source: true } },
+            },
+          })
+    if (existante === null) {
+      rapport.fiches.creees.push(fiche.slug)
+      if (!ecrire) continue
+      const creee = await tx.fiche.create({
+        data: { slug: fiche.slug, perimetreId, organisationId, activiteId },
+      })
+      const version = await tx.ficheVersion.create({
+        data: {
+          ficheId: creee.id,
+          titre: fiche.titre,
+          contenu: fiche.contenu,
+          empreinte: nouvelleEmpreinte,
+          source: 'GIT',
+          resume: 'Import depuis le dépôt',
+        },
+      })
+      await tx.fiche.update({
+        where: { id: creee.id },
+        data: { versionCouranteId: version.id },
+      })
+      idsFiches.set(fiche.slug, creee.id)
+      continue
+    }
+    idsFiches.set(fiche.slug, existante.id)
+    if (
+      ecrire &&
+      (existante.activiteId !== activiteId ||
+        existante.perimetreId !== perimetreId)
+    ) {
+      await tx.fiche.update({
+        where: { id: existante.id },
+        data: { activiteId, perimetreId },
+      })
+    }
+    if (existante.versionCourante?.empreinte === nouvelleEmpreinte) {
+      rapport.fiches.inchangees.push(fiche.slug)
+      continue
+    }
+    if (existante.versionCourante?.source === 'APP') {
+      rapport.fiches.conflits.push(fiche.slug)
+      continue
+    }
+    rapport.fiches.nouvellesVersions.push(fiche.slug)
+    if (!ecrire) continue
+    const version = await tx.ficheVersion.create({
+      data: {
+        ficheId: existante.id,
+        titre: fiche.titre,
+        contenu: fiche.contenu,
+        empreinte: nouvelleEmpreinte,
+        source: 'GIT',
+        resume: 'Import depuis le dépôt',
+      },
+    })
+    await tx.fiche.update({
+      where: { id: existante.id },
+      data: { versionCouranteId: version.id },
+    })
+  }
+
+  if (periode === null) return rapport
+
+  // Effectifs de la période
+  const effectifsExistants = new Set(
+    (
+      await tx.effectifPerimetre.findMany({
+        where: { editionId: periode.id },
+        select: { perimetreId: true },
+      })
+    ).map(e => e.perimetreId)
+  )
+  for (const perimetre of modele.perimetres) {
+    if (perimetre.effectif === undefined) continue
+    const perimetreId = idsPerimetres.get(perimetre.slug)
+    if (perimetreId !== undefined && effectifsExistants.has(perimetreId)) {
+      rapport.effectifs.dejaPresents.push(perimetre.slug)
+      continue
+    }
+    rapport.effectifs.crees.push(`${perimetre.slug} (${perimetre.effectif})`)
+    if (!ecrire || perimetreId === undefined) continue
+    await tx.effectifPerimetre.create({
+      data: {
+        perimetreId,
+        editionId: periode.id,
+        effectif: perimetre.effectif,
+      },
+    })
+  }
+
+  // Tâches types
+  for (const [slugPerimetre, taches] of modele.taches) {
+    const perimetreId = idsPerimetres.get(slugPerimetre)
+    for (const tache of taches) {
+      const cle = `${slugPerimetre}/${tache.modele}`
+      const existante =
+        perimetreId === undefined
+          ? null
+          : await tx.tache.findFirst({
+              where: {
+                editionId: periode.id,
+                perimetreId,
+                modeleSlug: tache.modele,
+              },
+              select: { id: true },
+            })
+      if (existante !== null) {
+        rapport.taches.dejaPresentes.push(cle)
+        continue
+      }
+      rapport.taches.creees.push(cle)
+      if (!ecrire || perimetreId === undefined) continue
+      await tx.tache.create({
+        data: {
+          editionId: periode.id,
+          perimetreId,
+          modeleSlug: tache.modele,
+          titre: tache.titre,
+          description: tache.description?.trim() || null,
+          echeance: dateEcheance(tache.echeance, periode.debut),
+          ficheId:
+            tache.fiche === undefined
+              ? null
+              : (idsFiches.get(tache.fiche) ?? null),
+        },
+      })
+    }
+  }
   return rapport
 }

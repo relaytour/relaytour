@@ -1,0 +1,12 @@
+# Le club de course des Rencontres : une section permanente, une saison par année.
+slug: club-de-course
+nom: Club de course
+nature: SAISON
+groupes:
+  - cle: groupe
+    libelle: Groupe d'entraînement
+    libellePluriel: Groupes d'entraînement
+  - cle: pole
+    libelle: Pôle
+    libellePluriel: Pôles
+ordre: 2
