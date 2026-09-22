@@ -318,7 +318,7 @@ html {
 /* La marque : pictogramme et nom. */
 .rt-entete-activite {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
   gap: 8px;
   padding-bottom: 20px;

@@ -1,5 +1,6 @@
 import { CheckOutlined, SwapOutlined } from '@ant-design/icons'
 import { Button, Dropdown } from 'antd'
+import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { useActivite } from '../lib/activite'
@@ -21,14 +22,31 @@ export default function ChoixActivite({
 }) {
   const { activite, activites } = useActivite()
   const navigate = useNavigate()
+  const entete = useRef<HTMLDivElement>(null)
+  const bouton = useRef<HTMLButtonElement>(null)
+  // Le bouton est à droite de l'en-tête, la liste s'aligne sur le bord gauche du
+  // panneau qui la porte : la barre latérale, ou le tiroir de la vue mobile.
+  const [decalage, setDecalage] = useState(0)
+  const mesurer = (ouvert: boolean) => {
+    if (!ouvert || bouton.current === null || entete.current === null) return
+    const panneau =
+      entete.current.closest('.rt-barre-laterale, .ant-drawer-section') ??
+      entete.current
+    setDecalage(
+      panneau.getBoundingClientRect().left -
+        bouton.current.getBoundingClientRect().left
+    )
+  }
   const nom = activite.sigle ?? activite.nom
   return (
-    <div className="rt-entete-activite">
+    <div className="rt-entete-activite" ref={entete}>
       <Marque nom={nom} taille={taille} />
       {activites.length > 1 && (
         <Dropdown
           trigger={['click']}
-          placement="bottomRight"
+          placement="bottomLeft"
+          align={{ points: ['tl', 'bl'], offset: [decalage, 8] }}
+          onOpenChange={mesurer}
           menu={{
             selectable: true,
             selectedKeys: [activite.slug],
@@ -48,6 +66,7 @@ export default function ChoixActivite({
           }}
         >
           <Button
+            ref={bouton}
             type="text"
             icon={<SwapOutlined />}
             aria-label="Changer d’activité"
