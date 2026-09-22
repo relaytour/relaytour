@@ -99,7 +99,9 @@ jobs:
         run: node outils/verifier-publication.mjs
 
       - name: Tests unitaires
-        run: yarn test
+        run: |
+          yarn test
+          node --test outils/*.test.mjs
 
       - name: Migrations et tests d'intégration
         run: |

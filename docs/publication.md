@@ -15,7 +15,7 @@ Ce document liste ce qui précède l'ouverture publique de `relaytour/relaytour`
 5. Sur GitHub : dépôt public, branche `main` protégée, signalement privé de vulnérabilités activé (`SECURITY.md` y renvoie).
 6. Le paquet `ghcr.io/relaytour/relaytour-server` est public. L'organisation GitHub doit autoriser les paquets publics (réglage « Package creation ») avant de changer la visibilité du paquet. Les workflows `valider.yml` des dépôts d'organisation lisent l'image avec `GITHUB_TOKEN`.
 7. Le gabarit `relaytour/organisation-modele` existe sur GitHub et porte l'option « Template repository ».
-8. Première version : lancer `yarn versionner valider` puis `yarn versionner compiler`, commiter les journaux, puis poser un tag de version (`serveur-x.y.z`, `orga-x.y.z`) qui reprend le champ `version` du `package.json` de chaque cible.
+8. Première version : lancer `yarn versionner publier`, ouvrir la PR `chore(version): x.y.z`, puis avancer `main` jusqu'à `develop` (CONTRIBUTING.md, « Versions »). Le workflow `publier.yml` crée le tag `vx.y.z`, la release et les images marquées du numéro.
 9. Les badges du README (vérifications, licence) s'ajoutent après l'ouverture : GitHub ne les affiche pas sur un dépôt privé.
 
 ## Après l'ouverture, toujours

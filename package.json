@@ -1,5 +1,6 @@
 {
   "name": "relaytour",
+  "version": "0.3.0",
   "author": "Quentin Fremeaux",
   "homepage": "https://github.com/relaytour/relaytour#readme",
   "repository": {
@@ -28,6 +29,7 @@
     "lint": "eslint --cache --cache-strategy content . && yarn workspace @relaytour/orga lint",
     "format": "prettier --write .",
     "test": "yarn workspaces foreach -Apt run test",
+    "test:outils": "node --test outils/*.test.mjs",
     "typecheck": "yarn workspaces foreach -Apt run typecheck",
     "build": "yarn generate && yarn codegen && yarn workspaces foreach -Apt run build",
     "check": "yarn lint && yarn typecheck && yarn build",

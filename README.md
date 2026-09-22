@@ -20,7 +20,7 @@ Relaytour est un logiciel libre (AGPL-3.0). Vous pouvez l'héberger vous-même. 
 | `packages/tokens` | Modèle de thème et thème par défaut de Relaytour. Chaque organisation déclare le sien dans `organisation.yaml`. |
 | `content/exemple` | Organisation d'exemple : identité et thème, deux activités, leurs périmètres, fiches méthode et tâches types. |
 | `infra/` | Déploiement de référence : Docker Compose, Caddyfile d'exemple et étapes pour s'auto-héberger. |
-| `outils/versionner.mjs` | Journal des changements : un fragment par changement visible, compilé en `notes/notes-de-version.<cible>.json`. |
+| `outils/versionner.mjs` | Journal des changements : un fragment par changement visible, compilé par version en `notes/notes-de-version.<cible>.json`. Il prépare aussi la prochaine version et le texte de sa release. |
 | `docs/adr/` | Décisions d'architecture. |
 | `docs/feuille-de-route.md` | Évolutions envisagées après la première version. |
 

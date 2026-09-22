@@ -11,7 +11,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `packages/database` : Prisma 6 sur MariaDB 11.8. Le client généré (`src/generated/`) n'est jamais commité.
 - `infra/` : déploiement de référence minimal (Compose, Caddyfile d'exemple, étapes). L'exploitation réelle vit hors du dépôt (ADR 0007).
 - `outils/verifier-licences.mjs` et `outils/verifier-publication.mjs` : contrôles de CI sur les licences des dépendances et sur l'absence de traces privées.
-- `outils/versionner.mjs` et `notes/` : journal des changements (`noter`, `valider`, `compiler`).
+- `outils/versionner.mjs` et `notes/` : journal des changements et publication des versions (`noter`, `valider`, `compiler`, `publier`, `release`).
 - `docs/adr/` : décisions d'architecture. `docs/design-system.md` : identité, matériau et composants.
 - `site/` : site de présentation publié sur GitHub Pages. `outils/site.mjs` y écrit les jetons, les palettes et les polices ; la CI vérifie qu'il est à jour.
 - `docs/feuille-de-route.md` et `docs/publication.md` : évolutions envisagées, liste de publication.
@@ -35,6 +35,10 @@ node outils/site.mjs   # site de présentation, après un changement des jetons
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif
 yarn versionner valider
 yarn versionner compiler   # journaux commités
+yarn versionner publier --simulation   # numéro de la prochaine version, sans rien écrire
+yarn versionner publier    # prépare la version : numéros, rattachement des notes, journaux
+yarn versionner release --version 0.4.0   # texte de la release d'une version
+yarn test:outils   # tests des outils du dépôt
 ```
 
 ## Décisions arrêtées
@@ -157,41 +161,37 @@ Relaytour accueille les contributions : correctifs, évolutions, documentation, 
 
 ## Versions
 
-### Ce qui porte un numéro
+### Un seul numéro
 
-- Deux cibles se publient, chacune avec son propre numéro : le serveur (`packages/server/package.json`) et l'espace organisateur (`packages/orga/package.json`).
+- Relaytour porte un seul numéro de version, celui du `package.json` racine. Les paquets `packages/server` et `packages/orga` en portent une copie, et `yarn versionner valider` refuse tout écart.
+- Une installation choisit une seule étiquette d'image pour ses trois images. Ce numéro est donc celui de l'installation.
 - `packages/tokens` et `packages/database` sont internes au dépôt. Leur numéro ne se publie pas.
-- Le journal `notes/notes-de-version.<cible>.json` reprend le numéro de sa cible et les fragments de `notes/fragments/`.
+- Les notes gardent leur cible : `notes/notes-de-version.serveur.json` et `notes/notes-de-version.orga.json` groupent les fragments de `notes/fragments/` par version, la prochaine version en tête.
 
 ### Numérotation
 
 - Les numéros suivent la forme `x.y.z` du versionnage sémantique.
-- Avant la version 1.0, une fonctionnalité fait monter le deuxième chiffre (0.3.0 devient 0.4.0) et un correctif le troisième (0.4.0 devient 0.4.1).
-- Une rupture (fragment de type `rupture`) fait aussi monter le deuxième chiffre avant la 1.0. Son fragment porte une consigne de migration.
-- Une cible sans changement depuis sa dernière version garde son numéro.
+- Avant la version 1.0, une fonctionnalité ou une rupture fait monter le deuxième chiffre (0.3.0 devient 0.4.0) et tout le reste le troisième (0.4.0 devient 0.4.1).
+- À partir de la 1.0, une rupture fait monter le premier chiffre.
+- Une rupture (fragment de type `rupture`) porte une consigne de migration. La release la reprend en tête, quelle que soit son audience.
 
 ### Une PR ordinaire ne change pas de numéro
 
-Une PR de correctif ou d'évolution apporte seulement son fragment de note. Elle ne modifie jamais le champ `version` d'un `package.json`. Deux PR ouvertes en même temps se disputeraient sinon le même numéro.
+Une PR de correctif ou d'évolution apporte seulement son fragment de note, sans champ `version`. Elle ne modifie jamais le champ `version` d'un `package.json`. Deux PR ouvertes en même temps se disputeraient sinon le même numéro.
 
 ### Publier une version
 
-1. Une PR `chore(version): serveur x.y.z, orga x.y.z` vers `develop` relève le numéro de chaque cible qui a changé. Elle lance `yarn versionner valider` puis `yarn versionner compiler`, et commite les journaux.
-2. Après sa fusion, une personne mainteneuse avance `main` jusqu'à `develop` en avance rapide, une fois la CI de `develop` au vert :
+1. Une personne mainteneuse lance `yarn versionner publier` sur une branche partie de `develop`. La commande calcule le numéro d'après les types des fragments sans version, écrit ce numéro dans les fragments et dans les trois `package.json`, puis compile les journaux. `--version x.y.z` impose un autre numéro, `--simulation` montre le résultat sans rien écrire.
+2. Elle ouvre la PR `chore(version): x.y.z` vers `develop`, qui passe par la CI comme toute autre PR.
+3. Après sa fusion et la CI de `develop` au vert, elle avance `main` jusqu'à `develop` en avance rapide :
    ```bash
    git push origin develop:main
    ```
    Une fusion de PR par GitHub réécrirait les commits, en rebase comme en squash, et `main` divergerait de `develop`. Seul le rôle d'administration contourne la règle de PR de `main`.
-3. Elle pose ensuite un tag par cible publiée, sur le commit de `main` :
-   ```bash
-   git tag serveur-x.y.z && git tag orga-x.y.z && git push origin --tags
-   ```
 
-### Ce qui reste à outiller
+Le workflow `publier.yml` fait le reste. À chaque poussée sur `main`, il construit les trois images et les publie sous l'empreinte du commit et sous `main`. Quand la version du `package.json` racine n'a pas encore de tag, il ajoute les étiquettes `:x.y.z`, `:x.y` et `:latest`, puis crée le tag `vx.y.z` et la release GitHub, dont le texte vient des notes de la version. Personne ne pose de tag à la main.
 
-- Aujourd'hui, chaque poussée sur `main` publie l'image du serveur sous l'empreinte du commit (`ghcr.io/relaytour/relaytour-server:<sha7>`), avec la version `x.y.z-dev.<sha7>` dans ses métadonnées.
-- Trois outils restent à écrire : le rattachement de chaque note à la version qui la publie, une release GitHub rédigée depuis les notes à chaque tag, et une image marquée du numéro de version.
-- En attendant, une installation suit une image par son empreinte de commit, et la release se rédige à la main à partir du journal.
+Une release ne se publie qu'après ses images : une relance du workflow ne crée donc pas de doublon. Pour voir le résultat sans rien publier, lancer `publier.yml` avec l'entrée `simulation`.
 
 ## Branches et CI
 

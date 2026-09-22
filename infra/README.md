@@ -21,7 +21,7 @@ L'espace organisateur est un site statique, livré par l'image `-orga` et servi 
 2. **Durcissement.** Un utilisateur sans sudo pour le déploiement, SSH par clé seulement, un pare-feu qui n'ouvre que SSH, 80 et 443, les mises à jour de sécurité automatiques. Tous les ports Docker sont publiés sur `127.0.0.1` : Caddy seul écoute sur 80 et 443.
 3. **DNS.** Deux hôtes vers la machine : l'API et l'espace organisateur (par exemple `api.exemple.org` et `orga.exemple.org`).
 4. **Dossiers.** `/srv/relaytour` avec `docker-compose.yml` (copié depuis `compose/`), un `.env` créé depuis `compose/.env.example` (droits 640), et `/srv/relaytour/orga` (`ORGA_DIR`) pour les fichiers de l'espace organisateur.
-5. **Image.** `docker login ghcr.io` si l'image est privée, puis `IMAGE_TAG` dans le `.env`. Le workflow `image.yml` publie trois images à chaque poussée sur `main`, sous le tag `main` et sous le SHA court du commit : l'API et le worker (`<tag>`), les migrations (`<tag>-migrate`) et l'espace organisateur (`<tag>-orga`).
+5. **Image.** `docker login ghcr.io` si l'image est privée, puis `IMAGE_TAG` dans le `.env`. Le workflow `publier.yml` publie trois images : l'API et le worker (`<tag>`), les migrations (`<tag>-migrate`) et l'espace organisateur (`<tag>-orga`). Chaque version publiée porte les étiquettes `x.y.z`, `x.y` et `latest` ; chaque poussée sur `main` porte aussi l'empreinte courte du commit et l'étiquette `main`. Une installation fixe `IMAGE_TAG=x.y.z` pour rester sur une version, ou `IMAGE_TAG=x.y` pour recevoir les correctifs de cette version.
 6. **Mail.** Un fournisseur SMTP et les enregistrements SPF, DKIM et DMARC de votre domaine (voir `docs/courriel.md`). Une fois la pile démarrée, un mail d'essai vérifie la chaîne :
     ```bash
     docker compose --env-file .env exec worker node dist/essai-courriel.js adresse@exemple.org
@@ -48,7 +48,7 @@ L'espace organisateur est un site statique, livré par l'image `-orga` et servi 
 
 ## Mettre à jour
 
-Changer `IMAGE_TAG` dans le `.env`, puis `docker compose --env-file .env up -d`. Le service `migrate` applique les migrations, le service `orga` dépose la nouvelle version de l'espace organisateur, puis l'API redémarre. Les anciens fichiers `assets/` restent dans `ORGA_DIR` ; un nettoyage périodique du dossier reste à votre charge.
+Les versions publiées sont listées dans les releases du dépôt, avec leurs notes et leurs consignes de migration. Changer `IMAGE_TAG` dans le `.env`, puis `docker compose --env-file .env up -d`. Le service `migrate` applique les migrations, le service `orga` dépose la nouvelle version de l'espace organisateur, puis l'API redémarre. Les anciens fichiers `assets/` restent dans `ORGA_DIR` ; un nettoyage périodique du dossier reste à votre charge.
 
 ## Adapter la pile à votre hébergement
 
