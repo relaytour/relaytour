@@ -28,6 +28,7 @@ import {
   configurationPublique,
   type ConfigurationOrganisation,
 } from '../lib/organisation.ts'
+import { marquerContenuModifie } from '../lib/synchronisation.ts'
 
 import { builder } from './builder.ts'
 
@@ -215,7 +216,7 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       const activiteId = await ctx.exigerActivite(args.activiteId)
       const groupe = await groupeDuPerimetre(activiteId, args.groupe, args.type)
-      return sansDoublon(
+      const perimetre = await sansDoublon(
         prisma.perimetre.create({
           ...query,
           data: {
@@ -231,6 +232,8 @@ builder.mutationFields(t => ({
         }),
         'Un périmètre utilise déjà cet identifiant.'
       )
+      await marquerContenuModifie(ctx.organisation!.id)
+      return perimetre
     },
   }),
 
@@ -256,7 +259,7 @@ builder.mutationFields(t => ({
         args.groupe || args.type
           ? await groupeDuPerimetre(actuel.activiteId, args.groupe, args.type)
           : actuel.groupe
-      return prisma.perimetre.update({
+      const perimetre = await prisma.perimetre.update({
         ...query,
         where: { id: String(args.id) },
         data: {
@@ -269,6 +272,8 @@ builder.mutationFields(t => ({
           archivedAt: args.archive ? (actuel.archivedAt ?? new Date()) : null,
         },
       })
+      await marquerContenuModifie(ctx.organisation!.id)
+      return perimetre
     },
   }),
 }))
@@ -343,7 +348,7 @@ const TypographieThemeRef = builder
     }),
   })
 
-const ThemeRef = builder.objectRef<Theme>('Theme').implement({
+export const ThemeRef = builder.objectRef<Theme>('Theme').implement({
   description:
     'Le thème complet de l’organisation, fusionné avec le thème par défaut de Relaytour.',
   fields: t => ({
@@ -370,6 +375,11 @@ const OrganisationRef = builder
       faviconUrl: t.exposeString('faviconUrl', { nullable: true }),
       pageEquipe: t.exposeString('pageEquipe', { nullable: true }),
       theme: t.field({ type: ThemeRef, resolve: o => o.theme }),
+      codeSource: t.string({
+        description:
+          'Adresse du code source de l’installation, que l’AGPL oblige à proposer aux personnes qui l’utilisent.',
+        resolve: async () => (await import('../env.ts')).env.CODE_SOURCE_URL,
+      }),
     }),
   })
 

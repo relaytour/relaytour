@@ -402,6 +402,13 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'modifierIdentiteActivite',
+    query:
+      'mutation ($id: ID!) { modifierIdentiteActivite(id: $id, pageEquipe: "https://exemple.org/intrusion") { id } }',
+    variables: () => ({ id: a.activite }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'modifierEdition',
     query:
       'mutation ($id: ID!) { modifierEdition(id: $id, nom: "X", debut: "2027-06-01", fin: "2027-06-02", statut: ARCHIVEE) { id } }',
@@ -539,7 +546,7 @@ async function etatDeA() {
       }),
       prisma.activite.findUniqueOrThrow({
         where: { id: a.activite },
-        select: { nom: true, archivedAt: true, nature: true },
+        select: { nom: true, archivedAt: true, nature: true, identite: true },
       }),
       prisma.edition.findUniqueOrThrow({
         where: { id: a.edition },

@@ -9,7 +9,9 @@ import {
   type NotificationAComposer,
 } from '../lib/notifications.ts'
 import {
+  configurationActivite,
   configurationOrganisation,
+  type ConfigurationOrganisation,
   variablesOrganisation,
 } from '../lib/organisation.ts'
 
@@ -110,7 +112,9 @@ export async function composer(
   let desabonnement: string | undefined
   let apresEnvoi: (() => Promise<void>) | undefined
   const organisationId = await organisationDuMail(prisma, job)
-  const configuration = await configurationOrganisation(organisationId)
+  // Un mail qui concerne une seule activité prend son identité (ADR 0009).
+  let configuration: ConfigurationOrganisation =
+    await configurationOrganisation(organisationId)
   const origine = configuration.origineOrga
   const lienPreferences = `${origine}/preferences`
 
@@ -162,7 +166,7 @@ export async function composer(
             select: {
               nom: true,
               slug: true,
-              activite: { select: { slug: true } },
+              activite: { select: { id: true, slug: true } },
             },
           },
         },
@@ -172,6 +176,7 @@ export async function composer(
         select: { name: true },
       }),
     ])
+    configuration = await configurationActivite(tache.perimetre.activite.id)
     variables.acteur = acteur.name
     variables.titre = tache.titre
     variables.perimetre = tache.perimetre.nom

@@ -10,6 +10,7 @@ import {
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { exigerPlaceActivite } from '../lib/limites.ts'
 import { sansDoublon, texteRequis } from '../lib/saisie.ts'
+import { marquerContenuModifie } from '../lib/synchronisation.ts'
 
 import { builder } from './builder.ts'
 
@@ -113,10 +114,12 @@ builder.mutationFields(t => ({
         ordre: args.ordre ?? 0,
       }
       await exigerPlaceActivite(organisationId)
-      return sansDoublon(
+      const activite = await sansDoublon(
         prisma.activite.create({ ...query, data: donnees }),
         'Une activité utilise déjà cet identifiant.'
       )
+      await marquerContenuModifie(organisationId)
+      return activite
     },
   }),
 
@@ -145,7 +148,7 @@ builder.mutationFields(t => ({
       if (manquant !== undefined) {
         throw erreurGroupeUtilise(manquant.groupe)
       }
-      return prisma.activite.update({
+      const activite = await prisma.activite.update({
         ...query,
         where: { id },
         data: {
@@ -158,6 +161,8 @@ builder.mutationFields(t => ({
           ordre: args.ordre,
         },
       })
+      await marquerContenuModifie(ctx.organisation!.id)
+      return activite
     },
   }),
 
@@ -189,7 +194,7 @@ builder.mutationFields(t => ({
         })
         if (restantes === 0) throw erreurDerniereActivite()
       }
-      return prisma.activite.update({
+      const activite = await prisma.activite.update({
         ...query,
         where: { id },
         data: {
@@ -197,6 +202,8 @@ builder.mutationFields(t => ({
           archivedAt: args.archive ? (actuelle.archivedAt ?? new Date()) : null,
         },
       })
+      await marquerContenuModifie(ctx.organisation!.id)
+      return activite
     },
   }),
 }))

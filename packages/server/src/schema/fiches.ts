@@ -75,12 +75,13 @@ export const FicheRef = builder.prismaObject('Fiche', {
     // pas être reversée dans Git (yarn orga:exporter la refuse).
     donneesPersonnelles: t.stringList({
       select: { versionCourante: { select: { contenu: true } } },
-      resolve: async f =>
-        donneesPersonnelles(
-          f.versionCourante?.contenu ?? '',
-          (await configurationOrganisation(f.organisationId))
-            .domainesCourrielAutorises
-        ),
+      resolve: async f => {
+        const configuration = await configurationOrganisation(f.organisationId)
+        return donneesPersonnelles(f.versionCourante?.contenu ?? '', {
+          domaines: configuration.domainesCourrielAutorises,
+          adresses: configuration.adressesRoleAutorisees,
+        })
+      },
     }),
     peutModifier: t.boolean({
       resolve: (f, _args, ctx) => peutRedigerFiche(ctx, f.perimetreId),

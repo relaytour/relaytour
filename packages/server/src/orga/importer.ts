@@ -1,8 +1,13 @@
-import type { PrismaClient } from '@relaytour/database'
+import { Prisma, type PrismaClient } from '@relaytour/database'
 
 import { empreinte } from '../lib/fiches.ts'
 import { lireLimites } from '../lib/limites.ts'
-import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
+import {
+  invaliderConfigurationOrganisation,
+  type DeclarationOrganisation,
+  type IdentiteActivite,
+  type Logo,
+} from '../lib/organisation.ts'
 
 import { dateEcheance, type ActiviteModele, type Modeles } from './modeles.ts'
 
@@ -25,12 +30,19 @@ export interface RapportActivite {
 export interface RapportImport {
   /** La ligne Organisation créée ou mise à jour depuis organisation.yaml. */
   organisation: { slug: string; etat: 'creee' | 'mise-a-jour' }
+  /** Images enregistrées : nouvelles, ou déjà présentes en base. */
+  medias: { enregistrees: string[]; dejaPresentes: string[] }
+  /**
+   * Date de la dernière modification faite dans l'application depuis le dernier
+   * import ou export, ou null. Sans `forcer`, un import réel refuse de l'écraser.
+   */
+  modifieDansApplication: Date | null
   activites: RapportActivite[]
   /** Activités en base que le dépôt ne décrit pas : signalées, jamais archivées. */
   activitesAbsentesDuDepot: string[]
   /**
-   * Activité d'amorçage « defaut », vide, retirée au premier import d'un dépôt en
-   * disposition activites/ qui ne la décrit pas.
+   * Activité d'amorçage (« defaut », ou au slug de l'organisation), vide, retirée
+   * au premier import d'un dépôt en disposition activites/ qui ne la décrit pas.
    */
   amorcageRetire: boolean
 }
@@ -46,6 +58,11 @@ export interface OptionsImport {
   organisation?: string
   /** Restreint l'import à une activité du dépôt. */
   activite?: string
+  /**
+   * Écrase les modifications faites dans l'application depuis la dernière
+   * synchronisation (ADR 0009). Sans cette option, l'import les protège.
+   */
+  forcer?: boolean
 }
 
 function rapportActiviteVide(
@@ -174,9 +191,42 @@ export async function importerModeles(
           slug: modeles.organisation.slug,
           etat: organisation.etat,
         },
+        medias: { enregistrees: [], dejaPresentes: [] },
+        modifieDansApplication: null,
         activites: [],
         activitesAbsentesDuDepot: [],
         amorcageRetire: false,
+      }
+
+      if (organisation.id !== '') {
+        rapport.modifieDansApplication = await modificationNonSynchronisee(
+          tx,
+          organisation.id
+        )
+        if (
+          ecrire &&
+          rapport.modifieDansApplication !== null &&
+          options.forcer !== true
+        ) {
+          throw new Error(
+            `Des admins ont modifié le contenu dans l'application le ${rapport.modifieDansApplication.toISOString()}, après la dernière synchronisation. Exportez d'abord le contenu (orga:exporter), ou relancez l'import avec --forcer pour écraser ces modifications. Import refusé.`
+          )
+        }
+      }
+      const empreintes = await enregistrerMedias(
+        tx,
+        organisation.id,
+        modeles,
+        ecrire,
+        rapport
+      )
+      if (ecrire && organisation.id !== '') {
+        await tx.organisation.update({
+          where: { id: organisation.id },
+          data: {
+            configuration: declarationEnBase(modeles.organisation, empreintes),
+          },
+        })
       }
 
       const enBase =
@@ -215,11 +265,14 @@ export async function importerModeles(
         }
       }
       const retrouvees = new Set([...correspondance.values()].map(l => l.id))
-      // La migration a créé une activité « defaut » pour chaque organisation. Un
-      // dépôt en disposition activites/ qui ne la décrit pas la retire, si elle est
-      // vide : elle deviendrait sinon l'activité affichée par défaut.
+      // La migration a créé une activité « defaut » pour chaque organisation, et
+      // organisation:creer une activité au slug de l'organisation. Un dépôt en
+      // disposition activites/ qui ne la décrit pas la retire, si elle est vide :
+      // elle deviendrait sinon l'activité affichée par défaut.
       const amorcage = enBase.find(
-        a => a.slug === 'defaut' && !retrouvees.has(a.id)
+        a =>
+          (a.slug === 'defaut' || a.slug === modeles.organisation.slug) &&
+          !retrouvees.has(a.id)
       )
       if (
         amorcage !== undefined &&
@@ -253,7 +306,8 @@ export async function importerModeles(
           activite,
           ligne?.id ?? null,
           options.annee,
-          ecrire
+          ecrire,
+          empreintes
         )
         if (resultat.periode === 'importee') periodesTrouvees += 1
         rapport.activites.push(resultat)
@@ -263,6 +317,12 @@ export async function importerModeles(
           `Aucune activité n'a de période ${options.annee}. Créez-la d'abord dans l'espace organisateur ou avec edition:creer (dist/creer-edition.js dans l'image).`
         )
       }
+      if (ecrire && organisation.id !== '') {
+        await tx.organisation.update({
+          where: { id: organisation.id },
+          data: { contenuSynchroniseLe: new Date() },
+        })
+      }
       return rapport
     },
     { timeout: 60_000 }
@@ -270,6 +330,117 @@ export async function importerModeles(
 
   invaliderConfigurationOrganisation()
   return rapport
+}
+
+/**
+ * La date de la dernière modification faite dans l'application, si elle suit la
+ * dernière synchronisation avec le dossier de contenu. Null sinon.
+ */
+export async function modificationNonSynchronisee(
+  tx: Pick<Transaction, 'organisation'>,
+  organisationId: string
+): Promise<Date | null> {
+  const ligne = await tx.organisation.findUniqueOrThrow({
+    where: { id: organisationId },
+    select: { contenuModifieLe: true, contenuSynchroniseLe: true },
+  })
+  if (ligne.contenuModifieLe === null) return null
+  if (
+    ligne.contenuSynchroniseLe !== null &&
+    ligne.contenuModifieLe <= ligne.contenuSynchroniseLe
+  ) {
+    return null
+  }
+  return ligne.contenuModifieLe
+}
+
+type Empreintes = Map<string, string>
+
+/** Enregistre les images du dossier et renvoie l'empreinte de chaque chemin. */
+async function enregistrerMedias(
+  tx: Transaction,
+  organisationId: string,
+  modeles: Modeles,
+  ecrire: boolean,
+  rapport: RapportImport
+): Promise<Empreintes> {
+  const empreintes: Empreintes = new Map()
+  for (const [chemin, media] of modeles.medias) {
+    empreintes.set(chemin, media.empreinte)
+    const existant =
+      organisationId === ''
+        ? null
+        : await tx.media.findUnique({
+            where: {
+              organisationId_empreinte: {
+                organisationId,
+                empreinte: media.empreinte,
+              },
+            },
+            select: { id: true },
+          })
+    if (existant !== null) {
+      rapport.medias.dejaPresentes.push(chemin)
+      continue
+    }
+    rapport.medias.enregistrees.push(chemin)
+    if (!ecrire || organisationId === '') continue
+    await tx.media.create({
+      data: {
+        organisationId,
+        empreinte: media.empreinte,
+        type: media.type,
+        octets: media.octets,
+        donnees: new Uint8Array(media.donnees),
+      },
+    })
+  }
+  return empreintes
+}
+
+function logoEnBase(
+  logo: Logo | undefined,
+  empreintes: Empreintes
+): Logo | undefined {
+  if (logo === undefined) return undefined
+  const png = empreintes.get(logo.png)
+  if (png === undefined) return undefined
+  const svg = logo.svg === undefined ? undefined : empreintes.get(logo.svg)
+  return svg === undefined ? { png } : { png, svg }
+}
+
+/** La déclaration de l'organisation telle qu'elle se garde en base : images par empreinte. */
+export function declarationEnBase(
+  declaration: DeclarationOrganisation,
+  empreintes: Empreintes
+): DeclarationOrganisation {
+  const resultat: DeclarationOrganisation = { ...declaration }
+  const logo = logoEnBase(declaration.logo, empreintes)
+  if (logo === undefined) delete resultat.logo
+  else resultat.logo = logo
+  const favicon =
+    declaration.favicon === undefined
+      ? undefined
+      : empreintes.get(declaration.favicon)
+  if (favicon === undefined) delete resultat.favicon
+  else resultat.favicon = favicon
+  return resultat
+}
+
+/** L'identité d'une activité telle qu'elle se garde en base, ou null si elle est vide. */
+function identiteEnBase(
+  modele: ActiviteModele,
+  empreintes: Empreintes
+): IdentiteActivite | null {
+  const d = modele.declaration
+  const identite: IdentiteActivite = {}
+  if (d.contactRecrutement !== undefined)
+    identite.contactRecrutement = d.contactRecrutement
+  if (d.pageEquipe !== undefined) identite.pageEquipe = d.pageEquipe
+  const logo = logoEnBase(d.logo, empreintes)
+  if (logo !== undefined) identite.logo = logo
+  if (d.theme !== undefined) identite.theme = d.theme
+  return Object.keys(identite).length === 0 ? null : identite
 }
 
 /** Une activité sans période, sans périmètre ni fiche. */
@@ -289,7 +460,8 @@ async function importerActivite(
   modele: ActiviteModele,
   ligneId: string | null,
   annee: number | undefined,
-  ecrire: boolean
+  ecrire: boolean,
+  empreintes: Empreintes
 ): Promise<RapportActivite> {
   const declaration = modele.implicite
     ? {
@@ -304,6 +476,7 @@ async function importerActivite(
         nature: modele.declaration.nature,
         groupes: modele.declaration.groupes,
         ordre: modele.declaration.ordre,
+        identite: identiteEnBase(modele, empreintes) ?? Prisma.DbNull,
       }
   const rapport = rapportActiviteVide(
     declaration.slug,
@@ -354,12 +527,15 @@ async function importerActivite(
   const idsPerimetres = new Map<string, string>()
   for (const perimetre of modele.perimetres) {
     const existant = existants.get(perimetre.slug)
+    const tachesTypes = modele.taches.get(perimetre.slug) ?? null
     const donnees = {
       nom: perimetre.nom,
       type: perimetre.type,
       groupe: perimetre.groupe,
       couleur: perimetre.couleur?.toUpperCase() ?? null,
       ordre: perimetre.ordre,
+      effectifParDefaut: perimetre.effectif ?? null,
+      tachesTypes: tachesTypes ?? Prisma.DbNull,
     }
     if (existant === undefined) {
       rapport.perimetres.crees.push(perimetre.slug)
@@ -382,7 +558,9 @@ async function importerActivite(
       existant.type !== donnees.type ||
       existant.groupe !== donnees.groupe ||
       existant.couleur !== donnees.couleur ||
-      existant.ordre !== donnees.ordre
+      existant.ordre !== donnees.ordre ||
+      existant.effectifParDefaut !== donnees.effectifParDefaut ||
+      JSON.stringify(existant.tachesTypes) !== JSON.stringify(tachesTypes)
     if (change) {
       rapport.perimetres.modifies.push(perimetre.slug)
       if (ecrire)

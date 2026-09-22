@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -9,7 +9,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { AppContext } from '../context.ts'
 import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
-import { exporterFiches } from '../orga/exporter.ts'
+import { exporterContenu } from '../orga/exporter.ts'
 import { assurerOrganisationParDefaut } from '../lib/organisation.ts'
 import {
   importerModeles,
@@ -409,9 +409,16 @@ describe('droits sur les fiches', () => {
       c: 'Appeler le 06 12 34 56 78.',
     })
     const sortie = mkdtempSync(path.join(tmpdir(), 'relaytour-export-'))
-    const rapport = await exporterFiches(prisma, sortie)
-    expect(rapport.refusees.map(r => r.fichier)).toContain(
-      path.join('fiches', `natation-${s}`, `piscine-${s}.md`)
-    )
+    try {
+      const rapport = await exporterContenu(prisma, sortie, SLUG_ORGANISATION)
+      expect(rapport.refusees.map(r => r.fichier)).toContainEqual(
+        expect.stringMatching(
+          new RegExp(`fiches/natation-${s}/piscine-${s}\\.md$`)
+        )
+      )
+      expect(rapport.ecrites.join(' ')).not.toContain(`piscine-${s}.md`)
+    } finally {
+      rmSync(sortie, { recursive: true, force: true })
+    }
   })
 })

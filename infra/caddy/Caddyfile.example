@@ -15,10 +15,11 @@ api.exemple.org {
 	reverse_proxy 127.0.0.1:4400
 }
 
-# L'espace organisateur relaie la connexion et GraphQL vers l'API : le navigateur ne parle
-# qu'à une seule origine, et le cookie de session reste de première partie (ADR 0002).
+# L'espace organisateur relaie la connexion, GraphQL et les images d'identité vers l'API :
+# le navigateur ne parle qu'à une seule origine, et le cookie de session reste de
+# première partie (ADR 0002). Les mails citent les images sous /medias/ (ADR 0009).
 orga.exemple.org {
-	@api path /api/auth/* /graphql
+	@api path /api/auth/* /graphql /medias/*
 	handle @api {
 		reverse_proxy 127.0.0.1:4400
 	}
