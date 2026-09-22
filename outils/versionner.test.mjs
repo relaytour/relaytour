@@ -188,6 +188,16 @@ test('valider refuse un paquet dont le numéro diffère de la racine', () => {
   assert.match(erreur, /packages\/orga\/package\.json porte « 0\.1\.0 »/)
 })
 
+test('publier réaligne un paquet dont le numéro a divergé', () => {
+  const racine = depot('0.4.0', { 'packages/orga/package.json': '0.1.0' })
+  fragment(racine, '2026-01-01-orga-a', { type: 'correctif' })
+  assert.equal(lancer(racine, 'publier').code, 0)
+  for (const relatif of PAQUETS) {
+    assert.equal(JSON.parse(lire(racine, relatif)).version, '0.4.1')
+  }
+  assert.equal(lancer(racine, 'valider').code, 0)
+})
+
 test('valider refuse un fragment rattaché à une version future', () => {
   const racine = depot('0.4.0')
   fragment(racine, '2026-01-01-serveur-a', {

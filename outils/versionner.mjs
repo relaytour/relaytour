@@ -207,16 +207,24 @@ function comparer(a, b) {
   return 0
 }
 
-/**
- * Le numéro du produit, lu dans le package.json racine. Les paquets du serveur
- * et de l'espace organisateur doivent porter le même.
- */
-function versionDuProduit() {
-  const [racine, ...copies] = PAQUETS_VERSIONNES
+/** Le numéro du produit, lu dans le package.json racine et nulle part ailleurs. */
+function versionRacine() {
+  const [racine] = PAQUETS_VERSIONNES
   const version = lireJson(racine).version
   if (typeof version !== 'string' || !FORME_VERSION.test(version)) {
     mourir(`${racine} : « ${version} » n'est pas un numéro x.y.z`)
   }
+  return version
+}
+
+/**
+ * Le numéro du produit, une fois vérifié que les paquets du serveur et de
+ * l'espace organisateur portent le même. « publier » ne passe pas par ici : il
+ * réaligne les copies, y compris quand l'une d'elles a divergé.
+ */
+function versionDuProduit() {
+  const [racine, ...copies] = PAQUETS_VERSIONNES
+  const version = versionRacine()
   for (const relatif of copies) {
     const copie = lireJson(relatif).version
     if (copie !== version) {
@@ -486,7 +494,7 @@ function relever(relatif, version) {
 }
 
 function commandePublier(options) {
-  const actuelle = versionDuProduit()
+  const actuelle = versionRacine()
   const fragments = lireFragments()
   exigerFragmentsValides(fragments, actuelle)
 
