@@ -316,7 +316,7 @@ html {
 }
 
 /* La marque : pictogramme et nom. */
-.rt-entete {
+.rt-entete-panneau {
   padding-bottom: 20px;
 }
 
@@ -345,6 +345,9 @@ html {
 }
 
 .rt-entete-activite .rt-marque {
+  /* La marque prend la place restante : le bouton reste collé à droite, même
+     derrière un sigle court, et un nom trop long se tronque. */
+  flex: 1 1 0;
   padding-bottom: 0;
   min-width: 0;
 }

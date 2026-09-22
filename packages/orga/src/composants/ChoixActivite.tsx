@@ -42,7 +42,7 @@ export default function ChoixActivite({
   }
   const nom = activite.sigle ?? activite.nom
   return (
-    <div className="rt-entete">
+    <div className="rt-entete-panneau">
       <p className="rt-rappel-organisation">
         {organisation.logoUrl !== null && (
           <img
