@@ -103,10 +103,16 @@ export async function exigerEcriture(
   return ctx.personne
 }
 
-/** Date du jour à Paris, au format AAAA-MM-JJ. */
-export function aujourdhuiParis(maintenant = new Date()): string {
+/** Fuseau d'une organisation qui n'en déclare pas. */
+export const FUSEAU_PAR_DEFAUT = 'Europe/Paris'
+
+/** Date du jour dans le fuseau d'une organisation, au format AAAA-MM-JJ. */
+export function aujourdhui(
+  maintenant = new Date(),
+  fuseau = FUSEAU_PAR_DEFAUT
+): string {
   return new Intl.DateTimeFormat('fr-CA', {
-    timeZone: 'Europe/Paris',
+    timeZone: fuseau,
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
@@ -116,9 +122,9 @@ export function aujourdhuiParis(maintenant = new Date()): string {
 /** Une tâche est en retard si son échéance est passée et qu'elle n'est ni faite ni abandonnée. */
 export function estEnRetard(
   tache: { echeance: Date | null; statut: string },
-  aujourdhui = aujourdhuiParis()
+  jour = aujourdhui()
 ): boolean {
   if (tache.echeance === null) return false
   if (tache.statut === 'FAITE' || tache.statut === 'ABANDONNEE') return false
-  return tache.echeance.toISOString().slice(0, 10) < aujourdhui
+  return tache.echeance.toISOString().slice(0, 10) < jour
 }

@@ -1,4 +1,4 @@
-{{organisation}}
+{{marque}}
 
 Une de vos tâches a été modifiée
 

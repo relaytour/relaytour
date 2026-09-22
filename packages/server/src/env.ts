@@ -77,6 +77,17 @@ const EnvSchema = z
     ),
     // Dossier du serveur où s'écrivent les exports d'organisation.
     EXPORTS_DIR: optionnelle,
+    // Code source de la version exécutée, lié depuis l'espace organisateur (AGPL,
+    // article 13). Un hébergeur qui modifie Relaytour y indique son propre dépôt.
+    CODE_SOURCE_URL: z.preprocess(
+      v => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+      z
+        .string()
+        .trim()
+        .url()
+        .regex(/^https:\/\//, 'CODE_SOURCE_URL : adresse https attendue')
+        .default('https://github.com/relaytour/relaytour')
+    ),
   })
   .superRefine((v, ctx) => {
     if (

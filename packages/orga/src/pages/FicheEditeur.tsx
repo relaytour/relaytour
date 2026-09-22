@@ -29,6 +29,7 @@ import {
   MODIFIER_FICHE,
   slugDepuisTitre,
 } from '../lib/fiches'
+import { useActivite } from '../lib/activite'
 
 const PERIMETRE_CIBLE = graphql(`
   query PerimetreCibleFiche($slug: String!) {
@@ -109,6 +110,7 @@ function Formulaire({
 }) {
   const creation = fiche === null
   const navigate = useNavigate()
+  const { lien } = useActivite()
   const { message } = App.useApp()
   const ecrans = Grid.useBreakpoint()
   const [form] = Form.useForm<Valeurs>()
@@ -132,7 +134,7 @@ function Formulaire({
           },
         })
         message.success('Fiche créée.')
-        navigate(`/fiches/${r.data?.creerFiche.slug ?? v.slug}`)
+        navigate(lien(`/fiches/${r.data?.creerFiche.slug ?? v.slug}`))
       } else if (fiche) {
         await modifier({
           variables: {
@@ -143,7 +145,7 @@ function Formulaire({
           },
         })
         message.success('Fiche enregistrée.')
-        navigate(`/fiches/${fiche.slug}`)
+        navigate(lien(`/fiches/${fiche.slug}`))
       }
     } catch (e) {
       message.error(messageErreur(e))

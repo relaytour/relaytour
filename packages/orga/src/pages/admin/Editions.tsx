@@ -16,6 +16,7 @@ import {
 import { useState } from 'react'
 
 import Titre from '../../composants/Titre'
+import { useActivite } from '../../lib/activite'
 import { graphql } from '../../gql'
 import type { EditionsQuery, StatutEdition } from '../../gql/graphql'
 import { dateCourte, messageErreur } from '../../lib/erreurs'
@@ -60,11 +61,16 @@ const MODIFIER = graphql(`
 
 type Edition = EditionsQuery['editions'][number]
 
-const STATUTS: Record<StatutEdition, { libelle: string; couleur: string }> = {
+const statuts = (
+  archivee: string
+): Record<StatutEdition, { libelle: string; couleur: string }> => ({
   PREPARATION: { libelle: 'En préparation', couleur: 'blue' },
   EN_COURS: { libelle: 'En cours', couleur: 'green' },
-  ARCHIVEE: { libelle: 'Archivée', couleur: 'default' },
-}
+  ARCHIVEE: {
+    libelle: archivee.charAt(0).toUpperCase() + archivee.slice(1),
+    couleur: 'default',
+  },
+})
 
 interface Valeurs {
   annee: number
@@ -76,6 +82,8 @@ interface Valeurs {
 
 export default function Editions() {
   const { message } = App.useApp()
+  const { periode } = useActivite()
+  const STATUTS = statuts(periode.archivee)
   const { data, loading } = useQuery(EDITIONS)
   const [enEdition, setEnEdition] = useState<Edition | 'nouvelle' | null>(null)
   const [form] = Form.useForm<Valeurs>()
@@ -111,7 +119,7 @@ export default function Editions() {
         await creer({
           variables: { annee: valeurs.annee, nom: valeurs.nom, debut, fin },
         })
-        message.success('Édition créée.')
+        message.success(`${periode.Nom} ${periode.creee}.`)
       } else if (enEdition) {
         await modifier({
           variables: {
@@ -122,7 +130,7 @@ export default function Editions() {
             statut: valeurs.statut,
           },
         })
-        message.success('Édition enregistrée.')
+        message.success(`${periode.Nom} ${periode.enregistree}.`)
       }
       setEnEdition(null)
     } catch (e) {
@@ -132,8 +140,10 @@ export default function Editions() {
 
   return (
     <>
-      <Titre sousTitre="Chaque édition sert de repère aux échéances des tâches.">
-        Éditions
+      <Titre
+        sousTitre={`Chaque ${periode.nom} sert de repère aux échéances des tâches.`}
+      >
+        {periode.Pluriel}
       </Titre>
       <Button
         type="primary"
@@ -141,7 +151,7 @@ export default function Editions() {
         style={{ marginBottom: 16 }}
         onClick={() => ouvrir('nouvelle')}
       >
-        Nouvelle édition
+        {periode.Nouvelle}
       </Button>
       <Table<Edition>
         rowKey="id"
@@ -173,7 +183,7 @@ export default function Editions() {
       <Modal
         open={enEdition !== null}
         title={
-          enEdition === 'nouvelle' ? 'Nouvelle édition' : 'Modifier l’édition'
+          enEdition === 'nouvelle' ? periode.Nouvelle : `Modifier ${periode.la}`
         }
         okText="Enregistrer"
         cancelText="Annuler"
@@ -200,7 +210,7 @@ export default function Editions() {
             name="nom"
             rules={[{ required: true, message: 'Saisissez un nom.' }]}
           >
-            <Input placeholder="Édition 2027" />
+            <Input placeholder={`${periode.Nom} 2027`} />
           </Form.Item>
           <Row gutter={16}>
             <Col xs={24} sm={12}>

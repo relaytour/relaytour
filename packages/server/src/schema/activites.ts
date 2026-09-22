@@ -1,14 +1,16 @@
-import { NatureActivite, prisma } from '@relaytour/database'
+import { NatureActivite, prisma, type Prisma } from '@relaytour/database'
 
 import {
   GROUPES_PAR_DEFAUT,
   groupesValides,
   lireGroupes,
+  slugActiviteValide,
   type GroupePerimetres,
 } from '../lib/activites.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
-import { exigerPlaceActivite } from '../lib/limites.ts'
-import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
+import { exigerPlaceActivite, sousVerrouOrganisation } from '../lib/limites.ts'
+import { sansDoublon, texteRequis } from '../lib/saisie.ts'
+import { marquerContenuModifie } from '../lib/synchronisation.ts'
 
 import { builder } from './builder.ts'
 
@@ -65,6 +67,9 @@ builder.prismaObjectFields('Perimetre', t => ({
   activite: t.relation('activite', { type: ActiviteRef }),
   groupe: t.exposeString('groupe'),
 }))
+builder.prismaObjectFields('Fiche', t => ({
+  activite: t.relation('activite', { type: ActiviteRef }),
+}))
 
 builder.queryFields(t => ({
   activites: t.prismaField({
@@ -99,7 +104,7 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
       const donnees = {
         organisationId,
-        slug: slugValide(args.slug),
+        slug: slugActiviteValide(args.slug),
         nom: texteRequis(args.nom, 'Le nom'),
         sigle: args.sigle?.trim()
           ? texteRequis(args.sigle, 'Le sigle', 20)
@@ -108,11 +113,15 @@ builder.mutationFields(t => ({
         groupes: groupesValides(args.groupes ?? GROUPES_PAR_DEFAUT),
         ordre: args.ordre ?? 0,
       }
-      await exigerPlaceActivite(organisationId)
-      return sansDoublon(
-        prisma.activite.create({ ...query, data: donnees }),
-        'Une activité utilise déjà cet identifiant.'
-      )
+      return sousVerrouOrganisation(organisationId, async tx => {
+        await exigerPlaceActivite(organisationId, tx)
+        const activite = await sansDoublon(
+          tx.activite.create({ ...query, data: donnees }),
+          'Une activité utilise déjà cet identifiant.'
+        )
+        await marquerContenuModifie(organisationId, tx)
+        return activite
+      })
     },
   }),
 
@@ -126,8 +135,12 @@ builder.mutationFields(t => ({
       nature: t.arg({ type: NatureActiviteEnum, required: true }),
       groupes: t.arg({ type: [GroupePerimetresInput], required: true }),
       ordre: t.arg.int({ required: true }),
+      // Archiver ou rouvrir dans la même transaction : une limite atteinte ou la
+      // dernière activité ouverte annulent toute la modification.
+      archive: t.arg.boolean(),
     },
     resolve: async (query, _root, args, ctx) => {
+      const organisationId = ctx.organisation!.id
       const id = await ctx.exigerActivite(args.id)
       const groupes = groupesValides(args.groupes)
       // Un groupe encore porté par un périmètre ne disparaît pas.
@@ -141,18 +154,30 @@ builder.mutationFields(t => ({
       if (manquant !== undefined) {
         throw erreurGroupeUtilise(manquant.groupe)
       }
-      return prisma.activite.update({
-        ...query,
-        where: { id },
-        data: {
-          nom: texteRequis(args.nom, 'Le nom'),
-          sigle: args.sigle?.trim()
-            ? texteRequis(args.sigle, 'Le sigle', 20)
-            : null,
-          nature: args.nature,
-          groupes,
-          ordre: args.ordre,
-        },
+      const donnees = {
+        nom: texteRequis(args.nom, 'Le nom'),
+        sigle: args.sigle?.trim()
+          ? texteRequis(args.sigle, 'Le sigle', 20)
+          : null,
+        nature: args.nature,
+        groupes,
+        ordre: args.ordre,
+      }
+      return sousVerrouOrganisation(organisationId, async tx => {
+        const archivedAt =
+          args.archive === null || args.archive === undefined
+            ? undefined
+            : await archivage(tx, organisationId, id, args.archive)
+        const activite = await tx.activite.update({
+          ...query,
+          where: { id },
+          data: {
+            ...donnees,
+            ...(archivedAt === undefined ? {} : { archivedAt }),
+          },
+        })
+        await marquerContenuModifie(organisationId, tx)
+        return activite
       })
     },
   }),
@@ -167,35 +192,48 @@ builder.mutationFields(t => ({
       archive: t.arg.boolean({ required: true }),
     },
     resolve: async (query, _root, args, ctx) => {
+      const organisationId = ctx.organisation!.id
       const id = await ctx.exigerActivite(args.id)
-      const actuelle = await prisma.activite.findUniqueOrThrow({
-        where: { id },
-        select: { archivedAt: true },
-      })
-      if (!args.archive && actuelle.archivedAt !== null) {
-        await exigerPlaceActivite(ctx.organisation!.id)
-      }
-      if (args.archive && actuelle.archivedAt === null) {
-        const restantes = await prisma.activite.count({
-          where: {
-            organisationId: ctx.organisation!.id,
-            archivedAt: null,
-            id: { not: id },
-          },
+      return sousVerrouOrganisation(organisationId, async tx => {
+        const archivedAt = await archivage(tx, organisationId, id, args.archive)
+        const activite = await tx.activite.update({
+          ...query,
+          where: { id },
+          data: { archivedAt },
         })
-        if (restantes === 0) throw erreurDerniereActivite()
-      }
-      return prisma.activite.update({
-        ...query,
-        where: { id },
-        data: {
-          // La date d'archivage d'origine est conservée.
-          archivedAt: args.archive ? (actuelle.archivedAt ?? new Date()) : null,
-        },
+        await marquerContenuModifie(organisationId, tx)
+        return activite
       })
     },
   }),
 }))
+
+/**
+ * La date d'archivage d'une activité après la demande, contrôles faits sous le
+ * verrou de l'organisation : rouvrir respecte la limite d'activités, archiver
+ * garde au moins une activité ouverte. La date d'archivage d'origine est conservée.
+ */
+async function archivage(
+  tx: Prisma.TransactionClient,
+  organisationId: string,
+  id: string,
+  archive: boolean
+): Promise<Date | null> {
+  const actuelle = await tx.activite.findUniqueOrThrow({
+    where: { id },
+    select: { archivedAt: true },
+  })
+  if (!archive && actuelle.archivedAt !== null) {
+    await exigerPlaceActivite(organisationId, tx)
+  }
+  if (archive && actuelle.archivedAt === null) {
+    const restantes = await tx.activite.count({
+      where: { organisationId, archivedAt: null, id: { not: id } },
+    })
+    if (restantes === 0) throw erreurDerniereActivite()
+  }
+  return archive ? (actuelle.archivedAt ?? new Date()) : null
+}
 
 function erreurGroupeUtilise(cle: string) {
   return erreurSaisie(

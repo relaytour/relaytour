@@ -7,16 +7,23 @@ import type {
 } from '../context.ts'
 
 import {
-  aujourdhuiParis,
+  aujourdhui,
   estEnRetard,
   peutLirePerimetre,
   perimetresLisibles,
 } from './droits.ts'
 
-describe('aujourdhuiParis', () => {
+describe('aujourdhui', () => {
   it('passe au lendemain à minuit heure de Paris, pas à minuit UTC', () => {
     // 23 h 30 UTC le 26 août 2027 = 1 h 30 à Paris le 27 août.
-    expect(aujourdhuiParis(new Date('2027-08-26T23:30:00Z'))).toBe('2027-08-27')
+    expect(aujourdhui(new Date('2027-08-26T23:30:00Z'))).toBe('2027-08-27')
+  })
+
+  it('suit le fuseau de l’organisation', () => {
+    // 23 h 30 UTC le 26 août 2027 = 19 h 30 à Montréal, encore le 26 août.
+    expect(
+      aujourdhui(new Date('2027-08-26T23:30:00Z'), 'America/Montreal')
+    ).toBe('2027-08-26')
   })
 })
 

@@ -1,4 +1,6 @@
 import {
+  ApartmentOutlined,
+  BankOutlined,
   AppstoreOutlined,
   BarChartOutlined,
   BookOutlined,
@@ -13,14 +15,17 @@ import {
   TeamOutlined,
 } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
-import { Button, Drawer, Grid, Menu, Result, Spin } from 'antd'
+import { Alert, Button, Drawer, Grid, Menu, Select } from 'antd'
 import { useState } from 'react'
-import { Navigate, Outlet, useLocation, useNavigate } from 'react-router'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { graphql } from '../gql'
-import { MOI } from '../lib/requetes'
+import { useActivite } from '../lib/activite'
+import { ContexteSession, type Session } from '../lib/session'
 
-import Marque, { Pictogramme } from './Marque'
+import FournisseurActivite from './FournisseurActivite'
+import GardeSession from './GardeSession'
+import Marque, { Pictogramme, SignatureRelaytour } from './Marque'
 import MenuCompte from './MenuCompte'
 import Notifications from './Notifications'
 import Recherche from './Recherche'
@@ -36,6 +41,9 @@ const MENU_PERIMETRES = graphql(`
           slug
           nom
           couleur
+          activite {
+            id
+          }
         }
       }
     }
@@ -43,58 +51,62 @@ const MENU_PERIMETRES = graphql(`
 `)
 
 // Mise en page des écrans connectés : une barre latérale et une barre haute en
-// verre, détachées des bords, posées sur le sol du thème. Sans session, elle
-// renvoie vers la connexion ; les écrans d'admin exigent en plus le droit d'admin.
-export default function Coquille({
-  adminSeulement = false,
-}: {
-  adminSeulement?: boolean
-}) {
-  const { data, loading, error } = useQuery(MOI)
-  const { data: menu } = useQuery(MENU_PERIMETRES, { skip: !data?.moi })
+// verre, détachées des bords, posées sur le sol du thème. La garde de session
+// renvoie vers la connexion ou fait choisir l'organisation ; le fournisseur
+// d'activité lit l'activité de l'adresse (ADR 0008).
+export default function Coquille() {
+  return (
+    <GardeSession>
+      {session => (
+        <ContexteSession.Provider value={session}>
+          <FournisseurActivite>
+            <Mise session={session} />
+          </FournisseurActivite>
+        </ContexteSession.Provider>
+      )}
+    </GardeSession>
+  )
+}
+
+function Mise({ session }: { session: Session }) {
+  const { moi, active } = session
+  const { activite, activites, lien, periode } = useActivite()
+  const { data: menu } = useQuery(MENU_PERIMETRES)
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const ecrans = Grid.useBreakpoint()
   const [tiroirOuvert, setTiroirOuvert] = useState(false)
 
-  if (loading) {
-    return <Spin fullscreen description="Chargement" />
-  }
-  if (error) {
-    return (
-      <Result
-        status="warning"
-        title="L’espace organisateur ne répond pas."
-        subTitle="Vérifiez votre connexion, puis rechargez la page."
-      />
-    )
-  }
-  const moi = data?.moi
-  if (!moi) return <Navigate to="/connexion" replace />
-
-  // Les périmètres où la personne a été affectée, toutes éditions confondues.
+  // Les périmètres de l'activité où la personne a été affectée, toutes périodes
+  // confondues.
   const perimetres = [
     ...new Map(
-      (menu?.moi?.affectations ?? []).map(a => [a.perimetre.id, a.perimetre])
+      (menu?.moi?.affectations ?? [])
+        .filter(a => a.perimetre.activite.id === activite.id)
+        .map(a => [a.perimetre.id, a.perimetre])
     ).values(),
   ].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
 
   const entrees = [
-    { key: '/', icon: <HomeOutlined />, label: 'Mon espace' },
+    { key: lien('/'), icon: <HomeOutlined />, label: 'Mon espace' },
     {
-      key: '/retroplanning',
+      key: lien('/retroplanning'),
       icon: <ScheduleOutlined />,
       label: 'Rétroplanning',
     },
-    { key: '/fiches', icon: <BookOutlined />, label: 'Fiches' },
-    { key: '/preferences', icon: <SettingOutlined />, label: 'Préférences' },
+    { key: lien('/fiches'), icon: <BookOutlined />, label: 'Fiches' },
+    {
+      key: lien('/preferences'),
+      icon: <SettingOutlined />,
+      label: 'Préférences',
+    },
     ...(perimetres.length > 0
       ? [
           {
             type: 'group' as const,
             label: 'Mes périmètres',
             children: perimetres.map(p => ({
-              key: `/perimetres/${p.slug}`,
+              key: lien(`/perimetres/${p.slug}`),
               icon: (
                 <span className="rt-icone-point" aria-hidden="true">
                   <span
@@ -115,37 +127,47 @@ export default function Coquille({
             label: 'Administration',
             children: [
               {
-                key: '/admin/avancement',
+                key: lien('/admin/organisation'),
+                icon: <BankOutlined />,
+                label: 'Organisation',
+              },
+              {
+                key: lien('/admin/activites'),
+                icon: <ApartmentOutlined />,
+                label: 'Activités',
+              },
+              {
+                key: lien('/admin/avancement'),
                 icon: <BarChartOutlined />,
                 label: 'Avancement',
               },
               {
-                key: '/admin/classement',
+                key: lien('/admin/classement'),
                 icon: <TrophyOutlined />,
                 label: 'Classement',
               },
               {
-                key: '/admin/editions',
+                key: lien('/admin/editions'),
                 icon: <CalendarOutlined />,
-                label: 'Éditions',
+                label: periode.Pluriel,
               },
               {
-                key: '/admin/perimetres',
+                key: lien('/admin/perimetres'),
                 icon: <AppstoreOutlined />,
                 label: 'Périmètres',
               },
               {
-                key: '/admin/personnes',
+                key: lien('/admin/personnes'),
                 icon: <TeamOutlined />,
                 label: 'Personnes',
               },
               {
-                key: '/admin/postes',
+                key: lien('/admin/postes'),
                 icon: <SolutionOutlined />,
                 label: 'Postes à pourvoir',
               },
               {
-                key: '/admin/redaction',
+                key: lien('/admin/redaction'),
                 icon: <EditOutlined />,
                 label: 'Rédaction',
               },
@@ -158,7 +180,9 @@ export default function Coquille({
   const navigation = (
     <Menu
       mode="inline"
-      selectedKeys={[pathname.startsWith('/fiches') ? '/fiches' : pathname]}
+      selectedKeys={[
+        pathname.startsWith(lien('/fiches')) ? lien('/fiches') : pathname,
+      ]}
       items={entrees}
       onClick={({ key }) => {
         setTiroirOuvert(false)
@@ -167,14 +191,7 @@ export default function Coquille({
     />
   )
 
-  const pied = (
-    <div className="rt-pied-marque">
-      <span style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}>
-        <Pictogramme taille={14} monochrome />
-      </span>
-      Propulsé par Relaytour
-    </div>
-  )
+  const pied = <SignatureRelaytour />
 
   return (
     <div className="rt-page">
@@ -218,17 +235,38 @@ export default function Coquille({
               <Pictogramme taille={24} />
             </span>
           )}
+          {activites.length > 1 && (
+            <Select
+              aria-label="Activité"
+              value={activite.slug}
+              style={{ minWidth: 180 }}
+              onChange={slug => navigate(`/${slug}/`)}
+              options={activites.map(a => ({ value: a.slug, label: a.nom }))}
+            />
+          )}
           <Recherche estAdmin={moi.estAdmin} />
           <span style={{ flex: 1 }} />
           <Notifications />
           <MenuCompte nom={moi.nom} afficherNom={Boolean(ecrans.sm)} />
         </header>
         <main className="rt-contenu">
-          {adminSeulement && !moi.estAdmin ? (
-            <Result status="403" title="Cette page est réservée aux admins." />
-          ) : (
-            <Outlet />
+          {active.statut === 'LECTURE_SEULE' && (
+            <Alert
+              type="warning"
+              showIcon
+              title="Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier."
+              style={{ marginBottom: 16 }}
+            />
           )}
+          {activite.archive && (
+            <Alert
+              type="info"
+              showIcon
+              title="Cette activité est archivée : elle reste consultable."
+              style={{ marginBottom: 16 }}
+            />
+          )}
+          <Outlet />
         </main>
       </div>
     </div>

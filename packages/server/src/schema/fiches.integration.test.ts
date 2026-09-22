@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs'
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import path from 'node:path'
 
@@ -8,8 +8,8 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { AppContext } from '../context.ts'
-import { contexteDeTest } from '../test/contexte.ts'
-import { exporterFiches } from '../orga/exporter.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
+import { exporterContenu } from '../orga/exporter.ts'
 import { assurerOrganisationParDefaut } from '../lib/organisation.ts'
 import {
   importerModeles,
@@ -19,7 +19,6 @@ import {
 import { lireModeles } from '../orga/modeles.ts'
 
 import { schema } from './index.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)
@@ -62,7 +61,8 @@ let ORGANISATION = ''
 let SLUG_ORGANISATION = ''
 
 /** Le rapport de l'unique activité du dossier, en disposition plate. */
-const activite = (rapport: RapportImport): RapportActivite => rapport.activites[0]!
+const activite = (rapport: RapportImport): RapportActivite =>
+  rapport.activites[0]!
 let ACTIVITE = ''
 
 beforeAll(async () => {
@@ -210,7 +210,9 @@ describe('import des modèles', () => {
       crees: [],
       dejaPresents: [`natation-${s}`],
     })
-    expect(activite(rapport).taches.dejaPresentes).toEqual([`natation-${s}/piscine`])
+    expect(activite(rapport).taches.dejaPresentes).toEqual([
+      `natation-${s}/piscine`,
+    ])
   })
 
   it('ne remplace pas un effectif modifié dans l’application', async () => {
@@ -407,9 +409,16 @@ describe('droits sur les fiches', () => {
       c: 'Appeler le 06 12 34 56 78.',
     })
     const sortie = mkdtempSync(path.join(tmpdir(), 'relaytour-export-'))
-    const rapport = await exporterFiches(prisma, sortie)
-    expect(rapport.refusees.map(r => r.fichier)).toContain(
-      path.join('fiches', `natation-${s}`, `piscine-${s}.md`)
-    )
+    try {
+      const rapport = await exporterContenu(prisma, sortie, SLUG_ORGANISATION)
+      expect(rapport.refusees.map(r => r.fichier)).toContainEqual(
+        expect.stringMatching(
+          new RegExp(`fiches/natation-${s}/piscine-${s}\\.md$`)
+        )
+      )
+      expect(rapport.ecrites.join(' ')).not.toContain(`piscine-${s}.md`)
+    } finally {
+      rmSync(sortie, { recursive: true, force: true })
+    }
   })
 })

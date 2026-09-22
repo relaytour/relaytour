@@ -19,7 +19,9 @@ const SELECTION_TACHE = {
   select: {
     titre: true,
     echeance: true,
-    perimetre: { select: { nom: true, slug: true } },
+    perimetre: {
+      select: { nom: true, slug: true, activite: { select: { slug: true } } },
+    },
   },
 } as const
 
