@@ -7,7 +7,7 @@ import {
 
 import type { AppContext } from '../context.ts'
 import { lireGroupes, type GroupePerimetres } from '../lib/activites.ts'
-import { configurationOrganisation } from '../lib/organisation.ts'
+import { configurationActivite } from '../lib/organisation.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import {
@@ -76,13 +76,18 @@ async function chargerPostes(
 ): Promise<{
   annee: number
   postes: PostesPerimetre[]
-  activite: { nom: string; sigle: string | null; groupes: GroupePerimetres[] }
+  activite: {
+    id: string
+    nom: string
+    sigle: string | null
+    groupes: GroupePerimetres[]
+  }
 }> {
   const edition = await ctx.exigerEdition(editionIdBrut)
   const editionId = edition.id
   const ligneActivite = await prisma.activite.findUniqueOrThrow({
     where: { id: edition.activiteId },
-    select: { nom: true, sigle: true, groupes: true },
+    select: { id: true, nom: true, sigle: true, groupes: true },
   })
   const activite = {
     ...ligneActivite,
@@ -156,9 +161,8 @@ builder.queryFields(t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
       const { annee, postes, activite } = await chargerPostes(ctx, editionId)
-      const configuration = await configurationOrganisation(
-        ctx.organisation!.id
-      )
+      // Les contacts de l'activité l'emportent sur ceux de l'organisation (ADR 0009).
+      const configuration = await configurationActivite(activite.id)
       // L'appel porte le nom court de l'activité (ADR 0008) : pour l'activité
       // implicite d'un dépôt plat, c'est celui de l'organisation.
       return texteAppel(

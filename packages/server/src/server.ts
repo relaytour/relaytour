@@ -3,6 +3,7 @@ import http from 'node:http'
 import { ApolloServer } from '@apollo/server'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { expressMiddleware } from '@as-integrations/express5'
+import { prisma } from '@relaytour/database'
 import cors from 'cors'
 import express from 'express'
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
@@ -17,6 +18,7 @@ import {
 import { env } from './env.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
+import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
 import { assurerOrganisationParDefaut } from './lib/organisation.ts'
 import { writeSchemaFile } from './lib/print-schema.ts'
 import { sonderDependances } from './lib/sante.ts'
@@ -76,6 +78,44 @@ app.get('/ready', (_req, res) => {
   )
 })
 
+// Images d'identité (ADR 0009) : publiques, comme le nom et le thème que l'écran
+// de connexion affiche. L'adresse porte l'empreinte du fichier : le contenu d'une
+// adresse ne change jamais, et le navigateur la garde en cache. La politique de
+// sécurité bloque tout script, y compris dans un SVG ouvert directement.
+app.get('/medias/:fichier', (req, res) => {
+  const m = /^([0-9a-f]{64})\.(png|svg)$/.exec(req.params.fichier)
+  if (m === null) {
+    res.status(404).end()
+    return
+  }
+  void prisma.media
+    .findFirst({
+      where: { empreinte: m[1] },
+      select: { type: true, donnees: true },
+    })
+    .then(
+      media => {
+        if (media === null || EXTENSIONS[media.type as TypeMedia] !== m[2]) {
+          res.status(404).end()
+          return
+        }
+        res
+          .set({
+            'Content-Type': media.type,
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'X-Content-Type-Options': 'nosniff',
+            'Content-Security-Policy':
+              "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+            'Cross-Origin-Resource-Policy': 'cross-origin',
+          })
+          .send(Buffer.from(media.donnees))
+      },
+      () => {
+        res.status(503).end()
+      }
+    )
+})
+
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)
 app.all('/api/auth/*splat', (req, res) => {
@@ -89,7 +129,9 @@ app.use(
   expressMiddleware(apollo, {
     context: async ({ req }) => {
       // Le jeton d'administration de l'installation ignore toute session (ADR 0008).
-      const porteur = /^Bearer\s+(.+)$/i.exec(req.get('authorization') ?? '')
+      // Un en-tête Bearer, même vide ou malformé, écarte la session : un jeton
+      // faux rend la requête anonyme.
+      const porteur = /^Bearer\b\s*(.*)$/i.exec(req.get('authorization') ?? '')
       if (porteur !== null) {
         const valide = jetonAdministrationValide((porteur[1] ?? '').trim())
         if (!valide) {

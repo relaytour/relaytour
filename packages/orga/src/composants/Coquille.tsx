@@ -1,5 +1,6 @@
 import {
   ApartmentOutlined,
+  BankOutlined,
   AppstoreOutlined,
   BarChartOutlined,
   BookOutlined,
@@ -24,7 +25,7 @@ import { ContexteSession, type Session } from '../lib/session'
 
 import FournisseurActivite from './FournisseurActivite'
 import GardeSession from './GardeSession'
-import Marque, { Pictogramme } from './Marque'
+import Marque, { Pictogramme, SignatureRelaytour } from './Marque'
 import MenuCompte from './MenuCompte'
 import Notifications from './Notifications'
 import Recherche from './Recherche'
@@ -126,6 +127,11 @@ function Mise({ session }: { session: Session }) {
             label: 'Administration',
             children: [
               {
+                key: lien('/admin/organisation'),
+                icon: <BankOutlined />,
+                label: 'Organisation',
+              },
+              {
                 key: lien('/admin/activites'),
                 icon: <ApartmentOutlined />,
                 label: 'Activités',
@@ -185,14 +191,7 @@ function Mise({ session }: { session: Session }) {
     />
   )
 
-  const pied = (
-    <div className="rt-pied-marque">
-      <span style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}>
-        <Pictogramme taille={14} monochrome />
-      </span>
-      Propulsé par Relaytour
-    </div>
-  )
+  const pied = <SignatureRelaytour />
 
   return (
     <div className="rt-page">

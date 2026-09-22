@@ -1,12 +1,14 @@
 # Relaytour
 
-Relaytour aide une association ou un collectif bénévole à organiser un événement récurrent : tournoi, rencontre sportive, festival, forum. Il garde la méthode d'une édition à l'autre.
+Relaytour aide une association ou un collectif bénévole à organiser ses activités récurrentes. Une activité peut être un événement (tournoi, rencontre sportive, festival), une section qui vit à la saison, ou une instance comme un conseil d'administration. Relaytour garde la méthode d'une période à l'autre.
 
-- **Périmètres** : les sports et les pôles transverses d'une organisation, stables d'une édition à l'autre.
-- **Référentes et référents** : les personnes affectées à un périmètre pour une édition.
-- **Tâches** : des tâches types à échéance relative au jour J (J-120, J+14), recréées à chaque édition, puis suivies dans un rétroplanning.
-- **Fiches méthode** : le « comment faire » de chaque périmètre, versionné et transmis à l'édition suivante.
+- **Activités** : les événements, sections et instances d'une organisation. Chacune a ses périodes (édition, saison ou mandat) et ses groupes de périmètres.
+- **Périmètres** : les parties d'une activité (un sport, un pôle, une commission), rangées en groupes et stables d'une période à l'autre.
+- **Référentes et référents** : les personnes affectées à un périmètre pour une période.
+- **Tâches** : des tâches types à échéance relative au premier jour (J-120, J+14), recréées à chaque période, puis suivies dans un rétroplanning.
+- **Fiches méthode** : le « comment faire » de chaque périmètre, versionné et transmis à la période suivante.
 - **Postes à pourvoir, souhaits, notifications** : ce qu'il faut pour constituer l'équipe et tenir les échéances.
+- **Plusieurs organisations** : une installation peut servir plusieurs associations. Un hébergeur les administre par script ou par API. L'API ne renvoie aucune donnée d'une organisation ; seul l'export d'une organisation, écrit sur le serveur, contient ses noms et ses adresses (ADR 0008).
 
 Relaytour est un logiciel libre (AGPL-3.0). Vous pouvez l'héberger vous-même. Le contenu de votre organisation reste chez vous : le dépôt ne contient qu'une organisation d'exemple.
 
@@ -49,7 +51,7 @@ yarn workspace @relaytour/server orga:valider /chemin/vers/votre/contenu
 yarn workspace @relaytour/server orga:importer --dossier /chemin/vers/votre/contenu --edition 2027
 ```
 
-La structure attendue est décrite dans [content/exemple/README.md](content/exemple/README.md). Le plus simple est de créer votre dépôt d'organisation depuis le gabarit `relaytour/organisation-modele`, qui documente les trois façons de le rattacher à Relaytour. Le choix du fournisseur de mail est décrit dans [docs/courriel.md](docs/courriel.md).
+Une installation qui porte plusieurs organisations exige `--organisation <slug>`, pour l'import comme pour l'export. La structure attendue, en disposition plate ou en disposition `activites/`, est décrite dans [content/exemple/README.md](content/exemple/README.md). Le plus simple est de créer votre dépôt d'organisation depuis le gabarit `relaytour/organisation-modele`, qui documente les trois façons de le rattacher à Relaytour. Le choix du fournisseur de mail est décrit dans [docs/courriel.md](docs/courriel.md).
 
 ## Commandes
 
@@ -60,7 +62,7 @@ yarn workspace @relaytour/server test:integration   # tests sur la base locale (
 yarn codegen      # schema.graphql, gabarits de mail et types GraphQL (contrats commités)
 yarn db:migrate   # nouvelle migration Prisma
 yarn workspace @relaytour/server courriel:essai adresse@exemple.org   # mail d'essai (worker requis)
-yarn workspace @relaytour/server orga:exporter --dossier /chemin/vers/votre/contenu   # reverse les fiches modifiées dans l'application
+yarn workspace @relaytour/server orga:exporter --dossier /chemin/vers/votre/contenu   # écrit tout le contenu porté par l'application
 ```
 
 ## Licence

@@ -15,6 +15,7 @@ export default defineConfig({
     proxy: {
       '/api/auth': { target: API, xfwd: true },
       '/graphql': { target: API, xfwd: true },
+      '/medias': { target: API, xfwd: true },
     },
   },
   build: {

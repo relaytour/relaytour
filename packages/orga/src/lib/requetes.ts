@@ -72,6 +72,20 @@ export const ACTIVITES = graphql(`
         libelle
         libellePluriel
       }
+      logoUrl
+      contactRecrutement
+      pageEquipe
+      theme {
+        ...ThemeChamps
+      }
+      identite {
+        contactRecrutement
+        pageEquipe
+        logoPng
+        logoSvg
+        logoUrl
+        theme
+      }
     }
   }
 `)

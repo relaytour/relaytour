@@ -4,7 +4,6 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 
 ## Prévu après la première version
 
-- **Plusieurs activités par organisation.** Une organisation déclare ses activités (un événement, une section, une instance), chacune avec ses périodes, ses groupes de périmètres, ses fiches et ses tâches types. Un hébergeur crée, suspend et exporte une organisation par un script ou un jeton, sans accès aux données. La décision est prise (ADR 0008) et le chantier se fait un lot par session.
 - **Rôle bénévole.** Un admin ou un·e référent·e invite une ou un bénévole sur un périmètre et une édition. Les bénévoles voient les tâches qui leur sont confiées et les fiches utiles à leur mission. Elles et ils ne voient ni le score ni l'avancement global. La connexion se fait par code mail, comme pour les autres comptes.
 - **Espace des participantes et participants.** Chaque personne inscrite dispose d'un compte relié à son inscription, avec la même connexion par code mail. L'espace affiche l'inscription, le programme, les informations pratiques et les messages de l'organisation. Une page de contrôle vérifie chaque inscription auprès du serveur sans jamais charger la liste des personnes.
 - **Import des inscriptions par connecteur.** Chaque organisation branche son outil d'inscription ou de billetterie par un connecteur, à l'import régulier ou à la création automatique du compte. Le choix du connecteur appartient à l'organisation.
@@ -18,6 +17,7 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 ## Propositions à valider avec les référentes et référents
 
 - **Transmission d'une période à la suivante.** Ce chantier suit l'ADR 0008 : il donne sa valeur à la période. À la création d'une période, un admin choisit les tâches de l'édition passée à reconduire, avec leurs échéances recalculées. Un·e référent·e sortant·e laisse une note de passation à la personne qui lui succède.
+- **Éditeur de tâches types.** Les admins modifient les tâches types d'un périmètre dans l'espace organisateur. Elles ne changent aujourd'hui que dans le dossier de contenu (ADR 0009).
 - **Tâches.** Sous-tâches sous forme de cases à cocher ; dépendances entre tâches ; pièces jointes sur une tâche ou une fiche ; commentaires entre référentes et référents sur une tâche.
 - **Fiches.** Relecture avant publication sur les périmètres choisis par l'admin ; recherche en texte libre sur toutes les fiches accessibles ; liste des tâches qui s'appuient sur une fiche.
 - **Calendrier.** Vue calendrier des échéances par périmètre ; abonnement personnel au format iCal.

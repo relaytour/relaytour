@@ -3,7 +3,7 @@ import { Alert, Button, Card, Form, Input, Typography } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import Marque from '../composants/Marque'
+import Marque, { SignatureRelaytour } from '../composants/Marque'
 import {
   adresseConnexionAutomatique,
   adresseMemorisee,
@@ -225,6 +225,9 @@ export default function Connexion() {
             </Button>
           </Form>
         )}
+        <div style={{ marginTop: 24 }}>
+          <SignatureRelaytour />
+        </div>
       </Card>
     </main>
   )

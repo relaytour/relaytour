@@ -13,7 +13,7 @@ Ce dossier décrit le déploiement de référence (ADR 0004) : une machine sous 
 | `server` | API GraphQL, port 4400 sur `127.0.0.1` |
 | `worker` | Mails, rappels et résumés |
 
-L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*` et `/graphql` vers l'API. Aucun outil Node n'est nécessaire sur le serveur.
+L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*`, `/graphql` et `/medias/*` vers l'API. `/medias/*` sert les logos et les favicons des organisations (ADR 0009). Aucun outil Node n'est nécessaire sur le serveur.
 
 ## Étapes
 
@@ -72,6 +72,8 @@ Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses m
     docker compose --env-file .env cp server:/exports ./exports
     ```
     Le fichier contient des noms et des adresses : remettez-le à l'organisation et supprimez-le du serveur ensuite.
+5. **Code source.** L'espace organisateur lie le code source de la version exécutée, comme l'AGPL l'exige (article 13). Par défaut, le lien mène au dépôt public. Un hébergeur qui modifie Relaytour indique son propre dépôt dans `CODE_SOURCE_URL`.
+6. **Identité et contenu.** Les admins d'une organisation modifient son nom, ses contacts, son logo et son thème dans l'espace organisateur, et téléchargent son contenu en archive. Le portail d'un hébergeur ne gère que le statut et les limites (ADR 0009).
 
 ## Tâches planifiées
 
