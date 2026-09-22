@@ -40,6 +40,7 @@ export const SLUGS_RESERVES = new Set([
   'connexion',
   'fiches',
   'graphql',
+  'medias',
   'perimetres',
   'preferences',
   'retroplanning',

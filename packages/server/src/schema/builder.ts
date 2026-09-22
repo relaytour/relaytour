@@ -3,7 +3,11 @@ import ComplexityPlugin from '@pothos/plugin-complexity'
 import PrismaPlugin from '@pothos/plugin-prisma'
 import ScopeAuthPlugin from '@pothos/plugin-scope-auth'
 import { getDatamodel, prisma, type PrismaTypes } from '@relaytour/database'
-import { DateResolver, DateTimeResolver } from 'graphql-scalars'
+import {
+  DateResolver,
+  DateTimeResolver,
+  JSONObjectResolver,
+} from 'graphql-scalars'
 
 import type { AppContext } from '../context.ts'
 import {
@@ -18,6 +22,10 @@ export const builder = new SchemaBuilder<{
   Scalars: {
     Date: { Input: Date; Output: Date }
     DateTime: { Input: Date; Output: Date }
+    JSONObject: {
+      Input: Record<string, unknown>
+      Output: Record<string, unknown>
+    }
   }
   DefaultFieldNullability: false
   AuthScopes: {
@@ -72,6 +80,8 @@ export const builder = new SchemaBuilder<{
 
 builder.addScalarType('Date', DateResolver, {})
 builder.addScalarType('DateTime', DateTimeResolver, {})
+// Un thème déclaré : un objet que le serveur valide avec son schéma zod.
+builder.addScalarType('JSONObject', JSONObjectResolver, {})
 
 builder.queryType({})
 builder.mutationType({ authScopes: { ecriture: true } })

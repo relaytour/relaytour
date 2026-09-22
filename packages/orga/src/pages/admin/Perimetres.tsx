@@ -79,6 +79,10 @@ export default function Perimetres() {
   const { message } = App.useApp()
   // Les groupes de périmètres viennent de l'activité (ADR 0008).
   const { activite, periode, libelleGroupe } = useActivite()
+  const rangGroupe = (cle: string) => {
+    const rang = activite.groupes.findIndex(g => g.cle === cle)
+    return rang === -1 ? activite.groupes.length : rang
+  }
   const groupes = activite.groupes.map(g => ({
     value: g.cle,
     label: g.libelle,
@@ -164,7 +168,13 @@ export default function Perimetres() {
       <Table<Perimetre>
         rowKey="id"
         loading={loading}
-        dataSource={data?.perimetres ?? []}
+        dataSource={[...(data?.perimetres ?? [])].sort(
+          // L'ordre des groupes déclaré par l'activité, puis l'ordre et le nom.
+          (a, b) =>
+            rangGroupe(a.groupe) - rangGroupe(b.groupe) ||
+            a.ordre - b.ordre ||
+            a.nom.localeCompare(b.nom, 'fr')
+        )}
         pagination={false}
         scroll={{ x: 'max-content' }}
         onRow={p => ({

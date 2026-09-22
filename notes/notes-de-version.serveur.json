@@ -65,6 +65,18 @@
       }
     },
     {
+      "id": "2026-09-22-serveur-l-application-porte-le-contenu-et-l-identite-des-activites",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Chaque activité a son identité, et l'export reprend tout le contenu",
+        "texte": "Une activité peut avoir son propre logo, ses couleurs, son contact de recrutement et sa page d'équipe. Les mails d'une tâche prennent l'identité de son activité. L'export écrit tout le contenu de l'organisation, et un import ne remplace plus une modification faite dans l'application.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-22-serveur-l-api-sert-le-choix-d-organisation-et-d-activite",
       "date": "2026-09-22",
       "type": "fonctionnalite",

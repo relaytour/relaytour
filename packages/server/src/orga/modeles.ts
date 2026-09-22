@@ -5,10 +5,18 @@ import { parse } from 'yaml'
 import { z } from 'zod'
 
 import { SLUGS_RESERVES } from '../lib/activites.ts'
-import { donneesPersonnelles, normaliserContenu } from '../lib/contenu.ts'
+import {
+  donneesPersonnelles,
+  normaliserContenu,
+  type AdressesDeRole,
+} from '../lib/contenu.ts'
+import { verifierMedia, type MediaValide } from '../lib/medias.ts'
 import {
   DeclarationOrganisationSchema,
+  IdentiteActiviteSchema,
+  manquementsIdentiteActivite,
   type DeclarationOrganisation,
+  type Logo,
 } from '../lib/organisation.ts'
 
 // Lecture et validation d'un dossier de contenu (ADR 0003 et 0008).
@@ -28,13 +36,15 @@ const GroupeModele = z.strictObject({
 })
 
 // Groupes de la disposition plate, et des activités qui n'en déclarent pas.
-const GROUPES_PAR_DEFAUT = [
+export const GROUPES_PAR_DEFAUT = [
   { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },
   { cle: 'pole', libelle: 'Pôle', libellePluriel: 'Pôles' },
 ]
 
-// activites/<slug>/activite.yaml (ADR 0008).
-const ActiviteDeclaree = z.strictObject({
+// activites/<slug>/activite.yaml (ADR 0008), avec l'identité propre de l'activité
+// (ADR 0009) : contacts, logo, couleurs et fond.
+export const ActiviteDeclaree = z.strictObject({
+  ...IdentiteActiviteSchema.shape,
   // Les premiers segments d'adresse de l'espace organisateur sont réservés.
   slug: Slug.refine(s => !SLUGS_RESERVES.has(s), {
     message: 'identifiant réservé par l’espace organisateur',
@@ -67,13 +77,25 @@ const PerimetreDeclare = z
     message: 'groupe attendu (ou type pour un contenu antérieur)',
     path: ['groupe'],
   })
+  // Un périmètre qui déclare les deux garde un type cohérent avec son groupe :
+  // SPORT pour le groupe sport, POLE pour tout autre groupe.
+  .refine(
+    p =>
+      p.groupe === undefined ||
+      p.type === undefined ||
+      p.type === (p.groupe === 'sport' ? 'SPORT' : 'POLE'),
+    {
+      message: 'type incohérent avec le groupe : retirez le type',
+      path: ['type'],
+    }
+  )
   .transform(p => ({
     ...p,
     groupe: p.groupe ?? (p.type === 'SPORT' ? 'sport' : 'pole'),
     type: p.type ?? (p.groupe === 'sport' ? 'SPORT' : 'POLE'),
   }))
 
-const FichierPerimetres = z.strictObject({
+export const FichierPerimetres = z.strictObject({
   perimetres: z.array(PerimetreDeclare),
 })
 
@@ -95,7 +117,7 @@ const TacheModele = z.strictObject({
   fiche: Slug.optional(),
 })
 
-const FichierTaches = z.strictObject({
+export const FichierTaches = z.strictObject({
   taches: z.array(TacheModele),
 })
 
@@ -125,8 +147,13 @@ export interface ActiviteModele {
 }
 
 export interface Modeles {
-  /** Identité et thème de l'organisation (organisation.yaml). */
+  /**
+   * Identité et thème de l'organisation (organisation.yaml). Ses images et celles
+   * des activités sont des chemins relatifs à la racine du dossier.
+   */
   organisation: DeclarationOrganisation
+  /** Images du dossier, vérifiées, par chemin relatif à la racine. */
+  medias: Map<string, MediaValide>
   /** Disposition du dossier : plate (une activité implicite) ou activites/. */
   disposition: 'plate' | 'activites'
   activites: ActiviteModele[]
@@ -172,6 +199,82 @@ function sousDossiers(dossier: string): string[] {
     .sort()
 }
 
+/**
+ * Lit une image déclarée par un fichier YAML. Le chemin est relatif au dossier du
+ * fichier et ne sort pas du dossier de contenu. Renvoie le chemin relatif à la
+ * racine, ou undefined en cas d'erreur (consignée).
+ */
+function lireImage(
+  racine: string,
+  dossier: string,
+  reference: string,
+  attendu: 'png' | 'svg',
+  fichierDeclarant: string,
+  medias: Map<string, MediaValide>,
+  erreurs: string[]
+): string | undefined {
+  const cible = path.resolve(racine, dossier, reference)
+  const relatif = path.relative(path.resolve(racine), cible)
+  if (
+    path.isAbsolute(reference) ||
+    relatif.startsWith('..') ||
+    path.isAbsolute(relatif)
+  ) {
+    erreurs.push(
+      `${fichierDeclarant} : l'image ${reference} doit se trouver dans le dossier de contenu`
+    )
+    return undefined
+  }
+  const chemin = relatif.split(path.sep).join('/')
+  if (!existsSync(cible)) {
+    erreurs.push(`${fichierDeclarant} : l'image ${chemin} est absente`)
+    return undefined
+  }
+  try {
+    medias.set(chemin, verifierMedia(readFileSync(cible), attendu))
+    return chemin
+  } catch (e) {
+    erreurs.push(`${chemin} : ${(e as Error).message}`)
+    return undefined
+  }
+}
+
+/** Lit le PNG et le SVG d'un logo ; les chemins deviennent relatifs à la racine. */
+function lireLogo(
+  racine: string,
+  dossier: string,
+  logo: Logo | undefined,
+  fichierDeclarant: string,
+  medias: Map<string, MediaValide>,
+  erreurs: string[]
+): Logo | undefined {
+  if (logo === undefined) return undefined
+  const png = lireImage(
+    racine,
+    dossier,
+    logo.png,
+    'png',
+    fichierDeclarant,
+    medias,
+    erreurs
+  )
+  const svg =
+    logo.svg === undefined
+      ? undefined
+      : lireImage(
+          racine,
+          dossier,
+          logo.svg,
+          'svg',
+          fichierDeclarant,
+          medias,
+          erreurs
+        )
+  return png === undefined
+    ? undefined
+    : { png, ...(svg === undefined ? {} : { svg }) }
+}
+
 /** Fichiers propres à une activité, qui signalent la disposition plate à la racine. */
 const FICHIERS_D_ACTIVITE = ['perimetres.yaml', 'fiches', 'taches']
 
@@ -184,7 +287,7 @@ function lireActivite(
   dossier: string,
   declaration: ActiviteDeclaree,
   implicite: boolean,
-  domaines: string[],
+  role: AdressesDeRole,
   erreurs: string[]
 ): ActiviteModele {
   const base = path.join(racine, dossier)
@@ -252,7 +355,7 @@ function lireActivite(
         erreurs.push(`${nom} : le contenu est vide`)
       const personnelles = donneesPersonnelles(
         `${entete.data.titre}\n${contenu}`,
-        domaines
+        role
       )
       if (personnelles.length > 0) {
         erreurs.push(
@@ -301,7 +404,7 @@ function lireActivite(
       }
       const personnelles = donneesPersonnelles(
         `${tache.titre}\n${tache.description ?? ''}`,
-        domaines
+        role
       )
       if (personnelles.length > 0) {
         erreurs.push(
@@ -343,7 +446,40 @@ export function lireModeles(racine: string): Modeles {
     if (r.success) organisation = r.data
     else erreurs.push(...formaterZod('organisation.yaml', r.error))
   }
-  const domaines = organisation?.domainesCourrielAutorises ?? []
+  const role: AdressesDeRole = {
+    domaines: organisation?.domainesCourrielAutorises ?? [],
+    adresses: organisation?.adressesRoleAutorisees ?? [],
+  }
+  const medias = new Map<string, MediaValide>()
+  if (organisation !== null) {
+    const logo = lireLogo(
+      racine,
+      '',
+      organisation.logo,
+      'organisation.yaml',
+      medias,
+      erreurs
+    )
+    const favicon =
+      organisation.favicon === undefined
+        ? undefined
+        : lireImage(
+            racine,
+            '',
+            organisation.favicon,
+            'png',
+            'organisation.yaml',
+            medias,
+            erreurs
+          )
+    organisation = {
+      ...organisation,
+      logo,
+      favicon,
+    }
+    if (logo === undefined) delete organisation.logo
+    if (favicon === undefined) delete organisation.favicon
+  }
 
   const plate = FICHIERS_D_ACTIVITE.some(f => existsSync(path.join(racine, f)))
   const dossierActivites = path.join(racine, 'activites')
@@ -381,8 +517,27 @@ export function lireModeles(racine: string): Modeles {
       if (new Set(cles).size !== cles.length) {
         erreurs.push(`${nom} : deux groupes ont la même clé`)
       }
+      const declaration = { ...r.data }
+      if (organisation !== null) {
+        for (const m of manquementsIdentiteActivite(
+          declaration,
+          organisation
+        )) {
+          erreurs.push(`${nom} : ${m.path.join('.')} ${m.message}`)
+        }
+      }
+      const logo = lireLogo(
+        racine,
+        dossier,
+        declaration.logo,
+        nom,
+        medias,
+        erreurs
+      )
+      if (logo === undefined) delete declaration.logo
+      else declaration.logo = logo
       activites.push(
-        lireActivite(racine, dossier, r.data, false, domaines, erreurs)
+        lireActivite(racine, dossier, declaration, false, role, erreurs)
       )
     }
   } else {
@@ -396,9 +551,7 @@ export function lireModeles(racine: string): Modeles {
       groupes: GROUPES_PAR_DEFAUT,
       ordre: 0,
     }
-    activites.push(
-      lireActivite(racine, '', declaration, true, domaines, erreurs)
-    )
+    activites.push(lireActivite(racine, '', declaration, true, role, erreurs))
   }
 
   // Le slug d'une fiche est unique dans l'organisation, toutes activités confondues.
@@ -421,6 +574,7 @@ export function lireModeles(racine: string): Modeles {
   )
   return {
     organisation,
+    medias,
     disposition: enActivites ? 'activites' : 'plate',
     activites,
   }

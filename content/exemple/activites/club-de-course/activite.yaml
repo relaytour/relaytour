@@ -10,3 +10,12 @@ groupes:
     libelle: Pôle
     libellePluriel: Pôles
 ordre: 2
+# Identité propre du club (ADR 0009). Chaque champ absent reprend la valeur de
+# l'organisation. Le thème ne change que les couleurs et le fond.
+contactRecrutement: club.course.rencontres@messagerie.example
+pageEquipe: https://exemple.org/club-de-course
+logo:
+  png: medias/logo.png
+theme:
+  couleurs:
+    primaire: '#2E5B3B'

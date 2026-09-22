@@ -17,7 +17,11 @@ const CIBLE = path.resolve(
 )
 
 // Mentions qui prouvent que l'en-tête et le pied de page ont bien été inclus.
-const MARQUEURS = ['{{organisation}}', 'github.com/relaytour/relaytour']
+const MARQUEURS = [
+  '{{marque}}',
+  '{{organisation}}',
+  'github.com/relaytour/relaytour',
+]
 
 // MJML strict refuse une variable dans un attribut de couleur. Les gabarits écrivent
 // des couleurs sentinelles, remplacées ici par une variable après compilation.
@@ -33,6 +37,10 @@ const COULEURS_SENTINELLES: Record<string, string> = {
 // de la liste des variables métier du gabarit.
 const VARIABLES_ORGANISATION = new Set([
   'organisation',
+  // La marque de l'en-tête : le logo PNG de l'organisation ou de l'activité, sinon
+  // son nom. rendre() la compose ; la partie texte garde le nom.
+  'marque',
+  'logoUrl',
   ...Object.values(COULEURS_SENTINELLES),
 ])
 

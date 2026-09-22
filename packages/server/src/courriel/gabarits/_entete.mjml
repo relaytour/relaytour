@@ -2,7 +2,7 @@
   <mj-column>
     <mj-text font-size="14px" letter-spacing="3px" color="#010101" text-transform="uppercase"
              font-weight="700" align="center" padding="0 0 24px">
-      {{organisation}}
+      {{marque}}
     </mj-text>
   </mj-column>
 </mj-section>

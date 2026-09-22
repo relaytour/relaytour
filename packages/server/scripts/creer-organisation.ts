@@ -3,7 +3,11 @@ import { parseArgs } from 'node:util'
 import { prisma } from '@relaytour/database'
 
 import { connection, courrielQueue } from '../src/jobs/queues.ts'
-import { creerOrganisation, inviterAdmin } from '../src/lib/installation.ts'
+import {
+  creerOrganisation,
+  inviterAdmin,
+  validerInvitation,
+} from '../src/lib/installation.ts'
 
 // Crée une organisation et sa première activité, puis invite son premier admin
 // (ADR 0008, administration de l'installation). N'accède à aucune autre donnée.
@@ -54,6 +58,11 @@ const activites = entier(values['limite-activites'], 'limite-activites')
 const periodesOuvertes = entier(values['limite-periodes'], 'limite-periodes')
 
 try {
+  // L'admin se vérifie avant la création : une adresse refusée ne laisse pas
+  // derrière elle une organisation à moitié amorcée.
+  if (values.admin !== undefined && values['admin-nom'] !== undefined) {
+    await validerInvitation(values.admin, values['admin-nom'])
+  }
   await creerOrganisation({
     slug,
     nom,

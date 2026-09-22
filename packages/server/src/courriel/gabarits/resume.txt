@@ -1,4 +1,4 @@
-{{organisation}}
+{{marque}}
 
 Bonjour {{nom}},
 

@@ -233,6 +233,26 @@ describe('résumés par organisation', () => {
     expect(await personnesAResumer(prisma, pourB)).toContain(ids.double)
   })
 
+  it('note les deux résumés quand ils partent en même temps', async () => {
+    const [resumeA, resumeB] = await Promise.all(
+      [ids.orgA, ids.orgB].map(organisationId =>
+        composer(prisma, {
+          sorte: 'resume',
+          userId: ids.double,
+          organisationId,
+        })
+      )
+    )
+    await Promise.all([resumeA?.apresEnvoi?.(), resumeB?.apresEnvoi?.()])
+    const preferences = await prisma.preferenceNotification.findUniqueOrThrow({
+      where: { userId: ids.double },
+      select: { derniersResumes: true },
+    })
+    expect(Object.keys(preferences.derniersResumes as object)).toEqual(
+      expect.arrayContaining([ids.orgA, ids.orgB])
+    )
+  })
+
   it('prend l’unique organisation de la personne quand le job n’en porte pas', async () => {
     const message = await composer(prisma, {
       sorte: 'invitation',
