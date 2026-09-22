@@ -1,0 +1,14 @@
+# Le rassemblement sportif des Rencontres : un événement, une édition par année.
+slug: rencontres
+nom: Les Rencontres de la Vallée
+sigle: Rencontres
+nature: EVENEMENT
+# Groupes de périmètres, dans l'ordre d'affichage. Sans cette clé, sport et pôle.
+groupes:
+  - cle: sport
+    libelle: Sport
+    libellePluriel: Sports
+  - cle: pole
+    libelle: Pôle
+    libellePluriel: Pôles
+ordre: 1

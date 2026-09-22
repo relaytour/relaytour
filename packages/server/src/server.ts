@@ -3,14 +3,22 @@ import http from 'node:http'
 import { ApolloServer } from '@apollo/server'
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer'
 import { expressMiddleware } from '@as-integrations/express5'
+import { prisma } from '@relaytour/database'
 import cors from 'cors'
 import express from 'express'
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
 
 import { auth } from './auth.ts'
-import { buildContext, type AppContext } from './context.ts'
+import {
+  buildContext,
+  ENTETE_ACTIVITE,
+  ENTETE_ORGANISATION,
+  type AppContext,
+} from './context.ts'
 import { env } from './env.ts'
+import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
+import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
 import { assurerOrganisationParDefaut } from './lib/organisation.ts'
 import { writeSchemaFile } from './lib/print-schema.ts'
 import { sonderDependances } from './lib/sante.ts'
@@ -22,6 +30,9 @@ const httpServer = http.createServer(app)
 // Un seul proxy devant l'API (Caddy) : req.ip et X-Forwarded-Proto sont fiables.
 app.set('trust proxy', 1)
 app.disable('x-powered-by')
+
+const jetonAdministrationValide = (jeton: string) =>
+  jetonValide(jeton, env.JETON_ADMINISTRATION)
 
 const apollo = new ApolloServer<AppContext>({
   schema,
@@ -67,6 +78,44 @@ app.get('/ready', (_req, res) => {
   )
 })
 
+// Images d'identité (ADR 0009) : publiques, comme le nom et le thème que l'écran
+// de connexion affiche. L'adresse porte l'empreinte du fichier : le contenu d'une
+// adresse ne change jamais, et le navigateur la garde en cache. La politique de
+// sécurité bloque tout script, y compris dans un SVG ouvert directement.
+app.get('/medias/:fichier', (req, res) => {
+  const m = /^([0-9a-f]{64})\.(png|svg)$/.exec(req.params.fichier)
+  if (m === null) {
+    res.status(404).end()
+    return
+  }
+  void prisma.media
+    .findFirst({
+      where: { empreinte: m[1] },
+      select: { type: true, donnees: true },
+    })
+    .then(
+      media => {
+        if (media === null || EXTENSIONS[media.type as TypeMedia] !== m[2]) {
+          res.status(404).end()
+          return
+        }
+        res
+          .set({
+            'Content-Type': media.type,
+            'Cache-Control': 'public, max-age=31536000, immutable',
+            'X-Content-Type-Options': 'nosniff',
+            'Content-Security-Policy':
+              "default-src 'none'; style-src 'unsafe-inline'; sandbox",
+            'Cross-Origin-Resource-Policy': 'cross-origin',
+          })
+          .send(Buffer.from(media.donnees))
+      },
+      () => {
+        res.status(503).end()
+      }
+    )
+})
+
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)
 app.all('/api/auth/*splat', (req, res) => {
@@ -79,10 +128,32 @@ app.use(
   express.json({ limit: '1mb' }),
   expressMiddleware(apollo, {
     context: async ({ req }) => {
+      // Le jeton d'administration de l'installation ignore toute session (ADR 0008).
+      // Un en-tête Bearer, même vide ou malformé, écarte la session : un jeton
+      // faux rend la requête anonyme.
+      const porteur = /^Bearer\b\s*(.*)$/i.exec(req.get('authorization') ?? '')
+      if (porteur !== null) {
+        const valide = jetonAdministrationValide((porteur[1] ?? '').trim())
+        if (!valide) {
+          journal.warn(
+            { evenement: 'jeton-administration-refuse', ip: req.ip },
+            'Un jeton d’administration invalide a été présenté.'
+          )
+        }
+        return buildContext(req.ip, null, null, valide)
+      }
       const session = await auth.api.getSession({
         headers: fromNodeHeaders(req.headers),
       })
-      return buildContext(req.ip, session?.user.id ?? null)
+      // L'espace organisateur désigne l'organisation active par un en-tête ; sans
+      // lui, l'unique appartenance de la personne fait foi (ADR 0008).
+      return buildContext(
+        req.ip,
+        session?.user.id ?? null,
+        req.get(ENTETE_ORGANISATION)?.trim() || null,
+        false,
+        req.get(ENTETE_ACTIVITE)?.trim() || null
+      )
     },
   })
 )

@@ -10,14 +10,22 @@ const racine = path.resolve(
 )
 
 try {
-  const { organisation, perimetres, fiches, taches } = lireModeles(racine)
-  const nombreTaches = [...taches.values()].reduce(
-    (n, liste) => n + liste.length,
-    0
-  )
+  const { organisation, disposition, activites } = lireModeles(racine)
   console.log(
-    `✔ ${racine} valide : ${organisation.sigle ?? organisation.nom}, ${perimetres.length} périmètre(s), ${fiches.length} fiche(s), ${nombreTaches} tâche(s) type.`
+    `✔ ${racine} valide : ${organisation.sigle ?? organisation.nom}, disposition ${disposition === 'plate' ? 'plate' : 'activites/'}, ${activites.length} activité(s).`
   )
+  for (const activite of activites) {
+    const nombreTaches = [...activite.taches.values()].reduce(
+      (n, liste) => n + liste.length,
+      0
+    )
+    const nom = activite.implicite
+      ? organisation.slug
+      : activite.declaration.slug
+    console.log(
+      `  ${nom} (${activite.declaration.nature.toLowerCase()}) : ${activite.perimetres.length} périmètre(s), ${activite.fiches.length} fiche(s), ${nombreTaches} tâche(s) type.`
+    )
+  }
 } catch (erreur) {
   console.error(erreur instanceof ErreurModeles ? erreur.message : erreur)
   process.exit(1)

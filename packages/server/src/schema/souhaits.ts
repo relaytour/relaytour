@@ -1,6 +1,7 @@
 import { prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
+import { exigerMembre } from '../lib/appartenances.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import {
@@ -70,8 +71,11 @@ builder.prismaObjectFields(PersonneRef, t => ({
   souhaits: t.relation('souhaits', {
     authScopes: { admin: true },
     args: { editionId: t.arg.id() },
-    query: args => ({
-      where: args.editionId ? { editionId: String(args.editionId) } : {},
+    query: (args, ctx) => ({
+      where: {
+        perimetre: { organisationId: ctx.organisation?.id ?? '' },
+        ...(args.editionId ? { editionId: String(args.editionId) } : {}),
+      },
       orderBy: [
         { perimetre: { type: 'asc' } },
         { perimetre: { ordre: 'asc' } },
@@ -94,7 +98,7 @@ builder.mutationFields(t => ({
     },
     resolve: async (query, _root, args, ctx) => {
       const userId = String(args.personneId)
-      const editionId = String(args.editionId)
+      await exigerMembre(ctx, userId)
       const personne = await prisma.user.findUnique({
         where: { id: userId },
         select: { archivedAt: true },
@@ -102,8 +106,12 @@ builder.mutationFields(t => ({
       if (personne === null || personne.archivedAt !== null) {
         throw erreurSaisie('Ce compte est introuvable ou archivé.')
       }
-      await exigerEditionOuverte(editionId)
-      const perimetreIds = await perimetresSouhaitesValides(args.perimetreIds)
+      const edition = await exigerEditionOuverte(ctx, args.editionId)
+      const editionId = edition.id
+      const perimetreIds = await perimetresSouhaitesValides(
+        args.perimetreIds,
+        edition.activiteId
+      )
 
       await prisma.$transaction([
         prisma.souhait.deleteMany({
@@ -144,12 +152,15 @@ builder.mutationFields(t => ({
     authScopes: { admin: true },
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, { id }, ctx) => {
-      const souhait = await prisma.souhait.findUnique({
-        where: { id: String(id) },
+      const souhait = await prisma.souhait.findFirst({
+        where: {
+          id: String(id),
+          perimetre: { organisationId: ctx.organisation!.id },
+        },
         select: { id: true, userId: true, editionId: true },
       })
       if (souhait === null) return false
-      await exigerEditionOuverte(souhait.editionId)
+      await exigerEditionOuverte(ctx, souhait.editionId)
       const { count } = await prisma.souhait.deleteMany({
         where: { id: souhait.id },
       })

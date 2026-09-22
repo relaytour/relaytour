@@ -7,6 +7,8 @@ export default defineConfig({
     // Compilé pour exister dans l'image, qui n'embarque ni tsx ni scripts/.
     'creer-admin': 'scripts/creer-admin.ts',
     'creer-edition': 'scripts/creer-edition.ts',
+    'creer-organisation': 'scripts/creer-organisation.ts',
+    'exporter-organisation': 'scripts/exporter-organisation.ts',
     'orga-valider': 'scripts/orga-valider.ts',
     'orga-importer': 'scripts/orga-importer.ts',
     'orga-exporter': 'scripts/orga-exporter.ts',

@@ -70,10 +70,14 @@ ENV NODE_ENV=production \
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build     /app/packages/server/dist ./packages/server/dist
 COPY packages/server/package.json ./packages/server/package.json
-# Commandes disponibles dans dist/ : creer-admin, creer-edition, orga-valider, orga-importer,
-# orga-exporter, essai-courriel, planification-lancer (liste tenue par tsup.config.ts).
+# Commandes disponibles dans dist/ : creer-admin, creer-edition, creer-organisation,
+# exporter-organisation, orga-valider, orga-importer, orga-exporter, essai-courriel,
+# planification-lancer (liste tenue par tsup.config.ts).
 # Le contenu d'une organisation ne fait pas partie de l'image : montez-le en volume
 # et lancez `node dist/orga-importer.js --dossier /contenu --edition <année>`.
+# /exports reçoit les exports d'organisation (ADR 0008). Un volume nommé monté ici
+# hérite du propriétaire node au premier montage.
+RUN mkdir -p /exports && chown node:node /exports && chmod 750 /exports
 USER node
 WORKDIR /app/packages/server
 EXPOSE 4400

@@ -4,7 +4,8 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 
 import { schema } from './index.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
@@ -33,7 +34,7 @@ async function executer(
 ) {
   const reponse = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (reponse.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -60,9 +61,11 @@ async function creerTache(userId: string, titre: string, mAssigner = true) {
 }
 
 let ORGANISATION = ''
+let ACTIVITE = ''
 
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
+  ACTIVITE = await activiteParDefaut()
   await apollo.start()
   for (const [cle, estAdmin] of [
     ['admin', true],
@@ -87,6 +90,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee,
         nom: `Essai ${suffixe}`,
         debut: new Date('2027-08-27'),
@@ -98,6 +102,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee: annee - 1,
         nom: `Archive ${suffixe}`,
         debut: new Date('2025-08-27'),
@@ -108,12 +113,26 @@ beforeAll(async () => {
   ).id
   ids.natation = (
     await prisma.perimetre.create({
-      data: { organisationId: ORGANISATION, slug: `natation-${suffixe}`, nom: 'Natation', type: 'SPORT' },
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        groupe: 'sport',
+        slug: `natation-${suffixe}`,
+        nom: 'Natation',
+        type: 'SPORT',
+      },
     })
   ).id
   ids.basket = (
     await prisma.perimetre.create({
-      data: { organisationId: ORGANISATION, slug: `basket-${suffixe}`, nom: 'Basket', type: 'SPORT' },
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        groupe: 'sport',
+        slug: `basket-${suffixe}`,
+        nom: 'Basket',
+        type: 'SPORT',
+      },
     })
   ).id
   await prisma.affectation.createMany({
@@ -129,7 +148,7 @@ beforeAll(async () => {
 
 afterAll(async () => {
   const editions = [ids.edition, ids.archivee]
-  await prisma.activite.deleteMany({ where: { editionId: { in: editions } } })
+  await prisma.journal.deleteMany({ where: { editionId: { in: editions } } })
   await prisma.tache.deleteMany({ where: { editionId: { in: editions } } })
   await prisma.affectation.deleteMany({
     where: { editionId: { in: editions } },
@@ -400,7 +419,7 @@ describe('vues d’ensemble', () => {
   })
 
   it('journalise les actions', async () => {
-    const n = await prisma.activite.count({
+    const n = await prisma.journal.count({
       where: { editionId: ids.edition, acteurId: ids.alice },
     })
     expect(n).toBeGreaterThan(5)
@@ -432,7 +451,9 @@ describe('rétroplanning', () => {
       await prisma.perimetre.create({
         data: {
           organisationId: ORGANISATION,
-        slug: `escrime-${suffixe}`,
+          activiteId: ACTIVITE,
+          groupe: 'sport',
+          slug: `escrime-${suffixe}`,
           nom: 'Escrime',
           type: 'SPORT',
           archivedAt: new Date(),

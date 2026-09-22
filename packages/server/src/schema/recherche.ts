@@ -43,7 +43,10 @@ const PersonneTrouveeRef = builder
 interface Resultats {
   texte: string
   editionId: string | null
-  lisibles: string[] | null
+  organisationId: string
+  estAdmin: boolean
+  /** Périmètres lisibles dans l'organisation active (tous pour un admin). */
+  lisibles: string[]
 }
 
 const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
@@ -61,9 +64,7 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
                 titre: { contains: r.texte },
                 perimetre: { archivedAt: null },
                 editionId: r.editionId,
-                ...(r.lisibles === null
-                  ? {}
-                  : { perimetreId: { in: r.lisibles } }),
+                perimetreId: { in: r.lisibles },
               },
               orderBy: [{ echeance: { sort: 'asc', nulls: 'last' } }],
               take: RESULTATS_MAX,
@@ -75,24 +76,19 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
         prisma.fiche.findMany({
           ...query,
           where: {
+            organisationId: r.organisationId,
             archivedAt: null,
             versionCourante: { titre: { contains: r.texte } },
-            ...(r.lisibles === null
-              ? {}
-              : {
-                  OR: [
-                    { perimetreId: null },
-                    { perimetreId: { in: r.lisibles } },
-                  ],
-                }),
+            OR: [{ perimetreId: null }, { perimetreId: { in: r.lisibles } }],
           },
           orderBy: { slug: 'asc' },
           take: RESULTATS_MAX,
         }),
     }),
-    // Les admins trouvent tous les comptes actifs. Les autres ne trouvent que les
-    // personnes affectées à un périmètre qu'elles peuvent lire et qui n'est pas
-    // archivé, comme le rétroplanning : chaque résultat mène à un périmètre ouvert.
+    // Les admins trouvent tous les comptes actifs de leur organisation. Les autres ne
+    // trouvent que les personnes affectées à un périmètre qu'elles peuvent lire et qui
+    // n'est pas archivé, comme le rétroplanning : chaque résultat mène à un périmètre
+    // ouvert.
     personnes: t.field({
       type: [PersonneTrouveeRef],
       resolve: async r => {
@@ -100,8 +96,12 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
           where: {
             archivedAt: null,
             name: { contains: r.texte },
-            ...(r.lisibles === null
-              ? {}
+            ...(r.estAdmin
+              ? {
+                  appartenances: {
+                    some: { organisationId: r.organisationId },
+                  },
+                }
               : {
                   affectations: {
                     some: {
@@ -117,9 +117,7 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
             affectations: {
               where: {
                 perimetre: { archivedAt: null },
-                ...(r.lisibles === null
-                  ? {}
-                  : { perimetreId: { in: r.lisibles } }),
+                perimetreId: { in: r.lisibles },
               },
               select: { perimetre: true },
             },
@@ -161,7 +159,9 @@ builder.queryFields(t => ({
       }
       return {
         texte: nettoye,
-        editionId: editionId ? String(editionId) : null,
+        editionId: editionId ? (await ctx.exigerEdition(editionId)).id : null,
+        organisationId: ctx.organisation!.id,
+        estAdmin: ctx.personne!.estAdmin,
         lisibles: await perimetresLisibles(ctx),
       }
     },

@@ -4,7 +4,8 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 import { calculerScores } from '../lib/score.ts'
 
 import { schema } from './index.ts'
@@ -28,7 +29,7 @@ async function executer(
 ) {
   const r = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -59,9 +60,11 @@ async function tacheFaite(donnees: {
 }
 
 let ORGANISATION = ''
+let ACTIVITE = ''
 
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
+  ACTIVITE = await activiteParDefaut()
   await apollo.start()
   for (const [cle, estAdmin] of [
     ['admin', true],
@@ -84,6 +87,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2099-08-27'),
@@ -93,18 +97,30 @@ beforeAll(async () => {
   ).id
   ids.perimetre = (
     await prisma.perimetre.create({
-      data: { organisationId: ORGANISATION, slug: `natation-${s}`, nom: 'Natation', type: 'SPORT' },
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        groupe: 'sport',
+        slug: `natation-${s}`,
+        nom: 'Natation',
+        type: 'SPORT',
+      },
     })
   ).id
   ids.fiche = (
     await prisma.fiche.create({
-      data: { organisationId: ORGANISATION, slug: `fiche-${s}`, perimetreId: ids.perimetre },
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        slug: `fiche-${s}`,
+        perimetreId: ids.perimetre,
+      },
     })
   ).id
 })
 
 afterAll(async () => {
-  await prisma.activite.deleteMany({ where: { ficheId: ids.fiche } })
+  await prisma.journal.deleteMany({ where: { ficheId: ids.fiche } })
   await prisma.fiche.delete({ where: { id: ids.fiche } })
   await prisma.tache.deleteMany({ where: { editionId: ids.edition } })
   await prisma.edition.delete({ where: { id: ids.edition } })
@@ -178,7 +194,7 @@ describe('barème', () => {
 
   it('compte une modification de fiche au plus une fois par jour', async () => {
     const jour = new Date('2099-07-01T09:00:00Z')
-    await prisma.activite.createMany({
+    await prisma.journal.createMany({
       data: [
         {
           type: 'FICHE_CREEE',

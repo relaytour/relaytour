@@ -4,7 +4,8 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 
 import { schema } from './index.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
@@ -37,7 +38,7 @@ async function executer(
 ) {
   const r = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -113,9 +114,11 @@ const souhaitsEnBase = (userId: string) =>
   prisma.souhait.count({ where: { userId, editionId: ids.edition } })
 
 let ORGANISATION = ''
+let ACTIVITE = ''
 
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
+  ACTIVITE = await activiteParDefaut()
   await apollo.start()
   for (const [cle, estAdmin, archive] of [
     ['admin', true, false],
@@ -131,6 +134,13 @@ beforeAll(async () => {
         name: `${cle} ${s}`,
         isAdmin: estAdmin,
         archivedAt: archive ? new Date() : null,
+        // Tous les comptes du test sont membres de l'organisation (ADR 0008).
+        appartenances: {
+          create: {
+            organisationId: ORGANISATION,
+            role: estAdmin ? 'ADMIN' : 'MEMBRE',
+          },
+        },
       },
     })
   }
@@ -139,6 +149,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),
@@ -150,6 +161,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee: annee - 1,
         nom: `Archive ${s}`,
         debut: new Date('2025-08-27'),
@@ -168,7 +180,9 @@ beforeAll(async () => {
       await prisma.perimetre.create({
         data: {
           organisationId: ORGANISATION,
-        slug: `${cle}-${s}`,
+          activiteId: ACTIVITE,
+          groupe: type.toLowerCase(),
+          slug: `${cle}-${s}`,
           nom: `${cle} ${s}`,
           type,
           archivedAt: archive ? new Date() : null,
@@ -346,15 +360,23 @@ describe('saisies invalides', () => {
     expect(await prisma.souhait.count({ where: { id: ancien.id } })).toBe(1)
   })
 
-  it('refuse une personne archivée ou inconnue', async () => {
-    for (const u of [ids.ancienne, `inconnue-${s}`]) {
-      const r = await executer(ids.admin, DEFINIR, {
-        u,
-        e: ids.edition,
-        p: [ids.natation],
-      })
-      expect(code(r)).toBe('SAISIE_INVALIDE')
-    }
+  it('refuse une personne archivée', async () => {
+    const r = await executer(ids.admin, DEFINIR, {
+      u: ids.ancienne,
+      e: ids.edition,
+      p: [ids.natation],
+    })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+  })
+
+  // Un compte inconnu et un compte d'une autre organisation donnent le même refus.
+  it('refuse une personne inconnue comme une personne d’ailleurs', async () => {
+    const r = await executer(ids.admin, DEFINIR, {
+      u: `inconnue-${s}`,
+      e: ids.edition,
+      p: [ids.natation],
+    })
+    expect(code(r)).toBe('FORBIDDEN')
   })
 })
 
@@ -377,9 +399,7 @@ describe('cas nominaux', () => {
     )
     expect(personne.souhaits.every(x => !x.satisfait)).toBe(true)
     expect(await souhaitsEnBase(invitee)).toBe(2)
-    expect(await prisma.activite.count({ where: { acteurId: invitee } })).toBe(
-      0
-    )
+    expect(await prisma.journal.count({ where: { acteurId: invitee } })).toBe(0)
     expect(
       await prisma.notification.count({ where: { userId: invitee } })
     ).toBe(0)

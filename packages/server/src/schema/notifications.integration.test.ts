@@ -4,7 +4,8 @@ import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 import { composer } from '../courriel/messages.ts'
 import { genererRappels, personnesAResumer } from '../jobs/planification.ts'
 
@@ -31,7 +32,7 @@ async function executer(
 ) {
   const r = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (r.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -47,9 +48,14 @@ const notificationsDe = (userId: string, tacheId: string) =>
   })
 
 let ORGANISATION = ''
+let ACTIVITE = ''
+
+/** L'organisation par défaut, telle que le worker la planifie. */
+const planifiee = () => ({ id: ORGANISATION, fuseauHoraire: 'Europe/Paris' })
 
 beforeAll(async () => {
   ORGANISATION = await organisationParDefaut()
+  ACTIVITE = await activiteParDefaut()
   await apollo.start()
   for (const cle of ['alice', 'bruno', 'chloe', 'david'] as const) {
     ids[cle] = randomUUID()
@@ -58,6 +64,8 @@ beforeAll(async () => {
         id: ids[cle],
         email: `${cle}-${s}@exemple.fr`,
         name: cle.charAt(0).toUpperCase() + cle.slice(1),
+        // Membres de l'organisation : les résumés ne concernent que ses membres.
+        appartenances: { create: { organisationId: ORGANISATION } },
       },
     })
   }
@@ -66,6 +74,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee,
         nom: `Essai ${s}`,
         debut: new Date('2027-08-27'),
@@ -77,6 +86,7 @@ beforeAll(async () => {
     await prisma.edition.create({
       data: {
         organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
         annee: annee - 1,
         nom: `Archive ${s}`,
         debut: new Date('2025-08-27'),
@@ -87,12 +97,26 @@ beforeAll(async () => {
   ).id
   ids.natation = (
     await prisma.perimetre.create({
-      data: { organisationId: ORGANISATION, slug: `natation-${s}`, nom: 'Natation', type: 'SPORT' },
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        groupe: 'sport',
+        slug: `natation-${s}`,
+        nom: 'Natation',
+        type: 'SPORT',
+      },
     })
   ).id
   ids.basket = (
     await prisma.perimetre.create({
-      data: { organisationId: ORGANISATION, slug: `basket-${s}`, nom: 'Basket', type: 'SPORT' },
+      data: {
+        organisationId: ORGANISATION,
+        activiteId: ACTIVITE,
+        groupe: 'sport',
+        slug: `basket-${s}`,
+        nom: 'Basket',
+        type: 'SPORT',
+      },
     })
   ).id
   await prisma.affectation.createMany({
@@ -110,7 +134,7 @@ afterAll(async () => {
   const editions = [ids.edition, ids.archivee]
   const users = [ids.alice, ids.bruno, ids.chloe, ids.david]
   await prisma.notification.deleteMany({ where: { userId: { in: users } } })
-  await prisma.activite.deleteMany({ where: { editionId: { in: editions } } })
+  await prisma.journal.deleteMany({ where: { editionId: { in: editions } } })
   await prisma.tache.deleteMany({ where: { editionId: { in: editions } } })
   await prisma.affectation.deleteMany({
     where: { editionId: { in: editions } },
@@ -237,10 +261,10 @@ describe('rappels d’échéance', () => {
       },
     })
 
-    const premier = await genererRappels(prisma, maintenant, {
+    const premier = await genererRappels(prisma, planifiee(), maintenant, {
       editionId: { in: [ids.edition, ids.archivee] },
     })
-    const second = await genererRappels(prisma, maintenant, {
+    const second = await genererRappels(prisma, planifiee(), maintenant, {
       editionId: { in: [ids.edition, ids.archivee] },
     })
     expect(second.flatMap(r => r.notificationIds)).toEqual([])
@@ -284,7 +308,11 @@ describe('rappels d’échéance', () => {
     expect(message?.desabonnement).toMatch(/\/preferences$/)
 
     await prisma.preferenceNotification.create({
-      data: { organisationId: ORGANISATION, userId: ids.bruno, mailEcheance: false },
+      data: {
+        organisationId: ORGANISATION,
+        userId: ids.bruno,
+        mailEcheance: false,
+      },
     })
     expect(
       await composer(prisma, {
@@ -304,15 +332,23 @@ describe('résumés', () => {
     await prisma.preferenceNotification.upsert({
       where: { userId: ids.chloe },
       update: { frequenceResume: 'QUOTIDIEN' },
-      create: { organisationId: ORGANISATION, userId: ids.chloe, frequenceResume: 'QUOTIDIEN' },
+      create: {
+        organisationId: ORGANISATION,
+        userId: ids.chloe,
+        frequenceResume: 'QUOTIDIEN',
+      },
     })
     await prisma.preferenceNotification.upsert({
       where: { userId: ids.david },
       update: { frequenceResume: 'AUCUN' },
-      create: { organisationId: ORGANISATION, userId: ids.david, frequenceResume: 'AUCUN' },
+      create: {
+        organisationId: ORGANISATION,
+        userId: ids.david,
+        frequenceResume: 'AUCUN',
+      },
     })
-    const lundiIds = await personnesAResumer(prisma, lundi)
-    const mardiIds = await personnesAResumer(prisma, mardi)
+    const lundiIds = await personnesAResumer(prisma, planifiee(), lundi)
+    const mardiIds = await personnesAResumer(prisma, planifiee(), mardi)
     expect(lundiIds).toEqual(expect.arrayContaining([ids.alice, ids.chloe]))
     expect(lundiIds).not.toContain(ids.david)
     expect(mardiIds).toContain(ids.chloe)
@@ -328,6 +364,8 @@ describe('résumés', () => {
     await message?.apresEnvoi?.()
     const apres = await composer(prisma, { sorte: 'resume', userId: ids.chloe })
     expect(apres?.texte ?? '').not.toContain('Bruno s’occupe de la tâche')
-    expect(await personnesAResumer(prisma, new Date())).not.toContain(ids.chloe)
+    expect(
+      await personnesAResumer(prisma, planifiee(), new Date())
+    ).not.toContain(ids.chloe)
   })
 })

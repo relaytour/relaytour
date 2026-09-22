@@ -10,10 +10,10 @@ import PastillePerimetre from '../composants/PastillePerimetre'
 import { PuceBascule, Puces, SeparateurPuces } from '../composants/Puces'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
-import type { TypePerimetre } from '../gql/graphql'
 import { EDITION_COURANTE } from '../lib/requetes'
 import { grouperParMois, libelleMois } from '../lib/retroplanning'
 import { estOuverte } from '../lib/taches'
+import { useActivite } from '../lib/activite'
 
 const RETROPLANNING = graphql(`
   query Retroplanning($editionId: ID!) {
@@ -37,7 +37,7 @@ const RETROPLANNING = graphql(`
         id
         slug
         nom
-        type
+        groupe
         couleur
       }
       assignes {
@@ -48,7 +48,8 @@ const RETROPLANNING = graphql(`
   }
 `)
 
-type FiltreType = 'tous' | TypePerimetre
+// Un groupe de périmètres de l'activité (ADR 0008), ou tous.
+type FiltreType = string
 type FiltreStatut = 'ouvertes' | 'toutes'
 
 function titreGroupe(mois: string | null): string {
@@ -58,6 +59,7 @@ function titreGroupe(mois: string | null): string {
 }
 
 export default function Retroplanning() {
+  const { lien, periode, activite } = useActivite()
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
@@ -76,25 +78,23 @@ export default function Retroplanning() {
   const moi = data?.moi
   const toutes = data?.retroplanning
 
-  // Les options du filtre : les périmètres présents dans le résultat, sports puis pôles.
+  // Les options du filtre : les périmètres présents dans le résultat, rangés par
+  // groupe dans l'ordre que déclare l'activité.
   const options = useMemo(() => {
     const presents = [
       ...new Map((toutes ?? []).map(t => [t.perimetre.id, t.perimetre])),
     ]
       .map(([, p]) => p)
       .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
-    return [
-      { type: 'SPORT', label: 'Sports' },
-      { type: 'POLE', label: 'Pôles' },
-    ]
+    return activite.groupes
       .map(groupe => ({
-        label: groupe.label,
+        label: groupe.libellePluriel,
         options: presents
-          .filter(p => p.type === groupe.type)
+          .filter(p => p.groupe === groupe.cle)
           .map(p => ({ value: p.id, label: p.nom, couleur: p.couleur })),
       }))
       .filter(groupe => groupe.options.length > 0)
-  }, [toutes])
+  }, [toutes, activite.groupes])
 
   const couleurDe = useMemo(
     () =>
@@ -112,7 +112,7 @@ export default function Retroplanning() {
       (toutes ?? []).filter(
         t =>
           (perimetres.length === 0 || perimetres.includes(t.perimetre.id)) &&
-          (type === 'tous' || t.perimetre.type === type) &&
+          (type === 'tous' || t.perimetre.groupe === type) &&
           (statut === 'toutes' || estOuverte(t)) &&
           (!mesPerimetres || affectes.has(t.perimetre.id)) &&
           (!assigneesAMoi || t.assignes.some(p => p.id === moi?.id))
@@ -144,7 +144,9 @@ export default function Retroplanning() {
   )
 
   if (editionId === undefined && courante && !courante.editionCourante) {
-    return <Result status="info" title="Aucune édition n’est en préparation." />
+    return (
+      <Result status="info" title={`${periode.Aucune} n’est en préparation.`} />
+    )
   }
   if (error && !data) {
     return (
@@ -184,7 +186,7 @@ export default function Retroplanning() {
   return (
     <>
       <Titre
-        sousTitre="Les tâches de l’édition sont regroupées par mois, de la plus proche à la plus lointaine."
+        sousTitre={`Les tâches ${periode.de} sont regroupées par mois, de la plus proche à la plus lointaine.`}
         actions={
           <ChoixEdition
             valeur={editionId}
@@ -200,13 +202,15 @@ export default function Retroplanning() {
 
       <div className="rt-puces" style={{ marginBottom: 22, rowGap: 10 }}>
         <Puces<FiltreType>
-          libelle="Type de périmètre"
+          libelle="Groupe de périmètres"
           valeur={type}
           onChange={setType}
           options={[
             { valeur: 'tous', libelle: 'Tous' },
-            { valeur: 'SPORT', libelle: 'Sports' },
-            { valeur: 'POLE', libelle: 'Pôles' },
+            ...activite.groupes.map(g => ({
+              valeur: g.cle,
+              libelle: g.libellePluriel,
+            })),
           ]}
         />
         <SeparateurPuces />
@@ -329,7 +333,9 @@ export default function Retroplanning() {
                       <li key={t.id}>
                         <Link
                           className="rt-ligne-lien"
-                          to={`/perimetres/${t.perimetre.slug}?edition=${editionId}`}
+                          to={lien(
+                            `/perimetres/${t.perimetre.slug}?edition=${editionId}`
+                          )}
                           style={{ fontSize: 13.5 }}
                         >
                           <span
@@ -361,7 +367,9 @@ export default function Retroplanning() {
           {affectes.size === 0 &&
           (mesPerimetres || (!moi.estAdmin && toutes?.length === 0)) ? (
             <div className="rt-verre rt-panneau">
-              <Empty description="Vous n’êtes affecté·e à aucun périmètre pour cette édition." />
+              <Empty
+                description={`Vous n’êtes affecté·e à aucun périmètre pour ${periode.cette}.`}
+              />
             </div>
           ) : taches.length === 0 ? (
             <div className="rt-verre rt-panneau">

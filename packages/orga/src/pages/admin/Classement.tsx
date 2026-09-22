@@ -6,6 +6,7 @@ import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { ClassementQuery } from '../../gql/graphql'
 import { EDITIONS } from '../../lib/requetes'
+import { useActivite } from '../../lib/activite'
 
 const CLASSEMENT = graphql(`
   query Classement($editionId: ID!) {
@@ -30,6 +31,7 @@ const CLASSEMENT = graphql(`
 type Ligne = ClassementQuery['classement'][number]
 
 export default function Classement() {
+  const { periode } = useActivite()
   const { data: editions } = useQuery(EDITIONS)
   const [choix, setChoix] = useState<string | undefined>()
   const editionId =
@@ -41,7 +43,9 @@ export default function Classement() {
 
   return (
     <>
-      <Titre sousTitre="Les contributions de chaque personne sur une édition.">
+      <Titre
+        sousTitre={`Les contributions de chaque personne sur ${periode.une}.`}
+      >
         Classement
       </Titre>
       <Alert
@@ -49,10 +53,10 @@ export default function Classement() {
         showIcon
         style={{ marginBottom: 16 }}
         title="Ce classement n’est visible que par les admins."
-        description="Chaque personne voit seulement son propre score. Un palmarès public se décide en fin d’édition."
+        description={`Chaque personne voit seulement son propre score. Un palmarès public se décide en fin ${periode.de}.`}
       />
       <Space style={{ marginBottom: 16 }}>
-        <span>Édition</span>
+        <span>{periode.Nom}</span>
         <Select
           style={{ minWidth: 200 }}
           value={editionId}
@@ -64,7 +68,7 @@ export default function Classement() {
         />
       </Space>
       {editionId === undefined ? (
-        <Empty description="Créez d’abord une édition." />
+        <Empty description={`Créez d’abord ${periode.une}.`} />
       ) : (
         <Table<Ligne>
           rowKey={l => l.personne.id}
@@ -72,7 +76,7 @@ export default function Classement() {
           dataSource={data?.classement ?? []}
           pagination={false}
           scroll={{ x: 'max-content' }}
-          locale={{ emptyText: 'Aucune contribution pour cette édition.' }}
+          locale={{ emptyText: `Aucune contribution pour ${periode.cette}.` }}
           columns={[
             { title: 'Rang', dataIndex: 'rang', width: 70 },
             { title: 'Personne', render: (_, l) => l.personne.nom },

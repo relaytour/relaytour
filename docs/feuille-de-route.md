@@ -16,7 +16,8 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 
 ## Propositions à valider avec les référentes et référents
 
-- **Transmission d'une édition à l'autre.** À la création d'une édition, un admin choisit les tâches de l'édition passée à reconduire, avec leurs échéances recalculées. Un·e référent·e sortant·e laisse une note de passation à la personne qui lui succède.
+- **Transmission d'une période à la suivante.** Ce chantier suit l'ADR 0008 : il donne sa valeur à la période. À la création d'une période, un admin choisit les tâches de l'édition passée à reconduire, avec leurs échéances recalculées. Un·e référent·e sortant·e laisse une note de passation à la personne qui lui succède.
+- **Éditeur de tâches types.** Les admins modifient les tâches types d'un périmètre dans l'espace organisateur. Elles ne changent aujourd'hui que dans le dossier de contenu (ADR 0009).
 - **Tâches.** Sous-tâches sous forme de cases à cocher ; dépendances entre tâches ; pièces jointes sur une tâche ou une fiche ; commentaires entre référentes et référents sur une tâche.
 - **Fiches.** Relecture avant publication sur les périmètres choisis par l'admin ; recherche en texte libre sur toutes les fiches accessibles ; liste des tâches qui s'appuient sur une fiche.
 - **Calendrier.** Vue calendrier des échéances par périmètre ; abonnement personnel au format iCal.

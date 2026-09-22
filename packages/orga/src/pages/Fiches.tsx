@@ -20,6 +20,7 @@ import { LISTE_FICHES } from '../lib/fiches'
 import { useOrganisation } from '../lib/organisation'
 import { normaliser } from '../lib/recherche'
 import { teinteLisible } from '../lib/theme'
+import { useActivite } from '../lib/activite'
 
 type FicheListe = ListeFichesQuery['fiches'][number]
 type Affichage = 'cartes' | 'liste'
@@ -47,6 +48,7 @@ function miseAJour(fiche: FicheListe): string {
 }
 
 export default function Fiches() {
+  const { lien } = useActivite()
   const navigate = useNavigate()
   const { theme } = useOrganisation()
   const { data, loading } = useQuery(LISTE_FICHES)
@@ -121,7 +123,7 @@ export default function Fiches() {
               type="primary"
               size="large"
               icon={<PlusOutlined />}
-              onClick={() => navigate('/fiches/nouvelle')}
+              onClick={() => navigate(lien('/fiches/nouvelle'))}
             >
               Nouvelle fiche commune
             </Button>
@@ -241,7 +243,7 @@ export default function Fiches() {
                     <EtiquettePerimetre
                       nom={groupe.nom}
                       couleur={groupe.couleur}
-                      lien={`/perimetres/${groupe.slug}`}
+                      lien={lien(`/perimetres/${groupe.slug}`)}
                       point
                     />
                   ) : (
@@ -260,7 +262,7 @@ export default function Fiches() {
                   {groupe.fiches.map(fiche => (
                     <li key={fiche.id}>
                       <Link
-                        to={`/fiches/${fiche.slug}`}
+                        to={lien(`/fiches/${fiche.slug}`)}
                         className={`rt-carte-fiche${affichage === 'cartes' ? ' rt-verre' : ''}`}
                       >
                         <span className="rt-carte-fiche-titre">

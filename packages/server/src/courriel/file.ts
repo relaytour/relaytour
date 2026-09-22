@@ -20,6 +20,7 @@ export async function mettreEnFile(
     tache?: CourrielJobData['tache']
     notificationId?: string
     notificationIds?: string[]
+    organisationId?: string
   } = {}
 ): Promise<void> {
   try {
@@ -35,6 +36,9 @@ export async function mettreEnFile(
       ...(options.notificationIds === undefined
         ? {}
         : { notificationIds: options.notificationIds }),
+      ...(options.organisationId === undefined
+        ? {}
+        : { organisationId: options.organisationId }),
     }
     await avecDelai(
       courrielQueue.add(sorte, data, {

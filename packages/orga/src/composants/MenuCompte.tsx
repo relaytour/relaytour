@@ -1,12 +1,24 @@
-import { LogoutOutlined, SettingOutlined } from '@ant-design/icons'
+import {
+  CheckOutlined,
+  LogoutOutlined,
+  SettingOutlined,
+} from '@ant-design/icons'
 import { Dropdown } from 'antd'
 import { useNavigate } from 'react-router'
 
-import { useDeconnexion } from '../lib/session'
+import { useActivite } from '../lib/activite'
+import {
+  useChangerOrganisation,
+  useDeconnexion,
+  useSession,
+} from '../lib/session'
 
 import { Avatar } from './Personne'
 
-/** Le compte de la barre haute : initiales, nom, préférences et déconnexion. */
+/**
+ * Le compte de la barre haute : initiales, nom, préférences, changement
+ * d'organisation quand la personne en a plusieurs (ADR 0008), et déconnexion.
+ */
 export default function MenuCompte({
   nom,
   afficherNom,
@@ -16,12 +28,31 @@ export default function MenuCompte({
 }) {
   const navigate = useNavigate()
   const deconnecter = useDeconnexion()
+  const { organisations } = useSession()
+  const changerOrganisation = useChangerOrganisation()
+  const { lien } = useActivite()
+  const choixOrganisation =
+    organisations.length > 1
+      ? [
+          {
+            type: 'group' as const,
+            label: 'Organisation',
+            children: organisations.map(o => ({
+              key: `organisation:${o.slug}`,
+              icon: o.active ? <CheckOutlined /> : <span />,
+              label: o.nom,
+            })),
+          },
+          { type: 'divider' as const },
+        ]
+      : []
   return (
     <Dropdown
       trigger={['click']}
       placement="bottomRight"
       menu={{
         items: [
+          ...choixOrganisation,
           {
             key: 'preferences',
             icon: <SettingOutlined />,
@@ -35,8 +66,14 @@ export default function MenuCompte({
           },
         ],
         onClick: ({ key }) => {
-          if (key === 'preferences') navigate('/preferences')
+          if (key === 'preferences') navigate(lien('/preferences'))
           if (key === 'deconnexion') void deconnecter()
+          if (key.startsWith('organisation:')) {
+            const slug = key.slice('organisation:'.length)
+            if (!organisations.find(o => o.slug === slug)?.active) {
+              void changerOrganisation(slug)
+            }
+          }
         },
       }}
     >

@@ -3,7 +3,7 @@ import { GraphQLError } from 'graphql'
 
 import type { AppContext } from '../context.ts'
 import {
-  aujourdhuiParis,
+  aujourdhui,
   estEnRetard,
   exigerEcriture,
   exigerLecture,
@@ -31,7 +31,14 @@ export const TacheRef = builder.prismaObject('Tache', {
     description: t.exposeString('description', { nullable: true }),
     echeance: t.expose('echeance', { type: 'Date', nullable: true }),
     statut: t.expose('statut', { type: StatutTacheEnum }),
-    enRetard: t.boolean({ resolve: tache => estEnRetard(tache) }),
+    // Le retard se juge au jour du fuseau de l'organisation.
+    enRetard: t.boolean({
+      resolve: (tache, _args, ctx) =>
+        estEnRetard(
+          tache,
+          aujourdhui(new Date(), ctx.organisation?.fuseauHoraire)
+        ),
+    }),
     termineeLe: t.expose('termineeLe', { type: 'DateTime', nullable: true }),
     creeLe: t.expose('createdAt', { type: 'DateTime' }),
     modifieeLe: t.expose('updatedAt', { type: 'DateTime' }),
@@ -100,7 +107,10 @@ const AvancementRef = builder
     }),
   })
 
-async function calculerAvancement(where: Prisma.TacheWhereInput) {
+async function calculerAvancement(
+  where: Prisma.TacheWhereInput,
+  fuseau: string | undefined
+) {
   const taches = await prisma.tache.findMany({
     where,
     select: {
@@ -110,7 +120,7 @@ async function calculerAvancement(where: Prisma.TacheWhereInput) {
       _count: { select: { assignations: true } },
     },
   })
-  const aujourdhui = aujourdhuiParis()
+  const jour = aujourdhui(new Date(), fuseau)
   const parPerimetre = new Map<string, ReturnType<typeof avancementVide>>()
   for (const tache of taches) {
     const a = parPerimetre.get(tache.perimetreId) ?? avancementVide()
@@ -119,7 +129,7 @@ async function calculerAvancement(where: Prisma.TacheWhereInput) {
     if (tache.statut === 'EN_COURS') a.enCours += 1
     if (tache.statut === 'FAITE') a.faites += 1
     if (tache.statut === 'ABANDONNEE') a.abandonnees += 1
-    if (estEnRetard(tache, aujourdhui)) a.enRetard += 1
+    if (estEnRetard(tache, jour)) a.enRetard += 1
     const ouverte = tache.statut === 'A_FAIRE' || tache.statut === 'EN_COURS'
     if (ouverte && tache._count.assignations === 0) a.sansPersonne += 1
     parPerimetre.set(tache.perimetreId, a)
@@ -174,9 +184,10 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, perimetre, { editionId }, ctx) => {
       await exigerLecture(ctx, perimetre.id)
+      const edition = await ctx.exigerEdition(editionId)
       return prisma.tache.findMany({
         ...query,
-        where: { perimetreId: perimetre.id, editionId: String(editionId) },
+        where: { perimetreId: perimetre.id, editionId: edition.id },
         orderBy: ORDRE_TACHES,
       })
     },
@@ -188,11 +199,12 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, perimetre, { editionId }, ctx) => {
       await exigerLecture(ctx, perimetre.id)
+      const edition = await ctx.exigerEdition(editionId)
       return prisma.user.findMany({
         ...query,
         where: {
           affectations: {
-            some: { perimetreId: perimetre.id, editionId: String(editionId) },
+            some: { perimetreId: perimetre.id, editionId: edition.id },
           },
         },
         orderBy: { name: 'asc' },
@@ -205,10 +217,11 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (perimetre, { editionId }, ctx) => {
       await exigerLecture(ctx, perimetre.id)
-      const resultat = await calculerAvancement({
-        perimetreId: perimetre.id,
-        editionId: String(editionId),
-      })
+      const edition = await ctx.exigerEdition(editionId)
+      const resultat = await calculerAvancement(
+        { perimetreId: perimetre.id, editionId: edition.id },
+        ctx.organisation?.fuseauHoraire
+      )
       return resultat.get(perimetre.id) ?? avancementVide()
     },
   }),
@@ -227,11 +240,19 @@ builder.queryFields(t => ({
     type: PerimetreRef,
     nullable: true,
     authScopes: { connecte: true },
-    args: { slug: t.arg.string({ required: true }) },
-    resolve: async (query, _root, { slug }, ctx) => {
+    args: {
+      slug: t.arg.string({ required: true }),
+      activiteId: t.arg.id(),
+    },
+    resolve: async (query, _root, { slug, activiteId }, ctx) => {
       const perimetre = await prisma.perimetre.findUnique({
         ...query,
-        where: { slug },
+        where: {
+          activiteId_slug: {
+            activiteId: await ctx.exigerActivite(activiteId),
+            slug,
+          },
+        },
       })
       // Un périmètre inconnu et un périmètre interdit donnent la même réponse.
       if (perimetre === null) {
@@ -243,17 +264,26 @@ builder.queryFields(t => ({
     },
   }),
 
-  // Les périmètres accessibles en lecture : tous pour un admin, sinon ceux où la
-  // personne a été affectée au moins une fois.
+  // Les périmètres accessibles en lecture dans l'organisation active : tous ceux qui
+  // ne sont pas archivés pour un admin, sinon ceux où la personne a été affectée au
+  // moins une fois. Avec `activiteId`, ceux de cette activité seulement.
   mesPerimetres: t.prismaField({
     type: [PerimetreRef],
     authScopes: { connecte: true },
-    resolve: async (query, _root, _args, ctx) => {
+    args: { activiteId: t.arg.id() },
+    resolve: async (query, _root, { activiteId }, ctx) => {
       const lisibles = await perimetresLisibles(ctx)
+      const activite =
+        activiteId === null || activiteId === undefined
+          ? {}
+          : { activiteId: await ctx.exigerActivite(activiteId) }
       return prisma.perimetre.findMany({
         ...query,
-        where:
-          lisibles === null ? { archivedAt: null } : { id: { in: lisibles } },
+        where: {
+          id: { in: lisibles },
+          ...activite,
+          ...(ctx.personne!.estAdmin ? { archivedAt: null } : {}),
+        },
         orderBy: [{ type: 'asc' }, { ordre: 'asc' }, { nom: 'asc' }],
       })
     },
@@ -263,11 +293,11 @@ builder.queryFields(t => ({
     type: [TacheRef],
     authScopes: { connecte: true },
     args: { editionId: t.arg.id({ required: true }) },
-    resolve: (query, _root, { editionId }, ctx) =>
+    resolve: async (query, _root, { editionId }, ctx) =>
       prisma.tache.findMany({
         ...query,
         where: {
-          editionId: String(editionId),
+          editionId: (await ctx.exigerEdition(editionId)).id,
           statut: { in: ['A_FAIRE', 'EN_COURS'] },
           assignations: { some: { userId: ctx.personne!.id } },
         },
@@ -283,13 +313,14 @@ builder.queryFields(t => ({
     authScopes: { connecte: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, _root, { editionId }, ctx) => {
+      const edition = await ctx.exigerEdition(editionId)
       const lisibles = await perimetresLisibles(ctx)
       return prisma.tache.findMany({
         ...query,
         where: {
-          editionId: String(editionId),
+          editionId: edition.id,
           perimetre: { archivedAt: null },
-          ...(lisibles === null ? {} : { perimetreId: { in: lisibles } }),
+          perimetreId: { in: lisibles },
         },
         orderBy: ORDRE_TACHES,
       })
@@ -302,11 +333,12 @@ builder.queryFields(t => ({
     authScopes: { connecte: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, _root, { editionId }, ctx) => {
-      const perimetres = [...(await ctx.perimetresAffectes(String(editionId)))]
+      const edition = await ctx.exigerEdition(editionId)
+      const perimetres = [...(await ctx.perimetresAffectes(edition.id))]
       return prisma.tache.findMany({
         ...query,
         where: {
-          editionId: String(editionId),
+          editionId: edition.id,
           perimetreId: { in: perimetres },
           statut: { in: ['A_FAIRE', 'EN_COURS'] },
           assignations: { none: {} },
@@ -320,14 +352,18 @@ builder.queryFields(t => ({
     type: [AvancementPerimetreRef],
     authScopes: { admin: true },
     args: { editionId: t.arg.id({ required: true }) },
-    resolve: async (_root, { editionId }) => {
+    resolve: async (_root, { editionId }, ctx) => {
+      const edition = await ctx.exigerEdition(editionId)
       const [perimetres, parPerimetre] = await Promise.all([
         prisma.perimetre.findMany({
-          where: { archivedAt: null },
+          where: { activiteId: edition.activiteId, archivedAt: null },
           select: { id: true },
           orderBy: [{ type: 'asc' }, { ordre: 'asc' }, { nom: 'asc' }],
         }),
-        calculerAvancement({ editionId: String(editionId) }),
+        calculerAvancement(
+          { editionId: edition.id },
+          ctx.organisation?.fuseauHoraire
+        ),
       ])
       return perimetres.map(p => ({
         perimetreId: p.id,
@@ -410,18 +446,28 @@ async function exigerAffectee(
   }
 }
 
-/** Une tâche se lie à une fiche commune ou à une fiche de son propre périmètre. */
+/**
+ * Une tâche se lie à une fiche commune de son activité ou à une fiche de son propre
+ * périmètre.
+ */
 async function ficheValide(
   ficheId: string | number | null | undefined,
   perimetreId: string
 ): Promise<string | null> {
   if (ficheId === null || ficheId === undefined || ficheId === '') return null
-  const fiche = await prisma.fiche.findUnique({
-    where: { id: String(ficheId) },
-    select: { id: true, perimetreId: true },
-  })
+  const [fiche, perimetre] = await Promise.all([
+    prisma.fiche.findUnique({
+      where: { id: String(ficheId) },
+      select: { id: true, perimetreId: true, activiteId: true },
+    }),
+    prisma.perimetre.findUniqueOrThrow({
+      where: { id: perimetreId },
+      select: { activiteId: true },
+    }),
+  ])
   if (
     fiche === null ||
+    fiche.activiteId !== perimetre.activiteId ||
     (fiche.perimetreId !== null && fiche.perimetreId !== perimetreId)
   ) {
     throw erreurSaisie('Cette fiche ne peut pas être liée à cette tâche.')
@@ -462,7 +508,7 @@ builder.mutationFields(t => ({
               : {}),
           },
         })
-        await tx.activite.create({
+        await tx.journal.create({
           data: {
             type: 'TACHE_CREEE',
             acteurId: acteur.id,
@@ -524,7 +570,7 @@ builder.mutationFields(t => ({
             ficheId,
           },
         })
-        await tx.activite.create({
+        await tx.journal.create({
           data: {
             type: 'TACHE_MODIFIEE',
             acteurId: acteur.id,
@@ -589,7 +635,7 @@ builder.mutationFields(t => ({
             realiseeParId,
           },
         })
-        await tx.activite.create({
+        await tx.journal.create({
           data: {
             type: 'TACHE_STATUT',
             acteurId: acteur.id,
@@ -649,7 +695,7 @@ builder.mutationFields(t => ({
             : prisma.tacheAssignation.deleteMany({
                 where: { tacheId: tache.id, userId: personneId },
               }),
-          prisma.activite.create({
+          prisma.journal.create({
             data: {
               type: args.assigne ? 'TACHE_ASSIGNEE' : 'TACHE_DESASSIGNEE',
               acteurId: acteur.id,

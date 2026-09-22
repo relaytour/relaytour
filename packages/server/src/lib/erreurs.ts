@@ -12,6 +12,30 @@ export function accesRefuse(): GraphQLError {
   })
 }
 
+/** Refus d'une écriture dans une organisation en lecture seule (ADR 0008). */
+export function organisationEnLectureSeule(): GraphQLError {
+  return new GraphQLError(
+    'Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier.',
+    { extensions: { code: 'LECTURE_SEULE' } }
+  )
+}
+
+/**
+ * Refus d'une création au-delà d'une limite fixée par l'administration de
+ * l'installation (ADR 0008). Le message renvoie vers l'hébergeur s'il est connu.
+ */
+export function limiteAtteinte(
+  message: string,
+  contactHebergeur: string | undefined
+): GraphQLError {
+  const suite = contactHebergeur
+    ? ` Contactez votre hébergeur : ${contactHebergeur}.`
+    : ' Contactez un admin de votre organisation.'
+  return new GraphQLError(message + suite, {
+    extensions: { code: 'LIMITE_ATTEINTE' },
+  })
+}
+
 /** Mesure d'une requête GraphQL, telle que le plugin de complexité la calcule. */
 export interface MesureRequete {
   depth: number

@@ -1,8 +1,8 @@
 import type { PrismaClient } from '@relaytour/database'
 
-import { aujourdhuiParis } from './droits.ts'
+import { aujourdhui } from './droits.ts'
 
-// Score d'activité d'une édition (phase 5).
+// Score de participation d'une édition (phase 5).
 //
 // Le score se calcule à partir de l'état actuel des données, pas du journal brut :
 // rouvrir une tâche lui retire ses points, et répéter une action n'en rapporte pas
@@ -53,28 +53,34 @@ function scoreVide(userId: string): Score {
   }
 }
 
-/** Période d'une édition pour les contributions qui n'en dépendent pas. */
+/**
+ * Période d'une édition pour les contributions qui n'en dépendent pas. L'édition
+ * précédente se cherche dans la même activité (ADR 0008).
+ */
 export async function periodeEdition(
   prisma: PrismaClient,
   editionId: string
-): Promise<{ debut: Date | null; fin: Date }> {
+): Promise<{ debut: Date | null; fin: Date; activiteId: string }> {
   const edition = await prisma.edition.findUniqueOrThrow({
     where: { id: editionId },
   })
   const precedente = await prisma.edition.findFirst({
-    where: { annee: { lt: edition.annee } },
+    where: { activiteId: edition.activiteId, annee: { lt: edition.annee } },
     orderBy: { annee: 'desc' },
   })
   return {
     // Fin (exclue) de la période précédente : aucun jour n'est perdu entre deux éditions.
     debut: precedente ? new Date(precedente.fin.getTime() + 31 * JOUR) : null,
     fin: new Date(edition.fin.getTime() + 31 * JOUR),
+    activiteId: edition.activiteId,
   }
 }
 
 export async function calculerScores(
   prisma: PrismaClient,
-  editionId: string
+  editionId: string,
+  // Le jour d'une contribution se lit dans le fuseau de l'organisation.
+  fuseau?: string
 ): Promise<Map<string, Score>> {
   const scores = new Map<string, Score>()
   const de = (userId: string) => {
@@ -104,9 +110,10 @@ export async function calculerScores(
         const score = de(auteur)
         score.tachesRealisees += 1
         score.points += BAREME.tacheRealisee
-        // Jour de clôture à Paris : une tâche cochée à 1 h du matin le lendemain est en retard.
+        // Jour de clôture dans le fuseau de l'organisation : une tâche cochée à 1 h du
+        // matin le lendemain est en retard.
         const faiteLe = tache.termineeLe
-          ? aujourdhuiParis(tache.termineeLe)
+          ? aujourdhui(tache.termineeLe, fuseau)
           : undefined
         const echeance = tache.echeance?.toISOString().slice(0, 10)
         if (faiteLe && echeance && faiteLe <= echeance) {
@@ -123,9 +130,11 @@ export async function calculerScores(
   }
 
   const periode = await periodeEdition(prisma, editionId)
-  const activites = await prisma.activite.findMany({
+  const activites = await prisma.journal.findMany({
     where: {
       type: { in: ['FICHE_CREEE', 'FICHE_MODIFIEE'] },
+      // Seules les fiches de l'activité de l'édition comptent.
+      fiche: { activiteId: periode.activiteId },
       createdAt: {
         ...(periode.debut ? { gte: periode.debut } : {}),
         lt: periode.fin,
@@ -135,7 +144,7 @@ export async function calculerScores(
   })
   const dejaComptees = new Set<string>()
   for (const activite of activites) {
-    const cle = `${activite.type}|${activite.acteurId}|${activite.ficheId}|${aujourdhuiParis(activite.createdAt)}`
+    const cle = `${activite.type}|${activite.acteurId}|${activite.ficheId}|${aujourdhui(activite.createdAt, fuseau)}`
     if (dejaComptees.has(cle)) continue
     dejaComptees.add(cle)
     const score = de(activite.acteurId)

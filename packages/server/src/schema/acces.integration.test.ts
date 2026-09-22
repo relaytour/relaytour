@@ -6,7 +6,9 @@ import { testUtils } from 'better-auth/plugins'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { auth, creerAuth } from '../auth.ts'
-import { buildContext, type AppContext } from '../context.ts'
+import type { AppContext } from '../context.ts'
+import { organisationParDefaut } from '../lib/organisation.ts'
+import { contexteDeTest } from '../test/contexte.ts'
 
 import { schema } from './index.ts'
 
@@ -23,7 +25,7 @@ async function executer(
 ) {
   const reponse = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', userId) }
+    { contextValue: await contexteDeTest(userId) }
   )
   if (reponse.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -140,8 +142,17 @@ describe('session Better Auth', () => {
       test: { getAuthHeaders(o: { userId: string }): Promise<Headers> }
     }
     const cible = randomUUID()
+    // La cible est membre de l'organisation de l'admin : un admin n'archive que les
+    // membres de son organisation (ADR 0008).
     await prisma.user.create({
-      data: { id: cible, email: `cible-${suffixe}@exemple.fr`, name: 'cible' },
+      data: {
+        id: cible,
+        email: `cible-${suffixe}@exemple.fr`,
+        name: 'cible',
+        appartenances: {
+          create: { organisationId: await organisationParDefaut() },
+        },
+      },
     })
     const entetes = await test.getAuthHeaders({ userId: cible })
     expect((await auth.api.getSession({ headers: entetes }))?.user.id).toBe(

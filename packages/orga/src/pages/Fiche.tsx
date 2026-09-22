@@ -28,6 +28,7 @@ import {
   VERSIONS_FICHE,
 } from '../lib/fiches'
 import { EDITION_COURANTE } from '../lib/requetes'
+import { useActivite } from '../lib/activite'
 
 function dateHeure(iso: string) {
   return new Date(iso).toLocaleString('fr-FR', {
@@ -40,6 +41,7 @@ function dateHeure(iso: string) {
 }
 
 export default function Fiche() {
+  const { lien } = useActivite()
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const { message } = App.useApp()
@@ -78,13 +80,13 @@ export default function Fiche() {
       <Titre
         avant={
           <nav aria-label="Fil d’Ariane" className="rt-ariane">
-            <Link to="/fiches">Fiches</Link>
+            <Link to={lien('/fiches')}>Fiches</Link>
             <span aria-hidden="true">/</span>
             {fiche.perimetre ? (
               <EtiquettePerimetre
                 nom={fiche.perimetre.nom}
                 couleur={fiche.perimetre.couleur}
-                lien={`/perimetres/${fiche.perimetre.slug}`}
+                lien={lien(`/perimetres/${fiche.perimetre.slug}`)}
                 point
               />
             ) : (
@@ -115,7 +117,7 @@ export default function Fiche() {
               <Button
                 type="primary"
                 icon={<EditOutlined />}
-                onClick={() => navigate(`/fiches/${fiche.slug}/modifier`)}
+                onClick={() => navigate(lien(`/fiches/${fiche.slug}/modifier`))}
               >
                 Modifier
               </Button>
@@ -173,7 +175,9 @@ export default function Fiche() {
                         <Link
                           className="rt-ligne-lien"
                           style={{ fontSize: 13.5 }}
-                          to={`/perimetres/${t.perimetre.slug}?edition=${editionId}`}
+                          to={lien(
+                            `/perimetres/${t.perimetre.slug}?edition=${editionId}`
+                          )}
                         >
                           <span
                             style={{

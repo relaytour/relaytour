@@ -11,11 +11,25 @@ import { schema } from './index.ts'
 
 const contexteConnecte: AppContext = {
   ip: '127.0.0.1',
+  administration: false,
   personne: { id: 'p1', nom: 'Test', email: 'test@exemple.fr', estAdmin: false },
   perimetresAffectes: () => {
     throw new Error('Un résolveur a été appelé.')
   },
   perimetresConnus: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
+  organisation: {
+    id: 'o1',
+    slug: 'rencontres',
+    role: 'MEMBRE',
+    statut: 'ACTIVE',
+    fuseauHoraire: 'Europe/Paris',
+  },
+  exigerActivite: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
+  exigerEdition: () => {
     throw new Error('Un résolveur a été appelé.')
   },
 }

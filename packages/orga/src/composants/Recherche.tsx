@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { graphql } from '../gql'
+import { useActivite } from '../lib/activite'
 import { EDITION_COURANTE } from '../lib/requetes'
 
 import EtiquettePerimetre from './EtiquettePerimetre'
@@ -29,6 +30,10 @@ const RECHERCHE = graphql(`
         id
         slug
         titre
+        activite {
+          id
+          slug
+        }
         perimetre {
           id
           nom
@@ -42,6 +47,10 @@ const RECHERCHE = graphql(`
           id
           slug
           nom
+          activite {
+            id
+            slug
+          }
         }
       }
     }
@@ -59,6 +68,7 @@ const DELAI_MS = 250
  */
 export default function Recherche({ estAdmin }: { estAdmin: boolean }) {
   const navigate = useNavigate()
+  const { lien } = useActivite()
   const [saisie, setSaisie] = useState('')
   const [texte, setTexte] = useState('')
   const { data: courante } = useQuery(EDITION_COURANTE)
@@ -85,9 +95,10 @@ export default function Recherche({ estAdmin }: { estAdmin: boolean }) {
         label: 'Tâches',
         options: r.taches.map(t => {
           const cle = `tache:${t.id}`
+          // Les tâches se cherchent dans la période de l'activité affichée.
           liens.set(
             cle,
-            `/perimetres/${t.perimetre.slug}?edition=${t.edition.id}`
+            lien(`/perimetres/${t.perimetre.slug}?edition=${t.edition.id}`)
           )
           return {
             value: cle,
@@ -109,7 +120,8 @@ export default function Recherche({ estAdmin }: { estAdmin: boolean }) {
         label: 'Fiches',
         options: r.fiches.map(f => {
           const cle = `fiche:${f.id}`
-          liens.set(cle, `/fiches/${f.slug}`)
+          // Une fiche peut venir d'une autre activité de l'organisation.
+          liens.set(cle, `/${f.activite.slug}/fiches/${f.slug}`)
           return {
             value: cle,
             label: (
@@ -138,10 +150,10 @@ export default function Recherche({ estAdmin }: { estAdmin: boolean }) {
           liens.set(
             cle,
             estAdmin
-              ? '/admin/personnes'
+              ? lien('/admin/personnes')
               : premier
-                ? `/perimetres/${premier.slug}`
-                : '/'
+                ? `/${premier.activite.slug}/perimetres/${premier.slug}`
+                : lien('/')
           )
           return {
             value: cle,
@@ -158,7 +170,7 @@ export default function Recherche({ estAdmin }: { estAdmin: boolean }) {
       })
     }
     return { options: groupes, liens }
-  }, [data, texte, estAdmin])
+  }, [data, texte, estAdmin, lien])
 
   const vide =
     texte.length >= LONGUEUR_MIN && !loading && data && options.length === 0
