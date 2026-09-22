@@ -85,10 +85,12 @@ type Fiche {
   id: ID!
   modifieeLe: DateTime!
   modifieePar: String
+  nombreVersions: Int
   perimetre: Perimetre
   peutModifier: Boolean!
   slug: String!
   source: SourceFiche
+  taches(editionId: ID!): [Tache!]!
   titre: String!
   versionCouranteId: ID
   versions: [FicheVersion!]!
@@ -212,6 +214,15 @@ type Personne {
   souhaits(editionId: ID): [Souhait!]!
 }
 
+"""
+Une personne trouvée par la recherche, avec les périmètres lisibles où elle est affectée.
+"""
+type PersonneTrouvee {
+  id: ID!
+  nom: String!
+  perimetres: [Perimetre!]!
+}
+
 """Piles CSS complètes, prêtes pour font-family."""
 type PolicesTheme {
   mono: String!
@@ -273,8 +284,15 @@ type Query {
   personnes(inclureArchives: Boolean = false): [Personne!]!
   peutRedigerFichesCommunes: Boolean!
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
+  recherche(editionId: ID, texte: String!): Recherche!
   retroplanning(editionId: ID!): [Tache!]!
   tachesAPrendre(editionId: ID!): [Tache!]!
+}
+
+type Recherche {
+  fiches: [Fiche!]!
+  personnes: [PersonneTrouvee!]!
+  taches: [Tache!]!
 }
 
 type Score {

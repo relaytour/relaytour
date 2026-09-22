@@ -4,7 +4,6 @@ import {
   Alert,
   App,
   Button,
-  Card,
   Drawer,
   Empty,
   Popconfirm,
@@ -17,10 +16,18 @@ import {
 import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 
+import EtiquettePerimetre from '../composants/EtiquettePerimetre'
 import Markdown from '../composants/Markdown'
+import { DeuxColonnes, Panneau } from '../composants/Panneau'
 import Titre from '../composants/Titre'
-import { messageErreur } from '../lib/erreurs'
-import { FICHE, RESTAURER_VERSION, VERSIONS_FICHE } from '../lib/fiches'
+import { dateCourte, messageErreur } from '../lib/erreurs'
+import {
+  FICHE,
+  RESTAURER_VERSION,
+  TACHES_FICHE,
+  VERSIONS_FICHE,
+} from '../lib/fiches'
+import { EDITION_COURANTE } from '../lib/requetes'
 
 function dateHeure(iso: string) {
   return new Date(iso).toLocaleString('fr-FR', {
@@ -37,6 +44,12 @@ export default function Fiche() {
   const navigate = useNavigate()
   const { message } = App.useApp()
   const { data, loading, error } = useQuery(FICHE, { variables: { slug } })
+  const { data: courante } = useQuery(EDITION_COURANTE)
+  const editionId = courante?.editionCourante?.id
+  const liees = useQuery(TACHES_FICHE, {
+    variables: { slug, editionId: editionId ?? '' },
+    skip: editionId === undefined || !data?.fiche,
+  })
   const [historique, setHistorique] = useState(false)
   const [apercu, setApercu] = useState<string | null>(null)
   const versions = useQuery(VERSIONS_FICHE, {
@@ -58,69 +71,164 @@ export default function Fiche() {
     v => v.id === apercu
   )
 
+  const taches = liees.data?.fiche?.taches ?? []
+
   return (
     <>
-      <div
-        style={{
-          borderInlineStart: `8px solid ${fiche.perimetre?.couleur ?? 'var(--rt-accent)'}`,
-          paddingInlineStart: 16,
-        }}
+      <Titre
+        avant={
+          <nav aria-label="Fil d’Ariane" className="rt-ariane">
+            <Link to="/fiches">Fiches</Link>
+            <span aria-hidden="true">/</span>
+            {fiche.perimetre ? (
+              <EtiquettePerimetre
+                nom={fiche.perimetre.nom}
+                couleur={fiche.perimetre.couleur}
+                lien={`/perimetres/${fiche.perimetre.slug}`}
+                point
+              />
+            ) : (
+              <span>Fiches communes</span>
+            )}
+          </nav>
+        }
+        sousTitre={
+          <>
+            Mise à jour le {dateHeure(fiche.modifieeLe)}
+            {fiche.modifieePar
+              ? ` par ${fiche.modifieePar}.`
+              : ' depuis le dépôt.'}
+          </>
+        }
+        actions={
+          <>
+            {fiche.archive && <Tag>Archivée</Tag>}
+            {data.moi?.estAdmin && (
+              <Button
+                icon={<HistoryOutlined />}
+                onClick={() => setHistorique(true)}
+              >
+                Historique
+              </Button>
+            )}
+            {fiche.peutModifier && (
+              <Button
+                type="primary"
+                icon={<EditOutlined />}
+                onClick={() => navigate(`/fiches/${fiche.slug}/modifier`)}
+              >
+                Modifier
+              </Button>
+            )}
+          </>
+        }
       >
-        <Titre
-          sousTitre={
-            <>
-              {fiche.perimetre ? (
-                <Link to={`/perimetres/${fiche.perimetre.slug}`}>
-                  {fiche.perimetre.nom}
-                </Link>
-              ) : (
-                'Fiche commune'
-              )}
-              {' · '}Mise à jour le {dateHeure(fiche.modifieeLe)}
-              {fiche.modifieePar
-                ? ` par ${fiche.modifieePar}`
-                : ' depuis le dépôt'}
-            </>
-          }
+        {fiche.titre}
+      </Titre>
+
+      <DeuxColonnes
+        cote={
+          <>
+            <Panneau titre="À propos">
+              <dl className="rt-description">
+                <dt>Périmètre</dt>
+                <dd>{fiche.perimetre?.nom ?? 'Fiche commune'}</dd>
+                <dt>Source</dt>
+                <dd>{fiche.source === 'GIT' ? 'Dépôt' : 'Application'}</dd>
+                <dt>Identifiant</dt>
+                <dd
+                  className="rt-mono"
+                  style={{ fontWeight: 400, fontSize: 12.5 }}
+                >
+                  {fiche.slug}
+                </dd>
+                {fiche.nombreVersions !== null &&
+                  fiche.nombreVersions !== undefined && (
+                    <>
+                      <dt>Versions</dt>
+                      <dd>{fiche.nombreVersions}</dd>
+                    </>
+                  )}
+              </dl>
+            </Panneau>
+            {editionId && (
+              <Panneau
+                titre="Tâches liées"
+                extra={
+                  <span className="rt-compte">
+                    {courante?.editionCourante?.annee}
+                  </span>
+                }
+              >
+                {liees.loading ? (
+                  <Skeleton active paragraph={{ rows: 2 }} title={false} />
+                ) : taches.length === 0 ? (
+                  <p className="rt-texte-secondaire">
+                    Aucune tâche de l’édition en cours ne renvoie à cette fiche.
+                  </p>
+                ) : (
+                  <ul className="rt-liste-liens">
+                    {taches.map(t => (
+                      <li key={t.id}>
+                        <Link
+                          className="rt-ligne-lien"
+                          style={{ fontSize: 13.5 }}
+                          to={`/perimetres/${t.perimetre.slug}?edition=${editionId}`}
+                        >
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              minWidth: 0,
+                            }}
+                          >
+                            <span
+                              className="rt-point"
+                              style={{
+                                background:
+                                  t.perimetre.couleur ?? 'var(--rt-primaire)',
+                              }}
+                            />
+                            {t.titre}
+                          </span>
+                          {t.echeance && (
+                            <span
+                              className={`rt-date${t.enRetard ? ' rt-date-retard' : ''}`}
+                              style={{ fontWeight: 400, whiteSpace: 'nowrap' }}
+                            >
+                              {dateCourte(t.echeance)}
+                            </span>
+                          )}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Panneau>
+            )}
+          </>
+        }
+      >
+        {fiche.peutModifier && fiche.donneesPersonnelles.length > 0 && (
+          <Alert
+            type="warning"
+            showIcon
+            title="Cette fiche contient une adresse ou un numéro personnel."
+            description="Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
+          />
+        )}
+
+        <article
+          className="rt-verre"
+          style={{
+            borderRadius: 'var(--rt-rayon-panneau)',
+            padding: '30px 36px 34px',
+          }}
         >
-          {fiche.titre}
-        </Titre>
-      </div>
-
-      <Space wrap style={{ marginBottom: 16 }}>
-        {fiche.peutModifier && (
-          <Button
-            type="primary"
-            icon={<EditOutlined />}
-            onClick={() => navigate(`/fiches/${fiche.slug}/modifier`)}
-          >
-            Modifier
-          </Button>
-        )}
-        {data.moi?.estAdmin && (
-          <Button
-            icon={<HistoryOutlined />}
-            onClick={() => setHistorique(true)}
-          >
-            Historique
-          </Button>
-        )}
-        {fiche.archive && <Tag>Archivée</Tag>}
-      </Space>
-
-      {fiche.peutModifier && fiche.donneesPersonnelles.length > 0 && (
-        <Alert
-          type="warning"
-          showIcon
-          style={{ marginBottom: 16 }}
-          title="Cette fiche contient une adresse ou un numéro personnel."
-          description="Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
-        />
-      )}
-
-      <Card>
-        <Markdown contenu={fiche.contenu} />
-      </Card>
+          <Markdown contenu={fiche.contenu} />
+        </article>
+      </DeuxColonnes>
 
       <Drawer
         open={historique}

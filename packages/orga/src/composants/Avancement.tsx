@@ -1,4 +1,4 @@
-import { Progress, Space, Tag } from 'antd'
+import { PastilleEtat } from './Etat'
 
 export interface AvancementDonnees {
   total: number
@@ -6,36 +6,180 @@ export interface AvancementDonnees {
   abandonnees: number
   enRetard: number
   sansPersonne: number
+  aFaire?: number
+  enCours?: number
 }
 
-/** Barre de progression : tâches faites sur tâches non abandonnées. */
+function Signalements({ avancement }: { avancement: AvancementDonnees }) {
+  const toutesAbandonnees =
+    avancement.total > 0 && avancement.abandonnees === avancement.total
+  if (
+    avancement.enRetard === 0 &&
+    avancement.sansPersonne === 0 &&
+    !toutesAbandonnees
+  )
+    return null
+  return (
+    <div className="rt-meta">
+      {toutesAbandonnees && (
+        <PastilleEtat variante="abandonnee">
+          {avancement.total > 1
+            ? `Les ${avancement.total} tâches sont abandonnées`
+            : 'La tâche est abandonnée'}
+        </PastilleEtat>
+      )}
+      {avancement.enRetard > 0 && (
+        <PastilleEtat variante="retard">
+          {avancement.enRetard} en retard
+        </PastilleEtat>
+      )}
+      {avancement.sansPersonne > 0 && (
+        <PastilleEtat variante="alerte">
+          {avancement.sansPersonne} sans personne
+        </PastilleEtat>
+      )}
+    </div>
+  )
+}
+
+const largeur = (part: number, total: number) =>
+  `${total === 0 ? 0 : (100 * part) / total}%`
+
+/**
+ * L'avancement d'un périmètre : tâches faites sur tâches non abandonnées. La
+ * version compacte tient dans une carte ; la version complète empile les
+ * statuts et ajoute une légende quand les comptes par statut sont connus.
+ */
 export default function Avancement({
   avancement,
   compact = false,
+  couleur = 'var(--rt-primaire)',
 }: {
   avancement: AvancementDonnees
   compact?: boolean
+  /** Couleur de la barre compacte, par exemple celle du périmètre. */
+  couleur?: string
 }) {
   const utiles = avancement.total - avancement.abandonnees
   const pourcentage =
     utiles === 0 ? 0 : Math.round((avancement.faites / utiles) * 100)
+
+  // Seul un périmètre sans aucune tâche est vide. Un périmètre dont toutes les
+  // tâches sont abandonnées affiche 0 % et le compte de ses abandons.
+  if (avancement.total === 0) {
+    return (
+      <div className="rt-meta">
+        <PastilleEtat>Aucune tâche</PastilleEtat>
+      </div>
+    )
+  }
+
+  if (compact) {
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            gap: 8,
+            fontSize: 13,
+          }}
+        >
+          <span style={{ color: 'var(--rt-encre-70)' }}>
+            {pourcentage} % des tâches faites
+          </span>
+          <span className="rt-compte">
+            {avancement.faites} / {utiles}
+          </span>
+        </div>
+        <div
+          className="rt-barre-simple"
+          role="progressbar"
+          aria-valuenow={pourcentage}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-label="Tâches faites"
+        >
+          <span style={{ width: `${pourcentage}%`, background: couleur }} />
+        </div>
+        <Signalements avancement={avancement} />
+      </div>
+    )
+  }
+
+  const detaille =
+    avancement.aFaire !== undefined && avancement.enCours !== undefined
   return (
-    <Space orientation="vertical" size={4} style={{ width: '100%' }}>
-      <Progress
-        percent={pourcentage}
-        size={compact ? 'small' : 'medium'}
-        strokeColor="var(--rt-primaire)"
-        format={() => `${avancement.faites} / ${utiles}`}
-      />
-      <Space size={[6, 6]} wrap>
-        {avancement.enRetard > 0 && (
-          <Tag color="red">{avancement.enRetard} en retard</Tag>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+        <span className="rt-grand-nombre">{pourcentage} %</span>
+        <span className="rt-texte-secondaire">des tâches faites</span>
+      </div>
+      <div
+        className="rt-barre-empilee"
+        role="progressbar"
+        aria-valuenow={pourcentage}
+        aria-valuemin={0}
+        aria-valuemax={100}
+        aria-label="Tâches faites"
+      >
+        <span
+          style={{
+            width: largeur(avancement.faites, utiles),
+            background: 'var(--rt-succes)',
+          }}
+        />
+        {detaille && (
+          <>
+            <span
+              style={{
+                width: largeur(avancement.enCours!, utiles),
+                background: 'var(--rt-primaire)',
+              }}
+            />
+            <span
+              style={{
+                width: largeur(avancement.aFaire!, utiles),
+                background: 'var(--rt-encre-40)',
+              }}
+            />
+          </>
         )}
-        {avancement.sansPersonne > 0 && (
-          <Tag color="orange">{avancement.sansPersonne} sans personne</Tag>
-        )}
-        {utiles === 0 && <Tag>Aucune tâche</Tag>}
-      </Space>
-    </Space>
+      </div>
+      {detaille && (
+        <ul className="rt-legende">
+          <li>
+            <span
+              className="rt-point"
+              style={{ background: 'var(--rt-succes)' }}
+            />
+            {avancement.faites} {avancement.faites > 1 ? 'faites' : 'faite'}
+          </li>
+          <li>
+            <span
+              className="rt-point"
+              style={{ background: 'var(--rt-primaire)' }}
+            />
+            {avancement.enCours} en cours
+          </li>
+          <li>
+            <span
+              className="rt-point"
+              style={{ background: 'var(--rt-encre-40)' }}
+            />
+            {avancement.aFaire} à faire
+          </li>
+          <li style={{ color: 'var(--rt-encre-55)' }}>
+            <span
+              className="rt-point"
+              style={{ background: 'var(--rt-encre-14)' }}
+            />
+            {avancement.abandonnees}{' '}
+            {avancement.abandonnees > 1 ? 'abandonnées' : 'abandonnée'}
+          </li>
+        </ul>
+      )}
+      <Signalements avancement={avancement} />
+    </div>
   )
 }

@@ -65,6 +65,18 @@
       }
     },
     {
+      "id": "2026-09-19-orga-les-ecrans-de-l-espace-organisateur-changent-d-allure",
+      "date": "2026-09-19",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Les écrans de l'espace organisateur changent d'allure",
+        "texte": "Mon espace, le rétroplanning, les fiches, les périmètres et les préférences suivent le nouveau design system. Une colonne de droite résume l'avancement, vos périmètres et votre contribution. Les fiches s'affichent en cartes ou en liste condensée, selon votre choix. Chaque périmètre indique ses personnes affectées et leur nombre de tâches ouvertes.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-orga-le-lien-du-mail-de-code-remplit-l-adresse-et-le-code",
       "date": "2026-09-19",
       "type": "correctif",

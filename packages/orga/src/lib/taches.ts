@@ -16,6 +16,42 @@ export const STATUTS: Record<
   ABANDONNEE: { libelle: 'Abandonnée', couleur: 'default' },
 }
 
+/** Classe CSS de la pastille d'état de chaque statut (global.css, `.rt-etat-*`). */
+export const CLASSE_STATUT: Record<StatutTache, string> = {
+  A_FAIRE: 'rt-etat-a-faire',
+  EN_COURS: 'rt-etat-en-cours',
+  FAITE: 'rt-etat-faite',
+  ABANDONNEE: 'rt-etat-abandonnee',
+}
+
+export const estOuverte = (tache: { statut: StatutTache }) =>
+  tache.statut === 'A_FAIRE' || tache.statut === 'EN_COURS'
+
+/** Nombre de jours pendant lesquels une échéance ouverte est signalée comme proche. */
+export const JOURS_ECHEANCE_PROCHE = 7
+
+/**
+ * Situation d'une échéance : en retard (le serveur le calcule), proche (ouverte
+ * et due dans les sept jours) ou normale. La date se lit dans le texte, sans
+ * décalage de fuseau.
+ */
+export function etatEcheance(
+  tache: { statut: StatutTache; echeance?: string | null; enRetard: boolean },
+  aujourdhui = new Date()
+): 'retard' | 'proche' | 'normale' {
+  if (tache.enRetard) return 'retard'
+  if (!tache.echeance || !estOuverte(tache)) return 'normale'
+  const [annee, mois, jour] = tache.echeance.slice(0, 10).split('-').map(Number)
+  const echeance = new Date(annee ?? 0, (mois ?? 1) - 1, jour ?? 1)
+  const debut = new Date(
+    aujourdhui.getFullYear(),
+    aujourdhui.getMonth(),
+    aujourdhui.getDate()
+  )
+  const jours = Math.round((echeance.getTime() - debut.getTime()) / 86_400_000)
+  return jours >= 0 && jours <= JOURS_ECHEANCE_PROCHE ? 'proche' : 'normale'
+}
+
 // Les requêtes actives à rafraîchir après une action sur une tâche : les compteurs
 // d'avancement et les listes « à prendre » dépendent du statut et des assignations.
 export const VUES_TACHES = [

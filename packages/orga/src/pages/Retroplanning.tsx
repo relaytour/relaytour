@@ -1,27 +1,19 @@
 import { useQuery } from '@apollo/client/react'
-import {
-  Card,
-  Checkbox,
-  Empty,
-  Result,
-  Segmented,
-  Select,
-  Skeleton,
-  Space,
-  Tag,
-  Typography,
-} from 'antd'
+import { Empty, Result, Select, Skeleton } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
+import ChoixEdition from '../composants/ChoixEdition'
+import LigneTache from '../composants/LigneTache'
+import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
+import { PuceBascule, Puces, SeparateurPuces } from '../composants/Puces'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
-import type { RetroplanningQuery, TypePerimetre } from '../gql/graphql'
-import { dateCourte } from '../lib/erreurs'
-import { EDITION_COURANTE, EDITIONS } from '../lib/requetes'
+import type { TypePerimetre } from '../gql/graphql'
+import { EDITION_COURANTE } from '../lib/requetes'
 import { grouperParMois, libelleMois } from '../lib/retroplanning'
-import { STATUTS } from '../lib/taches'
+import { estOuverte } from '../lib/taches'
 
 const RETROPLANNING = graphql(`
   query Retroplanning($editionId: ID!) {
@@ -56,15 +48,8 @@ const RETROPLANNING = graphql(`
   }
 `)
 
-type Tache = RetroplanningQuery['retroplanning'][number]
 type FiltreType = 'tous' | TypePerimetre
 type FiltreStatut = 'ouvertes' | 'toutes'
-
-const ROUGE_RETARD = 'var(--rt-erreur)'
-const PRIMAIRE = 'var(--rt-primaire)'
-
-const estOuverte = (tache: Tache) =>
-  tache.statut === 'A_FAIRE' || tache.statut === 'EN_COURS'
 
 function titreGroupe(mois: string | null): string {
   if (mois === null) return 'Sans échéance'
@@ -75,7 +60,6 @@ function titreGroupe(mois: string | null): string {
 export default function Retroplanning() {
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
-  const { data: editions } = useQuery(EDITIONS)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
   const { data, error } = useQuery(RETROPLANNING, {
     variables: { editionId: editionId ?? '' },
@@ -146,6 +130,19 @@ export default function Retroplanning() {
   )
   const groupes = useMemo(() => grouperParMois(taches), [taches])
 
+  // Les tâches ouvertes sans personne dans les périmètres de l'édition où la
+  // personne est affectée : elle peut les prendre depuis leur périmètre.
+  const aPrendre = useMemo(
+    () =>
+      (toutes ?? []).filter(
+        t =>
+          estOuverte(t) &&
+          t.assignes.length === 0 &&
+          affectes.has(t.perimetre.id)
+      ),
+    [toutes, affectes]
+  )
+
   if (editionId === undefined && courante && !courante.editionCourante) {
     return <Result status="info" title="Aucune édition n’est en préparation." />
   }
@@ -160,44 +157,87 @@ export default function Retroplanning() {
   }
 
   const enRetard = taches.filter(t => t.enRetard).length
+  const repartition = [
+    {
+      nom: 'À faire',
+      nombre: taches.filter(t => t.statut === 'A_FAIRE').length,
+      couleur: 'var(--rt-encre-40)',
+    },
+    {
+      nom: 'En cours',
+      nombre: taches.filter(t => t.statut === 'EN_COURS').length,
+      couleur: 'var(--rt-primaire)',
+    },
+    {
+      nom: 'Faites',
+      nombre: taches.filter(t => t.statut === 'FAITE').length,
+      couleur: 'var(--rt-succes)',
+    },
+    {
+      nom: 'Abandonnées',
+      nombre: taches.filter(t => t.statut === 'ABANDONNEE').length,
+      couleur: 'var(--rt-encre-14)',
+    },
+    { nom: 'En retard', nombre: enRetard, couleur: 'var(--rt-erreur)' },
+  ].filter(r => r.nombre > 0 || r.nom === 'En retard')
 
   return (
     <>
-      <Titre sousTitre="Les tâches de l’édition sont regroupées par mois, de la plus proche à la plus lointaine.">
-        Rétroplanning
-      </Titre>
-
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: 12,
-          marginBottom: 12,
-        }}
-      >
-        <Space>
-          <span>Édition</span>
-          <Select
-            style={{ minWidth: 180 }}
-            value={editionId}
+      <Titre
+        sousTitre="Les tâches de l’édition sont regroupées par mois, de la plus proche à la plus lointaine."
+        actions={
+          <ChoixEdition
+            valeur={editionId}
             onChange={id => {
               setPerimetres([])
               setParametres({ edition: id })
             }}
-            options={(editions?.editions ?? []).map(e => ({
-              value: e.id,
-              label: e.nom,
-            }))}
           />
-        </Space>
+        }
+      >
+        Rétroplanning
+      </Titre>
+
+      <div className="rt-puces" style={{ marginBottom: 22, rowGap: 10 }}>
+        <Puces<FiltreType>
+          libelle="Type de périmètre"
+          valeur={type}
+          onChange={setType}
+          options={[
+            { valeur: 'tous', libelle: 'Tous' },
+            { valeur: 'SPORT', libelle: 'Sports' },
+            { valeur: 'POLE', libelle: 'Pôles' },
+          ]}
+        />
+        <SeparateurPuces />
+        <Puces<FiltreStatut>
+          libelle="Statut des tâches"
+          valeur={statut}
+          onChange={setStatut}
+          options={[
+            { valeur: 'ouvertes', libelle: 'Ouvertes' },
+            { valeur: 'toutes', libelle: 'Toutes' },
+          ]}
+        />
+        <SeparateurPuces />
+        <PuceBascule actif={mesPerimetres} onChange={setMesPerimetres}>
+          Mes périmètres
+        </PuceBascule>
+        <PuceBascule actif={assigneesAMoi} onChange={setAssigneesAMoi}>
+          Assignées à moi
+        </PuceBascule>
         <Select
           mode="multiple"
           maxTagCount="responsive"
           allowClear
           aria-label="Périmètres"
           placeholder="Tous les périmètres"
-          style={{ flex: '1 1 260px', minWidth: 0 }}
+          style={{
+            flex: '1 1 240px',
+            minWidth: 0,
+            maxWidth: 360,
+            marginInlineStart: 'auto',
+          }}
           value={perimetres}
           onChange={setPerimetres}
           options={options}
@@ -218,76 +258,134 @@ export default function Retroplanning() {
         />
       </div>
 
-      <div
-        style={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          gap: '12px 16px',
-          marginBottom: 24,
-        }}
-      >
-        <Segmented<FiltreType>
-          aria-label="Type de périmètre"
-          value={type}
-          onChange={setType}
-          options={[
-            { value: 'tous', label: 'Tous' },
-            { value: 'SPORT', label: 'Sports' },
-            { value: 'POLE', label: 'Pôles' },
-          ]}
-        />
-        <Segmented<FiltreStatut>
-          aria-label="Statut des tâches"
-          value={statut}
-          onChange={setStatut}
-          options={[
-            { value: 'ouvertes', label: 'Ouvertes' },
-            { value: 'toutes', label: 'Toutes' },
-          ]}
-        />
-        <Checkbox
-          checked={mesPerimetres}
-          onChange={e => setMesPerimetres(e.target.checked)}
-        >
-          Mes périmètres
-        </Checkbox>
-        <Checkbox
-          checked={assigneesAMoi}
-          onChange={e => setAssigneesAMoi(e.target.checked)}
-        >
-          Assignées à moi
-        </Checkbox>
-      </div>
-
       {!data || !moi ? (
         <Skeleton active />
-      ) : affectes.size === 0 &&
-        (mesPerimetres || (!moi.estAdmin && toutes?.length === 0)) ? (
-        <Card>
-          <Empty description="Vous n’êtes affecté·e à aucun périmètre pour cette édition." />
-        </Card>
-      ) : taches.length === 0 ? (
-        <Card>
-          <Empty description="Aucune tâche ne correspond à ces filtres." />
-        </Card>
       ) : (
-        <>
-          <Typography.Paragraph strong style={{ marginBottom: 16 }}>
-            {taches.length} {taches.length > 1 ? 'tâches' : 'tâche'}, dont{' '}
-            <span style={{ color: enRetard > 0 ? ROUGE_RETARD : undefined }}>
-              {enRetard} en retard
-            </span>
-          </Typography.Paragraph>
-
-          <Space orientation="vertical" size={24} style={{ width: '100%' }}>
-            {groupes.map(groupe => (
-              <section key={groupe.mois ?? 'sans-echeance'}>
-                <Typography.Title level={4} style={{ marginTop: 0 }}>
-                  {titreGroupe(groupe.mois)}
-                </Typography.Title>
-                <Card size="small" styles={{ body: { padding: 8 } }}>
+        <DeuxColonnes
+          cote={
+            <>
+              <Panneau
+                titre="Sur cette sélection"
+                extra={
+                  <span className="rt-compte">
+                    {taches.length} {taches.length > 1 ? 'tâches' : 'tâche'}
+                  </span>
+                }
+              >
+                {repartition.map(r => (
+                  <div
+                    key={r.nom}
+                    style={{ display: 'flex', flexDirection: 'column', gap: 5 }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: 13,
+                      }}
+                    >
+                      <span
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 7,
+                          fontWeight: 600,
+                        }}
+                      >
+                        <span
+                          className="rt-point"
+                          style={{ background: r.couleur }}
+                        />
+                        {r.nom}
+                      </span>
+                      <span className="rt-compte">{r.nombre}</span>
+                    </div>
+                    <div className="rt-barre-simple">
+                      <span
+                        style={{
+                          width: `${taches.length === 0 ? 0 : (100 * r.nombre) / taches.length}%`,
+                          background: r.couleur,
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </Panneau>
+              {aPrendre.length > 0 && (
+                <Panneau
+                  teinte
+                  titre={
+                    aPrendre.length > 1
+                      ? `${aPrendre.length} tâches attendent une personne`
+                      : 'Une tâche attend une personne'
+                  }
+                >
+                  <p className="rt-texte-secondaire">
+                    Ces tâches ouvertes de vos périmètres n’ont aucune personne
+                    assignée. Vous pouvez les prendre depuis leur périmètre.
+                  </p>
                   <ul className="rt-liste-liens">
+                    {aPrendre.slice(0, 5).map(t => (
+                      <li key={t.id}>
+                        <Link
+                          className="rt-ligne-lien"
+                          to={`/perimetres/${t.perimetre.slug}?edition=${editionId}`}
+                          style={{ fontSize: 13.5 }}
+                        >
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 8,
+                              minWidth: 0,
+                            }}
+                          >
+                            <span
+                              className="rt-point"
+                              style={{
+                                background:
+                                  t.perimetre.couleur ?? 'var(--rt-primaire)',
+                              }}
+                            />
+                            {t.titre}
+                          </span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </Panneau>
+              )}
+            </>
+          }
+        >
+          {affectes.size === 0 &&
+          (mesPerimetres || (!moi.estAdmin && toutes?.length === 0)) ? (
+            <div className="rt-verre rt-panneau">
+              <Empty description="Vous n’êtes affecté·e à aucun périmètre pour cette édition." />
+            </div>
+          ) : taches.length === 0 ? (
+            <div className="rt-verre rt-panneau">
+              <Empty description="Aucune tâche ne correspond à ces filtres." />
+            </div>
+          ) : (
+            <>
+              <p style={{ margin: '0 6px', fontWeight: 600 }}>
+                {taches.length} {taches.length > 1 ? 'tâches' : 'tâche'}, dont{' '}
+                <span
+                  style={{
+                    color: enRetard > 0 ? 'var(--rt-erreur)' : undefined,
+                  }}
+                >
+                  {enRetard} en retard
+                </span>
+              </p>
+              {groupes.map(groupe => (
+                <Section
+                  key={groupe.mois ?? 'sans-echeance'}
+                  titre={titreGroupe(groupe.mois)}
+                  compte={`${groupe.taches.length} ${groupe.taches.length > 1 ? 'tâches' : 'tâche'}`}
+                >
+                  <ul className="rt-liste-liens" style={{ gap: 8 }}>
                     {groupe.taches.map(tache => (
                       <LigneTache
                         key={tache.id}
@@ -297,104 +395,12 @@ export default function Retroplanning() {
                       />
                     ))}
                   </ul>
-                </Card>
-              </section>
-            ))}
-          </Space>
-        </>
+                </Section>
+              ))}
+            </>
+          )}
+        </DeuxColonnes>
       )}
     </>
-  )
-}
-
-// Une tâche du rétroplanning : toute la ligne mène à son périmètre, où la tâche
-// se consulte et se modifie.
-function LigneTache({
-  tache,
-  moiId,
-  editionId,
-}: {
-  tache: Tache
-  moiId: string
-  editionId: string
-}) {
-  return (
-    <li>
-      <Link
-        to={`/perimetres/${tache.perimetre.slug}?edition=${editionId}`}
-        className={`rt-ligne-lien${tache.enRetard ? ' rt-en-retard' : ''}`}
-        style={{
-          flexWrap: 'wrap',
-          gap: '4px 16px',
-          fontWeight: 400,
-          opacity: tache.statut === 'ABANDONNEE' ? 0.6 : 1,
-        }}
-      >
-        {tache.echeance && (
-          <span style={{ flex: '0 0 130px', fontSize: 14 }}>
-            {dateCourte(tache.echeance)}
-          </span>
-        )}
-        {/* Le titre et les étiquettes partagent une colonne.
-          Les étiquettes passent sous le titre quand la place manque. */}
-        <div
-          style={{
-            flex: '1 1 240px',
-            minWidth: 0,
-            display: 'flex',
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            gap: '6px 12px',
-          }}
-        >
-          <span
-            style={{
-              flex: '1 1 220px',
-              minWidth: 0,
-              fontWeight: 700,
-              overflowWrap: 'anywhere',
-              textDecoration:
-                tache.statut === 'ABANDONNEE' ? 'line-through' : undefined,
-            }}
-          >
-            {tache.titre}
-          </span>
-          <Space size={[6, 6]} wrap style={{ minWidth: 0 }}>
-            <Tag
-              style={{
-                borderInlineStart: `4px solid ${tache.perimetre.couleur ?? PRIMAIRE}`,
-                marginInlineEnd: 0,
-              }}
-            >
-              {tache.perimetre.nom}
-            </Tag>
-            <Tag
-              color={STATUTS[tache.statut].couleur}
-              style={{ marginInlineEnd: 0 }}
-            >
-              {STATUTS[tache.statut].libelle}
-            </Tag>
-            {tache.enRetard && (
-              <Tag color="red" style={{ marginInlineEnd: 0 }}>
-                En retard
-              </Tag>
-            )}
-            {tache.assignes.length === 0 ? (
-              estOuverte(tache) && (
-                <Tag color="orange" style={{ marginInlineEnd: 0 }}>
-                  Personne
-                </Tag>
-              )
-            ) : (
-              <span style={{ fontSize: 14, overflowWrap: 'anywhere' }}>
-                {tache.assignes
-                  .map(p => (p.id === moiId ? 'Vous' : p.nom))
-                  .join(', ')}
-              </span>
-            )}
-          </Space>
-        </div>
-      </Link>
-    </li>
   )
 }

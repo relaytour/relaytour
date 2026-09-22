@@ -14,7 +14,7 @@ Décision de Quentin du 18 septembre 2026, après une planche de fondations et u
 
 | Rôle | Valeur | Usage |
 |---|---|---|
-| encre | `#1B2730` | texte, icônes, ombres ; le texte secondaire est une transparence de l'encre (68, 52, 38 %) |
+| encre | `#1B2730` | texte, icônes, ombres ; les autres textes sont des transparences de l'encre (84, 78, 64, 38 %) |
 | primaire | `#1E5A63` | actions principales, liens, élément de menu actif |
 | primaire clair | `#DCEAEB` | état « en cours », en-têtes de tableau |
 | accent | `#AD412B` | engagement d'une personne, notification non lue |
@@ -37,6 +37,16 @@ Le fond d'un thème se compose du dégradé du sol et de deux halos.
 - Une organisation déclare ces valeurs dans le bloc `fond` de son thème. Sans déclaration, la transition reprend `sol1`, le premier halo la primaire à 18 % et le second l'accent à 13 %.
 - Le thème par défaut garde un blanc pur à 18 % et ces halos dérivés.
 
+## Hiérarchie du texte
+
+- 100 % pour les titres et le texte principal.
+- 84 % pour le texte courant d'une carte, comme la description d'une tâche.
+- 78 % pour le texte secondaire (`colorTextSecondary` d'antd).
+- 64 % pour le texte muet et les comptes en mono (`colorTextTertiary`).
+- 38, 12 et 7 % pour les icônes inactives, les filets et les fonds.
+
+Les gris de texte ont été relevés le 19 septembre 2026. Sur le verre teinté, 52 % descendait à 3,1:1 et 68 % restait peu lisible. Les nouvelles valeurs dépassent 4,5:1 sur toutes les surfaces.
+
 ## Polices
 
 - Hanken Grotesk pour l'interface et les titres (graisse 600, espacement −0,02 em).
@@ -51,6 +61,8 @@ Le pictogramme est formé de deux arcs qui se passent le relais : le premier en 
 ## Matériau
 
 - Trois verres : panneau (cartes, tableaux, formulaires), barre (barre latérale, barre haute, tiroirs), teinté (élément mis en avant). Aucune bordure : un liseré blanc et une ombre d'encre suffisent.
+- Un verre de carte, plus dense (blanc de 92 à 76 %), porte les cartes de tâche et les lignes du rétroplanning. Le sol et les halos ne gênent plus la lecture de leur texte.
+- Une surface interne distingue un bloc posé dans un panneau (choix, réglage, tuile, ligne cliquable) : un voile d'encre à 3,5 %, un filet d'encre à 10 % et une ombre douce. Un fond blanc disparaît sur le verre.
 - Rayons : champs 10, chips 14, cartes 20, panneaux 28, barres 36, boutons en pilule.
 - Ombres diffuses dans la teinte de l'encre du thème. Focus : anneau d'encre à 12 %.
 - Mouvement fluide, sans rebond : `cubic-bezier(.32,.72,0,1)`, 140 à 400 ms.
