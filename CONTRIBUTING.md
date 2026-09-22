@@ -7,7 +7,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `packages/server` : API GraphQL (Express 5, Apollo Server 5, Pothos, un seul schéma), connexion Better Auth et worker BullMQ.
 - `packages/orga` : espace organisateur, SPA React 19 + Vite + React Router 7 + Apollo Client 4 + antd 6. Types GraphQL générés dans `src/gql/`.
 - `packages/tokens` : modèle de thème, thème par défaut et thème alternatif de Relaytour, contraste. Le serveur le lit pour valider et compléter le thème d'une organisation ; l'espace organisateur le lit pour le thème de repli (ADR 0006).
-- `content/exemple` : organisation d'exemple, fictive et anonyme (`organisation.yaml`, périmètres, fiches, tâches types). Le contenu réel d'une organisation vit hors du dépôt (voir son README).
+- `content/exemple` : organisation d'exemple, fictive et anonyme (`organisation.yaml`, deux activités, leurs périmètres, fiches et tâches types). Le contenu réel d'une organisation vit hors du dépôt (voir son README).
 - `packages/database` : Prisma 6 sur MariaDB 11.8. Le client généré (`src/generated/`) n'est jamais commité.
 - `infra/` : déploiement de référence minimal (Compose, Caddyfile d'exemple, étapes). L'exploitation réelle vit hors du dépôt (ADR 0007).
 - `outils/verifier-licences.mjs` et `outils/verifier-publication.mjs` : contrôles de CI sur les licences des dépendances et sur l'absence de traces privées.
@@ -25,7 +25,7 @@ yarn workspace @relaytour/server admin:creer adresse@exemple.org "Prénom Nom"  
 yarn workspace @relaytour/server edition:creer 2027 "Rencontres 2027" 2027-06-05 2027-06-06   # première édition
 yarn workspace @relaytour/server organisation:creer rencontres "Les Rencontres" --admin adresse@exemple.org --admin-nom "Prénom Nom"   # autre organisation (ADR 0008)
 yarn workspace @relaytour/server organisation:exporter rencontres --dossier /tmp/exports   # export complet d'une organisation
-yarn workspace @relaytour/server planification:lancer rappels|resumes         # lancer une tâche planifiée tout de suite
+yarn workspace @relaytour/server planification:lancer rappels|resumes [--organisation slug]   # lancer une tâche planifiée tout de suite
 yarn check        # lint, types, build
 yarn test         # tests unitaires
 yarn workspace @relaytour/server test:integration   # base locale, worker arrêté
@@ -49,11 +49,11 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 | Hébergement | Déploiement de référence : une pile Compose sur un VPS. Le dépôt produit une image et ne déploie rien ; l'exploitation vit dans un dépôt séparé qui consomme l'image. Aucun correctif privé. | ADR 0004, 0007 |
 | Contenu d'une organisation | Un dépôt par organisation, créé depuis `relaytour/organisation-modele`, rattaché par un chemin (`CONTENU_ORGA`), un volume ou la CI de l'organisation | ADR 0003, 0007 |
 | Dépendances | Licences compatibles avec l'AGPL seulement, liste blanche dans `outils/verifier-licences.mjs`. Valkey et non Redis. | ADR 0007 |
-| Licence | AGPL-3.0, un seul code, multi-organisation à venir. Le contenu d'une organisation n'entre jamais dans le dépôt. | ADR 0005, 0006 |
-| Activités et administration de l'installation | Une organisation porte une ou plusieurs activités (événement, saison, mandat), chacune avec ses périodes, ses périmètres rangés en groupes déclarés dans le contenu, ses fiches et ses tâches types. Les appartenances sont par organisation. L'administration de l'installation (créer, suspendre, limiter, exporter une organisation) passe par un script ou un jeton, sans accès aux données. À réaliser, un chantier par session. | ADR 0008 |
+| Licence | AGPL-3.0, un seul code, multi-organisation comprise. Le contenu d'une organisation n'entre jamais dans le dépôt. | ADR 0005, 0006, 0008 |
+| Activités et administration de l'installation | Une organisation porte une ou plusieurs activités (événement, saison, mandat), chacune avec ses périodes, ses périmètres rangés en groupes déclarés dans le contenu, ses fiches et ses tâches types. Les appartenances sont par organisation. L'administration de l'installation (créer, suspendre, limiter, exporter une organisation) passe par un script ou un jeton, sans accès aux données. | ADR 0008 |
 | Extensions | Aucun chargeur de modules dans le serveur. Un besoin d'hébergeur entre par l'API d'administration de l'installation ; portail client, paiement et paliers restent chez l'hébergeur. | ADR 0007, 0008 |
 | Configuration d'organisation | Un seul objet (`packages/server/src/lib/organisation.ts`), lu dans la ligne `Organisation` en base, sinon dans les variables d'amorçage. `organisation.yaml` du dépôt d'organisation la porte ; l'import la met à jour. L'expéditeur des mails et l'origine de l'espace organisateur restent dans l'environnement. | ADR 0006 |
-| Rôles V1 | Admin et référent·e. Le rôle bénévole viendra après la V1. | ADR 0006 |
+| Rôles V1 | Admin et référent·e, dans une organisation. Le rôle bénévole viendra après la V1. | ADR 0006, 0008 |
 | Score de participation | Visible par la personne concernée et par les admins seulement. Calculé à partir de l'état actuel (une tâche rouverte perd ses points) : tâche réalisée 3 points (+1 à temps, crédités à la personne réalisatrice indiquée, sinon à celle qui a coché), tâche créée 1, fiche créée 3, fiche modifiée 2 une fois par jour. Un palmarès public se décide en fin d'édition. Barème validé le 16 septembre 2026. | `packages/server/src/lib/score.ts` |
 | Tâches | Une tâche ne se supprime pas, elle s'abandonne. Modifier la tâche d'une autre personne exige une confirmation et la prévient par mail. Qui a coché et qui a réalisé une tâche n'est visible que par la personne qui a coché et par les admins. | `packages/server/src/schema/taches.ts` |
 | Fiches | Une version ne se modifie ni ne se supprime ; restaurer crée une nouvelle version. L'historique est réservé aux admins. Rédiger exige un droit accordé par un admin (un périmètre, ou toutes les fiches). | `packages/server/src/schema/fiches.ts` |
@@ -97,7 +97,7 @@ Un seul mot par notion.
 
 | Mot | Sens |
 |---|---|
-| organisation | L'association ou le collectif qui utilise une installation de Relaytour. Elle porte une ou plusieurs activités. Une seule par installation tant que l'ADR 0008 n'est pas réalisée. |
+| organisation | L'association ou le collectif qui utilise une installation de Relaytour. Elle porte une ou plusieurs activités. Une installation peut porter plusieurs organisations (ADR 0008). |
 | activité | Ce qu'une organisation fait dans la durée : un événement, une section, une instance. Une activité porte ses périodes, ses périmètres, ses fiches et ses tâches types (ADR 0008). |
 | nature | Événement, saison ou mandat. La nature d'une activité fixe le libellé de sa période. |
 | édition | Une période d'une activité : l'édition d'un événement (2025, 2027), la saison d'une section, le mandat d'une instance. `Edition` reste le nom technique. |

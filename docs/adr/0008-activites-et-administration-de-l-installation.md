@@ -1,6 +1,6 @@
 # ADR 0008 — Activités d'une organisation et administration de l'installation
 
-- **Statut** : acceptée
+- **Statut** : acceptée ; réalisée le 22 septembre 2026, en huit PR empilées (#10 à #17)
 - **Date** : 2026-09-22
 - Complète l'ADR 0006. Remplace son choix du module « organization » de Better Auth et sa réserve sur `TypePerimetre`.
 
