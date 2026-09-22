@@ -76,6 +76,22 @@ export default function TacheCarte({
     r => !tache.assignes.some(p => p.id === r.id)
   )
   const echeance = etatEcheance(tache)
+  // Le menu « Autres actions » ne s'affiche que s'il propose au moins une entrée :
+  // une tâche faite ou abandonnée, hors page du périmètre, n'en a aucune.
+  const autresActions = [
+    ...(onModifier
+      ? [{ key: 'modifier', icon: <EditOutlined />, label: 'Modifier' }]
+      : []),
+    ...(tache.statut === 'A_FAIRE'
+      ? [{ key: 'EN_COURS', label: 'Marquer en cours' }]
+      : []),
+    ...(tache.statut === 'EN_COURS'
+      ? [{ key: 'A_FAIRE', label: 'Remettre à faire' }]
+      : []),
+    ...(ouverte
+      ? [{ key: 'ABANDONNEE', label: 'Abandonner', danger: true }]
+      : []),
+  ]
 
   const assignerPersonne = (
     personneId: string,
@@ -281,46 +297,29 @@ export default function TacheCarte({
               Rouvrir
             </Button>
           )}
-          <Dropdown
-            trigger={['click']}
-            menu={{
-              items: [
-                ...(onModifier
-                  ? [
-                      {
-                        key: 'modifier',
-                        icon: <EditOutlined />,
-                        label: 'Modifier',
-                      },
-                    ]
-                  : []),
-                ...(tache.statut === 'A_FAIRE'
-                  ? [{ key: 'EN_COURS', label: 'Marquer en cours' }]
-                  : []),
-                ...(tache.statut === 'EN_COURS'
-                  ? [{ key: 'A_FAIRE', label: 'Remettre à faire' }]
-                  : []),
-                ...(ouverte
-                  ? [{ key: 'ABANDONNEE', label: 'Abandonner', danger: true }]
-                  : []),
-              ],
-              onClick: ({ key }) => {
-                if (key === 'modifier') onModifier?.(tache)
-                if (key === 'EN_COURS')
-                  void statut('EN_COURS', 'Tâche marquée en cours.')
-                if (key === 'A_FAIRE')
-                  void statut('A_FAIRE', 'Tâche remise à faire.')
-                if (key === 'ABANDONNEE')
-                  void statut('ABANDONNEE', 'Tâche abandonnée.')
-              },
-            }}
-          >
-            <Button
-              size="small"
-              icon={<MoreOutlined />}
-              aria-label="Autres actions"
-            />
-          </Dropdown>
+          {autresActions.length > 0 && (
+            <Dropdown
+              trigger={['click']}
+              menu={{
+                items: autresActions,
+                onClick: ({ key }) => {
+                  if (key === 'modifier') onModifier?.(tache)
+                  if (key === 'EN_COURS')
+                    void statut('EN_COURS', 'Tâche marquée en cours.')
+                  if (key === 'A_FAIRE')
+                    void statut('A_FAIRE', 'Tâche remise à faire.')
+                  if (key === 'ABANDONNEE')
+                    void statut('ABANDONNEE', 'Tâche abandonnée.')
+                },
+              }}
+            >
+              <Button
+                size="small"
+                icon={<MoreOutlined />}
+                aria-label="Autres actions"
+              />
+            </Dropdown>
+          )}
         </div>
       )}
 

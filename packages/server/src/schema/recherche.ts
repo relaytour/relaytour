@@ -50,18 +50,24 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
   fields: t => ({
     taches: t.prismaField({
       type: [TacheRef],
+      // Les tâches se cherchent dans une édition. Sans édition, la liste reste
+      // vide : la barre haute ne mélange jamais les éditions.
       resolve: (query, r) =>
-        prisma.tache.findMany({
-          ...query,
-          where: {
-            titre: { contains: r.texte },
-            perimetre: { archivedAt: null },
-            ...(r.editionId === null ? {} : { editionId: r.editionId }),
-            ...(r.lisibles === null ? {} : { perimetreId: { in: r.lisibles } }),
-          },
-          orderBy: [{ echeance: { sort: 'asc', nulls: 'last' } }],
-          take: RESULTATS_MAX,
-        }),
+        r.editionId === null
+          ? []
+          : prisma.tache.findMany({
+              ...query,
+              where: {
+                titre: { contains: r.texte },
+                perimetre: { archivedAt: null },
+                editionId: r.editionId,
+                ...(r.lisibles === null
+                  ? {}
+                  : { perimetreId: { in: r.lisibles } }),
+              },
+              orderBy: [{ echeance: { sort: 'asc', nulls: 'last' } }],
+              take: RESULTATS_MAX,
+            }),
     }),
     fiches: t.prismaField({
       type: [FicheRef],

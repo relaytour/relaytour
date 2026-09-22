@@ -214,6 +214,14 @@ describe('recherche globale', () => {
     expect(personne.perimetres.map(p => p.id)).toEqual([ids.basket])
   })
 
+  it('ne donne aucune tâche sans édition', async () => {
+    const r = await executer(ids.admin, CHERCHER, { t: suffixe })
+    expect(r.errors).toBeUndefined()
+    const data = r.data as unknown as Resultats
+    expect(data.recherche.taches).toHaveLength(0)
+    expect(data.recherche.fiches.length).toBeGreaterThan(0)
+  })
+
   it('donne tout à un admin', async () => {
     const { data } = await chercher(ids.admin, suffixe)
     expect(data!.recherche.taches).toHaveLength(3)

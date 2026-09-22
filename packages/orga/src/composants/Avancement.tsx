@@ -11,9 +11,23 @@ export interface AvancementDonnees {
 }
 
 function Signalements({ avancement }: { avancement: AvancementDonnees }) {
-  if (avancement.enRetard === 0 && avancement.sansPersonne === 0) return null
+  const toutesAbandonnees =
+    avancement.total > 0 && avancement.abandonnees === avancement.total
+  if (
+    avancement.enRetard === 0 &&
+    avancement.sansPersonne === 0 &&
+    !toutesAbandonnees
+  )
+    return null
   return (
     <div className="rt-meta">
+      {toutesAbandonnees && (
+        <PastilleEtat variante="abandonnee">
+          {avancement.total > 1
+            ? `Les ${avancement.total} tâches sont abandonnées`
+            : 'La tâche est abandonnée'}
+        </PastilleEtat>
+      )}
       {avancement.enRetard > 0 && (
         <PastilleEtat variante="retard">
           {avancement.enRetard} en retard
@@ -50,7 +64,9 @@ export default function Avancement({
   const pourcentage =
     utiles === 0 ? 0 : Math.round((avancement.faites / utiles) * 100)
 
-  if (utiles === 0) {
+  // Seul un périmètre sans aucune tâche est vide. Un périmètre dont toutes les
+  // tâches sont abandonnées affiche 0 % et le compte de ses abandons.
+  if (avancement.total === 0) {
     return (
       <div className="rt-meta">
         <PastilleEtat>Aucune tâche</PastilleEtat>
