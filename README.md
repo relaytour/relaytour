@@ -62,7 +62,7 @@ yarn workspace @relaytour/server test:integration   # tests sur la base locale (
 yarn codegen      # schema.graphql, gabarits de mail et types GraphQL (contrats commités)
 yarn db:migrate   # nouvelle migration Prisma
 yarn workspace @relaytour/server courriel:essai adresse@exemple.org   # mail d'essai (worker requis)
-yarn workspace @relaytour/server orga:exporter --dossier /chemin/vers/votre/contenu   # reverse les fiches modifiées dans l'application
+yarn workspace @relaytour/server orga:exporter --dossier /chemin/vers/votre/contenu   # écrit tout le contenu porté par l'application
 ```
 
 ## Licence

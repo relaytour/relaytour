@@ -29,7 +29,7 @@ yarn workspace @relaytour/server planification:lancer rappels|resumes [--organis
 yarn check        # lint, types, build
 yarn test         # tests unitaires
 yarn workspace @relaytour/server test:integration   # base locale, worker arrêté
-yarn workspace @relaytour/server orga:exporter      # reverse les fiches modifiées dans l'application vers le dossier de contenu
+yarn workspace @relaytour/server orga:exporter      # écrit tout le contenu de l'organisation dans le dossier de contenu (ADR 0009)
 yarn codegen      # contrats commités
 node outils/site.mjs   # site de présentation, après un changement des jetons
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif
@@ -46,13 +46,15 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 | Socle | Yarn 4, Node 24, tsup ESM, un seul schéma GraphQL sans gateway | ADR 0001 |
 | Connexion | Better Auth, code ou lien reçu par mail, inscription fermée (invitation par un admin) | ADR 0002 |
 | Modèles de l'espace organisateur | Fiches et tâches types dans un dossier de contenu propre à l'organisation, hors dépôt, importées en base par édition | ADR 0003 |
+| Source de vérité du contenu | L'application porte le contenu d'une organisation : identité, activités, périmètres, fiches, tâches types, images. Le dossier de contenu en est l'archive et le point de départ. L'export est iso ; un import refuse d'écraser une modification faite dans l'application depuis le dernier export, sauf avec `--forcer`. | ADR 0009 |
+| Identité et images | Une activité surcharge le contact, la page d'équipe, le logo, les couleurs et le fond de son organisation. Les images vivent en base (PNG obligatoire, SVG facultatif sans script) et se servent sous `/medias/`. Relaytour reste en signature, avec le lien vers le code source (`CODE_SOURCE_URL`). | ADR 0009 |
 | Hébergement | Déploiement de référence : une pile Compose sur un VPS. Le dépôt produit une image et ne déploie rien ; l'exploitation vit dans un dépôt séparé qui consomme l'image. Aucun correctif privé. | ADR 0004, 0007 |
 | Contenu d'une organisation | Un dépôt par organisation, créé depuis `relaytour/organisation-modele`, rattaché par un chemin (`CONTENU_ORGA`), un volume ou la CI de l'organisation | ADR 0003, 0007 |
 | Dépendances | Licences compatibles avec l'AGPL seulement, liste blanche dans `outils/verifier-licences.mjs`. Valkey et non Redis. | ADR 0007 |
 | Licence | AGPL-3.0, un seul code, multi-organisation comprise. Le contenu d'une organisation n'entre jamais dans le dépôt. | ADR 0005, 0006, 0008 |
 | Activités et administration de l'installation | Une organisation porte une ou plusieurs activités (événement, saison, mandat), chacune avec ses périodes, ses périmètres rangés en groupes déclarés dans le contenu, ses fiches et ses tâches types. Les appartenances sont par organisation. L'administration de l'installation (créer, suspendre, limiter, exporter une organisation) passe par un script ou un jeton, sans accès aux données. | ADR 0008 |
 | Extensions | Aucun chargeur de modules dans le serveur. Un besoin d'hébergeur entre par l'API d'administration de l'installation ; portail client, paiement et paliers restent chez l'hébergeur. | ADR 0007, 0008 |
-| Configuration d'organisation | Un seul objet (`packages/server/src/lib/organisation.ts`), lu dans la ligne `Organisation` en base, sinon dans les variables d'amorçage. `organisation.yaml` du dépôt d'organisation la porte ; l'import la met à jour. L'expéditeur des mails et l'origine de l'espace organisateur restent dans l'environnement. | ADR 0006 |
+| Configuration d'organisation | Un seul objet (`packages/server/src/lib/organisation.ts`), lu dans la ligne `Organisation` en base, sinon dans les variables d'amorçage. `organisation.yaml` du dépôt d'organisation la porte ; l'import la met à jour, et les admins la modifient dans l'espace organisateur (ADR 0009). L'expéditeur des mails et l'origine de l'espace organisateur restent dans l'environnement. | ADR 0006 |
 | Rôles V1 | Admin et référent·e, dans une organisation. Le rôle bénévole viendra après la V1. | ADR 0006, 0008 |
 | Score de participation | Visible par la personne concernée et par les admins seulement. Calculé à partir de l'état actuel (une tâche rouverte perd ses points) : tâche réalisée 3 points (+1 à temps, crédités à la personne réalisatrice indiquée, sinon à celle qui a coché), tâche créée 1, fiche créée 3, fiche modifiée 2 une fois par jour. Un palmarès public se décide en fin d'édition. Barème validé le 16 septembre 2026. | `packages/server/src/lib/score.ts` |
 | Tâches | Une tâche ne se supprime pas, elle s'abandonne. Modifier la tâche d'une autre personne exige une confirmation et la prévient par mail. Qui a coché et qui a réalisé une tâche n'est visible que par la personne qui a coché et par les admins. | `packages/server/src/schema/taches.ts` |
@@ -80,7 +82,7 @@ Chaque règle vient d'un incident réel ou d'un risque constaté.
 13. **Le schéma GraphQL n'importe jamais `auth.ts`.** Better Auth charge `env.ts` : le serveur résout la session, puis la passe à `buildContext`.
 14. **Une requête lue sans session ne demande que des champs publics.** Un champ protégé dans la même requête transforme la réponse en erreur.
 15. **Toute nouvelle route de Better Auth s'ouvre explicitement** dans `ROUTES_OUVERTES` (`packages/server/src/auth.ts`). Les autres répondent 404.
-16. **Aucune coordonnée personnelle dans un dossier de contenu.** La validation (`orga:valider`) et l'export refusent les adresses et numéros hors des domaines listés dans `DOMAINES_COURRIEL_AUTORISES` ; les contacts s'écrivent sous forme de rôles.
+16. **Aucune coordonnée personnelle dans un dossier de contenu.** La validation (`orga:valider`) et l'export refusent les numéros et les adresses qui ne sont pas des adresses de rôle : hors des `domainesCourrielAutorises` de l'organisation, et hors de ses `adressesRoleAutorisees`. Un domaine de messagerie grand public n'est jamais un domaine de rôle (ADR 0009) ; les contacts s'écrivent sous forme de rôles.
 17. **Tout appel à Redis sur le chemin d'une requête est borné dans le temps** (`lib/delai.ts`). La connexion de BullMQ attend Redis sans limite : la première CI, sans Redis, a bloqué deux tests jusqu'à leur délai de 30 s.
 
 18. **Aucune nouvelle contrainte d'unicité globale sans clé d'organisation ou d'activité, aucune nouvelle requête qui parcourt toute la base sans filtre, aucune marque en dur** (ADR 0005, 0006 et 0008).
@@ -114,6 +116,9 @@ Un seul mot par notion.
 | admin | Membre du bureau qui voit l'avancement global et gère les affectations. Le rôle vaut pour une organisation et toutes ses activités. |
 | journal | Trace de qui a fait quoi, et quand. Le journal alimente les notifications et le score de participation. |
 | administration de l'installation | Actions d'hébergement, par script ou par jeton, sans accès aux données : créer, suspendre, limiter, exporter une organisation. |
+| identité | Nom, sigle, contacts, logo, favicon et thème d'une organisation. Une activité en surcharge les contacts, le logo, les couleurs et le fond (ADR 0009). |
+| adresse de rôle | Adresse d'une boîte partagée de l'organisation, jamais d'une personne : une adresse d'un domaine de rôle, ou une adresse déclarée une par une. Relaytour la publie sans la signaler comme donnée personnelle. |
+| image | Logo ou favicon d'une organisation ou d'une activité, gardé en base et désigné par son empreinte. |
 | limites | Plafonds d'une organisation (nombre d'activités, nombre de périodes ouvertes), fixés par l'administration de l'installation. Une limite ne bloque jamais la lecture ni l'export. Une organisation auto-hébergée n'en a aucune. |
 | bénévole | Personne qui aide pendant le tournoi sans être référent·e. |
 

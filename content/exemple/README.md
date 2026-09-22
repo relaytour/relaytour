@@ -18,7 +18,8 @@ Un dossier de contenu prend l'une de deux dispositions. Elles ne se mélangent p
 **Disposition plate**, pour une organisation qui ne mène qu'une activité. Le gabarit `relaytour/organisation-modele` la propose. L'activité reprend le slug et le nom de l'organisation, et ses groupes sont sport et pôle.
 
 ```
-organisation.yaml             nom, sigle, domaines de mail, contact, thème
+organisation.yaml             nom, sigle, adresses de rôle, contact, logo, thème
+medias/                       logo et favicon de l'organisation
 perimetres.yaml               périmètres de l'activité
 modeles/fiche.md              gabarit commun d'une fiche
 fiches/communes/<slug>.md     fiches communes à tous les périmètres
@@ -30,8 +31,10 @@ taches/<perimetre>.yaml       tâches types d'un périmètre
 
 ```
 organisation.yaml
+medias/
 modeles/fiche.md
-activites/<activite>/activite.yaml     nom, nature, groupes de périmètres
+activites/<activite>/activite.yaml     nom, nature, groupes de périmètres, identité propre
+activites/<activite>/medias/           logo de l'activité
 activites/<activite>/perimetres.yaml
 activites/<activite>/fiches/…
 activites/<activite>/taches/…
@@ -54,6 +57,12 @@ groupes:                  # facultatif : sport et pôle par défaut
     libelle: Pôle
     libellePluriel: Pôles
 ordre: 2                  # facultatif : ordre d'affichage
+# Identité propre, facultative (ADR 0009) : chaque champ absent reprend celui de l'organisation.
+contactRecrutement: club.course.rencontres@messagerie.example   # une adresse de rôle de l'organisation
+pageEquipe: https://exemple.org/club-de-course
+logo: { png: medias/logo.png }   # chemin relatif au dossier de l'activité
+theme:                    # couleurs et fond seulement ; les polices restent celles de l'organisation
+  couleurs: { primaire: '#2E5B3B' }
 ```
 
 La nature fixe le mot qui désigne une période : édition pour un événement, saison pour une section, mandat pour une instance. Les échéances des tâches types se comptent depuis le premier jour de la période.
@@ -65,9 +74,14 @@ slug: rencontres-de-la-vallee   # identifiant stable
 nom: Les Rencontres de la Vallée
 sigle: Rencontres               # facultatif : nom court affiché dans l'espace organisateur et les mails
 fuseauHoraire: Europe/Paris     # facultatif
-domainesCourrielAutorises: [exemple.org]   # boîtes partagées admises dans les fiches
-contactRecrutement: contact@exemple.org    # facultatif, dans un domaine autorisé
+domainesCourrielAutorises: [exemple.org]   # domaines des adresses de rôle, jamais une messagerie grand public
+adressesRoleAutorisees: [club.course.rencontres@messagerie.example]   # facultatif : boîtes partagées, une par une
+contactRecrutement: contact@exemple.org    # facultatif : une adresse de rôle
 pageEquipe: https://exemple.org/equipe     # facultatif
+logo:                                      # facultatif : PNG obligatoire (mails), SVG facultatif (écran)
+  png: medias/logo.png                     # chemin relatif à ce fichier ; 512 Ko au plus
+  svg: medias/logo.svg                     # 128 Ko au plus, sans script ni ressource externe
+favicon: medias/favicon.png                # facultatif : PNG
 theme:                          # facultatif : chaque valeur absente prend celle de Relaytour
   couleurs: { primaire: '#1E5A63' }
   fond:                                    # facultatif : sans lui, le fond suit les couleurs
@@ -77,7 +91,13 @@ theme:                          # facultatif : chaque valeur absente prend celle
   polices: { titre: Hanken Grotesk }       # parmi les polices embarquées
 ```
 
-La validation refuse une clé inconnue, un halo dont l'intensité dépasse 0,35, un thème dont une couleur de texte passe sous 4,5:1 de contraste, une police absente de l'espace organisateur et un contact hors des domaines autorisés. Le thème complet est décrit dans `docs/design-system.md` du dépôt de Relaytour.
+La validation refuse une clé inconnue, un halo dont l'intensité dépasse 0,35, un thème dont une couleur de texte passe sous 4,5:1 de contraste, une police absente de l'espace organisateur, un domaine de messagerie grand public, une image absente ou dangereuse, et un contact qui n'est pas une adresse de rôle.
+
+Une adresse de rôle passe pour institutionnelle : Relaytour l'accepte dans les fiches et dans l'export sans la signaler. Une association dont la boîte partagée est hébergée chez une messagerie grand public la déclare dans `adressesRoleAutorisees`. N'y déclarez jamais l'adresse d'une personne.
+
+## Export
+
+L'application est la source de vérité du contenu (ADR 0009). `orga:exporter` écrit dans ce dossier tout ce que l'organisation porte en base : identité, activités, périmètres, fiches, tâches types et images. Un fichier dont le sens ne change pas reste intact, avec ses commentaires. Les admins téléchargent le même contenu en archive depuis la page « Organisation ». Un import refuse d'écraser une modification faite dans l'application depuis le dernier export ; `--forcer` l'y autorise. Le thème complet est décrit dans `docs/design-system.md` du dépôt de Relaytour.
 
 ## Périmètres
 
@@ -121,6 +141,8 @@ taches:
 - Une activité, un périmètre ou une fiche absents du dépôt sont signalés, jamais archivés.
 - Une activité nouvelle respecte la limite d'activités de l'organisation, s'il y en a une.
 - Une fiche modifiée dans l'application n'est jamais remplacée : l'import signale un conflit.
+- Une modification faite dans l'application depuis le dernier export bloque l'import. Exportez d'abord le contenu, ou relancez l'import avec `--forcer`.
+- L'activité vide créée avec l'organisation disparaît au premier import d'un dossier en disposition `activites/` qui ne la décrit pas.
 - Un effectif déjà présent pour l'édition n'est jamais remplacé.
 - Une tâche déjà importée n'est jamais modifiée.
-- L'export (`orga:exporter --dossier …`) écrit les fiches modifiées dans l'application, dans la disposition du dossier. Il refuse une fiche qui contient des données personnelles.
+- L'export (`orga:exporter --dossier …`) écrit tout le contenu que l'organisation porte en base, dans la disposition du dossier. Un fichier dont le sens ne change pas reste intact. L'export refuse une fiche qui contient des données personnelles.
