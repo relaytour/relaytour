@@ -316,6 +316,24 @@ html {
 }
 
 /* La marque : pictogramme et nom. */
+.rt-entete-activite {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 20px;
+}
+
+.rt-entete-activite .rt-marque {
+  padding-bottom: 0;
+  min-width: 0;
+}
+
+.rt-entete-activite .rt-marque-nom {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .rt-marque {
   display: inline-flex;
   align-items: center;
