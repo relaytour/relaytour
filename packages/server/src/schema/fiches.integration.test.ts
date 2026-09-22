@@ -8,7 +8,7 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { AppContext } from '../context.ts'
-import { contexteDeTest } from '../test/contexte.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 import { exporterFiches } from '../orga/exporter.ts'
 import { assurerOrganisationParDefaut } from '../lib/organisation.ts'
 import {
@@ -19,7 +19,6 @@ import {
 import { lireModeles } from '../orga/modeles.ts'
 
 import { schema } from './index.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)
@@ -62,7 +61,8 @@ let ORGANISATION = ''
 let SLUG_ORGANISATION = ''
 
 /** Le rapport de l'unique activité du dossier, en disposition plate. */
-const activite = (rapport: RapportImport): RapportActivite => rapport.activites[0]!
+const activite = (rapport: RapportImport): RapportActivite =>
+  rapport.activites[0]!
 let ACTIVITE = ''
 
 beforeAll(async () => {
@@ -210,7 +210,9 @@ describe('import des modèles', () => {
       crees: [],
       dejaPresents: [`natation-${s}`],
     })
-    expect(activite(rapport).taches.dejaPresentes).toEqual([`natation-${s}/piscine`])
+    expect(activite(rapport).taches.dejaPresentes).toEqual([
+      `natation-${s}/piscine`,
+    ])
   })
 
   it('ne remplace pas un effectif modifié dans l’application', async () => {

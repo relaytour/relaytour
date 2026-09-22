@@ -75,11 +75,11 @@ Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses m
 
 ## Tâches planifiées
 
-Le worker planifie deux tâches, à l'heure de Paris : à 6 h 30 les rappels d'échéance (7 jours, veille) et le signalement des retards ; à 7 h les résumés par mail. Pour en lancer une tout de suite :
+Le worker planifie deux tâches pour chaque organisation active, à l'heure de son fuseau (ADR 0008) : à 6 h 30 les rappels d'échéance (7 jours, veille) et le signalement des retards ; à 7 h les résumés par mail. Il ajuste ces planifications à son démarrage, puis chaque heure : une organisation créée ou suspendue est prise en compte dans l'heure. Pour lancer une tâche tout de suite :
 
 ```bash
 docker compose --env-file .env exec worker node dist/planification-lancer.js rappels
-docker compose --env-file .env exec worker node dist/planification-lancer.js resumes
+docker compose --env-file .env exec worker node dist/planification-lancer.js resumes --organisation rencontres
 ```
 
-Un rappel n'est jamais créé deux fois et un résumé ne part qu'une fois par jour : relancer est sans risque.
+Sans `--organisation`, la tâche part pour toutes les organisations actives. Un rappel n'est jamais créé deux fois et un résumé ne part qu'une fois par jour et par organisation : relancer est sans risque.

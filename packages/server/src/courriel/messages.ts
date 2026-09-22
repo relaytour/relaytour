@@ -2,7 +2,7 @@ import type { PrismaClient } from '@relaytour/database'
 
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
-import { aujourdhuiParis } from '../lib/droits.ts'
+import { aujourdhui } from '../lib/droits.ts'
 import {
   messageNotification,
   preferencesDe,
@@ -10,7 +10,6 @@ import {
 } from '../lib/notifications.ts'
 import {
   configurationOrganisation,
-  organisationParDefaut,
   variablesOrganisation,
 } from '../lib/organisation.ts'
 
@@ -78,6 +77,27 @@ async function nomsDes(
 }
 
 /**
+ * L'organisation dont un mail porte le nom et les couleurs (ADR 0008) : celle du job,
+ * sinon l'unique organisation de la personne. Undefined laisse la configuration
+ * choisir la première organisation de l'installation.
+ */
+async function organisationDuMail(
+  prisma: PrismaClient,
+  job: CourrielJobData
+): Promise<string | undefined> {
+  if (job.organisationId !== undefined) return job.organisationId
+  if (job.userId === undefined) return undefined
+  const appartenances = await prisma.appartenance.findMany({
+    where: { userId: job.userId },
+    select: { organisationId: true },
+    take: 2,
+  })
+  return appartenances.length === 1
+    ? appartenances[0]?.organisationId
+    : undefined
+}
+
+/**
  * Compose le message d'une sorte donnée, au moment de l'envoi.
  * Les données du compte se relisent en base ; le code vient de la charge utile.
  * Renvoie null quand il n'y a rien à envoyer (préférence désactivée, résumé vide).
@@ -89,7 +109,8 @@ export async function composer(
   const variables: Variables = {}
   let desabonnement: string | undefined
   let apresEnvoi: (() => Promise<void>) | undefined
-  const configuration = await configurationOrganisation()
+  const organisationId = await organisationDuMail(prisma, job)
+  const configuration = await configurationOrganisation(organisationId)
   const origine = configuration.origineOrga
   const lienPreferences = `${origine}/preferences`
 
@@ -197,14 +218,24 @@ export async function composer(
     const userId = job.userId
     const preferences = await preferencesDe(prisma, userId)
     if (preferences.frequenceResume === 'AUCUN') return null
-    const aujourdhui = new Date(`${aujourdhuiParis()}T00:00:00Z`)
+    // Le résumé porte sur une organisation : ses notifications et ses tâches.
+    const idOrganisation = configuration.id
+    if (idOrganisation === null) return null
+    const jour = new Date(
+      `${aujourdhui(new Date(), configuration.fuseauHoraire)}T00:00:00Z`
+    )
     const [personne, notifications, taches] = await Promise.all([
       prisma.user.findUniqueOrThrow({
         where: { id: userId },
         select: { name: true },
       }),
       prisma.notification.findMany({
-        where: { userId, lueLe: null, resumeeLe: null },
+        where: {
+          userId,
+          organisationId: idOrganisation,
+          lueLe: null,
+          resumeeLe: null,
+        },
         select: SELECTION_NOTIFICATION,
         orderBy: { createdAt: 'desc' },
         take: 30,
@@ -214,8 +245,9 @@ export async function composer(
           statut: { in: ['A_FAIRE', 'EN_COURS'] },
           assignations: { some: { userId } },
           edition: { statut: { not: 'ARCHIVEE' } },
+          perimetre: { organisationId: idOrganisation },
           echeance: {
-            lte: new Date(aujourdhui.getTime() + 14 * 24 * 3600 * 1000),
+            lte: new Date(jour.getTime() + 14 * 24 * 3600 * 1000),
           },
         },
         select: {
@@ -245,7 +277,7 @@ export async function composer(
               month: 'long',
               timeZone: 'UTC',
             })
-            const retard = t.echeance! < aujourdhui ? ' (en retard)' : ''
+            const retard = t.echeance! < jour ? ' (en retard)' : ''
             return `${date} : ${t.titre} (${t.perimetre.nom})${retard}`
           })
         : ['Aucune échéance.']
@@ -258,13 +290,27 @@ export async function composer(
         where: { id: { in: notifications.map(n => n.id) } },
         data: { resumeeLe: maintenant },
       })
+      // La date du résumé se note pour cette organisation : une personne membre de
+      // plusieurs organisations reçoit le résumé de chacune.
+      const actuelles = await prisma.preferenceNotification.findUnique({
+        where: { userId },
+        select: { derniersResumes: true },
+      })
+      const derniersResumes = {
+        ...(typeof actuelles?.derniersResumes === 'object' &&
+        actuelles.derniersResumes !== null
+          ? (actuelles.derniersResumes as Record<string, string>)
+          : {}),
+        [idOrganisation]: maintenant.toISOString(),
+      }
       await prisma.preferenceNotification.upsert({
         where: { userId },
-        update: { dernierResumeLe: maintenant },
+        update: { dernierResumeLe: maintenant, derniersResumes },
         create: {
           userId,
           dernierResumeLe: maintenant,
-          organisationId: await organisationParDefaut(),
+          derniersResumes,
+          organisationId: idOrganisation,
         },
       })
     }

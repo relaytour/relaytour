@@ -1,6 +1,6 @@
 import type { PrismaClient } from '@relaytour/database'
 
-import { aujourdhuiParis } from './droits.ts'
+import { aujourdhui } from './droits.ts'
 
 // Score de participation d'une édition (phase 5).
 //
@@ -78,7 +78,9 @@ export async function periodeEdition(
 
 export async function calculerScores(
   prisma: PrismaClient,
-  editionId: string
+  editionId: string,
+  // Le jour d'une contribution se lit dans le fuseau de l'organisation.
+  fuseau?: string
 ): Promise<Map<string, Score>> {
   const scores = new Map<string, Score>()
   const de = (userId: string) => {
@@ -108,9 +110,10 @@ export async function calculerScores(
         const score = de(auteur)
         score.tachesRealisees += 1
         score.points += BAREME.tacheRealisee
-        // Jour de clôture à Paris : une tâche cochée à 1 h du matin le lendemain est en retard.
+        // Jour de clôture dans le fuseau de l'organisation : une tâche cochée à 1 h du
+        // matin le lendemain est en retard.
         const faiteLe = tache.termineeLe
-          ? aujourdhuiParis(tache.termineeLe)
+          ? aujourdhui(tache.termineeLe, fuseau)
           : undefined
         const echeance = tache.echeance?.toISOString().slice(0, 10)
         if (faiteLe && echeance && faiteLe <= echeance) {
@@ -141,7 +144,7 @@ export async function calculerScores(
   })
   const dejaComptees = new Set<string>()
   for (const activite of activites) {
-    const cle = `${activite.type}|${activite.acteurId}|${activite.ficheId}|${aujourdhuiParis(activite.createdAt)}`
+    const cle = `${activite.type}|${activite.acteurId}|${activite.ficheId}|${aujourdhui(activite.createdAt, fuseau)}`
     if (dejaComptees.has(cle)) continue
     dejaComptees.add(cle)
     const score = de(activite.acteurId)

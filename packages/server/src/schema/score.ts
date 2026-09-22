@@ -50,7 +50,11 @@ builder.queryFields(t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
       const edition = await ctx.exigerEdition(editionId)
-      const scores = await calculerScores(prisma, edition.id)
+      const scores = await calculerScores(
+        prisma,
+        edition.id,
+        ctx.organisation!.fuseauHoraire
+      )
       return (
         scores.get(ctx.personne!.id) ?? {
           userId: ctx.personne!.id,
@@ -77,7 +81,15 @@ builder.queryFields(t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
       const edition = await ctx.exigerEdition(editionId)
-      const scores = [...(await calculerScores(prisma, edition.id)).values()]
+      const scores = [
+        ...(
+          await calculerScores(
+            prisma,
+            edition.id,
+            ctx.organisation!.fuseauHoraire
+          )
+        ).values(),
+      ]
         .filter(s => s.points > 0)
         .sort((a, b) => b.points - a.points)
       // Les personnes se chargent en une seule requête, pas une par ligne.

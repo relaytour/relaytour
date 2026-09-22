@@ -1,6 +1,5 @@
 import type { PrismaClient } from '@relaytour/database'
 
-import { invaliderActiviteParDefaut } from '../lib/activites.ts'
 import { empreinte } from '../lib/fiches.ts'
 import { lireLimites } from '../lib/limites.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
@@ -244,7 +243,6 @@ export async function importerModeles(
   )
 
   invaliderConfigurationOrganisation()
-  invaliderActiviteParDefaut()
   return rapport
 }
 

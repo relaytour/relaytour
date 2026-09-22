@@ -101,7 +101,9 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 
 ### Worker
 
-- Un seul préfixe BullMQ existe par installation. Les identifiants de jobs et les clés de limite portent l'organisation.
+- Un seul préfixe BullMQ existe par installation. Les identifiants des jobs planifiés et des résumés portent l'organisation. Les clés de limite de la connexion restent par adresse : la connexion vaut pour le compte, pas pour une organisation.
+- Un mail porte le nom et les couleurs de l'organisation de son job, sinon de l'unique organisation de la personne, sinon de la première organisation de l'installation.
+- Une personne membre de plusieurs organisations reçoit le résumé de chacune. La date du dernier résumé se note par organisation (migration `resumes_par_organisation`).
 - Un planificateur horaire crée et retire un scheduler `rappels` et un scheduler `resumes` par organisation active, avec son fuseau horaire.
 - `genererRappels` et `personnesAResumer` reçoivent une organisation. `periodeEdition` cherche la période précédente dans la même activité. `aujourdhuiParis` devient `aujourdhui(fuseau)`.
 
@@ -113,12 +115,13 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 
 ### Migrations
 
-Quatre migrations additives (invariant 8), dans cet ordre :
+Cinq migrations additives (invariant 8), dans cet ordre :
 
 1. `activites` : renommage du journal, table `Activite`, table `Appartenance`, `Organisation.statut` et `Organisation.limites`, colonnes `activiteId` et `Perimetre.groupe` nullables.
 2. `activites_remplissage` : une activité `EVENEMENT` par organisation, remplissage des clés, `groupe` tiré de `type`, appartenances créées depuis `isAdmin`.
 3. `activites_obligatoire` : `activiteId` obligatoire, retrait des trois contraintes uniques globales, contraintes composées. Élargir une contrainte est l'assouplissement prévu par l'ADR 0006, pas un changement de sens.
 4. `droits_redaction_organisation` : clé d'organisation du droit de rédaction, remplie depuis le périmètre ou la première appartenance de la personne, puis obligatoire.
+5. `resumes_par_organisation` : date du dernier résumé par organisation, colonne JSON nullable.
 
 ### Tests
 
@@ -146,7 +149,7 @@ Un chantier par session, dans cet ordre.
 - L'ADR 0006 reste acceptée : son lot multi se réalise ici, avec l'activité en plus.
 - Le glossaire gagne activité, nature, groupe, journal, administration de l'installation et limites. L'invariant 18 couvre la clé d'activité.
 - Les URL de l'espace organisateur changent. La redirection et le générateur de liens des mails se livrent ensemble.
-- Une personne membre de plusieurs organisations garde une seule cadence de résumé : `PreferenceNotification` reste par personne.
+- Une personne membre de plusieurs organisations garde une seule cadence de résumé, commune à ses organisations : `PreferenceNotification` reste par personne.
 - Le retrait de trois index uniques sur une base en service demande une courte interruption. Le remplissage précède toujours l'obligation.
 - La décision sur le type générique de périmètre, différée par l'ADR 0006, est prise : les groupes sont du contenu.
 - `CONTACT_HEBERGEUR` rejoint `infra/compose/.env.example`, vide par défaut.

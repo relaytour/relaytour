@@ -5,8 +5,7 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { AppContext } from '../context.ts'
-import { contexteDeTest } from '../test/contexte.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 import { schema } from './index.ts'

@@ -29,6 +29,18 @@
       }
     },
     {
+      "id": "2026-09-22-serveur-rappels-et-resumes-suivent-chaque-organisation",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Les rappels et les résumés suivent chaque organisation",
+        "texte": "Chaque organisation reçoit ses rappels d'échéance et ses résumés à l'heure de son fuseau. Un mail porte le nom et les couleurs de son organisation. Une personne membre de plusieurs organisations reçoit le résumé de chacune, limité à ses tâches et à ses notifications.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-22-serveur-les-activites-et-les-appartenances-entrent-dans-le-schema",
       "date": "2026-09-22",
       "type": "interne",

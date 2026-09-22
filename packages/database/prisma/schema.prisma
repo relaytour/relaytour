@@ -560,6 +560,9 @@ model PreferenceNotification {
   // Mail immédiat pour les échéances à 7 jours, à 1 jour, et les retards.
   mailEcheance     Boolean         @default(true)
   dernierResumeLe  DateTime?
+  // Date du dernier résumé envoyé pour chaque organisation : { [organisationId]: ISO }.
+  // Une personne membre de plusieurs organisations reçoit le résumé de chacune (ADR 0008).
+  derniersResumes  Json?
   updatedAt        DateTime        @updatedAt
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)

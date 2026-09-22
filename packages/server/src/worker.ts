@@ -10,10 +10,12 @@ import {
   PLANIFICATION_QUEUE,
   planificationQueue,
   type CourrielJobData,
+  type PlanificationJobData,
   type TachePlanifiee,
 } from './jobs/queues.ts'
 import { courrielProcessor } from './jobs/processors/courriel.processor.ts'
 import { planificationProcessor } from './jobs/processors/planification.processor.ts'
+import { synchroniserPlanification } from './jobs/synchro.ts'
 import { journal } from './lib/journal.ts'
 import { assurerOrganisationParDefaut } from './lib/organisation.ts'
 
@@ -22,27 +24,32 @@ const postier = new Worker<CourrielJobData>(COURRIEL_QUEUE, courrielProcessor, {
   connection,
   concurrency: 2,
 })
-const planificateur = new Worker<
-  Record<string, never>,
-  unknown,
-  TachePlanifiee
->(PLANIFICATION_QUEUE, planificationProcessor, { connection })
+const planificateur = new Worker<PlanificationJobData, unknown, TachePlanifiee>(
+  PLANIFICATION_QUEUE,
+  planificationProcessor,
+  { connection }
+)
 const workers = [postier, planificateur]
 
 void verifierTransport()
 await assurerOrganisationParDefaut()
 
-// La planification vit ici et nulle part ailleurs. `upsertJobScheduler` est idempotent :
-// redémarrer le worker ne crée pas de doublon. Les heures sont celles de Paris.
+// La planification vit ici et nulle part ailleurs (ADR 0008) : rappels et résumés par
+// organisation active, à l'heure de son fuseau, ajustés au démarrage puis chaque heure.
+// `upsertJobScheduler` est idempotent : redémarrer le worker ne crée pas de doublon.
+void synchroniserPlanification().catch((erreur: unknown) => {
+  journal.error(
+    {
+      evenement: 'planification-impossible',
+      message: (erreur as Error).message,
+    },
+    'Les planifications n’ont pas pu être ajustées au démarrage.'
+  )
+})
 void planificationQueue.upsertJobScheduler(
-  'rappels',
-  { pattern: '30 6 * * *', tz: 'Europe/Paris' },
-  { name: 'rappels' }
-)
-void planificationQueue.upsertJobScheduler(
-  'resumes',
-  { pattern: '0 7 * * *', tz: 'Europe/Paris' },
-  { name: 'resumes' }
+  'synchro',
+  { pattern: '5 * * * *' },
+  { name: 'synchro' }
 )
 
 // Sonde de vie du worker, jamais publiée sur l'hôte. Elle détecte une connexion Redis bloquée.

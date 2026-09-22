@@ -5,11 +5,10 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { AppContext } from '../context.ts'
-import { contexteDeTest } from '../test/contexte.ts'
+import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 import { calculerScores } from '../lib/score.ts'
 
 import { schema } from './index.ts'
-import { activiteParDefaut } from '../lib/activites.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
 
 const s = randomUUID().slice(0, 8)

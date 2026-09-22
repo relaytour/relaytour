@@ -52,7 +52,7 @@ await prisma.appartenance.upsert({
   create: { userId: personne.id, organisationId, role: 'ADMIN' },
 })
 
-await mettreEnFile('invitation', { userId: personne.id })
+await mettreEnFile('invitation', { userId: personne.id }, { organisationId })
 await courrielQueue.close()
 connection.disconnect()
 await prisma.$disconnect()

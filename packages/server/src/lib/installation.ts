@@ -135,7 +135,7 @@ export async function inviterAdmin(
     update: { role: 'ADMIN' },
     create: { userId: personne.id, organisationId, role: 'ADMIN' },
   })
-  await mettreEnFile('invitation', { userId: personne.id })
+  await mettreEnFile('invitation', { userId: personne.id }, { organisationId })
   return personne.id
 }
 

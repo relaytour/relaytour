@@ -190,7 +190,11 @@ builder.mutationFields(t => ({
         },
         'Une personne a été invitée.'
       )
-      await mettreEnFile('invitation', { userId: personne.id })
+      await mettreEnFile(
+        'invitation',
+        { userId: personne.id },
+        { organisationId }
+      )
       return personne
     },
   }),
@@ -207,7 +211,11 @@ builder.mutationFields(t => ({
       if (personne === null || personne.archivedAt !== null) {
         throw erreurSaisie('Ce compte est introuvable ou archivé.')
       }
-      await mettreEnFile('invitation', { userId: personne.id })
+      await mettreEnFile(
+        'invitation',
+        { userId: personne.id },
+        { organisationId: ctx.organisation!.id }
+      )
       return true
     },
   }),
