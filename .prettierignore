@@ -9,3 +9,5 @@ packages/server/schema.graphql
 *.md
 *.mjml
 packages/orga/src/gql
+# Le site contient des blocs générés par outils/site.mjs.
+site/

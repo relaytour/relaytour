@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Relaytour · préparer un événement associatif d'une édition à l'autre</title>
+    <meta
+      name="description"
+      content="Relaytour est un logiciel libre qui aide une association à préparer un événement récurrent : périmètres, rétroplanning calé sur le jour J, fiches méthode transmises d'une édition à l'autre."
+    />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="jetons.css" />
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="./">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          Relaytour
+        </a>
+        <ul class="liens">
+          <li><a href="./" aria-current="page">Présentation</a></li>
+          <li><a href="design-system.html">Design system</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="etiquette">Logiciel libre · AGPL-3.0</span>
+        <h1>Préparer un événement associatif avec un outil qui garde la méthode d'une édition à l'autre</h1>
+        <p class="chapo">
+          Relaytour organise la préparation d'un événement récurrent porté par des bénévoles. Chaque sport et chaque pôle y retrouve ses référentes et référents, ses tâches datées par rapport au jour J et ses fiches méthode.
+        </p>
+        <div class="reperes">
+          <span class="repere">Préparation de J-330 à J+90</span>
+          <span class="repere">Connexion par code reçu par mail</span>
+          <span class="repere">Contenu dans le dépôt de l'organisation</span>
+        </div>
+        <div class="actions">
+          <a class="bouton bouton-primaire" href="https://github.com/relaytour/relaytour#readme">Installer Relaytour</a>
+          <a class="bouton bouton-verre" href="design-system.html">Voir le design system</a>
+        </div>
+      </header>
+
+      <section aria-labelledby="t-constat">
+        <div class="entete">
+          <span class="etiquette">Le problème</span>
+          <h2 id="t-constat">Trois difficultés qui reviennent d'une édition à l'autre</h2>
+          <p class="texte">
+            Un événement associatif se prépare souvent pendant près d'un an. Les bénévoles qui le portent changent d'une année à l'autre.
+          </p>
+        </div>
+        <div class="grille-3">
+          <article class="verre panneau">
+            <span class="etiquette">Charge</span>
+            <h3>Trop de travail repose sur trop peu de personnes</h3>
+            <p>Une ou deux personnes portent souvent la logistique et la relation avec les partenaires. Cette surcharge entraîne une perte de coordination.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">Continuité</span>
+            <h3>L'équipe se disperse entre deux jalons</h3>
+            <p>Une équipe constituée à l'automne peut se disperser jusqu'au printemps. Sans point régulier, elle perd vite ses membres.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">Transmission</span>
+            <h3>La méthode se perd à chaque changement d'équipe</h3>
+            <p>Le savoir-faire d'une édition reste dans la mémoire de quelques personnes. L'équipe suivante reprend souvent les démarches depuis le début.</p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-fonctions">
+        <div class="entete">
+          <span class="etiquette">La réponse</span>
+          <h2 id="t-fonctions">Ce que fait Relaytour</h2>
+          <p class="texte">
+            Relaytour s'utilise dans un navigateur. Les membres se connectent avec un code reçu par mail, sans mot de passe. Un admin invite chaque personne et l'affecte à son périmètre.
+          </p>
+        </div>
+        <div class="fonctions">
+          <div class="fonction">
+            <span class="mono">périmètres</span>
+            <div><h3>Les sports et les pôles</h3><p>Les périmètres restent les mêmes d'une édition à l'autre. Chaque édition leur affecte de nouvelles personnes.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">J-120</span>
+            <div><h3>Un rétroplanning calé sur le jour J</h3><p>Chaque tâche type porte une échéance relative, par exemple J-120. Relaytour recalcule toutes les dates à partir de la date de l'édition.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">fiches</span>
+            <div><h3>Des fiches méthode versionnées</h3><p>Chaque fiche décrit le « comment faire » d'une démarche. Les référentes et référents la corrigent pendant l'édition, et l'historique conserve chaque version.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">postes</span>
+            <div><h3>Les postes à pourvoir</h3><p>Chaque périmètre a un effectif souhaité. Les admins voient les places encore libres et les souhaits des membres.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">rappels</span>
+            <div><h3>Des rappels par mail</h3><p>Relaytour envoie un rappel avant chaque échéance et un résumé périodique. Chaque personne règle la fréquence de ces mails.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">recherche</span>
+            <div><h3>Tout retrouver depuis la barre haute</h3><p>La recherche trouve les tâches, les fiches et les personnes. Chaque personne ne trouve que ce qu'elle peut déjà consulter.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-captures">
+        <div class="entete">
+          <span class="etiquette">Aperçu</span>
+          <h2 id="t-captures">Les écrans principaux</h2>
+          <p class="texte">
+            Les captures montrent l'organisation d'exemple livrée avec Relaytour. Les personnes et les données sont fictives.
+          </p>
+        </div>
+        <div class="grille-2">
+          <figure class="verre capture">
+            <div class="cadre"><span class="etiquette">Capture à venir</span></div>
+            <figcaption>
+              <h3>Mon espace</h3>
+              <p>La page d'accueil d'une référente ou d'un référent liste ses tâches, les tâches à prendre dans ses périmètres et sa contribution.</p>
+            </figcaption>
+          </figure>
+          <figure class="verre capture">
+            <div class="cadre"><span class="etiquette">Capture à venir</span></div>
+            <figcaption>
+              <h3>Le rétroplanning</h3>
+              <p>Le rétroplanning regroupe les tâches de tous les périmètres par mois. Des filtres limitent l'affichage à un type de périmètre ou à vos tâches.</p>
+            </figcaption>
+          </figure>
+          <figure class="verre capture">
+            <div class="cadre"><span class="etiquette">Capture à venir</span></div>
+            <figcaption>
+              <h3>Un périmètre</h3>
+              <p>La page d'un périmètre présente ses tâches, son avancement, ses fiches méthode et les personnes affectées.</p>
+            </figcaption>
+          </figure>
+          <figure class="verre capture">
+            <div class="cadre"><span class="etiquette">Capture à venir</span></div>
+            <figcaption>
+              <h3>Les fiches méthode</h3>
+              <p>Les fiches s'affichent en cartes ou en liste condensée. Une fiche indique les tâches de l'édition qui la citent.</p>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-comparaison">
+        <div class="entete">
+          <span class="etiquette">Comparaison</span>
+          <h2 id="t-comparaison">Pourquoi un outil dédié</h2>
+          <p class="texte">
+            Les outils courants couvrent une partie du besoin. Aucune catégorie ne couvre la préparation d'un événement récurrent par une équipe bénévole, jusqu'à la transmission à l'édition suivante.
+          </p>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau comparaison">
+            <thead>
+              <tr>
+                <th scope="col">Catégorie d'outil</th>
+                <th scope="col">Dates recalculées depuis le jour J</th>
+                <th scope="col">Méthode transmise à l'édition suivante</th>
+                <th scope="col">Postes par sport et par pôle</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Tableur et dossier partagé</th>
+                <td><span class="non">Non</span><br />Chaque date se reprend à la main.</td>
+                <td><span class="partiel">Partiel</span><br />Les documents existent, sans version validée.</td>
+                <td><span class="non">Non</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Tableaux de projet</th>
+                <td><span class="non">Non</span><br />La copie d'un tableau garde les anciennes dates.</td>
+                <td><span class="partiel">Partiel</span><br />Les pages vieillissent sans que personne ne les valide.</td>
+                <td><span class="non">Non</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Gestion de projet avancée</th>
+                <td><span class="oui">Oui</span><br />Souvent dans une offre payante.</td>
+                <td><span class="non">Non</span></td>
+                <td><span class="non">Non</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Gestion associative</th>
+                <td><span class="non">Non</span></td>
+                <td><span class="non">Non</span></td>
+                <td><span class="non">Non</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Planning des bénévoles du jour J</th>
+                <td><span class="non">Non</span><br />Des rappels la veille d'un créneau.</td>
+                <td><span class="non">Non</span></td>
+                <td><span class="partiel">Partiel</span><br />Les créneaux du jour J, pas la préparation.</td>
+              </tr>
+              <tr class="relaytour">
+                <th scope="row">Relaytour</th>
+                <td><span class="oui">Oui</span><br />Les tâches types sont recalculées à chaque édition.</td>
+                <td><span class="oui">Oui</span><br />Les fiches sont versionnées et reversées dans le dépôt de l'organisation.</td>
+                <td><span class="oui">Oui</span><br />Effectifs, affectations et souhaits.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grille-2">
+          <div class="verre panneau">
+            <h3>Ce que Relaytour ne remplace pas</h3>
+            <p>La billetterie, les adhésions et la comptabilité restent dans les outils de gestion associative. Les tableaux de matchs et les créneaux du jour J restent dans les outils spécialisés.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Ce que Relaytour coûte</h3>
+            <p>Le logiciel est gratuit. Seul le serveur qui l'héberge a un coût. Le déploiement de référence tient sur un petit serveur.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-perennite">
+        <div class="entete">
+          <span class="etiquette">Pérennité</span>
+          <h2 id="t-perennite">Pourquoi l'outil tiendra dans le temps</h2>
+          <p class="texte">
+            Un outil associatif disparaît souvent avec la personne qui l'a mis en place, ou avec l'offre gratuite d'un éditeur. Relaytour est conçu pour éviter ces deux situations.
+          </p>
+        </div>
+        <div class="grille-2">
+          <article class="verre panneau">
+            <span class="etiquette">Contenu</span>
+            <h3>Le contenu appartient à l'organisation</h3>
+            <p>Les périmètres, les fiches et les tâches types vivent dans un dépôt propre à l'organisation. Ce sont des fichiers texte, lisibles et modifiables sans Relaytour.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">Licence</span>
+            <h3>Le code est libre et le restera</h3>
+            <p>La licence AGPL-3.0 interdit de refermer le code. Personne ne peut retirer la version publiée ni la rendre payante.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">Reprise</span>
+            <h3>Une autre personne peut reprendre l'outil</h3>
+            <p>Le code, les choix d'architecture et l'installation sont documentés publiquement. Une développeuse ou un développeur bénévole peut reprendre la maintenance.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">Reconduction</span>
+            <h3>Chaque édition repart de la précédente</h3>
+            <p>À la création d'une édition, Relaytour recrée les tâches types avec leurs nouvelles dates. Les fiches corrigées pendant l'édition deviennent la base de la suivante.</p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-etapes">
+        <div class="entete">
+          <span class="etiquette">Démarrer</span>
+          <h2 id="t-etapes">Mettre Relaytour en service</h2>
+        </div>
+        <ol class="etapes">
+          <li class="etape">
+            <code>organisation-modele</code>
+            <h3>Créer le dépôt de contenu</h3>
+            <p>L'organisation crée son dépôt depuis le modèle, puis y décrit ses périmètres, son thème et ses fiches.</p>
+          </li>
+          <li class="etape">
+            <code>docker compose</code>
+            <h3>Installer le serveur</h3>
+            <p>Le déploiement de référence tient dans une pile Compose sur un petit serveur.</p>
+          </li>
+          <li class="etape">
+            <code>orga:importer</code>
+            <h3>Importer une édition</h3>
+            <p>L'import crée les périmètres, les fiches et les tâches datées de l'édition.</p>
+          </li>
+          <li class="etape">
+            <code>admin</code>
+            <h3>Inviter l'équipe</h3>
+            <p>Les admins invitent les membres et les affectent à leurs périmètres.</p>
+          </li>
+        </ol>
+      </section>
+
+      <footer>
+        Relaytour est un logiciel libre distribué sous licence GNU AGPL-3.0. Le code, la documentation et les règles de contribution sont sur
+        <a href="https://github.com/relaytour/relaytour">GitHub</a>.
+      </footer>
+    </main>
+  </body>
+</html>

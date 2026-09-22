@@ -12,7 +12,8 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `infra/` : déploiement de référence minimal (Compose, Caddyfile d'exemple, étapes). L'exploitation réelle vit hors du dépôt (ADR 0007).
 - `outils/verifier-licences.mjs` et `outils/verifier-publication.mjs` : contrôles de CI sur les licences des dépendances et sur l'absence de traces privées.
 - `outils/versionner.mjs` et `notes/` : journal des changements (`noter`, `valider`, `compiler`).
-- `docs/adr/` : décisions d'architecture.
+- `docs/adr/` : décisions d'architecture. `docs/design-system.md` : identité, matériau et composants.
+- `site/` : site de présentation publié sur GitHub Pages. `outils/site.mjs` y écrit les jetons, les palettes et les polices ; la CI vérifie qu'il est à jour.
 - `docs/feuille-de-route.md` et `docs/publication.md` : évolutions envisagées, liste de publication.
 
 ## Commandes
@@ -28,6 +29,7 @@ yarn test         # tests unitaires
 yarn workspace @relaytour/server test:integration   # base locale, worker arrêté
 yarn workspace @relaytour/server orga:exporter      # reverse les fiches modifiées dans l'application vers le dossier de contenu
 yarn codegen      # contrats commités
+node outils/site.mjs   # site de présentation, après un changement des jetons
 yarn versionner valider
 yarn versionner compiler   # journaux commités
 ```

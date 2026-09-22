@@ -84,11 +84,13 @@ jobs:
           node outils/versionner.mjs valider
           node outils/versionner.mjs compiler
           yarn workspace @relaytour/server orga:valider
+          node outils/site.mjs
           git diff --exit-code \
             packages/server/schema.graphql \
             packages/server/src/courriel/gabarits.genere.ts \
             packages/orga/src/gql \
-            notes/
+            notes/ \
+            site/
 
       - name: Licences des dépendances
         run: node outils/verifier-licences.mjs

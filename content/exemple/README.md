@@ -41,7 +41,7 @@ theme:                          # facultatif : chaque valeur absente prend celle
   polices: { titre: Hanken Grotesk }       # parmi les polices embarquées
 ```
 
-La validation refuse une clé inconnue, un halo dont l'intensité dépasse 0,35, un thème dont une couleur de texte passe sous 4,5:1 de contraste, une police absente de l'espace organisateur et un contact hors des domaines autorisés. Le thème complet est décrit dans `docs/identite.md` du dépôt de Relaytour.
+La validation refuse une clé inconnue, un halo dont l'intensité dépasse 0,35, un thème dont une couleur de texte passe sous 4,5:1 de contraste, une police absente de l'espace organisateur et un contact hors des domaines autorisés. Le thème complet est décrit dans `docs/design-system.md` du dépôt de Relaytour.
 
 ## Périmètres
 
