@@ -45,6 +45,11 @@ export interface EditionDuContexte {
 
 export interface AppContext {
   ip: string | undefined
+  /**
+   * Requête porteuse du jeton d'administration de l'installation (ADR 0008). Elle n'a
+   * ni personne ni organisation : seuls les champs réservés à l'administration répondent.
+   */
+  administration: boolean
   personne: PersonneConnectee | null
   /** Null sans session, sans appartenance, ou pour une organisation suspendue ou archivée. */
   organisation: OrganisationActive | null
@@ -95,10 +100,12 @@ export function choisirOrganisation(
 export async function buildContext(
   ip: string | undefined,
   userId: string | null,
-  organisationDemandee: string | null = null
+  organisationDemandee: string | null = null,
+  administration = false
 ): Promise<AppContext> {
+  // Le jeton d'administration ignore toute session.
   const user =
-    userId === null
+    userId === null || administration
       ? null
       : await prisma.user.findUnique({
           where: { id: userId },
@@ -218,6 +225,7 @@ export async function buildContext(
 
   return {
     ip,
+    administration,
     personne,
     organisation,
     perimetresAffectes,

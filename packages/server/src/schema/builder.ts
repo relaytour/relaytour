@@ -24,6 +24,7 @@ export const builder = new SchemaBuilder<{
     connecte: boolean
     admin: boolean
     ecriture: boolean
+    administration: boolean
   }
 }>({
   plugins: [ScopeAuthPlugin, ComplexityPlugin, PrismaPlugin],
@@ -43,6 +44,7 @@ export const builder = new SchemaBuilder<{
         ctx.organisation !== null &&
         ctx.organisation.role === 'ADMIN',
       ecriture: ctx.organisation?.statut !== 'LECTURE_SEULE',
+      administration: ctx.administration,
     }),
     unauthorizedError: (_parent, ctx, info) =>
       info.parentType.name === 'Mutation' &&

@@ -14,6 +14,7 @@ import {
   type AppContext,
 } from './context.ts'
 import { env } from './env.ts'
+import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
 import { assurerOrganisationParDefaut } from './lib/organisation.ts'
 import { writeSchemaFile } from './lib/print-schema.ts'
@@ -26,6 +27,9 @@ const httpServer = http.createServer(app)
 // Un seul proxy devant l'API (Caddy) : req.ip et X-Forwarded-Proto sont fiables.
 app.set('trust proxy', 1)
 app.disable('x-powered-by')
+
+const jetonAdministrationValide = (jeton: string) =>
+  jetonValide(jeton, env.JETON_ADMINISTRATION)
 
 const apollo = new ApolloServer<AppContext>({
   schema,
@@ -83,6 +87,18 @@ app.use(
   express.json({ limit: '1mb' }),
   expressMiddleware(apollo, {
     context: async ({ req }) => {
+      // Le jeton d'administration de l'installation ignore toute session (ADR 0008).
+      const porteur = /^Bearer\s+(.+)$/i.exec(req.get('authorization') ?? '')
+      if (porteur !== null) {
+        const valide = jetonAdministrationValide((porteur[1] ?? '').trim())
+        if (!valide) {
+          journal.warn(
+            { evenement: 'jeton-administration-refuse', ip: req.ip },
+            'Un jeton d’administration invalide a été présenté.'
+          )
+        }
+        return buildContext(req.ip, null, null, valide)
+      }
       const session = await auth.api.getSession({
         headers: fromNodeHeaders(req.headers),
       })

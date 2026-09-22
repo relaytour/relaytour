@@ -12,6 +12,8 @@
     "courriel:essai": "tsx --env-file=.env scripts/essai-courriel.ts",
     "admin:creer": "tsx --env-file=.env scripts/creer-admin.ts",
     "edition:creer": "tsx --env-file=.env scripts/creer-edition.ts",
+    "organisation:creer": "tsx --env-file=.env scripts/creer-organisation.ts",
+    "organisation:exporter": "tsx --env-file=.env scripts/exporter-organisation.ts",
     "orga:importer": "tsx --env-file=.env scripts/orga-importer.ts",
     "orga:exporter": "tsx --env-file=.env scripts/orga-exporter.ts",
     "orga:valider": "tsx --env-file-if-exists=.env scripts/orga-valider.ts",

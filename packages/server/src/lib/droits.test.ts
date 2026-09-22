@@ -64,6 +64,7 @@ describe('perimetresLisibles', () => {
     active: OrganisationActive | null = organisation
   ): AppContext => ({
     ip: undefined,
+    administration: false,
     personne,
     organisation: active,
     perimetresAffectes: () => Promise.resolve(new Set(['natation'])),

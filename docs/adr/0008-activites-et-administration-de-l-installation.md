@@ -66,9 +66,12 @@ Un hébergeur a aussi besoin d'un portail client, d'une facturation et de palier
 ### Administration de l'installation
 
 - L'**administration de l'installation** regroupe les actions d'un hébergeur. Il crée une organisation, invite son premier admin, la suspend ou l'archive, fixe ses limites et demande son export. Elle n'accède à aucune donnée : ni personne, ni tâche, ni fiche.
-- Un script `organisation:creer <slug> "<nom>" [--fuseau] [--domaines] [--limite-activites n] [--admin adresse "Nom"]` remplace l'amorçage par variables d'environnement. `admin:creer` reçoit `--organisation`.
+- Un script `organisation:creer <slug> "<nom>" [--sigle] [--fuseau] [--domaines] [--limite-activites n] [--limite-periodes n] [--admin adresse --admin-nom "Nom"]` crée une organisation et sa première activité. `admin:creer` reçoit `--organisation`, `edition:creer` reçoit `--organisation` et `--activite`. Sans `--organisation`, une installation qui porte plusieurs organisations refuse de deviner.
+- Les scripts s'exécutent sur le serveur, par la personne qui l'exploite : ils ne consultent pas les limites.
 - Un jeton `JETON_ADMINISTRATION`, facultatif dans l'environnement, ouvre les mêmes actions par GraphQL. La requête `organisations` renvoie slug, nom, statut, limites et date de création. Elle liste aussi les activités et leurs périodes non archivées (nom, statut, début, fin). Aucune donnée personnelle n'y figure. Les mutations sont `creerOrganisation`, `inviterPremierAdmin`, `modifierOrganisationInstallation` et `demanderExport`.
-- Le serveur compare le jeton en temps constant. Une requête porteuse du jeton ignore toute session. Aucune route de Better Auth ne s'ouvre. Ces champs ne sont pas publics (invariant 14).
+- Le serveur compare le jeton en temps constant. Une requête porteuse du jeton ignore toute session, et un jeton faux donne une requête anonyme. Aucune route de Better Auth ne s'ouvre. Ces champs ne sont pas publics (invariant 14).
+- L'invitation du premier admin refuse un compte archivé : le rétablir lui rendrait l'accès à ses autres organisations.
+- L'export (`demanderExport`, script `organisation:exporter`) écrit un fichier JSON versionné dans `EXPORTS_DIR`, volume `exports` de la pile de référence. Le fichier porte les activités, les périodes, les périmètres, les fiches et leur historique, les tâches, les membres et leurs affectations. Il contient des noms et des adresses : il ne transite jamais par l'API et se remet à l'organisation. Sa réimportation fera l'objet d'un chantier ultérieur.
 - `Organisation.statut` prend `ACTIVE`, `LECTURE_SEULE`, `SUSPENDUE` ou `ARCHIVEE`. En lecture seule, les membres lisent fiches et périodes, et aucune mutation de données ne passe. L'export par l'administration reste possible dans tous les statuts.
 
 ### Limites

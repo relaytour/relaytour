@@ -25,6 +25,8 @@ x-environnement-app: &environnement-app
   CONTACT_RECRUTEMENT: '${CONTACT_RECRUTEMENT:-}'
   PAGE_EQUIPE: '${PAGE_EQUIPE:-}'
   CONTACT_HEBERGEUR: '${CONTACT_HEBERGEUR:-}'
+  # Les exports d'organisation s'écrivent dans le volume exports (ADR 0008).
+  EXPORTS_DIR: /exports
 
 services:
   db:
@@ -92,6 +94,9 @@ services:
     environment:
       <<: *environnement-app
       PORT: 4400
+      JETON_ADMINISTRATION: '${JETON_ADMINISTRATION:-}'
+    volumes:
+      - exports:/exports
     ports:
       - '127.0.0.1:${API_PORT:?requis}:4400'
     stop_grace_period: 20s
@@ -141,3 +146,4 @@ services:
 volumes:
   dbdata:
   cachedata:
+  exports:

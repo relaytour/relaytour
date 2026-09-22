@@ -11,6 +11,7 @@ import { schema } from './index.ts'
 
 const contexteConnecte: AppContext = {
   ip: '127.0.0.1',
+  administration: false,
   personne: { id: 'p1', nom: 'Test', email: 'test@exemple.fr', estAdmin: false },
   perimetresAffectes: () => {
     throw new Error('Un résolveur a été appelé.')
