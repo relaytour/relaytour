@@ -27,6 +27,7 @@ import type { NatureActivite } from '../../gql/graphql'
 import { formesPeriode, useActivite, type Activite } from '../../lib/activite'
 import { messageErreur } from '../../lib/erreurs'
 import { useOrganisation } from '../../lib/organisation'
+import { useSession } from '../../lib/session'
 import { ACTIVITES } from '../../lib/requetes'
 
 // Les activités de l'organisation (ADR 0008) : un événement, une section, une
@@ -176,6 +177,9 @@ export default function Activites() {
   const navigate = useNavigate()
   const { activite: affichee } = useActivite()
   const organisation = useOrganisation()
+  // Créer et archiver une activité relève de l'admin de l'organisation ; l'admin
+  // d'une activité ne modifie que la sienne (ADR 0010).
+  const gereOrganisation = useSession().moi.estAdmin
   const { data, loading } = useQuery(ACTIVITES)
   const [enEdition, setEnEdition] = useState<Activite | 'nouvelle' | null>(null)
   const [erreur, setErreur] = useState<string | null>(null)
@@ -307,24 +311,27 @@ export default function Activites() {
       <Titre sousTitre="Un événement, une section ou une instance : chaque activité a ses périodes, ses périmètres, ses fiches et ses tâches types.">
         Activités
       </Titre>
-      <Button
-        type="primary"
-        icon={<PlusOutlined />}
-        style={{ marginBottom: 16 }}
-        onClick={() => ouvrir('nouvelle')}
-      >
-        Nouvelle activité
-      </Button>
+      {gereOrganisation && (
+        <Button
+          type="primary"
+          icon={<PlusOutlined />}
+          style={{ marginBottom: 16 }}
+          onClick={() => ouvrir('nouvelle')}
+        >
+          Nouvelle activité
+        </Button>
+      )}
       <Table<Activite>
         rowKey="id"
         loading={loading}
         dataSource={data?.activites ?? []}
         pagination={false}
         scroll={{ x: 'max-content' }}
-        onRow={activite => ({
-          onClick: () => ouvrir(activite),
-          style: { cursor: 'pointer' },
-        })}
+        onRow={activite =>
+          activite.estAdministree
+            ? { onClick: () => ouvrir(activite), style: { cursor: 'pointer' } }
+            : {}
+        }
         columns={[
           {
             title: 'Nom',
@@ -360,17 +367,18 @@ export default function Activites() {
             key: 'modifier',
             // Un bouton rend la modification accessible au clavier ; le clic sur
             // la ligne reste un raccourci.
-            render: (_, a) => (
-              <Button
-                size="small"
-                icon={<EditOutlined />}
-                aria-label={`Modifier ${a.nom}`}
-                onClick={e => {
-                  e.stopPropagation()
-                  ouvrir(a)
-                }}
-              />
-            ),
+            render: (_, a) =>
+              !a.estAdministree ? null : (
+                <Button
+                  size="small"
+                  icon={<EditOutlined />}
+                  aria-label={`Modifier ${a.nom}`}
+                  onClick={e => {
+                    e.stopPropagation()
+                    ouvrir(a)
+                  }}
+                />
+              ),
           },
         ]}
       />
@@ -572,7 +580,7 @@ export default function Activites() {
               </Form.Item>
             </Col>
           </Row>
-          {enEdition !== 'nouvelle' && (
+          {enEdition !== 'nouvelle' && gereOrganisation && (
             <Form.Item
               label="Archivée"
               name="archive"

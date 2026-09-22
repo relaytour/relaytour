@@ -11,5 +11,6 @@
 | [0007](0007-frontiere-entre-logiciel-et-exploitation.md) | Frontière entre le logiciel et son exploitation | Acceptée |
 | [0008](0008-activites-et-administration-de-l-installation.md) | Activités d'une organisation et administration de l'installation | Acceptée, réalisée |
 | [0009](0009-identite-des-activites-et-source-de-verite-du-contenu.md) | Identité des activités et source de vérité du contenu | Acceptée |
+| [0010](0010-admins-d-activite-et-visibilite-des-activites.md) | Admins d'activité et visibilité des activités | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

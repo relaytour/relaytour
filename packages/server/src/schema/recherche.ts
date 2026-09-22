@@ -47,6 +47,8 @@ interface Resultats {
   estAdmin: boolean
   /** Périmètres lisibles dans l'organisation active (tous pour un admin). */
   lisibles: string[]
+  /** Activités visibles (ADR 0010) : une fiche commune ne sort que de celles-ci. */
+  visibles: string[]
 }
 
 const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
@@ -77,6 +79,7 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
           ...query,
           where: {
             organisationId: r.organisationId,
+            activiteId: { in: r.visibles },
             archivedAt: null,
             versionCourante: { titre: { contains: r.texte } },
             OR: [{ perimetreId: null }, { perimetreId: { in: r.lisibles } }],
@@ -163,6 +166,7 @@ builder.queryFields(t => ({
         organisationId: ctx.organisation!.id,
         estAdmin: ctx.personne!.estAdmin,
         lisibles: await perimetresLisibles(ctx),
+        visibles: [...(await ctx.activitesVisibles())],
       }
     },
   }),

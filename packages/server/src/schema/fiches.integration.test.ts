@@ -320,13 +320,13 @@ describe('droits sur les fiches', () => {
     expect(code(r)).toBe('FORBIDDEN')
   })
 
-  it('ouvre les fiches communes à toute personne connectée', async () => {
-    const r = await executer(
-      ids.autre,
-      `query ($s: String!) { fiche(slug: $s) { titre } }`,
-      { s: `accueil-${s}` }
-    )
-    expect(r.errors).toBeUndefined()
+  it('ouvre les fiches communes à toute personne qui voit l’activité, et à elle seule', async () => {
+    const requete = `query ($s: String!) { fiche(slug: $s) { titre } }`
+    const affecte = await executer(ids.referent, requete, { s: `accueil-${s}` })
+    expect(affecte.errors).toBeUndefined()
+    // Sans affectation ni rôle d'admin, l'activité n'existe pas pour la personne.
+    const autre = await executer(ids.autre, requete, { s: `accueil-${s}` })
+    expect(code(autre)).toBe('FORBIDDEN')
   })
 
   it('refuse la modification à un référent sans droit de rédaction', async () => {

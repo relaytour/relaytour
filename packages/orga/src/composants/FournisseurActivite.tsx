@@ -9,7 +9,7 @@ import {
   ContexteActivite,
 } from '../lib/activite'
 import { themeDepuisApi, useOrganisation } from '../lib/organisation'
-import { ACTIVITES } from '../lib/requetes'
+import { ACTIVITES, MOI } from '../lib/requetes'
 import { appliquerTheme, construireTheme } from '../lib/theme'
 import { activiteAffichee, afficherActivite } from '../lib/selection'
 
@@ -24,12 +24,24 @@ const PAGES = new Set([
 ])
 
 function AucuneActivite() {
+  // La session est déjà en cache : la garde de session l'a chargée.
+  const moi = useQuery(MOI).data?.moi
   return (
-    <Result
-      status="info"
-      title="Cette organisation n’a encore aucune activité."
-      subTitle="Un admin de l’organisation crée la première activité, ou l’import du dépôt d’organisation la crée."
-    />
+    // Un admin de l'organisation voit toutes les activités : une liste vide dit
+    // qu'il n'en existe aucune. Pour les autres, aucune ne leur est encore ouverte.
+    moi?.estAdmin ? (
+      <Result
+        status="info"
+        title="Cette organisation n’a encore aucune activité."
+        subTitle="Un admin de l’organisation crée la première activité, ou l’import du dépôt d’organisation la crée."
+      />
+    ) : (
+      <Result
+        status="info"
+        title="Aucune activité ne vous est encore ouverte."
+        subTitle="Un admin vous ouvre une activité en vous affectant à l’un de ses périmètres."
+      />
+    )
   )
 }
 

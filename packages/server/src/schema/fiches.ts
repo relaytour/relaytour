@@ -14,6 +14,7 @@ import { exigerMembre } from '../lib/appartenances.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
 
+import { exigerAdminDuPerimetre } from '../lib/droits.ts'
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
@@ -84,11 +85,12 @@ export const FicheRef = builder.prismaObject('Fiche', {
       },
     }),
     peutModifier: t.boolean({
-      resolve: (f, _args, ctx) => peutRedigerFiche(ctx, f.perimetreId),
+      resolve: (f, _args, ctx) =>
+        peutRedigerFiche(ctx, f.perimetreId, f.activiteId),
     }),
-    // L'historique complet est réservé aux admins.
+    // L'historique complet est réservé aux admins de l'activité de la fiche.
     versions: t.relation('versions', {
-      authScopes: { admin: true },
+      authScopes: (f, _args, ctx) => ctx.estAdminDe(f.activiteId),
       query: { orderBy: { createdAt: 'desc' } },
     }),
     versionCouranteId: t.exposeID('versionCouranteId', { nullable: true }),
@@ -106,13 +108,24 @@ const DroitRedactionRef = builder.prismaObject('DroitRedaction', {
 
 async function exigerLectureFiche(
   ctx: AppContext,
-  fiche: { perimetreId: string | null; organisationId: string }
+  fiche: {
+    perimetreId: string | null
+    organisationId: string
+    activiteId: string
+  }
 ) {
   if (!(await peutLireFiche(ctx, fiche))) throw accesRefuse()
 }
 
-async function exigerRedaction(ctx: AppContext, perimetreId: string | null) {
-  if (ctx.personne === null || !(await peutRedigerFiche(ctx, perimetreId))) {
+async function exigerRedaction(
+  ctx: AppContext,
+  perimetreId: string | null,
+  activiteId: string
+) {
+  if (
+    ctx.personne === null ||
+    !(await peutRedigerFiche(ctx, perimetreId, activiteId))
+  ) {
     throw accesRefuse()
   }
   return ctx.personne
@@ -143,7 +156,8 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     },
   }),
   peutRedigerFiches: t.boolean({
-    resolve: (perimetre, _args, ctx) => peutRedigerFiche(ctx, perimetre.id),
+    resolve: (perimetre, _args, ctx) =>
+      peutRedigerFiche(ctx, perimetre.id, perimetre.activiteId),
   }),
 }))
 
@@ -188,8 +202,8 @@ builder.prismaObjectFields(FicheRef, t => ({
   // Le nombre de versions suit la règle de l'historique : les autres lisent null.
   nombreVersions: t.int({
     nullable: true,
-    resolve: (fiche, _args, ctx) =>
-      ctx.personne?.estAdmin
+    resolve: async (fiche, _args, ctx) =>
+      (await ctx.estAdminDe(fiche.activiteId))
         ? prisma.ficheVersion.count({ where: { ficheId: fiche.id } })
         : null,
   }),
@@ -214,7 +228,7 @@ builder.queryFields(t => ({
         ...query,
         where: {
           activiteId: activite,
-          ...(inclureArchives && ctx.personne?.estAdmin
+          ...(inclureArchives && (await ctx.estAdminDe(activite))
             ? {}
             : { archivedAt: null }),
           OR: [{ perimetreId: null }, { perimetreId: { in: perimetres } }],
@@ -252,16 +266,29 @@ builder.queryFields(t => ({
 
   peutRedigerFichesCommunes: t.boolean({
     authScopes: { connecte: true },
-    resolve: (_root, _args, ctx) => peutRedigerFiche(ctx, null),
+    args: { activiteId: t.arg.id() },
+    resolve: async (_root, { activiteId }, ctx) =>
+      peutRedigerFiche(ctx, null, await ctx.exigerActivite(activiteId)),
   }),
 
+  // Les droits de rédaction que la personne gère : tous pour un admin de
+  // l'organisation ; ceux des périmètres de ses activités pour un admin d'activité.
   droitsRedaction: t.prismaField({
     type: [DroitRedactionRef],
-    authScopes: { admin: true },
-    resolve: (query, _root, _args, ctx) =>
+    authScopes: { gestion: true },
+    resolve: async (query, _root, _args, ctx) =>
       prisma.droitRedaction.findMany({
         ...query,
-        where: { organisationId: ctx.organisation!.id },
+        where: {
+          organisationId: ctx.organisation!.id,
+          ...(ctx.personne!.estAdmin
+            ? {}
+            : {
+                perimetre: {
+                  activiteId: { in: [...(await ctx.activitesAdministrees())] },
+                },
+              }),
+        },
         orderBy: { createdAt: 'asc' },
       }),
   }),
@@ -283,16 +310,17 @@ builder.mutationFields(t => ({
     },
     resolve: async (query, _root, args, ctx) => {
       const perimetreId = args.perimetreId ? String(args.perimetreId) : null
-      const auteur = await exigerRedaction(ctx, perimetreId)
-      const activiteId =
+      const perimetre =
         perimetreId === null
-          ? await ctx.exigerActivite(args.activiteId)
-          : (
-              await prisma.perimetre.findUniqueOrThrow({
-                where: { id: perimetreId },
-                select: { activiteId: true },
-              })
-            ).activiteId
+          ? null
+          : await prisma.perimetre.findFirst({
+              where: { id: perimetreId, organisationId: ctx.organisation!.id },
+              select: { activiteId: true },
+            })
+      if (perimetreId !== null && perimetre === null) throw accesRefuse()
+      const activiteId =
+        perimetre?.activiteId ?? (await ctx.exigerActivite(args.activiteId))
+      const auteur = await exigerRedaction(ctx, perimetreId, activiteId)
       const titre = texteRequis(args.titre, 'Le titre', 200)
       const contenu = contenuValide(args.contenu)
       const slug = slugValide(args.slug)
@@ -350,7 +378,11 @@ builder.mutationFields(t => ({
         include: { versionCourante: { select: { empreinte: true } } },
       })
       if (fiche === null) throw accesRefuse()
-      const auteur = await exigerRedaction(ctx, fiche.perimetreId)
+      const auteur = await exigerRedaction(
+        ctx,
+        fiche.perimetreId,
+        fiche.activiteId
+      )
       const titre = texteRequis(args.titre, 'Le titre', 200)
       const contenu = contenuValide(args.contenu)
       const nouvelleEmpreinte = empreinte(titre, contenu)
@@ -394,7 +426,7 @@ builder.mutationFields(t => ({
   // Restaurer une version en crée une nouvelle : l'historique ne se réécrit jamais.
   restaurerVersionFiche: t.prismaField({
     type: FicheRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { versionId: t.arg.id({ required: true }) },
     resolve: async (query, _root, { versionId }, ctx) => {
       const ancienne = await prisma.ficheVersion.findFirst({
@@ -402,9 +434,11 @@ builder.mutationFields(t => ({
           id: String(versionId),
           fiche: { organisationId: ctx.organisation!.id },
         },
+        include: { fiche: { select: { activiteId: true } } },
       })
       if (ancienne === null)
         throw erreurSaisie('Cette version est introuvable.')
+      await ctx.exigerAdminDe(ancienne.fiche.activiteId)
       const date = ancienne.createdAt.toLocaleDateString('fr-FR', {
         timeZone: 'Europe/Paris',
       })
@@ -431,7 +465,7 @@ builder.mutationFields(t => ({
 
   archiverFiche: t.prismaField({
     type: FicheRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       id: t.arg.id({ required: true }),
       archive: t.arg.boolean({ required: true }),
@@ -439,9 +473,10 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, { id, archive }, ctx) => {
       const fiche = await prisma.fiche.findFirst({
         where: { id: String(id), organisationId: ctx.organisation!.id },
-        select: { id: true },
+        select: { id: true, activiteId: true },
       })
       if (fiche === null) throw accesRefuse()
+      await ctx.exigerAdminDe(fiche.activiteId)
       return prisma.fiche.update({
         ...query,
         where: { id: fiche.id },
@@ -452,20 +487,21 @@ builder.mutationFields(t => ({
 
   accorderDroitRedaction: t.prismaField({
     type: DroitRedactionRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { personneId: t.arg.id({ required: true }), perimetreId: t.arg.id() },
     resolve: async (query, _root, args, ctx) => {
       const userId = String(args.personneId)
       const perimetreId = args.perimetreId ? String(args.perimetreId) : null
       const organisationId = ctx.organisation!.id
-      await exigerMembre(ctx, userId)
-      if (perimetreId !== null) {
-        const perimetre = await prisma.perimetre.findFirst({
-          where: { id: perimetreId, organisationId },
-          select: { id: true },
-        })
-        if (perimetre === null) throw accesRefuse()
+      // Un droit sur toutes les fiches vaut pour toute l'organisation : seul un
+      // admin de l'organisation l'accorde. Un droit de périmètre relève de l'admin
+      // de son activité.
+      if (perimetreId === null) {
+        if (!ctx.personne!.estAdmin) throw accesRefuse()
+      } else {
+        await exigerAdminDuPerimetre(ctx, perimetreId)
       }
+      await exigerMembre(ctx, userId)
       // MariaDB ne rend pas un index unique efficace sur une colonne nulle :
       // le doublon se vérifie ici.
       const existant = await prisma.droitRedaction.findFirst({
@@ -487,11 +523,22 @@ builder.mutationFields(t => ({
   }),
 
   retirerDroitRedaction: t.boolean({
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, { id }, ctx) => {
-      const { count } = await prisma.droitRedaction.deleteMany({
+      const droit = await prisma.droitRedaction.findFirst({
         where: { id: String(id), organisationId: ctx.organisation!.id },
+        select: { id: true, perimetre: { select: { activiteId: true } } },
+      })
+      // Un droit hors de sa gestion vaut un droit inconnu : rien ne change.
+      if (droit === null) return false
+      const gere =
+        droit.perimetre === null
+          ? ctx.personne!.estAdmin
+          : await ctx.estAdminDe(droit.perimetre.activiteId)
+      if (!gere) return false
+      const { count } = await prisma.droitRedaction.deleteMany({
+        where: { id: droit.id },
       })
       return count === 1
     },

@@ -10,11 +10,14 @@ import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
 import { schema } from './index.ts'
 
-// Table des refus entre organisations (ADR 0008, invariant 11).
+// Table des refus entre organisations et entre activités (ADR 0008 et 0010,
+// invariant 11).
 //
 // Chaque requête ou mutation qui reçoit un identifiant est appelée avec les
-// identifiants de l'organisation A, depuis la session de l'admin de l'organisation B.
-// Elle doit refuser, ou ne rien faire pour les opérations qui retirent ou marquent.
+// identifiants de l'activité principale de l'organisation A, depuis trois sessions :
+// l'admin de l'organisation B, l'admin d'une autre activité de l'organisation A, et
+// une référente de cette autre activité. Elle doit refuser, ou ne rien faire pour
+// les opérations qui retirent ou marquent.
 // Le dernier test compare la table au contrat : une opération nouvelle qui reçoit un
 // identifiant doit y entrer.
 
@@ -36,6 +39,10 @@ const a = {
   notification: '',
   admin: '',
   referente: '',
+  // Une autre activité de l'organisation A, son admin et sa référente (ADR 0010).
+  autreActivite: '',
+  adminAutre: '',
+  referenteAutre: '',
 }
 const b = {
   org: '',
@@ -46,10 +53,12 @@ const b = {
   admin: '',
 }
 
+let acteur = ''
+
 async function executer(query: string, variables: Record<string, unknown>) {
   const reponse = await apollo.executeOperation(
     { query, variables },
-    { contextValue: await buildContext('127.0.0.1', b.admin) }
+    { contextValue: await buildContext('127.0.0.1', acteur) }
   )
   if (reponse.body.kind !== 'single')
     throw new Error('Réponse incrémentale inattendue.')
@@ -138,6 +147,51 @@ beforeAll(async () => {
   a.admin = await creerCompte('admin-a', a.org, true)
   a.referente = await creerCompte('referente-a', a.org, false)
   b.admin = await creerCompte('admin-b', b.org, true)
+  // L'autre activité de A : une période, un périmètre, un admin d'activité qui y
+  // est aussi affecté, et une référente.
+  const autre = await prisma.activite.create({
+    data: {
+      organisationId: a.org,
+      slug: `autre-${s}`,
+      nom: 'Autre activité',
+      groupes: [{ cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' }],
+    },
+  })
+  a.autreActivite = autre.id
+  const autreEdition = await prisma.edition.create({
+    data: {
+      organisationId: a.org,
+      activiteId: autre.id,
+      annee: 2027,
+      nom: 'Autre période',
+      debut: new Date('2027-06-01'),
+      fin: new Date('2027-06-02'),
+    },
+  })
+  const autrePerimetre = await prisma.perimetre.create({
+    data: {
+      organisationId: a.org,
+      activiteId: autre.id,
+      slug: 'natation',
+      nom: 'Natation autre',
+      type: 'SPORT',
+      groupe: 'sport',
+    },
+  })
+  a.adminAutre = await creerCompte('admin-autre', a.org, false)
+  a.referenteAutre = await creerCompte('referente-autre', a.org, false)
+  await prisma.adminActivite.create({
+    data: { userId: a.adminAutre, activiteId: autre.id, organisationId: a.org },
+  })
+  for (const userId of [a.adminAutre, a.referenteAutre]) {
+    await prisma.affectation.create({
+      data: {
+        userId,
+        perimetreId: autrePerimetre.id,
+        editionId: autreEdition.id,
+      },
+    })
+  }
   for (const [cle, perimetreId] of [
     ['fiche', a.perimetre],
     ['ficheCommune', null],
@@ -238,6 +292,9 @@ afterAll(async () => {
   await prisma.perimetre.deleteMany({
     where: { organisationId: { in: organisations } },
   })
+  await prisma.adminActivite.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
   await prisma.activite.deleteMany({
     where: { organisationId: { in: organisations } },
   })
@@ -251,7 +308,11 @@ afterAll(async () => {
 
 /** Refus attendu : l'opération renvoie une erreur de l'un de ces codes. */
 type Refus = { refus: ('FORBIDDEN' | 'SAISIE_INVALIDE')[] }
-/** Sans effet attendu : l'opération répond, sans toucher aux données de A. */
+/**
+ * Sans effet attendu : l'opération répond sans toucher aux données de A. Une
+ * session sans rôle de gestion reçoit un refus avant tout traitement, ce qui vaut
+ * aussi.
+ */
 type SansEffet = { sansEffet: (data: Record<string, unknown>) => void }
 
 interface Cas {
@@ -359,6 +420,13 @@ const CAS: Cas[] = [
       'mutation ($p: ID!, $e: ID!, $f: ID) { creerTache(perimetreId: $p, editionId: $e, titre: "Intrusion", ficheId: $f) { id } }',
     variables: () => ({ p: b.perimetre, e: b.edition, f: a.ficheCommune }),
     attente: REFUSE,
+  },
+  {
+    operation: 'definirAdminActivite',
+    query:
+      'mutation ($u: ID!, $a: ID!) { definirAdminActivite(personneId: $u, activiteId: $a, admin: true) }',
+    variables: () => ({ u: a.referente, a: a.activite }),
+    attente: INTERDIT,
   },
   {
     operation: 'definirEffectif',
@@ -515,6 +583,10 @@ const CAS: Cas[] = [
       ['mesPerimetres', 'mesPerimetres(activiteId: $a) { id }'],
       ['perimetre', 'perimetre(slug: "natation", activiteId: $a) { id }'],
       ['perimetres', 'perimetres(activiteId: $a) { id }'],
+      [
+        'peutRedigerFichesCommunes',
+        'peutRedigerFichesCommunes(activiteId: $a)',
+      ],
     ] as const
   ).map(([operation, champ]) => ({
     operation,
@@ -580,6 +652,7 @@ async function etatDeA() {
           where: { organisationId: a.org, lueLe: null },
         }),
         prisma.user.count({ where: { email: 'intrusion-refus@exemple.fr' } }),
+        prisma.adminActivite.count({ where: { organisationId: a.org } }),
       ]),
     ])
   return JSON.stringify({
@@ -593,25 +666,37 @@ async function etatDeA() {
   })
 }
 
-describe('refus croisés : l’admin de B ne touche à rien de A', () => {
-  let reference = ''
-  beforeAll(async () => {
-    reference = await etatDeA()
-  })
+const ACTEURS = [
+  ['l’admin de l’organisation B', () => b.admin],
+  ['l’admin d’une autre activité de A', () => a.adminAutre],
+  ['une référente d’une autre activité de A', () => a.referenteAutre],
+] as const
 
-  for (const cas of CAS) {
-    it(`${cas.operation} (${JSON.stringify(Object.keys(cas.variables()))})`, async () => {
-      const r = await executer(cas.query, cas.variables())
-      if ('refus' in cas.attente) {
-        expect(r.errors?.[0]?.extensions?.code).toBeOneOf(cas.attente.refus)
-      } else {
-        expect(r.errors).toBeUndefined()
-        cas.attente.sansEffet(r.data as Record<string, unknown>)
-      }
-      expect(await etatDeA()).toBe(reference)
+describe.each(ACTEURS)(
+  'refus croisés : %s ne touche à rien de l’activité de A',
+  (_nom, qui) => {
+    let reference = ''
+    beforeAll(async () => {
+      acteur = qui()
+      reference = await etatDeA()
     })
+
+    for (const cas of CAS) {
+      it(`${cas.operation} (${JSON.stringify(Object.keys(cas.variables()))})`, async () => {
+        const r = await executer(cas.query, cas.variables())
+        if ('refus' in cas.attente) {
+          expect(r.errors?.[0]?.extensions?.code).toBeOneOf(cas.attente.refus)
+        } else if (r.errors !== undefined) {
+          expect(r.errors[0]?.extensions?.code).toBe('FORBIDDEN')
+        } else {
+          expect(r.errors).toBeUndefined()
+          cas.attente.sansEffet(r.data as Record<string, unknown>)
+        }
+        expect(await etatDeA()).toBe(reference)
+      })
+    }
   }
-})
+)
 
 describe('couverture de la table', () => {
   it('contient chaque opération du contrat qui reçoit un identifiant', () => {

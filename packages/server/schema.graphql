@@ -1,6 +1,7 @@
 type Activite {
   archive: Boolean!
   contactRecrutement: String
+  estAdministree: Boolean!
   groupes: [GroupePerimetres!]!
   id: ID!
   identite: IdentiteActivite!
@@ -282,6 +283,7 @@ type Mutation {
   creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, nom: String!, sigle: String, slug: String!): OrganisationInstallation!
   creerPerimetre(activiteId: ID, couleur: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
   creerTache(description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
+  definirAdminActivite(activiteId: ID!, admin: Boolean!, personneId: ID!): Boolean!
   definirEffectif(editionId: ID!, effectif: Int!, perimetreId: ID!): Int!
 
   """Remplace l’ensemble des souhaits d’une personne pour une édition."""
@@ -414,11 +416,12 @@ type PeriodeInstallation {
 }
 
 type Personne {
+  activitesAdministrees: [ID!]!
   affectations(editionId: ID): [Affectation!]!
   archive: Boolean!
   creeLe: DateTime!
   email: String!
-  estAdmin: Boolean!
+  estAdmin: Boolean
   id: ID!
   nom: String!
   souhaits(editionId: ID): [Souhait!]!
@@ -499,7 +502,7 @@ type Query {
   perimetre(activiteId: ID, slug: String!): Perimetre
   perimetres(activiteId: ID, inclureArchives: Boolean = false): [Perimetre!]!
   personnes(inclureArchives: Boolean = false): [Personne!]!
-  peutRedigerFichesCommunes: Boolean!
+  peutRedigerFichesCommunes(activiteId: ID): Boolean!
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
   recherche(editionId: ID, texte: String!): Recherche!
   retroplanning(editionId: ID!): [Tache!]!

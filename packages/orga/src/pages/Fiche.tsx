@@ -41,7 +41,7 @@ function dateHeure(iso: string) {
 }
 
 export default function Fiche() {
-  const { lien } = useActivite()
+  const { lien, gere } = useActivite()
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const { message } = App.useApp()
@@ -56,7 +56,8 @@ export default function Fiche() {
   const [apercu, setApercu] = useState<string | null>(null)
   const versions = useQuery(VERSIONS_FICHE, {
     variables: { slug },
-    skip: !historique || !data?.moi?.estAdmin,
+    // L'historique est réservé aux admins de l'activité de la fiche.
+    skip: !historique || !gere,
   })
   const [restaurer, restauration] = useMutation(RESTAURER_VERSION, {
     refetchQueries: ['VersionsFiche', 'Fiche'],
@@ -105,7 +106,7 @@ export default function Fiche() {
         actions={
           <>
             {fiche.archive && <Tag>Archivée</Tag>}
-            {data.moi?.estAdmin && (
+            {gere && (
               <Button
                 icon={<HistoryOutlined />}
                 onClick={() => setHistorique(true)}

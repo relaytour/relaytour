@@ -16,6 +16,7 @@ const activite = (slug: string, options: Partial<Activite> = {}): Activite => ({
   nature: 'EVENEMENT',
   ordre: 0,
   archive: false,
+  estAdministree: false,
   groupes: [
     { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },
     { cle: 'pole', libelle: 'Pôle', libellePluriel: 'Pôles' },

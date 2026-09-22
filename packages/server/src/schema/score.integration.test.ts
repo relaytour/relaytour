@@ -123,6 +123,7 @@ afterAll(async () => {
   await prisma.journal.deleteMany({ where: { ficheId: ids.fiche } })
   await prisma.fiche.delete({ where: { id: ids.fiche } })
   await prisma.tache.deleteMany({ where: { editionId: ids.edition } })
+  await prisma.affectation.deleteMany({ where: { editionId: ids.edition } })
   await prisma.edition.delete({ where: { id: ids.edition } })
   await prisma.perimetre.delete({ where: { id: ids.perimetre } })
   await prisma.user.deleteMany({
@@ -239,6 +240,14 @@ describe('visibilité', () => {
   })
 
   it('donne à chaque personne son propre score seulement', async () => {
+    // Une personne lit son score dans une activité où elle est affectée (ADR 0010).
+    await prisma.affectation.create({
+      data: {
+        userId: ids.alice,
+        perimetreId: ids.perimetre,
+        editionId: ids.edition,
+      },
+    })
     const r = await executer(
       ids.alice,
       `query ($e: ID!) { monScore(editionId: $e) { points } }`,

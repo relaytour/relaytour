@@ -57,32 +57,37 @@ export const TacheRef = builder.prismaObject('Tache', {
     }),
     // Qui a coché la tâche et qui l'a réalisée : ces informations ne sont lisibles que
     // par la personne qui a coché et par les admins. Les autres lisent null.
+    // L'activité se charge avec la tâche : aucune requête de plus par tâche.
     clotureePar: t.field({
       type: PersonneRef,
       nullable: true,
-      resolve: (tache, _args, ctx) =>
-        tache.clotureeParId !== null && voitLaCloture(ctx, tache)
+      select: { perimetre: { select: { activiteId: true } } },
+      resolve: async (tache, _args, ctx) =>
+        tache.clotureeParId !== null && (await voitLaCloture(ctx, tache))
           ? prisma.user.findUnique({ where: { id: tache.clotureeParId } })
           : null,
     }),
     realiseePar: t.field({
       type: PersonneRef,
       nullable: true,
-      resolve: (tache, _args, ctx) =>
-        tache.realiseeParId !== null && voitLaCloture(ctx, tache)
+      select: { perimetre: { select: { activiteId: true } } },
+      resolve: async (tache, _args, ctx) =>
+        tache.realiseeParId !== null && (await voitLaCloture(ctx, tache))
           ? prisma.user.findUnique({ where: { id: tache.realiseeParId } })
           : null,
     }),
   }),
 })
 
-function voitLaCloture(
+/** Qui a coché et qui a réalisé : la personne qui a coché, et les admins de l'activité. */
+async function voitLaCloture(
   ctx: AppContext,
-  tache: { clotureeParId: string | null }
+  tache: { clotureeParId: string | null; perimetre: { activiteId: string } }
 ) {
-  return (
-    ctx.personne?.estAdmin === true || ctx.personne?.id === tache.clotureeParId
-  )
+  if (ctx.personne === null) return false
+  if (ctx.personne.id === tache.clotureeParId) return true
+  // Les activités administrées se calculent une fois par requête.
+  return ctx.estAdminDe(tache.perimetre.activiteId)
 }
 
 const AvancementRef = builder
@@ -282,7 +287,13 @@ builder.queryFields(t => ({
         where: {
           id: { in: lisibles },
           ...activite,
-          ...(ctx.personne!.estAdmin ? { archivedAt: null } : {}),
+          // Un admin voit tous les périmètres des activités qu'il administre : les
+          // archivés de ces activités n'encombrent pas sa liste. Une personne garde
+          // les périmètres archivés où elle a été affectée.
+          OR: [
+            { archivedAt: null },
+            { activiteId: { notIn: [...(await ctx.activitesAdministrees())] } },
+          ],
         },
         orderBy: [{ type: 'asc' }, { ordre: 'asc' }, { nom: 'asc' }],
       })
@@ -350,10 +361,11 @@ builder.queryFields(t => ({
 
   avancementGlobal: t.field({
     type: [AvancementPerimetreRef],
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
       const edition = await ctx.exigerEdition(editionId)
+      await ctx.exigerAdminDe(edition.activiteId)
       const [perimetres, parPerimetre] = await Promise.all([
         prisma.perimetre.findMany({
           where: { activiteId: edition.activiteId, archivedAt: null },
@@ -682,7 +694,13 @@ builder.mutationFields(t => ({
         tache.editionId
       )
       const personneId = args.personneId ? String(args.personneId) : acteur.id
-      if (personneId !== acteur.id && !acteur.estAdmin) throw accesRefuse()
+      // Assigner une autre personne revient à l'admin de l'activité de la tâche.
+      if (
+        personneId !== acteur.id &&
+        !(await ctx.estAdminDe(await activiteDuPerimetre(tache.perimetreId)))
+      ) {
+        throw accesRefuse()
+      }
       if (args.assigne) await exigerAffectee(personneId, tache)
 
       const dejaAssignee = tache.assignations.some(a => a.userId === personneId)
@@ -732,3 +750,12 @@ builder.mutationFields(t => ({
     },
   }),
 }))
+
+/** L'activité d'un périmètre, pour les contrôles d'admin d'activité (ADR 0010). */
+async function activiteDuPerimetre(perimetreId: string): Promise<string> {
+  const perimetre = await prisma.perimetre.findUniqueOrThrow({
+    where: { id: perimetreId },
+    select: { activiteId: true },
+  })
+  return perimetre.activiteId
+}

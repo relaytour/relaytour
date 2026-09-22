@@ -4,8 +4,12 @@ import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
 import { exigerMembre } from '../lib/appartenances.ts'
-import { exigerEcriture } from '../lib/droits.ts'
-import { erreurSaisie } from '../lib/erreurs.ts'
+import {
+  exigerAdminDeLEdition,
+  exigerAdminDuPerimetre,
+  exigerEcriture,
+} from '../lib/droits.ts'
+import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import { adresseValide, sansDoublon, texteRequis } from '../lib/saisie.ts'
 import {
@@ -17,42 +21,87 @@ import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
 
 // Les données personnelles d'un compte (adresse, affectations) ne sont lisibles que
-// par la personne elle-même et par les admins.
-const soiOuAdmin = (
+// par la personne elle-même et par les admins. Un admin d'activité lit l'annuaire de
+// l'organisation, dont il a besoin pour constituer son équipe (ADR 0010). Il ne lit
+// les affectations que dans les activités qu'il administre.
+const soiOuGestion = (
   personne: { id: string },
   _args: unknown,
   ctx: { personne: { id: string } | null }
-) => (ctx.personne?.id === personne.id ? true : { admin: true })
+) => (ctx.personne?.id === personne.id ? true : { gestion: true })
 
 export const PersonneRef = builder.prismaObject('User', {
   name: 'Personne',
   fields: t => ({
     id: t.exposeID('id'),
     nom: t.exposeString('name'),
-    email: t.exposeString('email', { authScopes: soiOuAdmin }),
-    // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global.
+    email: t.exposeString('email', { authScopes: soiOuGestion }),
+    // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global. Il se
+    // lit par la personne elle-même et par les admins de l'organisation ; un admin
+    // d'activité lit null (ADR 0010).
     estAdmin: t.boolean({
+      nullable: true,
       select: (_args, ctx) => ({
         appartenances: {
           where: { organisationId: ctx.organisation?.id ?? '' },
           select: { role: true },
         },
       }),
-      resolve: u => u.appartenances[0]?.role === 'ADMIN',
+      resolve: (u, _args, ctx) =>
+        ctx.personne?.id === u.id || ctx.personne?.estAdmin === true
+          ? u.appartenances[0]?.role === 'ADMIN'
+          : null,
     }),
     archive: t.boolean({ resolve: u => u.archivedAt !== null }),
     creeLe: t.expose('createdAt', { type: 'DateTime' }),
-    affectations: t.relation('affectations', {
-      authScopes: soiOuAdmin,
+    // Les affectations de l'organisation active : toutes pour la personne elle-même
+    // et pour un admin de l'organisation, celles des activités administrées sinon.
+    affectations: t.prismaField({
+      type: ['Affectation'],
+      authScopes: soiOuGestion,
       args: { editionId: t.arg.id() },
-      // Seules les affectations de l'organisation active sont visibles.
-      query: (args, ctx) => ({
-        where: {
-          perimetre: { organisationId: ctx.organisation?.id ?? '' },
-          ...(args.editionId ? { editionId: String(args.editionId) } : {}),
-        },
-        orderBy: { createdAt: 'asc' },
-      }),
+      resolve: async (query, personne, args, ctx) => {
+        const soi = ctx.personne?.id === personne.id
+        return prisma.affectation.findMany({
+          ...query,
+          where: {
+            userId: personne.id,
+            perimetre: {
+              organisationId: ctx.organisation?.id ?? '',
+              ...(soi
+                ? {}
+                : {
+                    activiteId: {
+                      in: [...(await ctx.activitesAdministrees())],
+                    },
+                  }),
+            },
+            ...(args.editionId ? { editionId: String(args.editionId) } : {}),
+          },
+          orderBy: { createdAt: 'asc' },
+        })
+      },
+    }),
+    // Les activités que la personne administre (ADR 0010), parmi celles que la
+    // personne qui lit administre elle-même.
+    activitesAdministrees: t.idList({
+      authScopes: soiOuGestion,
+      resolve: async (personne, _args, ctx) => {
+        const soi = ctx.personne?.id === personne.id
+        const lignes = await prisma.adminActivite.findMany({
+          where: {
+            userId: personne.id,
+            organisationId: ctx.organisation?.id ?? '',
+            ...(soi
+              ? {}
+              : {
+                  activiteId: { in: [...(await ctx.activitesAdministrees())] },
+                }),
+          },
+          select: { activiteId: true },
+        })
+        return lignes.map(l => l.activiteId)
+      },
     }),
   }),
 })
@@ -132,7 +181,7 @@ builder.queryFields(t => ({
 
   personnes: t.prismaField({
     type: [PersonneRef],
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { inclureArchives: t.arg.boolean({ defaultValue: false }) },
     resolve: (query, _root, { inclureArchives }, ctx) =>
       prisma.user.findMany({
@@ -147,12 +196,12 @@ builder.queryFields(t => ({
 
   affectations: t.prismaField({
     type: [AffectationRef],
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, _root, { editionId }, ctx) =>
       prisma.affectation.findMany({
         ...query,
-        where: { editionId: (await ctx.exigerEdition(editionId)).id },
+        where: { editionId: (await exigerAdminDeLEdition(ctx, editionId)).id },
         orderBy: [{ perimetre: { ordre: 'asc' } }, { createdAt: 'asc' }],
       }),
   }),
@@ -161,7 +210,7 @@ builder.queryFields(t => ({
 builder.mutationFields(t => ({
   inviterPersonne: t.prismaField({
     type: PersonneRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       email: t.arg.string({ required: true }),
       nom: t.arg.string({ required: true }),
@@ -171,6 +220,8 @@ builder.mutationFields(t => ({
       perimetresSouhaites: t.arg.idList(),
     },
     resolve: async (query, _root, args, ctx) => {
+      // Seul un admin de l'organisation invite un autre admin de l'organisation.
+      if (args.estAdmin && !ctx.personne!.estAdmin) throw accesRefuse()
       const email = adresseValide(args.email)
       const name = texteRequis(args.nom, 'Le nom')
       // Les souhaits sont validés avant toute création de compte.
@@ -180,6 +231,7 @@ builder.mutationFields(t => ({
           throw erreurSaisie('Choisissez l’édition des périmètres souhaités.')
         }
         const edition = await exigerEditionOuverte(ctx, args.editionId)
+        await ctx.exigerAdminDe(edition.activiteId)
         const perimetreIds = await perimetresSouhaitesValides(
           args.perimetresSouhaites ?? [],
           edition.activiteId
@@ -253,10 +305,34 @@ builder.mutationFields(t => ({
   }),
 
   renvoyerInvitation: t.boolean({
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, { id }, ctx) => {
       await exigerMembre(ctx, String(id))
+      // Un admin d'activité ne relance que son équipe : une personne affectée,
+      // souhaitée ou admin dans une activité qu'il administre (ADR 0010).
+      if (!ctx.personne!.estAdmin) {
+        const activites = [...(await ctx.activitesAdministrees())]
+        const equipe = await prisma.user.count({
+          where: {
+            id: String(id),
+            OR: [
+              {
+                affectations: {
+                  some: { perimetre: { activiteId: { in: activites } } },
+                },
+              },
+              {
+                souhaits: {
+                  some: { perimetre: { activiteId: { in: activites } } },
+                },
+              },
+              { adminsActivite: { some: { activiteId: { in: activites } } } },
+            ],
+          },
+        })
+        if (equipe === 0) throw accesRefuse()
+      }
       const personne = await prisma.user.findUnique({
         where: { id: String(id) },
         select: { id: true, archivedAt: true },
@@ -367,7 +443,7 @@ builder.mutationFields(t => ({
 
   affecter: t.prismaField({
     type: AffectationRef,
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       personneId: t.arg.id({ required: true }),
       perimetreId: t.arg.id({ required: true }),
@@ -377,6 +453,9 @@ builder.mutationFields(t => ({
       const userId = String(args.personneId)
       const perimetreId = String(args.perimetreId)
       const editionId = String(args.editionId)
+      // Seul l'admin de l'activité du périmètre affecte : une affectation comme
+      // référent·e d'un autre périmètre ne suffit pas.
+      await exigerAdminDuPerimetre(ctx, perimetreId)
       await exigerMembre(ctx, userId)
       // Même contrôle qu'une écriture : périmètre et édition de la même activité de
       // l'organisation, édition non archivée.
@@ -397,16 +476,75 @@ builder.mutationFields(t => ({
   }),
 
   retirerAffectation: t.boolean({
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, { id }, ctx) => {
-      const { count } = await prisma.affectation.deleteMany({
+      const affectation = await prisma.affectation.findFirst({
         where: {
           id: String(id),
           perimetre: { organisationId: ctx.organisation!.id },
         },
+        select: { id: true, perimetre: { select: { activiteId: true } } },
+      })
+      // Une affectation hors des activités administrées vaut une affectation
+      // inconnue : rien ne change, comme pour une autre organisation.
+      if (
+        affectation === null ||
+        !(await ctx.estAdminDe(affectation.perimetre.activiteId))
+      ) {
+        return false
+      }
+      const { count } = await prisma.affectation.deleteMany({
+        where: { id: affectation.id },
       })
       return count === 1
+    },
+  }),
+
+  // Nomme ou retire un admin d'activité (ADR 0010). Seul un admin de l'organisation
+  // le fait ; la personne reste membre de l'organisation.
+  definirAdminActivite: t.boolean({
+    authScopes: { admin: true },
+    args: {
+      personneId: t.arg.id({ required: true }),
+      activiteId: t.arg.id({ required: true }),
+      admin: t.arg.boolean({ required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const userId = String(args.personneId)
+      const activiteId = await ctx.exigerActivite(args.activiteId)
+      await exigerMembre(ctx, userId)
+      if (args.admin) {
+        await prisma.adminActivite.upsert({
+          where: { userId_activiteId: { userId, activiteId } },
+          update: {},
+          create: {
+            userId,
+            activiteId,
+            organisationId,
+            nommeParId: ctx.personne!.id,
+          },
+        })
+      } else {
+        await prisma.adminActivite.deleteMany({
+          where: { userId, activiteId, organisationId },
+        })
+      }
+      journal.info(
+        {
+          evenement: args.admin
+            ? 'admin-activite-nomme'
+            : 'admin-activite-retire',
+          userId,
+          activiteId,
+          par: ctx.personne?.id,
+        },
+        args.admin
+          ? 'Un admin d’activité a été nommé.'
+          : 'Un admin d’activité a été retiré.'
+      )
+      return args.admin
     },
   }),
 }))

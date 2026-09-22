@@ -6,6 +6,7 @@ import { graphql } from '../../gql'
 import type { DroitsRedactionQuery } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
 import { PERIMETRES } from '../../lib/requetes'
+import { useSession } from '../../lib/session'
 
 const DROITS = graphql(`
   query DroitsRedaction {
@@ -46,6 +47,9 @@ type Droit = DroitsRedactionQuery['droitsRedaction'][number]
 const TOUTES = 'toutes'
 
 export default function Redaction() {
+  // Un droit sur toutes les fiches vaut pour toute l'organisation : seul un admin de
+  // l'organisation l'accorde (ADR 0010).
+  const gereOrganisation = useSession().moi.estAdmin
   const { message } = App.useApp()
   const { data, loading } = useQuery(DROITS)
   const { data: perimetres } = useQuery(PERIMETRES)
@@ -104,10 +108,14 @@ export default function Redaction() {
               placeholder="Fiches concernées"
               style={{ minWidth: 220 }}
               options={[
-                {
-                  value: TOUTES,
-                  label: 'Toutes les fiches, communes comprises',
-                },
+                ...(gereOrganisation
+                  ? [
+                      {
+                        value: TOUTES,
+                        label: 'Toutes les fiches, communes comprises',
+                      },
+                    ]
+                  : []),
                 ...(perimetres?.perimetres ?? []).map(p => ({
                   value: p.id,
                   label: p.nom,

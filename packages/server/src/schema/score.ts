@@ -77,10 +77,11 @@ builder.queryFields(t => ({
 
   classement: t.field({
     type: [LigneClassementRef],
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
       const edition = await ctx.exigerEdition(editionId)
+      await ctx.exigerAdminDe(edition.activiteId)
       const scores = [
         ...(
           await calculerScores(

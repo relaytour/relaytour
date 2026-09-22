@@ -101,6 +101,18 @@
       }
     },
     {
+      "id": "2026-09-22-serveur-chaque-activite-a-ses-admins",
+      "date": "2026-09-22",
+      "type": "securite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Chaque activité peut avoir ses admins, et chacun ne voit que ses activités",
+        "texte": "Un admin de l'organisation nomme des admins pour une activité. Ils gèrent ses périodes, ses périmètres, ses affectations et ses fiches, sans voir les autres activités. Une personne ne voit que les activités où elle est affectée.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-19-serveur-une-recherche-globale-trouve-taches-fiches-et-personnes",
       "date": "2026-09-19",
       "type": "fonctionnalite",

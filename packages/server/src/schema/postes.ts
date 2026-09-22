@@ -18,6 +18,7 @@ import {
   type EtatPostes,
 } from '../lib/postes.ts'
 
+import { exigerAdminDeLEdition } from '../lib/droits.ts'
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
 import { AffectationRef } from './personnes.ts'
@@ -83,7 +84,8 @@ async function chargerPostes(
     groupes: GroupePerimetres[]
   }
 }> {
-  const edition = await ctx.exigerEdition(editionIdBrut)
+  // Les postes d'une période relèvent de l'admin de son activité (ADR 0010).
+  const edition = await exigerAdminDeLEdition(ctx, editionIdBrut)
   const editionId = edition.id
   const ligneActivite = await prisma.activite.findUniqueOrThrow({
     where: { id: edition.activiteId },
@@ -147,7 +149,7 @@ async function chargerPostes(
 builder.queryFields(t => ({
   postesAPourvoir: t.field({
     type: [PostesPerimetreRef],
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) =>
       (await chargerPostes(ctx, editionId)).postes,
@@ -157,7 +159,7 @@ builder.queryFields(t => ({
     nullable: true,
     description:
       'Message à diffuser pour trouver des référentes et des référents. Vaut null quand aucun périmètre n’est à pourvoir.',
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
       const { annee, postes, activite } = await chargerPostes(ctx, editionId)
@@ -181,7 +183,7 @@ builder.queryFields(t => ({
 
 builder.mutationFields(t => ({
   definirEffectif: t.int({
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       perimetreId: t.arg.id({ required: true }),
       editionId: t.arg.id({ required: true }),
@@ -198,7 +200,7 @@ builder.mutationFields(t => ({
         )
       }
       const perimetreId = String(args.perimetreId)
-      const edition = await ctx.exigerEdition(args.editionId)
+      const edition = await exigerAdminDeLEdition(ctx, args.editionId)
       const editionId = edition.id
       const perimetre = await prisma.perimetre.findFirst({
         where: { id: perimetreId, activiteId: edition.activiteId },

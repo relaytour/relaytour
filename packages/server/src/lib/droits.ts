@@ -8,28 +8,35 @@ import { accesRefuse, erreurSaisie } from './erreurs.ts'
 //
 // Tout se lit dans l'organisation active (ADR 0008) : un périmètre ou une édition
 // d'une autre organisation est refusé comme un périmètre interdit.
-// Lecture : les admins, et toute personne affectée au périmètre pour au moins une
-// édition. Une affectation passée donne donc accès aux archives du périmètre.
-// Écriture : les admins, et les personnes affectées au périmètre pour l'édition
-// concernée, tant que cette édition n'est pas archivée. Le périmètre et l'édition
-// relèvent de la même activité.
+// Lecture : les admins de l'activité du périmètre (ADR 0010), et toute personne
+// affectée au périmètre pour au moins une édition. Une affectation passée donne donc
+// accès aux archives du périmètre.
+// Écriture : les admins de l'activité, et les personnes affectées au périmètre pour
+// l'édition concernée, tant que cette édition n'est pas archivée. Le périmètre et
+// l'édition relèvent de la même activité.
 
 /**
  * Identifiants des périmètres que la personne peut lire dans l'organisation active :
- * tous ceux de l'organisation pour un admin, ceux où elle a été affectée sinon.
+ * tous ceux des activités qu'elle administre, et ceux où elle a été affectée.
  * La liste est vide sans session ou sans organisation active. Toute liste filtrée
  * par périmètre s'appuie sur cette règle.
  */
 export async function perimetresLisibles(ctx: AppContext): Promise<string[]> {
   if (ctx.personne === null || ctx.organisation === null) return []
-  if (ctx.personne.estAdmin) {
-    const perimetres = await prisma.perimetre.findMany({
-      where: { organisationId: ctx.organisation.id },
-      select: { id: true },
-    })
-    return perimetres.map(p => p.id)
-  }
-  return [...(await ctx.perimetresConnus())]
+  const administrees = [...(await ctx.activitesAdministrees())]
+  const [gerees, connus] = await Promise.all([
+    administrees.length === 0
+      ? Promise.resolve([])
+      : prisma.perimetre.findMany({
+          where: {
+            organisationId: ctx.organisation.id,
+            activiteId: { in: administrees },
+          },
+          select: { id: true },
+        }),
+    ctx.perimetresConnus(),
+  ])
+  return [...new Set([...gerees.map(p => p.id), ...connus])]
 }
 
 export async function peutLirePerimetre(
@@ -79,7 +86,7 @@ export async function peutModifierPerimetre(
   if (ctx.personne === null) return false
   const edition = await editionEtPerimetre(ctx, perimetreId, editionId)
   if (edition === null || edition.statut === 'ARCHIVEE') return false
-  if (ctx.personne.estAdmin) return true
+  if (await ctx.estAdminDe(edition.activiteId)) return true
   return (await ctx.perimetresAffectes(editionId)).has(perimetreId)
 }
 
@@ -101,6 +108,35 @@ export async function exigerEcriture(
     throw accesRefuse()
   }
   return ctx.personne
+}
+
+/**
+ * L'activité d'un périmètre de l'organisation active, si la personne l'administre.
+ * Un périmètre inconnu, d'une autre organisation ou d'une activité qu'elle
+ * n'administre pas donne le même refus.
+ */
+export async function exigerAdminDuPerimetre(
+  ctx: AppContext,
+  perimetreId: string
+): Promise<{ id: string; activiteId: string }> {
+  if (ctx.organisation === null) throw accesRefuse()
+  const perimetre = await prisma.perimetre.findFirst({
+    where: { id: perimetreId, organisationId: ctx.organisation.id },
+    select: { id: true, activiteId: true },
+  })
+  if (perimetre === null) throw accesRefuse()
+  await ctx.exigerAdminDe(perimetre.activiteId)
+  return perimetre
+}
+
+/** L'édition, si la personne administre son activité ; sinon un refus. */
+export async function exigerAdminDeLEdition(
+  ctx: AppContext,
+  editionId: string | number
+) {
+  const edition = await ctx.exigerEdition(editionId)
+  await ctx.exigerAdminDe(edition.activiteId)
+  return edition
 }
 
 /** Fuseau d'une organisation qui n'en déclare pas. */

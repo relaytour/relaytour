@@ -26,6 +26,18 @@ const contexteConnecte: AppContext = {
     statut: 'ACTIVE',
     fuseauHoraire: 'Europe/Paris',
   },
+  activitesAdministrees: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
+  activitesVisibles: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
+  estAdminDe: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
+  exigerAdminDe: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
   exigerActivite: () => {
     throw new Error('Un résolveur a été appelé.')
   },

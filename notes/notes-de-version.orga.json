@@ -17,6 +17,18 @@
       }
     },
     {
+      "id": "2026-09-22-orga-l-espace-organisateur-suit-le-role-de-chaque-activite",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "L'espace organisateur suit le rôle de chaque personne dans chaque activité",
+        "texte": "Le sélecteur ne montre que vos activités. Le menu d'administration s'ouvre dans les activités que vous administrez. La page « Personnes » permet aux admins de l'organisation de nommer les admins de chaque activité.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-22-orga-l-espace-organisateur-suit-l-organisation-et-l-activite",
       "date": "2026-09-22",
       "type": "fonctionnalite",
