@@ -3,6 +3,7 @@ cible: serveur
 type: interne
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Le serveur repose sur un socle maintenu

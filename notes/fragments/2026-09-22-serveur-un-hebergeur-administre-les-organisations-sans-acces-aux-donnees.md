@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Un hébergeur administre les organisations sans accès à leurs données

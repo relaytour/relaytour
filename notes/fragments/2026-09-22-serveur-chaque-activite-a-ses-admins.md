@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: organisateurs
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Chaque activité peut avoir ses admins, et chacun ne voit que ses activités

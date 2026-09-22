@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Une édition se crée aussi en ligne de commande

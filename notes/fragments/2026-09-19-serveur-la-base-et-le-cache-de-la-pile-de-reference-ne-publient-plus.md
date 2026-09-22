@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     La base et le cache de la pile de référence ne publient plus de port

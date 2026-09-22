@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Votre organisation choisit le fond de son espace

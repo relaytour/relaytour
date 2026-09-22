@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Les pôles, les fiches et les tâches types de l'édition sont prêts à importer

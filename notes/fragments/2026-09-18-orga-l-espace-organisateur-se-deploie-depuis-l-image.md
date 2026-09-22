@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     L'espace organisateur se déploie depuis l'image

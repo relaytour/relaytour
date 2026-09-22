@@ -3,6 +3,7 @@ cible: serveur
 type: rupture
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     La newsletter quitte le périmètre publié

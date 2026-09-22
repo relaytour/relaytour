@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Chaque périmètre a sa liste de tâches et son avancement

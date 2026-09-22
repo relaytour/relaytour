@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: organisateurs
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Une nouvelle demande de code renvoie le code en cours

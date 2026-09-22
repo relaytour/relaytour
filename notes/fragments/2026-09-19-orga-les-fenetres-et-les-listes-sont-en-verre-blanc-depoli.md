@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Les fenêtres et les listes s'affichent en verre blanc dépoli

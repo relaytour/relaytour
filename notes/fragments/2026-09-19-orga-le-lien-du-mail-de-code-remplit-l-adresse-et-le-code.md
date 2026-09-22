@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: public
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Le lien du mail de code remplit l'adresse et le code

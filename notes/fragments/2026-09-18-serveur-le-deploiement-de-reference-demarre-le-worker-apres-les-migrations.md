@@ -3,6 +3,7 @@ cible: serveur
 type: correctif
 audience: interne
 etat: prevu
+version: 0.4.0
 fr:
   titre: >-
     Le déploiement de référence démarre le worker après les migrations
