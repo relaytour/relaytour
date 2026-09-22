@@ -17,6 +17,18 @@
       }
     },
     {
+      "id": "2026-09-22-serveur-un-depot-d-organisation-decrit-plusieurs-activites",
+      "date": "2026-09-22",
+      "type": "fonctionnalite",
+      "audience": "organisateurs",
+      "etat": "prevu",
+      "fr": {
+        "titre": "Un dépôt d'organisation décrit plusieurs activités",
+        "texte": "Un dépôt d'organisation peut décrire plusieurs activités dans un dossier activites/, chacune avec sa nature, ses groupes de périmètres, ses fiches et ses tâches types. La disposition plate reste valide pour une seule activité. Un périmètre déclare son groupe ; le type SPORT ou POLE reste accepté.",
+        "migration": null
+      }
+    },
+    {
       "id": "2026-09-22-serveur-les-activites-et-les-appartenances-entrent-dans-le-schema",
       "date": "2026-09-22",
       "type": "interne",
