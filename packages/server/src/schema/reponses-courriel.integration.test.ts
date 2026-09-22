@@ -209,6 +209,39 @@ describe('réponses aux mails', () => {
     expect(message?.repondreA).toBe(CONTACT_ORGA)
   })
 
+  it('renvoie une invitation relancée au contact de l’activité de la personne', async () => {
+    const membre = await creerCompte('relance', 'MEMBRE')
+    await prisma.affectation.create({
+      data: {
+        userId: membre,
+        perimetreId: ids.perimetre1,
+        editionId: ids.edition1,
+      },
+    })
+    for (const par of [ids.adminOrg, ids.adminA1]) {
+      enFile.length = 0
+      await executer(
+        par,
+        'mutation ($id: ID!) { renvoyerInvitation(id: $id) }',
+        {
+          id: membre,
+        }
+      )
+      const job = enFile.at(-1)
+      expect(job?.sorte).toBe('invitation')
+      expect(job?.options).toMatchObject({
+        organisationId: ids.org,
+        activiteId: ids.a1,
+      })
+      const message = await composer(prisma, {
+        sorte: 'invitation',
+        userId: membre,
+        ...(job!.options as Partial<CourrielJobData>),
+      })
+      expect(message?.repondreA).toBe(CONTACT_A1)
+    }
+  })
+
   it('reprend le contact de l’organisation pour une activité qui n’en déclare pas', async () => {
     const message = await composer(prisma, {
       sorte: 'invitation',
