@@ -45,7 +45,12 @@ export default function ChoixActivite({
     <div className="rt-entete">
       <p className="rt-rappel-organisation">
         {organisation.logoUrl !== null && (
-          <img src={organisation.logoUrl} alt="" height={14} />
+          <img
+            src={organisation.logoUrl}
+            alt=""
+            height={14}
+            style={{ maxWidth: 42, objectFit: 'contain' }}
+          />
         )}
         <span>{organisation.nom}</span>
       </p>
@@ -64,7 +69,13 @@ export default function ChoixActivite({
                 key: a.slug,
                 icon:
                   a.logoUrl === null ? undefined : (
-                    <img src={a.logoUrl} alt="" height={16} />
+                    // Un logo très horizontal élargirait le menu : la boîte est bornée.
+                    <img
+                      src={a.logoUrl}
+                      alt=""
+                      height={16}
+                      style={{ maxWidth: 48, objectFit: 'contain' }}
+                    />
                   ),
                 label: a.nom,
                 extra: a.slug === activite.slug ? <CheckOutlined /> : undefined,
