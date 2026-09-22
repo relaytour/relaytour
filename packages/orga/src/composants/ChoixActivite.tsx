@@ -4,13 +4,15 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { useActivite } from '../lib/activite'
+import { useOrganisation } from '../lib/organisation'
 
 import Marque from './Marque'
 
 /**
- * L'en-tête de la barre latérale : le logo et le sigle de l'activité affichée
- * (ADR 0008 et 0009), puis le bouton qui ouvre la liste des autres activités.
- * Le bouton disparaît quand l'organisation n'en porte qu'une.
+ * L'en-tête de la barre latérale : le nom de l'organisation en rappel, puis le
+ * logo et le sigle de l'activité affichée (ADR 0008 et 0009), puis le bouton qui
+ * ouvre la liste des autres activités. Le bouton disparaît quand l'organisation
+ * n'en porte qu'une.
  */
 export default function ChoixActivite({
   taille = 28,
@@ -21,6 +23,7 @@ export default function ChoixActivite({
   apresChoix?: () => void
 }) {
   const { activite, activites } = useActivite()
+  const organisation = useOrganisation()
   const navigate = useNavigate()
   const entete = useRef<HTMLDivElement>(null)
   const bouton = useRef<HTMLButtonElement>(null)
@@ -39,41 +42,49 @@ export default function ChoixActivite({
   }
   const nom = activite.sigle ?? activite.nom
   return (
-    <div className="rt-entete-activite" ref={entete}>
-      <Marque nom={nom} taille={taille} />
-      {activites.length > 1 && (
-        <Dropdown
-          trigger={['click']}
-          placement="bottomLeft"
-          align={{ points: ['tl', 'bl'], offset: [decalage, 8] }}
-          onOpenChange={mesurer}
-          menu={{
-            selectable: true,
-            selectedKeys: [activite.slug],
-            items: activites.map(a => ({
-              key: a.slug,
-              icon:
-                a.logoUrl === null ? undefined : (
-                  <img src={a.logoUrl} alt="" height={16} />
-                ),
-              label: a.nom,
-              extra: a.slug === activite.slug ? <CheckOutlined /> : undefined,
-            })),
-            onClick: ({ key }) => {
-              apresChoix?.()
-              if (key !== activite.slug) navigate(`/${key}/`)
-            },
-          }}
-        >
-          <Button
-            ref={bouton}
-            type="text"
-            icon={<SwapOutlined />}
-            aria-label="Changer d’activité"
-            title="Changer d’activité"
-          />
-        </Dropdown>
-      )}
+    <div className="rt-entete">
+      <p className="rt-rappel-organisation">
+        {organisation.logoUrl !== null && (
+          <img src={organisation.logoUrl} alt="" height={14} />
+        )}
+        <span>{organisation.nom}</span>
+      </p>
+      <div className="rt-entete-activite" ref={entete}>
+        <Marque nom={nom} taille={taille} />
+        {activites.length > 1 && (
+          <Dropdown
+            trigger={['click']}
+            placement="bottomLeft"
+            align={{ points: ['tl', 'bl'], offset: [decalage, 8] }}
+            onOpenChange={mesurer}
+            menu={{
+              selectable: true,
+              selectedKeys: [activite.slug],
+              items: activites.map(a => ({
+                key: a.slug,
+                icon:
+                  a.logoUrl === null ? undefined : (
+                    <img src={a.logoUrl} alt="" height={16} />
+                  ),
+                label: a.nom,
+                extra: a.slug === activite.slug ? <CheckOutlined /> : undefined,
+              })),
+              onClick: ({ key }) => {
+                apresChoix?.()
+                if (key !== activite.slug) navigate(`/${key}/`)
+              },
+            }}
+          >
+            <Button
+              ref={bouton}
+              type="text"
+              icon={<SwapOutlined />}
+              aria-label="Changer d’activité"
+              title="Changer d’activité"
+            />
+          </Dropdown>
+        )}
+      </div>
     </div>
   )
 }

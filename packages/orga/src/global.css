@@ -316,12 +316,32 @@ html {
 }
 
 /* La marque : pictogramme et nom. */
+.rt-entete {
+  padding-bottom: 20px;
+}
+
+/* Rappel de l'organisation au-dessus de l'activité, dans le ton de la signature. */
+.rt-rappel-organisation {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  padding: 0 10px;
+  font-size: 12px;
+  line-height: 1.2;
+  color: var(--rt-encre-55);
+}
+
+.rt-rappel-organisation img {
+  display: block;
+  opacity: 0.8;
+}
+
 .rt-entete-activite {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 8px;
-  padding-bottom: 20px;
 }
 
 .rt-entete-activite .rt-marque {
