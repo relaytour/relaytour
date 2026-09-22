@@ -130,12 +130,20 @@ export default function Avancement({
           }}
         />
         {detaille && (
-          <span
-            style={{
-              width: largeur(avancement.enCours!, utiles),
-              background: 'var(--rt-primaire)',
-            }}
-          />
+          <>
+            <span
+              style={{
+                width: largeur(avancement.enCours!, utiles),
+                background: 'var(--rt-primaire)',
+              }}
+            />
+            <span
+              style={{
+                width: largeur(avancement.aFaire!, utiles),
+                background: 'var(--rt-encre-40)',
+              }}
+            />
+          </>
         )}
       </div>
       {detaille && (

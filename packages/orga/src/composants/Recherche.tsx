@@ -49,6 +49,8 @@ const RECHERCHE = graphql(`
 `)
 
 const LONGUEUR_MIN = 2
+// Le serveur refuse une recherche plus longue : le champ l'empêche.
+const LONGUEUR_MAX = 100
 const DELAI_MS = 250
 
 /**
@@ -178,6 +180,7 @@ export default function Recherche({ estAdmin }: { estAdmin: boolean }) {
     >
       <Input
         allowClear
+        maxLength={LONGUEUR_MAX}
         aria-label="Rechercher une tâche, une fiche ou une personne"
         placeholder="Rechercher une tâche, une fiche, une personne"
         prefix={

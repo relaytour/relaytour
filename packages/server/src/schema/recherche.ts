@@ -91,8 +91,8 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
         }),
     }),
     // Les admins trouvent tous les comptes actifs. Les autres ne trouvent que les
-    // personnes affectées à un périmètre qu'elles peuvent lire, comme le champ
-    // `referents` du périmètre.
+    // personnes affectées à un périmètre qu'elles peuvent lire et qui n'est pas
+    // archivé, comme le rétroplanning : chaque résultat mène à un périmètre ouvert.
     personnes: t.field({
       type: [PersonneTrouveeRef],
       resolve: async r => {
@@ -103,7 +103,12 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
             ...(r.lisibles === null
               ? {}
               : {
-                  affectations: { some: { perimetreId: { in: r.lisibles } } },
+                  affectations: {
+                    some: {
+                      perimetreId: { in: r.lisibles },
+                      perimetre: { archivedAt: null },
+                    },
+                  },
                 }),
           },
           select: {

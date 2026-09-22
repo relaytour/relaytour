@@ -17,9 +17,11 @@ const apollo = new ApolloServer<AppContext>({ schema })
 const ids = {
   admin: '',
   alice: '', // référente natation
-  chloe: '', // référente basket
+  chloe: '', // référente basket et d'un périmètre archivé
+  dora: '', // affectée seulement au périmètre archivé
   natation: '',
   basket: '',
+  escrime: '', // périmètre archivé
   edition: '',
   ficheNatation: '',
   ficheCommune: '',
@@ -70,6 +72,7 @@ beforeAll(async () => {
     ['admin', true],
     ['alice', false],
     ['chloe', false],
+    ['dora', false],
   ] as const) {
     const id = randomUUID()
     await prisma.user.create({
@@ -103,10 +106,23 @@ beforeAll(async () => {
       })
     ).id
   }
+  ids.escrime = (
+    await prisma.perimetre.create({
+      data: {
+        organisationId: organisation,
+        slug: `escrime-${suffixe}`,
+        nom: 'Escrime',
+        type: 'SPORT',
+        archivedAt: new Date(),
+      },
+    })
+  ).id
   await prisma.affectation.createMany({
     data: [
       { userId: ids.alice, perimetreId: ids.natation, editionId: ids.edition },
       { userId: ids.chloe, perimetreId: ids.basket, editionId: ids.edition },
+      { userId: ids.chloe, perimetreId: ids.escrime, editionId: ids.edition },
+      { userId: ids.dora, perimetreId: ids.escrime, editionId: ids.edition },
     ],
   })
   for (const [cle, perimetreId] of [
@@ -171,7 +187,7 @@ afterAll(async () => {
   await prisma.fiche.deleteMany({ where: { id: { in: fiches } } })
   await prisma.edition.deleteMany({ where: { id: ids.edition } })
   await prisma.perimetre.deleteMany({
-    where: { id: { in: [ids.natation, ids.basket] } },
+    where: { id: { in: [ids.natation, ids.basket, ids.escrime] } },
   })
   await prisma.user.deleteMany({
     where: { email: { endsWith: `-${suffixe}@exemple.fr` } },
@@ -205,6 +221,11 @@ describe('recherche globale', () => {
 
   it('ne donne pas les personnes d’un autre périmètre', async () => {
     const { data } = await chercher(ids.chloe, `alice ${suffixe}`)
+    expect(data!.recherche.personnes).toHaveLength(0)
+  })
+
+  it('ne donne pas une personne affectée seulement à un périmètre archivé', async () => {
+    const { data } = await chercher(ids.chloe, `dora ${suffixe}`)
     expect(data!.recherche.personnes).toHaveLength(0)
   })
 
