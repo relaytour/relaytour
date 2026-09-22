@@ -26,7 +26,7 @@ const MON_SCORE = graphql(`
   }
 `)
 
-/** Score personnel d'une édition. Il n'est visible que par la personne et par les admins. */
+/** Score personnel d'une période. Il n'est visible que par la personne et par les admins. */
 export default function Contribution({
   editionId,
   nomEdition,
@@ -85,7 +85,7 @@ export default function Contribution({
               {score.points}
             </span>
             <span className="rt-texte-secondaire">
-              {score.points > 1 ? 'points' : 'point'} sur l’édition {nomEdition}
+              {score.points > 1 ? 'points' : 'point'} pour {nomEdition}
             </span>
           </div>
           <dl className="rt-tuiles" style={{ margin: 0 }}>

@@ -7,6 +7,7 @@ import Avancement from '../../composants/Avancement'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import { EDITIONS } from '../../lib/requetes'
+import { useActivite } from '../../lib/activite'
 
 const AVANCEMENT = graphql(`
   query AvancementGlobal($editionId: ID!) {
@@ -35,6 +36,7 @@ const AVANCEMENT = graphql(`
 `)
 
 export default function AvancementGlobal() {
+  const { lien, periode } = useActivite()
   const { data: editions } = useQuery(EDITIONS)
   const [choix, setChoix] = useState<string | undefined>()
   const editionId =
@@ -60,7 +62,7 @@ export default function AvancementGlobal() {
         Avancement
       </Titre>
       <Space style={{ marginBottom: 24 }}>
-        <span>Édition</span>
+        <span>{periode.Nom}</span>
         <Select
           style={{ minWidth: 200 }}
           value={editionId}
@@ -73,7 +75,7 @@ export default function AvancementGlobal() {
       </Space>
 
       {editionId === undefined ? (
-        <Empty description="Créez d’abord une édition." />
+        <Empty description={`Créez d’abord ${periode.une}.`} />
       ) : loading ? (
         <Skeleton active />
       ) : (
@@ -116,7 +118,11 @@ export default function AvancementGlobal() {
           <Row gutter={[16, 16]}>
             {lignes.map(({ perimetre, avancement }) => (
               <Col key={perimetre.id} xs={24} md={12} xl={8}>
-                <Link to={`/perimetres/${perimetre.slug}?edition=${editionId}`}>
+                <Link
+                  to={lien(
+                    `/perimetres/${perimetre.slug}?edition=${editionId}`
+                  )}
+                >
                   <Card
                     hoverable
                     className="rt-carte-lien"

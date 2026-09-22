@@ -24,6 +24,39 @@ export function groupeDepuisType(type: TypePerimetre): string {
   return type.toLowerCase()
 }
 
+/** Le type d'historique d'un groupe : SPORT pour le groupe sport, POLE sinon. */
+export function typeDepuisGroupe(groupe: string): TypePerimetre {
+  return groupe === 'sport' ? 'SPORT' : 'POLE'
+}
+
+/**
+ * Premiers segments d'adresse de l'espace organisateur : une activité ne peut pas
+ * les prendre comme slug, ses pages vivent sous /<slug>/ (ADR 0008).
+ */
+export const SLUGS_RESERVES = new Set([
+  'admin',
+  'api',
+  'assets',
+  'connexion',
+  'fiches',
+  'graphql',
+  'medias',
+  'perimetres',
+  'preferences',
+  'retroplanning',
+])
+
+/** Le slug d'une activité : un identifiant, hors des segments réservés. */
+export function slugActiviteValide(brut: string): string {
+  const slug = slugValide(brut)
+  if (SLUGS_RESERVES.has(slug)) {
+    throw erreurSaisie(
+      `« ${slug} » est réservé par l’espace organisateur : choisissez un autre identifiant.`
+    )
+  }
+  return slug
+}
+
 export const GROUPES_MAX = 10
 
 /**

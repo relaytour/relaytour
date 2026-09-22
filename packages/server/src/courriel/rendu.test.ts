@@ -5,6 +5,7 @@ import { rendre, type VariablesOrganisation } from './rendu.ts'
 
 const ORGANISATION: VariablesOrganisation = {
   organisation: 'Les Rencontres',
+  logoUrl: '',
   couleurEncre: '#1B2730',
   couleurPrimaire: '#1E5A63',
   couleurAccent: '#AD412B',
@@ -32,6 +33,27 @@ describe('gabarits', () => {
     expect(html).not.toContain('{{')
     expect(texte).toContain('Les Rencontres')
     expect(texte).toContain('propulsé par Relaytour')
+  })
+
+  it('affiche le logo PNG dans l’en-tête HTML et le nom dans la partie texte', () => {
+    const { html, texte } = rendre(
+      'essai',
+      {},
+      {
+        ...ORGANISATION,
+        logoUrl: 'https://orga.exemple.org/medias/abc.png',
+      }
+    )
+    expect(html).toContain(
+      '<img src="https://orga.exemple.org/medias/abc.png" alt="Les Rencontres"'
+    )
+    expect(texte.split('\n')[0]).toBe('Les Rencontres')
+  })
+
+  it('refuse un logo qui n’a pas une adresse https', () => {
+    expect(() =>
+      rendre('essai', {}, { ...ORGANISATION, logoUrl: 'javascript:alert(1)' })
+    ).toThrow(/https/)
   })
 
   it('refuse une couleur qui n’a pas la forme #RRGGBB', () => {

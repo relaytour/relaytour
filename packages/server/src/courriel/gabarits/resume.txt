@@ -1,12 +1,12 @@
-{{organisation}}
+{{marque}}
 
 Bonjour {{nom}},
 
-Voici l’activité de vos périmètres {{periode}}.
+Voici les nouvelles de vos périmètres {{periode}}.
 
-Activité non lue
+Nouvelles non lues
 
-{{activite}}
+{{nouvelles}}
 
 Vos échéances des 14 prochains jours
 

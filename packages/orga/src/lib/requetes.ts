@@ -47,9 +47,59 @@ export const PERIMETRES = graphql(`
       slug
       nom
       type
+      groupe
       couleur
       ordre
       archive
+    }
+  }
+`)
+
+// Les activités de l'organisation active, archivées comprises : une adresse peut
+// désigner une activité archivée, toujours consultable (ADR 0008).
+export const ACTIVITES = graphql(`
+  query Activites {
+    activites(inclureArchives: true) {
+      id
+      slug
+      nom
+      sigle
+      nature
+      ordre
+      archive
+      groupes {
+        cle
+        libelle
+        libellePluriel
+      }
+      logoUrl
+      contactRecrutement
+      pageEquipe
+      theme {
+        ...ThemeChamps
+      }
+      identite {
+        contactRecrutement
+        pageEquipe
+        logoPng
+        logoSvg
+        logoUrl
+        theme
+      }
+    }
+  }
+`)
+
+// Les organisations de la personne connectée, pour choisir l'organisation active.
+export const MES_ORGANISATIONS = graphql(`
+  query MesOrganisations {
+    mesOrganisations {
+      slug
+      nom
+      sigle
+      estAdmin
+      statut
+      active
     }
   }
 `)
