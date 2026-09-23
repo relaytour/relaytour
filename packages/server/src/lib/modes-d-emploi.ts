@@ -12,9 +12,18 @@ export const LIBELLES_ROLE: Record<RoleModeDEmploi, string> = {
   referent: 'des référentes et référents',
 }
 
-/** Adresse de la page d'un rôle, sous la liste des modes d'emploi. */
+/**
+ * Adresse de la page d'un rôle, à côté de la liste des modes d'emploi. La liste
+ * peut être un dossier (`…/modes-d-emploi/` ou `…/modes-d-emploi`) ou une page
+ * (`…/modes-d-emploi/index.html`) : la page du rôle se place dans le même dossier.
+ */
 export function lienModeDEmploi(base: string, role: RoleModeDEmploi): string {
-  return `${base.endsWith('/') ? base : `${base}/`}${role}.html`
+  const liste = new URL(base)
+  liste.search = ''
+  liste.hash = ''
+  const dernier = liste.pathname.split('/').at(-1) ?? ''
+  if (dernier !== '' && !dernier.includes('.')) liste.pathname += '/'
+  return new URL(`${role}.html`, liste).toString()
 }
 
 /**

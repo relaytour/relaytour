@@ -89,7 +89,8 @@ const EnvSchema = z
         .default('https://github.com/relaytour/relaytour')
     ),
     // Liste des modes d'emploi, liée depuis le menu du compte et le mail
-    // d'invitation. Un hébergeur qui modifie Relaytour y indique les siens.
+    // d'invitation : un dossier ou une page. Les pages des rôles se placent dans
+    // le même dossier. Un hébergeur qui modifie Relaytour y indique les siens.
     MODES_D_EMPLOI_URL: z.preprocess(
       v => (typeof v === 'string' && v.trim() === '' ? undefined : v),
       z

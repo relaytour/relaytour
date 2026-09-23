@@ -16,6 +16,21 @@ describe('lienModeDEmploi', () => {
     )
   })
 
+  it('se place à côté d’une liste donnée comme page', () => {
+    expect(
+      lienModeDEmploi(
+        'https://docs.exemple.org/modes-d-emploi/index.html',
+        'admin-organisation'
+      )
+    ).toBe('https://docs.exemple.org/modes-d-emploi/admin-organisation.html')
+  })
+
+  it('ignore la requête et l’ancre de la liste', () => {
+    expect(
+      lienModeDEmploi('https://exemple.org/aide/?langue=fr#roles', 'referent')
+    ).toBe('https://exemple.org/aide/referent.html')
+  })
+
   it('ajoute la barre finale quand la base n’en a pas', () => {
     expect(
       lienModeDEmploi('https://hebergeur.exemple.org/aide', 'referent')
