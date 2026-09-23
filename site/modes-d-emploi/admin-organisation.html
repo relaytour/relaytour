@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin de l'organisation · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Le mode d'emploi des admins de l'organisation dans l'espace organisateur de Relaytour : identité, contenu, activités, comptes et rôles."
+    />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          Relaytour
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Admin de l'organisation</span>
+        <h1>Tenir l'organisation dans Relaytour</h1>
+        <p class="chapo">
+          Vous gérez ce qui dépasse une activité : l'identité de l'organisation, la liste des activités, les comptes et les rôles. C'est le niveau du bureau. Vous administrez aussi toutes les activités, sans avoir besoin d'y être nommé·e.
+        </p>
+        <p class="renvoi">
+          Ce mode d'emploi ne décrit que les fonctions propres à ce rôle. Le pilotage courant d'une activité (périodes, périmètres, affectations, avancement) figure dans le <a href="admin-activite.html">mode d'emploi de l'admin d'activité</a>.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-ou">
+        <div class="entete">
+          <span class="etiquette">Point de départ</span>
+          <h2 id="t-ou">Où se trouvent vos écrans</h2>
+          <p class="texte">
+            L'entrée <strong>Organisation</strong> ouvre le groupe « Administration » du menu. Elle n'apparaît que pour votre rôle. Vos autres leviers se trouvent sur les pages Activités, Personnes et Rédaction, sous forme de champs et de boutons que les admins d'activité ne voient pas.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Sommaire">
+          <span class="etiquette">Vos cinq leviers</span>
+          <ol>
+            <li><a href="#e-organisation">Organisation</a> : identité, adresses de rôle, logo et thème.</li>
+            <li><a href="#e-contenu">Contenu de l'organisation</a> : télécharger l'archive avant tout import.</li>
+            <li><a href="#e-activites">Activités</a> : créer et archiver une activité.</li>
+            <li><a href="#e-roles">Personnes et rôles</a> : nommer les admins, gérer les comptes.</li>
+            <li><a href="#e-redaction">Rédaction</a> : accorder un droit sur toutes les fiches.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-ecrans">
+        <div class="entete">
+          <span class="etiquette">Vos écrans</span>
+          <h2 id="t-ecrans">Ce que vous seul·e pouvez faire</h2>
+        </div>
+
+        <article class="verre ecran" id="e-organisation">
+          <div class="ecran-tete"><h3>Identité de l'organisation</h3><span class="route">/&lt;activité&gt;/admin/organisation</span></div>
+          <p>La page réunit le nom, les contacts, le logo et le thème de l'organisation. Chaque activité peut ensuite surcharger les contacts, le logo et les couleurs pour elle-même.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Identité</span></span><span>Le nom, le sigle, le contact de l'organisation et la page de l'équipe. Le contact reçoit les réponses aux mails.</span></li>
+            <li><span><span class="libelle">Adresses de rôle</span></span><span>Les domaines admis pour les adresses citées dans les fiches, et les boîtes partagées hébergées chez une messagerie grand public.</span></li>
+            <li><span><span class="libelle">Logo et favicon</span></span><span>Le logo PNG, sa variante SVG et le favicon.</span></li>
+            <li><span><span class="libelle">Thème</span></span><span>Les couleurs et les deux polices. Relaytour vérifie le contraste avant d'enregistrer, et une couleur laissée vide reprend celle de Relaytour.</span></li>
+          </ul>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/organisation</span></div>
+        </article>
+
+        <article class="verre ecran" id="e-contenu">
+          <div class="ecran-tete"><h3>Contenu de l'organisation</h3><span class="route">/&lt;activité&gt;/admin/organisation</span></div>
+          <p>L'application est la source de vérité du contenu. Le panneau situé en bas de la page Organisation indique la date du dernier import ou export, et signale si des admins ont modifié le contenu depuis.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Télécharger le contenu (zip)</span></span><span>Récupérer l'identité, les activités, les périmètres, les fiches et les tâches types dans une archive.</span></li>
+          </ul>
+          <p class="note">L'archive ne contient aucune personne, aucune affectation ni aucune tâche datée. Téléchargez-la avant tout import : un import refuse d'écraser des modifications plus récentes.</p>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/organisation</span></div>
+        </article>
+
+        <article class="verre ecran" id="e-activites">
+          <div class="ecran-tete"><h3>Créer et archiver une activité</h3><span class="route">/&lt;activité&gt;/admin/activites</span></div>
+          <p>Vous voyez toutes les activités de l'organisation, y compris celles que vous n'administrez pas nommément. Deux commandes vous sont réservées.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouvelle activité</span></span><span>Créer un événement, une section ou une instance, avec son identifiant, sa nature et ses groupes de périmètres.</span></li>
+            <li><span><span class="libelle">Archivée</span></span><span>Archiver une activité terminée. Elle disparaît du sélecteur et reste consultable.</span></li>
+          </ul>
+          <p class="note">L'identifiant apparaît dans l'adresse des pages et ne change plus après la création.</p>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/activites</span></div>
+        </article>
+
+        <article class="verre ecran" id="e-roles">
+          <div class="ecran-tete"><h3>Comptes et rôles</h3><span class="route">/&lt;activité&gt;/admin/personnes</span></div>
+          <p>Un compte est commun à toute l'organisation, et une même personne peut appartenir à plusieurs organisations. Vous seul·e touchez au compte lui-même et aux rôles.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Admin de l'organisation</span></span><span>Donner ce rôle à un autre membre du bureau. Vous ne pouvez pas vous le retirer vous-même.</span></li>
+            <li><span><span class="libelle">Admin des activités</span></span><span>Nommer les personnes qui piloteront une activité. Elles ne voient pas les autres activités.</span></li>
+            <li><span><span class="libelle">Prénom et nom</span></span><span>Corriger le nom d'un compte existant.</span></li>
+            <li><span><span class="libelle">Archiver</span></span><span>Fermer l'accès d'une personne qui quitte l'organisation. Elle est déconnectée, son historique reste conservé.</span></li>
+            <li><span><span class="libelle">Restaurer</span></span><span>Rouvrir l'accès d'un compte archivé.</span></li>
+          </ul>
+          <p class="note">Le mail d'invitation contient le lien vers le mode d'emploi du rôle de la personne. Après une nomination, renvoyez l'invitation pour lui transmettre le mode d'emploi de son nouveau rôle.</p>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/personnes</span></div>
+        </article>
+
+        <article class="verre ecran" id="e-redaction">
+          <div class="ecran-tete"><h3>Droit sur toutes les fiches</h3><span class="route">/&lt;activité&gt;/admin/redaction</span></div>
+          <p>Vous voyez tous les droits de rédaction de l'organisation, et vous disposez d'une option supplémentaire dans la liste des fiches concernées.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Toutes les fiches, communes comprises</span></span><span>Confier la rédaction des fiches communes à une personne, par exemple la coordination.</span></li>
+          </ul>
+          <p class="note">Un admin d'activité n'accorde un droit que sur les périmètres de son activité.</p>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/redaction</span></div>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-veiller">
+        <div class="entete">
+          <span class="etiquette">Bon à savoir</span>
+          <h2 id="t-veiller">Quatre points de vigilance</h2>
+        </div>
+        <div class="grille-2">
+          <article class="verre panneau">
+            <h3>Exporter avant d'importer</h3>
+            <p>Les modifications faites dans l'application priment sur le dossier de contenu. Téléchargez l'archive avant toute réimportation, sinon l'import s'arrête pour protéger votre travail.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Un compte, plusieurs organisations</h3>
+            <p>Le nom et l'archivage appartiennent au compte, commun à toutes ses organisations. Archiver un compte ferme donc l'accès partout.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Les adresses de rôle protègent les personnes</h3>
+            <p>Relaytour refuse les coordonnées personnelles dans les fiches. N'ouvrez les domaines admis qu'à des boîtes partagées de l'organisation.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>La visibilité reste cloisonnée</h3>
+            <p>Une personne voit une activité si elle l'administre ou si elle y est affectée. Nommer un admin d'activité ne lui ouvre rien d'autre.</p>
+          </article>
+        </div>
+        <div class="alerte">
+          <span class="etiquette">Hors de l'espace organisateur</span>
+          <p>La création de l'organisation, ses limites, sa suspension et l'export complet de ses données appartiennent à la personne qui exploite le serveur. Ces actions passent par des scripts d'administration, pas par cet écran.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Les autres rôles</span>
+          <h2 id="t-autres">Les autres modes d'emploi</h2>
+          <p class="texte">Vous administrez aussi chaque activité, et vous utilisez les écrans communs à toutes les personnes. Ces deux modes d'emploi complètent celui-ci.</p>
+        </div>
+        <div class="grille-2">
+          <a class="verre panneau lien-guide" href="admin-activite.html">
+            <span class="role">Admin d'une activité</span>
+            <h3>Piloter une activité</h3>
+            <p>Les périodes, les périmètres, les postes à pourvoir, les personnes, la rédaction et l'avancement.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="referent.html">
+            <span class="role">Référent·e</span>
+            <h3>Suivre vos tâches et vos fiches</h3>
+            <p>La connexion, Mon espace, le rétroplanning, les fiches et les préférences.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Les captures de cette page restent à produire, sur l'organisation d'exemple et avec des comptes fictifs. Mode d'emploi à jour de la version 0.5.0.
+      </footer>
+    </main>
+  </body>
+</html>

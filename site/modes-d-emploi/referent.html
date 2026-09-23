@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Référent·e · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Le mode d'emploi des référentes et référents dans l'espace organisateur de Relaytour : connexion, tâches, rétroplanning, fiches et préférences."
+    />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          Relaytour
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Référent·e</span>
+        <h1>Suivre vos tâches et vos fiches dans Relaytour</h1>
+        <p class="chapo">
+          Vous êtes affecté·e à un ou plusieurs périmètres pour une période. L'espace organisateur vous montre vos tâches, leurs échéances et les fiches méthode qui expliquent comment les mener.
+        </p>
+        <p class="renvoi">
+          Ce mode d'emploi décrit les écrans ouverts à toute personne affectée. Si vous administrez une activité ou l'organisation, reportez-vous au <a href="./">mode d'emploi correspondant</a> pour le menu « Administration ».
+        </p>
+      </header>
+
+      <section aria-labelledby="t-connexion">
+        <div class="entete">
+          <span class="etiquette">Premier pas</span>
+          <h2 id="t-connexion">Se connecter sans mot de passe</h2>
+          <p class="texte">
+            L'espace ne demande pas de mot de passe. Vous saisissez votre adresse mail, vous recevez un code à six chiffres, valable dix minutes, et vous le reportez dans l'écran de connexion. Le mail contient aussi un lien : il vous connecte directement quand vous l'ouvrez dans l'onglet où vous avez demandé le code.
+          </p>
+          <p class="texte">
+            Seules les personnes invitées par un admin peuvent se connecter. Si votre compte n'appartient à aucune organisation ouverte, l'écran vous invite à demander une nouvelle invitation.
+          </p>
+        </div>
+        <div class="grille-2">
+          <article class="verre panneau">
+            <h3>Le menu de gauche</h3>
+            <p>Il donne accès à Mon espace, au Rétroplanning, aux Fiches et aux Préférences. Sous « Mes périmètres », vous retrouvez chaque périmètre où vous êtes affecté·e.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>La barre du haut</h3>
+            <p>Elle porte la recherche (une tâche, une fiche, une personne), la cloche des notifications et le menu de votre compte. Ce menu mène aussi aux modes d'emploi.</p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-ecrans">
+        <div class="entete">
+          <span class="etiquette">Vos écrans</span>
+          <h2 id="t-ecrans">Ce que vous faites, écran par écran</h2>
+          <p class="texte">
+            Les adresses commencent par l'identifiant de l'activité affichée, par exemple <span class="route">/timm/retroplanning</span>. Le mot « édition » devient « saison » ou « mandat » selon la nature de l'activité.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-mon-espace">
+          <div class="ecran-tete"><h3>Mon espace</h3><span class="route">/&lt;activité&gt;/</span></div>
+          <p>La page d'accueil réunit les tâches qui vous sont assignées, les tâches de vos périmètres que personne n'a prises, l'avancement de chacun de vos périmètres et votre contribution à la période en cours.</p>
+          <figure>
+            <img src="../captures/mon-espace.webp" width="1440" height="900" loading="lazy" alt="Écran Mon espace : la liste des tâches assignées, les périmètres et la contribution." />
+            <figcaption>Écran Mon espace, sur l'organisation d'exemple livrée avec Relaytour. Les personnes et les tâches sont fictives.</figcaption>
+          </figure>
+          <ul class="gestes">
+            <li><span><span class="libelle">Je m'en occupe</span><span class="libelle">Me retirer</span></span><span>Prendre une tâche de votre périmètre, ou vous en retirer. Vous n'assignez que vous-même.</span></li>
+            <li><span><span class="libelle">Faite</span></span><span>Marquer une tâche comme faite. Vous pouvez indiquer qui l'a réalisée, information visible par vous et par les admins.</span></li>
+            <li><span><span class="libelle">Autres actions</span></span><span>Marquer en cours, remettre à faire ou abandonner. Une tâche ne se supprime pas : elle s'abandonne.</span></li>
+          </ul>
+          <p class="note">Votre score n'est visible que par vous et par les admins. Il compte les tâches réalisées, celles rendues à temps, les tâches créées et les fiches écrites.</p>
+        </article>
+
+        <article class="verre ecran" id="e-retroplanning">
+          <div class="ecran-tete"><h3>Rétroplanning</h3><span class="route">/&lt;activité&gt;/retroplanning</span></div>
+          <p>Les tâches de la période sont regroupées par mois, de la plus proche à la plus lointaine. Les filtres limitent l'affichage à un groupe de périmètres, aux tâches ouvertes, à vos périmètres ou aux tâches qui vous sont assignées.</p>
+          <figure>
+            <img src="../captures/retroplanning.webp" width="1440" height="900" loading="lazy" alt="Écran Rétroplanning : les tâches regroupées par mois, avec les filtres et le récapitulatif de la sélection." />
+            <figcaption>Écran Rétroplanning, sur l'organisation d'exemple. Les échéances sont fictives.</figcaption>
+          </figure>
+          <p class="note">Aucune action ne se fait ici : une ligne mène à son périmètre, où la tâche se modifie. Le panneau de droite signale les tâches de vos périmètres qui attendent encore une personne.</p>
+        </article>
+
+        <article class="verre ecran" id="e-perimetre">
+          <div class="ecran-tete"><h3>Un périmètre</h3><span class="route">/&lt;activité&gt;/perimetres/&lt;périmètre&gt;</span></div>
+          <p>La page de votre périmètre réunit ses tâches, son avancement, ses fiches méthode et les personnes affectées. Les tâches se filtrent par statut : ouvertes, faites, abandonnées ou toutes.</p>
+          <figure>
+            <img src="../captures/perimetre.webp" width="1440" height="900" loading="lazy" alt="Page d'un périmètre : ses tâches, son avancement, ses fiches et les personnes affectées." />
+            <figcaption>Page d'un périmètre, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouvelle tâche</span></span><span>Ajouter une tâche à votre périmètre : titre, description, échéance et fiche liée. La case « Je m'en occupe » est cochée par défaut.</span></li>
+            <li><span><span class="libelle">Modifier</span></span><span>Corriger une tâche existante depuis le menu « Autres actions » de sa carte.</span></li>
+          </ul>
+          <p class="note">Ces actions sont ouvertes aux personnes affectées au périmètre pour la période consultée. Une période archivée passe ses tâches en lecture seule.</p>
+        </article>
+
+        <article class="verre ecran" id="e-fiches">
+          <div class="ecran-tete"><h3>Les fiches</h3><span class="route">/&lt;activité&gt;/fiches</span></div>
+          <p>Les fiches méthode expliquent comment mener chaque étape de l'organisation. Elles se filtrent par périmètre, se cherchent par mot et s'affichent en cartes ou en liste condensée.</p>
+          <figure>
+            <img src="../captures/fiches-cartes.webp" width="1440" height="900" loading="lazy" alt="Écran Fiches : les fiches groupées par périmètre, affichées en cartes." />
+            <figcaption>Écran Fiches, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p class="note">Chaque fiche indique sa date de mise à jour et son auteur, ou la mention « Depuis le dépôt » quand elle vient du dossier de contenu de l'organisation.</p>
+        </article>
+
+        <article class="verre ecran" id="e-fiche">
+          <div class="ecran-tete"><h3>Une fiche méthode</h3><span class="route">/&lt;activité&gt;/fiches/&lt;fiche&gt;</span></div>
+          <p>Une fiche décrit une démarche étape par étape, souvent avec ses échéances en J-n. Le panneau « Tâches liées » donne les tâches de la période en cours qui renvoient à cette fiche.</p>
+          <figure>
+            <img src="../captures/fiche.webp" width="1440" height="900" loading="lazy" alt="Une fiche méthode : l'objectif, le calendrier, les étapes, et les tâches liées à droite." />
+            <figcaption>Une fiche méthode, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <ul class="gestes">
+            <li><span><span class="libelle">Modifier</span></span><span>Corriger la fiche, si un admin vous a accordé un droit de rédaction sur le périmètre. Chaque enregistrement crée une version.</span></li>
+          </ul>
+          <p class="note">Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels : une fiche qui en contient ne peut pas être reversée dans le dépôt de l'organisation. L'historique des versions est réservé aux admins.</p>
+        </article>
+
+        <article class="verre ecran" id="e-preferences">
+          <div class="ecran-tete"><h3>Préférences</h3><span class="route">/&lt;activité&gt;/preferences</span></div>
+          <p>Vous choisissez les mails que vous recevez. Les notifications restent visibles dans l'espace, quelle que soit votre décision.</p>
+          <figure>
+            <img src="../captures/preferences.webp" width="1440" height="900" loading="lazy" alt="Écran Préférences : le choix du résumé par mail et les deux mails immédiats." />
+            <figcaption>Écran Préférences, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <ul class="gestes">
+            <li><span><span class="libelle">Chaque jour</span><span class="libelle">Chaque lundi</span><span class="libelle">Jamais</span></span><span>Régler le résumé par mail. Il reprend les nouvelles de vos périmètres et vos échéances des 14 prochains jours, et part à 7 h.</span></li>
+            <li><span><span class="libelle">Modification de vos tâches</span></span><span>Recevoir un mail quand une autre personne modifie une tâche qui vous est assignée.</span></li>
+            <li><span><span class="libelle">Échéances</span></span><span>Recevoir un mail quand une de vos tâches arrive à échéance ou passe en retard.</span></li>
+          </ul>
+          <p class="note">Votre nom, votre adresse et vos affectations sont gérés par les admins. Les mails de connexion et d'invitation partent toujours.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-reperes">
+        <div class="entete">
+          <span class="etiquette">Bon à savoir</span>
+          <h2 id="t-reperes">Quatre repères</h2>
+        </div>
+        <div class="grille-2">
+          <article class="verre panneau">
+            <h3>Vous ne voyez que vos périmètres</h3>
+            <p>Les tâches et les fiches des périmètres où vous n'êtes pas affecté·e ne vous sont pas présentées. Une affectation passée garde l'accès aux archives du périmètre.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Les affectations viennent des admins</h3>
+            <p>Un admin note vos périmètres souhaités et procède aux affectations. L'espace ne comporte pas de formulaire de candidature.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Plusieurs activités</h3>
+            <p>Si vous participez à plusieurs activités, un bouton en haut du menu permet de changer d'activité. Il reste masqué quand vous n'en voyez qu'une.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Le vocabulaire suit l'activité</h3>
+            <p>Une période s'appelle édition pour un événement, saison pour une section, mandat pour une instance. Les groupes de périmètres portent les noms déclarés par l'activité.</p>
+          </article>
+        </div>
+        <div class="alerte">
+          <span class="etiquette">Si un bandeau apparaît en haut de l'écran</span>
+          <p>« Cette organisation est en lecture seule » signifie que plus aucune modification n'est acceptée. « Cette activité est archivée » signifie que l'activité reste consultable, sans modification.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Pour aller plus loin</span>
+          <h2 id="t-autres">Les modes d'emploi des admins</h2>
+          <p class="texte">Les admins disposent d'un menu « Administration ». Leurs modes d'emploi le décrivent, en complément de celui-ci.</p>
+        </div>
+        <div class="grille-2">
+          <a class="verre panneau lien-guide" href="admin-activite.html">
+            <span class="role">Admin d'une activité</span>
+            <h3>Piloter une activité</h3>
+            <p>Les périodes, les périmètres, les postes à pourvoir, les personnes et la rédaction.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="admin-organisation.html">
+            <span class="role">Admin de l'organisation</span>
+            <h3>Tenir l'organisation</h3>
+            <p>L'identité de l'organisation, ses activités, les comptes et les rôles.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.5.0.
+      </footer>
+    </main>
+  </body>
+</html>

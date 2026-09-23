@@ -229,7 +229,8 @@ section,
   color: var(--rt-encre);
 }
 
-.liens a[aria-current='page'] {
+.liens a[aria-current='page'],
+.liens a[aria-current='true'] {
   background: var(--rt-encre);
   color: #ffffff;
 }
@@ -389,6 +390,7 @@ section {
 .capture .cadre {
   display: block;
   width: 100%;
+  height: auto;
   aspect-ratio: 16 / 10;
   object-fit: cover;
   object-position: top left;
@@ -571,6 +573,207 @@ footer {
   border-top: 1px solid var(--rt-encre-14);
   font-size: 0.88rem;
   color: var(--rt-encre-55);
+}
+
+/* ── Modes d'emploi ─────────────────────────────────────────────────────── */
+
+.role {
+  justify-self: start;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-family: var(--rt-mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--rt-accent);
+  background: var(--rt-accent-clair);
+}
+
+.renvoi {
+  max-width: 70ch;
+  padding: 4px 0 4px 18px;
+  border-left: 3px solid var(--rt-encre-14);
+  font-size: 0.95rem;
+  color: var(--rt-encre-55);
+}
+
+.route {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-family: var(--rt-mono);
+  font-size: 0.82rem;
+  color: var(--rt-primaire);
+  background: var(--rt-primaire-clair);
+}
+
+.libelle {
+  display: inline-block;
+  padding: 3px 11px;
+  border-radius: 999px;
+  font-family: var(--rt-mono);
+  font-size: 0.8rem;
+  white-space: nowrap;
+  color: var(--rt-encre);
+  background: #ffffff;
+  box-shadow: 0 0 0 1px var(--rt-encre-14);
+}
+
+.sommaire {
+  display: grid;
+  gap: 10px;
+  padding: 20px 24px;
+  border-radius: 24px;
+}
+
+.sommaire ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 1.3em;
+  font-size: 0.96rem;
+  color: var(--rt-encre-70);
+}
+
+.sommaire a {
+  text-decoration: none;
+}
+
+.sommaire a:hover {
+  text-decoration: underline;
+}
+
+.ecran {
+  min-width: 0;
+  display: grid;
+  gap: 18px;
+  padding: 24px;
+  border-radius: 28px;
+  scroll-margin-top: 96px;
+}
+
+.ecran-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
+}
+
+.ecran-tete h3 {
+  flex: 1 1 auto;
+  min-width: 12ch;
+}
+
+.ecran > p {
+  font-size: 0.98rem;
+  color: var(--rt-encre-70);
+}
+
+.ecran figure {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+}
+
+.ecran img,
+.ecran .cadre {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 10;
+  border-radius: 14px;
+  box-shadow: 0 1px 2px rgba(var(--rt-encre-rgb), 0.08);
+}
+
+.ecran .cadre {
+  box-sizing: border-box;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 6px;
+  padding: 16px;
+  text-align: center;
+  border: 1.5px dashed var(--rt-encre-40);
+  background: var(--rt-surface-interne);
+  box-shadow: none;
+}
+
+.ecran .cadre .etiquette {
+  color: var(--rt-encre-55);
+}
+
+.ecran figcaption {
+  font-size: 0.86rem;
+  color: var(--rt-encre-55);
+}
+
+.gestes {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gestes li {
+  display: grid;
+  grid-template-columns: 12rem minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  font-size: 0.96rem;
+  color: var(--rt-encre-70);
+}
+
+.gestes li > span:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.alerte {
+  display: grid;
+  gap: 8px;
+  padding: 20px 22px;
+  border-radius: 24px;
+  background: rgba(var(--rt-accent-rgb), 0.07);
+  box-shadow: inset 0 0 0 1px rgba(var(--rt-accent-rgb), 0.18);
+}
+
+.alerte .etiquette {
+  color: var(--rt-accent);
+}
+
+.alerte p {
+  font-size: 0.95rem;
+  color: var(--rt-encre-70);
+}
+
+.lien-guide {
+  color: inherit;
+  text-decoration: none;
+}
+
+.lien-guide:hover h3 {
+  color: var(--rt-primaire);
+  text-decoration: underline;
+}
+
+.lien-guide .suite {
+  font-weight: 600;
+  color: var(--rt-primaire);
+}
+
+@media (max-width: 760px) {
+  .gestes li {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 4px;
+  }
+  .libelle {
+    white-space: normal;
+  }
+  .ecran {
+    padding: 18px;
+  }
 }
 
 /* ── Page du design system ─────────────────────────────────────────────── */

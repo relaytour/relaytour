@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Admin d'activité · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Le mode d'emploi des admins d'activité dans l'espace organisateur de Relaytour : périodes, périmètres, postes à pourvoir, personnes et rédaction."
+    />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          Relaytour
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Admin d'une activité</span>
+        <h1>Piloter une activité dans Relaytour</h1>
+        <p class="chapo">
+          Vous administrez une activité : un événement, une section ou une instance. Vous ouvrez ses périodes, créez ses périmètres, constituez son équipe et suivez son avancement. Les autres activités de l'organisation restent invisibles pour vous.
+        </p>
+        <p class="renvoi">
+          Ce mode d'emploi ne décrit que le menu « Administration » de votre activité. Les écrans communs à toutes les personnes (Mon espace, Rétroplanning, Fiches, Préférences) sont décrits dans le <a href="referent.html">mode d'emploi des référentes et référents</a>.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-ou">
+        <div class="entete">
+          <span class="etiquette">Point de départ</span>
+          <h2 id="t-ou">Où se trouvent vos écrans</h2>
+          <p class="texte">
+            Le groupe <strong>Administration</strong> apparaît dans le menu de gauche quand vous administrez l'activité affichée. Toutes ses adresses commencent par l'identifiant de l'activité, par exemple <span class="route">/timm/admin/postes</span>.
+          </p>
+          <p class="texte">
+            Le libellé des périodes suit la nature de l'activité : <strong>Éditions</strong> pour un événement, <strong>Saisons</strong> pour une section, <strong>Mandats</strong> pour une instance. Les exemples ci-dessous emploient « édition ».
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Sommaire">
+          <span class="etiquette">Vos huit écrans</span>
+          <ol>
+            <li><a href="#e-avancement">Avancement</a> : l'état de chaque périmètre sur la période.</li>
+            <li><a href="#e-editions">Éditions</a> : ouvrir et dater les périodes de l'activité.</li>
+            <li><a href="#e-perimetres">Périmètres</a> : créer les sports, les pôles ou les commissions.</li>
+            <li><a href="#e-postes">Postes à pourvoir</a> : effectifs, souhaits et affectations.</li>
+            <li><a href="#e-personnes">Personnes</a> : inviter votre équipe et relancer les invitations.</li>
+            <li><a href="#e-redaction">Rédaction</a> : accorder un droit d'écriture sur les fiches d'un périmètre.</li>
+            <li><a href="#e-historique">Historique d'une fiche</a> : consulter et restaurer une version.</li>
+            <li><a href="#e-activite">Activités</a> : régler le nom, les groupes et l'identité de votre activité.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-ecrans">
+        <div class="entete">
+          <span class="etiquette">Vos écrans</span>
+          <h2 id="t-ecrans">Ce que vous faites, écran par écran</h2>
+        </div>
+
+        <article class="verre ecran" id="e-avancement">
+          <div class="ecran-tete"><h3>Avancement</h3><span class="route">/&lt;activité&gt;/admin/avancement</span></div>
+          <p>L'écran affiche les tâches faites, en retard et sans personne, périmètre par périmètre. Quatre compteurs résument la période choisie : <strong>Tâches faites</strong>, <strong>En retard</strong>, <strong>Sans personne</strong> et <strong>Périmètres</strong>. Chaque carte mène à la page du périmètre.</p>
+          <figure>
+            <img src="../captures/avancement.webp" width="1440" height="900" loading="lazy" alt="Écran Avancement : quatre compteurs et une carte par périmètre avec sa barre d'avancement." />
+            <figcaption>Écran Avancement, sur l'organisation d'exemple livrée avec Relaytour. Les personnes et les périmètres sont fictifs.</figcaption>
+          </figure>
+          <p class="note">Cet écran ne se modifie pas. Il sert au point d'avancement et repère les périmètres qui décrochent.</p>
+        </article>
+
+        <article class="verre ecran" id="e-editions">
+          <div class="ecran-tete"><h3>Éditions, saisons ou mandats</h3><span class="route">/&lt;activité&gt;/admin/editions</span></div>
+          <p>Une période sert de repère à toutes les échéances : une tâche type à J-120 se date depuis son premier jour. Le tableau liste l'année, le nom, les dates et le statut, soit <strong>En préparation</strong>, <strong>En cours</strong> ou <strong>Archivée</strong>.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouvelle édition</span></span><span>Ouvrir la période suivante. Vous saisissez l'année, le nom, le premier jour et le dernier jour.</span></li>
+            <li><span><span class="libelle">Enregistrer</span></span><span>Modifier le nom, les dates ou le statut d'une période. L'année ne change plus après la création.</span></li>
+          </ul>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/editions</span></div>
+        </article>
+
+        <article class="verre ecran" id="e-perimetres">
+          <div class="ecran-tete"><h3>Périmètres</h3><span class="route">/&lt;activité&gt;/admin/perimetres</span></div>
+          <p>Un périmètre est une partie de l'activité, rangée dans un groupe. Il reste le même d'une période à l'autre, ce qui permet à l'historique de le suivre. Le tableau affiche la couleur, le nom, l'identifiant, le groupe, l'ordre et l'état.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouveau périmètre</span></span><span>Saisir le nom, l'identifiant, le groupe, la couleur et l'ordre d'affichage.</span></li>
+            <li><span><span class="libelle">Enregistrer</span></span><span>Modifier un périmètre, ou l'archiver. Un périmètre archivé disparaît des listes et son historique reste consultable.</span></li>
+          </ul>
+          <p class="note">L'identifiant ne change plus après la création : il relie les fiches, les tâches types et l'historique.</p>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/perimetres</span></div>
+        </article>
+
+        <article class="verre ecran" id="e-postes">
+          <div class="ecran-tete"><h3>Postes à pourvoir</h3><span class="route">/&lt;activité&gt;/admin/postes</span></div>
+          <p>C'est l'écran de constitution de l'équipe. Les périmètres qui manquent de référentes et de référents s'affichent en premier. Trois compteurs résument la situation : <strong>Postes à pourvoir</strong>, <strong>Périmètres sans personne</strong> et <strong>Souhaits en attente</strong>.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Effectif souhaité</span></span><span>Fixer le nombre de personnes attendues sur un périmètre. La différence avec les affectations donne les postes à pourvoir.</span></li>
+            <li><span><span class="libelle">Affecter</span></span><span>Affecter une personne qui a exprimé un souhait, ou choisir n'importe quel membre de l'organisation dans la liste.</span></li>
+            <li><span><span class="libelle">Retirer</span></span><span>Retirer une affectation, ou retirer un souhait devenu sans objet.</span></li>
+            <li><span><span class="libelle">Copier l'appel</span></span><span>Copier un appel aux référentes et référents, à coller dans un mail ou un message.</span></li>
+          </ul>
+          <p class="note">Sur une période archivée, l'effectif et le retrait des souhaits sont désactivés.</p>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/postes</span></div>
+        </article>
+
+        <article class="verre ecran" id="e-personnes">
+          <div class="ecran-tete"><h3>Personnes</h3><span class="route">/&lt;activité&gt;/admin/personnes</span></div>
+          <p>Seules les personnes invitées ici peuvent se connecter à l'espace organisateur. Le tableau donne le nom, l'adresse mail, les affectations, les souhaits et le rôle. Un filtre isole les personnes sans affectation pour la période choisie.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Inviter une personne</span></span><span>Saisir le nom et l'adresse, et noter ses périmètres souhaités. La personne reçoit un mail avec son lien de connexion et le mode d'emploi de son rôle.</span></li>
+            <li><span><span class="libelle">Renvoyer l'invitation</span></span><span>Relancer une personne de votre équipe qui ne s'est pas encore connectée.</span></li>
+          </ul>
+          <p class="note">Vous lisez l'annuaire de l'organisation, dont vous avez besoin pour constituer votre équipe. Les affectations et les souhaits que vous voyez sont ceux de vos activités seulement. Le nom d'un compte existant se modifie par un admin de l'organisation.</p>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/personnes</span></div>
+        </article>
+
+        <article class="verre ecran" id="e-redaction">
+          <div class="ecran-tete"><h3>Rédaction des fiches</h3><span class="route">/&lt;activité&gt;/admin/redaction</span></div>
+          <p>Les admins rédigent toutes les fiches de leur activité. Les autres personnes ont besoin d'un droit de rédaction, accordé périmètre par périmètre.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Accorder</span></span><span>Choisir une personne et un périmètre de votre activité.</span></li>
+            <li><span><span class="libelle">Retirer</span></span><span>Retirer un droit devenu inutile, après confirmation.</span></li>
+          </ul>
+          <p class="note">Le droit portant sur toutes les fiches, communes comprises, appartient aux admins de l'organisation.</p>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/redaction</span></div>
+        </article>
+
+        <article class="verre ecran" id="e-historique">
+          <div class="ecran-tete"><h3>Historique d'une fiche</h3><span class="route">/&lt;activité&gt;/fiches/&lt;fiche&gt;</span></div>
+          <p>Sur chaque fiche de votre activité, un bouton <strong>Historique</strong> ouvre la liste des versions. Vous y consultez une version passée et vous la restaurez si une modification doit être annulée.</p>
+          <p class="note">Les référentes et référents qui ont un droit de rédaction modifient la fiche, mais ne voient pas cet historique.</p>
+        </article>
+
+        <article class="verre ecran" id="e-activite">
+          <div class="ecran-tete"><h3>Activités</h3><span class="route">/&lt;activité&gt;/admin/activites</span></div>
+          <p>Le tableau liste les activités que vous voyez. Le bouton de modification n'apparaît que sur celles que vous administrez.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Enregistrer</span></span><span>Régler le nom, le sigle, l'ordre et la nature de votre activité.</span></li>
+            <li><span><span class="libelle">Ajouter un groupe</span></span><span>Déclarer les groupes de périmètres : sports et pôles, équipes et pôles, commissions et bureau.</span></li>
+            <li><span><span class="libelle">Identité propre</span></span><span>Donner à l'activité son contact, sa page d'équipe, son logo et ses deux couleurs. Un champ vide reprend la valeur de l'organisation.</span></li>
+          </ul>
+          <p class="note">La création et l'archivage d'une activité appartiennent aux admins de l'organisation.</p>
+          <div class="cadre"><span class="etiquette">Capture à produire</span><span class="route">/&lt;activité&gt;/admin/activites</span></div>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-limites">
+        <div class="entete">
+          <span class="etiquette">Bon à savoir</span>
+          <h2 id="t-limites">Les limites de votre rôle</h2>
+        </div>
+        <div class="grille-2">
+          <article class="verre panneau">
+            <h3>Une activité à la fois</h3>
+            <p>Une activité que vous n'administrez pas et où vous n'êtes pas affecté·e n'existe pas pour vous : ni dans le sélecteur, ni dans les listes, ni dans la recherche.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Vous ne nommez pas d'admin</h3>
+            <p>La nomination des admins d'activité et des admins de l'organisation appartient aux admins de l'organisation. Vous invitez des membres, pas des admins.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Les comptes ne vous appartiennent pas</h3>
+            <p>Le nom, l'archivage et la restauration d'un compte relèvent des admins de l'organisation. Un compte est commun à toute l'organisation.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>L'identité de l'organisation vous échappe</h3>
+            <p>Le nom, le logo, le thème et le téléchargement du contenu de l'organisation se règlent sur la page Organisation, réservée aux admins de l'organisation.</p>
+          </article>
+        </div>
+        <div class="alerte">
+          <span class="etiquette">Si l'organisation passe en lecture seule</span>
+          <p>Un bandeau s'affiche en haut de l'espace : vous pouvez consulter et exporter les données, pas les modifier. Les boutons restent visibles, et toute tentative d'enregistrement renvoie ce message.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Les autres rôles</span>
+          <h2 id="t-autres">Les autres modes d'emploi</h2>
+          <p class="texte">Votre équipe utilise le mode d'emploi des référentes et référents. Le bureau de l'organisation utilise celui de l'admin de l'organisation.</p>
+        </div>
+        <div class="grille-2">
+          <a class="verre panneau lien-guide" href="referent.html">
+            <span class="role">Référent·e</span>
+            <h3>Suivre vos tâches et vos fiches</h3>
+            <p>La connexion, Mon espace, le rétroplanning, les fiches et les préférences. Ces écrans vous concernent aussi.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="admin-organisation.html">
+            <span class="role">Admin de l'organisation</span>
+            <h3>Tenir l'organisation</h3>
+            <p>L'identité de l'organisation, la création des activités, les comptes et les rôles.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.5.0.
+      </footer>
+    </main>
+  </body>
+</html>
