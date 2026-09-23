@@ -534,3 +534,65 @@ describe('rétroplanning', () => {
     ])
   })
 })
+
+// Une assignation survit au retrait de l'affectation : la tâche reste dans « Vos
+// tâches » alors que l'écriture est refusée. Le champ porte ce droit jusqu'à la
+// carte, qui masque alors ses actions au lieu de les proposer en vain.
+describe('droit d’écriture porté par la tâche', () => {
+  const MES_TACHES = `query ($e: ID!) { mesTaches(editionId: $e) { id peutModifier } }`
+
+  const mesTaches = async (userId: string) => {
+    const r = await executer(userId, MES_TACHES, { e: ids.edition })
+    expect(r.errors).toBeUndefined()
+    return (r.data as { mesTaches: { id: string; peutModifier: boolean }[] })
+      .mesTaches
+  }
+
+  it('refuse la modification à une personne assignée sans affectation', async () => {
+    const tache = await creerTache(ids.bruno, 'Compter les bonnets', false)
+    await prisma.tacheAssignation.create({
+      data: { tacheId: tache.id, userId: ids.dora },
+    })
+
+    const lue = (await mesTaches(ids.dora)).find(t => t.id === tache.id)
+    expect(lue?.peutModifier).toBe(false)
+
+    const ecriture = await executer(
+      ids.dora,
+      `mutation ($id: ID!) { changerStatutTache(id: $id, statut: FAITE) { id } }`,
+      { id: tache.id }
+    )
+    expect(code(ecriture)).toBe('FORBIDDEN')
+  })
+
+  it('accorde la modification à une référente affectée à l’édition', async () => {
+    const tache = await creerTache(ids.alice, 'Ranger les plots')
+    const lue = (await mesTaches(ids.alice)).find(t => t.id === tache.id)
+    expect(lue?.peutModifier).toBe(true)
+  })
+
+  it('refuse la modification sur une édition archivée', async () => {
+    const tache = await prisma.tache.create({
+      data: {
+        perimetreId: ids.natation,
+        editionId: ids.archivee,
+        titre: 'Classer les résultats',
+        creeParId: ids.admin,
+      },
+    })
+    const r = await executer(
+      ids.alice,
+      `query ($s: String!, $e: ID!) {
+        perimetre(slug: $s) { taches(editionId: $e) { id peutModifier } }
+      }`,
+      { s: `natation-${suffixe}`, e: ids.archivee }
+    )
+    expect(r.errors).toBeUndefined()
+    const taches = (
+      r.data as {
+        perimetre: { taches: { id: string; peutModifier: boolean }[] }
+      }
+    ).perimetre.taches
+    expect(taches.find(t => t.id === tache.id)?.peutModifier).toBe(false)
+  })
+})

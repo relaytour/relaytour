@@ -1,4 +1,4 @@
-import { prisma } from '@relaytour/database'
+import { prisma, type StatutEdition } from '@relaytour/database'
 
 import type { AppContext, PersonneConnectee } from '../context.ts'
 
@@ -56,8 +56,35 @@ export async function exigerLecture(
   return ctx.personne
 }
 
+// Mémo par requête : une liste de tâches interroge le même couple (périmètre,
+// édition) autant de fois qu'elle compte de tâches. Le contexte est propre à la
+// requête, donc le mémo disparaît avec elle.
+const memoEditionEtPerimetre = new WeakMap<
+  AppContext,
+  Map<string, Promise<{ statut: StatutEdition; activiteId: string } | null>>
+>()
+
 /** L'édition et le périmètre, s'ils relèvent de la même activité de l'organisation active. */
-async function editionEtPerimetre(
+function editionEtPerimetre(
+  ctx: AppContext,
+  perimetreId: string,
+  editionId: string
+) {
+  let memo = memoEditionEtPerimetre.get(ctx)
+  if (memo === undefined) {
+    memo = new Map()
+    memoEditionEtPerimetre.set(ctx, memo)
+  }
+  const cle = `${perimetreId}:${editionId}`
+  let resultat = memo.get(cle)
+  if (resultat === undefined) {
+    resultat = chargerEditionEtPerimetre(ctx, perimetreId, editionId)
+    memo.set(cle, resultat)
+  }
+  return resultat
+}
+
+async function chargerEditionEtPerimetre(
   ctx: AppContext,
   perimetreId: string,
   editionId: string

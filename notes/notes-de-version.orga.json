@@ -5,6 +5,23 @@
   "version": "0.5.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-23-orga-mon-espace-masque-les-actions-sur-une-tache-que-vous-ne-pouv",
+          "date": "2026-09-23",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Mon espace masque les actions sur une tâche que vous ne pouvez plus modifier",
+            "texte": "Une tâche vous reste assignée après le retrait de votre affectation au périmètre. Mon espace affichait alors les boutons « Faite », « Me retirer » et le menu « Autres actions », et le serveur refusait l'action. Ces boutons ne s'affichent plus, comme sur la page d'un périmètre.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.4.1",
       "notes": [
         {

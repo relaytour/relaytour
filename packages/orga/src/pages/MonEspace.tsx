@@ -185,7 +185,7 @@ export default function MonEspace() {
                   key={tache.id}
                   tache={tache}
                   moiId={moiId}
-                  peutModifier
+                  peutModifier={tache.peutModifier}
                   referents={referentsDe(tache.perimetre.id)}
                   estAdmin={estAdmin}
                   afficherPerimetre
@@ -208,7 +208,7 @@ export default function MonEspace() {
                   key={tache.id}
                   tache={tache}
                   moiId={moiId}
-                  peutModifier
+                  peutModifier={tache.peutModifier}
                   referents={referentsDe(tache.perimetre.id)}
                   estAdmin={estAdmin}
                   afficherPerimetre
