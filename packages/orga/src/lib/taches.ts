@@ -70,6 +70,7 @@ export const TACHE_CHAMPS = graphql(`
     statut
     enRetard
     termineeLe
+    peutModifier
     perimetre {
       id
       slug
