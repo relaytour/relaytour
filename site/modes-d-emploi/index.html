@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Les modes d'emploi de l'espace organisateur de Relaytour : admin de l'organisation, admin d'activité, référentes et référents."
+    />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          Relaytour
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="page">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="etiquette">Espace organisateur</span>
+        <h1>Les modes d'emploi de Relaytour</h1>
+        <p class="chapo">
+          Chaque mode d'emploi décrit les écrans et les actions d'un rôle. Choisissez celui qui correspond au rôle que votre organisation vous a donné.
+        </p>
+        <p class="renvoi">
+          Un mode d'emploi ne décrit que les fonctions propres à son rôle. Les admins consultent aussi le mode d'emploi des référentes et référents, qui présente les écrans communs à toutes les personnes.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-roles">
+        <div class="entete">
+          <span class="etiquette">Trois rôles</span>
+          <h2 id="t-roles">Choisir votre mode d'emploi</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="referent.html">
+            <span class="role">Référent·e</span>
+            <h3>Suivre vos tâches et vos fiches</h3>
+            <p>Pour toute personne affectée à un périmètre : la connexion, Mon espace, le rétroplanning, les fiches et les préférences.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="admin-activite.html">
+            <span class="role">Admin d'une activité</span>
+            <h3>Piloter une activité</h3>
+            <p>Pour les personnes qui administrent un événement, une section ou une instance : périodes, périmètres, équipe et avancement.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="admin-organisation.html">
+            <span class="role">Admin de l'organisation</span>
+            <h3>Tenir l'organisation</h3>
+            <p>Pour les membres du bureau : l'identité de l'organisation, ses activités, les comptes et les rôles.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour est un logiciel libre distribué sous licence GNU AGPL-3.0. Les modes d'emploi sont à jour de la version 0.5.0 et servent de base aux modes d'emploi que les organisations envoient à leurs membres.
+      </footer>
+    </main>
+  </body>
+</html>

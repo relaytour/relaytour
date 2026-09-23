@@ -4,6 +4,11 @@ import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import {
+  LIBELLES_ROLE,
+  lienModeDEmploi,
+  roleDuModeDEmploi,
+} from '../lib/modes-d-emploi.ts'
+import {
   messageNotification,
   preferencesDe,
   type NotificationAComposer,
@@ -129,10 +134,20 @@ export async function composer(
   if (job.sorte === 'invitation') {
     const user = await prisma.user.findUniqueOrThrow({
       where: { id: job.userId },
-      select: { name: true },
+      select: { id: true, name: true },
     })
     variables.nom = user.name
     variables.lienConnexion = `${origine}/connexion`
+    // Le rôle se lit à l'envoi : une invitation renvoyée après une nomination
+    // lie le mode d'emploi du nouveau rôle.
+    const role = await roleDuModeDEmploi(
+      prisma,
+      user.id,
+      organisationId ?? configuration.id
+    )
+    const { env } = await import('../env.ts')
+    variables.roleModeDEmploi = LIBELLES_ROLE[role]
+    variables.lienModeDEmploi = lienModeDEmploi(env.MODES_D_EMPLOI_URL, role)
   }
 
   if (job.sorte === 'code-connexion') {
