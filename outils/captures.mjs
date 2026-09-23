@@ -59,22 +59,22 @@ const defiler = texte =>
  * le chargement (`avant`) et geste après le chargement (`apres`).
  */
 const ECRANS = [
-  { nom: 'mon-espace', chemin: '/' },
-  { nom: 'retroplanning', chemin: '/retroplanning' },
+  { nom: 'mon-espace', chemin: `${ACTIVITE}/` },
+  { nom: 'retroplanning', chemin: `${ACTIVITE}/retroplanning` },
   {
     nom: 'fiches-cartes',
-    chemin: '/fiches',
+    chemin: `${ACTIVITE}/fiches`,
     avant: "localStorage.setItem('relaytour.fiches.affichage', 'cartes')",
   },
   {
     nom: 'fiches-liste',
-    chemin: '/fiches',
+    chemin: `${ACTIVITE}/fiches`,
     avant: "localStorage.setItem('relaytour.fiches.affichage', 'liste')",
   },
-  { nom: 'fiche', chemin: '/fiches/planifier-les-creneaux' },
-  { nom: 'perimetre', chemin: '/perimetres/coordination' },
-  { nom: 'preferences', chemin: '/preferences' },
-  { nom: 'avancement', chemin: '/admin/avancement' },
+  { nom: 'fiche', chemin: `${ACTIVITE}/fiches/planifier-les-creneaux` },
+  { nom: 'perimetre', chemin: `${ACTIVITE}/perimetres/coordination` },
+  { nom: 'preferences', chemin: `${ACTIVITE}/preferences` },
+  { nom: 'avancement', chemin: `${ACTIVITE}/admin/avancement` },
   { nom: 'editions', chemin: `${ACTIVITE}/admin/editions` },
   { nom: 'perimetres', chemin: `${ACTIVITE}/admin/perimetres` },
   { nom: 'postes', chemin: `${ACTIVITE}/admin/postes` },
