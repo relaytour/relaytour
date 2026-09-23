@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.6.0
 fr:
   titre: >-
     Vous ouvrez les modes d'emploi depuis le menu du compte

@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.6.0
 fr:
   titre: >-
     Le mail d'invitation contient le lien du mode d'emploi de votre rôle
