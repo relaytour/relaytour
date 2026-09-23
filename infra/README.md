@@ -72,7 +72,7 @@ Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses m
     docker compose --env-file .env cp server:/exports ./exports
     ```
     Le fichier contient des noms et des adresses : remettez-le à l'organisation et supprimez-le du serveur ensuite.
-5. **Code source.** L'espace organisateur lie le code source de la version exécutée, comme l'AGPL l'exige (article 13). Par défaut, le lien mène au dépôt public. Un hébergeur qui modifie Relaytour indique son propre dépôt dans `CODE_SOURCE_URL`.
+5. **Code source.** L'espace organisateur lie le code source de la version exécutée, comme l'AGPL l'exige (article 13). Par défaut, le lien mène au dépôt public. Un hébergeur qui modifie Relaytour indique son propre dépôt dans `CODE_SOURCE_URL`. De la même façon, le menu du compte et le mail d'invitation lient les modes d'emploi du site de Relaytour ; `MODES_D_EMPLOI_URL` les remplace par ceux de l'hébergeur.
 6. **Identité et contenu.** Les admins d'une organisation modifient son nom, ses contacts, son logo et son thème dans l'espace organisateur, et téléchargent son contenu en archive. Le portail d'un hébergeur ne gère que le statut et les limites (ADR 0009).
 
 ## Tâches planifiées

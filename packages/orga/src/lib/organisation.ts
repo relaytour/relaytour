@@ -67,6 +67,7 @@ export const ORGANISATION = graphql(`
         ...ThemeChamps
       }
       codeSource
+      modesDEmploi
     }
   }
 `)
@@ -82,6 +83,8 @@ export interface Organisation {
   pageEquipe: string | null
   /** Adresse du code source de l'installation (AGPL, article 13). */
   codeSource: string
+  /** Liste des modes d'emploi de l'espace organisateur, un par rôle. */
+  modesDEmploi: string
   theme: Theme
 }
 
@@ -95,6 +98,7 @@ export const ORGANISATION_PAR_DEFAUT: Organisation = {
   faviconUrl: null,
   pageEquipe: null,
   codeSource: 'https://github.com/relaytour/relaytour',
+  modesDEmploi: 'https://relaytour.org/modes-d-emploi/',
   theme: themeParDefaut,
 }
 

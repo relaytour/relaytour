@@ -29,6 +29,10 @@
                    padding="8px 0 16px" inner-padding="13px 24px">
           Se connecter
         </mj-button>
+        <mj-text padding="0 0 4px">
+          Le mode d’emploi {{roleModeDEmploi}} présente vos écrans et vos actions.
+          <a href="{{lienModeDEmploi}}" style="color:#020202;font-weight:600">Lire le mode d’emploi</a>
+        </mj-text>
       </mj-column>
     </mj-section>
 

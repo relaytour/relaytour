@@ -88,6 +88,17 @@ const EnvSchema = z
         .regex(/^https:\/\//, 'CODE_SOURCE_URL : adresse https attendue')
         .default('https://github.com/relaytour/relaytour')
     ),
+    // Liste des modes d'emploi, liée depuis le menu du compte et le mail
+    // d'invitation. Un hébergeur qui modifie Relaytour y indique les siens.
+    MODES_D_EMPLOI_URL: z.preprocess(
+      v => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+      z
+        .string()
+        .trim()
+        .url()
+        .regex(/^https:\/\//, 'MODES_D_EMPLOI_URL : adresse https attendue')
+        .default('https://relaytour.org/modes-d-emploi/')
+    ),
   })
   .superRefine((v, ctx) => {
     if (

@@ -117,6 +117,7 @@ Un seul mot par notion.
 | souhait | Intérêt d'une personne pour un périmètre d'une édition, noté par un admin. |
 | tâche | Action datée d'un périmètre pour une édition. |
 | fiche | Fiche méthode (« comment faire ») d'un périmètre ou commune. |
+| mode d'emploi | Page publique du site (`site/modes-d-emploi/`) qui décrit les écrans d'un rôle : admin de l'organisation, admin d'activité, référent·e. Ne pas confondre avec une fiche. |
 | admin de l'organisation | Membre du bureau qui gère toutes les activités, les comptes et l'identité de l'organisation. Il nomme les admins d'activité. |
 | admin d'activité | Personne qui gère une activité : ses périodes, ses périmètres, ses affectations et ses fiches. Elle ne voit pas les autres activités (ADR 0010). |
 | journal | Trace de qui a fait quoi, et quand. Le journal alimente les notifications et le score de participation. |
