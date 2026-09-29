@@ -2,10 +2,10 @@
   "schemaVersion": 3,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.8.0",
+  "version": "0.8.1",
   "versions": [
     {
-      "version": null,
+      "version": "0.8.1",
       "notes": [
         {
           "id": "2026-09-29-orga-les-cartes-de-tous-les-perimetres-ne-se-chevauchent-plus",
