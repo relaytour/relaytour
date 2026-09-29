@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.8.0
 fr:
   titre: >-
     Une activité peut s'ouvrir aux souhaits de tous les membres
