@@ -5,6 +5,7 @@ import { prisma } from '@relaytour/database'
 import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
 import { exigerMembre } from '../lib/appartenances.ts'
+import { annoncerChangementEquipe } from '../lib/equipe.ts'
 import {
   exigerAdminDeLEdition,
   exigerAdminDuPerimetre,
@@ -418,34 +419,49 @@ builder.mutationFields(t => ({
       }
       const membre = await exigerMembre(ctx, id)
       const nom = texteRequis(args.nom, 'Le nom')
-      const actuel = await prisma.user.findUniqueOrThrow({
-        where: { id },
-        select: { name: true },
-      })
+      const organisationId = ctx.organisation!.id
+      const [actuel, appartenance] = await Promise.all([
+        prisma.user.findUniqueOrThrow({
+          where: { id },
+          select: { name: true },
+        }),
+        prisma.appartenance.findUniqueOrThrow({
+          where: { userId_organisationId: { userId: id, organisationId } },
+          select: { role: true },
+        }),
+      ])
       // Le nom appartient au compte, commun à toutes ses organisations.
       if (nom !== actuel.name && membre.autresOrganisations > 0) {
         throw erreurSaisie(
           'Ce compte appartient aussi à une autre organisation : seule la personne peut changer son nom.'
         )
       }
-      return prisma.user.update({
+      // Le rôle ne s'écrit que s'il change : la date de mise à jour de
+      // l'appartenance date alors une vraie nomination (mails d'équipe, ADR 0012).
+      const role = args.estAdmin ? 'ADMIN' : 'MEMBRE'
+      const personne = await prisma.user.update({
         ...query,
         where: { id },
         data: {
           name: nom,
-          appartenances: {
-            update: {
-              where: {
-                userId_organisationId: {
-                  userId: id,
-                  organisationId: ctx.organisation!.id,
+          ...(role === appartenance.role
+            ? {}
+            : {
+                appartenances: {
+                  update: {
+                    where: {
+                      userId_organisationId: { userId: id, organisationId },
+                    },
+                    data: { role },
+                  },
                 },
-              },
-              data: { role: args.estAdmin ? 'ADMIN' : 'MEMBRE' },
-            },
-          },
+              }),
         },
       })
+      if (role === 'ADMIN' && appartenance.role !== 'ADMIN') {
+        await annoncerChangementEquipe(id, { organisationId })
+      }
+      return personne
     },
   }),
 
@@ -506,12 +522,12 @@ builder.mutationFields(t => ({
       const editionId = String(args.editionId)
       // Seul l'admin de l'activité du périmètre affecte : une affectation comme
       // référent·e d'un autre périmètre ne suffit pas.
-      await exigerAdminDuPerimetre(ctx, perimetreId)
+      const { activiteId } = await exigerAdminDuPerimetre(ctx, perimetreId)
       await exigerMembre(ctx, userId)
       // Même contrôle qu'une écriture : périmètre et édition de la même activité de
       // l'organisation, édition non archivée.
       await exigerEcriture(ctx, perimetreId, editionId)
-      return sansDoublon(
+      const affectation = await sansDoublon(
         prisma.affectation.create({
           ...query,
           data: {
@@ -523,6 +539,12 @@ builder.mutationFields(t => ({
         }),
         'Cette personne est déjà affectée à ce périmètre pour cette édition.'
       )
+      // La personne apprend sa nouvelle place par un mail regroupé (ADR 0012).
+      await annoncerChangementEquipe(userId, {
+        organisationId: ctx.organisation!.id,
+        activiteId,
+      })
+      return affectation
     },
   }),
 
@@ -633,6 +655,8 @@ builder.mutationFields(t => ({
             nommeParId: ctx.personne!.id,
           },
         })
+        // Une nomination déjà faite ne crée pas de ligne : le mail ne dira rien.
+        await annoncerChangementEquipe(userId, { organisationId, activiteId })
       } else {
         await prisma.adminActivite.deleteMany({
           where: { userId, activiteId, organisationId },

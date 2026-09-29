@@ -18,6 +18,7 @@ export type SorteCourriel =
   | 'tache-modifiee'
   | 'rappels-echeance'
   | 'resume'
+  | 'equipe'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.
@@ -43,6 +44,8 @@ export interface CourrielJobData {
   // Activité qui porte le mail (ADR 0009) : son identité et son contact, qui reçoit
   // les réponses.
   activiteId?: string
+  // Fenêtre des changements annoncés par un mail d'équipe (ADR 0012), en ISO 8601.
+  fenetre?: { debut: string; fin: string }
 }
 
 export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {

@@ -1,7 +1,7 @@
 <mjml>
   <mj-head>
-    <mj-title>Votre accès à l’espace organisateur</mj-title>
-    <mj-preview>L’équipe d’organisation vous a ouvert un accès à l’espace organisateur.</mj-preview>
+    <mj-title>Votre place dans l’équipe a changé</mj-title>
+    <mj-preview>Votre place dans l’équipe d’organisation a changé.</mj-preview>
     <mj-attributes>
       <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
       <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
@@ -17,23 +17,18 @@
           Bonjour {{nom}},
         </mj-text>
         <mj-text>
-          L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez
-          vos périmètres, vos tâches et les fiches méthode des éditions précédentes.
+          Votre place dans l’équipe d’organisation a changé.
         </mj-text>
         <mj-text>
-          {{situation}}
+          {{changements}}
         </mj-text>
         <mj-text>
-          {{perimetres}}
-        </mj-text>
-        <mj-text>
-          L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre
-          adresse et vous recevez un code par mail.
+          Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur.
         </mj-text>
         <mj-button href="{{lienConnexion}}" background-color="#030303" color="#FFFFFF"
                    border-radius="10px" font-size="15px" font-weight="700"
                    padding="8px 0 16px" inner-padding="13px 24px">
-          Se connecter
+          Ouvrir l’espace organisateur
         </mj-button>
         <mj-text padding="0 0 4px">
           Le mode d’emploi {{roleModeDEmploi}} présente vos écrans et vos actions.
