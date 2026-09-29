@@ -4,6 +4,11 @@ import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import {
+  changementsEquipe,
+  decouvreDesPerimetres,
+  perimetresDeLaPersonne,
+} from '../lib/equipe.ts'
+import {
   LIBELLES_ROLE,
   lienModeDEmploi,
   roleDuModeDEmploi,
@@ -38,6 +43,7 @@ export function sujets(nomCourt: string): Record<SorteCourriel, string> {
     'tache-modifiee': 'Une de vos tâches a été modifiée',
     'rappels-echeance': `Échéances de vos tâches ${nomCourt}`,
     resume: `Votre résumé ${nomCourt}`,
+    equipe: `Votre place dans l’équipe ${nomCourt} a changé`,
   }
 }
 
@@ -145,6 +151,49 @@ export async function composer(
       user.id,
       organisationId ?? configuration.id
     )
+    const { env } = await import('../env.ts')
+    variables.roleModeDEmploi = LIBELLES_ROLE[role]
+    variables.lienModeDEmploi = lienModeDEmploi(env.MODES_D_EMPLOI_URL, role)
+    // Les périmètres de la personne, avec leur description (ADR 0012). Sans
+    // périmètre, le mail explique comment en obtenir un.
+    const idOrganisation = organisationId ?? configuration.id
+    const perimetres =
+      idOrganisation === null
+        ? []
+        : await perimetresDeLaPersonne(prisma, user.id, idOrganisation)
+    variables.perimetres = perimetres
+    variables.situation =
+      perimetres.length > 0
+        ? 'Vous faites partie de l’équipe de ces périmètres :'
+        : idOrganisation !== null &&
+            (await decouvreDesPerimetres(prisma, user.id, idOrganisation))
+          ? 'Vous n’avez pas encore de périmètre. Dans « Tous les périmètres », vous découvrez les périmètres et formulez vos souhaits. Un admin vous affectera ensuite. En attendant, le mode d’emploi vous aide à découvrir l’espace.'
+          : 'Vous n’avez pas encore de périmètre : un admin vous affectera à l’un d’eux. En attendant, le mode d’emploi vous aide à découvrir l’espace.'
+  }
+
+  if (job.sorte === 'equipe') {
+    if (job.fenetre === undefined) {
+      throw new Error('Le mail « equipe » exige une fenêtre.')
+    }
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: job.userId },
+      select: { id: true, name: true },
+    })
+    const idOrganisation = organisationId ?? configuration.id
+    if (idOrganisation === null) return null
+    const changements = await changementsEquipe(
+      prisma,
+      user.id,
+      idOrganisation,
+      job.fenetre,
+      job.activiteId
+    )
+    // Un changement annulé pendant la fenêtre ne s'annonce pas.
+    if (changements.length === 0) return null
+    variables.nom = user.name
+    variables.changements = changements
+    variables.lienConnexion = `${origine}/connexion`
+    const role = await roleDuModeDEmploi(prisma, user.id, idOrganisation)
     const { env } = await import('../env.ts')
     variables.roleModeDEmploi = LIBELLES_ROLE[role]
     variables.lienModeDEmploi = lienModeDEmploi(env.MODES_D_EMPLOI_URL, role)

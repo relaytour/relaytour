@@ -459,6 +459,13 @@ const CAS: Cas[] = [
     attente: REFUSE,
   },
   {
+    operation: 'formulerSouhait',
+    query:
+      'mutation ($p: ID!, $e: ID!) { formulerSouhait(perimetreId: $p, editionId: $e) }',
+    variables: () => ({ p: a.perimetre, e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'inviterPersonne',
     query:
       'mutation ($e: ID, $p: [ID!]) { inviterPersonne(email: "intrusion-refus@exemple.fr", nom: "X", editionId: $e, perimetresSouhaites: $p) { id } }',
@@ -552,6 +559,13 @@ const CAS: Cas[] = [
     attente: { sansEffet: d => expect(d.retirerDroitRedaction).toBe(false) },
   },
   {
+    operation: 'retirerMonSouhait',
+    query:
+      'mutation ($p: ID!, $e: ID!) { retirerMonSouhait(perimetreId: $p, editionId: $e) }',
+    variables: () => ({ p: a.perimetre, e: a.edition }),
+    attente: { sansEffet: d => expect(d.retirerMonSouhait).toBe(false) },
+  },
+  {
     operation: 'retirerSouhait',
     query: 'mutation ($id: ID!) { retirerSouhait(id: $id) }',
     variables: () => ({ id: a.souhait }),
@@ -592,6 +606,10 @@ const CAS: Cas[] = [
       ['mesPerimetres', 'mesPerimetres(activiteId: $a) { id }'],
       ['perimetre', 'perimetre(slug: "natation", activiteId: $a) { id }'],
       ['perimetres', 'perimetres(activiteId: $a) { id }'],
+      [
+        'tousLesPerimetres',
+        'tousLesPerimetres(activiteId: $a) { perimetres { affecte } }',
+      ],
       [
         'peutRedigerFichesCommunes',
         'peutRedigerFichesCommunes(activiteId: $a)',

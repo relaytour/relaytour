@@ -2,17 +2,13 @@
 
 Bonjour {{nom}},
 
-L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez
-vos périmètres, vos tâches et les fiches méthode des éditions précédentes.
+Votre place dans l’équipe d’organisation a changé.
 
-{{situation}}
+{{changements}}
 
-{{perimetres}}
+Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur.
 
-L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre
-adresse et vous recevez un code par mail.
-
-Se connecter : {{lienConnexion}}
+Ouvrir l’espace organisateur : {{lienConnexion}}
 
 Le mode d’emploi {{roleModeDEmploi}} présente vos écrans et vos actions.
 Lire le mode d’emploi : {{lienModeDEmploi}}

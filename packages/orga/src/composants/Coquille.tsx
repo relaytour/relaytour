@@ -1,4 +1,5 @@
 import {
+  CompassOutlined,
   ApartmentOutlined,
   BankOutlined,
   AppstoreOutlined,
@@ -71,7 +72,7 @@ export default function Coquille() {
 
 function Mise({ session }: { session: Session }) {
   const { moi, active } = session
-  const { activite, lien, periode, gere } = useActivite()
+  const { activite, lien, periode, gere, decouverte } = useActivite()
   const { data: menu } = useQuery(MENU_PERIMETRES)
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -88,39 +89,48 @@ function Mise({ session }: { session: Session }) {
     ).values(),
   ].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
 
+  // Une personne qui découvre l'activité (ADR 0012) ne voit que « Tous les
+  // périmètres » et ses préférences.
   const entrees = [
-    { key: lien('/'), icon: <HomeOutlined />, label: 'Mon espace' },
-    {
-      key: lien('/retroplanning'),
-      icon: <ScheduleOutlined />,
-      label: 'Rétroplanning',
-    },
-    { key: lien('/fiches'), icon: <BookOutlined />, label: 'Fiches' },
+    ...(decouverte
+      ? []
+      : [
+          { key: lien('/'), icon: <HomeOutlined />, label: 'Mon espace' },
+          {
+            key: lien('/retroplanning'),
+            icon: <ScheduleOutlined />,
+            label: 'Rétroplanning',
+          },
+          { key: lien('/fiches'), icon: <BookOutlined />, label: 'Fiches' },
+        ]),
     {
       key: lien('/preferences'),
       icon: <SettingOutlined />,
       label: 'Préférences',
     },
-    ...(perimetres.length > 0
-      ? [
-          {
-            type: 'group' as const,
-            label: 'Mes périmètres',
-            children: perimetres.map(p => ({
-              key: lien(`/perimetres/${p.slug}`),
-              icon: (
-                <span className="rt-icone-point" aria-hidden="true">
-                  <span
-                    className="rt-point"
-                    style={{ background: p.couleur ?? 'var(--rt-primaire)' }}
-                  />
-                </span>
-              ),
-              label: p.nom,
-            })),
-          },
-        ]
-      : []),
+    {
+      type: 'group' as const,
+      label: 'Périmètres',
+      children: [
+        {
+          key: lien('/perimetres'),
+          icon: <CompassOutlined />,
+          label: 'Tous les périmètres',
+        },
+        ...perimetres.map(p => ({
+          key: lien(`/perimetres/${p.slug}`),
+          icon: (
+            <span className="rt-icone-point" aria-hidden="true">
+              <span
+                className="rt-point"
+                style={{ background: p.couleur ?? 'var(--rt-primaire)' }}
+              />
+            </span>
+          ),
+          label: p.nom,
+        })),
+      ],
+    },
     // L'administration d'une activité s'ouvre à ses admins ; la page de
     // l'organisation, aux admins de l'organisation seulement (ADR 0010).
     ...(gere
@@ -220,7 +230,10 @@ function Mise({ session }: { session: Session }) {
           open={tiroirOuvert}
           onClose={() => setTiroirOuvert(false)}
           title={
-            <ChoixActivite taille={24} apresChoix={() => setTiroirOuvert(false)} />
+            <ChoixActivite
+              taille={24}
+              apresChoix={() => setTiroirOuvert(false)}
+            />
           }
           styles={{
             body: { padding: 12, display: 'flex', flexDirection: 'column' },

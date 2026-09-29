@@ -57,6 +57,7 @@ groupes:                  # facultatif : sport et pôle par défaut
     libelle: Pôle
     libellePluriel: Pôles
 ordre: 2                  # facultatif : ordre d'affichage
+souhaitsOuverts: true     # facultatif : tous les membres découvrent les périmètres (ADR 0012)
 # Identité propre, facultative (ADR 0009) : chaque champ absent reprend celui de l'organisation.
 contactRecrutement: club.course.rencontres@messagerie.example   # une adresse de rôle de l'organisation
 pageEquipe: https://exemple.org/club-de-course

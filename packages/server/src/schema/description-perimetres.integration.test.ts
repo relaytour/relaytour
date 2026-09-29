@@ -5,6 +5,7 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { construireContenu } from '../orga/exporter.ts'
 
 import { schema } from './index.ts'
 
@@ -61,7 +62,12 @@ beforeAll(async () => {
     data: {
       slug,
       nom: `Organisation ${slug}`,
-      configuration: {},
+      // Une configuration valide : l'export relit les adresses de rôle.
+      configuration: {
+        slug,
+        nom: `Organisation ${slug}`,
+        domainesCourrielAutorises: ['exemple.fr'],
+      },
       activites: {
         create: {
           slug,
@@ -142,6 +148,24 @@ describe('description d’un périmètre', () => {
     })
     expect(r.errors?.[0]?.extensions?.code).toBe('FORBIDDEN')
     expect(await lire()).toBe('Le pôle obtient les lieux.')
+  })
+
+  it('reste hors de l’export quand elle contient une coordonnée personnelle', async () => {
+    await prisma.perimetre.update({
+      where: { id: perimetreId },
+      data: { description: 'Appelez le 06 12 34 56 78.' },
+    })
+    const contenu = await construireContenu(prisma, organisationId)
+    const perimetres = [...contenu.fichiers.entries()].find(([chemin]) =>
+      chemin.endsWith('perimetres.yaml')
+    )
+    expect(perimetres).toBeDefined()
+    expect(String(perimetres![1])).toContain('natation')
+    expect(String(perimetres![1])).not.toContain('06 12 34 56 78')
+    const refus = contenu.refusees.find(r => r.fichier === perimetres![0])
+    expect(refus?.raison).toMatch(
+      /^description de natation : données personnelles/
+    )
   })
 
   it('se retire avec une chaîne vide', async () => {

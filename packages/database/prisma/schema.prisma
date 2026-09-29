@@ -139,22 +139,25 @@ enum NatureActivite {
 // instance (ADR 0008). Elle porte ses périodes (Edition), ses périmètres, ses
 // fiches et ses tâches types.
 model Activite {
-  id             String         @id @default(cuid())
-  organisationId String
-  slug           String
-  nom            String
-  sigle          String?
-  nature         NatureActivite @default(EVENEMENT)
+  id              String         @id @default(cuid())
+  organisationId  String
+  slug            String
+  nom             String
+  sigle           String?
+  nature          NatureActivite @default(EVENEMENT)
   // Groupes de périmètres déclarés dans le contenu, dans l'ordre d'affichage :
   // [{ cle, libelle, libellePluriel }]. Le gabarit propose sport et pole.
-  groupes        Json
-  ordre          Int            @default(0)
+  groupes         Json
+  ordre           Int            @default(0)
   // Identité propre à l'activité (ADR 0009) : contacts, logo, couleurs et fond.
   // Chaque champ absent reprend la valeur de l'organisation.
-  identite       Json?
-  archivedAt     DateTime?
-  createdAt      DateTime       @default(now())
-  updatedAt      DateTime       @updatedAt
+  identite        Json?
+  // Ouverte aux souhaits (ADR 0012) : tous les membres de l'organisation découvrent
+  // ses périmètres et formulent leurs souhaits, sans lire ses tâches ni ses fiches.
+  souhaitsOuverts Boolean        @default(false)
+  archivedAt      DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
 
   organisation Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   editions     Edition[]

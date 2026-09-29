@@ -298,6 +298,7 @@ export async function construireContenu(
           sigle: activite.sigle ?? undefined,
           nature: activite.nature,
           ordre: activite.ordre,
+          souhaitsOuverts: activite.souhaitsOuverts || undefined,
           groupes: lireGroupes(activite.groupes),
           contactRecrutement: identite.contactRecrutement,
           pageEquipe: identite.pageEquipe,

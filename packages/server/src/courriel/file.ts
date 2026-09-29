@@ -22,6 +22,9 @@ export async function mettreEnFile(
     notificationIds?: string[]
     organisationId?: string
     activiteId?: string
+    // Délai avant l'envoi, en millisecondes (mails d'équipe regroupés, ADR 0012).
+    delai?: number
+    fenetre?: CourrielJobData['fenetre']
   } = {}
 ): Promise<void> {
   try {
@@ -43,10 +46,14 @@ export async function mettreEnFile(
       ...(options.activiteId === undefined
         ? {}
         : { activiteId: options.activiteId }),
+      ...(options.fenetre === undefined ? {} : { fenetre: options.fenetre }),
     }
     await avecDelai(
       courrielQueue.add(sorte, data, {
         ...(options.jobId === undefined ? {} : { jobId: options.jobId }),
+        ...(options.delai === undefined
+          ? {}
+          : { delay: Math.max(0, options.delai) }),
         // Un job qui porte un code disparaît de Redis dès son traitement, réussi ou non.
         ...(options.code === undefined
           ? {}

@@ -4,13 +4,16 @@ import type { AppContext, EditionDuContexte } from '../context.ts'
 
 import { erreurSaisie } from './erreurs.ts'
 
-// Souhaits : intérêt d'une personne pour un périmètre d'une édition, noté par un admin.
+// Souhaits : intérêt d'une personne pour un périmètre d'une édition, noté par un admin
+// ou formulé par la personne elle-même (ADR 0012).
 //
-// Un souhait ne donne aucun accès. Seule l'affectation ouvre les droits, et
-// lib/droits.ts ne lit jamais cette table. Un souhait est satisfait quand l'affectation
-// du même triplet (personne, périmètre, édition) existe : cet état se calcule à la
-// lecture et ne se stocke pas. Les admins sont les seules personnes à voir les souhaits,
-// qui ne sont jamais exportés dans Git et ne contiennent aucun texte libre.
+// Un souhait ne donne aucun accès aux tâches ni aux fiches. Seule l'affectation ouvre
+// ces droits, et lib/droits.ts ne lit jamais cette table. Un souhait fait seulement
+// découvrir son activité : la page « Tous les périmètres » (context.ts). Un souhait est
+// satisfait quand l'affectation du même triplet (personne, périmètre, édition) existe :
+// cet état se calcule à la lecture et ne se stocke pas. Les admins voient tous les
+// souhaits de leurs activités, une personne voit les siens. Les souhaits ne sont jamais
+// exportés dans Git et ne contiennent aucun texte libre.
 
 export const SOUHAITS_MAX = 30
 

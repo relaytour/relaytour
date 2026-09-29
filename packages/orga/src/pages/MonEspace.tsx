@@ -116,7 +116,9 @@ export default function MonEspace() {
                 {affectations.length === 0 ? (
                   <p className="rt-texte-secondaire">
                     Vous n’êtes affecté·e à aucun périmètre pour {periode.cette}
-                    . Les admins gèrent les affectations.
+                    . Les admins gèrent les affectations. Dans{' '}
+                    <Link to={lien('/perimetres')}>Tous les périmètres</Link>,
+                    vous découvrez les périmètres et formulez vos souhaits.
                   </p>
                 ) : (
                   affectations.map(({ id, perimetre }) => (

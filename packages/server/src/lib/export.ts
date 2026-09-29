@@ -133,6 +133,7 @@ export async function construireExport(organisationId: string) {
       nom: a.nom,
       sigle: a.sigle,
       nature: a.nature,
+      souhaitsOuverts: a.souhaitsOuverts,
       groupes: lireGroupes(a.groupes),
       ordre: a.ordre,
       archive: a.archivedAt !== null,
