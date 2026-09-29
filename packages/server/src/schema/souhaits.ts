@@ -4,6 +4,7 @@ import type { AppContext } from '../context.ts'
 import { exigerMembre } from '../lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
+import { etatPostes } from '../lib/postes.ts'
 import {
   exigerEditionOuverte,
   perimetresSouhaitesValides,
@@ -207,11 +208,13 @@ builder.mutationFields(t => ({
 // souhaits pour la période en cours, et formule ou retire ses propres souhaits. La
 // page ne renvoie aucune donnée d'une autre personne. Les champs de périmètre qui
 // lisent des tâches, des fiches ou des personnes gardent leurs propres contrôles.
+// Le nombre de personnes recherchées est une information : il ne bloque aucun souhait.
 
 interface PerimetreDecouvert {
   perimetre: Perimetre
   affecte: boolean
   souhaite: boolean
+  personnesRecherchees: number | null
 }
 
 interface Decouverte {
@@ -231,6 +234,11 @@ const PerimetreDecouvertRef = builder
       souhaite: t.exposeBoolean('souhaite', {
         description:
           'Vrai si la personne a un souhait pour ce périmètre et la période.',
+      }),
+      personnesRecherchees: t.exposeInt('personnesRecherchees', {
+        nullable: true,
+        description:
+          'Nombre de personnes encore recherchées pour la période : l’effectif moins les affectations. Nul sans période.',
       }),
     }),
   })
@@ -271,9 +279,9 @@ builder.queryFields(t => ({
           orderBy: [{ ordre: 'asc' }, { nom: 'asc' }],
         }),
       ])
-      const [affectations, souhaits] =
+      const [affectations, souhaits, effectifs, equipes] =
         edition === null
-          ? [[], []]
+          ? [[], [], [], []]
           : await Promise.all([
               prisma.affectation.findMany({
                 where: { userId, editionId: edition.id },
@@ -283,15 +291,35 @@ builder.queryFields(t => ({
                 where: { userId, editionId: edition.id },
                 select: { perimetreId: true },
               }),
+              prisma.effectifPerimetre.findMany({
+                where: { editionId: edition.id },
+                select: { perimetreId: true, effectif: true },
+              }),
+              // Un décompte par périmètre, sans aucun nom de personne.
+              prisma.affectation.groupBy({
+                by: ['perimetreId'],
+                where: { editionId: edition.id },
+                _count: { _all: true },
+              }),
             ])
       const affectes = new Set(affectations.map(a => a.perimetreId))
       const souhaites = new Set(souhaits.map(s => s.perimetreId))
+      const effectif = new Map(effectifs.map(e => [e.perimetreId, e.effectif]))
+      const taille = new Map(equipes.map(e => [e.perimetreId, e._count._all]))
+      // Même règle que la page des postes des admins (lib/postes.ts).
+      const recherchees = (perimetreId: string) =>
+        etatPostes(
+          effectif.get(perimetreId) ?? null,
+          taille.get(perimetreId) ?? 0
+        ).aPourvoir
       return {
         edition,
         perimetres: perimetres.map(perimetre => ({
           perimetre,
           affecte: affectes.has(perimetre.id),
           souhaite: souhaites.has(perimetre.id),
+          personnesRecherchees:
+            edition === null ? null : recherchees(perimetre.id),
         })),
       }
     },
@@ -346,17 +374,29 @@ builder.mutationFields(t => ({
         String(args.perimetreId),
         String(args.editionId)
       )
-      const deja = await prisma.souhait.count({
-        where: { userId, editionId: cible.editionId },
+      // Un souhait déjà présent répond oui, même à la limite : l'opération se
+      // rejoue sans erreur.
+      const present = await prisma.souhait.findUnique({
+        where: { userId_perimetreId_editionId: { userId, ...cible } },
+        select: { id: true },
       })
-      if (deja >= SOUHAITS_MAX) {
-        throw erreurSaisie(
-          `Vous avez déjà ${SOUHAITS_MAX} souhaits pour cette période.`
-        )
-      }
-      await prisma.souhait.createMany({
-        data: [{ userId, ...cible }],
-        skipDuplicates: true,
+      if (present !== null) return true
+      // Le verrou sur la ligne de la personne sérialise ses souhaits : deux requêtes
+      // simultanées ne dépassent pas la limite.
+      await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM User WHERE id = ${userId} FOR UPDATE`
+        const deja = await tx.souhait.count({
+          where: { userId, editionId: cible.editionId },
+        })
+        if (deja >= SOUHAITS_MAX) {
+          throw erreurSaisie(
+            `Vous avez déjà ${SOUHAITS_MAX} souhaits pour cette période.`
+          )
+        }
+        await tx.souhait.createMany({
+          data: [{ userId, ...cible }],
+          skipDuplicates: true,
+        })
       })
       journal.info(
         { evenement: 'souhait-formule', userId, ...cible },

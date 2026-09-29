@@ -12,6 +12,7 @@ export default defineConfig({
     'orga-valider': 'scripts/orga-valider.ts',
     'orga-importer': 'scripts/orga-importer.ts',
     'orga-exporter': 'scripts/orga-exporter.ts',
+    'equipe-importer': 'scripts/equipe-importer.ts',
     'essai-courriel': 'scripts/essai-courriel.ts',
     'planification-lancer': 'scripts/planification-lancer.ts',
   },

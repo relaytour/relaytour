@@ -1,4 +1,4 @@
-import { CheckOutlined, StarOutlined } from '@ant-design/icons'
+import { CheckOutlined, StarOutlined, TeamOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Alert, App, Button, Col, Empty, Row, Skeleton, Tag } from 'antd'
 import { Link } from 'react-router'
@@ -12,7 +12,8 @@ import { messageErreur } from '../lib/erreurs'
 
 // Tous les périmètres de l'activité affichée (ADR 0012) : les affectations de la
 // personne, ses souhaits, puis les autres périmètres, chacun avec sa description.
-// La page ne montre ni tâche, ni fiche, ni nom de personne.
+// La page ne montre ni tâche, ni fiche, ni nom de personne. Le nombre de personnes
+// encore recherchées est une information : il n'empêche aucun souhait.
 
 const TOUS = graphql(`
   query TousLesPerimetres {
@@ -24,6 +25,7 @@ const TOUS = graphql(`
       perimetres {
         affecte
         souhaite
+        personnesRecherchees
         perimetre {
           id
           slug
@@ -50,6 +52,13 @@ const RETIRER = graphql(`
 `)
 
 type Ligne = TousLesPerimetresQuery['tousLesPerimetres']['perimetres'][number]
+
+function libelleRecherche(nombre: number): string {
+  if (nombre === 0) return 'L’équipe est au complet.'
+  return nombre === 1
+    ? '1 personne recherchée'
+    : `${nombre} personnes recherchées`
+}
 
 export default function TousLesPerimetres() {
   const { activite, lien, libelleGroupe, decouverte } = useActivite()
@@ -163,6 +172,20 @@ export default function TousLesPerimetres() {
           >
             {perimetre.description ?? 'Aucune description pour ce périmètre.'}
           </p>
+          {ligne.personnesRecherchees !== null && (
+            <p
+              className="rt-texte-secondaire"
+              style={{
+                margin: 0,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+              }}
+            >
+              <TeamOutlined aria-hidden />
+              {libelleRecherche(ligne.personnesRecherchees)}
+            </p>
+          )}
           <div>{action}</div>
         </div>
       </Col>

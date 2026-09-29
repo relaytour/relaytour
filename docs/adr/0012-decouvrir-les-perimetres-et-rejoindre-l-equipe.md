@@ -25,6 +25,7 @@ Une organisation constitue son équipe à partir d'une réunion, d'une fiche d'i
 - Une entrée « Tous les périmètres » ouvre la section « Périmètres » du menu. Elle est toujours visible dans une activité visible.
 - La page range les périmètres de l'activité en trois blocs : vos périmètres (vos affectations), vos souhaits, puis les autres périmètres. Chaque bloc suit les groupes de l'activité. Chaque périmètre montre son nom, son groupe, sa couleur et sa description.
 - Un périmètre affecté mène à sa page. La page ne montre ni tâche, ni fiche, ni nom de personne, ni souhait d'une autre personne.
+- Chaque périmètre indique le nombre de personnes encore recherchées pour la période : l'effectif moins les affectations, selon la règle de la page « Postes à pourvoir ». Ce nombre est une information : il n'empêche aucun souhait.
 
 ### Visibilité d'une activité
 
