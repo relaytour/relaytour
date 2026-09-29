@@ -11,10 +11,7 @@ const saisie = {
 
 describe('validerEdition', () => {
   it('normalise le nom et garde les autres valeurs', () => {
-    expect(validerEdition(saisie)).toEqual({
-      ...saisie,
-      nom: 'Rencontres 2027',
-    })
+    expect(validerEdition(saisie)).toEqual({ ...saisie, nom: 'Rencontres 2027' })
   })
 
   it('refuse une année hors de la plage', () => {
@@ -24,9 +21,7 @@ describe('validerEdition', () => {
   })
 
   it('refuse un nom vide', () => {
-    expect(() => validerEdition({ ...saisie, nom: '  ' })).toThrow(
-      /obligatoire/
-    )
+    expect(() => validerEdition({ ...saisie, nom: '  ' })).toThrow(/obligatoire/)
   })
 
   it('refuse une fin avant le début', () => {
