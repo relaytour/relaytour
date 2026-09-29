@@ -130,6 +130,9 @@ export default function TousLesPerimetres() {
         <div
           className="rt-verre"
           style={{
+            // Sans border-box, la marge interne et la bande de couleur s'ajoutent à
+            // la hauteur de la colonne : la carte recouvre alors la rangée suivante.
+            boxSizing: 'border-box',
             height: '100%',
             display: 'flex',
             flexDirection: 'column',

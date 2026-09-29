@@ -5,6 +5,23 @@
   "version": "0.8.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-29-orga-les-cartes-de-tous-les-perimetres-ne-se-chevauchent-plus",
+          "date": "2026-09-29",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les cartes de « Tous les périmètres » ne se chevauchent plus",
+            "texte": "Chaque carte de la page « Tous les périmètres » reste dans sa colonne. Les titres des groupes et les cartes de la rangée suivante restent visibles.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.0",
       "notes": [
         {
