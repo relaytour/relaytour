@@ -2,6 +2,7 @@
 // captures : photographie les écrans de l'espace organisateur pour le site.
 //
 //   node outils/captures.mjs --origine http://localhost:4460
+//   node outils/captures.mjs --seulement editions,perimetres
 //
 // Le script ouvre Google Chrome avec un profil temporaire et le pilote par son
 // protocole de débogage (WebSocket natif de Node 24, aucune dépendance). La
@@ -27,6 +28,8 @@ const { values } = parseArgs({
     sortie: { type: 'string', default: join(RACINE, 'site/captures') },
     chrome: { type: 'string' },
     port: { type: 'string', default: '9333' },
+    // Noms des écrans à photographier, séparés par des virgules. Tous par défaut.
+    seulement: { type: 'string' },
   },
 })
 
@@ -40,25 +43,68 @@ const CHROME =
 const LARGEUR = 1440
 const HAUTEUR = 900
 
-/** Les écrans photographiés : nom du fichier, chemin, réglage éventuel du navigateur. */
+// Les écrans d'administration vivent sous l'identifiant de l'activité (ADR 0008).
+const ACTIVITE = '/rencontres'
+
+/** Clique le premier élément de <main> dont le texte vaut `texte`. */
+const cliquer = texte =>
+  `[...document.querySelectorAll('main a, main button')].find(e => e.innerText.trim() === ${JSON.stringify(texte)})?.click()`
+
+/** Fait défiler jusqu'au titre dont le texte vaut `texte`. */
+const defiler = texte =>
+  `[...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim() === ${JSON.stringify(texte)})?.scrollIntoView({ block: 'start' })`
+
+/**
+ * Les écrans photographiés : nom du fichier, chemin, réglage du navigateur avant
+ * le chargement (`avant`) et geste après le chargement (`apres`).
+ */
 const ECRANS = [
-  { nom: 'mon-espace', chemin: '/' },
-  { nom: 'retroplanning', chemin: '/retroplanning' },
+  { nom: 'mon-espace', chemin: `${ACTIVITE}/` },
+  { nom: 'retroplanning', chemin: `${ACTIVITE}/retroplanning` },
   {
     nom: 'fiches-cartes',
-    chemin: '/fiches',
+    chemin: `${ACTIVITE}/fiches`,
     avant: "localStorage.setItem('relaytour.fiches.affichage', 'cartes')",
   },
   {
     nom: 'fiches-liste',
-    chemin: '/fiches',
+    chemin: `${ACTIVITE}/fiches`,
     avant: "localStorage.setItem('relaytour.fiches.affichage', 'liste')",
   },
-  { nom: 'fiche', chemin: '/fiches/planifier-les-creneaux' },
-  { nom: 'perimetre', chemin: '/perimetres/coordination' },
-  { nom: 'preferences', chemin: '/preferences' },
-  { nom: 'avancement', chemin: '/admin/avancement' },
+  { nom: 'fiche', chemin: `${ACTIVITE}/fiches/planifier-les-creneaux` },
+  { nom: 'perimetre', chemin: `${ACTIVITE}/perimetres/coordination` },
+  { nom: 'preferences', chemin: `${ACTIVITE}/preferences` },
+  { nom: 'avancement', chemin: `${ACTIVITE}/admin/avancement` },
+  { nom: 'editions', chemin: `${ACTIVITE}/admin/editions` },
+  { nom: 'perimetres', chemin: `${ACTIVITE}/admin/perimetres` },
+  { nom: 'postes', chemin: `${ACTIVITE}/admin/postes` },
+  { nom: 'personnes', chemin: `${ACTIVITE}/admin/personnes` },
+  {
+    nom: 'personnes-roles',
+    chemin: `${ACTIVITE}/admin/personnes`,
+    apres: cliquer('Léa Bernard'),
+  },
+  { nom: 'redaction', chemin: `${ACTIVITE}/admin/redaction` },
+  { nom: 'activites', chemin: `${ACTIVITE}/admin/activites` },
+  {
+    nom: 'activites-nouvelle',
+    chemin: `${ACTIVITE}/admin/activites`,
+    apres: cliquer('Nouvelle activité'),
+  },
+  { nom: 'organisation', chemin: `${ACTIVITE}/admin/organisation` },
+  {
+    nom: 'organisation-contenu',
+    chemin: `${ACTIVITE}/admin/organisation`,
+    apres: defiler('Contenu de l’organisation'),
+  },
 ]
+
+const choisis = values.seulement?.split(',').map(nom => nom.trim())
+const inconnus = (choisis ?? []).filter(nom => !ECRANS.some(e => e.nom === nom))
+if (inconnus.length > 0) {
+  console.error(`Écrans inconnus : ${inconnus.join(', ')}`)
+  process.exit(1)
+}
 
 const attendre = ms => new Promise(r => setTimeout(r, ms))
 
@@ -165,10 +211,14 @@ await envoyer('Emulation.setDeviceMetricsOverride', {
 })
 mkdirSync(values.sortie, { recursive: true })
 
-for (const ecran of ECRANS) {
+for (const ecran of ECRANS.filter(e => !choisis || choisis.includes(e.nom))) {
   if (ecran.avant) await evaluer(ecran.avant)
   await envoyer('Page.navigate', { url: `${values.origine}${ecran.chemin}` })
   await attendre(2500)
+  if (ecran.apres) {
+    await evaluer(ecran.apres)
+    await attendre(1200)
+  }
   await evaluer('document.fonts.ready.then(() => true)')
   const { data } = await envoyer('Page.captureScreenshot', {
     format: 'webp',

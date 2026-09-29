@@ -389,6 +389,11 @@ const OrganisationRef = builder
           'Adresse du code source de l’installation, que l’AGPL oblige à proposer aux personnes qui l’utilisent.',
         resolve: async () => (await import('../env.ts')).env.CODE_SOURCE_URL,
       }),
+      modesDEmploi: t.string({
+        description:
+          'Adresse de la liste des modes d’emploi de l’espace organisateur, un par rôle.',
+        resolve: async () => (await import('../env.ts')).env.MODES_D_EMPLOI_URL,
+      }),
     }),
   })
 

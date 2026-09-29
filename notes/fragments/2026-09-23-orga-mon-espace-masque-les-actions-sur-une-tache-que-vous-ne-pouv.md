@@ -16,5 +16,5 @@ fr:
 L'API expose `peutModifier` sur la tâche, sans argument : la tâche porte son
 périmètre et son édition. Le champ reprend `peutModifierPerimetre`, la règle
 qu'applique déjà `perimetre.peutModifier`. `MonEspace` le passe aux cartes à la
-place de la valeur codée en dur. `editionEtPerimetre` garde son résultat par
-requête : une liste de tâches interroge le même couple périmètre et édition.
+place de la valeur codée en dur. `droits.ts` mémorise l'édition et le périmètre
+par requête : une liste de tâches les relit autrement à chaque tâche.

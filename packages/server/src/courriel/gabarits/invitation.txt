@@ -10,6 +10,9 @@ adresse et vous recevez un code par mail.
 
 Se connecter : {{lienConnexion}}
 
+Le mode d’emploi {{roleModeDEmploi}} présente vos écrans et vos actions.
+Lire le mode d’emploi : {{lienModeDEmploi}}
+
 --
 Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
 organisateur de {{organisation}}. Pour toute question, répondez à ce mail.

@@ -1,12 +1,14 @@
 import {
   CheckOutlined,
   LogoutOutlined,
+  QuestionCircleOutlined,
   SettingOutlined,
 } from '@ant-design/icons'
 import { Dropdown } from 'antd'
 import { useNavigate } from 'react-router'
 
 import { useActivite } from '../lib/activite'
+import { useOrganisation } from '../lib/organisation'
 import {
   useChangerOrganisation,
   useDeconnexion,
@@ -16,8 +18,9 @@ import {
 import { Avatar } from './Personne'
 
 /**
- * Le compte de la barre haute : initiales, nom, préférences, changement
- * d'organisation quand la personne en a plusieurs (ADR 0008), et déconnexion.
+ * Le compte de la barre haute : initiales, nom, préférences, modes d'emploi,
+ * changement d'organisation quand la personne en a plusieurs (ADR 0008), et
+ * déconnexion.
  */
 export default function MenuCompte({
   nom,
@@ -31,6 +34,7 @@ export default function MenuCompte({
   const { organisations } = useSession()
   const changerOrganisation = useChangerOrganisation()
   const { lien } = useActivite()
+  const { modesDEmploi } = useOrganisation()
   const choixOrganisation =
     organisations.length > 1
       ? [
@@ -57,6 +61,16 @@ export default function MenuCompte({
             key: 'preferences',
             icon: <SettingOutlined />,
             label: 'Préférences',
+          },
+          {
+            key: 'modes-d-emploi',
+            icon: <QuestionCircleOutlined />,
+            // Le site public s'ouvre dans un nouvel onglet, hors du routeur.
+            label: (
+              <a href={modesDEmploi} target="_blank" rel="noopener noreferrer">
+                Modes d’emploi
+              </a>
+            ),
           },
           { type: 'divider' },
           {

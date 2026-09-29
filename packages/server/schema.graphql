@@ -358,6 +358,11 @@ type Organisation {
   codeSource: String!
   faviconUrl: String
   logoUrl: String
+
+  """
+  Adresse de la liste des modes d’emploi de l’espace organisateur, un par rôle.
+  """
+  modesDEmploi: String!
   nom: String!
   pageEquipe: String
   sigle: String
