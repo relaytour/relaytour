@@ -2,10 +2,10 @@
   "schemaVersion": 3,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.7.0",
       "notes": [
         {
           "id": "2026-09-29-orga-chaque-perimetre-peut-avoir-un-contact-principal",

@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.7.0
 fr:
   titre: >-
     Mon espace masque les actions sur une tâche que vous ne pouvez plus modifier

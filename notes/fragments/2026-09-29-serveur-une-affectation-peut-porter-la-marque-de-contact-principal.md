@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.7.0
 fr:
   titre: >-
     Une affectation peut porter la marque de contact principal
