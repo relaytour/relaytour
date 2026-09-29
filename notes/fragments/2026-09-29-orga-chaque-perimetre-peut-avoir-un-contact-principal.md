@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.7.0
 fr:
   titre: >-
     Chaque périmètre peut avoir un contact principal
