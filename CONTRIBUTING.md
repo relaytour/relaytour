@@ -30,6 +30,7 @@ yarn check        # lint, types, build
 yarn test         # tests unitaires
 yarn workspace @relaytour/server test:integration   # base locale, worker arrêté
 yarn workspace @relaytour/server orga:exporter      # écrit tout le contenu de l'organisation dans le dossier de contenu (ADR 0009)
+yarn workspace @relaytour/server equipe:importer --fichier equipe.yaml --activite rencontres --edition 2027 --simulation   # équipe d'une période (ADR 0013)
 yarn codegen      # contrats commités
 node outils/site.mjs   # site de présentation, après un changement des jetons
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif
@@ -58,6 +59,7 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 | Dépendances | Licences compatibles avec l'AGPL seulement, liste blanche dans `outils/verifier-licences.mjs`. Valkey et non Redis. | ADR 0007 |
 | Licence | AGPL-3.0, un seul code, multi-organisation comprise. Le contenu d'une organisation n'entre jamais dans le dépôt. | ADR 0005, 0006, 0008 |
 | Activités et administration de l'installation | Une organisation porte une ou plusieurs activités (événement, saison, mandat), chacune avec ses périodes, ses périmètres rangés en groupes déclarés dans le contenu, ses fiches et ses tâches types. Les appartenances sont par organisation. L'administration de l'installation (créer, suspendre, limiter, exporter une organisation) passe par un script ou un jeton, sans accès aux données. | ADR 0008 |
+| Administration de l'équipe | Une équipe se saisit dans l'espace organisateur, ou s'importe par la commande `equipe-importer` dans le conteneur, additive et sans mail par défaut. Le jeton de l'hébergeur n'invite ni n'affecte personne ; `JETON_ADMINISTRATION_LOCAL` le limite aux requêtes locales. | ADR 0013 |
 | Extensions | Aucun chargeur de modules dans le serveur. Un besoin d'hébergeur entre par l'API d'administration de l'installation ; portail client, paiement et paliers restent chez l'hébergeur. | ADR 0007, 0008 |
 | Configuration d'organisation | Un seul objet (`packages/server/src/lib/organisation.ts`), lu dans la ligne `Organisation` en base, sinon dans les variables d'amorçage. `organisation.yaml` du dépôt d'organisation la porte ; l'import la met à jour, et les admins la modifient dans l'espace organisateur (ADR 0009). L'expéditeur des mails et l'origine de l'espace organisateur restent dans l'environnement. | ADR 0006 |
 | Rôles V1 | Admin de l'organisation, admin d'activité et référent·e. Une personne voit les activités qu'elle administre ou où elle est affectée. Elle découvre en plus les activités ouvertes aux souhaits et celles où elle a un souhait : la page « Tous les périmètres » seulement. Le rôle bénévole viendra après la V1. | ADR 0006, 0008, 0010, 0012 |

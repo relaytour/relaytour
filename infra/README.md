@@ -65,7 +65,7 @@ Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses m
     ```
     Les options `--limite-activites` et `--limite-periodes` plafonnent le nombre d'activités et de périodes ouvertes. Sans elles, l'organisation n'a aucune limite.
 2. **Désigner l'organisation** dans les autres scripts avec `--organisation <slug>` : `creer-admin.js`, `creer-edition.js` (et `--activite <slug>`).
-3. **Administrer par API** (facultatif) : un jeton `JETON_ADMINISTRATION` d'au moins 32 caractères, dans le `.env`, ouvre les requêtes `organisations` et les mutations `creerOrganisation`, `inviterPremierAdmin`, `modifierOrganisationInstallation` et `demanderExport` sur `/graphql`, avec l'en-tête `Authorization: Bearer <jeton>`. Ce jeton ne donne accès à aucune donnée d'une organisation. `CONTACT_HEBERGEUR` indique à qui s'adresser quand une limite est atteinte.
+3. **Administrer par API** (facultatif) : un jeton `JETON_ADMINISTRATION` d'au moins 32 caractères, dans le `.env`, ouvre les requêtes `organisations` et les mutations `creerOrganisation`, `inviterPremierAdmin`, `modifierOrganisationInstallation` et `demanderExport` sur `/graphql`, avec l'en-tête `Authorization: Bearer <jeton>`. Ce jeton ne donne accès à aucune donnée d'une organisation. `CONTACT_HEBERGEUR` indique à qui s'adresser quand une limite est atteinte. Avec `JETON_ADMINISTRATION_LOCAL=true`, le jeton n'est accepté que sur une requête locale, qui n'est pas passée par Caddy : un programme de la machine appelle alors `http://127.0.0.1:4400/graphql` (ADR 0013).
 4. **Exporter une organisation** : le fichier s'écrit dans le volume `exports`.
     ```bash
     docker compose --env-file .env exec server node dist/exporter-organisation.js rencontres
@@ -74,6 +74,29 @@ Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses m
     Le fichier contient des noms et des adresses : remettez-le à l'organisation et supprimez-le du serveur ensuite.
 5. **Code source.** L'espace organisateur lie le code source de la version exécutée, comme l'AGPL l'exige (article 13). Par défaut, le lien mène au dépôt public. Un hébergeur qui modifie Relaytour indique son propre dépôt dans `CODE_SOURCE_URL`. De la même façon, le menu du compte et le mail d'invitation lient les modes d'emploi du site de Relaytour ; `MODES_D_EMPLOI_URL` les remplace par ceux de l'hébergeur.
 6. **Identité et contenu.** Les admins d'une organisation modifient son nom, ses contacts, son logo et son thème dans l'espace organisateur, et téléchargent son contenu en archive. Le portail d'un hébergeur ne gère que le statut et les limites (ADR 0009).
+
+## Constituer une équipe depuis le serveur
+
+Une commande importe l'équipe d'une activité pour une période : les comptes, les affectations, les contacts principaux et les souhaits (ADR 0013). Elle s'exécute dans le conteneur, sans route réseau. Elle crée ce qui manque, ne retire rien, et peut se relancer. Aucun mail ne part sans `--envoyer-mails`.
+
+```yaml
+# equipe.yaml : données personnelles, à garder hors de tout dépôt Git.
+personnes:
+  - nom: Prénom Nom
+    adresse: prenom.nom@exemple.org
+    affectations: [coordination, football]   # slugs des périmètres de l'activité
+    contactPrincipal: [coordination]         # parmi ses affectations
+  - nom: Autre Personne
+    adresse: autre@exemple.org
+    souhaits: [volley]                       # intéressée, sans affectation
+```
+
+```bash
+docker compose --env-file .env run --rm -v /chemin/equipe.yaml:/equipe.yaml:ro server \
+  node dist/equipe-importer.js --fichier /equipe.yaml --activite rencontres --edition 2027 --simulation
+```
+
+Sans `--simulation`, la commande écrit. Avec `--envoyer-mails`, une personne nouvelle reçoit son invitation, qui liste ses périmètres, et une personne déjà membre reçoit le mail d'équipe (ADR 0012). Supprimez le fichier du serveur après l'import.
 
 ## Tâches planifiées
 

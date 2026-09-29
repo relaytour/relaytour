@@ -14,7 +14,11 @@ import {
 
 import { buildContext, type AppContext } from '../context.ts'
 import { composer } from '../courriel/messages.ts'
-import { fenetreEquipe, FENETRE_EQUIPE_MS } from '../lib/equipe.ts'
+import {
+  annoncerChangementEquipe,
+  fenetreEquipe,
+  FENETRE_EQUIPE_MS,
+} from '../lib/equipe.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
 import { schema } from './index.ts'
@@ -76,6 +80,8 @@ const mailsEquipe = () =>
       organisationId: string
     }
   }[]
+
+let jobAlex = ''
 
 const AFFECTER = `mutation ($u: ID!, $p: ID!, $e: ID!) { affecter(personneId: $u, perimetreId: $p, editionId: $e) { id } }`
 
@@ -199,13 +205,17 @@ describe('gestes qui mettent un mail d’équipe en file', () => {
     const [mail] = mailsEquipe()
     expect(mail?.cible).toEqual({ userId: ids.alex })
     expect(mail?.options.activiteId).toBe(ids.activite)
-    expect(mail?.options.jobId).toMatch(new RegExp(`^equipe-${ids.alex}-\\d+$`))
+    // L'organisation et l'activité entrent dans l'identifiant du job.
+    expect(mail?.options.jobId).toMatch(
+      new RegExp(`^equipe-${ids.org}-${ids.activite}-${ids.alex}-\\d+$`)
+    )
     expect(mail?.options.jobId).not.toContain(':')
+    jobAlex = mail?.options.jobId ?? ''
     expect(mail?.options.delai).toBeGreaterThan(0)
     expect(mail?.options.delai).toBeLessThanOrEqual(FENETRE_EQUIPE_MS + 5_000)
   })
 
-  it('deux affectations de la même fenêtre partagent le même job', async () => {
+  it('deux affectations d’une personne dans la même fenêtre partagent le même job', async () => {
     await executer(ids.admin, AFFECTER, {
       u: ids.alex,
       p: ids.basket,
@@ -217,8 +227,28 @@ describe('gestes qui mettent un mail d’équipe en file', () => {
       e: ids.edition,
     })
     const [alex, sam] = mailsEquipe()
-    expect(alex?.options.fenetre).toEqual(sam?.options.fenetre)
-    expect(alex?.options.jobId).not.toBe(sam?.options.jobId)
+    // Les deux affectations d'Alex (natation, puis basket) visent le même job, sauf
+    // si le test a franchi la fin d'une fenêtre entre les deux.
+    if (alex?.options.fenetre.debut === fenetreEquipe().debut) {
+      expect(alex.options.jobId).toBe(jobAlex)
+    }
+    expect(sam?.options.jobId).not.toBe(alex?.options.jobId)
+  })
+
+  it('déduit la fenêtre de l’instant écrit en base, pas de l’heure de l’annonce', async () => {
+    const instant = new Date('2027-01-01T10:09:59.900Z')
+    await annoncerChangementEquipe(
+      ids.alex,
+      { organisationId: ids.org, activiteId: ids.activite, instant },
+      Date.parse('2027-01-01T10:10:00.100Z')
+    )
+    const [mail] = mailsEquipe()
+    expect(mail?.options.fenetre).toEqual({
+      debut: '2027-01-01T10:00:00.000Z',
+      fin: '2027-01-01T10:10:00.000Z',
+    })
+    // L'envoi part tout de suite après la fin de la fenêtre.
+    expect(mail?.options.delai).toBeLessThanOrEqual(5_000)
   })
 
   it('une nomination comme admin d’activité', async () => {
@@ -305,6 +335,7 @@ describe('contenu des mails', () => {
       sorte: 'equipe',
       userId: ids.lou,
       organisationId: ids.org,
+      activiteId: ids.activite,
       fenetre: autourDuTest(),
     })
     expect(lou?.texte).toContain('Vous devenez admin de l’activité Tournoi')
@@ -323,15 +354,34 @@ describe('contenu des mails', () => {
   })
 
   it('n’annonce pas une affectation retirée pendant la fenêtre', async () => {
+    // Le mail de l'activité ne trouve plus rien à annoncer.
+    expect(
+      await composer(prisma, {
+        sorte: 'equipe',
+        userId: ids.sam,
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        fenetre: autourDuTest(),
+      })
+    ).toBeNull()
+  })
+
+  it('sépare le mail de l’organisation de celui d’une activité', async () => {
+    // Sans activité, le mail ne porte que le rôle d'organisation.
     const sam = await composer(prisma, {
       sorte: 'equipe',
       userId: ids.sam,
       organisationId: ids.org,
       fenetre: autourDuTest(),
     })
-    // Seule reste la nomination comme admin de l'organisation.
-    expect(sam?.texte).not.toContain('Basket')
     expect(sam?.texte).toContain('Vous devenez admin de l’organisation')
+    const alex = await composer(prisma, {
+      sorte: 'equipe',
+      userId: ids.alex,
+      organisationId: ids.org,
+      fenetre: autourDuTest(),
+    })
+    expect(alex).toBeNull()
   })
 
   it('liste les périmètres dans l’invitation', async () => {

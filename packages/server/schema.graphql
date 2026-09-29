@@ -449,6 +449,11 @@ type PerimetreDecouvert {
   affecte: Boolean!
   perimetre: Perimetre!
 
+  """
+  Nombre de personnes encore recherchées pour la période : l’effectif moins les affectations. Nul sans période.
+  """
+  personnesRecherchees: Int
+
   """Vrai si la personne a un souhait pour ce périmètre et la période."""
   souhaite: Boolean!
 }

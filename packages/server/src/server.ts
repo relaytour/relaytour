@@ -21,6 +21,7 @@ import { journal } from './lib/journal.ts'
 import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
 import { assurerOrganisationParDefaut } from './lib/organisation.ts'
 import { writeSchemaFile } from './lib/print-schema.ts'
+import { requeteLocale } from './lib/requete-locale.ts'
 import { sonderDependances } from './lib/sante.ts'
 import { schema } from './schema/index.ts'
 
@@ -133,7 +134,11 @@ app.use(
       // faux rend la requête anonyme.
       const porteur = /^Bearer\b\s*(.*)$/i.exec(req.get('authorization') ?? '')
       if (porteur !== null) {
-        const valide = jetonAdministrationValide((porteur[1] ?? '').trim())
+        // Avec JETON_ADMINISTRATION_LOCAL, un jeton relayé par le proxy ne vaut rien :
+        // la requête devient anonyme, comme avec un jeton faux (ADR 0013).
+        const valide =
+          jetonAdministrationValide((porteur[1] ?? '').trim()) &&
+          (!env.JETON_ADMINISTRATION_LOCAL || requeteLocale(req))
         if (!valide) {
           journal.warn(
             { evenement: 'jeton-administration-refuse', ip: req.ip },

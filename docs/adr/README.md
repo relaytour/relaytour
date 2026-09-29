@@ -14,5 +14,6 @@
 | [0010](0010-admins-d-activite-et-visibilite-des-activites.md) | Admins d'activité et visibilité des activités | Acceptée |
 | [0011](0011-contact-principal-d-un-perimetre.md) | Contact principal d'un périmètre | Acceptée |
 | [0012](0012-decouvrir-les-perimetres-et-rejoindre-l-equipe.md) | Découvrir les périmètres et rejoindre l'équipe | Acceptée |
+| [0013](0013-administrer-l-equipe-depuis-le-serveur.md) | Administrer l'équipe depuis le serveur | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

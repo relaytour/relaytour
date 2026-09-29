@@ -51,7 +51,7 @@ const code = (r: Awaited<ReturnType<typeof executer>>) =>
 const TOUS = `query ($a: ID) {
   tousLesPerimetres(activiteId: $a) {
     edition { id }
-    perimetres { perimetre { slug description } affecte souhaite }
+    perimetres { perimetre { slug description } affecte souhaite personnesRecherchees }
   }
 }`
 const ACTIVITES = `{ activites { id acces souhaitsOuverts } }`
@@ -68,6 +68,7 @@ type Tous = {
       perimetre: { slug: string; description: string | null }
       affecte: boolean
       souhaite: boolean
+      personnesRecherchees: number | null
     }[]
   }
 }
@@ -159,6 +160,10 @@ beforeAll(async () => {
       perimetreId: ids.natation,
       editionId: ids.edition,
     },
+  })
+  // Natation cherche trois personnes et en a une ; basket n'a pas d'effectif.
+  await prisma.effectifPerimetre.create({
+    data: { perimetreId: ids.natation, editionId: ids.edition, effectif: 3 },
   })
   ids.fiche = (
     await prisma.fiche.create({
@@ -257,6 +262,50 @@ describe('activité ouverte aux souhaits', () => {
     ])
   })
 
+  it('indique le nombre de personnes recherchées, sans bloquer les souhaits', async () => {
+    const tous = (
+      (await executer(ids.membre, TOUS, { a: ids.activite })).data as Tous
+    ).tousLesPerimetres
+    // Sans effectif, un périmètre attend une personne (même règle que les postes).
+    expect(
+      tous.perimetres.map(p => [p.perimetre.slug, p.personnesRecherchees])
+    ).toEqual([
+      ['basket', 1],
+      ['natation', 2],
+    ])
+    await prisma.effectifPerimetre.update({
+      where: {
+        perimetreId_editionId: {
+          perimetreId: ids.natation,
+          editionId: ids.edition,
+        },
+      },
+      data: { effectif: 1 },
+    })
+    try {
+      const complet = (
+        (await executer(ids.membre, TOUS, { a: ids.activite })).data as Tous
+      ).tousLesPerimetres.perimetres.find(p => p.perimetre.slug === 'natation')
+      expect(complet?.personnesRecherchees).toBe(0)
+      const r = await executer(ids.membre, FORMULER, {
+        p: ids.natation,
+        e: ids.edition,
+      })
+      expect(r.errors).toBeUndefined()
+      await executer(ids.membre, RETIRER, { p: ids.natation, e: ids.edition })
+    } finally {
+      await prisma.effectifPerimetre.update({
+        where: {
+          perimetreId_editionId: {
+            perimetreId: ids.natation,
+            editionId: ids.edition,
+          },
+        },
+        data: { effectif: 3 },
+      })
+    }
+  })
+
   it('n’ouvre ni les tâches, ni les fiches, ni les périodes', async () => {
     for (const [query, variables] of [
       [
@@ -352,6 +401,71 @@ describe('activité ouverte aux souhaits', () => {
       )
     ).toBe('SAISIE_INVALIDE')
     expect(await souhaitsDe(ids.membre)).toEqual([])
+  })
+})
+
+describe('limite des souhaits', () => {
+  const limite = randomUUID()
+  const perimetresLimite: string[] = []
+
+  beforeAll(async () => {
+    await prisma.user.create({
+      data: {
+        id: limite,
+        email: `limite-${slug}@exemple.fr`,
+        name: `Limite ${s}`,
+        appartenances: { create: { organisationId: ids.org, role: 'MEMBRE' } },
+      },
+    })
+    for (let i = 0; i < 31; i++) {
+      perimetresLimite.push(
+        (
+          await prisma.perimetre.create({
+            data: {
+              organisationId: ids.org,
+              activiteId: ids.activite,
+              slug: `limite-${i}`,
+              nom: `Limite ${i}`,
+              type: 'SPORT',
+              groupe: 'sport',
+              ordre: 100 + i,
+            },
+          })
+        ).id
+      )
+    }
+    await prisma.souhait.createMany({
+      data: perimetresLimite.slice(0, 29).map(perimetreId => ({
+        userId: limite,
+        perimetreId,
+        editionId: ids.edition,
+      })),
+    })
+  })
+
+  it('ne dépasse pas la limite avec deux souhaits simultanés', async () => {
+    const [a, b] = await Promise.all(
+      perimetresLimite
+        .slice(29, 31)
+        .map(p => executer(limite, FORMULER, { p, e: ids.edition }))
+    )
+    expect([code(a!), code(b!)].sort()).toEqual(
+      ['SAISIE_INVALIDE', undefined].sort()
+    )
+    expect(
+      await prisma.souhait.count({
+        where: { userId: limite, editionId: ids.edition },
+      })
+    ).toBe(30)
+  })
+
+  it('accepte de nouveau un souhait déjà présent, même à la limite', async () => {
+    const r = await executer(limite, FORMULER, {
+      p: perimetresLimite[0],
+      e: ids.edition,
+    })
+    expect(r.errors).toBeUndefined()
+    expect((r.data as { formulerSouhait: boolean }).formulerSouhait).toBe(true)
   })
 })
 

@@ -185,7 +185,8 @@ export async function composer(
       prisma,
       user.id,
       idOrganisation,
-      job.fenetre
+      job.fenetre,
+      job.activiteId
     )
     // Un changement annulé pendant la fenêtre ne s'annonce pas.
     if (changements.length === 0) return null

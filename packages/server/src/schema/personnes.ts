@@ -439,6 +439,7 @@ builder.mutationFields(t => ({
       // Le rôle ne s'écrit que s'il change : la date de mise à jour de
       // l'appartenance date alors une vraie nomination (mails d'équipe, ADR 0012).
       const role = args.estAdmin ? 'ADMIN' : 'MEMBRE'
+      const instant = new Date()
       const personne = await prisma.user.update({
         ...query,
         where: { id },
@@ -452,14 +453,14 @@ builder.mutationFields(t => ({
                     where: {
                       userId_organisationId: { userId: id, organisationId },
                     },
-                    data: { role },
+                    data: { role, updatedAt: instant },
                   },
                 },
               }),
         },
       })
       if (role === 'ADMIN' && appartenance.role !== 'ADMIN') {
-        await annoncerChangementEquipe(id, { organisationId })
+        await annoncerChangementEquipe(id, { organisationId, instant })
       }
       return personne
     },
@@ -527,6 +528,8 @@ builder.mutationFields(t => ({
       // Même contrôle qu'une écriture : périmètre et édition de la même activité de
       // l'organisation, édition non archivée.
       await exigerEcriture(ctx, perimetreId, editionId)
+      // Le même instant date l'affectation et choisit la fenêtre du mail d'équipe.
+      const instant = new Date()
       const affectation = await sansDoublon(
         prisma.affectation.create({
           ...query,
@@ -535,6 +538,7 @@ builder.mutationFields(t => ({
             perimetreId,
             editionId,
             creeParId: ctx.personne?.id ?? null,
+            createdAt: instant,
           },
         }),
         'Cette personne est déjà affectée à ce périmètre pour cette édition.'
@@ -543,6 +547,7 @@ builder.mutationFields(t => ({
       await annoncerChangementEquipe(userId, {
         organisationId: ctx.organisation!.id,
         activiteId,
+        instant,
       })
       return affectation
     },
@@ -645,6 +650,7 @@ builder.mutationFields(t => ({
       const activiteId = await ctx.exigerActivite(args.activiteId)
       await exigerMembre(ctx, userId)
       if (args.admin) {
+        const instant = new Date()
         await prisma.adminActivite.upsert({
           where: { userId_activiteId: { userId, activiteId } },
           update: {},
@@ -653,10 +659,15 @@ builder.mutationFields(t => ({
             activiteId,
             organisationId,
             nommeParId: ctx.personne!.id,
+            createdAt: instant,
           },
         })
         // Une nomination déjà faite ne crée pas de ligne : le mail ne dira rien.
-        await annoncerChangementEquipe(userId, { organisationId, activiteId })
+        await annoncerChangementEquipe(userId, {
+          organisationId,
+          activiteId,
+          instant,
+        })
       } else {
         await prisma.adminActivite.deleteMany({
           where: { userId, activiteId, organisationId },
