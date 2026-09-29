@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.8.0
 fr:
   titre: >-
     Vous découvrez tous les périmètres et formulez vos souhaits

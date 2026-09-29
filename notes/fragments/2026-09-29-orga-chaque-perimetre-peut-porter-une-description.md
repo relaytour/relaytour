@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.8.0
 fr:
   titre: >-
     Chaque périmètre peut porter une description

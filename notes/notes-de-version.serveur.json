@@ -2,10 +2,10 @@
   "schemaVersion": 3,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.8.0",
       "notes": [
         {
           "id": "2026-09-29-serveur-une-commande-importe-l-equipe-d-une-periode-depuis-le-serveu",

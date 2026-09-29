@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.8.0
 fr:
   titre: >-
     Une commande importe l'équipe d'une période depuis le serveur

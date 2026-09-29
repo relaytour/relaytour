@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.8.0
 fr:
   titre: >-
     Un mail annonce chaque nouvelle place dans l'équipe
