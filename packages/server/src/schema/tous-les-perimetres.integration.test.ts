@@ -355,6 +355,71 @@ describe('activité ouverte aux souhaits', () => {
   })
 })
 
+describe('limite des souhaits', () => {
+  const limite = randomUUID()
+  const perimetresLimite: string[] = []
+
+  beforeAll(async () => {
+    await prisma.user.create({
+      data: {
+        id: limite,
+        email: `limite-${slug}@exemple.fr`,
+        name: `Limite ${s}`,
+        appartenances: { create: { organisationId: ids.org, role: 'MEMBRE' } },
+      },
+    })
+    for (let i = 0; i < 31; i++) {
+      perimetresLimite.push(
+        (
+          await prisma.perimetre.create({
+            data: {
+              organisationId: ids.org,
+              activiteId: ids.activite,
+              slug: `limite-${i}`,
+              nom: `Limite ${i}`,
+              type: 'SPORT',
+              groupe: 'sport',
+              ordre: 100 + i,
+            },
+          })
+        ).id
+      )
+    }
+    await prisma.souhait.createMany({
+      data: perimetresLimite.slice(0, 29).map(perimetreId => ({
+        userId: limite,
+        perimetreId,
+        editionId: ids.edition,
+      })),
+    })
+  })
+
+  it('ne dépasse pas la limite avec deux souhaits simultanés', async () => {
+    const [a, b] = await Promise.all(
+      perimetresLimite
+        .slice(29, 31)
+        .map(p => executer(limite, FORMULER, { p, e: ids.edition }))
+    )
+    expect([code(a!), code(b!)].sort()).toEqual(
+      ['SAISIE_INVALIDE', undefined].sort()
+    )
+    expect(
+      await prisma.souhait.count({
+        where: { userId: limite, editionId: ids.edition },
+      })
+    ).toBe(30)
+  })
+
+  it('accepte de nouveau un souhait déjà présent, même à la limite', async () => {
+    const r = await executer(limite, FORMULER, {
+      p: perimetresLimite[0],
+      e: ids.edition,
+    })
+    expect(r.errors).toBeUndefined()
+    expect((r.data as { formulerSouhait: boolean }).formulerSouhait).toBe(true)
+  })
+})
+
 describe('activité refermée', () => {
   beforeAll(async () => {
     await executer(ids.admin, OUVRIR, { id: ids.activite, o: false })

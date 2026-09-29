@@ -34,13 +34,20 @@ export function fenetreEquipe(maintenant = Date.now()): FenetreEquipe {
 /**
  * Annonce un changement de la place d'une personne dans l'équipe. Ne lève jamais :
  * comme toute mise en file, un échec est journalisé et l'action métier aboutit.
+ *
+ * `instant` est la date écrite en base avec le changement : la fenêtre se déduit
+ * d'elle, jamais de l'heure de l'annonce, sinon un changement écrit juste avant la
+ * fin d'une fenêtre serait cherché dans la suivante. Un changement d'une activité
+ * porte son identité ; un rôle d'organisation, celle de l'organisation. Chaque
+ * activité et l'organisation ont donc leur propre mail, et leur propre job.
  */
 export async function annoncerChangementEquipe(
   userId: string,
-  options: { organisationId: string; activiteId?: string },
+  options: { organisationId: string; activiteId?: string; instant: Date },
   maintenant = Date.now()
 ): Promise<void> {
-  const fenetre = fenetreEquipe(maintenant)
+  const fenetre = fenetreEquipe(options.instant.getTime())
+  const portee = options.activiteId ?? 'organisation'
   await mettreEnFile(
     'equipe',
     { userId },
@@ -49,8 +56,9 @@ export async function annoncerChangementEquipe(
       ...(options.activiteId === undefined
         ? {}
         : { activiteId: options.activiteId }),
-      // BullMQ refuse « : » dans un identifiant de job.
-      jobId: `equipe-${userId}-${Date.parse(fenetre.debut)}`,
+      // BullMQ refuse « : » dans un identifiant de job. Une personne peut appartenir
+      // à plusieurs organisations : l'organisation entre dans l'identifiant.
+      jobId: `equipe-${options.organisationId}-${portee}-${userId}-${Date.parse(fenetre.debut)}`,
       delai: Date.parse(fenetre.fin) - maintenant + MARGE_MS,
       fenetre,
     }
@@ -93,15 +101,17 @@ export async function perimetresDeLaPersonne(
 }
 
 /**
- * Les changements de la place d'une personne pendant une fenêtre : ses nouvelles
- * affectations, ses nominations comme admin d'une activité ou de l'organisation.
- * Une liste vide veut dire que rien n'est à annoncer.
+ * Les changements de la place d'une personne pendant une fenêtre. Avec une activité :
+ * ses nouvelles affectations et sa nomination comme admin de cette activité. Sans
+ * activité : son passage admin de l'organisation. Une liste vide veut dire que rien
+ * n'est à annoncer.
  */
 export async function changementsEquipe(
   prisma: PrismaClient,
   userId: string,
   organisationId: string,
-  fenetre: FenetreEquipe
+  fenetre: FenetreEquipe,
+  activiteId?: string
 ): Promise<string[]> {
   const pendant = { gte: new Date(fenetre.debut), lt: new Date(fenetre.fin) }
   const [affectations, admins, appartenance] = await Promise.all([
@@ -109,7 +119,12 @@ export async function changementsEquipe(
       where: {
         userId,
         createdAt: pendant,
-        perimetre: { organisationId, archivedAt: null },
+        // Sans activité, le mail ne porte que le rôle d'organisation.
+        perimetre: {
+          organisationId,
+          archivedAt: null,
+          activiteId: activiteId ?? '',
+        },
         edition: { statut: { not: 'ARCHIVEE' } },
       },
       select: {
@@ -119,7 +134,12 @@ export async function changementsEquipe(
       orderBy: { createdAt: 'asc' },
     }),
     prisma.adminActivite.findMany({
-      where: { userId, organisationId, createdAt: pendant },
+      where: {
+        userId,
+        organisationId,
+        activiteId: activiteId ?? '',
+        createdAt: pendant,
+      },
       select: { activite: { select: { nom: true } } },
       orderBy: { createdAt: 'asc' },
     }),
@@ -144,6 +164,7 @@ export async function changementsEquipe(
   // Une appartenance créée pendant la fenêtre est une invitation, déjà annoncée par
   // son propre mail. Une appartenance plus ancienne passée admin est une nomination.
   if (
+    activiteId === undefined &&
     appartenance !== null &&
     appartenance.role === 'ADMIN' &&
     appartenance.createdAt < new Date(fenetre.debut) &&

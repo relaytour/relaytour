@@ -158,6 +158,8 @@ export async function importerEquipe(
     mails: { invitations: 0, equipe: 0 },
   }
   const ecrire = options.simulation !== true
+  // Le même instant date les affectations et choisit la fenêtre des mails d'équipe.
+  const instant = new Date()
   const aInviter: string[] = []
   const aAnnoncer = new Set<string>()
 
@@ -222,7 +224,11 @@ export async function importerEquipe(
             if (existant !== null && existant.appartenances.length > 0) {
               aAnnoncer.add(userId)
             }
-            if (ecrire) await tx.affectation.create({ data: cle })
+            if (ecrire) {
+              await tx.affectation.create({
+                data: { ...cle, createdAt: instant },
+              })
+            }
           } else {
             rapport.affectationsExistantes.push(`${p.nom} → ${slug}`)
           }
@@ -279,7 +285,11 @@ export async function importerEquipe(
       )
     }
     for (const userId of aAnnoncer) {
-      await annoncerChangementEquipe(userId, { organisationId, activiteId })
+      await annoncerChangementEquipe(userId, {
+        organisationId,
+        activiteId,
+        instant,
+      })
     }
     rapport.mails = { invitations: aInviter.length, equipe: aAnnoncer.size }
   }

@@ -346,17 +346,29 @@ builder.mutationFields(t => ({
         String(args.perimetreId),
         String(args.editionId)
       )
-      const deja = await prisma.souhait.count({
-        where: { userId, editionId: cible.editionId },
+      // Un souhait déjà présent répond oui, même à la limite : l'opération se
+      // rejoue sans erreur.
+      const present = await prisma.souhait.findUnique({
+        where: { userId_perimetreId_editionId: { userId, ...cible } },
+        select: { id: true },
       })
-      if (deja >= SOUHAITS_MAX) {
-        throw erreurSaisie(
-          `Vous avez déjà ${SOUHAITS_MAX} souhaits pour cette période.`
-        )
-      }
-      await prisma.souhait.createMany({
-        data: [{ userId, ...cible }],
-        skipDuplicates: true,
+      if (present !== null) return true
+      // Le verrou sur la ligne de la personne sérialise ses souhaits : deux requêtes
+      // simultanées ne dépassent pas la limite.
+      await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM User WHERE id = ${userId} FOR UPDATE`
+        const deja = await tx.souhait.count({
+          where: { userId, editionId: cible.editionId },
+        })
+        if (deja >= SOUHAITS_MAX) {
+          throw erreurSaisie(
+            `Vous avez déjà ${SOUHAITS_MAX} souhaits pour cette période.`
+          )
+        }
+        await tx.souhait.createMany({
+          data: [{ userId, ...cible }],
+          skipDuplicates: true,
+        })
       })
       journal.info(
         { evenement: 'souhait-formule', userId, ...cible },
