@@ -97,6 +97,7 @@ services:
       <<: *environnement-app
       PORT: 4400
       JETON_ADMINISTRATION: '${JETON_ADMINISTRATION:-}'
+      JETON_ADMINISTRATION_LOCAL: '${JETON_ADMINISTRATION_LOCAL:-}'
     volumes:
       - exports:/exports
     ports:
