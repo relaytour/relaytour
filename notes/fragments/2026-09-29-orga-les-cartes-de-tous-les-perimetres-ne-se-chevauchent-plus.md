@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.8.1
 fr:
   titre: >-
     Les cartes de « Tous les périmètres » ne se chevauchent plus
