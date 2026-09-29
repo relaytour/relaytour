@@ -167,6 +167,12 @@ describe('lecture du fichier', () => {
   - { nom: A, adresse: a@exemple.fr, affectations: [ville], contactPrincipal: [ville] }
   - { nom: B, adresse: b@exemple.fr, affectations: [ville], contactPrincipal: [ville] }`)
     ).toMatch(/a déjà un contact principal/)
+    for (const liste of ['affectations', 'souhaits']) {
+      expect(
+        erreurs(`personnes:
+  - { nom: A, adresse: a@exemple.fr, ${liste}: [ville, soirees, ville] }`)
+      ).toMatch(`personnes.0.${liste} : périmètre répété (ville)`)
+    }
     expect(
       erreurs(`personnes:
   - { nom: A, adresse: a@exemple.fr, role: admin }`)

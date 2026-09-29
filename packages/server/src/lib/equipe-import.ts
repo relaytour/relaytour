@@ -64,6 +64,19 @@ export function lireEquipe(texte: string): PersonneEquipe[] {
       }
       adresses.set(adresse, i)
     }
+    // Un slug répété créerait deux fois la même affectation ou le même souhait.
+    for (const liste of [
+      'affectations',
+      'contactPrincipal',
+      'souhaits',
+    ] as const) {
+      const repetes = p[liste].filter((slug, j) => p[liste].indexOf(slug) !== j)
+      if (repetes.length > 0) {
+        erreurs.push(
+          `personnes.${i}.${liste} : périmètre répété (${[...new Set(repetes)].join(', ')})`
+        )
+      }
+    }
     for (const slug of p.contactPrincipal) {
       if (!p.affectations.includes(slug)) {
         erreurs.push(
