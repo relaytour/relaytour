@@ -1,12 +1,14 @@
-import { prisma } from '@relaytour/database'
+import { prisma, type Edition, type Perimetre } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { exigerMembre } from '../lib/appartenances.ts'
-import { erreurSaisie } from '../lib/erreurs.ts'
+import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
+import { etatPostes } from '../lib/postes.ts'
 import {
   exigerEditionOuverte,
   perimetresSouhaitesValides,
+  SOUHAITS_MAX,
 } from '../lib/souhaits.ts'
 
 import { builder } from './builder.ts'
@@ -14,7 +16,8 @@ import { EditionRef, PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
 
 // Souhaits des personnes pour les périmètres d'une édition (règle dans lib/souhaits.ts).
-// Tous les champs et toutes les mutations sont réservés aux admins. Les souhaits ne
+// Les admins voient et gèrent tous les souhaits de leurs activités. Une personne ne
+// voit et ne gère que les siens, dans « Tous les périmètres » (ADR 0012). Les souhaits ne
 // créent ni activité ni notification.
 
 /** Clé d'une affectation pour une édition : la personne et le périmètre. */
@@ -191,6 +194,252 @@ builder.mutationFields(t => ({
           userId: souhait.userId,
           editionId: souhait.editionId,
           par: ctx.personne?.id,
+        },
+        'Un souhait a été retiré.'
+      )
+      return count === 1
+    },
+  }),
+}))
+
+// ── Tous les périmètres (ADR 0012) ────────────────────────────────────────────
+//
+// Une personne découvre les périmètres d'une activité, voit ses affectations et ses
+// souhaits pour la période en cours, et formule ou retire ses propres souhaits. La
+// page ne renvoie aucune donnée d'une autre personne. Les champs de périmètre qui
+// lisent des tâches, des fiches ou des personnes gardent leurs propres contrôles.
+// Le nombre de personnes recherchées est une information : il ne bloque aucun souhait.
+
+interface PerimetreDecouvert {
+  perimetre: Perimetre
+  affecte: boolean
+  souhaite: boolean
+  personnesRecherchees: number | null
+}
+
+interface Decouverte {
+  edition: Edition | null
+  perimetres: PerimetreDecouvert[]
+}
+
+const PerimetreDecouvertRef = builder
+  .objectRef<PerimetreDecouvert>('PerimetreDecouvert')
+  .implement({
+    fields: t => ({
+      perimetre: t.field({ type: PerimetreRef, resolve: p => p.perimetre }),
+      affecte: t.exposeBoolean('affecte', {
+        description:
+          'Vrai si la personne est affectée à ce périmètre pour la période.',
+      }),
+      souhaite: t.exposeBoolean('souhaite', {
+        description:
+          'Vrai si la personne a un souhait pour ce périmètre et la période.',
+      }),
+      personnesRecherchees: t.exposeInt('personnesRecherchees', {
+        nullable: true,
+        description:
+          'Nombre de personnes encore recherchées pour la période : l’effectif moins les affectations. Nul sans période.',
+      }),
+    }),
+  })
+
+const DecouverteRef = builder
+  .objectRef<Decouverte>('TousLesPerimetres')
+  .implement({
+    fields: t => ({
+      edition: t.field({
+        type: EditionRef,
+        nullable: true,
+        description:
+          'La période en préparation ou en cours la plus récente. Sans elle, aucun souhait ne se formule.',
+        resolve: d => d.edition,
+      }),
+      perimetres: t.field({
+        type: [PerimetreDecouvertRef],
+        resolve: d => d.perimetres,
+      }),
+    }),
+  })
+
+builder.queryFields(t => ({
+  tousLesPerimetres: t.field({
+    type: DecouverteRef,
+    authScopes: { connecte: true },
+    args: { activiteId: t.arg.id() },
+    resolve: async (_root, { activiteId }, ctx) => {
+      const id = await ctx.exigerActiviteDecouverte(activiteId)
+      const userId = ctx.personne!.id
+      const [edition, perimetres] = await Promise.all([
+        prisma.edition.findFirst({
+          where: { activiteId: id, statut: { not: 'ARCHIVEE' } },
+          orderBy: { annee: 'desc' },
+        }),
+        prisma.perimetre.findMany({
+          where: { activiteId: id, archivedAt: null },
+          orderBy: [{ ordre: 'asc' }, { nom: 'asc' }],
+        }),
+      ])
+      const [affectations, souhaits, effectifs, equipes] =
+        edition === null
+          ? [[], [], [], []]
+          : await Promise.all([
+              prisma.affectation.findMany({
+                where: { userId, editionId: edition.id },
+                select: { perimetreId: true },
+              }),
+              prisma.souhait.findMany({
+                where: { userId, editionId: edition.id },
+                select: { perimetreId: true },
+              }),
+              prisma.effectifPerimetre.findMany({
+                where: { editionId: edition.id },
+                select: { perimetreId: true, effectif: true },
+              }),
+              // Un décompte par périmètre, sans aucun nom de personne.
+              prisma.affectation.groupBy({
+                by: ['perimetreId'],
+                where: { editionId: edition.id },
+                _count: { _all: true },
+              }),
+            ])
+      const affectes = new Set(affectations.map(a => a.perimetreId))
+      const souhaites = new Set(souhaits.map(s => s.perimetreId))
+      const effectif = new Map(effectifs.map(e => [e.perimetreId, e.effectif]))
+      const taille = new Map(equipes.map(e => [e.perimetreId, e._count._all]))
+      // Même règle que la page des postes des admins (lib/postes.ts).
+      const recherchees = (perimetreId: string) =>
+        etatPostes(
+          effectif.get(perimetreId) ?? null,
+          taille.get(perimetreId) ?? 0
+        ).aPourvoir
+      return {
+        edition,
+        perimetres: perimetres.map(perimetre => ({
+          perimetre,
+          affecte: affectes.has(perimetre.id),
+          souhaite: souhaites.has(perimetre.id),
+          personnesRecherchees:
+            edition === null ? null : recherchees(perimetre.id),
+        })),
+      }
+    },
+  }),
+}))
+
+/**
+ * Le périmètre et la période d'un souhait formulé par la personne elle-même : un
+ * périmètre non archivé d'une activité qu'elle découvre, et une période de la même
+ * activité. Un identifiant d'ailleurs donne le même refus qu'un identifiant inconnu.
+ */
+async function cibleDuSouhait(
+  ctx: AppContext,
+  perimetreId: string,
+  editionId: string
+) {
+  const organisationId = ctx.organisation!.id
+  const perimetre = await prisma.perimetre.findFirst({
+    where: { id: perimetreId, organisationId, archivedAt: null },
+    select: { id: true, activiteId: true },
+  })
+  if (
+    perimetre === null ||
+    !(await ctx.activitesDecouvertes()).has(perimetre.activiteId)
+  ) {
+    throw accesRefuse()
+  }
+  const edition = await prisma.edition.findFirst({
+    where: { id: editionId, organisationId, activiteId: perimetre.activiteId },
+    select: { id: true, statut: true },
+  })
+  if (edition === null) throw accesRefuse()
+  if (edition.statut === 'ARCHIVEE') {
+    throw erreurSaisie('Cette période est archivée : ses souhaits sont figés.')
+  }
+  return { perimetreId: perimetre.id, editionId: edition.id }
+}
+
+builder.mutationFields(t => ({
+  formulerSouhait: t.boolean({
+    description:
+      'La personne connectée note son intérêt pour un périmètre (ADR 0012). Aucun mail ne part.',
+    authScopes: { connecte: true },
+    args: {
+      perimetreId: t.arg.id({ required: true }),
+      editionId: t.arg.id({ required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const userId = ctx.personne!.id
+      const cible = await cibleDuSouhait(
+        ctx,
+        String(args.perimetreId),
+        String(args.editionId)
+      )
+      // Un souhait déjà présent répond oui, même à la limite : l'opération se
+      // rejoue sans erreur.
+      const present = await prisma.souhait.findUnique({
+        where: { userId_perimetreId_editionId: { userId, ...cible } },
+        select: { id: true },
+      })
+      if (present !== null) return true
+      // Le verrou sur la ligne de la personne sérialise ses souhaits : deux requêtes
+      // simultanées ne dépassent pas la limite.
+      await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM User WHERE id = ${userId} FOR UPDATE`
+        const deja = await tx.souhait.count({
+          where: { userId, editionId: cible.editionId },
+        })
+        if (deja >= SOUHAITS_MAX) {
+          throw erreurSaisie(
+            `Vous avez déjà ${SOUHAITS_MAX} souhaits pour cette période.`
+          )
+        }
+        await tx.souhait.createMany({
+          data: [{ userId, ...cible }],
+          skipDuplicates: true,
+        })
+      })
+      journal.info(
+        { evenement: 'souhait-formule', userId, ...cible },
+        'Une personne a formulé un souhait.'
+      )
+      return true
+    },
+  }),
+
+  retirerMonSouhait: t.boolean({
+    description:
+      'La personne connectée retire son propre souhait. Hors de ses activités, rien ne change.',
+    authScopes: { connecte: true },
+    args: {
+      perimetreId: t.arg.id({ required: true }),
+      editionId: t.arg.id({ required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const userId = ctx.personne!.id
+      const souhait = await prisma.souhait.findFirst({
+        where: {
+          userId,
+          perimetreId: String(args.perimetreId),
+          editionId: String(args.editionId),
+          perimetre: { organisationId: ctx.organisation!.id },
+        },
+        select: { id: true, edition: { select: { statut: true } } },
+      })
+      if (souhait === null) return false
+      if (souhait.edition.statut === 'ARCHIVEE') {
+        throw erreurSaisie(
+          'Cette période est archivée : ses souhaits sont figés.'
+        )
+      }
+      const { count } = await prisma.souhait.deleteMany({
+        where: { id: souhait.id },
+      })
+      journal.info(
+        {
+          evenement: 'souhait-retire',
+          souhaitId: souhait.id,
+          userId,
+          par: userId,
         },
         'Un souhait a été retiré.'
       )

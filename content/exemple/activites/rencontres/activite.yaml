@@ -12,3 +12,5 @@ groupes:
     libelle: Pôle
     libellePluriel: Pôles
 ordre: 1
+# Tous les membres découvrent les périmètres et formulent leurs souhaits (ADR 0012).
+souhaitsOuverts: true

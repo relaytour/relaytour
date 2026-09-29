@@ -17,6 +17,8 @@ const activite = (slug: string, options: Partial<Activite> = {}): Activite => ({
   ordre: 0,
   archive: false,
   estAdministree: false,
+  souhaitsOuverts: false,
+  acces: 'COMPLET',
   groupes: [
     { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },
     { cle: 'pole', libelle: 'Pôle', libellePluriel: 'Pôles' },
@@ -48,6 +50,15 @@ describe('construireContexte', () => {
     expect(contexte.lien('perimetres/natation?edition=e1')).toBe(
       '/rencontres/perimetres/natation?edition=e1'
     )
+  })
+
+  it('distingue l’accès complet de la découverte (ADR 0012)', () => {
+    expect(contexte.decouverte).toBe(false)
+    const decouverte = construireContexte(
+      activite('tournoi', { acces: 'DECOUVERTE' }),
+      []
+    )
+    expect(decouverte.decouverte).toBe(true)
   })
 
   it('nomme les groupes, au singulier et au pluriel', () => {

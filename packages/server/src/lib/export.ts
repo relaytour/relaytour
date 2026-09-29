@@ -133,6 +133,7 @@ export async function construireExport(organisationId: string) {
       nom: a.nom,
       sigle: a.sigle,
       nature: a.nature,
+      souhaitsOuverts: a.souhaitsOuverts,
       groupes: lireGroupes(a.groupes),
       ordre: a.ordre,
       archive: a.archivedAt !== null,
@@ -150,6 +151,7 @@ export async function construireExport(organisationId: string) {
       perimetres: a.perimetres.map(p => ({
         slug: p.slug,
         nom: p.nom,
+        description: p.description,
         groupe: p.groupe,
         type: p.type,
         couleur: p.couleur,

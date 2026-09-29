@@ -75,6 +75,12 @@ const EnvSchema = z
       s => s === undefined || s.length >= 32,
       'JETON_ADMINISTRATION : 32 caractères au moins'
     ),
+    // Vrai : le jeton n'est accepté que sur une requête locale, qui n'est pas passée
+    // par le proxy (ADR 0013). Une requête relayée par Caddy porte X-Forwarded-For.
+    JETON_ADMINISTRATION_LOCAL: z
+      .enum(['true', 'false', ''])
+      .optional()
+      .transform(v => v === 'true'),
     // Dossier du serveur où s'écrivent les exports d'organisation.
     EXPORTS_DIR: optionnelle,
     // Code source de la version exécutée, lié depuis l'espace organisateur (AGPL,

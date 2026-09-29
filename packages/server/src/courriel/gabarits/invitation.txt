@@ -5,6 +5,10 @@ Bonjour {{nom}},
 L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez
 vos périmètres, vos tâches et les fiches méthode des éditions précédentes.
 
+{{situation}}
+
+{{perimetres}}
+
 L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre
 adresse et vous recevez un code par mail.
 

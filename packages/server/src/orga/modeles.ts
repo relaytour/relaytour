@@ -54,6 +54,8 @@ export const ActiviteDeclaree = z.strictObject({
   nature: z.enum(['EVENEMENT', 'SAISON', 'MANDAT']).default('EVENEMENT'),
   groupes: z.array(GroupeModele).min(1).max(10).default(GROUPES_PAR_DEFAUT),
   ordre: z.number().int().min(0).max(999).default(0),
+  // Tous les membres découvrent les périmètres et formulent leurs souhaits (ADR 0012).
+  souhaitsOuverts: z.boolean().optional(),
 })
 
 // Un périmètre déclare son groupe, ou son type (SPORT, POLE) pour les contenus
@@ -62,6 +64,8 @@ const PerimetreDeclare = z
   .strictObject({
     slug: Slug,
     nom: z.string().min(1).max(120),
+    // Une ou deux phrases qui présentent le périmètre (ADR 0012).
+    description: z.string().trim().min(1).max(400).optional(),
     groupe: Slug.optional(),
     type: z.enum(['SPORT', 'POLE']).optional(),
     couleur: z
@@ -315,6 +319,16 @@ function lireActivite(
     if (!groupes.has(perimetre.groupe)) {
       erreurs.push(
         `${nomPerimetres} : ${perimetre.slug} appartient au groupe ${perimetre.groupe}, que l'activité ne déclare pas (${[...groupes].join(', ')})`
+      )
+    }
+    // Une description est un texte de contenu : aucune coordonnée personnelle
+    // (invariant 16).
+    if (
+      perimetre.description !== undefined &&
+      donneesPersonnelles(perimetre.description, role).length > 0
+    ) {
+      erreurs.push(
+        `${nomPerimetres} : la description de ${perimetre.slug} contient des données personnelles interdites dans Git`
       )
     }
   }

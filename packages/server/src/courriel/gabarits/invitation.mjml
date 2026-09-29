@@ -21,6 +21,12 @@
           vos périmètres, vos tâches et les fiches méthode des éditions précédentes.
         </mj-text>
         <mj-text>
+          {{situation}}
+        </mj-text>
+        <mj-text>
+          {{perimetres}}
+        </mj-text>
+        <mj-text>
           L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre
           adresse et vous recevez un code par mail.
         </mj-text>

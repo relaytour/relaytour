@@ -476,6 +476,7 @@ async function importerActivite(
         nature: modele.declaration.nature,
         groupes: modele.declaration.groupes,
         ordre: modele.declaration.ordre,
+        souhaitsOuverts: modele.declaration.souhaitsOuverts ?? false,
         identite: identiteEnBase(modele, empreintes) ?? Prisma.DbNull,
       }
   const rapport = rapportActiviteVide(
@@ -530,6 +531,7 @@ async function importerActivite(
     const tachesTypes = modele.taches.get(perimetre.slug) ?? null
     const donnees = {
       nom: perimetre.nom,
+      description: perimetre.description ?? null,
       type: perimetre.type,
       groupe: perimetre.groupe,
       couleur: perimetre.couleur?.toUpperCase() ?? null,
@@ -555,6 +557,7 @@ async function importerActivite(
     idsPerimetres.set(perimetre.slug, existant.id)
     const change =
       existant.nom !== donnees.nom ||
+      existant.description !== donnees.description ||
       existant.type !== donnees.type ||
       existant.groupe !== donnees.groupe ||
       existant.couleur !== donnees.couleur ||

@@ -21,6 +21,21 @@ export function texteRequis(brut: string, libelle: string, max = 120): string {
   return texte
 }
 
+/** Longueur maximale d'une description de périmètre : une ou deux phrases. */
+export const DESCRIPTION_MAX = 400
+
+/** Une description facultative : vide, elle vaut null. */
+export function descriptionValide(
+  brute: string | null | undefined
+): string | null {
+  const texte = (brute ?? '').trim()
+  if (texte.length === 0) return null
+  if (texte.length > DESCRIPTION_MAX) {
+    throw erreurSaisie(`La description dépasse ${DESCRIPTION_MAX} caractères.`)
+  }
+  return texte
+}
+
 export function slugValide(brut: string): string {
   const slug = brut.trim()
   if (!SLUG.test(slug) || slug.length > 60) {

@@ -1,0 +1,42 @@
+<mjml>
+  <mj-head>
+    <mj-title>Votre place dans l’équipe a changé</mj-title>
+    <mj-preview>Votre place dans l’équipe d’organisation a changé.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#040404" width="480px">
+    <mj-include path="./_entete.mjml" />
+
+    <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
+      <mj-column>
+        <mj-text font-size="20px" line-height="28px" font-weight="700">
+          Bonjour {{nom}},
+        </mj-text>
+        <mj-text>
+          Votre place dans l’équipe d’organisation a changé.
+        </mj-text>
+        <mj-text>
+          {{changements}}
+        </mj-text>
+        <mj-text>
+          Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur.
+        </mj-text>
+        <mj-button href="{{lienConnexion}}" background-color="#030303" color="#FFFFFF"
+                   border-radius="10px" font-size="15px" font-weight="700"
+                   padding="8px 0 16px" inner-padding="13px 24px">
+          Ouvrir l’espace organisateur
+        </mj-button>
+        <mj-text padding="0 0 4px">
+          Le mode d’emploi {{roleModeDEmploi}} présente vos écrans et vos actions.
+          <a href="{{lienModeDEmploi}}" style="color:#020202;font-weight:600">Lire le mode d’emploi</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_pied.mjml" />
+  </mj-body>
+</mjml>

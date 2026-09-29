@@ -3,18 +3,21 @@
 perimetres:
   - slug: debutants
     nom: Groupe débutants
+    description: Le groupe accompagne les personnes qui découvrent la course à pied.
     groupe: groupe
     couleur: '#FB8B36'
     ordre: 1
     effectif: 2
   - slug: confirmes
     nom: Groupe confirmés
+    description: Le groupe prépare les courses officielles avec un plan d'entraînement.
     groupe: groupe
     couleur: '#F32988'
     ordre: 2
     effectif: 1
   - slug: vie-du-club
     nom: Vie du club
+    description: Le pôle organise les sorties, les repas et l'accueil des nouvelles personnes.
     groupe: pole
     couleur: '#2F6B4F'
     ordre: 10

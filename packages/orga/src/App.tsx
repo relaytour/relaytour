@@ -2,6 +2,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
 
 import Coquille from './composants/Coquille'
 import ReserveAdmin from './composants/ReserveAdmin'
+import ReserveEquipe from './composants/ReserveEquipe'
 import { VersActivite } from './composants/FournisseurActivite'
 import GardeSession from './composants/GardeSession'
 import Activites from './pages/admin/Activites'
@@ -21,6 +22,7 @@ import MonEspace from './pages/MonEspace'
 import Perimetre from './pages/Perimetre'
 import Preferences from './pages/Preferences'
 import Retroplanning from './pages/Retroplanning'
+import TousLesPerimetres from './pages/TousLesPerimetres'
 
 // Les écrans d'une activité vivent sous /<slug de l'activité>/ (ADR 0008). Une
 // adresse sans activité (l'accueil, une adresse d'avant, un lien de mail) mène à la
@@ -34,14 +36,22 @@ const routeur = createBrowserRouter([
     path: '/:activite',
     element: <Coquille />,
     children: [
-      { index: true, element: <MonEspace /> },
-      { path: 'retroplanning', element: <Retroplanning /> },
-      { path: 'perimetres/:slug', element: <Perimetre /> },
+      { path: 'perimetres', element: <TousLesPerimetres /> },
       { path: 'preferences', element: <Preferences /> },
-      { path: 'fiches', element: <Fiches /> },
-      { path: 'fiches/nouvelle', element: <FicheEditeur /> },
-      { path: 'fiches/:slug', element: <Fiche /> },
-      { path: 'fiches/:slug/modifier', element: <FicheEditeur /> },
+      // Les écrans de l'équipe : une personne qui découvre l'activité (ADR 0012)
+      // est menée à « Tous les périmètres ».
+      {
+        element: <ReserveEquipe />,
+        children: [
+          { index: true, element: <MonEspace /> },
+          { path: 'retroplanning', element: <Retroplanning /> },
+          { path: 'perimetres/:slug', element: <Perimetre /> },
+          { path: 'fiches', element: <Fiches /> },
+          { path: 'fiches/nouvelle', element: <FicheEditeur /> },
+          { path: 'fiches/:slug', element: <Fiche /> },
+          { path: 'fiches/:slug/modifier', element: <FicheEditeur /> },
+        ],
+      },
       {
         path: 'admin',
         element: <ReserveAdmin />,

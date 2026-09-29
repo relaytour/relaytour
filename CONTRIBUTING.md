@@ -30,6 +30,7 @@ yarn check        # lint, types, build
 yarn test         # tests unitaires
 yarn workspace @relaytour/server test:integration   # base locale, worker arrêté
 yarn workspace @relaytour/server orga:exporter      # écrit tout le contenu de l'organisation dans le dossier de contenu (ADR 0009)
+yarn workspace @relaytour/server equipe:importer --fichier equipe.yaml --activite rencontres --edition 2027 --simulation   # équipe d'une période (ADR 0013)
 yarn codegen      # contrats commités
 node outils/site.mjs   # site de présentation, après un changement des jetons
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif
@@ -58,16 +59,17 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 | Dépendances | Licences compatibles avec l'AGPL seulement, liste blanche dans `outils/verifier-licences.mjs`. Valkey et non Redis. | ADR 0007 |
 | Licence | AGPL-3.0, un seul code, multi-organisation comprise. Le contenu d'une organisation n'entre jamais dans le dépôt. | ADR 0005, 0006, 0008 |
 | Activités et administration de l'installation | Une organisation porte une ou plusieurs activités (événement, saison, mandat), chacune avec ses périodes, ses périmètres rangés en groupes déclarés dans le contenu, ses fiches et ses tâches types. Les appartenances sont par organisation. L'administration de l'installation (créer, suspendre, limiter, exporter une organisation) passe par un script ou un jeton, sans accès aux données. | ADR 0008 |
+| Administration de l'équipe | Une équipe se saisit dans l'espace organisateur, ou s'importe par la commande `equipe-importer` dans le conteneur, additive et sans mail par défaut. Le jeton de l'hébergeur n'invite ni n'affecte personne ; `JETON_ADMINISTRATION_LOCAL` le limite aux requêtes locales. | ADR 0013 |
 | Extensions | Aucun chargeur de modules dans le serveur. Un besoin d'hébergeur entre par l'API d'administration de l'installation ; portail client, paiement et paliers restent chez l'hébergeur. | ADR 0007, 0008 |
 | Configuration d'organisation | Un seul objet (`packages/server/src/lib/organisation.ts`), lu dans la ligne `Organisation` en base, sinon dans les variables d'amorçage. `organisation.yaml` du dépôt d'organisation la porte ; l'import la met à jour, et les admins la modifient dans l'espace organisateur (ADR 0009). L'expéditeur des mails et l'origine de l'espace organisateur restent dans l'environnement. | ADR 0006 |
-| Rôles V1 | Admin de l'organisation, admin d'activité et référent·e. Une personne ne voit que les activités qu'elle administre ou où elle est affectée. Le rôle bénévole viendra après la V1. | ADR 0006, 0008, 0010 |
+| Rôles V1 | Admin de l'organisation, admin d'activité et référent·e. Une personne voit les activités qu'elle administre ou où elle est affectée. Elle découvre en plus les activités ouvertes aux souhaits et celles où elle a un souhait : la page « Tous les périmètres » seulement. Le rôle bénévole viendra après la V1. | ADR 0006, 0008, 0010, 0012 |
 | Score de participation | Visible par la personne concernée et par les admins seulement. Calculé à partir de l'état actuel (une tâche rouverte perd ses points) : tâche réalisée 3 points (+1 à temps, crédités à la personne réalisatrice indiquée, sinon à celle qui a coché), tâche créée 1, fiche créée 3, fiche modifiée 2 une fois par jour. Un palmarès public se décide en fin d'édition. Barème validé le 16 septembre 2026. | `packages/server/src/lib/score.ts` |
 | Tâches | Une tâche ne se supprime pas, elle s'abandonne. Modifier la tâche d'une autre personne exige une confirmation et la prévient par mail. Qui a coché et qui a réalisé une tâche n'est visible que par la personne qui a coché et par les admins. | `packages/server/src/schema/taches.ts` |
 | Fiches | Une version ne se modifie ni ne se supprime ; restaurer crée une nouvelle version. L'historique est réservé aux admins. Rédiger exige un droit accordé par un admin (un périmètre, ou toutes les fiches). | `packages/server/src/schema/fiches.ts` |
-| Notifications | Une notification ne stocke que des identifiants ; son texte se compose à la lecture. Mail immédiat : modification d'une tâche assignée, rappels à 7 jours et à la veille, retards. Le reste passe par le résumé (hebdomadaire par défaut, le lundi à 7 h, valeur validée le 16 septembre 2026). Le worker vérifie les préférences au moment de l'envoi. | `packages/server/src/lib/notifications.ts`, `src/jobs/planification.ts` |
+| Notifications | Une notification ne stocke que des identifiants ; son texte se compose à la lecture. Mail immédiat : modification d'une tâche assignée, rappels à 7 jours et à la veille, retards. Mail d'équipe regroupé par fenêtre de dix minutes : nouvelle affectation, nomination comme admin d'une activité ou de l'organisation ; rien pour un souhait, un contact principal ou un retrait (ADR 0012). Le reste passe par le résumé (hebdomadaire par défaut, le lundi à 7 h, valeur validée le 16 septembre 2026). Le worker vérifie les préférences au moment de l'envoi. | `packages/server/src/lib/notifications.ts`, `src/jobs/planification.ts` |
 | Accès aux périmètres | Lecture pour toute personne affectée au périmètre dans au moins une édition ; écriture pour les personnes affectées à l'édition concernée, tant qu'elle n'est pas archivée ; tout pour les admins de l'activité du périmètre. Une activité invisible vaut une activité d'une autre organisation. | `packages/server/src/lib/droits.ts`, ADR 0010 |
 | Contact principal | Un périmètre a au plus un contact principal par édition, désigné par un admin de son activité parmi les personnes affectées. C'est une information : le contact principal a les mêmes droits que les autres référentes et référents. | ADR 0011 |
-| Souhaits | Un souhait note l'intérêt d'une personne pour un périmètre d'une édition. Il est visible des admins seulement, ne donne aucun accès et n'est jamais exporté dans Git. Il est satisfait quand l'affectation correspondante existe. | `packages/server/src/lib/souhaits.ts` |
+| Souhaits | Un souhait note l'intérêt d'une personne pour un périmètre d'une édition. Un admin le note, ou la personne le formule dans « Tous les périmètres ». Il est visible des admins et de la personne concernée, ne donne accès ni aux tâches ni aux fiches, et n'est jamais exporté dans Git. Il est satisfait quand l'affectation correspondante existe. | `packages/server/src/lib/souhaits.ts`, ADR 0012 |
 
 ## Invariants techniques
 
@@ -117,7 +119,8 @@ Un seul mot par notion.
 | contact principal | Référent·e désigné·e par un admin comme première personne à solliciter pour un périmètre et une édition. Une information seulement, sans droit supplémentaire (ADR 0011). |
 | effectif | Nombre de référentes et de référents souhaité pour un périmètre et une édition. |
 | poste à pourvoir | Place de référent·e encore libre : l'effectif moins les affectations. |
-| souhait | Intérêt d'une personne pour un périmètre d'une édition, noté par un admin. |
+| souhait | Intérêt d'une personne pour un périmètre d'une édition, noté par un admin ou formulé par la personne. |
+| ouverte aux souhaits | Réglage d'une activité : tous les membres de l'organisation découvrent ses périmètres et formulent leurs souhaits (ADR 0012). |
 | tâche | Action datée d'un périmètre pour une édition. |
 | fiche | Fiche méthode (« comment faire ») d'un périmètre ou commune. |
 | mode d'emploi | Page publique du site (`site/modes-d-emploi/`) qui décrit les écrans d'un rôle : admin de l'organisation, admin d'activité, référent·e. Ne pas confondre avec une fiche. |

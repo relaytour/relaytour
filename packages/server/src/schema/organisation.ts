@@ -18,6 +18,7 @@ import { validerDates, validerEdition } from '../lib/editions.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import {
   couleurValide,
+  descriptionValide,
   sansDoublon,
   slugValide,
   texteRequis,
@@ -55,6 +56,11 @@ export const PerimetreRef = builder.prismaObject('Perimetre', {
     id: t.exposeID('id'),
     slug: t.exposeString('slug'),
     nom: t.exposeString('nom'),
+    description: t.exposeString('description', {
+      nullable: true,
+      description:
+        'Une ou deux phrases qui présentent le périmètre (ADR 0012). Vaut null sans description.',
+    }),
     type: t.expose('type', { type: TypePerimetreEnum }),
     couleur: t.exposeString('couleur', { nullable: true }),
     ordre: t.exposeInt('ordre'),
@@ -218,6 +224,7 @@ builder.mutationFields(t => ({
       groupe: t.arg.string(),
       type: t.arg({ type: TypePerimetreEnum }),
       couleur: t.arg.string(),
+      description: t.arg.string(),
       ordre: t.arg.int({ defaultValue: 0 }),
     },
     resolve: async (query, _root, args, ctx) => {
@@ -232,6 +239,7 @@ builder.mutationFields(t => ({
             activiteId,
             slug: slugValide(args.slug),
             nom: texteRequis(args.nom, 'Le nom'),
+            description: descriptionValide(args.description),
             type: typeDepuisGroupe(groupe),
             groupe,
             couleur: couleurValide(args.couleur),
@@ -254,6 +262,8 @@ builder.mutationFields(t => ({
       groupe: t.arg.string(),
       type: t.arg({ type: TypePerimetreEnum }),
       couleur: t.arg.string(),
+      // Absente, la description ne change pas ; vide, elle est retirée.
+      description: t.arg.string(),
       ordre: t.arg.int({ required: true }),
       archive: t.arg.boolean({ required: true }),
     },
@@ -276,6 +286,9 @@ builder.mutationFields(t => ({
           type: typeDepuisGroupe(groupe),
           groupe,
           couleur: couleurValide(args.couleur),
+          ...(args.description === undefined
+            ? {}
+            : { description: descriptionValide(args.description) }),
           ordre: args.ordre,
           // La date d'archivage d'origine est conservée.
           archivedAt: args.archive ? (actuel.archivedAt ?? new Date()) : null,
