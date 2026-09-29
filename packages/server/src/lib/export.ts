@@ -150,6 +150,7 @@ export async function construireExport(organisationId: string) {
       perimetres: a.perimetres.map(p => ({
         slug: p.slug,
         nom: p.nom,
+        description: p.description,
         groupe: p.groupe,
         type: p.type,
         couleur: p.couleur,

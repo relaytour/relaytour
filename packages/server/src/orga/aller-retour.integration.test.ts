@@ -114,6 +114,12 @@ describe('aller-retour du contenu', () => {
     const rencontres = await prisma.activite.findFirstOrThrow({
       where: { organisationId, slug: 'rencontres' },
     })
+    // La description d'un périmètre vient de perimetres.yaml (ADR 0012).
+    const football = await prisma.perimetre.findFirstOrThrow({
+      where: { activiteId: rencontres.id, slug: 'football' },
+    })
+    expect(football.description).toMatch(/^Le tournoi à 7 contre 7/)
+
     const heritee = await configurationActivite(rencontres.id)
     expect(heritee.contactRecrutement).toBe(organisation.contactRecrutement)
     expect(heritee.logoUrl).toBe(organisation.logoUrl)

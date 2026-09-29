@@ -30,6 +30,7 @@ const PAGE = graphql(`
     perimetre(slug: $slug) {
       id
       nom
+      description
       groupe
       couleur
       peutModifier(editionId: $editionId)
@@ -144,36 +145,50 @@ export default function Perimetre() {
         <div style={{ flex: 1, minWidth: 0 }}>
           <Titre
             sousTitre={
-              perimetre.referents.length > 0 ? (
-                <span
-                  style={{
-                    display: 'inline-flex',
-                    flexWrap: 'wrap',
-                    alignItems: 'center',
-                    gap: '6px 12px',
-                  }}
-                >
-                  <span>Référent·es :</span>
-                  {perimetre.referents.map(r => (
-                    <span
-                      key={r.id}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: 6,
-                      }}
-                    >
-                      <PersonneNommee
-                        nom={r.id === moiId ? 'Vous' : r.nom}
-                        initialesDe={r.nom}
-                      />
-                      {r.id === contactId && <MentionContactPrincipal />}
-                    </span>
-                  ))}
-                </span>
-              ) : (
-                `Aucune personne n’est affectée à ce périmètre pour ${periode.cette}.`
-              )
+              <>
+                {perimetre.description && (
+                  <span
+                    style={{
+                      display: 'block',
+                      marginBottom: 8,
+                      color: 'var(--rt-encre)',
+                      maxWidth: '70ch',
+                    }}
+                  >
+                    {perimetre.description}
+                  </span>
+                )}
+                {perimetre.referents.length > 0 ? (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      flexWrap: 'wrap',
+                      alignItems: 'center',
+                      gap: '6px 12px',
+                    }}
+                  >
+                    <span>Référent·es :</span>
+                    {perimetre.referents.map(r => (
+                      <span
+                        key={r.id}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                        }}
+                      >
+                        <PersonneNommee
+                          nom={r.id === moiId ? 'Vous' : r.nom}
+                          initialesDe={r.nom}
+                        />
+                        {r.id === contactId && <MentionContactPrincipal />}
+                      </span>
+                    ))}
+                  </span>
+                ) : (
+                  `Aucune personne n’est affectée à ce périmètre pour ${periode.cette}.`
+                )}
+              </>
             }
             actions={
               <>

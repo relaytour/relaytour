@@ -130,6 +130,29 @@ describe('lireModeles', () => {
     }
   })
 
+  it('lit une description facultative, sans les espaces autour', () => {
+    const modeles = lireModeles(
+      dossier({
+        'perimetres.yaml': `${PERIMETRES}    description: '  Treize épreuves sur une journée.  '\n`,
+      })
+    )
+    expect(modeles.activites[0]!.perimetres[0]!.description).toBe(
+      'Treize épreuves sur une journée.'
+    )
+  })
+
+  it('refuse une description trop longue ou qui contient une coordonnée personnelle', () => {
+    for (const [description, motif] of [
+      ['x'.repeat(401), /description/],
+      ['Appelez le 06 12 34 56 78.', /données personnelles/],
+    ] as const) {
+      const racine = dossier({
+        'perimetres.yaml': `${PERIMETRES}    description: '${description}'\n`,
+      })
+      expect(erreurs(racine).join()).toMatch(motif)
+    }
+  })
+
   it('refuse un champ inconnu', () => {
     const racine = dossier({
       'perimetres.yaml': PERIMETRES.replace(

@@ -105,6 +105,7 @@ L'application est la source de vérité du contenu (ADR 0009). `orga:exporter` �
 perimetres:
   - slug: football          # identifiant stable, jamais modifié
     nom: Football
+    description: Le tournoi à 7 contre 7 réunit les équipes du samedi.   # facultatif
     groupe: sport           # un groupe déclaré par l'activité
     couleur: '#8FC9B7'      # facultatif
     ordre: 1
@@ -112,6 +113,8 @@ perimetres:
 ```
 
 Un contenu écrit avant l'ADR 0008 porte `type: SPORT` ou `type: POLE` à la place du groupe : l'import le lit comme le groupe `sport` ou `pole`.
+
+`description` présente le périmètre en une ou deux phrases, 400 caractères au plus (ADR 0012). La page « Tous les périmètres », la page du périmètre et les mails d'équipe l'affichent. Les admins la modifient aussi dans la page « Périmètres ».
 
 `effectif` indique le nombre de référentes et de référents souhaité pour chaque période, de 0 à 50. L'import crée l'effectif d'un périmètre s'il manque et ne le remplace jamais : les admins le modifient ensuite dans la page « Postes à pourvoir ».
 

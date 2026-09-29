@@ -312,12 +312,25 @@ export async function construireContenu(
       orderBy: [{ ordre: 'asc' }, { slug: 'asc' }],
     })
     const slugsPerimetres = new Map(perimetres.map(p => [p.id, p.slug]))
+    // Une description qui contient des coordonnées personnelles ne quitte pas la
+    // base (invariant 16) : le périmètre s'exporte sans elle.
+    const descriptionExportable = (p: (typeof perimetres)[number]) => {
+      if (p.description === null) return undefined
+      const personnelles = donneesPersonnelles(p.description, role)
+      if (personnelles.length === 0) return p.description
+      refusees.push({
+        fichier: `${dossier}perimetres.yaml`,
+        raison: `description de ${p.slug} : données personnelles (${personnelles.join(', ')})`,
+      })
+      return undefined
+    }
     fichiers.set(
       `${dossier}perimetres.yaml`,
       yaml({
         perimetres: perimetres.map(p => ({
           slug: p.slug,
           nom: p.nom,
+          description: descriptionExportable(p),
           groupe: p.groupe,
           couleur: p.couleur ?? undefined,
           ordre: p.ordre,

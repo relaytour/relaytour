@@ -62,6 +62,8 @@ const PerimetreDeclare = z
   .strictObject({
     slug: Slug,
     nom: z.string().min(1).max(120),
+    // Une ou deux phrases qui présentent le périmètre (ADR 0012).
+    description: z.string().trim().min(1).max(400).optional(),
     groupe: Slug.optional(),
     type: z.enum(['SPORT', 'POLE']).optional(),
     couleur: z
@@ -315,6 +317,16 @@ function lireActivite(
     if (!groupes.has(perimetre.groupe)) {
       erreurs.push(
         `${nomPerimetres} : ${perimetre.slug} appartient au groupe ${perimetre.groupe}, que l'activité ne déclare pas (${[...groupes].join(', ')})`
+      )
+    }
+    // Une description est un texte de contenu : aucune coordonnée personnelle
+    // (invariant 16).
+    if (
+      perimetre.description !== undefined &&
+      donneesPersonnelles(perimetre.description, role).length > 0
+    ) {
+      erreurs.push(
+        `${nomPerimetres} : la description de ${perimetre.slug} contient des données personnelles interdites dans Git`
       )
     }
   }

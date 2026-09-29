@@ -303,6 +303,9 @@ model Perimetre {
   type              TypePerimetre
   groupe            String
   couleur           String?
+  // Une ou deux phrases qui présentent le périmètre (ADR 0012) : la page « Tous les
+  // périmètres », la page du périmètre et les mails d'équipe l'affichent.
+  description       String?       @db.Text
   ordre             Int           @default(0)
   // Effectif déclaré dans le contenu, repris pour chaque nouvelle période.
   effectifParDefaut Int?

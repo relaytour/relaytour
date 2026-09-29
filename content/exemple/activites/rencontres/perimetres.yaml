@@ -5,42 +5,49 @@
 perimetres:
   - slug: football
     nom: Football
+    description: Le tournoi à 7 contre 7 réunit les équipes du samedi sur deux terrains.
     groupe: sport
     couleur: '#8FC9B7'
     ordre: 1
     effectif: 2
   - slug: volley
     nom: Volley
+    description: Le tournoi mixte se joue par niveau dans le gymnase de la vallée.
     groupe: sport
     couleur: '#F32988'
     ordre: 2
     effectif: 2
   - slug: course
     nom: Course à pied
+    description: Une boucle de 10 km et une course enfants partent le dimanche matin.
     groupe: sport
     couleur: '#FB8B36'
     ordre: 3
     effectif: 2
   - slug: coordination
     nom: Coordination
+    description: Le pôle forme l'équipe, tient le calendrier et prépare les décisions du bureau.
     groupe: pole
     couleur: '#2F6B4F'
     ordre: 10
     effectif: 2
   - slug: benevoles
     nom: Bénévoles
+    description: Le pôle recrute les bénévoles et planifie leurs créneaux pendant l'édition.
     groupe: pole
     couleur: '#FC685F'
     ordre: 11
     effectif: 2
   - slug: logistique
     nom: Logistique
+    description: Le pôle stocke et transporte le matériel, puis l'installe sur chaque site.
     groupe: pole
     couleur: '#6F4AA3'
     ordre: 12
     effectif: 1
   - slug: communication
     nom: Communication
+    description: Le pôle annonce les rencontres et informe les participantes et participants.
     groupe: pole
     couleur: '#02ADB8'
     ordre: 13

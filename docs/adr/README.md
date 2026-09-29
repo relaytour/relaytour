@@ -13,5 +13,6 @@
 | [0009](0009-identite-des-activites-et-source-de-verite-du-contenu.md) | Identité des activités et source de vérité du contenu | Acceptée |
 | [0010](0010-admins-d-activite-et-visibilite-des-activites.md) | Admins d'activité et visibilité des activités | Acceptée |
 | [0011](0011-contact-principal-d-un-perimetre.md) | Contact principal d'un périmètre | Acceptée |
+| [0012](0012-decouvrir-les-perimetres-et-rejoindre-l-equipe.md) | Découvrir les périmètres et rejoindre l'équipe | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

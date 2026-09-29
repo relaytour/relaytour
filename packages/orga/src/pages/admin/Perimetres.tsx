@@ -28,6 +28,7 @@ const CREER = graphql(`
     $nom: String!
     $groupe: String!
     $couleur: String
+    $description: String
     $ordre: Int
   ) {
     creerPerimetre(
@@ -35,6 +36,7 @@ const CREER = graphql(`
       nom: $nom
       groupe: $groupe
       couleur: $couleur
+      description: $description
       ordre: $ordre
     ) {
       id
@@ -48,6 +50,7 @@ const MODIFIER = graphql(`
     $nom: String!
     $groupe: String!
     $couleur: String
+    $description: String
     $ordre: Int!
     $archive: Boolean!
   ) {
@@ -56,6 +59,7 @@ const MODIFIER = graphql(`
       nom: $nom
       groupe: $groupe
       couleur: $couleur
+      description: $description
       ordre: $ordre
       archive: $archive
     ) {
@@ -71,6 +75,7 @@ interface Valeurs {
   nom: string
   groupe: string
   couleur: string | null
+  description: string | null
   ordre: number
   archive: boolean
 }
@@ -105,6 +110,7 @@ export default function Perimetres() {
             nom: '',
             groupe: activite.groupes[0]?.cle ?? '',
             couleur: null,
+            description: null,
             ordre: 0,
             archive: false,
           }
@@ -127,6 +133,7 @@ export default function Perimetres() {
             nom: v.nom,
             groupe: v.groupe,
             couleur,
+            description: v.description ?? '',
             ordre: v.ordre,
           },
         })
@@ -138,6 +145,7 @@ export default function Perimetres() {
             nom: v.nom,
             groupe: v.groupe,
             couleur,
+            description: v.description ?? '',
             ordre: v.ordre,
             archive: v.archive,
           },
@@ -264,6 +272,18 @@ export default function Perimetres() {
             rules={[{ required: true, message: 'Choisissez un groupe.' }]}
           >
             <Segmented options={groupes} />
+          </Form.Item>
+          <Form.Item
+            label="Description"
+            name="description"
+            extra="Une ou deux phrases qui présentent le périmètre aux membres de l’équipe."
+          >
+            <Input.TextArea
+              rows={3}
+              maxLength={400}
+              showCount
+              placeholder="Le pôle obtient les gymnases, la piscine et les autorisations."
+            />
           </Form.Item>
           <Form.Item label="Couleur" name="couleur">
             <ColorPicker format="hex" allowClear />

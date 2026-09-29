@@ -5,6 +5,23 @@
   "version": "0.7.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-29-orga-chaque-perimetre-peut-porter-une-description",
+          "date": "2026-09-29",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque périmètre peut porter une description",
+            "texte": "Les admins décrivent chaque périmètre en une ou deux phrases, dans la page « Périmètres » ou dans le fichier perimetres.yaml du contenu. La description s'affiche sous le titre de la page du périmètre.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.7.0",
       "notes": [
         {

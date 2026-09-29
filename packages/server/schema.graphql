@@ -285,7 +285,7 @@ type Mutation {
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
   creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, nom: String!, sigle: String, slug: String!): OrganisationInstallation!
-  creerPerimetre(activiteId: ID, couleur: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
+  creerPerimetre(activiteId: ID, couleur: String, description: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
   creerTache(description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
   definirAdminActivite(activiteId: ID!, admin: Boolean!, personneId: ID!): Boolean!
   definirContactPrincipal(affectationId: ID!, contactPrincipal: Boolean!): Boolean!
@@ -321,7 +321,7 @@ type Mutation {
   """
   modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, domainesCourrielAutorises: [String!]!, favicon: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
   modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
-  modifierPerimetre(archive: Boolean!, couleur: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre): Perimetre!
+  modifierPerimetre(archive: Boolean!, couleur: String, description: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre): Perimetre!
   modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
   modifierPreferencesNotification(frequenceResume: FrequenceResume!, mailEcheance: Boolean!, mailModification: Boolean!): PreferencesNotification!
   modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String!): Tache!
@@ -405,6 +405,11 @@ type Perimetre {
   avancement(editionId: ID!): Avancement!
   contactPrincipal(editionId: ID!): Personne
   couleur: String
+
+  """
+  Une ou deux phrases qui présentent le périmètre (ADR 0012). Vaut null sans description.
+  """
+  description: String
   fiches: [Fiche!]!
   groupe: String!
   id: ID!

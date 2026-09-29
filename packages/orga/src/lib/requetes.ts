@@ -46,6 +46,7 @@ export const PERIMETRES = graphql(`
       id
       slug
       nom
+      description
       type
       groupe
       couleur
