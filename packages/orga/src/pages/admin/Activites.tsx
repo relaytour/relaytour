@@ -67,6 +67,7 @@ const MODIFIER = graphql(`
     $groupes: [GroupePerimetresInput!]!
     $ordre: Int!
     $archive: Boolean
+    $souhaitsOuverts: Boolean
   ) {
     modifierActivite(
       id: $id
@@ -76,6 +77,7 @@ const MODIFIER = graphql(`
       groupes: $groupes
       ordre: $ordre
       archive: $archive
+      souhaitsOuverts: $souhaitsOuverts
     ) {
       id
     }
@@ -136,6 +138,7 @@ interface Valeurs {
   ordre: number
   groupes: Groupe[]
   archive: boolean
+  souhaitsOuverts: boolean
   // Identité propre de l'activité (ADR 0009) : un champ vide reprend la valeur
   // de l'organisation.
   contactRecrutement?: string
@@ -207,6 +210,7 @@ export default function Activites() {
             ordre: (data?.activites.length ?? 0) + 1,
             groupes: GROUPES_PAR_DEFAUT,
             archive: false,
+            souhaitsOuverts: false,
             contactRecrutement: '',
             pageEquipe: '',
             logoPng: null,
@@ -221,6 +225,7 @@ export default function Activites() {
             ordre: activite.ordre,
             groupes: activite.groupes.map(g => ({ ...g })),
             archive: activite.archive,
+            souhaitsOuverts: activite.souhaitsOuverts,
             contactRecrutement: activite.identite.contactRecrutement ?? '',
             pageEquipe: activite.identite.pageEquipe ?? '',
             logoPng: activite.identite.logoPng ?? null,
@@ -295,6 +300,7 @@ export default function Activites() {
             groupes,
             ordre: v.ordre,
             archive: v.archive === enEdition.archive ? null : v.archive,
+            souhaitsOuverts: v.souhaitsOuverts,
           },
         })
         message.success('Activité enregistrée.')
@@ -581,6 +587,16 @@ export default function Activites() {
               </Form.Item>
             </Col>
           </Row>
+          {enEdition !== 'nouvelle' && (
+            <Form.Item
+              label="Ouverte aux souhaits"
+              name="souhaitsOuverts"
+              valuePropName="checked"
+              extra="Tous les membres de l’organisation découvrent les périmètres dans « Tous les périmètres » et formulent leurs souhaits. Les tâches et les fiches restent réservées aux personnes affectées."
+            >
+              <Switch />
+            </Form.Item>
+          )}
           {enEdition !== 'nouvelle' && gereOrganisation && (
             <Form.Item
               label="Archivée"

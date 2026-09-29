@@ -79,6 +79,21 @@ export interface AppContext {
    * d'une autre organisation.
    */
   activitesVisibles: () => Promise<Set<string>>
+  /**
+   * Activités que la personne découvre (ADR 0012) : les activités visibles, celles où
+   * elle a un souhait, et les activités ouvertes aux souhaits de l'organisation. Une
+   * activité découverte sans être visible n'ouvre que la page « Tous les
+   * périmètres » et les souhaits de la personne.
+   */
+  activitesDecouvertes: () => Promise<Set<string>>
+  /**
+   * L'activité demandée si la personne la découvre, sinon un refus. Sans
+   * identifiant, l'activité de l'en-tête si elle est découverte, sinon la première
+   * activité découverte et ouverte.
+   */
+  exigerActiviteDecouverte: (
+    activiteId?: string | number | null
+  ) => Promise<string>
   /** Vrai pour un admin de l'organisation, ou un admin de cette activité. */
   estAdminDe: (activiteId: string) => Promise<boolean>
   /** Refuse la requête si la personne n'administre pas cette activité. */
@@ -259,6 +274,71 @@ export async function buildContext(
     return visibles
   }
 
+  let decouvertes: Promise<Set<string>> | undefined
+  const activitesDecouvertes = () => {
+    if (personne === null || organisation === null)
+      return Promise.resolve(new Set<string>())
+    decouvertes ??= Promise.all([
+      activitesVisibles(),
+      prisma.activite.findMany({
+        where: {
+          organisationId: organisation.id,
+          OR: [
+            { souhaitsOuverts: true, archivedAt: null },
+            {
+              perimetres: {
+                some: { souhaits: { some: { userId: personne.id } } },
+              },
+            },
+          ],
+        },
+        select: { id: true },
+      }),
+    ]).then(
+      ([visiblesIci, autres]) =>
+        new Set([...visiblesIci, ...autres.map(a => a.id)])
+    )
+    return decouvertes
+  }
+
+  const exigerActiviteDecouverte = async (
+    activiteId?: string | number | null
+  ) => {
+    if (organisation === null) throw accesRefuse()
+    const ici = await activitesDecouvertes()
+    if (activiteId !== undefined && activiteId !== null && activiteId !== '') {
+      // Une activité non découverte vaut une activité d'une autre organisation.
+      if (!ici.has(String(activiteId))) throw accesRefuse()
+      return String(activiteId)
+    }
+    if (ici.size === 0) throw accesRefuse()
+    const demandee =
+      activiteDemandee === null
+        ? null
+        : await prisma.activite.findFirst({
+            where: {
+              organisationId: organisation.id,
+              slug: activiteDemandee,
+              id: { in: [...ici] },
+            },
+            select: { id: true },
+          })
+    const activite =
+      demandee ??
+      (await prisma.activite.findFirst({
+        where: {
+          organisationId: organisation.id,
+          archivedAt: null,
+          id: { in: [...ici] },
+        },
+        orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+        select: { id: true },
+      }))
+    if (activite === null)
+      throw erreurSaisie('Aucune activité ouverte ne vous est accessible.')
+    return activite.id
+  }
+
   const estAdminDe = async (activiteId: string) =>
     (await activitesAdministrees()).has(activiteId)
 
@@ -341,6 +421,8 @@ export async function buildContext(
     perimetresConnus,
     activitesAdministrees,
     activitesVisibles,
+    activitesDecouvertes,
+    exigerActiviteDecouverte,
     estAdminDe,
     exigerAdminDe,
     exigerActivite,

@@ -89,6 +89,12 @@ export interface ContexteActiviteValeur {
    * ou admin de cette activité (ADR 0010). Le serveur vérifie chaque opération.
    */
   gere: boolean
+  /**
+   * Vrai quand la personne ne fait que découvrir l'activité (ADR 0012) : elle voit
+   * la page « Tous les périmètres » et formule ses souhaits, sans lire les tâches ni
+   * les fiches.
+   */
+  decouverte: boolean
   /** Les activités ouvertes de l'organisation, pour le sélecteur. */
   activites: Activite[]
   periode: FormesPeriode
@@ -119,6 +125,7 @@ export function construireContexte(
   return {
     activite,
     gere: activite.estAdministree,
+    decouverte: activite.acces === 'DECOUVERTE',
     activites: activites.filter(a => !a.archive || a.id === activite.id),
     periode: formesPeriode(activite.nature),
     lien: chemin =>

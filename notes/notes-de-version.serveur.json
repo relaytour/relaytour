@@ -5,6 +5,23 @@
   "version": "0.7.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-29-serveur-une-activite-peut-s-ouvrir-aux-souhaits-de-tous-les-membres",
+          "date": "2026-09-29",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une activité peut s'ouvrir aux souhaits de tous les membres",
+            "texte": "Une personne découvre une activité ouverte aux souhaits, ou une activité où elle a un souhait. Elle y voit les périmètres et formule ses propres souhaits, sans lire les tâches ni les fiches.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.7.0",
       "notes": [
         {

@@ -44,6 +44,13 @@ const GroupePerimetresInput = builder.inputType('GroupePerimetresInput', {
   }),
 })
 
+// Accès d'une personne à une activité (ADR 0012). COMPLET : elle l'administre ou y
+// a été affectée, et lit ses tâches et ses fiches. DECOUVERTE : elle ne voit que la
+// page « Tous les périmètres » et formule ses souhaits.
+const AccesActiviteEnum = builder.enumType('AccesActivite', {
+  values: ['COMPLET', 'DECOUVERTE'] as const,
+})
+
 export const ActiviteRef = builder.prismaObject('Activite', {
   fields: t => ({
     id: t.exposeID('id'),
@@ -60,6 +67,15 @@ export const ActiviteRef = builder.prismaObject('Activite', {
     // Vrai quand la personne connectée administre l'activité (ADR 0010).
     estAdministree: t.boolean({
       resolve: (a, _args, ctx) => ctx.estAdminDe(a.id),
+    }),
+    souhaitsOuverts: t.exposeBoolean('souhaitsOuverts', {
+      description:
+        'Vrai quand tous les membres de l’organisation découvrent les périmètres de l’activité et formulent leurs souhaits (ADR 0012).',
+    }),
+    acces: t.field({
+      type: AccesActiviteEnum,
+      resolve: async (a, _args, ctx) =>
+        (await ctx.activitesVisibles()).has(a.id) ? 'COMPLET' : 'DECOUVERTE',
     }),
   }),
 })
@@ -86,7 +102,9 @@ builder.queryFields(t => ({
         ...query,
         where: {
           organisationId: ctx.organisation!.id,
-          id: { in: [...(await ctx.activitesVisibles())] },
+          // Les activités découvertes : `acces` dit si la personne lit aussi leurs
+          // tâches et leurs fiches (ADR 0012).
+          id: { in: [...(await ctx.activitesDecouvertes())] },
           ...(inclureArchives ? {} : { archivedAt: null }),
         },
         orderBy: [{ ordre: 'asc' }, { nom: 'asc' }],
@@ -144,6 +162,8 @@ builder.mutationFields(t => ({
       // Archiver ou rouvrir dans la même transaction : une limite atteinte ou la
       // dernière activité ouverte annulent toute la modification.
       archive: t.arg.boolean(),
+      // Absent, le réglage ne change pas (ADR 0012).
+      souhaitsOuverts: t.arg.boolean(),
     },
     resolve: async (query, _root, args, ctx) => {
       const organisationId = ctx.organisation!.id
@@ -178,6 +198,9 @@ builder.mutationFields(t => ({
         nature: args.nature,
         groupes,
         ordre: args.ordre,
+        ...(args.souhaitsOuverts === null || args.souhaitsOuverts === undefined
+          ? {}
+          : { souhaitsOuverts: args.souhaitsOuverts }),
       }
       return sousVerrouOrganisation(organisationId, async tx => {
         const archivedAt =

@@ -1,4 +1,10 @@
+enum AccesActivite {
+  COMPLET
+  DECOUVERTE
+}
+
 type Activite {
+  acces: AccesActivite!
   archive: Boolean!
   contactRecrutement: String
   estAdministree: Boolean!
@@ -14,6 +20,11 @@ type Activite {
   pageEquipe: String
   sigle: String
   slug: String!
+
+  """
+  Vrai quand tous les membres de l’organisation découvrent les périmètres de l’activité et formulent leurs souhaits (ADR 0012).
+  """
+  souhaitsOuverts: Boolean!
 
   """
   Le thème de l’organisation, dont l’activité surcharge les couleurs et le fond.
@@ -298,6 +309,11 @@ type Mutation {
   Écrit l’export complet d’une organisation dans le dossier EXPORTS_DIR du serveur et renvoie le nom du fichier. Le contenu ne transite jamais par l’API.
   """
   demanderExport(organisation: String!): String!
+
+  """
+  La personne connectée note son intérêt pour un périmètre (ADR 0012). Aucun mail ne part.
+  """
+  formulerSouhait(editionId: ID!, perimetreId: ID!): Boolean!
   inviterPersonne(editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresSouhaites: [ID!]): Personne!
 
   """
@@ -307,7 +323,7 @@ type Mutation {
 
   """Sans identifiants, marque toutes les notifications comme lues."""
   marquerNotificationsLues(ids: [ID!]): Int!
-  modifierActivite(archive: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String): Activite!
+  modifierActivite(archive: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
   modifierFiche(contenu: String!, id: ID!, resume: String, titre: String!): Fiche!
 
@@ -329,6 +345,11 @@ type Mutation {
   restaurerVersionFiche(versionId: ID!): Fiche!
   retirerAffectation(id: ID!): Boolean!
   retirerDroitRedaction(id: ID!): Boolean!
+
+  """
+  La personne connectée retire son propre souhait. Hors de ses activités, rien ne change.
+  """
+  retirerMonSouhait(editionId: ID!, perimetreId: ID!): Boolean!
   retirerSouhait(id: ID!): Boolean!
 
   """
@@ -421,6 +442,15 @@ type Perimetre {
   slug: String!
   taches(editionId: ID!): [Tache!]!
   type: TypePerimetre!
+}
+
+type PerimetreDecouvert {
+  """Vrai si la personne est affectée à ce périmètre pour la période."""
+  affecte: Boolean!
+  perimetre: Perimetre!
+
+  """Vrai si la personne a un souhait pour ce périmètre et la période."""
+  souhaite: Boolean!
 }
 
 type PeriodeInstallation {
@@ -523,6 +553,7 @@ type Query {
   recherche(editionId: ID, texte: String!): Recherche!
   retroplanning(editionId: ID!): [Tache!]!
   tachesAPrendre(editionId: ID!): [Tache!]!
+  tousLesPerimetres(activiteId: ID): TousLesPerimetres!
 }
 
 type Recherche {
@@ -608,6 +639,14 @@ type Theme {
   fond: FondTheme!
   polices: PolicesTheme!
   typographie: TypographieTheme!
+}
+
+type TousLesPerimetres {
+  """
+  La période en préparation ou en cours la plus récente. Sans elle, aucun souhait ne se formule.
+  """
+  edition: Edition
+  perimetres: [PerimetreDecouvert!]!
 }
 
 enum TypeNotification {

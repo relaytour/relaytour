@@ -54,6 +54,8 @@ export const ActiviteDeclaree = z.strictObject({
   nature: z.enum(['EVENEMENT', 'SAISON', 'MANDAT']).default('EVENEMENT'),
   groupes: z.array(GroupeModele).min(1).max(10).default(GROUPES_PAR_DEFAUT),
   ordre: z.number().int().min(0).max(999).default(0),
+  // Tous les membres découvrent les périmètres et formulent leurs souhaits (ADR 0012).
+  souhaitsOuverts: z.boolean().optional(),
 })
 
 // Un périmètre déclare son groupe, ou son type (SPORT, POLE) pour les contenus

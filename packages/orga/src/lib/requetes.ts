@@ -69,6 +69,8 @@ export const ACTIVITES = graphql(`
       ordre
       archive
       estAdministree
+      souhaitsOuverts
+      acces
       groupes {
         cle
         libelle
