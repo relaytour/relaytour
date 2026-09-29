@@ -582,6 +582,7 @@ type Tache {
   id: ID!
   modifieeLe: DateTime!
   perimetre: Perimetre!
+  peutModifier: Boolean!
   realiseePar: Personne
   statut: StatutTache!
   termineeLe: DateTime

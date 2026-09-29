@@ -1,4 +1,4 @@
-import { prisma } from '@relaytour/database'
+import { prisma, type StatutEdition } from '@relaytour/database'
 
 import type { AppContext, PersonneConnectee } from '../context.ts'
 
@@ -56,22 +56,75 @@ export async function exigerLecture(
   return ctx.personne
 }
 
+// Mémos par requête : une liste de tâches demande le droit d'écriture par tâche.
+// Les tâches d'une même liste partagent leur édition et se répartissent sur quelques
+// périmètres. Mémoriser l'édition et le périmètre séparément ramène la lecture à une
+// requête par édition et une par périmètre, au lieu de deux par tâche. Le contexte
+// est propre à la requête, donc les mémos disparaissent avec elle.
+type EditionLue = { statut: StatutEdition; activiteId: string } | null
+type PerimetreLu = { activiteId: string } | null
+
+const memoEditions = new WeakMap<AppContext, Map<string, Promise<EditionLue>>>()
+const memoPerimetres = new WeakMap<
+  AppContext,
+  Map<string, Promise<PerimetreLu>>
+>()
+
+function memoriser<T>(
+  memos: WeakMap<AppContext, Map<string, Promise<T>>>,
+  ctx: AppContext,
+  cle: string,
+  charger: () => Promise<T>
+): Promise<T> {
+  let memo = memos.get(ctx)
+  if (memo === undefined) {
+    memo = new Map()
+    memos.set(ctx, memo)
+  }
+  let resultat = memo.get(cle)
+  if (resultat === undefined) {
+    resultat = charger()
+    memo.set(cle, resultat)
+  }
+  return resultat
+}
+
+/** L'édition de l'organisation active, ou `null`. */
+function lireEdition(ctx: AppContext, editionId: string): Promise<EditionLue> {
+  if (ctx.organisation === null) return Promise.resolve(null)
+  const organisationId = ctx.organisation.id
+  return memoriser(memoEditions, ctx, editionId, () =>
+    prisma.edition.findFirst({
+      where: { id: editionId, organisationId },
+      select: { statut: true, activiteId: true },
+    })
+  )
+}
+
+/** Le périmètre de l'organisation active, ou `null`. */
+function lirePerimetre(
+  ctx: AppContext,
+  perimetreId: string
+): Promise<PerimetreLu> {
+  if (ctx.organisation === null) return Promise.resolve(null)
+  const organisationId = ctx.organisation.id
+  return memoriser(memoPerimetres, ctx, perimetreId, () =>
+    prisma.perimetre.findFirst({
+      where: { id: perimetreId, organisationId },
+      select: { activiteId: true },
+    })
+  )
+}
+
 /** L'édition et le périmètre, s'ils relèvent de la même activité de l'organisation active. */
 async function editionEtPerimetre(
   ctx: AppContext,
   perimetreId: string,
   editionId: string
 ) {
-  if (ctx.organisation === null) return null
   const [edition, perimetre] = await Promise.all([
-    prisma.edition.findFirst({
-      where: { id: editionId, organisationId: ctx.organisation.id },
-      select: { statut: true, activiteId: true },
-    }),
-    prisma.perimetre.findFirst({
-      where: { id: perimetreId, organisationId: ctx.organisation.id },
-      select: { activiteId: true },
-    }),
+    lireEdition(ctx, editionId),
+    lirePerimetre(ctx, perimetreId),
   ])
   if (edition === null || perimetre === null) return null
   if (edition.activiteId !== perimetre.activiteId) return null

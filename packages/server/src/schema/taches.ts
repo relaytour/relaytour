@@ -76,6 +76,13 @@ export const TacheRef = builder.prismaObject('Tache', {
           ? prisma.user.findUnique({ where: { id: tache.realiseeParId } })
           : null,
     }),
+    // Les droits d'écriture sur la tâche, pour n'afficher que les actions permises.
+    // La tâche porte son périmètre et son édition : le champ ne prend aucun argument,
+    // et les listes qui la rendent hors de la page d'un périmètre le lisent aussi.
+    peutModifier: t.boolean({
+      resolve: (tache, _args, ctx) =>
+        peutModifierPerimetre(ctx, tache.perimetreId, tache.editionId),
+    }),
   }),
 })
 
