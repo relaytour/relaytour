@@ -5,6 +5,23 @@
   "version": "0.6.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-29-serveur-une-affectation-peut-porter-la-marque-de-contact-principal",
+          "date": "2026-09-29",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une affectation peut porter la marque de contact principal",
+            "texte": "Un admin d'activité désigne le contact principal d'un périmètre pour une édition. Un périmètre en a un seul par édition. La marque ne donne aucun droit et figure dans l'export de l'organisation.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.0",
       "notes": [
         {

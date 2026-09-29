@@ -1,4 +1,5 @@
-import { CloseOutlined } from '@ant-design/icons'
+import { CloseOutlined, StarFilled } from '@ant-design/icons'
+import { Tag } from 'antd'
 
 import { initiales } from '../lib/personnes'
 
@@ -60,5 +61,21 @@ export function PersonneNommee({
         </button>
       )}
     </span>
+  )
+}
+
+/**
+ * La mention du contact principal d'un périmètre (ADR 0011). C'est une information
+ * pour l'organisation : elle ne donne aucun droit.
+ */
+export function MentionContactPrincipal() {
+  return (
+    <Tag
+      icon={<StarFilled aria-hidden />}
+      color="gold"
+      style={{ marginInlineEnd: 0 }}
+    >
+      Contact principal
+    </Tag>
   )
 }

@@ -1,4 +1,10 @@
-import { CloseOutlined, CopyOutlined, UserAddOutlined } from '@ant-design/icons'
+import {
+  CloseOutlined,
+  CopyOutlined,
+  StarFilled,
+  StarOutlined,
+  UserAddOutlined,
+} from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import {
   App,
@@ -44,6 +50,7 @@ const POSTES = graphql(`
       }
       affectations {
         id
+        contactPrincipal
         personne {
           id
           nom
@@ -94,6 +101,15 @@ const AFFECTER = graphql(`
 const RETIRER = graphql(`
   mutation RetirerAffectation($id: ID!) {
     retirerAffectation(id: $id)
+  }
+`)
+
+const DEFINIR_CONTACT = graphql(`
+  mutation DefinirContactPrincipal($id: ID!, $contactPrincipal: Boolean!) {
+    definirContactPrincipal(
+      affectationId: $id
+      contactPrincipal: $contactPrincipal
+    )
   }
 `)
 
@@ -204,6 +220,7 @@ export default function Postes() {
   const [definirEffectif] = useMutation(DEFINIR_EFFECTIF, rafraichir)
   const [affecter] = useMutation(AFFECTER, rafraichir)
   const [retirer] = useMutation(RETIRER, rafraichir)
+  const [definirContact] = useMutation(DEFINIR_CONTACT, rafraichir)
   const [retirerSouhait] = useMutation(RETIRER_SOUHAIT, rafraichir)
 
   const postes = data?.postesAPourvoir ?? []
@@ -422,6 +439,7 @@ export default function Postes() {
                         {affectations.map(a => (
                           <Tag
                             key={a.id}
+                            color={a.contactPrincipal ? 'gold' : undefined}
                             closable
                             closeIcon={
                               <CloseOutlined
@@ -435,6 +453,44 @@ export default function Postes() {
                               )
                             }}
                           >
+                            <Tooltip
+                              title={
+                                a.contactPrincipal
+                                  ? 'Contact principal. Cliquez pour retirer la désignation.'
+                                  : 'Désigner comme contact principal, sans droit supplémentaire.'
+                              }
+                            >
+                              <Button
+                                type="text"
+                                size="small"
+                                icon={
+                                  a.contactPrincipal ? (
+                                    <StarFilled aria-hidden />
+                                  ) : (
+                                    <StarOutlined aria-hidden />
+                                  )
+                                }
+                                aria-pressed={a.contactPrincipal}
+                                aria-label={`${a.personne.nom}, contact principal de ${perimetre.nom}`}
+                                disabled={archivee}
+                                onClick={() =>
+                                  void executer(() =>
+                                    definirContact({
+                                      variables: {
+                                        id: a.id,
+                                        contactPrincipal: !a.contactPrincipal,
+                                      },
+                                    })
+                                  )
+                                }
+                                style={{
+                                  height: 20,
+                                  width: 20,
+                                  minWidth: 20,
+                                  marginInlineEnd: 2,
+                                }}
+                              />
+                            </Tooltip>
                             {a.personne.nom}
                           </Tag>
                         ))}

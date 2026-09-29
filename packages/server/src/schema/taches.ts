@@ -198,21 +198,58 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     },
   }),
 
-  // Les personnes affectées au périmètre pour l'édition : les co-référent·es.
+  // Les personnes affectées au périmètre pour l'édition : les co-référent·es. Le
+  // contact principal vient en tête, les autres suivent par nom (ADR 0011).
   referents: t.prismaField({
     type: [PersonneRef],
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, perimetre, { editionId }, ctx) => {
       await exigerLecture(ctx, perimetre.id)
       const edition = await ctx.exigerEdition(editionId)
-      return prisma.user.findMany({
+      const [personnes, contact] = await Promise.all([
+        prisma.user.findMany({
+          ...query,
+          where: {
+            affectations: {
+              some: { perimetreId: perimetre.id, editionId: edition.id },
+            },
+          },
+          orderBy: { name: 'asc' },
+        }),
+        prisma.affectation.findFirst({
+          where: {
+            perimetreId: perimetre.id,
+            editionId: edition.id,
+            contactPrincipal: true,
+          },
+          select: { userId: true },
+        }),
+      ])
+      const enTete = (id: string) => (id === contact?.userId ? 0 : 1)
+      return personnes.sort((p, q) => enTete(p.id) - enTete(q.id))
+    },
+  }),
+
+  // Le contact principal du périmètre pour l'édition, s'il est désigné. Il se lit
+  // comme les référent·es : c'est une information, sans droit (ADR 0011).
+  contactPrincipal: t.prismaField({
+    type: PersonneRef,
+    nullable: true,
+    args: { editionId: t.arg.id({ required: true }) },
+    resolve: async (query, perimetre, { editionId }, ctx) => {
+      await exigerLecture(ctx, perimetre.id)
+      const edition = await ctx.exigerEdition(editionId)
+      return prisma.user.findFirst({
         ...query,
         where: {
           affectations: {
-            some: { perimetreId: perimetre.id, editionId: edition.id },
+            some: {
+              perimetreId: perimetre.id,
+              editionId: edition.id,
+              contactPrincipal: true,
+            },
           },
         },
-        orderBy: { name: 'asc' },
       })
     },
   }),

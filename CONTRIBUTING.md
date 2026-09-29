@@ -66,6 +66,7 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 | Fiches | Une version ne se modifie ni ne se supprime ; restaurer crée une nouvelle version. L'historique est réservé aux admins. Rédiger exige un droit accordé par un admin (un périmètre, ou toutes les fiches). | `packages/server/src/schema/fiches.ts` |
 | Notifications | Une notification ne stocke que des identifiants ; son texte se compose à la lecture. Mail immédiat : modification d'une tâche assignée, rappels à 7 jours et à la veille, retards. Le reste passe par le résumé (hebdomadaire par défaut, le lundi à 7 h, valeur validée le 16 septembre 2026). Le worker vérifie les préférences au moment de l'envoi. | `packages/server/src/lib/notifications.ts`, `src/jobs/planification.ts` |
 | Accès aux périmètres | Lecture pour toute personne affectée au périmètre dans au moins une édition ; écriture pour les personnes affectées à l'édition concernée, tant qu'elle n'est pas archivée ; tout pour les admins de l'activité du périmètre. Une activité invisible vaut une activité d'une autre organisation. | `packages/server/src/lib/droits.ts`, ADR 0010 |
+| Contact principal | Un périmètre a au plus un contact principal par édition, désigné par un admin de son activité parmi les personnes affectées. C'est une information : le contact principal a les mêmes droits que les autres référentes et référents. | ADR 0011 |
 | Souhaits | Un souhait note l'intérêt d'une personne pour un périmètre d'une édition. Il est visible des admins seulement, ne donne aucun accès et n'est jamais exporté dans Git. Il est satisfait quand l'affectation correspondante existe. | `packages/server/src/lib/souhaits.ts` |
 
 ## Invariants techniques
@@ -113,6 +114,7 @@ Un seul mot par notion.
 | pôle | Groupe de périmètres transverses (coordination, logistique, trésorerie…), proposé par défaut. Les pôles sont listés dans le `perimetres.yaml` de l'activité. |
 | référent·e | Personne membre de l'organisation, désignée pour un périmètre et une édition. |
 | affectation | Lien entre une personne, un périmètre et une édition. |
+| contact principal | Référent·e désigné·e par un admin comme première personne à solliciter pour un périmètre et une édition. Une information seulement, sans droit supplémentaire (ADR 0011). |
 | effectif | Nombre de référentes et de référents souhaité pour un périmètre et une édition. |
 | poste à pourvoir | Place de référent·e encore libre : l'effectif moins les affectations. |
 | souhait | Intérêt d'une personne pour un périmètre d'une édition, noté par un admin. |

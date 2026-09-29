@@ -21,6 +21,9 @@ const AVANCEMENT = graphql(`
           id
           nom
         }
+        contactPrincipal(editionId: $editionId) {
+          id
+        }
       }
       avancement {
         total
@@ -135,7 +138,13 @@ export default function AvancementGlobal() {
                     <Avancement avancement={avancement} compact />
                     <div style={{ marginTop: 8, fontSize: 13, opacity: 0.75 }}>
                       {perimetre.referents.length > 0
-                        ? perimetre.referents.map(r => r.nom).join(', ')
+                        ? perimetre.referents
+                            .map(r =>
+                              r.id === perimetre.contactPrincipal?.id
+                                ? `${r.nom} (contact principal)`
+                                : r.nom
+                            )
+                            .join(', ')
                         : 'Aucune personne affectée'}
                     </div>
                   </Card>

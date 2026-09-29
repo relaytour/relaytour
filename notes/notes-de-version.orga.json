@@ -5,6 +5,23 @@
   "version": "0.6.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-09-29-orga-chaque-perimetre-peut-avoir-un-contact-principal",
+          "date": "2026-09-29",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque périmètre peut avoir un contact principal",
+            "texte": "Dans « Postes à pourvoir », l'étoile d'une personne affectée la désigne comme contact principal du périmètre pour la période. La page du périmètre et l'avancement global l'affichent en tête des référentes et référents. Ce rôle ne donne aucun droit supplémentaire.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.6.0",
       "notes": [
         {

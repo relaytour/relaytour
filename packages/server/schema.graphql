@@ -32,6 +32,10 @@ type ActiviteInstallation {
 }
 
 type Affectation {
+  """
+  Vrai pour le contact principal du périmètre et de l’édition : une information, sans droit supplémentaire (ADR 0011).
+  """
+  contactPrincipal: Boolean!
   creeLe: DateTime!
   edition: Edition!
   id: ID!
@@ -284,6 +288,7 @@ type Mutation {
   creerPerimetre(activiteId: ID, couleur: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
   creerTache(description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
   definirAdminActivite(activiteId: ID!, admin: Boolean!, personneId: ID!): Boolean!
+  definirContactPrincipal(affectationId: ID!, contactPrincipal: Boolean!): Boolean!
   definirEffectif(editionId: ID!, effectif: Int!, perimetreId: ID!): Int!
 
   """Remplace l’ensemble des souhaits d’une personne pour une édition."""
@@ -398,6 +403,7 @@ type Perimetre {
   activite: Activite!
   archive: Boolean!
   avancement(editionId: ID!): Avancement!
+  contactPrincipal(editionId: ID!): Personne
   couleur: String
   fiches: [Fiche!]!
   groupe: String!

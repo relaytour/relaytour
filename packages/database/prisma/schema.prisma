@@ -330,12 +330,16 @@ model Perimetre {
 // Une personne désignée pour un périmètre et une édition.
 // Les suppressions sont bloquées (Restrict) : l'historique des éditions reste intact.
 model Affectation {
-  id          String   @id @default(cuid())
-  userId      String
-  perimetreId String
-  editionId   String
-  creeParId   String?
-  createdAt   DateTime @default(now())
+  id               String   @id @default(cuid())
+  userId           String
+  perimetreId      String
+  editionId        String
+  creeParId        String?
+  createdAt        DateTime @default(now())
+  // Contact principal du périmètre pour l'édition (ADR 0011) : une information pour
+  // l'organisation, sans droit supplémentaire. La mutation definirContactPrincipal
+  // en garde une seule par périmètre et par édition.
+  contactPrincipal Boolean  @default(false)
 
   user      User      @relation("AffectationUtilisateur", fields: [userId], references: [id], onDelete: Restrict)
   perimetre Perimetre @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
