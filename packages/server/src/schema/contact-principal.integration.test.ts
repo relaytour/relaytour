@@ -233,24 +233,32 @@ describe('definirContactPrincipal', () => {
 
 describe('lecture du contact principal', () => {
   it('place le contact principal en tête des référent·es, lisible par une référente', async () => {
-    const r = await executer(ids.alice, PERIMETRE, {
-      a: ACTIVITE,
-      slug: `natation-contact-${s}`,
-      e: ids.edition,
-    })
-    expect(r.errors).toBeUndefined()
-    const perimetre = (
-      r.data as {
-        perimetre: {
-          referents: { id: string }[]
-          contactPrincipal: { id: string } | null
+    // Par ordre alphabétique, Bruno précède Zoé. Zoé, désignée, doit passer devant.
+    await executer(ids.admin, DEFINIR, { id: ids.affAlice, c: true })
+    const lire = async () =>
+      (
+        (
+          await executer(ids.bruno, PERIMETRE, {
+            a: ACTIVITE,
+            slug: `natation-contact-${s}`,
+            e: ids.edition,
+          })
+        ).data as {
+          perimetre: {
+            referents: { id: string }[]
+            contactPrincipal: { id: string } | null
+          }
         }
-      }
-    ).perimetre
-    // Sans contact, l'ordre serait alphabétique : Bruno avant Zoé. Bruno est ici le
-    // contact : il reste en tête, et Zoé suit.
-    expect(perimetre.contactPrincipal?.id).toBe(ids.bruno)
-    expect(perimetre.referents.map(p => p.id)).toEqual([ids.bruno, ids.alice])
+      ).perimetre
+    const avecZoe = await lire()
+    expect(avecZoe.contactPrincipal?.id).toBe(ids.alice)
+    expect(avecZoe.referents.map(p => p.id)).toEqual([ids.alice, ids.bruno])
+    // Bruno redevient le contact, pour les cas suivants.
+    await executer(ids.admin, DEFINIR, { id: ids.affBruno, c: true })
+    const avecBruno = await lire()
+    expect(avecBruno.contactPrincipal?.id).toBe(ids.bruno)
+    expect(avecBruno.referents.map(p => p.id)).toEqual([ids.bruno, ids.alice])
+    expect(await contacts()).toEqual([ids.affBruno])
   })
 
   it('renvoie null pour un périmètre sans contact principal', async () => {
