@@ -7,7 +7,11 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import Avancement from '../composants/Avancement'
 import ChoixEdition from '../composants/ChoixEdition'
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
-import { Avatar, PersonneNommee } from '../composants/Personne'
+import {
+  Avatar,
+  MentionContactPrincipal,
+  PersonneNommee,
+} from '../composants/Personne'
 import { Puces } from '../composants/Puces'
 import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
@@ -32,6 +36,9 @@ const PAGE = graphql(`
       referents(editionId: $editionId) {
         id
         nom
+      }
+      contactPrincipal(editionId: $editionId) {
+        id
       }
       avancement(editionId: $editionId) {
         total
@@ -118,6 +125,7 @@ export default function Perimetre() {
     return <Result status="404" title="Ce périmètre est introuvable." />
 
   const moiId = data.moi.id
+  const contactId = perimetre.contactPrincipal?.id
   const edition = editions?.editions.find(e => e.id === editionId)
   const a = perimetre.avancement
 
@@ -147,11 +155,20 @@ export default function Perimetre() {
                 >
                   <span>Référent·es :</span>
                   {perimetre.referents.map(r => (
-                    <PersonneNommee
+                    <span
                       key={r.id}
-                      nom={r.id === moiId ? 'Vous' : r.nom}
-                      initialesDe={r.nom}
-                    />
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <PersonneNommee
+                        nom={r.id === moiId ? 'Vous' : r.nom}
+                        initialesDe={r.nom}
+                      />
+                      {r.id === contactId && <MentionContactPrincipal />}
+                    </span>
                   ))}
                 </span>
               ) : (
@@ -282,6 +299,7 @@ export default function Perimetre() {
                         <span style={{ fontWeight: 600 }}>
                           {r.id === moiId ? 'Vous' : r.nom}
                         </span>
+                        {r.id === contactId && <MentionContactPrincipal />}
                         <span
                           className="rt-compte"
                           style={{ marginInlineStart: 'auto' }}

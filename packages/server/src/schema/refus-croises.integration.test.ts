@@ -429,6 +429,15 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'definirContactPrincipal',
+    query:
+      'mutation ($id: ID!) { definirContactPrincipal(affectationId: $id, contactPrincipal: true) }',
+    variables: () => ({ id: a.affectation }),
+    attente: {
+      sansEffet: d => expect(d.definirContactPrincipal).toBe(false),
+    },
+  },
+  {
     operation: 'definirEffectif',
     query:
       'mutation ($p: ID!, $e: ID!) { definirEffectif(perimetreId: $p, editionId: $e, effectif: 9) }',
@@ -636,6 +645,12 @@ async function etatDeA() {
       Promise.all([
         prisma.affectation.count({
           where: { perimetre: { organisationId: a.org } },
+        }),
+        prisma.affectation.count({
+          where: {
+            perimetre: { organisationId: a.org },
+            contactPrincipal: true,
+          },
         }),
         prisma.souhait.count({
           where: { perimetre: { organisationId: a.org } },

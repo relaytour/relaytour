@@ -1,4 +1,9 @@
-import { prisma, StatutTache, type Prisma } from '@relaytour/database'
+import {
+  prisma,
+  StatutTache,
+  type Prisma,
+  type User,
+} from '@relaytour/database'
 import { GraphQLError } from 'graphql'
 
 import type { AppContext } from '../context.ts'
@@ -183,6 +188,37 @@ const AvancementPerimetreRef = builder
     }),
   })
 
+// Contacts principaux d'une édition, lus une fois par requête GraphQL (ADR 0011).
+// L'avancement global demande le contact et les référent·es de chaque périmètre :
+// les deux champs partagent cette lecture au lieu de relire la base par périmètre.
+// L'édition a déjà été contrôlée par l'appelant.
+const contactsParRequete = new WeakMap<
+  AppContext,
+  Map<string, Promise<Map<string, User>>>
+>()
+
+function contactsDeLEdition(
+  ctx: AppContext,
+  editionId: string
+): Promise<Map<string, User>> {
+  let parEdition = contactsParRequete.get(ctx)
+  if (parEdition === undefined) {
+    parEdition = new Map()
+    contactsParRequete.set(ctx, parEdition)
+  }
+  let contacts = parEdition.get(editionId)
+  if (contacts === undefined) {
+    contacts = prisma.affectation
+      .findMany({
+        where: { editionId, contactPrincipal: true },
+        include: { user: true },
+      })
+      .then(lignes => new Map(lignes.map(l => [l.perimetreId, l.user])))
+    parEdition.set(editionId, contacts)
+  }
+  return contacts
+}
+
 const ORDRE_TACHES: Prisma.TacheOrderByWithRelationInput[] = [
   { echeance: { sort: 'asc', nulls: 'last' } },
   { createdAt: 'asc' },
@@ -205,22 +241,44 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     },
   }),
 
-  // Les personnes affectées au périmètre pour l'édition : les co-référent·es.
+  // Les personnes affectées au périmètre pour l'édition : les co-référent·es. Le
+  // contact principal vient en tête, les autres suivent par nom (ADR 0011).
   referents: t.prismaField({
     type: [PersonneRef],
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, perimetre, { editionId }, ctx) => {
       await exigerLecture(ctx, perimetre.id)
       const edition = await ctx.exigerEdition(editionId)
-      return prisma.user.findMany({
-        ...query,
-        where: {
-          affectations: {
-            some: { perimetreId: perimetre.id, editionId: edition.id },
+      const [personnes, contacts] = await Promise.all([
+        prisma.user.findMany({
+          ...query,
+          where: {
+            affectations: {
+              some: { perimetreId: perimetre.id, editionId: edition.id },
+            },
           },
-        },
-        orderBy: { name: 'asc' },
-      })
+          orderBy: { name: 'asc' },
+        }),
+        contactsDeLEdition(ctx, edition.id),
+      ])
+      const contactId = contacts.get(perimetre.id)?.id
+      const enTete = (id: string) => (id === contactId ? 0 : 1)
+      return personnes.sort((p, q) => enTete(p.id) - enTete(q.id))
+    },
+  }),
+
+  // Le contact principal du périmètre pour l'édition, s'il est désigné. Il se lit
+  // comme les référent·es : c'est une information, sans droit (ADR 0011).
+  contactPrincipal: t.field({
+    type: PersonneRef,
+    nullable: true,
+    args: { editionId: t.arg.id({ required: true }) },
+    resolve: async (perimetre, { editionId }, ctx) => {
+      await exigerLecture(ctx, perimetre.id)
+      const edition = await ctx.exigerEdition(editionId)
+      return (
+        (await contactsDeLEdition(ctx, edition.id)).get(perimetre.id) ?? null
+      )
     },
   }),
 

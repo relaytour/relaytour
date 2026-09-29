@@ -194,6 +194,7 @@ export async function construireExport(organisationId: string) {
       activite: x.perimetre.activite.slug,
       perimetre: x.perimetre.slug,
       periode: x.edition.annee,
+      contactPrincipal: x.contactPrincipal,
     })),
     souhaits: souhaits.map(x => ({
       email: x.user.email,

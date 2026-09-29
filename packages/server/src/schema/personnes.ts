@@ -114,6 +114,10 @@ export const AffectationRef = builder.prismaObject('Affectation', {
     perimetre: t.relation('perimetre', { type: PerimetreRef }),
     edition: t.relation('edition', { type: EditionRef }),
     creeLe: t.expose('createdAt', { type: 'DateTime' }),
+    contactPrincipal: t.exposeBoolean('contactPrincipal', {
+      description:
+        'Vrai pour le contact principal du périmètre et de l’édition : une information, sans droit supplémentaire (ADR 0011).',
+    }),
   }),
 })
 
@@ -545,6 +549,62 @@ builder.mutationFields(t => ({
         where: { id: affectation.id },
       })
       return count === 1
+    },
+  }),
+
+  // Désigne ou retire le contact principal d'un périmètre pour une édition
+  // (ADR 0011). Le contact principal ne reçoit aucun droit : seule l'information
+  // change. Un périmètre n'en a qu'un par édition : désigner une personne retire la
+  // désignation précédente.
+  definirContactPrincipal: t.boolean({
+    authScopes: { gestion: true },
+    args: {
+      affectationId: t.arg.id({ required: true }),
+      contactPrincipal: t.arg.boolean({ required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const affectation = await prisma.affectation.findFirst({
+        where: {
+          id: String(args.affectationId),
+          perimetre: { organisationId: ctx.organisation!.id },
+        },
+        select: {
+          id: true,
+          perimetreId: true,
+          editionId: true,
+          perimetre: { select: { activiteId: true } },
+        },
+      })
+      // Comme pour retirerAffectation : hors des activités administrées, rien ne
+      // change et la réponse ne dit pas si l'affectation existe.
+      if (
+        affectation === null ||
+        !(await ctx.estAdminDe(affectation.perimetre.activiteId))
+      ) {
+        return false
+      }
+      // Une édition archivée reste en lecture seule.
+      await exigerEcriture(ctx, affectation.perimetreId, affectation.editionId)
+      await prisma.$transaction([
+        ...(args.contactPrincipal
+          ? [
+              prisma.affectation.updateMany({
+                where: {
+                  perimetreId: affectation.perimetreId,
+                  editionId: affectation.editionId,
+                  contactPrincipal: true,
+                  NOT: { id: affectation.id },
+                },
+                data: { contactPrincipal: false },
+              }),
+            ]
+          : []),
+        prisma.affectation.update({
+          where: { id: affectation.id },
+          data: { contactPrincipal: args.contactPrincipal },
+        }),
+      ])
+      return true
     },
   }),
 
