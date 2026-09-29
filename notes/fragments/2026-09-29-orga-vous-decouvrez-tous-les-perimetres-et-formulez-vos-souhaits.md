@@ -8,8 +8,9 @@ fr:
     Vous découvrez tous les périmètres et formulez vos souhaits
   texte: >-
     La page « Tous les périmètres » ouvre la section « Périmètres » du menu.
-    Elle présente chaque périmètre avec sa description, puis range vos
-    périmètres, vos souhaits et les autres. Le bouton « Je suis intéressé·e »
+    Elle présente chaque périmètre avec sa description et le nombre de
+    personnes encore recherchées, puis range vos périmètres, vos souhaits et
+    les autres. Le bouton « Je suis intéressé·e »
     note un souhait, qu'un admin retrouve dans « Postes à pourvoir ». Une
     activité ouverte aux souhaits s'y découvre par tous les membres.
 ---

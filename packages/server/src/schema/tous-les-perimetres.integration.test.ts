@@ -51,7 +51,7 @@ const code = (r: Awaited<ReturnType<typeof executer>>) =>
 const TOUS = `query ($a: ID) {
   tousLesPerimetres(activiteId: $a) {
     edition { id }
-    perimetres { perimetre { slug description } affecte souhaite }
+    perimetres { perimetre { slug description } affecte souhaite personnesRecherchees }
   }
 }`
 const ACTIVITES = `{ activites { id acces souhaitsOuverts } }`
@@ -68,6 +68,7 @@ type Tous = {
       perimetre: { slug: string; description: string | null }
       affecte: boolean
       souhaite: boolean
+      personnesRecherchees: number | null
     }[]
   }
 }
@@ -159,6 +160,10 @@ beforeAll(async () => {
       perimetreId: ids.natation,
       editionId: ids.edition,
     },
+  })
+  // Natation cherche trois personnes et en a une ; basket n'a pas d'effectif.
+  await prisma.effectifPerimetre.create({
+    data: { perimetreId: ids.natation, editionId: ids.edition, effectif: 3 },
   })
   ids.fiche = (
     await prisma.fiche.create({
@@ -255,6 +260,50 @@ describe('activité ouverte aux souhaits', () => {
       'Le périmètre Basket.',
       'Le périmètre Natation.',
     ])
+  })
+
+  it('indique le nombre de personnes recherchées, sans bloquer les souhaits', async () => {
+    const tous = (
+      (await executer(ids.membre, TOUS, { a: ids.activite })).data as Tous
+    ).tousLesPerimetres
+    // Sans effectif, un périmètre attend une personne (même règle que les postes).
+    expect(
+      tous.perimetres.map(p => [p.perimetre.slug, p.personnesRecherchees])
+    ).toEqual([
+      ['basket', 1],
+      ['natation', 2],
+    ])
+    await prisma.effectifPerimetre.update({
+      where: {
+        perimetreId_editionId: {
+          perimetreId: ids.natation,
+          editionId: ids.edition,
+        },
+      },
+      data: { effectif: 1 },
+    })
+    try {
+      const complet = (
+        (await executer(ids.membre, TOUS, { a: ids.activite })).data as Tous
+      ).tousLesPerimetres.perimetres.find(p => p.perimetre.slug === 'natation')
+      expect(complet?.personnesRecherchees).toBe(0)
+      const r = await executer(ids.membre, FORMULER, {
+        p: ids.natation,
+        e: ids.edition,
+      })
+      expect(r.errors).toBeUndefined()
+      await executer(ids.membre, RETIRER, { p: ids.natation, e: ids.edition })
+    } finally {
+      await prisma.effectifPerimetre.update({
+        where: {
+          perimetreId_editionId: {
+            perimetreId: ids.natation,
+            editionId: ids.edition,
+          },
+        },
+        data: { effectif: 3 },
+      })
+    }
   })
 
   it('n’ouvre ni les tâches, ni les fiches, ni les périodes', async () => {
