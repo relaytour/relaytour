@@ -139,7 +139,7 @@ jobs:
           } > "$RUNNER_TEMP/release.md"
           { echo; echo "### Texte de la release"; echo; cat "$RUNNER_TEMP/release.md"; } >> "$GITHUB_STEP_SUMMARY"
 
-      - uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3.12.0
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
         if: ${{ !inputs.simulation }}
 
       - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
