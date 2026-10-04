@@ -10,7 +10,11 @@ import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
 import { genererRappels, personnesAResumer } from './planification.ts'
 import { connection, type TachePlanifiee } from './queues.ts'
-import { nomPlanification, synchroniserPlanification } from './synchro.ts'
+import {
+  nomPlanification,
+  PLANIFICATIONS_GLOBALES,
+  synchroniserPlanification,
+} from './synchro.ts'
 
 // Worker par organisation (ADR 0008) : rappels, résumés et planifications se
 // limitent à chaque organisation, dans son fuseau. Deux organisations sont créées
@@ -275,6 +279,12 @@ describe('planifications par organisation', () => {
       { pattern: '0 7 * * *' },
       { name: 'resumes' }
     )
+    // Les planifications de l'installation ne dépendent d'aucune organisation.
+    await fileDeTest.upsertJobScheduler(
+      'purge',
+      { pattern: PLANIFICATIONS_GLOBALES.purge },
+      { name: 'purge' }
+    )
     await prisma.organisation.update({
       where: { id: ids.orgB },
       data: { statut: 'SUSPENDUE' },
@@ -283,6 +293,7 @@ describe('planifications par organisation', () => {
       await synchroniserPlanification(fileDeTest)
       const planifications = await fileDeTest.getJobSchedulers()
       const cles = planifications.map(p => p.key)
+      expect(cles).toContain('purge')
       expect(cles).toEqual(
         expect.arrayContaining([
           nomPlanification('rappels', ids.orgA),

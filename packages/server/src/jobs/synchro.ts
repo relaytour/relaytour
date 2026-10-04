@@ -16,6 +16,15 @@ export const HEURES = {
   resumes: '0 7 * * *',
 } as const
 
+/**
+ * Les planifications de l'installation, hors de toute organisation : elles survivent
+ * à l'ajustement. La purge tourne chaque nuit à 3 h 15, à l'heure du serveur.
+ */
+export const PLANIFICATIONS_GLOBALES = {
+  synchro: '5 * * * *',
+  purge: '15 3 * * *',
+} as const
+
 /** Identifiant d'un scheduler. BullMQ refuse « : » dans un identifiant. */
 export const nomPlanification = (
   tache: keyof typeof HEURES,
@@ -54,7 +63,7 @@ export async function synchroniserPlanification(
   let retirees = 0
   for (const scheduler of await file.getJobSchedulers()) {
     const cle = scheduler.key
-    if (cle === 'synchro' || attendues.has(cle)) continue
+    if (cle in PLANIFICATIONS_GLOBALES || attendues.has(cle)) continue
     await file.removeJobScheduler(cle)
     retirees += 1
   }

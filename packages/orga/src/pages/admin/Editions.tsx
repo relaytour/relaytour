@@ -244,7 +244,11 @@ export default function Editions() {
             </Col>
           </Row>
           {enEdition !== 'nouvelle' && (
-            <Form.Item label="Statut" name="statut">
+            <Form.Item
+              label="Statut"
+              name="statut"
+              extra={`Archiver ${periode.une} passe ses tâches en lecture seule. Ses demandes pour rejoindre l’équipe sont supprimées la nuit suivante ; les comptes et les affectations restent.`}
+            >
               <Select
                 options={Object.entries(STATUTS).map(
                   ([value, { libelle }]) => ({

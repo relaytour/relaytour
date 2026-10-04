@@ -15,7 +15,10 @@ import {
 } from './jobs/queues.ts'
 import { courrielProcessor } from './jobs/processors/courriel.processor.ts'
 import { planificationProcessor } from './jobs/processors/planification.processor.ts'
-import { synchroniserPlanification } from './jobs/synchro.ts'
+import {
+  PLANIFICATIONS_GLOBALES,
+  synchroniserPlanification,
+} from './jobs/synchro.ts'
 import { journal } from './lib/journal.ts'
 import { assurerOrganisationParDefaut } from './lib/organisation.ts'
 
@@ -46,11 +49,13 @@ void synchroniserPlanification().catch((erreur: unknown) => {
     'Les planifications n’ont pas pu être ajustées au démarrage.'
   )
 })
-void planificationQueue.upsertJobScheduler(
-  'synchro',
-  { pattern: '5 * * * *' },
-  { name: 'synchro' }
-)
+for (const tache of ['synchro', 'purge'] as const) {
+  void planificationQueue.upsertJobScheduler(
+    tache,
+    { pattern: PLANIFICATIONS_GLOBALES[tache] },
+    { name: tache }
+  )
+}
 
 // Sonde de vie du worker, jamais publiée sur l'hôte. Elle détecte une connexion Redis bloquée.
 const sonde = http.createServer((_req, res) => {

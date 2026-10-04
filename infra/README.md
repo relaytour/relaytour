@@ -108,3 +108,9 @@ docker compose --env-file .env exec worker node dist/planification-lancer.js res
 ```
 
 Sans `--organisation`, la tâche part pour toutes les organisations actives. Un rappel n'est jamais créé deux fois et un résumé ne part qu'une fois par jour et par organisation : relancer est sans risque.
+
+Une troisième tâche, `purge`, tourne chaque nuit à 3 h 15, à l'heure du serveur, pour toutes les organisations quel que soit leur statut. Elle supprime les demandes pour rejoindre l'équipe des périodes archivées (ADR 0015) : ces demandes portent le nom et l'adresse de personnes qui ne sont pas membres. Les comptes et les affectations restent. Elle se lance aussi à la main :
+
+```bash
+docker compose --env-file .env exec worker node dist/planification-lancer.js purge
+```
