@@ -9,10 +9,9 @@ import Activites from './pages/admin/Activites'
 import AvancementGlobal from './pages/admin/AvancementGlobal'
 import Classement from './pages/admin/Classement'
 import Editions from './pages/admin/Editions'
+import Equipe from './pages/admin/Equipe'
 import Organisation from './pages/admin/Organisation'
-import Perimetres from './pages/admin/Perimetres'
 import Personnes from './pages/admin/Personnes'
-import Postes from './pages/admin/Postes'
 import Redaction from './pages/admin/Redaction'
 import Connexion from './pages/Connexion'
 import Fiche from './pages/Fiche'
@@ -66,14 +65,14 @@ const routeur = createBrowserRouter([
             element: <ReserveAdmin organisation />,
             children: [{ index: true, element: <Organisation /> }],
           },
-          { path: 'perimetres', element: <Perimetres /> },
+          { path: 'equipe', element: <Equipe /> },
           { path: 'personnes', element: <Personnes /> },
-          { path: 'postes', element: <Postes /> },
-          // Ancienne adresse de la page, conservée pour les favoris.
-          {
-            path: 'affectations',
-            element: <Navigate to="../postes" replace />,
-          },
+          // Anciennes adresses des pages réunies dans « Équipe », conservées pour
+          // les favoris.
+          ...['affectations', 'perimetres', 'postes'].map(path => ({
+            path,
+            element: <Navigate to="../equipe" replace />,
+          })),
           { path: 'redaction', element: <Redaction /> },
         ],
       },

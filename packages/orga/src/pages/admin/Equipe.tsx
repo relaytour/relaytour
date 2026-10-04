@@ -1,6 +1,8 @@
 import {
   CloseOutlined,
   CopyOutlined,
+  PlusOutlined,
+  SettingOutlined,
   StarFilled,
   StarOutlined,
   UserAddOutlined,
@@ -11,6 +13,7 @@ import {
   Button,
   Card,
   Col,
+  Collapse,
   Empty,
   InputNumber,
   Modal,
@@ -28,11 +31,14 @@ import {
 } from 'antd'
 import { useRef, useState } from 'react'
 
+import ReglagePerimetre, {
+  type PerimetreRegle,
+} from '../../composants/ReglagePerimetre'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { EtatPostes } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
-import { EDITIONS } from '../../lib/requetes'
+import { EDITIONS, PERIMETRES } from '../../lib/requetes'
 import { useActivite } from '../../lib/activite'
 
 const POSTES = graphql(`
@@ -47,6 +53,9 @@ const POSTES = graphql(`
         nom
         groupe
         couleur
+        description
+        ordre
+        archive
       }
       affectations {
         id
@@ -200,13 +209,27 @@ function ChampEffectif({
   )
 }
 
-export default function Postes() {
+/**
+ * L'équipe d'une période, périmètre par périmètre : l'effectif, les personnes
+ * affectées et les souhaits. Chaque carte ouvre aussi le réglage de son périmètre,
+ * qui ne dépend pas de la période.
+ */
+export default function Equipe() {
   const { periode, libelleGroupe } = useActivite()
   const { message } = App.useApp()
   const { data: editions } = useQuery(EDITIONS)
   const [choix, setChoix] = useState<string | undefined>()
   const [filtre, setFiltre] = useState<Filtre>('tous')
   const [appelOuvert, setAppelOuvert] = useState(false)
+  const [enReglage, setEnReglage] = useState<PerimetreRegle | 'nouveau' | null>(
+    null
+  )
+  // Les périmètres archivés sortent des cartes : ils se règlent, et se désarchivent,
+  // depuis leur propre liste.
+  const { data: tous } = useQuery(PERIMETRES, {
+    variables: { inclureArchives: true },
+  })
+  const archives = (tous?.perimetres ?? []).filter(p => p.archive)
   const edition =
     editions?.editions.find(e => e.id === choix) ??
     editions?.editions.find(e => e.statut !== 'ARCHIVEE')
@@ -259,8 +282,20 @@ export default function Postes() {
 
   return (
     <>
-      <Titre sousTitre="Les périmètres qui manquent de référentes et de référents s’affichent en premier.">
-        Postes à pourvoir
+      <Titre
+        sousTitre="Chaque carte porte l’effectif, les personnes affectées et les souhaits d’un périmètre. Les périmètres qui manquent de référentes et de référents s’affichent en premier."
+        actions={
+          <Button
+            type="primary"
+            size="large"
+            icon={<PlusOutlined />}
+            onClick={() => setEnReglage('nouveau')}
+          >
+            Nouveau périmètre
+          </Button>
+        }
+      >
+        Équipe
       </Titre>
       <Space wrap size={[16, 12]} style={{ marginBottom: 24 }}>
         <Space>
@@ -341,7 +376,7 @@ export default function Postes() {
               description={
                 filtre === 'aPourvoir'
                   ? 'Tous les périmètres ont leurs référentes et référents.'
-                  : 'Créez d’abord un périmètre.'
+                  : 'Cette activité n’a aucun périmètre actif. Créez-en un avec « Nouveau périmètre ».'
               }
             />
           ) : (
@@ -399,11 +434,24 @@ export default function Postes() {
                         </Space>
                       }
                       extra={
-                        effectif === null ? (
-                          <Tooltip title="Effectif à définir">{compte}</Tooltip>
-                        ) : (
-                          compte
-                        )
+                        <Space size={4}>
+                          {effectif === null ? (
+                            <Tooltip title="Effectif à définir">
+                              {compte}
+                            </Tooltip>
+                          ) : (
+                            compte
+                          )}
+                          <Tooltip title="Régler le périmètre">
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<SettingOutlined />}
+                              aria-label={`Régler le périmètre ${perimetre.nom}`}
+                              onClick={() => setEnReglage(perimetre)}
+                            />
+                          </Tooltip>
+                        </Space>
                       }
                       style={{
                         borderTop: `6px solid ${perimetre.couleur ?? 'var(--rt-primaire)'}`,
@@ -582,6 +630,53 @@ export default function Postes() {
           )}
         </>
       )}
+
+      {archives.length > 0 && (
+        <Collapse
+          style={{ marginTop: 24 }}
+          items={[
+            {
+              key: 'archives',
+              label: `Périmètres archivés (${archives.length})`,
+              children: (
+                <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
+                  {archives.map(p => (
+                    <li
+                      key={p.id}
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        gap: 8,
+                        padding: '4px 0',
+                      }}
+                    >
+                      <Space wrap size={8}>
+                        <span>{p.nom}</span>
+                        <Tag>{libelleGroupe(p.groupe)}</Tag>
+                      </Space>
+                      <Button
+                        size="small"
+                        icon={<SettingOutlined />}
+                        aria-label={`Régler le périmètre ${p.nom}`}
+                        onClick={() => setEnReglage(p)}
+                      >
+                        Régler
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              ),
+            },
+          ]}
+        />
+      )}
+
+      <ReglagePerimetre
+        perimetre={enReglage}
+        onFermer={() => setEnReglage(null)}
+      />
 
       <Modal
         open={appelOuvert}
