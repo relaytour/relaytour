@@ -24,6 +24,7 @@ import { useActivite } from '../lib/activite'
 import { useRafraichissement } from '../lib/rafraichissement'
 import { ContexteSession, type Session } from '../lib/session'
 
+import AvisRelecture from './AvisRelecture'
 import ChoixActivite from './ChoixActivite'
 import FournisseurActivite from './FournisseurActivite'
 import GardeSession from './GardeSession'
@@ -265,6 +266,7 @@ function Mise({ session }: { session: Session }) {
           <MenuCompte nom={moi.nom} afficherNom={Boolean(ecrans.sm)} />
         </header>
         <main className="rt-contenu">
+          <AvisRelecture />
           {active.statut === 'LECTURE_SEULE' && (
             <Alert
               type="warning"

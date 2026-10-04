@@ -1,7 +1,7 @@
 import type { ApolloClient, ObservableQuery } from '@apollo/client'
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { useApolloClient } from '@apollo/client/react'
-import { useEffect } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 
 // Rafraîchissement des écrans. Les données d'un écran viennent aussi d'autres
 // personnes : les écrans les relisent au retour sur l'onglet, au retour du réseau, et
@@ -12,9 +12,16 @@ import { useEffect } from 'react'
 //
 // Une relecture est silencieuse. Elle n'appelle pas `refetch()` sur la requête d'un
 // écran : `refetch()` passe `loading` à vrai, et une panne de réseau y pose une
-// erreur que l'écran afficherait comme un refus. Elle lit le serveur à côté, et le
-// cache met à jour les écrans qui l'observent. Une panne laisse donc l'écran tel
-// quel jusqu'au passage suivant.
+// erreur que l'écran afficherait comme un refus. Elle lit le serveur à côté, puis
+// écrit la réponse dans le cache, qui met à jour les écrans. Une panne du réseau ou
+// du serveur laisse donc l'écran tel quel jusqu'au passage suivant.
+//
+// Un refus n'est pas une panne : la session a pris fin, ou les accès de la personne
+// ont changé. Peu d'écrans lisent l'erreur de leur requête, et la garde de session
+// renverrait aussitôt vers la connexion. Le refus se traite donc à un seul endroit :
+// la coquille affiche un avis, qui propose de recharger la page
+// (composants/AvisRelecture.tsx). Rien n'est démonté ni écrit dans le cache, et une
+// saisie en cours reste à l'écran jusqu'au rechargement.
 
 // Les requêtes actives à rafraîchir après une action sur une tâche : les compteurs
 // d'avancement et les listes « à prendre » dépendent du statut et des assignations.
@@ -69,38 +76,90 @@ export function peutRafraichir(etat: {
 // de fiche garde la version qu'il a chargée. La valeur compte les écrans montés.
 const ecartees = new Map<string, number>()
 
+/** Vrai pour un refus du serveur, faux pour une panne du réseau ou du serveur. */
+function estUnRefus(erreur: unknown): boolean {
+  return (
+    CombinedGraphQLErrors.is(erreur) &&
+    erreur.errors.some(e => e.extensions?.code === 'FORBIDDEN')
+  )
+}
+
+/**
+ * Vrai quand la réponse dit que la session a pris fin : le champ `moi` est public,
+ * et répond null sans erreur à une requête sans session.
+ */
+function sessionTerminee(donnees: unknown): boolean {
+  return (
+    typeof donnees === 'object' &&
+    donnees !== null &&
+    'moi' in donnees &&
+    donnees.moi === null
+  )
+}
+
+// Le refus rencontré par la dernière relecture, lu par l'avis de la coquille.
+let refusEnCours = false
+const abonnes = new Set<() => void>()
+
+function noterRefus(refus: boolean): void {
+  if (refus === refusEnCours) return
+  refusEnCours = refus
+  for (const prevenir of abonnes) prevenir()
+}
+
+function abonner(prevenir: () => void): () => void {
+  abonnes.add(prevenir)
+  return () => abonnes.delete(prevenir)
+}
+
+/** Vrai quand la dernière relecture a rencontré un refus du serveur. */
+export function useRefusDeRelecture(): boolean {
+  return useSyncExternalStore(
+    abonner,
+    () => refusEnCours,
+    () => refusEnCours
+  )
+}
+
 async function relire(
   client: ApolloClient,
   requete: ObservableQuery
-): Promise<void> {
+): Promise<'relue' | 'panne' | 'refus'> {
+  const { query, variables } = requete
   try {
-    await client.query({
-      query: requete.query,
-      variables: requete.variables,
-      fetchPolicy: 'network-only',
+    const { data } = await client.query({
+      query,
+      variables,
+      fetchPolicy: 'no-cache',
     })
+    if (data === undefined || data === null) return 'panne'
+    // Écrire `moi: null` dans le cache renverrait aussitôt vers la connexion.
+    if (sessionTerminee(data)) return 'refus'
+    client.writeQuery({ query, variables, data })
+    return 'relue'
   } catch (erreur) {
-    // Un refus du serveur doit se voir : la requête se relit elle-même, et l'écran
-    // affiche le refus. Une panne de réseau ne change rien à l'écran.
-    if (CombinedGraphQLErrors.is(erreur)) {
-      await requete.refetch().catch(() => undefined)
-    }
+    return estUnRefus(erreur) ? 'refus' : 'panne'
   }
 }
 
 /**
- * Relit en silence les requêtes actives de la liste, et renvoie leur nombre. Ne lève
- * jamais.
+ * Relit en silence les requêtes actives de la liste, et renvoie leur nombre. Note un
+ * refus pour l'avis de la coquille : une relecture suivante sans refus le retire. Ne
+ * lève jamais.
  */
 export async function relireLesRequetes(client: ApolloClient): Promise<number> {
-  const lectures = [...client.getObservableQueries('active')]
-    .filter(requete => {
-      const nom = requete.queryName ?? ''
-      return REQUETES_RAFRAICHIES.has(nom) && !ecartees.has(nom)
-    })
-    .map(requete => relire(client, requete))
-  await Promise.all(lectures)
-  return lectures.length
+  const issues = await Promise.all(
+    [...client.getObservableQueries('active')]
+      .filter(requete => {
+        const nom = requete.queryName ?? ''
+        return REQUETES_RAFRAICHIES.has(nom) && !ecartees.has(nom)
+      })
+      .map(requete => relire(client, requete))
+  )
+  // Une relecture où tout est en panne ne dit rien des accès : l'avis reste tel quel.
+  if (issues.includes('refus')) noterRefus(true)
+  else if (issues.includes('relue')) noterRefus(false)
+  return issues.length
 }
 
 /** Écarte une requête de la relecture tant que le composant est monté. */
