@@ -173,7 +173,10 @@ describe('refus du serveur pendant une relecture', () => {
 
   it('affiche l’avis quand la session a pris fin, sans vider la session du cache', async () => {
     const { client, etat } = banc()
-    const MENU = gql(`query MenuPerimetres { moi { id } }`)
+    // Le nom s'insère dans le texte : codegen ne lit pas ce document, qui porte le
+    // nom d'une opération de l'application.
+    const nom = 'MenuPerimetres'
+    const MENU = gql(`query ${nom} { moi { id } }`)
     const requete = client.watchQuery<{ moi: { id: string } | null }>({
       query: MENU,
     })
