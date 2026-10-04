@@ -1,10 +1,9 @@
-import { randomUUID } from 'node:crypto'
-
 import { prisma, type StatutOrganisation } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
 
 import { GROUPES_PAR_DEFAUT } from './activites.ts'
+import { creerOuRattacherCompte } from './comptes.ts'
 import { erreurSaisie } from './erreurs.ts'
 import {
   LimitesSchema,
@@ -17,7 +16,12 @@ import {
   DeclarationOrganisationSchema,
   invaliderConfigurationOrganisation,
 } from './organisation.ts'
-import { adresseValide, sansDoublon, texteRequis } from './saisie.ts'
+import {
+  adresseValide,
+  rejouerSurDoublon,
+  sansDoublon,
+  texteRequis,
+} from './saisie.ts'
 
 // Administration de l'installation (ADR 0008).
 //
@@ -137,34 +141,41 @@ export async function inviterAdmin(
 ): Promise<string> {
   const { id: organisationId } = await organisationParSlug(slugOrganisation)
   const invitation = await validerInvitation(adresse, nom)
-  const userId = await sousVerrouOrganisation(organisationId, async tx => {
-    const admins = await tx.appartenance.count({
-      where: { organisationId, role: 'ADMIN' },
-    })
-    if (admins > 0) {
-      throw erreurSaisie(
-        'Cette organisation a déjà un admin : ses admins invitent les autres personnes.'
-      )
-    }
-    const personne = await tx.user.upsert({
-      where: { email: invitation.email },
-      update: {},
-      create: {
-        id: randomUUID(),
+  // Le verrou ne vaut que pour cette organisation. Une autre organisation peut
+  // inviter la même adresse nouvelle au même instant : la seconde création du compte
+  // échoue alors sur l'unicité de l'adresse, se rejoue et rattache le compte créé.
+  const userId = await rejouerSurDoublon(() =>
+    sousVerrouOrganisation(organisationId, async tx => {
+      const admins = await tx.appartenance.count({
+        where: { organisationId, role: 'ADMIN' },
+      })
+      if (admins > 0) {
+        throw erreurSaisie(
+          'Cette organisation a déjà un admin : ses admins invitent les autres personnes.'
+        )
+      }
+      const compte = await creerOuRattacherCompte(tx, {
         email: invitation.email,
-        name: invitation.nom,
-      },
-      select: { id: true },
+        nom: invitation.nom,
+        organisationId,
+        role: 'ADMIN',
+      })
+      // validerInvitation a refusé un compte archivé ; il peut l'être devenu depuis.
+      if (compte.issue === 'archive') {
+        throw erreurSaisie('Cette adresse ne peut pas être invitée.')
+      }
+      // Une personne déjà membre devient admin de son organisation.
+      if (compte.issue === 'membre') {
+        await tx.appartenance.update({
+          where: {
+            userId_organisationId: { userId: compte.userId, organisationId },
+          },
+          data: { role: 'ADMIN' },
+        })
+      }
+      return compte.userId
     })
-    await tx.appartenance.upsert({
-      where: {
-        userId_organisationId: { userId: personne.id, organisationId },
-      },
-      update: { role: 'ADMIN' },
-      create: { userId: personne.id, organisationId, role: 'ADMIN' },
-    })
-    return personne.id
-  })
+  )
   await mettreEnFile('invitation', { userId }, { organisationId })
   return userId
 }

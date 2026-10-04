@@ -1,10 +1,10 @@
-import { randomUUID } from 'node:crypto'
-
 import { prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
+import { creerAffectations } from '../lib/affectations.ts'
 import { exigerMembre } from '../lib/appartenances.ts'
+import { creerOuRattacherCompte } from '../lib/comptes.ts'
 import { annoncerChangementEquipe } from '../lib/equipe.ts'
 import {
   exigerAdminDeLEdition,
@@ -289,53 +289,40 @@ builder.mutationFields(t => ({
       }
       const organisationId = ctx.organisation!.id
       const role = args.estAdmin ? 'ADMIN' : 'MEMBRE'
-      // Un compte est global (ADR 0008) : une adresse déjà connue d'une autre
-      // organisation reçoit une appartenance à celle-ci, sans nouveau compte.
-      const existant = await prisma.user.findUnique({
-        where: { email },
-        select: {
-          id: true,
-          archivedAt: true,
-          appartenances: { where: { organisationId }, select: { id: true } },
-        },
-      })
-      if (existant !== null && existant.appartenances.length > 0) {
-        throw erreurSaisie('Un compte existe déjà pour cette adresse.')
-      }
-      if (existant !== null && existant.archivedAt !== null) {
-        throw erreurSaisie('Cette adresse ne peut pas être invitée.')
-      }
-      const personne = await sansDoublon(
-        existant === null
-          ? prisma.user.create({
-              ...query,
-              data: {
-                id: randomUUID(),
-                email,
-                name,
-                appartenances: { create: { organisationId, role } },
-                ...(souhaits.length > 0
-                  ? { souhaits: { create: souhaits } }
-                  : {}),
-              },
+      // Le compte, son appartenance et ses souhaits s'écrivent ensemble. Une adresse
+      // déjà connue d'une autre organisation garde son compte (ADR 0008).
+      const compte = await sansDoublon(
+        prisma.$transaction(async tx => {
+          const compte = await creerOuRattacherCompte(tx, {
+            email,
+            nom: name,
+            organisationId,
+            role,
+          })
+          if (compte.dejaMembre) {
+            throw erreurSaisie('Un compte existe déjà pour cette adresse.')
+          }
+          if (compte.issue === 'archive') {
+            throw erreurSaisie('Cette adresse ne peut pas être invitée.')
+          }
+          if (souhaits.length > 0) {
+            await tx.souhait.createMany({
+              data: souhaits.map(s => ({ ...s, userId: compte.userId })),
             })
-          : prisma.user.update({
-              ...query,
-              where: { id: existant.id },
-              data: {
-                appartenances: { create: { organisationId, role } },
-                ...(souhaits.length > 0
-                  ? { souhaits: { create: souhaits } }
-                  : {}),
-              },
-            }),
+          }
+          return compte
+        }),
         'Un compte existe déjà pour cette adresse.'
       )
+      const personne = await prisma.user.findUniqueOrThrow({
+        ...query,
+        where: { id: compte.userId },
+      })
       journal.info(
         {
           evenement: 'personne-invitee',
           userId: personne.id,
-          compteExistant: existant !== null,
+          compteExistant: compte.issue === 'rattache',
           souhaits: souhaits.length,
           par: ctx.personne?.id,
         },
@@ -530,19 +517,25 @@ builder.mutationFields(t => ({
       await exigerEcriture(ctx, perimetreId, editionId)
       // Le même instant date l'affectation et choisit la fenêtre du mail d'équipe.
       const instant = new Date()
-      const affectation = await sansDoublon(
-        prisma.affectation.create({
-          ...query,
-          data: {
-            userId,
-            perimetreId,
-            editionId,
-            creeParId: ctx.personne?.id ?? null,
-            createdAt: instant,
-          },
-        }),
+      const dejaAffectee =
         'Cette personne est déjà affectée à ce périmètre pour cette édition.'
+      const { creees } = await sansDoublon(
+        creerAffectations(prisma, {
+          userId,
+          perimetreIds: [perimetreId],
+          editionId,
+          creeParId: ctx.personne?.id ?? null,
+          instant,
+        }),
+        dejaAffectee
       )
+      if (creees.length === 0) throw erreurSaisie(dejaAffectee)
+      const affectation = await prisma.affectation.findUniqueOrThrow({
+        ...query,
+        where: {
+          userId_perimetreId_editionId: { userId, perimetreId, editionId },
+        },
+      })
       // La personne apprend sa nouvelle place par un mail regroupé (ADR 0012).
       await annoncerChangementEquipe(userId, {
         organisationId: ctx.organisation!.id,
