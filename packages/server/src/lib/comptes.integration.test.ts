@@ -1,15 +1,21 @@
 import { randomUUID } from 'node:crypto'
 
 import { prisma } from '@relaytour/database'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { creerAffectations } from './affectations.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
+import { inviterAdmin } from './installation.ts'
 
 // Entrée d'une personne dans une organisation, puis dans des périmètres. Les deux
 // fonctions servent l'invitation, l'affectation et l'import d'une équipe : elles
 // écrivent dans le client ou la transaction de l'appelant. Le fichier crée ses deux
 // organisations.
+
+// Aucun mail ne part de ce fichier.
+vi.mock('../courriel/file.ts', () => ({
+  mettreEnFile: () => Promise.resolve(),
+}))
 
 const s = randomUUID().slice(0, 8)
 const adresse = (cle: string) => `${cle}-comptes-${s}@exemple.fr`
@@ -84,7 +90,7 @@ afterAll(async () => {
     where: { email: { endsWith: `-comptes-${s}@exemple.fr` } },
   })
   await prisma.organisation.deleteMany({
-    where: { id: { in: [ids.org, ids.autre] } },
+    where: { slug: { endsWith: `-${s}` } },
   })
   await prisma.$disconnect()
 })
@@ -210,6 +216,29 @@ describe('creerOuRattacherCompte', () => {
     expect(
       await prisma.user.findUnique({ where: { email: adresse('annulee') } })
     ).toBeNull()
+  })
+})
+
+// Deux organisations invitent au même instant la même adresse nouvelle comme premier
+// admin. Chaque invitation tient le verrou de sa propre organisation : rien ne les
+// sépare, et la seconde création de compte bute sur l'unicité de l'adresse.
+describe('deux invitations simultanées de la même adresse', () => {
+  it('rattachent le même compte aux deux organisations', async () => {
+    for (let tour = 0; tour < 5; tour += 1) {
+      const slugs = [`comptes-x${tour}-${s}`, `comptes-y${tour}-${s}`]
+      await prisma.organisation.createMany({
+        data: slugs.map(slug => ({ slug, nom: slug, configuration: {} })),
+      })
+      const email = adresse(`simultanee-${tour}`)
+      const [premier, second] = await Promise.all(
+        slugs.map(slug => inviterAdmin(slug, email, 'Première Admin'))
+      )
+      expect(second).toBe(premier)
+      expect((await appartenances(premier!)).map(a => a.role)).toEqual([
+        'ADMIN',
+        'ADMIN',
+      ])
+    }
   })
 })
 

@@ -68,3 +68,19 @@ export async function sansDoublon<T>(
     throw erreur
   }
 }
+
+/**
+ * Rejoue une fois une opération qu'une violation d'unicité (P2002) a fait échouer.
+ * Deux écritures simultanées lisent toutes deux une ligne absente, puis la créent :
+ * la seconde échoue. Au second passage, elle lit la ligne écrite par la première.
+ */
+export async function rejouerSurDoublon<T>(
+  operation: () => Promise<T>
+): Promise<T> {
+  try {
+    return await operation()
+  } catch (erreur) {
+    if ((erreur as { code?: string }).code !== 'P2002') throw erreur
+    return operation()
+  }
+}
