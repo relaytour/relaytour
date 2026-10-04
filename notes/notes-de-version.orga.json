@@ -20,6 +20,18 @@
           }
         },
         {
+          "id": "2026-10-04-orga-une-referente-ou-un-referent-propose-une-personne-un-admin-d",
+          "date": "2026-10-04",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une référente ou un référent propose une personne, un admin décide",
+            "texte": "La page d'un périmètre porte un panneau « Proposer une personne ». Vous y saisissez le prénom et le nom d'une personne qui veut rejoindre votre périmètre, son adresse et un mot facultatif. Les admins retrouvent la demande dans l'onglet « Demandes » de l'écran « Personnes », et la cloche les prévient. Un admin accepte la demande et choisit les périmètres à affecter : le compte est alors créé et la personne reçoit son invitation. Il peut aussi la refuser, sans qu'aucun mail ne parte. Aucun compte n'existe avant sa décision. L'écran « Équipe » compte les demandes en attente de chaque périmètre.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-04-orga-l-ecran-equipe-reunit-les-postes-a-pourvoir-et-le-reglage-de",
           "date": "2026-10-04",
           "type": "fonctionnalite",
