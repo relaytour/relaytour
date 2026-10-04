@@ -70,6 +70,12 @@ export const ACTIVITES = graphql(`
       archive
       estAdministree
       souhaitsOuverts
+      formulaireOuvert
+      formulaire {
+        introduction
+        question
+        paliers
+      }
       acces
       groupes {
         cle

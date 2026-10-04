@@ -37,7 +37,7 @@ export function motValide(brut: string | null | undefined): string | null {
  */
 export async function signalerDemande(
   prisma: PrismaClient,
-  demande: { organisationId: string; activiteId: string; acteurId: string },
+  demande: { organisationId: string; activiteId: string; acteurId?: string },
   maintenant = new Date()
 ): Promise<void> {
   const { organisationId, activiteId, acteurId } = demande
@@ -68,7 +68,7 @@ export async function signalerDemande(
             organisationId,
             userId,
             type: 'DEMANDE_RECUE',
-            acteurId,
+            acteurId: acteurId ?? null,
             activiteId,
             cle: `DEMANDE_RECUE-${activiteId}-${userId}-${jour}`,
           },
@@ -88,4 +88,39 @@ export async function signalerDemande(
       'Une notification n’a pas pu être créée.'
     )
   }
+}
+
+/**
+ * Supprime les demandes des périodes archivées (ADR 0015), quel que soit leur état :
+ * les admins les lisent jusqu'à l'archivage de la période, pas au-delà. Les comptes,
+ * les affectations et les souhaits créés par une acceptation restent. La purge
+ * parcourt chaque organisation, quel que soit son statut : une organisation
+ * suspendue ne garde pas des données de personnes non membres. `organisationId` la
+ * limite à une organisation.
+ */
+export async function purgerDemandes(
+  prisma: PrismaClient,
+  options: { organisationId?: string } = {}
+): Promise<number> {
+  const organisations = await prisma.organisation.findMany({
+    where:
+      options.organisationId === undefined
+        ? {}
+        : { id: options.organisationId },
+    select: { id: true },
+  })
+  let supprimees = 0
+  for (const { id: organisationId } of organisations) {
+    const { count } = await prisma.demande.deleteMany({
+      where: { organisationId, edition: { statut: 'ARCHIVEE' } },
+    })
+    if (count > 0) {
+      journal.info(
+        { evenement: 'demandes-purgees', organisationId, demandes: count },
+        'Les demandes des périodes archivées ont été supprimées.'
+      )
+    }
+    supprimees += count
+  }
+  return supprimees
 }

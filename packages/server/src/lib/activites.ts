@@ -43,6 +43,7 @@ export const SLUGS_RESERVES = new Set([
   'medias',
   'perimetres',
   'preferences',
+  'rejoindre',
   'retroplanning',
 ])
 

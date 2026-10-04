@@ -477,6 +477,7 @@ async function importerActivite(
         groupes: modele.declaration.groupes,
         ordre: modele.declaration.ordre,
         souhaitsOuverts: modele.declaration.souhaitsOuverts ?? false,
+        formulaire: modele.declaration.formulaire ?? Prisma.DbNull,
         identite: identiteEnBase(modele, empreintes) ?? Prisma.DbNull,
       }
   const rapport = rapportActiviteVide(

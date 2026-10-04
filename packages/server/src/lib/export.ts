@@ -6,13 +6,15 @@ import { prisma } from '@relaytour/database'
 
 import { lireGroupes } from './activites.ts'
 import { erreurSaisie } from './erreurs.ts'
+import { lireFormulaire } from './formulaire.ts'
 
 // Export complet d'une organisation (ADR 0008).
 //
 // Le fichier appartient à l'organisation : il porte de quoi reconstituer ses
 // activités, ses périodes, ses périmètres, ses fiches avec leur historique, ses
-// tâches, ses membres et leurs affectations. Il contient donc des noms et des
-// adresses. Il s'écrit sur le disque du serveur (EXPORTS_DIR) et ne transite jamais
+// tâches, ses membres et leurs affectations, et les demandes pour rejoindre l'équipe
+// de ses périodes ouvertes. Il contient donc des noms et des adresses, y compris de
+// personnes qui ne sont pas membres. Il s'écrit sur le disque du serveur (EXPORTS_DIR) et ne transite jamais
 // par l'API. Le journal et les notifications n'y figurent pas : le premier se
 // déduit des tâches et des fiches, les secondes sont transitoires.
 //
@@ -29,7 +31,7 @@ export async function construireExport(organisationId: string) {
   const organisation = await prisma.organisation.findUniqueOrThrow({
     where: { id: organisationId },
   })
-  const [membres, activites, affectations, souhaits, droits] =
+  const [membres, activites, affectations, souhaits, droits, demandes] =
     await Promise.all([
       prisma.appartenance.findMany({
         where: { organisationId },
@@ -94,6 +96,24 @@ export async function construireExport(organisationId: string) {
         },
         orderBy: { createdAt: 'asc' },
       }),
+      // Les demandes pour rejoindre l'équipe (ADR 0015) : celles des périodes
+      // ouvertes, puisque la purge supprime celles des périodes archivées.
+      prisma.demande.findMany({
+        where: { organisationId },
+        include: {
+          activite: { select: { slug: true } },
+          edition: { select: { annee: true } },
+          traiteePar: { select: { email: true } },
+          perimetres: {
+            orderBy: { createdAt: 'asc' },
+            include: {
+              perimetre: { select: { slug: true } },
+              proposePar: { select: { email: true } },
+            },
+          },
+        },
+        orderBy: { createdAt: 'asc' },
+      }),
     ])
 
   const taches = await prisma.tache.findMany({
@@ -134,6 +154,8 @@ export async function construireExport(organisationId: string) {
       sigle: a.sigle,
       nature: a.nature,
       souhaitsOuverts: a.souhaitsOuverts,
+      formulaire: lireFormulaire(a.formulaire),
+      formulaireOuvert: a.formulaireOuvert,
       groupes: lireGroupes(a.groupes),
       ordre: a.ordre,
       archive: a.archivedAt !== null,
@@ -208,6 +230,26 @@ export async function construireExport(organisationId: string) {
       email: x.user.email,
       activite: x.perimetre?.activite.slug ?? null,
       perimetre: x.perimetre?.slug ?? null,
+    })),
+    demandes: demandes.map(d => ({
+      activite: d.activite.slug,
+      periode: d.edition.annee,
+      origine: d.origine,
+      statut: d.statut,
+      nom: d.nom,
+      email: d.adresse,
+      disponibilite: d.disponibilite,
+      question: d.question,
+      reponse: d.reponse,
+      texte: d.texte,
+      perimetres: d.perimetres.map(p => ({
+        perimetre: p.perimetre.slug,
+        proposePar: p.proposePar?.email ?? null,
+        mot: p.mot,
+      })),
+      traiteePar: d.traiteePar?.email ?? null,
+      traiteeLe: d.traiteeLe?.toISOString() ?? null,
+      creeLe: d.createdAt.toISOString(),
     })),
   }
 }

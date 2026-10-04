@@ -32,6 +32,30 @@
           }
         },
         {
+          "id": "2026-10-04-serveur-les-demandes-d-une-periode-archivee-sont-supprimees",
+          "date": "2026-10-04",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les demandes d'une période archivée sont supprimées",
+            "texte": "Les admins lisent les demandes pour rejoindre l'équipe jusqu'à l'archivage de leur période. La nuit suivante, Relaytour supprime toutes les demandes de cette période, quel que soit leur état. Les comptes, les affectations et les souhaits créés par une demande acceptée restent. L'écran des périodes le rappelle au moment d'archiver. L'export d'une organisation contient désormais les demandes de ses périodes ouvertes.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-04-serveur-le-formulaire-public-d-une-activite-depose-des-demandes-sans",
+          "date": "2026-10-04",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le formulaire public d'une activité dépose des demandes sans session",
+            "texte": "La requête `formulaireRejoindre` et la mutation `envoyerDemande` se lisent sans session. Elles ne répondent que pour une organisation active, une activité non archivée, un formulaire ouvert, une période non archivée et un contact déclaré. Un dépôt crée une demande en attente, sans compte ni mail. `modifierActivite` reçoit le réglage du formulaire et son ouverture. Le réglage s'importe et s'exporte avec le contenu ; l'ouverture vit en base seulement. Le segment d'adresse `rejoindre` devient réservé : une activité ne peut plus le prendre comme identifiant.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-04-serveur-la-creation-de-compte-et-l-affectation-passent-par-deux-fonc",
           "date": "2026-10-04",
           "type": "interne",

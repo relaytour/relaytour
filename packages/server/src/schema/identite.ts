@@ -402,16 +402,24 @@ builder.mutationFields(t => ({
       // bloque la modification.
       const activites = await prisma.activite.findMany({
         where: { organisationId, archivedAt: null },
-        select: { nom: true, identite: true },
+        select: { nom: true, identite: true, formulaireOuvert: true },
       })
       for (const activite of activites) {
-        const manquements = manquementsIdentiteActivite(
-          lireIdentiteActivite(activite.identite),
-          declaration
-        )
+        const identite = lireIdentiteActivite(activite.identite)
+        const manquements = manquementsIdentiteActivite(identite, declaration)
         if (manquements.length > 0) {
           throw erreurSaisie(
             `L’activité « ${activite.nom} » ne serait plus valide : ${messageValidation(manquements)}.`
+          )
+        }
+        // Un formulaire public ouvert cite un contact (ADR 0015).
+        if (
+          activite.formulaireOuvert &&
+          declaration.contactRecrutement === undefined &&
+          identite.contactRecrutement === undefined
+        ) {
+          throw erreurSaisie(
+            `Le formulaire public de l’activité « ${activite.nom} » cite ce contact : fermez d’abord le formulaire, ou gardez un contact.`
           )
         }
       }
@@ -466,12 +474,23 @@ builder.mutationFields(t => ({
               },
         theme: args.theme ?? undefined,
       })
-      const manquements = manquementsIdentiteActivite(
-        identite,
-        await declarationEnBase(organisationId)
-      )
+      const declaration = await declarationEnBase(organisationId)
+      const manquements = manquementsIdentiteActivite(identite, declaration)
       if (manquements.length > 0) {
         throw erreurSaisie(messageValidation(manquements))
+      }
+      // Un formulaire public ouvert cite un contact (ADR 0015) : le dernier contact
+      // ne se retire pas tant que le formulaire est ouvert.
+      if (
+        identite.contactRecrutement === undefined &&
+        declaration.contactRecrutement === undefined &&
+        (await prisma.activite.count({
+          where: { id, formulaireOuvert: true },
+        })) > 0
+      ) {
+        throw erreurSaisie(
+          'Le formulaire public de l’activité cite ce contact : fermez d’abord le formulaire, ou gardez un contact.'
+        )
       }
       const vide = Object.values(identite).every(v => v === undefined)
       const activite = await prisma.activite.update({

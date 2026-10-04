@@ -291,10 +291,68 @@ describe('export d’une organisation', () => {
         },
       },
     })
+    // Une demande dans chaque organisation : l'export ne porte que la sienne.
+    for (const [slug, cle] of [
+      [slugA, 'a'],
+      [slugB, 'b'],
+    ] as const) {
+      const activite = await prisma.activite.findFirstOrThrow({
+        where: { organisation: { slug } },
+        select: { id: true, organisationId: true },
+      })
+      const perimetre = await prisma.perimetre.create({
+        data: {
+          organisationId: activite.organisationId,
+          activiteId: activite.id,
+          slug: 'accueil',
+          nom: 'Accueil',
+          type: 'POLE',
+          groupe: 'pole',
+        },
+      })
+      const edition = await prisma.edition.create({
+        data: {
+          organisationId: activite.organisationId,
+          activiteId: activite.id,
+          annee: 2027,
+          nom: 'Période 2027',
+          debut: new Date('2027-06-01'),
+          fin: new Date('2027-06-02'),
+        },
+      })
+      await prisma.demande.create({
+        data: {
+          organisationId: activite.organisationId,
+          activiteId: activite.id,
+          editionId: edition.id,
+          origine: 'FORMULAIRE',
+          nom: `Demande ${cle.toUpperCase()}`,
+          adresse: `demande-${cle}-${s}@exemple.fr`,
+          adresseEnAttente: `demande-${cle}-${s}@exemple.fr`,
+          disponibilite: 'Chaque semaine',
+          texte: 'Je tiens la buvette.',
+          perimetres: { create: { perimetreId: perimetre.id } },
+        },
+      })
+    }
     const { chemin } = await ecrireExport(slugA, dossier)
     const contenu = JSON.parse(await readFile(chemin, 'utf8')) as Awaited<
       ReturnType<typeof construireExport>
     >
+    expect(contenu.demandes).toMatchObject([
+      {
+        periode: 2027,
+        origine: 'FORMULAIRE',
+        statut: 'EN_ATTENTE',
+        nom: 'Demande A',
+        email: `demande-a-${s}@exemple.fr`,
+        disponibilite: 'Chaque semaine',
+        texte: 'Je tiens la buvette.',
+        perimetres: [{ perimetre: 'accueil', proposePar: null, mot: null }],
+        traiteePar: null,
+      },
+    ])
+    expect(JSON.stringify(contenu)).not.toContain(`demande-b-${s}`)
     expect(contenu.format).toBe('relaytour-export')
     expect(contenu.version).toBe(1)
     expect(contenu.organisation.slug).toBe(slugA)

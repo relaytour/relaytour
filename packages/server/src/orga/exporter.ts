@@ -7,6 +7,11 @@ import type { z } from 'zod'
 
 import { lireGroupes } from '../lib/activites.ts'
 import { donneesPersonnelles, normaliserContenu } from '../lib/contenu.ts'
+import {
+  formulaireVide,
+  lireFormulaire,
+  textesDuFormulaire,
+} from '../lib/formulaire.ts'
 import { EXTENSIONS, type TypeMedia } from '../lib/medias.ts'
 import {
   DeclarationOrganisationSchema,
@@ -290,6 +295,18 @@ export async function construireContenu(
     const dossierSansBarre = dossier.replace(/\/$/, '')
     if (disposition === 'activites') {
       const identite = lireIdentiteActivite(activite.identite)
+      // Le réglage du formulaire public s'exporte avec l'activité. Un texte qui
+      // contient des coordonnées personnelles ne quitte pas la base (invariant 16).
+      const formulaire = lireFormulaire(activite.formulaire)
+      const personnelles = textesDuFormulaire(formulaire).flatMap(texte =>
+        donneesPersonnelles(texte, role)
+      )
+      if (personnelles.length > 0) {
+        refusees.push({
+          fichier: `${dossier}activite.yaml`,
+          raison: `formulaire : données personnelles (${personnelles.join(', ')})`,
+        })
+      }
       fichiers.set(
         `${dossier}activite.yaml`,
         yaml({
@@ -299,6 +316,10 @@ export async function construireContenu(
           nature: activite.nature,
           ordre: activite.ordre,
           souhaitsOuverts: activite.souhaitsOuverts || undefined,
+          formulaire:
+            formulaireVide(formulaire) || personnelles.length > 0
+              ? undefined
+              : formulaire,
           groupes: lireGroupes(activite.groupes),
           contactRecrutement: identite.contactRecrutement,
           pageEquipe: identite.pageEquipe,

@@ -6,12 +6,15 @@ import { journal } from './journal.ts'
  * Renvoie false quand la limite est dépassée.
  *
  * Si Redis ne répond pas, l'appel passe : la limite par IP de Better Auth reste active,
- * et une panne de Redis ne doit pas empêcher toute connexion.
+ * et une panne de Redis ne doit pas empêcher toute connexion. Avec
+ * `siIndisponible: 'refuser'`, l'appel est refusé : une écriture ouverte sans session
+ * ne reste pas sans limite.
  */
 export async function limiterParCle(
   cle: string,
   max: number,
-  fenetreSecondes: number
+  fenetreSecondes: number,
+  options: { siIndisponible?: 'laisser-passer' | 'refuser' } = {}
 ): Promise<boolean> {
   try {
     const { connection } = await import('../jobs/queues.ts')
@@ -30,10 +33,13 @@ export async function limiterParCle(
     }
     return compte <= max
   } catch (erreur) {
+    const refuser = options.siIndisponible === 'refuser'
     journal.error(
       { evenement: 'limite-indisponible', message: (erreur as Error).message },
-      'Redis ne répond pas : la limite par adresse est ignorée.'
+      refuser
+        ? 'Redis ne répond pas : l’appel limité est refusé.'
+        : 'Redis ne répond pas : la limite par adresse est ignorée.'
     )
-    return true
+    return !refuser
   }
 }

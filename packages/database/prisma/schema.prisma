@@ -140,25 +140,32 @@ enum NatureActivite {
 // instance (ADR 0008). Elle porte ses périodes (Edition), ses périmètres, ses
 // fiches et ses tâches types.
 model Activite {
-  id              String         @id @default(cuid())
-  organisationId  String
-  slug            String
-  nom             String
-  sigle           String?
-  nature          NatureActivite @default(EVENEMENT)
+  id               String         @id @default(cuid())
+  organisationId   String
+  slug             String
+  nom              String
+  sigle            String?
+  nature           NatureActivite @default(EVENEMENT)
   // Groupes de périmètres déclarés dans le contenu, dans l'ordre d'affichage :
   // [{ cle, libelle, libellePluriel }]. Le gabarit propose sport et pole.
-  groupes         Json
-  ordre           Int            @default(0)
+  groupes          Json
+  ordre            Int            @default(0)
   // Identité propre à l'activité (ADR 0009) : contacts, logo, couleurs et fond.
   // Chaque champ absent reprend la valeur de l'organisation.
-  identite        Json?
+  identite         Json?
   // Ouverte aux souhaits (ADR 0012) : tous les membres de l'organisation découvrent
   // ses périmètres et formulent leurs souhaits, sans lire ses tâches ni ses fiches.
-  souhaitsOuverts Boolean        @default(false)
-  archivedAt      DateTime?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  souhaitsOuverts  Boolean        @default(false)
+  // Formulaire public pour rejoindre l'équipe (ADR 0015) : texte d'introduction,
+  // question complémentaire et paliers de disponibilité. C'est du contenu, importé
+  // et exporté avec l'activité.
+  formulaire       Json?
+  // Ouverture du formulaire public. En base seulement : un import de contenu ne
+  // l'ouvre ni ne le ferme jamais.
+  formulaireOuvert Boolean        @default(false)
+  archivedAt       DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
 
   organisation  Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   editions      Edition[]
@@ -435,6 +442,13 @@ model Demande {
   // L'adresse tant que la demande attend, puis null : la contrainte d'unicité garde
   // une seule demande en attente par adresse et par période.
   adresseEnAttente String?
+  // Réponses du formulaire public : le palier de disponibilité choisi et la question
+  // complémentaire (leurs libellés au moment du dépôt, que le réglage peut changer
+  // ensuite), la réponse à cette question, et le texte libre.
+  disponibilite    String?
+  question         String?
+  reponse          String?
+  texte            String?        @db.VarChar(600)
   // Le compte créé ou rattaché par l'acceptation.
   userId           String?
   traiteeParId     String?

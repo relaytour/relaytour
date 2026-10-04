@@ -20,6 +20,7 @@ import Fiches from './pages/Fiches'
 import MonEspace from './pages/MonEspace'
 import Perimetre from './pages/Perimetre'
 import Preferences from './pages/Preferences'
+import Rejoindre from './pages/Rejoindre'
 import Retroplanning from './pages/Retroplanning'
 import TousLesPerimetres from './pages/TousLesPerimetres'
 
@@ -30,6 +31,8 @@ const versActivite = <GardeSession>{() => <VersActivite />}</GardeSession>
 
 const routeur = createBrowserRouter([
   { path: '/connexion', element: <Connexion /> },
+  // Formulaire public d'une activité (ADR 0015), lisible sans session.
+  { path: '/rejoindre/:organisation/:activite', element: <Rejoindre /> },
   { path: '/', element: versActivite },
   {
     path: '/:activite',

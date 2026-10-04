@@ -14,3 +14,14 @@ groupes:
 ordre: 1
 # Tous les membres découvrent les périmètres et formulent leurs souhaits (ADR 0012).
 souhaitsOuverts: true
+# Formulaire public pour rejoindre l'équipe (ADR 0015). Un admin l'ouvre dans
+# l'espace organisateur : son ouverture ne se déclare pas ici.
+formulaire:
+  introduction: >-
+    Les Rencontres de la Vallée cherchent des personnes pour préparer la
+    prochaine édition. Indiquez ce qui vous intéresse : l'équipe vous répond.
+  question: Votre club ou votre commune
+  paliers:
+    - Quelques heures pendant l'édition
+    - Deux à quatre heures par mois
+    - Plusieurs heures par semaine

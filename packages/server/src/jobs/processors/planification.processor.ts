@@ -3,6 +3,7 @@ import type { Job } from 'bullmq'
 import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../../courriel/file.ts'
+import { purgerDemandes } from '../../lib/demandes.ts'
 import { aujourdhui } from '../../lib/droits.ts'
 import { journal } from '../../lib/journal.ts'
 import {
@@ -35,6 +36,12 @@ export async function planificationProcessor(
 ): Promise<void> {
   if (job.name === 'synchro') {
     await synchroniserPlanification()
+    return
+  }
+  // La purge ne dépend pas du statut d'une organisation : elle les parcourt toutes,
+  // ou celle que le job désigne.
+  if (job.name === 'purge') {
+    await purgerDemandes(prisma, job.data)
     return
   }
 

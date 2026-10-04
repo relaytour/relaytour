@@ -15,6 +15,7 @@ import {
 import { buildContext, type AppContext } from '../context.ts'
 import {
   PROPOSITIONS_EN_ATTENTE_MAX,
+  purgerDemandes,
   signalerDemande,
 } from '../lib/demandes.ts'
 
@@ -685,5 +686,111 @@ describe('limites', () => {
       (await prisma.demande.findUniqueOrThrow({ where: { id: demande.id } }))
         .statut
     ).toBe('EN_ATTENTE')
+  })
+})
+
+// La purge se limite à l'organisation du fichier : la base de développement porte
+// d'autres données.
+describe('purge des demandes d’une période archivée', () => {
+  it('supprime les demandes de la période archivée, quel que soit leur état, et garde le reste', async () => {
+    const zoe = await prisma.user.findUniqueOrThrow({
+      where: { email: adresse('zoe') },
+      select: { id: true },
+    })
+    // Une demande acceptée de la période archivée, liée à un compte bien réel.
+    await prisma.demande.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.archivee,
+        origine: 'FORMULAIRE',
+        statut: 'ACCEPTEE',
+        nom: 'Personne zoe',
+        adresse: adresse('zoe'),
+        userId: zoe.id,
+        traiteeParId: ids.admin,
+        traiteeLe: new Date(),
+        texte: 'Réponse à effacer.',
+        perimetres: { create: { perimetreId: ids.natation } },
+      },
+    })
+    const compter = (editionId: string) =>
+      prisma.demande.count({ where: { editionId } })
+    const ouvertes = await compter(ids.edition)
+    expect(await compter(ids.archivee)).toBe(2)
+    const affectations = await prisma.affectation.count({
+      where: { userId: zoe.id },
+    })
+
+    expect(await purgerDemandes(prisma, { organisationId: ids.org })).toBe(2)
+
+    expect(await compter(ids.archivee)).toBe(0)
+    expect(
+      await prisma.demandePerimetre.count({
+        where: { demande: { editionId: ids.archivee } },
+      })
+    ).toBe(0)
+    // Les demandes de la période ouverte, le compte et ses affectations restent.
+    expect(await compter(ids.edition)).toBe(ouvertes)
+    expect(await prisma.user.count({ where: { email: adresse('zoe') } })).toBe(
+      1
+    )
+    expect(await prisma.affectation.count({ where: { userId: zoe.id } })).toBe(
+      affectations
+    )
+    // Une seconde purge ne trouve plus rien.
+    expect(await purgerDemandes(prisma, { organisationId: ids.org })).toBe(0)
+  })
+
+  it('ne touche pas une autre organisation', async () => {
+    const ailleurs = await prisma.organisation.create({
+      data: { slug: `${slug}-purge`, nom: 'Purge', configuration: {} },
+    })
+    const activite = await prisma.activite.create({
+      data: {
+        organisationId: ailleurs.id,
+        slug: `${slug}-purge`,
+        nom: 'Purge',
+        groupes: [],
+      },
+    })
+    const edition = await prisma.edition.create({
+      data: {
+        organisationId: ailleurs.id,
+        activiteId: activite.id,
+        annee: 2020,
+        nom: 'Purge 2020',
+        debut: new Date('2020-01-01'),
+        fin: new Date('2020-01-02'),
+        statut: 'ARCHIVEE',
+      },
+    })
+    try {
+      await prisma.demande.create({
+        data: {
+          organisationId: ailleurs.id,
+          activiteId: activite.id,
+          editionId: edition.id,
+          origine: 'FORMULAIRE',
+          nom: 'Ailleurs',
+          adresse: adresse('purge-ailleurs'),
+          adresseEnAttente: adresse('purge-ailleurs'),
+        },
+      })
+      await purgerDemandes(prisma, { organisationId: ids.org })
+      expect(
+        await prisma.demande.count({ where: { organisationId: ailleurs.id } })
+      ).toBe(1)
+      expect(
+        await purgerDemandes(prisma, { organisationId: ailleurs.id })
+      ).toBe(1)
+    } finally {
+      await prisma.demande.deleteMany({
+        where: { organisationId: ailleurs.id },
+      })
+      await prisma.edition.deleteMany({ where: { id: edition.id } })
+      await prisma.activite.deleteMany({ where: { id: activite.id } })
+      await prisma.organisation.delete({ where: { id: ailleurs.id } })
+    }
   })
 })
