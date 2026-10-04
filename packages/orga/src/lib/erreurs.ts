@@ -13,7 +13,11 @@ export function messageErreur(erreur: unknown): string {
   return 'L’opération a échoué. Réessayez dans un instant.'
 }
 
-/** Formate une date « AAAA-MM-JJ » en français, sans décalage de fuseau. */
+/**
+ * Formate une date sans heure « AAAA-MM-JJ » en français, sans décalage de fuseau
+ * (échéance d'une tâche, début et fin d'une période). Un instant passe par
+ * `jourDeLInstant`.
+ */
 export function dateCourte(iso: string): string {
   const [annee, mois, jour] = iso.slice(0, 10).split('-').map(Number)
   return new Date(annee ?? 0, (mois ?? 1) - 1, jour ?? 1).toLocaleDateString(
@@ -24,4 +28,18 @@ export function dateCourte(iso: string): string {
       year: 'numeric',
     }
   )
+}
+
+/**
+ * Formate en français le jour d'un instant (`DateTime`, en UTC), dans le fuseau
+ * du navigateur. Le jour UTC d'un instant situé juste après minuit en France est
+ * la veille. `fuseau` remplace le fuseau du navigateur dans les tests.
+ */
+export function jourDeLInstant(iso: string, fuseau?: string): string {
+  return new Date(iso).toLocaleDateString('fr-FR', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: fuseau,
+  })
 }

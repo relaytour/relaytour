@@ -24,7 +24,7 @@ import ChampImage from '../../composants/ChampImage'
 import { Panneau } from '../../composants/Panneau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
-import { dateCourte, messageErreur } from '../../lib/erreurs'
+import { jourDeLInstant, messageErreur } from '../../lib/erreurs'
 import { ORGANISATION } from '../../lib/organisation'
 import { ACTIVITES } from '../../lib/requetes'
 
@@ -458,7 +458,7 @@ export default function Organisation() {
             showIcon
             style={{ marginBottom: 16 }}
             title="Le dossier de contenu ne reflète pas les dernières modifications."
-            description={`Des admins ont modifié le contenu le ${dateCourte(identite!.contenuModifieLe!)}. Exportez-le avant tout import, sinon l’import refusera d’écraser ces modifications.`}
+            description={`Des admins ont modifié le contenu le ${jourDeLInstant(identite!.contenuModifieLe!)}. Exportez-le avant tout import, sinon l’import refusera d’écraser ces modifications.`}
           />
         )}
         <Space wrap>
@@ -472,7 +472,7 @@ export default function Organisation() {
           {identite?.contenuSynchroniseLe && (
             <span className="rt-texte-secondaire">
               Dernier import ou export :{' '}
-              {dateCourte(identite.contenuSynchroniseLe)}
+              {jourDeLInstant(identite.contenuSynchroniseLe)}
             </span>
           )}
         </Space>
