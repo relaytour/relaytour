@@ -1,10 +1,9 @@
-import { randomUUID } from 'node:crypto'
-
 import { prisma, type StatutOrganisation } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
 
 import { GROUPES_PAR_DEFAUT } from './activites.ts'
+import { creerOuRattacherCompte } from './comptes.ts'
 import { erreurSaisie } from './erreurs.ts'
 import {
   LimitesSchema,
@@ -146,24 +145,26 @@ export async function inviterAdmin(
         'Cette organisation a déjà un admin : ses admins invitent les autres personnes.'
       )
     }
-    const personne = await tx.user.upsert({
-      where: { email: invitation.email },
-      update: {},
-      create: {
-        id: randomUUID(),
-        email: invitation.email,
-        name: invitation.nom,
-      },
-      select: { id: true },
+    const compte = await creerOuRattacherCompte(tx, {
+      email: invitation.email,
+      nom: invitation.nom,
+      organisationId,
+      role: 'ADMIN',
     })
-    await tx.appartenance.upsert({
-      where: {
-        userId_organisationId: { userId: personne.id, organisationId },
-      },
-      update: { role: 'ADMIN' },
-      create: { userId: personne.id, organisationId, role: 'ADMIN' },
-    })
-    return personne.id
+    // validerInvitation a refusé un compte archivé ; il peut l'être devenu depuis.
+    if (compte.issue === 'archive') {
+      throw erreurSaisie('Cette adresse ne peut pas être invitée.')
+    }
+    // Une personne déjà membre devient admin de son organisation.
+    if (compte.issue === 'membre') {
+      await tx.appartenance.update({
+        where: {
+          userId_organisationId: { userId: compte.userId, organisationId },
+        },
+        data: { role: 'ADMIN' },
+      })
+    }
+    return compte.userId
   })
   await mettreEnFile('invitation', { userId }, { organisationId })
   return userId

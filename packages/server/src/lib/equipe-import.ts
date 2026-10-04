@@ -1,11 +1,11 @@
-import { randomUUID } from 'node:crypto'
-
 import type { PrismaClient } from '@relaytour/database'
 import { parse } from 'yaml'
 import { z } from 'zod'
 
 import { mettreEnFile } from '../courriel/file.ts'
 
+import { creerAffectations } from './affectations.ts'
+import { creerOuRattacherCompte } from './comptes.ts'
 import { annoncerChangementEquipe } from './equipe.ts'
 import { adresseValide } from './saisie.ts'
 
@@ -179,69 +179,50 @@ export async function importerEquipe(
   await prisma.$transaction(
     async tx => {
       for (const p of personnes) {
-        const existant = await tx.user.findUnique({
-          where: { email: p.adresse },
-          select: {
-            id: true,
-            name: true,
-            archivedAt: true,
-            appartenances: { where: { organisationId }, select: { id: true } },
-          },
+        const compte = await creerOuRattacherCompte(tx, {
+          email: p.adresse,
+          nom: p.nom,
+          organisationId,
+          role: 'MEMBRE',
+          simulation: !ecrire,
         })
-        if (existant?.archivedAt) {
+        if (compte.issue === 'archive') {
           throw new ErreurEquipe([`${p.adresse} : compte archivé`])
         }
-        let userId = existant?.id ?? randomUUID()
-        if (existant === null) {
+        const { userId } = compte
+        const nouveau = compte.issue === 'cree'
+        if (nouveau) {
           rapport.comptesCrees.push(p.nom)
           aInviter.push(userId)
-          if (ecrire) {
-            await tx.user.create({
-              data: {
-                id: userId,
-                email: p.adresse,
-                name: p.nom,
-                appartenances: { create: { organisationId, role: 'MEMBRE' } },
-              },
-            })
-          }
-        } else if (existant.appartenances.length === 0) {
+        } else if (compte.issue === 'rattache') {
           rapport.comptesRattaches.push(p.nom)
           aInviter.push(userId)
-          if (ecrire) {
-            await tx.appartenance.create({
-              data: { userId, organisationId, role: 'MEMBRE' },
-            })
-          }
         } else {
-          userId = existant.id
           rapport.comptesExistants.push(p.nom)
         }
         // Le nom appartient au compte : l'import ne le change pas.
-        if (existant !== null && existant.name !== p.nom) {
-          rapport.nomsDifferents.push(`${p.nom} (compte : ${existant.name})`)
+        if (compte.nomDuCompte !== null && compte.nomDuCompte !== p.nom) {
+          rapport.nomsDifferents.push(
+            `${p.nom} (compte : ${compte.nomDuCompte})`
+          )
         }
 
+        const { creees } = await creerAffectations(tx, {
+          userId,
+          perimetreIds: p.affectations.map(slug => perimetres.get(slug)!),
+          editionId: edition.id,
+          creeParId: null,
+          instant,
+          simulation: !ecrire,
+        })
+        const affectationsCreees = new Set(creees)
         for (const slug of p.affectations) {
           const perimetreId = perimetres.get(slug)!
           const cle = { userId, perimetreId, editionId: edition.id }
-          const affectation =
-            existant === null
-              ? null
-              : await tx.affectation.findUnique({
-                  where: { userId_perimetreId_editionId: cle },
-                  select: { id: true },
-                })
-          if (affectation === null) {
+          if (affectationsCreees.has(perimetreId)) {
             rapport.affectationsCreees.push(`${p.nom} → ${slug}`)
-            if (existant !== null && existant.appartenances.length > 0) {
-              aAnnoncer.add(userId)
-            }
-            if (ecrire) {
-              await tx.affectation.create({
-                data: { ...cle, createdAt: instant },
-              })
-            }
+            // Une personne déjà membre apprend sa nouvelle place par le mail d'équipe.
+            if (compte.issue === 'membre') aAnnoncer.add(userId)
           } else {
             rapport.affectationsExistantes.push(`${p.nom} → ${slug}`)
           }
@@ -268,13 +249,12 @@ export async function importerEquipe(
           }
           const perimetreId = perimetres.get(slug)!
           const cle = { userId, perimetreId, editionId: edition.id }
-          const souhait =
-            existant === null
-              ? null
-              : await tx.souhait.findUnique({
-                  where: { userId_perimetreId_editionId: cle },
-                  select: { id: true },
-                })
+          const souhait = nouveau
+            ? null
+            : await tx.souhait.findUnique({
+                where: { userId_perimetreId_editionId: cle },
+                select: { id: true },
+              })
           if (souhait === null) {
             rapport.souhaitsCrees.push(`${p.nom} → ${slug}`)
             if (ecrire) await tx.souhait.create({ data: cle })
