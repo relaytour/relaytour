@@ -50,7 +50,7 @@ const RETROPLANNING = graphql(`
 
 // Un groupe de périmètres de l'activité (ADR 0008), ou tous.
 type FiltreType = string
-type FiltreStatut = 'ouvertes' | 'toutes'
+type FiltreStatut = 'ouvertes' | 'retard' | 'toutes'
 
 function titreGroupe(mois: string | null): string {
   if (mois === null) return 'Sans échéance'
@@ -113,7 +113,8 @@ export default function Retroplanning() {
         t =>
           (perimetres.length === 0 || perimetres.includes(t.perimetre.id)) &&
           (type === 'tous' || t.perimetre.groupe === type) &&
-          (statut === 'toutes' || estOuverte(t)) &&
+          (statut === 'toutes' ||
+            (statut === 'retard' ? t.enRetard : estOuverte(t))) &&
           (!mesPerimetres || affectes.has(t.perimetre.id)) &&
           (!assigneesAMoi || t.assignes.some(p => p.id === moi?.id))
       ),
@@ -220,6 +221,7 @@ export default function Retroplanning() {
           onChange={setStatut}
           options={[
             { valeur: 'ouvertes', libelle: 'Ouvertes' },
+            { valeur: 'retard', libelle: 'En retard' },
             { valeur: 'toutes', libelle: 'Toutes' },
           ]}
         />

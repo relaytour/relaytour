@@ -33,6 +33,7 @@ const PAGE = graphql(`
       description
       groupe
       couleur
+      acces
       peutModifier(editionId: $editionId)
       referents(editionId: $editionId) {
         id
@@ -53,12 +54,6 @@ const PAGE = graphql(`
       taches(editionId: $editionId) {
         ...TacheChamps
       }
-      peutRedigerFiches
-      fiches {
-        id
-        slug
-        titre
-      }
     }
     fichesCommunes: fiches {
       id
@@ -70,10 +65,27 @@ const PAGE = graphql(`
   }
 `)
 
-type Filtre = 'ouvertes' | 'faites' | 'abandonnees' | 'toutes'
+// Les fiches d'un périmètre suivent la règle de lecture (ADR 0014) : le serveur les
+// refuse en consultation. Elles se demandent à part, avec un accès complet seulement.
+const FICHES = graphql(`
+  query FichesDuPerimetre($slug: String!) {
+    perimetre(slug: $slug) {
+      id
+      peutRedigerFiches
+      fiches {
+        id
+        slug
+        titre
+      }
+    }
+  }
+`)
+
+type Filtre = 'ouvertes' | 'retard' | 'faites' | 'abandonnees' | 'toutes'
 
 const FILTRES: Record<Filtre, (t: TacheChampsFragment) => boolean> = {
   ouvertes: t => t.statut === 'A_FAIRE' || t.statut === 'EN_COURS',
+  retard: t => t.enRetard,
   faites: t => t.statut === 'FAITE',
   abandonnees: t => t.statut === 'ABANDONNEE',
   toutes: () => true,
@@ -97,6 +109,12 @@ export default function Perimetre() {
   >(null)
 
   const perimetre = data?.perimetre
+  const consultation = perimetre?.acces === 'CONSULTATION'
+  const { data: methode } = useQuery(FICHES, {
+    variables: { slug },
+    skip: perimetre?.acces !== 'COMPLET',
+  })
+  const fiches = methode?.perimetre?.fiches ?? []
   const taches = useMemo(
     () => (perimetre?.taches ?? []).filter(FILTRES[filtre]),
     [perimetre, filtre]
@@ -229,6 +247,22 @@ export default function Perimetre() {
         </div>
       </div>
 
+      {consultation && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          title="Vous consultez ce périmètre sans y être affecté·e."
+          description={
+            <>
+              Vous lisez ses tâches et son équipe. Vous ne pouvez pas les
+              modifier. Pour rejoindre ce périmètre, formulez un souhait dans{' '}
+              <Link to={lien('/perimetres')}>Tous les périmètres</Link>.
+            </>
+          }
+        />
+      )}
+
       {!perimetre.peutModifier && edition?.statut === 'ARCHIVEE' && (
         <Alert
           type="info"
@@ -248,43 +282,45 @@ export default function Perimetre() {
               <Avancement avancement={a} />
             </Panneau>
 
-            <Panneau
-              titre="Fiches méthode"
-              icone={<BookOutlined aria-hidden />}
-              extra={
-                perimetre.peutRedigerFiches && (
-                  <Button
-                    size="small"
-                    type="link"
-                    onClick={() =>
-                      navigate(lien(`/fiches/nouvelle?perimetre=${slug}`))
-                    }
-                  >
-                    Nouvelle fiche
-                  </Button>
-                )
-              }
-            >
-              {perimetre.fiches.length === 0 ? (
-                <p className="rt-texte-secondaire">
-                  Aucune fiche pour ce périmètre.
-                </p>
-              ) : (
-                <ul className="rt-liste-liens">
-                  {perimetre.fiches.map(f => (
-                    <li key={f.id}>
-                      <Link
-                        className="rt-ligne-lien"
-                        style={{ fontSize: 13.5 }}
-                        to={lien(`/fiches/${f.slug}`)}
-                      >
-                        {f.titre}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </Panneau>
+            {perimetre.acces === 'COMPLET' && (
+              <Panneau
+                titre="Fiches méthode"
+                icone={<BookOutlined aria-hidden />}
+                extra={
+                  methode?.perimetre?.peutRedigerFiches && (
+                    <Button
+                      size="small"
+                      type="link"
+                      onClick={() =>
+                        navigate(lien(`/fiches/nouvelle?perimetre=${slug}`))
+                      }
+                    >
+                      Nouvelle fiche
+                    </Button>
+                  )
+                }
+              >
+                {fiches.length === 0 ? (
+                  <p className="rt-texte-secondaire">
+                    Aucune fiche pour ce périmètre.
+                  </p>
+                ) : (
+                  <ul className="rt-liste-liens">
+                    {fiches.map(f => (
+                      <li key={f.id}>
+                        <Link
+                          className="rt-ligne-lien"
+                          style={{ fontSize: 13.5 }}
+                          to={lien(`/fiches/${f.slug}`)}
+                        >
+                          {f.titre}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </Panneau>
+            )}
 
             {perimetre.referents.length > 0 && (
               <Panneau titre="Personnes affectées">
@@ -348,6 +384,7 @@ export default function Perimetre() {
                 libelle: 'Ouvertes',
                 compte: a.aFaire + a.enCours,
               },
+              { valeur: 'retard', libelle: 'En retard', compte: a.enRetard },
               { valeur: 'faites', libelle: 'Faites', compte: a.faites },
               {
                 valeur: 'abandonnees',

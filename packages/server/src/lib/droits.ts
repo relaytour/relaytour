@@ -10,7 +10,10 @@ import { accesRefuse, erreurSaisie } from './erreurs.ts'
 // d'une autre organisation est refusé comme un périmètre interdit.
 // Lecture : les admins de l'activité du périmètre (ADR 0010), et toute personne
 // affectée au périmètre pour au moins une édition. Une affectation passée donne donc
-// accès aux archives du périmètre.
+// accès aux archives du périmètre. La lecture ouvre les tâches et les fiches.
+// Consultation : toute personne qui voit l'activité du périmètre (ADR 0014). Elle
+// lit les tâches, l'avancement et l'équipe de chaque périmètre de l'activité, sans
+// ses fiches et sans rien modifier.
 // Écriture : les admins de l'activité, et les personnes affectées au périmètre pour
 // l'édition concernée, tant que cette édition n'est pas archivée. Le périmètre et
 // l'édition relèvent de la même activité.
@@ -46,14 +49,55 @@ export async function peutLirePerimetre(
   return (await perimetresLisibles(ctx)).includes(perimetreId)
 }
 
-export async function exigerLecture(
+/** Ce qu'il faut d'un périmètre pour juger de sa consultation. */
+type PerimetreSitue = { id: string; organisationId: string; activiteId: string }
+
+/**
+ * Consultation (ADR 0014) : un périmètre de l'organisation active, dans une activité
+ * que la personne voit. Elle administre cette activité, ou elle y a été affectée au
+ * moins une fois. Une personne en découverte ne consulte rien (ADR 0012).
+ */
+export async function peutConsulterPerimetre(
   ctx: AppContext,
-  perimetreId: string
+  perimetre: Omit<PerimetreSitue, 'id'>
+): Promise<boolean> {
+  if (ctx.personne === null || ctx.organisation === null) return false
+  if (perimetre.organisationId !== ctx.organisation.id) return false
+  return (await ctx.activitesVisibles()).has(perimetre.activiteId)
+}
+
+export async function exigerConsultation(
+  ctx: AppContext,
+  perimetre: Omit<PerimetreSitue, 'id'>
 ): Promise<PersonneConnectee> {
-  if (ctx.personne === null || !(await peutLirePerimetre(ctx, perimetreId))) {
+  if (
+    ctx.personne === null ||
+    !(await peutConsulterPerimetre(ctx, perimetre))
+  ) {
     throw accesRefuse()
   }
   return ctx.personne
+}
+
+export type AccesPerimetre = 'COMPLET' | 'CONSULTATION' | 'AUCUN'
+
+/**
+ * Accès d'une personne à un périmètre. COMPLET suit la règle de lecture : elle
+ * administre l'activité ou a été affectée au périmètre. CONSULTATION : elle voit
+ * l'activité sans avoir été affectée à ce périmètre. AUCUN : ni tâche, ni
+ * avancement, ni équipe, ni fiche ; une personne en découverte lit encore le nom
+ * et la description (ADR 0012). Les ensembles lus ici sont mémorisés par requête :
+ * le champ se demande sans coût sur une liste.
+ */
+export async function accesAuPerimetre(
+  ctx: AppContext,
+  perimetre: PerimetreSitue
+): Promise<AccesPerimetre> {
+  if (!(await peutConsulterPerimetre(ctx, perimetre))) return 'AUCUN'
+  if (await ctx.estAdminDe(perimetre.activiteId)) return 'COMPLET'
+  return (await ctx.perimetresConnus()).has(perimetre.id)
+    ? 'COMPLET'
+    : 'CONSULTATION'
 }
 
 // Mémos par requête : une liste de tâches demande le droit d'écriture par tâche.
