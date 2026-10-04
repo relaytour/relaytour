@@ -40,6 +40,9 @@ const DEMANDES = graphql(`
       statut
       creeLe
       dejaMembre
+      disponibilite
+      reponse
+      texte
       traiteePar {
         id
         nom
@@ -190,7 +193,8 @@ export default function Demandes({
     <>
       <p className="rt-texte-secondaire" style={{ marginTop: 0 }}>
         Une demande vient d’une référente ou d’un référent, qui propose une
-        personne pour son périmètre. Aucun compte n’existe avant votre décision.
+        personne pour son périmètre, ou du formulaire public de l’activité.
+        Aucun compte n’existe avant votre décision.
       </p>
       {souhaits > 0 && (
         <Alert
@@ -223,6 +227,32 @@ export default function Demandes({
         dataSource={affichees}
         pagination={{ pageSize: 50, hideOnSinglePage: true }}
         scroll={{ x: 'max-content' }}
+        expandable={{
+          // Les réponses du formulaire public se déplient sous la demande.
+          rowExpandable: d => Boolean(d.disponibilite ?? d.reponse ?? d.texte),
+          expandedRowRender: d => (
+            <dl className="rt-reponses" style={{ margin: 0 }}>
+              {d.disponibilite && (
+                <>
+                  <dt>Disponibilité</dt>
+                  <dd>{d.disponibilite}</dd>
+                </>
+              )}
+              {d.reponse && (
+                <>
+                  <dt>{activite.formulaire.question ?? 'Réponse'}</dt>
+                  <dd>{d.reponse}</dd>
+                </>
+              )}
+              {d.texte && (
+                <>
+                  <dt>Ce que la personne aime faire ou sait faire</dt>
+                  <dd style={{ whiteSpace: 'pre-wrap' }}>{d.texte}</dd>
+                </>
+              )}
+            </dl>
+          ),
+        }}
         locale={{
           emptyText:
             filtre === 'EN_ATTENTE'
@@ -236,6 +266,7 @@ export default function Demandes({
             render: (nom: string, d) => (
               <Space style={{ whiteSpace: 'nowrap' }}>
                 <span style={{ fontWeight: 600 }}>{nom}</span>
+                {d.origine === 'FORMULAIRE' && <Tag>Formulaire public</Tag>}
                 {d.dejaMembre && (
                   <Tooltip title="Un compte de l’organisation porte déjà cette adresse. Accepter la demande ne crée aucun compte.">
                     <Tag>Déjà membre</Tag>
@@ -250,7 +281,9 @@ export default function Demandes({
             dataIndex: 'perimetres',
             render: (_, d) =>
               d.perimetres.length === 0 ? (
-                <Typography.Text type="secondary">Aucun</Typography.Text>
+                <Typography.Text type="secondary">
+                  Aucun : un rôle est à lui proposer
+                </Typography.Text>
               ) : (
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
                   {d.perimetres.map(p => (

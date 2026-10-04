@@ -1564,3 +1564,17 @@ a.rt-etiquette:hover {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Réponses d'une demande venue du formulaire public : un libellé, puis sa valeur. */
+.rt-reponses dt {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--rt-encre-70);
+}
+.rt-reponses dd {
+  margin: 0 0 10px;
+  max-width: 70ch;
+}
+.rt-reponses dd:last-child {
+  margin-bottom: 0;
+}

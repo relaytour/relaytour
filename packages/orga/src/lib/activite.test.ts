@@ -18,6 +18,8 @@ const activite = (slug: string, options: Partial<Activite> = {}): Activite => ({
   archive: false,
   estAdministree: false,
   souhaitsOuverts: false,
+  formulaireOuvert: false,
+  formulaire: { introduction: null, question: null, paliers: [] },
   acces: 'COMPLET',
   groupes: [
     { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },

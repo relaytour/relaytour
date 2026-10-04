@@ -15,6 +15,7 @@ import {
   Switch,
   Table,
   Tag,
+  Typography,
 } from 'antd'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -68,6 +69,8 @@ const MODIFIER = graphql(`
     $ordre: Int!
     $archive: Boolean
     $souhaitsOuverts: Boolean
+    $formulaire: FormulaireInput
+    $formulaireOuvert: Boolean
   ) {
     modifierActivite(
       id: $id
@@ -78,6 +81,8 @@ const MODIFIER = graphql(`
       ordre: $ordre
       archive: $archive
       souhaitsOuverts: $souhaitsOuverts
+      formulaire: $formulaire
+      formulaireOuvert: $formulaireOuvert
     ) {
       id
     }
@@ -139,6 +144,11 @@ interface Valeurs {
   groupes: Groupe[]
   archive: boolean
   souhaitsOuverts: boolean
+  // Formulaire public pour rejoindre l'équipe (ADR 0015).
+  formulaireOuvert: boolean
+  introduction?: string
+  question?: string
+  paliers: string[]
   // Identité propre de l'activité (ADR 0009) : un champ vide reprend la valeur
   // de l'organisation.
   contactRecrutement?: string
@@ -211,6 +221,10 @@ export default function Activites() {
             groupes: GROUPES_PAR_DEFAUT,
             archive: false,
             souhaitsOuverts: false,
+            formulaireOuvert: false,
+            introduction: '',
+            question: '',
+            paliers: [],
             contactRecrutement: '',
             pageEquipe: '',
             logoPng: null,
@@ -226,6 +240,10 @@ export default function Activites() {
             groupes: activite.groupes.map(g => ({ ...g })),
             archive: activite.archive,
             souhaitsOuverts: activite.souhaitsOuverts,
+            formulaireOuvert: activite.formulaireOuvert,
+            introduction: activite.formulaire.introduction ?? '',
+            question: activite.formulaire.question ?? '',
+            paliers: [...activite.formulaire.paliers],
             contactRecrutement: activite.identite.contactRecrutement ?? '',
             pageEquipe: activite.identite.pageEquipe ?? '',
             logoPng: activite.identite.logoPng ?? null,
@@ -301,6 +319,12 @@ export default function Activites() {
             ordre: v.ordre,
             archive: v.archive === enEdition.archive ? null : v.archive,
             souhaitsOuverts: v.souhaitsOuverts,
+            formulaire: {
+              introduction: v.introduction ?? '',
+              question: v.question ?? '',
+              paliers: v.paliers,
+            },
+            formulaireOuvert: v.formulaireOuvert,
           },
         })
         message.success('Activité enregistrée.')
@@ -596,6 +620,61 @@ export default function Activites() {
             >
               <Switch />
             </Form.Item>
+          )}
+          {enEdition !== null && enEdition !== 'nouvelle' && (
+            <>
+              <Divider titlePlacement="start" plain>
+                Formulaire public
+              </Divider>
+              <p className="rt-texte-secondaire">
+                Une personne extérieure remplit ce formulaire pour rejoindre
+                l’équipe. Sa demande arrive dans l’onglet « Demandes » de
+                l’écran « Personnes ». Aucun compte n’existe avant votre
+                décision.
+              </p>
+              <Form.Item
+                label="Formulaire ouvert"
+                name="formulaireOuvert"
+                valuePropName="checked"
+                extra={
+                  <>
+                    Adresse à partager :{' '}
+                    <Typography.Text copyable>
+                      {`${window.location.origin}/rejoindre/${organisation.slug}/${enEdition.slug}`}
+                    </Typography.Text>
+                  </>
+                }
+              >
+                <Switch />
+              </Form.Item>
+              <Form.Item
+                label="Introduction"
+                name="introduction"
+                extra="Ce texte ouvre le formulaire. Il est public : n’y écrivez aucune coordonnée personnelle."
+              >
+                <Input.TextArea rows={3} maxLength={600} showCount />
+              </Form.Item>
+              <Form.Item
+                label="Question complémentaire"
+                name="question"
+                extra="Le libellé d’une question propre à votre organisation, par exemple « Votre club ». Un champ vide ne pose aucune question."
+              >
+                <Input maxLength={120} />
+              </Form.Item>
+              <Form.Item
+                label="Paliers de disponibilité"
+                name="paliers"
+                extra="Saisissez un palier, puis validez avec Entrée. Le formulaire en propose huit au plus."
+              >
+                <Select
+                  mode="tags"
+                  maxCount={8}
+                  open={false}
+                  suffixIcon={null}
+                  placeholder="Quelques heures pendant l’événement"
+                />
+              </Form.Item>
+            </>
           )}
           {enEdition !== 'nouvelle' && gereOrganisation && (
             <Form.Item
