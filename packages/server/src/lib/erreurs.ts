@@ -12,6 +12,19 @@ export function accesRefuse(): GraphQLError {
   })
 }
 
+/**
+ * Refus d'écraser un changement fait par une autre personne depuis la lecture. Les
+ * détails disent l'état actuel : l'interface propose de recharger ou d'écraser.
+ */
+export function conflitDeVersion(
+  message: string,
+  details: Record<string, string | number | null>
+): GraphQLError {
+  return new GraphQLError(message, {
+    extensions: { code: 'CONFLIT_VERSION', ...details },
+  })
+}
+
 /** Refus d'une écriture dans une organisation en lecture seule (ADR 0008). */
 export function organisationEnLectureSeule(): GraphQLError {
   return new GraphQLError(

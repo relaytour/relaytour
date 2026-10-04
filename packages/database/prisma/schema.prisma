@@ -518,6 +518,10 @@ model Tache {
   termineeLe    DateTime?
   clotureeParId String?
   realiseeParId String?
+  // Compte les modifications du contenu (titre, description, échéance, fiche). Une
+  // modification porte la version lue : le serveur refuse d'écraser un changement
+  // fait entre-temps. Le statut et les assignations ne changent pas la version.
+  version       Int         @default(0)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
 

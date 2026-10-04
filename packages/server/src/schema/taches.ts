@@ -16,7 +16,7 @@ import {
   perimetresLisibles,
   peutModifierPerimetre,
 } from '../lib/droits.ts'
-import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { notifier, referentsSauf } from '../lib/notifications.ts'
 import { texteRequis } from '../lib/saisie.ts'
 
@@ -37,6 +37,10 @@ export const TacheRef = builder.prismaObject('Tache', {
     description: t.exposeString('description', { nullable: true }),
     echeance: t.expose('echeance', { type: 'Date', nullable: true }),
     statut: t.expose('statut', { type: StatutTacheEnum }),
+    version: t.exposeInt('version', {
+      description:
+        'Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`.',
+    }),
     // Le retard se juge au jour du fuseau de l'organisation.
     enRetard: t.boolean({
       resolve: (tache, _args, ctx) =>
@@ -514,6 +518,49 @@ function echeanceValide(echeance: Date | null | undefined): Date | null {
   return echeance ?? null
 }
 
+// Travail à plusieurs. Une modification du contenu porte la version que la personne
+// a lue, et un changement de statut le statut qu'elle a vu : le serveur refuse
+// d'écraser ce qu'une autre personne a écrit entre-temps. L'erreur dit l'état actuel,
+// et l'interface propose de recharger ou d'écraser.
+
+/**
+ * Le contenu a changé depuis la version lue. L'erreur nomme la personne qui l'a
+ * modifié : une modification du contenu n'est pas confidentielle, à la différence de
+ * « qui a coché ».
+ */
+async function conflitDeContenu(tacheId: string): Promise<GraphQLError> {
+  const [tache, derniere] = await Promise.all([
+    prisma.tache.findUniqueOrThrow({
+      where: { id: tacheId },
+      select: { version: true, updatedAt: true },
+    }),
+    prisma.journal.findFirst({
+      where: { tacheId, type: 'TACHE_MODIFIEE' },
+      orderBy: { createdAt: 'desc' },
+      select: { createdAt: true, acteur: { select: { name: true } } },
+    }),
+  ])
+  return conflitDeVersion(
+    'Une autre personne a modifié cette tâche depuis votre lecture.',
+    {
+      versionCourante: tache.version,
+      modifieeLe: (derniere?.createdAt ?? tache.updatedAt).toISOString(),
+      modifieePar: derniere?.acteur.name ?? null,
+    }
+  )
+}
+
+/**
+ * Le statut a changé depuis la lecture. L'erreur ne nomme personne : qui a coché une
+ * tâche reste réservé à la personne qui a coché et aux admins.
+ */
+function conflitDeStatut(statut: StatutTache): GraphQLError {
+  return conflitDeVersion(
+    'Le statut de cette tâche a changé depuis votre lecture.',
+    { statutCourant: statut }
+  )
+}
+
 async function exigerAffectee(
   personneId: string,
   tache: { perimetreId: string; editionId: string }
@@ -626,12 +673,15 @@ builder.mutationFields(t => ({
   modifierTache: t.prismaField({
     type: TacheRef,
     authScopes: { connecte: true },
+    description:
+      'Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).',
     args: {
       id: t.arg.id({ required: true }),
-      titre: t.arg.string({ required: true }),
+      titre: t.arg.string(),
       description: t.arg.string(),
       echeance: t.arg({ type: 'Date' }),
       ficheId: t.arg.id(),
+      versionAttendue: t.arg.int(),
       confirmer: t.arg.boolean({ defaultValue: false }),
     },
     resolve: async (query, _root, args, ctx) => {
@@ -641,22 +691,45 @@ builder.mutationFields(t => ({
         tache.perimetreId,
         tache.editionId
       )
-      const ficheId = await ficheValide(args.ficheId, tache.perimetreId)
+      // Le conflit se dit avant la confirmation : la personne ne confirme pas une
+      // écriture que le serveur refusera.
+      const versionAttendue = args.versionAttendue ?? null
+      if (versionAttendue !== null && versionAttendue !== tache.version) {
+        throw await conflitDeContenu(tache.id)
+      }
+      const donnees = {
+        ...(args.titre === undefined
+          ? {}
+          : { titre: texteRequis(args.titre ?? '', 'Le titre', 200) }),
+        ...(args.description === undefined
+          ? {}
+          : { description: args.description?.trim() || null }),
+        ...(args.echeance === undefined
+          ? {}
+          : { echeance: echeanceValide(args.echeance) }),
+        ...(args.ficheId === undefined
+          ? {}
+          : { ficheId: await ficheValide(args.ficheId, tache.perimetreId) }),
+      }
+      const relire = () =>
+        prisma.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
+      if (Object.keys(donnees).length === 0) return relire()
       const autres = await exigerConfirmation(
         tache,
         acteur.id,
         args.confirmer ?? false
       )
-      const resultat = await prisma.$transaction(async tx => {
-        await tx.tache.update({
-          where: { id: tache.id },
-          data: {
-            titre: texteRequis(args.titre, 'Le titre', 200),
-            description: args.description?.trim() || null,
-            echeance: echeanceValide(args.echeance),
-            ficheId,
+      const ecrite = await prisma.$transaction(async tx => {
+        // L'écriture porte la version attendue : une modification simultanée ne
+        // trouve plus la ligne. Sans version attendue, la dernière écriture gagne.
+        const { count } = await tx.tache.updateMany({
+          where: {
+            id: tache.id,
+            ...(versionAttendue === null ? {} : { version: versionAttendue }),
           },
+          data: { ...donnees, version: { increment: 1 } },
         })
+        if (count === 0) return false
         await tx.journal.create({
           data: {
             type: 'TACHE_MODIFIEE',
@@ -666,8 +739,9 @@ builder.mutationFields(t => ({
             tacheId: tache.id,
           },
         })
-        return tx.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
+        return true
       })
+      if (!ecrite) throw await conflitDeContenu(tache.id)
       // Règle n° 2 : les personnes assignées sont prévenues tout de suite, par mail.
       await notifier(
         prisma,
@@ -681,17 +755,20 @@ builder.mutationFields(t => ({
         },
         { mailImmediat: true }
       )
-      return resultat
+      return relire()
     },
   }),
 
   changerStatutTache: t.prismaField({
     type: TacheRef,
     authScopes: { connecte: true },
+    description:
+      'Change le statut d’une tâche. Demander le statut qu’elle a déjà ne change rien. Avec `statutAttendu`, le serveur refuse de changer un statut qu’une autre personne a modifié entre-temps (code `CONFLIT_VERSION`).',
     args: {
       id: t.arg.id({ required: true }),
       statut: t.arg({ type: StatutTacheEnum, required: true }),
       realiseeParId: t.arg.id(),
+      statutAttendu: t.arg({ type: StatutTacheEnum }),
       confirmer: t.arg.boolean({ defaultValue: false }),
     },
     resolve: async (query, _root, args, ctx) => {
@@ -701,6 +778,16 @@ builder.mutationFields(t => ({
         tache.perimetreId,
         tache.editionId
       )
+      const relire = () =>
+        prisma.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
+      // La tâche a déjà ce statut : rien ne s'écrit. Deux personnes qui cochent la
+      // même tâche ne produisent ni second journal ni second mail, et la première
+      // garde les points de la réalisation.
+      if (tache.statut === args.statut) return relire()
+      const statutAttendu = args.statutAttendu ?? null
+      if (statutAttendu !== null && statutAttendu !== tache.statut) {
+        throw conflitDeStatut(tache.statut)
+      }
       const autres = await exigerConfirmation(
         tache,
         acteur.id,
@@ -711,9 +798,11 @@ builder.mutationFields(t => ({
         faite && args.realiseeParId ? String(args.realiseeParId) : null
       if (realiseeParId !== null) await exigerAffectee(realiseeParId, tache)
 
-      const resultat = await prisma.$transaction(async tx => {
-        await tx.tache.update({
-          where: { id: tache.id },
+      const ecrite = await prisma.$transaction(async tx => {
+        // L'écriture porte le statut lu : un changement simultané ne trouve plus la
+        // ligne.
+        const { count } = await tx.tache.updateMany({
+          where: { id: tache.id, statut: tache.statut },
           data: {
             statut: args.statut,
             // Rouvrir une tâche efface qui l'avait cochée et réalisée.
@@ -722,6 +811,7 @@ builder.mutationFields(t => ({
             realiseeParId,
           },
         })
+        if (count === 0) return false
         await tx.journal.create({
           data: {
             type: 'TACHE_STATUT',
@@ -733,8 +823,17 @@ builder.mutationFields(t => ({
             realiseeParId,
           },
         })
-        return tx.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
+        return true
       })
+      if (!ecrite) {
+        // Une autre personne a changé le statut entre la lecture et l'écriture.
+        const actuelle = await prisma.tache.findUniqueOrThrow({
+          where: { id: tache.id },
+          select: { statut: true },
+        })
+        if (actuelle.statut === args.statut) return relire()
+        throw conflitDeStatut(actuelle.statut)
+      }
       await notifier(
         prisma,
         {
@@ -747,7 +846,7 @@ builder.mutationFields(t => ({
         },
         { mailImmediat: true }
       )
-      return resultat
+      return relire()
     },
   }),
 
@@ -779,26 +878,41 @@ builder.mutationFields(t => ({
       if (args.assigne) await exigerAffectee(personneId, tache)
 
       const dejaAssignee = tache.assignations.some(a => a.userId === personneId)
-      if (dejaAssignee !== args.assigne) {
-        await prisma.$transaction([
-          args.assigne
-            ? prisma.tacheAssignation.create({
+      // Deux requêtes simultanées lisent la même assignation absente, ou présente.
+      // La seconde ne trouve plus rien à écrire : le résultat est celui demandé, sans
+      // second journal ni seconde notification.
+      const ecrite =
+        dejaAssignee !== args.assigne &&
+        (await prisma
+          .$transaction(async tx => {
+            if (args.assigne) {
+              await tx.tacheAssignation.create({
                 data: { tacheId: tache.id, userId: personneId },
               })
-            : prisma.tacheAssignation.deleteMany({
+            } else {
+              const { count } = await tx.tacheAssignation.deleteMany({
                 where: { tacheId: tache.id, userId: personneId },
-              }),
-          prisma.journal.create({
-            data: {
-              type: args.assigne ? 'TACHE_ASSIGNEE' : 'TACHE_DESASSIGNEE',
-              acteurId: acteur.id,
-              editionId: tache.editionId,
-              perimetreId: tache.perimetreId,
-              tacheId: tache.id,
-              personneId,
-            },
-          }),
-        ])
+              })
+              if (count === 0) return false
+            }
+            await tx.journal.create({
+              data: {
+                type: args.assigne ? 'TACHE_ASSIGNEE' : 'TACHE_DESASSIGNEE',
+                acteurId: acteur.id,
+                editionId: tache.editionId,
+                perimetreId: tache.perimetreId,
+                tacheId: tache.id,
+                personneId,
+              },
+            })
+            return true
+          })
+          .catch((erreur: unknown) => {
+            // P2002 : l'assignation existe déjà.
+            if ((erreur as { code?: string }).code !== 'P2002') throw erreur
+            return false
+          }))
+      if (ecrite) {
         // Règle n° 3 : les autres référent·es voient qui fait quoi dans leur résumé.
         // La personne assignée par un admin l'apprend aussi.
         await notifier(prisma, {

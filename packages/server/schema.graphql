@@ -385,7 +385,11 @@ type Mutation {
   archiverFiche(archive: Boolean!, id: ID!): Fiche!
   archiverPersonne(archive: Boolean!, id: ID!): Personne!
   assignerTache(assigne: Boolean!, id: ID!, personneId: ID): Tache!
-  changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!): Tache!
+
+  """
+  Change le statut d’une tâche. Demander le statut qu’elle a déjà ne change rien. Avec `statutAttendu`, le serveur refuse de changer un statut qu’une autre personne a modifié entre-temps (code `CONFLIT_VERSION`).
+  """
+  changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!, statutAttendu: StatutTache): Tache!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, sigle: String, slug: String!): Activite!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
@@ -446,7 +450,11 @@ type Mutation {
     mailEcheance: Boolean!
     mailModification: Boolean!
   ): PreferencesNotification!
-  modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String!): Tache!
+
+  """
+  Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
+  """
+  modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String, versionAttendue: Int): Tache!
   proposerPersonne(editionId: ID!, email: String!, mot: String, nom: String!, perimetreId: ID!): Boolean!
   refuserDemande(id: ID!): Demande!
   renvoyerInvitation(id: ID!): Boolean!
@@ -793,6 +801,11 @@ type Tache {
   statut: StatutTache!
   termineeLe: DateTime
   titre: String!
+
+  """
+  Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`.
+  """
+  version: Int!
 }
 
 """

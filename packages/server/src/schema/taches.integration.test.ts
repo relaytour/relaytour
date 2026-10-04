@@ -735,3 +735,190 @@ describe('droit d’écriture porté par la tâche', () => {
     expect(taches.find(t => t.id === tache.id)?.peutModifier).toBe(false)
   })
 })
+
+// Deux personnes qui écrivent la même tâche ne s'écrasent pas : une modification
+// porte la version lue, un changement de statut le statut vu, et une écriture
+// simultanée ne produit ni second journal ni seconde notification.
+describe('travail à plusieurs', () => {
+  const MODIFIER = `mutation ($id: ID!, $t: String, $d: String, $v: Int) {
+    modifierTache(id: $id, titre: $t, description: $d, versionAttendue: $v) { titre description version }
+  }`
+  const STATUT = `mutation ($id: ID!, $s: StatutTache!, $a: StatutTache) {
+    changerStatutTache(id: $id, statut: $s, statutAttendu: $a) { statut }
+  }`
+  const ASSIGNER = `mutation ($id: ID!, $a: Boolean!) { assignerTache(id: $id, assigne: $a) { id } }`
+  const journal = (
+    tacheId: string,
+    type:
+      'TACHE_MODIFIEE' | 'TACHE_STATUT' | 'TACHE_ASSIGNEE' | 'TACHE_DESASSIGNEE'
+  ) => prisma.journal.count({ where: { tacheId, type } })
+  const enBase = (id: string) =>
+    prisma.tache.findUniqueOrThrow({
+      where: { id },
+      include: { assignations: true },
+    })
+  const extensions = (r: Awaited<ReturnType<typeof executer>>) =>
+    r.errors?.[0]?.extensions
+
+  it('refuse d’écraser une modification faite depuis la version lue', async () => {
+    const tache = await creerTache(ids.alice, 'Réserver le bassin', false)
+    // Alice et Bruno lisent la version 0. Bruno enregistre le premier.
+    const parBruno = await executer(ids.bruno, MODIFIER, {
+      id: tache.id,
+      t: 'Réserver le grand bassin',
+      v: 0,
+    })
+    expect(parBruno.data).toMatchObject({ modifierTache: { version: 1 } })
+
+    const parAlice = await executer(ids.alice, MODIFIER, {
+      id: tache.id,
+      t: 'Réserver le petit bassin',
+      v: 0,
+    })
+    expect(code(parAlice)).toBe('CONFLIT_VERSION')
+    expect(extensions(parAlice)).toMatchObject({
+      versionCourante: 1,
+      modifieePar: `bruno ${suffixe}`,
+    })
+    expect(
+      Number.isNaN(Date.parse(String(extensions(parAlice)?.modifieeLe)))
+    ).toBe(false)
+    expect(await enBase(tache.id)).toMatchObject({
+      titre: 'Réserver le grand bassin',
+      version: 1,
+    })
+    expect(await journal(tache.id, 'TACHE_MODIFIEE')).toBe(1)
+
+    // Alice écrase en connaissance de cause : elle porte la version actuelle.
+    const ecrase = await executer(ids.alice, MODIFIER, {
+      id: tache.id,
+      t: 'Réserver le petit bassin',
+      v: 1,
+    })
+    expect(ecrase.data).toMatchObject({
+      modifierTache: { titre: 'Réserver le petit bassin', version: 2 },
+    })
+  })
+
+  it('refuse l’accès avant de dire un conflit', async () => {
+    const tache = await creerTache(ids.alice, 'Louer les plots', false)
+    await executer(ids.alice, MODIFIER, { id: tache.id, t: 'Louer des plots' })
+    // Une version périmée ne renseigne pas une personne sans droit d'écriture.
+    for (const personne of [ids.chloe, ids.emma, null]) {
+      const r = await executer(personne, MODIFIER, {
+        id: tache.id,
+        t: 'Intrusion',
+        v: 0,
+      })
+      expect(code(r)).toBe('FORBIDDEN')
+      const s = await executer(personne, STATUT, {
+        id: tache.id,
+        s: 'FAITE',
+        a: 'EN_COURS',
+      })
+      expect(code(s)).toBe('FORBIDDEN')
+    }
+    expect((await enBase(tache.id)).titre).toBe('Louer des plots')
+  })
+
+  it('ne change pas un champ absent, et efface un champ nul', async () => {
+    const tache = await creerTache(ids.alice, 'Afficher les horaires', false)
+    await executer(ids.alice, MODIFIER, {
+      id: tache.id,
+      d: 'Devant le vestiaire.',
+    })
+    expect(await enBase(tache.id)).toMatchObject({
+      titre: 'Afficher les horaires',
+      description: 'Devant le vestiaire.',
+      version: 1,
+    })
+    // Sans version attendue, la dernière écriture gagne.
+    await executer(ids.bruno, MODIFIER, {
+      id: tache.id,
+      t: 'Afficher les horaires du samedi',
+    })
+    expect(await enBase(tache.id)).toMatchObject({
+      titre: 'Afficher les horaires du samedi',
+      description: 'Devant le vestiaire.',
+      version: 2,
+    })
+    await executer(ids.alice, MODIFIER, { id: tache.id, d: null })
+    expect((await enBase(tache.id)).description).toBeNull()
+    // Une modification sans aucun champ n'écrit rien.
+    const vide = await executer(ids.alice, MODIFIER, { id: tache.id })
+    expect(vide.errors).toBeUndefined()
+    expect((await enBase(tache.id)).version).toBe(3)
+    expect(await journal(tache.id, 'TACHE_MODIFIEE')).toBe(3)
+  })
+
+  it('ne journalise pas un statut déjà atteint, et garde la personne qui a coché', async () => {
+    const tache = await creerTache(ids.alice, 'Compter les bonnets', false)
+    const cocher = (userId: string) =>
+      executer(userId, STATUT, { id: tache.id, s: 'FAITE' })
+    expect((await cocher(ids.alice)).errors).toBeUndefined()
+    expect((await cocher(ids.bruno)).data).toEqual({
+      changerStatutTache: { statut: 'FAITE' },
+    })
+    expect((await enBase(tache.id)).clotureeParId).toBe(ids.alice)
+    expect(await journal(tache.id, 'TACHE_STATUT')).toBe(1)
+
+    // Les deux personnes cochent une autre tâche au même instant.
+    const autre = await creerTache(ids.alice, 'Compter les planches', false)
+    const reponses = await Promise.all(
+      [ids.alice, ids.bruno].map(userId =>
+        executer(userId, STATUT, { id: autre.id, s: 'FAITE' })
+      )
+    )
+    for (const r of reponses) {
+      expect(r.data).toEqual({ changerStatutTache: { statut: 'FAITE' } })
+    }
+    expect(await journal(autre.id, 'TACHE_STATUT')).toBe(1)
+    expect([ids.alice, ids.bruno]).toContain(
+      (await enBase(autre.id)).clotureeParId
+    )
+  })
+
+  it('refuse de changer un statut qui a changé depuis la lecture, sans nommer personne', async () => {
+    const tache = await creerTache(ids.alice, 'Tester le chronomètre', false)
+    await executer(ids.alice, STATUT, { id: tache.id, s: 'FAITE' })
+    // Bruno voit encore la tâche « à faire », et veut l'abandonner.
+    const perime = await executer(ids.bruno, STATUT, {
+      id: tache.id,
+      s: 'ABANDONNEE',
+      a: 'A_FAIRE',
+    })
+    expect(code(perime)).toBe('CONFLIT_VERSION')
+    expect(extensions(perime)).toMatchObject({ statutCourant: 'FAITE' })
+    // Qui a coché reste réservé à la personne qui a coché et aux admins.
+    expect(JSON.stringify(perime.errors)).not.toContain(`alice ${suffixe}`)
+    expect(extensions(perime)).not.toHaveProperty('modifieePar')
+    expect(await enBase(tache.id)).toMatchObject({
+      statut: 'FAITE',
+      clotureeParId: ids.alice,
+    })
+
+    const voulu = await executer(ids.bruno, STATUT, {
+      id: tache.id,
+      s: 'ABANDONNEE',
+      a: 'FAITE',
+    })
+    expect(voulu.data).toEqual({ changerStatutTache: { statut: 'ABANDONNEE' } })
+  })
+
+  it('n’assigne et ne retire qu’une fois deux demandes simultanées', async () => {
+    const tache = await creerTache(ids.alice, 'Gonfler les bouées', false)
+    const deuxFois = (assigne: boolean) =>
+      Promise.all(
+        [1, 2].map(() =>
+          executer(ids.alice, ASSIGNER, { id: tache.id, a: assigne })
+        )
+      )
+    for (const r of await deuxFois(true)) expect(r.errors).toBeUndefined()
+    expect((await enBase(tache.id)).assignations).toHaveLength(1)
+    expect(await journal(tache.id, 'TACHE_ASSIGNEE')).toBe(1)
+
+    for (const r of await deuxFois(false)) expect(r.errors).toBeUndefined()
+    expect((await enBase(tache.id)).assignations).toHaveLength(0)
+    expect(await journal(tache.id, 'TACHE_DESASSIGNEE')).toBe(1)
+  })
+})
