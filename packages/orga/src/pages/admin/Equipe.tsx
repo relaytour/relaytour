@@ -30,6 +30,7 @@ import {
   type SelectProps,
 } from 'antd'
 import { useRef, useState } from 'react'
+import { Link } from 'react-router'
 
 import ReglagePerimetre, {
   type PerimetreRegle,
@@ -47,6 +48,7 @@ const POSTES = graphql(`
       effectif
       aPourvoir
       etat
+      demandesEnAttente
       perimetre {
         id
         slug
@@ -215,7 +217,7 @@ function ChampEffectif({
  * qui ne dépend pas de la période.
  */
 export default function Equipe() {
-  const { periode, libelleGroupe } = useActivite()
+  const { periode, libelleGroupe, lien } = useActivite()
   const { message } = App.useApp()
   const { data: editions } = useQuery(EDITIONS)
   const [choix, setChoix] = useState<string | undefined>()
@@ -543,6 +545,15 @@ export default function Equipe() {
                           </Tag>
                         ))}
                       </Space>
+                      {poste.demandesEnAttente > 0 && (
+                        <div style={{ marginBottom: 12 }}>
+                          <Link to={lien('/admin/personnes?onglet=demandes')}>
+                            {poste.demandesEnAttente === 1
+                              ? '1 demande en attente'
+                              : `${poste.demandesEnAttente} demandes en attente`}
+                          </Link>
+                        </div>
+                      )}
                       {souhaits.length > 0 && (
                         <div style={{ marginBottom: 12 }}>
                           <Typography.Text

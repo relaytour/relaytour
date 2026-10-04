@@ -61,7 +61,7 @@
             <li><a href="#e-avancement">Avancement</a> : l'état de chaque périmètre sur la période.</li>
             <li><a href="#e-editions">Éditions</a> : ouvrir et dater les périodes de l'activité.</li>
             <li><a href="#e-equipe">Équipe</a> : effectifs, souhaits, affectations et réglage des périmètres.</li>
-            <li><a href="#e-personnes">Personnes</a> : inviter votre équipe et relancer les invitations.</li>
+            <li><a href="#e-personnes">Personnes</a> : inviter votre équipe, relancer les invitations et traiter les demandes.</li>
             <li><a href="#e-redaction">Rédaction</a> : accorder un droit d'écriture sur les fiches d'un périmètre.</li>
             <li><a href="#e-historique">Historique d'une fiche</a> : consulter et restaurer une version.</li>
             <li><a href="#e-activite">Activités</a> : régler le nom, les groupes et l'identité de votre activité.</li>
@@ -128,15 +128,25 @@
 
         <article class="verre ecran" id="e-personnes">
           <div class="ecran-tete"><h3>Personnes</h3><span class="route">/&lt;activité&gt;/admin/personnes</span></div>
-          <p>Seules les personnes invitées ici peuvent se connecter à l'espace organisateur. Le tableau donne le nom, l'adresse mail, les affectations, les souhaits et le rôle. Un filtre isole les personnes sans affectation pour la période choisie.</p>
+          <p>Seules les personnes invitées ici peuvent se connecter à l'espace organisateur. L'écran a deux onglets. « Annuaire » donne le nom, l'adresse mail, les affectations, les souhaits et le rôle de chaque personne. Un filtre y isole les personnes sans affectation pour la période choisie. « Demandes » porte la file des personnes proposées pour rejoindre l'équipe.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Inviter une personne</span></span><span>Saisir le nom et l'adresse, et noter ses périmètres souhaités. La personne reçoit un mail avec son lien de connexion et le mode d'emploi de son rôle.</span></li>
             <li><span><span class="libelle">Renvoyer l'invitation</span></span><span>Relancer une personne de votre équipe qui ne s'est pas encore connectée.</span></li>
           </ul>
           <p class="note">Vous lisez l'annuaire de l'organisation, dont vous avez besoin pour constituer votre équipe. Les affectations et les souhaits que vous voyez sont ceux de vos activités seulement. Le nom d'un compte existant se modifie par un admin de l'organisation.</p>
           <figure>
-            <img src="../captures/personnes.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes : le nom, l'adresse, les affectations, les souhaits et le rôle de chaque personne." />
+            <img src="../captures/personnes.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes, onglet Annuaire : le nom, l'adresse, les affectations, les souhaits et le rôle de chaque personne." />
             <figcaption>Écran Personnes, sur l'organisation d'exemple. Les personnes et les adresses sont fictives.</figcaption>
+          </figure>
+          <p>Une référente ou un référent propose une personne pour son périmètre. La demande arrive dans l'onglet « Demandes », avec l'adresse, le périmètre demandé et le mot de la personne qui propose. Aucun compte n'existe avant votre décision. La cloche vous prévient une fois par jour au plus, et chaque carte de l'écran « Équipe » compte ses demandes en attente.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Accepter</span></span><span>Créer le compte de la personne et choisir ses périmètres. Un périmètre demandé que vous n'affectez pas devient un souhait. La personne reçoit son invitation par mail.</span></li>
+            <li><span><span class="libelle">Refuser</span></span><span>Écarter la demande. Aucun compte n'est créé et aucun mail ne part.</span></li>
+          </ul>
+          <p class="note">Une personne déjà membre de l'organisation porte la mention « Déjà membre » : accepter sa demande l'affecte sans créer de compte. Les demandes d'une période archivée ne se traitent plus.</p>
+          <figure>
+            <img src="../captures/personnes-demandes.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes, onglet Demandes : une demande en attente, avec son périmètre, la personne qui propose et les boutons Accepter et Refuser." />
+            <figcaption>Onglet Demandes, sur l'organisation d'exemple. Les personnes et les adresses sont fictives.</figcaption>
           </figure>
         </article>
 

@@ -118,6 +118,31 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+type Demande {
+  adresse: String!
+  creeLe: DateTime!
+
+  """
+  Vrai quand un compte de l’organisation porte déjà cette adresse : accepter la demande ne crée alors aucun compte.
+  """
+  dejaMembre: Boolean!
+  edition: Edition!
+  id: ID!
+  nom: String!
+  origine: OrigineDemande!
+  perimetres: [DemandePerimetre!]!
+  statut: StatutDemande!
+  traiteeLe: DateTime
+  traiteePar: Personne
+}
+
+type DemandePerimetre {
+  id: ID!
+  mot: String
+  perimetre: Perimetre!
+  proposePar: Personne
+}
+
 type DroitRedaction {
   accordeLe: DateTime!
   id: ID!
@@ -291,6 +316,7 @@ type MediaTeleverse {
 }
 
 type Mutation {
+  accepterDemande(affecter: [ID!]!, id: ID!): Demande!
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
   archiverActivite(archive: Boolean!, id: ID!): Activite!
@@ -347,6 +373,8 @@ type Mutation {
   modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
   modifierPreferencesNotification(frequenceResume: FrequenceResume!, mailEcheance: Boolean!, mailModification: Boolean!): PreferencesNotification!
   modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String!): Tache!
+  proposerPersonne(editionId: ID!, email: String!, mot: String, nom: String!, perimetreId: ID!): Boolean!
+  refuserDemande(id: ID!): Demande!
   renvoyerInvitation(id: ID!): Boolean!
   restaurerVersionFiche(versionId: ID!): Fiche!
   retirerAffectation(id: ID!): Boolean!
@@ -356,6 +384,7 @@ type Mutation {
   La personne connectée retire son propre souhait. Hors de ses activités, rien ne change.
   """
   retirerMonSouhait(editionId: ID!, perimetreId: ID!): Boolean!
+  retirerProposition(id: ID!): Boolean!
   retirerSouhait(id: ID!): Boolean!
 
   """
@@ -424,6 +453,11 @@ type OrganisationInstallation {
   nombreMembres: Int!
   slug: String!
   statut: StatutOrganisation!
+}
+
+enum OrigineDemande {
+  FORMULAIRE
+  PROPOSITION
 }
 
 type Perimetre {
@@ -509,6 +543,11 @@ type PostesPerimetre {
   affectations: [Affectation!]!
 
   """
+  Nombre de demandes pour rejoindre l’équipe qui citent ce périmètre et attendent une revue (ADR 0015).
+  """
+  demandesEnAttente: Int!
+
+  """
   Vaut null tant que l’effectif n’a été ni importé ni défini pour cette édition.
   """
   effectif: Int
@@ -527,6 +566,13 @@ type PreferencesNotification {
   mailModification: Boolean!
 }
 
+type Proposition {
+  creeLe: DateTime!
+  id: ID!
+  nom: String!
+  statut: StatutDemande!
+}
+
 type Query {
   activites(inclureArchives: Boolean = false): [Activite!]!
   affectations(editionId: ID!): [Affectation!]!
@@ -538,6 +584,7 @@ type Query {
   avancementGlobal(editionId: ID!): [AvancementPerimetre!]!
   baremeScore: BaremeScore!
   classement(editionId: ID!): [LigneClassement!]!
+  demandes(editionId: ID!, statut: StatutDemande): [Demande!]!
   droitsRedaction: [DroitRedaction!]!
   editionCourante(activiteId: ID): Edition
   editions(activiteId: ID): [Edition!]!
@@ -549,6 +596,7 @@ type Query {
   mesOrganisations: [OrganisationDeLaPersonne!]!
   mesPerimetres(activiteId: ID): [Perimetre!]!
   mesPreferencesNotification: PreferencesNotification!
+  mesPropositions(editionId: ID!, perimetreId: ID!): [Proposition!]!
   mesTaches(editionId: ID!): [Tache!]!
   moi: Personne
   monScore(editionId: ID!): Score!
@@ -602,6 +650,12 @@ type Souhait {
 enum SourceFiche {
   APP
   GIT
+}
+
+enum StatutDemande {
+  ACCEPTEE
+  EN_ATTENTE
+  REFUSEE
 }
 
 enum StatutEdition {
@@ -665,6 +719,7 @@ type TousLesPerimetres {
 }
 
 enum TypeNotification {
+  DEMANDE_RECUE
   ECHEANCE_PROCHE
   TACHE_ASSIGNEE
   TACHE_CREEE

@@ -75,6 +75,7 @@ const SELECTION_NOTIFICATION = {
       },
     },
   },
+  activite: { select: { slug: true, nom: true } },
 } as const
 
 async function nomsDes(

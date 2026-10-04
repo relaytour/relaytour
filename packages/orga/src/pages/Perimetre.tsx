@@ -12,6 +12,7 @@ import {
   MentionContactPrincipal,
   PersonneNommee,
 } from '../composants/Personne'
+import ProposerPersonne from '../composants/ProposerPersonne'
 import { Puces } from '../composants/Puces'
 import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
@@ -366,6 +367,14 @@ export default function Perimetre() {
                   personne.
                 </p>
               </Panneau>
+            )}
+
+            {perimetre.peutModifier && editionId && (
+              <ProposerPersonne
+                perimetreId={perimetre.id}
+                perimetreNom={perimetre.nom}
+                editionId={editionId}
+              />
             )}
           </>
         }

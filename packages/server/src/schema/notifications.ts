@@ -25,6 +25,8 @@ const SELECTION_TACHE = {
   },
 } as const
 
+const SELECTION_ACTIVITE = { select: { slug: true, nom: true } } as const
+
 const NotificationRef = builder.prismaObject('Notification', {
   fields: t => ({
     id: t.exposeID('id'),
@@ -39,6 +41,7 @@ const NotificationRef = builder.prismaObject('Notification', {
         personneId: true,
         userId: true,
         tache: SELECTION_TACHE,
+        activite: SELECTION_ACTIVITE,
       },
       resolve: async n => {
         const ids = [n.acteurId, n.personneId].filter(id => id !== null)
@@ -60,6 +63,7 @@ const NotificationRef = builder.prismaObject('Notification', {
         acteurId: true,
         personneId: true,
         tache: SELECTION_TACHE,
+        activite: SELECTION_ACTIVITE,
       },
       resolve: n => lienNotification(n),
     }),

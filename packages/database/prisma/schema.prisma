@@ -65,6 +65,7 @@ model Organisation {
   droitsRedaction DroitRedaction[]
   medias          Media[]
   adminsActivite  AdminActivite[]
+  demandes        Demande[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -159,11 +160,13 @@ model Activite {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  organisation Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  editions     Edition[]
-  perimetres   Perimetre[]
-  fiches       Fiche[]
-  admins       AdminActivite[]
+  organisation  Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  editions      Edition[]
+  perimetres    Perimetre[]
+  fiches        Fiche[]
+  admins        AdminActivite[]
+  demandes      Demande[]
+  notifications Notification[]
 
   @@unique([organisationId, slug])
 }
@@ -201,6 +204,9 @@ model User {
   souhaits           Souhait[]
   appartenances      Appartenance[]
   adminsActivite     AdminActivite[]
+  demandes           Demande[]               @relation("DemandeCompte")
+  demandesTraitees   Demande[]               @relation("DemandeTraitement")
+  propositions       DemandePerimetre[]
 }
 
 model Session {
@@ -284,6 +290,7 @@ model Edition {
   journal      Journal[]
   effectifs    EffectifPerimetre[]
   souhaits     Souhait[]
+  demandes     Demande[]
 
   @@unique([activiteId, annee])
   @@index([organisationId])
@@ -328,6 +335,7 @@ model Perimetre {
   droitsRedaction DroitRedaction[]
   effectifs       EffectifPerimetre[]
   souhaits        Souhait[]
+  demandes        DemandePerimetre[]
 
   @@unique([activiteId, slug])
   @@index([organisationId])
@@ -395,6 +403,77 @@ model Souhait {
   @@unique([userId, perimetreId, editionId])
   @@index([perimetreId, editionId])
   @@index([editionId])
+}
+
+// ── Demandes pour rejoindre l'équipe (ADR 0015) ───────────────────────────────
+
+enum OrigineDemande {
+  PROPOSITION
+  FORMULAIRE
+}
+
+enum StatutDemande {
+  EN_ATTENTE
+  ACCEPTEE
+  REFUSEE
+}
+
+// Une personne qui demande à rejoindre l'équipe d'une période : proposée par un·e
+// référent·e pour son périmètre, ou venue du formulaire public. Aucun compte n'existe
+// avant qu'un admin accepte la demande. Elle porte le nom et l'adresse d'une personne
+// qui n'est pas encore membre : elle vit en base seulement, et suit la suppression
+// de sa période (Cascade).
+model Demande {
+  id               String         @id @default(cuid())
+  organisationId   String
+  activiteId       String
+  editionId        String
+  origine          OrigineDemande
+  statut           StatutDemande  @default(EN_ATTENTE)
+  nom              String
+  adresse          String
+  // L'adresse tant que la demande attend, puis null : la contrainte d'unicité garde
+  // une seule demande en attente par adresse et par période.
+  adresseEnAttente String?
+  // Le compte créé ou rattaché par l'acceptation.
+  userId           String?
+  traiteeParId     String?
+  traiteeLe        DateTime?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+
+  organisation Organisation       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite           @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  edition      Edition            @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  user         User?              @relation("DemandeCompte", fields: [userId], references: [id], onDelete: SetNull)
+  traiteePar   User?              @relation("DemandeTraitement", fields: [traiteeParId], references: [id], onDelete: SetNull)
+  perimetres   DemandePerimetre[]
+
+  @@unique([editionId, adresseEnAttente])
+  @@index([editionId, statut, createdAt])
+  @@index([organisationId])
+  @@index([activiteId])
+}
+
+// Un périmètre demandé : proposé par un·e référent·e, ou choisi dans le formulaire
+// public (sans auteur). Le mot facultatif accompagne une proposition. Deux personnes
+// qui proposent la même adresse pour le même périmètre ont chacune leur ligne : la
+// liste de chacune se comporte comme pour une adresse inconnue.
+model DemandePerimetre {
+  id           String   @id @default(cuid())
+  demandeId    String
+  perimetreId  String
+  proposeParId String?
+  mot          String?  @db.VarChar(280)
+  createdAt    DateTime @default(now())
+
+  demande    Demande   @relation(fields: [demandeId], references: [id], onDelete: Cascade)
+  perimetre  Perimetre @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  proposePar User?     @relation(fields: [proposeParId], references: [id], onDelete: SetNull)
+
+  @@unique([demandeId, perimetreId, proposeParId])
+  @@index([perimetreId])
+  @@index([proposeParId])
 }
 
 // ── Tâches ───────────────────────────────────────────────────────────────────
@@ -576,6 +655,7 @@ enum TypeNotification {
   TACHE_DESASSIGNEE
   ECHEANCE_PROCHE
   TACHE_EN_RETARD
+  DEMANDE_RECUE
 }
 
 // Une notification ne stocke que des identifiants : le texte se compose à la lecture,
@@ -588,6 +668,8 @@ model Notification {
   acteurId       String?
   tacheId        String?
   perimetreId    String?
+  // Pour DEMANDE_RECUE : l'activité dont la file de demandes attend une revue.
+  activiteId     String?
   // Pour TACHE_ASSIGNEE et TACHE_DESASSIGNEE : la personne concernée.
   personneId     String?
   // Pour ECHEANCE_PROCHE : le nombre de jours avant l'échéance.
@@ -604,6 +686,7 @@ model Notification {
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   user         User         @relation("NotificationDestinataire", fields: [userId], references: [id], onDelete: Cascade)
   tache        Tache?       @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+  activite     Activite?    @relation(fields: [activiteId], references: [id], onDelete: Cascade)
 
   @@index([userId, lueLe, createdAt])
   @@index([userId, resumeeLe])

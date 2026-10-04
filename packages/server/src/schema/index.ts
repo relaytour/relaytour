@@ -11,6 +11,7 @@ import './notifications.ts'
 import './score.ts'
 import './postes.ts'
 import './souhaits.ts'
+import './demandes.ts'
 
 import { builder } from './builder.ts'
 
