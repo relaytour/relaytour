@@ -115,9 +115,9 @@ perimetres:
 
 Un contenu écrit avant l'ADR 0008 porte `type: SPORT` ou `type: POLE` à la place du groupe : l'import le lit comme le groupe `sport` ou `pole`.
 
-`description` présente le périmètre en une ou deux phrases, 400 caractères au plus (ADR 0012). La page « Tous les périmètres », la page du périmètre et les mails d'équipe l'affichent. Les admins la modifient aussi dans la page « Périmètres ».
+`description` présente le périmètre en une ou deux phrases, 400 caractères au plus (ADR 0012). La page « Tous les périmètres », la page du périmètre et les mails d'équipe l'affichent. Les admins la modifient aussi dans la page « Équipe », par le réglage du périmètre.
 
-`effectif` indique le nombre de référentes et de référents souhaité pour chaque période, de 0 à 50. L'import crée l'effectif d'un périmètre s'il manque et ne le remplace jamais : les admins le modifient ensuite dans la page « Postes à pourvoir ».
+`effectif` indique le nombre de référentes et de référents souhaité pour chaque période, de 0 à 50. L'import crée l'effectif d'un périmètre s'il manque et ne le remplace jamais : les admins le modifient ensuite dans la page « Équipe ».
 
 ## Écrire une fiche
 
