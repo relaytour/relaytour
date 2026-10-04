@@ -12,6 +12,7 @@ import './score.ts'
 import './postes.ts'
 import './souhaits.ts'
 import './demandes.ts'
+import './formulaire.ts'
 
 import { builder } from './builder.ts'
 

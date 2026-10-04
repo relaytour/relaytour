@@ -5,6 +5,7 @@ import { parse } from 'yaml'
 import { z } from 'zod'
 
 import { SLUGS_RESERVES } from '../lib/activites.ts'
+import { FormulaireSchema, textesDuFormulaire } from '../lib/formulaire.ts'
 import {
   donneesPersonnelles,
   normaliserContenu,
@@ -56,6 +57,9 @@ export const ActiviteDeclaree = z.strictObject({
   ordre: z.number().int().min(0).max(999).default(0),
   // Tous les membres découvrent les périmètres et formulent leurs souhaits (ADR 0012).
   souhaitsOuverts: z.boolean().optional(),
+  // Réglage du formulaire public (ADR 0015). Son ouverture ne se déclare pas ici :
+  // elle vit en base seulement.
+  formulaire: FormulaireSchema.optional(),
 })
 
 // Un périmètre déclare son groupe, ou son type (SPORT, POLE) pour les contenus
@@ -297,6 +301,18 @@ function lireActivite(
   const base = path.join(racine, dossier)
   const relatif = (f: string) => path.relative(racine, f)
   const groupes = new Set(declaration.groupes.map(g => g.cle))
+
+  // Le formulaire public s'affiche sans session : aucune coordonnée personnelle
+  // (invariant 16).
+  if (
+    textesDuFormulaire(declaration.formulaire ?? {}).some(
+      texte => donneesPersonnelles(texte, role).length > 0
+    )
+  ) {
+    erreurs.push(
+      `${relatif(path.join(base, 'activite.yaml'))} : le formulaire contient des données personnelles interdites dans Git`
+    )
+  }
 
   // Périmètres
   let perimetres: PerimetreModele[] = []

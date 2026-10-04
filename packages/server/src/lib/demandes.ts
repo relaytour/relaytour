@@ -37,7 +37,7 @@ export function motValide(brut: string | null | undefined): string | null {
  */
 export async function signalerDemande(
   prisma: PrismaClient,
-  demande: { organisationId: string; activiteId: string; acteurId: string },
+  demande: { organisationId: string; activiteId: string; acteurId?: string },
   maintenant = new Date()
 ): Promise<void> {
   const { organisationId, activiteId, acteurId } = demande
@@ -68,7 +68,7 @@ export async function signalerDemande(
             organisationId,
             userId,
             type: 'DEMANDE_RECUE',
-            acteurId,
+            acteurId: acteurId ?? null,
             activiteId,
             cle: `DEMANDE_RECUE-${activiteId}-${userId}-${jour}`,
           },

@@ -55,6 +55,18 @@ const DemandeRef = builder.prismaObject('Demande', {
     adresse: t.exposeString('adresse'),
     origine: t.expose('origine', { type: OrigineDemandeEnum }),
     statut: t.expose('statut', { type: StatutDemandeEnum }),
+    disponibilite: t.exposeString('disponibilite', {
+      nullable: true,
+      description: 'Palier de disponibilité choisi dans le formulaire public.',
+    }),
+    reponse: t.exposeString('reponse', {
+      nullable: true,
+      description: 'Réponse à la question complémentaire du formulaire public.',
+    }),
+    texte: t.exposeString('texte', {
+      nullable: true,
+      description: 'Texte libre du formulaire public.',
+    }),
     creeLe: t.expose('createdAt', { type: 'DateTime' }),
     traiteeLe: t.expose('traiteeLe', { type: 'DateTime', nullable: true }),
     traiteePar: t.relation('traiteePar', { type: PersonneRef, nullable: true }),

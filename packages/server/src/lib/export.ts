@@ -6,6 +6,7 @@ import { prisma } from '@relaytour/database'
 
 import { lireGroupes } from './activites.ts'
 import { erreurSaisie } from './erreurs.ts'
+import { lireFormulaire } from './formulaire.ts'
 
 // Export complet d'une organisation (ADR 0008).
 //
@@ -134,6 +135,8 @@ export async function construireExport(organisationId: string) {
       sigle: a.sigle,
       nature: a.nature,
       souhaitsOuverts: a.souhaitsOuverts,
+      formulaire: lireFormulaire(a.formulaire),
+      formulaireOuvert: a.formulaireOuvert,
       groupes: lireGroupes(a.groupes),
       ordre: a.ordre,
       archive: a.archivedAt !== null,

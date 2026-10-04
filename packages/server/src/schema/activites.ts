@@ -1,4 +1,4 @@
-import { NatureActivite, prisma, type Prisma } from '@relaytour/database'
+import { NatureActivite, Prisma, prisma } from '@relaytour/database'
 
 import {
   GROUPES_PAR_DEFAUT,
@@ -7,8 +7,17 @@ import {
   slugActiviteValide,
   type GroupePerimetres,
 } from '../lib/activites.ts'
+import { donneesPersonnelles } from '../lib/contenu.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import {
+  FormulaireSchema,
+  formulaireVide,
+  lireFormulaire,
+  textesDuFormulaire,
+  type Formulaire,
+} from '../lib/formulaire.ts'
 import { exigerPlaceActivite, sousVerrouOrganisation } from '../lib/limites.ts'
+import { configurationActivite } from '../lib/organisation.ts'
 import { sansDoublon, texteRequis } from '../lib/saisie.ts'
 import { marquerContenuModifie } from '../lib/synchronisation.ts'
 
@@ -44,6 +53,25 @@ const GroupePerimetresInput = builder.inputType('GroupePerimetresInput', {
   }),
 })
 
+// Réglage du formulaire public pour rejoindre l'équipe (ADR 0015).
+const FormulaireRef = builder.objectRef<Formulaire>('Formulaire').implement({
+  description:
+    'Réglage du formulaire public d’une activité : introduction, question complémentaire et paliers de disponibilité.',
+  fields: t => ({
+    introduction: t.exposeString('introduction', { nullable: true }),
+    question: t.exposeString('question', { nullable: true }),
+    paliers: t.stringList({ resolve: f => f.paliers ?? [] }),
+  }),
+})
+
+const FormulaireInput = builder.inputType('FormulaireInput', {
+  fields: t => ({
+    introduction: t.string(),
+    question: t.string(),
+    paliers: t.stringList(),
+  }),
+})
+
 // Accès d'une personne à une activité (ADR 0012). COMPLET : elle l'administre ou y
 // a été affectée, et lit ses tâches et ses fiches. DECOUVERTE : elle ne voit que la
 // page « Tous les périmètres » et formule ses souhaits.
@@ -71,6 +99,14 @@ export const ActiviteRef = builder.prismaObject('Activite', {
     souhaitsOuverts: t.exposeBoolean('souhaitsOuverts', {
       description:
         'Vrai quand tous les membres de l’organisation découvrent les périmètres de l’activité et formulent leurs souhaits (ADR 0012).',
+    }),
+    formulaire: t.field({
+      type: FormulaireRef,
+      resolve: a => lireFormulaire(a.formulaire),
+    }),
+    formulaireOuvert: t.exposeBoolean('formulaireOuvert', {
+      description:
+        'Vrai quand le formulaire public de l’activité accepte des demandes (ADR 0015).',
     }),
     acces: t.field({
       type: AccesActiviteEnum,
@@ -111,6 +147,71 @@ builder.queryFields(t => ({
       }),
   }),
 }))
+
+/**
+ * Les colonnes du formulaire public à écrire, d'après les arguments reçus. Le réglage
+ * est un contenu : il se valide comme à l'import, sans coordonnée personnelle. Le
+ * formulaire ne s'ouvre pas sans contact, que sa mention cite pour l'accès aux
+ * données et leur suppression.
+ */
+async function reglageDuFormulaire(
+  activiteId: string,
+  args: {
+    formulaire?: {
+      introduction?: string | null
+      question?: string | null
+      paliers?: string[] | null
+    } | null
+    formulaireOuvert?: boolean | null
+  }
+): Promise<Prisma.ActiviteUpdateInput> {
+  const donnees: Prisma.ActiviteUpdateInput = {}
+  const ouvrir = args.formulaireOuvert === true
+  if (args.formulaire || ouvrir) {
+    const configuration = await configurationActivite(activiteId)
+    if (args.formulaire) {
+      const vide = (texte: string | null | undefined) =>
+        texte === null || texte === undefined || texte.trim() === ''
+      const lu = FormulaireSchema.safeParse({
+        introduction: vide(args.formulaire.introduction)
+          ? undefined
+          : args.formulaire.introduction,
+        question: vide(args.formulaire.question)
+          ? undefined
+          : args.formulaire.question,
+        paliers: (args.formulaire.paliers ?? []).filter(p => !vide(p)),
+      })
+      if (!lu.success) {
+        throw erreurSaisie(
+          'Le formulaire accepte une introduction de 600 caractères, une question de 120 caractères et 8 paliers de 80 caractères au plus.'
+        )
+      }
+      const role = {
+        domaines: configuration.domainesCourrielAutorises,
+        adresses: configuration.adressesRoleAutorisees,
+      }
+      if (
+        textesDuFormulaire(lu.data).some(
+          texte => donneesPersonnelles(texte, role).length > 0
+        )
+      ) {
+        throw erreurSaisie(
+          'Le formulaire est public : n’y écrivez ni adresse personnelle ni numéro de téléphone.'
+        )
+      }
+      donnees.formulaire = formulaireVide(lu.data) ? Prisma.DbNull : lu.data
+    }
+    if (ouvrir && configuration.contactRecrutement === undefined) {
+      throw erreurSaisie(
+        'Renseignez d’abord le contact de l’activité ou de l’organisation : le formulaire le cite pour l’accès aux données et leur suppression.'
+      )
+    }
+  }
+  if (args.formulaireOuvert !== null && args.formulaireOuvert !== undefined) {
+    donnees.formulaireOuvert = args.formulaireOuvert
+  }
+  return donnees
+}
 
 builder.mutationFields(t => ({
   creerActivite: t.prismaField({
@@ -164,11 +265,16 @@ builder.mutationFields(t => ({
       archive: t.arg.boolean(),
       // Absent, le réglage ne change pas (ADR 0012).
       souhaitsOuverts: t.arg.boolean(),
+      // Absents, le réglage et l'ouverture du formulaire public ne changent pas
+      // (ADR 0015).
+      formulaire: t.arg({ type: FormulaireInput }),
+      formulaireOuvert: t.arg.boolean(),
     },
     resolve: async (query, _root, args, ctx) => {
       const organisationId = ctx.organisation!.id
       const id = await ctx.exigerActivite(args.id)
       await ctx.exigerAdminDe(id)
+      const formulaire = await reglageDuFormulaire(id, args)
       // Archiver ou rouvrir une activité touche aux limites de l'organisation :
       // seul un admin de l'organisation le fait.
       if (
@@ -201,6 +307,7 @@ builder.mutationFields(t => ({
         ...(args.souhaitsOuverts === null || args.souhaitsOuverts === undefined
           ? {}
           : { souhaitsOuverts: args.souhaitsOuverts }),
+        ...formulaire,
       }
       return sousVerrouOrganisation(organisationId, async tx => {
         const archivedAt =

@@ -14,6 +14,12 @@ type Activite {
   archive: Boolean!
   contactRecrutement: String
   estAdministree: Boolean!
+  formulaire: Formulaire!
+
+  """
+  Vrai quand le formulaire public de l’activité accepte des demandes (ADR 0015).
+  """
+  formulaireOuvert: Boolean!
   groupes: [GroupePerimetres!]!
   id: ID!
   identite: IdentiteActivite!
@@ -126,12 +132,21 @@ type Demande {
   Vrai quand un compte de l’organisation porte déjà cette adresse : accepter la demande ne crée alors aucun compte.
   """
   dejaMembre: Boolean!
+
+  """Palier de disponibilité choisi dans le formulaire public."""
+  disponibilite: String
   edition: Edition!
   id: ID!
   nom: String!
   origine: OrigineDemande!
   perimetres: [DemandePerimetre!]!
+
+  """Réponse à la question complémentaire du formulaire public."""
+  reponse: String
   statut: StatutDemande!
+
+  """Texte libre du formulaire public."""
+  texte: String
   traiteeLe: DateTime
   traiteePar: Personne
 }
@@ -209,10 +224,52 @@ enum FormatMedia {
   SVG
 }
 
+"""
+Réglage du formulaire public d’une activité : introduction, question complémentaire et paliers de disponibilité.
+"""
+type Formulaire {
+  introduction: String
+  paliers: [String!]!
+  question: String
+}
+
+input FormulaireInput {
+  introduction: String
+  paliers: [String!]
+  question: String
+}
+
+"""
+Formulaire public pour rejoindre l’équipe d’une activité (ADR 0015). Lisible sans session.
+"""
+type FormulaireRejoindre {
+  activite: String!
+
+  """
+  Adresse de rôle à laquelle demander l’accès à ses données ou leur suppression.
+  """
+  contact: String!
+  groupes: [GroupeDuFormulaire!]!
+  introduction: String
+  organisation: String!
+
+  """Paliers de disponibilité proposés."""
+  paliers: [String!]!
+  periode: String!
+
+  """Libellé de la question complémentaire propre à l’organisation."""
+  question: String
+}
+
 enum FrequenceResume {
   AUCUN
   HEBDOMADAIRE
   QUOTIDIEN
+}
+
+type GroupeDuFormulaire {
+  libelle: String!
+  perimetres: [PerimetreDuFormulaire!]!
 }
 
 """Catégorie de périmètres déclarée par une activité."""
@@ -343,6 +400,11 @@ type Mutation {
   demanderExport(organisation: String!): String!
 
   """
+  Dépose une demande pour rejoindre l’équipe d’une activité dont le formulaire est ouvert. La réponse est la même que l’adresse ait déjà un compte, une demande en attente, ou ni l’un ni l’autre. Utilisable sans session.
+  """
+  envoyerDemande(activite: String!, disponibilite: String, email: String!, nom: String!, organisation: String, perimetres: [String!]!, reponse: String, siteWeb: String, texte: String): Boolean!
+
+  """
   La personne connectée note son intérêt pour un périmètre (ADR 0012). Aucun mail ne part.
   """
   formulerSouhait(editionId: ID!, perimetreId: ID!): Boolean!
@@ -355,7 +417,7 @@ type Mutation {
 
   """Sans identifiants, marque toutes les notifications comme lues."""
   marquerNotificationsLues(ids: [ID!]): Int!
-  modifierActivite(archive: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String, souhaitsOuverts: Boolean): Activite!
+  modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
   modifierFiche(contenu: String!, id: ID!, resume: String, titre: String!): Fiche!
 
@@ -502,6 +564,17 @@ type PerimetreDecouvert {
   souhaite: Boolean!
 }
 
+type PerimetreDuFormulaire {
+  couleur: String
+
+  """
+  Vaut null sans description, ou si elle contient une coordonnée personnelle.
+  """
+  description: String
+  nom: String!
+  slug: String!
+}
+
 type PeriodeInstallation {
   annee: Int!
   debut: Date!
@@ -591,6 +664,11 @@ type Query {
   exportContenu: ArchiveContenu!
   fiche(activiteId: ID, slug: String!): Fiche
   fiches(activiteId: ID, inclureArchives: Boolean = false): [Fiche!]!
+
+  """
+  Le formulaire d’une activité, ou null s’il est fermé. Sans slug d’organisation : l’unique organisation de l’installation. Lisible sans session.
+  """
+  formulaireRejoindre(activite: String!, organisation: String): FormulaireRejoindre
   health: String!
   identiteOrganisation: IdentiteOrganisation!
   mesOrganisations: [OrganisationDeLaPersonne!]!
