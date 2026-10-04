@@ -22,7 +22,7 @@ export async function mettreEnFile(
     notificationIds?: string[]
     organisationId?: string
     activiteId?: string
-    // Délai avant l'envoi, en millisecondes (mails d'équipe regroupés, ADR 0012).
+    // Délai avant l'envoi, en millisecondes (mails regroupés, ADR 0012 et 0016).
     delai?: number
     fenetre?: CourrielJobData['fenetre']
   } = {}

@@ -23,10 +23,14 @@ import { schema } from './index.ts'
 // chaque dépôt part d'une adresse IP propre au fichier : les limites de débit ne
 // débordent pas d'une exécution sur l'autre.
 
+// `enFile` reçoit les mails destinés à une personne de l'équipe ou à l'adresse
+// saisie ; `mailsAdmins`, les destinataires du mail regroupé aux admins (ADR 0016).
 const enFile = vi.hoisted(() => [] as string[])
+const mailsAdmins = vi.hoisted(() => [] as unknown[])
 vi.mock('../courriel/file.ts', () => ({
-  mettreEnFile: (sorte: string) => {
-    enFile.push(sorte)
+  mettreEnFile: (sorte: string, cible: unknown) => {
+    if (sorte === 'demandes') mailsAdmins.push(cible)
+    else enFile.push(sorte)
     return Promise.resolve()
   },
 }))
@@ -237,6 +241,7 @@ afterAll(async () => {
 
 beforeEach(() => {
   enFile.length = 0
+  mailsAdmins.length = 0
 })
 
 describe('lire le formulaire sans session', () => {
@@ -378,7 +383,9 @@ describe('déposer une demande sans session', () => {
     expect(
       await prisma.user.findUnique({ where: { email: adresse('lina') } })
     ).toBeNull()
+    // Aucun mail ne part vers l'adresse saisie. L'admin a son mail regroupé.
     expect(enFile).toEqual([])
+    expect(mailsAdmins).toEqual([{ userId: ids.admin }])
     expect(
       await prisma.notification.findMany({
         where: { organisationId: ids.org },

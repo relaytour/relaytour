@@ -13,7 +13,9 @@ import {
 } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { composer } from '../courriel/messages.ts'
 import {
+  fenetreDemandes,
   PROPOSITIONS_EN_ATTENTE_MAX,
   purgerDemandes,
   signalerDemande,
@@ -26,10 +28,16 @@ import { schema } from './index.ts'
 // refus. Le fichier crée sa propre organisation : les notifications aux admins ne
 // touchent aucune donnée locale.
 
+// `enFile` reçoit les mails destinés aux personnes de l'équipe ; `mailsAdmins`, les
+// mails regroupés qui préviennent les admins d'une demande (ADR 0016).
 const enFile = vi.hoisted(() => [] as { sorte: string; cible: unknown }[])
+const mailsAdmins = vi.hoisted(
+  () => [] as { cible: unknown; options: unknown }[]
+)
 vi.mock('../courriel/file.ts', () => ({
-  mettreEnFile: (sorte: string, cible: unknown) => {
-    enFile.push({ sorte, cible })
+  mettreEnFile: (sorte: string, cible: unknown, options: unknown = {}) => {
+    if (sorte === 'demandes') mailsAdmins.push({ cible, options })
+    else enFile.push({ sorte, cible })
     return Promise.resolve()
   },
 }))
@@ -222,6 +230,7 @@ afterAll(async () => {
 
 beforeEach(() => {
   enFile.length = 0
+  mailsAdmins.length = 0
 })
 
 describe('proposer une personne', () => {
@@ -271,9 +280,27 @@ describe('proposer une personne', () => {
       },
     ])
     expect(await compter()).toEqual({ ...avant, demandes: avant.demandes + 1 })
+    // Aucun mail ne part vers la personne proposée. L'admin a un mail différé
+    // jusqu'à la fin de l'heure où la proposition a été écrite.
     expect(enFile).toEqual([])
-    // Une seconde proposition le même jour n'ajoute aucune notification.
+    const fenetre = fenetreDemandes(demande!.createdAt.getTime())
+    const mail = {
+      cible: { userId: ids.admin },
+      options: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        jobId: `demandes-${ids.activite}-${ids.admin}-${Date.parse(fenetre.debut)}`,
+        delai: expect.any(Number) as number,
+        fenetre,
+      },
+    }
+    expect(mailsAdmins).toEqual([mail])
+    expect(demande!.perimetres[0]!.createdAt).toEqual(demande!.createdAt)
+    // Une seconde proposition le même jour n'ajoute aucune notification. Son mail
+    // porte le même identifiant de job tant que l'heure n'a pas changé : la file
+    // n'en garde qu'un.
     await proposer(ids.alice, 'yann')
+    expect(mailsAdmins).toHaveLength(2)
     const notifications = await prisma.notification.findMany({
       where: { organisationId: ids.org },
       select: { userId: true, type: true, activiteId: true, tacheId: true },
@@ -792,5 +819,217 @@ describe('purge des demandes d’une période archivée', () => {
       await prisma.activite.deleteMany({ where: { id: activite.id } })
       await prisma.organisation.delete({ where: { id: ailleurs.id } })
     }
+  })
+})
+
+// Le mail regroupé aux admins (ADR 0016) : un job par admin, par activité et par
+// heure. Les demandes de ce bloc sont datées de fenêtres passées : elles ne se mêlent
+// pas aux demandes des tests précédents.
+describe('mail regroupé aux admins', () => {
+  const fenetre = fenetreDemandes(Date.parse('2027-03-01T10:30:00Z'))
+  const seule = fenetreDemandes(Date.parse('2027-03-02T10:30:00Z'))
+  const mail = (userId: string, f = fenetre) =>
+    composer(prisma, {
+      sorte: 'demandes',
+      userId,
+      organisationId: ids.org,
+      activiteId: ids.activite,
+      fenetre: f,
+    })
+
+  beforeAll(async () => {
+    const base = {
+      organisationId: ids.org,
+      activiteId: ids.activite,
+      editionId: ids.edition,
+      nom: 'Nom Secret',
+    }
+    const le = (heure: string) => new Date(`2027-03-01T${heure}:00Z`)
+    // Une demande du formulaire, déposée pendant la fenêtre.
+    await prisma.demande.create({
+      data: {
+        ...base,
+        origine: 'FORMULAIRE',
+        adresse: adresse('mail-a'),
+        adresseEnAttente: adresse('mail-a'),
+        createdAt: le('10:15'),
+      },
+    })
+    // Une demande plus ancienne, complétée pendant la fenêtre par une proposition.
+    await prisma.demande.create({
+      data: {
+        ...base,
+        origine: 'PROPOSITION',
+        adresse: adresse('mail-b'),
+        adresseEnAttente: adresse('mail-b'),
+        createdAt: le('09:30'),
+        perimetres: {
+          create: {
+            perimetreId: ids.natation,
+            proposeParId: ids.alice,
+            createdAt: le('10:20'),
+          },
+        },
+      },
+    })
+    // Une proposition de l'admin lui-même : elle ne lui est pas annoncée.
+    await prisma.demande.create({
+      data: {
+        ...base,
+        origine: 'PROPOSITION',
+        adresse: adresse('mail-c'),
+        adresseEnAttente: adresse('mail-c'),
+        createdAt: le('10:25'),
+        perimetres: {
+          create: {
+            perimetreId: ids.basket,
+            proposeParId: ids.admin,
+            createdAt: le('10:25'),
+          },
+        },
+      },
+    })
+    // Une demande déjà refusée, et une demande d'une période archivée.
+    await prisma.demande.create({
+      data: {
+        ...base,
+        origine: 'FORMULAIRE',
+        statut: 'REFUSEE',
+        adresse: adresse('mail-d'),
+        createdAt: le('10:30'),
+      },
+    })
+    await prisma.demande.create({
+      data: {
+        ...base,
+        editionId: ids.archivee,
+        origine: 'FORMULAIRE',
+        adresse: adresse('mail-e'),
+        adresseEnAttente: adresse('mail-e'),
+        createdAt: le('10:40'),
+      },
+    })
+    // Le lendemain, une seule demande.
+    await prisma.demande.create({
+      data: {
+        ...base,
+        origine: 'FORMULAIRE',
+        adresse: adresse('mail-f'),
+        adresseEnAttente: adresse('mail-f'),
+        createdAt: new Date('2027-03-02T10:05:00Z'),
+      },
+    })
+  })
+
+  it('place le mail dans la fenêtre de l’instant écrit avec la demande', async () => {
+    // La demande est écrite juste avant 11 h, et signalée juste après.
+    await signalerDemande(
+      prisma,
+      {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        instant: new Date('2027-03-01T10:59:59.900Z'),
+      },
+      new Date('2027-03-01T11:00:00.100Z')
+    )
+    expect(mailsAdmins).toEqual([
+      {
+        cible: { userId: ids.admin },
+        options: {
+          organisationId: ids.org,
+          activiteId: ids.activite,
+          jobId: `demandes-${ids.activite}-${ids.admin}-${Date.parse('2027-03-01T10:00:00Z')}`,
+          delai: 4_900,
+          fenetre: {
+            debut: '2027-03-01T10:00:00.000Z',
+            fin: '2027-03-01T11:00:00.000Z',
+          },
+        },
+      },
+    ])
+  })
+
+  it('ne prévient pas l’admin de sa propre proposition', async () => {
+    await signalerDemande(prisma, {
+      organisationId: ids.org,
+      activiteId: ids.activite,
+      acteurId: ids.admin,
+    })
+    expect(mailsAdmins).toEqual([])
+  })
+
+  it('compte les demandes de la fenêtre qui attendent encore, sans citer personne', async () => {
+    const message = await mail(ids.admin)
+    expect(message?.sujet).toMatch(/^Demandes pour rejoindre l’équipe .+$/)
+    expect(message?.texte).toContain(
+      'L’activité Tournoi a reçu 2 demandes pour rejoindre son équipe. Elles attendent votre décision.'
+    )
+    expect(message?.texte).toContain(`/${slug}/admin/personnes?onglet=demandes`)
+    expect(message?.desabonnement).toMatch(/\/preferences$/)
+    for (const corps of [message?.texte, message?.html]) {
+      expect(corps).not.toContain('Secret')
+      expect(corps).not.toContain('@exemple.fr')
+    }
+    const unique = await mail(ids.admin, seule)
+    expect(unique?.texte).toContain(
+      'L’activité Tournoi a reçu une demande pour rejoindre son équipe. Elle attend votre décision.'
+    )
+  })
+
+  it('note l’envoi sur la notification de l’admin', async () => {
+    const enAttente = () =>
+      prisma.notification.count({
+        where: {
+          userId: ids.admin,
+          activiteId: ids.activite,
+          type: 'DEMANDE_RECUE',
+          envoyeeLe: null,
+        },
+      })
+    expect(await enAttente()).toBeGreaterThan(0)
+    await (await mail(ids.admin))?.apresEnvoi?.()
+    expect(await enAttente()).toBe(0)
+  })
+
+  it('n’envoie rien sans demande en attente, ni à une personne qui n’administre pas l’activité', async () => {
+    const vide = fenetreDemandes(Date.parse('2027-03-03T10:30:00Z'))
+    expect(await mail(ids.admin, vide)).toBeNull()
+    expect(await mail(ids.alice)).toBeNull()
+
+    // Avec un admin d'activité, l'admin de l'organisation n'est plus prévenu : le
+    // rôle se relit à l'envoi. La proposition de l'admin compte pour bruno.
+    const nomination = await prisma.adminActivite.create({
+      data: {
+        userId: ids.bruno,
+        activiteId: ids.activite,
+        organisationId: ids.org,
+      },
+    })
+    expect(await mail(ids.admin)).toBeNull()
+    expect((await mail(ids.bruno))?.texte).toContain('a reçu 3 demandes')
+    await prisma.adminActivite.delete({ where: { id: nomination.id } })
+    expect(await mail(ids.bruno)).toBeNull()
+  })
+
+  it('se règle par une préférence, qu’une requête sans cette valeur ne change pas', async () => {
+    const LIRE = `{ mesPreferencesNotification { mailDemandes } }`
+    const REGLER = `mutation ($d: Boolean) {
+      modifierPreferencesNotification(frequenceResume: HEBDOMADAIRE, mailModification: true, mailEcheance: true, mailDemandes: $d) { mailDemandes }
+    }`
+    expect(code(await executer(null, REGLER, { d: false }))).toBe('FORBIDDEN')
+    expect((await executer(ids.admin, LIRE)).data).toEqual({
+      mesPreferencesNotification: { mailDemandes: true },
+    })
+    expect((await executer(ids.admin, REGLER, { d: false })).data).toEqual({
+      modifierPreferencesNotification: { mailDemandes: false },
+    })
+    expect((await executer(ids.admin, REGLER)).data).toEqual({
+      modifierPreferencesNotification: { mailDemandes: false },
+    })
+    expect(await mail(ids.admin)).toBeNull()
+    expect((await executer(ids.admin, REGLER, { d: true })).data).toEqual({
+      modifierPreferencesNotification: { mailDemandes: true },
+    })
+    expect(await mail(ids.admin)).not.toBeNull()
   })
 })

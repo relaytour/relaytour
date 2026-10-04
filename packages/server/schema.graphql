@@ -438,7 +438,14 @@ type Mutation {
   modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
   modifierPerimetre(archive: Boolean!, couleur: String, description: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre): Perimetre!
   modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
-  modifierPreferencesNotification(frequenceResume: FrequenceResume!, mailEcheance: Boolean!, mailModification: Boolean!): PreferencesNotification!
+  modifierPreferencesNotification(
+    frequenceResume: FrequenceResume!
+
+    """Sans valeur, ce réglage ne change pas."""
+    mailDemandes: Boolean
+    mailEcheance: Boolean!
+    mailModification: Boolean!
+  ): PreferencesNotification!
   modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String!): Tache!
   proposerPersonne(editionId: ID!, email: String!, mot: String, nom: String!, perimetreId: ID!): Boolean!
   refuserDemande(id: ID!): Demande!
@@ -640,6 +647,11 @@ type PostesPerimetre {
 
 type PreferencesNotification {
   frequenceResume: FrequenceResume!
+
+  """
+  Mail regroupé par heure quand une activité que la personne administre reçoit des demandes pour rejoindre son équipe.
+  """
+  mailDemandes: Boolean!
   mailEcheance: Boolean!
   mailModification: Boolean!
 }
