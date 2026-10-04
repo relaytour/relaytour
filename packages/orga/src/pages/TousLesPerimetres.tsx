@@ -14,6 +14,8 @@ import { messageErreur } from '../lib/erreurs'
 // personne, ses souhaits, puis les autres périmètres, chacun avec sa description.
 // La page ne montre ni tâche, ni fiche, ni nom de personne. Le nombre de personnes
 // encore recherchées est une information : il n'empêche aucun souhait.
+// Une personne qui voit l'activité ouvre chaque périmètre en consultation
+// (ADR 0014). Une personne en découverte n'a pas ce lien.
 
 const TOUS = graphql(`
   query TousLesPerimetres {
@@ -189,7 +191,24 @@ export default function TousLesPerimetres() {
               {libelleRecherche(ligne.personnesRecherchees)}
             </p>
           )}
-          <div>{action}</div>
+          <div
+            style={{
+              display: 'flex',
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              gap: '8px 14px',
+            }}
+          >
+            {action}
+            {!decouverte && !ligne.affecte && (
+              <Link
+                to={lien(`/perimetres/${perimetre.slug}`)}
+                aria-label={`Consulter les tâches de ${perimetre.nom}`}
+              >
+                Consulter les tâches
+              </Link>
+            )}
+          </div>
         </div>
       </Col>
     )

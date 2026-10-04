@@ -198,7 +198,13 @@ function Mise({ session }: { session: Session }) {
     <Menu
       mode="inline"
       selectedKeys={[
-        pathname.startsWith(lien('/fiches')) ? lien('/fiches') : pathname,
+        pathname.startsWith(lien('/fiches'))
+          ? lien('/fiches')
+          : // Un périmètre hors du menu s'ouvre depuis « Tous les périmètres ».
+            pathname.startsWith(lien('/perimetres/')) &&
+              !perimetres.some(p => lien(`/perimetres/${p.slug}`) === pathname)
+            ? lien('/perimetres')
+            : pathname,
       ]}
       items={entrees}
       onClick={({ key }) => {
