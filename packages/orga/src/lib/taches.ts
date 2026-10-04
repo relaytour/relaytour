@@ -1,10 +1,13 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { useApolloClient } from '@apollo/client/react'
 import { App } from 'antd'
 
 import { graphql } from '../gql'
 import type { StatutTache } from '../gql/graphql'
 
+import { lireConflit, texteConflit } from './conflit'
 import { messageErreur } from './erreurs'
+import { VUES_TACHES } from './rafraichissement'
 
 export const STATUTS: Record<
   StatutTache,
@@ -52,7 +55,7 @@ export function etatEcheance(
   return jours >= 0 && jours <= JOURS_ECHEANCE_PROCHE ? 'proche' : 'normale'
 }
 
-export { VUES_TACHES } from './rafraichissement'
+export { VUES_TACHES }
 
 export const TACHE_CHAMPS = graphql(`
   fragment TacheChamps on Tache {
@@ -61,6 +64,7 @@ export const TACHE_CHAMPS = graphql(`
     description
     echeance
     statut
+    version
     enRetard
     termineeLe
     peutModifier
@@ -121,6 +125,7 @@ export const MODIFIER_TACHE = graphql(`
     $description: String
     $echeance: Date
     $ficheId: ID
+    $versionAttendue: Int
     $confirmer: Boolean
   ) {
     modifierTache(
@@ -129,6 +134,7 @@ export const MODIFIER_TACHE = graphql(`
       description: $description
       echeance: $echeance
       ficheId: $ficheId
+      versionAttendue: $versionAttendue
       confirmer: $confirmer
     ) {
       ...TacheChamps
@@ -141,12 +147,14 @@ export const CHANGER_STATUT = graphql(`
     $id: ID!
     $statut: StatutTache!
     $realiseeParId: ID
+    $statutAttendu: StatutTache
     $confirmer: Boolean
   ) {
     changerStatutTache(
       id: $id
       statut: $statut
       realiseeParId: $realiseeParId
+      statutAttendu: $statutAttendu
       confirmer: $confirmer
     ) {
       ...TacheChamps
@@ -162,49 +170,92 @@ export const ASSIGNER_TACHE = graphql(`
   }
 `)
 
+/** Ce que l'action rejoue après une réponse de la personne. */
+export interface Reprise {
+  /** La personne accepte de modifier la tâche d'une autre personne. */
+  confirmer: boolean
+  /** Après un conflit de contenu : la version que le serveur vient d'annoncer. */
+  versionAttendue?: number
+  /** Après un conflit de statut : le statut que le serveur vient d'annoncer. */
+  statutAttendu?: StatutTache
+}
+
 /**
- * Exécute une action sur une tâche. Si l'API demande une confirmation (tâche
- * assignée à d'autres personnes), une fenêtre nomme ces personnes, puis l'action est
- * rejouée avec `confirmer: true`.
+ * Exécute une action sur une tâche, et la rejoue selon la réponse de la personne.
+ *
+ * Si l'API demande une confirmation (tâche assignée à d'autres personnes), une
+ * fenêtre nomme ces personnes, puis l'action est rejouée avec `confirmer: true`.
+ *
+ * Si l'API annonce un conflit (une autre personne a écrit depuis la lecture), une
+ * fenêtre dit ce qui a changé. « Écraser » rejoue l'action avec l'état annoncé.
+ * « Recharger » relit les vues des tâches, puis appelle `apresRechargement`.
  */
 export function useActionTache() {
   const { message, modal } = App.useApp()
+  const client = useApolloClient()
 
   return async function executer(
-    action: (confirmer: boolean) => Promise<unknown>,
-    succes?: string
+    action: (reprise: Reprise) => Promise<unknown>,
+    succes?: string,
+    options: { apresRechargement?: () => void } = {}
   ): Promise<boolean> {
-    try {
-      await action(false)
-      if (succes) message.success(succes)
-      return true
-    } catch (erreur) {
-      const premiere = CombinedGraphQLErrors.is(erreur)
-        ? erreur.errors[0]
-        : undefined
-      if (premiere?.extensions?.code !== 'CONFIRMATION_REQUISE') {
-        message.error(messageErreur(erreur))
-        return false
-      }
-      const personnes =
-        (premiere.extensions.personnes as string[] | undefined) ?? []
-      const confirme = await modal.confirm({
-        title: 'Cette tâche est assignée à d’autres personnes',
-        content: `${personnes.join(', ')} ${
-          personnes.length > 1 ? 'recevront' : 'recevra'
-        } un mail pour les prévenir de votre modification.`,
-        okText: 'Confirmer',
-        cancelText: 'Annuler',
-      })
-      if (!confirme) return false
+    const reprise: Reprise = { confirmer: false }
+    // Une confirmation, puis un conflit par écriture simultanée : la boucle s'arrête
+    // si les réponses du serveur se répètent.
+    for (let essai = 0; essai < 6; essai++) {
       try {
-        await action(true)
+        await action({ ...reprise })
         if (succes) message.success(succes)
         return true
-      } catch (e) {
-        message.error(messageErreur(e))
-        return false
+      } catch (erreur) {
+        const premiere = CombinedGraphQLErrors.is(erreur)
+          ? erreur.errors[0]
+          : undefined
+        const conflit = lireConflit(erreur)
+        if (conflit !== null) {
+          const { titre, texte } = texteConflit(conflit)
+          const ecraser = await modal.confirm({
+            title: titre,
+            content: texte,
+            okText: 'Écraser',
+            cancelText: 'Recharger',
+          })
+          if (!ecraser) {
+            await client
+              .refetchQueries({ include: VUES_TACHES })
+              .catch(() => undefined)
+            options.apresRechargement?.()
+            return false
+          }
+          if (conflit.nature === 'contenu') {
+            reprise.versionAttendue = conflit.versionCourante
+          } else {
+            reprise.statutAttendu = conflit.statutCourant
+          }
+          continue
+        }
+        if (
+          premiere?.extensions?.code !== 'CONFIRMATION_REQUISE' ||
+          reprise.confirmer
+        ) {
+          message.error(messageErreur(erreur))
+          return false
+        }
+        const personnes =
+          (premiere.extensions.personnes as string[] | undefined) ?? []
+        const confirme = await modal.confirm({
+          title: 'Cette tâche est assignée à d’autres personnes',
+          content: `${personnes.join(', ')} ${
+            personnes.length > 1 ? 'recevront' : 'recevra'
+          } un mail pour les prévenir de votre modification.`,
+          okText: 'Confirmer',
+          cancelText: 'Annuler',
+        })
+        if (!confirme) return false
+        reprise.confirmer = true
       }
     }
+    message.error('L’opération a échoué. Rechargez la page, puis réessayez.')
+    return false
   }
 }

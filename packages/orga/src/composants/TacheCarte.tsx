@@ -111,13 +111,16 @@ export default function TacheCarte({
     realisee?: string | null
   ) =>
     executer(
-      confirmer =>
+      reprise =>
         changerStatut({
           variables: {
             id: tache.id,
             statut: nouveau,
             realiseeParId: realisee ?? null,
-            confirmer,
+            confirmer: reprise.confirmer,
+            // Le statut affiché : le serveur refuse de changer un statut qu'une
+            // autre personne a modifié entre-temps.
+            statutAttendu: reprise.statutAttendu ?? tache.statut,
           },
         }),
       succes

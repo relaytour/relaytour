@@ -4,7 +4,10 @@ import { CombinedGraphQLErrors } from '@apollo/client/errors'
 export function messageErreur(erreur: unknown): string {
   if (CombinedGraphQLErrors.is(erreur)) {
     const premiere = erreur.errors[0]
-    if (premiere?.extensions?.code === 'SAISIE_INVALIDE')
+    if (
+      premiere?.extensions?.code === 'SAISIE_INVALIDE' ||
+      premiere?.extensions?.code === 'CONFLIT_VERSION'
+    )
       return premiere.message
     if (premiere?.extensions?.code === 'FORBIDDEN') {
       return 'Vous n’avez pas accès à cette action.'
