@@ -45,8 +45,7 @@ export interface CourrielJobData {
   // Activité qui porte le mail (ADR 0009) : son identité et son contact, qui reçoit
   // les réponses.
   activiteId?: string
-  // Fenêtre des changements annoncés par un mail d'équipe (ADR 0012), ou des
-  // demandes annoncées aux admins d'une activité (ADR 0016), en ISO 8601.
+  // Fenêtre des changements annoncés par un mail d'équipe (ADR 0012), en ISO 8601.
   fenetre?: { debut: string; fin: string }
 }
 

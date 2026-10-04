@@ -15,7 +15,6 @@ import {
 import { buildContext, type AppContext } from '../context.ts'
 import { composer } from '../courriel/messages.ts'
 import {
-  fenetreDemandes,
   PROPOSITIONS_EN_ATTENTE_MAX,
   purgerDemandes,
   signalerDemande,
@@ -281,21 +280,20 @@ describe('proposer une personne', () => {
     ])
     expect(await compter()).toEqual({ ...avant, demandes: avant.demandes + 1 })
     // Aucun mail ne part vers la personne proposée. L'admin a un mail différé
-    // jusqu'à la fin de l'heure où la proposition a été écrite.
+    // jusqu'à la fin de l'heure en cours.
     expect(enFile).toEqual([])
-    const fenetre = fenetreDemandes(demande!.createdAt.getTime())
     const mail = {
       cible: { userId: ids.admin },
       options: {
         organisationId: ids.org,
         activiteId: ids.activite,
-        jobId: `demandes-${ids.activite}-${ids.admin}-${Date.parse(fenetre.debut)}`,
+        jobId: expect.stringMatching(
+          new RegExp(`^demandes-${ids.activite}-${ids.admin}-\\d+$`)
+        ) as string,
         delai: expect.any(Number) as number,
-        fenetre,
       },
     }
     expect(mailsAdmins).toEqual([mail])
-    expect(demande!.perimetres[0]!.createdAt).toEqual(demande!.createdAt)
     // Une seconde proposition le même jour n'ajoute aucune notification. Son mail
     // porte le même identifiant de job tant que l'heure n'a pas changé : la file
     // n'en garde qu'un.
@@ -823,157 +821,133 @@ describe('purge des demandes d’une période archivée', () => {
 })
 
 // Le mail regroupé aux admins (ADR 0016) : un job par admin, par activité et par
-// heure. Les demandes de ce bloc sont datées de fenêtres passées : elles ne se mêlent
-// pas aux demandes des tests précédents.
+// heure. Le bloc a sa propre activité : son nombre de demandes en attente ne dépend
+// pas des tests précédents.
 describe('mail regroupé aux admins', () => {
-  const fenetre = fenetreDemandes(Date.parse('2027-03-01T10:30:00Z'))
-  const seule = fenetreDemandes(Date.parse('2027-03-02T10:30:00Z'))
-  const mail = (userId: string, f = fenetre) =>
+  const gala = { id: '', slug: `${slug}-gala` }
+  const mail = (userId: string) =>
     composer(prisma, {
       sorte: 'demandes',
       userId,
       organisationId: ids.org,
-      activiteId: ids.activite,
-      fenetre: f,
+      activiteId: gala.id,
     })
+  const signaler = (instant: string, acteurId?: string) =>
+    signalerDemande(
+      prisma,
+      { organisationId: ids.org, activiteId: gala.id, acteurId },
+      new Date(instant)
+    )
+  const jobDe = (heure: string) =>
+    `demandes-${gala.id}-${ids.admin}-${Date.parse(heure)}`
 
   beforeAll(async () => {
+    gala.id = (
+      await prisma.activite.create({
+        data: {
+          organisationId: ids.org,
+          slug: gala.slug,
+          nom: 'Gala',
+          groupes: [],
+        },
+      })
+    ).id
+    const editions: Record<string, string> = {}
+    for (const [annee, statut] of [
+      [2027, 'PREPARATION'],
+      [2025, 'ARCHIVEE'],
+    ] as const) {
+      editions[statut] = (
+        await prisma.edition.create({
+          data: {
+            organisationId: ids.org,
+            activiteId: gala.id,
+            annee,
+            nom: `Gala ${annee}`,
+            debut: new Date(`${annee}-05-01`),
+            fin: new Date(`${annee}-05-02`),
+            statut,
+          },
+        })
+      ).id
+    }
     const base = {
       organisationId: ids.org,
-      activiteId: ids.activite,
-      editionId: ids.edition,
+      activiteId: gala.id,
+      editionId: editions.PREPARATION!,
+      origine: 'FORMULAIRE' as const,
       nom: 'Nom Secret',
     }
-    const le = (heure: string) => new Date(`2027-03-01T${heure}:00Z`)
-    // Une demande du formulaire, déposée pendant la fenêtre.
-    await prisma.demande.create({
-      data: {
-        ...base,
-        origine: 'FORMULAIRE',
-        adresse: adresse('mail-a'),
-        adresseEnAttente: adresse('mail-a'),
-        createdAt: le('10:15'),
-      },
-    })
-    // Une demande plus ancienne, complétée pendant la fenêtre par une proposition.
-    await prisma.demande.create({
-      data: {
-        ...base,
-        origine: 'PROPOSITION',
-        adresse: adresse('mail-b'),
-        adresseEnAttente: adresse('mail-b'),
-        createdAt: le('09:30'),
-        perimetres: {
-          create: {
-            perimetreId: ids.natation,
-            proposeParId: ids.alice,
-            createdAt: le('10:20'),
-          },
+    // Deux demandes en attente, une demande refusée, et une demande d'une période
+    // archivée.
+    for (const cle of ['gala-a', 'gala-b']) {
+      await prisma.demande.create({
+        data: {
+          ...base,
+          adresse: adresse(cle),
+          adresseEnAttente: adresse(cle),
         },
-      },
-    })
-    // Une proposition de l'admin lui-même : elle ne lui est pas annoncée.
+      })
+    }
     await prisma.demande.create({
-      data: {
-        ...base,
-        origine: 'PROPOSITION',
-        adresse: adresse('mail-c'),
-        adresseEnAttente: adresse('mail-c'),
-        createdAt: le('10:25'),
-        perimetres: {
-          create: {
-            perimetreId: ids.basket,
-            proposeParId: ids.admin,
-            createdAt: le('10:25'),
-          },
-        },
-      },
-    })
-    // Une demande déjà refusée, et une demande d'une période archivée.
-    await prisma.demande.create({
-      data: {
-        ...base,
-        origine: 'FORMULAIRE',
-        statut: 'REFUSEE',
-        adresse: adresse('mail-d'),
-        createdAt: le('10:30'),
-      },
+      data: { ...base, statut: 'REFUSEE', adresse: adresse('gala-c') },
     })
     await prisma.demande.create({
       data: {
         ...base,
-        editionId: ids.archivee,
-        origine: 'FORMULAIRE',
-        adresse: adresse('mail-e'),
-        adresseEnAttente: adresse('mail-e'),
-        createdAt: le('10:40'),
-      },
-    })
-    // Le lendemain, une seule demande.
-    await prisma.demande.create({
-      data: {
-        ...base,
-        origine: 'FORMULAIRE',
-        adresse: adresse('mail-f'),
-        adresseEnAttente: adresse('mail-f'),
-        createdAt: new Date('2027-03-02T10:05:00Z'),
+        editionId: editions.ARCHIVEE!,
+        adresse: adresse('gala-d'),
+        adresseEnAttente: adresse('gala-d'),
       },
     })
   })
 
-  it('place le mail dans la fenêtre de l’instant écrit avec la demande', async () => {
-    // La demande est écrite juste avant 11 h, et signalée juste après.
-    await signalerDemande(
-      prisma,
-      {
-        organisationId: ids.org,
-        activiteId: ids.activite,
-        instant: new Date('2027-03-01T10:59:59.900Z'),
-      },
-      new Date('2027-03-01T11:00:00.100Z')
-    )
+  it('place un mail par admin et par heure, à la fin de l’heure du signalement', async () => {
+    // Le signalement suit la validation de la demande : un signalement de 10 h 59
+    // rejoint le mail de 11 h, et celui de 11 h le mail de midi.
+    await signaler('2027-03-01T10:59:59.900Z')
+    await signaler('2027-03-01T11:00:00.100Z')
     expect(mailsAdmins).toEqual([
       {
         cible: { userId: ids.admin },
         options: {
           organisationId: ids.org,
-          activiteId: ids.activite,
-          jobId: `demandes-${ids.activite}-${ids.admin}-${Date.parse('2027-03-01T10:00:00Z')}`,
-          delai: 4_900,
-          fenetre: {
-            debut: '2027-03-01T10:00:00.000Z',
-            fin: '2027-03-01T11:00:00.000Z',
-          },
+          activiteId: gala.id,
+          jobId: jobDe('2027-03-01T10:00:00Z'),
+          delai: 100,
+        },
+      },
+      {
+        cible: { userId: ids.admin },
+        options: {
+          organisationId: ids.org,
+          activiteId: gala.id,
+          jobId: jobDe('2027-03-01T11:00:00Z'),
+          delai: 3_599_900,
         },
       },
     ])
   })
 
   it('ne prévient pas l’admin de sa propre proposition', async () => {
-    await signalerDemande(prisma, {
-      organisationId: ids.org,
-      activiteId: ids.activite,
-      acteurId: ids.admin,
-    })
+    await signaler('2027-03-01T12:30:00Z', ids.admin)
     expect(mailsAdmins).toEqual([])
   })
 
-  it('compte les demandes de la fenêtre qui attendent encore, sans citer personne', async () => {
+  it('compte les demandes en attente à l’envoi, sans citer personne', async () => {
     const message = await mail(ids.admin)
     expect(message?.sujet).toMatch(/^Demandes pour rejoindre l’équipe .+$/)
     expect(message?.texte).toContain(
-      'L’activité Tournoi a reçu 2 demandes pour rejoindre son équipe. Elles attendent votre décision.'
+      '2 demandes pour rejoindre l’équipe de l’activité Gala attendent votre décision.'
     )
-    expect(message?.texte).toContain(`/${slug}/admin/personnes?onglet=demandes`)
+    expect(message?.texte).toContain(
+      `/${gala.slug}/admin/personnes?onglet=demandes`
+    )
     expect(message?.desabonnement).toMatch(/\/preferences$/)
     for (const corps of [message?.texte, message?.html]) {
       expect(corps).not.toContain('Secret')
       expect(corps).not.toContain('@exemple.fr')
     }
-    const unique = await mail(ids.admin, seule)
-    expect(unique?.texte).toContain(
-      'L’activité Tournoi a reçu une demande pour rejoindre son équipe. Elle attend votre décision.'
-    )
   })
 
   it('note l’envoi sur la notification de l’admin', async () => {
@@ -981,32 +955,29 @@ describe('mail regroupé aux admins', () => {
       prisma.notification.count({
         where: {
           userId: ids.admin,
-          activiteId: ids.activite,
+          activiteId: gala.id,
           type: 'DEMANDE_RECUE',
           envoyeeLe: null,
         },
       })
-    expect(await enAttente()).toBeGreaterThan(0)
+    expect(await enAttente()).toBe(1)
     await (await mail(ids.admin))?.apresEnvoi?.()
     expect(await enAttente()).toBe(0)
   })
 
-  it('n’envoie rien sans demande en attente, ni à une personne qui n’administre pas l’activité', async () => {
-    const vide = fenetreDemandes(Date.parse('2027-03-03T10:30:00Z'))
-    expect(await mail(ids.admin, vide)).toBeNull()
+  it('n’envoie rien à une personne qui n’administre pas l’activité', async () => {
     expect(await mail(ids.alice)).toBeNull()
-
     // Avec un admin d'activité, l'admin de l'organisation n'est plus prévenu : le
-    // rôle se relit à l'envoi. La proposition de l'admin compte pour bruno.
+    // rôle se relit à l'envoi.
     const nomination = await prisma.adminActivite.create({
       data: {
         userId: ids.bruno,
-        activiteId: ids.activite,
+        activiteId: gala.id,
         organisationId: ids.org,
       },
     })
     expect(await mail(ids.admin)).toBeNull()
-    expect((await mail(ids.bruno))?.texte).toContain('a reçu 3 demandes')
+    expect((await mail(ids.bruno))?.texte).toContain('2 demandes')
     await prisma.adminActivite.delete({ where: { id: nomination.id } })
     expect(await mail(ids.bruno)).toBeNull()
   })
@@ -1031,5 +1002,20 @@ describe('mail regroupé aux admins', () => {
       modifierPreferencesNotification: { mailDemandes: true },
     })
     expect(await mail(ids.admin)).not.toBeNull()
+  })
+
+  it('n’annonce pas une demande déjà traitée', async () => {
+    const traiter = (cle: string) =>
+      prisma.demande.updateMany({
+        where: { activiteId: gala.id, adresseEnAttente: adresse(cle) },
+        data: { statut: 'REFUSEE', adresseEnAttente: null },
+      })
+    await traiter('gala-a')
+    expect((await mail(ids.admin))?.texte).toContain(
+      'Une demande pour rejoindre l’équipe de l’activité Gala attend votre décision.'
+    )
+    // Sans demande en attente dans une période ouverte, aucun mail ne part.
+    await traiter('gala-b')
+    expect(await mail(ids.admin)).toBeNull()
   })
 })

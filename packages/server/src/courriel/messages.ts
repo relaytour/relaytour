@@ -2,7 +2,7 @@ import type { PrismaClient } from '@relaytour/database'
 
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
-import { adminsAPrevenir, demandesRecues } from '../lib/demandes.ts'
+import { adminsAPrevenir, demandesEnAttente } from '../lib/demandes.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import {
   changementsEquipe,
@@ -203,8 +203,8 @@ export async function composer(
   }
 
   if (job.sorte === 'demandes') {
-    if (job.fenetre === undefined || job.activiteId === undefined) {
-      throw new Error('Le mail « demandes » exige une fenêtre et une activité.')
+    if (job.activiteId === undefined) {
+      throw new Error('Le mail « demandes » exige une activité.')
     }
     if (!job.userId) return null
     const userId = job.userId
@@ -222,14 +222,10 @@ export async function composer(
       activite.id
     )
     if (!admins.includes(userId)) return null
-    // Une demande traitée pendant la fenêtre ne s'annonce pas. Le mail porte un
-    // nombre et un lien : il ne cite aucune personne qui n'est pas membre.
-    const nombre = await demandesRecues(
-      prisma,
-      activite.id,
-      job.fenetre,
-      userId
-    )
+    // Le mail compte les demandes qui attendent au moment de l'envoi : une demande
+    // déjà traitée ne s'annonce pas. Il porte un nombre et un lien, et ne cite
+    // aucune personne qui n'est pas membre.
+    const nombre = await demandesEnAttente(prisma, activite.id)
     if (nombre === 0) return null
     const personne = await prisma.user.findUniqueOrThrow({
       where: { id: userId },
@@ -238,8 +234,8 @@ export async function composer(
     variables.nom = personne.name
     variables.annonce =
       nombre === 1
-        ? `L’activité ${activite.nom} a reçu une demande pour rejoindre son équipe. Elle attend votre décision.`
-        : `L’activité ${activite.nom} a reçu ${nombre} demandes pour rejoindre son équipe. Elles attendent votre décision.`
+        ? `Une demande pour rejoindre l’équipe de l’activité ${activite.nom} attend votre décision.`
+        : `${nombre} demandes pour rejoindre l’équipe de l’activité ${activite.nom} attendent votre décision.`
     variables.lienDemandes = `${origine}/${activite.slug}/admin/personnes?onglet=demandes`
     variables.lienPreferences = lienPreferences
     desabonnement = lienPreferences

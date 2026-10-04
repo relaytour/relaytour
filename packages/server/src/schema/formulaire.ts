@@ -339,13 +339,10 @@ builder.mutationField('envoyerDemande', t =>
 
       await exigerDebitRaisonnable(ctx, formulaire, email)
 
-      let instant: Date
       try {
-        instant = await prisma.$transaction(async tx => {
+        await prisma.$transaction(async tx => {
           await tx.$queryRaw`SELECT id FROM Activite WHERE id = ${formulaire.activiteId} FOR UPDATE`
           await exigerPlaceDansLActivite(tx, formulaire.activiteId)
-          // L'instant écrit avec la demande fixe la fenêtre du mail aux admins.
-          const ecritLe = new Date()
           await tx.demande.create({
             data: {
               organisationId: formulaire.organisationId,
@@ -363,16 +360,13 @@ builder.mutationField('envoyerDemande', t =>
                   : (formulaire.formulaire.question ?? null),
               reponse,
               texte,
-              createdAt: ecritLe,
               perimetres: {
                 create: perimetreIds.map(perimetreId => ({
                   perimetreId: perimetreId!,
-                  createdAt: ecritLe,
                 })),
               },
             },
           })
-          return ecritLe
         })
       } catch (erreur) {
         // P2002 : une demande attend déjà pour cette adresse et cette période. La
@@ -391,7 +385,6 @@ builder.mutationField('envoyerDemande', t =>
       await signalerDemande(prisma, {
         organisationId: formulaire.organisationId,
         activiteId: formulaire.activiteId,
-        instant,
       })
       return true
     },

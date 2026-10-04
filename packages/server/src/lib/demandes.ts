@@ -32,28 +32,26 @@ export function motValide(brut: string | null | undefined): string | null {
 }
 
 // Mail regroupé aux admins (ADR 0016). Les demandes d'une activité se regroupent par
-// fenêtre fixe d'une heure : la première demande d'une fenêtre place un mail différé
-// jusqu'à sa fin, les suivantes retrouvent le même identifiant de job et BullMQ les
-// ignore. À l'envoi, le mail compte les demandes reçues pendant la fenêtre qui
-// attendent encore : une demande traitée entre-temps ne s'annonce pas.
+// fenêtre fixe d'une heure : le premier signalement d'une fenêtre place un mail
+// différé jusqu'à sa fin, les suivants retrouvent le même identifiant de job et
+// BullMQ les ignore. À l'envoi, le mail compte les demandes en attente de
+// l'activité : une demande traitée entre-temps ne s'annonce pas.
+//
+// La fenêtre se déduit de l'heure du signalement, qui suit la validation de la
+// transaction. Le mail d'une fenêtre part à sa fin : toute demande signalée pendant
+// la fenêtre est donc déjà en base quand il se compose, et aucun signalement ne
+// retrouve l'identifiant d'un job déjà traité.
 
 export const FENETRE_DEMANDES_MS = 60 * 60 * 1000
-/** Marge après la fin de la fenêtre, pour qu'une écriture de la dernière seconde soit lue. */
-const MARGE_MS = 5_000
 
-export interface FenetreDemandes {
-  debut: string
-  fin: string
-}
-
-/** La fenêtre de regroupement qui contient l'instant donné. */
-export function fenetreDemandes(maintenant = Date.now()): FenetreDemandes {
+/** Le début et la fin, en millisecondes, de la fenêtre qui contient l'instant donné. */
+export function fenetreDemandes(maintenant = Date.now()): {
+  debut: number
+  fin: number
+} {
   const debut =
     Math.floor(maintenant / FENETRE_DEMANDES_MS) * FENETRE_DEMANDES_MS
-  return {
-    debut: new Date(debut).toISOString(),
-    fin: new Date(debut + FENETRE_DEMANDES_MS).toISOString(),
-  }
+  return { debut, fin: debut + FENETRE_DEMANDES_MS }
 }
 
 /**
@@ -80,32 +78,16 @@ export async function adminsAPrevenir(
   return admins.map(a => a.userId)
 }
 
-/**
- * Le nombre de demandes d'une activité reçues pendant une fenêtre et encore en
- * attente, pour le mail d'un admin. Une demande compte par sa date de dépôt, ou par
- * la date d'une proposition qui la complète. Les propositions de l'admin lui-même ne
- * comptent pas : il les connaît.
- */
-export function demandesRecues(
+/** Le nombre de demandes d'une activité qui attendent une décision. */
+export function demandesEnAttente(
   prisma: PrismaClient,
-  activiteId: string,
-  fenetre: FenetreDemandes,
-  adminId: string
+  activiteId: string
 ): Promise<number> {
-  const pendant = { gte: new Date(fenetre.debut), lt: new Date(fenetre.fin) }
   return prisma.demande.count({
     where: {
       activiteId,
       statut: 'EN_ATTENTE',
       edition: { statut: { not: 'ARCHIVEE' } },
-      OR: [
-        { origine: 'FORMULAIRE', createdAt: pendant },
-        {
-          perimetres: {
-            some: { createdAt: pendant, proposeParId: { not: adminId } },
-          },
-        },
-      ],
     },
   })
 }
@@ -117,18 +99,12 @@ export function demandesRecues(
  * heure (ADR 0016). Ne lève jamais : une notification manquée ne doit pas faire
  * échouer la demande.
  *
- * `instant` est la date écrite en base avec la demande ou avec la proposition : la
- * fenêtre du mail se déduit d'elle, jamais de l'heure du signalement, sinon une
- * demande écrite juste avant la fin d'une fenêtre serait cherchée dans la suivante.
+ * L'appel suit la validation de la transaction qui écrit la demande : le mail de la
+ * fenêtre en cours la trouvera en base.
  */
 export async function signalerDemande(
   prisma: PrismaClient,
-  demande: {
-    organisationId: string
-    activiteId: string
-    acteurId?: string
-    instant?: Date
-  },
+  demande: { organisationId: string; activiteId: string; acteurId?: string },
   maintenant = new Date()
 ): Promise<void> {
   const { organisationId, activiteId, acteurId } = demande
@@ -140,7 +116,7 @@ export async function signalerDemande(
       select: { fuseauHoraire: true },
     })
     const jour = aujourdhui(maintenant, fuseauHoraire)
-    const fenetre = fenetreDemandes((demande.instant ?? maintenant).getTime())
+    const fenetre = fenetreDemandes(maintenant.getTime())
     for (const userId of admins) {
       if (userId === acteurId) continue
       // BullMQ refuse « : » dans un identifiant de job. Le worker relit la
@@ -151,9 +127,8 @@ export async function signalerDemande(
         {
           organisationId,
           activiteId,
-          jobId: `demandes-${activiteId}-${userId}-${Date.parse(fenetre.debut)}`,
-          delai: Date.parse(fenetre.fin) - maintenant.getTime() + MARGE_MS,
-          fenetre,
+          jobId: `demandes-${activiteId}-${userId}-${fenetre.debut}`,
+          delai: fenetre.fin - maintenant.getTime(),
         }
       )
       try {

@@ -267,10 +267,8 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
 
       // Deux propositions simultanées de la même adresse créent la demande deux
-      // fois : la seconde se rejoue et s'ajoute à la demande de la première. La
-      // transaction renvoie l'instant écrit avec la proposition quand les admins
-      // sont à prévenir, sinon null.
-      const instant = await rejouerSurDoublon(() =>
+      // fois : la seconde se rejoue et s'ajoute à la demande de la première.
+      const nouvelle = await rejouerSurDoublon(() =>
         prisma.$transaction(async tx => {
           // Le verrou sur la personne rend le plafond exact.
           await tx.$queryRaw`SELECT id FROM User WHERE id = ${acteur.id} FOR UPDATE`
@@ -285,13 +283,7 @@ builder.mutationFields(t => ({
               `Vous avez déjà ${PROPOSITIONS_EN_ATTENTE_MAX} propositions en attente. Un admin doit d’abord les traiter.`
             )
           }
-          const ecritLe = new Date()
-          const ligne = {
-            perimetreId,
-            proposeParId: acteur.id,
-            mot,
-            createdAt: ecritLe,
-          }
+          const ligne = { perimetreId, proposeParId: acteur.id, mot }
           const enCours = await tx.demande.findUnique({
             where: {
               editionId_adresseEnAttente: {
@@ -326,30 +318,28 @@ builder.mutationFields(t => ({
                 nom,
                 adresse: email,
                 adresseEnAttente: email,
-                createdAt: ecritLe,
                 perimetres: { create: ligne },
               },
             })
-            return ecritLe
+            return true
           }
           // Chaque personne qui propose a sa ligne : sa liste se comporte comme
           // pour une adresse inconnue. Les admins ne sont prévenus que d'un
           // périmètre nouveau pour la demande.
           if (demande.perimetres.some(l => l.proposeParId === acteur.id)) {
-            return null
+            return false
           }
           await tx.demandePerimetre.create({
             data: { demandeId: demande.id, ...ligne },
           })
-          return demande.perimetres.length === 0 ? ecritLe : null
+          return demande.perimetres.length === 0
         })
       )
-      if (instant !== null) {
+      if (nouvelle) {
         await signalerDemande(prisma, {
           organisationId,
           activiteId: edition.activiteId,
           acteurId: acteur.id,
-          instant,
         })
       }
       return true

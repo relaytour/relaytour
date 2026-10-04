@@ -27,7 +27,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "Un mail regroupé prévient les admins des demandes reçues",
-            "texte": "Quand une activité reçoit des demandes pour rejoindre son équipe, ses admins reçoivent un mail, une fois par heure au plus. Le mail donne le nombre de demandes reçues et un lien vers l'onglet « Demandes ». Il ne cite aucune personne. Chaque admin le désactive dans ses préférences.",
+            "texte": "Quand une activité reçoit des demandes pour rejoindre son équipe, ses admins reçoivent un mail, une fois par heure au plus. Le mail donne le nombre de demandes en attente et un lien vers l'onglet « Demandes ». Il ne cite aucune personne. Chaque admin le désactive dans ses préférences.",
             "migration": null
           }
         },
