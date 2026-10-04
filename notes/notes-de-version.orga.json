@@ -32,6 +32,18 @@
           }
         },
         {
+          "id": "2026-10-04-orga-un-formulaire-public-recueille-les-demandes-pour-rejoindre-l",
+          "date": "2026-10-04",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un formulaire public recueille les demandes pour rejoindre l'équipe",
+            "texte": "Dans l'écran « Activités », vous ouvrez le formulaire public de votre activité et copiez son adresse. Une personne extérieure le remplit sans compte : son prénom et son nom, son adresse, les périmètres qui l'intéressent, sa disponibilité et ce qu'elle sait faire. Vous réglez le texte d'introduction, une question complémentaire et les paliers de disponibilité. La demande arrive dans l'onglet « Demandes » de l'écran « Personnes », avec ses réponses. La personne ne reçoit aucun mail avant votre décision. Le formulaire est fermé par défaut.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-04-orga-l-ecran-equipe-reunit-les-postes-a-pourvoir-et-le-reglage-de",
           "date": "2026-10-04",
           "type": "fonctionnalite",
