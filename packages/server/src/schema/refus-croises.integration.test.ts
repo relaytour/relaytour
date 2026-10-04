@@ -35,6 +35,8 @@ const a = {
   tache: '',
   affectation: '',
   souhait: '',
+  demande: '',
+  proposition: '',
   droit: '',
   notification: '',
   admin: '',
@@ -238,6 +240,23 @@ beforeAll(async () => {
       },
     })
   ).id
+  const demande = await prisma.demande.create({
+    data: {
+      organisationId: a.org,
+      activiteId: a.activite,
+      editionId: a.edition,
+      origine: 'PROPOSITION',
+      nom: 'Personne proposée',
+      adresse: 'proposee-refus@exemple.fr',
+      adresseEnAttente: 'proposee-refus@exemple.fr',
+      perimetres: {
+        create: { perimetreId: a.perimetre, proposeParId: a.referente },
+      },
+    },
+    include: { perimetres: true },
+  })
+  a.demande = demande.id
+  a.proposition = demande.perimetres[0]!.id
   a.droit = (
     await prisma.droitRedaction.create({
       data: { organisationId: a.org, userId: a.referente, perimetreId: null },
@@ -269,6 +288,9 @@ afterAll(async () => {
   })
   await prisma.souhait.deleteMany({
     where: { perimetre: { organisationId: { in: organisations } } },
+  })
+  await prisma.demande.deleteMany({
+    where: { organisationId: { in: organisations } },
   })
   await prisma.affectation.deleteMany({
     where: { perimetre: { organisationId: { in: organisations } } },
@@ -335,6 +357,13 @@ const CAS: Cas[] = [
     query:
       'mutation ($u: ID!, $p: ID) { accorderDroitRedaction(personneId: $u, perimetreId: $p) { id } }',
     variables: () => ({ u: a.referente, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'accepterDemande',
+    query:
+      'mutation ($id: ID!, $p: [ID!]!) { accepterDemande(id: $id, affecter: $p) { id } }',
+    variables: () => ({ id: a.demande, p: [a.perimetre] }),
     attente: INTERDIT,
   },
   {
@@ -559,6 +588,25 @@ const CAS: Cas[] = [
     attente: { sansEffet: d => expect(d.retirerDroitRedaction).toBe(false) },
   },
   {
+    operation: 'proposerPersonne',
+    query:
+      'mutation ($p: ID!, $e: ID!) { proposerPersonne(perimetreId: $p, editionId: $e, nom: "Intrusion", email: "intrusion-refus@exemple.fr") }',
+    variables: () => ({ p: a.perimetre, e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'refuserDemande',
+    query: 'mutation ($id: ID!) { refuserDemande(id: $id) { id } }',
+    variables: () => ({ id: a.demande }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'retirerProposition',
+    query: 'mutation ($id: ID!) { retirerProposition(id: $id) }',
+    variables: () => ({ id: a.proposition }),
+    attente: { sansEffet: d => expect(d.retirerProposition).toBe(false) },
+  },
+  {
     operation: 'retirerMonSouhait',
     query:
       'mutation ($p: ID!, $e: ID!) { retirerMonSouhait(perimetreId: $p, editionId: $e) }',
@@ -572,6 +620,13 @@ const CAS: Cas[] = [
     attente: { sansEffet: d => expect(d.retirerSouhait).toBe(false) },
   },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  {
+    operation: 'mesPropositions',
+    query:
+      'query ($p: ID!, $e: ID!) { mesPropositions(perimetreId: $p, editionId: $e) { id } }',
+    variables: () => ({ p: a.perimetre, e: a.edition }),
+    attente: INTERDIT,
+  },
   ...(
     [
       ['affectations', 'affectations(editionId: $e) { id }'],
@@ -581,6 +636,7 @@ const CAS: Cas[] = [
         'avancementGlobal(editionId: $e) { perimetre { id } }',
       ],
       ['classement', 'classement(editionId: $e) { rang }'],
+      ['demandes', 'demandes(editionId: $e) { id adresse }'],
       ['mesTaches', 'mesTaches(editionId: $e) { id }'],
       ['monScore', 'monScore(editionId: $e) { points }'],
       ['postesAPourvoir', 'postesAPourvoir(editionId: $e) { etat }'],
@@ -686,6 +742,13 @@ async function etatDeA() {
         }),
         prisma.user.count({ where: { email: 'intrusion-refus@exemple.fr' } }),
         prisma.adminActivite.count({ where: { organisationId: a.org } }),
+        prisma.demande.count({ where: { organisationId: a.org } }),
+        prisma.demande.count({
+          where: { organisationId: a.org, statut: 'EN_ATTENTE' },
+        }),
+        prisma.demandePerimetre.count({
+          where: { demande: { organisationId: a.org } },
+        }),
       ]),
     ])
   return JSON.stringify({

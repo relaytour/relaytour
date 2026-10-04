@@ -122,6 +122,8 @@ export interface NotificationAComposer {
     echeance: Date | null
     perimetre: { nom: string; slug: string; activite: { slug: string } }
   } | null
+  /** Pour DEMANDE_RECUE : l'activité dont la file de demandes attend une revue. */
+  activite: { slug: string; nom: string } | null
 }
 
 function dateLongue(date: Date): string {
@@ -141,6 +143,13 @@ export function messageNotification(
   noms: Map<string, string>,
   moiId: string
 ): string {
+  // Une demande porte le nom d'une personne qui n'est pas membre : la notification
+  // ne le cite pas, et renvoie vers la file de revue.
+  if (n.type === 'DEMANDE_RECUE') {
+    return n.activite === null
+      ? 'Une demande pour rejoindre l’équipe attend votre revue.'
+      : `Une demande pour rejoindre l’équipe de ${n.activite.nom} attend votre revue.`
+  }
   const tache = n.tache
   if (tache === null) return 'Cette tâche n’existe plus.'
   const titre = `« ${tache.titre} » (${tache.perimetre.nom})`
@@ -176,9 +185,16 @@ export function messageNotification(
   }
 }
 
-/** Chemin de l'espace organisateur vers lequel renvoie une notification. */
-/** Le lien d'une notification, sous le slug de l'activité du périmètre (ADR 0008). */
+/**
+ * Chemin de l'espace organisateur vers lequel renvoie une notification, sous le slug
+ * de son activité (ADR 0008) : le périmètre d'une tâche, ou la file des demandes.
+ */
 export function lienNotification(n: NotificationAComposer): string {
+  if (n.type === 'DEMANDE_RECUE') {
+    return n.activite
+      ? `/${n.activite.slug}/admin/personnes?onglet=demandes`
+      : '/'
+  }
   return n.tache
     ? `/${n.tache.perimetre.activite.slug}/perimetres/${n.tache.perimetre.slug}`
     : '/'

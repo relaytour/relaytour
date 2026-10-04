@@ -32,6 +32,8 @@ interface PostesPerimetre {
   affectations: Affectation[]
   /** Souhaits non satisfaits de personnes non archivées. */
   souhaits: Souhait[]
+  /** Demandes en attente qui citent ce périmètre (ADR 0015). */
+  demandesEnAttente: number
   /** null : l'effectif n'a été ni importé ni défini pour cette édition. */
   effectif: number | null
   aPourvoir: number
@@ -56,6 +58,10 @@ const PostesPerimetreRef = builder
         description:
           'Souhaits en attente : la personne n’est pas encore affectée à ce périmètre. Les comptes archivés sont exclus.',
         resolve: p => p.souhaits,
+      }),
+      demandesEnAttente: t.exposeInt('demandesEnAttente', {
+        description:
+          'Nombre de demandes pour rejoindre l’équipe qui citent ce périmètre et attendent une revue (ADR 0015).',
       }),
       effectif: t.exposeInt('effectif', {
         nullable: true,
@@ -96,26 +102,35 @@ async function chargerPostes(
     groupes: lireGroupes(ligneActivite.groupes),
   }
 
-  const [perimetres, affectations, effectifs, souhaits] = await Promise.all([
-    prisma.perimetre.findMany({
-      where: { activiteId: edition.activiteId, archivedAt: null },
-    }),
-    // Un compte archivé ne tient plus son périmètre : il ne compte pas comme poste pourvu.
-    prisma.affectation.findMany({
-      where: { editionId, user: { archivedAt: null } },
-      include: { user: true },
-      orderBy: { createdAt: 'asc' },
-    }),
-    prisma.effectifPerimetre.findMany({ where: { editionId } }),
-    prisma.souhait.findMany({
-      where: { editionId, user: { archivedAt: null } },
-      include: { user: true },
-      orderBy: { createdAt: 'asc' },
-    }),
-  ])
+  const [perimetres, affectations, effectifs, souhaits, demandes] =
+    await Promise.all([
+      prisma.perimetre.findMany({
+        where: { activiteId: edition.activiteId, archivedAt: null },
+      }),
+      // Un compte archivé ne tient plus son périmètre : il ne compte pas comme poste pourvu.
+      prisma.affectation.findMany({
+        where: { editionId, user: { archivedAt: null } },
+        include: { user: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.effectifPerimetre.findMany({ where: { editionId } }),
+      prisma.souhait.findMany({
+        where: { editionId, user: { archivedAt: null } },
+        include: { user: true },
+        orderBy: { createdAt: 'asc' },
+      }),
+      prisma.demandePerimetre.groupBy({
+        by: ['perimetreId'],
+        where: { demande: { editionId, statut: 'EN_ATTENTE' } },
+        _count: { _all: true },
+      }),
+    ])
 
   const effectifParPerimetre = new Map(
     effectifs.map(e => [e.perimetreId, e.effectif])
+  )
+  const demandesParPerimetre = new Map(
+    demandes.map(d => [d.perimetreId, d._count._all])
   )
   // Un souhait est satisfait dès que l'affectation du même triplet existe.
   const affectes = new Set(
@@ -132,6 +147,7 @@ async function chargerPostes(
           souhait.perimetreId === perimetre.id &&
           !affectes.has(`${souhait.userId}|${souhait.perimetreId}`)
       ),
+      demandesEnAttente: demandesParPerimetre.get(perimetre.id) ?? 0,
       effectif,
       ...etatPostes(effectif, duPerimetre.length),
     }
