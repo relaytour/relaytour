@@ -49,19 +49,18 @@
           <span class="etiquette">Point de départ</span>
           <h2 id="t-ou">Où se trouvent vos écrans</h2>
           <p class="texte">
-            Le groupe <strong>Administration</strong> apparaît dans le menu de gauche quand vous administrez l'activité affichée. Toutes ses adresses commencent par l'identifiant de l'activité, par exemple <span class="route">/rencontres/admin/postes</span>.
+            Le groupe <strong>Administration</strong> apparaît dans le menu de gauche quand vous administrez l'activité affichée. Toutes ses adresses commencent par l'identifiant de l'activité, par exemple <span class="route">/rencontres/admin/equipe</span>.
           </p>
           <p class="texte">
             Le libellé des périodes suit la nature de l'activité : <strong>Éditions</strong> pour un événement, <strong>Saisons</strong> pour une section, <strong>Mandats</strong> pour une instance. Les exemples ci-dessous emploient « édition ».
           </p>
         </div>
         <nav class="verre sommaire" aria-label="Sommaire">
-          <span class="etiquette">Vos huit écrans</span>
+          <span class="etiquette">Vos sept écrans</span>
           <ol>
             <li><a href="#e-avancement">Avancement</a> : l'état de chaque périmètre sur la période.</li>
             <li><a href="#e-editions">Éditions</a> : ouvrir et dater les périodes de l'activité.</li>
-            <li><a href="#e-perimetres">Périmètres</a> : créer les sports, les pôles ou les commissions.</li>
-            <li><a href="#e-postes">Postes à pourvoir</a> : effectifs, souhaits et affectations.</li>
+            <li><a href="#e-equipe">Équipe</a> : effectifs, souhaits, affectations et réglage des périmètres.</li>
             <li><a href="#e-personnes">Personnes</a> : inviter votre équipe et relancer les invitations.</li>
             <li><a href="#e-redaction">Rédaction</a> : accorder un droit d'écriture sur les fiches d'un périmètre.</li>
             <li><a href="#e-historique">Historique d'une fiche</a> : consulter et restaurer une version.</li>
@@ -99,23 +98,9 @@
           </figure>
         </article>
 
-        <article class="verre ecran" id="e-perimetres">
-          <div class="ecran-tete"><h3>Périmètres</h3><span class="route">/&lt;activité&gt;/admin/perimetres</span></div>
-          <p>Un périmètre est une partie de l'activité, rangée dans un groupe. Il reste le même d'une période à l'autre, ce qui permet à l'historique de le suivre. Le tableau affiche la couleur, le nom, l'identifiant, le groupe, l'ordre et l'état.</p>
-          <ul class="gestes">
-            <li><span><span class="libelle">Nouveau périmètre</span></span><span>Saisir le nom, l'identifiant, le groupe, la description, la couleur et l'ordre d'affichage. La description présente le périmètre en une ou deux phrases.</span></li>
-            <li><span><span class="libelle">Enregistrer</span></span><span>Modifier un périmètre, ou l'archiver. Un périmètre archivé disparaît des listes et son historique reste consultable.</span></li>
-          </ul>
-          <p class="note">L'identifiant ne change plus après la création : il relie les fiches, les tâches types et l'historique.</p>
-          <figure>
-            <img src="../captures/perimetres.webp" width="1440" height="900" loading="lazy" alt="Écran Périmètres : la couleur, le nom, l'identifiant, le groupe, l'ordre et l'état de chaque périmètre." />
-            <figcaption>Écran Périmètres, sur l'organisation d'exemple.</figcaption>
-          </figure>
-        </article>
-
-        <article class="verre ecran" id="e-postes">
-          <div class="ecran-tete"><h3>Postes à pourvoir</h3><span class="route">/&lt;activité&gt;/admin/postes</span></div>
-          <p>C'est l'écran de constitution de l'équipe. Les périmètres qui manquent de référentes et de référents s'affichent en premier. Trois compteurs résument la situation : <strong>Postes à pourvoir</strong>, <strong>Périmètres sans personne</strong> et <strong>Souhaits en attente</strong>.</p>
+        <article class="verre ecran" id="e-equipe">
+          <div class="ecran-tete"><h3>Équipe</h3><span class="route">/&lt;activité&gt;/admin/equipe</span></div>
+          <p>C'est l'écran de constitution de l'équipe. Il affiche une carte par périmètre, avec son effectif, ses personnes affectées et ses souhaits. Les périmètres qui manquent de référentes et de référents s'affichent en premier. Trois compteurs résument la situation : <strong>Postes à pourvoir</strong>, <strong>Périmètres sans personne</strong> et <strong>Souhaits en attente</strong>.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Effectif souhaité</span></span><span>Fixer le nombre de personnes attendues sur un périmètre. La différence avec les affectations donne les postes à pourvoir.</span></li>
             <li><span><span class="libelle">Affecter</span></span><span>Affecter une personne qui a exprimé un souhait, ou choisir n'importe quel membre de l'organisation dans la liste.</span></li>
@@ -125,8 +110,19 @@
           </ul>
           <p class="note">Sur une période archivée, l'effectif, le contact principal et le retrait des souhaits sont désactivés.</p>
           <figure>
-            <img src="../captures/postes.webp" width="1440" height="900" loading="lazy" alt="Écran Postes à pourvoir : trois compteurs, puis une carte par périmètre avec son effectif, ses affectations et les personnes intéressées." />
-            <figcaption>Écran Postes à pourvoir, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
+            <img src="../captures/equipe.webp" width="1440" height="900" loading="lazy" alt="Écran Équipe : trois compteurs, puis une carte par périmètre avec son effectif, ses affectations, les personnes intéressées et le bouton de réglage." />
+            <figcaption>Écran Équipe, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
+          </figure>
+          <p>Le même écran règle les périmètres. Un périmètre est une partie de l'activité, rangée dans un groupe. Il reste le même d'une période à l'autre, ce qui permet à l'historique de le suivre.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouveau périmètre</span></span><span>Saisir le nom, l'identifiant, le groupe, la description, la couleur et l'ordre d'affichage. La description présente le périmètre en une ou deux phrases.</span></li>
+            <li><span><span class="libelle">Régler</span></span><span>Ouvrir le réglage d'un périmètre depuis la roue dentée de sa carte, pour le modifier ou l'archiver. Un périmètre archivé quitte les cartes et son historique reste consultable.</span></li>
+            <li><span><span class="libelle">Périmètres archivés</span></span><span>Déplier cette liste, en bas de l'écran, pour régler un périmètre archivé ou le désarchiver.</span></li>
+          </ul>
+          <p class="note">L'identifiant ne change plus après la création : il relie les fiches, les tâches types et l'historique.</p>
+          <figure>
+            <img src="../captures/equipe-reglage.webp" width="1440" height="900" loading="lazy" alt="Fenêtre de réglage d'un périmètre : nom, identifiant, groupe, description, couleur, ordre et archivage." />
+            <figcaption>Réglage d'un périmètre, sur l'organisation d'exemple.</figcaption>
           </figure>
         </article>
 
@@ -171,7 +167,7 @@
             <li><span><span class="libelle">Enregistrer</span></span><span>Régler le nom, le sigle, l'ordre et la nature de votre activité.</span></li>
             <li><span><span class="libelle">Ajouter un groupe</span></span><span>Déclarer les groupes de périmètres : sports et pôles, équipes et pôles, commissions et bureau.</span></li>
             <li><span><span class="libelle">Identité propre</span></span><span>Donner à l'activité son contact, sa page d'équipe, son logo et ses deux couleurs. Un champ vide reprend la valeur de l'organisation.</span></li>
-            <li><span><span class="libelle">Ouverte aux souhaits</span></span><span>Laisser tous les membres de l'organisation découvrir les périmètres dans « Tous les périmètres » et formuler leurs souhaits. Les tâches et les fiches restent réservées aux personnes affectées. Les souhaits arrivent dans « Postes à pourvoir ».</span></li>
+            <li><span><span class="libelle">Ouverte aux souhaits</span></span><span>Laisser tous les membres de l'organisation découvrir les périmètres dans « Tous les périmètres » et formuler leurs souhaits. Les tâches et les fiches restent réservées aux personnes affectées. Les souhaits arrivent dans « Équipe ».</span></li>
           </ul>
           <p class="note">La création et l'archivage d'une activité appartiennent aux admins de l'organisation.</p>
           <figure>

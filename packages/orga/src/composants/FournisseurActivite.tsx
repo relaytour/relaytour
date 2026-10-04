@@ -14,7 +14,7 @@ import { appliquerTheme, construireTheme } from '../lib/theme'
 import { activiteAffichee, afficherActivite } from '../lib/selection'
 
 // Premiers segments des adresses d'avant l'ADR 0008, sans activité : une adresse
-// comme /fiches ou /admin/postes mène à la même page de l'activité par défaut.
+// comme /fiches ou /admin/equipe mène à la même page de l'activité par défaut.
 const PAGES = new Set([
   'admin',
   'fiches',

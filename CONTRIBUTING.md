@@ -34,7 +34,7 @@ yarn workspace @relaytour/server equipe:importer --fichier equipe.yaml --activit
 yarn codegen      # contrats commités
 node outils/site.mjs   # site de présentation, après un changement des jetons
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif
-node outils/captures.mjs --seulement editions,postes   # quelques écrans seulement
+node outils/captures.mjs --seulement editions,equipe   # quelques écrans seulement
 yarn versionner valider
 yarn versionner compiler   # journaux commités
 yarn versionner publier --simulation   # numéro de la prochaine version, sans rien écrire

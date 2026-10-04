@@ -2,7 +2,7 @@
 // captures : photographie les écrans de l'espace organisateur pour le site.
 //
 //   node outils/captures.mjs --origine http://localhost:4460
-//   node outils/captures.mjs --seulement editions,perimetres
+//   node outils/captures.mjs --seulement editions,equipe
 //
 // Le script ouvre Google Chrome avec un profil temporaire et le pilote par son
 // protocole de débogage (WebSocket natif de Node 24, aucune dépendance). La
@@ -46,13 +46,20 @@ const HAUTEUR = 900
 // Les écrans d'administration vivent sous l'identifiant de l'activité (ADR 0008).
 const ACTIVITE = '/rencontres'
 
+// Chaque geste vaut vrai quand sa cible existe : la boucle de capture l'attend, au
+// lieu de photographier un écran où le clic n'a rien fait.
+
 /** Clique le premier élément de <main> dont le texte vaut `texte`. */
 const cliquer = texte =>
-  `[...document.querySelectorAll('main a, main button')].find(e => e.innerText.trim() === ${JSON.stringify(texte)})?.click()`
+  `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main a, main button')].find(e => e.innerText.trim() === ${JSON.stringify(texte)}))`
+
+/** Clique le premier élément de <main> dont le libellé d'accessibilité vaut `libelle`. */
+const cliquerLibelle = libelle =>
+  `(e => (e?.click(), Boolean(e)))(document.querySelector(${JSON.stringify(`main [aria-label="${libelle}"]`)}))`
 
 /** Fait défiler jusqu'au titre dont le texte vaut `texte`. */
 const defiler = texte =>
-  `[...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim() === ${JSON.stringify(texte)})?.scrollIntoView({ block: 'start' })`
+  `(e => (e?.scrollIntoView({ block: 'start' }), Boolean(e)))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim() === ${JSON.stringify(texte)}))`
 
 /**
  * Les écrans photographiés : nom du fichier, chemin, réglage du navigateur avant
@@ -85,8 +92,12 @@ const ECRANS = [
   { nom: 'preferences', chemin: `${ACTIVITE}/preferences` },
   { nom: 'avancement', chemin: `${ACTIVITE}/admin/avancement` },
   { nom: 'editions', chemin: `${ACTIVITE}/admin/editions` },
-  { nom: 'perimetres', chemin: `${ACTIVITE}/admin/perimetres` },
-  { nom: 'postes', chemin: `${ACTIVITE}/admin/postes` },
+  { nom: 'equipe', chemin: `${ACTIVITE}/admin/equipe` },
+  {
+    nom: 'equipe-reglage',
+    chemin: `${ACTIVITE}/admin/equipe`,
+    apres: cliquerLibelle('Régler le périmètre Football'),
+  },
   { nom: 'personnes', chemin: `${ACTIVITE}/admin/personnes` },
   {
     nom: 'personnes-roles',
@@ -128,6 +139,11 @@ const chrome = spawn(
     `--window-size=${LARGEUR},${HAUTEUR + 120}`,
     '--no-first-run',
     '--no-default-browser-check',
+    // Une fenêtre recouverte par une autre ne doit pas suspendre ses animations :
+    // une fenêtre modale resterait invisible sur la capture.
+    '--disable-backgrounding-occluded-windows',
+    '--disable-renderer-backgrounding',
+    '--disable-background-timer-throttling',
     `${values.origine}/connexion`,
   ],
   { stdio: 'ignore' }
@@ -219,6 +235,7 @@ await envoyer('Emulation.setDeviceMetricsOverride', {
   mobile: false,
 })
 mkdirSync(values.sortie, { recursive: true })
+let echecs = 0
 
 for (const ecran of ECRANS.filter(e =>
   choisis ? choisis.includes(e.nom) : !e.surDemande
@@ -227,7 +244,18 @@ for (const ecran of ECRANS.filter(e =>
   await envoyer('Page.navigate', { url: `${values.origine}${ecran.chemin}` })
   await attendre(2500)
   if (ecran.apres) {
-    await evaluer(ecran.apres)
+    // La cible d'un geste arrive avec les données de la page : le geste se répète
+    // jusqu'à la trouver, cinq secondes au plus.
+    let trouve = false
+    for (let essai = 0; essai < 20 && !trouve; essai += 1) {
+      trouve = await evaluer(ecran.apres)
+      if (!trouve) await attendre(250)
+    }
+    if (!trouve) {
+      console.error(`✖ ${ecran.nom} : la cible du geste est introuvable.`)
+      echecs += 1
+      continue
+    }
     await attendre(1200)
   }
   await evaluer('document.fonts.ready.then(() => true)')
@@ -241,4 +269,4 @@ for (const ecran of ECRANS.filter(e =>
 }
 
 socket.close()
-await fermer()
+await fermer(echecs > 0 ? 1 : 0)

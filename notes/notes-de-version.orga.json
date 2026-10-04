@@ -20,6 +20,18 @@
           }
         },
         {
+          "id": "2026-10-04-orga-l-ecran-equipe-reunit-les-postes-a-pourvoir-et-le-reglage-de",
+          "date": "2026-10-04",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'écran Équipe réunit les postes à pourvoir et le réglage des périmètres",
+            "texte": "Dans l'administration, « Postes à pourvoir » devient « Équipe ». Chaque carte de périmètre garde son effectif, ses personnes affectées et ses souhaits. Sa roue dentée ouvre le réglage du périmètre : nom, groupe, description, couleur, ordre et archivage. Le bouton « Nouveau périmètre » et la liste « Périmètres archivés » se trouvent sur le même écran. La page « Périmètres » quitte le menu, et vos anciens favoris mènent à « Équipe ».",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-09-22-orga-les-souhaits-se-notent-dans-chaque-activite",
           "date": "2026-09-22",
           "type": "correctif",

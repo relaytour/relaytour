@@ -2,7 +2,6 @@ import {
   CompassOutlined,
   ApartmentOutlined,
   BankOutlined,
-  AppstoreOutlined,
   BarChartOutlined,
   BookOutlined,
   CalendarOutlined,
@@ -169,19 +168,14 @@ function Mise({ session }: { session: Session }) {
                 label: periode.Pluriel,
               },
               {
-                key: lien('/admin/perimetres'),
-                icon: <AppstoreOutlined />,
-                label: 'Périmètres',
+                key: lien('/admin/equipe'),
+                icon: <SolutionOutlined />,
+                label: 'Équipe',
               },
               {
                 key: lien('/admin/personnes'),
                 icon: <TeamOutlined />,
                 label: 'Personnes',
-              },
-              {
-                key: lien('/admin/postes'),
-                icon: <SolutionOutlined />,
-                label: 'Postes à pourvoir',
               },
               {
                 key: lien('/admin/redaction'),
