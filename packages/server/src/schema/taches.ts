@@ -8,10 +8,11 @@ import { GraphQLError } from 'graphql'
 
 import type { AppContext } from '../context.ts'
 import {
+  accesAuPerimetre,
   aujourdhui,
   estEnRetard,
+  exigerConsultation,
   exigerEcriture,
-  exigerLecture,
   perimetresLisibles,
   peutModifierPerimetre,
 } from '../lib/droits.ts'
@@ -226,12 +227,16 @@ const ORDRE_TACHES: Prisma.TacheOrderByWithRelationInput[] = [
 
 // ── Champs ajoutés au périmètre ──────────────────────────────────────────────
 
+const AccesPerimetreEnum = builder.enumType('AccesPerimetre', {
+  values: ['COMPLET', 'CONSULTATION', 'AUCUN'] as const,
+})
+
 builder.prismaObjectFields(PerimetreRef, t => ({
   taches: t.prismaField({
     type: [TacheRef],
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, perimetre, { editionId }, ctx) => {
-      await exigerLecture(ctx, perimetre.id)
+      await exigerConsultation(ctx, perimetre)
       const edition = await ctx.exigerEdition(editionId)
       return prisma.tache.findMany({
         ...query,
@@ -247,7 +252,7 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     type: [PersonneRef],
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, perimetre, { editionId }, ctx) => {
-      await exigerLecture(ctx, perimetre.id)
+      await exigerConsultation(ctx, perimetre)
       const edition = await ctx.exigerEdition(editionId)
       const [personnes, contacts] = await Promise.all([
         prisma.user.findMany({
@@ -274,7 +279,7 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     nullable: true,
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (perimetre, { editionId }, ctx) => {
-      await exigerLecture(ctx, perimetre.id)
+      await exigerConsultation(ctx, perimetre)
       const edition = await ctx.exigerEdition(editionId)
       return (
         (await contactsDeLEdition(ctx, edition.id)).get(perimetre.id) ?? null
@@ -286,7 +291,7 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     type: AvancementRef,
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (perimetre, { editionId }, ctx) => {
-      await exigerLecture(ctx, perimetre.id)
+      await exigerConsultation(ctx, perimetre)
       const edition = await ctx.exigerEdition(editionId)
       const resultat = await calculerAvancement(
         { perimetreId: perimetre.id, editionId: edition.id },
@@ -300,6 +305,13 @@ builder.prismaObjectFields(PerimetreRef, t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: (perimetre, { editionId }, ctx) =>
       peutModifierPerimetre(ctx, perimetre.id, String(editionId)),
+  }),
+
+  acces: t.field({
+    type: AccesPerimetreEnum,
+    description:
+      'Accès de la personne connectée au périmètre (ADR 0014). COMPLET : elle lit ses tâches et ses fiches. CONSULTATION : elle lit ses tâches et son équipe, sans ses fiches. AUCUN : elle ne lit rien.',
+    resolve: (perimetre, _args, ctx) => accesAuPerimetre(ctx, perimetre),
   }),
 }))
 
@@ -329,7 +341,7 @@ builder.queryFields(t => ({
         if (ctx.personne?.estAdmin) return null
         throw accesRefuse()
       }
-      await exigerLecture(ctx, perimetre.id)
+      await exigerConsultation(ctx, perimetre)
       return perimetre
     },
   }),
@@ -381,22 +393,20 @@ builder.queryFields(t => ({
       }),
   }),
 
-  // Toutes les tâches d'une édition dans les périmètres que la personne peut lire,
-  // triées par échéance. Seule la règle de lecture compte : une assignation dans un
-  // autre périmètre n'ajoute aucune tâche.
+  // Toutes les tâches d'une édition, triées par échéance, dans les périmètres non
+  // archivés de son activité. Toute personne qui voit l'activité les consulte
+  // (ADR 0014) : exigerEdition refuse l'édition d'une activité invisible.
   retroplanning: t.prismaField({
     type: [TacheRef],
     authScopes: { connecte: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (query, _root, { editionId }, ctx) => {
       const edition = await ctx.exigerEdition(editionId)
-      const lisibles = await perimetresLisibles(ctx)
       return prisma.tache.findMany({
         ...query,
         where: {
           editionId: edition.id,
           perimetre: { archivedAt: null },
-          perimetreId: { in: lisibles },
         },
         orderBy: ORDRE_TACHES,
       })

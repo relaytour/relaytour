@@ -20,6 +20,7 @@ const ids = {
   bruno: '', // référent natation, édition en cours
   chloe: '', // référente basket
   dora: '', // référente natation, édition archivée seulement
+  emma: '', // membre de l'organisation, sans aucune affectation
   natation: '',
   basket: '',
   escrime: '', // périmètre archivé
@@ -73,6 +74,7 @@ beforeAll(async () => {
     ['bruno', false],
     ['chloe', false],
     ['dora', false],
+    ['emma', false],
   ] as const) {
     const id = randomUUID()
     await prisma.user.create({
@@ -169,10 +171,10 @@ afterAll(async () => {
 describe('lecture d’un périmètre', () => {
   const LIRE = `query ($s: String!, $e: ID!) { perimetre(slug: $s) { taches(editionId: $e) { id } } }`
 
-  it('refuse une référente d’un autre périmètre', async () => {
+  it('refuse un membre sans affectation dans l’activité', async () => {
     expect(
       code(
-        await executer(ids.chloe, LIRE, {
+        await executer(ids.emma, LIRE, {
           s: `natation-${suffixe}`,
           e: ids.edition,
         })
@@ -211,6 +213,120 @@ describe('lecture d’un périmètre', () => {
       t: 'Archive',
     })
     expect(code(ecriture)).toBe('SAISIE_INVALIDE')
+  })
+})
+
+// ADR 0014 : une personne affectée dans l'activité consulte les autres périmètres.
+// Elle lit leurs tâches et leur équipe. Chaque refus qui subsiste est prouvé ici.
+describe('consultation d’un autre périmètre de l’activité', () => {
+  const CONSULTER = `query ($s: String!, $e: ID!) {
+    perimetre(slug: $s) {
+      acces
+      peutModifier(editionId: $e)
+      taches(editionId: $e) { id peutModifier clotureePar { id } assignes { id nom } }
+      referents(editionId: $e) { id nom }
+      avancement(editionId: $e) { total enRetard }
+    }
+  }`
+  type Consulte = {
+    perimetre: {
+      acces: string
+      peutModifier: boolean
+      taches: {
+        id: string
+        peutModifier: boolean
+        clotureePar: { id: string } | null
+        assignes: { id: string; nom: string }[]
+      }[]
+      referents: { id: string; nom: string }[]
+      avancement: { total: number; enRetard: number }
+    }
+  }
+  let tache = ''
+
+  beforeAll(async () => {
+    tache = (await creerTache(ids.alice, 'Chronométrer les séries')).id
+    const faite = await executer(
+      ids.alice,
+      `mutation ($id: ID!) { changerStatutTache(id: $id, statut: FAITE) { id } }`,
+      { id: tache }
+    )
+    expect(faite.errors).toBeUndefined()
+  })
+
+  it('ouvre les tâches, l’équipe et l’avancement sans droit d’écriture', async () => {
+    const r = await executer(ids.chloe, CONSULTER, {
+      s: `natation-${suffixe}`,
+      e: ids.edition,
+    })
+    expect(r.errors).toBeUndefined()
+    const { perimetre } = r.data as Consulte
+    expect(perimetre.acces).toBe('CONSULTATION')
+    expect(perimetre.peutModifier).toBe(false)
+    expect(perimetre.referents.map(p => p.id).sort()).toEqual(
+      [ids.alice, ids.bruno].sort()
+    )
+    expect(perimetre.avancement.total).toBeGreaterThan(0)
+    const lue = perimetre.taches.find(t => t.id === tache)
+    expect(lue?.peutModifier).toBe(false)
+    expect(lue?.assignes.map(p => p.id)).toEqual([ids.alice])
+    // Qui a coché reste réservé à la personne qui a coché et aux admins.
+    expect(lue?.clotureePar).toBeNull()
+  })
+
+  it('garde l’accès complet à la référente du périmètre', async () => {
+    const r = await executer(ids.alice, CONSULTER, {
+      s: `natation-${suffixe}`,
+      e: ids.edition,
+    })
+    expect(r.errors).toBeUndefined()
+    const { perimetre } = r.data as Consulte
+    expect(perimetre.acces).toBe('COMPLET')
+    expect(perimetre.peutModifier).toBe(true)
+    expect(perimetre.taches.find(t => t.id === tache)?.clotureePar?.id).toBe(
+      ids.alice
+    )
+  })
+
+  it('refuse les fiches du périmètre consulté', async () => {
+    const r = await executer(
+      ids.chloe,
+      `query ($s: String!) { perimetre(slug: $s) { fiches { id } } }`,
+      { s: `natation-${suffixe}` }
+    )
+    expect(code(r)).toBe('FORBIDDEN')
+  })
+
+  it('refuse l’adresse des référentes et référents consultés', async () => {
+    const r = await executer(
+      ids.chloe,
+      `query ($s: String!, $e: ID!) {
+        perimetre(slug: $s) { referents(editionId: $e) { id email } }
+      }`,
+      { s: `natation-${suffixe}`, e: ids.edition }
+    )
+    expect(code(r)).toBe('FORBIDDEN')
+  })
+
+  it('refuse le changement de statut et l’assignation', async () => {
+    const statut = await executer(
+      ids.chloe,
+      `mutation ($id: ID!) { changerStatutTache(id: $id, statut: EN_COURS) { id } }`,
+      { id: tache }
+    )
+    expect(code(statut)).toBe('FORBIDDEN')
+    const assignation = await executer(
+      ids.chloe,
+      `mutation ($id: ID!) { assignerTache(id: $id, assigne: true) { id } }`,
+      { id: tache }
+    )
+    expect(code(assignation)).toBe('FORBIDDEN')
+    const enBase = await prisma.tache.findUniqueOrThrow({
+      where: { id: tache },
+      select: { statut: true, assignations: { select: { userId: true } } },
+    })
+    expect(enBase.statut).toBe('FAITE')
+    expect(enBase.assignations.map(a => a.userId)).toEqual([ids.alice])
   })
 })
 
@@ -482,31 +598,54 @@ describe('rétroplanning', () => {
     expect(code(await executer(null, Q, { e: ids.edition }))).toBe('FORBIDDEN')
   })
 
-  it('ne donne pas à une référente les tâches d’un autre périmètre', async () => {
-    expect(await lire(ids.chloe)).toEqual([
+  it('refuse un membre sans affectation dans l’activité', async () => {
+    expect(code(await executer(ids.emma, Q, { e: ids.edition }))).toBe(
+      'FORBIDDEN'
+    )
+  })
+
+  // ADR 0014 : le rétroplanning couvre tous les périmètres actifs de l'activité.
+  it('donne à une référente les tâches des autres périmètres actifs', async () => {
+    const lues = await lire(ids.chloe)
+    expect(lues).toEqual([
       taches.basketMars,
-      taches.basketJuin,
-    ])
-  })
-
-  it('n’ajoute pas une tâche d’un autre périmètre assignée directement', async () => {
-    await prisma.tacheAssignation.create({
-      data: { tacheId: taches.natationMai, userId: ids.chloe },
-    })
-    expect(await lire(ids.chloe)).not.toContain(taches.natationMai)
-  })
-
-  it('suit la règle de lecture pour une personne affectée à une édition archivée', async () => {
-    expect(await lire(ids.dora)).toEqual([
       taches.natationMai,
+      taches.basketJuin,
       taches.natationSansEcheance,
     ])
-    const perimetre = await executer(
-      ids.dora,
-      `query ($s: String!, $e: ID!) { perimetre(slug: $s) { taches(editionId: $e) { id } } }`,
-      { s: `natation-${suffixe}`, e: ids.edition }
+    expect(lues).not.toContain(taches.escrimeAvril)
+  })
+
+  it('ne propose pas à une référente les tâches à prendre d’un périmètre consulté', async () => {
+    const r = await executer(
+      ids.chloe,
+      `query ($e: ID!) { tachesAPrendre(editionId: $e) { id } }`,
+      { e: ids.edition }
     )
-    expect(perimetre.errors).toBeUndefined()
+    expect(r.errors).toBeUndefined()
+    const aPrendre = (
+      r.data as { tachesAPrendre: { id: string }[] }
+    ).tachesAPrendre.map(t => t.id)
+    expect(aPrendre).toContain(taches.basketMars)
+    expect(aPrendre).not.toContain(taches.natationMai)
+  })
+
+  it('ouvre le rétroplanning à une personne affectée à une édition archivée', async () => {
+    expect(await lire(ids.dora)).toEqual([
+      taches.basketMars,
+      taches.natationMai,
+      taches.basketJuin,
+      taches.natationSansEcheance,
+    ])
+    // Son ancien périmètre garde la règle de lecture ; l'autre s'ouvre en consultation.
+    const ACCES = `query ($s: String!, $e: ID!) { perimetre(slug: $s) { acces taches(editionId: $e) { id } } }`
+    const acces = async (slug: string) => {
+      const r = await executer(ids.dora, ACCES, { s: slug, e: ids.edition })
+      expect(r.errors).toBeUndefined()
+      return (r.data as { perimetre: { acces: string } }).perimetre.acces
+    }
+    expect(await acces(`natation-${suffixe}`)).toBe('COMPLET')
+    expect(await acces(`basket-${suffixe}`)).toBe('CONSULTATION')
   })
 
   it('charge les personnes assignées triées par nom', async () => {

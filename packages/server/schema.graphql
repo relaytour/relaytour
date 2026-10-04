@@ -3,6 +3,12 @@ enum AccesActivite {
   DECOUVERTE
 }
 
+enum AccesPerimetre {
+  AUCUN
+  COMPLET
+  CONSULTATION
+}
+
 type Activite {
   acces: AccesActivite!
   archive: Boolean!
@@ -421,6 +427,10 @@ type OrganisationInstallation {
 }
 
 type Perimetre {
+  """
+  Accès de la personne connectée au périmètre (ADR 0014). COMPLET : elle lit ses tâches et ses fiches. CONSULTATION : elle lit ses tâches et son équipe, sans ses fiches. AUCUN : elle ne lit rien.
+  """
+  acces: AccesPerimetre!
   activite: Activite!
   archive: Boolean!
   avancement(editionId: ID!): Avancement!
