@@ -5,6 +5,23 @@
   "version": "0.8.1",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-04-serveur-une-personne-de-l-activite-consulte-les-taches-de-chaque-per",
+          "date": "2026-10-04",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une personne de l'activité consulte les tâches de chaque périmètre",
+            "texte": "Une personne qui voit une activité lit les tâches, l'avancement, les référentes et référents et le contact principal de chacun de ses périmètres. Le rétroplanning renvoie les tâches de tous les périmètres non archivés de l'activité. Les fiches, la recherche, les tâches à prendre et toutes les écritures gardent leur règle. Le champ `Perimetre.acces` vaut `COMPLET`, `CONSULTATION` ou `AUCUN`.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.0",
       "notes": [
         {

@@ -5,6 +5,23 @@
   "version": "0.8.1",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-04-orga-vous-consultez-les-taches-des-autres-perimetres-de-votre-act",
+          "date": "2026-10-04",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Vous consultez les tâches des autres périmètres de votre activité",
+            "texte": "Dès votre première affectation dans une activité, vous ouvrez chaque périmètre de cette activité depuis « Tous les périmètres ». Vous y lisez les tâches, l'avancement, les retards et les personnes affectées. Vous ne pouvez rien y modifier, et les fiches restent réservées aux personnes affectées au périmètre. Le rétroplanning couvre désormais toute l'activité : la bascule « Mes périmètres » le ramène à vos périmètres. La page d'un périmètre et le rétroplanning filtrent aussi les tâches en retard.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.8.1",
       "notes": [
         {
