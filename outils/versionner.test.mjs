@@ -8,6 +8,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
+  readdirSync,
   rmSync,
   writeFileSync,
 } from 'node:fs'
@@ -62,9 +63,9 @@ function fragment(racine, nom, champs) {
   writeFileSync(join(racine, 'notes/fragments', `${nom}.md`), lignes.join('\n'))
 }
 
-function lancer(racine, ...args) {
+function lancerAvec(racine, env, ...args) {
   const resultat = spawnSync(process.execPath, [SCRIPT, ...args], {
-    env: { ...process.env, VERSIONNER_RACINE: racine },
+    env: { ...process.env, VERSIONNER_RACINE: racine, ...env },
     encoding: 'utf8',
   })
   return {
@@ -73,6 +74,8 @@ function lancer(racine, ...args) {
     erreur: resultat.stderr,
   }
 }
+
+const lancer = (racine, ...args) => lancerAvec(racine, {}, ...args)
 
 const lire = (racine, relatif) => readFileSync(join(racine, relatif), 'utf8')
 const journal = (racine, cible) =>
@@ -268,3 +271,72 @@ test('release refuse une version sans fragment', () => {
   assert.equal(code, 1)
   assert.match(erreur, /aucun fragment ne porte la version 0\.9\.0/)
 })
+
+/** Lance `noter` à un instant et dans un fuseau fixés, et rend les fragments créés. */
+function noterLe(racine, instant, fuseau) {
+  const resultat = lancerAvec(
+    racine,
+    { TZ: fuseau, VERSIONNER_MAINTENANT: instant },
+    'noter',
+    '--cible',
+    'orga',
+    '--type',
+    'correctif',
+    '--audience',
+    'organisateurs',
+    '--titre',
+    'Un titre'
+  )
+  assert.equal(resultat.code, 0, resultat.erreur)
+  return readdirSync(join(racine, 'notes/fragments'))
+}
+
+test('noter date le fragment du jour local, en avance sur le jour UTC', () => {
+  // 22 h 30 UTC le 4 octobre correspond à 0 h 30 le 5 octobre à Paris.
+  assert.deepEqual(
+    noterLe(depot('0.8.1'), '2026-10-04T22:30:00.000Z', 'Europe/Paris'),
+    ['2026-10-05-orga-un-titre.md']
+  )
+})
+
+test('noter date le fragment du jour local, en retard sur le jour UTC', () => {
+  // 3 h 30 UTC le 2 mars correspond à 22 h 30 le 1er mars à Montréal.
+  assert.deepEqual(
+    noterLe(depot('0.8.1'), '2027-03-02T03:30:00.000Z', 'America/Montreal'),
+    ['2027-03-01-orga-un-titre.md']
+  )
+})
+
+test('noter garde le jour UTC quand le poste est en UTC', () => {
+  assert.deepEqual(noterLe(depot('0.8.1'), '2026-10-04T22:30:00.000Z', 'UTC'), [
+    '2026-10-04-orga-un-titre.md',
+  ])
+})
+
+// Une variable vide est une valeur illisible, pas une variable absente.
+for (const valeur of ['demain', '']) {
+  test(`noter refuse l'instant illisible « ${valeur} »`, () => {
+    const racine = depot('0.8.1')
+    const { code, erreur } = lancerAvec(
+      racine,
+      { VERSIONNER_MAINTENANT: valeur },
+      'noter',
+      '--cible',
+      'orga',
+      '--type',
+      'correctif',
+      '--audience',
+      'organisateurs',
+      '--titre',
+      'Un titre'
+    )
+    assert.equal(code, 1)
+    assert.ok(
+      erreur.includes(
+        `VERSIONNER_MAINTENANT « ${valeur} » n'est pas un instant`
+      ),
+      erreur
+    )
+    assert.deepEqual(readdirSync(join(racine, 'notes/fragments')), [])
+  })
+}

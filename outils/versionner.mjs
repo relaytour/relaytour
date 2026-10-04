@@ -48,7 +48,8 @@ const CHAMPS = ['cible', 'type', 'audience', 'etat', 'version', 'fr']
 const AUDIENCES_PUBLIEES = ['organisateurs', 'public']
 
 // Le script vit dans outils/ mais lit et écrit à la racine du dépôt. Les tests
-// le lancent sur un dépôt temporaire par VERSIONNER_RACINE.
+// le lancent sur un dépôt temporaire par VERSIONNER_RACINE, et fixent l'instant
+// de `noter` par VERSIONNER_MAINTENANT.
 const RACINE =
   process.env.VERSIONNER_RACINE ??
   resolve(dirname(fileURLToPath(import.meta.url)), '..')
@@ -628,6 +629,29 @@ function slug(titre) {
     .slice(0, 60)
 }
 
+/**
+ * Le jour « AAAA-MM-JJ » d'un instant dans le fuseau du poste. Le jour UTC d'un
+ * instant situé juste après minuit en France est la veille.
+ */
+function jourLocal(instant) {
+  const deux = nombre => String(nombre).padStart(2, '0')
+  return [
+    instant.getFullYear(),
+    deux(instant.getMonth() + 1),
+    deux(instant.getDate()),
+  ].join('-')
+}
+
+function maintenant() {
+  const fixe = process.env.VERSIONNER_MAINTENANT
+  if (fixe === undefined) return new Date()
+  const instant = new Date(fixe)
+  if (Number.isNaN(instant.getTime())) {
+    mourir(`VERSIONNER_MAINTENANT « ${fixe} » n'est pas un instant`)
+  }
+  return instant
+}
+
 function commandeNoter(options) {
   const verifierChoix = (nom, valeur, liste) => {
     if (!valeur) mourir(`--${nom} requis (${liste.join(', ')})`)
@@ -644,7 +668,7 @@ function commandeNoter(options) {
   if (!morceau) {
     mourir(`--titre « ${options.titre} » ne donne aucun slug`)
   }
-  const date = new Date().toISOString().slice(0, 10)
+  const date = jourLocal(maintenant())
   const nom = `${date}-${options.cible}-${morceau}.md`
   const chemin = join(DOSSIER_FRAGMENTS, nom)
   if (existsSync(chemin)) mourir(`${nom} existe déjà`)
