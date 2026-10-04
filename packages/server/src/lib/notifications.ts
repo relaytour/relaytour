@@ -146,9 +146,10 @@ export function messageNotification(
   // Une demande porte le nom d'une personne qui n'est pas membre : la notification
   // ne le cite pas, et renvoie vers la file de revue.
   if (n.type === 'DEMANDE_RECUE') {
+    const phrase = 'une demande pour rejoindre l’équipe attend votre revue.'
     return n.activite === null
-      ? 'Une demande pour rejoindre l’équipe attend votre revue.'
-      : `Une demande pour rejoindre l’équipe de ${n.activite.nom} attend votre revue.`
+      ? `U${phrase.slice(1)}`
+      : `${n.activite.nom} : ${phrase}`
   }
   const tache = n.tache
   if (tache === null) return 'Cette tâche n’existe plus.'
