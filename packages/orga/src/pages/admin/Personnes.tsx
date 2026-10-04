@@ -71,7 +71,9 @@ const SOUHAITS_ACTIVITE = graphql(`
   }
 `)
 
-// Les souhaits d'une édition, lus à l'ouverture du formulaire pour le préremplir.
+// Les souhaits d'une édition d'une autre activité que celle affichée, lus à
+// l'ouverture du formulaire pour le préremplir. L'activité affichée n'en a pas
+// besoin : la liste de la page porte déjà les souhaits de son édition.
 const SOUHAITS_EDITION = graphql(`
   query SouhaitsEdition($editionId: ID!) {
     personnes {
@@ -177,17 +179,21 @@ const SOUHAITS_MAX = 30
 
 /**
  * Champ des périmètres souhaités pour une activité. L'activité affichée passe
- * l'édition choisie sur la page ; les autres activités utilisent leur édition en cours.
+ * l'édition choisie sur la page et les souhaits déjà lus par la liste ; les autres
+ * activités utilisent leur édition en cours et lisent leurs souhaits à l'ouverture.
  */
 function ChampSouhaits({
   activite,
   edition: editionChoisie,
+  connus,
   personne,
   seul,
   extra,
 }: {
   activite: Activite
   edition?: Pick<EditionsQuery['editions'][number], 'id' | 'nom'>
+  /** Périmètres déjà souhaités pour l'édition choisie, lus par la liste de la page. */
+  connus?: string[]
   personne: Personne | 'nouvelle'
   /** Vrai quand le formulaire ne propose qu'une activité. */
   seul: boolean
@@ -201,26 +207,34 @@ function ChampSouhaits({
   const editionId = edition?.id
   const nouvelle = personne === 'nouvelle'
   const personneId = nouvelle ? undefined : personne.id
-  // Lecture fraîche à chaque ouverture : la liste de la page ne porte que les
-  // souhaits de l'édition affichée.
+  // Lecture fraîche à chaque ouverture, pour une autre activité seulement : la liste
+  // de la page ne porte que les souhaits de l'édition affichée.
   const { data: existants } = useQuery(SOUHAITS_EDITION, {
     variables: { editionId: editionId ?? '' },
-    skip: nouvelle || editionId === undefined,
+    skip: nouvelle || connus !== undefined || editionId === undefined,
     fetchPolicy: 'network-only',
   })
+  const lus =
+    connus ??
+    existants?.personnes
+      .find(p => p.id === personneId)
+      ?.souhaits.map(souhait => souhait.perimetre.id)
   // Souhaits de la personne, limités aux périmètres non archivés.
   const initiaux =
     data === undefined || editionId === undefined
       ? undefined
       : nouvelle
         ? []
-        : existants?.personnes
-            .find(p => p.id === personneId)
-            ?.souhaits.map(souhait => souhait.perimetre.id)
-            .filter(id => data.perimetres.some(p => p.id === id))
+        : lus?.filter(id => data.perimetres.some(p => p.id === id))
   const pret = initiaux !== undefined
   useEffect(() => {
-    if (editionId !== undefined && initiaux !== undefined) {
+    // Une saisie en cours n'est jamais remplacée : après une invitation enregistrée
+    // en partie, la fenêtre passe en modification et garde les choix à renvoyer.
+    if (
+      editionId !== undefined &&
+      initiaux !== undefined &&
+      !form.isFieldTouched(['souhaits', editionId])
+    ) {
       form.setFieldValue(['souhaits', editionId], initiaux)
     }
     // Le champ se remplit une fois, quand les souhaits sont lus.
@@ -275,7 +289,7 @@ export default function Personnes() {
   // Les souhaits se notent pour l'édition choisie, tant qu'elle n'est pas archivée.
   const souhaitsModifiables =
     edition !== undefined && edition.statut !== 'ARCHIVEE'
-  const { data, loading } = useQuery(PERSONNES, {
+  const { data, loading, refetch } = useQuery(PERSONNES, {
     variables: { inclureArchives, editionId: editionId ?? null },
   })
   const [enEdition, setEnEdition] = useState<Personne | 'nouvelle' | null>(null)
@@ -323,9 +337,11 @@ export default function Personnes() {
   const champSouhaits =
     enEdition !== null && (enEdition === 'nouvelle' || !enEdition.archive)
   // Les souhaits se notent dans chaque activité administrée, l'activité affichée
-  // en premier.
+  // en premier. Elle sort de la liste quand l'édition choisie sur la page est
+  // archivée : son champ noterait sinon les souhaits sur une autre édition.
   const activitesSouhaits = (toutesActivites?.activites ?? [])
     .filter(a => a.estAdministree && !a.archive)
+    .filter(a => a.id !== activite.id || souhaitsModifiables)
     .sort((a, b) => Number(b.id === activite.id) - Number(a.id === activite.id))
 
   // Recherche insensible aux accents et à la casse, sur le nom et l'adresse.
@@ -385,6 +401,8 @@ export default function Personnes() {
         }))
       : []
     const premiers = souhaits.find(s => s.ids.length > 0)
+    // Le compte créé par l'invitation, pour reprendre la suite si elle échoue.
+    let cree: string | undefined
     const ok =
       enEdition === 'nouvelle'
         ? await executer(async () => {
@@ -399,6 +417,7 @@ export default function Personnes() {
             })
             const id = r.data?.inviterPersonne.id
             if (id === undefined) return
+            cree = id
             if (gereOrganisation) {
               await ajusterAdminsActivite(id, [], v.activitesAdministrees ?? [])
             }
@@ -442,7 +461,23 @@ export default function Personnes() {
               }
             }, 'Compte enregistré.')
           : false
-    if (ok) setEnEdition(null)
+    if (ok) {
+      setEnEdition(null)
+      return
+    }
+    if (cree === undefined) return
+    // Le compte existe et l'invitation est partie, mais un rôle ou un souhait a
+    // échoué. Une nouvelle invitation serait refusée : la fenêtre passe en
+    // modification de ce compte et garde la saisie, pour ne renvoyer que le reste.
+    const creee = (await refetch()).data?.personnes.find(p => p.id === cree)
+    if (creee === undefined) {
+      setEnEdition(null)
+      return
+    }
+    setEnEdition(creee)
+    message.warning(
+      'Le compte est créé et l’invitation est envoyée. Une partie des rôles ou des souhaits n’a pas été enregistrée : vérifiez-les, puis enregistrez de nouveau.'
+    )
   }
 
   return (
@@ -732,9 +767,10 @@ export default function Personnes() {
               <ChampSouhaits
                 key={`${a.id}-${ouverture}`}
                 activite={a}
-                edition={
-                  a.id === activite.id && souhaitsModifiables
-                    ? edition
+                edition={a.id === activite.id ? edition : undefined}
+                connus={
+                  a.id === activite.id && enEdition !== 'nouvelle'
+                    ? enEdition.souhaits.map(s => s.perimetre.id)
                     : undefined
                 }
                 personne={enEdition}

@@ -15,8 +15,10 @@ fr:
 ---
 
 `ChampSouhaits` lit l'édition en cours et les périmètres de son activité
-(`editionCourante(activiteId)`, `perimetres(activiteId)`), puis les souhaits de
-cette édition à chaque ouverture. L'activité affichée garde l'édition choisie
-sur la page. L'invitation porte les souhaits de la première édition renseignée ;
-les autres passent par `definirSouhaits` une fois le compte créé. Le serveur ne
-change pas.
+(`editionCourante(activiteId)`, `perimetres(activiteId)`). L'activité affichée
+garde l'édition choisie sur la page et les souhaits déjà lus par la liste ; elle
+n'a pas de champ quand cette édition est archivée. Une autre activité lit les
+souhaits de son édition à chaque ouverture. L'invitation porte les souhaits de la
+première édition renseignée ; les autres passent par `definirSouhaits` une fois le
+compte créé. Si cette suite échoue, la fenêtre passe en modification du compte créé
+et garde la saisie. Le serveur ne change pas.
