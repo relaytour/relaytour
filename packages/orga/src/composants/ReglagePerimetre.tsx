@@ -1,3 +1,4 @@
+import type { ApolloCache } from '@apollo/client'
 import { useMutation } from '@apollo/client/react'
 import {
   App,
@@ -91,7 +92,26 @@ interface Valeurs {
   archive: boolean
 }
 
-// Les listes qui changent quand un périmètre est créé, archivé ou désarchivé.
+// Les listes qui changent quand un périmètre est créé, archivé ou désarchivé. Le
+// cache en garde une copie par période ou par activité déjà visitée : toutes en
+// sortent, pour qu'aucune ne montre un périmètre archivé ou n'oublie un nouveau.
+const CHAMPS_LISTES = [
+  'appelPostes',
+  'avancementGlobal',
+  'mesPerimetres',
+  'perimetres',
+  'postesAPourvoir',
+  'tousLesPerimetres',
+]
+
+function oublierLesListes(cache: ApolloCache) {
+  for (const fieldName of CHAMPS_LISTES) {
+    cache.evict({ id: 'ROOT_QUERY', fieldName })
+  }
+  cache.gc()
+}
+
+// Les listes affichées par l'écran « Équipe », relues aussitôt.
 const LISTES = ['Perimetres', 'PostesAPourvoir']
 
 /**
@@ -111,7 +131,7 @@ export default function ReglagePerimetre({
   // Les groupes de périmètres viennent de l'activité (ADR 0008).
   const { activite } = useActivite()
   const [form] = Form.useForm<Valeurs>()
-  const rafraichir = { refetchQueries: LISTES }
+  const rafraichir = { update: oublierLesListes, refetchQueries: LISTES }
   const [creer, creation] = useMutation(CREER, rafraichir)
   const [modifier, modification] = useMutation(MODIFIER, rafraichir)
   const premierGroupe = activite.groupes[0]?.cle ?? ''
