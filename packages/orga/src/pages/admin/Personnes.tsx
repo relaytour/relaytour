@@ -4,6 +4,7 @@ import {
   App,
   Button,
   Checkbox,
+  Empty,
   Form,
   Input,
   Modal,
@@ -12,11 +13,14 @@ import {
   Space,
   Switch,
   Table,
+  Tabs,
   Tag,
   Typography,
 } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router'
 
+import Demandes from '../../composants/Demandes'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { EditionsQuery, PersonnesQuery } from '../../gql/graphql'
@@ -51,6 +55,15 @@ const PERSONNES = graphql(`
           couleur
         }
       }
+    }
+  }
+`)
+
+// Le nombre de demandes en attente d'une période, pour le libellé de l'onglet.
+const DEMANDES_EN_ATTENTE = graphql(`
+  query DemandesEnAttente($editionId: ID!) {
+    demandes(editionId: $editionId, statut: EN_ATTENTE) {
+      id
     }
   }
 `)
@@ -292,6 +305,15 @@ export default function Personnes() {
   const { data, loading, refetch } = useQuery(PERSONNES, {
     variables: { inclureArchives, editionId: editionId ?? null },
   })
+  const { data: demandes } = useQuery(DEMANDES_EN_ATTENTE, {
+    variables: { editionId: editionId ?? '' },
+    skip: editionId === undefined,
+  })
+  const demandesEnAttente = demandes?.demandes.length ?? 0
+  // L'onglet se lit dans l'adresse : une notification mène droit aux demandes.
+  const [parametres, setParametres] = useSearchParams()
+  const onglet =
+    parametres.get('onglet') === 'demandes' ? 'demandes' : 'annuaire'
   const [enEdition, setEnEdition] = useState<Personne | 'nouvelle' | null>(null)
   // Compteur d'ouvertures : la fenêtre reste montée d'une ouverture à l'autre, et
   // les champs de souhaits doivent relire les souhaits à chaque fois.
@@ -482,202 +504,237 @@ export default function Personnes() {
 
   return (
     <>
-      <Titre sousTitre="Seules les personnes invitées ici peuvent se connecter à l’espace organisateur.">
+      <Titre
+        sousTitre="Seules les personnes invitées ici peuvent se connecter à l’espace organisateur."
+        actions={
+          <Space>
+            <span>{periode.Nom}</span>
+            <Select
+              style={{ minWidth: 200 }}
+              value={editionId}
+              onChange={setChoix}
+              placeholder={`Choisir ${periode.une}`}
+              options={(editions?.editions ?? []).map(e => ({
+                value: e.id,
+                label: e.nom,
+              }))}
+            />
+          </Space>
+        }
+      >
         Personnes
       </Titre>
-      <Space
-        wrap
-        style={{
-          marginBottom: 16,
-          justifyContent: 'space-between',
-          width: '100%',
-        }}
-      >
-        <Button
-          type="primary"
-          icon={<UserAddOutlined />}
-          onClick={() => ouvrir('nouvelle')}
-        >
-          Inviter une personne
-        </Button>
-        <Space>
-          <Switch checked={inclureArchives} onChange={setInclureArchives} />
-          <span>Afficher les comptes archivés</span>
-        </Space>
-      </Space>
-      <Space wrap size={[16, 12]} style={{ marginBottom: 16 }}>
-        <Input.Search
-          allowClear
-          placeholder="Rechercher un nom ou une adresse"
-          aria-label="Rechercher un nom ou une adresse"
-          style={{ width: 320, maxWidth: '100%' }}
-          value={recherche}
-          onChange={e => setRecherche(e.target.value)}
-        />
-        <Space>
-          <span>{periode.Nom}</span>
-          <Select
-            style={{ minWidth: 200 }}
-            value={editionId}
-            onChange={setChoix}
-            placeholder={`Choisir ${periode.une}`}
-            options={(editions?.editions ?? []).map(e => ({
-              value: e.id,
-              label: e.nom,
-            }))}
-          />
-        </Space>
-        <Checkbox
-          checked={sansAffectation && editionId !== undefined}
-          disabled={editionId === undefined}
-          onChange={e => setSansAffectation(e.target.checked)}
-        >
-          Sans affectation pour {periode.cette}
-        </Checkbox>
-      </Space>
-
-      <Table<Personne>
-        rowKey="id"
-        loading={loading}
-        dataSource={personnes}
-        pagination={{ pageSize: 50, hideOnSinglePage: true }}
-        scroll={{ x: 'max-content' }}
-        columns={[
+      <Tabs
+        activeKey={onglet}
+        onChange={cle =>
+          setParametres(cle === 'demandes' ? { onglet: 'demandes' } : {})
+        }
+        items={[
+          { key: 'annuaire', label: 'Annuaire' },
           {
-            title: 'Nom',
-            dataIndex: 'nom',
-            render: (nom: string, p) => (
-              <Space style={{ whiteSpace: 'nowrap' }}>
-                <Typography.Link onClick={() => ouvrir(p)}>
-                  {nom}
-                </Typography.Link>
-                {p.id === moiId && <Tag>Vous</Tag>}
-              </Space>
-            ),
-          },
-          { title: 'Adresse mail', dataIndex: 'email' },
-          {
-            title: 'Affectations',
-            key: 'affectations',
-            render: (_, p) =>
-              p.affectations.length === 0 ? (
-                <Typography.Text type="secondary">Aucune</Typography.Text>
-              ) : (
-                <Space size={[4, 4]} wrap>
-                  {p.affectations.map(a => (
-                    <Tag
-                      key={a.id}
-                      style={{
-                        borderInlineStart: `4px solid ${a.perimetre.couleur ?? 'var(--rt-primaire)'}`,
-                      }}
-                    >
-                      {a.perimetre.nom}
-                    </Tag>
-                  ))}
-                </Space>
-              ),
-          },
-          {
-            title: 'Souhaits',
-            key: 'souhaits',
-            render: (_, p) =>
-              p.souhaits.length === 0 ? (
-                <Typography.Text type="secondary">Aucun</Typography.Text>
-              ) : (
-                <Space size={[4, 4]} wrap>
-                  {p.souhaits.map(souhait => (
-                    <Tag
-                      key={souhait.id}
-                      icon={
-                        souhait.satisfait ? (
-                          <CheckOutlined aria-label="Satisfait :" />
-                        ) : undefined
-                      }
-                      style={{
-                        borderInlineStart: `4px solid ${souhait.perimetre.couleur ?? 'var(--rt-primaire)'}`,
-                      }}
-                    >
-                      {souhait.perimetre.nom}
-                    </Tag>
-                  ))}
-                </Space>
-              ),
-          },
-          {
-            title: 'Rôle',
-            dataIndex: 'estAdmin',
-            render: (a: boolean, p) =>
-              a ? (
-                <Tag color="blue">Admin de l’organisation</Tag>
-              ) : p.activitesAdministrees.length > 0 ? (
-                <Space size={4} wrap>
-                  {p.activitesAdministrees.map(id => (
-                    <Tag key={id} color="geekblue">
-                      Admin · {nomsActivites.get(id) ?? 'activité'}
-                    </Tag>
-                  ))}
-                </Space>
-              ) : (
-                <Tag>Référent·e</Tag>
-              ),
-          },
-          {
-            title: 'Actions',
-            key: 'actions',
-            render: (_, p) =>
-              p.archive && !gereOrganisation ? null : p.archive ? (
-                <Button
-                  size="small"
-                  onClick={() =>
-                    void executer(
-                      () =>
-                        archiver({ variables: { id: p.id, archive: false } }),
-                      'Compte restauré.'
-                    )
-                  }
-                >
-                  Restaurer
-                </Button>
-              ) : (
-                <Space>
-                  <Button
-                    size="small"
-                    icon={<MailOutlined />}
-                    onClick={() =>
-                      void executer(
-                        () => renvoyer({ variables: { id: p.id } }),
-                        'Invitation renvoyée.'
-                      )
-                    }
-                  >
-                    Renvoyer l’invitation
-                  </Button>
-                  {p.id !== moiId && gereOrganisation && (
-                    <Popconfirm
-                      title="Archiver ce compte ?"
-                      description="La personne est déconnectée et ne peut plus se connecter. Son historique reste conservé."
-                      okText="Archiver"
-                      cancelText="Annuler"
-                      onConfirm={() =>
-                        executer(
-                          () =>
-                            archiver({
-                              variables: { id: p.id, archive: true },
-                            }),
-                          'Compte archivé.'
-                        )
-                      }
-                    >
-                      <Button size="small" danger>
-                        Archiver
-                      </Button>
-                    </Popconfirm>
-                  )}
-                </Space>
-              ),
+            key: 'demandes',
+            label:
+              demandesEnAttente > 0
+                ? `Demandes (${demandesEnAttente})`
+                : 'Demandes',
           },
         ]}
       />
+      {onglet === 'demandes' &&
+        (editionId === undefined ? (
+          <Empty description={`Créez d’abord ${periode.une}.`} />
+        ) : (
+          <Demandes
+            editionId={editionId}
+            archivee={edition?.statut === 'ARCHIVEE'}
+          />
+        ))}
+      {onglet === 'annuaire' && (
+        <>
+          <Space
+            wrap
+            style={{
+              marginBottom: 16,
+              justifyContent: 'space-between',
+              width: '100%',
+            }}
+          >
+            <Button
+              type="primary"
+              icon={<UserAddOutlined />}
+              onClick={() => ouvrir('nouvelle')}
+            >
+              Inviter une personne
+            </Button>
+            <Space>
+              <Switch checked={inclureArchives} onChange={setInclureArchives} />
+              <span>Afficher les comptes archivés</span>
+            </Space>
+          </Space>
+          <Space wrap size={[16, 12]} style={{ marginBottom: 16 }}>
+            <Input.Search
+              allowClear
+              placeholder="Rechercher un nom ou une adresse"
+              aria-label="Rechercher un nom ou une adresse"
+              style={{ width: 320, maxWidth: '100%' }}
+              value={recherche}
+              onChange={e => setRecherche(e.target.value)}
+            />
+            <Checkbox
+              checked={sansAffectation && editionId !== undefined}
+              disabled={editionId === undefined}
+              onChange={e => setSansAffectation(e.target.checked)}
+            >
+              Sans affectation pour {periode.cette}
+            </Checkbox>
+          </Space>
+
+          <Table<Personne>
+            rowKey="id"
+            loading={loading}
+            dataSource={personnes}
+            pagination={{ pageSize: 50, hideOnSinglePage: true }}
+            scroll={{ x: 'max-content' }}
+            columns={[
+              {
+                title: 'Nom',
+                dataIndex: 'nom',
+                render: (nom: string, p) => (
+                  <Space style={{ whiteSpace: 'nowrap' }}>
+                    <Typography.Link onClick={() => ouvrir(p)}>
+                      {nom}
+                    </Typography.Link>
+                    {p.id === moiId && <Tag>Vous</Tag>}
+                  </Space>
+                ),
+              },
+              { title: 'Adresse mail', dataIndex: 'email' },
+              {
+                title: 'Affectations',
+                key: 'affectations',
+                render: (_, p) =>
+                  p.affectations.length === 0 ? (
+                    <Typography.Text type="secondary">Aucune</Typography.Text>
+                  ) : (
+                    <Space size={[4, 4]} wrap>
+                      {p.affectations.map(a => (
+                        <Tag
+                          key={a.id}
+                          style={{
+                            borderInlineStart: `4px solid ${a.perimetre.couleur ?? 'var(--rt-primaire)'}`,
+                          }}
+                        >
+                          {a.perimetre.nom}
+                        </Tag>
+                      ))}
+                    </Space>
+                  ),
+              },
+              {
+                title: 'Souhaits',
+                key: 'souhaits',
+                render: (_, p) =>
+                  p.souhaits.length === 0 ? (
+                    <Typography.Text type="secondary">Aucun</Typography.Text>
+                  ) : (
+                    <Space size={[4, 4]} wrap>
+                      {p.souhaits.map(souhait => (
+                        <Tag
+                          key={souhait.id}
+                          icon={
+                            souhait.satisfait ? (
+                              <CheckOutlined aria-label="Satisfait :" />
+                            ) : undefined
+                          }
+                          style={{
+                            borderInlineStart: `4px solid ${souhait.perimetre.couleur ?? 'var(--rt-primaire)'}`,
+                          }}
+                        >
+                          {souhait.perimetre.nom}
+                        </Tag>
+                      ))}
+                    </Space>
+                  ),
+              },
+              {
+                title: 'Rôle',
+                dataIndex: 'estAdmin',
+                render: (a: boolean, p) =>
+                  a ? (
+                    <Tag color="blue">Admin de l’organisation</Tag>
+                  ) : p.activitesAdministrees.length > 0 ? (
+                    <Space size={4} wrap>
+                      {p.activitesAdministrees.map(id => (
+                        <Tag key={id} color="geekblue">
+                          Admin · {nomsActivites.get(id) ?? 'activité'}
+                        </Tag>
+                      ))}
+                    </Space>
+                  ) : (
+                    <Tag>Référent·e</Tag>
+                  ),
+              },
+              {
+                title: 'Actions',
+                key: 'actions',
+                render: (_, p) =>
+                  p.archive && !gereOrganisation ? null : p.archive ? (
+                    <Button
+                      size="small"
+                      onClick={() =>
+                        void executer(
+                          () =>
+                            archiver({
+                              variables: { id: p.id, archive: false },
+                            }),
+                          'Compte restauré.'
+                        )
+                      }
+                    >
+                      Restaurer
+                    </Button>
+                  ) : (
+                    <Space>
+                      <Button
+                        size="small"
+                        icon={<MailOutlined />}
+                        onClick={() =>
+                          void executer(
+                            () => renvoyer({ variables: { id: p.id } }),
+                            'Invitation renvoyée.'
+                          )
+                        }
+                      >
+                        Renvoyer l’invitation
+                      </Button>
+                      {p.id !== moiId && gereOrganisation && (
+                        <Popconfirm
+                          title="Archiver ce compte ?"
+                          description="La personne est déconnectée et ne peut plus se connecter. Son historique reste conservé."
+                          okText="Archiver"
+                          cancelText="Annuler"
+                          onConfirm={() =>
+                            executer(
+                              () =>
+                                archiver({
+                                  variables: { id: p.id, archive: true },
+                                }),
+                              'Compte archivé.'
+                            )
+                          }
+                        >
+                          <Button size="small" danger>
+                            Archiver
+                          </Button>
+                        </Popconfirm>
+                      )}
+                    </Space>
+                  ),
+              },
+            ]}
+          />
+        </>
+      )}
 
       <Modal
         open={enEdition !== null}
