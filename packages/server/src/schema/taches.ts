@@ -310,7 +310,7 @@ builder.prismaObjectFields(PerimetreRef, t => ({
   acces: t.field({
     type: AccesPerimetreEnum,
     description:
-      'Accès de la personne connectée au périmètre (ADR 0014). COMPLET : elle lit ses tâches et ses fiches. CONSULTATION : elle lit ses tâches et son équipe, sans ses fiches. AUCUN : elle ne lit rien.',
+      'Accès de la personne connectée au périmètre (ADR 0014). COMPLET : elle lit ses tâches et ses fiches. CONSULTATION : elle lit ses tâches, son avancement et son équipe, sans ses fiches. AUCUN : elle ne lit ni ses tâches, ni son avancement, ni son équipe, ni ses fiches. Le nom et la description du périmètre restent lisibles en découverte (ADR 0012).',
     resolve: (perimetre, _args, ctx) => accesAuPerimetre(ctx, perimetre),
   }),
 }))

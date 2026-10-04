@@ -84,8 +84,10 @@ export type AccesPerimetre = 'COMPLET' | 'CONSULTATION' | 'AUCUN'
 /**
  * Accès d'une personne à un périmètre. COMPLET suit la règle de lecture : elle
  * administre l'activité ou a été affectée au périmètre. CONSULTATION : elle voit
- * l'activité sans avoir été affectée à ce périmètre. Les ensembles lus ici sont
- * mémorisés par requête : le champ se demande sans coût sur une liste.
+ * l'activité sans avoir été affectée à ce périmètre. AUCUN : ni tâche, ni
+ * avancement, ni équipe, ni fiche ; une personne en découverte lit encore le nom
+ * et la description (ADR 0012). Les ensembles lus ici sont mémorisés par requête :
+ * le champ se demande sans coût sur une liste.
  */
 export async function accesAuPerimetre(
   ctx: AppContext,
