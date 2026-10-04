@@ -313,20 +313,30 @@ test('noter garde le jour UTC quand le poste est en UTC', () => {
   ])
 })
 
-test('noter refuse un instant illisible', () => {
-  const { code, erreur } = lancerAvec(
-    depot('0.8.1'),
-    { VERSIONNER_MAINTENANT: 'demain' },
-    'noter',
-    '--cible',
-    'orga',
-    '--type',
-    'correctif',
-    '--audience',
-    'organisateurs',
-    '--titre',
-    'Un titre'
-  )
-  assert.equal(code, 1)
-  assert.match(erreur, /VERSIONNER_MAINTENANT « demain » n'est pas un instant/)
-})
+// Une variable vide est une valeur illisible, pas une variable absente.
+for (const valeur of ['demain', '']) {
+  test(`noter refuse l'instant illisible « ${valeur} »`, () => {
+    const racine = depot('0.8.1')
+    const { code, erreur } = lancerAvec(
+      racine,
+      { VERSIONNER_MAINTENANT: valeur },
+      'noter',
+      '--cible',
+      'orga',
+      '--type',
+      'correctif',
+      '--audience',
+      'organisateurs',
+      '--titre',
+      'Un titre'
+    )
+    assert.equal(code, 1)
+    assert.ok(
+      erreur.includes(
+        `VERSIONNER_MAINTENANT « ${valeur} » n'est pas un instant`
+      ),
+      erreur
+    )
+    assert.deepEqual(readdirSync(join(racine, 'notes/fragments')), [])
+  })
+}

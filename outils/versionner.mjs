@@ -644,7 +644,7 @@ function jourLocal(instant) {
 
 function maintenant() {
   const fixe = process.env.VERSIONNER_MAINTENANT
-  if (!fixe) return new Date()
+  if (fixe === undefined) return new Date()
   const instant = new Date(fixe)
   if (Number.isNaN(instant.getTime())) {
     mourir(`VERSIONNER_MAINTENANT « ${fixe} » n'est pas un instant`)
