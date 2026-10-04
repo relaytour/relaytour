@@ -21,7 +21,7 @@ import { Link } from 'react-router'
 import { graphql } from '../gql'
 import type { DemandesQuery, StatutDemande } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
-import { dateCourte, messageErreur } from '../lib/erreurs'
+import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import { PERIMETRES } from '../lib/requetes'
 
 import EtiquettePerimetre from './EtiquettePerimetre'
@@ -312,7 +312,7 @@ export default function Demandes({
           {
             title: 'Reçue le',
             dataIndex: 'creeLe',
-            render: (creeLe: string) => dateCourte(creeLe),
+            render: (creeLe: string) => jourDeLInstant(creeLe),
           },
           {
             title: 'État',

@@ -15,7 +15,7 @@ import { Section } from '../composants/Panneau'
 import { Puces } from '../composants/Puces'
 import Titre from '../composants/Titre'
 import type { ListeFichesQuery } from '../gql/graphql'
-import { dateCourte } from '../lib/erreurs'
+import { jourDeLInstant } from '../lib/erreurs'
 import { LISTE_FICHES } from '../lib/fiches'
 import { useOrganisation } from '../lib/organisation'
 import { normaliser } from '../lib/recherche'
@@ -39,7 +39,7 @@ function affichageMemorise(): Affichage {
 }
 
 function miseAJour(fiche: FicheListe): string {
-  const date = dateCourte(fiche.modifieeLe)
+  const date = jourDeLInstant(fiche.modifieeLe)
   if (fiche.source === 'GIT' && !fiche.modifieePar)
     return `Depuis le dépôt · ${date}`
   return fiche.modifieePar

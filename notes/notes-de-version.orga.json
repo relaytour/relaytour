@@ -8,6 +8,18 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-05-orga-la-date-d-une-demande-ou-d-une-fiche-suit-votre-fuseau-horai",
+          "date": "2026-10-05",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La date d'une demande ou d'une fiche suit votre fuseau horaire",
+            "texte": "L'onglet « Demandes » de « Personnes », la liste des fiches et le panneau « Contenu de l'organisation » calculaient le jour d'après l'heure universelle (UTC). En France, une demande déposée entre minuit et 2 h s'affichait avec la date de la veille. Ces écrans affichent désormais le jour dans le fuseau horaire de votre navigateur. Les échéances des tâches et les dates des périodes ne changent pas.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-04-orga-vous-consultez-les-taches-des-autres-perimetres-de-votre-act",
           "date": "2026-10-04",
           "type": "fonctionnalite",
