@@ -90,6 +90,8 @@ const ECRANS = [
     surDemande: true,
   },
   { nom: 'preferences', chemin: `${ACTIVITE}/preferences` },
+  // Le formulaire public (ADR 0015) : l'activité d'exemple doit l'avoir ouvert.
+  { nom: 'rejoindre', chemin: '/rejoindre/rencontres-de-la-vallee/rencontres' },
   { nom: 'avancement', chemin: `${ACTIVITE}/admin/avancement` },
   { nom: 'editions', chemin: `${ACTIVITE}/admin/editions` },
   { nom: 'equipe', chemin: `${ACTIVITE}/admin/equipe` },
