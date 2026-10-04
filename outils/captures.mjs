@@ -225,11 +225,16 @@ await envoyer('Runtime.enable')
 console.log(
   'Connectez-vous dans la fenêtre Chrome avec un compte fictif. Le code arrive dans Mailpit.'
 )
-// Pendant un chargement, la page ne répond pas ou répond sans valeur : seule une
-// adresse lue, et autre que celle de la connexion, prouve la session.
+// Pendant un chargement, la page ne répond pas, répond sans valeur ou porte encore
+// une adresse vide (about:blank). Seule une page de l'instance, autre que celle de
+// la connexion, prouve la session.
+const horsConnexion = adresse =>
+  typeof adresse === 'string' &&
+  adresse.startsWith(`${values.origine}/`) &&
+  new URL(adresse).pathname !== '/connexion'
 for (;;) {
-  const chemin = await evaluer('location.pathname').catch(() => undefined)
-  if (typeof chemin === 'string' && chemin !== '/connexion') break
+  if (horsConnexion(await evaluer('location.href').catch(() => undefined)))
+    break
   await attendre(1000)
 }
 console.log('✔ Session ouverte. Les captures commencent.')
@@ -252,7 +257,7 @@ for (const ecran of ECRANS.filter(e =>
   await envoyer('Page.navigate', { url: `${values.origine}${ecran.chemin}` })
   await attendre(2500)
   // Sans session, l'application renvoie à la connexion : cet écran ne se publie pas.
-  if ((await evaluer('location.pathname')) === '/connexion') {
+  if (!horsConnexion(await evaluer('location.href').catch(() => undefined))) {
     console.error(`✖ ${ecran.nom} : la session n'est pas ouverte.`)
     echecs += 1
     continue

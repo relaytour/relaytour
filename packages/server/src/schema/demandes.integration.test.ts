@@ -13,7 +13,10 @@ import {
 } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
-import { PROPOSITIONS_EN_ATTENTE_MAX } from '../lib/demandes.ts'
+import {
+  PROPOSITIONS_EN_ATTENTE_MAX,
+  signalerDemande,
+} from '../lib/demandes.ts'
 
 import { schema } from './index.ts'
 
@@ -44,6 +47,7 @@ const ids = {
   basket: '',
   admin: '',
   alice: '', // référente natation
+  bruno: '', // référent natation, lui aussi
   chloe: '', // référente basket
   emma: '', // membre sans affectation
   fred: '', // membre sans affectation, proposé plus bas
@@ -163,7 +167,14 @@ beforeAll(async () => {
       })
     ).id
   }
-  for (const cle of ['admin', 'alice', 'chloe', 'emma', 'fred'] as const) {
+  for (const cle of [
+    'admin',
+    'alice',
+    'bruno',
+    'chloe',
+    'emma',
+    'fred',
+  ] as const) {
     ids[cle] = randomUUID()
     await prisma.user.create({
       data: {
@@ -183,6 +194,7 @@ beforeAll(async () => {
     data: [
       { userId: ids.alice, perimetreId: ids.natation, editionId: ids.edition },
       { userId: ids.alice, perimetreId: ids.natation, editionId: ids.archivee },
+      { userId: ids.bruno, perimetreId: ids.natation, editionId: ids.edition },
       { userId: ids.chloe, perimetreId: ids.basket, editionId: ids.edition },
     ],
   })
@@ -300,6 +312,54 @@ describe('proposer une personne', () => {
     ])
   })
 
+  it('donne sa propre ligne à un co-référent qui propose la même adresse', async () => {
+    const avant = await compter()
+    expect((await proposer(ids.bruno, 'zoe')).data).toEqual({
+      proposerPersonne: true,
+    })
+    // La demande reste unique : seule la liste du co-référent change, comme pour
+    // une adresse inconnue.
+    expect(await compter()).toEqual(avant)
+    const demande = await demandeDe('zoe')
+    expect(
+      demande?.perimetres
+        .filter(p => p.perimetreId === ids.natation)
+        .map(p => p.proposeParId)
+    ).toEqual([ids.alice, ids.bruno])
+    const r = await executer(
+      ids.bruno,
+      `query ($p: ID!, $e: ID!) { mesPropositions(perimetreId: $p, editionId: $e) { nom } }`,
+      { p: ids.natation, e: ids.edition }
+    )
+    expect(r.data).toEqual({ mesPropositions: [{ nom: 'Personne zoe' }] })
+    // Proposer deux fois ne crée pas deux lignes.
+    await proposer(ids.bruno, 'zoe')
+    expect((await demandeDe('zoe'))?.perimetres).toHaveLength(3)
+  })
+
+  it('prévient un admin une seule fois par jour de son fuseau', async () => {
+    const compterNotifications = () =>
+      prisma.notification.count({ where: { organisationId: ids.org } })
+    const avant = await compterNotifications()
+    const signaler = (instant: string) =>
+      signalerDemande(
+        prisma,
+        {
+          organisationId: ids.org,
+          activiteId: ids.activite,
+          acteurId: ids.alice,
+        },
+        new Date(instant)
+      )
+    // 0 h 30 et 11 h le 11 janvier à Paris : deux jours différents en UTC.
+    await signaler('2027-01-10T23:30:00Z')
+    await signaler('2027-01-11T10:00:00Z')
+    expect(await compterNotifications()).toBe(avant + 1)
+    // Le lendemain à Paris, une nouvelle notification part.
+    await signaler('2027-01-11T23:30:00Z')
+    expect(await compterNotifications()).toBe(avant + 2)
+  })
+
   it('ne montre à chaque personne que ses propres propositions, sans adresse', async () => {
     const Q = `query ($p: ID!, $e: ID!) { mesPropositions(perimetreId: $p, editionId: $e) { nom statut } }`
     const lire = async (userId: string, perimetre: string) => {
@@ -369,6 +429,7 @@ describe('file de revue', () => {
     expect(demandes[0]?.perimetres.map(p => p.perimetre.id)).toEqual([
       ids.natation,
       ids.basket,
+      ids.natation,
     ])
   })
 
@@ -389,6 +450,7 @@ describe('file de revue', () => {
         }
       ).postesAPourvoir.map(p => [p.perimetre.id, p.demandesEnAttente])
     )
+    // Zoé est proposée deux fois pour la natation : sa demande compte une fois.
     expect(comptes.get(ids.natation)).toBe(3)
     expect(comptes.get(ids.basket)).toBe(1)
   })

@@ -26,7 +26,7 @@ Le droit d'inviter créerait un troisième niveau de droits, écarté par l'ADR 
 
 - Une **demande** porte le nom et l'adresse d'une personne qui demande à rejoindre l'équipe d'une période, avec les périmètres qui l'intéressent.
 - Une demande a deux origines. Une **proposition** vient d'une personne affectée à un périmètre, pour ce périmètre. Le **formulaire public** est rempli par la personne elle-même, sans session.
-- Une demande est en attente, acceptée ou refusée. Une adresse a au plus une demande en attente par période : une seconde proposition ajoute son périmètre à la demande existante.
+- Une demande est en attente, acceptée ou refusée. Une adresse a au plus une demande en attente par période : une seconde proposition s'ajoute à la demande existante. Chaque personne qui propose y garde sa propre ligne, même pour un périmètre déjà proposé.
 - Aucun compte n'existe avant la revue. Une demande ne donne aucun accès, et aucun contrôle d'accès ne la lit.
 
 ### Proposition par une référente ou un référent

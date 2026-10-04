@@ -37,7 +37,7 @@ CREATE TABLE `DemandePerimetre` (
 
     INDEX `DemandePerimetre_perimetreId_idx`(`perimetreId`),
     INDEX `DemandePerimetre_proposeParId_idx`(`proposeParId`),
-    UNIQUE INDEX `DemandePerimetre_demandeId_perimetreId_key`(`demandeId`, `perimetreId`),
+    UNIQUE INDEX `DemandePerimetre_demandeId_perimetreId_proposeParId_key`(`demandeId`, `perimetreId`, `proposeParId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 

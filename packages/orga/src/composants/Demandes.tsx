@@ -163,9 +163,11 @@ export default function Demandes({
     // préfère laisser en souhait.
     const actifs = new Set((perimetres?.perimetres ?? []).map(p => p.id))
     form.setFieldsValue({
-      affecter: demande.perimetres
-        .map(p => p.perimetre.id)
-        .filter(id => actifs.has(id)),
+      // Deux personnes peuvent avoir proposé le même périmètre : il ne se choisit
+      // qu'une fois.
+      affecter: [
+        ...new Set(demande.perimetres.map(p => p.perimetre.id)),
+      ].filter(id => actifs.has(id)),
     })
   }
 
@@ -307,7 +309,9 @@ export default function Demandes({
                     size="small"
                     type="primary"
                     icon={<CheckOutlined />}
-                    disabled={archivee}
+                    // Sans la liste des périmètres, la fenêtre ne saurait pas
+                    // lesquels proposer d'office à l'affectation.
+                    disabled={archivee || perimetres === undefined}
                     aria-label={`Accepter la demande de ${d.nom}`}
                     onClick={() => ouvrir(d)}
                   >

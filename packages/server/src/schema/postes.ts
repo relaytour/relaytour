@@ -119,19 +119,25 @@ async function chargerPostes(
         include: { user: true },
         orderBy: { createdAt: 'asc' },
       }),
-      prisma.demandePerimetre.groupBy({
-        by: ['perimetreId'],
+      // Deux personnes peuvent proposer la même adresse pour le même périmètre :
+      // la demande ne compte qu'une fois.
+      prisma.demandePerimetre.findMany({
         where: { demande: { editionId, statut: 'EN_ATTENTE' } },
-        _count: { _all: true },
+        select: { perimetreId: true, demandeId: true },
+        distinct: ['perimetreId', 'demandeId'],
       }),
     ])
 
   const effectifParPerimetre = new Map(
     effectifs.map(e => [e.perimetreId, e.effectif])
   )
-  const demandesParPerimetre = new Map(
-    demandes.map(d => [d.perimetreId, d._count._all])
-  )
+  const demandesParPerimetre = new Map<string, number>()
+  for (const d of demandes) {
+    demandesParPerimetre.set(
+      d.perimetreId,
+      (demandesParPerimetre.get(d.perimetreId) ?? 0) + 1
+    )
+  }
   // Un souhait est satisfait dès que l'affectation du même triplet existe.
   const affectes = new Set(
     affectations.map(a => `${a.userId}|${a.perimetreId}`)

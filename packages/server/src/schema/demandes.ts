@@ -66,13 +66,10 @@ const DemandeRef = builder.prismaObject('Demande', {
     dejaMembre: t.boolean({
       description:
         'Vrai quand un compte de l’organisation porte déjà cette adresse : accepter la demande ne crée alors aucun compte.',
-      resolve: async demande =>
-        (await prisma.appartenance.count({
-          where: {
-            organisationId: demande.organisationId,
-            user: { email: demande.adresse },
-          },
-        })) > 0,
+      resolve: async (demande, _args, ctx) =>
+        (await adressesDesMembres(ctx, demande.organisationId)).has(
+          demande.adresse
+        ),
     }),
   }),
 })
@@ -91,6 +88,35 @@ const PropositionRef = builder
     }),
   })
 
+// Les adresses des membres d'une organisation, lues une fois par requête : la file
+// de revue demande « déjà membre » pour chaque demande.
+const memoAdresses = new WeakMap<
+  AppContext,
+  Map<string, Promise<Set<string>>>
+>()
+
+function adressesDesMembres(
+  ctx: AppContext,
+  organisationId: string
+): Promise<Set<string>> {
+  let memo = memoAdresses.get(ctx)
+  if (memo === undefined) {
+    memo = new Map()
+    memoAdresses.set(ctx, memo)
+  }
+  let adresses = memo.get(organisationId)
+  if (adresses === undefined) {
+    adresses = prisma.user
+      .findMany({
+        where: { appartenances: { some: { organisationId } } },
+        select: { email: true },
+      })
+      .then(comptes => new Set(comptes.map(c => c.email)))
+    memo.set(organisationId, adresses)
+  }
+  return adresses
+}
+
 // ── Contrôles ────────────────────────────────────────────────────────────────
 
 /**
@@ -108,6 +134,21 @@ async function exigerDemande(ctx: AppContext, id: string | number) {
 }
 
 const DEJA_TRAITEE = 'Cette demande est déjà traitée.'
+
+/**
+ * Verrouille la demande jusqu'à la fin de la transaction. Renvoie faux si elle
+ * n'attend plus : deux écritures simultanées se suivent, et la seconde lit la
+ * décision de la première.
+ */
+async function verrouillerEnAttente(
+  tx: Prisma.TransactionClient,
+  demandeId: string
+): Promise<boolean> {
+  const [ligne] = await tx.$queryRaw<
+    { statut: string }[]
+  >`SELECT statut FROM Demande WHERE id = ${demandeId} FOR UPDATE`
+  return ligne?.statut === 'EN_ATTENTE'
+}
 
 /** Refuse le traitement d'une demande dont la période est archivée. */
 async function exigerPeriodeOuverte(ctx: AppContext, editionId: string) {
@@ -226,18 +267,30 @@ builder.mutationFields(t => ({
             )
           }
           const ligne = { perimetreId, proposeParId: acteur.id, mot }
-          const demande = await tx.demande.findUnique({
+          const enCours = await tx.demande.findUnique({
             where: {
               editionId_adresseEnAttente: {
                 editionId,
                 adresseEnAttente: email,
               },
             },
-            select: {
-              id: true,
-              perimetres: { where: { perimetreId }, select: { id: true } },
-            },
+            select: { id: true },
           })
+          // Un admin peut traiter la demande pendant la proposition : le verrou
+          // attend sa décision, et une demande traitée laisse la place à une nouvelle.
+          const demande =
+            enCours !== null && (await verrouillerEnAttente(tx, enCours.id))
+              ? await tx.demande.findUniqueOrThrow({
+                  where: { id: enCours.id },
+                  select: {
+                    id: true,
+                    perimetres: {
+                      where: { perimetreId },
+                      select: { proposeParId: true },
+                    },
+                  },
+                })
+              : null
           if (demande === null) {
             await tx.demande.create({
               data: {
@@ -253,11 +306,16 @@ builder.mutationFields(t => ({
             })
             return true
           }
-          if (demande.perimetres.length > 0) return false
+          // Chaque personne qui propose a sa ligne : sa liste se comporte comme
+          // pour une adresse inconnue. Les admins ne sont prévenus que d'un
+          // périmètre nouveau pour la demande.
+          if (demande.perimetres.some(l => l.proposeParId === acteur.id)) {
+            return false
+          }
           await tx.demandePerimetre.create({
             data: { demandeId: demande.id, ...ligne },
           })
-          return true
+          return demande.perimetres.length === 0
         })
       )
       if (nouvelle) {
@@ -289,7 +347,9 @@ builder.mutationFields(t => ({
         select: { id: true, demandeId: true },
       })
       if (ligne === null) return false
-      await prisma.$transaction(async tx => {
+      return prisma.$transaction(async tx => {
+        // Un admin peut avoir traité la demande depuis la lecture : elle ne change plus.
+        if (!(await verrouillerEnAttente(tx, ligne.demandeId))) return false
         await tx.demandePerimetre.delete({ where: { id: ligne.id } })
         // Une demande née d'une proposition disparaît avec son dernier périmètre.
         await tx.demande.deleteMany({
@@ -300,8 +360,8 @@ builder.mutationFields(t => ({
             perimetres: { none: {} },
           },
         })
+        return true
       })
-      return true
     },
   }),
 
@@ -329,10 +389,9 @@ builder.mutationFields(t => ({
         prisma.$transaction(async tx => {
           // Deux admins peuvent accepter en même temps : le verrou sérialise, et le
           // second lit une demande déjà traitée.
-          const [verrou] = await tx.$queryRaw<
-            { statut: string }[]
-          >`SELECT statut FROM Demande WHERE id = ${demande.id} FOR UPDATE`
-          if (verrou?.statut !== 'EN_ATTENTE') throw erreurSaisie(DEJA_TRAITEE)
+          if (!(await verrouillerEnAttente(tx, demande.id))) {
+            throw erreurSaisie(DEJA_TRAITEE)
+          }
           const compte = await creerOuRattacherCompte(tx, {
             email: demande.adresse,
             nom: demande.nom,
@@ -443,7 +502,7 @@ async function noterLesAutresSouhaits(
   userId: string,
   affectes: string[]
 ) {
-  const [demandes, dejaSouhaites] = await Promise.all([
+  const [demandes, souhaits] = await Promise.all([
     tx.demandePerimetre.findMany({
       where: {
         demandeId: demande.id,
@@ -453,14 +512,22 @@ async function noterLesAutresSouhaits(
       select: { perimetreId: true },
       orderBy: { createdAt: 'asc' },
     }),
-    tx.souhait.count({ where: { userId, editionId: demande.editionId } }),
+    tx.souhait.findMany({
+      where: { userId, editionId: demande.editionId },
+      select: { perimetreId: true },
+    }),
   ])
-  const places = Math.max(SOUHAITS_MAX - dejaSouhaites, 0)
-  const data = demandes.slice(0, places).map(d => ({
+  // Un périmètre déjà souhaité ne prend pas de place : seuls les souhaits nouveaux
+  // comptent dans la limite. Deux propositions du même périmètre n'en font qu'un.
+  const dejaSouhaites = new Set(souhaits.map(s => s.perimetreId))
+  const nouveaux = [...new Set(demandes.map(d => d.perimetreId))].filter(
+    id => !dejaSouhaites.has(id)
+  )
+  const places = Math.max(SOUHAITS_MAX - dejaSouhaites.size, 0)
+  const data = nouveaux.slice(0, places).map(perimetreId => ({
     userId,
-    perimetreId: d.perimetreId,
+    perimetreId,
     editionId: demande.editionId,
   }))
-  if (data.length > 0)
-    await tx.souhait.createMany({ data, skipDuplicates: true })
+  if (data.length > 0) await tx.souhait.createMany({ data })
 }

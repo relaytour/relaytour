@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@relaytour/database'
 
+import { aujourdhui } from './droits.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { journal } from './journal.ts'
 
@@ -53,7 +54,12 @@ export async function signalerDemande(
             where: { organisationId, role: 'ADMIN', user: actif },
             select: { userId: true },
           })
-    const jour = maintenant.toISOString().slice(0, 10)
+    // Le jour se compte dans le fuseau de l'organisation, comme ses rappels.
+    const { fuseauHoraire } = await prisma.organisation.findUniqueOrThrow({
+      where: { id: organisationId },
+      select: { fuseauHoraire: true },
+    })
+    const jour = aujourdhui(maintenant, fuseauHoraire)
     for (const { userId } of admins) {
       if (userId === acteurId) continue
       try {

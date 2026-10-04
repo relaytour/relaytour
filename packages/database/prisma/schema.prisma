@@ -456,7 +456,9 @@ model Demande {
 }
 
 // Un périmètre demandé : proposé par un·e référent·e, ou choisi dans le formulaire
-// public (sans auteur). Le mot facultatif accompagne une proposition.
+// public (sans auteur). Le mot facultatif accompagne une proposition. Deux personnes
+// qui proposent la même adresse pour le même périmètre ont chacune leur ligne : la
+// liste de chacune se comporte comme pour une adresse inconnue.
 model DemandePerimetre {
   id           String   @id @default(cuid())
   demandeId    String
@@ -469,7 +471,7 @@ model DemandePerimetre {
   perimetre  Perimetre @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
   proposePar User?     @relation(fields: [proposeParId], references: [id], onDelete: SetNull)
 
-  @@unique([demandeId, perimetreId])
+  @@unique([demandeId, perimetreId, proposeParId])
   @@index([perimetreId])
   @@index([proposeParId])
 }
