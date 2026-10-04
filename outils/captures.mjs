@@ -56,7 +56,8 @@ const defiler = texte =>
 
 /**
  * Les écrans photographiés : nom du fichier, chemin, réglage du navigateur avant
- * le chargement (`avant`) et geste après le chargement (`apres`).
+ * le chargement (`avant`) et geste après le chargement (`apres`). Un écran
+ * `surDemande` demande un autre compte : il ne se prend qu'avec --seulement.
  */
 const ECRANS = [
   { nom: 'mon-espace', chemin: `${ACTIVITE}/` },
@@ -73,6 +74,14 @@ const ECRANS = [
   },
   { nom: 'fiche', chemin: `${ACTIVITE}/fiches/planifier-les-creneaux` },
   { nom: 'perimetre', chemin: `${ACTIVITE}/perimetres/coordination` },
+  // Un périmètre ouvert en consultation (ADR 0014). L'écran se photographie avec le
+  // compte d'une personne affectée à un autre périmètre de l'activité, sans rôle
+  // d'admin : il ne se prend que sur demande, par --seulement.
+  {
+    nom: 'perimetre-consultation',
+    chemin: `${ACTIVITE}/perimetres/football`,
+    surDemande: true,
+  },
   { nom: 'preferences', chemin: `${ACTIVITE}/preferences` },
   { nom: 'avancement', chemin: `${ACTIVITE}/admin/avancement` },
   { nom: 'editions', chemin: `${ACTIVITE}/admin/editions` },
@@ -211,7 +220,9 @@ await envoyer('Emulation.setDeviceMetricsOverride', {
 })
 mkdirSync(values.sortie, { recursive: true })
 
-for (const ecran of ECRANS.filter(e => !choisis || choisis.includes(e.nom))) {
+for (const ecran of ECRANS.filter(e =>
+  choisis ? choisis.includes(e.nom) : !e.surDemande
+)) {
   if (ecran.avant) await evaluer(ecran.avant)
   await envoyer('Page.navigate', { url: `${values.origine}${ecran.chemin}` })
   await attendre(2500)
