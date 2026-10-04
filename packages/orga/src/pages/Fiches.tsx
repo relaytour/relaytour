@@ -209,7 +209,7 @@ export default function Fiches() {
         </span>
       </div>
 
-      {loading ? (
+      {loading && !data ? (
         <Skeleton active />
       ) : groupes.length === 0 ? (
         <div className="rt-verre rt-panneau">

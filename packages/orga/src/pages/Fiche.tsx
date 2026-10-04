@@ -45,7 +45,7 @@ export default function Fiche() {
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const { message } = App.useApp()
-  const { data, loading, error } = useQuery(FICHE, { variables: { slug } })
+  const { data, error } = useQuery(FICHE, { variables: { slug } })
   const { data: courante } = useQuery(EDITION_COURANTE)
   const editionId = courante?.editionCourante?.id
   const liees = useQuery(TACHES_FICHE, {
@@ -65,7 +65,7 @@ export default function Fiche() {
 
   if (error)
     return <Result status="403" title="Vous n’avez pas accès à cette fiche." />
-  if (loading || !data) return <Skeleton active />
+  if (!data) return <Skeleton active />
   const fiche = data.fiche
   if (!fiche)
     return <Result status="404" title="Cette fiche est introuvable." />
@@ -163,7 +163,7 @@ export default function Fiche() {
                   </span>
                 }
               >
-                {liees.loading ? (
+                {liees.loading && !liees.data ? (
                   <Skeleton active paragraph={{ rows: 2 }} title={false} />
                 ) : taches.length === 0 ? (
                   <p className="rt-texte-secondaire">
@@ -244,7 +244,7 @@ export default function Fiche() {
         title="Historique de la fiche"
         size={560}
       >
-        {versions.loading ? (
+        {versions.loading && !versions.data ? (
           <Skeleton active />
         ) : versionAffichee ? (
           <>

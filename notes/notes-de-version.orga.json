@@ -8,6 +8,18 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-05-orga-les-ecrans-se-mettent-a-jour-pendant-que-vous-travaillez",
+          "date": "2026-10-05",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les écrans se mettent à jour pendant que vous travaillez",
+            "texte": "Les tâches, l'avancement, les fiches, l'équipe et la cloche se relisent quand vous revenez sur l'onglet, quand le réseau revient, et chaque minute tant que l'onglet est visible. Vous voyez ainsi les changements des autres personnes sans recharger la page. L'écran garde son contenu pendant la relecture, et l'éditeur de fiche garde votre texte. Quand vos accès changent ou que votre session prend fin, un avis vous propose de recharger la page.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-05-orga-la-date-d-une-demande-ou-d-une-fiche-suit-votre-fuseau-horai",
           "date": "2026-10-05",
           "type": "correctif",

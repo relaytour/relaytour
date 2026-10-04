@@ -219,6 +219,7 @@ Une release ne se publie qu'après ses images : une relance du workflow ne crée
 - `mjml2html` est asynchrone en version 5 alors que ses types le décrivent synchrone.
 - Sans `--target`, un `docker build` construit la dernière étape du Dockerfile : `runtime` doit rester la dernière.
 - BullMQ refuse `:` dans un `jobId`.
+- Apollo Client 4 passe `loading` à vrai pendant un `refetch()`, y compris après une mutation qui liste des `refetchQueries`. Un écran qui affiche son squelette sur `loading` seul démonte alors son contenu : tester `loading && !data`. La relecture périodique des écrans (`packages/orga/src/lib/rafraichissement.ts`) ne passe pas par `refetch()` ; une requête ajoutée à sa liste doit garder son écran pendant un chargement.
 - antd 6 déprécie plusieurs props : `message` sur `Alert` (`title`), `tip` sur `Spin` (`description`), `direction` sur `Space` (`orientation`), `size="default"` sur `Progress` (`medium`), `valueStyle` sur `Statistic` (`styles.content`).
 - Prettier reformate le texte des requêtes `graphql()` : relancer `yarn workspace @relaytour/orga codegen` après un formatage, sinon les types deviennent `unknown`.
 - Dans `Coquille`, le contenu principal porte `minWidth: 0` : sans lui, un tableau large élargit toute la page au-delà de l'écran.

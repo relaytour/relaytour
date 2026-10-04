@@ -100,7 +100,7 @@ export default function Perimetre() {
   const { data: courante } = useQuery(EDITION_COURANTE)
   const { data: editions } = useQuery(EDITIONS)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
-  const { data, loading, error } = useQuery(PAGE, {
+  const { data, error } = useQuery(PAGE, {
     variables: { slug, editionId: editionId ?? '' },
     skip: editionId === undefined,
   })
@@ -140,7 +140,9 @@ export default function Perimetre() {
       <Result status="info" title={`${periode.Aucune} n’est en préparation.`} />
     )
   }
-  if (loading || !data) return <Skeleton active />
+  // L'écran garde son contenu pendant une relecture : seul un premier chargement
+  // affiche le squelette.
+  if (!data) return <Skeleton active />
   if (!perimetre || !data.moi)
     return <Result status="404" title="Ce périmètre est introuvable." />
 

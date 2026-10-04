@@ -47,8 +47,9 @@ function ilYA(iso: string): string {
 export default function Notifications() {
   const navigate = useNavigate()
   const [ouvert, setOuvert] = useState(false)
-  // Le nombre se rafraîchit chaque minute : les notifications viennent d'autres personnes.
-  const { data: nombre } = useQuery(NOMBRE, { pollInterval: 60_000 })
+  // Les notifications viennent d'autres personnes : la coquille relit le nombre
+  // chaque minute, avec les écrans (lib/rafraichissement.ts).
+  const { data: nombre } = useQuery(NOMBRE)
   const liste = useQuery(LISTE, {
     skip: !ouvert,
     fetchPolicy: 'cache-and-network',
