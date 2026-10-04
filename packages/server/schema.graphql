@@ -141,6 +141,11 @@ type Demande {
   origine: OrigineDemande!
   perimetres: [DemandePerimetre!]!
 
+  """
+  Libellé de la question complémentaire au moment du dépôt. Le réglage du formulaire peut avoir changé depuis.
+  """
+  question: String
+
   """Réponse à la question complémentaire du formulaire public."""
   reponse: String
   statut: StatutDemande!

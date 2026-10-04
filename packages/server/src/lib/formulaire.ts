@@ -63,9 +63,24 @@ export function descriptionPubliable(
     : null
 }
 
-const LIEN = /https?:\/\/|www\./i
+// Un lien s'écrit avec un schéma (https://, mailto:), avec « www. », ou comme un nom
+// de domaine nu. Les extensions les plus courantes suffisent : la liste complète
+// refuserait une phrase où l'espace manque après un point (« tournoi.Merci »).
+const EXTENSIONS =
+  'app|be|biz|ca|ch|club|co|com|de|dev|es|eu|fr|gg|info|io|it|link|live|ly|me|net|online|org|pro|ru|shop|site|store|tech|top|tv|uk|us|xyz'
+const LIENS = [
+  /\b[a-z][a-z0-9+.-]*:\/\//i,
+  /\bmailto:/i,
+  /\bwww\./i,
+  new RegExp(`\\b(?:[a-z0-9-]+\\.)+(?:${EXTENSIONS})\\b`, 'i'),
+]
 
-/** Vrai quand un texte libre du formulaire contient un lien, que le dépôt refuse. */
+/**
+ * Vrai quand un texte libre du formulaire contient un lien, que le dépôt refuse. Une
+ * adresse mail compte comme un lien : le formulaire a déjà son champ d'adresse. Ce
+ * contrôle complète les limites de débit et la revue par un admin ; l'espace
+ * organisateur n'affiche jamais ces textes comme des liens.
+ */
 export function contientUnLien(texte: string): boolean {
-  return LIEN.test(texte)
+  return LIENS.some(lien => lien.test(texte))
 }

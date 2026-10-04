@@ -361,6 +361,8 @@ describe('déposer une demande sans session', () => {
       statut: 'EN_ATTENTE',
       nom: 'Personne lina',
       disponibilite: 'Chaque semaine',
+      // La question posée se garde avec la réponse : le réglage peut changer.
+      question: 'Votre club',
       reponse: 'Club de la vallée',
       texte: 'J’ai déjà tenu une buvette.',
       userId: null,
@@ -424,6 +426,8 @@ describe('déposer une demande sans session', () => {
     ['une disponibilité hors des paliers', { d: 'Tous les jours' }],
     ['un lien dans le texte', { t: 'Voir https://exemple.org' }],
     ['un lien dans la réponse', { r: 'www.exemple.org' }],
+    ['un nom de domaine nu', { t: 'Mon site : mon-club.fr' }],
+    ['une adresse mailto', { t: 'mailto:personne@exemple.org' }],
     ['un texte trop long', { t: 'a'.repeat(601) }],
   ])('refuse %s', async (_cas, plus) => {
     const avant = await demandes()
@@ -510,6 +514,33 @@ describe('régler le formulaire', () => {
       },
     })
     expect(await lire()).toBeNull()
+  })
+
+  it('refuse de retirer le dernier contact d’un formulaire ouvert', async () => {
+    await reglerActivite({ formulaireOuvert: true })
+    const RETIRER = `mutation ($id: ID!) { modifierIdentiteActivite(id: $id) { id } }`
+    const ouvert = await executer(
+      RETIRER,
+      { id: ids.activite },
+      { userId: ids.admin }
+    )
+    expect(code(ouvert)).toBe('SAISIE_INVALIDE')
+    expect(await lire()).not.toBeNull()
+    // Formulaire fermé, le contact se retire.
+    await reglerActivite({ formulaireOuvert: false })
+    try {
+      const ferme = await executer(
+        RETIRER,
+        { id: ids.activite },
+        { userId: ids.admin }
+      )
+      expect(ferme.errors).toBeUndefined()
+    } finally {
+      await reglerActivite({
+        identite: { contactRecrutement: 'equipe@exemple.fr' },
+      })
+      invaliderConfigurationOrganisation()
+    }
   })
 
   it('refuse d’ouvrir le formulaire sans contact', async () => {

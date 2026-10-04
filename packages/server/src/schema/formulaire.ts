@@ -1,4 +1,4 @@
-import { prisma } from '@relaytour/database'
+import { prisma, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { lireGroupes } from '../lib/activites.ts'
@@ -60,8 +60,8 @@ interface FormulaireOuvert {
 
 /**
  * Le formulaire d'une activité, s'il est ouvert : l'organisation est active,
- * l'activité n'est pas archivée, un admin a ouvert le formulaire, une période est en
- * préparation et un contact est déclaré. Sinon null, sans dire pourquoi. Sans slug
+ * l'activité n'est pas archivée, un admin a ouvert le formulaire, une période n'est
+ * pas archivée (en préparation ou en cours) et un contact est déclaré. Sinon null, sans dire pourquoi. Sans slug
  * d'organisation, l'installation doit n'en porter qu'une.
  */
 async function formulaireOuvert(
@@ -243,42 +243,46 @@ function texteLibre(
   return texte
 }
 
-/** Refuse le dépôt quand l'adresse IP, l'adresse mail ou l'activité en envoient trop. */
+/** Refuse le dépôt quand l'adresse IP ou l'adresse mail en envoient trop. */
 async function exigerDebitRaisonnable(
   ctx: AppContext,
   formulaire: FormulaireOuvert,
   email: string
 ) {
   const refuser = { siIndisponible: 'refuser' } as const
-  const [parIp, parAdresse] = [
-    await limiterParCle(
-      `rejoindre-ip-${ctx.ip ?? 'inconnue'}`,
-      DEPOTS_PAR_IP_ET_PAR_HEURE,
-      3600,
-      refuser
-    ),
-    await limiterParCle(
-      `rejoindre-adresse-${formulaire.activiteId}-${email}`,
-      DEPOTS_PAR_ADRESSE_ET_PAR_JOUR,
-      86_400,
-      refuser
-    ),
-  ]
+  const parIp = await limiterParCle(
+    `rejoindre-ip-${ctx.ip ?? 'inconnue'}`,
+    DEPOTS_PAR_IP_ET_PAR_HEURE,
+    3600,
+    refuser
+  )
+  const parAdresse = await limiterParCle(
+    `rejoindre-adresse-${formulaire.activiteId}-${email}`,
+    DEPOTS_PAR_ADRESSE_ET_PAR_JOUR,
+    86_400,
+    refuser
+  )
   if (!parIp || !parAdresse) throw erreurSaisie(TROP)
-  const duFormulaire = {
-    activiteId: formulaire.activiteId,
-    origine: 'FORMULAIRE' as const,
-  }
+}
+
+/**
+ * Refuse le dépôt quand l'activité en a trop reçu. L'appelant tient le verrou de
+ * l'activité : le comptage et la création qui suit ne se croisent pas avec un autre
+ * dépôt, et les plafonds ne se dépassent pas.
+ */
+async function exigerPlaceDansLActivite(
+  tx: Prisma.TransactionClient,
+  activiteId: string
+) {
+  const duFormulaire = { activiteId, origine: 'FORMULAIRE' as const }
   const [recentes, enAttente] = await Promise.all([
-    prisma.demande.count({
+    tx.demande.count({
       where: {
         ...duFormulaire,
         createdAt: { gte: new Date(Date.now() - 3600 * 1000) },
       },
     }),
-    prisma.demande.count({
-      where: { ...duFormulaire, statut: 'EN_ATTENTE' },
-    }),
+    tx.demande.count({ where: { ...duFormulaire, statut: 'EN_ATTENTE' } }),
   ])
   if (
     recentes >= DEPOTS_PAR_ACTIVITE_ET_PAR_HEURE ||
@@ -336,24 +340,33 @@ builder.mutationField('envoyerDemande', t =>
       await exigerDebitRaisonnable(ctx, formulaire, email)
 
       try {
-        await prisma.demande.create({
-          data: {
-            organisationId: formulaire.organisationId,
-            activiteId: formulaire.activiteId,
-            editionId: formulaire.editionId,
-            origine: 'FORMULAIRE',
-            nom,
-            adresse: email,
-            adresseEnAttente: email,
-            disponibilite,
-            reponse,
-            texte,
-            perimetres: {
-              create: perimetreIds.map(perimetreId => ({
-                perimetreId: perimetreId!,
-              })),
+        await prisma.$transaction(async tx => {
+          await tx.$queryRaw`SELECT id FROM Activite WHERE id = ${formulaire.activiteId} FOR UPDATE`
+          await exigerPlaceDansLActivite(tx, formulaire.activiteId)
+          await tx.demande.create({
+            data: {
+              organisationId: formulaire.organisationId,
+              activiteId: formulaire.activiteId,
+              editionId: formulaire.editionId,
+              origine: 'FORMULAIRE',
+              nom,
+              adresse: email,
+              adresseEnAttente: email,
+              disponibilite,
+              // La question se garde avec sa réponse : le réglage peut changer.
+              question:
+                reponse === null
+                  ? null
+                  : (formulaire.formulaire.question ?? null),
+              reponse,
+              texte,
+              perimetres: {
+                create: perimetreIds.map(perimetreId => ({
+                  perimetreId: perimetreId!,
+                })),
+              },
             },
-          },
+          })
         })
       } catch (erreur) {
         // P2002 : une demande attend déjà pour cette adresse et cette période. La

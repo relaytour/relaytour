@@ -239,6 +239,7 @@ export async function construireExport(organisationId: string) {
       nom: d.nom,
       email: d.adresse,
       disponibilite: d.disponibilite,
+      question: d.question,
       reponse: d.reponse,
       texte: d.texte,
       perimetres: d.perimetres.map(p => ({

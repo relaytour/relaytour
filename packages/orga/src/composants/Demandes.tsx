@@ -41,6 +41,7 @@ const DEMANDES = graphql(`
       creeLe
       dejaMembre
       disponibilite
+      question
       reponse
       texte
       traiteePar {
@@ -240,7 +241,7 @@ export default function Demandes({
               )}
               {d.reponse && (
                 <>
-                  <dt>{activite.formulaire.question ?? 'Réponse'}</dt>
+                  <dt>{d.question ?? 'Question complémentaire'}</dt>
                   <dd>{d.reponse}</dd>
                 </>
               )}

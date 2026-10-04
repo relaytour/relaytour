@@ -59,6 +59,11 @@ const DemandeRef = builder.prismaObject('Demande', {
       nullable: true,
       description: 'Palier de disponibilité choisi dans le formulaire public.',
     }),
+    question: t.exposeString('question', {
+      nullable: true,
+      description:
+        'Libellé de la question complémentaire au moment du dépôt. Le réglage du formulaire peut avoir changé depuis.',
+    }),
     reponse: t.exposeString('reponse', {
       nullable: true,
       description: 'Réponse à la question complémentaire du formulaire public.',

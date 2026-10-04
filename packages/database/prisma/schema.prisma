@@ -442,9 +442,11 @@ model Demande {
   // L'adresse tant que la demande attend, puis null : la contrainte d'unicité garde
   // une seule demande en attente par adresse et par période.
   adresseEnAttente String?
-  // Réponses du formulaire public : le palier de disponibilité choisi (son libellé
-  // au moment du dépôt), la réponse à la question complémentaire, et le texte libre.
+  // Réponses du formulaire public : le palier de disponibilité choisi et la question
+  // complémentaire (leurs libellés au moment du dépôt, que le réglage peut changer
+  // ensuite), la réponse à cette question, et le texte libre.
   disponibilite    String?
+  question         String?
   reponse          String?
   texte            String?        @db.VarChar(600)
   // Le compte créé ou rattaché par l'acceptation.
