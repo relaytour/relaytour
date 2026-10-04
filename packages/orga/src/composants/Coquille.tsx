@@ -21,6 +21,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
+import { useRafraichissement } from '../lib/rafraichissement'
 import { ContexteSession, type Session } from '../lib/session'
 
 import ChoixActivite from './ChoixActivite'
@@ -73,6 +74,7 @@ function Mise({ session }: { session: Session }) {
   const { moi, active } = session
   const { activite, lien, periode, gere, decouverte } = useActivite()
   const { data: menu } = useQuery(MENU_PERIMETRES)
+  useRafraichissement()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const ecrans = Grid.useBreakpoint()

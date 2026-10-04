@@ -30,6 +30,7 @@ import {
   slugDepuisTitre,
 } from '../lib/fiches'
 import { useActivite } from '../lib/activite'
+import { useSansRafraichissement } from '../lib/rafraichissement'
 
 const PERIMETRE_CIBLE = graphql(`
   query PerimetreCibleFiche($slug: String!) {
@@ -73,7 +74,11 @@ export default function FicheEditeur() {
   })
 
   const fiche = existante.data?.fiche
-  const chargement = existante.loading || perimetre.loading || communes.loading
+  // Une relecture ne démonte pas le formulaire : seul un premier chargement affiche
+  // le squelette.
+  const chargement = [existante, perimetre, communes].some(
+    requete => requete.loading && !requete.data
+  )
   const autorise = creation
     ? slugPerimetre !== null
       ? perimetre.data?.perimetre?.peutRedigerFiches
@@ -109,6 +114,9 @@ function Formulaire({
   perimetre: { id: string; nom: string } | null
 }) {
   const creation = fiche === null
+  // L'éditeur garde la version de la fiche qu'il a chargée : la relecture
+  // périodique ne la remplace pas sous la saisie.
+  useSansRafraichissement('Fiche')
   const navigate = useNavigate()
   const { lien } = useActivite()
   const { message } = App.useApp()

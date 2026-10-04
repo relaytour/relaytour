@@ -52,14 +52,7 @@ export function etatEcheance(
   return jours >= 0 && jours <= JOURS_ECHEANCE_PROCHE ? 'proche' : 'normale'
 }
 
-// Les requêtes actives à rafraîchir après une action sur une tâche : les compteurs
-// d'avancement et les listes « à prendre » dépendent du statut et des assignations.
-export const VUES_TACHES = [
-  'PagePerimetre',
-  'MesTaches',
-  'AvancementGlobal',
-  'Retroplanning',
-]
+export { VUES_TACHES } from './rafraichissement'
 
 export const TACHE_CHAMPS = graphql(`
   fragment TacheChamps on Tache {

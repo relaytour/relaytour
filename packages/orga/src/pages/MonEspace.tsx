@@ -103,7 +103,7 @@ export default function MonEspace() {
         Bonjour {prenom(session?.moi?.nom)}
       </Titre>
 
-      {loading || chargementEdition ? (
+      {(loading && !data) || (chargementEdition && !courante) ? (
         <Skeleton active />
       ) : !edition ? null : (
         <DeuxColonnes

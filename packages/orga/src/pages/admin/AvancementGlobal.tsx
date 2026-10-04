@@ -79,7 +79,7 @@ export default function AvancementGlobal() {
 
       {editionId === undefined ? (
         <Empty description={`Créez d’abord ${periode.une}.`} />
-      ) : loading ? (
+      ) : loading && !data ? (
         <Skeleton active />
       ) : (
         <>
