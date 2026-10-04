@@ -19,6 +19,7 @@ export type SorteCourriel =
   | 'rappels-echeance'
   | 'resume'
   | 'equipe'
+  | 'demandes'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.

@@ -13,6 +13,7 @@ import {
 } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { composer } from '../courriel/messages.ts'
 import {
   PROPOSITIONS_EN_ATTENTE_MAX,
   purgerDemandes,
@@ -26,10 +27,16 @@ import { schema } from './index.ts'
 // refus. Le fichier crée sa propre organisation : les notifications aux admins ne
 // touchent aucune donnée locale.
 
+// `enFile` reçoit les mails destinés aux personnes de l'équipe ; `mailsAdmins`, les
+// mails regroupés qui préviennent les admins d'une demande (ADR 0016).
 const enFile = vi.hoisted(() => [] as { sorte: string; cible: unknown }[])
+const mailsAdmins = vi.hoisted(
+  () => [] as { cible: unknown; options: unknown }[]
+)
 vi.mock('../courriel/file.ts', () => ({
-  mettreEnFile: (sorte: string, cible: unknown) => {
-    enFile.push({ sorte, cible })
+  mettreEnFile: (sorte: string, cible: unknown, options: unknown = {}) => {
+    if (sorte === 'demandes') mailsAdmins.push({ cible, options })
+    else enFile.push({ sorte, cible })
     return Promise.resolve()
   },
 }))
@@ -222,6 +229,7 @@ afterAll(async () => {
 
 beforeEach(() => {
   enFile.length = 0
+  mailsAdmins.length = 0
 })
 
 describe('proposer une personne', () => {
@@ -271,9 +279,26 @@ describe('proposer une personne', () => {
       },
     ])
     expect(await compter()).toEqual({ ...avant, demandes: avant.demandes + 1 })
+    // Aucun mail ne part vers la personne proposée. L'admin a un mail différé
+    // jusqu'à la fin de l'heure en cours.
     expect(enFile).toEqual([])
-    // Une seconde proposition le même jour n'ajoute aucune notification.
+    const mail = {
+      cible: { userId: ids.admin },
+      options: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        jobId: expect.stringMatching(
+          new RegExp(`^demandes-${ids.activite}-${ids.admin}-\\d+$`)
+        ) as string,
+        delai: expect.any(Number) as number,
+      },
+    }
+    expect(mailsAdmins).toEqual([mail])
+    // Une seconde proposition le même jour n'ajoute aucune notification. Son mail
+    // porte le même identifiant de job tant que l'heure n'a pas changé : la file
+    // n'en garde qu'un.
     await proposer(ids.alice, 'yann')
+    expect(mailsAdmins).toHaveLength(2)
     const notifications = await prisma.notification.findMany({
       where: { organisationId: ids.org },
       select: { userId: true, type: true, activiteId: true, tacheId: true },
@@ -792,5 +817,205 @@ describe('purge des demandes d’une période archivée', () => {
       await prisma.activite.deleteMany({ where: { id: activite.id } })
       await prisma.organisation.delete({ where: { id: ailleurs.id } })
     }
+  })
+})
+
+// Le mail regroupé aux admins (ADR 0016) : un job par admin, par activité et par
+// heure. Le bloc a sa propre activité : son nombre de demandes en attente ne dépend
+// pas des tests précédents.
+describe('mail regroupé aux admins', () => {
+  const gala = { id: '', slug: `${slug}-gala` }
+  const mail = (userId: string) =>
+    composer(prisma, {
+      sorte: 'demandes',
+      userId,
+      organisationId: ids.org,
+      activiteId: gala.id,
+    })
+  const signaler = (instant: string, acteurId?: string) =>
+    signalerDemande(
+      prisma,
+      { organisationId: ids.org, activiteId: gala.id, acteurId },
+      new Date(instant)
+    )
+  const jobDe = (heure: string) =>
+    `demandes-${gala.id}-${ids.admin}-${Date.parse(heure)}`
+
+  beforeAll(async () => {
+    gala.id = (
+      await prisma.activite.create({
+        data: {
+          organisationId: ids.org,
+          slug: gala.slug,
+          nom: 'Gala',
+          groupes: [],
+        },
+      })
+    ).id
+    const editions: Record<string, string> = {}
+    for (const [annee, statut] of [
+      [2027, 'PREPARATION'],
+      [2025, 'ARCHIVEE'],
+    ] as const) {
+      editions[statut] = (
+        await prisma.edition.create({
+          data: {
+            organisationId: ids.org,
+            activiteId: gala.id,
+            annee,
+            nom: `Gala ${annee}`,
+            debut: new Date(`${annee}-05-01`),
+            fin: new Date(`${annee}-05-02`),
+            statut,
+          },
+        })
+      ).id
+    }
+    const base = {
+      organisationId: ids.org,
+      activiteId: gala.id,
+      editionId: editions.PREPARATION!,
+      origine: 'FORMULAIRE' as const,
+      nom: 'Nom Secret',
+    }
+    // Deux demandes en attente, une demande refusée, et une demande d'une période
+    // archivée.
+    for (const cle of ['gala-a', 'gala-b']) {
+      await prisma.demande.create({
+        data: {
+          ...base,
+          adresse: adresse(cle),
+          adresseEnAttente: adresse(cle),
+        },
+      })
+    }
+    await prisma.demande.create({
+      data: { ...base, statut: 'REFUSEE', adresse: adresse('gala-c') },
+    })
+    await prisma.demande.create({
+      data: {
+        ...base,
+        editionId: editions.ARCHIVEE!,
+        adresse: adresse('gala-d'),
+        adresseEnAttente: adresse('gala-d'),
+      },
+    })
+  })
+
+  it('place un mail par admin et par heure, à la fin de l’heure du signalement', async () => {
+    // Le signalement suit la validation de la demande : un signalement de 10 h 59
+    // rejoint le mail de 11 h, et celui de 11 h le mail de midi.
+    await signaler('2027-03-01T10:59:59.900Z')
+    await signaler('2027-03-01T11:00:00.100Z')
+    expect(mailsAdmins).toEqual([
+      {
+        cible: { userId: ids.admin },
+        options: {
+          organisationId: ids.org,
+          activiteId: gala.id,
+          jobId: jobDe('2027-03-01T10:00:00Z'),
+          delai: 100,
+        },
+      },
+      {
+        cible: { userId: ids.admin },
+        options: {
+          organisationId: ids.org,
+          activiteId: gala.id,
+          jobId: jobDe('2027-03-01T11:00:00Z'),
+          delai: 3_599_900,
+        },
+      },
+    ])
+  })
+
+  it('ne prévient pas l’admin de sa propre proposition', async () => {
+    await signaler('2027-03-01T12:30:00Z', ids.admin)
+    expect(mailsAdmins).toEqual([])
+  })
+
+  it('compte les demandes en attente à l’envoi, sans citer personne', async () => {
+    const message = await mail(ids.admin)
+    expect(message?.sujet).toMatch(/^Demandes pour rejoindre l’équipe .+$/)
+    expect(message?.texte).toContain(
+      '2 demandes pour rejoindre l’équipe de l’activité Gala attendent votre décision.'
+    )
+    expect(message?.texte).toContain(
+      `/${gala.slug}/admin/personnes?onglet=demandes`
+    )
+    expect(message?.desabonnement).toMatch(/\/preferences$/)
+    for (const corps of [message?.texte, message?.html]) {
+      expect(corps).not.toContain('Secret')
+      expect(corps).not.toContain('@exemple.fr')
+    }
+  })
+
+  it('note l’envoi sur la notification de l’admin', async () => {
+    const enAttente = () =>
+      prisma.notification.count({
+        where: {
+          userId: ids.admin,
+          activiteId: gala.id,
+          type: 'DEMANDE_RECUE',
+          envoyeeLe: null,
+        },
+      })
+    expect(await enAttente()).toBe(1)
+    await (await mail(ids.admin))?.apresEnvoi?.()
+    expect(await enAttente()).toBe(0)
+  })
+
+  it('n’envoie rien à une personne qui n’administre pas l’activité', async () => {
+    expect(await mail(ids.alice)).toBeNull()
+    // Avec un admin d'activité, l'admin de l'organisation n'est plus prévenu : le
+    // rôle se relit à l'envoi.
+    const nomination = await prisma.adminActivite.create({
+      data: {
+        userId: ids.bruno,
+        activiteId: gala.id,
+        organisationId: ids.org,
+      },
+    })
+    expect(await mail(ids.admin)).toBeNull()
+    expect((await mail(ids.bruno))?.texte).toContain('2 demandes')
+    await prisma.adminActivite.delete({ where: { id: nomination.id } })
+    expect(await mail(ids.bruno)).toBeNull()
+  })
+
+  it('se règle par une préférence, qu’une requête sans cette valeur ne change pas', async () => {
+    const LIRE = `{ mesPreferencesNotification { mailDemandes } }`
+    const REGLER = `mutation ($d: Boolean) {
+      modifierPreferencesNotification(frequenceResume: HEBDOMADAIRE, mailModification: true, mailEcheance: true, mailDemandes: $d) { mailDemandes }
+    }`
+    expect(code(await executer(null, REGLER, { d: false }))).toBe('FORBIDDEN')
+    expect((await executer(ids.admin, LIRE)).data).toEqual({
+      mesPreferencesNotification: { mailDemandes: true },
+    })
+    expect((await executer(ids.admin, REGLER, { d: false })).data).toEqual({
+      modifierPreferencesNotification: { mailDemandes: false },
+    })
+    expect((await executer(ids.admin, REGLER)).data).toEqual({
+      modifierPreferencesNotification: { mailDemandes: false },
+    })
+    expect(await mail(ids.admin)).toBeNull()
+    expect((await executer(ids.admin, REGLER, { d: true })).data).toEqual({
+      modifierPreferencesNotification: { mailDemandes: true },
+    })
+    expect(await mail(ids.admin)).not.toBeNull()
+  })
+
+  it('n’annonce pas une demande déjà traitée', async () => {
+    const traiter = (cle: string) =>
+      prisma.demande.updateMany({
+        where: { activiteId: gala.id, adresseEnAttente: adresse(cle) },
+        data: { statut: 'REFUSEE', adresseEnAttente: null },
+      })
+    await traiter('gala-a')
+    expect((await mail(ids.admin))?.texte).toContain(
+      'Une demande pour rejoindre l’équipe de l’activité Gala attend votre décision.'
+    )
+    // Sans demande en attente dans une période ouverte, aucun mail ne part.
+    await traiter('gala-b')
+    expect(await mail(ids.admin)).toBeNull()
   })
 })

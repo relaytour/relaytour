@@ -7,6 +7,7 @@ import { Avatar } from '../composants/Personne'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import type { FrequenceResume } from '../gql/graphql'
+import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
 import { MOI } from '../lib/requetes'
 import { useDeconnexion } from '../lib/session'
@@ -17,6 +18,7 @@ const PREFERENCES = graphql(`
       frequenceResume
       mailModification
       mailEcheance
+      mailDemandes
     }
   }
 `)
@@ -26,15 +28,18 @@ const MODIFIER = graphql(`
     $frequenceResume: FrequenceResume!
     $mailModification: Boolean!
     $mailEcheance: Boolean!
+    $mailDemandes: Boolean
   ) {
     modifierPreferencesNotification(
       frequenceResume: $frequenceResume
       mailModification: $mailModification
       mailEcheance: $mailEcheance
+      mailDemandes: $mailDemandes
     ) {
       frequenceResume
       mailModification
       mailEcheance
+      mailDemandes
     }
   }
 `)
@@ -43,12 +48,18 @@ interface Valeurs {
   frequenceResume: FrequenceResume
   mailModification: boolean
   mailEcheance: boolean
+  // Présent pour les personnes qui administrent une activité seulement.
+  mailDemandes?: boolean
 }
 
 export default function Preferences() {
   const { message } = App.useApp()
   const deconnecter = useDeconnexion()
   const { data: session } = useQuery(MOI)
+  const { activites } = useActivite()
+  // Le mail des demandes ne part qu'aux admins : le réglage ne s'affiche que pour
+  // une personne qui administre au moins une activité.
+  const administre = activites.some(a => a.estAdministree)
   const { data, loading } = useQuery(PREFERENCES)
   const [modifier, modification] = useMutation(MODIFIER, {
     refetchQueries: [PREFERENCES],
@@ -56,7 +67,9 @@ export default function Preferences() {
 
   const enregistrer = async (v: Valeurs) => {
     try {
-      await modifier({ variables: v })
+      await modifier({
+        variables: { ...v, mailDemandes: v.mailDemandes ?? null },
+      })
       message.success('Préférences enregistrées.')
     } catch (e) {
       message.error(messageErreur(e))
@@ -195,6 +208,26 @@ export default function Preferences() {
                   <Switch id="mailEcheance" />
                 </Form.Item>
               </div>
+              {administre && (
+                <div className="rt-reglage">
+                  <label htmlFor="mailDemandes">
+                    <span className="rt-choix-titre">
+                      Demandes pour rejoindre l’équipe
+                    </span>
+                    <span className="rt-choix-detail">
+                      Un mail par heure au plus quand une activité que vous
+                      administrez reçoit des demandes.
+                    </span>
+                  </label>
+                  <Form.Item
+                    name="mailDemandes"
+                    valuePropName="checked"
+                    noStyle
+                  >
+                    <Switch id="mailDemandes" />
+                  </Form.Item>
+                </div>
+              )}
             </div>
 
             <div

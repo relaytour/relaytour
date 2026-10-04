@@ -8,6 +8,7 @@ export const PREFERENCES_PAR_DEFAUT = {
   frequenceResume: 'HEBDOMADAIRE',
   mailModification: true,
   mailEcheance: true,
+  mailDemandes: true,
   dernierResumeLe: null,
 } as const
 

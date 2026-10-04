@@ -1,5 +1,7 @@
 import type { PrismaClient } from '@relaytour/database'
 
+import { mettreEnFile } from '../courriel/file.ts'
+
 import { aujourdhui } from './droits.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { journal } from './journal.ts'
@@ -29,11 +31,76 @@ export function motValide(brut: string | null | undefined): string | null {
   return mot
 }
 
+// Mail regroupé aux admins (ADR 0016). Les demandes d'une activité se regroupent par
+// fenêtre fixe d'une heure : le premier signalement d'une fenêtre place un mail
+// différé jusqu'à sa fin, les suivants retrouvent le même identifiant de job et
+// BullMQ les ignore. À l'envoi, le mail compte les demandes en attente de
+// l'activité : une demande traitée entre-temps ne s'annonce pas.
+//
+// La fenêtre se déduit de l'heure du signalement, qui suit la validation de la
+// transaction. Le mail d'une fenêtre part à sa fin : toute demande signalée pendant
+// la fenêtre est donc déjà en base quand il se compose, et aucun signalement ne
+// retrouve l'identifiant d'un job déjà traité.
+
+export const FENETRE_DEMANDES_MS = 60 * 60 * 1000
+
+/** Le début et la fin, en millisecondes, de la fenêtre qui contient l'instant donné. */
+export function fenetreDemandes(maintenant = Date.now()): {
+  debut: number
+  fin: number
+} {
+  const debut =
+    Math.floor(maintenant / FENETRE_DEMANDES_MS) * FENETRE_DEMANDES_MS
+  return { debut, fin: debut + FENETRE_DEMANDES_MS }
+}
+
+/**
+ * Les personnes à prévenir d'une demande : les admins de l'activité, sinon ceux de
+ * l'organisation. Un compte archivé ne reçoit rien.
+ */
+export async function adminsAPrevenir(
+  prisma: PrismaClient,
+  organisationId: string,
+  activiteId: string
+): Promise<string[]> {
+  const actif = { archivedAt: null }
+  const deLActivite = await prisma.adminActivite.findMany({
+    where: { activiteId, organisationId, user: actif },
+    select: { userId: true },
+  })
+  const admins =
+    deLActivite.length > 0
+      ? deLActivite
+      : await prisma.appartenance.findMany({
+          where: { organisationId, role: 'ADMIN', user: actif },
+          select: { userId: true },
+        })
+  return admins.map(a => a.userId)
+}
+
+/** Le nombre de demandes d'une activité qui attendent une décision. */
+export function demandesEnAttente(
+  prisma: PrismaClient,
+  activiteId: string
+): Promise<number> {
+  return prisma.demande.count({
+    where: {
+      activiteId,
+      statut: 'EN_ATTENTE',
+      edition: { statut: { not: 'ARCHIVEE' } },
+    },
+  })
+}
+
 /**
  * Prévient les admins qu'une demande attend leur revue : les admins de l'activité,
  * sinon ceux de l'organisation. Chaque admin reçoit au plus une notification par
- * activité et par jour, garantie par sa clé. Ne lève jamais : une notification
- * manquée ne doit pas faire échouer la demande.
+ * activité et par jour, garantie par sa clé, et au plus un mail par activité et par
+ * heure (ADR 0016). Ne lève jamais : une notification manquée ne doit pas faire
+ * échouer la demande.
+ *
+ * L'appel suit la validation de la transaction qui écrit la demande : le mail de la
+ * fenêtre en cours la trouvera en base.
  */
 export async function signalerDemande(
   prisma: PrismaClient,
@@ -42,26 +109,28 @@ export async function signalerDemande(
 ): Promise<void> {
   const { organisationId, activiteId, acteurId } = demande
   try {
-    const actif = { archivedAt: null }
-    const deLActivite = await prisma.adminActivite.findMany({
-      where: { activiteId, organisationId, user: actif },
-      select: { userId: true },
-    })
-    const admins =
-      deLActivite.length > 0
-        ? deLActivite
-        : await prisma.appartenance.findMany({
-            where: { organisationId, role: 'ADMIN', user: actif },
-            select: { userId: true },
-          })
+    const admins = await adminsAPrevenir(prisma, organisationId, activiteId)
     // Le jour se compte dans le fuseau de l'organisation, comme ses rappels.
     const { fuseauHoraire } = await prisma.organisation.findUniqueOrThrow({
       where: { id: organisationId },
       select: { fuseauHoraire: true },
     })
     const jour = aujourdhui(maintenant, fuseauHoraire)
-    for (const { userId } of admins) {
+    const fenetre = fenetreDemandes(maintenant.getTime())
+    for (const userId of admins) {
       if (userId === acteurId) continue
+      // BullMQ refuse « : » dans un identifiant de job. Le worker relit la
+      // préférence et le rôle de la personne au moment de l'envoi.
+      await mettreEnFile(
+        'demandes',
+        { userId },
+        {
+          organisationId,
+          activiteId,
+          jobId: `demandes-${activiteId}-${userId}-${fenetre.debut}`,
+          delai: fenetre.fin - maintenant.getTime(),
+        }
+      )
       try {
         await prisma.notification.create({
           data: {

@@ -75,6 +75,7 @@ const PreferencesRef = builder
     frequenceResume: FrequenceResume
     mailModification: boolean
     mailEcheance: boolean
+    mailDemandes: boolean
   }>('PreferencesNotification')
   .implement({
     fields: t => ({
@@ -83,6 +84,10 @@ const PreferencesRef = builder
       }),
       mailModification: t.exposeBoolean('mailModification'),
       mailEcheance: t.exposeBoolean('mailEcheance'),
+      mailDemandes: t.exposeBoolean('mailDemandes', {
+        description:
+          'Mail regroupé par heure quand une activité que la personne administre reçoit des demandes pour rejoindre son équipe.',
+      }),
     }),
   })
 
@@ -156,12 +161,18 @@ builder.mutationFields(t => ({
       frequenceResume: t.arg({ type: FrequenceResumeEnum, required: true }),
       mailModification: t.arg.boolean({ required: true }),
       mailEcheance: t.arg.boolean({ required: true }),
+      mailDemandes: t.arg.boolean({
+        description: 'Sans valeur, ce réglage ne change pas.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const donnees = {
         frequenceResume: args.frequenceResume,
         mailModification: args.mailModification,
         mailEcheance: args.mailEcheance,
+        ...(typeof args.mailDemandes === 'boolean'
+          ? { mailDemandes: args.mailDemandes }
+          : {}),
       }
       return prisma.preferenceNotification.upsert({
         where: { userId: ctx.personne!.id },

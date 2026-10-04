@@ -2,6 +2,7 @@ import type { PrismaClient } from '@relaytour/database'
 
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
+import { adminsAPrevenir, demandesEnAttente } from '../lib/demandes.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import {
   changementsEquipe,
@@ -44,6 +45,7 @@ export function sujets(nomCourt: string): Record<SorteCourriel, string> {
     'rappels-echeance': `Échéances de vos tâches ${nomCourt}`,
     resume: `Votre résumé ${nomCourt}`,
     equipe: `Votre place dans l’équipe ${nomCourt} a changé`,
+    demandes: `Demandes pour rejoindre l’équipe ${nomCourt}`,
   }
 }
 
@@ -198,6 +200,56 @@ export async function composer(
     const { env } = await import('../env.ts')
     variables.roleModeDEmploi = LIBELLES_ROLE[role]
     variables.lienModeDEmploi = lienModeDEmploi(env.MODES_D_EMPLOI_URL, role)
+  }
+
+  if (job.sorte === 'demandes') {
+    if (job.activiteId === undefined) {
+      throw new Error('Le mail « demandes » exige une activité.')
+    }
+    if (!job.userId) return null
+    const userId = job.userId
+    if (!(await preferencesDe(prisma, userId)).mailDemandes) return null
+    const activite = await prisma.activite.findUnique({
+      where: { id: job.activiteId },
+      select: { id: true, slug: true, nom: true, organisationId: true },
+    })
+    if (activite === null) return null
+    // Le rôle se relit à l'envoi : une personne qui n'administre plus l'activité
+    // ne reçoit rien.
+    const admins = await adminsAPrevenir(
+      prisma,
+      activite.organisationId,
+      activite.id
+    )
+    if (!admins.includes(userId)) return null
+    // Le mail compte les demandes qui attendent au moment de l'envoi : une demande
+    // déjà traitée ne s'annonce pas. Il porte un nombre et un lien, et ne cite
+    // aucune personne qui n'est pas membre.
+    const nombre = await demandesEnAttente(prisma, activite.id)
+    if (nombre === 0) return null
+    const personne = await prisma.user.findUniqueOrThrow({
+      where: { id: userId },
+      select: { name: true },
+    })
+    variables.nom = personne.name
+    variables.annonce =
+      nombre === 1
+        ? `Une demande pour rejoindre l’équipe de l’activité ${activite.nom} attend votre décision.`
+        : `${nombre} demandes pour rejoindre l’équipe de l’activité ${activite.nom} attendent votre décision.`
+    variables.lienDemandes = `${origine}/${activite.slug}/admin/personnes?onglet=demandes`
+    variables.lienPreferences = lienPreferences
+    desabonnement = lienPreferences
+    apresEnvoi = async () => {
+      await prisma.notification.updateMany({
+        where: {
+          userId,
+          activiteId: activite.id,
+          type: 'DEMANDE_RECUE',
+          envoyeeLe: null,
+        },
+        data: { envoyeeLe: new Date() },
+      })
+    }
   }
 
   if (job.sorte === 'code-connexion') {

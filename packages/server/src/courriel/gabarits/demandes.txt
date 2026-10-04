@@ -1,0 +1,18 @@
+{{marque}}
+
+Bonjour {{nom}},
+
+{{annonce}}
+
+Aucun compte n’existe avant votre décision. Vous acceptez ou refusez chaque demande dans l’onglet « Demandes » de l’écran « Personnes ».
+
+Voir les demandes : {{lienDemandes}}
+
+Vous pouvez désactiver ces mails dans vos préférences : {{lienPreferences}}
+
+--
+Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}. Pour toute question, répondez à ce mail.
+
+Cet espace est propulsé par Relaytour, logiciel libre.
+https://github.com/relaytour/relaytour

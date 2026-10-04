@@ -16,6 +16,7 @@
 | [0012](0012-decouvrir-les-perimetres-et-rejoindre-l-equipe.md) | Découvrir les périmètres et rejoindre l'équipe | Acceptée, accès aux tâches élargi par l'ADR 0014 |
 | [0013](0013-administrer-l-equipe-depuis-le-serveur.md) | Administrer l'équipe depuis le serveur | Acceptée |
 | [0014](0014-consulter-les-perimetres-de-son-activite.md) | Consulter les périmètres de son activité | Acceptée |
-| [0015](0015-demandes-pour-rejoindre-l-equipe.md) | Demandes pour rejoindre l'équipe | Acceptée |
+| [0015](0015-demandes-pour-rejoindre-l-equipe.md) | Demandes pour rejoindre l'équipe | Acceptée, mail aux admins ajouté par l'ADR 0016 |
+| [0016](0016-prevenir-les-admins-d-une-demande-par-mail.md) | Prévenir les admins d'une demande par un mail regroupé | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

@@ -20,6 +20,18 @@
           }
         },
         {
+          "id": "2026-10-04-serveur-un-mail-regroupe-previent-les-admins-des-demandes-recues",
+          "date": "2026-10-04",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un mail regroupé prévient les admins des demandes reçues",
+            "texte": "Quand une activité reçoit des demandes pour rejoindre son équipe, ses admins reçoivent un mail, une fois par heure au plus. Le mail donne le nombre de demandes en attente et un lien vers l'onglet « Demandes ». Il ne cite aucune personne. Chaque admin le désactive dans ses préférences.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-04-serveur-les-demandes-pour-rejoindre-l-equipe-attendent-la-decision-d",
           "date": "2026-10-04",
           "type": "fonctionnalite",
