@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Le serveur pousse les changements par un flux SSE

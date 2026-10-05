@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Le formulaire public d'une activité dépose des demandes sans session

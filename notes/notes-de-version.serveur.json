@@ -2,10 +2,10 @@
   "schemaVersion": 3,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.8.1",
+  "version": "0.9.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.9.0",
       "notes": [
         {
           "id": "2026-10-05-serveur-un-proxy-laisse-passer-le-flux-des-changements-sans-tampon-n",

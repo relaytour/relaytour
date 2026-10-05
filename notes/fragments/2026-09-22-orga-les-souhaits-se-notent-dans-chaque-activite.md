@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Les souhaits se notent dans chaque activité
