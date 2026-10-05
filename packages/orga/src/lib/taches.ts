@@ -233,10 +233,10 @@ export function useActionTache() {
             }
             return false
           }
-          if (conflit.nature === 'contenu') {
-            reprise.versionAttendue = conflit.versionCourante
-          } else {
+          if (conflit.nature === 'statut') {
             reprise.statutAttendu = conflit.statutCourant
+          } else if (typeof conflit.versionCourante === 'number') {
+            reprise.versionAttendue = conflit.versionCourante
           }
           continue
         }

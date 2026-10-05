@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router'
 
 import type { MesOrganisationsQuery, MoiQuery } from '../gql/graphql'
 
+import { effacerLesBrouillons } from './brouillon'
 import { seDeconnecter } from './connexion'
 import { choisirOrganisation } from './selection'
 
@@ -43,6 +44,8 @@ export function useDeconnexion(): () => Promise<void> {
   const navigate = useNavigate()
   return async () => {
     await seDeconnecter().catch(() => undefined)
+    // Un brouillon de fiche ne reste pas dans le navigateur d'un poste partagé.
+    effacerLesBrouillons()
     await apollo.clearStore()
     navigate('/connexion', { replace: true })
   }

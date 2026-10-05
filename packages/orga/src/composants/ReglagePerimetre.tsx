@@ -1,5 +1,5 @@
 import type { ApolloCache } from '@apollo/client'
-import { useMutation } from '@apollo/client/react'
+import { useApolloClient, useMutation } from '@apollo/client/react'
 import {
   App,
   ColorPicker,
@@ -14,7 +14,9 @@ import { useEffect } from 'react'
 
 import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
+import { lireConflit, texteConflit } from '../lib/conflit'
 import { messageErreur } from '../lib/erreurs'
+import { relireLesVues } from '../lib/rafraichissement'
 
 const CREER = graphql(`
   mutation CreerPerimetre(
@@ -49,6 +51,7 @@ const MODIFIER = graphql(`
     $description: String
     $ordre: Int!
     $archive: Boolean!
+    $versionAttendue: Int
   ) {
     modifierPerimetre(
       id: $id
@@ -58,6 +61,7 @@ const MODIFIER = graphql(`
       description: $description
       ordre: $ordre
       archive: $archive
+      versionAttendue: $versionAttendue
     ) {
       id
       nom
@@ -66,6 +70,7 @@ const MODIFIER = graphql(`
       description
       ordre
       archive
+      version
     }
   }
 `)
@@ -80,6 +85,8 @@ export interface PerimetreRegle {
   description?: string | null
   ordre: number
   archive: boolean
+  /** La version lue : le serveur refuse d'écraser un réglage fait depuis. */
+  version: number
 }
 
 interface Valeurs {
@@ -127,7 +134,8 @@ export default function ReglagePerimetre({
   perimetre: PerimetreRegle | 'nouveau' | null
   onFermer: () => void
 }) {
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
+  const client = useApolloClient()
   // Les groupes de périmètres viennent de l'activité (ADR 0008).
   const { activite } = useActivite()
   const [form] = Form.useForm<Valeurs>()
@@ -182,17 +190,50 @@ export default function ReglagePerimetre({
         })
         message.success('Périmètre créé.')
       } else if (perimetre) {
-        await modifier({
-          variables: {
-            id: perimetre.id,
-            nom: v.nom,
-            groupe: v.groupe,
-            couleur,
-            description: v.description ?? '',
-            ordre: v.ordre,
-            archive: v.archive,
-          },
-        })
+        const envoyer = (versionAttendue: number) =>
+          modifier({
+            variables: {
+              id: perimetre.id,
+              nom: v.nom,
+              groupe: v.groupe,
+              couleur,
+              description: v.description ?? '',
+              ordre: v.ordre,
+              archive: v.archive,
+              versionAttendue,
+            },
+          })
+        try {
+          await envoyer(perimetre.version)
+        } catch (e) {
+          // Une autre personne a réglé ce périmètre depuis l'ouverture de la
+          // fenêtre : « Écraser » rejoue avec la version annoncée, « Recharger »
+          // relit les listes et ne ferme la fenêtre qu'après une relecture réussie.
+          const conflit = lireConflit(e)
+          if (
+            conflit?.nature !== 'contenu' ||
+            typeof conflit.versionCourante !== 'number'
+          ) {
+            throw e
+          }
+          const { titre, texte } = texteConflit(conflit, { objet: 'perimetre' })
+          const ecraser = await modal.confirm({
+            title: titre,
+            content: texte,
+            okText: 'Écraser',
+            cancelText: 'Recharger',
+          })
+          if (!ecraser) {
+            if (await relireLesVues(client, LISTES)) onFermer()
+            else {
+              message.error(
+                'Le périmètre n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant.'
+              )
+            }
+            return
+          }
+          await envoyer(conflit.versionCourante)
+        }
         message.success('Périmètre enregistré.')
       }
       onFermer()

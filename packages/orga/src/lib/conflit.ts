@@ -2,10 +2,11 @@ import { CombinedGraphQLErrors } from '@apollo/client/errors'
 
 import type { StatutTache } from '../gql/graphql'
 
-// Conflit d'écriture sur une tâche. Le serveur refuse d'écraser ce qu'une autre
-// personne a écrit depuis la lecture (code `CONFLIT_VERSION`), et dit l'état actuel :
-// la version et l'auteur d'une modification du contenu, ou le nouveau statut. Il ne
-// nomme jamais la personne qui a changé un statut.
+// Conflit d'écriture sur une tâche, une fiche ou un périmètre. Le serveur refuse
+// d'écraser ce qu'une autre personne a écrit depuis la lecture (code
+// `CONFLIT_VERSION`), et dit l'état actuel : la version et l'auteur d'une
+// modification du contenu, ou le nouveau statut d'une tâche. Il ne nomme jamais la
+// personne qui a changé un statut.
 
 const LIBELLES: Record<StatutTache, string> = {
   A_FAIRE: 'À faire',
@@ -17,7 +18,8 @@ const LIBELLES: Record<StatutTache, string> = {
 export type Conflit =
   | {
       nature: 'contenu'
-      versionCourante: number
+      /** Un compteur pour une tâche ou un périmètre, un identifiant pour une fiche. */
+      versionCourante: number | string
       modifieeLe: string | null
       modifieePar: string | null
     }
@@ -37,7 +39,12 @@ export function lireConflit(erreur: unknown): Conflit | null {
       statutCourant: details.statutCourant as StatutTache,
     }
   }
-  if (typeof details.versionCourante !== 'number') return null
+  if (
+    typeof details.versionCourante !== 'number' &&
+    typeof details.versionCourante !== 'string'
+  ) {
+    return null
+  }
   return {
     nature: 'contenu',
     versionCourante: details.versionCourante,
@@ -66,13 +73,28 @@ function momentDe(iso: string, fuseau?: string): string {
   return `le ${jour} à ${Number(heures)} h ${minutes}`
 }
 
+/** « Alex Martin » et « le 4 octobre à 14 h 05 », ou des formules sans nom ni date. */
+function auteurEtMoment(
+  conflit: Extract<Conflit, { nature: 'contenu' }>,
+  fuseau?: string
+): { auteur: string; moment: string } {
+  return {
+    auteur: conflit.modifieePar ?? 'Une autre personne',
+    moment:
+      conflit.modifieeLe === null
+        ? ''
+        : ` ${momentDe(conflit.modifieeLe, fuseau)}`,
+  }
+}
+
 /**
- * Le titre et le texte de la fenêtre qui annonce un conflit. « Écraser » rejoue
- * l'action avec l'état annoncé, « Recharger » affiche cet état.
+ * Le titre et le texte de la fenêtre qui annonce un conflit sur une tâche ou sur un
+ * périmètre. « Écraser » rejoue l'action avec l'état annoncé, « Recharger » affiche
+ * cet état.
  */
 export function texteConflit(
   conflit: Conflit,
-  fuseau?: string
+  options: { objet?: 'tache' | 'perimetre'; fuseau?: string } = {}
 ): { titre: string; texte: string } {
   if (conflit.nature === 'statut') {
     return {
@@ -80,13 +102,24 @@ export function texteConflit(
       texte: `Cette tâche est maintenant « ${LIBELLES[conflit.statutCourant]} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel.`,
     }
   }
-  const auteur = conflit.modifieePar ?? 'Une autre personne'
-  const moment =
-    conflit.modifieeLe === null
-      ? ''
-      : ` ${momentDe(conflit.modifieeLe, fuseau)}`
+  const { auteur, moment } = auteurEtMoment(conflit, options.fuseau)
+  if (options.objet === 'perimetre') {
+    return {
+      titre: 'Ce périmètre a changé depuis votre lecture',
+      texte: `${auteur} a modifié ce périmètre${moment}. « Écraser » enregistre votre réglage à la place du sien. « Recharger » abandonne votre saisie et affiche le sien.`,
+    }
+  }
   return {
     titre: 'Cette tâche a changé depuis votre lecture',
     texte: `${auteur} a modifié cette tâche${moment}. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne.`,
   }
+}
+
+/** La phrase qui annonce, dans l'éditeur, qu'une autre version de la fiche existe. */
+export function annonceConflitFiche(
+  conflit: Extract<Conflit, { nature: 'contenu' }>,
+  fuseau?: string
+): string {
+  const { auteur, moment } = auteurEtMoment(conflit, fuseau)
+  return `${auteur} a enregistré une autre version de cette fiche${moment}.`
 }
