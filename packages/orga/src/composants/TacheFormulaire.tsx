@@ -92,9 +92,19 @@ export default function TacheFormulaire({
           )
         : tache
           ? await executer(
-              confirmer =>
-                modifier({ variables: { ...commun, id: tache.id, confirmer } }),
-              'Tâche enregistrée.'
+              reprise =>
+                modifier({
+                  variables: {
+                    ...commun,
+                    id: tache.id,
+                    confirmer: reprise.confirmer,
+                    // La version lue à l'ouverture de la fenêtre : le serveur
+                    // refuse d'écraser une modification faite depuis.
+                    versionAttendue: reprise.versionAttendue ?? tache.version,
+                  },
+                }),
+              'Tâche enregistrée.',
+              { apresRechargement: onFermer }
             )
           : false
     if (ok) onEnregistree()

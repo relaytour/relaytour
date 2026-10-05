@@ -10,6 +10,7 @@ import {
   ECART_MIN_MS,
   peutRafraichir,
   relireLesRequetes,
+  relireLesVues,
   REQUETES_RAFRAICHIES,
   VUES_TACHES,
 } from './rafraichissement'
@@ -148,6 +149,34 @@ describe('relireLesRequetes', () => {
     await attendre(10)
     expect(etats).toEqual([])
     expect(requete.getCurrentResult().error).toBeUndefined()
+    expect(avis()).toBe('')
+  })
+})
+
+describe('relireLesVues', () => {
+  it('relit les vues nommées, et dit quand le serveur n’a pas répondu', async () => {
+    const { client, etat, observer } = banc()
+    const { etats } = await observer('PagePerimetre')
+    await observer('ListeFiches')
+    etat.lectures.length = 0
+
+    expect(await relireLesVues(client, ['PagePerimetre', 'MesTaches'])).toBe(
+      true
+    )
+    await attendre(10)
+    expect(etat.lectures).toEqual(['PagePerimetre'])
+    expect(etats.at(-1)).toMatchObject({ chargement: false, erreur: false })
+
+    // Sans réponse du serveur, l'appelant garde sa saisie ouverte.
+    etat.panne = true
+    expect(await relireLesVues(client, ['PagePerimetre'])).toBe(false)
+    etat.panne = false
+    etat.erreur = 'FORBIDDEN'
+    expect(await relireLesVues(client, ['PagePerimetre'])).toBe(false)
+    expect(avis()).toContain('Recharger la page')
+    // Une relecture sans refus retire l'avis pour les tests suivants.
+    etat.erreur = null
+    await relireLesRequetes(client)
     expect(avis()).toBe('')
   })
 })
