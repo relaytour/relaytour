@@ -8,7 +8,7 @@ import {
 } from '@ant-design/icons'
 import { useMutation } from '@apollo/client/react'
 import { Button, Dropdown, Form, Modal, Select, Typography } from 'antd'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import type { TacheChampsFragment } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
@@ -44,6 +44,7 @@ export default function TacheCarte({
   estAdmin = false,
   afficherPerimetre = false,
   teinte = false,
+  enEvidence = false,
   onModifier,
 }: {
   tache: TacheChampsFragment
@@ -53,8 +54,14 @@ export default function TacheCarte({
   estAdmin?: boolean
   afficherPerimetre?: boolean
   teinte?: boolean
+  /** La tâche visée par une notification : la carte se signale et se place à l'écran. */
+  enEvidence?: boolean
   onModifier?: (tache: TacheChampsFragment) => void
 }) {
+  const racine = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (enEvidence) racine.current?.scrollIntoView({ block: 'center' })
+  }, [enEvidence])
   const executer = useActionTache()
   const { lien } = useActivite()
   const [assigner, assignation] = useMutation(ASSIGNER_TACHE, {
@@ -135,7 +142,8 @@ export default function TacheCarte({
 
   return (
     <article
-      className={`${teinte ? 'rt-verre-teinte' : 'rt-verre'} rt-carte-tache${tache.statut === 'ABANDONNEE' ? ' rt-abandonnee' : ''}`}
+      ref={racine}
+      className={`${teinte ? 'rt-verre-teinte' : 'rt-verre'} rt-carte-tache${tache.statut === 'ABANDONNEE' ? ' rt-abandonnee' : ''}${enEvidence ? ' rt-en-evidence' : ''}`}
     >
       <span
         className="rt-rail"

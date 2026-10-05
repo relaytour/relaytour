@@ -116,10 +116,17 @@ export default function Perimetre() {
     skip: perimetre?.acces !== 'COMPLET',
   })
   const fiches = methode?.perimetre?.fiches ?? []
-  const taches = useMemo(
-    () => (perimetre?.taches ?? []).filter(FILTRES[filtre]),
-    [perimetre, filtre]
-  )
+  // La tâche visée par une notification (`?tache=`) s'affiche quel que soit le
+  // filtre choisi : elle vient en tête quand le filtre l'aurait écartée.
+  const tacheVisee = parametres.get('tache')
+  const taches = useMemo(() => {
+    const toutes = perimetre?.taches ?? []
+    const filtrees = toutes.filter(FILTRES[filtre])
+    const visee = toutes.find(t => t.id === tacheVisee)
+    return visee !== undefined && !filtrees.includes(visee)
+      ? [visee, ...filtrees]
+      : filtrees
+  }, [perimetre, filtre, tacheVisee])
 
   // Le nombre de tâches ouvertes de chaque personne affectée au périmètre.
   const chargeDe = useMemo(() => {
@@ -422,6 +429,7 @@ export default function Perimetre() {
                 peutModifier={perimetre.peutModifier}
                 referents={perimetre.referents}
                 estAdmin={gere}
+                enEvidence={tache.id === tacheVisee}
                 onModifier={setEnEdition}
               />
             ))}
