@@ -478,7 +478,36 @@ describe('statut de l’organisation', () => {
         e: ids.editionA1,
       })
       expect(code(ecriture)).toBe('LECTURE_SEULE')
+      // Lire une notification ne modifie aucune donnée de l'organisation : la
+      // marquer comme lue reste possible. Un réglage reste une écriture.
+      const notification = await prisma.notification.create({
+        data: {
+          organisationId: ids.orgA,
+          userId: ids.adminA,
+          type: 'TACHE_CREEE',
+        },
+      })
+      const lue = await executer(
+        ids.adminA,
+        'mutation ($ids: [ID!]) { marquerNotificationsLues(ids: $ids) }',
+        { ids: [notification.id] }
+      )
+      expect(lue.data).toEqual({ marquerNotificationsLues: 1 })
+      const reglage = await executer(
+        ids.adminA,
+        'mutation { modifierPreferencesNotification(frequenceResume: AUCUN, mailModification: true, mailEcheance: true) { frequenceResume } }'
+      )
+      expect(code(reglage)).toBe('LECTURE_SEULE')
+      // Sans session, la mutation reste refusée.
+      const sansSession = await executer(
+        null,
+        'mutation { marquerNotificationsLues }'
+      )
+      expect(code(sansSession)).toBe('FORBIDDEN')
     } finally {
+      await prisma.notification.deleteMany({
+        where: { organisationId: ids.orgA, userId: ids.adminA },
+      })
       await prisma.organisation.update({
         where: { id: ids.orgA },
         data: { statut: 'ACTIVE' },

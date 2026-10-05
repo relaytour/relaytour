@@ -17,6 +17,9 @@ import {
 import {
   messageNotification,
   preferencesDe,
+  SELECTION_ACTIVITE_NOTIFIEE,
+  SELECTION_FICHE_NOTIFIEE,
+  SELECTION_TACHE_NOTIFIEE,
   type NotificationAComposer,
 } from '../lib/notifications.ts'
 import {
@@ -68,16 +71,10 @@ const SELECTION_NOTIFICATION = {
   jours: true,
   acteurId: true,
   personneId: true,
-  tache: {
-    select: {
-      titre: true,
-      echeance: true,
-      perimetre: {
-        select: { nom: true, slug: true, activite: { select: { slug: true } } },
-      },
-    },
-  },
-  activite: { select: { slug: true, nom: true } },
+  statut: true,
+  tache: SELECTION_TACHE_NOTIFIEE,
+  fiche: SELECTION_FICHE_NOTIFIEE,
+  activite: SELECTION_ACTIVITE_NOTIFIEE,
 } as const
 
 async function nomsDes(

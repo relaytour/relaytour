@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import type { AppContext } from '../context.ts'
 import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
@@ -10,7 +10,26 @@ import { composer } from '../courriel/messages.ts'
 import { genererRappels, personnesAResumer } from '../jobs/planification.ts'
 
 import { schema } from './index.ts'
+import {
+  notifierLePerimetre,
+  TRANCHE_PERIMETRE_MS,
+} from '../lib/notifications.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
+
+// Les mails mis en file se notent au passage, sans rien changer à leur envoi : un
+// test prouve qu'une notification du périmètre n'en produit aucun.
+const enFile = vi.hoisted(
+  () => [] as { sorte: string; cible: { userId?: string } }[]
+)
+vi.mock('../courriel/file.ts', async importOriginal => {
+  const reel = await importOriginal<typeof import('../courriel/file.ts')>()
+  return {
+    mettreEnFile: (...args: Parameters<typeof reel.mettreEnFile>) => {
+      enFile.push({ sorte: args[0], cible: args[1] as { userId?: string } })
+      return reel.mettreEnFile(...args)
+    },
+  }
+})
 
 const s = randomUUID().slice(0, 8)
 const apollo = new ApolloServer<AppContext>({ schema })
@@ -367,5 +386,200 @@ describe('résumés', () => {
     expect(
       await personnesAResumer(prisma, planifiee(), new Date())
     ).not.toContain(ids.chloe)
+  })
+})
+
+// Activité d'un périmètre (lot « travail à plusieurs ») : les référentes et référents
+// qui ne sont pas assignés à une tâche apprennent dans l'application ce que les
+// autres y font. Aucun mail immédiat ne part pour eux.
+describe('activité du périmètre pour les autres référent·es', () => {
+  let tacheId = ''
+  let ficheId = ''
+  const slugFiche = `bassin-${s}`
+  const types = async (
+    userId: string,
+    cible: { tacheId?: string; ficheId?: string }
+  ) =>
+    (
+      await prisma.notification.findMany({
+        where: { userId, ...cible },
+        orderBy: { createdAt: 'asc' },
+      })
+    ).map(n => n.type)
+  const messages = async (userId: string) =>
+    (
+      (
+        await executer(
+          userId,
+          `{ notifications(limite: 100) { message lien } }`
+        )
+      ).notifications as { message: string; lien: string }[]
+    ).map(n => `${n.message} → ${n.lien}`)
+  const slugActivite = async () =>
+    (await prisma.activite.findUniqueOrThrow({ where: { id: ACTIVITE } })).slug
+
+  beforeAll(async () => {
+    // Alice rédige les fiches de la natation.
+    await prisma.droitRedaction.create({
+      data: {
+        organisationId: ORGANISATION,
+        userId: ids.alice,
+        perimetreId: ids.natation,
+      },
+    })
+    const data = await executer(
+      ids.alice,
+      `mutation ($p: ID!, $e: ID!) { creerTache(perimetreId: $p, editionId: $e, titre: "Louer le bassin", mAssigner: true) { id } }`,
+      { p: ids.natation, e: ids.edition }
+    )
+    tacheId = (data.creerTache as { id: string }).id
+  })
+
+  afterAll(async () => {
+    await prisma.droitRedaction.deleteMany({ where: { userId: ids.alice } })
+    await prisma.journal.deleteMany({ where: { ficheId } })
+    await prisma.fiche.updateMany({
+      where: { id: ficheId },
+      data: { versionCouranteId: null },
+    })
+    await prisma.fiche.deleteMany({ where: { id: ficheId } })
+  })
+
+  it('annonce une modification à la référente non assignée, sans mail', async () => {
+    enFile.length = 0
+    await executer(
+      ids.bruno,
+      `mutation ($id: ID!) { modifierTache(id: $id, titre: "Louer le grand bassin", confirmer: true) { id } }`,
+      { id: tacheId }
+    )
+    // Alice, assignée, garde sa notification et son mail. Chloé, référente du même
+    // périmètre, l'apprend dans l'application seulement.
+    expect(
+      (await types(ids.alice, { tacheId })).filter(t => t === 'TACHE_MODIFIEE')
+    ).toHaveLength(1)
+    expect(await types(ids.chloe, { tacheId })).toEqual([
+      'TACHE_CREEE',
+      'TACHE_MODIFIEE',
+    ])
+    expect(enFile).toEqual([
+      { sorte: 'tache-modifiee', cible: { userId: ids.alice } },
+    ])
+    // L'auteur et la référente d'un autre périmètre ne reçoivent rien.
+    expect(await types(ids.bruno, { tacheId })).toEqual(['TACHE_CREEE'])
+    expect(await types(ids.david, { tacheId })).toEqual([])
+  })
+
+  it('ne prévient qu’une fois d’une même action dans la tranche de dix minutes', async () => {
+    const instant = Date.parse('2027-03-01T10:02:00Z')
+    const prevenir = (maintenant: number) =>
+      notifierLePerimetre(
+        prisma,
+        {
+          type: 'TACHE_MODIFIEE',
+          perimetreId: ids.natation,
+          editionId: ids.edition,
+          acteurId: ids.alice,
+          tacheId,
+        },
+        maintenant
+      )
+    const compter = async () =>
+      (await types(ids.chloe, { tacheId })).filter(t => t === 'TACHE_MODIFIEE')
+        .length
+    const avant = await compter()
+    await prevenir(instant)
+    await prevenir(instant + 60_000)
+    expect(await compter()).toBe(avant + 1)
+    await prevenir(instant + TRANCHE_PERIMETRE_MS)
+    expect(await compter()).toBe(avant + 2)
+  })
+
+  it('annonce un changement de statut, sans nommer qui a coché', async () => {
+    const STATUT = `mutation ($id: ID!, $s: StatutTache!) { changerStatutTache(id: $id, statut: $s, confirmer: true) { id } }`
+    await executer(ids.bruno, STATUT, { id: tacheId, s: 'EN_COURS' })
+    await executer(ids.bruno, STATUT, { id: tacheId, s: 'FAITE' })
+    const lien = `/${await slugActivite()}/perimetres/natation-${s}?edition=${ids.edition}&tache=${tacheId}`
+    const recus = await messages(ids.chloe)
+    expect(recus).toContain(
+      `Bruno a commencé la tâche « Louer le grand bassin » (Natation). → ${lien}`
+    )
+    expect(recus).toContain(
+      `La tâche « Louer le grand bassin » (Natation) est faite. → ${lien}`
+    )
+    // La notification ne garde pas l'auteur du passage à « faite ».
+    const faite = await prisma.notification.findFirstOrThrow({
+      where: { userId: ids.chloe, tacheId, statut: 'FAITE' },
+    })
+    expect(faite).toMatchObject({ type: 'TACHE_STATUT', acteurId: null })
+  })
+
+  it('annonce la création et la modification d’une fiche du périmètre', async () => {
+    const data = await executer(
+      ids.alice,
+      `mutation ($s: String!, $p: ID!, $c: String!) { creerFiche(slug: $s, titre: "Préparer le bassin", contenu: $c, perimetreId: $p) { id } }`,
+      { s: slugFiche, p: ids.natation, c: '## Objectif\n\nPréparer.' }
+    )
+    ficheId = (data.creerFiche as { id: string }).id
+    await executer(
+      ids.alice,
+      `mutation ($id: ID!, $c: String!) { modifierFiche(id: $id, titre: "Préparer le bassin", contenu: $c) { id } }`,
+      { id: ficheId, c: '## Objectif\n\nPréparer tôt.' }
+    )
+    for (const personne of [ids.bruno, ids.chloe]) {
+      expect(await types(personne, { ficheId })).toEqual([
+        'FICHE_CREEE',
+        'FICHE_MODIFIEE',
+      ])
+    }
+    expect(await types(ids.alice, { ficheId })).toEqual([])
+    expect(await types(ids.david, { ficheId })).toEqual([])
+    const lien = `/${await slugActivite()}/fiches/${slugFiche}`
+    const recus = await messages(ids.bruno)
+    expect(recus).toContain(
+      `Alice a créé la fiche « Préparer le bassin » (Natation). → ${lien}`
+    )
+    expect(recus).toContain(
+      `Alice a modifié la fiche « Préparer le bassin » (Natation). → ${lien}`
+    )
+  })
+
+  it('ne prévient pas une personne qui a coupé ces notifications', async () => {
+    const REGLER = `mutation ($a: Boolean) {
+      modifierPreferencesNotification(frequenceResume: HEBDOMADAIRE, mailModification: true, mailEcheance: true, applicationPerimetre: $a) { applicationPerimetre }
+    }`
+    expect(
+      (
+        await executer(
+          ids.chloe,
+          `{ mesPreferencesNotification { applicationPerimetre } }`
+        )
+      ).mesPreferencesNotification
+    ).toEqual({ applicationPerimetre: true })
+    expect(
+      (await executer(ids.chloe, REGLER, { a: false }))
+        .modifierPreferencesNotification
+    ).toEqual({ applicationPerimetre: false })
+    // Une requête sans cette valeur ne change pas le réglage.
+    expect(
+      (await executer(ids.chloe, REGLER)).modifierPreferencesNotification
+    ).toEqual({ applicationPerimetre: false })
+
+    const data = await executer(
+      ids.alice,
+      `mutation ($p: ID!, $e: ID!) { creerTache(perimetreId: $p, editionId: $e, titre: "Ranger les lignes", mAssigner: false) { id } }`,
+      { p: ids.natation, e: ids.edition }
+    )
+    const autre = (data.creerTache as { id: string }).id
+    await executer(
+      ids.alice,
+      `mutation ($id: ID!) { changerStatutTache(id: $id, statut: EN_COURS) { id } }`,
+      { id: autre }
+    )
+    expect(await types(ids.chloe, { tacheId: autre })).toEqual([])
+    expect(await types(ids.bruno, { tacheId: autre })).toEqual([
+      'TACHE_CREEE',
+      'TACHE_STATUT',
+    ])
+    await executer(ids.chloe, REGLER, { a: true })
   })
 })

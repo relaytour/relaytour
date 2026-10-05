@@ -17,7 +17,11 @@ import {
   peutModifierPerimetre,
 } from '../lib/droits.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
-import { notifier, referentsSauf } from '../lib/notifications.ts'
+import {
+  notifier,
+  notifierLePerimetre,
+  referentsAPrevenir,
+} from '../lib/notifications.ts'
 import { texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
@@ -662,7 +666,7 @@ builder.mutationFields(t => ({
       // Règle n° 3 : les autres référent·es du périmètre le voient dans leur résumé.
       await notifier(prisma, {
         type: 'TACHE_CREEE',
-        destinataires: await referentsSauf(
+        destinataires: await referentsAPrevenir(
           prisma,
           perimetreId,
           editionId,
@@ -761,6 +765,15 @@ builder.mutationFields(t => ({
         },
         { mailImmediat: true }
       )
+      // Les autres référentes et référents l'apprennent dans l'application.
+      await notifierLePerimetre(prisma, {
+        type: 'TACHE_MODIFIEE',
+        perimetreId: tache.perimetreId,
+        editionId: tache.editionId,
+        acteurId: acteur.id,
+        tacheId: tache.id,
+        sauf: autres,
+      })
       return relire()
     },
   }),
@@ -852,6 +865,17 @@ builder.mutationFields(t => ({
         },
         { mailImmediat: true }
       )
+      // Les autres référentes et référents l'apprennent dans l'application. Un
+      // passage à « faite » ne leur nomme personne.
+      await notifierLePerimetre(prisma, {
+        type: 'TACHE_STATUT',
+        perimetreId: tache.perimetreId,
+        editionId: tache.editionId,
+        acteurId: acteur.id,
+        tacheId: tache.id,
+        statut: args.statut,
+        sauf: autres,
+      })
       return relire()
     },
   }),
@@ -924,7 +948,7 @@ builder.mutationFields(t => ({
         await notifier(prisma, {
           type: args.assigne ? 'TACHE_ASSIGNEE' : 'TACHE_DESASSIGNEE',
           destinataires: [
-            ...(await referentsSauf(
+            ...(await referentsAPrevenir(
               prisma,
               tache.perimetreId,
               tache.editionId,

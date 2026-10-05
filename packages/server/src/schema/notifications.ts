@@ -4,6 +4,9 @@ import {
   lienNotification,
   messageNotification,
   preferencesDe,
+  SELECTION_ACTIVITE_NOTIFIEE,
+  SELECTION_FICHE_NOTIFIEE,
+  SELECTION_TACHE_NOTIFIEE,
 } from '../lib/notifications.ts'
 
 import { builder } from './builder.ts'
@@ -15,17 +18,17 @@ const FrequenceResumeEnum = builder.enumType(FrequenceResume, {
   name: 'FrequenceResume',
 })
 
-const SELECTION_TACHE = {
-  select: {
-    titre: true,
-    echeance: true,
-    perimetre: {
-      select: { nom: true, slug: true, activite: { select: { slug: true } } },
-    },
-  },
+// Ce que le message et le lien d'une notification lisent d'elle.
+const SELECTION_NOTIFICATION = {
+  type: true,
+  jours: true,
+  acteurId: true,
+  personneId: true,
+  statut: true,
+  tache: SELECTION_TACHE_NOTIFIEE,
+  fiche: SELECTION_FICHE_NOTIFIEE,
+  activite: SELECTION_ACTIVITE_NOTIFIEE,
 } as const
-
-const SELECTION_ACTIVITE = { select: { slug: true, nom: true } } as const
 
 const NotificationRef = builder.prismaObject('Notification', {
   fields: t => ({
@@ -34,15 +37,7 @@ const NotificationRef = builder.prismaObject('Notification', {
     lue: t.boolean({ resolve: n => n.lueLe !== null }),
     creeLe: t.expose('createdAt', { type: 'DateTime' }),
     message: t.string({
-      select: {
-        type: true,
-        jours: true,
-        acteurId: true,
-        personneId: true,
-        userId: true,
-        tache: SELECTION_TACHE,
-        activite: SELECTION_ACTIVITE,
-      },
+      select: { ...SELECTION_NOTIFICATION, userId: true },
       resolve: async n => {
         const ids = [n.acteurId, n.personneId].filter(id => id !== null)
         const personnes = await prisma.user.findMany({
@@ -57,14 +52,7 @@ const NotificationRef = builder.prismaObject('Notification', {
       },
     }),
     lien: t.string({
-      select: {
-        type: true,
-        jours: true,
-        acteurId: true,
-        personneId: true,
-        tache: SELECTION_TACHE,
-        activite: SELECTION_ACTIVITE,
-      },
+      select: SELECTION_NOTIFICATION,
       resolve: n => lienNotification(n),
     }),
   }),
@@ -76,6 +64,7 @@ const PreferencesRef = builder
     mailModification: boolean
     mailEcheance: boolean
     mailDemandes: boolean
+    applicationPerimetre: boolean
   }>('PreferencesNotification')
   .implement({
     fields: t => ({
@@ -87,6 +76,10 @@ const PreferencesRef = builder
       mailDemandes: t.exposeBoolean('mailDemandes', {
         description:
           'Mail regroupé par heure quand une activité que la personne administre reçoit des demandes pour rejoindre son équipe.',
+      }),
+      applicationPerimetre: t.exposeBoolean('applicationPerimetre', {
+        description:
+          'Notification dans l’application quand une autre personne agit sur une tâche ou une fiche d’un périmètre où la personne est affectée.',
       }),
     }),
   })
@@ -137,8 +130,11 @@ builder.queryFields(t => ({
 builder.mutationFields(t => ({
   marquerNotificationsLues: t.int({
     authScopes: { connecte: true },
+    // Lire une notification ne modifie aucune donnée de l'organisation : une
+    // organisation en lecture seule le permet, à la différence des autres mutations.
+    skipTypeScopes: true,
     description:
-      'Sans identifiants, marque toutes les notifications comme lues.',
+      'Sans identifiants, marque toutes les notifications comme lues. Reste possible dans une organisation en lecture seule.',
     args: { ids: t.arg.idList() },
     resolve: async (_root, { ids }, ctx) => {
       const { count } = await prisma.notification.updateMany({
@@ -164,6 +160,9 @@ builder.mutationFields(t => ({
       mailDemandes: t.arg.boolean({
         description: 'Sans valeur, ce réglage ne change pas.',
       }),
+      applicationPerimetre: t.arg.boolean({
+        description: 'Sans valeur, ce réglage ne change pas.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const donnees = {
@@ -172,6 +171,9 @@ builder.mutationFields(t => ({
         mailEcheance: args.mailEcheance,
         ...(typeof args.mailDemandes === 'boolean'
           ? { mailDemandes: args.mailDemandes }
+          : {}),
+        ...(typeof args.applicationPerimetre === 'boolean'
+          ? { applicationPerimetre: args.applicationPerimetre }
           : {}),
       }
       return prisma.preferenceNotification.upsert({

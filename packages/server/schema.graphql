@@ -424,7 +424,9 @@ type Mutation {
   """
   inviterPremierAdmin(email: String!, nom: String!, organisation: String!): Boolean!
 
-  """Sans identifiants, marque toutes les notifications comme lues."""
+  """
+  Sans identifiants, marque toutes les notifications comme lues. Reste possible dans une organisation en lecture seule.
+  """
   marquerNotificationsLues(ids: [ID!]): Int!
   modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
@@ -451,6 +453,8 @@ type Mutation {
   modifierPerimetre(archive: Boolean!, couleur: String, description: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre, versionAttendue: Int): Perimetre!
   modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
   modifierPreferencesNotification(
+    """Sans valeur, ce réglage ne change pas."""
+    applicationPerimetre: Boolean
     frequenceResume: FrequenceResume!
 
     """Sans valeur, ce réglage ne change pas."""
@@ -671,6 +675,10 @@ type PostesPerimetre {
 }
 
 type PreferencesNotification {
+  """
+  Notification dans l’application quand une autre personne agit sur une tâche ou une fiche d’un périmètre où la personne est affectée.
+  """
+  applicationPerimetre: Boolean!
   frequenceResume: FrequenceResume!
 
   """
@@ -846,11 +854,14 @@ type TousLesPerimetres {
 enum TypeNotification {
   DEMANDE_RECUE
   ECHEANCE_PROCHE
+  FICHE_CREEE
+  FICHE_MODIFIEE
   TACHE_ASSIGNEE
   TACHE_CREEE
   TACHE_DESASSIGNEE
   TACHE_EN_RETARD
   TACHE_MODIFIEE
+  TACHE_STATUT
 }
 
 enum TypePerimetre {
