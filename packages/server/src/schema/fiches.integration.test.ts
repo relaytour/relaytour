@@ -421,4 +421,146 @@ describe('droits sur les fiches', () => {
       rmSync(sortie, { recursive: true, force: true })
     }
   })
+  // Deux personnes qui rédigent la même fiche ne s'écrasent pas : un enregistrement
+  // porte la version lue avant la rédaction.
+  describe('travail à plusieurs', () => {
+    const ENREGISTRER = `mutation ($id: ID!, $c: String!, $v: ID) {
+      modifierFiche(id: $id, titre: "Réserver la piscine", contenu: $c, versionDeDepart: $v) { versionCouranteId }
+    }`
+    const RESTAURER = `mutation ($v: ID!, $d: ID) { restaurerVersionFiche(versionId: $v, versionDeDepart: $d) { versionCouranteId } }`
+    const courante = async () =>
+      (await prisma.fiche.findUniqueOrThrow({ where: { id: piscine } }))
+        .versionCouranteId
+    const versions = () =>
+      prisma.ficheVersion.count({ where: { ficheId: piscine } })
+    const nomDe = async (id: string) =>
+      (await prisma.user.findUniqueOrThrow({ where: { id } })).name
+    const extensions = (r: Awaited<ReturnType<typeof executer>>) =>
+      r.errors?.[0]?.extensions
+
+    it('refuse d’enregistrer par-dessus une version écrite depuis la lecture', async () => {
+      const depart = await courante()
+      const avant = await versions()
+      // L'admin et la rédactrice partent de la même version. L'admin enregistre.
+      const parAdmin = await executer(ids.admin, ENREGISTRER, {
+        id: piscine,
+        c: 'Version de l’admin.',
+        v: depart,
+      })
+      expect(parAdmin.errors).toBeUndefined()
+      const ecrite = await courante()
+
+      const parRedactrice = await executer(ids.redactrice, ENREGISTRER, {
+        id: piscine,
+        c: 'Version de la rédactrice.',
+        v: depart,
+      })
+      expect(code(parRedactrice)).toBe('CONFLIT_VERSION')
+      expect(extensions(parRedactrice)).toMatchObject({
+        versionCourante: ecrite,
+        modifieePar: await nomDe(ids.admin),
+      })
+      expect(
+        Number.isNaN(Date.parse(String(extensions(parRedactrice)?.modifieeLe)))
+      ).toBe(false)
+      // Aucune version n'est créée pour l'enregistrement refusé.
+      expect(await versions()).toBe(avant + 1)
+      expect(await courante()).toBe(ecrite)
+
+      // La rédactrice écrase en connaissance de cause.
+      const ecrase = await executer(ids.redactrice, ENREGISTRER, {
+        id: piscine,
+        c: 'Version de la rédactrice.',
+        v: ecrite,
+      })
+      expect(ecrase.errors).toBeUndefined()
+      expect(await versions()).toBe(avant + 2)
+    })
+
+    it('ne garde qu’un de deux enregistrements simultanés de la même version', async () => {
+      const depart = await courante()
+      const avant = await versions()
+      const auteurs = [ids.admin, ids.redactrice]
+      const reponses = await Promise.all(
+        auteurs.map((id, i) =>
+          executer(id, ENREGISTRER, {
+            id: piscine,
+            c: `Enregistrement simultané ${i}.`,
+            v: depart,
+          })
+        )
+      )
+      const gagnante = reponses.findIndex(r => r.errors === undefined)
+      expect(reponses.filter(r => r.errors === undefined)).toHaveLength(1)
+      expect(code(reponses[1 - gagnante]!)).toBe('CONFLIT_VERSION')
+      expect(extensions(reponses[1 - gagnante]!)).toMatchObject({
+        versionCourante: await courante(),
+        modifieePar: await nomDe(auteurs[gagnante]!),
+      })
+      expect(await versions()).toBe(avant + 1)
+    })
+
+    it('laisse gagner le dernier enregistrement sans version de départ', async () => {
+      const avant = await versions()
+      const r = await executer(ids.redactrice, ENREGISTRER, {
+        id: piscine,
+        c: 'Sans version de départ.',
+      })
+      expect(r.errors).toBeUndefined()
+      expect(await versions()).toBe(avant + 1)
+    })
+
+    it('refuse l’accès avant de dire un conflit', async () => {
+      const avant = await versions()
+      for (const personne of [ids.referent, ids.autre]) {
+        const r = await executer(personne, ENREGISTRER, {
+          id: piscine,
+          c: 'Intrusion.',
+          v: 'version-perimee',
+        })
+        expect(code(r)).toBe('FORBIDDEN')
+      }
+      // La restauration reste réservée aux admins, même avec une version périmée.
+      const premiere = await prisma.ficheVersion.findFirstOrThrow({
+        where: { ficheId: piscine },
+        orderBy: { createdAt: 'asc' },
+      })
+      const r = await executer(ids.redactrice, RESTAURER, {
+        v: premiere.id,
+        d: 'version-perimee',
+      })
+      expect(code(r)).toBe('FORBIDDEN')
+      expect(await versions()).toBe(avant)
+    })
+
+    it('refuse de restaurer par-dessus une version écrite depuis l’historique', async () => {
+      const premiere = await prisma.ficheVersion.findFirstOrThrow({
+        where: { ficheId: piscine },
+        orderBy: { createdAt: 'asc' },
+      })
+      const depart = await courante()
+      await executer(ids.redactrice, ENREGISTRER, {
+        id: piscine,
+        c: 'Écrit pendant la lecture de l’historique.',
+      })
+      const avant = await versions()
+      const perimee = await executer(ids.admin, RESTAURER, {
+        v: premiere.id,
+        d: depart,
+      })
+      expect(code(perimee)).toBe('CONFLIT_VERSION')
+      expect(extensions(perimee)).toMatchObject({
+        versionCourante: await courante(),
+        modifieePar: await nomDe(ids.redactrice),
+      })
+      expect(await versions()).toBe(avant)
+
+      const voulue = await executer(ids.admin, RESTAURER, {
+        v: premiere.id,
+        d: await courante(),
+      })
+      expect(voulue.errors).toBeUndefined()
+      expect(await versions()).toBe(avant + 1)
+    })
+  })
 })

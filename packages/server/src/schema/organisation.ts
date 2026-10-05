@@ -15,7 +15,7 @@ import {
   typeDepuisGroupe,
 } from '../lib/activites.ts'
 import { validerDates, validerEdition } from '../lib/editions.ts'
-import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import {
   couleurValide,
   descriptionValide,
@@ -65,6 +65,10 @@ export const PerimetreRef = builder.prismaObject('Perimetre', {
     couleur: t.exposeString('couleur', { nullable: true }),
     ordre: t.exposeInt('ordre'),
     archive: t.boolean({ resolve: p => p.archivedAt !== null }),
+    version: t.exposeInt('version', {
+      description:
+        'Nombre de modifications du réglage. `modifierPerimetre` la reçoit en `versionAttendue`.',
+    }),
   }),
 })
 
@@ -256,6 +260,8 @@ builder.mutationFields(t => ({
   modifierPerimetre: t.prismaField({
     type: PerimetreRef,
     authScopes: { gestion: true },
+    description:
+      'Modifie le réglage d’un périmètre. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).',
     args: {
       id: t.arg.id({ required: true }),
       nom: t.arg.string({ required: true }),
@@ -266,22 +272,52 @@ builder.mutationFields(t => ({
       description: t.arg.string(),
       ordre: t.arg.int({ required: true }),
       archive: t.arg.boolean({ required: true }),
+      versionAttendue: t.arg.int(),
     },
     resolve: async (query, _root, args, ctx) => {
+      const id = String(args.id)
       const actuel = await prisma.perimetre.findFirst({
-        where: { id: String(args.id), organisationId: ctx.organisation!.id },
-        select: { archivedAt: true, activiteId: true, groupe: true },
+        where: { id, organisationId: ctx.organisation!.id },
+        select: {
+          archivedAt: true,
+          activiteId: true,
+          groupe: true,
+          version: true,
+        },
       })
       if (actuel === null) throw accesRefuse()
       await ctx.exigerAdminDe(actuel.activiteId)
+      // Un réglage n'a pas de journal : le conflit dit la version et sa date, sans
+      // nommer personne.
+      const conflit = async () => {
+        const { version, updatedAt } = await prisma.perimetre.findUniqueOrThrow(
+          {
+            where: { id },
+            select: { version: true, updatedAt: true },
+          }
+        )
+        return conflitDeVersion(
+          'Une autre personne a modifié ce périmètre depuis votre lecture.',
+          { versionCourante: version, modifieeLe: updatedAt.toISOString() }
+        )
+      }
+      const versionAttendue = args.versionAttendue ?? null
+      if (versionAttendue !== null && versionAttendue !== actuel.version) {
+        throw await conflit()
+      }
       const groupe =
         args.groupe || args.type
           ? await groupeDuPerimetre(actuel.activiteId, args.groupe, args.type)
           : actuel.groupe
-      const perimetre = await prisma.perimetre.update({
-        ...query,
-        where: { id: String(args.id) },
+      // L'écriture porte la version attendue : une modification simultanée ne
+      // trouve plus la ligne. Sans version attendue, la dernière écriture gagne.
+      const { count } = await prisma.perimetre.updateMany({
+        where: {
+          id,
+          ...(versionAttendue === null ? {} : { version: versionAttendue }),
+        },
         data: {
+          version: { increment: 1 },
           nom: texteRequis(args.nom, 'Le nom'),
           type: typeDepuisGroupe(groupe),
           groupe,
@@ -294,8 +330,9 @@ builder.mutationFields(t => ({
           archivedAt: args.archive ? (actuel.archivedAt ?? new Date()) : null,
         },
       })
+      if (count === 0) throw await conflit()
       await marquerContenuModifie(ctx.organisation!.id)
-      return perimetre
+      return prisma.perimetre.findUniqueOrThrow({ ...query, where: { id } })
     },
   }),
 }))

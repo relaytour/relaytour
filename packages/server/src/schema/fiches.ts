@@ -1,8 +1,8 @@
-import { prisma, SourceFiche } from '@relaytour/database'
+import { prisma, SourceFiche, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { perimetresLisibles, peutLirePerimetre } from '../lib/droits.ts'
-import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import {
   donneesPersonnelles,
   empreinte,
@@ -129,6 +129,58 @@ async function exigerRedaction(
     throw accesRefuse()
   }
   return ctx.personne
+}
+
+/**
+ * Verrouille la fiche pour la durée de la transaction, et dit si elle porte encore la
+ * version de départ. Sans version de départ, toute version convient.
+ */
+async function verrouillerLaFiche(
+  tx: Prisma.TransactionClient,
+  ficheId: string,
+  versionDeDepart: string | null
+): Promise<boolean> {
+  const [fiche] = await tx.$queryRaw<
+    { versionCouranteId: string | null }[]
+  >`SELECT versionCouranteId FROM Fiche WHERE id = ${ficheId} FOR UPDATE`
+  return (
+    fiche !== undefined &&
+    (versionDeDepart === null || fiche.versionCouranteId === versionDeDepart)
+  )
+}
+
+/**
+ * La fiche a changé depuis la version de départ. L'erreur dit la version actuelle,
+ * sa date et son auteur, que la fiche affiche déjà à ses lectrices et lecteurs.
+ */
+async function conflitDeFiche(ficheId: string) {
+  // La fiche, sa version courante et son auteur se lisent dans un même instantané :
+  // l'erreur ne nomme pas l'auteur d'une version et l'identifiant d'une autre.
+  const [fiche] = await prisma.$transaction(
+    [
+      prisma.fiche.findUniqueOrThrow({
+        where: { id: ficheId },
+        select: {
+          versionCouranteId: true,
+          updatedAt: true,
+          versionCourante: {
+            select: { createdAt: true, auteur: { select: { name: true } } },
+          },
+        },
+      }),
+    ],
+    { isolationLevel: 'RepeatableRead' }
+  )
+  return conflitDeVersion(
+    'Une autre personne a enregistré cette fiche depuis votre lecture.',
+    {
+      versionCourante: fiche.versionCouranteId,
+      modifieeLe: (
+        fiche.versionCourante?.createdAt ?? fiche.updatedAt
+      ).toISOString(),
+      modifieePar: fiche.versionCourante?.auteur?.name ?? null,
+    }
+  )
 }
 
 function contenuValide(contenu: string): string {
@@ -366,11 +418,14 @@ builder.mutationFields(t => ({
   modifierFiche: t.prismaField({
     type: FicheRef,
     authScopes: { connecte: true },
+    description:
+      'Enregistre une nouvelle version d’une fiche. Avec `versionDeDepart`, la version lue avant la rédaction, le serveur refuse d’écraser une version enregistrée entre-temps (code `CONFLIT_VERSION`).',
     args: {
       id: t.arg.id({ required: true }),
       titre: t.arg.string({ required: true }),
       contenu: t.arg.string({ required: true }),
       resume: t.arg.string(),
+      versionDeDepart: t.arg.id(),
     },
     resolve: async (query, _root, args, ctx) => {
       const fiche = await prisma.fiche.findFirst({
@@ -394,7 +449,23 @@ builder.mutationFields(t => ({
           where: { id: fiche.id },
         })
       }
-      return prisma.$transaction(async tx => {
+      const versionDeDepart = args.versionDeDepart
+        ? String(args.versionDeDepart)
+        : null
+      if (
+        versionDeDepart !== null &&
+        versionDeDepart !== fiche.versionCouranteId
+      ) {
+        throw await conflitDeFiche(fiche.id)
+      }
+      const ecrite = await prisma.$transaction(async tx => {
+        // Le verrou sur la fiche met les enregistrements simultanés à la suite. Sans
+        // lui, deux transactions créent chacune leur version, puis s'attendent l'une
+        // l'autre pour mettre la fiche à jour : la base en annule une. Sans version
+        // de départ, le dernier enregistrement gagne.
+        if (!(await verrouillerLaFiche(tx, fiche.id, versionDeDepart))) {
+          return false
+        }
         const version = await tx.ficheVersion.create({
           data: {
             ficheId: fiche.id,
@@ -406,6 +477,10 @@ builder.mutationFields(t => ({
             auteurId: auteur.id,
           },
         })
+        await tx.fiche.update({
+          where: { id: fiche.id },
+          data: { versionCouranteId: version.id },
+        })
         await tx.journal.create({
           data: {
             type: 'FICHE_MODIFIEE',
@@ -414,11 +489,12 @@ builder.mutationFields(t => ({
             ficheId: fiche.id,
           },
         })
-        return tx.fiche.update({
-          ...query,
-          where: { id: fiche.id },
-          data: { versionCouranteId: version.id },
-        })
+        return true
+      })
+      if (!ecrite) throw await conflitDeFiche(fiche.id)
+      return prisma.fiche.findUniqueOrThrow({
+        ...query,
+        where: { id: fiche.id },
       })
     },
   }),
@@ -427,22 +503,43 @@ builder.mutationFields(t => ({
   restaurerVersionFiche: t.prismaField({
     type: FicheRef,
     authScopes: { gestion: true },
-    args: { versionId: t.arg.id({ required: true }) },
-    resolve: async (query, _root, { versionId }, ctx) => {
+    description:
+      'Restaure une version : son contenu devient une nouvelle version. Avec `versionDeDepart`, la version courante lue dans l’historique, le serveur refuse de restaurer par-dessus une version enregistrée entre-temps (code `CONFLIT_VERSION`).',
+    args: {
+      versionId: t.arg.id({ required: true }),
+      versionDeDepart: t.arg.id(),
+    },
+    resolve: async (query, _root, args, ctx) => {
       const ancienne = await prisma.ficheVersion.findFirst({
         where: {
-          id: String(versionId),
+          id: String(args.versionId),
           fiche: { organisationId: ctx.organisation!.id },
         },
-        include: { fiche: { select: { activiteId: true } } },
+        include: {
+          fiche: { select: { activiteId: true, versionCouranteId: true } },
+        },
       })
       if (ancienne === null)
         throw erreurSaisie('Cette version est introuvable.')
       await ctx.exigerAdminDe(ancienne.fiche.activiteId)
+      const versionDeDepart = args.versionDeDepart
+        ? String(args.versionDeDepart)
+        : null
+      if (
+        versionDeDepart !== null &&
+        versionDeDepart !== ancienne.fiche.versionCouranteId
+      ) {
+        throw await conflitDeFiche(ancienne.ficheId)
+      }
       const date = ancienne.createdAt.toLocaleDateString('fr-FR', {
         timeZone: 'Europe/Paris',
       })
-      return prisma.$transaction(async tx => {
+      const ecrite = await prisma.$transaction(async tx => {
+        if (
+          !(await verrouillerLaFiche(tx, ancienne.ficheId, versionDeDepart))
+        ) {
+          return false
+        }
         const version = await tx.ficheVersion.create({
           data: {
             ficheId: ancienne.ficheId,
@@ -454,11 +551,16 @@ builder.mutationFields(t => ({
             auteurId: ctx.personne!.id,
           },
         })
-        return tx.fiche.update({
-          ...query,
+        await tx.fiche.update({
           where: { id: ancienne.ficheId },
           data: { versionCouranteId: version.id },
         })
+        return true
+      })
+      if (!ecrite) throw await conflitDeFiche(ancienne.ficheId)
+      return prisma.fiche.findUniqueOrThrow({
+        ...query,
+        where: { id: ancienne.ficheId },
       })
     },
   }),

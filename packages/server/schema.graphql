@@ -428,7 +428,11 @@ type Mutation {
   marquerNotificationsLues(ids: [ID!]): Int!
   modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
-  modifierFiche(contenu: String!, id: ID!, resume: String, titre: String!): Fiche!
+
+  """
+  Enregistre une nouvelle version d’une fiche. Avec `versionDeDepart`, la version lue avant la rédaction, le serveur refuse d’écraser une version enregistrée entre-temps (code `CONFLIT_VERSION`).
+  """
+  modifierFiche(contenu: String!, id: ID!, resume: String, titre: String!, versionDeDepart: ID): Fiche!
 
   """
   Remplace l’identité propre d’une activité. Un champ vide reprend la valeur de l’organisation.
@@ -440,7 +444,11 @@ type Mutation {
   """
   modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, domainesCourrielAutorises: [String!]!, favicon: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
   modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
-  modifierPerimetre(archive: Boolean!, couleur: String, description: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre): Perimetre!
+
+  """
+  Modifie le réglage d’un périmètre. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
+  """
+  modifierPerimetre(archive: Boolean!, couleur: String, description: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre, versionAttendue: Int): Perimetre!
   modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
   modifierPreferencesNotification(
     frequenceResume: FrequenceResume!
@@ -458,7 +466,11 @@ type Mutation {
   proposerPersonne(editionId: ID!, email: String!, mot: String, nom: String!, perimetreId: ID!): Boolean!
   refuserDemande(id: ID!): Demande!
   renvoyerInvitation(id: ID!): Boolean!
-  restaurerVersionFiche(versionId: ID!): Fiche!
+
+  """
+  Restaure une version : son contenu devient une nouvelle version. Avec `versionDeDepart`, la version courante lue dans l’historique, le serveur refuse de restaurer par-dessus une version enregistrée entre-temps (code `CONFLIT_VERSION`).
+  """
+  restaurerVersionFiche(versionDeDepart: ID, versionId: ID!): Fiche!
   retirerAffectation(id: ID!): Boolean!
   retirerDroitRedaction(id: ID!): Boolean!
 
@@ -568,6 +580,11 @@ type Perimetre {
   slug: String!
   taches(editionId: ID!): [Tache!]!
   type: TypePerimetre!
+
+  """
+  Nombre de modifications du réglage. `modifierPerimetre` la reçoit en `versionAttendue`.
+  """
+  version: Int!
 }
 
 type PerimetreDecouvert {
