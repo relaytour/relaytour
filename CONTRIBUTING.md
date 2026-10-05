@@ -49,7 +49,7 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 
 | Sujet | Décision | Référence |
 |---|---|---|
-| Socle | Yarn 4, Node 24, tsup ESM, un seul schéma GraphQL sans gateway | ADR 0001 |
+| Socle | Yarn 4, Node 24, tsup ESM, un seul schéma GraphQL sans gateway, abonnements compris | ADR 0001, 0017 |
 | Connexion | Better Auth, code ou lien reçu par mail, inscription fermée (invitation par un admin, ou demande acceptée par un admin) | ADR 0002, 0015 |
 | Modèles de l'espace organisateur | Fiches et tâches types dans un dossier de contenu propre à l'organisation, hors dépôt, importées en base par édition | ADR 0003 |
 | Source de vérité du contenu | L'application porte le contenu d'une organisation : identité, activités, périmètres, fiches, tâches types, images. Le dossier de contenu en est l'archive et le point de départ. L'export est iso ; un import refuse d'écraser une modification faite dans l'application depuis le dernier export, sauf avec `--forcer`. | ADR 0009 |
@@ -71,6 +71,7 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 | Contact principal | Un périmètre a au plus un contact principal par édition, désigné par un admin de son activité parmi les personnes affectées. C'est une information : le contact principal a les mêmes droits que les autres référentes et référents. | ADR 0011 |
 | Demandes | Une demande porte le nom et l'adresse d'une personne qui veut rejoindre l'équipe d'une période. Une personne affectée à un périmètre la propose pour ce périmètre, ou la personne la dépose elle-même par le formulaire public, qu'un admin ouvre et règle par activité. Aucun compte n'existe avant qu'un admin de l'activité l'accepte : il choisit alors les affectations, et les autres périmètres demandés deviennent des souhaits. Les admins de l'activité lisent les demandes ; la personne qui propose ne relit que ses propositions, sans adresse. Une demande ne donne aucun accès et n'est jamais exportée dans Git. Une purge planifiée supprime les demandes d'une période archivée. | `packages/server/src/lib/demandes.ts`, ADR 0015, 0016 |
 | Souhaits | Un souhait note l'intérêt d'une personne pour un périmètre d'une édition. Un admin le note, ou la personne le formule dans « Tous les périmètres ». Il est visible des admins et de la personne concernée, ne donne accès ni aux tâches ni aux fiches, et n'est jamais exporté dans Git. Il est satisfait quand l'affectation correspondante existe. | `packages/server/src/lib/souhaits.ts`, ADR 0012 |
+| Flux des changements | Une écriture publie un signal, sans donnée : une entité et des identifiants. Le serveur le pousse en SSE sur `/graphql` aux personnes qui peuvent lire l'objet, et le navigateur relit ses écrans par GraphQL. Le flux est un accélérateur : l'application fonctionne sans lui, et le pub/sub de Valkey n'est pas durable. Une mutation nouvelle publie son signal. | `packages/server/src/lib/flux.ts`, ADR 0017 |
 
 ## Invariants techniques
 
@@ -118,6 +119,7 @@ Un seul mot par notion.
 | référent·e | Personne membre de l'organisation, désignée pour un périmètre et une édition. |
 | affectation | Lien entre une personne, un périmètre et une édition. |
 | contact principal | Référent·e désigné·e par un admin comme première personne à solliciter pour un périmètre et une édition. Une information seulement, sans droit supplémentaire (ADR 0011). |
+| signal | Message du flux des changements : il dit qu'un objet a changé, sans porter de donnée (ADR 0017). |
 | consultation | Lecture des tâches, de l'avancement et de l'équipe d'un périmètre par une personne de l'activité qui n'y est pas affectée. Elle n'ouvre ni les fiches ni l'écriture (ADR 0014). |
 | effectif | Nombre de référentes et de référents souhaité pour un périmètre et une édition. |
 | poste à pourvoir | Place de référent·e encore libre : l'effectif moins les affectations. |

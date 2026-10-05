@@ -2,7 +2,7 @@
 
 | N° | Décision | Statut |
 |---|---|---|
-| [0001](0001-socle-technique.md) | Socle technique | Acceptée |
+| [0001](0001-socle-technique.md) | Socle technique | Acceptée, abonnements ajoutés par l'ADR 0017 |
 | [0002](0002-connexion-par-code-mail.md) | Connexion par code mail avec Better Auth | Acceptée |
 | [0003](0003-modeles-dans-git.md) | Fiches et tâches types versionnées dans Git | Acceptée, source de vérité remplacée par l'ADR 0009 |
 | [0004](0004-deploiement-de-reference.md) | Déploiement de référence : une pile Compose sur un VPS | Acceptée |
@@ -18,5 +18,6 @@
 | [0014](0014-consulter-les-perimetres-de-son-activite.md) | Consulter les périmètres de son activité | Acceptée |
 | [0015](0015-demandes-pour-rejoindre-l-equipe.md) | Demandes pour rejoindre l'équipe | Acceptée, mail aux admins ajouté par l'ADR 0016 |
 | [0016](0016-prevenir-les-admins-d-une-demande-par-mail.md) | Prévenir les admins d'une demande par un mail regroupé | Acceptée |
+| [0017](0017-flux-des-changements.md) | Flux des changements poussé par le serveur | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

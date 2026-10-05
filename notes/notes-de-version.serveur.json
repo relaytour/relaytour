@@ -20,6 +20,18 @@
           }
         },
         {
+          "id": "2026-10-05-serveur-le-serveur-pousse-les-changements-par-un-flux-sse",
+          "date": "2026-10-05",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le serveur pousse les changements par un flux SSE",
+            "texte": "Le serveur signale chaque changement aux navigateurs abonnés : une tâche, une fiche, un périmètre, l'équipe, une demande ou une notification. Le signal ne porte aucune donnée, et l'espace organisateur s'en servira pour relire ses écrans sans attendre. Le flux passe par l'adresse de l'API : aucun réglage de proxy ne s'ajoute.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-05-serveur-deux-personnes-ne-s-ecrasent-plus-sur-une-meme-tache",
           "date": "2026-10-05",
           "type": "fonctionnalite",
