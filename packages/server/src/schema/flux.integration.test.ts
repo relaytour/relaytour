@@ -44,6 +44,7 @@ const ids = {
   activite: '',
   autreActivite: '',
   natation: '',
+  basket: '', // même activité, sans Alice
   edition: '',
   admin: '',
   alice: '', // affectée à la natation
@@ -124,18 +125,20 @@ beforeAll(async () => {
       },
     })
   ).id
-  ids.natation = (
-    await prisma.perimetre.create({
-      data: {
-        organisationId: ids.org,
-        activiteId: ids.activite,
-        slug: 'natation',
-        nom: 'Natation',
-        type: 'SPORT',
-        groupe: 'sport',
-      },
-    })
-  ).id
+  for (const cle of ['natation', 'basket'] as const) {
+    ids[cle] = (
+      await prisma.perimetre.create({
+        data: {
+          organisationId: ids.org,
+          activiteId: ids.activite,
+          slug: cle,
+          nom: cle,
+          type: 'SPORT',
+          groupe: 'sport',
+        },
+      })
+    ).id
+  }
   for (const [cle, organisationId, role] of [
     ['admin', ids.org, 'ADMIN'],
     ['alice', ids.org, 'MEMBRE'],
@@ -209,6 +212,27 @@ describe('droit de recevoir un signal', () => {
     expect(
       await peutRecevoir(await contexte(ids.admin), tache({ activiteId: null }))
     ).toBe(false)
+  })
+
+  it('ne livre le signal d’une fiche qu’aux personnes qui peuvent la lire', async () => {
+    const fiche = (perimetreId: string | null) =>
+      tache({ entite: 'FICHE', perimetreId, editionId: null })
+    const alice = await contexte(ids.alice)
+    // La consultation ouvre les tâches des autres périmètres, pas leurs fiches.
+    expect(await peutRecevoir(alice, tache({ perimetreId: ids.basket }))).toBe(
+      true
+    )
+    expect(await peutRecevoir(alice, fiche(ids.basket))).toBe(false)
+    // Sa propre fiche de périmètre, et une fiche commune de son activité.
+    expect(await peutRecevoir(alice, fiche(ids.natation))).toBe(true)
+    expect(await peutRecevoir(alice, fiche(null))).toBe(true)
+    // Les admins lisent toutes les fiches ; un membre sans affectation, aucune.
+    expect(
+      await peutRecevoir(await contexte(ids.admin), fiche(ids.basket))
+    ).toBe(true)
+    expect(await peutRecevoir(await contexte(ids.emma), fiche(null))).toBe(
+      false
+    )
   })
 
   it('réserve une demande aux admins et une notification à son destinataire', async () => {
@@ -383,6 +407,66 @@ describe('abonnement aux changements', () => {
         editionId: ids.edition,
       },
     })
+  })
+})
+
+describe('panne de Valkey', () => {
+  /** Une connexion qui ne répond pas, à la place de celle que le flux ouvre. */
+  async function connexionEnPanne() {
+    const { connection } = await import('../jobs/queues.ts')
+    const fausse = {
+      status: 'reconnecting',
+      on: () => fausse,
+      once: () => fausse,
+      publish: vi.fn(() => Promise.resolve(0)),
+      psubscribe: vi.fn(() => Promise.reject(new Error('Valkey injoignable'))),
+      disconnect: vi.fn(),
+      quit: vi.fn(() => Promise.resolve('OK')),
+      stream: { unref: () => undefined },
+    }
+    vi.spyOn(connection, 'duplicate').mockReturnValueOnce(fausse as never)
+    return fausse
+  }
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+  })
+
+  it('abandonne le signal au lieu de le garder en attente', async () => {
+    const fausse = await connexionEnPanne()
+    // La publication ne lève pas, et rien n'est confié à la connexion en panne : le
+    // signal ne partira pas au retour de Valkey.
+    await expect(publierChangement(tache())).resolves.toBeUndefined()
+    await publierChangement(tache())
+    expect(fausse.publish).not.toHaveBeenCalled()
+    await fermerLesFlux()
+    expect(fausse.disconnect).toHaveBeenCalledTimes(1)
+
+    // Valkey revient : un flux reçoit de nouveau les signaux.
+    const flux = await ouvrirLeFlux(await contexte(ids.alice), {
+      relireLeContexte: () => contexte(ids.alice),
+    })
+    await publierChangement(tache({ id: 'apres-la-panne' }))
+    expect(((await flux!.next()).value as Changement).id).toBe('apres-la-panne')
+  })
+
+  it('ferme la connexion d’un abonnement qui échoue', async () => {
+    const fausse = await connexionEnPanne()
+    await expect(
+      ouvrirLeFlux(await contexte(ids.alice), {
+        relireLeContexte: () => contexte(ids.alice),
+      })
+    ).rejects.toThrow('Valkey injoignable')
+    // Aucune connexion ne reste à se reconnecter, et la place est rendue.
+    expect(fausse.disconnect).toHaveBeenCalledTimes(1)
+    expect(nombreDeFlux()).toBe(0)
+
+    // L'essai suivant ouvre un abonné neuf.
+    const flux = await ouvrirLeFlux(await contexte(ids.alice), {
+      relireLeContexte: () => contexte(ids.alice),
+    })
+    await publierChangement(tache({ id: 'abonne-neuf' }))
+    expect(((await flux!.next()).value as Changement).id).toBe('abonne-neuf')
   })
 })
 

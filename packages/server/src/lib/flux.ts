@@ -1,8 +1,10 @@
 import { prisma } from '@relaytour/database'
+import type { Redis } from 'ioredis'
 
 import type { AppContext } from '../context.ts'
 
 import { avecDelai } from './delai.ts'
+import { peutLireFiche } from './fiches.ts'
 import { journal } from './journal.ts'
 
 // Flux des changements (ADR 0017).
@@ -38,16 +40,49 @@ export interface Changement {
 const PREFIXE = 'relaytour:changements:'
 const canal = (organisationId: string) => `${PREFIXE}${organisationId}`
 
+// La publication a sa propre connexion, sans file hors ligne ni reprise. La
+// connexion de BullMQ garde les commandes en attente tant que Valkey est injoignable :
+// chaque écriture y laisserait un signal en mémoire, publié trop tard au retour de
+// Valkey. Ici, une publication échoue aussitôt quand Valkey ne répond pas.
+let editeur: Promise<Redis> | null = null
+
+async function ouvrirLEditeur(): Promise<Redis> {
+  const { connection } = await import('../jobs/queues.ts')
+  const connexion = connection.duplicate({
+    enableOfflineQueue: false,
+    maxRetriesPerRequest: 1,
+    autoResendUnfulfilledCommands: false,
+    commandTimeout: 1_000,
+  })
+  // Une panne se lit à chaque publication : l'événement lui-même ne dit rien de plus.
+  connexion.on('error', () => undefined)
+  // La connexion ne retient pas le processus : un script se termine sans la fermer.
+  connexion.on('connect', () => {
+    connexion.stream.unref()
+  })
+  if (connexion.status !== 'ready') {
+    await avecDelai(
+      new Promise<void>(ok => connexion.once('ready', ok)),
+      1_000,
+      'Connexion du flux'
+    ).catch(() => undefined)
+  }
+  return connexion
+}
+
 /**
  * Publie un changement. Ne lève jamais et ne bloque pas la requête au-delà d'une
  * seconde : une panne de Valkey laisse l'écriture aboutir, et les écrans se relisent
- * à leur rythme (invariant 17).
+ * à leur rythme (invariant 17). Le signal d'une écriture faite pendant la panne est
+ * perdu : il n'attend pas le retour de Valkey.
  */
 export async function publierChangement(changement: Changement): Promise<void> {
   try {
-    const { connection } = await import('../jobs/queues.ts')
+    editeur ??= ouvrirLEditeur()
+    const connexion = await editeur
+    if (connexion.status !== 'ready') throw new Error('Valkey ne répond pas')
     await avecDelai(
-      connection.publish(
+      connexion.publish(
         canal(changement.organisationId),
         JSON.stringify(changement)
       ),
@@ -135,7 +170,9 @@ export function publierNotification(
  *
  * - Une notification va à son seul destinataire.
  * - Une demande va aux admins de son activité, qui seuls lisent les demandes.
- * - Tout autre changement va aux personnes qui voient l'activité (ADR 0014).
+ * - Une fiche va aux personnes qui peuvent la lire : une fiche de périmètre ne se
+ *   lit pas en consultation, à la différence des tâches (ADR 0014).
+ * - Tout autre changement va aux personnes qui voient l'activité.
  */
 export async function peutRecevoir(
   ctx: AppContext,
@@ -149,6 +186,13 @@ export async function peutRecevoir(
   const activiteId = changement.activiteId
   if (activiteId === null || activiteId === undefined) return false
   if (changement.entite === 'DEMANDE') return ctx.estAdminDe(activiteId)
+  if (changement.entite === 'FICHE') {
+    return peutLireFiche(ctx, {
+      organisationId: changement.organisationId,
+      activiteId,
+      perimetreId: changement.perimetreId ?? null,
+    })
+  }
   return (await ctx.activitesVisibles()).has(activiteId)
 }
 
@@ -161,7 +205,7 @@ export async function peutRecevoir(
 type Ecouteur = (changement: Changement) => void
 
 const ecouteurs = new Set<Ecouteur>()
-let abonne: Promise<{ quit: () => Promise<unknown> }> | null = null
+let abonne: Promise<Redis> | null = null
 
 function lireChangement(message: string): Changement | null {
   try {
@@ -176,7 +220,7 @@ function lireChangement(message: string): Changement | null {
   }
 }
 
-async function ouvrirLAbonne() {
+async function ouvrirLAbonne(): Promise<Redis> {
   const { connection } = await import('../jobs/queues.ts')
   const connexion = connection.duplicate()
   connexion.on(
@@ -193,11 +237,18 @@ async function ouvrirLAbonne() {
       'L’abonné du flux a perdu Valkey : il se reconnecte.'
     )
   })
-  await avecDelai(
-    connexion.psubscribe(`${PREFIXE}*`),
-    2_000,
-    'Abonnement au flux'
-  )
+  try {
+    await avecDelai(
+      connexion.psubscribe(`${PREFIXE}*`),
+      2_000,
+      'Abonnement au flux'
+    )
+  } catch (erreur) {
+    // Sans cette fermeture, chaque essai laisserait une connexion qui finirait par
+    // s'abonner au retour de Valkey, et livrerait les mêmes signaux plusieurs fois.
+    connexion.disconnect()
+    throw erreur
+  }
   return connexion
 }
 
@@ -374,6 +425,16 @@ export async function fermerLesFlux(): Promise<void> {
     for (const controleur of siens) controleur.abort()
   }
   ecouteurs.clear()
+  const publication = editeur
+  editeur = null
+  if (publication !== null) {
+    await publication.then(
+      connexion => {
+        connexion.disconnect()
+      },
+      () => undefined
+    )
+  }
   const enCours = abonne
   abonne = null
   if (enCours !== null) {

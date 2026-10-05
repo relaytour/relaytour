@@ -33,6 +33,7 @@ La relecture seule laisse deux personnes écrire sur un état vieux d'une minute
 ### Qui reçoit quoi
 
 - Un signal suit les droits de lecture. Il va aux personnes de l'organisation qui voient l'activité concernée (ADR 0014).
+- Le signal d'une fiche va aux personnes qui peuvent la lire. Une fiche de périmètre ne se lit pas en consultation : son signal va aux personnes affectées à ce périmètre et aux admins de l'activité.
 - Le signal d'une demande va aux admins de son activité, qui seuls lisent les demandes (ADR 0015).
 - Le signal d'une notification va à son seul destinataire.
 - Un flux s'ouvre avec une session et une organisation active. Il revalide la session et relit les droits au plus une fois par minute. Il se ferme quand la session est fermée, le compte archivé ou l'organisation suspendue.
@@ -41,6 +42,7 @@ La relecture seule laisse deux personnes écrire sur un état vieux d'une minute
 
 - Une écriture publie son signal sur le pub/sub de Valkey, après sa transaction. Le worker publie les notifications qu'il crée.
 - La publication est bornée à une seconde et n'attend pas la réponse de la mutation. Une panne de Valkey laisse l'écriture aboutir.
+- La publication a sa propre connexion, sans file d'attente hors ligne. Pendant une panne, un signal est abandonné : il ne reste pas en mémoire, et il ne part pas en retard au retour de Valkey.
 - Chaque processus garde un seul abonné, sur une connexion dédiée.
 - Le pub/sub n'est pas durable : un signal publié pendant une reconnexion est perdu. La relecture périodique le rattrape.
 
@@ -61,7 +63,7 @@ La relecture seule laisse deux personnes écrire sur un état vieux d'une minute
 
 ## Revue de sécurité
 
-- Un signal ne contient aucune donnée. Il dit qu'une chose existe et vient de changer : il suit donc les droits de lecture, et des tests prouvent chaque refus (autre organisation, activité invisible, demande pour une personne qui n'administre pas, notification d'une autre personne, requête sans session).
+- Un signal ne contient aucune donnée. Il dit qu'une chose existe et vient de changer : il suit donc les droits de lecture, et des tests prouvent chaque refus (autre organisation, activité invisible, fiche d'un périmètre où la personne n'est pas affectée, demande pour une personne qui n'administre pas, notification d'une autre personne, requête sans session).
 - Le refus sans session se décide à l'ouverture du flux, dans l'abonnement lui-même. La portée d'un champ d'abonnement ne se vérifie qu'à chaque signal livré.
 - Le signal n'expose ni l'organisation ni le destinataire d'une notification.
 - Une session fermée garde son flux une minute au plus, jusqu'au signal suivant. Le flux ne lui livre alors plus rien.
