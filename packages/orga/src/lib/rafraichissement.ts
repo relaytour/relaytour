@@ -219,8 +219,12 @@ export function useSansRafraichissement(nom: string): void {
  * Relit les écrans au retour sur l'onglet, au retour du réseau et chaque minute, et
  * tient le flux des changements ouvert tant que l'onglet est visible et en ligne.
  * À monter une seule fois, dans la coquille de l'espace organisateur.
+ *
+ * `organisation` est le slug de l'organisation active. Le serveur attache un flux à
+ * une organisation : quand la personne en change, le flux se ferme et un autre
+ * s'ouvre pour la nouvelle.
  */
-export function useRafraichissement(): void {
+export function useRafraichissement(organisation: string): void {
   const client = useApolloClient()
   useEffect(() => {
     // Les écrans viennent de se charger : la première relecture attend son tour.
@@ -241,8 +245,9 @@ export function useRafraichissement(): void {
     const flux = creerFlux({
       ouvrir: ouvrirLeFluxSse,
       relire: noms => relireLesRequetes(client, noms),
-      // Un flux qui s'ouvre a pu manquer des signaux : une relecture les rattrape.
-      apresOuverture: () => rafraichir(),
+      // Un flux qui s'ouvre a pu manquer des signaux : une relecture complète les
+      // rattrape, sans attendre l'écart minimal entre deux relectures.
+      apresOuverture: () => rafraichir(0),
     })
     // Un onglet caché ou hors ligne ne garde pas de flux ouvert.
     const suivreLOnglet = () => {
@@ -268,5 +273,5 @@ export function useRafraichissement(): void {
       window.clearInterval(minuteur)
       flux.arreter()
     }
-  }, [client])
+  }, [client, organisation])
 }

@@ -11,27 +11,39 @@
 export type EntiteChangee =
   'TACHE' | 'FICHE' | 'PERIMETRE' | 'EQUIPE' | 'DEMANDE' | 'NOTIFICATION'
 
-/** Les requêtes à relire quand une entité change, par le nom de leur opération. */
+// Les requêtes qui affichent des tâches, et celles qui affichent des fiches.
+const VUES_DES_TACHES = [
+  'PagePerimetre',
+  'MesTaches',
+  'AvancementGlobal',
+  'Retroplanning',
+  'TachesFiche',
+] as const
+const VUES_DES_FICHES = ['ListeFiches', 'Fiche', 'FichesDuPerimetre'] as const
+const VUES_DES_PERIMETRES = [
+  'MenuPerimetres',
+  'TousLesPerimetres',
+  'PostesAPourvoir',
+] as const
+
+/**
+ * Les requêtes à relire quand une entité change, par le nom de leur opération. Une
+ * requête figure sous chaque entité dont elle affiche une donnée ou dont dépendent
+ * ses droits :
+ *
+ * - la page d'un périmètre liste les fiches communes dans son formulaire de tâche ;
+ * - le nom et la couleur d'un périmètre s'affichent avec chaque tâche et chaque fiche ;
+ * - les affectations décident des tâches à prendre, des référentes et référents
+ *   affichés, et du droit de lire ou de rédiger une fiche.
+ */
 const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
-  TACHE: [
-    'PagePerimetre',
-    'MesTaches',
-    'AvancementGlobal',
-    'Retroplanning',
-    'TachesFiche',
-  ],
-  FICHE: ['ListeFiches', 'Fiche', 'FichesDuPerimetre'],
-  PERIMETRE: [
-    'MenuPerimetres',
-    'TousLesPerimetres',
-    'PostesAPourvoir',
-    'PagePerimetre',
-  ],
+  TACHE: VUES_DES_TACHES,
+  FICHE: [...VUES_DES_FICHES, 'PagePerimetre'],
+  PERIMETRE: [...VUES_DES_PERIMETRES, ...VUES_DES_TACHES, ...VUES_DES_FICHES],
   EQUIPE: [
-    'MenuPerimetres',
-    'TousLesPerimetres',
-    'PostesAPourvoir',
-    'PagePerimetre',
+    ...VUES_DES_PERIMETRES,
+    ...VUES_DES_TACHES,
+    ...VUES_DES_FICHES,
     'SouhaitsEnAttente',
   ],
   DEMANDE: [

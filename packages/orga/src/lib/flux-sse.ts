@@ -11,11 +11,11 @@ import { organisationChoisie } from './selection'
 const ABONNEMENT = 'subscription Changements { changements { entite } }'
 
 /**
- * Durée après laquelle un flux resté ouvert est tenu pour établi. Le serveur répond
- * aussi par un flux quand il refuse l'abonnement : il y écrit l'erreur, puis le
- * ferme. Un flux n'est donc établi qu'une fois ce moment passé.
+ * Durée après laquelle un flux accepté et resté ouvert est tenu pour établi. Le
+ * serveur répond aussi par un flux quand il refuse l'abonnement : il y écrit
+ * l'erreur, puis le ferme. Un flux n'est donc établi qu'une fois ce moment passé.
  */
-const ETABLI_APRES_MS = 2_000
+export const ETABLI_APRES_MS = 2_000
 
 /** La cause que dit le code d'une erreur du serveur. */
 function causeDe(code: unknown): FinDeFlux {
@@ -24,15 +24,33 @@ function causeDe(code: unknown): FinDeFlux {
   return 'panne'
 }
 
-/** Ouvre un flux et renvoie de quoi le fermer. */
-export function ouvrirLeFluxSse(ecoute: Ecoute): () => void {
+/**
+ * Ouvre un flux et renvoie de quoi le fermer. `fetchFn` remplace `fetch` dans les
+ * tests.
+ */
+export function ouvrirLeFluxSse(
+  ecoute: Ecoute,
+  options: { fetchFn?: typeof fetch } = {}
+): () => void {
   let termine = false
   let cause: FinDeFlux | null = null
+  let etabli: ReturnType<typeof setTimeout> | null = null
   const client = createClient({
     url: '/graphql',
     singleConnection: false,
     credentials: 'same-origin',
     retryAttempts: 0,
+    ...(options.fetchFn === undefined ? {} : { fetchFn: options.fetchFn }),
+    on: {
+      // Le délai part de la réponse du serveur, pas de l'envoi de la requête : une
+      // requête qu'un proxy laisse en attente n'est pas un flux ouvert.
+      connected: () => {
+        if (termine) return
+        etabli = setTimeout(() => {
+          if (!termine) ecoute.ouvert()
+        }, ETABLI_APRES_MS)
+      },
+    },
     headers: (): Record<string, string> => {
       const organisation = organisationChoisie()
       return organisation === null
@@ -40,14 +58,10 @@ export function ouvrirLeFluxSse(ecoute: Ecoute): () => void {
         : { 'X-Relaytour-Organisation': organisation }
     },
   })
-  const etabli = setTimeout(() => {
-    if (!termine) ecoute.ouvert()
-  }, ETABLI_APRES_MS)
-
   const finir = (fin: FinDeFlux) => {
     if (termine) return
     termine = true
-    clearTimeout(etabli)
+    if (etabli !== null) clearTimeout(etabli)
     client.dispose()
     ecoute.fin(fin)
   }
@@ -55,6 +69,8 @@ export function ouvrirLeFluxSse(ecoute: Ecoute): () => void {
     { query: ABONNEMENT },
     {
       next: resultat => {
+        // Un signal déjà en route quand l'appelant ferme le flux ne compte plus.
+        if (termine) return
         // Un refus arrive comme un résultat en erreur, juste avant la fin du flux.
         const erreur = resultat.errors?.[0]
         if (erreur !== undefined) {
@@ -71,7 +87,7 @@ export function ouvrirLeFluxSse(ecoute: Ecoute): () => void {
   return () => {
     if (termine) return
     termine = true
-    clearTimeout(etabli)
+    if (etabli !== null) clearTimeout(etabli)
     cesser()
     client.dispose()
   }

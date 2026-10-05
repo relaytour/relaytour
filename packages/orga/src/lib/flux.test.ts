@@ -69,6 +69,36 @@ describe('requetesPour', () => {
     expect(lot).toContain('SouhaitsEnAttente')
     expect(requetesPour(['AUTRE' as never])).toEqual([])
   })
+
+  it('relit chaque écran qui affiche l’entité ou en tire ses droits', () => {
+    // Le formulaire de tâche d'un périmètre liste les fiches communes.
+    expect(requetesPour(['FICHE'])).toContain('PagePerimetre')
+    // Le nom et la couleur d'un périmètre s'affichent avec ses tâches et ses fiches.
+    expect(requetesPour(['PERIMETRE'])).toEqual(
+      expect.arrayContaining([
+        'MesTaches',
+        'Retroplanning',
+        'AvancementGlobal',
+        'TachesFiche',
+        'ListeFiches',
+        'Fiche',
+      ])
+    )
+    // Une affectation change les tâches à prendre et le droit de lire une fiche.
+    expect(requetesPour(['EQUIPE'])).toEqual(
+      expect.arrayContaining([
+        'PagePerimetre',
+        'MesTaches',
+        'Retroplanning',
+        'ListeFiches',
+        'Fiche',
+        'FichesDuPerimetre',
+      ])
+    )
+    // Une tâche ou une notification ne relit pas tout.
+    expect(requetesPour(['TACHE'])).not.toContain('ListeFiches')
+    expect(requetesPour(['NOTIFICATION'])).toHaveLength(2)
+  })
 })
 
 describe('delaiDeReprise', () => {
