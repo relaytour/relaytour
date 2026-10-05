@@ -11,6 +11,7 @@ import {
   peutRedigerFiche,
 } from '../lib/fiches.ts'
 import { exigerMembre } from '../lib/appartenances.ts'
+import { notifierLePerimetre } from '../lib/notifications.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
 
@@ -181,6 +182,26 @@ async function conflitDeFiche(ficheId: string) {
       modifieePar: fiche.versionCourante?.auteur?.name ?? null,
     }
   )
+}
+
+/**
+ * Prévient les référentes et référents du périmètre d'une fiche, dans l'application.
+ * Une fiche commune ne prévient personne : elle concerne toute l'activité.
+ */
+async function prevenirLePerimetre(
+  type: 'FICHE_CREEE' | 'FICHE_MODIFIEE',
+  ficheId: string,
+  perimetreId: string | null,
+  acteurId: string
+) {
+  if (perimetreId === null) return
+  await notifierLePerimetre(prisma, {
+    type,
+    perimetreId,
+    editionId: null,
+    acteurId,
+    ficheId,
+  })
 }
 
 function contenuValide(contenu: string): string {
@@ -376,7 +397,7 @@ builder.mutationFields(t => ({
       const titre = texteRequis(args.titre, 'Le titre', 200)
       const contenu = contenuValide(args.contenu)
       const slug = slugValide(args.slug)
-      return sansDoublon(
+      const creee = await sansDoublon(
         prisma.$transaction(async tx => {
           const fiche = await tx.fiche.create({
             data: {
@@ -412,6 +433,8 @@ builder.mutationFields(t => ({
         }),
         'Une fiche utilise déjà cet identifiant.'
       )
+      await prevenirLePerimetre('FICHE_CREEE', creee.id, perimetreId, auteur.id)
+      return creee
     },
   }),
 
@@ -495,6 +518,12 @@ builder.mutationFields(t => ({
         return true
       })
       if (!ecrite) throw await conflitDeFiche(fiche.id)
+      await prevenirLePerimetre(
+        'FICHE_MODIFIEE',
+        fiche.id,
+        fiche.perimetreId,
+        auteur.id
+      )
       return prisma.fiche.findUniqueOrThrow({
         ...query,
         where: { id: fiche.id },
@@ -519,7 +548,13 @@ builder.mutationFields(t => ({
           fiche: { organisationId: ctx.organisation!.id },
         },
         include: {
-          fiche: { select: { activiteId: true, versionCouranteId: true } },
+          fiche: {
+            select: {
+              activiteId: true,
+              perimetreId: true,
+              versionCouranteId: true,
+            },
+          },
         },
       })
       if (ancienne === null)
@@ -561,6 +596,12 @@ builder.mutationFields(t => ({
         return true
       })
       if (!ecrite) throw await conflitDeFiche(ancienne.ficheId)
+      await prevenirLePerimetre(
+        'FICHE_MODIFIEE',
+        ancienne.ficheId,
+        ancienne.fiche.perimetreId,
+        ctx.personne!.id
+      )
       return prisma.fiche.findUniqueOrThrow({
         ...query,
         where: { id: ancienne.ficheId },

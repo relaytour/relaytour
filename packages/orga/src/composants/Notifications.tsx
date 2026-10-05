@@ -59,7 +59,13 @@ export default function Notifications() {
 
   return (
     <>
-      <Badge dot={nonLues > 0} offset={[-9, 9]} color="var(--rt-accent)">
+      <Badge
+        count={nonLues}
+        overflowCount={99}
+        size="small"
+        offset={[-6, 6]}
+        color="var(--rt-accent)"
+      >
         <Button
           shape="circle"
           className="rt-bouton-barre"

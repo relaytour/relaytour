@@ -621,6 +621,7 @@ model Fiche {
   versions        FicheVersion[] @relation("FicheVersions")
   taches          Tache[]
   journal         Journal[]
+  notifications   Notification[]
 
   @@unique([organisationId, slug])
   @@index([perimetreId])
@@ -678,6 +679,11 @@ enum TypeNotification {
   ECHEANCE_PROCHE
   TACHE_EN_RETARD
   DEMANDE_RECUE
+  // Activité d'un périmètre, pour ses autres référentes et référents : dans
+  // l'application seulement, jamais par mail immédiat.
+  TACHE_STATUT
+  FICHE_CREEE
+  FICHE_MODIFIEE
 }
 
 // Une notification ne stocke que des identifiants : le texte se compose à la lecture,
@@ -696,6 +702,11 @@ model Notification {
   personneId     String?
   // Pour ECHEANCE_PROCHE : le nombre de jours avant l'échéance.
   jours          Int?
+  // Pour FICHE_CREEE et FICHE_MODIFIEE : la fiche concernée.
+  ficheId        String?
+  // Pour TACHE_STATUT : le nouveau statut. Un passage à « faite » ne garde pas son
+  // auteur : qui a coché reste réservé à la personne qui a coché et aux admins.
+  statut         StatutTache?
   // Empêche de créer deux fois le même rappel (type, tâche, personne, échéance).
   cle            String?          @unique
   lueLe          DateTime?
@@ -709,6 +720,7 @@ model Notification {
   user         User         @relation("NotificationDestinataire", fields: [userId], references: [id], onDelete: Cascade)
   tache        Tache?       @relation(fields: [tacheId], references: [id], onDelete: Cascade)
   activite     Activite?    @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  fiche        Fiche?       @relation(fields: [ficheId], references: [id], onDelete: Cascade)
 
   @@index([userId, lueLe, createdAt])
   @@index([userId, resumeeLe])
@@ -723,21 +735,24 @@ enum FrequenceResume {
 
 // Préférences d'une personne. Sans ligne, les valeurs par défaut s'appliquent.
 model PreferenceNotification {
-  userId           String          @id
-  organisationId   String
-  frequenceResume  FrequenceResume @default(HEBDOMADAIRE)
+  userId               String          @id
+  organisationId       String
+  frequenceResume      FrequenceResume @default(HEBDOMADAIRE)
   // Mail immédiat quand une autre personne modifie une de vos tâches.
-  mailModification Boolean         @default(true)
+  mailModification     Boolean         @default(true)
   // Mail immédiat pour les échéances à 7 jours, à 1 jour, et les retards.
-  mailEcheance     Boolean         @default(true)
+  mailEcheance         Boolean         @default(true)
   // Mail regroupé par heure quand une activité que la personne administre reçoit
   // des demandes pour rejoindre son équipe (ADR 0016).
-  mailDemandes     Boolean         @default(true)
-  dernierResumeLe  DateTime?
+  mailDemandes         Boolean         @default(true)
+  // Notification dans l'application quand une autre personne agit sur une tâche ou
+  // une fiche d'un périmètre où la personne est affectée.
+  applicationPerimetre Boolean         @default(true)
+  dernierResumeLe      DateTime?
   // Date du dernier résumé envoyé pour chaque organisation : { [organisationId]: ISO }.
   // Une personne membre de plusieurs organisations reçoit le résumé de chacune (ADR 0008).
-  derniersResumes  Json?
-  updatedAt        DateTime        @updatedAt
+  derniersResumes      Json?
+  updatedAt            DateTime        @updatedAt
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)

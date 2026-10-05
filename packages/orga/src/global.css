@@ -997,6 +997,12 @@ a.rt-etiquette:hover {
   align-items: start;
 }
 
+/* La tâche visée par une notification. */
+.rt-carte-tache.rt-en-evidence {
+  outline: 2px solid var(--rt-accent);
+  outline-offset: 2px;
+}
+
 .rt-carte-tache.rt-verre,
 .rt-ligne-tache.rt-verre {
   background: var(--rt-verre-carte);

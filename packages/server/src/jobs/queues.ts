@@ -30,9 +30,11 @@ export interface CourrielJobData {
   destinataire?: string
   code?: string
   // Pour `tache-modifiee` : identifiants seulement, le contenu se relit à l'envoi.
+  // Sans `acteurId` pour un passage à « faite » : qui a coché une tâche reste
+  // réservé à la personne qui a coché et aux admins, et le mail ne le nomme pas.
   tache?: {
     tacheId: string
-    acteurId: string
+    acteurId?: string
     changement: 'contenu' | 'statut'
   }
   // Notification liée : sa date d'envoi est posée après le départ du mail.

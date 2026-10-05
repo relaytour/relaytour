@@ -19,6 +19,7 @@ const PREFERENCES = graphql(`
       mailModification
       mailEcheance
       mailDemandes
+      applicationPerimetre
     }
   }
 `)
@@ -29,17 +30,20 @@ const MODIFIER = graphql(`
     $mailModification: Boolean!
     $mailEcheance: Boolean!
     $mailDemandes: Boolean
+    $applicationPerimetre: Boolean
   ) {
     modifierPreferencesNotification(
       frequenceResume: $frequenceResume
       mailModification: $mailModification
       mailEcheance: $mailEcheance
       mailDemandes: $mailDemandes
+      applicationPerimetre: $applicationPerimetre
     ) {
       frequenceResume
       mailModification
       mailEcheance
       mailDemandes
+      applicationPerimetre
     }
   }
 `)
@@ -50,6 +54,7 @@ interface Valeurs {
   mailEcheance: boolean
   // Présent pour les personnes qui administrent une activité seulement.
   mailDemandes?: boolean
+  applicationPerimetre: boolean
 }
 
 export default function Preferences() {
@@ -78,7 +83,7 @@ export default function Preferences() {
 
   return (
     <>
-      <Titre sousTitre="Choisissez les mails que vous recevez. Les notifications restent visibles dans l’espace organisateur.">
+      <Titre sousTitre="Choisissez les mails et les notifications que vous recevez.">
         Préférences
       </Titre>
       {loading || !data ? (
@@ -127,9 +132,9 @@ export default function Preferences() {
               )}
               <Panneau teinte titre="Les notifications dans l’espace">
                 <p className="rt-texte-secondaire">
-                  Quel que soit votre choix, la cloche de la barre haute affiche
-                  les nouvelles de vos périmètres. Elle se rafraîchit chaque
-                  minute.
+                  La cloche de la barre haute affiche les nouvelles de vos
+                  tâches, quel que soit votre choix pour les mails. Elle se
+                  rafraîchit chaque minute.
                 </p>
               </Panneau>
             </>
@@ -228,6 +233,38 @@ export default function Preferences() {
                   </Form.Item>
                 </div>
               )}
+            </div>
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 12,
+                marginTop: 24,
+              }}
+            >
+              <span style={{ fontSize: 16, fontWeight: 600 }}>
+                Dans l’espace organisateur
+              </span>
+              <div className="rt-reglage">
+                <label htmlFor="applicationPerimetre">
+                  <span className="rt-choix-titre">
+                    Activité de vos périmètres
+                  </span>
+                  <span className="rt-choix-detail">
+                    Une notification quand une autre personne crée, modifie ou
+                    termine une tâche ou une fiche de vos périmètres. Aucun mail
+                    ne part.
+                  </span>
+                </label>
+                <Form.Item
+                  name="applicationPerimetre"
+                  valuePropName="checked"
+                  noStyle
+                >
+                  <Switch id="applicationPerimetre" />
+                </Form.Item>
+              </div>
             </div>
 
             <div
