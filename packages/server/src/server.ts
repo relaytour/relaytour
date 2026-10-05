@@ -16,6 +16,8 @@ import {
   type AppContext,
 } from './context.ts'
 import { env } from './env.ts'
+import { creerGestionnaireFlux } from './flux-http.ts'
+import { fermerLesFlux } from './lib/flux.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
 import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
@@ -123,44 +125,50 @@ app.all('/api/auth/*splat', (req, res) => {
   void gestionnaireAuth(req, res)
 })
 
+/**
+ * Le contexte d'une requête : le jeton d'administration de l'installation, sinon la
+ * session et l'organisation désignée. L'API et le flux des changements le partagent.
+ */
+async function contexteDeRequete(req: express.Request): Promise<AppContext> {
+  // Le jeton d'administration de l'installation ignore toute session (ADR 0008).
+  // Un en-tête Bearer, même vide ou malformé, écarte la session : un jeton
+  // faux rend la requête anonyme.
+  const porteur = /^Bearer\b\s*(.*)$/i.exec(req.get('authorization') ?? '')
+  if (porteur !== null) {
+    // Avec JETON_ADMINISTRATION_LOCAL, un jeton relayé par le proxy ne vaut rien :
+    // la requête devient anonyme, comme avec un jeton faux (ADR 0013).
+    const valide =
+      jetonAdministrationValide((porteur[1] ?? '').trim()) &&
+      (!env.JETON_ADMINISTRATION_LOCAL || requeteLocale(req))
+    if (!valide) {
+      journal.warn(
+        { evenement: 'jeton-administration-refuse', ip: req.ip },
+        'Un jeton d’administration invalide a été présenté.'
+      )
+    }
+    return buildContext(req.ip, null, null, valide)
+  }
+  const session = await auth.api.getSession({
+    headers: fromNodeHeaders(req.headers),
+  })
+  // L'espace organisateur désigne l'organisation active par un en-tête ; sans
+  // lui, l'unique appartenance de la personne fait foi (ADR 0008).
+  return buildContext(
+    req.ip,
+    session?.user.id ?? null,
+    req.get(ENTETE_ORGANISATION)?.trim() || null,
+    false,
+    req.get(ENTETE_ACTIVITE)?.trim() || null
+  )
+}
+
 app.use(
   '/graphql',
   cors({ origin: env.CORS_ORIGIN, credentials: true }),
   express.json({ limit: '1mb' }),
-  expressMiddleware(apollo, {
-    context: async ({ req }) => {
-      // Le jeton d'administration de l'installation ignore toute session (ADR 0008).
-      // Un en-tête Bearer, même vide ou malformé, écarte la session : un jeton
-      // faux rend la requête anonyme.
-      const porteur = /^Bearer\b\s*(.*)$/i.exec(req.get('authorization') ?? '')
-      if (porteur !== null) {
-        // Avec JETON_ADMINISTRATION_LOCAL, un jeton relayé par le proxy ne vaut rien :
-        // la requête devient anonyme, comme avec un jeton faux (ADR 0013).
-        const valide =
-          jetonAdministrationValide((porteur[1] ?? '').trim()) &&
-          (!env.JETON_ADMINISTRATION_LOCAL || requeteLocale(req))
-        if (!valide) {
-          journal.warn(
-            { evenement: 'jeton-administration-refuse', ip: req.ip },
-            'Un jeton d’administration invalide a été présenté.'
-          )
-        }
-        return buildContext(req.ip, null, null, valide)
-      }
-      const session = await auth.api.getSession({
-        headers: fromNodeHeaders(req.headers),
-      })
-      // L'espace organisateur désigne l'organisation active par un en-tête ; sans
-      // lui, l'unique appartenance de la personne fait foi (ADR 0008).
-      return buildContext(
-        req.ip,
-        session?.user.id ?? null,
-        req.get(ENTETE_ORGANISATION)?.trim() || null,
-        false,
-        req.get(ENTETE_ACTIVITE)?.trim() || null
-      )
-    },
-  })
+  // Les abonnements partent en SSE (ADR 0017) ; le reste continue vers Apollo.
+  creerGestionnaireFlux({ contexte: contexteDeRequete }),
+  expressMiddleware(apollo, { context: ({ req }) => contexteDeRequete(req) })
 )
 
 if (env.APP_ENV === 'local') {
@@ -187,8 +195,10 @@ const arreter = (signal: string) => {
     `Signal ${signal} reçu : arrêt en cours.`
   )
 
+  // Les flux se ferment d'abord : une connexion SSE ouverte retiendrait l'arrêt
+  // jusqu'à son délai.
   const drainBorne = Promise.race([
-    apollo.stop(),
+    fermerLesFlux().then(() => apollo.stop()),
     new Promise<void>(resolve => {
       const t = setTimeout(() => {
         httpServer.closeAllConnections()

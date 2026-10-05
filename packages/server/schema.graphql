@@ -97,6 +97,17 @@ type BaremeScore {
   tacheRealisee: Int!
 }
 
+"""
+Signal qu’une chose a changé dans l’organisation active. Il ne porte aucune donnée : le client relit ses écrans.
+"""
+type Changement {
+  activiteId: ID
+  editionId: ID
+  entite: EntiteChangee!
+  id: ID
+  perimetreId: ID
+}
+
 type CouleursTheme {
   accent: String!
   accentClair: String!
@@ -178,6 +189,16 @@ type Edition {
   id: ID!
   nom: String!
   statut: StatutEdition!
+}
+
+"""Ce qui a changé. EQUIPE couvre les affectations et les souhaits."""
+enum EntiteChangee {
+  DEMANDE
+  EQUIPE
+  FICHE
+  NOTIFICATION
+  PERIMETRE
+  TACHE
 }
 
 enum EtatPostes {
@@ -807,6 +828,13 @@ enum StatutTache {
   A_FAIRE
   EN_COURS
   FAITE
+}
+
+type Subscription {
+  """
+  Les changements que la personne peut voir, au fil de l’eau. Le serveur ferme le flux après quinze minutes : le client en rouvre un. Une personne garde quatre flux ouverts au plus.
+  """
+  changements: Changement!
 }
 
 type Tache {

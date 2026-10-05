@@ -21,6 +21,8 @@ import { journal } from '../lib/journal.ts'
 import { adresseValide, rejouerSurDoublon, texteRequis } from '../lib/saisie.ts'
 import { perimetresSouhaitesValides, SOUHAITS_MAX } from '../lib/souhaits.ts'
 
+import { publierPourActivite } from '../lib/flux.ts'
+
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
@@ -342,6 +344,12 @@ builder.mutationFields(t => ({
           acteurId: acteur.id,
         })
       }
+      // La file de revue des admins se relit, même pour une proposition qui s'ajoute
+      // à une demande déjà signalée.
+      publierPourActivite('DEMANDE', organisationId, edition.activiteId, {
+        perimetreId,
+        editionId,
+      })
       return true
     },
   }),
@@ -361,10 +369,14 @@ builder.mutationFields(t => ({
             statut: 'EN_ATTENTE',
           },
         },
-        select: { id: true, demandeId: true },
+        select: {
+          id: true,
+          demandeId: true,
+          demande: { select: { activiteId: true, editionId: true } },
+        },
       })
       if (ligne === null) return false
-      return prisma.$transaction(async tx => {
+      const retiree = await prisma.$transaction(async tx => {
         // Un admin peut avoir traité la demande depuis la lecture : elle ne change plus.
         if (!(await verrouillerEnAttente(tx, ligne.demandeId))) return false
         await tx.demandePerimetre.delete({ where: { id: ligne.id } })
@@ -379,6 +391,15 @@ builder.mutationFields(t => ({
         })
         return true
       })
+      if (retiree) {
+        publierPourActivite(
+          'DEMANDE',
+          ctx.organisation!.id,
+          ligne.demande.activiteId,
+          { editionId: ligne.demande.editionId }
+        )
+      }
+      return retiree
     },
   }),
 
@@ -468,6 +489,13 @@ builder.mutationFields(t => ({
           { organisationId, activiteId: demande.activiteId }
         )
       }
+      // La file se relit, et l'équipe aussi : l'acceptation crée des affectations et
+      // des souhaits.
+      for (const entite of ['DEMANDE', 'EQUIPE'] as const) {
+        publierPourActivite(entite, organisationId, demande.activiteId, {
+          editionId: demande.editionId,
+        })
+      }
       return prisma.demande.findUniqueOrThrow({
         ...query,
         where: { id: demande.id },
@@ -501,6 +529,9 @@ builder.mutationFields(t => ({
         },
         'Une demande a été refusée.'
       )
+      publierPourActivite('DEMANDE', ctx.organisation!.id, demande.activiteId, {
+        editionId: demande.editionId,
+      })
       return prisma.demande.findUniqueOrThrow({
         ...query,
         where: { id: demande.id },

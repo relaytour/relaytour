@@ -17,6 +17,8 @@ import { configurationActivite } from '../lib/organisation.ts'
 import { adresseValide, texteRequis } from '../lib/saisie.ts'
 import { identifiantsSouhaites } from '../lib/souhaits.ts'
 
+import { publierPourActivite } from '../lib/flux.ts'
+
 import { builder } from './builder.ts'
 
 // Formulaire public pour rejoindre l'équipe d'une activité (ADR 0015). Ces deux
@@ -386,6 +388,12 @@ builder.mutationField('envoyerDemande', t =>
         organisationId: formulaire.organisationId,
         activiteId: formulaire.activiteId,
       })
+      publierPourActivite(
+        'DEMANDE',
+        formulaire.organisationId,
+        formulaire.activiteId,
+        { editionId: formulaire.editionId }
+      )
       return true
     },
   })

@@ -6,6 +6,7 @@ import type {
 
 import { aujourdhui } from '../lib/droits.ts'
 import { journal } from '../lib/journal.ts'
+import { publierNotification } from '../lib/flux.ts'
 
 // Tâches planifiées : elles tournent dans le worker, une fois par jour et par
 // organisation, dans le fuseau de l'organisation (ADR 0008). Les fonctions reçoivent
@@ -115,6 +116,8 @@ export async function genererRappels(
           },
           select: { id: true },
         })
+        // Le worker publie lui aussi : la cloche de la personne se met à jour.
+        publierNotification(organisation.id, userId)
         parPersonne.set(userId, [
           ...(parPersonne.get(userId) ?? []),
           notification.id,

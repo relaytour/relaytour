@@ -12,6 +12,7 @@ import {
 } from '../lib/fiches.ts'
 import { exigerMembre } from '../lib/appartenances.ts'
 import { notifierLePerimetre } from '../lib/notifications.ts'
+import { publierPourActivite } from '../lib/flux.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
 
@@ -433,6 +434,10 @@ builder.mutationFields(t => ({
         }),
         'Une fiche utilise déjà cet identifiant.'
       )
+      publierPourActivite('FICHE', ctx.organisation!.id, activiteId, {
+        id: creee.id,
+        perimetreId,
+      })
       await prevenirLePerimetre('FICHE_CREEE', creee.id, perimetreId, auteur.id)
       return creee
     },
@@ -518,6 +523,10 @@ builder.mutationFields(t => ({
         return true
       })
       if (!ecrite) throw await conflitDeFiche(fiche.id)
+      publierPourActivite('FICHE', fiche.organisationId, fiche.activiteId, {
+        id: fiche.id,
+        perimetreId: fiche.perimetreId,
+      })
       await prevenirLePerimetre(
         'FICHE_MODIFIEE',
         fiche.id,
@@ -596,6 +605,12 @@ builder.mutationFields(t => ({
         return true
       })
       if (!ecrite) throw await conflitDeFiche(ancienne.ficheId)
+      publierPourActivite(
+        'FICHE',
+        ctx.organisation!.id,
+        ancienne.fiche.activiteId,
+        { id: ancienne.ficheId, perimetreId: ancienne.fiche.perimetreId }
+      )
       await prevenirLePerimetre(
         'FICHE_MODIFIEE',
         ancienne.ficheId,
@@ -619,15 +634,20 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, { id, archive }, ctx) => {
       const fiche = await prisma.fiche.findFirst({
         where: { id: String(id), organisationId: ctx.organisation!.id },
-        select: { id: true, activiteId: true },
+        select: { id: true, activiteId: true, perimetreId: true },
       })
       if (fiche === null) throw accesRefuse()
       await ctx.exigerAdminDe(fiche.activiteId)
-      return prisma.fiche.update({
+      const archivee = await prisma.fiche.update({
         ...query,
         where: { id: fiche.id },
         data: { archivedAt: archive ? new Date() : null },
       })
+      publierPourActivite('FICHE', ctx.organisation!.id, fiche.activiteId, {
+        id: fiche.id,
+        perimetreId: fiche.perimetreId,
+      })
+      return archivee
     },
   }),
 

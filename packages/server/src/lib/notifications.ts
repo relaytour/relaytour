@@ -6,6 +6,8 @@ import type {
 
 import { mettreEnFile } from '../courriel/file.ts'
 
+import { publierNotification } from './flux.ts'
+
 import { journal } from './journal.ts'
 
 export const PREFERENCES_PAR_DEFAUT = {
@@ -123,6 +125,7 @@ export async function notifierLePerimetre(
             cle: `${type}-${cible}-${statut ?? ''}-${statut === 'FAITE' ? '' : acteurId}-${userId}-${tranche}`,
           },
         })
+        publierNotification(organisationId, userId)
       } catch (erreur) {
         // P2002 : cette personne est déjà prévenue de cette action dans la tranche.
         if ((erreur as { code?: string }).code !== 'P2002') throw erreur
@@ -191,6 +194,7 @@ export async function notifier(
         },
         select: { id: true },
       })
+      publierNotification(organisationId, userId)
       if (options.mailImmediat) {
         await mettreEnFile(
           'tache-modifiee',

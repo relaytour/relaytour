@@ -16,6 +16,7 @@ import {
 } from '../lib/activites.ts'
 import { validerDates, validerEdition } from '../lib/editions.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
+import { publierPourActivite } from '../lib/flux.ts'
 import {
   couleurValide,
   descriptionValide,
@@ -253,6 +254,9 @@ builder.mutationFields(t => ({
         'Un périmètre utilise déjà cet identifiant.'
       )
       await marquerContenuModifie(ctx.organisation!.id)
+      publierPourActivite('PERIMETRE', ctx.organisation!.id, activiteId, {
+        perimetreId: perimetre.id,
+      })
       return perimetre
     },
   }),
@@ -332,6 +336,12 @@ builder.mutationFields(t => ({
       })
       if (count === 0) throw await conflit()
       await marquerContenuModifie(ctx.organisation!.id)
+      publierPourActivite(
+        'PERIMETRE',
+        ctx.organisation!.id,
+        actuel.activiteId,
+        { perimetreId: id }
+      )
       return prisma.perimetre.findUniqueOrThrow({ ...query, where: { id } })
     },
   }),
