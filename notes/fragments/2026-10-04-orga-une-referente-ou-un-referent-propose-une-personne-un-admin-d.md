@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Une référente ou un référent propose une personne, un admin décide

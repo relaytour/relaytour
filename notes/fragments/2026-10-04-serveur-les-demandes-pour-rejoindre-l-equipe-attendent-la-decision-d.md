@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Les demandes pour rejoindre l'équipe attendent la décision d'un admin

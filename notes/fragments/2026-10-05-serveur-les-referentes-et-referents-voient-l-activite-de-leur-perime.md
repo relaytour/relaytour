@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Les référentes et référents voient l'activité de leur périmètre

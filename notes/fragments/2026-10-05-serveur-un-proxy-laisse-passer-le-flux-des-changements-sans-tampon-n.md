@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Un proxy laisse passer le flux des changements sans tampon ni compression

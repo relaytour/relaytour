@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     La date d'une demande ou d'une fiche suit votre fuseau horaire

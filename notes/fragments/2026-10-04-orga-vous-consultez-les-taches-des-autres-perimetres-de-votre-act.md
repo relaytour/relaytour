@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Vous consultez les tâches des autres périmètres de votre activité

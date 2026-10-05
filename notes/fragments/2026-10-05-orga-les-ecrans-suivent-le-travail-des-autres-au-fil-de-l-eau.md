@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Les écrans suivent le travail des autres au fil de l'eau

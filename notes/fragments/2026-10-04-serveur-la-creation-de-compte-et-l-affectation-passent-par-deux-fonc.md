@@ -3,6 +3,7 @@ cible: serveur
 type: interne
 audience: interne
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     La création de compte et l'affectation passent par deux fonctions partagées

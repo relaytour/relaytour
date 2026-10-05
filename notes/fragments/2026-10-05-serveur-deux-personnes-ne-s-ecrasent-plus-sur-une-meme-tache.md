@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.9.0
 fr:
   titre: >-
     Deux personnes ne s'écrasent plus sur une même tâche
