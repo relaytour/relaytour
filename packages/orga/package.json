@@ -23,6 +23,7 @@
     "@relaytour/tokens": "workspace:*",
     "antd": "^6.6.4",
     "graphql": "^16.14.0",
+    "graphql-sse": "^2.6.2",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "react-markdown": "^10.1.0",

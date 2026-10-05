@@ -75,7 +75,7 @@ function Mise({ session }: { session: Session }) {
   const { moi, active } = session
   const { activite, lien, periode, gere, decouverte } = useActivite()
   const { data: menu } = useQuery(MENU_PERIMETRES)
-  useRafraichissement()
+  useRafraichissement(active.slug)
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const ecrans = Grid.useBreakpoint()

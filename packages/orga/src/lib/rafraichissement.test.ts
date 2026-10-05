@@ -8,6 +8,7 @@ import AvisRelecture from '../composants/AvisRelecture'
 
 import {
   ECART_MIN_MS,
+  INTERVALLE_AVEC_FLUX_MS,
   peutRafraichir,
   relireLesRequetes,
   relireLesVues,
@@ -103,6 +104,14 @@ describe('peutRafraichir', () => {
     expect(peutRafraichir({ ...pret, enLigne: false })).toBe(false)
     expect(peutRafraichir({ ...pret, dernier: pret.dernier + 1 })).toBe(false)
   })
+
+  it('espace la relecture périodique quand le flux des changements est ouvert', () => {
+    const ecart = INTERVALLE_AVEC_FLUX_MS
+    expect(peutRafraichir({ ...pret, ecart })).toBe(false)
+    expect(
+      peutRafraichir({ ...pret, dernier: pret.maintenant - ecart, ecart })
+    ).toBe(true)
+  })
 })
 
 describe('relireLesRequetes', () => {
@@ -149,6 +158,37 @@ describe('relireLesRequetes', () => {
     await attendre(10)
     expect(etats).toEqual([])
     expect(requete.getCurrentResult().error).toBeUndefined()
+    expect(avis()).toBe('')
+  })
+})
+
+describe('relecture après un signal du flux', () => {
+  it('ne relit que les requêtes nommées, et ne retire pas l’avis', async () => {
+    const { client, etat, observer } = banc()
+    await observer('MesTaches')
+    await observer('ListeFiches')
+    // Une relecture complète rencontre un refus : l'avis s'affiche.
+    etat.erreur = 'FORBIDDEN'
+    await relireLesRequetes(client)
+    expect(avis()).not.toBe('')
+
+    // Un signal ne concerne que les tâches. Sa relecture réussit, mais elle ne dit
+    // rien des autres requêtes : l'avis reste.
+    etat.erreur = null
+    etat.lectures.length = 0
+    expect(
+      await relireLesRequetes(client, ['MesTaches', 'Retroplanning'])
+    ).toBe(1)
+    expect(etat.lectures).toEqual(['MesTaches'])
+    expect(avis()).not.toBe('')
+    // Une requête hors de la liste ne se relit pas, même nommée.
+    await observer('Moi')
+    etat.lectures.length = 0
+    expect(await relireLesRequetes(client, ['Moi'])).toBe(0)
+    expect(etat.lectures).toEqual([])
+
+    // La relecture complète suivante, sans refus, retire l'avis.
+    await relireLesRequetes(client)
     expect(avis()).toBe('')
   })
 })

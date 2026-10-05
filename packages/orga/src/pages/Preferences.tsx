@@ -133,8 +133,8 @@ export default function Preferences() {
               <Panneau teinte titre="Les notifications dans l’espace">
                 <p className="rt-texte-secondaire">
                   La cloche de la barre haute affiche les nouvelles de vos
-                  tâches, quel que soit votre choix pour les mails. Elle se
-                  rafraîchit chaque minute.
+                  tâches, quel que soit votre choix pour les mails. Elle se met
+                  à jour sans recharger la page.
                 </p>
               </Panneau>
             </>

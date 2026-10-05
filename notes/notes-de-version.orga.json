@@ -8,6 +8,18 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-05-orga-les-ecrans-suivent-le-travail-des-autres-au-fil-de-l-eau",
+          "date": "2026-10-05",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les écrans suivent le travail des autres au fil de l'eau",
+            "texte": "Quand une autre personne modifie une tâche, une fiche, un périmètre ou l'équipe, votre écran se met à jour en moins d'une seconde, sans recharger la page. La cloche fait de même pour une notification nouvelle. Ce suivi s'arrête quand l'onglet est caché et reprend à votre retour. Sans lui, par exemple derrière un réseau qui le bloque, les écrans se relisent chaque minute comme avant.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-05-orga-les-ecrans-se-mettent-a-jour-pendant-que-vous-travaillez",
           "date": "2026-10-05",
           "type": "fonctionnalite",
