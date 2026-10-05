@@ -18,6 +18,8 @@ api.exemple.org {
 # L'espace organisateur relaie la connexion, GraphQL et les images d'identité vers l'API :
 # le navigateur ne parle qu'à une seule origine, et le cookie de session reste de
 # première partie (ADR 0002). Les mails citent les images sous /medias/ (ADR 0009).
+# /graphql porte aussi le flux des changements (SSE, ADR 0017) : Caddy le transmet
+# au fil de l'eau, sans réglage.
 orga.exemple.org {
 	@api path /api/auth/* /graphql /medias/*
 	handle @api {

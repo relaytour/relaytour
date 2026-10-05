@@ -32,6 +32,18 @@
           }
         },
         {
+          "id": "2026-10-05-orga-le-mode-d-emploi-decrit-le-travail-a-plusieurs",
+          "date": "2026-10-05",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le mode d'emploi décrit le travail à plusieurs",
+            "texte": "Le mode d'emploi des référentes et référents reçoit une section « Travailler à plusieurs ». Elle donne quatre habitudes : prendre une tâche avant de la modifier, la passer « en cours », rédiger une fiche à tour de rôle, recharger avant d'écraser. Elle décrit aussi les fenêtres de conflit, le brouillon d'une fiche et les notifications d'un périmètre.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-05-orga-la-date-d-une-demande-ou-d-une-fiche-suit-votre-fuseau-horai",
           "date": "2026-10-05",
           "type": "correctif",

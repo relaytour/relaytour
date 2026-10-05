@@ -6,7 +6,7 @@
     <title>Référent·e · Modes d'emploi · Relaytour</title>
     <meta
       name="description"
-      content="Le mode d'emploi des référentes et référents dans l'espace organisateur de Relaytour : connexion, tâches, rétroplanning, fiches et préférences."
+      content="Le mode d'emploi des référentes et référents dans l'espace organisateur de Relaytour : connexion, tâches, rétroplanning, fiches, préférences et travail à plusieurs."
     />
     <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../jetons.css" />
@@ -177,6 +177,71 @@
         </article>
       </section>
 
+      <section aria-labelledby="t-plusieurs">
+        <div class="entete">
+          <span class="etiquette">En équipe</span>
+          <h2 id="t-plusieurs">Travailler à plusieurs sur un périmètre</h2>
+          <p class="texte">
+            Plusieurs référentes et référents partagent souvent un périmètre. Relaytour met vos écrans à jour pendant que les autres travaillent, et vous avertit quand deux saisies se croisent. Quatre habitudes évitent la plupart de ces croisements.
+          </p>
+        </div>
+        <div class="grille-2">
+          <article class="verre panneau">
+            <h3>Prenez une tâche avant de la modifier</h3>
+            <p>Cliquez sur « Je m'en occupe » avant de corriger une tâche ou de la mener. Votre nom s'affiche sur la tâche, et votre équipe voit qu'elle est prise.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Passez-la « en cours » quand vous commencez</h3>
+            <p>Le menu « Autres actions » propose « Marquer en cours ». Les autres référentes et référents du périmètre reçoivent alors une notification qui annonce que vous avez commencé.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Rédigez une fiche à tour de rôle</h3>
+            <p>Prévenez votre équipe avant de reprendre une fiche. Relaytour ne fusionne pas deux rédactions menées en même temps : la seconde personne qui enregistre choisit entre les deux textes.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Rechargez avant d'écraser</h3>
+            <p>Quand Relaytour annonce un conflit, lisez d'abord la version de l'autre personne. « Écraser » remplace son travail par le vôtre. Réservez ce choix à une version que vous avez lue.</p>
+          </article>
+        </div>
+
+        <article class="verre ecran" id="p-suivi">
+          <div class="ecran-tete"><h3>Vos écrans suivent le travail de votre équipe</h3></div>
+          <p>Quand une autre personne modifie une tâche, une fiche, un périmètre ou l'équipe, votre écran affiche le changement en quelques secondes. Vous ne rechargez pas la page. La cloche reçoit ses notifications de la même façon.</p>
+          <p class="note">Ce suivi s'arrête quand l'onglet est caché, et l'écran se relit à votre retour. Sur un réseau qui bloque ce suivi, les écrans se relisent chaque minute. L'éditeur d'une fiche ne change jamais pendant votre rédaction.</p>
+          <p class="note">Le bandeau « Vos accès ont changé, ou votre session a pris fin. » signale que l'écran ne peut plus se relire. Rechargez alors la page.</p>
+        </article>
+
+        <article class="verre ecran" id="p-conflit-tache">
+          <div class="ecran-tete"><h3>Deux personnes modifient la même tâche</h3></div>
+          <p>Relaytour n'enregistre pas votre modification à la place d'une modification que vous n'avez pas vue. Une fenêtre indique qui a modifié la tâche, et quand.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Recharger</span></span><span>Abandonner votre saisie et afficher la version de l'autre personne.</span></li>
+            <li><span><span class="libelle">Écraser</span></span><span>Enregistrer votre version à la place de la sienne.</span></li>
+          </ul>
+          <p class="note">La même fenêtre s'ouvre quand le statut d'une tâche a changé avant votre clic. Elle donne le statut actuel, sans nommer la personne qui l'a changé. Prendre une tâche ou vous en retirer ne provoque aucun conflit.</p>
+        </article>
+
+        <article class="verre ecran" id="p-conflit-fiche">
+          <div class="ecran-tete"><h3>Deux personnes rédigent la même fiche</h3></div>
+          <p>Si une autre version de la fiche a été enregistrée pendant votre rédaction, l'éditeur n'enregistre pas la vôtre. Un avis indique qui a enregistré cette version, et quand. Votre texte reste à l'écran.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Voir la version actuelle</span></span><span>Ouvrir la fiche enregistrée dans un nouvel onglet, pour la comparer à votre texte.</span></li>
+            <li><span><span class="libelle">Copier mon texte</span></span><span>Copier votre rédaction, pour la reporter à la main dans la version actuelle.</span></li>
+            <li><span><span class="libelle">Écraser avec mon texte</span></span><span>Enregistrer votre texte comme nouvelle version. La version de l'autre personne reste dans l'historique, et un admin peut la restaurer.</span></li>
+          </ul>
+          <p>L'éditeur garde aussi un brouillon de votre rédaction dans votre navigateur. Si vous quittez l'éditeur sans enregistrer, il vous propose à votre retour « Reprendre le brouillon » ou « Supprimer le brouillon ».</p>
+          <p class="note">Le brouillon reste dans ce navigateur : il n'existe sur aucun autre appareil. Il est effacé quand vous enregistrez, quand vous abandonnez la rédaction et quand vous vous déconnectez.</p>
+        </article>
+
+        <article class="verre ecran" id="p-cloche">
+          <div class="ecran-tete"><h3>La cloche annonce l'activité de vos périmètres</h3></div>
+          <p>Quand une autre personne crée, modifie, commence, termine ou abandonne une tâche de votre périmètre, vous recevez une notification. Vous en recevez une aussi quand elle crée ou modifie une fiche du périmètre. Un clic sur la notification d'une tâche ouvre le périmètre et met cette tâche en évidence.</p>
+          <p class="note">Pour une fiche, ou pour une tâche qui ne vous est pas assignée, aucun mail ne part. Le réglage « Activité de vos périmètres », dans vos <a href="#e-preferences">Préférences</a>, désactive ces notifications.</p>
+          <p class="note">Une tâche qui vous est assignée garde sa notification, quel que soit ce réglage. Un mail vous prévient aussi quand une autre personne la modifie ou change son statut, selon le réglage « Modification de vos tâches ».</p>
+          <p class="note">Une tâche terminée est annoncée sans nom : seuls la personne qui l'a cochée et les admins savent qui l'a terminée.</p>
+        </article>
+      </section>
+
       <section aria-labelledby="t-reperes">
         <div class="entete">
           <span class="etiquette">Bon à savoir</span>
@@ -184,12 +249,12 @@
         </div>
         <div class="grille-2">
           <article class="verre panneau">
-            <h3>Vous ne voyez que vos périmètres</h3>
-            <p>Les tâches et les fiches des périmètres où vous n'êtes pas affecté·e ne vous sont pas présentées. Une affectation passée garde l'accès aux archives du périmètre.</p>
+            <h3>Vous agissez dans vos périmètres</h3>
+            <p>Vous modifiez les tâches et vous lisez les fiches des périmètres où vous êtes affecté·e. Vous consultez les tâches des autres périmètres de l'activité, sans leurs fiches. Une affectation passée garde l'accès aux archives du périmètre.</p>
           </article>
           <article class="verre panneau">
             <h3>Les affectations viennent des admins</h3>
-            <p>Un admin note vos périmètres souhaités et procède aux affectations. L'espace ne comporte pas de formulaire de candidature.</p>
+            <p>Vous formulez un souhait dans « Tous les périmètres », et un admin procède aux affectations. Une personne extérieure à l'équipe dépose une demande par le formulaire public, quand un admin l'a ouvert.</p>
           </article>
           <article class="verre panneau">
             <h3>Plusieurs activités</h3>
