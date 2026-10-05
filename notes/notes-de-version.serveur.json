@@ -8,6 +8,18 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-05-serveur-les-referentes-et-referents-voient-l-activite-de-leur-perime",
+          "date": "2026-10-05",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les référentes et référents voient l'activité de leur périmètre",
+            "texte": "Quand une autre personne modifie une tâche de votre périmètre, change son statut, ou crée et modifie une de ses fiches, la cloche vous prévient, même si la tâche ne vous est pas assignée. Aucun mail ne part pour ces notifications : le résumé les reprend. La cloche affiche le nombre de notifications non lues, et une notification mène à la tâche, mise en évidence dans la page du périmètre. Vous coupez ces notifications dans vos préférences.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-05-serveur-deux-personnes-ne-s-ecrasent-plus-sur-une-meme-tache",
           "date": "2026-10-05",
           "type": "fonctionnalite",
