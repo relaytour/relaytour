@@ -172,7 +172,7 @@ async function conflitDeFiche(ficheId: string) {
     { isolationLevel: 'RepeatableRead' }
   )
   return conflitDeVersion(
-    'Une autre personne a enregistré cette fiche depuis votre lecture.',
+    'Une autre version de cette fiche a été enregistrée depuis votre lecture.',
     {
       versionCourante: fiche.versionCouranteId,
       modifieeLe: (
@@ -442,7 +442,10 @@ builder.mutationFields(t => ({
       const contenu = contenuValide(args.contenu)
       const nouvelleEmpreinte = empreinte(titre, contenu)
 
-      // Rien n'a changé : aucune version n'est créée.
+      // Rien n'a changé : aucune version n'est créée. Ce retour précède le contrôle
+      // de la version de départ. Un texte identique à la version actuelle n'écrase
+      // rien, même parti d'une version plus ancienne : annoncer un conflit proposerait
+      // d'écraser un texte par lui-même.
       if (fiche.versionCourante?.empreinte === nouvelleEmpreinte) {
         return prisma.fiche.findUniqueOrThrow({
           ...query,

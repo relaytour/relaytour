@@ -176,8 +176,11 @@ function Formulaire({
     effacerBrouillon(cle)
   }
   useEffect(() => {
-    // Un brouillon proposé reste intact tant que la personne n'a pas choisi.
-    if (!modifie || brouillon !== null) return
+    // Sans modification, rien ne s'écrit : un brouillon proposé à l'ouverture reste
+    // intact. Dès que la personne modifie le texte, sa saisie se garde, même sans
+    // réponse à la proposition : l'ancien brouillon reste offert par l'avis tant que
+    // l'écran est ouvert.
+    if (!modifie) return
     const minuteur = window.setTimeout(() => {
       if (termine.current) return
       ecrireBrouillon(cle, {
@@ -188,7 +191,7 @@ function Formulaire({
       })
     }, 400)
     return () => window.clearTimeout(minuteur)
-  }, [cle, titre, contenu, versionDeDepart, modifie, brouillon])
+  }, [cle, titre, contenu, versionDeDepart, modifie])
   const [vue, setVue] = useState<'ecrire' | 'apercu'>('ecrire')
   const [slugTouche, setSlugTouche] = useState(false)
   const [creer, creationEnCours] = useMutation(CREER_FICHE, {
@@ -345,7 +348,7 @@ function Formulaire({
             showIcon
             style={{ marginBottom: 16 }}
             title={`Un brouillon du ${jourDeLInstant(brouillon.enregistreLe)} n’a pas été enregistré.`}
-            description="Il est gardé dans ce navigateur. Reprenez-le pour continuer votre rédaction, ou supprimez-le pour repartir de la fiche."
+            description="Il est gardé dans ce navigateur. Reprenez-le pour continuer votre rédaction, ou supprimez-le pour repartir de la fiche. Si vous modifiez la fiche sans le reprendre, votre nouvelle saisie le remplace."
             action={
               <Space wrap>
                 <Button onClick={reprendreLeBrouillon}>
@@ -353,7 +356,8 @@ function Formulaire({
                 </Button>
                 <Button
                   onClick={() => {
-                    effacerBrouillon(cle)
+                    // Une saisie déjà reprise sur la fiche garde son brouillon.
+                    if (!modifie) effacerBrouillon(cle)
                     setBrouillon(null)
                   }}
                 >

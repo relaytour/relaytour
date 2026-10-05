@@ -73,19 +73,12 @@ function momentDe(iso: string, fuseau?: string): string {
   return `le ${jour} à ${Number(heures)} h ${minutes}`
 }
 
-/** « Alex Martin » et « le 4 octobre à 14 h 05 », ou des formules sans nom ni date. */
-function auteurEtMoment(
+/** « le 4 octobre à 14 h 05 », précédé d'une espace, ou rien sans date. */
+const momentDuConflit = (
   conflit: Extract<Conflit, { nature: 'contenu' }>,
   fuseau?: string
-): { auteur: string; moment: string } {
-  return {
-    auteur: conflit.modifieePar ?? 'Une autre personne',
-    moment:
-      conflit.modifieeLe === null
-        ? ''
-        : ` ${momentDe(conflit.modifieeLe, fuseau)}`,
-  }
-}
+): string =>
+  conflit.modifieeLe === null ? '' : ` ${momentDe(conflit.modifieeLe, fuseau)}`
 
 /**
  * Le titre et le texte de la fenêtre qui annonce un conflit sur une tâche ou sur un
@@ -102,24 +95,33 @@ export function texteConflit(
       texte: `Cette tâche est maintenant « ${LIBELLES[conflit.statutCourant]} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel.`,
     }
   }
-  const { auteur, moment } = auteurEtMoment(conflit, options.fuseau)
+  const moment = momentDuConflit(conflit, options.fuseau)
   if (options.objet === 'perimetre') {
+    // Un réglage n'a pas de journal, et un import du contenu le modifie aussi : la
+    // phrase ne suppose aucune personne.
     return {
       titre: 'Ce périmètre a changé depuis votre lecture',
-      texte: `${auteur} a modifié ce périmètre${moment}. « Écraser » enregistre votre réglage à la place du sien. « Recharger » abandonne votre saisie et affiche le sien.`,
+      texte: `Ce périmètre a été modifié${moment}. « Écraser » enregistre votre réglage à la place du réglage actuel. « Recharger » abandonne votre saisie et affiche le réglage actuel.`,
     }
   }
+  const auteur = conflit.modifieePar ?? 'Une autre personne'
   return {
     titre: 'Cette tâche a changé depuis votre lecture',
     texte: `${auteur} a modifié cette tâche${moment}. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne.`,
   }
 }
 
-/** La phrase qui annonce, dans l'éditeur, qu'une autre version de la fiche existe. */
+/**
+ * La phrase qui annonce, dans l'éditeur, qu'une autre version de la fiche existe.
+ * Une version importée du contenu n'a pas d'auteur : la phrase ne suppose alors
+ * aucune personne.
+ */
 export function annonceConflitFiche(
   conflit: Extract<Conflit, { nature: 'contenu' }>,
   fuseau?: string
 ): string {
-  const { auteur, moment } = auteurEtMoment(conflit, fuseau)
-  return `${auteur} a enregistré une autre version de cette fiche${moment}.`
+  const moment = momentDuConflit(conflit, fuseau)
+  return conflit.modifieePar === null
+    ? `Une autre version de cette fiche a été enregistrée${moment}.`
+    : `${conflit.modifieePar} a enregistré une autre version de cette fiche${moment}.`
 }

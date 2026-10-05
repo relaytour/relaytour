@@ -533,6 +533,59 @@ describe('droits sur les fiches', () => {
       expect(await versions()).toBe(avant)
     })
 
+    it('accepte sans rien écrire un texte identique à la version actuelle', async () => {
+      const actuelle = await prisma.fiche.findUniqueOrThrow({
+        where: { id: piscine },
+        include: { versionCourante: true },
+      })
+      const avant = await versions()
+      // Parti d'une version plus ancienne, ce texte n'écrase rien : aucun conflit.
+      const r = await executer(ids.redactrice, ENREGISTRER, {
+        id: piscine,
+        c: actuelle.versionCourante!.contenu,
+        v: 'version-perimee',
+      })
+      expect(r.errors).toBeUndefined()
+      expect(await versions()).toBe(avant)
+      expect(await courante()).toBe(actuelle.versionCouranteId)
+    })
+
+    it('compte un import du contenu comme une modification du périmètre', async () => {
+      const avant = await prisma.perimetre.findUniqueOrThrow({
+        where: { id: natation },
+      })
+      ecrire(
+        'perimetres.yaml',
+        `perimetres:\n  - slug: natation-${s}\n    nom: Natation sportive\n    type: SPORT\n  - slug: basket-${s}\n    nom: Basket\n    type: SPORT\n`
+      )
+      const rapport = await importerModeles(prisma, lireModeles(racine), {
+        organisation: SLUG_ORGANISATION,
+      })
+      expect(activite(rapport).perimetres.modifies).toContain(`natation-${s}`)
+      expect(
+        await prisma.perimetre.findUniqueOrThrow({ where: { id: natation } })
+      ).toMatchObject({
+        nom: 'Natation sportive',
+        version: avant.version + 1,
+      })
+      // Un réglage ouvert avant l'import ne l'écrase pas sans le dire.
+      const perime = await executer(
+        ids.admin,
+        `mutation ($id: ID!, $v: Int) {
+          modifierPerimetre(id: $id, nom: "Natation", ordre: 0, archive: false, versionAttendue: $v) { nom }
+        }`,
+        { id: natation, v: avant.version }
+      )
+      expect(code(perime)).toBe('CONFLIT_VERSION')
+      expect(extensions(perime)).toMatchObject({
+        versionCourante: avant.version + 1,
+      })
+      expect(
+        (await prisma.perimetre.findUniqueOrThrow({ where: { id: natation } }))
+          .nom
+      ).toBe('Natation sportive')
+    })
+
     it('refuse de restaurer par-dessus une version écrite depuis l’historique', async () => {
       const premiere = await prisma.ficheVersion.findFirstOrThrow({
         where: { ficheId: piscine },

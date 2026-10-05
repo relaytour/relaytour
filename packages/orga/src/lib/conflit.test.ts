@@ -79,9 +79,12 @@ describe('texteConflit', () => {
       { objet: 'perimetre', fuseau: 'Europe/Paris' }
     )
     expect(titre).toBe('Ce périmètre a changé depuis votre lecture')
+    // Un import du contenu modifie aussi un périmètre : la phrase ne suppose
+    // aucune personne.
     expect(texte).toContain(
-      'Une autre personne a modifié ce périmètre le 4 octobre à 14 h 05.'
+      'Ce périmètre a été modifié le 4 octobre à 14 h 05. « Écraser » enregistre votre réglage à la place du réglage actuel.'
     )
+    expect(texte).not.toContain('personne')
   })
 
   it('annonce une autre version d’une fiche, désignée par son identifiant', () => {
@@ -102,6 +105,20 @@ describe('texteConflit', () => {
         annonceConflitFiche(conflit, 'Europe/Paris')
     ).toBe(
       'Alex Martin a enregistré une autre version de cette fiche le 4 octobre à 14 h 05.'
+    )
+    // Une version importée du contenu n'a pas d'auteur.
+    expect(
+      annonceConflitFiche(
+        {
+          nature: 'contenu',
+          versionCourante: 'cmversion3',
+          modifieeLe: '2026-10-04T12:05:00.000Z',
+          modifieePar: null,
+        },
+        'Europe/Paris'
+      )
+    ).toBe(
+      'Une autre version de cette fiche a été enregistrée le 4 octobre à 14 h 05.'
     )
   })
 

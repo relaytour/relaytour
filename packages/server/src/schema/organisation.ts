@@ -297,7 +297,7 @@ builder.mutationFields(t => ({
           }
         )
         return conflitDeVersion(
-          'Une autre personne a modifié ce périmètre depuis votre lecture.',
+          'Ce périmètre a été modifié depuis votre lecture.',
           { versionCourante: version, modifieeLe: updatedAt.toISOString() }
         )
       }
