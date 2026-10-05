@@ -8,6 +8,7 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 - **Espace des participantes et participants.** Chaque personne inscrite dispose d'un compte relié à son inscription, avec la même connexion par code mail. L'espace affiche l'inscription, le programme, les informations pratiques et les messages de l'organisation. Une page de contrôle vérifie chaque inscription auprès du serveur sans jamais charger la liste des personnes.
 - **Import des inscriptions par connecteur.** Chaque organisation branche son outil d'inscription ou de billetterie par un connecteur, à l'import régulier ou à la création automatique du compte. Le choix du connecteur appartient à l'organisation.
 - **Connexion par un fournisseur d'identité, facultative.** Une organisation qui dispose d'un annuaire (Microsoft, Google ou autre) peut l'autoriser pour ses membres. La connexion par code mail reste disponible pour tout le monde.
+- **Webhooks sortants.** Une organisation déclare l'adresse d'un outil tiers, par exemple sa messagerie d'équipe. Relaytour y envoie un message signé pour les changements qu'elle choisit : tâche faite, fiche modifiée, demande reçue. Le message porte des identifiants et aucune donnée personnelle, comme le signal du flux des changements (ADR 0017). La signature, les reprises après un échec et le réglage par activité restent à décider.
 
 ## À décider en fin d'édition
 
@@ -20,6 +21,7 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 - **Éditeur de tâches types.** Les admins modifient les tâches types d'un périmètre dans l'espace organisateur. Elles ne changent aujourd'hui que dans le dossier de contenu (ADR 0009).
 - **Tâches.** Sous-tâches sous forme de cases à cocher ; dépendances entre tâches ; pièces jointes sur une tâche ou une fiche ; commentaires entre référentes et référents sur une tâche.
 - **Fiches.** Relecture avant publication sur les périmètres choisis par l'admin ; recherche en texte libre sur toutes les fiches accessibles ; liste des tâches qui s'appuient sur une fiche.
+- **Indicateur de présence.** La carte d'une tâche et l'éditeur d'une fiche indiquent qu'une autre personne les a ouverts. Cette information évite un conflit d'écriture avant l'enregistrement (ADR 0017). Elle montre aussi qui est connecté, et à quel moment : les référentes et référents décident si elle leur convient.
 - **Calendrier.** Vue calendrier des échéances par périmètre ; abonnement personnel au format iCal.
 - **Annuaire interne.** Liste des rôles de l'édition, réservée aux personnes connectées. Chacune choisit les coordonnées qu'elle partage.
 - **Traduction.** L'espace organisateur passe dans une autre langue pour les membres qui ne lisent pas le français.

@@ -13,7 +13,7 @@ Ce dossier décrit le déploiement de référence (ADR 0004) : une machine sous 
 | `server` | API GraphQL, port 4400 sur `127.0.0.1` |
 | `worker` | Mails, rappels et résumés |
 
-L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*`, `/graphql` et `/medias/*` vers l'API. `/medias/*` sert les logos et les favicons des organisations (ADR 0009). Aucun outil Node n'est nécessaire sur le serveur.
+L'espace organisateur est un site statique, livré par l'image `-orga` et servi par Caddy, qui relaie `/api/auth/*`, `/graphql` et `/medias/*` vers l'API. `/medias/*` sert les logos et les favicons des organisations (ADR 0009). `/graphql` porte aussi le flux des changements (voir « Laisser passer le flux des changements »). Aucun outil Node n'est nécessaire sur le serveur.
 
 ## Étapes
 
@@ -53,6 +53,32 @@ Les versions publiées sont listées dans les releases du dépôt, avec leurs no
 ## Adapter la pile à votre hébergement
 
 Ne modifiez pas `docker-compose.yml` : ajoutez un fichier de surcharge, par exemple `compose.local.yml`, et lancez `docker compose -f docker-compose.yml -f compose.local.yml …`. C'est là que vont vos ports, vos limites mémoire, vos volumes et votre supervision. La base et le cache ne publient aucun port : la file des mails contient des codes de connexion en clair pendant quelques minutes, et tout processus de la machine pourrait les lire. Pour administrer la base, passez par `docker compose exec db mariadb -u root -p`. Si un outil de la machine doit joindre la base, publiez le port dans votre surcharge, sur `127.0.0.1` seulement. Si une adaptation exige un changement dans l'application, proposez-le dans le dépôt de Relaytour sous une forme générique.
+
+## Laisser passer le flux des changements
+
+L'API signale chaque changement aux navigateurs par un flux SSE (ADR 0017) : une réponse HTTP qui reste ouverte et reçoit quelques lignes par signal. Le flux passe par `/graphql`, pour une requête `POST` qui demande `text/event-stream`. Il n'ajoute ni chemin ni port.
+
+Le `Caddyfile` d'exemple relaie ce flux sans réglage : Caddy transmet une réponse `text/event-stream` au fil de l'eau. Tout autre intermédiaire placé devant l'API (proxy, répartiteur de charge, CDN) respecte trois règles.
+
+- **Tampon.** L'intermédiaire transmet chaque ligne dès qu'il la reçoit, sans mettre la réponse en tampon. nginx, par exemple, met les réponses en tampon par défaut : la directive `proxy_buffering off` s'applique alors au relais de `/graphql`.
+- **Compression.** L'intermédiaire ne compresse pas une réponse `text/event-stream`. L'API annonce `Content-Encoding: none` pour écarter la compression.
+- **Délai d'inactivité.** L'API envoie un battement toutes les 12 secondes. Un délai d'inactivité de 30 secondes ou plus garde donc le flux ouvert.
+
+Ce dépôt ne vérifie que la configuration de Caddy.
+
+Le serveur ferme chaque flux après 15 minutes, et le navigateur en rouvre un. Un intermédiaire qui coupe une requête plus tôt ne bloque rien : le navigateur rouvre un flux après 1 à 30 secondes. Chaque onglet visible ouvre un flux, et une personne en garde quatre au plus par processus de l'API. En HTTP/1.1, un navigateur ouvre six connexions au plus par hôte : servez l'espace organisateur en HTTP/2 ou en HTTP/3, comme Caddy le fait par défaut.
+
+Le flux est un accélérateur. Sans lui, l'espace organisateur relit ses écrans chaque minute et à chaque retour sur l'onglet. Un flux retenu en tampon est le seul cas gênant. Le navigateur reçoit alors les en-têtes de la réponse et aucun signal : il espace sa relecture à cinq minutes.
+
+Deux vérifications suivent une mise en service ou un changement de proxy.
+
+1. **Sans compte.** La commande suivante reçoit une réponse `text/event-stream`, qui porte un refus (`FORBIDDEN`) puis se termine. Le chemin et le type de la réponse traversent donc le proxy.
+    ```bash
+    curl -N -X POST https://orga.exemple.org/graphql \
+      -H 'Content-Type: application/json' -H 'Accept: text/event-stream' \
+      -d '{"query":"subscription { changements { entite } }"}'
+    ```
+2. **Avec deux comptes d'une même activité**, ouverts dans deux navigateurs. Une personne change le statut d'une tâche, et l'autre écran affiche le changement en quelques secondes. Un changement qui n'apparaît qu'au retour sur l'onglet, ou après plusieurs minutes, désigne un tampon.
 
 ## Héberger plusieurs organisations
 
