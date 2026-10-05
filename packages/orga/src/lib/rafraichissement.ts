@@ -3,9 +3,17 @@ import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { useApolloClient } from '@apollo/client/react'
 import { useEffect, useSyncExternalStore } from 'react'
 
+import { creerFlux } from './flux'
+import { ouvrirLeFluxSse } from './flux-sse'
+
 // Rafraîchissement des écrans. Les données d'un écran viennent aussi d'autres
 // personnes : les écrans les relisent au retour sur l'onglet, au retour du réseau, et
 // chaque minute tant que l'onglet est visible.
+//
+// Le flux des changements (lib/flux.ts, ADR 0017) accélère cette relecture : à chaque
+// signal du serveur, les écrans concernés se relisent aussitôt. Tant qu'il est
+// ouvert, la relecture périodique passe à cinq minutes : elle ne sert plus qu'à
+// rattraper un signal perdu.
 //
 // La relecture passe par une liste de requêtes, jamais par toutes les requêtes
 // actives : les requêtes de session et les écrans de réglage n'y figurent pas.
@@ -55,6 +63,8 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
 
 /** Délai entre deux relectures périodiques. */
 export const INTERVALLE_MS = 60_000
+/** Délai entre deux relectures périodiques quand le flux des changements est ouvert. */
+export const INTERVALLE_AVEC_FLUX_MS = 5 * 60_000
 /** Écart minimal entre deux relectures, quelle que soit leur cause. */
 export const ECART_MIN_MS = 15_000
 
@@ -64,11 +74,13 @@ export function peutRafraichir(etat: {
   dernier: number
   visible: boolean
   enLigne: boolean
+  /** L'écart exigé depuis la relecture précédente : `ECART_MIN_MS` par défaut. */
+  ecart?: number
 }): boolean {
   return (
     etat.visible &&
     etat.enLigne &&
-    etat.maintenant - etat.dernier >= ECART_MIN_MS
+    etat.maintenant - etat.dernier >= (etat.ecart ?? ECART_MIN_MS)
   )
 }
 
@@ -146,19 +158,30 @@ async function relire(
  * Relit en silence les requêtes actives de la liste, et renvoie leur nombre. Note un
  * refus pour l'avis de la coquille : une relecture suivante sans refus le retire. Ne
  * lève jamais.
+ *
+ * Avec `noms`, seules ces requêtes de la liste se relisent : un signal du flux ne
+ * concerne que quelques écrans. Une relecture partielle peut lever l'avis, jamais le
+ * retirer : elle ne dit rien des autres requêtes.
  */
-export async function relireLesRequetes(client: ApolloClient): Promise<number> {
+export async function relireLesRequetes(
+  client: ApolloClient,
+  noms?: readonly string[]
+): Promise<number> {
   const issues = await Promise.all(
     [...client.getObservableQueries('active')]
       .filter(requete => {
         const nom = requete.queryName ?? ''
-        return REQUETES_RAFRAICHIES.has(nom) && !ecartees.has(nom)
+        return (
+          REQUETES_RAFRAICHIES.has(nom) &&
+          !ecartees.has(nom) &&
+          (noms === undefined || noms.includes(nom))
+        )
       })
       .map(requete => relire(client, requete))
   )
   // Une relecture où tout est en panne ne dit rien des accès : l'avis reste tel quel.
   if (issues.includes('refus')) noterRefus(true)
-  else if (issues.includes('relue')) noterRefus(false)
+  else if (noms === undefined && issues.includes('relue')) noterRefus(false)
   return issues.length
 }
 
@@ -193,7 +216,8 @@ export function useSansRafraichissement(nom: string): void {
 }
 
 /**
- * Relit les écrans au retour sur l'onglet, au retour du réseau et chaque minute.
+ * Relit les écrans au retour sur l'onglet, au retour du réseau et chaque minute, et
+ * tient le flux des changements ouvert tant que l'onglet est visible et en ligne.
  * À monter une seule fois, dans la coquille de l'espace organisateur.
  */
 export function useRafraichissement(): void {
@@ -201,25 +225,48 @@ export function useRafraichissement(): void {
   useEffect(() => {
     // Les écrans viennent de se charger : la première relecture attend son tour.
     let dernier = Date.now()
-    const rafraichir = () => {
+    const rafraichir = (ecart?: number) => {
       const maintenant = Date.now()
       const pret = peutRafraichir({
         maintenant,
         dernier,
         visible: document.visibilityState === 'visible',
         enLigne: navigator.onLine,
+        ecart,
       })
       if (!pret) return
       dernier = maintenant
       void relireLesRequetes(client)
     }
-    document.addEventListener('visibilitychange', rafraichir)
-    window.addEventListener('online', rafraichir)
-    const minuteur = window.setInterval(rafraichir, INTERVALLE_MS)
+    const flux = creerFlux({
+      ouvrir: ouvrirLeFluxSse,
+      relire: noms => relireLesRequetes(client, noms),
+      // Un flux qui s'ouvre a pu manquer des signaux : une relecture les rattrape.
+      apresOuverture: () => rafraichir(),
+    })
+    // Un onglet caché ou hors ligne ne garde pas de flux ouvert.
+    const suivreLOnglet = () => {
+      if (document.visibilityState === 'visible' && navigator.onLine) {
+        flux.demarrer()
+      } else {
+        flux.arreter()
+      }
+      rafraichir()
+    }
+    const periodique = () =>
+      rafraichir(flux.actif() ? INTERVALLE_AVEC_FLUX_MS : INTERVALLE_MS)
+
+    suivreLOnglet()
+    document.addEventListener('visibilitychange', suivreLOnglet)
+    window.addEventListener('online', suivreLOnglet)
+    window.addEventListener('offline', suivreLOnglet)
+    const minuteur = window.setInterval(periodique, INTERVALLE_MS)
     return () => {
-      document.removeEventListener('visibilitychange', rafraichir)
-      window.removeEventListener('online', rafraichir)
+      document.removeEventListener('visibilitychange', suivreLOnglet)
+      window.removeEventListener('online', suivreLOnglet)
+      window.removeEventListener('offline', suivreLOnglet)
       window.clearInterval(minuteur)
+      flux.arreter()
     }
   }, [client])
 }

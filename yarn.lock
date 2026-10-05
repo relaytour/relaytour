@@ -3353,6 +3353,7 @@ __metadata:
     eslint-plugin-react-refresh: "npm:^0.5.7"
     globals: "npm:^17.0.0"
     graphql: "npm:^16.14.0"
+    graphql-sse: "npm:^2.6.2"
     react: "npm:^19.3.0"
     react-dom: "npm:^19.3.0"
     react-markdown: "npm:^10.1.0"
