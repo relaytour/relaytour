@@ -58,6 +58,7 @@ const POSTES = graphql(`
         description
         ordre
         archive
+        version
       }
       affectations {
         id

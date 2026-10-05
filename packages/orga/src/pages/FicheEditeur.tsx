@@ -15,13 +15,20 @@ import {
   Space,
   Typography,
 } from 'antd'
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router'
 
 import Markdown from '../composants/Markdown'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
-import { messageErreur } from '../lib/erreurs'
+import {
+  cleBrouillon,
+  ecrireBrouillon,
+  effacerBrouillon,
+  lireBrouillon,
+} from '../lib/brouillon'
+import { annonceConflitFiche, lireConflit, type Conflit } from '../lib/conflit'
+import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import {
   CREER_FICHE,
   FICHE,
@@ -31,6 +38,7 @@ import {
 } from '../lib/fiches'
 import { useActivite } from '../lib/activite'
 import { useSansRafraichissement } from '../lib/rafraichissement'
+import { organisationChoisie } from '../lib/selection'
 
 const PERIMETRE_CIBLE = graphql(`
   query PerimetreCibleFiche($slug: String!) {
@@ -102,27 +110,88 @@ export default function FicheEditeur() {
           ? (perimetre.data?.perimetre ?? null)
           : null
       }
+      cible={slugPerimetre ?? 'commune'}
     />
   )
 }
 
+type ConflitDeFiche = Extract<Conflit, { nature: 'contenu' }>
+
 function Formulaire({
   fiche,
   perimetre,
+  cible,
 }: {
-  fiche: { id: string; slug: string; titre: string; contenu: string } | null
+  fiche: {
+    id: string
+    slug: string
+    titre: string
+    contenu: string
+    versionCouranteId?: string | null
+  } | null
   perimetre: { id: string; nom: string } | null
+  /** Pour une fiche nouvelle : le slug de son périmètre, ou `commune`. */
+  cible: string
 }) {
   const creation = fiche === null
   // L'éditeur garde la version de la fiche qu'il a chargée : la relecture
   // périodique ne la remplace pas sous la saisie.
   useSansRafraichissement('Fiche')
   const navigate = useNavigate()
-  const { lien } = useActivite()
+  const { lien, activite } = useActivite()
   const { message } = App.useApp()
   const ecrans = Grid.useBreakpoint()
   const [form] = Form.useForm<Valeurs>()
-  const [contenu, setContenu] = useState(fiche?.contenu ?? GABARIT_FICHE)
+  const depart = fiche?.contenu ?? GABARIT_FICHE
+  const [contenu, setContenu] = useState(depart)
+  // La version lue avant la rédaction : le serveur refuse d'enregistrer par-dessus
+  // une version écrite depuis. Elle ne suit pas les relectures de la fiche.
+  const [versionDeDepart, setVersionDeDepart] = useState(
+    fiche?.versionCouranteId ?? null
+  )
+  const [conflit, setConflit] = useState<ConflitDeFiche | null>(null)
+
+  // Le texte en cours se garde dans le navigateur : une page rechargée ou une
+  // session terminée ne le perdent pas. Un brouillon trouvé à l'ouverture se
+  // propose, sans remplacer le texte de la fiche d'office.
+  const cle = cleBrouillon({
+    organisation: organisationChoisie(),
+    activite: activite.slug,
+    fiche: fiche?.id ?? `nouvelle.${cible}`,
+  })
+  const [brouillon, setBrouillon] = useState(() => {
+    const lu = lireBrouillon(cle)
+    return lu !== null &&
+      (lu.contenu !== depart || lu.titre !== (fiche?.titre ?? ''))
+      ? lu
+      : null
+  })
+  const titre = Form.useWatch('titre', form) ?? fiche?.titre ?? ''
+  const modifie = contenu !== depart || titre !== (fiche?.titre ?? '')
+  // La saisie est enregistrée ou abandonnée : une écriture différée du brouillon ne
+  // le recrée pas avant que l'écran ne soit quitté.
+  const termine = useRef(false)
+  const oublierLeBrouillon = () => {
+    termine.current = true
+    effacerBrouillon(cle)
+  }
+  useEffect(() => {
+    // Sans modification, rien ne s'écrit : un brouillon proposé à l'ouverture reste
+    // intact. Dès que la personne modifie le texte, sa saisie se garde, même sans
+    // réponse à la proposition : l'ancien brouillon reste offert par l'avis tant que
+    // l'écran est ouvert.
+    if (!modifie) return
+    const minuteur = window.setTimeout(() => {
+      if (termine.current) return
+      ecrireBrouillon(cle, {
+        titre,
+        contenu,
+        versionDeDepart,
+        enregistreLe: new Date().toISOString(),
+      })
+    }, 400)
+    return () => window.clearTimeout(minuteur)
+  }, [cle, titre, contenu, versionDeDepart, modifie])
   const [vue, setVue] = useState<'ecrire' | 'apercu'>('ecrire')
   const [slugTouche, setSlugTouche] = useState(false)
   const [creer, creationEnCours] = useMutation(CREER_FICHE, {
@@ -130,7 +199,7 @@ function Formulaire({
   })
   const [modifier, modificationEnCours] = useMutation(MODIFIER_FICHE)
 
-  const enregistrer = async (v: Valeurs) => {
+  const enregistrer = async (v: Valeurs, depuis = versionDeDepart) => {
     try {
       if (creation) {
         const r = await creer({
@@ -141,6 +210,7 @@ function Formulaire({
             perimetreId: perimetre?.id ?? null,
           },
         })
+        oublierLeBrouillon()
         message.success('Fiche créée.')
         navigate(lien(`/fiches/${r.data?.creerFiche.slug ?? v.slug}`))
       } else if (fiche) {
@@ -150,13 +220,47 @@ function Formulaire({
             titre: v.titre,
             contenu,
             resume: v.resume || null,
+            versionDeDepart: depuis,
           },
         })
+        oublierLeBrouillon()
         message.success('Fiche enregistrée.')
         navigate(lien(`/fiches/${fiche.slug}`))
       }
     } catch (e) {
-      message.error(messageErreur(e))
+      // Une autre version existe : l'écran garde le texte et annonce le conflit.
+      const lu = lireConflit(e)
+      if (lu?.nature === 'contenu') setConflit(lu)
+      else message.error(messageErreur(e))
+    }
+  }
+
+  const reprendreLeBrouillon = () => {
+    if (brouillon === null) return
+    setContenu(brouillon.contenu)
+    form.setFieldValue('titre', brouillon.titre)
+    // Le brouillon garde sa version de départ : un conflit se détecte encore si la
+    // fiche a changé depuis sa rédaction.
+    setVersionDeDepart(brouillon.versionDeDepart)
+    setBrouillon(null)
+  }
+
+  const ecraser = () => {
+    if (conflit === null) return
+    const actuelle = String(conflit.versionCourante)
+    setVersionDeDepart(actuelle)
+    setConflit(null)
+    void enregistrer(form.getFieldsValue(), actuelle)
+  }
+
+  const copier = async () => {
+    try {
+      await navigator.clipboard.writeText(contenu)
+      message.success('Votre texte est copié.')
+    } catch {
+      message.error(
+        'La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même.'
+      )
     }
   }
 
@@ -238,6 +342,61 @@ function Formulaire({
           </Col>
         </Row>
 
+        {brouillon !== null && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+            title={`Un brouillon du ${jourDeLInstant(brouillon.enregistreLe)} n’a pas été enregistré.`}
+            description="Il est gardé dans ce navigateur. Reprenez-le pour continuer votre rédaction, ou supprimez-le pour repartir de la fiche. Si vous modifiez la fiche sans le reprendre, votre nouvelle saisie le remplace."
+            action={
+              <Space wrap>
+                <Button onClick={reprendreLeBrouillon}>
+                  Reprendre le brouillon
+                </Button>
+                <Button
+                  onClick={() => {
+                    // Une saisie déjà reprise sur la fiche garde son brouillon.
+                    if (!modifie) effacerBrouillon(cle)
+                    setBrouillon(null)
+                  }}
+                >
+                  Supprimer le brouillon
+                </Button>
+              </Space>
+            }
+          />
+        )}
+
+        {conflit !== null && fiche !== null && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+            title={annonceConflitFiche(conflit)}
+            description="Votre texte reste à l’écran et n’est pas enregistré. Consultez la version actuelle avant de choisir."
+            action={
+              <Space wrap>
+                <Button
+                  href={lien(`/fiches/${fiche.slug}`)}
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Voir la version actuelle
+                </Button>
+                <Button onClick={() => void copier()}>Copier mon texte</Button>
+                <Button
+                  danger
+                  loading={modificationEnCours.loading}
+                  onClick={ecraser}
+                >
+                  Écraser avec mon texte
+                </Button>
+              </Space>
+            }
+          />
+        )}
+
         <Alert
           type="info"
           showIcon
@@ -292,7 +451,15 @@ function Formulaire({
           >
             Enregistrer
           </Button>
-          <Button onClick={() => navigate(-1)}>Annuler</Button>
+          <Button
+            onClick={() => {
+              // Annuler abandonne la saisie : son brouillon s'efface avec elle.
+              oublierLeBrouillon()
+              navigate(-1)
+            }}
+          >
+            Annuler
+          </Button>
           {!creation && (
             <Button
               type="link"

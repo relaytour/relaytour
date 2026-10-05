@@ -1,5 +1,5 @@
 import { EditOutlined, HistoryOutlined } from '@ant-design/icons'
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import {
   Alert,
   App,
@@ -21,12 +21,14 @@ import Markdown from '../composants/Markdown'
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
 import Titre from '../composants/Titre'
 import { dateCourte, messageErreur } from '../lib/erreurs'
+import { lireConflit } from '../lib/conflit'
 import {
   FICHE,
   RESTAURER_VERSION,
   TACHES_FICHE,
   VERSIONS_FICHE,
 } from '../lib/fiches'
+import { relireLesVues } from '../lib/rafraichissement'
 import { EDITION_COURANTE } from '../lib/requetes'
 import { useActivite } from '../lib/activite'
 
@@ -59,6 +61,7 @@ export default function Fiche() {
     // L'historique est réservé aux admins de l'activité de la fiche.
     skip: !historique || !gere,
   })
+  const client = useApolloClient()
   const [restaurer, restauration] = useMutation(RESTAURER_VERSION, {
     refetchQueries: ['VersionsFiche', 'Fiche'],
   })
@@ -306,11 +309,23 @@ export default function Fiche() {
                         onConfirm={async () => {
                           try {
                             await restaurer({
-                              variables: { versionId: version.id },
+                              variables: {
+                                versionId: version.id,
+                                // La version courante lue avec l'historique.
+                                versionDeDepart: fiche.versionCouranteId,
+                              },
                             })
                             message.success('Version restaurée.')
                           } catch (e) {
                             message.error(messageErreur(e))
+                            // Une autre version existe : la fiche et son
+                            // historique se relisent avant un nouvel essai.
+                            if (lireConflit(e) !== null) {
+                              void relireLesVues(client, [
+                                'Fiche',
+                                'VersionsFiche',
+                              ])
+                            }
                           }
                         }}
                       >

@@ -22,6 +22,7 @@ export const FICHE = graphql(`
       peutModifier
       donneesPersonnelles
       nombreVersions
+      versionCouranteId
       perimetre {
         id
         slug
@@ -119,8 +120,15 @@ export const MODIFIER_FICHE = graphql(`
     $titre: String!
     $contenu: String!
     $resume: String
+    $versionDeDepart: ID
   ) {
-    modifierFiche(id: $id, titre: $titre, contenu: $contenu, resume: $resume) {
+    modifierFiche(
+      id: $id
+      titre: $titre
+      contenu: $contenu
+      resume: $resume
+      versionDeDepart: $versionDeDepart
+    ) {
       id
       slug
       titre
@@ -129,19 +137,24 @@ export const MODIFIER_FICHE = graphql(`
       modifieePar
       source
       donneesPersonnelles
+      versionCouranteId
     }
   }
 `)
 
 export const RESTAURER_VERSION = graphql(`
-  mutation RestaurerVersionFiche($versionId: ID!) {
-    restaurerVersionFiche(versionId: $versionId) {
+  mutation RestaurerVersionFiche($versionId: ID!, $versionDeDepart: ID) {
+    restaurerVersionFiche(
+      versionId: $versionId
+      versionDeDepart: $versionDeDepart
+    ) {
       id
       titre
       contenu
       modifieeLe
       modifieePar
       source
+      versionCouranteId
     }
   }
 `)

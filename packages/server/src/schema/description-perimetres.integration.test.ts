@@ -174,3 +174,78 @@ describe('description d’un périmètre', () => {
     expect(await lire()).toBeNull()
   })
 })
+
+// Deux admins qui règlent le même périmètre ne s'écrasent pas : une modification
+// porte la version lue.
+describe('réglage d’un périmètre à plusieurs', () => {
+  const REGLER = `mutation ($id: ID!, $n: String!, $v: Int) {
+    modifierPerimetre(id: $id, nom: $n, ordre: 0, archive: false, versionAttendue: $v) { nom version }
+  }`
+  const enBase = () =>
+    prisma.perimetre.findUniqueOrThrow({
+      where: { id: perimetreId },
+      select: { nom: true, version: true },
+    })
+  const code = (r: Awaited<ReturnType<typeof executer>>) =>
+    r.errors?.[0]?.extensions?.code
+
+  it('refuse d’écraser un réglage fait depuis la version lue', async () => {
+    const { version } = await enBase()
+    const premier = await executer(admin, REGLER, {
+      id: perimetreId,
+      n: 'Natation course',
+      v: version,
+    })
+    expect(premier.data).toEqual({
+      modifierPerimetre: { nom: 'Natation course', version: version + 1 },
+    })
+
+    const perime = await executer(admin, REGLER, {
+      id: perimetreId,
+      n: 'Natation loisir',
+      v: version,
+    })
+    expect(code(perime)).toBe('CONFLIT_VERSION')
+    expect(perime.errors?.[0]?.extensions).toMatchObject({
+      versionCourante: version + 1,
+    })
+    expect(await enBase()).toEqual({
+      nom: 'Natation course',
+      version: version + 1,
+    })
+
+    // Avec la version actuelle, puis sans version attendue, l'écriture passe.
+    const voulu = await executer(admin, REGLER, {
+      id: perimetreId,
+      n: 'Natation loisir',
+      v: version + 1,
+    })
+    expect(voulu.errors).toBeUndefined()
+    await executer(admin, REGLER, { id: perimetreId, n: 'Natation' })
+    expect(await enBase()).toEqual({ nom: 'Natation', version: version + 3 })
+  })
+
+  it('ne laisse passer qu’un de deux réglages simultanés de la même version', async () => {
+    const { version } = await enBase()
+    const reponses = await Promise.all(
+      ['Natation A', 'Natation B'].map(n =>
+        executer(admin, REGLER, { id: perimetreId, n, v: version })
+      )
+    )
+    expect(reponses.filter(r => r.errors === undefined)).toHaveLength(1)
+    expect(reponses.filter(r => code(r) === 'CONFLIT_VERSION')).toHaveLength(1)
+    expect((await enBase()).version).toBe(version + 1)
+  })
+
+  it('refuse l’accès avant de dire un conflit', async () => {
+    for (const personne of [referente, null]) {
+      const r = await executer(personne, REGLER, {
+        id: perimetreId,
+        n: 'Intrusion',
+        v: -1,
+      })
+      expect(code(r)).toBe('FORBIDDEN')
+    }
+    expect((await enBase()).nom).not.toBe('Intrusion')
+  })
+})

@@ -330,6 +330,10 @@ model Perimetre {
   // l'export les réécrit sans les reconstituer depuis les tâches d'une période.
   tachesTypes       Json?
   archivedAt        DateTime?
+  // Compte les modifications du réglage (nom, groupe, description, couleur, ordre,
+  // archivage). Une modification porte la version lue : le serveur refuse d'écraser
+  // un changement fait entre-temps.
+  version           Int           @default(0)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 

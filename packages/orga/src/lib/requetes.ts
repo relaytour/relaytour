@@ -52,6 +52,7 @@ export const PERIMETRES = graphql(`
       couleur
       ordre
       archive
+      version
     }
   }
 `)

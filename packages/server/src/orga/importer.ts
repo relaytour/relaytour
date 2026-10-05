@@ -568,7 +568,12 @@ async function importerActivite(
     if (change) {
       rapport.perimetres.modifies.push(perimetre.slug)
       if (ecrire)
-        await tx.perimetre.update({ where: { id: existant.id }, data: donnees })
+        // L'import compte comme une modification : un réglage ouvert avant lui
+        // ne l'écrase pas sans le dire.
+        await tx.perimetre.update({
+          where: { id: existant.id },
+          data: { ...donnees, version: { increment: 1 } },
+        })
     }
   }
   const slugsModeles = new Set(modele.perimetres.map(p => p.slug))

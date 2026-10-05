@@ -1,7 +1,7 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { describe, expect, it } from 'vitest'
 
-import { lireConflit, texteConflit } from './conflit'
+import { annonceConflitFiche, lireConflit, texteConflit } from './conflit'
 
 const erreur = (extensions: Record<string, unknown>) =>
   new CombinedGraphQLErrors({
@@ -49,7 +49,7 @@ describe('texteConflit', () => {
         modifieeLe: '2026-10-04T12:05:00.000Z',
         modifieePar: 'Alex Martin',
       },
-      'Europe/Paris'
+      { fuseau: 'Europe/Paris' }
     )
     expect(titre).toBe('Cette tâche a changé depuis votre lecture')
     expect(texte).toContain(
@@ -66,6 +66,60 @@ describe('texteConflit', () => {
         modifieePar: null,
       }).texte
     ).toContain('Une autre personne a modifié cette tâche.')
+  })
+
+  it('parle d’un périmètre, sans auteur quand le serveur n’en donne pas', () => {
+    const { titre, texte } = texteConflit(
+      {
+        nature: 'contenu',
+        versionCourante: 2,
+        modifieeLe: '2026-10-04T12:05:00.000Z',
+        modifieePar: null,
+      },
+      { objet: 'perimetre', fuseau: 'Europe/Paris' }
+    )
+    expect(titre).toBe('Ce périmètre a changé depuis votre lecture')
+    // Un import du contenu modifie aussi un périmètre : la phrase ne suppose
+    // aucune personne.
+    expect(texte).toContain(
+      'Ce périmètre a été modifié le 4 octobre à 14 h 05. « Écraser » enregistre votre réglage à la place du réglage actuel.'
+    )
+    expect(texte).not.toContain('personne')
+  })
+
+  it('annonce une autre version d’une fiche, désignée par son identifiant', () => {
+    const conflit = lireConflit(
+      erreur({
+        code: 'CONFLIT_VERSION',
+        versionCourante: 'cmversion2',
+        modifieeLe: '2026-10-04T12:05:00.000Z',
+        modifieePar: 'Alex Martin',
+      })
+    )
+    expect(conflit).toMatchObject({
+      nature: 'contenu',
+      versionCourante: 'cmversion2',
+    })
+    expect(
+      conflit?.nature === 'contenu' &&
+        annonceConflitFiche(conflit, 'Europe/Paris')
+    ).toBe(
+      'Alex Martin a enregistré une autre version de cette fiche le 4 octobre à 14 h 05.'
+    )
+    // Une version importée du contenu n'a pas d'auteur.
+    expect(
+      annonceConflitFiche(
+        {
+          nature: 'contenu',
+          versionCourante: 'cmversion3',
+          modifieeLe: '2026-10-04T12:05:00.000Z',
+          modifieePar: null,
+        },
+        'Europe/Paris'
+      )
+    ).toBe(
+      'Une autre version de cette fiche a été enregistrée le 4 octobre à 14 h 05.'
+    )
   })
 
   it('dit le nouveau statut sans nommer personne', () => {

@@ -20,6 +20,18 @@
           }
         },
         {
+          "id": "2026-10-05-serveur-deux-personnes-ne-s-ecrasent-plus-sur-une-fiche-ou-un-perime",
+          "date": "2026-10-05",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Deux personnes ne s'écrasent plus sur une fiche ou un périmètre",
+            "texte": "Quand une autre personne a enregistré une fiche pendant votre rédaction, l'éditeur garde votre texte et vous le dit. Vous consultez la version actuelle, vous copiez votre texte, ou vous écrasez la version actuelle avec le vôtre. L'éditeur garde aussi votre texte en brouillon dans votre navigateur : une page rechargée ne le perd plus. Le réglage d'un périmètre et la restauration d'une version de fiche signalent le même conflit.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-04-serveur-une-personne-de-l-activite-consulte-les-taches-de-chaque-per",
           "date": "2026-10-04",
           "type": "fonctionnalite",
