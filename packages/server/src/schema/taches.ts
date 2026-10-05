@@ -529,17 +529,23 @@ function echeanceValide(echeance: Date | null | undefined): Date | null {
  * « qui a coché ».
  */
 async function conflitDeContenu(tacheId: string): Promise<GraphQLError> {
-  const [tache, derniere] = await Promise.all([
-    prisma.tache.findUniqueOrThrow({
-      where: { id: tacheId },
-      select: { version: true, updatedAt: true },
-    }),
-    prisma.journal.findFirst({
-      where: { tacheId, type: 'TACHE_MODIFIEE' },
-      orderBy: { createdAt: 'desc' },
-      select: { createdAt: true, acteur: { select: { name: true } } },
-    }),
-  ])
+  // La version et le journal qui l'a produite s'écrivent dans une même transaction.
+  // Les deux lectures partagent un même instantané : la fenêtre ne nomme pas
+  // l'auteur d'une version et le numéro d'une autre.
+  const [tache, derniere] = await prisma.$transaction(
+    [
+      prisma.tache.findUniqueOrThrow({
+        where: { id: tacheId },
+        select: { version: true, updatedAt: true },
+      }),
+      prisma.journal.findFirst({
+        where: { tacheId, type: 'TACHE_MODIFIEE' },
+        orderBy: { createdAt: 'desc' },
+        select: { createdAt: true, acteur: { select: { name: true } } },
+      }),
+    ],
+    { isolationLevel: 'RepeatableRead' }
+  )
   return conflitDeVersion(
     'Une autre personne a modifié cette tâche depuis votre lecture.',
     {

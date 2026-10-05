@@ -162,6 +162,24 @@ export async function relireLesRequetes(client: ApolloClient): Promise<number> {
   return issues.length
 }
 
+/**
+ * Relit tout de suite, en silence, les requêtes actives nommées. Vrai quand le
+ * serveur a répondu à chacune : l'appelant ne ferme une saisie qu'après une
+ * relecture réussie. Un refus s'annonce par l'avis de la coquille.
+ */
+export async function relireLesVues(
+  client: ApolloClient,
+  noms: readonly string[]
+): Promise<boolean> {
+  const issues = await Promise.all(
+    [...client.getObservableQueries('active')]
+      .filter(requete => noms.includes(requete.queryName ?? ''))
+      .map(requete => relire(client, requete))
+  )
+  if (issues.includes('refus')) noterRefus(true)
+  return issues.every(issue => issue === 'relue')
+}
+
 /** Écarte une requête de la relecture tant que le composant est monté. */
 export function useSansRafraichissement(nom: string): void {
   useEffect(() => {

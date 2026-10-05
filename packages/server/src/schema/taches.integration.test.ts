@@ -800,6 +800,33 @@ describe('travail à plusieurs', () => {
     })
   })
 
+  it('ne laisse passer qu’une de deux modifications simultanées de la même version', async () => {
+    const tache = await creerTache(ids.alice, 'Tracer les couloirs', false)
+    const auteurs = [
+      { id: ids.alice, nom: `alice ${suffixe}`, titre: 'Tracer huit couloirs' },
+      { id: ids.bruno, nom: `bruno ${suffixe}`, titre: 'Tracer six couloirs' },
+    ]
+    const reponses = await Promise.all(
+      auteurs.map(a =>
+        executer(a.id, MODIFIER, { id: tache.id, t: a.titre, v: 0 })
+      )
+    )
+    const gagnante = reponses.findIndex(r => r.errors === undefined)
+    const perdante = 1 - gagnante
+    expect(reponses.filter(r => r.errors === undefined)).toHaveLength(1)
+    expect(code(reponses[perdante]!)).toBe('CONFLIT_VERSION')
+    // Le conflit annonce la version écrite et la personne qui l'a écrite.
+    expect(extensions(reponses[perdante]!)).toMatchObject({
+      versionCourante: 1,
+      modifieePar: auteurs[gagnante]!.nom,
+    })
+    expect(await enBase(tache.id)).toMatchObject({
+      titre: auteurs[gagnante]!.titre,
+      version: 1,
+    })
+    expect(await journal(tache.id, 'TACHE_MODIFIEE')).toBe(1)
+  })
+
   it('refuse l’accès avant de dire un conflit', async () => {
     const tache = await creerTache(ids.alice, 'Louer les plots', false)
     await executer(ids.alice, MODIFIER, { id: tache.id, t: 'Louer des plots' })

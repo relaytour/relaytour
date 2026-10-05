@@ -7,7 +7,7 @@ import type { StatutTache } from '../gql/graphql'
 
 import { lireConflit, texteConflit } from './conflit'
 import { messageErreur } from './erreurs'
-import { VUES_TACHES } from './rafraichissement'
+import { relireLesVues, VUES_TACHES } from './rafraichissement'
 
 export const STATUTS: Record<
   StatutTache,
@@ -188,7 +188,8 @@ export interface Reprise {
  *
  * Si l'API annonce un conflit (une autre personne a écrit depuis la lecture), une
  * fenêtre dit ce qui a changé. « Écraser » rejoue l'action avec l'état annoncé.
- * « Recharger » relit les vues des tâches, puis appelle `apresRechargement`.
+ * « Recharger » relit les vues des tâches, puis appelle `apresRechargement` si la
+ * relecture a réussi.
  */
 export function useActionTache() {
   const { message, modal } = App.useApp()
@@ -221,10 +222,15 @@ export function useActionTache() {
             cancelText: 'Recharger',
           })
           if (!ecraser) {
-            await client
-              .refetchQueries({ include: VUES_TACHES })
-              .catch(() => undefined)
-            options.apresRechargement?.()
+            // La saisie ne se ferme qu'après une relecture réussie : sans réponse
+            // du serveur, la personne garde son texte et peut réessayer.
+            if (await relireLesVues(client, VUES_TACHES)) {
+              options.apresRechargement?.()
+            } else {
+              message.error(
+                'La tâche n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.'
+              )
+            }
             return false
           }
           if (conflit.nature === 'contenu') {
