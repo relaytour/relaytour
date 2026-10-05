@@ -19,13 +19,22 @@ import { organisationParDefaut } from '../lib/organisation.ts'
 // Les mails mis en file se notent au passage, sans rien changer à leur envoi : un
 // test prouve qu'une notification du périmètre n'en produit aucun.
 const enFile = vi.hoisted(
-  () => [] as { sorte: string; cible: { userId?: string } }[]
+  () =>
+    [] as {
+      sorte: string
+      cible: { userId?: string }
+      tache?: { tacheId: string; acteurId?: string; changement: string }
+    }[]
 )
 vi.mock('../courriel/file.ts', async importOriginal => {
   const reel = await importOriginal<typeof import('../courriel/file.ts')>()
   return {
     mettreEnFile: (...args: Parameters<typeof reel.mettreEnFile>) => {
-      enFile.push({ sorte: args[0], cible: args[1] as { userId?: string } })
+      enFile.push({
+        sorte: args[0],
+        cible: args[1] as { userId?: string },
+        tache: args[2]?.tache,
+      })
       return reel.mettreEnFile(...args)
     },
   }
@@ -462,7 +471,11 @@ describe('activité du périmètre pour les autres référent·es', () => {
       'TACHE_MODIFIEE',
     ])
     expect(enFile).toEqual([
-      { sorte: 'tache-modifiee', cible: { userId: ids.alice } },
+      {
+        sorte: 'tache-modifiee',
+        cible: { userId: ids.alice },
+        tache: { tacheId, acteurId: ids.bruno, changement: 'contenu' },
+      },
     ])
     // L'auteur et la référente d'un autre périmètre ne reçoivent rien.
     expect(await types(ids.bruno, { tacheId })).toEqual(['TACHE_CREEE'])
@@ -506,11 +519,57 @@ describe('activité du périmètre pour les autres référent·es', () => {
     expect(recus).toContain(
       `La tâche « Louer le grand bassin » (Natation) est faite. → ${lien}`
     )
-    // La notification ne garde pas l'auteur du passage à « faite ».
+    // La notification ne garde pas l'auteur du passage à « faite », pas même dans
+    // sa clé d'unicité.
     const faite = await prisma.notification.findFirstOrThrow({
       where: { userId: ids.chloe, tacheId, statut: 'FAITE' },
     })
     expect(faite).toMatchObject({ type: 'TACHE_STATUT', acteurId: null })
+    expect(faite.cle).not.toContain(ids.bruno)
+
+    // Alice, assignée, garde sa notification et son mail immédiat. Ni l'une ni
+    // l'autre ne nomme Bruno, et la file ne reçoit pas son identifiant.
+    const pourAlice = await prisma.notification.findFirstOrThrow({
+      where: { userId: ids.alice, tacheId, statut: 'FAITE' },
+    })
+    expect(pourAlice).toMatchObject({ type: 'TACHE_STATUT', acteurId: null })
+    expect(await messages(ids.alice)).toContain(
+      `La tâche « Louer le grand bassin » (Natation) est faite. → ${lien}`
+    )
+    const mailFaite = enFile.find(
+      m =>
+        m.cible.userId === ids.alice &&
+        m.tache?.changement === 'statut' &&
+        m.tache.acteurId === undefined
+    )
+    expect(mailFaite).toMatchObject({
+      sorte: 'tache-modifiee',
+      tache: { tacheId, changement: 'statut' },
+    })
+    const mail = await composer(prisma, {
+      sorte: 'tache-modifiee',
+      userId: ids.alice,
+      tache: { tacheId, changement: 'statut' },
+      notificationId: pourAlice.id,
+    })
+    expect(mail?.texte).toContain(
+      'Une autre personne a modifié la tâche « Louer le grand bassin » du périmètre Natation.'
+    )
+    expect(mail?.texte).toContain(
+      'Le nouveau statut de la tâche est « Faite ».'
+    )
+    for (const corps of [mail?.texte, mail?.html]) {
+      expect(corps).not.toContain('Bruno')
+    }
+    // Le passage à « en cours », lui, nomme son auteur dans le mail.
+    expect(
+      enFile.some(
+        m =>
+          m.cible.userId === ids.alice &&
+          m.tache?.changement === 'statut' &&
+          m.tache.acteurId === ids.bruno
+      )
+    ).toBe(true)
   })
 
   it('annonce la création et la modification d’une fiche du périmètre', async () => {

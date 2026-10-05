@@ -853,15 +853,18 @@ builder.mutationFields(t => ({
         if (actuelle.statut === args.statut) return relire()
         throw conflitDeStatut(actuelle.statut)
       }
+      // Les personnes assignées sont prévenues tout de suite, par mail. Un passage à
+      // « faite » ne leur nomme personne, ni dans l'application ni dans le mail.
       await notifier(
         prisma,
         {
-          type: 'TACHE_MODIFIEE',
+          type: faite ? 'TACHE_STATUT' : 'TACHE_MODIFIEE',
           destinataires: autres,
           acteurId: acteur.id,
           tacheId: tache.id,
           perimetreId: tache.perimetreId,
           changement: 'statut',
+          ...(faite ? { statut: 'FAITE' as const } : {}),
         },
         { mailImmediat: true }
       )

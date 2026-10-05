@@ -293,10 +293,13 @@ export async function composer(
           },
         },
       }),
-      prisma.user.findUniqueOrThrow({
-        where: { id: job.tache.acteurId },
-        select: { name: true },
-      }),
+      // Un passage à « faite » arrive sans auteur : le mail ne nomme personne.
+      job.tache.acteurId === undefined
+        ? { name: 'Une autre personne' }
+        : prisma.user.findUniqueOrThrow({
+            where: { id: job.tache.acteurId },
+            select: { name: true },
+          }),
     ])
     configuration = await configurationActivite(tache.perimetre.activite.id)
     variables.acteur = acteur.name

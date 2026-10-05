@@ -119,7 +119,8 @@ export async function notifierLePerimetre(
             ficheId: notification.ficheId ?? null,
             perimetreId,
             statut: statut ?? null,
-            cle: `${type}-${cible}-${statut ?? ''}-${acteurId}-${userId}-${tranche}`,
+            // La clé d'un passage à « faite » ne porte pas son auteur non plus.
+            cle: `${type}-${cible}-${statut ?? ''}-${statut === 'FAITE' ? '' : acteurId}-${userId}-${tranche}`,
           },
         })
       } catch (erreur) {
@@ -145,6 +146,10 @@ export async function notifierLePerimetre(
  *
  * Avec `mailImmediat`, la notification part aussi par mail (règle de collaboration
  * n° 2). Le worker vérifie la préférence du destinataire au moment de l'envoi.
+ *
+ * Un passage à « faite » (`statut: 'FAITE'`) ne garde son auteur ni dans la
+ * notification ni dans le mail : qui a coché une tâche reste réservé à la personne
+ * qui a coché et aux admins.
  */
 export async function notifier(
   prisma: PrismaClient,
@@ -156,9 +161,12 @@ export async function notifier(
     perimetreId: string
     personneId?: string
     changement?: 'contenu' | 'statut'
+    /** Pour TACHE_STATUT : le nouveau statut. */
+    statut?: StatutTache
   },
   options: { mailImmediat?: boolean } = {}
 ): Promise<void> {
+  const anonyme = notification.statut === 'FAITE'
   const destinataires = [...new Set(notification.destinataires)].filter(
     id => id !== notification.acteurId
   )
@@ -175,10 +183,11 @@ export async function notifier(
           organisationId,
           userId,
           type: notification.type,
-          acteurId: notification.acteurId,
+          acteurId: anonyme ? null : notification.acteurId,
           tacheId: notification.tacheId,
           perimetreId: notification.perimetreId,
           personneId: notification.personneId ?? null,
+          statut: notification.statut ?? null,
         },
         select: { id: true },
       })
@@ -189,7 +198,7 @@ export async function notifier(
           {
             tache: {
               tacheId: notification.tacheId,
-              acteurId: notification.acteurId,
+              ...(anonyme ? {} : { acteurId: notification.acteurId }),
               changement: notification.changement ?? 'contenu',
             },
             notificationId: creee.id,

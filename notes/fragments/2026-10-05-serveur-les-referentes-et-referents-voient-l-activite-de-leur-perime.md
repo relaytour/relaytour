@@ -13,7 +13,8 @@ fr:
     notifications : le résumé les reprend. La cloche affiche le nombre de
     notifications non lues, et une notification mène à la tâche, mise en
     évidence dans la page du périmètre. Vous coupez ces notifications dans vos
-    préférences.
+    préférences. Quand une autre personne coche une tâche qui vous est
+    assignée, le mail et la notification vous l'annoncent sans la nommer.
 ---
 
 `notifierLePerimetre` (`lib/notifications.ts`) prévient les personnes affectées au
