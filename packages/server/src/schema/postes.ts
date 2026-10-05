@@ -19,6 +19,8 @@ import {
 } from '../lib/postes.ts'
 
 import { exigerAdminDeLEdition } from '../lib/droits.ts'
+import { publierPourPerimetre } from '../lib/flux.ts'
+
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
 import { AffectationRef } from './personnes.ts'
@@ -248,6 +250,7 @@ builder.mutationFields(t => ({
         },
         'Un effectif a été défini.'
       )
+      publierPourPerimetre('EQUIPE', perimetreId, { editionId })
       return ligne.effectif
     },
   }),

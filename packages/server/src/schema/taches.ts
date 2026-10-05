@@ -17,6 +17,7 @@ import {
   peutModifierPerimetre,
 } from '../lib/droits.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
+import { publierPourPerimetre } from '../lib/flux.ts'
 import {
   notifier,
   notifierLePerimetre,
@@ -663,6 +664,7 @@ builder.mutationFields(t => ({
         })
         return tx.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
       })
+      publierPourPerimetre('TACHE', perimetreId, { id: creee.id, editionId })
       // Règle n° 3 : les autres référent·es du périmètre le voient dans leur résumé.
       await notifier(prisma, {
         type: 'TACHE_CREEE',
@@ -752,6 +754,10 @@ builder.mutationFields(t => ({
         return true
       })
       if (!ecrite) throw await conflitDeContenu(tache.id)
+      publierPourPerimetre('TACHE', tache.perimetreId, {
+        id: tache.id,
+        editionId: tache.editionId,
+      })
       // Règle n° 2 : les personnes assignées sont prévenues tout de suite, par mail.
       await notifier(
         prisma,
@@ -853,6 +859,10 @@ builder.mutationFields(t => ({
         if (actuelle.statut === args.statut) return relire()
         throw conflitDeStatut(actuelle.statut)
       }
+      publierPourPerimetre('TACHE', tache.perimetreId, {
+        id: tache.id,
+        editionId: tache.editionId,
+      })
       // Les personnes assignées sont prévenues tout de suite, par mail. Un passage à
       // « faite » ne leur nomme personne, ni dans l'application ni dans le mail.
       await notifier(
@@ -946,6 +956,10 @@ builder.mutationFields(t => ({
             return false
           }))
       if (ecrite) {
+        publierPourPerimetre('TACHE', tache.perimetreId, {
+          id: tache.id,
+          editionId: tache.editionId,
+        })
         // Règle n° 3 : les autres référent·es voient qui fait quoi dans leur résumé.
         // La personne assignée par un admin l'apprend aussi.
         await notifier(prisma, {

@@ -4,6 +4,7 @@ import { mettreEnFile } from '../courriel/file.ts'
 
 import { aujourdhui } from './droits.ts'
 import { erreurSaisie } from './erreurs.ts'
+import { publierNotification } from './flux.ts'
 import { journal } from './journal.ts'
 
 // Demandes pour rejoindre l'équipe d'une période (ADR 0015).
@@ -142,6 +143,7 @@ export async function signalerDemande(
             cle: `DEMANDE_RECUE-${activiteId}-${userId}-${jour}`,
           },
         })
+        publierNotification(organisationId, userId)
       } catch (erreur) {
         // P2002 : cet admin est déjà prévenu aujourd'hui pour cette activité.
         if ((erreur as { code?: string }).code !== 'P2002') throw erreur

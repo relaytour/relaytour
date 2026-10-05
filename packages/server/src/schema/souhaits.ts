@@ -11,6 +11,8 @@ import {
   SOUHAITS_MAX,
 } from '../lib/souhaits.ts'
 
+import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
+
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
@@ -149,6 +151,9 @@ builder.mutationFields(t => ({
         },
         'Les souhaits d’une personne ont été définis.'
       )
+      publierPourActivite('EQUIPE', ctx.organisation!.id, edition.activiteId, {
+        editionId,
+      })
       return prisma.souhait.findMany({
         ...query,
         where: { userId, editionId },
@@ -197,6 +202,14 @@ builder.mutationFields(t => ({
         },
         'Un souhait a été retiré.'
       )
+      if (count === 1) {
+        publierPourActivite(
+          'EQUIPE',
+          ctx.organisation!.id,
+          souhait.perimetre.activiteId,
+          { editionId: souhait.editionId }
+        )
+      }
       return count === 1
     },
   }),
@@ -402,6 +415,9 @@ builder.mutationFields(t => ({
         { evenement: 'souhait-formule', userId, ...cible },
         'Une personne a formulé un souhait.'
       )
+      publierPourPerimetre('EQUIPE', cible.perimetreId, {
+        editionId: cible.editionId,
+      })
       return true
     },
   }),
@@ -443,6 +459,11 @@ builder.mutationFields(t => ({
         },
         'Un souhait a été retiré.'
       )
+      if (count === 1) {
+        publierPourPerimetre('EQUIPE', String(args.perimetreId), {
+          editionId: String(args.editionId),
+        })
+      }
       return count === 1
     },
   }),

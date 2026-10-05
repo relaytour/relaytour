@@ -3390,6 +3390,7 @@ __metadata:
     express: "npm:^5.2.1"
     graphql: "npm:^16.14.0"
     graphql-scalars: "npm:^1.24.0"
+    graphql-sse: "npm:^2.6.2"
     ioredis: "npm:^5.11.0"
     mjml: "npm:^5.4.0"
     nodemailer: "npm:^9.0.4"
@@ -7108,6 +7109,15 @@ __metadata:
   peerDependencies:
     graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
   checksum: 10/740747ca0191d17f593ea747b02df5fedd778a1376ea235a815bd80b69356efacf5b32412b2461d9ae3edadd1a56bfba8df0a75ae2c5ea2932a126b3e513cca6
+  languageName: node
+  linkType: hard
+
+"graphql-sse@npm:^2.6.2":
+  version: 2.6.2
+  resolution: "graphql-sse@npm:2.6.2"
+  peerDependencies:
+    graphql: ">=0.11 <=17"
+  checksum: 10/44b1918d6a748d06af2c1b180ddda1b54ba52f279c88e78e69b5b545f9a19329a4b480b364035ede76a5c20fdce674aa1eff05f6ce6e9c631c6a4dae3ecdd6b3
   languageName: node
   linkType: hard
 

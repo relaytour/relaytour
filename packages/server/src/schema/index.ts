@@ -13,6 +13,7 @@ import './postes.ts'
 import './souhaits.ts'
 import './demandes.ts'
 import './formulaire.ts'
+import './flux.ts'
 
 import { builder } from './builder.ts'
 

@@ -19,6 +19,8 @@ import {
   perimetresSouhaitesValides,
 } from '../lib/souhaits.ts'
 
+import { publierPourPerimetre } from '../lib/flux.ts'
+
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
 
@@ -542,6 +544,7 @@ builder.mutationFields(t => ({
         activiteId,
         instant,
       })
+      publierPourPerimetre('EQUIPE', perimetreId, { editionId })
       return affectation
     },
   }),
@@ -555,7 +558,12 @@ builder.mutationFields(t => ({
           id: String(id),
           perimetre: { organisationId: ctx.organisation!.id },
         },
-        select: { id: true, perimetre: { select: { activiteId: true } } },
+        select: {
+          id: true,
+          perimetreId: true,
+          editionId: true,
+          perimetre: { select: { activiteId: true } },
+        },
       })
       // Une affectation hors des activités administrées vaut une affectation
       // inconnue : rien ne change, comme pour une autre organisation.
@@ -568,6 +576,11 @@ builder.mutationFields(t => ({
       const { count } = await prisma.affectation.deleteMany({
         where: { id: affectation.id },
       })
+      if (count === 1) {
+        publierPourPerimetre('EQUIPE', affectation.perimetreId, {
+          editionId: affectation.editionId,
+        })
+      }
       return count === 1
     },
   }),
@@ -624,6 +637,9 @@ builder.mutationFields(t => ({
           data: { contactPrincipal: args.contactPrincipal },
         }),
       ])
+      publierPourPerimetre('EQUIPE', affectation.perimetreId, {
+        editionId: affectation.editionId,
+      })
       return true
     },
   }),

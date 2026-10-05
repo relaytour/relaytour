@@ -106,6 +106,12 @@ export interface AppContext {
   exigerActivite: (activiteId?: string | number | null) => Promise<string>
   /** L'édition si elle appartient à une activité visible, sinon un refus. */
   exigerEdition: (editionId: string | number) => Promise<EditionDuContexte>
+  /**
+   * Pour un flux des changements (ADR 0017) : reconstruit le contexte depuis la
+   * requête d'origine, session comprise. Un flux dure plus qu'une requête : il
+   * relit ainsi une session fermée, un compte archivé ou des droits retirés.
+   */
+  relire?: () => Promise<AppContext>
 }
 
 interface Appartenance {
