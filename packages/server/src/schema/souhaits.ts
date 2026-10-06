@@ -1,7 +1,7 @@
 import { prisma, type Edition, type Perimetre } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
-import { exigerMembre } from '../lib/appartenances.ts'
+import { equipesModifiees, exigerMembreGere } from '../lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import { etatPostes } from '../lib/postes.ts'
@@ -112,7 +112,9 @@ builder.mutationFields(t => ({
     },
     resolve: async (query, _root, args, ctx) => {
       const userId = String(args.personneId)
-      await exigerMembre(ctx, userId)
+      // Un admin d'activité ne note les souhaits que d'une personne de ses équipes
+      // (ADR 0018). Le refus précède le contrôle d'archivage : il ne dit rien du compte.
+      await exigerMembreGere(ctx, userId)
       const personne = await prisma.user.findUnique({
         where: { id: userId },
         select: { archivedAt: true },
@@ -141,6 +143,7 @@ builder.mutationFields(t => ({
           skipDuplicates: true,
         }),
       ])
+      equipesModifiees(ctx)
       journal.info(
         {
           evenement: 'souhaits-definis',
@@ -192,6 +195,7 @@ builder.mutationFields(t => ({
       const { count } = await prisma.souhait.deleteMany({
         where: { id: souhait.id },
       })
+      equipesModifiees(ctx)
       journal.info(
         {
           evenement: 'souhait-retire',

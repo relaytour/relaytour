@@ -79,6 +79,8 @@ export interface AppContext {
    * l'organisation lit tout l'annuaire : les contrôles testent son rôle d'abord.
    */
   equipeAdministree: () => Promise<Set<string>>
+  /** Oublie l'équipe mémorisée, après une écriture qui change un lien d'équipe. */
+  oublierLesEquipes: () => void
   /**
    * Activités que la personne voit : celles qu'elle administre, et celles où elle a
    * été affectée à un périmètre, toutes périodes confondues. Une activité hors de
@@ -284,6 +286,10 @@ export async function buildContext(
     return equipe
   }
 
+  const oublierLesEquipes = () => {
+    equipe = undefined
+  }
+
   let visibles: Promise<Set<string>> | undefined
   const activitesVisibles = () => {
     if (personne === null || organisation === null)
@@ -454,6 +460,7 @@ export async function buildContext(
     perimetresConnus,
     activitesAdministrees,
     equipeAdministree,
+    oublierLesEquipes,
     activitesVisibles,
     activitesDecouvertes,
     exigerActiviteDecouverte,

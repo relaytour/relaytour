@@ -18,6 +18,18 @@
             "texte": "Un admin d'activité invite une personne par son adresse, avec au moins un périmètre souhaité. Si la personne a déjà un compte, ce compte rejoint l'équipe et garde son nom : aucune erreur ne s'affiche. Une personne sans compte reçoit son invitation par mail. Une demande s'accepte désormais avec au moins un périmètre, pour que la personne rejoigne l'équipe de l'activité.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-06-serveur-un-admin-d-activite-ne-lit-plus-que-l-equipe-de-ses-activite",
+          "date": "2026-10-06",
+          "type": "securite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un admin d'activité ne lit plus que l'équipe de ses activités",
+            "texte": "Un admin d'activité lisait l'annuaire de toute l'organisation, noms et adresses, et pouvait affecter n'importe quel membre. Il lit désormais l'équipe de ses activités seulement : les personnes affectées, intéressées ou admins. Il n'affecte, ne note un souhait et n'accorde un droit de rédaction que pour ces personnes. L'annuaire complet reste lisible par les admins de l'organisation. L'adresse d'une personne ne se lit plus depuis une activité où vous êtes simple référente ou référent, même si vous administrez une autre activité.",
+            "migration": null
+          }
         }
       ]
     },
