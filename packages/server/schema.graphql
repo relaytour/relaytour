@@ -140,7 +140,7 @@ type Demande {
   creeLe: DateTime!
 
   """
-  Vrai quand un compte de l’organisation porte déjà cette adresse : accepter la demande ne crée alors aucun compte.
+  Vrai quand un compte que la personne connectée peut lire porte déjà cette adresse : un membre de l’organisation pour un admin de l’organisation, une personne de ses équipes pour un admin d’activité (ADR 0018).
   """
   dejaMembre: Boolean!
 

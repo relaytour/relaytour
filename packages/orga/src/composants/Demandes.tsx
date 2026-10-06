@@ -21,6 +21,7 @@ import { Link } from 'react-router'
 import { graphql } from '../gql'
 import type { DemandesQuery, StatutDemande } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
+import { useSession } from '../lib/session'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import { PERIMETRES } from '../lib/requetes'
 
@@ -116,6 +117,8 @@ export default function Demandes({
 }) {
   const { message } = App.useApp()
   const { activite, lien, periode } = useActivite()
+  // Un admin d'activité n'apprend « déjà membre » que pour son équipe (ADR 0018).
+  const gereOrganisation = useSession().moi.estAdmin === true
   const [filtre, setFiltre] = useState<Filtre>('EN_ATTENTE')
   const [enAcceptation, setEnAcceptation] = useState<Demande | null>(null)
   const [form] = Form.useForm<{ affecter: string[] }>()
@@ -182,7 +185,7 @@ export default function Demandes({
       message.success(
         enAcceptation.dejaMembre
           ? 'Demande acceptée. La personne est affectée.'
-          : 'Demande acceptée. La personne reçoit son invitation par mail.'
+          : 'Demande acceptée. Une personne sans compte reçoit son invitation par mail.'
       )
       setEnAcceptation(null)
     } catch (e) {
@@ -269,8 +272,18 @@ export default function Demandes({
                 <span style={{ fontWeight: 600 }}>{nom}</span>
                 {d.origine === 'FORMULAIRE' && <Tag>Formulaire public</Tag>}
                 {d.dejaMembre && (
-                  <Tooltip title="Un compte de l’organisation porte déjà cette adresse. Accepter la demande ne crée aucun compte.">
-                    <Tag>Déjà membre</Tag>
+                  <Tooltip
+                    title={
+                      gereOrganisation
+                        ? 'Un compte de l’organisation porte déjà cette adresse. Accepter la demande ne crée aucun compte.'
+                        : 'Une personne de votre équipe porte déjà cette adresse. Accepter la demande ne crée aucun compte.'
+                    }
+                  >
+                    <Tag>
+                      {gereOrganisation
+                        ? 'Déjà membre'
+                        : 'Déjà dans votre équipe'}
+                    </Tag>
                   </Tooltip>
                 )}
               </Space>
@@ -390,8 +403,8 @@ export default function Demandes({
       >
         <p style={{ marginTop: 0 }}>
           {enAcceptation?.dejaMembre
-            ? 'Cette personne est déjà membre de l’organisation : l’acceptation ne crée aucun compte. Un mail lui annonce ses nouveaux périmètres.'
-            : 'L’acceptation crée le compte de cette personne. Elle reçoit une invitation par mail, avec ses périmètres.'}
+            ? 'Cette personne a déjà un compte : l’acceptation n’en crée aucun. Un mail lui annonce ses nouveaux périmètres.'
+            : 'L’acceptation fait entrer cette personne dans l’équipe. Si elle n’a pas de compte, elle reçoit une invitation par mail, avec ses périmètres.'}
         </p>
         <Form
           form={form}

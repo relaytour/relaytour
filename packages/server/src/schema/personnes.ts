@@ -2,7 +2,11 @@ import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from '../lib/affectations.ts'
-import { dansLEquipe, exigerMembre } from '../lib/appartenances.ts'
+import {
+  dansLEquipe,
+  exigerMembre,
+  exigerMembreGere,
+} from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
 import { annoncerChangementEquipe } from '../lib/equipe.ts'
 import {
@@ -28,10 +32,9 @@ import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
 
-// Les données personnelles d'un compte (adresse, affectations) ne sont lisibles que
-// par la personne elle-même et par les admins. Un admin d'activité lit l'annuaire de
-// l'organisation, dont il a besoin pour constituer son équipe (ADR 0010). Il ne lit
-// les affectations que dans les activités qu'il administre.
+// Les affectations et les rôles d'un compte ne sont lisibles que par la personne
+// elle-même et par les admins. Un admin d'activité ne les lit que dans les activités
+// qu'il administre : chaque résolveur filtre (ADR 0010).
 const soiOuGestion = (
   personne: { id: string },
   _args: unknown,
@@ -43,7 +46,15 @@ export const PersonneRef = builder.prismaObject('User', {
   fields: t => ({
     id: t.exposeID('id'),
     nom: t.exposeString('name'),
-    email: t.exposeString('email', { authScopes: soiOuGestion }),
+    // L'adresse se lit par la personne elle-même, par un admin de l'organisation et
+    // par un admin d'une activité dont elle fait partie de l'équipe (ADR 0018). Le
+    // rôle d'admin d'une autre activité ne l'ouvre pas.
+    email: t.exposeString('email', {
+      authScopes: async (personne, _args, ctx) =>
+        ctx.personne?.id === personne.id ||
+        ctx.personne?.estAdmin === true ||
+        (await ctx.equipeAdministree()).has(personne.id),
+    }),
     // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global. Il se
     // lit par la personne elle-même et par les admins de l'organisation ; un admin
     // d'activité lit null (ADR 0010).
@@ -191,9 +202,11 @@ builder.queryFields(t => ({
         : prisma.user.findUnique({ ...query, where: { id: ctx.personne.id } }),
   }),
 
+  // L'annuaire de l'organisation, réservé à ses admins (ADR 0018). Un admin
+  // d'activité lit son équipe par la requête `equipe`.
   personnes: t.prismaField({
     type: [PersonneRef],
-    authScopes: { gestion: true },
+    authScopes: { admin: true },
     args: { inclureArchives: t.arg.boolean({ defaultValue: false }) },
     resolve: (query, _root, { inclureArchives }, ctx) =>
       prisma.user.findMany({
@@ -401,31 +414,8 @@ builder.mutationFields(t => ({
     authScopes: { gestion: true },
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, { id }, ctx) => {
-      await exigerMembre(ctx, String(id))
-      // Un admin d'activité ne relance que son équipe : une personne affectée,
-      // souhaitée ou admin dans une activité qu'il administre (ADR 0010).
-      if (!ctx.personne!.estAdmin) {
-        const activites = [...(await ctx.activitesAdministrees())]
-        const equipe = await prisma.user.count({
-          where: {
-            id: String(id),
-            OR: [
-              {
-                affectations: {
-                  some: { perimetre: { activiteId: { in: activites } } },
-                },
-              },
-              {
-                souhaits: {
-                  some: { perimetre: { activiteId: { in: activites } } },
-                },
-              },
-              { adminsActivite: { some: { activiteId: { in: activites } } } },
-            ],
-          },
-        })
-        if (equipe === 0) throw accesRefuse()
-      }
+      // Un admin d'activité ne relance que son équipe (ADR 0018).
+      await exigerMembreGere(ctx, String(id))
       const personne = await prisma.user.findUnique({
         where: { id: String(id) },
         select: { id: true, archivedAt: true },
@@ -571,7 +561,9 @@ builder.mutationFields(t => ({
       // Seul l'admin de l'activité du périmètre affecte : une affectation comme
       // référent·e d'un autre périmètre ne suffit pas.
       const { activiteId } = await exigerAdminDuPerimetre(ctx, perimetreId)
-      await exigerMembre(ctx, userId)
+      // Un admin d'activité n'affecte qu'une personne de ses équipes (ADR 0018). Il
+      // y fait entrer une autre personne par une invitation.
+      await exigerMembreGere(ctx, userId)
       // Même contrôle qu'une écriture : périmètre et édition de la même activité de
       // l'organisation, édition non archivée.
       await exigerEcriture(ctx, perimetreId, editionId)

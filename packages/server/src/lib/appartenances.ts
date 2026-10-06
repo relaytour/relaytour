@@ -31,6 +31,26 @@ export async function exigerMembre(
 }
 
 /**
+ * Le rôle d'un compte que la personne connectée peut gérer (ADR 0018) : tout membre
+ * pour un admin de l'organisation, une personne de ses équipes pour un admin
+ * d'activité. Un membre hors de ses équipes, un compte inconnu et un compte d'une
+ * autre organisation donnent le même refus.
+ */
+export async function exigerMembreGere(
+  ctx: AppContext,
+  userId: string
+): Promise<Membre> {
+  const membre = await exigerMembre(ctx, userId)
+  if (
+    ctx.personne?.estAdmin !== true &&
+    !(await ctx.equipeAdministree()).has(userId)
+  ) {
+    throw accesRefuse()
+  }
+  return membre
+}
+
+/**
  * Le filtre des comptes qui font partie de l'équipe d'au moins une de ces activités
  * (ADR 0018) : une affectation, un souhait ou un rôle d'admin, toutes périodes
  * confondues. Aucune table ne porte ce lien : il se déduit.

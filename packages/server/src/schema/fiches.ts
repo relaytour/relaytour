@@ -10,7 +10,7 @@ import {
   peutLireFiche,
   peutRedigerFiche,
 } from '../lib/fiches.ts'
-import { exigerMembre } from '../lib/appartenances.ts'
+import { exigerMembreGere } from '../lib/appartenances.ts'
 import { notifierLePerimetre } from '../lib/notifications.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
@@ -667,7 +667,9 @@ builder.mutationFields(t => ({
       } else {
         await exigerAdminDuPerimetre(ctx, perimetreId)
       }
-      await exigerMembre(ctx, userId)
+      // Un admin d'activité n'accorde un droit qu'à une personne de ses équipes
+      // (ADR 0018).
+      await exigerMembreGere(ctx, userId)
       // MariaDB ne rend pas un index unique efficace sur une colonne nulle :
       // le doublon se vérifie ici.
       const existant = await prisma.droitRedaction.findFirst({
