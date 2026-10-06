@@ -124,6 +124,8 @@ docker compose --env-file .env run --rm -v /chemin/equipe.yaml:/equipe.yaml:ro s
 
 Sans `--simulation`, la commande écrit. Avec `--envoyer-mails`, une personne nouvelle reçoit son invitation, qui liste ses périmètres, et une personne déjà membre reçoit le mail d'équipe (ADR 0012). Supprimez le fichier du serveur après l'import.
 
+La commande agit comme un admin de l'organisation : elle rattache par son adresse un compte déjà membre, quelle que soit son activité. Une personne déclarée sans affectation ni souhait n'entre dans l'équipe d'aucune activité (ADR 0018) : seuls les admins de l'organisation la lisent, dans l'annuaire.
+
 ## Tâches planifiées
 
 Le worker planifie deux tâches pour chaque organisation active, à l'heure de son fuseau (ADR 0008) : à 6 h 30 les rappels d'échéance (7 jours, veille) et le signalement des retards ; à 7 h les résumés par mail. Il ajuste ces planifications à son démarrage, puis chaque heure : une organisation créée ou suspendue est prise en compte dans l'heure. Pour lancer une tâche tout de suite :

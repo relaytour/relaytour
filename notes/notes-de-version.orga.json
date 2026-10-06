@@ -5,6 +5,23 @@
   "version": "0.9.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-06-orga-l-annuaire-indique-les-activites-de-chaque-personne",
+          "date": "2026-10-06",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'annuaire indique les activités de chaque personne",
+            "texte": "Pour un admin de l'organisation, l'écran « Personnes » gagne une colonne « Activités » : elle indique où chaque personne est affectée, intéressée ou admin, toutes périodes confondues. Un filtre isole les personnes d'une activité, ou celles qui ne participent à aucune. Dans l'écran « Équipe », la liste d'affectation range les personnes en trois groupes : intéressées, équipe de l'activité, autres membres de l'organisation avec le nom de leurs activités. Un admin d'activité voit l'onglet « Votre équipe », avec le rôle de chaque personne dans son activité.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.9.0",
       "notes": [
         {

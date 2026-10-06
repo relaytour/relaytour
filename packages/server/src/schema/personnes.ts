@@ -3,7 +3,10 @@ import { prisma } from '@relaytour/database'
 import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from '../lib/affectations.ts'
 import {
+  type AttributionActivite,
+  attributionsDeLOrganisation,
   dansLEquipe,
+  equipesModifiees,
   exigerMembre,
   exigerMembreGere,
 } from '../lib/appartenances.ts'
@@ -25,6 +28,7 @@ import {
 import {
   exigerEditionOuverte,
   perimetresSouhaitesValides,
+  SOUHAITS_MAX,
 } from '../lib/souhaits.ts'
 
 import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
@@ -40,6 +44,25 @@ const soiOuGestion = (
   _args: unknown,
   ctx: { personne: { id: string } | null }
 ) => (ctx.personne?.id === personne.id ? true : { gestion: true })
+
+const AttributionActiviteRef = builder
+  .objectRef<AttributionActivite>('AttributionActivite')
+  .implement({
+    description:
+      'Le lien d’une personne avec une activité de l’organisation, toutes périodes confondues (ADR 0018).',
+    fields: t => ({
+      activiteId: t.exposeID('activiteId'),
+      affectee: t.exposeBoolean('affectee', {
+        description: 'Vrai quand la personne y a au moins une affectation.',
+      }),
+      interessee: t.exposeBoolean('interessee', {
+        description: 'Vrai quand la personne y a au moins un souhait.',
+      }),
+      admin: t.exposeBoolean('admin', {
+        description: 'Vrai quand la personne administre l’activité.',
+      }),
+    }),
+  })
 
 export const PersonneRef = builder.prismaObject('User', {
   name: 'Personne',
@@ -100,6 +123,17 @@ export const PersonneRef = builder.prismaObject('User', {
           orderBy: { createdAt: 'asc' },
         })
       },
+    }),
+    // Les activités où la personne participe, pour l'annuaire de l'admin de
+    // l'organisation : il y lit qui est où avant d'affecter ou d'inviter (ADR 0018).
+    attributions: t.field({
+      type: [AttributionActiviteRef],
+      authScopes: { admin: true },
+      // Le champ lit un mémo de la requête, pas la base, et rend au plus une ligne
+      // par activité : ses champs ne comptent pas comme ceux d'une liste ouverte.
+      complexity: { field: 1, multiplier: 1 },
+      resolve: async (personne, _args, ctx) =>
+        (await attributionsDeLOrganisation(ctx)).get(personne.id) ?? [],
     }),
     // Les activités que la personne administre (ADR 0010), parmi celles que la
     // personne qui lit administre elle-même.
@@ -363,7 +397,24 @@ builder.mutationFields(t => ({
           ) {
             throw erreurSaisie(dejaLa)
           }
-          if (souhaits.length > 0) {
+          if (cible !== null) {
+            // Un compte existant garde ses souhaits : la limite porte sur leur
+            // réunion avec ceux de l'invitation. Le verrou sur la ligne de la
+            // personne sérialise ses souhaits, comme dans formulerSouhait.
+            await tx.$queryRaw`SELECT id FROM User WHERE id = ${compte.userId} FOR UPDATE`
+            const existants = await tx.souhait.findMany({
+              where: { userId: compte.userId, editionId: cible.editionId },
+              select: { perimetreId: true },
+            })
+            const reunion = new Set([
+              ...existants.map(s => s.perimetreId),
+              ...souhaits.map(s => s.perimetreId),
+            ])
+            if (reunion.size > SOUHAITS_MAX) {
+              throw erreurSaisie(
+                `Une personne a ${SOUHAITS_MAX} souhaits au plus pour une période.`
+              )
+            }
             await tx.souhait.createMany({
               data: souhaits.map(s => ({ ...s, userId: compte.userId })),
               skipDuplicates: true,
@@ -401,6 +452,7 @@ builder.mutationFields(t => ({
           }
         )
       }
+      equipesModifiees(ctx)
       if (cible !== null) {
         publierPourActivite('EQUIPE', organisationId, cible.activiteId, {
           editionId: cible.editionId,
@@ -594,6 +646,7 @@ builder.mutationFields(t => ({
         activiteId,
         instant,
       })
+      equipesModifiees(ctx)
       publierPourPerimetre('EQUIPE', perimetreId, { editionId })
       return affectation
     },
@@ -626,6 +679,7 @@ builder.mutationFields(t => ({
       const { count } = await prisma.affectation.deleteMany({
         where: { id: affectation.id },
       })
+      equipesModifiees(ctx)
       if (count === 1) {
         publierPourPerimetre('EQUIPE', affectation.perimetreId, {
           editionId: affectation.editionId,
@@ -732,6 +786,7 @@ builder.mutationFields(t => ({
           where: { userId, activiteId, organisationId },
         })
       }
+      equipesModifiees(ctx)
       journal.info(
         {
           evenement: args.admin

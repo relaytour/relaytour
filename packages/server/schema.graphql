@@ -74,6 +74,22 @@ type ArchiveContenu {
   nomFichier: String!
 }
 
+"""
+Le lien d’une personne avec une activité de l’organisation, toutes périodes confondues (ADR 0018).
+"""
+type AttributionActivite {
+  activiteId: ID!
+
+  """Vrai quand la personne administre l’activité."""
+  admin: Boolean!
+
+  """Vrai quand la personne y a au moins une affectation."""
+  affectee: Boolean!
+
+  """Vrai quand la personne y a au moins un souhait."""
+  interessee: Boolean!
+}
+
 type Avancement {
   aFaire: Int!
   abandonnees: Int!
@@ -649,6 +665,7 @@ type Personne {
   activitesAdministrees: [ID!]!
   affectations(editionId: ID): [Affectation!]!
   archive: Boolean!
+  attributions: [AttributionActivite!]!
   creeLe: DateTime!
   email: String!
   estAdmin: Boolean

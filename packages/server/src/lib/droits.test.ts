@@ -37,6 +37,7 @@ const contexte = (
   perimetresConnus: () => Promise.resolve(new Set(['natation', 'basket'])),
   activitesAdministrees: () => Promise.resolve(new Set<string>()),
   equipeAdministree: () => Promise.resolve(new Set<string>()),
+  oublierLesEquipes: () => undefined,
   activitesVisibles: () => Promise.resolve(new Set(visibles)),
   activitesDecouvertes: () => Promise.resolve(new Set<string>()),
   exigerActiviteDecouverte: () => Promise.reject(new Error('non utilisé')),

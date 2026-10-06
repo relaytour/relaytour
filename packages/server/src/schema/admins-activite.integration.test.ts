@@ -255,6 +255,87 @@ describe('admin d’une activité', () => {
     expect(annuaire.data?.personnes).toHaveLength(5)
   })
 
+  it('réserve à l’admin de l’organisation les activités de chaque personne', async () => {
+    const ATTRIBUTIONS =
+      '{ id attributions { activiteId affectee interessee admin } }'
+    expect(
+      code(
+        await executer(
+          ids.adminA1,
+          `query ($a: ID) { equipe(activiteId: $a) ${ATTRIBUTIONS} }`,
+          { a: ids.a1 }
+        )
+      )
+    ).toBe('FORBIDDEN')
+    expect(
+      code(await executer(ids.membreA1, `query { moi ${ATTRIBUTIONS} }`))
+    ).toBe('FORBIDDEN')
+
+    const souhait = await prisma.souhait.create({
+      data: {
+        userId: ids.membreA1,
+        perimetreId: ids.perimetre2,
+        editionId: ids.edition2,
+      },
+    })
+    try {
+      const r = await executer(
+        ids.adminOrg,
+        `query { personnes ${ATTRIBUTIONS} }`
+      )
+      expect(r.errors).toBeUndefined()
+      const attributions = new Map(
+        (
+          r.data?.personnes as {
+            id: string
+            attributions: { activiteId: string }[]
+          }[]
+        ).map(p => [
+          p.id,
+          [...p.attributions].sort((x, y) =>
+            x.activiteId.localeCompare(y.activiteId)
+          ),
+        ])
+      )
+      const lien = (activiteId: string, vrai: string) => ({
+        activiteId,
+        affectee: vrai === 'affectee',
+        interessee: vrai === 'interessee',
+        admin: vrai === 'admin',
+      })
+      expect(attributions.get(ids.membreA1)).toEqual(
+        [lien(ids.a1, 'affectee'), lien(ids.a2, 'interessee')].sort((x, y) =>
+          x.activiteId.localeCompare(y.activiteId)
+        )
+      )
+      expect(attributions.get(ids.adminA1)).toEqual([lien(ids.a1, 'admin')])
+      expect(attributions.get(ids.sansActivite)).toEqual([])
+    } finally {
+      await prisma.souhait.delete({ where: { id: souhait.id } })
+    }
+  })
+
+  it('sert les listes de l’écran « Personnes » sous la limite de complexité', async () => {
+    // Les sélections de l'espace organisateur, `__typename` compris : Apollo Client
+    // l'ajoute à chaque objet, et il compte dans la complexité.
+    const LIGNE = `__typename id nom email estAdmin activitesAdministrees archive
+      affectations(editionId: $e) { __typename id perimetre { __typename id nom couleur } }
+      souhaits(editionId: $e) { __typename id satisfait perimetre { __typename id nom couleur } }`
+    const annuaire = await executer(
+      ids.adminOrg,
+      `query ($e: ID) { personnes(inclureArchives: true) { ${LIGNE}
+        attributions { __typename activiteId affectee interessee admin } } }`,
+      { e: ids.edition1 }
+    )
+    expect(annuaire.errors).toBeUndefined()
+    const equipe = await executer(
+      ids.adminA1,
+      `query ($e: ID) { equipe { ${LIGNE} } }`,
+      { e: ids.edition1 }
+    )
+    expect(equipe.errors).toBeUndefined()
+  })
+
   it('n’agit pas sur une personne hors de son équipe, comme sur un compte inconnu', async () => {
     const avant = await liens()
     for (const [query, variables] of [
@@ -607,6 +688,133 @@ describe('équipe d’une activité (ADR 0018)', () => {
     expect(code(refus)).toBe('SAISIE_INVALIDE')
     expect(await comptes()).toEqual(avant)
     await prisma.souhait.deleteMany({ where: { userId: externe } })
+  })
+
+  it('lit l’équipe et les attributions à jour entre deux invitations d’une même mutation', async () => {
+    const DEUX = (champs: string) =>
+      `mutation ($a: String!, $b: String!, $e: ID, $p: [ID!]) {
+        a: inviterPersonne(email: $a, nom: "A", editionId: $e, perimetresSouhaites: $p) { ${champs} }
+        b: inviterPersonne(email: $b, nom: "B", editionId: $e, perimetresSouhaites: $p) { ${champs} }
+      }`
+    const souhait = { e: ids.edition1, p: [ids.perimetre1] }
+    // L'adresse de la seconde personne se lit : l'équipe mémorisée par le premier
+    // champ ne la contenait pas encore.
+    const adresses = await executer(ids.adminA1, DEUX('id email'), {
+      a: adresse('double-a'),
+      b: adresse('double-b'),
+      ...souhait,
+    })
+    expect(adresses.errors).toBeUndefined()
+    expect((adresses.data?.b as { email: string }).email).toBe(
+      adresse('double-b')
+    )
+    const attributions = await executer(
+      ids.adminOrg,
+      DEUX('id attributions { activiteId interessee }'),
+      { a: adresse('double-c'), b: adresse('double-d'), ...souhait }
+    )
+    expect(attributions.errors).toBeUndefined()
+    for (const cle of ['a', 'b']) {
+      expect(
+        (attributions.data?.[cle] as { attributions: unknown[] }).attributions
+      ).toEqual([{ activiteId: ids.a1, interessee: true }])
+    }
+    await prisma.souhait.deleteMany({
+      where: { user: { email: { startsWith: 'double-' } } },
+    })
+  })
+
+  it('refuse une invitation qui porterait un compte existant au-delà de la limite de souhaits', async () => {
+    const perimetres = await Promise.all(
+      Array.from({ length: 31 }, (_, i) =>
+        prisma.perimetre.create({
+          data: {
+            organisationId: ids.org,
+            activiteId: ids.a1,
+            slug: `limite-${i}-${s}`,
+            nom: `Limite ${i}`,
+            type: 'SPORT',
+            groupe: 'sport',
+          },
+          select: { id: true },
+        })
+      )
+    )
+    const [dernier, ...trente] = perimetres.map(p => p.id)
+    await prisma.souhait.createMany({
+      data: trente.map(perimetreId => ({
+        userId: ids.membreA2,
+        perimetreId,
+        editionId: ids.edition1,
+      })),
+    })
+    try {
+      const variables = { email: adresse('membre-a2'), e: ids.edition1 }
+      const refus = await executer(ids.adminA1, INVITER, {
+        ...variables,
+        p: [dernier],
+      })
+      expect(code(refus)).toBe('SAISIE_INVALIDE')
+      // Un périmètre déjà souhaité se rejoue sans erreur, même à la limite.
+      const rejeu = await executer(ids.adminA1, INVITER, {
+        ...variables,
+        p: [trente[0]],
+      })
+      expect(rejeu.errors).toBeUndefined()
+      expect(
+        await prisma.souhait.count({ where: { userId: ids.membreA2 } })
+      ).toBe(30)
+    } finally {
+      await prisma.souhait.deleteMany({ where: { userId: ids.membreA2 } })
+      await prisma.perimetre.deleteMany({
+        where: { id: { in: perimetres.map(p => p.id) } },
+      })
+    }
+  })
+
+  it('déplace les souhaits d’une personne d’une activité administrée à l’autre', async () => {
+    const SOUHAITS =
+      'mutation ($u: ID!, $e: ID!, $p: [ID!]!) { definirSouhaits(personneId: $u, editionId: $e, perimetreIds: $p) { id } }'
+    const [admin, souhait] = await Promise.all([
+      prisma.adminActivite.create({
+        data: {
+          userId: ids.adminA1,
+          activiteId: ids.a2,
+          organisationId: ids.org,
+        },
+      }),
+      // La personne n'est liée aux deux activités que par ce souhait.
+      prisma.souhait.create({
+        data: {
+          userId: ids.sansActivite,
+          perimetreId: ids.perimetre1,
+          editionId: ids.edition1,
+        },
+      }),
+    ])
+    try {
+      // L'ajout précède le retrait : la personne ne sort pas de l'équipe.
+      const ajout = await executer(ids.adminA1, SOUHAITS, {
+        u: ids.sansActivite,
+        e: ids.edition2,
+        p: [ids.perimetre2],
+      })
+      expect(ajout.errors).toBeUndefined()
+      const retrait = await executer(ids.adminA1, SOUHAITS, {
+        u: ids.sansActivite,
+        e: ids.edition1,
+        p: [],
+      })
+      expect(retrait.errors).toBeUndefined()
+      expect(await equipe(ids.adminA1, ids.a2)).toContain(ids.sansActivite)
+      expect(await equipe(ids.adminA1, ids.a1)).not.toContain(ids.sansActivite)
+    } finally {
+      await prisma.adminActivite.delete({ where: { id: admin.id } })
+      await prisma.souhait.deleteMany({
+        where: { userId: ids.sansActivite, id: { not: souhait.id } },
+      })
+      await prisma.souhait.deleteMany({ where: { id: souhait.id } })
+    }
   })
 
   it('garde à l’admin de l’organisation le refus d’inviter un membre sans périmètre', async () => {

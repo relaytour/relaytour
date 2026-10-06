@@ -37,7 +37,7 @@
         <span class="role">Admin d'une activité</span>
         <h1>Piloter une activité dans Relaytour</h1>
         <p class="chapo">
-          Vous administrez une activité : un événement, une section ou une instance. Vous ouvrez ses périodes, créez ses périmètres, constituez son équipe et suivez son avancement. Les autres activités de l'organisation restent invisibles pour vous.
+          Vous administrez une activité : un événement, une section ou une instance. Vous ouvrez ses périodes, créez ses périmètres, constituez son équipe et suivez son avancement. Les autres activités de l'organisation et leurs personnes restent invisibles pour vous.
         </p>
         <p class="renvoi">
           Ce mode d'emploi ne décrit que le menu « Administration » de votre activité. Les écrans communs à toutes les personnes (Mon espace, Rétroplanning, Fiches, Préférences) sont décrits dans le <a href="referent.html">mode d'emploi des référentes et référents</a>.
@@ -104,7 +104,7 @@
           <p>C'est l'écran de constitution de l'équipe. Il affiche une carte par périmètre, avec son effectif, ses personnes affectées et ses souhaits. Les périmètres qui manquent de référentes et de référents s'affichent en premier. Trois compteurs résument la situation : <strong>Postes à pourvoir</strong>, <strong>Périmètres sans personne</strong> et <strong>Souhaits en attente</strong>.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Effectif souhaité</span></span><span>Fixer le nombre de personnes attendues sur un périmètre. La différence avec les affectations donne les postes à pourvoir.</span></li>
-            <li><span><span class="libelle">Affecter</span></span><span>Affecter une personne qui a exprimé un souhait, ou choisir n'importe quel membre de l'organisation dans la liste.</span></li>
+            <li><span><span class="libelle">Affecter</span></span><span>Affecter une personne qui a exprimé un souhait, ou choisir une autre personne de votre équipe dans la liste. Une personne absente de la liste s'invite depuis l'écran « Personnes ».</span></li>
             <li><span><span class="libelle">Contact principal</span></span><span>Cliquer sur l'étoile d'une personne affectée pour la désigner comme contact principal du périmètre. Un périmètre en a un seul par période. Ce rôle ne donne aucun droit supplémentaire.</span></li>
             <li><span><span class="libelle">Retirer</span></span><span>Retirer une affectation, ou retirer un souhait devenu sans objet.</span></li>
             <li><span><span class="libelle">Copier l'appel</span></span><span>Copier un appel aux référentes et référents, à coller dans un mail ou un message.</span></li>
@@ -130,19 +130,19 @@
 
         <article class="verre ecran" id="e-personnes">
           <div class="ecran-tete"><h3>Personnes</h3><span class="route">/&lt;activité&gt;/admin/personnes</span></div>
-          <p>Seules les personnes invitées ici peuvent se connecter à l'espace organisateur. L'écran a deux onglets. « Annuaire » donne le nom, l'adresse mail, les affectations, les souhaits et le rôle de chaque personne. Un filtre y isole les personnes sans affectation pour la période choisie. « Demandes » porte la file des personnes proposées pour rejoindre l'équipe.</p>
+          <p>Seules les personnes invitées ici peuvent se connecter à l'espace organisateur. L'écran a deux onglets. « Votre équipe » donne le nom, l'adresse mail, les affectations, les souhaits et le rôle de chaque personne de l'activité. Un filtre y isole les personnes sans affectation pour la période choisie. « Demandes » porte la file des personnes proposées pour rejoindre l'équipe.</p>
           <ul class="gestes">
-            <li><span><span class="libelle">Inviter une personne</span></span><span>Saisir le nom et l'adresse, et noter ses périmètres souhaités. La personne reçoit un mail avec son lien de connexion et le mode d'emploi de son rôle.</span></li>
+            <li><span><span class="libelle">Inviter une personne</span></span><span>Saisir le nom et l'adresse, et choisir au moins un périmètre souhaité : la personne rejoint votre équipe par ce périmètre. Une personne sans compte reçoit un mail avec son lien de connexion et le mode d'emploi de son rôle. Une personne qui a déjà un compte dans l'organisation rejoint votre équipe sans nouveau mail, et garde le nom de son compte.</span></li>
             <li><span><span class="libelle">Renvoyer l'invitation</span></span><span>Relancer une personne de votre équipe qui ne s'est pas encore connectée.</span></li>
           </ul>
-          <p class="note">Vous lisez l'annuaire de l'organisation, dont vous avez besoin pour constituer votre équipe. Les affectations et les souhaits que vous voyez sont ceux de vos activités seulement. Le nom d'un compte existant se modifie par un admin de l'organisation.</p>
+          <p class="note">Votre équipe réunit les personnes affectées, intéressées ou admins dans votre activité. Vous ne lisez pas les autres membres de l'organisation : seuls ses admins lisent l'annuaire complet. Les affectations et les souhaits que vous voyez sont ceux de vos activités seulement. Le nom d'un compte existant se modifie par un admin de l'organisation.</p>
           <figure>
-            <img src="../captures/personnes.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes, onglet Annuaire : le nom, l'adresse, les affectations, les souhaits et le rôle de chaque personne." />
+            <img src="../captures/personnes.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes : le nom, l'adresse, les affectations, les souhaits et le rôle de chaque personne." />
             <figcaption>Écran Personnes, sur l'organisation d'exemple. Les personnes et les adresses sont fictives.</figcaption>
           </figure>
           <p>Une référente ou un référent propose une personne pour son périmètre, ou une personne remplit le formulaire public de l'activité. La demande arrive dans l'onglet « Demandes », avec l'adresse, les périmètres demandés, et le mot de la personne qui propose ou les réponses du formulaire. Aucun compte n'existe avant votre décision. La cloche vous prévient une fois par jour au plus, et chaque carte de l'écran « Équipe » compte ses demandes en attente. Un mail vous prévient aussi, une fois par heure au plus : il donne le nombre de demandes en attente, sans nom. Vous le désactivez dans vos préférences.</p>
           <ul class="gestes">
-            <li><span><span class="libelle">Accepter</span></span><span>Créer le compte de la personne et choisir ses périmètres. Un périmètre demandé que vous n'affectez pas devient un souhait. La personne reçoit son invitation par mail.</span></li>
+            <li><span><span class="libelle">Accepter</span></span><span>Faire entrer la personne dans votre équipe et choisir ses périmètres. Un périmètre demandé que vous n'affectez pas devient un souhait. Une demande sans périmètre s'accepte avec au moins une affectation. Une personne sans compte reçoit son invitation par mail.</span></li>
             <li><span><span class="libelle">Refuser</span></span><span>Écarter la demande. Aucun compte n'est créé et aucun mail ne part.</span></li>
           </ul>
           <p class="note">Une personne déjà membre de l'organisation porte la mention « Déjà membre » : accepter sa demande l'affecte sans créer de compte. Les demandes d'une période archivée ne se traitent plus.</p>
@@ -209,7 +209,7 @@
         <div class="grille-2">
           <article class="verre panneau">
             <h3>Une activité à la fois</h3>
-            <p>Une activité que vous n'administrez pas et où vous n'êtes pas affecté·e n'existe pas pour vous : ni dans le sélecteur, ni dans les listes, ni dans la recherche.</p>
+            <p>Une activité que vous n'administrez pas et où vous n'êtes pas affecté·e n'existe pas pour vous : ni dans le sélecteur, ni dans les listes, ni dans la recherche. Ses personnes non plus : vous lisez et vous affectez votre équipe seulement.</p>
           </article>
           <article class="verre panneau">
             <h3>Vous ne nommez pas d'admin</h3>
@@ -217,7 +217,7 @@
           </article>
           <article class="verre panneau">
             <h3>Les comptes ne vous appartiennent pas</h3>
-            <p>Le nom, l'archivage et la restauration d'un compte relèvent des admins de l'organisation. Un compte est commun à toute l'organisation.</p>
+            <p>Le nom, l'archivage et la restauration d'un compte relèvent des admins de l'organisation. Un compte est commun à toute l'organisation : une personne que vous invitez peut déjà y avoir un compte, que vous ne lisez pas avant son entrée dans votre équipe.</p>
           </article>
           <article class="verre panneau">
             <h3>L'identité de l'organisation vous échappe</h3>
