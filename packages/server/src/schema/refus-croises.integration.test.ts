@@ -10,7 +10,7 @@ import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
 import { schema } from './index.ts'
 
-// Table des refus entre organisations et entre activités (ADR 0008 et 0010,
+// Table des refus entre organisations et entre activités (ADR 0008, 0010 et 0018,
 // invariant 11).
 //
 // Chaque requête ou mutation qui reçoit un identifiant est appelée avec les
@@ -43,6 +43,8 @@ const a = {
   referente: '',
   // Une autre activité de l'organisation A, son admin et sa référente (ADR 0010).
   autreActivite: '',
+  autreEdition: '',
+  autrePerimetre: '',
   adminAutre: '',
   referenteAutre: '',
 }
@@ -180,6 +182,8 @@ beforeAll(async () => {
       groupe: 'sport',
     },
   })
+  a.autreEdition = autreEdition.id
+  a.autrePerimetre = autrePerimetre.id
   a.adminAutre = await creerCompte('admin-autre', a.org, false)
   a.referenteAutre = await creerCompte('referente-autre', a.org, false)
   await prisma.adminActivite.create({
@@ -357,6 +361,37 @@ const CAS: Cas[] = [
     query:
       'mutation ($u: ID!, $p: ID) { accorderDroitRedaction(personneId: $u, perimetreId: $p) { id } }',
     variables: () => ({ u: a.referente, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  // Le périmètre de l'acteur et une personne d'une autre activité : un admin
+  // d'activité n'agit que sur son équipe (ADR 0018).
+  {
+    operation: 'accorderDroitRedaction',
+    query:
+      'mutation ($u: ID!, $p: ID) { accorderDroitRedaction(personneId: $u, perimetreId: $p) { id } }',
+    variables: () => ({ u: a.referente, p: a.autrePerimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'affecter',
+    query:
+      'mutation ($u: ID!, $p: ID!, $e: ID!) { affecter(personneId: $u, perimetreId: $p, editionId: $e) { id } }',
+    variables: () => ({
+      u: a.referente,
+      p: a.autrePerimetre,
+      e: a.autreEdition,
+    }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'definirSouhaits',
+    query:
+      'mutation ($u: ID!, $e: ID!, $p: [ID!]!) { definirSouhaits(personneId: $u, editionId: $e, perimetreIds: $p) { id } }',
+    variables: () => ({
+      u: a.referente,
+      e: a.autreEdition,
+      p: [a.autrePerimetre],
+    }),
     attente: INTERDIT,
   },
   {
@@ -620,6 +655,12 @@ const CAS: Cas[] = [
     attente: { sansEffet: d => expect(d.retirerSouhait).toBe(false) },
   },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  {
+    operation: 'equipe',
+    query: 'query ($a: ID) { equipe(activiteId: $a) { id nom } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
   {
     operation: 'mesPropositions',
     query:

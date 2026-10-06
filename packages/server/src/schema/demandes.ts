@@ -8,6 +8,7 @@ import {
 import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from '../lib/affectations.ts'
+import { dansLEquipe, equipesModifiees } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
 import {
   motValide,
@@ -84,9 +85,9 @@ const DemandeRef = builder.prismaObject('Demande', {
     }),
     dejaMembre: t.boolean({
       description:
-        'Vrai quand un compte de l’organisation porte déjà cette adresse : accepter la demande ne crée alors aucun compte.',
+        'Vrai quand un compte que la personne connectée peut lire porte déjà cette adresse : un membre de l’organisation pour un admin de l’organisation, une personne de ses équipes pour un admin d’activité (ADR 0018).',
       resolve: async (demande, _args, ctx) =>
-        (await adressesDesMembres(ctx, demande.organisationId)).has(
+        (await adressesConnues(ctx, demande.organisationId)).has(
           demande.adresse
         ),
     }),
@@ -107,14 +108,15 @@ const PropositionRef = builder
     }),
   })
 
-// Les adresses des membres d'une organisation, lues une fois par requête : la file
-// de revue demande « déjà membre » pour chaque demande.
+// Les adresses que la personne connectée lit déjà, lues une fois par requête : la
+// file de revue demande « déjà membre » pour chaque demande. Un admin d'activité
+// n'apprend pas qu'une adresse appartient à un membre d'une autre activité.
 const memoAdresses = new WeakMap<
   AppContext,
   Map<string, Promise<Set<string>>>
 >()
 
-function adressesDesMembres(
+function adressesConnues(
   ctx: AppContext,
   organisationId: string
 ): Promise<Set<string>> {
@@ -125,11 +127,19 @@ function adressesDesMembres(
   }
   let adresses = memo.get(organisationId)
   if (adresses === undefined) {
-    adresses = prisma.user
-      .findMany({
-        where: { appartenances: { some: { organisationId } } },
-        select: { email: true },
-      })
+    adresses = (
+      ctx.personne?.estAdmin === true
+        ? Promise.resolve({})
+        : ctx
+            .activitesAdministrees()
+            .then(activites => dansLEquipe([...activites]))
+    )
+      .then(equipe =>
+        prisma.user.findMany({
+          where: { appartenances: { some: { organisationId } }, ...equipe },
+          select: { email: true },
+        })
+      )
       .then(comptes => new Set(comptes.map(c => c.email)))
     memo.set(organisationId, adresses)
   }
@@ -448,6 +458,16 @@ builder.mutationFields(t => ({
             instant,
           })
           await noterLesAutresSouhaits(tx, demande, userId, affecter)
+          // La personne rejoint l'équipe de l'activité par un périmètre (ADR 0018) :
+          // sans affectation ni souhait, aucun admin de l'activité ne la lirait.
+          const liee = await tx.user.count({
+            where: { id: userId, ...dansLEquipe([demande.activiteId]) },
+          })
+          if (liee === 0) {
+            throw erreurSaisie(
+              'Choisissez au moins un périmètre : la personne rejoint l’équipe par ce périmètre.'
+            )
+          }
           await tx.demande.update({
             where: { id: demande.id },
             data: {
@@ -461,6 +481,7 @@ builder.mutationFields(t => ({
           return { compte, creees }
         })
       )
+      equipesModifiees(ctx)
       journal.info(
         {
           evenement: 'demande-acceptee',

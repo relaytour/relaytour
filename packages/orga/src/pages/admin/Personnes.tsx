@@ -1,6 +1,7 @@
 import { CheckOutlined, MailOutlined, UserAddOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import {
+  Alert,
   App,
   Button,
   Checkbox,
@@ -23,15 +24,59 @@ import { useSearchParams } from 'react-router'
 import Demandes from '../../composants/Demandes'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
-import type { EditionsQuery, PersonnesQuery } from '../../gql/graphql'
+import type {
+  EditionsQuery,
+  PersonnesEquipeQuery,
+  PersonnesQuery,
+} from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
 import { normaliser } from '../../lib/recherche'
 import { type Activite, useActivite } from '../../lib/activite'
 import { ACTIVITES, EDITIONS, MOI } from '../../lib/requetes'
 
+// Un admin de l'organisation lit l'annuaire ; un admin d'activité lit l'équipe de
+// l'activité affichée (ADR 0018). Les deux listes portent les mêmes champs, et
+// l'annuaire ajoute les attributions. Deux requêtes distinctes : le serveur compte
+// la complexité de chaque liste demandée, même écartée par une directive.
 const PERSONNES = graphql(`
   query Personnes($inclureArchives: Boolean, $editionId: ID) {
     personnes(inclureArchives: $inclureArchives) {
+      id
+      nom
+      email
+      estAdmin
+      activitesAdministrees
+      archive
+      affectations(editionId: $editionId) {
+        id
+        perimetre {
+          id
+          nom
+          couleur
+        }
+      }
+      souhaits(editionId: $editionId) {
+        id
+        satisfait
+        perimetre {
+          id
+          nom
+          couleur
+        }
+      }
+      attributions {
+        activiteId
+        affectee
+        interessee
+        admin
+      }
+    }
+  }
+`)
+
+const EQUIPE = graphql(`
+  query PersonnesEquipe($editionId: ID) {
+    equipe {
       id
       nom
       email
@@ -86,10 +131,11 @@ const SOUHAITS_ACTIVITE = graphql(`
 
 // Les souhaits d'une édition d'une autre activité que celle affichée, lus à
 // l'ouverture du formulaire pour le préremplir. L'activité affichée n'en a pas
-// besoin : la liste de la page porte déjà les souhaits de son édition.
+// besoin : la liste de la page porte déjà les souhaits de son édition. Une personne
+// absente de l'équipe de cette activité n'y a aucun souhait.
 const SOUHAITS_EDITION = graphql(`
-  query SouhaitsEdition($editionId: ID!) {
-    personnes {
+  query SouhaitsEdition($activiteId: ID!, $editionId: ID!) {
+    equipe(activiteId: $activiteId) {
       id
       souhaits(editionId: $editionId) {
         id
@@ -176,7 +222,24 @@ const RENVOYER = graphql(`
   }
 `)
 
-type Personne = PersonnesQuery['personnes'][number]
+type Membre = PersonnesQuery['personnes'][number]
+// Une ligne de l'annuaire ou de l'équipe : seul l'annuaire porte les attributions.
+type Personne = PersonnesEquipeQuery['equipe'][number] &
+  Partial<Pick<Membre, 'attributions'>>
+
+// Filtre de l'annuaire : toutes les personnes, celles d'une activité, ou celles
+// qui ne participent à aucune.
+const TOUTES = 'toutes'
+const SANS_ACTIVITE = 'sans-activite'
+
+/** Le rôle d'une personne dans une activité, pour l'étiquette de l'annuaire. */
+function libelleAttribution(a: Membre['attributions'][number]): string {
+  const roles = [
+    a.admin ? 'admin' : null,
+    a.affectee ? 'affecté·e' : a.interessee ? 'intéressé·e' : null,
+  ].filter(role => role !== null)
+  return roles.join(', ')
+}
 
 interface Valeurs {
   email: string
@@ -223,15 +286,17 @@ function ChampSouhaits({
   // Lecture fraîche à chaque ouverture, pour une autre activité seulement : la liste
   // de la page ne porte que les souhaits de l'édition affichée.
   const { data: existants } = useQuery(SOUHAITS_EDITION, {
-    variables: { editionId: editionId ?? '' },
+    variables: { activiteId: activite.id, editionId: editionId ?? '' },
     skip: nouvelle || connus !== undefined || editionId === undefined,
     fetchPolicy: 'network-only',
   })
   const lus =
     connus ??
-    existants?.personnes
-      .find(p => p.id === personneId)
-      ?.souhaits.map(souhait => souhait.perimetre.id)
+    (existants === undefined
+      ? undefined
+      : (existants.equipe
+          .find(p => p.id === personneId)
+          ?.souhaits.map(souhait => souhait.perimetre.id) ?? []))
   // Souhaits de la personne, limités aux périmètres non archivés.
   const initiaux =
     data === undefined || editionId === undefined
@@ -294,6 +359,7 @@ export default function Personnes() {
   const [recherche, setRecherche] = useState('')
   const [choix, setChoix] = useState<string | undefined>()
   const [sansAffectation, setSansAffectation] = useState(false)
+  const [filtreActivite, setFiltreActivite] = useState(TOUTES)
   const { data: session } = useQuery(MOI)
   const { data: editions } = useQuery(EDITIONS)
   const editionId =
@@ -302,9 +368,22 @@ export default function Personnes() {
   // Les souhaits se notent pour l'édition choisie, tant qu'elle n'est pas archivée.
   const souhaitsModifiables =
     edition !== undefined && edition.statut !== 'ARCHIVEE'
-  const { data, loading, refetch } = useQuery(PERSONNES, {
+  // Les rôles, le nom et l'archivage d'un compte relèvent des admins de
+  // l'organisation. Un admin d'activité invite, affecte et note les souhaits.
+  const gereOrganisation = session?.moi?.estAdmin ?? false
+  // Le rôle choisit la liste : chaque requête attend la session.
+  const annuaire = useQuery(PERSONNES, {
     variables: { inclureArchives, editionId: editionId ?? null },
+    skip: session === undefined || !gereOrganisation,
   })
+  const equipe = useQuery(EQUIPE, {
+    variables: { editionId: editionId ?? null },
+    skip: session === undefined || gereOrganisation,
+  })
+  const liste: Personne[] | undefined = gereOrganisation
+    ? annuaire.data?.personnes
+    : equipe.data?.equipe
+  const loading = gereOrganisation ? annuaire.loading : equipe.loading
   const { data: demandes } = useQuery(DEMANDES_EN_ATTENTE, {
     variables: { editionId: editionId ?? '' },
     skip: editionId === undefined,
@@ -319,7 +398,9 @@ export default function Personnes() {
   // les champs de souhaits doivent relire les souhaits à chaque fois.
   const [ouverture, setOuverture] = useState(0)
   const [form] = Form.useForm<Valeurs>()
-  const rafraichir = { refetchQueries: [PERSONNES] }
+  const rafraichir = {
+    refetchQueries: [gereOrganisation ? PERSONNES : EQUIPE],
+  }
   const [inviter, invitation] = useMutation(INVITER, rafraichir)
   const [modifier, modification] = useMutation(MODIFIER, rafraichir)
   const [archiver] = useMutation(ARCHIVER, rafraichir)
@@ -331,12 +412,6 @@ export default function Personnes() {
   const [definirAdminActivite] = useMutation(DEFINIR_ADMIN_ACTIVITE, rafraichir)
   const { data: toutesActivites } = useQuery(ACTIVITES)
   const moiId = session?.moi?.id
-  // Les rôles, le nom et l'archivage d'un compte relèvent des admins de
-  // l'organisation. Un admin d'activité invite, affecte et note les souhaits.
-  const gereOrganisation = session?.moi?.estAdmin ?? false
-  const nomsActivites = new Map(
-    (toutesActivites?.activites ?? []).map(a => [a.id, a.nom])
-  )
 
   /** Nomme ou retire les admins d'activité pour aller de `avant` à `apres`. */
   const ajusterAdminsActivite = async (
@@ -369,16 +444,21 @@ export default function Personnes() {
   // Recherche insensible aux accents et à la casse, sur le nom et l'adresse.
   const personnes = useMemo(() => {
     const filtre = normaliser(recherche.trim())
-    return (data?.personnes ?? []).filter(
+    return (liste ?? []).filter(
       p =>
         (filtre === '' ||
           normaliser(p.nom).includes(filtre) ||
           normaliser(p.email).includes(filtre)) &&
         (!sansAffectation ||
           editionId === undefined ||
-          p.affectations.length === 0)
+          p.affectations.length === 0) &&
+        (filtreActivite === TOUTES ||
+          p.attributions === undefined ||
+          (filtreActivite === SANS_ACTIVITE
+            ? p.attributions.length === 0
+            : p.attributions.some(a => a.activiteId === filtreActivite)))
     )
-  }, [data, recherche, sansAffectation, editionId])
+  }, [liste, recherche, sansAffectation, editionId, filtreActivite])
 
   const ouvrir = (personne: Personne | 'nouvelle') => {
     setEnEdition(personne)
@@ -423,6 +503,18 @@ export default function Personnes() {
         }))
       : []
     const premiers = souhaits.find(s => s.ids.length > 0)
+    // Un admin d'activité fait entrer la personne dans son équipe par un périmètre
+    // (ADR 0018). Le serveur refuse aussi une invitation sans périmètre.
+    if (
+      enEdition === 'nouvelle' &&
+      !gereOrganisation &&
+      premiers === undefined
+    ) {
+      message.error(
+        'Choisissez au moins un périmètre : la personne rejoint votre équipe par ce périmètre.'
+      )
+      return
+    }
     // Le compte créé par l'invitation, pour reprendre la suite si elle échoue.
     let cree: string | undefined
     const ok =
@@ -443,17 +535,22 @@ export default function Personnes() {
             if (gereOrganisation) {
               await ajusterAdminsActivite(id, [], v.activitesAdministrees ?? [])
             }
+            // Les autres périodes passent aussi par l'invitation, qui ajoute sans
+            // rien retirer : la personne a peut-être déjà un compte et des souhaits,
+            // que ce formulaire n'a pas lus.
             for (const s of souhaits) {
               if (s === premiers || s.ids.length === 0) continue
-              await definirSouhaits({
+              await inviter({
                 variables: {
-                  personneId: id,
+                  email: v.email,
+                  nom: v.nom,
+                  estAdmin: false,
                   editionId: s.editionId,
-                  perimetreIds: s.ids,
+                  perimetresSouhaites: s.ids,
                 },
               })
             }
-          }, 'Invitation envoyée. La personne reçoit un mail avec le lien de connexion.')
+          }, 'Invitation enregistrée. Une personne sans compte reçoit un mail avec le lien de connexion.')
         : enEdition
           ? await executer(async () => {
               if (gereOrganisation) {
@@ -470,8 +567,15 @@ export default function Personnes() {
                   v.activitesAdministrees ?? []
                 )
               }
-              // Les souhaits d'une édition ne sont envoyés que si le champ a été modifié.
-              for (const s of souhaits) {
+              // Les souhaits d'une édition ne sont envoyés que si le champ a été
+              // modifié. Les périodes qui gardent des souhaits passent avant celles
+              // qui se vident : une personne déplacée d'une activité à l'autre ne
+              // sort pas de l'équipe entre les deux écritures (ADR 0018).
+              const ordonnes = [
+                ...souhaits.filter(s => s.ids.length > 0),
+                ...souhaits.filter(s => s.ids.length === 0),
+              ]
+              for (const s of ordonnes) {
                 if (!form.isFieldTouched(['souhaits', s.editionId])) continue
                 await definirSouhaits({
                   variables: {
@@ -491,7 +595,10 @@ export default function Personnes() {
     // Le compte existe et l'invitation est partie, mais un rôle ou un souhait a
     // échoué. Une nouvelle invitation serait refusée : la fenêtre passe en
     // modification de ce compte et garde la saisie, pour ne renvoyer que le reste.
-    const creee = (await refetch()).data?.personnes.find(p => p.id === cree)
+    const relue: Personne[] | undefined = gereOrganisation
+      ? (await annuaire.refetch()).data?.personnes
+      : (await equipe.refetch()).data?.equipe
+    const creee = relue?.find(p => p.id === cree)
     if (creee === undefined) {
       setEnEdition(null)
       return
@@ -505,7 +612,11 @@ export default function Personnes() {
   return (
     <>
       <Titre
-        sousTitre="Seules les personnes invitées ici peuvent se connecter à l’espace organisateur."
+        sousTitre={
+          gereOrganisation
+            ? 'Seules les personnes invitées ici peuvent se connecter à l’espace organisateur.'
+            : 'Vous lisez l’équipe de cette activité : les personnes affectées, intéressées ou admins. Vous y ajoutez une personne par son adresse.'
+        }
         actions={
           <Space>
             <span>{periode.Nom}</span>
@@ -530,7 +641,10 @@ export default function Personnes() {
           setParametres(cle === 'demandes' ? { onglet: 'demandes' } : {})
         }
         items={[
-          { key: 'annuaire', label: 'Annuaire' },
+          {
+            key: 'annuaire',
+            label: gereOrganisation ? 'Annuaire' : 'Votre équipe',
+          },
           {
             key: 'demandes',
             label:
@@ -566,10 +680,15 @@ export default function Personnes() {
             >
               Inviter une personne
             </Button>
-            <Space>
-              <Switch checked={inclureArchives} onChange={setInclureArchives} />
-              <span>Afficher les comptes archivés</span>
-            </Space>
+            {gereOrganisation && (
+              <Space>
+                <Switch
+                  checked={inclureArchives}
+                  onChange={setInclureArchives}
+                />
+                <span>Afficher les comptes archivés</span>
+              </Space>
+            )}
           </Space>
           <Space wrap size={[16, 12]} style={{ marginBottom: 16 }}>
             <Input.Search
@@ -580,6 +699,22 @@ export default function Personnes() {
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
             />
+            {gereOrganisation && (
+              <Select
+                style={{ minWidth: 220 }}
+                aria-label="Filtrer par activité"
+                value={filtreActivite}
+                onChange={setFiltreActivite}
+                options={[
+                  { value: TOUTES, label: 'Toutes les activités' },
+                  ...(toutesActivites?.activites ?? []).map(a => ({
+                    value: a.id,
+                    label: a.nom,
+                  })),
+                  { value: SANS_ACTIVITE, label: 'Sans activité' },
+                ]}
+              />
+            )}
             <Checkbox
               checked={sansAffectation && editionId !== undefined}
               disabled={editionId === undefined}
@@ -656,22 +791,59 @@ export default function Personnes() {
                     </Space>
                   ),
               },
+              // L'admin de l'organisation lit qui participe à quelle activité, toutes
+              // périodes confondues (ADR 0018).
+              ...(gereOrganisation
+                ? [
+                    {
+                      title: 'Activités',
+                      key: 'activites',
+                      render: (_: unknown, p: Personne) => {
+                        const attributions = (
+                          toutesActivites?.activites ?? []
+                        ).flatMap(a => {
+                          const lien = p.attributions?.find(
+                            x => x.activiteId === a.id
+                          )
+                          return lien === undefined ? [] : [{ a, lien }]
+                        })
+                        return attributions.length === 0 ? (
+                          <Typography.Text type="secondary">
+                            Aucune
+                          </Typography.Text>
+                        ) : (
+                          <Space size={[4, 4]} wrap>
+                            {attributions.map(({ a, lien }) => (
+                              <Tag
+                                key={a.id}
+                                color={lien.admin ? 'geekblue' : undefined}
+                              >
+                                {a.nom} : {libelleAttribution(lien)}
+                              </Tag>
+                            ))}
+                          </Space>
+                        )
+                      },
+                    },
+                  ]
+                : []),
               {
-                title: 'Rôle',
+                title: gereOrganisation ? 'Rôle' : 'Rôle dans l’activité',
                 dataIndex: 'estAdmin',
                 render: (a: boolean, p) =>
-                  a ? (
+                  !gereOrganisation ? (
+                    // Un admin d'activité ne lit que les rôles de son activité.
+                    p.activitesAdministrees.includes(activite.id) ? (
+                      <Tag color="geekblue">Admin de l’activité</Tag>
+                    ) : p.affectations.length > 0 ? (
+                      <Tag>Référent·e</Tag>
+                    ) : p.souhaits.length > 0 ? (
+                      <Tag>Intéressé·e</Tag>
+                    ) : null
+                  ) : a ? (
                     <Tag color="blue">Admin de l’organisation</Tag>
-                  ) : p.activitesAdministrees.length > 0 ? (
-                    <Space size={4} wrap>
-                      {p.activitesAdministrees.map(id => (
-                        <Tag key={id} color="geekblue">
-                          Admin · {nomsActivites.get(id) ?? 'activité'}
-                        </Tag>
-                      ))}
-                    </Space>
                   ) : (
-                    <Tag>Référent·e</Tag>
+                    <Tag>Membre</Tag>
                   ),
               },
               {
@@ -815,6 +987,18 @@ export default function Personnes() {
                 />
               </Form.Item>
             </>
+          )}
+          {enEdition === 'nouvelle' && !gereOrganisation && (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+              title={
+                activitesSouhaits.length === 0
+                  ? `Ouvrez d’abord ${periode.une} : une invitation porte au moins un périmètre.`
+                  : 'Choisissez au moins un périmètre : la personne rejoint votre équipe par ce périmètre. Si elle a déjà un compte, ce compte est rattaché et garde son nom.'
+              }
+            />
           )}
           {champSouhaits && activitesSouhaits.length > 1 && (
             <Typography.Title level={5}>Périmètres souhaités</Typography.Title>

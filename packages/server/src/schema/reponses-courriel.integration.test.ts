@@ -197,8 +197,21 @@ describe('réponses aux mails', () => {
   })
 
   it('renvoie l’invitation d’un admin d’activité au contact de son activité', async () => {
-    const message = await inviter(ids.adminA1, 'par-admin-a1')
+    const message = await inviter(ids.adminA1, 'par-admin-a1', {
+      e: ids.edition1,
+      p: [ids.perimetre1],
+    })
     expect(message?.repondreA).toBe(CONTACT_A1)
+  })
+
+  it('n’envoie aucune invitation à une personne déjà membre rattachée à une équipe', async () => {
+    await creerCompte('deja-membre', 'MEMBRE')
+    await executer(ids.adminA1, INVITER, {
+      email: `deja-membre-${s}@exemple.fr`,
+      e: ids.edition1,
+      p: [ids.perimetre1],
+    })
+    expect(enFile).toEqual([])
   })
 
   it('renvoie l’invitation d’un admin de l’organisation au contact de l’organisation', async () => {

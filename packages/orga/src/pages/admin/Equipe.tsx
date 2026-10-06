@@ -39,11 +39,12 @@ import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { EtatPostes } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
-import { EDITIONS, PERIMETRES } from '../../lib/requetes'
+import { ACTIVITES, EDITIONS, PERIMETRES } from '../../lib/requetes'
 import { useActivite } from '../../lib/activite'
+import { useSession } from '../../lib/session'
 
 const POSTES = graphql(`
-  query PostesAPourvoir($editionId: ID!) {
+  query PostesAPourvoir($editionId: ID!, $annuaire: Boolean!) {
     postesAPourvoir(editionId: $editionId) {
       effectif
       aPourvoir
@@ -77,9 +78,16 @@ const POSTES = graphql(`
       }
     }
     appelPostes(editionId: $editionId)
-    personnes {
+    equipe {
       id
       nom
+    }
+    personnes @include(if: $annuaire) {
+      id
+      nom
+      attributions {
+        activiteId
+      }
     }
   }
 `)
@@ -219,6 +227,10 @@ function ChampEffectif({
  */
 export default function Equipe() {
   const { periode, libelleGroupe, lien } = useActivite()
+  // Un admin d'activité affecte les personnes de son équipe. Seul un admin de
+  // l'organisation lit l'annuaire et choisit hors de l'équipe (ADR 0018).
+  const gereOrganisation = useSession().moi.estAdmin === true
+  const { data: activites } = useQuery(ACTIVITES, { skip: !gereOrganisation })
   const { message } = App.useApp()
   const { data: editions } = useQuery(EDITIONS)
   const [choix, setChoix] = useState<string | undefined>()
@@ -239,7 +251,7 @@ export default function Equipe() {
   const editionId = edition?.id
   const archivee = edition?.statut === 'ARCHIVEE'
   const { data, loading } = useQuery(POSTES, {
-    variables: { editionId: editionId ?? '' },
+    variables: { editionId: editionId ?? '', annuaire: gereOrganisation },
     skip: editionId === undefined,
   })
   const rafraichir = { refetchQueries: ['PostesAPourvoir'] }
@@ -253,6 +265,10 @@ export default function Equipe() {
   const affiches =
     filtre === 'aPourvoir' ? postes.filter(p => p.aPourvoir > 0) : postes
   const appel = data?.appelPostes ?? null
+  const dansLEquipe = new Set((data?.equipe ?? []).map(p => p.id))
+  const nomsActivites = new Map(
+    (activites?.activites ?? []).map(a => [a.id, a.nom])
+  )
   const totalAPourvoir = postes.reduce((total, p) => total + p.aPourvoir, 0)
   const sansPersonne = postes.filter(p => p.etat === 'SANS_PERSONNE').length
   const souhaitsEnAttente = postes.reduce(
@@ -400,23 +416,47 @@ export default function Equipe() {
                       },
                     })
                   )
-                const autres = (data?.personnes ?? [])
-                  .filter(p => !dejaAffectes.has(p.id) && !interesses.has(p.id))
-                  .map(p => ({ value: p.id, label: p.nom }))
-                // Les personnes intéressées apparaissent en premier dans la liste.
-                const options: SelectProps['options'] =
-                  souhaits.length === 0
-                    ? autres
-                    : [
-                        {
-                          label: 'Intéressé·es',
-                          options: souhaits.map(x => ({
-                            value: x.personne.id,
-                            label: x.personne.nom,
-                          })),
-                        },
-                        { label: 'Autres personnes', options: autres },
-                      ]
+                const libres = (
+                  personnes: readonly { id: string; nom: string }[]
+                ) =>
+                  personnes
+                    .filter(
+                      p => !dejaAffectes.has(p.id) && !interesses.has(p.id)
+                    )
+                    .map(p => ({ value: p.id, label: p.nom }))
+                // Les personnes intéressées apparaissent en premier, puis l'équipe de
+                // l'activité. Seul un admin de l'organisation choisit hors de l'équipe.
+                const options: SelectProps['options'] = [
+                  {
+                    label: 'Intéressé·es',
+                    options: souhaits.map(x => ({
+                      value: x.personne.id,
+                      label: x.personne.nom,
+                    })),
+                  },
+                  {
+                    label: 'Équipe de l’activité',
+                    options: libres(data?.equipe ?? []),
+                  },
+                  {
+                    label: 'Autres membres de l’organisation',
+                    // Chaque nom porte ses activités : l'admin de l'organisation
+                    // voit d'où vient la personne avant de l'affecter.
+                    options: libres(
+                      (data?.personnes ?? [])
+                        .filter(p => !dansLEquipe.has(p.id))
+                        .map(p => ({
+                          id: p.id,
+                          nom: `${p.nom} (${
+                            p.attributions
+                              .map(a => nomsActivites.get(a.activiteId))
+                              .filter(nom => nom !== undefined)
+                              .join(', ') || 'sans activité'
+                          })`,
+                        }))
+                    ),
+                  },
+                ].filter(groupe => groupe.options.length > 0)
                 const compte = (
                   <Tag
                     color={ETATS[poste.etat].couleur}
@@ -630,6 +670,11 @@ export default function Equipe() {
                         value={null}
                         optionFilterProp="label"
                         options={options}
+                        notFoundContent={
+                          gereOrganisation
+                            ? 'Aucune personne à affecter.'
+                            : 'Aucune autre personne dans votre équipe. Invitez-la par son adresse depuis l’écran Personnes.'
+                        }
                         onChange={(personneId: string) =>
                           void affecterPersonne(personneId)
                         }

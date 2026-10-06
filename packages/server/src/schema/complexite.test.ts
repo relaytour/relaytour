@@ -34,6 +34,12 @@ const contexteConnecte: AppContext = {
   activitesAdministrees: () => {
     throw new Error('Un résolveur a été appelé.')
   },
+  equipeAdministree: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
+  oublierLesEquipes: () => {
+    throw new Error('Un résolveur a été appelé.')
+  },
   activitesVisibles: () => {
     throw new Error('Un résolveur a été appelé.')
   },

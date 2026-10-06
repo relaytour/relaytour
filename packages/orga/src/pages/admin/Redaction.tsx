@@ -9,7 +9,7 @@ import { PERIMETRES } from '../../lib/requetes'
 import { useSession } from '../../lib/session'
 
 const DROITS = graphql(`
-  query DroitsRedaction {
+  query DroitsRedaction($annuaire: Boolean!) {
     droitsRedaction {
       id
       accordeLe
@@ -22,7 +22,11 @@ const DROITS = graphql(`
         nom
       }
     }
-    personnes {
+    equipe {
+      id
+      nom
+    }
+    personnes @include(if: $annuaire) {
       id
       nom
     }
@@ -49,9 +53,13 @@ const TOUTES = 'toutes'
 export default function Redaction() {
   // Un droit sur toutes les fiches vaut pour toute l'organisation : seul un admin de
   // l'organisation l'accorde (ADR 0010).
-  const gereOrganisation = useSession().moi.estAdmin
+  const gereOrganisation = useSession().moi.estAdmin === true
   const { message } = App.useApp()
-  const { data, loading } = useQuery(DROITS)
+  // Un admin d'activité choisit dans son équipe ; un admin de l'organisation lit
+  // l'annuaire (ADR 0018).
+  const { data, loading } = useQuery(DROITS, {
+    variables: { annuaire: gereOrganisation },
+  })
   const { data: perimetres } = useQuery(PERIMETRES)
   const [form] = Form.useForm<{ personneId: string; perimetre: string }>()
   const [accorder, accord] = useMutation(ACCORDER, { refetchQueries: [DROITS] })
@@ -94,7 +102,7 @@ export default function Redaction() {
               optionFilterProp="label"
               placeholder="Personne"
               style={{ minWidth: 200 }}
-              options={(data?.personnes ?? []).map(p => ({
+              options={(data?.personnes ?? data?.equipe ?? []).map(p => ({
                 value: p.id,
                 label: p.nom,
               }))}

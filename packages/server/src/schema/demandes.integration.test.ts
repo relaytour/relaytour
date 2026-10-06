@@ -603,6 +603,26 @@ describe('accepter une demande', () => {
     expect(enFile).toEqual([{ sorte: 'invitation', cible: { userId } }])
   })
 
+  it('refuse d’accepter sans périmètre une demande qui n’en porte aucun', async () => {
+    const demande = await prisma.demande.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        origine: 'FORMULAIRE',
+        nom: 'Sans choix',
+        adresse: adresse('sans-choix'),
+      },
+    })
+    const avant = await compter()
+    const r = await executer(ids.admin, ACCEPTER, { id: demande.id, p: [] })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(await compter()).toEqual(avant)
+    expect((await demandeDe('sans-choix'))?.statut).toBe('EN_ATTENTE')
+    expect(enFile).toEqual([])
+    await prisma.demande.delete({ where: { id: demande.id } })
+  })
+
   it('refuse un compte archivé et laisse la demande en attente', async () => {
     await prisma.user.create({
       data: {
