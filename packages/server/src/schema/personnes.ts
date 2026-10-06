@@ -1,9 +1,8 @@
 import { prisma } from '@relaytour/database'
 
-import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from '../lib/affectations.ts'
-import { exigerMembre } from '../lib/appartenances.ts'
+import { dansLEquipe, exigerMembre } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
 import { annoncerChangementEquipe } from '../lib/equipe.ts'
 import {
@@ -13,13 +12,18 @@ import {
 } from '../lib/droits.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
-import { adresseValide, sansDoublon, texteRequis } from '../lib/saisie.ts'
+import {
+  adresseValide,
+  rejouerSurDoublon,
+  sansDoublon,
+  texteRequis,
+} from '../lib/saisie.ts'
 import {
   exigerEditionOuverte,
   perimetresSouhaitesValides,
 } from '../lib/souhaits.ts'
 
-import { publierPourPerimetre } from '../lib/flux.ts'
+import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
 
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
@@ -202,6 +206,28 @@ builder.queryFields(t => ({
       }),
   }),
 
+  // L'équipe d'une activité (ADR 0018) : les membres qui y ont une affectation, un
+  // souhait ou un rôle d'admin, toutes périodes confondues. Seuls ses admins la
+  // lisent. Sans identifiant, la requête porte sur l'activité affichée.
+  equipe: t.prismaField({
+    type: [PersonneRef],
+    authScopes: { gestion: true },
+    args: { activiteId: t.arg.id() },
+    resolve: async (query, _root, args, ctx) => {
+      const activiteId = await ctx.exigerActivite(args.activiteId)
+      await ctx.exigerAdminDe(activiteId)
+      return prisma.user.findMany({
+        ...query,
+        where: {
+          archivedAt: null,
+          appartenances: { some: { organisationId: ctx.organisation!.id } },
+          ...dansLEquipe([activiteId]),
+        },
+        orderBy: { name: 'asc' },
+      })
+    },
+  }),
+
   affectations: t.prismaField({
     type: [AffectationRef],
     authScopes: { gestion: true },
@@ -218,15 +244,13 @@ builder.queryFields(t => ({
 /**
  * L'activité qui porte une invitation (ADR 0009) : son identité habille le mail et son
  * contact reçoit les réponses. C'est l'unique activité où la personne a un souhait,
- * une affectation ou un rôle d'admin. Sans lien, un admin d'activité invite pour
- * l'activité affichée qu'il administre. Sinon, l'invitation reste celle de
+ * une affectation ou un rôle d'admin. Sinon, l'invitation reste celle de
  * l'organisation.
  */
 async function activiteDeLInvitation(
-  ctx: AppContext,
+  organisationId: string,
   userId: string
 ): Promise<string | undefined> {
-  const organisationId = ctx.organisation!.id
   const dansLOrganisation = { perimetre: { organisationId } }
   const [souhaits, affectations, admins] = await Promise.all([
     prisma.souhait.findMany({
@@ -246,13 +270,7 @@ async function activiteDeLInvitation(
     ...[...souhaits, ...affectations].map(l => l.perimetre.activiteId),
     ...admins.map(a => a.activiteId),
   ])
-  if (liees.size > 0) return liees.size === 1 ? [...liees][0] : undefined
-  if (ctx.personne!.estAdmin) return undefined
-  // Le compte existe déjà : l'absence d'activité ouverte ne bloque pas l'invitation.
-  const affichee = await ctx.exigerActivite().catch(() => null)
-  return affichee !== null && (await ctx.estAdminDe(affichee))
-    ? affichee
-    : undefined
+  return liees.size === 1 ? [...liees][0] : undefined
 }
 
 builder.mutationFields(t => ({
@@ -274,6 +292,7 @@ builder.mutationFields(t => ({
       const name = texteRequis(args.nom, 'Le nom')
       // Les souhaits sont validés avant toute création de compte.
       let souhaits: { perimetreId: string; editionId: string }[] = []
+      let cible: { activiteId: string; editionId: string } | null = null
       if ((args.perimetresSouhaites ?? []).length > 0) {
         if (!args.editionId) {
           throw erreurSaisie('Choisissez l’édition des périmètres souhaités.')
@@ -288,12 +307,24 @@ builder.mutationFields(t => ({
           perimetreId,
           editionId: edition.id,
         }))
+        cible = { activiteId: edition.activiteId, editionId: edition.id }
+      }
+      // Un admin d'activité fait entrer une personne dans son équipe par un périmètre
+      // (ADR 0018). Le refus précède toute lecture de compte : il ne dit rien de
+      // l'adresse.
+      if (souhaits.length === 0 && !ctx.personne!.estAdmin) {
+        throw erreurSaisie(
+          'Choisissez au moins un périmètre : la personne rejoint votre équipe par ce périmètre.'
+        )
       }
       const organisationId = ctx.organisation!.id
       const role = args.estAdmin ? 'ADMIN' : 'MEMBRE'
+      const dejaLa = 'Un compte existe déjà pour cette adresse.'
       // Le compte, son appartenance et ses souhaits s'écrivent ensemble. Une adresse
-      // déjà connue d'une autre organisation garde son compte (ADR 0008).
-      const compte = await sansDoublon(
+      // déjà connue d'une autre organisation garde son compte (ADR 0008). Deux
+      // invitations simultanées de la même adresse se suivent : la seconde relit le
+      // compte créé par la première.
+      const compte = await rejouerSurDoublon(() =>
         prisma.$transaction(async tx => {
           const compte = await creerOuRattacherCompte(tx, {
             email,
@@ -301,20 +332,32 @@ builder.mutationFields(t => ({
             organisationId,
             role,
           })
-          if (compte.dejaMembre) {
-            throw erreurSaisie('Un compte existe déjà pour cette adresse.')
-          }
+          // Seul l'admin de l'organisation, qui lit l'annuaire, apprend qu'un compte
+          // archivé de son organisation porte l'adresse.
           if (compte.issue === 'archive') {
-            throw erreurSaisie('Cette adresse ne peut pas être invitée.')
+            throw erreurSaisie(
+              compte.dejaMembre && ctx.personne!.estAdmin
+                ? dejaLa
+                : 'Cette adresse ne peut pas être invitée.'
+            )
+          }
+          // Un compte déjà membre rejoint l'équipe par ses souhaits, sans que la
+          // réponse le distingue d'un compte créé (ADR 0018). Sans souhait, ou pour
+          // un rôle d'admin, la personne qui invite est admin de l'organisation.
+          if (
+            compte.issue === 'membre' &&
+            (souhaits.length === 0 || args.estAdmin)
+          ) {
+            throw erreurSaisie(dejaLa)
           }
           if (souhaits.length > 0) {
             await tx.souhait.createMany({
               data: souhaits.map(s => ({ ...s, userId: compte.userId })),
+              skipDuplicates: true,
             })
           }
           return compte
-        }),
-        'Un compte existe déjà pour cette adresse.'
+        })
       )
       const personne = await prisma.user.findUniqueOrThrow({
         ...query,
@@ -324,20 +367,32 @@ builder.mutationFields(t => ({
         {
           evenement: 'personne-invitee',
           userId: personne.id,
-          compteExistant: compte.issue === 'rattache',
+          compte: compte.issue,
           souhaits: souhaits.length,
           par: ctx.personne?.id,
         },
         'Une personne a été invitée.'
       )
-      await mettreEnFile(
-        'invitation',
-        { userId: personne.id },
-        {
-          organisationId,
-          activiteId: await activiteDeLInvitation(ctx, personne.id),
-        }
-      )
+      // Une personne déjà membre a déjà reçu son invitation. Un souhait ne lui
+      // envoie aucun mail (ADR 0012).
+      if (compte.issue !== 'membre') {
+        await mettreEnFile(
+          'invitation',
+          { userId: personne.id },
+          {
+            organisationId,
+            activiteId: await activiteDeLInvitation(
+              organisationId,
+              personne.id
+            ),
+          }
+        )
+      }
+      if (cible !== null) {
+        publierPourActivite('EQUIPE', organisationId, cible.activiteId, {
+          editionId: cible.editionId,
+        })
+      }
       return personne
     },
   }),
@@ -383,7 +438,10 @@ builder.mutationFields(t => ({
         { userId: personne.id },
         {
           organisationId: ctx.organisation!.id,
-          activiteId: await activiteDeLInvitation(ctx, personne.id),
+          activiteId: await activiteDeLInvitation(
+            ctx.organisation!.id,
+            personne.id
+          ),
         }
       )
       return true

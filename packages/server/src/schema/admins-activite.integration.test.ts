@@ -102,6 +102,9 @@ const CREER_PERIMETRE =
   'mutation ($a: ID!, $s: String!) { creerPerimetre(activiteId: $a, slug: $s, nom: "Nouveau", groupe: "sport") { id } }'
 const AFFECTER =
   'mutation ($u: ID!, $p: ID!, $e: ID!) { affecter(personneId: $u, perimetreId: $p, editionId: $e) { id } }'
+const EQUIPE = 'query ($a: ID) { equipe(activiteId: $a) { id nom email } }'
+const INVITER =
+  'mutation ($email: String!, $e: ID, $p: [ID!]) { inviterPersonne(email: $email, nom: "Invitée", editionId: $e, perimetresSouhaites: $p) { id } }'
 const DEFINIR_ADMIN =
   'mutation ($u: ID!, $a: ID!, $x: Boolean!) { definirAdminActivite(personneId: $u, activiteId: $a, admin: $x) }'
 
@@ -146,6 +149,9 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await prisma.souhait.deleteMany({
+    where: { perimetre: { organisationId: ids.org } },
+  })
   await prisma.affectation.deleteMany({
     where: { perimetre: { organisationId: ids.org } },
   })
@@ -320,6 +326,139 @@ describe('admin d’une activité', () => {
       e: ids.edition1,
     })
     expect(code(r)).toBe('FORBIDDEN')
+  })
+})
+
+describe('équipe d’une activité (ADR 0018)', () => {
+  const adresse = (cle: string) => `${cle}-${s}@exemple.fr`
+  const equipe = async (userId: string, a: string) =>
+    ((await executer(userId, EQUIPE, { a })).data?.equipe as { id: string }[])
+      .map(p => p.id)
+      .sort()
+  const comptes = () =>
+    Promise.all([
+      prisma.user.count({ where: { email: { endsWith: `-${s}@exemple.fr` } } }),
+      prisma.appartenance.count({ where: { organisationId: ids.org } }),
+      prisma.souhait.count({
+        where: { perimetre: { organisationId: ids.org } },
+      }),
+    ])
+
+  it('réunit les personnes affectées, intéressées et admins, sans les comptes archivés', async () => {
+    const interessee = await creerCompte('interessee', 'MEMBRE')
+    const archivee = await creerCompte('archivee', 'MEMBRE')
+    await prisma.user.update({
+      where: { id: archivee },
+      data: { archivedAt: new Date() },
+    })
+    await prisma.souhait.createMany({
+      data: [interessee, archivee].map(userId => ({
+        userId,
+        perimetreId: ids.perimetre1,
+        editionId: ids.edition1,
+      })),
+    })
+    const attendue = [ids.adminA1, ids.membreA1, interessee].sort()
+    expect(await equipe(ids.adminA1, ids.a1)).toEqual(attendue)
+    // L'admin de l'organisation lit la même équipe : il n'en fait pas partie sans lien.
+    expect(await equipe(ids.adminOrg, ids.a1)).toEqual(attendue)
+    expect(await equipe(ids.adminOrg, ids.a2)).toEqual([ids.membreA2])
+    await prisma.souhait.deleteMany({
+      where: { userId: { in: [interessee, archivee] } },
+    })
+  })
+
+  it('refuse l’équipe à qui n’administre pas l’activité', async () => {
+    for (const [userId, a] of [
+      [ids.membreA1, ids.a1],
+      [ids.adminA1, ids.a2],
+      [ids.membreA2, ids.a1],
+      [ids.sansActivite, ids.a1],
+    ] as const) {
+      expect(code(await executer(userId, EQUIPE, { a }))).toBe('FORBIDDEN')
+    }
+    const anonyme = await apollo.executeOperation(
+      { query: EQUIPE, variables: { a: ids.a1 } },
+      { contextValue: await buildContext('127.0.0.1', null, slug) }
+    )
+    if (anonyme.body.kind !== 'single') throw new Error('Réponse inattendue.')
+    expect(anonyme.body.singleResult.errors?.[0]?.extensions?.code).toBe(
+      'FORBIDDEN'
+    )
+  })
+
+  it('refuse à un admin d’activité une invitation sans périmètre, quelle que soit l’adresse', async () => {
+    const avant = await comptes()
+    const inconnue = await executer(ids.adminA1, INVITER, {
+      email: adresse('inconnue'),
+    })
+    const membre = await executer(ids.adminA1, INVITER, {
+      email: adresse('membre-a2'),
+    })
+    expect(code(inconnue)).toBe('SAISIE_INVALIDE')
+    expect(membre.errors?.[0]?.message).toBe(inconnue.errors?.[0]?.message)
+    expect(await comptes()).toEqual(avant)
+  })
+
+  it('rattache à l’équipe un membre d’une autre activité invité par son adresse', async () => {
+    const [utilisateurs, appartenances, souhaits] = await comptes()
+    const variables = {
+      email: adresse('membre-a2'),
+      e: ids.edition1,
+      p: [ids.perimetre1],
+    }
+    const r = await executer(ids.adminA1, INVITER, variables)
+    expect(r.errors).toBeUndefined()
+    expect(r.data?.inviterPersonne).toEqual({ id: ids.membreA2 })
+    expect(await comptes()).toEqual([utilisateurs, appartenances, souhaits + 1])
+    expect(await equipe(ids.adminA1, ids.a1)).toContain(ids.membreA2)
+    // Une seconde invitation ne change rien et répond de la même façon.
+    const encore = await executer(ids.adminA1, INVITER, variables)
+    expect(encore.data?.inviterPersonne).toEqual({ id: ids.membreA2 })
+    expect(await comptes()).toEqual([utilisateurs, appartenances, souhaits + 1])
+    await prisma.souhait.deleteMany({ where: { userId: ids.membreA2 } })
+  })
+
+  it('rattache le compte d’une autre organisation, et refuse un compte archivé sans rien écrire', async () => {
+    const externe = randomUUID()
+    const archive = randomUUID()
+    await prisma.user.createMany({
+      data: [
+        { id: externe, email: adresse('externe-equipe'), name: 'Externe' },
+        {
+          id: archive,
+          email: adresse('archive-equipe'),
+          name: 'Archivé',
+          archivedAt: new Date(),
+        },
+      ],
+    })
+    const souhait = { e: ids.edition1, p: [ids.perimetre1] }
+    const r = await executer(ids.adminA1, INVITER, {
+      email: adresse('externe-equipe'),
+      ...souhait,
+    })
+    expect(r.data?.inviterPersonne).toEqual({ id: externe })
+    expect(await equipe(ids.adminA1, ids.a1)).toContain(externe)
+
+    const avant = await comptes()
+    const refus = await executer(ids.adminA1, INVITER, {
+      email: adresse('archive-equipe'),
+      ...souhait,
+    })
+    expect(code(refus)).toBe('SAISIE_INVALIDE')
+    expect(await comptes()).toEqual(avant)
+    await prisma.souhait.deleteMany({ where: { userId: externe } })
+  })
+
+  it('garde à l’admin de l’organisation le refus d’inviter un membre sans périmètre', async () => {
+    const r = await executer(ids.adminOrg, INVITER, {
+      email: adresse('membre-a2'),
+    })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(r.errors?.[0]?.message).toBe(
+      'Un compte existe déjà pour cette adresse.'
+    )
   })
 })
 

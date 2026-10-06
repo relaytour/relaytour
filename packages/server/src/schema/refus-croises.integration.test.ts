@@ -621,6 +621,12 @@ const CAS: Cas[] = [
   },
   // ── Requêtes ───────────────────────────────────────────────────────────────
   {
+    operation: 'equipe',
+    query: 'query ($a: ID) { equipe(activiteId: $a) { id nom } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'mesPropositions',
     query:
       'query ($p: ID!, $e: ID!) { mesPropositions(perimetreId: $p, editionId: $e) { id } }',

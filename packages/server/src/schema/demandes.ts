@@ -8,6 +8,7 @@ import {
 import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from '../lib/affectations.ts'
+import { dansLEquipe } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
 import {
   motValide,
@@ -448,6 +449,16 @@ builder.mutationFields(t => ({
             instant,
           })
           await noterLesAutresSouhaits(tx, demande, userId, affecter)
+          // La personne rejoint l'équipe de l'activité par un périmètre (ADR 0018) :
+          // sans affectation ni souhait, aucun admin de l'activité ne la lirait.
+          const liee = await tx.user.count({
+            where: { id: userId, ...dansLEquipe([demande.activiteId]) },
+          })
+          if (liee === 0) {
+            throw erreurSaisie(
+              'Choisissez au moins un périmètre : la personne rejoint l’équipe par ce périmètre.'
+            )
+          }
           await tx.demande.update({
             where: { id: demande.id },
             data: {

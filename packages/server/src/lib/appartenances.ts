@@ -1,4 +1,4 @@
-import { prisma, type RoleOrganisation } from '@relaytour/database'
+import { prisma, type Prisma, type RoleOrganisation } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 
@@ -28,4 +28,20 @@ export async function exigerMembre(
   const ici = appartenances.find(a => a.organisationId === ctx.organisation!.id)
   if (ici === undefined) throw accesRefuse()
   return { role: ici.role, autresOrganisations: appartenances.length - 1 }
+}
+
+/**
+ * Le filtre des comptes qui font partie de l'équipe d'au moins une de ces activités
+ * (ADR 0018) : une affectation, un souhait ou un rôle d'admin, toutes périodes
+ * confondues. Aucune table ne porte ce lien : il se déduit.
+ */
+export function dansLEquipe(activiteIds: string[]): Prisma.UserWhereInput {
+  const ici = { activiteId: { in: activiteIds } }
+  return {
+    OR: [
+      { affectations: { some: { perimetre: ici } } },
+      { souhaits: { some: { perimetre: ici } } },
+      { adminsActivite: { some: ici } },
+    ],
+  }
 }

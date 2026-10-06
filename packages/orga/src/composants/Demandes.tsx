@@ -403,6 +403,15 @@ export default function Demandes({
             label="Périmètres à affecter"
             name="affecter"
             extra="Un périmètre demandé que vous n’affectez pas devient un souhait."
+            rules={[
+              {
+                // Sans périmètre demandé, la personne rejoint l'équipe par une
+                // affectation (ADR 0018).
+                required: enAcceptation?.perimetres.length === 0,
+                message:
+                  'Choisissez au moins un périmètre : la personne rejoint l’équipe par ce périmètre.',
+              },
+            ]}
           >
             <Select
               mode="multiple"

@@ -5,6 +5,7 @@ import {
   type StatutOrganisation,
 } from '@relaytour/database'
 
+import { dansLEquipe } from './lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from './lib/erreurs.ts'
 
 // Contexte de chaque requête GraphQL.
@@ -72,6 +73,12 @@ export interface AppContext {
    * sinon.
    */
   activitesAdministrees: () => Promise<Set<string>>
+  /**
+   * Identifiants des comptes qui font partie de l'équipe d'une activité que la
+   * personne administre (ADR 0018), comptes archivés compris. Un admin de
+   * l'organisation lit tout l'annuaire : les contrôles testent son rôle d'abord.
+   */
+  equipeAdministree: () => Promise<Set<string>>
   /**
    * Activités que la personne voit : celles qu'elle administre, et celles où elle a
    * été affectée à un périmètre, toutes périodes confondues. Une activité hors de
@@ -257,6 +264,26 @@ export async function buildContext(
     return administrees
   }
 
+  let equipe: Promise<Set<string>> | undefined
+  const equipeAdministree = () => {
+    if (personne === null || organisation === null)
+      return Promise.resolve(new Set<string>())
+    equipe ??= activitesAdministrees()
+      .then(activites =>
+        activites.size === 0
+          ? []
+          : prisma.user.findMany({
+              where: {
+                appartenances: { some: { organisationId: organisation.id } },
+                ...dansLEquipe([...activites]),
+              },
+              select: { id: true },
+            })
+      )
+      .then(comptes => new Set(comptes.map(c => c.id)))
+    return equipe
+  }
+
   let visibles: Promise<Set<string>> | undefined
   const activitesVisibles = () => {
     if (personne === null || organisation === null)
@@ -426,6 +453,7 @@ export async function buildContext(
     perimetresAffectes,
     perimetresConnus,
     activitesAdministrees,
+    equipeAdministree,
     activitesVisibles,
     activitesDecouvertes,
     exigerActiviteDecouverte,

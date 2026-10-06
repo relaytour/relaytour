@@ -732,6 +732,7 @@ type Query {
   droitsRedaction: [DroitRedaction!]!
   editionCourante(activiteId: ID): Edition
   editions(activiteId: ID): [Edition!]!
+  equipe(activiteId: ID): [Personne!]!
   exportContenu: ArchiveContenu!
   fiche(activiteId: ID, slug: String!): Fiche
   fiches(activiteId: ID, inclureArchives: Boolean = false): [Fiche!]!
