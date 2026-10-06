@@ -8,7 +8,7 @@ import {
 import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from '../lib/affectations.ts'
-import { dansLEquipe } from '../lib/appartenances.ts'
+import { dansLEquipe, equipesModifiees } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
 import {
   motValide,
@@ -481,6 +481,7 @@ builder.mutationFields(t => ({
           return { compte, creees }
         })
       )
+      equipesModifiees(ctx)
       journal.info(
         {
           evenement: 'demande-acceptee',

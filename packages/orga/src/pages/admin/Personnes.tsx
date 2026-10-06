@@ -535,13 +535,18 @@ export default function Personnes() {
             if (gereOrganisation) {
               await ajusterAdminsActivite(id, [], v.activitesAdministrees ?? [])
             }
+            // Les autres périodes passent aussi par l'invitation, qui ajoute sans
+            // rien retirer : la personne a peut-être déjà un compte et des souhaits,
+            // que ce formulaire n'a pas lus.
             for (const s of souhaits) {
               if (s === premiers || s.ids.length === 0) continue
-              await definirSouhaits({
+              await inviter({
                 variables: {
-                  personneId: id,
+                  email: v.email,
+                  nom: v.nom,
+                  estAdmin: false,
                   editionId: s.editionId,
-                  perimetreIds: s.ids,
+                  perimetresSouhaites: s.ids,
                 },
               })
             }
@@ -562,8 +567,15 @@ export default function Personnes() {
                   v.activitesAdministrees ?? []
                 )
               }
-              // Les souhaits d'une édition ne sont envoyés que si le champ a été modifié.
-              for (const s of souhaits) {
+              // Les souhaits d'une édition ne sont envoyés que si le champ a été
+              // modifié. Les périodes qui gardent des souhaits passent avant celles
+              // qui se vident : une personne déplacée d'une activité à l'autre ne
+              // sort pas de l'équipe entre les deux écritures (ADR 0018).
+              const ordonnes = [
+                ...souhaits.filter(s => s.ids.length > 0),
+                ...souhaits.filter(s => s.ids.length === 0),
+              ]
+              for (const s of ordonnes) {
                 if (!form.isFieldTouched(['souhaits', s.editionId])) continue
                 await definirSouhaits({
                   variables: {

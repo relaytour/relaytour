@@ -1,10 +1,12 @@
 import { prisma } from '@relaytour/database'
 
-import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from '../lib/affectations.ts'
 import {
+  type AttributionActivite,
+  attributionsDeLOrganisation,
   dansLEquipe,
+  equipesModifiees,
   exigerMembre,
   exigerMembreGere,
 } from '../lib/appartenances.ts'
@@ -26,6 +28,7 @@ import {
 import {
   exigerEditionOuverte,
   perimetresSouhaitesValides,
+  SOUHAITS_MAX,
 } from '../lib/souhaits.ts'
 
 import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
@@ -41,13 +44,6 @@ const soiOuGestion = (
   _args: unknown,
   ctx: { personne: { id: string } | null }
 ) => (ctx.personne?.id === personne.id ? true : { gestion: true })
-
-interface AttributionActivite {
-  activiteId: string
-  affectee: boolean
-  interessee: boolean
-  admin: boolean
-}
 
 const AttributionActiviteRef = builder
   .objectRef<AttributionActivite>('AttributionActivite')
@@ -67,66 +63,6 @@ const AttributionActiviteRef = builder
       }),
     }),
   })
-
-// Les attributions de tous les membres d'une organisation, lues une fois par requête :
-// l'annuaire les demande pour chaque personne.
-const attributionsParRequete = new WeakMap<
-  AppContext,
-  Promise<Map<string, AttributionActivite[]>>
->()
-
-function attributionsDeLOrganisation(
-  ctx: AppContext
-): Promise<Map<string, AttributionActivite[]>> {
-  let attributions = attributionsParRequete.get(ctx)
-  if (attributions === undefined) {
-    const organisationId = ctx.organisation?.id ?? ''
-    const parPerimetre = {
-      where: { perimetre: { organisationId } },
-      select: { userId: true, perimetre: { select: { activiteId: true } } },
-    }
-    attributions = Promise.all([
-      prisma.affectation.findMany(parPerimetre),
-      prisma.souhait.findMany(parPerimetre),
-      prisma.adminActivite.findMany({
-        where: { organisationId },
-        select: { userId: true, activiteId: true },
-      }),
-    ]).then(([affectations, souhaits, admins]) => {
-      const parPersonne = new Map<string, Map<string, AttributionActivite>>()
-      const noter = (
-        userId: string,
-        activiteId: string,
-        lien: 'affectee' | 'interessee' | 'admin'
-      ) => {
-        const activites =
-          parPersonne.get(userId) ?? new Map<string, AttributionActivite>()
-        parPersonne.set(userId, activites)
-        const attribution = activites.get(activiteId) ?? {
-          activiteId,
-          affectee: false,
-          interessee: false,
-          admin: false,
-        }
-        attribution[lien] = true
-        activites.set(activiteId, attribution)
-      }
-      for (const a of affectations)
-        noter(a.userId, a.perimetre.activiteId, 'affectee')
-      for (const s of souhaits)
-        noter(s.userId, s.perimetre.activiteId, 'interessee')
-      for (const a of admins) noter(a.userId, a.activiteId, 'admin')
-      return new Map(
-        [...parPersonne].map(([userId, activites]) => [
-          userId,
-          [...activites.values()],
-        ])
-      )
-    })
-    attributionsParRequete.set(ctx, attributions)
-  }
-  return attributions
-}
 
 export const PersonneRef = builder.prismaObject('User', {
   name: 'Personne',
@@ -461,7 +397,24 @@ builder.mutationFields(t => ({
           ) {
             throw erreurSaisie(dejaLa)
           }
-          if (souhaits.length > 0) {
+          if (cible !== null) {
+            // Un compte existant garde ses souhaits : la limite porte sur leur
+            // réunion avec ceux de l'invitation. Le verrou sur la ligne de la
+            // personne sérialise ses souhaits, comme dans formulerSouhait.
+            await tx.$queryRaw`SELECT id FROM User WHERE id = ${compte.userId} FOR UPDATE`
+            const existants = await tx.souhait.findMany({
+              where: { userId: compte.userId, editionId: cible.editionId },
+              select: { perimetreId: true },
+            })
+            const reunion = new Set([
+              ...existants.map(s => s.perimetreId),
+              ...souhaits.map(s => s.perimetreId),
+            ])
+            if (reunion.size > SOUHAITS_MAX) {
+              throw erreurSaisie(
+                `Une personne a ${SOUHAITS_MAX} souhaits au plus pour une période.`
+              )
+            }
             await tx.souhait.createMany({
               data: souhaits.map(s => ({ ...s, userId: compte.userId })),
               skipDuplicates: true,
@@ -499,6 +452,7 @@ builder.mutationFields(t => ({
           }
         )
       }
+      equipesModifiees(ctx)
       if (cible !== null) {
         publierPourActivite('EQUIPE', organisationId, cible.activiteId, {
           editionId: cible.editionId,
@@ -692,6 +646,7 @@ builder.mutationFields(t => ({
         activiteId,
         instant,
       })
+      equipesModifiees(ctx)
       publierPourPerimetre('EQUIPE', perimetreId, { editionId })
       return affectation
     },
@@ -724,6 +679,7 @@ builder.mutationFields(t => ({
       const { count } = await prisma.affectation.deleteMany({
         where: { id: affectation.id },
       })
+      equipesModifiees(ctx)
       if (count === 1) {
         publierPourPerimetre('EQUIPE', affectation.perimetreId, {
           editionId: affectation.editionId,
@@ -830,6 +786,7 @@ builder.mutationFields(t => ({
           where: { userId, activiteId, organisationId },
         })
       }
+      equipesModifiees(ctx)
       journal.info(
         {
           evenement: args.admin
