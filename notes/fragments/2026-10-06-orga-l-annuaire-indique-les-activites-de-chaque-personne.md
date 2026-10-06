@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.10.0
 fr:
   titre: >-
     L'annuaire indique les activités de chaque personne

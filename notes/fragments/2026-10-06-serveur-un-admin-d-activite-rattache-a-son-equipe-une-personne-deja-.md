@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.10.0
 fr:
   titre: >-
     Un admin d'activité rattache à son équipe une personne déjà membre
