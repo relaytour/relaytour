@@ -138,7 +138,8 @@ export default function Demandes({
       'DemandesEnAttente',
       'SouhaitsEnAttente',
       'PostesAPourvoir',
-      'Personnes',
+      // L'écran « Personnes » lit l'annuaire ou l'équipe selon le rôle.
+      gereOrganisation ? 'Personnes' : 'PersonnesEquipe',
     ],
   }
   const [accepter, acceptation] = useMutation(ACCEPTER, rafraichir)

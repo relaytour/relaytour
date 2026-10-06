@@ -39,7 +39,7 @@ import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { EtatPostes } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
-import { EDITIONS, PERIMETRES } from '../../lib/requetes'
+import { ACTIVITES, EDITIONS, PERIMETRES } from '../../lib/requetes'
 import { useActivite } from '../../lib/activite'
 import { useSession } from '../../lib/session'
 
@@ -85,6 +85,9 @@ const POSTES = graphql(`
     personnes @include(if: $annuaire) {
       id
       nom
+      attributions {
+        activiteId
+      }
     }
   }
 `)
@@ -227,6 +230,7 @@ export default function Equipe() {
   // Un admin d'activité affecte les personnes de son équipe. Seul un admin de
   // l'organisation lit l'annuaire et choisit hors de l'équipe (ADR 0018).
   const gereOrganisation = useSession().moi.estAdmin === true
+  const { data: activites } = useQuery(ACTIVITES, { skip: !gereOrganisation })
   const { message } = App.useApp()
   const { data: editions } = useQuery(EDITIONS)
   const [choix, setChoix] = useState<string | undefined>()
@@ -262,6 +266,9 @@ export default function Equipe() {
     filtre === 'aPourvoir' ? postes.filter(p => p.aPourvoir > 0) : postes
   const appel = data?.appelPostes ?? null
   const dansLEquipe = new Set((data?.equipe ?? []).map(p => p.id))
+  const nomsActivites = new Map(
+    (activites?.activites ?? []).map(a => [a.id, a.nom])
+  )
   const totalAPourvoir = postes.reduce((total, p) => total + p.aPourvoir, 0)
   const sansPersonne = postes.filter(p => p.etat === 'SANS_PERSONNE').length
   const souhaitsEnAttente = postes.reduce(
@@ -433,10 +440,20 @@ export default function Equipe() {
                   },
                   {
                     label: 'Autres membres de l’organisation',
+                    // Chaque nom porte ses activités : l'admin de l'organisation
+                    // voit d'où vient la personne avant de l'affecter.
                     options: libres(
-                      (data?.personnes ?? []).filter(
-                        p => !dansLEquipe.has(p.id)
-                      )
+                      (data?.personnes ?? [])
+                        .filter(p => !dansLEquipe.has(p.id))
+                        .map(p => ({
+                          id: p.id,
+                          nom: `${p.nom} (${
+                            p.attributions
+                              .map(a => nomsActivites.get(a.activiteId))
+                              .filter(nom => nom !== undefined)
+                              .join(', ') || 'sans activité'
+                          })`,
+                        }))
                     ),
                   },
                 ].filter(groupe => groupe.options.length > 0)

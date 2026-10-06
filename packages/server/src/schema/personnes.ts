@@ -1,5 +1,6 @@
 import { prisma } from '@relaytour/database'
 
+import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from '../lib/affectations.ts'
 import {
@@ -40,6 +41,92 @@ const soiOuGestion = (
   _args: unknown,
   ctx: { personne: { id: string } | null }
 ) => (ctx.personne?.id === personne.id ? true : { gestion: true })
+
+interface AttributionActivite {
+  activiteId: string
+  affectee: boolean
+  interessee: boolean
+  admin: boolean
+}
+
+const AttributionActiviteRef = builder
+  .objectRef<AttributionActivite>('AttributionActivite')
+  .implement({
+    description:
+      'Le lien d’une personne avec une activité de l’organisation, toutes périodes confondues (ADR 0018).',
+    fields: t => ({
+      activiteId: t.exposeID('activiteId'),
+      affectee: t.exposeBoolean('affectee', {
+        description: 'Vrai quand la personne y a au moins une affectation.',
+      }),
+      interessee: t.exposeBoolean('interessee', {
+        description: 'Vrai quand la personne y a au moins un souhait.',
+      }),
+      admin: t.exposeBoolean('admin', {
+        description: 'Vrai quand la personne administre l’activité.',
+      }),
+    }),
+  })
+
+// Les attributions de tous les membres d'une organisation, lues une fois par requête :
+// l'annuaire les demande pour chaque personne.
+const attributionsParRequete = new WeakMap<
+  AppContext,
+  Promise<Map<string, AttributionActivite[]>>
+>()
+
+function attributionsDeLOrganisation(
+  ctx: AppContext
+): Promise<Map<string, AttributionActivite[]>> {
+  let attributions = attributionsParRequete.get(ctx)
+  if (attributions === undefined) {
+    const organisationId = ctx.organisation?.id ?? ''
+    const parPerimetre = {
+      where: { perimetre: { organisationId } },
+      select: { userId: true, perimetre: { select: { activiteId: true } } },
+    }
+    attributions = Promise.all([
+      prisma.affectation.findMany(parPerimetre),
+      prisma.souhait.findMany(parPerimetre),
+      prisma.adminActivite.findMany({
+        where: { organisationId },
+        select: { userId: true, activiteId: true },
+      }),
+    ]).then(([affectations, souhaits, admins]) => {
+      const parPersonne = new Map<string, Map<string, AttributionActivite>>()
+      const noter = (
+        userId: string,
+        activiteId: string,
+        lien: 'affectee' | 'interessee' | 'admin'
+      ) => {
+        const activites =
+          parPersonne.get(userId) ?? new Map<string, AttributionActivite>()
+        parPersonne.set(userId, activites)
+        const attribution = activites.get(activiteId) ?? {
+          activiteId,
+          affectee: false,
+          interessee: false,
+          admin: false,
+        }
+        attribution[lien] = true
+        activites.set(activiteId, attribution)
+      }
+      for (const a of affectations)
+        noter(a.userId, a.perimetre.activiteId, 'affectee')
+      for (const s of souhaits)
+        noter(s.userId, s.perimetre.activiteId, 'interessee')
+      for (const a of admins) noter(a.userId, a.activiteId, 'admin')
+      return new Map(
+        [...parPersonne].map(([userId, activites]) => [
+          userId,
+          [...activites.values()],
+        ])
+      )
+    })
+    attributionsParRequete.set(ctx, attributions)
+  }
+  return attributions
+}
 
 export const PersonneRef = builder.prismaObject('User', {
   name: 'Personne',
@@ -100,6 +187,17 @@ export const PersonneRef = builder.prismaObject('User', {
           orderBy: { createdAt: 'asc' },
         })
       },
+    }),
+    // Les activités où la personne participe, pour l'annuaire de l'admin de
+    // l'organisation : il y lit qui est où avant d'affecter ou d'inviter (ADR 0018).
+    attributions: t.field({
+      type: [AttributionActiviteRef],
+      authScopes: { admin: true },
+      // Le champ lit un mémo de la requête, pas la base, et rend au plus une ligne
+      // par activité : ses champs ne comptent pas comme ceux d'une liste ouverte.
+      complexity: { field: 1, multiplier: 1 },
+      resolve: async (personne, _args, ctx) =>
+        (await attributionsDeLOrganisation(ctx)).get(personne.id) ?? [],
     }),
     // Les activités que la personne administre (ADR 0010), parmi celles que la
     // personne qui lit administre elle-même.
