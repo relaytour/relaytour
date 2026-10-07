@@ -114,3 +114,39 @@ export const MES_ORGANISATIONS = graphql(`
     }
   }
 `)
+
+// Affecter une personne à un périmètre et retirer une affectation : l'écran Équipe
+// et la fenêtre d'un compte partagent ces deux écritures.
+export const AFFECTER = graphql(`
+  mutation Affecter($personneId: ID!, $perimetreId: ID!, $editionId: ID!) {
+    affecter(
+      personneId: $personneId
+      perimetreId: $perimetreId
+      editionId: $editionId
+    ) {
+      id
+    }
+  }
+`)
+
+export const RETIRER_AFFECTATION = graphql(`
+  mutation RetirerAffectation($id: ID!) {
+    retirerAffectation(id: $id)
+  }
+`)
+
+// Nommer ou retirer un admin d'activité (ADR 0010, 0019) : la fenêtre d'un compte et
+// l'écran « Admins » partagent cette écriture.
+export const DEFINIR_ADMIN_ACTIVITE = graphql(`
+  mutation DefinirAdminActivite(
+    $personneId: ID!
+    $activiteId: ID!
+    $admin: Boolean!
+  ) {
+    definirAdminActivite(
+      personneId: $personneId
+      activiteId: $activiteId
+      admin: $admin
+    )
+  }
+`)

@@ -9,6 +9,7 @@ import {
   equipesModifiees,
   exigerMembre,
   exigerMembreGere,
+  refuserAdminDeLOrganisation,
 } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
 import { annoncerChangementEquipe } from '../lib/equipe.ts'
@@ -79,8 +80,8 @@ export const PersonneRef = builder.prismaObject('User', {
         (await ctx.equipeAdministree()).has(personne.id),
     }),
     // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global. Il se
-    // lit par la personne elle-même et par les admins de l'organisation ; un admin
-    // d'activité lit null (ADR 0010).
+    // lit par la personne elle-même, par les admins de l'organisation et par les
+    // admins d'activité (ADR 0019) ; toute autre personne lit null.
     estAdmin: t.boolean({
       nullable: true,
       select: (_args, ctx) => ({
@@ -89,8 +90,10 @@ export const PersonneRef = builder.prismaObject('User', {
           select: { role: true },
         },
       }),
-      resolve: (u, _args, ctx) =>
-        ctx.personne?.id === u.id || ctx.personne?.estAdmin === true
+      resolve: async (u, _args, ctx) =>
+        ctx.personne?.id === u.id ||
+        ctx.personne?.estAdmin === true ||
+        (await ctx.activitesAdministrees()).size > 0
           ? u.appartenances[0]?.role === 'ADMIN'
           : null,
     }),
@@ -275,6 +278,24 @@ builder.queryFields(t => ({
     },
   }),
 
+  // Les admins de l'organisation, lus par tout admin d'activité (ADR 0019) : il sait
+  // ainsi qui gère l'organisation. Leur adresse suit la règle de l'ADR 0018.
+  adminsOrganisation: t.prismaField({
+    type: [PersonneRef],
+    authScopes: { gestion: true },
+    resolve: (query, _root, _args, ctx) =>
+      prisma.user.findMany({
+        ...query,
+        where: {
+          archivedAt: null,
+          appartenances: {
+            some: { organisationId: ctx.organisation!.id, role: 'ADMIN' },
+          },
+        },
+        orderBy: { name: 'asc' },
+      }),
+  }),
+
   affectations: t.prismaField({
     type: [AffectationRef],
     authScopes: { gestion: true },
@@ -328,21 +349,28 @@ builder.mutationFields(t => ({
       email: t.arg.string({ required: true }),
       nom: t.arg.string({ required: true }),
       estAdmin: t.arg.boolean({ defaultValue: false }),
-      // Édition et périmètres souhaités. Un souhait ne donne aucun accès.
+      // Édition, périmètres souhaités et périmètres affectés. Un souhait ne donne
+      // aucun accès ; une affectation fait de la personne une référente ou un
+      // référent dès l'invitation (ADR 0019).
       editionId: t.arg.id(),
       perimetresSouhaites: t.arg.idList(),
+      perimetresAffectes: t.arg.idList(),
     },
     resolve: async (query, _root, args, ctx) => {
       // Seul un admin de l'organisation invite un autre admin de l'organisation.
       if (args.estAdmin && !ctx.personne!.estAdmin) throw accesRefuse()
       const email = adresseValide(args.email)
       const name = texteRequis(args.nom, 'Le nom')
-      // Les souhaits sont validés avant toute création de compte.
+      // Les périmètres sont validés avant toute création de compte.
       let souhaits: { perimetreId: string; editionId: string }[] = []
+      let affectes: string[] = []
       let cible: { activiteId: string; editionId: string } | null = null
-      if ((args.perimetresSouhaites ?? []).length > 0) {
+      if (
+        (args.perimetresSouhaites ?? []).length > 0 ||
+        (args.perimetresAffectes ?? []).length > 0
+      ) {
         if (!args.editionId) {
-          throw erreurSaisie('Choisissez l’édition des périmètres souhaités.')
+          throw erreurSaisie('Choisissez l’édition des périmètres.')
         }
         const edition = await exigerEditionOuverte(ctx, args.editionId)
         await ctx.exigerAdminDe(edition.activiteId)
@@ -354,12 +382,19 @@ builder.mutationFields(t => ({
           perimetreId,
           editionId: edition.id,
         }))
+        // Un périmètre affecté suit la même validation qu'un périmètre souhaité :
+        // non archivé, dans l'activité de l'édition.
+        affectes = await perimetresSouhaitesValides(
+          args.perimetresAffectes ?? [],
+          edition.activiteId
+        )
         cible = { activiteId: edition.activiteId, editionId: edition.id }
       }
-      // Un admin d'activité fait entrer une personne dans son équipe par un périmètre
-      // (ADR 0018). Le refus précède toute lecture de compte : il ne dit rien de
-      // l'adresse.
-      if (souhaits.length === 0 && !ctx.personne!.estAdmin) {
+      const perimetres = souhaits.length + affectes.length
+      // Un admin d'activité fait entrer une personne dans son équipe par un
+      // périmètre, souhaité ou affecté (ADR 0018, 0019). Le refus précède toute
+      // lecture de compte : il ne dit rien de l'adresse.
+      if (perimetres === 0 && !ctx.personne!.estAdmin) {
         throw erreurSaisie(
           'Choisissez au moins un périmètre : la personne rejoint votre équipe par ce périmètre.'
         )
@@ -367,11 +402,12 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
       const role = args.estAdmin ? 'ADMIN' : 'MEMBRE'
       const dejaLa = 'Un compte existe déjà pour cette adresse.'
+      const instant = new Date()
       // Le compte, son appartenance et ses souhaits s'écrivent ensemble. Une adresse
       // déjà connue d'une autre organisation garde son compte (ADR 0008). Deux
       // invitations simultanées de la même adresse se suivent : la seconde relit le
       // compte créé par la première.
-      const compte = await rejouerSurDoublon(() =>
+      const { compte, creees } = await rejouerSurDoublon(() =>
         prisma.$transaction(async tx => {
           const compte = await creerOuRattacherCompte(tx, {
             email,
@@ -379,23 +415,36 @@ builder.mutationFields(t => ({
             organisationId,
             role,
           })
+          const refusee = 'Cette adresse ne peut pas être invitée.'
           // Seul l'admin de l'organisation, qui lit l'annuaire, apprend qu'un compte
           // archivé de son organisation porte l'adresse.
           if (compte.issue === 'archive') {
             throw erreurSaisie(
-              compte.dejaMembre && ctx.personne!.estAdmin
-                ? dejaLa
-                : 'Cette adresse ne peut pas être invitée.'
+              compte.dejaMembre && ctx.personne!.estAdmin ? dejaLa : refusee
             )
           }
-          // Un compte déjà membre rejoint l'équipe par ses souhaits, sans que la
-          // réponse le distingue d'un compte créé (ADR 0018). Sans souhait, ou pour
-          // un rôle d'admin, la personne qui invite est admin de l'organisation.
+          // Un compte déjà membre rejoint l'équipe par ses périmètres, sans que la
+          // réponse le distingue d'un compte créé (ADR 0018). Sans périmètre, ou
+          // pour un rôle d'admin, la personne qui invite est admin de l'organisation.
           if (
             compte.issue === 'membre' &&
-            (souhaits.length === 0 || args.estAdmin)
+            (perimetres === 0 || args.estAdmin)
           ) {
             throw erreurSaisie(dejaLa)
+          }
+          // Un admin d'activité n'agit pas sur un admin de l'organisation (ADR 0019).
+          // Il n'en lit pas l'adresse : le refus est celui d'un compte archivé.
+          if (compte.issue === 'membre' && !ctx.personne!.estAdmin) {
+            const appartenance = await tx.appartenance.findUnique({
+              where: {
+                userId_organisationId: {
+                  userId: compte.userId,
+                  organisationId,
+                },
+              },
+              select: { role: true },
+            })
+            if (appartenance?.role === 'ADMIN') throw erreurSaisie(refusee)
           }
           if (cible !== null) {
             // Un compte existant garde ses souhaits : la limite porte sur leur
@@ -420,7 +469,17 @@ builder.mutationFields(t => ({
               skipDuplicates: true,
             })
           }
-          return compte
+          const { creees } =
+            cible === null
+              ? { creees: [] }
+              : await creerAffectations(tx, {
+                  userId: compte.userId,
+                  perimetreIds: affectes,
+                  editionId: cible.editionId,
+                  creeParId: ctx.personne!.id,
+                  instant,
+                })
+          return { compte, creees }
         })
       )
       const personne = await prisma.user.findUniqueOrThrow({
@@ -433,13 +492,23 @@ builder.mutationFields(t => ({
           userId: personne.id,
           compte: compte.issue,
           souhaits: souhaits.length,
+          affectations: creees.length,
           par: ctx.personne?.id,
         },
         'Une personne a été invitée.'
       )
       // Une personne déjà membre a déjà reçu son invitation. Un souhait ne lui
-      // envoie aucun mail (ADR 0012).
-      if (compte.issue !== 'membre') {
+      // envoie aucun mail ; une affectation lui est annoncée par le mail d'équipe
+      // (ADR 0012). L'invitation d'un nouveau compte liste déjà ses périmètres.
+      if (compte.issue === 'membre') {
+        if (creees.length > 0 && cible !== null) {
+          await annoncerChangementEquipe(compte.userId, {
+            organisationId,
+            activiteId: cible.activiteId,
+            instant,
+          })
+        }
+      } else {
         await mettreEnFile(
           'invitation',
           { userId: personne.id },
@@ -663,6 +732,7 @@ builder.mutationFields(t => ({
         },
         select: {
           id: true,
+          userId: true,
           perimetreId: true,
           editionId: true,
           perimetre: { select: { activiteId: true } },
@@ -676,6 +746,7 @@ builder.mutationFields(t => ({
       ) {
         return false
       }
+      await refuserAdminDeLOrganisation(ctx, affectation.userId)
       const { count } = await prisma.affectation.deleteMany({
         where: { id: affectation.id },
       })
@@ -748,10 +819,12 @@ builder.mutationFields(t => ({
     },
   }),
 
-  // Nomme ou retire un admin d'activité (ADR 0010). Seul un admin de l'organisation
-  // le fait ; la personne reste membre de l'organisation.
+  // Nomme ou retire un admin d'activité (ADR 0010, 0019). Un admin de l'organisation
+  // le fait pour toute activité et tout membre ; un admin d'activité, pour ses
+  // activités et les personnes de ses équipes. La personne reste membre de
+  // l'organisation.
   definirAdminActivite: t.boolean({
-    authScopes: { admin: true },
+    authScopes: { gestion: true },
     args: {
       personneId: t.arg.id({ required: true }),
       activiteId: t.arg.id({ required: true }),
@@ -761,7 +834,19 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
       const userId = String(args.personneId)
       const activiteId = await ctx.exigerActivite(args.activiteId)
-      await exigerMembre(ctx, userId)
+      await ctx.exigerAdminDe(activiteId)
+      await exigerMembreGere(ctx, userId)
+      // Un admin d'activité ne retire pas son propre rôle : il ne pourrait plus le
+      // rétablir. Un admin de l'organisation garde ses droits sans ce rôle.
+      if (
+        !args.admin &&
+        userId === ctx.personne!.id &&
+        !ctx.personne!.estAdmin
+      ) {
+        throw erreurSaisie(
+          'Vous ne pouvez pas retirer votre propre rôle d’admin de l’activité.'
+        )
+      }
       if (args.admin) {
         const instant = new Date()
         await prisma.adminActivite.upsert({

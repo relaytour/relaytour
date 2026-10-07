@@ -5,11 +5,13 @@ import {
   App,
   Button,
   Checkbox,
+  Collapse,
   Empty,
   Form,
   Input,
   Modal,
   Popconfirm,
+  Segmented,
   Select,
   Space,
   Switch,
@@ -17,8 +19,9 @@ import {
   Tabs,
   Tag,
   Typography,
+  type TableColumnsType,
 } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import Demandes from '../../composants/Demandes'
@@ -32,7 +35,15 @@ import type {
 import { messageErreur } from '../../lib/erreurs'
 import { normaliser } from '../../lib/recherche'
 import { type Activite, useActivite } from '../../lib/activite'
-import { ACTIVITES, EDITIONS, MOI } from '../../lib/requetes'
+import {
+  ACTIVITES,
+  AFFECTER,
+  DEFINIR_ADMIN_ACTIVITE,
+  EDITIONS,
+  MOI,
+  PERIMETRES,
+  RETIRER_AFFECTATION,
+} from '../../lib/requetes'
 
 // Un admin de l'organisation lit l'annuaire ; un admin d'activité lit l'équipe de
 // l'activité affichée (ADR 0018). Les deux listes portent les mêmes champs, et
@@ -113,8 +124,8 @@ const DEMANDES_EN_ATTENTE = graphql(`
   }
 `)
 
-// L'édition en cours et les périmètres d'une activité, pour noter des souhaits
-// dans chaque activité administrée.
+// L'édition en cours et les périmètres d'une activité, pour affecter une personne
+// et noter ses souhaits dans chaque activité administrée.
 const SOUHAITS_ACTIVITE = graphql(`
   query SouhaitsActivite($activiteId: ID!) {
     editionCourante(activiteId: $activiteId) {
@@ -129,14 +140,20 @@ const SOUHAITS_ACTIVITE = graphql(`
   }
 `)
 
-// Les souhaits d'une édition d'une autre activité que celle affichée, lus à
-// l'ouverture du formulaire pour le préremplir. L'activité affichée n'en a pas
-// besoin : la liste de la page porte déjà les souhaits de son édition. Une personne
-// absente de l'équipe de cette activité n'y a aucun souhait.
+// Les affectations et les souhaits d'une édition d'une autre activité que celle
+// affichée, lus à l'ouverture du formulaire pour le préremplir. L'activité affichée
+// n'en a pas besoin : la liste de la page les porte déjà pour son édition. Une
+// personne absente de l'équipe de cette activité n'y a ni affectation ni souhait.
 const SOUHAITS_EDITION = graphql(`
   query SouhaitsEdition($activiteId: ID!, $editionId: ID!) {
     equipe(activiteId: $activiteId) {
       id
+      affectations(editionId: $editionId) {
+        id
+        perimetre {
+          id
+        }
+      }
       souhaits(editionId: $editionId) {
         id
         perimetre {
@@ -151,16 +168,16 @@ const INVITER = graphql(`
   mutation InviterPersonne(
     $email: String!
     $nom: String!
-    $estAdmin: Boolean
     $editionId: ID
     $perimetresSouhaites: [ID!]
+    $perimetresAffectes: [ID!]
   ) {
     inviterPersonne(
       email: $email
       nom: $nom
-      estAdmin: $estAdmin
       editionId: $editionId
       perimetresSouhaites: $perimetresSouhaites
+      perimetresAffectes: $perimetresAffectes
     ) {
       id
     }
@@ -202,20 +219,6 @@ const DEFINIR_SOUHAITS = graphql(`
   }
 `)
 
-const DEFINIR_ADMIN_ACTIVITE = graphql(`
-  mutation DefinirAdminActivite(
-    $personneId: ID!
-    $activiteId: ID!
-    $admin: Boolean!
-  ) {
-    definirAdminActivite(
-      personneId: $personneId
-      activiteId: $activiteId
-      admin: $admin
-    )
-  }
-`)
-
 const RENVOYER = graphql(`
   mutation RenvoyerInvitation($id: ID!) {
     renvoyerInvitation(id: $id)
@@ -244,36 +247,46 @@ function libelleAttribution(a: Membre['attributions'][number]): string {
 interface Valeurs {
   email: string
   nom: string
-  estAdmin: boolean
   /** Activités dont la personne est admin (ADR 0010). */
   activitesAdministrees?: string[]
   /** Périmètres souhaités, par identifiant d'édition. */
   souhaits?: Record<string, string[] | undefined>
+  /** Périmètres affectés, par identifiant d'édition. */
+  affectations?: Record<string, string[] | undefined>
+}
+
+/** Une affectation lue à l'ouverture de la fenêtre. */
+interface AffectationLue {
+  id: string
+  perimetreId: string
 }
 
 const SOUHAITS_MAX = 30
 
 /**
- * Champ des périmètres souhaités pour une activité. L'activité affichée passe
- * l'édition choisie sur la page et les souhaits déjà lus par la liste ; les autres
- * activités utilisent leur édition en cours et lisent leurs souhaits à l'ouverture.
+ * Champs des périmètres d'une activité pour une personne : ceux où elle est
+ * affectée, puis ceux qu'elle souhaite. L'activité affichée passe l'édition choisie
+ * sur la page, avec les affectations et les souhaits déjà lus par la liste ; les
+ * autres activités utilisent leur édition en cours et les lisent à l'ouverture. Une
+ * invitation part de champs vides.
  */
-function ChampSouhaits({
+function ChampsPerimetres({
   activite,
   edition: editionChoisie,
   connus,
   personne,
   seul,
-  extra,
+  surLecture,
 }: {
   activite: Activite
   edition?: Pick<EditionsQuery['editions'][number], 'id' | 'nom'>
-  /** Périmètres déjà souhaités pour l'édition choisie, lus par la liste de la page. */
-  connus?: string[]
+  /** Affectations et souhaits de l'édition choisie, lus par la liste de la page. */
+  connus?: { affectations: AffectationLue[]; souhaits: string[] }
   personne: Personne | 'nouvelle'
-  /** Vrai quand le formulaire ne propose qu'une activité. */
+  /** Vrai pour l'activité affichée : ses champs portent le nom de la période. */
   seul: boolean
-  extra?: string
+  /** Reçoit les affectations lues, pour calculer celles à créer et à retirer. */
+  surLecture: (editionId: string, affectations: AffectationLue[]) => void
 }) {
   const form = Form.useFormInstance<Valeurs>()
   const { data } = useQuery(SOUHAITS_ACTIVITE, {
@@ -284,40 +297,57 @@ function ChampSouhaits({
   const nouvelle = personne === 'nouvelle'
   const personneId = nouvelle ? undefined : personne.id
   // Lecture fraîche à chaque ouverture, pour une autre activité seulement : la liste
-  // de la page ne porte que les souhaits de l'édition affichée.
+  // de la page ne porte que les périmètres de l'édition affichée.
   const { data: existants } = useQuery(SOUHAITS_EDITION, {
     variables: { activiteId: activite.id, editionId: editionId ?? '' },
     skip: nouvelle || connus !== undefined || editionId === undefined,
     fetchPolicy: 'network-only',
   })
+  const membre = existants?.equipe.find(p => p.id === personneId)
   const lus =
     connus ??
     (existants === undefined
       ? undefined
-      : (existants.equipe
-          .find(p => p.id === personneId)
-          ?.souhaits.map(souhait => souhait.perimetre.id) ?? []))
-  // Souhaits de la personne, limités aux périmètres non archivés.
+      : {
+          affectations: (membre?.affectations ?? []).map(a => ({
+            id: a.id,
+            perimetreId: a.perimetre.id,
+          })),
+          souhaits: (membre?.souhaits ?? []).map(
+            souhait => souhait.perimetre.id
+          ),
+        })
+  // Périmètres de la personne, limités aux périmètres non archivés.
+  const actif = (id: string) => data?.perimetres.some(p => p.id === id) ?? false
   const initiaux =
     data === undefined || editionId === undefined
       ? undefined
       : nouvelle
-        ? []
-        : lus?.filter(id => data.perimetres.some(p => p.id === id))
+        ? { affectations: [], souhaits: [] }
+        : lus && {
+            affectations: lus.affectations.filter(a => actif(a.perimetreId)),
+            souhaits: lus.souhaits.filter(actif),
+          }
   const pret = initiaux !== undefined
   useEffect(() => {
+    if (editionId === undefined || initiaux === undefined) return
+    surLecture(editionId, initiaux.affectations)
     // Une saisie en cours n'est jamais remplacée : après une invitation enregistrée
     // en partie, la fenêtre passe en modification et garde les choix à renvoyer.
-    if (
-      editionId !== undefined &&
-      initiaux !== undefined &&
-      !form.isFieldTouched(['souhaits', editionId])
-    ) {
-      form.setFieldValue(['souhaits', editionId], initiaux)
+    if (!form.isFieldTouched(['souhaits', editionId])) {
+      form.setFieldValue(['souhaits', editionId], initiaux.souhaits)
     }
-    // Le champ se remplit une fois, quand les souhaits sont lus.
+    if (!form.isFieldTouched(['affectations', editionId])) {
+      form.setFieldValue(
+        ['affectations', editionId],
+        initiaux.affectations.map(a => a.perimetreId)
+      )
+    }
+    // Les champs se remplissent une fois, quand les périmètres sont lus.
+    // Une invitation enregistrée en partie passe en modification : les affectations
+    // du compte créé se relisent alors.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form, editionId, pret])
+  }, [form, editionId, pret, nouvelle])
 
   if (edition === undefined) return null
   const options = activite.groupes
@@ -328,78 +358,141 @@ function ChampSouhaits({
         .map(p => ({ value: p.id, label: p.nom })),
     }))
     .filter(groupe => groupe.options.length > 0)
+  const champ = (placeholder: string) => (
+    <Select
+      mode="multiple"
+      allowClear
+      placeholder={placeholder}
+      optionFilterProp="label"
+      maxCount={SOUHAITS_MAX}
+      options={options}
+      loading={!pret}
+      disabled={!pret}
+    />
+  )
   return (
-    <Form.Item
-      label={
-        seul
-          ? `Périmètres souhaités pour ${edition.nom}`
-          : `${activite.nom} (${edition.nom})`
-      }
-      name={['souhaits', edition.id]}
-      extra={extra}
-    >
-      <Select
-        mode="multiple"
-        allowClear
-        placeholder="Choisir des périmètres"
-        optionFilterProp="label"
-        maxCount={SOUHAITS_MAX}
-        options={options}
-        loading={!pret}
-        disabled={!pret}
-      />
-    </Form.Item>
+    <>
+      {!seul && (
+        <Typography.Title level={5}>
+          {activite.nom} ({edition.nom})
+        </Typography.Title>
+      )}
+      <Form.Item
+        label={
+          seul
+            ? `Périmètres affectés pour ${edition.nom}`
+            : 'Périmètres affectés'
+        }
+        name={['affectations', edition.id]}
+      >
+        {champ('Aucune affectation')}
+      </Form.Item>
+      <Form.Item
+        label={
+          seul
+            ? `Périmètres souhaités pour ${edition.nom}`
+            : 'Périmètres souhaités'
+        }
+        name={['souhaits', edition.id]}
+      >
+        {champ('Aucun souhait')}
+      </Form.Item>
+    </>
   )
 }
 
-export default function Personnes() {
-  const { activite, periode } = useActivite()
+/** Le rôle d'admin de l'activité affichée, lu dans la liste des activités administrées. */
+function InterrupteurAdmin({
+  value = [],
+  onChange,
+  activiteId,
+  disabled,
+}: {
+  value?: string[]
+  onChange?: (valeur: string[]) => void
+  activiteId: string
+  disabled: boolean
+}) {
+  return (
+    <Switch
+      checked={value.includes(activiteId)}
+      disabled={disabled}
+      onChange={admin =>
+        onChange?.(
+          admin ? [...value, activiteId] : value.filter(id => id !== activiteId)
+        )
+      }
+    />
+  )
+}
+
+type FiltreRole = 'tous' | 'admins' | 'membres'
+
+/**
+ * Les personnes, sous deux formes (ADR 0018). Dans « Gérer l'activité », l'écran
+ * liste l'équipe de l'activité affichée, pour tout admin. Avec `annuaire`, dans
+ * « Gérer l'organisation », il liste tous les membres de l'organisation, pour ses
+ * admins seulement.
+ */
+export default function Personnes({
+  annuaire: modeAnnuaire = false,
+}: {
+  annuaire?: boolean
+}) {
+  const { activite, periode, libelleGroupe } = useActivite()
   const { message } = App.useApp()
   const [inclureArchives, setInclureArchives] = useState(false)
   const [recherche, setRecherche] = useState('')
   const [choix, setChoix] = useState<string | undefined>()
   const [sansAffectation, setSansAffectation] = useState(false)
+  const [filtreRole, setFiltreRole] = useState<FiltreRole>('tous')
   const [filtreActivite, setFiltreActivite] = useState(TOUTES)
+  const [filtrePerimetres, setFiltrePerimetres] = useState<string[]>([])
+  const { data: perimetres } = useQuery(PERIMETRES, { skip: modeAnnuaire })
   const { data: session } = useQuery(MOI)
   const { data: editions } = useQuery(EDITIONS)
   const editionId =
     choix ?? editions?.editions.find(e => e.statut !== 'ARCHIVEE')?.id
   const edition = editions?.editions.find(e => e.id === editionId)
-  // Les souhaits se notent pour l'édition choisie, tant qu'elle n'est pas archivée.
+  // Les affectations et les souhaits se modifient pour l'édition choisie, tant
+  // qu'elle n'est pas archivée.
   const souhaitsModifiables =
     edition !== undefined && edition.statut !== 'ARCHIVEE'
   // Les rôles, le nom et l'archivage d'un compte relèvent des admins de
   // l'organisation. Un admin d'activité invite, affecte et note les souhaits.
   const gereOrganisation = session?.moi?.estAdmin ?? false
-  // Le rôle choisit la liste : chaque requête attend la session.
+  // L'écran choisit la liste : l'annuaire de l'organisation, ou l'équipe de
+  // l'activité affichée.
   const annuaire = useQuery(PERSONNES, {
     variables: { inclureArchives, editionId: editionId ?? null },
-    skip: session === undefined || !gereOrganisation,
+    skip: !modeAnnuaire,
   })
   const equipe = useQuery(EQUIPE, {
     variables: { editionId: editionId ?? null },
-    skip: session === undefined || gereOrganisation,
+    skip: modeAnnuaire,
   })
-  const liste: Personne[] | undefined = gereOrganisation
+  const liste: Personne[] | undefined = modeAnnuaire
     ? annuaire.data?.personnes
     : equipe.data?.equipe
-  const loading = gereOrganisation ? annuaire.loading : equipe.loading
+  const loading = modeAnnuaire ? annuaire.loading : equipe.loading
   const { data: demandes } = useQuery(DEMANDES_EN_ATTENTE, {
     variables: { editionId: editionId ?? '' },
-    skip: editionId === undefined,
+    skip: editionId === undefined || modeAnnuaire,
   })
   const demandesEnAttente = demandes?.demandes.length ?? 0
   // L'onglet se lit dans l'adresse : une notification mène droit aux demandes.
   const [parametres, setParametres] = useSearchParams()
   const onglet =
-    parametres.get('onglet') === 'demandes' ? 'demandes' : 'annuaire'
+    !modeAnnuaire && parametres.get('onglet') === 'demandes'
+      ? 'demandes'
+      : 'annuaire'
   const [enEdition, setEnEdition] = useState<Personne | 'nouvelle' | null>(null)
   // Compteur d'ouvertures : la fenêtre reste montée d'une ouverture à l'autre, et
   // les champs de souhaits doivent relire les souhaits à chaque fois.
   const [ouverture, setOuverture] = useState(0)
   const [form] = Form.useForm<Valeurs>()
   const rafraichir = {
-    refetchQueries: [gereOrganisation ? PERSONNES : EQUIPE],
+    refetchQueries: [modeAnnuaire ? PERSONNES : EQUIPE],
   }
   const [inviter, invitation] = useMutation(INVITER, rafraichir)
   const [modifier, modification] = useMutation(MODIFIER, rafraichir)
@@ -408,6 +501,15 @@ export default function Personnes() {
     DEFINIR_SOUHAITS,
     rafraichir
   )
+  const [affecter, affectation] = useMutation(AFFECTER, rafraichir)
+  const [retirerAffectation, retrait] = useMutation(
+    RETIRER_AFFECTATION,
+    rafraichir
+  )
+  // Affectations lues à l'ouverture de la fenêtre, par édition puis par périmètre.
+  // Chaque écriture réussie les met à jour : un second enregistrement après un
+  // échec ne renvoie que le reste.
+  const affectationsLues = useRef(new Map<string, Map<string, string>>())
   const [renvoyer] = useMutation(RENVOYER)
   const [definirAdminActivite] = useMutation(DEFINIR_ADMIN_ACTIVITE, rafraichir)
   const { data: toutesActivites } = useQuery(ACTIVITES)
@@ -430,39 +532,74 @@ export default function Personnes() {
       })
     }
   }
-  // Un compte archivé ne reçoit plus de souhaits.
+  // Un compte archivé ne reçoit plus d'affectation ni de souhait.
   const champSouhaits =
     enEdition !== null && (enEdition === 'nouvelle' || !enEdition.archive)
-  // Les souhaits se notent dans chaque activité administrée, l'activité affichée
-  // en premier. Elle sort de la liste quand l'édition choisie sur la page est
-  // archivée : son champ noterait sinon les souhaits sur une autre édition.
+  // Les périmètres se choisissent dans chaque activité administrée, l'activité
+  // affichée en premier. Elle sort de la liste quand l'édition choisie sur la page
+  // est archivée : ses champs écriraient sinon sur une autre édition.
+  // Un admin d'activité ne gère ici que l'activité affichée, même s'il en administre
+  // une autre : seul un admin de l'organisation agit sur plusieurs activités.
   const activitesSouhaits = (toutesActivites?.activites ?? [])
     .filter(a => a.estAdministree && !a.archive)
+    .filter(a => gereOrganisation || a.id === activite.id)
     .filter(a => a.id !== activite.id || souhaitsModifiables)
     .sort((a, b) => Number(b.id === activite.id) - Number(a.id === activite.id))
 
   // Recherche insensible aux accents et à la casse, sur le nom et l'adresse.
   const personnes = useMemo(() => {
     const filtre = normaliser(recherche.trim())
+    // Le filtre « Admins » réunit les admins de l'organisation et les admins
+    // d'activité : de toute activité dans l'annuaire, de l'activité affichée dans
+    // l'équipe.
+    const estAdmin = (p: Personne) =>
+      p.estAdmin === true ||
+      (modeAnnuaire
+        ? p.activitesAdministrees.length > 0
+        : p.activitesAdministrees.includes(activite.id))
     return (liste ?? []).filter(
       p =>
+        (filtreRole === 'tous' || estAdmin(p) === (filtreRole === 'admins')) &&
         (filtre === '' ||
           normaliser(p.nom).includes(filtre) ||
           normaliser(p.email).includes(filtre)) &&
-        (!sansAffectation ||
+        (modeAnnuaire ||
+          !sansAffectation ||
           editionId === undefined ||
           p.affectations.length === 0) &&
-        (filtreActivite === TOUTES ||
+        // Une personne répond au filtre par une affectation ou un souhait dans l'un
+        // des périmètres choisis.
+        (modeAnnuaire ||
+          filtrePerimetres.length === 0 ||
+          [...p.affectations, ...p.souhaits].some(x =>
+            filtrePerimetres.includes(x.perimetre.id)
+          )) &&
+        (!modeAnnuaire ||
+          filtreActivite === TOUTES ||
           p.attributions === undefined ||
           (filtreActivite === SANS_ACTIVITE
             ? p.attributions.length === 0
             : p.attributions.some(a => a.activiteId === filtreActivite)))
     )
-  }, [liste, recherche, sansAffectation, editionId, filtreActivite])
+  }, [
+    liste,
+    recherche,
+    sansAffectation,
+    editionId,
+    filtreActivite,
+    filtreRole,
+    filtrePerimetres,
+    modeAnnuaire,
+    activite.id,
+  ])
+
+  // Un admin d'activité n'agit pas sur un admin de l'organisation (ADR 0019).
+  const modifiable = (p: Personne) => gereOrganisation || p.estAdmin !== true
 
   const ouvrir = (personne: Personne | 'nouvelle') => {
     setEnEdition(personne)
     setOuverture(n => n + 1)
+    affectationsLues.current = new Map()
     // Les souhaits d'une ouverture précédente ne doivent pas rester dans le formulaire.
     form.resetFields()
     form.setFieldsValue(
@@ -470,13 +607,11 @@ export default function Personnes() {
         ? {
             email: '',
             nom: '',
-            estAdmin: false,
             activitesAdministrees: [],
           }
         : {
             email: personne.email,
             nom: personne.nom,
-            estAdmin: personne.estAdmin ?? false,
             activitesAdministrees: personne.activitesAdministrees,
           }
     )
@@ -494,22 +629,34 @@ export default function Personnes() {
   }
 
   const enregistrer = async (v: Valeurs) => {
-    // Souhaits saisis, par édition. L'invitation porte ceux de la première édition
-    // renseignée ; les autres suivent une fois le compte créé.
+    // Souhaits saisis, par édition.
     const souhaits = champSouhaits
       ? Object.entries(v.souhaits ?? {}).map(([editionId, ids]) => ({
           editionId,
           ids: ids ?? [],
         }))
       : []
-    const premiers = souhaits.find(s => s.ids.length > 0)
-    // Un admin d'activité fait entrer la personne dans son équipe par un périmètre
-    // (ADR 0018). Le serveur refuse aussi une invitation sans périmètre.
-    if (
-      enEdition === 'nouvelle' &&
-      !gereOrganisation &&
-      premiers === undefined
-    ) {
+    // Périmètres d'une invitation, par édition : l'invitation porte ceux de la
+    // première édition renseignée ; les autres suivent une fois le compte créé.
+    const invites = champSouhaits
+      ? [
+          ...new Set([
+            ...Object.keys(v.souhaits ?? {}),
+            ...Object.keys(v.affectations ?? {}),
+          ]),
+        ]
+          .map(editionId => ({
+            editionId,
+            souhaites: v.souhaits?.[editionId] ?? [],
+            affectes: v.affectations?.[editionId] ?? [],
+          }))
+          .filter(i => i.souhaites.length + i.affectes.length > 0)
+      : []
+    const premiers = invites[0]
+    // Un admin d'activité fait entrer la personne dans son équipe par un périmètre,
+    // souhaité ou affecté (ADR 0018, 0019). Le serveur refuse aussi une invitation
+    // sans périmètre.
+    if (enEdition === 'nouvelle' && !modeAnnuaire && premiers === undefined) {
       message.error(
         'Choisissez au moins un périmètre : la personne rejoint votre équipe par ce périmètre.'
       )
@@ -524,29 +671,26 @@ export default function Personnes() {
               variables: {
                 email: v.email,
                 nom: v.nom,
-                estAdmin: gereOrganisation && v.estAdmin,
                 editionId: premiers?.editionId ?? null,
-                perimetresSouhaites: premiers?.ids ?? [],
+                perimetresSouhaites: premiers?.souhaites ?? [],
+                perimetresAffectes: premiers?.affectes ?? [],
               },
             })
             const id = r.data?.inviterPersonne.id
             if (id === undefined) return
             cree = id
-            if (gereOrganisation) {
-              await ajusterAdminsActivite(id, [], v.activitesAdministrees ?? [])
-            }
+            await ajusterAdminsActivite(id, [], v.activitesAdministrees ?? [])
             // Les autres périodes passent aussi par l'invitation, qui ajoute sans
-            // rien retirer : la personne a peut-être déjà un compte et des souhaits,
-            // que ce formulaire n'a pas lus.
-            for (const s of souhaits) {
-              if (s === premiers || s.ids.length === 0) continue
+            // rien retirer : la personne a peut-être déjà un compte, des souhaits
+            // et des affectations, que ce formulaire n'a pas lus.
+            for (const i of invites.slice(1)) {
               await inviter({
                 variables: {
                   email: v.email,
                   nom: v.nom,
-                  estAdmin: false,
-                  editionId: s.editionId,
-                  perimetresSouhaites: s.ids,
+                  editionId: i.editionId,
+                  perimetresSouhaites: i.souhaites,
+                  perimetresAffectes: i.affectes,
                 },
               })
             }
@@ -558,14 +702,53 @@ export default function Personnes() {
                   variables: {
                     id: enEdition.id,
                     nom: v.nom,
-                    estAdmin: v.estAdmin,
+                    // Le rôle d'admin de l'organisation se donne sur l'écran
+                    // « Admins » : cette fenêtre le laisse tel quel.
+                    estAdmin: enEdition.estAdmin ?? false,
                   },
                 })
-                await ajusterAdminsActivite(
-                  enEdition.id,
-                  enEdition.activitesAdministrees,
-                  v.activitesAdministrees ?? []
-                )
+              }
+              // Les nominations passent avant tout le reste, les retraits de rôle
+              // à la fin : la personne ne sort pas de l'équipe entre deux écritures
+              // (ADR 0018).
+              const adminsAvant = enEdition.activitesAdministrees
+              const adminsApres = v.activitesAdministrees ?? adminsAvant
+              const adminsReunis = [
+                ...new Set([...adminsAvant, ...adminsApres]),
+              ]
+              await ajusterAdminsActivite(
+                enEdition.id,
+                adminsAvant,
+                adminsReunis
+              )
+              // Les affectations d'une édition ne sont envoyées que si le champ a
+              // été modifié. Les nouvelles passent avant les souhaits, les retraits
+              // après : la personne ne sort pas de l'équipe entre deux écritures
+              // (ADR 0018).
+              const affectations = champSouhaits
+                ? Object.entries(v.affectations ?? {}).flatMap(
+                    ([editionId, ids]) => {
+                      const lues = affectationsLues.current.get(editionId)
+                      return lues !== undefined &&
+                        form.isFieldTouched(['affectations', editionId])
+                        ? [{ editionId, ids: ids ?? [], lues }]
+                        : []
+                    }
+                  )
+                : []
+              for (const { editionId, ids, lues } of affectations) {
+                for (const perimetreId of ids) {
+                  if (lues.has(perimetreId)) continue
+                  const r = await affecter({
+                    variables: {
+                      personneId: enEdition.id,
+                      perimetreId,
+                      editionId,
+                    },
+                  })
+                  const id = r.data?.affecter.id
+                  if (id !== undefined) lues.set(perimetreId, id)
+                }
               }
               // Les souhaits d'une édition ne sont envoyés que si le champ a été
               // modifié. Les périodes qui gardent des souhaits passent avant celles
@@ -585,6 +768,18 @@ export default function Personnes() {
                   },
                 })
               }
+              for (const { ids, lues } of affectations) {
+                for (const [perimetreId, id] of [...lues]) {
+                  if (ids.includes(perimetreId)) continue
+                  await retirerAffectation({ variables: { id } })
+                  lues.delete(perimetreId)
+                }
+              }
+              await ajusterAdminsActivite(
+                enEdition.id,
+                adminsReunis,
+                adminsApres
+              )
             }, 'Compte enregistré.')
           : false
     if (ok) {
@@ -595,7 +790,7 @@ export default function Personnes() {
     // Le compte existe et l'invitation est partie, mais un rôle ou un souhait a
     // échoué. Une nouvelle invitation serait refusée : la fenêtre passe en
     // modification de ce compte et garde la saisie, pour ne renvoyer que le reste.
-    const relue: Personne[] | undefined = gereOrganisation
+    const relue: Personne[] | undefined = modeAnnuaire
       ? (await annuaire.refetch()).data?.personnes
       : (await equipe.refetch()).data?.equipe
     const creee = relue?.find(p => p.id === cree)
@@ -609,51 +804,85 @@ export default function Personnes() {
     )
   }
 
+  // L'activité affichée passe en premier ; les autres se rangent dans un volet.
+  const autresActivites = activitesSouhaits.filter(a => a.id !== activite.id)
+  const champsPerimetres = (a: Activite, seul: boolean) =>
+    enEdition === null ? null : (
+      <ChampsPerimetres
+        key={`${a.id}-${ouverture}`}
+        activite={a}
+        edition={a.id === activite.id ? edition : undefined}
+        connus={
+          a.id === activite.id && enEdition !== 'nouvelle'
+            ? {
+                affectations: enEdition.affectations.map(x => ({
+                  id: x.id,
+                  perimetreId: x.perimetre.id,
+                })),
+                souhaits: enEdition.souhaits.map(x => x.perimetre.id),
+              }
+            : undefined
+        }
+        personne={enEdition}
+        seul={seul}
+        surLecture={(editionId, lues) =>
+          affectationsLues.current.set(
+            editionId,
+            new Map(lues.map(x => [x.perimetreId, x.id]))
+          )
+        }
+      />
+    )
+
   return (
     <>
       <Titre
         sousTitre={
-          gereOrganisation
-            ? 'Seules les personnes invitées ici peuvent se connecter à l’espace organisateur.'
-            : 'Vous lisez l’équipe de cette activité : les personnes affectées, intéressées ou admins. Vous y ajoutez une personne par son adresse.'
+          modeAnnuaire
+            ? 'Tous les membres de l’organisation, avec les activités de chacun. Seules les personnes invitées peuvent se connecter à l’espace organisateur.'
+            : 'L’équipe de cette activité : les personnes affectées, intéressées ou admins. Vous y ajoutez une personne par son adresse.'
         }
         actions={
-          <Space>
-            <span>{periode.Nom}</span>
-            <Select
-              style={{ minWidth: 200 }}
-              value={editionId}
-              onChange={setChoix}
-              placeholder={`Choisir ${periode.une}`}
-              options={(editions?.editions ?? []).map(e => ({
-                value: e.id,
-                label: e.nom,
-              }))}
-            />
-          </Space>
+          modeAnnuaire ? undefined : (
+            <Space>
+              <span>{periode.Nom}</span>
+              <Select
+                style={{ minWidth: 200 }}
+                value={editionId}
+                onChange={setChoix}
+                placeholder={`Choisir ${periode.une}`}
+                options={(editions?.editions ?? []).map(e => ({
+                  value: e.id,
+                  label: e.nom,
+                }))}
+              />
+            </Space>
+          )
         }
       >
-        Personnes
+        {modeAnnuaire ? 'Annuaire' : 'Personnes'}
       </Titre>
-      <Tabs
-        activeKey={onglet}
-        onChange={cle =>
-          setParametres(cle === 'demandes' ? { onglet: 'demandes' } : {})
-        }
-        items={[
-          {
-            key: 'annuaire',
-            label: gereOrganisation ? 'Annuaire' : 'Votre équipe',
-          },
-          {
-            key: 'demandes',
-            label:
-              demandesEnAttente > 0
-                ? `Demandes (${demandesEnAttente})`
-                : 'Demandes',
-          },
-        ]}
-      />
+      {!modeAnnuaire && (
+        <Tabs
+          activeKey={onglet}
+          onChange={cle =>
+            setParametres(cle === 'demandes' ? { onglet: 'demandes' } : {})
+          }
+          items={[
+            {
+              key: 'annuaire',
+              label: 'Équipe de l’activité',
+            },
+            {
+              key: 'demandes',
+              label:
+                demandesEnAttente > 0
+                  ? `Demandes (${demandesEnAttente})`
+                  : 'Demandes',
+            },
+          ]}
+        />
+      )}
       {onglet === 'demandes' &&
         (editionId === undefined ? (
           <Empty description={`Créez d’abord ${periode.une}.`} />
@@ -680,7 +909,7 @@ export default function Personnes() {
             >
               Inviter une personne
             </Button>
-            {gereOrganisation && (
+            {modeAnnuaire && (
               <Space>
                 <Switch
                   checked={inclureArchives}
@@ -691,6 +920,16 @@ export default function Personnes() {
             )}
           </Space>
           <Space wrap size={[16, 12]} style={{ marginBottom: 16 }}>
+            <Segmented<FiltreRole>
+              aria-label="Filtrer par rôle"
+              value={filtreRole}
+              onChange={setFiltreRole}
+              options={[
+                { value: 'tous', label: 'Tous' },
+                { value: 'admins', label: 'Admins' },
+                { value: 'membres', label: 'Membres' },
+              ]}
+            />
             <Input.Search
               allowClear
               placeholder="Rechercher un nom ou une adresse"
@@ -699,7 +938,7 @@ export default function Personnes() {
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
             />
-            {gereOrganisation && (
+            {modeAnnuaire && (
               <Select
                 style={{ minWidth: 220 }}
                 aria-label="Filtrer par activité"
@@ -715,13 +954,36 @@ export default function Personnes() {
                 ]}
               />
             )}
-            <Checkbox
-              checked={sansAffectation && editionId !== undefined}
-              disabled={editionId === undefined}
-              onChange={e => setSansAffectation(e.target.checked)}
-            >
-              Sans affectation pour {periode.cette}
-            </Checkbox>
+            {!modeAnnuaire && (
+              <Select
+                mode="multiple"
+                allowClear
+                maxTagCount="responsive"
+                style={{ minWidth: 260 }}
+                placeholder="Tous les périmètres"
+                aria-label="Filtrer par périmètre"
+                optionFilterProp="label"
+                value={filtrePerimetres}
+                onChange={setFiltrePerimetres}
+                options={activite.groupes
+                  .map(groupe => ({
+                    label: libelleGroupe(groupe.cle, true),
+                    options: (perimetres?.perimetres ?? [])
+                      .filter(p => p.groupe === groupe.cle)
+                      .map(p => ({ value: p.id, label: p.nom })),
+                  }))
+                  .filter(groupe => groupe.options.length > 0)}
+              />
+            )}
+            {!modeAnnuaire && (
+              <Checkbox
+                checked={sansAffectation && editionId !== undefined}
+                disabled={editionId === undefined}
+                onChange={e => setSansAffectation(e.target.checked)}
+              >
+                Sans affectation pour {periode.cette}
+              </Checkbox>
+            )}
           </Space>
 
           <Table<Personne>
@@ -736,64 +998,78 @@ export default function Personnes() {
                 dataIndex: 'nom',
                 render: (nom: string, p) => (
                   <Space style={{ whiteSpace: 'nowrap' }}>
-                    <Typography.Link onClick={() => ouvrir(p)}>
-                      {nom}
-                    </Typography.Link>
+                    {modifiable(p) ? (
+                      <Typography.Link onClick={() => ouvrir(p)}>
+                        {nom}
+                      </Typography.Link>
+                    ) : (
+                      nom
+                    )}
                     {p.id === moiId && <Tag>Vous</Tag>}
                   </Space>
                 ),
               },
               { title: 'Adresse mail', dataIndex: 'email' },
-              {
-                title: 'Affectations',
-                key: 'affectations',
-                render: (_, p) =>
-                  p.affectations.length === 0 ? (
-                    <Typography.Text type="secondary">Aucune</Typography.Text>
-                  ) : (
-                    <Space size={[4, 4]} wrap>
-                      {p.affectations.map(a => (
-                        <Tag
-                          key={a.id}
-                          style={{
-                            borderInlineStart: `4px solid ${a.perimetre.couleur ?? 'var(--rt-primaire)'}`,
-                          }}
-                        >
-                          {a.perimetre.nom}
-                        </Tag>
-                      ))}
-                    </Space>
-                  ),
-              },
-              {
-                title: 'Souhaits',
-                key: 'souhaits',
-                render: (_, p) =>
-                  p.souhaits.length === 0 ? (
-                    <Typography.Text type="secondary">Aucun</Typography.Text>
-                  ) : (
-                    <Space size={[4, 4]} wrap>
-                      {p.souhaits.map(souhait => (
-                        <Tag
-                          key={souhait.id}
-                          icon={
-                            souhait.satisfait ? (
-                              <CheckOutlined aria-label="Satisfait :" />
-                            ) : undefined
-                          }
-                          style={{
-                            borderInlineStart: `4px solid ${souhait.perimetre.couleur ?? 'var(--rt-primaire)'}`,
-                          }}
-                        >
-                          {souhait.perimetre.nom}
-                        </Tag>
-                      ))}
-                    </Space>
-                  ),
-              },
+              // Les affectations et les souhaits valent pour une période d'une
+              // activité : l'annuaire montre les activités à la place.
+              ...(modeAnnuaire
+                ? []
+                : ([
+                    {
+                      title: 'Affectations',
+                      key: 'affectations',
+                      render: (_, p) =>
+                        p.affectations.length === 0 ? (
+                          <Typography.Text type="secondary">
+                            Aucune
+                          </Typography.Text>
+                        ) : (
+                          <Space size={[4, 4]} wrap>
+                            {p.affectations.map(a => (
+                              <Tag
+                                key={a.id}
+                                style={{
+                                  borderInlineStart: `4px solid ${a.perimetre.couleur ?? 'var(--rt-primaire)'}`,
+                                }}
+                              >
+                                {a.perimetre.nom}
+                              </Tag>
+                            ))}
+                          </Space>
+                        ),
+                    },
+                    {
+                      title: 'Souhaits',
+                      key: 'souhaits',
+                      render: (_, p) =>
+                        p.souhaits.length === 0 ? (
+                          <Typography.Text type="secondary">
+                            Aucun
+                          </Typography.Text>
+                        ) : (
+                          <Space size={[4, 4]} wrap>
+                            {p.souhaits.map(souhait => (
+                              <Tag
+                                key={souhait.id}
+                                icon={
+                                  souhait.satisfait ? (
+                                    <CheckOutlined aria-label="Satisfait :" />
+                                  ) : undefined
+                                }
+                                style={{
+                                  borderInlineStart: `4px solid ${souhait.perimetre.couleur ?? 'var(--rt-primaire)'}`,
+                                }}
+                              >
+                                {souhait.perimetre.nom}
+                              </Tag>
+                            ))}
+                          </Space>
+                        ),
+                    },
+                  ] satisfies TableColumnsType<Personne>)),
               // L'admin de l'organisation lit qui participe à quelle activité, toutes
               // périodes confondues (ADR 0018).
-              ...(gereOrganisation
+              ...(modeAnnuaire
                 ? [
                     {
                       title: 'Activités',
@@ -828,12 +1104,15 @@ export default function Personnes() {
                   ]
                 : []),
               {
-                title: gereOrganisation ? 'Rôle' : 'Rôle dans l’activité',
+                title: modeAnnuaire ? 'Rôle' : 'Rôle dans l’activité',
                 dataIndex: 'estAdmin',
                 render: (a: boolean, p) =>
-                  !gereOrganisation ? (
-                    // Un admin d'activité ne lit que les rôles de son activité.
-                    p.activitesAdministrees.includes(activite.id) ? (
+                  !modeAnnuaire ? (
+                    // L'écran d'une activité montre les rôles de cette activité, et
+                    // qui administre l'organisation (ADR 0019).
+                    a ? (
+                      <Tag color="blue">Admin de l’organisation</Tag>
+                    ) : p.activitesAdministrees.includes(activite.id) ? (
                       <Tag color="geekblue">Admin de l’activité</Tag>
                     ) : p.affectations.length > 0 ? (
                       <Tag>Référent·e</Tag>
@@ -850,7 +1129,8 @@ export default function Personnes() {
                 title: 'Actions',
                 key: 'actions',
                 render: (_, p) =>
-                  p.archive && !gereOrganisation ? null : p.archive ? (
+                  !modifiable(p) ||
+                  (p.archive && !modeAnnuaire) ? null : p.archive ? (
                     <Button
                       size="small"
                       onClick={() =>
@@ -879,7 +1159,7 @@ export default function Personnes() {
                       >
                         Renvoyer l’invitation
                       </Button>
-                      {p.id !== moiId && gereOrganisation && (
+                      {p.id !== moiId && modeAnnuaire && (
                         <Popconfirm
                           title="Archiver ce compte ?"
                           description="La personne est déconnectée et ne peut plus se connecter. Son historique reste conservé."
@@ -920,7 +1200,11 @@ export default function Personnes() {
         }
         cancelText="Annuler"
         confirmLoading={
-          invitation.loading || modification.loading || definition.loading
+          invitation.loading ||
+          modification.loading ||
+          definition.loading ||
+          affectation.loading ||
+          retrait.loading
         }
         onOk={() => form.submit()}
         onCancel={() => setEnEdition(null)}
@@ -959,22 +1243,12 @@ export default function Personnes() {
               disabled={enEdition !== 'nouvelle'}
             />
           </Form.Item>
-          {gereOrganisation && (
+          {modeAnnuaire && (
             <>
-              <Form.Item
-                label="Admin de l’organisation"
-                name="estAdmin"
-                valuePropName="checked"
-                extra="Un admin de l’organisation gère toutes les activités, les comptes et l’identité de l’organisation."
-              >
-                <Switch
-                  disabled={enEdition !== 'nouvelle' && enEdition?.id === moiId}
-                />
-              </Form.Item>
               <Form.Item
                 label="Admin des activités"
                 name="activitesAdministrees"
-                extra="Un admin d’activité gère ses périodes, ses périmètres, ses affectations et ses fiches. Il ne voit pas les autres activités."
+                extra="Un admin d’activité gère ses périodes, ses périmètres, ses affectations et ses fiches. Il ne voit pas les autres activités. Le rôle d’admin de l’organisation se donne depuis l’écran Admins."
               >
                 <Select
                   mode="multiple"
@@ -988,7 +1262,27 @@ export default function Personnes() {
               </Form.Item>
             </>
           )}
-          {enEdition === 'nouvelle' && !gereOrganisation && (
+          {!modeAnnuaire && (
+            <Form.Item
+              label="Admin de l’activité"
+              name="activitesAdministrees"
+              extra={
+                gereOrganisation
+                  ? 'Un admin de l’activité gère ses périodes, ses périmètres, ses affectations et ses fiches.'
+                  : 'Un admin de l’activité gère avec vous ses périodes, ses périmètres, ses affectations et ses fiches. Vous ne retirez pas votre propre rôle.'
+              }
+            >
+              <InterrupteurAdmin
+                activiteId={activite.id}
+                disabled={
+                  !gereOrganisation &&
+                  enEdition !== 'nouvelle' &&
+                  enEdition?.id === moiId
+                }
+              />
+            </Form.Item>
+          )}
+          {enEdition === 'nouvelle' && !modeAnnuaire && (
             <Alert
               type="info"
               showIcon
@@ -996,33 +1290,48 @@ export default function Personnes() {
               title={
                 activitesSouhaits.length === 0
                   ? `Ouvrez d’abord ${periode.une} : une invitation porte au moins un périmètre.`
-                  : 'Choisissez au moins un périmètre : la personne rejoint votre équipe par ce périmètre. Si elle a déjà un compte, ce compte est rattaché et garde son nom.'
+                  : 'Choisissez au moins un périmètre, affecté ou souhaité : la personne rejoint votre équipe par ce périmètre. Si elle a déjà un compte, ce compte est rattaché et garde son nom.'
               }
             />
           )}
-          {champSouhaits && activitesSouhaits.length > 1 && (
-            <Typography.Title level={5}>Périmètres souhaités</Typography.Title>
+          {champSouhaits && activitesSouhaits.length > 0 && (
+            <>
+              <Typography.Title level={5}>
+                Affectations et souhaits
+              </Typography.Title>
+              <Typography.Paragraph type="secondary">
+                Une affectation rend la personne référent·e du périmètre : elle
+                y modifie les tâches et reçoit un mail qui l’annonce. Un souhait
+                note seulement un intérêt : il ne donne aucun accès, et seuls
+                les admins le voient.
+              </Typography.Paragraph>
+            </>
           )}
           {champSouhaits &&
-            activitesSouhaits.map((a, i) => (
-              <ChampSouhaits
-                key={`${a.id}-${ouverture}`}
-                activite={a}
-                edition={a.id === activite.id ? edition : undefined}
-                connus={
-                  a.id === activite.id && enEdition !== 'nouvelle'
-                    ? enEdition.souhaits.map(s => s.perimetre.id)
-                    : undefined
-                }
-                personne={enEdition}
-                seul={activitesSouhaits.length === 1}
-                extra={
-                  i === activitesSouhaits.length - 1
-                    ? 'Seuls les admins voient les souhaits. Un souhait ne donne aucun accès.'
-                    : undefined
-                }
-              />
-            ))}
+            activitesSouhaits
+              .filter(a => a.id === activite.id)
+              .map(a => champsPerimetres(a, true))}
+          {champSouhaits && autresActivites.length > 0 && (
+            // Le volet se referme à chaque ouverture de la fenêtre. Ses champs ne se
+            // montent qu'une fois déplié : rien ne part pour une activité restée
+            // repliée.
+            <Collapse
+              key={ouverture}
+              ghost
+              items={[
+                {
+                  key: 'autres',
+                  label:
+                    enEdition === 'nouvelle'
+                      ? 'Inviter aussi dans d’autres activités'
+                      : 'Affecter aussi dans d’autres activités',
+                  children: autresActivites.map(a =>
+                    champsPerimetres(a, false)
+                  ),
+                },
+              ]}
+            />
+          )}
         </Form>
       </Modal>
     </>

@@ -5,6 +5,23 @@
   "version": "0.10.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-07-serveur-un-admin-d-activite-nomme-les-admins-de-son-activite-et-invi",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un admin d'activité nomme les admins de son activité et invite avec une affectation",
+            "texte": "Un admin d'activité lit désormais qui administre l'organisation. Il nomme et retire les admins de ses activités, parmi les personnes de son équipe. Il ne modifie ni les affectations ni les souhaits d'un admin de l'organisation. Une invitation peut porter une affectation, sans périmètre souhaité.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.10.0",
       "notes": [
         {

@@ -1,7 +1,11 @@
 import { prisma, type Edition, type Perimetre } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
-import { equipesModifiees, exigerMembreGere } from '../lib/appartenances.ts'
+import {
+  equipesModifiees,
+  exigerMembreGere,
+  refuserAdminDeLOrganisation,
+} from '../lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
 import { etatPostes } from '../lib/postes.ts'
@@ -191,6 +195,7 @@ builder.mutationFields(t => ({
       ) {
         return false
       }
+      await refuserAdminDeLOrganisation(ctx, souhait.userId)
       await exigerEditionOuverte(ctx, souhait.editionId)
       const { count } = await prisma.souhait.deleteMany({
         where: { id: souhait.id },

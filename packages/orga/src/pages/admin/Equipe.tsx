@@ -39,7 +39,14 @@ import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { EtatPostes } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
-import { ACTIVITES, EDITIONS, PERIMETRES } from '../../lib/requetes'
+import { usePremiereReception } from '../../lib/ordre'
+import {
+  ACTIVITES,
+  AFFECTER,
+  EDITIONS,
+  PERIMETRES,
+  RETIRER_AFFECTATION,
+} from '../../lib/requetes'
 import { useActivite } from '../../lib/activite'
 import { useSession } from '../../lib/session'
 
@@ -81,6 +88,7 @@ const POSTES = graphql(`
     equipe {
       id
       nom
+      estAdmin
     }
     personnes @include(if: $annuaire) {
       id
@@ -103,24 +111,6 @@ const DEFINIR_EFFECTIF = graphql(`
       editionId: $editionId
       effectif: $effectif
     )
-  }
-`)
-
-const AFFECTER = graphql(`
-  mutation Affecter($personneId: ID!, $perimetreId: ID!, $editionId: ID!) {
-    affecter(
-      personneId: $personneId
-      perimetreId: $perimetreId
-      editionId: $editionId
-    ) {
-      id
-    }
-  }
-`)
-
-const RETIRER = graphql(`
-  mutation RetirerAffectation($id: ID!) {
-    retirerAffectation(id: $id)
   }
 `)
 
@@ -257,13 +247,36 @@ export default function Equipe() {
   const rafraichir = { refetchQueries: ['PostesAPourvoir'] }
   const [definirEffectif] = useMutation(DEFINIR_EFFECTIF, rafraichir)
   const [affecter] = useMutation(AFFECTER, rafraichir)
-  const [retirer] = useMutation(RETIRER, rafraichir)
+  const [retirer] = useMutation(RETIRER_AFFECTATION, rafraichir)
   const [definirContact] = useMutation(DEFINIR_CONTACT, rafraichir)
   const [retirerSouhait] = useMutation(RETIRER_SOUHAIT, rafraichir)
 
-  const postes = data?.postesAPourvoir ?? []
+  const recus = data?.postesAPourvoir ?? []
+  // Le serveur place en premier les périmètres à pourvoir. Les cartes gardent
+  // l'ordre de leur première réception : une affectation ne déplace pas la carte
+  // en cours de modification.
+  const ordre = usePremiereReception(
+    editionId,
+    recus.map(p => p.perimetre.id)
+  )
+  const rang = new Map(ordre.map((id, i) => [id, i]))
+  const postes = [...recus].sort(
+    (a, b) => (rang.get(a.perimetre.id) ?? 0) - (rang.get(b.perimetre.id) ?? 0)
+  )
+  // Sous le filtre « À pourvoir », une carte reste affichée après que son périmètre
+  // est devenu complet, jusqu'au prochain changement de filtre ou de période.
+  const aPourvoirVus = new Set(
+    usePremiereReception(
+      `${editionId}|${filtre}`,
+      filtre === 'aPourvoir'
+        ? recus.filter(p => p.aPourvoir > 0).map(p => p.perimetre.id)
+        : []
+    )
+  )
   const affiches =
-    filtre === 'aPourvoir' ? postes.filter(p => p.aPourvoir > 0) : postes
+    filtre === 'aPourvoir'
+      ? postes.filter(p => aPourvoirVus.has(p.perimetre.id))
+      : postes
   const appel = data?.appelPostes ?? null
   const dansLEquipe = new Set((data?.equipe ?? []).map(p => p.id))
   const nomsActivites = new Map(
@@ -302,7 +315,7 @@ export default function Equipe() {
   return (
     <>
       <Titre
-        sousTitre="Chaque carte porte l’effectif, les personnes affectées et les souhaits d’un périmètre. Les périmètres qui manquent de référentes et de référents s’affichent en premier."
+        sousTitre="Chaque carte porte l’effectif, les personnes affectées et les souhaits d’un périmètre. Les périmètres qui manquent de référentes et de référents s’affichent en premier au chargement de la page. Les cartes gardent ensuite leur place pendant vos modifications."
         actions={
           <Button
             type="primary"
@@ -436,7 +449,13 @@ export default function Equipe() {
                   },
                   {
                     label: 'Équipe de l’activité',
-                    options: libres(data?.equipe ?? []),
+                    // Un admin d'activité n'affecte pas un admin de
+                    // l'organisation (ADR 0019).
+                    options: libres(
+                      (data?.equipe ?? []).filter(
+                        p => gereOrganisation || p.estAdmin !== true
+                      )
+                    ),
                   },
                   {
                     label: 'Autres membres de l’organisation',
