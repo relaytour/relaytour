@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     Un hébergeur règle l'action du bouton Support

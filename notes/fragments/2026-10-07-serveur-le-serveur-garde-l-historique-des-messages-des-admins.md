@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     Le serveur garde l'historique des messages des admins

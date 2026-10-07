@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     Un admin écrit à son équipe depuis l'espace organisateur

@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     Les modes d'emploi décrivent les messages, le classement et les tableaux

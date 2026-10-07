@@ -2,10 +2,10 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.11.0",
       "notes": [
         {
           "id": "2026-10-07-serveur-un-hebergeur-regle-l-action-du-bouton-support",

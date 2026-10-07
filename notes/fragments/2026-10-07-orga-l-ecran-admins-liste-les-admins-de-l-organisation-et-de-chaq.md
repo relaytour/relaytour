@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     L'écran Admins liste les admins de l'organisation et de chaque activité
