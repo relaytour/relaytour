@@ -730,6 +730,12 @@ footer {
   gap: 6px;
 }
 
+/* Un libellé plus long que sa colonne passe à la ligne au lieu de recouvrir le texte. */
+.gestes .libelle {
+  white-space: normal;
+  border-radius: 14px;
+}
+
 .alerte {
   display: grid;
   gap: 8px;

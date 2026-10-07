@@ -135,6 +135,28 @@ const ECRANS = [
     compte: 'admin-activite',
     chemin: `${ACTIVITE}/admin/personnes`,
   },
+  // La fenêtre d'un compte, où un admin d'activité affecte la personne et note
+  // ses souhaits.
+  {
+    nom: 'personnes-compte',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/personnes`,
+    apres: cliquerLibelle('Modifier le compte de Sofia Lambert'),
+  },
+  // Un message préparé pour toute l'équipe (ADR 0020). La fenêtre n'ouvre aucune
+  // messagerie tant que personne ne clique son bouton.
+  {
+    nom: 'message',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/equipe`,
+    apres: cliquer('Écrire à l’équipe'),
+  },
+  // L'historique des messages. L'instance d'exemple doit en porter au moins un.
+  {
+    nom: 'personnes-messages',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/personnes?onglet=messages`,
+  },
   // La file de revue (ADR 0015). L'instance d'exemple doit porter une demande en
   // attente, proposée par une personne fictive.
   {
@@ -146,6 +168,11 @@ const ECRANS = [
     nom: 'avancement',
     compte: 'admin-activite',
     chemin: `${ACTIVITE}/admin/avancement`,
+  },
+  {
+    nom: 'classement',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/classement`,
   },
   {
     nom: 'editions',
@@ -173,12 +200,14 @@ const ECRANS = [
   // Le formulaire public (ADR 0015) : l'activité d'exemple doit l'avoir ouvert.
   { nom: 'rejoindre', chemin: '/rejoindre/rencontres-de-la-vallee/rencontres' },
   // L'annuaire de l'organisation, avec les activités de chaque personne (ADR 0018).
-  { nom: 'annuaire', chemin: `${ACTIVITE}/admin/personnes` },
+  { nom: 'annuaire', chemin: `${ACTIVITE}/admin/annuaire` },
   {
     nom: 'personnes-roles',
-    chemin: `${ACTIVITE}/admin/personnes`,
-    apres: cliquer('Léa Bernard'),
+    chemin: `${ACTIVITE}/admin/annuaire`,
+    apres: cliquerLibelle('Modifier le compte de Léa Bernard'),
   },
+  // Les admins de l'organisation et de chaque activité (ADR 0019).
+  { nom: 'admins', chemin: `${ACTIVITE}/admin/admins` },
   // Le même écran pour un admin de l'organisation, qui accorde aussi un droit sur
   // toutes les fiches.
   { nom: 'redaction-organisation', chemin: `${ACTIVITE}/admin/redaction` },
@@ -361,6 +390,12 @@ for (const ecran of aPrendre) {
     }
     await attendre(1200)
   }
+  // Le menu d'un admin de l'organisation dépasse la hauteur de la fenêtre :
+  // l'entrée de l'écran photographié doit rester visible.
+  await evaluer(
+    "document.querySelector('.ant-menu-item-selected')?.scrollIntoView({ block: 'nearest' })"
+  )
+  await attendre(200)
   await evaluer('document.fonts.ready.then(() => true)')
   const { data } = await envoyer('Page.captureScreenshot', {
     format: 'webp',

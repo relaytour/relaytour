@@ -49,19 +49,23 @@
           <span class="etiquette">Point de départ</span>
           <h2 id="t-ou">Où se trouvent vos écrans</h2>
           <p class="texte">
-            Le groupe <strong>Gérer l'activité</strong> apparaît dans le menu de gauche quand vous administrez l'activité affichée, suivi du groupe <strong>Gérer l'organisation</strong>. Toutes ses adresses commencent par l'identifiant de l'activité, par exemple <span class="route">/rencontres/admin/equipe</span>.
+            Le groupe <strong>Gérer l'activité</strong> apparaît dans le menu de gauche quand vous administrez l'activité affichée, suivi du groupe <strong>Gérer l'organisation</strong>, qui ne porte pour vous que l'entrée « Activités ». Les adresses de ces écrans commencent par l'identifiant de l'activité, par exemple <span class="route">/rencontres/admin/equipe</span>.
           </p>
           <p class="texte">
             Le libellé des périodes suit la nature de l'activité : <strong>Éditions</strong> pour un événement, <strong>Saisons</strong> pour une section, <strong>Mandats</strong> pour une instance. Les exemples ci-dessous emploient « édition ».
           </p>
+          <p class="texte" id="t-tableaux">
+            Les tableaux de ces écrans se règlent de la même façon. Un clic sur l'en-tête d'une colonne trie le tableau, et l'icône de cet en-tête le filtre. Vous ajustez la largeur d'une colonne en faisant glisser son bord droit, et un double-clic rétablit la largeur automatique. Votre navigateur garde ces largeurs. Un clic sur une ligne des tableaux Personnes, Éditions et Activités ouvre sa fenêtre, comme le crayon placé au début de la ligne.
+          </p>
         </div>
         <nav class="verre sommaire" aria-label="Sommaire">
-          <span class="etiquette">Vos sept écrans</span>
+          <span class="etiquette">Vos huit écrans</span>
           <ol>
             <li><a href="#e-avancement">Avancement</a> : l'état de chaque périmètre sur la période.</li>
+            <li><a href="#e-classement">Classement</a> : les contributions de chaque personne sur la période.</li>
             <li><a href="#e-editions">Éditions</a> : ouvrir et dater les périodes de l'activité.</li>
             <li><a href="#e-equipe">Équipe</a> : effectifs, souhaits, affectations et réglage des périmètres.</li>
-            <li><a href="#e-personnes">Personnes</a> : inviter votre équipe, relancer les invitations et traiter les demandes.</li>
+            <li><a href="#e-personnes">Personnes</a> : inviter votre équipe, traiter les demandes et écrire à votre équipe.</li>
             <li><a href="#e-redaction">Rédaction</a> : accorder un droit d'écriture sur les fiches d'un périmètre.</li>
             <li><a href="#e-historique">Historique d'une fiche</a> : consulter et restaurer une version.</li>
             <li><a href="#e-activite">Activités</a> : régler le nom, les groupes et l'identité de votre activité.</li>
@@ -85,6 +89,16 @@
           <p class="note">Cet écran ne se modifie pas. Il sert au point d'avancement et repère les périmètres qui décrochent.</p>
         </article>
 
+        <article class="verre ecran" id="e-classement">
+          <div class="ecran-tete"><h3>Classement</h3><span class="route">/&lt;activité&gt;/admin/classement</span></div>
+          <p>Le tableau classe les personnes selon leur contribution à la période choisie. Il donne pour chacune ses points, ses tâches réalisées, celles rendues à temps, ses tâches créées et ses fiches créées ou modifiées.</p>
+          <figure>
+            <img src="../captures/classement.webp" width="1440" height="900" loading="lazy" alt="Écran Classement : un tableau avec le rang, la personne, les points et le détail de ses contributions." />
+            <figcaption>Écran Classement, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
+          </figure>
+          <p class="note">Seuls les admins lisent ce classement. Chaque personne voit son propre score dans « Mon espace », et aucun autre.</p>
+        </article>
+
         <article class="verre ecran" id="e-editions">
           <div class="ecran-tete"><h3>Éditions, saisons ou mandats</h3><span class="route">/&lt;activité&gt;/admin/editions</span></div>
           <p>Une période sert de repère à toutes les échéances : une tâche type à J-120 se date depuis son premier jour. Le tableau liste l'année, le nom, les dates et le statut, soit <strong>En préparation</strong>, <strong>En cours</strong> ou <strong>Archivée</strong>.</p>
@@ -101,17 +115,18 @@
 
         <article class="verre ecran" id="e-equipe">
           <div class="ecran-tete"><h3>Équipe</h3><span class="route">/&lt;activité&gt;/admin/equipe</span></div>
-          <p>C'est l'écran de constitution de l'équipe. Il affiche une carte par périmètre, avec son effectif, ses personnes affectées et ses souhaits. Les périmètres qui manquent de référentes et de référents s'affichent en premier. Trois compteurs résument la situation : <strong>Postes à pourvoir</strong>, <strong>Périmètres sans personne</strong> et <strong>Souhaits en attente</strong>.</p>
+          <p>C'est l'écran de constitution de l'équipe. Il affiche une carte par périmètre, avec son effectif, ses personnes affectées et ses souhaits. Les périmètres qui manquent de référentes et de référents s'affichent en premier au chargement de la page. Les cartes gardent ensuite leur place pendant vos modifications. Le filtre « À pourvoir » ne garde que les périmètres incomplets. Trois compteurs résument la situation : <strong>Postes à pourvoir</strong>, <strong>Périmètres sans personne</strong> et <strong>Souhaits en attente</strong>.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Effectif souhaité</span></span><span>Fixer le nombre de personnes attendues sur un périmètre. La différence avec les affectations donne les postes à pourvoir.</span></li>
             <li><span><span class="libelle">Affecter</span></span><span>Affecter une personne qui a exprimé un souhait, ou choisir une autre personne de votre équipe dans la liste. Une personne absente de la liste s'invite depuis l'écran « Personnes ».</span></li>
             <li><span><span class="libelle">Contact principal</span></span><span>Cliquer sur l'étoile d'une personne affectée pour la désigner comme contact principal du périmètre. Un périmètre en a un seul par période. Ce rôle ne donne aucun droit supplémentaire.</span></li>
             <li><span><span class="libelle">Retirer</span></span><span>Retirer une affectation, ou retirer un souhait devenu sans objet.</span></li>
             <li><span><span class="libelle">Copier l'appel</span></span><span>Copier un appel aux référentes et référents, à coller dans un mail ou un message.</span></li>
+            <li><span><span class="libelle">Écrire à l'équipe</span></span><span>Préparer un message pour toute l'équipe de l'activité. L'icône d'envoi d'une carte prépare un message pour les référentes et référents de ce périmètre. La section <a href="#e-messages">« Messages »</a> décrit la suite.</span></li>
           </ul>
           <p class="note">Sur une période archivée, l'effectif, le contact principal et le retrait des souhaits sont désactivés.</p>
           <figure>
-            <img src="../captures/equipe.webp" width="1440" height="900" loading="lazy" alt="Écran Équipe : trois compteurs, puis une carte par périmètre avec son effectif, ses affectations, les personnes intéressées et le bouton de réglage." />
+            <img src="../captures/equipe.webp" width="1440" height="900" loading="lazy" alt="Écran Équipe : trois compteurs, puis une carte par périmètre avec son effectif, ses affectations, les personnes intéressées, le bouton de message et le bouton de réglage." />
             <figcaption>Écran Équipe, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
           </figure>
           <p>Le même écran règle les périmètres. Un périmètre est une partie de l'activité, rangée dans un groupe. Il reste le même d'une période à l'autre, ce qui permet à l'historique de le suivre.</p>
@@ -130,15 +145,23 @@
 
         <article class="verre ecran" id="e-personnes">
           <div class="ecran-tete"><h3>Personnes</h3><span class="route">/&lt;activité&gt;/admin/personnes</span></div>
-          <p>Seules les personnes invitées ici peuvent se connecter à l'espace organisateur. L'écran a deux onglets. « Votre équipe » donne le nom, l'adresse mail, les affectations, les souhaits et le rôle de chaque personne de l'activité. Un filtre y isole les personnes sans affectation pour la période choisie. « Demandes » porte la file des personnes proposées pour rejoindre l'équipe.</p>
+          <p>Seules les personnes invitées ici peuvent se connecter à l'espace organisateur. L'écran a trois onglets. « Équipe de l'activité » donne le nom, l'adresse mail, les affectations, les souhaits et le rôle de chaque personne de l'activité. « Demandes » porte la file des personnes proposées pour rejoindre l'équipe. « Messages » garde les messages que les admins ont préparés.</p>
+          <p>Dans le premier onglet, des filtres séparent les admins et les membres, isolent un périmètre, ou ne gardent que les personnes sans affectation pour la période choisie. Un champ cherche un nom ou une adresse.</p>
           <ul class="gestes">
-            <li><span><span class="libelle">Inviter une personne</span></span><span>Saisir le nom et l'adresse, et choisir au moins un périmètre souhaité : la personne rejoint votre équipe par ce périmètre. Une personne sans compte reçoit un mail avec son lien de connexion et le mode d'emploi de son rôle. Une personne qui a déjà un compte dans l'organisation rejoint votre équipe sans nouveau mail, et garde le nom de son compte.</span></li>
+            <li><span><span class="libelle">Inviter une personne</span></span><span>Saisir le nom et l'adresse, et choisir au moins un périmètre, affecté ou souhaité : la personne rejoint votre équipe par ce périmètre. La même fenêtre peut la nommer admin de l'activité. Une personne sans compte reçoit un mail avec son lien de connexion et le mode d'emploi de son rôle. Une personne qui a déjà un compte dans l'organisation rejoint votre équipe sans nouveau mail, et garde le nom de son compte.</span></li>
+            <li><span><span class="libelle">Modifier le compte</span></span><span>Ouvrir la fenêtre d'un compte par le crayon de sa ligne, ou par un clic sur la ligne. Vous y réglez les périmètres affectés et les périmètres souhaités de la personne, et son rôle d'admin de l'activité.</span></li>
             <li><span><span class="libelle">Renvoyer l'invitation</span></span><span>Relancer une personne de votre équipe qui ne s'est pas encore connectée.</span></li>
+            <li><span><span class="libelle">Écrire</span></span><span>Préparer un message pour une personne. « Écrire à la sélection » prépare un message pour les personnes cochées.</span></li>
           </ul>
           <p class="note">Votre équipe réunit les personnes affectées, intéressées ou admins dans votre activité. Vous ne lisez pas les autres membres de l'organisation : seuls ses admins lisent l'annuaire complet. Les affectations et les souhaits que vous voyez sont ceux de vos activités seulement. Le nom d'un compte existant se modifie par un admin de l'organisation.</p>
           <figure>
-            <img src="../captures/personnes.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes : le nom, l'adresse, les affectations, les souhaits et le rôle de chaque personne." />
+            <img src="../captures/personnes.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes, onglet Équipe de l'activité : les filtres, puis le nom, l'adresse, les affectations, les souhaits et le rôle de chaque personne." />
             <figcaption>Écran Personnes, sur l'organisation d'exemple. Les personnes et les adresses sont fictives.</figcaption>
+          </figure>
+          <p>Dans la fenêtre d'un compte, une affectation rend la personne référent·e du périmètre : elle y modifie les tâches, et un mail lui annonce son affectation. Un souhait note seulement un intérêt. Il ne donne aucun accès, et seuls les admins le voient.</p>
+          <figure>
+            <img src="../captures/personnes-compte.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Modifier le compte : le nom et l'adresse en lecture seule, le rôle d'admin de l'activité, les périmètres affectés et les périmètres souhaités." />
+            <figcaption>Fenêtre d'un compte, sur l'organisation d'exemple. La personne est fictive.</figcaption>
           </figure>
           <p>Une référente ou un référent propose une personne pour son périmètre, ou une personne remplit le formulaire public de l'activité. La demande arrive dans l'onglet « Demandes », avec l'adresse, les périmètres demandés, et le mot de la personne qui propose ou les réponses du formulaire. Aucun compte n'existe avant votre décision. La cloche vous prévient une fois par jour au plus, et chaque carte de l'écran « Équipe » compte ses demandes en attente. Un mail vous prévient aussi, une fois par heure au plus : il donne le nombre de demandes en attente, sans nom. Vous le désactivez dans vos préférences.</p>
           <ul class="gestes">
@@ -152,6 +175,29 @@
           </figure>
         </article>
 
+        <article class="verre ecran" id="e-messages">
+          <div class="ecran-tete"><h3>Messages à votre équipe</h3><span class="route">/&lt;activité&gt;/admin/personnes?onglet=messages</span></div>
+          <p>Vous préparez un message dans Relaytour, puis vous l'envoyez depuis votre propre messagerie. Relaytour n'envoie rien : il compose le texte, ouvre votre messagerie et garde ce que vous avez préparé. Le message part de votre adresse, et les réponses vous reviennent.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Modèle</span></span><span>Partir d'un message libre ou d'un texte préparé : lancement de la période, rappel des tâches en retard, appel à bénévoles, remerciements, entre autres. Relaytour y place le nom de l'activité, les dates et les tâches du périmètre choisi.</span></li>
+            <li><span><span class="libelle">Insérer une information</span></span><span>Placer dans votre texte une information de l'application, à l'endroit du curseur. Un passage entre crochets reste à compléter, et la fenêtre le signale.</span></li>
+            <li><span><span class="libelle">Cc ou Cci</span></span><span>Choisir entre des adresses visibles (Cc) et des adresses cachées (Cci) pour un message à plusieurs personnes. En Cc, chaque destinataire voit l'adresse des autres. En Cci, vous pouvez garder les contacts principaux en copie visible.</span></li>
+            <li><span><span class="libelle">Ouvrir dans votre messagerie</span></span><span>Ouvrir votre messagerie avec les destinataires, l'objet et le texte. Relaytour enregistre le message à ce moment.</span></li>
+            <li><span><span class="libelle">Copier</span></span><span>Copier les adresses, l'objet ou le texte, pour les coller dans une messagerie en ligne.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/message.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Écrire un message : les destinataires, le choix entre Cc et Cci, le modèle, le périmètre, l'objet et le texte." />
+            <figcaption>Un message préparé pour toute l'équipe, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
+          </figure>
+          <p>L'onglet « Messages » de l'écran « Personnes » liste les messages de l'activité : la date, l'objet, le modèle, l'auteur, les destinataires et l'état. Un message est « En cours » à l'ouverture de la messagerie. Son auteur le note ensuite « Envoyé » ou « Annulé », et peut le rouvrir dans sa messagerie.</p>
+          <figure>
+            <img src="../captures/personnes-messages.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes, onglet Messages : deux messages avec leur date, leur objet, leur modèle, leur auteur, leurs destinataires et leur état." />
+            <figcaption>Onglet Messages, sur l'organisation d'exemple. Les personnes et les messages sont fictifs.</figcaption>
+          </figure>
+          <p class="note">L'état d'un message est celui que son auteur déclare : Relaytour ne sait pas si le message est parti. Un message compte 500 destinataires au plus, et un message préparé ne se modifie plus.</p>
+          <p class="note">Un texte très long ou de très nombreux destinataires dépassent ce qu'un lien vers la messagerie peut porter. La fenêtre vous demande alors de copier le texte, ou les adresses, et de les coller dans le message.</p>
+        </article>
+
         <article class="verre ecran" id="e-redaction">
           <div class="ecran-tete"><h3>Rédaction des fiches</h3><span class="route">/&lt;activité&gt;/admin/redaction</span></div>
           <p>Les admins rédigent toutes les fiches de leur activité. Les autres personnes ont besoin d'un droit de rédaction, accordé périmètre par périmètre.</p>
@@ -160,8 +206,9 @@
             <li><span><span class="libelle">Retirer</span></span><span>Retirer un droit devenu inutile, après confirmation.</span></li>
           </ul>
           <p class="note">Le droit portant sur toutes les fiches, communes comprises, appartient aux admins de l'organisation.</p>
+          <p class="note">Un second tableau liste les admins. Leur rôle leur donne déjà la rédaction des fiches : la liste « Personne » ne les propose pas.</p>
           <figure>
-            <img src="../captures/redaction.webp" width="1440" height="900" loading="lazy" alt="Écran Rédaction des fiches : le formulaire d'attribution et la liste des droits accordés." />
+            <img src="../captures/redaction.webp" width="1440" height="900" loading="lazy" alt="Écran Rédaction des fiches : le formulaire d'attribution, la liste des droits accordés et la liste des admins." />
             <figcaption>Écran Rédaction des fiches, sur l'organisation d'exemple.</figcaption>
           </figure>
         </article>
@@ -195,7 +242,7 @@
             <figcaption>Formulaire public d'une activité, sur l'organisation d'exemple.</figcaption>
           </figure>
           <figure>
-            <img src="../captures/activites.webp" width="1440" height="900" loading="lazy" alt="Écran Activités : un événement et une section, avec leur nature, leurs groupes et leur état." />
+            <img src="../captures/activites.webp" width="1440" height="900" loading="lazy" alt="Écran Activités : l'activité administrée, avec son identifiant, sa nature, ses groupes et son état." />
             <figcaption>Écran Activités, sur l'organisation d'exemple.</figcaption>
           </figure>
         </article>
@@ -253,7 +300,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.10.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.11.0.
       </footer>
     </main>
   </body>

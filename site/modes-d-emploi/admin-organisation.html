@@ -49,16 +49,20 @@
           <span class="etiquette">Point de départ</span>
           <h2 id="t-ou">Où se trouvent vos écrans</h2>
           <p class="texte">
-            L'entrée <strong>Organisation</strong> ouvre le groupe « Gérer l'organisation » du menu, placé sous le groupe « Gérer l'activité ». Elle n'apparaît que pour votre rôle. Vos autres leviers se trouvent sur les pages Activités, Personnes et Rédaction, sous forme de champs et de boutons que les admins d'activité ne voient pas.
+            Le groupe <strong>Gérer l'organisation</strong> du menu se trouve sous le groupe « Gérer l'activité ». Il porte quatre entrées : Organisation, Activités, Annuaire et Admins. Les entrées Organisation, Annuaire et Admins n'apparaissent que pour votre rôle. Vos autres leviers se trouvent sur les pages Activités et Rédaction, sous forme de champs et de boutons que les admins d'activité ne voient pas.
+          </p>
+          <p class="texte">
+            Les tableaux de l'annuaire et des admins se trient, se filtrent et se redimensionnent comme ceux des activités. Le mode d'emploi de l'admin d'activité le décrit dans <a href="admin-activite.html#t-tableaux">« Où se trouvent vos écrans »</a>.
           </p>
         </div>
         <nav class="verre sommaire" aria-label="Sommaire">
-          <span class="etiquette">Vos cinq leviers</span>
+          <span class="etiquette">Vos six leviers</span>
           <ol>
             <li><a href="#e-organisation">Organisation</a> : identité, adresses de rôle, logo et thème.</li>
             <li><a href="#e-contenu">Contenu de l'organisation</a> : télécharger l'archive avant tout import.</li>
             <li><a href="#e-activites">Activités</a> : créer et archiver une activité.</li>
-            <li><a href="#e-roles">Personnes et rôles</a> : nommer les admins, gérer les comptes.</li>
+            <li><a href="#e-roles">Annuaire</a> : gérer les comptes et écrire aux membres.</li>
+            <li><a href="#e-admins">Admins</a> : nommer les admins de l'organisation et de chaque activité.</li>
             <li><a href="#e-redaction">Rédaction</a> : accorder un droit sur toutes les fiches.</li>
           </ol>
         </nav>
@@ -113,24 +117,40 @@
         </article>
 
         <article class="verre ecran" id="e-roles">
-          <div class="ecran-tete"><h3>Comptes et rôles</h3><span class="route">/&lt;activité&gt;/admin/annuaire</span></div>
-          <p>Un compte est commun à toute l'organisation, et une même personne peut appartenir à plusieurs organisations. Vous seul·e touchez au compte lui-même et aux rôles. Vous seul·e lisez l'annuaire complet, dans le groupe « Gérer l'organisation » : la colonne « Activités » indique où chaque personne participe, et le filtre « Sans activité » isole les membres qui ne participent encore à aucune. L'écran « Personnes » d'une activité ne montre que son équipe. Dans l'écran « Équipe », la liste d'affectation vous propose aussi les membres des autres activités, suivis du nom de leurs activités.</p>
+          <div class="ecran-tete"><h3>Annuaire et comptes</h3><span class="route">/&lt;activité&gt;/admin/annuaire</span></div>
+          <p>Un compte est commun à toute l'organisation, et une même personne peut appartenir à plusieurs organisations. Vous seul·e touchez au compte lui-même et aux rôles. Vous seul·e lisez l'annuaire complet, dans le groupe « Gérer l'organisation » : la colonne « Activités » indique où chaque personne participe. Des filtres séparent les admins et les membres, isolent une activité, ou ne gardent que les membres « Sans activité ». L'écran « Personnes » d'une activité ne montre que son équipe. Dans l'écran « Équipe », la liste d'affectation vous propose aussi les membres des autres activités, suivis du nom de leurs activités.</p>
           <figure>
-            <img src="../captures/annuaire.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes, onglet Annuaire : le nom, l'adresse, les affectations, les souhaits, les activités et le rôle de chaque membre de l'organisation." />
+            <img src="../captures/annuaire.webp" width="1440" height="900" loading="lazy" alt="Écran Annuaire : les filtres, puis le nom, l'adresse, les activités et le rôle de chaque membre de l'organisation." />
             <figcaption>Annuaire de l'organisation, sur l'organisation d'exemple. Les personnes et les adresses sont fictives.</figcaption>
           </figure>
           <ul class="gestes">
-            <li><span><span class="libelle">Admins</span></span><span>L'écran « Admins », dans le groupe « Gérer l'organisation », liste les admins de l'organisation et ceux de chaque activité. Vous y donnez le rôle d'admin de l'organisation à un autre membre du bureau. Vous ne pouvez pas vous le retirer vous-même.</span></li>
-            <li><span><span class="libelle">Admin des activités</span></span><span>Nommer les personnes qui piloteront une activité, depuis la fenêtre d'un compte de l'annuaire ou depuis l'écran « Admins ». Elles ne voient ni les autres activités, ni leurs personnes.</span></li>
+            <li><span><span class="libelle">Inviter une personne</span></span><span>Créer un compte, choisir les activités que la personne administre et ses périmètres, affectés ou souhaités.</span></li>
+            <li><span><span class="libelle">Modifier le compte</span></span><span>Ouvrir la fenêtre d'un compte par le crayon de sa ligne, ou par un clic sur la ligne. Vous y réglez les activités que la personne administre, ses périmètres affectés et ses périmètres souhaités, dans chaque activité.</span></li>
             <li><span><span class="libelle">Prénom et nom</span></span><span>Corriger le nom d'un compte existant.</span></li>
             <li><span><span class="libelle">Archiver</span></span><span>Fermer l'accès d'une personne qui quitte l'organisation. Elle est déconnectée, son historique reste conservé.</span></li>
-            <li><span><span class="libelle">Restaurer</span></span><span>Rouvrir l'accès d'un compte archivé.</span></li>
+            <li><span><span class="libelle">Restaurer</span></span><span>Rouvrir l'accès d'un compte archivé. L'interrupteur « Afficher les comptes archivés » les fait apparaître dans le tableau.</span></li>
+            <li><span><span class="libelle">Écrire</span></span><span>Préparer un message pour un membre, ou pour les membres cochés avec « Écrire à la sélection ». Le message part de votre propre messagerie. L'onglet « Messages » liste tous les messages de l'organisation, ceux des activités compris.</span></li>
           </ul>
-          <p class="note">Le mail d'invitation contient le lien vers le mode d'emploi du rôle de la personne. Après une nomination, renvoyez l'invitation pour lui transmettre le mode d'emploi de son nouveau rôle.</p>
+          <p class="note">Un message de l'annuaire s'adresse à des membres de l'organisation, quelle que soit leur activité. Le mode d'emploi de l'admin d'activité décrit la fenêtre d'écriture dans <a href="admin-activite.html#e-messages">« Messages à votre équipe »</a>.</p>
           <figure>
-            <img src="../captures/personnes-roles.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Modifier le compte : le nom, l'adresse, le rôle d'admin de l'organisation et les activités administrées." />
+            <img src="../captures/personnes-roles.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Modifier le compte : le nom, l'adresse, les activités administrées, les périmètres affectés et les périmètres souhaités." />
             <figcaption>Modification d'un compte, sur l'organisation d'exemple. La personne est fictive.</figcaption>
           </figure>
+        </article>
+
+        <article class="verre ecran" id="e-admins">
+          <div class="ecran-tete"><h3>Admins</h3><span class="route">/&lt;activité&gt;/admin/admins</span></div>
+          <p>L'écran liste les admins de l'organisation, puis les admins de chaque activité. Vous nommez et vous retirez les uns et les autres.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nommer</span></span><span>Choisir une personne dans la liste d'un bloc, puis la nommer admin de l'organisation ou admin de cette activité.</span></li>
+            <li><span><span class="libelle">Retirer</span></span><span>Retirer le rôle d'une personne, après confirmation. Vous ne pouvez pas vous retirer vous-même le rôle d'admin de l'organisation.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/admins.webp" width="1440" height="900" loading="lazy" alt="Écran Admins : le bloc de l'organisation avec son admin, puis un bloc par activité avec ses admins et le bouton Retirer." />
+            <figcaption>Écran Admins, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
+          </figure>
+          <p class="note">Un admin d'activité ne voit ni les autres activités, ni leurs personnes. Il nomme les autres admins de son activité depuis l'écran « Personnes ».</p>
+          <p class="note">Le mail d'invitation contient le lien vers le mode d'emploi du rôle de la personne. Après une nomination, renvoyez l'invitation depuis l'annuaire pour lui transmettre le mode d'emploi de son nouveau rôle.</p>
         </article>
 
         <article class="verre ecran" id="e-redaction">
@@ -141,7 +161,7 @@
           </ul>
           <p class="note">Un admin d'activité n'accorde un droit que sur les périmètres de son activité.</p>
           <figure>
-            <img src="../captures/redaction-organisation.webp" width="1440" height="900" loading="lazy" alt="Écran Rédaction des fiches : un droit porte sur toutes les fiches, les autres sur un périmètre." />
+            <img src="../captures/redaction-organisation.webp" width="1440" height="900" loading="lazy" alt="Écran Rédaction des fiches : un droit porte sur toutes les fiches, les autres sur un périmètre, et un second tableau liste les admins." />
             <figcaption>Écran Rédaction des fiches, sur l'organisation d'exemple.</figcaption>
           </figure>
         </article>
@@ -199,7 +219,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.10.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.11.0.
       </footer>
     </main>
   </body>
