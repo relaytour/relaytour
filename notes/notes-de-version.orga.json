@@ -34,6 +34,19 @@
           }
         },
         {
+          "id": "2026-10-07-orga-l-espace-organisateur-s-installe-sur-l-ecran-d-accueil-d-un-",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'espace organisateur s'installe sur l'écran d'accueil d'un téléphone",
+            "texte": "L'espace organisateur s'ajoute à l'écran d'accueil d'un téléphone, sous le nom et l'icône de votre organisation. Il s'ouvre alors sans barre d'adresse. Sans réseau, il affiche un écran « Hors connexion » et reprend au retour du réseau. Un avis annonce une nouvelle version : vous rechargez quand vous le voulez.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-l-espace-organisateur-s-adapte-mieux-au-telephone",
           "date": "2026-10-07",
           "type": "fonctionnalite",

@@ -424,6 +424,12 @@ export function declarationEnBase(
       : empreintes.get(declaration.favicon)
   if (favicon === undefined) delete resultat.favicon
   else resultat.favicon = favicon
+  const icone =
+    declaration.iconeApplication === undefined
+      ? undefined
+      : empreintes.get(declaration.iconeApplication)
+  if (icone === undefined) delete resultat.iconeApplication
+  else resultat.iconeApplication = icone
   return resultat
 }
 

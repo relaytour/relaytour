@@ -384,6 +384,12 @@ type IdentiteOrganisation {
   domainesCourrielAutorises: [String!]!
   favicon: String
   faviconUrl: String
+
+  """
+  Empreinte de l’icône de l’application installée : un PNG carré de 512 pixels (ADR 0023).
+  """
+  iconeApplication: String
+  iconeApplicationUrl: String
   logoPng: String
   logoSvg: String
   logoUrl: String
@@ -552,7 +558,7 @@ type Mutation {
   """
   Remplace l’identité de l’organisation. Le slug, le fuseau horaire, le statut et les limites ne changent pas ici.
   """
-  modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
+  modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, iconeApplication: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
   modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
 
   """
@@ -633,7 +639,13 @@ type Organisation {
   """
   codeSource: String!
   faviconUrl: String
+  iconeApplicationUrl: String
   logoUrl: String
+
+  """
+  Adresse du manifest de l’application installée, propre à l’organisation (ADR 0023).
+  """
+  manifestUrl: String!
 
   """
   Adresse de la liste des modes d’emploi de l’espace organisateur, un par rôle.

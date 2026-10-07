@@ -259,6 +259,8 @@ export const DeclarationOrganisationSchema = z
     pageEquipe: z.string().trim().url().optional(),
     logo: LogoSchema.optional(),
     favicon: ReferenceImage.optional(),
+    // Icône de l'application installée : un PNG carré de 512 pixels (ADR 0023).
+    iconeApplication: ReferenceImage.optional(),
     logoUrl: z
       .string()
       .trim()
@@ -370,6 +372,8 @@ export interface ConfigurationOrganisation {
   /** Le logo PNG en adresse absolue, pour les mails. */
   logoMailUrl: string | undefined
   faviconUrl: string | undefined
+  /** L'icône de l'application installée, si l'organisation en déclare une (ADR 0023). */
+  iconeApplicationUrl: string | undefined
   /** La déclaration du thème, avant résolution : base de la fusion d'une activité. */
   themeDeclare: ThemeDeclare | undefined
   theme: Theme
@@ -436,6 +440,7 @@ export function resoudreConfiguration(
       declaration.logoUrl,
     logoMailUrl: urlMedia(declaration.logo?.png, 'png', env.ORIGINE_ORGA),
     faviconUrl: urlMedia(declaration.favicon, 'png') ?? declaration.faviconUrl,
+    iconeApplicationUrl: urlMedia(declaration.iconeApplication, 'png'),
     themeDeclare: declaration.theme,
     theme: resoudreTheme(declaration.theme),
   }

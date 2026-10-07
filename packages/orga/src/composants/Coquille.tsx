@@ -28,9 +28,11 @@ import { useActivite } from '../lib/activite'
 import { useRafraichissement } from '../lib/rafraichissement'
 import { ContexteSession, type Session } from '../lib/session'
 
+import AvisMiseAJour from './AvisMiseAJour'
 import AvisRelecture from './AvisRelecture'
 import ChoixActivite from './ChoixActivite'
 import FournisseurActivite from './FournisseurActivite'
+import { AvisHorsConnexion } from './HorsConnexion'
 import GardeSession from './GardeSession'
 import { Pictogramme, SignatureRelaytour } from './Marque'
 import MenuCompte from './MenuCompte'
@@ -325,6 +327,8 @@ function Mise({ session }: { session: Session }) {
           )}
         </header>
         <main className="rt-contenu">
+          <AvisMiseAJour />
+          <AvisHorsConnexion />
           <AvisRelecture />
           {active.statut === 'LECTURE_SEULE' && (
             <Alert

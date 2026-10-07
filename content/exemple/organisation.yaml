@@ -17,3 +17,6 @@ logo:
   png: medias/logo.png
   svg: medias/logo.svg
 favicon: medias/favicon.png
+# Icône de l'application installée sur un téléphone : un PNG carré de 512 pixels
+# de côté (facultatif). Sans elle, l'application porte l'icône de Relaytour.
+iconeApplication: medias/icone-application.png

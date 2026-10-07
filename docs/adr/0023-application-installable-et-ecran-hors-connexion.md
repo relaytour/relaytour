@@ -47,11 +47,13 @@ Une application native demande un second code, un compte de développeur par mag
 - Le service worker garde en cache la coquille de l'application : la page, les scripts, les styles et les polices du build.
 - Il ne garde aucune donnée. Il n'intercepte ni `/graphql`, ni `/api/auth/`, ni `/medias/`.
 - Une navigation interroge d'abord le réseau. Sans réseau, le service worker rend la coquille gardée en cache.
-- La bibliothèque `vite-plugin-pwa` (licence MIT) produit la liste des fichiers du build. Le code du service worker reste dans le dépôt (`packages/orga/src/sw.ts`).
+- Le code du service worker vit dans le dépôt (`packages/orga/src/sw.ts`). Un plugin de `vite.config.ts` le construit et y écrit la liste des scripts et des styles du build. Aucune dépendance ne s'ajoute.
+- Les polices entrent dans le cache à leur première lecture.
 
 ### Hors connexion
 
-- Sans réseau, l'espace organisateur affiche un écran « Hors connexion ». L'écran propose de réessayer, et l'application reprend au retour du réseau.
+- Ouvert sans réseau, l'espace organisateur affiche un écran « Hors connexion ». L'écran propose de réessayer, et l'application reprend au retour du réseau.
+- Quand le réseau disparaît en cours d'utilisation, un avis le signale et l'écran reste en place : une saisie en cours n'est pas perdue.
 - Aucune fiche ni aucune tâche ne se lit hors connexion. Une lecture hors connexion demanderait de garder des données sur le téléphone, donc une décision propre.
 
 ### Mise à jour
@@ -68,7 +70,6 @@ Une application native demande un second code, un compte de développeur par mag
 ## Conséquences
 
 - La déclaration d'une organisation reçoit un champ pour l'icône d'application. Aucune migration : la déclaration est stockée en JSON.
-- `packages/orga` reçoit une dépendance de build, `vite-plugin-pwa`.
 - Sur iPhone, l'application installée a un stockage séparé de Safari. Le lien du mail de connexion s'ouvre dans Safari : dans l'application installée, la personne saisit le code reçu (ADR 0002).
 - Un exploitant ne règle rien. La note `infra/README.md` précise que `/sw.js` ne doit pas recevoir de cache long.
 - Les anciens fichiers du build restent sur le disque après une mise à jour (`infra/README.md`). Une application ouverte sur l'ancienne version continue donc de fonctionner jusqu'au rechargement.

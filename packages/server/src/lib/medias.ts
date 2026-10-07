@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto'
 
-// Images d'une organisation ou d'une activité (ADR 0009) : logo et favicon. Ce
+// Images d'une organisation ou d'une activité (ADR 0009) : logo, favicon et
+// icône d'application (ADR 0023). Ce
 // module est pur ; il n'importe ni Prisma ni l'environnement, pour servir aussi
 // à la validation d'un dossier de contenu sans base.
 
@@ -95,5 +96,41 @@ export function verifierMedia(
     empreinte: empreinteMedia(donnees),
     octets: donnees.length,
     donnees,
+  }
+}
+
+/** Côté de l'icône d'application, en pixels (ADR 0023). */
+export const COTE_ICONE_APPLICATION = 512
+
+/** Les dimensions d'un PNG, lues dans son en-tête IHDR, ou null s'il est tronqué. */
+export function dimensionsPng(
+  donnees: Buffer
+): { largeur: number; hauteur: number } | null {
+  if (
+    donnees.length < 24 ||
+    !donnees.subarray(0, 8).equals(SIGNATURE_PNG) ||
+    donnees.toString('latin1', 12, 16) !== 'IHDR'
+  )
+    return null
+  return {
+    largeur: donnees.readUInt32BE(16),
+    hauteur: donnees.readUInt32BE(20),
+  }
+}
+
+/**
+ * Vérifie une icône d'application : un PNG carré de 512 pixels de côté. Le
+ * serveur ne redimensionne aucune image (ADR 0023).
+ */
+export function verifierIconeApplication(donnees: Buffer): void {
+  const d = dimensionsPng(donnees)
+  if (
+    d === null ||
+    d.largeur !== COTE_ICONE_APPLICATION ||
+    d.hauteur !== COTE_ICONE_APPLICATION
+  ) {
+    throw new Error(
+      `L’icône d’application doit être un PNG carré de ${COTE_ICONE_APPLICATION} pixels de côté.`
+    )
   }
 }
