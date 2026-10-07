@@ -8,6 +8,18 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-07-orga-un-admin-affecte-une-personne-depuis-la-fenetre-de-son-compt",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un admin affecte une personne depuis la fenêtre de son compte",
+            "texte": "La fenêtre d'un compte, sur l'écran Personnes, propose désormais les périmètres affectés en plus des périmètres souhaités, pour chaque activité que vous administrez. Un texte rappelle la différence : une affectation rend la personne référent·e du périmètre, un souhait note seulement un intérêt. L'écran Rédaction liste les admins à part, sans les proposer au choix : leur rôle leur donne déjà la rédaction des fiches.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-les-cartes-de-l-ecran-equipe-gardent-leur-place-pendant-les-",
           "date": "2026-10-07",
           "type": "correctif",
@@ -16,6 +28,18 @@
           "fr": {
             "titre": "Les cartes de l'écran Équipe gardent leur place pendant les modifications",
             "texte": "Sur l'écran Équipe, une affectation ne déplace plus la carte du périmètre : l'ordre se recalcule au chargement de la page. Le menu sépare la gestion de l'activité et celle de l'organisation. Les sections de la page Organisation sont espacées.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-07-orga-l-ecran-admins-liste-les-admins-de-l-organisation-et-de-chaq",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'écran Admins liste les admins de l'organisation et de chaque activité",
+            "texte": "Le groupe « Gérer l'organisation » du menu porte un écran « Admins ». Il liste les admins de l'organisation, puis ceux de chaque activité, et permet de les nommer ou de les retirer. Le rôle d'admin de l'organisation ne se donne plus depuis la fenêtre d'un compte. L'écran est réservé aux admins de l'organisation, comme le nouvel écran Annuaire, qui liste tous les membres et se filtre par activité. L'écran Personnes d'une activité ne liste plus que son équipe, avec un filtre par périmètre. Un filtre y sépare les admins et les membres, et un admin d'activité nomme les admins de son activité depuis la fenêtre d'un compte. La fenêtre d'invitation propose les périmètres affectés en plus des périmètres souhaités.",
             "migration": null
           }
         }

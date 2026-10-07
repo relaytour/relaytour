@@ -134,3 +134,19 @@ export const RETIRER_AFFECTATION = graphql(`
     retirerAffectation(id: $id)
   }
 `)
+
+// Nommer ou retirer un admin d'activité (ADR 0010, 0019) : la fenêtre d'un compte et
+// l'écran « Admins » partagent cette écriture.
+export const DEFINIR_ADMIN_ACTIVITE = graphql(`
+  mutation DefinirAdminActivite(
+    $personneId: ID!
+    $activiteId: ID!
+    $admin: Boolean!
+  ) {
+    definirAdminActivite(
+      personneId: $personneId
+      activiteId: $activiteId
+      admin: $admin
+    )
+  }
+`)

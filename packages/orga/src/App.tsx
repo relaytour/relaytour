@@ -6,6 +6,7 @@ import ReserveEquipe from './composants/ReserveEquipe'
 import { VersActivite } from './composants/FournisseurActivite'
 import GardeSession from './composants/GardeSession'
 import Activites from './pages/admin/Activites'
+import Admins from './pages/admin/Admins'
 import AvancementGlobal from './pages/admin/AvancementGlobal'
 import Classement from './pages/admin/Classement'
 import Editions from './pages/admin/Editions'
@@ -67,6 +68,18 @@ const routeur = createBrowserRouter([
             path: 'organisation',
             element: <ReserveAdmin organisation />,
             children: [{ index: true, element: <Organisation /> }],
+          },
+          // L'annuaire de l'organisation : le même écran que « Personnes », sur
+          // tous les membres (ADR 0018).
+          {
+            path: 'annuaire',
+            element: <ReserveAdmin organisation />,
+            children: [{ index: true, element: <Personnes annuaire /> }],
+          },
+          {
+            path: 'admins',
+            element: <ReserveAdmin organisation />,
+            children: [{ index: true, element: <Admins /> }],
           },
           { path: 'equipe', element: <Equipe /> },
           { path: 'personnes', element: <Personnes /> },
