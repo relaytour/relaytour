@@ -2,6 +2,7 @@
 cible: serveur
 type: fonctionnalite
 audience: organisateurs
+role: referent
 etat: prevu
 version: 0.5.0
 fr:

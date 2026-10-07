@@ -51,6 +51,7 @@ function fragment(racine, nom, champs) {
     `cible: ${cible}`,
     `type: ${champs.type}`,
     `audience: ${champs.audience ?? 'organisateurs'}`,
+    ...(champs.role ? [`role: ${champs.role}`] : []),
     ...(champs.etat ? [`etat: ${champs.etat}`] : []),
     ...(champs.version ? [`version: ${champs.version}`] : []),
     'fr:',
@@ -148,7 +149,7 @@ test('publier rattache les fragments, relève les trois paquets et groupe le jou
   )
 
   const serveur = journal(racine, 'serveur')
-  assert.equal(serveur.schemaVersion, 3)
+  assert.equal(serveur.schemaVersion, 4)
   assert.equal(serveur.version, '0.2.0')
   assert.deepEqual(
     serveur.versions.map(v => [v.version, v.notes.map(n => n.id)]),
@@ -340,3 +341,89 @@ for (const valeur of ['demain', '']) {
     assert.deepEqual(readdirSync(join(racine, 'notes/fragments')), [])
   })
 }
+
+test('compiler donne à chaque note des organisateurs son rôle, « referent » par défaut', () => {
+  const racine = depot('0.2.0')
+  fragment(racine, '2026-01-01-orga-pour-tous', {
+    type: 'correctif',
+    version: '0.2.0',
+  })
+  fragment(racine, '2026-01-02-orga-pour-les-admins', {
+    type: 'correctif',
+    role: 'admin-activite',
+    version: '0.2.0',
+  })
+  fragment(racine, '2026-01-03-orga-interne', {
+    type: 'interne',
+    audience: 'interne',
+    version: '0.2.0',
+  })
+  assert.equal(lancer(racine, 'compiler').code, 0)
+  assert.deepEqual(
+    journal(racine, 'orga').versions[0].notes.map(n => [n.id, n.role]),
+    [
+      ['2026-01-03-orga-interne', null],
+      ['2026-01-02-orga-pour-les-admins', 'admin-activite'],
+      ['2026-01-01-orga-pour-tous', 'referent'],
+    ]
+  )
+})
+
+test('valider refuse un rôle inconnu, et un rôle hors de l’audience des organisateurs', () => {
+  const racine = depot('0.2.0')
+  fragment(racine, '2026-01-01-orga-inconnu', {
+    type: 'correctif',
+    role: 'benevole',
+  })
+  fragment(racine, '2026-01-02-orga-interne', {
+    type: 'interne',
+    audience: 'interne',
+    role: 'admin-organisation',
+  })
+  const { code, sortie } = lancer(racine, 'valider')
+  assert.equal(code, 1)
+  assert.ok(
+    sortie.includes('valeur « benevole » inconnue pour « role »'),
+    sortie
+  )
+  assert.ok(
+    sortie.includes(
+      "« role » ne s'emploie qu'avec l'audience « organisateurs »"
+    ),
+    sortie
+  )
+})
+
+test('noter écrit le rôle demandé, et « referent » sans option', () => {
+  const racine = depot('0.2.0')
+  const noter = (titre, ...options) =>
+    lancer(
+      racine,
+      'noter',
+      '--cible',
+      'orga',
+      '--type',
+      'correctif',
+      '--titre',
+      titre,
+      ...options
+    )
+  assert.equal(noter('Pour tous', '--audience', 'organisateurs').code, 0)
+  assert.equal(
+    noter(
+      'Pour les admins',
+      '--audience',
+      'organisateurs',
+      '--role',
+      'admin-organisation'
+    ).code,
+    0
+  )
+  const refus = noter('Interne', '--audience', 'interne', '--role', 'referent')
+  assert.equal(refus.code, 1)
+  const [admins, tous] = readdirSync(join(racine, 'notes/fragments'))
+    .sort((a, b) => a.slice(11).localeCompare(b.slice(11)))
+    .map(nom => lire(racine, `notes/fragments/${nom}`))
+  assert.match(admins, /^role: admin-organisation$/m)
+  assert.match(tous, /^role: referent$/m)
+})

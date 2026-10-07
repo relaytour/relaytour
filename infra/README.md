@@ -99,7 +99,8 @@ Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses m
     ```
     Le fichier contient des noms et des adresses : remettez-le à l'organisation et supprimez-le du serveur ensuite.
 5. **Code source.** L'espace organisateur lie le code source de la version exécutée, comme l'AGPL l'exige (article 13). Par défaut, le lien mène au dépôt public. Un hébergeur qui modifie Relaytour indique son propre dépôt dans `CODE_SOURCE_URL`. De la même façon, le menu du compte et le mail d'invitation lient les modes d'emploi du site de Relaytour ; `MODES_D_EMPLOI_URL` les remplace par ceux de l'hébergeur.
-6. **Identité et contenu.** Les admins d'une organisation modifient son nom, ses contacts, son logo et son thème dans l'espace organisateur, et téléchargent son contenu en archive. Le portail d'un hébergeur ne gère que le statut et les limites (ADR 0009).
+6. **Version et support.** Le menu du compte affiche le numéro de version de l'installation et ouvre les notes de version, limitées au rôle de chaque personne (ADR 0021). Le bouton « Support » du même menu ouvre l'adresse de support que l'organisation a déclarée. Pour les organisations qui n'en ont pas, `SUPPORT_URL` indique l'action de l'hébergeur : une page d'assistance en `https://` ou une adresse en `mailto:`. Sans l'une ni l'autre, le bouton n'apparaît pas.
+7. **Identité et contenu.** Les admins d'une organisation modifient son nom, ses contacts, son logo et son thème dans l'espace organisateur, et téléchargent son contenu en archive. Le portail d'un hébergeur ne gère que le statut et les limites (ADR 0009).
 
 ## Constituer une équipe depuis le serveur
 

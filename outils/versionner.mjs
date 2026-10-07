@@ -43,7 +43,13 @@ const TYPES = [
 const AUDIENCES = ['organisateurs', 'interne', 'public']
 // `retire` sort du journal compilé ; `differe` y reste avec son état.
 const ETATS = ['prevu', 'differe', 'retire']
-const CHAMPS = ['cible', 'type', 'audience', 'etat', 'version', 'fr']
+// Le rôle le moins étendu qu'une note concerne, dans l'espace organisateur.
+// Une note s'affiche à ce rôle et aux rôles plus étendus. Seule l'audience
+// « organisateurs » porte un rôle ; absent, il vaut « referent ».
+const ROLES = ['referent', 'admin-activite', 'admin-organisation']
+const ROLE_PAR_DEFAUT = 'referent'
+const AUDIENCE_A_ROLE = 'organisateurs'
+const CHAMPS = ['cible', 'type', 'audience', 'role', 'etat', 'version', 'fr']
 /** Les audiences reprises dans le texte d'une release. */
 const AUDIENCES_PUBLIEES = ['organisateurs', 'public']
 
@@ -281,6 +287,14 @@ function controler(fragment, produit) {
   attendu('type', c.type, TYPES)
   attendu('audience', c.audience, AUDIENCES)
   if (c.etat !== undefined) attendu('etat', c.etat, ETATS)
+  if (c.role !== undefined) {
+    attendu('role', c.role, ROLES)
+    if (c.audience !== undefined && c.audience !== AUDIENCE_A_ROLE) {
+      erreurs.push(
+        `« role » ne s'emploie qu'avec l'audience « ${AUDIENCE_A_ROLE} »`
+      )
+    }
+  }
 
   if (
     c.cible !== undefined &&
@@ -366,6 +380,7 @@ function entree(fragment) {
     date: fragment.date,
     type: c.type,
     audience: c.audience,
+    role: c.audience === AUDIENCE_A_ROLE ? (c.role ?? ROLE_PAR_DEFAUT) : null,
     etat: c.etat ?? 'prevu',
     fr: {
       titre: c.fr.titre,
@@ -402,7 +417,7 @@ function compilerCible(cible, fragments, produit) {
     version => ({ version, notes: groupes.get(version).reverse() })
   )
   return {
-    schemaVersion: 3,
+    schemaVersion: 4,
     projet: nomDuProjet(),
     cible,
     version: produit,
@@ -662,6 +677,12 @@ function commandeNoter(options) {
   verifierChoix('cible', options.cible, CIBLES)
   verifierChoix('type', options.type, TYPES)
   verifierChoix('audience', options.audience, AUDIENCES)
+  if (options.role !== undefined) {
+    verifierChoix('role', options.role, ROLES)
+    if (options.audience !== AUDIENCE_A_ROLE) {
+      mourir(`--role ne s'emploie qu'avec --audience ${AUDIENCE_A_ROLE}`)
+    }
+  }
   if (!options.titre) mourir('--titre requis')
 
   const morceau = slug(options.titre)
@@ -692,6 +713,9 @@ function commandeNoter(options) {
       `cible: ${options.cible}`,
       `type: ${options.type}`,
       `audience: ${options.audience}`,
+      ...(options.audience === AUDIENCE_A_ROLE
+        ? [`role: ${options.role ?? ROLE_PAR_DEFAUT}`]
+        : []),
       'etat: prevu',
       blocFr,
       '---',
@@ -711,11 +735,12 @@ function commandeNoter(options) {
 
 const USAGE = `versionner : journal des changements du dépôt
 
-  noter --cible <c> --type <t> --audience <a> --titre "…"
+  noter --cible <c> --type <t> --audience <a> [--role <r>] --titre "…"
       Crée un fragment dans notes/fragments/.
       cibles : ${CIBLES.join(', ')}
       types : ${TYPES.join(', ')}
       audiences : ${AUDIENCES.join(', ')}
+      rôles (audience ${AUDIENCE_A_ROLE}) : ${ROLES.join(', ')}
 
   valider
       Contrôle le schéma et les énumérations de chaque fragment, et exige une
@@ -746,6 +771,7 @@ function principal() {
       cible: { type: 'string' },
       type: { type: 'string' },
       audience: { type: 'string' },
+      role: { type: 'string' },
       titre: { type: 'string' },
       version: { type: 'string' },
       simulation: { type: 'boolean' },

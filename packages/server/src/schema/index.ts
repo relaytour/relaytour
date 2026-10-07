@@ -15,6 +15,7 @@ import './demandes.ts'
 import './formulaire.ts'
 import './messages.ts'
 import './flux.ts'
+import './notes-de-version.ts'
 
 import { builder } from './builder.ts'
 

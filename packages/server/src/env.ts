@@ -68,6 +68,14 @@ const EnvSchema = z
     // Adresse ou URL de l'hébergeur, citée quand une limite d'organisation est
     // atteinte (ADR 0008). Absente en auto-hébergement : le message renvoie vers un admin.
     CONTACT_HEBERGEUR: optionnelle,
+    // Action du bouton « Support » de l'espace organisateur, pour les organisations
+    // qui ne déclarent pas leur propre adresse de support (ADR 0021) : une page
+    // d'assistance en https, ou une adresse en mailto:. Absente, le bouton
+    // n'apparaît que dans les organisations qui ont déclaré leur adresse.
+    SUPPORT_URL: optionnelle.refine(
+      s => s === undefined || /^(https:\/\/|mailto:)\S+$/.test(s),
+      'SUPPORT_URL : adresse https ou lien mailto: attendu'
+    ),
     // Administration de l'installation (ADR 0008) : jeton d'un hébergeur pour créer,
     // suspendre, limiter et exporter les organisations, sans accès aux données.
     // Absent, l'API d'administration est fermée ; seuls les scripts l'exercent.

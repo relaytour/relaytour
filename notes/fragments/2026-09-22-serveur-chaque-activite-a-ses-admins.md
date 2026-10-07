@@ -2,6 +2,7 @@
 cible: serveur
 type: securite
 audience: organisateurs
+role: admin-activite
 etat: prevu
 version: 0.4.0
 fr:

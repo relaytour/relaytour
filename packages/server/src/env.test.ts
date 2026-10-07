@@ -99,4 +99,18 @@ describe('resoudreEnv', () => {
     })
     expect(env.COURRIEL?.secure).toBe(true)
   })
+
+  it('accepte une action de support en https ou en mailto:, et rien d’autre', () => {
+    const lire = (SUPPORT_URL: string) =>
+      resoudreEnv({ ...BASE, SUPPORT_URL }).SUPPORT_URL
+    expect(lire('https://hebergeur.exemple.org/aide')).toBe(
+      'https://hebergeur.exemple.org/aide'
+    )
+    expect(lire('mailto:aide@hebergeur.exemple.org')).toBe(
+      'mailto:aide@hebergeur.exemple.org'
+    )
+    expect(lire('')).toBeUndefined()
+    expect(() => lire('http://hebergeur.exemple.org')).toThrow(/SUPPORT_URL/)
+    expect(() => lire('javascript:alert(1)')).toThrow(/SUPPORT_URL/)
+  })
 })
