@@ -139,9 +139,18 @@ function Redaction({
     cible.perimetreId === undefined ? MODELE_LIBRE : MODELE_PERIMETRE
   )
   const [perimetreId, setPerimetreId] = useState(cible.perimetreId)
-  const [champ, setChamp] = useState<ChampDestinataires>(() =>
+  const [choixChamp, setChamp] = useState<ChampDestinataires>(() =>
     champParDefaut(destinataires.length, cible.toutLeMonde)
   )
+  // Le champ « À » va avec une seule personne, et avec elle seulement : la liste
+  // des destinataires peut changer pendant que la fenêtre est ouverte.
+  const champ: ChampDestinataires = seul
+    ? 'A'
+    : choixChamp === 'A'
+      ? champParDefaut(destinataires.length, cible.toutLeMonde)
+      : choixChamp
+  // Vrai quand l'application a pu copier le texte qu'un lien trop long ne porte pas.
+  const [texteCopie, setTexteCopie] = useState(false)
   const [copieContacts, setCopieContacts] = useState(false)
   // Null : l'objet et le texte suivent le modèle et les informations de
   // l'application. Une saisie de l'admin les fige.
@@ -330,8 +339,14 @@ function Redaction({
       })
       if (!data) return
       if (omis !== 'rien') {
-        // Le lien ne porte pas le texte : l'admin le colle dans sa messagerie.
-        await navigator.clipboard.writeText(corps).catch(() => undefined)
+        // Le lien ne porte pas le texte : l'admin le colle dans sa messagerie. La
+        // copie peut être refusée par le navigateur : la suite le dit alors.
+        setTexteCopie(
+          await navigator.clipboard.writeText(corps).then(
+            () => true,
+            () => false
+          )
+        )
       }
       ouvrirLaMessagerie(lienMessagerie)
       setSuivi(data.creerMessage.id)
@@ -423,7 +438,11 @@ function Redaction({
             type="warning"
             showIcon
             title="Collez le texte dans le message"
-            description="Le texte est trop long pour le lien vers la messagerie. L’application l’a copié : collez-le dans le corps du message."
+            description={
+              texteCopie
+                ? 'Le texte est trop long pour le lien vers la messagerie. L’application l’a copié : collez-le dans le corps du message.'
+                : 'Le texte est trop long pour le lien vers la messagerie, et la copie automatique a échoué. Copiez le texte avec le bouton ci-dessous, puis collez-le dans le corps du message.'
+            }
           />
         )}
         {omis === 'adresses' && (

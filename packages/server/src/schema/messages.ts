@@ -190,8 +190,19 @@ builder.mutationFields(t => ({
       })
       if (lisibles !== ids.length) throw accesRefuse()
 
-      if (saisie.champ === 'A' && ids.length !== 1) {
-        throw erreurSaisie('Le champ « À » convient à un seul destinataire.')
+      // L'auteur reçoit déjà son message : il ne figure pas parmi ses destinataires.
+      if (ids.includes(ctx.personne!.id)) {
+        throw erreurSaisie(
+          'Vous ne pouvez pas figurer parmi les destinataires de votre message.'
+        )
+      }
+      // Le champ « À » va avec une seule personne, et avec elle seulement.
+      if ((saisie.champ === 'A') !== (ids.length === 1)) {
+        throw erreurSaisie(
+          ids.length === 1
+            ? 'Un message à une seule personne utilise le champ « À ».'
+            : 'Le champ « À » convient à un seul destinataire.'
+        )
       }
       const enCopie = new Set((saisie.enCopieIds ?? []).map(String))
       if (enCopie.size > 0 && saisie.champ !== 'CCI') {

@@ -7,6 +7,7 @@ import { useActivite } from '../lib/activite'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import {
   CHAMPS,
+  adressesACopier,
   STATUTS_MESSAGE,
   libelleModele,
   preparerLien,
@@ -42,7 +43,7 @@ interface Props {
 const unique = <T,>(valeurs: T[]) => [...new Set(valeurs)]
 
 export default function Messages({ annuaire, personnes }: Props) {
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const { activite, activites } = useActivite()
   const { moi } = useSession()
   const { data, loading } = useQuery(MESSAGES, {
@@ -105,20 +106,67 @@ export default function Messages({ annuaire, personnes }: Props) {
       objet: m.objet,
       corps: m.corps,
     })
-    if (omis !== 'rien') {
-      await navigator.clipboard.writeText(m.corps).catch(() => undefined)
-      message.info(
-        omis === 'texte'
-          ? 'Le texte est trop long pour le lien. L’application l’a copié : collez-le dans le message.'
-          : 'Les destinataires sont trop nombreux pour le lien. La messagerie s’ouvre avec l’objet seulement.'
-      )
-    }
+    const adresses = repartir(destinataires, m.champ, enCopie, moi.email)
     if (manquantes > 0) {
       message.warning(
         manquantes === 1
           ? 'Un destinataire ne figure plus dans la liste affichée : son adresse manque.'
           : `${manquantes} destinataires ne figurent plus dans la liste affichée : leurs adresses manquent.`
       )
+    }
+    if (omis !== 'rien') {
+      // Le lien ne porte pas tout le message : l'admin copie ici ce qui manque,
+      // puis ouvre sa messagerie.
+      modal.info({
+        title:
+          omis === 'texte'
+            ? 'Le texte est trop long pour le lien vers la messagerie'
+            : 'Les destinataires sont trop nombreux pour le lien vers la messagerie',
+        content: (
+          <Space orientation="vertical" size={8}>
+            <span>
+              {omis === 'texte'
+                ? 'La messagerie s’ouvre avec les destinataires et l’objet. Copiez le texte, puis collez-le dans le message.'
+                : 'La messagerie s’ouvre avec l’objet seulement. Copiez les adresses et le texte, puis collez-les dans le message.'}
+            </span>
+            {(
+              [
+                ['a', m.champ === 'A' ? 'Copier l’adresse' : null],
+                ['cc', 'Copier les adresses en Cc'],
+                ['cci', 'Copier les adresses en Cci'],
+              ] as const
+            ).map(
+              ([cle, libelle]) =>
+                libelle !== null &&
+                adresses[cle].length > 0 && (
+                  <Button
+                    key={cle}
+                    icon={<CopyOutlined />}
+                    onClick={() =>
+                      void copier(
+                        adressesACopier(adresses[cle]),
+                        'Les adresses sont copiées.'
+                      )
+                    }
+                  >
+                    {libelle}
+                  </Button>
+                )
+            )}
+            <Button
+              icon={<CopyOutlined />}
+              onClick={() => void copier(m.corps, 'Le texte est copié.')}
+            >
+              Copier le texte
+            </Button>
+            <Button type="primary" icon={<MailOutlined />} href={lien}>
+              Ouvrir la messagerie
+            </Button>
+          </Space>
+        ),
+        okText: 'Fermer',
+      })
+      return
     }
     const ancre = document.createElement('a')
     ancre.href = lien

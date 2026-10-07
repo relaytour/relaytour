@@ -358,6 +358,9 @@ describe('écrire un message', () => {
     const avant = await compter()
     const saisies: Saisie[] = [
       { champ: 'A' },
+      { champ: 'CC', destinataireIds: [ids.carla] },
+      { champ: 'CCI', destinataireIds: [ids.carla] },
+      { destinataireIds: [ids.carla, ids.anna] },
       { champ: 'CC', enCopieIds: [ids.carla] },
       { enCopieIds: [ids.anna] },
       { objet: '   ' },

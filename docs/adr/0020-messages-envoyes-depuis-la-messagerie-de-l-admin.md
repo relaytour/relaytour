@@ -25,7 +25,7 @@ Chaque admin dispose déjà d'une messagerie sur son poste. Un lien `mailto:` l'
 - Seuls les admins écrivent un message : l'admin de l'organisation et les admins d'activité.
 - Un message d'une activité s'adresse à des personnes de l'équipe de cette activité (ADR 0018). Un admin de l'activité l'écrit depuis l'écran « Équipe » ou depuis l'écran « Personnes ».
 - Un message de l'annuaire s'adresse à des membres de l'organisation, quelle que soit leur activité. Seul un admin de l'organisation l'écrit, depuis l'écran « Personnes ». Ce message ne porte aucune activité.
-- Un compte archivé ne reçoit pas de message. L'auteur ne figure pas parmi ses propres destinataires.
+- Un compte archivé ne reçoit pas de message. L'auteur ne figure pas parmi ses propres destinataires : le serveur refuse un message qui le nomme.
 - Un message compte 500 destinataires au plus.
 
 ### Champ des destinataires
