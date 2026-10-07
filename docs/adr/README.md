@@ -24,5 +24,7 @@
 | [0020](0020-messages-envoyes-depuis-la-messagerie-de-l-admin.md) | Messages écrits dans l'application, envoyés depuis la messagerie de l'admin | Acceptée, choix de la messagerie ajouté par l'ADR 0022 |
 | [0021](0021-version-notes-de-version-et-support.md) | Version, notes de version et support dans l'espace organisateur | Acceptée |
 | [0022](0022-choix-de-la-messagerie.md) | Choix de la messagerie qui reçoit un message | Acceptée |
+| [0023](0023-application-installable-et-ecran-hors-connexion.md) | Application installable et écran hors connexion | Proposée |
+| [0024](0024-notifications-push.md) | Notifications push | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

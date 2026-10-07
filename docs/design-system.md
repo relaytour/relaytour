@@ -125,6 +125,20 @@ Les composants de `packages/orga/src/composants` servent aux écrans publics et 
 | `Avancement` | avancement compact ou barre empilée avec sa légende |
 | `Recherche`, `MenuCompte`, `Notifications` | éléments de la barre haute |
 
+## Mobile
+
+Chaque écran reste utilisable sur un téléphone de 375 pixels de large (ADR 0023). Les écrans des référentes et référents sont conçus pour le téléphone. Les écrans d'administration restent utilisables, sans disposition propre.
+
+- **Ruptures.** `md` (768 px) sépare le téléphone du reste : en dessous, le menu passe dans un tiroir et les colonnes s'empilent. `lg` (992 px) sépare les dispositions côte à côte. Un composant lit la rupture par `Grid.useBreakpoint`, une feuille de style par une requête `max-width`.
+- **Largeur.** Aucun élément ne dépasse la largeur de l'écran. Une largeur fixe s'écrit avec une borne : `min(420px, 100vw - 24px)`. Un tableau large défile dans son cadre, jamais avec la page.
+- **Hauteur et bords.** Une hauteur d'écran s'écrit en `dvh`, pas en `vh` : la barre du navigateur mobile change la hauteur visible. Les barres fixes ajoutent les marges `env(safe-area-inset-*)`.
+- **Cibles tactiles.** Une cible mesure au moins 44 px de côté au doigt. La requête `(pointer: coarse)` agrandit les petits boutons sans changer l'écran d'ordinateur.
+- **Champs.** Un champ de saisie affiche son texte à 16 px au moins sous `md`. En dessous de cette taille, Safari sur iPhone zoome sur le champ.
+- **Survol.** Aucune information et aucune action ne dépendent du seul survol. Une bulle d'aide répète une information visible, ou s'ouvre aussi à l'appui.
+- **Fenêtres.** Une fenêtre modale longue ou large occupe tout l'écran sous `md`. Un tiroir ne dépasse jamais la largeur de l'écran.
+- **Saisie.** Un champ déclare son type et son `autoComplete` : le téléphone affiche alors le bon clavier et propose le code reçu.
+- **Application installée.** Un écran ne suppose pas la barre du navigateur : chaque écran offre un retour par l'interface.
+
 ## Correspondance avec Ant Design 6
 
 | Jeton | Valeur |
