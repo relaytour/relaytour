@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-07-orga-le-code-de-connexion-se-saisit-plus-vite-sur-un-telephone",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le code de connexion se saisit plus vite sur un téléphone",
+            "texte": "L'écran de connexion ouvre le clavier numérique, et le téléphone propose le code reçu quand il le reconnaît.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-l-espace-organisateur-s-adapte-mieux-au-telephone",
           "date": "2026-10-07",
           "type": "fonctionnalite",

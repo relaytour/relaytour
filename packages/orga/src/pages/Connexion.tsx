@@ -13,6 +13,7 @@ import {
   seConnecter,
   type LienConnexion,
 } from '../lib/connexion'
+import { estInstallee } from '../lib/installation'
 
 type Etape = 'adresse' | 'code'
 
@@ -196,11 +197,19 @@ export default function Connexion() {
               <Input.OTP
                 size="large"
                 length={6}
+                inputMode="numeric"
+                autoComplete="one-time-code"
                 value={code}
                 onChange={valeur => setCode(valeur)}
                 formatter={valeur => valeur.replace(/\D/g, '')}
               />
             </Form.Item>
+            {estInstallee() && (
+              <Typography.Paragraph type="secondary">
+                Saisissez ici le code du mail. Le lien du mail ouvre votre
+                navigateur, pas l’application installée.
+              </Typography.Paragraph>
+            )}
             <Button
               type="primary"
               htmlType="submit"
