@@ -253,6 +253,9 @@ export const DeclarationOrganisationSchema = z
     // Exceptions : boîtes partagées hébergées chez une messagerie grand public.
     adressesRoleAutorisees: z.array(Adresse).max(20).default([]),
     contactRecrutement: Adresse.optional(),
+    // Adresse de rôle que le bouton « Support » de l'espace organisateur ouvre
+    // dans la messagerie de la personne (ADR 0021).
+    contactSupport: Adresse.optional(),
     pageEquipe: z.string().trim().url().optional(),
     logo: LogoSchema.optional(),
     favicon: ReferenceImage.optional(),
@@ -273,15 +276,15 @@ export const DeclarationOrganisationSchema = z
       domaines: v.domainesCourrielAutorises,
       adresses: v.adressesRoleAutorisees,
     }
-    if (
-      v.contactRecrutement !== undefined &&
-      !adresseDeRole(v.contactRecrutement, role)
-    ) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['contactRecrutement'],
-        message: `le domaine ${v.contactRecrutement.split('@')[1] ?? ''} n'est pas dans domainesCourrielAutorises, et l'adresse n'est pas dans adressesRoleAutorisees`,
-      })
+    for (const champ of ['contactRecrutement', 'contactSupport'] as const) {
+      const adresse = v[champ]
+      if (adresse !== undefined && !adresseDeRole(adresse, role)) {
+        ctx.addIssue({
+          code: 'custom',
+          path: [champ],
+          message: `le domaine ${adresse.split('@')[1] ?? ''} n'est pas dans domainesCourrielAutorises, et l'adresse n'est pas dans adressesRoleAutorisees`,
+        })
+      }
     }
     for (const m of manquementsContraste(v.theme)) {
       ctx.addIssue({ code: 'custom', ...m })
@@ -359,6 +362,8 @@ export interface ConfigurationOrganisation {
   domainesCourrielAutorises: string[]
   adressesRoleAutorisees: string[]
   contactRecrutement: string | undefined
+  /** Adresse de support de l'organisation, ouverte par le bouton « Support ». */
+  contactSupport: string | undefined
   pageEquipe: string | undefined
   /** Le logo à l'écran : SVG, sinon PNG, sinon l'adresse déclarée. */
   logoUrl: string | undefined
@@ -423,6 +428,7 @@ export function resoudreConfiguration(
     domainesCourrielAutorises: declaration.domainesCourrielAutorises,
     adressesRoleAutorisees: declaration.adressesRoleAutorisees,
     contactRecrutement: declaration.contactRecrutement,
+    contactSupport: declaration.contactSupport,
     pageEquipe: declaration.pageEquipe,
     logoUrl:
       urlMedia(declaration.logo?.svg, 'svg') ??
@@ -433,6 +439,20 @@ export function resoudreConfiguration(
     themeDeclare: declaration.theme,
     theme: resoudreTheme(declaration.theme),
   }
+}
+
+/**
+ * Le lien du bouton « Support » (ADR 0021) : l'adresse de support de
+ * l'organisation en `mailto:`, sinon l'action de l'hébergeur (SUPPORT_URL), sinon
+ * rien. Le réglage de l'organisation l'emporte : il est le plus précis des deux.
+ */
+export function lienSupport(
+  configuration: Pick<ConfigurationOrganisation, 'contactSupport'>,
+  env: Pick<Env, 'SUPPORT_URL'>
+): string | undefined {
+  return configuration.contactSupport === undefined
+    ? env.SUPPORT_URL
+    : `mailto:${configuration.contactSupport}`
 }
 
 /** La configuration d'une activité : celle de son organisation, surchargée par son identité. */

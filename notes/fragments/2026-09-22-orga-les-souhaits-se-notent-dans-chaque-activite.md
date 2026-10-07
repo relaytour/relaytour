@@ -2,6 +2,7 @@
 cible: orga
 type: correctif
 audience: organisateurs
+role: admin-activite
 etat: prevu
 version: 0.9.0
 fr:

@@ -140,6 +140,8 @@ Un seul mot par notion.
 | mode d'emploi | Page publique du site (`site/modes-d-emploi/`) qui décrit les écrans d'un rôle : admin de l'organisation, admin d'activité, référent·e. Ne pas confondre avec une fiche. |
 | admin de l'organisation | Membre du bureau qui gère toutes les activités, les comptes et l'identité de l'organisation. Il nomme les admins de l'organisation et les admins d'activité. |
 | admin d'activité | Personne qui gère une activité : ses périodes, ses périmètres, ses affectations et ses fiches. Elle ne voit ni les autres activités (ADR 0010), ni les personnes hors de son équipe (ADR 0018). Elle nomme les autres admins de son activité (ADR 0019). |
+| note de version | Texte qui décrit un changement visible d'une version. Les notes d'audience `organisateurs` se lisent dans l'espace organisateur, selon le rôle de la personne (ADR 0021). |
+| support | Aide demandée depuis le menu du compte : un mail à l'adresse de support de l'organisation, sinon l'action indiquée par l'hébergeur (ADR 0021). |
 | équipe | Les membres de l'organisation liés à une activité par une affectation, un souhait ou un rôle d'admin, toutes périodes confondues (ADR 0018). |
 | annuaire | La liste de tous les membres de l'organisation, lue par ses admins seulement (ADR 0018). |
 | journal | Trace de qui a fait quoi, et quand. Le journal alimente les notifications et le score de participation. |
@@ -168,6 +170,7 @@ Relaytour accueille les contributions : correctifs, évolutions, documentation, 
   yarn versionner noter --cible orga --type fonctionnalite --audience organisateurs --titre "Les fiches s'affichent en liste condensée"
   ```
   La cible vaut `serveur` ou `orga`. Le type vaut `fonctionnalite`, `correctif`, `rupture`, `securite`, `performance` ou `interne`. Complétez ensuite le texte du fragment créé dans `notes/fragments/`.
+- Une note d'audience `organisateurs` s'affiche dans l'espace organisateur (ADR 0021). Son champ `role` désigne le rôle le moins étendu qu'elle concerne : `referent` (valeur par défaut, lue par tous), `admin-activite` ou `admin-organisation`. L'option `--role` de `noter` l'écrit. Les audiences `interne` et `public` ne s'affichent pas dans l'application.
 - Un changement d'interface joint une capture de l'écran, faite avec le contenu d'exemple (`content/exemple`) et des comptes fictifs.
 - Un changement de contrôle d'accès joint un test qui prouve le refus (invariant 11).
 - Les contrats générés sont à jour (`yarn codegen`, invariant 9).

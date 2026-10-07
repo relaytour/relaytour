@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "orga",
   "version": "0.10.0",
@@ -8,10 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-07-orga-un-bouton-support-ouvre-un-mail-a-votre-organisation",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un bouton Support ouvre un mail à votre organisation",
+            "texte": "Le menu du compte propose l'entrée « Support » quand votre organisation a déclaré une adresse de support. L'entrée ouvre un mail à cette adresse dans votre messagerie. L'objet du mail indique l'organisation et la version de Relaytour. Sans adresse déclarée, l'entrée ouvre le mail ou la page d'assistance de votre hébergeur, s'il en a réglé une. Elle n'apparaît pas quand aucune des deux n'existe.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-un-admin-ecrit-a-son-equipe-depuis-l-espace-organisateur",
           "date": "2026-10-07",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Un admin écrit à son équipe depuis l'espace organisateur",
@@ -24,6 +38,7 @@
           "date": "2026-10-07",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Un admin affecte une personne depuis la fenêtre de son compte",
@@ -36,6 +51,7 @@
           "date": "2026-10-07",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les tableaux se trient, se filtrent et leurs colonnes se redimensionnent",
@@ -48,6 +64,7 @@
           "date": "2026-10-07",
           "type": "correctif",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les cartes de l'écran Équipe gardent leur place pendant les modifications",
@@ -56,10 +73,24 @@
           }
         },
         {
+          "id": "2026-10-07-orga-le-menu-du-compte-affiche-la-version-et-les-notes-de-version",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le menu du compte affiche la version et les notes de version",
+            "texte": "Le menu du compte affiche le numéro de version de Relaytour. L'entrée « Notes de version » ouvre une fenêtre qui liste les changements de chaque version, de la plus récente à la plus ancienne. Vous y lisez les notes qui concernent votre rôle : une note réservée aux admins porte une étiquette.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-l-ecran-admins-liste-les-admins-de-l-organisation-et-de-chaq",
           "date": "2026-10-07",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "L'écran Admins liste les admins de l'organisation et de chaque activité",
@@ -77,6 +108,7 @@
           "date": "2026-10-06",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "L'annuaire indique les activités de chaque personne",
@@ -94,6 +126,7 @@
           "date": "2026-10-05",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les écrans suivent le travail des autres au fil de l'eau",
@@ -106,6 +139,7 @@
           "date": "2026-10-05",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les écrans se mettent à jour pendant que vous travaillez",
@@ -118,6 +152,7 @@
           "date": "2026-10-05",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Le mode d'emploi décrit le travail à plusieurs",
@@ -130,6 +165,7 @@
           "date": "2026-10-05",
           "type": "correctif",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "La date d'une demande ou d'une fiche suit votre fuseau horaire",
@@ -142,6 +178,7 @@
           "date": "2026-10-04",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Vous consultez les tâches des autres périmètres de votre activité",
@@ -154,6 +191,7 @@
           "date": "2026-10-04",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Une référente ou un référent propose une personne, un admin décide",
@@ -166,6 +204,7 @@
           "date": "2026-10-04",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Un formulaire public recueille les demandes pour rejoindre l'équipe",
@@ -178,6 +217,7 @@
           "date": "2026-10-04",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "L'écran Équipe réunit les postes à pourvoir et le réglage des périmètres",
@@ -190,6 +230,7 @@
           "date": "2026-09-22",
           "type": "correctif",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les souhaits se notent dans chaque activité",
@@ -207,6 +248,7 @@
           "date": "2026-09-29",
           "type": "correctif",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les cartes de « Tous les périmètres » ne se chevauchent plus",
@@ -224,6 +266,7 @@
           "date": "2026-09-29",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Vous découvrez tous les périmètres et formulez vos souhaits",
@@ -236,6 +279,7 @@
           "date": "2026-09-29",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Chaque périmètre peut porter une description",
@@ -253,6 +297,7 @@
           "date": "2026-09-29",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Chaque périmètre peut avoir un contact principal",
@@ -265,6 +310,7 @@
           "date": "2026-09-23",
           "type": "correctif",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Mon espace masque les actions sur une tâche que vous ne pouvez plus modifier",
@@ -282,6 +328,7 @@
           "date": "2026-09-23",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Vous ouvrez les modes d'emploi depuis le menu du compte",
@@ -299,6 +346,7 @@
           "date": "2026-09-22",
           "type": "correctif",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Le sélecteur d'activité passe dans la barre latérale",
@@ -316,6 +364,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-organisation",
           "etat": "prevu",
           "fr": {
             "titre": "Les admins modifient l'identité de l'organisation et de ses activités",
@@ -328,6 +377,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "L'espace organisateur suit le rôle de chaque personne dans chaque activité",
@@ -340,6 +390,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "L'espace organisateur suit l'organisation et l'activité choisies",
@@ -352,6 +403,7 @@
           "date": "2026-09-19",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-organisation",
           "etat": "prevu",
           "fr": {
             "titre": "Votre organisation choisit le fond de son espace",
@@ -364,6 +416,7 @@
           "date": "2026-09-19",
           "type": "securite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Un lien de connexion ne connecte plus sans votre accord",
@@ -376,6 +429,7 @@
           "date": "2026-09-19",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les listes de liens deviennent des lignes cliquables",
@@ -388,6 +442,7 @@
           "date": "2026-09-19",
           "type": "correctif",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les fenêtres et les listes s'affichent en verre blanc dépoli",
@@ -400,6 +455,7 @@
           "date": "2026-09-19",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les éléments cliquables et les pastilles se lisent mieux",
@@ -412,6 +468,7 @@
           "date": "2026-09-19",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les écrans de l'espace organisateur changent d'allure",
@@ -423,7 +480,8 @@
           "id": "2026-09-19-orga-le-lien-du-mail-de-code-remplit-l-adresse-et-le-code",
           "date": "2026-09-19",
           "type": "correctif",
-          "audience": "public",
+          "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Le lien du mail de code remplit l'adresse et le code",
@@ -436,6 +494,7 @@
           "date": "2026-09-19",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Le filtre du rétroplanning montre la couleur de chaque périmètre",
@@ -448,6 +507,7 @@
           "date": "2026-09-19",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "L'espace organisateur prend le nom et le thème de votre organisation",
@@ -460,6 +520,7 @@
           "date": "2026-09-18",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "L'espace organisateur se déploie depuis l'image",
@@ -472,6 +533,7 @@
           "date": "2026-09-18",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "L'espace organisateur prend l'identité de Relaytour",
@@ -484,6 +546,7 @@
           "date": "2026-09-17",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les souhaits guident les affectations",
@@ -496,6 +559,7 @@
           "date": "2026-09-17",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les postes à pourvoir s'affichent périmètre par périmètre",
@@ -508,6 +572,7 @@
           "date": "2026-09-17",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les admins assignent une tâche à une autre personne",
@@ -520,6 +585,7 @@
           "date": "2026-09-17",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Le rétroplanning montre les échéances d'une édition",
@@ -532,6 +598,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Votre contribution et le classement des admins s'affichent",
@@ -544,6 +611,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les notifications et les préférences de mail arrivent dans l'espace organisateur",
@@ -556,6 +624,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les fiches méthode se lisent et se rédigent dans l'espace organisateur",
@@ -568,6 +637,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "L'espace organisateur ouvre ses premiers écrans",
@@ -580,6 +650,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Chaque périmètre a sa liste de tâches et son avancement",

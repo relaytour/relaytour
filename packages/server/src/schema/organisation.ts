@@ -28,6 +28,7 @@ import {
 import { exigerPlacePeriode, sousVerrouOrganisation } from '../lib/limites.ts'
 import {
   configurationPublique,
+  lienSupport,
   type ConfigurationOrganisation,
 } from '../lib/organisation.ts'
 import { marquerContenuModifie } from '../lib/synchronisation.ts'
@@ -448,6 +449,13 @@ const OrganisationRef = builder
         description:
           'Adresse du code source de l’installation, que l’AGPL oblige à proposer aux personnes qui l’utilisent.',
         resolve: async () => (await import('../env.ts')).env.CODE_SOURCE_URL,
+      }),
+      support: t.string({
+        nullable: true,
+        description:
+          'Lien du bouton « Support » : l’adresse de support de l’organisation en mailto:, sinon l’action de l’hébergeur, sinon rien.',
+        resolve: async o =>
+          lienSupport(o, (await import('../env.ts')).env) ?? null,
       }),
       modesDEmploi: t.string({
         description:

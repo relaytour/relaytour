@@ -281,6 +281,7 @@ export async function construireContenu(
         ? undefined
         : declaration.adressesRoleAutorisees,
       contactRecrutement: declaration.contactRecrutement,
+      contactSupport: declaration.contactSupport,
       pageEquipe: declaration.pageEquipe,
       logo: logo(declaration.logo, ''),
       favicon: image(declaration.favicon, '', 'favicon'),

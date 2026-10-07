@@ -27,6 +27,8 @@ COPY tsconfig.base.json ./
 COPY packages/database packages/database
 COPY packages/tokens   packages/tokens
 COPY packages/server   packages/server
+# Les notes de version compilées entrent dans le build du serveur (ADR 0021).
+COPY notes/notes-de-version.orga.json notes/notes-de-version.serveur.json notes/
 # Prisma exige une URL à la génération ; aucune connexion n'est ouverte ici.
 ARG DATABASE_URL=mysql://build:build@127.0.0.1:3306/build
 RUN yarn workspace @relaytour/database generate

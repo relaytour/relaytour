@@ -2,6 +2,7 @@
 cible: serveur
 type: fonctionnalite
 audience: organisateurs
+role: admin-activite
 etat: prevu
 fr:
   titre: >-

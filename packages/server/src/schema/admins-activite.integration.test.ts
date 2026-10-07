@@ -1022,3 +1022,41 @@ describe('admins lus et nommés par un admin d’activité (ADR 0019)', () => {
     ).toBe(0)
   })
 })
+
+describe('notes de version (ADR 0021)', () => {
+  const NOTES = 'query { notesDeVersion { numero notes { id role } } }'
+
+  it('limite les notes au rôle de chaque personne', async () => {
+    const roles = async (userId: string) => {
+      const r = await executer(userId, NOTES)
+      expect(r.errors).toBeUndefined()
+      const versions = r.data?.notesDeVersion as {
+        notes: { role: string }[]
+      }[]
+      return new Set(versions.flatMap(v => v.notes.map(n => n.role)))
+    }
+    expect([...(await roles(ids.membreA1))]).toEqual(['REFERENT'])
+    expect([...(await roles(ids.sansActivite))]).toEqual(['REFERENT'])
+    const adminA1 = await roles(ids.adminA1)
+    expect(adminA1.has('ADMIN_ACTIVITE')).toBe(true)
+    expect(adminA1.has('ADMIN_ORGANISATION')).toBe(false)
+    expect(await roles(ids.adminOrg)).toEqual(
+      new Set(['REFERENT', 'ADMIN_ACTIVITE', 'ADMIN_ORGANISATION'])
+    )
+  })
+
+  it('refuse les notes sans session, et donne le numéro de version', async () => {
+    const sansSession = async (query: string) => {
+      const reponse = await apollo.executeOperation(
+        { query },
+        { contextValue: await buildContext('127.0.0.1', null, slug) }
+      )
+      if (reponse.body.kind !== 'single')
+        throw new Error('Réponse incrémentale inattendue.')
+      return reponse.body.singleResult
+    }
+    expect(code(await sansSession(NOTES))).toBe('FORBIDDEN')
+    const version = await sansSession('query { versionInstallation }')
+    expect(version.data?.versionInstallation).toMatch(/^\d+\.\d+\.\d+/)
+  })
+})

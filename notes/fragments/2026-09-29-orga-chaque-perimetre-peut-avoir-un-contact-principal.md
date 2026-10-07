@@ -2,6 +2,7 @@
 cible: orga
 type: fonctionnalite
 audience: organisateurs
+role: referent
 etat: prevu
 version: 0.7.0
 fr:

@@ -1602,6 +1602,57 @@ a.rt-etiquette:hover {
   font-size: 13px;
 }
 
+/* Le numéro de version, à droite de l'entrée « Notes de version » du menu. */
+.rt-compte-version {
+  margin-left: 16px;
+  font-size: 12px;
+  color: var(--rt-encre-55);
+}
+
+/* Fenêtre des notes de version (NotesDeVersion). */
+.rt-version {
+  margin-top: 20px;
+}
+
+.rt-version-titre {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(var(--rt-encre-rgb), 0.1);
+  font-size: 16px;
+}
+
+.rt-version-date {
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--rt-encre-55);
+}
+
+.rt-version-notes {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-version-notes p {
+  margin: 2px 0 0;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--rt-encre-70);
+}
+
+.rt-version-etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
 /* Texte lu par les lecteurs d'écran seulement. */
 .rt-sr {
   position: absolute;
