@@ -57,7 +57,7 @@ interface Props<T> extends Omit<
 const PAS_CLAVIER = 16
 
 const INTERACTIFS =
-  'a, button, input, select, textarea, label, [role="button"], [role="separator"], .ant-popover, .ant-select, .ant-dropdown, .ant-modal-root'
+  'a, button, input, select, textarea, label, [role="button"], [role="separator"], .ant-table-selection-column, .ant-popover, .ant-select, .ant-dropdown, .ant-modal-root'
 
 interface PropsEnTete extends ThHTMLAttributes<HTMLTableCellElement> {
   /** Reçoit la nouvelle largeur, ou `null` pour revenir à la largeur automatique. */

@@ -9,7 +9,13 @@
 // relecture périodique : rien ne dépend de son ouverture.
 
 export type EntiteChangee =
-  'TACHE' | 'FICHE' | 'PERIMETRE' | 'EQUIPE' | 'DEMANDE' | 'NOTIFICATION'
+  | 'TACHE'
+  | 'FICHE'
+  | 'PERIMETRE'
+  | 'EQUIPE'
+  | 'DEMANDE'
+  | 'NOTIFICATION'
+  | 'MESSAGE'
 
 // Les requêtes qui affichent des tâches, et celles qui affichent des fiches.
 const VUES_DES_TACHES = [
@@ -53,6 +59,8 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
     'MesPropositions',
   ],
   NOTIFICATION: ['NombreNotificationsNonLues', 'ListeNotifications'],
+  // L'historique des messages (ADR 0020), lu par les admins.
+  MESSAGE: ['Messages'],
 }
 
 /** Les requêtes à relire pour un lot de signaux, sans doublon. */

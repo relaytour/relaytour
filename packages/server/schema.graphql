@@ -114,6 +114,15 @@ type BaremeScore {
 }
 
 """
+Le champ de la messagerie qui reçoit les destinataires : « À » pour une seule personne, « Cc » (adresses visibles) ou « Cci » (adresses cachées).
+"""
+enum ChampDestinataires {
+  A
+  CC
+  CCI
+}
+
+"""
 Signal qu’une chose a changé dans l’organisation active. Il ne porte aucune donnée : le client relit ses écrans.
 """
 type Changement {
@@ -207,11 +216,14 @@ type Edition {
   statut: StatutEdition!
 }
 
-"""Ce qui a changé. EQUIPE couvre les affectations et les souhaits."""
+"""
+Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message.
+"""
 enum EntiteChangee {
   DEMANDE
   EQUIPE
   FICHE
+  MESSAGE
   NOTIFICATION
   PERIMETRE
   TACHE
@@ -414,6 +426,58 @@ type MediaTeleverse {
   url: String!
 }
 
+type Message {
+  """Null pour un message écrit depuis l’annuaire."""
+  activiteId: ID
+  auteur: Personne
+  champ: ChampDestinataires!
+  corps: String!
+  creeLe: DateTime!
+  destinataires: [MessageDestinataire!]!
+  editionId: ID
+
+  """Vrai pour l’auteur du message, qui seul en change le statut."""
+  estLeMien: Boolean!
+  id: ID!
+
+  """Clé du modèle de départ, connue de l’espace organisateur."""
+  modele: String!
+  objet: String!
+  perimetreId: ID
+  statut: StatutMessage!
+
+  """Moment où l’auteur a déclaré le message envoyé ou annulé."""
+  statutLe: DateTime
+}
+
+type MessageDestinataire {
+  """
+  Vrai quand la personne figure en copie visible d’un message en copie cachée.
+  """
+  enCopie: Boolean!
+  id: ID!
+  personne: Personne!
+}
+
+input MessageInput {
+  """
+  L’activité du message. Sans elle, le message vient de l’annuaire : seul un admin de l’organisation l’écrit.
+  """
+  activiteId: ID
+  champ: ChampDestinataires!
+  corps: String!
+  destinataireIds: [ID!]!
+  editionId: ID
+
+  """
+  Parmi les destinataires d’un message en copie cachée, les personnes placées en copie visible.
+  """
+  enCopieIds: [ID!]
+  modele: String!
+  objet: String!
+  perimetreId: ID
+}
+
 type Mutation {
   accepterDemande(affecter: [ID!]!, id: ID!): Demande!
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
@@ -430,6 +494,7 @@ type Mutation {
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, sigle: String, slug: String!): Activite!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
+  creerMessage(message: MessageInput!): Message!
   creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, nom: String!, sigle: String, slug: String!): OrganisationInstallation!
   creerPerimetre(activiteId: ID, couleur: String, description: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
   creerTache(description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
@@ -439,6 +504,7 @@ type Mutation {
 
   """Remplace l’ensemble des souhaits d’une personne pour une édition."""
   definirSouhaits(editionId: ID!, perimetreIds: [ID!]!, personneId: ID!): [Souhait!]!
+  definirStatutMessage(id: ID!, statut: StatutMessage!): Message!
 
   """
   Écrit l’export complet d’une organisation dans le dossier EXPORTS_DIR du serveur et renvoie le nom du fichier. Le contenu ne transite jamais par l’API.
@@ -765,6 +831,11 @@ type Query {
   mesPreferencesNotification: PreferencesNotification!
   mesPropositions(editionId: ID!, perimetreId: ID!): [Proposition!]!
   mesTaches(editionId: ID!): [Tache!]!
+
+  """
+  Les messages d’une activité, lus par ses admins. Sans activité : tous les messages de l’organisation, lus par ses admins seulement.
+  """
+  messages(activiteId: ID): [Message!]!
   moi: Personne
   monScore(editionId: ID!): Score!
   nombreNotificationsNonLues: Int!
@@ -829,6 +900,12 @@ enum StatutEdition {
   ARCHIVEE
   EN_COURS
   PREPARATION
+}
+
+enum StatutMessage {
+  ANNULE
+  ENVOYE
+  EN_COURS
 }
 
 """

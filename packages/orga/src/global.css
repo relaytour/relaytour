@@ -1646,3 +1646,39 @@ a.rt-etiquette:hover {
 .rt-reponses dd:last-child {
   margin-bottom: 0;
 }
+
+/* Messages (ADR 0020) : destinataires de la fenêtre de rédaction, texte de l'historique. */
+.rt-destinataires {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  max-height: 92px;
+  overflow-y: auto;
+}
+
+.rt-message {
+  max-width: 80ch;
+}
+
+.rt-message-corps {
+  margin: 0 0 12px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  background: var(--rt-encre-08);
+  font: inherit;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+/* Une ligne cochée garde un fond clair : le texte y reste lisible. Le sélecteur
+   reprend celui d'antd, avec une classe de plus pour l'emporter. */
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  .ant-table-row.ant-table-row-selected
+  > .ant-table-cell,
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  .ant-table-row.ant-table-row-selected
+  > .ant-table-cell-row-hover {
+  background: var(--rt-primaire-clair);
+}

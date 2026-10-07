@@ -2,6 +2,7 @@ import {
   CloseOutlined,
   CopyOutlined,
   PlusOutlined,
+  SendOutlined,
   SettingOutlined,
   StarFilled,
   StarOutlined,
@@ -32,6 +33,7 @@ import {
 import { useRef, useState } from 'react'
 import { Link } from 'react-router'
 
+import MessageEquipe, { type CibleEquipe } from '../../composants/MessageEquipe'
 import ReglagePerimetre, {
   type PerimetreRegle,
 } from '../../composants/ReglagePerimetre'
@@ -236,6 +238,8 @@ export default function Equipe() {
   const [choix, setChoix] = useState<string | undefined>()
   const [filtre, setFiltre] = useState<Filtre>('tous')
   const [appelOuvert, setAppelOuvert] = useState(false)
+  // Les personnes à qui la fenêtre de rédaction écrit (ADR 0020).
+  const [cibleMessage, setCibleMessage] = useState<CibleEquipe | null>(null)
   const [enReglage, setEnReglage] = useState<PerimetreRegle | 'nouveau' | null>(
     null
   )
@@ -265,6 +269,12 @@ export default function Equipe() {
   const affiches =
     filtre === 'aPourvoir' ? postes.filter(p => p.aPourvoir > 0) : postes
   const appel = data?.appelPostes ?? null
+  const affectees = [
+    ...new Set(postes.flatMap(p => p.affectations.map(a => a.personne.id))),
+  ]
+  const contactsPrincipaux = postes.flatMap(p =>
+    p.affectations.filter(a => a.contactPrincipal).map(a => a.personne.id)
+  )
   const dansLEquipe = new Set((data?.equipe ?? []).map(p => p.id))
   const nomsActivites = new Map(
     (activites?.activites ?? []).map(a => [a.id, a.nom])
@@ -344,6 +354,15 @@ export default function Equipe() {
           onClick={() => setAppelOuvert(true)}
         >
           Copier l’appel
+        </Button>
+        <Button
+          icon={<SendOutlined />}
+          disabled={affectees.length === 0}
+          onClick={() =>
+            setCibleMessage({ personneIds: affectees, toutLeMonde: true })
+          }
+        >
+          Écrire à l’équipe
         </Button>
       </Space>
 
@@ -485,6 +504,24 @@ export default function Equipe() {
                           ) : (
                             compte
                           )}
+                          <Tooltip title="Écrire aux référentes et aux référents">
+                            <Button
+                              type="text"
+                              size="small"
+                              icon={<SendOutlined />}
+                              disabled={affectations.length === 0}
+                              aria-label={`Écrire aux référentes et aux référents du périmètre ${perimetre.nom}`}
+                              onClick={() =>
+                                setCibleMessage({
+                                  personneIds: affectations.map(
+                                    a => a.personne.id
+                                  ),
+                                  toutLeMonde: false,
+                                  perimetreId: perimetre.id,
+                                })
+                              }
+                            />
+                          </Tooltip>
                           <Tooltip title="Régler le périmètre">
                             <Button
                               type="text"
@@ -752,6 +789,12 @@ export default function Equipe() {
           {appel}
         </Typography.Paragraph>
       </Modal>
+      <MessageEquipe
+        cible={cibleMessage}
+        fermer={() => setCibleMessage(null)}
+        editionId={editionId}
+        contactsPrincipaux={contactsPrincipaux}
+      />
     </>
   )
 }
