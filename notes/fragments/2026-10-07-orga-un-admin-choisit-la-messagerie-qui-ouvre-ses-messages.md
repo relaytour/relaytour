@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.12.0
 fr:
   titre: >-
     Un admin choisit la messagerie qui ouvre ses messages
