@@ -33,7 +33,8 @@ yarn workspace @relaytour/server orga:exporter      # écrit tout le contenu de 
 yarn workspace @relaytour/server equipe:importer --fichier equipe.yaml --activite rencontres --edition 2027 --simulation   # équipe d'une période (ADR 0013)
 yarn codegen      # contrats commités
 node outils/site.mjs   # site de présentation, après un changement des jetons
-node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif
+node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif d'admin de l'organisation
+node outils/captures.mjs --compte referent   # écrans d'un autre rôle : referent ou admin-activite, avec un compte de ce rôle
 node outils/captures.mjs --seulement editions,equipe   # quelques écrans seulement
 yarn versionner valider
 yarn versionner compiler   # journaux commités

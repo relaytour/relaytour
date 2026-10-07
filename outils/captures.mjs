@@ -2,7 +2,12 @@
 // captures : photographie les écrans de l'espace organisateur pour le site.
 //
 //   node outils/captures.mjs --origine http://localhost:4460
+//   node outils/captures.mjs --compte referent
 //   node outils/captures.mjs --seulement editions,equipe
+//
+// Chaque écran se photographie avec le compte du rôle que son mode d'emploi
+// décrit : `--compte` choisit le rôle, et une passe prend tous ses écrans. Le
+// site se refait donc en trois passes, une par rôle.
 //
 // Le script ouvre Google Chrome avec un profil temporaire et le pilote par son
 // protocole de débogage (WebSocket natif de Node 24, aucune dépendance). La
@@ -28,7 +33,10 @@ const { values } = parseArgs({
     sortie: { type: 'string', default: join(RACINE, 'site/captures') },
     chrome: { type: 'string' },
     port: { type: 'string', default: '9333' },
-    // Noms des écrans à photographier, séparés par des virgules. Tous par défaut.
+    // Rôle du compte connecté : la passe prend les écrans de ce rôle.
+    compte: { type: 'string', default: 'admin-organisation' },
+    // Noms des écrans à photographier, séparés par des virgules, quel que soit
+    // leur rôle. Par défaut, tous ceux du rôle choisi.
     seulement: { type: 'string' },
   },
 })
@@ -61,59 +69,119 @@ const cliquerLibelle = libelle =>
 const defiler = texte =>
   `(e => (e?.scrollIntoView({ block: 'start' }), Boolean(e)))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim() === ${JSON.stringify(texte)}))`
 
+// Le compte de chaque rôle, sur l'instance d'exemple. Un compte d'un rôle plus
+// large montrerait des menus et des boutons que le rôle décrit ne voit pas.
+const COMPTES = {
+  'admin-organisation': 'un admin de l’organisation',
+  'admin-activite':
+    'un admin de l’activité, qui n’est pas admin de l’organisation',
+  referent:
+    'une personne affectée au pôle Bénévoles seulement, sans rôle d’admin, avec un droit de rédaction sur ce pôle',
+}
+
 /**
- * Les écrans photographiés : nom du fichier, chemin, réglage du navigateur avant
- * le chargement (`avant`) et geste après le chargement (`apres`). Un écran
- * `surDemande` demande un autre compte : il ne se prend qu'avec --seulement.
+ * Les écrans photographiés : nom du fichier, rôle du compte (`compte`, admin de
+ * l'organisation par défaut), chemin, réglage du navigateur avant le chargement
+ * (`avant`) et geste après le chargement (`apres`).
  */
 const ECRANS = [
-  { nom: 'mon-espace', chemin: `${ACTIVITE}/` },
-  { nom: 'retroplanning', chemin: `${ACTIVITE}/retroplanning` },
+  // ── Guide des référentes et référents ──────────────────────────────────────
+  { nom: 'mon-espace', compte: 'referent', chemin: `${ACTIVITE}/` },
+  {
+    nom: 'retroplanning',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/retroplanning`,
+  },
   {
     nom: 'fiches-cartes',
+    compte: 'referent',
     chemin: `${ACTIVITE}/fiches`,
     avant: "localStorage.setItem('relaytour.fiches.affichage', 'cartes')",
   },
   {
     nom: 'fiches-liste',
+    compte: 'referent',
     chemin: `${ACTIVITE}/fiches`,
     avant: "localStorage.setItem('relaytour.fiches.affichage', 'liste')",
   },
-  { nom: 'fiche', chemin: `${ACTIVITE}/fiches/planifier-les-creneaux` },
-  { nom: 'perimetre', chemin: `${ACTIVITE}/perimetres/coordination` },
-  // Un périmètre ouvert en consultation (ADR 0014). L'écran se photographie avec le
-  // compte d'une personne affectée à un autre périmètre de l'activité, sans rôle
-  // d'admin : il ne se prend que sur demande, par --seulement.
+  {
+    nom: 'fiche',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/fiches/planifier-les-creneaux`,
+  },
+  // Le périmètre de la personne, avec ses tâches et le droit d'y écrire.
+  {
+    nom: 'perimetre',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/perimetres/benevoles`,
+  },
+  // Un périmètre ouvert en consultation (ADR 0014) : la personne n'y est pas
+  // affectée.
   {
     nom: 'perimetre-consultation',
+    compte: 'referent',
     chemin: `${ACTIVITE}/perimetres/football`,
-    surDemande: true,
   },
-  { nom: 'preferences', chemin: `${ACTIVITE}/preferences` },
-  // Le formulaire public (ADR 0015) : l'activité d'exemple doit l'avoir ouvert.
-  { nom: 'rejoindre', chemin: '/rejoindre/rencontres-de-la-vallee/rencontres' },
-  { nom: 'avancement', chemin: `${ACTIVITE}/admin/avancement` },
-  { nom: 'editions', chemin: `${ACTIVITE}/admin/editions` },
-  { nom: 'equipe', chemin: `${ACTIVITE}/admin/equipe` },
+  { nom: 'preferences', compte: 'referent', chemin: `${ACTIVITE}/preferences` },
+  // ── Guide de l'admin d'activité ────────────────────────────────────────────
+  // L'équipe d'une activité, lue par un de ses admins (ADR 0018).
   {
-    nom: 'equipe-reglage',
+    nom: 'equipe',
+    compte: 'admin-activite',
     chemin: `${ACTIVITE}/admin/equipe`,
-    apres: cliquerLibelle('Régler le périmètre Football'),
   },
-  { nom: 'personnes', chemin: `${ACTIVITE}/admin/personnes` },
+  {
+    nom: 'personnes',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/personnes`,
+  },
   // La file de revue (ADR 0015). L'instance d'exemple doit porter une demande en
   // attente, proposée par une personne fictive.
   {
     nom: 'personnes-demandes',
+    compte: 'admin-activite',
     chemin: `${ACTIVITE}/admin/personnes?onglet=demandes`,
   },
+  {
+    nom: 'avancement',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/avancement`,
+  },
+  {
+    nom: 'editions',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/editions`,
+  },
+  {
+    nom: 'equipe-reglage',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/equipe`,
+    apres: cliquerLibelle('Régler le périmètre Football'),
+  },
+  // Les droits de rédaction des périmètres de l'activité.
+  {
+    nom: 'redaction',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/redaction`,
+  },
+  {
+    nom: 'activites',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/activites`,
+  },
+  // ── Admin de l'organisation ────────────────────────────────────────────────
+  // Le formulaire public (ADR 0015) : l'activité d'exemple doit l'avoir ouvert.
+  { nom: 'rejoindre', chemin: '/rejoindre/rencontres-de-la-vallee/rencontres' },
+  // L'annuaire de l'organisation, avec les activités de chaque personne (ADR 0018).
+  { nom: 'annuaire', chemin: `${ACTIVITE}/admin/personnes` },
   {
     nom: 'personnes-roles',
     chemin: `${ACTIVITE}/admin/personnes`,
     apres: cliquer('Léa Bernard'),
   },
-  { nom: 'redaction', chemin: `${ACTIVITE}/admin/redaction` },
-  { nom: 'activites', chemin: `${ACTIVITE}/admin/activites` },
+  // Le même écran pour un admin de l'organisation, qui accorde aussi un droit sur
+  // toutes les fiches.
+  { nom: 'redaction-organisation', chemin: `${ACTIVITE}/admin/redaction` },
   {
     nom: 'activites-nouvelle',
     chemin: `${ACTIVITE}/admin/activites`,
@@ -125,7 +193,14 @@ const ECRANS = [
     chemin: `${ACTIVITE}/admin/organisation`,
     apres: defiler('Contenu de l’organisation'),
   },
-]
+].map(ecran => ({ compte: 'admin-organisation', ...ecran }))
+
+if (!(values.compte in COMPTES)) {
+  console.error(
+    `Rôle inconnu : ${values.compte}. Rôles : ${Object.keys(COMPTES).join(', ')}`
+  )
+  process.exit(1)
+}
 
 const choisis = values.seulement?.split(',').map(nom => nom.trim())
 const inconnus = (choisis ?? []).filter(nom => !ECRANS.some(e => e.nom === nom))
@@ -133,6 +208,10 @@ if (inconnus.length > 0) {
   console.error(`Écrans inconnus : ${inconnus.join(', ')}`)
   process.exit(1)
 }
+
+const aPrendre = ECRANS.filter(e =>
+  choisis ? choisis.includes(e.nom) : e.compte === values.compte
+)
 
 const attendre = ms => new Promise(r => setTimeout(r, ms))
 
@@ -224,8 +303,13 @@ async function evaluer(expression) {
 
 await envoyer('Page.enable')
 await envoyer('Runtime.enable')
+// Avec --seulement, les écrans choisis disent quel compte utiliser.
+for (const role of new Set(aPrendre.map(e => e.compte))) {
+  const noms = aPrendre.filter(e => e.compte === role).map(e => e.nom)
+  console.log(`${noms.join(', ')} : ${COMPTES[role]}.`)
+}
 console.log(
-  'Connectez-vous dans la fenêtre Chrome avec un compte fictif. Le code arrive dans Mailpit.'
+  'Connectez-vous dans la fenêtre Chrome avec ce compte fictif. Le code arrive dans Mailpit.'
 )
 // Pendant un chargement, la page ne répond pas, répond sans valeur ou porte encore
 // une adresse vide (about:blank). Seule une page de l'instance, autre que celle de
@@ -252,9 +336,7 @@ await envoyer('Emulation.setDeviceMetricsOverride', {
 mkdirSync(values.sortie, { recursive: true })
 let echecs = 0
 
-for (const ecran of ECRANS.filter(e =>
-  choisis ? choisis.includes(e.nom) : !e.surDemande
-)) {
+for (const ecran of aPrendre) {
   if (ecran.avant) await evaluer(ecran.avant)
   await envoyer('Page.navigate', { url: `${values.origine}${ecran.chemin}` })
   await attendre(2500)

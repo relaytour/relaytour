@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: organisateurs
 etat: prevu
+version: 0.10.0
 fr:
   titre: >-
     Un admin d'activité ne lit plus que l'équipe de ses activités
