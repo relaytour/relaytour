@@ -163,16 +163,19 @@ export default function Redaction() {
             render: (_, d) => d.perimetre?.nom ?? TOUTES_LES_FICHES,
             tri: d => d.perimetre?.nom ?? TOUTES_LES_FICHES,
             filtre: {
+              // La valeur est l'identifiant du périmètre : deux périmètres de
+              // même nom restent deux options.
               options: [
-                ...new Set(
-                  (data?.droitsRedaction ?? []).map(
-                    d => d.perimetre?.nom ?? TOUTES_LES_FICHES
-                  )
+                ...new Map(
+                  (data?.droitsRedaction ?? []).map(d => [
+                    d.perimetre?.id ?? TOUTES,
+                    d.perimetre?.nom ?? TOUTES_LES_FICHES,
+                  ])
                 ),
               ]
-                .sort(comparer)
-                .map(nom => ({ text: nom, value: nom })),
-              valeurs: d => d.perimetre?.nom ?? TOUTES_LES_FICHES,
+                .sort((a, b) => comparer(a[1], b[1]))
+                .map(([value, text]) => ({ text, value })),
+              valeurs: d => d.perimetre?.id ?? TOUTES,
             },
           },
           {

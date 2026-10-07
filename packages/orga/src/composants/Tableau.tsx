@@ -10,6 +10,8 @@ import type {
 } from 'react'
 
 import {
+  LARGEUR_MAX,
+  LARGEUR_MIN,
   bornerLargeur,
   comparer,
   contient,
@@ -62,11 +64,19 @@ const INTERACTIFS =
 interface PropsEnTete extends ThHTMLAttributes<HTMLTableCellElement> {
   /** Reçoit la nouvelle largeur, ou `null` pour revenir à la largeur automatique. */
   redimensionner?: (largeur: number | null) => void
+  /** La largeur choisie, en pixels. Sans elle, la colonne a sa largeur automatique. */
+  largeur?: number
   libelle?: string
 }
 
 /** Cellule d'en-tête, avec une poignée de redimensionnement sur son bord droit. */
-function EnTete({ redimensionner, libelle, children, ...reste }: PropsEnTete) {
+function EnTete({
+  redimensionner,
+  largeur,
+  libelle,
+  children,
+  ...reste
+}: PropsEnTete) {
   if (redimensionner === undefined) return <th {...reste}>{children}</th>
 
   const largeurActuelle = (poignee: Element) =>
@@ -114,6 +124,13 @@ function EnTete({ redimensionner, libelle, children, ...reste }: PropsEnTete) {
         role="separator"
         aria-orientation="vertical"
         aria-label={`Largeur de la colonne ${libelle ?? ''}`.trim()}
+        // Un séparateur focalisable annonce sa valeur et ses bornes.
+        aria-valuemin={LARGEUR_MIN}
+        aria-valuemax={LARGEUR_MAX}
+        aria-valuenow={largeur}
+        aria-valuetext={
+          largeur === undefined ? 'Largeur automatique' : `${largeur} pixels`
+        }
         title="Faites glisser pour ajuster la largeur. Un double-clic rétablit la largeur automatique."
         tabIndex={0}
         onPointerDown={saisir}
@@ -217,6 +234,7 @@ export default function Tableau<T extends object>({
             onHeaderCell: () => {
               const proprietes: PropsEnTete = {
                 libelle,
+                largeur,
                 redimensionner: valeur =>
                   setLargeurs(courantes => {
                     const suivantes = { ...courantes }
