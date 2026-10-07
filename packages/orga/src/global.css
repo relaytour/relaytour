@@ -220,7 +220,7 @@ html {
 
 /* Mise en page de l'espace organisateur (Coquille). */
 .rt-page {
-  min-height: 100vh;
+  min-height: 100dvh;
   box-sizing: border-box;
   padding: 16px;
   display: flex;
@@ -233,7 +233,7 @@ html {
   flex-shrink: 0;
   position: sticky;
   top: 16px;
-  height: calc(100vh - 32px);
+  height: calc(100dvh - 32px);
   box-sizing: border-box;
   padding: 24px 12px 20px;
   display: flex;
@@ -301,17 +301,69 @@ html {
   padding: 8px 12px 24px;
 }
 
+/* Un bouton de la barre haute garde sa largeur quand la place manque. */
+.rt-barre-haute > .ant-btn {
+  flex-shrink: 0;
+}
+
+/* Sur téléphone, les marges suivent les zones sûres de l'écran (encoche, barre
+   d'accueil) : la page déclare viewport-fit=cover. */
 @media (max-width: 767px) {
   .rt-page {
-    padding: 12px;
+    padding: max(12px, env(safe-area-inset-top))
+      max(12px, env(safe-area-inset-right))
+      max(12px, env(safe-area-inset-bottom))
+      max(12px, env(safe-area-inset-left));
     gap: 12px;
   }
   .rt-barre-haute {
-    top: 12px;
+    top: max(12px, env(safe-area-inset-top));
     padding: 8px 10px 8px 12px;
+    gap: 8px;
   }
   .rt-contenu {
     padding: 4px 0 16px;
+  }
+
+  /* Sous 16 px, Safari sur iPhone zoome sur un champ qui reçoit le focus. */
+  .ant-input,
+  .ant-input-affix-wrapper,
+  .ant-input-number-input,
+  .ant-input-otp-input,
+  .ant-select,
+  .ant-select-selection-search-input,
+  .ant-picker-input > input {
+    font-size: 16px !important;
+  }
+}
+
+/* Au doigt, une cible mesure au moins 40 px, ou reçoit une zone d'appui plus
+   large que son dessin (docs/design-system.md, « Mobile »). */
+@media (pointer: coarse) {
+  .ant-btn-sm {
+    min-height: 40px;
+    min-width: 40px;
+  }
+
+  .rt-personne-retirer,
+  .ant-tag .ant-tag-close-icon,
+  .ant-table-filter-trigger,
+  .ant-checkbox,
+  .ant-radio {
+    position: relative;
+  }
+
+  .rt-personne-retirer::after,
+  .ant-tag .ant-tag-close-icon::after,
+  .ant-table-filter-trigger::after,
+  .ant-checkbox::after,
+  .ant-radio::after {
+    content: '';
+    position: absolute;
+    inset: -10px;
+    border: none;
+    visibility: visible;
+    animation: none;
   }
 }
 
@@ -1542,6 +1594,11 @@ a.rt-etiquette:hover {
 .rt-recherche {
   flex: 0 1 460px;
   min-width: 0;
+}
+
+/* Sur téléphone, la recherche ouverte occupe toute la barre haute. */
+.rt-recherche-large {
+  flex: 1 1 auto;
 }
 
 .rt-recherche .ant-select-selector,

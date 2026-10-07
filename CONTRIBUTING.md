@@ -36,6 +36,7 @@ node outils/site.mjs   # site de présentation, après un changement des jetons
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif d'admin de l'organisation
 node outils/captures.mjs --compte referent   # écrans d'un autre rôle : referent ou admin-activite, avec un compte de ce rôle
 node outils/captures.mjs --seulement editions,equipe   # quelques écrans seulement
+node outils/captures.mjs --largeur 375 --hauteur 812 --mobile --sortie /tmp/captures-mobile   # mêmes écrans sur un téléphone, hors du site
 yarn versionner valider
 yarn versionner compiler   # journaux commités
 yarn versionner publier --simulation   # numéro de la prochaine version, sans rien écrire

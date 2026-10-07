@@ -7,10 +7,12 @@ import {
   BarChartOutlined,
   BookOutlined,
   CalendarOutlined,
+  CloseOutlined,
   EditOutlined,
   HomeOutlined,
   MenuOutlined,
   ScheduleOutlined,
+  SearchOutlined,
   SettingOutlined,
   SolutionOutlined,
   TrophyOutlined,
@@ -81,6 +83,13 @@ function Mise({ session }: { session: Session }) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const ecrans = Grid.useBreakpoint()
+  // Sous 576 px, la recherche se replie en un bouton. Ouverte, elle occupe
+  // seule la barre haute, et se referme quand l'écran change.
+  const etroit = Boolean(ecrans.xs)
+  const [rechercheOuverteSur, setRechercheOuverteSur] = useState<string>()
+  const rechercheSeule = etroit && rechercheOuverteSur === pathname
+  const setRechercheOuverte = (ouverte: boolean) =>
+    setRechercheOuverteSur(ouverte ? pathname : undefined)
   const [tiroirOuvert, setTiroirOuvert] = useState(false)
 
   // Les périmètres de l'activité où la personne a été affectée, toutes périodes
@@ -272,22 +281,48 @@ function Mise({ session }: { session: Session }) {
       )}
       <div className="rt-principal">
         <header className="rt-verre-barre rt-barre-haute">
-          {!ecrans.md && (
-            <Button
-              icon={<MenuOutlined />}
-              aria-label="Ouvrir le menu"
-              onClick={() => setTiroirOuvert(true)}
-            />
+          {rechercheSeule ? (
+            <>
+              <Recherche
+                estAdmin={gere}
+                large
+                apresChoix={() => setRechercheOuverte(false)}
+              />
+              <Button
+                type="text"
+                icon={<CloseOutlined />}
+                aria-label="Fermer la recherche"
+                onClick={() => setRechercheOuverte(false)}
+              />
+            </>
+          ) : (
+            <>
+              {!ecrans.md && (
+                <Button
+                  icon={<MenuOutlined />}
+                  aria-label="Ouvrir le menu"
+                  onClick={() => setTiroirOuvert(true)}
+                />
+              )}
+              {!ecrans.md && (
+                <span style={{ display: 'inline-flex', marginInlineStart: 4 }}>
+                  <Pictogramme taille={24} />
+                </span>
+              )}
+              {!etroit && <Recherche estAdmin={gere} />}
+              <span style={{ flex: 1 }} />
+              {etroit && (
+                <Button
+                  type="text"
+                  icon={<SearchOutlined />}
+                  aria-label="Rechercher"
+                  onClick={() => setRechercheOuverte(true)}
+                />
+              )}
+              <Notifications />
+              <MenuCompte nom={moi.nom} afficherNom={Boolean(ecrans.sm)} />
+            </>
           )}
-          {!ecrans.md && (
-            <span style={{ display: 'inline-flex', marginInlineStart: 4 }}>
-              <Pictogramme taille={24} />
-            </span>
-          )}
-          <Recherche estAdmin={gere} />
-          <span style={{ flex: 1 }} />
-          <Notifications />
-          <MenuCompte nom={moi.nom} afficherNom={Boolean(ecrans.sm)} />
         </header>
         <main className="rt-contenu">
           <AvisRelecture />

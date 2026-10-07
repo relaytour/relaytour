@@ -92,7 +92,7 @@ export default function Connexion() {
   return (
     <main
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'grid',
         placeItems: 'center',
         padding: 16,

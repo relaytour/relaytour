@@ -4,6 +4,7 @@
 //   node outils/captures.mjs --origine http://localhost:4460
 //   node outils/captures.mjs --compte referent
 //   node outils/captures.mjs --seulement editions,equipe
+//   node outils/captures.mjs --largeur 375 --hauteur 812 --mobile --sortie /tmp/captures-mobile
 //
 // Chaque écran se photographie avec le compte du rôle que son mode d'emploi
 // décrit : `--compte` choisit le rôle, et une passe prend tous ses écrans. Le
@@ -38,6 +39,11 @@ const { values } = parseArgs({
     // Noms des écrans à photographier, séparés par des virgules, quel que soit
     // leur rôle. Par défaut, tous ceux du rôle choisi.
     seulement: { type: 'string' },
+    // Taille de la fenêtre photographiée. `--mobile` émule un téléphone : écran
+    // tactile et agent de navigation mobile, pour les règles `(pointer: coarse)`.
+    largeur: { type: 'string', default: '1440' },
+    hauteur: { type: 'string', default: '900' },
+    mobile: { type: 'boolean', default: false },
   },
 })
 
@@ -48,8 +54,19 @@ const CHROME =
     ? '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'
     : 'google-chrome')
 
-const LARGEUR = 1440
-const HAUTEUR = 900
+const LARGEUR = Number(values.largeur)
+const HAUTEUR = Number(values.hauteur)
+if (
+  !Number.isInteger(LARGEUR) ||
+  !Number.isInteger(HAUTEUR) ||
+  LARGEUR < 320 ||
+  HAUTEUR < 480
+) {
+  console.error(
+    '✖ --largeur (320 au moins) et --hauteur (480 au moins) sont des nombres de pixels.'
+  )
+  process.exit(1)
+}
 
 // Les écrans d'administration vivent sous l'identifiant de l'activité (ADR 0008).
 const ACTIVITE = '/rencontres'
@@ -381,9 +398,14 @@ console.log('✔ Session ouverte. Les captures commencent.')
 await envoyer('Emulation.setDeviceMetricsOverride', {
   width: LARGEUR,
   height: HAUTEUR,
-  deviceScaleFactor: 1,
-  mobile: false,
+  deviceScaleFactor: values.mobile ? 2 : 1,
+  mobile: values.mobile,
 })
+if (values.mobile)
+  await envoyer('Emulation.setTouchEmulationEnabled', {
+    enabled: true,
+    maxTouchPoints: 5,
+  })
 mkdirSync(values.sortie, { recursive: true })
 let echecs = 0
 
