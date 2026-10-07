@@ -1,4 +1,9 @@
-import { CheckOutlined, MailOutlined, UserAddOutlined } from '@ant-design/icons'
+import {
+  CheckOutlined,
+  MailOutlined,
+  SendOutlined,
+  UserAddOutlined,
+} from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import {
   Alert,
@@ -13,14 +18,20 @@ import {
   Select,
   Space,
   Switch,
+  Table,
   Tabs,
   Tag,
+  Tooltip,
   Typography,
 } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import Demandes from '../../composants/Demandes'
+import EcrireMessage, {
+  type CibleMessage,
+} from '../../composants/EcrireMessage'
+import Messages from '../../composants/Messages'
 import Tableau, { type ColonneTableau } from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
@@ -50,6 +61,7 @@ const PERSONNES = graphql(`
       archive
       affectations(editionId: $editionId) {
         id
+        contactPrincipal
         perimetre {
           id
           nom
@@ -86,6 +98,7 @@ const EQUIPE = graphql(`
       archive
       affectations(editionId: $editionId) {
         id
+        contactPrincipal
         perimetre {
           id
           nom
@@ -430,8 +443,15 @@ export default function Personnes() {
   const demandesEnAttente = demandes?.demandes.length ?? 0
   // L'onglet se lit dans l'adresse : une notification mène droit aux demandes.
   const [parametres, setParametres] = useSearchParams()
+  const ongletDemande = parametres.get('onglet')
   const onglet =
-    parametres.get('onglet') === 'demandes' ? 'demandes' : 'annuaire'
+    ongletDemande === 'demandes' || ongletDemande === 'messages'
+      ? ongletDemande
+      : 'annuaire'
+  // Les personnes cochées dans le tableau, et celles à qui la fenêtre de rédaction
+  // écrit (ADR 0020).
+  const [selection, setSelection] = useState<string[]>([])
+  const [cibleMessage, setCibleMessage] = useState<CibleMessage | null>(null)
   const [enEdition, setEnEdition] = useState<Personne | 'nouvelle' | null>(null)
   // Compteur d'ouvertures : la fenêtre reste montée d'une ouverture à l'autre, et
   // les champs de souhaits doivent relire les souhaits à chaque fois.
@@ -451,6 +471,19 @@ export default function Personnes() {
   const [definirAdminActivite] = useMutation(DEFINIR_ADMIN_ACTIVITE, rafraichir)
   const { data: toutesActivites } = useQuery(ACTIVITES)
   const moiId = session?.moi?.id
+
+  // Un message s'écrit à des comptes actifs, sauf à soi-même (ADR 0020).
+  const joignables = useMemo(
+    () =>
+      (liste ?? [])
+        .filter(p => !p.archive && p.id !== moiId)
+        .map(p => ({ id: p.id, nom: p.nom, email: p.email })),
+    [liste, moiId]
+  )
+  const selectionnees = joignables.filter(p => selection.includes(p.id))
+  const contactsPrincipaux = (liste ?? [])
+    .filter(p => p.affectations.some(a => a.contactPrincipal))
+    .map(p => p.id)
 
   /** Nomme ou retire les admins d'activité pour aller de `avant` à `apres`. */
   const ajusterAdminsActivite = async (
@@ -691,7 +724,7 @@ export default function Personnes() {
       <Tabs
         activeKey={onglet}
         onChange={cle =>
-          setParametres(cle === 'demandes' ? { onglet: 'demandes' } : {})
+          setParametres(cle === 'annuaire' ? {} : { onglet: cle })
         }
         items={[
           {
@@ -705,6 +738,7 @@ export default function Personnes() {
                 ? `Demandes (${demandesEnAttente})`
                 : 'Demandes',
           },
+          { key: 'messages', label: 'Messages' },
         ]}
       />
       {onglet === 'demandes' &&
@@ -716,6 +750,9 @@ export default function Personnes() {
             archivee={edition?.statut === 'ARCHIVEE'}
           />
         ))}
+      {onglet === 'messages' && (
+        <Messages annuaire={gereOrganisation} personnes={joignables} />
+      )}
       {onglet === 'annuaire' && (
         <>
           <Space
@@ -775,6 +812,28 @@ export default function Personnes() {
             >
               Sans affectation pour {periode.cette}
             </Checkbox>
+            <Tooltip
+              title={
+                selectionnees.length === 0
+                  ? 'Cochez d’abord des personnes dans le tableau.'
+                  : undefined
+              }
+            >
+              <Button
+                icon={<SendOutlined />}
+                disabled={selectionnees.length === 0}
+                onClick={() =>
+                  setCibleMessage({
+                    destinataires: selectionnees,
+                    toutLeMonde: selectionnees.length === joignables.length,
+                  })
+                }
+              >
+                {selectionnees.length === 0
+                  ? 'Écrire à la sélection'
+                  : `Écrire à la sélection (${selectionnees.length})`}
+              </Button>
+            </Tooltip>
           </Space>
 
           <Tableau<Personne>
@@ -783,6 +842,16 @@ export default function Personnes() {
             loading={loading}
             dataSource={personnes}
             pagination={{ pageSize: 50, hideOnSinglePage: true }}
+            rowSelection={{
+              selectedRowKeys: selection,
+              onChange: cles => setSelection(cles.map(String)),
+              preserveSelectedRowKeys: true,
+              selections: [Table.SELECTION_ALL, Table.SELECTION_NONE],
+              getCheckboxProps: p => ({
+                disabled: p.archive || p.id === moiId,
+                'aria-label': `Sélectionner ${p.nom}`,
+              }),
+            }}
             ouvrir={ouvrir}
             libelleOuvrir={p => `Modifier le compte de ${p.nom}`}
             colonnes={[
@@ -927,6 +996,23 @@ export default function Personnes() {
                     </Button>
                   ) : (
                     <Space>
+                      {p.id !== moiId && (
+                        <Button
+                          size="small"
+                          icon={<SendOutlined />}
+                          aria-label={`Écrire à ${p.nom}`}
+                          onClick={() =>
+                            setCibleMessage({
+                              destinataires: [
+                                { id: p.id, nom: p.nom, email: p.email },
+                              ],
+                              toutLeMonde: false,
+                            })
+                          }
+                        >
+                          Écrire
+                        </Button>
+                      )}
                       <Button
                         size="small"
                         icon={<MailOutlined />}
@@ -967,6 +1053,14 @@ export default function Personnes() {
           />
         </>
       )}
+
+      <EcrireMessage
+        cible={cibleMessage}
+        fermer={() => setCibleMessage(null)}
+        annuaire={gereOrganisation}
+        editionId={editionId}
+        contactsPrincipaux={contactsPrincipaux}
+      />
 
       <Modal
         open={enEdition !== null}
