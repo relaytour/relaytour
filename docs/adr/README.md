@@ -11,7 +11,7 @@
 | [0007](0007-frontiere-entre-logiciel-et-exploitation.md) | Frontière entre le logiciel et son exploitation | Acceptée |
 | [0008](0008-activites-et-administration-de-l-installation.md) | Activités d'une organisation et administration de l'installation | Acceptée, réalisée |
 | [0009](0009-identite-des-activites-et-source-de-verite-du-contenu.md) | Identité des activités et source de vérité du contenu | Acceptée |
-| [0010](0010-admins-d-activite-et-visibilite-des-activites.md) | Admins d'activité et visibilité des activités | Acceptée, annuaire cloisonné par l'ADR 0018 |
+| [0010](0010-admins-d-activite-et-visibilite-des-activites.md) | Admins d'activité et visibilité des activités | Acceptée, annuaire cloisonné par l'ADR 0018, nomination des admins élargie par l'ADR 0019 |
 | [0011](0011-contact-principal-d-un-perimetre.md) | Contact principal d'un périmètre | Acceptée |
 | [0012](0012-decouvrir-les-perimetres-et-rejoindre-l-equipe.md) | Découvrir les périmètres et rejoindre l'équipe | Acceptée, accès aux tâches élargi par l'ADR 0014 |
 | [0013](0013-administrer-l-equipe-depuis-le-serveur.md) | Administrer l'équipe depuis le serveur | Acceptée |
@@ -19,7 +19,8 @@
 | [0015](0015-demandes-pour-rejoindre-l-equipe.md) | Demandes pour rejoindre l'équipe | Acceptée, mail aux admins ajouté par l'ADR 0016 |
 | [0016](0016-prevenir-les-admins-d-une-demande-par-mail.md) | Prévenir les admins d'une demande par un mail regroupé | Acceptée |
 | [0017](0017-flux-des-changements.md) | Flux des changements poussé par le serveur | Acceptée |
-| [0018](0018-personnes-d-une-activite.md) | Personnes d'une activité | Acceptée |
+| [0018](0018-personnes-d-une-activite.md) | Personnes d'une activité | Acceptée, invitation avec affectation ajoutée par l'ADR 0019 |
+| [0019](0019-admins-lus-et-nommes-par-les-admins-d-activite.md) | Admins lus et nommés par les admins d'activité | Acceptée |
 | [0020](0020-messages-envoyes-depuis-la-messagerie-de-l-admin.md) | Messages écrits dans l'application, envoyés depuis la messagerie de l'admin | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

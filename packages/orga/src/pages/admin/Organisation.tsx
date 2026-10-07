@@ -278,6 +278,8 @@ export default function Organisation() {
         layout="vertical"
         requiredMark={false}
         onFinish={v => void enregistrer(v)}
+        className="rt-colonne"
+        style={{ gap: 24, marginBottom: 40 }}
       >
         <Panneau titre="Identité">
           <Row gutter={16}>
@@ -439,7 +441,7 @@ export default function Organisation() {
           type="primary"
           htmlType="submit"
           loading={modification.loading}
-          style={{ marginBottom: 24 }}
+          style={{ alignSelf: 'flex-start' }}
         >
           Enregistrer l’identité
         </Button>

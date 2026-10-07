@@ -2,7 +2,7 @@ import { prisma, type Prisma, type RoleOrganisation } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 
-import { accesRefuse } from './erreurs.ts'
+import { accesRefuse, erreurSaisie } from './erreurs.ts'
 
 // Appartenances (ADR 0008) : un compte est global, il appartient à une ou plusieurs
 // organisations avec un rôle dans chacune. Un admin n'agit que sur les membres de
@@ -30,23 +30,46 @@ export async function exigerMembre(
   return { role: ici.role, autresOrganisations: appartenances.length - 1 }
 }
 
+const ADMIN_DE_L_ORGANISATION =
+  'Seul un admin de l’organisation agit sur le compte d’un admin de l’organisation.'
+
+/**
+ * Refuse à un admin d'activité d'agir sur un admin de l'organisation (ADR 0019) :
+ * ni affectation, ni souhait, ni rôle. Le refus est explicite : un admin d'activité
+ * lit déjà qui administre l'organisation. `db` est le client Prisma ou la
+ * transaction de l'appelant.
+ */
+export async function refuserAdminDeLOrganisation(
+  ctx: AppContext,
+  userId: string,
+  db: Prisma.TransactionClient = prisma
+): Promise<void> {
+  if (ctx.personne?.estAdmin === true || ctx.organisation === null) return
+  const appartenance = await db.appartenance.findUnique({
+    where: {
+      userId_organisationId: { userId, organisationId: ctx.organisation.id },
+    },
+    select: { role: true },
+  })
+  if (appartenance?.role === 'ADMIN')
+    throw erreurSaisie(ADMIN_DE_L_ORGANISATION)
+}
+
 /**
  * Le rôle d'un compte que la personne connectée peut gérer (ADR 0018) : tout membre
  * pour un admin de l'organisation, une personne de ses équipes pour un admin
  * d'activité. Un membre hors de ses équipes, un compte inconnu et un compte d'une
- * autre organisation donnent le même refus.
+ * autre organisation donnent le même refus. Un admin d'activité ne gère jamais un
+ * admin de l'organisation (ADR 0019).
  */
 export async function exigerMembreGere(
   ctx: AppContext,
   userId: string
 ): Promise<Membre> {
   const membre = await exigerMembre(ctx, userId)
-  if (
-    ctx.personne?.estAdmin !== true &&
-    !(await ctx.equipeAdministree()).has(userId)
-  ) {
-    throw accesRefuse()
-  }
+  if (ctx.personne?.estAdmin === true) return membre
+  if (membre.role === 'ADMIN') throw erreurSaisie(ADMIN_DE_L_ORGANISATION)
+  if (!(await ctx.equipeAdministree()).has(userId)) throw accesRefuse()
   return membre
 }
 

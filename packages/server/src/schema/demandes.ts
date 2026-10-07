@@ -8,7 +8,11 @@ import {
 import type { AppContext } from '../context.ts'
 import { mettreEnFile } from '../courriel/file.ts'
 import { creerAffectations } from '../lib/affectations.ts'
-import { dansLEquipe, equipesModifiees } from '../lib/appartenances.ts'
+import {
+  dansLEquipe,
+  equipesModifiees,
+  refuserAdminDeLOrganisation,
+} from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
 import {
   motValide,
@@ -450,6 +454,10 @@ builder.mutationFields(t => ({
             throw erreurSaisie('Cette adresse ne peut pas être invitée.')
           }
           const { userId } = compte
+          // Un admin d'activité n'affecte pas un admin de l'organisation (ADR 0019).
+          if (compte.issue === 'membre') {
+            await refuserAdminDeLOrganisation(ctx, userId, tx)
+          }
           const { creees } = await creerAffectations(tx, {
             userId,
             perimetreIds: affecter,

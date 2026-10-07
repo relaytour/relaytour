@@ -446,7 +446,7 @@ describe('admin d’une activité', () => {
     }
   })
 
-  it('ne lit pas le rôle d’organisation des personnes de son équipe', async () => {
+  it('lit le rôle d’organisation des personnes de son équipe (ADR 0019)', async () => {
     const r = await executer(
       ids.adminA1,
       'query ($a: ID) { equipe(activiteId: $a) { id estAdmin } }',
@@ -456,7 +456,7 @@ describe('admin d’une activité', () => {
       id: string
       estAdmin: boolean | null
     }[]
-    expect(personnes.find(p => p.id === ids.membreA1)?.estAdmin).toBeNull()
+    expect(personnes.find(p => p.id === ids.membreA1)?.estAdmin).toBe(false)
     expect(personnes.find(p => p.id === ids.adminA1)?.estAdmin).toBe(false)
   })
 
@@ -531,7 +531,6 @@ describe('admin d’une activité', () => {
         'mutation ($a: ID!) { modifierActivite(id: $a, nom: "X", nature: EVENEMENT, groupes: [{ cle: "sport", libelle: "Sport", libellePluriel: "Sports" }], ordre: 0, archive: true) { id } }',
         { a: ids.a1 },
       ],
-      [DEFINIR_ADMIN, { u: ids.membreA1, a: ids.a1, x: true }],
       [
         'mutation { inviterPersonne(email: "admin-intrus@exemple.fr", nom: "X", estAdmin: true) { id } }',
         {},
@@ -868,5 +867,158 @@ describe('nomination d’un admin d’activité', () => {
     expect(await prisma.adminActivite.count({ where: { userId: autre } })).toBe(
       0
     )
+  })
+})
+
+describe('admins lus et nommés par un admin d’activité (ADR 0019)', () => {
+  const ADMINS = 'query { adminsOrganisation { id nom estAdmin } }'
+  const INVITER_AFFECTEE =
+    'mutation ($email: String!, $e: ID, $p: [ID!]) { inviterPersonne(email: $email, nom: "Affectée", editionId: $e, perimetresAffectes: $p) { id } }'
+  const adminsDe = (activiteId: string) =>
+    prisma.adminActivite
+      .findMany({ where: { activiteId }, select: { userId: true } })
+      .then(lignes => lignes.map(l => l.userId).sort())
+
+  it('montre les admins de l’organisation à un admin d’activité, pas à une référente', async () => {
+    const r = await executer(ids.adminA1, ADMINS)
+    expect(r.data?.adminsOrganisation).toEqual([
+      { id: ids.adminOrg, nom: `admin-org ${s}`, estAdmin: true },
+    ])
+    // L'adresse garde la règle de l'ADR 0018 : l'admin de l'organisation n'est pas
+    // dans l'équipe de A1.
+    const adresse = await executer(
+      ids.adminA1,
+      'query { adminsOrganisation { email } }'
+    )
+    expect(code(adresse)).toBe('FORBIDDEN')
+    expect(code(await executer(ids.membreA1, ADMINS))).toBe('FORBIDDEN')
+  })
+
+  it('laisse un admin d’activité nommer et retirer un admin de son activité', async () => {
+    const nomme = await executer(ids.adminA1, DEFINIR_ADMIN, {
+      u: ids.membreA1,
+      a: ids.a1,
+      x: true,
+    })
+    expect(nomme.data?.definirAdminActivite).toBe(true)
+    expect(await adminsDe(ids.a1)).toEqual([ids.adminA1, ids.membreA1].sort())
+    const retire = await executer(ids.adminA1, DEFINIR_ADMIN, {
+      u: ids.membreA1,
+      a: ids.a1,
+      x: false,
+    })
+    expect(retire.data?.definirAdminActivite).toBe(false)
+    expect(await adminsDe(ids.a1)).toEqual([ids.adminA1])
+  })
+
+  it('refuse une nomination hors de son activité ou hors de son équipe', async () => {
+    for (const [u, a] of [
+      // Une autre activité, invisible pour l'admin de A1.
+      [ids.membreA1, ids.a2],
+      // Une personne hors de son équipe.
+      [ids.membreA2, ids.a1],
+      [ids.sansActivite, ids.a1],
+    ]) {
+      const r = await executer(ids.adminA1, DEFINIR_ADMIN, { u, a, x: true })
+      expect(code(r)).toBe('FORBIDDEN')
+    }
+    expect(await adminsDe(ids.a1)).toEqual([ids.adminA1])
+    expect(await adminsDe(ids.a2)).toEqual([])
+  })
+
+  it('refuse à un admin d’activité de retirer son propre rôle', async () => {
+    const r = await executer(ids.adminA1, DEFINIR_ADMIN, {
+      u: ids.adminA1,
+      a: ids.a1,
+      x: false,
+    })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(await adminsDe(ids.a1)).toEqual([ids.adminA1])
+  })
+
+  it('refuse à un admin d’activité d’agir sur un admin de l’organisation', async () => {
+    // L'admin de l'organisation entre dans l'équipe de A1 par une affectation et un
+    // souhait : l'admin de A1 le lit, sans pouvoir le modifier.
+    const affectation = await prisma.affectation.create({
+      data: {
+        userId: ids.adminOrg,
+        perimetreId: ids.perimetre1,
+        editionId: ids.edition1,
+      },
+    })
+    const souhait = await prisma.souhait.create({
+      data: {
+        userId: ids.adminOrg,
+        perimetreId: ids.perimetre1,
+        editionId: ids.edition1,
+      },
+    })
+    try {
+      for (const [query, variables] of [
+        [DEFINIR_ADMIN, { u: ids.adminOrg, a: ids.a1, x: true }],
+        [AFFECTER, { u: ids.adminOrg, p: ids.perimetre1, e: ids.edition1 }],
+        [
+          'mutation ($u: ID!, $e: ID!) { definirSouhaits(personneId: $u, editionId: $e, perimetreIds: []) { id } }',
+          { u: ids.adminOrg, e: ids.edition1 },
+        ],
+        [
+          'mutation ($id: ID!) { retirerAffectation(id: $id) }',
+          { id: affectation.id },
+        ],
+        ['mutation ($id: ID!) { retirerSouhait(id: $id) }', { id: souhait.id }],
+        [
+          INVITER,
+          {
+            email: `admin-org-${s}@exemple.fr`,
+            e: ids.edition1,
+            p: [ids.perimetre1],
+          },
+        ],
+      ] as const) {
+        const r = await executer(ids.adminA1, query, variables)
+        expect(code(r), query).toBe('SAISIE_INVALIDE')
+      }
+      expect(
+        await prisma.affectation.count({ where: { id: affectation.id } })
+      ).toBe(1)
+      expect(await prisma.souhait.count({ where: { id: souhait.id } })).toBe(1)
+      expect(await adminsDe(ids.a1)).toEqual([ids.adminA1])
+    } finally {
+      await prisma.affectation.deleteMany({ where: { userId: ids.adminOrg } })
+      await prisma.souhait.deleteMany({ where: { userId: ids.adminOrg } })
+    }
+  })
+
+  it('invite une personne avec une affectation, sans périmètre souhaité', async () => {
+    const email = `affectee-${s}@exemple.fr`
+    const r = await executer(ids.adminA1, INVITER_AFFECTEE, {
+      email,
+      e: ids.edition1,
+      p: [ids.perimetre1],
+    })
+    expect(r.errors).toBeUndefined()
+    const userId = (r.data?.inviterPersonne as { id: string }).id
+    expect(
+      await prisma.affectation.count({
+        where: {
+          userId,
+          perimetreId: ids.perimetre1,
+          editionId: ids.edition1,
+        },
+      })
+    ).toBe(1)
+    expect(await prisma.souhait.count({ where: { userId } })).toBe(0)
+    // Un périmètre d'une autre activité reste refusé, avant toute création.
+    const ailleurs = await executer(ids.adminA1, INVITER_AFFECTEE, {
+      email: `ailleurs-${s}@exemple.fr`,
+      e: ids.edition2,
+      p: [ids.perimetre2],
+    })
+    expect(code(ailleurs)).toBe('FORBIDDEN')
+    expect(
+      await prisma.user.count({
+        where: { email: `ailleurs-${s}@exemple.fr` },
+      })
+    ).toBe(0)
   })
 })
