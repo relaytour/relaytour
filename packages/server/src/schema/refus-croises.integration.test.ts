@@ -37,6 +37,7 @@ const a = {
   souhait: '',
   demande: '',
   proposition: '',
+  message: '',
   droit: '',
   notification: '',
   admin: '',
@@ -261,6 +262,22 @@ beforeAll(async () => {
   })
   a.demande = demande.id
   a.proposition = demande.perimetres[0]!.id
+  // Un message de l'activité principale, écrit par son admin (ADR 0020).
+  a.message = (
+    await prisma.message.create({
+      data: {
+        organisationId: a.org,
+        activiteId: a.activite,
+        editionId: a.edition,
+        auteurId: a.admin,
+        modele: 'message-libre',
+        objet: 'Réunion',
+        corps: 'Bonjour',
+        champ: 'A',
+        destinataires: { create: { userId: a.referente } },
+      },
+    })
+  ).id
   a.droit = (
     await prisma.droitRedaction.create({
       data: { organisationId: a.org, userId: a.referente, perimetreId: null },
@@ -294,6 +311,9 @@ afterAll(async () => {
     where: { perimetre: { organisationId: { in: organisations } } },
   })
   await prisma.demande.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
+  await prisma.message.deleteMany({
     where: { organisationId: { in: organisations } },
   })
   await prisma.affectation.deleteMany({
@@ -633,6 +653,34 @@ const CAS: Cas[] = [
     operation: 'refuserDemande',
     query: 'mutation ($id: ID!) { refuserDemande(id: $id) { id } }',
     variables: () => ({ id: a.demande }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'creerMessage',
+    query: 'mutation ($m: MessageInput!) { creerMessage(message: $m) { id } }',
+    variables: () => ({
+      m: {
+        activiteId: a.activite,
+        modele: 'message-libre',
+        objet: 'Réunion',
+        corps: 'Bonjour',
+        champ: 'A',
+        destinataireIds: [a.referente],
+      },
+    }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'definirStatutMessage',
+    query:
+      'mutation ($id: ID!) { definirStatutMessage(id: $id, statut: ENVOYE) { id } }',
+    variables: () => ({ id: a.message }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'messages',
+    query: 'query ($a: ID) { messages(activiteId: $a) { id objet } }',
+    variables: () => ({ a: a.activite }),
     attente: INTERDIT,
   },
   {

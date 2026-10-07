@@ -23,7 +23,13 @@ import { journal } from './journal.ts'
 // chargement, et le schéma doit pouvoir s'imprimer sans .env (invariant 12).
 
 export type EntiteChangee =
-  'TACHE' | 'FICHE' | 'PERIMETRE' | 'EQUIPE' | 'DEMANDE' | 'NOTIFICATION'
+  | 'TACHE'
+  | 'FICHE'
+  | 'PERIMETRE'
+  | 'EQUIPE'
+  | 'DEMANDE'
+  | 'NOTIFICATION'
+  | 'MESSAGE'
 
 export interface Changement {
   entite: EntiteChangee
@@ -151,6 +157,18 @@ export function publierPourActivite(
   })
 }
 
+/**
+ * Publie le changement d'un message (ADR 0020). Sans activité, le message vient de
+ * l'annuaire : le signal va aux admins de l'organisation.
+ */
+export function publierMessage(
+  organisationId: string,
+  activiteId: string | null,
+  id: string
+): void {
+  void publierChangement({ entite: 'MESSAGE', organisationId, activiteId, id })
+}
+
 /** Publie une notification nouvelle pour son seul destinataire. */
 export function publierNotification(
   organisationId: string,
@@ -170,6 +188,8 @@ export function publierNotification(
  *
  * - Une notification va à son seul destinataire.
  * - Une demande va aux admins de son activité, qui seuls lisent les demandes.
+ * - Un message va aux admins de son activité, ou aux admins de l'organisation
+ *   quand il vient de l'annuaire.
  * - Une fiche va aux personnes qui peuvent la lire : une fiche de périmètre ne se
  *   lit pas en consultation, à la différence des tâches (ADR 0014).
  * - Tout autre changement va aux personnes qui voient l'activité.
@@ -184,6 +204,11 @@ export async function peutRecevoir(
     return changement.destinataireId === ctx.personne.id
   }
   const activiteId = changement.activiteId
+  if (changement.entite === 'MESSAGE') {
+    return activiteId === null || activiteId === undefined
+      ? ctx.personne.estAdmin
+      : ctx.estAdminDe(activiteId)
+  }
   if (activiteId === null || activiteId === undefined) return false
   if (changement.entite === 'DEMANDE') return ctx.estAdminDe(activiteId)
   if (changement.entite === 'FICHE') {

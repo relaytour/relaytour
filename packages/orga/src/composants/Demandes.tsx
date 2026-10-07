@@ -10,7 +10,6 @@ import {
   Segmented,
   Select,
   Space,
-  Table,
   Tag,
   Tooltip,
   Typography,
@@ -24,8 +23,10 @@ import { useActivite } from '../lib/activite'
 import { useSession } from '../lib/session'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import { PERIMETRES } from '../lib/requetes'
+import { comparer } from '../lib/tableau'
 
 import EtiquettePerimetre from './EtiquettePerimetre'
+import Tableau from './Tableau'
 
 // File de revue des demandes pour rejoindre l'équipe d'une période (ADR 0015). Un
 // admin de l'activité accepte une demande, ce qui crée le compte et les affectations
@@ -100,6 +101,9 @@ const REFUSER = graphql(`
 
 type Demande = DemandesQuery['demandes'][number]
 type Filtre = 'EN_ATTENTE' | 'traitees'
+
+/** Valeur de filtre d'une demande sans périmètre. */
+const AUCUN = 'aucun'
 
 const STATUTS: Record<StatutDemande, { libelle: string; couleur?: string }> = {
   EN_ATTENTE: { libelle: 'En attente', couleur: 'gold' },
@@ -226,12 +230,12 @@ export default function Demandes({
           { value: 'traitees', label: 'Traitées' },
         ]}
       />
-      <Table<Demande>
+      <Tableau<Demande>
+        id="demandes"
         rowKey="id"
         loading={loading && data === undefined}
         dataSource={affichees}
         pagination={{ pageSize: 50, hideOnSinglePage: true }}
-        scroll={{ x: 'max-content' }}
         expandable={{
           // Les réponses du formulaire public se déplient sous la demande.
           rowExpandable: d => Boolean(d.disponibilite ?? d.reponse ?? d.texte),
@@ -264,10 +268,13 @@ export default function Demandes({
               ? `Aucune demande n’attend pour ${periode.cette}.`
               : `Aucune demande traitée pour ${periode.cette}.`,
         }}
-        columns={[
+        colonnes={[
           {
+            key: 'nom',
             title: 'Nom',
             dataIndex: 'nom',
+            tri: d => d.nom,
+            recherche: d => d.nom,
             render: (nom: string, d) => (
               <Space style={{ whiteSpace: 'nowrap' }}>
                 <span style={{ fontWeight: 600 }}>{nom}</span>
@@ -290,10 +297,35 @@ export default function Demandes({
               </Space>
             ),
           },
-          { title: 'Adresse mail', dataIndex: 'adresse' },
           {
+            key: 'adresse',
+            title: 'Adresse mail',
+            dataIndex: 'adresse',
+            tri: d => d.adresse,
+            recherche: d => d.adresse,
+          },
+          {
+            key: 'perimetres',
             title: 'Périmètres demandés',
             dataIndex: 'perimetres',
+            filtre: {
+              options: [
+                { text: 'Aucun périmètre', value: AUCUN },
+                ...[
+                  ...new Map(
+                    affichees.flatMap(d =>
+                      d.perimetres.map(p => [p.perimetre.id, p.perimetre.nom])
+                    )
+                  ),
+                ]
+                  .sort((a, b) => comparer(a[1], b[1]))
+                  .map(([value, text]) => ({ text, value })),
+              ],
+              valeurs: d =>
+                d.perimetres.length === 0
+                  ? AUCUN
+                  : d.perimetres.map(p => p.perimetre.id),
+            },
             render: (_, d) =>
               d.perimetres.length === 0 ? (
                 <Typography.Text type="secondary">
@@ -324,13 +356,25 @@ export default function Demandes({
               ),
           },
           {
+            key: 'creeLe',
             title: 'Reçue le',
             dataIndex: 'creeLe',
+            tri: d => d.creeLe,
             render: (creeLe: string) => jourDeLInstant(creeLe),
           },
           {
+            key: 'statut',
             title: 'État',
             dataIndex: 'statut',
+            ...(filtre === 'traitees' && {
+              filtre: {
+                options: (['ACCEPTEE', 'REFUSEE'] as const).map(value => ({
+                  text: STATUTS[value].libelle,
+                  value,
+                })),
+                valeurs: d => d.statut,
+              },
+            }),
             render: (statut: StatutDemande, d) => (
               <Space size={4} wrap>
                 <Tag
@@ -350,6 +394,7 @@ export default function Demandes({
           {
             title: 'Actions',
             key: 'actions',
+            redimensionnable: false,
             render: (_, d) =>
               d.statut === 'EN_ATTENTE' && (
                 <Space>

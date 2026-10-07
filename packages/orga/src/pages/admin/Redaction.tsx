@@ -1,17 +1,8 @@
 import { useMutation, useQuery } from '@apollo/client/react'
-import {
-  App,
-  Button,
-  Card,
-  Form,
-  Popconfirm,
-  Select,
-  Space,
-  Table,
-  Tag,
-} from 'antd'
+import { App, Button, Card, Form, Popconfirm, Select, Space, Tag } from 'antd'
 
 import { Section } from '../../composants/Panneau'
+import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { DroitsRedactionQuery } from '../../gql/graphql'
@@ -19,6 +10,9 @@ import { useActivite } from '../../lib/activite'
 import { messageErreur } from '../../lib/erreurs'
 import { PERIMETRES } from '../../lib/requetes'
 import { useSession } from '../../lib/session'
+import { comparer } from '../../lib/tableau'
+
+const TOUTES_LES_FICHES = 'Toutes les fiches'
 
 const DROITS = graphql(`
   query DroitsRedaction($annuaire: Boolean!) {
@@ -207,21 +201,45 @@ export default function Redaction() {
 
       <div className="rt-colonne" style={{ gap: 26 }}>
         <Section titre="Droits accordés" compte={droits.length}>
-          <Table<Droit>
+          <Tableau<Droit>
+            id="redaction"
             rowKey="id"
             loading={loading}
             dataSource={droits}
             pagination={false}
-            scroll={{ x: 'max-content' }}
-            columns={[
-              { title: 'Personne', render: (_, d) => d.personne.nom },
+            colonnes={[
               {
+                key: 'personne',
+                title: 'Personne',
+                render: (_, d) => d.personne.nom,
+                tri: d => d.personne.nom,
+                recherche: d => d.personne.nom,
+              },
+              {
+                key: 'fiches',
                 title: 'Fiches',
-                render: (_, d) => d.perimetre?.nom ?? 'Toutes les fiches',
+                render: (_, d) => d.perimetre?.nom ?? TOUTES_LES_FICHES,
+                tri: d => d.perimetre?.nom ?? TOUTES_LES_FICHES,
+                filtre: {
+                  // La valeur est l'identifiant du périmètre : deux périmètres
+                  // de même nom restent deux options.
+                  options: [
+                    ...new Map(
+                      droits.map(d => [
+                        d.perimetre?.id ?? TOUTES,
+                        d.perimetre?.nom ?? TOUTES_LES_FICHES,
+                      ])
+                    ),
+                  ]
+                    .sort((a, b) => comparer(a[1], b[1]))
+                    .map(([value, text]) => ({ text, value })),
+                  valeurs: d => d.perimetre?.id ?? TOUTES,
+                },
               },
               {
                 title: '',
                 key: 'actions',
+                redimensionnable: false,
                 render: (_, d) => (
                   <Space>
                     <Popconfirm
@@ -253,17 +271,29 @@ export default function Redaction() {
             Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie
             depuis l’écran {gereOrganisation ? 'Admins' : 'Personnes'}.
           </p>
-          <Table<Admin>
+          <Tableau<Admin>
+            id="redaction-admins"
             rowKey="id"
             loading={loading}
             dataSource={admins}
             pagination={false}
-            scroll={{ x: 'max-content' }}
-            columns={[
-              { title: 'Personne', dataIndex: 'nom' },
+            colonnes={[
+              {
+                key: 'personne',
+                title: 'Personne',
+                dataIndex: 'nom',
+                tri: p => p.nom,
+              },
               {
                 title: 'Rôle',
                 key: 'role',
+                filtre: {
+                  options: [
+                    { text: 'Admin de l’organisation', value: 'organisation' },
+                    { text: 'Admin de l’activité', value: 'activite' },
+                  ],
+                  valeurs: p => (p.organisation ? 'organisation' : 'activite'),
+                },
                 render: (_, p) =>
                   p.organisation ? (
                     <Tag color="blue">Admin de l’organisation</Tag>
@@ -282,6 +312,7 @@ export default function Redaction() {
               {
                 title: '',
                 key: 'actions',
+                redimensionnable: false,
                 render: () => (
                   <Button size="small" disabled>
                     Rédaction déjà accordée

@@ -116,6 +116,22 @@ export async function construireExport(organisationId: string) {
       }),
     ])
 
+  // Les messages préparés par les admins (ADR 0020), avec leurs destinataires.
+  const messages = await prisma.message.findMany({
+    where: { organisationId },
+    orderBy: { createdAt: 'asc' },
+    include: {
+      activite: { select: { slug: true } },
+      edition: { select: { annee: true } },
+      perimetre: { select: { slug: true } },
+      auteur: { select: { email: true } },
+      destinataires: {
+        orderBy: { id: 'asc' },
+        include: { user: { select: { email: true } } },
+      },
+    },
+  })
+
   const taches = await prisma.tache.findMany({
     where: { perimetre: { organisationId } },
     orderBy: [{ editionId: 'asc' }, { createdAt: 'asc' }],
@@ -250,6 +266,23 @@ export async function construireExport(organisationId: string) {
       traiteePar: d.traiteePar?.email ?? null,
       traiteeLe: d.traiteeLe?.toISOString() ?? null,
       creeLe: d.createdAt.toISOString(),
+    })),
+    messages: messages.map(m => ({
+      activite: m.activite?.slug ?? null,
+      periode: m.edition?.annee ?? null,
+      perimetre: m.perimetre?.slug ?? null,
+      auteur: m.auteur?.email ?? null,
+      modele: m.modele,
+      objet: m.objet,
+      corps: m.corps,
+      champ: m.champ,
+      statut: m.statut,
+      statutLe: m.statutLe?.toISOString() ?? null,
+      creeLe: m.createdAt.toISOString(),
+      destinataires: m.destinataires.map(d => ({
+        email: d.user.email,
+        enCopie: d.enCopie,
+      })),
     })),
   }
 }

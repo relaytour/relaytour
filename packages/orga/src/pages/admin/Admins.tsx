@@ -1,8 +1,9 @@
 import { useMutation, useQuery } from '@apollo/client/react'
-import { App, Button, Popconfirm, Select, Space, Table, Tag } from 'antd'
+import { App, Button, Popconfirm, Select, Space, Tag } from 'antd'
 import { useState } from 'react'
 
 import { Section } from '../../composants/Panneau'
+import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { Activite } from '../../lib/activite'
@@ -120,16 +121,18 @@ function ListeAdmins({
           Nommer
         </Button>
       </Space>
-      <Table<Ligne>
+      <Tableau<Ligne>
+        id="admins"
         rowKey="id"
         loading={chargement}
         dataSource={admins}
         pagination={false}
         locale={{ emptyText: vide }}
-        scroll={{ x: 'max-content' }}
-        columns={[
+        colonnes={[
           {
+            key: 'personne',
             title: 'Personne',
+            tri: p => p.nom,
             render: (_, p) => (
               <Space>
                 {p.nom}
@@ -141,6 +144,7 @@ function ListeAdmins({
             title: '',
             key: 'actions',
             align: 'end',
+            redimensionnable: false,
             render: (_, p) =>
               retirable(p) ? (
                 <Popconfirm

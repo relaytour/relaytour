@@ -18,6 +18,18 @@
             "texte": "Un admin d'activité lit désormais qui administre l'organisation. Il nomme et retire les admins de ses activités, parmi les personnes de son équipe. Il ne modifie ni les affectations ni les souhaits d'un admin de l'organisation. Une invitation peut porter une affectation, sans périmètre souhaité.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-07-serveur-le-serveur-garde-l-historique-des-messages-des-admins",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le serveur garde l'historique des messages des admins",
+            "texte": "Le serveur enregistre les messages que les admins préparent pour leur équipe, avec leurs destinataires et le statut déclaré par l'auteur. Il n'envoie aucun de ces messages.",
+            "migration": null
+          }
         }
       ]
     },

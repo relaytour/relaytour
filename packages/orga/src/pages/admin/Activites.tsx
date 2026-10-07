@@ -1,4 +1,4 @@
-import { DeleteOutlined, EditOutlined, PlusOutlined } from '@ant-design/icons'
+import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import {
   Alert,
@@ -13,7 +13,6 @@ import {
   Row,
   Select,
   Switch,
-  Table,
   Tag,
   Typography,
 } from 'antd'
@@ -22,6 +21,7 @@ import { useNavigate } from 'react-router'
 
 import ChampCouleur from '../../composants/ChampCouleur'
 import ChampImage from '../../composants/ChampImage'
+import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { NatureActivite } from '../../gql/graphql'
@@ -351,21 +351,22 @@ export default function Activites() {
           Nouvelle activité
         </Button>
       )}
-      <Table<Activite>
+      <Tableau<Activite>
+        id="activites"
         rowKey="id"
         loading={loading}
         dataSource={data?.activites ?? []}
         pagination={false}
-        scroll={{ x: 'max-content' }}
-        onRow={activite =>
-          activite.estAdministree
-            ? { onClick: () => ouvrir(activite), style: { cursor: 'pointer' } }
-            : {}
-        }
-        columns={[
+        ouvrir={ouvrir}
+        peutOuvrir={a => a.estAdministree}
+        libelleOuvrir={a => `Modifier ${a.nom}`}
+        colonnes={[
           {
+            key: 'nom',
             title: 'Nom',
             dataIndex: 'nom',
+            tri: a => a.nom,
+            recherche: a => a.nom,
             render: (nom: string, a) => (
               <>
                 {nom}
@@ -375,40 +376,41 @@ export default function Activites() {
               </>
             ),
           },
-          { title: 'Identifiant', dataIndex: 'slug' },
           {
+            key: 'slug',
+            title: 'Identifiant',
+            dataIndex: 'slug',
+            tri: a => a.slug,
+          },
+          {
+            key: 'nature',
             title: 'Nature',
             dataIndex: 'nature',
             render: (n: NatureActivite) =>
               `${NATURES.find(x => x.value === n)?.label ?? n} (${formesPeriode(n).nom})`,
+            filtre: {
+              options: NATURES.map(n => ({ text: n.label, value: n.value })),
+              valeurs: a => a.nature,
+            },
           },
           {
+            key: 'groupes',
             title: 'Groupes',
             render: (_, a) => a.groupes.map(g => g.libellePluriel).join(', '),
           },
           {
+            key: 'etat',
             title: 'État',
             dataIndex: 'archive',
             render: (archive: boolean) =>
               archive ? <Tag>Archivée</Tag> : <Tag color="green">Ouverte</Tag>,
-          },
-          {
-            title: '',
-            key: 'modifier',
-            // Un bouton rend la modification accessible au clavier ; le clic sur
-            // la ligne reste un raccourci.
-            render: (_, a) =>
-              !a.estAdministree ? null : (
-                <Button
-                  size="small"
-                  icon={<EditOutlined />}
-                  aria-label={`Modifier ${a.nom}`}
-                  onClick={e => {
-                    e.stopPropagation()
-                    ouvrir(a)
-                  }}
-                />
-              ),
+            filtre: {
+              options: [
+                { text: 'Ouverte', value: 'ouverte' },
+                { text: 'Archivée', value: 'archivee' },
+              ],
+              valeurs: a => (a.archive ? 'archivee' : 'ouverte'),
+            },
           },
         ]}
       />

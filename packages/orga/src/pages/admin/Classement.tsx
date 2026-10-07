@@ -1,7 +1,8 @@
 import { useQuery } from '@apollo/client/react'
-import { Alert, Empty, Select, Space, Table } from 'antd'
+import { Alert, Empty, Select, Space } from 'antd'
 import { useState } from 'react'
 
+import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { ClassementQuery } from '../../gql/graphql'
@@ -70,29 +71,57 @@ export default function Classement() {
       {editionId === undefined ? (
         <Empty description={`Créez d’abord ${periode.une}.`} />
       ) : (
-        <Table<Ligne>
+        <Tableau<Ligne>
+          id="classement"
           rowKey={l => l.personne.id}
           loading={loading}
           dataSource={data?.classement ?? []}
           pagination={false}
-          scroll={{ x: 'max-content' }}
           locale={{ emptyText: `Aucune contribution pour ${periode.cette}.` }}
-          columns={[
-            { title: 'Rang', dataIndex: 'rang', width: 70 },
-            { title: 'Personne', render: (_, l) => l.personne.nom },
+          colonnes={[
             {
+              key: 'rang',
+              title: 'Rang',
+              dataIndex: 'rang',
+              width: 90,
+              tri: l => l.rang,
+            },
+            {
+              key: 'personne',
+              title: 'Personne',
+              render: (_, l) => l.personne.nom,
+              tri: l => l.personne.nom,
+              recherche: l => l.personne.nom,
+            },
+            {
+              key: 'points',
               title: 'Points',
               render: (_, l) => <strong>{l.score.points}</strong>,
+              tri: l => l.score.points,
             },
             {
+              key: 'tachesRealisees',
               title: 'Tâches réalisées',
               render: (_, l) => l.score.tachesRealisees,
+              tri: l => l.score.tachesRealisees,
             },
-            { title: 'Dont à temps', render: (_, l) => l.score.tachesATemps },
-            { title: 'Tâches créées', render: (_, l) => l.score.tachesCreees },
             {
+              key: 'tachesATemps',
+              title: 'Dont à temps',
+              render: (_, l) => l.score.tachesATemps,
+              tri: l => l.score.tachesATemps,
+            },
+            {
+              key: 'tachesCreees',
+              title: 'Tâches créées',
+              render: (_, l) => l.score.tachesCreees,
+              tri: l => l.score.tachesCreees,
+            },
+            {
+              key: 'fiches',
               title: 'Fiches créées ou modifiées',
               render: (_, l) => l.score.fichesCreees + l.score.fichesModifiees,
+              tri: l => l.score.fichesCreees + l.score.fichesModifiees,
             },
           ]}
         />

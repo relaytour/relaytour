@@ -1,4 +1,9 @@
-import { CheckOutlined, MailOutlined, UserAddOutlined } from '@ant-design/icons'
+import {
+  CheckOutlined,
+  MailOutlined,
+  SendOutlined,
+  UserAddOutlined,
+} from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import {
   Alert,
@@ -18,13 +23,18 @@ import {
   Table,
   Tabs,
   Tag,
+  Tooltip,
   Typography,
-  type TableColumnsType,
 } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import Demandes from '../../composants/Demandes'
+import EcrireMessage, {
+  type CibleMessage,
+} from '../../composants/EcrireMessage'
+import Messages from '../../composants/Messages'
+import Tableau, { type ColonneTableau } from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type {
@@ -44,6 +54,7 @@ import {
   PERIMETRES,
   RETIRER_AFFECTATION,
 } from '../../lib/requetes'
+import { comparer } from '../../lib/tableau'
 
 // Un admin de l'organisation lit l'annuaire ; un admin d'activité lit l'équipe de
 // l'activité affichée (ADR 0018). Les deux listes portent les mêmes champs, et
@@ -60,6 +71,7 @@ const PERSONNES = graphql(`
       archive
       affectations(editionId: $editionId) {
         id
+        contactPrincipal
         perimetre {
           id
           nom
@@ -96,6 +108,7 @@ const EQUIPE = graphql(`
       archive
       affectations(editionId: $editionId) {
         id
+        contactPrincipal
         perimetre {
           id
           nom
@@ -242,6 +255,44 @@ function libelleAttribution(a: Membre['attributions'][number]): string {
     a.affectee ? 'affecté·e' : a.interessee ? 'intéressé·e' : null,
   ].filter(role => role !== null)
   return roles.join(', ')
+}
+
+interface Role {
+  libelle: string
+  couleur?: string
+}
+
+const ROLES = {
+  admin: { libelle: 'Admin de l’organisation', couleur: 'blue' },
+  membre: { libelle: 'Membre' },
+  adminActivite: { libelle: 'Admin de l’activité', couleur: 'geekblue' },
+  referent: { libelle: 'Référent·e' },
+  interesse: { libelle: 'Intéressé·e' },
+} satisfies Record<string, Role>
+
+/** Valeur de filtre d'une personne sans périmètre dans la colonne. */
+const AUCUN = 'aucun'
+
+/** Filtre d'une colonne de périmètres : ceux que portent les lignes affichées. */
+function filtreParPerimetre<T>(
+  lignes: T[],
+  liens: (ligne: T) => { perimetre: { id: string; nom: string } }[]
+): NonNullable<ColonneTableau<T>['filtre']> {
+  const noms = new Map(
+    lignes.flatMap(l => liens(l).map(x => [x.perimetre.id, x.perimetre.nom]))
+  )
+  return {
+    options: [
+      { text: 'Aucun périmètre', value: AUCUN },
+      ...[...noms]
+        .sort((a, b) => comparer(a[1], b[1]))
+        .map(([value, text]) => ({ text, value })),
+    ],
+    valeurs: l => {
+      const ids = liens(l).map(x => x.perimetre.id)
+      return ids.length === 0 ? AUCUN : ids
+    },
+  }
 }
 
 interface Valeurs {
@@ -482,10 +533,16 @@ export default function Personnes({
   const demandesEnAttente = demandes?.demandes.length ?? 0
   // L'onglet se lit dans l'adresse : une notification mène droit aux demandes.
   const [parametres, setParametres] = useSearchParams()
+  const ongletDemande = parametres.get('onglet')
   const onglet =
-    !modeAnnuaire && parametres.get('onglet') === 'demandes'
-      ? 'demandes'
+    ongletDemande === 'messages' ||
+    (!modeAnnuaire && ongletDemande === 'demandes')
+      ? ongletDemande
       : 'annuaire'
+  // Les personnes cochées dans le tableau, et celles à qui la fenêtre de rédaction
+  // écrit (ADR 0020).
+  const [selection, setSelection] = useState<string[]>([])
+  const [cibleMessage, setCibleMessage] = useState<CibleMessage | null>(null)
   const [enEdition, setEnEdition] = useState<Personne | 'nouvelle' | null>(null)
   // Compteur d'ouvertures : la fenêtre reste montée d'une ouverture à l'autre, et
   // les champs de souhaits doivent relire les souhaits à chaque fois.
@@ -514,6 +571,19 @@ export default function Personnes({
   const [definirAdminActivite] = useMutation(DEFINIR_ADMIN_ACTIVITE, rafraichir)
   const { data: toutesActivites } = useQuery(ACTIVITES)
   const moiId = session?.moi?.id
+
+  // Un message s'écrit à des comptes actifs, sauf à soi-même (ADR 0020).
+  const joignables = useMemo(
+    () =>
+      (liste ?? [])
+        .filter(p => !p.archive && p.id !== moiId)
+        .map(p => ({ id: p.id, nom: p.nom, email: p.email })),
+    [liste, moiId]
+  )
+  const selectionnees = joignables.filter(p => selection.includes(p.id))
+  const contactsPrincipaux = (liste ?? [])
+    .filter(p => p.affectations.some(a => a.contactPrincipal))
+    .map(p => p.id)
 
   /** Nomme ou retire les admins d'activité pour aller de `avant` à `apres`. */
   const ajusterAdminsActivite = async (
@@ -595,6 +665,21 @@ export default function Personnes({
 
   // Un admin d'activité n'agit pas sur un admin de l'organisation (ADR 0019).
   const modifiable = (p: Personne) => gereOrganisation || p.estAdmin !== true
+
+  // L'écran d'une activité montre les rôles de cette activité, et qui administre
+  // l'organisation (ADR 0019).
+  const roleDe = (p: Personne): Role | null =>
+    p.estAdmin
+      ? ROLES.admin
+      : modeAnnuaire
+        ? ROLES.membre
+        : p.activitesAdministrees.includes(activite.id)
+          ? ROLES.adminActivite
+          : p.affectations.length > 0
+            ? ROLES.referent
+            : p.souhaits.length > 0
+              ? ROLES.interesse
+              : null
 
   const ouvrir = (personne: Personne | 'nouvelle') => {
     setEnEdition(personne)
@@ -862,27 +947,31 @@ export default function Personnes({
       >
         {modeAnnuaire ? 'Annuaire' : 'Personnes'}
       </Titre>
-      {!modeAnnuaire && (
-        <Tabs
-          activeKey={onglet}
-          onChange={cle =>
-            setParametres(cle === 'demandes' ? { onglet: 'demandes' } : {})
-          }
-          items={[
-            {
-              key: 'annuaire',
-              label: 'Équipe de l’activité',
-            },
-            {
-              key: 'demandes',
-              label:
-                demandesEnAttente > 0
-                  ? `Demandes (${demandesEnAttente})`
-                  : 'Demandes',
-            },
-          ]}
-        />
-      )}
+      <Tabs
+        activeKey={onglet}
+        onChange={cle =>
+          setParametres(cle === 'annuaire' ? {} : { onglet: cle })
+        }
+        items={[
+          {
+            key: 'annuaire',
+            label: modeAnnuaire ? 'Annuaire' : 'Équipe de l’activité',
+          },
+          // Les demandes valent pour une période d'une activité.
+          ...(modeAnnuaire
+            ? []
+            : [
+                {
+                  key: 'demandes',
+                  label:
+                    demandesEnAttente > 0
+                      ? `Demandes (${demandesEnAttente})`
+                      : 'Demandes',
+                },
+              ]),
+          { key: 'messages', label: 'Messages' },
+        ]}
+      />
       {onglet === 'demandes' &&
         (editionId === undefined ? (
           <Empty description={`Créez d’abord ${periode.une}.`} />
@@ -892,6 +981,9 @@ export default function Personnes({
             archivee={edition?.statut === 'ARCHIVEE'}
           />
         ))}
+      {onglet === 'messages' && (
+        <Messages annuaire={modeAnnuaire} personnes={joignables} />
+      )}
       {onglet === 'annuaire' && (
         <>
           <Space
@@ -984,32 +1076,68 @@ export default function Personnes({
                 Sans affectation pour {periode.cette}
               </Checkbox>
             )}
+            <Tooltip
+              title={
+                selectionnees.length === 0
+                  ? 'Cochez d’abord des personnes dans le tableau.'
+                  : undefined
+              }
+            >
+              <Button
+                icon={<SendOutlined />}
+                disabled={selectionnees.length === 0}
+                onClick={() =>
+                  setCibleMessage({
+                    destinataires: selectionnees,
+                    toutLeMonde: selectionnees.length === joignables.length,
+                  })
+                }
+              >
+                {selectionnees.length === 0
+                  ? 'Écrire à la sélection'
+                  : `Écrire à la sélection (${selectionnees.length})`}
+              </Button>
+            </Tooltip>
           </Space>
 
-          <Table<Personne>
+          <Tableau<Personne>
+            id="personnes"
             rowKey="id"
             loading={loading}
             dataSource={personnes}
             pagination={{ pageSize: 50, hideOnSinglePage: true }}
-            scroll={{ x: 'max-content' }}
-            columns={[
+            rowSelection={{
+              selectedRowKeys: selection,
+              onChange: cles => setSelection(cles.map(String)),
+              preserveSelectedRowKeys: true,
+              selections: [Table.SELECTION_ALL, Table.SELECTION_NONE],
+              getCheckboxProps: p => ({
+                disabled: p.archive || p.id === moiId,
+                'aria-label': `Sélectionner ${p.nom}`,
+              }),
+            }}
+            ouvrir={ouvrir}
+            peutOuvrir={modifiable}
+            libelleOuvrir={p => `Modifier le compte de ${p.nom}`}
+            colonnes={[
               {
+                key: 'nom',
                 title: 'Nom',
                 dataIndex: 'nom',
+                tri: p => p.nom,
                 render: (nom: string, p) => (
-                  <Space style={{ whiteSpace: 'nowrap' }}>
-                    {modifiable(p) ? (
-                      <Typography.Link onClick={() => ouvrir(p)}>
-                        {nom}
-                      </Typography.Link>
-                    ) : (
-                      nom
-                    )}
+                  <Space>
+                    <span style={{ fontWeight: 600 }}>{nom}</span>
                     {p.id === moiId && <Tag>Vous</Tag>}
                   </Space>
                 ),
               },
-              { title: 'Adresse mail', dataIndex: 'email' },
+              {
+                key: 'email',
+                title: 'Adresse mail',
+                dataIndex: 'email',
+                tri: p => p.email,
+              },
               // Les affectations et les souhaits valent pour une période d'une
               // activité : l'annuaire montre les activités à la place.
               ...(modeAnnuaire
@@ -1018,6 +1146,10 @@ export default function Personnes({
                     {
                       title: 'Affectations',
                       key: 'affectations',
+                      filtre: filtreParPerimetre(
+                        personnes,
+                        p => p.affectations
+                      ),
                       render: (_, p) =>
                         p.affectations.length === 0 ? (
                           <Typography.Text type="secondary">
@@ -1041,6 +1173,7 @@ export default function Personnes({
                     {
                       title: 'Souhaits',
                       key: 'souhaits',
+                      filtre: filtreParPerimetre(personnes, p => p.souhaits),
                       render: (_, p) =>
                         p.souhaits.length === 0 ? (
                           <Typography.Text type="secondary">
@@ -1066,7 +1199,7 @@ export default function Personnes({
                           </Space>
                         ),
                     },
-                  ] satisfies TableColumnsType<Personne>)),
+                  ] satisfies ColonneTableau<Personne>[])),
               // L'admin de l'organisation lit qui participe à quelle activité, toutes
               // périodes confondues (ADR 0018).
               ...(modeAnnuaire
@@ -1100,34 +1233,34 @@ export default function Personnes({
                           </Space>
                         )
                       },
-                    },
+                    } satisfies ColonneTableau<Personne>,
                   ]
                 : []),
               {
                 title: modeAnnuaire ? 'Rôle' : 'Rôle dans l’activité',
-                dataIndex: 'estAdmin',
-                render: (a: boolean, p) =>
-                  !modeAnnuaire ? (
-                    // L'écran d'une activité montre les rôles de cette activité, et
-                    // qui administre l'organisation (ADR 0019).
-                    a ? (
-                      <Tag color="blue">Admin de l’organisation</Tag>
-                    ) : p.activitesAdministrees.includes(activite.id) ? (
-                      <Tag color="geekblue">Admin de l’activité</Tag>
-                    ) : p.affectations.length > 0 ? (
-                      <Tag>Référent·e</Tag>
-                    ) : p.souhaits.length > 0 ? (
-                      <Tag>Intéressé·e</Tag>
-                    ) : null
-                  ) : a ? (
-                    <Tag color="blue">Admin de l’organisation</Tag>
-                  ) : (
-                    <Tag>Membre</Tag>
-                  ),
+                key: 'role',
+                render: (_, p) => {
+                  const role = roleDe(p)
+                  return role && <Tag color={role.couleur}>{role.libelle}</Tag>
+                },
+                tri: p => roleDe(p)?.libelle,
+                filtre: {
+                  options: (modeAnnuaire
+                    ? [ROLES.admin, ROLES.membre]
+                    : [
+                        ROLES.admin,
+                        ROLES.adminActivite,
+                        ROLES.referent,
+                        ROLES.interesse,
+                      ]
+                  ).map(r => ({ text: r.libelle, value: r.libelle })),
+                  valeurs: p => roleDe(p)?.libelle ?? [],
+                },
               },
               {
                 title: 'Actions',
                 key: 'actions',
+                redimensionnable: false,
                 render: (_, p) =>
                   !modifiable(p) ||
                   (p.archive && !modeAnnuaire) ? null : p.archive ? (
@@ -1147,6 +1280,23 @@ export default function Personnes({
                     </Button>
                   ) : (
                     <Space>
+                      {p.id !== moiId && (
+                        <Button
+                          size="small"
+                          icon={<SendOutlined />}
+                          aria-label={`Écrire à ${p.nom}`}
+                          onClick={() =>
+                            setCibleMessage({
+                              destinataires: [
+                                { id: p.id, nom: p.nom, email: p.email },
+                              ],
+                              toutLeMonde: false,
+                            })
+                          }
+                        >
+                          Écrire
+                        </Button>
+                      )}
                       <Button
                         size="small"
                         icon={<MailOutlined />}
@@ -1187,6 +1337,14 @@ export default function Personnes({
           />
         </>
       )}
+
+      <EcrireMessage
+        cible={cibleMessage}
+        fermer={() => setCibleMessage(null)}
+        annuaire={modeAnnuaire}
+        editionId={editionId}
+        contactsPrincipaux={contactsPrincipaux}
+      />
 
       <Modal
         open={enEdition !== null}

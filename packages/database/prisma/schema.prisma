@@ -66,6 +66,7 @@ model Organisation {
   medias          Media[]
   adminsActivite  AdminActivite[]
   demandes        Demande[]
+  messages        Message[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -173,6 +174,7 @@ model Activite {
   fiches        Fiche[]
   admins        AdminActivite[]
   demandes      Demande[]
+  messages      Message[]
   notifications Notification[]
 
   @@unique([organisationId, slug])
@@ -214,6 +216,8 @@ model User {
   demandes           Demande[]               @relation("DemandeCompte")
   demandesTraitees   Demande[]               @relation("DemandeTraitement")
   propositions       DemandePerimetre[]
+  messagesEcrits     Message[]               @relation("MessageAuteur")
+  messagesRecus      MessageDestinataire[]
 }
 
 model Session {
@@ -298,6 +302,7 @@ model Edition {
   effectifs    EffectifPerimetre[]
   souhaits     Souhait[]
   demandes     Demande[]
+  messages     Message[]
 
   @@unique([activiteId, annee])
   @@index([organisationId])
@@ -347,6 +352,7 @@ model Perimetre {
   effectifs       EffectifPerimetre[]
   souhaits        Souhait[]
   demandes        DemandePerimetre[]
+  messages        Message[]
 
   @@unique([activiteId, slug])
   @@index([organisationId])
@@ -492,6 +498,74 @@ model DemandePerimetre {
   @@unique([demandeId, perimetreId, proposeParId])
   @@index([perimetreId])
   @@index([proposeParId])
+}
+
+// ── Messages ─────────────────────────────────────────────────────────────────
+
+enum StatutMessage {
+  EN_COURS
+  ENVOYE
+  ANNULE
+}
+
+// Le champ de la messagerie qui reçoit les destinataires : « À » pour une seule
+// personne, « Cc » (adresses visibles) ou « Cci » (adresses cachées) pour plusieurs.
+enum ChampDestinataires {
+  A
+  CC
+  CCI
+}
+
+// Un message qu'un admin prépare dans l'application et envoie depuis sa propre
+// messagerie (ADR 0020). L'application n'envoie rien : elle garde le texte préparé
+// et l'état que l'auteur déclare. Les destinataires sont des comptes, jamais des
+// adresses. Sans activité, le message vient de l'annuaire : seuls les admins de
+// l'organisation le lisent. Un message vit en base seulement.
+model Message {
+  id             String             @id @default(cuid())
+  organisationId String
+  activiteId     String?
+  editionId      String?
+  perimetreId    String?
+  auteurId       String?
+  // La clé du modèle de départ, connue de l'espace organisateur.
+  modele         String             @db.VarChar(60)
+  objet          String             @db.VarChar(200)
+  corps          String             @db.Text
+  champ          ChampDestinataires
+  statut         StatutMessage      @default(EN_COURS)
+  // Le moment où l'auteur a déclaré le message envoyé ou annulé.
+  statutLe       DateTime?
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organisation  Organisation          @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite      Activite?             @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  edition       Edition?              @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  perimetre     Perimetre?            @relation(fields: [perimetreId], references: [id], onDelete: SetNull)
+  auteur        User?                 @relation("MessageAuteur", fields: [auteurId], references: [id], onDelete: SetNull)
+  destinataires MessageDestinataire[]
+
+  @@index([organisationId, createdAt])
+  @@index([activiteId, createdAt])
+  @@index([editionId])
+  @@index([perimetreId])
+  @@index([auteurId])
+}
+
+// Un destinataire d'un message. `enCopie` : la personne figure en copie visible
+// (Cc) d'un message dont les autres destinataires sont en copie cachée.
+model MessageDestinataire {
+  id        String  @id @default(cuid())
+  messageId String
+  userId    String
+  enCopie   Boolean @default(false)
+
+  message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([messageId, userId])
+  @@index([userId])
 }
 
 // ── Tâches ───────────────────────────────────────────────────────────────────
