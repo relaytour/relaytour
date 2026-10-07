@@ -64,6 +64,7 @@
           "date": "2026-10-07",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les modes d'emploi décrivent les messages, le classement et les tableaux",
