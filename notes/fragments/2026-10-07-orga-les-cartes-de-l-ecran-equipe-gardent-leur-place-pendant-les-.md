@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     Les cartes de l'écran Équipe gardent leur place pendant les modifications

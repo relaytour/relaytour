@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     Le menu du compte affiche la version et les notes de version

@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     Les admins déclarent l'adresse de support de l'organisation

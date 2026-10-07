@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     Un bouton Support ouvre un mail à votre organisation

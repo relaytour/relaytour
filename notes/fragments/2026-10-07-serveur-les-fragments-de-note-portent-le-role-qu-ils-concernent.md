@@ -3,6 +3,7 @@ cible: serveur
 type: interne
 audience: interne
 etat: prevu
+version: 0.11.0
 fr:
   titre: >-
     Les fragments de note portent le rôle qu'ils concernent
