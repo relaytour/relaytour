@@ -15,6 +15,12 @@ import {
   type Destinataire,
   type StatutMessage,
 } from '../lib/messages'
+import {
+  lienVers,
+  lireMessagerie,
+  ouvreUnOnglet,
+  ouvrirLaMessagerie,
+} from '../lib/messagerie'
 import { PERIMETRES } from '../lib/requetes'
 import { DEFINIR_STATUT_MESSAGE, MESSAGES } from '../lib/requetes-messages'
 import { useSession } from '../lib/session'
@@ -101,11 +107,16 @@ export default function Messages({ annuaire, personnes }: Props) {
     const enCopie = new Set(
       m.destinataires.filter(d => d.enCopie).map(d => d.personne.id)
     )
-    const { lien, omis } = preparerLien({
-      ...repartir(destinataires, m.champ, enCopie, moi.email),
-      objet: m.objet,
-      corps: m.corps,
-    })
+    // Le message se rouvre dans la messagerie des préférences (ADR 0022).
+    const cible = lireMessagerie()
+    const { lien, omis } = preparerLien(
+      {
+        ...repartir(destinataires, m.champ, enCopie, moi.email),
+        objet: m.objet,
+        corps: m.corps,
+      },
+      envoi => lienVers(cible, envoi)
+    )
     const adresses = repartir(destinataires, m.champ, enCopie, moi.email)
     if (manquantes > 0) {
       message.warning(
@@ -159,7 +170,14 @@ export default function Messages({ annuaire, personnes }: Props) {
             >
               Copier le texte
             </Button>
-            <Button type="primary" icon={<MailOutlined />} href={lien}>
+            <Button
+              type="primary"
+              icon={<MailOutlined />}
+              href={lien}
+              {...(ouvreUnOnglet(lien)
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+            >
               Ouvrir la messagerie
             </Button>
           </Space>
@@ -168,9 +186,7 @@ export default function Messages({ annuaire, personnes }: Props) {
       })
       return
     }
-    const ancre = document.createElement('a')
-    ancre.href = lien
-    ancre.click()
+    ouvrirLaMessagerie(lien)
   }
 
   const colonnes: ColonneTableau<Message>[] = [

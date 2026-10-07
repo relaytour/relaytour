@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client/react'
 import { App, Button, Form, Radio, Skeleton, Switch } from 'antd'
 
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
+import PreferenceMessagerie from '../composants/PreferenceMessagerie'
 import { Avatar } from '../composants/Personne'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
@@ -291,6 +292,8 @@ export default function Preferences() {
               </Button>
             </div>
           </Form>
+          {/* Seuls les admins écrivent un message (ADR 0020). */}
+          {(administre || session?.moi?.estAdmin) && <PreferenceMessagerie />}
         </DeuxColonnes>
       )}
     </>

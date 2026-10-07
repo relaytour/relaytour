@@ -479,15 +479,19 @@ export type Omission = 'rien' | 'texte' | 'adresses'
 
 /**
  * Le lien le plus complet qui tient dans la longueur admise. Le texte part en
- * premier, puis les adresses : l'objet reste toujours.
+ * premier, puis les adresses : l'objet reste toujours. `lien` compose l'adresse
+ * d'une autre cible que la messagerie par défaut (ADR 0022).
  */
-export function preparerLien(envoi: Envoi): { lien: string; omis: Omission } {
-  const complet = lienMailto(envoi)
+export function preparerLien(
+  envoi: Envoi,
+  lien: (envoi: Envoi) => string = lienMailto
+): { lien: string; omis: Omission } {
+  const complet = lien(envoi)
   if (complet.length <= LIEN_MAX) return { lien: complet, omis: 'rien' }
-  const sansTexte = lienMailto({ ...envoi, corps: '' })
+  const sansTexte = lien({ ...envoi, corps: '' })
   if (sansTexte.length <= LIEN_MAX) return { lien: sansTexte, omis: 'texte' }
   return {
-    lien: lienMailto({ a: [], cc: [], cci: [], objet: envoi.objet, corps: '' }),
+    lien: lien({ a: [], cc: [], cci: [], objet: envoi.objet, corps: '' }),
     omis: 'adresses',
   }
 }

@@ -21,7 +21,8 @@
 | [0017](0017-flux-des-changements.md) | Flux des changements poussé par le serveur | Acceptée |
 | [0018](0018-personnes-d-une-activite.md) | Personnes d'une activité | Acceptée, invitation avec affectation ajoutée par l'ADR 0019 |
 | [0019](0019-admins-lus-et-nommes-par-les-admins-d-activite.md) | Admins lus et nommés par les admins d'activité | Acceptée |
-| [0020](0020-messages-envoyes-depuis-la-messagerie-de-l-admin.md) | Messages écrits dans l'application, envoyés depuis la messagerie de l'admin | Acceptée |
+| [0020](0020-messages-envoyes-depuis-la-messagerie-de-l-admin.md) | Messages écrits dans l'application, envoyés depuis la messagerie de l'admin | Acceptée, choix de la messagerie ajouté par l'ADR 0022 |
 | [0021](0021-version-notes-de-version-et-support.md) | Version, notes de version et support dans l'espace organisateur | Acceptée |
+| [0022](0022-choix-de-la-messagerie.md) | Choix de la messagerie qui reçoit un message | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

@@ -151,6 +151,28 @@ const ECRANS = [
     chemin: `${ACTIVITE}/admin/equipe`,
     apres: cliquer('Écrire à l’équipe'),
   },
+  // Le champ « Messagerie » en bas de la fenêtre (ADR 0022). Le geste ouvre la
+  // fenêtre, puis la fait défiler jusqu'en bas. antd la remonte quand il y place
+  // le focus : le défilement se répète pendant une seconde avant la capture.
+  {
+    nom: 'message-messagerie',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/equipe`,
+    apres: `(fenetre => {
+      if (!fenetre) return (${cliquer('Écrire à l’équipe')}, false)
+      if (!fenetre.querySelector('[aria-label="Messagerie"]')) return false
+      fenetre.scrollTo(0, fenetre.scrollHeight)
+      fenetre.dataset.defilements = Number(fenetre.dataset.defilements ?? 0) + 1
+      return Number(fenetre.dataset.defilements) >= 5
+    })(document.querySelector('.ant-modal-wrap'))`,
+  },
+  // Le réglage de la messagerie, réservé aux admins (ADR 0022).
+  {
+    nom: 'preferences-messagerie',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/preferences`,
+    apres: defiler('Votre messagerie'),
+  },
   // L'historique des messages. L'instance d'exemple doit en porter au moins un.
   {
     nom: 'personnes-messages',

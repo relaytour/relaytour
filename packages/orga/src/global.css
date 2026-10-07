@@ -1733,3 +1733,29 @@ a.rt-etiquette:hover {
   > .ant-table-cell-row-hover {
   background: var(--rt-primaire-clair);
 }
+
+/* Sélecteur de messagerie (ChoixMessagerie) : le libellé, puis l'icône d'avis. */
+.rt-choix-messagerie {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rt-avis-messagerie-icone {
+  display: inline-flex;
+  font-size: 14px;
+  cursor: help;
+}
+
+.rt-avis-messagerie {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: 320px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.rt-avis-messagerie p {
+  margin: 0;
+}
