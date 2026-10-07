@@ -125,6 +125,12 @@ const IdentiteOrganisationRef = builder
         nullable: true,
         resolve: i => i.declaration.contactRecrutement,
       }),
+      contactSupport: t.string({
+        nullable: true,
+        description:
+          'Adresse de rôle que le bouton « Support » ouvre dans la messagerie de la personne.',
+        resolve: i => i.declaration.contactSupport,
+      }),
       pageEquipe: t.string({
         nullable: true,
         resolve: i => i.declaration.pageEquipe,
@@ -360,6 +366,7 @@ builder.mutationFields(t => ({
       nom: t.arg.string({ required: true }),
       sigle: t.arg.string(),
       contactRecrutement: t.arg.string(),
+      contactSupport: t.arg.string(),
       pageEquipe: t.arg.string(),
       domainesCourrielAutorises: t.arg.stringList({ required: true }),
       adressesRoleAutorisees: t.arg.stringList({ required: true }),
@@ -384,6 +391,7 @@ builder.mutationFields(t => ({
         nom: texteRequis(args.nom, 'Le nom'),
         sigle: texteFacultatif(args.sigle),
         contactRecrutement: texteFacultatif(args.contactRecrutement),
+        contactSupport: texteFacultatif(args.contactSupport),
         pageEquipe: texteFacultatif(args.pageEquipe),
         domainesCourrielAutorises: args.domainesCourrielAutorises,
         adressesRoleAutorisees: args.adressesRoleAutorisees,

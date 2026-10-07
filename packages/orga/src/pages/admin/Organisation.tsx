@@ -39,6 +39,7 @@ const IDENTITE = graphql(`
       nom
       sigle
       contactRecrutement
+      contactSupport
       pageEquipe
       domainesCourrielAutorises
       adressesRoleAutorisees
@@ -57,6 +58,7 @@ const MODIFIER = graphql(`
     $nom: String!
     $sigle: String
     $contactRecrutement: String
+    $contactSupport: String
     $pageEquipe: String
     $domainesCourrielAutorises: [String!]!
     $adressesRoleAutorisees: [String!]!
@@ -69,6 +71,7 @@ const MODIFIER = graphql(`
       nom: $nom
       sigle: $sigle
       contactRecrutement: $contactRecrutement
+      contactSupport: $contactSupport
       pageEquipe: $pageEquipe
       domainesCourrielAutorises: $domainesCourrielAutorises
       adressesRoleAutorisees: $adressesRoleAutorisees
@@ -116,6 +119,7 @@ interface Valeurs {
   nom: string
   sigle?: string
   contactRecrutement?: string
+  contactSupport?: string
   pageEquipe?: string
   domainesCourrielAutorises: string[]
   adressesRoleAutorisees: string[]
@@ -188,6 +192,7 @@ export default function Organisation() {
       nom: identite.nom,
       sigle: identite.sigle ?? '',
       contactRecrutement: identite.contactRecrutement ?? '',
+      contactSupport: identite.contactSupport ?? '',
       pageEquipe: identite.pageEquipe ?? '',
       domainesCourrielAutorises: identite.domainesCourrielAutorises,
       adressesRoleAutorisees: identite.adressesRoleAutorisees,
@@ -212,6 +217,7 @@ export default function Organisation() {
           nom: v.nom,
           sigle: v.sigle || null,
           contactRecrutement: v.contactRecrutement || null,
+          contactSupport: v.contactSupport || null,
           pageEquipe: v.pageEquipe || null,
           domainesCourrielAutorises: v.domainesCourrielAutorises,
           adressesRoleAutorisees: v.adressesRoleAutorisees,
@@ -302,6 +308,15 @@ export default function Organisation() {
                 label="Contact de l’organisation (facultatif)"
                 name="contactRecrutement"
                 extra="Une adresse de rôle, citée dans l’appel aux référentes et référents. Elle reçoit les réponses aux mails de l’organisation."
+              >
+                <Input type="email" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Adresse de support (facultatif)"
+                name="contactSupport"
+                extra="Une adresse de rôle. Le bouton « Support » du menu du compte ouvre un mail à cette adresse."
               >
                 <Input type="email" />
               </Form.Item>

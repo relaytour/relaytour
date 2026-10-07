@@ -159,6 +159,42 @@ describe('droits sur l’identité', () => {
   })
 })
 
+describe('support (ADR 0021)', () => {
+  const MODIFIER = `mutation ($support: String) {
+    modifierIdentiteOrganisation(nom: "Identité B", contactSupport: $support, domainesCourrielAutorises: ["exemple.org"], adressesRoleAutorisees: []) { contactSupport }
+  }`
+  const SUPPORT =
+    'query ($slug: String) { organisation(slug: $slug) { support } }'
+  const support = async () =>
+    (
+      (await executer(ids.adminB, slugB, SUPPORT, { slug: slugB })).data as {
+        organisation: { support: string | null }
+      }
+    ).organisation.support
+
+  it('ouvre l’adresse de support déclarée par l’organisation', async () => {
+    const r = await executer(ids.adminB, slugB, MODIFIER, {
+      support: 'Support@exemple.org',
+    })
+    expect(r.errors).toBeUndefined()
+    expect(await support()).toBe('mailto:support@exemple.org')
+  })
+
+  it('refuse une adresse de support hors des adresses de rôle', async () => {
+    const r = await executer(ids.adminB, slugB, MODIFIER, {
+      support: 'prenom.nom@laposte.net',
+    })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(await support()).toBe('mailto:support@exemple.org')
+  })
+
+  it('retire le bouton quand l’adresse est effacée et que l’hébergeur ne règle rien', async () => {
+    const r = await executer(ids.adminB, slugB, MODIFIER, { support: null })
+    expect(r.errors).toBeUndefined()
+    expect(await support()).toBeNull()
+  })
+})
+
 describe('adresses de rôle', () => {
   it('refuse une messagerie grand public comme domaine', async () => {
     const r = await executer(ids.adminA, slugA, MODIFIER_ORGANISATION, {

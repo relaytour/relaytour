@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "serveur",
   "version": "0.10.0",
@@ -8,10 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-07-serveur-un-hebergeur-regle-l-action-du-bouton-support",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un hébergeur règle l'action du bouton Support",
+            "texte": "La variable `SUPPORT_URL` indique l'action du bouton « Support » pour les organisations qui n'ont pas déclaré leur adresse de support : une page en `https://` ou une adresse en `mailto:`. Sans cette variable, le bouton n'apparaît que dans les organisations qui ont déclaré leur adresse.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-serveur-un-admin-d-activite-nomme-les-admins-de-son-activite-et-invi",
           "date": "2026-10-07",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Un admin d'activité nomme les admins de son activité et invite avec une affectation",
@@ -20,10 +34,37 @@
           }
         },
         {
+          "id": "2026-10-07-serveur-les-fragments-de-note-portent-le-role-qu-ils-concernent",
+          "date": "2026-10-07",
+          "type": "interne",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les fragments de note portent le rôle qu'ils concernent",
+            "texte": "Un fragment d'audience `organisateurs` porte un champ `role` : `referent`, `admin-activite` ou `admin-organisation`. `yarn versionner noter` reçoit l'option `--role`. Le journal compilé passe en `schemaVersion: 4`, et le build du serveur embarque les deux journaux.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-07-serveur-les-admins-declarent-l-adresse-de-support-de-l-organisation",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins déclarent l'adresse de support de l'organisation",
+            "texte": "L'écran « Organisation » reçoit le champ « Adresse de support ». L'adresse suit la règle des adresses de rôle. Le bouton « Support » du menu du compte ouvre un mail à cette adresse pour chaque membre. Le champ `contactSupport` d'`organisation.yaml` porte la même adresse dans le dépôt de contenu.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-serveur-le-serveur-garde-l-historique-des-messages-des-admins",
           "date": "2026-10-07",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Le serveur garde l'historique des messages des admins",
@@ -41,6 +82,7 @@
           "date": "2026-10-06",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Un admin d'activité rattache à son équipe une personne déjà membre",
@@ -53,6 +95,7 @@
           "date": "2026-10-06",
           "type": "securite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Un admin d'activité ne lit plus que l'équipe de ses activités",
@@ -70,6 +113,7 @@
           "date": "2026-10-05",
           "type": "fonctionnalite",
           "audience": "public",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Un proxy laisse passer le flux des changements sans tampon ni compression",
@@ -82,6 +126,7 @@
           "date": "2026-10-05",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les référentes et référents voient l'activité de leur périmètre",
@@ -94,6 +139,7 @@
           "date": "2026-10-05",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Le serveur pousse les changements par un flux SSE",
@@ -106,6 +152,7 @@
           "date": "2026-10-05",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Deux personnes ne s'écrasent plus sur une même tâche",
@@ -118,6 +165,7 @@
           "date": "2026-10-05",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Deux personnes ne s'écrasent plus sur une fiche ou un périmètre",
@@ -130,6 +178,7 @@
           "date": "2026-10-04",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Une personne de l'activité consulte les tâches de chaque périmètre",
@@ -142,6 +191,7 @@
           "date": "2026-10-04",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Un mail regroupé prévient les admins des demandes reçues",
@@ -154,6 +204,7 @@
           "date": "2026-10-04",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Les demandes pour rejoindre l'équipe attendent la décision d'un admin",
@@ -166,6 +217,7 @@
           "date": "2026-10-04",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les demandes d'une période archivée sont supprimées",
@@ -178,6 +230,7 @@
           "date": "2026-10-04",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Le formulaire public d'une activité dépose des demandes sans session",
@@ -190,6 +243,7 @@
           "date": "2026-10-04",
           "type": "interne",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "La création de compte et l'affectation passent par deux fonctions partagées",
@@ -207,6 +261,7 @@
           "date": "2026-09-29",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Une commande importe l'équipe d'une période depuis le serveur",
@@ -219,6 +274,7 @@
           "date": "2026-09-29",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Une activité peut s'ouvrir aux souhaits de tous les membres",
@@ -231,6 +287,7 @@
           "date": "2026-09-29",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Un mail annonce chaque nouvelle place dans l'équipe",
@@ -248,6 +305,7 @@
           "date": "2026-09-29",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Une affectation peut porter la marque de contact principal",
@@ -265,6 +323,7 @@
           "date": "2026-09-23",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Le mail d'invitation contient le lien du mode d'emploi de votre rôle",
@@ -282,6 +341,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les réponses aux mails arrivent au contact de l'activité",
@@ -299,6 +359,7 @@
           "date": "2026-09-22",
           "type": "securite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Une table prouve les refus entre organisations",
@@ -311,6 +372,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Un hébergeur administre les organisations sans accès à leurs données",
@@ -323,6 +385,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-organisation",
           "etat": "prevu",
           "fr": {
             "titre": "Un dépôt d'organisation décrit plusieurs activités",
@@ -335,6 +398,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les rappels et les résumés suivent chaque organisation",
@@ -347,6 +411,7 @@
           "date": "2026-09-22",
           "type": "interne",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Les activités et les appartenances entrent dans le schéma",
@@ -359,6 +424,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-organisation",
           "etat": "prevu",
           "fr": {
             "titre": "Chaque activité a son identité, et l'export reprend tout le contenu",
@@ -371,6 +437,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "L'API sert le choix d'organisation et d'activité de l'espace organisateur",
@@ -383,6 +450,7 @@
           "date": "2026-09-22",
           "type": "fonctionnalite",
           "audience": "public",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Chaque version se publie depuis main, avec ses images et sa release",
@@ -395,6 +463,7 @@
           "date": "2026-09-22",
           "type": "interne",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Chaque requête se limite à l'organisation active",
@@ -407,6 +476,7 @@
           "date": "2026-09-22",
           "type": "securite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Chaque activité peut avoir ses admins, et chacun ne voit que ses activités",
@@ -419,6 +489,7 @@
           "date": "2026-09-19",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Une recherche globale trouve les tâches, les fiches et les personnes",
@@ -431,6 +502,7 @@
           "date": "2026-09-19",
           "type": "securite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Une nouvelle demande de code renvoie le code en cours",
@@ -443,6 +515,7 @@
           "date": "2026-09-19",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les mails portent le nom et les couleurs de votre organisation",
@@ -455,6 +528,7 @@
           "date": "2026-09-19",
           "type": "rupture",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Le mode recette quitte le logiciel",
@@ -467,6 +541,7 @@
           "date": "2026-09-19",
           "type": "interne",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "La table Organisation devient la racine des données",
@@ -479,6 +554,7 @@
           "date": "2026-09-19",
           "type": "rupture",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "La table Newsletter est supprimée",
@@ -491,6 +567,7 @@
           "date": "2026-09-19",
           "type": "interne",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "La configuration de l'organisation se lit en un seul objet",
@@ -503,6 +580,7 @@
           "date": "2026-09-19",
           "type": "securite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "La base et le cache de la pile de référence ne publient plus de port",
@@ -515,6 +593,7 @@
           "date": "2026-09-19",
           "type": "securite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "L'API refuse les requêtes trop profondes",
@@ -527,6 +606,7 @@
           "date": "2026-09-19",
           "type": "securite",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "L'API passe sur Apollo Server 5 et Express 5",
@@ -539,6 +619,7 @@
           "date": "2026-09-19",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-organisation",
           "etat": "prevu",
           "fr": {
             "titre": "Chaque organisation décrit son identité dans son dépôt",
@@ -551,6 +632,7 @@
           "date": "2026-09-18",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-organisation",
           "etat": "prevu",
           "fr": {
             "titre": "Une édition se crée aussi en ligne de commande",
@@ -563,6 +645,7 @@
           "date": "2026-09-18",
           "type": "correctif",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Le serveur refuse de démarrer sans ORIGINE_ORGA hors du poste local",
@@ -575,6 +658,7 @@
           "date": "2026-09-18",
           "type": "correctif",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Le déploiement de référence démarre le worker après les migrations",
@@ -587,6 +671,7 @@
           "date": "2026-09-18",
           "type": "correctif",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "La validation et l'export d'un dossier de contenu tournent dans l'image",
@@ -599,6 +684,7 @@
           "date": "2026-09-18",
           "type": "rupture",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "La newsletter quitte le périmètre publié",
@@ -611,6 +697,7 @@
           "date": "2026-09-18",
           "type": "interne",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "L'organisation d'exemple a des tâches types pour chaque périmètre",
@@ -623,6 +710,7 @@
           "date": "2026-09-17",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-organisation",
           "etat": "prevu",
           "fr": {
             "titre": "Les pôles, les fiches et les tâches types de l'édition sont prêts à importer",
@@ -635,6 +723,7 @@
           "date": "2026-09-17",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les admins notent les souhaits des personnes invitées",
@@ -647,6 +736,7 @@
           "date": "2026-09-17",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les admins fixent l'effectif de chaque périmètre",
@@ -659,6 +749,7 @@
           "date": "2026-09-17",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Le rétroplanning respecte les droits de lecture",
@@ -671,6 +762,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les référentes et référents suivent les tâches de leurs périmètres",
@@ -683,6 +775,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Les référentes et référents sont prévenus de l'activité et des échéances",
@@ -695,6 +788,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-organisation",
           "etat": "prevu",
           "fr": {
             "titre": "Les fiches méthode sont versionnées et importées depuis le dépôt",
@@ -707,6 +801,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "admin-activite",
           "etat": "prevu",
           "fr": {
             "titre": "Les admins invitent les référentes et référents",
@@ -719,6 +814,7 @@
           "date": "2026-09-16",
           "type": "fonctionnalite",
           "audience": "organisateurs",
+          "role": "referent",
           "etat": "prevu",
           "fr": {
             "titre": "Chaque contribution compte dans un score d'activité",
@@ -731,6 +827,7 @@
           "date": "2026-09-15",
           "type": "interne",
           "audience": "interne",
+          "role": null,
           "etat": "prevu",
           "fr": {
             "titre": "Le serveur repose sur un socle maintenu",

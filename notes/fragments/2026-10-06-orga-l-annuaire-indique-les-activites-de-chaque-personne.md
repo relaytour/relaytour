@@ -2,6 +2,7 @@
 cible: orga
 type: fonctionnalite
 audience: organisateurs
+role: admin-activite
 etat: prevu
 version: 0.10.0
 fr:

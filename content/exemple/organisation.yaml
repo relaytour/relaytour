@@ -5,6 +5,8 @@ sigle: Rencontres
 fuseauHoraire: Europe/Paris
 domainesCourrielAutorises: [exemple.org]
 contactRecrutement: contact@exemple.org
+# Adresse ouverte par le bouton « Support » de l'espace organisateur (facultatif).
+contactSupport: support@exemple.org
 pageEquipe: https://exemple.org/equipe
 # Adresses de rôle hébergées chez une messagerie grand public : elles s'autorisent
 # une par une, jamais par leur domaine (ADR 0009).

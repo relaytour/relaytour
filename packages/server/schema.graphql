@@ -370,6 +370,11 @@ type IdentiteOrganisation {
   """
   adressesRoleAutorisees: [String!]!
   contactRecrutement: String
+
+  """
+  Adresse de rôle que le bouton « Support » ouvre dans la messagerie de la personne.
+  """
+  contactSupport: String
   contenuModifieLe: DateTime
   contenuSynchroniseLe: DateTime
 
@@ -547,7 +552,7 @@ type Mutation {
   """
   Remplace l’identité de l’organisation. Le slug, le fuseau horaire, le statut et les limites ne changent pas ici.
   """
-  modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, domainesCourrielAutorises: [String!]!, favicon: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
+  modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
   modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
 
   """
@@ -603,6 +608,15 @@ enum NatureActivite {
   SAISON
 }
 
+type NoteDeVersion {
+  date: Date!
+  id: String!
+  role: RoleNoteDeVersion!
+  texte: String!
+  titre: String!
+  type: TypeNoteDeVersion!
+}
+
 type Notification {
   creeLe: DateTime!
   id: ID!
@@ -629,6 +643,11 @@ type Organisation {
   pageEquipe: String
   sigle: String
   slug: String!
+
+  """
+  Lien du bouton « Support » : l’adresse de support de l’organisation en mailto:, sinon l’action de l’hébergeur, sinon rien.
+  """
+  support: String
   theme: Theme!
 }
 
@@ -840,6 +859,11 @@ type Query {
   moi: Personne
   monScore(editionId: ID!): Score!
   nombreNotificationsNonLues: Int!
+
+  """
+  Notes des versions publiées, de la plus récente à la plus ancienne, limitées au rôle de la personne dans l’organisation active.
+  """
+  notesDeVersion: [VersionPubliee!]!
   notifications(limite: Int = 30, nonLuesSeulement: Boolean = false): [Notification!]!
 
   """
@@ -856,12 +880,26 @@ type Query {
   retroplanning(editionId: ID!): [Tache!]!
   tachesAPrendre(editionId: ID!): [Tache!]!
   tousLesPerimetres(activiteId: ID): TousLesPerimetres!
+
+  """
+  Numéro de version de l’installation. Lisible sans session, comme sur /health.
+  """
+  versionInstallation: String!
 }
 
 type Recherche {
   fiches: [Fiche!]!
   personnes: [PersonneTrouvee!]!
   taches: [Tache!]!
+}
+
+"""
+Le rôle le moins étendu qu’une note concerne. Une personne lit les notes de son rôle et des rôles moins étendus.
+"""
+enum RoleNoteDeVersion {
+  ADMIN_ACTIVITE
+  ADMIN_ORGANISATION
+  REFERENT
 }
 
 type Score {
@@ -975,6 +1013,14 @@ type TousLesPerimetres {
   perimetres: [PerimetreDecouvert!]!
 }
 
+enum TypeNoteDeVersion {
+  CORRECTIF
+  FONCTIONNALITE
+  PERFORMANCE
+  RUPTURE
+  SECURITE
+}
+
 enum TypeNotification {
   DEMANDE_RECUE
   ECHEANCE_PROCHE
@@ -998,4 +1044,14 @@ type TypographieTheme {
   espacementTitre: String!
   graisseCorps: Int!
   graisseTitre: Int!
+}
+
+"""
+Une version de Relaytour et ses notes lisibles par la personne connectée.
+"""
+type VersionPubliee {
+  """Date de la note la plus récente de la version."""
+  date: Date!
+  notes: [NoteDeVersion!]!
+  numero: String!
 }

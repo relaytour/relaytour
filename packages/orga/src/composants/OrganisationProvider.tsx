@@ -36,6 +36,7 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
       pageEquipe: o.pageEquipe ?? null,
       codeSource: o.codeSource,
       modesDEmploi: o.modesDEmploi,
+      support: o.support ?? null,
       theme: themeDepuisApi(o.theme),
     }
   }, [data])

@@ -68,6 +68,7 @@ export const ORGANISATION = graphql(`
       }
       codeSource
       modesDEmploi
+      support
     }
   }
 `)
@@ -85,6 +86,8 @@ export interface Organisation {
   codeSource: string
   /** Liste des modes d'emploi de l'espace organisateur, un par rôle. */
   modesDEmploi: string
+  /** Lien du bouton « Support » (mailto: ou https), null quand rien n'est réglé. */
+  support: string | null
   theme: Theme
 }
 
@@ -99,6 +102,7 @@ export const ORGANISATION_PAR_DEFAUT: Organisation = {
   pageEquipe: null,
   codeSource: 'https://github.com/relaytour/relaytour',
   modesDEmploi: 'https://relaytour.org/modes-d-emploi/',
+  support: null,
   theme: themeParDefaut,
 }
 

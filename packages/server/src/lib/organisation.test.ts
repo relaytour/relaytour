@@ -5,6 +5,7 @@ import {
   DeclarationOrganisationSchema,
   declarationDepuisEnv,
   fusionnerThemesDeclares,
+  lienSupport,
   manquementsIdentiteActivite,
   resoudreConfiguration,
   resoudreTheme,
@@ -40,7 +41,9 @@ describe('resoudreConfiguration', () => {
   it('compose le nom court, l’expéditeur par défaut et le thème par défaut', () => {
     const c = resoudreConfiguration(ENV, declarationDepuisEnv(ENV, {}))
     expect(c.nomCourt).toBe('Les Rencontres de la Vallée')
-    expect(c.expediteur).toBe('Les Rencontres de la Vallée <relaytour@localhost>')
+    expect(c.expediteur).toBe(
+      'Les Rencontres de la Vallée <relaytour@localhost>'
+    )
     expect(c.origineOrga).toBe('https://orga.exemple.org')
     expect(c.theme).toEqual(themeParDefaut)
     expect(c.id).toBeNull()
@@ -49,7 +52,11 @@ describe('resoudreConfiguration', () => {
   it('préfère le sigle et l’expéditeur de l’environnement', () => {
     const c = resoudreConfiguration(
       { ...ENV, COURRIEL_EXPEDITEUR: 'FSV <fsv@exemple.org>' },
-      DeclarationOrganisationSchema.parse({ slug: 'fete-sportive', nom: 'Fête sportive', sigle: 'FSV' })
+      DeclarationOrganisationSchema.parse({
+        slug: 'fete-sportive',
+        nom: 'Fête sportive',
+        sigle: 'FSV',
+      })
     )
     expect(c.nomCourt).toBe('FSV')
     expect(c.expediteur).toBe('FSV <fsv@exemple.org>')
@@ -57,7 +64,11 @@ describe('resoudreConfiguration', () => {
 })
 
 describe('DeclarationOrganisationSchema', () => {
-  const base = { slug: 'fete-sportive', nom: 'Fête sportive', domainesCourrielAutorises: ['exemple.org'] }
+  const base = {
+    slug: 'fete-sportive',
+    nom: 'Fête sportive',
+    domainesCourrielAutorises: ['exemple.org'],
+  }
 
   it('accepte une déclaration minimale et pose les valeurs par défaut', () => {
     const d = DeclarationOrganisationSchema.parse({ slug: 'asso', nom: 'Asso' })
@@ -66,10 +77,18 @@ describe('DeclarationOrganisationSchema', () => {
   })
 
   it('refuse une clé inconnue, un slug mal formé et un fuseau inconnu', () => {
-    expect(DeclarationOrganisationSchema.safeParse({ ...base, couleur: 'x' }).success).toBe(false)
-    expect(DeclarationOrganisationSchema.safeParse({ ...base, slug: 'Fête 27' }).success).toBe(false)
     expect(
-      DeclarationOrganisationSchema.safeParse({ ...base, fuseauHoraire: 'Mars/Olympus' }).success
+      DeclarationOrganisationSchema.safeParse({ ...base, couleur: 'x' }).success
+    ).toBe(false)
+    expect(
+      DeclarationOrganisationSchema.safeParse({ ...base, slug: 'Fête 27' })
+        .success
+    ).toBe(false)
+    expect(
+      DeclarationOrganisationSchema.safeParse({
+        ...base,
+        fuseauHoraire: 'Mars/Olympus',
+      }).success
     ).toBe(false)
   })
 
@@ -84,12 +103,16 @@ describe('DeclarationOrganisationSchema', () => {
 
   it('refuse une police hors de la liste et une couleur mal formée', () => {
     expect(
-      DeclarationOrganisationSchema.safeParse({ ...base, theme: { polices: { titre: 'Comic' } } })
-        .success
+      DeclarationOrganisationSchema.safeParse({
+        ...base,
+        theme: { polices: { titre: 'Comic' } },
+      }).success
     ).toBe(false)
     expect(
-      DeclarationOrganisationSchema.safeParse({ ...base, theme: { couleurs: { primaire: 'bleu' } } })
-        .success
+      DeclarationOrganisationSchema.safeParse({
+        ...base,
+        theme: { couleurs: { primaire: 'bleu' } },
+      }).success
     ).toBe(false)
   })
 
@@ -106,7 +129,13 @@ describe('DeclarationOrganisationSchema', () => {
     const r = DeclarationOrganisationSchema.safeParse({
       ...base,
       theme: {
-        couleurs: { encre: '#1F3A2E', primaire: '#2F6B4F', accent: '#8A4B1F', sol2: '#F2F5EF', sol3: '#E4EAE0' },
+        couleurs: {
+          encre: '#1F3A2E',
+          primaire: '#2F6B4F',
+          accent: '#8A4B1F',
+          sol2: '#F2F5EF',
+          sol3: '#E4EAE0',
+        },
         polices: { texte: 'Hanken Grotesk', titre: 'Bebas Neue' },
         typographie: { graisseTitre: 400, echelleTitre: 1.35 },
       },
@@ -116,7 +145,8 @@ describe('DeclarationOrganisationSchema', () => {
 
   it('accepte un fond déclaré et refuse un halo trop intense ou une clé inconnue', () => {
     const avec = (fond: unknown) =>
-      DeclarationOrganisationSchema.safeParse({ ...base, theme: { fond } }).success
+      DeclarationOrganisationSchema.safeParse({ ...base, theme: { fond } })
+        .success
     expect(
       avec({
         transition: '#FDF9F3',
@@ -133,7 +163,10 @@ describe('DeclarationOrganisationSchema', () => {
 
 describe('resoudreTheme', () => {
   it('convertit les polices nommées en piles et complète avec le thème par défaut', () => {
-    const t = resoudreTheme({ polices: { titre: 'Bebas Neue' }, couleurs: { primaire: '#2F6B4F' } })
+    const t = resoudreTheme({
+      polices: { titre: 'Bebas Neue' },
+      couleurs: { primaire: '#2F6B4F' },
+    })
     expect(t.polices.titre).toBe(pile('Bebas Neue'))
     expect(t.polices.texte).toBe(themeParDefaut.polices.texte)
     expect(t.couleurs.primaire).toBe('#2F6B4F')
@@ -141,12 +174,17 @@ describe('resoudreTheme', () => {
   })
 
   it('garde le fond dérivé sans déclaration et applique le fond déclaré', () => {
-    expect(resoudreTheme({ couleurs: { primaire: '#2F6B4F' } }).fond.halo1).toEqual({
+    expect(
+      resoudreTheme({ couleurs: { primaire: '#2F6B4F' } }).fond.halo1
+    ).toEqual({
       couleur: '#2F6B4F',
       intensite: 0.18,
     })
     const t = resoudreTheme({
-      fond: { transition: '#FDF9F3', halo2: { couleur: '#F32988', intensite: 0.14 } },
+      fond: {
+        transition: '#FDF9F3',
+        halo2: { couleur: '#F32988', intensite: 0.14 },
+      },
     })
     expect(t.fond.transition).toBe('#FDF9F3')
     expect(t.fond.halo1).toEqual(themeParDefaut.fond.halo1)
@@ -166,7 +204,10 @@ describe('identité d’une activité (ADR 0009)', () => {
   const organisation = resoudreConfiguration(ENV, declaration, 'org')
 
   it('refuse un slug d’organisation réservé par l’espace organisateur', () => {
-    const r = DeclarationOrganisationSchema.safeParse({ slug: 'admin', nom: 'X' })
+    const r = DeclarationOrganisationSchema.safeParse({
+      slug: 'admin',
+      nom: 'X',
+    })
     expect(r.success).toBe(false)
   })
 
@@ -222,5 +263,38 @@ describe('identité d’une activité (ADR 0009)', () => {
         { fond: { halo1: { intensite: 0.1 } } }
       )?.fond?.halo1
     ).toEqual({ couleur: '#111111', intensite: 0.1 })
+  })
+})
+
+describe('support (ADR 0021)', () => {
+  const declarer = (contactSupport?: string) =>
+    DeclarationOrganisationSchema.safeParse({
+      slug: 'exemple',
+      nom: 'Exemple',
+      domainesCourrielAutorises: ['exemple.org'],
+      contactSupport,
+    })
+
+  it('accepte une adresse de rôle et refuse une adresse hors des domaines', () => {
+    expect(declarer('Support@Exemple.org').data?.contactSupport).toBe(
+      'support@exemple.org'
+    )
+    const refus = declarer('prenom@messagerie.example')
+    expect(refus.error?.issues.map(i => i.path.join('.'))).toEqual([
+      'contactSupport',
+    ])
+  })
+
+  it('ouvre l’adresse de l’organisation avant l’action de l’hébergeur', () => {
+    const hebergeur = { SUPPORT_URL: 'https://hebergeur.exemple.org/aide' }
+    expect(
+      lienSupport({ contactSupport: 'support@exemple.org' }, hebergeur)
+    ).toBe('mailto:support@exemple.org')
+    expect(lienSupport({ contactSupport: undefined }, hebergeur)).toBe(
+      'https://hebergeur.exemple.org/aide'
+    )
+    expect(
+      lienSupport({ contactSupport: undefined }, { SUPPORT_URL: undefined })
+    ).toBeUndefined()
   })
 })
