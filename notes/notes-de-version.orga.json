@@ -21,6 +21,19 @@
           }
         },
         {
+          "id": "2026-10-07-orga-le-menu-du-compte-explique-comment-installer-l-application",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le menu du compte explique comment installer l'application",
+            "texte": "Le menu du compte reçoit l'entrée « Installer l'application ». La fenêtre affiche les étapes de votre appareil : iPhone, Android ou ordinateur. Quand le navigateur le permet, un bouton installe l'application en un appui. Un mode d'emploi public décrit les mêmes étapes.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-le-code-de-connexion-se-saisit-plus-vite-sur-un-telephone",
           "date": "2026-10-07",
           "type": "fonctionnalite",

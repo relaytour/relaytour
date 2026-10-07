@@ -1868,3 +1868,11 @@ a.rt-etiquette:hover {
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 }
+
+/* Étapes de la fenêtre « Installer l'application » (InstallerApplication). */
+.rt-etapes-installation {
+  margin: 0 0 16px;
+  padding-inline-start: 22px;
+  display: grid;
+  gap: 8px;
+}

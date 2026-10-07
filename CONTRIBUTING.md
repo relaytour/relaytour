@@ -140,7 +140,7 @@ Un seul mot par notion.
 | ouverte aux souhaits | Réglage d'une activité : tous les membres de l'organisation découvrent ses périmètres et formulent leurs souhaits (ADR 0012). |
 | tâche | Action datée d'un périmètre pour une édition. |
 | fiche | Fiche méthode (« comment faire ») d'un périmètre ou commune. |
-| mode d'emploi | Page publique du site (`site/modes-d-emploi/`) qui décrit les écrans d'un rôle : admin de l'organisation, admin d'activité, référent·e. Ne pas confondre avec une fiche. |
+| mode d'emploi | Page publique du site (`site/modes-d-emploi/`) qui décrit les écrans d'un rôle : admin de l'organisation, admin d'activité, référent·e. Une page peut aussi traiter un point précis, commun à plusieurs rôles : la messagerie, l'installation de l'application. Ne pas confondre avec une fiche. |
 | admin de l'organisation | Membre du bureau qui gère toutes les activités, les comptes et l'identité de l'organisation. Il nomme les admins de l'organisation et les admins d'activité. |
 | admin d'activité | Personne qui gère une activité : ses périodes, ses périmètres, ses affectations et ses fiches. Elle ne voit ni les autres activités (ADR 0010), ni les personnes hors de son équipe (ADR 0018). Elle nomme les autres admins de son activité (ADR 0019). |
 | note de version | Texte qui décrit un changement visible d'une version. Les notes d'audience `organisateurs` se lisent dans l'espace organisateur, selon le rôle de la personne (ADR 0021). |
