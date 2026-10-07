@@ -345,6 +345,18 @@ html {
     min-width: 40px;
   }
 
+  /* L'étoile du contact principal garde son dessin dans l'étiquette. */
+  .ant-btn-sm.rt-bouton-etoile {
+    min-height: 0;
+  }
+
+  /* Une largeur de colonne ne se règle pas au doigt : la poignée gênerait le
+     défilement du tableau. */
+  .rt-poignee-colonne {
+    display: none;
+  }
+
+  .rt-bouton-etoile,
   .rt-personne-retirer,
   .ant-tag .ant-tag-close-icon,
   .ant-table-filter-trigger,
@@ -353,6 +365,7 @@ html {
     position: relative;
   }
 
+  .rt-bouton-etoile::after,
   .rt-personne-retirer::after,
   .ant-tag .ant-tag-close-icon::after,
   .ant-table-filter-trigger::after,
@@ -1834,4 +1847,24 @@ a.rt-etiquette:hover {
 .rt-separateur-adresses p {
   margin: 0;
   max-width: 560px;
+}
+
+/* Sur téléphone, une fenêtre modale large occupe tout l'écran
+   (docs/design-system.md, « Mobile »). */
+@media (max-width: 767px) {
+  .rt-modale-pleine .ant-modal {
+    width: 100vw !important;
+    max-width: 100vw;
+    top: 0;
+    margin: 0;
+    padding-bottom: 0;
+  }
+
+  .rt-modale-pleine .ant-modal-container {
+    min-height: 100dvh;
+    box-sizing: border-box;
+    border-radius: 0;
+    padding-top: max(20px, env(safe-area-inset-top));
+    padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
 }

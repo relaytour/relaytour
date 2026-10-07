@@ -281,6 +281,7 @@ export default function Demandes({
                 {d.origine === 'FORMULAIRE' && <Tag>Formulaire public</Tag>}
                 {d.dejaMembre && (
                   <Tooltip
+                    trigger={['hover', 'click']}
                     title={
                       gereOrganisation
                         ? 'Un compte de l’organisation porte déjà cette adresse. Accepter la demande ne crée aucun compte.'

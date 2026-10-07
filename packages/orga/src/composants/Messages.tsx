@@ -239,6 +239,7 @@ export default function Messages({ annuaire, personnes }: Props) {
         const reste = noms.length - NOMS_MAX
         return (
           <Tooltip
+            trigger={['hover', 'click']}
             title={
               reste > 0
                 ? `${noms.slice(0, NOMS_MAX).join(', ')} et ${reste} de plus`

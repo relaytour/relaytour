@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-07-orga-les-ecrans-d-administration-restent-utilisables-sur-un-telep",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les écrans d'administration restent utilisables sur un téléphone",
+            "texte": "Sur un téléphone, les fenêtres « Écrire un message », « Notes de version » et « Modifier l'activité » occupent tout l'écran. Un appui affiche les destinataires d'un message et l'explication « Déjà membre » d'une demande. Un tableau défile au doigt sans déplacer la largeur de ses colonnes.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-le-code-de-connexion-se-saisit-plus-vite-sur-un-telephone",
           "date": "2026-10-07",
           "type": "fonctionnalite",
