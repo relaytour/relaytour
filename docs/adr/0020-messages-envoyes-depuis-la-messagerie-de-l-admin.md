@@ -1,6 +1,6 @@
 # ADR 0020 — Messages écrits dans l'application, envoyés depuis la messagerie de l'admin
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-07
 - Complète l'ADR 0012 (mails d'équipe envoyés par l'application) et s'appuie sur l'ADR 0018 (personnes qu'un admin peut lire).
 
@@ -70,7 +70,7 @@ Chaque admin dispose déjà d'une messagerie sur son poste. Un lien `mailto:` l'
 - La suppression d'une activité supprime ses messages. La suppression d'un compte retire ce compte des destinataires.
 - L'application ne sait rien de la remise d'un message : ni réception, ni ouverture, ni réponse.
 - Les modèles sont les mêmes pour toutes les organisations. Une organisation qui veut ses propres modèles relève d'une décision ultérieure.
-- Aucune purge ne supprime les messages d'une période archivée. Cette durée de conservation reste à décider.
+- Aucune purge ne supprime les messages d'une période archivée. Cette durée de conservation reste à décider (ticket #71).
 
 ## Revue de sécurité
 
