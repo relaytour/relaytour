@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Choisir votre messagerie · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Le mode d'emploi du choix de la messagerie dans l'espace organisateur de Relaytour : messagerie par défaut de chaque système, messageries en ligne et applications."
+    />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          Relaytour
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Admins</span>
+        <h1>Choisir votre messagerie</h1>
+        <p class="chapo">
+          Vous préparez un message dans Relaytour, puis vous l'envoyez depuis votre propre messagerie. Ce mode d'emploi explique comment Relaytour ouvre cette messagerie, et comment vous choisissez celle qui s'ouvre.
+        </p>
+        <p class="renvoi">
+          Ce mode d'emploi complète la section « Messages à votre équipe » du <a href="admin-activite.html#e-messages">mode d'emploi des admins d'activité</a>. Il s'adresse aux admins, qui sont les seules personnes à écrire un message.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-principe">
+        <div class="entete">
+          <span class="etiquette">Point de départ</span>
+          <h2 id="t-principe">Comment Relaytour ouvre votre messagerie</h2>
+          <p class="texte">
+            Relaytour n'envoie aucun message. Il ouvre votre messagerie par un lien <span class="route">mailto:</span>, qui porte les destinataires, l'objet et le texte. Votre appareil décide seul de l'application qui répond à ce lien : c'est son application de mail par défaut.
+          </p>
+          <p class="texte">
+            Une page web ne peut pas désigner une autre application que celle-ci. Relaytour vous propose donc deux autres moyens : ouvrir une messagerie en ligne dans un nouvel onglet, ou ouvrir une application par un lien qui lui est propre.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Sommaire">
+          <span class="etiquette">Dans ce mode d'emploi</span>
+          <ol>
+            <li><a href="#t-cibles">Les messageries proposées</a> : ce que chacune reprend du message.</li>
+            <li><a href="#t-reglage">Régler votre choix</a> : dans vos préférences, ou pour un seul message.</li>
+            <li><a href="#t-systeme">Changer la messagerie par défaut</a> : le réglage de chaque système et de chaque navigateur.</li>
+            <li><a href="#t-applications">Les applications à essayer</a> : Gmail et Outlook sur téléphone ou tablette.</li>
+            <li><a href="#t-secours">Si rien ne s'ouvre</a> : copier le message à la main.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-cibles">
+        <div class="entete">
+          <span class="etiquette">Huit choix</span>
+          <h2 id="t-cibles">Les messageries proposées</h2>
+          <p class="texte">
+            Les messageries en ligne s'ouvrent dans un nouvel onglet, avec le compte déjà connecté dans votre navigateur. Si vous utilisez plusieurs comptes, vérifiez l'expéditeur avant d'envoyer.
+          </p>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Choix</th><th>Ce qui s'ouvre</th><th>Appareils</th><th>Champs Cc et Cci</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>Messagerie par défaut de l'appareil</th><td>L'application de mail par défaut de votre système, ou la messagerie en ligne que votre navigateur associe aux liens <span class="route">mailto:</span>.</td><td>Tous</td><td>Repris</td></tr>
+              <tr><th>Gmail</th><td>Un nouveau message dans Gmail, dans un nouvel onglet.</td><td>Tous, dans un navigateur</td><td>Repris</td></tr>
+              <tr><th>Outlook (compte professionnel ou associatif)</th><td>Un nouveau message dans Outlook sur le web (Microsoft 365), dans un nouvel onglet.</td><td>Tous, dans un navigateur</td><td>Repris</td></tr>
+              <tr><th>Outlook.com (compte personnel)</th><td>Un nouveau message dans Outlook.com, dans un nouvel onglet.</td><td>Tous, dans un navigateur</td><td>À vérifier</td></tr>
+              <tr><th>Yahoo Mail</th><td>Un nouveau message dans Yahoo Mail, dans un nouvel onglet.</td><td>Tous, dans un navigateur</td><td>À vérifier</td></tr>
+              <tr><th>Proton Mail</th><td>Un nouveau message dans Proton Mail, dans un nouvel onglet.</td><td>Tous, dans un navigateur</td><td>Repris</td></tr>
+              <tr><th>Application Gmail</th><td>L'application Gmail installée sur l'appareil.</td><td>iPhone et iPad seulement</td><td>À vérifier</td></tr>
+              <tr><th>Application Outlook</th><td>L'application Outlook installée sur l'appareil.</td><td>iPhone, iPad et Android, ni Mac ni Windows</td><td>À vérifier</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">« À vérifier » signifie que l'éditeur de la messagerie ne documente pas ce champ. Relaytour le transmet, et la messagerie peut l'ignorer. La fenêtre « Écrire un message » vous le rappelle, et vous propose de copier les adresses.</p>
+        <p class="note">Une messagerie qui ignore le champ Cci n'expose aucune adresse : le message s'ouvre sans ces destinataires, et vous les collez vous-même dans le champ Cci.</p>
+      </section>
+
+      <section aria-labelledby="t-reglage">
+        <div class="entete">
+          <span class="etiquette">Deux endroits</span>
+          <h2 id="t-reglage">Régler votre choix</h2>
+        </div>
+
+        <article class="verre ecran" id="e-preferences">
+          <div class="ecran-tete"><h3>Dans vos préférences</h3><span class="route">/&lt;activité&gt;/preferences</span></div>
+          <p>Le panneau « Votre messagerie » fixe la messagerie que Relaytour vous propose pour chaque message. Votre navigateur garde ce choix : il vaut pour ce navigateur, sur cet appareil. Vous pouvez ainsi choisir une application sur votre téléphone et une messagerie en ligne sur votre ordinateur.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Messagerie</span></span><span>Choisir l'une des huit messageries. Une icône d'information accompagne la messagerie par défaut, et une icône d'avertissement accompagne les applications. Le bouton placé à droite du champ ouvre l'explication du choix affiché.</span></li>
+            <li><span><span class="libelle">Essayer</span></span><span>Ouvrir un message d'essai, adressé à vous seul·e. Votre adresse y figure dans les champs « À » et « Cci ». Vous fermez ce message sans l'envoyer.</span></li>
+            <li><span><span class="libelle">Oui, le message s'est ouvert</span></span><span>Confirmer l'essai. Relaytour ne peut pas savoir seul si une application a répondu : votre réponse fait foi.</span></li>
+            <li><span><span class="libelle">Enregistrer</span></span><span>Garder ce choix. Pour une application, le bouton reste inactif tant que vous n'avez pas confirmé un essai.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/preferences-messagerie.webp" width="1440" height="900" loading="lazy" alt="Écran Préférences d'une admin : le panneau Votre messagerie, avec le sélecteur, le bouton Essayer et le bouton Enregistrer." />
+            <figcaption>Le panneau « Votre messagerie », sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p class="note">Pendant l'essai d'une application, Relaytour observe si votre navigateur quitte la page. Si rien ne se passe, un avertissement vous indique que l'application ne semble pas installée.</p>
+        </article>
+
+        <article class="verre ecran" id="e-message">
+          <div class="ecran-tete"><h3>Pour un seul message</h3><span class="route">Fenêtre « Écrire un message »</span></div>
+          <p>Le champ « Messagerie », en bas de la fenêtre, reprend le choix de vos préférences. Vous pouvez en choisir une autre pour ce message. Ce changement ne modifie pas vos préférences.</p>
+          <figure>
+            <img src="../captures/message-messagerie.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Écrire un message : le champ Messagerie, au-dessus du bouton Ouvrir dans votre messagerie." />
+            <figcaption>Le champ « Messagerie » de la fenêtre, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
+          </figure>
+          <p class="note">Un message rouvert depuis l'onglet « Messages » s'ouvre dans la messagerie de vos préférences.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-systeme">
+        <div class="entete">
+          <span class="etiquette">Messagerie par défaut</span>
+          <h2 id="t-systeme">Changer la messagerie par défaut de votre appareil</h2>
+          <p class="texte">
+            Le choix « Messagerie par défaut de l'appareil » ouvre l'application que votre système associe aux liens <span class="route">mailto:</span>. Si une application que vous n'utilisez pas s'ouvre, changez ce réglage dans votre système. Les libellés ci-dessous varient un peu d'une version à l'autre.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="s-macos">
+          <div class="ecran-tete"><h3>Mac</h3><span class="route">macOS</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">1</span></span><span>Ouvrir l'application Mail, même si vous ne l'utilisez pas.</span></li>
+            <li><span><span class="libelle">2</span></span><span>Ouvrir le menu « Mail », puis « Réglages », puis l'onglet « Général ».</span></li>
+            <li><span><span class="libelle">3</span></span><span>Choisir votre application dans « Logiciel de messagerie par défaut » : Outlook, Thunderbird ou une autre application installée.</span></li>
+          </ul>
+        </article>
+
+        <article class="verre ecran" id="s-windows">
+          <div class="ecran-tete"><h3>PC</h3><span class="route">Windows 10 et 11</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">1</span></span><span>Ouvrir « Paramètres », puis « Applications », puis « Applications par défaut ».</span></li>
+            <li><span><span class="libelle">2</span></span><span>Saisir « mailto » dans le champ de recherche par type de lien.</span></li>
+            <li><span><span class="libelle">3</span></span><span>Choisir votre application de mail dans la liste proposée.</span></li>
+          </ul>
+        </article>
+
+        <article class="verre ecran" id="s-ios">
+          <div class="ecran-tete"><h3>iPhone et iPad</h3><span class="route">iOS et iPadOS</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">1</span></span><span>Ouvrir « Réglages », puis « Apps », puis « Apps par défaut ».</span></li>
+            <li><span><span class="libelle">2</span></span><span>Ouvrir « E-mail », puis choisir votre application.</span></li>
+          </ul>
+          <p class="note">Sur une version plus ancienne du système, ce réglage se trouve dans « Réglages », à la ligne de votre application de mail, sous « App de messagerie par défaut ».</p>
+        </article>
+
+        <article class="verre ecran" id="s-android">
+          <div class="ecran-tete"><h3>Téléphone et tablette Android</h3><span class="route">Android</span></div>
+          <p>Android vous demande quelle application ouvrir la première fois que vous suivez un lien de mail. Vous choisissez votre application, puis « Toujours ».</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Changer</span></span><span>Ouvrir « Paramètres », puis « Applications », puis l'application qui s'ouvre aujourd'hui. Ouvrir « Ouvrir par défaut », puis effacer les valeurs par défaut. Android vous repose la question au prochain message.</span></li>
+          </ul>
+        </article>
+
+        <article class="verre ecran" id="s-linux">
+          <div class="ecran-tete"><h3>Ordinateur sous Linux</h3><span class="route">GNOME</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">1</span></span><span>Ouvrir « Paramètres », puis « Applications par défaut ».</span></li>
+            <li><span><span class="libelle">2</span></span><span>Choisir votre application à la ligne « Messagerie ».</span></li>
+          </ul>
+        </article>
+
+        <article class="verre ecran" id="s-navigateur">
+          <div class="ecran-tete"><h3>Une messagerie en ligne par défaut</h3><span class="route">Chrome, Edge, Firefox</span></div>
+          <p>Votre navigateur peut confier les liens <span class="route">mailto:</span> à une messagerie en ligne. Le choix « Messagerie par défaut de l'appareil » ouvre alors cette messagerie, avec tous les champs du message.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Chrome et Edge</span></span><span>Ouvrir votre messagerie en ligne. Cliquer l'icône en forme de double losange, à droite de la barre d'adresse, puis « Autoriser ». Le réglage se retrouve dans les paramètres du navigateur, à la rubrique des gestionnaires de protocoles.</span></li>
+            <li><span><span class="libelle">Firefox</span></span><span>Ouvrir « Paramètres », puis « Général », puis « Applications ». Chercher « mailto », puis choisir votre messagerie dans la colonne « Action ».</span></li>
+            <li><span><span class="libelle">Safari</span></span><span>Safari ne confie pas les liens de mail à une messagerie en ligne. Choisissez la messagerie en ligne dans vos préférences Relaytour.</span></li>
+          </ul>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-applications">
+        <div class="entete">
+          <span class="etiquette">À essayer</span>
+          <h2 id="t-applications">Les applications Gmail et Outlook</h2>
+          <p class="texte">
+            Les choix « Application Gmail » et « Application Outlook » ouvrent l'application par un lien qui lui est propre. Google et Microsoft ne documentent pas ces liens, et leur comportement peut changer avec une mise à jour.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Selon l'appareil</h3>
+            <p>L'application Gmail ne répond que sur iPhone et iPad. L'application Outlook répond sur iPhone, iPad et Android. Sur Mac, elle s'ouvre et refuse le lien. Sur Windows, elle ne s'ouvre pas.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Selon le champ</h3>
+            <p>Le destinataire, l'objet et le texte sont repris. Les champs Cc et Cci ne sont pas garantis : relisez-les dans le message avant d'envoyer.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Sans application</h3>
+            <p>Si l'application n'est pas installée, le navigateur ne fait rien ou affiche une erreur. Revenez alors à la messagerie par défaut ou à une messagerie en ligne.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Outlook sur ordinateur</h3>
+            <p>Pour ouvrir vos messages dans Outlook sur Mac ou sur Windows, réglez Outlook comme <a href="#t-systeme">messagerie par défaut de votre système</a>, puis gardez le choix « Messagerie par défaut de l'appareil ».</p>
+          </div>
+        </div>
+        <p class="note">Pour ces raisons, vos préférences n'enregistrent une application qu'après un essai confirmé sur l'appareil.</p>
+      </section>
+
+      <section aria-labelledby="t-secours">
+        <div class="entete">
+          <span class="etiquette">En dernier recours</span>
+          <h2 id="t-secours">Si rien ne s'ouvre</h2>
+          <p class="texte">
+            La fenêtre « Écrire un message » propose toujours de copier les adresses, l'objet et le texte. Vous ouvrez votre messagerie vous-même, puis vous collez chaque partie dans un nouveau message.
+          </p>
+          <p class="texte">
+            Un texte très long ou de très nombreux destinataires dépassent ce qu'un lien peut porter, quelle que soit la messagerie. La fenêtre vous demande alors de copier le texte, ou les adresses.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Autres modes d'emploi</span>
+          <h2 id="t-autres">Poursuivre</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="admin-activite.html#e-messages">
+            <span class="role">Admin d'une activité</span>
+            <h3>Écrire à votre équipe</h3>
+            <p>Les modèles, les champs Cc et Cci, l'historique des messages et leur état.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="referent.html#e-preferences">
+            <span class="role">Référent·e</span>
+            <h3>Régler vos préférences</h3>
+            <p>Les mails et les notifications que vous recevez de l'espace organisateur.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">Tous les rôles</span>
+            <h3>Choisir un mode d'emploi</h3>
+            <p>La liste des modes d'emploi de l'espace organisateur.</p>
+            <span class="suite">Voir la liste</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.12.0.
+      </footer>
+    </main>
+  </body>
+</html>

@@ -45,6 +45,14 @@ import {
   type Informations,
   type StatutMessage,
 } from '../lib/messages'
+import {
+  lienVers,
+  lireMessagerie,
+  messagerie,
+  ouvreUnOnglet,
+  ouvrirLaMessagerie,
+  reserverOnglet,
+} from '../lib/messagerie'
 import { useOrganisation } from '../lib/organisation'
 import { prenom } from '../lib/personnes'
 import { EDITIONS, PERIMETRES } from '../lib/requetes'
@@ -56,6 +64,8 @@ import {
 import { useSession } from '../lib/session'
 import { comparer } from '../lib/tableau'
 import { estOuverte } from '../lib/taches'
+
+import ChoixMessagerie from './ChoixMessagerie'
 
 // Fenêtre de rédaction d'un message (ADR 0020). L'admin choisit un modèle, complète
 // le texte, puis ouvre sa propre messagerie : l'application n'envoie rien. Elle
@@ -85,13 +95,6 @@ interface Props {
    * garder en copie visible.
    */
   contactsPrincipaux?: readonly string[]
-}
-
-/** Ouvre la messagerie du poste sur un lien `mailto:`. */
-function ouvrirLaMessagerie(lien: string): void {
-  const ancre = document.createElement('a')
-  ancre.href = lien
-  ancre.click()
 }
 
 const majuscule = (texte: string) =>
@@ -152,6 +155,8 @@ function Redaction({
   // Vrai quand l'application a pu copier le texte qu'un lien trop long ne porte pas.
   const [texteCopie, setTexteCopie] = useState(false)
   const [copieContacts, setCopieContacts] = useState(false)
+  // La messagerie des préférences, que l'admin peut changer pour ce message.
+  const [cleMessagerie, setCleMessagerie] = useState(lireMessagerie)
   // Null : l'objet et le texte suivent le modèle et les informations de
   // l'application. Une saisie de l'admin les fige.
   const [saisie, setSaisie] = useState<{ objet: string; corps: string } | null>(
@@ -262,11 +267,25 @@ function Redaction({
     champ === 'CCI' && copieContacts ? contacts.map(d => d.id) : []
   )
   const adresses = repartir(destinataires, champ, enCopie, moi.email)
-  const { lien: lienMessagerie, omis } = preparerLien({
-    ...adresses,
-    objet,
-    corps,
-  })
+  const { lien: lienMessagerie, omis } = preparerLien(
+    { ...adresses, objet, corps },
+    envoi => lienVers(cleMessagerie, envoi)
+  )
+  // Une cible dont l'éditeur ne documente pas les copies peut les ignorer.
+  const copiesAVerifier =
+    !messagerie(cleMessagerie).copiesEtablies &&
+    omis !== 'adresses' &&
+    adresses.cc.length + adresses.cci.length > 0
+  const avisCopies = (suite: string) =>
+    copiesAVerifier && (
+      <Alert
+        type="warning"
+        showIcon
+        style={{ marginBottom: 16 }}
+        title="Vérifiez les champs « Cc » et « Cci » avant d’envoyer"
+        description={`« ${messagerie(cleMessagerie).libelle} » ne reprend pas toujours ces champs. ${suite}`}
+      />
+    )
   const restes = passagesACompleter(`${objet}\n${corps}`)
 
   const copier = async (texte: string, succes: string) => {
@@ -321,6 +340,9 @@ function Redaction({
       message.error('Saisissez le texte du message.')
       return
     }
+    // L'onglet d'une messagerie en ligne se réserve pendant le clic : ouvert après
+    // l'enregistrement, le navigateur pourrait le bloquer.
+    const onglet = reserverOnglet(lienMessagerie)
     try {
       const { data } = await creer({
         variables: {
@@ -337,7 +359,10 @@ function Redaction({
           },
         },
       })
-      if (!data) return
+      if (!data) {
+        onglet?.close()
+        return
+      }
       if (omis !== 'rien') {
         // Le lien ne porte pas le texte : l'admin le colle dans sa messagerie. La
         // copie peut être refusée par le navigateur : la suite le dit alors.
@@ -348,9 +373,10 @@ function Redaction({
           )
         )
       }
-      ouvrirLaMessagerie(lienMessagerie)
+      ouvrirLaMessagerie(lienMessagerie, onglet)
       setSuivi(data.creerMessage.id)
     } catch (e) {
+      onglet?.close()
       message.error(messageErreur(e))
     }
   }
@@ -453,13 +479,22 @@ function Redaction({
             description="Les destinataires sont trop nombreux pour le lien vers la messagerie. La messagerie s’ouvre avec l’objet seulement. Copiez les adresses et le texte avec les boutons ci-dessous."
           />
         )}
+        {avisCopies(
+          'S’ils sont vides dans votre message, copiez les adresses avec les boutons ci-dessous.'
+        )}
         <div>
           <Typography.Paragraph type="secondary">
             Si votre messagerie ne s’est pas ouverte, rouvrez-la, ou copiez
             chaque partie du message.
           </Typography.Paragraph>
           <Space orientation="vertical" size={8}>
-            <Button icon={<MailOutlined />} href={lienMessagerie}>
+            <Button
+              icon={<MailOutlined />}
+              href={lienMessagerie}
+              {...(ouvreUnOnglet(lienMessagerie)
+                ? { target: '_blank', rel: 'noopener noreferrer' }
+                : {})}
+            >
               Rouvrir la messagerie
             </Button>
             {copies}
@@ -668,6 +703,21 @@ function Redaction({
           }
         />
       )}
+
+      {avisCopies(
+        'Après l’ouverture, cette fenêtre propose de copier les adresses.'
+      )}
+
+      <Form.Item
+        label="Messagerie"
+        extra="Vos préférences fixent la messagerie proposée. Ce choix ne vaut que pour ce message."
+      >
+        <ChoixMessagerie
+          valeur={cleMessagerie}
+          choisir={setCleMessagerie}
+          style={{ width: '100%', maxWidth: 420 }}
+        />
+      </Form.Item>
 
       <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
         <Button onClick={fermer}>Annuler</Button>
