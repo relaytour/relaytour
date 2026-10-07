@@ -114,3 +114,23 @@ export const MES_ORGANISATIONS = graphql(`
     }
   }
 `)
+
+// Affecter une personne à un périmètre et retirer une affectation : l'écran Équipe
+// et la fenêtre d'un compte partagent ces deux écritures.
+export const AFFECTER = graphql(`
+  mutation Affecter($personneId: ID!, $perimetreId: ID!, $editionId: ID!) {
+    affecter(
+      personneId: $personneId
+      perimetreId: $perimetreId
+      editionId: $editionId
+    ) {
+      id
+    }
+  }
+`)
+
+export const RETIRER_AFFECTATION = graphql(`
+  mutation RetirerAffectation($id: ID!) {
+    retirerAffectation(id: $id)
+  }
+`)

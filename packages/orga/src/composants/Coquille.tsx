@@ -133,28 +133,15 @@ function Mise({ session }: { session: Session }) {
         })),
       ],
     },
-    // L'administration d'une activité s'ouvre à ses admins ; la page de
-    // l'organisation, aux admins de l'organisation seulement (ADR 0010).
+    // Deux niveaux d'administration, du plus proche au plus large : l'activité
+    // affichée, ouverte à ses admins, puis l'organisation. La page de l'organisation
+    // revient aux admins de l'organisation seulement (ADR 0010).
     ...(gere
       ? [
           {
             type: 'group' as const,
-            label: 'Administration',
+            label: 'Gérer l’activité',
             children: [
-              ...(moi.estAdmin
-                ? [
-                    {
-                      key: lien('/admin/organisation'),
-                      icon: <BankOutlined />,
-                      label: 'Organisation',
-                    },
-                  ]
-                : []),
-              {
-                key: lien('/admin/activites'),
-                icon: <ApartmentOutlined />,
-                label: 'Activités',
-              },
               {
                 key: lien('/admin/avancement'),
                 icon: <BarChartOutlined />,
@@ -184,6 +171,26 @@ function Mise({ session }: { session: Session }) {
                 key: lien('/admin/redaction'),
                 icon: <EditOutlined />,
                 label: 'Rédaction',
+              },
+            ],
+          },
+          {
+            type: 'group' as const,
+            label: 'Gérer l’organisation',
+            children: [
+              ...(moi.estAdmin
+                ? [
+                    {
+                      key: lien('/admin/organisation'),
+                      icon: <BankOutlined />,
+                      label: 'Organisation',
+                    },
+                  ]
+                : []),
+              {
+                key: lien('/admin/activites'),
+                icon: <ApartmentOutlined />,
+                label: 'Activités',
               },
             ],
           },
