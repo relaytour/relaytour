@@ -88,6 +88,7 @@ const POSTES = graphql(`
     equipe {
       id
       nom
+      estAdmin
     }
     personnes @include(if: $annuaire) {
       id
@@ -448,7 +449,13 @@ export default function Equipe() {
                   },
                   {
                     label: 'Équipe de l’activité',
-                    options: libres(data?.equipe ?? []),
+                    // Un admin d'activité n'affecte pas un admin de
+                    // l'organisation (ADR 0019).
+                    options: libres(
+                      (data?.equipe ?? []).filter(
+                        p => gereOrganisation || p.estAdmin !== true
+                      )
+                    ),
                   },
                   {
                     label: 'Autres membres de l’organisation',

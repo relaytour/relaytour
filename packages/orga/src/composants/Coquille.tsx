@@ -1,6 +1,8 @@
 import {
   CompassOutlined,
+  ContactsOutlined,
   ApartmentOutlined,
+  SafetyCertificateOutlined,
   BankOutlined,
   BarChartOutlined,
   BookOutlined,
@@ -135,7 +137,8 @@ function Mise({ session }: { session: Session }) {
     },
     // Deux niveaux d'administration, du plus proche au plus large : l'activité
     // affichée, ouverte à ses admins, puis l'organisation. La page de l'organisation
-    // revient aux admins de l'organisation seulement (ADR 0010).
+    // l'annuaire et l'écran
+    // « Admins » reviennent aux admins de l'organisation seulement (ADR 0010, 0019).
     ...(gere
       ? [
           {
@@ -192,6 +195,20 @@ function Mise({ session }: { session: Session }) {
                 icon: <ApartmentOutlined />,
                 label: 'Activités',
               },
+              ...(moi.estAdmin
+                ? [
+                    {
+                      key: lien('/admin/annuaire'),
+                      icon: <ContactsOutlined />,
+                      label: 'Annuaire',
+                    },
+                    {
+                      key: lien('/admin/admins'),
+                      icon: <SafetyCertificateOutlined />,
+                      label: 'Admins',
+                    },
+                  ]
+                : []),
             ],
           },
         ]

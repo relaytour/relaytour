@@ -454,7 +454,7 @@ type Mutation {
   La personne connectée note son intérêt pour un périmètre (ADR 0012). Aucun mail ne part.
   """
   formulerSouhait(editionId: ID!, perimetreId: ID!): Boolean!
-  inviterPersonne(editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresSouhaites: [ID!]): Personne!
+  inviterPersonne(editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresAffectes: [ID!], perimetresSouhaites: [ID!]): Personne!
 
   """
   Donne le rôle d’admin d’une organisation à une adresse et lui envoie une invitation. La réponse ne renvoie aucune donnée du compte.
@@ -736,6 +736,7 @@ type Proposition {
 
 type Query {
   activites(inclureArchives: Boolean = false): [Activite!]!
+  adminsOrganisation: [Personne!]!
   affectations(editionId: ID!): [Affectation!]!
 
   """
