@@ -1,6 +1,6 @@
 # ADR 0022 — Choix de la messagerie qui reçoit un message
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-07
 - Complète l'ADR 0020 (messages écrits dans l'application, envoyés depuis la messagerie de l'admin).
 
