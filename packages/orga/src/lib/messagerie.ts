@@ -247,8 +247,30 @@ export function ouvreUnOnglet(lien: string): boolean {
   return lien.startsWith('https://')
 }
 
-/** Ouvre la cible : un nouvel onglet pour une page web, sinon l'application. */
-export function ouvrirLaMessagerie(lien: string): void {
+/**
+ * Réserve l'onglet d'une cible web pendant le clic. Un navigateur bloque un
+ * onglet ouvert après une attente, par exemple l'enregistrement du message : la
+ * fenêtre le réserve donc d'abord, vide, puis y charge la messagerie. Null pour
+ * une cible sans onglet, ou quand le navigateur refuse l'onglet.
+ */
+export function reserverOnglet(lien: string): Window | null {
+  return ouvreUnOnglet(lien) ? window.open('about:blank', '_blank') : null
+}
+
+/**
+ * Ouvre la cible : l'onglet réservé ou un nouvel onglet pour une page web, sinon
+ * l'application. L'onglet réservé perd son lien avec l'espace organisateur avant
+ * de charger la messagerie.
+ */
+export function ouvrirLaMessagerie(
+  lien: string,
+  onglet: Window | null = null
+): void {
+  if (onglet !== null && !onglet.closed) {
+    onglet.opener = null
+    onglet.location.replace(lien)
+    return
+  }
   const ancre = document.createElement('a')
   ancre.href = lien
   if (ouvreUnOnglet(lien)) {

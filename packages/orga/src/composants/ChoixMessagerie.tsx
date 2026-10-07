@@ -1,5 +1,5 @@
 import { InfoCircleOutlined, WarningOutlined } from '@ant-design/icons'
-import { Popover, Select } from 'antd'
+import { Button, Popover, Select } from 'antd'
 
 import {
   GENRES,
@@ -13,7 +13,8 @@ import { useOrganisation } from '../lib/organisation'
 
 // Sélecteur de la messagerie qui reçoit un message (ADR 0022). Les préférences
 // fixent le choix habituel, la fenêtre « Écrire un message » le change pour un
-// message. Une icône signale les cibles qui demandent une précaution.
+// message. Une icône signale les cibles qui demandent une précaution, et un
+// bouton voisin du sélecteur en ouvre l'explication.
 
 /** Le lien vers la page « Choisir votre messagerie » du site. */
 export function LienGuideMessagerie({ children }: { children: string }) {
@@ -29,22 +30,40 @@ export function LienGuideMessagerie({ children }: { children: string }) {
   )
 }
 
+/** L'icône qui signale une cible : un avertissement pour une application, une information pour `mailto:`. */
+function IconeMessagerie({ cle }: { cle: CleMessagerie }) {
+  const { genre } = messagerie(cle)
+  if (genre === 'web') return null
+  return (
+    <span
+      className="rt-avis-messagerie-icone"
+      aria-hidden
+      style={{
+        color:
+          genre === 'application' ? 'var(--rt-alerte)' : 'var(--rt-encre-55)',
+      }}
+    >
+      {genre === 'application' ? <WarningOutlined /> : <InfoCircleOutlined />}
+    </span>
+  )
+}
+
 /**
- * L'icône d'une cible et son explication. La messagerie par défaut renvoie au
- * réglage du système. Une application ouverte par son schéma d'URL ne répond pas
- * sur tous les appareils.
+ * L'explication d'une cible, ouverte par un bouton que le clavier atteint. La
+ * messagerie par défaut renvoie au réglage du système. Une application ouverte
+ * par son schéma d'URL ne répond pas sur tous les appareils.
  */
 export function AvisMessagerie({ cle }: { cle: CleMessagerie }) {
   const { genre, detail, systemes } = messagerie(cle)
   if (genre === 'web') return null
   const application = genre === 'application'
+  const titre = application
+    ? 'Ce lien ne fonctionne pas sur tous les appareils'
+    : 'La messagerie par défaut se règle dans votre système'
   return (
     <Popover
-      title={
-        application
-          ? 'Ce lien ne fonctionne pas sur tous les appareils'
-          : 'La messagerie par défaut se règle dans votre système'
-      }
+      trigger={['hover', 'click']}
+      title={titre}
       content={
         <div className="rt-avis-messagerie">
           <p>{detail}</p>
@@ -70,30 +89,16 @@ export function AvisMessagerie({ cle }: { cle: CleMessagerie }) {
         </div>
       }
     >
-      <span
-        className="rt-avis-messagerie-icone"
-        role="img"
-        aria-label={
-          application
-            ? 'Fonctionnement à vérifier sur cet appareil'
-            : 'Réglage du système'
-        }
-        style={{
-          color: application ? 'var(--rt-alerte)' : 'var(--rt-encre-55)',
-        }}
-      >
-        {application ? <WarningOutlined /> : <InfoCircleOutlined />}
-      </span>
+      <Button
+        type="text"
+        shape="circle"
+        size="small"
+        icon={<IconeMessagerie cle={cle} />}
+        aria-label={titre}
+      />
     </Popover>
   )
 }
-
-const Libelle = ({ cle }: { cle: CleMessagerie }) => (
-  <span className="rt-choix-messagerie">
-    <span>{messagerie(cle).libelle}</span>
-    <AvisMessagerie cle={cle} />
-  </span>
-)
 
 interface Props {
   valeur: CleMessagerie
@@ -101,25 +106,34 @@ interface Props {
   style?: React.CSSProperties
 }
 
+/** Le sélecteur, puis le bouton d'explication de la cible choisie. */
 export default function ChoixMessagerie({ valeur, choisir, style }: Props) {
   return (
-    <Select<CleMessagerie>
-      aria-label="Messagerie"
-      value={valeur}
-      onChange={choisir}
-      style={style}
-      popupMatchSelectWidth={false}
-      // Les huit cibles et leurs trois titres se lisent sans défilement.
-      listHeight={400}
-      options={(Object.keys(GENRES) as GenreMessagerie[]).map(genre => ({
-        label: GENRES[genre],
-        options: MESSAGERIES.filter(m => m.genre === genre).map(m => ({
-          value: m.cle,
-          label: m.libelle,
-        })),
-      }))}
-      optionRender={option => <Libelle cle={option.value as CleMessagerie} />}
-      labelRender={({ value }) => <Libelle cle={value as CleMessagerie} />}
-    />
+    <span className="rt-choix-messagerie" style={style}>
+      <Select<CleMessagerie>
+        aria-label="Messagerie"
+        value={valeur}
+        onChange={choisir}
+        style={{ flex: 1, minWidth: 0 }}
+        popupMatchSelectWidth={false}
+        // Les huit cibles et leurs trois titres se lisent sans défilement.
+        listHeight={400}
+        options={(Object.keys(GENRES) as GenreMessagerie[]).map(genre => ({
+          label: GENRES[genre],
+          options: MESSAGERIES.filter(m => m.genre === genre).map(m => ({
+            value: m.cle,
+            label: m.libelle,
+          })),
+        }))}
+        // L'icône d'une option est décorative : le bouton voisin porte l'explication.
+        optionRender={option => (
+          <span className="rt-choix-messagerie-option">
+            <span>{option.label}</span>
+            <IconeMessagerie cle={option.value as CleMessagerie} />
+          </span>
+        )}
+      />
+      <AvisMessagerie cle={valeur} />
+    </span>
   )
 }

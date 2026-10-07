@@ -76,7 +76,9 @@ Deux autres moyens existent. Une messagerie en ligne accepte une adresse de comp
 
 - Une adresse de composition porte les adresses des destinataires, l'objet et le texte. Elle part vers le fournisseur de messagerie que l'admin a choisi, qui recevrait ces données à l'envoi.
 - Cette adresse reste dans l'historique du navigateur de l'admin, comme un lien `mailto:` suivi dans une messagerie en ligne. Le fragment de Proton Mail ne part pas vers son serveur.
-- Les liens web s'ouvrent avec `rel="noopener noreferrer"` : la messagerie ne reçoit ni référent, ni accès à l'onglet de l'espace organisateur.
+- La fenêtre de rédaction réserve l'onglet d'une messagerie en ligne pendant le clic, puis y charge la messagerie après l'enregistrement du message. Un onglet ouvert après cette attente serait bloqué par le navigateur. Elle ferme l'onglet si l'enregistrement échoue.
+- Cet onglet réservé perd son lien avec l'espace organisateur (`opener`) avant de charger la messagerie. La messagerie reçoit en référent l'origine de l'espace organisateur, sans chemin : le domaine d'une installation n'est pas un secret.
+- Les autres liens web (essai, réouverture) s'ouvrent avec `rel="noopener noreferrer"`.
 - La liste des cibles est fixe. Aucune saisie de l'admin ni aucune donnée du serveur ne compose l'origine d'un lien.
 - Une cible qui ignore le champ « Cci » ouvre le message sans ces destinataires. Aucune adresse cachée ne passe dans un champ visible.
 - Le message d'essai ne porte que l'adresse de l'admin. Il n'est pas enregistré.

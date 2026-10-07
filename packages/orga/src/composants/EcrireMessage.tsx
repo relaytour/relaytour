@@ -51,6 +51,7 @@ import {
   messagerie,
   ouvreUnOnglet,
   ouvrirLaMessagerie,
+  reserverOnglet,
 } from '../lib/messagerie'
 import { useOrganisation } from '../lib/organisation'
 import { prenom } from '../lib/personnes'
@@ -339,6 +340,9 @@ function Redaction({
       message.error('Saisissez le texte du message.')
       return
     }
+    // L'onglet d'une messagerie en ligne se réserve pendant le clic : ouvert après
+    // l'enregistrement, le navigateur pourrait le bloquer.
+    const onglet = reserverOnglet(lienMessagerie)
     try {
       const { data } = await creer({
         variables: {
@@ -355,7 +359,10 @@ function Redaction({
           },
         },
       })
-      if (!data) return
+      if (!data) {
+        onglet?.close()
+        return
+      }
       if (omis !== 'rien') {
         // Le lien ne porte pas le texte : l'admin le colle dans sa messagerie. La
         // copie peut être refusée par le navigateur : la suite le dit alors.
@@ -366,9 +373,10 @@ function Redaction({
           )
         )
       }
-      ouvrirLaMessagerie(lienMessagerie)
+      ouvrirLaMessagerie(lienMessagerie, onglet)
       setSuivi(data.creerMessage.id)
     } catch (e) {
+      onglet?.close()
       message.error(messageErreur(e))
     }
   }

@@ -1734,8 +1734,15 @@ a.rt-etiquette:hover {
   background: var(--rt-primaire-clair);
 }
 
-/* Sélecteur de messagerie (ChoixMessagerie) : le libellé, puis l'icône d'avis. */
+/* Sélecteur de messagerie (ChoixMessagerie) : le sélecteur, puis le bouton
+   d'explication. Dans la liste, chaque option porte son libellé et son icône. */
 .rt-choix-messagerie {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rt-choix-messagerie-option {
   display: inline-flex;
   align-items: center;
   gap: 8px;
@@ -1744,7 +1751,6 @@ a.rt-etiquette:hover {
 .rt-avis-messagerie-icone {
   display: inline-flex;
   font-size: 14px;
-  cursor: help;
 }
 
 .rt-avis-messagerie {
