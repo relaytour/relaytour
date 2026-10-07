@@ -13,7 +13,6 @@ import {
   Select,
   Space,
   Switch,
-  Table,
   Tabs,
   Tag,
   Typography,
@@ -22,6 +21,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import Demandes from '../../composants/Demandes'
+import Tableau, { type ColonneTableau } from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type {
@@ -33,6 +33,7 @@ import { messageErreur } from '../../lib/erreurs'
 import { normaliser } from '../../lib/recherche'
 import { type Activite, useActivite } from '../../lib/activite'
 import { ACTIVITES, EDITIONS, MOI } from '../../lib/requetes'
+import { comparer } from '../../lib/tableau'
 
 // Un admin de l'organisation lit l'annuaire ; un admin d'activité lit l'équipe de
 // l'activité affichée (ADR 0018). Les deux listes portent les mêmes champs, et
@@ -239,6 +240,44 @@ function libelleAttribution(a: Membre['attributions'][number]): string {
     a.affectee ? 'affecté·e' : a.interessee ? 'intéressé·e' : null,
   ].filter(role => role !== null)
   return roles.join(', ')
+}
+
+interface Role {
+  libelle: string
+  couleur?: string
+}
+
+const ROLES = {
+  admin: { libelle: 'Admin de l’organisation', couleur: 'blue' },
+  membre: { libelle: 'Membre' },
+  adminActivite: { libelle: 'Admin de l’activité', couleur: 'geekblue' },
+  referent: { libelle: 'Référent·e' },
+  interesse: { libelle: 'Intéressé·e' },
+} satisfies Record<string, Role>
+
+/** Valeur de filtre d'une personne sans périmètre dans la colonne. */
+const AUCUN = 'aucun'
+
+/** Filtre d'une colonne de périmètres : ceux que portent les lignes affichées. */
+function filtrePerimetres<T>(
+  lignes: T[],
+  liens: (ligne: T) => { perimetre: { id: string; nom: string } }[]
+): NonNullable<ColonneTableau<T>['filtre']> {
+  const noms = new Map(
+    lignes.flatMap(l => liens(l).map(x => [x.perimetre.id, x.perimetre.nom]))
+  )
+  return {
+    options: [
+      { text: 'Aucun périmètre', value: AUCUN },
+      ...[...noms]
+        .sort((a, b) => comparer(a[1], b[1]))
+        .map(([value, text]) => ({ text, value })),
+    ],
+    valeurs: l => {
+      const ids = liens(l).map(x => x.perimetre.id)
+      return ids.length === 0 ? AUCUN : ids
+    },
+  }
 }
 
 interface Valeurs {
@@ -459,6 +498,20 @@ export default function Personnes() {
             : p.attributions.some(a => a.activiteId === filtreActivite)))
     )
   }, [liste, recherche, sansAffectation, editionId, filtreActivite])
+
+  const roleDe = (p: Personne): Role | null =>
+    gereOrganisation
+      ? p.estAdmin
+        ? ROLES.admin
+        : ROLES.membre
+      : // Un admin d'activité ne lit que les rôles de son activité.
+        p.activitesAdministrees.includes(activite.id)
+        ? ROLES.adminActivite
+        : p.affectations.length > 0
+          ? ROLES.referent
+          : p.souhaits.length > 0
+            ? ROLES.interesse
+            : null
 
   const ouvrir = (personne: Personne | 'nouvelle') => {
     setEnEdition(personne)
@@ -724,29 +777,37 @@ export default function Personnes() {
             </Checkbox>
           </Space>
 
-          <Table<Personne>
+          <Tableau<Personne>
+            id="personnes"
             rowKey="id"
             loading={loading}
             dataSource={personnes}
             pagination={{ pageSize: 50, hideOnSinglePage: true }}
-            scroll={{ x: 'max-content' }}
-            columns={[
+            ouvrir={ouvrir}
+            libelleOuvrir={p => `Modifier le compte de ${p.nom}`}
+            colonnes={[
               {
+                key: 'nom',
                 title: 'Nom',
                 dataIndex: 'nom',
+                tri: p => p.nom,
                 render: (nom: string, p) => (
-                  <Space style={{ whiteSpace: 'nowrap' }}>
-                    <Typography.Link onClick={() => ouvrir(p)}>
-                      {nom}
-                    </Typography.Link>
+                  <Space>
+                    <span style={{ fontWeight: 600 }}>{nom}</span>
                     {p.id === moiId && <Tag>Vous</Tag>}
                   </Space>
                 ),
               },
-              { title: 'Adresse mail', dataIndex: 'email' },
+              {
+                key: 'email',
+                title: 'Adresse mail',
+                dataIndex: 'email',
+                tri: p => p.email,
+              },
               {
                 title: 'Affectations',
                 key: 'affectations',
+                filtre: filtrePerimetres(personnes, p => p.affectations),
                 render: (_, p) =>
                   p.affectations.length === 0 ? (
                     <Typography.Text type="secondary">Aucune</Typography.Text>
@@ -768,6 +829,7 @@ export default function Personnes() {
               {
                 title: 'Souhaits',
                 key: 'souhaits',
+                filtre: filtrePerimetres(personnes, p => p.souhaits),
                 render: (_, p) =>
                   p.souhaits.length === 0 ? (
                     <Typography.Text type="secondary">Aucun</Typography.Text>
@@ -824,31 +886,29 @@ export default function Personnes() {
                           </Space>
                         )
                       },
-                    },
+                    } satisfies ColonneTableau<Personne>,
                   ]
                 : []),
               {
                 title: gereOrganisation ? 'Rôle' : 'Rôle dans l’activité',
-                dataIndex: 'estAdmin',
-                render: (a: boolean, p) =>
-                  !gereOrganisation ? (
-                    // Un admin d'activité ne lit que les rôles de son activité.
-                    p.activitesAdministrees.includes(activite.id) ? (
-                      <Tag color="geekblue">Admin de l’activité</Tag>
-                    ) : p.affectations.length > 0 ? (
-                      <Tag>Référent·e</Tag>
-                    ) : p.souhaits.length > 0 ? (
-                      <Tag>Intéressé·e</Tag>
-                    ) : null
-                  ) : a ? (
-                    <Tag color="blue">Admin de l’organisation</Tag>
-                  ) : (
-                    <Tag>Membre</Tag>
-                  ),
+                key: 'role',
+                render: (_, p) => {
+                  const role = roleDe(p)
+                  return role && <Tag color={role.couleur}>{role.libelle}</Tag>
+                },
+                tri: p => roleDe(p)?.libelle,
+                filtre: {
+                  options: (gereOrganisation
+                    ? [ROLES.admin, ROLES.membre]
+                    : [ROLES.adminActivite, ROLES.referent, ROLES.interesse]
+                  ).map(r => ({ text: r.libelle, value: r.libelle })),
+                  valeurs: p => roleDe(p)?.libelle ?? [],
+                },
               },
               {
                 title: 'Actions',
                 key: 'actions',
+                redimensionnable: false,
                 render: (_, p) =>
                   p.archive && !gereOrganisation ? null : p.archive ? (
                     <Button

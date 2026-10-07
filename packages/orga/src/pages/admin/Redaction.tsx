@@ -1,12 +1,16 @@
 import { useMutation, useQuery } from '@apollo/client/react'
-import { App, Button, Card, Form, Popconfirm, Select, Space, Table } from 'antd'
+import { App, Button, Card, Form, Popconfirm, Select, Space } from 'antd'
 
+import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import type { DroitsRedactionQuery } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
 import { PERIMETRES } from '../../lib/requetes'
 import { useSession } from '../../lib/session'
+import { comparer } from '../../lib/tableau'
+
+const TOUTES_LES_FICHES = 'Toutes les fiches'
 
 const DROITS = graphql(`
   query DroitsRedaction($annuaire: Boolean!) {
@@ -139,21 +143,42 @@ export default function Redaction() {
         </Form>
       </Card>
 
-      <Table<Droit>
+      <Tableau<Droit>
+        id="redaction"
         rowKey="id"
         loading={loading}
         dataSource={data?.droitsRedaction ?? []}
         pagination={false}
-        scroll={{ x: 'max-content' }}
-        columns={[
-          { title: 'Personne', render: (_, d) => d.personne.nom },
+        colonnes={[
           {
+            key: 'personne',
+            title: 'Personne',
+            render: (_, d) => d.personne.nom,
+            tri: d => d.personne.nom,
+            recherche: d => d.personne.nom,
+          },
+          {
+            key: 'fiches',
             title: 'Fiches',
-            render: (_, d) => d.perimetre?.nom ?? 'Toutes les fiches',
+            render: (_, d) => d.perimetre?.nom ?? TOUTES_LES_FICHES,
+            tri: d => d.perimetre?.nom ?? TOUTES_LES_FICHES,
+            filtre: {
+              options: [
+                ...new Set(
+                  (data?.droitsRedaction ?? []).map(
+                    d => d.perimetre?.nom ?? TOUTES_LES_FICHES
+                  )
+                ),
+              ]
+                .sort(comparer)
+                .map(nom => ({ text: nom, value: nom })),
+              valeurs: d => d.perimetre?.nom ?? TOUTES_LES_FICHES,
+            },
           },
           {
             title: '',
             key: 'actions',
+            redimensionnable: false,
             render: (_, d) => (
               <Space>
                 <Popconfirm

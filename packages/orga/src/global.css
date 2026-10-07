@@ -560,6 +560,68 @@ button.rt-ligne-lien {
   background: transparent;
 }
 
+/* Tableau commun : ouverture d'une ligne et largeur des colonnes. */
+.rt-tableau .rt-ligne-ouvrable {
+  cursor: pointer;
+}
+
+.rt-tableau .rt-colonne-redimensionnee {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.rt-poignee-colonne {
+  position: absolute;
+  inset-block: 0;
+  inset-inline-end: -4px;
+  z-index: 1;
+  width: 9px;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+.rt-poignee-colonne::after {
+  content: '';
+  position: absolute;
+  inset-block: 25%;
+  inset-inline-start: 4px;
+  width: 1px;
+  background: transparent;
+  transition: background 0.15s;
+}
+
+.rt-poignee-colonne:hover::after,
+.rt-poignee-colonne:active::after,
+.rt-poignee-colonne:focus-visible::after {
+  inset-block: 0;
+  width: 2px;
+  inset-inline-start: 3px;
+  background: var(--rt-primaire);
+}
+
+.rt-poignee-colonne:focus-visible {
+  box-shadow: none;
+}
+
+.rt-recherche-colonne {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px;
+  width: 240px;
+}
+
+/* Texte lu par les lecteurs d'écran, absent de l'affichage. */
+.rt-masque {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
 /* Le focus : un anneau d'encre, jamais un bleu vif. */
 :focus-visible {
   outline: none;

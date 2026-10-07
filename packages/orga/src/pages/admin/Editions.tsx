@@ -10,11 +10,11 @@ import {
   Modal,
   Row,
   Select,
-  Table,
   Tag,
 } from 'antd'
 import { useState } from 'react'
 
+import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { useActivite } from '../../lib/activite'
 import { graphql } from '../../gql'
@@ -153,29 +153,49 @@ export default function Editions() {
       >
         {periode.Nouvelle}
       </Button>
-      <Table<Edition>
+      <Tableau<Edition>
+        id="editions"
         rowKey="id"
         loading={loading}
         dataSource={data?.editions ?? []}
         pagination={false}
-        scroll={{ x: 'max-content' }}
-        onRow={edition => ({
-          onClick: () => ouvrir(edition),
-          style: { cursor: 'pointer' },
-        })}
-        columns={[
-          { title: 'Année', dataIndex: 'annee', width: 90 },
-          { title: 'Nom', dataIndex: 'nom' },
+        ouvrir={ouvrir}
+        libelleOuvrir={e => `Modifier ${e.nom}`}
+        colonnes={[
           {
-            title: 'Dates',
-            render: (_, e) => `${dateCourte(e.debut)} au ${dateCourte(e.fin)}`,
+            key: 'annee',
+            title: 'Année',
+            dataIndex: 'annee',
+            width: 110,
+            tri: e => e.annee,
           },
           {
+            key: 'nom',
+            title: 'Nom',
+            dataIndex: 'nom',
+            tri: e => e.nom,
+            recherche: e => e.nom,
+          },
+          {
+            key: 'dates',
+            title: 'Dates',
+            render: (_, e) => `${dateCourte(e.debut)} au ${dateCourte(e.fin)}`,
+            tri: e => e.debut,
+          },
+          {
+            key: 'statut',
             title: 'Statut',
             dataIndex: 'statut',
             render: (s: StatutEdition) => (
               <Tag color={STATUTS[s].couleur}>{STATUTS[s].libelle}</Tag>
             ),
+            filtre: {
+              options: Object.entries(STATUTS).map(([value, s]) => ({
+                text: s.libelle,
+                value,
+              })),
+              valeurs: e => e.statut,
+            },
           },
         ]}
       />
