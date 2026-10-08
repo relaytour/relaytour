@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import { appareil, lienGuideInstallation } from './installation'
 
@@ -37,5 +37,62 @@ describe('lienGuideInstallation', () => {
       'https://relaytour.org/modes-d-emploi/?a=1#b',
     ])
       expect(lienGuideInstallation(base)).toBe(attendu)
+  })
+})
+
+describe('invite d’installation', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    vi.resetModules()
+  })
+
+  /** Charge le module avec une fenêtre factice, et rend ses écouteurs. */
+  async function charger() {
+    const ecouteurs = new Map<string, (evenement: unknown) => void>()
+    vi.stubGlobal('window', {
+      addEventListener: (type: string, f: (evenement: unknown) => void) =>
+        ecouteurs.set(type, f),
+    })
+    vi.resetModules()
+    const module = await import('./installation')
+    return { module, ecouteurs }
+  }
+
+  const invite = (issue: 'accepted' | 'dismissed') => ({
+    preventDefault: vi.fn(),
+    prompt: vi.fn(() => Promise.resolve({ outcome: issue })),
+  })
+
+  it('retient l’invite du navigateur et prévient les abonnés', async () => {
+    const { module, ecouteurs } = await charger()
+    const prevenir = vi.fn()
+    const retirer = module.abonnerInvite(prevenir)
+    expect(module.inviteDisponible()).toBe(false)
+    const evenement = invite('accepted')
+    ecouteurs.get('beforeinstallprompt')!(evenement)
+    expect(evenement.preventDefault).toHaveBeenCalled()
+    expect(module.inviteDisponible()).toBe(true)
+    expect(prevenir).toHaveBeenCalledTimes(1)
+    retirer()
+    ecouteurs.get('appinstalled')!({})
+    expect(module.inviteDisponible()).toBe(false)
+    expect(prevenir).toHaveBeenCalledTimes(1)
+  })
+
+  it('rend vrai quand la personne accepte, et ne sert qu’une fois', async () => {
+    const { module, ecouteurs } = await charger()
+    const evenement = invite('accepted')
+    ecouteurs.get('beforeinstallprompt')!(evenement)
+    expect(await module.installer()).toBe(true)
+    expect(evenement.prompt).toHaveBeenCalledTimes(1)
+    expect(module.inviteDisponible()).toBe(false)
+    expect(await module.installer()).toBe(false)
+  })
+
+  it('rend faux quand la personne refuse', async () => {
+    const { module, ecouteurs } = await charger()
+    ecouteurs.get('beforeinstallprompt')!(invite('dismissed'))
+    expect(await module.installer()).toBe(false)
+    expect(module.inviteDisponible()).toBe(false)
   })
 })

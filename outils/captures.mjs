@@ -401,11 +401,19 @@ await envoyer('Emulation.setDeviceMetricsOverride', {
   deviceScaleFactor: values.mobile ? 2 : 1,
   mobile: values.mobile,
 })
-if (values.mobile)
+if (values.mobile) {
   await envoyer('Emulation.setTouchEmulationEnabled', {
     enabled: true,
     maxTouchPoints: 5,
   })
+  // L'espace organisateur lit l'agent de navigation pour choisir les étapes
+  // d'installation : un téléphone Android sous Chrome.
+  await envoyer('Emulation.setUserAgentOverride', {
+    userAgent:
+      'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Mobile Safari/537.36',
+    platform: 'Android',
+  })
+}
 mkdirSync(values.sortie, { recursive: true })
 let echecs = 0
 

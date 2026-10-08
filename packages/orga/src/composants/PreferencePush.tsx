@@ -135,7 +135,8 @@ export default function PreferencePush({
   // connaît pour cette personne.
   useEffect(() => {
     let actif = true
-    void abonnementCourant()
+    if (cle === null) return
+    void abonnementCourant(cle)
       .then(async courant => {
         if (courant === null) return false
         const { data } = await apollo.query({
@@ -152,7 +153,7 @@ export default function PreferencePush({
     return () => {
       actif = false
     }
-  }, [apollo])
+  }, [apollo, cle])
 
   const etat: EtatPush = etatPush(cle, permission, abonne, contexteAppareil())
   if (etat === 'indisponible') return null

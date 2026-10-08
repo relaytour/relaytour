@@ -74,13 +74,38 @@ function versServeur(abonnement: PushSubscription): AbonnementAEnvoyer | null {
   return { adresse: endpoint, p256dh: keys.p256dh, auth: keys.auth }
 }
 
-/** L'abonnement de ce navigateur, ou null. Ne lève jamais. */
-export async function abonnementCourant(): Promise<AbonnementAEnvoyer | null> {
+/**
+ * Vrai quand un abonnement a été créé avec la clé VAPID courante. Après un
+ * changement de clés sur l'installation, le navigateur garde l'ancien
+ * abonnement : le serveur ne peut plus lui écrire, et il doit être recréé.
+ */
+export function cleCourante(
+  cleDeLAbonnement: ArrayBuffer | null | undefined,
+  cle: string
+): boolean {
+  if (!cleDeLAbonnement) return false
+  const attendue = cleEnOctets(cle)
+  const portee = new Uint8Array(cleDeLAbonnement)
+  return (
+    portee.length === attendue.length &&
+    portee.every((octet, i) => octet === attendue[i])
+  )
+}
+
+/**
+ * L'abonnement de ce navigateur pour la clé courante, ou null : sans
+ * abonnement, ou avec un abonnement lié à une ancienne clé. Ne lève jamais.
+ */
+export async function abonnementCourant(
+  cle: string
+): Promise<AbonnementAEnvoyer | null> {
   if (!pushPrisEnCharge()) return null
   try {
     const enregistrement = await navigator.serviceWorker.getRegistration()
     const abonnement = await enregistrement?.pushManager.getSubscription()
-    return abonnement ? versServeur(abonnement) : null
+    if (!abonnement) return null
+    if (!cleCourante(abonnement.options.applicationServerKey, cle)) return null
+    return versServeur(abonnement)
   } catch {
     return null
   }
@@ -89,15 +114,23 @@ export async function abonnementCourant(): Promise<AbonnementAEnvoyer | null> {
 /**
  * Demande l'autorisation, puis abonne ce navigateur. L'appel suit un appui de la
  * personne : un iPhone refuse toute demande faite sans geste. Rend null quand la
- * personne refuse.
+ * personne refuse. Un abonnement lié à une ancienne clé est retiré puis recréé.
  */
 export async function abonner(cle: string): Promise<AbonnementAEnvoyer | null> {
   if ((await Notification.requestPermission()) !== 'granted') return null
   const enregistrement = await navigator.serviceWorker.ready
   let abonnement: PushSubscription
   try {
+    let existant = await enregistrement.pushManager.getSubscription()
+    if (
+      existant !== null &&
+      !cleCourante(existant.options.applicationServerKey, cle)
+    ) {
+      await existant.unsubscribe()
+      existant = null
+    }
     abonnement =
-      (await enregistrement.pushManager.getSubscription()) ??
+      existant ??
       (await enregistrement.pushManager.subscribe({
         userVisibleOnly: true,
         applicationServerKey: cleEnOctets(cle),
@@ -121,19 +154,26 @@ export class ErreurAbonnement extends Error {
   }
 }
 
-/** Retire l'abonnement de ce navigateur et rend son adresse, pour le serveur. */
+/**
+ * Retire l'abonnement de ce navigateur et rend son adresse, pour le serveur.
+ * L'adresse se lit avant le retrait : si le navigateur échoue à se désabonner,
+ * le serveur retire quand même sa copie, et n'écrit plus à cet appareil. Rend
+ * null sans abonnement, ou quand le navigateur ne répond pas. Ne lève jamais :
+ * une déconnexion ne doit pas en dépendre.
+ */
 export async function desabonner(): Promise<string | null> {
   if (!pushPrisEnCharge()) return null
+  let abonnement: PushSubscription | null | undefined
   try {
     const enregistrement = await navigator.serviceWorker.getRegistration()
-    const abonnement = await enregistrement?.pushManager.getSubscription()
-    if (!abonnement) return null
-    const adresse = abonnement.endpoint
-    await abonnement.unsubscribe()
-    return adresse
+    abonnement = await enregistrement?.pushManager.getSubscription()
   } catch {
     return null
   }
+  if (!abonnement) return null
+  const adresse = abonnement.endpoint
+  await abonnement.unsubscribe().catch(() => false)
+  return adresse
 }
 
 /** Pose le nombre de non-lus sur l'icône de l'application, là où le système le permet. */

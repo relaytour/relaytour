@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { cleEnOctets, etatPush } from './push'
+import { cleCourante, cleEnOctets, etatPush } from './push'
 
 const navigateur = { prisEnCharge: true, iphone: false, installee: false }
 
@@ -33,5 +33,17 @@ describe('etatPush', () => {
 describe('cleEnOctets', () => {
   it('décode une clé en base64 adapté aux adresses', () => {
     expect([...cleEnOctets('AQID-_8')]).toEqual([1, 2, 3, 251, 255])
+  })
+})
+
+describe('cleCourante', () => {
+  it('reconnaît un abonnement créé avec la clé de l’installation', () => {
+    expect(cleCourante(cleEnOctets('AQID-_8').buffer, 'AQID-_8')).toBe(true)
+  })
+
+  it('écarte un abonnement lié à une autre clé, ou sans clé', () => {
+    expect(cleCourante(cleEnOctets('AQID-_4').buffer, 'AQID-_8')).toBe(false)
+    expect(cleCourante(cleEnOctets('AQID').buffer, 'AQID-_8')).toBe(false)
+    expect(cleCourante(null, 'AQID-_8')).toBe(false)
   })
 })

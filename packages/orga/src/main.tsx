@@ -21,7 +21,7 @@ appliquerTheme(themeParDefaut)
 enregistrerServiceWorker()
 
 // Ouverte sans réseau, l'application n'affiche que l'écran « Hors connexion »
-// (ADR 0023) : elle ne garde aucune donnée, et l'identité de l'organisation vient
+// (ADR 0023) : elle ne garde ni tâche ni fiche, et l'identité de l'organisation vient
 // de l'API. Le thème de Relaytour sert alors de repli.
 const racine = createRoot(document.getElementById('racine')!)
 if (navigator.onLine) {

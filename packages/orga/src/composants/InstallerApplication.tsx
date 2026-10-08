@@ -102,7 +102,7 @@ export default function InstallerApplication({
           showIcon
           style={{ marginBottom: 12 }}
           title="À la première ouverture, saisissez le code reçu par mail."
-          description="Le lien du mail ouvre Safari, pas l’application installée."
+          description="Le lien du mail ouvre votre navigateur, pas l’application installée."
         />
       )}
       <Typography.Paragraph type="secondary" style={{ marginBottom: 0 }}>

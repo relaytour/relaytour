@@ -114,6 +114,12 @@ export interface MessagePush {
   corps: string
   /** Chemin de l'espace organisateur ouvert par un appui. */
   lien: string
+  /**
+   * Slug de l'organisation de la notification. Une personne reçoit sur un même
+   * appareil les notifications de toutes ses organisations : l'application
+   * sélectionne celle-ci avant d'ouvrir le lien.
+   */
+  organisation: string
   /** Regroupe les messages d'une même notification : un renvoi remplace l'affichage. */
   etiquette: string
   icone: string

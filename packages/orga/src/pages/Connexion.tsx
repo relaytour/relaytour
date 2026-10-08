@@ -13,7 +13,7 @@ import {
   seConnecter,
   type LienConnexion,
 } from '../lib/connexion'
-import { estInstallee } from '../lib/installation'
+import { appareil, estInstallee } from '../lib/installation'
 
 type Etape = 'adresse' | 'code'
 
@@ -204,7 +204,10 @@ export default function Connexion() {
                 formatter={valeur => valeur.replace(/\D/g, '')}
               />
             </Form.Item>
-            {estInstallee() && (
+            {/* Sur iPhone, l'application installée ne partage pas sa session avec
+                le navigateur qui ouvre le lien (ADR 0023). Ailleurs, le lien peut
+                revenir dans l'application. */}
+            {estInstallee() && appareil() === 'iphone' && (
               <Typography.Paragraph type="secondary">
                 Saisissez ici le code du mail. Le lien du mail ouvre votre
                 navigateur, pas l’application installée.

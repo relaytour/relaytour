@@ -150,10 +150,11 @@ export function useMiseAJour(): { disponible: boolean; recharger: () => void } {
 /**
  * Ouvre l'écran d'une notification push (ADR 0024). Le service worker ramène la
  * fenêtre au premier plan, puis lui demande d'afficher le chemin : le routeur
- * s'en charge, sans recharger la page.
+ * s'en charge, sans recharger la page. Le message nomme l'organisation de la
+ * notification, que l'appelant sélectionne quand elle n'est pas l'active.
  */
 export function useOuvertureDepuisNotification(
-  ouvrir: (chemin: string) => void
+  ouvrir: (chemin: string, organisation: string | null) => void
 ): void {
   useEffect(() => {
     if (!('serviceWorker' in navigator)) return
@@ -161,13 +162,17 @@ export function useOuvertureDepuisNotification(
       const donnees = evenement.data as {
         type?: string
         chemin?: unknown
+        organisation?: unknown
       } | null
       if (
         donnees?.type === 'OUVRIR' &&
         typeof donnees.chemin === 'string' &&
         /^\/(?!\/)/.test(donnees.chemin)
       )
-        ouvrir(donnees.chemin)
+        ouvrir(
+          donnees.chemin,
+          typeof donnees.organisation === 'string' ? donnees.organisation : null
+        )
     }
     navigator.serviceWorker.addEventListener('message', recevoir)
     return () =>

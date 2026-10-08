@@ -88,6 +88,7 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
       n.userId
     ),
     lien: lienNotification(n),
+    organisation: organisation.slug,
     etiquette: `notification-${n.id}`,
     icone: organisation.iconeApplicationUrl ?? '/icon.png',
     nonLues,

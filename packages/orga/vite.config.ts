@@ -11,13 +11,15 @@ const API = process.env.RELAYTOUR_API ?? 'http://localhost:4400'
 /**
  * Construit le service worker (ADR 0023) : `src/sw.ts` devient `/sw.js`, à la
  * racine pour couvrir toute l'application. Le plugin y écrit la liste des scripts
- * et des styles du build, et une version tirée de cette liste : un build
- * identique garde le même service worker. Aucune dépendance ne s'ajoute.
+ * et des styles du build, et une version tirée de cette liste et de la page :
+ * un build identique garde le même service worker. Aucune dépendance ne s'ajoute.
  */
 function serviceWorker(): Plugin {
   return {
     name: 'relaytour-service-worker',
     apply: 'build',
+    // Après le plugin de Vite qui écrit index.html dans le build.
+    enforce: 'post',
     buildStart() {
       this.emitFile({ type: 'chunk', id: 'src/sw.ts', fileName: 'sw.js' })
     },
@@ -33,8 +35,15 @@ function serviceWorker(): Plugin {
         .filter(nom => /^assets\/.+\.(?:js|css)$/.test(nom))
         .sort()
         .map(nom => `/${nom}`)
+      // La page entre dans la version : un build qui ne change qu'elle doit
+      // produire un nouveau service worker, sinon le repli hors connexion
+      // garderait l'ancienne page.
+      const page = bundle['index.html']
+      if (page === undefined || page.type !== 'asset')
+        throw new Error('La page index.html est absente du build.')
       const version = createHash('sha256')
         .update(fichiers.join('\n'))
+        .update(page.source)
         .digest('hex')
         .slice(0, 12)
       sw.code = sw.code

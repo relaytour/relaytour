@@ -31,6 +31,7 @@ Une notification push ne va pas directement du serveur au téléphone. Elle pass
 ### Ce qui part en notification push
 
 - Une notification push reprend une notification de l'application : même texte, même lien.
+- Le message nomme l'organisation de la notification. Une personne reçoit sur un même appareil les notifications de toutes ses organisations : l'application sélectionne l'organisation du message, et repart d'un cache vide, avant d'ouvrir l'écran.
 - Partent en push : une tâche assignée à la personne ou qui lui est retirée, la modification d'une de ses tâches par une autre personne, une échéance proche, un retard et une demande reçue.
 - Ne partent pas en push : la création d'une tâche et les changements de fiche annoncés à tout un périmètre. Ils restent dans la cloche et dans le résumé.
 - Une préférence par famille (tâches, échéances, demandes) coupe le push sans couper le mail. Le worker relit les préférences au moment de l'envoi.
@@ -64,7 +65,7 @@ Une notification push ne va pas directement du serveur au téléphone. Elle pass
 ## Revue de sécurité
 
 - `abonnerPush` et `desabonnerPush` exigent une session. Une personne ne lit, ne crée et ne supprime que ses propres abonnements, et des tests prouvent chaque refus.
-- L'adresse d'un abonnement doit être en `https://` et désigner le service de push d'un navigateur connu : Google, Apple, Mozilla ou Microsoft. Sans cette liste, une personne ferait appeler une adresse de son choix par le serveur. Le worker l'appelle avec un délai borné, et retire un abonnement dont l'adresse n'est plus admise.
+- L'adresse d'un abonnement doit être en `https://` et désigner le service de push d'un navigateur connu : Google, Apple, Mozilla ou Microsoft. Sans cette liste, une personne ferait appeler une adresse de son choix par le serveur. Le worker l'appelle avec un délai borné, ne suit aucune redirection, et retire un abonnement dont l'adresse n'est plus admise. Des tests prouvent chaque refus.
 - Une personne garde dix abonnements au plus. Au-delà, le plus ancien est retiré.
 - Le journal ne contient ni l'adresse d'un abonnement ni ses clés (invariant 6).
 - Le texte d'une notification push suit les règles de la cloche : il ne nomme pas la personne qui a coché une tâche, et il ne porte aucune adresse.

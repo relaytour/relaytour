@@ -18,15 +18,16 @@ import {
   TrophyOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
-import { useQuery } from '@apollo/client/react'
+import { useApolloClient, useQuery } from '@apollo/client/react'
 import { Alert, Button, Drawer, Grid, Menu } from 'antd'
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
 import { useOuvertureDepuisNotification } from '../lib/application'
 import { useRafraichissement } from '../lib/rafraichissement'
+import { choisirOrganisation } from '../lib/selection'
 import { ContexteSession, type Session } from '../lib/session'
 
 import AvisMiseAJour from './AvisMiseAJour'
@@ -84,13 +85,28 @@ function Mise({ session }: { session: Session }) {
   const { data: menu } = useQuery(MENU_PERIMETRES)
   useRafraichissement(active.slug)
   const navigate = useNavigate()
-  useOuvertureDepuisNotification(navigate)
+  // Une notification push peut venir d'une autre organisation de la personne
+  // (ADR 0024) : elle devient l'active, et le cache repart de zéro, avant l'écran.
+  const apollo = useApolloClient()
+  const ouvrirNotification = useCallback(
+    (chemin: string, organisation: string | null) => {
+      if (organisation === null || organisation === active.slug) {
+        navigate(chemin)
+        return
+      }
+      choisirOrganisation(organisation)
+      void apollo.resetStore().finally(() => navigate(chemin))
+    },
+    [active.slug, apollo, navigate]
+  )
+  useOuvertureDepuisNotification(ouvrirNotification)
   const { pathname } = useLocation()
   const ecrans = Grid.useBreakpoint()
   // Sous 576 px, la recherche se replie en un bouton. Ouverte, elle occupe
   // seule la barre haute, et se referme quand l'écran change.
   const etroit = Boolean(ecrans.xs)
   const [rechercheOuverteSur, setRechercheOuverteSur] = useState<string>()
+  const boutonRecherche = useRef<HTMLButtonElement>(null)
   const rechercheSeule = etroit && rechercheOuverteSur === pathname
   const setRechercheOuverte = (ouverte: boolean) =>
     setRechercheOuverteSur(ouverte ? pathname : undefined)
@@ -296,7 +312,12 @@ function Mise({ session }: { session: Session }) {
                 type="text"
                 icon={<CloseOutlined />}
                 aria-label="Fermer la recherche"
-                onClick={() => setRechercheOuverte(false)}
+                onClick={() => {
+                  setRechercheOuverte(false)
+                  // Le bouton fermé disparaît : le focus revient au bouton qui
+                  // avait ouvert la recherche, pas au document.
+                  requestAnimationFrame(() => boutonRecherche.current?.focus())
+                }}
               />
             </>
           ) : (
@@ -320,6 +341,7 @@ function Mise({ session }: { session: Session }) {
                   type="text"
                   icon={<SearchOutlined />}
                   aria-label="Rechercher"
+                  ref={boutonRecherche}
                   onClick={() => setRechercheOuverte(true)}
                 />
               )}

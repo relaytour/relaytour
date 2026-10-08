@@ -340,16 +340,16 @@ html {
   }
 }
 
-/* Au doigt, une cible mesure au moins 40 px, ou reçoit une zone d'appui plus
+/* Au doigt, une cible mesure au moins 44 px, ou reçoit une zone d'appui plus
    large que son dessin (docs/design-system.md, « Mobile »). */
 @media (pointer: coarse) {
-  .ant-btn-sm {
-    min-height: 40px;
-    min-width: 40px;
+  .ant-btn {
+    min-height: 44px;
+    min-width: 44px;
   }
 
   /* L'étoile du contact principal garde son dessin dans l'étiquette. */
-  .ant-btn-sm.rt-bouton-etoile {
+  .ant-btn.rt-bouton-etoile {
     min-height: 0;
   }
 
@@ -376,7 +376,8 @@ html {
   .ant-radio::after {
     content: '';
     position: absolute;
-    inset: -10px;
+    /* 20 px de dessin et 12 px de chaque côté : 44 px. */
+    inset: -12px;
     border: none;
     visibility: visible;
     animation: none;
@@ -1869,6 +1870,12 @@ a.rt-etiquette:hover {
     border-radius: 0;
     padding-top: max(20px, env(safe-area-inset-top));
     padding-bottom: max(20px, env(safe-area-inset-bottom));
+  }
+
+  /* La croix est posée en absolu : elle suit aussi la zone sûre. */
+  .rt-modale-pleine .ant-modal-close {
+    top: max(12px, env(safe-area-inset-top));
+    inset-inline-end: max(12px, env(safe-area-inset-right));
   }
 }
 
