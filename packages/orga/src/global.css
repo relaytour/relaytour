@@ -374,14 +374,11 @@ html {
   color: var(--rt-encre-55);
 }
 
-/* La barre haute et le contenu partagent la même largeur : le volet latéral
-   finit sous le bord droit de la barre. Sur un très grand écran, l'ensemble est
-   borné et centré dans la place que le volet de navigation laisse. */
+/* La barre haute et le contenu partagent la même largeur, jusqu'au bord droit
+   de l'écran : le volet latéral finit sous le bord droit de la barre. */
 .rt-principal {
   flex: 1;
   min-width: 0;
-  max-width: 1600px;
-  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -889,7 +886,9 @@ button.rt-ligne-lien {
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 20px;
   align-items: start;
-  transition: grid-template-columns var(--rt-duree) var(--rt-ease-fluide);
+  transition:
+    grid-template-columns var(--rt-duree) var(--rt-ease-fluide),
+    margin var(--rt-duree) var(--rt-ease-fluide);
 }
 
 /* Le volet latéral reste dans l'écran pendant le défilement : lib/volets.ts
@@ -917,7 +916,10 @@ button.rt-ligne-lien {
 /* Replié, le volet devient une tranche : ses cartes glissent vers la droite et
    ne montrent plus que leur bord arrondi, sans texte. */
 .rt-deux-colonnes.rt-volet-replie {
-  grid-template-columns: minmax(0, 1fr) 28px;
+  grid-template-columns: minmax(0, 1fr) 32px;
+  /* La tranche traverse les marges du contenu (12 px) et de la page (16 px) :
+     elle se colle au bord droit de l'écran, comme le rail au bord gauche. */
+  margin-inline-end: -28px;
 }
 
 .rt-volet-replie .rt-volet-lateral {
@@ -941,6 +943,7 @@ button.rt-ligne-lien {
   .rt-deux-colonnes,
   .rt-deux-colonnes.rt-volet-replie {
     grid-template-columns: minmax(0, 1fr);
+    margin-inline-end: 0;
   }
 
   /* Les deux colonnes s'empilent : le volet suit le contenu, sans repli. */

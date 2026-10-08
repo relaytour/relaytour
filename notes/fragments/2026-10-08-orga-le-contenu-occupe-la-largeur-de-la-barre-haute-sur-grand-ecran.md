@@ -9,10 +9,8 @@ fr:
   texte: >-
     Le contenu d'un écran s'arrêtait à 1180 pixels de large, alors que la barre
     haute suivait l'écran. Le contenu et la barre haute partagent maintenant la
-    même largeur, jusqu'à 1600 pixels. Sur un écran plus large, l'ensemble est
-    centré.
+    même largeur. Replié, le volet latéral se colle au bord droit de l'écran.
 ---
 
-`.rt-principal` porte la largeur maximale dans `packages/orga/src/global.css` ;
-`.rt-contenu` n'a plus de borne propre. Voir `docs/design-system.md`,
+`.rt-contenu` n'a plus de borne de largeur dans `packages/orga/src/global.css`. Voir `docs/design-system.md`,
 « Volets ».
