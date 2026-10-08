@@ -31,7 +31,7 @@ Une notification push ne va pas directement du serveur au téléphone. Elle pass
 ### Ce qui part en notification push
 
 - Une notification push reprend une notification de l'application : même texte, même lien.
-- Partent en push : une tâche assignée ou retirée, la modification d'une tâche assignée, une échéance proche, un retard et une demande reçue.
+- Partent en push : une tâche assignée à la personne ou qui lui est retirée, la modification d'une de ses tâches par une autre personne, une échéance proche, un retard et une demande reçue.
 - Ne partent pas en push : la création d'une tâche et les changements de fiche annoncés à tout un périmètre. Ils restent dans la cloche et dans le résumé.
 - Une préférence par famille (tâches, échéances, demandes) coupe le push sans couper le mail. Le worker relit les préférences au moment de l'envoi.
 - Un passage à « faite » ne nomme personne, comme dans l'application et dans le mail.
@@ -58,12 +58,14 @@ Une notification push ne va pas directement du serveur au téléphone. Elle pass
 - Le worker ouvre des connexions sortantes vers les services de push d'Apple, de Google et de Mozilla. Un pare-feu sortant doit les laisser passer.
 - La clé privée VAPID est un secret d'exploitation. Elle ne vit que dans le `.env` de l'installation.
 - Le guide d'installation explique l'activation, et précise qu'un iPhone exige l'application installée.
+- Le simulateur iOS n'offre pas de service de push : l'envoi se vérifie sur un téléphone, ou dans Chrome sur un poste.
 - La notification d'un message (ADR 0020) et la notification d'une nouvelle version restent hors de cette décision.
 
 ## Revue de sécurité
 
 - `abonnerPush` et `desabonnerPush` exigent une session. Une personne ne lit, ne crée et ne supprime que ses propres abonnements, et des tests prouvent chaque refus.
-- L'adresse d'un abonnement doit être en `https://`. Le serveur ne l'appelle que depuis le worker, avec un délai borné.
+- L'adresse d'un abonnement doit être en `https://` et désigner le service de push d'un navigateur connu : Google, Apple, Mozilla ou Microsoft. Sans cette liste, une personne ferait appeler une adresse de son choix par le serveur. Le worker l'appelle avec un délai borné, et retire un abonnement dont l'adresse n'est plus admise.
+- Une personne garde dix abonnements au plus. Au-delà, le plus ancien est retiré.
 - Le journal ne contient ni l'adresse d'un abonnement ni ses clés (invariant 6).
 - Le texte d'une notification push suit les règles de la cloche : il ne nomme pas la personne qui a coché une tâche, et il ne porte aucune adresse.
 - Le service de push connaît l'appareil, l'heure et la taille du message. Il ne connaît ni le texte, ni la personne, ni l'organisation.

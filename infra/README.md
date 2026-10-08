@@ -57,6 +57,16 @@ L'espace organisateur s'installe sur un téléphone (ADR 0023). Deux points conc
 
 Le manifest de chaque organisation se sert sous `/medias/application/`, chemin déjà relayé vers l'API.
 
+### Notifications push
+
+Les notifications push sont facultatives (ADR 0024). Pour les ouvrir :
+
+1. Créez une paire de clés VAPID, une seule fois : `npx web-push generate-vapid-keys`.
+2. Renseignez `PUSH_VAPID_PUBLIQUE`, `PUSH_VAPID_PRIVEE` et `PUSH_VAPID_SUJET` dans le `.env`, puis relancez la pile. Le sujet est une adresse `mailto:` ou `https://` que les services de push peuvent joindre.
+3. Laissez le worker sortir en HTTPS vers `fcm.googleapis.com`, `*.push.apple.com`, `updates.push.services.mozilla.com` et `*.notify.windows.com`.
+
+La clé privée est un secret : elle ne quitte pas le `.env`. Changer la paire de clés annule tous les abonnements, et chaque personne doit réactiver les notifications sur ses appareils.
+
 ## Adapter la pile à votre hébergement
 
 Ne modifiez pas `docker-compose.yml` : ajoutez un fichier de surcharge, par exemple `compose.local.yml`, et lancez `docker compose -f docker-compose.yml -f compose.local.yml …`. C'est là que vont vos ports, vos limites mémoire, vos volumes et votre supervision. La base et le cache ne publient aucun port : la file des mails contient des codes de connexion en clair pendant quelques minutes, et tout processus de la machine pourrait les lire. Pour administrer la base, passez par `docker compose exec db mariadb -u root -p`. Si un outil de la machine doit joindre la base, publiez le port dans votre surcharge, sur `127.0.0.1` seulement. Si une adaptation exige un changement dans l'application, proposez-le dans le dépôt de Relaytour sous une forme générique.

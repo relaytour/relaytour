@@ -1,10 +1,11 @@
 import { BellOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Badge, Button, Drawer, Empty, Skeleton, Typography } from 'antd'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { graphql } from '../gql'
+import { poserPastille } from '../lib/push'
 
 const NOMBRE = graphql(`
   query NombreNotificationsNonLues {
@@ -56,6 +57,8 @@ export default function Notifications() {
   })
   const [marquer] = useMutation(MARQUER, { refetchQueries: [NOMBRE, LISTE] })
   const nonLues = nombre?.nombreNotificationsNonLues ?? 0
+  // L'icône de l'application installée porte le même nombre (ADR 0024).
+  useEffect(() => poserPastille(nonLues), [nonLues])
 
   return (
     <>

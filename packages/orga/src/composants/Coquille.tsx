@@ -25,6 +25,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
+import { useOuvertureDepuisNotification } from '../lib/application'
 import { useRafraichissement } from '../lib/rafraichissement'
 import { ContexteSession, type Session } from '../lib/session'
 
@@ -83,6 +84,7 @@ function Mise({ session }: { session: Session }) {
   const { data: menu } = useQuery(MENU_PERIMETRES)
   useRafraichissement(active.slug)
   const navigate = useNavigate()
+  useOuvertureDepuisNotification(navigate)
   const { pathname } = useLocation()
   const ecrans = Grid.useBreakpoint()
   // Sous 576 px, la recherche se replie en un bouton. Ouverte, elle occupe

@@ -44,6 +44,62 @@ sw.addEventListener('message', evenement => {
     void sw.skipWaiting()
 })
 
+// Notification push (ADR 0024). Le serveur envoie un texte déjà composé : le
+// service worker l'affiche. Chaque message reçu affiche une notification, sans
+// quoi le navigateur retire l'abonnement.
+interface MessagePush {
+  titre: string
+  corps: string
+  lien: string
+  etiquette: string
+  icone: string
+  nonLues: number
+}
+
+sw.addEventListener('push', evenement => {
+  let message: Partial<MessagePush> = {}
+  try {
+    message = (evenement.data?.json() ?? {}) as Partial<MessagePush>
+  } catch {
+    // Charge illisible : la notification garde un texte neutre.
+  }
+  const pastille = sw.navigator as WorkerNavigator & {
+    setAppBadge?: (nombre?: number) => Promise<void>
+  }
+  evenement.waitUntil(
+    Promise.all([
+      sw.registration.showNotification(message.titre ?? 'Espace organisateur', {
+        body: message.corps ?? 'Une notification vous attend.',
+        tag: message.etiquette,
+        icon: message.icone ?? '/icon.png',
+        data: { lien: message.lien ?? '/' },
+      }),
+      typeof message.nonLues === 'number' && message.nonLues > 0
+        ? pastille.setAppBadge?.(message.nonLues).catch(() => undefined)
+        : undefined,
+    ])
+  )
+})
+
+// Un appui ramène une fenêtre déjà ouverte sur l'écran concerné, ou en ouvre une.
+sw.addEventListener('notificationclick', evenement => {
+  evenement.notification.close()
+  const lien = (evenement.notification.data as { lien?: string } | null)?.lien
+  // Seul un chemin de l'application s'ouvre, jamais une adresse externe.
+  const chemin = typeof lien === 'string' && /^\/(?!\/)/.test(lien) ? lien : '/'
+  evenement.waitUntil(
+    sw.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then(async fenetres => {
+        const fenetre = fenetres[0]
+        if (fenetre === undefined) return sw.clients.openWindow(chemin)
+        await fenetre.focus()
+        fenetre.postMessage({ type: 'OUVRIR', chemin })
+        return undefined
+      })
+  )
+})
+
 sw.addEventListener('fetch', evenement => {
   const requete = evenement.request
   if (requete.method !== 'GET') return

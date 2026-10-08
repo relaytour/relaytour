@@ -1,4 +1,4 @@
-import { useSyncExternalStore } from 'react'
+import { useEffect, useSyncExternalStore } from 'react'
 
 // Application installée (ADR 0023) : déclaration du manifest dans la page,
 // service worker, mise à jour et état du réseau.
@@ -145,4 +145,32 @@ export function useMiseAJour(): { disponible: boolean; recharger: () => void } {
     disponible: worker !== null,
     recharger: () => worker?.postMessage({ type: 'ACTIVER' }),
   }
+}
+
+/**
+ * Ouvre l'écran d'une notification push (ADR 0024). Le service worker ramène la
+ * fenêtre au premier plan, puis lui demande d'afficher le chemin : le routeur
+ * s'en charge, sans recharger la page.
+ */
+export function useOuvertureDepuisNotification(
+  ouvrir: (chemin: string) => void
+): void {
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return
+    const recevoir = (evenement: MessageEvent) => {
+      const donnees = evenement.data as {
+        type?: string
+        chemin?: unknown
+      } | null
+      if (
+        donnees?.type === 'OUVRIR' &&
+        typeof donnees.chemin === 'string' &&
+        /^\/(?!\/)/.test(donnees.chemin)
+      )
+        ouvrir(donnees.chemin)
+    }
+    navigator.serviceWorker.addEventListener('message', recevoir)
+    return () =>
+      navigator.serviceWorker.removeEventListener('message', recevoir)
+  }, [ouvrir])
 }

@@ -490,6 +490,17 @@ input MessageInput {
 }
 
 type Mutation {
+  """
+  Enregistre l’abonnement push de cet appareil pour la personne connectée. Reste possible dans une organisation en lecture seule.
+  """
+  abonnerPush(
+    adresse: String!
+
+    """Agent de navigation, dont le serveur tire un libellé d’appareil."""
+    agent: String
+    auth: String!
+    p256dh: String!
+  ): Boolean!
   accepterDemande(affecter: [ID!]!, id: ID!): Demande!
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
@@ -521,6 +532,11 @@ type Mutation {
   Écrit l’export complet d’une organisation dans le dossier EXPORTS_DIR du serveur et renvoie le nom du fichier. Le contenu ne transite jamais par l’API.
   """
   demanderExport(organisation: String!): String!
+
+  """
+  Retire l’abonnement push de cet appareil. Rend vrai quand un abonnement de la personne connectée a été retiré.
+  """
+  desabonnerPush(adresse: String!): Boolean!
 
   """
   Dépose une demande pour rejoindre l’équipe d’une activité dont le formulaire est ouvert. La réponse est la même que l’adresse ait déjà un compte, une demande en attente, ou ni l’un ni l’autre. Utilisable sans session.
@@ -575,6 +591,15 @@ type Mutation {
     mailDemandes: Boolean
     mailEcheance: Boolean!
     mailModification: Boolean!
+
+    """Sans valeur, ce réglage ne change pas."""
+    pushDemandes: Boolean
+
+    """Sans valeur, ce réglage ne change pas."""
+    pushEcheances: Boolean
+
+    """Sans valeur, ce réglage ne change pas."""
+    pushTaches: Boolean
   ): PreferencesNotification!
 
   """
@@ -822,6 +847,19 @@ type PreferencesNotification {
   mailDemandes: Boolean!
   mailEcheance: Boolean!
   mailModification: Boolean!
+
+  """
+  Notification push quand une activité que la personne administre reçoit une demande.
+  """
+  pushDemandes: Boolean!
+
+  """Notification push pour les échéances proches et les retards."""
+  pushEcheances: Boolean!
+
+  """
+  Notification push quand une tâche est assignée à la personne, lui est retirée, ou quand une autre personne modifie une de ses tâches (ADR 0024).
+  """
+  pushTaches: Boolean!
 }
 
 type Proposition {
@@ -832,6 +870,10 @@ type Proposition {
 }
 
 type Query {
+  """
+  Vrai quand cet abonnement, désigné par son adresse, est enregistré pour la personne connectée.
+  """
+  abonnePush(adresse: String!): Boolean!
   activites(inclureArchives: Boolean = false): [Activite!]!
   adminsOrganisation: [Personne!]!
   affectations(editionId: ID!): [Affectation!]!
@@ -843,6 +885,11 @@ type Query {
   avancementGlobal(editionId: ID!): [AvancementPerimetre!]!
   baremeScore: BaremeScore!
   classement(editionId: ID!): [LigneClassement!]!
+
+  """
+  Clé publique VAPID de l’installation, dont un navigateur a besoin pour s’abonner aux notifications push. Null quand le canal est fermé. Lisible sans session.
+  """
+  clePubliquePush: String
   demandes(editionId: ID!, statut: StatutDemande): [Demande!]!
   droitsRedaction: [DroitRedaction!]!
   editionCourante(activiteId: ID): Edition
