@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client/react'
-import { Form, Input, Modal } from 'antd'
+import { Alert, Form, Input, Modal } from 'antd'
 import { useEffect } from 'react'
 
 import type { TacheChampsFragment } from '../gql/graphql'
@@ -28,7 +28,7 @@ export function AideDeclinaison({ estAdmin }: { estAdmin: boolean }) {
       personnes assignées. Vous suivez leur avancement depuis cette tâche.{' '}
       {estAdmin
         ? 'Comme admin de l’activité, vous ajoutez ces tâches sans attendre l’accord des périmètres.'
-        : 'Les référentes et référents de chaque périmètre acceptent ou refusent la tâche.'}
+        : 'Les référentes et référents de chaque périmètre acceptent ou refusent la tâche. Elle entre sans attendre dans un périmètre où vous êtes vous-même affecté·e.'}
     </p>
   )
 }
@@ -53,10 +53,13 @@ export default function DeclinerTache({
 }) {
   const [form] = Form.useForm<Valeurs>()
   const executer = useActionTache()
-  const { data } = useQuery(DECLINAISONS_TACHE, {
+  const { data, error } = useQuery(DECLINAISONS_TACHE, {
     variables: { id: tache?.id ?? '' },
     skip: tache === null || !dejaPartagee,
   })
+  // Une tâche déjà partagée ne propose que les périmètres qui ne l'ont pas : tant
+  // que leur liste n'est pas lue, le formulaire reste fermé.
+  const servisConnus = !dejaPartagee || data?.tache != null
   const [decliner, declinaison] = useMutation(DECLINER_TACHE, {
     refetchQueries: VUES_TACHES,
   })
@@ -84,7 +87,7 @@ export default function DeclinerTache({
         }),
       estAdmin
         ? 'La tâche est ajoutée aux périmètres choisis.'
-        : 'La tâche est proposée aux périmètres choisis.'
+        : 'La tâche est partagée avec les périmètres choisis.'
     )
     if (ok) onFermer()
   }
@@ -96,6 +99,7 @@ export default function DeclinerTache({
       okText={estAdmin ? 'Ajouter' : 'Proposer'}
       cancelText="Annuler"
       confirmLoading={declinaison.loading}
+      okButtonProps={{ disabled: !servisConnus }}
       onOk={() => form.submit()}
       onCancel={onFermer}
       destroyOnHidden
@@ -105,6 +109,15 @@ export default function DeclinerTache({
         <>
           <p style={{ fontWeight: 600 }}>« {tache.titre} »</p>
           <AideDeclinaison estAdmin={estAdmin} />
+          {!servisConnus && error && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginBottom: 16 }}
+              title="Les périmètres qui portent déjà cette tâche n’ont pas pu être chargés."
+              description="Fermez cette fenêtre et réessayez dans un instant."
+            />
+          )}
           <Form
             form={form}
             layout="vertical"
@@ -130,7 +143,7 @@ export default function DeclinerTache({
             >
               <ChoixPerimetresCibles
                 perimetres={libres}
-                disabled={libres.length === 0}
+                disabled={libres.length === 0 || !servisConnus}
               />
             </Form.Item>
             <Form.Item

@@ -2,7 +2,7 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "versions": [
     {
       "version": null,
@@ -43,6 +43,24 @@
           "fr": {
             "titre": "Les tâches se regroupent par phase ou par fiche",
             "texte": "La page d'un périmètre propose trois lectures de ses tâches : par échéance, par phase ou par fiche méthode. Le rétroplanning en propose deux : par mois, ou par phase puis par périmètre. Une phase est une partie de la période, par exemple « Préparation ». Chaque tâche s'y range par son échéance. Votre navigateur garde le regroupement choisi.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.13.1",
+      "notes": [
+        {
+          "id": "2026-10-08-orga-l-application-installee-ne-laisse-plus-rien-passer-sous-la-barre-d-etat",
+          "date": "2026-10-08",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'application installée sur un iPhone ne laisse plus rien passer sous la barre d'état",
+            "texte": "Dans l'application installée, le texte d'un écran se lisait sous l'heure pendant le défilement. L'en-tête du menu et les messages de confirmation s'affichaient derrière la barre d'état. Le voile du haut de l'écran couvre maintenant toute cette zone, et le menu comme les messages commencent en dessous.",
             "migration": null
           }
         }

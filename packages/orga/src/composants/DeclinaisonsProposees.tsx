@@ -48,12 +48,24 @@ export default function DeclinaisonsProposees({
     refetchQueries: VUES_TACHES,
   })
   // La requête vit à part de celle de la page, que le serveur borne en nombre de
-  // champs. Sans réponse, l'encart ne s'affiche pas.
-  const { data } = useQuery(DECLINAISONS_PROPOSEES, {
+  // champs.
+  const { data, error } = useQuery(DECLINAISONS_PROPOSEES, {
     variables: { slug, editionId },
   })
+  // Une requête en échec ne vaut pas une liste vide : l'encart le dit, pour que
+  // personne ne croie qu'aucune tâche n'attend.
+  if (data === undefined) {
+    return error ? (
+      <Section titre="Tâches proposées à ce périmètre">
+        <p className="rt-note" style={{ margin: '0 6px' }}>
+          Les tâches proposées à ce périmètre n’ont pas pu être chargées.
+          Rechargez la page dans un instant.
+        </p>
+      </Section>
+    ) : null
+  }
   const declinaisons: DeclinaisonProposee[] =
-    data?.perimetre?.declinaisonsProposees ?? []
+    data.perimetre?.declinaisonsProposees ?? []
   if (declinaisons.length === 0) return null
 
   const repondre = (id: string, accepter: boolean) =>

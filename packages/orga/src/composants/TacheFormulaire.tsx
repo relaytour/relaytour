@@ -123,7 +123,7 @@ export default function TacheFormulaire({
               ? 'Tâche créée.'
               : estAdmin
                 ? 'Tâche créée et ajoutée aux périmètres choisis.'
-                : 'Tâche créée et proposée aux périmètres choisis.'
+                : 'Tâche créée et partagée avec les périmètres choisis.'
           )
         : tache
           ? await executer(

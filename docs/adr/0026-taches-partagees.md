@@ -1,6 +1,6 @@
 # ADR 0026 — Tâches partagées entre périmètres
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-08
 - Complète l'ADR 0003 (tâches types) et l'ADR 0009 (source de vérité du contenu). Ajoute une exception à l'ADR 0014 : une personne propose une tâche à un périmètre où elle n'est pas affectée.
 

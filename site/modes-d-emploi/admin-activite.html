@@ -87,6 +87,12 @@
             <figcaption>Écran Avancement, sur l'organisation d'exemple livrée avec Relaytour. Les personnes et les périmètres sont fictifs.</figcaption>
           </figure>
           <p class="note">Cet écran ne se modifie pas. Il sert au point d'avancement et repère les périmètres qui décrochent.</p>
+          <p>Sur la page d'un périmètre, une <strong>tâche partagée</strong> vous montre plus qu'aux autres personnes. Son détail donne, pour chaque périmètre, qui a proposé, accepté ou refusé la tâche, et quand.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Décliner dans d'autres périmètres</span></span><span>Ajouter une tâche à d'autres périmètres sans attendre leur accord. Une référente ou un référent ne fait que la proposer.</span></li>
+            <li><span><span class="libelle">Ajouter sans accord</span></span><span>Ajouter à un périmètre une tâche qu'il n'a pas encore acceptée, ou qu'il a refusée. L'historique garde ce geste, avec votre nom.</span></li>
+          </ul>
+          <p class="note">Une tâche type du dossier de contenu se partage aussi, avec la clé <code>declinaison</code>. L'import ajoute alors la tâche à chaque périmètre, sans demander d'accord.</p>
         </article>
 
         <article class="verre ecran" id="e-classement">
@@ -232,7 +238,7 @@
           </ul>
           <p class="note">La création et l'archivage d'une activité appartiennent aux admins de l'organisation.</p>
           <figure>
-            <img src="../captures/activites-phases.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Modifier l'activité : la liste des phases, avec la clé, le libellé et le dernier jour de chaque phase." />
+            <img src="../captures/activites-phases.webp" data-mobile="../captures/mobile/activites-phases.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Modifier l'activité : la liste des phases, avec la clé, le libellé et le dernier jour de chaque phase." />
             <figcaption>Les phases d'une activité, sur l'organisation d'exemple.</figcaption>
           </figure>
           <p class="note">Une activité que vous ne réglez pas garde quatre phases : Lancement, Préparation, Derniers réglages, Déroulement et bilan. Modifier les phases ne modifie aucune tâche : seul le rangement des tâches datées change, dans le rétroplanning et dans chaque périmètre.</p>
@@ -307,7 +313,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.13.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.13.1.
       </footer>
     </main>
     <script src="../bascule.js"></script>
