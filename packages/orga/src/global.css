@@ -2125,10 +2125,20 @@ a.rt-etiquette:hover {
   background: color-mix(in srgb, var(--rt-fond-fige) 94%, var(--rt-encre));
 }
 
+/* Une ligne cochée garde sa couleur au survol : ces sélecteurs pèsent autant
+   que ceux du survol, et viennent après eux. */
 .rt-tableau.ant-table-wrapper
   .ant-table-tbody
   > tr.ant-table-row-selected
-  > td.ant-table-cell-fix {
+  > td.ant-table-cell-fix,
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row.ant-table-row-selected:hover
+  > td.ant-table-cell-fix,
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row-selected
+  > td.ant-table-cell-fix.ant-table-cell-row-hover {
   background: var(--rt-primaire-clair);
 }
 
