@@ -143,6 +143,9 @@ body {
 html {
   background: var(--rt-sol);
   background-attachment: fixed;
+  /* Safari sur iPhone teinte ses barres avec cette couleur : sans elle, une bande
+     blanche encadre la page. */
+  background-color: var(--rt-sol-2);
 }
 
 /* Les surfaces de verre : aucune bordure, un liseré blanc et une ombre d'encre. */
@@ -1875,4 +1878,27 @@ a.rt-etiquette:hover {
   padding-inline-start: 22px;
   display: grid;
   gap: 8px;
+}
+
+/* Dans l'application installée sur iPhone, la page s'étend sous la barre d'état
+   (apple-mobile-web-app-status-bar-style dans index.html) : le sol monte jusqu'en
+   haut de l'écran. Un voile dépoli couvre cette zone, pour que l'heure reste
+   lisible quand le contenu défile dessous. Sa hauteur vaut zéro sur un écran
+   sans zone sûre. */
+@media (display-mode: standalone) {
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 9;
+    /* Un quart de plus que la zone sûre : le voile s'efface jusqu'à la barre
+       haute, sans arête visible. */
+    height: calc(env(safe-area-inset-top) * 1.25);
+    background: rgba(255, 255, 255, 0.55);
+    -webkit-backdrop-filter: blur(18px);
+    backdrop-filter: blur(18px);
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    pointer-events: none;
+  }
 }
