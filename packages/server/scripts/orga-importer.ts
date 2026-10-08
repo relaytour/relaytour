@@ -79,6 +79,7 @@ function imprimerActivite(r: RapportActivite) {
       'rattachées à leur tâche partagée (non modifiées)',
       r.taches.rattachees
     )
+    afficher('CONFLITS : déclinaisons ni créées ni liées', r.taches.conflits)
   }
 }
 
