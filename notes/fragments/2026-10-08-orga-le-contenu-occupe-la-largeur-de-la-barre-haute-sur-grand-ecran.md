@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     Le contenu occupe toute la largeur disponible sur un grand écran

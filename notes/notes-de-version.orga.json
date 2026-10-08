@@ -2,10 +2,10 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.13.0",
       "notes": [
         {
           "id": "2026-10-08-orga-votre-telephone-affiche-les-notifications-de-l-espace-organi",

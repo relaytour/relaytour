@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     Une adresse inconnue mène à l'accueil de l'activité

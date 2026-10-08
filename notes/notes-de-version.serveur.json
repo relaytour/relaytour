@@ -2,10 +2,10 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.13.0",
       "notes": [
         {
           "id": "2026-10-08-serveur-un-retour-a-une-version-anterieure-ne-remplace-plus-l-identi",
