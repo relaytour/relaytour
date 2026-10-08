@@ -11,6 +11,7 @@ import {
 import {
   configurationOrganisation,
   DeclarationOrganisationSchema,
+  lireDeclaration,
   IdentiteActiviteSchema,
   invaliderConfigurationOrganisation,
   lireIdentiteActivite,
@@ -56,13 +57,13 @@ async function declarationEnBase(
     where: { id: organisationId },
     select: { configuration: true },
   })
-  const r = DeclarationOrganisationSchema.safeParse(ligne.configuration)
-  if (!r.success) {
+  const r = lireDeclaration(ligne.configuration)
+  if (r.etat !== 'valide') {
     throw erreurSaisie(
       'La configuration de l’organisation est invalide : l’hébergeur doit la réimporter.'
     )
   }
-  return r.data
+  return r.declaration
 }
 
 /** Vérifie qu'une image appartient à l'organisation et a le format attendu. */

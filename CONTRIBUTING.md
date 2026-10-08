@@ -238,6 +238,7 @@ Une release ne se publie qu'après ses images : une relance du workflow ne crée
 
 ## Pièges connus
 
+- La configuration d'une organisation se valide par un schéma qui refuse tout champ inconnu. Une version antérieure rencontre donc, après un retour arrière, un champ qu'elle ne connaît pas : la lecture en base (`lireDeclaration`) l'écarte et garde le reste. Le démarrage ne complète qu'une configuration vide, jamais une configuration illisible. Un champ nouveau de la déclaration reste facultatif, pour qu'une version antérieure lise encore la ligne.
 - MJML 5 remplace en silence une inclusion refusée : `scripts/gabarits-courriel.ts` assemble les fragments lui-même et vérifie la présence du pied de page.
 - MJML strict refuse une variable dans un attribut de couleur : les gabarits écrivent des couleurs sentinelles (`#010101` encre, `#020202` primaire, `#030303` accent, `#040404` sol), que `scripts/gabarits-courriel.ts` remplace par `{{couleur…}}` après compilation. Ne jamais utiliser ces quatre valeurs comme vraies couleurs.
 - `mjml2html` est asynchrone en version 5 alors que ses types le décrivent synchrone.
