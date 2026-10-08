@@ -1909,3 +1909,13 @@ a.rt-etiquette:hover {
     pointer-events: none;
   }
 }
+
+/* Écran sans coquille (connexion, formulaire public, hors connexion) : ses marges
+   suivent les zones sûres, comme celles de la coquille. Dans l'application
+   installée, la page s'étend sous la barre d'état. */
+.rt-page-seule {
+  box-sizing: border-box;
+  padding: max(16px, env(safe-area-inset-top))
+    max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
+    max(16px, env(safe-area-inset-left));
+}

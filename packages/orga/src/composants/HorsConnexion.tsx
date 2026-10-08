@@ -15,11 +15,11 @@ export default function HorsConnexion() {
   }, [enLigne])
   return (
     <main
+      className="rt-page-seule"
       style={{
         minHeight: '100dvh',
         display: 'grid',
         placeItems: 'center',
-        padding: 16,
       }}
     >
       <Card style={{ maxWidth: 440, width: '100%' }}>
