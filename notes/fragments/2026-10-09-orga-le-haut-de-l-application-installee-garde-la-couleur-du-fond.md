@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.13.2
 fr:
   titre: >-
     Le haut de l'application installée garde la couleur du fond
