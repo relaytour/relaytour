@@ -93,10 +93,18 @@
 
         <article class="verre ecran" id="e-retroplanning">
           <div class="ecran-tete"><h3>Rétroplanning</h3><span class="route">/&lt;activité&gt;/retroplanning</span></div>
-          <p>Les tâches de la période sont regroupées par mois, de la plus proche à la plus lointaine. Le rétroplanning couvre tous les périmètres de l'activité. Les filtres limitent l'affichage à un groupe de périmètres, aux tâches ouvertes ou en retard, à vos périmètres ou aux tâches qui vous sont assignées.</p>
+          <p>Le rétroplanning couvre tous les périmètres de l'activité. Il regroupe les tâches de la période par mois, de la plus proche à la plus lointaine. Les filtres limitent l'affichage à un groupe de périmètres, aux tâches ouvertes ou en retard, à vos périmètres ou aux tâches qui vous sont assignées.</p>
           <figure>
             <img src="../captures/retroplanning.webp" data-mobile="../captures/mobile/retroplanning.webp" width="1440" height="900" loading="lazy" alt="Écran Rétroplanning : les tâches regroupées par mois, avec les filtres et le récapitulatif de la sélection." />
             <figcaption>Écran Rétroplanning, sur l'organisation d'exemple. Les échéances sont fictives.</figcaption>
+          </figure>
+          <p>Une activité découpe sa période en <strong>phases</strong>, par exemple « Préparation » ou « Bilan ». Chaque tâche se range dans une phase par son échéance. Le regroupement « Par phase » affiche une section par phase, avec ses jours. Dans une phase, les tâches se rangent par périmètre.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Par mois</span><span class="libelle">Par phase</span></span><span>Choisir le regroupement des tâches. Votre navigateur garde ce choix.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/retroplanning-phases.webp" width="1440" height="900" loading="lazy" alt="Écran Rétroplanning regroupé par phase : une section par phase avec ses jours, et un sous-titre par périmètre." />
+            <figcaption>Le rétroplanning regroupé par phase, sur l'organisation d'exemple.</figcaption>
           </figure>
           <p class="note">Aucune action ne se fait ici : une ligne mène à son périmètre. Vous y modifiez la tâche si vous êtes affecté·e à ce périmètre. Le panneau de droite signale les tâches de vos périmètres qui attendent encore une personne.</p>
         </article>
@@ -121,7 +129,13 @@
             <img src="../captures/perimetre.webp" data-mobile="../captures/mobile/perimetre.webp" width="1440" height="900" loading="lazy" alt="Page d'un périmètre : ses tâches, son avancement, ses fiches et les personnes affectées." />
             <figcaption>Page d'un périmètre, sur l'organisation d'exemple.</figcaption>
           </figure>
+          <p>Les tâches se lisent de trois façons. « Par échéance » garde une seule liste. « Par phase » range les tâches dans les phases de l'activité. « Par fiche » les range sous la fiche méthode liée, et place en dernier les tâches sans fiche.</p>
+          <figure>
+            <img src="../captures/perimetre-phases.webp" width="1440" height="900" loading="lazy" alt="Page d'un périmètre regroupée par phase : une section par phase, avec son nombre de tâches et ses jours." />
+            <figcaption>Les tâches d'un périmètre regroupées par phase, sur l'organisation d'exemple.</figcaption>
+          </figure>
           <ul class="gestes">
+            <li><span><span class="libelle">Par échéance</span><span class="libelle">Par phase</span><span class="libelle">Par fiche</span></span><span>Choisir le regroupement des tâches. Votre navigateur garde ce choix. Le regroupement par fiche demande d'être affecté·e au périmètre.</span></li>
             <li><span><span class="libelle">Nouvelle tâche</span></span><span>Ajouter une tâche à votre périmètre : titre, description, échéance et fiche liée. La case « Je m'en occupe » est cochée par défaut.</span></li>
             <li><span><span class="libelle">Modifier</span></span><span>Corriger une tâche existante depuis le menu « Autres actions » de sa carte.</span></li>
             <li><span><span class="libelle">Proposer une personne</span></span><span>Proposer à un admin une personne qui veut rejoindre votre périmètre : son prénom et son nom, son adresse, et un mot facultatif. Un admin examine la proposition, puis invite la personne. Elle ne reçoit aucun mail avant sa décision.</span></li>

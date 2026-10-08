@@ -122,6 +122,16 @@ const ECRANS = [
     nom: 'retroplanning',
     compte: 'referent',
     chemin: `${ACTIVITE}/retroplanning`,
+    avant:
+      "localStorage.setItem('relaytour.retroplanning.regroupement', 'mois')",
+  },
+  // Le même écran, rangé par phase puis par périmètre (ADR 0025).
+  {
+    nom: 'retroplanning-phases',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/retroplanning`,
+    avant:
+      "localStorage.setItem('relaytour.retroplanning.regroupement', 'phase')",
   },
   {
     nom: 'fiches-cartes',
@@ -145,6 +155,14 @@ const ECRANS = [
     nom: 'perimetre',
     compte: 'referent',
     chemin: `${ACTIVITE}/perimetres/benevoles`,
+    avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
+  },
+  // Les tâches du périmètre rangées par phase (ADR 0025).
+  {
+    nom: 'perimetre-phases',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/perimetres/benevoles`,
+    avant: "localStorage.setItem('relaytour.taches.regroupement', 'phase')",
   },
   // Un périmètre ouvert en consultation (ADR 0014) : la personne n'y est pas
   // affectée.
@@ -152,6 +170,7 @@ const ECRANS = [
     nom: 'perimetre-consultation',
     compte: 'referent',
     chemin: `${ACTIVITE}/perimetres/football`,
+    avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
   },
   { nom: 'preferences', compte: 'referent', chemin: `${ACTIVITE}/preferences` },
   // ── Guide de l'admin d'activité ────────────────────────────────────────────
@@ -248,6 +267,22 @@ const ECRANS = [
     nom: 'activites',
     compte: 'admin-activite',
     chemin: `${ACTIVITE}/admin/activites`,
+  },
+  // Les phases de l'activité, dans sa fenêtre de modification (ADR 0025). Le
+  // geste ouvre la fenêtre, puis la fait défiler jusqu'aux phases. antd la remonte
+  // quand il y place le focus : le défilement se répète avant la capture.
+  {
+    nom: 'activites-phases',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/activites`,
+    apres: `(fenetre => {
+      if (!fenetre) return (${cliquerLibelle('Modifier Les Rencontres de la Vallée')}, false)
+      const phases = [...fenetre.querySelectorAll('label')].find(l => l.innerText.trim() === 'Phases')
+      if (!phases) return false
+      phases.scrollIntoView({ block: 'start' })
+      fenetre.dataset.defilements = Number(fenetre.dataset.defilements ?? 0) + 1
+      return Number(fenetre.dataset.defilements) >= 5
+    })(document.querySelector('.ant-modal-wrap'))`,
   },
   // ── Admin de l'organisation ────────────────────────────────────────────────
   // Le formulaire public (ADR 0015) : l'activité d'exemple doit l'avoir ouvert.
