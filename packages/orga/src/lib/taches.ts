@@ -94,6 +94,103 @@ export const TACHE_CHAMPS = graphql(`
   }
 `)
 
+// Le serveur borne le nombre de champs d'une requête, et « Mon espace » lit ce
+// fragment deux fois : il ne porte donc rien des tâches partagées (ADR 0026). La
+// page d'un périmètre lit en plus l'origine et le résumé des déclinaisons.
+
+// Les tâches que d'autres périmètres proposent à celui-ci, en attente de son accord.
+export const DECLINAISONS_PROPOSEES = graphql(`
+  query DeclinaisonsProposees($slug: String!, $editionId: ID!) {
+    perimetre(slug: $slug) {
+      id
+      declinaisonsProposees(editionId: $editionId) {
+        id
+        titre
+        description
+        echeance
+        origine {
+          id
+          perimetre {
+            slug
+            nom
+            couleur
+          }
+        }
+      }
+    }
+  }
+`)
+
+// Les déclinaisons d'une tâche partagée, avec l'accord de chaque périmètre. Les
+// admins de l'activité y lisent aussi l'historique de cet accord.
+export const DECLINAISONS_TACHE = graphql(`
+  query DeclinaisonsTache($id: ID!) {
+    tache(id: $id) {
+      id
+      declinaisons {
+        id
+        titre
+        echeance
+        statut
+        enRetard
+        accord
+        perimetre {
+          id
+          slug
+          nom
+          couleur
+        }
+        historiqueAccord {
+          etape
+          le
+          par {
+            id
+            nom
+          }
+        }
+      }
+    }
+  }
+`)
+
+export const DECLINER_TACHE = graphql(`
+  mutation DeclinerTache(
+    $id: ID!
+    $perimetreIds: [ID!]!
+    $titre: String
+    $description: String
+    $echeance: Date
+  ) {
+    declinerTache(
+      id: $id
+      perimetreIds: $perimetreIds
+      titre: $titre
+      description: $description
+      echeance: $echeance
+    ) {
+      ...TacheChamps
+    }
+  }
+`)
+
+export const ACCORDER_DECLINAISON = graphql(`
+  mutation AccorderDeclinaison($id: ID!, $accepter: Boolean!) {
+    accorderDeclinaison(id: $id, accepter: $accepter) {
+      id
+      accord
+    }
+  }
+`)
+
+export const IMPOSER_DECLINAISON = graphql(`
+  mutation ImposerDeclinaison($id: ID!) {
+    imposerDeclinaison(id: $id) {
+      id
+      accord
+    }
+  }
+`)
+
 export const CREER_TACHE = graphql(`
   mutation CreerTache(
     $perimetreId: ID!
@@ -103,6 +200,7 @@ export const CREER_TACHE = graphql(`
     $echeance: Date
     $ficheId: ID
     $mAssigner: Boolean
+    $declinaison: DeclinaisonInput
   ) {
     creerTache(
       perimetreId: $perimetreId
@@ -112,6 +210,7 @@ export const CREER_TACHE = graphql(`
       echeance: $echeance
       ficheId: $ficheId
       mAssigner: $mAssigner
+      declinaison: $declinaison
     ) {
       ...TacheChamps
     }

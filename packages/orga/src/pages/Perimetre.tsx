@@ -6,6 +6,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import Avancement from '../composants/Avancement'
 import ChoixEdition from '../composants/ChoixEdition'
+import DeclinaisonsProposees from '../composants/DeclinaisonsProposees'
 import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import {
   Avatar,
@@ -18,7 +19,7 @@ import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
-import type { TacheChampsFragment } from '../gql/graphql'
+import type { PagePerimetreQuery, TacheChampsFragment } from '../gql/graphql'
 import {
   CLE_REGROUPEMENT_TACHES,
   ecrireRegroupement,
@@ -27,7 +28,7 @@ import {
   libelleBorne,
   lireRegroupement,
 } from '../lib/regroupement'
-import { EDITION_COURANTE, EDITIONS } from '../lib/requetes'
+import { EDITION_COURANTE, EDITIONS, PERIMETRES } from '../lib/requetes'
 import { estOuverte } from '../lib/taches'
 import { useActivite } from '../lib/activite'
 
@@ -62,6 +63,24 @@ const PAGE = graphql(`
       }
       taches(editionId: $editionId) {
         ...TacheChamps
+        # Tâches partagées (ADR 0026) : pour une déclinaison, le périmètre qui la
+        # demande ; pour une tâche partagée, où en sont ses déclinaisons.
+        origine {
+          id
+          perimetre {
+            slug
+            nom
+            couleur
+          }
+        }
+        resumeDeclinaisons {
+          total
+          enAttente
+          refusees
+          acceptees
+          faites
+          abandonnees
+        }
       }
     }
     fichesCommunes: fiches {
@@ -112,11 +131,16 @@ const NOTE_REGROUPEMENT: Record<Regroupement, string> = {
   fiche: 'Les tâches sont rangées par fiche méthode, puis par échéance.',
 }
 
+// Une tâche de la page : le fragment commun et le résumé de ses déclinaisons.
+type TacheDuPerimetre = NonNullable<
+  PagePerimetreQuery['perimetre']
+>['taches'][number]
+
 interface SectionTaches {
   cle: string
   titre: ReactNode
   extra?: string
-  taches: TacheChampsFragment[]
+  taches: TacheDuPerimetre[]
 }
 
 const compteTaches = (n: number) => `${n} ${n > 1 ? 'tâches' : 'tâche'}`
@@ -152,6 +176,18 @@ export default function Perimetre() {
     skip: perimetre?.acces !== 'COMPLET',
   })
   const fiches = methode?.perimetre?.fiches ?? []
+  // Les autres périmètres de l'activité, où décliner une tâche (ADR 0026). Seule
+  // une personne qui écrit dans le périmètre les lit.
+  const { data: autres } = useQuery(PERIMETRES, {
+    skip: !perimetre?.peutModifier,
+  })
+  const perimetresCibles = useMemo(
+    () =>
+      (autres?.perimetres ?? []).filter(
+        p => !p.archive && p.id !== perimetre?.id
+      ),
+    [autres, perimetre?.id]
+  )
   // La tâche visée par une notification (`?tache=`) s'affiche quel que soit le
   // filtre choisi : elle vient en tête quand le filtre l'aurait écartée.
   const tacheVisee = parametres.get('tache')
@@ -248,7 +284,7 @@ export default function Perimetre() {
   const contactId = perimetre.contactPrincipal?.id
   const edition = editions?.editions.find(e => e.id === editionId)
   const a = perimetre.avancement
-  const cartes = (liste: TacheChampsFragment[]) => (
+  const cartes = (liste: TacheDuPerimetre[]) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {liste.map(tache => (
         <TacheCarte
@@ -260,6 +296,8 @@ export default function Perimetre() {
           estAdmin={gere}
           enEvidence={tache.id === tacheVisee}
           onModifier={setEnEdition}
+          perimetresCibles={perimetresCibles}
+          editionId={editionId}
         />
       ))}
     </div>
@@ -495,6 +533,14 @@ export default function Perimetre() {
           </>
         }
       >
+        {editionId && (
+          <DeclinaisonsProposees
+            slug={slug}
+            editionId={editionId}
+            peutRepondre={perimetre.peutModifier}
+          />
+        )}
+
         {/* Deux lignes de puces : le statut, puis le regroupement. Sur une seule
             ligne, le second groupe passerait à la ligne en laissant son trait. */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -569,6 +615,8 @@ export default function Perimetre() {
           fiches={(data.fichesCommunes ?? []).filter(
             f => f.perimetre === null || f.perimetre.id === perimetre.id
           )}
+          perimetresCibles={perimetresCibles}
+          estAdmin={gere}
           onFermer={() => setEnEdition(null)}
           onEnregistree={() => setEnEdition(null)}
         />

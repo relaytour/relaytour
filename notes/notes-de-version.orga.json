@@ -21,6 +21,19 @@
           }
         },
         {
+          "id": "2026-10-08-orga-une-tache-se-partage-avec-d-autres-perimetres",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une tâche se partage avec d'autres périmètres",
+            "texte": "Depuis la page de votre périmètre, vous déclinez une tâche dans d'autres périmètres de l'activité, à sa création ou depuis le menu « Autres actions ». Chaque périmètre choisi reçoit sa propre tâche, que ses référentes et référents acceptent ou refusent. Votre tâche indique où en sont ses déclinaisons, par exemple « 6 faites sur 9 ». Une tâche reçue indique le périmètre qui la demande. Les admins d'activité ajoutent une tâche à un périmètre sans attendre son accord. Le rétroplanning réunit sur une ligne les déclinaisons d'une même tâche qui tombent le même jour.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-08-orga-les-taches-se-regroupent-par-phase-ou-par-fiche",
           "date": "2026-10-08",
           "type": "fonctionnalite",

@@ -1392,6 +1392,84 @@ a.rt-etiquette:hover {
   gap: 8px;
 }
 
+/* Tâches partagées (ADR 0026). Une déclinaison nomme le périmètre qui la demande. */
+.rt-demandee-par {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  font-size: 13px;
+  color: var(--rt-encre-80);
+}
+
+/* Les déclinaisons d'une tâche partagée : un résumé qui se déplie. */
+.rt-declinaisons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--rt-encre-08);
+}
+
+.rt-declinaisons-resume {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 13.5px;
+  text-align: start;
+  color: var(--rt-encre);
+  cursor: pointer;
+}
+
+.rt-declinaisons-resume > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+
+.rt-declinaisons-resume:focus-visible,
+.rt-ligne-declinaisons:focus-visible {
+  outline: 2px solid var(--rt-primaire);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.rt-declinaisons-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Au rétroplanning, plusieurs déclinaisons d'une tâche sur une ligne dépliable. */
+button.rt-ligne-declinaisons {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rt-ligne-declinaisons-detail {
+  gap: 8px;
+  margin-top: 8px;
+  padding-inline-start: 22px;
+}
+
+@media (pointer: coarse) {
+  .rt-declinaisons-resume {
+    min-height: 44px;
+  }
+}
+
 @media (max-width: 767px) {
   .rt-carte-tache {
     grid-template-columns: 6px minmax(0, 1fr);
