@@ -320,6 +320,8 @@ const ECRANS = [
       if (!fenetre) return (${cliquerLibelle('Modifier Les Rencontres de la Vallée')}, false)
       const phases = [...fenetre.querySelectorAll('label')].find(l => l.innerText.trim() === 'Phases')
       if (!phases) return false
+      // Sur un téléphone, la fenêtre occupe l'écran : le libellé reste sous la barre d'état.
+      if (window.innerWidth < 768) phases.style.scrollMarginTop = '96px'
       phases.scrollIntoView({ block: 'start' })
       fenetre.dataset.defilements = Number(fenetre.dataset.defilements ?? 0) + 1
       return Number(fenetre.dataset.defilements) >= 5
