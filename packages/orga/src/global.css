@@ -414,16 +414,14 @@ html {
    d'accueil) : la page déclare viewport-fit=cover. */
 @media (max-width: 767px) {
   .rt-page {
-    /* Le haut dépasse la zone sûre de 6 px : le voile de la barre d'état
-       s'efface sur cette hauteur (voir body::before). */
-    padding: max(12px, calc(env(safe-area-inset-top) + 6px))
+    padding: max(12px, env(safe-area-inset-top))
       max(12px, env(safe-area-inset-right))
       max(12px, env(safe-area-inset-bottom))
       max(12px, env(safe-area-inset-left));
     gap: 12px;
   }
   .rt-barre-haute {
-    top: max(12px, calc(env(safe-area-inset-top) + 6px));
+    top: max(12px, env(safe-area-inset-top));
     padding: 8px 10px 8px 12px;
     gap: 8px;
   }
@@ -2029,13 +2027,13 @@ a.rt-etiquette:hover {
     min-height: 100dvh;
     box-sizing: border-box;
     border-radius: 0;
-    padding-top: max(20px, calc(env(safe-area-inset-top) + 8px));
+    padding-top: max(20px, env(safe-area-inset-top));
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 
   /* La croix est posée en absolu : elle suit aussi la zone sûre. */
   .rt-modale-pleine .ant-modal-close {
-    top: max(12px, calc(env(safe-area-inset-top) + 8px));
+    top: max(12px, env(safe-area-inset-top));
     inset-inline-end: max(12px, env(safe-area-inset-right));
   }
 }
@@ -2087,8 +2085,11 @@ a.rt-etiquette:hover {
     position: fixed;
     inset: 0 0 auto;
     z-index: 9;
+    /* 44 px de plus que la zone sûre, quelle que soit sa hauteur, et zéro sans
+       zone sûre : le produit borné par min() vaut alors zéro. */
     height: calc(
-      env(safe-area-inset-top) + min(44px, env(safe-area-inset-top))
+      env(safe-area-inset-top) +
+        min(44px, calc(env(safe-area-inset-top) * 1000))
     );
     -webkit-backdrop-filter: blur(22px);
     backdrop-filter: blur(22px);
@@ -2099,6 +2100,26 @@ a.rt-etiquette:hover {
     );
     mask-image: linear-gradient(to bottom, #000 calc(100% - 12px), transparent);
     pointer-events: none;
+  }
+}
+
+/* Dans l'application installée, la barre haute, une fenêtre en plein écran et sa
+   croix commencent sous le fondu du voile. Le navigateur garde ses marges. */
+@media (display-mode: standalone) and (max-width: 767px) {
+  .rt-page {
+    padding-top: max(12px, calc(env(safe-area-inset-top) + 6px));
+  }
+
+  .rt-barre-haute {
+    top: max(12px, calc(env(safe-area-inset-top) + 6px));
+  }
+
+  .rt-modale-pleine .ant-modal-container {
+    padding-top: max(20px, calc(env(safe-area-inset-top) + 8px));
+  }
+
+  .rt-modale-pleine .ant-modal-close {
+    top: max(12px, calc(env(safe-area-inset-top) + 8px));
   }
 }
 
