@@ -1,16 +1,20 @@
 import { MailOutlined } from '@ant-design/icons'
-import { Alert, App, Button, Space } from 'antd'
+import { Alert, App, Button, Segmented, Space } from 'antd'
 import { useState } from 'react'
 
 import {
+  SEPARATEURS,
   enregistrerMessagerie,
+  enregistrerSeparateur,
   envoiDEssai,
   lienVers,
   lireMessagerie,
+  lireSeparateur,
   messagerie,
   observerOuverture,
   ouvrirLaMessagerie,
   type CleMessagerie,
+  type Separateur,
 } from '../lib/messagerie'
 import { useSession } from '../lib/session'
 
@@ -35,6 +39,10 @@ export default function PreferenceMessagerie() {
   const [enregistree, setEnregistree] = useState(lireMessagerie)
   const [choix, setChoix] = useState(enregistree)
   const [essai, setEssai] = useState<Essai | null>(null)
+  // Le signe qui sépare les adresses copiées, pour la messagerie par défaut.
+  const [separateurEnregistre, setSeparateurEnregistre] =
+    useState(lireSeparateur)
+  const [separateur, setSeparateur] = useState(separateurEnregistre)
 
   const cible = messagerie(choix)
   const application = cible.genre === 'application'
@@ -57,13 +65,18 @@ export default function PreferenceMessagerie() {
     setEssai(e => (e === null ? e : { ...e, reponse }))
 
   const enregistrer = () => {
-    if (!enregistrerMessagerie(choix)) {
+    // Les deux écritures sont indépendantes : chaque réglage gardé se reflète
+    // tout de suite, et un nouvel essai ne porte que sur celui qui a échoué.
+    const cibleGardee = enregistrerMessagerie(choix)
+    const separateurGarde = enregistrerSeparateur(separateur)
+    if (cibleGardee) setEnregistree(choix)
+    if (separateurGarde) setSeparateurEnregistre(separateur)
+    if (!cibleGardee || !separateurGarde) {
       message.error(
         'Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message.'
       )
       return
     }
-    setEnregistree(choix)
     message.success('Votre messagerie est enregistrée pour ce navigateur.')
   }
 
@@ -84,6 +97,30 @@ export default function PreferenceMessagerie() {
         style={{ width: '100%', maxWidth: 420 }}
       />
       <p className="rt-note">{cible.detail}</p>
+      {cible.separateur === null && (
+        <div>
+          <Space wrap size={8}>
+            <span id="rt-preference-separateur">
+              Séparateur des adresses copiées
+            </span>
+            <Segmented<Separateur>
+              aria-labelledby="rt-preference-separateur"
+              value={separateur}
+              onChange={setSeparateur}
+              options={(Object.keys(SEPARATEURS) as Separateur[]).map(s => ({
+                value: s,
+                label: `${SEPARATEURS[s]} (${s})`,
+              }))}
+            />
+          </Space>
+          <p className="rt-note" style={{ marginTop: 6 }}>
+            Choisissez le point-virgule si votre messagerie par défaut est
+            Outlook : il ne découpe pas des adresses collées avec des virgules.
+            Vous pouvez changer ce signe à côté des boutons de copie de chaque
+            message.
+          </p>
+        </div>
+      )}
 
       {essaiDuChoix !== null && essaiDuChoix.observee !== null && (
         <>
@@ -162,7 +199,10 @@ export default function PreferenceMessagerie() {
           </Button>
           <Button
             type="primary"
-            disabled={aEssayer || choix === enregistree}
+            disabled={
+              aEssayer ||
+              (choix === enregistree && separateur === separateurEnregistre)
+            }
             onClick={enregistrer}
           >
             Enregistrer

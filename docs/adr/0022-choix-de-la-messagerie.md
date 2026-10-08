@@ -3,6 +3,7 @@
 - **Statut** : acceptée
 - **Date** : 2026-10-07
 - Complète l'ADR 0020 (messages écrits dans l'application, envoyés depuis la messagerie de l'admin).
+- Complétée le 2026-10-08 : séparateur des adresses copiées.
 
 ## Contexte
 
@@ -41,6 +42,15 @@ Deux autres moyens existent. Une messagerie en ligne accepte une adresse de comp
 - Seul Proton Mail documente son adresse de composition. Les autres adresses sont d'usage courant, sans engagement de leur éditeur.
 - Une cible dont les copies ne sont pas confirmées porte la marque `copiesEtablies: false`. La fenêtre de rédaction demande alors à l'admin de relire les champs « Cc » et « Cci » dans sa messagerie.
 - La limite de 2 000 caractères de l'ADR 0020 vaut pour toutes les cibles. Le texte, puis les adresses, sortent du lien dans le même ordre.
+
+### Séparateur des adresses copiées
+
+- Les boutons de copie de l'ADR 0020 séparent les adresses par un signe : la virgule, ou le point-virgule.
+- Outlook ne découpe pas une liste d'adresses collée avec des virgules. Il attend un point-virgule.
+- Chaque cible déclare son séparateur : le point-virgule pour Outlook sur le web, Outlook.com et l'application Outlook, la virgule pour les autres.
+- La messagerie par défaut n'a pas de séparateur propre, car l'application qui s'ouvre n'est pas connue. Elle suit un réglage de l'écran « Préférences », gardé dans le navigateur (`localStorage`, clé `relaytour.messagerie.separateur`). La virgule vaut sans réglage.
+- L'admin change ce signe pour un message, à côté des boutons de copie. Ce changement ne modifie pas le réglage.
+- Le lien d'ouverture garde la virgule de la RFC 6068 pour toutes les cibles. Outlook sur le web y lit plusieurs adresses par champ (essai du 8 octobre 2026).
 
 ### Où le choix se garde
 

@@ -1765,3 +1765,16 @@ a.rt-etiquette:hover {
 .rt-avis-messagerie p {
   margin: 0;
 }
+
+/* Choix du séparateur des adresses copiées (CopierAdresses). */
+.rt-separateur-adresses {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+}
+
+.rt-separateur-adresses p {
+  margin: 0;
+  max-width: 560px;
+}
