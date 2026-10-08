@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     Les écrans d'administration restent utilisables sur un téléphone

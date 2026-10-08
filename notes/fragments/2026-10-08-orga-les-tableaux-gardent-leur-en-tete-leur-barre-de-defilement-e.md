@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     Les tableaux gardent leur en-tête, leur barre de défilement et leurs premières colonnes à l'écran

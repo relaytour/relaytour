@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     L'espace organisateur s'installe sur l'écran d'accueil d'un téléphone

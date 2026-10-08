@@ -28,7 +28,7 @@ import {
   lireEpingle,
   lireLargeurs,
 } from '../lib/tableau'
-import { HAUT_SOUS_LA_BARRE } from '../lib/volets'
+import { HAUT_SOUS_LA_BARRE, useDecalagesCollants } from '../lib/volets'
 import type { Largeurs, ValeurTri } from '../lib/tableau'
 
 /** Colonne d'un tableau de l'application. */
@@ -192,6 +192,9 @@ export default function Tableau<T extends object>({
   const figees = colonnesFigees(largeurCadre, epingle)
   // L'en-tête se colle sous la barre haute, plus basse sur un téléphone.
   const { md } = Grid.useBreakpoint()
+  const decalages = useDecalagesCollants(
+    md === false ? HAUT_SOUS_LA_BARRE - 12 : HAUT_SOUS_LA_BARRE
+  )
 
   const columns = useMemo(() => {
     const ouvrable = (ligne: T) => peutOuvrir?.(ligne) ?? true
@@ -364,11 +367,7 @@ export default function Tableau<T extends object>({
         // L'en-tête reste sous la barre haute et la barre de défilement horizontale
         // reste en bas de l'écran, tant que le tableau est visible : la page garde
         // un seul défilement vertical.
-        sticky={{
-          offsetHeader:
-            md === false ? HAUT_SOUS_LA_BARRE - 12 : HAUT_SOUS_LA_BARRE,
-          offsetScroll: 0,
-        }}
+        sticky={{ offsetHeader: decalages.haut, offsetScroll: decalages.bas }}
         {...reste}
         rowSelection={
           reste.rowSelection && { ...reste.rowSelection, fixed: figees }

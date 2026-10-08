@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     Le serveur envoie des notifications push, sur activation par l'exploitant
