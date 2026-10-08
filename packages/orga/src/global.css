@@ -998,6 +998,29 @@ button.rt-ligne-lien {
   letter-spacing: -0.01em;
 }
 
+/* Dans une section, un sous-groupe et son titre : un périmètre dans une phase
+   du rétroplanning (ADR 0025). */
+.rt-sous-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rt-sous-section + .rt-sous-section {
+  margin-top: 6px;
+}
+
+.rt-sous-section-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  margin: 0;
+  padding: 0 6px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
 .rt-compte {
   font-family: var(--rt-mono);
   font-size: 12.5px;

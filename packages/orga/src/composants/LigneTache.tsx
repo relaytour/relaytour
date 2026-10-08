@@ -27,10 +27,13 @@ export default function LigneTache({
   tache,
   moiId,
   editionId,
+  sansPerimetre = false,
 }: {
   tache: TacheLigne
   moiId: string
   editionId: string
+  /** Vrai sous un titre qui nomme déjà le périmètre : son étiquette ne se répète pas. */
+  sansPerimetre?: boolean
 }) {
   const { lien } = useActivite()
   const echeance = etatEcheance(tache)
@@ -58,10 +61,12 @@ export default function LigneTache({
         </span>
         <span className="rt-ligne-tache-titre">
           <span>{tache.titre}</span>
-          <EtiquettePerimetre
-            nom={tache.perimetre.nom}
-            couleur={tache.perimetre.couleur}
-          />
+          {!sansPerimetre && (
+            <EtiquettePerimetre
+              nom={tache.perimetre.nom}
+              couleur={tache.perimetre.couleur}
+            />
+          )}
         </span>
         <span className="rt-ligne-tache-fin">
           {tache.assignes.length === 0 ? (

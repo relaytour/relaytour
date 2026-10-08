@@ -34,6 +34,19 @@
           }
         },
         {
+          "id": "2026-10-08-orga-les-taches-se-regroupent-par-phase-ou-par-fiche",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les tâches se regroupent par phase ou par fiche",
+            "texte": "La page d'un périmètre propose trois lectures de ses tâches : par échéance, par phase ou par fiche méthode. Le rétroplanning en propose deux : par mois, ou par phase puis par périmètre. Une phase est une partie de la période, par exemple « Préparation ». Chaque tâche s'y range par son échéance. Votre navigateur garde le regroupement choisi.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-08-orga-les-tableaux-gardent-leur-en-tete-leur-barre-de-defilement-e",
           "date": "2026-10-08",
           "type": "fonctionnalite",
