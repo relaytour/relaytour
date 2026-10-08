@@ -5,6 +5,24 @@
   "version": "0.13.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-08-orga-l-application-installee-ne-laisse-plus-rien-passer-sous-la-barre-d-etat",
+          "date": "2026-10-08",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'application installée sur un iPhone ne laisse plus rien passer sous la barre d'état",
+            "texte": "Dans l'application installée, le texte d'un écran se lisait sous l'heure pendant le défilement. L'en-tête du menu et les messages de confirmation s'affichaient derrière la barre d'état. Le voile du haut de l'écran couvre maintenant toute cette zone, et le menu comme les messages commencent en dessous.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.13.0",
       "notes": [
         {

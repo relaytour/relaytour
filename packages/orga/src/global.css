@@ -2048,25 +2048,45 @@ a.rt-etiquette:hover {
 
 /* Dans l'application installée sur iPhone, la page s'étend sous la barre d'état
    (apple-mobile-web-app-status-bar-style dans index.html) : le sol monte jusqu'en
-   haut de l'écran. Un voile dépoli couvre cette zone, pour que l'heure reste
-   lisible quand le contenu défile dessous. Sa hauteur vaut zéro sur un écran
-   sans zone sûre. */
+   haut de l'écran. Un voile dépoli couvre toute la zone sûre, pour que le contenu
+   qui défile ne se lise pas sous l'heure. Il dépasse cette zone de 8 px, puis
+   s'efface sur 12 px, derrière le haut de la barre haute. Sa hauteur vaut zéro sur un écran sans
+   zone sûre. */
 @media (display-mode: standalone) {
   body::before {
     content: '';
     position: fixed;
     inset: 0 0 auto;
     z-index: 9;
-    /* Un quart de plus que la zone sûre : le voile s'efface jusqu'à la barre
-       haute, sans arête visible. */
-    height: calc(env(safe-area-inset-top) * 1.25);
-    background: rgba(255, 255, 255, 0.55);
+    /* min() ramène le dépassement à zéro sur un écran sans zone sûre. */
+    height: calc(
+      env(safe-area-inset-top) + min(20px, env(safe-area-inset-top))
+    );
+    background: rgba(255, 255, 255, 0.72);
     -webkit-backdrop-filter: blur(18px);
     backdrop-filter: blur(18px);
-    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
-    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 calc(100% - 12px),
+      transparent
+    );
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 12px), transparent);
     pointer-events: none;
   }
+}
+
+/* Un tiroir occupe toute la hauteur de l'écran : son en-tête descend sous la
+   barre d'état, et son contenu s'arrête au-dessus de la barre d'accueil. */
+.ant-drawer .ant-drawer-section {
+  box-sizing: border-box;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Un message éphémère s'affiche sous la barre d'état. Ant Design pose sa
+   position dans un style en ligne, d'où le !important. */
+.ant-message {
+  top: calc(env(safe-area-inset-top) + 8px) !important;
 }
 
 /* Écran sans coquille (connexion, formulaire public, hors connexion) : ses marges
