@@ -147,6 +147,7 @@ L'espace organisateur porte deux volets autour du contenu. Chacun se replie pour
 - **Rail.** Une entrée ne garde que son icône, et son libellé s'affiche dans une bulle au survol et au focus. Le titre d'un groupe devient un filet. Le changement d'activité demande de déplier le volet. La barre de défilement du menu disparaît, car elle décalerait les icônes : un fondu en bas signale que le menu continue. Dans le volet déplié, elle reste fine et ne se montre qu'au survol ou au focus.
 - **Volet latéral.** Dans un écran à deux colonnes, la colonne de droite se replie en une tranche de 28 px : ses cartes glissent vers la droite et ne montrent plus que leur bord arrondi. Le bouton placé en tête de la colonne, ou un clic sur la tranche, la rouvre. Cet état vaut pour l'écran affiché et ne se retient pas.
 - **Volet collant.** Le volet latéral reste dans l'écran pendant le défilement. Plus haut que l'écran, il suit le sens du défilement : son bas se cale en descendant, son haut en remontant. Sous 1100 px, les deux colonnes s'empilent et le volet suit le contenu.
+- **Largeur.** La barre haute et le contenu partagent la même largeur : le volet latéral, déplié ou replié, finit sous le bord droit de la barre. Cette largeur suit l'écran jusqu'à 1600 px. Au-delà, l'ensemble est centré dans la place que le volet de navigation laisse.
 - **Mouvement.** La largeur, la marge et les arrondis changent ensemble, avec la courbe et la durée du matériau (240 ms).
 
 ## Tableaux

@@ -47,6 +47,19 @@
           }
         },
         {
+          "id": "2026-10-08-orga-le-contenu-occupe-la-largeur-de-la-barre-haute-sur-grand-ecran",
+          "date": "2026-10-08",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le contenu occupe toute la largeur disponible sur un grand écran",
+            "texte": "Le contenu d'un écran s'arrêtait à 1180 pixels de large, alors que la barre haute suivait l'écran. Le contenu et la barre haute partagent maintenant la même largeur, jusqu'à 1600 pixels. Sur un écran plus large, l'ensemble est centré.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-les-ecrans-d-administration-restent-utilisables-sur-un-telep",
           "date": "2026-10-07",
           "type": "fonctionnalite",

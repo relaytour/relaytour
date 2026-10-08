@@ -311,11 +311,6 @@ html {
   width: 100%;
 }
 
-/* Le contenu reprend la largeur que le rail libère : un tableau large en profite. */
-.rt-rail + .rt-principal .rt-contenu {
-  max-width: 1364px;
-}
-
 /* En rail, le titre d'un groupe devient un filet : son texte ne tient pas. */
 .rt-barre-laterale.rt-rail .ant-menu-item-group-title {
   height: 1px;
@@ -379,9 +374,14 @@ html {
   color: var(--rt-encre-55);
 }
 
+/* La barre haute et le contenu partagent la même largeur : le volet latéral
+   finit sous le bord droit de la barre. Sur un très grand écran, l'ensemble est
+   borné et centré dans la place que le volet de navigation laisse. */
 .rt-principal {
   flex: 1;
   min-width: 0;
+  max-width: 1600px;
+  margin-inline: auto;
   display: flex;
   flex-direction: column;
   gap: 20px;
@@ -404,8 +404,6 @@ html {
 .rt-contenu {
   min-width: 0;
   width: 100%;
-  max-width: 1180px;
-  transition: max-width var(--rt-duree) var(--rt-ease-fluide);
   box-sizing: border-box;
   padding: 8px 12px 24px;
 }
