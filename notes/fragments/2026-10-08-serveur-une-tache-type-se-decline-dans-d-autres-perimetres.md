@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.14.0
 fr:
   titre: >-
     Une tâche type se décline dans d'autres périmètres

@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.14.0
 fr:
   titre: >-
     Vous réglez les phases d'une activité

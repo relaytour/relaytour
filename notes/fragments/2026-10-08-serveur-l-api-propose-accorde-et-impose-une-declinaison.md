@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.14.0
 fr:
   titre: >-
     L'API propose, accorde et impose une déclinaison
