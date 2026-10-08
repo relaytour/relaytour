@@ -65,14 +65,18 @@ export default function PreferenceMessagerie() {
     setEssai(e => (e === null ? e : { ...e, reponse }))
 
   const enregistrer = () => {
-    if (!enregistrerMessagerie(choix) || !enregistrerSeparateur(separateur)) {
+    // Les deux écritures sont indépendantes : chaque réglage gardé se reflète
+    // tout de suite, et un nouvel essai ne porte que sur celui qui a échoué.
+    const cibleGardee = enregistrerMessagerie(choix)
+    const separateurGarde = enregistrerSeparateur(separateur)
+    if (cibleGardee) setEnregistree(choix)
+    if (separateurGarde) setSeparateurEnregistre(separateur)
+    if (!cibleGardee || !separateurGarde) {
       message.error(
         'Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message.'
       )
       return
     }
-    setEnregistree(choix)
-    setSeparateurEnregistre(separateur)
     message.success('Votre messagerie est enregistrée pour ce navigateur.')
   }
 
