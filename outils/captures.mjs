@@ -164,6 +164,47 @@ const ECRANS = [
     chemin: `${ACTIVITE}/perimetres/benevoles`,
     avant: "localStorage.setItem('relaytour.taches.regroupement', 'phase')",
   },
+  // Tâches partagées (ADR 0026). Le geste déplie le détail des déclinaisons de
+  // chaque tâche partagée du périmètre, puis attend que le serveur l'ait rendu.
+  {
+    nom: 'perimetre-partage',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/perimetres/benevoles`,
+    avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
+    apres: `(resumes => {
+      if (resumes.length === 0) return false
+      for (const resume of resumes)
+        if (resume.getAttribute('aria-expanded') !== 'true') resume.click()
+      resumes[0].closest('.rt-carte-tache').scrollIntoView({ block: 'center' })
+      return document.querySelectorAll('main .rt-declinaisons-liste .rt-etiquette').length > 0
+    })([...document.querySelectorAll('main .rt-declinaisons-resume')])`,
+  },
+  // La fenêtre « Nouvelle tâche », avec les périmètres où la décliner. Le geste
+  // ouvre la fenêtre, ajoute les sports, puis la fait défiler jusqu'à ce champ.
+  {
+    nom: 'tache-decliner',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/perimetres/benevoles`,
+    apres: `(fenetre => {
+      if (!fenetre) return (${cliquer('Nouvelle tâche')}, false)
+      const sports = fenetre.querySelector('[aria-label="Ajouter tous les périmètres du groupe Sports"]')
+      if (!sports) return false
+      if (!sports.disabled) return (sports.click(), false)
+      const champ = [...fenetre.querySelectorAll('label')].find(l => l.innerText.trim().startsWith('Décliner dans'))
+      if (!champ) return false
+      champ.scrollIntoView({ block: 'start' })
+      fenetre.dataset.defilements = Number(fenetre.dataset.defilements ?? 0) + 1
+      return Number(fenetre.dataset.defilements) >= 5
+    })(document.querySelector('.ant-modal-wrap'))`,
+  },
+  // Un périmètre qui reçoit une tâche proposée : l'instance d'exemple doit porter
+  // une déclinaison en attente pour le volley, et le compte y être affecté.
+  {
+    nom: 'perimetre-propositions',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/perimetres/volley`,
+    avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
+  },
   // Un périmètre ouvert en consultation (ADR 0014) : la personne n'y est pas
   // affectée.
   {
