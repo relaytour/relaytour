@@ -1110,7 +1110,7 @@ footer {
 }
 
 .bascule button {
-  min-height: 36px;
+  min-height: 44px;
   padding: 0 16px;
   border: none;
   border-radius: 999px;
@@ -1120,6 +1120,14 @@ footer {
   font-size: 0.93rem;
   font-weight: 600;
   cursor: pointer;
+}
+
+/* Sur un écran étroit, la barre de navigation passe sur plusieurs lignes : la
+   bascule ne se colle plus, elle la recouvrirait. */
+@media (max-width: 760px) {
+  .bascule {
+    position: static;
+  }
 }
 
 .bascule button[aria-pressed='true'] {

@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     Le code de connexion se saisit plus vite sur un téléphone

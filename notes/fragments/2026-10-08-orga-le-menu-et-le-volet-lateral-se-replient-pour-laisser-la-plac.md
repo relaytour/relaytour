@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     Le menu et le volet latéral se replient pour laisser la place au contenu
