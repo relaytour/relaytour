@@ -55,6 +55,11 @@ export function VersActivite() {
   if (loading) return <Spin fullscreen description="Chargement" />
   const cible = activiteParDefaut(data?.activites ?? [])
   if (cible === undefined) return <AucuneActivite />
+  // Une adresse inconnue qui porte déjà une activité mène à l'accueil de cette
+  // activité : lui ajouter un slug la ferait revenir ici sans fin.
+  const premier = pathname.split('/')[1]
+  const connue = (data?.activites ?? []).find(a => a.slug === premier)
+  if (connue !== undefined) return <Navigate to={`/${connue.slug}/`} replace />
   const suite = pathname === '/' ? '/' : pathname
   return <Navigate to={`/${cible.slug}${suite}${search}${hash}`} replace />
 }

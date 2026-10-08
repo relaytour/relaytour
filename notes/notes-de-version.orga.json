@@ -21,6 +21,19 @@
           }
         },
         {
+          "id": "2026-10-08-orga-une-adresse-inconnue-mene-a-l-accueil-de-l-activite",
+          "date": "2026-10-08",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une adresse inconnue mène à l'accueil de l'activité",
+            "texte": "Une adresse inconnue qui portait déjà le nom d'une activité laissait l'écran vide. L'espace organisateur ouvre maintenant l'accueil de cette activité.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-08-orga-les-tableaux-gardent-leur-en-tete-leur-barre-de-defilement-e",
           "date": "2026-10-08",
           "type": "fonctionnalite",
