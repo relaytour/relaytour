@@ -1,3 +1,5 @@
+import { DownOutlined, UpOutlined } from '@ant-design/icons'
+import { useId, useState } from 'react'
 import { Link } from 'react-router'
 
 import type { StatutTache } from '../gql/graphql'
@@ -89,6 +91,89 @@ export default function LigneTache({
           <PastilleStatut statut={tache.statut} />
         </span>
       </Link>
+    </li>
+  )
+}
+
+/**
+ * Plusieurs déclinaisons d'une même tâche partagée, à la même échéance, sur une
+ * seule ligne (ADR 0026) : le rétroplanning ne répète pas la même tâche pour
+ * chaque périmètre. La ligne se déplie pour montrer chaque déclinaison.
+ */
+export function LigneDeclinaisons({
+  titre,
+  taches,
+  moiId,
+  editionId,
+}: {
+  titre: string
+  taches: TacheLigne[]
+  moiId: string
+  editionId: string
+}) {
+  const [ouvert, setOuvert] = useState(false)
+  const detail = useId()
+  const premiere = taches[0]
+  if (premiere === undefined) return null
+  const faites = taches.filter(t => t.statut === 'FAITE').length
+  const enRetard = taches.some(t => t.enRetard)
+  // L'échéance est commune au groupe : la plus pressante de ses tâches donne l'état.
+  const echeance = enRetard
+    ? 'retard'
+    : taches.some(t => etatEcheance(t) === 'proche')
+      ? 'proche'
+      : 'normale'
+  return (
+    <li>
+      <button
+        type="button"
+        className="rt-verre rt-ligne-tache rt-ligne-declinaisons"
+        aria-expanded={ouvert}
+        aria-controls={detail}
+        onClick={() => setOuvert(o => !o)}
+      >
+        <span
+          className="rt-rail"
+          style={{ background: 'var(--rt-encre-40)' }}
+          aria-hidden="true"
+        />
+        <span
+          className={`rt-date${echeance === 'retard' ? ' rt-date-retard' : echeance === 'proche' ? ' rt-date-proche' : ''}`}
+          style={{ fontSize: 13 }}
+        >
+          {premiere.echeance ? dateCourte(premiere.echeance) : 'Sans échéance'}
+        </span>
+        <span className="rt-ligne-tache-titre">
+          <span>{titre}</span>
+          {taches.map(t => (
+            <EtiquettePerimetre
+              key={t.id}
+              nom={t.perimetre.nom}
+              couleur={t.perimetre.couleur}
+            />
+          ))}
+        </span>
+        <span className="rt-ligne-tache-fin">
+          {enRetard && <PastilleEtat variante="retard">En retard</PastilleEtat>}
+          <span className="rt-compte">
+            {taches.length} périmètres · {faites}{' '}
+            {faites > 1 ? 'faites' : 'faite'}
+          </span>
+          {ouvert ? <UpOutlined aria-hidden /> : <DownOutlined aria-hidden />}
+        </span>
+      </button>
+      {ouvert && (
+        <ul id={detail} className="rt-liste-liens rt-ligne-declinaisons-detail">
+          {taches.map(t => (
+            <LigneTache
+              key={t.id}
+              tache={t}
+              moiId={moiId}
+              editionId={editionId}
+            />
+          ))}
+        </ul>
+      )}
     </li>
   )
 }

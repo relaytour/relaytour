@@ -38,6 +38,10 @@ export const VUES_TACHES = [
   'MesTaches',
   'AvancementGlobal',
   'Retroplanning',
+  // Tâches partagées (ADR 0026) : les tâches proposées à un périmètre, et le détail
+  // des déclinaisons d'une tâche quand il est ouvert.
+  'DeclinaisonsProposees',
+  'DeclinaisonsTache',
 ]
 
 /** Les requêtes relues, désignées par le nom de leur opération GraphQL. */

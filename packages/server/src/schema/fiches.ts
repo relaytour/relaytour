@@ -1,6 +1,7 @@
 import { prisma, SourceFiche, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
+import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { perimetresLisibles, peutLirePerimetre } from '../lib/droits.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import {
@@ -268,6 +269,7 @@ builder.prismaObjectFields(FicheRef, t => ({
           editionId: edition.id,
           perimetre: { archivedAt: null },
           perimetreId: { in: lisibles },
+          AND: [TACHES_ACTIVES],
         },
         orderBy: [{ echeance: { sort: 'asc', nulls: 'last' } }],
       })

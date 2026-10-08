@@ -3,6 +3,7 @@ import {
   CheckOutlined,
   EditOutlined,
   MoreOutlined,
+  ShareAltOutlined,
   UndoOutlined,
   UserAddOutlined,
 } from '@ant-design/icons'
@@ -12,6 +13,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { TacheChampsFragment } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
+import type { ResumeDeclinaisons } from '../lib/declinaisons'
 import { dateCourte } from '../lib/erreurs'
 import {
   ASSIGNER_TACHE,
@@ -22,6 +24,9 @@ import {
   VUES_TACHES,
 } from '../lib/taches'
 
+import type { PerimetreCible } from './ChoixPerimetresCibles'
+import DeclinaisonsTache from './DeclinaisonsTache'
+import DeclinerTache from './DeclinerTache'
 import EtiquettePerimetre from './EtiquettePerimetre'
 import { PastilleEtat, PastilleStatut } from './Etat'
 import { PersonneNommee } from './Personne'
@@ -46,8 +51,18 @@ export default function TacheCarte({
   teinte = false,
   enEvidence = false,
   onModifier,
+  perimetresCibles,
+  editionId,
 }: {
-  tache: TacheChampsFragment
+  // La page d'un périmètre lit en plus ce qui relie les tâches partagées : le
+  // périmètre qui demande une déclinaison, et le résumé des déclinaisons.
+  tache: TacheChampsFragment & {
+    origine?: {
+      id: string
+      perimetre: { slug: string; nom: string; couleur?: string | null }
+    } | null
+    resumeDeclinaisons?: ResumeDeclinaisons | null
+  }
   moiId: string
   peutModifier: boolean
   referents: Referent[]
@@ -57,6 +72,13 @@ export default function TacheCarte({
   /** La tâche visée par une notification : la carte se signale et se place à l'écran. */
   enEvidence?: boolean
   onModifier?: (tache: TacheChampsFragment) => void
+  /**
+   * Les autres périmètres de l'activité où décliner la tâche (ADR 0026). Sans
+   * cette liste, la carte ne propose pas de la décliner.
+   */
+  perimetresCibles?: PerimetreCible[]
+  /** La période affichée : les liens vers une autre tâche la gardent. */
+  editionId?: string
 }) {
   const racine = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -73,6 +95,14 @@ export default function TacheCarte({
   const [cloture, setCloture] = useState(false)
   const [realiseeParId, setRealiseeParId] = useState<string | null>(null)
   const [choixAssignation, setChoixAssignation] = useState(false)
+  const [aDecliner, setADecliner] = useState(false)
+  const resume = tache.resumeDeclinaisons
+  // Une déclinaison ne se décline pas : seule une tâche du périmètre se partage.
+  const declinable =
+    peutModifier &&
+    !tache.origine &&
+    perimetresCibles !== undefined &&
+    perimetresCibles.length > 0
 
   const assignee = tache.assignes.some(p => p.id === moiId)
   const ouverte = estOuverte(tache)
@@ -96,6 +126,15 @@ export default function TacheCarte({
       : []),
     ...(tache.statut === 'EN_COURS'
       ? [{ key: 'A_FAIRE', label: 'Remettre à faire' }]
+      : []),
+    ...(declinable
+      ? [
+          {
+            key: 'decliner',
+            icon: <ShareAltOutlined />,
+            label: 'Décliner dans d’autres périmètres',
+          },
+        ]
       : []),
     ...(ouverte
       ? [{ key: 'ABANDONNEE', label: 'Abandonner', danger: true }]
@@ -178,6 +217,19 @@ export default function TacheCarte({
             {tache.description}
           </Typography.Paragraph>
         )}
+        {tache.origine && (
+          <p className="rt-demandee-par">
+            Demandée par
+            <EtiquettePerimetre
+              nom={tache.origine.perimetre.nom}
+              couleur={tache.origine.perimetre.couleur}
+              point
+              lien={lien(
+                `/perimetres/${tache.origine.perimetre.slug}?${editionId ? `edition=${editionId}&` : ''}tache=${tache.origine.id}`
+              )}
+            />
+          </p>
+        )}
         <div className="rt-meta">
           <PastilleStatut statut={tache.statut} />
           {tache.fiche && (
@@ -233,6 +285,15 @@ export default function TacheCarte({
                 `Réalisée par ${tache.realiseePar.id === moiId ? 'vous' : tache.realiseePar.nom}.`}
             </p>
           )}
+        {resume && resume.total > 0 && (
+          <DeclinaisonsTache
+            tacheId={tache.id}
+            titre={tache.titre}
+            resume={resume}
+            editionId={editionId}
+            estAdmin={estAdmin}
+          />
+        )}
       </div>
 
       {peutModifier && (
@@ -317,6 +378,7 @@ export default function TacheCarte({
                 items: autresActions,
                 onClick: ({ key }) => {
                   if (key === 'modifier') onModifier?.(tache)
+                  if (key === 'decliner') setADecliner(true)
                   if (key === 'EN_COURS')
                     void statut('EN_COURS', 'Tâche marquée en cours.')
                   if (key === 'A_FAIRE')
@@ -365,6 +427,15 @@ export default function TacheCarte({
           </Form.Item>
         </Form>
       </Modal>
+      {declinable && (
+        <DeclinerTache
+          tache={aDecliner ? tache : null}
+          dejaPartagee={(resume?.total ?? 0) > 0}
+          perimetres={perimetresCibles}
+          estAdmin={estAdmin}
+          onFermer={() => setADecliner(false)}
+        />
+      )}
     </article>
   )
 }

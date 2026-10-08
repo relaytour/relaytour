@@ -139,6 +139,10 @@ export async function construireExport(organisationId: string) {
       edition: { select: { annee: true } },
       perimetre: { select: { slug: true, activiteId: true } },
       fiche: { select: { slug: true } },
+      // La tâche partagée d'une déclinaison (ADR 0026), désignée par son périmètre.
+      origine: {
+        select: { titre: true, perimetre: { select: { slug: true } } },
+      },
       creePar: { select: { email: true } },
       clotureePar: { select: { email: true } },
       realiseePar: { select: { email: true } },
@@ -221,6 +225,11 @@ export async function construireExport(organisationId: string) {
           statut: t.statut,
           modele: t.modeleSlug,
           fiche: t.fiche?.slug ?? null,
+          origine:
+            t.origine === null
+              ? null
+              : { perimetre: t.origine.perimetre.slug, titre: t.origine.titre },
+          accord: t.accord,
           creePar: t.creePar?.email ?? null,
           clotureePar: t.clotureePar?.email ?? null,
           realiseePar: t.realiseePar?.email ?? null,
