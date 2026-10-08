@@ -1,5 +1,6 @@
 import { prisma } from '@relaytour/database'
 
+import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { perimetresLisibles } from '../lib/droits.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 
@@ -67,6 +68,7 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
                 perimetre: { archivedAt: null },
                 editionId: r.editionId,
                 perimetreId: { in: r.lisibles },
+                AND: [TACHES_ACTIVES],
               },
               orderBy: [{ echeance: { sort: 'asc', nulls: 'last' } }],
               take: RESULTATS_MAX,

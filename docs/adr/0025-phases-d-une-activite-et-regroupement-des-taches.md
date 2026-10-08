@@ -1,6 +1,6 @@
 # ADR 0025 — Phases d'une activité et regroupement des tâches
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-08
 - Complète l'ADR 0008 (groupes de périmètres) et l'ADR 0009 (source de vérité du contenu).
 

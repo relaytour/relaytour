@@ -249,6 +249,10 @@ export const SELECTION_TACHE_NOTIFIEE = {
     perimetre: {
       select: { nom: true, slug: true, activite: { select: { slug: true } } },
     },
+    // Pour une déclinaison : sa tâche partagée et son périmètre (ADR 0026).
+    origine: {
+      select: { id: true, perimetre: { select: { nom: true, slug: true } } },
+    },
   },
 } as const
 export const SELECTION_FICHE_NOTIFIEE = {
@@ -276,6 +280,8 @@ export interface NotificationAComposer {
     titre: string
     echeance: Date | null
     perimetre: { nom: string; slug: string; activite: { slug: string } }
+    /** Pour une déclinaison : sa tâche partagée et son périmètre. */
+    origine?: { id: string; perimetre: { nom: string; slug: string } } | null
   } | null
   /** Pour FICHE_CREEE et FICHE_MODIFIEE. */
   fiche: {
@@ -331,9 +337,19 @@ export function messageNotification(
       ? 'vous'
       : ((n.personneId && noms.get(n.personneId)) ?? 'une personne')
 
+  // Une déclinaison nomme le périmètre qui la demande (ADR 0026).
+  const demandeur = tache.origine?.perimetre.nom
   switch (n.type) {
     case 'TACHE_CREEE':
-      return `${acteur} a créé la tâche ${titre}.`
+      return demandeur === undefined
+        ? `${acteur} a créé la tâche ${titre}.`
+        : `${acteur} a ajouté la tâche ${titre}, demandée par ${demandeur}.`
+    case 'DECLINAISON_PROPOSEE':
+      return `${acteur} propose la tâche ${titre}${demandeur === undefined ? '' : `, demandée par ${demandeur}`}. Elle attend l’accord du périmètre.`
+    case 'DECLINAISON_ACCEPTEE':
+      return `${acteur} a accepté la tâche ${titre}.`
+    case 'DECLINAISON_REFUSEE':
+      return `${acteur} a refusé la tâche ${titre}.`
     case 'TACHE_MODIFIEE':
       return `${acteur} a modifié la tâche ${titre}.`
     case 'TACHE_ASSIGNEE':
@@ -384,6 +400,14 @@ export function lienNotification(n: NotificationAComposer): string {
     return n.fiche ? `/${n.fiche.activite.slug}/fiches/${n.fiche.slug}` : '/'
   }
   if (n.tache === null) return '/'
-  const { perimetre, editionId, id } = n.tache
+  const { perimetre, editionId, id, origine } = n.tache
+  // La réponse à une déclinaison se lit sur sa tâche partagée, dans le périmètre qui
+  // l'a proposée (ADR 0026).
+  if (
+    origine &&
+    (n.type === 'DECLINAISON_ACCEPTEE' || n.type === 'DECLINAISON_REFUSEE')
+  ) {
+    return `/${perimetre.activite.slug}/perimetres/${origine.perimetre.slug}?edition=${editionId}&tache=${origine.id}`
+  }
   return `/${perimetre.activite.slug}/perimetres/${perimetre.slug}?edition=${editionId}&tache=${id}`
 }

@@ -8,6 +8,15 @@ taches:
       Il rassemble ces besoins dans un tableau unique.
     echeance: J-150
     fiche: planifier-les-creneaux
+    # Tâche partagée (ADR 0026) : chaque sport reçoit sa déclinaison, avec son
+    # propre statut. Le pôle lit l'avancement de chacune sur sa tâche.
+    declinaison:
+      groupe: sport
+      titre: Transmettre les besoins en bénévoles au pôle Bénévoles
+      description: >-
+        Les référent·es listent les postes à tenir, par site et par créneau,
+        et transmettent cette liste au pôle Bénévoles.
+      echeance: J-160
   - modele: lancer-l-appel-aux-benevoles
     titre: Lancer l'appel aux bénévoles
     description: >-

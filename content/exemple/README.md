@@ -163,6 +163,31 @@ taches:
 
 `echeance` accepte `J-<jours>` (avant le premier jour) et `J+<jours>` (après).
 
+### Tâches partagées
+
+Une tâche type se décline dans d'autres périmètres de la même activité (ADR 0026). Un pôle déclare par exemple une tâche que chaque sport reçoit à son tour.
+
+```yaml
+taches:
+  - modele: recueillir-les-besoins-en-benevoles
+    titre: Recueillir les besoins en bénévoles de chaque sport
+    echeance: J-150
+    declinaison:
+      groupe: sport                   # tous les périmètres de ce groupe
+      # perimetres: [football, volley]  ou une liste de périmètres, à la place du groupe
+      titre: Transmettre les besoins en bénévoles au pôle Bénévoles   # facultatif
+      description: Les référent·es listent les postes à tenir.          # facultatif
+      echeance: J-160                 # facultatif
+      fiche: donnees-personnelles     # facultatif, une fiche commune seulement
+```
+
+- La tâche du fichier est la **tâche partagée**. Elle reste dans son périmètre, avec son statut.
+- Chaque périmètre cible reçoit une **déclinaison** : une tâche à part entière, avec son statut, ses personnes assignées et son échéance. Le périmètre d'origine lit l'état de chaque déclinaison sur sa tâche partagée.
+- `declinaison` porte `groupe` ou `perimetres`, jamais les deux. Le périmètre d'origine ne reçoit pas de déclinaison.
+- `titre`, `description` et `echeance` remplacent ceux de la tâche partagée. Absents, la déclinaison reprend les siens.
+- Une déclinaison ne cite qu'une fiche commune, que tous les périmètres lisent. Sans `fiche`, elle reprend celle de la tâche partagée si cette fiche est commune.
+- Un périmètre cible ne déclare pas lui-même le `modele` qu'il reçoit, et deux tâches partagées ne déclinent pas le même `modele` dans un même périmètre.
+
 ## Règles de l'import
 
 - L'import crée les activités, les périmètres et les fiches, puis les effectifs et les tâches de la période demandée, dans chaque activité qui en a une.
@@ -173,4 +198,7 @@ taches:
 - L'activité vide créée avec l'organisation disparaît au premier import d'un dossier en disposition `activites/` qui ne la décrit pas.
 - Un effectif déjà présent pour l'édition n'est jamais remplacé.
 - Une tâche déjà importée n'est jamais modifiée.
+- Une tâche partagée crée une déclinaison dans chaque périmètre cible qui n'en porte pas. Un périmètre ajouté plus tard à un groupe reçoit sa déclinaison à l'import suivant.
+- Un périmètre cible qui porte déjà une tâche de même `modele` la garde telle quelle. L'import la rattache à sa tâche partagée et le signale.
+- L'import ne déplace jamais un lien et garde un seul niveau. Il signale comme conflit, sans rien écrire, une déclinaison dont la tâche partagée est déjà la déclinaison d'une autre, ou dont le périmètre cible porte une tâche déjà liée ailleurs ou déjà partagée. Un périmètre archivé ne reçoit pas de déclinaison.
 - L'export (`orga:exporter --dossier …`) écrit tout le contenu que l'organisation porte en base, dans la disposition du dossier. Un fichier dont le sens ne change pas reste intact. L'export refuse une fiche qui contient des données personnelles.
