@@ -632,6 +632,15 @@ describe('une référente propose une tâche partagée', () => {
     const volley = declinaisonDe(partagee, ids.volley).id
     await prisma.notification.deleteMany({ where: { userId: ids.pauline } })
 
+    // Le pôle n'est prévenu que d'une déclinaison faite : la commencer ne le
+    // prévient pas.
+    const commencee = await executer(ids.nina, STATUT, {
+      id: natation,
+      s: 'EN_COURS',
+    })
+    expect(commencee.errors).toBeUndefined()
+    expect(await notificationsDe(ids.pauline)).toEqual([])
+
     const faite = await executer(ids.nina, STATUT, { id: natation, s: 'FAITE' })
     expect(faite.errors).toBeUndefined()
     const statuts = async () =>

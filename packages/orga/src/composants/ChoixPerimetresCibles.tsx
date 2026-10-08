@@ -2,6 +2,7 @@ import { PlusOutlined } from '@ant-design/icons'
 import { Button, Select } from 'antd'
 
 import { useActivite } from '../lib/activite'
+import { CIBLES_MAX } from '../lib/declinaisons'
 
 import PastillePerimetre from './PastillePerimetre'
 
@@ -42,6 +43,8 @@ export default function ChoixPerimetresCibles({
       <Select
         mode="multiple"
         maxTagCount="responsive"
+        // Le serveur refuse une liste plus longue : le champ s'arrête avant.
+        maxCount={CIBLES_MAX}
         allowClear
         aria-label="Périmètres"
         placeholder="Choisir des périmètres"
@@ -73,25 +76,39 @@ export default function ChoixPerimetresCibles({
       />
       {groupes.length > 0 && (
         <div className="rt-puces">
-          {groupes.map(g => (
-            <Button
-              key={g.groupe.cle}
-              size="small"
-              icon={<PlusOutlined />}
-              disabled={
-                disabled || g.perimetres.every(p => value.includes(p.id))
-              }
-              aria-label={`Ajouter tous les périmètres du groupe ${g.groupe.libellePluriel}`}
-              onClick={() =>
-                onChange?.([
-                  ...new Set([...value, ...g.perimetres.map(p => p.id)]),
-                ])
-              }
-            >
-              {g.groupe.libellePluriel}
-            </Button>
-          ))}
+          {groupes.map(g => {
+            const avecLeGroupe = [
+              ...new Set([...value, ...g.perimetres.map(p => p.id)]),
+            ]
+            const tropLong = avecLeGroupe.length > CIBLES_MAX
+            return (
+              <Button
+                key={g.groupe.cle}
+                size="small"
+                icon={<PlusOutlined />}
+                disabled={
+                  disabled ||
+                  tropLong ||
+                  g.perimetres.every(p => value.includes(p.id))
+                }
+                title={
+                  tropLong
+                    ? `Une tâche se décline dans ${CIBLES_MAX} périmètres au plus.`
+                    : undefined
+                }
+                aria-label={`Ajouter tous les périmètres du groupe ${g.groupe.libellePluriel}`}
+                onClick={() => onChange?.(avecLeGroupe)}
+              >
+                {g.groupe.libellePluriel}
+              </Button>
+            )
+          })}
         </div>
+      )}
+      {value.length >= CIBLES_MAX && (
+        <span className="rt-note">
+          Une tâche se décline dans {CIBLES_MAX} périmètres au plus en une fois.
+        </span>
       )}
     </div>
   )

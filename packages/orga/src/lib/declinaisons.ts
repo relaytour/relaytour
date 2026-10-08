@@ -1,6 +1,9 @@
 // Tâches partagées et déclinaisons (ADR 0026) : libellés et regroupements, sans
 // accès au réseau.
 
+/** Le nombre de périmètres où décliner une tâche en une fois, fixé par le serveur. */
+export const CIBLES_MAX = 60
+
 /** L'état des déclinaisons d'une tâche partagée, en nombres. */
 export interface ResumeDeclinaisons {
   total: number
