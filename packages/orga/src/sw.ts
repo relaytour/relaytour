@@ -44,6 +44,91 @@ sw.addEventListener('message', evenement => {
     void sw.skipWaiting()
 })
 
+// Notification push (ADR 0024). Le serveur envoie un texte déjà composé : le
+// service worker l'affiche. Chaque message reçu affiche une notification, sans
+// quoi le navigateur retire l'abonnement.
+interface MessagePush {
+  titre: string
+  corps: string
+  lien: string
+  organisation: string
+  etiquette: string
+  icone: string
+  nonLues: number
+}
+
+sw.addEventListener('push', evenement => {
+  let message: Partial<MessagePush> = {}
+  try {
+    message = (evenement.data?.json() ?? {}) as Partial<MessagePush>
+  } catch {
+    // Charge illisible : la notification garde un texte neutre.
+  }
+  const pastille = sw.navigator as WorkerNavigator & {
+    setAppBadge?: (nombre?: number) => Promise<void>
+  }
+  evenement.waitUntil(
+    Promise.all([
+      sw.registration.showNotification(message.titre ?? 'Espace organisateur', {
+        body: message.corps ?? 'Une notification vous attend.',
+        tag: message.etiquette,
+        icon: message.icone ?? '/icon.png',
+        data: { lien: message.lien ?? '/', organisation: message.organisation },
+      }),
+      typeof message.nonLues === 'number' && message.nonLues > 0
+        ? pastille.setAppBadge?.(message.nonLues).catch(() => undefined)
+        : undefined,
+    ])
+  )
+})
+
+// Un appui ramène une fenêtre déjà ouverte sur l'écran concerné, ou en ouvre une.
+// Une personne peut appartenir à plusieurs organisations : l'adresse désigne
+// celle de la notification, que l'application sélectionne avant d'afficher l'écran.
+sw.addEventListener('notificationclick', evenement => {
+  evenement.notification.close()
+  const donnees = evenement.notification.data as {
+    lien?: string
+    organisation?: string
+  } | null
+  // Seul un chemin de l'application s'ouvre, jamais une adresse externe.
+  const chemin =
+    typeof donnees?.lien === 'string' && /^\/(?!\/)/.test(donnees.lien)
+      ? donnees.lien
+      : '/'
+  const organisation =
+    typeof donnees?.organisation === 'string' &&
+    /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(donnees.organisation)
+      ? donnees.organisation
+      : null
+  // L'adresse complète sert à une fenêtre neuve : l'application y lit
+  // l'organisation à son démarrage.
+  const adresse = new URL(chemin, sw.location.origin)
+  if (organisation !== null)
+    adresse.searchParams.set('organisation', organisation)
+  const complete = adresse.pathname + adresse.search
+  evenement.waitUntil(
+    sw.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then(async fenetres => {
+        const fenetre = fenetres[0]
+        if (fenetre === undefined) return sw.clients.openWindow(complete)
+        await fenetre.focus()
+        // L'écran de connexion et le formulaire public n'écoutent pas le
+        // service worker : la fenêtre charge alors l'adresse elle-même.
+        const sansCoquille = /^\/(?:connexion|rejoindre)(?:\/|$)/.test(
+          new URL(fenetre.url).pathname
+        )
+        if (sansCoquille)
+          return fenetre
+            .navigate(complete)
+            .catch(() => sw.clients.openWindow(complete))
+        fenetre.postMessage({ type: 'OUVRIR', chemin, organisation })
+        return undefined
+      })
+  )
+})
+
 sw.addEventListener('fetch', evenement => {
   const requete = evenement.request
   if (requete.method !== 'GET') return
@@ -73,7 +158,11 @@ sw.addEventListener('fetch', evenement => {
           fetch(requete).then(reponse => {
             if (reponse.ok) {
               const copie = reponse.clone()
-              void caches.open(CACHE).then(cache => cache.put(requete, copie))
+              // L'écriture tient le service worker en vie jusqu'à sa fin : sans
+              // cela, le navigateur peut l'arrêter dès la réponse rendue.
+              evenement.waitUntil(
+                caches.open(CACHE).then(cache => cache.put(requete, copie))
+              )
             }
             return reponse
           })
