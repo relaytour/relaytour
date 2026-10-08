@@ -2,10 +2,10 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.12.0",
+  "version": "0.12.1",
   "versions": [
     {
-      "version": null,
+      "version": "0.12.1",
       "notes": [
         {
           "id": "2026-10-08-orga-les-adresses-copiees-se-collent-dans-outlook",

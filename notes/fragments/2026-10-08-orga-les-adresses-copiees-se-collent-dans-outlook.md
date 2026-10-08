@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.12.1
 fr:
   titre: >-
     Les adresses copiées se collent dans Outlook
