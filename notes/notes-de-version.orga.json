@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-08-orga-vous-reglez-les-phases-d-une-activite",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Vous réglez les phases d'une activité",
+            "texte": "L'écran « Activités » permet de modifier les phases d'une activité : leur nom, leur ordre et leur dernier jour. Le dernier jour se compte depuis le premier jour de la période, par exemple J-120 pour 120 jours avant. La dernière phase reçoit toutes les tâches qui suivent. Les tâches changent de phase dès l'enregistrement, sans être modifiées. Une activité que vous ne réglez pas garde quatre phases : Lancement, Préparation, Derniers réglages, Déroulement et bilan.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-08-orga-votre-telephone-affiche-les-notifications-de-l-espace-organi",
           "date": "2026-10-08",
           "type": "fonctionnalite",
