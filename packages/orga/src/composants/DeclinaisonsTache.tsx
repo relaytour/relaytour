@@ -53,6 +53,11 @@ export default function DeclinaisonsTache({
   })
   const { titre, details } = libelleDeclinaisons(resume)
   const declinaisons = data?.tache?.declinaisons
+  // Les déclinaisons portent le plus souvent un même titre, différent de celui de
+  // la tâche partagée : il s'affiche une fois, et une ligne ne répète que le sien.
+  const titres = new Set((declinaisons ?? []).map(d => d.titre))
+  const titreCommun =
+    titres.size === 1 && !titres.has(titreTache) ? [...titres][0] : undefined
 
   return (
     <div className="rt-declinaisons">
@@ -84,61 +89,70 @@ export default function DeclinaisonsTache({
               )}
             </li>
           ) : (
-            declinaisons.map(d => (
-              <li key={d.id}>
-                <div className="rt-meta">
-                  <EtiquettePerimetre
-                    nom={d.perimetre.nom}
-                    couleur={d.perimetre.couleur}
-                    point
-                    lien={lien(
-                      `/perimetres/${d.perimetre.slug}?${editionId ? `edition=${editionId}&` : ''}tache=${d.id}`
-                    )}
-                  />
-                  {d.accord === 'EN_ATTENTE' ? (
-                    <PastilleEtat variante="alerte" sansPoint>
-                      En attente d’accord
-                    </PastilleEtat>
-                  ) : d.accord === 'REFUSE' ? (
-                    <PastilleEtat variante="abandonnee">Refusée</PastilleEtat>
-                  ) : (
-                    <>
-                      <PastilleStatut statut={d.statut} />
-                      {d.enRetard && (
-                        <PastilleEtat variante="retard">En retard</PastilleEtat>
+            <>
+              {titreCommun !== undefined && (
+                <li className="rt-note">
+                  Tâche reçue par ces périmètres : « {titreCommun} »
+                </li>
+              )}
+              {declinaisons.map(d => (
+                <li key={d.id}>
+                  <div className="rt-meta">
+                    <EtiquettePerimetre
+                      nom={d.perimetre.nom}
+                      couleur={d.perimetre.couleur}
+                      point
+                      lien={lien(
+                        `/perimetres/${d.perimetre.slug}?${editionId ? `edition=${editionId}&` : ''}tache=${d.id}`
                       )}
-                    </>
-                  )}
-                  {d.titre !== titreTache && (
-                    <span style={{ fontSize: 13.5 }}>{d.titre}</span>
-                  )}
-                  {estAdmin && d.accord !== 'ACCEPTE' && (
-                    <Button
-                      size="small"
-                      loading={imposition.loading}
-                      onClick={() =>
-                        void executer(
-                          () => imposer({ variables: { id: d.id } }),
-                          `La tâche est ajoutée au périmètre ${d.perimetre.nom}.`
+                    />
+                    {d.accord === 'EN_ATTENTE' ? (
+                      <PastilleEtat variante="alerte" sansPoint>
+                        En attente d’accord
+                      </PastilleEtat>
+                    ) : d.accord === 'REFUSE' ? (
+                      <PastilleEtat variante="abandonnee">Refusée</PastilleEtat>
+                    ) : (
+                      <>
+                        <PastilleStatut statut={d.statut} />
+                        {d.enRetard && (
+                          <PastilleEtat variante="retard">
+                            En retard
+                          </PastilleEtat>
+                        )}
+                      </>
+                    )}
+                    {d.titre !== titreTache && d.titre !== titreCommun && (
+                      <span style={{ fontSize: 13.5 }}>{d.titre}</span>
+                    )}
+                    {estAdmin && d.accord !== 'ACCEPTE' && (
+                      <Button
+                        size="small"
+                        loading={imposition.loading}
+                        onClick={() =>
+                          void executer(
+                            () => imposer({ variables: { id: d.id } }),
+                            `La tâche est ajoutée au périmètre ${d.perimetre.nom}.`
+                          )
+                        }
+                      >
+                        Ajouter sans accord
+                      </Button>
+                    )}
+                  </div>
+                  {d.historiqueAccord.length > 0 && (
+                    <p className="rt-note" style={{ margin: '4px 0 0' }}>
+                      {d.historiqueAccord
+                        .map(
+                          e =>
+                            `${ETAPES_ACCORD[e.etape]} par ${e.par.nom} le ${jourDeLInstant(e.le)}`
                         )
-                      }
-                    >
-                      Ajouter sans accord
-                    </Button>
+                        .join(' · ')}
+                    </p>
                   )}
-                </div>
-                {d.historiqueAccord.length > 0 && (
-                  <p className="rt-note" style={{ margin: '4px 0 0' }}>
-                    {d.historiqueAccord
-                      .map(
-                        e =>
-                          `${ETAPES_ACCORD[e.etape]} par ${e.par.nom} le ${jourDeLInstant(e.le)}`
-                      )
-                      .join(' · ')}
-                  </p>
-                )}
-              </li>
-            ))
+                </li>
+              ))}
+            </>
           )}
         </ul>
       )}
