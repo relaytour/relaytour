@@ -1,6 +1,7 @@
 import {
   CheckOutlined,
   CustomerServiceOutlined,
+  DownloadOutlined,
   LogoutOutlined,
   QuestionCircleOutlined,
   SettingOutlined,
@@ -12,6 +13,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { useActivite } from '../lib/activite'
+import { estInstallee } from '../lib/installation'
 import { VERSION } from '../lib/notes-de-version'
 import { useOrganisation } from '../lib/organisation'
 import {
@@ -22,12 +24,13 @@ import {
 
 import { lienSupport, ouvreUnOnglet } from '../lib/support'
 
+import InstallerApplication from './InstallerApplication'
 import NotesDeVersion from './NotesDeVersion'
 import { Avatar } from './Personne'
 
 /**
  * Le compte de la barre haute : initiales, nom, préférences, modes d'emploi,
- * support et notes de version (ADR 0021), changement d'organisation quand la
+ * installation de l'application (ADR 0023), support et notes de version (ADR 0021), changement d'organisation quand la
  * personne en a plusieurs (ADR 0008), et déconnexion.
  */
 export default function MenuCompte({
@@ -45,6 +48,17 @@ export default function MenuCompte({
   const { modesDEmploi, support, nomCourt } = useOrganisation()
   const version = useQuery(VERSION).data?.versionInstallation
   const [notesOuvertes, setNotesOuvertes] = useState(false)
+  const [installationOuverte, setInstallationOuverte] = useState(false)
+  // L'entrée n'a plus d'objet dans l'application déjà installée.
+  const entreeInstallation = estInstallee()
+    ? []
+    : [
+        {
+          key: 'installer',
+          icon: <DownloadOutlined />,
+          label: 'Installer l’application',
+        },
+      ]
   const entreeSupport =
     support === null
       ? []
@@ -108,6 +122,7 @@ export default function MenuCompte({
                 </a>
               ),
             },
+            ...entreeInstallation,
             ...entreeSupport,
             {
               key: 'notes-de-version',
@@ -131,6 +146,7 @@ export default function MenuCompte({
           onClick: ({ key }) => {
             if (key === 'preferences') navigate(lien('/preferences'))
             if (key === 'notes-de-version') setNotesOuvertes(true)
+            if (key === 'installer') setInstallationOuverte(true)
             if (key === 'deconnexion') void deconnecter()
             if (key.startsWith('organisation:')) {
               const slug = key.slice('organisation:'.length)
@@ -168,6 +184,10 @@ export default function MenuCompte({
         ouvert={notesOuvertes}
         version={version}
         onFermer={() => setNotesOuvertes(false)}
+      />
+      <InstallerApplication
+        ouvert={installationOuverte}
+        onFermer={() => setInstallationOuverte(false)}
       />
     </>
   )

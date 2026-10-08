@@ -17,11 +17,15 @@ import {
 } from './context.ts'
 import { env } from './env.ts'
 import { creerGestionnaireFlux } from './flux-http.ts'
+import { manifestApplication, slugDuManifest } from './lib/application.ts'
 import { fermerLesFlux } from './lib/flux.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
 import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
-import { assurerOrganisationParDefaut } from './lib/organisation.ts'
+import {
+  assurerOrganisationParDefaut,
+  configurationOrganisation,
+} from './lib/organisation.ts'
 import { writeSchemaFile } from './lib/print-schema.ts'
 import { requeteLocale } from './lib/requete-locale.ts'
 import { sonderDependances } from './lib/sante.ts'
@@ -112,6 +116,43 @@ app.get('/medias/:fichier', (req, res) => {
             'Cross-Origin-Resource-Policy': 'cross-origin',
           })
           .send(Buffer.from(media.donnees))
+      },
+      () => {
+        res.status(503).end()
+      }
+    )
+})
+
+// Manifest de l'application installée (ADR 0023) : un par organisation, lisible
+// sans session. Il ne porte que l'identité publique de l'organisation. Le chemin
+// vit sous `/medias/`, déjà relayé par le proxy de l'installation.
+app.get('/medias/application/:fichier', (req, res) => {
+  const slug = slugDuManifest(req.params.fichier)
+  if (slug === null) {
+    res.status(404).end()
+    return
+  }
+  void prisma.organisation
+    .findFirst({
+      where: { slug, statut: { in: ['ACTIVE', 'LECTURE_SEULE'] } },
+      select: { id: true },
+    })
+    .then(organisation =>
+      organisation === null ? null : configurationOrganisation(organisation.id)
+    )
+    .then(
+      configuration => {
+        if (configuration === null) {
+          res.status(404).end()
+          return
+        }
+        res
+          .set({
+            'Content-Type': 'application/manifest+json; charset=utf-8',
+            'Cache-Control': 'public, max-age=300',
+            'X-Content-Type-Options': 'nosniff',
+          })
+          .send(JSON.stringify(manifestApplication(configuration)))
       },
       () => {
         res.status(503).end()

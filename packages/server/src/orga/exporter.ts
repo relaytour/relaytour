@@ -285,6 +285,11 @@ export async function construireContenu(
       pageEquipe: declaration.pageEquipe,
       logo: logo(declaration.logo, ''),
       favicon: image(declaration.favicon, '', 'favicon'),
+      iconeApplication: image(
+        declaration.iconeApplication,
+        '',
+        'icone-application'
+      ),
       logoUrl: declaration.logoUrl,
       faviconUrl: declaration.faviconUrl,
       theme: declaration.theme,

@@ -431,6 +431,7 @@ export default function Activites() {
         onCancel={() => setEnEdition(null)}
         destroyOnHidden
         width={620}
+        rootClassName="rt-modale-pleine"
       >
         {erreur && (
           <Alert
