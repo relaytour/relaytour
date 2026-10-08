@@ -2,10 +2,28 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.12.1",
+  "version": "0.13.0",
   "versions": [
     {
       "version": null,
+      "notes": [
+        {
+          "id": "2026-10-08-orga-les-taches-se-regroupent-par-phase-ou-par-fiche",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les tâches se regroupent par phase ou par fiche",
+            "texte": "La page d'un périmètre propose trois lectures de ses tâches : par échéance, par phase ou par fiche méthode. Le rétroplanning en propose deux : par mois, ou par phase puis par périmètre. Une phase est une partie de la période, par exemple « Préparation ». Chaque tâche s'y range par son échéance. Votre navigateur garde le regroupement choisi.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.13.0",
       "notes": [
         {
           "id": "2026-10-08-orga-votre-telephone-affiche-les-notifications-de-l-espace-organi",
@@ -30,19 +48,6 @@
           "fr": {
             "titre": "Une adresse inconnue mène à l'accueil de l'activité",
             "texte": "Une adresse inconnue qui portait déjà le nom d'une activité laissait l'écran vide. L'espace organisateur ouvre maintenant l'accueil de cette activité.",
-            "migration": null
-          }
-        },
-        {
-          "id": "2026-10-08-orga-les-taches-se-regroupent-par-phase-ou-par-fiche",
-          "date": "2026-10-08",
-          "type": "fonctionnalite",
-          "audience": "organisateurs",
-          "role": "referent",
-          "etat": "prevu",
-          "fr": {
-            "titre": "Les tâches se regroupent par phase ou par fiche",
-            "texte": "La page d'un périmètre propose trois lectures de ses tâches : par échéance, par phase ou par fiche méthode. Le rétroplanning en propose deux : par mois, ou par phase puis par périmètre. Une phase est une partie de la période, par exemple « Préparation ». Chaque tâche s'y range par son échéance. Votre navigateur garde le regroupement choisi.",
             "migration": null
           }
         },

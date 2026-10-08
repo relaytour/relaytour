@@ -3,6 +3,7 @@ cible: serveur
 type: correctif
 audience: public
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     Un retour à une version antérieure ne remplace plus l'identité d'une organisation

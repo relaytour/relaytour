@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.13.0
 fr:
   titre: >-
     Une organisation déclare l'icône de son application
