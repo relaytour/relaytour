@@ -610,6 +610,7 @@ export default function Equipe() {
                               <Button
                                 type="text"
                                 size="small"
+                                className="rt-bouton-etoile"
                                 icon={
                                   a.contactPrincipal ? (
                                     <StarFilled aria-hidden />

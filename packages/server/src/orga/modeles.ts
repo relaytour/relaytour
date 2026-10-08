@@ -11,7 +11,11 @@ import {
   normaliserContenu,
   type AdressesDeRole,
 } from '../lib/contenu.ts'
-import { verifierMedia, type MediaValide } from '../lib/medias.ts'
+import {
+  verifierIconeApplication,
+  verifierMedia,
+  type MediaValide,
+} from '../lib/medias.ts'
 import {
   DeclarationOrganisationSchema,
   IdentiteActiviteSchema,
@@ -502,13 +506,35 @@ export function lireModeles(racine: string): Modeles {
             medias,
             erreurs
           )
+    let iconeApplication =
+      organisation.iconeApplication === undefined
+        ? undefined
+        : lireImage(
+            racine,
+            '',
+            organisation.iconeApplication,
+            'png',
+            'organisation.yaml',
+            medias,
+            erreurs
+          )
+    if (iconeApplication !== undefined) {
+      try {
+        verifierIconeApplication(medias.get(iconeApplication)!.donnees)
+      } catch (e) {
+        erreurs.push(`${iconeApplication} : ${(e as Error).message}`)
+        iconeApplication = undefined
+      }
+    }
     organisation = {
       ...organisation,
       logo,
       favicon,
+      iconeApplication,
     }
     if (logo === undefined) delete organisation.logo
     if (favicon === undefined) delete organisation.favicon
+    if (iconeApplication === undefined) delete organisation.iconeApplication
   }
 
   const plate = FICHIERS_D_ACTIVITE.some(f => existsSync(path.join(racine, f)))

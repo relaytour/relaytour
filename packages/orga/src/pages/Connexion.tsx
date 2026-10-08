@@ -13,6 +13,7 @@ import {
   seConnecter,
   type LienConnexion,
 } from '../lib/connexion'
+import { appareil, estInstallee } from '../lib/installation'
 
 type Etape = 'adresse' | 'code'
 
@@ -91,11 +92,11 @@ export default function Connexion() {
 
   return (
     <main
+      className="rt-page-seule"
       style={{
-        minHeight: '100vh',
+        minHeight: '100dvh',
         display: 'grid',
         placeItems: 'center',
-        padding: 16,
       }}
     >
       <div className="rt-halo rt-halo-1" aria-hidden="true" />
@@ -196,11 +197,22 @@ export default function Connexion() {
               <Input.OTP
                 size="large"
                 length={6}
+                inputMode="numeric"
+                autoComplete="one-time-code"
                 value={code}
                 onChange={valeur => setCode(valeur)}
                 formatter={valeur => valeur.replace(/\D/g, '')}
               />
             </Form.Item>
+            {/* Sur iPhone, l'application installée ne partage pas sa session avec
+                le navigateur qui ouvre le lien (ADR 0023). Ailleurs, le lien peut
+                revenir dans l'application. */}
+            {estInstallee() && appareil() === 'iphone' && (
+              <Typography.Paragraph type="secondary">
+                Saisissez ici le code du mail. Le lien du mail ouvre votre
+                navigateur, pas l’application installée.
+              </Typography.Paragraph>
+            )}
             <Button
               type="primary"
               htmlType="submit"
@@ -214,7 +226,9 @@ export default function Connexion() {
             <Button
               type="link"
               block
-              style={{ marginTop: 8 }}
+              // Sur un téléphone, ce libellé tient sur deux lignes : sans retour à
+              // la ligne, il élargit la carte au-delà de l'écran.
+              style={{ marginTop: 8, height: 'auto', whiteSpace: 'normal' }}
               onClick={() => {
                 setEtape('adresse')
                 setErreur(null)

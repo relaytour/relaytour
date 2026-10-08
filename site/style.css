@@ -1087,3 +1087,100 @@ footer {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Bascule « Ordinateur / Téléphone » des captures (bascule.js). Elle reste à
+   portée pendant la lecture. */
+.bascule {
+  position: sticky;
+  /* Sous la barre de navigation, elle aussi collée en haut de l'écran. */
+  top: 86px;
+  z-index: 5;
+  display: inline-flex;
+  gap: 4px;
+  width: fit-content;
+  margin: 0 0 24px;
+  padding: 4px;
+  border-radius: 999px;
+  background: var(--rt-verre-barre, rgba(255, 255, 255, 0.86));
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  box-shadow:
+    0 8px 30px rgba(var(--rt-encre-rgb), 0.1),
+    inset 0 1px 1px rgba(255, 255, 255, 0.85);
+}
+
+.bascule button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: none;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--rt-encre-70);
+  font: inherit;
+  font-size: 0.93rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Sur un écran étroit, la barre de navigation passe sur plusieurs lignes : la
+   bascule ne se colle plus, elle la recouvrirait. */
+@media (max-width: 760px) {
+  .bascule {
+    position: static;
+  }
+}
+
+.bascule button[aria-pressed='true'] {
+  background: var(--rt-encre);
+  color: #fff;
+}
+
+.bascule button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(var(--rt-encre-rgb), 0.12);
+}
+
+/* Une capture de téléphone garde ses proportions et la largeur d'un téléphone. */
+[data-captures='telephone'] .ecran img[data-mobile],
+[data-captures='telephone'] .capture img[data-mobile] {
+  width: min(100%, 300px);
+  aspect-ratio: 804 / 1748;
+  margin-inline: auto;
+  object-fit: contain;
+  border-radius: 30px;
+  box-shadow:
+    0 12px 36px rgba(var(--rt-encre-rgb), 0.14),
+    0 0 0 1px rgba(var(--rt-encre-rgb), 0.08);
+}
+
+/* Rangée de captures de téléphone (guide d'installation). */
+.telephones {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+  margin: 8px 0 4px;
+}
+
+.ecran .telephones figure {
+  align-content: start;
+}
+
+.ecran .telephones img {
+  width: 100%;
+  aspect-ratio: 804 / 1748;
+  border-radius: 22px;
+  box-shadow:
+    0 12px 36px rgba(var(--rt-encre-rgb), 0.14),
+    0 0 0 1px rgba(var(--rt-encre-rgb), 0.08);
+}
+
+.telephones figcaption {
+  font-size: 0.88rem;
+  color: var(--rt-encre-70);
+}
+
+@media (max-width: 760px) {
+  .telephones {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

@@ -28,6 +28,10 @@ x-environnement-app: &environnement-app
   SUPPORT_URL: '${SUPPORT_URL:-}'
   CODE_SOURCE_URL: '${CODE_SOURCE_URL:-}'
   MODES_D_EMPLOI_URL: '${MODES_D_EMPLOI_URL:-}'
+  # Notifications push (ADR 0024) : l'API donne la clé publique, le worker envoie.
+  PUSH_VAPID_PUBLIQUE: '${PUSH_VAPID_PUBLIQUE:-}'
+  PUSH_VAPID_PRIVEE: '${PUSH_VAPID_PRIVEE:-}'
+  PUSH_VAPID_SUJET: '${PUSH_VAPID_SUJET:-}'
   # Les exports d'organisation s'écrivent dans le volume exports (ADR 0008).
   EXPORTS_DIR: /exports
 

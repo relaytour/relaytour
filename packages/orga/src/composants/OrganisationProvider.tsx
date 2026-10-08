@@ -10,6 +10,7 @@ import {
   themeDepuisApi,
   type Organisation,
 } from '../lib/organisation'
+import { declarerApplication } from '../lib/application'
 import { organisationChoisie } from '../lib/selection'
 import { appliquerTheme, construireTheme } from '../lib/theme'
 
@@ -33,6 +34,8 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
       nomCourt: o.sigle ?? o.nom,
       logoUrl: o.logoUrl ?? null,
       faviconUrl: o.faviconUrl ?? null,
+      iconeApplicationUrl: o.iconeApplicationUrl ?? null,
+      manifestUrl: o.manifestUrl,
       pageEquipe: o.pageEquipe ?? null,
       codeSource: o.codeSource,
       modesDEmploi: o.modesDEmploi,
@@ -51,6 +54,7 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
         lien.href = organisation.faviconUrl
       }
     }
+    declarerApplication(organisation)
   }, [organisation])
 
   const theme = useMemo(

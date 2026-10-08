@@ -33,6 +33,7 @@ export default function NotesDeVersion({
       title="Notes de version"
       footer={null}
       width={680}
+      rootClassName="rt-modale-pleine"
       onCancel={onFermer}
       styles={{ body: { maxHeight: '70vh', overflowY: 'auto' } }}
     >

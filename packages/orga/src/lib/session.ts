@@ -6,6 +6,8 @@ import type { MesOrganisationsQuery, MoiQuery } from '../gql/graphql'
 
 import { effacerLesBrouillons } from './brouillon'
 import { seDeconnecter } from './connexion'
+import { desabonner, poserPastille } from './push'
+import { DESABONNER_PUSH } from './push-requetes'
 import { choisirOrganisation } from './selection'
 
 export type OrganisationDeLaPersonne =
@@ -43,6 +45,14 @@ export function useDeconnexion(): () => Promise<void> {
   const apollo = useApolloClient()
   const navigate = useNavigate()
   return async () => {
+    // L'appareil ne reçoit plus de notification push après la déconnexion (ADR
+    // 0024). Le retrait passe avant la fin de la session, qui l'autorise.
+    const adresse = await desabonner()
+    if (adresse !== null)
+      await apollo
+        .mutate({ mutation: DESABONNER_PUSH, variables: { adresse } })
+        .catch(() => undefined)
+    poserPastille(0)
     await seDeconnecter().catch(() => undefined)
     // Un brouillon de fiche ne reste pas dans le navigateur d'un poste partagé.
     effacerLesBrouillons()

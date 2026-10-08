@@ -66,7 +66,16 @@ const DELAI_MS = 250
  * La recherche globale de la barre haute : tâches de l'édition courante, fiches
  * et personnes. Le serveur ne renvoie que ce que la personne peut déjà lire.
  */
-export default function Recherche({ estAdmin }: { estAdmin: boolean }) {
+export default function Recherche({
+  estAdmin,
+  large = false,
+  apresChoix,
+}: {
+  estAdmin: boolean
+  /** Sur téléphone, la recherche ouverte occupe toute la barre haute. */
+  large?: boolean
+  apresChoix?: () => void
+}) {
   const navigate = useNavigate()
   const { lien } = useActivite()
   const [saisie, setSaisie] = useState('')
@@ -177,7 +186,7 @@ export default function Recherche({ estAdmin }: { estAdmin: boolean }) {
 
   return (
     <AutoComplete
-      className="rt-recherche"
+      className={large ? 'rt-recherche rt-recherche-large' : 'rt-recherche'}
       value={saisie}
       options={options}
       onChange={setSaisie}
@@ -186,15 +195,19 @@ export default function Recherche({ estAdmin }: { estAdmin: boolean }) {
         setSaisie('')
         setTexte('')
         if (lien) navigate(lien)
+        apresChoix?.()
       }}
       notFoundContent={vide ? 'Aucun résultat.' : null}
-      popupMatchSelectWidth={420}
+      popupMatchSelectWidth={large ? true : 420}
     >
       <Input
         allowClear
+        autoFocus={large}
         maxLength={LONGUEUR_MAX}
         aria-label="Rechercher une tâche, une fiche ou une personne"
-        placeholder="Rechercher une tâche, une fiche, une personne"
+        placeholder={
+          large ? 'Rechercher' : 'Rechercher une tâche, une fiche, une personne'
+        }
         prefix={
           <SearchOutlined aria-hidden style={{ color: 'var(--rt-encre-55)' }} />
         }

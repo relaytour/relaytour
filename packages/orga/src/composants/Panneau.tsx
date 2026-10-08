@@ -1,4 +1,13 @@
-import type { ReactNode } from 'react'
+import { DoubleLeftOutlined, DoubleRightOutlined } from '@ant-design/icons'
+import { Button } from 'antd'
+import { useRef, useState, type ReactNode } from 'react'
+
+import {
+  HAUT_SOUS_LA_BARRE,
+  LARGEUR_VOLET_DEPLIE,
+  useLargeurAuMoins,
+  useVoletCollant,
+} from '../lib/volets'
 
 /**
  * Un panneau de verre, le plus souvent dans la colonne de droite. `teinte`
@@ -49,12 +58,53 @@ export function DeuxColonnes({
   children: ReactNode
   cote: ReactNode
 }) {
+  // Le volet latéral se replie en une tranche, pour laisser sa largeur au
+  // contenu (docs/design-system.md, « Volets »). L'état vaut pour l'écran
+  // affiché : il ne se retient pas d'un écran à l'autre.
+  const [replie, setReplie] = useState(false)
+  // Sous cette largeur, les deux colonnes s'empilent : le volet suit le contenu.
+  const coteACote = useLargeurAuMoins(LARGEUR_VOLET_DEPLIE)
+  const volet = useRef<HTMLElement>(null)
+  useVoletCollant(volet, HAUT_SOUS_LA_BARRE, coteACote)
+  const libelle = replie
+    ? 'Déplier le volet latéral'
+    : 'Replier le volet latéral'
   return (
-    <div className="rt-deux-colonnes">
+    <div
+      className={
+        replie ? 'rt-deux-colonnes rt-volet-replie' : 'rt-deux-colonnes'
+      }
+    >
       <div className="rt-colonne" style={{ gap: 26 }}>
         {children}
       </div>
-      <aside className="rt-colonne">{cote}</aside>
+      <aside
+        className="rt-colonne rt-volet-lateral"
+        ref={volet}
+        // Replié, un clic sur la tranche rouvre le volet, comme son bouton.
+        onClick={replie && coteACote ? () => setReplie(false) : undefined}
+      >
+        {coteACote && (
+          <Button
+            className="rt-bascule-volet-lateral"
+            size="small"
+            shape="circle"
+            icon={replie ? <DoubleLeftOutlined /> : <DoubleRightOutlined />}
+            aria-label={libelle}
+            aria-expanded={!replie}
+            title={libelle}
+            onClick={evenement => {
+              evenement.stopPropagation()
+              setReplie(r => !r)
+            }}
+          />
+        )}
+        {/* Replié, le volet ne garde que le bord de ses cartes : son contenu
+            sort de la lecture d'écran et du parcours au clavier. */}
+        <div className="rt-volet-contenu" inert={replie && coteACote}>
+          {cote}
+        </div>
+      </aside>
     </div>
   )
 }
