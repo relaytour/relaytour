@@ -244,11 +244,111 @@ html {
   overflow: hidden;
 }
 
+/* Le volet se replie en un rail d'icônes, collé au bord gauche de l'écran
+   (docs/design-system.md, « Volets »). La largeur, la marge et les arrondis
+   changent ensemble. */
+.rt-barre-laterale {
+  transition:
+    width var(--rt-duree) var(--rt-ease-fluide),
+    margin var(--rt-duree) var(--rt-ease-fluide),
+    padding var(--rt-duree) var(--rt-ease-fluide),
+    height var(--rt-duree) var(--rt-ease-fluide),
+    top var(--rt-duree) var(--rt-ease-fluide),
+    border-radius var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-barre-laterale.rt-rail {
+  width: 64px;
+  /* La page porte 16 px de marge : le rail la traverse jusqu'aux bords. */
+  margin: -16px 0 -16px -16px;
+  top: 0;
+  height: 100dvh;
+  padding: 16px 8px;
+  border-radius: 0 var(--rt-rayon-panneau) var(--rt-rayon-panneau) 0;
+}
+
+/* Déplié, le bouton de repli partage la ligne du nom de l'organisation : il ne
+   prend aucune hauteur au menu. */
+.rt-bascule-volet {
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 12px;
+  color: var(--rt-encre-55);
+}
+
+.rt-barre-laterale:not(.rt-rail) .rt-rappel-organisation {
+  padding-inline-end: 36px;
+}
+
+/* En rail, la ligne de l'organisation disparaît : le bouton prend sa place. */
+.rt-rail .rt-bascule-volet {
+  position: static;
+  align-self: center;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
+.rt-rail .rt-rappel-organisation,
+.rt-rail .rt-marque-nom,
+.rt-rail .rt-entete-activite .ant-btn {
+  display: none;
+}
+
+.rt-rail .rt-entete-activite {
+  justify-content: center;
+}
+
+.rt-rail .rt-entete-activite .rt-marque {
+  flex: none;
+}
+
+.rt-rail .rt-pied-marque {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.rt-rail .ant-menu-inline-collapsed {
+  width: 100%;
+}
+
+/* En rail, le titre d'un groupe devient un filet : son texte ne tient pas. */
+.rt-barre-laterale.rt-rail .ant-menu-item-group-title {
+  height: 1px;
+  margin: 10px 12px;
+  padding: 0;
+  overflow: hidden;
+  font-size: 0;
+  background: var(--rt-encre-14);
+}
+
 .rt-barre-laterale .ant-menu {
   flex: 1;
   overflow-y: auto;
   background: transparent;
   border-inline-end: none !important;
+  /* La barre de défilement du menu reste fine, et ne se montre qu'au survol ou
+     au focus : au repos, elle chargerait le volet. */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-barre-laterale .ant-menu:hover,
+.rt-barre-laterale .ant-menu:focus-within {
+  scrollbar-color: var(--rt-encre-14) transparent;
+}
+
+/* Dans le rail, une barre décalerait les icônes : elle disparaît. Le menu
+   défile toujours, à la molette, au doigt et au clavier, et un fondu en bas
+   signale qu'il continue. */
+.rt-barre-laterale.rt-rail .ant-menu {
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 20px),
+    transparent
+  );
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
 }
 
 .rt-barre-laterale .ant-menu-item-group-title {
@@ -274,6 +374,8 @@ html {
   color: var(--rt-encre-55);
 }
 
+/* La barre haute et le contenu partagent la même largeur, jusqu'au bord droit
+   de l'écran : le volet latéral finit sous le bord droit de la barre. */
 .rt-principal {
   flex: 1;
   min-width: 0;
@@ -299,7 +401,6 @@ html {
 .rt-contenu {
   min-width: 0;
   width: 100%;
-  max-width: 1180px;
   box-sizing: border-box;
   padding: 8px 12px 24px;
 }
@@ -785,6 +886,50 @@ button.rt-ligne-lien {
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 20px;
   align-items: start;
+  transition:
+    grid-template-columns var(--rt-duree) var(--rt-ease-fluide),
+    margin var(--rt-duree) var(--rt-ease-fluide);
+}
+
+/* Le volet latéral reste dans l'écran pendant le défilement : lib/volets.ts
+   pose sa position, qui suit le sens du défilement quand le volet dépasse la
+   hauteur de l'écran. */
+.rt-volet-lateral {
+  position: sticky;
+  top: 100px;
+}
+
+.rt-volet-contenu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  transition: transform var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-bascule-volet-lateral {
+  align-self: flex-start;
+  flex-shrink: 0;
+  color: var(--rt-encre-55);
+}
+
+/* Replié, le volet devient une tranche : ses cartes glissent vers la droite et
+   ne montrent plus que leur bord arrondi, sans texte. */
+.rt-deux-colonnes.rt-volet-replie {
+  grid-template-columns: minmax(0, 1fr) 32px;
+  /* La tranche traverse les marges du contenu (12 px) et de la page (16 px) :
+     elle se colle au bord droit de l'écran, comme le rail au bord gauche. */
+  margin-inline-end: -28px;
+}
+
+.rt-volet-replie .rt-volet-lateral {
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.rt-volet-replie .rt-volet-contenu {
+  width: 340px;
+  transform: translateX(16px);
 }
 
 .rt-colonne {
@@ -795,8 +940,22 @@ button.rt-ligne-lien {
 }
 
 @media (max-width: 1099px) {
-  .rt-deux-colonnes {
+  .rt-deux-colonnes,
+  .rt-deux-colonnes.rt-volet-replie {
     grid-template-columns: minmax(0, 1fr);
+    margin-inline-end: 0;
+  }
+
+  /* Les deux colonnes s'empilent : le volet suit le contenu, sans repli. */
+  .rt-volet-lateral {
+    position: static;
+    overflow: visible;
+    cursor: auto;
+  }
+
+  .rt-volet-replie .rt-volet-contenu {
+    width: auto;
+    transform: none;
   }
 }
 
@@ -1918,4 +2077,80 @@ a.rt-etiquette:hover {
   padding: max(16px, env(safe-area-inset-top))
     max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
     max(16px, env(safe-area-inset-left));
+}
+
+/* Tableau : en-tête et colonnes qui restent visibles (docs/design-system.md,
+   « Tableaux »). Le verre du tableau est translucide : une cellule figée ou un
+   en-tête collé reçoit un fond plein, sinon le contenu qui défile dessous se
+   lirait au travers. */
+.rt-tableau {
+  --rt-fond-fige: color-mix(in srgb, #fff 82%, var(--rt-sol-3));
+}
+
+.rt-tableau.ant-table-wrapper .ant-table-tbody > tr > td.ant-table-cell-fix {
+  background: var(--rt-fond-fige);
+}
+
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row:hover
+  > td.ant-table-cell-fix,
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr
+  > td.ant-table-cell-fix.ant-table-cell-row-hover {
+  background: color-mix(in srgb, var(--rt-fond-fige) 94%, var(--rt-encre));
+}
+
+/* Une ligne cochée garde sa couleur au survol : ces sélecteurs pèsent autant
+   que ceux du survol, et viennent après eux. */
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row-selected
+  > td.ant-table-cell-fix,
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row.ant-table-row-selected:hover
+  > td.ant-table-cell-fix,
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row-selected
+  > td.ant-table-cell-fix.ant-table-cell-row-hover {
+  background: var(--rt-primaire-clair);
+}
+
+.rt-tableau.ant-table-wrapper .ant-table-sticky-holder {
+  background: var(--rt-fond-fige);
+  border-radius: var(--rt-rayon-champ) var(--rt-rayon-champ) 0 0;
+}
+
+/* La barre de défilement horizontale, collée en bas de l'écran tant que le
+   tableau est visible. */
+.rt-tableau.ant-table-wrapper .ant-table-sticky-scroll {
+  height: 12px;
+  background: color-mix(in srgb, var(--rt-fond-fige) 88%, transparent);
+  border-top: 1px solid var(--rt-encre-08);
+}
+
+.rt-tableau.ant-table-wrapper .ant-table-sticky-scroll-bar {
+  height: 8px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: var(--rt-encre-40);
+}
+
+/* Le titre de la première colonne et la punaise qui fige les premières colonnes
+   dans un tableau étroit. */
+.rt-titre-epinglable {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rt-punaise {
+  color: var(--rt-encre-55);
+}
+
+.rt-punaise[aria-pressed='true'] {
+  color: var(--rt-primaire);
 }
