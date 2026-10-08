@@ -414,14 +414,16 @@ html {
    d'accueil) : la page déclare viewport-fit=cover. */
 @media (max-width: 767px) {
   .rt-page {
-    padding: max(12px, env(safe-area-inset-top))
+    /* Le haut dépasse la zone sûre de 6 px : le voile de la barre d'état
+       s'efface sur cette hauteur (voir body::before). */
+    padding: max(12px, calc(env(safe-area-inset-top) + 6px))
       max(12px, env(safe-area-inset-right))
       max(12px, env(safe-area-inset-bottom))
       max(12px, env(safe-area-inset-left));
     gap: 12px;
   }
   .rt-barre-haute {
-    top: max(12px, env(safe-area-inset-top));
+    top: max(12px, calc(env(safe-area-inset-top) + 6px));
     padding: 8px 10px 8px 12px;
     gap: 8px;
   }
@@ -2027,13 +2029,13 @@ a.rt-etiquette:hover {
     min-height: 100dvh;
     box-sizing: border-box;
     border-radius: 0;
-    padding-top: max(20px, env(safe-area-inset-top));
+    padding-top: max(20px, calc(env(safe-area-inset-top) + 8px));
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 
   /* La croix est posée en absolu : elle suit aussi la zone sûre. */
   .rt-modale-pleine .ant-modal-close {
-    top: max(12px, env(safe-area-inset-top));
+    top: max(12px, calc(env(safe-area-inset-top) + 8px));
     inset-inline-end: max(12px, env(safe-area-inset-right));
   }
 }
@@ -2048,23 +2050,48 @@ a.rt-etiquette:hover {
 
 /* Dans l'application installée sur iPhone, la page s'étend sous la barre d'état
    (apple-mobile-web-app-status-bar-style dans index.html) : le sol monte jusqu'en
-   haut de l'écran. Un voile dépoli couvre toute la zone sûre, pour que le contenu
-   qui défile ne se lise pas sous l'heure. Il dépasse cette zone de 8 px, puis
-   s'efface sur 12 px, derrière le haut de la barre haute. Sa hauteur vaut zéro sur un écran sans
-   zone sûre. */
+   haut de l'écran. Un voile flou couvre toute la zone sûre, pour que le contenu
+   qui défile ne se lise pas sous l'heure. Il passe au-dessus de tout, fenêtres
+   et tiroirs compris : une fenêtre en plein écran défile aussi sous l'heure. Il
+   s'efface sur 6 px sous la zone sûre : la barre haute, une fenêtre en plein
+   écran et un message éphémère commencent plus bas. Sa hauteur vaut zéro sur un
+   écran sans zone sûre. */
 @media (display-mode: standalone) {
   body::before {
     content: '';
     position: fixed;
     inset: 0 0 auto;
-    z-index: 9;
+    z-index: 3000;
     /* min() ramène le dépassement à zéro sur un écran sans zone sûre. */
-    height: calc(
-      env(safe-area-inset-top) + min(20px, env(safe-area-inset-top))
+    height: calc(env(safe-area-inset-top) + min(6px, env(safe-area-inset-top)));
+    /* Aucune teinte : un voile blanc dessinait une bande claire sur le fond
+       coloré d'une organisation. Le flou seul rend le contenu illisible et
+       laisse le fond tel quel. */
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
+    -webkit-mask-image: linear-gradient(
+      to bottom,
+      #000 calc(100% - 6px),
+      transparent
     );
-    background: rgba(255, 255, 255, 0.72);
-    -webkit-backdrop-filter: blur(18px);
-    backdrop-filter: blur(18px);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 6px), transparent);
+    pointer-events: none;
+  }
+}
+
+/* Un second voile passe sous la barre haute, jusqu'à sa mi-hauteur : le contenu
+   ne se lit pas non plus à côté de ses angles arrondis du haut. */
+@media (display-mode: standalone) and (max-width: 767px) {
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 9;
+    height: calc(
+      env(safe-area-inset-top) + min(44px, env(safe-area-inset-top))
+    );
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
     -webkit-mask-image: linear-gradient(
       to bottom,
       #000 calc(100% - 12px),
