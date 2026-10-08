@@ -5,6 +5,24 @@
   "version": "0.13.1",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-09-orga-le-haut-de-l-application-installee-garde-la-couleur-du-fond",
+          "date": "2026-10-09",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le haut de l'application installée garde la couleur du fond",
+            "texte": "Dans l'application installée sur un iPhone, une bande claire restait visible sous l'heure, sur le fond coloré d'une organisation. Une fenêtre en plein écran défilait aussi sous l'heure. Le haut de l'écran est maintenant flouté sans teinte, y compris au-dessus des fenêtres, et le texte ne se lit plus à côté des angles de la barre haute.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.13.1",
       "notes": [
         {
