@@ -26,6 +26,7 @@
 | [0022](0022-choix-de-la-messagerie.md) | Choix de la messagerie qui reçoit un message | Acceptée |
 | [0023](0023-application-installable-et-ecran-hors-connexion.md) | Application installable et écran hors connexion | Proposée |
 | [0024](0024-notifications-push.md) | Notifications push | Proposée |
-| [0025](0025-phases-d-une-activite-et-regroupement-des-taches.md) | Phases d'une activité et regroupement des tâches | Proposée |
+| [0025](0025-phases-d-une-activite-et-regroupement-des-taches.md) | Phases d'une activité et regroupement des tâches | Acceptée |
+| [0026](0026-taches-partagees.md) | Tâches partagées entre périmètres | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
