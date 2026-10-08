@@ -112,6 +112,7 @@ export default function EcrireMessage({ cible, fermer, ...reste }: Props) {
       onCancel={fermer}
       destroyOnHidden
       width={760}
+      rootClassName="rt-modale-pleine"
     >
       {gardee && <Redaction cible={gardee} fermer={fermer} {...reste} />}
     </Modal>

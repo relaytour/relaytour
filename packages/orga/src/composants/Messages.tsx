@@ -239,13 +239,14 @@ export default function Messages({ annuaire, personnes }: Props) {
         const reste = noms.length - NOMS_MAX
         return (
           <Tooltip
+            trigger={['hover', 'click', 'focus']}
             title={
               reste > 0
                 ? `${noms.slice(0, NOMS_MAX).join(', ')} et ${reste} de plus`
                 : noms.join(', ')
             }
           >
-            <span>
+            <span tabIndex={0}>
               {noms.length === 1 ? noms[0] : `${noms.length} personnes`} (
               {CHAMPS[m.champ]})
             </span>

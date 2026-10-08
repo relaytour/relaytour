@@ -88,3 +88,24 @@ export const planificationQueue = new Queue<
     removeOnFail: { count: 30 },
   },
 })
+
+// La file des notifications push (ADR 0024). La charge utile ne porte que
+// l'identifiant de la notification : le processeur relit en base son texte, ses
+// destinataires et leurs préférences au moment de l'envoi.
+export const PUSH_QUEUE = 'push'
+
+export interface PushJobData {
+  notificationId: string
+}
+
+export const pushQueue = new Queue<PushJobData>(PUSH_QUEUE, {
+  connection,
+  defaultJobOptions: {
+    // Un service de push indisponible se rétablit en quelques minutes. Au-delà,
+    // la notification reste dans la cloche et dans le résumé.
+    attempts: 3,
+    backoff: { type: 'exponential', delay: 60_000 },
+    removeOnComplete: { age: 3600, count: 200 },
+    removeOnFail: { age: 24 * 3600, count: 200 },
+  },
+})

@@ -14,6 +14,7 @@ import {
   lireGroupes,
   typeDepuisGroupe,
 } from '../lib/activites.ts'
+import { cheminManifest } from '../lib/application.ts'
 import { validerDates, validerEdition } from '../lib/editions.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
@@ -443,6 +444,14 @@ const OrganisationRef = builder
       sigle: t.exposeString('sigle', { nullable: true }),
       logoUrl: t.exposeString('logoUrl', { nullable: true }),
       faviconUrl: t.exposeString('faviconUrl', { nullable: true }),
+      iconeApplicationUrl: t.exposeString('iconeApplicationUrl', {
+        nullable: true,
+      }),
+      manifestUrl: t.string({
+        description:
+          'Adresse du manifest de l’application installée, propre à l’organisation (ADR 0023).',
+        resolve: c => cheminManifest(c.slug),
+      }),
       pageEquipe: t.exposeString('pageEquipe', { nullable: true }),
       theme: t.field({ type: ThemeRef, resolve: o => o.theme }),
       codeSource: t.string({

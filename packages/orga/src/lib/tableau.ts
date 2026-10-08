@@ -85,3 +85,45 @@ export function ecrireLargeurs(
     // Le stockage peut être plein ou interdit : les largeurs restent alors en mémoire.
   }
 }
+
+/**
+ * Largeur d'un tableau à partir de laquelle ses premières colonnes se figent
+ * d'office, en pixels. En dessous, elles occuperaient trop de place : la
+ * personne les épingle elle-même.
+ */
+export const LARGEUR_COLONNES_FIGEES = 900
+
+const cleEpingle = (id: string) => `relaytour.tableau.${id}.epingle`
+
+/** Vrai quand la personne a épinglé les premières colonnes de ce tableau. */
+export function lireEpingle(id: string, depot = stockage()): boolean {
+  try {
+    return depot?.getItem(cleEpingle(id)) === 'oui'
+  } catch {
+    return false
+  }
+}
+
+export function ecrireEpingle(
+  id: string,
+  epingle: boolean,
+  depot = stockage()
+): void {
+  try {
+    if (epingle) depot?.setItem(cleEpingle(id), 'oui')
+    else depot?.removeItem(cleEpingle(id))
+  } catch {
+    // Stockage indisponible : le choix vaut pour la page.
+  }
+}
+
+/**
+ * Vrai quand les premières colonnes restent visibles pendant le défilement
+ * horizontal : d'office dans un tableau large, sur choix dans un tableau étroit.
+ */
+export function colonnesFigees(
+  largeur: number | null,
+  epingle: boolean
+): boolean {
+  return (largeur !== null && largeur >= LARGEUR_COLONNES_FIGEES) || epingle
+}

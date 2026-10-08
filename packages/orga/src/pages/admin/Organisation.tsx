@@ -46,6 +46,7 @@ const IDENTITE = graphql(`
       logoPng
       logoSvg
       favicon
+      iconeApplication
       theme
       contenuModifieLe
       contenuSynchroniseLe
@@ -65,6 +66,7 @@ const MODIFIER = graphql(`
     $logoPng: String
     $logoSvg: String
     $favicon: String
+    $iconeApplication: String
     $theme: JSONObject
   ) {
     modifierIdentiteOrganisation(
@@ -78,6 +80,7 @@ const MODIFIER = graphql(`
       logoPng: $logoPng
       logoSvg: $logoSvg
       favicon: $favicon
+      iconeApplication: $iconeApplication
       theme: $theme
     ) {
       nom
@@ -126,6 +129,7 @@ interface Valeurs {
   logoPng: string | null
   logoSvg: string | null
   favicon: string | null
+  iconeApplication: string | null
   couleurs: Partial<Record<keyof CouleursTheme, string | null>>
   halo1: string | null
   halo2: string | null
@@ -199,6 +203,7 @@ export default function Organisation() {
       logoPng: identite.logoPng ?? null,
       logoSvg: identite.logoSvg ?? null,
       favicon: identite.favicon ?? null,
+      iconeApplication: identite.iconeApplication ?? null,
       couleurs: Object.fromEntries(
         COULEURS.map(({ cle }) => [cle, theme.couleurs?.[cle] ?? null])
       ),
@@ -224,6 +229,7 @@ export default function Organisation() {
           logoPng: v.logoPng,
           logoSvg: v.logoSvg,
           favicon: v.favicon,
+          iconeApplication: v.iconeApplication,
           theme: themeDepuisFormulaire(declare, v),
         },
       })
@@ -395,6 +401,15 @@ export default function Organisation() {
             <Col xs={24} md={8}>
               <Form.Item label="Favicon PNG (facultatif)" name="favicon">
                 <ChampImage format="PNG" libelle="Favicon" />
+              </Form.Item>
+            </Col>
+            <Col xs={24} md={8}>
+              <Form.Item
+                label="Icône d’application (facultatif)"
+                name="iconeApplication"
+                extra="PNG carré de 512 pixels de côté. Elle s’affiche sur l’écran d’accueil d’un téléphone qui installe l’application."
+              >
+                <ChampImage format="PNG" libelle="Icône d’application" />
               </Form.Item>
             </Col>
           </Row>

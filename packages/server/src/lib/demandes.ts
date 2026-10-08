@@ -5,6 +5,7 @@ import { mettreEnFile } from '../courriel/file.ts'
 import { aujourdhui } from './droits.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { publierNotification } from './flux.ts'
+import { pousser } from './push-file.ts'
 import { journal } from './journal.ts'
 
 // Demandes pour rejoindre l'équipe d'une période (ADR 0015).
@@ -133,7 +134,7 @@ export async function signalerDemande(
         }
       )
       try {
-        await prisma.notification.create({
+        const notification = await prisma.notification.create({
           data: {
             organisationId,
             userId,
@@ -142,8 +143,10 @@ export async function signalerDemande(
             activiteId,
             cle: `DEMANDE_RECUE-${activiteId}-${userId}-${jour}`,
           },
+          select: { id: true },
         })
         publierNotification(organisationId, userId)
+        await pousser(notification.id)
       } catch (erreur) {
         // P2002 : cet admin est déjà prévenu aujourd'hui pour cette activité.
         if ((erreur as { code?: string }).code !== 'P2002') throw erreur
