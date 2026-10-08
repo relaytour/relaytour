@@ -565,7 +565,7 @@ const CAS: Cas[] = [
   {
     operation: 'modifierActivite',
     query:
-      'mutation ($id: ID!) { modifierActivite(id: $id, nom: "X", nature: SAISON, groupes: [{ cle: "x", libelle: "X", libellePluriel: "X" }], ordre: 0) { id } }',
+      'mutation ($id: ID!) { modifierActivite(id: $id, nom: "X", nature: SAISON, groupes: [{ cle: "x", libelle: "X", libellePluriel: "X" }], phases: [{ cle: "x", libelle: "X" }], ordre: 0) { id } }',
     variables: () => ({ id: a.activite }),
     attente: INTERDIT,
   },

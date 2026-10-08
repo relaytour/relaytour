@@ -150,6 +150,10 @@ model Activite {
   // Groupes de périmètres déclarés dans le contenu, dans l'ordre d'affichage :
   // [{ cle, libelle, libellePluriel }]. Le gabarit propose sport et pole.
   groupes          Json
+  // Phases déclarées dans le contenu, dans l'ordre (ADR 0025) :
+  // [{ cle, libelle, jusquA }], avec une borne en jours depuis le premier jour de la
+  // période (J-120), sauf sur la dernière phase. Null : phases par défaut.
+  phases           Json?
   ordre            Int            @default(0)
   // Identité propre à l'activité (ADR 0009) : contacts, logo, couleurs et fond.
   // Chaque champ absent reprend la valeur de l'organisation.

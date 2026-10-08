@@ -17,6 +17,7 @@ import {
   type Formulaire,
 } from '../lib/formulaire.ts'
 import { exigerPlaceActivite, sousVerrouOrganisation } from '../lib/limites.ts'
+import { lirePhases, phasesValides, type Phase } from '../lib/phases.ts'
 import { configurationActivite } from '../lib/organisation.ts'
 import { sansDoublon, texteRequis } from '../lib/saisie.ts'
 import { marquerContenuModifie } from '../lib/synchronisation.ts'
@@ -50,6 +51,29 @@ const GroupePerimetresInput = builder.inputType('GroupePerimetresInput', {
     cle: t.string({ required: true }),
     libelle: t.string({ required: true }),
     libellePluriel: t.string({ required: true }),
+  }),
+})
+
+// Phase d'une activité (ADR 0025) : une tâche s'y range par son échéance.
+const PhaseRef = builder.objectRef<Phase>('Phase').implement({
+  description:
+    'Phase d’une activité. Une tâche se range dans la première phase dont la borne n’est pas dépassée.',
+  fields: t => ({
+    cle: t.exposeString('cle'),
+    libelle: t.exposeString('libelle'),
+    jusquA: t.exposeString('jusquA', {
+      nullable: true,
+      description:
+        'Dernier jour de la phase, en jours depuis le premier jour de la période : J-120, J+30. La dernière phase n’en porte pas.',
+    }),
+  }),
+})
+
+const PhaseInput = builder.inputType('PhaseInput', {
+  fields: t => ({
+    cle: t.string({ required: true }),
+    libelle: t.string({ required: true }),
+    jusquA: t.string(),
   }),
 })
 
@@ -89,6 +113,12 @@ export const ActiviteRef = builder.prismaObject('Activite', {
     groupes: t.field({
       type: [GroupePerimetresRef],
       resolve: a => lireGroupes(a.groupes),
+    }),
+    phases: t.field({
+      type: [PhaseRef],
+      description:
+        'Les phases de l’activité, dans l’ordre : celles qu’elle déclare, sinon les phases par défaut (ADR 0025).',
+      resolve: a => lirePhases(a.phases),
     }),
     ordre: t.exposeInt('ordre'),
     archive: t.boolean({ resolve: a => a.archivedAt !== null }),
@@ -223,6 +253,8 @@ builder.mutationFields(t => ({
       sigle: t.arg.string(),
       nature: t.arg({ type: NatureActiviteEnum, required: true }),
       groupes: t.arg({ type: [GroupePerimetresInput] }),
+      // Absentes, l'activité garde les phases par défaut (ADR 0025).
+      phases: t.arg({ type: [PhaseInput] }),
       ordre: t.arg.int({ defaultValue: 0 }),
     },
     resolve: async (query, _root, args, ctx) => {
@@ -236,6 +268,9 @@ builder.mutationFields(t => ({
           : null,
         nature: args.nature,
         groupes: groupesValides(args.groupes ?? GROUPES_PAR_DEFAUT),
+        ...(args.phases === null || args.phases === undefined
+          ? {}
+          : { phases: phasesValides(args.phases) }),
         ordre: args.ordre ?? 0,
       }
       return sousVerrouOrganisation(organisationId, async tx => {
@@ -259,6 +294,8 @@ builder.mutationFields(t => ({
       sigle: t.arg.string(),
       nature: t.arg({ type: NatureActiviteEnum, required: true }),
       groupes: t.arg({ type: [GroupePerimetresInput], required: true }),
+      // Absentes, les phases ne changent pas (ADR 0025).
+      phases: t.arg({ type: [PhaseInput] }),
       ordre: t.arg.int({ required: true }),
       // Archiver ou rouvrir dans la même transaction : une limite atteinte ou la
       // dernière activité ouverte annulent toute la modification.
@@ -303,6 +340,9 @@ builder.mutationFields(t => ({
           : null,
         nature: args.nature,
         groupes,
+        ...(args.phases === null || args.phases === undefined
+          ? {}
+          : { phases: phasesValides(args.phases) }),
         ordre: args.ordre,
         ...(args.souhaitsOuverts === null || args.souhaitsOuverts === undefined
           ? {}

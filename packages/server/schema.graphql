@@ -30,6 +30,11 @@ type Activite {
   nom: String!
   ordre: Int!
   pageEquipe: String
+
+  """
+  Les phases de l’activité, dans l’ordre : celles qu’elle déclare, sinon les phases par défaut (ADR 0025).
+  """
+  phases: [Phase!]!
   sigle: String
   slug: String!
 
@@ -513,7 +518,7 @@ type Mutation {
   Change le statut d’une tâche. Demander le statut qu’elle a déjà ne change rien. Avec `statutAttendu`, le serveur refuse de changer un statut qu’une autre personne a modifié entre-temps (code `CONFLIT_VERSION`).
   """
   changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!, statutAttendu: StatutTache): Tache!
-  creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, sigle: String, slug: String!): Activite!
+  creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
   creerMessage(message: MessageInput!): Message!
@@ -558,7 +563,7 @@ type Mutation {
   Sans identifiants, marque toutes les notifications comme lues. Reste possible dans une organisation en lecture seule.
   """
   marquerNotificationsLues(ids: [ID!]): Int!
-  modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String, souhaitsOuverts: Boolean): Activite!
+  modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
 
   """
@@ -803,6 +808,25 @@ type PersonneTrouvee {
   id: ID!
   nom: String!
   perimetres: [Perimetre!]!
+}
+
+"""
+Phase d’une activité. Une tâche se range dans la première phase dont la borne n’est pas dépassée.
+"""
+type Phase {
+  cle: String!
+
+  """
+  Dernier jour de la phase, en jours depuis le premier jour de la période : J-120, J+30. La dernière phase n’en porte pas.
+  """
+  jusquA: String
+  libelle: String!
+}
+
+input PhaseInput {
+  cle: String!
+  jusquA: String
+  libelle: String!
 }
 
 """Piles CSS complètes, prêtes pour font-family."""

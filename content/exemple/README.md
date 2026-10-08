@@ -33,7 +33,7 @@ taches/<perimetre>.yaml       tâches types d'un périmètre
 organisation.yaml
 medias/
 modeles/fiche.md
-activites/<activite>/activite.yaml     nom, nature, groupes de périmètres, identité propre
+activites/<activite>/activite.yaml     nom, nature, groupes de périmètres, phases, identité propre
 activites/<activite>/medias/           logo de l'activité
 activites/<activite>/perimetres.yaml
 activites/<activite>/fiches/…
@@ -56,6 +56,12 @@ groupes:                  # facultatif : sport et pôle par défaut
   - cle: pole
     libelle: Pôle
     libellePluriel: Pôles
+phases:                   # facultatif : quatre phases par défaut (ADR 0025)
+  - cle: rentree
+    libelle: Rentrée
+    jusquA: J+30            # dernier jour de la phase, compté depuis le premier jour de la période
+  - cle: saison
+    libelle: Saison         # la dernière phase ne porte pas de borne
 ordre: 2                  # facultatif : ordre d'affichage
 souhaitsOuverts: true     # facultatif : tous les membres découvrent les périmètres (ADR 0012)
 formulaire:               # facultatif : réglage du formulaire public pour rejoindre l'équipe (ADR 0015)
@@ -73,6 +79,18 @@ theme:                    # couleurs et fond seulement ; les polices restent cel
 ```
 
 La nature fixe le mot qui désigne une période : édition pour un événement, saison pour une section, mandat pour une instance. Les échéances des tâches types se comptent depuis le premier jour de la période.
+
+### Phases
+
+Une activité découpe sa période en phases (ADR 0025). L'espace organisateur regroupe les tâches d'un périmètre et du rétroplanning par phase.
+
+- Une phase porte une clé, un libellé et une borne `jusquA`, de la forme `J-<jours>` ou `J+<jours>`. La borne désigne le dernier jour de la phase.
+- Les bornes se suivent dans l'ordre croissant. La dernière phase ne porte pas de borne : elle reçoit toutes les tâches qui suivent.
+- Une tâche ne déclare pas sa phase. Elle se range par son échéance, dans la première phase dont la borne n'est pas dépassée.
+- Une activité déclare 12 phases au plus. Sans la clé `phases`, elle garde quatre phases : Lancement (jusqu'à J-120), Préparation (jusqu'à J-30), Derniers réglages (jusqu'à J-1), Déroulement et bilan.
+- La disposition plate ne décrit pas de phases : une organisation qui en déclare passe son dossier en disposition `activites/`.
+
+Les admins de l'activité modifient aussi les phases dans l'espace organisateur. L'export les réécrit dans `activite.yaml`.
 
 ## Organisation
 

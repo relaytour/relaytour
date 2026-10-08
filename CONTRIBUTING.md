@@ -125,6 +125,7 @@ Un seul mot par notion.
 | périmètre | Une sous-partie d'une activité (un sport, un pôle, une commission…), rangée dans un groupe. |
 | groupe | Catégorie de périmètre déclarée par l'activité dans son contenu. Le gabarit propose sport et pôle. |
 | pôle | Groupe de périmètres transverses (coordination, logistique, trésorerie…), proposé par défaut. Les pôles sont listés dans le `perimetres.yaml` de l'activité. |
+| phase | Partie de la période d'une activité, bornée en jours depuis son premier jour. L'activité déclare ses phases ; une tâche s'y range par son échéance, sans la déclarer (ADR 0025). |
 | référent·e | Personne membre de l'organisation, désignée pour un périmètre et une édition. |
 | affectation | Lien entre une personne, un périmètre et une édition. |
 | contact principal | Référent·e désigné·e par un admin comme première personne à solliciter pour un périmètre et une édition. Une information seulement, sans droit supplémentaire (ADR 0011). |

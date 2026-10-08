@@ -13,6 +13,7 @@ import {
   textesDuFormulaire,
 } from '../lib/formulaire.ts'
 import { EXTENSIONS, type TypeMedia } from '../lib/medias.ts'
+import { lirePhasesDeclarees } from '../lib/phases.ts'
 import {
   DeclarationOrganisationSchema,
   lireIdentiteActivite,
@@ -206,6 +207,7 @@ export async function construireContenu(
     activites[0]!.slug === organisation.slug &&
     activites[0]!.nature === 'EVENEMENT' &&
     activites[0]!.identite === null &&
+    lirePhasesDeclarees(activites[0]!.phases) === null &&
     egauxProfond(lireGroupes(activites[0]!.groupes), GROUPES_PAR_DEFAUT)
   const disposition =
     options.disposition ?? (representablePlat ? 'plate' : 'activites')
@@ -213,7 +215,7 @@ export async function construireContenu(
     throw new Error(
       activites.length > 1
         ? `L'organisation porte ${activites.length} activités (${activites.map(a => a.slug).join(', ')}) : le dossier doit passer en disposition activites/ (ADR 0008).`
-        : "L'activité a une nature, des groupes, une identité ou un slug que la disposition plate ne décrit pas : passez le dossier en disposition activites/ (ADR 0008)."
+        : "L'activité a une nature, des groupes, des phases, une identité ou un slug que la disposition plate ne décrit pas : passez le dossier en disposition activites/ (ADR 0008)."
     )
   }
 
@@ -327,6 +329,9 @@ export async function construireContenu(
               ? undefined
               : formulaire,
           groupes: lireGroupes(activite.groupes),
+          // Les phases ne s'écrivent que si l'activité en déclare : sans elles,
+          // le dossier garde les phases par défaut (ADR 0025).
+          phases: lirePhasesDeclarees(activite.phases) ?? undefined,
           contactRecrutement: identite.contactRecrutement,
           pageEquipe: identite.pageEquipe,
           logo: logo(identite.logo, dossierSansBarre),

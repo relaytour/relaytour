@@ -11,6 +11,24 @@ groupes:
   - cle: pole
     libelle: Pôle
     libellePluriel: Pôles
+# Phases de l'activité, dans l'ordre (ADR 0025). Une borne compte les jours depuis le
+# premier jour de la période. La dernière phase n'en porte pas. Sans cette clé,
+# l'activité garde les quatre phases par défaut.
+phases:
+  - cle: cadrage
+    libelle: Cadrage
+    jusquA: J-180
+  - cle: preparation
+    libelle: Préparation
+    jusquA: J-60
+  - cle: mobilisation
+    libelle: Mobilisation
+    jusquA: J-7
+  - cle: deroulement
+    libelle: Déroulement
+    jusquA: J+1
+  - cle: bilan
+    libelle: Bilan
 ordre: 1
 # Tous les membres découvrent les périmètres et formulent leurs souhaits (ADR 0012).
 souhaitsOuverts: true

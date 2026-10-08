@@ -265,6 +265,52 @@ groupes:
     expect(modeles.activites[1]!.perimetres[0]?.groupe).toBe('sport')
   })
 
+  it('lit les phases d’une activité, et les laisse absentes sinon (ADR 0025)', () => {
+    const modeles = lireModeles(
+      dossier({
+        'activites/tournoi/activite.yaml': ACTIVITE_TOURNOI,
+        'activites/tournoi/perimetres.yaml': PERIMETRES,
+        'activites/section/activite.yaml': `${ACTIVITE_SECTION}phases:
+  - cle: rentree
+    libelle: Rentrée
+    jusquA: J+30
+  - cle: saison
+    libelle: Saison
+`,
+        'activites/section/perimetres.yaml': PERIMETRES_SECTION,
+      })
+    )
+    expect(modeles.activites[0]!.declaration.phases).toEqual([
+      { cle: 'rentree', libelle: 'Rentrée', jusquA: 'J+30' },
+      { cle: 'saison', libelle: 'Saison' },
+    ])
+    expect(modeles.activites[1]!.declaration.phases).toBeUndefined()
+  })
+
+  it('refuse des phases mal ordonnées, en nommant le fichier et la phase', () => {
+    expect(
+      erreurs(
+        dossier({
+          'activites/tournoi/activite.yaml': `${ACTIVITE_TOURNOI}phases:
+  - cle: preparation
+    libelle: Préparation
+    jusquA: J-7
+  - cle: cadrage
+    libelle: Cadrage
+    jusquA: J-90
+  - cle: bilan
+    libelle: Bilan
+    jusquA: J+30
+`,
+          'activites/tournoi/perimetres.yaml': PERIMETRES,
+        })
+      )
+    ).toEqual([
+      'activites/tournoi/activite.yaml : phases.1.jusquA les bornes se suivent dans l’ordre croissant',
+      'activites/tournoi/activite.yaml : phases.2.jusquA la dernière phase ne porte pas de borne : elle reçoit tout ce qui suit',
+    ])
+  })
+
   it('décrit une activité implicite en disposition plate', () => {
     const modeles = lireModeles(dossier({ 'perimetres.yaml': PERIMETRES }))
     expect(modeles.disposition).toBe('plate')

@@ -481,6 +481,7 @@ async function importerActivite(
         sigle: modele.declaration.sigle ?? null,
         nature: modele.declaration.nature,
         groupes: modele.declaration.groupes,
+        phases: modele.declaration.phases ?? Prisma.DbNull,
         ordre: modele.declaration.ordre,
         souhaitsOuverts: modele.declaration.souhaitsOuverts ?? false,
         formulaire: modele.declaration.formulaire ?? Prisma.DbNull,
@@ -491,7 +492,7 @@ async function importerActivite(
     ligneId === null ? 'creee' : 'mise-a-jour'
   )
 
-  // Activité. L'activité implicite garde sa nature et ses groupes.
+  // Activité. L'activité implicite garde sa nature, ses groupes et ses phases.
   let activiteId = ligneId ?? ''
   if (ecrire && organisationId !== '') {
     activiteId =

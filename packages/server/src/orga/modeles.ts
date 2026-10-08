@@ -16,6 +16,7 @@ import {
   verifierMedia,
   type MediaValide,
 } from '../lib/medias.ts'
+import { ECHEANCE_RELATIVE, PhasesSchema } from '../lib/phases.ts'
 import {
   DeclarationOrganisationSchema,
   IdentiteActiviteSchema,
@@ -58,6 +59,9 @@ export const ActiviteDeclaree = z.strictObject({
   sigle: z.string().trim().min(1).max(20).optional(),
   nature: z.enum(['EVENEMENT', 'SAISON', 'MANDAT']).default('EVENEMENT'),
   groupes: z.array(GroupeModele).min(1).max(10).default(GROUPES_PAR_DEFAUT),
+  // Phases de l'activité, dans l'ordre (ADR 0025). Absentes, l'activité garde les
+  // phases par défaut.
+  phases: PhasesSchema.optional(),
   ordre: z.number().int().min(0).max(999).default(0),
   // Tous les membres découvrent les périmètres et formulent leurs souhaits (ADR 0012).
   souhaitsOuverts: z.boolean().optional(),
@@ -119,7 +123,7 @@ const EnteteFiche = z.strictObject({
 // J-120 : 120 jours avant le premier jour de la période. J+3 : 3 jours après.
 const EcheanceRelative = z
   .string()
-  .regex(/^J[-+]\d{1,3}$/, 'échéance relative de la forme J-120 ou J+3')
+  .regex(ECHEANCE_RELATIVE, 'échéance relative de la forme J-120 ou J+3')
 
 const TacheModele = z.strictObject({
   modele: Slug,
