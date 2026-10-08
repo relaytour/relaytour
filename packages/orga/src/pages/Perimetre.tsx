@@ -13,7 +13,7 @@ import {
   PersonneNommee,
 } from '../composants/Personne'
 import ProposerPersonne from '../composants/ProposerPersonne'
-import { Puces, SeparateurPuces } from '../composants/Puces'
+import { Puces } from '../composants/Puces'
 import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
 import Titre from '../composants/Titre'
@@ -479,7 +479,9 @@ export default function Perimetre() {
           </>
         }
       >
-        <div className="rt-puces" style={{ rowGap: 10 }}>
+        {/* Deux lignes de puces : le statut, puis le regroupement. Sur une seule
+            ligne, le second groupe passerait à la ligne en laissant son trait. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <Puces<Filtre>
             libelle="Statut des tâches"
             valeur={filtre}
@@ -500,7 +502,6 @@ export default function Perimetre() {
               { valeur: 'toutes', libelle: 'Toutes', compte: a.total },
             ]}
           />
-          <SeparateurPuces />
           <Puces<Regroupement>
             libelle="Regroupement des tâches"
             valeur={regroupement}
