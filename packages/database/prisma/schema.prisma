@@ -667,6 +667,12 @@ enum TypeJournal {
   TACHE_STATUT
   FICHE_CREEE
   FICHE_MODIFIEE
+  // Accord d'un périmètre cible sur une déclinaison (ADR 0026) : la tâche et le
+  // périmètre de la ligne sont ceux de la déclinaison.
+  DECLINAISON_PROPOSEE
+  DECLINAISON_ACCEPTEE
+  DECLINAISON_REFUSEE
+  DECLINAISON_IMPOSEE
 }
 
 // Journal : qui a fait quoi, et quand. Il alimente les notifications et le score
@@ -787,6 +793,12 @@ enum TypeNotification {
   TACHE_STATUT
   FICHE_CREEE
   FICHE_MODIFIEE
+  // Déclinaison d'une tâche partagée (ADR 0026), dans l'application seulement :
+  // proposée au périmètre cible, puis acceptée ou refusée pour le périmètre
+  // d'origine. `tacheId` désigne la déclinaison.
+  DECLINAISON_PROPOSEE
+  DECLINAISON_ACCEPTEE
+  DECLINAISON_REFUSEE
 }
 
 // Une notification ne stocke que des identifiants : le texte se compose à la lecture,

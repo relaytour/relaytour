@@ -1,6 +1,6 @@
 # ADR 0026 — Tâches partagées entre périmètres
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-08
 - Complète l'ADR 0003 (tâches types) et l'ADR 0009 (source de vérité du contenu). Ajoute une exception à l'ADR 0014 : une personne propose une tâche à un périmètre où elle n'est pas affectée.
 
@@ -61,6 +61,7 @@ Une copie sans origine ne montre rien au périmètre qui demande. Une entité no
 - Un périmètre cible ne déclare pas lui-même le modèle qu'il reçoit. Une tâche se retrouve par sa période, son périmètre et son modèle : cette règle garde la clé unique.
 - L'import crée la tâche partagée, puis une déclinaison par périmètre cible qui n'en porte pas. Un périmètre ajouté à un groupe reçoit sa déclinaison à l'import suivant.
 - Un périmètre cible qui porte déjà une tâche de même modèle la garde telle quelle : l'import la rattache à sa tâche partagée et le signale. Une organisation partage ainsi une tâche après un premier import, sans doublon.
+- L'import ne déplace jamais un lien. Quand le contenu contredit un lien déjà en base, il signale un conflit et n'écrit rien pour cette déclinaison : le lien garde ainsi un seul niveau d'un import à l'autre. Un périmètre archivé ne reçoit pas de déclinaison.
 - L'export réécrit les tâches types telles que le contenu les déclare.
 
 ### Score, avancement et notifications

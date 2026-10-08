@@ -1,5 +1,6 @@
 import type { PrismaClient } from '@relaytour/database'
 
+import { TACHES_ACTIVES } from './declinaisons.ts'
 import { aujourdhui } from './droits.ts'
 
 // Score de participation d'une édition (phase 5).
@@ -92,9 +93,12 @@ export async function calculerScores(
     return score
   }
 
+  // Une déclinaison qui attend un accord, ou refusée, n'est pas encore une tâche de
+  // son périmètre : elle ne compte pas (ADR 0026).
   const taches = await prisma.tache.findMany({
-    where: { editionId },
+    where: { editionId, AND: [TACHES_ACTIVES] },
     select: {
+      origineId: true,
       statut: true,
       echeance: true,
       termineeLe: true,
@@ -122,7 +126,13 @@ export async function calculerScores(
         }
       }
     }
-    if (tache.creeParId && tache.statut !== 'ABANDONNEE') {
+    // Une déclinaison ne donne aucun point de création : une tâche partagée dans
+    // neuf périmètres compterait sinon dix fois.
+    if (
+      tache.creeParId &&
+      tache.statut !== 'ABANDONNEE' &&
+      tache.origineId === null
+    ) {
       const score = de(tache.creeParId)
       score.tachesCreees += 1
       score.points += BAREME.tacheCreee

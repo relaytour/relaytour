@@ -24,6 +24,8 @@ const VUES_DES_TACHES = [
   'AvancementGlobal',
   'Retroplanning',
   'TachesFiche',
+  'DeclinaisonsProposees',
+  'DeclinaisonsTache',
 ] as const
 const VUES_DES_FICHES = ['ListeFiches', 'Fiche', 'FichesDuPerimetre'] as const
 const VUES_DES_PERIMETRES = [

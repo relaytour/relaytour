@@ -200,4 +200,5 @@ taches:
 - Une tâche déjà importée n'est jamais modifiée.
 - Une tâche partagée crée une déclinaison dans chaque périmètre cible qui n'en porte pas. Un périmètre ajouté plus tard à un groupe reçoit sa déclinaison à l'import suivant.
 - Un périmètre cible qui porte déjà une tâche de même `modele` la garde telle quelle. L'import la rattache à sa tâche partagée et le signale.
+- L'import ne déplace jamais un lien et garde un seul niveau. Il signale comme conflit, sans rien écrire, une déclinaison dont la tâche partagée est déjà la déclinaison d'une autre, ou dont le périmètre cible porte une tâche déjà liée ailleurs ou déjà partagée. Un périmètre archivé ne reçoit pas de déclinaison.
 - L'export (`orga:exporter --dossier …`) écrit tout le contenu que l'organisation porte en base, dans la disposition du dossier. Un fichier dont le sens ne change pas reste intact. L'export refuse une fiche qui contient des données personnelles.

@@ -6,6 +6,7 @@ import path from 'node:path'
 import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { empreinte } from '../lib/fiches.ts'
 import { creerOrganisation } from '../lib/installation.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
@@ -322,5 +323,130 @@ describe('import des tâches partagées', () => {
     } finally {
       rmSync(retour, { recursive: true, force: true })
     }
+  })
+})
+
+// Le contenu change entre deux imports. L'import ne déplace pas un lien et ne crée
+// jamais une chaîne : une déclinaison ne se décline pas, et une tâche partagée ne
+// devient pas la déclinaison d'une autre.
+describe('import qui contredit un lien existant', () => {
+  const CONFLITS = [
+    // L'escrime déclare maintenant le plan des lieux, que la natation tient déjà du
+    // pôle.
+    'natation/plan-des-lieux (déclinaison de escrime/plan-des-lieux) : la tâche du périmètre est déjà liée à une autre tâche partagée',
+    'escrime/clefs (déclinaison de lieux/clefs) : le périmètre est archivé',
+    // La natation voudrait décliner une tâche qu'elle tient elle-même du pôle.
+    "volley/besoins-de-lieux (déclinaison de natation/besoins-de-lieux) : natation/besoins-de-lieux est déjà la déclinaison d'une autre tâche",
+    // Le volley voudrait décliner vers le pôle une tâche que le pôle partage déjà.
+    'lieux/reservation (déclinaison de volley/reservation) : la tâche du périmètre porte déjà ses propres déclinaisons',
+  ].sort()
+  let avant = ''
+
+  const liens = async () =>
+    JSON.stringify(
+      (await taches()).map(t => [t.perimetre, t.modele, t.origine, t.fiche])
+    )
+
+  beforeAll(async () => {
+    avant = await liens()
+    const activite = await prisma.activite.findFirstOrThrow({
+      where: { organisationId, slug: ACTIVITE },
+    })
+    await prisma.perimetre.updateMany({
+      where: { activiteId: activite.id, slug: 'escrime' },
+      data: { archivedAt: new Date() },
+    })
+    // Une fiche restée en conflit garde son périmètre en base, même quand le
+    // dossier la range parmi les fiches communes.
+    const lieux = await prisma.perimetre.findFirstOrThrow({
+      where: { activiteId: activite.id, slug: 'lieux' },
+    })
+    const reserver = await prisma.fiche.findFirstOrThrow({
+      where: { organisationId, slug: `reserver-${s}` },
+    })
+    const contenu = '## Objectif\n\nRéserver avec le service des sports.'
+    const version = await prisma.ficheVersion.create({
+      data: {
+        ficheId: reserver.id,
+        titre: `Titre reserver-${s}`,
+        contenu,
+        empreinte: empreinte(`Titre reserver-${s}`, contenu),
+        source: 'APP',
+      },
+    })
+    await prisma.fiche.update({
+      where: { id: reserver.id },
+      data: { perimetreId: lieux.id, versionCouranteId: version.id },
+    })
+    ecrire(
+      'taches/lieux.yaml',
+      `taches:
+  - modele: clefs
+    titre: Remettre les clefs
+    fiche: reserver-${s}
+    declinaison:
+      groupe: sport
+`
+    )
+    ecrire(
+      'taches/natation.yaml',
+      'taches:\n  - modele: besoins-de-lieux\n    titre: Recenser\n    declinaison:\n      perimetres: [volley]\n'
+    )
+    ecrire(
+      'taches/escrime.yaml',
+      'taches:\n  - modele: plan-des-lieux\n    titre: Dresser le plan\n    declinaison:\n      perimetres: [natation]\n'
+    )
+    ecrire(
+      'taches/volley.yaml',
+      'taches:\n  - modele: reservation\n    titre: Réserver\n    declinaison:\n      perimetres: [lieux]\n'
+    )
+  })
+
+  it('annonce chaque conflit en simulation, sans rien écrire', async () => {
+    const rapport = rapportTaches(await importer(true))
+    expect([...rapport.conflits].sort()).toEqual(CONFLITS)
+    expect(rapport.rattachees).toEqual([])
+    expect(await liens()).toBe(avant)
+  })
+
+  it('ne lie ni ne crée les déclinaisons en conflit, et garde un seul niveau', async () => {
+    const rapport = rapportTaches(await importer())
+    expect([...rapport.conflits].sort()).toEqual(CONFLITS)
+    expect(rapport.rattachees).toEqual([])
+    expect(rapport.creees).toEqual([
+      'escrime/plan-des-lieux',
+      'lieux/clefs',
+      'natation/clefs (déclinaison de lieux/clefs)',
+      'volley/clefs (déclinaison de lieux/clefs)',
+      'volley/reservation',
+    ])
+    // Aucune chaîne : une tâche partagée n'est jamais elle-même une déclinaison.
+    expect(
+      await prisma.tache.count({
+        where: { editionId, origine: { origineId: { not: null } } },
+      })
+    ).toBe(0)
+    const lues = await taches()
+    // Les liens d'avant n'ont pas bougé.
+    expect(
+      lues
+        .filter(t => t.modele !== 'clefs' && t.origine !== null)
+        .map(t => [t.perimetre, t.modele, t.origine])
+    ).toEqual(
+      (JSON.parse(avant) as [string, string, string | null, string | null][])
+        .filter(([, , origine]) => origine !== null)
+        .map(([perimetre, modele, origine]) => [perimetre, modele, origine])
+    )
+    // Le périmètre archivé ne reçoit rien. La fiche du pôle ne suit pas dans les
+    // sports, même rangée parmi les fiches communes du dossier.
+    expect(
+      lues
+        .filter(t => t.modele === 'clefs')
+        .map(t => [t.perimetre, t.origine, t.fiche])
+    ).toEqual([
+      ['lieux', null, `reserver-${s}`],
+      ['natation', 'lieux', null],
+      ['volley', 'lieux', null],
+    ])
   })
 })
