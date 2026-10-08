@@ -302,6 +302,11 @@ html {
   width: 100%;
 }
 
+/* Le contenu reprend la largeur que le rail libère : un tableau large en profite. */
+.rt-rail + .rt-principal .rt-contenu {
+  max-width: 1364px;
+}
+
 /* En rail, le titre d'un groupe devient un filet : son texte ne tient pas. */
 .rt-rail .ant-menu-item-group-title {
   height: 1px;
@@ -368,6 +373,7 @@ html {
   min-width: 0;
   width: 100%;
   max-width: 1180px;
+  transition: max-width var(--rt-duree) var(--rt-ease-fluide);
   box-sizing: border-box;
   padding: 8px 12px 24px;
 }
@@ -2038,4 +2044,70 @@ a.rt-etiquette:hover {
   padding: max(16px, env(safe-area-inset-top))
     max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
     max(16px, env(safe-area-inset-left));
+}
+
+/* Tableau : en-tête et colonnes qui restent visibles (docs/design-system.md,
+   « Tableaux »). Le verre du tableau est translucide : une cellule figée ou un
+   en-tête collé reçoit un fond plein, sinon le contenu qui défile dessous se
+   lirait au travers. */
+.rt-tableau {
+  --rt-fond-fige: color-mix(in srgb, #fff 82%, var(--rt-sol-3));
+}
+
+.rt-tableau.ant-table-wrapper .ant-table-tbody > tr > td.ant-table-cell-fix {
+  background: var(--rt-fond-fige);
+}
+
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row:hover
+  > td.ant-table-cell-fix,
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr
+  > td.ant-table-cell-fix.ant-table-cell-row-hover {
+  background: color-mix(in srgb, var(--rt-fond-fige) 94%, var(--rt-encre));
+}
+
+.rt-tableau.ant-table-wrapper
+  .ant-table-tbody
+  > tr.ant-table-row-selected
+  > td.ant-table-cell-fix {
+  background: var(--rt-primaire-clair);
+}
+
+.rt-tableau.ant-table-wrapper .ant-table-sticky-holder {
+  background: var(--rt-fond-fige);
+  border-radius: var(--rt-rayon-champ) var(--rt-rayon-champ) 0 0;
+}
+
+/* La barre de défilement horizontale, collée en bas de l'écran tant que le
+   tableau est visible. */
+.rt-tableau.ant-table-wrapper .ant-table-sticky-scroll {
+  height: 12px;
+  background: color-mix(in srgb, var(--rt-fond-fige) 88%, transparent);
+  border-top: 1px solid var(--rt-encre-08);
+}
+
+.rt-tableau.ant-table-wrapper .ant-table-sticky-scroll-bar {
+  height: 8px;
+  margin-top: 2px;
+  border-radius: 999px;
+  background: var(--rt-encre-40);
+}
+
+/* Le titre de la première colonne et la punaise qui fige les premières colonnes
+   dans un tableau étroit. */
+.rt-titre-epinglable {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rt-punaise {
+  color: var(--rt-encre-55);
+}
+
+.rt-punaise[aria-pressed='true'] {
+  color: var(--rt-primaire);
 }

@@ -139,6 +139,25 @@ Chaque écran reste utilisable sur un téléphone de 375 pixels de large (ADR 00
 - **Saisie.** Un champ déclare son type et son `autoComplete` : le téléphone affiche alors le bon clavier et propose le code reçu.
 - **Application installée.** Un écran ne suppose pas la barre du navigateur : chaque écran offre un retour par l'interface.
 
+## Volets
+
+L'espace organisateur porte deux volets autour du contenu. Chacun se replie pour lui laisser la place.
+
+- **Volet de navigation.** Déplié, c'est une carte de verre flottante de 248 px. Replié, c'est un rail d'icônes de 64 px, collé au bord gauche de l'écran, sur toute sa hauteur, sans arrondi à gauche. Un bouton en tête du volet passe de l'un à l'autre. Le navigateur retient ce choix. Sans choix, le volet est déplié à partir de 1100 px de large et en rail de 768 à 1099 px. Sous 768 px, il devient un tiroir.
+- **Rail.** Une entrée ne garde que son icône, et son libellé s'affiche dans une bulle au survol et au focus. Le titre d'un groupe devient un filet. Le changement d'activité demande de déplier le volet.
+- **Volet latéral.** Dans un écran à deux colonnes, la colonne de droite se replie en une tranche de 28 px : ses cartes glissent vers la droite et ne montrent plus que leur bord arrondi. Le bouton placé en tête de la colonne, ou un clic sur la tranche, la rouvre. Cet état vaut pour l'écran affiché et ne se retient pas.
+- **Volet collant.** Le volet latéral reste dans l'écran pendant le défilement. Plus haut que l'écran, il suit le sens du défilement : son bas se cale en descendant, son haut en remontant. Sous 1100 px, les deux colonnes s'empilent et le volet suit le contenu.
+- **Mouvement.** La largeur, la marge et les arrondis changent ensemble, avec la courbe et la durée du matériau (240 ms).
+
+## Tableaux
+
+Tous les tableaux passent par le composant `Tableau`.
+
+- **Un seul défilement vertical.** Un tableau ne borne pas sa hauteur : la page défile. L'en-tête du tableau reste collé sous la barre haute.
+- **Barre de défilement horizontale.** Elle reste collée en bas de l'écran tant que le tableau est visible. La personne n'a pas à descendre jusqu'à la dernière ligne pour faire défiler les colonnes.
+- **Colonnes figées.** Le bouton d'ouverture, la case de sélection et la première colonne restent visibles pendant le défilement horizontal. Elles se figent d'office quand le tableau dispose de 900 px. En dessous, elles occuperaient trop de place : une punaise, dans l'en-tête de la première colonne, les fige sur choix. Le navigateur retient ce choix par tableau.
+- **Fond plein.** Le verre du tableau est translucide. Une cellule figée et un en-tête collé prennent un fond plein, pour que le contenu ne se lise pas au travers.
+
 ## Correspondance avec Ant Design 6
 
 | Jeton | Valeur |

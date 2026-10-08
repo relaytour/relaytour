@@ -21,6 +21,19 @@
           }
         },
         {
+          "id": "2026-10-08-orga-les-tableaux-gardent-leur-en-tete-leur-barre-de-defilement-e",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les tableaux gardent leur en-tête, leur barre de défilement et leurs premières colonnes à l'écran",
+            "texte": "Dans un tableau long, l'en-tête reste sous la barre haute et la barre de défilement horizontale reste en bas de l'écran. Les premières colonnes (ouverture, sélection, nom) restent visibles quand vous faites défiler les autres. Sur un petit écran, une punaise dans l'en-tête de la première colonne les fige sur votre choix.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-les-ecrans-d-administration-restent-utilisables-sur-un-telep",
           "date": "2026-10-07",
           "type": "fonctionnalite",
