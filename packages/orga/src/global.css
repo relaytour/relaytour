@@ -267,16 +267,25 @@ html {
   border-radius: 0 var(--rt-rayon-panneau) var(--rt-rayon-panneau) 0;
 }
 
+/* Déplié, le bouton de repli partage la ligne du nom de l'organisation : il ne
+   prend aucune hauteur au menu. */
 .rt-bascule-volet {
-  align-self: flex-end;
-  flex-shrink: 0;
-  margin: -8px 0 8px;
+  position: absolute;
+  top: 14px;
+  inset-inline-end: 12px;
   color: var(--rt-encre-55);
 }
 
+.rt-barre-laterale:not(.rt-rail) .rt-rappel-organisation {
+  padding-inline-end: 36px;
+}
+
+/* En rail, la ligne de l'organisation disparaît : le bouton prend sa place. */
 .rt-rail .rt-bascule-volet {
+  position: static;
   align-self: center;
-  margin-top: 0;
+  flex-shrink: 0;
+  margin-bottom: 8px;
 }
 
 .rt-rail .rt-rappel-organisation,
@@ -308,7 +317,7 @@ html {
 }
 
 /* En rail, le titre d'un groupe devient un filet : son texte ne tient pas. */
-.rt-rail .ant-menu-item-group-title {
+.rt-barre-laterale.rt-rail .ant-menu-item-group-title {
   height: 1px;
   margin: 10px 12px;
   padding: 0;
@@ -322,6 +331,29 @@ html {
   overflow-y: auto;
   background: transparent;
   border-inline-end: none !important;
+  /* La barre de défilement du menu reste fine, et ne se montre qu'au survol ou
+     au focus : au repos, elle chargerait le volet. */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-barre-laterale .ant-menu:hover,
+.rt-barre-laterale .ant-menu:focus-within {
+  scrollbar-color: var(--rt-encre-14) transparent;
+}
+
+/* Dans le rail, une barre décalerait les icônes : elle disparaît. Le menu
+   défile toujours, à la molette, au doigt et au clavier, et un fondu en bas
+   signale qu'il continue. */
+.rt-barre-laterale.rt-rail .ant-menu {
+  scrollbar-width: none;
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    #000 calc(100% - 20px),
+    transparent
+  );
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
 }
 
 .rt-barre-laterale .ant-menu-item-group-title {

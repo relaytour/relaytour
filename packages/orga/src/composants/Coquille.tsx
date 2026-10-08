@@ -304,6 +304,7 @@ function Mise({ session }: { session: Session }) {
           <Button
             className="rt-bascule-volet"
             type="text"
+            size="small"
             icon={rail ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             aria-label={rail ? 'Déplier le menu' : 'Replier le menu'}
             aria-expanded={!rail}

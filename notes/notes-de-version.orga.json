@@ -34,6 +34,19 @@
           }
         },
         {
+          "id": "2026-10-08-orga-le-menu-et-le-volet-lateral-se-replient-pour-laisser-la-plac",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le menu et le volet latéral se replient pour laisser la place au contenu",
+            "texte": "Un bouton, à côté du nom de l'organisation, réduit le menu à une colonne d'icônes collée au bord de l'écran. Votre navigateur retient ce choix. Dans les écrans à deux colonnes, la colonne de droite se replie aussi, et elle reste à l'écran pendant que vous faites défiler la page.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-les-ecrans-d-administration-restent-utilisables-sur-un-telep",
           "date": "2026-10-07",
           "type": "fonctionnalite",
