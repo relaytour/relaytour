@@ -38,6 +38,24 @@ export interface Messagerie {
   copiesEtablies: boolean
   /** Les systèmes où l'application répond à son schéma d'URL. */
   systemes?: string
+  /**
+   * Le signe qui sépare des adresses copiées, à coller dans cette cible. Null
+   * pour la messagerie par défaut : l'application qui s'ouvre n'est pas connue,
+   * et le réglage de la personne tranche.
+   */
+  separateur: Separateur | null
+}
+
+/**
+ * Le signe placé entre deux adresses copiées. La norme des mails emploie la
+ * virgule ; Outlook attend un point-virgule et ne découpe pas une liste collée
+ * avec des virgules.
+ */
+export type Separateur = ',' | ';'
+
+export const SEPARATEURS: Record<Separateur, string> = {
+  ',': 'Virgule',
+  ';': 'Point-virgule',
 }
 
 export const MESSAGERIE_PAR_DEFAUT: CleMessagerie = 'defaut'
@@ -50,6 +68,7 @@ export const MESSAGERIES: readonly Messagerie[] = [
     detail:
       'Votre appareil ouvre l’application de mail réglée par défaut dans votre système ou dans votre navigateur.',
     copiesEtablies: true,
+    separateur: null,
   },
   {
     cle: 'gmail',
@@ -58,6 +77,7 @@ export const MESSAGERIES: readonly Messagerie[] = [
     detail:
       'Gmail s’ouvre dans un nouvel onglet, avec le compte Google connecté dans ce navigateur.',
     copiesEtablies: true,
+    separateur: ',',
   },
   {
     cle: 'outlook',
@@ -66,6 +86,7 @@ export const MESSAGERIES: readonly Messagerie[] = [
     detail:
       'Outlook sur le web s’ouvre dans un nouvel onglet, avec le compte Microsoft 365 connecté dans ce navigateur.',
     copiesEtablies: true,
+    separateur: ';',
   },
   {
     cle: 'outlook-perso',
@@ -74,6 +95,7 @@ export const MESSAGERIES: readonly Messagerie[] = [
     detail:
       'Outlook.com s’ouvre dans un nouvel onglet, avec le compte Microsoft personnel connecté dans ce navigateur.',
     copiesEtablies: false,
+    separateur: ';',
   },
   {
     cle: 'yahoo',
@@ -82,6 +104,7 @@ export const MESSAGERIES: readonly Messagerie[] = [
     detail:
       'Yahoo Mail s’ouvre dans un nouvel onglet, avec le compte connecté dans ce navigateur.',
     copiesEtablies: false,
+    separateur: ',',
   },
   {
     cle: 'proton',
@@ -90,6 +113,7 @@ export const MESSAGERIES: readonly Messagerie[] = [
     detail:
       'Proton Mail s’ouvre dans un nouvel onglet, avec le compte connecté dans ce navigateur.',
     copiesEtablies: true,
+    separateur: ',',
   },
   {
     cle: 'app-gmail',
@@ -99,6 +123,7 @@ export const MESSAGERIES: readonly Messagerie[] = [
       'Le lien ouvre l’application Gmail installée sur l’appareil. Google ne documente pas ce lien.',
     copiesEtablies: false,
     systemes: 'iPhone et iPad seulement',
+    separateur: ',',
   },
   {
     cle: 'app-outlook',
@@ -108,6 +133,7 @@ export const MESSAGERIES: readonly Messagerie[] = [
       'Le lien ouvre l’application Outlook installée sur l’appareil. Microsoft ne documente pas ce lien.',
     copiesEtablies: false,
     systemes: 'iPhone, iPad et Android, ni Mac ni Windows',
+    separateur: ';',
   },
 ]
 
@@ -238,6 +264,43 @@ export function enregistrerMessagerie(
   } catch {
     return false
   }
+}
+
+const CLE_SEPARATEUR = 'relaytour.messagerie.separateur'
+
+/** Le séparateur réglé pour la messagerie par défaut, sinon la virgule. */
+export function lireSeparateur(stockage = stockageDuNavigateur()): Separateur {
+  try {
+    return stockage?.getItem(CLE_SEPARATEUR) === ';' ? ';' : ','
+  } catch {
+    return ','
+  }
+}
+
+/** Garde le séparateur dans ce navigateur. Faux quand le stockage le refuse. */
+export function enregistrerSeparateur(
+  separateur: Separateur,
+  stockage = stockageDuNavigateur()
+): boolean {
+  if (stockage === null) return false
+  try {
+    if (separateur === ',') stockage.removeItem(CLE_SEPARATEUR)
+    else stockage.setItem(CLE_SEPARATEUR, separateur)
+    return true
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Le séparateur proposé pour des adresses à coller dans une cible : celui de la
+ * cible, ou le réglage de la personne pour la messagerie par défaut.
+ */
+export function separateurPropose(
+  cle: CleMessagerie,
+  reglage: Separateur = lireSeparateur()
+): Separateur {
+  return messagerie(cle).separateur ?? reglage
 }
 
 // ── Ouverture ────────────────────────────────────────────────────────────────

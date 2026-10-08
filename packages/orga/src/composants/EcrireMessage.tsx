@@ -32,7 +32,6 @@ import {
   MODELE_LIBRE,
   MODELE_PERIMETRE,
   OBJET_MAX,
-  adressesACopier,
   champParDefaut,
   composer,
   listerTaches,
@@ -66,6 +65,7 @@ import { comparer } from '../lib/tableau'
 import { estOuverte } from '../lib/taches'
 
 import ChoixMessagerie from './ChoixMessagerie'
+import CopierAdresses from './CopierAdresses'
 
 // Fenêtre de rédaction d'un message (ADR 0020). L'admin choisit un modèle, complète
 // le texte, puis ouvre sa propre messagerie : l'application n'envoie rien. Elle
@@ -397,33 +397,11 @@ function Redaction({
   }
 
   const copies = (
-    <Space wrap>
-      {(
-        [
-          ['a', champ === 'A' ? 'Copier l’adresse' : null],
-          ['cc', 'Copier les adresses en Cc'],
-          ['cci', 'Copier les adresses en Cci'],
-        ] as const
-      ).map(
-        ([cle, libelle]) =>
-          libelle !== null &&
-          adresses[cle].length > 0 && (
-            <Button
-              key={cle}
-              icon={<CopyOutlined />}
-              onClick={() =>
-                void copier(
-                  adressesACopier(adresses[cle]),
-                  adresses[cle].length === 1
-                    ? 'L’adresse est copiée.'
-                    : `Les ${adresses[cle].length} adresses sont copiées.`
-                )
-              }
-            >
-              {libelle}
-            </Button>
-          )
-      )}
+    <CopierAdresses
+      adresses={adresses}
+      seul={champ === 'A'}
+      cible={cleMessagerie}
+    >
       <Button
         icon={<CopyOutlined />}
         onClick={() => void copier(objet, 'L’objet est copié.')}
@@ -436,7 +414,7 @@ function Redaction({
       >
         Copier le texte
       </Button>
-    </Space>
+    </CopierAdresses>
   )
 
   if (destinataires.length === 0) {

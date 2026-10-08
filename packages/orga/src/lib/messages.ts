@@ -496,7 +496,13 @@ export function preparerLien(
   }
 }
 
-/** Les adresses d'un champ, prêtes à être collées dans une messagerie. */
-export function adressesACopier(adresses: string[]): string {
-  return adresses.join(', ')
+/**
+ * Les adresses d'un champ, prêtes à être collées dans une messagerie. Outlook
+ * attend un point-virgule entre deux adresses, les autres une virgule.
+ */
+export function adressesACopier(
+  adresses: string[],
+  separateur: ',' | ';' = ','
+): string {
+  return adresses.join(`${separateur} `)
 }

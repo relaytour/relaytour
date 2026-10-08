@@ -3,13 +3,16 @@ import { describe, expect, it } from 'vitest'
 import {
   MESSAGERIES,
   enregistrerMessagerie,
+  enregistrerSeparateur,
   envoiDEssai,
   lienGuideMessagerie,
   lienVers,
   lireMessagerie,
+  lireSeparateur,
   ouvreUnOnglet,
+  separateurPropose,
 } from './messagerie'
-import { LIEN_MAX, lienMailto, preparerLien } from './messages'
+import { LIEN_MAX, adressesACopier, lienMailto, preparerLien } from './messages'
 
 const envoi = {
   a: ['camille@exemple.org'],
@@ -150,6 +153,47 @@ describe('messagerie gardée dans le navigateur', () => {
     }
     expect(enregistrerMessagerie('gmail', plein)).toBe(false)
     expect(enregistrerMessagerie('gmail', null)).toBe(false)
+  })
+})
+
+describe('séparateur des adresses copiées', () => {
+  it('sépare par une virgule, ou par un point-virgule pour Outlook', () => {
+    expect(adressesACopier(envoi.cci)).toBe('alex@exemple.org, noa@exemple.org')
+    expect(adressesACopier(envoi.cci, ';')).toBe(
+      'alex@exemple.org; noa@exemple.org'
+    )
+    expect(adressesACopier(envoi.a, ';')).toBe('camille@exemple.org')
+  })
+
+  it('propose le point-virgule pour les trois cibles Outlook, quel que soit le réglage', () => {
+    for (const cle of ['outlook', 'outlook-perso', 'app-outlook'] as const) {
+      expect(separateurPropose(cle, ',')).toBe(';')
+    }
+    for (const cle of ['gmail', 'yahoo', 'proton', 'app-gmail'] as const) {
+      expect(separateurPropose(cle, ';')).toBe(',')
+    }
+  })
+
+  it('suit le réglage de la personne pour la messagerie par défaut', () => {
+    expect(separateurPropose('defaut', ',')).toBe(',')
+    expect(separateurPropose('defaut', ';')).toBe(';')
+  })
+
+  it('garde le réglage dans le navigateur, la virgule par défaut', () => {
+    const s = stockage()
+    expect(lireSeparateur(s)).toBe(',')
+    expect(lireSeparateur(null)).toBe(',')
+    expect(enregistrerSeparateur(';', s)).toBe(true)
+    expect(lireSeparateur(s)).toBe(';')
+    enregistrerSeparateur(',', s)
+    expect(s.valeurs.size).toBe(0)
+    expect(enregistrerSeparateur(';', null)).toBe(false)
+  })
+
+  it('écarte une valeur inconnue', () => {
+    expect(
+      lireSeparateur(stockage({ 'relaytour.messagerie.separateur': '|' }))
+    ).toBe(',')
   })
 })
 
