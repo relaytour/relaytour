@@ -7,6 +7,7 @@ import type {
 import { mettreEnFile } from '../courriel/file.ts'
 
 import { publierNotification } from './flux.ts'
+import { pousser } from './push-file.ts'
 
 import { journal } from './journal.ts'
 
@@ -16,6 +17,9 @@ export const PREFERENCES_PAR_DEFAUT = {
   mailEcheance: true,
   mailDemandes: true,
   applicationPerimetre: true,
+  pushTaches: true,
+  pushEcheances: true,
+  pushDemandes: true,
   dernierResumeLe: null,
 } as const
 
@@ -195,6 +199,16 @@ export async function notifier(
         select: { id: true },
       })
       publierNotification(organisationId, userId)
+      // Push (ADR 0024) : la modification d'une tâche assignée, et l'assignation
+      // ou le retrait qui concerne le destinataire lui-même. Ce que la personne
+      // apprend comme simple référente du périmètre reste dans la cloche.
+      if (
+        options.mailImmediat ||
+        ((notification.type === 'TACHE_ASSIGNEE' ||
+          notification.type === 'TACHE_DESASSIGNEE') &&
+          notification.personneId === userId)
+      )
+        await pousser(creee.id)
       if (options.mailImmediat) {
         await mettreEnFile(
           'tache-modifiee',

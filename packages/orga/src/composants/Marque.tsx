@@ -78,8 +78,28 @@ export default function Marque({
  * connexion : le logiciel libre qui fait tourner l'espace. Son nom porte le lien
  * vers le code source, que l'AGPL oblige à proposer (article 13).
  */
-export function SignatureRelaytour() {
+export function SignatureRelaytour({
+  compacte = false,
+}: {
+  /** Dans le rail du volet de navigation : le pictogramme seul porte le lien. */
+  compacte?: boolean
+}) {
   const { codeSource } = useOrganisation()
+  if (compacte)
+    return (
+      <div className="rt-pied-marque">
+        <a
+          href={codeSource}
+          target="_blank"
+          rel="noreferrer"
+          aria-label="Propulsé par Relaytour : code source"
+          title="Propulsé par Relaytour : code source"
+          style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}
+        >
+          <Pictogramme taille={16} monochrome />
+        </a>
+      </div>
+    )
   return (
     <div className="rt-pied-marque">
       <span style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}>

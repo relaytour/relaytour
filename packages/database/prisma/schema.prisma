@@ -208,6 +208,7 @@ model User {
   droitsAccordes     DroitRedaction[]        @relation("DroitRedactionAuteur")
   notifications      Notification[]          @relation("NotificationDestinataire")
   preferences        PreferenceNotification?
+  abonnementsPush    AbonnementPush[]
   assignations       TacheAssignation[]
   journal            Journal[]               @relation("JournalActeur")
   souhaits           Souhait[]
@@ -822,6 +823,11 @@ model PreferenceNotification {
   // Notification dans l'application quand une autre personne agit sur une tâche ou
   // une fiche d'un périmètre où la personne est affectée.
   applicationPerimetre Boolean         @default(true)
+  // Notifications push (ADR 0024), par famille. Elles ne partent que vers les
+  // appareils où la personne les a activées (AbonnementPush).
+  pushTaches           Boolean         @default(true)
+  pushEcheances        Boolean         @default(true)
+  pushDemandes         Boolean         @default(true)
   dernierResumeLe      DateTime?
   // Date du dernier résumé envoyé pour chaque organisation : { [organisationId]: ISO }.
   // Une personne membre de plusieurs organisations reçoit le résumé de chacune (ADR 0008).
@@ -832,4 +838,27 @@ model PreferenceNotification {
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([organisationId])
+}
+
+// Abonnement d'un appareil aux notifications push (ADR 0024). L'adresse vient du
+// service de push du navigateur ; son empreinte SHA-256 la désigne, car une
+// adresse dépasse la longueur d'un index. Un abonnement appartient à une
+// personne, pas à une organisation, comme ses préférences.
+model AbonnementPush {
+  id        String   @id @default(cuid())
+  userId    String
+  empreinte String   @db.Char(64)
+  adresse   String   @db.Text
+  // Clés de chiffrement fournies par le navigateur : le message est chiffré pour
+  // cet appareil, et le service de push ne peut pas le lire.
+  p256dh    String   @db.VarChar(255)
+  auth      String   @db.VarChar(255)
+  // Libellé d'appareil, déduit de l'agent de navigation : « iPhone », « Android »…
+  appareil  String   @db.VarChar(60)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, empreinte])
 }

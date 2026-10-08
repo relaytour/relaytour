@@ -2,10 +2,16 @@ import { Prisma, prisma, type Activite } from '@relaytour/database'
 import type { z } from 'zod'
 
 import { erreurSaisie } from '../lib/erreurs.ts'
-import { EXTENSIONS, verifierMedia, type TypeMedia } from '../lib/medias.ts'
+import {
+  EXTENSIONS,
+  verifierIconeApplication,
+  verifierMedia,
+  type TypeMedia,
+} from '../lib/medias.ts'
 import {
   configurationOrganisation,
   DeclarationOrganisationSchema,
+  lireDeclaration,
   IdentiteActiviteSchema,
   invaliderConfigurationOrganisation,
   lireIdentiteActivite,
@@ -51,13 +57,13 @@ async function declarationEnBase(
     where: { id: organisationId },
     select: { configuration: true },
   })
-  const r = DeclarationOrganisationSchema.safeParse(ligne.configuration)
-  if (!r.success) {
+  const r = lireDeclaration(ligne.configuration)
+  if (r.etat !== 'valide') {
     throw erreurSaisie(
       'La configuration de l’organisation est invalide : l’hébergeur doit la réimporter.'
     )
   }
-  return r.data
+  return r.declaration
 }
 
 /** Vérifie qu'une image appartient à l'organisation et a le format attendu. */
@@ -80,6 +86,25 @@ async function exigerMedia(
     )
   }
   return empreinte
+}
+
+/** L'icône d'application : une image PNG de l'organisation, aux dimensions exigées (ADR 0023). */
+async function exigerIconeApplication(
+  organisationId: string,
+  empreinte: string | null | undefined
+): Promise<string | undefined> {
+  const icone = await exigerMedia(organisationId, empreinte, 'png')
+  if (icone === undefined) return undefined
+  const media = await prisma.media.findUnique({
+    where: { organisationId_empreinte: { organisationId, empreinte: icone } },
+    select: { donnees: true },
+  })
+  try {
+    verifierIconeApplication(Buffer.from(media!.donnees))
+  } catch (e) {
+    throw erreurSaisie((e as Error).message)
+  }
+  return icone
 }
 
 function texteFacultatif(
@@ -156,6 +181,16 @@ const IdentiteOrganisationRef = builder
       favicon: t.string({
         nullable: true,
         resolve: i => i.declaration.favicon,
+      }),
+      iconeApplication: t.string({
+        nullable: true,
+        description:
+          'Empreinte de l’icône de l’application installée : un PNG carré de 512 pixels (ADR 0023).',
+        resolve: i => i.declaration.iconeApplication,
+      }),
+      iconeApplicationUrl: t.string({
+        nullable: true,
+        resolve: i => urlMedia(i.declaration.iconeApplication, 'png'),
       }),
       logoUrl: t.string({
         nullable: true,
@@ -373,6 +408,7 @@ builder.mutationFields(t => ({
       logoPng: t.arg.string(),
       logoSvg: t.arg.string(),
       favicon: t.arg.string(),
+      iconeApplication: t.arg.string(),
       theme: t.arg({ type: 'JSONObject' }),
     },
     resolve: async (_root, args, ctx) => {
@@ -386,6 +422,10 @@ builder.mutationFields(t => ({
         )
       }
       const favicon = await exigerMedia(organisationId, args.favicon, 'png')
+      const iconeApplication = await exigerIconeApplication(
+        organisationId,
+        args.iconeApplication
+      )
       const declaration = valider(DeclarationOrganisationSchema, {
         ...actuelle,
         nom: texteRequis(args.nom, 'Le nom'),
@@ -403,6 +443,7 @@ builder.mutationFields(t => ({
                 ...(logoSvg === undefined ? {} : { svg: logoSvg }),
               },
         favicon,
+        iconeApplication,
         theme: args.theme ?? undefined,
       })
       // Les activités gardent une identité valide : un contact qui cesserait

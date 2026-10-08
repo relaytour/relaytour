@@ -65,6 +65,9 @@ const PreferencesRef = builder
     mailEcheance: boolean
     mailDemandes: boolean
     applicationPerimetre: boolean
+    pushTaches: boolean
+    pushEcheances: boolean
+    pushDemandes: boolean
   }>('PreferencesNotification')
   .implement({
     fields: t => ({
@@ -80,6 +83,18 @@ const PreferencesRef = builder
       applicationPerimetre: t.exposeBoolean('applicationPerimetre', {
         description:
           'Notification dans l’application quand une autre personne agit sur une tâche ou une fiche d’un périmètre où la personne est affectée.',
+      }),
+      pushTaches: t.exposeBoolean('pushTaches', {
+        description:
+          'Notification push quand une tâche est assignée à la personne, lui est retirée, ou quand une autre personne modifie une de ses tâches (ADR 0024).',
+      }),
+      pushEcheances: t.exposeBoolean('pushEcheances', {
+        description:
+          'Notification push pour les échéances proches et les retards.',
+      }),
+      pushDemandes: t.exposeBoolean('pushDemandes', {
+        description:
+          'Notification push quand une activité que la personne administre reçoit une demande.',
       }),
     }),
   })
@@ -163,6 +178,15 @@ builder.mutationFields(t => ({
       applicationPerimetre: t.arg.boolean({
         description: 'Sans valeur, ce réglage ne change pas.',
       }),
+      pushTaches: t.arg.boolean({
+        description: 'Sans valeur, ce réglage ne change pas.',
+      }),
+      pushEcheances: t.arg.boolean({
+        description: 'Sans valeur, ce réglage ne change pas.',
+      }),
+      pushDemandes: t.arg.boolean({
+        description: 'Sans valeur, ce réglage ne change pas.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const donnees = {
@@ -174,6 +198,15 @@ builder.mutationFields(t => ({
           : {}),
         ...(typeof args.applicationPerimetre === 'boolean'
           ? { applicationPerimetre: args.applicationPerimetre }
+          : {}),
+        ...(typeof args.pushTaches === 'boolean'
+          ? { pushTaches: args.pushTaches }
+          : {}),
+        ...(typeof args.pushEcheances === 'boolean'
+          ? { pushEcheances: args.pushEcheances }
+          : {}),
+        ...(typeof args.pushDemandes === 'boolean'
+          ? { pushDemandes: args.pushDemandes }
           : {}),
       }
       return prisma.preferenceNotification.upsert({
