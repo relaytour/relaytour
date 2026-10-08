@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-08-serveur-une-tache-type-se-decline-dans-d-autres-perimetres",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une tâche type se décline dans d'autres périmètres",
+            "texte": "Dans un dossier de contenu, une tâche type accepte une clé `declinaison`. Elle désigne un groupe de périmètres ou une liste de périmètres. L'import crée alors la tâche dans son périmètre, puis une déclinaison dans chaque périmètre cible. Chaque déclinaison garde son statut, ses personnes assignées et son échéance. Un périmètre cible qui porte déjà une tâche de même modèle la garde : l'import la rattache à sa tâche partagée et le signale. Un contenu existant reste valide sans changement.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-08-serveur-une-activite-declare-ses-phases",
           "date": "2026-10-08",
           "type": "fonctionnalite",

@@ -143,6 +143,9 @@ Un seul mot par notion.
 | formulaire public | Page lisible sans session où une personne dépose une demande pour rejoindre l'équipe d'une activité. Un admin l'ouvre, et règle son introduction, sa question complémentaire et ses paliers de disponibilité (ADR 0015). |
 | ouverte aux souhaits | Réglage d'une activité : tous les membres de l'organisation découvrent ses périmètres et formulent leurs souhaits (ADR 0012). |
 | tâche | Action datée d'un périmètre pour une édition. |
+| tâche partagée | Tâche d'un périmètre, déclinée dans d'autres périmètres de la même activité pour la même période. Elle garde son statut propre et montre l'état de ses déclinaisons (ADR 0026). |
+| déclinaison | Tâche créée dans un périmètre cible depuis une tâche partagée. Elle vit comme toute tâche de ce périmètre : statut, personnes assignées, échéance (ADR 0026). |
+| accord | Réponse d'un périmètre cible à une déclinaison proposée : acceptée ou refusée. Un admin de l'activité impose une déclinaison sans accord (ADR 0026). |
 | fiche | Fiche méthode (« comment faire ») d'un périmètre ou commune. |
 | mode d'emploi | Page publique du site (`site/modes-d-emploi/`) qui décrit les écrans d'un rôle : admin de l'organisation, admin d'activité, référent·e. Une page peut aussi traiter un point précis, commun à plusieurs rôles : la messagerie, l'installation de l'application. Ne pas confondre avec une fiche. |
 | admin de l'organisation | Membre du bureau qui gère toutes les activités, les comptes et l'identité de l'organisation. Il nomme les admins de l'organisation et les admins d'activité. |

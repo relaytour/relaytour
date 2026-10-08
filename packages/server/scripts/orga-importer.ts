@@ -75,6 +75,10 @@ function imprimerActivite(r: RapportActivite) {
     console.log(`  Tâches de la période ${annee}`)
     afficher('créées', r.taches.creees)
     afficher('déjà présentes (non modifiées)', r.taches.dejaPresentes)
+    afficher(
+      'rattachées à leur tâche partagée (non modifiées)',
+      r.taches.rattachees
+    )
   }
 }
 
