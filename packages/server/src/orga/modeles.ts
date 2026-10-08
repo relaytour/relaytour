@@ -16,6 +16,7 @@ import {
   verifierMedia,
   type MediaValide,
 } from '../lib/medias.ts'
+import { ECHEANCE_RELATIVE, PhasesSchema } from '../lib/phases.ts'
 import {
   DeclarationOrganisationSchema,
   IdentiteActiviteSchema,
@@ -58,6 +59,9 @@ export const ActiviteDeclaree = z.strictObject({
   sigle: z.string().trim().min(1).max(20).optional(),
   nature: z.enum(['EVENEMENT', 'SAISON', 'MANDAT']).default('EVENEMENT'),
   groupes: z.array(GroupeModele).min(1).max(10).default(GROUPES_PAR_DEFAUT),
+  // Phases de l'activité, dans l'ordre (ADR 0025). Absentes, l'activité garde les
+  // phases par défaut.
+  phases: PhasesSchema.optional(),
   ordre: z.number().int().min(0).max(999).default(0),
   // Tous les membres découvrent les périmètres et formulent leurs souhaits (ADR 0012).
   souhaitsOuverts: z.boolean().optional(),
@@ -119,7 +123,25 @@ const EnteteFiche = z.strictObject({
 // J-120 : 120 jours avant le premier jour de la période. J+3 : 3 jours après.
 const EcheanceRelative = z
   .string()
-  .regex(/^J[-+]\d{1,3}$/, 'échéance relative de la forme J-120 ou J+3')
+  .regex(ECHEANCE_RELATIVE, 'échéance relative de la forme J-120 ou J+3')
+
+// Déclinaison d'une tâche partagée (ADR 0026) : la tâche type se décline dans les
+// périmètres d'un groupe, ou dans une liste de périmètres. Un champ absent reprend
+// celui de la tâche partagée.
+const Declinaison = z
+  .strictObject({
+    groupe: Slug.optional(),
+    perimetres: z.array(Slug).min(1).optional(),
+    titre: z.string().min(1).max(200).optional(),
+    description: z.string().max(5000).optional(),
+    echeance: EcheanceRelative.optional(),
+    // Une fiche commune seulement : les périmètres cibles la lisent tous.
+    fiche: Slug.optional(),
+  })
+  .refine(d => (d.groupe === undefined) !== (d.perimetres === undefined), {
+    message: 'groupe ou perimetres attendu, l’un des deux',
+    path: ['groupe'],
+  })
 
 const TacheModele = z.strictObject({
   modele: Slug,
@@ -127,6 +149,7 @@ const TacheModele = z.strictObject({
   description: z.string().max(5000).optional(),
   echeance: EcheanceRelative.optional(),
   fiche: Slug.optional(),
+  declinaison: Declinaison.optional(),
 })
 
 export const FichierTaches = z.strictObject({
@@ -136,6 +159,44 @@ export const FichierTaches = z.strictObject({
 export type PerimetreModele = z.output<typeof PerimetreDeclare>
 export type TacheModele = z.infer<typeof TacheModele>
 export type ActiviteDeclaree = z.output<typeof ActiviteDeclaree>
+
+/**
+ * Les périmètres cibles d'une tâche partagée, dans l'ordre de perimetres.yaml : ceux
+ * du groupe déclaré, ou ceux de la liste. Le périmètre d'origine n'en fait jamais
+ * partie.
+ */
+export function ciblesDeLaDeclinaison(
+  tache: TacheModele,
+  origine: string,
+  perimetres: readonly PerimetreModele[]
+): string[] {
+  const declinaison = tache.declinaison
+  if (declinaison === undefined) return []
+  const voulus =
+    declinaison.perimetres === undefined
+      ? null
+      : new Set(declinaison.perimetres)
+  return perimetres
+    .filter(
+      p =>
+        p.slug !== origine &&
+        (voulus === null ? p.groupe === declinaison.groupe : voulus.has(p.slug))
+    )
+    .map(p => p.slug)
+}
+
+/** Les textes d'une déclinaison : ceux qu'elle déclare, sinon ceux de sa tâche partagée. */
+export function textesDeLaDeclinaison(tache: TacheModele): {
+  titre: string
+  description: string | undefined
+  echeance: string | undefined
+} {
+  return {
+    titre: tache.declinaison?.titre ?? tache.titre,
+    description: tache.declinaison?.description ?? tache.description,
+    echeance: tache.declinaison?.echeance ?? tache.echeance,
+  }
+}
 
 export interface FicheModele {
   slug: string
@@ -437,7 +498,12 @@ function lireActivite(
         )
       }
       const personnelles = donneesPersonnelles(
-        `${tache.titre}\n${tache.description ?? ''}`,
+        [
+          tache.titre,
+          tache.description ?? '',
+          tache.declinaison?.titre ?? '',
+          tache.declinaison?.description ?? '',
+        ].join('\n'),
         role
       )
       if (personnelles.length > 0) {
@@ -447,6 +513,86 @@ function lireActivite(
       }
     }
     taches.set(perimetre, r.data.taches)
+  }
+
+  // Tâches partagées (ADR 0026). Les cibles se vérifient après la lecture de tous
+  // les fichiers : une tâche partagée peut viser un périmètre lu après le sien.
+  const fichierTaches = (perimetre: string) =>
+    relatif(path.join(base, 'taches', `${perimetre}.yaml`))
+  // Pour chaque périmètre cible, le fichier d'origine de chaque modèle décliné.
+  const declinees = new Map<string, Map<string, string>>()
+  for (const [origine, liste] of taches) {
+    const nom = fichierTaches(origine)
+    for (const tache of liste) {
+      const declinaison = tache.declinaison
+      if (declinaison === undefined) continue
+      if (
+        declinaison.groupe !== undefined &&
+        !groupes.has(declinaison.groupe)
+      ) {
+        erreurs.push(
+          `${nom} : ${tache.modele} se décline dans le groupe ${declinaison.groupe}, que l'activité ne déclare pas (${[...groupes].join(', ')})`
+        )
+        continue
+      }
+      for (const slug of declinaison.perimetres ?? []) {
+        if (slug === origine) {
+          erreurs.push(
+            `${nom} : ${tache.modele} ne se décline pas dans son propre périmètre`
+          )
+        } else if (!slugsPerimetres.has(slug)) {
+          erreurs.push(
+            `${nom} : ${tache.modele} se décline dans le périmètre ${slug}, qui n'existe pas dans ${nomPerimetres}`
+          )
+        }
+      }
+      if (
+        declinaison.perimetres !== undefined &&
+        new Set(declinaison.perimetres).size !== declinaison.perimetres.length
+      ) {
+        erreurs.push(
+          `${nom} : ${tache.modele} cite deux fois le même périmètre cible`
+        )
+      }
+      const cibles = ciblesDeLaDeclinaison(tache, origine, perimetres)
+      if (cibles.length === 0 && declinaison.groupe !== undefined) {
+        erreurs.push(
+          `${nom} : ${tache.modele} se décline dans le groupe ${declinaison.groupe}, qui ne contient aucun autre périmètre`
+        )
+      }
+      const fiche =
+        declinaison.fiche === undefined
+          ? undefined
+          : slugsFiches.get(declinaison.fiche)
+      if (declinaison.fiche !== undefined && fiche === undefined) {
+        erreurs.push(
+          `${nom} : la déclinaison de ${tache.modele} cite la fiche ${declinaison.fiche}, qui n'existe pas dans cette activité`
+        )
+      }
+      if (fiche !== undefined && fiche.perimetre !== null) {
+        erreurs.push(
+          `${nom} : la déclinaison de ${tache.modele} ne cite qu'une fiche commune`
+        )
+      }
+      // Une tâche se retrouve par son périmètre et son modèle : un périmètre cible
+      // ne porte donc pas deux fois le même modèle.
+      for (const cible of cibles) {
+        if ((taches.get(cible) ?? []).some(t => t.modele === tache.modele)) {
+          erreurs.push(
+            `${fichierTaches(cible)} : le modèle ${tache.modele} est déjà décliné depuis ${nom}`
+          )
+        }
+        const recus = declinees.get(cible) ?? new Map<string, string>()
+        const autre = recus.get(tache.modele)
+        if (autre !== undefined) {
+          erreurs.push(
+            `${nom} : le modèle ${tache.modele} est déjà décliné dans ${cible} depuis ${autre}`
+          )
+        }
+        recus.set(tache.modele, nom)
+        declinees.set(cible, recus)
+      }
+    }
   }
 
   return { declaration, implicite, dossier, perimetres, fiches, taches }

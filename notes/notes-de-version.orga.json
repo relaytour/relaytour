@@ -19,6 +19,45 @@
             "texte": "Dans l'application installée sur un iPhone, une bande claire restait visible sous l'heure, sur le fond coloré d'une organisation. Une fenêtre en plein écran défilait aussi sous l'heure. Le haut de l'écran est maintenant flouté sans teinte, y compris au-dessus des fenêtres, et le texte ne se lit plus à côté des angles de la barre haute.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-08-orga-vous-reglez-les-phases-d-une-activite",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Vous réglez les phases d'une activité",
+            "texte": "L'écran « Activités » permet de modifier les phases d'une activité : leur nom, leur ordre et leur dernier jour. Le dernier jour se compte depuis le premier jour de la période, par exemple J-120 pour 120 jours avant. La dernière phase reçoit toutes les tâches qui suivent. Les tâches changent de phase dès l'enregistrement, sans être modifiées. Une activité que vous ne réglez pas garde quatre phases : Lancement, Préparation, Derniers réglages, Déroulement et bilan.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-08-orga-une-tache-se-partage-avec-d-autres-perimetres",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une tâche se partage avec d'autres périmètres",
+            "texte": "Depuis la page de votre périmètre, vous déclinez une tâche dans d'autres périmètres de l'activité, à sa création ou depuis le menu « Autres actions ». Chaque périmètre choisi reçoit sa propre tâche, que ses référentes et référents acceptent ou refusent. Votre tâche indique où en sont ses déclinaisons, par exemple « 6 faites sur 9 ». Une tâche reçue indique le périmètre qui la demande. Les admins d'activité ajoutent une tâche à un périmètre sans attendre son accord. Le rétroplanning réunit sur une ligne les déclinaisons d'une même tâche qui tombent le même jour.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-08-orga-les-taches-se-regroupent-par-phase-ou-par-fiche",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les tâches se regroupent par phase ou par fiche",
+            "texte": "La page d'un périmètre propose trois lectures de ses tâches : par échéance, par phase ou par fiche méthode. Le rétroplanning en propose deux : par mois, ou par phase puis par périmètre. Une phase est une partie de la période, par exemple « Préparation ». Chaque tâche s'y range par son échéance. Votre navigateur garde le regroupement choisi.",
+            "migration": null
+          }
         }
       ]
     },

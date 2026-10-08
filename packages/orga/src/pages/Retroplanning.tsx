@@ -4,16 +4,26 @@ import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
 import ChoixEdition from '../composants/ChoixEdition'
-import LigneTache from '../composants/LigneTache'
+import EtiquettePerimetre from '../composants/EtiquettePerimetre'
+import LigneTache, { LigneDeclinaisons } from '../composants/LigneTache'
 import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
 import { PuceBascule, Puces, SeparateurPuces } from '../composants/Puces'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
-import { EDITION_COURANTE } from '../lib/requetes'
+import {
+  CLE_REGROUPEMENT_RETROPLANNING,
+  ecrireRegroupement,
+  grouperParPerimetre,
+  grouperParPhase,
+  libelleBorne,
+  lireRegroupement,
+} from '../lib/regroupement'
+import { EDITION_COURANTE, EDITIONS } from '../lib/requetes'
 import { grouperParMois, libelleMois } from '../lib/retroplanning'
 import { estOuverte } from '../lib/taches'
 import { useActivite } from '../lib/activite'
+import { regrouperDeclinaisons } from '../lib/declinaisons'
 
 const RETROPLANNING = graphql(`
   query Retroplanning($editionId: ID!) {
@@ -39,10 +49,15 @@ const RETROPLANNING = graphql(`
         nom
         groupe
         couleur
+        ordre
       }
       assignes {
         id
         nom
+      }
+      # Pour réunir les déclinaisons d'une même tâche partagée (ADR 0026).
+      origine {
+        id
       }
     }
   }
@@ -51,6 +66,12 @@ const RETROPLANNING = graphql(`
 // Un groupe de périmètres de l'activité (ADR 0008), ou tous.
 type FiltreType = string
 type FiltreStatut = 'ouvertes' | 'retard' | 'toutes'
+// Regroupement de la liste (ADR 0025) : par mois d'échéance, ou par phase de
+// l'activité puis par périmètre.
+type Regroupement = 'mois' | 'phase'
+const REGROUPEMENTS = ['mois', 'phase'] as const
+
+const compteTaches = (n: number) => `${n} ${n > 1 ? 'tâches' : 'tâche'}`
 
 function titreGroupe(mois: string | null): string {
   if (mois === null) return 'Sans échéance'
@@ -62,6 +83,7 @@ export default function Retroplanning() {
   const { lien, periode, activite, gere } = useActivite()
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
+  const { data: editions } = useQuery(EDITIONS)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
   const { data, error } = useQuery(RETROPLANNING, {
     variables: { editionId: editionId ?? '' },
@@ -74,6 +96,13 @@ export default function Retroplanning() {
   const [statut, setStatut] = useState<FiltreStatut>('ouvertes')
   const [mesPerimetres, setMesPerimetres] = useState(false)
   const [assigneesAMoi, setAssigneesAMoi] = useState(false)
+  const [regroupementChoisi, setRegroupement] = useState<Regroupement>(() =>
+    lireRegroupement(CLE_REGROUPEMENT_RETROPLANNING, REGROUPEMENTS, 'mois')
+  )
+  const changerRegroupement = (valeur: Regroupement) => {
+    setRegroupement(valeur)
+    ecrireRegroupement(CLE_REGROUPEMENT_RETROPLANNING, valeur)
+  }
 
   const moi = data?.moi
   const toutes = data?.retroplanning
@@ -131,6 +160,25 @@ export default function Retroplanning() {
   )
   const groupes = useMemo(() => grouperParMois(taches), [taches])
 
+  // Le premier jour de la période : les bornes des phases se comptent depuis lui.
+  // Tant qu'il n'est pas chargé, la liste reste regroupée par mois.
+  const debut = editions?.editions.find(e => e.id === editionId)?.debut
+  const regroupement: Regroupement =
+    regroupementChoisi === 'phase' && debut ? 'phase' : 'mois'
+  const phases = useMemo(() => {
+    if (!debut) return []
+    const cles = activite.groupes.map(g => g.cle)
+    return grouperParPhase(taches, activite.phases, debut).map(groupe => ({
+      ...groupe,
+      perimetres: grouperParPerimetre(groupe.taches, cles),
+    }))
+  }, [taches, activite.phases, activite.groupes, debut])
+  // Un seul périmètre dans la sélection : son nom ne se répète pas sous chaque phase.
+  const plusieursPerimetres = useMemo(
+    () => new Set(taches.map(t => t.perimetre.id)).size > 1,
+    [taches]
+  )
+
   // Les tâches ouvertes sans personne dans les périmètres de l'édition où la
   // personne est affectée : elle peut les prendre depuis leur périmètre.
   const aPrendre = useMemo(
@@ -158,6 +206,44 @@ export default function Retroplanning() {
       />
     )
   }
+
+  const lignes = (liste: typeof taches, sansPerimetre = false) => (
+    <ul className="rt-liste-liens" style={{ gap: 8 }}>
+      {liste.map(tache => (
+        <LigneTache
+          key={tache.id}
+          tache={tache}
+          moiId={moi?.id ?? ''}
+          editionId={editionId ?? ''}
+          sansPerimetre={sansPerimetre}
+        />
+      ))}
+    </ul>
+  )
+  // Par mois, les déclinaisons d'une même tâche partagée qui tombent le même jour
+  // tiennent sur une ligne : la liste ne répète pas la tâche pour chaque périmètre.
+  const lignesDuMois = (liste: typeof taches) => (
+    <ul className="rt-liste-liens" style={{ gap: 8 }}>
+      {regrouperDeclinaisons(liste).map(ligne =>
+        ligne.sorte === 'tache' ? (
+          <LigneTache
+            key={ligne.tache.id}
+            tache={ligne.tache}
+            moiId={moi?.id ?? ''}
+            editionId={editionId ?? ''}
+          />
+        ) : (
+          <LigneDeclinaisons
+            key={ligne.cle}
+            titre={ligne.titre}
+            taches={ligne.taches}
+            moiId={moi?.id ?? ''}
+            editionId={editionId ?? ''}
+          />
+        )
+      )}
+    </ul>
+  )
 
   const enRetard = taches.filter(t => t.enRetard).length
   const repartition = [
@@ -187,7 +273,11 @@ export default function Retroplanning() {
   return (
     <>
       <Titre
-        sousTitre={`Les tâches ${periode.de} sont regroupées par mois, de la plus proche à la plus lointaine.`}
+        sousTitre={
+          regroupement === 'phase'
+            ? `Les tâches ${periode.de} sont rangées par phase, puis par périmètre.`
+            : `Les tâches ${periode.de} sont regroupées par mois, de la plus proche à la plus lointaine.`
+        }
         actions={
           <ChoixEdition
             valeur={editionId}
@@ -202,6 +292,16 @@ export default function Retroplanning() {
       </Titre>
 
       <div className="rt-puces" style={{ marginBottom: 22, rowGap: 10 }}>
+        <Puces<Regroupement>
+          libelle="Regroupement des tâches"
+          valeur={regroupementChoisi}
+          onChange={changerRegroupement}
+          options={[
+            { valeur: 'mois', libelle: 'Par mois' },
+            { valeur: 'phase', libelle: 'Par phase' },
+          ]}
+        />
+        <SeparateurPuces />
         <Puces<FiltreType>
           libelle="Groupe de périmètres"
           valeur={type}
@@ -389,24 +489,57 @@ export default function Retroplanning() {
                   {enRetard} en retard
                 </span>
               </p>
-              {groupes.map(groupe => (
-                <Section
-                  key={groupe.mois ?? 'sans-echeance'}
-                  titre={titreGroupe(groupe.mois)}
-                  compte={`${groupe.taches.length} ${groupe.taches.length > 1 ? 'tâches' : 'tâche'}`}
-                >
-                  <ul className="rt-liste-liens" style={{ gap: 8 }}>
-                    {groupe.taches.map(tache => (
-                      <LigneTache
-                        key={tache.id}
-                        tache={tache}
-                        moiId={moi.id}
-                        editionId={editionId ?? ''}
-                      />
-                    ))}
-                  </ul>
-                </Section>
-              ))}
+              {regroupement === 'phase' && debut
+                ? phases.map(groupe => (
+                    <Section
+                      // Le préfixe garde la clé du groupe sans échéance distincte
+                      // d'une phase qui porterait ce nom.
+                      key={
+                        groupe.phase === null
+                          ? 'sans-echeance'
+                          : `phase:${groupe.phase.cle}`
+                      }
+                      titre={groupe.phase?.libelle ?? 'Sans échéance'}
+                      compte={compteTaches(groupe.taches.length)}
+                      extra={
+                        groupe.phase && (
+                          <span className="rt-note">
+                            {libelleBorne(groupe.phase, activite.phases, debut)}
+                          </span>
+                        )
+                      }
+                    >
+                      {plusieursPerimetres
+                        ? groupe.perimetres.map(({ perimetre, taches: t }) => (
+                            <div key={perimetre.id} className="rt-sous-section">
+                              <h3 className="rt-sous-section-titre">
+                                <EtiquettePerimetre
+                                  nom={perimetre.nom}
+                                  couleur={perimetre.couleur}
+                                  lien={lien(
+                                    `/perimetres/${perimetre.slug}?edition=${editionId}`
+                                  )}
+                                  point
+                                />
+                                <span className="rt-compte">
+                                  {compteTaches(t.length)}
+                                </span>
+                              </h3>
+                              {lignes(t, true)}
+                            </div>
+                          ))
+                        : lignes(groupe.taches)}
+                    </Section>
+                  ))
+                : groupes.map(groupe => (
+                    <Section
+                      key={groupe.mois ?? 'sans-echeance'}
+                      titre={titreGroupe(groupe.mois)}
+                      compte={compteTaches(groupe.taches.length)}
+                    >
+                      {lignesDuMois(groupe.taches)}
+                    </Section>
+                  ))}
             </>
           )}
         </DeuxColonnes>

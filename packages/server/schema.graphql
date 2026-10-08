@@ -9,6 +9,15 @@ enum AccesPerimetre {
   CONSULTATION
 }
 
+"""
+Accord du périmètre cible sur une déclinaison. EN_ATTENTE : la déclinaison est proposée et ne compte pas encore parmi les tâches du périmètre.
+"""
+enum AccordDeclinaison {
+  ACCEPTE
+  EN_ATTENTE
+  REFUSE
+}
+
 type Activite {
   acces: AccesActivite!
   archive: Boolean!
@@ -30,6 +39,11 @@ type Activite {
   nom: String!
   ordre: Int!
   pageEquipe: String
+
+  """
+  Les phases de l’activité, dans l’ordre : celles qu’elle déclare, sinon les phases par défaut (ADR 0025).
+  """
+  phases: [Phase!]!
   sigle: String
   slug: String!
 
@@ -160,6 +174,16 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 """
 scalar DateTime
 
+"""
+Les périmètres où décliner une tâche partagée. Un texte ou une échéance absents reprennent ceux de la tâche partagée.
+"""
+input DeclinaisonInput {
+  description: String
+  echeance: Date
+  perimetreIds: [ID!]!
+  titre: String
+}
+
 type Demande {
   adresse: String!
   creeLe: DateTime!
@@ -227,6 +251,25 @@ enum EntiteChangee {
   NOTIFICATION
   PERIMETRE
   TACHE
+}
+
+"""
+Étape de l’accord d’une déclinaison. IMPOSEE : un admin de l’activité l’a ajoutée sans accord du périmètre.
+"""
+enum EtapeAccord {
+  ACCEPTEE
+  IMPOSEE
+  PROPOSEE
+  REFUSEE
+}
+
+"""
+Une étape de l’accord d’une déclinaison : qui l’a proposée, acceptée, refusée ou imposée, et quand.
+"""
+type EtapeAccordDeclinaison {
+  etape: EtapeAccord!
+  le: DateTime!
+  par: Personne!
 }
 
 enum EtatPostes {
@@ -502,6 +545,11 @@ type Mutation {
     p256dh: String!
   ): Boolean!
   accepterDemande(affecter: [ID!]!, id: ID!): Demande!
+
+  """
+  Accepte ou refuse une déclinaison proposée à un périmètre. Seule une personne qui écrit dans ce périmètre répond. Une déclinaison acceptée entre parmi ses tâches.
+  """
+  accorderDeclinaison(accepter: Boolean!, id: ID!): Tache!
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
   archiverActivite(archive: Boolean!, id: ID!): Activite!
@@ -513,13 +561,18 @@ type Mutation {
   Change le statut d’une tâche. Demander le statut qu’elle a déjà ne change rien. Avec `statutAttendu`, le serveur refuse de changer un statut qu’une autre personne a modifié entre-temps (code `CONFLIT_VERSION`).
   """
   changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!, statutAttendu: StatutTache): Tache!
-  creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, sigle: String, slug: String!): Activite!
+  creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
   creerMessage(message: MessageInput!): Message!
   creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, nom: String!, sigle: String, slug: String!): OrganisationInstallation!
   creerPerimetre(activiteId: ID, couleur: String, description: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
-  creerTache(description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
+  creerTache(declinaison: DeclinaisonInput, description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
+
+  """
+  Décline une tâche dans d’autres périmètres de son activité : elle devient une tâche partagée. Chaque déclinaison attend l’accord de son périmètre, sauf quand un admin de l’activité l’ajoute. Un périmètre déjà servi est ignoré.
+  """
+  declinerTache(description: String, echeance: Date, id: ID!, perimetreIds: [ID!]!, titre: String): Tache!
   definirAdminActivite(activiteId: ID!, admin: Boolean!, personneId: ID!): Boolean!
   definirContactPrincipal(affectationId: ID!, contactPrincipal: Boolean!): Boolean!
   definirEffectif(editionId: ID!, effectif: Int!, perimetreId: ID!): Int!
@@ -547,6 +600,11 @@ type Mutation {
   La personne connectée note son intérêt pour un périmètre (ADR 0012). Aucun mail ne part.
   """
   formulerSouhait(editionId: ID!, perimetreId: ID!): Boolean!
+
+  """
+  Ajoute une déclinaison aux tâches de son périmètre sans son accord, même après un refus. Réservé aux admins de l’activité.
+  """
+  imposerDeclinaison(id: ID!): Tache!
   inviterPersonne(editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresAffectes: [ID!], perimetresSouhaites: [ID!]): Personne!
 
   """
@@ -558,7 +616,7 @@ type Mutation {
   Sans identifiants, marque toutes les notifications comme lues. Reste possible dans une organisation en lecture seule.
   """
   marquerNotificationsLues(ids: [ID!]): Int!
-  modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, sigle: String, souhaitsOuverts: Boolean): Activite!
+  modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
 
   """
@@ -729,6 +787,11 @@ type Perimetre {
   couleur: String
 
   """
+  Les déclinaisons proposées à ce périmètre pour la période, en attente de son accord.
+  """
+  declinaisonsProposees(editionId: ID!): [Tache!]!
+
+  """
   Une ou deux phrases qui présentent le périmètre (ADR 0012). Vaut null sans description.
   """
   description: String
@@ -803,6 +866,25 @@ type PersonneTrouvee {
   id: ID!
   nom: String!
   perimetres: [Perimetre!]!
+}
+
+"""
+Phase d’une activité. Une tâche se range dans la première phase dont la borne n’est pas dépassée.
+"""
+type Phase {
+  cle: String!
+
+  """
+  Dernier jour de la phase, en jours depuis le premier jour de la période : J-120, J+30. La dernière phase n’en porte pas.
+  """
+  jusquA: String
+  libelle: String!
+}
+
+input PhaseInput {
+  cle: String!
+  jusquA: String
+  libelle: String!
 }
 
 """Piles CSS complètes, prêtes pour font-family."""
@@ -937,6 +1019,7 @@ type Query {
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
   recherche(editionId: ID, texte: String!): Recherche!
   retroplanning(editionId: ID!): [Tache!]!
+  tache(id: ID!): Tache!
   tachesAPrendre(editionId: ID!): [Tache!]!
   tousLesPerimetres(activiteId: ID): TousLesPerimetres!
 
@@ -950,6 +1033,18 @@ type Recherche {
   fiches: [Fiche!]!
   personnes: [PersonneTrouvee!]!
   taches: [Tache!]!
+}
+
+"""
+L’état des déclinaisons d’une tâche partagée, en nombres. Les nombres `faites` et `abandonnees` se comptent parmi les déclinaisons acceptées.
+"""
+type ResumeDeclinaisons {
+  abandonnees: Int!
+  acceptees: Int!
+  enAttente: Int!
+  faites: Int!
+  refusees: Int!
+  total: Int!
 }
 
 """
@@ -1031,19 +1126,37 @@ type Subscription {
 }
 
 type Tache {
+  """
+  Pour une déclinaison : l’accord de son périmètre. Null pour une tâche ordinaire et pour une tâche partagée.
+  """
+  accord: AccordDeclinaison
   assignes: [Personne!]!
   clotureePar: Personne
   creeLe: DateTime!
+
+  """
+  Les déclinaisons de cette tâche partagée, une par périmètre cible, quel que soit leur accord. Vide pour une tâche ordinaire et pour une déclinaison.
+  """
+  declinaisons: [Tache!]!
   description: String
   echeance: Date
   edition: Edition!
   enRetard: Boolean!
   fiche: Fiche
+  historiqueAccord: [EtapeAccordDeclinaison!]!
   id: ID!
   modifieeLe: DateTime!
+
+  """La tâche partagée dont cette tâche est la déclinaison, ou null."""
+  origine: Tache
   perimetre: Perimetre!
   peutModifier: Boolean!
   realiseePar: Personne
+
+  """
+  L’état des déclinaisons de cette tâche partagée, en nombres. Tous à zéro pour une tâche ordinaire et pour une déclinaison.
+  """
+  resumeDeclinaisons: ResumeDeclinaisons!
   statut: StatutTache!
   termineeLe: DateTime
   titre: String!
@@ -1081,6 +1194,9 @@ enum TypeNoteDeVersion {
 }
 
 enum TypeNotification {
+  DECLINAISON_ACCEPTEE
+  DECLINAISON_PROPOSEE
+  DECLINAISON_REFUSEE
   DEMANDE_RECUE
   ECHEANCE_PROCHE
   FICHE_CREEE

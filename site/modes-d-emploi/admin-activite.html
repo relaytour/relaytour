@@ -87,6 +87,12 @@
             <figcaption>Écran Avancement, sur l'organisation d'exemple livrée avec Relaytour. Les personnes et les périmètres sont fictifs.</figcaption>
           </figure>
           <p class="note">Cet écran ne se modifie pas. Il sert au point d'avancement et repère les périmètres qui décrochent.</p>
+          <p>Sur la page d'un périmètre, une <strong>tâche partagée</strong> vous montre plus qu'aux autres personnes. Son détail donne, pour chaque périmètre, qui a proposé, accepté ou refusé la tâche, et quand.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Décliner dans d'autres périmètres</span></span><span>Ajouter une tâche à d'autres périmètres sans attendre leur accord. Une référente ou un référent ne fait que la proposer.</span></li>
+            <li><span><span class="libelle">Ajouter sans accord</span></span><span>Ajouter à un périmètre une tâche qu'il n'a pas encore acceptée, ou qu'il a refusée. L'historique garde ce geste, avec votre nom.</span></li>
+          </ul>
+          <p class="note">Une tâche type du dossier de contenu se partage aussi, avec la clé <code>declinaison</code>. L'import ajoute alors la tâche à chaque périmètre, sans demander d'accord.</p>
         </article>
 
         <article class="verre ecran" id="e-classement">
@@ -226,10 +232,16 @@
           <ul class="gestes">
             <li><span><span class="libelle">Enregistrer</span></span><span>Régler le nom, le sigle, l'ordre et la nature de votre activité.</span></li>
             <li><span><span class="libelle">Ajouter un groupe</span></span><span>Déclarer les groupes de périmètres : sports et pôles, équipes et pôles, commissions et bureau.</span></li>
+            <li><span><span class="libelle">Ajouter une phase</span></span><span>Découper la période en phases : un libellé et un dernier jour par phase, compté depuis le premier jour de la période (J-120, J+30). La dernière phase reçoit toutes les tâches qui suivent. Les tâches se rangent dans les phases par leur échéance. Une tâche sans échéance n'entre dans aucune phase : elle reste dans un groupe « Sans échéance ».</span></li>
             <li><span><span class="libelle">Identité propre</span></span><span>Donner à l'activité son contact, sa page d'équipe, son logo et ses deux couleurs. Un champ vide reprend la valeur de l'organisation.</span></li>
             <li><span><span class="libelle">Ouverte aux souhaits</span></span><span>Laisser tous les membres de l'organisation découvrir les périmètres dans « Tous les périmètres » et formuler leurs souhaits. Les tâches et les fiches restent réservées aux personnes affectées. Les souhaits arrivent dans « Équipe ».</span></li>
           </ul>
           <p class="note">La création et l'archivage d'une activité appartiennent aux admins de l'organisation.</p>
+          <figure>
+            <img src="../captures/activites-phases.webp" data-mobile="../captures/mobile/activites-phases.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Modifier l'activité : la liste des phases, avec la clé, le libellé et le dernier jour de chaque phase." />
+            <figcaption>Les phases d'une activité, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p class="note">Une activité que vous ne réglez pas garde quatre phases : Lancement, Préparation, Derniers réglages, Déroulement et bilan. Modifier les phases ne modifie aucune tâche : seul le rangement des tâches datées change, dans le rétroplanning et dans chaque périmètre.</p>
           <p>La même fenêtre règle le <strong>formulaire public</strong> de l'activité. Une personne extérieure à l'organisation le remplit sans compte pour rejoindre l'équipe. Sa demande arrive dans l'onglet « Demandes » de l'écran « Personnes ».</p>
           <ul class="gestes">
             <li><span><span class="libelle">Formulaire ouvert</span></span><span>Ouvrir ou fermer le formulaire. L'adresse à partager s'affiche sous l'interrupteur. Le formulaire ne s'ouvre pas sans contact de l'activité ou de l'organisation.</span></li>

@@ -9,7 +9,13 @@ import {
   type Logo,
 } from '../lib/organisation.ts'
 
-import { dateEcheance, type ActiviteModele, type Modeles } from './modeles.ts'
+import {
+  ciblesDeLaDeclinaison,
+  dateEcheance,
+  textesDeLaDeclinaison,
+  type ActiviteModele,
+  type Modeles,
+} from './modeles.ts'
 
 export interface RapportActivite {
   slug: string
@@ -24,7 +30,18 @@ export interface RapportActivite {
   /** Période de l'année demandée : importée, absente, ou null sans année. */
   periode: 'importee' | 'absente' | null
   effectifs: { crees: string[]; dejaPresents: string[] }
-  taches: { creees: string[]; dejaPresentes: string[] }
+  /**
+   * Tâches de la période. `rattachees` : des tâches déjà présentes dans un
+   * périmètre cible, liées à leur tâche partagée sans autre changement.
+   * `conflits` : des déclinaisons que l'import ne crée ni ne lie, avec la raison
+   * (ADR 0026).
+   */
+  taches: {
+    creees: string[]
+    dejaPresentes: string[]
+    rattachees: string[]
+    conflits: string[]
+  }
 }
 
 export interface RapportImport {
@@ -76,7 +93,7 @@ function rapportActiviteVide(
     fiches: { creees: [], nouvellesVersions: [], inchangees: [], conflits: [] },
     periode: null,
     effectifs: { crees: [], dejaPresents: [] },
-    taches: { creees: [], dejaPresentes: [] },
+    taches: { creees: [], dejaPresentes: [], rattachees: [], conflits: [] },
   }
 }
 
@@ -459,6 +476,28 @@ async function activiteVide(tx: Transaction, activiteId: string) {
   return periodes + perimetres + fiches === 0
 }
 
+/**
+ * La fiche d'une déclinaison, si elle est bien commune à l'activité en base. Une
+ * fiche d'un périmètre ne se lie pas : les personnes des périmètres cibles ne la
+ * lisent pas (ADR 0014 et 0026).
+ */
+async function ficheCommuneEnBase(
+  tx: Transaction,
+  ficheId: string | null,
+  activiteId: string
+): Promise<string | null> {
+  if (ficheId === null) return null
+  const fiche = await tx.fiche.findUnique({
+    where: { id: ficheId },
+    select: { perimetreId: true, activiteId: true },
+  })
+  return fiche !== null &&
+    fiche.perimetreId === null &&
+    fiche.activiteId === activiteId
+    ? ficheId
+    : null
+}
+
 async function importerActivite(
   tx: Transaction,
   organisationId: string,
@@ -481,6 +520,7 @@ async function importerActivite(
         sigle: modele.declaration.sigle ?? null,
         nature: modele.declaration.nature,
         groupes: modele.declaration.groupes,
+        phases: modele.declaration.phases ?? Prisma.DbNull,
         ordre: modele.declaration.ordre,
         souhaitsOuverts: modele.declaration.souhaitsOuverts ?? false,
         formulaire: modele.declaration.formulaire ?? Prisma.DbNull,
@@ -491,7 +531,7 @@ async function importerActivite(
     ligneId === null ? 'creee' : 'mise-a-jour'
   )
 
-  // Activité. L'activité implicite garde sa nature et ses groupes.
+  // Activité. L'activité implicite garde sa nature, ses groupes et ses phases.
   let activiteId = ligneId ?? ''
   if (ecrire && organisationId !== '') {
     activiteId =
@@ -699,7 +739,13 @@ async function importerActivite(
     })
   }
 
-  // Tâches types
+  // Tâches types. Une tâche se retrouve par sa période, son périmètre et son
+  // modèle : déjà présente, elle n'est jamais modifiée.
+  const fichesCommunes = new Set(
+    modele.fiches.filter(f => f.perimetre === null).map(f => f.slug)
+  )
+  const ficheDe = (slug: string | undefined) =>
+    slug === undefined ? null : (idsFiches.get(slug) ?? null)
   for (const [slugPerimetre, taches] of modele.taches) {
     const perimetreId = idsPerimetres.get(slugPerimetre)
     for (const tache of taches) {
@@ -713,28 +759,125 @@ async function importerActivite(
                 perimetreId,
                 modeleSlug: tache.modele,
               },
-              select: { id: true },
+              select: { id: true, origineId: true },
             })
+      // L'identifiant de la tâche, pour y lier ses déclinaisons. Une simulation
+      // qui la crée ne le connaît pas.
+      let tacheId = existante?.id ?? null
       if (existante !== null) {
         rapport.taches.dejaPresentes.push(cle)
-        continue
+      } else {
+        rapport.taches.creees.push(cle)
+        if (ecrire && perimetreId !== undefined) {
+          const creee = await tx.tache.create({
+            data: {
+              editionId: periode.id,
+              perimetreId,
+              modeleSlug: tache.modele,
+              titre: tache.titre,
+              description: tache.description?.trim() || null,
+              echeance: dateEcheance(tache.echeance, periode.debut),
+              ficheId: ficheDe(tache.fiche),
+            },
+            select: { id: true },
+          })
+          tacheId = creee.id
+        }
       }
-      rapport.taches.creees.push(cle)
-      if (!ecrire || perimetreId === undefined) continue
-      await tx.tache.create({
-        data: {
-          editionId: periode.id,
-          perimetreId,
-          modeleSlug: tache.modele,
-          titre: tache.titre,
-          description: tache.description?.trim() || null,
-          echeance: dateEcheance(tache.echeance, periode.debut),
-          ficheId:
-            tache.fiche === undefined
-              ? null
-              : (idsFiches.get(tache.fiche) ?? null),
-        },
-      })
+
+      // Tâche partagée (ADR 0026) : une déclinaison par périmètre cible, acceptée
+      // d'office puisque le contenu la déclare. Une déclinaison ne cite qu'une
+      // fiche commune : celle qu'elle déclare, sinon celle de sa tâche partagée.
+      if (tache.declinaison === undefined) continue
+      const textes = textesDeLaDeclinaison(tache)
+      const fiche =
+        tache.declinaison.fiche ??
+        (tache.fiche !== undefined && fichesCommunes.has(tache.fiche)
+          ? tache.fiche
+          : undefined)
+      // La fiche se juge en base : une fiche en conflit garde le périmètre qu'elle
+      // avait, même quand le dossier la range parmi les fiches communes.
+      const ficheId = await ficheCommuneEnBase(tx, ficheDe(fiche), activiteId)
+      for (const cible of ciblesDeLaDeclinaison(
+        tache,
+        slugPerimetre,
+        modele.perimetres
+      )) {
+        const cleCible = `${cible}/${tache.modele} (déclinaison de ${cle})`
+        const conflit = (raison: string) =>
+          rapport.taches.conflits.push(`${cleCible} : ${raison}`)
+        // Le lien garde un seul niveau : une tâche qui est déjà la déclinaison
+        // d'une autre ne se décline pas. Le contenu a pu changer de sens depuis
+        // un import précédent.
+        if (existante !== null && existante.origineId !== null) {
+          conflit(`${cle} est déjà la déclinaison d'une autre tâche`)
+          continue
+        }
+        if (existants.get(cible)?.archivedAt != null) {
+          conflit('le périmètre est archivé')
+          continue
+        }
+        const cibleId = idsPerimetres.get(cible)
+        const declinaison =
+          cibleId === undefined
+            ? null
+            : await tx.tache.findFirst({
+                where: {
+                  editionId: periode.id,
+                  perimetreId: cibleId,
+                  modeleSlug: tache.modele,
+                },
+                select: {
+                  id: true,
+                  origineId: true,
+                  _count: { select: { declinaisons: true } },
+                },
+              })
+        if (declinaison === null) {
+          rapport.taches.creees.push(cleCible)
+          if (!ecrire || cibleId === undefined || tacheId === null) continue
+          await tx.tache.create({
+            data: {
+              editionId: periode.id,
+              perimetreId: cibleId,
+              modeleSlug: tache.modele,
+              titre: textes.titre,
+              description: textes.description?.trim() || null,
+              echeance: dateEcheance(textes.echeance, periode.debut),
+              ficheId,
+              origineId: tacheId,
+              accord: 'ACCEPTE',
+              accordLe: new Date(),
+            },
+          })
+          continue
+        }
+        if (declinaison.origineId !== null) {
+          // Déjà liée : à cette tâche partagée, ou à une autre que le contenu ne
+          // déclare plus. L'import ne déplace pas un lien.
+          if (declinaison.origineId === tacheId) {
+            rapport.taches.dejaPresentes.push(cleCible)
+          } else {
+            conflit(
+              'la tâche du périmètre est déjà liée à une autre tâche partagée'
+            )
+          }
+          continue
+        }
+        if (declinaison._count.declinaisons > 0) {
+          conflit('la tâche du périmètre porte déjà ses propres déclinaisons')
+          continue
+        }
+        // Une tâche importée avant que le contenu ne la partage : elle se lie à sa
+        // tâche partagée. Son titre, son échéance, son statut et ses personnes
+        // assignées ne changent pas.
+        rapport.taches.rattachees.push(cleCible)
+        if (!ecrire || tacheId === null) continue
+        await tx.tache.update({
+          where: { id: declinaison.id },
+          data: { origineId: tacheId, accord: 'ACCEPTE', accordLe: new Date() },
+        })
+      }
     }
   }
   return rapport

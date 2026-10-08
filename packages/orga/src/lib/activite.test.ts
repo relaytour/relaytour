@@ -25,6 +25,10 @@ const activite = (slug: string, options: Partial<Activite> = {}): Activite => ({
     { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },
     { cle: 'pole', libelle: 'Pôle', libellePluriel: 'Pôles' },
   ],
+  phases: [
+    { cle: 'preparation', libelle: 'Préparation', jusquA: 'J-1' },
+    { cle: 'bilan', libelle: 'Bilan', jusquA: null },
+  ],
   logoUrl: null,
   contactRecrutement: null,
   pageEquipe: null,

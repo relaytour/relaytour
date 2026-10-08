@@ -4,7 +4,13 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { dateEcheance, ErreurModeles, lireModeles } from './modeles.ts'
+import {
+  ciblesDeLaDeclinaison,
+  dateEcheance,
+  ErreurModeles,
+  lireModeles,
+  textesDeLaDeclinaison,
+} from './modeles.ts'
 
 const ORGANISATION = `slug: club
 nom: Club nautique
@@ -265,6 +271,52 @@ groupes:
     expect(modeles.activites[1]!.perimetres[0]?.groupe).toBe('sport')
   })
 
+  it('lit les phases d’une activité, et les laisse absentes sinon (ADR 0025)', () => {
+    const modeles = lireModeles(
+      dossier({
+        'activites/tournoi/activite.yaml': ACTIVITE_TOURNOI,
+        'activites/tournoi/perimetres.yaml': PERIMETRES,
+        'activites/section/activite.yaml': `${ACTIVITE_SECTION}phases:
+  - cle: rentree
+    libelle: Rentrée
+    jusquA: J+30
+  - cle: saison
+    libelle: Saison
+`,
+        'activites/section/perimetres.yaml': PERIMETRES_SECTION,
+      })
+    )
+    expect(modeles.activites[0]!.declaration.phases).toEqual([
+      { cle: 'rentree', libelle: 'Rentrée', jusquA: 'J+30' },
+      { cle: 'saison', libelle: 'Saison' },
+    ])
+    expect(modeles.activites[1]!.declaration.phases).toBeUndefined()
+  })
+
+  it('refuse des phases mal ordonnées, en nommant le fichier et la phase', () => {
+    expect(
+      erreurs(
+        dossier({
+          'activites/tournoi/activite.yaml': `${ACTIVITE_TOURNOI}phases:
+  - cle: preparation
+    libelle: Préparation
+    jusquA: J-7
+  - cle: cadrage
+    libelle: Cadrage
+    jusquA: J-90
+  - cle: bilan
+    libelle: Bilan
+    jusquA: J+30
+`,
+          'activites/tournoi/perimetres.yaml': PERIMETRES,
+        })
+      )
+    ).toEqual([
+      'activites/tournoi/activite.yaml : phases.1.jusquA les bornes se suivent dans l’ordre croissant',
+      'activites/tournoi/activite.yaml : phases.2.jusquA la dernière phase ne porte pas de borne : elle reçoit tout ce qui suit',
+    ])
+  })
+
   it('décrit une activité implicite en disposition plate', () => {
     const modeles = lireModeles(dossier({ 'perimetres.yaml': PERIMETRES }))
     expect(modeles.disposition).toBe('plate')
@@ -362,5 +414,200 @@ describe('dateEcheance', () => {
 
   it('renvoie null sans échéance', () => {
     expect(dateEcheance(undefined, debut)).toBeNull()
+  })
+})
+
+describe('tâches partagées (ADR 0026)', () => {
+  const ACTIVITE = `slug: tournoi
+nom: Tournoi
+groupes:
+  - cle: sport
+    libelle: Sport
+    libellePluriel: Sports
+  - cle: pole
+    libelle: Pôle
+    libellePluriel: Pôles
+  - cle: atelier
+    libelle: Atelier
+    libellePluriel: Ateliers
+`
+  const PERIMETRES_TOURNOI = `perimetres:
+  - slug: lieux
+    nom: Lieux
+    groupe: pole
+  - slug: natation
+    nom: Natation
+    groupe: sport
+    ordre: 1
+  - slug: volley
+    nom: Volley
+    groupe: sport
+    ordre: 2
+`
+  const partagee = (declinaison: string, modele = 'besoins-de-lieux') =>
+    `taches:
+  - modele: ${modele}
+    titre: Recenser les besoins de lieux
+    description: Le pôle réunit les besoins de chaque sport.
+    echeance: J-300
+    fiche: reserver
+    declinaison:
+${declinaison}
+`
+  const contenu = (fichiers: Record<string, string>) =>
+    dossier({
+      'activites/tournoi/activite.yaml': ACTIVITE,
+      'activites/tournoi/perimetres.yaml': PERIMETRES_TOURNOI,
+      'activites/tournoi/fiches/communes/reserver.md': fiche('reserver'),
+      'activites/tournoi/fiches/lieux/missions.md': fiche('missions'),
+      ...fichiers,
+    })
+
+  it('décline une tâche dans les périmètres d’un groupe, sans son périmètre d’origine', () => {
+    const modeles = lireModeles(
+      contenu({
+        'activites/tournoi/taches/lieux.yaml': partagee(
+          '      groupe: sport\n      titre: Transmettre les besoins de lieux\n      echeance: J-285'
+        ),
+      })
+    )
+    const activite = modeles.activites[0]!
+    const tache = activite.taches.get('lieux')![0]!
+    expect(ciblesDeLaDeclinaison(tache, 'lieux', activite.perimetres)).toEqual([
+      'natation',
+      'volley',
+    ])
+    expect(textesDeLaDeclinaison(tache)).toEqual({
+      titre: 'Transmettre les besoins de lieux',
+      description: 'Le pôle réunit les besoins de chaque sport.',
+      echeance: 'J-285',
+    })
+  })
+
+  it('décline une tâche dans une liste de périmètres, et reprend ses textes', () => {
+    const modeles = lireModeles(
+      contenu({
+        'activites/tournoi/taches/lieux.yaml': partagee(
+          '      perimetres: [volley]'
+        ),
+      })
+    )
+    const activite = modeles.activites[0]!
+    const tache = activite.taches.get('lieux')![0]!
+    expect(ciblesDeLaDeclinaison(tache, 'lieux', activite.perimetres)).toEqual([
+      'volley',
+    ])
+    expect(textesDeLaDeclinaison(tache)).toEqual({
+      titre: 'Recenser les besoins de lieux',
+      description: 'Le pôle réunit les besoins de chaque sport.',
+      echeance: 'J-300',
+    })
+  })
+
+  it('ne décline pas une tâche ordinaire', () => {
+    const modeles = lireModeles(
+      contenu({
+        'activites/tournoi/taches/lieux.yaml':
+          'taches:\n  - modele: visite\n    titre: Visiter les lieux\n',
+      })
+    )
+    const activite = modeles.activites[0]!
+    expect(
+      ciblesDeLaDeclinaison(
+        activite.taches.get('lieux')![0]!,
+        'lieux',
+        activite.perimetres
+      )
+    ).toEqual([])
+  })
+
+  it.each([
+    [
+      'un groupe et une liste ensemble',
+      '      groupe: sport\n      perimetres: [volley]',
+      /declinaison\.groupe groupe ou perimetres attendu/,
+    ],
+    [
+      'ni groupe ni liste',
+      '      titre: Transmettre',
+      /declinaison\.groupe groupe ou perimetres attendu/,
+    ],
+    [
+      'un groupe que l’activité ne déclare pas',
+      '      groupe: commission',
+      /se décline dans le groupe commission, que l'activité ne déclare pas/,
+    ],
+    [
+      'un groupe sans autre périmètre',
+      '      groupe: atelier',
+      /le groupe atelier, qui ne contient aucun autre périmètre/,
+    ],
+    [
+      'un périmètre inconnu',
+      '      perimetres: [escrime]',
+      /le périmètre escrime, qui n'existe pas/,
+    ],
+    [
+      'son propre périmètre',
+      '      perimetres: [lieux, volley]',
+      /ne se décline pas dans son propre périmètre/,
+    ],
+    [
+      'deux fois le même périmètre',
+      '      perimetres: [volley, volley]',
+      /cite deux fois le même périmètre cible/,
+    ],
+    [
+      'une fiche de périmètre',
+      '      groupe: sport\n      fiche: missions',
+      /ne cite qu'une fiche commune/,
+    ],
+    [
+      'une fiche inconnue',
+      '      groupe: sport\n      fiche: absente',
+      /cite la fiche absente, qui n'existe pas/,
+    ],
+    [
+      'un champ inconnu',
+      '      groupe: sport\n      priorite: haute',
+      /declinaison/,
+    ],
+    [
+      'une donnée personnelle dans son titre',
+      '      groupe: sport\n      titre: Écrire à jean.dupont@messagerie.example',
+      /besoins-de-lieux contient des données personnelles/,
+    ],
+  ])('refuse %s', (_cas, declinaison, attendu) => {
+    const lues = erreurs(
+      contenu({ 'activites/tournoi/taches/lieux.yaml': partagee(declinaison) })
+    )
+    expect(lues.join('\n')).toMatch(attendu)
+  })
+
+  it('refuse un modèle que le périmètre cible déclare déjà', () => {
+    const lues = erreurs(
+      contenu({
+        'activites/tournoi/taches/lieux.yaml': partagee('      groupe: sport'),
+        'activites/tournoi/taches/volley.yaml':
+          'taches:\n  - modele: besoins-de-lieux\n    titre: Transmettre les besoins\n',
+      })
+    )
+    expect(lues).toEqual([
+      'activites/tournoi/taches/volley.yaml : le modèle besoins-de-lieux est déjà décliné depuis activites/tournoi/taches/lieux.yaml',
+    ])
+  })
+
+  it('refuse deux tâches partagées qui déclinent le même modèle dans un périmètre', () => {
+    const lues = erreurs(
+      contenu({
+        'activites/tournoi/taches/lieux.yaml': partagee('      groupe: sport'),
+        'activites/tournoi/taches/natation.yaml': partagee(
+          '      perimetres: [volley]'
+        ).replace('    fiche: reserver\n', ''),
+      })
+    )
+    expect(lues.join('\n')).toMatch(
+      /le modèle besoins-de-lieux est déjà décliné dans volley depuis/
+    )
   })
 })

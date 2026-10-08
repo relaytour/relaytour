@@ -4,6 +4,7 @@ import type {
   TypeNotification,
 } from '@relaytour/database'
 
+import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import { journal } from '../lib/journal.ts'
 import { publierNotification } from '../lib/flux.ts'
@@ -65,6 +66,8 @@ export async function genererRappels(
       echeance: { not: null, lte: dansSeptJours },
       edition: { statut: { not: 'ARCHIVEE' } },
       perimetre: { organisationId: organisation.id },
+      // Une déclinaison qui attend un accord ne se rappelle à personne (ADR 0026).
+      AND: [TACHES_ACTIVES],
     },
     select: {
       id: true,

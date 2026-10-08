@@ -376,6 +376,28 @@ const REFUSE: Refus = { refus: ['FORBIDDEN', 'SAISIE_INVALIDE'] }
 
 const CAS: Cas[] = [
   // ── Mutations ──────────────────────────────────────────────────────────────
+  // Tâches partagées (ADR 0026) : accorder, décliner et imposer portent sur une
+  // tâche de l'activité principale de A.
+  {
+    operation: 'accorderDeclinaison',
+    query:
+      'mutation ($id: ID!) { accorderDeclinaison(id: $id, accepter: true) { id } }',
+    variables: () => ({ id: a.tache }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'declinerTache',
+    query:
+      'mutation ($id: ID!, $p: [ID!]!) { declinerTache(id: $id, perimetreIds: $p) { id } }',
+    variables: () => ({ id: a.tache, p: [a.autrePerimetre] }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'imposerDeclinaison',
+    query: 'mutation ($id: ID!) { imposerDeclinaison(id: $id) { id } }',
+    variables: () => ({ id: a.tache }),
+    attente: INTERDIT,
+  },
   {
     operation: 'accorderDroitRedaction',
     query:
@@ -505,6 +527,15 @@ const CAS: Cas[] = [
     variables: () => ({ p: b.perimetre, e: b.edition, f: a.ficheCommune }),
     attente: REFUSE,
   },
+  // Depuis son propre périmètre, une tâche ne se décline pas dans un périmètre
+  // d'une autre organisation (ADR 0026).
+  {
+    operation: 'creerTache',
+    query:
+      'mutation ($p: ID!, $e: ID!, $c: [ID!]!) { creerTache(perimetreId: $p, editionId: $e, titre: "Intrusion", declinaison: { perimetreIds: $c }) { id } }',
+    variables: () => ({ p: b.perimetre, e: b.edition, c: [a.perimetre] }),
+    attente: REFUSE,
+  },
   {
     operation: 'definirAdminActivite',
     query:
@@ -565,7 +596,7 @@ const CAS: Cas[] = [
   {
     operation: 'modifierActivite',
     query:
-      'mutation ($id: ID!) { modifierActivite(id: $id, nom: "X", nature: SAISON, groupes: [{ cle: "x", libelle: "X", libellePluriel: "X" }], ordre: 0) { id } }',
+      'mutation ($id: ID!) { modifierActivite(id: $id, nom: "X", nature: SAISON, groupes: [{ cle: "x", libelle: "X", libellePluriel: "X" }], phases: [{ cle: "x", libelle: "X" }], ordre: 0) { id } }',
     variables: () => ({ id: a.activite }),
     attente: INTERDIT,
   },
@@ -703,6 +734,14 @@ const CAS: Cas[] = [
     attente: { sansEffet: d => expect(d.retirerSouhait).toBe(false) },
   },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  // Une tâche et ses déclinaisons (ADR 0026).
+  {
+    operation: 'tache',
+    query:
+      'query ($id: ID!) { tache(id: $id) { id titre declinaisons { id } } }',
+    variables: () => ({ id: a.tache }),
+    attente: INTERDIT,
+  },
   {
     operation: 'equipe',
     query: 'query ($a: ID) { equipe(activiteId: $a) { id nom } }',

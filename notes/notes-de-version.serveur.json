@@ -5,6 +5,50 @@
   "version": "0.13.2",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-08-serveur-une-tache-type-se-decline-dans-d-autres-perimetres",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une tâche type se décline dans d'autres périmètres",
+            "texte": "Dans un dossier de contenu, une tâche type accepte une clé `declinaison`. Elle désigne un groupe de périmètres ou une liste de périmètres. L'import crée alors la tâche dans son périmètre, puis une déclinaison dans chaque périmètre cible. Chaque déclinaison garde son statut, ses personnes assignées et son échéance. Un périmètre cible qui porte déjà une tâche de même modèle la garde : l'import la rattache à sa tâche partagée et le signale. Un contenu existant reste valide sans changement.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-08-serveur-une-activite-declare-ses-phases",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une activité déclare ses phases",
+            "texte": "Le fichier `activite.yaml` d'un dossier de contenu accepte une clé `phases`. Chaque phase porte une clé, un libellé et une borne en jours depuis le premier jour de la période, par exemple `J-120`. La dernière phase ne porte pas de borne. Une activité qui ne déclare rien garde quatre phases par défaut. L'import écrit les phases en base et l'export les réécrit. Une tâche ne déclare pas sa phase : elle s'y range par son échéance.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-08-serveur-l-api-propose-accorde-et-impose-une-declinaison",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'API propose, accorde et impose une déclinaison",
+            "texte": "Une personne qui écrit dans un périmètre crée une tâche partagée et la propose à d'autres périmètres de l'activité. Chaque déclinaison attend l'accord du périmètre cible, qui l'accepte ou la refuse. Tant qu'elle n'est pas acceptée, elle ne compte ni dans ses tâches, ni dans son avancement, ni dans les rappels, ni dans le score. Un admin de l'activité ajoute une déclinaison sans accord, et impose une déclinaison refusée. Une tâche lit le résumé de ses déclinaisons, et les admins lisent l'historique de chaque accord.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.13.0",
       "notes": [
         {
