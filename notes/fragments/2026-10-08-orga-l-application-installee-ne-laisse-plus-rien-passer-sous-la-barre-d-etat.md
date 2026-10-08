@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.13.1
 fr:
   titre: >-
     L'application installée sur un iPhone ne laisse plus rien passer sous la barre d'état
