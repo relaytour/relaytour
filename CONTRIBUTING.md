@@ -14,6 +14,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `outils/versionner.mjs` et `notes/` : journal des changements et publication des versions (`noter`, `valider`, `compiler`, `publier`, `release`).
 - `docs/adr/` : décisions d'architecture. `docs/design-system.md` : identité, matériau et composants.
 - `site/` : site de présentation publié sur GitHub Pages. `outils/site.mjs` y écrit les jetons, les palettes et les polices ; la CI vérifie qu'il est à jour.
+- `site/captures/` et `site/captures/mobile/` : les écrans des modes d'emploi, en version ordinateur et en version téléphone. `outils/captures.mjs` produit les deux. La version téléphone se prend dans l'application installée sur un simulateur iOS (macOS, Xcode et `cwebp`) : le script relaie l'espace organisateur à l'adresse de `--origine` et pilote l'application par ce relais. Le bouton « Ordinateur / Téléphone » du site (`site/bascule.js`) passe de l'une à l'autre.
 - `docs/feuille-de-route.md` et `docs/publication.md` : évolutions envisagées, liste de publication.
 
 ## Commandes
@@ -36,7 +37,8 @@ node outils/site.mjs   # site de présentation, après un changement des jetons
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif d'admin de l'organisation
 node outils/captures.mjs --compte referent   # écrans d'un autre rôle : referent ou admin-activite, avec un compte de ce rôle
 node outils/captures.mjs --seulement editions,equipe   # quelques écrans seulement
-node outils/captures.mjs --largeur 375 --hauteur 812 --mobile --sortie /tmp/captures-mobile   # mêmes écrans sur un téléphone, hors du site
+node outils/captures.mjs --largeur 375 --hauteur 812 --mobile --sortie /tmp/captures-mobile   # mêmes écrans dans un navigateur de téléphone, pour un contrôle rapide
+node outils/captures.mjs --simulateur Relaytour --amont http://localhost:4571 --sortie site/captures/mobile   # captures téléphone du site, prises dans l'application installée sur un simulateur iOS
 yarn versionner valider
 yarn versionner compiler   # journaux commités
 yarn versionner publier --simulation   # numéro de la prochaine version, sans rien écrire
@@ -78,7 +80,7 @@ Ces décisions ne se rouvrent pas sans raison nouvelle.
 | Messages | Un admin prépare un message dans l'espace organisateur, à partir d'un modèle, puis l'envoie depuis sa propre messagerie : l'application n'envoie rien. Un message d'une activité s'adresse à des personnes de son équipe ; un message de l'annuaire, écrit par un admin de l'organisation, à des membres de l'organisation. Le serveur vérifie chaque destinataire et garde le message, ses destinataires (des comptes, jamais des adresses) et le statut que l'auteur déclare : en cours, envoyé ou annulé. Les admins de l'activité relisent ses messages, les admins de l'organisation relisent tout. Un message n'est jamais exporté dans Git. L'admin choisit la messagerie qui s'ouvre : celle de son appareil (`mailto:`), une messagerie en ligne ou une application. Ce choix se garde dans son navigateur, jamais sur le serveur, et une application ne s'enregistre qu'après un essai confirmé. Les adresses copiées se séparent par une virgule, ou par un point-virgule pour Outlook ; l'admin change ce signe à côté des boutons de copie. | `packages/server/src/schema/messages.ts`, `packages/orga/src/lib/messages.ts`, `packages/orga/src/lib/messagerie.ts`, ADR 0020, 0022 |
 | Flux des changements | Une écriture publie un signal, sans donnée : une entité et des identifiants. Le serveur le pousse en SSE sur `/graphql` aux personnes qui peuvent lire l'objet, et le navigateur relit ses écrans par GraphQL. Le flux est un accélérateur : l'application fonctionne sans lui, et le pub/sub de Valkey n'est pas durable. Une mutation nouvelle publie son signal, et une entité nouvelle nomme les requêtes à relire dans `packages/orga/src/lib/flux.ts`. L'espace organisateur tient le flux ouvert sur un onglet visible et en ligne ; sa relecture périodique passe alors d'une minute à cinq. | `packages/server/src/lib/flux.ts`, ADR 0017 |
 | Mobile et application installable | Chaque écran reste utilisable à 375 pixels de large ; les écrans des référentes et référents sont adaptés au téléphone. L'espace organisateur s'installe sur l'écran d'accueil avec l'identité de l'organisation : le serveur sert un manifest par organisation sous `/medias/`. Le service worker garde la coquille de l'application et aucune donnée. Sans réseau, l'application affiche un écran « Hors connexion ». Une nouvelle version s'annonce par un avis, sans rechargement automatique. | `docs/design-system.md`, ADR 0023 (proposée) |
-| Notifications push | Canal facultatif, activé par les variables VAPID de l'exploitant. Une personne l'active par appareil, depuis ses préférences. Une notification push reprend une notification de l'application adressée à la personne ; les annonces faites à tout un périmètre n'y passent pas. La file `push` ne porte que des identifiants. | ADR 0024 (proposée) |
+| Notifications push | Canal facultatif, ouvert par les trois variables VAPID de l'exploitant. Une personne l'active par appareil, depuis ses préférences ; la déconnexion retire l'abonnement de l'appareil. Une notification push reprend une notification de l'application adressée à la personne : tâche assignée ou retirée, modification d'une de ses tâches, échéance, retard, demande reçue. Les annonces faites à tout un périmètre n'y passent pas. La file `push` ne porte que l'identifiant de la notification, et le worker relit les préférences à l'envoi. L'adresse d'un abonnement désigne le service de push d'un navigateur connu, jamais une autre adresse. | `packages/server/src/lib/push.ts`, `src/jobs/processors/push.processor.ts`, ADR 0024 (proposée) |
 
 ## Invariants techniques
 
@@ -179,7 +181,7 @@ Relaytour accueille les contributions : correctifs, évolutions, documentation, 
   La cible vaut `serveur` ou `orga`. Le type vaut `fonctionnalite`, `correctif`, `rupture`, `securite`, `performance` ou `interne`. Complétez ensuite le texte du fragment créé dans `notes/fragments/`.
 - Une note d'audience `organisateurs` s'affiche dans l'espace organisateur (ADR 0021). Son champ `role` désigne le rôle le moins étendu qu'elle concerne : `referent` (valeur par défaut, lue par tous), `admin-activite` ou `admin-organisation`. L'option `--role` de `noter` l'écrit. Les audiences `interne` et `public` ne s'affichent pas dans l'application.
 - Un changement d'interface joint une capture de l'écran, faite avec le contenu d'exemple (`content/exemple`) et des comptes fictifs.
-- Un changement d'interface joint aussi une capture à 375 pixels de large, et respecte les règles de la section « Mobile » de `docs/design-system.md`.
+- Un changement d'interface respecte les règles de la section « Mobile » de `docs/design-system.md`. Quand l'écran figure dans les modes d'emploi, la PR met à jour ses deux captures du site, `site/captures/` et `site/captures/mobile/`, et les cite dans sa description.
 - Un changement de contrôle d'accès joint un test qui prouve le refus (invariant 11).
 - Les contrats générés sont à jour (`yarn codegen`, invariant 9).
 - Aucun contenu d'organisation, aucune donnée personnelle, aucun secret (invariants 1 et 2).
@@ -236,6 +238,7 @@ Une release ne se publie qu'après ses images : une relance du workflow ne crée
 
 ## Pièges connus
 
+- La configuration d'une organisation se valide par un schéma qui refuse tout champ inconnu. Une version antérieure rencontre donc, après un retour arrière, un champ qu'elle ne connaît pas : la lecture en base (`lireDeclaration`) l'écarte et garde le reste. Le démarrage ne complète qu'une configuration vide, jamais une configuration illisible. Un champ nouveau de la déclaration reste facultatif, pour qu'une version antérieure lise encore la ligne.
 - MJML 5 remplace en silence une inclusion refusée : `scripts/gabarits-courriel.ts` assemble les fragments lui-même et vérifie la présence du pied de page.
 - MJML strict refuse une variable dans un attribut de couleur : les gabarits écrivent des couleurs sentinelles (`#010101` encre, `#020202` primaire, `#030303` accent, `#040404` sol), que `scripts/gabarits-courriel.ts` remplace par `{{couleur…}}` après compilation. Ne jamais utiliser ces quatre valeurs comme vraies couleurs.
 - `mjml2html` est asynchrone en version 5 alors que ses types le décrivent synchrone.

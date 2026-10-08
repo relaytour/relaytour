@@ -4,6 +4,7 @@ import { App, Button, Form, Radio, Skeleton, Switch } from 'antd'
 
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
 import PreferenceMessagerie from '../composants/PreferenceMessagerie'
+import PreferencePush from '../composants/PreferencePush'
 import { Avatar } from '../composants/Personne'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
@@ -21,6 +22,9 @@ const PREFERENCES = graphql(`
       mailEcheance
       mailDemandes
       applicationPerimetre
+      pushTaches
+      pushEcheances
+      pushDemandes
     }
   }
 `)
@@ -292,6 +296,11 @@ export default function Preferences() {
               </Button>
             </div>
           </Form>
+          <PreferencePush
+            preferences={data.mesPreferencesNotification}
+            administre={administre}
+            requeteARelire={PREFERENCES}
+          />
           {/* Seuls les admins écrivent un message (ADR 0020). */}
           {(administre || session?.moi?.estAdmin) && <PreferenceMessagerie />}
         </DeuxColonnes>

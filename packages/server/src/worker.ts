@@ -9,12 +9,15 @@ import {
   COURRIEL_QUEUE,
   PLANIFICATION_QUEUE,
   planificationQueue,
+  PUSH_QUEUE,
   type CourrielJobData,
   type PlanificationJobData,
+  type PushJobData,
   type TachePlanifiee,
 } from './jobs/queues.ts'
 import { courrielProcessor } from './jobs/processors/courriel.processor.ts'
 import { planificationProcessor } from './jobs/processors/planification.processor.ts'
+import { pushProcessor } from './jobs/processors/push.processor.ts'
 import {
   PLANIFICATIONS_GLOBALES,
   synchroniserPlanification,
@@ -32,7 +35,12 @@ const planificateur = new Worker<PlanificationJobData, unknown, TachePlanifiee>(
   planificationProcessor,
   { connection }
 )
-const workers = [postier, planificateur]
+// Les notifications push (ADR 0024). Sans clés VAPID, la file reste vide.
+const pousseur = new Worker<PushJobData>(PUSH_QUEUE, pushProcessor, {
+  connection,
+  concurrency: 2,
+})
+const workers = [postier, planificateur, pousseur]
 
 void verifierTransport()
 await assurerOrganisationParDefaut()
@@ -64,7 +72,7 @@ const sonde = http.createServer((_req, res) => {
   res.end(
     JSON.stringify({
       status: vivant ? 'ok' : 'down',
-      queues: [COURRIEL_QUEUE, PLANIFICATION_QUEUE],
+      queues: [COURRIEL_QUEUE, PLANIFICATION_QUEUE, PUSH_QUEUE],
     })
   )
 })

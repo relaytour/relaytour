@@ -5,6 +5,7 @@
 //   node outils/captures.mjs --compte referent
 //   node outils/captures.mjs --seulement editions,equipe
 //   node outils/captures.mjs --largeur 375 --hauteur 812 --mobile --sortie /tmp/captures-mobile
+//   node outils/captures.mjs --simulateur Relaytour --amont http://localhost:4571 --sortie site/captures/mobile
 //
 // Chaque écran se photographie avec le compte du rôle que son mode d'emploi
 // décrit : `--compte` choisit le rôle, et une passe prend tous ses écrans. Le
@@ -16,10 +17,17 @@
 // le script ne saisit jamais de code. Il enregistre ensuite chaque écran en
 // WebP dans site/captures/.
 //
+// Avec --simulateur, les captures viennent de l'application installée sur un
+// simulateur iOS démarré, pas d'un navigateur (macOS, Xcode et cwebp). Le script
+// écoute alors à l'adresse de --origine et relaie l'espace organisateur, qui
+// tourne à l'adresse de --amont. La personne ajoute l'application à l'écran
+// d'accueil du simulateur depuis Safari, l'ouvre et s'y connecte.
+//
 // Utilisez une instance au contenu fictif (content/exemple) et des comptes
 // fictifs : les captures sont publiques.
 
-import { spawn } from 'node:child_process'
+import { execFileSync, spawn } from 'node:child_process'
+import http from 'node:http'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
@@ -44,6 +52,12 @@ const { values } = parseArgs({
     largeur: { type: 'string', default: '1440' },
     hauteur: { type: 'string', default: '900' },
     mobile: { type: 'boolean', default: false },
+    // Nom ou identifiant d'un simulateur iOS démarré : les captures viennent de
+    // l'application installée sur son écran d'accueil, pas d'un navigateur.
+    simulateur: { type: 'string' },
+    // Avec --simulateur : l'adresse où tourne l'espace organisateur. Le script le
+    // relaie à l'adresse de --origine, celle que l'application installée ouvre.
+    amont: { type: 'string' },
   },
 })
 
@@ -283,102 +297,375 @@ const aPrendre = ECRANS.filter(e =>
 
 const attendre = ms => new Promise(r => setTimeout(r, ms))
 
+// Largeur des captures du simulateur, en pixels : deux par point d'écran.
+const LARGEUR_SIMULATEUR = 804
+
+// Un pilote ouvre l'application, évalue une expression dans la page, charge un
+// chemin et enregistre l'écran. Chrome photographie une fenêtre de navigateur ;
+// le simulateur iOS photographie l'application installée (ADR 0023).
+const pilote = values.simulateur
+  ? await piloteSimulateur()
+  : await piloteChrome()
+process.on('SIGINT', () => void pilote.fermer(130))
+
 // ── Chrome ──────────────────────────────────────────────────────────────────
 
-const profil = mkdtempSync(join(tmpdir(), 'relaytour-captures-'))
-const chrome = spawn(
-  CHROME,
-  [
-    `--remote-debugging-port=${values.port}`,
-    `--user-data-dir=${profil}`,
-    `--window-size=${LARGEUR},${HAUTEUR + 120}`,
-    '--no-first-run',
-    '--no-default-browser-check',
-    // Une fenêtre recouverte par une autre ne doit pas suspendre ses animations :
-    // une fenêtre modale resterait invisible sur la capture.
-    '--disable-backgrounding-occluded-windows',
-    '--disable-renderer-backgrounding',
-    '--disable-background-timer-throttling',
-    `${values.origine}/connexion`,
-  ],
-  { stdio: 'ignore' }
-)
+async function piloteChrome() {
+  const profil = mkdtempSync(join(tmpdir(), 'relaytour-captures-'))
+  const chrome = spawn(
+    CHROME,
+    [
+      `--remote-debugging-port=${values.port}`,
+      `--user-data-dir=${profil}`,
+      `--window-size=${LARGEUR},${HAUTEUR + 120}`,
+      '--no-first-run',
+      '--no-default-browser-check',
+      // Une fenêtre recouverte par une autre ne doit pas suspendre ses animations :
+      // une fenêtre modale resterait invisible sur la capture.
+      '--disable-backgrounding-occluded-windows',
+      '--disable-renderer-backgrounding',
+      '--disable-background-timer-throttling',
+      `${values.origine}/connexion`,
+    ],
+    { stdio: 'ignore' }
+  )
 
-// Chrome écrit dans son profil jusqu'à sa sortie : le profil s'efface après.
-async function fermer(code = 0) {
-  if (chrome.exitCode === null) {
-    const sortie = new Promise(ok => chrome.once('exit', ok))
-    chrome.kill()
-    await Promise.race([sortie, attendre(5000)])
-  }
-  rmSync(profil, {
-    recursive: true,
-    force: true,
-    maxRetries: 5,
-    retryDelay: 200,
-  })
-  process.exit(code)
-}
-process.on('SIGINT', () => void fermer(130))
-
-async function cible() {
-  for (let essai = 0; essai < 50; essai += 1) {
-    try {
-      const reponse = await fetch(`http://127.0.0.1:${values.port}/json/list`)
-      const pages = (await reponse.json()).filter(p => p.type === 'page')
-      if (pages.length > 0) return pages[0].webSocketDebuggerUrl
-    } catch {
-      // Chrome démarre encore.
+  async function cible() {
+    for (let essai = 0; essai < 50; essai += 1) {
+      try {
+        const reponse = await fetch(`http://127.0.0.1:${values.port}/json/list`)
+        const pages = (await reponse.json()).filter(p => p.type === 'page')
+        if (pages.length > 0) return pages[0].webSocketDebuggerUrl
+      } catch {
+        // Chrome démarre encore.
+      }
+      await attendre(200)
     }
-    await attendre(200)
+    throw new Error('Chrome ne répond pas sur le port de débogage.')
   }
-  throw new Error('Chrome ne répond pas sur le port de débogage.')
-}
 
-const socket = new WebSocket(await cible())
-await new Promise((ok, ko) => {
-  socket.addEventListener('open', ok, { once: true })
-  socket.addEventListener('error', ko, { once: true })
-})
-
-let prochainId = 1
-const enAttente = new Map()
-socket.addEventListener('message', evenement => {
-  const message = JSON.parse(evenement.data)
-  const promesse = enAttente.get(message.id)
-  if (!promesse) return
-  enAttente.delete(message.id)
-  if (message.error) promesse.ko(new Error(message.error.message))
-  else promesse.ok(message.result)
-})
-
-function envoyer(methode, params = {}) {
-  const id = prochainId++
-  socket.send(JSON.stringify({ id, method: methode, params }))
-  return new Promise((ok, ko) => enAttente.set(id, { ok, ko }))
-}
-
-async function evaluer(expression) {
-  const { result } = await envoyer('Runtime.evaluate', {
-    expression,
-    awaitPromise: true,
-    returnByValue: true,
+  const socket = new WebSocket(await cible())
+  await new Promise((ok, ko) => {
+    socket.addEventListener('open', ok, { once: true })
+    socket.addEventListener('error', ko, { once: true })
   })
-  return result.value
+
+  let prochainId = 1
+  const enAttente = new Map()
+  socket.addEventListener('message', evenement => {
+    const message = JSON.parse(evenement.data)
+    const promesse = enAttente.get(message.id)
+    if (!promesse) return
+    enAttente.delete(message.id)
+    if (message.error) promesse.ko(new Error(message.error.message))
+    else promesse.ok(message.result)
+  })
+
+  function envoyer(methode, params = {}) {
+    const id = prochainId++
+    socket.send(JSON.stringify({ id, method: methode, params }))
+    return new Promise((ok, ko) => enAttente.set(id, { ok, ko }))
+  }
+
+  await envoyer('Page.enable')
+  await envoyer('Runtime.enable')
+
+  return {
+    consigne:
+      'Connectez-vous dans la fenêtre Chrome avec ce compte fictif. Le code arrive dans Mailpit.',
+    extension: 'webp',
+    async evaluer(expression) {
+      const { result } = await envoyer('Runtime.evaluate', {
+        expression,
+        awaitPromise: true,
+        returnByValue: true,
+      })
+      return result.value
+    },
+    async preparer() {
+      await envoyer('Emulation.setDeviceMetricsOverride', {
+        width: LARGEUR,
+        height: HAUTEUR,
+        deviceScaleFactor: values.mobile ? 2 : 1,
+        mobile: values.mobile,
+      })
+      if (!values.mobile) return
+      await envoyer('Emulation.setTouchEmulationEnabled', {
+        enabled: true,
+        maxTouchPoints: 5,
+      })
+      // L'espace organisateur lit l'agent de navigation pour choisir les étapes
+      // d'installation : un téléphone Android sous Chrome.
+      await envoyer('Emulation.setUserAgentOverride', {
+        userAgent:
+          'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130 Mobile Safari/537.36',
+        platform: 'Android',
+      })
+    },
+    async naviguer(chemin) {
+      await envoyer('Page.navigate', { url: `${values.origine}${chemin}` })
+    },
+    async capturer(fichier) {
+      const { data } = await envoyer('Page.captureScreenshot', {
+        format: 'webp',
+        quality: 88,
+      })
+      writeFileSync(fichier, Buffer.from(data, 'base64'))
+    },
+    // Chrome écrit dans son profil jusqu'à sa sortie : le profil s'efface après.
+    async fermer(code = 0) {
+      socket.close()
+      if (chrome.exitCode === null) {
+        const sortie = new Promise(ok => chrome.once('exit', ok))
+        chrome.kill()
+        await Promise.race([sortie, attendre(5000)])
+      }
+      rmSync(profil, {
+        recursive: true,
+        force: true,
+        maxRetries: 5,
+        retryDelay: 200,
+      })
+      process.exit(code)
+    },
+  }
+}
+
+// ── Simulateur iOS ──────────────────────────────────────────────────────────
+
+// L'application installée ne se pilote pas de l'extérieur : aucun protocole de
+// débogage n'y entre. Le script se place donc devant l'espace organisateur : un
+// relais écoute à l'adresse de `--origine`, transmet chaque requête à `--amont`
+// et ajoute un petit script aux pages. Ce script vient chercher les expressions
+// à évaluer et renvoie leur résultat. Rien de tout cela n'existe hors du relais :
+// l'application photographiée est celle du build.
+async function piloteSimulateur() {
+  if (!values.amont) {
+    console.error(
+      '✖ --simulateur demande --amont : l’adresse où tourne l’espace organisateur, que le relais sert à l’adresse de --origine.'
+    )
+    process.exit(1)
+  }
+  const simctl = (...args) =>
+    execFileSync('xcrun', ['simctl', ...args], {
+      encoding: 'utf8',
+      // simctl annonce chaque capture sur sa sortie d'erreur.
+      stdio: ['ignore', 'pipe', 'ignore'],
+    })
+  const appareil = values.simulateur
+  try {
+    execFileSync('cwebp', ['-version'], { stdio: 'ignore' })
+  } catch {
+    console.error(
+      '✖ cwebp est introuvable : il convertit les captures du simulateur (brew install webp).'
+    )
+    process.exit(1)
+  }
+
+  const PILOTE = `(() => {
+  if (window.__relaytourPilote) return
+  window.__relaytourPilote = true
+  const boucle = async () => {
+    for (;;) {
+      try {
+        const ordre = await (await fetch('/__captures/ordre')).json()
+        if (ordre.id === undefined) continue
+        let valeur, erreur
+        try { valeur = await (0, eval)(ordre.expression) } catch (e) { erreur = String(e) }
+        await fetch('/__captures/resultat', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ id: ordre.id, valeur, erreur }),
+        })
+      } catch {
+        await new Promise(r => setTimeout(r, 500))
+      }
+    }
+  }
+  void boucle()
+})()`
+
+  const ordres = []
+  const demandeurs = []
+  const resultats = new Map()
+  let prochain = 1
+  const servir = () => {
+    while (ordres.length > 0 && demandeurs.length > 0) {
+      const res = demandeurs.shift()
+      res.writeHead(200, { 'content-type': 'application/json' })
+      res.end(JSON.stringify(ordres.shift()))
+    }
+  }
+
+  const amont = new URL(values.amont)
+  const relais = http.createServer((req, res) => {
+    if (req.url === '/__captures/pilote.js') {
+      res.writeHead(200, {
+        'content-type': 'text/javascript',
+        'cache-control': 'no-store',
+      })
+      res.end(PILOTE)
+      return
+    }
+    if (req.url === '/__captures/ordre') {
+      demandeurs.push(res)
+      // Une page qui change d'adresse abandonne son attente : sa réponse quitte
+      // la file, sinon le prochain ordre partirait dans une connexion fermée.
+      res.on('close', () => {
+        const i = demandeurs.indexOf(res)
+        if (i >= 0) demandeurs.splice(i, 1)
+      })
+      // Une attente longue se referme d'elle-même : la page en ouvre une autre.
+      setTimeout(() => {
+        const i = demandeurs.indexOf(res)
+        if (i < 0) return
+        demandeurs.splice(i, 1)
+        res.writeHead(200, { 'content-type': 'application/json' })
+        res.end('{}')
+      }, 20_000)
+      servir()
+      return
+    }
+    if (req.url === '/__captures/resultat') {
+      let corps = ''
+      req.on('data', morceau => (corps += morceau))
+      req.on('end', () => {
+        const { id, valeur, erreur } = JSON.parse(corps)
+        resultats.get(id)?.({ valeur, erreur })
+        resultats.delete(id)
+        res.writeHead(204).end()
+      })
+      return
+    }
+    // Sans compression, pour lire la page ; l'hôte reste celui de l'origine, que
+    // la connexion vérifie.
+    const enTetes = { ...req.headers, 'accept-encoding': 'identity' }
+    const versAmont = http.request(
+      {
+        hostname: amont.hostname,
+        port: amont.port,
+        path: req.url,
+        method: req.method,
+        headers: enTetes,
+      },
+      reponse => {
+        const type = String(reponse.headers['content-type'] ?? '')
+        if (!type.startsWith('text/html')) {
+          res.writeHead(reponse.statusCode ?? 502, reponse.headers)
+          reponse.pipe(res)
+          return
+        }
+        const morceaux = []
+        reponse.on('data', m => morceaux.push(m))
+        reponse.on('end', () => {
+          const page = Buffer.concat(morceaux)
+            .toString('utf8')
+            .replace(
+              '</head>',
+              '<script src="/__captures/pilote.js"></script></head>'
+            )
+          const sortants = { ...reponse.headers }
+          delete sortants['content-length']
+          delete sortants.etag
+          sortants['cache-control'] = 'no-store'
+          res.writeHead(reponse.statusCode ?? 200, sortants)
+          res.end(page)
+        })
+      }
+    )
+    versAmont.on('error', () => res.writeHead(502).end())
+    req.pipe(versAmont)
+  })
+  const origine = new URL(values.origine)
+  await new Promise((ok, ko) => {
+    relais.once('error', ko)
+    // Sans hôte : « localhost » vaut ::1 ou 127.0.0.1 selon le simulateur.
+    relais.listen(Number(origine.port), ok)
+  })
+
+  // Une barre d'état identique sur toutes les captures.
+  simctl(
+    'status_bar',
+    appareil,
+    'override',
+    '--time',
+    '9:41',
+    '--batteryState',
+    'charged',
+    '--batteryLevel',
+    '100',
+    '--wifiBars',
+    '3',
+    '--cellularBars',
+    '4'
+  )
+
+  const temporaire = mkdtempSync(join(tmpdir(), 'relaytour-captures-'))
+  return {
+    consigne: `Dans le simulateur « ${appareil} », ouvrez ${values.origine} dans Safari, ajoutez l’application à l’écran d’accueil, ouvrez-la et connectez-vous avec ce compte fictif. Le code arrive dans Mailpit.`,
+    extension: 'webp',
+    evaluer(expression) {
+      const id = prochain++
+      return new Promise((ok, ko) => {
+        const minuteur = setTimeout(() => {
+          resultats.delete(id)
+          ko(new Error('La page ne répond pas.'))
+        }, 15_000)
+        resultats.set(id, ({ valeur, erreur }) => {
+          clearTimeout(minuteur)
+          if (erreur) ko(new Error(erreur))
+          else ok(valeur)
+        })
+        ordres.push({ id, expression })
+        servir()
+      })
+    },
+    async preparer() {},
+    // L'application installée garde sa fenêtre : la page charge le chemin
+    // elle-même, puis le pilote se rebranche.
+    async naviguer(chemin) {
+      await this.evaluer(
+        `setTimeout(() => location.assign(${JSON.stringify(chemin)}), 50), true`
+      )
+    },
+    async capturer(fichier) {
+      const png = join(temporaire, 'ecran.png')
+      simctl('io', appareil, 'screenshot', '--type=png', png)
+      // L'écran d'un iPhone compte trois pixels par point : deux suffisent au site.
+      execFileSync('cwebp', [
+        '-quiet',
+        '-q',
+        '86',
+        '-resize',
+        String(LARGEUR_SIMULATEUR),
+        '0',
+        png,
+        '-o',
+        fichier,
+      ])
+    },
+    async fermer(code = 0) {
+      relais.closeAllConnections()
+      relais.close()
+      try {
+        simctl('status_bar', appareil, 'clear')
+      } catch {
+        // Le simulateur est peut-être déjà éteint.
+      }
+      rmSync(temporaire, { recursive: true, force: true })
+      process.exit(code)
+    },
+  }
 }
 
 // ── Connexion par la personne ───────────────────────────────────────────────
 
-await envoyer('Page.enable')
-await envoyer('Runtime.enable')
 // Avec --seulement, les écrans choisis disent quel compte utiliser.
 for (const role of new Set(aPrendre.map(e => e.compte))) {
   const noms = aPrendre.filter(e => e.compte === role).map(e => e.nom)
   console.log(`${noms.join(', ')} : ${COMPTES[role]}.`)
 }
-console.log(
-  'Connectez-vous dans la fenêtre Chrome avec ce compte fictif. Le code arrive dans Mailpit.'
-)
+console.log(pilote.consigne)
 // Pendant un chargement, la page ne répond pas, répond sans valeur ou porte encore
 // une adresse vide (about:blank). Seule une page de l'instance, autre que celle de
 // la connexion, prouve la session.
@@ -386,35 +673,31 @@ const horsConnexion = adresse =>
   typeof adresse === 'string' &&
   adresse.startsWith(`${values.origine}/`) &&
   new URL(adresse).pathname !== '/connexion'
+const adresseCourante = () =>
+  pilote.evaluer('location.href').catch(() => undefined)
 for (;;) {
-  if (horsConnexion(await evaluer('location.href').catch(() => undefined)))
-    break
+  if (horsConnexion(await adresseCourante())) break
   await attendre(1000)
 }
 console.log('✔ Session ouverte. Les captures commencent.')
 
 // ── Captures ────────────────────────────────────────────────────────────────
 
-await envoyer('Emulation.setDeviceMetricsOverride', {
-  width: LARGEUR,
-  height: HAUTEUR,
-  deviceScaleFactor: values.mobile ? 2 : 1,
-  mobile: values.mobile,
-})
-if (values.mobile)
-  await envoyer('Emulation.setTouchEmulationEnabled', {
-    enabled: true,
-    maxTouchPoints: 5,
-  })
+await pilote.preparer()
 mkdirSync(values.sortie, { recursive: true })
 let echecs = 0
 
 for (const ecran of aPrendre) {
-  if (ecran.avant) await evaluer(ecran.avant)
-  await envoyer('Page.navigate', { url: `${values.origine}${ecran.chemin}` })
+  if (ecran.avant) await pilote.evaluer(ecran.avant)
+  await pilote.naviguer(ecran.chemin)
   await attendre(2500)
   // Sans session, l'application renvoie à la connexion : cet écran ne se publie pas.
-  if (!horsConnexion(await evaluer('location.href').catch(() => undefined))) {
+  let adresse
+  for (let essai = 0; essai < 10 && adresse === undefined; essai += 1) {
+    adresse = await adresseCourante()
+    if (adresse === undefined) await attendre(500)
+  }
+  if (!horsConnexion(adresse)) {
     console.error(`✖ ${ecran.nom} : la session n'est pas ouverte.`)
     echecs += 1
     continue
@@ -424,7 +707,7 @@ for (const ecran of aPrendre) {
     // jusqu'à la trouver, cinq secondes au plus.
     let trouve = false
     for (let essai = 0; essai < 20 && !trouve; essai += 1) {
-      trouve = await evaluer(ecran.apres)
+      trouve = await pilote.evaluer(ecran.apres)
       if (!trouve) await attendre(250)
     }
     if (!trouve) {
@@ -436,19 +719,14 @@ for (const ecran of aPrendre) {
   }
   // Le menu d'un admin de l'organisation dépasse la hauteur de la fenêtre :
   // l'entrée de l'écran photographié doit rester visible.
-  await evaluer(
-    "document.querySelector('.ant-menu-item-selected')?.scrollIntoView({ block: 'nearest' })"
+  await pilote.evaluer(
+    "document.querySelector('.ant-menu-item-selected')?.scrollIntoView({ block: 'nearest' }), true"
   )
   await attendre(200)
-  await evaluer('document.fonts.ready.then(() => true)')
-  const { data } = await envoyer('Page.captureScreenshot', {
-    format: 'webp',
-    quality: 88,
-  })
-  const fichier = join(values.sortie, `${ecran.nom}.webp`)
-  writeFileSync(fichier, Buffer.from(data, 'base64'))
+  await pilote.evaluer('document.fonts.ready.then(() => true)')
+  const fichier = join(values.sortie, `${ecran.nom}.${pilote.extension}`)
+  await pilote.capturer(fichier)
   console.log(`✔ ${fichier}`)
 }
 
-socket.close()
-await fermer(echecs > 0 ? 1 : 0)
+await pilote.fermer(echecs > 0 ? 1 : 0)

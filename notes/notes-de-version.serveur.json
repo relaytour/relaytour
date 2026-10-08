@@ -8,6 +8,32 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-08-serveur-un-retour-a-une-version-anterieure-ne-remplace-plus-l-identi",
+          "date": "2026-10-08",
+          "type": "correctif",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un retour à une version antérieure ne remplace plus l'identité d'une organisation",
+            "texte": "Au démarrage, le serveur remplaçait par les valeurs d'amorçage une configuration d'organisation qu'il ne savait pas lire. Un champ écrit par une version plus récente suffisait à déclencher ce remplacement. Le serveur écarte maintenant un champ inconnu et garde le reste, et il n'écrase plus jamais une configuration illisible. Les versions 0.12.1 et antérieures gardent l'ancien comportement : la note pour les exploitants décrit la précaution à prendre avant d'y revenir.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-08-serveur-le-serveur-envoie-des-notifications-push-sur-activation-par-",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le serveur envoie des notifications push, sur activation par l'exploitant",
+            "texte": "Une installation peut ouvrir les notifications push. L'exploitant crée une paire de clés VAPID et renseigne `PUSH_VAPID_PUBLIQUE`, `PUSH_VAPID_PRIVEE` et `PUSH_VAPID_SUJET`. Sans ces variables, rien ne change. Le worker sort alors en HTTPS vers les services de push de Google, d'Apple, de Mozilla et de Microsoft. La mise à jour applique une migration additive.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-serveur-une-organisation-declare-l-icone-de-son-application",
           "date": "2026-10-07",
           "type": "fonctionnalite",
