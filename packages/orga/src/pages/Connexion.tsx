@@ -92,11 +92,11 @@ export default function Connexion() {
 
   return (
     <main
+      className="rt-page-seule"
       style={{
         minHeight: '100dvh',
         display: 'grid',
         placeItems: 'center',
-        padding: 16,
       }}
     >
       <div className="rt-halo rt-halo-1" aria-hidden="true" />

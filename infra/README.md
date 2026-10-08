@@ -57,6 +57,12 @@ L'espace organisateur s'installe sur un téléphone (ADR 0023). Deux points conc
 
 Le manifest de chaque organisation se sert sous `/medias/application/`, chemin déjà relayé vers l'API.
 
+### Revenir à une version antérieure
+
+Une version récente peut écrire, dans la configuration d'une organisation, un champ qu'une version antérieure ne connaît pas. À partir de la version 0.13, le serveur écarte ce champ à la lecture et garde le reste : un retour arrière ne change pas l'identité de l'organisation. Une configuration qu'il ne sait pas lire du tout n'est jamais écrasée : le journal porte l'événement `configuration-illisible`, et l'organisation s'affiche avec l'identité d'amorçage jusqu'à son réimport.
+
+Les versions 0.12.1 et antérieures n'ont pas cette protection. Au démarrage, elles remplacent une configuration qu'elles ne lisent pas par les valeurs d'amorçage du `.env`. Avant de revenir d'une version 0.13 ou suivante à l'une d'elles, exportez le contenu de l'organisation (`orga-exporter`), ou retirez l'icône d'application dans l'écran « Organisation ».
+
 ### Notifications push
 
 Les notifications push sont facultatives (ADR 0024). Pour les ouvrir :

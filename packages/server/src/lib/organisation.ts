@@ -560,12 +560,52 @@ interface LigneOrganisation {
   configuration: unknown
 }
 
-/** La déclaration portée par une ligne, ou null si sa configuration est vide ou invalide. */
+/**
+ * Ce qu'une configuration gardée en base contient :
+ * - `valide` : une déclaration, lue telle quelle ou sans ses champs inconnus ;
+ * - `vide` : rien, ou un objet sans champ (ligne posée par une migration) ;
+ * - `illisible` : des données que cette version ne sait pas lire.
+ */
+export type LectureDeclaration =
+  | { etat: 'valide'; declaration: DeclarationOrganisation }
+  | { etat: 'vide' }
+  | { etat: 'illisible' }
+
+/**
+ * Lit la configuration gardée en base. Le schéma refuse tout champ inconnu : c'est
+ * ce qui signale une faute de frappe dans un `organisation.yaml`. Une ligne en
+ * base peut pourtant porter un champ qu'une version plus récente a écrit, après un
+ * retour à une version antérieure. La lecture écarte alors ce champ au lieu de
+ * rejeter toute la déclaration : l'organisation garde son nom, ses contacts et
+ * son thème.
+ */
+export function lireDeclaration(configuration: unknown): LectureDeclaration {
+  const stricte = DeclarationOrganisationSchema.safeParse(configuration)
+  if (stricte.success) return { etat: 'valide', declaration: stricte.data }
+  if (
+    configuration === null ||
+    configuration === undefined ||
+    typeof configuration !== 'object' ||
+    Array.isArray(configuration) ||
+    Object.keys(configuration).length === 0
+  )
+    return { etat: 'vide' }
+  const connus = new Set(Object.keys(DeclarationOrganisationSchema.shape))
+  const sansInconnus = Object.fromEntries(
+    Object.entries(configuration).filter(([cle]) => connus.has(cle))
+  )
+  const tolerante = DeclarationOrganisationSchema.safeParse(sansInconnus)
+  return tolerante.success
+    ? { etat: 'valide', declaration: tolerante.data }
+    : { etat: 'illisible' }
+}
+
+/** La déclaration portée par une ligne, ou null si sa configuration est vide ou illisible. */
 function declarationDeLaLigne(
   ligne: LigneOrganisation
 ): DeclarationOrganisation | null {
-  const r = DeclarationOrganisationSchema.safeParse(ligne.configuration)
-  return r.success ? r.data : null
+  const lecture = lireDeclaration(ligne.configuration)
+  return lecture.etat === 'valide' ? lecture.declaration : null
 }
 
 /**
@@ -641,6 +681,8 @@ export async function configurationPublique(
  *
  * Sans ligne, elle en crée une depuis l'environnement (slug « defaut »). Une
  * ligne à la configuration vide (posée par une migration) est complétée de même.
+ * Une configuration illisible n'est jamais écrasée : seule une ligne vide se
+ * complète.
  * L'import d'organisation.yaml remplace ensuite ces valeurs d'amorçage.
  */
 export async function assurerOrganisationParDefaut(): Promise<string> {
@@ -664,17 +706,29 @@ export async function assurerOrganisationParDefaut(): Promise<string> {
       },
       select: { id: true, slug: true, configuration: true },
     })
-  } else if (declarationDeLaLigne(ligne) === null) {
-    const declaration = declarationDepuisEnv(env)
-    await prisma.organisation.update({
-      where: { id: ligne.id },
-      data: {
-        nom: declaration.nom,
-        sigle: declaration.sigle ?? null,
-        fuseauHoraire: declaration.fuseauHoraire,
-        configuration: declaration,
-      },
-    })
+  } else {
+    const { etat } = lireDeclaration(ligne.configuration)
+    if (etat === 'vide') {
+      const declaration = declarationDepuisEnv(env)
+      await prisma.organisation.update({
+        where: { id: ligne.id },
+        data: {
+          nom: declaration.nom,
+          sigle: declaration.sigle ?? null,
+          fuseauHoraire: declaration.fuseauHoraire,
+          configuration: declaration,
+        },
+      })
+    } else if (etat === 'illisible') {
+      // Une configuration illisible ne s'écrase jamais : elle vient d'une autre
+      // version, ou d'une écriture hors de l'application. L'organisation
+      // s'affiche avec l'identité d'amorçage tant qu'elle n'est pas réimportée.
+      const { journal } = await import('./journal.ts')
+      journal.error(
+        { evenement: 'configuration-illisible', organisationId: ligne.id },
+        'La configuration de cette organisation ne se lit pas : elle est laissée telle quelle. Réimportez son organisation.yaml.'
+      )
+    }
   }
   // Une installation neuve reçoit aussi sa première activité : un événement au slug
   // de l'organisation, que le premier import en disposition activites/ retire s'il

@@ -6,6 +6,7 @@ import {
   declarationDepuisEnv,
   fusionnerThemesDeclares,
   lienSupport,
+  lireDeclaration,
   manquementsIdentiteActivite,
   resoudreConfiguration,
   resoudreTheme,
@@ -296,5 +297,54 @@ describe('support (ADR 0021)', () => {
     expect(
       lienSupport({ contactSupport: undefined }, { SUPPORT_URL: undefined })
     ).toBeUndefined()
+  })
+})
+
+describe('lireDeclaration', () => {
+  const valide = declarationDepuisEnv(ENV, {
+    DOMAINES_COURRIEL_AUTORISES: 'exemple.org',
+  })
+
+  it('lit une déclaration valide', () => {
+    const lecture = lireDeclaration(valide)
+    expect(lecture.etat).toBe('valide')
+    expect(lecture.etat === 'valide' && lecture.declaration.nom).toBe(
+      'Les Rencontres de la Vallée'
+    )
+  })
+
+  it('reconnaît une ligne vide, que le démarrage complète', () => {
+    for (const vide of [null, undefined, {}, 'texte', []])
+      expect(lireDeclaration(vide).etat).toBe('vide')
+  })
+
+  it('garde une déclaration qui porte un champ d’une version plus récente', () => {
+    const lecture = lireDeclaration({
+      ...valide,
+      champAjouteParUneVersionSuivante: 'medias/exemple.png',
+    })
+    expect(lecture.etat).toBe('valide')
+    if (lecture.etat !== 'valide') return
+    expect(lecture.declaration.nom).toBe(valide.nom)
+    expect(lecture.declaration.contactRecrutement).toBe(
+      valide.contactRecrutement
+    )
+    expect(lecture.declaration).not.toHaveProperty(
+      'champAjouteParUneVersionSuivante'
+    )
+  })
+
+  it('refuse toujours un champ inconnu à la validation d’un contenu', () => {
+    expect(
+      DeclarationOrganisationSchema.safeParse({ ...valide, fautDeFrappe: 1 })
+        .success
+    ).toBe(false)
+  })
+
+  it('signale une configuration illisible, que le démarrage n’écrase pas', () => {
+    expect(lireDeclaration({ nom: 42, slug: 'Pas Un Slug' }).etat).toBe(
+      'illisible'
+    )
+    expect(lireDeclaration({ ...valide, nom: '' }).etat).toBe('illisible')
   })
 })
