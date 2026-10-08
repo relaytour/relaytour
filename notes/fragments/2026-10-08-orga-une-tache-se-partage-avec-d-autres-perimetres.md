@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.14.0
 fr:
   titre: >-
     Une tâche se partage avec d'autres périmètres

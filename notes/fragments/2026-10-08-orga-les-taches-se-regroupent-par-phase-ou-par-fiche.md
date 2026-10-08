@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.14.0
 fr:
   titre: >-
     Les tâches se regroupent par phase ou par fiche
