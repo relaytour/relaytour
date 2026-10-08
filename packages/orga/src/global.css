@@ -1876,3 +1876,17 @@ a.rt-etiquette:hover {
   display: grid;
   gap: 8px;
 }
+
+/* Dans l'application installée, la page s'étend sous la barre d'état du
+   téléphone (viewport-fit=cover). Un voile fixe garde l'heure lisible quand le
+   contenu défile dessous. */
+@media (display-mode: standalone) {
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0 0 auto;
+    z-index: 20;
+    height: env(safe-area-inset-top);
+    background: var(--rt-sol-1);
+  }
+}
