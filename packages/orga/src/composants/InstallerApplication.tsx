@@ -14,8 +14,8 @@ import { useOrganisation } from '../lib/organisation'
 const ETAPES: Record<Appareil, string[]> = {
   iphone: [
     'Ouvrez cette page dans Safari.',
-    'Touchez le bouton « Partager », en bas de l’écran.',
-    'Faites défiler la liste, puis touchez « Sur l’écran d’accueil ».',
+    'Touchez « Partager ». Sur iOS 26, ce bouton se trouve dans le menu « ··· », en bas à droite.',
+    'Touchez « En voir plus » si la liste est repliée, puis « Sur l’écran d’accueil ».',
     'Touchez « Ajouter ».',
   ],
   android: [

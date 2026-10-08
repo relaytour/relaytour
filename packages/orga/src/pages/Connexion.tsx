@@ -223,7 +223,9 @@ export default function Connexion() {
             <Button
               type="link"
               block
-              style={{ marginTop: 8 }}
+              // Sur un téléphone, ce libellé tient sur deux lignes : sans retour à
+              // la ligne, il élargit la carte au-delà de l'écran.
+              style={{ marginTop: 8, height: 'auto', whiteSpace: 'normal' }}
               onClick={() => {
                 setEtape('adresse')
                 setErreur(null)
