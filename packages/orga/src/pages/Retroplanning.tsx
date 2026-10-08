@@ -463,7 +463,13 @@ export default function Retroplanning() {
               {regroupement === 'phase' && debut
                 ? phases.map(groupe => (
                     <Section
-                      key={groupe.phase?.cle ?? 'sans-echeance'}
+                      // Le préfixe garde la clé du groupe sans échéance distincte
+                      // d'une phase qui porterait ce nom.
+                      key={
+                        groupe.phase === null
+                          ? 'sans-echeance'
+                          : `phase:${groupe.phase.cle}`
+                      }
                       titre={groupe.phase?.libelle ?? 'Sans échéance'}
                       compte={compteTaches(groupe.taches.length)}
                       extra={
