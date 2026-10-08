@@ -1,12 +1,13 @@
 import { BookOutlined, PlusOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
 import { Alert, Button, Empty, Result, Skeleton } from 'antd'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
 import Avancement from '../composants/Avancement'
 import ChoixEdition from '../composants/ChoixEdition'
-import { DeuxColonnes, Panneau } from '../composants/Panneau'
+import DeclinaisonsProposees from '../composants/DeclinaisonsProposees'
+import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import {
   Avatar,
   MentionContactPrincipal,
@@ -18,8 +19,16 @@ import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
-import type { TacheChampsFragment } from '../gql/graphql'
-import { EDITION_COURANTE, EDITIONS } from '../lib/requetes'
+import type { PagePerimetreQuery, TacheChampsFragment } from '../gql/graphql'
+import {
+  CLE_REGROUPEMENT_TACHES,
+  ecrireRegroupement,
+  grouperParFiche,
+  grouperParPhase,
+  libelleBorne,
+  lireRegroupement,
+} from '../lib/regroupement'
+import { EDITION_COURANTE, EDITIONS, PERIMETRES } from '../lib/requetes'
 import { estOuverte } from '../lib/taches'
 import { useActivite } from '../lib/activite'
 
@@ -54,6 +63,24 @@ const PAGE = graphql(`
       }
       taches(editionId: $editionId) {
         ...TacheChamps
+        # Tâches partagées (ADR 0026) : pour une déclinaison, le périmètre qui la
+        # demande ; pour une tâche partagée, où en sont ses déclinaisons.
+        origine {
+          id
+          perimetre {
+            slug
+            nom
+            couleur
+          }
+        }
+        resumeDeclinaisons {
+          total
+          enAttente
+          refusees
+          acceptees
+          faites
+          abandonnees
+        }
       }
     }
     fichesCommunes: fiches {
@@ -92,8 +119,34 @@ const FILTRES: Record<Filtre, (t: TacheChampsFragment) => boolean> = {
   toutes: () => true,
 }
 
+// Regroupement de la liste (ADR 0025) : par échéance, la liste reste d'un seul
+// tenant ; par phase ou par fiche, elle se découpe en sections.
+type Regroupement = 'echeance' | 'phase' | 'fiche'
+const REGROUPEMENTS = ['echeance', 'phase', 'fiche'] as const
+
+const NOTE_REGROUPEMENT: Record<Regroupement, string> = {
+  echeance: 'Les tâches sont triées par échéance.',
+  phase:
+    'Les tâches sont rangées par phase, puis par échéance. Une tâche se range dans une phase par son échéance.',
+  fiche: 'Les tâches sont rangées par fiche méthode, puis par échéance.',
+}
+
+// Une tâche de la page : le fragment commun et le résumé de ses déclinaisons.
+type TacheDuPerimetre = NonNullable<
+  PagePerimetreQuery['perimetre']
+>['taches'][number]
+
+interface SectionTaches {
+  cle: string
+  titre: ReactNode
+  extra?: string
+  taches: TacheDuPerimetre[]
+}
+
+const compteTaches = (n: number) => `${n} ${n > 1 ? 'tâches' : 'tâche'}`
+
 export default function Perimetre() {
-  const { lien, periode, libelleGroupe, gere } = useActivite()
+  const { lien, periode, libelleGroupe, gere, activite } = useActivite()
   const { slug = '' } = useParams()
   const [parametres, setParametres] = useSearchParams()
   const navigate = useNavigate()
@@ -105,6 +158,13 @@ export default function Perimetre() {
     skip: editionId === undefined,
   })
   const [filtre, setFiltre] = useState<Filtre>('ouvertes')
+  const [regroupementChoisi, setRegroupement] = useState<Regroupement>(() =>
+    lireRegroupement(CLE_REGROUPEMENT_TACHES, REGROUPEMENTS, 'echeance')
+  )
+  const changerRegroupement = (valeur: Regroupement) => {
+    setRegroupement(valeur)
+    ecrireRegroupement(CLE_REGROUPEMENT_TACHES, valeur)
+  }
   const [enEdition, setEnEdition] = useState<
     TacheChampsFragment | 'nouvelle' | null
   >(null)
@@ -116,6 +176,18 @@ export default function Perimetre() {
     skip: perimetre?.acces !== 'COMPLET',
   })
   const fiches = methode?.perimetre?.fiches ?? []
+  // Les autres périmètres de l'activité, où décliner une tâche (ADR 0026). Seule
+  // une personne qui écrit dans le périmètre les lit.
+  const { data: autres } = useQuery(PERIMETRES, {
+    skip: !perimetre?.peutModifier,
+  })
+  const perimetresCibles = useMemo(
+    () =>
+      (autres?.perimetres ?? []).filter(
+        p => !p.archive && p.id !== perimetre?.id
+      ),
+    [autres, perimetre?.id]
+  )
   // La tâche visée par une notification (`?tache=`) s'affiche quel que soit le
   // filtre choisi : elle vient en tête quand le filtre l'aurait écartée.
   const tacheVisee = parametres.get('tache')
@@ -127,6 +199,61 @@ export default function Perimetre() {
       ? [visee, ...filtrees]
       : filtrees
   }, [perimetre, filtre, tacheVisee])
+  // Dans une section, la tâche visée garde sa place par échéance : la liste du
+  // serveur est déjà triée, et la tâche visée y reste quel que soit le filtre.
+  const tachesParEcheance = useMemo(
+    () =>
+      (perimetre?.taches ?? []).filter(
+        t => FILTRES[filtre](t) || t.id === tacheVisee
+      ),
+    [perimetre, filtre, tacheVisee]
+  )
+
+  // En consultation, le serveur ne rend pas les fiches (ADR 0014) : le regroupement
+  // par fiche n'est proposé qu'avec un accès complet.
+  const parFiche = perimetre?.acces === 'COMPLET'
+  const regroupement: Regroupement =
+    regroupementChoisi === 'fiche' && !parFiche
+      ? 'echeance'
+      : regroupementChoisi
+  // Le premier jour de la période : les bornes des phases se comptent depuis lui.
+  const debut = editions?.editions.find(e => e.id === editionId)?.debut
+  const sections = useMemo((): SectionTaches[] | null => {
+    if (regroupement === 'phase' && debut) {
+      return grouperParPhase(tachesParEcheance, activite.phases, debut).map(
+        groupe => ({
+          // Une activité peut déclarer une phase « sans-echeance » : le préfixe
+          // garde la clé du groupe sans échéance distincte.
+          cle:
+            groupe.phase === null
+              ? 'sans-echeance'
+              : `phase:${groupe.phase.cle}`,
+          titre: groupe.phase?.libelle ?? 'Sans échéance',
+          extra:
+            groupe.phase === null
+              ? undefined
+              : libelleBorne(groupe.phase, activite.phases, debut),
+          taches: groupe.taches,
+        })
+      )
+    }
+    if (regroupement === 'fiche') {
+      return grouperParFiche(tachesParEcheance).map(groupe => ({
+        cle: groupe.fiche === null ? 'sans-fiche' : `fiche:${groupe.fiche.id}`,
+        titre:
+          groupe.fiche === null ? (
+            'Sans fiche'
+          ) : (
+            <Link to={lien(`/fiches/${groupe.fiche.slug}`)}>
+              {groupe.fiche.titre}
+            </Link>
+          ),
+        taches: groupe.taches,
+      }))
+    }
+    // Par échéance, ou tant que la période n'est pas chargée : la liste d'un tenant.
+    return null
+  }, [regroupement, debut, tachesParEcheance, activite.phases, lien])
 
   // Le nombre de tâches ouvertes de chaque personne affectée au périmètre.
   const chargeDe = useMemo(() => {
@@ -157,6 +284,24 @@ export default function Perimetre() {
   const contactId = perimetre.contactPrincipal?.id
   const edition = editions?.editions.find(e => e.id === editionId)
   const a = perimetre.avancement
+  const cartes = (liste: TacheDuPerimetre[]) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {liste.map(tache => (
+        <TacheCarte
+          key={tache.id}
+          tache={tache}
+          moiId={moiId}
+          peutModifier={perimetre.peutModifier}
+          referents={perimetre.referents}
+          estAdmin={gere}
+          enEvidence={tache.id === tacheVisee}
+          onModifier={setEnEdition}
+          perimetresCibles={perimetresCibles}
+          editionId={editionId}
+        />
+      ))}
+    </div>
+  )
 
   return (
     <>
@@ -388,10 +533,17 @@ export default function Perimetre() {
           </>
         }
       >
-        <div
-          className="rt-puces"
-          style={{ justifyContent: 'space-between', rowGap: 10 }}
-        >
+        {editionId && (
+          <DeclinaisonsProposees
+            slug={slug}
+            editionId={editionId}
+            peutRepondre={perimetre.peutModifier}
+          />
+        )}
+
+        {/* Deux lignes de puces : le statut, puis le regroupement. Sur une seule
+            ligne, le second groupe passerait à la ligne en laissant son trait. */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <Puces<Filtre>
             libelle="Statut des tâches"
             valeur={filtre}
@@ -412,33 +564,46 @@ export default function Perimetre() {
               { valeur: 'toutes', libelle: 'Toutes', compte: a.total },
             ]}
           />
-          <span className="rt-note">Triées par échéance</span>
+          <Puces<Regroupement>
+            libelle="Regroupement des tâches"
+            valeur={regroupement}
+            onChange={changerRegroupement}
+            options={[
+              { valeur: 'echeance', libelle: 'Par échéance' },
+              { valeur: 'phase', libelle: 'Par phase' },
+              ...(parFiche
+                ? [{ valeur: 'fiche' as const, libelle: 'Par fiche' }]
+                : []),
+            ]}
+          />
         </div>
 
         {taches.length === 0 ? (
           <div className="rt-verre rt-panneau">
             <Empty description="Aucune tâche dans cette catégorie." />
           </div>
+        ) : sections === null ? (
+          cartes(taches)
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {taches.map(tache => (
-              <TacheCarte
-                key={tache.id}
-                tache={tache}
-                moiId={moiId}
-                peutModifier={perimetre.peutModifier}
-                referents={perimetre.referents}
-                estAdmin={gere}
-                enEvidence={tache.id === tacheVisee}
-                onModifier={setEnEdition}
-              />
-            ))}
-          </div>
+          sections.map(section => (
+            <Section
+              key={section.cle}
+              titre={section.titre}
+              compte={compteTaches(section.taches.length)}
+              extra={
+                section.extra && (
+                  <span className="rt-note">{section.extra}</span>
+                )
+              }
+            >
+              {cartes(section.taches)}
+            </Section>
+          ))
         )}
 
         <p className="rt-note" style={{ margin: '0 6px' }}>
-          Les tâches sont triées par échéance. Une tâche ne se supprime pas :
-          elle s’abandonne.
+          {NOTE_REGROUPEMENT[sections === null ? 'echeance' : regroupement]} Une
+          tâche ne se supprime pas : elle s’abandonne.
         </p>
       </DeuxColonnes>
 
@@ -450,6 +615,8 @@ export default function Perimetre() {
           fiches={(data.fichesCommunes ?? []).filter(
             f => f.perimetre === null || f.perimetre.id === perimetre.id
           )}
+          perimetresCibles={perimetresCibles}
+          estAdmin={gere}
           onFermer={() => setEnEdition(null)}
           onEnregistree={() => setEnEdition(null)}
         />

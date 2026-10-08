@@ -10,6 +10,11 @@ import {
   VUES_TACHES,
 } from '../lib/taches'
 
+import ChoixPerimetresCibles, {
+  type PerimetreCible,
+} from './ChoixPerimetresCibles'
+import { AideDeclinaison } from './DeclinerTache'
+
 export interface FicheChoix {
   id: string
   titre: string
@@ -21,6 +26,12 @@ interface Valeurs {
   description?: string
   echeance?: string
   mAssigner?: boolean
+  // Tâche partagée (ADR 0026) : les périmètres où la décliner, et ce qu'ils
+  // reçoivent quand il diffère de la tâche.
+  cibles?: string[]
+  titreDeclinaison?: string
+  descriptionDeclinaison?: string
+  echeanceDeclinaison?: string
 }
 
 /** Création (tache = 'nouvelle') ou modification d'une tâche. */
@@ -29,18 +40,25 @@ export default function TacheFormulaire({
   perimetreId,
   editionId,
   fiches = [],
+  perimetresCibles = [],
+  estAdmin = false,
   onFermer,
   onEnregistree,
 }: {
   /** Fiches liables : celles du périmètre et les fiches communes. */
   fiches?: FicheChoix[]
   tache: TacheChampsFragment | 'nouvelle' | null
+  /** Les autres périmètres de l'activité, où décliner une tâche nouvelle. */
+  perimetresCibles?: PerimetreCible[]
+  /** Un admin de l'activité décline sans attendre l'accord des périmètres. */
+  estAdmin?: boolean
   perimetreId: string
   editionId: string
   onFermer: () => void
   onEnregistree: () => void
 }) {
   const [form] = Form.useForm<Valeurs>()
+  const cibles = Form.useWatch('cibles', form) ?? []
   const executer = useActionTache()
   const [creer, creation] = useMutation(CREER_TACHE, {
     refetchQueries: VUES_TACHES,
@@ -59,6 +77,10 @@ export default function TacheFormulaire({
             echeance: '',
             ficheId: null,
             mAssigner: true,
+            cibles: [],
+            titreDeclinaison: '',
+            descriptionDeclinaison: '',
+            echeanceDeclinaison: '',
           }
         : {
             ficheId: tache.fiche?.id ?? null,
@@ -86,9 +108,22 @@ export default function TacheFormulaire({
                   perimetreId,
                   editionId,
                   mAssigner: v.mAssigner ?? false,
+                  declinaison:
+                    (v.cibles ?? []).length === 0
+                      ? null
+                      : {
+                          perimetreIds: v.cibles ?? [],
+                          titre: v.titreDeclinaison?.trim() || null,
+                          description: v.descriptionDeclinaison?.trim() || null,
+                          echeance: v.echeanceDeclinaison || null,
+                        },
                 },
               }),
-            'Tâche créée.'
+            (v.cibles ?? []).length === 0
+              ? 'Tâche créée.'
+              : estAdmin
+                ? 'Tâche créée et ajoutée aux périmètres choisis.'
+                : 'Tâche créée et partagée avec les périmètres choisis.'
           )
         : tache
           ? await executer(
@@ -120,6 +155,7 @@ export default function TacheFormulaire({
       onOk={() => form.submit()}
       onCancel={onFermer}
       destroyOnHidden
+      rootClassName="rt-modale-pleine"
     >
       <Form
         form={form}
@@ -158,6 +194,44 @@ export default function TacheFormulaire({
           <Form.Item name="mAssigner" valuePropName="checked">
             <Checkbox>Je m’en occupe</Checkbox>
           </Form.Item>
+        )}
+        {tache === 'nouvelle' && perimetresCibles.length > 0 && (
+          <>
+            <Form.Item
+              label="Décliner dans d’autres périmètres (facultatif)"
+              name="cibles"
+              extra="Un pôle demande par exemple la même tâche à chaque sport."
+            >
+              <ChoixPerimetresCibles perimetres={perimetresCibles} />
+            </Form.Item>
+            {cibles.length > 0 && (
+              <>
+                <AideDeclinaison estAdmin={estAdmin} />
+                <Form.Item
+                  label="Titre dans ces périmètres (facultatif)"
+                  name="titreDeclinaison"
+                  extra="Sans titre, les périmètres reçoivent celui de cette tâche."
+                  rules={[
+                    { max: 200, message: 'Le titre dépasse 200 caractères.' },
+                  ]}
+                >
+                  <Input placeholder="Transmettre les besoins au pôle" />
+                </Form.Item>
+                <Form.Item
+                  label="Description dans ces périmètres (facultatif)"
+                  name="descriptionDeclinaison"
+                >
+                  <Input.TextArea autoSize={{ minRows: 2, maxRows: 8 }} />
+                </Form.Item>
+                <Form.Item
+                  label="Échéance dans ces périmètres (facultatif)"
+                  name="echeanceDeclinaison"
+                >
+                  <Input type="date" style={{ maxWidth: 200 }} />
+                </Form.Item>
+              </>
+            )}
+          </>
         )}
       </Form>
     </Modal>

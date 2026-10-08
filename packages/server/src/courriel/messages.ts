@@ -3,6 +3,7 @@ import type { PrismaClient } from '@relaytour/database'
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
 import { adminsAPrevenir, demandesEnAttente } from '../lib/demandes.ts'
+import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import {
   changementsEquipe,
@@ -386,6 +387,7 @@ export async function composer(
           echeance: {
             lte: new Date(jour.getTime() + 14 * 24 * 3600 * 1000),
           },
+          AND: [TACHES_ACTIVES],
         },
         select: {
           titre: true,

@@ -28,6 +28,7 @@ import type { NatureActivite } from '../../gql/graphql'
 import { formesPeriode, useActivite, type Activite } from '../../lib/activite'
 import { messageErreur } from '../../lib/erreurs'
 import { useOrganisation } from '../../lib/organisation'
+import { joursRelatifs } from '../../lib/regroupement'
 import { useSession } from '../../lib/session'
 import { ACTIVITES } from '../../lib/requetes'
 
@@ -66,6 +67,7 @@ const MODIFIER = graphql(`
     $sigle: String
     $nature: NatureActivite!
     $groupes: [GroupePerimetresInput!]!
+    $phases: [PhaseInput!]
     $ordre: Int!
     $archive: Boolean
     $souhaitsOuverts: Boolean
@@ -78,6 +80,7 @@ const MODIFIER = graphql(`
       sigle: $sigle
       nature: $nature
       groupes: $groupes
+      phases: $phases
       ordre: $ordre
       archive: $archive
       souhaitsOuverts: $souhaitsOuverts
@@ -135,6 +138,36 @@ interface Groupe {
   libellePluriel: string
 }
 
+// Une phase de l'activité (ADR 0025). La borne compte les jours depuis le premier
+// jour de la période ; la dernière phase n'en porte pas.
+interface Phase {
+  cle: string
+  libelle: string
+  jusquA?: string | null
+}
+
+const PHASES_MAX = 12
+const BORNE = /^J[-+]\d{1,3}$/
+
+/** Les phases telles que le serveur les attend : seule la dernière est sans borne. */
+function phasesSaisies(phases: Phase[]): Phase[] {
+  return phases.map((phase, rang) => ({
+    cle: phase.cle.trim(),
+    libelle: phase.libelle.trim(),
+    jusquA:
+      rang === phases.length - 1 ? null : (phase.jusquA ?? '').trim() || null,
+  }))
+}
+
+const memesPhases = (a: Phase[], b: Phase[]) =>
+  a.length === b.length &&
+  a.every(
+    (phase, rang) =>
+      phase.cle === b[rang]?.cle &&
+      phase.libelle === b[rang]?.libelle &&
+      (phase.jusquA ?? null) === (b[rang]?.jusquA ?? null)
+  )
+
 interface Valeurs {
   slug: string
   nom: string
@@ -142,6 +175,7 @@ interface Valeurs {
   nature: NatureActivite
   ordre: number
   groupes: Groupe[]
+  phases: Phase[]
   archive: boolean
   souhaitsOuverts: boolean
   // Formulaire public pour rejoindre l'équipe (ADR 0015).
@@ -219,6 +253,9 @@ export default function Activites() {
             nature: 'SAISON',
             ordre: (data?.activites.length ?? 0) + 1,
             groupes: GROUPES_PAR_DEFAUT,
+            // Une activité nouvelle garde les phases par défaut : elles se règlent
+            // après sa création.
+            phases: [],
             archive: false,
             souhaitsOuverts: false,
             formulaireOuvert: false,
@@ -238,6 +275,7 @@ export default function Activites() {
             nature: activite.nature,
             ordre: activite.ordre,
             groupes: activite.groupes.map(g => ({ ...g })),
+            phases: activite.phases.map(p => ({ ...p })),
             archive: activite.archive,
             souhaitsOuverts: activite.souhaitsOuverts,
             formulaireOuvert: activite.formulaireOuvert,
@@ -304,6 +342,9 @@ export default function Activites() {
         return
       }
       if (enEdition) {
+        // Les phases ne partent que si elles changent : une activité qui n'en
+        // déclare pas garde ainsi les phases par défaut (ADR 0025).
+        const phases = phasesSaisies(v.phases)
         // L'identité se vérifie d'abord. La modification et l'archivage suivent
         // dans une seule transaction : une limite atteinte annule les deux.
         await modifierIdentite({
@@ -316,6 +357,7 @@ export default function Activites() {
             sigle,
             nature: v.nature,
             groupes,
+            phases: memesPhases(phases, enEdition.phases) ? null : phases,
             ordre: v.ordre,
             archive: v.archive === enEdition.archive ? null : v.archive,
             souhaitsOuverts: v.souhaitsOuverts,
@@ -331,7 +373,8 @@ export default function Activites() {
         setEnEdition(null)
       }
     } catch (e) {
-      // Une limite atteinte ou un groupe encore utilisé s'affichent dans la fenêtre.
+      // Une limite atteinte, un groupe encore utilisé ou des phases mal ordonnées
+      // s'affichent dans la fenêtre.
       setErreur(messageErreur(e))
     }
   }
@@ -397,6 +440,11 @@ export default function Activites() {
             key: 'groupes',
             title: 'Groupes',
             render: (_, a) => a.groupes.map(g => g.libellePluriel).join(', '),
+          },
+          {
+            key: 'phases',
+            title: 'Phases',
+            render: (_, a) => a.phases.map(p => p.libelle).join(', '),
           },
           {
             key: 'etat',
@@ -576,6 +624,127 @@ export default function Activites() {
               )}
             </Form.List>
           </Form.Item>
+          {enEdition !== 'nouvelle' && (
+            <Form.Item
+              label="Phases"
+              extra="Une tâche se range par son échéance dans la première phase dont la borne n’est pas dépassée. La borne compte les jours depuis le premier jour de la période : J-120 pour 120 jours avant, J+30 pour 30 jours après. La dernière phase reçoit tout ce qui suit."
+            >
+              <Form.List name="phases">
+                {(champs, { add, remove }) => (
+                  <>
+                    {champs.map((champ, rang) => (
+                      <Row gutter={8} key={champ.key} align="top">
+                        <Col xs={24} sm={7}>
+                          <Form.Item
+                            name={[champ.name, 'cle']}
+                            rules={[
+                              { required: true, message: 'Clé requise.' },
+                              {
+                                pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
+                                message: 'Minuscules, chiffres, tirets.',
+                              },
+                            ]}
+                          >
+                            <Input
+                              placeholder="clé"
+                              aria-label="Clé de la phase"
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={12} sm={8}>
+                          <Form.Item
+                            name={[champ.name, 'libelle']}
+                            rules={[
+                              { required: true, message: 'Libellé requis.' },
+                            ]}
+                          >
+                            <Input
+                              placeholder="Préparation"
+                              maxLength={60}
+                              aria-label="Libellé de la phase"
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col xs={10} sm={7}>
+                          {rang === champs.length - 1 ? (
+                            <Form.Item>
+                              <Input
+                                disabled
+                                placeholder="sans borne"
+                                aria-label="Dernier jour de la phase : aucun, la dernière phase reçoit tout ce qui suit"
+                              />
+                            </Form.Item>
+                          ) : (
+                            <Form.Item
+                              name={[champ.name, 'jusquA']}
+                              dependencies={
+                                rang === 0
+                                  ? undefined
+                                  : [['phases', rang - 1, 'jusquA']]
+                              }
+                              rules={[
+                                { required: true, message: 'Borne requise.' },
+                                {
+                                  pattern: BORNE,
+                                  message: 'Forme J-120 ou J+30.',
+                                },
+                                // Le serveur applique la même règle : ce contrôle
+                                // place le message sous le champ concerné.
+                                ({ getFieldValue }) => ({
+                                  validator: (_regle, valeur: string) => {
+                                    const borne = joursRelatifs(valeur)
+                                    const precedente =
+                                      rang === 0
+                                        ? null
+                                        : joursRelatifs(
+                                            getFieldValue([
+                                              'phases',
+                                              rang - 1,
+                                              'jusquA',
+                                            ]) as string | undefined
+                                          )
+                                    return borne === null ||
+                                      precedente === null ||
+                                      borne > precedente
+                                      ? Promise.resolve()
+                                      : Promise.reject(
+                                          new Error(
+                                            'La borne doit dépasser la précédente.'
+                                          )
+                                        )
+                                  },
+                                }),
+                              ]}
+                            >
+                              <Input
+                                placeholder="J-120"
+                                aria-label="Dernier jour de la phase"
+                              />
+                            </Form.Item>
+                          )}
+                        </Col>
+                        <Col xs={2} sm={2}>
+                          <Button
+                            icon={<DeleteOutlined />}
+                            aria-label="Retirer la phase"
+                            disabled={champs.length === 1}
+                            onClick={() => remove(champ.name)}
+                          />
+                        </Col>
+                      </Row>
+                    ))}
+                    <Button
+                      icon={<PlusOutlined />}
+                      onClick={() => add({ cle: '', libelle: '', jusquA: '' })}
+                      disabled={champs.length >= PHASES_MAX}
+                    >
+                      Ajouter une phase
+                    </Button>
+                  </>
+                )}
+              </Form.List>
+            </Form.Item>
+          )}
           <Divider titlePlacement="start" plain>
             Identité propre (facultatif)
           </Divider>

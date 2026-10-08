@@ -83,6 +83,11 @@ export const ACTIVITES = graphql(`
         libelle
         libellePluriel
       }
+      phases {
+        cle
+        libelle
+        jusquA
+      }
       logoUrl
       contactRecrutement
       pageEquipe

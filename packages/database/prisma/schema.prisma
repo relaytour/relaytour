@@ -207,6 +207,7 @@ model User {
   tachesCreees       Tache[]                 @relation("TacheAuteur")
   tachesCloturees    Tache[]                 @relation("TacheCloture")
   tachesRealisees    Tache[]                 @relation("TacheRealisation")
+  tachesAccordees    Tache[]                 @relation("TacheAccord")
   versionsFiches     FicheVersion[]
   droitsRedaction    DroitRedaction[]        @relation("DroitRedactionPersonne")
   droitsAccordes     DroitRedaction[]        @relation("DroitRedactionAuteur")
@@ -582,16 +583,24 @@ enum StatutTache {
   ABANDONNEE
 }
 
+// Accord du périmètre cible sur une déclinaison (ADR 0026). EN_ATTENTE : la
+// déclinaison est proposée, et ne compte pas encore parmi les tâches du périmètre.
+enum AccordDeclinaison {
+  EN_ATTENTE
+  ACCEPTE
+  REFUSE
+}
+
 // Action datée d'un périmètre pour une édition. Une tâche ne se supprime pas :
 // elle s'abandonne, pour garder l'historique.
 model Tache {
-  id            String      @id @default(cuid())
+  id            String             @id @default(cuid())
   editionId     String
   perimetreId   String
   titre         String
-  description   String?     @db.Text
-  echeance      DateTime?   @db.Date
-  statut        StatutTache @default(A_FAIRE)
+  description   String?            @db.Text
+  echeance      DateTime?          @db.Date
+  statut        StatutTache        @default(A_FAIRE)
   // Identifiant du modèle Git d'origine (phase 3), null pour une tâche créée dans l'app.
   modeleSlug    String?
   ficheId       String?
@@ -604,9 +613,18 @@ model Tache {
   // Compte les modifications du contenu (titre, description, échéance, fiche). Une
   // modification porte la version lue : le serveur refuse d'écraser un changement
   // fait entre-temps. Le statut et les assignations ne changent pas la version.
-  version       Int         @default(0)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
+  version       Int                @default(0)
+  // Tâche partagée dont celle-ci est la déclinaison dans son périmètre (ADR 0026).
+  // Null pour une tâche ordinaire et pour la tâche partagée elle-même. Une
+  // déclinaison ne se décline pas.
+  origineId     String?
+  // Accord du périmètre cible, pour une déclinaison seulement : qui l'a donné ou
+  // refusé, et quand.
+  accord        AccordDeclinaison?
+  accordParId   String?
+  accordLe      DateTime?
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
 
   edition       Edition            @relation(fields: [editionId], references: [id], onDelete: Restrict)
   perimetre     Perimetre          @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
@@ -614,10 +632,16 @@ model Tache {
   clotureePar   User?              @relation("TacheCloture", fields: [clotureeParId], references: [id], onDelete: SetNull)
   realiseePar   User?              @relation("TacheRealisation", fields: [realiseeParId], references: [id], onDelete: SetNull)
   fiche         Fiche?             @relation(fields: [ficheId], references: [id], onDelete: SetNull)
+  origine       Tache?             @relation("Declinaisons", fields: [origineId], references: [id], onDelete: Restrict)
+  declinaisons  Tache[]            @relation("Declinaisons")
+  accordPar     User?              @relation("TacheAccord", fields: [accordParId], references: [id], onDelete: SetNull)
   assignations  TacheAssignation[]
   journal       Journal[]
   notifications Notification[]
 
+  // Une déclinaison par périmètre cible. La clé est bornée par la tâche partagée,
+  // elle-même rangée dans une activité (invariant 18).
+  @@unique([origineId, perimetreId])
   @@index([editionId, perimetreId])
   @@index([editionId, echeance])
 }
@@ -643,6 +667,12 @@ enum TypeJournal {
   TACHE_STATUT
   FICHE_CREEE
   FICHE_MODIFIEE
+  // Accord d'un périmètre cible sur une déclinaison (ADR 0026) : la tâche et le
+  // périmètre de la ligne sont ceux de la déclinaison.
+  DECLINAISON_PROPOSEE
+  DECLINAISON_ACCEPTEE
+  DECLINAISON_REFUSEE
+  DECLINAISON_IMPOSEE
 }
 
 // Journal : qui a fait quoi, et quand. Il alimente les notifications et le score
@@ -763,6 +793,12 @@ enum TypeNotification {
   TACHE_STATUT
   FICHE_CREEE
   FICHE_MODIFIEE
+  // Déclinaison d'une tâche partagée (ADR 0026), dans l'application seulement :
+  // proposée au périmètre cible, puis acceptée ou refusée pour le périmètre
+  // d'origine. `tacheId` désigne la déclinaison.
+  DECLINAISON_PROPOSEE
+  DECLINAISON_ACCEPTEE
+  DECLINAISON_REFUSEE
 }
 
 // Une notification ne stocke que des identifiants : le texte se compose à la lecture,
