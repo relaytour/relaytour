@@ -10,7 +10,9 @@ import {
   CloseOutlined,
   EditOutlined,
   HomeOutlined,
+  MenuFoldOutlined,
   MenuOutlined,
+  MenuUnfoldOutlined,
   ScheduleOutlined,
   SearchOutlined,
   SettingOutlined,
@@ -28,6 +30,13 @@ import { useActivite } from '../lib/activite'
 import { useOuvertureDepuisNotification } from '../lib/application'
 import { useRafraichissement } from '../lib/rafraichissement'
 import { choisirOrganisation } from '../lib/selection'
+import {
+  ecrireVolet,
+  etatDuVolet,
+  LARGEUR_VOLET_DEPLIE,
+  lireVolet,
+  useLargeurAuMoins,
+} from '../lib/volets'
 import { ContexteSession, type Session } from '../lib/session'
 
 import AvisMiseAJour from './AvisMiseAJour'
@@ -244,9 +253,24 @@ function Mise({ session }: { session: Session }) {
       : []),
   ]
 
-  const navigation = (
+  // Le volet de navigation (docs/design-system.md, « Volets ») : déplié, ou
+  // réduit à un rail d'icônes collé au bord gauche. Le choix de la personne
+  // l'emporte sur le défaut, qui suit la largeur de l'écran.
+  const large = useLargeurAuMoins(LARGEUR_VOLET_DEPLIE)
+  const [choixVolet, setChoixVolet] = useState(lireVolet)
+  const rail = etatDuVolet(choixVolet, large) === 'rail'
+  const basculerVolet = () => {
+    const suivant = rail ? 'deplie' : 'rail'
+    ecrireVolet(suivant)
+    setChoixVolet(suivant)
+  }
+
+  const navigation = (replie: boolean) => (
     <Menu
       mode="inline"
+      // En rail, Ant Design ne garde que les icônes et affiche le libellé dans
+      // une bulle, au survol et au focus.
+      inlineCollapsed={replie}
       selectedKeys={[
         pathname.startsWith(lien('/fiches'))
           ? lien('/fiches')
@@ -264,20 +288,31 @@ function Mise({ session }: { session: Session }) {
     />
   )
 
-  const pied = <SignatureRelaytour />
-
   return (
     <div className="rt-page">
       <div className="rt-halo rt-halo-1" aria-hidden="true" />
       <div className="rt-halo rt-halo-2" aria-hidden="true" />
       {ecrans.md ? (
         <nav
-          className="rt-verre-barre rt-barre-laterale"
+          className={
+            rail
+              ? 'rt-verre-barre rt-barre-laterale rt-rail'
+              : 'rt-verre-barre rt-barre-laterale'
+          }
           aria-label="Navigation principale"
         >
+          <Button
+            className="rt-bascule-volet"
+            type="text"
+            icon={rail ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            aria-label={rail ? 'Déplier le menu' : 'Replier le menu'}
+            aria-expanded={!rail}
+            title={rail ? 'Déplier le menu' : 'Replier le menu'}
+            onClick={basculerVolet}
+          />
           <ChoixActivite />
-          {navigation}
-          {pied}
+          {navigation(rail)}
+          <SignatureRelaytour compacte={rail} />
         </nav>
       ) : (
         <Drawer
@@ -295,8 +330,8 @@ function Mise({ session }: { session: Session }) {
             body: { padding: 12, display: 'flex', flexDirection: 'column' },
           }}
         >
-          {navigation}
-          {pied}
+          {navigation(false)}
+          <SignatureRelaytour />
         </Drawer>
       )}
       <div className="rt-principal">

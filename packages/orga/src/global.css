@@ -244,6 +244,74 @@ html {
   overflow: hidden;
 }
 
+/* Le volet se replie en un rail d'icônes, collé au bord gauche de l'écran
+   (docs/design-system.md, « Volets »). La largeur, la marge et les arrondis
+   changent ensemble. */
+.rt-barre-laterale {
+  transition:
+    width var(--rt-duree) var(--rt-ease-fluide),
+    margin var(--rt-duree) var(--rt-ease-fluide),
+    padding var(--rt-duree) var(--rt-ease-fluide),
+    height var(--rt-duree) var(--rt-ease-fluide),
+    top var(--rt-duree) var(--rt-ease-fluide),
+    border-radius var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-barre-laterale.rt-rail {
+  width: 64px;
+  /* La page porte 16 px de marge : le rail la traverse jusqu'aux bords. */
+  margin: -16px 0 -16px -16px;
+  top: 0;
+  height: 100dvh;
+  padding: 16px 8px;
+  border-radius: 0 var(--rt-rayon-panneau) var(--rt-rayon-panneau) 0;
+}
+
+.rt-bascule-volet {
+  align-self: flex-end;
+  flex-shrink: 0;
+  margin: -8px 0 8px;
+  color: var(--rt-encre-55);
+}
+
+.rt-rail .rt-bascule-volet {
+  align-self: center;
+  margin-top: 0;
+}
+
+.rt-rail .rt-rappel-organisation,
+.rt-rail .rt-marque-nom,
+.rt-rail .rt-entete-activite .ant-btn {
+  display: none;
+}
+
+.rt-rail .rt-entete-activite {
+  justify-content: center;
+}
+
+.rt-rail .rt-entete-activite .rt-marque {
+  flex: none;
+}
+
+.rt-rail .rt-pied-marque {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.rt-rail .ant-menu-inline-collapsed {
+  width: 100%;
+}
+
+/* En rail, le titre d'un groupe devient un filet : son texte ne tient pas. */
+.rt-rail .ant-menu-item-group-title {
+  height: 1px;
+  margin: 10px 12px;
+  padding: 0;
+  overflow: hidden;
+  font-size: 0;
+  background: var(--rt-encre-14);
+}
+
 .rt-barre-laterale .ant-menu {
   flex: 1;
   overflow-y: auto;
@@ -785,6 +853,45 @@ button.rt-ligne-lien {
   grid-template-columns: minmax(0, 1fr) 340px;
   gap: 20px;
   align-items: start;
+  transition: grid-template-columns var(--rt-duree) var(--rt-ease-fluide);
+}
+
+/* Le volet latéral reste dans l'écran pendant le défilement : lib/volets.ts
+   pose sa position, qui suit le sens du défilement quand le volet dépasse la
+   hauteur de l'écran. */
+.rt-volet-lateral {
+  position: sticky;
+  top: 100px;
+}
+
+.rt-volet-contenu {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+  transition: transform var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-bascule-volet-lateral {
+  align-self: flex-start;
+  flex-shrink: 0;
+  color: var(--rt-encre-55);
+}
+
+/* Replié, le volet devient une tranche : ses cartes glissent vers la droite et
+   ne montrent plus que leur bord arrondi, sans texte. */
+.rt-deux-colonnes.rt-volet-replie {
+  grid-template-columns: minmax(0, 1fr) 28px;
+}
+
+.rt-volet-replie .rt-volet-lateral {
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.rt-volet-replie .rt-volet-contenu {
+  width: 340px;
+  transform: translateX(16px);
 }
 
 .rt-colonne {
@@ -795,8 +902,21 @@ button.rt-ligne-lien {
 }
 
 @media (max-width: 1099px) {
-  .rt-deux-colonnes {
+  .rt-deux-colonnes,
+  .rt-deux-colonnes.rt-volet-replie {
     grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* Les deux colonnes s'empilent : le volet suit le contenu, sans repli. */
+  .rt-volet-lateral {
+    position: static;
+    overflow: visible;
+    cursor: auto;
+  }
+
+  .rt-volet-replie .rt-volet-contenu {
+    width: auto;
+    transform: none;
   }
 }
 
