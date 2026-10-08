@@ -509,6 +509,12 @@ async function piloteSimulateur() {
     }
     if (req.url === '/__captures/ordre') {
       demandeurs.push(res)
+      // Une page qui change d'adresse abandonne son attente : sa réponse quitte
+      // la file, sinon le prochain ordre partirait dans une connexion fermée.
+      res.on('close', () => {
+        const i = demandeurs.indexOf(res)
+        if (i >= 0) demandeurs.splice(i, 1)
+      })
       // Une attente longue se referme d'elle-même : la page en ouvre une autre.
       setTimeout(() => {
         const i = demandeurs.indexOf(res)

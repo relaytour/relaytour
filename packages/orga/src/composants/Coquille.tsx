@@ -271,6 +271,7 @@ function Mise({ session }: { session: Session }) {
       // En rail, Ant Design ne garde que les icônes et affiche le libellé dans
       // une bulle, au survol et au focus.
       inlineCollapsed={replie}
+      tooltip={{ trigger: ['hover', 'focus'] }}
       selectedKeys={[
         pathname.startsWith(lien('/fiches'))
           ? lien('/fiches')
@@ -304,6 +305,7 @@ function Mise({ session }: { session: Session }) {
           <Button
             className="rt-bascule-volet"
             type="text"
+            size="small"
             icon={rail ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             aria-label={rail ? 'Déplier le menu' : 'Replier le menu'}
             aria-expanded={!rail}

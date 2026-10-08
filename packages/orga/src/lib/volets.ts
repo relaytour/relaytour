@@ -1,4 +1,10 @@
-import { useEffect, useRef, useSyncExternalStore, type RefObject } from 'react'
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type RefObject,
+} from 'react'
 
 // Volets de l'espace organisateur (docs/design-system.md, « Volets ») : le volet
 // de navigation, déplié ou réduit à un rail d'icônes, et le volet latéral des
@@ -122,4 +128,49 @@ export function useVoletCollant(
       observateur.disconnect()
     }
   }, [volet, sous, actif])
+}
+
+/** Lit la zone sûre du bas de l'écran (barre d'accueil d'un téléphone), en pixels. */
+function zoneSureBasse(): number {
+  const sonde = document.createElement('div')
+  sonde.style.cssText =
+    'position:fixed;visibility:hidden;padding-bottom:env(safe-area-inset-bottom,0px)'
+  document.body.appendChild(sonde)
+  const valeur = Number.parseFloat(getComputedStyle(sonde).paddingBottom)
+  sonde.remove()
+  return Number.isFinite(valeur) ? valeur : 0
+}
+
+/**
+ * Les décalages d'un élément collé dans la page : `haut` sous la barre haute,
+ * `bas` au-dessus de la zone sûre de l'écran. `haut` vaut `defaut` sur un écran
+ * sans zone sûre ; dans l'application installée sur un téléphone, la barre haute
+ * descend sous la barre d'état, et le décalage la suit.
+ */
+export function useDecalagesCollants(defaut: number): {
+  haut: number
+  bas: number
+} {
+  const [decalages, setDecalages] = useState({ haut: defaut, bas: 0 })
+  useEffect(() => {
+    const barre = document.querySelector<HTMLElement>('.rt-barre-haute')
+    const mesurer = () => {
+      // La barre haute est collée : son `top` calculé porte la zone sûre du haut.
+      const collage =
+        barre === null
+          ? Number.NaN
+          : Number.parseFloat(getComputedStyle(barre).top)
+      // `defaut` suppose une barre collée à 12 px (téléphone) ou 16 px.
+      const marge = defaut < HAUT_SOUS_LA_BARRE ? 12 : 16
+      const haut = Number.isFinite(collage)
+        ? defaut + Math.max(0, collage - marge)
+        : defaut
+      const bas = zoneSureBasse()
+      setDecalages(d => (d.haut === haut && d.bas === bas ? d : { haut, bas }))
+    }
+    mesurer()
+    window.addEventListener('resize', mesurer)
+    return () => window.removeEventListener('resize', mesurer)
+  }, [defaut])
+  return decalages
 }

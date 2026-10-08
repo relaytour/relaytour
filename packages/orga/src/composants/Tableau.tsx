@@ -1,23 +1,34 @@
-import { EditOutlined, SearchOutlined } from '@ant-design/icons'
-import { Button, Input, Space, Table } from 'antd'
+import {
+  EditOutlined,
+  PushpinFilled,
+  PushpinOutlined,
+  SearchOutlined,
+} from '@ant-design/icons'
+import { Button, Grid, Input, Space, Table } from 'antd'
 import type { TableColumnType, TableProps } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type {
   KeyboardEvent,
   MouseEvent,
   PointerEvent,
+  ReactNode,
   ThHTMLAttributes,
 } from 'react'
 
 import {
+  LARGEUR_COLONNES_FIGEES,
   LARGEUR_MAX,
   LARGEUR_MIN,
   bornerLargeur,
+  colonnesFigees,
   comparer,
   contient,
+  ecrireEpingle,
   ecrireLargeurs,
+  lireEpingle,
   lireLargeurs,
 } from '../lib/tableau'
+import { HAUT_SOUS_LA_BARRE, useDecalagesCollants } from '../lib/volets'
 import type { Largeurs, ValeurTri } from '../lib/tableau'
 
 /** Colonne d'un tableau de l'application. */
@@ -162,16 +173,81 @@ export default function Tableau<T extends object>({
   const [largeurs, setLargeurs] = useState<Largeurs>(() => lireLargeurs(id))
   useEffect(() => ecrireLargeurs(id, largeurs), [id, largeurs])
 
+  // Les premières colonnes (ouverture, sélection, identité de la ligne) restent
+  // visibles pendant le défilement horizontal : d'office dans un tableau large,
+  // sur choix de la personne dans un tableau étroit (docs/design-system.md).
+  const cadre = useRef<HTMLDivElement>(null)
+  const [largeurCadre, setLargeurCadre] = useState<number | null>(null)
+  useEffect(() => {
+    const element = cadre.current
+    if (element === null) return
+    const observateur = new ResizeObserver(([entree]) => {
+      if (entree) setLargeurCadre(Math.round(entree.contentRect.width))
+    })
+    observateur.observe(element)
+    return () => observateur.disconnect()
+  }, [])
+  const [epingle, setEpingle] = useState(() => lireEpingle(id))
+  const etroit = largeurCadre !== null && largeurCadre < LARGEUR_COLONNES_FIGEES
+  const figees = colonnesFigees(largeurCadre, epingle)
+  // L'en-tête se colle sous la barre haute, plus basse sur un téléphone.
+  const { md } = Grid.useBreakpoint()
+  const decalages = useDecalagesCollants(
+    md === false ? HAUT_SOUS_LA_BARRE - 12 : HAUT_SOUS_LA_BARRE
+  )
+
   const columns = useMemo(() => {
     const ouvrable = (ligne: T) => peutOuvrir?.(ligne) ?? true
 
+    // Dans un tableau étroit, l'en-tête de la première colonne porte le bouton
+    // qui épingle ou libère les premières colonnes.
+    const punaise = etroit && (
+      <Button
+        className="rt-punaise"
+        type="text"
+        size="small"
+        icon={epingle ? <PushpinFilled /> : <PushpinOutlined />}
+        aria-pressed={epingle}
+        aria-label={
+          epingle
+            ? 'Libérer les premières colonnes'
+            : 'Épingler les premières colonnes'
+        }
+        title={
+          epingle
+            ? 'Libérer les premières colonnes'
+            : 'Épingler les premières colonnes'
+        }
+        onClick={evenement => {
+          // L'en-tête trie au clic : le bouton garde le sien.
+          evenement.stopPropagation()
+          ecrireEpingle(id, !epingle)
+          setEpingle(!epingle)
+        }}
+      />
+    )
+
     const liste: TableColumnType<T>[] = colonnes.map(
-      ({ tri, filtre, recherche, redimensionnable = true, ...colonne }) => {
+      (
+        { tri, filtre, recherche, redimensionnable = true, ...colonne },
+        rang
+      ) => {
         const largeur = largeurs[colonne.key]
         const libelle =
           typeof colonne.title === 'string' ? colonne.title : undefined
         return {
           ...colonne,
+          ...(rang === 0 && {
+            fixed: figees ? ('left' as const) : undefined,
+            title: punaise ? (
+              <span className="rt-titre-epinglable">
+                {colonne.title as ReactNode}
+                {punaise}
+              </span>
+            ) : (
+              colonne.title
+            ),
+          }),
           width: largeur ?? colonne.width,
           ...(largeur !== undefined && {
             className:
@@ -256,6 +332,7 @@ export default function Tableau<T extends object>({
         key: 'ouvrir',
         title: <span className="rt-masque">Ouvrir</span>,
         width: 48,
+        fixed: figees ? ('left' as const) : undefined,
         // Le bouton rend l'ouverture accessible au clavier ; le clic sur la ligne
         // reste un raccourci.
         render: (_: unknown, ligne: T) =>
@@ -271,31 +348,50 @@ export default function Tableau<T extends object>({
       } satisfies TableColumnType<T>,
       ...liste,
     ]
-  }, [colonnes, largeurs, ouvrir, peutOuvrir, libelleOuvrir])
+  }, [
+    colonnes,
+    largeurs,
+    ouvrir,
+    peutOuvrir,
+    libelleOuvrir,
+    figees,
+    etroit,
+    epingle,
+    id,
+  ])
 
   return (
-    <Table<T>
-      scroll={{ x: 'max-content' }}
-      {...reste}
-      className={`rt-tableau ${reste.className ?? ''}`.trim()}
-      components={COMPOSANTS}
-      columns={columns}
-      onRow={
-        ouvrir &&
-        (ligne =>
-          (peutOuvrir?.(ligne) ?? true)
-            ? {
-                className: 'rt-ligne-ouvrable',
-                onClick: e => {
-                  // Un bouton, un lien ou une fenêtre de confirmation de la ligne
-                  // garde son propre clic. Une sélection de texte n'ouvre rien.
-                  if ((e.target as Element).closest(INTERACTIFS)) return
-                  if (window.getSelection()?.toString()) return
-                  ouvrir(ligne)
-                },
-              }
-            : {})
-      }
-    />
+    <div ref={cadre} className="rt-cadre-tableau">
+      <Table<T>
+        scroll={{ x: 'max-content' }}
+        // L'en-tête reste sous la barre haute et la barre de défilement horizontale
+        // reste en bas de l'écran, tant que le tableau est visible : la page garde
+        // un seul défilement vertical.
+        sticky={{ offsetHeader: decalages.haut, offsetScroll: decalages.bas }}
+        {...reste}
+        rowSelection={
+          reste.rowSelection && { ...reste.rowSelection, fixed: figees }
+        }
+        className={`rt-tableau ${reste.className ?? ''}`.trim()}
+        components={COMPOSANTS}
+        columns={columns}
+        onRow={
+          ouvrir &&
+          (ligne =>
+            (peutOuvrir?.(ligne) ?? true)
+              ? {
+                  className: 'rt-ligne-ouvrable',
+                  onClick: e => {
+                    // Un bouton, un lien ou une fenêtre de confirmation de la ligne
+                    // garde son propre clic. Une sélection de texte n'ouvre rien.
+                    if ((e.target as Element).closest(INTERACTIFS)) return
+                    if (window.getSelection()?.toString()) return
+                    ouvrir(ligne)
+                  },
+                }
+              : {})
+        }
+      />
+    </div>
   )
 }
