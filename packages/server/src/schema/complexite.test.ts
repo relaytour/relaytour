@@ -121,6 +121,31 @@ describe('limites de complexité des requêtes', () => {
     expect(resultat.errors?.[0]?.extensions?.code).toBe('REQUETE_TROP_COMPLEXE')
   })
 
+  // Tâches partagées (ADR 0026) : l'espace organisateur lit le détail des
+  // déclinaisons par la requête d'une seule tâche. Dans une liste de tâches, le
+  // même détail dépasse le plafond avant tout résolveur.
+  const DETAIL = `declinaisons {
+    id titre echeance statut enRetard accord
+    perimetre { id slug nom couleur }
+    historiqueAccord { etape le par { id nom } }
+  }`
+
+  it('refuse le détail des déclinaisons dans une liste de tâches', async () => {
+    const resultat = await executer(
+      `{ perimetre(slug: "x") { taches(editionId: "e") { id ${DETAIL} } } }`
+    )
+    expect(resultat.errors?.[0]?.extensions?.code).toBe('REQUETE_TROP_COMPLEXE')
+  })
+
+  it('laisse passer le détail des déclinaisons d’une seule tâche', async () => {
+    const resultat = await executer(`{ tache(id: "t") { id ${DETAIL} } }`)
+    // La requête franchit les limites : elle atteint le résolveur, qui refuse faute
+    // de contexte complet dans ce test.
+    expect((resultat.errors ?? []).map(e => e.extensions?.code)).not.toContain(
+      'REQUETE_TROP_COMPLEXE'
+    )
+  })
+
   it('laisse passer une requête simple jusqu’au résolveur', async () => {
     const resultat = await executer('{ baremeScore { tacheRealisee } }')
     expect(resultat.errors).toBeUndefined()

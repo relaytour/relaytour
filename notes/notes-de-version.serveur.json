@@ -2,7 +2,7 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.13.0",
+  "version": "0.13.1",
   "versions": [
     {
       "version": null,

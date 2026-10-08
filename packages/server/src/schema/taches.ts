@@ -177,8 +177,11 @@ export const TacheRef = builder.prismaObject('Tache', {
         ],
       },
     }),
-    // Le résumé se charge avec la tâche et coûte peu : une liste de tâches le lit,
-    // et garde le détail des déclinaisons pour la requête d'une seule tâche.
+    // Le résumé se charge avec la tâche et coûte peu : une liste de tâches le lit.
+    // Le détail des déclinaisons, avec leur périmètre et l'historique de leur
+    // accord, dépasse le plafond de complexité dans une liste : l'espace
+    // organisateur le lit par la requête d'une seule tâche. Ce plafond borne le
+    // coût d'une requête ; aucun droit n'en dépend.
     resumeDeclinaisons: t.field({
       type: ResumeDeclinaisonsRef,
       description:
@@ -1282,21 +1285,24 @@ builder.mutationFields(t => ({
         sauf: autres,
       })
       // Le périmètre de la tâche partagée suit l'avancement de ses déclinaisons
-      // (ADR 0026), dans l'application seulement.
+      // (ADR 0026). Ses écrans se relisent à chaque changement ; ses référentes et
+      // référents ne sont prévenus que d'une déclinaison faite, dans l'application.
       if (tache.origine !== null) {
         publierPourPerimetre('TACHE', tache.origine.perimetreId, {
           id: tache.origineId ?? undefined,
           editionId: tache.editionId,
         })
-        await notifierLePerimetre(prisma, {
-          type: 'TACHE_STATUT',
-          perimetreId: tache.origine.perimetreId,
-          editionId: tache.editionId,
-          acteurId: acteur.id,
-          tacheId: tache.id,
-          statut: args.statut,
-          sauf: autres,
-        })
+        if (faite) {
+          await notifierLePerimetre(prisma, {
+            type: 'TACHE_STATUT',
+            perimetreId: tache.origine.perimetreId,
+            editionId: tache.editionId,
+            acteurId: acteur.id,
+            tacheId: tache.id,
+            statut: args.statut,
+            sauf: autres,
+          })
+        }
       }
       return relire()
     },

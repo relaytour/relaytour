@@ -5,7 +5,7 @@ import { Link, useSearchParams } from 'react-router'
 
 import ChoixEdition from '../composants/ChoixEdition'
 import EtiquettePerimetre from '../composants/EtiquettePerimetre'
-import LigneTache from '../composants/LigneTache'
+import LigneTache, { LigneDeclinaisons } from '../composants/LigneTache'
 import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
 import { PuceBascule, Puces, SeparateurPuces } from '../composants/Puces'
@@ -23,6 +23,7 @@ import { EDITION_COURANTE, EDITIONS } from '../lib/requetes'
 import { grouperParMois, libelleMois } from '../lib/retroplanning'
 import { estOuverte } from '../lib/taches'
 import { useActivite } from '../lib/activite'
+import { regrouperDeclinaisons } from '../lib/declinaisons'
 
 const RETROPLANNING = graphql(`
   query Retroplanning($editionId: ID!) {
@@ -53,6 +54,10 @@ const RETROPLANNING = graphql(`
       assignes {
         id
         nom
+      }
+      # Pour réunir les déclinaisons d'une même tâche partagée (ADR 0026).
+      origine {
+        id
       }
     }
   }
@@ -213,6 +218,30 @@ export default function Retroplanning() {
           sansPerimetre={sansPerimetre}
         />
       ))}
+    </ul>
+  )
+  // Par mois, les déclinaisons d'une même tâche partagée qui tombent le même jour
+  // tiennent sur une ligne : la liste ne répète pas la tâche pour chaque périmètre.
+  const lignesDuMois = (liste: typeof taches) => (
+    <ul className="rt-liste-liens" style={{ gap: 8 }}>
+      {regrouperDeclinaisons(liste).map(ligne =>
+        ligne.sorte === 'tache' ? (
+          <LigneTache
+            key={ligne.tache.id}
+            tache={ligne.tache}
+            moiId={moi?.id ?? ''}
+            editionId={editionId ?? ''}
+          />
+        ) : (
+          <LigneDeclinaisons
+            key={ligne.cle}
+            titre={ligne.titre}
+            taches={ligne.taches}
+            moiId={moi?.id ?? ''}
+            editionId={editionId ?? ''}
+          />
+        )
+      )}
     </ul>
   )
 
@@ -508,7 +537,7 @@ export default function Retroplanning() {
                       titre={titreGroupe(groupe.mois)}
                       compte={compteTaches(groupe.taches.length)}
                     >
-                      {lignes(groupe.taches)}
+                      {lignesDuMois(groupe.taches)}
                     </Section>
                   ))}
             </>
