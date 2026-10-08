@@ -114,6 +114,9 @@ export type TypeNoteDeVersion =
   | 'SECURITE';
 
 export type TypeNotification =
+  | 'DECLINAISON_ACCEPTEE'
+  | 'DECLINAISON_PROPOSEE'
+  | 'DECLINAISON_REFUSEE'
   | 'DEMANDE_RECUE'
   | 'ECHEANCE_PROCHE'
   | 'FICHE_CREEE'

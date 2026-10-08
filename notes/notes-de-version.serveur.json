@@ -60,6 +60,19 @@
           }
         },
         {
+          "id": "2026-10-08-serveur-l-api-propose-accorde-et-impose-une-declinaison",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'API propose, accorde et impose une déclinaison",
+            "texte": "Une personne qui écrit dans un périmètre crée une tâche partagée et la propose à d'autres périmètres de l'activité. Chaque déclinaison attend l'accord du périmètre cible, qui l'accepte ou la refuse. Tant qu'elle n'est pas acceptée, elle ne compte ni dans ses tâches, ni dans son avancement, ni dans les rappels, ni dans le score. Un admin de l'activité ajoute une déclinaison sans accord, et impose une déclinaison refusée. Une tâche lit le résumé de ses déclinaisons, et les admins lisent l'historique de chaque accord.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-serveur-une-organisation-declare-l-icone-de-son-application",
           "date": "2026-10-07",
           "type": "fonctionnalite",

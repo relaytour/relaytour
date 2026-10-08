@@ -1,7 +1,9 @@
 import {
+  AccordDeclinaison,
   prisma,
   StatutTache,
   type Prisma,
+  type TypeJournal,
   type User,
 } from '@relaytour/database'
 import { GraphQLError } from 'graphql'
@@ -16,6 +18,12 @@ import {
   perimetresLisibles,
   peutModifierPerimetre,
 } from '../lib/droits.ts'
+import {
+  CIBLES_MAX,
+  resumerDeclinaisons,
+  TACHES_ACTIVES,
+  type ResumeDeclinaisons,
+} from '../lib/declinaisons.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourPerimetre } from '../lib/flux.ts'
 import {
@@ -32,6 +40,60 @@ import { PersonneRef } from './personnes.ts'
 export const StatutTacheEnum = builder.enumType(StatutTache, {
   name: 'StatutTache',
 })
+
+// Accord d'un périmètre cible sur une déclinaison (ADR 0026).
+const AccordDeclinaisonEnum = builder.enumType(AccordDeclinaison, {
+  name: 'AccordDeclinaison',
+  description:
+    'Accord du périmètre cible sur une déclinaison. EN_ATTENTE : la déclinaison est proposée et ne compte pas encore parmi les tâches du périmètre.',
+})
+
+// Les étapes de l'accord d'une déclinaison, lues dans le journal par les admins.
+const ETAPES_ACCORD = {
+  DECLINAISON_PROPOSEE: 'PROPOSEE',
+  DECLINAISON_ACCEPTEE: 'ACCEPTEE',
+  DECLINAISON_REFUSEE: 'REFUSEE',
+  DECLINAISON_IMPOSEE: 'IMPOSEE',
+} as const satisfies Partial<Record<TypeJournal, string>>
+type TypeAccord = keyof typeof ETAPES_ACCORD
+
+const EtapeAccordEnum = builder.enumType('EtapeAccord', {
+  description:
+    'Étape de l’accord d’une déclinaison. IMPOSEE : un admin de l’activité l’a ajoutée sans accord du périmètre.',
+  values: Object.values(ETAPES_ACCORD),
+})
+
+const EtapeAccordRef = builder
+  .objectRef<{ type: TypeAccord; createdAt: Date; acteur: User }>(
+    'EtapeAccordDeclinaison'
+  )
+  .implement({
+    description:
+      'Une étape de l’accord d’une déclinaison : qui l’a proposée, acceptée, refusée ou imposée, et quand.',
+    fields: t => ({
+      etape: t.field({
+        type: EtapeAccordEnum,
+        resolve: e => ETAPES_ACCORD[e.type],
+      }),
+      le: t.field({ type: 'DateTime', resolve: e => e.createdAt }),
+      par: t.field({ type: PersonneRef, resolve: e => e.acteur }),
+    }),
+  })
+
+const ResumeDeclinaisonsRef = builder
+  .objectRef<ResumeDeclinaisons>('ResumeDeclinaisons')
+  .implement({
+    description:
+      'L’état des déclinaisons d’une tâche partagée, en nombres. Les nombres `faites` et `abandonnees` se comptent parmi les déclinaisons acceptées.',
+    fields: t => ({
+      total: t.exposeInt('total'),
+      enAttente: t.exposeInt('enAttente'),
+      refusees: t.exposeInt('refusees'),
+      acceptees: t.exposeInt('acceptees'),
+      faites: t.exposeInt('faites'),
+      abandonnees: t.exposeInt('abandonnees'),
+    }),
+  })
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -98,6 +160,58 @@ export const TacheRef = builder.prismaObject('Tache', {
       resolve: (tache, _args, ctx) =>
         peutModifierPerimetre(ctx, tache.perimetreId, tache.editionId),
     }),
+    // Tâche partagée et déclinaisons (ADR 0026). Les deux tâches appartiennent à la
+    // même activité : qui consulte l'une consulte l'autre (ADR 0014).
+    origine: t.relation('origine', {
+      nullable: true,
+      description:
+        'La tâche partagée dont cette tâche est la déclinaison, ou null.',
+    }),
+    declinaisons: t.relation('declinaisons', {
+      description:
+        'Les déclinaisons de cette tâche partagée, une par périmètre cible, quel que soit leur accord. Vide pour une tâche ordinaire et pour une déclinaison.',
+      query: {
+        orderBy: [
+          { perimetre: { ordre: 'asc' } },
+          { perimetre: { nom: 'asc' } },
+        ],
+      },
+    }),
+    // Le résumé se charge avec la tâche et coûte peu : une liste de tâches le lit,
+    // et garde le détail des déclinaisons pour la requête d'une seule tâche.
+    resumeDeclinaisons: t.field({
+      type: ResumeDeclinaisonsRef,
+      description:
+        'L’état des déclinaisons de cette tâche partagée, en nombres. Tous à zéro pour une tâche ordinaire et pour une déclinaison.',
+      select: { declinaisons: { select: { statut: true, accord: true } } },
+      resolve: tache => resumerDeclinaisons(tache.declinaisons),
+    }),
+    accord: t.expose('accord', {
+      type: AccordDeclinaisonEnum,
+      nullable: true,
+      description:
+        'Pour une déclinaison : l’accord de son périmètre. Null pour une tâche ordinaire et pour une tâche partagée.',
+    }),
+    // Qui a proposé, accepté, refusé ou imposé une déclinaison : cet historique
+    // n'est lisible que par les admins de l'activité. Les autres lisent une liste
+    // vide.
+    historiqueAccord: t.field({
+      type: [EtapeAccordRef],
+      select: { perimetre: { select: { activiteId: true } } },
+      resolve: async (tache, _args, ctx) => {
+        if (tache.origineId === null) return []
+        if (!(await ctx.estAdminDe(tache.perimetre.activiteId))) return []
+        const lignes = await prisma.journal.findMany({
+          where: {
+            tacheId: tache.id,
+            type: { in: Object.keys(ETAPES_ACCORD) as TypeAccord[] },
+          },
+          orderBy: { createdAt: 'asc' },
+          select: { type: true, createdAt: true, acteur: true },
+        })
+        return lignes.map(l => ({ ...l, type: l.type as TypeAccord }))
+      },
+    }),
   }),
 })
 
@@ -138,8 +252,9 @@ async function calculerAvancement(
   where: Prisma.TacheWhereInput,
   fuseau: string | undefined
 ) {
+  // Une déclinaison qui attend un accord, ou refusée, ne compte pas (ADR 0026).
   const taches = await prisma.tache.findMany({
-    where,
+    where: { AND: [where, TACHES_ACTIVES] },
     select: {
       statut: true,
       echeance: true,
@@ -249,7 +364,33 @@ builder.prismaObjectFields(PerimetreRef, t => ({
       const edition = await ctx.exigerEdition(editionId)
       return prisma.tache.findMany({
         ...query,
-        where: { perimetreId: perimetre.id, editionId: edition.id },
+        where: {
+          perimetreId: perimetre.id,
+          editionId: edition.id,
+          AND: [TACHES_ACTIVES],
+        },
+        orderBy: ORDRE_TACHES,
+      })
+    },
+  }),
+
+  // Les déclinaisons proposées au périmètre, qui attendent son accord (ADR 0026).
+  // Elles ne figurent pas encore parmi ses tâches.
+  declinaisonsProposees: t.prismaField({
+    type: [TacheRef],
+    args: { editionId: t.arg.id({ required: true }) },
+    description:
+      'Les déclinaisons proposées à ce périmètre pour la période, en attente de son accord.',
+    resolve: async (query, perimetre, { editionId }, ctx) => {
+      await exigerConsultation(ctx, perimetre)
+      const edition = await ctx.exigerEdition(editionId)
+      return prisma.tache.findMany({
+        ...query,
+        where: {
+          perimetreId: perimetre.id,
+          editionId: edition.id,
+          accord: 'EN_ATTENTE',
+        },
         orderBy: ORDRE_TACHES,
       })
     },
@@ -355,6 +496,31 @@ builder.queryFields(t => ({
     },
   }),
 
+  // Une tâche, pour lire ses déclinaisons et leur accord (ADR 0026). Toute personne
+  // qui consulte son périmètre la lit (ADR 0014). Une tâche inconnue et une tâche
+  // interdite donnent la même réponse.
+  tache: t.prismaField({
+    type: TacheRef,
+    authScopes: { connecte: true },
+    args: { id: t.arg.id({ required: true }) },
+    resolve: async (query, _root, { id }, ctx) => {
+      const tache = await prisma.tache.findUnique({
+        where: { id: String(id) },
+        select: {
+          perimetre: {
+            select: { id: true, activiteId: true, organisationId: true },
+          },
+        },
+      })
+      if (tache === null) throw accesRefuse()
+      await exigerConsultation(ctx, tache.perimetre)
+      return prisma.tache.findUniqueOrThrow({
+        ...query,
+        where: { id: String(id) },
+      })
+    },
+  }),
+
   // Les périmètres accessibles en lecture dans l'organisation active : tous ceux qui
   // ne sont pas archivés pour un admin, sinon ceux où la personne a été affectée au
   // moins une fois. Avec `activiteId`, ceux de cette activité seulement.
@@ -397,6 +563,7 @@ builder.queryFields(t => ({
           editionId: (await ctx.exigerEdition(editionId)).id,
           statut: { in: ['A_FAIRE', 'EN_COURS'] },
           assignations: { some: { userId: ctx.personne!.id } },
+          AND: [TACHES_ACTIVES],
         },
         orderBy: ORDRE_TACHES,
       }),
@@ -416,6 +583,7 @@ builder.queryFields(t => ({
         where: {
           editionId: edition.id,
           perimetre: { archivedAt: null },
+          AND: [TACHES_ACTIVES],
         },
         orderBy: ORDRE_TACHES,
       })
@@ -437,6 +605,7 @@ builder.queryFields(t => ({
           perimetreId: { in: perimetres },
           statut: { in: ['A_FAIRE', 'EN_COURS'] },
           assignations: { none: {} },
+          AND: [TACHES_ACTIVES],
         },
         orderBy: ORDRE_TACHES,
       })
@@ -475,6 +644,7 @@ type TacheChargee = Prisma.TacheGetPayload<{
   include: {
     assignations: { select: { userId: true } }
     perimetre: { select: { nom: true } }
+    origine: { select: { perimetreId: true } }
   }
 }>
 
@@ -484,10 +654,30 @@ async function chargerTache(id: string): Promise<TacheChargee> {
     include: {
       assignations: { select: { userId: true } },
       perimetre: { select: { nom: true } },
+      // Le périmètre de la tâche partagée, pour le prévenir (ADR 0026).
+      origine: { select: { perimetreId: true } },
     },
   })
   if (tache === null) throw accesRefuse()
   return tache
+}
+
+/**
+ * Une déclinaison qui attend un accord, ou refusée, n'est pas encore une tâche de
+ * son périmètre : elle ne se modifie pas, ne change pas de statut et ne s'assigne
+ * pas (ADR 0026).
+ */
+function exigerDeclinaisonAcceptee(tache: {
+  accord: AccordDeclinaison | null
+}) {
+  if (tache.accord === 'EN_ATTENTE') {
+    throw erreurSaisie(
+      'Cette déclinaison attend l’accord de son périmètre : acceptez-la d’abord.'
+    )
+  }
+  if (tache.accord === 'REFUSE') {
+    throw erreurSaisie('Cette déclinaison a été refusée par son périmètre.')
+  }
 }
 
 /**
@@ -620,6 +810,187 @@ async function ficheValide(
   return fiche.id
 }
 
+// ── Tâches partagées (ADR 0026) ──────────────────────────────────────────────
+
+const DeclinaisonInput = builder.inputType('DeclinaisonInput', {
+  description:
+    'Les périmètres où décliner une tâche partagée. Un texte ou une échéance absents reprennent ceux de la tâche partagée.',
+  fields: t => ({
+    perimetreIds: t.idList({ required: true }),
+    titre: t.string(),
+    description: t.string(),
+    echeance: t.field({ type: 'Date' }),
+  }),
+})
+
+interface TextesDeclinaison {
+  titre?: string | null
+  description?: string | null
+  echeance?: Date | null
+}
+
+interface CibleValide {
+  id: string
+  /** Vrai quand la déclinaison entre dans le périmètre sans attendre son accord. */
+  acceptee: boolean
+  /** Vrai quand un admin de l'activité l'ajoute : aucun accord n'est demandé. */
+  parAdmin: boolean
+}
+
+/**
+ * Les périmètres cibles d'une tâche partagée. Ils appartiennent à l'activité de la
+ * tâche et ne sont pas archivés. Un périmètre inconnu, d'une autre organisation ou
+ * d'une autre activité donne le même refus.
+ *
+ * Une déclinaison attend l'accord de son périmètre, sauf dans deux cas : un admin de
+ * l'activité l'ajoute, ou la personne écrit déjà dans le périmètre cible.
+ */
+async function ciblesValides(
+  ctx: AppContext,
+  perimetreIds: readonly (string | number)[],
+  origine: { perimetreId: string; editionId: string }
+): Promise<CibleValide[]> {
+  const ids = [...new Set(perimetreIds.map(String))]
+  if (ids.length === 0) {
+    throw erreurSaisie('Choisissez au moins un périmètre.')
+  }
+  if (ids.length > CIBLES_MAX) {
+    throw erreurSaisie(
+      `Une tâche se décline dans ${CIBLES_MAX} périmètres au plus.`
+    )
+  }
+  if (ids.includes(origine.perimetreId)) {
+    throw erreurSaisie('Une tâche ne se décline pas dans son propre périmètre.')
+  }
+  const activiteId = await activiteDuPerimetre(origine.perimetreId)
+  const perimetres = await prisma.perimetre.findMany({
+    where: {
+      id: { in: ids },
+      organisationId: ctx.organisation!.id,
+      activiteId,
+    },
+    select: { id: true, nom: true, archivedAt: true },
+  })
+  if (perimetres.length !== ids.length) throw accesRefuse()
+  const archive = perimetres.find(p => p.archivedAt !== null)
+  if (archive !== undefined) {
+    throw erreurSaisie(`Le périmètre « ${archive.nom} » est archivé.`)
+  }
+  const parAdmin = await ctx.estAdminDe(activiteId)
+  return Promise.all(
+    ids.map(async id => ({
+      id,
+      parAdmin,
+      acceptee:
+        parAdmin || (await peutModifierPerimetre(ctx, id, origine.editionId)),
+    }))
+  )
+}
+
+/**
+ * Crée une déclinaison par périmètre cible, dans la transaction de l'appelant. Une
+ * déclinaison ne cite qu'une fiche commune : celle de la tâche partagée, si elle
+ * l'est.
+ */
+async function creerDeclinaisons(
+  tx: Prisma.TransactionClient,
+  origine: {
+    id: string
+    editionId: string
+    titre: string
+    description: string | null
+    echeance: Date | null
+    ficheId: string | null
+  },
+  cibles: readonly CibleValide[],
+  textes: TextesDeclinaison,
+  acteurId: string
+): Promise<(CibleValide & { tacheId: string })[]> {
+  const fiche =
+    origine.ficheId === null
+      ? null
+      : await tx.fiche.findUnique({
+          where: { id: origine.ficheId },
+          select: { id: true, perimetreId: true },
+        })
+  const titre = textes.titre?.trim()
+    ? texteRequis(textes.titre, 'Le titre de la déclinaison', 200)
+    : origine.titre
+  const description =
+    textes.description === undefined || textes.description === null
+      ? origine.description
+      : textes.description.trim() || null
+  const echeance =
+    textes.echeance === undefined || textes.echeance === null
+      ? origine.echeance
+      : textes.echeance
+  const creees: (CibleValide & { tacheId: string })[] = []
+  for (const cible of cibles) {
+    const declinaison = await tx.tache.create({
+      data: {
+        editionId: origine.editionId,
+        perimetreId: cible.id,
+        titre,
+        description,
+        echeance,
+        ficheId: fiche !== null && fiche.perimetreId === null ? fiche.id : null,
+        creeParId: acteurId,
+        origineId: origine.id,
+        accord: cible.acceptee ? 'ACCEPTE' : 'EN_ATTENTE',
+        ...(cible.acceptee
+          ? { accordParId: acteurId, accordLe: new Date() }
+          : {}),
+      },
+      select: { id: true },
+    })
+    await tx.journal.create({
+      data: {
+        type: !cible.acceptee
+          ? 'DECLINAISON_PROPOSEE'
+          : cible.parAdmin
+            ? 'DECLINAISON_IMPOSEE'
+            : 'DECLINAISON_ACCEPTEE',
+        acteurId,
+        editionId: origine.editionId,
+        perimetreId: cible.id,
+        tacheId: declinaison.id,
+      },
+    })
+    creees.push({ ...cible, tacheId: declinaison.id })
+  }
+  return creees
+}
+
+/**
+ * Signale les déclinaisons créées et prévient leur périmètre, dans l'application
+ * seulement : une déclinaison proposée attend un accord, une déclinaison acceptée
+ * entre parmi les tâches du périmètre.
+ */
+async function annoncerDeclinaisons(
+  declinaisons: readonly (CibleValide & { tacheId: string })[],
+  editionId: string,
+  acteurId: string
+) {
+  for (const declinaison of declinaisons) {
+    publierPourPerimetre('TACHE', declinaison.id, {
+      id: declinaison.tacheId,
+      editionId,
+    })
+    await notifier(prisma, {
+      type: declinaison.acceptee ? 'TACHE_CREEE' : 'DECLINAISON_PROPOSEE',
+      destinataires: await referentsAPrevenir(
+        prisma,
+        declinaison.id,
+        editionId,
+        acteurId
+      ),
+      acteurId,
+      tacheId: declinaison.tacheId,
+      perimetreId: declinaison.id,
+    })
+  }
+}
+
 builder.mutationFields(t => ({
   creerTache: t.prismaField({
     type: TacheRef,
@@ -632,12 +1003,21 @@ builder.mutationFields(t => ({
       echeance: t.arg({ type: 'Date' }),
       ficheId: t.arg.id(),
       mAssigner: t.arg.boolean({ defaultValue: false }),
+      // Avec une déclinaison, la tâche créée est une tâche partagée (ADR 0026).
+      declinaison: t.arg({ type: DeclinaisonInput }),
     },
     resolve: async (query, _root, args, ctx) => {
       const perimetreId = String(args.perimetreId)
       const editionId = String(args.editionId)
       const acteur = await exigerEcriture(ctx, perimetreId, editionId)
       const ficheId = await ficheValide(args.ficheId, perimetreId)
+      const cibles = args.declinaison
+        ? await ciblesValides(ctx, args.declinaison.perimetreIds, {
+            perimetreId,
+            editionId,
+          })
+        : []
+      let declinaisons: (CibleValide & { tacheId: string })[] = []
       const creee = await prisma.$transaction(async tx => {
         const tache = await tx.tache.create({
           data: {
@@ -662,9 +1042,19 @@ builder.mutationFields(t => ({
             tacheId: tache.id,
           },
         })
+        if (cibles.length > 0) {
+          declinaisons = await creerDeclinaisons(
+            tx,
+            tache,
+            cibles,
+            args.declinaison ?? {},
+            acteur.id
+          )
+        }
         return tx.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
       })
       publierPourPerimetre('TACHE', perimetreId, { id: creee.id, editionId })
+      await annoncerDeclinaisons(declinaisons, editionId, acteur.id)
       // Règle n° 3 : les autres référent·es du périmètre le voient dans leur résumé.
       await notifier(prisma, {
         type: 'TACHE_CREEE',
@@ -703,6 +1093,7 @@ builder.mutationFields(t => ({
         tache.perimetreId,
         tache.editionId
       )
+      exigerDeclinaisonAcceptee(tache)
       // Le conflit se dit avant la confirmation : la personne ne confirme pas une
       // écriture que le serveur refusera.
       const versionAttendue = args.versionAttendue ?? null
@@ -803,6 +1194,7 @@ builder.mutationFields(t => ({
         tache.perimetreId,
         tache.editionId
       )
+      exigerDeclinaisonAcceptee(tache)
       const relire = () =>
         prisma.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
       // La tâche a déjà ce statut : rien ne s'écrit. Deux personnes qui cochent la
@@ -889,6 +1281,23 @@ builder.mutationFields(t => ({
         statut: args.statut,
         sauf: autres,
       })
+      // Le périmètre de la tâche partagée suit l'avancement de ses déclinaisons
+      // (ADR 0026), dans l'application seulement.
+      if (tache.origine !== null) {
+        publierPourPerimetre('TACHE', tache.origine.perimetreId, {
+          id: tache.origineId ?? undefined,
+          editionId: tache.editionId,
+        })
+        await notifierLePerimetre(prisma, {
+          type: 'TACHE_STATUT',
+          perimetreId: tache.origine.perimetreId,
+          editionId: tache.editionId,
+          acteurId: acteur.id,
+          tacheId: tache.id,
+          statut: args.statut,
+          sauf: autres,
+        })
+      }
       return relire()
     },
   }),
@@ -910,6 +1319,7 @@ builder.mutationFields(t => ({
         tache.perimetreId,
         tache.editionId
       )
+      exigerDeclinaisonAcceptee(tache)
       const personneId = args.personneId ? String(args.personneId) : acteur.id
       // Assigner une autre personne revient à l'admin de l'activité de la tâche.
       if (
@@ -983,6 +1393,242 @@ builder.mutationFields(t => ({
         ...query,
         where: { id: tache.id },
       })
+    },
+  }),
+
+  // Décline une tâche de son périmètre dans d'autres périmètres de l'activité
+  // (ADR 0026). Un périmètre qui porte déjà sa déclinaison est ignoré.
+  declinerTache: t.prismaField({
+    type: TacheRef,
+    authScopes: { connecte: true },
+    description:
+      'Décline une tâche dans d’autres périmètres de son activité : elle devient une tâche partagée. Chaque déclinaison attend l’accord de son périmètre, sauf quand un admin de l’activité l’ajoute. Un périmètre déjà servi est ignoré.',
+    args: {
+      id: t.arg.id({ required: true }),
+      perimetreIds: t.arg.idList({ required: true }),
+      titre: t.arg.string(),
+      description: t.arg.string(),
+      echeance: t.arg({ type: 'Date' }),
+    },
+    resolve: async (query, _root, args, ctx) => {
+      const tache = await chargerTache(String(args.id))
+      const acteur = await exigerEcriture(
+        ctx,
+        tache.perimetreId,
+        tache.editionId
+      )
+      if (tache.origineId !== null) {
+        throw erreurSaisie('Une déclinaison ne se décline pas.')
+      }
+      const voulues = await ciblesValides(ctx, args.perimetreIds, tache)
+      const relire = () =>
+        prisma.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
+      const servies = new Set(
+        (
+          await prisma.tache.findMany({
+            where: { origineId: tache.id },
+            select: { perimetreId: true },
+          })
+        ).map(d => d.perimetreId)
+      )
+      const cibles = voulues.filter(c => !servies.has(c.id))
+      if (cibles.length === 0) return relire()
+      const declinaisons = await prisma
+        .$transaction(tx =>
+          creerDeclinaisons(tx, tache, cibles, args, acteur.id)
+        )
+        .catch((erreur: unknown) => {
+          // P2002 : une autre requête vient de servir un de ces périmètres. Rien
+          // n'est écrit ici : la personne relit la tâche et recommence au besoin.
+          if ((erreur as { code?: string }).code !== 'P2002') throw erreur
+          return []
+        })
+      publierPourPerimetre('TACHE', tache.perimetreId, {
+        id: tache.id,
+        editionId: tache.editionId,
+      })
+      await annoncerDeclinaisons(declinaisons, tache.editionId, acteur.id)
+      return relire()
+    },
+  }),
+
+  // Le périmètre cible accepte ou refuse une déclinaison proposée (ADR 0026).
+  accorderDeclinaison: t.prismaField({
+    type: TacheRef,
+    authScopes: { connecte: true },
+    description:
+      'Accepte ou refuse une déclinaison proposée à un périmètre. Seule une personne qui écrit dans ce périmètre répond. Une déclinaison acceptée entre parmi ses tâches.',
+    args: {
+      id: t.arg.id({ required: true }),
+      accepter: t.arg.boolean({ required: true }),
+    },
+    resolve: async (query, _root, args, ctx) => {
+      const tache = await chargerTache(String(args.id))
+      const acteur = await exigerEcriture(
+        ctx,
+        tache.perimetreId,
+        tache.editionId
+      )
+      if (tache.origine === null) {
+        throw erreurSaisie('Cette tâche n’est pas une déclinaison.')
+      }
+      const accord = args.accepter ? 'ACCEPTE' : 'REFUSE'
+      const relire = () =>
+        prisma.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
+      const dejaRepondu = (actuel: AccordDeclinaison | null) =>
+        erreurSaisie(
+          actuel === 'ACCEPTE'
+            ? 'Cette déclinaison est déjà acceptée. Abandonnez la tâche si elle ne concerne pas votre périmètre.'
+            : 'Cette déclinaison a déjà été refusée. Un admin de l’activité peut l’imposer.'
+        )
+      // La même réponse une seconde fois ne change rien.
+      if (tache.accord === accord) return relire()
+      if (tache.accord !== 'EN_ATTENTE') throw dejaRepondu(tache.accord)
+      const ecrite = await prisma.$transaction(async tx => {
+        // L'écriture porte l'accord lu : deux réponses simultanées n'en écrivent
+        // qu'une.
+        const { count } = await tx.tache.updateMany({
+          where: { id: tache.id, accord: 'EN_ATTENTE' },
+          data: { accord, accordParId: acteur.id, accordLe: new Date() },
+        })
+        if (count === 0) return false
+        await tx.journal.create({
+          data: {
+            type: args.accepter
+              ? 'DECLINAISON_ACCEPTEE'
+              : 'DECLINAISON_REFUSEE',
+            acteurId: acteur.id,
+            editionId: tache.editionId,
+            perimetreId: tache.perimetreId,
+            tacheId: tache.id,
+          },
+        })
+        return true
+      })
+      if (!ecrite) {
+        const actuelle = await prisma.tache.findUniqueOrThrow({
+          where: { id: tache.id },
+          select: { accord: true },
+        })
+        if (actuelle.accord === accord) return relire()
+        throw dejaRepondu(actuelle.accord)
+      }
+      for (const perimetreId of [
+        tache.perimetreId,
+        tache.origine.perimetreId,
+      ]) {
+        publierPourPerimetre('TACHE', perimetreId, {
+          id: tache.id,
+          editionId: tache.editionId,
+        })
+      }
+      // Le périmètre d'origine apprend la réponse, avec la personne qui a proposé.
+      await notifier(prisma, {
+        type: args.accepter ? 'DECLINAISON_ACCEPTEE' : 'DECLINAISON_REFUSEE',
+        destinataires: [
+          ...(await referentsAPrevenir(
+            prisma,
+            tache.origine.perimetreId,
+            tache.editionId,
+            acteur.id
+          )),
+          ...(tache.creeParId === null ? [] : [tache.creeParId]),
+        ],
+        acteurId: acteur.id,
+        tacheId: tache.id,
+        perimetreId: tache.perimetreId,
+      })
+      // Acceptée, la tâche entre dans le périmètre : ses autres référentes et
+      // référents l'apprennent.
+      if (args.accepter) {
+        await notifier(prisma, {
+          type: 'TACHE_CREEE',
+          destinataires: await referentsAPrevenir(
+            prisma,
+            tache.perimetreId,
+            tache.editionId,
+            acteur.id
+          ),
+          acteurId: acteur.id,
+          tacheId: tache.id,
+          perimetreId: tache.perimetreId,
+        })
+      }
+      return relire()
+    },
+  }),
+
+  // Un admin de l'activité ajoute une déclinaison sans l'accord de son périmètre,
+  // qu'elle attende une réponse ou qu'elle ait été refusée (ADR 0026).
+  imposerDeclinaison: t.prismaField({
+    type: TacheRef,
+    authScopes: { connecte: true },
+    description:
+      'Ajoute une déclinaison aux tâches de son périmètre sans son accord, même après un refus. Réservé aux admins de l’activité.',
+    args: { id: t.arg.id({ required: true }) },
+    resolve: async (query, _root, args, ctx) => {
+      const tache = await chargerTache(String(args.id))
+      const acteur = await exigerEcriture(
+        ctx,
+        tache.perimetreId,
+        tache.editionId
+      )
+      if (
+        !(await ctx.estAdminDe(await activiteDuPerimetre(tache.perimetreId)))
+      ) {
+        throw accesRefuse()
+      }
+      if (tache.origine === null) {
+        throw erreurSaisie('Cette tâche n’est pas une déclinaison.')
+      }
+      const relire = () =>
+        prisma.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
+      if (tache.accord === 'ACCEPTE') return relire()
+      const ecrite = await prisma.$transaction(async tx => {
+        const { count } = await tx.tache.updateMany({
+          where: { id: tache.id, accord: { in: ['EN_ATTENTE', 'REFUSE'] } },
+          data: {
+            accord: 'ACCEPTE',
+            accordParId: acteur.id,
+            accordLe: new Date(),
+          },
+        })
+        if (count === 0) return false
+        await tx.journal.create({
+          data: {
+            type: 'DECLINAISON_IMPOSEE',
+            acteurId: acteur.id,
+            editionId: tache.editionId,
+            perimetreId: tache.perimetreId,
+            tacheId: tache.id,
+          },
+        })
+        return true
+      })
+      // Une autre personne vient de l'accepter : le résultat est celui demandé.
+      if (!ecrite) return relire()
+      for (const perimetreId of [
+        tache.perimetreId,
+        tache.origine.perimetreId,
+      ]) {
+        publierPourPerimetre('TACHE', perimetreId, {
+          id: tache.id,
+          editionId: tache.editionId,
+        })
+      }
+      await notifier(prisma, {
+        type: 'TACHE_CREEE',
+        destinataires: await referentsAPrevenir(
+          prisma,
+          tache.perimetreId,
+          tache.editionId,
+          acteur.id
+        ),
+        acteurId: acteur.id,
+        tacheId: tache.id,
+        perimetreId: tache.perimetreId,
+      })
+      return relire()
     },
   }),
 }))
