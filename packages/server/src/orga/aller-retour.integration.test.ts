@@ -89,12 +89,15 @@ describe('aller-retour du contenu', () => {
       organisation: slug,
     })
     expect(rapport.amorcageRetire).toBe(true)
-    expect(rapport.medias.enregistrees).toHaveLength(4)
+    expect(rapport.medias.enregistrees).toHaveLength(5)
     invaliderConfigurationOrganisation()
 
     const organisation = await configurationOrganisation(organisationId)
     expect(organisation.logoUrl).toMatch(/^\/medias\/[0-9a-f]{64}\.svg$/)
     expect(organisation.faviconUrl).toMatch(/^\/medias\/[0-9a-f]{64}\.png$/)
+    expect(organisation.iconeApplicationUrl).toMatch(
+      /^\/medias\/[0-9a-f]{64}\.png$/
+    )
     expect(organisation.logoMailUrl).toMatch(
       /^http.*\/medias\/[0-9a-f]{64}\.png$/
     )

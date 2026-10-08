@@ -102,6 +102,22 @@ const EnvSchema = z
         .regex(/^https:\/\//, 'CODE_SOURCE_URL : adresse https attendue')
         .default('https://github.com/relaytour/relaytour')
     ),
+    // Notifications push (ADR 0024) : la paire de clés VAPID identifie
+    // l'installation auprès des services de push des navigateurs, et le sujet
+    // leur donne un contact. Les trois valeurs vont ensemble. Absentes, le canal
+    // est fermé : rien ne part, et l'espace organisateur masque le réglage.
+    PUSH_VAPID_PUBLIQUE: optionnelle.refine(
+      s => s === undefined || /^[A-Za-z0-9_-]{80,100}$/.test(s),
+      'PUSH_VAPID_PUBLIQUE : clé publique VAPID en base64 adapté aux adresses'
+    ),
+    PUSH_VAPID_PRIVEE: optionnelle.refine(
+      s => s === undefined || /^[A-Za-z0-9_-]{40,50}$/.test(s),
+      'PUSH_VAPID_PRIVEE : clé privée VAPID en base64 adapté aux adresses'
+    ),
+    PUSH_VAPID_SUJET: optionnelle.refine(
+      s => s === undefined || /^(https:\/\/|mailto:)\S+$/.test(s),
+      'PUSH_VAPID_SUJET : adresse https ou lien mailto: attendu'
+    ),
     // Liste des modes d'emploi, liée depuis le menu du compte et le mail
     // d'invitation : un dossier ou une page. Les pages des rôles se placent dans
     // le même dossier. Un hébergeur qui modifie Relaytour y indique les siens.
@@ -116,6 +132,19 @@ const EnvSchema = z
     ),
   })
   .superRefine((v, ctx) => {
+    const vapid = [
+      v.PUSH_VAPID_PUBLIQUE,
+      v.PUSH_VAPID_PRIVEE,
+      v.PUSH_VAPID_SUJET,
+    ]
+    if (vapid.some(x => x !== undefined) && vapid.some(x => x === undefined)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['PUSH_VAPID_PUBLIQUE'],
+        message:
+          'PUSH_VAPID_PUBLIQUE, PUSH_VAPID_PRIVEE et PUSH_VAPID_SUJET vont ensemble.',
+      })
+    }
     if (
       v.APP_ENV !== 'local' &&
       v.CORS_ORIGIN.some(o => o.includes('localhost'))

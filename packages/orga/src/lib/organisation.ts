@@ -62,6 +62,8 @@ export const ORGANISATION = graphql(`
       sigle
       logoUrl
       faviconUrl
+      iconeApplicationUrl
+      manifestUrl
       pageEquipe
       theme {
         ...ThemeChamps
@@ -81,6 +83,10 @@ export interface Organisation {
   nomCourt: string
   logoUrl: string | null
   faviconUrl: string | null
+  /** Icône de l'application installée, null sans icône déclarée (ADR 0023). */
+  iconeApplicationUrl: string | null
+  /** Manifest de l'application installée, null avant la réponse de l'API. */
+  manifestUrl: string | null
   pageEquipe: string | null
   /** Adresse du code source de l'installation (AGPL, article 13). */
   codeSource: string
@@ -99,6 +105,8 @@ export const ORGANISATION_PAR_DEFAUT: Organisation = {
   nomCourt: 'Relaytour',
   logoUrl: null,
   faviconUrl: null,
+  iconeApplicationUrl: null,
+  manifestUrl: null,
   pageEquipe: null,
   codeSource: 'https://github.com/relaytour/relaytour',
   modesDEmploi: 'https://relaytour.org/modes-d-emploi/',

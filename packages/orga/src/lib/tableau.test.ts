@@ -3,10 +3,14 @@ import { describe, expect, it } from 'vitest'
 import {
   LARGEUR_MAX,
   LARGEUR_MIN,
+  LARGEUR_COLONNES_FIGEES,
   bornerLargeur,
+  colonnesFigees,
   comparer,
   contient,
+  ecrireEpingle,
   ecrireLargeurs,
+  lireEpingle,
   lireLargeurs,
 } from './tableau'
 
@@ -93,5 +97,33 @@ describe('largeurs des colonnes', () => {
     expect(
       lireLargeurs('personnes', stockage({ [cle]: '{"nom":"x","mail":9999}' }))
     ).toEqual({ mail: LARGEUR_MAX })
+  })
+})
+
+describe('colonnes figées', () => {
+  it('fige d’office les premières colonnes d’un tableau large', () => {
+    expect(colonnesFigees(LARGEUR_COLONNES_FIGEES, false)).toBe(true)
+    expect(colonnesFigees(1400, false)).toBe(true)
+  })
+
+  it('laisse le choix à la personne dans un tableau étroit', () => {
+    expect(colonnesFigees(LARGEUR_COLONNES_FIGEES - 1, false)).toBe(false)
+    expect(colonnesFigees(351, true)).toBe(true)
+  })
+
+  it('ne fige rien avant la première mesure, sauf choix de la personne', () => {
+    expect(colonnesFigees(null, false)).toBe(false)
+    expect(colonnesFigees(null, true)).toBe(true)
+  })
+
+  it('retient la punaise par tableau', () => {
+    const depot = stockage()
+    expect(lireEpingle('personnes', depot)).toBe(false)
+    ecrireEpingle('personnes', true, depot)
+    expect(lireEpingle('personnes', depot)).toBe(true)
+    expect(lireEpingle('demandes', depot)).toBe(false)
+    ecrireEpingle('personnes', false, depot)
+    expect(lireEpingle('personnes', depot)).toBe(false)
+    expect(depot.valeurs.size).toBe(0)
   })
 })

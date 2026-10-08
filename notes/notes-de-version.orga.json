@@ -8,6 +8,71 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-08-orga-votre-telephone-affiche-les-notifications-de-l-espace-organi",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Votre téléphone affiche les notifications de l'espace organisateur",
+            "texte": "Les préférences reçoivent le panneau « Notifications sur cet appareil ». Une fois activées, votre téléphone ou votre ordinateur vous prévient quand une tâche vous est assignée, quand une échéance approche ou quand une demande attend votre revue, même application fermée. Sur iPhone, installez d'abord l'application sur l'écran d'accueil. Le panneau n'apparaît que si votre organisation a ouvert ce canal.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-08-orga-une-adresse-inconnue-mene-a-l-accueil-de-l-activite",
+          "date": "2026-10-08",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une adresse inconnue mène à l'accueil de l'activité",
+            "texte": "Une adresse inconnue qui portait déjà le nom d'une activité laissait l'écran vide. L'espace organisateur ouvre maintenant l'accueil de cette activité.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-08-orga-les-tableaux-gardent-leur-en-tete-leur-barre-de-defilement-e",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les tableaux gardent leur en-tête, leur barre de défilement et leurs premières colonnes à l'écran",
+            "texte": "Dans un tableau long, l'en-tête reste sous la barre haute et la barre de défilement horizontale reste en bas de l'écran. Les premières colonnes (ouverture, sélection, nom) restent visibles quand vous faites défiler les autres. Sur un petit écran, une punaise dans l'en-tête de la première colonne les fige sur votre choix.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-08-orga-le-menu-et-le-volet-lateral-se-replient-pour-laisser-la-plac",
+          "date": "2026-10-08",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le menu et le volet latéral se replient pour laisser la place au contenu",
+            "texte": "Un bouton, à côté du nom de l'organisation, réduit le menu à une colonne d'icônes collée au bord de l'écran. Votre navigateur retient ce choix. Dans les écrans à deux colonnes, la colonne de droite se replie aussi, et elle reste à l'écran pendant que vous faites défiler la page.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-08-orga-le-contenu-occupe-la-largeur-de-la-barre-haute-sur-grand-ecran",
+          "date": "2026-10-08",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le contenu occupe toute la largeur disponible sur un grand écran",
+            "texte": "Le contenu d'un écran s'arrêtait à 1180 pixels de large, alors que la barre haute suivait l'écran. Le contenu et la barre haute partagent maintenant la même largeur. Replié, le volet latéral se colle au bord droit de l'écran.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-les-ecrans-d-administration-restent-utilisables-sur-un-telep",
           "date": "2026-10-07",
           "type": "fonctionnalite",
@@ -21,6 +86,19 @@
           }
         },
         {
+          "id": "2026-10-07-orga-le-menu-du-compte-explique-comment-installer-l-application",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le menu du compte explique comment installer l'application",
+            "texte": "Le menu du compte reçoit l'entrée « Installer l'application ». La fenêtre affiche les étapes de votre appareil : iPhone, Android ou ordinateur. Quand le navigateur le permet, un bouton installe l'application en un appui. Un mode d'emploi public décrit les mêmes étapes.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-07-orga-le-code-de-connexion-se-saisit-plus-vite-sur-un-telephone",
           "date": "2026-10-07",
           "type": "fonctionnalite",
@@ -30,6 +108,19 @@
           "fr": {
             "titre": "Le code de connexion se saisit plus vite sur un téléphone",
             "texte": "L'écran de connexion ouvre le clavier numérique, et le téléphone propose le code reçu quand il le reconnaît.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-07-orga-l-espace-organisateur-s-installe-sur-l-ecran-d-accueil-d-un-",
+          "date": "2026-10-07",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'espace organisateur s'installe sur l'écran d'accueil d'un téléphone",
+            "texte": "L'espace organisateur s'ajoute à l'écran d'accueil d'un téléphone, sous le nom et l'icône de votre organisation. Il s'ouvre alors sans barre d'adresse. Sans réseau, il affiche un écran « Hors connexion » et reprend au retour du réseau. Un avis annonce une nouvelle version : vous rechargez quand vous le voulez.",
             "migration": null
           }
         },

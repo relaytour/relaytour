@@ -26,7 +26,27 @@ function ecrire(cle: string, valeur: string | null) {
   }
 }
 
-let organisation: string | null = lire(CLE_ORGANISATION)
+/**
+ * L'organisation que désigne l'adresse d'ouverture de l'application installée
+ * (`/?organisation=<slug>`, ADR 0023). Sur iPhone, l'application installée ne
+ * partage pas le stockage du navigateur : elle ne connaît que cette adresse.
+ */
+export function organisationDeLAdresse(recherche: string): string | null {
+  const slug = new URLSearchParams(recherche).get('organisation')
+  return slug !== null && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : null
+}
+
+function organisationInitiale(): string | null {
+  const designee =
+    typeof window === 'undefined'
+      ? null
+      : organisationDeLAdresse(window.location.search)
+  if (designee === null) return lire(CLE_ORGANISATION)
+  ecrire(CLE_ORGANISATION, designee)
+  return designee
+}
+
+let organisation: string | null = organisationInitiale()
 let activite: string | null = null
 
 /** Le slug de l'organisation choisie, ou null pour laisser le serveur décider. */

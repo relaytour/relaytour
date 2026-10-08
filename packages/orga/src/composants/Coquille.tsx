@@ -10,7 +10,9 @@ import {
   CloseOutlined,
   EditOutlined,
   HomeOutlined,
+  MenuFoldOutlined,
   MenuOutlined,
+  MenuUnfoldOutlined,
   ScheduleOutlined,
   SearchOutlined,
   SettingOutlined,
@@ -18,19 +20,30 @@ import {
   TrophyOutlined,
   TeamOutlined,
 } from '@ant-design/icons'
-import { useQuery } from '@apollo/client/react'
+import { useApolloClient, useQuery } from '@apollo/client/react'
 import { Alert, Button, Drawer, Grid, Menu } from 'antd'
-import { useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
 import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
+import { useOuvertureDepuisNotification } from '../lib/application'
 import { useRafraichissement } from '../lib/rafraichissement'
+import { choisirOrganisation } from '../lib/selection'
+import {
+  ecrireVolet,
+  etatDuVolet,
+  LARGEUR_VOLET_DEPLIE,
+  lireVolet,
+  useLargeurAuMoins,
+} from '../lib/volets'
 import { ContexteSession, type Session } from '../lib/session'
 
+import AvisMiseAJour from './AvisMiseAJour'
 import AvisRelecture from './AvisRelecture'
 import ChoixActivite from './ChoixActivite'
 import FournisseurActivite from './FournisseurActivite'
+import { AvisHorsConnexion } from './HorsConnexion'
 import GardeSession from './GardeSession'
 import { Pictogramme, SignatureRelaytour } from './Marque'
 import MenuCompte from './MenuCompte'
@@ -81,12 +94,28 @@ function Mise({ session }: { session: Session }) {
   const { data: menu } = useQuery(MENU_PERIMETRES)
   useRafraichissement(active.slug)
   const navigate = useNavigate()
+  // Une notification push peut venir d'une autre organisation de la personne
+  // (ADR 0024) : elle devient l'active, et le cache repart de zéro, avant l'écran.
+  const apollo = useApolloClient()
+  const ouvrirNotification = useCallback(
+    (chemin: string, organisation: string | null) => {
+      if (organisation === null || organisation === active.slug) {
+        navigate(chemin)
+        return
+      }
+      choisirOrganisation(organisation)
+      void apollo.resetStore().finally(() => navigate(chemin))
+    },
+    [active.slug, apollo, navigate]
+  )
+  useOuvertureDepuisNotification(ouvrirNotification)
   const { pathname } = useLocation()
   const ecrans = Grid.useBreakpoint()
   // Sous 576 px, la recherche se replie en un bouton. Ouverte, elle occupe
   // seule la barre haute, et se referme quand l'écran change.
   const etroit = Boolean(ecrans.xs)
   const [rechercheOuverteSur, setRechercheOuverteSur] = useState<string>()
+  const boutonRecherche = useRef<HTMLButtonElement>(null)
   const rechercheSeule = etroit && rechercheOuverteSur === pathname
   const setRechercheOuverte = (ouverte: boolean) =>
     setRechercheOuverteSur(ouverte ? pathname : undefined)
@@ -224,9 +253,25 @@ function Mise({ session }: { session: Session }) {
       : []),
   ]
 
-  const navigation = (
+  // Le volet de navigation (docs/design-system.md, « Volets ») : déplié, ou
+  // réduit à un rail d'icônes collé au bord gauche. Le choix de la personne
+  // l'emporte sur le défaut, qui suit la largeur de l'écran.
+  const large = useLargeurAuMoins(LARGEUR_VOLET_DEPLIE)
+  const [choixVolet, setChoixVolet] = useState(lireVolet)
+  const rail = etatDuVolet(choixVolet, large) === 'rail'
+  const basculerVolet = () => {
+    const suivant = rail ? 'deplie' : 'rail'
+    ecrireVolet(suivant)
+    setChoixVolet(suivant)
+  }
+
+  const navigation = (replie: boolean) => (
     <Menu
       mode="inline"
+      // En rail, Ant Design ne garde que les icônes et affiche le libellé dans
+      // une bulle, au survol et au focus.
+      inlineCollapsed={replie}
+      tooltip={{ trigger: ['hover', 'focus'] }}
       selectedKeys={[
         pathname.startsWith(lien('/fiches'))
           ? lien('/fiches')
@@ -244,20 +289,32 @@ function Mise({ session }: { session: Session }) {
     />
   )
 
-  const pied = <SignatureRelaytour />
-
   return (
     <div className="rt-page">
       <div className="rt-halo rt-halo-1" aria-hidden="true" />
       <div className="rt-halo rt-halo-2" aria-hidden="true" />
       {ecrans.md ? (
         <nav
-          className="rt-verre-barre rt-barre-laterale"
+          className={
+            rail
+              ? 'rt-verre-barre rt-barre-laterale rt-rail'
+              : 'rt-verre-barre rt-barre-laterale'
+          }
           aria-label="Navigation principale"
         >
+          <Button
+            className="rt-bascule-volet"
+            type="text"
+            size="small"
+            icon={rail ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
+            aria-label={rail ? 'Déplier le menu' : 'Replier le menu'}
+            aria-expanded={!rail}
+            title={rail ? 'Déplier le menu' : 'Replier le menu'}
+            onClick={basculerVolet}
+          />
           <ChoixActivite />
-          {navigation}
-          {pied}
+          {navigation(rail)}
+          <SignatureRelaytour compacte={rail} />
         </nav>
       ) : (
         <Drawer
@@ -275,8 +332,8 @@ function Mise({ session }: { session: Session }) {
             body: { padding: 12, display: 'flex', flexDirection: 'column' },
           }}
         >
-          {navigation}
-          {pied}
+          {navigation(false)}
+          <SignatureRelaytour />
         </Drawer>
       )}
       <div className="rt-principal">
@@ -292,7 +349,12 @@ function Mise({ session }: { session: Session }) {
                 type="text"
                 icon={<CloseOutlined />}
                 aria-label="Fermer la recherche"
-                onClick={() => setRechercheOuverte(false)}
+                onClick={() => {
+                  setRechercheOuverte(false)
+                  // Le bouton fermé disparaît : le focus revient au bouton qui
+                  // avait ouvert la recherche, pas au document.
+                  requestAnimationFrame(() => boutonRecherche.current?.focus())
+                }}
               />
             </>
           ) : (
@@ -316,6 +378,7 @@ function Mise({ session }: { session: Session }) {
                   type="text"
                   icon={<SearchOutlined />}
                   aria-label="Rechercher"
+                  ref={boutonRecherche}
                   onClick={() => setRechercheOuverte(true)}
                 />
               )}
@@ -325,6 +388,8 @@ function Mise({ session }: { session: Session }) {
           )}
         </header>
         <main className="rt-contenu">
+          <AvisMiseAJour />
+          <AvisHorsConnexion />
           <AvisRelecture />
           {active.statut === 'LECTURE_SEULE' && (
             <Alert
