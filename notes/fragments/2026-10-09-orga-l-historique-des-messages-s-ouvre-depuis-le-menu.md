@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.15.0
 fr:
   titre: >-
     L'historique des messages s'ouvre depuis le menu
