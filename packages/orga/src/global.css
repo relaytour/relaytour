@@ -411,17 +411,18 @@ html {
 }
 
 /* Sur téléphone, les marges suivent les zones sûres de l'écran (encoche, barre
-   d'accueil) : la page déclare viewport-fit=cover. */
+   d'accueil) : la page déclare viewport-fit=cover. --rt-haut-sur est défini plus
+   bas, avec la marge de l'application installée. */
 @media (max-width: 767px) {
   .rt-page {
-    padding: max(12px, env(safe-area-inset-top))
+    padding: max(12px, var(--rt-haut-sur))
       max(12px, env(safe-area-inset-right))
       max(12px, env(safe-area-inset-bottom))
       max(12px, env(safe-area-inset-left));
     gap: 12px;
   }
   .rt-barre-haute {
-    top: max(12px, env(safe-area-inset-top));
+    top: max(12px, var(--rt-haut-sur));
     padding: 8px 10px 8px 12px;
     gap: 8px;
   }
@@ -2128,13 +2129,13 @@ button.rt-ligne-declinaisons {
     min-height: 100dvh;
     box-sizing: border-box;
     border-radius: 0;
-    padding-top: max(20px, env(safe-area-inset-top));
+    padding-top: max(20px, var(--rt-haut-sur));
     padding-bottom: max(20px, env(safe-area-inset-bottom));
   }
 
   /* La croix est posée en absolu : elle suit aussi la zone sûre. */
   .rt-modale-pleine .ant-modal-close {
-    top: max(12px, env(safe-area-inset-top));
+    top: max(12px, var(--rt-haut-sur));
     inset-inline-end: max(12px, env(safe-area-inset-right));
   }
 }
@@ -2149,78 +2150,21 @@ button.rt-ligne-declinaisons {
 
 /* Dans l'application installée sur iPhone, la page s'étend sous la barre d'état
    (apple-mobile-web-app-status-bar-style dans index.html) : le sol monte jusqu'en
-   haut de l'écran. Un voile flou couvre toute la zone sûre, pour que le contenu
-   qui défile ne se lise pas sous l'heure. Il passe au-dessus de tout, fenêtres
-   et tiroirs compris : une fenêtre en plein écran défile aussi sous l'heure. Il
-   s'efface sur 6 px sous la zone sûre : la barre haute, une fenêtre en plein
-   écran et un message éphémère commencent plus bas. Sa hauteur vaut zéro sur un
-   écran sans zone sûre. */
+   haut de l'écran. Depuis iOS 26, le système floute lui-même le haut d'une
+   application web installée, un peu plus bas que la barre d'état, et aucune
+   règle ne règle ce flou. L'application ne pose donc aucun voile : la barre
+   haute, un tiroir, une fenêtre en plein écran et un message éphémère commencent
+   14 px sous la zone sûre, hors de ce flou. min() ramène cette marge à zéro sur
+   un écran sans zone sûre, et le navigateur garde ses marges. */
+:root {
+  --rt-haut-sur: env(safe-area-inset-top);
+}
+
 @media (display-mode: standalone) {
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0 0 auto;
-    z-index: 3000;
-    /* min() ramène le dépassement à zéro sur un écran sans zone sûre. */
-    height: calc(env(safe-area-inset-top) + min(6px, env(safe-area-inset-top)));
-    /* Aucune teinte : un voile blanc dessinait une bande claire sur le fond
-       coloré d'une organisation. Le flou seul rend le contenu illisible et
-       laisse le fond tel quel. */
-    -webkit-backdrop-filter: blur(22px);
-    backdrop-filter: blur(22px);
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      #000 calc(100% - 6px),
-      transparent
+  :root {
+    --rt-haut-sur: calc(
+      env(safe-area-inset-top) + min(14px, env(safe-area-inset-top))
     );
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 6px), transparent);
-    pointer-events: none;
-  }
-}
-
-/* Un second voile passe sous la barre haute, jusqu'à sa mi-hauteur : le contenu
-   ne se lit pas non plus à côté de ses angles arrondis du haut. */
-@media (display-mode: standalone) and (max-width: 767px) {
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0 0 auto;
-    z-index: 9;
-    /* 44 px de plus que la zone sûre, quelle que soit sa hauteur, et zéro sans
-       zone sûre : le produit borné par min() vaut alors zéro. */
-    height: calc(
-      env(safe-area-inset-top) +
-        min(44px, calc(env(safe-area-inset-top) * 1000))
-    );
-    -webkit-backdrop-filter: blur(22px);
-    backdrop-filter: blur(22px);
-    -webkit-mask-image: linear-gradient(
-      to bottom,
-      #000 calc(100% - 12px),
-      transparent
-    );
-    mask-image: linear-gradient(to bottom, #000 calc(100% - 12px), transparent);
-    pointer-events: none;
-  }
-}
-
-/* Dans l'application installée, la barre haute, une fenêtre en plein écran et sa
-   croix commencent sous le fondu du voile. Le navigateur garde ses marges. */
-@media (display-mode: standalone) and (max-width: 767px) {
-  .rt-page {
-    padding-top: max(12px, calc(env(safe-area-inset-top) + 6px));
-  }
-
-  .rt-barre-haute {
-    top: max(12px, calc(env(safe-area-inset-top) + 6px));
-  }
-
-  .rt-modale-pleine .ant-modal-container {
-    padding-top: max(20px, calc(env(safe-area-inset-top) + 8px));
-  }
-
-  .rt-modale-pleine .ant-modal-close {
-    top: max(12px, calc(env(safe-area-inset-top) + 8px));
   }
 }
 
@@ -2228,14 +2172,14 @@ button.rt-ligne-declinaisons {
    barre d'état, et son contenu s'arrête au-dessus de la barre d'accueil. */
 .ant-drawer .ant-drawer-section {
   box-sizing: border-box;
-  padding-top: env(safe-area-inset-top);
+  padding-top: var(--rt-haut-sur);
   padding-bottom: env(safe-area-inset-bottom);
 }
 
 /* Un message éphémère s'affiche sous la barre d'état. Ant Design pose sa
    position dans un style en ligne, d'où le !important. */
 .ant-message {
-  top: calc(env(safe-area-inset-top) + 8px) !important;
+  top: calc(var(--rt-haut-sur) + 8px) !important;
 }
 
 /* Écran sans coquille (connexion, formulaire public, hors connexion) : ses marges
@@ -2243,9 +2187,8 @@ button.rt-ligne-declinaisons {
    installée, la page s'étend sous la barre d'état. */
 .rt-page-seule {
   box-sizing: border-box;
-  padding: max(16px, env(safe-area-inset-top))
-    max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom))
-    max(16px, env(safe-area-inset-left));
+  padding: max(16px, var(--rt-haut-sur)) max(16px, env(safe-area-inset-right))
+    max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
 }
 
 /* Tableau : en-tête et colonnes qui restent visibles (docs/design-system.md,
