@@ -27,7 +27,7 @@ import {
   Typography,
 } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Navigate, useSearchParams } from 'react-router'
 
 import Demandes from '../../composants/Demandes'
 import EcrireMessage, {
@@ -490,7 +490,7 @@ export default function Personnes({
 }: {
   annuaire?: boolean
 }) {
-  const { activite, periode, libelleGroupe } = useActivite()
+  const { activite, periode, libelleGroupe, lien } = useActivite()
   const { message } = App.useApp()
   const [inclureArchives, setInclureArchives] = useState(false)
   const [recherche, setRecherche] = useState('')
@@ -534,8 +534,10 @@ export default function Personnes({
   // L'onglet se lit dans l'adresse : une notification mène droit aux demandes.
   const [parametres, setParametres] = useSearchParams()
   const ongletDemande = parametres.get('onglet')
+  // L'historique des messages d'une activité a son écran (ADR 0027). L'annuaire
+  // garde l'onglet qui montre les messages de toute l'organisation.
   const onglet =
-    ongletDemande === 'messages' ||
+    (modeAnnuaire && ongletDemande === 'messages') ||
     (!modeAnnuaire && ongletDemande === 'demandes')
       ? ongletDemande
       : 'annuaire'
@@ -919,6 +921,11 @@ export default function Personnes({
       />
     )
 
+  // Ancienne adresse de l'historique des messages d'une activité.
+  if (!modeAnnuaire && ongletDemande === 'messages') {
+    return <Navigate to={lien('/admin/messages')} replace />
+  }
+
   return (
     <>
       <Titre
@@ -969,7 +976,7 @@ export default function Personnes({
                       : 'Demandes',
                 },
               ]),
-          { key: 'messages', label: 'Messages' },
+          ...(modeAnnuaire ? [{ key: 'messages', label: 'Messages' }] : []),
         ]}
       />
       {onglet === 'demandes' &&

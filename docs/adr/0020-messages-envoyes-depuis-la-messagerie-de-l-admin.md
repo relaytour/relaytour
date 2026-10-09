@@ -3,6 +3,7 @@
 - **Statut** : acceptée
 - **Date** : 2026-10-07
 - Complète l'ADR 0012 (mails d'équipe envoyés par l'application) et s'appuie sur l'ADR 0018 (personnes qu'un admin peut lire).
+- Amendée par l'ADR 0027 : l'historique des messages d'une activité se lit dans l'écran « Messages ».
 
 ## Contexte
 

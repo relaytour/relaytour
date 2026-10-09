@@ -4,12 +4,12 @@ import {
   ApartmentOutlined,
   SafetyCertificateOutlined,
   BankOutlined,
-  BarChartOutlined,
   BookOutlined,
   CalendarOutlined,
   CloseOutlined,
   EditOutlined,
   HomeOutlined,
+  MailOutlined,
   MenuFoldOutlined,
   MenuOutlined,
   MenuUnfoldOutlined,
@@ -182,22 +182,9 @@ function Mise({ session }: { session: Session }) {
           {
             type: 'group' as const,
             label: 'Gérer l’activité',
+            // Du plus fréquent au plus rare : l'équipe et ses messages au fil de
+            // la période, les réglages d'une période en dernier.
             children: [
-              {
-                key: lien('/admin/avancement'),
-                icon: <BarChartOutlined />,
-                label: 'Avancement',
-              },
-              {
-                key: lien('/admin/classement'),
-                icon: <TrophyOutlined />,
-                label: 'Classement',
-              },
-              {
-                key: lien('/admin/editions'),
-                icon: <CalendarOutlined />,
-                label: periode.Pluriel,
-              },
               {
                 key: lien('/admin/equipe'),
                 icon: <SolutionOutlined />,
@@ -209,9 +196,24 @@ function Mise({ session }: { session: Session }) {
                 label: 'Personnes',
               },
               {
+                key: lien('/admin/messages'),
+                icon: <MailOutlined />,
+                label: 'Messages',
+              },
+              {
+                key: lien('/admin/classement'),
+                icon: <TrophyOutlined />,
+                label: 'Classement',
+              },
+              {
                 key: lien('/admin/redaction'),
                 icon: <EditOutlined />,
                 label: 'Rédaction',
+              },
+              {
+                key: lien('/admin/editions'),
+                icon: <CalendarOutlined />,
+                label: periode.Pluriel,
               },
             ],
           },
