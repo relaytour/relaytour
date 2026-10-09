@@ -16,7 +16,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "L'historique des messages s'ouvre depuis le menu",
-            "texte": "Le menu « Gérer l'activité » porte une entrée « Messages », qui liste les messages préparés pour l'équipe de l'activité. L'onglet « Messages » quitte l'écran « Personnes », et vos anciens favoris mènent au nouvel écran. L'écran « Équipe » y mène aussi, par le lien « Historique des messages ». L'annuaire garde son onglet « Messages » pour les admins de l'organisation.",
+            "texte": "Le menu « Gérer l'activité » porte une entrée « Messages », qui liste les messages préparés pour l'équipe de l'activité. L'onglet « Messages » quitte l'écran « Personnes », et vos anciens favoris mènent au nouvel écran. L'écran « Équipe » y mène aussi, par le lien « Historique des messages ». L'annuaire garde son onglet « Messages » pour les admins de l'organisation. Le menu « Gérer l'activité » range ses écrans du plus fréquent au plus rare : Équipe, Personnes, Messages, Classement, Rédaction, puis les périodes.",
             "migration": null
           }
         },

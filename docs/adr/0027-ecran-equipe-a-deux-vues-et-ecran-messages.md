@@ -1,6 +1,6 @@
 # ADR 0027 — Écran « Équipe » à deux vues et écran « Messages »
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-09
 - Amende l'ADR 0020 sur un point : l'emplacement de l'historique des messages d'une activité.
 
@@ -27,6 +27,7 @@ L'ADR 0020 a placé l'historique des messages dans un onglet de l'écran « Pers
 - L'historique des messages d'une activité se lit dans un écran « Messages » du groupe « Gérer l'activité » (`admin/messages`). L'onglet « Messages » quitte l'écran « Personnes » d'une activité, et son ancienne adresse redirige.
 - L'écran « Équipe » porte un lien vers cet historique, à côté du bouton « Écrire à l'équipe ».
 - L'écran « Annuaire » garde son onglet « Messages » : il montre aux admins de l'organisation les messages de toutes les activités.
+- Le groupe « Gérer l'activité » range ses écrans du plus fréquent au plus rare : Équipe, Personnes, Messages, Classement, Rédaction, puis les périodes.
 - Les autres règles de l'ADR 0020 ne changent pas : qui écrit, à qui, ce que le serveur enregistre, et le statut déclaré par l'auteur.
 
 ## Conséquences

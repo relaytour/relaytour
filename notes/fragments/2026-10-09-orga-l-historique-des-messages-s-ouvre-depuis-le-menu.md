@@ -13,6 +13,9 @@ fr:
     l'écran « Personnes », et vos anciens favoris mènent au nouvel écran.
     L'écran « Équipe » y mène aussi, par le lien « Historique des messages ».
     L'annuaire garde son onglet « Messages » pour les admins de l'organisation.
+    Le menu « Gérer l'activité » range ses écrans du plus fréquent au plus
+    rare : Équipe, Personnes, Messages, Classement, Rédaction, puis les
+    périodes.
 ---
 
 Nouvelle page `pages/admin/MessagesActivite.tsx`, sur la route `admin/messages`.

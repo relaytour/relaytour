@@ -182,21 +182,13 @@ function Mise({ session }: { session: Session }) {
           {
             type: 'group' as const,
             label: 'Gérer l’activité',
+            // Du plus fréquent au plus rare : l'équipe et ses messages au fil de
+            // la période, les réglages d'une période en dernier.
             children: [
               {
                 key: lien('/admin/equipe'),
                 icon: <SolutionOutlined />,
                 label: 'Équipe',
-              },
-              {
-                key: lien('/admin/classement'),
-                icon: <TrophyOutlined />,
-                label: 'Classement',
-              },
-              {
-                key: lien('/admin/editions'),
-                icon: <CalendarOutlined />,
-                label: periode.Pluriel,
               },
               {
                 key: lien('/admin/personnes'),
@@ -209,9 +201,19 @@ function Mise({ session }: { session: Session }) {
                 label: 'Messages',
               },
               {
+                key: lien('/admin/classement'),
+                icon: <TrophyOutlined />,
+                label: 'Classement',
+              },
+              {
                 key: lien('/admin/redaction'),
                 icon: <EditOutlined />,
                 label: 'Rédaction',
+              },
+              {
+                key: lien('/admin/editions'),
+                icon: <CalendarOutlined />,
+                label: periode.Pluriel,
               },
             ],
           },

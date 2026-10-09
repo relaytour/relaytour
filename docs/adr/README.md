@@ -28,6 +28,6 @@
 | [0024](0024-notifications-push.md) | Notifications push | Acceptée |
 | [0025](0025-phases-d-une-activite-et-regroupement-des-taches.md) | Phases d'une activité et regroupement des tâches | Acceptée |
 | [0026](0026-taches-partagees.md) | Tâches partagées entre périmètres | Acceptée |
-| [0027](0027-ecran-equipe-a-deux-vues-et-ecran-messages.md) | Écran « Équipe » à deux vues et écran « Messages » | Proposée |
+| [0027](0027-ecran-equipe-a-deux-vues-et-ecran-messages.md) | Écran « Équipe » à deux vues et écran « Messages » | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
