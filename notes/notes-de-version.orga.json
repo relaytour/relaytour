@@ -2,10 +2,10 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.14.0",
+  "version": "0.14.1",
   "versions": [
     {
-      "version": null,
+      "version": "0.14.1",
       "notes": [
         {
           "id": "2026-10-09-orga-le-haut-de-l-application-installee-n-est-plus-floute-deux-fois",
@@ -16,7 +16,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "La barre haute sort du flou qu'iOS pose en haut de l'application installée",
-            "texte": "Depuis iOS 26, l'iPhone floute lui-même le haut d'une application installée. L'application ajoutait son propre flou, et sa barre haute restait prise dedans. Elle ne pose plus aucun flou. La barre haute, le menu, les fenêtres en plein écran et les messages de confirmation commencent 14 pixels plus bas.",
+            "texte": "Depuis iOS 26, l'iPhone floute lui-même le haut d'une application installée. L'application ajoutait son propre flou, et sa barre haute restait prise dedans. Sur ces versions, elle ne pose plus aucun flou. La barre haute, le menu, les fenêtres en plein écran et les messages de confirmation commencent 14 pixels plus bas.",
             "migration": null
           }
         }
