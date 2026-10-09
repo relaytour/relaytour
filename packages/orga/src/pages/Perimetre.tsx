@@ -1,4 +1,4 @@
-import { BookOutlined, PlusOutlined } from '@ant-design/icons'
+import { BookOutlined, PlusOutlined, SolutionOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
 import { Alert, Button, Empty, Result, Skeleton } from 'antd'
 import { useMemo, useState, type ReactNode } from 'react'
@@ -369,6 +369,24 @@ export default function Perimetre() {
                   valeur={editionId}
                   onChange={id => setParametres({ edition: id })}
                 />
+                {gere && (
+                  <Button
+                    size="large"
+                    icon={<SolutionOutlined />}
+                    onClick={() =>
+                      void navigate(
+                        lien(
+                          `/admin/equipe?${new URLSearchParams({
+                            ...(editionId ? { edition: editionId } : {}),
+                            q: perimetre.nom,
+                          })}`
+                        )
+                      )
+                    }
+                  >
+                    Gérer l’équipe
+                  </Button>
+                )}
                 {perimetre.peutModifier && (
                   <Button
                     type="primary"

@@ -4,7 +4,6 @@ import {
   ApartmentOutlined,
   SafetyCertificateOutlined,
   BankOutlined,
-  BarChartOutlined,
   BookOutlined,
   CalendarOutlined,
   CloseOutlined,
@@ -184,9 +183,9 @@ function Mise({ session }: { session: Session }) {
             label: 'Gérer l’activité',
             children: [
               {
-                key: lien('/admin/avancement'),
-                icon: <BarChartOutlined />,
-                label: 'Avancement',
+                key: lien('/admin/equipe'),
+                icon: <SolutionOutlined />,
+                label: 'Équipe',
               },
               {
                 key: lien('/admin/classement'),
@@ -197,11 +196,6 @@ function Mise({ session }: { session: Session }) {
                 key: lien('/admin/editions'),
                 icon: <CalendarOutlined />,
                 label: periode.Pluriel,
-              },
-              {
-                key: lien('/admin/equipe'),
-                icon: <SolutionOutlined />,
-                label: 'Équipe',
               },
               {
                 key: lien('/admin/personnes'),

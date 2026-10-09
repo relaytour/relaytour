@@ -155,3 +155,24 @@ export const DEFINIR_ADMIN_ACTIVITE = graphql(`
     )
   }
 `)
+
+// L'avancement des tâches de chaque périmètre d'une période, pour la vue
+// « Avancement » de l'écran « Équipe ».
+export const AVANCEMENT_GLOBAL = graphql(`
+  query AvancementGlobal($editionId: ID!) {
+    avancementGlobal(editionId: $editionId) {
+      perimetre {
+        id
+      }
+      avancement {
+        total
+        aFaire
+        enCours
+        faites
+        abandonnees
+        enRetard
+        sansPersonne
+      }
+    }
+  }
+`)

@@ -280,7 +280,7 @@ const ECRANS = [
   {
     nom: 'avancement',
     compte: 'admin-activite',
-    chemin: `${ACTIVITE}/admin/avancement`,
+    chemin: `${ACTIVITE}/admin/equipe?vue=avancement`,
   },
   {
     nom: 'classement',

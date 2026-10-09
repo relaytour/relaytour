@@ -7,7 +7,6 @@ import { VersActivite } from './composants/FournisseurActivite'
 import GardeSession from './composants/GardeSession'
 import Activites from './pages/admin/Activites'
 import Admins from './pages/admin/Admins'
-import AvancementGlobal from './pages/admin/AvancementGlobal'
 import Classement from './pages/admin/Classement'
 import Editions from './pages/admin/Editions'
 import Equipe from './pages/admin/Equipe'
@@ -59,9 +58,14 @@ const routeur = createBrowserRouter([
         path: 'admin',
         element: <ReserveAdmin />,
         children: [
-          { index: true, element: <Navigate to="avancement" replace /> },
+          { index: true, element: <Navigate to="equipe" replace /> },
           { path: 'activites', element: <Activites /> },
-          { path: 'avancement', element: <AvancementGlobal /> },
+          // L'avancement est une vue de l'écran « Équipe ». L'ancienne adresse
+          // reste valable pour les favoris.
+          {
+            path: 'avancement',
+            element: <Navigate to="../equipe?vue=avancement" replace />,
+          },
           { path: 'classement', element: <Classement /> },
           { path: 'editions', element: <Editions /> },
           {
