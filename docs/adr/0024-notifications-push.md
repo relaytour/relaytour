@@ -1,6 +1,6 @@
 # ADR 0024 — Notifications push
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-07
 - S'appuie sur l'ADR 0023 : le service worker reçoit les notifications push. Respecte l'ADR 0007 : le canal est facultatif et se règle par des variables.
 

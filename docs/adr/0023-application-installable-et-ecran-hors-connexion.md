@@ -1,6 +1,6 @@
 # ADR 0023 — Application installable et écran hors connexion
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-07
 - Respecte l'ADR 0007 : aucun réglage de proxy ne s'ajoute. S'appuie sur l'identité d'une organisation (ADR 0006 et 0009).
 
