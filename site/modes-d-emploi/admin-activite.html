@@ -59,13 +59,14 @@
           </p>
         </div>
         <nav class="verre sommaire" aria-label="Sommaire">
-          <span class="etiquette">Vos sept écrans</span>
+          <span class="etiquette">Vos huit écrans</span>
           <ol>
             <li><a href="#e-equipe">Équipe</a> : effectifs, souhaits, affectations, réglage des périmètres et avancement de chaque périmètre.</li>
+            <li><a href="#e-personnes">Personnes</a> : inviter votre équipe et traiter les demandes.</li>
+            <li><a href="#e-messages">Messages</a> : écrire à votre équipe et relire les messages préparés.</li>
             <li><a href="#e-classement">Classement</a> : les contributions de chaque personne sur la période.</li>
-            <li><a href="#e-editions">Éditions</a> : ouvrir et dater les périodes de l'activité.</li>
-            <li><a href="#e-personnes">Personnes</a> : inviter votre équipe, traiter les demandes et écrire à votre équipe.</li>
             <li><a href="#e-redaction">Rédaction</a> : accorder un droit d'écriture sur les fiches d'un périmètre.</li>
+            <li><a href="#e-editions">Éditions</a> : ouvrir et dater les périodes de l'activité.</li>
             <li><a href="#e-historique">Historique d'une fiche</a> : consulter et restaurer une version.</li>
             <li><a href="#e-activite">Activités</a> : régler le nom, les groupes et l'identité de votre activité.</li>
           </ol>
@@ -126,34 +127,9 @@
           </figure>
         </article>
 
-        <article class="verre ecran" id="e-classement">
-          <div class="ecran-tete"><h3>Classement</h3><span class="route">/&lt;activité&gt;/admin/classement</span></div>
-          <p>Le tableau classe les personnes selon leur contribution à la période choisie. Il donne pour chacune ses points, ses tâches réalisées, celles rendues à temps, ses tâches créées et ses fiches créées ou modifiées.</p>
-          <figure>
-            <img src="../captures/classement.webp" data-mobile="../captures/mobile/classement.webp" width="1440" height="900" loading="lazy" alt="Écran Classement : un tableau avec le rang, la personne, les points et le détail de ses contributions." />
-            <figcaption>Écran Classement, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
-          </figure>
-          <p class="note">Seuls les admins lisent ce classement. Chaque personne voit son propre score dans « Mon espace », et aucun autre.</p>
-        </article>
-
-        <article class="verre ecran" id="e-editions">
-          <div class="ecran-tete"><h3>Éditions, saisons ou mandats</h3><span class="route">/&lt;activité&gt;/admin/editions</span></div>
-          <p>Une période sert de repère à toutes les échéances : une tâche type à J-120 se date depuis son premier jour. Le tableau liste l'année, le nom, les dates et le statut, soit <strong>En préparation</strong>, <strong>En cours</strong> ou <strong>Archivée</strong>.</p>
-          <ul class="gestes">
-            <li><span><span class="libelle">Nouvelle édition</span></span><span>Ouvrir la période suivante. Vous saisissez l'année, le nom, le premier jour et le dernier jour.</span></li>
-            <li><span><span class="libelle">Enregistrer</span></span><span>Modifier le nom, les dates ou le statut d'une période. L'année ne change plus après la création.</span></li>
-          </ul>
-          <p class="note">Archiver une période passe ses tâches en lecture seule. Ses demandes pour rejoindre l'équipe sont supprimées la nuit suivante, quel que soit leur état. Les comptes et les affectations restent.</p>
-          <figure>
-            <img src="../captures/editions.webp" data-mobile="../captures/mobile/editions.webp" width="1440" height="900" loading="lazy" alt="Écran Éditions : la liste des éditions, avec une édition en préparation et une édition archivée." />
-            <figcaption>Écran Éditions, sur l'organisation d'exemple livrée avec Relaytour.</figcaption>
-          </figure>
-        </article>
-
-
         <article class="verre ecran" id="e-personnes">
           <div class="ecran-tete"><h3>Personnes</h3><span class="route">/&lt;activité&gt;/admin/personnes</span></div>
-          <p>Seules les personnes invitées ici peuvent se connecter à l'espace organisateur. L'écran a trois onglets. « Équipe de l'activité » donne le nom, l'adresse mail, les affectations, les souhaits et le rôle de chaque personne de l'activité. « Demandes » porte la file des personnes proposées pour rejoindre l'équipe. « Messages » garde les messages que les admins ont préparés.</p>
+          <p>Seules les personnes invitées ici peuvent se connecter à l'espace organisateur. L'écran a deux onglets. « Équipe de l'activité » donne le nom, l'adresse mail, les affectations, les souhaits et le rôle de chaque personne de l'activité. « Demandes » porte la file des personnes proposées pour rejoindre l'équipe.</p>
           <p>Dans le premier onglet, des filtres séparent les admins et les membres, isolent un périmètre, ou ne gardent que les personnes sans affectation pour la période choisie. Un champ cherche un nom ou une adresse.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Inviter une personne</span></span><span>Saisir le nom et l'adresse, et choisir au moins un périmètre, affecté ou souhaité : la personne rejoint votre équipe par ce périmètre. La même fenêtre peut la nommer admin de l'activité. Une personne sans compte reçoit un mail avec son lien de connexion et le mode d'emploi de son rôle. Une personne qui a déjà un compte dans l'organisation rejoint votre équipe sans nouveau mail, et garde le nom de son compte.</span></li>
@@ -184,7 +160,7 @@
         </article>
 
         <article class="verre ecran" id="e-messages">
-          <div class="ecran-tete"><h3>Messages à votre équipe</h3><span class="route">/&lt;activité&gt;/admin/personnes?onglet=messages</span></div>
+          <div class="ecran-tete"><h3>Messages à votre équipe</h3><span class="route">/&lt;activité&gt;/admin/messages</span></div>
           <p>Vous préparez un message dans Relaytour, puis vous l'envoyez depuis votre propre messagerie. Relaytour n'envoie rien : il compose le texte, ouvre votre messagerie et garde ce que vous avez préparé. Le message part de votre adresse, et les réponses vous reviennent.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Modèle</span></span><span>Partir d'un message libre ou d'un texte préparé : lancement de la période, rappel des tâches en retard, appel à bénévoles, remerciements, entre autres. Relaytour y place le nom de l'activité, les dates et les tâches du périmètre choisi.</span></li>
@@ -198,13 +174,23 @@
             <img src="../captures/message.webp" data-mobile="../captures/mobile/message.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Écrire un message : les destinataires, le choix entre Cc et Cci, le modèle, le périmètre, l'objet et le texte." />
             <figcaption>Un message préparé pour toute l'équipe, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
           </figure>
-          <p>L'onglet « Messages » de l'écran « Personnes » liste les messages de l'activité : la date, l'objet, le modèle, l'auteur, les destinataires et l'état. Un message est « En cours » à l'ouverture de la messagerie. Son auteur le note ensuite « Envoyé » ou « Annulé », et peut le rouvrir dans sa messagerie.</p>
+          <p>L'écran « Messages » liste les messages de l'activité : la date, l'objet, le modèle, l'auteur, les destinataires et l'état. Un message est « En cours » à l'ouverture de la messagerie. Son auteur le note ensuite « Envoyé » ou « Annulé », et peut le rouvrir dans sa messagerie. Le lien « Historique des messages » de l'écran « Équipe » mène à cet écran.</p>
           <figure>
-            <img src="../captures/personnes-messages.webp" data-mobile="../captures/mobile/personnes-messages.webp" width="1440" height="900" loading="lazy" alt="Écran Personnes, onglet Messages : deux messages avec leur date, leur objet, leur modèle, leur auteur, leurs destinataires et leur état." />
-            <figcaption>Onglet Messages, sur l'organisation d'exemple. Les personnes et les messages sont fictifs.</figcaption>
+            <img src="../captures/messages-historique.webp" data-mobile="../captures/mobile/messages-historique.webp" width="1440" height="900" loading="lazy" alt="Écran Messages : deux messages avec leur date, leur objet, leur modèle, leur auteur, leurs destinataires et leur état." />
+            <figcaption>Écran Messages, sur l'organisation d'exemple. Les personnes et les messages sont fictifs.</figcaption>
           </figure>
           <p class="note">L'état d'un message est celui que son auteur déclare : Relaytour ne sait pas si le message est parti. Un message compte 500 destinataires au plus, et un message préparé ne se modifie plus.</p>
           <p class="note">Un texte très long ou de très nombreux destinataires dépassent ce qu'un lien vers la messagerie peut porter. La fenêtre vous demande alors de copier le texte, ou les adresses, et de les coller dans le message.</p>
+        </article>
+
+        <article class="verre ecran" id="e-classement">
+          <div class="ecran-tete"><h3>Classement</h3><span class="route">/&lt;activité&gt;/admin/classement</span></div>
+          <p>Le tableau classe les personnes selon leur contribution à la période choisie. Il donne pour chacune ses points, ses tâches réalisées, celles rendues à temps, ses tâches créées et ses fiches créées ou modifiées.</p>
+          <figure>
+            <img src="../captures/classement.webp" data-mobile="../captures/mobile/classement.webp" width="1440" height="900" loading="lazy" alt="Écran Classement : un tableau avec le rang, la personne, les points et le détail de ses contributions." />
+            <figcaption>Écran Classement, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
+          </figure>
+          <p class="note">Seuls les admins lisent ce classement. Chaque personne voit son propre score dans « Mon espace », et aucun autre.</p>
         </article>
 
         <article class="verre ecran" id="e-redaction">
@@ -219,6 +205,20 @@
           <figure>
             <img src="../captures/redaction.webp" data-mobile="../captures/mobile/redaction.webp" width="1440" height="900" loading="lazy" alt="Écran Rédaction des fiches : le formulaire d'attribution, la liste des droits accordés et la liste des admins." />
             <figcaption>Écran Rédaction des fiches, sur l'organisation d'exemple.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-editions">
+          <div class="ecran-tete"><h3>Éditions, saisons ou mandats</h3><span class="route">/&lt;activité&gt;/admin/editions</span></div>
+          <p>Une période sert de repère à toutes les échéances : une tâche type à J-120 se date depuis son premier jour. Le tableau liste l'année, le nom, les dates et le statut, soit <strong>En préparation</strong>, <strong>En cours</strong> ou <strong>Archivée</strong>.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouvelle édition</span></span><span>Ouvrir la période suivante. Vous saisissez l'année, le nom, le premier jour et le dernier jour.</span></li>
+            <li><span><span class="libelle">Enregistrer</span></span><span>Modifier le nom, les dates ou le statut d'une période. L'année ne change plus après la création.</span></li>
+          </ul>
+          <p class="note">Archiver une période passe ses tâches en lecture seule. Ses demandes pour rejoindre l'équipe sont supprimées la nuit suivante, quel que soit leur état. Les comptes et les affectations restent.</p>
+          <figure>
+            <img src="../captures/editions.webp" data-mobile="../captures/mobile/editions.webp" width="1440" height="900" loading="lazy" alt="Écran Éditions : la liste des éditions, avec une édition en préparation et une édition archivée." />
+            <figcaption>Écran Éditions, sur l'organisation d'exemple livrée avec Relaytour.</figcaption>
           </figure>
         </article>
 

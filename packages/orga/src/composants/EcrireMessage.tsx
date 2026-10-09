@@ -484,7 +484,7 @@ function Redaction({
             Avez-vous envoyé ce message ?
           </Typography.Title>
           <Typography.Paragraph type="secondary">
-            Votre réponse met à jour l’onglet « Messages ». Sans réponse, le
+            Votre réponse met à jour l’historique des messages. Sans réponse, le
             message y reste « En cours » et vous répondez plus tard.
           </Typography.Paragraph>
           <Space wrap>

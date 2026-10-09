@@ -1,7 +1,7 @@
 import { graphql } from '../gql'
 
 // Messages (ADR 0020) : l'historique et ses écritures, partagés par la fenêtre de
-// rédaction et par l'onglet « Messages ».
+// rédaction et par l'historique des messages.
 
 export const MESSAGES = graphql(`
   query Messages($activiteId: ID) {

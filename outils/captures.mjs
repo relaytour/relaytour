@@ -266,9 +266,9 @@ const ECRANS = [
   },
   // L'historique des messages. L'instance d'exemple doit en porter au moins un.
   {
-    nom: 'personnes-messages',
+    nom: 'messages-historique',
     compte: 'admin-activite',
-    chemin: `${ACTIVITE}/admin/personnes?onglet=messages`,
+    chemin: `${ACTIVITE}/admin/messages`,
   },
   // La file de revue (ADR 0015). L'instance d'exemple doit porter une demande en
   // attente, proposée par une personne fictive.

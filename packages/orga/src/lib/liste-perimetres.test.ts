@@ -4,6 +4,7 @@ import {
   ecrireReglages,
   filtrer,
   lireReglages,
+  TOUS_LES_GROUPES,
   partFaite,
   trier,
   type LignePerimetre,
@@ -35,7 +36,7 @@ describe('lireReglages', () => {
     expect(lireReglages(new URLSearchParams(), GROUPES)).toEqual({
       vue: 'equipe',
       edition: undefined,
-      groupe: 'tous',
+      groupe: TOUS_LES_GROUPES,
       q: '',
       tri: 'priorite',
       filtre: 'tous',
@@ -61,7 +62,13 @@ describe('lireReglages', () => {
     const reglages = lireReglages(parametres, GROUPES)
     expect(reglages.vue).toBe('equipe')
     expect(reglages.tri).toBe('priorite')
-    expect(reglages.groupe).toBe('tous')
+    expect(reglages.groupe).toBe(TOUS_LES_GROUPES)
+  })
+
+  it('lit un groupe dont la clé vaut « tous »', () => {
+    expect(
+      lireReglages(new URLSearchParams('groupe=tous'), ['tous', 'pole']).groupe
+    ).toBe('tous')
   })
 
   it('écarte le filtre d’une autre vue', () => {
@@ -89,7 +96,7 @@ describe('ecrireReglages', () => {
   it('retire de l’adresse une valeur par défaut ou vide', () => {
     const suivants = ecrireReglages(
       new URLSearchParams('vue=avancement&q=nat&groupe=pole&edition=e1'),
-      { vue: 'equipe', q: '', groupe: 'tous', edition: undefined }
+      { vue: 'equipe', q: '', groupe: TOUS_LES_GROUPES, edition: undefined }
     )
     expect(suivants.toString()).toBe('')
   })
@@ -126,7 +133,7 @@ describe('filtrer', () => {
       sansPersonne: 3,
     }),
   ]
-  const tout = { groupe: 'tous', q: '', filtre: 'tous' } as const
+  const tout = { groupe: TOUS_LES_GROUPES, q: '', filtre: 'tous' } as const
 
   it('garde tout sans réglage', () => {
     expect(ids(filtrer(lignes, tout))).toEqual([
@@ -163,6 +170,11 @@ describe('filtrer', () => {
     expect(ids(filtrer(lignes, { ...tout, filtre: 'sansPersonne' }))).toEqual([
       'tresorerie',
     ])
+  })
+
+  it('filtre un groupe dont la clé vaut « tous »', () => {
+    const melange = [ligne('a', { groupe: 'tous' }), ligne('b')]
+    expect(ids(filtrer(melange, { ...tout, groupe: 'tous' }))).toEqual(['a'])
   })
 
   it('combine le groupe, le filtre et la recherche', () => {

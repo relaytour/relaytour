@@ -24,8 +24,11 @@ export const FILTRES: Record<Vue, readonly Filtre[]> = {
   avancement: ['tous', 'retard', 'sansPersonne'],
 }
 
-/** Valeur du filtre de groupe qui garde tous les périmètres. */
-export const TOUS_LES_GROUPES = 'tous'
+/**
+ * Valeur du filtre de groupe qui garde tous les périmètres. Une clé de groupe est
+ * un identifiant : elle ne peut pas valoir « * ».
+ */
+export const TOUS_LES_GROUPES = '*'
 
 export interface Reglages {
   vue: Vue
