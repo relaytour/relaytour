@@ -415,8 +415,7 @@ html {
    bas, avec la marge de l'application installée. */
 @media (max-width: 767px) {
   .rt-page {
-    padding: max(12px, var(--rt-haut-sur))
-      max(12px, env(safe-area-inset-right))
+    padding: max(12px, var(--rt-haut-sur)) max(12px, env(safe-area-inset-right))
       max(12px, env(safe-area-inset-bottom))
       max(12px, env(safe-area-inset-left));
     gap: 12px;
@@ -2152,7 +2151,7 @@ button.rt-ligne-declinaisons {
    (apple-mobile-web-app-status-bar-style dans index.html) : le sol monte jusqu'en
    haut de l'écran. Depuis iOS 26, le système floute lui-même le haut d'une
    application web installée, un peu plus bas que la barre d'état, et aucune
-   règle ne règle ce flou. L'application ne pose donc aucun voile : la barre
+   règle ne règle ce flou. L'application n'y pose donc aucun voile : la barre
    haute, un tiroir, une fenêtre en plein écran et un message éphémère commencent
    14 px sous la zone sûre, hors de ce flou. min() ramène cette marge à zéro sur
    un écran sans zone sûre, et le navigateur garde ses marges. */
@@ -2165,6 +2164,36 @@ button.rt-ligne-declinaisons {
     --rt-haut-sur: calc(
       env(safe-area-inset-top) + min(14px, env(safe-area-inset-top))
     );
+  }
+}
+
+/* Avant iOS 26, le système ne floute rien : un voile flou couvre alors la zone
+   sûre et la marge, pour que le contenu qui défile ne se lise pas sous l'heure.
+   Le positionnement par ancre est arrivé dans Safari 26 : son absence désigne
+   ces versions. Le voile passe au-dessus des fenêtres et des tiroirs, n'a aucune
+   teinte, et sa hauteur vaut zéro sur un écran sans zone sûre. */
+@supports not (anchor-name: --rt) {
+  @media (display-mode: standalone) {
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 3000;
+      height: var(--rt-haut-sur);
+      -webkit-backdrop-filter: blur(22px);
+      backdrop-filter: blur(22px);
+      -webkit-mask-image: linear-gradient(
+        to bottom,
+        #000 calc(100% - 6px),
+        transparent
+      );
+      mask-image: linear-gradient(
+        to bottom,
+        #000 calc(100% - 6px),
+        transparent
+      );
+      pointer-events: none;
+    }
   }
 }
 
