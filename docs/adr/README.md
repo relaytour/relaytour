@@ -21,12 +21,13 @@
 | [0017](0017-flux-des-changements.md) | Flux des changements poussé par le serveur | Acceptée |
 | [0018](0018-personnes-d-une-activite.md) | Personnes d'une activité | Acceptée, invitation avec affectation ajoutée par l'ADR 0019 |
 | [0019](0019-admins-lus-et-nommes-par-les-admins-d-activite.md) | Admins lus et nommés par les admins d'activité | Acceptée |
-| [0020](0020-messages-envoyes-depuis-la-messagerie-de-l-admin.md) | Messages écrits dans l'application, envoyés depuis la messagerie de l'admin | Acceptée, choix de la messagerie ajouté par l'ADR 0022 |
+| [0020](0020-messages-envoyes-depuis-la-messagerie-de-l-admin.md) | Messages écrits dans l'application, envoyés depuis la messagerie de l'admin | Acceptée, choix de la messagerie ajouté par l'ADR 0022, emplacement de l'historique d'une activité amendé par l'ADR 0027 |
 | [0021](0021-version-notes-de-version-et-support.md) | Version, notes de version et support dans l'espace organisateur | Acceptée |
 | [0022](0022-choix-de-la-messagerie.md) | Choix de la messagerie qui reçoit un message | Acceptée |
 | [0023](0023-application-installable-et-ecran-hors-connexion.md) | Application installable et écran hors connexion | Acceptée |
 | [0024](0024-notifications-push.md) | Notifications push | Acceptée |
 | [0025](0025-phases-d-une-activite-et-regroupement-des-taches.md) | Phases d'une activité et regroupement des tâches | Acceptée |
 | [0026](0026-taches-partagees.md) | Tâches partagées entre périmètres | Acceptée |
+| [0027](0027-ecran-equipe-a-deux-vues-et-ecran-messages.md) | Écran « Équipe » à deux vues et écran « Messages » | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

@@ -9,6 +9,7 @@ import {
   CloseOutlined,
   EditOutlined,
   HomeOutlined,
+  MailOutlined,
   MenuFoldOutlined,
   MenuOutlined,
   MenuUnfoldOutlined,
@@ -201,6 +202,11 @@ function Mise({ session }: { session: Session }) {
                 key: lien('/admin/personnes'),
                 icon: <TeamOutlined />,
                 label: 'Personnes',
+              },
+              {
+                key: lien('/admin/messages'),
+                icon: <MailOutlined />,
+                label: 'Messages',
               },
               {
                 key: lien('/admin/redaction'),

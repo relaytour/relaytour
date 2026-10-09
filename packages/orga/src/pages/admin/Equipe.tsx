@@ -453,6 +453,7 @@ export default function Equipe() {
         >
           Écrire à l’équipe
         </Button>
+        <Link to={lien('/admin/messages')}>Historique des messages</Link>
       </Space>
       <div className="rt-puces" style={{ marginBottom: 24, rowGap: 10 }}>
         {activite.groupes.length > 1 && (

@@ -11,6 +11,7 @@ import Classement from './pages/admin/Classement'
 import Editions from './pages/admin/Editions'
 import Equipe from './pages/admin/Equipe'
 import Organisation from './pages/admin/Organisation'
+import MessagesActivite from './pages/admin/MessagesActivite'
 import Personnes from './pages/admin/Personnes'
 import Redaction from './pages/admin/Redaction'
 import Connexion from './pages/Connexion'
@@ -86,6 +87,7 @@ const routeur = createBrowserRouter([
             children: [{ index: true, element: <Admins /> }],
           },
           { path: 'equipe', element: <Equipe /> },
+          { path: 'messages', element: <MessagesActivite /> },
           { path: 'personnes', element: <Personnes /> },
           // Anciennes adresses des pages réunies dans « Équipe », conservées pour
           // les favoris.
