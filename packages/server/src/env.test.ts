@@ -83,6 +83,49 @@ describe('resoudreEnv', () => {
     ).toThrow(/ORIGINE_ORGA/)
   })
 
+  it('exige ORIGINE_ORGA en https hors du poste local', () => {
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        APP_ENV: 'prod',
+        CORS_ORIGIN: 'https://orga.exemple.org',
+        ORIGINE_ORGA: 'http://orga.exemple.org',
+      })
+    ).toThrow(/ORIGINE_ORGA est en https/)
+    expect(
+      resoudreEnv({ ...BASE, ORIGINE_ORGA: 'http://localhost:5305' })
+        .ORIGINE_ORGA
+    ).toBe('http://localhost:5305')
+  })
+
+  it('exige APP_ENV quand NODE_ENV vaut production', () => {
+    expect(() => resoudreEnv({ ...BASE, NODE_ENV: 'production' })).toThrow(
+      /APP_ENV est requis/
+    )
+    expect(() =>
+      resoudreEnv({ ...BASE, NODE_ENV: 'production', APP_ENV: '' })
+    ).toThrow(/APP_ENV est requis/)
+    expect(
+      resoudreEnv({ ...BASE, NODE_ENV: 'production', APP_ENV: 'local' }).APP_ENV
+    ).toBe('local')
+  })
+
+  it('réserve le jeton d’administration aux requêtes locales, sauf refus explicite', () => {
+    expect(resoudreEnv({ ...BASE }).JETON_ADMINISTRATION_LOCAL).toBe(true)
+    expect(
+      resoudreEnv({ ...BASE, JETON_ADMINISTRATION_LOCAL: '' })
+        .JETON_ADMINISTRATION_LOCAL
+    ).toBe(true)
+    expect(
+      resoudreEnv({ ...BASE, JETON_ADMINISTRATION_LOCAL: 'true' })
+        .JETON_ADMINISTRATION_LOCAL
+    ).toBe(true)
+    expect(
+      resoudreEnv({ ...BASE, JETON_ADMINISTRATION_LOCAL: 'false' })
+        .JETON_ADMINISTRATION_LOCAL
+    ).toBe(false)
+  })
+
   it('retombe sur le poste local sans ORIGINE_ORGA', () => {
     expect(resoudreEnv({ ...BASE }).ORIGINE_ORGA).toBe('http://localhost:5305')
   })

@@ -6,6 +6,7 @@ import { emailOTP } from 'better-auth/plugins/email-otp'
 
 import { mettreEnFile } from './courriel/file.ts'
 import { env } from './env.ts'
+import { ENTETE_IP_CLIENT } from './lib/adresse-client.ts'
 import { CODE_VALIDITE_SECONDES } from './lib/connexion.ts'
 import { courrielTronque, journal } from './lib/journal.ts'
 import { limiterParCle } from './lib/limite.ts'
@@ -27,6 +28,19 @@ const ROUTES_OUVERTES = new Set([
 
 // Au plus 5 codes par adresse sur 15 minutes, en plus de la limite par IP de Better Auth.
 const LIMITE_CODES_PAR_ADRESSE = { max: 5, fenetreSecondes: 15 * 60 }
+// Et au plus 20 codes par adresse et par jour : avec 5 essais par code, un tiers qui
+// demande des codes sur une adresse ne dispose que de 100 essais par jour sur un
+// million de codes possibles.
+const LIMITE_CODES_PAR_ADRESSE_ET_PAR_JOUR = {
+  max: 20,
+  fenetreSecondes: 24 * 3600,
+}
+
+// La connexion répond la même chose pour une adresse connue et une adresse inconnue
+// (ADR 0002). Sans ce filtre, Better Auth répond « trop d'essais » ou « code expiré »
+// pour une adresse qui a un compte, et toujours « code invalide » pour une autre :
+// six essais faux suffisent à savoir si une adresse est connue.
+const CODES_UNIFORMISES = new Set(['OTP_EXPIRED', 'TOO_MANY_ATTEMPTS'])
 
 export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
   return betterAuth({
@@ -62,8 +76,11 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
 
     advanced: {
       cookiePrefix: 'relaytour',
-      // Caddy est le seul proxy : il remplace X-Forwarded-For par l'adresse du client.
-      ipAddress: { ipAddressHeaders: ['x-forwarded-for'] },
+      // L'adresse du client, telle que le serveur l'a établie (lib/adresse-client.ts) et
+      // réécrite dans cet en-tête avant d'appeler Better Auth. Better Auth ne lit
+      // qu'une valeur unique dans X-Forwarded-For : avec une chaîne d'adresses (un
+      // intermédiaire devant Caddy), il rangerait tous les clients dans un même compteur.
+      ipAddress: { ipAddressHeaders: [ENTETE_IP_CLIENT] },
     },
 
     databaseHooks: {
@@ -94,11 +111,17 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
             typeof corps.email === 'string'
               ? corps.email.trim().toLowerCase()
               : ''
-          const autorise = await limiterParCle(
-            `code:${adresse}`,
-            LIMITE_CODES_PAR_ADRESSE.max,
-            LIMITE_CODES_PAR_ADRESSE.fenetreSecondes
-          )
+          const autorise =
+            (await limiterParCle(
+              `code:${adresse}`,
+              LIMITE_CODES_PAR_ADRESSE.max,
+              LIMITE_CODES_PAR_ADRESSE.fenetreSecondes
+            )) &&
+            (await limiterParCle(
+              `code-jour:${adresse}`,
+              LIMITE_CODES_PAR_ADRESSE_ET_PAR_JOUR.max,
+              LIMITE_CODES_PAR_ADRESSE_ET_PAR_JOUR.fenetreSecondes
+            ))
           if (!autorise) {
             journal.warn(
               {
@@ -110,6 +133,38 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
             throw new APIError('TOO_MANY_REQUESTS')
           }
         }
+      }),
+      after: createAuthMiddleware(ctx => {
+        if (ctx.path !== '/sign-in/email-otp') return Promise.resolve()
+        const rendu = ctx.context.returned
+        if (
+          rendu instanceof APIError &&
+          typeof rendu.body?.code === 'string' &&
+          CODES_UNIFORMISES.has(rendu.body.code)
+        ) {
+          return Promise.reject(
+            new APIError('BAD_REQUEST', {
+              code: 'INVALID_OTP',
+              message: 'Invalid OTP',
+            })
+          )
+        }
+        // Better Auth renvoie le jeton de session dans le corps de la réponse, en plus
+        // du cookie httpOnly. L'espace organisateur ne lit que le cookie : le jeton
+        // n'a rien à faire dans un corps qu'un script de la page pourrait lire. Par
+        // HTTP, le corps est enveloppé (`_flag: 'json'`) ; par `auth.api`, il est nu.
+        const corps =
+          rendu !== null &&
+          typeof rendu === 'object' &&
+          '_flag' in rendu &&
+          rendu._flag === 'json' &&
+          'body' in rendu
+            ? rendu.body
+            : rendu
+        if (corps !== null && typeof corps === 'object' && 'token' in corps) {
+          return Promise.resolve(ctx.json({ ...corps, token: null }))
+        }
+        return Promise.resolve()
       }),
     },
 

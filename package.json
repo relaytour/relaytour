@@ -16,6 +16,20 @@
   "workspaces": [
     "packages/*"
   ],
+  "dependenciesMeta": {
+    "@prisma/client": {
+      "built": true
+    },
+    "@prisma/engines": {
+      "built": true
+    },
+    "esbuild": {
+      "built": true
+    },
+    "prisma": {
+      "built": true
+    }
+  },
   "scripts": {
     "setup": "yarn install && yarn db:up && yarn generate && yarn db:migrate && yarn codegen",
     "db:up": "yarn workspace @relaytour/database docker",

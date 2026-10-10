@@ -15,9 +15,18 @@
 	}
 }
 
+# L'API lit l'adresse du client dans X-Relaytour-Ip, que Caddy remplit avec {client_ip}.
+# Un intermédiaire devant Caddy (CDN, répartiteur) se déclare dans `trusted_proxies`
+# du bloc global `servers`, pour que {client_ip} reste l'adresse du client.
+(relais-api) {
+	reverse_proxy 127.0.0.1:4400 {
+		header_up X-Relaytour-Ip {client_ip}
+	}
+}
+
 api.exemple.org {
 	import entetes-securite
-	reverse_proxy 127.0.0.1:4400
+	import relais-api
 }
 
 # L'espace organisateur relaie la connexion, GraphQL et les images d'identité vers l'API :
@@ -29,7 +38,7 @@ orga.exemple.org {
 	import entetes-securite
 	@api path /api/auth/* /graphql /medias/*
 	handle @api {
-		reverse_proxy 127.0.0.1:4400
+		import relais-api
 	}
 	handle {
 		root * /srv/relaytour/orga
