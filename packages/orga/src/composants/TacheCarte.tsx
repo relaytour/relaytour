@@ -176,7 +176,9 @@ export default function TacheCarte({
     message.open({
       key: cle,
       type: 'success',
-      duration: 6,
+      // Le message reste dix secondes. Passé ce délai, la croix à côté du nom
+      // retire encore la personne.
+      duration: 10,
       content: (
         <>
           Tâche assignée à {personne.nom}.
