@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-10-orga-chaque-tache-porte-un-fil-de-commentaires",
+          "date": "2026-10-10",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque tâche porte un fil de commentaires",
+            "texte": "Le bouton « Commenter » d'une tâche ouvre son fil. Vous y écrivez un compte rendu, une information ou une question, avec votre nom et la date. Le fil montre aussi l'historique de la tâche : création, modifications, assignations et changements de statut. Une adresse web écrite dans un commentaire devient un lien. Les personnes assignées à la tâche reçoivent une notification, sans mail immédiat. Vous modifiez et supprimez vos propres commentaires.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-10-orga-chaque-personne-d-un-perimetre-assigne-ses-taches-aux-autres",
           "date": "2026-10-10",
           "type": "fonctionnalite",

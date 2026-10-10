@@ -1,6 +1,6 @@
 # ADR 0028 — Assigner une tâche entre référentes et référents
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-10
 - Amende les ADR 0010 et 0011 sur un point : qui assigne une autre personne à une tâche.
 

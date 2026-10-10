@@ -1,6 +1,6 @@
 # ADR 0029 — Commentaires d'une tâche
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-10
 
 ## Contexte

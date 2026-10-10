@@ -291,6 +291,25 @@ describe('lire le fil', () => {
     expect(archive.peutCommenter).toBe(false)
   })
 
+  it('charge les champs d’une personne du fil qui demandent une relation', async () => {
+    // `Personne.estAdmin` lit les appartenances, que le fil ne charge pas d'avance.
+    const r = await executer(
+      ids.admin,
+      `query ($id: ID!) { filTache(id: $id) {
+        commentaires { auteur { id estAdmin } }
+        evenements { acteur { id estAdmin } personne { id estAdmin } }
+      } }`,
+      { id: ids.tache }
+    )
+    expect(r.errors).toBeUndefined()
+    const f = (
+      r.data as {
+        filTache: { commentaires: { auteur: { estAdmin: boolean | null } }[] }
+      }
+    ).filTache
+    expect(f.commentaires[0]?.auteur.estAdmin).toBe(false)
+  })
+
   it('refuse le fil à une personne en consultation, sans affectation ou sans session', async () => {
     for (const acteur of [ids.chloe, ids.emma, null]) {
       expect(code(await executer(acteur, FIL, { id: ids.tache }))).toBe(

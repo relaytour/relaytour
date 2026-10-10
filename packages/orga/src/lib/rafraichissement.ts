@@ -42,6 +42,9 @@ export const VUES_TACHES = [
   // des déclinaisons d'une tâche quand il est ouvert.
   'DeclinaisonsProposees',
   'DeclinaisonsTache',
+  // Commentaires (ADR 0029) : le nombre par tâche, et le fil quand il est ouvert.
+  'CommentairesDeLaPeriode',
+  'FilTache',
 ]
 
 /** Les requêtes relues, désignées par le nom de leur opération GraphQL. */
