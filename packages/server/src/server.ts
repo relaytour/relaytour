@@ -8,7 +8,7 @@ import cors from 'cors'
 import express from 'express'
 import { fromNodeHeaders, toNodeHandler } from 'better-auth/node'
 
-import { auth } from './auth.ts'
+import { auth, ENTETE_IP_CLIENT } from './auth.ts'
 import {
   buildContext,
   ENTETE_ACTIVITE,
@@ -21,6 +21,7 @@ import { manifestApplication, slugDuManifest } from './lib/application.ts'
 import { fermerLesFlux } from './lib/flux.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
+import { noterRefus, tropDeRefus } from './lib/limite.ts'
 import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
 import {
   assurerOrganisationParDefaut,
@@ -163,8 +164,15 @@ app.get('/medias/application/:fichier', (req, res) => {
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)
 app.all('/api/auth/*splat', (req, res) => {
+  // L'adresse du client, pour les compteurs de Better Auth : celle qu'Express a
+  // résolue derrière l'unique proxy de confiance, jamais celle que le client annonce.
+  req.headers[ENTETE_IP_CLIENT] = req.ip ?? ''
   void gestionnaireAuth(req, res)
 })
+
+// Dix jetons d'administration refusés en quinze minutes depuis une même adresse, et
+// cette adresse n'est plus écoutée pendant la fenêtre : un jeton exact y vaut un jeton faux.
+const REFUS_DE_JETON = { max: 10, fenetreSecondes: 15 * 60 }
 
 /**
  * Le contexte d'une requête : le jeton d'administration de l'installation, sinon la
@@ -178,10 +186,13 @@ async function contexteDeRequete(req: express.Request): Promise<AppContext> {
   if (porteur !== null) {
     // Avec JETON_ADMINISTRATION_LOCAL, un jeton relayé par le proxy ne vaut rien :
     // la requête devient anonyme, comme avec un jeton faux (ADR 0013).
+    const cleRefus = `jeton-refuse:${req.ip}`
     const valide =
+      !(await tropDeRefus(cleRefus, REFUS_DE_JETON.max)) &&
       jetonAdministrationValide((porteur[1] ?? '').trim()) &&
       (!env.JETON_ADMINISTRATION_LOCAL || requeteLocale(req))
     if (!valide) {
+      await noterRefus(cleRefus, REFUS_DE_JETON.fenetreSecondes)
       journal.warn(
         { evenement: 'jeton-administration-refuse', ip: req.ip },
         'Un jeton d’administration invalide a été présenté.'
