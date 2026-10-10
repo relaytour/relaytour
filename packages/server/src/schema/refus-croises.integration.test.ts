@@ -58,6 +58,7 @@ const b = {
   edition: '',
   perimetre: '',
   tache: '',
+  demande: '',
   admin: '',
 }
 
@@ -264,6 +265,21 @@ beforeAll(async () => {
     include: { perimetres: true },
   })
   a.demande = demande.id
+  // Une demande de l'organisation B, pour les combinaisons d'identifiants mêlés.
+  b.demande = (
+    await prisma.demande.create({
+      data: {
+        organisationId: b.org,
+        activiteId: b.activite,
+        editionId: b.edition,
+        origine: 'PROPOSITION',
+        nom: 'Personne proposée à B',
+        adresse: `proposee-b-refus-${s}@exemple.fr`,
+        adresseEnAttente: `proposee-b-refus-${s}@exemple.fr`,
+        perimetres: { create: { perimetreId: b.perimetre } },
+      },
+    })
+  ).id
   a.proposition = demande.perimetres[0]!.id
   // Un message de l'activité principale, écrit par son admin (ADR 0020).
   a.message = (
@@ -416,7 +432,120 @@ const INTERDIT: Refus = { refus: ['FORBIDDEN'] }
 // autre organisation.
 const REFUSE: Refus = { refus: ['FORBIDDEN', 'SAISIE_INVALIDE'] }
 
+const MESSAGE = {
+  modele: 'message-libre',
+  objet: 'Réunion',
+  corps: 'Bonjour',
+  champ: 'A',
+}
+
+// Identifiants mêlés : l'opération part d'un objet de l'organisation B et y joint
+// un objet de A. Chaque identifiant se contrôle, et pas seulement le premier : un
+// périmètre, une personne ou une période de A n'entre jamais dans un objet de B.
+// Les deux acteurs de A, pour qui l'objet de B est étranger, sont refusés aussi.
+const MELES: Cas[] = [
+  {
+    operation: 'accepterDemande',
+    query:
+      'mutation ($id: ID!, $p: [ID!]!) { accepterDemande(id: $id, affecter: $p) { id } }',
+    variables: () => ({ id: b.demande, p: [a.perimetre] }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'inviterPersonne',
+    query:
+      'mutation ($e: ID, $p: [ID!]) { inviterPersonne(email: "melee-refus@exemple.fr", nom: "X", editionId: $e, perimetresAffectes: $p) { enAttente } }',
+    variables: () => ({ e: b.edition, p: [a.perimetre] }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'changerStatutTache',
+    query:
+      'mutation ($id: ID!, $u: ID) { changerStatutTache(id: $id, statut: FAITE, realiseeParId: $u, confirmer: true) { id } }',
+    variables: () => ({ id: b.tache, u: a.referente }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'assignerTache',
+    query:
+      'mutation ($id: ID!, $u: ID) { assignerTache(id: $id, personneId: $u, assigne: true) { id } }',
+    variables: () => ({ id: b.tache, u: a.referente }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'creerMessage',
+    query: 'mutation ($m: MessageInput!) { creerMessage(message: $m) { id } }',
+    variables: () => ({
+      m: { ...MESSAGE, activiteId: b.activite, destinataireIds: [a.referente] },
+    }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'creerMessage',
+    query: 'mutation ($m: MessageInput!) { creerMessage(message: $m) { id } }',
+    variables: () => ({
+      m: {
+        ...MESSAGE,
+        activiteId: b.activite,
+        editionId: a.edition,
+        destinataireIds: [b.admin],
+      },
+    }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'creerMessage',
+    query: 'mutation ($m: MessageInput!) { creerMessage(message: $m) { id } }',
+    variables: () => ({
+      m: {
+        ...MESSAGE,
+        activiteId: b.activite,
+        editionId: b.edition,
+        perimetreId: a.perimetre,
+        destinataireIds: [b.admin],
+      },
+    }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'definirEffectif',
+    query:
+      'mutation ($e: ID!, $p: ID!) { definirEffectif(editionId: $e, perimetreId: $p, effectif: 3) }',
+    variables: () => ({ e: b.edition, p: a.perimetre }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'declinerTache',
+    query:
+      'mutation ($id: ID!, $p: [ID!]!) { declinerTache(id: $id, perimetreIds: $p) { id } }',
+    variables: () => ({ id: b.tache, p: [a.perimetre] }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'accorderDroitRedaction',
+    query:
+      'mutation ($u: ID!, $p: ID) { accorderDroitRedaction(personneId: $u, perimetreId: $p) { id } }',
+    variables: () => ({ u: a.referente, p: b.perimetre }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'affecter',
+    query:
+      'mutation ($u: ID!, $p: ID!, $e: ID!) { affecter(personneId: $u, perimetreId: $p, editionId: $e) { id } }',
+    variables: () => ({ u: a.referente, p: b.perimetre, e: b.edition }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'affecter',
+    query:
+      'mutation ($u: ID!, $p: ID!, $e: ID!) { affecter(personneId: $u, perimetreId: $p, editionId: $e) { id } }',
+    variables: () => ({ u: b.admin, p: b.perimetre, e: a.edition }),
+    attente: REFUSE,
+  },
+]
+
 const CAS: Cas[] = [
+  ...MELES,
   // ── Mutations ──────────────────────────────────────────────────────────────
   // Invitations entre organisations (ADR 0030) : seule la personne invitée accepte
   // ou refuse, seuls les admins de l'activité de A relancent ou retirent.
@@ -998,7 +1127,35 @@ async function etatDeA() {
     where: { id: a.invitation },
     select: { lots: true, expireLe: true, role: true },
   })
+  // Rien de A n'entre dans B par une combinaison d'identifiants mêlés.
+  const dansB = {
+    affectations: await prisma.affectation.count({
+      where: { perimetre: { organisationId: b.org } },
+    }),
+    messages: await prisma.message.count({ where: { organisationId: b.org } }),
+    invitations: await prisma.invitationOrganisation.count({
+      where: { organisationId: b.org },
+    }),
+    membres: await prisma.appartenance.count({
+      where: { organisationId: b.org },
+    }),
+    droits: await prisma.droitRedaction.count({
+      where: { organisationId: b.org },
+    }),
+    declinaisons: await prisma.tache.count({
+      where: { perimetre: { organisationId: b.org } },
+    }),
+    demande: await prisma.demande.findUnique({
+      where: { id: b.demande },
+      select: { statut: true },
+    }),
+    tache: await prisma.tache.findUnique({
+      where: { id: b.tache },
+      select: { statut: true, _count: { select: { assignations: true } } },
+    }),
+  }
   return JSON.stringify({
+    dansB,
     invitation,
     tache,
     fiche,
