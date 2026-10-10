@@ -4,6 +4,7 @@ import { mettreEnFile } from '../courriel/file.ts'
 
 import { GROUPES_PAR_DEFAUT } from './activites.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
+import { annoncerInvitation, inviterCompteExterne } from './invitations.ts'
 import { erreurSaisie } from './erreurs.ts'
 import {
   LimitesSchema,
@@ -138,13 +139,13 @@ export async function inviterAdmin(
   slugOrganisation: string,
   adresse: string,
   nom: string
-): Promise<string> {
+): Promise<{ userId: string; enAttente: boolean }> {
   const { id: organisationId } = await organisationParSlug(slugOrganisation)
   const invitation = await validerInvitation(adresse, nom)
   // Le verrou ne vaut que pour cette organisation. Une autre organisation peut
   // inviter la même adresse nouvelle au même instant : la seconde création du compte
   // échoue alors sur l'unicité de l'adresse, se rejoue et rattache le compte créé.
-  const userId = await rejouerSurDoublon(() =>
+  const admin = await rejouerSurDoublon(() =>
     sousVerrouOrganisation(organisationId, async tx => {
       const admins = await tx.appartenance.count({
         where: { organisationId, role: 'ADMIN' },
@@ -164,6 +165,21 @@ export async function inviterAdmin(
       if (compte.issue === 'archive') {
         throw erreurSaisie('Cette adresse ne peut pas être invitée.')
       }
+      // Un compte connu hors de l'organisation reçoit une invitation au rôle
+      // d'admin (ADR 0030) : l'organisation n'a aucun admin tant qu'il ne l'a pas
+      // acceptée.
+      if (compte.issue === 'externe') {
+        await inviterCompteExterne(tx, {
+          organisationId,
+          userId: compte.userId,
+          role: 'ADMIN',
+          nom: invitation.nom,
+          origine: 'INSTALLATION',
+          inviteParId: null,
+          instant: new Date(),
+        })
+        return { userId: compte.userId, enAttente: true }
+      }
       // Une personne déjà membre devient admin de son organisation.
       if (compte.issue === 'membre') {
         await tx.appartenance.update({
@@ -173,11 +189,21 @@ export async function inviterAdmin(
           data: { role: 'ADMIN' },
         })
       }
-      return compte.userId
+      return { userId: compte.userId, enAttente: false }
     })
   )
-  await mettreEnFile('invitation', { userId }, { organisationId })
-  return userId
+  // Une invitation en attente se redemande tant que l'organisation n'a pas d'admin :
+  // son mail passe par la limite d'un envoi par personne et par heure.
+  if (admin.enAttente) {
+    await annoncerInvitation(admin.userId, { organisationId })
+  } else {
+    await mettreEnFile(
+      'invitation',
+      { userId: admin.userId },
+      { organisationId }
+    )
+  }
+  return admin
 }
 
 /** Change le statut ou les limites d'une organisation. Une limite nulle se retire. */

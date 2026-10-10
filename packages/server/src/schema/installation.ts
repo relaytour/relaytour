@@ -149,19 +149,27 @@ builder.mutationFields(t => ({
   inviterPremierAdmin: t.boolean({
     authScopes: { administration: true },
     description:
-      'Donne le rôle d’admin d’une organisation à une adresse et lui envoie une invitation. La réponse ne renvoie aucune donnée du compte.',
+      'Donne le rôle d’admin d’une organisation à une adresse et lui envoie une invitation. Vrai quand l’admin est en place ; faux quand l’adresse a déjà un compte hors de l’organisation, dont l’invitation attend l’accord (ADR 0030). La réponse ne renvoie aucune donnée du compte.',
     args: {
       organisation: t.arg.string({ required: true }),
       email: t.arg.string({ required: true }),
       nom: t.arg.string({ required: true }),
     },
     resolve: async (_root, args) => {
-      await inviterAdmin(args.organisation, args.email, args.nom)
+      const { enAttente } = await inviterAdmin(
+        args.organisation,
+        args.email,
+        args.nom
+      )
       journal.info(
-        { evenement: 'admin-invite', organisation: args.organisation },
+        {
+          evenement: 'admin-invite',
+          organisation: args.organisation,
+          enAttente,
+        },
         'Un admin a été invité par l’administration de l’installation.'
       )
-      return true
+      return !enAttente
     },
   }),
 

@@ -102,7 +102,7 @@ describe('mutations réservées aux admins', () => {
   it('refuse l’invitation à une référente', async () => {
     const resultat = await executer(
       ids.referente,
-      'mutation { inviterPersonne(email: "pirate@exemple.fr", nom: "Pirate") { id } }'
+      'mutation { inviterPersonne(email: "pirate@exemple.fr", nom: "Pirate") { personne { id } } }'
     )
     expect(codeErreur(resultat)).toBe('FORBIDDEN')
     expect(

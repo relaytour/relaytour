@@ -10,6 +10,7 @@ import {
   decouvreDesPerimetres,
   perimetresDeLaPersonne,
 } from '../lib/equipe.ts'
+import { invitationEnAttente } from '../lib/invitations.ts'
 import {
   LIBELLES_ROLE,
   lienModeDEmploi,
@@ -127,6 +128,8 @@ export async function composer(
   job: CourrielJobData
 ): Promise<MessageCompose | null> {
   const variables: Variables = {}
+  // Le sujet d'une sorte de mail, sauf quand le contenu en demande un autre.
+  let sujet: string | undefined
   let desabonnement: string | undefined
   let apresEnvoi: (() => Promise<void>) | undefined
   const organisationId = await organisationDuMail(prisma, job)
@@ -145,6 +148,8 @@ export async function composer(
     })
     variables.nom = user.name
     variables.lienConnexion = `${origine}/connexion`
+    variables.accroche =
+      'L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez vos périmètres, vos tâches et les fiches méthode des éditions précédentes.'
     // Le rôle se lit à l'envoi : une invitation renvoyée après une nomination
     // lie le mode d'emploi du nouveau rôle.
     const role = await roleDuModeDEmploi(
@@ -163,13 +168,39 @@ export async function composer(
         ? []
         : await perimetresDeLaPersonne(prisma, user.id, idOrganisation)
     variables.perimetres = perimetres
+    // Un compte connu hors de l'organisation n'en est pas membre : son invitation
+    // attend son accord (ADR 0030). Le mail le dit, et liste ce qu'on lui propose.
+    // Sans appartenance ni invitation en cours (refusée, retirée, expirée), rien ne part.
+    const attente =
+      idOrganisation === null
+        ? 'membre'
+        : await invitationEnAttente(prisma, user.id, idOrganisation)
+    if (attente === 'aucune') return null
+    if (attente !== 'membre') {
+      sujet = `${configuration.nomCourt} vous invite dans son espace organisateur`
+      variables.accroche = `${configuration.nomCourt} vous invite à rejoindre son espace organisateur. Vous avez déjà un compte à cette adresse : après connexion, vous acceptez ou refusez cette invitation depuis le menu de votre compte. Rien n’est partagé avec cette organisation avant votre accord.`
+      variables.perimetres = attente.perimetres
+      // La personne n'a encore aucun rôle dans l'organisation : le mode d'emploi
+      // lié est celui du rôle que l'invitation propose.
+      const propose =
+        attente.role === 'ADMIN' ? 'admin-organisation' : 'referent'
+      variables.roleModeDEmploi = LIBELLES_ROLE[propose]
+      variables.lienModeDEmploi = lienModeDEmploi(
+        env.MODES_D_EMPLOI_URL,
+        propose
+      )
+    }
     variables.situation =
-      perimetres.length > 0
-        ? 'Vous faites partie de l’équipe de ces périmètres :'
-        : idOrganisation !== null &&
-            (await decouvreDesPerimetres(prisma, user.id, idOrganisation))
-          ? 'Vous n’avez pas encore de périmètre. Dans « Tous les périmètres », vous découvrez les périmètres et formulez vos souhaits. Un admin vous affectera ensuite. En attendant, le mode d’emploi vous aide à découvrir l’espace.'
-          : 'Vous n’avez pas encore de périmètre : un admin vous affectera à l’un d’eux. En attendant, le mode d’emploi vous aide à découvrir l’espace.'
+      attente !== 'membre'
+        ? attente.perimetres.length > 0
+          ? 'L’invitation vous propose ces périmètres :'
+          : 'Vous choisirez vos périmètres avec l’équipe après votre accord.'
+        : perimetres.length > 0
+          ? 'Vous faites partie de l’équipe de ces périmètres :'
+          : idOrganisation !== null &&
+              (await decouvreDesPerimetres(prisma, user.id, idOrganisation))
+            ? 'Vous n’avez pas encore de périmètre. Dans « Tous les périmètres », vous découvrez les périmètres et formulez vos souhaits. Un admin vous affectera ensuite. En attendant, le mode d’emploi vous aide à découvrir l’espace.'
+            : 'Vous n’avez pas encore de périmètre : un admin vous affectera à l’un d’eux. En attendant, le mode d’emploi vous aide à découvrir l’espace.'
   }
 
   if (job.sorte === 'equipe') {
@@ -462,7 +493,7 @@ export async function composer(
     variablesOrganisation(configuration)
   )
   return {
-    sujet: sujets(configuration.nomCourt)[job.sorte],
+    sujet: sujet ?? sujets(configuration.nomCourt)[job.sorte],
     html,
     texte,
     desabonnement,

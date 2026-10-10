@@ -2,8 +2,7 @@
 
 Bonjour {{nom}},
 
-L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez
-vos périmètres, vos tâches et les fiches méthode des éditions précédentes.
+{{accroche}}
 
 {{situation}}
 

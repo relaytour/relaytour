@@ -79,8 +79,16 @@ try {
   })
   console.log(`✔ Organisation « ${slug} » créée, avec sa première activité.`)
   if (values.admin !== undefined && values['admin-nom'] !== undefined) {
-    await inviterAdmin(slug, values.admin, values['admin-nom'])
-    console.log('✔ Premier admin prêt, invitation mise en file.')
+    const { enAttente } = await inviterAdmin(
+      slug,
+      values.admin,
+      values['admin-nom']
+    )
+    console.log(
+      enAttente
+        ? '✔ Cette adresse a déjà un compte hors de l’organisation : son invitation au rôle d’admin attend son accord.'
+        : '✔ Premier admin prêt, invitation mise en file.'
+    )
   }
 } catch (erreur) {
   console.error(erreur instanceof Error ? erreur.message : erreur)

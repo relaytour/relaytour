@@ -513,6 +513,56 @@ type IdentiteOrganisation {
 }
 
 """
+Une invitation qui attend l’accord de la personne, vue par l’organisation : ce qu’elle a saisi, et rien du compte invité.
+"""
+type InvitationEnAttente {
+  creeLe: DateTime!
+
+  """L’adresse saisie par la personne qui a invité."""
+  email: String!
+  estAdmin: Boolean!
+  expireLe: DateTime!
+  id: ID!
+
+  """Le nom saisi par la personne qui a invité."""
+  nom: String!
+  perimetresAffectes: [Perimetre!]!
+  perimetresSouhaites: [Perimetre!]!
+}
+
+"""
+Le résultat d’une invitation : la personne, ou une invitation en attente quand l’adresse a déjà un compte hors de l’organisation.
+"""
+type InvitationEnvoyee {
+  """
+  Vrai quand l’invitation attend que la personne l’accepte. Rien n’est créé en son nom avant.
+  """
+  enAttente: Boolean!
+
+  """Le nom saisi par la personne qui invite."""
+  nom: String!
+
+  """La personne, sauf pour une invitation en attente."""
+  personne: Personne
+}
+
+"""
+Une invitation à rejoindre une organisation, vue par la personne invitée. Rien n’est partagé avec cette organisation avant son accord.
+"""
+type InvitationRecue {
+  """Vrai quand l’invitation propose le rôle d’admin."""
+  estAdmin: Boolean!
+  expireLe: DateTime!
+  id: ID!
+  organisationNom: String!
+
+  """
+  Les périmètres proposés, avec leur période : « Football (Rencontres 2027) ».
+  """
+  perimetres: [String!]!
+}
+
+"""
 The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
 scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
@@ -612,6 +662,11 @@ type Mutation {
   accepterDemande(affecter: [ID!]!, id: ID!): Demande!
 
   """
+  La personne accepte une invitation : elle devient membre de l’organisation, avec les périmètres proposés. Renvoie le slug de l’organisation.
+  """
+  accepterInvitation(id: ID!): String!
+
+  """
   Accepte ou refuse une déclinaison proposée à un périmètre. Seule une personne qui écrit dans ce périmètre répond. Une déclinaison acceptée entre parmi ses tâches.
   """
   accorderDeclinaison(accepter: Boolean!, id: ID!): Tache!
@@ -675,10 +730,10 @@ type Mutation {
   Ajoute une déclinaison aux tâches de son périmètre sans son accord, même après un refus. Réservé aux admins de l’activité.
   """
   imposerDeclinaison(id: ID!): Tache!
-  inviterPersonne(editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresAffectes: [ID!], perimetresSouhaites: [ID!]): Personne!
+  inviterPersonne(editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresAffectes: [ID!], perimetresSouhaites: [ID!]): InvitationEnvoyee!
 
   """
-  Donne le rôle d’admin d’une organisation à une adresse et lui envoie une invitation. La réponse ne renvoie aucune donnée du compte.
+  Donne le rôle d’admin d’une organisation à une adresse et lui envoie une invitation. Vrai quand l’admin est en place ; faux quand l’adresse a déjà un compte hors de l’organisation, dont l’invitation attend l’accord (ADR 0030). La réponse ne renvoie aucune donnée du compte.
   """
   inviterPremierAdmin(email: String!, nom: String!, organisation: String!): Boolean!
 
@@ -741,6 +796,16 @@ type Mutation {
   modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String, versionAttendue: Int): Tache!
   proposerPersonne(editionId: ID!, email: String!, mot: String, nom: String!, perimetreId: ID!): Boolean!
   refuserDemande(id: ID!): Demande!
+
+  """
+  La personne refuse une invitation. L’organisation n’en est pas informée : une invitation refusée et une invitation expirée ne se distinguent pas.
+  """
+  refuserInvitation(id: ID!): Boolean!
+
+  """
+  Renvoie le mail d’une invitation en attente, une fois par heure au plus.
+  """
+  relancerInvitation(id: ID!): Boolean!
   renvoyerInvitation(id: ID!): Boolean!
 
   """
@@ -749,6 +814,11 @@ type Mutation {
   restaurerVersionFiche(versionDeDepart: ID, versionId: ID!): Fiche!
   retirerAffectation(id: ID!): Boolean!
   retirerDroitRedaction(id: ID!): Boolean!
+
+  """
+  Retire une invitation en attente. Un admin d’activité retire les périmètres de ses activités ; l’invitation disparaît quand il n’en reste aucun.
+  """
+  retirerInvitation(id: ID!): Boolean!
 
   """
   La personne connectée retire son propre souhait. Hors de ses activités, rien ne change.
@@ -1083,6 +1153,16 @@ type Query {
   formulaireRejoindre(activite: String!, organisation: String): FormulaireRejoindre
   health: String!
   identiteOrganisation: IdentiteOrganisation!
+
+  """
+  Les invitations de l’organisation qui attendent un accord (ADR 0030). Un admin d’activité lit celles de ses activités, avec leurs seuls périmètres.
+  """
+  invitationsEnAttente(activiteId: ID): [InvitationEnAttente!]!
+
+  """
+  Les invitations qui attendent l’accord de la personne connectée (ADR 0030).
+  """
+  mesInvitations: [InvitationRecue!]!
   mesOrganisations: [OrganisationDeLaPersonne!]!
   mesPerimetres(activiteId: ID): [Perimetre!]!
   mesPreferencesNotification: PreferencesNotification!
@@ -1308,6 +1388,7 @@ enum TypeNotification {
   ECHEANCE_PROCHE
   FICHE_CREEE
   FICHE_MODIFIEE
+  INVITATION_ACCEPTEE
   TACHE_ASSIGNEE
   TACHE_COMMENTEE
   TACHE_CREEE

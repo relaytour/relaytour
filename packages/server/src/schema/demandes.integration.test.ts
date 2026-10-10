@@ -575,7 +575,7 @@ describe('accepter une demande', () => {
     expect(enFile.map(m => m.sorte)).toEqual(['equipe'])
   })
 
-  it('rattache le compte d’une autre organisation', async () => {
+  it('laisse en attente le compte d’une autre organisation', async () => {
     const userId = randomUUID()
     await prisma.user.create({
       data: {
@@ -589,17 +589,32 @@ describe('accepter une demande', () => {
     const demande = await demandeDe('ailleurs')
     const r = await executer(ids.admin, ACCEPTER, { id: demande!.id, p: [] })
     expect(r.errors).toBeUndefined()
+    // ADR 0030 : la demande est traitée, mais rien ne s'écrit au nom du compte
+    // extérieur. La demande ne se lie pas à lui.
     expect(
       await prisma.appartenance.count({
         where: { userId, organisationId: ids.org },
       })
-    ).toBe(1)
-    // Sans périmètre affecté, la proposition devient un souhait.
-    expect(
-      await prisma.souhait.count({
-        where: { userId, perimetreId: ids.natation },
-      })
-    ).toBe(1)
+    ).toBe(0)
+    expect(await prisma.souhait.count({ where: { userId } })).toBe(0)
+    const traitee = await demandeDe('ailleurs')
+    expect(traitee).toMatchObject({ statut: 'ACCEPTEE', userId: null })
+    // Sans périmètre affecté, la proposition attend comme souhait dans l'invitation.
+    const invitation = await prisma.invitationOrganisation.findUniqueOrThrow({
+      where: {
+        organisationId_userId: { organisationId: ids.org, userId },
+      },
+    })
+    expect(invitation.lots).toEqual([
+      {
+        editionId: ids.edition,
+        activiteId: ids.activite,
+        affectes: [],
+        souhaites: [ids.natation],
+        contactPrincipal: [],
+      },
+    ])
+    expect(invitation.nom).not.toBe('Nom du compte')
     expect(enFile).toEqual([{ sorte: 'invitation', cible: { userId } }])
   })
 

@@ -120,7 +120,7 @@ describe('creerOuRattacherCompte', () => {
     ])
   })
 
-  it('rattache le compte d’une autre organisation, sans changer son nom', async () => {
+  it('n’écrit rien pour le compte d’une autre organisation, et ne rend pas son nom', async () => {
     const userId = randomUUID()
     await prisma.user.create({
       data: {
@@ -134,15 +134,15 @@ describe('creerOuRattacherCompte', () => {
       ...demande('ailleurs'),
       role: 'ADMIN',
     })
+    // ADR 0030 : l'appelant enregistre une invitation, sans rien lire du compte.
     expect(compte).toEqual({
       userId,
-      issue: 'rattache',
+      issue: 'externe',
       dejaMembre: false,
-      nomDuCompte: 'Nom du compte',
+      nomDuCompte: null,
     })
     expect(await appartenances(userId)).toEqual([
       { organisationId: ids.autre, role: 'MEMBRE' },
-      { organisationId: ids.org, role: 'ADMIN' },
     ])
     expect(
       (await prisma.user.findUniqueOrThrow({ where: { id: userId } })).name
@@ -223,7 +223,7 @@ describe('creerOuRattacherCompte', () => {
 // admin. Chaque invitation tient le verrou de sa propre organisation : rien ne les
 // sépare, et la seconde création de compte bute sur l'unicité de l'adresse.
 describe('deux invitations simultanées de la même adresse', () => {
-  it('rattachent le même compte aux deux organisations', async () => {
+  it('créent un seul compte : admin de l’une, invité de l’autre', async () => {
     for (let tour = 0; tour < 5; tour += 1) {
       const slugs = [`comptes-x${tour}-${s}`, `comptes-y${tour}-${s}`]
       await prisma.organisation.createMany({
@@ -233,11 +233,22 @@ describe('deux invitations simultanées de la même adresse', () => {
       const [premier, second] = await Promise.all(
         slugs.map(slug => inviterAdmin(slug, email, 'Première Admin'))
       )
-      expect(second).toBe(premier)
-      expect((await appartenances(premier!)).map(a => a.role)).toEqual([
-        'ADMIN',
+      expect(second!.userId).toBe(premier!.userId)
+      // L'une crée le compte ; l'autre le trouve hors de son organisation et
+      // n'enregistre qu'une invitation au rôle d'admin (ADR 0030).
+      expect([premier!.enAttente, second!.enAttente].sort()).toEqual([
+        false,
+        true,
+      ])
+      expect((await appartenances(premier!.userId)).map(a => a.role)).toEqual([
         'ADMIN',
       ])
+      expect(
+        await prisma.invitationOrganisation.findMany({
+          where: { userId: premier!.userId },
+          select: { role: true, origine: true, globale: true },
+        })
+      ).toEqual([{ role: 'ADMIN', origine: 'INSTALLATION', globale: true }])
     }
   })
 })

@@ -3,6 +3,7 @@ import { Button, Card, Result, Spin, Typography } from 'antd'
 import { useEffect, type ReactNode } from 'react'
 import { Navigate } from 'react-router'
 
+import { useMesInvitations } from '../lib/invitations'
 import { MES_ORGANISATIONS, MOI } from '../lib/requetes'
 import { choisirOrganisation, organisationChoisie } from '../lib/selection'
 import {
@@ -13,6 +14,7 @@ import {
 } from '../lib/session'
 
 import Marque from './Marque'
+import { InvitationsRecues } from './MesInvitations'
 
 /**
  * Garde des écrans connectés (ADR 0008). Sans session, elle renvoie vers la
@@ -64,12 +66,7 @@ export default function GardeSession({
   if (organisations.length === 0) {
     return (
       <EcranCentre>
-        <Result
-          status="info"
-          title="Votre compte n’appartient à aucune organisation ouverte."
-          subTitle="Un admin de votre organisation peut vous inviter de nouveau."
-          extra={<BoutonDeconnexion />}
-        />
+        <SansOrganisation />
       </EcranCentre>
     )
   }
@@ -78,6 +75,43 @@ export default function GardeSession({
     return <ChoixOrganisation organisations={organisations} />
   }
   return <>{children({ moi, organisations, active })}</>
+}
+
+/**
+ * Le compte n'appartient à aucune organisation ouverte. S'il a des invitations en
+ * attente (ADR 0030), il les lit ici et peut en accepter une.
+ */
+function SansOrganisation() {
+  const invitations = useMesInvitations()
+  if (invitations.length > 0) {
+    return (
+      <Card
+        style={{ width: '100%', maxWidth: 520 }}
+        styles={{ body: { padding: 32 } }}
+      >
+        <Marque taille={30} />
+        <h1
+          className="rt-titre"
+          style={{
+            fontSize: 'calc(26px * var(--rt-titre-echelle))',
+            margin: '0 0 6px',
+          }}
+        >
+          Vos invitations
+        </h1>
+        <InvitationsRecues />
+        <BoutonDeconnexion />
+      </Card>
+    )
+  }
+  return (
+    <Result
+      status="info"
+      title="Votre compte n’appartient à aucune organisation ouverte."
+      subTitle="Un admin de votre organisation peut vous inviter de nouveau."
+      extra={<BoutonDeconnexion />}
+    />
+  )
 }
 
 function EcranCentre({ children }: { children: ReactNode }) {

@@ -63,6 +63,9 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   'DemandesEnAttente',
   'SouhaitsEnAttente',
   'MesPropositions',
+  // Invitations entre organisations (ADR 0030).
+  'InvitationsEnAttente',
+  'MesInvitations',
   // Cloche.
   'NombreNotificationsNonLues',
   'ListeNotifications',

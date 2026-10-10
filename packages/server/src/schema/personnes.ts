@@ -19,6 +19,7 @@ import {
   exigerEcriture,
 } from '../lib/droits.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import { annoncerInvitation, inviterCompteExterne } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import {
@@ -342,9 +343,39 @@ async function activiteDeLInvitation(
   return liees.size === 1 ? [...liees][0] : undefined
 }
 
+// Ce que l'invitation a donné (ADR 0030). Un compte créé ou déjà membre rend la
+// personne. Un compte connu hors de l'organisation rend une invitation en attente,
+// sans aucune donnée de ce compte : seul le nom saisi revient.
+const InvitationEnvoyeeRef = builder
+  .objectRef<{ enAttente: boolean; nom: string; personneId: string | null }>(
+    'InvitationEnvoyee'
+  )
+  .implement({
+    description:
+      'Le résultat d’une invitation : la personne, ou une invitation en attente quand l’adresse a déjà un compte hors de l’organisation.',
+    fields: t => ({
+      enAttente: t.exposeBoolean('enAttente', {
+        description:
+          'Vrai quand l’invitation attend que la personne l’accepte. Rien n’est créé en son nom avant.',
+      }),
+      nom: t.exposeString('nom', {
+        description: 'Le nom saisi par la personne qui invite.',
+      }),
+      personne: t.prismaField({
+        type: PersonneRef,
+        nullable: true,
+        description: 'La personne, sauf pour une invitation en attente.',
+        resolve: (query, r) =>
+          r.personneId === null
+            ? null
+            : prisma.user.findUnique({ ...query, where: { id: r.personneId } }),
+      }),
+    }),
+  })
+
 builder.mutationFields(t => ({
-  inviterPersonne: t.prismaField({
-    type: PersonneRef,
+  inviterPersonne: t.field({
+    type: InvitationEnvoyeeRef,
     authScopes: { gestion: true },
     args: {
       email: t.arg.string({ required: true }),
@@ -357,7 +388,7 @@ builder.mutationFields(t => ({
       perimetresSouhaites: t.arg.idList(),
       perimetresAffectes: t.arg.idList(),
     },
-    resolve: async (query, _root, args, ctx) => {
+    resolve: async (_root, args, ctx) => {
       // Seul un admin de l'organisation invite un autre admin de l'organisation.
       if (args.estAdmin && !ctx.personne!.estAdmin) throw accesRefuse()
       const email = adresseValide(args.email)
@@ -405,9 +436,9 @@ builder.mutationFields(t => ({
       const dejaLa = 'Un compte existe déjà pour cette adresse.'
       const instant = new Date()
       // Le compte, son appartenance et ses souhaits s'écrivent ensemble. Une adresse
-      // déjà connue d'une autre organisation garde son compte (ADR 0008). Deux
-      // invitations simultanées de la même adresse se suivent : la seconde relit le
-      // compte créé par la première.
+      // déjà connue hors de l'organisation ne reçoit qu'une invitation en attente
+      // (ADR 0030). Deux invitations simultanées de la même adresse se suivent : la
+      // seconde relit le compte créé par la première.
       const { compte, creees } = await rejouerSurDoublon(() =>
         prisma.$transaction(async tx => {
           const compte = await creerOuRattacherCompte(tx, {
@@ -423,6 +454,31 @@ builder.mutationFields(t => ({
             throw erreurSaisie(
               compte.dejaMembre && ctx.personne!.estAdmin ? dejaLa : refusee
             )
+          }
+          // Les organisations sont cloisonnées (ADR 0030) : rien ne s'écrit au nom
+          // d'un compte extérieur. L'invitation garde ce que l'acceptation créera.
+          if (compte.issue === 'externe') {
+            await inviterCompteExterne(tx, {
+              organisationId,
+              userId: compte.userId,
+              role,
+              nom: name,
+              origine: 'PERSONNE',
+              inviteParId: ctx.personne!.id,
+              ...(cible === null
+                ? {}
+                : {
+                    lot: {
+                      editionId: cible.editionId,
+                      activiteId: cible.activiteId,
+                      affectes,
+                      souhaites: souhaits.map(s => s.perimetreId),
+                      contactPrincipal: [],
+                    },
+                  }),
+              instant,
+            })
+            return { compte, creees: [] }
           }
           // Un compte déjà membre rejoint l'équipe par ses périmètres, sans que la
           // réponse le distingue d'un compte créé (ADR 0018). Sans périmètre, ou
@@ -483,14 +539,11 @@ builder.mutationFields(t => ({
           return { compte, creees }
         })
       )
-      const personne = await prisma.user.findUniqueOrThrow({
-        ...query,
-        where: { id: compte.userId },
-      })
+      const enAttente = compte.issue === 'externe'
       journal.info(
         {
           evenement: 'personne-invitee',
-          userId: personne.id,
+          userId: compte.userId,
           compte: compte.issue,
           souhaits: souhaits.length,
           affectations: creees.length,
@@ -509,15 +562,21 @@ builder.mutationFields(t => ({
             instant,
           })
         }
+      } else if (enAttente) {
+        // Un seul mail par personne et par heure, même si l'invitation se répète.
+        await annoncerInvitation(compte.userId, {
+          organisationId,
+          activiteId: cible?.activiteId,
+        })
       } else {
         await mettreEnFile(
           'invitation',
-          { userId: personne.id },
+          { userId: compte.userId },
           {
             organisationId,
             activiteId: await activiteDeLInvitation(
               organisationId,
-              personne.id
+              compte.userId
             ),
           }
         )
@@ -528,7 +587,11 @@ builder.mutationFields(t => ({
           editionId: cible.editionId,
         })
       }
-      return personne
+      return {
+        enAttente,
+        nom: name,
+        personneId: enAttente ? null : compte.userId,
+      }
     },
   }),
 

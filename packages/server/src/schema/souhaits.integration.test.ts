@@ -62,8 +62,10 @@ const RETIRER = `mutation ($id: ID!) { retirerSouhait(id: $id) }`
 
 const INVITER = `mutation ($email: String!, $e: ID, $p: [ID!]) {
   inviterPersonne(email: $email, nom: "Invitée ${s}", editionId: $e, perimetresSouhaites: $p) {
-    id
-    souhaits(editionId: $e) { id perimetre { id } satisfait }
+    personne {
+      id
+      souhaits(editionId: $e) { id perimetre { id } satisfait }
+    }
   }
 }`
 
@@ -391,8 +393,10 @@ describe('cas nominaux', () => {
     })
     expect(r.errors).toBeUndefined()
     const personne = (
-      r.data as { inviterPersonne: { id: string; souhaits: SouhaitLu[] } }
-    ).inviterPersonne
+      r.data as {
+        inviterPersonne: { personne: { id: string; souhaits: SouhaitLu[] } }
+      }
+    ).inviterPersonne.personne
     invitee = personne.id
     expect(personne.souhaits.map(x => x.perimetre.id).sort()).toEqual(
       [ids.natation, ids.basket].sort()

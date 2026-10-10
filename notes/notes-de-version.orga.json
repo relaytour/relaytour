@@ -8,6 +8,32 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-10-orga-vous-acceptez-ou-refusez-l-invitation-d-une-autre-organisati",
+          "date": "2026-10-10",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Vous acceptez ou refusez l'invitation d'une autre organisation",
+            "texte": "Quand une autre organisation vous invite, le menu de votre compte l'annonce, avec une pastille sur vos initiales. Vous y lisez le nom de l'organisation et les périmètres proposés, puis vous acceptez ou refusez. Cette organisation ne lit rien de votre compte et ne vous compte pas dans son équipe avant votre accord. Elle n'est pas informée d'un refus.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-orga-une-adresse-connue-d-une-autre-organisation-recoit-une-invit",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une adresse connue d'une autre organisation reçoit une invitation à accepter",
+            "texte": "Quand vous invitez une adresse qui a déjà un compte hors de votre organisation, la personne n'entre plus d'office dans votre équipe. Les écrans « Personnes » et « Équipe » affichent un encadré « Invitations en attente », avec le nom et l'adresse que vous avez saisis et les périmètres proposés. Vous relancez une invitation une fois par heure, ou vous la retirez. La personne apparaît dans l'équipe après son accord. Une invitation expire après 30 jours.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-10-orga-un-code-refuse-affiche-un-seul-message",
           "date": "2026-10-10",
           "type": "securite",

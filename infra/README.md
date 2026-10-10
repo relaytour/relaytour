@@ -173,7 +173,7 @@ docker compose --env-file .env run --rm -v /chemin/equipe.yaml:/equipe.yaml:ro s
 
 Sans `--simulation`, la commande écrit. Avec `--envoyer-mails`, une personne nouvelle reçoit son invitation, qui liste ses périmètres, et une personne déjà membre reçoit le mail d'équipe (ADR 0012). Supprimez le fichier du serveur après l'import.
 
-La commande agit comme un admin de l'organisation : elle rattache par son adresse un compte déjà membre, quelle que soit son activité. Une personne déclarée sans affectation ni souhait n'entre dans l'équipe d'aucune activité (ADR 0018) : seuls les admins de l'organisation la lisent, dans l'annuaire.
+La commande agit comme un admin de l'organisation : elle rattache par son adresse un compte déjà membre, quelle que soit son activité. Une adresse qui a déjà un compte hors de l'organisation, sur une installation partagée, ne reçoit qu'une invitation : ses affectations, ses souhaits et sa désignation de contact principal attendent son accord, et le compte rendu la compte à part (ADR 0030). Une personne déclarée sans affectation ni souhait n'entre dans l'équipe d'aucune activité (ADR 0018) : seuls les admins de l'organisation la lisent, dans l'annuaire.
 
 ## Tâches planifiées
 
