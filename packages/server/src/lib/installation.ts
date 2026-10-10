@@ -130,6 +130,76 @@ export async function validerInvitation(
   return { email, nom: nomValide }
 }
 
+/** Ce que `nommerAdmin` a fait du compte. */
+export type IssueNomination = 'cree' | 'promu' | 'retabli' | 'invite'
+
+/**
+ * Donne le rôle d'admin d'une organisation à une adresse, pour la commande
+ * `creer-admin` de l'opérateur. À la différence d'`inviterAdmin`, elle agit même
+ * quand l'organisation a déjà un admin. Elle suit les mêmes règles de
+ * cloisonnement (ADR 0030) :
+ *
+ * - une adresse inconnue reçoit un compte, admin de l'organisation ;
+ * - un membre de l'organisation en devient admin ;
+ * - un compte connu hors de l'organisation ne reçoit qu'une invitation au rôle
+ *   d'admin, qu'il accepte ou refuse ;
+ * - un compte archivé n'est rétabli que s'il n'appartient qu'à cette organisation :
+ *   le rétablir lui rendrait sinon l'accès à ses autres organisations.
+ */
+export async function nommerAdmin(
+  organisationId: string,
+  adresse: string,
+  nom: string
+): Promise<{ userId: string; issue: IssueNomination }> {
+  const email = adresseValide(adresse)
+  const nomValide = texteRequis(nom, 'Le nom', 120)
+  return rejouerSurDoublon(() =>
+    sousVerrouOrganisation(organisationId, async tx => {
+      const compte = await creerOuRattacherCompte(tx, {
+        email,
+        nom: nomValide,
+        organisationId,
+        role: 'ADMIN',
+      })
+      const { userId } = compte
+      if (compte.issue === 'cree') return { userId, issue: 'cree' as const }
+      if (compte.issue === 'externe') {
+        await inviterCompteExterne(tx, {
+          organisationId,
+          userId,
+          role: 'ADMIN',
+          nom: nomValide,
+          origine: 'INSTALLATION',
+          inviteParId: null,
+          instant: new Date(),
+        })
+        return { userId, issue: 'invite' as const }
+      }
+      let issue: IssueNomination = 'promu'
+      if (compte.issue === 'archive') {
+        const ailleurs = await tx.appartenance.count({
+          where: { userId, organisationId: { not: organisationId } },
+        })
+        if (!compte.dejaMembre || ailleurs > 0) {
+          throw erreurSaisie(
+            'Ce compte est archivé et n’appartient pas à cette seule organisation : il ne peut pas être rétabli d’ici.'
+          )
+        }
+        await tx.user.update({
+          where: { id: userId },
+          data: { archivedAt: null },
+        })
+        issue = 'retabli'
+      }
+      await tx.appartenance.update({
+        where: { userId_organisationId: { userId, organisationId } },
+        data: { role: 'ADMIN' },
+      })
+      return { userId, issue }
+    })
+  )
+}
+
 /**
  * Invite le premier admin d'une organisation. L'opération ne vaut qu'une fois :
  * dès qu'un admin existe, les admins de l'organisation invitent les autres

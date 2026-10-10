@@ -273,7 +273,7 @@ beforeEach(async () => {
   // Les relances sont limitées à une par heure et par personne.
   const { connection } = await import('../jobs/queues.ts')
   for (const cle of ['zoe', 'yann'] as const) {
-    await connection.del(`limite:relance-invitation:${ids[cle]}`)
+    await connection.del(`limite:relance-invitation:${ids.orgA}:${ids[cle]}`)
   }
 })
 

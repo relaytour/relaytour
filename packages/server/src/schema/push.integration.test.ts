@@ -204,6 +204,22 @@ describe('abonnement push', () => {
     expect(await abonnementsDe(ids.alice)).toHaveLength(1)
   })
 
+  it('ne garde qu’un compte par appareil', async () => {
+    // Un autre compte s'abonne sur le même appareil : l'abonnement que le premier
+    // y avait laissé est retiré, et ses notifications n'y arrivent plus.
+    const variables = { adresse: ADRESSE, ...CLES }
+    expect(
+      (await executer(ids.bruno, ABONNER, variables)).errors
+    ).toBeUndefined()
+    expect(await abonnementsDe(ids.alice)).toHaveLength(0)
+    expect(await abonnementsDe(ids.bruno)).toHaveLength(1)
+    expect(
+      (await executer(ids.alice, ABONNER, variables)).errors
+    ).toBeUndefined()
+    expect(await abonnementsDe(ids.bruno)).toHaveLength(0)
+    expect(await abonnementsDe(ids.alice)).toHaveLength(1)
+  })
+
   it('retire l’abonnement à la demande de sa personne', async () => {
     expect(
       (await executer(ids.alice, DESABONNER, { adresse: ADRESSE })).data

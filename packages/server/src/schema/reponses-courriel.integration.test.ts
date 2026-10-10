@@ -237,7 +237,7 @@ describe('réponses aux mails', () => {
       enFile.length = 0
       // Une relance par personne et par heure : le compteur se remet à zéro entre
       // les deux admins, et le refus se vérifie ensuite.
-      await connection.del(`limite:relance-invitation:${membre}`)
+      await connection.del(`limite:relance-invitation:${ids.org}:${membre}`)
       await executer(
         par,
         'mutation ($id: ID!) { renvoyerInvitation(id: $id) }',
@@ -267,7 +267,7 @@ describe('réponses aux mails', () => {
       )
     ).rejects.toThrow(/SAISIE_INVALIDE/)
     expect(enFile).toHaveLength(0)
-    await connection.del(`limite:relance-invitation:${membre}`)
+    await connection.del(`limite:relance-invitation:${ids.org}:${membre}`)
   })
 
   it('reprend le contact de l’organisation pour une activité qui n’en déclare pas', async () => {
