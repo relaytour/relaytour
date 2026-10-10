@@ -11,12 +11,27 @@ x-journal: &journal
     max-size: 10m
     max-file: '3'
 
+# Durcissement commun : aucune capacité, aucune élévation de privilège. Les services
+# de l'application tournent sur un système de fichiers en lecture seule, avec /tmp
+# en mémoire ; seul le volume des exports s'écrit.
+x-durci: &durci
+  cap_drop: [ALL]
+  security_opt: [no-new-privileges:true]
+
+x-app-durci: &app-durci
+  <<: *durci
+  read_only: true
+  tmpfs: [/tmp]
+
 x-environnement-app: &environnement-app
   NODE_ENV: production
   APP_ENV: '${APP_ENV:?requis}'
   DATABASE_URL: '${DATABASE_URL:?requis}'
   BETTER_AUTH_SECRET: '${BETTER_AUTH_SECRET:?requis}'
-  REDIS_URL: redis://cache:6379
+  # Valkey exige un mot de passe (VALKEY_MOT_DE_PASSE) : la file contient des codes de
+  # connexion en clair pendant quelques minutes. Le mot de passe ne contient que des
+  # lettres et des chiffres (openssl rand -hex 24), pour entrer tel quel dans l'adresse.
+  REDIS_URL: 'redis://:${VALKEY_MOT_DE_PASSE:?requis}@cache:6379'
   CORS_ORIGIN: '${CORS_ORIGIN:?requis}'
   ORIGINE_ORGA: '${ORIGINE_ORGA:?requis}'
   LOG_LEVEL: '${LOG_LEVEL:-}'
@@ -40,6 +55,7 @@ services:
     image: mariadb:11.8
     restart: unless-stopped
     logging: *journal
+    networks: [interne]
     environment:
       MARIADB_ROOT_PASSWORD: '${MARIADB_ROOT_PASSWORD:?requis}'
       MARIADB_DATABASE: '${MARIADB_DATABASE:?requis}'
@@ -58,6 +74,7 @@ services:
     image: valkey/valkey:8-alpine
     restart: unless-stopped
     logging: *journal
+    networks: [interne]
     command:
       [
         'valkey-server',
@@ -65,7 +82,12 @@ services:
         'yes',
         '--maxmemory-policy',
         'noeviction',
+        '--requirepass',
+        '${VALKEY_MOT_DE_PASSE:?requis}',
       ]
+    environment:
+      # La sonde valkey-cli lit le mot de passe dans cette variable.
+      REDISCLI_AUTH: '${VALKEY_MOT_DE_PASSE:?requis}'
     volumes:
       - cachedata:/data
     healthcheck:
@@ -76,8 +98,10 @@ services:
 
   migrate:
     image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}-migrate'
+    <<: *app-durci
     restart: 'no'
     logging: *journal
+    networks: [interne]
     environment:
       DATABASE_URL: '${DATABASE_URL:?requis}'
     depends_on:
@@ -86,18 +110,24 @@ services:
 
   # Copie l'espace organisateur (site statique) dans ORGA_DIR, que Caddy sert sur l'hôte.
   # Le service s'exécute une fois à chaque `up`, comme migrate.
+  # Il n'a besoin d'aucun réseau. Il écrit dans un dossier de l'hôte : fixez `user:`
+  # dans votre surcharge si Caddy ou votre utilisateur de déploiement l'exige.
   orga:
     image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}-orga'
+    <<: *durci
     restart: 'no'
     logging: *journal
+    network_mode: none
     volumes:
       - '${ORGA_DIR:?requis}:/cible'
 
   server:
     image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}'
+    <<: *app-durci
     restart: unless-stopped
     init: true
     logging: *journal
+    networks: [interne]
     environment:
       <<: *environnement-app
       PORT: 4400
@@ -120,10 +150,12 @@ services:
 
   worker:
     image: '${IMAGE_REPO:?requis}:${IMAGE_TAG:?requis}'
+    <<: *app-durci
     command: ['node', '--enable-source-maps', 'dist/worker.js']
     restart: unless-stopped
     init: true
     logging: *journal
+    networks: [interne]
     environment:
       <<: *environnement-app
       COURRIEL_SMTP_HOTE: '${COURRIEL_SMTP_HOTE:-}'
@@ -150,6 +182,11 @@ services:
         condition: service_healthy
       cache:
         condition: service_healthy
+
+# Un seul réseau, interne : la base et le cache ne sont joignables que par les
+# services de l'application. Seul `server` publie un port, sur 127.0.0.1.
+networks:
+  interne:
 
 volumes:
   dbdata:

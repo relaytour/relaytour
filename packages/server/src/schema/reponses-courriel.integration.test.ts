@@ -231,8 +231,12 @@ describe('réponses aux mails', () => {
         editionId: ids.edition1,
       },
     })
+    const { connection } = await import('../jobs/queues.ts')
     for (const par of [ids.adminOrg, ids.adminA1]) {
       enFile.length = 0
+      // Une relance par personne et par heure : le compteur se remet à zéro entre
+      // les deux admins, et le refus se vérifie ensuite.
+      await connection.del(`limite:relance-invitation:${membre}`)
       await executer(
         par,
         'mutation ($id: ID!) { renvoyerInvitation(id: $id) }',
@@ -253,6 +257,16 @@ describe('réponses aux mails', () => {
       })
       expect(message?.repondreA).toBe(CONTACT_A1)
     }
+    enFile.length = 0
+    await expect(
+      executer(
+        ids.adminOrg,
+        'mutation ($id: ID!) { renvoyerInvitation(id: $id) }',
+        { id: membre }
+      )
+    ).rejects.toThrow(/SAISIE_INVALIDE/)
+    expect(enFile).toHaveLength(0)
+    await connection.del(`limite:relance-invitation:${membre}`)
   })
 
   it('reprend le contact de l’organisation pour une activité qui n’en déclare pas', async () => {

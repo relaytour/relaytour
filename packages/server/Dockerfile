@@ -40,10 +40,16 @@ FROM deps AS prod-deps
 RUN --mount=type=cache,target=/root/.yarn/berry/cache \
   yarn workspaces focus @relaytour/server @relaytour/database @relaytour/tokens --production
 
-# Applique les migrations (image -migrate). Placée avant `runtime`, qui reste la cible par défaut.
-FROM build AS migrator
-WORKDIR /app
-CMD ["yarn", "workspace", "@relaytour/database", "migrate-deploy"]
+# Applique les migrations (image -migrate). Placée avant `runtime`, qui reste la cible
+# par défaut. Elle part des dépendances installées (le CLI Prisma est une dépendance
+# de développement de packages/database) et n'y ajoute que le schéma et les
+# migrations ; elle tourne sous `node` : ni source, ni build, ni root.
+FROM deps AS migrator
+COPY packages/database/prisma packages/database/prisma
+USER node
+# Prisma est appelé directement : Yarn, par corepack, voudrait écrire son cache,
+# que le système de fichiers en lecture seule refuse.
+CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy", "--schema", "packages/database/prisma/schema.prisma"]
 
 # Espace organisateur : construit avec Vite, sans variable d'environnement, donc un
 # seul build pour toutes les installations.

@@ -455,6 +455,25 @@ describe('déposer une demande sans session', () => {
     expect(await demandes()).toBe(avant)
   })
 
+  it('limite les dépôts d’une même adresse IP sur la journée, fenêtre horaire comprise', async () => {
+    const ip = ipNeuve()
+    const { connection } = await import('../jobs/queues.ts')
+    for (let lot = 0; lot < 4; lot += 1) {
+      // Seule la fenêtre horaire se remet à zéro : la fenêtre journalière compte.
+      await connection.del(`limite:rejoindre-ip-${ip}`)
+      for (let i = 0; i < 5; i += 1) {
+        const r = await envoyer(`jour${lot}-${i}`, {}, { ip })
+        expect(r.data).toEqual({ envoyerDemande: true })
+      }
+    }
+    await connection.del(`limite:rejoindre-ip-${ip}`)
+    const avant = await demandes()
+    expect(code(await envoyer('jour-de-trop', {}, { ip }))).toBe(
+      'SAISIE_INVALIDE'
+    )
+    expect(await demandes()).toBe(avant)
+  })
+
   it('limite les dépôts pour une même adresse mail', async () => {
     expect((await envoyer('repetee')).data).toEqual({ envoyerDemande: true })
     expect((await envoyer('repetee')).data).toEqual({ envoyerDemande: true })

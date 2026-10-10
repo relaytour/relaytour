@@ -72,15 +72,18 @@ model Organisation {
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
 // fichier vit en base, avec les sauvegardes, et se sert par son empreinte.
 model Media {
-  id             String   @id @default(cuid())
+  id             String    @id @default(cuid())
   organisationId String
   // SHA-256 du fichier, en hexadécimal : l'adresse publique de l'image.
   empreinte      String
   // image/png ou image/svg+xml.
   type           String
   octets         Int
-  donnees        Bytes    @db.MediumBlob
-  createdAt      DateTime @default(now())
+  donnees        Bytes     @db.MediumBlob
+  createdAt      DateTime  @default(now())
+  // Date à laquelle la purge a constaté qu'aucune identité ne cite plus l'image ;
+  // nulle tant qu'elle est citée. L'image est supprimée 30 jours après.
+  orphelinDepuis DateTime?
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
 

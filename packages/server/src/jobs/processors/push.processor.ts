@@ -4,7 +4,7 @@ import webpush, { WebPushError } from 'web-push'
 import { prisma } from '@relaytour/database'
 
 import { env } from '../../env.ts'
-import { journal } from '../../lib/journal.ts'
+import { journal, sansAdresses } from '../../lib/journal.ts'
 import {
   lienNotification,
   messageNotification,
@@ -130,7 +130,11 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
         await prisma.abonnementPush.deleteMany({ where: { id: abonnement.id } })
         retires++
       } else {
-        echecs.push(statut === 0 ? (erreur as Error).message : String(statut))
+        echecs.push(
+          statut === 0
+            ? sansAdresses((erreur as Error).message)
+            : String(statut)
+        )
       }
     }
   }

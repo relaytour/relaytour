@@ -169,6 +169,8 @@ jobs:
             BUILT_AT=${{ steps.version.outputs.construite-le }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+          provenance: true
+          sbom: true
 
       - name: Construire et pousser l'image de migration
         if: ${{ !inputs.simulation }}
@@ -181,6 +183,8 @@ jobs:
           tags: ${{ steps.version.outputs.etiquettes-migrate }}
           labels: ${{ steps.version.outputs.labels }}
           cache-from: type=gha
+          provenance: true
+          sbom: true
 
       - name: Construire et pousser l'image de l'espace organisateur
         if: ${{ !inputs.simulation }}
@@ -193,6 +197,8 @@ jobs:
           tags: ${{ steps.version.outputs.etiquettes-orga }}
           labels: ${{ steps.version.outputs.labels }}
           cache-from: type=gha
+          provenance: true
+          sbom: true
 
       - name: Créer le tag et la release
         if: ${{ steps.version.outputs.nouvelle == 'true' && !inputs.simulation }}

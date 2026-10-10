@@ -40,6 +40,43 @@ const SVG_INTERDITS: { motif: RegExp; raison: string }[] = [
   { motif: /@import/i, raison: 'une ressource externe' },
 ]
 
+/**
+ * Le texte d'un SVG dont les entités numériques et les entités XML de base sont
+ * décodées, jusqu'à stabilité : « &amp;#58; » donne « &#58; » puis « : ».
+ */
+function decoderEntites(texte: string): string {
+  let courant = texte
+  for (let passe = 0; passe < 5; passe++) {
+    const suivant = decoderUnePasse(courant)
+    if (suivant === courant) break
+    courant = suivant
+  }
+  return courant
+}
+
+function decoderUnePasse(texte: string): string {
+  const base: Record<string, string> = {
+    amp: '&',
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    apos: "'",
+  }
+  return texte.replace(
+    /&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,
+    (entite, corps: string) => {
+      if (corps[0] !== '#') return base[corps.toLowerCase()] ?? entite
+      const code =
+        corps[1] === 'x' || corps[1] === 'X'
+          ? parseInt(corps.slice(2), 16)
+          : parseInt(corps.slice(1), 10)
+      return Number.isFinite(code) && code > 0 && code <= 0x10ffff
+        ? String.fromCodePoint(code)
+        : entite
+    }
+  )
+}
+
 export interface MediaValide {
   type: TypeMedia
   empreinte: string
@@ -70,9 +107,13 @@ export function verifierMedia(
     ) {
       throw new Error('L’image doit être un fichier PNG ou SVG.')
     }
-    for (const { motif, raison } of SVG_INTERDITS) {
-      if (motif.test(texte)) {
-        throw new Error(`Le fichier SVG contient ${raison} : il est refusé.`)
+    // Les motifs s'appliquent au texte brut et au texte dont les entités numériques
+    // sont décodées : « javascript&#58; » dans une valeur d'attribut vaut « javascript: ».
+    for (const forme of [texte, decoderEntites(texte)]) {
+      for (const { motif, raison } of SVG_INTERDITS) {
+        if (motif.test(forme)) {
+          throw new Error(`Le fichier SVG contient ${raison} : il est refusé.`)
+        }
       }
     }
     type = 'image/svg+xml'

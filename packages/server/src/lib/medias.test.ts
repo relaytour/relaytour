@@ -38,3 +38,24 @@ describe('verifierMedia', () => {
     expect(() => verifierMedia(lourd)).toThrow(/Ko/)
   })
 })
+
+describe('verifierMedia : entités encodées', () => {
+  it('refuse un schéma javascript encodé par entités dans une animation', () => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg"><a href="#"><set attributeName="href" to="javascript&#58;alert(1)"/></a></svg>`
+    expect(() => verifierMedia(Buffer.from(svg))).toThrow(/javascript/)
+    const hexa = `<svg xmlns="http://www.w3.org/2000/svg"><a href="#"><set attributeName="href" to="java&#x73;cript:alert(1)"/></a></svg>`
+    expect(() => verifierMedia(Buffer.from(hexa))).toThrow(/javascript/)
+  })
+
+  it('refuse une entité encodée plusieurs fois', () => {
+    const double = `<svg xmlns="http://www.w3.org/2000/svg"><a href="#"><set attributeName="href" to="javascript&amp;#58;alert(1)"/></a></svg>`
+    expect(() => verifierMedia(Buffer.from(double))).toThrow(/javascript/)
+    const triple = `<svg xmlns="http://www.w3.org/2000/svg" onload&amp;amp;#61;"alert(1)"></svg>`
+    expect(() => verifierMedia(Buffer.from(triple))).toThrow(/gestionnaire/)
+  })
+
+  it('refuse un gestionnaire d’événement dont le signe égal est encodé', () => {
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" onload&#61;"alert(1)"></svg>`
+    expect(() => verifierMedia(Buffer.from(svg))).toThrow(/gestionnaire/)
+  })
+})

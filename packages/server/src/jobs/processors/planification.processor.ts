@@ -6,6 +6,7 @@ import { mettreEnFile } from '../../courriel/file.ts'
 import { purgerDemandes } from '../../lib/demandes.ts'
 import { aujourdhui } from '../../lib/droits.ts'
 import { journal } from '../../lib/journal.ts'
+import { purgerDonneesTechniques, purgerMedias } from '../../lib/purge.ts'
 import {
   genererRappels,
   personnesAResumer,
@@ -42,6 +43,8 @@ export async function planificationProcessor(
   // ou celle que le job désigne.
   if (job.name === 'purge') {
     await purgerDemandes(prisma, job.data)
+    await purgerMedias(prisma, job.data)
+    await purgerDonneesTechniques(prisma)
     return
   }
 

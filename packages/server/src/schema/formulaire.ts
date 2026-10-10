@@ -29,6 +29,7 @@ import { builder } from './builder.ts'
 // Limites d'un dépôt. Le compteur Valkey borne une adresse IP et une adresse mail ;
 // la base borne l'activité entière, même si Valkey ne répond pas.
 const DEPOTS_PAR_IP_ET_PAR_HEURE = 5
+const DEPOTS_PAR_IP_ET_PAR_JOUR = 20
 const DEPOTS_PAR_ADRESSE_ET_PAR_JOUR = 2
 const DEPOTS_PAR_ACTIVITE_ET_PAR_HEURE = 60
 const DEMANDES_EN_ATTENTE_MAX = 300
@@ -252,12 +253,19 @@ async function exigerDebitRaisonnable(
   email: string
 ) {
   const refuser = { siIndisponible: 'refuser' } as const
-  const parIp = await limiterParCle(
-    `rejoindre-ip-${ctx.ip ?? 'inconnue'}`,
-    DEPOTS_PAR_IP_ET_PAR_HEURE,
-    3600,
-    refuser
-  )
+  const parIp =
+    (await limiterParCle(
+      `rejoindre-ip-${ctx.ip ?? 'inconnue'}`,
+      DEPOTS_PAR_IP_ET_PAR_HEURE,
+      3600,
+      refuser
+    )) &&
+    (await limiterParCle(
+      `rejoindre-ip-jour-${ctx.ip ?? 'inconnue'}`,
+      DEPOTS_PAR_IP_ET_PAR_JOUR,
+      86_400,
+      refuser
+    ))
   const parAdresse = await limiterParCle(
     `rejoindre-adresse-${formulaire.activiteId}-${email}`,
     DEPOTS_PAR_ADRESSE_ET_PAR_JOUR,

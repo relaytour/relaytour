@@ -1,7 +1,7 @@
 import { createTransport, type Transporter } from 'nodemailer'
 
 import { env, type ReglageSmtp } from '../env.ts'
-import { courrielTronque, journal } from '../lib/journal.ts'
+import { courrielTronque, journal, sansAdresses } from '../lib/journal.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 
 export interface Message {
@@ -131,7 +131,7 @@ export async function expedier(
         evenement: definitif ? 'courriel-refuse' : 'courriel-en-panne',
         destinataire: courrielTronque(message.destinataire),
         codeSmtp: codeSmtp ?? null,
-        message: (erreur as Error).message,
+        message: sansAdresses((erreur as Error).message),
       },
       definitif
         ? 'Le serveur distant a refusé définitivement.'

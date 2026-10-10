@@ -112,6 +112,7 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
                     some: {
                       perimetreId: { in: r.lisibles },
                       perimetre: { archivedAt: null },
+                      edition: { statut: { not: 'ARCHIVEE' } },
                     },
                   },
                 }),
@@ -119,10 +120,13 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
           select: {
             id: true,
             name: true,
+            // Les affectations d'une période archivée ne remontent pas : les équipes
+            // des années passées ne sont pas un annuaire.
             affectations: {
               where: {
                 perimetre: { archivedAt: null },
                 perimetreId: { in: r.lisibles },
+                edition: { statut: { not: 'ARCHIVEE' } },
               },
               select: { perimetre: true },
             },
