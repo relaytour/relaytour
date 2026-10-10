@@ -75,6 +75,15 @@ describe('decouperLiens', () => {
     ).toBe('https://fr.wikipedia.org/wiki/Relais_(sport)')
   })
 
+  it('compte les parenthèses et les crochets à part', () => {
+    expect(liens('(voir https://exemple.org/a[texte).')[0]?.texte).toBe(
+      'https://exemple.org/a[texte'
+    )
+    expect(liens('https://exemple.org/a[1]')[0]?.texte).toBe(
+      'https://exemple.org/a[1]'
+    )
+  })
+
   it('ne rend cliquable que http et https', () => {
     expect(
       liens(

@@ -2408,3 +2408,15 @@ button.rt-ligne-declinaisons {
   outline: none;
   box-shadow: var(--rt-anneau-focus);
 }
+
+/* Au doigt, le bouton du fil et les actions d'un commentaire gardent 44 px. */
+@media (pointer: coarse) {
+  .rt-ouvrir-fil {
+    min-height: 44px;
+    padding-inline: 14px;
+  }
+
+  .rt-fil-actions .ant-btn-link {
+    min-height: 44px;
+  }
+}

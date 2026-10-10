@@ -25,15 +25,24 @@ const FIN_DE_PHRASE = /[.,;:!?»”’…]$/
 // un écran : ils s'ouvrent comme une adresse externe.
 const CHEMINS_DU_SERVEUR = ['/api/', '/graphql', '/medias/']
 
-/** Retire la ponctuation finale et une parenthèse fermante sans ouvrante. */
+const compter = (texte: string, signe: string) => texte.split(signe).length - 1
+
+/**
+ * Retire la ponctuation finale, et une parenthèse ou un crochet fermant sans
+ * ouvrant. Chaque paire se compte à part : un crochet n'équilibre pas une
+ * parenthèse.
+ */
 function borner(adresse: string): string {
   let fin = adresse
   for (;;) {
+    const dernier = fin.at(-1)
+    const ouvrant = dernier === ')' ? '(' : dernier === ']' ? '[' : null
     if (FIN_DE_PHRASE.test(fin)) {
       fin = fin.slice(0, -1)
     } else if (
-      /[)\]]$/.test(fin) &&
-      (fin.match(/[([]/g)?.length ?? 0) < (fin.match(/[)\]]/g)?.length ?? 0)
+      dernier !== undefined &&
+      ouvrant !== null &&
+      compter(fin, ouvrant) < compter(fin, dernier)
     ) {
       fin = fin.slice(0, -1)
     } else {

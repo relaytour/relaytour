@@ -111,6 +111,13 @@ export default function TacheCarte({
   const filLisible = commentaires.lus.has(tache.perimetre.id)
   const nombreCommentaires = commentaires.nombres.get(tache.id) ?? 0
   const [fil, setFil] = useState(filOuvert)
+  // La page reste montée quand une notification change seulement l'adresse : le
+  // fil s'ouvre aussi quand `filOuvert` devient vrai après le montage.
+  const [filDemande, setFilDemande] = useState(filOuvert)
+  if (filOuvert !== filDemande) {
+    setFilDemande(filOuvert)
+    if (filOuvert) setFil(true)
+  }
   const resume = tache.resumeDeclinaisons
   // Une déclinaison ne se décline pas : seule une tâche du périmètre se partage.
   const declinable =
