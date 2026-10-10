@@ -19,7 +19,7 @@
 | [0015](0015-demandes-pour-rejoindre-l-equipe.md) | Demandes pour rejoindre l'équipe | Acceptée, mail aux admins ajouté par l'ADR 0016 |
 | [0016](0016-prevenir-les-admins-d-une-demande-par-mail.md) | Prévenir les admins d'une demande par un mail regroupé | Acceptée |
 | [0017](0017-flux-des-changements.md) | Flux des changements poussé par le serveur | Acceptée |
-| [0018](0018-personnes-d-une-activite.md) | Personnes d'une activité | Acceptée, invitation avec affectation ajoutée par l'ADR 0019, rattachement entre organisations remplacé par l'ADR 0030 (proposée) |
+| [0018](0018-personnes-d-une-activite.md) | Personnes d'une activité | Acceptée, invitation avec affectation ajoutée par l'ADR 0019, rattachement entre organisations remplacé par l'ADR 0030 |
 | [0019](0019-admins-lus-et-nommes-par-les-admins-d-activite.md) | Admins lus et nommés par les admins d'activité | Acceptée |
 | [0020](0020-messages-envoyes-depuis-la-messagerie-de-l-admin.md) | Messages écrits dans l'application, envoyés depuis la messagerie de l'admin | Acceptée, choix de la messagerie ajouté par l'ADR 0022, emplacement de l'historique d'une activité amendé par l'ADR 0027 |
 | [0021](0021-version-notes-de-version-et-support.md) | Version, notes de version et support dans l'espace organisateur | Acceptée |
@@ -31,6 +31,6 @@
 | [0027](0027-ecran-equipe-a-deux-vues-et-ecran-messages.md) | Écran « Équipe » à deux vues et écran « Messages » | Acceptée |
 | [0028](0028-assigner-une-tache-entre-referents.md) | Assigner une tâche entre référentes et référents | Acceptée |
 | [0029](0029-commentaires-d-une-tache.md) | Commentaires d'une tâche | Acceptée |
-| [0030](0030-cloisonnement-des-organisations.md) | Cloisonnement des organisations d'une installation partagée | Proposée |
+| [0030](0030-cloisonnement-des-organisations.md) | Cloisonnement des organisations d'une installation partagée | Acceptée, à réaliser |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
