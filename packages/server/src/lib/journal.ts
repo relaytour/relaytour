@@ -44,3 +44,16 @@ export function courrielTronque(courriel: string): string {
   if (arobase <= 0) return '⟨illisible⟩'
   return `${courriel.slice(0, Math.min(2, arobase))}…${courriel.slice(arobase)}`
 }
+
+const ADRESSE_DANS_UN_TEXTE = /[^\s<>()"',;:]+@[^\s<>()"',;:]+\.[a-z]{2,}/gi
+
+/**
+ * Un texte libre (message d'erreur SMTP, de service de push) où chaque adresse mail
+ * est tronquée comme par `courrielTronque` : un refus SMTP cite souvent l'adresse
+ * complète du destinataire (invariant 6).
+ */
+export function sansAdresses(texte: string): string {
+  return texte.replace(ADRESSE_DANS_UN_TEXTE, adresse =>
+    courrielTronque(adresse)
+  )
+}

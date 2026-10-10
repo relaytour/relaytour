@@ -22,7 +22,7 @@ import {
   PLANIFICATIONS_GLOBALES,
   synchroniserPlanification,
 } from './jobs/synchro.ts'
-import { journal } from './lib/journal.ts'
+import { journal, sansAdresses } from './lib/journal.ts'
 import { assurerOrganisationParDefaut } from './lib/organisation.ts'
 
 // Deux envois simultanés au plus, comme le pool SMTP.
@@ -94,7 +94,7 @@ for (const w of workers) {
         queue: job?.queueName,
         jobId: job?.id,
         essais: job?.attemptsMade ?? 0,
-        message: err.message,
+        message: sansAdresses(err.message),
       },
       epuise ? 'Job abandonné après épuisement des essais.' : 'Job en échec.'
     )

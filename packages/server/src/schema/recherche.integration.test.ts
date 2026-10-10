@@ -20,6 +20,8 @@ const ids = {
   alice: '', // référente natation
   chloe: '', // référente basket et d'un périmètre archivé
   dora: '', // affectée seulement au périmètre archivé
+  eve: '', // affectée à la natation dans une période archivée seulement
+  editionArchivee: '',
   natation: '',
   basket: '',
   escrime: '', // périmètre archivé
@@ -75,6 +77,7 @@ beforeAll(async () => {
     ['alice', false],
     ['chloe', false],
     ['dora', false],
+    ['eve', false],
   ] as const) {
     const id = randomUUID()
     await prisma.user.create({
@@ -96,6 +99,19 @@ beforeAll(async () => {
         nom: `Essai ${suffixe}`,
         debut: new Date('2027-08-27'),
         fin: new Date('2027-08-29'),
+      },
+    })
+  ).id
+  ids.editionArchivee = (
+    await prisma.edition.create({
+      data: {
+        organisationId: organisation,
+        activiteId: activite,
+        annee: 2900 + Math.floor(Math.random() * 90),
+        nom: `Archivée ${suffixe}`,
+        debut: new Date('2020-08-27'),
+        fin: new Date('2020-08-29'),
+        statut: 'ARCHIVEE',
       },
     })
   ).id
@@ -135,6 +151,11 @@ beforeAll(async () => {
       { userId: ids.chloe, perimetreId: ids.basket, editionId: ids.edition },
       { userId: ids.chloe, perimetreId: ids.escrime, editionId: ids.edition },
       { userId: ids.dora, perimetreId: ids.escrime, editionId: ids.edition },
+      {
+        userId: ids.eve,
+        perimetreId: ids.natation,
+        editionId: ids.editionArchivee,
+      },
     ],
   })
   for (const [cle, perimetreId] of [
@@ -190,7 +211,9 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await prisma.tache.deleteMany({ where: { editionId: ids.edition } })
-  await prisma.affectation.deleteMany({ where: { editionId: ids.edition } })
+  await prisma.affectation.deleteMany({
+    where: { editionId: { in: [ids.edition, ids.editionArchivee] } },
+  })
   const fiches = [ids.ficheNatation, ids.ficheCommune]
   await prisma.fiche.updateMany({
     where: { id: { in: fiches } },
@@ -198,7 +221,9 @@ afterAll(async () => {
   })
   await prisma.ficheVersion.deleteMany({ where: { ficheId: { in: fiches } } })
   await prisma.fiche.deleteMany({ where: { id: { in: fiches } } })
-  await prisma.edition.deleteMany({ where: { id: ids.edition } })
+  await prisma.edition.deleteMany({
+    where: { id: { in: [ids.edition, ids.editionArchivee] } },
+  })
   await prisma.perimetre.deleteMany({
     where: { id: { in: [ids.natation, ids.basket, ids.escrime] } },
   })
@@ -239,6 +264,11 @@ describe('recherche globale', () => {
 
   it('ne donne pas une personne affectée seulement à un périmètre archivé', async () => {
     const { data } = await chercher(ids.chloe, `dora ${suffixe}`)
+    expect(data!.recherche.personnes).toHaveLength(0)
+  })
+
+  it('ne donne pas une personne affectée seulement dans une période archivée', async () => {
+    const { data } = await chercher(ids.alice, `eve ${suffixe}`)
     expect(data!.recherche.personnes).toHaveLength(0)
   })
 

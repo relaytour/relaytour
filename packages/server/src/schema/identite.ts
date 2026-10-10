@@ -116,6 +116,9 @@ function texteFacultatif(
 
 // ── Types ──────────────────────────────────────────────────────────────────
 
+/** Images gardées par organisation : logos, favicons et icônes, actuels et récents. */
+const MEDIAS_MAX = 50
+
 const MediaTeleverseRef = builder
   .objectRef<{ empreinte: string; url: string }>('MediaTeleverse')
   .implement({
@@ -368,6 +371,19 @@ builder.mutationFields(t => ({
         media = verifierMedia(Buffer.from(args.donnees, 'base64'), args.format)
       } catch (e) {
         throw erreurSaisie((e as Error).message)
+      }
+      // Au plus MEDIAS_MAX images par organisation ; la purge nocturne retire celles
+      // qu'aucune identité ne cite plus (lib/purge.ts).
+      const existante = await prisma.media.count({
+        where: { organisationId, empreinte: media.empreinte },
+      })
+      if (existante === 0) {
+        const total = await prisma.media.count({ where: { organisationId } })
+        if (total >= MEDIAS_MAX) {
+          throw erreurSaisie(
+            `L’organisation a déjà ${MEDIAS_MAX} images : les images que l’identité ne cite plus sont retirées chaque nuit.`
+          )
+        }
       }
       await prisma.media.upsert({
         where: {

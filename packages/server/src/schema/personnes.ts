@@ -20,6 +20,7 @@ import {
 } from '../lib/droits.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
+import { limiterParCle } from '../lib/limite.ts'
 import {
   adresseValide,
   rejouerSurDoublon,
@@ -543,6 +544,14 @@ builder.mutationFields(t => ({
       })
       if (personne === null || personne.archivedAt !== null) {
         throw erreurSaisie('Ce compte est introuvable ou archivé.')
+      }
+      // Une relance par personne et par heure : un admin ne peut pas inonder une boîte.
+      if (
+        !(await limiterParCle(`relance-invitation:${personne.id}`, 1, 3600))
+      ) {
+        throw erreurSaisie(
+          'Cette personne a déjà été relancée il y a moins d’une heure.'
+        )
       }
       await mettreEnFile(
         'invitation',

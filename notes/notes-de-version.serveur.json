@@ -5,6 +5,63 @@
   "version": "0.16.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-10-serveur-valkey-exige-un-mot-de-passe-et-la-pile-tourne-sur-un-reseau",
+          "date": "2026-10-10",
+          "type": "rupture",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Valkey exige un mot de passe et la pile tourne sur un réseau interne",
+            "texte": "La pile Compose de référence donne un mot de passe à Valkey, dont la file contient des codes de connexion en clair pendant quelques minutes, et place la base, le cache et les services de l'application sur un réseau interne. Le service `orga` n'a plus de réseau.",
+            "migration": "Ajoutez `VALKEY_MOT_DE_PASSE` à votre `.env` (`openssl rand -hex 24`, lettres et chiffres seulement) avant `docker compose up -d`. La file en attente dans Valkey est conservée : le mot de passe s'applique au démarrage suivant."
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-les-conteneurs-tournent-sans-privilege-et-l-image-des-migrat",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les conteneurs tournent sans privilège et l'image des migrations s'allège",
+            "texte": "Dans la pile de référence, chaque service abandonne toutes les capacités et refuse toute élévation de privilège ; l'API, le worker et les migrations tournent sur un système de fichiers en lecture seule. L'image `-migrate` ne contient plus que les dépendances de production, le schéma et les migrations, sous l'utilisateur `node`. Les images publiées portent une attestation de provenance et un inventaire des composants (SBOM). Le `.env` d'exemple propose une version précise plutôt que l'étiquette mouvante `main`.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-le-journal-le-formulaire-public-la-recherche-et-les-relances",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le journal, le formulaire public, la recherche et les relances se resserrent",
+            "texte": "Les messages d'erreur SMTP, de push et de job entrent dans le journal avec leurs adresses tronquées. Le formulaire public n'accepte plus que vingt dépôts par adresse IP et par jour. La recherche ne remonte plus les personnes affectées seulement dans une période archivée. Une invitation ne se relance qu'une fois par heure et par personne. Un mail parti n'est plus renvoyé quand la suite de l'envoi échoue. Le filtre des SVG lit aussi les entités encodées.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-la-purge-nocturne-retire-les-donnees-techniques-echues-et-le",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La purge nocturne retire les données techniques échues et les images sans usage",
+            "texte": "Chaque nuit, le serveur supprime les sessions et les codes de connexion expirés, les compteurs de la veille, les notifications lues depuis plus de 90 jours, et les images que l'identité de l'organisation ou d'une activité ne cite plus depuis 30 jours. Une organisation garde 50 images au plus ; au-delà, l'écran « Organisation » refuse une nouvelle image et renvoie à cette purge.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.16.0",
       "notes": [
         {

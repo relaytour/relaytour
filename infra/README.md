@@ -44,7 +44,28 @@ L'espace organisateur est un site statique, livré par l'image `-orga` et servi 
     docker compose --env-file .env run --rm -v /srv/relaytour/contenu/contenu:/contenu:ro server \
       node dist/orga-importer.js --dossier /contenu --edition 2027
     ```
-13. **Sauvegarde.** Un dump quotidien de la base (`mariadb-dump` dans le conteneur `db`) copié hors de la machine, et une restauration testée avant l'ouverture.
+13. **Sauvegarde.** Un dump quotidien de la base (`mariadb-dump` dans le conteneur `db`) copié hors de la machine, et une restauration testée avant l'ouverture. La section « Sauvegarder et restaurer » détaille ce qui se sauvegarde et comment se restaure une installation.
+
+## Sauvegarder et restaurer
+
+Ce que porte une installation, et ce qu'il faut en garder :
+
+- **La base MariaDB** (volume `dbdata`) : toutes les données des organisations. Un dump quotidien suffit : `docker compose --env-file .env exec db mariadb-dump --single-transaction --routines relaytour | gzip > relaytour-$(date +%F).sql.gz`. Le fichier contient des données personnelles : chiffrez-le avant de le copier hors de la machine (`age` ou `gpg`), limitez sa conservation (par exemple 30 jours glissants et une copie mensuelle sur un an), et gardez la clé de déchiffrement hors de la machine.
+- **Le `.env`** : les secrets de l'installation. Sans `BETTER_AUTH_SECRET`, les codes de connexion en attente sont perdus, sans les clés VAPID, tous les abonnements push. Gardez-en une copie chiffrée avec les dumps.
+- **Le dossier de contenu de l'organisation** : il vit dans son propre dépôt Git ; l'application le relit par `orga-importer`.
+- **Le volume `exports`** : des fichiers d'export d'organisation, avec noms et adresses. Il ne se sauvegarde pas : un export se remet à son destinataire puis se supprime (point 4 de « Plusieurs organisations »).
+- **Le volume `cachedata`** (Valkey) : la file des mails et les compteurs de limite. Il ne se sauvegarde pas. Après une restauration, les mails en attente sont perdus ; les rappels et les résumés repartent à la prochaine planification.
+- **`ORGA_DIR`** : l'espace organisateur, que l'image `-orga` redépose à chaque `up`.
+
+Restaurer sur une machine neuve, dans cet ordre :
+
+1. Installer la pile comme ci-dessus, avec le `.env` restauré et la même `IMAGE_TAG` que l'installation sauvegardée.
+2. Démarrer la base seule : `docker compose --env-file .env up -d db`.
+3. Charger le dump : `gunzip -c relaytour-AAAA-MM-JJ.sql.gz | docker compose --env-file .env exec -T db mariadb relaytour`.
+4. Démarrer le reste : `docker compose --env-file .env up -d`. Le service `migrate` applique les migrations manquantes si l'image est plus récente que le dump.
+5. Vérifier `/ready`, puis une connexion par code et un mail de test (`essai-courriel`).
+
+Testez cette restauration avant l'ouverture, puis à chaque changement de machine ou de version majeure de MariaDB.
 
 ## Mettre à jour
 
@@ -75,7 +96,9 @@ La clé privée est un secret : elle ne quitte pas le `.env`. Changer la paire d
 
 ## Adapter la pile à votre hébergement
 
-Ne modifiez pas `docker-compose.yml` : ajoutez un fichier de surcharge, par exemple `compose.local.yml`, et lancez `docker compose -f docker-compose.yml -f compose.local.yml …`. C'est là que vont vos ports, vos limites mémoire, vos volumes et votre supervision. La base et le cache ne publient aucun port : la file des mails contient des codes de connexion en clair pendant quelques minutes, et tout processus de la machine pourrait les lire. Pour administrer la base, passez par `docker compose exec db mariadb -u root -p`. Si un outil de la machine doit joindre la base, publiez le port dans votre surcharge, sur `127.0.0.1` seulement. Si une adaptation exige un changement dans l'application, proposez-le dans le dépôt de Relaytour sous une forme générique.
+Ne modifiez pas `docker-compose.yml` : ajoutez un fichier de surcharge, par exemple `compose.local.yml`, et lancez `docker compose -f docker-compose.yml -f compose.local.yml …`. C'est là que vont vos ports, vos limites mémoire, vos volumes et votre supervision. La base et le cache ne publient aucun port et ne sont joignables que sur le réseau interne de la pile : la file des mails contient des codes de connexion en clair pendant quelques minutes, et tout processus de la machine pourrait les lire. Valkey exige en plus le mot de passe `VALKEY_MOT_DE_PASSE`. Pour administrer la base, passez par `docker compose exec db mariadb -u root -p`. Si un outil de la machine doit joindre la base, publiez le port dans votre surcharge, sur `127.0.0.1` seulement. Si une adaptation exige un changement dans l'application, proposez-le dans le dépôt de Relaytour sous une forme générique.
+
+Les services de l'application tournent sans capacité, sans élévation de privilège et sur un système de fichiers en lecture seule (`/tmp` en mémoire, le volume `exports` en écriture). Le service `orga`, qui écrit dans `ORGA_DIR`, n'a pas de réseau ; fixez-lui `user:` dans votre surcharge si votre utilisateur de déploiement ou Caddy l'exige. L'image `-migrate` ne contient que les dépendances de production, le schéma et les migrations. Les images publiées portent une attestation de provenance et un inventaire des composants (SBOM), lisibles avec `docker buildx imagetools inspect`.
 
 ## Laisser passer le flux des changements
 

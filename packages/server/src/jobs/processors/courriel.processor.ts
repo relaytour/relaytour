@@ -5,7 +5,7 @@ import { prisma } from '@relaytour/database'
 import { composer } from '../../courriel/messages.ts'
 import { expedier } from '../../courriel/transport.ts'
 import { CODE_VALIDITE_SECONDES } from '../../lib/connexion.ts'
-import { courrielTronque, journal } from '../../lib/journal.ts'
+import { courrielTronque, journal, sansAdresses } from '../../lib/journal.ts'
 import type { CourrielJobData } from '../queues.ts'
 
 export async function courrielProcessor(
@@ -65,7 +65,23 @@ export async function courrielProcessor(
     desabonnement,
     repondreA,
   })
-  if (issue === 'parti') await message.apresEnvoi?.()
+  if (issue === 'parti' && message.apresEnvoi !== undefined) {
+    // Le mail est parti : un échec de la suite (date d'envoi, notification) se
+    // journalise sans faire rejouer le job, qui renverrait le mail.
+    try {
+      await message.apresEnvoi()
+    } catch (erreur) {
+      journal.error(
+        {
+          evenement: 'courriel-suite-en-echec',
+          sorte,
+          userId: userId ?? null,
+          message: sansAdresses((erreur as Error).message),
+        },
+        'Le mail est parti, mais la suite de l’envoi a échoué.'
+      )
+    }
+  }
 
   if (issue === 'refuse') {
     // Un refus définitif arrête les essais restants.

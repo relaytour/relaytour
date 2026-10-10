@@ -65,8 +65,9 @@ export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {
 // Les tâches planifiées : rappels d'échéance et résumés, une fois par jour et par
 // organisation, à l'heure de son fuseau (ADR 0008). `synchro` ajuste chaque heure les
 // planifications aux organisations actives. `purge` supprime chaque nuit les demandes
-// des périodes archivées, dans toutes les organisations (ADR 0015). La planification
-// vit dans le worker, et nulle part ailleurs.
+// des périodes archivées, dans toutes les organisations (ADR 0015), les images que
+// l'identité ne cite plus, et les données techniques échues (sessions, vérifications,
+// compteurs, notifications lues). La planification vit dans le worker, et nulle part ailleurs.
 export const PLANIFICATION_QUEUE = 'planification'
 
 export type TachePlanifiee = 'rappels' | 'resumes' | 'synchro' | 'purge'
