@@ -619,8 +619,12 @@ function declarationDeLaLigne(
 /**
  * La configuration d'une organisation, en cache une minute : la ligne Organisation
  * en base si elle porte une déclaration valide, sinon l'amorçage de l'environnement.
- * Sans identifiant, la première organisation de l'installation (worker et scripts,
- * jusqu'à leur passage par organisation).
+ * Sans identifiant, l'unique organisation de l'installation. Une installation qui
+ * en porte plusieurs sert alors l'identité d'amorçage de l'environnement : un mail
+ * sans organisation désignée (le code de connexion d'un compte membre de plusieurs
+ * organisations, l'expéditeur du transport) ne prend le nom ni le logo d'aucune
+ * organisation, et surtout pas ceux d'une organisation dont la personne n'est pas
+ * membre (ADR 0030).
  */
 export async function configurationOrganisation(
   organisationId?: string
@@ -638,10 +642,12 @@ export async function configurationOrganisation(
   const selection = { id: true, slug: true, configuration: true } as const
   const ligne =
     organisationId === undefined
-      ? await prisma.organisation.findFirst({
-          orderBy: { createdAt: 'asc' },
-          select: selection,
-        })
+      ? (await prisma.organisation.count()) > 1
+        ? null
+        : await prisma.organisation.findFirst({
+            orderBy: { createdAt: 'asc' },
+            select: selection,
+          })
       : await prisma.organisation.findUnique({
           where: { id: organisationId },
           select: selection,

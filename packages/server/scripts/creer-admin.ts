@@ -1,4 +1,3 @@
-import { randomUUID } from 'node:crypto'
 import { parseArgs } from 'node:util'
 
 import { prisma } from '@relaytour/database'
@@ -6,12 +5,15 @@ import { prisma } from '@relaytour/database'
 import { mettreEnFile } from '../src/courriel/file.ts'
 import { connection, courrielQueue } from '../src/jobs/queues.ts'
 import {
+  nommerAdmin,
   organisationParSlug,
   organisationUnique,
 } from '../src/lib/installation.ts'
+import { annoncerInvitation } from '../src/lib/invitations.ts'
 
-// Crée le premier compte admin, ou donne les droits d'admin à un compte existant,
-// puis met en file le mail d'invitation. Le worker doit tourner pour l'envoyer.
+// Crée le premier compte admin, ou donne les droits d'admin à un membre de
+// l'organisation, puis met en file le mail d'invitation. Une adresse qui a déjà un
+// compte hors de l'organisation reçoit une invitation au rôle d'admin (ADR 0030). Le worker doit tourner pour l'envoyer.
 //
 // Le rôle vaut dans une organisation (ADR 0008) : celle de l'installation, ou celle
 // que désigne --organisation quand l'installation en porte plusieurs.
@@ -42,22 +44,33 @@ const organisationId =
   values.organisation === undefined
     ? await organisationUnique()
     : (await organisationParSlug(values.organisation)).id
-const personne = await prisma.user.upsert({
-  where: { email: adresse },
-  update: { isAdmin: true, archivedAt: null },
-  create: { id: randomUUID(), email: adresse, name: nom.trim(), isAdmin: true },
-  select: { id: true },
-})
-await prisma.appartenance.upsert({
-  where: {
-    userId_organisationId: { userId: personne.id, organisationId },
-  },
-  update: { role: 'ADMIN' },
-  create: { userId: personne.id, organisationId, role: 'ADMIN' },
-})
-
-await mettreEnFile('invitation', { userId: personne.id }, { organisationId })
+// Les règles sont celles de l'application (lib/installation.ts, `nommerAdmin`) : un
+// compte connu d'une autre organisation ne reçoit qu'une invitation (ADR 0030).
+let admin: Awaited<ReturnType<typeof nommerAdmin>> | null = null
+try {
+  admin = await nommerAdmin(organisationId, adresse, nom.trim())
+  if (admin.issue === 'invite') {
+    await annoncerInvitation(admin.userId, { organisationId })
+  } else {
+    await mettreEnFile(
+      'invitation',
+      { userId: admin.userId },
+      { organisationId }
+    )
+  }
+} catch (erreur) {
+  console.error(erreur instanceof Error ? erreur.message : erreur)
+  process.exitCode = 1
+}
 await courrielQueue.close()
 connection.disconnect()
 await prisma.$disconnect()
-console.log('✔ Compte admin prêt, invitation mise en file.')
+if (admin !== null) {
+  console.log(
+    admin.issue === 'invite'
+      ? '✔ Cette adresse a déjà un compte hors de l’organisation : son invitation au rôle d’admin attend son accord.'
+      : admin.issue === 'retabli'
+        ? '✔ Compte rétabli et admin, invitation mise en file.'
+        : '✔ Compte admin prêt, invitation mise en file.'
+  )
+}
