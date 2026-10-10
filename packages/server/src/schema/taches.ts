@@ -1308,8 +1308,8 @@ builder.mutationFields(t => ({
     },
   }),
 
-  // Une personne s'assigne ou se retire elle-même. Les admins peuvent assigner une
-  // autre personne affectée au périmètre.
+  // Une personne qui écrit dans le périmètre s'assigne, se retire, assigne ou retire
+  // une autre personne affectée au périmètre (ADR 0028).
   assignerTache: t.prismaField({
     type: TacheRef,
     authScopes: { connecte: true },
@@ -1327,13 +1327,6 @@ builder.mutationFields(t => ({
       )
       exigerDeclinaisonAcceptee(tache)
       const personneId = args.personneId ? String(args.personneId) : acteur.id
-      // Assigner une autre personne revient à l'admin de l'activité de la tâche.
-      if (
-        personneId !== acteur.id &&
-        !(await ctx.estAdminDe(await activiteDuPerimetre(tache.perimetreId)))
-      ) {
-        throw accesRefuse()
-      }
       if (args.assigne) await exigerAffectee(personneId, tache)
 
       const dejaAssignee = tache.assignations.some(a => a.userId === personneId)

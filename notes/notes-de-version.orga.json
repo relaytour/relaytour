@@ -5,6 +5,24 @@
   "version": "0.15.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-10-orga-chaque-personne-d-un-perimetre-assigne-ses-taches-aux-autres",
+          "date": "2026-10-10",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque personne d'un périmètre assigne ses tâches aux autres",
+            "texte": "Vous assignez une tâche de votre périmètre à une autre personne de son équipe, depuis le bouton « Assigner » de la tâche. Cette personne reçoit une notification qui porte votre nom. Le message de confirmation propose d'annuler. Retirer une autre personne demande une confirmation. Ce geste était réservé aux admins de l'activité.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.15.0",
       "notes": [
         {

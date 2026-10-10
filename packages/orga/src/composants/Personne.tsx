@@ -30,7 +30,7 @@ export function Avatar({
 
 /**
  * Une personne : ses initiales et son nom. Avec `retirer`, une croix permet de
- * la retirer (assignation d'une tâche gérée par un admin).
+ * la retirer d'une tâche.
  */
 export function PersonneNommee({
   nom,

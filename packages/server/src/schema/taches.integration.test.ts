@@ -380,19 +380,9 @@ describe('écriture', () => {
     )
     expect(r.errors).toBeUndefined()
   })
-
-  it('refuse qu’une référente assigne une autre personne', async () => {
-    const tache = await creerTache(ids.alice, 'Trouver des bénévoles', false)
-    const r = await executer(
-      ids.alice,
-      `mutation ($id: ID!, $p: ID!) { assignerTache(id: $id, assigne: true, personneId: $p) { id } }`,
-      { id: tache.id, p: ids.bruno }
-    )
-    expect(code(r)).toBe('FORBIDDEN')
-  })
 })
 
-describe('assignation par les admins', () => {
+describe('assignation d’une autre personne', () => {
   const ASSIGNER = `mutation ($id: ID!, $a: Boolean!, $p: ID) {
     assignerTache(id: $id, assigne: $a, personneId: $p) { assignes { id } }
   }`
@@ -402,19 +392,73 @@ describe('assignation par les admins', () => {
       r.data as { assignerTache: { assignes: { id: string }[] } }
     ).assignerTache.assignes.map(p => p.id)
 
-  it('refuse qu’une référente retire une autre personne', async () => {
-    const tache = await creerTache(ids.alice, 'Réserver les couloirs')
-    const r = await executer(ids.bruno, ASSIGNER, {
+  it('laisse une référente assigner puis retirer une autre personne du périmètre', async () => {
+    const tache = await creerTache(ids.alice, 'Trouver des bénévoles', false)
+    const assignee = await executer(ids.alice, ASSIGNER, {
       id: tache.id,
-      a: false,
-      p: ids.alice,
+      a: true,
+      p: ids.bruno,
     })
-    expect(code(r)).toBe('FORBIDDEN')
+    expect(assignee.errors).toBeUndefined()
+    expect(assignes(assignee)).toEqual([ids.bruno])
+    // Le journal garde l'auteur du geste et la personne concernée.
     expect(
-      await prisma.tacheAssignation.count({
-        where: { tacheId: tache.id, userId: ids.alice },
+      await prisma.journal.count({
+        where: {
+          tacheId: tache.id,
+          type: 'TACHE_ASSIGNEE',
+          acteurId: ids.alice,
+          personneId: ids.bruno,
+        },
       })
     ).toBe(1)
+    const retiree = await executer(ids.alice, ASSIGNER, {
+      id: tache.id,
+      a: false,
+      p: ids.bruno,
+    })
+    expect(retiree.errors).toBeUndefined()
+    expect(assignes(retiree)).toEqual([])
+  })
+
+  it('refuse qu’une référente assigne une personne non affectée au périmètre', async () => {
+    const tache = await creerTache(ids.alice, 'Réserver les couloirs', false)
+    const r = await executer(ids.alice, ASSIGNER, {
+      id: tache.id,
+      a: true,
+      p: ids.chloe,
+    })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(
+      await prisma.tacheAssignation.count({ where: { tacheId: tache.id } })
+    ).toBe(0)
+  })
+
+  it('refuse qu’une personne hors du périmètre assigne ou retire quelqu’un', async () => {
+    const tache = await creerTache(ids.alice, 'Compter les bonnets')
+    // Chloé consulte la natation sans y écrire, Emma ne voit pas l'activité.
+    for (const acteur of [ids.chloe, ids.emma]) {
+      const assigner = await executer(acteur, ASSIGNER, {
+        id: tache.id,
+        a: true,
+        p: ids.bruno,
+      })
+      expect(code(assigner)).toBe('FORBIDDEN')
+      const retirer = await executer(acteur, ASSIGNER, {
+        id: tache.id,
+        a: false,
+        p: ids.alice,
+      })
+      expect(code(retirer)).toBe('FORBIDDEN')
+    }
+    expect(
+      (
+        await prisma.tacheAssignation.findMany({
+          where: { tacheId: tache.id },
+          select: { userId: true },
+        })
+      ).map(a => a.userId)
+    ).toEqual([ids.alice])
   })
 
   it('refuse qu’un admin assigne une personne non affectée', async () => {

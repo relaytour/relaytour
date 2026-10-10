@@ -8,7 +8,7 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons'
 import { useMutation } from '@apollo/client/react'
-import { Button, Dropdown, Form, Modal, Select, Typography } from 'antd'
+import { App, Button, Dropdown, Form, Modal, Select, Typography } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 
 import type { TacheChampsFragment } from '../gql/graphql'
@@ -37,8 +37,8 @@ export interface Referent {
 }
 
 /**
- * Une tâche et ses actions : prise en charge, statut, assignation (admins),
- * modification. Le rail porte la couleur du périmètre. `teinte` met en avant
+ * Une tâche et ses actions : prise en charge, statut, assignation d'une autre
+ * personne du périmètre (ADR 0028), modification. Le rail porte la couleur du périmètre. `teinte` met en avant
  * une tâche à prendre.
  */
 export default function TacheCarte({
@@ -85,6 +85,7 @@ export default function TacheCarte({
     if (enEvidence) racine.current?.scrollIntoView({ block: 'center' })
   }, [enEvidence])
   const executer = useActionTache()
+  const { message, modal } = App.useApp()
   const { lien } = useActivite()
   const [assigner, assignation] = useMutation(ASSIGNER_TACHE, {
     refetchQueries: VUES_TACHES,
@@ -109,10 +110,12 @@ export default function TacheCarte({
   const enAction = assignation.loading || changement.loading
   // Le serveur refuse d'assigner une personne non affectée au périmètre pour l'édition.
   const affectee = referents.some(r => r.id === moiId)
-  // Les admins assignent et retirent les autres personnes depuis la carte.
-  const gererAssignes = estAdmin && peutModifier && ouverte
+  // Toute personne qui écrit dans le périmètre assigne et retire les autres
+  // personnes depuis la carte (ADR 0028).
+  const gererAssignes = peutModifier && ouverte
+  // La personne connectée s'assigne par le bouton « Je m'en occupe ».
   const assignables = referents.filter(
-    r => !tache.assignes.some(p => p.id === r.id)
+    r => r.id !== moiId && !tache.assignes.some(p => p.id === r.id)
   )
   const echeance = etatEcheance(tache)
   // Le menu « Autres actions » ne s'affiche que s'il propose au moins une entrée :
@@ -144,12 +147,64 @@ export default function TacheCarte({
   const assignerPersonne = (
     personneId: string,
     assigne: boolean,
-    succes: string
+    succes?: string
   ) =>
     executer(
       () => assigner({ variables: { id: tache.id, assigne, personneId } }),
       succes
     )
+
+  // Assigner une autre personne ne demande aucune confirmation : le message de
+  // succès la nomme et propose d'annuler le geste.
+  const assignerAutre = async (personne: Referent) => {
+    if (!(await assignerPersonne(personne.id, true))) return
+    const cle = `assignation-${tache.id}-${personne.id}`
+    message.open({
+      key: cle,
+      type: 'success',
+      duration: 6,
+      content: (
+        <>
+          Tâche assignée à {personne.nom}.
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              message.destroy(cle)
+              void assignerPersonne(
+                personne.id,
+                false,
+                'L’assignation est annulée.'
+              )
+            }}
+          >
+            Annuler
+          </Button>
+        </>
+      ),
+    })
+  }
+
+  // Retirer une autre personne demande une confirmation, se retirer soi-même non.
+  const retirerPersonne = async (personne: { id: string; nom: string }) => {
+    if (personne.id === moiId) {
+      await assignerPersonne(moiId, false, 'Vous êtes retiré·e de la tâche.')
+      return
+    }
+    const confirme = await modal.confirm({
+      title: `Retirer ${personne.nom} de cette tâche ?`,
+      content: `« ${tache.titre} ». ${personne.nom} en sera prévenu·e.`,
+      okText: 'Retirer',
+      cancelText: 'Annuler',
+    })
+    if (confirme) {
+      await assignerPersonne(
+        personne.id,
+        false,
+        `${personne.nom} est retiré·e de la tâche.`
+      )
+    }
+  }
 
   const statut = (
     nouveau: TacheChampsFragment['statut'],
@@ -261,16 +316,7 @@ export default function TacheCarte({
                 initialesDe={p.nom}
                 desactive={enAction}
                 retirer={
-                  gererAssignes
-                    ? () =>
-                        void assignerPersonne(
-                          p.id,
-                          false,
-                          p.id === moiId
-                            ? 'Vous êtes retiré·e de la tâche.'
-                            : 'La personne est retirée de la tâche.'
-                        )
-                    : undefined
+                  gererAssignes ? () => void retirerPersonne(p) : undefined
                 }
               />
             ))
@@ -314,11 +360,12 @@ export default function TacheCarte({
                 onBlur={() => setChoixAssignation(false)}
                 options={assignables.map(r => ({
                   value: r.id,
-                  label: r.id === moiId ? 'Vous' : r.nom,
+                  label: r.nom,
                 }))}
                 onChange={(personneId: string) => {
                   setChoixAssignation(false)
-                  void assignerPersonne(personneId, true, 'Tâche assignée.')
+                  const personne = assignables.find(r => r.id === personneId)
+                  if (personne) void assignerAutre(personne)
                 }}
               />
             ) : (
