@@ -31,7 +31,12 @@ import {
   notifierLePerimetre,
   referentsAPrevenir,
 } from '../lib/notifications.ts'
-import { texteRequis } from '../lib/saisie.ts'
+import {
+  DESCRIPTION_TACHE_MAX,
+  texteFacultatif,
+  texteRequis,
+  TITRE_MAX,
+} from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
@@ -917,12 +922,16 @@ async function creerDeclinaisons(
           select: { id: true, perimetreId: true },
         })
   const titre = textes.titre?.trim()
-    ? texteRequis(textes.titre, 'Le titre de la déclinaison', 200)
+    ? texteRequis(textes.titre, 'Le titre de la déclinaison', TITRE_MAX)
     : origine.titre
   const description =
     textes.description === undefined || textes.description === null
       ? origine.description
-      : textes.description.trim() || null
+      : texteFacultatif(
+          textes.description,
+          'La description',
+          DESCRIPTION_TACHE_MAX
+        )
   const echeance =
     textes.echeance === undefined || textes.echeance === null
       ? origine.echeance
@@ -1026,8 +1035,12 @@ builder.mutationFields(t => ({
           data: {
             perimetreId,
             editionId,
-            titre: texteRequis(args.titre, 'Le titre', 200),
-            description: args.description?.trim() || null,
+            titre: texteRequis(args.titre, 'Le titre', TITRE_MAX),
+            description: texteFacultatif(
+              args.description,
+              'La description',
+              DESCRIPTION_TACHE_MAX
+            ),
             echeance: echeanceValide(args.echeance),
             ficheId,
             creeParId: acteur.id,
@@ -1106,10 +1119,16 @@ builder.mutationFields(t => ({
       const donnees = {
         ...(args.titre === undefined
           ? {}
-          : { titre: texteRequis(args.titre ?? '', 'Le titre', 200) }),
+          : { titre: texteRequis(args.titre ?? '', 'Le titre', TITRE_MAX) }),
         ...(args.description === undefined
           ? {}
-          : { description: args.description?.trim() || null }),
+          : {
+              description: texteFacultatif(
+                args.description,
+                'La description',
+                DESCRIPTION_TACHE_MAX
+              ),
+            }),
         ...(args.echeance === undefined
           ? {}
           : { echeance: echeanceValide(args.echeance) }),

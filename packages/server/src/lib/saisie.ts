@@ -12,6 +12,13 @@ export function adresseValide(brute: string): string {
   return adresse
 }
 
+/** Longueur maximale d'un titre de tâche ou de fiche : celle de sa colonne. */
+export const TITRE_MAX = 191
+/** Longueur maximale du résumé d'une version de fiche : celle de sa colonne. */
+export const RESUME_MAX = 191
+/** Longueur maximale de la description d'une tâche. */
+export const DESCRIPTION_TACHE_MAX = 5000
+
 export function texteRequis(brut: string, libelle: string, max = 120): string {
   const texte = brut.trim()
   if (texte.length === 0) throw erreurSaisie(`${libelle} est obligatoire.`)
@@ -32,6 +39,20 @@ export function descriptionValide(
   if (texte.length === 0) return null
   if (texte.length > DESCRIPTION_MAX) {
     throw erreurSaisie(`La description dépasse ${DESCRIPTION_MAX} caractères.`)
+  }
+  return texte
+}
+
+/** Un texte facultatif borné : vide, il vaut null. */
+export function texteFacultatif(
+  brut: string | null | undefined,
+  libelle: string,
+  max: number
+): string | null {
+  const texte = (brut ?? '').trim()
+  if (texte.length === 0) return null
+  if (texte.length > max) {
+    throw erreurSaisie(`${libelle} dépasse ${max} caractères.`)
   }
   return texte
 }

@@ -172,6 +172,14 @@ function manquementsContraste(theme: ThemeDeclare | undefined) {
   }))
 }
 
+// Une page liée depuis l'espace organisateur et les mails : https seulement, jamais
+// un autre schéma (javascript:, data:) qu'un lien pourrait exécuter.
+const PageHttps = z
+  .string()
+  .trim()
+  .url()
+  .regex(/^https:\/\//, 'La page d’équipe est une adresse https.')
+
 const Adresse = z
   .string()
   .trim()
@@ -256,7 +264,7 @@ export const DeclarationOrganisationSchema = z
     // Adresse de rôle que le bouton « Support » de l'espace organisateur ouvre
     // dans la messagerie de la personne (ADR 0021).
     contactSupport: Adresse.optional(),
-    pageEquipe: z.string().trim().url().optional(),
+    pageEquipe: PageHttps.optional(),
     logo: LogoSchema.optional(),
     favicon: ReferenceImage.optional(),
     // Icône de l'application installée : un PNG carré de 512 pixels (ADR 0023).
@@ -303,7 +311,7 @@ export type DeclarationOrganisation = z.infer<
  */
 export const IdentiteActiviteSchema = z.strictObject({
   contactRecrutement: Adresse.optional(),
-  pageEquipe: z.string().trim().url().optional(),
+  pageEquipe: PageHttps.optional(),
   logo: LogoSchema.optional(),
   theme: ThemeActiviteSchema.optional(),
 })

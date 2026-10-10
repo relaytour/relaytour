@@ -21,6 +21,7 @@ import { manifestApplication, slugDuManifest } from './lib/application.ts'
 import { fermerLesFlux } from './lib/flux.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
+import { formaterErreur } from './lib/erreurs.ts'
 import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
 import {
   assurerOrganisationParDefaut,
@@ -41,9 +42,35 @@ app.disable('x-powered-by')
 const jetonAdministrationValide = (jeton: string) =>
   jetonValide(jeton, env.JETON_ADMINISTRATION)
 
+// En-têtes de sécurité posés par le serveur lui-même, pour une installation dont le
+// proxy ne les pose pas. Le Caddyfile d'exemple les pose aussi, avec la politique de
+// contenu de l'espace organisateur. L'API ne sert aucun document : sa politique de
+// contenu interdit tout, hors du poste local où la page d'Apollo charge des scripts.
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Frame-Options': 'DENY',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+  })
+  if (env.APP_ENV === 'prod') {
+    res.set(
+      'Content-Security-Policy',
+      "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+    )
+  }
+  if (req.secure) {
+    res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
+  next()
+})
+
 const apollo = new ApolloServer<AppContext>({
   schema,
   introspection: env.APP_ENV !== 'prod',
+  // Une erreur interne (Prisma, exécution) sort masquée, sous une référence journalisée.
+  formatError: formaterErreur,
   plugins: [
     ApolloServerPluginDrainHttpServer({
       httpServer,
@@ -58,16 +85,22 @@ await assurerOrganisationParDefaut()
 await apollo.start()
 
 // Vivacité : aucune dépendance sondée, pour qu'un hoquet de la base ne fasse pas
-// redémarrer le conteneur en boucle. Les champs de version viennent du build.
-app.get('/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    env: env.APP_ENV,
-    uptime: process.uptime(),
-    version: process.env.APP_VERSION ?? '0.0.0-local',
-    gitSha: process.env.APP_GIT_SHA ?? 'inconnu',
-    builtAt: process.env.APP_BUILT_AT ?? 'inconnu',
-  })
+// redémarrer le conteneur en boucle. Les champs de version viennent du build et ne
+// sortent que pour une requête locale (sonde du conteneur, outils de la machine) :
+// une requête relayée par le proxy ne lit ni l'empreinte du commit ni la date du build.
+app.get('/health', (req, res) => {
+  res.json(
+    requeteLocale(req)
+      ? {
+          status: 'ok',
+          env: env.APP_ENV,
+          uptime: process.uptime(),
+          version: process.env.APP_VERSION ?? '0.0.0-local',
+          gitSha: process.env.APP_GIT_SHA ?? 'inconnu',
+          builtAt: process.env.APP_BUILT_AT ?? 'inconnu',
+        }
+      : { status: 'ok' }
+  )
 })
 
 // Disponibilité : la base et Redis répondent-ils ?
