@@ -20,6 +20,18 @@ describe('formaterErreur', () => {
     }
   })
 
+  it('laisse passer une confirmation demandée, avec ses extensions', () => {
+    const erreur = new GraphQLError(
+      'Cette tâche est assignée à d’autres personnes.',
+      {
+        extensions: { code: 'CONFIRMATION_REQUISE', personnes: ['Camille'] },
+      }
+    )
+    const f = formatee(erreur)
+    expect(formaterErreur(f, erreur)).toBe(f)
+    expect(f.extensions).toMatchObject({ personnes: ['Camille'] })
+  })
+
   it('masque une erreur interne et garde une référence', () => {
     const prisma = new Error(
       "Invalid `prisma.tache.create()` invocation: The provided value for the column is too long for the column's type. Column: titre"
