@@ -5,13 +5,14 @@ audience: interne
 etat: prevu
 fr:
   titre: >-
-    Les dépendances et les images sont suivies, et l'installation n'exécute plus de script tiers
+    Les dépendances et les images sont suivies, et l'installation n'exécute que les scripts autorisés
   texte: >-
     Dependabot propose chaque mois les mises à jour des paquets npm, groupées
     par usage, et celles des images Docker de l'image publiée et des piles Compose.
     La CI refuse une dépendance d'exécution qui porte une faille connue de gravité
     élevée ou critique. L'installation des paquets n'exécute plus que les scripts
-    de Prisma et d'esbuild, listés dans le package.json racine.
+    d'installation explicitement autorisés, ceux de Prisma et d'esbuild, listés
+    dans le package.json racine.
 ---
 
 `enableScripts: false` dans `.yarnrc.yml`, avec `dependenciesMeta` qui autorise
