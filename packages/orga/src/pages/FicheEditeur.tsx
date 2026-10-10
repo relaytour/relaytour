@@ -437,7 +437,7 @@ function Formulaire({
             style={{ marginTop: 16 }}
           >
             <Input
-              maxLength={200}
+              maxLength={191}
               placeholder="Ajout des horaires d’ouverture de la piscine"
             />
           </Form.Item>

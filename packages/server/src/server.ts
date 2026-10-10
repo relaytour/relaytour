@@ -18,9 +18,12 @@ import {
 import { env } from './env.ts'
 import { creerGestionnaireFlux } from './flux-http.ts'
 import { manifestApplication, slugDuManifest } from './lib/application.ts'
+import { adresseClient, ENTETE_IP_CLIENT } from './lib/adresse-client.ts'
 import { fermerLesFlux } from './lib/flux.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
+import { formaterErreur } from './lib/erreurs.ts'
+import { limiterParCle, rendreTentative } from './lib/limite.ts'
 import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
 import {
   assurerOrganisationParDefaut,
@@ -41,9 +44,35 @@ app.disable('x-powered-by')
 const jetonAdministrationValide = (jeton: string) =>
   jetonValide(jeton, env.JETON_ADMINISTRATION)
 
+// En-têtes de sécurité posés par le serveur lui-même, pour une installation dont le
+// proxy ne les pose pas. Le Caddyfile d'exemple les pose aussi, avec la politique de
+// contenu de l'espace organisateur. L'API ne sert aucun document : sa politique de
+// contenu interdit tout, hors du poste local où la page d'Apollo charge des scripts.
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'X-Frame-Options': 'DENY',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+    'Cross-Origin-Opener-Policy': 'same-origin',
+  })
+  if (env.APP_ENV === 'prod') {
+    res.set(
+      'Content-Security-Policy',
+      "default-src 'none'; frame-ancestors 'none'; base-uri 'none'"
+    )
+  }
+  if (req.secure) {
+    res.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  }
+  next()
+})
+
 const apollo = new ApolloServer<AppContext>({
   schema,
   introspection: env.APP_ENV !== 'prod',
+  // Une erreur interne (Prisma, exécution) sort masquée, sous une référence journalisée.
+  formatError: formaterErreur,
   plugins: [
     ApolloServerPluginDrainHttpServer({
       httpServer,
@@ -58,16 +87,22 @@ await assurerOrganisationParDefaut()
 await apollo.start()
 
 // Vivacité : aucune dépendance sondée, pour qu'un hoquet de la base ne fasse pas
-// redémarrer le conteneur en boucle. Les champs de version viennent du build.
-app.get('/health', (_req, res) => {
-  res.json({
-    status: 'ok',
-    env: env.APP_ENV,
-    uptime: process.uptime(),
-    version: process.env.APP_VERSION ?? '0.0.0-local',
-    gitSha: process.env.APP_GIT_SHA ?? 'inconnu',
-    builtAt: process.env.APP_BUILT_AT ?? 'inconnu',
-  })
+// redémarrer le conteneur en boucle. Les champs de version viennent du build et ne
+// sortent que pour une requête locale (sonde du conteneur, outils de la machine) :
+// une requête relayée par le proxy ne lit ni l'empreinte du commit ni la date du build.
+app.get('/health', (req, res) => {
+  res.json(
+    requeteLocale(req)
+      ? {
+          status: 'ok',
+          env: env.APP_ENV,
+          uptime: process.uptime(),
+          version: process.env.APP_VERSION ?? '0.0.0-local',
+          gitSha: process.env.APP_GIT_SHA ?? 'inconnu',
+          builtAt: process.env.APP_BUILT_AT ?? 'inconnu',
+        }
+      : { status: 'ok' }
+  )
 })
 
 // Disponibilité : la base et Redis répondent-ils ?
@@ -163,8 +198,15 @@ app.get('/medias/application/:fichier', (req, res) => {
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)
 app.all('/api/auth/*splat', (req, res) => {
+  // L'adresse du client, pour les compteurs de Better Auth : celle que le serveur a
+  // établie, réécrite dans l'en-tête que Better Auth lit, jamais celle qu'un client annonce.
+  req.headers[ENTETE_IP_CLIENT] = adresseClient(req)
   void gestionnaireAuth(req, res)
 })
+
+// Dix jetons d'administration refusés en quinze minutes depuis une même adresse, et
+// cette adresse n'est plus écoutée pendant la fenêtre : un jeton exact y vaut un jeton faux.
+const REFUS_DE_JETON = { max: 10, fenetreSecondes: 15 * 60 }
 
 /**
  * Le contexte d'une requête : le jeton d'administration de l'installation, sinon la
@@ -174,20 +216,33 @@ async function contexteDeRequete(req: express.Request): Promise<AppContext> {
   // Le jeton d'administration de l'installation ignore toute session (ADR 0008).
   // Un en-tête Bearer, même vide ou malformé, écarte la session : un jeton
   // faux rend la requête anonyme.
+  const ip = adresseClient(req)
   const porteur = /^Bearer\b\s*(.*)$/i.exec(req.get('authorization') ?? '')
   if (porteur !== null) {
     // Avec JETON_ADMINISTRATION_LOCAL, un jeton relayé par le proxy ne vaut rien :
     // la requête devient anonyme, comme avec un jeton faux (ADR 0013).
+    // La tentative se réserve avant la comparaison, puis se rend si le jeton est
+    // exact : seuls les refus s'accumulent, et des requêtes parallèles ne passent pas
+    // ensemble au-delà de la limite.
+    const cleRefus = `jeton-refuse:${ip}`
+    const tentativePermise = await limiterParCle(
+      cleRefus,
+      REFUS_DE_JETON.max,
+      REFUS_DE_JETON.fenetreSecondes
+    )
     const valide =
+      tentativePermise &&
       jetonAdministrationValide((porteur[1] ?? '').trim()) &&
       (!env.JETON_ADMINISTRATION_LOCAL || requeteLocale(req))
-    if (!valide) {
+    if (valide) {
+      await rendreTentative(cleRefus)
+    } else {
       journal.warn(
-        { evenement: 'jeton-administration-refuse', ip: req.ip },
+        { evenement: 'jeton-administration-refuse', ip },
         'Un jeton d’administration invalide a été présenté.'
       )
     }
-    return buildContext(req.ip, null, null, valide)
+    return buildContext(ip, null, null, valide)
   }
   const session = await auth.api.getSession({
     headers: fromNodeHeaders(req.headers),
@@ -195,7 +250,7 @@ async function contexteDeRequete(req: express.Request): Promise<AppContext> {
   // L'espace organisateur désigne l'organisation active par un en-tête ; sans
   // lui, l'unique appartenance de la personne fait foi (ADR 0008).
   return buildContext(
-    req.ip,
+    ip,
     session?.user.id ?? null,
     req.get(ENTETE_ORGANISATION)?.trim() || null,
     false,

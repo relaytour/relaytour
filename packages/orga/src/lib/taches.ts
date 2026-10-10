@@ -9,6 +9,9 @@ import { lireConflit, texteConflit } from './conflit'
 import { messageErreur } from './erreurs'
 import { relireLesVues, VUES_TACHES } from './rafraichissement'
 
+/** Longueur maximale d'un titre de tâche ou de fiche, celle de sa colonne en base. */
+export const TITRE_MAX = 191
+
 export const STATUTS: Record<
   StatutTache,
   { libelle: string; couleur: string }

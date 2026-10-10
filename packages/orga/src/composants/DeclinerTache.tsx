@@ -10,6 +10,7 @@ import {
   VUES_TACHES,
 } from '../lib/taches'
 
+import { TITRE_MAX } from '../lib/taches.ts'
 import ChoixPerimetresCibles, {
   type PerimetreCible,
 } from './ChoixPerimetresCibles'
@@ -151,7 +152,10 @@ export default function DeclinerTache({
               name="titre"
               extra="Sans titre, les périmètres reçoivent celui de cette tâche."
               rules={[
-                { max: 200, message: 'Le titre dépasse 200 caractères.' },
+                {
+                  max: TITRE_MAX,
+                  message: `Le titre dépasse ${TITRE_MAX} caractères.`,
+                },
               ]}
             >
               <Input placeholder={tache.titre} />

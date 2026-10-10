@@ -14,6 +14,7 @@ import ChoixPerimetresCibles, {
   type PerimetreCible,
 } from './ChoixPerimetresCibles'
 import { AideDeclinaison } from './DeclinerTache'
+import { TITRE_MAX } from '../lib/taches.ts'
 
 export interface FicheChoix {
   id: string
@@ -168,7 +169,10 @@ export default function TacheFormulaire({
           name="titre"
           rules={[
             { required: true, message: 'Saisissez un titre.' },
-            { max: 200, message: 'Le titre dépasse 200 caractères.' },
+            {
+              max: TITRE_MAX,
+              message: `Le titre dépasse ${TITRE_MAX} caractères.`,
+            },
           ]}
         >
           <Input placeholder="Réserver les lignes d’eau" />
@@ -212,7 +216,10 @@ export default function TacheFormulaire({
                   name="titreDeclinaison"
                   extra="Sans titre, les périmètres reçoivent celui de cette tâche."
                   rules={[
-                    { max: 200, message: 'Le titre dépasse 200 caractères.' },
+                    {
+                      max: TITRE_MAX,
+                      message: `Le titre dépasse ${TITRE_MAX} caractères.`,
+                    },
                   ]}
                 >
                   <Input placeholder="Transmettre les besoins au pôle" />

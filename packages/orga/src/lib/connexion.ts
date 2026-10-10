@@ -12,10 +12,11 @@ export class ErreurConnexion extends Error {
   }
 }
 
+// Le serveur répond « INVALID_OTP » pour un code faux, un code expiré et un code
+// épuisé : il ne dit pas si l'adresse a un compte (ADR 0002). Le message couvre les trois cas.
 const MESSAGES: Record<string, string> = {
-  INVALID_OTP: 'Le code est incorrect.',
-  OTP_EXPIRED: 'Le code a expiré. Demandez un nouveau code.',
-  TOO_MANY_ATTEMPTS: 'Trop d’essais avec ce code. Demandez un nouveau code.',
+  INVALID_OTP:
+    'Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code.',
 }
 
 async function appeler(chemin: string, corps: unknown): Promise<void> {

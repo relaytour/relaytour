@@ -15,7 +15,14 @@ import { exigerMembreGere } from '../lib/appartenances.ts'
 import { notifierLePerimetre } from '../lib/notifications.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
-import { sansDoublon, slugValide, texteRequis } from '../lib/saisie.ts'
+import {
+  RESUME_MAX,
+  sansDoublon,
+  slugValide,
+  texteFacultatif,
+  texteRequis,
+  TITRE_MAX,
+} from '../lib/saisie.ts'
 
 import { exigerAdminDuPerimetre } from '../lib/droits.ts'
 import { builder } from './builder.ts'
@@ -397,7 +404,7 @@ builder.mutationFields(t => ({
       const activiteId =
         perimetre?.activiteId ?? (await ctx.exigerActivite(args.activiteId))
       const auteur = await exigerRedaction(ctx, perimetreId, activiteId)
-      const titre = texteRequis(args.titre, 'Le titre', 200)
+      const titre = texteRequis(args.titre, 'Le titre', TITRE_MAX)
       const contenu = contenuValide(args.contenu)
       const slug = slugValide(args.slug)
       const creee = await sansDoublon(
@@ -468,7 +475,7 @@ builder.mutationFields(t => ({
         fiche.perimetreId,
         fiche.activiteId
       )
-      const titre = texteRequis(args.titre, 'Le titre', 200)
+      const titre = texteRequis(args.titre, 'Le titre', TITRE_MAX)
       const contenu = contenuValide(args.contenu)
       const nouvelleEmpreinte = empreinte(titre, contenu)
 
@@ -506,7 +513,7 @@ builder.mutationFields(t => ({
             contenu,
             empreinte: nouvelleEmpreinte,
             source: 'APP',
-            resume: args.resume?.trim() || null,
+            resume: texteFacultatif(args.resume, 'Le résumé', RESUME_MAX),
             auteurId: auteur.id,
           },
         })

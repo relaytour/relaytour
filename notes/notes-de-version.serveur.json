@@ -21,6 +21,45 @@
           }
         },
         {
+          "id": "2026-10-10-serveur-un-titre-de-tache-ou-de-fiche-compte-191-caracteres-au-plus",
+          "date": "2026-10-10",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un titre de tâche ou de fiche compte 191 caractères au plus",
+            "texte": "Un titre de tâche ou de fiche de 192 à 200 caractères était accepté par l'écran et refusé par la base, avec une erreur incompréhensible. La limite est désormais 191 caractères, annoncée par un message clair. Le résumé d'une version de fiche compte 191 caractères au plus, et la description d'une tâche 5 000.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-les-erreurs-internes-ne-sortent-plus-du-serveur",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les erreurs internes ne sortent plus du serveur",
+            "texte": "Une erreur que l'API n'a pas prévue (base de données, exécution) répond par un message générique et une référence de huit caractères. Le journal du serveur garde le message et la pile sous cette référence. Les erreurs de saisie, de droits, de conflit et de limite ne changent pas.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-les-dependances-et-les-images-sont-suivies-et-l-installation",
+          "date": "2026-10-10",
+          "type": "interne",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les dépendances et les images sont suivies, et l'installation n'exécute que les scripts autorisés",
+            "texte": "Dependabot propose chaque mois les mises à jour des paquets npm, groupées par usage, et celles des images Docker de l'image publiée et des piles Compose. La CI refuse une dépendance d'exécution qui porte une faille connue de gravité élevée ou critique. L'installation des paquets n'exécute plus que les scripts d'installation explicitement autorisés, ceux de Prisma et d'esbuild, listés dans le package.json racine.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-10-serveur-les-conteneurs-tournent-sans-privilege-et-l-image-des-migrat",
           "date": "2026-10-10",
           "type": "securite",
@@ -47,6 +86,32 @@
           }
         },
         {
+          "id": "2026-10-10-serveur-le-jeton-d-administration-n-est-accepte-qu-en-local-par-defa",
+          "date": "2026-10-10",
+          "type": "rupture",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le jeton d'administration n'est accepté qu'en local par défaut",
+            "texte": "Sans réglage, le jeton `JETON_ADMINISTRATION` n'est accepté que sur une requête locale, qui n'est pas passée par Caddy, et depuis une adresse locale ou privée. Dix jetons refusés en quinze minutes depuis une même adresse ferment l'API d'administration à cette adresse pour la fenêtre.",
+            "migration": "Une installation qui appelle l'API d'administration à travers Caddy, depuis une autre machine, écrit `JETON_ADMINISTRATION_LOCAL=false` dans son `.env`. Une installation qui l'appelle depuis la machine (`http://127.0.0.1:4400`), ou qui n'a pas de jeton, ne change rien."
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-le-demarrage-et-les-compteurs-de-limite-se-durcissent",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le démarrage et les compteurs de limite se durcissent",
+            "texte": "Le serveur refuse de démarrer en `NODE_ENV=production` sans `APP_ENV`, et hors du poste local avec une `ORIGINE_ORGA` qui n'est pas en https. Les compteurs de limite dans Redis posent leur fenêtre dans la même commande que l'incrément. L'API lit l'adresse du client dans l'en-tête `X-Relaytour-Ip`, que Caddy remplit avec `{client_ip}`.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-10-serveur-la-purge-nocturne-retire-les-donnees-techniques-echues-et-le",
           "date": "2026-10-10",
           "type": "securite",
@@ -56,6 +121,45 @@
           "fr": {
             "titre": "La purge nocturne retire les données techniques échues et les images sans usage",
             "texte": "Chaque nuit, le serveur supprime les sessions et les codes de connexion expirés, les compteurs de la veille, les notifications lues depuis plus de 90 jours, et les images que l'identité de l'organisation ou d'une activité ne cite plus depuis 30 jours (la purge note la date à laquelle une image cesse d'être citée). Une organisation garde 50 images au plus ; au-delà, l'écran « Organisation » refuse une nouvelle image et renvoie à cette purge.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-la-connexion-ne-revele-plus-si-une-adresse-a-un-compte",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "La connexion ne révèle plus si une adresse a un compte",
+            "texte": "Un code refusé reçoit la même réponse pour une adresse qui a un compte et pour une adresse inconnue, quel que soit le nombre d'essais. Une adresse ne reçoit plus que vingt codes par jour, en plus des cinq codes par quart d'heure. La réponse d'une connexion réussie ne porte plus le jeton de session : seul le cookie le transporte.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-la-bibliotheque-d-envoi-des-mails-est-mise-a-jour",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "La bibliothèque d'envoi des mails est mise à jour",
+            "texte": "Le serveur passe à la version 10 de nodemailer, qui corrige deux failles de déni de service dans l'analyse des adresses (GHSA-v53p-9fqp-m79j et GHSA-prgh-xp8r-p3m5) et trois faiblesses de gravité modérée. Les mails partent comme avant ; aucune action n'est attendue des installations.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-l-api-et-l-espace-organisateur-posent-des-en-tetes-de-securite",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'API et l'espace organisateur posent des en-têtes de sécurité",
+            "texte": "L'API pose elle-même `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` et `Cross-Origin-Opener-Policy`, et une politique de contenu fermée en production. Le `Caddyfile` d'exemple pose les mêmes en-têtes sur les deux hôtes, y compris sur les chemins relayés vers l'API, et une politique de contenu pour l'espace organisateur. `/health` ne rend l'empreinte du commit et la date du build qu'à une requête locale.",
             "migration": null
           }
         }

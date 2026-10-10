@@ -17,6 +17,7 @@ import {
   type MediaValide,
 } from '../lib/medias.ts'
 import { ECHEANCE_RELATIVE, PhasesSchema } from '../lib/phases.ts'
+import { TITRE_MAX } from '../lib/saisie.ts'
 import {
   DeclarationOrganisationSchema,
   IdentiteActiviteSchema,
@@ -117,7 +118,7 @@ export const FichierPerimetres = z.strictObject({
 
 const EnteteFiche = z.strictObject({
   slug: Slug,
-  titre: z.string().min(1).max(200),
+  titre: z.string().min(1).max(TITRE_MAX),
 })
 
 // J-120 : 120 jours avant le premier jour de la période. J+3 : 3 jours après.
@@ -132,7 +133,7 @@ const Declinaison = z
   .strictObject({
     groupe: Slug.optional(),
     perimetres: z.array(Slug).min(1).optional(),
-    titre: z.string().min(1).max(200).optional(),
+    titre: z.string().min(1).max(TITRE_MAX).optional(),
     description: z.string().max(5000).optional(),
     echeance: EcheanceRelative.optional(),
     // Une fiche commune seulement : les périmètres cibles la lisent tous.
@@ -145,7 +146,7 @@ const Declinaison = z
 
 const TacheModele = z.strictObject({
   modele: Slug,
-  titre: z.string().min(1).max(200),
+  titre: z.string().min(1).max(TITRE_MAX),
   description: z.string().max(5000).optional(),
   echeance: EcheanceRelative.optional(),
   fiche: Slug.optional(),

@@ -5,6 +5,24 @@
   "version": "0.16.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-10-orga-un-code-refuse-affiche-un-seul-message",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un code refusé affiche un seul message",
+            "texte": "Quand le code saisi est refusé, l'écran de connexion affiche « Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code. », quel que soit le cas. Le serveur ne distingue plus ces cas, pour ne pas révéler si une adresse a un compte.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.16.0",
       "notes": [
         {
