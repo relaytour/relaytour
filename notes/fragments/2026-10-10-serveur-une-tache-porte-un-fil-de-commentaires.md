@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: interne
 etat: prevu
+version: 0.16.0
 fr:
   titre: >-
     Une tâche porte un fil de commentaires
