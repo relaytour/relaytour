@@ -1,6 +1,8 @@
 # Publier le dépôt
 
-Ce document liste ce qui précède l'ouverture publique de `relaytour/relaytour`, puis ce qui reste vrai ensuite.
+Le dépôt `relaytour/relaytour` est public depuis le 18 septembre 2026. Ce document garde la liste de ce qui a précédé l'ouverture, pour une installation qui repartirait d'un dépôt privé, puis ce qui reste vrai ensuite.
+
+L'historique de `main` antérieur au 30 septembre 2026 porte une adresse personnelle sur vingt-cinq commits (fusions faites depuis l'interface GitHub et rebase de PR de Dependabot, avant le passage à l'adresse `noreply`). Il n'est pas réécrit : une réécriture d'un dépôt public casse les tags, les releases, les clones et les forks, et les anciens commits resteraient joignables par leur empreinte. Depuis, `outils/verifier-publication.mjs` refuse en CI tout commit postérieur à cette date qui porte une adresse hors du projet.
 
 ## Avant l'ouverture, une fois
 

@@ -40,6 +40,26 @@ for (const fichier of fichiers) {
     }
   })
 }
+// Les commits portent une adresse du projet ou l'adresse noreply de leur auteur,
+// jamais une adresse personnelle. La règle vaut pour les commits postérieurs au
+// passage à l'adresse noreply (29 septembre 2026) : l'historique antérieur reste.
+const DEPUIS = '2026-09-30'
+const ADRESSE_ADMISE =
+  /(@users\.noreply\.github\.com|^noreply@github\.com|@relaytour\.org)$/
+const adresses = execFileSync(
+  'git',
+  ['log', `--since=${DEPUIS}`, '--format=%h %ae%n%h %ce', 'HEAD'],
+  { encoding: 'utf8' }
+)
+  .split('\n')
+  .filter(Boolean)
+for (const ligne of adresses) {
+  const [sha, adresse] = ligne.split(' ')
+  if (!ADRESSE_ADMISE.test(adresse ?? '')) {
+    trouvailles.push(`commit ${sha} : adresse de commit hors du projet`)
+  }
+}
+
 if (trouvailles.length > 0) {
   console.error('✖ Le dépôt contient des traces à retirer avant publication :')
   for (const t of trouvailles) console.error(`  ${t}`)
