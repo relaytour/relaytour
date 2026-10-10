@@ -1,6 +1,7 @@
 import { Prisma, prisma, type Activite } from '@relaytour/database'
 import type { z } from 'zod'
 
+import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import {
   EXTENSIONS,
@@ -373,33 +374,37 @@ builder.mutationFields(t => ({
         throw erreurSaisie((e as Error).message)
       }
       // Au plus MEDIAS_MAX images par organisation ; la purge nocturne retire celles
-      // qu'aucune identité ne cite plus (lib/purge.ts).
-      const existante = await prisma.media.count({
-        where: { organisationId, empreinte: media.empreinte },
-      })
-      if (existante === 0) {
-        const total = await prisma.media.count({ where: { organisationId } })
-        if (total >= MEDIAS_MAX) {
-          throw erreurSaisie(
-            `L’organisation a déjà ${MEDIAS_MAX} images : les images que l’identité ne cite plus sont retirées chaque nuit.`
-          )
+      // qu'aucune identité ne cite plus (lib/purge.ts). Le comptage et l'écriture se
+      // font sous le verrou de l'organisation : deux envois simultanés ne dépassent
+      // pas la limite ensemble.
+      await sousVerrouOrganisation(organisationId, async tx => {
+        const existante = await tx.media.count({
+          where: { organisationId, empreinte: media.empreinte },
+        })
+        if (existante === 0) {
+          const total = await tx.media.count({ where: { organisationId } })
+          if (total >= MEDIAS_MAX) {
+            throw erreurSaisie(
+              `L’organisation a déjà ${MEDIAS_MAX} images : les images que l’identité ne cite plus sont retirées chaque nuit.`
+            )
+          }
         }
-      }
-      await prisma.media.upsert({
-        where: {
-          organisationId_empreinte: {
+        await tx.media.upsert({
+          where: {
+            organisationId_empreinte: {
+              organisationId,
+              empreinte: media.empreinte,
+            },
+          },
+          update: {},
+          create: {
             organisationId,
             empreinte: media.empreinte,
+            type: media.type,
+            octets: media.octets,
+            donnees: new Uint8Array(media.donnees),
           },
-        },
-        update: {},
-        create: {
-          organisationId,
-          empreinte: media.empreinte,
-          type: media.type,
-          octets: media.octets,
-          donnees: new Uint8Array(media.donnees),
-        },
+        })
       })
       return {
         empreinte: media.empreinte,

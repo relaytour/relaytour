@@ -29,7 +29,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "Les conteneurs tournent sans privilège et l'image des migrations s'allège",
-            "texte": "Dans la pile de référence, chaque service abandonne toutes les capacités et refuse toute élévation de privilège ; l'API, le worker et les migrations tournent sur un système de fichiers en lecture seule. L'image `-migrate` ne contient plus que les dépendances de production, le schéma et les migrations, sous l'utilisateur `node`. Les images publiées portent une attestation de provenance et un inventaire des composants (SBOM). Le `.env` d'exemple propose une version précise plutôt que l'étiquette mouvante `main`.",
+            "texte": "Dans la pile de référence, chaque service abandonne toutes les capacités et refuse toute élévation de privilège ; l'API, le worker et les migrations tournent sur un système de fichiers en lecture seule. L'image `-migrate` ne contient plus ni source ni build : les dépendances installées (dont le CLI Prisma), le schéma et les migrations, sous l'utilisateur `node`. Les images publiées portent une attestation de provenance et un inventaire des composants (SBOM). Le `.env` d'exemple propose une version précise plutôt que l'étiquette mouvante `main`.",
             "migration": null
           }
         },
@@ -55,7 +55,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "La purge nocturne retire les données techniques échues et les images sans usage",
-            "texte": "Chaque nuit, le serveur supprime les sessions et les codes de connexion expirés, les compteurs de la veille, les notifications lues depuis plus de 90 jours, et les images que l'identité de l'organisation ou d'une activité ne cite plus depuis 30 jours. Une organisation garde 50 images au plus ; au-delà, l'écran « Organisation » refuse une nouvelle image et renvoie à cette purge.",
+            "texte": "Chaque nuit, le serveur supprime les sessions et les codes de connexion expirés, les compteurs de la veille, les notifications lues depuis plus de 90 jours, et les images que l'identité de l'organisation ou d'une activité ne cite plus depuis 30 jours (la purge note la date à laquelle une image cesse d'être citée). Une organisation garde 50 images au plus ; au-delà, l'écran « Organisation » refuse une nouvelle image et renvoie à cette purge.",
             "migration": null
           }
         }

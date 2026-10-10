@@ -116,34 +116,28 @@ beforeAll(async () => {
   const ancien = new Date(
     maintenant.getTime() - (MEDIAS_ORPHELINS_JOURS + 1) * JOUR
   )
+  const image = (
+    id: string,
+    empreinte: string,
+    orphelinDepuis: Date | null
+  ) => ({
+    id: `${id}-${suffixe}`,
+    organisationId: ids.organisation,
+    empreinte,
+    type: 'image/png',
+    octets: 1,
+    donnees: new Uint8Array([1]),
+    createdAt: ancien,
+    orphelinDepuis,
+  })
   await prisma.media.createMany({
     data: [
-      {
-        id: `m-citee-${suffixe}`,
-        organisationId: ids.organisation,
-        empreinte: empreintes.citee,
-        type: 'image/png',
-        octets: 1,
-        donnees: new Uint8Array([1]),
-        createdAt: ancien,
-      },
-      {
-        id: `m-orpheline-${suffixe}`,
-        organisationId: ids.organisation,
-        empreinte: empreintes.orpheline,
-        type: 'image/png',
-        octets: 1,
-        donnees: new Uint8Array([1]),
-        createdAt: ancien,
-      },
-      {
-        id: `m-recente-${suffixe}`,
-        organisationId: ids.organisation,
-        empreinte: empreintes.recente,
-        type: 'image/png',
-        octets: 1,
-        donnees: new Uint8Array([1]),
-      },
+      // Citée par l'identité, mais notée orpheline par erreur : la purge l'efface.
+      image('m-citee', empreintes.citee, ancien),
+      // Orpheline depuis longtemps : supprimée.
+      image('m-orpheline', empreintes.orpheline, ancien),
+      // Pas encore notée orpheline : la purge note la date, sans supprimer.
+      image('m-recente', empreintes.recente, null),
     ],
   })
   // L'identité d'une activité cite l'image gardée.
@@ -201,7 +195,7 @@ describe('purgerDonneesTechniques', () => {
 })
 
 describe('purgerMedias', () => {
-  it('retire une image ancienne que rien ne cite, garde celle que l’identité cite et la récente', async () => {
+  it('retire une image orpheline depuis 30 jours, garde celle que l’identité cite et date celle qui vient de cesser de l’être', async () => {
     const supprimees = await purgerMedias(
       prisma,
       { organisationId: ids.organisation },
@@ -215,5 +209,15 @@ describe('purgerMedias', () => {
     expect(restantes.map(m => m.empreinte).sort()).toEqual(
       [empreintes.citee, empreintes.recente].sort()
     )
+    const etats = await prisma.media.findMany({
+      where: { empreinte: { in: [empreintes.citee, empreintes.recente] } },
+      select: { empreinte: true, orphelinDepuis: true },
+    })
+    expect(
+      etats.find(m => m.empreinte === empreintes.citee)?.orphelinDepuis
+    ).toBeNull()
+    expect(
+      etats.find(m => m.empreinte === empreintes.recente)?.orphelinDepuis
+    ).toEqual(maintenant)
   })
 })

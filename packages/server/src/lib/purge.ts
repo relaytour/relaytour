@@ -55,9 +55,11 @@ export async function purgerDonneesTechniques(
 const EMPREINTE = /[0-9a-f]{64}/g
 
 /**
- * Supprime les images qu'aucune identité (organisation, activités) ne cite plus,
- * après MEDIAS_ORPHELINS_JOURS : les mails déjà envoyés citent l'image sous son
- * empreinte pendant ce délai. `organisationId` limite la purge à une organisation.
+ * Supprime les images qu'aucune identité (organisation, activités) ne cite plus
+ * depuis MEDIAS_ORPHELINS_JOURS : les mails déjà envoyés citent l'image sous son
+ * empreinte pendant ce délai. Chaque passage note la date à laquelle une image
+ * cesse d'être citée (`orphelinDepuis`) et l'efface si elle l'est de nouveau.
+ * `organisationId` limite la purge à une organisation.
  */
 export async function purgerMedias(
   prisma: Base,
@@ -86,12 +88,24 @@ export async function purgerMedias(
         organisation.activites.map(a => a.identite),
       ]).match(EMPREINTE) ?? []
     )
-    const { count } = await prisma.media.deleteMany({
+    await prisma.media.updateMany({
       where: {
         organisationId: organisation.id,
         empreinte: { notIn: [...citees] },
-        createdAt: { lt: seuil },
+        orphelinDepuis: null,
       },
+      data: { orphelinDepuis: maintenant },
+    })
+    await prisma.media.updateMany({
+      where: {
+        organisationId: organisation.id,
+        empreinte: { in: [...citees] },
+        orphelinDepuis: { not: null },
+      },
+      data: { orphelinDepuis: null },
+    })
+    const { count } = await prisma.media.deleteMany({
+      where: { organisationId: organisation.id, orphelinDepuis: { lt: seuil } },
     })
     if (count > 0) {
       journal.info(

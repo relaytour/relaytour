@@ -40,8 +40,21 @@ const SVG_INTERDITS: { motif: RegExp; raison: string }[] = [
   { motif: /@import/i, raison: 'une ressource externe' },
 ]
 
-/** Le texte d'un SVG dont les entités numériques et les entités XML de base sont décodées. */
+/**
+ * Le texte d'un SVG dont les entités numériques et les entités XML de base sont
+ * décodées, jusqu'à stabilité : « &amp;#58; » donne « &#58; » puis « : ».
+ */
 function decoderEntites(texte: string): string {
+  let courant = texte
+  for (let passe = 0; passe < 5; passe++) {
+    const suivant = decoderUnePasse(courant)
+    if (suivant === courant) break
+    courant = suivant
+  }
+  return courant
+}
+
+function decoderUnePasse(texte: string): string {
   const base: Record<string, string> = {
     amp: '&',
     lt: '<',
