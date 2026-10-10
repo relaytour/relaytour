@@ -8,8 +8,8 @@ fr:
     Une tâche porte un fil de commentaires
   texte: >-
     L'API porte les commentaires d'une tâche : la requête `filTache` rend les
-    commentaires et les événements du journal, `nombresCommentaires` compte les
-    commentaires par tâche, et trois mutations écrivent, modifient et suppriment
+    commentaires et les événements du journal, `commentairesDeLaPeriode` compte
+    les commentaires par tâche, et trois mutations écrivent, modifient et suppriment
     un commentaire. Une migration additive crée la table `CommentaireTache`.
 ---
 

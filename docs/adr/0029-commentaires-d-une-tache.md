@@ -61,7 +61,7 @@ Le journal garde déjà l'histoire d'une tâche : sa création, ses modification
 ## Conséquences
 
 - Une migration additive crée la table `CommentaireTache` et ajoute la valeur `TACHE_COMMENTEE` au type des notifications.
-- L'API gagne la requête `filTache`, la requête `nombresCommentaires` et trois mutations : `commenterTache`, `modifierCommentaire`, `supprimerCommentaire`.
+- L'API gagne la requête `filTache`, la requête `commentairesDeLaPeriode` et trois mutations : `commenterTache`, `modifierCommentaire`, `supprimerCommentaire`.
 - Le fil se lit dans une requête à part, à l'ouverture d'une tâche. Les listes de tâches ne grandissent pas : le serveur borne une requête à 100 champs. Le nombre de commentaires par tâche se lit aussi à part, par période.
 - Une écriture publie le signal `TACHE` du flux des changements (ADR 0017). Le fil ouvert chez une autre personne se relit alors.
 - L'espace organisateur ouvre le fil dans un volet, depuis la carte d'une tâche. La carte affiche le nombre de commentaires.
@@ -71,7 +71,7 @@ Le journal garde déjà l'histoire d'une tâche : sa création, ses modification
 ## Revue de sécurité
 
 - Chaque lecture et chaque écriture part de la tâche, puis de son périmètre, dans l'organisation active. Un commentaire d'une autre organisation, d'une activité invisible ou d'un périmètre non lu reçoit le même refus qu'une tâche inconnue.
-- `nombresCommentaires` ne compte que les tâches des périmètres que la personne lit.
+- `commentairesDeLaPeriode` ne nomme que les périmètres que la personne lit, et ne compte que leurs tâches.
 - Le texte d'un commentaire s'affiche comme du texte, jamais comme du HTML. Seules les adresses `http` et `https` deviennent des liens.
 - Le texte d'un commentaire n'entre ni dans le journal du serveur, ni dans une notification, ni dans la charge utile d'une file.
 - La table des refus croisés couvre les deux requêtes et les trois mutations.

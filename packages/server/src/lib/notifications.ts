@@ -419,5 +419,7 @@ export function lienNotification(n: NotificationAComposer): string {
   ) {
     return `/${perimetre.activite.slug}/perimetres/${origine.perimetre.slug}?edition=${editionId}&tache=${origine.id}`
   }
-  return `/${perimetre.activite.slug}/perimetres/${perimetre.slug}?edition=${editionId}&tache=${id}`
+  // Un commentaire ouvre le fil de sa tâche (ADR 0029).
+  const fil = n.type === 'TACHE_COMMENTEE' ? '&fil=1' : ''
+  return `/${perimetre.activite.slug}/perimetres/${perimetre.slug}?edition=${editionId}&tache=${id}${fil}`
 }

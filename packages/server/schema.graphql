@@ -171,6 +171,17 @@ type CommentaireTache {
   texte: String!
 }
 
+"""
+Les commentaires d’une période, pour une liste de tâches : où la personne lit les fils, et combien de commentaires porte chaque tâche.
+"""
+type CommentairesPeriode {
+  """Une tâche sans commentaire est absente."""
+  nombres: [NombreCommentaires!]!
+
+  """Les périmètres de l’activité dont la personne lit les fils."""
+  perimetresLus: [ID!]!
+}
+
 type CouleursTheme {
   accent: String!
   accentClair: String!
@@ -1047,6 +1058,11 @@ type Query {
   Clé publique VAPID de l’installation, dont un navigateur a besoin pour s’abonner aux notifications push. Null quand le canal est fermé. Lisible sans session.
   """
   clePubliquePush: String
+
+  """
+  Pour une période : les périmètres dont la personne lit les fils, et le nombre de commentaires de chaque tâche commentée de ces périmètres. Une liste de tâches lit ces nombres à part.
+  """
+  commentairesDeLaPeriode(editionId: ID!): CommentairesPeriode!
   demandes(editionId: ID!, statut: StatutDemande): [Demande!]!
   droitsRedaction: [DroitRedaction!]!
   editionCourante(activiteId: ID): Edition
@@ -1080,11 +1096,6 @@ type Query {
   moi: Personne
   monScore(editionId: ID!): Score!
   nombreNotificationsNonLues: Int!
-
-  """
-  Le nombre de commentaires de chaque tâche commentée d’une période, dans les périmètres que la personne lit. Une tâche sans commentaire est absente.
-  """
-  nombresCommentaires(editionId: ID!): [NombreCommentaires!]!
 
   """
   Notes des versions publiées, de la plus récente à la plus ancienne, limitées au rôle de la personne dans l’organisation active.

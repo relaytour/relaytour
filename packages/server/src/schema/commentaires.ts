@@ -171,6 +171,27 @@ const NombreCommentairesRef = builder
     }),
   })
 
+const CommentairesPeriodeRef = builder
+  .objectRef<{
+    perimetresLus: string[]
+    nombres: { tacheId: string; nombre: number }[]
+  }>('CommentairesPeriode')
+  .implement({
+    description:
+      'Les commentaires d’une période, pour une liste de tâches : où la personne lit les fils, et combien de commentaires porte chaque tâche.',
+    fields: t => ({
+      perimetresLus: t.exposeIDList('perimetresLus', {
+        description:
+          'Les périmètres de l’activité dont la personne lit les fils.',
+      }),
+      nombres: t.field({
+        type: [NombreCommentairesRef],
+        description: 'Une tâche sans commentaire est absente.',
+        resolve: c => c.nombres,
+      }),
+    }),
+  })
+
 // ── Accès ────────────────────────────────────────────────────────────────────
 
 interface TacheSituee {
@@ -297,24 +318,37 @@ builder.queryFields(t => ({
     resolve: (_root, { id }, ctx) => lireLeFil(ctx, String(id)),
   }),
 
-  nombresCommentaires: t.field({
-    type: [NombreCommentairesRef],
+  commentairesDeLaPeriode: t.field({
+    type: CommentairesPeriodeRef,
     authScopes: { connecte: true },
     description:
-      'Le nombre de commentaires de chaque tâche commentée d’une période, dans les périmètres que la personne lit. Une tâche sans commentaire est absente.',
+      'Pour une période : les périmètres dont la personne lit les fils, et le nombre de commentaires de chaque tâche commentée de ces périmètres. Une liste de tâches lit ces nombres à part.',
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
       const edition = await ctx.exigerEdition(editionId)
-      const lisibles = await perimetresLisibles(ctx)
-      if (lisibles.length === 0) return []
+      const lus = await prisma.perimetre.findMany({
+        where: {
+          id: { in: await perimetresLisibles(ctx) },
+          activiteId: edition.activiteId,
+        },
+        select: { id: true },
+      })
+      const perimetresLus = lus.map(p => p.id)
+      if (perimetresLus.length === 0) return { perimetresLus, nombres: [] }
       const groupes = await prisma.commentaireTache.groupBy({
         by: ['tacheId'],
         where: {
-          tache: { editionId: edition.id, perimetreId: { in: lisibles } },
+          tache: { editionId: edition.id, perimetreId: { in: perimetresLus } },
         },
         _count: { _all: true },
       })
-      return groupes.map(g => ({ tacheId: g.tacheId, nombre: g._count._all }))
+      return {
+        perimetresLus,
+        nombres: groupes.map(g => ({
+          tacheId: g.tacheId,
+          nombre: g._count._all,
+        })),
+      }
     },
   }),
 }))

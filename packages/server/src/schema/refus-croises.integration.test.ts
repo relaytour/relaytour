@@ -754,9 +754,9 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
-    operation: 'nombresCommentaires',
+    operation: 'commentairesDeLaPeriode',
     query:
-      'query ($e: ID!) { nombresCommentaires(editionId: $e) { tacheId nombre } }',
+      'query ($e: ID!) { commentairesDeLaPeriode(editionId: $e) { perimetresLus nombres { tacheId nombre } } }',
     variables: () => ({ e: a.edition }),
     attente: INTERDIT,
   },

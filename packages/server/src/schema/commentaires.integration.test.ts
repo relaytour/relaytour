@@ -58,7 +58,7 @@ const FIL = `query ($id: ID!) { filTache(id: $id) { ${CHAMPS} } }`
 const COMMENTER = `mutation ($id: ID!, $t: String!) { commenterTache(id: $id, texte: $t) { ${CHAMPS} } }`
 const MODIFIER = `mutation ($id: ID!, $t: String!) { modifierCommentaire(id: $id, texte: $t) { ${CHAMPS} } }`
 const SUPPRIMER = `mutation ($id: ID!) { supprimerCommentaire(id: $id) { ${CHAMPS} } }`
-const NOMBRES = `query ($e: ID!) { nombresCommentaires(editionId: $e) { tacheId nombre } }`
+const PERIODE = `query ($e: ID!) { commentairesDeLaPeriode(editionId: $e) { perimetresLus nombres { tacheId nombre } } }`
 
 interface Fil {
   tacheId: string
@@ -306,18 +306,35 @@ describe('lire le fil', () => {
   })
 
   it('ne compte que les tâches des périmètres lus', async () => {
-    const nombres = async (userId: string) => {
-      const r = await executer(userId, NOMBRES, { e: ids.edition })
+    const periode = async (userId: string) => {
+      const r = await executer(userId, PERIODE, { e: ids.edition })
       expect(r.errors).toBeUndefined()
-      return (
-        r.data as { nombresCommentaires: { tacheId: string; nombre: number }[] }
-      ).nombresCommentaires
+      const { perimetresLus, nombres } = (
+        r.data as {
+          commentairesDeLaPeriode: {
+            perimetresLus: string[]
+            nombres: { tacheId: string; nombre: number }[]
+          }
+        }
+      ).commentairesDeLaPeriode
+      // L'activité par défaut porte d'autres périmètres : seuls ceux du test comptent.
+      return {
+        natation: perimetresLus.includes(ids.natation),
+        basket: perimetresLus.includes(ids.basket),
+        nombres: nombres.filter(n => n.tacheId === ids.tache),
+      }
     }
-    expect(await nombres(ids.bruno)).toEqual([
-      { tacheId: ids.tache, nombre: 1 },
-    ])
-    expect(await nombres(ids.chloe)).toEqual([])
-    expect(code(await executer(ids.emma, NOMBRES, { e: ids.edition }))).toBe(
+    expect(await periode(ids.bruno)).toEqual({
+      natation: true,
+      basket: false,
+      nombres: [{ tacheId: ids.tache, nombre: 1 }],
+    })
+    expect(await periode(ids.chloe)).toEqual({
+      natation: false,
+      basket: true,
+      nombres: [],
+    })
+    expect(code(await executer(ids.emma, PERIODE, { e: ids.edition }))).toBe(
       'FORBIDDEN'
     )
   })
@@ -419,17 +436,23 @@ describe('notifications et export', () => {
     expect(await notifications(ids.chloe, ids.libre)).toBe(0)
   })
 
-  it('compose une notification sans le texte du commentaire', async () => {
+  it('compose une notification sans le texte, qui ouvre le fil', async () => {
     const r = await executer(
       ids.bruno,
-      `query { notifications { message } }`
+      `query { notifications { type message lien } }`
     )
     expect(r.errors).toBeUndefined()
-    const messages = (
-      r.data as { notifications: { message: string }[] }
-    ).notifications.map(n => n.message)
-    expect(messages.some(m => m.includes('a commenté la tâche'))).toBe(true)
-    expect(messages.some(m => m.includes('Créneau confirmé'))).toBe(false)
+    const recues = (
+      r.data as {
+        notifications: { type: string; message: string; lien: string }[]
+      }
+    ).notifications.filter(n => n.type === 'TACHE_COMMENTEE')
+    expect(recues.length).toBeGreaterThan(0)
+    for (const n of recues) {
+      expect(n.message).toContain('a commenté la tâche')
+      expect(n.message).not.toContain('Créneau confirmé')
+      expect(n.lien).toMatch(/&tache=[^&]+&fil=1$/)
+    }
   })
 
   it('porte les commentaires dans l’export de l’organisation', async () => {
