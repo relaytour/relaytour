@@ -5,6 +5,37 @@
   "version": "0.16.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-10-serveur-les-dependances-et-les-images-sont-suivies-et-l-installation",
+          "date": "2026-10-10",
+          "type": "interne",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les dépendances et les images sont suivies, et l'installation n'exécute plus de script tiers",
+            "texte": "Dependabot propose chaque mois les mises à jour des paquets npm, groupées par usage, et celles des images Docker de l'image publiée et des piles Compose. La CI refuse une dépendance d'exécution qui porte une faille connue de gravité élevée ou critique. L'installation des paquets n'exécute plus que les scripts de Prisma et d'esbuild, listés dans le package.json racine.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-la-bibliotheque-d-envoi-des-mails-est-mise-a-jour",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "La bibliothèque d'envoi des mails est mise à jour",
+            "texte": "Le serveur passe à la version 10 de nodemailer, qui corrige deux failles de déni de service dans l'analyse des adresses (GHSA-v53p-9fqp-m79j et GHSA-prgh-xp8r-p3m5) et trois faiblesses de gravité modérée. Les mails partent comme avant ; aucune action n'est attendue des installations.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.16.0",
       "notes": [
         {
