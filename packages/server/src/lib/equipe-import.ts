@@ -6,6 +6,7 @@ import { mettreEnFile } from '../courriel/file.ts'
 
 import { creerAffectations } from './affectations.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
+import { inviterCompteExterne } from './invitations.ts'
 import { annoncerChangementEquipe } from './equipe.ts'
 import { adresseValide } from './saisie.ts'
 
@@ -101,7 +102,8 @@ export function lireEquipe(texte: string): PersonneEquipe[] {
 
 export interface RapportEquipe {
   comptesCrees: string[]
-  comptesRattaches: string[]
+  /** Comptes connus hors de l'organisation : une invitation attend leur accord (ADR 0030). */
+  invitationsEnAttente: string[]
   comptesExistants: string[]
   nomsDifferents: string[]
   affectationsCreees: string[]
@@ -159,7 +161,7 @@ export async function importerEquipe(
 
   const rapport: RapportEquipe = {
     comptesCrees: [],
-    comptesRattaches: [],
+    invitationsEnAttente: [],
     comptesExistants: [],
     nomsDifferents: [],
     affectationsCreees: [],
@@ -194,9 +196,35 @@ export async function importerEquipe(
         if (nouveau) {
           rapport.comptesCrees.push(p.nom)
           aInviter.push(userId)
-        } else if (compte.issue === 'rattache') {
-          rapport.comptesRattaches.push(p.nom)
+        } else if (compte.issue === 'externe') {
+          // Rien ne s'écrit au nom d'un compte extérieur : l'invitation garde les
+          // affectations, les souhaits et le contact principal que le fichier déclare.
+          rapport.invitationsEnAttente.push(p.nom)
           aInviter.push(userId)
+          if (ecrire) {
+            const affectes = p.affectations.map(slug => perimetres.get(slug)!)
+            await inviterCompteExterne(tx, {
+              organisationId,
+              userId,
+              role: 'MEMBRE',
+              nom: p.nom,
+              origine: 'IMPORT',
+              inviteParId: null,
+              lot: {
+                editionId: edition.id,
+                activiteId,
+                affectes,
+                souhaites: p.souhaits
+                  .filter(slug => !p.affectations.includes(slug))
+                  .map(slug => perimetres.get(slug)!),
+                contactPrincipal: p.contactPrincipal.map(slug =>
+                  perimetres.get(slug)!
+                ),
+              },
+              instant,
+            })
+          }
+          continue
         } else {
           rapport.comptesExistants.push(p.nom)
         }

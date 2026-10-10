@@ -617,6 +617,24 @@ a:hover .rt-pastille {
   list-style: none;
 }
 
+/* Invitations en attente (ADR 0030) : une ligne par invitation, ses gestes à droite. */
+.rt-invitations {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-invitations > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
 .rt-ligne-lien {
   display: flex;
   align-items: center;

@@ -67,6 +67,7 @@ model Organisation {
   adminsActivite  AdminActivite[]
   demandes        Demande[]
   messages        Message[]
+  invitations     InvitationOrganisation[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -111,6 +112,50 @@ model Appartenance {
 
   @@unique([userId, organisationId])
   @@index([organisationId])
+}
+
+enum OrigineInvitation {
+  // Un admin, par l'espace organisateur : `inviteParId` le désigne.
+  PERSONNE
+  // La commande equipe-importer (ADR 0013), sans personne connectée.
+  IMPORT
+  // L'administration de l'installation (ADR 0008) : le premier admin d'une organisation.
+  INSTALLATION
+}
+
+// Invitation d'un compte qui existe déjà hors de l'organisation (ADR 0030). Les
+// organisations d'une installation sont cloisonnées : rien n'est écrit au nom de la
+// personne (appartenance, affectation, souhait) tant qu'elle n'a pas accepté.
+// L'organisation ne lit de cette ligne que ce qu'elle a saisi : le nom, l'adresse
+// et les périmètres. Une invitation expirée n'existe plus pour personne ; la purge
+// nocturne efface sa ligne.
+model InvitationOrganisation {
+  id             String            @id @default(cuid())
+  organisationId String
+  userId         String
+  role           RoleOrganisation  @default(MEMBRE)
+  // Le nom saisi par la personne qui invite. Le nom du compte reste inconnu de
+  // l'organisation jusqu'à l'acceptation.
+  nom            String
+  origine        OrigineInvitation
+  inviteParId    String?
+  // Vrai pour une invitation sans périmètre, faite au niveau de l'organisation :
+  // elle demeure quand un admin d'activité retire les périmètres de son activité.
+  globale        Boolean           @default(false)
+  // Ce que l'acceptation créera, par période : `[{ editionId, activiteId, affectes,
+  // souhaites, contactPrincipal }]`, des identifiants de périmètres (lib/invitations.ts).
+  lots           Json
+  expireLe       DateTime
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  user         User         @relation("InvitationRecue", fields: [userId], references: [id], onDelete: Cascade)
+  invitePar    User?        @relation("InvitationEnvoyee", fields: [inviteParId], references: [id], onDelete: SetNull)
+
+  @@unique([organisationId, userId])
+  @@index([userId])
+  @@index([inviteParId])
 }
 
 // Admin d'une activité (ADR 0010) : les droits d'un admin, limités à cette
@@ -203,31 +248,33 @@ model User {
   // Un compte archivé ne peut plus se connecter. Il reste pour l'historique des éditions.
   archivedAt    DateTime?
 
-  sessions           Session[]
-  accounts           Account[]
-  affectations       Affectation[]           @relation("AffectationUtilisateur")
-  affectationsCreees Affectation[]           @relation("AffectationAuteur")
-  tachesCreees       Tache[]                 @relation("TacheAuteur")
-  commentaires       CommentaireTache[]      @relation("CommentaireAuteur")
-  tachesCloturees    Tache[]                 @relation("TacheCloture")
-  tachesRealisees    Tache[]                 @relation("TacheRealisation")
-  tachesAccordees    Tache[]                 @relation("TacheAccord")
-  versionsFiches     FicheVersion[]
-  droitsRedaction    DroitRedaction[]        @relation("DroitRedactionPersonne")
-  droitsAccordes     DroitRedaction[]        @relation("DroitRedactionAuteur")
-  notifications      Notification[]          @relation("NotificationDestinataire")
-  preferences        PreferenceNotification?
-  abonnementsPush    AbonnementPush[]
-  assignations       TacheAssignation[]
-  journal            Journal[]               @relation("JournalActeur")
-  souhaits           Souhait[]
-  appartenances      Appartenance[]
-  adminsActivite     AdminActivite[]
-  demandes           Demande[]               @relation("DemandeCompte")
-  demandesTraitees   Demande[]               @relation("DemandeTraitement")
-  propositions       DemandePerimetre[]
-  messagesEcrits     Message[]               @relation("MessageAuteur")
-  messagesRecus      MessageDestinataire[]
+  sessions            Session[]
+  accounts            Account[]
+  affectations        Affectation[]            @relation("AffectationUtilisateur")
+  affectationsCreees  Affectation[]            @relation("AffectationAuteur")
+  tachesCreees        Tache[]                  @relation("TacheAuteur")
+  commentaires        CommentaireTache[]       @relation("CommentaireAuteur")
+  tachesCloturees     Tache[]                  @relation("TacheCloture")
+  tachesRealisees     Tache[]                  @relation("TacheRealisation")
+  tachesAccordees     Tache[]                  @relation("TacheAccord")
+  versionsFiches      FicheVersion[]
+  droitsRedaction     DroitRedaction[]         @relation("DroitRedactionPersonne")
+  droitsAccordes      DroitRedaction[]         @relation("DroitRedactionAuteur")
+  notifications       Notification[]           @relation("NotificationDestinataire")
+  preferences         PreferenceNotification?
+  abonnementsPush     AbonnementPush[]
+  assignations        TacheAssignation[]
+  journal             Journal[]                @relation("JournalActeur")
+  souhaits            Souhait[]
+  appartenances       Appartenance[]
+  adminsActivite      AdminActivite[]
+  demandes            Demande[]                @relation("DemandeCompte")
+  demandesTraitees    Demande[]                @relation("DemandeTraitement")
+  propositions        DemandePerimetre[]
+  invitationsRecues   InvitationOrganisation[] @relation("InvitationRecue")
+  invitationsEnvoyees InvitationOrganisation[] @relation("InvitationEnvoyee")
+  messagesEcrits      Message[]                @relation("MessageAuteur")
+  messagesRecus       MessageDestinataire[]
 }
 
 model Session {
@@ -826,6 +873,9 @@ enum TypeNotification {
   // Commentaire écrit sur une tâche (ADR 0029). La notification ne porte pas le
   // texte : elle nomme l'auteur et la tâche.
   TACHE_COMMENTEE
+  // Une personne a accepté l'invitation de l'organisation (ADR 0030). `acteurId`
+  // la désigne ; `activiteId` porte l'activité de l'invitation, s'il y en a une.
+  INVITATION_ACCEPTEE
 }
 
 // Une notification ne stocke que des identifiants : le texte se compose à la lecture,

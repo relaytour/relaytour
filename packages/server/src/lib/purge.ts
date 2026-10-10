@@ -1,5 +1,6 @@
 import type { Prisma, PrismaClient } from '@relaytour/database'
 
+import { purgerInvitations } from './invitations.ts'
 import { journal } from './journal.ts'
 
 const JOUR_MS = 24 * 3600 * 1000
@@ -21,7 +22,10 @@ export async function purgerDonneesTechniques(
   prisma: Base,
   maintenant = new Date()
 ): Promise<
-  Record<'sessions' | 'verifications' | 'limites' | 'notifications', number>
+  Record<
+    'sessions' | 'verifications' | 'limites' | 'notifications' | 'invitations',
+    number
+  >
 > {
   const sessions = await prisma.session.deleteMany({
     where: { expiresAt: { lt: maintenant } },
@@ -44,6 +48,8 @@ export async function purgerDonneesTechniques(
     verifications: verifications.count,
     limites: limites.count,
     notifications: notifications.count,
+    // Une invitation expirée n'est déjà plus lue (ADR 0030) : la purge efface sa ligne.
+    invitations: await purgerInvitations(prisma, maintenant),
   }
   journal.info(
     { evenement: 'donnees-techniques-purgees', ...compte },

@@ -40,7 +40,13 @@ describe('adresseLocaleOuPrivee', () => {
       'fc00::1',
     ])
       expect(adresseLocaleOuPrivee(a)).toBe(true)
-    for (const a of ['198.51.100.1', '203.0.113.9', '2a00::1', 'poste', undefined])
+    for (const a of [
+      '198.51.100.1',
+      '203.0.113.9',
+      '2a00::1',
+      'poste',
+      undefined,
+    ])
       expect(adresseLocaleOuPrivee(a)).toBe(false)
   })
 })

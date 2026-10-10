@@ -1,5 +1,5 @@
 import { useApolloClient, useQuery } from '@apollo/client/react'
-import { ConfigProvider, Result, Spin } from 'antd'
+import { Card, ConfigProvider, Result, Spin } from 'antd'
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router'
 
@@ -8,10 +8,13 @@ import {
   construireContexte,
   ContexteActivite,
 } from '../lib/activite'
+import { useMesInvitations } from '../lib/invitations'
 import { themeDepuisApi, useOrganisation } from '../lib/organisation'
 import { ACTIVITES, MOI } from '../lib/requetes'
 import { appliquerTheme, construireTheme } from '../lib/theme'
 import { activiteAffichee, afficherActivite } from '../lib/selection'
+
+import { InvitationsRecues } from './MesInvitations'
 
 // Premiers segments des adresses d'avant l'ADR 0008, sans activité : une adresse
 // comme /fiches ou /admin/equipe mène à la même page de l'activité par défaut.
@@ -26,6 +29,7 @@ const PAGES = new Set([
 function AucuneActivite() {
   // La session est déjà en cache : la garde de session l'a chargée.
   const moi = useQuery(MOI).data?.moi
+  const invitations = useMesInvitations()
   return (
     // Un admin de l'organisation voit toutes les activités : une liste vide dit
     // qu'il n'en existe aucune. Pour les autres, aucune ne leur est encore ouverte.
@@ -36,11 +40,23 @@ function AucuneActivite() {
         subTitle="Un admin de l’organisation crée la première activité, ou l’import du dépôt d’organisation la crée."
       />
     ) : (
-      <Result
-        status="info"
-        title="Aucune activité ne vous est encore ouverte."
-        subTitle="Un admin vous ouvre une activité en vous affectant à l’un de ses périmètres."
-      />
+      <>
+        <Result
+          status="info"
+          title="Aucune activité ne vous est encore ouverte."
+          subTitle="Un admin vous ouvre une activité en vous affectant à l’un de ses périmètres."
+        />
+        {/* Cet écran n'a pas de menu du compte : une invitation d'une autre
+            organisation (ADR 0030) se lit et se décide ici. */}
+        {invitations.length > 0 && (
+          <Card
+            title="Vos invitations"
+            style={{ maxWidth: 560, margin: '0 auto 24px' }}
+          >
+            <InvitationsRecues />
+          </Card>
+        )}
+      </>
     )
   )
 }

@@ -31,6 +31,6 @@
 | [0027](0027-ecran-equipe-a-deux-vues-et-ecran-messages.md) | Écran « Équipe » à deux vues et écran « Messages » | Acceptée |
 | [0028](0028-assigner-une-tache-entre-referents.md) | Assigner une tâche entre référentes et référents | Acceptée |
 | [0029](0029-commentaires-d-une-tache.md) | Commentaires d'une tâche | Acceptée |
-| [0030](0030-cloisonnement-des-organisations.md) | Cloisonnement des organisations d'une installation partagée | Acceptée, à réaliser |
+| [0030](0030-cloisonnement-des-organisations.md) | Cloisonnement des organisations d'une installation partagée | Acceptée, réalisée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

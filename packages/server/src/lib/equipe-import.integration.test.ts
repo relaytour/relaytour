@@ -286,4 +286,51 @@ personnes:
       { sorte: 'equipe', cible: { userId: ids.membre } },
     ])
   })
+
+  it('laisse en attente un compte connu hors de l’organisation, avec ses périmètres et son contact principal', async () => {
+    const externe = randomUUID()
+    await prisma.user.create({
+      data: { id: externe, email: adresse('externe'), name: `Compte ${s}` },
+    })
+    const fichier = `
+personnes:
+  - nom: Saisie ${s}
+    adresse: ${adresse('externe')}
+    affectations: [soirees]
+    contactPrincipal: [soirees]
+    souhaits: [restauration]
+`
+    const avant = await compter()
+    const rapport = await importerEquipe(prisma, lireEquipe(fichier), {
+      ...options(),
+      envoyerMails: true,
+    })
+    // ADR 0030 : rien ne s'écrit au nom du compte, et son nom ne se lit pas.
+    expect(rapport.invitationsEnAttente).toEqual([`Saisie ${s}`])
+    expect(rapport.nomsDifferents).toEqual([])
+    expect(rapport.affectationsCreees).toEqual([])
+    expect(await compter()).toEqual(avant)
+    const invitation = await prisma.invitationOrganisation.findUniqueOrThrow({
+      where: {
+        organisationId_userId: { organisationId: ids.org, userId: externe },
+      },
+    })
+    expect(invitation).toMatchObject({
+      origine: 'IMPORT',
+      inviteParId: null,
+      nom: `Saisie ${s}`,
+      role: 'MEMBRE',
+    })
+    const [lot] = invitation.lots as {
+      affectes: string[]
+      souhaites: string[]
+      contactPrincipal: string[]
+    }[]
+    expect(lot!.affectes).toHaveLength(1)
+    expect(lot!.contactPrincipal).toEqual(lot!.affectes)
+    expect(lot!.souhaites).toHaveLength(1)
+    expect(enFile).toEqual([
+      { sorte: 'invitation', cible: { userId: externe } },
+    ])
+  })
 })

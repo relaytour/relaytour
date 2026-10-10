@@ -22,6 +22,7 @@ import {
 import { exigerAdminDeLEdition, exigerEcriture } from '../lib/droits.ts'
 import { annoncerChangementEquipe } from '../lib/equipe.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import { annoncerInvitation, inviterCompteExterne } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
 import { adresseValide, rejouerSurDoublon, texteRequis } from '../lib/saisie.ts'
 import { perimetresSouhaitesValides, SOUHAITS_MAX } from '../lib/souhaits.ts'
@@ -454,6 +455,46 @@ builder.mutationFields(t => ({
             throw erreurSaisie('Cette adresse ne peut pas être invitée.')
           }
           const { userId } = compte
+          const traitee = {
+            statut: 'ACCEPTEE' as const,
+            traiteeParId: ctx.personne!.id,
+            traiteeLe: instant,
+            adresseEnAttente: null,
+          }
+          // Les organisations sont cloisonnées (ADR 0030) : un compte connu hors de
+          // l'organisation reçoit une invitation, qui garde les périmètres affectés
+          // et les autres périmètres demandés. La demande ne se lie pas au compte.
+          if (compte.issue === 'externe') {
+            const souhaites = await autresPerimetresDemandes(
+              tx,
+              demande.id,
+              affecter
+            )
+            if (affecter.length + souhaites.length === 0) {
+              throw erreurSaisie(SANS_PERIMETRE)
+            }
+            await inviterCompteExterne(tx, {
+              organisationId,
+              userId,
+              role: 'MEMBRE',
+              nom: demande.nom,
+              origine: 'PERSONNE',
+              inviteParId: ctx.personne!.id,
+              lot: {
+                editionId: demande.editionId,
+                activiteId: demande.activiteId,
+                affectes: affecter,
+                souhaites: souhaites.slice(0, SOUHAITS_MAX),
+                contactPrincipal: [],
+              },
+              instant,
+            })
+            await tx.demande.update({
+              where: { id: demande.id },
+              data: traitee,
+            })
+            return { compte, creees: [] }
+          }
           // Un admin d'activité n'affecte pas un admin de l'organisation (ADR 0019).
           if (compte.issue === 'membre') {
             await refuserAdminDeLOrganisation(ctx, userId, tx)
@@ -472,19 +513,11 @@ builder.mutationFields(t => ({
             where: { id: userId, ...dansLEquipe([demande.activiteId]) },
           })
           if (liee === 0) {
-            throw erreurSaisie(
-              'Choisissez au moins un périmètre : la personne rejoint l’équipe par ce périmètre.'
-            )
+            throw erreurSaisie(SANS_PERIMETRE)
           }
           await tx.demande.update({
             where: { id: demande.id },
-            data: {
-              statut: 'ACCEPTEE',
-              traiteeParId: ctx.personne!.id,
-              traiteeLe: instant,
-              userId,
-              adresseEnAttente: null,
-            },
+            data: { ...traitee, userId },
           })
           return { compte, creees }
         })
@@ -511,6 +544,12 @@ builder.mutationFields(t => ({
             instant,
           })
         }
+      } else if (compte.issue === 'externe') {
+        // Un seul mail par personne et par heure (ADR 0030).
+        await annoncerInvitation(compte.userId, {
+          organisationId,
+          activiteId: demande.activiteId,
+        })
       } else {
         await mettreEnFile(
           'invitation',
@@ -568,6 +607,27 @@ builder.mutationFields(t => ({
     },
   }),
 }))
+
+const SANS_PERIMETRE =
+  'Choisissez au moins un périmètre : la personne rejoint l’équipe par ce périmètre.'
+
+/** Les périmètres demandés, non archivés, que l'admin n'a pas affectés. */
+async function autresPerimetresDemandes(
+  tx: Prisma.TransactionClient,
+  demandeId: string,
+  affectes: string[]
+): Promise<string[]> {
+  const demandes = await tx.demandePerimetre.findMany({
+    where: {
+      demandeId,
+      perimetreId: { notIn: affectes },
+      perimetre: { archivedAt: null },
+    },
+    select: { perimetreId: true },
+    orderBy: { createdAt: 'asc' },
+  })
+  return [...new Set(demandes.map(d => d.perimetreId))]
+}
 
 /**
  * Les périmètres demandés que l'admin n'a pas affectés deviennent des souhaits, dans

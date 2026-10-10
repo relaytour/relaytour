@@ -139,6 +139,7 @@ Un seul mot par notion.
 | souhait | Intérêt d'une personne pour un périmètre d'une édition, noté par un admin ou formulé par la personne. |
 | demande | Nom et adresse d'une personne qui veut rejoindre l'équipe d'une période, avec les périmètres qui l'intéressent. Elle attend la décision d'un admin : aucun compte n'existe avant (ADR 0015). |
 | proposition | Demande faite par une personne affectée à un périmètre, pour ce périmètre. |
+| invitation en attente | Proposition faite à une personne qui a déjà un compte hors de l'organisation de la rejoindre, avec un rôle et des périmètres. Rien n'est créé en son nom avant son accord, et l'organisation ne lit rien de son compte (ADR 0030). |
 | message | Texte qu'un admin prépare dans l'espace organisateur et envoie depuis sa propre messagerie, à une ou plusieurs personnes. L'application ne l'envoie pas (ADR 0020). Ne pas confondre avec un mail, que l'application envoie elle-même. |
 | messagerie | Le logiciel ou le service de mail de l'admin, que l'application ouvre avec le message préparé : l'application par défaut de son appareil, une messagerie en ligne ou une application choisie (ADR 0022). |
 | modèle | Texte de départ d'un message, que l'application complète avec ses informations : période, périmètre, tâches, adresses. |

@@ -55,6 +55,8 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
     ...VUES_DES_TACHES,
     ...VUES_DES_FICHES,
     'SouhaitsEnAttente',
+    // Une invitation acceptée ou retirée quitte la liste d'attente (ADR 0030).
+    'InvitationsEnAttente',
   ],
   DEMANDE: [
     'Demandes',

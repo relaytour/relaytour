@@ -20,6 +20,10 @@ type Documents = {
     "\n  query SouhaitsEnAttente($editionId: ID!) {\n    postesAPourvoir(editionId: $editionId) {\n      perimetre {\n        id\n      }\n      souhaits {\n        id\n      }\n    }\n  }\n": typeof types.SouhaitsEnAttenteDocument,
     "\n  mutation AccepterDemande($id: ID!, $affecter: [ID!]!) {\n    accepterDemande(id: $id, affecter: $affecter) {\n      id\n      statut\n    }\n  }\n": typeof types.AccepterDemandeDocument,
     "\n  mutation RefuserDemande($id: ID!) {\n    refuserDemande(id: $id) {\n      id\n      statut\n    }\n  }\n": typeof types.RefuserDemandeDocument,
+    "\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n": typeof types.RelancerInvitationDocument,
+    "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": typeof types.RetirerInvitationDocument,
+    "\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n": typeof types.AccepterInvitationDocument,
+    "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n": typeof types.RefuserInvitationDocument,
     "\n  query NombreNotificationsNonLues {\n    nombreNotificationsNonLues\n  }\n": typeof types.NombreNotificationsNonLuesDocument,
     "\n  query ListeNotifications {\n    notifications(limite: 40) {\n      id\n      type\n      message\n      lien\n      lue\n      creeLe\n    }\n  }\n": typeof types.ListeNotificationsDocument,
     "\n  mutation MarquerNotificationsLues($ids: [ID!]) {\n    marquerNotificationsLues(ids: $ids)\n  }\n": typeof types.MarquerNotificationsLuesDocument,
@@ -46,6 +50,8 @@ type Documents = {
     "\n  mutation CreerFiche(\n    $slug: String!\n    $titre: String!\n    $contenu: String!\n    $perimetreId: ID\n  ) {\n    creerFiche(\n      slug: $slug\n      titre: $titre\n      contenu: $contenu\n      perimetreId: $perimetreId\n    ) {\n      id\n      slug\n    }\n  }\n": typeof types.CreerFicheDocument,
     "\n  mutation ModifierFiche(\n    $id: ID!\n    $titre: String!\n    $contenu: String!\n    $resume: String\n    $versionDeDepart: ID\n  ) {\n    modifierFiche(\n      id: $id\n      titre: $titre\n      contenu: $contenu\n      resume: $resume\n      versionDeDepart: $versionDeDepart\n    ) {\n      id\n      slug\n      titre\n      contenu\n      modifieeLe\n      modifieePar\n      source\n      donneesPersonnelles\n      versionCouranteId\n    }\n  }\n": typeof types.ModifierFicheDocument,
     "\n  mutation RestaurerVersionFiche($versionId: ID!, $versionDeDepart: ID) {\n    restaurerVersionFiche(\n      versionId: $versionId\n      versionDeDepart: $versionDeDepart\n    ) {\n      id\n      titre\n      contenu\n      modifieeLe\n      modifieePar\n      source\n      versionCouranteId\n    }\n  }\n": typeof types.RestaurerVersionFicheDocument,
+    "\n  query InvitationsEnAttente($activiteId: ID) {\n    invitationsEnAttente(activiteId: $activiteId) {\n      id\n      nom\n      email\n      estAdmin\n      expireLe\n      perimetresAffectes {\n        id\n        nom\n        couleur\n      }\n      perimetresSouhaites {\n        id\n        nom\n        couleur\n      }\n    }\n  }\n": typeof types.InvitationsEnAttenteDocument,
+    "\n  query MesInvitations {\n    mesInvitations {\n      id\n      organisationNom\n      estAdmin\n      perimetres\n      expireLe\n    }\n  }\n": typeof types.MesInvitationsDocument,
     "\n  mutation TeleverserMedia($format: FormatMedia!, $donnees: String!) {\n    televerserMedia(format: $format, donnees: $donnees) {\n      empreinte\n      url\n    }\n  }\n": typeof types.TeleverserMediaDocument,
     "\n  query VersionInstallation {\n    versionInstallation\n  }\n": typeof types.VersionInstallationDocument,
     "\n  query NotesDeVersion {\n    notesDeVersion {\n      numero\n      date\n      notes {\n        id\n        type\n        role\n        titre\n        texte\n      }\n    }\n  }\n": typeof types.NotesDeVersionDocument,
@@ -112,7 +118,7 @@ type Documents = {
     "\n  query DemandesEnAttente($editionId: ID!) {\n    demandes(editionId: $editionId, statut: EN_ATTENTE) {\n      id\n    }\n  }\n": typeof types.DemandesEnAttenteDocument,
     "\n  query SouhaitsActivite($activiteId: ID!) {\n    editionCourante(activiteId: $activiteId) {\n      id\n      nom\n    }\n    perimetres(activiteId: $activiteId) {\n      id\n      nom\n      groupe\n    }\n  }\n": typeof types.SouhaitsActiviteDocument,
     "\n  query SouhaitsEdition($activiteId: ID!, $editionId: ID!) {\n    equipe(activiteId: $activiteId) {\n      id\n      affectations(editionId: $editionId) {\n        id\n        perimetre {\n          id\n        }\n      }\n      souhaits(editionId: $editionId) {\n        id\n        perimetre {\n          id\n        }\n      }\n    }\n  }\n": typeof types.SouhaitsEditionDocument,
-    "\n  mutation InviterPersonne(\n    $email: String!\n    $nom: String!\n    $editionId: ID\n    $perimetresSouhaites: [ID!]\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      editionId: $editionId\n      perimetresSouhaites: $perimetresSouhaites\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      id\n    }\n  }\n": typeof types.InviterPersonneDocument,
+    "\n  mutation InviterPersonne(\n    $email: String!\n    $nom: String!\n    $editionId: ID\n    $perimetresSouhaites: [ID!]\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      editionId: $editionId\n      perimetresSouhaites: $perimetresSouhaites\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n      personne {\n        id\n      }\n    }\n  }\n": typeof types.InviterPersonneDocument,
     "\n  mutation ModifierPersonne($id: ID!, $nom: String!, $estAdmin: Boolean!) {\n    modifierPersonne(id: $id, nom: $nom, estAdmin: $estAdmin) {\n      id\n      nom\n      estAdmin\n    }\n  }\n": typeof types.ModifierPersonneDocument,
     "\n  mutation ArchiverPersonne($id: ID!, $archive: Boolean!) {\n    archiverPersonne(id: $id, archive: $archive) {\n      id\n      archive\n    }\n  }\n": typeof types.ArchiverPersonneDocument,
     "\n  mutation DefinirSouhaits(\n    $personneId: ID!\n    $editionId: ID!\n    $perimetreIds: [ID!]!\n  ) {\n    definirSouhaits(\n      personneId: $personneId\n      editionId: $editionId\n      perimetreIds: $perimetreIds\n    ) {\n      id\n    }\n  }\n": typeof types.DefinirSouhaitsDocument,
@@ -128,6 +134,10 @@ const documents: Documents = {
     "\n  query SouhaitsEnAttente($editionId: ID!) {\n    postesAPourvoir(editionId: $editionId) {\n      perimetre {\n        id\n      }\n      souhaits {\n        id\n      }\n    }\n  }\n": types.SouhaitsEnAttenteDocument,
     "\n  mutation AccepterDemande($id: ID!, $affecter: [ID!]!) {\n    accepterDemande(id: $id, affecter: $affecter) {\n      id\n      statut\n    }\n  }\n": types.AccepterDemandeDocument,
     "\n  mutation RefuserDemande($id: ID!) {\n    refuserDemande(id: $id) {\n      id\n      statut\n    }\n  }\n": types.RefuserDemandeDocument,
+    "\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n": types.RelancerInvitationDocument,
+    "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": types.RetirerInvitationDocument,
+    "\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n": types.AccepterInvitationDocument,
+    "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n": types.RefuserInvitationDocument,
     "\n  query NombreNotificationsNonLues {\n    nombreNotificationsNonLues\n  }\n": types.NombreNotificationsNonLuesDocument,
     "\n  query ListeNotifications {\n    notifications(limite: 40) {\n      id\n      type\n      message\n      lien\n      lue\n      creeLe\n    }\n  }\n": types.ListeNotificationsDocument,
     "\n  mutation MarquerNotificationsLues($ids: [ID!]) {\n    marquerNotificationsLues(ids: $ids)\n  }\n": types.MarquerNotificationsLuesDocument,
@@ -154,6 +164,8 @@ const documents: Documents = {
     "\n  mutation CreerFiche(\n    $slug: String!\n    $titre: String!\n    $contenu: String!\n    $perimetreId: ID\n  ) {\n    creerFiche(\n      slug: $slug\n      titre: $titre\n      contenu: $contenu\n      perimetreId: $perimetreId\n    ) {\n      id\n      slug\n    }\n  }\n": types.CreerFicheDocument,
     "\n  mutation ModifierFiche(\n    $id: ID!\n    $titre: String!\n    $contenu: String!\n    $resume: String\n    $versionDeDepart: ID\n  ) {\n    modifierFiche(\n      id: $id\n      titre: $titre\n      contenu: $contenu\n      resume: $resume\n      versionDeDepart: $versionDeDepart\n    ) {\n      id\n      slug\n      titre\n      contenu\n      modifieeLe\n      modifieePar\n      source\n      donneesPersonnelles\n      versionCouranteId\n    }\n  }\n": types.ModifierFicheDocument,
     "\n  mutation RestaurerVersionFiche($versionId: ID!, $versionDeDepart: ID) {\n    restaurerVersionFiche(\n      versionId: $versionId\n      versionDeDepart: $versionDeDepart\n    ) {\n      id\n      titre\n      contenu\n      modifieeLe\n      modifieePar\n      source\n      versionCouranteId\n    }\n  }\n": types.RestaurerVersionFicheDocument,
+    "\n  query InvitationsEnAttente($activiteId: ID) {\n    invitationsEnAttente(activiteId: $activiteId) {\n      id\n      nom\n      email\n      estAdmin\n      expireLe\n      perimetresAffectes {\n        id\n        nom\n        couleur\n      }\n      perimetresSouhaites {\n        id\n        nom\n        couleur\n      }\n    }\n  }\n": types.InvitationsEnAttenteDocument,
+    "\n  query MesInvitations {\n    mesInvitations {\n      id\n      organisationNom\n      estAdmin\n      perimetres\n      expireLe\n    }\n  }\n": types.MesInvitationsDocument,
     "\n  mutation TeleverserMedia($format: FormatMedia!, $donnees: String!) {\n    televerserMedia(format: $format, donnees: $donnees) {\n      empreinte\n      url\n    }\n  }\n": types.TeleverserMediaDocument,
     "\n  query VersionInstallation {\n    versionInstallation\n  }\n": types.VersionInstallationDocument,
     "\n  query NotesDeVersion {\n    notesDeVersion {\n      numero\n      date\n      notes {\n        id\n        type\n        role\n        titre\n        texte\n      }\n    }\n  }\n": types.NotesDeVersionDocument,
@@ -220,7 +232,7 @@ const documents: Documents = {
     "\n  query DemandesEnAttente($editionId: ID!) {\n    demandes(editionId: $editionId, statut: EN_ATTENTE) {\n      id\n    }\n  }\n": types.DemandesEnAttenteDocument,
     "\n  query SouhaitsActivite($activiteId: ID!) {\n    editionCourante(activiteId: $activiteId) {\n      id\n      nom\n    }\n    perimetres(activiteId: $activiteId) {\n      id\n      nom\n      groupe\n    }\n  }\n": types.SouhaitsActiviteDocument,
     "\n  query SouhaitsEdition($activiteId: ID!, $editionId: ID!) {\n    equipe(activiteId: $activiteId) {\n      id\n      affectations(editionId: $editionId) {\n        id\n        perimetre {\n          id\n        }\n      }\n      souhaits(editionId: $editionId) {\n        id\n        perimetre {\n          id\n        }\n      }\n    }\n  }\n": types.SouhaitsEditionDocument,
-    "\n  mutation InviterPersonne(\n    $email: String!\n    $nom: String!\n    $editionId: ID\n    $perimetresSouhaites: [ID!]\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      editionId: $editionId\n      perimetresSouhaites: $perimetresSouhaites\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      id\n    }\n  }\n": types.InviterPersonneDocument,
+    "\n  mutation InviterPersonne(\n    $email: String!\n    $nom: String!\n    $editionId: ID\n    $perimetresSouhaites: [ID!]\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      editionId: $editionId\n      perimetresSouhaites: $perimetresSouhaites\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n      personne {\n        id\n      }\n    }\n  }\n": types.InviterPersonneDocument,
     "\n  mutation ModifierPersonne($id: ID!, $nom: String!, $estAdmin: Boolean!) {\n    modifierPersonne(id: $id, nom: $nom, estAdmin: $estAdmin) {\n      id\n      nom\n      estAdmin\n    }\n  }\n": types.ModifierPersonneDocument,
     "\n  mutation ArchiverPersonne($id: ID!, $archive: Boolean!) {\n    archiverPersonne(id: $id, archive: $archive) {\n      id\n      archive\n    }\n  }\n": types.ArchiverPersonneDocument,
     "\n  mutation DefinirSouhaits(\n    $personneId: ID!\n    $editionId: ID!\n    $perimetreIds: [ID!]!\n  ) {\n    definirSouhaits(\n      personneId: $personneId\n      editionId: $editionId\n      perimetreIds: $perimetreIds\n    ) {\n      id\n    }\n  }\n": types.DefinirSouhaitsDocument,
@@ -268,6 +280,22 @@ export function graphql(source: "\n  mutation AccepterDemande($id: ID!, $affecte
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RefuserDemande($id: ID!) {\n    refuserDemande(id: $id) {\n      id\n      statut\n    }\n  }\n"): (typeof documents)["\n  mutation RefuserDemande($id: ID!) {\n    refuserDemande(id: $id) {\n      id\n      statut\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n"): (typeof documents)["\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n"): (typeof documents)["\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n"): (typeof documents)["\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n"): (typeof documents)["\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -372,6 +400,14 @@ export function graphql(source: "\n  mutation ModifierFiche(\n    $id: ID!\n    
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RestaurerVersionFiche($versionId: ID!, $versionDeDepart: ID) {\n    restaurerVersionFiche(\n      versionId: $versionId\n      versionDeDepart: $versionDeDepart\n    ) {\n      id\n      titre\n      contenu\n      modifieeLe\n      modifieePar\n      source\n      versionCouranteId\n    }\n  }\n"): (typeof documents)["\n  mutation RestaurerVersionFiche($versionId: ID!, $versionDeDepart: ID) {\n    restaurerVersionFiche(\n      versionId: $versionId\n      versionDeDepart: $versionDeDepart\n    ) {\n      id\n      titre\n      contenu\n      modifieeLe\n      modifieePar\n      source\n      versionCouranteId\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query InvitationsEnAttente($activiteId: ID) {\n    invitationsEnAttente(activiteId: $activiteId) {\n      id\n      nom\n      email\n      estAdmin\n      expireLe\n      perimetresAffectes {\n        id\n        nom\n        couleur\n      }\n      perimetresSouhaites {\n        id\n        nom\n        couleur\n      }\n    }\n  }\n"): (typeof documents)["\n  query InvitationsEnAttente($activiteId: ID) {\n    invitationsEnAttente(activiteId: $activiteId) {\n      id\n      nom\n      email\n      estAdmin\n      expireLe\n      perimetresAffectes {\n        id\n        nom\n        couleur\n      }\n      perimetresSouhaites {\n        id\n        nom\n        couleur\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query MesInvitations {\n    mesInvitations {\n      id\n      organisationNom\n      estAdmin\n      perimetres\n      expireLe\n    }\n  }\n"): (typeof documents)["\n  query MesInvitations {\n    mesInvitations {\n      id\n      organisationNom\n      estAdmin\n      perimetres\n      expireLe\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -639,7 +675,7 @@ export function graphql(source: "\n  query SouhaitsEdition($activiteId: ID!, $ed
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  mutation InviterPersonne(\n    $email: String!\n    $nom: String!\n    $editionId: ID\n    $perimetresSouhaites: [ID!]\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      editionId: $editionId\n      perimetresSouhaites: $perimetresSouhaites\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation InviterPersonne(\n    $email: String!\n    $nom: String!\n    $editionId: ID\n    $perimetresSouhaites: [ID!]\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      editionId: $editionId\n      perimetresSouhaites: $perimetresSouhaites\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      id\n    }\n  }\n"];
+export function graphql(source: "\n  mutation InviterPersonne(\n    $email: String!\n    $nom: String!\n    $editionId: ID\n    $perimetresSouhaites: [ID!]\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      editionId: $editionId\n      perimetresSouhaites: $perimetresSouhaites\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n      personne {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation InviterPersonne(\n    $email: String!\n    $nom: String!\n    $editionId: ID\n    $perimetresSouhaites: [ID!]\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      editionId: $editionId\n      perimetresSouhaites: $perimetresSouhaites\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n      personne {\n        id\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

@@ -106,7 +106,7 @@ const AFFECTER =
   'mutation ($u: ID!, $p: ID!, $e: ID!) { affecter(personneId: $u, perimetreId: $p, editionId: $e) { id } }'
 const EQUIPE = 'query ($a: ID) { equipe(activiteId: $a) { id nom email } }'
 const INVITER =
-  'mutation ($email: String!, $e: ID, $p: [ID!]) { inviterPersonne(email: $email, nom: "Invitée", editionId: $e, perimetresSouhaites: $p) { id } }'
+  'mutation ($email: String!, $e: ID, $p: [ID!]) { inviterPersonne(email: $email, nom: "Invitée", editionId: $e, perimetresSouhaites: $p) { personne { id } } }'
 const DEFINIR_ADMIN =
   'mutation ($u: ID!, $a: ID!, $x: Boolean!) { definirAdminActivite(personneId: $u, activiteId: $a, admin: $x) }'
 
@@ -532,7 +532,7 @@ describe('admin d’une activité', () => {
         { a: ids.a1 },
       ],
       [
-        'mutation { inviterPersonne(email: "admin-intrus@exemple.fr", nom: "X", estAdmin: true) { id } }',
+        'mutation { inviterPersonne(email: "admin-intrus@exemple.fr", nom: "X", estAdmin: true) { personne { id } } }',
         {},
       ],
       ['query { identiteOrganisation { nom } }', {}],
@@ -647,17 +647,19 @@ describe('équipe d’une activité (ADR 0018)', () => {
     }
     const r = await executer(ids.adminA1, INVITER, variables)
     expect(r.errors).toBeUndefined()
-    expect(r.data?.inviterPersonne).toEqual({ id: ids.membreA2 })
+    expect(r.data?.inviterPersonne).toEqual({ personne: { id: ids.membreA2 } })
     expect(await comptes()).toEqual([utilisateurs, appartenances, souhaits + 1])
     expect(await equipe(ids.adminA1, ids.a1)).toContain(ids.membreA2)
     // Une seconde invitation ne change rien et répond de la même façon.
     const encore = await executer(ids.adminA1, INVITER, variables)
-    expect(encore.data?.inviterPersonne).toEqual({ id: ids.membreA2 })
+    expect(encore.data?.inviterPersonne).toEqual({
+      personne: { id: ids.membreA2 },
+    })
     expect(await comptes()).toEqual([utilisateurs, appartenances, souhaits + 1])
     await prisma.souhait.deleteMany({ where: { userId: ids.membreA2 } })
   })
 
-  it('rattache le compte d’une autre organisation, et refuse un compte archivé sans rien écrire', async () => {
+  it('laisse en attente le compte connu hors de l’organisation, et refuse un compte archivé sans rien écrire', async () => {
     const externe = randomUUID()
     const archive = randomUUID()
     await prisma.user.createMany({
@@ -676,8 +678,17 @@ describe('équipe d’une activité (ADR 0018)', () => {
       email: adresse('externe-equipe'),
       ...souhait,
     })
-    expect(r.data?.inviterPersonne).toEqual({ id: externe })
-    expect(await equipe(ids.adminA1, ids.a1)).toContain(externe)
+    // ADR 0030 : rien ne s'écrit au nom d'un compte extérieur, et la réponse ne
+    // rend pas ce compte.
+    expect(r.data?.inviterPersonne).toEqual({ personne: null })
+    expect(await equipe(ids.adminA1, ids.a1)).not.toContain(externe)
+    expect(
+      await prisma.appartenance.count({ where: { userId: externe } })
+    ).toBe(0)
+    expect(await prisma.souhait.count({ where: { userId: externe } })).toBe(0)
+    expect(
+      await prisma.invitationOrganisation.count({ where: { userId: externe } })
+    ).toBe(1)
 
     const avant = await comptes()
     const refus = await executer(ids.adminA1, INVITER, {
@@ -692,8 +703,8 @@ describe('équipe d’une activité (ADR 0018)', () => {
   it('lit l’équipe et les attributions à jour entre deux invitations d’une même mutation', async () => {
     const DEUX = (champs: string) =>
       `mutation ($a: String!, $b: String!, $e: ID, $p: [ID!]) {
-        a: inviterPersonne(email: $a, nom: "A", editionId: $e, perimetresSouhaites: $p) { ${champs} }
-        b: inviterPersonne(email: $b, nom: "B", editionId: $e, perimetresSouhaites: $p) { ${champs} }
+        a: inviterPersonne(email: $a, nom: "A", editionId: $e, perimetresSouhaites: $p) { personne { ${champs} } }
+        b: inviterPersonne(email: $b, nom: "B", editionId: $e, perimetresSouhaites: $p) { personne { ${champs} } }
       }`
     const souhait = { e: ids.edition1, p: [ids.perimetre1] }
     // L'adresse de la seconde personne se lit : l'équipe mémorisée par le premier
@@ -704,9 +715,9 @@ describe('équipe d’une activité (ADR 0018)', () => {
       ...souhait,
     })
     expect(adresses.errors).toBeUndefined()
-    expect((adresses.data?.b as { email: string }).email).toBe(
-      adresse('double-b')
-    )
+    expect(
+      (adresses.data?.b as { personne: { email: string } }).personne.email
+    ).toBe(adresse('double-b'))
     const attributions = await executer(
       ids.adminOrg,
       DEUX('id attributions { activiteId interessee }'),
@@ -715,7 +726,8 @@ describe('équipe d’une activité (ADR 0018)', () => {
     expect(attributions.errors).toBeUndefined()
     for (const cle of ['a', 'b']) {
       expect(
-        (attributions.data?.[cle] as { attributions: unknown[] }).attributions
+        (attributions.data?.[cle] as { personne: { attributions: unknown[] } })
+          .personne.attributions
       ).toEqual([{ activiteId: ids.a1, interessee: true }])
     }
     await prisma.souhait.deleteMany({
@@ -873,7 +885,7 @@ describe('nomination d’un admin d’activité', () => {
 describe('admins lus et nommés par un admin d’activité (ADR 0019)', () => {
   const ADMINS = 'query { adminsOrganisation { id nom estAdmin } }'
   const INVITER_AFFECTEE =
-    'mutation ($email: String!, $e: ID, $p: [ID!]) { inviterPersonne(email: $email, nom: "Affectée", editionId: $e, perimetresAffectes: $p) { id } }'
+    'mutation ($email: String!, $e: ID, $p: [ID!]) { inviterPersonne(email: $email, nom: "Affectée", editionId: $e, perimetresAffectes: $p) { personne { id } } }'
   const adminsDe = (activiteId: string) =>
     prisma.adminActivite
       .findMany({ where: { activiteId }, select: { userId: true } })
@@ -997,7 +1009,8 @@ describe('admins lus et nommés par un admin d’activité (ADR 0019)', () => {
       p: [ids.perimetre1],
     })
     expect(r.errors).toBeUndefined()
-    const userId = (r.data?.inviterPersonne as { id: string }).id
+    const userId = (r.data?.inviterPersonne as { personne: { id: string } })
+      .personne.id
     expect(
       await prisma.affectation.count({
         where: {

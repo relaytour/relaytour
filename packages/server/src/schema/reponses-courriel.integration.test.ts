@@ -109,7 +109,7 @@ async function creerCompte(cle: string, role: 'ADMIN' | 'MEMBRE') {
 }
 
 const INVITER =
-  'mutation ($email: String!, $e: ID, $p: [ID!]) { inviterPersonne(email: $email, nom: "Invitée", editionId: $e, perimetresSouhaites: $p) { id } }'
+  'mutation ($email: String!, $e: ID, $p: [ID!]) { inviterPersonne(email: $email, nom: "Invitée", editionId: $e, perimetresSouhaites: $p) { personne { id } } }'
 
 /** Invite une personne, puis compose le mail mis en file. */
 async function inviter(
@@ -121,7 +121,8 @@ async function inviter(
     email: `${cle}-${s}@exemple.fr`,
     ...variables,
   })
-  const userId = (data.inviterPersonne as { id: string }).id
+  const userId = (data.inviterPersonne as { personne: { id: string } }).personne
+    .id
   const job = enFile.at(-1)
   expect(job?.sorte).toBe('invitation')
   return composer(prisma, {

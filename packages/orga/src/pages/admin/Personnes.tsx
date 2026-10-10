@@ -30,6 +30,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { Navigate, useSearchParams } from 'react-router'
 
 import Demandes from '../../composants/Demandes'
+import InvitationsEnAttente from '../../composants/InvitationsEnAttente'
 import EcrireMessage, {
   type CibleMessage,
 } from '../../composants/EcrireMessage'
@@ -43,6 +44,7 @@ import type {
   PersonnesQuery,
 } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
+import { INVITATIONS_EN_ATTENTE } from '../../lib/invitations'
 import { normaliser } from '../../lib/recherche'
 import { type Activite, useActivite } from '../../lib/activite'
 import {
@@ -192,7 +194,10 @@ const INVITER = graphql(`
       perimetresSouhaites: $perimetresSouhaites
       perimetresAffectes: $perimetresAffectes
     ) {
-      id
+      enAttente
+      personne {
+        id
+      }
     }
   }
 `)
@@ -553,7 +558,9 @@ export default function Personnes({
   const rafraichir = {
     refetchQueries: [modeAnnuaire ? PERSONNES : EQUIPE],
   }
-  const [inviter, invitation] = useMutation(INVITER, rafraichir)
+  const [inviter, invitation] = useMutation(INVITER, {
+    refetchQueries: [...rafraichir.refetchQueries, INVITATIONS_EN_ATTENTE],
+  })
   const [modifier, modification] = useMutation(MODIFIER, rafraichir)
   const [archiver] = useMutation(ARCHIVER, rafraichir)
   const [definirSouhaits, definition] = useMutation(
@@ -704,10 +711,13 @@ export default function Personnes({
     )
   }
 
-  const executer = async (action: () => Promise<unknown>, succes: string) => {
+  const executer = async (
+    action: () => Promise<unknown>,
+    succes: string | (() => string)
+  ) => {
     try {
       await action()
-      message.success(succes)
+      message.success(typeof succes === 'string' ? succes : succes())
       return true
     } catch (e) {
       message.error(messageErreur(e))
@@ -751,37 +761,54 @@ export default function Personnes({
     }
     // Le compte créé par l'invitation, pour reprendre la suite si elle échoue.
     let cree: string | undefined
+    // Vrai quand l'adresse a déjà un compte hors de l'organisation : l'invitation
+    // attend l'accord de la personne, et rien n'est créé en son nom (ADR 0030).
+    let enAttente = false
     const ok =
       enEdition === 'nouvelle'
-        ? await executer(async () => {
-            const r = await inviter({
-              variables: {
-                email: v.email,
-                nom: v.nom,
-                editionId: premiers?.editionId ?? null,
-                perimetresSouhaites: premiers?.souhaites ?? [],
-                perimetresAffectes: premiers?.affectes ?? [],
-              },
-            })
-            const id = r.data?.inviterPersonne.id
-            if (id === undefined) return
-            cree = id
-            await ajusterAdminsActivite(id, [], v.activitesAdministrees ?? [])
-            // Les autres périodes passent aussi par l'invitation, qui ajoute sans
-            // rien retirer : la personne a peut-être déjà un compte, des souhaits
-            // et des affectations, que ce formulaire n'a pas lus.
-            for (const i of invites.slice(1)) {
-              await inviter({
+        ? await executer(
+            async () => {
+              const r = await inviter({
                 variables: {
                   email: v.email,
                   nom: v.nom,
-                  editionId: i.editionId,
-                  perimetresSouhaites: i.souhaites,
-                  perimetresAffectes: i.affectes,
+                  editionId: premiers?.editionId ?? null,
+                  perimetresSouhaites: premiers?.souhaites ?? [],
+                  perimetresAffectes: premiers?.affectes ?? [],
                 },
               })
-            }
-          }, 'Invitation enregistrée. Une personne sans compte reçoit un mail avec le lien de connexion.')
+              enAttente = r.data?.inviterPersonne.enAttente ?? false
+              const id = r.data?.inviterPersonne.personne?.id
+              // Un rôle d'admin d'activité se donne à un membre : pour une invitation
+              // en attente, il se donnera après l'accord de la personne.
+              if (id !== undefined) {
+                cree = id
+                await ajusterAdminsActivite(
+                  id,
+                  [],
+                  v.activitesAdministrees ?? []
+                )
+              } else if (!enAttente) return
+              // Les autres périodes passent aussi par l'invitation, qui ajoute sans
+              // rien retirer : la personne a peut-être déjà un compte, des souhaits
+              // et des affectations, que ce formulaire n'a pas lus.
+              for (const i of invites.slice(1)) {
+                await inviter({
+                  variables: {
+                    email: v.email,
+                    nom: v.nom,
+                    editionId: i.editionId,
+                    perimetresSouhaites: i.souhaites,
+                    perimetresAffectes: i.affectes,
+                  },
+                })
+              }
+            },
+            () =>
+              enAttente
+                ? 'Invitation envoyée. Cette adresse a déjà un compte : la personne accepte ou refuse depuis son compte, et rien n’est créé avant son accord.'
+                : 'Invitation enregistrée. Une personne sans compte reçoit un mail avec le lien de connexion.'
+          )
         : enEdition
           ? await executer(async () => {
               if (gereOrganisation) {
@@ -1107,6 +1134,9 @@ export default function Personnes({
             </Tooltip>
           </Space>
 
+          <InvitationsEnAttente
+            {...(modeAnnuaire ? {} : { activiteId: activite.id })}
+          />
           <Tableau<Personne>
             id="personnes"
             rowKey="id"
@@ -1455,7 +1485,7 @@ export default function Personnes({
               title={
                 activitesSouhaits.length === 0
                   ? `Ouvrez d’abord ${periode.une} : une invitation porte au moins un périmètre.`
-                  : 'Choisissez au moins un périmètre, affecté ou souhaité : la personne rejoint votre équipe par ce périmètre. Si elle a déjà un compte, ce compte est rattaché et garde son nom.'
+                  : 'Choisissez au moins un périmètre, affecté ou souhaité : la personne rejoint votre équipe par ce périmètre. Si elle a déjà un compte dans votre organisation, ce compte rejoint l’équipe et garde son nom. Si son compte existe hors de votre organisation, l’invitation attend son accord.'
               }
             />
           )}

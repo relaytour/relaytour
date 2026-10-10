@@ -327,6 +327,10 @@ export function messageNotification(
       : `${n.activite.nom} : ${phrase}`
   }
   const acteur = (n.acteurId && noms.get(n.acteurId)) ?? 'Une personne'
+  // La personne a accepté : elle est membre, et son nom se lit désormais (ADR 0030).
+  if (n.type === 'INVITATION_ACCEPTEE') {
+    return `${acteur} a accepté l’invitation et rejoint l’organisation.`
+  }
   if (n.type === 'FICHE_CREEE' || n.type === 'FICHE_MODIFIEE') {
     if (n.fiche === null) return 'Cette fiche n’existe plus.'
     const perimetre =
@@ -409,6 +413,9 @@ export function lienNotification(n: NotificationAComposer): string {
     return n.activite
       ? `/${n.activite.slug}/admin/personnes?onglet=demandes`
       : '/'
+  }
+  if (n.type === 'INVITATION_ACCEPTEE') {
+    return n.activite ? `/${n.activite.slug}/admin/personnes` : '/'
   }
   if (n.type === 'FICHE_CREEE' || n.type === 'FICHE_MODIFIEE') {
     return n.fiche ? `/${n.fiche.activite.slug}/fiches/${n.fiche.slug}` : '/'

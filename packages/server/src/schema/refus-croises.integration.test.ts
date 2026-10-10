@@ -41,6 +41,8 @@ const a = {
   message: '',
   droit: '',
   notification: '',
+  // Une invitation en attente pour un compte extérieur (ADR 0030).
+  invitation: '',
   admin: '',
   referente: '',
   // Une autre activité de l'organisation A, son admin et sa référente (ADR 0010).
@@ -305,6 +307,35 @@ beforeAll(async () => {
       },
     })
   ).id
+  const invitee = randomUUID()
+  await prisma.user.create({
+    data: {
+      id: invitee,
+      email: `invitee-refus-${s}@exemple.fr`,
+      name: 'Compte extérieur',
+    },
+  })
+  a.invitation = (
+    await prisma.invitationOrganisation.create({
+      data: {
+        organisationId: a.org,
+        userId: invitee,
+        nom: 'Invitée',
+        origine: 'PERSONNE',
+        inviteParId: a.admin,
+        lots: [
+          {
+            editionId: a.edition,
+            activiteId: a.activite,
+            affectes: [a.perimetre],
+            souhaites: [],
+            contactPrincipal: [],
+          },
+        ],
+        expireLe: new Date(Date.now() + 24 * 3600 * 1000),
+      },
+    })
+  ).id
 })
 
 afterAll(async () => {
@@ -387,6 +418,39 @@ const REFUSE: Refus = { refus: ['FORBIDDEN', 'SAISIE_INVALIDE'] }
 
 const CAS: Cas[] = [
   // ── Mutations ──────────────────────────────────────────────────────────────
+  // Invitations entre organisations (ADR 0030) : seule la personne invitée accepte
+  // ou refuse, seuls les admins de l'activité de A relancent ou retirent.
+  {
+    operation: 'accepterInvitation',
+    query: 'mutation ($id: ID!) { accepterInvitation(id: $id) }',
+    variables: () => ({ id: a.invitation }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'refuserInvitation',
+    query: 'mutation ($id: ID!) { refuserInvitation(id: $id) }',
+    variables: () => ({ id: a.invitation }),
+    attente: { sansEffet: d => expect(d.refuserInvitation).toBe(false) },
+  },
+  {
+    operation: 'relancerInvitation',
+    query: 'mutation ($id: ID!) { relancerInvitation(id: $id) }',
+    variables: () => ({ id: a.invitation }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'retirerInvitation',
+    query: 'mutation ($id: ID!) { retirerInvitation(id: $id) }',
+    variables: () => ({ id: a.invitation }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'invitationsEnAttente',
+    query:
+      'query ($a: ID) { invitationsEnAttente(activiteId: $a) { id nom email } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
   // Tâches partagées (ADR 0026) : accorder, décliner et imposer portent sur une
   // tâche de l'activité principale de A.
   {
@@ -594,7 +658,7 @@ const CAS: Cas[] = [
   {
     operation: 'inviterPersonne',
     query:
-      'mutation ($e: ID, $p: [ID!]) { inviterPersonne(email: "intrusion-refus@exemple.fr", nom: "X", editionId: $e, perimetresSouhaites: $p) { id } }',
+      'mutation ($e: ID, $p: [ID!]) { inviterPersonne(email: "intrusion-refus@exemple.fr", nom: "X", editionId: $e, perimetresSouhaites: $p) { personne { id } } }',
     variables: () => ({ e: a.edition, p: [a.perimetre] }),
     attente: INTERDIT,
   },
@@ -930,7 +994,12 @@ async function etatDeA() {
         }),
       ]),
     ])
+  const invitation = await prisma.invitationOrganisation.findUnique({
+    where: { id: a.invitation },
+    select: { lots: true, expireLe: true, role: true },
+  })
   return JSON.stringify({
+    invitation,
     tache,
     fiche,
     perimetre,

@@ -37,6 +37,7 @@ import { Link, useSearchParams } from 'react-router'
 
 import Avancement from '../../composants/Avancement'
 import CarteAvancement from '../../composants/CarteAvancement'
+import InvitationsEnAttente from '../../composants/InvitationsEnAttente'
 import MessageEquipe, { type CibleEquipe } from '../../composants/MessageEquipe'
 import { Puces, SeparateurPuces } from '../../composants/Puces'
 import ReglagePerimetre, {
@@ -414,6 +415,7 @@ export default function Equipe() {
       >
         Équipe
       </Titre>
+      {vue === 'equipe' && <InvitationsEnAttente activiteId={activite.id} />}
       <Space wrap size={[16, 12]} style={{ marginBottom: 16 }}>
         <Segmented<Vue>
           aria-label="Vue"

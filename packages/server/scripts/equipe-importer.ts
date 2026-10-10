@@ -63,7 +63,10 @@ try {
       : '✔ Équipe importée'
   )
   afficher('Comptes créés', rapport.comptesCrees)
-  afficher('Comptes rattachés à l’organisation', rapport.comptesRattaches)
+  afficher(
+    'Invitations en attente (compte connu hors de l’organisation)',
+    rapport.invitationsEnAttente
+  )
   afficher('Comptes déjà membres', rapport.comptesExistants)
   afficher('Noms différents, laissés tels quels', rapport.nomsDifferents)
   afficher('Affectations créées', rapport.affectationsCreees)

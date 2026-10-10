@@ -3,17 +3,19 @@ import {
   CustomerServiceOutlined,
   DownloadOutlined,
   LogoutOutlined,
+  MailOutlined,
   QuestionCircleOutlined,
   SettingOutlined,
   TagOutlined,
 } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
-import { Dropdown } from 'antd'
+import { Badge, Dropdown } from 'antd'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { useActivite } from '../lib/activite'
 import { estInstallee } from '../lib/installation'
+import { useMesInvitations } from '../lib/invitations'
 import { VERSION } from '../lib/notes-de-version'
 import { useOrganisation } from '../lib/organisation'
 import {
@@ -25,6 +27,7 @@ import {
 import { lienSupport, ouvreUnOnglet } from '../lib/support'
 
 import InstallerApplication from './InstallerApplication'
+import MesInvitations from './MesInvitations'
 import NotesDeVersion from './NotesDeVersion'
 import { Avatar } from './Personne'
 
@@ -49,6 +52,24 @@ export default function MenuCompte({
   const version = useQuery(VERSION).data?.versionInstallation
   const [notesOuvertes, setNotesOuvertes] = useState(false)
   const [installationOuverte, setInstallationOuverte] = useState(false)
+  // Les invitations d'autres organisations qui attendent l'accord de la personne
+  // (ADR 0030). Sans invitation, l'entrée n'apparaît pas.
+  const invitations = useMesInvitations()
+  const [invitationsOuvertes, setInvitationsOuvertes] = useState(false)
+  const entreeInvitations =
+    invitations.length === 0
+      ? []
+      : [
+          {
+            key: 'invitations',
+            icon: <MailOutlined />,
+            label:
+              invitations.length === 1
+                ? '1 invitation en attente'
+                : `${invitations.length} invitations en attente`,
+          },
+          { type: 'divider' as const },
+        ]
   // L'entrée n'a plus d'objet dans l'application déjà installée.
   const entreeInstallation = estInstallee()
     ? []
@@ -102,6 +123,7 @@ export default function MenuCompte({
         placement="bottomRight"
         menu={{
           items: [
+            ...entreeInvitations,
             ...choixOrganisation,
             {
               key: 'preferences',
@@ -147,6 +169,7 @@ export default function MenuCompte({
             if (key === 'preferences') navigate(lien('/preferences'))
             if (key === 'notes-de-version') setNotesOuvertes(true)
             if (key === 'installer') setInstallationOuverte(true)
+            if (key === 'invitations') setInvitationsOuvertes(true)
             if (key === 'deconnexion') void deconnecter()
             if (key.startsWith('organisation:')) {
               const slug = key.slice('organisation:'.length)
@@ -162,7 +185,9 @@ export default function MenuCompte({
           className="rt-compte-bouton"
           aria-label={`Compte de ${nom}`}
         >
-          <Avatar nom={nom} encre />
+          <Badge dot={invitations.length > 0} offset={[-2, 4]}>
+            <Avatar nom={nom} encre />
+          </Badge>
           {afficherNom && <span>{nom}</span>}
           <svg
             width="14"
@@ -184,6 +209,10 @@ export default function MenuCompte({
         ouvert={notesOuvertes}
         version={version}
         onFermer={() => setNotesOuvertes(false)}
+      />
+      <MesInvitations
+        ouvert={invitationsOuvertes}
+        onFermer={() => setInvitationsOuvertes(false)}
       />
       <InstallerApplication
         ouvert={installationOuverte}
