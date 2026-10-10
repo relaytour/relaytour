@@ -1,11 +1,16 @@
 # Exemple de /etc/caddy/Caddyfile pour une installation (Caddy sur l'hôte).
 # Remplacez les hôtes d'exemple par les vôtres. Caddy obtient et renouvelle les certificats.
 
+# En-têtes communs aux deux hôtes. L'API les pose aussi elle-même : ceux-ci couvrent
+# les fichiers de l'espace organisateur et toute réponse que Caddy produit seul.
 (entetes-securite) {
 	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
 		Referrer-Policy strict-origin-when-cross-origin
+		Permissions-Policy "camera=(), microphone=(), geolocation=()"
+		Cross-Origin-Opener-Policy same-origin
 		-Server
 	}
 }
@@ -30,6 +35,7 @@ api.exemple.org {
 # /graphql porte aussi le flux des changements (SSE, ADR 0017) : Caddy le transmet
 # au fil de l'eau, sans réglage.
 orga.exemple.org {
+	import entetes-securite
 	@api path /api/auth/* /graphql /medias/*
 	handle @api {
 		import relais-api
@@ -37,8 +43,11 @@ orga.exemple.org {
 	handle {
 		root * /srv/relaytour/orga
 		encode zstd gzip
-		import entetes-securite
-		header X-Frame-Options DENY
+		# Politique de contenu de l'espace organisateur. Tout vient de cette origine :
+		# scripts, polices et images d'identité ; les styles autorisent l'inline, posé par
+		# la bibliothèque de composants ; les images des fiches peuvent venir d'un site
+		# https. Retirez « https: » d'img-src pour les limiter à cette origine.
+		header Content-Security-Policy "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self'; connect-src 'self'; worker-src 'self'; manifest-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
 		@assets path /assets/*
 		header @assets Cache-Control "public, max-age=31536000, immutable"
 		try_files {path} /index.html

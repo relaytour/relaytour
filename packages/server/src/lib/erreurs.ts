@@ -1,4 +1,8 @@
-import { GraphQLError } from 'graphql'
+import { randomUUID } from 'node:crypto'
+
+import { GraphQLError, type GraphQLFormattedError } from 'graphql'
+
+import { journal } from './journal.ts'
 
 /** Erreur de saisie lisible par l'interface. */
 export function erreurSaisie(message: string): GraphQLError {
@@ -89,4 +93,65 @@ export function requeteTropLourde(
       complexite: mesure.complexity,
     },
   })
+}
+
+// Codes d'erreur qui sortent du serveur tels quels : ceux de ce fichier, et ceux
+// qu'Apollo pose sur une requête mal formée. Toute autre erreur (Prisma, exécution)
+// est remplacée par un message générique, pour ne pas révéler le schéma de la base
+// ni le détail d'une requête.
+const CODES_CONNUS = new Set([
+  'SAISIE_INVALIDE',
+  'FORBIDDEN',
+  'CONFLIT_VERSION',
+  'CONFIRMATION_REQUISE',
+  'LECTURE_SEULE',
+  'LIMITE_ATTEINTE',
+  'ABONNEMENT_ATTENDU',
+  'TROP_DE_FLUX',
+  'FLUX_INDISPONIBLE',
+  'REQUETE_TROP_PROFONDE',
+  'REQUETE_TROP_LARGE',
+  'REQUETE_TROP_COMPLEXE',
+  'GRAPHQL_PARSE_FAILED',
+  'GRAPHQL_VALIDATION_FAILED',
+  'BAD_USER_INPUT',
+  'BAD_REQUEST',
+  'PERSISTED_QUERY_NOT_FOUND',
+  'PERSISTED_QUERY_NOT_SUPPORTED',
+  'OPERATION_RESOLUTION_FAILURE',
+])
+
+/**
+ * `formatError` d'Apollo : une erreur à code connu passe, une autre est masquée.
+ * Le journal garde le message et la pile sous une référence que la réponse porte,
+ * pour retrouver l'erreur à partir du retour d'une personne.
+ */
+export function formaterErreur(
+  formatee: GraphQLFormattedError,
+  erreur: unknown
+): GraphQLFormattedError {
+  const code = formatee.extensions?.code
+  if (typeof code === 'string' && CODES_CONNUS.has(code)) return formatee
+  const reference = randomUUID().slice(0, 8)
+  const origine =
+    erreur instanceof GraphQLError ? (erreur.originalError ?? erreur) : erreur
+  journal.error(
+    {
+      evenement: 'erreur-interne',
+      reference,
+      code: code ?? null,
+      chemin: formatee.path ?? null,
+      message: origine instanceof Error ? origine.message : String(origine),
+      pile: origine instanceof Error ? origine.stack : undefined,
+    },
+    'Une erreur interne a été masquée dans la réponse.'
+  )
+  return {
+    message: `Le serveur a rencontré une erreur (référence ${reference}). Réessayez, puis contactez un admin si elle persiste.`,
+    ...(formatee.path === undefined ? {} : { path: formatee.path }),
+    ...(formatee.locations === undefined
+      ? {}
+      : { locations: formatee.locations }),
+    extensions: { code: 'INTERNAL_SERVER_ERROR', reference },
+  }
 }

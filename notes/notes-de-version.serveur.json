@@ -8,6 +8,32 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-10-serveur-un-titre-de-tache-ou-de-fiche-compte-191-caracteres-au-plus",
+          "date": "2026-10-10",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un titre de tâche ou de fiche compte 191 caractères au plus",
+            "texte": "Un titre de tâche ou de fiche de 192 à 200 caractères était accepté par l'écran et refusé par la base, avec une erreur incompréhensible. La limite est désormais 191 caractères, annoncée par un message clair. Le résumé d'une version de fiche compte 191 caractères au plus, et la description d'une tâche 5 000.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-les-erreurs-internes-ne-sortent-plus-du-serveur",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les erreurs internes ne sortent plus du serveur",
+            "texte": "Une erreur que l'API n'a pas prévue (base de données, exécution) répond par un message générique et une référence de huit caractères. Le journal du serveur garde le message et la pile sous cette référence. Les erreurs de saisie, de droits, de conflit et de limite ne changent pas.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-10-serveur-les-dependances-et-les-images-sont-suivies-et-l-installation",
           "date": "2026-10-10",
           "type": "interne",
@@ -69,6 +95,19 @@
           "fr": {
             "titre": "La bibliothèque d'envoi des mails est mise à jour",
             "texte": "Le serveur passe à la version 10 de nodemailer, qui corrige deux failles de déni de service dans l'analyse des adresses (GHSA-v53p-9fqp-m79j et GHSA-prgh-xp8r-p3m5) et trois faiblesses de gravité modérée. Les mails partent comme avant ; aucune action n'est attendue des installations.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-l-api-et-l-espace-organisateur-posent-des-en-tetes-de-securite",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'API et l'espace organisateur posent des en-têtes de sécurité",
+            "texte": "L'API pose elle-même `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` et `Cross-Origin-Opener-Policy`, et une politique de contenu fermée en production. Le `Caddyfile` d'exemple pose les mêmes en-têtes sur les deux hôtes, y compris sur les chemins relayés vers l'API, et une politique de contenu pour l'espace organisateur. `/health` ne rend l'empreinte du commit et la date du build qu'à une requête locale.",
             "migration": null
           }
         }

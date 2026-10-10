@@ -64,7 +64,10 @@ const EnvSchema = z
     // premier import d'organisation.yaml. La ligne en base prend ensuite le relais (ADR 0006).
     ORGANISATION_NOM: optionnelle.transform(s => s ?? 'Relaytour'),
     CONTACT_RECRUTEMENT: optionnelle,
-    PAGE_EQUIPE: optionnelle,
+    PAGE_EQUIPE: optionnelle.refine(
+      s => s === undefined || /^https:\/\/\S+$/.test(s),
+      'PAGE_EQUIPE : adresse https attendue'
+    ),
     // Adresse ou URL de l'hébergeur, citée quand une limite d'organisation est
     // atteinte (ADR 0008). Absente en auto-hébergement : le message renvoie vers un admin.
     CONTACT_HEBERGEUR: optionnelle,
