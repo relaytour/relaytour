@@ -365,11 +365,15 @@ export function messageNotification(
     case 'TACHE_ASSIGNEE':
       return n.personneId === n.acteurId
         ? `${acteur} s’occupe de la tâche ${titre}.`
-        : `${acteur} a assigné la tâche ${titre} à ${personne}.`
+        : n.personneId === moiId
+          ? `${acteur} vous a assigné la tâche ${titre}.`
+          : `${acteur} a assigné la tâche ${titre} à ${personne}.`
     case 'TACHE_DESASSIGNEE':
       return n.personneId === n.acteurId
         ? `${acteur} ne s’occupe plus de la tâche ${titre}.`
-        : `${acteur} a retiré ${personne} de la tâche ${titre}.`
+        : n.personneId === moiId
+          ? `${acteur} vous a retiré·e de la tâche ${titre}.`
+          : `${acteur} a retiré ${personne} de la tâche ${titre}.`
     case 'ECHEANCE_PROCHE':
       return n.jours === 0
         ? `La tâche ${titre} arrive à échéance aujourd’hui.`

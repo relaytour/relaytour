@@ -122,6 +122,7 @@ Les composants de `packages/orga/src/composants` servent aux écrans publics et 
 | `Avatar`, `PersonneNommee` | initiales et nom d'une personne, retirable par un admin |
 | `ChoixEdition` | sélecteur d'édition |
 | `TacheCarte`, `LigneTache` | tâche avec ses actions, tâche sur une ligne sans action |
+| `FilTache` | volet du fil d'une tâche : commentaires, événements du journal et saisie (ADR 0029) |
 | `Avancement` | avancement compact ou barre empilée avec sa légende |
 | `Recherche`, `MenuCompte`, `Notifications` | éléments de la barre haute |
 
