@@ -143,6 +143,7 @@ export type TypeNotification =
   | 'FICHE_CREEE'
   | 'FICHE_MODIFIEE'
   | 'TACHE_ASSIGNEE'
+  | 'TACHE_COMMENTEE'
   | 'TACHE_CREEE'
   | 'TACHE_DESASSIGNEE'
   | 'TACHE_EN_RETARD'

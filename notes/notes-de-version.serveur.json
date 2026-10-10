@@ -5,6 +5,24 @@
   "version": "0.15.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-10-serveur-une-tache-porte-un-fil-de-commentaires",
+          "date": "2026-10-10",
+          "type": "fonctionnalite",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une tâche porte un fil de commentaires",
+            "texte": "L'API porte les commentaires d'une tâche : la requête `filTache` rend les commentaires et les événements du journal, `nombresCommentaires` compte les commentaires par tâche, et trois mutations écrivent, modifient et suppriment un commentaire. Une migration additive crée la table `CommentaireTache`.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.14.0",
       "notes": [
         {

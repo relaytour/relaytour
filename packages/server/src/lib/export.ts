@@ -147,6 +147,11 @@ export async function construireExport(organisationId: string) {
       clotureePar: { select: { email: true } },
       realiseePar: { select: { email: true } },
       assignations: { include: { user: { select: { email: true } } } },
+      // Les commentaires de la tâche (ADR 0029), du plus ancien au plus récent.
+      commentaires: {
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        include: { auteur: { select: { email: true } } },
+      },
     },
   })
 
@@ -235,6 +240,12 @@ export async function construireExport(organisationId: string) {
           realiseePar: t.realiseePar?.email ?? null,
           termineeLe: t.termineeLe?.toISOString() ?? null,
           assignes: t.assignations.map(x => x.user.email),
+          commentaires: t.commentaires.map(c => ({
+            auteur: c.auteur?.email ?? null,
+            texte: c.texte,
+            creeLe: c.createdAt.toISOString(),
+            modifieLe: c.modifieLe?.toISOString() ?? null,
+          })),
           creeLe: t.createdAt.toISOString(),
         })),
     })),

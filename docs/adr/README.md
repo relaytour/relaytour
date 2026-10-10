@@ -30,5 +30,6 @@
 | [0026](0026-taches-partagees.md) | Tâches partagées entre périmètres | Acceptée |
 | [0027](0027-ecran-equipe-a-deux-vues-et-ecran-messages.md) | Écran « Équipe » à deux vues et écran « Messages » | Acceptée |
 | [0028](0028-assigner-une-tache-entre-referents.md) | Assigner une tâche entre référentes et référents | Proposée |
+| [0029](0029-commentaires-d-une-tache.md) | Commentaires d'une tâche | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

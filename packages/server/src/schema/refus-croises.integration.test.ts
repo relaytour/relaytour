@@ -33,6 +33,7 @@ const a = {
   ficheCommune: '',
   version: '',
   tache: '',
+  commentaire: '',
   affectation: '',
   souhait: '',
   demande: '',
@@ -275,6 +276,16 @@ beforeAll(async () => {
         corps: 'Bonjour',
         champ: 'A',
         destinataires: { create: { userId: a.referente } },
+      },
+    })
+  ).id
+  // Un commentaire de la référente sur la tâche (ADR 0029).
+  a.commentaire = (
+    await prisma.commentaireTache.create({
+      data: {
+        tacheId: a.tache,
+        auteurId: a.referente,
+        texte: 'Salle réservée.',
       },
     })
   ).id
@@ -734,6 +745,41 @@ const CAS: Cas[] = [
     attente: { sansEffet: d => expect(d.retirerSouhait).toBe(false) },
   },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  // Le fil d'une tâche et ses commentaires (ADR 0029).
+  {
+    operation: 'filTache',
+    query:
+      'query ($id: ID!) { filTache(id: $id) { commentaires { texte } evenements { id } } }',
+    variables: () => ({ id: a.tache }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'nombresCommentaires',
+    query:
+      'query ($e: ID!) { nombresCommentaires(editionId: $e) { tacheId nombre } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'commenterTache',
+    query:
+      'mutation ($id: ID!) { commenterTache(id: $id, texte: "Intrusion") { tacheId } }',
+    variables: () => ({ id: a.tache }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'modifierCommentaire',
+    query:
+      'mutation ($id: ID!) { modifierCommentaire(id: $id, texte: "Intrusion") { tacheId } }',
+    variables: () => ({ id: a.commentaire }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'supprimerCommentaire',
+    query: 'mutation ($id: ID!) { supprimerCommentaire(id: $id) { tacheId } }',
+    variables: () => ({ id: a.commentaire }),
+    attente: INTERDIT,
+  },
   // Une tâche et ses déclinaisons (ADR 0026).
   {
     operation: 'tache',
@@ -876,6 +922,11 @@ async function etatDeA() {
         }),
         prisma.demandePerimetre.count({
           where: { demande: { organisationId: a.org } },
+        }),
+        prisma.commentaireTache.findMany({
+          where: { tache: { perimetre: { organisationId: a.org } } },
+          select: { id: true, texte: true, modifieLe: true },
+          orderBy: { id: 'asc' },
         }),
       ]),
     ])

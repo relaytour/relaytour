@@ -82,7 +82,12 @@ export const TRANCHE_PERIMETRE_MS = 10 * 60 * 1000
 export async function notifierLePerimetre(
   prisma: PrismaClient,
   notification: {
-    type: 'TACHE_MODIFIEE' | 'TACHE_STATUT' | 'FICHE_CREEE' | 'FICHE_MODIFIEE'
+    type:
+      | 'TACHE_MODIFIEE'
+      | 'TACHE_STATUT'
+      | 'TACHE_COMMENTEE'
+      | 'FICHE_CREEE'
+      | 'FICHE_MODIFIEE'
     perimetreId: string
     /** L'édition de la tâche, ou null pour une fiche. */
     editionId: string | null
@@ -204,6 +209,8 @@ export async function notifier(
       // apprend comme simple référente du périmètre reste dans la cloche.
       if (
         options.mailImmediat ||
+        // Un commentaire prévient en push les personnes assignées (ADR 0029).
+        notification.type === 'TACHE_COMMENTEE' ||
         ((notification.type === 'TACHE_ASSIGNEE' ||
           notification.type === 'TACHE_DESASSIGNEE') &&
           notification.personneId === userId)
@@ -352,6 +359,9 @@ export function messageNotification(
       return `${acteur} a refusé la tâche ${titre}.`
     case 'TACHE_MODIFIEE':
       return `${acteur} a modifié la tâche ${titre}.`
+    // Le texte du commentaire ne figure jamais dans une notification (ADR 0029).
+    case 'TACHE_COMMENTEE':
+      return `${acteur} a commenté la tâche ${titre}.`
     case 'TACHE_ASSIGNEE':
       return n.personneId === n.acteurId
         ? `${acteur} s’occupe de la tâche ${titre}.`

@@ -147,6 +147,30 @@ type Changement {
   perimetreId: ID
 }
 
+"""
+Un commentaire écrit sur une tâche : un texte simple, daté et signé (ADR 0029).
+"""
+type CommentaireTache {
+  """Null quand le compte de l’auteur n’existe plus."""
+  auteur: Personne
+  creeLe: DateTime!
+  id: ID!
+
+  """
+  Le moment de la dernière modification du texte par son auteur, ou null.
+  """
+  modifieLe: DateTime
+
+  """Vrai pour l’auteur, tant qu’il écrit dans le périmètre."""
+  peutModifier: Boolean!
+
+  """
+  Vrai pour l’auteur et pour les admins de l’activité, tant que la période n’est pas archivée.
+  """
+  peutSupprimer: Boolean!
+  texte: String!
+}
+
 type CouleursTheme {
   accent: String!
   accentClair: String!
@@ -278,6 +302,23 @@ enum EtatPostes {
   SANS_PERSONNE
 }
 
+"""
+Un événement du journal d’une tâche : création, modification, assignation, retrait ou changement de statut.
+"""
+type EvenementTache {
+  """
+  La personne qui a agi. Null pour un passage à « faite », sauf pour la personne qui a coché et pour les admins de l’activité.
+  """
+  acteur: Personne
+  id: ID!
+  le: DateTime!
+
+  """Pour une assignation ou un retrait : la personne concernée."""
+  personne: Personne
+  statut: StatutTache
+  type: TypeEvenementTache!
+}
+
 type Fiche {
   activite: Activite!
   archive: Boolean!
@@ -305,6 +346,19 @@ type FicheVersion {
   resume: String
   source: SourceFiche!
   titre: String!
+}
+
+"""
+Le fil d’une tâche : ses commentaires et les événements de son journal, du plus ancien au plus récent. Chaque liste rend au plus ses 200 derniers éléments.
+"""
+type FilTache {
+  commentaires: [CommentaireTache!]!
+  evenements: [EvenementTache!]!
+
+  """Le nombre total de commentaires de la tâche."""
+  nombreCommentaires: Int!
+  peutCommenter: Boolean!
+  tacheId: ID!
 }
 
 """Le fond du thème, en plus des trois arrêts du sol."""
@@ -561,6 +615,11 @@ type Mutation {
   Change le statut d’une tâche. Demander le statut qu’elle a déjà ne change rien. Avec `statutAttendu`, le serveur refuse de changer un statut qu’une autre personne a modifié entre-temps (code `CONFLIT_VERSION`).
   """
   changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!, statutAttendu: StatutTache): Tache!
+
+  """
+  Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
+  """
+  commenterTache(id: ID!, texte: String!): FilTache!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
@@ -617,6 +676,11 @@ type Mutation {
   """
   marquerNotificationsLues(ids: [ID!]): Int!
   modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
+
+  """
+  Modifie le texte d’un commentaire et rend le fil de sa tâche. Seul son auteur le modifie.
+  """
+  modifierCommentaire(id: ID!, texte: String!): FilTache!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
 
   """
@@ -683,6 +747,11 @@ type Mutation {
   retirerSouhait(id: ID!): Boolean!
 
   """
+  Supprime un commentaire, définitivement, et rend le fil de sa tâche. Son auteur le supprime, ainsi qu’un admin de l’activité.
+  """
+  supprimerCommentaire(id: ID!): FilTache!
+
+  """
   Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.
   """
   televerserMedia(donnees: String!, format: FormatMedia!): MediaTeleverse!
@@ -695,6 +764,12 @@ enum NatureActivite {
   EVENEMENT
   MANDAT
   SAISON
+}
+
+"""Le nombre de commentaires d’une tâche."""
+type NombreCommentaires {
+  nombre: Int!
+  tacheId: ID!
 }
 
 type NoteDeVersion {
@@ -982,6 +1057,11 @@ type Query {
   fiches(activiteId: ID, inclureArchives: Boolean = false): [Fiche!]!
 
   """
+  Le fil d’une tâche (ADR 0029). Toute personne qui lit le périmètre de la tâche le lit ; une personne en consultation reçoit un refus.
+  """
+  filTache(id: ID!): FilTache!
+
+  """
   Le formulaire d’une activité, ou null s’il est fermé. Sans slug d’organisation : l’unique organisation de l’installation. Lisible sans session.
   """
   formulaireRejoindre(activite: String!, organisation: String): FormulaireRejoindre
@@ -1000,6 +1080,11 @@ type Query {
   moi: Personne
   monScore(editionId: ID!): Score!
   nombreNotificationsNonLues: Int!
+
+  """
+  Le nombre de commentaires de chaque tâche commentée d’une période, dans les périmètres que la personne lit. Une tâche sans commentaire est absente.
+  """
+  nombresCommentaires(editionId: ID!): [NombreCommentaires!]!
 
   """
   Notes des versions publiées, de la plus récente à la plus ancienne, limitées au rôle de la personne dans l’organisation active.
@@ -1185,6 +1270,17 @@ type TousLesPerimetres {
   perimetres: [PerimetreDecouvert!]!
 }
 
+"""
+Un événement du journal d’une tâche, repris dans son fil. STATUT : le champ `statut` porte le nouveau statut.
+"""
+enum TypeEvenementTache {
+  ASSIGNEE
+  CREEE
+  MODIFIEE
+  RETIREE
+  STATUT
+}
+
 enum TypeNoteDeVersion {
   CORRECTIF
   FONCTIONNALITE
@@ -1202,6 +1298,7 @@ enum TypeNotification {
   FICHE_CREEE
   FICHE_MODIFIEE
   TACHE_ASSIGNEE
+  TACHE_COMMENTEE
   TACHE_CREEE
   TACHE_DESASSIGNEE
   TACHE_EN_RETARD

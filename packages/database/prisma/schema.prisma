@@ -205,6 +205,7 @@ model User {
   affectations       Affectation[]           @relation("AffectationUtilisateur")
   affectationsCreees Affectation[]           @relation("AffectationAuteur")
   tachesCreees       Tache[]                 @relation("TacheAuteur")
+  commentaires       CommentaireTache[]      @relation("CommentaireAuteur")
   tachesCloturees    Tache[]                 @relation("TacheCloture")
   tachesRealisees    Tache[]                 @relation("TacheRealisation")
   tachesAccordees    Tache[]                 @relation("TacheAccord")
@@ -636,6 +637,7 @@ model Tache {
   declinaisons  Tache[]            @relation("Declinaisons")
   accordPar     User?              @relation("TacheAccord", fields: [accordParId], references: [id], onDelete: SetNull)
   assignations  TacheAssignation[]
+  commentaires  CommentaireTache[]
   journal       Journal[]
   notifications Notification[]
 
@@ -657,6 +659,25 @@ model TacheAssignation {
 
   @@unique([tacheId, userId])
   @@index([userId])
+}
+
+// Commentaire d'une tâche (ADR 0029) : un texte daté et signé, écrit par une
+// personne qui écrit dans le périmètre. Il vit en base seulement, et suit la tâche.
+// La suppression d'un commentaire est définitive.
+model CommentaireTache {
+  id        String    @id @default(cuid())
+  tacheId   String
+  auteurId  String?
+  texte     String    @db.Text
+  // Le moment de la dernière modification du texte par son auteur.
+  modifieLe DateTime?
+  createdAt DateTime  @default(now())
+
+  tache  Tache @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+  auteur User? @relation("CommentaireAuteur", fields: [auteurId], references: [id], onDelete: SetNull)
+
+  @@index([tacheId, createdAt])
+  @@index([auteurId])
 }
 
 enum TypeJournal {
@@ -799,6 +820,9 @@ enum TypeNotification {
   DECLINAISON_PROPOSEE
   DECLINAISON_ACCEPTEE
   DECLINAISON_REFUSEE
+  // Commentaire écrit sur une tâche (ADR 0029). La notification ne porte pas le
+  // texte : elle nomme l'auteur et la tâche.
+  TACHE_COMMENTEE
 }
 
 // Une notification ne stocke que des identifiants : le texte se compose à la lecture,
