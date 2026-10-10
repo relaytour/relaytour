@@ -60,38 +60,30 @@ export async function limiterParCle(
   }
 }
 
+// Rend une tentative réservée par INCR, sans passer sous zéro : la clé a pu expirer
+// entre la réservation et la restitution.
+const RENDRE = `
+local compte = tonumber(redis.call('GET', KEYS[1]) or '0')
+if compte > 0 then return redis.call('DECR', KEYS[1]) end
+return 0
+`
+
 /**
- * Vrai quand `cle` a reçu au moins `max` refus dans sa fenêtre. Sans Redis, faux :
- * le contrôle qui suit (comparaison d'un jeton, par exemple) reste entier.
+ * Rend une tentative comptée par `limiterParCle` : l'appel réserve sa place avant
+ * un contrôle, puis la rend si le contrôle réussit. Seuls les échecs s'accumulent,
+ * et deux requêtes parallèles ne peuvent pas dépasser la limite ensemble. Ne lève jamais.
  */
-export async function tropDeRefus(cle: string, max: number): Promise<boolean> {
+export async function rendreTentative(cle: string): Promise<void> {
   try {
-    const compte = await avecDelai(
-      (await connexion()).get(`limite:${cle}`),
+    await avecDelai(
+      (await connexion()).eval(RENDRE, 1, `limite:${cle}`),
       1_000,
       'Limite par clé'
     )
-    return Number(compte ?? 0) >= max
   } catch (erreur) {
     journal.error(
       { evenement: 'limite-indisponible', message: (erreur as Error).message },
-      'Redis ne répond pas : les refus récents ne sont pas comptés.'
-    )
-    return false
-  }
-}
-
-/** Note un refus pour `cle`, dans une fenêtre fixe. Ne lève jamais. */
-export async function noterRefus(
-  cle: string,
-  fenetreSecondes: number
-): Promise<void> {
-  try {
-    await compter(cle, fenetreSecondes)
-  } catch (erreur) {
-    journal.error(
-      { evenement: 'limite-indisponible', message: (erreur as Error).message },
-      'Redis ne répond pas : le refus n’est pas compté.'
+      'Redis ne répond pas : la tentative n’est pas rendue.'
     )
   }
 }

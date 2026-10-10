@@ -6,6 +6,7 @@ import { emailOTP } from 'better-auth/plugins/email-otp'
 
 import { mettreEnFile } from './courriel/file.ts'
 import { env } from './env.ts'
+import { ENTETE_IP_CLIENT } from './lib/adresse-client.ts'
 import { CODE_VALIDITE_SECONDES } from './lib/connexion.ts'
 import { courrielTronque, journal } from './lib/journal.ts'
 import { limiterParCle } from './lib/limite.ts'
@@ -41,9 +42,6 @@ const LIMITE_CODES_PAR_ADRESSE_ET_PAR_JOUR = {
 // six essais faux suffisent à savoir si une adresse est connue.
 const CODES_UNIFORMISES = new Set(['OTP_EXPIRED', 'TOO_MANY_ATTEMPTS'])
 
-/** En-tête interne qui porte l'adresse du client résolue par Express. */
-export const ENTETE_IP_CLIENT = 'x-relaytour-ip'
-
 export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
   return betterAuth({
     appName: 'Relaytour',
@@ -78,8 +76,8 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
 
     advanced: {
       cookiePrefix: 'relaytour',
-      // L'adresse du client est celle qu'Express a résolue (`req.ip`, un seul proxy de
-      // confiance), posée dans un en-tête interne par le serveur. Better Auth ne lit
+      // L'adresse du client, telle que le serveur l'a établie (lib/adresse-client.ts) et
+      // réécrite dans cet en-tête avant d'appeler Better Auth. Better Auth ne lit
       // qu'une valeur unique dans X-Forwarded-For : avec une chaîne d'adresses (un
       // intermédiaire devant Caddy), il rangerait tous les clients dans un même compteur.
       ipAddress: { ipAddressHeaders: [ENTETE_IP_CLIENT] },
@@ -150,6 +148,21 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
               message: 'Invalid OTP',
             })
           )
+        }
+        // Better Auth renvoie le jeton de session dans le corps de la réponse, en plus
+        // du cookie httpOnly. L'espace organisateur ne lit que le cookie : le jeton
+        // n'a rien à faire dans un corps qu'un script de la page pourrait lire. Par
+        // HTTP, le corps est enveloppé (`_flag: 'json'`) ; par `auth.api`, il est nu.
+        const corps =
+          rendu !== null &&
+          typeof rendu === 'object' &&
+          '_flag' in rendu &&
+          rendu._flag === 'json' &&
+          'body' in rendu
+            ? rendu.body
+            : rendu
+        if (corps !== null && typeof corps === 'object' && 'token' in corps) {
+          return Promise.resolve(ctx.json({ ...corps, token: null }))
         }
         return Promise.resolve()
       }),

@@ -4,8 +4,13 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 // EXPIRE dans le script, GET pour la lecture.
 const cles = new Map<string, { valeur: number; ttl: number }>()
 const connection = {
-  eval: vi.fn((_script: string, _n: number, cle: string, ttl: number) => {
+  eval: vi.fn((script: string, _n: number, cle: string, ttl?: number) => {
     const entree = cles.get(cle) ?? { valeur: 0, ttl: -1 }
+    if (script.includes('DECR')) {
+      if (entree.valeur > 0) entree.valeur -= 1
+      cles.set(cle, entree)
+      return Promise.resolve(entree.valeur)
+    }
     entree.valeur += 1
     if (entree.ttl < 0) entree.ttl = Number(ttl)
     cles.set(cle, entree)
@@ -17,7 +22,7 @@ const connection = {
 }
 vi.mock('../jobs/queues.ts', () => ({ connection }))
 
-const { limiterParCle, noterRefus, tropDeRefus } = await import('./limite.ts')
+const { limiterParCle, rendreTentative } = await import('./limite.ts')
 
 beforeEach(() => {
   cles.clear()
@@ -53,18 +58,19 @@ describe('limiterParCle', () => {
   })
 })
 
-describe('tropDeRefus et noterRefus', () => {
-  it('ne bloque qu’à partir du nombre de refus demandé', async () => {
-    expect(await tropDeRefus('jeton:ip', 2)).toBe(false)
-    await noterRefus('jeton:ip', 900)
-    expect(await tropDeRefus('jeton:ip', 2)).toBe(false)
-    await noterRefus('jeton:ip', 900)
-    expect(await tropDeRefus('jeton:ip', 2)).toBe(true)
-    expect(cles.get('limite:jeton:ip')?.ttl).toBe(900)
+describe('rendreTentative', () => {
+  it('rend une tentative réservée, sans passer sous zéro', async () => {
+    await limiterParCle('jeton:ip', 10, 900)
+    await limiterParCle('jeton:ip', 10, 900)
+    await rendreTentative('jeton:ip')
+    expect(cles.get('limite:jeton:ip')?.valeur).toBe(1)
+    await rendreTentative('jeton:ip')
+    await rendreTentative('jeton:ip')
+    expect(cles.get('limite:jeton:ip')?.valeur).toBe(0)
   })
 
-  it('ne bloque pas sans Redis', async () => {
-    connection.get.mockRejectedValueOnce(new Error('ECONNREFUSED'))
-    expect(await tropDeRefus('jeton:ip', 1)).toBe(false)
+  it('ne lève pas sans Redis', async () => {
+    connection.eval.mockRejectedValueOnce(new Error('ECONNREFUSED'))
+    await expect(rendreTentative('jeton:ip')).resolves.toBeUndefined()
   })
 })

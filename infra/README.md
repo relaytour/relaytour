@@ -87,7 +87,7 @@ Le `Caddyfile` d'exemple relaie ce flux sans réglage : Caddy transmet une répo
 - **Compression.** L'intermédiaire ne compresse pas une réponse `text/event-stream`. L'API annonce `Content-Encoding: none` pour écarter la compression.
 - **Délai d'inactivité.** L'API envoie un battement toutes les 12 secondes. Un délai d'inactivité de 30 secondes ou plus garde donc le flux ouvert.
 
-- **Adresse du client.** L'API fait confiance à un seul relais : elle lit l'adresse du client dans le dernier saut de `X-Forwarded-For`. Caddy, seul devant l'API, écrit cette adresse. Un intermédiaire placé devant Caddy (CDN, répartiteur de charge) s'y déclare avec `trusted_proxies` dans le `Caddyfile`, pour que Caddy transmette l'adresse du client et non la sienne : sinon les compteurs de la connexion et du formulaire public comptent tous les clients comme un seul.
+- **Adresse du client.** L'API lit l'adresse du client dans l'en-tête `X-Relaytour-Ip`, que le `Caddyfile` d'exemple remplit avec `{client_ip}` (`header_up`). Elle ne lit cet en-tête que sur une connexion venue d'une adresse locale ou privée, celle du proxy ; sinon elle retient l'adresse qu'Express résout derrière un seul relais. Un intermédiaire placé devant Caddy (CDN, répartiteur de charge) se déclare dans `trusted_proxies` (bloc global `servers`), pour que `{client_ip}` reste l'adresse du client et non celle de l'intermédiaire : sinon les compteurs de la connexion et du formulaire public comptent tous les clients comme un seul. Un autre proxy que Caddy pose lui-même `X-Relaytour-Ip` avec l'adresse du client et remplace toute valeur reçue.
 
 Ce dépôt ne vérifie que la configuration de Caddy.
 

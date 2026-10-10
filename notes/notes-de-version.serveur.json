@@ -29,7 +29,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "Le démarrage et les compteurs de limite se durcissent",
-            "texte": "Le serveur refuse de démarrer en `NODE_ENV=production` sans `APP_ENV`, et hors du poste local avec une `ORIGINE_ORGA` qui n'est pas en https. Les compteurs de limite dans Redis posent leur fenêtre dans la même commande que l'incrément. Better Auth lit l'adresse du client résolue par Express.",
+            "texte": "Le serveur refuse de démarrer en `NODE_ENV=production` sans `APP_ENV`, et hors du poste local avec une `ORIGINE_ORGA` qui n'est pas en https. Les compteurs de limite dans Redis posent leur fenêtre dans la même commande que l'incrément. L'API lit l'adresse du client dans l'en-tête `X-Relaytour-Ip`, que Caddy remplit avec `{client_ip}`.",
             "migration": null
           }
         },
@@ -42,7 +42,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "La connexion ne révèle plus si une adresse a un compte",
-            "texte": "Un code refusé reçoit la même réponse pour une adresse qui a un compte et pour une adresse inconnue, quel que soit le nombre d'essais. Une adresse ne reçoit plus que vingt codes par jour, en plus des cinq codes par quart d'heure.",
+            "texte": "Un code refusé reçoit la même réponse pour une adresse qui a un compte et pour une adresse inconnue, quel que soit le nombre d'essais. Une adresse ne reçoit plus que vingt codes par jour, en plus des cinq codes par quart d'heure. La réponse d'une connexion réussie ne porte plus le jeton de session : seul le cookie le transporte.",
             "migration": null
           }
         }
