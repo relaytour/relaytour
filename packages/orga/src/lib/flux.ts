@@ -26,6 +26,8 @@ const VUES_DES_TACHES = [
   'TachesFiche',
   'DeclinaisonsProposees',
   'DeclinaisonsTache',
+  'CommentairesDeLaPeriode',
+  'FilTache',
 ] as const
 const VUES_DES_FICHES = ['ListeFiches', 'Fiche', 'FichesDuPerimetre'] as const
 const VUES_DES_PERIMETRES = [

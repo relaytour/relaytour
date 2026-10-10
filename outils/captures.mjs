@@ -179,6 +179,19 @@ const ECRANS = [
       return document.querySelectorAll('main .rt-declinaisons-liste .rt-etiquette').length > 0
     })([...document.querySelectorAll('main .rt-declinaisons-resume')])`,
   },
+  // Le fil d'une tâche (ADR 0029). Le geste ouvre le fil de la première tâche
+  // commentée, puis attend ses commentaires : l'instance d'exemple doit en porter.
+  {
+    nom: 'tache-fil',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/perimetres/benevoles`,
+    avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
+    apres: `(volet => {
+      if (volet) return volet.querySelectorAll('.rt-fil-commentaire').length > 0
+      const bouton = [...document.querySelectorAll('main .rt-ouvrir-fil')].find(b => /commentaire/.test(b.innerText))
+      return (bouton?.click(), false)
+    })(document.querySelector('.rt-fil-volet'))`,
+  },
   // La fenêtre « Nouvelle tâche », avec les périmètres où la décliner. Le geste
   // ouvre la fenêtre, ajoute les sports, puis la fait défiler jusqu'à ce champ.
   {

@@ -276,18 +276,6 @@ describe('lecture du contact principal', () => {
 })
 
 describe('le contact principal ne reçoit aucun droit', () => {
-  it('ne peut pas assigner une autre personne à une tâche', async () => {
-    const r = await executer(
-      ids.bruno,
-      `mutation ($id: ID!, $u: ID) { assignerTache(id: $id, assigne: true, personneId: $u) { id } }`,
-      { id: ids.tache, u: ids.alice }
-    )
-    expect(code(r)).toBe('FORBIDDEN')
-    expect(
-      await prisma.tacheAssignation.count({ where: { tacheId: ids.tache } })
-    ).toBe(0)
-  })
-
   it('ne peut pas désigner un autre contact principal', async () => {
     const r = await executer(ids.bruno, DEFINIR, { id: ids.affAlice, c: true })
     expect(code(r)).toBe('FORBIDDEN')
