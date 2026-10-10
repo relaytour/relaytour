@@ -51,6 +51,8 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          # Aucune étape ne pousse : le jeton ne reste pas dans .git/config.
+          persist-credentials: false
 
       - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
@@ -94,6 +96,14 @@ jobs:
 
       - name: Licences des dépendances
         run: node outils/verifier-licences.mjs
+
+      # Les dépendances d'exécution n'embarquent aucune faille connue de gravité
+      # élevée ou critique. L'outillage de développement n'entre pas dans l'image.
+      # Avis ignoré : 1145093 (GHSA-ggr8-5vv4-36mx), deepmerge-ts via @prisma/config.
+      # Le CLI Prisma l'emploie pour fusionner sa configuration, sur un fichier du
+      # dépôt et jamais sur une entrée reçue ; Prisma 7.10 porte encore la même version.
+      - name: Failles connues des dépendances d'exécution
+        run: yarn npm audit --all --recursive --environment production --severity high --ignore 1145093
 
       - name: Rien de privé dans le dépôt
         run: node outils/verifier-publication.mjs

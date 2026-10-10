@@ -1,11 +1,49 @@
-# Dependabot ne suit que les actions GitHub : une action épinglée par SHA ne se met pas à jour seule.
-# Les dépendances npm restent hors de son périmètre.
+# Dependabot suit les actions GitHub, les paquets npm et les images Docker : une
+# dépendance épinglée (SHA, lockfile, tag d'image) ne se met pas à jour seule.
 # Ses PR visent `develop`, comme toute PR : `main` n'avance qu'à la publication d'une version.
 # GitHub lit ce fichier sur la branche par défaut (`main`) : un changement prend effet à la version suivante.
 version: 2
 updates:
   - package-ecosystem: github-actions
     directory: /
+    target-branch: develop
+    schedule:
+      interval: monthly
+
+  # Paquets npm de tous les workspaces (Yarn 4, lockfile unique à la racine).
+  # Les versions mineures et correctives arrivent groupées en deux PR, une pour
+  # l'exécution et une pour le développement. Une version majeure a sa propre PR.
+  - package-ecosystem: npm
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 5
+    groups:
+      execution:
+        dependency-type: production
+        update-types: [minor, patch]
+      developpement:
+        dependency-type: development
+        update-types: [minor, patch]
+    # Better Auth porte la connexion : une montée de version se relit à part,
+    # avec l'ADR 0002 et les tests d'intégration de l'authentification.
+    ignore:
+      - dependency-name: better-auth
+        update-types: [version-update:semver-major, version-update:semver-minor]
+
+  # Images de base de l'image publiée (packages/server/Dockerfile).
+  - package-ecosystem: docker
+    directory: /packages/server
+    target-branch: develop
+    schedule:
+      interval: monthly
+
+  # Images de la pile de référence et de la pile du poste local.
+  - package-ecosystem: docker-compose
+    directories:
+      - /infra/compose
+      - /packages/database
     target-branch: develop
     schedule:
       interval: monthly
