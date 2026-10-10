@@ -167,7 +167,25 @@ export async function accepterInvitation(
 ): Promise<{ organisationSlug: string }> {
   const { invitationId, userId } = demande
   const issue = await prisma.$transaction(async tx => {
-    await tx.$queryRaw`SELECT id FROM InvitationOrganisation WHERE id = ${invitationId} FOR UPDATE`
+    // Les verrous se prennent avant toute lecture ordinaire : l'instantané de la
+    // transaction naît à la première, et doit voir ce que les transactions
+    // précédentes ont validé. La première lecture, verrouillante, rend les lots ;
+    // les périmètres dont l'invitation propose le contact principal se
+    // verrouillent ensuite dans un ordre fixe. Deux personnes invitées comme
+    // contact principal du même périmètre qui acceptent ensemble se suivent, et
+    // la seconde lit la désignation de la première (ADR 0011).
+    const verrouillees = await tx.$queryRaw<{ lots: unknown }[]>`
+      SELECT lots FROM InvitationOrganisation
+      WHERE id = ${invitationId} AND userId = ${userId} FOR UPDATE`
+    const brut = verrouillees[0]?.lots
+    const aVerrouiller = new Set(
+      lireLots(typeof brut === 'string' ? JSON.parse(brut) : brut).flatMap(
+        l => l.contactPrincipal
+      )
+    )
+    for (const perimetreId of [...aVerrouiller].sort()) {
+      await tx.$queryRaw`SELECT id FROM Perimetre WHERE id = ${perimetreId} FOR UPDATE`
+    }
     const invitation = await tx.invitationOrganisation.findFirst({
       where: { id: invitationId, userId, ...vivante(instant) },
       select: {
@@ -229,7 +247,8 @@ export async function accepterInvitation(
       })
       for (const perimetreId of lot.contactPrincipal) {
         if (!affectes.includes(perimetreId)) continue
-        // La désignation faite pendant l'attente l'emporte.
+        // La désignation faite pendant l'attente l'emporte. Le périmètre est
+        // verrouillé depuis le début de la transaction.
         const titulaire = await tx.affectation.count({
           where: { perimetreId, editionId: edition.id, contactPrincipal: true },
         })
@@ -375,17 +394,20 @@ export async function invitationEnAttente(
   userId: string,
   organisationId: string,
   maintenant = new Date()
-): Promise<'membre' | 'aucune' | { perimetres: string[] }> {
+): Promise<
+  'membre' | 'aucune' | { perimetres: string[]; role: RoleOrganisation }
+> {
   const appartenance = await prisma.appartenance.count({
     where: { userId, organisationId },
   })
   if (appartenance > 0) return 'membre'
   const invitation = await prisma.invitationOrganisation.findFirst({
     where: { userId, organisationId, ...vivante(maintenant) },
-    select: { lots: true },
+    select: { lots: true, role: true },
   })
   if (invitation === null) return 'aucune'
   return {
+    role: invitation.role,
     perimetres: await perimetresProposes(
       prisma,
       organisationId,

@@ -332,5 +332,14 @@ personnes:
     expect(enFile).toEqual([
       { sorte: 'invitation', cible: { userId: externe } },
     ])
+    // Un import rejoué dans l'heure ne renvoie pas le mail d'invitation.
+    enFile.length = 0
+    const rejoue = await importerEquipe(prisma, lireEquipe(fichier), {
+      ...options(),
+      envoyerMails: true,
+    })
+    expect(rejoue.invitationsEnAttente).toEqual([`Saisie ${s}`])
+    expect(rejoue.mails.invitations).toBe(0)
+    expect(enFile).toEqual([])
   })
 })

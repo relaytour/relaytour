@@ -779,8 +779,9 @@ export default function Personnes({
               })
               enAttente = r.data?.inviterPersonne.enAttente ?? false
               const id = r.data?.inviterPersonne.personne?.id
-              // Un rôle d'admin d'activité se donne à un membre : pour une invitation
-              // en attente, il se donnera après l'accord de la personne.
+              // Un rôle d'admin d'activité se donne à un membre. Une invitation en
+              // attente ne le garde pas : l'admin nomme la personne après son
+              // accord, et le message de fin le lui rappelle.
               if (id !== undefined) {
                 cree = id
                 await ajusterAdminsActivite(
@@ -806,7 +807,11 @@ export default function Personnes({
             },
             () =>
               enAttente
-                ? 'Invitation envoyée. Cette adresse a déjà un compte : la personne accepte ou refuse depuis son compte, et rien n’est créé avant son accord.'
+                ? `Invitation envoyée. Cette adresse a déjà un compte : la personne accepte ou refuse depuis son compte, et rien n’est créé avant son accord.${
+                    (v.activitesAdministrees ?? []).length > 0
+                      ? ' Le rôle d’admin d’activité n’est pas gardé : nommez la personne après son accord.'
+                      : ''
+                  }`
                 : 'Invitation enregistrée. Une personne sans compte reçoit un mail avec le lien de connexion.'
           )
         : enEdition

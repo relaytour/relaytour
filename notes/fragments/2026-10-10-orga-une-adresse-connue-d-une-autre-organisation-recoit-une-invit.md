@@ -16,5 +16,7 @@ fr:
     apparaît dans l'équipe après son accord. Une invitation expire après 30 jours.
 ---
 
-ADR 0030. Un rôle d'admin d'activité demandé à l'invitation se donne après
-l'accord de la personne.
+ADR 0030. L'invitation en attente garde le rôle d'admin de l'organisation et les
+périmètres, pas le rôle d'admin d'activité : l'écran le dit à l'envoi, et l'admin
+nomme la personne après son accord. Nommer d'avance un compte extérieur admin d'une
+activité donnerait un droit de gestion à une personne qui n'a encore rien accepté.

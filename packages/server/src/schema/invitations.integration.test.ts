@@ -621,6 +621,95 @@ describe('invitation née d’un import', () => {
   })
 })
 
+describe('gestes simultanés', () => {
+  const lot = (editionId: string, activiteId: string, perimetreId: string) => ({
+    editionId,
+    activiteId,
+    affectes: [perimetreId],
+    souhaites: [],
+    contactPrincipal: [perimetreId],
+  })
+  const inviter = (userId: string, lots: ReturnType<typeof lot>[]) =>
+    prisma.invitationOrganisation.create({
+      data: {
+        organisationId: ids.orgA,
+        userId,
+        nom: 'Saisi',
+        origine: 'IMPORT',
+        lots,
+        expireLe: new Date(Date.now() + 3600_000),
+      },
+    })
+
+  it('retire entièrement l’invitation quand deux admins d’activité retirent ensemble leurs périmètres', async () => {
+    const { id } = await inviter(ids.tiers, [
+      lot(ids.edition1, ids.a1, ids.basket),
+      lot(ids.edition2, ids.a2, ids.judo),
+    ])
+    const [un, deux] = await Promise.all([
+      executer(ids.adminA1, slugA, RETIRER, { id }),
+      executer(ids.adminA2, slugA, RETIRER, { id }),
+    ])
+    expect(un.errors ?? deux.errors).toBeUndefined()
+    // Sans verrou, le second retrait réécrirait le lot que le premier a retiré.
+    expect(await invitationDe(ids.tiers)).toBeNull()
+  })
+
+  it('ne désigne qu’un contact principal quand deux personnes invitées acceptent ensemble', async () => {
+    const invitations = await Promise.all(
+      [ids.tiers, ids.adminB].map(userId =>
+        inviter(userId, [lot(ids.edition1, ids.a1, ids.basket)])
+      )
+    )
+    const [un, deux] = await Promise.all([
+      executer(ids.tiers, slugB, ACCEPTER, { id: invitations[0]!.id }),
+      executer(ids.adminB, slugB, ACCEPTER, { id: invitations[1]!.id }),
+    ])
+    expect(un.errors ?? deux.errors).toBeUndefined()
+    expect(
+      await prisma.affectation.count({
+        where: { perimetreId: ids.basket, editionId: ids.edition1 },
+      })
+    ).toBe(2)
+    expect(
+      await prisma.affectation.count({
+        where: {
+          perimetreId: ids.basket,
+          editionId: ids.edition1,
+          contactPrincipal: true,
+        },
+      })
+    ).toBe(1)
+  })
+})
+
+describe('mail d’une invitation au rôle d’admin', () => {
+  it('lie le mode d’emploi du rôle proposé, pas celui d’un rôle que la personne n’a pas encore', async () => {
+    const userId = randomUUID()
+    await prisma.user.create({
+      data: { id: userId, email: adresse('future-admin'), name: 'Compte' },
+    })
+    await prisma.$transaction(tx =>
+      inviterCompteExterne(tx, {
+        organisationId: ids.orgA,
+        userId,
+        role: 'ADMIN',
+        nom: 'Saisie',
+        origine: 'INSTALLATION',
+        inviteParId: null,
+        instant: new Date(),
+      })
+    )
+    const message = await composer(prisma, {
+      sorte: 'invitation',
+      userId,
+      organisationId: ids.orgA,
+    })
+    expect(message?.texte).toContain('admin-organisation.html')
+    expect(message?.texte).not.toContain('referent.html')
+  })
+})
+
 describe('purge', () => {
   it('efface les invitations expirées et laisse les autres', async () => {
     const instant = new Date()

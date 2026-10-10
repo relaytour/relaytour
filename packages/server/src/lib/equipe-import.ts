@@ -6,7 +6,7 @@ import { mettreEnFile } from '../courriel/file.ts'
 
 import { creerAffectations } from './affectations.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
-import { inviterCompteExterne } from './invitations.ts'
+import { annoncerInvitation, inviterCompteExterne } from './invitations.ts'
 import { annoncerChangementEquipe } from './equipe.ts'
 import { adresseValide } from './saisie.ts'
 
@@ -176,6 +176,8 @@ export async function importerEquipe(
   // Le même instant date les affectations et choisit la fenêtre des mails d'équipe.
   const instant = new Date()
   const aInviter: string[] = []
+  // Comptes extérieurs : leur mail passe par la limite d'un envoi par heure.
+  const enAttente: string[] = []
   const aAnnoncer = new Set<string>()
 
   await prisma.$transaction(
@@ -200,7 +202,7 @@ export async function importerEquipe(
           // Rien ne s'écrit au nom d'un compte extérieur : l'invitation garde les
           // affectations, les souhaits et le contact principal que le fichier déclare.
           rapport.invitationsEnAttente.push(p.nom)
-          aInviter.push(userId)
+          enAttente.push(userId)
           if (ecrire) {
             const affectes = p.affectations.map(slug => perimetres.get(slug)!)
             await inviterCompteExterne(tx, {
@@ -305,6 +307,12 @@ export async function importerEquipe(
         { organisationId, activiteId }
       )
     }
+    let annoncees = 0
+    for (const userId of enAttente) {
+      if (await annoncerInvitation(userId, { organisationId, activiteId })) {
+        annoncees += 1
+      }
+    }
     for (const userId of aAnnoncer) {
       await annoncerChangementEquipe(userId, {
         organisationId,
@@ -312,7 +320,10 @@ export async function importerEquipe(
         instant,
       })
     }
-    rapport.mails = { invitations: aInviter.length, equipe: aAnnoncer.size }
+    rapport.mails = {
+      invitations: aInviter.length + annoncees,
+      equipe: aAnnoncer.size,
+    }
   }
   return rapport
 }

@@ -180,6 +180,15 @@ export async function composer(
       sujet = `${configuration.nomCourt} vous invite dans son espace organisateur`
       variables.accroche = `${configuration.nomCourt} vous invite à rejoindre son espace organisateur. Vous avez déjà un compte à cette adresse : après connexion, vous acceptez ou refusez cette invitation depuis le menu de votre compte. Rien n’est partagé avec cette organisation avant votre accord.`
       variables.perimetres = attente.perimetres
+      // La personne n'a encore aucun rôle dans l'organisation : le mode d'emploi
+      // lié est celui du rôle que l'invitation propose.
+      const propose =
+        attente.role === 'ADMIN' ? 'admin-organisation' : 'referent'
+      variables.roleModeDEmploi = LIBELLES_ROLE[propose]
+      variables.lienModeDEmploi = lienModeDEmploi(
+        env.MODES_D_EMPLOI_URL,
+        propose
+      )
     }
     variables.situation =
       attente !== 'membre'

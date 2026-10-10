@@ -292,31 +292,46 @@ builder.mutationFields(t => ({
       'Retire une invitation en attente. Un admin d’activité retire les périmètres de ses activités ; l’invitation disparaît quand il n’en reste aucun.',
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
-      const { invitation, lots, lisibles } = await exigerInvitation(
+      const { invitation, lisibles } = await exigerInvitation(
         ctx,
         String(args.id)
       )
-      const retires = new Set(lisibles.map(l => l.editionId))
-      const restants = ctx.personne!.estAdmin
-        ? []
-        : lots.filter(l => !retires.has(l.editionId))
-      // Une invitation faite au niveau de l'organisation, ou au rôle d'admin,
-      // demeure quand un admin d'activité retire ses périmètres.
-      const demeure =
-        !ctx.personne!.estAdmin &&
-        (restants.length > 0 ||
-          invitation.globale ||
-          invitation.role === 'ADMIN')
-      if (demeure) {
-        await prisma.invitationOrganisation.updateMany({
+      const estAdmin = ctx.personne!.estAdmin
+      const administrees = estAdmin ? null : await ctx.activitesAdministrees()
+      // La lecture et l'écriture des lots se font sous le verrou de l'invitation :
+      // deux admins d'activité qui retirent ensemble leurs périmètres ne se
+      // rendent pas l'un à l'autre ce que l'autre vient de retirer.
+      const demeure = await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM InvitationOrganisation WHERE id = ${invitation.id} FOR UPDATE`
+        const courante = await tx.invitationOrganisation.findUnique({
           where: { id: invitation.id },
-          data: { lots: restants },
+          select: { lots: true, globale: true, role: true },
         })
-      } else {
-        await prisma.invitationOrganisation.deleteMany({
-          where: { id: invitation.id },
-        })
-      }
+        // Acceptée, refusée ou retirée entre-temps : il n'y a plus rien à retirer.
+        if (courante === null) return false
+        const restants =
+          administrees === null
+            ? []
+            : lireLots(courante.lots).filter(
+                l => !administrees.has(l.activiteId)
+              )
+        // Une invitation faite au niveau de l'organisation, ou au rôle d'admin,
+        // demeure quand un admin d'activité retire ses périmètres.
+        const garder =
+          administrees !== null &&
+          (restants.length > 0 || courante.globale || courante.role === 'ADMIN')
+        if (garder) {
+          await tx.invitationOrganisation.update({
+            where: { id: invitation.id },
+            data: { lots: restants },
+          })
+        } else {
+          await tx.invitationOrganisation.delete({
+            where: { id: invitation.id },
+          })
+        }
+        return garder
+      })
       journal.info(
         {
           evenement: 'invitation-retiree',

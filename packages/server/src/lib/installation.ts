@@ -4,7 +4,7 @@ import { mettreEnFile } from '../courriel/file.ts'
 
 import { GROUPES_PAR_DEFAUT } from './activites.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
-import { inviterCompteExterne } from './invitations.ts'
+import { annoncerInvitation, inviterCompteExterne } from './invitations.ts'
 import { erreurSaisie } from './erreurs.ts'
 import {
   LimitesSchema,
@@ -192,7 +192,17 @@ export async function inviterAdmin(
       return { userId: compte.userId, enAttente: false }
     })
   )
-  await mettreEnFile('invitation', { userId: admin.userId }, { organisationId })
+  // Une invitation en attente se redemande tant que l'organisation n'a pas d'admin :
+  // son mail passe par la limite d'un envoi par personne et par heure.
+  if (admin.enAttente) {
+    await annoncerInvitation(admin.userId, { organisationId })
+  } else {
+    await mettreEnFile(
+      'invitation',
+      { userId: admin.userId },
+      { organisationId }
+    )
+  }
   return admin
 }
 
