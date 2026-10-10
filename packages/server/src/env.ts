@@ -77,18 +77,22 @@ const EnvSchema = z
       'SUPPORT_URL : adresse https ou lien mailto: attendu'
     ),
     // Administration de l'installation (ADR 0008) : jeton d'un hébergeur pour créer,
-    // suspendre, limiter et exporter les organisations, sans accès aux données.
-    // Absent, l'API d'administration est fermée ; seuls les scripts l'exercent.
+    // suspendre, limiter et exporter les organisations. L'API ne lui rend aucune donnée
+    // d'une organisation ; l'export qu'il déclenche s'écrit sur le disque du serveur et
+    // contient les noms et les adresses. Absent, l'API d'administration est fermée ;
+    // seuls les scripts l'exercent.
     JETON_ADMINISTRATION: optionnelle.refine(
       s => s === undefined || s.length >= 32,
       'JETON_ADMINISTRATION : 32 caractères au moins'
     ),
-    // Vrai : le jeton n'est accepté que sur une requête locale, qui n'est pas passée
-    // par le proxy (ADR 0013). Une requête relayée par Caddy porte X-Forwarded-For.
+    // Vrai par défaut : le jeton n'est accepté que sur une requête locale, qui n'est pas
+    // passée par le proxy (ADR 0013). Une requête relayée par Caddy porte X-Forwarded-For.
+    // « false » ouvre le jeton aux requêtes relayées, pour un hébergeur qui administre
+    // depuis une autre machine.
     JETON_ADMINISTRATION_LOCAL: z
       .enum(['true', 'false', ''])
       .optional()
-      .transform(v => v === 'true'),
+      .transform(v => v !== 'false'),
     // Dossier du serveur où s'écrivent les exports d'organisation.
     EXPORTS_DIR: optionnelle,
     // Code source de la version exécutée, lié depuis l'espace organisateur (AGPL,
@@ -164,6 +168,19 @@ const EnvSchema = z
         message: 'ORIGINE_ORGA est requis hors du poste local.',
       })
     }
+    // Hors du poste local, l'espace organisateur se sert en https : sinon Better Auth
+    // pose un cookie de session sans l'attribut Secure.
+    if (
+      v.APP_ENV !== 'local' &&
+      v.ORIGINE_ORGA !== undefined &&
+      !v.ORIGINE_ORGA.startsWith('https://')
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['ORIGINE_ORGA'],
+        message: 'ORIGINE_ORGA est en https hors du poste local.',
+      })
+    }
     if (v.APP_ENV !== 'local' && v.BETTER_AUTH_SECRET.includes('local')) {
       ctx.addIssue({
         code: 'custom',
@@ -203,6 +220,17 @@ export type ReglageSmtp = {
 }
 
 export function resoudreEnv(source: NodeJS.ProcessEnv) {
+  // Une installation déployée tourne en NODE_ENV=production (invariant 3). Elle
+  // écrit APP_ENV : la valeur par défaut « local » coupe la limitation de débit de
+  // la connexion et ouvre l'introspection, et un .env incomplet ne doit pas y mener.
+  if (
+    source.NODE_ENV === 'production' &&
+    (source.APP_ENV === undefined || source.APP_ENV.trim() === '')
+  ) {
+    throw new Error(
+      'APP_ENV est requis quand NODE_ENV vaut production : local ou prod.'
+    )
+  }
   const brut = EnvSchema.parse(source)
 
   // Le Mailpit du poste local (packages/database/docker-compose.yml) reçoit tout sans SMTP.
