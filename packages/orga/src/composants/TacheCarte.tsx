@@ -2,6 +2,7 @@ import {
   BookOutlined,
   CheckOutlined,
   EditOutlined,
+  MessageOutlined,
   MoreOutlined,
   ShareAltOutlined,
   UndoOutlined,
@@ -13,6 +14,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { TacheChampsFragment } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
+import { useCommentairesDeLaPeriode } from '../lib/commentaires'
 import type { ResumeDeclinaisons } from '../lib/declinaisons'
 import { dateCourte } from '../lib/erreurs'
 import {
@@ -28,6 +30,7 @@ import type { PerimetreCible } from './ChoixPerimetresCibles'
 import DeclinaisonsTache from './DeclinaisonsTache'
 import DeclinerTache from './DeclinerTache'
 import EtiquettePerimetre from './EtiquettePerimetre'
+import FilTache from './FilTache'
 import { PastilleEtat, PastilleStatut } from './Etat'
 import { PersonneNommee } from './Personne'
 
@@ -38,7 +41,7 @@ export interface Referent {
 
 /**
  * Une tâche et ses actions : prise en charge, statut, assignation d'une autre
- * personne du périmètre (ADR 0028), modification. Le rail porte la couleur du périmètre. `teinte` met en avant
+ * personne du périmètre (ADR 0028), commentaires (ADR 0029), modification. Le rail porte la couleur du périmètre. `teinte` met en avant
  * une tâche à prendre.
  */
 export default function TacheCarte({
@@ -50,6 +53,7 @@ export default function TacheCarte({
   afficherPerimetre = false,
   teinte = false,
   enEvidence = false,
+  filOuvert = false,
   onModifier,
   perimetresCibles,
   editionId,
@@ -71,13 +75,18 @@ export default function TacheCarte({
   teinte?: boolean
   /** La tâche visée par une notification : la carte se signale et se place à l'écran. */
   enEvidence?: boolean
+  /** Vrai quand une notification de commentaire vise la tâche : son fil s'ouvre. */
+  filOuvert?: boolean
   onModifier?: (tache: TacheChampsFragment) => void
   /**
    * Les autres périmètres de l'activité où décliner la tâche (ADR 0026). Sans
    * cette liste, la carte ne propose pas de la décliner.
    */
   perimetresCibles?: PerimetreCible[]
-  /** La période affichée : les liens vers une autre tâche la gardent. */
+  /**
+   * La période affichée : les liens vers une autre tâche la gardent, et le nombre
+   * de commentaires s'y lit. Sans elle, la carte ne propose pas le fil.
+   */
   editionId?: string
 }) {
   const racine = useRef<HTMLElement>(null)
@@ -97,6 +106,18 @@ export default function TacheCarte({
   const [realiseeParId, setRealiseeParId] = useState<string | null>(null)
   const [choixAssignation, setChoixAssignation] = useState(false)
   const [aDecliner, setADecliner] = useState(false)
+  // Le fil s'ouvre quand la personne lit le périmètre de la tâche (ADR 0029).
+  const commentaires = useCommentairesDeLaPeriode(editionId)
+  const filLisible = commentaires.lus.has(tache.perimetre.id)
+  const nombreCommentaires = commentaires.nombres.get(tache.id) ?? 0
+  const [fil, setFil] = useState(filOuvert)
+  // La page reste montée quand une notification change seulement l'adresse : le
+  // fil s'ouvre aussi quand `filOuvert` devient vrai après le montage.
+  const [filDemande, setFilDemande] = useState(filOuvert)
+  if (filOuvert !== filDemande) {
+    setFilDemande(filOuvert)
+    if (filOuvert) setFil(true)
+  }
   const resume = tache.resumeDeclinaisons
   // Une déclinaison ne se décline pas : seule une tâche du périmètre se partage.
   const declinable =
@@ -162,7 +183,9 @@ export default function TacheCarte({
     message.open({
       key: cle,
       type: 'success',
-      duration: 6,
+      // Le message reste dix secondes. Passé ce délai, la croix à côté du nom
+      // retire encore la personne.
+      duration: 10,
       content: (
         <>
           Tâche assignée à {personne.nom}.
@@ -321,6 +344,22 @@ export default function TacheCarte({
               />
             ))
           )}
+          {filLisible && (
+            <button
+              type="button"
+              className="rt-ouvrir-fil"
+              onClick={() => setFil(true)}
+            >
+              <MessageOutlined aria-hidden />
+              {nombreCommentaires > 1
+                ? `${nombreCommentaires} commentaires`
+                : nombreCommentaires === 1
+                  ? '1 commentaire'
+                  : peutModifier
+                    ? 'Commenter'
+                    : 'Historique'}
+            </button>
+          )}
         </div>
         {tache.statut === 'FAITE' &&
           (tache.clotureePar || tache.realiseePar) && (
@@ -474,6 +513,14 @@ export default function TacheCarte({
           </Form.Item>
         </Form>
       </Modal>
+      {filLisible && (
+        <FilTache
+          tache={tache}
+          moiId={moiId}
+          ouvert={fil}
+          onFermer={() => setFil(false)}
+        />
+      )}
       {declinable && (
         <DeclinerTache
           tache={aDecliner ? tache : null}

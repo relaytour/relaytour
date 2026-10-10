@@ -25,6 +25,7 @@ export function famillePush(type: TypeNotification): FamillePush | null {
     case 'TACHE_DESASSIGNEE':
     case 'TACHE_MODIFIEE':
     case 'TACHE_STATUT':
+    case 'TACHE_COMMENTEE':
       return 'taches'
     case 'ECHEANCE_PROCHE':
     case 'TACHE_EN_RETARD':

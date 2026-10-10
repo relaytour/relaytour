@@ -19,7 +19,8 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 
 - **Transmission d'une période à la suivante.** Ce chantier suit l'ADR 0008 : il donne sa valeur à la période. À la création d'une période, un admin choisit les tâches de l'édition passée à reconduire, avec leurs échéances recalculées. Un·e référent·e sortant·e laisse une note de passation à la personne qui lui succède.
 - **Éditeur de tâches types.** Les admins modifient les tâches types d'un périmètre dans l'espace organisateur. Elles ne changent aujourd'hui que dans le dossier de contenu (ADR 0009).
-- **Tâches.** Sous-tâches sous forme de cases à cocher ; dépendances entre tâches (une tâche attend la fin d'une autre) ; pièces jointes sur une tâche ou une fiche ; commentaires entre référentes et référents sur une tâche.
+- **Tâches.** Sous-tâches sous forme de cases à cocher ; dépendances entre tâches (une tâche attend la fin d'une autre) ; pièces jointes sur une tâche ou une fiche.
+- **Commentaires.** Mention d'une personne dans un commentaire ; mise en forme ; fil commun à une tâche partagée et à ses déclinaisons ; recherche dans les commentaires (ADR 0029).
 - **Tâches partagées.** Report d'une modification d'une tâche partagée vers ses déclinaisons encore intactes ; nouvelle proposition à un périmètre qui a refusé ; périmètre qui demande une tâche, affiché aussi dans « Mon espace » (ADR 0026).
 - **Lecture des tâches.** Les tâches liées à une fiche se rangent par phase, comme celles d'un périmètre (ADR 0025). Une activité déclare des thèmes, et une tâche type en porte un : cette lecture complète les phases et la fiche liée, si l'usage le demande.
 - **Fiches.** Relecture avant publication sur les périmètres choisis par l'admin ; recherche en texte libre sur toutes les fiches accessibles ; liste des tâches qui s'appuient sur une fiche.

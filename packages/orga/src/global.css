@@ -2295,3 +2295,128 @@ button.rt-ligne-declinaisons {
 .rt-punaise[aria-pressed='true'] {
   color: var(--rt-primaire);
 }
+
+/* Fil d'une tâche (FilTache, ADR 0029) : ses commentaires et les événements de
+   son journal, dans un volet. La saisie reste au pied du volet. */
+.rt-fil {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-fil time,
+.rt-fil-commentaire-tete span {
+  font-size: 12.5px;
+  color: var(--rt-encre-55);
+}
+
+.rt-fil-evenement {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  padding-left: 40px;
+  font-size: 13px;
+  color: var(--rt-encre-70);
+}
+
+.rt-fil-commentaire {
+  display: grid;
+  grid-template-columns: 30px minmax(0, 1fr);
+  gap: 10px;
+  align-items: start;
+}
+
+.rt-fil-commentaire-corps {
+  padding: 10px 14px;
+  border-radius: var(--rt-rayon-champ);
+  background: var(--rt-surface-interne);
+}
+
+.rt-fil-commentaire-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 2px 8px;
+  margin: 0 0 4px;
+  font-size: 13.5px;
+}
+
+/* Un commentaire garde ses retours à la ligne, et une longue adresse se coupe. */
+.rt-commentaire-texte {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  color: var(--rt-encre-80);
+}
+
+.rt-commentaire-texte a {
+  color: var(--rt-primaire);
+  text-decoration: underline;
+}
+
+.rt-fil-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 6px;
+}
+
+.rt-fil-actions .ant-btn-link {
+  height: auto;
+  padding: 0;
+}
+
+.rt-fil-edition {
+  display: flex;
+  flex-direction: column;
+}
+
+.rt-fil-saisie {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+/* Le bouton qui ouvre le fil d'une tâche, dans la ligne de ses informations. */
+.rt-ouvrir-fil {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 10px;
+  border: 1px solid var(--rt-encre-14);
+  border-radius: 999px;
+  font: inherit;
+  font-size: 13px;
+  color: var(--rt-encre-70);
+  background: transparent;
+  cursor: pointer;
+}
+
+.rt-ouvrir-fil:hover {
+  color: var(--rt-primaire);
+  border-color: var(--rt-primaire);
+}
+
+.rt-ouvrir-fil:focus-visible {
+  outline: none;
+  box-shadow: var(--rt-anneau-focus);
+}
+
+/* Au doigt, le bouton du fil et les actions d'un commentaire gardent 44 px. */
+@media (pointer: coarse) {
+  .rt-ouvrir-fil {
+    min-height: 44px;
+    padding-inline: 14px;
+  }
+
+  .rt-fil-actions .ant-btn-link {
+    min-height: 44px;
+  }
+}

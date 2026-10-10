@@ -295,6 +295,7 @@ export default function Perimetre() {
           referents={perimetre.referents}
           estAdmin={gere}
           enEvidence={tache.id === tacheVisee}
+          filOuvert={tache.id === tacheVisee && parametres.get('fil') === '1'}
           onModifier={setEnEdition}
           perimetresCibles={perimetresCibles}
           editionId={editionId}

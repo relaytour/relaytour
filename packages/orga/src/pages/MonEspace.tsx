@@ -190,6 +190,7 @@ export default function MonEspace() {
                   peutModifier={tache.peutModifier}
                   referents={referentsDe(tache.perimetre.id)}
                   estAdmin={estAdmin}
+                  editionId={edition?.id}
                   afficherPerimetre
                 />
               ))
@@ -213,6 +214,7 @@ export default function MonEspace() {
                   peutModifier={tache.peutModifier}
                   referents={referentsDe(tache.perimetre.id)}
                   estAdmin={estAdmin}
+                  editionId={edition?.id}
                   afficherPerimetre
                   teinte
                 />
