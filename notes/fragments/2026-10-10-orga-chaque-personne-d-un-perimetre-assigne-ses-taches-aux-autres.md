@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.16.0
 fr:
   titre: >-
     Chaque personne d'un périmètre assigne ses tâches aux autres
