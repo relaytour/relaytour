@@ -118,13 +118,11 @@ builder.mutationFields(t => ({
       const userId = String(args.personneId)
       // Un admin d'activité ne note les souhaits que d'une personne de ses équipes
       // (ADR 0018). Le refus précède le contrôle d'archivage : il ne dit rien du compte.
-      await exigerMembreGere(ctx, userId)
-      const personne = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { archivedAt: true },
-      })
-      if (personne === null || personne.archivedAt !== null) {
-        throw erreurSaisie('Ce compte est introuvable ou archivé.')
+      const membre = await exigerMembreGere(ctx, userId)
+      if (membre.archive) {
+        throw erreurSaisie(
+          'Cette personne est archivée dans votre organisation.'
+        )
       }
       const edition = await exigerEditionOuverte(ctx, args.editionId)
       await ctx.exigerAdminDe(edition.activiteId)

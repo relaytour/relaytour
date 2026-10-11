@@ -340,10 +340,11 @@ describe('refus entre organisations', () => {
       { id: ids.referenteA }
     )
     expect(code(r)).toBe('FORBIDDEN')
-    const compte = await prisma.user.findUniqueOrThrow({
-      where: { id: ids.referenteA },
-    })
-    expect(compte.archivedAt).toBeNull()
+    expect(
+      await prisma.appartenance.count({
+        where: { userId: ids.referenteA, archiveLe: { not: null } },
+      })
+    ).toBe(0)
   })
 
   it('refuse un droit de rédaction pour une personne d’une autre organisation', async () => {
@@ -443,22 +444,171 @@ describe('personne membre de deux organisations', () => {
     expect(code(r)).toBe('FORBIDDEN')
   })
 
-  it('refuse l’archivage de son compte depuis une seule de ses organisations', async () => {
-    const r = await executer(
-      ids.adminB,
-      'mutation ($id: ID!) { archiverPersonne(id: $id, archive: true) { id } }',
-      { id: ids.double }
+  // L'archivage porte sur l'appartenance (ADR 0031) : une organisation ne produit
+  // aucun effet dans une autre.
+  const ARCHIVER =
+    'mutation ($id: ID!, $a: Boolean!) { archiverPersonne(id: $id, archive: $a) { id archive } }'
+  const MES_ORGANISATIONS = '{ mesOrganisations { slug } }'
+  const compteDerive = async () =>
+    (
+      await prisma.user.findUniqueOrThrow({
+        where: { id: ids.double },
+        select: { sansAppartenanceActiveLe: true },
+      })
+    ).sansAppartenanceActiveLe
+
+  it('archive la personne dans une organisation sans rien changer dans l’autre', async () => {
+    const r = await executer(ids.adminB, ARCHIVER, { id: ids.double, a: true })
+    expect(r.errors).toBeUndefined()
+    expect(r.data?.archiverPersonne).toEqual({ id: ids.double, archive: true })
+    // Elle perd B à la requête suivante, et garde A.
+    expect(
+      code(await executer(ids.double, '{ moi { estAdmin } }', {}, slugB))
+    ).toBeUndefined()
+    expect(
+      code(await executer(ids.double, '{ activites { id } }', {}, slugB))
+    ).toBe('FORBIDDEN')
+    const chezA = await executer(ids.double, MES_ORGANISATIONS, {}, slugA)
+    expect(chezA.data).toEqual({ mesOrganisations: [{ slug: slugA }] })
+    expect(
+      (await executer(ids.double, '{ activites { id } }', {}, slugA)).errors
+    ).toBeUndefined()
+    // B ne lui renvoie plus d'invitation ; A le peut encore.
+    const RENVOYER = `mutation ($id: ID!) { renvoyerInvitation(id: $id) }`
+    const refus = await executer(ids.adminB, RENVOYER, { id: ids.double })
+    expect(refus.errors?.[0]?.message).toBe(
+      'Cette personne est archivée dans votre organisation.'
     )
-    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(
+      (await executer(ids.adminA, RENVOYER, { id: ids.double }, slugA)).errors
+    ).toBeUndefined()
+    // L'admin de A ne lit pas cet archivage : il n'est pas le sien.
+    const vueDeA = await executer(
+      ids.adminA,
+      '{ personnes(inclureArchives: true) { id archive } }',
+      {},
+      slugA
+    )
+    expect(
+      (vueDeA.data as { personnes: { id: string; archive: boolean }[] })
+        .personnes
+    ).toContainEqual({ id: ids.double, archive: false })
+    // Le compte garde une appartenance active : la valeur dérivée reste vide.
+    expect(await compteDerive()).toBeNull()
   })
 
-  it('refuse le changement de son nom depuis une seule de ses organisations', async () => {
-    const r = await executer(
-      ids.adminB,
-      'mutation ($id: ID!) { modifierPersonne(id: $id, nom: "Autre", estAdmin: true) { id } }',
-      { id: ids.double }
-    )
+  it('tient la valeur dérivée du compte quand il n’a plus aucune appartenance active', async () => {
+    // Archivée aussi dans A, la personne n'a plus aucune organisation.
+    await executer(ids.adminA, ARCHIVER, { id: ids.double, a: true }, slugA)
+    expect(await compteDerive()).not.toBeNull()
+    const sans = await executer(ids.double, MES_ORGANISATIONS, {}, slugA)
+    expect(sans.data).toEqual({ mesOrganisations: [] })
+    // Rétablie dans A puis dans B, elle retrouve les deux.
+    await executer(ids.adminA, ARCHIVER, { id: ids.double, a: false }, slugA)
+    expect(await compteDerive()).toBeNull()
+    const retabli = await executer(ids.adminB, ARCHIVER, {
+      id: ids.double,
+      a: false,
+    })
+    expect(retabli.data?.archiverPersonne).toEqual({
+      id: ids.double,
+      archive: false,
+    })
+    expect(
+      (await executer(ids.double, '{ activites { id } }', {}, slugB)).errors
+    ).toBeUndefined()
+  })
+
+  it('refuse l’archivage d’une personne par l’admin d’une organisation dont elle n’est pas membre', async () => {
+    const r = await executer(ids.adminB, ARCHIVER, {
+      id: ids.referenteA,
+      a: true,
+    })
+    expect(code(r)).toBe('FORBIDDEN')
+  })
+
+  // Le nom appartient à la personne (ADR 0031).
+  const RENOMMER =
+    'mutation ($id: ID!, $nom: String!) { modifierPersonne(id: $id, nom: $nom, estAdmin: true) { id nom } }'
+
+  it('laisse un admin corriger le nom tant que la personne ne s’est jamais connectée', async () => {
+    const avant = (
+      await prisma.user.findUniqueOrThrow({ where: { id: ids.double } })
+    ).name
+    const r = await executer(ids.adminB, RENOMMER, {
+      id: ids.double,
+      nom: 'Nom corrigé',
+    })
+    expect(r.data?.modifierPersonne).toEqual({
+      id: ids.double,
+      nom: 'Nom corrigé',
+    })
+    await prisma.user.update({
+      where: { id: ids.double },
+      data: { name: avant },
+    })
+  })
+
+  it('refuse à un admin le nom d’une personne déjà connectée, sans rien dire de ses autres organisations', async () => {
+    await prisma.user.update({
+      where: { id: ids.double },
+      data: { emailVerified: true },
+    })
+    const r = await executer(ids.adminB, RENOMMER, {
+      id: ids.double,
+      nom: 'Autre',
+    })
     expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(r.errors?.[0]?.message).not.toContain('autre organisation')
+    // Le refus est le même pour une personne qui n'a que cette organisation.
+    await prisma.user.update({
+      where: { id: ids.adminA },
+      data: { emailVerified: true },
+    })
+    const seule = await executer(
+      ids.adminA,
+      'mutation ($id: ID!) { modifierPersonne(id: $id, nom: "Autre", estAdmin: true) { id } }',
+      { id: ids.adminA },
+      slugA
+    )
+    expect(seule.errors?.[0]?.message).toBe(r.errors?.[0]?.message)
+    // Le rôle, lui, se modifie toujours sans toucher au nom.
+    const memeNom = (
+      await prisma.user.findUniqueOrThrow({ where: { id: ids.double } })
+    ).name
+    const role = await executer(ids.adminB, RENOMMER, {
+      id: ids.double,
+      nom: memeNom,
+    })
+    expect(role.errors).toBeUndefined()
+  })
+
+  it('laisse la personne modifier son nom, lu ensuite dans ses deux organisations', async () => {
+    const r = await executer(
+      ids.double,
+      'mutation { modifierMonNom(nom: "  Camille Renommée ") { id nom } }',
+      {},
+      slugA
+    )
+    expect(r.data?.modifierMonNom).toEqual({
+      id: ids.double,
+      nom: 'Camille Renommée',
+    })
+    for (const [admin, slug] of [
+      [ids.adminA, slugA],
+      [ids.adminB, slugB],
+    ] as const) {
+      const lu = await executer(admin, '{ personnes { id nom } }', {}, slug)
+      expect(
+        (lu.data as { personnes: { id: string; nom: string }[] }).personnes
+      ).toContainEqual({ id: ids.double, nom: 'Camille Renommée' })
+    }
+    // Sans session, rien ne se modifie.
+    const anonyme = await executer(
+      null,
+      'mutation { modifierMonNom(nom: "X") { id } }'
+    )
+    expect(code(anonyme)).toBe('FORBIDDEN')
   })
 })
 

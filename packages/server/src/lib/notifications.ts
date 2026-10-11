@@ -44,6 +44,11 @@ export async function referentsAPrevenir(
   editionId: string | null,
   acteurId: string
 ): Promise<string[]> {
+  const perimetre = await prisma.perimetre.findUnique({
+    where: { id: perimetreId },
+    select: { organisationId: true },
+  })
+  if (perimetre === null) return []
   const affectations = await prisma.affectation.findMany({
     where: {
       perimetreId,
@@ -51,7 +56,12 @@ export async function referentsAPrevenir(
         ? { edition: { statut: { not: 'ARCHIVEE' } } }
         : { editionId }),
       userId: { not: acteurId },
-      user: { archivedAt: null },
+      // Une personne archivée dans l'organisation ne reçoit rien (ADR 0031).
+      user: {
+        appartenances: {
+          some: { organisationId: perimetre.organisationId, archiveLe: null },
+        },
+      },
     },
     select: { userId: true },
     distinct: ['userId'],

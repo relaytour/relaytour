@@ -4,6 +4,7 @@ import type {
   TypeNotification,
 } from '@relaytour/database'
 
+import { membreActif } from '../lib/appartenances.ts'
 import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import { journal } from '../lib/journal.ts'
@@ -75,7 +76,9 @@ export async function genererRappels(
       perimetreId: true,
       editionId: true,
       assignations: {
-        where: { user: { archivedAt: null } },
+        // Une personne archivée dans l'organisation ne reçoit plus ses rappels
+        // (ADR 0031).
+        where: { user: membreActif(organisation.id) },
         select: { userId: true },
       },
     },
@@ -98,7 +101,7 @@ export async function genererRappels(
         where: {
           perimetreId: tache.perimetreId,
           editionId: tache.editionId,
-          user: { archivedAt: null },
+          user: membreActif(organisation.id),
         },
         select: { userId: true },
       })
@@ -184,10 +187,7 @@ export async function personnesAResumer(
     }).format(maintenant) === 'Mon'
 
   const personnes = await prisma.user.findMany({
-    where: {
-      archivedAt: null,
-      appartenances: { some: { organisationId: organisation.id } },
-    },
+    where: membreActif(organisation.id),
     select: { id: true, preferences: true },
   })
   return personnes

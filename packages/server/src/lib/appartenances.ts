@@ -11,23 +11,86 @@ import { accesRefuse, erreurSaisie } from './erreurs.ts'
 
 export interface Membre {
   role: RoleOrganisation
-  /** Nombre d'autres organisations auxquelles le compte appartient. */
-  autresOrganisations: number
+  /** Vrai quand la personne est archivée dans l'organisation active (ADR 0031). */
+  archive: boolean
 }
 
-/** Le rôle d'un compte dans l'organisation active, ou un refus s'il n'en est pas membre. */
+/**
+ * Le rôle d'un compte dans l'organisation active, ou un refus s'il n'en est pas
+ * membre. Une personne archivée dans l'organisation reste membre : un admin la lit
+ * et la rétablit. La réponse ne dépend d'aucune autre organisation du compte.
+ */
 export async function exigerMembre(
   ctx: AppContext,
   userId: string
 ): Promise<Membre> {
   if (ctx.organisation === null) throw accesRefuse()
-  const appartenances = await prisma.appartenance.findMany({
-    where: { userId },
-    select: { organisationId: true, role: true },
+  const ici = await prisma.appartenance.findUnique({
+    where: {
+      userId_organisationId: { userId, organisationId: ctx.organisation.id },
+    },
+    select: { role: true, archiveLe: true },
   })
-  const ici = appartenances.find(a => a.organisationId === ctx.organisation!.id)
-  if (ici === undefined) throw accesRefuse()
-  return { role: ici.role, autresOrganisations: appartenances.length - 1 }
+  if (ici === null) throw accesRefuse()
+  return { role: ici.role, archive: ici.archiveLe !== null }
+}
+
+/**
+ * Le filtre Prisma d'un compte membre actif d'une organisation : il y appartient, et
+ * n'y est pas archivé (ADR 0031). L'archivage d'une personne dans une autre
+ * organisation ne compte pas.
+ */
+export function membreActif(organisationId: string) {
+  return {
+    appartenances: { some: { organisationId, archiveLe: null } },
+  } as const
+}
+
+/**
+ * Vrai quand le mail ne doit pas partir : la personne est archivée dans
+ * l'organisation qui écrit, ou, sans organisation connue, n'a plus aucune
+ * appartenance active. Une personne sans appartenance dans l'organisation qui écrit
+ * (une invitation en attente, ADR 0030) reçoit son mail.
+ */
+export function archiveePourCeMail(
+  appartenances: { organisationId: string; archiveLe: Date | null }[],
+  organisationId: string | undefined
+): boolean {
+  if (organisationId === undefined) {
+    return (
+      appartenances.length > 0 && appartenances.every(a => a.archiveLe !== null)
+    )
+  }
+  const ici = appartenances.find(a => a.organisationId === organisationId)
+  return ici !== undefined && ici.archiveLe !== null
+}
+
+/**
+ * Tient à jour `User.sansAppartenanceActiveLe` (colonne `archivedAt`), valeur
+ * dérivée : une date quand le compte n'a aucune appartenance active, rien sinon. Le
+ * code ne la lit pas ; une version antérieure, elle, y lit l'archivage du compte
+ * (ADR 0031). À appeler dans la transaction qui archive, rétablit ou crée une
+ * appartenance.
+ */
+export async function synchroniserArchivageDuCompte(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  instant = new Date()
+): Promise<void> {
+  const [actives, compte] = await Promise.all([
+    tx.appartenance.count({ where: { userId, archiveLe: null } }),
+    tx.user.findUnique({
+      where: { id: userId },
+      select: { sansAppartenanceActiveLe: true },
+    }),
+  ])
+  if (compte === null) return
+  const attendue = actives === 0
+  if (attendue === (compte.sansAppartenanceActiveLe !== null)) return
+  await tx.user.update({
+    where: { id: userId },
+    data: { sansAppartenanceActiveLe: attendue ? instant : null },
+  })
 }
 
 const ADMIN_DE_L_ORGANISATION =
@@ -169,29 +232,45 @@ export function equipesModifiees(ctx: AppContext): void {
   membresParRequete.delete(ctx)
 }
 
-// Les membres de l'organisation active et la date de leur arrivée, lus une fois
-// par requête : l'annuaire les demande pour chaque personne.
-const membresParRequete = new WeakMap<AppContext, Promise<Map<string, Date>>>()
+// Les membres de l'organisation active, avec la date de leur arrivée et celle de
+// leur archivage, lus une fois par requête : l'annuaire les demande pour chaque
+// personne.
+export interface MembreDeLOrganisation {
+  arrivee: Date
+  archiveLe: Date | null
+}
+const membresParRequete = new WeakMap<
+  AppContext,
+  Promise<Map<string, MembreDeLOrganisation>>
+>()
 
 /**
- * La date d'arrivée de chaque membre dans l'organisation active. Un compte absent
- * de cette liste n'est pas membre : rien de lui ne se lit depuis cette
- * organisation, même s'il existe ailleurs sur l'installation (ADR 0030).
+ * Chaque membre de l'organisation active, archivé ou non. Un compte absent de cette
+ * liste n'est pas membre : rien de lui ne se lit depuis cette organisation, même
+ * s'il existe ailleurs sur l'installation (ADR 0030).
  */
 export function membresDeLOrganisation(
   ctx: AppContext
-): Promise<Map<string, Date>> {
+): Promise<Map<string, MembreDeLOrganisation>> {
   let membres = membresParRequete.get(ctx)
   if (membres === undefined) {
     membres =
       ctx.organisation === null
-        ? Promise.resolve(new Map<string, Date>())
+        ? Promise.resolve(new Map<string, MembreDeLOrganisation>())
         : prisma.appartenance
             .findMany({
               where: { organisationId: ctx.organisation.id },
-              select: { userId: true, createdAt: true },
+              select: { userId: true, createdAt: true, archiveLe: true },
             })
-            .then(lignes => new Map(lignes.map(l => [l.userId, l.createdAt])))
+            .then(
+              lignes =>
+                new Map(
+                  lignes.map(l => [
+                    l.userId,
+                    { arrivee: l.createdAt, archiveLe: l.archiveLe },
+                  ])
+                )
+            )
     membresParRequete.set(ctx, membres)
   }
   return membres

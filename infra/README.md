@@ -82,6 +82,8 @@ Le manifest de chaque organisation se sert sous `/medias/application/`, chemin d
 
 Une version récente peut écrire, dans la configuration d'une organisation, un champ qu'une version antérieure ne connaît pas. À partir de la version 0.13, le serveur écarte ce champ à la lecture et garde le reste : un retour arrière ne change pas l'identité de l'organisation. Une configuration qu'il ne sait pas lire du tout n'est jamais écrasée : le journal porte l'événement `configuration-illisible`, et l'organisation s'affiche avec l'identité d'amorçage jusqu'à son réimport.
 
+À partir de la version qui porte l'ADR 0031, l'archivage d'une personne se lit dans son appartenance à l'organisation. Le serveur tient aussi à jour l'ancienne colonne du compte, renseignée quand la personne n'a plus aucune appartenance active. Après un retour arrière, une version antérieure refuse donc encore ces personnes. Une personne archivée dans une organisation et active dans une autre retrouve en revanche son accès aux deux : restaurez la version récente sans tarder sur une installation qui porte plusieurs organisations.
+
 Les versions 0.12.1 et antérieures n'ont pas cette protection. Au démarrage, elles remplacent une configuration qu'elles ne lisent pas par les valeurs d'amorçage du `.env`. Avant de revenir d'une version 0.13 ou suivante à l'une d'elles, exportez le contenu de l'organisation (`orga-exporter`), ou retirez l'icône d'application dans l'écran « Organisation ».
 
 ### Notifications push

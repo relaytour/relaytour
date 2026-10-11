@@ -7,6 +7,7 @@ import type {
 import { z } from 'zod'
 
 import { creerAffectations } from './affectations.ts'
+import { synchroniserArchivageDuCompte } from './appartenances.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
 import { publierNotification, publierPourActivite } from './flux.ts'
 import { journal } from './journal.ts'
@@ -147,7 +148,7 @@ async function adminsDeLOrganisation(
   organisationId: string
 ): Promise<string[]> {
   const admins = await tx.appartenance.findMany({
-    where: { organisationId, role: 'ADMIN', user: { archivedAt: null } },
+    where: { organisationId, role: 'ADMIN', archiveLe: null },
     select: { userId: true },
   })
   return admins.map(a => a.userId)
@@ -211,6 +212,8 @@ export async function accepterInvitation(
       // Le rôle d'admin de l'invitation s'ajoute ; il ne retire jamais un rôle.
       update: invitation.role === 'ADMIN' ? { role: 'ADMIN' } : {},
     })
+    // Le compte a de nouveau une appartenance active (ADR 0031).
+    await synchroniserArchivageDuCompte(tx, userId, instant)
 
     const activites: { activiteId: string; editionId: string }[] = []
     for (const lot of lireLots(invitation.lots)) {
@@ -305,7 +308,7 @@ export async function accepterInvitation(
                 where: {
                   organisationId,
                   userId: invitation.inviteParId,
-                  user: { archivedAt: null },
+                  archiveLe: null,
                 },
                 select: { userId: true },
               })
@@ -397,10 +400,15 @@ export async function invitationEnAttente(
 ): Promise<
   'membre' | 'aucune' | { perimetres: string[]; role: RoleOrganisation }
 > {
-  const appartenance = await prisma.appartenance.count({
-    where: { userId, organisationId },
+  // Une personne archivée dans l'organisation ne reçoit pas de mail d'invitation
+  // (ADR 0031) : elle n'y est ni membre active, ni invitée.
+  const appartenance = await prisma.appartenance.findUnique({
+    where: { userId_organisationId: { userId, organisationId } },
+    select: { archiveLe: true },
   })
-  if (appartenance > 0) return 'membre'
+  if (appartenance !== null) {
+    return appartenance.archiveLe === null ? 'membre' : 'aucune'
+  }
   const invitation = await prisma.invitationOrganisation.findFirst({
     where: { userId, organisationId, ...vivante(maintenant) },
     select: { lots: true, role: true },

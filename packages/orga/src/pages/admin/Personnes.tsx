@@ -71,6 +71,7 @@ const PERSONNES = graphql(`
       estAdmin
       activitesAdministrees
       archive
+      nomModifiable
       affectations(editionId: $editionId) {
         id
         contactPrincipal
@@ -246,7 +247,7 @@ const RENVOYER = graphql(`
 type Membre = PersonnesQuery['personnes'][number]
 // Une ligne de l'annuaire ou de l'équipe : seul l'annuaire porte les attributions.
 type Personne = PersonnesEquipeQuery['equipe'][number] &
-  Partial<Pick<Membre, 'attributions'>>
+  Partial<Pick<Membre, 'attributions' | 'nomModifiable'>>
 
 // Filtre de l'annuaire : toutes les personnes, celles d'une activité, ou celles
 // qui ne participent à aucune.
@@ -514,14 +515,18 @@ export default function Personnes({
   // qu'elle n'est pas archivée.
   const souhaitsModifiables =
     edition !== undefined && edition.statut !== 'ARCHIVEE'
-  // Les rôles, le nom et l'archivage d'un compte relèvent des admins de
-  // l'organisation. Un admin d'activité invite, affecte et note les souhaits.
+  // Les rôles et l'archivage d'une personne relèvent des admins de
+  // l'organisation. Le nom appartient à la personne dès sa première connexion
+  // (ADR 0031). Un admin d'activité invite, affecte et note les souhaits.
   const gereOrganisation = session?.moi?.estAdmin ?? false
   // L'écran choisit la liste : l'annuaire de l'organisation, ou l'équipe de
   // l'activité affichée.
   const annuaire = useQuery(PERSONNES, {
     variables: { inclureArchives, editionId: editionId ?? null },
     skip: !modeAnnuaire,
+    // L'interrupteur des personnes archivées change les variables : la liste gardée
+    // en cache pour l'autre position date d'avant le dernier archivage.
+    fetchPolicy: 'cache-and-network',
   })
   const equipe = useQuery(EQUIPE, {
     variables: { editionId: editionId ?? null },
@@ -554,6 +559,13 @@ export default function Personnes({
   // Compteur d'ouvertures : la fenêtre reste montée d'une ouverture à l'autre, et
   // les champs de souhaits doivent relire les souhaits à chaque fois.
   const [ouverture, setOuverture] = useState(0)
+  // Un admin de l'organisation corrige le nom d'une personne tant qu'elle ne
+  // s'est jamais connectée (ADR 0031).
+  const nomVerrouille =
+    gereOrganisation &&
+    enEdition !== null &&
+    enEdition !== 'nouvelle' &&
+    enEdition.nomModifiable === false
   const [form] = Form.useForm<Valeurs>()
   const rafraichir = {
     refetchQueries: [modeAnnuaire ? PERSONNES : EQUIPE],
@@ -611,7 +623,7 @@ export default function Personnes({
       })
     }
   }
-  // Un compte archivé ne reçoit plus d'affectation ni de souhait.
+  // Une personne archivée ne reçoit plus d'affectation ni de souhait.
   const champSouhaits =
     enEdition !== null && (enEdition === 'nouvelle' || !enEdition.archive)
   // Les périmètres se choisissent dans chaque activité administrée, l'activité
@@ -1046,7 +1058,7 @@ export default function Personnes({
                   checked={inclureArchives}
                   onChange={setInclureArchives}
                 />
-                <span>Afficher les comptes archivés</span>
+                <span>Afficher les personnes archivées</span>
               </Space>
             )}
           </Space>
@@ -1314,7 +1326,7 @@ export default function Personnes({
                             archiver({
                               variables: { id: p.id, archive: false },
                             }),
-                          'Compte restauré.'
+                          'Personne restaurée.'
                         )
                       }
                     >
@@ -1353,8 +1365,8 @@ export default function Personnes({
                       </Button>
                       {p.id !== moiId && modeAnnuaire && (
                         <Popconfirm
-                          title="Archiver ce compte ?"
-                          description="La personne est déconnectée et ne peut plus se connecter. Son historique reste conservé."
+                          title="Archiver cette personne ?"
+                          description="La personne perd l’accès à votre organisation. Son compte et son historique restent conservés."
                           okText="Archiver"
                           cancelText="Annuler"
                           onConfirm={() =>
@@ -1363,7 +1375,7 @@ export default function Personnes({
                                 archiver({
                                   variables: { id: p.id, archive: true },
                                 }),
-                              'Compte archivé.'
+                              'Personne archivée.'
                             )
                           }
                         >
@@ -1420,10 +1432,17 @@ export default function Personnes({
             label="Prénom et nom"
             name="nom"
             rules={[{ required: true, message: 'Saisissez un nom.' }]}
+            extra={
+              nomVerrouille
+                ? 'Cette personne s’est déjà connectée : elle modifie son nom dans ses préférences.'
+                : undefined
+            }
           >
             <Input
               autoComplete="off"
-              disabled={enEdition !== 'nouvelle' && !gereOrganisation}
+              disabled={
+                enEdition !== 'nouvelle' && (!gereOrganisation || nomVerrouille)
+              }
             />
           </Form.Item>
           <Form.Item
