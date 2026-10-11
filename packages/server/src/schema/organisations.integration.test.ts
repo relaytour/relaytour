@@ -473,6 +473,15 @@ describe('personne membre de deux organisations', () => {
     expect(
       (await executer(ids.double, '{ activites { id } }', {}, slugA)).errors
     ).toBeUndefined()
+    // B ne lui renvoie plus d'invitation ; A le peut encore.
+    const RENVOYER = `mutation ($id: ID!) { renvoyerInvitation(id: $id) }`
+    const refus = await executer(ids.adminB, RENVOYER, { id: ids.double })
+    expect(refus.errors?.[0]?.message).toBe(
+      'Cette personne est archivée dans votre organisation.'
+    )
+    expect(
+      (await executer(ids.adminA, RENVOYER, { id: ids.double }, slugA)).errors
+    ).toBeUndefined()
     // L'admin de A ne lit pas cet archivage : il n'est pas le sien.
     const vueDeA = await executer(
       ids.adminA,
