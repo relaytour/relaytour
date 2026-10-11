@@ -46,9 +46,11 @@ const organisationId =
     : (await organisationParSlug(values.organisation)).id
 // Les règles sont celles de l'application (lib/installation.ts, `nommerAdmin`) : un
 // compte connu d'une autre organisation ne reçoit qu'une invitation (ADR 0030).
-let admin: Awaited<ReturnType<typeof nommerAdmin>> | null = null
+// L'issue ne se retient qu'après la mise en file : un message de succès ne suit
+// jamais une erreur.
+let issue: Awaited<ReturnType<typeof nommerAdmin>>['issue'] | null = null
 try {
-  admin = await nommerAdmin(organisationId, adresse, nom.trim())
+  const admin = await nommerAdmin(organisationId, adresse, nom.trim())
   if (admin.issue === 'invite') {
     await annoncerInvitation(admin.userId, { organisationId })
   } else {
@@ -58,6 +60,7 @@ try {
       { organisationId }
     )
   }
+  issue = admin.issue
 } catch (erreur) {
   console.error(erreur instanceof Error ? erreur.message : erreur)
   process.exitCode = 1
@@ -65,11 +68,11 @@ try {
 await courrielQueue.close()
 connection.disconnect()
 await prisma.$disconnect()
-if (admin !== null) {
+if (issue !== null) {
   console.log(
-    admin.issue === 'invite'
+    issue === 'invite'
       ? '✔ Cette adresse a déjà un compte hors de l’organisation : son invitation au rôle d’admin attend son accord.'
-      : admin.issue === 'retabli'
+      : issue === 'retabli'
         ? '✔ Compte rétabli et admin, invitation mise en file.'
         : '✔ Compte admin prêt, invitation mise en file.'
   )

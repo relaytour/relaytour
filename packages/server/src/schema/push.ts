@@ -1,5 +1,6 @@
 import { prisma } from '@relaytour/database'
 
+import { abonnerAppareil } from '../lib/abonnements.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import {
   ABONNEMENTS_MAX,
@@ -84,17 +85,7 @@ builder.mutationFields(t => ({
         auth: args.auth,
         appareil: libelleAppareil(args.agent?.slice(0, 400)),
       }
-      // Un appareil ne sert qu'un compte : l'abonnement qu'un autre compte y avait
-      // laissé (session expirée, compte archivé) est retiré. Sans cela, l'appareil
-      // continuerait de recevoir les notifications du compte précédent.
-      await prisma.abonnementPush.deleteMany({
-        where: { empreinte, userId: { not: userId } },
-      })
-      await prisma.abonnementPush.upsert({
-        where: { userId_empreinte: { userId, empreinte } },
-        update: donnees,
-        create: { userId, empreinte, ...donnees },
-      })
+      await abonnerAppareil(prisma, userId, empreinte, donnees)
       // Au-delà du plafond, les abonnements les plus anciens sont retirés.
       const anciens = await prisma.abonnementPush.findMany({
         where: { userId },

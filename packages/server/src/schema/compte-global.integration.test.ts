@@ -240,7 +240,8 @@ describe('la limite de relance', () => {
 
 describe('un mail sans organisation désignée', () => {
   it('ne prend le nom d’aucune organisation sur une installation qui en porte plusieurs', async () => {
-    invaliderConfigurationOrganisation()
+    // Le cache n'est pas vidé : l'identité neutre vaut dès qu'une seconde
+    // organisation existe, sans attendre la fin d'une durée de cache.
     const neutre = await configurationOrganisation()
     expect(neutre.id).toBeNull()
     const noms = (
