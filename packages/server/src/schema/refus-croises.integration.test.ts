@@ -1127,33 +1127,26 @@ async function etatDeA() {
     where: { id: a.invitation },
     select: { lots: true, expireLe: true, role: true },
   })
-  // Rien de A n'entre dans B par une combinaison d'identifiants mêlés.
-  const dansB = {
-    affectations: await prisma.affectation.count({
+  // Rien de A n'entre dans B par une combinaison d'identifiants mêlés. Les lectures
+  // partent ensemble : l'état se relit après chaque cas de la table.
+  const dansB = await Promise.all([
+    prisma.affectation.count({
       where: { perimetre: { organisationId: b.org } },
     }),
-    messages: await prisma.message.count({ where: { organisationId: b.org } }),
-    invitations: await prisma.invitationOrganisation.count({
-      where: { organisationId: b.org },
-    }),
-    membres: await prisma.appartenance.count({
-      where: { organisationId: b.org },
-    }),
-    droits: await prisma.droitRedaction.count({
-      where: { organisationId: b.org },
-    }),
-    declinaisons: await prisma.tache.count({
-      where: { perimetre: { organisationId: b.org } },
-    }),
-    demande: await prisma.demande.findUnique({
+    prisma.message.count({ where: { organisationId: b.org } }),
+    prisma.invitationOrganisation.count({ where: { organisationId: b.org } }),
+    prisma.appartenance.count({ where: { organisationId: b.org } }),
+    prisma.droitRedaction.count({ where: { organisationId: b.org } }),
+    prisma.tache.count({ where: { perimetre: { organisationId: b.org } } }),
+    prisma.demande.findUnique({
       where: { id: b.demande },
       select: { statut: true },
     }),
-    tache: await prisma.tache.findUnique({
+    prisma.tache.findUnique({
       where: { id: b.tache },
       select: { statut: true, _count: { select: { assignations: true } } },
     }),
-  }
+  ])
   return JSON.stringify({
     dansB,
     invitation,

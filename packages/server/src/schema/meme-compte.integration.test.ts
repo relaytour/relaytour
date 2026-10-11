@@ -288,6 +288,14 @@ describe.each([
           }[]
         }
       ).personnes.find(p => p.id === ids.zoe)!
+      // La liste des admins de l'organisation ne compte que ses propres admins : le
+      // rôle que la personne a dans l'autre organisation ne l'y fait pas entrer.
+      const admins = (
+        lectures[5] as { adminsOrganisation: { id: string }[] }
+      ).adminsOrganisation.map(a => a.id)
+      expect(admins.sort()).toEqual(
+        (ici === 'b' ? [mondes.b.admin, ids.zoe] : [mondes.a.admin]).sort()
+      )
       expect(zoe.estAdmin).toBe(ici === 'b')
       expect(zoe.activitesAdministrees).toEqual(
         ici === 'b' ? [mondes.b.activite] : []
