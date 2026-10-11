@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-11-orga-un-refus-de-limite-ou-de-lecture-seule-affiche-son-motif",
+          "date": "2026-10-11",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un refus de limite ou de lecture seule affiche son motif",
+            "texte": "Quand votre organisation a atteint une limite d'activités ou de périodes ouvertes, ou quand elle est en lecture seule, l'espace organisateur affiche maintenant le motif du refus et la personne à contacter. Il affichait auparavant un message d'échec sans explication.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-10-orga-vous-acceptez-ou-refusez-l-invitation-d-une-autre-organisati",
           "date": "2026-10-10",
           "type": "fonctionnalite",
