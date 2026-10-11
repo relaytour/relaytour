@@ -125,6 +125,19 @@
           }
         },
         {
+          "id": "2026-10-10-serveur-le-compte-d-une-personne-ne-laisse-plus-rien-passer-d-une-or",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le compte d'une personne ne laisse plus rien passer d'une organisation à l'autre",
+            "texte": "Sur une installation qui porte plusieurs organisations, six points se resserrent. La date lue d'une personne est celle de son arrivée dans l'organisation, plus celle de la création de son compte. La limite d'un mail d'invitation par heure se compte par organisation. Un mail sans organisation désignée, comme le code de connexion d'une personne membre de plusieurs organisations, ne prend plus le nom ni le logo d'une organisation. La commande `creer-admin` n'accorde à un compte connu d'une autre organisation qu'une invitation à accepter. Un appareil ne garde l'abonnement push que d'un compte. Un admin ne lit l'adresse que d'un membre de son organisation. Une installation à une seule organisation ne voit aucun changement.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-10-serveur-la-purge-nocturne-retire-les-donnees-techniques-echues-et-le",
           "date": "2026-10-10",
           "type": "securite",

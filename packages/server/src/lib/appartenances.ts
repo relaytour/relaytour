@@ -166,4 +166,33 @@ export function attributionsDeLOrganisation(
 export function equipesModifiees(ctx: AppContext): void {
   ctx.oublierLesEquipes()
   attributionsParRequete.delete(ctx)
+  membresParRequete.delete(ctx)
+}
+
+// Les membres de l'organisation active et la date de leur arrivée, lus une fois
+// par requête : l'annuaire les demande pour chaque personne.
+const membresParRequete = new WeakMap<AppContext, Promise<Map<string, Date>>>()
+
+/**
+ * La date d'arrivée de chaque membre dans l'organisation active. Un compte absent
+ * de cette liste n'est pas membre : rien de lui ne se lit depuis cette
+ * organisation, même s'il existe ailleurs sur l'installation (ADR 0030).
+ */
+export function membresDeLOrganisation(
+  ctx: AppContext
+): Promise<Map<string, Date>> {
+  let membres = membresParRequete.get(ctx)
+  if (membres === undefined) {
+    membres =
+      ctx.organisation === null
+        ? Promise.resolve(new Map<string, Date>())
+        : prisma.appartenance
+            .findMany({
+              where: { organisationId: ctx.organisation.id },
+              select: { userId: true, createdAt: true },
+            })
+            .then(lignes => new Map(lignes.map(l => [l.userId, l.createdAt])))
+    membresParRequete.set(ctx, membres)
+  }
+  return membres
 }

@@ -1007,6 +1007,8 @@ type Personne {
   affectations(editionId: ID): [Affectation!]!
   archive: Boolean!
   attributions: [AttributionActivite!]!
+
+  """Date d’arrivée de la personne dans l’organisation active."""
   creeLe: DateTime!
   email: String!
   estAdmin: Boolean

@@ -444,8 +444,17 @@ export async function perimetresProposes(
 }
 
 /**
+ * La clé de la limite d'un mail d'invitation : par organisation et par personne.
+ * Une organisation ne consomme pas la limite d'une autre, et n'apprend pas par un
+ * refus qu'une autre vient d'écrire à la même personne (ADR 0030).
+ */
+export function cleRelance(organisationId: string, userId: string): string {
+  return `relance-invitation:${organisationId}:${userId}`
+}
+
+/**
  * Met en file le mail d'une invitation en attente, une fois par personne et par
- * heure au plus : la même limite que la relance. Une organisation qui répète
+ * heure au plus dans une organisation : la même limite que la relance. Une organisation qui répète
  * l'invitation d'une adresse extérieure n'inonde pas sa boîte. Renvoie faux quand
  * le mail n'est pas parti.
  */
@@ -457,7 +466,9 @@ export async function annoncerInvitation(
     import('./limite.ts'),
     import('../courriel/file.ts'),
   ])
-  if (!(await limiterParCle(`relance-invitation:${userId}`, 1, 3600))) {
+  if (
+    !(await limiterParCle(cleRelance(porteur.organisationId, userId), 1, 3600))
+  ) {
     return false
   }
   await mettreEnFile('invitation', { userId }, porteur)

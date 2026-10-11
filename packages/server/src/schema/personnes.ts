@@ -9,6 +9,7 @@ import {
   equipesModifiees,
   exigerMembre,
   exigerMembreGere,
+  membresDeLOrganisation,
   refuserAdminDeLOrganisation,
 } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
@@ -19,7 +20,11 @@ import {
   exigerEcriture,
 } from '../lib/droits.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
-import { annoncerInvitation, inviterCompteExterne } from '../lib/invitations.ts'
+import {
+  annoncerInvitation,
+  cleRelance,
+  inviterCompteExterne,
+} from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import {
@@ -74,11 +79,14 @@ export const PersonneRef = builder.prismaObject('User', {
     nom: t.exposeString('name'),
     // L'adresse se lit par la personne elle-même, par un admin de l'organisation et
     // par un admin d'une activité dont elle fait partie de l'équipe (ADR 0018). Le
-    // rôle d'admin d'une autre activité ne l'ouvre pas.
+    // rôle d'admin d'une autre activité ne l'ouvre pas. Un admin de l'organisation
+    // ne lit que l'adresse d'un membre de son organisation : un compte qui n'en fait
+    // pas partie garde son adresse, quel que soit le chemin qui y mène (ADR 0030).
     email: t.exposeString('email', {
       authScopes: async (personne, _args, ctx) =>
         ctx.personne?.id === personne.id ||
-        ctx.personne?.estAdmin === true ||
+        (ctx.personne?.estAdmin === true &&
+          (await membresDeLOrganisation(ctx)).has(personne.id)) ||
         (await ctx.equipeAdministree()).has(personne.id),
     }),
     // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global. Il se
@@ -100,7 +108,20 @@ export const PersonneRef = builder.prismaObject('User', {
           : null,
     }),
     archive: t.boolean({ resolve: u => u.archivedAt !== null }),
-    creeLe: t.expose('createdAt', { type: 'DateTime' }),
+    // La date d'arrivée de la personne dans l'organisation active, et non celle de
+    // la création de son compte : un compte créé plus tôt par une autre
+    // organisation ne le laisse pas voir (ADR 0030). La personne lit pour elle-même
+    // la date de son compte quand elle n'a aucune organisation active.
+    creeLe: t.field({
+      type: 'DateTime',
+      description: 'Date d’arrivée de la personne dans l’organisation active.',
+      resolve: async (u, _args, ctx) => {
+        const arrivee = (await membresDeLOrganisation(ctx)).get(u.id)
+        if (arrivee !== undefined) return arrivee
+        if (ctx.personne?.id === u.id) return u.createdAt
+        throw accesRefuse()
+      },
+    }),
     // Les affectations de l'organisation active : toutes pour la personne elle-même
     // et pour un admin de l'organisation, celles des activités administrées sinon.
     affectations: t.prismaField({
@@ -610,7 +631,11 @@ builder.mutationFields(t => ({
       }
       // Une relance par personne et par heure : un admin ne peut pas inonder une boîte.
       if (
-        !(await limiterParCle(`relance-invitation:${personne.id}`, 1, 3600))
+        !(await limiterParCle(
+          cleRelance(ctx.organisation!.id, personne.id),
+          1,
+          3600
+        ))
       ) {
         throw erreurSaisie(
           'Cette personne a déjà été relancée il y a moins d’une heure.'
