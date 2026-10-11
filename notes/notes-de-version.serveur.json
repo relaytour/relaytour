@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-11-serveur-une-installation-peut-plafonner-ses-mails-par-jour",
+          "date": "2026-10-11",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une installation peut plafonner ses mails par jour",
+            "texte": "La variable facultative `COURRIEL_PLAFOND_QUOTIDIEN` fixe le nombre de mails qu'une installation envoie par jour. Au-delà, le worker reporte le mail au lendemain. Le code de connexion part toujours. Sans cette variable, rien ne change.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-10-serveur-valkey-exige-un-mot-de-passe-et-la-pile-tourne-sur-un-reseau",
           "date": "2026-10-10",
           "type": "rupture",

@@ -60,6 +60,15 @@ const EnvSchema = z
     COURRIEL_SMTP_MOT_DE_PASSE: optionnelle,
     // Sans expéditeur, la configuration compose « <nom court> <relaytour@localhost> ».
     COURRIEL_EXPEDITEUR: optionnelle,
+    // Plafond quotidien des mails de l'installation (ADR 0031). Absent, aucun
+    // plafond : c'est le cas d'une installation auto-hébergée. Au-delà, un mail est
+    // reporté au lendemain ; le code de connexion part toujours.
+    COURRIEL_PLAFOND_QUOTIDIEN: optionnelle
+      .refine(
+        s => s === undefined || /^[1-9]\d{0,8}$/.test(s),
+        'COURRIEL_PLAFOND_QUOTIDIEN : entier positif attendu'
+      )
+      .transform(s => (s === undefined ? undefined : Number(s))),
     // Amorçage de la configuration d'organisation (lib/organisation.ts) avant le
     // premier import d'organisation.yaml. La ligne en base prend ensuite le relais (ADR 0006).
     ORGANISATION_NOM: optionnelle.transform(s => s ?? 'Relaytour'),

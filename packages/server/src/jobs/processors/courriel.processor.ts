@@ -1,15 +1,25 @@
-import { UnrecoverableError, type Job } from 'bullmq'
+import { DelayedError, UnrecoverableError, type Job } from 'bullmq'
 
 import { prisma } from '@relaytour/database'
 
 import { composer } from '../../courriel/messages.ts'
 import { expedier } from '../../courriel/transport.ts'
+import { env } from '../../env.ts'
 import { CODE_VALIDITE_SECONDES } from '../../lib/connexion.ts'
 import { courrielTronque, journal, sansAdresses } from '../../lib/journal.ts'
+import {
+  attenteJusquAuLendemain,
+  rendreEnvoi,
+  reserverEnvoi,
+} from '../../lib/plafond-courriel.ts'
 import type { CourrielJobData } from '../queues.ts'
 
+// Les mails reportés par le plafond repartent étalés sur ce délai, et non tous à minuit.
+const ETALEMENT_DU_REPORT_MS = 30 * 60 * 1000
+
 export async function courrielProcessor(
-  job: Job<CourrielJobData>
+  job: Job<CourrielJobData>,
+  token?: string
 ): Promise<void> {
   const { sorte, userId } = job.data
 
@@ -57,6 +67,29 @@ export async function courrielProcessor(
     return
   }
   const { sujet, html, texte, desabonnement, repondreA } = message
+
+  // Plafond quotidien de l'installation (ADR 0031) : au-delà, le mail attend le
+  // lendemain. Le job garde ses essais : un report n'en consomme aucun.
+  const plafond = env.COURRIEL_PLAFOND_QUOTIDIEN
+  if ((await reserverEnvoi(sorte, plafond)) === 'atteint') {
+    const maintenant = new Date()
+    journal.warn(
+      {
+        evenement: 'courriel-plafond-atteint',
+        sorte,
+        userId: userId ?? null,
+        plafond,
+      },
+      'Plafond quotidien des mails atteint : le mail est reporté au lendemain.'
+    )
+    await job.moveToDelayed(
+      maintenant.getTime() +
+        attenteJusquAuLendemain(maintenant) +
+        Math.floor(Math.random() * ETALEMENT_DU_REPORT_MS),
+      token
+    )
+    throw new DelayedError()
+  }
   const issue = await expedier({
     destinataire,
     sujet,
@@ -88,6 +121,8 @@ export async function courrielProcessor(
     throw new UnrecoverableError(`Adresse refusée définitivement (${sorte}).`)
   }
   if (issue === 'panne') {
+    // Le mail n'est pas parti : sa place est rendue, le nouvel essai la réservera.
+    await rendreEnvoi(sorte, plafond)
     throw new Error(`Envoi impossible (${sorte}), nouvel essai prévu.`)
   }
   journal.debug(
