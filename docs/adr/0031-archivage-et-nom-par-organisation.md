@@ -1,6 +1,6 @@
 # ADR 0031 — Archivage par organisation et nom tenu par la personne
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-11
 - Remplace les règles de l'ADR 0008 « l'archivage porte sur le compte » et « un admin de l'organisation modifie le nom d'un compte ». Complète l'ADR 0030 (cloisonnement des organisations).
 
