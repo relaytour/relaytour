@@ -638,13 +638,15 @@ describe('accepter une demande', () => {
     await prisma.demande.delete({ where: { id: demande.id } })
   })
 
-  it('refuse un compte archivé et laisse la demande en attente', async () => {
+  it('refuse une personne archivée dans l’organisation et laisse la demande en attente', async () => {
     await prisma.user.create({
       data: {
         id: randomUUID(),
         email: adresse('archive'),
         name: 'Archivée',
-        archivedAt: new Date(),
+        appartenances: {
+          create: { organisationId: ids.org, archiveLe: new Date() },
+        },
       },
     })
     await proposer(ids.alice, 'archive')

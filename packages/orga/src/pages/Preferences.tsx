@@ -1,6 +1,7 @@
-import { LogoutOutlined } from '@ant-design/icons'
+import { EditOutlined, LogoutOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
-import { App, Button, Form, Radio, Skeleton, Switch } from 'antd'
+import { App, Button, Form, Input, Radio, Skeleton, Switch } from 'antd'
+import { useState } from 'react'
 
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
 import PreferenceMessagerie from '../composants/PreferenceMessagerie'
@@ -53,6 +54,17 @@ const MODIFIER = graphql(`
   }
 `)
 
+// Le nom appartient à la personne et vaut dans toutes ses organisations
+// (ADR 0031).
+const MODIFIER_MON_NOM = graphql(`
+  mutation ModifierMonNom($nom: String!) {
+    modifierMonNom(nom: $nom) {
+      id
+      nom
+    }
+  }
+`)
+
 interface Valeurs {
   frequenceResume: FrequenceResume
   mailModification: boolean
@@ -74,6 +86,22 @@ export default function Preferences() {
   const [modifier, modification] = useMutation(MODIFIER, {
     refetchQueries: [PREFERENCES],
   })
+
+  const [renommer, renommage] = useMutation(MODIFIER_MON_NOM, {
+    refetchQueries: [MOI],
+  })
+  const [nomEnEdition, setNomEnEdition] = useState(false)
+  const [formNom] = Form.useForm<{ nom: string }>()
+
+  const enregistrerNom = async ({ nom }: { nom: string }) => {
+    try {
+      await renommer({ variables: { nom } })
+      setNomEnEdition(false)
+      message.success('Nom enregistré.')
+    } catch (e) {
+      message.error(messageErreur(e))
+    }
+  }
 
   const enregistrer = async (v: Valeurs) => {
     try {
@@ -122,9 +150,52 @@ export default function Preferences() {
                       </span>
                     </span>
                   </div>
+                  {nomEnEdition ? (
+                    <Form
+                      form={formNom}
+                      layout="vertical"
+                      requiredMark={false}
+                      initialValues={{ nom: session.moi.nom }}
+                      onFinish={v => void enregistrerNom(v)}
+                    >
+                      <Form.Item
+                        label="Prénom et nom"
+                        name="nom"
+                        rules={[
+                          {
+                            required: true,
+                            whitespace: true,
+                            message: 'Saisissez un nom.',
+                          },
+                        ]}
+                        extra="Ce nom s’affiche dans toutes vos organisations."
+                      >
+                        <Input autoComplete="name" maxLength={120} />
+                      </Form.Item>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <Button
+                          type="primary"
+                          htmlType="submit"
+                          loading={renommage.loading}
+                        >
+                          Enregistrer
+                        </Button>
+                        <Button onClick={() => setNomEnEdition(false)}>
+                          Annuler
+                        </Button>
+                      </div>
+                    </Form>
+                  ) : (
+                    <Button
+                      icon={<EditOutlined />}
+                      style={{ alignSelf: 'flex-start' }}
+                      onClick={() => setNomEnEdition(true)}
+                    >
+                      Modifier mon nom
+                    </Button>
+                  )}
                   <p className="rt-note">
-                    Les admins gèrent votre nom, votre adresse et vos
-                    affectations.
+                    Les admins gèrent votre adresse et vos affectations.
                   </p>
                   <Button
                     icon={<LogoutOutlined />}

@@ -2,6 +2,7 @@ import type { PrismaClient } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
 
+import { membreActif } from './appartenances.ts'
 import { aujourdhui } from './droits.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { publierNotification } from './flux.ts'
@@ -58,23 +59,22 @@ export function fenetreDemandes(maintenant = Date.now()): {
 
 /**
  * Les personnes à prévenir d'une demande : les admins de l'activité, sinon ceux de
- * l'organisation. Un compte archivé ne reçoit rien.
+ * l'organisation. Une personne archivée dans l'organisation ne reçoit rien (ADR 0031).
  */
 export async function adminsAPrevenir(
   prisma: PrismaClient,
   organisationId: string,
   activiteId: string
 ): Promise<string[]> {
-  const actif = { archivedAt: null }
   const deLActivite = await prisma.adminActivite.findMany({
-    where: { activiteId, organisationId, user: actif },
+    where: { activiteId, organisationId, user: membreActif(organisationId) },
     select: { userId: true },
   })
   const admins =
     deLActivite.length > 0
       ? deLActivite
       : await prisma.appartenance.findMany({
-          where: { organisationId, role: 'ADMIN', user: actif },
+          where: { organisationId, role: 'ADMIN', archiveLe: null },
           select: { userId: true },
         })
   return admins.map(a => a.userId)

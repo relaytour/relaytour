@@ -104,6 +104,10 @@ model Appartenance {
   userId         String
   organisationId String
   role           RoleOrganisation @default(MEMBRE)
+  // Date à laquelle la personne a été archivée dans cette organisation (ADR 0031).
+  // Nulle, l'appartenance est active. L'archivage ne touche ni le compte ni ses
+  // autres organisations.
+  archiveLe      DateTime?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
 
@@ -237,16 +241,21 @@ model Activite {
 // `isAdmin` et `archivedAt` sont des champs supplémentaires déclarés dans auth.ts.
 
 model User {
-  id            String    @id
-  name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
-  image         String?   @db.Text
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  isAdmin       Boolean   @default(false)
-  // Un compte archivé ne peut plus se connecter. Il reste pour l'historique des éditions.
-  archivedAt    DateTime?
+  id                       String    @id
+  name                     String
+  email                    String    @unique
+  emailVerified            Boolean   @default(false)
+  image                    String?   @db.Text
+  createdAt                DateTime  @default(now())
+  updatedAt                DateTime  @updatedAt
+  isAdmin                  Boolean   @default(false)
+  // Valeur dérivée depuis l'ADR 0031 : une date quand le compte n'a aucune
+  // appartenance active, rien sinon. Le code ne la lit plus pour décider d'un accès
+  // (`Appartenance.archiveLe` fait foi) ; il la tient à jour pour un retour à une
+  // version antérieure, qui la lit encore. Le champ change de nom dans le code pour
+  // qu'aucune lecture ne le prenne pour l'archivage d'une personne ; la colonne garde
+  // le sien.
+  sansAppartenanceActiveLe DateTime? @map("archivedAt")
 
   sessions            Session[]
   accounts            Account[]

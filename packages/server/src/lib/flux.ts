@@ -339,7 +339,7 @@ const FILE_MAX = 200
  * Renvoie null quand elle a déjà trop de flux ouverts. Lève si Valkey ne répond pas.
  *
  * Le flux se ferme à la demande du client (`return`), à l'arrêt du serveur, après
- * `dureeMs`, ou quand la personne n'a plus de contexte : compte archivé,
+ * `dureeMs`, ou quand la personne n'a plus de contexte : personne archivée dans l'organisation,
  * organisation suspendue, appartenance retirée. `relireLeContexte` reconstruit le
  * contexte, dont les droits se mémorisent par requête : le flux l'appelle au plus
  * une fois par `relectureMs`.

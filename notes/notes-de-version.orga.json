@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-11-orga-chaque-personne-modifie-son-nom-dans-ses-preferences",
+          "date": "2026-10-11",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque personne modifie son nom dans ses préférences",
+            "texte": "Le panneau « Votre compte » des préférences porte le bouton « Modifier mon nom ». Ce nom s'affiche dans toutes vos organisations. Un admin de l'organisation corrige encore le nom d'une personne tant qu'elle ne s'est jamais connectée. L'annuaire parle de « personnes archivées » : archiver une personne ferme son accès à votre organisation, et elle garde son compte.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-10-orga-vous-acceptez-ou-refusez-l-invitation-d-une-autre-organisati",
           "date": "2026-10-10",
           "type": "fonctionnalite",

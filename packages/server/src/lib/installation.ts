@@ -3,6 +3,7 @@ import { prisma, type StatutOrganisation } from '@relaytour/database'
 import { mettreEnFile } from '../courriel/file.ts'
 
 import { GROUPES_PAR_DEFAUT } from './activites.ts'
+import { synchroniserArchivageDuCompte } from './appartenances.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
 import { annoncerInvitation, inviterCompteExterne } from './invitations.ts'
 import { erreurSaisie } from './erreurs.ts'
@@ -111,8 +112,8 @@ export async function organisationParSlug(slug: string) {
 
 /**
  * Vérifie une invitation avant toute écriture : adresse valide, nom de 120
- * caractères au plus, compte non archivé. Un compte archivé est refusé : le
- * rétablir lui rendrait l'accès à ses autres organisations.
+ * caractères au plus. L'archivage d'une personne se lit ensuite dans l'organisation
+ * visée, par `creerOuRattacherCompte` (ADR 0031).
  */
 export async function validerInvitation(
   adresse: string,
@@ -120,14 +121,7 @@ export async function validerInvitation(
 ): Promise<{ email: string; nom: string }> {
   const email = adresseValide(adresse)
   const nomValide = texteRequis(nom, 'Le nom', 120)
-  const existant = await prisma.user.findUnique({
-    where: { email },
-    select: { archivedAt: true },
-  })
-  if (existant !== null && existant.archivedAt !== null) {
-    throw erreurSaisie('Cette adresse ne peut pas être invitée.')
-  }
-  return { email, nom: nomValide }
+  return Promise.resolve({ email, nom: nomValide })
 }
 
 /** Ce que `nommerAdmin` a fait du compte. */
@@ -143,8 +137,8 @@ export type IssueNomination = 'cree' | 'promu' | 'retabli' | 'invite'
  * - un membre de l'organisation en devient admin ;
  * - un compte connu hors de l'organisation ne reçoit qu'une invitation au rôle
  *   d'admin, qu'il accepte ou refuse ;
- * - un compte archivé n'est rétabli que s'il n'appartient qu'à cette organisation :
- *   le rétablir lui rendrait sinon l'accès à ses autres organisations.
+ * - une personne archivée dans cette organisation y est rétablie, sans effet sur
+ *   ses autres organisations (ADR 0031).
  */
 export async function nommerAdmin(
   organisationId: string,
@@ -176,25 +170,14 @@ export async function nommerAdmin(
         return { userId, issue: 'invite' as const }
       }
       let issue: IssueNomination = 'promu'
-      if (compte.issue === 'archive') {
-        const ailleurs = await tx.appartenance.count({
-          where: { userId, organisationId: { not: organisationId } },
-        })
-        if (!compte.dejaMembre || ailleurs > 0) {
-          throw erreurSaisie(
-            'Ce compte est archivé et n’appartient pas à cette seule organisation : il ne peut pas être rétabli d’ici.'
-          )
-        }
-        await tx.user.update({
-          where: { id: userId },
-          data: { archivedAt: null },
-        })
-        issue = 'retabli'
-      }
+      // Une personne archivée dans cette organisation y est rétablie : l'archivage
+      // ne porte que sur cette appartenance (ADR 0031).
+      if (compte.issue === 'archive') issue = 'retabli'
       await tx.appartenance.update({
         where: { userId_organisationId: { userId, organisationId } },
-        data: { role: 'ADMIN' },
+        data: { role: 'ADMIN', archiveLe: null },
       })
+      await synchroniserArchivageDuCompte(tx, userId)
       return { userId, issue }
     })
   )
@@ -217,8 +200,10 @@ export async function inviterAdmin(
   // échoue alors sur l'unicité de l'adresse, se rejoue et rattache le compte créé.
   const admin = await rejouerSurDoublon(() =>
     sousVerrouOrganisation(organisationId, async tx => {
+      // Seuls les admins actifs comptent (ADR 0031) : une organisation dont tous les
+      // admins sont archivés peut en recevoir un nouveau.
       const admins = await tx.appartenance.count({
-        where: { organisationId, role: 'ADMIN' },
+        where: { organisationId, role: 'ADMIN', archiveLe: null },
       })
       if (admins > 0) {
         throw erreurSaisie(
@@ -231,10 +216,6 @@ export async function inviterAdmin(
         organisationId,
         role: 'ADMIN',
       })
-      // validerInvitation a refusé un compte archivé ; il peut l'être devenu depuis.
-      if (compte.issue === 'archive') {
-        throw erreurSaisie('Cette adresse ne peut pas être invitée.')
-      }
       // Un compte connu hors de l'organisation reçoit une invitation au rôle
       // d'admin (ADR 0030) : l'organisation n'a aucun admin tant qu'il ne l'a pas
       // acceptée.
@@ -250,14 +231,16 @@ export async function inviterAdmin(
         })
         return { userId: compte.userId, enAttente: true }
       }
-      // Une personne déjà membre devient admin de son organisation.
-      if (compte.issue === 'membre') {
+      // Une personne déjà membre devient admin de son organisation. Archivée, elle
+      // y est rétablie : l'archivage ne porte que sur cette appartenance (ADR 0031).
+      if (compte.issue === 'membre' || compte.issue === 'archive') {
         await tx.appartenance.update({
           where: {
             userId_organisationId: { userId: compte.userId, organisationId },
           },
-          data: { role: 'ADMIN' },
+          data: { role: 'ADMIN', archiveLe: null },
         })
+        await synchroniserArchivageDuCompte(tx, compte.userId)
       }
       return { userId: compte.userId, enAttente: false }
     })
