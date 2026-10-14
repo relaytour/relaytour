@@ -900,6 +900,7 @@ builder.mutationFields(t => ({
         organisationId: ctx.organisation!.id,
         activiteId,
         perimetreId,
+        editionId,
         acteurId: ctx.personne!.id,
         personneId: userId,
       })
@@ -957,6 +958,7 @@ builder.mutationFields(t => ({
           organisationId,
           activiteId,
           perimetreId: affectation.perimetreId,
+          editionId: affectation.editionId,
           acteurId: ctx.personne!.id,
           personneId: affectation.userId,
         })
@@ -1070,12 +1072,14 @@ builder.mutationFields(t => ({
             createdAt: instant,
           },
         })
-        // Une nomination déjà faite ne crée pas de ligne : le mail ne dira rien.
-        await annoncerChangementEquipe(userId, {
-          organisationId,
-          activiteId,
-          instant,
-        })
+        // Une nomination déjà faite ne s'annonce pas : ni mail ni notification.
+        if (!dejaAdmin) {
+          await annoncerChangementEquipe(userId, {
+            organisationId,
+            activiteId,
+            instant,
+          })
+        }
       } else {
         await prisma.adminActivite.deleteMany({
           where: { userId, activiteId, organisationId },

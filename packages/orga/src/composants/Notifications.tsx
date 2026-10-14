@@ -28,7 +28,13 @@ import ListeNotifications from './ListeNotifications'
 export default function Notifications() {
   const navigate = useNavigate()
   const apollo = useApolloClient()
-  const { activite, gere } = useActivite()
+  const { activite, activites, gere } = useActivite()
+  // L'écran des admins s'ouvre sous une activité que la personne administre :
+  // l'activité affichée, sinon une autre de l'organisation. Le nombre des
+  // notifications d'admin couvre tous ses rôles (ADR 0033).
+  const activiteAdministree = gere
+    ? activite
+    : activites.find(a => a.estAdministree)
   const organisation = useOrganisation()
   const [ouvert, setOuvert] = useState(false)
   // Les notifications viennent d'autres personnes : la coquille relit les nombres
@@ -112,7 +118,7 @@ export default function Notifications() {
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-          {gere && nonLuesAdmin > 0 && (
+          {activiteAdministree !== undefined && nonLuesAdmin > 0 && (
             <ul className="rt-liste-liens">
               <li>
                 <button
@@ -120,7 +126,7 @@ export default function Notifications() {
                   className="rt-ligne-lien rt-non-lue"
                   onClick={() => {
                     setOuvert(false)
-                    navigate(`/${activite.slug}/admin/notifications`)
+                    navigate(`/${activiteAdministree.slug}/admin/notifications`)
                   }}
                 >
                   <span>

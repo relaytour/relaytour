@@ -10,6 +10,7 @@ import {
   SELECTION_NOTIFICATION,
 } from '../../lib/composition-notifications.ts'
 import { preferencesDe } from '../../lib/notifications.ts'
+import { filtreNotificationsAdmin } from '../../lib/notifications-admin.ts'
 import { configurationOrganisation } from '../../lib/organisation.ts'
 import {
   adressePushAcceptee,
@@ -49,6 +50,20 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
     },
   })
   if (active === 0) return
+  // Une notification d'admin ne part qu'à une personne qui tient encore ce rôle :
+  // le même filtre que l'écran des admins et le résumé (ADR 0033).
+  const filtreAdmin = await filtreNotificationsAdmin(
+    prisma,
+    n.userId,
+    n.organisationId
+  )
+  if (n.niveau !== 'REFERENT') {
+    if (filtreAdmin === null) return
+    const lisible = await prisma.notification.count({
+      where: { id: n.id, ...filtreAdmin },
+    })
+    if (lisible === 0) return
+  }
   if (
     !pushAutorise(
       await preferencesDe(prisma, n.userId, n.organisationId),
@@ -66,13 +81,17 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
   const [composee, organisation, nonLues] = await Promise.all([
     composerNotification(prisma, n, n.userId),
     configurationOrganisation(n.organisationId),
-    // La pastille de l'application compte toutes les notifications non lues de
-    // l'organisation, celles de la cloche et celles des admins.
+    // La pastille de l'application compte les notifications non lues de la cloche
+    // et celles des rôles d'admin que la personne tient encore.
     prisma.notification.count({
       where: {
         userId: n.userId,
         organisationId: n.organisationId,
         lueLe: null,
+        OR: [
+          { niveau: 'REFERENT' },
+          ...(filtreAdmin === null ? [] : [filtreAdmin]),
+        ],
       },
     }),
   ])

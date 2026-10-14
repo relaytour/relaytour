@@ -24,8 +24,11 @@ export default function NotificationsAdmin() {
   const [marquer] = useMutation(MARQUER_NOTIFICATIONS, {
     refetchQueries: [NOMBRE_NOTIFICATIONS_ADMIN, LISTE_NOTIFICATIONS_ADMIN],
   })
+  // Le nombre de non lues vient du serveur : la liste n'en montre que les 200
+  // dernières, et des notifications plus anciennes peuvent rester à lire.
+  const { data: nombre } = useQuery(NOMBRE_NOTIFICATIONS_ADMIN)
   const notifications = liste.data?.notifications ?? []
-  const nonLues = notifications.filter(n => !n.lue).length
+  const nonLues = nombre?.nombreNotificationsNonLues ?? 0
 
   return (
     <>

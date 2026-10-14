@@ -23,6 +23,7 @@ export const SELECTION_NOTIFICATION = {
   statut: true,
   activiteId: true,
   perimetreId: true,
+  editionId: true,
   tache: {
     select: {
       id: true,
@@ -60,6 +61,8 @@ export interface NotificationLue {
   statut: StatutTache | null
   activiteId: string | null
   perimetreId: string | null
+  /** La période d'une notification d'admin liée à une période (ADR 0033). */
+  editionId: string | null
   tache: {
     id: string
     editionId: string
@@ -144,6 +147,8 @@ interface Contexte {
   plusieursPeriodes: Set<string>
   /** Pour chaque organisation, le slug de sa première activité ouverte. */
   premiereActivite: Map<string, string>
+  /** Le nom des périodes que portent les notifications d'admin. */
+  periodes: Map<string, string>
 }
 
 async function lireContexte(
@@ -163,12 +168,14 @@ async function lireContexte(
     notifications.flatMap(n => [perimetreIdDe(n), n.tache?.perimetreId ?? null])
   )
   const organisations = uniques(notifications.map(n => n.organisationId))
+  const editions = uniques(notifications.map(n => n.editionId))
   const [
     lignesPersonnes,
     lignesActivites,
     lignesPerimetres,
     periodes,
     premieres,
+    lignesEditions,
   ] = await Promise.all([
     personnes.length === 0
       ? []
@@ -202,6 +209,12 @@ async function lireContexte(
           select: { organisationId: true, slug: true },
           orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }],
         }),
+    editions.length === 0
+      ? []
+      : prisma.edition.findMany({
+          where: { id: { in: editions } },
+          select: { id: true, nom: true },
+        }),
   ])
   const premiereActivite = new Map<string, string>()
   for (const a of premieres) {
@@ -217,6 +230,7 @@ async function lireContexte(
       periodes.filter(p => p._count._all > 1).map(p => p.activiteId)
     ),
     premiereActivite,
+    periodes: new Map(lignesEditions.map(e => [e.id, e.nom])),
   }
 }
 
@@ -418,9 +432,14 @@ export async function composerNotifications(
     const perimetreId = perimetreIdDe(n)
     const activite = (activiteId && c.activites.get(activiteId)) || null
     const perimetre = (perimetreId && c.perimetres.get(perimetreId)) || null
+    // La période se nomme quand l'activité en a plusieurs d'ouvertes : celle de la
+    // tâche, sinon celle de l'action d'admin (affectation, souhait).
+    const nomPeriode =
+      n.tache?.edition.nom ??
+      (n.editionId === null ? null : (c.periodes.get(n.editionId) ?? null))
     const periode =
-      activite !== null && c.plusieursPeriodes.has(activite.id) && n.tache
-        ? n.tache.edition.nom
+      activite !== null && c.plusieursPeriodes.has(activite.id)
+        ? nomPeriode
         : null
     const nomActivite = periode ?? activite?.nom ?? null
     const objet = n.tache !== null || n.fiche !== null
@@ -431,6 +450,9 @@ export async function composerNotifications(
         : ''
     const sansActivite =
       !objet && nomActivite !== null ? ` (${nomActivite})` : ''
+    // Une action d'admin liée à une période nomme celle-ci dans les mails rangés
+    // par activité.
+    const periodeSeule = !objet && periode !== null ? ` (${periode})` : ''
     const parties = [periode, perimetre?.nom].filter(Boolean)
     const lieuPerimetre =
       objet && parties.length > 0 ? ` (${parties.join(', ')})` : ''
@@ -438,7 +460,7 @@ export async function composerNotifications(
       id: n.id,
       message: `${phrase(n, c, moiId, '', '')}.`,
       messageAvecContexte: `${phrase(n, c, moiId, lieu, sansActivite)}.`,
-      messageAvecPerimetre: `${phrase(n, c, moiId, lieuPerimetre, '')}.`,
+      messageAvecPerimetre: `${phrase(n, c, moiId, lieuPerimetre, periodeSeule)}.`,
       lien: lien(n, c),
       activite,
       perimetre,

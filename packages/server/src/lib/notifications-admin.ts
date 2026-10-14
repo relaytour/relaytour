@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto'
+
 import type {
   NiveauNotification,
   Prisma,
@@ -50,6 +52,11 @@ export const NIVEAUX_ADMIN: NiveauNotification[] = [
   'ADMIN_ORGANISATION',
 ]
 
+/** Une empreinte courte et stable de plusieurs identifiants. */
+function empreinte(...parties: string[]): string {
+  return createHash('sha256').update(parties.join('|')).digest('hex')
+}
+
 /** Les admins actifs d'une organisation. */
 async function adminsDeLOrganisation(
   prisma: PrismaClient,
@@ -69,6 +76,8 @@ export interface NotificationAdmin {
   /** L'activité concernée. Sans activité, la notification va aux admins de l'organisation. */
   activiteId?: string | null
   perimetreId?: string | null
+  /** La période de l'action, pour une affectation ou un souhait. */
+  editionId?: string | null
   /** La personne qui a agi. Elle ne reçoit jamais sa propre notification. */
   acteurId: string | null
   /** La personne concernée par l'action. */
@@ -118,8 +127,18 @@ export async function notifierLesAdmins(
             acteurId,
             activiteId,
             perimetreId: notification.perimetreId ?? null,
+            editionId: notification.editionId ?? null,
             personneId: notification.personneId ?? null,
-            cle: `${type}-${activiteId ?? organisationId}-${notification.perimetreId ?? ''}-${notification.personneId ?? ''}-${acteurId ?? ''}-${userId}-${tranche}`,
+            // La clé tient dans la colonne : son contenu passe par une empreinte.
+            cle: `${type}-${empreinte(
+              activiteId ?? organisationId,
+              notification.perimetreId ?? '',
+              notification.editionId ?? '',
+              notification.personneId ?? '',
+              acteurId ?? '',
+              userId,
+              String(tranche)
+            )}`,
           },
           select: { id: true },
         })

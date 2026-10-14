@@ -433,6 +433,7 @@ builder.mutationFields(t => ({
         organisationId: ctx.organisation!.id,
         activiteId,
         perimetreId: cible.perimetreId,
+        editionId: cible.editionId,
         acteurId: userId,
       })
       publierPourPerimetre('EQUIPE', cible.perimetreId, {
