@@ -20,6 +20,7 @@ enum AccordDeclinaison {
 
 type Activite {
   acces: AccesActivite!
+  adressesOrganigramme: AdressesOrganigramme!
   archive: Boolean!
   contactRecrutement: String
   estAdministree: Boolean!
@@ -75,6 +76,15 @@ type ActiviteNotifiee {
   id: ID!
   nom: String!
   slug: String!
+}
+
+"""
+Adresses personnelles que l’organigramme d’une activité peut afficher, avec l’accord de chaque personne (ADR 0036).
+"""
+enum AdressesOrganigramme {
+  AUCUNE
+  CONTACTS
+  REFERENTS
 }
 
 type Affectation {
@@ -604,6 +614,19 @@ type MediaTeleverse {
   url: String!
 }
 
+type MembreOrganigramme {
+  """
+  L’adresse de la personne, si le réglage de l’activité et son accord l’autorisent, pour une personne qui voit l’activité. Nulle sinon.
+  """
+  adresse: String
+  contactPrincipal: Boolean!
+
+  """Vrai pour la personne connectée."""
+  moi: Boolean!
+  nom: String!
+  personneId: ID!
+}
+
 type Message {
   """Null pour un message écrit depuis l’annuaire."""
   activiteId: ID
@@ -759,7 +782,7 @@ type Mutation {
     ids: [ID!]
     perimetreId: ID
   ): Int!
-  modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
+  modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
 
   """
   Modifie le texte d’un commentaire et rend le fil de sa tâche. Seul son auteur le modifie.
@@ -781,6 +804,7 @@ type Mutation {
   Remplace l’identité de l’organisation. Le slug, le fuseau horaire, le statut et les limites ne changent pas ici.
   """
   modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, iconeApplication: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
+  modifierMonAdresseVisible(visible: Boolean!): Boolean!
 
   """
   La personne modifie son propre nom, qui vaut dans toutes ses organisations (ADR 0031).
@@ -937,6 +961,27 @@ type NotificationsAutreOrganisation {
   slug: String!
 }
 
+type Organigramme {
+  admins: [MembreOrganigramme!]!
+  adresses: AdressesOrganigramme!
+
+  """
+  Vrai si la personne voit l’activité : elle lit alors toutes les référentes et tous les référents, et les adresses ouvertes.
+  """
+  complet: Boolean!
+
+  """
+  Le contact de l’activité, une adresse de rôle, sinon celui de l’organisation.
+  """
+  contactActivite: String
+
+  """
+  La période en préparation ou en cours la plus récente, comme pour « Tous les périmètres ».
+  """
+  edition: Edition
+  perimetres: [PerimetreOrganigramme!]!
+}
+
 """Identité publique de l’organisation qui utilise cette installation."""
 type Organisation {
   """
@@ -1070,6 +1115,15 @@ type PerimetreNotifie {
   slug: String!
 }
 
+type PerimetreOrganigramme {
+  perimetre: Perimetre!
+
+  """
+  Le contact principal en tête, puis les autres référentes et référents de la période par ordre alphabétique. Une personne en découverte ne lit que le contact principal.
+  """
+  referents: [MembreOrganigramme!]!
+}
+
 type PeriodeInstallation {
   annee: Int!
   debut: Date!
@@ -1080,6 +1134,7 @@ type PeriodeInstallation {
 
 type Personne {
   activitesAdministrees: [ID!]!
+  adresseVisible: Boolean
   affectations(editionId: ID): [Affectation!]!
 
   """Vrai quand la personne est archivée dans l’organisation active."""
@@ -1294,6 +1349,7 @@ type Query {
   Les autres organisations de la personne qui ont des notifications non lues : celles de la cloche, et celles des rôles d’admin qu’elle y tient encore (ADR 0032).
   """
   notificationsAutresOrganisations: [NotificationsAutreOrganisation!]!
+  organigramme(activiteId: ID): Organigramme!
 
   """
   Nom, sigle et thème de l’organisation active. Sans session : l’organisation désignée par son slug, sinon l’unique organisation de l’installation, sinon une identité neutre. Lisible sans session.

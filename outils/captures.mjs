@@ -230,7 +230,21 @@ const ECRANS = [
     chemin: `${ACTIVITE}/perimetres/football`,
     avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
   },
+  // L'organigramme de l'activité (ADR 0036), lu par une référente.
+  {
+    nom: 'organigramme',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/organigramme`,
+  },
   { nom: 'preferences', compte: 'referent', chemin: `${ACTIVITE}/preferences` },
+  // L'accord pour l'organigramme (ADR 0036), dans les préférences.
+  {
+    nom: 'preferences-organigramme',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/preferences`,
+    // Le titre reste sous la barre haute flottante : le geste remonte un peu.
+    apres: `(e => (e?.scrollIntoView({ block: 'start' }), window.scrollBy(0, -140), Boolean(e)))([...document.querySelectorAll('main h2')].find(e => e.innerText.trim() === 'Votre adresse dans l’organigramme'))`,
+  },
   // Le tiroir de la cloche, rangé par activité (ADR 0032). La cloche est dans la
   // barre haute, hors de <main>.
   {

@@ -58,7 +58,7 @@
         <div class="grille-2">
           <article class="verre panneau">
             <h3>Le menu de gauche</h3>
-            <p>Il donne accès à Mon espace, au Rétroplanning, aux Fiches et aux Préférences. La section « Périmètres » commence par « Tous les périmètres », puis liste chaque périmètre où vous êtes affecté·e.</p>
+            <p>Il donne accès à Mon espace, au Rétroplanning, aux Fiches et aux Préférences. La section « Périmètres » commence par « Tous les périmètres » et « Organigramme », puis liste chaque périmètre où vous êtes affecté·e.</p>
           </article>
           <article class="verre panneau">
             <h3>La barre du haut</h3>
@@ -121,7 +121,18 @@
             <li><span><span class="libelle">Ouvrir le périmètre</span></span><span>Aller à la page d'un périmètre où vous êtes affecté·e.</span></li>
             <li><span><span class="libelle">Consulter les tâches</span></span><span>Ouvrir en consultation un périmètre où vous n'êtes pas affecté·e. Ce lien apparaît dès votre première affectation dans l'activité.</span></li>
           </ul>
-          <p class="note">Quand une activité est ouverte aux souhaits, tous les membres de l'organisation voient cette page. Une personne sans affectation ne voit qu'elle et ses préférences, jusqu'à sa première affectation.</p>
+          <p class="note">Quand une activité est ouverte aux souhaits, tous les membres de l'organisation voient cette page. Une personne sans affectation ne voit qu'elle, l'organigramme et ses préférences, jusqu'à sa première affectation.</p>
+        </article>
+
+        <article class="verre ecran" id="e-organigramme">
+          <div class="ecran-tete"><h3>Organigramme</h3><span class="route">/&lt;activité&gt;/organigramme</span></div>
+          <p>L'organigramme présente l'équipe de l'activité pour la période en cours. Il affiche le contact de l'activité, ses admins, puis chaque périmètre avec son contact principal et ses référentes et référents.</p>
+          <p>Une adresse personnelle s'affiche seulement avec deux accords : le réglage de l'activité, choisi par ses admins, et l'accord de la personne, donné dans ses préférences. Le lien d'une adresse ouvre la messagerie de votre appareil.</p>
+          <figure>
+            <img src="../captures/organigramme.webp" data-mobile="../captures/mobile/organigramme.webp" width="1440" height="900" loading="lazy" alt="Écran Organigramme : le contact de l'activité, ses admins, puis les personnes de chaque périmètre, contact principal en tête." />
+            <figcaption>L'organigramme d'une activité, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p class="note">Une personne sans affectation dans l'activité voit les admins, le contact principal de chaque périmètre et le contact de l'activité. Elle ne voit aucune adresse personnelle.</p>
         </article>
 
         <article class="verre ecran" id="e-perimetre">
@@ -209,12 +220,17 @@
             <img src="../captures/preferences.webp" data-mobile="../captures/mobile/preferences.webp" width="1440" height="900" loading="lazy" alt="Écran Préférences : le choix du résumé par mail, les réglages des mails immédiats et celui des notifications de vos périmètres." />
             <figcaption>Écran Préférences, sur l'organisation d'exemple.</figcaption>
           </figure>
+          <figure>
+            <img src="../captures/preferences-organigramme.webp" data-mobile="../captures/mobile/preferences-organigramme.webp" width="1440" height="900" loading="lazy" alt="Panneau Votre adresse dans l'organigramme : l'interrupteur qui accepte l'affichage de votre adresse." />
+            <figcaption>L'accord pour l'organigramme, dans les préférences.</figcaption>
+          </figure>
           <ul class="gestes">
             <li><span><span class="libelle">Modifier mon nom</span></span><span>Corriger votre prénom et votre nom, dans le panneau « Votre compte ». Ce nom s'affiche dans toutes vos organisations.</span></li>
             <li><span><span class="libelle">Chaque jour</span><span class="libelle">Chaque lundi</span><span class="libelle">Jamais</span></span><span>Régler le résumé par mail. Il reprend les nouvelles de vos périmètres et vos échéances des 14 prochains jours, et part à 7 h.</span></li>
             <li><span><span class="libelle">Modification de vos tâches</span></span><span>Recevoir un mail quand une autre personne modifie une tâche qui vous est assignée.</span></li>
             <li><span><span class="libelle">Échéances</span></span><span>Recevoir un mail quand une de vos tâches arrive à échéance ou passe en retard.</span></li>
             <li><span><span class="libelle">Demandes pour rejoindre l'équipe</span></span><span>Recevoir un mail, une fois par heure au plus, quand une activité que vous administrez reçoit des demandes. Ce réglage s'affiche pour les admins seulement.</span></li>
+            <li><span><span class="libelle">Afficher mon adresse dans l'organigramme</span></span><span>Accepter que votre adresse s'affiche dans l'organigramme des activités de votre organisation, si leurs admins l'autorisent. Seules les personnes de l'activité la lisent. Vous retirez votre accord à tout moment.</span></li>
             <li><span><span class="libelle">Activité de vos périmètres</span></span><span>Être prévenu·e par la cloche quand une autre personne crée, modifie ou termine une tâche ou une fiche de vos périmètres. Aucun mail ne part pour ces notifications.</span></li>
           </ul>
           <p class="note">Votre nom, votre adresse et vos affectations sont gérés par les admins. Les mails de connexion et d'invitation partent toujours.</p>

@@ -1,4 +1,9 @@
-import { NatureActivite, Prisma, prisma } from '@relaytour/database'
+import {
+  AdressesOrganigramme,
+  NatureActivite,
+  Prisma,
+  prisma,
+} from '@relaytour/database'
 
 import {
   GROUPES_PAR_DEFAUT,
@@ -18,6 +23,7 @@ import {
 } from '../lib/formulaire.ts'
 import { exigerPlaceActivite, sousVerrouOrganisation } from '../lib/limites.ts'
 import { lirePhases, phasesValides, type Phase } from '../lib/phases.ts'
+import { publierPourActivite } from '../lib/flux.ts'
 import { configurationActivite } from '../lib/organisation.ts'
 import { sansDoublon, texteRequis } from '../lib/saisie.ts'
 import { marquerContenuModifie } from '../lib/synchronisation.ts'
@@ -99,6 +105,12 @@ const FormulaireInput = builder.inputType('FormulaireInput', {
 // Accès d'une personne à une activité (ADR 0012). COMPLET : elle l'administre ou y
 // a été affectée, et lit ses tâches et ses fiches. DECOUVERTE : elle ne voit que la
 // page « Tous les périmètres » et formule ses souhaits.
+export const AdressesOrganigrammeEnum = builder.enumType(AdressesOrganigramme, {
+  name: 'AdressesOrganigramme',
+  description:
+    'Adresses personnelles que l’organigramme d’une activité peut afficher, avec l’accord de chaque personne (ADR 0036).',
+})
+
 const AccesActiviteEnum = builder.enumType('AccesActivite', {
   values: ['COMPLET', 'DECOUVERTE'] as const,
 })
@@ -137,6 +149,9 @@ export const ActiviteRef = builder.prismaObject('Activite', {
     formulaireOuvert: t.exposeBoolean('formulaireOuvert', {
       description:
         'Vrai quand le formulaire public de l’activité accepte des demandes (ADR 0015).',
+    }),
+    adressesOrganigramme: t.expose('adressesOrganigramme', {
+      type: AdressesOrganigrammeEnum,
     }),
     acces: t.field({
       type: AccesActiviteEnum,
@@ -306,6 +321,8 @@ builder.mutationFields(t => ({
       // (ADR 0015).
       formulaire: t.arg({ type: FormulaireInput }),
       formulaireOuvert: t.arg.boolean(),
+      // Absent, le réglage ne change pas (ADR 0036).
+      adressesOrganigramme: t.arg({ type: AdressesOrganigrammeEnum }),
     },
     resolve: async (query, _root, args, ctx) => {
       const organisationId = ctx.organisation!.id
@@ -347,24 +364,44 @@ builder.mutationFields(t => ({
         ...(args.souhaitsOuverts === null || args.souhaitsOuverts === undefined
           ? {}
           : { souhaitsOuverts: args.souhaitsOuverts }),
+        ...(args.adressesOrganigramme === null ||
+        args.adressesOrganigramme === undefined
+          ? {}
+          : { adressesOrganigramme: args.adressesOrganigramme }),
         ...formulaire,
       }
-      return sousVerrouOrganisation(organisationId, async tx => {
-        const archivedAt =
-          args.archive === null || args.archive === undefined
-            ? undefined
-            : await archivage(tx, organisationId, id, args.archive)
-        const activite = await tx.activite.update({
-          ...query,
-          where: { id },
-          data: {
-            ...donnees,
-            ...(archivedAt === undefined ? {} : { archivedAt }),
-          },
-        })
-        await marquerContenuModifie(organisationId, tx)
-        return activite
+      const avant = await prisma.activite.findUniqueOrThrow({
+        where: { id },
+        select: { adressesOrganigramme: true },
       })
+      const activite = await sousVerrouOrganisation(
+        organisationId,
+        async tx => {
+          const archivedAt =
+            args.archive === null || args.archive === undefined
+              ? undefined
+              : await archivage(tx, organisationId, id, args.archive)
+          const activite = await tx.activite.update({
+            ...query,
+            where: { id },
+            data: {
+              ...donnees,
+              ...(archivedAt === undefined ? {} : { archivedAt }),
+            },
+          })
+          await marquerContenuModifie(organisationId, tx)
+          return activite
+        }
+      )
+      // Les organigrammes ouverts relisent leurs adresses (ADR 0036), après la
+      // validation de la transaction.
+      if (
+        donnees.adressesOrganigramme !== undefined &&
+        donnees.adressesOrganigramme !== avant.adressesOrganigramme
+      ) {
+        publierPourActivite('EQUIPE', organisationId, id)
+      }
+      return activite
     },
   }),
 

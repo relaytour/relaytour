@@ -7,6 +7,7 @@ import {
   BookOutlined,
   CalendarOutlined,
   CloseOutlined,
+  ClusterOutlined,
   EditOutlined,
   HomeOutlined,
   MailOutlined,
@@ -165,6 +166,11 @@ function Mise({ session }: { session: Session }) {
           key: lien('/perimetres'),
           icon: <CompassOutlined />,
           label: 'Tous les périmètres',
+        },
+        {
+          key: lien('/organigramme'),
+          icon: <ClusterOutlined />,
+          label: 'Organigramme',
         },
         ...perimetres.map(p => ({
           key: lien(`/perimetres/${p.slug}`),
