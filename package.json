@@ -52,13 +52,13 @@
   "devDependencies": {
     "@eslint/js": "^9.39.0",
     "@types/node": "^24.13.0",
-    "concurrently": "^10.0.0",
+    "concurrently": "^10.0.6",
     "eslint": "^9.39.0",
     "eslint-config-prettier": "^10.1.0",
-    "globals": "^17.0.0",
-    "prettier": "^3.6.2",
+    "globals": "^17.13.0",
+    "prettier": "^3.9.10",
     "typescript": "~5.9.0",
-    "typescript-eslint": "^8.60.0"
+    "typescript-eslint": "^8.71.1"
   },
   "license": "AGPL-3.0-only"
 }
