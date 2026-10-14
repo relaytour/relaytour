@@ -2,25 +2,36 @@
 //
 // L'espace organisateur envoie ces deux slugs en en-tête de chaque requête
 // (lib/apollo.ts) : le serveur limite ses réponses à cette organisation et, sans
-// autre précision, à cette activité. Le navigateur se souvient du dernier choix ;
-// ce souvenir n'est qu'une commodité, le serveur vérifie chaque appartenance.
+// autre précision, à cette activité. Chaque onglet garde son organisation, et le
+// navigateur se souvient du dernier choix (ADR 0032) ; ce souvenir n'est qu'une
+// commodité, le serveur vérifie chaque appartenance.
 
 const CLE_ORGANISATION = 'relaytour.organisation'
 const cleActivite = (organisation: string | null) =>
   `relaytour.activite.${organisation ?? 'unique'}`
 
-function lire(cle: string): string | null {
+type Stockage = 'navigateur' | 'onglet'
+
+function stockage(type: Stockage): Storage {
+  return type === 'navigateur' ? window.localStorage : window.sessionStorage
+}
+
+function lire(cle: string, type: Stockage = 'navigateur'): string | null {
   try {
-    return window.localStorage.getItem(cle)
+    return stockage(type).getItem(cle)
   } catch {
     return null
   }
 }
 
-function ecrire(cle: string, valeur: string | null) {
+function ecrire(
+  cle: string,
+  valeur: string | null,
+  type: Stockage = 'navigateur'
+) {
   try {
-    if (valeur === null) window.localStorage.removeItem(cle)
-    else window.localStorage.setItem(cle, valeur)
+    if (valeur === null) stockage(type).removeItem(cle)
+    else stockage(type).setItem(cle, valeur)
   } catch {
     // Stockage indisponible (navigation privée) : le choix vaut pour la page.
   }
@@ -36,14 +47,32 @@ export function organisationDeLAdresse(recherche: string): string | null {
   return slug !== null && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ? slug : null
 }
 
+/**
+ * L'organisation d'un onglet qui s'ouvre (ADR 0032) : celle de l'adresse, sinon celle
+ * que l'onglet a déjà choisie (un rechargement), sinon le dernier choix du
+ * navigateur. Chaque onglet garde ainsi son organisation : un onglet ouvert sur une
+ * autre organisation ne change pas celle des onglets déjà ouverts.
+ */
+export function organisationRetenue(sources: {
+  adresse: string | null
+  onglet: string | null
+  navigateur: string | null
+}): string | null {
+  return sources.adresse ?? sources.onglet ?? sources.navigateur
+}
+
 function organisationInitiale(): string | null {
-  const designee =
-    typeof window === 'undefined'
-      ? null
-      : organisationDeLAdresse(window.location.search)
-  if (designee === null) return lire(CLE_ORGANISATION)
-  ecrire(CLE_ORGANISATION, designee)
-  return designee
+  if (typeof window === 'undefined') return null
+  const retenue = organisationRetenue({
+    adresse: organisationDeLAdresse(window.location.search),
+    onglet: lire(CLE_ORGANISATION, 'onglet'),
+    navigateur: lire(CLE_ORGANISATION),
+  })
+  if (retenue !== null) {
+    ecrire(CLE_ORGANISATION, retenue, 'onglet')
+    ecrire(CLE_ORGANISATION, retenue)
+  }
+  return retenue
 }
 
 let organisation: string | null = organisationInitiale()
@@ -57,6 +86,8 @@ export function organisationChoisie(): string | null {
 export function choisirOrganisation(slug: string | null) {
   organisation = slug
   activite = null
+  // L'onglet garde son choix ; le navigateur le retient pour la prochaine ouverture.
+  ecrire(CLE_ORGANISATION, slug, 'onglet')
   ecrire(CLE_ORGANISATION, slug)
 }
 

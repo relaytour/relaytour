@@ -12,6 +12,7 @@ import { graphql } from '../gql'
 import type { FrequenceResume } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
+import { useOrganisation } from '../lib/organisation'
 import { MOI } from '../lib/requetes'
 import { useDeconnexion } from '../lib/session'
 
@@ -26,6 +27,9 @@ const PREFERENCES = graphql(`
       pushTaches
       pushEcheances
       pushDemandes
+      pushEquipe
+      applicationEquipe
+      resumeAdmin
     }
   }
 `)
@@ -37,6 +41,8 @@ const MODIFIER = graphql(`
     $mailEcheance: Boolean!
     $mailDemandes: Boolean
     $applicationPerimetre: Boolean
+    $applicationEquipe: Boolean
+    $resumeAdmin: Boolean
   ) {
     modifierPreferencesNotification(
       frequenceResume: $frequenceResume
@@ -44,12 +50,16 @@ const MODIFIER = graphql(`
       mailEcheance: $mailEcheance
       mailDemandes: $mailDemandes
       applicationPerimetre: $applicationPerimetre
+      applicationEquipe: $applicationEquipe
+      resumeAdmin: $resumeAdmin
     ) {
       frequenceResume
       mailModification
       mailEcheance
       mailDemandes
       applicationPerimetre
+      applicationEquipe
+      resumeAdmin
     }
   }
 `)
@@ -69,9 +79,11 @@ interface Valeurs {
   frequenceResume: FrequenceResume
   mailModification: boolean
   mailEcheance: boolean
-  // Présent pour les personnes qui administrent une activité seulement.
-  mailDemandes?: boolean
   applicationPerimetre: boolean
+  // Présents pour les personnes qui administrent seulement (ADR 0033).
+  mailDemandes?: boolean
+  applicationEquipe?: boolean
+  resumeAdmin?: boolean
 }
 
 export default function Preferences() {
@@ -79,9 +91,11 @@ export default function Preferences() {
   const deconnecter = useDeconnexion()
   const { data: session } = useQuery(MOI)
   const { activites } = useActivite()
-  // Le mail des demandes ne part qu'aux admins : le réglage ne s'affiche que pour
-  // une personne qui administre au moins une activité.
-  const administre = activites.some(a => a.estAdministree)
+  const organisation = useOrganisation()
+  // Les réglages d'admin ne s'affichent qu'à une personne qui administre une
+  // activité ou l'organisation (ADR 0033).
+  const administre =
+    activites.some(a => a.estAdministree) || session?.moi?.estAdmin === true
   const { data, loading } = useQuery(PREFERENCES)
   const [modifier, modification] = useMutation(MODIFIER, {
     refetchQueries: [PREFERENCES],
@@ -106,7 +120,12 @@ export default function Preferences() {
   const enregistrer = async (v: Valeurs) => {
     try {
       await modifier({
-        variables: { ...v, mailDemandes: v.mailDemandes ?? null },
+        variables: {
+          ...v,
+          mailDemandes: v.mailDemandes ?? null,
+          applicationEquipe: v.applicationEquipe ?? null,
+          resumeAdmin: v.resumeAdmin ?? null,
+        },
       })
       message.success('Préférences enregistrées.')
     } catch (e) {
@@ -116,7 +135,9 @@ export default function Preferences() {
 
   return (
     <>
-      <Titre sousTitre="Choisissez les mails et les notifications que vous recevez.">
+      <Titre
+        sousTitre={`Choisissez les mails et les notifications que vous recevez de ${organisation.nom}. Vos autres organisations gardent leurs propres réglages.`}
+      >
         Préférences
       </Titre>
       {loading || !data ? (
@@ -289,26 +310,6 @@ export default function Preferences() {
                   <Switch id="mailEcheance" />
                 </Form.Item>
               </div>
-              {administre && (
-                <div className="rt-reglage">
-                  <label htmlFor="mailDemandes">
-                    <span className="rt-choix-titre">
-                      Demandes pour rejoindre l’équipe
-                    </span>
-                    <span className="rt-choix-detail">
-                      Un mail par heure au plus quand une activité que vous
-                      administrez reçoit des demandes.
-                    </span>
-                  </label>
-                  <Form.Item
-                    name="mailDemandes"
-                    valuePropName="checked"
-                    noStyle
-                  >
-                    <Switch id="mailDemandes" />
-                  </Form.Item>
-                </div>
-              )}
             </div>
 
             <div
@@ -342,6 +343,76 @@ export default function Preferences() {
                 </Form.Item>
               </div>
             </div>
+
+            {administre && (
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 12,
+                  marginTop: 24,
+                }}
+              >
+                <span style={{ fontSize: 16, fontWeight: 600 }}>
+                  Vos rôles d’admin
+                </span>
+                <p className="rt-texte-secondaire" style={{ margin: 0 }}>
+                  Les notifications d’admin ont leur écran, à part de la cloche.
+                  Les demandes et les invitations s’y affichent toujours.
+                </p>
+                <div className="rt-reglage">
+                  <label htmlFor="mailDemandes">
+                    <span className="rt-choix-titre">
+                      Demandes pour rejoindre l’équipe
+                    </span>
+                    <span className="rt-choix-detail">
+                      Un mail par heure au plus quand une activité que vous
+                      administrez reçoit des demandes.
+                    </span>
+                  </label>
+                  <Form.Item
+                    name="mailDemandes"
+                    valuePropName="checked"
+                    noStyle
+                  >
+                    <Switch id="mailDemandes" />
+                  </Form.Item>
+                </div>
+                <div className="rt-reglage">
+                  <label htmlFor="applicationEquipe">
+                    <span className="rt-choix-titre">
+                      Équipe de vos activités
+                    </span>
+                    <span className="rt-choix-detail">
+                      Une notification quand un autre admin affecte, retire ou
+                      nomme une personne, ou quand une personne formule un
+                      souhait. Aucun mail ne part.
+                    </span>
+                  </label>
+                  <Form.Item
+                    name="applicationEquipe"
+                    valuePropName="checked"
+                    noStyle
+                  >
+                    <Switch id="applicationEquipe" />
+                  </Form.Item>
+                </div>
+                <div className="rt-reglage">
+                  <label htmlFor="resumeAdmin">
+                    <span className="rt-choix-titre">
+                      Dans le résumé par mail
+                    </span>
+                    <span className="rt-choix-detail">
+                      Le résumé reprend aussi vos notifications d’admin non
+                      lues, dans une section à part.
+                    </span>
+                  </label>
+                  <Form.Item name="resumeAdmin" valuePropName="checked" noStyle>
+                    <Switch id="resumeAdmin" />
+                  </Form.Item>
+                </div>
+              </div>
+            )}
 
             <div
               style={{

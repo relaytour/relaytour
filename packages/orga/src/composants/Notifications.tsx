@@ -1,64 +1,78 @@
-import { BellOutlined } from '@ant-design/icons'
-import { useMutation, useQuery } from '@apollo/client/react'
+import { BellOutlined, ExportOutlined } from '@ant-design/icons'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { Badge, Button, Drawer, Empty, Skeleton, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
 
-import { graphql } from '../gql'
+import { useActivite } from '../lib/activite'
+import { estInstallee } from '../lib/installation'
+import { useOrganisation } from '../lib/organisation'
 import { poserPastille } from '../lib/push'
+import {
+  AUTRES_ORGANISATIONS,
+  LISTE_NOTIFICATIONS,
+  MARQUER_NOTIFICATIONS,
+  NOMBRE_NOTIFICATIONS,
+  NOMBRE_NOTIFICATIONS_ADMIN,
+} from '../lib/requetes-notifications'
+import { choisirOrganisation } from '../lib/selection'
 
-const NOMBRE = graphql(`
-  query NombreNotificationsNonLues {
-    nombreNotificationsNonLues
-  }
-`)
+import ListeNotifications from './ListeNotifications'
 
-const LISTE = graphql(`
-  query ListeNotifications {
-    notifications(limite: 40) {
-      id
-      type
-      message
-      lien
-      lue
-      creeLe
-    }
-  }
-`)
-
-const MARQUER = graphql(`
-  mutation MarquerNotificationsLues($ids: [ID!]) {
-    marquerNotificationsLues(ids: $ids)
-  }
-`)
-
-function ilYA(iso: string): string {
-  const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
-  if (minutes < 1) return 'à l’instant'
-  if (minutes < 60) return `il y a ${minutes} min`
-  const heures = Math.round(minutes / 60)
-  if (heures < 24) return `il y a ${heures} h`
-  return new Date(iso).toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-  })
-}
-
-/** Cloche de l'en-tête : nombre de notifications non lues et tiroir de consultation. */
+/**
+ * Cloche de l'en-tête (ADR 0032) : le nombre de notifications non lues de
+ * l'organisation active, et un tiroir qui les range par activité. Les
+ * notifications d'admin ont leur écran (ADR 0033) ; le tiroir y renvoie, puis
+ * signale les nouvelles des autres organisations.
+ */
 export default function Notifications() {
   const navigate = useNavigate()
+  const apollo = useApolloClient()
+  const { activite, gere } = useActivite()
+  const organisation = useOrganisation()
   const [ouvert, setOuvert] = useState(false)
-  // Les notifications viennent d'autres personnes : la coquille relit le nombre
+  // Les notifications viennent d'autres personnes : la coquille relit les nombres
   // chaque minute, avec les écrans (lib/rafraichissement.ts).
-  const { data: nombre } = useQuery(NOMBRE)
-  const liste = useQuery(LISTE, {
+  const { data: nombre } = useQuery(NOMBRE_NOTIFICATIONS)
+  const { data: nombreAdmin } = useQuery(NOMBRE_NOTIFICATIONS_ADMIN)
+  const liste = useQuery(LISTE_NOTIFICATIONS, {
     skip: !ouvert,
     fetchPolicy: 'cache-and-network',
   })
-  const [marquer] = useMutation(MARQUER, { refetchQueries: [NOMBRE, LISTE] })
+  const autres = useQuery(AUTRES_ORGANISATIONS, {
+    skip: !ouvert,
+    fetchPolicy: 'cache-and-network',
+  })
+  const [marquer] = useMutation(MARQUER_NOTIFICATIONS, {
+    refetchQueries: [NOMBRE_NOTIFICATIONS, LISTE_NOTIFICATIONS],
+  })
   const nonLues = nombre?.nombreNotificationsNonLues ?? 0
-  // L'icône de l'application installée porte le même nombre (ADR 0024).
-  useEffect(() => poserPastille(nonLues), [nonLues])
+  const nonLuesAdmin = nombreAdmin?.nombreNotificationsNonLues ?? 0
+  // L'icône de l'application installée compte toutes les notifications de
+  // l'organisation, celles de la cloche et celles des admins (ADR 0024).
+  useEffect(
+    () => poserPastille(nonLues + nonLuesAdmin),
+    [nonLues, nonLuesAdmin]
+  )
+  const autresOrganisations =
+    autres.data?.notificationsAutresOrganisations ?? []
+
+  // Une autre organisation s'ouvre dans un nouvel onglet, qui garde son propre
+  // choix (ADR 0032). L'application installée n'a pas d'onglets : elle change
+  // d'organisation dans la même fenêtre.
+  const ouvrirOrganisation = (slug: string) => {
+    if (!estInstallee()) {
+      window.open(
+        `/?organisation=${encodeURIComponent(slug)}`,
+        '_blank',
+        'noopener'
+      )
+      return
+    }
+    setOuvert(false)
+    choisirOrganisation(slug)
+    void apollo.resetStore().finally(() => navigate('/'))
+  }
 
   return (
     <>
@@ -97,42 +111,97 @@ export default function Notifications() {
           )
         }
       >
-        {liste.loading && !liste.data ? (
-          <Skeleton active />
-        ) : (liste.data?.notifications ?? []).length === 0 ? (
-          <Empty description="Aucune notification." />
-        ) : (
-          <ul className="rt-liste-liens">
-            {liste.data!.notifications.map(n => (
-              <li key={n.id}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {gere && nonLuesAdmin > 0 && (
+            <ul className="rt-liste-liens">
+              <li>
                 <button
                   type="button"
-                  className={`rt-ligne-lien${n.lue ? '' : ' rt-non-lue'}`}
+                  className="rt-ligne-lien rt-non-lue"
                   onClick={() => {
-                    if (!n.lue) void marquer({ variables: { ids: [n.id] } })
                     setOuvert(false)
-                    navigate(n.lien)
+                    navigate(`/${activite.slug}/admin/notifications`)
                   }}
                 >
-                  <span style={{ minWidth: 0 }}>
-                    <Typography.Text
-                      strong={!n.lue}
-                      style={{
-                        display: 'block',
-                        fontWeight: n.lue ? 400 : 700,
-                      }}
-                    >
-                      {n.message}
-                    </Typography.Text>
-                    <Typography.Text type="secondary" style={{ fontSize: 13 }}>
-                      {ilYA(n.creeLe)}
-                    </Typography.Text>
+                  <span>
+                    Vous avez {nonLuesAdmin} notification
+                    {nonLuesAdmin > 1 ? 's' : ''} d’admin non lue
+                    {nonLuesAdmin > 1 ? 's' : ''}.
                   </span>
                 </button>
               </li>
-            ))}
-          </ul>
-        )}
+            </ul>
+          )}
+          {liste.loading && !liste.data ? (
+            <Skeleton active />
+          ) : (liste.data?.notifications ?? []).length === 0 ? (
+            <Empty description="Aucune notification." />
+          ) : (
+            <ListeNotifications
+              notifications={liste.data!.notifications}
+              sansActivite={organisation.nom}
+              onOuvrir={n => {
+                if (!n.lue) void marquer({ variables: { ids: [n.id] } })
+                setOuvert(false)
+                navigate(n.lien)
+              }}
+              onMarquer={cible =>
+                void marquer({
+                  variables:
+                    cible.activiteId === null
+                      ? { ids: cible.ids }
+                      : { activiteId: cible.activiteId },
+                })
+              }
+            />
+          )}
+          {autresOrganisations.length > 0 && (
+            <section
+              className="rt-verre rt-panneau"
+              aria-labelledby="autres-organisations"
+              style={{ padding: 16, gap: 8 }}
+            >
+              <Typography.Text strong id="autres-organisations">
+                Vous avez d’autres notifications dans vos organisations
+              </Typography.Text>
+              <ul className="rt-liste-liens">
+                {autresOrganisations.map(o => (
+                  <li key={o.slug}>
+                    <button
+                      type="button"
+                      className="rt-ligne-lien"
+                      onClick={() => ouvrirOrganisation(o.slug)}
+                    >
+                      <span
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 8,
+                          minWidth: 0,
+                        }}
+                      >
+                        <span style={{ overflowWrap: 'anywhere' }}>
+                          {o.nom}
+                        </span>
+                        <Badge
+                          count={o.nonLues}
+                          size="small"
+                          color="var(--rt-accent)"
+                        />
+                        {!estInstallee() && (
+                          <ExportOutlined
+                            aria-label="S’ouvre dans un nouvel onglet"
+                            style={{ fontSize: 12, opacity: 0.6 }}
+                          />
+                        )}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+        </div>
       </Drawer>
     </>
   )
