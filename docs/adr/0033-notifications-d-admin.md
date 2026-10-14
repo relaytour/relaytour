@@ -1,6 +1,6 @@
 # ADR 0033 — Notifications d'admin, rangées par activité et par périmètre
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-14
 - Complète l'ADR 0032 (préférences par organisation, notifications qui nomment leur contexte), l'ADR 0016 (mail des demandes) et l'ADR 0030 (invitations).
 
