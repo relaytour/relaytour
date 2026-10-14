@@ -1,6 +1,6 @@
 # ADR 0034 — Plafond quotidien des mails d'une installation
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-11, renumérotée le 2026-10-14 (le numéro 0031 est pris par l'archivage par organisation)
 - Complète l'ADR 0007 (frontière entre le logiciel et son exploitation) et l'ADR 0008 (administration de l'installation).
 
