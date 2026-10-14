@@ -4,7 +4,9 @@
 - **Date** : 2026-10-14
 - Complète l'ADR 0002 (connexion par code mail) et l'ADR 0013 (jeton d'administration limité aux requêtes locales). Précise la portée du jeton décrite par l'ADR 0008.
 
-## Contexte L'audit de sécurité d'octobre 2026 a relevé des écarts entre ces ADR et le comportement du serveur. La PR #114 les a corrigés le 10 octobre 2026, sans qu'une ADR consigne les nouvelles règles. Les ADR 0002 et 0013 décrivent donc encore l'état d'avant.
+## Contexte
+
+L'audit de sécurité d'octobre 2026 a relevé des écarts entre ces ADR et le comportement du serveur. La PR #114 les a corrigés le 10 octobre 2026, sans qu'une ADR consigne les nouvelles règles. Les ADR 0002 et 0013 décrivent donc encore l'état d'avant.
 
 - **La connexion révélait l'existence d'un compte.** L'ADR 0002 promet la même réponse pour une adresse connue et pour une adresse inconnue. Better Auth répondait pourtant « trop d'essais » ou « code expiré » pour une adresse connue. Il répondait toujours « code invalide » pour une adresse inconnue. Six essais suffisaient à savoir si une adresse avait un compte.
 - **La force brute restait possible sur la durée.** Cinq codes par adresse et par quart d'heure, avec cinq essais par code, laissaient environ 2 400 essais par jour sur un million de codes.
@@ -32,7 +34,9 @@
 ### Ce que le jeton touche
 
 - Le jeton ne lit aucune donnée des membres d'une organisation par l'API : ni personne, ni tâche, ni fiche.
-- Deux opérations font exception, et la documentation le dit :  - `demanderExport` écrit sur le serveur un fichier qui contient les noms et les adresses des membres. Ce fichier sert à remettre ses données à l'organisation.  - `inviterPremierAdmin` nomme le premier admin d'une organisation qui n'en a pas. Un membre existant en devient admin ; un compte connu hors de l'organisation reçoit une invitation à accepter (ADR 0030).
+- Deux opérations font exception, et la documentation le dit :
+  - `demanderExport` écrit sur le serveur un fichier qui contient les noms et les adresses des membres. Ce fichier sert à remettre ses données à l'organisation.
+  - `inviterPremierAdmin` nomme le premier admin d'une organisation qui n'en a pas. Un membre existant en devient admin ; un compte connu hors de l'organisation reçoit une invitation à accepter (ADR 0030).
 - Cette précision remplace, pour le jeton, la formule « sans accès aux données » de l'ADR 0008.
 
 ## Conséquences
