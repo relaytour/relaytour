@@ -132,6 +132,33 @@ describe('connexion par code', () => {
     )
   })
 
+  it('ne renvoie pas le jeton dans le corps de la lecture de session (ADR 0035)', async () => {
+    await demanderUnCode(connue)
+    const code = await codeEnFile(ids.connue)
+    const connexion = await auth.api.signInEmailOTP({
+      body: { email: connue, otp: code },
+      returnHeaders: true,
+    })
+    const cookie = (connexion.headers.get('set-cookie') ?? '').split(';')[0]!
+    expect(cookie).not.toBe('')
+    // Par HTTP, comme un script de la page l'appellerait.
+    const reponse = await auth.handler(
+      new Request('http://localhost/api/auth/get-session', {
+        headers: { cookie },
+      })
+    )
+    expect(reponse.status).toBe(200)
+    const corps = (await reponse.json()) as {
+      user: { id: string }
+      session: { token: string | null }
+    }
+    expect(corps.user.id).toBe(ids.connue)
+    expect(corps.session.token).toBeNull()
+    // Le serveur lit toujours la session par le cookie.
+    const lue = await auth.api.getSession({ headers: new Headers({ cookie }) })
+    expect(lue?.user.id).toBe(ids.connue)
+  })
+
   it('répond la même chose pour une adresse connue et une adresse inconnue, essai après essai', async () => {
     await demanderUnCode(connue)
     await demanderUnCode(inconnue)
