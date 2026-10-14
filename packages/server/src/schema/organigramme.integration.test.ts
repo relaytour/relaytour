@@ -62,8 +62,8 @@ const ORGANIGRAMME = `query ($a: ID) {
     complet
     adresses
     contactActivite
-    admins { id nom adresse moi }
-    perimetres { perimetre { slug } referents { id adresse contactPrincipal } }
+    admins { id: personneId nom adresse moi }
+    perimetres { perimetre { slug } referents { id: personneId adresse contactPrincipal } }
   }
 }`
 const ACCORD = `mutation ($v: Boolean!) { modifierMonAdresseVisible(visible: $v) }`

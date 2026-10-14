@@ -59,7 +59,10 @@ const MembreOrganigrammeRef = builder
   .objectRef<MembreOrganigramme>('MembreOrganigramme')
   .implement({
     fields: t => ({
-      id: t.exposeID('id'),
+      // Pas de champ `id` : une même personne figure à plusieurs places, avec une
+      // adresse et une marque propres à chacune. Un cache normalisé par `id` les
+      // fusionnerait.
+      personneId: t.exposeID('id'),
       nom: t.exposeString('nom'),
       adresse: t.exposeString('adresse', {
         nullable: true,
