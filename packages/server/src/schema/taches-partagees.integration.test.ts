@@ -421,7 +421,7 @@ describe('une référente propose une tâche partagée', () => {
       expect(await notificationsDe(personne)).toEqual([
         {
           type: 'DECLINAISON_PROPOSEE',
-          message: `pauline ${s} propose la tâche « Transmettre les besoins de lieux » (natation), demandée par lieux. Elle attend l’accord du périmètre.`,
+          message: `pauline ${s} propose la tâche « Transmettre les besoins de lieux », demandée par lieux. Elle attend l’accord du périmètre.`,
           lien: `/tournoi-${s}/perimetres/natation-${s}?edition=${ids.edition}&tache=${declinaisonDe(partagee, ids.natation).id}`,
         },
       ])
@@ -501,13 +501,13 @@ describe('une référente propose une tâche partagée', () => {
     const id = declinaisonDe(partagee, ids.natation).id
     expect(await notificationsDe(ids.pauline)).toContainEqual({
       type: 'DECLINAISON_ACCEPTEE',
-      message: `nina ${s} a accepté la tâche « Transmettre les besoins de lieux » (natation).`,
+      message: `nina ${s} a accepté la tâche « Transmettre les besoins de lieux ».`,
       // La réponse se lit sur la tâche partagée, dans le pôle.
       lien: `/tournoi-${s}/perimetres/lieux-${s}?edition=${ids.edition}&tache=${partagee.id}`,
     })
     expect(await notificationsDe(ids.nadia)).toContainEqual({
       type: 'TACHE_CREEE',
-      message: `nina ${s} a ajouté la tâche « Transmettre les besoins de lieux » (natation), demandée par lieux.`,
+      message: `nina ${s} a ajouté la tâche « Transmettre les besoins de lieux », demandée par lieux.`,
       lien: `/tournoi-${s}/perimetres/natation-${s}?edition=${ids.edition}&tache=${id}`,
     })
   })
@@ -521,7 +521,7 @@ describe('une référente propose une tâche partagée', () => {
     expect(volley.declinaisonsProposees).toEqual([])
     expect(await notificationsDe(ids.pauline)).toContainEqual({
       type: 'DECLINAISON_REFUSEE',
-      message: `victor ${s} a refusé la tâche « Transmettre les besoins de lieux » (volley).`,
+      message: `victor ${s} a refusé la tâche « Transmettre les besoins de lieux ».`,
       lien: `/tournoi-${s}/perimetres/lieux-${s}?edition=${ids.edition}&tache=${partagee.id}`,
     })
     // Le périmètre ne revient pas seul sur un refus.
@@ -552,7 +552,7 @@ describe('une référente propose une tâche partagée', () => {
     expect(volley.avancement.total).toBe(1)
     expect(await notificationsDe(ids.victor)).toContainEqual({
       type: 'TACHE_CREEE',
-      message: `admin ${s} a ajouté la tâche « Transmettre les besoins de lieux » (volley), demandée par lieux.`,
+      message: `admin ${s} a ajouté la tâche « Transmettre les besoins de lieux », demandée par lieux.`,
       lien: `/tournoi-${s}/perimetres/volley-${s}?edition=${ids.edition}&tache=${id}`,
     })
     // Imposer une déclinaison déjà acceptée ne change rien.
@@ -661,8 +661,7 @@ describe('une référente propose une tâche partagée', () => {
     expect(await notificationsDe(ids.pauline)).toEqual([
       {
         type: 'TACHE_STATUT',
-        message:
-          'La tâche « Transmettre les besoins de lieux » (natation) est faite.',
+        message: 'La tâche « Transmettre les besoins de lieux » est faite.',
         lien: `/tournoi-${s}/perimetres/natation-${s}?edition=${ids.edition}&tache=${natation}`,
       },
     ])

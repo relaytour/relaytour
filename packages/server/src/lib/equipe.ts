@@ -1,6 +1,9 @@
-import type { PrismaClient } from '@relaytour/database'
+import { prisma, type PrismaClient } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
+
+import { publierNotification } from './flux.ts'
+import { journal } from './journal.ts'
 
 // Mails d'équipe (ADR 0012) : l'invitation liste les périmètres de la personne, et un
 // mail « Votre place dans l'équipe a changé » annonce une nouvelle affectation ou un
@@ -48,6 +51,8 @@ export async function annoncerChangementEquipe(
 ): Promise<void> {
   const fenetre = fenetreEquipe(options.instant.getTime())
   const portee = options.activiteId ?? 'organisation'
+  // Le mail a sa notification dans l'application (ADR 0033).
+  await notifierPlace(userId, options)
   await mettreEnFile(
     'equipe',
     { userId },
@@ -63,6 +68,43 @@ export async function annoncerChangementEquipe(
       fenetre,
     }
   )
+}
+
+/**
+ * Prévient une personne, dans l'application, que sa place dans l'équipe a changé
+ * (ADR 0033). Une notification par activité et par fenêtre de dix minutes, comme le
+ * mail. Ne lève jamais.
+ */
+export async function notifierPlace(
+  userId: string,
+  options: { organisationId: string; activiteId?: string; instant: Date }
+): Promise<void> {
+  const { organisationId } = options
+  const debut = Date.parse(fenetreEquipe(options.instant.getTime()).debut)
+  try {
+    await prisma.notification.create({
+      data: {
+        organisationId,
+        userId,
+        type: 'PLACE_MODIFIEE',
+        activiteId: options.activiteId ?? null,
+        cle: `PLACE_MODIFIEE-${organisationId}-${options.activiteId ?? 'organisation'}-${userId}-${debut}`,
+      },
+      select: { id: true },
+    })
+    publierNotification(organisationId, userId)
+  } catch (erreur) {
+    // P2002 : la personne est déjà prévenue pour cette fenêtre.
+    if ((erreur as { code?: string }).code === 'P2002') return
+    journal.error(
+      {
+        evenement: 'notification-echouee',
+        type: 'PLACE_MODIFIEE',
+        message: (erreur as Error).message,
+      },
+      'Une notification n’a pas pu être créée.'
+    )
+  }
 }
 
 /** « Football (Rencontres 2027) : le tournoi à 7 contre 7… », ou le nom seul. */

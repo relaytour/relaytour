@@ -973,14 +973,17 @@ describe('mail regroupé aux admins', () => {
 
   it('compte les demandes en attente à l’envoi, sans citer personne', async () => {
     const message = await mail(ids.admin)
-    expect(message?.sujet).toMatch(/^Demandes pour rejoindre l’équipe .+$/)
+    // Le sujet nomme l'organisation, puis l'activité (ADR 0032).
+    expect(message?.sujet).toMatch(
+      /^.+ · Gala : demandes pour rejoindre l’équipe$/
+    )
     expect(message?.texte).toContain(
       '2 demandes pour rejoindre l’équipe de l’activité Gala attendent votre décision.'
     )
     expect(message?.texte).toContain(
       `/${gala.slug}/admin/personnes?onglet=demandes`
     )
-    expect(message?.desabonnement).toMatch(/\/preferences$/)
+    expect(message?.desabonnement).toMatch(/\/preferences\?organisation=/)
     for (const corps of [message?.texte, message?.html]) {
       expect(corps).not.toContain('Secret')
       expect(corps).not.toContain('@exemple.fr')

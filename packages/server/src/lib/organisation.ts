@@ -663,7 +663,11 @@ export async function configurationOrganisation(
   const declaration =
     (ligne === null ? null : declarationDeLaLigne(ligne)) ??
     declarationDepuisEnv(env)
-  const valeur = resoudreConfiguration(env, declaration, ligne?.id ?? null)
+  const resolue = resoudreConfiguration(env, declaration, ligne?.id ?? null)
+  // L'identifiant d'adresse est celui de la ligne, que l'en-tête de l'espace
+  // organisateur désigne : une déclaration vide ou ancienne ne le change pas. Les
+  // liens des mails et du push choisissent ainsi la bonne organisation (ADR 0032).
+  const valeur = ligne === null ? resolue : { ...resolue, slug: ligne.slug }
   cache.set(cle, { valeur, expire: maintenant + DUREE_CACHE_MS })
   return valeur
 }
