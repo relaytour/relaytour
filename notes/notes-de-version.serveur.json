@@ -21,6 +21,19 @@
           }
         },
         {
+          "id": "2026-10-14-serveur-la-lecture-de-session-ne-renvoie-plus-le-jeton-de-session",
+          "date": "2026-10-14",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "La lecture de session ne renvoie plus le jeton de session",
+            "texte": "La route `/api/auth/get-session` ne renvoie plus le jeton de session dans le corps de sa réponse. Seul le cookie le transporte, comme pour la connexion. Un script injecté dans la page ne peut donc plus lire ce jeton.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-11-serveur-l-archivage-d-une-personne-ne-vaut-que-dans-son-organisation",
           "date": "2026-10-11",
           "type": "securite",
