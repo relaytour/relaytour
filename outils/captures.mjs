@@ -237,6 +237,13 @@ const ECRANS = [
     chemin: `${ACTIVITE}/organigramme`,
   },
   { nom: 'preferences', compte: 'referent', chemin: `${ACTIVITE}/preferences` },
+  // L'accord pour l'organigramme (ADR 0036), dans les préférences.
+  {
+    nom: 'preferences-organigramme',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/preferences`,
+    apres: defiler('Votre adresse dans l’organigramme'),
+  },
   // Le tiroir de la cloche, rangé par activité (ADR 0032). La cloche est dans la
   // barre haute, hors de <main>.
   {
