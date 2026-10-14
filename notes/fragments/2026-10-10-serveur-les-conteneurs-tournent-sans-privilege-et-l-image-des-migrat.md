@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: public
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Les conteneurs tournent sans privilège et l'image des migrations s'allège

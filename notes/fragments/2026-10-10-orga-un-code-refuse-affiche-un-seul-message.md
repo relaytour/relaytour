@@ -3,6 +3,7 @@ cible: orga
 type: securite
 audience: organisateurs
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Un code refusé affiche un seul message

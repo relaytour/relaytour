@@ -3,6 +3,7 @@ cible: serveur
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Un titre de tâche ou de fiche compte 191 caractères au plus

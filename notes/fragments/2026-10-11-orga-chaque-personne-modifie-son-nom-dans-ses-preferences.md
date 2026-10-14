@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Chaque personne modifie son nom dans ses préférences

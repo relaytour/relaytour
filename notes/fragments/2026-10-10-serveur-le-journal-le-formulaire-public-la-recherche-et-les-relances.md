@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: interne
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Le journal, le formulaire public, la recherche et les relances se resserrent

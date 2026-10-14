@@ -4,6 +4,7 @@ type: securite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     La purge nocturne retire les données techniques échues et les images sans usage

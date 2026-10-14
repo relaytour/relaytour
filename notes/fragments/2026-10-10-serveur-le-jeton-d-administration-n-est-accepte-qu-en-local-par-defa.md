@@ -3,6 +3,7 @@ cible: serveur
 type: rupture
 audience: public
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Le jeton d'administration n'est accepté qu'en local par défaut

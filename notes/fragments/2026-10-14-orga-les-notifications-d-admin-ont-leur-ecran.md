@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Les notifications d'admin ont leur écran

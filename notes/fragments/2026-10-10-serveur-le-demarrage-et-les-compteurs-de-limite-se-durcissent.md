@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: interne
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Le démarrage et les compteurs de limite se durcissent
