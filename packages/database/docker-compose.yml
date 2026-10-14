@@ -50,7 +50,7 @@ services:
   # Mailpit remplace MailDev (non maintenu). Le serveur l'utilise sans variable de
   # bascule : APP_ENV=local sans SMTP renseigné envoie ici.
   mailpit:
-    image: axllent/mailpit:v1.27
+    image: axllent/mailpit:v1.31
     container_name: mailpit_relaytour
     restart: unless-stopped
     environment:
