@@ -1079,8 +1079,9 @@ async function etatDeA() {
         where: { id: a.referente },
         select: {
           name: true,
-          archivedAt: true,
-          appartenances: { select: { organisationId: true, role: true } },
+          appartenances: {
+            select: { organisationId: true, role: true, archiveLe: true },
+          },
         },
       }),
       Promise.all([

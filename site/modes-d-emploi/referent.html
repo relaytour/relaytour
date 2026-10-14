@@ -203,12 +203,14 @@
         <article class="verre ecran" id="e-preferences">
           <div class="ecran-tete"><h3>Préférences</h3><span class="route">/&lt;activité&gt;/preferences</span></div>
           <p>Vous choisissez les mails que vous recevez, et les notifications de vos périmètres. Les notifications de vos tâches restent visibles dans l'espace, quel que soit votre choix pour les mails.</p>
+          <p class="note">Vos préférences valent pour l'organisation affichée. Si vous appartenez à plusieurs organisations, chacune garde ses propres réglages.</p>
           <p class="note">Les admins y trouvent aussi le panneau « Votre messagerie », décrit dans le mode d'emploi <a href="messagerie.html">« Choisir votre messagerie »</a>.</p>
           <figure>
             <img src="../captures/preferences.webp" data-mobile="../captures/mobile/preferences.webp" width="1440" height="900" loading="lazy" alt="Écran Préférences : le choix du résumé par mail, les réglages des mails immédiats et celui des notifications de vos périmètres." />
             <figcaption>Écran Préférences, sur l'organisation d'exemple.</figcaption>
           </figure>
           <ul class="gestes">
+            <li><span><span class="libelle">Modifier mon nom</span></span><span>Corriger votre prénom et votre nom, dans le panneau « Votre compte ». Ce nom s'affiche dans toutes vos organisations.</span></li>
             <li><span><span class="libelle">Chaque jour</span><span class="libelle">Chaque lundi</span><span class="libelle">Jamais</span></span><span>Régler le résumé par mail. Il reprend les nouvelles de vos périmètres et vos échéances des 14 prochains jours, et part à 7 h.</span></li>
             <li><span><span class="libelle">Modification de vos tâches</span></span><span>Recevoir un mail quand une autre personne modifie une tâche qui vous est assignée.</span></li>
             <li><span><span class="libelle">Échéances</span></span><span>Recevoir un mail quand une de vos tâches arrive à échéance ou passe en retard.</span></li>
@@ -277,6 +279,12 @@
 
         <article class="verre ecran" id="p-cloche">
           <div class="ecran-tete"><h3>La cloche annonce l'activité de vos périmètres</h3></div>
+          <p>La cloche compte les notifications non lues de l'organisation affichée. Son tiroir les range par activité, en groupes qui se replient. Chaque notification affiche son périmètre au-dessus de son texte. Le bouton « Tout lire » d'un groupe marque ses notifications comme lues.</p>
+          <figure>
+            <img src="../captures/cloche.webp" data-mobile="../captures/mobile/cloche.webp" width="1440" height="900" loading="lazy" alt="Tiroir de la cloche : les notifications rangées par activité, avec le périmètre au-dessus de chaque texte." />
+            <figcaption>Le tiroir de la cloche, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
+          </figure>
+          <p class="note">Si vous appartenez à plusieurs organisations, l'encadré « Vous avez d'autres notifications dans vos organisations » liste celles qui ont du nouveau. Chacune s'ouvre dans un nouvel onglet, et l'onglet d'origine garde la sienne. Dans l'application installée, l'organisation change dans la même fenêtre.</p>
           <p>Quand une autre personne crée, modifie, commence, termine ou abandonne une tâche de votre périmètre, vous recevez une notification. Vous en recevez une aussi quand elle crée ou modifie une fiche du périmètre. Un clic sur la notification d'une tâche ouvre le périmètre et met cette tâche en évidence.</p>
           <p class="note">Pour une fiche, ou pour une tâche qui ne vous est pas assignée, aucun mail ne part. Le réglage « Activité de vos périmètres », dans vos <a href="#e-preferences">Préférences</a>, désactive ces notifications.</p>
           <p class="note">Une tâche qui vous est assignée garde sa notification, quel que soit ce réglage. Un mail vous prévient aussi quand une autre personne la modifie ou change son statut, selon le réglage « Modification de vos tâches ».</p>

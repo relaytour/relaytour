@@ -585,9 +585,9 @@ describe('équipe d’une activité (ADR 0018)', () => {
   it('réunit les personnes affectées, intéressées et admins, sans les comptes archivés', async () => {
     const interessee = await creerCompte('interessee', 'MEMBRE')
     const archivee = await creerCompte('archivee', 'MEMBRE')
-    await prisma.user.update({
-      where: { id: archivee },
-      data: { archivedAt: new Date() },
+    await prisma.appartenance.updateMany({
+      where: { userId: archivee, organisationId: ids.org },
+      data: { archiveLe: new Date() },
     })
     await prisma.souhait.createMany({
       data: [interessee, archivee].map(userId => ({
@@ -659,19 +659,22 @@ describe('équipe d’une activité (ADR 0018)', () => {
     await prisma.souhait.deleteMany({ where: { userId: ids.membreA2 } })
   })
 
-  it('laisse en attente le compte connu hors de l’organisation, et refuse un compte archivé sans rien écrire', async () => {
+  it('laisse en attente le compte connu hors de l’organisation, et refuse une personne archivée dans la sienne sans rien écrire', async () => {
     const externe = randomUUID()
     const archive = randomUUID()
     await prisma.user.createMany({
       data: [
         { id: externe, email: adresse('externe-equipe'), name: 'Externe' },
-        {
-          id: archive,
-          email: adresse('archive-equipe'),
-          name: 'Archivé',
-          archivedAt: new Date(),
-        },
+        { id: archive, email: adresse('archive-equipe'), name: 'Archivé' },
       ],
+    })
+    // Archivée dans cette organisation (ADR 0031) : seul cet archivage se lit d'ici.
+    await prisma.appartenance.create({
+      data: {
+        userId: archive,
+        organisationId: ids.org,
+        archiveLe: new Date(),
+      },
     })
     const souhait = { e: ids.edition1, p: [ids.perimetre1] }
     const r = await executer(ids.adminA1, INVITER, {

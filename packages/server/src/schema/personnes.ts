@@ -11,9 +11,14 @@ import {
   exigerMembreGere,
   membresDeLOrganisation,
   refuserAdminDeLOrganisation,
+  membreActif,
+  refuserArchivee,
+  synchroniserArchivageDuCompte,
+  verrouillerCompte,
 } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
-import { annoncerChangementEquipe } from '../lib/equipe.ts'
+import { annoncerChangementEquipe, notifierPlace } from '../lib/equipe.ts'
+import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 import {
   exigerAdminDeLEdition,
   exigerAdminDuPerimetre,
@@ -107,7 +112,22 @@ export const PersonneRef = builder.prismaObject('User', {
           ? u.appartenances[0]?.role === 'ADMIN'
           : null,
     }),
-    archive: t.boolean({ resolve: u => u.archivedAt !== null }),
+    // Archivée dans l'organisation active (ADR 0031) : l'archivage d'une personne
+    // dans une autre organisation ne se lit pas d'ici.
+    archive: t.boolean({
+      description:
+        'Vrai quand la personne est archivée dans l’organisation active.',
+      resolve: async (u, _args, ctx) =>
+        (await membresDeLOrganisation(ctx)).get(u.id)?.archiveLe != null,
+    }),
+    // Un admin corrige le nom d'une personne tant qu'elle ne s'est jamais
+    // connectée ; ensuite, le nom lui appartient (ADR 0031).
+    nomModifiable: t.boolean({
+      authScopes: { admin: true },
+      description:
+        'Vrai tant que la personne ne s’est jamais connectée : un admin de l’organisation peut alors corriger son nom.',
+      resolve: u => !u.emailVerified,
+    }),
     // La date d'arrivée de la personne dans l'organisation active, et non celle de
     // la création de son compte : un compte créé plus tôt par une autre
     // organisation ne le laisse pas voir (ADR 0030). La personne lit pour elle-même
@@ -116,8 +136,8 @@ export const PersonneRef = builder.prismaObject('User', {
       type: 'DateTime',
       description: 'Date d’arrivée de la personne dans l’organisation active.',
       resolve: async (u, _args, ctx) => {
-        const arrivee = (await membresDeLOrganisation(ctx)).get(u.id)
-        if (arrivee !== undefined) return arrivee
+        const membre = (await membresDeLOrganisation(ctx)).get(u.id)
+        if (membre !== undefined) return membre.arrivee
         if (ctx.personne?.id === u.id) return u.createdAt
         throw accesRefuse()
       },
@@ -235,6 +255,8 @@ builder.queryFields(t => ({
       const appartenances = await prisma.appartenance.findMany({
         where: {
           userId: ctx.personne!.id,
+          // Une organisation où la personne est archivée ne figure plus (ADR 0031).
+          archiveLe: null,
           organisation: { statut: { in: ['ACTIVE', 'LECTURE_SEULE'] } },
         },
         select: {
@@ -272,8 +294,12 @@ builder.queryFields(t => ({
       prisma.user.findMany({
         ...query,
         where: {
-          appartenances: { some: { organisationId: ctx.organisation!.id } },
-          ...(inclureArchives ? {} : { archivedAt: null }),
+          appartenances: {
+            some: {
+              organisationId: ctx.organisation!.id,
+              ...(inclureArchives ? {} : { archiveLe: null }),
+            },
+          },
         },
         orderBy: { name: 'asc' },
       }),
@@ -292,8 +318,7 @@ builder.queryFields(t => ({
       return prisma.user.findMany({
         ...query,
         where: {
-          archivedAt: null,
-          appartenances: { some: { organisationId: ctx.organisation!.id } },
+          ...membreActif(ctx.organisation!.id),
           ...dansLEquipe([activiteId]),
         },
         orderBy: { name: 'asc' },
@@ -310,9 +335,12 @@ builder.queryFields(t => ({
       prisma.user.findMany({
         ...query,
         where: {
-          archivedAt: null,
           appartenances: {
-            some: { organisationId: ctx.organisation!.id, role: 'ADMIN' },
+            some: {
+              organisationId: ctx.organisation!.id,
+              role: 'ADMIN',
+              archiveLe: null,
+            },
           },
         },
         orderBy: { name: 'asc' },
@@ -469,11 +497,13 @@ builder.mutationFields(t => ({
             role,
           })
           const refusee = 'Cette adresse ne peut pas être invitée.'
-          // Seul l'admin de l'organisation, qui lit l'annuaire, apprend qu'un compte
-          // archivé de son organisation porte l'adresse.
+          // La personne est archivée dans cette organisation (ADR 0031). Seul l'admin
+          // de l'organisation, qui lit l'annuaire et peut la rétablir, l'apprend.
           if (compte.issue === 'archive') {
             throw erreurSaisie(
-              compte.dejaMembre && ctx.personne!.estAdmin ? dejaLa : refusee
+              ctx.personne!.estAdmin
+                ? 'Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire.'
+                : refusee
             )
           }
           // Les organisations sont cloisonnées (ADR 0030) : rien ne s'écrit au nom
@@ -621,14 +651,13 @@ builder.mutationFields(t => ({
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, { id }, ctx) => {
       // Un admin d'activité ne relance que son équipe (ADR 0018).
-      await exigerMembreGere(ctx, String(id))
-      const personne = await prisma.user.findUnique({
-        where: { id: String(id) },
-        select: { id: true, archivedAt: true },
-      })
-      if (personne === null || personne.archivedAt !== null) {
-        throw erreurSaisie('Ce compte est introuvable ou archivé.')
+      const membre = await exigerMembreGere(ctx, String(id))
+      if (membre.archive) {
+        throw erreurSaisie(
+          'Cette personne est archivée dans votre organisation.'
+        )
       }
+      const personne = { id: String(id) }
       // Une relance par personne et par heure : un admin ne peut pas inonder une boîte.
       if (
         !(await limiterParCle(
@@ -673,22 +702,26 @@ builder.mutationFields(t => ({
         )
       }
       const membre = await exigerMembre(ctx, id)
+      // Une personne archivée ne devient pas admin : elle se rétablit d'abord.
+      if (args.estAdmin && membre.role !== 'ADMIN') refuserArchivee(membre)
       const nom = texteRequis(args.nom, 'Le nom')
       const organisationId = ctx.organisation!.id
       const [actuel, appartenance] = await Promise.all([
         prisma.user.findUniqueOrThrow({
           where: { id },
-          select: { name: true },
+          select: { name: true, emailVerified: true },
         }),
         prisma.appartenance.findUniqueOrThrow({
           where: { userId_organisationId: { userId: id, organisationId } },
           select: { role: true },
         }),
       ])
-      // Le nom appartient au compte, commun à toutes ses organisations.
-      if (nom !== actuel.name && membre.autresOrganisations > 0) {
+      // Le nom appartient à la personne (ADR 0031). Un admin corrige une faute de
+      // saisie tant qu'elle ne s'est jamais connectée. La règle ne dépend d'aucune
+      // autre organisation du compte.
+      if (nom !== actuel.name && actuel.emailVerified) {
         throw erreurSaisie(
-          'Ce compte appartient aussi à une autre organisation : seule la personne peut changer son nom.'
+          'Cette personne s’est déjà connectée : elle seule modifie son nom, dans ses préférences.'
         )
       }
       // Le rôle ne s'écrit que s'il change : la date de mise à jour de
@@ -717,8 +750,38 @@ builder.mutationFields(t => ({
       if (role === 'ADMIN' && appartenance.role !== 'ADMIN') {
         await annoncerChangementEquipe(id, { organisationId, instant })
       }
+      // Les autres admins de l'organisation apprennent la nomination ou le retrait
+      // (ADR 0033).
+      if (role !== appartenance.role) {
+        await notifierLesAdmins(prisma, {
+          type:
+            role === 'ADMIN'
+              ? 'ADMIN_ORGANISATION_NOMME'
+              : 'ADMIN_ORGANISATION_RETIRE',
+          organisationId,
+          acteurId: ctx.personne!.id,
+          personneId: id,
+        })
+      }
       return personne
     },
+  }),
+
+  modifierMonNom: t.prismaField({
+    type: PersonneRef,
+    authScopes: { authentifie: true },
+    // Le nom appartient à la personne, pas à son organisation active : le statut de
+    // celle-ci ne l'empêche pas de le modifier.
+    skipTypeScopes: true,
+    description:
+      'La personne modifie son propre nom, qui vaut dans toutes ses organisations (ADR 0031).',
+    args: { nom: t.arg.string({ required: true }) },
+    resolve: (query, _root, args, ctx) =>
+      prisma.user.update({
+        ...query,
+        where: { id: ctx.personne!.id },
+        data: { name: texteRequis(args.nom, 'Le nom') },
+      }),
   }),
 
   archiverPersonne: t.prismaField({
@@ -733,32 +796,51 @@ builder.mutationFields(t => ({
       if (id === ctx.personne?.id) {
         throw erreurSaisie('Vous ne pouvez pas archiver votre propre compte.')
       }
-      // L'archivage porte sur le compte, commun à toutes ses organisations : un admin
-      // n'archive pas le compte d'une personne qui appartient aussi à une autre.
-      const membre = await exigerMembre(ctx, id)
-      if (membre.autresOrganisations > 0) {
-        throw erreurSaisie(
-          'Ce compte appartient aussi à une autre organisation : il ne peut pas être archivé depuis la vôtre.'
-        )
+      // L'archivage porte sur l'appartenance (ADR 0031) : la personne quitte cette
+      // organisation, son compte et ses autres organisations ne changent pas.
+      // Aucune session n'est fermée : le contexte relit l'appartenance à chaque
+      // requête, et l'accès à l'organisation tombe à la suivante.
+      await exigerMembre(ctx, id)
+      const organisationId = ctx.organisation!.id
+      const instant = new Date()
+      const change = await prisma.$transaction(async tx => {
+        await verrouillerCompte(tx, id)
+        // Une personne déjà archivée garde la date de son archivage.
+        const { count } = await tx.appartenance.updateMany({
+          where: {
+            userId: id,
+            organisationId,
+            archiveLe: args.archive ? null : { not: null },
+          },
+          data: { archiveLe: args.archive ? instant : null },
+        })
+        await synchroniserArchivageDuCompte(tx, id, instant)
+        return count > 0
+      })
+      equipesModifiees(ctx)
+      // Les autres admins de l'organisation l'apprennent (ADR 0033).
+      if (change) {
+        await notifierLesAdmins(prisma, {
+          type: args.archive ? 'PERSONNE_ARCHIVEE' : 'PERSONNE_RETABLIE',
+          organisationId,
+          acteurId: ctx.personne!.id,
+          personneId: id,
+        })
       }
-      // L'archivage ferme aussitôt toutes les sessions ouvertes du compte.
-      const [personne] = await prisma.$transaction([
-        prisma.user.update({
-          ...query,
-          where: { id },
-          data: { archivedAt: args.archive ? new Date() : null },
-        }),
-        ...(args.archive
-          ? [prisma.session.deleteMany({ where: { userId: id } })]
-          : []),
-      ])
+      const personne = await prisma.user.findUniqueOrThrow({
+        ...query,
+        where: { id },
+      })
       journal.info(
         {
           evenement: args.archive ? 'personne-archivee' : 'personne-restauree',
           userId: id,
+          organisationId,
           par: ctx.personne?.id,
         },
-        args.archive ? 'Un compte a été archivé.' : 'Un compte a été restauré.'
+        args.archive
+          ? 'Une personne a été archivée dans son organisation.'
+          : 'Une personne a été rétablie dans son organisation.'
       )
       return personne
     },
@@ -781,7 +863,7 @@ builder.mutationFields(t => ({
       const { activiteId } = await exigerAdminDuPerimetre(ctx, perimetreId)
       // Un admin d'activité n'affecte qu'une personne de ses équipes (ADR 0018). Il
       // y fait entrer une autre personne par une invitation.
-      await exigerMembreGere(ctx, userId)
+      refuserArchivee(await exigerMembreGere(ctx, userId))
       // Même contrôle qu'une écriture : périmètre et édition de la même activité de
       // l'organisation, édition non archivée.
       await exigerEcriture(ctx, perimetreId, editionId)
@@ -811,6 +893,16 @@ builder.mutationFields(t => ({
         organisationId: ctx.organisation!.id,
         activiteId,
         instant,
+      })
+      // Les autres admins de l'activité l'apprennent aussi (ADR 0033).
+      await notifierLesAdmins(prisma, {
+        type: 'AFFECTATION_AJOUTEE',
+        organisationId: ctx.organisation!.id,
+        activiteId,
+        perimetreId,
+        editionId,
+        acteurId: ctx.personne!.id,
+        personneId: userId,
       })
       equipesModifiees(ctx)
       publierPourPerimetre('EQUIPE', perimetreId, { editionId })
@@ -851,6 +943,24 @@ builder.mutationFields(t => ({
       if (count === 1) {
         publierPourPerimetre('EQUIPE', affectation.perimetreId, {
           editionId: affectation.editionId,
+        })
+        // La personne et les autres admins de l'activité l'apprennent dans
+        // l'application, sans mail (ADR 0012 et 0033).
+        const organisationId = ctx.organisation!.id
+        const activiteId = affectation.perimetre.activiteId
+        await notifierPlace(affectation.userId, {
+          organisationId,
+          activiteId,
+          instant: new Date(),
+        })
+        await notifierLesAdmins(prisma, {
+          type: 'AFFECTATION_RETIREE',
+          organisationId,
+          activiteId,
+          perimetreId: affectation.perimetreId,
+          editionId: affectation.editionId,
+          acteurId: ctx.personne!.id,
+          personneId: affectation.userId,
         })
       }
       return count === 1
@@ -932,7 +1042,8 @@ builder.mutationFields(t => ({
       const userId = String(args.personneId)
       const activiteId = await ctx.exigerActivite(args.activiteId)
       await ctx.exigerAdminDe(activiteId)
-      await exigerMembreGere(ctx, userId)
+      const membre = await exigerMembreGere(ctx, userId)
+      if (args.admin) refuserArchivee(membre)
       // Un admin d'activité ne retire pas son propre rôle : il ne pourrait plus le
       // rétablir. Un admin de l'organisation garde ses droits sans ce rôle.
       if (
@@ -944,6 +1055,10 @@ builder.mutationFields(t => ({
           'Vous ne pouvez pas retirer votre propre rôle d’admin de l’activité.'
         )
       }
+      // Seul un vrai changement de rôle prévient les autres admins (ADR 0033).
+      const dejaAdmin =
+        (await prisma.adminActivite.count({ where: { userId, activiteId } })) >
+        0
       if (args.admin) {
         const instant = new Date()
         await prisma.adminActivite.upsert({
@@ -957,15 +1072,26 @@ builder.mutationFields(t => ({
             createdAt: instant,
           },
         })
-        // Une nomination déjà faite ne crée pas de ligne : le mail ne dira rien.
-        await annoncerChangementEquipe(userId, {
-          organisationId,
-          activiteId,
-          instant,
-        })
+        // Une nomination déjà faite ne s'annonce pas : ni mail ni notification.
+        if (!dejaAdmin) {
+          await annoncerChangementEquipe(userId, {
+            organisationId,
+            activiteId,
+            instant,
+          })
+        }
       } else {
         await prisma.adminActivite.deleteMany({
           where: { userId, activiteId, organisationId },
+        })
+      }
+      if (dejaAdmin !== args.admin) {
+        await notifierLesAdmins(prisma, {
+          type: args.admin ? 'ADMIN_ACTIVITE_NOMME' : 'ADMIN_ACTIVITE_RETIRE',
+          organisationId,
+          activiteId,
+          acteurId: ctx.personne!.id,
+          personneId: userId,
         })
       }
       equipesModifiees(ctx)

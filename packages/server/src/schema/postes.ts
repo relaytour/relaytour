@@ -5,6 +5,7 @@ import {
   type Souhait,
 } from '@relaytour/database'
 
+import { membreActif } from '../lib/appartenances.ts'
 import type { AppContext } from '../context.ts'
 import { lireGroupes, type GroupePerimetres } from '../lib/activites.ts'
 import { configurationActivite } from '../lib/organisation.ts'
@@ -58,7 +59,7 @@ const PostesPerimetreRef = builder
       souhaits: t.field({
         type: [SouhaitRef],
         description:
-          'Souhaits en attente : la personne n’est pas encore affectée à ce périmètre. Les comptes archivés sont exclus.',
+          'Souhaits en attente : la personne n’est pas encore affectée à ce périmètre. Les personnes archivées dans l’organisation sont exclues.',
         resolve: p => p.souhaits,
       }),
       demandesEnAttente: t.exposeInt('demandesEnAttente', {
@@ -109,15 +110,16 @@ async function chargerPostes(
       prisma.perimetre.findMany({
         where: { activiteId: edition.activiteId, archivedAt: null },
       }),
-      // Un compte archivé ne tient plus son périmètre : il ne compte pas comme poste pourvu.
+      // Une personne archivée dans l'organisation ne tient plus son périmètre : elle
+      // ne compte pas comme poste pourvu (ADR 0031).
       prisma.affectation.findMany({
-        where: { editionId, user: { archivedAt: null } },
+        where: { editionId, user: membreActif(ctx.organisation!.id) },
         include: { user: true },
         orderBy: { createdAt: 'asc' },
       }),
       prisma.effectifPerimetre.findMany({ where: { editionId } }),
       prisma.souhait.findMany({
-        where: { editionId, user: { archivedAt: null } },
+        where: { editionId, user: membreActif(ctx.organisation!.id) },
         include: { user: true },
         orderBy: { createdAt: 'asc' },
       }),

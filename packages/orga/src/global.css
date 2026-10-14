@@ -2438,3 +2438,21 @@ button.rt-ligne-declinaisons {
     min-height: 44px;
   }
 }
+
+/* Une entrée du menu suivie de son compteur (notifications d'admin, ADR 0033). */
+.rt-entree-compteur {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Les groupes de notifications (ADR 0032 et 0033) : le contenu d'un groupe ne se
+   retire que peu, pour garder la largeur des lignes sur un téléphone. */
+.rt-notifications .ant-collapse-header {
+  padding-inline: 4px !important;
+}
+
+/* antd 6 nomme `.ant-collapse-body` le contenu d'un panneau. */
+.rt-notifications .ant-collapse-body {
+  padding-inline: 4px !important;
+}

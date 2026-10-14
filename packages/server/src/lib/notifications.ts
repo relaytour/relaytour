@@ -1,4 +1,5 @@
 import type {
+  NiveauNotification,
   PrismaClient,
   StatutTache,
   TypeNotification,
@@ -6,6 +7,7 @@ import type {
 
 import { mettreEnFile } from '../courriel/file.ts'
 
+import { membreActif } from './appartenances.ts'
 import { publierNotification } from './flux.ts'
 import { pousser } from './push-file.ts'
 
@@ -15,20 +17,30 @@ export const PREFERENCES_PAR_DEFAUT = {
   frequenceResume: 'HEBDOMADAIRE',
   mailModification: true,
   mailEcheance: true,
-  mailDemandes: true,
   applicationPerimetre: true,
   pushTaches: true,
   pushEcheances: true,
+  mailDemandes: true,
   pushDemandes: true,
+  applicationEquipe: true,
+  pushEquipe: false,
+  resumeAdmin: true,
   dernierResumeLe: null,
 } as const
 
-export async function preferencesDe(prisma: PrismaClient, userId: string) {
+/**
+ * Les préférences d'une personne dans une organisation (ADR 0032). Sans ligne, les
+ * valeurs par défaut : une organisation ne reprend jamais les réglages d'une autre.
+ */
+export async function preferencesDe(
+  prisma: PrismaClient,
+  userId: string,
+  organisationId: string
+) {
   return (
-    (await prisma.preferenceNotification.findUnique({ where: { userId } })) ?? {
-      userId,
-      ...PREFERENCES_PAR_DEFAUT,
-    }
+    (await prisma.preferenceOrganisation.findUnique({
+      where: { userId_organisationId: { userId, organisationId } },
+    })) ?? { userId, organisationId, ...PREFERENCES_PAR_DEFAUT }
   )
 }
 
@@ -44,6 +56,11 @@ export async function referentsAPrevenir(
   editionId: string | null,
   acteurId: string
 ): Promise<string[]> {
+  const perimetre = await prisma.perimetre.findUnique({
+    where: { id: perimetreId },
+    select: { organisationId: true },
+  })
+  if (perimetre === null) return []
   const affectations = await prisma.affectation.findMany({
     where: {
       perimetreId,
@@ -51,15 +68,20 @@ export async function referentsAPrevenir(
         ? { edition: { statut: { not: 'ARCHIVEE' } } }
         : { editionId }),
       userId: { not: acteurId },
-      user: { archivedAt: null },
+      // Une personne archivée dans l'organisation ne reçoit rien (ADR 0031).
+      user: membreActif(perimetre.organisationId),
     },
     select: { userId: true },
     distinct: ['userId'],
   })
   const ids = affectations.map(a => a.userId)
   if (ids.length === 0) return []
-  const coupees = await prisma.preferenceNotification.findMany({
-    where: { userId: { in: ids }, applicationPerimetre: false },
+  const coupees = await prisma.preferenceOrganisation.findMany({
+    where: {
+      userId: { in: ids },
+      organisationId: perimetre.organisationId,
+      applicationPerimetre: false,
+    },
     select: { userId: true },
   })
   const sans = new Set(coupees.map(c => c.userId))
@@ -244,193 +266,31 @@ export async function notifier(
   }
 }
 
-// ── Texte ────────────────────────────────────────────────────────────────────
-
-/** Ce qu'une notification lit de sa tâche, de sa fiche et de son activité. */
-export const SELECTION_TACHE_NOTIFIEE = {
-  select: {
-    id: true,
-    editionId: true,
-    titre: true,
-    echeance: true,
-    perimetre: {
-      select: { nom: true, slug: true, activite: { select: { slug: true } } },
-    },
-    // Pour une déclinaison : sa tâche partagée et son périmètre (ADR 0026).
-    origine: {
-      select: { id: true, perimetre: { select: { nom: true, slug: true } } },
-    },
-  },
-} as const
-export const SELECTION_FICHE_NOTIFIEE = {
-  select: {
-    slug: true,
-    activite: { select: { slug: true } },
-    perimetre: { select: { nom: true } },
-    versionCourante: { select: { titre: true } },
-  },
-} as const
-export const SELECTION_ACTIVITE_NOTIFIEE = {
-  select: { slug: true, nom: true },
-} as const
-
-export interface NotificationAComposer {
-  type: TypeNotification
-  jours: number | null
-  acteurId: string | null
-  personneId: string | null
-  /** Pour TACHE_STATUT : le nouveau statut. */
-  statut: StatutTache | null
-  tache: {
-    id: string
-    editionId: string
-    titre: string
-    echeance: Date | null
-    perimetre: { nom: string; slug: string; activite: { slug: string } }
-    /** Pour une déclinaison : sa tâche partagée et son périmètre. */
-    origine?: { id: string; perimetre: { nom: string; slug: string } } | null
-  } | null
-  /** Pour FICHE_CREEE et FICHE_MODIFIEE. */
-  fiche: {
-    slug: string
-    activite: { slug: string }
-    perimetre: { nom: string } | null
-    versionCourante: { titre: string } | null
-  } | null
-  /** Pour DEMANDE_RECUE : l'activité dont la file de demandes attend une revue. */
-  activite: { slug: string; nom: string } | null
-}
-
-function dateLongue(date: Date): string {
-  return date.toLocaleDateString('fr-FR', {
-    day: 'numeric',
-    month: 'long',
-    timeZone: 'UTC',
-  })
-}
-
 /**
- * Phrase affichée pour une notification. `noms` associe un identifiant de personne à
- * son nom ; `moiId` est la personne qui lit.
+ * Le niveau de chaque destinataire : admin de l'activité quand il l'administre,
+ * admin de l'organisation sinon (une activité sans admin renvoie ses notifications
+ * aux admins de l'organisation).
  */
-export function messageNotification(
-  n: NotificationAComposer,
-  noms: Map<string, string>,
-  moiId: string
-): string {
-  // Une demande porte le nom d'une personne qui n'est pas membre : la notification
-  // ne le cite pas, et renvoie vers la file de revue.
-  if (n.type === 'DEMANDE_RECUE') {
-    const phrase = 'une demande pour rejoindre l’équipe attend votre revue.'
-    return n.activite === null
-      ? `U${phrase.slice(1)}`
-      : `${n.activite.nom} : ${phrase}`
-  }
-  const acteur = (n.acteurId && noms.get(n.acteurId)) ?? 'Une personne'
-  // La personne a accepté : elle est membre, et son nom se lit désormais (ADR 0030).
-  if (n.type === 'INVITATION_ACCEPTEE') {
-    return `${acteur} a accepté l’invitation et rejoint l’organisation.`
-  }
-  if (n.type === 'FICHE_CREEE' || n.type === 'FICHE_MODIFIEE') {
-    if (n.fiche === null) return 'Cette fiche n’existe plus.'
-    const perimetre =
-      n.fiche.perimetre === null ? '' : ` (${n.fiche.perimetre.nom})`
-    const fiche = `« ${n.fiche.versionCourante?.titre ?? n.fiche.slug} »${perimetre}`
-    return n.type === 'FICHE_CREEE'
-      ? `${acteur} a créé la fiche ${fiche}.`
-      : `${acteur} a modifié la fiche ${fiche}.`
-  }
-  const tache = n.tache
-  if (tache === null) return 'Cette tâche n’existe plus.'
-  const titre = `« ${tache.titre} » (${tache.perimetre.nom})`
-  const personne =
-    n.personneId === moiId
-      ? 'vous'
-      : ((n.personneId && noms.get(n.personneId)) ?? 'une personne')
-
-  // Une déclinaison nomme le périmètre qui la demande (ADR 0026).
-  const demandeur = tache.origine?.perimetre.nom
-  switch (n.type) {
-    case 'TACHE_CREEE':
-      return demandeur === undefined
-        ? `${acteur} a créé la tâche ${titre}.`
-        : `${acteur} a ajouté la tâche ${titre}, demandée par ${demandeur}.`
-    case 'DECLINAISON_PROPOSEE':
-      return `${acteur} propose la tâche ${titre}${demandeur === undefined ? '' : `, demandée par ${demandeur}`}. Elle attend l’accord du périmètre.`
-    case 'DECLINAISON_ACCEPTEE':
-      return `${acteur} a accepté la tâche ${titre}.`
-    case 'DECLINAISON_REFUSEE':
-      return `${acteur} a refusé la tâche ${titre}.`
-    case 'TACHE_MODIFIEE':
-      return `${acteur} a modifié la tâche ${titre}.`
-    // Le texte du commentaire ne figure jamais dans une notification (ADR 0029).
-    case 'TACHE_COMMENTEE':
-      return `${acteur} a commenté la tâche ${titre}.`
-    case 'TACHE_ASSIGNEE':
-      return n.personneId === n.acteurId
-        ? `${acteur} s’occupe de la tâche ${titre}.`
-        : n.personneId === moiId
-          ? `${acteur} vous a assigné la tâche ${titre}.`
-          : `${acteur} a assigné la tâche ${titre} à ${personne}.`
-    case 'TACHE_DESASSIGNEE':
-      return n.personneId === n.acteurId
-        ? `${acteur} ne s’occupe plus de la tâche ${titre}.`
-        : n.personneId === moiId
-          ? `${acteur} vous a retiré·e de la tâche ${titre}.`
-          : `${acteur} a retiré ${personne} de la tâche ${titre}.`
-    case 'ECHEANCE_PROCHE':
-      return n.jours === 0
-        ? `La tâche ${titre} arrive à échéance aujourd’hui.`
-        : n.jours === 1
-          ? `La tâche ${titre} arrive à échéance demain.`
-          : `La tâche ${titre} arrive à échéance dans ${n.jours ?? 7} jours.`
-    case 'TACHE_EN_RETARD':
-      return tache.echeance
-        ? `La tâche ${titre} est en retard depuis le ${dateLongue(tache.echeance)}.`
-        : `La tâche ${titre} est en retard.`
-    case 'TACHE_STATUT':
-      switch (n.statut) {
-        // Qui a coché reste réservé : la phrase ne nomme personne.
-        case 'FAITE':
-          return `La tâche ${titre} est faite.`
-        case 'EN_COURS':
-          return `${acteur} a commencé la tâche ${titre}.`
-        case 'ABANDONNEE':
-          return `${acteur} a abandonné la tâche ${titre}.`
-        default:
-          return `${acteur} a remis la tâche ${titre} à faire.`
-      }
-  }
-}
-
-/**
- * Chemin de l'espace organisateur vers lequel renvoie une notification, sous le slug
- * de son activité (ADR 0008) : la tâche dans la page de son périmètre et de son
- * édition, la fiche, ou la file des demandes.
- */
-export function lienNotification(n: NotificationAComposer): string {
-  if (n.type === 'DEMANDE_RECUE') {
-    return n.activite
-      ? `/${n.activite.slug}/admin/personnes?onglet=demandes`
-      : '/'
-  }
-  if (n.type === 'INVITATION_ACCEPTEE') {
-    return n.activite ? `/${n.activite.slug}/admin/personnes` : '/'
-  }
-  if (n.type === 'FICHE_CREEE' || n.type === 'FICHE_MODIFIEE') {
-    return n.fiche ? `/${n.fiche.activite.slug}/fiches/${n.fiche.slug}` : '/'
-  }
-  if (n.tache === null) return '/'
-  const { perimetre, editionId, id, origine } = n.tache
-  // La réponse à une déclinaison se lit sur sa tâche partagée, dans le périmètre qui
-  // l'a proposée (ADR 0026).
-  if (
-    origine &&
-    (n.type === 'DECLINAISON_ACCEPTEE' || n.type === 'DECLINAISON_REFUSEE')
-  ) {
-    return `/${perimetre.activite.slug}/perimetres/${origine.perimetre.slug}?edition=${editionId}&tache=${origine.id}`
-  }
-  // Un commentaire ouvre le fil de sa tâche (ADR 0029).
-  const fil = n.type === 'TACHE_COMMENTEE' ? '&fil=1' : ''
-  return `/${perimetre.activite.slug}/perimetres/${perimetre.slug}?edition=${editionId}&tache=${id}${fil}`
+export async function niveauxDes(
+  prisma: Pick<PrismaClient, 'adminActivite'>,
+  userIds: string[],
+  activiteId: string | null
+): Promise<Map<string, NiveauNotification>> {
+  const adminsActivite =
+    activiteId === null || userIds.length === 0
+      ? new Set<string>()
+      : new Set(
+          (
+            await prisma.adminActivite.findMany({
+              where: { activiteId, userId: { in: userIds } },
+              select: { userId: true },
+            })
+          ).map(a => a.userId)
+        )
+  return new Map(
+    userIds.map(id => [
+      id,
+      adminsActivite.has(id) ? 'ADMIN_ACTIVITE' : 'ADMIN_ORGANISATION',
+    ])
+  )
 }

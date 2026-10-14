@@ -183,11 +183,11 @@ beforeAll(async () => {
         id: ids[cle],
         email: adresse(cle),
         name: `${cle} ${s}`,
-        archivedAt: cle === 'gil' ? new Date() : null,
         appartenances: {
           create: {
             organisationId: cle === 'hors' ? ids.ailleurs : ids.org,
             role: cle === 'admin' ? 'ADMIN' : 'MEMBRE',
+            archiveLe: cle === 'gil' ? new Date() : null,
           },
         },
       },

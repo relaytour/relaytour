@@ -1,5 +1,6 @@
 import { prisma } from '@relaytour/database'
 
+import { membreActif } from '../lib/appartenances.ts'
 import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { perimetresLisibles } from '../lib/droits.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
@@ -99,14 +100,12 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
       resolve: async r => {
         const personnes = await prisma.user.findMany({
           where: {
-            archivedAt: null,
+            // Membre actif de l'organisation : une personne qui y est archivée ne
+            // se trouve plus (ADR 0031).
+            ...membreActif(r.organisationId),
             name: { contains: r.texte },
             ...(r.estAdmin
-              ? {
-                  appartenances: {
-                    some: { organisationId: r.organisationId },
-                  },
-                }
+              ? {}
               : {
                   affectations: {
                     some: {

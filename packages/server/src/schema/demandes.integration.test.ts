@@ -638,13 +638,15 @@ describe('accepter une demande', () => {
     await prisma.demande.delete({ where: { id: demande.id } })
   })
 
-  it('refuse un compte archivé et laisse la demande en attente', async () => {
+  it('refuse une personne archivée dans l’organisation et laisse la demande en attente', async () => {
     await prisma.user.create({
       data: {
         id: randomUUID(),
         email: adresse('archive'),
         name: 'Archivée',
-        archivedAt: new Date(),
+        appartenances: {
+          create: { organisationId: ids.org, archiveLe: new Date() },
+        },
       },
     })
     await proposer(ids.alice, 'archive')
@@ -971,14 +973,17 @@ describe('mail regroupé aux admins', () => {
 
   it('compte les demandes en attente à l’envoi, sans citer personne', async () => {
     const message = await mail(ids.admin)
-    expect(message?.sujet).toMatch(/^Demandes pour rejoindre l’équipe .+$/)
+    // Le sujet nomme l'organisation, puis l'activité (ADR 0032).
+    expect(message?.sujet).toMatch(
+      /^.+ · Gala : demandes pour rejoindre l’équipe$/
+    )
     expect(message?.texte).toContain(
       '2 demandes pour rejoindre l’équipe de l’activité Gala attendent votre décision.'
     )
     expect(message?.texte).toContain(
       `/${gala.slug}/admin/personnes?onglet=demandes`
     )
-    expect(message?.desabonnement).toMatch(/\/preferences$/)
+    expect(message?.desabonnement).toMatch(/\/preferences\?organisation=/)
     for (const corps of [message?.texte, message?.html]) {
       expect(corps).not.toContain('Secret')
       expect(corps).not.toContain('@exemple.fr')

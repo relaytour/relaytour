@@ -69,6 +69,38 @@ async function codeEnFile(userId: string): Promise<string> {
 }
 
 describe('connexion par code', () => {
+  it('reste ouverte à une personne archivée dans toutes ses organisations', async () => {
+    // L'archivage porte sur l'appartenance (ADR 0031) : elle doit pouvoir accepter
+    // l'invitation d'une autre organisation.
+    const organisation = await prisma.organisation.findFirstOrThrow({
+      select: { id: true },
+    })
+    const id = randomUUID()
+    const email = `archivee-partout-${suffixe}@exemple.fr`
+    await prisma.user.create({
+      data: {
+        id,
+        email,
+        name: 'Archivée partout',
+        sansAppartenanceActiveLe: new Date(),
+        appartenances: {
+          create: { organisationId: organisation.id, archiveLe: new Date() },
+        },
+      },
+    })
+    try {
+      await demanderUnCode(email)
+      const code = await codeEnFile(id)
+      const reponse = await auth.api.signInEmailOTP({
+        body: { email, otp: code },
+      })
+      expect(reponse.user.id).toBe(id)
+      expect(await prisma.session.count({ where: { userId: id } })).toBe(1)
+    } finally {
+      await prisma.user.delete({ where: { id } })
+    }
+  })
+
   it('répond la même chose pour un code expiré et pour une adresse inconnue', async () => {
     const expiree = `expiree-${suffixe}@exemple.fr`
     await demanderUnCode(connue)

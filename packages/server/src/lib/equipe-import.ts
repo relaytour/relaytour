@@ -191,7 +191,9 @@ export async function importerEquipe(
           simulation: !ecrire,
         })
         if (compte.issue === 'archive') {
-          throw new ErreurEquipe([`${p.adresse} : compte archivé`])
+          throw new ErreurEquipe([
+            `${p.adresse} : personne archivée dans cette organisation, à rétablir d'abord`,
+          ])
         }
         const { userId } = compte
         const nouveau = compte.issue === 'cree'

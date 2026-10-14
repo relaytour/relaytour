@@ -4,6 +4,7 @@ import { prisma } from '@relaytour/database'
 
 import { composer } from '../../courriel/messages.ts'
 import { expedier } from '../../courriel/transport.ts'
+import { archiveePourCeMail } from '../../lib/appartenances.ts'
 import { CODE_VALIDITE_SECONDES } from '../../lib/connexion.ts'
 import { courrielTronque, journal, sansAdresses } from '../../lib/journal.ts'
 import type { CourrielJobData } from '../queues.ts'
@@ -25,15 +26,27 @@ export async function courrielProcessor(
     return
   }
 
-  // L'adresse se relit en base au dernier moment : un compte archivé entre-temps ne reçoit rien.
+  // L'adresse se relit en base au dernier moment. Une personne archivée entre-temps
+  // dans l'organisation du mail ne le reçoit pas (ADR 0031) ; ses autres
+  // organisations lui écrivent toujours. Le code de connexion part pour tout compte.
   let destinataire = job.data.destinataire
   if (userId !== undefined) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { email: true, archivedAt: true },
+      select: {
+        email: true,
+        appartenances: { select: { organisationId: true, archiveLe: true } },
+      },
     })
     destinataire =
-      user === null || user.archivedAt !== null ? undefined : user.email
+      user === null ||
+      (sorte !== 'code-connexion' &&
+        archiveePourCeMail(
+          user.appartenances,
+          await organisationDuJob(job.data)
+        ))
+        ? undefined
+        : user.email
   }
 
   if (destinataire === undefined) {
@@ -99,4 +112,17 @@ export async function courrielProcessor(
     },
     'Mail traité.'
   )
+}
+
+/** L'organisation qui écrit : celle du job, sinon celle de la tâche qu'il annonce. */
+async function organisationDuJob(
+  donnees: CourrielJobData
+): Promise<string | undefined> {
+  if (donnees.organisationId !== undefined) return donnees.organisationId
+  if (donnees.tache === undefined) return undefined
+  const tache = await prisma.tache.findUnique({
+    where: { id: donnees.tache.tacheId },
+    select: { perimetre: { select: { organisationId: true } } },
+  })
+  return tache?.perimetre.organisationId
 }

@@ -135,12 +135,13 @@ beforeAll(async () => {
         email: `${cle}-${s}@exemple.fr`,
         name: `${cle} ${s}`,
         isAdmin: estAdmin,
-        archivedAt: archive ? new Date() : null,
         // Tous les comptes du test sont membres de l'organisation (ADR 0008).
+        // L'archivage porte sur cette appartenance (ADR 0031).
         appartenances: {
           create: {
             organisationId: ORGANISATION,
             role: estAdmin ? 'ADMIN' : 'MEMBRE',
+            archiveLe: archive ? new Date() : null,
           },
         },
       },
