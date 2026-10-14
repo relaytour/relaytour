@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-14-serveur-les-notifications-se-reglent-par-organisation-et-nomment-leu",
+          "date": "2026-10-14",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les notifications se règlent par organisation et nomment leur activité",
+            "texte": "Les préférences de notification se règlent désormais dans chaque organisation : couper le résumé dans l'une ne le coupe plus dans les autres. Les mails et les notifications push nomment l'organisation et l'activité, et leurs liens ouvrent la bonne organisation. Les admins reçoivent de nouvelles notifications sur leur équipe, à part de celles de leurs tâches. Avant un retour à une version antérieure, suivez la consigne d'`infra/README.md`.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-11-serveur-une-installation-peut-plafonner-ses-mails-par-jour",
           "date": "2026-10-11",
           "type": "fonctionnalite",
@@ -17,6 +30,19 @@
           "fr": {
             "titre": "Une installation peut plafonner ses mails par jour",
             "texte": "La variable facultative `COURRIEL_PLAFOND_QUOTIDIEN` fixe le nombre de mails qu'une installation envoie par jour. Au-delà, le worker reporte le mail au lendemain. Le code de connexion part toujours. Sans cette variable, rien ne change.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-11-serveur-l-archivage-d-une-personne-ne-vaut-que-dans-son-organisation",
+          "date": "2026-10-11",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'archivage d'une personne ne vaut que dans son organisation",
+            "texte": "Un admin qui archive une personne lui ferme l'accès à son organisation seulement. La personne garde son compte, se connecte encore et reste membre de ses autres organisations, qui n'apprennent rien de cet archivage. Le nom appartient à la personne : elle le modifie dans ses préférences, et un admin ne le corrige que tant qu'elle ne s'est jamais connectée. Sur une installation qui porte une seule organisation, une personne archivée reçoit encore son code de connexion. Elle se connecte alors sans accès à aucune donnée, et l'application lui indique qu'elle n'appartient à aucune organisation ouverte.",
             "migration": null
           }
         },
@@ -134,6 +160,19 @@
           "fr": {
             "titre": "Le démarrage et les compteurs de limite se durcissent",
             "texte": "Le serveur refuse de démarrer en `NODE_ENV=production` sans `APP_ENV`, et hors du poste local avec une `ORIGINE_ORGA` qui n'est pas en https. Les compteurs de limite dans Redis posent leur fenêtre dans la même commande que l'incrément. L'API lit l'adresse du client dans l'en-tête `X-Relaytour-Ip`, que Caddy remplit avec `{client_ip}`.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-10-serveur-le-compte-d-une-personne-ne-laisse-plus-rien-passer-d-une-or",
+          "date": "2026-10-10",
+          "type": "securite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le compte d'une personne ne laisse plus rien passer d'une organisation à l'autre",
+            "texte": "Sur une installation qui porte plusieurs organisations, six points se resserrent. La date lue d'une personne est celle de son arrivée dans l'organisation, plus celle de la création de son compte. La limite d'un mail d'invitation par heure se compte par organisation. Un mail sans organisation désignée, comme le code de connexion d'une personne membre de plusieurs organisations, ne prend plus le nom ni le logo d'une organisation. La commande `creer-admin` n'accorde à un compte connu d'une autre organisation qu'une invitation à accepter. Un appareil ne garde l'abonnement push que d'un compte. Un admin ne lit l'adresse que d'un membre de son organisation. Une installation à une seule organisation ne voit aucun changement.",
             "migration": null
           }
         },

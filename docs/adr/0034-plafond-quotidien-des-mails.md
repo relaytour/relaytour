@@ -1,7 +1,7 @@
-# ADR 0031 — Plafond quotidien des mails d'une installation
+# ADR 0034 — Plafond quotidien des mails d'une installation
 
 - **Statut** : proposée
-- **Date** : 2026-10-11
+- **Date** : 2026-10-11, renumérotée le 2026-10-14 (le numéro 0031 est pris par l'archivage par organisation)
 - Complète l'ADR 0007 (frontière entre le logiciel et son exploitation) et l'ADR 0008 (administration de l'installation).
 
 ## Contexte
@@ -35,6 +35,7 @@ Un hébergeur peut limiter les envois chez son fournisseur, mais cette limite va
 - La pile de référence passe la variable au worker (`infra/compose/docker-compose.yml`, `.env.example`). `docs/courriel.md` explique comment la régler.
 - Un mail reporté arrive un jour plus tard. Un rappel « à la veille » peut donc arriver le jour de l'échéance. Le plafond se règle au-dessus du volume normal de l'installation : il borne un excès, il ne lisse pas l'activité courante.
 - Une file qui dépasse le plafond chaque jour grossit. Le journal le montre par l'événement `courriel-plafond-atteint`, que l'exploitant surveille.
+- Une installation qui porte plusieurs organisations partage le plafond : un excès d'une organisation retarde les mails des autres. Le report ne se voit dans aucune organisation, et aucune n'apprend ainsi l'activité d'une autre (ADR 0030). L'offre d'hébergement de référence porte une organisation par installation.
 - L'administration de l'installation ne lit pas le compteur. Un compteur de mails envoyés dans la requête `organisations` reste hors de cette décision.
 - Le plafond ne remplace ni les limites du fournisseur de mail, ni l'authentification du domaine d'envoi.
 

@@ -118,7 +118,7 @@ export interface AppContext {
   /**
    * Pour un flux des changements (ADR 0017) : reconstruit le contexte depuis la
    * requête d'origine, session comprise. Un flux dure plus qu'une requête : il
-   * relit ainsi une session fermée, un compte archivé ou des droits retirés.
+   * relit ainsi une session fermée, une personne archivée ou des droits retirés.
    */
   relire?: () => Promise<AppContext>
 }
@@ -171,8 +171,10 @@ export async function buildContext(
             id: true,
             name: true,
             email: true,
-            archivedAt: true,
+            // Seules les appartenances actives comptent : une personne archivée dans
+            // une organisation ne peut plus la choisir, et garde les autres (ADR 0031).
             appartenances: {
+              where: { archiveLe: null },
               select: {
                 role: true,
                 organisation: {
@@ -188,8 +190,9 @@ export async function buildContext(
           },
         })
 
-  // Un compte archivé est traité comme une requête anonyme, même avec une session encore valide.
-  const actif = user !== null && user.archivedAt === null
+  // L'archivage porte sur l'appartenance (ADR 0031) : une personne archivée partout
+  // garde sa session, sans aucune organisation active. Elle lit ses invitations.
+  const actif = user !== null
   const organisation = actif
     ? choisirOrganisation(user.appartenances, organisationDemandee)
     : null

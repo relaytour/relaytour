@@ -7,8 +7,11 @@ import type {
 import { z } from 'zod'
 
 import { creerAffectations } from './affectations.ts'
+import { synchroniserArchivageDuCompte } from './appartenances.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
 import { publierNotification, publierPourActivite } from './flux.ts'
+import { niveauxDes } from './notifications.ts'
+import { pousser } from './push-file.ts'
 import { journal } from './journal.ts'
 import { SOUHAITS_MAX } from './souhaits.ts'
 
@@ -147,7 +150,7 @@ async function adminsDeLOrganisation(
   organisationId: string
 ): Promise<string[]> {
   const admins = await tx.appartenance.findMany({
-    where: { organisationId, role: 'ADMIN', user: { archivedAt: null } },
+    where: { organisationId, role: 'ADMIN', archiveLe: null },
     select: { userId: true },
   })
   return admins.map(a => a.userId)
@@ -209,8 +212,14 @@ export async function accepterInvitation(
       where: { userId_organisationId: { userId, organisationId } },
       create: { userId, organisationId, role: invitation.role },
       // Le rôle d'admin de l'invitation s'ajoute ; il ne retire jamais un rôle.
-      update: invitation.role === 'ADMIN' ? { role: 'ADMIN' } : {},
+      // Accepter rétablit aussi une appartenance archivée (ADR 0031).
+      update: {
+        archiveLe: null,
+        ...(invitation.role === 'ADMIN' ? { role: 'ADMIN' as const } : {}),
+      },
     })
+    // Le compte a de nouveau une appartenance active (ADR 0031).
+    await synchroniserArchivageDuCompte(tx, userId, instant)
 
     const activites: { activiteId: string; editionId: string }[] = []
     for (const lot of lireLots(invitation.lots)) {
@@ -305,7 +314,7 @@ export async function accepterInvitation(
                 where: {
                   organisationId,
                   userId: invitation.inviteParId,
-                  user: { archivedAt: null },
+                  archiveLe: null,
                 },
                 select: { userId: true },
               })
@@ -314,22 +323,36 @@ export async function accepterInvitation(
           ? await adminsDeLOrganisation(tx, organisationId)
           : []
     const destinataires = aPrevenir.filter(id => id !== userId)
+    // Une invitation qui touche une seule activité se range sous elle ; celle qui
+    // en touche plusieurs, ou aucune, reste au niveau de l'organisation, comme
+    // l'identité de son mail (ADR 0033).
+    const liees = [...new Set(activites.map(a => a.activiteId))]
+    const activiteId = liees.length === 1 ? liees[0]! : null
+    const notificationIds: string[] = []
     if (destinataires.length > 0) {
-      await tx.notification.createMany({
-        data: destinataires.map(destinataire => ({
-          organisationId,
-          userId: destinataire,
-          type: 'INVITATION_ACCEPTEE' as const,
-          acteurId: userId,
-          activiteId: activites[0]?.activiteId ?? null,
-        })),
-      })
+      // Le niveau dit à quel titre la personne reçoit la nouvelle (ADR 0033).
+      const niveaux = await niveauxDes(tx, destinataires, activiteId)
+      for (const destinataire of destinataires) {
+        const creee = await tx.notification.create({
+          data: {
+            organisationId,
+            userId: destinataire,
+            type: 'INVITATION_ACCEPTEE',
+            niveau: niveaux.get(destinataire) ?? 'ADMIN_ORGANISATION',
+            acteurId: userId,
+            activiteId,
+          },
+          select: { id: true },
+        })
+        notificationIds.push(creee.id)
+      }
     }
     return {
       organisationId,
       organisationSlug: invitation.organisation.slug,
       activites,
       destinataires,
+      notificationIds,
       origine: invitation.origine,
     }
   })
@@ -337,6 +360,8 @@ export async function accepterInvitation(
   for (const destinataire of issue.destinataires) {
     publierNotification(issue.organisationId, destinataire)
   }
+  // Le push part après la validation : le worker relit la notification en base.
+  for (const id of issue.notificationIds) await pousser(id)
   for (const { activiteId, editionId } of issue.activites) {
     publierPourActivite('EQUIPE', issue.organisationId, activiteId, {
       editionId,
@@ -397,10 +422,15 @@ export async function invitationEnAttente(
 ): Promise<
   'membre' | 'aucune' | { perimetres: string[]; role: RoleOrganisation }
 > {
-  const appartenance = await prisma.appartenance.count({
-    where: { userId, organisationId },
+  // Une personne archivée dans l'organisation ne reçoit pas de mail d'invitation
+  // (ADR 0031) : elle n'y est ni membre active, ni invitée.
+  const appartenance = await prisma.appartenance.findUnique({
+    where: { userId_organisationId: { userId, organisationId } },
+    select: { archiveLe: true },
   })
-  if (appartenance > 0) return 'membre'
+  if (appartenance !== null) {
+    return appartenance.archiveLe === null ? 'membre' : 'aucune'
+  }
   const invitation = await prisma.invitationOrganisation.findFirst({
     where: { userId, organisationId, ...vivante(maintenant) },
     select: { lots: true, role: true },
@@ -444,8 +474,17 @@ export async function perimetresProposes(
 }
 
 /**
+ * La clé de la limite d'un mail d'invitation : par organisation et par personne.
+ * Une organisation ne consomme pas la limite d'une autre, et n'apprend pas par un
+ * refus qu'une autre vient d'écrire à la même personne (ADR 0030).
+ */
+export function cleRelance(organisationId: string, userId: string): string {
+  return `relance-invitation:${organisationId}:${userId}`
+}
+
+/**
  * Met en file le mail d'une invitation en attente, une fois par personne et par
- * heure au plus : la même limite que la relance. Une organisation qui répète
+ * heure au plus dans une organisation : la même limite que la relance. Une organisation qui répète
  * l'invitation d'une adresse extérieure n'inonde pas sa boîte. Renvoie faux quand
  * le mail n'est pas parti.
  */
@@ -457,7 +496,9 @@ export async function annoncerInvitation(
     import('./limite.ts'),
     import('../courriel/file.ts'),
   ])
-  if (!(await limiterParCle(`relance-invitation:${userId}`, 1, 3600))) {
+  if (
+    !(await limiterParCle(cleRelance(porteur.organisationId, userId), 1, 3600))
+  ) {
     return false
   }
   await mettreEnFile('invitation', { userId }, porteur)

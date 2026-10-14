@@ -32,7 +32,7 @@ Vérifiez la délivrabilité avant l'ouverture avec un service d'analyse d'en-t�
 
 ## Plafond quotidien
 
-`COURRIEL_PLAFOND_QUOTIDIEN` fixe le nombre de mails que l'installation envoie par jour (ADR 0031). La variable est facultative : vide, aucun plafond ne s'applique.
+`COURRIEL_PLAFOND_QUOTIDIEN` fixe le nombre de mails que l'installation envoie par jour (ADR 0034). La variable est facultative : vide, aucun plafond ne s'applique.
 
 - Réglez le plafond sous le quota quotidien de votre fournisseur, et au-dessus du volume normal de l'installation.
 - Au-delà du plafond, le worker reporte le mail au lendemain. Le code de connexion part toujours.

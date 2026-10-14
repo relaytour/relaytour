@@ -13,7 +13,7 @@ fr:
     change.
 ---
 
-ADR 0031. Le compteur vit dans Redis, par jour UTC (`lib/plafond-courriel.ts`). Le
+ADR 0034. Le compteur vit dans Redis, par jour UTC (`lib/plafond-courriel.ts`). Le
 processeur des mails réserve une place avant l'envoi, la rend après une panne du
 transport, et journalise chaque report (`courriel-plafond-atteint`). La pile de
 référence passe la variable au worker.

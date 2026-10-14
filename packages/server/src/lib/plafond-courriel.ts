@@ -1,7 +1,7 @@
 import { limiterParCle, rendreTentative } from './limite.ts'
 
 /**
- * Plafond quotidien des mails d'une installation (ADR 0031). Le compteur vit dans
+ * Plafond quotidien des mails d'une installation (ADR 0034). Le compteur vit dans
  * Redis, par jour UTC, pour toute l'installation. Sans plafond, rien n'est compté.
  */
 

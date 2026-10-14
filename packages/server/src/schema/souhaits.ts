@@ -16,6 +16,7 @@ import {
 } from '../lib/souhaits.ts'
 
 import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
+import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
@@ -118,13 +119,11 @@ builder.mutationFields(t => ({
       const userId = String(args.personneId)
       // Un admin d'activité ne note les souhaits que d'une personne de ses équipes
       // (ADR 0018). Le refus précède le contrôle d'archivage : il ne dit rien du compte.
-      await exigerMembreGere(ctx, userId)
-      const personne = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { archivedAt: true },
-      })
-      if (personne === null || personne.archivedAt !== null) {
-        throw erreurSaisie('Ce compte est introuvable ou archivé.')
+      const membre = await exigerMembreGere(ctx, userId)
+      if (membre.archive) {
+        throw erreurSaisie(
+          'Cette personne est archivée dans votre organisation.'
+        )
       }
       const edition = await exigerEditionOuverte(ctx, args.editionId)
       await ctx.exigerAdminDe(edition.activiteId)
@@ -424,6 +423,19 @@ builder.mutationFields(t => ({
         { evenement: 'souhait-formule', userId, ...cible },
         'Une personne a formulé un souhait.'
       )
+      // Les admins de l'activité l'apprennent (ADR 0033).
+      const { activiteId } = await prisma.perimetre.findUniqueOrThrow({
+        where: { id: cible.perimetreId },
+        select: { activiteId: true },
+      })
+      await notifierLesAdmins(prisma, {
+        type: 'SOUHAIT_FORMULE',
+        organisationId: ctx.organisation!.id,
+        activiteId,
+        perimetreId: cible.perimetreId,
+        editionId: cible.editionId,
+        acteurId: userId,
+      })
       publierPourPerimetre('EQUIPE', cible.perimetreId, {
         editionId: cible.editionId,
       })

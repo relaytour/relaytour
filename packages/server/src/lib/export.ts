@@ -37,7 +37,8 @@ export async function construireExport(organisationId: string) {
         where: { organisationId },
         select: {
           role: true,
-          user: { select: { email: true, name: true, archivedAt: true } },
+          archiveLe: true,
+          user: { select: { email: true, name: true } },
         },
         orderBy: { user: { name: 'asc' } },
       }),
@@ -171,7 +172,7 @@ export async function construireExport(organisationId: string) {
       email: m.user.email,
       nom: m.user.name,
       role: m.role,
-      archive: m.user.archivedAt !== null,
+      archive: m.archiveLe !== null,
     })),
     activites: activites.map(a => ({
       slug: a.slug,

@@ -68,6 +68,15 @@ type ActiviteInstallation {
   slug: String!
 }
 
+"""
+L’activité d’une notification, pour la ranger et l’afficher (ADR 0032).
+"""
+type ActiviteNotifiee {
+  id: ID!
+  nom: String!
+  slug: String!
+}
+
 type Affectation {
   """
   Vrai pour le contact principal du périmètre et de l’édition : une information, sans droit supplémentaire (ADR 0011).
@@ -738,9 +747,18 @@ type Mutation {
   inviterPremierAdmin(email: String!, nom: String!, organisation: String!): Boolean!
 
   """
-  Sans identifiants, marque toutes les notifications comme lues. Reste possible dans une organisation en lecture seule.
+  Sans identifiants, marque comme lues toutes les notifications du niveau choisi, ou celles d’une activité ou d’un périmètre. Reste possible dans une organisation en lecture seule.
   """
-  marquerNotificationsLues(ids: [ID!]): Int!
+  marquerNotificationsLues(
+    activiteId: ID
+
+    """
+    Sans identifiants : les notifications d’admin plutôt que celles de la cloche.
+    """
+    admin: Boolean = false
+    ids: [ID!]
+    perimetreId: ID
+  ): Int!
   modifierActivite(archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
 
   """
@@ -763,6 +781,11 @@ type Mutation {
   Remplace l’identité de l’organisation. Le slug, le fuseau horaire, le statut et les limites ne changent pas ici.
   """
   modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, iconeApplication: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
+
+  """
+  La personne modifie son propre nom, qui vaut dans toutes ses organisations (ADR 0031).
+  """
+  modifierMonNom(nom: String!): Personne!
   modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
 
   """
@@ -770,7 +793,14 @@ type Mutation {
   """
   modifierPerimetre(archive: Boolean!, couleur: String, description: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre, versionAttendue: Int): Perimetre!
   modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
+
+  """
+  Modifie les préférences de la personne dans l’organisation active (ADR 0032).
+  """
   modifierPreferencesNotification(
+    """Sans valeur, ce réglage ne change pas."""
+    applicationEquipe: Boolean
+
     """Sans valeur, ce réglage ne change pas."""
     applicationPerimetre: Boolean
     frequenceResume: FrequenceResume!
@@ -787,7 +817,13 @@ type Mutation {
     pushEcheances: Boolean
 
     """Sans valeur, ce réglage ne change pas."""
+    pushEquipe: Boolean
+
+    """Sans valeur, ce réglage ne change pas."""
     pushTaches: Boolean
+
+    """Sans valeur, ce réglage ne change pas."""
+    resumeAdmin: Boolean
   ): PreferencesNotification!
 
   """
@@ -847,6 +883,15 @@ enum NatureActivite {
   SAISON
 }
 
+"""
+À quel titre la personne reçoit la notification (ADR 0033). Le niveau REFERENT reste dans la cloche ; les niveaux d’admin ont leur écran.
+"""
+enum NiveauNotification {
+  ADMIN_ACTIVITE
+  ADMIN_ORGANISATION
+  REFERENT
+}
+
 """Le nombre de commentaires d’une tâche."""
 type NombreCommentaires {
   nombre: Int!
@@ -863,12 +908,33 @@ type NoteDeVersion {
 }
 
 type Notification {
+  activite: ActiviteNotifiee
   creeLe: DateTime!
   id: ID!
   lien: String!
   lue: Boolean!
+
+  """
+  Le texte affiché dans l’espace organisateur. L’activité et le périmètre s’affichent à part.
+  """
   message: String!
+  niveau: NiveauNotification!
+  perimetre: PerimetreNotifie
+
+  """
+  Le nom de la période, quand l’activité en a plusieurs qui ne sont pas archivées.
+  """
+  periode: String
   type: TypeNotification!
+}
+
+"""
+Une autre organisation de la personne qui a des notifications non lues (ADR 0032).
+"""
+type NotificationsAutreOrganisation {
+  nom: String!
+  nonLues: Int!
+  slug: String!
 }
 
 """Identité publique de l’organisation qui utilise cette installation."""
@@ -994,6 +1060,16 @@ type PerimetreDuFormulaire {
   slug: String!
 }
 
+"""
+Le périmètre d’une notification, pour la ranger et l’afficher (ADR 0032 et 0033).
+"""
+type PerimetreNotifie {
+  couleur: String
+  id: ID!
+  nom: String!
+  slug: String!
+}
+
 type PeriodeInstallation {
   annee: Int!
   debut: Date!
@@ -1005,13 +1081,22 @@ type PeriodeInstallation {
 type Personne {
   activitesAdministrees: [ID!]!
   affectations(editionId: ID): [Affectation!]!
+
+  """Vrai quand la personne est archivée dans l’organisation active."""
   archive: Boolean!
   attributions: [AttributionActivite!]!
+
+  """Date d’arrivée de la personne dans l’organisation active."""
   creeLe: DateTime!
   email: String!
   estAdmin: Boolean
   id: ID!
   nom: String!
+
+  """
+  Vrai tant que la personne ne s’est jamais connectée : un admin de l’organisation peut alors corriger son nom.
+  """
+  nomModifiable: Boolean!
   souhaits(editionId: ID): [Souhait!]!
 }
 
@@ -1067,12 +1152,18 @@ type PostesPerimetre {
   perimetre: Perimetre!
 
   """
-  Souhaits en attente : la personne n’est pas encore affectée à ce périmètre. Les comptes archivés sont exclus.
+  Souhaits en attente : la personne n’est pas encore affectée à ce périmètre. Les personnes archivées dans l’organisation sont exclues.
   """
   souhaits: [Souhait!]!
 }
 
+"""Les préférences de la personne dans l’organisation active (ADR 0032)."""
 type PreferencesNotification {
+  """
+  Notifications d’admin sur l’équipe : affectations, souhaits, nominations et archivages (ADR 0033).
+  """
+  applicationEquipe: Boolean!
+
   """
   Notification dans l’application quand une autre personne agit sur une tâche ou une fiche d’un périmètre où la personne est affectée.
   """
@@ -1087,17 +1178,23 @@ type PreferencesNotification {
   mailModification: Boolean!
 
   """
-  Notification push quand une activité que la personne administre reçoit une demande.
+  Notification push pour les demandes et les invitations des activités que la personne administre.
   """
   pushDemandes: Boolean!
 
   """Notification push pour les échéances proches et les retards."""
   pushEcheances: Boolean!
 
+  """Notification push pour les nouvelles d’admin sur l’équipe."""
+  pushEquipe: Boolean!
+
   """
   Notification push quand une tâche est assignée à la personne, lui est retirée, ou quand une autre personne modifie une de ses tâches (ADR 0024).
   """
   pushTaches: Boolean!
+
+  """La section « Pour vos rôles d’admin » du résumé par mail (ADR 0033)."""
+  resumeAdmin: Boolean!
 }
 
 type Proposition {
@@ -1175,13 +1272,28 @@ type Query {
   messages(activiteId: ID): [Message!]!
   moi: Personne
   monScore(editionId: ID!): Score!
-  nombreNotificationsNonLues: Int!
+  nombreNotificationsNonLues(
+    """
+    Compte les notifications d’admin plutôt que celles de la cloche (ADR 0033). Zéro pour une personne sans rôle d’admin.
+    """
+    admin: Boolean = false
+  ): Int!
 
   """
   Notes des versions publiées, de la plus récente à la plus ancienne, limitées au rôle de la personne dans l’organisation active.
   """
   notesDeVersion: [VersionPubliee!]!
-  notifications(limite: Int = 30, nonLuesSeulement: Boolean = false): [Notification!]!
+  notifications(
+    """Les notifications d’admin plutôt que celles de la cloche (ADR 0033)."""
+    admin: Boolean = false
+    limite: Int = 30
+    nonLuesSeulement: Boolean = false
+  ): [Notification!]!
+
+  """
+  Les autres organisations de la personne qui ont des notifications non lues : celles de la cloche, et celles des rôles d’admin qu’elle y tient encore (ADR 0032).
+  """
+  notificationsAutresOrganisations: [NotificationsAutreOrganisation!]!
 
   """
   Nom, sigle et thème de l’organisation active. Sans session : l’organisation désignée par son slug, sinon l’unique organisation de l’installation, sinon une identité neutre. Lisible sans session.
@@ -1381,14 +1493,26 @@ enum TypeNoteDeVersion {
 }
 
 enum TypeNotification {
+  ADMIN_ACTIVITE_NOMME
+  ADMIN_ACTIVITE_RETIRE
+  ADMIN_ORGANISATION_NOMME
+  ADMIN_ORGANISATION_RETIRE
+  AFFECTATION_AJOUTEE
+  AFFECTATION_RETIREE
   DECLINAISON_ACCEPTEE
   DECLINAISON_PROPOSEE
   DECLINAISON_REFUSEE
+  DEMANDE_ACCEPTEE
   DEMANDE_RECUE
+  DEMANDE_REFUSEE
   ECHEANCE_PROCHE
   FICHE_CREEE
   FICHE_MODIFIEE
   INVITATION_ACCEPTEE
+  PERSONNE_ARCHIVEE
+  PERSONNE_RETABLIE
+  PLACE_MODIFIEE
+  SOUHAIT_FORMULE
   TACHE_ASSIGNEE
   TACHE_COMMENTEE
   TACHE_CREEE

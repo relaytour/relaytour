@@ -39,9 +39,9 @@ function codeErreur(resultat: Awaited<ReturnType<typeof executer>>) {
 beforeAll(async () => {
   await apollo.start()
   for (const [cle, donnees] of Object.entries({
-    admin: { isAdmin: true, archivedAt: null },
-    referente: { isAdmin: false, archivedAt: null },
-    archivee: { isAdmin: true, archivedAt: new Date() },
+    admin: { isAdmin: true, archive: false },
+    referente: { isAdmin: false, archive: false },
+    archivee: { isAdmin: true, archive: true },
   })) {
     const id = randomUUID()
     await prisma.user.create({
@@ -49,7 +49,15 @@ beforeAll(async () => {
         id,
         email: `${cle}-${suffixe}@exemple.fr`,
         name: cle,
-        ...donnees,
+        isAdmin: donnees.isAdmin,
+        // L'archivage porte sur l'appartenance à l'organisation (ADR 0031).
+        appartenances: {
+          create: {
+            organisationId: await organisationParDefaut(),
+            role: donnees.isAdmin ? 'ADMIN' : 'MEMBRE',
+            archiveLe: donnees.archive ? new Date() : null,
+          },
+        },
       },
     })
     ids[cle as keyof typeof ids] = id
@@ -136,7 +144,7 @@ describe('données personnelles', () => {
 })
 
 describe('session Better Auth', () => {
-  it('ferme les sessions à l’archivage', async () => {
+  it('garde la session à l’archivage, sans plus donner accès à l’organisation', async () => {
     const authDeTest = creerAuth([testUtils()])
     const { test } = (await authDeTest.$context) as unknown as {
       test: { getAuthHeaders(o: { userId: string }): Promise<Headers> }
@@ -155,15 +163,31 @@ describe('session Better Auth', () => {
       },
     })
     const entetes = await test.getAuthHeaders({ userId: cible })
-    expect((await auth.api.getSession({ headers: entetes }))?.user.id).toBe(
-      cible
-    )
+    const lire = () => executer(cible, '{ activites { id } }')
+    expect((await lire()).errors).toBeUndefined()
 
     await executer(
       ids.admin,
       'mutation ($id: ID!) { archiverPersonne(id: $id, archive: true) { id } }',
       { id: cible }
     )
-    expect(await auth.api.getSession({ headers: entetes })).toBeNull()
+    // L'archivage porte sur l'appartenance (ADR 0031) : la session demeure, pour
+    // que la personne puisse accepter l'invitation d'une autre organisation, mais
+    // l'organisation lui est fermée dès la requête suivante.
+    expect((await auth.api.getSession({ headers: entetes }))?.user.id).toBe(
+      cible
+    )
+    expect(codeErreur(await lire())).toBe('FORBIDDEN')
+    expect(
+      (await executer(cible, '{ moi { id } mesOrganisations { slug } }')).data
+    ).toEqual({ moi: { id: cible }, mesOrganisations: [] })
+
+    // Le rétablissement lui rend l'organisation.
+    await executer(
+      ids.admin,
+      'mutation ($id: ID!) { archiverPersonne(id: $id, archive: false) { id } }',
+      { id: cible }
+    )
+    expect((await lire()).errors).toBeUndefined()
   })
 })

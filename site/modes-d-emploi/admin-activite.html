@@ -59,8 +59,9 @@
           </p>
         </div>
         <nav class="verre sommaire" aria-label="Sommaire">
-          <span class="etiquette">Vos huit écrans</span>
+          <span class="etiquette">Vos neuf écrans</span>
           <ol>
+            <li><a href="#e-notifications-admin">Notifications d'admin</a> : les nouvelles de votre équipe, rangées par périmètre.</li>
             <li><a href="#e-equipe">Équipe</a> : effectifs, souhaits, affectations, réglage des périmètres et avancement de chaque périmètre.</li>
             <li><a href="#e-personnes">Personnes</a> : inviter votre équipe et traiter les demandes.</li>
             <li><a href="#e-messages">Messages</a> : écrire à votre équipe et relire les messages préparés.</li>
@@ -78,6 +79,21 @@
           <span class="etiquette">Vos écrans</span>
           <h2 id="t-ecrans">Ce que vous faites, écran par écran</h2>
         </div>
+
+        <article class="verre ecran" id="e-notifications-admin">
+          <div class="ecran-tete"><h3>Notifications d'admin</h3><span class="route">/&lt;activité&gt;/admin/notifications</span></div>
+          <p>Cet écran réunit les nouvelles de votre rôle d'admin, à part de la cloche. Il les range par activité, puis par périmètre. Chaque groupe porte son nombre de notifications non lues, et un groupe sans nouvelle s'ouvre replié. L'entrée du menu porte le même nombre.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Demandes et invitations</span></span><span>Une demande attend votre revue, un autre admin en a traité une, ou une personne a accepté une invitation. Une invitation refusée ou expirée ne donne aucune notification.</span></li>
+            <li><span><span class="libelle">Équipe</span></span><span>Un autre admin de l'activité affecte ou retire une personne, ou la nomme admin. Une personne formule un souhait dans « Tous les périmètres ».</span></li>
+            <li><span><span class="libelle">Tout lire</span></span><span>Marquer comme lues les notifications d'un groupe : une activité ou un seul périmètre.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/notifications-admin.webp" data-mobile="../captures/mobile/notifications-admin.webp" width="1440" height="900" loading="lazy" alt="Écran Notifications d'admin : une activité, puis le groupe Toute l'activité et un groupe par périmètre, chacun avec son nombre de non lues." />
+            <figcaption>Notifications d'admin, sur l'organisation d'exemple. Les personnes sont fictives.</figcaption>
+          </figure>
+          <p class="note">Une action ne vous prévient jamais de ce que vous avez fait vous-même. Vos préférences règlent ces nouvelles dans la section « Vos rôles d'admin » : leur affichage, leur place dans le résumé par mail et leur notification push.</p>
+        </article>
 
         <article class="verre ecran" id="e-equipe">
           <div class="ecran-tete"><h3>Équipe</h3><span class="route">/&lt;activité&gt;/admin/equipe</span></div>
@@ -280,7 +296,7 @@
           </article>
           <article class="verre panneau">
             <h3>Les comptes ne vous appartiennent pas</h3>
-            <p>Le nom, l'archivage et la restauration d'un compte relèvent des admins de l'organisation. Un compte est commun à toute l'organisation : une personne que vous invitez peut déjà y avoir un compte, que vous ne lisez pas avant son entrée dans votre équipe. Les organisations d'une même installation sont cloisonnées : un compte connu ailleurs n'entre dans la vôtre qu'avec l'accord de la personne.</p>
+            <p>L'archivage et la restauration d'une personne relèvent des admins de l'organisation. Chaque personne modifie son nom dans ses préférences. Un compte est commun à toute l'organisation : une personne que vous invitez peut déjà y avoir un compte, que vous ne lisez pas avant son entrée dans votre équipe. Les organisations d'une même installation sont cloisonnées : un compte connu ailleurs n'entre dans la vôtre qu'avec l'accord de la personne.</p>
           </article>
           <article class="verre panneau">
             <h3>L'identité de l'organisation vous échappe</h3>

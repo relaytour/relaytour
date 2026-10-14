@@ -619,29 +619,43 @@ function declarationDeLaLigne(
 /**
  * La configuration d'une organisation, en cache une minute : la ligne Organisation
  * en base si elle porte une déclaration valide, sinon l'amorçage de l'environnement.
- * Sans identifiant, la première organisation de l'installation (worker et scripts,
- * jusqu'à leur passage par organisation).
+ * Sans identifiant, l'unique organisation de l'installation. Une installation qui
+ * en porte plusieurs sert alors l'identité d'amorçage de l'environnement : un mail
+ * sans organisation désignée (le code de connexion d'un compte membre de plusieurs
+ * organisations, l'expéditeur du transport) ne prend le nom ni le logo d'aucune
+ * organisation, et surtout pas ceux d'une organisation dont la personne n'est pas
+ * membre (ADR 0030).
  */
+/** Clé de cache de l'identité d'amorçage : aucun identifiant d'organisation ne la vaut. */
+const CLE_NEUTRE = '\0neutre'
+
 export async function configurationOrganisation(
   organisationId?: string
 ): Promise<ConfigurationOrganisation> {
   const maintenant = Date.now()
-  const cle = organisationId ?? ''
-  const enCache = cache.get(cle)
-  if (enCache !== undefined && enCache.expire > maintenant)
-    return enCache.valeur
   // Imports paresseux : ce module est chargé par la validation de contenu, sans base ni .env.
   const [{ env }, { prisma }] = await Promise.all([
     import('../env.ts'),
     import('@relaytour/database'),
   ])
+  // Sans identifiant, le nombre d'organisations se relit à chaque appel, hors du
+  // cache : dès qu'une seconde organisation existe, l'API comme le worker cessent
+  // de servir l'identité de la première, sans attendre la fin d'une durée de cache.
+  const plusieurs =
+    organisationId === undefined && (await prisma.organisation.count()) > 1
+  const cle = plusieurs ? CLE_NEUTRE : (organisationId ?? '')
+  const enCache = cache.get(cle)
+  if (enCache !== undefined && enCache.expire > maintenant)
+    return enCache.valeur
   const selection = { id: true, slug: true, configuration: true } as const
   const ligne =
     organisationId === undefined
-      ? await prisma.organisation.findFirst({
-          orderBy: { createdAt: 'asc' },
-          select: selection,
-        })
+      ? plusieurs
+        ? null
+        : await prisma.organisation.findFirst({
+            orderBy: { createdAt: 'asc' },
+            select: selection,
+          })
       : await prisma.organisation.findUnique({
           where: { id: organisationId },
           select: selection,
@@ -649,7 +663,11 @@ export async function configurationOrganisation(
   const declaration =
     (ligne === null ? null : declarationDeLaLigne(ligne)) ??
     declarationDepuisEnv(env)
-  const valeur = resoudreConfiguration(env, declaration, ligne?.id ?? null)
+  const resolue = resoudreConfiguration(env, declaration, ligne?.id ?? null)
+  // L'identifiant d'adresse est celui de la ligne, que l'en-tête de l'espace
+  // organisateur désigne : une déclaration vide ou ancienne ne le change pas. Les
+  // liens des mails et du push choisissent ainsi la bonne organisation (ADR 0032).
+  const valeur = ligne === null ? resolue : { ...resolue, slug: ligne.slug }
   cache.set(cle, { valeur, expire: maintenant + DUREE_CACHE_MS })
   return valeur
 }

@@ -94,7 +94,14 @@ beforeAll(async () => {
         email: `${cle}-${s}@exemple.fr`,
         name: `${cle} ${s}`,
         isAdmin: estAdmin,
-        archivedAt: archive ? new Date() : null,
+        // L'archivage porte sur l'appartenance à l'organisation (ADR 0031).
+        appartenances: {
+          create: {
+            organisationId: ORGANISATION,
+            role: estAdmin ? 'ADMIN' : 'MEMBRE',
+            archiveLe: archive ? new Date() : null,
+          },
+        },
       },
     })
   }

@@ -4,6 +4,7 @@ import type {
   TypeNotification,
 } from '@relaytour/database'
 
+import { membreActif } from '../lib/appartenances.ts'
 import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import { journal } from '../lib/journal.ts'
@@ -75,7 +76,9 @@ export async function genererRappels(
       perimetreId: true,
       editionId: true,
       assignations: {
-        where: { user: { archivedAt: null } },
+        // Une personne archivée dans l'organisation ne reçoit plus ses rappels
+        // (ADR 0031).
+        where: { user: membreActif(organisation.id) },
         select: { userId: true },
       },
     },
@@ -98,7 +101,7 @@ export async function genererRappels(
         where: {
           perimetreId: tache.perimetreId,
           editionId: tache.editionId,
-          user: { archivedAt: null },
+          user: membreActif(organisation.id),
         },
         select: { userId: true },
       })
@@ -150,21 +153,6 @@ export async function genererRappels(
   return resultat
 }
 
-/** Date du dernier résumé d'une organisation, lue dans la colonne JSON des préférences. */
-export function dernierResumeDe(
-  preferences: { derniersResumes: unknown; dernierResumeLe: Date | null },
-  organisationId: string
-): Date | null {
-  const derniers = preferences.derniersResumes
-  if (typeof derniers === 'object' && derniers !== null) {
-    // Une organisation absente de la liste n'a jamais envoyé de résumé.
-    const valeur = (derniers as Record<string, unknown>)[organisationId]
-    return typeof valeur === 'string' ? new Date(valeur) : null
-  }
-  // Avant l'ADR 0008, une seule date par personne.
-  return preferences.dernierResumeLe
-}
-
 /**
  * Les membres d'une organisation qui reçoivent son résumé aujourd'hui : fréquence
  * quotidienne, ou hebdomadaire le lundi (valeur par défaut), et pas déjà servis
@@ -183,22 +171,23 @@ export async function personnesAResumer(
       weekday: 'short',
     }).format(maintenant) === 'Mon'
 
+  // Les préférences se lisent dans cette organisation (ADR 0032).
   const personnes = await prisma.user.findMany({
-    where: {
-      archivedAt: null,
-      appartenances: { some: { organisationId: organisation.id } },
+    where: membreActif(organisation.id),
+    select: {
+      id: true,
+      preferencesOrganisation: {
+        where: { organisationId: organisation.id },
+        select: { frequenceResume: true, dernierResumeLe: true },
+      },
     },
-    select: { id: true, preferences: true },
   })
   return personnes
-    .filter(({ preferences }) => {
+    .filter(({ preferencesOrganisation: [preferences] }) => {
       const frequence = preferences?.frequenceResume ?? 'HEBDOMADAIRE'
       if (frequence === 'AUCUN') return false
       if (frequence === 'HEBDOMADAIRE' && !lundi) return false
-      const dernier =
-        preferences === null
-          ? null
-          : dernierResumeDe(preferences, organisation.id)
+      const dernier = preferences?.dernierResumeLe ?? null
       return (
         dernier === null ||
         aujourdhui(dernier, organisation.fuseauHoraire) !== jour

@@ -94,11 +94,12 @@ async function creerCompte(cle: string, organisations: string[]) {
       appartenances: {
         create: organisations.map(organisationId => ({ organisationId })),
       },
-      preferences: {
-        create: {
-          organisationId: organisations[0]!,
-          frequenceResume: 'QUOTIDIEN',
-        },
+      // Un résumé quotidien dans chacune de ses organisations (ADR 0032).
+      preferencesOrganisation: {
+        create: organisations.map(organisationId => ({
+          organisationId,
+          frequenceResume: 'QUOTIDIEN' as const,
+        })),
       },
     },
   })
@@ -154,7 +155,7 @@ afterAll(async () => {
   await prisma.activite.deleteMany({
     where: { organisationId: { in: organisations } },
   })
-  await prisma.preferenceNotification.deleteMany({
+  await prisma.preferenceOrganisation.deleteMany({
     where: { organisationId: { in: organisations } },
   })
   await prisma.user.deleteMany({
@@ -248,11 +249,12 @@ describe('résumés par organisation', () => {
       )
     )
     await Promise.all([resumeA?.apresEnvoi?.(), resumeB?.apresEnvoi?.()])
-    const preferences = await prisma.preferenceNotification.findUniqueOrThrow({
-      where: { userId: ids.double },
-      select: { derniersResumes: true },
+    // Chaque organisation note son propre résumé (ADR 0032).
+    const notees = await prisma.preferenceOrganisation.findMany({
+      where: { userId: ids.double, dernierResumeLe: { not: null } },
+      select: { organisationId: true },
     })
-    expect(Object.keys(preferences.derniersResumes as object)).toEqual(
+    expect(notees.map(p => p.organisationId)).toEqual(
       expect.arrayContaining([ids.orgA, ids.orgB])
     )
   })
