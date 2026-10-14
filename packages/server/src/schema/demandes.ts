@@ -24,6 +24,7 @@ import { annoncerChangementEquipe } from '../lib/equipe.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { annoncerInvitation, inviterCompteExterne } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
+import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 import { adresseValide, rejouerSurDoublon, texteRequis } from '../lib/saisie.ts'
 import { perimetresSouhaitesValides, SOUHAITS_MAX } from '../lib/souhaits.ts'
 
@@ -563,6 +564,14 @@ builder.mutationFields(t => ({
           { organisationId, activiteId: demande.activiteId }
         )
       }
+      // Les autres admins de l'activité l'apprennent, sans le nom de la personne
+      // (ADR 0015 et 0033).
+      await notifierLesAdmins(prisma, {
+        type: 'DEMANDE_ACCEPTEE',
+        organisationId,
+        activiteId: demande.activiteId,
+        acteurId: ctx.personne!.id,
+      })
       // La file se relit, et l'équipe aussi : l'acceptation crée des affectations et
       // des souhaits.
       for (const entite of ['DEMANDE', 'EQUIPE'] as const) {
@@ -603,6 +612,12 @@ builder.mutationFields(t => ({
         },
         'Une demande a été refusée.'
       )
+      await notifierLesAdmins(prisma, {
+        type: 'DEMANDE_REFUSEE',
+        organisationId: ctx.organisation!.id,
+        activiteId: demande.activiteId,
+        acteurId: ctx.personne!.id,
+      })
       publierPourActivite('DEMANDE', ctx.organisation!.id, demande.activiteId, {
         editionId: demande.editionId,
       })

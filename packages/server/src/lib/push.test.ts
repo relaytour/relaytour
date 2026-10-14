@@ -10,7 +10,12 @@ import {
   pushAutorise,
 } from './push.ts'
 
-const tout = { pushTaches: true, pushEcheances: true, pushDemandes: true }
+const tout = {
+  pushTaches: true,
+  pushEcheances: true,
+  pushDemandes: true,
+  pushEquipe: false,
+}
 
 describe('famillePush', () => {
   it('range les types qui partent en push dans leur famille', () => {
@@ -21,6 +26,13 @@ describe('famillePush', () => {
     expect(famillePush('ECHEANCE_PROCHE')).toBe('echeances')
     expect(famillePush('TACHE_EN_RETARD')).toBe('echeances')
     expect(famillePush('DEMANDE_RECUE')).toBe('demandes')
+    expect(famillePush('INVITATION_ACCEPTEE')).toBe('demandes')
+    expect(famillePush('AFFECTATION_AJOUTEE')).toBe('equipe')
+    expect(famillePush('PERSONNE_ARCHIVEE')).toBe('equipe')
+  })
+
+  it('laisse la notification de place au mail d’équipe', () => {
+    expect(famillePush('PLACE_MODIFIEE')).toBeNull()
   })
 
   it('écarte ce qui s’annonce à tout un périmètre', () => {
@@ -45,10 +57,21 @@ describe('pushAutorise', () => {
       pushAutorise({ ...tout, pushEcheances: false }, 'TACHE_EN_RETARD')
     ).toBe(false)
     expect(
-      pushAutorise({ ...tout, pushDemandes: false }, 'DEMANDE_RECUE')
+      pushAutorise(
+        { ...tout, pushDemandes: false, pushEquipe: false },
+        'DEMANDE_RECUE'
+      )
     ).toBe(false)
     expect(
-      pushAutorise({ ...tout, pushDemandes: false }, 'ECHEANCE_PROCHE')
+      pushAutorise(
+        { ...tout, pushDemandes: false, pushEquipe: false },
+        'ECHEANCE_PROCHE'
+      )
+    ).toBe(true)
+    // Les nouvelles d'équipe des admins ne partent qu'après activation (ADR 0033).
+    expect(pushAutorise(tout, 'AFFECTATION_AJOUTEE')).toBe(false)
+    expect(
+      pushAutorise({ ...tout, pushEquipe: true }, 'AFFECTATION_AJOUTEE')
     ).toBe(true)
   })
 })
