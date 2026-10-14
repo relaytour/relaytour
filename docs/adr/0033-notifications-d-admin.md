@@ -8,7 +8,7 @@
 
 La cloche mêle aujourd'hui deux sortes de nouvelles. Les unes concernent le travail d'une référente ou d'un référent : ses tâches, ses périmètres, ses échéances. Les autres concernent la gestion d'une activité ou de l'organisation : les demandes pour rejoindre l'équipe et les invitations acceptées.
 
-Les admins reçoivent peu de nouvelles de gestion. Deux types seulement les concernent : `DEMANDE_RECUE` et `INVITATION_ACCEPTEE`. Ils n'apprennent pas qu'un autre admin a affecté une personne, qu'une personne a formulé un souhait ou qu'une invitation a expiré.
+Les admins reçoivent peu de nouvelles de gestion. Deux types seulement les concernent : `DEMANDE_RECUE` et `INVITATION_ACCEPTEE`. Ils n'apprennent pas qu'un autre admin a affecté une personne, ni qu'une personne a formulé un souhait.
 
 Un admin d'activité suit aussi beaucoup de périmètres, une vingtaine parfois. Une liste unique de notifications ne lui permet pas de voir quel périmètre demande son attention.
 
