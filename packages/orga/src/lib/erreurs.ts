@@ -1,9 +1,10 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 
 /**
- * Codes dont le serveur compose un message destiné à la personne. Une limite atteinte
- * et une organisation en lecture seule en font partie : leur message dit quoi faire
- * et cite l'hébergeur s'il est connu (ADR 0008).
+ * Codes dont le serveur compose un message destiné à la personne (ADR 0008). Le
+ * message d'une limite atteinte dit qui contacter : l'hébergeur s'il est connu,
+ * sinon un admin de l'organisation. Celui de la lecture seule rappelle ce qui reste
+ * possible : consulter et exporter.
  */
 const CODES_AU_MESSAGE_LISIBLE = new Set([
   'SAISIE_INVALIDE',

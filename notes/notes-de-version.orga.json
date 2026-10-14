@@ -42,7 +42,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "Un refus de limite ou de lecture seule affiche son motif",
-            "texte": "Quand votre organisation a atteint une limite d'activités ou de périodes ouvertes, ou quand elle est en lecture seule, l'espace organisateur affiche maintenant le motif du refus et la personne à contacter. Il affichait auparavant un message d'échec sans explication.",
+            "texte": "Quand votre organisation atteint une limite d'activités ou de périodes ouvertes, l'espace organisateur affiche maintenant le motif du refus. Il indique aussi qui contacter : l'hébergeur s'il est renseigné, sinon un admin de votre organisation. Quand votre organisation est en lecture seule, il rappelle que ses données restent consultables et exportables. Il affichait auparavant un message d'échec sans explication.",
             "migration": null
           }
         },
