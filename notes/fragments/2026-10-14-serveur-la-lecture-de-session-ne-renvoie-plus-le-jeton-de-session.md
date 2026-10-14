@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: public
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     La lecture de session ne renvoie plus le jeton de session

@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Les notifications se règlent par organisation et nomment leur activité

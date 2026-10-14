@@ -3,6 +3,7 @@ cible: serveur
 type: rupture
 audience: public
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Valkey exige un mot de passe et la pile tourne sur un réseau interne

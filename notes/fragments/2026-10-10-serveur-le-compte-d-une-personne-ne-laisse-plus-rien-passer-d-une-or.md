@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: public
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Le compte d'une personne ne laisse plus rien passer d'une organisation à l'autre

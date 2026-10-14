@@ -3,6 +3,7 @@ cible: serveur
 type: securite
 audience: public
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     La connexion ne révèle plus si une adresse a un compte

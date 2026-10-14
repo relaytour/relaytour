@@ -4,6 +4,7 @@ type: securite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Une adresse connue d'une autre organisation reçoit une invitation à accepter

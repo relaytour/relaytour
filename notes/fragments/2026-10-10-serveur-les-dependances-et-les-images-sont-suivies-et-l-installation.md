@@ -3,6 +3,7 @@ cible: serveur
 type: interne
 audience: interne
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Les dépendances et les images sont suivies, et l'installation n'exécute que les scripts autorisés

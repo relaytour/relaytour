@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Une installation peut plafonner ses mails par jour

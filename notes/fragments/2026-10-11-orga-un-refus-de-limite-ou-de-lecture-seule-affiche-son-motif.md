@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.17.0
 fr:
   titre: >-
     Un refus de limite ou de lecture seule affiche son motif
