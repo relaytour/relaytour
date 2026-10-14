@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-14-serveur-les-notifications-se-reglent-par-organisation-et-nomment-leu",
+          "date": "2026-10-14",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les notifications se règlent par organisation et nomment leur activité",
+            "texte": "Les préférences de notification se règlent désormais dans chaque organisation : couper le résumé dans l'une ne le coupe plus dans les autres. Les mails et les notifications push nomment l'organisation et l'activité, et leurs liens ouvrent la bonne organisation. Les admins reçoivent de nouvelles notifications sur leur équipe, à part de celles de leurs tâches. Avant un retour à une version antérieure, suivez la consigne d'`infra/README.md`.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-11-serveur-l-archivage-d-une-personne-ne-vaut-que-dans-son-organisation",
           "date": "2026-10-11",
           "type": "securite",

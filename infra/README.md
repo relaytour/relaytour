@@ -84,6 +84,12 @@ Une version récente peut écrire, dans la configuration d'une organisation, un 
 
 À partir de la version qui porte l'ADR 0031, l'archivage d'une personne se lit dans son appartenance à l'organisation. Le serveur tient aussi à jour l'ancienne colonne du compte, renseignée quand la personne n'a plus aucune appartenance active. Après un retour arrière, une version antérieure refuse donc encore ces personnes. Une personne archivée dans une organisation et active dans une autre retrouve en revanche son accès aux deux : restaurez la version récente sans tarder sur une installation qui porte plusieurs organisations.
 
+À partir de la version qui porte les ADR 0032 et 0033, les préférences de notification se lisent par organisation, dans une table nouvelle. L'ancienne table reste en base sans écriture : après un retour arrière, une personne y retrouve ses réglages d'avant la migration. Les nouvelles sortes de notification n'existent pas dans une version antérieure, qui ne sait pas les lire. Avant un retour arrière, supprimez donc ces notifications par la requête ci-dessous, sur une sauvegarde vérifiée.
+
+```sql
+DELETE FROM Notification WHERE type IN ('AFFECTATION_AJOUTEE', 'AFFECTATION_RETIREE', 'SOUHAIT_FORMULE', 'DEMANDE_ACCEPTEE', 'DEMANDE_REFUSEE', 'ADMIN_ACTIVITE_NOMME', 'ADMIN_ACTIVITE_RETIRE', 'ADMIN_ORGANISATION_NOMME', 'ADMIN_ORGANISATION_RETIRE', 'PERSONNE_ARCHIVEE', 'PERSONNE_RETABLIE', 'PLACE_MODIFIEE');
+```
+
 Les versions 0.12.1 et antérieures n'ont pas cette protection. Au démarrage, elles remplacent une configuration qu'elles ne lisent pas par les valeurs d'amorçage du `.env`. Avant de revenir d'une version 0.13 ou suivante à l'une d'elles, exportez le contenu de l'organisation (`orga-exporter`), ou retirez l'icône d'application dans l'écran « Organisation ».
 
 ### Notifications push

@@ -10,6 +10,7 @@ import { creerAffectations } from './affectations.ts'
 import { synchroniserArchivageDuCompte } from './appartenances.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
 import { publierNotification, publierPourActivite } from './flux.ts'
+import { niveauxDes } from './notifications.ts'
 import { journal } from './journal.ts'
 import { SOUHAITS_MAX } from './souhaits.ts'
 
@@ -322,11 +323,18 @@ export async function accepterInvitation(
           : []
     const destinataires = aPrevenir.filter(id => id !== userId)
     if (destinataires.length > 0) {
+      // Le niveau dit à quel titre la personne reçoit la nouvelle (ADR 0033).
+      const niveaux = await niveauxDes(
+        tx,
+        destinataires,
+        activites[0]?.activiteId ?? null
+      )
       await tx.notification.createMany({
         data: destinataires.map(destinataire => ({
           organisationId,
           userId: destinataire,
           type: 'INVITATION_ACCEPTEE' as const,
+          niveau: niveaux.get(destinataire) ?? 'ADMIN_ORGANISATION',
           acteurId: userId,
           activiteId: activites[0]?.activiteId ?? null,
         })),

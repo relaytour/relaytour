@@ -55,19 +55,20 @@ model Organisation {
   createdAt            DateTime           @default(now())
   updatedAt            DateTime           @updatedAt
 
-  activites       Activite[]
-  appartenances   Appartenance[]
-  editions        Edition[]
-  perimetres      Perimetre[]
-  fiches          Fiche[]
-  notifications   Notification[]
-  preferences     PreferenceNotification[]
-  droitsRedaction DroitRedaction[]
-  medias          Media[]
-  adminsActivite  AdminActivite[]
-  demandes        Demande[]
-  messages        Message[]
-  invitations     InvitationOrganisation[]
+  activites               Activite[]
+  appartenances           Appartenance[]
+  editions                Edition[]
+  perimetres              Perimetre[]
+  fiches                  Fiche[]
+  notifications           Notification[]
+  preferences             PreferenceNotification[]
+  preferencesOrganisation PreferenceOrganisation[]
+  droitsRedaction         DroitRedaction[]
+  medias                  Media[]
+  adminsActivite          AdminActivite[]
+  demandes                Demande[]
+  messages                Message[]
+  invitations             InvitationOrganisation[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -257,33 +258,34 @@ model User {
   // le sien.
   sansAppartenanceActiveLe DateTime? @map("archivedAt")
 
-  sessions            Session[]
-  accounts            Account[]
-  affectations        Affectation[]            @relation("AffectationUtilisateur")
-  affectationsCreees  Affectation[]            @relation("AffectationAuteur")
-  tachesCreees        Tache[]                  @relation("TacheAuteur")
-  commentaires        CommentaireTache[]       @relation("CommentaireAuteur")
-  tachesCloturees     Tache[]                  @relation("TacheCloture")
-  tachesRealisees     Tache[]                  @relation("TacheRealisation")
-  tachesAccordees     Tache[]                  @relation("TacheAccord")
-  versionsFiches      FicheVersion[]
-  droitsRedaction     DroitRedaction[]         @relation("DroitRedactionPersonne")
-  droitsAccordes      DroitRedaction[]         @relation("DroitRedactionAuteur")
-  notifications       Notification[]           @relation("NotificationDestinataire")
-  preferences         PreferenceNotification?
-  abonnementsPush     AbonnementPush[]
-  assignations        TacheAssignation[]
-  journal             Journal[]                @relation("JournalActeur")
-  souhaits            Souhait[]
-  appartenances       Appartenance[]
-  adminsActivite      AdminActivite[]
-  demandes            Demande[]                @relation("DemandeCompte")
-  demandesTraitees    Demande[]                @relation("DemandeTraitement")
-  propositions        DemandePerimetre[]
-  invitationsRecues   InvitationOrganisation[] @relation("InvitationRecue")
-  invitationsEnvoyees InvitationOrganisation[] @relation("InvitationEnvoyee")
-  messagesEcrits      Message[]                @relation("MessageAuteur")
-  messagesRecus       MessageDestinataire[]
+  sessions                Session[]
+  accounts                Account[]
+  affectations            Affectation[]            @relation("AffectationUtilisateur")
+  affectationsCreees      Affectation[]            @relation("AffectationAuteur")
+  tachesCreees            Tache[]                  @relation("TacheAuteur")
+  commentaires            CommentaireTache[]       @relation("CommentaireAuteur")
+  tachesCloturees         Tache[]                  @relation("TacheCloture")
+  tachesRealisees         Tache[]                  @relation("TacheRealisation")
+  tachesAccordees         Tache[]                  @relation("TacheAccord")
+  versionsFiches          FicheVersion[]
+  droitsRedaction         DroitRedaction[]         @relation("DroitRedactionPersonne")
+  droitsAccordes          DroitRedaction[]         @relation("DroitRedactionAuteur")
+  notifications           Notification[]           @relation("NotificationDestinataire")
+  preferences             PreferenceNotification?
+  preferencesOrganisation PreferenceOrganisation[]
+  abonnementsPush         AbonnementPush[]
+  assignations            TacheAssignation[]
+  journal                 Journal[]                @relation("JournalActeur")
+  souhaits                Souhait[]
+  appartenances           Appartenance[]
+  adminsActivite          AdminActivite[]
+  demandes                Demande[]                @relation("DemandeCompte")
+  demandesTraitees        Demande[]                @relation("DemandeTraitement")
+  propositions            DemandePerimetre[]
+  invitationsRecues       InvitationOrganisation[] @relation("InvitationRecue")
+  invitationsEnvoyees     InvitationOrganisation[] @relation("InvitationEnvoyee")
+  messagesEcrits          Message[]                @relation("MessageAuteur")
+  messagesRecus           MessageDestinataire[]
 }
 
 model Session {
@@ -885,15 +887,42 @@ enum TypeNotification {
   // Une personne a accepté l'invitation de l'organisation (ADR 0030). `acteurId`
   // la désigne ; `activiteId` porte l'activité de l'invitation, s'il y en a une.
   INVITATION_ACCEPTEE
+  // Notifications d'admin (ADR 0033). `acteurId` désigne l'admin qui a agi,
+  // `personneId` la personne concernée, `activiteId` et `perimetreId` le rangement.
+  AFFECTATION_AJOUTEE
+  AFFECTATION_RETIREE
+  // Une personne a formulé un souhait dans « Tous les périmètres » : elle est l'acteur.
+  SOUHAIT_FORMULE
+  // Une demande traitée par un autre admin. Elle ne nomme pas la personne (ADR 0015).
+  DEMANDE_ACCEPTEE
+  DEMANDE_REFUSEE
+  ADMIN_ACTIVITE_NOMME
+  ADMIN_ACTIVITE_RETIRE
+  ADMIN_ORGANISATION_NOMME
+  ADMIN_ORGANISATION_RETIRE
+  PERSONNE_ARCHIVEE
+  PERSONNE_RETABLIE
+  // La place d'une personne dans l'équipe a changé : elle accompagne le mail
+  // d'équipe (ADR 0012), pour la personne concernée.
+  PLACE_MODIFIEE
+}
+
+// À quel titre une personne reçoit une notification (ADR 0033). Le niveau
+// `REFERENT` reste dans la cloche ; les niveaux d'admin ont leur écran.
+enum NiveauNotification {
+  REFERENT
+  ADMIN_ACTIVITE
+  ADMIN_ORGANISATION
 }
 
 // Une notification ne stocke que des identifiants : le texte se compose à la lecture,
 // à partir des titres et des noms à jour.
 model Notification {
-  id             String           @id @default(cuid())
+  id             String             @id @default(cuid())
   organisationId String
   userId         String
   type           TypeNotification
+  niveau         NiveauNotification @default(REFERENT)
   acteurId       String?
   tacheId        String?
   perimetreId    String?
@@ -909,13 +938,13 @@ model Notification {
   // auteur : qui a coché reste réservé à la personne qui a coché et aux admins.
   statut         StatutTache?
   // Empêche de créer deux fois le même rappel (type, tâche, personne, échéance).
-  cle            String?          @unique
+  cle            String?            @unique
   lueLe          DateTime?
   // Date d'envoi du mail immédiat, s'il y en a eu un.
   envoyeeLe      DateTime?
   // Date d'inclusion dans un résumé par mail.
   resumeeLe      DateTime?
-  createdAt      DateTime         @default(now())
+  createdAt      DateTime           @default(now())
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   user         User         @relation("NotificationDestinataire", fields: [userId], references: [id], onDelete: Cascade)
@@ -926,6 +955,7 @@ model Notification {
   @@index([userId, lueLe, createdAt])
   @@index([userId, resumeeLe])
   @@index([organisationId])
+  @@index([userId, organisationId, niveau, lueLe])
 }
 
 enum FrequenceResume {
@@ -963,6 +993,38 @@ model PreferenceNotification {
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@index([organisationId])
+}
+
+// Préférences de notification d'une personne dans une organisation (ADR 0032 et
+// 0033). Sans ligne, les valeurs par défaut s'appliquent. Elles remplacent
+// `PreferenceNotification`, gardée sans écriture pour un retour à une version
+// antérieure.
+model PreferenceOrganisation {
+  userId               String
+  organisationId       String
+  frequenceResume      FrequenceResume @default(HEBDOMADAIRE)
+  // Vos tâches et vos périmètres.
+  mailModification     Boolean         @default(true)
+  mailEcheance         Boolean         @default(true)
+  applicationPerimetre Boolean         @default(true)
+  pushTaches           Boolean         @default(true)
+  pushEcheances        Boolean         @default(true)
+  // Vos rôles d'admin : demandes et invitations.
+  mailDemandes         Boolean         @default(true)
+  pushDemandes         Boolean         @default(true)
+  // Vos rôles d'admin : équipe (ADR 0033).
+  applicationEquipe    Boolean         @default(true)
+  pushEquipe           Boolean         @default(false)
+  // La section « Pour vos rôles d'admin » du résumé.
+  resumeAdmin          Boolean         @default(true)
+  dernierResumeLe      DateTime?
+  updatedAt            DateTime        @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@id([userId, organisationId])
   @@index([organisationId])
 }
 
