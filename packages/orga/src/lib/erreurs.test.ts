@@ -1,6 +1,53 @@
+import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { dateCourte, jourDeLInstant } from './erreurs'
+import { dateCourte, jourDeLInstant, messageErreur } from './erreurs'
+
+function erreurGraphQL(message: string, code: string) {
+  return new CombinedGraphQLErrors({
+    errors: [{ message, extensions: { code } }],
+  })
+}
+
+describe('messageErreur', () => {
+  it('affiche le motif d’une limite atteinte, avec le contact de l’hébergeur', () => {
+    const message =
+      'Votre organisation a atteint sa limite d’activités. Contactez votre hébergeur : https://hebergeur.exemple.org.'
+    expect(messageErreur(erreurGraphQL(message, 'LIMITE_ATTEINTE'))).toBe(
+      message
+    )
+  })
+
+  it('affiche le motif d’un refus en lecture seule', () => {
+    const message =
+      'Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier.'
+    expect(messageErreur(erreurGraphQL(message, 'LECTURE_SEULE'))).toBe(message)
+  })
+
+  it('affiche le message d’une saisie invalide et d’un conflit de version', () => {
+    expect(
+      messageErreur(erreurGraphQL('Le nom est obligatoire.', 'SAISIE_INVALIDE'))
+    ).toBe('Le nom est obligatoire.')
+    expect(
+      messageErreur(erreurGraphQL('Version dépassée.', 'CONFLIT_VERSION'))
+    ).toBe('Version dépassée.')
+  })
+
+  it('remplace un refus d’accès par un message fixe', () => {
+    expect(messageErreur(erreurGraphQL('détail interne', 'FORBIDDEN'))).toBe(
+      'Vous n’avez pas accès à cette action.'
+    )
+  })
+
+  it('ne montre jamais le message d’une erreur interne ou inconnue', () => {
+    const generique = 'L’opération a échoué. Réessayez dans un instant.'
+    expect(
+      messageErreur(erreurGraphQL('détail interne', 'INTERNAL_SERVER_ERROR'))
+    ).toBe(generique)
+    expect(messageErreur(new Error('réseau'))).toBe(generique)
+    expect(messageErreur(undefined)).toBe(generique)
+  })
+})
 
 describe('dateCourte', () => {
   it('formate une date sans heure telle qu’elle est écrite', () => {

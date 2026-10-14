@@ -1,12 +1,27 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 
+/**
+ * Codes dont le serveur compose un message destiné à la personne (ADR 0008). Le
+ * message d'une limite atteinte dit qui contacter : l'hébergeur s'il est connu,
+ * sinon un admin de l'organisation. Celui de la lecture seule rappelle ce qui reste
+ * possible : consulter et exporter.
+ */
+const CODES_AU_MESSAGE_LISIBLE = new Set([
+  'SAISIE_INVALIDE',
+  'CONFLIT_VERSION',
+  'LIMITE_ATTEINTE',
+  'LECTURE_SEULE',
+])
+
 /** Message lisible pour une erreur GraphQL ou réseau. */
 export function messageErreur(erreur: unknown): string {
   if (CombinedGraphQLErrors.is(erreur)) {
     const premiere = erreur.errors[0]
+    const code = premiere?.extensions?.code
     if (
-      premiere?.extensions?.code === 'SAISIE_INVALIDE' ||
-      premiere?.extensions?.code === 'CONFLIT_VERSION'
+      premiere !== undefined &&
+      typeof code === 'string' &&
+      CODES_AU_MESSAGE_LISIBLE.has(code)
     )
       return premiere.message
     if (premiere?.extensions?.code === 'FORBIDDEN') {
