@@ -10,6 +10,7 @@ import {
   Input,
   InputNumber,
   Modal,
+  Radio,
   Row,
   Select,
   Switch,
@@ -24,7 +25,7 @@ import ChampImage from '../../composants/ChampImage'
 import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
-import type { NatureActivite } from '../../gql/graphql'
+import type { AdressesOrganigramme, NatureActivite } from '../../gql/graphql'
 import { formesPeriode, useActivite, type Activite } from '../../lib/activite'
 import { messageErreur } from '../../lib/erreurs'
 import { useOrganisation } from '../../lib/organisation'
@@ -73,6 +74,7 @@ const MODIFIER = graphql(`
     $souhaitsOuverts: Boolean
     $formulaire: FormulaireInput
     $formulaireOuvert: Boolean
+    $adressesOrganigramme: AdressesOrganigramme
   ) {
     modifierActivite(
       id: $id
@@ -86,6 +88,7 @@ const MODIFIER = graphql(`
       souhaitsOuverts: $souhaitsOuverts
       formulaire: $formulaire
       formulaireOuvert: $formulaireOuvert
+      adressesOrganigramme: $adressesOrganigramme
     ) {
       id
     }
@@ -178,6 +181,8 @@ interface Valeurs {
   phases: Phase[]
   archive: boolean
   souhaitsOuverts: boolean
+  // Adresses de l'organigramme (ADR 0035).
+  adressesOrganigramme: AdressesOrganigramme
   // Formulaire public pour rejoindre l'équipe (ADR 0015).
   formulaireOuvert: boolean
   introduction?: string
@@ -258,6 +263,7 @@ export default function Activites() {
             phases: [],
             archive: false,
             souhaitsOuverts: false,
+            adressesOrganigramme: 'AUCUNE',
             formulaireOuvert: false,
             introduction: '',
             question: '',
@@ -278,6 +284,7 @@ export default function Activites() {
             phases: activite.phases.map(p => ({ ...p })),
             archive: activite.archive,
             souhaitsOuverts: activite.souhaitsOuverts,
+            adressesOrganigramme: activite.adressesOrganigramme,
             formulaireOuvert: activite.formulaireOuvert,
             introduction: activite.formulaire.introduction ?? '',
             question: activite.formulaire.question ?? '',
@@ -361,6 +368,7 @@ export default function Activites() {
             ordre: v.ordre,
             archive: v.archive === enEdition.archive ? null : v.archive,
             souhaitsOuverts: v.souhaitsOuverts,
+            adressesOrganigramme: v.adressesOrganigramme,
             formulaire: {
               introduction: v.introduction ?? '',
               question: v.question ?? '',
@@ -791,6 +799,40 @@ export default function Activites() {
               extra="Tous les membres de l’organisation découvrent les périmètres dans « Tous les périmètres » et formulent leurs souhaits. Les tâches et les fiches restent réservées aux personnes affectées."
             >
               <Switch />
+            </Form.Item>
+          )}
+          {enEdition !== 'nouvelle' && (
+            <Form.Item
+              className="rt-choix"
+              label="Adresses dans l’organigramme"
+              name="adressesOrganigramme"
+              extra="Une adresse s’affiche seulement si la personne l’accepte dans ses préférences. Seules les personnes de l’activité la lisent."
+            >
+              <Radio.Group>
+                <Radio value="AUCUNE">
+                  <span className="rt-choix-titre">Aucune</span>
+                  <span className="rt-choix-detail">
+                    L’organigramme montre les noms et le contact de l’activité.
+                  </span>
+                </Radio>
+                <Radio value="CONTACTS">
+                  <span className="rt-choix-titre">
+                    Admins et contacts principaux
+                  </span>
+                  <span className="rt-choix-detail">
+                    Les personnes à solliciter en premier.
+                  </span>
+                </Radio>
+                <Radio value="REFERENTS">
+                  <span className="rt-choix-titre">
+                    Toute l’équipe des périmètres
+                  </span>
+                  <span className="rt-choix-detail">
+                    Les admins, les contacts principaux, les référentes et les
+                    référents.
+                  </span>
+                </Radio>
+              </Radio.Group>
             </Form.Item>
           )}
           {enEdition !== null && enEdition !== 'nouvelle' && (

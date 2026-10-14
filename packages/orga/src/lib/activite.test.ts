@@ -18,6 +18,7 @@ const activite = (slug: string, options: Partial<Activite> = {}): Activite => ({
   archive: false,
   estAdministree: false,
   souhaitsOuverts: false,
+  adressesOrganigramme: 'AUCUNE',
   formulaireOuvert: false,
   formulaire: { introduction: null, question: null, paliers: [] },
   acces: 'COMPLET',

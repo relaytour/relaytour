@@ -20,6 +20,7 @@ import Fiche from './pages/Fiche'
 import FicheEditeur from './pages/FicheEditeur'
 import Fiches from './pages/Fiches'
 import MonEspace from './pages/MonEspace'
+import Organigramme from './pages/Organigramme'
 import Perimetre from './pages/Perimetre'
 import Preferences from './pages/Preferences'
 import Rejoindre from './pages/Rejoindre'
@@ -41,6 +42,8 @@ const routeur = createBrowserRouter([
     element: <Coquille />,
     children: [
       { path: 'perimetres', element: <TousLesPerimetres /> },
+      // L'organigramme se lit aussi en découverte (ADR 0035).
+      { path: 'organigramme', element: <Organigramme /> },
       { path: 'preferences', element: <Preferences /> },
       // Les écrans de l'équipe : une personne qui découvre l'activité (ADR 0012)
       // est menée à « Tous les périmètres ».

@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
 import PreferenceMessagerie from '../composants/PreferenceMessagerie'
+import PreferenceOrganigramme from '../composants/PreferenceOrganigramme'
 import PreferencePush from '../composants/PreferencePush'
 import { Avatar } from '../composants/Personne'
 import Titre from '../composants/Titre'
@@ -443,6 +444,7 @@ export default function Preferences() {
             administre={administre}
             requeteARelire={PREFERENCES}
           />
+          <PreferenceOrganigramme />
           {/* Seuls les admins écrivent un message (ADR 0020). */}
           {(administre || session?.moi?.estAdmin) && <PreferenceMessagerie />}
         </DeuxColonnes>

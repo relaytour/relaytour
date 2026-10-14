@@ -34,6 +34,8 @@ const VUES_DES_PERIMETRES = [
   'MenuPerimetres',
   'TousLesPerimetres',
   'PostesAPourvoir',
+  // Les affectations, les contacts principaux et les accords (ADR 0035).
+  'Organigramme',
 ] as const
 
 /**

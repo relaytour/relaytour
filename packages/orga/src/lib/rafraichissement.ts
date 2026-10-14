@@ -58,6 +58,7 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   // Périmètres et équipe.
   'MenuPerimetres',
   'TousLesPerimetres',
+  'Organigramme',
   'PostesAPourvoir',
   'Demandes',
   'DemandesEnAttente',
