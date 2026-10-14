@@ -2,9 +2,11 @@ import type { PrismaClient } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
 
+import { membreActif } from './appartenances.ts'
 import { aujourdhui } from './droits.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { publierNotification } from './flux.ts'
+import { niveauxDes } from './notifications.ts'
 import { pousser } from './push-file.ts'
 import { journal } from './journal.ts'
 
@@ -58,23 +60,22 @@ export function fenetreDemandes(maintenant = Date.now()): {
 
 /**
  * Les personnes à prévenir d'une demande : les admins de l'activité, sinon ceux de
- * l'organisation. Un compte archivé ne reçoit rien.
+ * l'organisation. Une personne archivée dans l'organisation ne reçoit rien (ADR 0031).
  */
 export async function adminsAPrevenir(
   prisma: PrismaClient,
   organisationId: string,
   activiteId: string
 ): Promise<string[]> {
-  const actif = { archivedAt: null }
   const deLActivite = await prisma.adminActivite.findMany({
-    where: { activiteId, organisationId, user: actif },
+    where: { activiteId, organisationId, user: membreActif(organisationId) },
     select: { userId: true },
   })
   const admins =
     deLActivite.length > 0
       ? deLActivite
       : await prisma.appartenance.findMany({
-          where: { organisationId, role: 'ADMIN', user: actif },
+          where: { organisationId, role: 'ADMIN', archiveLe: null },
           select: { userId: true },
         })
   return admins.map(a => a.userId)
@@ -119,6 +120,8 @@ export async function signalerDemande(
     })
     const jour = aujourdhui(maintenant, fuseauHoraire)
     const fenetre = fenetreDemandes(maintenant.getTime())
+    // Le niveau dit à quel titre l'admin reçoit la demande (ADR 0033).
+    const niveaux = await niveauxDes(prisma, admins, activiteId)
     for (const userId of admins) {
       if (userId === acteurId) continue
       // BullMQ refuse « : » dans un identifiant de job. Le worker relit la
@@ -139,6 +142,7 @@ export async function signalerDemande(
             organisationId,
             userId,
             type: 'DEMANDE_RECUE',
+            niveau: niveaux.get(userId) ?? 'ADMIN_ORGANISATION',
             acteurId: acteurId ?? null,
             activiteId,
             cle: `DEMANDE_RECUE-${activiteId}-${userId}-${jour}`,

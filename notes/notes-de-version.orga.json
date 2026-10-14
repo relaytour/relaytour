@@ -8,6 +8,32 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-14-orga-les-notifications-d-admin-ont-leur-ecran",
+          "date": "2026-10-14",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les notifications d'admin ont leur écran",
+            "texte": "L'écran « Notifications d'admin », en tête du menu de gestion, réunit les demandes, les invitations acceptées et les nouvelles de votre équipe. Il les range par activité, puis par périmètre, avec un nombre de non lues pour chaque groupe. Vous apprenez ainsi qu'un autre admin a affecté ou nommé une personne, ou qu'une personne a formulé un souhait. Vos préférences règlent ces nouvelles dans une section « Vos rôles d'admin ».",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-14-orga-la-cloche-range-les-notifications-par-activite",
+          "date": "2026-10-14",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La cloche range les notifications par activité",
+            "texte": "La cloche compte les notifications de l'organisation affichée. Son tiroir les range par activité, en groupes repliables qui portent chacun leur nombre de non lues. Chaque notification affiche son périmètre au-dessus de son texte. Un encadré signale les nouvelles de vos autres organisations : chacune s'ouvre dans un nouvel onglet. Les préférences de notification se règlent désormais dans chaque organisation.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-11-orga-un-refus-de-limite-ou-de-lecture-seule-affiche-son-motif",
           "date": "2026-10-11",
           "type": "correctif",
@@ -17,6 +43,19 @@
           "fr": {
             "titre": "Un refus de limite ou de lecture seule affiche son motif",
             "texte": "Quand votre organisation a atteint une limite d'activités ou de périodes ouvertes, ou quand elle est en lecture seule, l'espace organisateur affiche maintenant le motif du refus et la personne à contacter. Il affichait auparavant un message d'échec sans explication.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-11-orga-chaque-personne-modifie-son-nom-dans-ses-preferences",
+          "date": "2026-10-11",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque personne modifie son nom dans ses préférences",
+            "texte": "Le panneau « Votre compte » des préférences porte le bouton « Modifier mon nom ». Ce nom s'affiche dans toutes vos organisations. Un admin de l'organisation corrige encore le nom d'une personne tant qu'elle ne s'est jamais connectée. L'annuaire parle de « personnes archivées » : archiver une personne ferme son accès à votre organisation, et elle garde son compte.",
             "migration": null
           }
         },

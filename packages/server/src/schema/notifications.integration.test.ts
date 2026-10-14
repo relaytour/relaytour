@@ -171,7 +171,7 @@ afterAll(async () => {
   await prisma.perimetre.deleteMany({
     where: { id: { in: [ids.natation, ids.basket] } },
   })
-  await prisma.preferenceNotification.deleteMany({
+  await prisma.preferenceOrganisation.deleteMany({
     where: { userId: { in: users } },
   })
   await prisma.user.deleteMany({ where: { id: { in: users } } })
@@ -215,7 +215,7 @@ describe('notifications de collaboration', () => {
       n => n.message
     )
     expect(messages).toContain(
-      'Bruno s’occupe de la tâche « Réserver la piscine » (Natation).'
+      'Bruno s’occupe de la tâche « Réserver la piscine ».'
     )
   })
 
@@ -330,12 +330,15 @@ describe('rappels d’échéance', () => {
       userId: ids.bruno,
       notificationIds,
     })
-    expect(message?.texte).toContain(
-      '- La tâche « Commander les bonnets » (Natation) arrive à échéance dans 7 jours.'
+    // Sous l'intertitre de l'activité, la ligne nomme le périmètre, et la période
+    // quand l'activité en a plusieurs d'ouvertes : la base partagée du poste en a
+    // plusieurs, celle de la CI une seule (ADR 0032).
+    expect(message?.texte).toMatch(
+      /- La tâche « Commander les bonnets » \((?:Essai [^,]+, )?Natation\) arrive à échéance dans 7 jours\./
     )
-    expect(message?.desabonnement).toMatch(/\/preferences$/)
+    expect(message?.desabonnement).toMatch(/\/preferences\?organisation=/)
 
-    await prisma.preferenceNotification.create({
+    await prisma.preferenceOrganisation.create({
       data: {
         organisationId: ORGANISATION,
         userId: ids.bruno,
@@ -357,8 +360,13 @@ describe('résumés', () => {
   const mardi = new Date('2027-08-10T05:00:00Z')
 
   it('choisit les personnes selon leur fréquence et le jour', async () => {
-    await prisma.preferenceNotification.upsert({
-      where: { userId: ids.chloe },
+    await prisma.preferenceOrganisation.upsert({
+      where: {
+        userId_organisationId: {
+          userId: ids.chloe,
+          organisationId: ORGANISATION,
+        },
+      },
       update: { frequenceResume: 'QUOTIDIEN' },
       create: {
         organisationId: ORGANISATION,
@@ -366,8 +374,13 @@ describe('résumés', () => {
         frequenceResume: 'QUOTIDIEN',
       },
     })
-    await prisma.preferenceNotification.upsert({
-      where: { userId: ids.david },
+    await prisma.preferenceOrganisation.upsert({
+      where: {
+        userId_organisationId: {
+          userId: ids.david,
+          organisationId: ORGANISATION,
+        },
+      },
       update: { frequenceResume: 'AUCUN' },
       create: {
         organisationId: ORGANISATION,
@@ -514,10 +527,10 @@ describe('activité du périmètre pour les autres référent·es', () => {
     const lien = `/${await slugActivite()}/perimetres/natation-${s}?edition=${ids.edition}&tache=${tacheId}`
     const recus = await messages(ids.chloe)
     expect(recus).toContain(
-      `Bruno a commencé la tâche « Louer le grand bassin » (Natation). → ${lien}`
+      `Bruno a commencé la tâche « Louer le grand bassin ». → ${lien}`
     )
     expect(recus).toContain(
-      `La tâche « Louer le grand bassin » (Natation) est faite. → ${lien}`
+      `La tâche « Louer le grand bassin » est faite. → ${lien}`
     )
     // La notification ne garde pas l'auteur du passage à « faite », pas même dans
     // sa clé d'unicité.
@@ -534,7 +547,7 @@ describe('activité du périmètre pour les autres référent·es', () => {
     })
     expect(pourAlice).toMatchObject({ type: 'TACHE_STATUT', acteurId: null })
     expect(await messages(ids.alice)).toContain(
-      `La tâche « Louer le grand bassin » (Natation) est faite. → ${lien}`
+      `La tâche « Louer le grand bassin » est faite. → ${lien}`
     )
     const mailFaite = enFile.find(
       m =>
@@ -595,10 +608,10 @@ describe('activité du périmètre pour les autres référent·es', () => {
     const lien = `/${await slugActivite()}/fiches/${slugFiche}`
     const recus = await messages(ids.bruno)
     expect(recus).toContain(
-      `Alice a créé la fiche « Préparer le bassin » (Natation). → ${lien}`
+      `Alice a créé la fiche « Préparer le bassin ». → ${lien}`
     )
     expect(recus).toContain(
-      `Alice a modifié la fiche « Préparer le bassin » (Natation). → ${lien}`
+      `Alice a modifié la fiche « Préparer le bassin ». → ${lien}`
     )
   })
 

@@ -5,8 +5,10 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import type { AppContext } from '../context.ts'
+import { abonnerAppareil } from '../lib/abonnements.ts'
 import { notifier, notifierLePerimetre } from '../lib/notifications.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
+import { empreinteAdresse } from '../lib/push.ts'
 import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 
 import { schema } from './index.ts'
@@ -202,6 +204,44 @@ describe('abonnement push', () => {
       (await executer(ids.bruno, DESABONNER, { adresse: ADRESSE })).data
     ).toEqual({ desabonnerPush: false })
     expect(await abonnementsDe(ids.alice)).toHaveLength(1)
+  })
+
+  it('ne garde qu’un compte par appareil', async () => {
+    // Un autre compte s'abonne sur le même appareil : l'abonnement que le premier
+    // y avait laissé est retiré, et ses notifications n'y arrivent plus.
+    const variables = { adresse: ADRESSE, ...CLES }
+    expect(
+      (await executer(ids.bruno, ABONNER, variables)).errors
+    ).toBeUndefined()
+    expect(await abonnementsDe(ids.alice)).toHaveLength(0)
+    expect(await abonnementsDe(ids.bruno)).toHaveLength(1)
+    expect(
+      (await executer(ids.alice, ABONNER, variables)).errors
+    ).toBeUndefined()
+    expect(await abonnementsDe(ids.bruno)).toHaveLength(0)
+    expect(await abonnementsDe(ids.alice)).toHaveLength(1)
+  })
+
+  it('ne garde qu’un compte quand deux comptes s’abonnent ensemble sur le même appareil', async () => {
+    const empreinte = empreinteAdresse(ADRESSE)
+    const donnees = { adresse: ADRESSE, ...CLES, appareil: 'iPhone' }
+    for (let tour = 0; tour < 8; tour += 1) {
+      // La course n'existe que sur un appareil sans abonnement : chaque compte ne
+      // trouve alors rien à retirer avant d'écrire le sien.
+      await prisma.abonnementPush.deleteMany({ where: { empreinte } })
+      await Promise.all(
+        [ids.alice, ids.bruno].map(userId =>
+          abonnerAppareil(prisma, userId, empreinte, donnees)
+        )
+      )
+      expect(await prisma.abonnementPush.count({ where: { empreinte } })).toBe(
+        1
+      )
+    }
+    // Le dernier mot revient à Alice, pour la suite du fichier.
+    await abonnerAppareil(prisma, ids.alice, empreinte, donnees)
+    expect(await abonnementsDe(ids.alice)).toHaveLength(1)
+    expect(await abonnementsDe(ids.bruno)).toHaveLength(0)
   })
 
   it('retire l’abonnement à la demande de sa personne', async () => {

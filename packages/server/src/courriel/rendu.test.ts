@@ -50,6 +50,26 @@ describe('gabarits', () => {
     expect(texte.split('\n')[0]).toBe('Les Rencontres')
   })
 
+  it('place chaque liste sous son intertitre, échappé', () => {
+    const { html, texte } = rendre(
+      'rappels-echeance',
+      {
+        rappels: [
+          { titre: 'Rencontres', elements: ['La tâche « A » <b> (Natation).'] },
+          { titre: 'Club & co', elements: ['La tâche « B » (Bassin).'] },
+        ],
+        lienConnexion: 'https://orga.exemple.org/',
+        lienPreferences: 'https://orga.exemple.org/preferences',
+      },
+      ORGANISATION
+    )
+    expect(html).toContain('>Rencontres</p><ul')
+    expect(html).toContain('Club &amp; co')
+    expect(html).toContain('&lt;b&gt;')
+    expect(texte).toContain('Rencontres\n- La tâche « A » <b> (Natation).')
+    expect(texte).toContain('Club & co\n- La tâche « B » (Bassin).')
+  })
+
   it('refuse un logo qui n’a pas une adresse https', () => {
     expect(() =>
       rendre('essai', {}, { ...ORGANISATION, logoUrl: 'javascript:alert(1)' })

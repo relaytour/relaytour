@@ -64,7 +64,12 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
     'PostesAPourvoir',
     'MesPropositions',
   ],
-  NOTIFICATION: ['NombreNotificationsNonLues', 'ListeNotifications'],
+  NOTIFICATION: [
+    'NombreNotificationsNonLues',
+    'ListeNotifications',
+    'NombreNotificationsAdmin',
+    'ListeNotificationsAdmin',
+  ],
   // L'historique des messages (ADR 0020), lu par les admins.
   MESSAGE: ['Messages'],
 }

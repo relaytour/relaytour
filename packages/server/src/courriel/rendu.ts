@@ -10,7 +10,13 @@ export interface Rendu {
   texte: string
 }
 
-export type Variables = Record<string, string | string[]>
+/** Une liste sous un intertitre : les rappels et le résumé, par activité (ADR 0032). */
+export interface GroupeDeListe {
+  titre: string
+  elements: string[]
+}
+
+export type Variables = Record<string, string | string[] | GroupeDeListe[]>
 
 /** Ce que l'organisation apporte à chaque mail : son nom court, son logo et ses couleurs. */
 export interface VariablesOrganisation {
@@ -30,7 +36,8 @@ const COULEUR = /^#[0-9A-F]{6}$/i
  * et laissées telles quelles dans la partie texte.
  *
  * Une valeur de type tableau devient une liste : `<ul>` dans la partie HTML, lignes
- * « - » dans la partie texte. Chaque élément est échappé séparément.
+ * « - » dans la partie texte. Chaque élément est échappé séparément. Une liste de
+ * groupes place chaque liste sous son intertitre.
  */
 export function rendre(
   nom: NomGabarit,
@@ -75,30 +82,42 @@ export function rendre(
       ? echapperHtml(organisation.organisation)
       : `<img src="${echapperHtml(organisation.logoUrl)}" alt="${echapperHtml(organisation.organisation)}" height="48" style="display:inline-block;height:48px;max-width:200px;border:0" />`
   const toutes: Variables = { ...organisation, ...variables }
+  const estGroupee = (v: string[] | GroupeDeListe[]): v is GroupeDeListe[] =>
+    v.length > 0 && typeof v[0] !== 'string'
   const poser = (
     source: string,
     texte: (v: string) => string,
-    liste: (v: string[]) => string
+    liste: (v: string[]) => string,
+    groupes: (v: GroupeDeListe[]) => string
   ): string =>
     source.replaceAll(/\{\{(\w+)\}\}/g, (_m, cle: string) => {
       if (cle === 'marque')
         return texte === echapperHtml ? marque : organisation.organisation
       const valeur = toutes[cle] ?? ''
-      return typeof valeur === 'string' ? texte(valeur) : liste(valeur)
+      if (typeof valeur === 'string') return texte(valeur)
+      return estGroupee(valeur) ? groupes(valeur) : liste(valeur)
     })
+  const listeHtml = (elements: string[]) =>
+    `<ul style="margin:0;padding-left:20px">${elements
+      .map(e => `<li style="margin:0 0 8px">${echapperHtml(e)}</li>`)
+      .join('')}</ul>`
+  const listeTexte = (elements: string[]) =>
+    elements.map(e => `- ${e}`).join('\n')
   return {
-    html: poser(
-      gabarit.html,
-      echapperHtml,
-      elements =>
-        `<ul style="margin:0;padding-left:20px">${elements
-          .map(e => `<li style="margin:0 0 8px">${echapperHtml(e)}</li>`)
-          .join('')}</ul>`
+    html: poser(gabarit.html, echapperHtml, listeHtml, groupes =>
+      groupes
+        .map(
+          g =>
+            `<p style="margin:12px 0 6px;font-weight:700">${echapperHtml(g.titre)}</p>${listeHtml(g.elements)}`
+        )
+        .join('')
     ),
     texte: poser(
       gabarit.texte,
       v => v,
-      elements => elements.map(e => `- ${e}`).join('\n')
+      listeTexte,
+      groupes =>
+        groupes.map(g => `${g.titre}\n${listeTexte(g.elements)}`).join('\n\n')
     ),
   }
 }

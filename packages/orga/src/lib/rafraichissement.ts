@@ -66,9 +66,12 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   // Invitations entre organisations (ADR 0030).
   'InvitationsEnAttente',
   'MesInvitations',
-  // Cloche.
+  // Cloche et notifications d'admin (ADR 0032 et 0033).
   'NombreNotificationsNonLues',
   'ListeNotifications',
+  'NombreNotificationsAdmin',
+  'ListeNotificationsAdmin',
+  'NotificationsAutresOrganisations',
 ])
 
 /** Délai entre deux relectures périodiques. */

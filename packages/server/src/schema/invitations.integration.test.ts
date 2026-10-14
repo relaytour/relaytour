@@ -273,7 +273,7 @@ beforeEach(async () => {
   // Les relances sont limitées à une par heure et par personne.
   const { connection } = await import('../jobs/queues.ts')
   for (const cle of ['zoe', 'yann'] as const) {
-    await connection.del(`limite:relance-invitation:${ids[cle]}`)
+    await connection.del(`limite:relance-invitation:${ids.orgA}:${ids[cle]}`)
   }
 })
 
@@ -488,7 +488,9 @@ describe('ce que la personne invitée lit et décide', () => {
       organisationId: ids.orgA,
       activiteId: ids.a1,
     })
-    expect(message?.sujet).toContain('vous invite')
+    expect(message?.sujet).toContain(
+      'invitation à rejoindre l’espace organisateur'
+    )
     expect(message?.texte).toContain('vous acceptez ou refusez')
     expect(message?.texte).toContain('natation (Période a1)')
     expect(message?.texte).not.toContain('vous a ouvert un accès')
@@ -529,15 +531,19 @@ describe('ce que la personne invitée lit et décide', () => {
     expect(code(await executer(ids.zoe, slugB, ACCEPTER, { id }))).toBe(
       'FORBIDDEN'
     )
+    // L'acceptation est une notification d'admin (ADR 0033) : elle quitte la cloche
+    // pour l'écran des admins.
     const notifications = await executer(
       ids.adminA1,
       slugA,
-      'query { notifications { type message } }'
+      'query { cloche: notifications { type } admin: notifications(admin: true) { type niveau message } }'
     )
     expect(notifications.data).toEqual({
-      notifications: [
+      cloche: [],
+      admin: [
         {
           type: 'INVITATION_ACCEPTEE',
+          niveau: 'ADMIN_ACTIVITE',
           message: `${NOM_DU_COMPTE} a accepté l’invitation et rejoint l’organisation.`,
         },
       ],

@@ -17,16 +17,17 @@ import {
   roleDuModeDEmploi,
 } from '../lib/modes-d-emploi.ts'
 import {
-  messageNotification,
-  preferencesDe,
-  SELECTION_ACTIVITE_NOTIFIEE,
-  SELECTION_FICHE_NOTIFIEE,
-  SELECTION_TACHE_NOTIFIEE,
-  type NotificationAComposer,
-} from '../lib/notifications.ts'
+  avecOrganisation,
+  composerNotifications,
+  grouperParActivite,
+  SELECTION_NOTIFICATION,
+} from '../lib/composition-notifications.ts'
+import { preferencesDe } from '../lib/notifications.ts'
+import { filtreNotificationsAdmin } from '../lib/notifications-admin.ts'
 import {
   configurationActivite,
   configurationOrganisation,
+  type ConfigurationActivite,
   type ConfigurationOrganisation,
   variablesOrganisation,
 } from '../lib/organisation.ts'
@@ -40,18 +41,33 @@ const LIBELLES_STATUT: Record<string, string> = {
   ABANDONNEE: 'Abandonnée',
 }
 
-/** Les sujets, composés à l'envoi avec le nom court de l'organisation. */
-export function sujets(nomCourt: string): Record<SorteCourriel, string> {
+/**
+ * Les sujets, composés à l'envoi (ADR 0032). Chaque sujet commence par le nom court
+ * de l'organisation ; un mail qui porte sur une seule activité ajoute son nom après
+ * un point médian : « TIMM · Rencontres : une de vos tâches a été modifiée ».
+ */
+export function sujets(
+  nomCourt: string,
+  activite?: string
+): Record<SorteCourriel, string> {
+  const tete = activite === undefined ? nomCourt : `${nomCourt} · ${activite}`
   return {
     essai: 'Essai d’envoi du serveur Relaytour',
-    invitation: `Votre accès à l’espace organisateur ${nomCourt}`,
-    'code-connexion': `Votre code de connexion ${nomCourt}`,
-    'tache-modifiee': 'Une de vos tâches a été modifiée',
-    'rappels-echeance': `Échéances de vos tâches ${nomCourt}`,
-    resume: `Votre résumé ${nomCourt}`,
-    equipe: `Votre place dans l’équipe ${nomCourt} a changé`,
-    demandes: `Demandes pour rejoindre l’équipe ${nomCourt}`,
+    invitation: `${tete} : votre accès à l’espace organisateur`,
+    'code-connexion': `${nomCourt} : votre code de connexion`,
+    'tache-modifiee': `${tete} : une de vos tâches a été modifiée`,
+    'rappels-echeance': `${tete} : échéances de vos tâches`,
+    resume: `${nomCourt} : votre résumé`,
+    equipe: `${tete} : votre place dans l’équipe a changé`,
+    demandes: `${tete} : demandes pour rejoindre l’équipe`,
   }
+}
+
+/** L'activité qu'un sujet nomme : celle de la configuration du mail, s'il y en a une. */
+function activiteDuSujet(
+  configuration: ConfigurationOrganisation
+): string | undefined {
+  return (configuration as Partial<ConfigurationActivite>).activite?.nom
 }
 
 const SANS_REPONSE = new Set<SorteCourriel>(['essai', 'code-connexion'])
@@ -65,36 +81,6 @@ export interface MessageCompose {
   repondreA?: string
   /** Appelé après le départ du mail : dates d'envoi et de résumé. */
   apresEnvoi?: () => Promise<void>
-}
-
-const SELECTION_NOTIFICATION = {
-  id: true,
-  type: true,
-  jours: true,
-  acteurId: true,
-  personneId: true,
-  statut: true,
-  tache: SELECTION_TACHE_NOTIFIEE,
-  fiche: SELECTION_FICHE_NOTIFIEE,
-  activite: SELECTION_ACTIVITE_NOTIFIEE,
-} as const
-
-async function nomsDes(
-  prisma: PrismaClient,
-  notifications: NotificationAComposer[]
-) {
-  const ids = [
-    ...new Set(
-      notifications
-        .flatMap(n => [n.acteurId, n.personneId])
-        .filter(id => id !== null)
-    ),
-  ]
-  const personnes = await prisma.user.findMany({
-    where: { id: { in: ids } },
-    select: { id: true, name: true },
-  })
-  return new Map(personnes.map(p => [p.id, p.name]))
 }
 
 /**
@@ -139,7 +125,13 @@ export async function composer(
       ? await configurationOrganisation(organisationId)
       : await configurationActivite(job.activiteId)
   const origine = configuration.origineOrga
-  const lienPreferences = `${origine}/preferences`
+  // Les préférences se lisent dans l'organisation du mail (ADR 0032).
+  const organisationDesPreferences = organisationId ?? configuration.id ?? ''
+  // Chaque lien désigne l'organisation du mail (ADR 0032) : l'espace organisateur
+  // la choisit à l'ouverture, même si l'appareil en a choisi une autre.
+  const lienVers = (chemin: string) =>
+    `${origine}${avecOrganisation(chemin, configuration.slug)}`
+  const lienPreferences = lienVers('/preferences')
 
   if (job.sorte === 'invitation') {
     const user = await prisma.user.findUniqueOrThrow({
@@ -147,7 +139,7 @@ export async function composer(
       select: { id: true, name: true },
     })
     variables.nom = user.name
-    variables.lienConnexion = `${origine}/connexion`
+    variables.lienConnexion = lienVers('/connexion')
     variables.accroche =
       'L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez vos périmètres, vos tâches et les fiches méthode des éditions précédentes.'
     // Le rôle se lit à l'envoi : une invitation renvoyée après une nomination
@@ -177,7 +169,8 @@ export async function composer(
         : await invitationEnAttente(prisma, user.id, idOrganisation)
     if (attente === 'aucune') return null
     if (attente !== 'membre') {
-      sujet = `${configuration.nomCourt} vous invite dans son espace organisateur`
+      const activite = activiteDuSujet(configuration)
+      sujet = `${activite === undefined ? configuration.nomCourt : `${configuration.nomCourt} · ${activite}`} : invitation à rejoindre l’espace organisateur`
       variables.accroche = `${configuration.nomCourt} vous invite à rejoindre son espace organisateur. Vous avez déjà un compte à cette adresse : après connexion, vous acceptez ou refusez cette invitation depuis le menu de votre compte. Rien n’est partagé avec cette organisation avant votre accord.`
       variables.perimetres = attente.perimetres
       // La personne n'a encore aucun rôle dans l'organisation : le mode d'emploi
@@ -224,7 +217,7 @@ export async function composer(
     if (changements.length === 0) return null
     variables.nom = user.name
     variables.changements = changements
-    variables.lienConnexion = `${origine}/connexion`
+    variables.lienConnexion = lienVers('/connexion')
     const role = await roleDuModeDEmploi(prisma, user.id, idOrganisation)
     const { env } = await import('../env.ts')
     variables.roleModeDEmploi = LIBELLES_ROLE[role]
@@ -237,12 +230,16 @@ export async function composer(
     }
     if (!job.userId) return null
     const userId = job.userId
-    if (!(await preferencesDe(prisma, userId)).mailDemandes) return null
     const activite = await prisma.activite.findUnique({
       where: { id: job.activiteId },
       select: { id: true, slug: true, nom: true, organisationId: true },
     })
     if (activite === null) return null
+    if (
+      !(await preferencesDe(prisma, userId, activite.organisationId))
+        .mailDemandes
+    )
+      return null
     // Le rôle se relit à l'envoi : une personne qui n'administre plus l'activité
     // ne reçoit rien.
     const admins = await adminsAPrevenir(
@@ -265,7 +262,9 @@ export async function composer(
       nombre === 1
         ? `Une demande pour rejoindre l’équipe de l’activité ${activite.nom} attend votre décision.`
         : `${nombre} demandes pour rejoindre l’équipe de l’activité ${activite.nom} attendent votre décision.`
-    variables.lienDemandes = `${origine}/${activite.slug}/admin/personnes?onglet=demandes`
+    variables.lienDemandes = lienVers(
+      `/${activite.slug}/admin/personnes?onglet=demandes`
+    )
     variables.lienPreferences = lienPreferences
     desabonnement = lienPreferences
     apresEnvoi = async () => {
@@ -306,7 +305,8 @@ export async function composer(
     }
     if (
       job.userId &&
-      !(await preferencesDe(prisma, job.userId)).mailModification
+      !(await preferencesDe(prisma, job.userId, organisationDesPreferences))
+        .mailModification
     ) {
       return null
     }
@@ -342,7 +342,9 @@ export async function composer(
         ? `Le nouveau statut de la tâche est « ${LIBELLES_STATUT[tache.statut]} ».`
         : 'Le titre, la description ou l’échéance de la tâche ont changé.'
     // Les pages d'un périmètre vivent sous le slug de son activité (ADR 0008).
-    variables.lienPerimetre = `${origine}/${tache.perimetre.activite.slug}/perimetres/${tache.perimetre.slug}`
+    variables.lienPerimetre = lienVers(
+      `/${tache.perimetre.activite.slug}/perimetres/${tache.perimetre.slug}`
+    )
     const notificationId = job.notificationId
     if (notificationId) {
       apresEnvoi = async () => {
@@ -356,22 +358,26 @@ export async function composer(
 
   if (job.sorte === 'rappels-echeance') {
     if (!job.userId || !job.notificationIds?.length) return null
-    if (!(await preferencesDe(prisma, job.userId)).mailEcheance) return null
+    const userId = job.userId
+    if (
+      !(await preferencesDe(prisma, userId, organisationDesPreferences))
+        .mailEcheance
+    )
+      return null
     const notifications = await prisma.notification.findMany({
-      where: {
-        id: { in: job.notificationIds },
-        userId: job.userId,
-        lueLe: null,
-      },
+      where: { id: { in: job.notificationIds }, userId, lueLe: null },
       select: SELECTION_NOTIFICATION,
       orderBy: { createdAt: 'asc' },
     })
     if (notifications.length === 0) return null
-    const noms = await nomsDes(prisma, notifications)
-    variables.rappels = notifications.map(n =>
-      messageNotification(n, noms, job.userId!)
-    )
-    variables.lienConnexion = `${origine}/`
+    const composees = await composerNotifications(prisma, notifications, userId)
+    // Les rappels se rangent par activité (ADR 0032). Un seul rappel d'activité
+    // nomme son activité dans le sujet.
+    variables.rappels = grouperParActivite(composees, configuration.nomCourt)
+    const activites = new Set(composees.map(n => n.activite?.nom ?? null))
+    const seule = activites.size === 1 ? [...activites][0] : null
+    if (seule) sujet = sujets(configuration.nomCourt, seule)['rappels-echeance']
+    variables.lienConnexion = lienVers('/')
     variables.lienPreferences = lienPreferences
     desabonnement = lienPreferences
     apresEnvoi = async () => {
@@ -385,105 +391,137 @@ export async function composer(
   if (job.sorte === 'resume') {
     if (!job.userId) return null
     const userId = job.userId
-    const preferences = await preferencesDe(prisma, userId)
-    if (preferences.frequenceResume === 'AUCUN') return null
-    // Le résumé porte sur une organisation : ses notifications et ses tâches.
+    // Le résumé porte sur une organisation : ses notifications, ses tâches et ses
+    // préférences (ADR 0032).
     const idOrganisation = configuration.id
     if (idOrganisation === null) return null
+    const preferences = await preferencesDe(prisma, userId, idOrganisation)
+    if (preferences.frequenceResume === 'AUCUN') return null
     const jour = new Date(
       `${aujourdhui(new Date(), configuration.fuseauHoraire)}T00:00:00Z`
     )
-    const [personne, notifications, taches] = await Promise.all([
-      prisma.user.findUniqueOrThrow({
-        where: { id: userId },
-        select: { name: true },
-      }),
-      prisma.notification.findMany({
-        where: {
-          userId,
-          organisationId: idOrganisation,
-          lueLe: null,
-          resumeeLe: null,
-        },
-        select: SELECTION_NOTIFICATION,
-        orderBy: { createdAt: 'desc' },
-        take: 30,
-      }),
-      prisma.tache.findMany({
-        where: {
-          statut: { in: ['A_FAIRE', 'EN_COURS'] },
-          assignations: { some: { userId } },
-          edition: { statut: { not: 'ARCHIVEE' } },
-          perimetre: { organisationId: idOrganisation },
-          echeance: {
-            lte: new Date(jour.getTime() + 14 * 24 * 3600 * 1000),
+    // La section « Pour vos rôles d'admin » ne reprend que les notifications que la
+    // personne lit encore à ce titre (ADR 0033).
+    const filtreAdmin = preferences.resumeAdmin
+      ? await filtreNotificationsAdmin(prisma, userId, idOrganisation)
+      : null
+    const nonResumees = {
+      userId,
+      organisationId: idOrganisation,
+      lueLe: null,
+      resumeeLe: null,
+    }
+    const [personne, notifications, notificationsAdmin, taches] =
+      await Promise.all([
+        prisma.user.findUniqueOrThrow({
+          where: { id: userId },
+          select: { name: true },
+        }),
+        prisma.notification.findMany({
+          where: { ...nonResumees, niveau: 'REFERENT' },
+          select: SELECTION_NOTIFICATION,
+          orderBy: { createdAt: 'desc' },
+          take: 30,
+        }),
+        filtreAdmin === null
+          ? []
+          : prisma.notification.findMany({
+              where: { ...nonResumees, ...filtreAdmin },
+              select: SELECTION_NOTIFICATION,
+              orderBy: { createdAt: 'desc' },
+              take: 30,
+            }),
+        prisma.tache.findMany({
+          where: {
+            statut: { in: ['A_FAIRE', 'EN_COURS'] },
+            assignations: { some: { userId } },
+            edition: { statut: { not: 'ARCHIVEE' } },
+            perimetre: { organisationId: idOrganisation },
+            echeance: {
+              lte: new Date(jour.getTime() + 14 * 24 * 3600 * 1000),
+            },
+            AND: [TACHES_ACTIVES],
           },
-          AND: [TACHES_ACTIVES],
-        },
-        select: {
-          titre: true,
-          echeance: true,
-          perimetre: { select: { nom: true } },
-        },
-        orderBy: { echeance: 'asc' },
-      }),
+          select: {
+            titre: true,
+            echeance: true,
+            perimetre: {
+              select: {
+                nom: true,
+                activite: { select: { id: true, nom: true } },
+              },
+            },
+          },
+          orderBy: { echeance: 'asc' },
+        }),
+      ])
+    if (
+      notifications.length === 0 &&
+      notificationsAdmin.length === 0 &&
+      taches.length === 0
+    )
+      return null
+    const [composees, composeesAdmin] = await Promise.all([
+      composerNotifications(prisma, notifications, userId),
+      composerNotifications(prisma, notificationsAdmin, userId),
     ])
-    if (notifications.length === 0 && taches.length === 0) return null
-    const noms = await nomsDes(prisma, notifications)
     variables.nom = personne.name
     variables.periode =
       preferences.frequenceResume === 'QUOTIDIEN'
         ? 'depuis hier'
         : 'de la semaine'
-    variables.nouvelles =
-      notifications.length > 0
-        ? notifications.map(n => messageNotification(n, noms, userId))
-        : ['Aucune nouvelle.']
+    // Les nouvelles se rangent par activité, puis viennent celles des rôles
+    // d'admin, sous un intertitre qui le dit (ADR 0032 et 0033).
+    const groupes = [
+      ...grouperParActivite(composees, configuration.nomCourt),
+      ...grouperParActivite(
+        composeesAdmin,
+        configuration.nomCourt,
+        'Pour vos rôles d’admin · '
+      ),
+    ]
+    variables.nouvelles = groupes.length > 0 ? groupes : ['Aucune nouvelle.']
+    // Les échéances se rangent aussi par activité.
+    const parActivite = new Map<string, { titre: string; elements: string[] }>()
+    for (const t of taches) {
+      const date = t.echeance!.toLocaleDateString('fr-FR', {
+        day: 'numeric',
+        month: 'long',
+        timeZone: 'UTC',
+      })
+      const retard = t.echeance! < jour ? ' (en retard)' : ''
+      const groupe = parActivite.get(t.perimetre.activite.id) ?? {
+        titre: t.perimetre.activite.nom,
+        elements: [],
+      }
+      groupe.elements.push(`${date} : ${t.titre} (${t.perimetre.nom})${retard}`)
+      parActivite.set(t.perimetre.activite.id, groupe)
+    }
     variables.echeances =
-      taches.length > 0
-        ? taches.map(t => {
-            const date = t.echeance!.toLocaleDateString('fr-FR', {
-              day: 'numeric',
-              month: 'long',
-              timeZone: 'UTC',
-            })
-            const retard = t.echeance! < jour ? ' (en retard)' : ''
-            return `${date} : ${t.titre} (${t.perimetre.nom})${retard}`
-          })
-        : ['Aucune échéance.']
-    variables.lienConnexion = `${origine}/`
+      parActivite.size > 0 ? [...parActivite.values()] : ['Aucune échéance.']
+    variables.lienConnexion = lienVers('/')
     variables.lienPreferences = lienPreferences
     desabonnement = lienPreferences
     apresEnvoi = async () => {
       const maintenant = new Date()
       await prisma.notification.updateMany({
-        where: { id: { in: notifications.map(n => n.id) } },
+        where: {
+          id: { in: [...notifications, ...notificationsAdmin].map(n => n.id) },
+        },
         data: { resumeeLe: maintenant },
       })
-      // La date du résumé se note pour cette organisation : une personne membre de
-      // plusieurs organisations reçoit le résumé de chacune. Deux résumés envoyés
-      // en même temps écrivent chacun leur clé par JSON_SET, en une seule requête :
-      // aucun des deux n'efface la date de l'autre.
-      try {
-        await prisma.preferenceNotification.upsert({
-          where: { userId },
-          update: {},
-          create: { userId, organisationId: idOrganisation },
-        })
-      } catch (erreur) {
-        // Une création simultanée a déjà posé la ligne : la mise à jour suit.
-        if ((erreur as { code?: string }).code !== 'P2002') throw erreur
-      }
-      await prisma.$executeRaw`
-        UPDATE PreferenceNotification
-        SET dernierResumeLe = ${maintenant},
-            derniersResumes = JSON_SET(
-              COALESCE(derniersResumes, JSON_OBJECT()),
-              ${`$."${idOrganisation}"`},
-              ${maintenant.toISOString()}
-            ),
-            updatedAt = ${maintenant}
-        WHERE userId = ${userId}`
+      // La date du résumé se note pour cette organisation (ADR 0032).
+      await prisma.preferenceOrganisation.upsert({
+        where: {
+          userId_organisationId: { userId, organisationId: idOrganisation },
+        },
+        update: { dernierResumeLe: maintenant },
+        create: {
+          userId,
+          organisationId: idOrganisation,
+          dernierResumeLe: maintenant,
+        },
+      })
     }
   }
 
@@ -493,7 +531,9 @@ export async function composer(
     variablesOrganisation(configuration)
   )
   return {
-    sujet: sujet ?? sujets(configuration.nomCourt)[job.sorte],
+    sujet:
+      sujet ??
+      sujets(configuration.nomCourt, activiteDuSujet(configuration))[job.sorte],
     html,
     texte,
     desabonnement,

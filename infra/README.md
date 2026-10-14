@@ -82,6 +82,14 @@ Le manifest de chaque organisation se sert sous `/medias/application/`, chemin d
 
 Une version récente peut écrire, dans la configuration d'une organisation, un champ qu'une version antérieure ne connaît pas. À partir de la version 0.13, le serveur écarte ce champ à la lecture et garde le reste : un retour arrière ne change pas l'identité de l'organisation. Une configuration qu'il ne sait pas lire du tout n'est jamais écrasée : le journal porte l'événement `configuration-illisible`, et l'organisation s'affiche avec l'identité d'amorçage jusqu'à son réimport.
 
+À partir de la version qui porte l'ADR 0031, l'archivage d'une personne se lit dans son appartenance à l'organisation. Le serveur tient aussi à jour l'ancienne colonne du compte, renseignée quand la personne n'a plus aucune appartenance active. Après un retour arrière, une version antérieure refuse donc encore ces personnes. Une personne archivée dans une organisation et active dans une autre retrouve en revanche son accès aux deux : restaurez la version récente sans tarder sur une installation qui porte plusieurs organisations.
+
+À partir de la version qui porte les ADR 0032 et 0033, les préférences de notification se lisent par organisation, dans une table nouvelle. L'ancienne table reste en base sans écriture : après un retour arrière, une personne y retrouve ses réglages d'avant la migration. Les nouvelles sortes de notification n'existent pas dans une version antérieure, qui ne sait pas les lire. Avant un retour arrière, supprimez donc ces notifications par la requête ci-dessous, sur une sauvegarde vérifiée.
+
+```sql
+DELETE FROM Notification WHERE type IN ('AFFECTATION_AJOUTEE', 'AFFECTATION_RETIREE', 'SOUHAIT_FORMULE', 'DEMANDE_ACCEPTEE', 'DEMANDE_REFUSEE', 'ADMIN_ACTIVITE_NOMME', 'ADMIN_ACTIVITE_RETIRE', 'ADMIN_ORGANISATION_NOMME', 'ADMIN_ORGANISATION_RETIRE', 'PERSONNE_ARCHIVEE', 'PERSONNE_RETABLIE', 'PLACE_MODIFIEE');
+```
+
 Les versions 0.12.1 et antérieures n'ont pas cette protection. Au démarrage, elles remplacent une configuration qu'elles ne lisent pas par les valeurs d'amorçage du `.env`. Avant de revenir d'une version 0.13 ou suivante à l'une d'elles, exportez le contenu de l'organisation (`orga-exporter`), ou retirez l'icône d'application dans l'écran « Organisation ».
 
 ### Notifications push
@@ -138,7 +146,7 @@ Une installation peut porter plusieurs organisations (ADR 0008). Chacune a ses m
       --domaines exemple.org --admin adresse@exemple.org --admin-nom "Prénom Nom"
     ```
     Les options `--limite-activites` et `--limite-periodes` plafonnent le nombre d'activités et de périodes ouvertes. Sans elles, l'organisation n'a aucune limite.
-2. **Désigner l'organisation** dans les autres scripts avec `--organisation <slug>` : `creer-admin.js`, `creer-edition.js` (et `--activite <slug>`).
+2. **Désigner l'organisation** dans les autres scripts avec `--organisation <slug>` : `creer-admin.js`, `creer-edition.js` (et `--activite <slug>`). `creer-admin.js` suit le cloisonnement des organisations (ADR 0030) : une adresse qui a déjà un compte dans une autre organisation reçoit une invitation au rôle d'admin, qu'elle accepte depuis son compte, et un compte archivé n'est rétabli que s'il n'appartient qu'à cette organisation.
 3. **Administrer par API** (facultatif) : un jeton `JETON_ADMINISTRATION` d'au moins 32 caractères, dans le `.env`, ouvre les requêtes `organisations` et les mutations `creerOrganisation`, `inviterPremierAdmin`, `modifierOrganisationInstallation` et `demanderExport` sur `/graphql`, avec l'en-tête `Authorization: Bearer <jeton>`. L'API ne rend à ce jeton aucune donnée d'une organisation ; l'export qu'il déclenche s'écrit sur le disque du serveur et contient les noms et les adresses (point 4). `CONTACT_HEBERGEUR` indique à qui s'adresser quand une limite est atteinte. Par défaut, le jeton n'est accepté que sur une requête locale, qui n'est pas passée par Caddy : un programme de la machine appelle `http://127.0.0.1:4400/graphql` (ADR 0013). Ce critère suppose que tout relais vers l'API pose `X-Forwarded-For`, ce que Caddy fait toujours, et que le port de l'API reste publié sur `127.0.0.1`. `JETON_ADMINISTRATION_LOCAL=false` accepte le jeton à travers Caddy, pour un hébergeur qui administre depuis une autre machine. Dix jetons refusés en quinze minutes depuis une même adresse ferment l'API d'administration à cette adresse pour la fenêtre.
 4. **Exporter une organisation** : le fichier s'écrit dans le volume `exports`.
     ```bash
