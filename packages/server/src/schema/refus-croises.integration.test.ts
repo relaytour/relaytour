@@ -1034,6 +1034,10 @@ const CAS: Cas[] = [
         'tousLesPerimetres(activiteId: $a) { perimetres { affecte } }',
       ],
       [
+        'organigramme',
+        'organigramme(activiteId: $a) { admins { nom adresse } }',
+      ],
+      [
         'peutRedigerFichesCommunes',
         'peutRedigerFichesCommunes(activiteId: $a)',
       ],

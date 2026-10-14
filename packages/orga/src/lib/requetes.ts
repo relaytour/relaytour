@@ -71,6 +71,7 @@ export const ACTIVITES = graphql(`
       archive
       estAdministree
       souhaitsOuverts
+      adressesOrganigramme
       formulaireOuvert
       formulaire {
         introduction
