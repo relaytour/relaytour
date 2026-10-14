@@ -330,10 +330,11 @@ describe('rappels d’échéance', () => {
       userId: ids.bruno,
       notificationIds,
     })
-    // L'activité d'essai a plusieurs périodes ouvertes : la ligne nomme la période,
-    // puis le périmètre, sous l'intertitre de l'activité (ADR 0032).
+    // Sous l'intertitre de l'activité, la ligne nomme le périmètre, et la période
+    // quand l'activité en a plusieurs d'ouvertes : la base partagée du poste en a
+    // plusieurs, celle de la CI une seule (ADR 0032).
     expect(message?.texte).toMatch(
-      /- La tâche « Commander les bonnets » \(Essai [^,]+, Natation\) arrive à échéance dans 7 jours\./
+      /- La tâche « Commander les bonnets » \((?:Essai [^,]+, )?Natation\) arrive à échéance dans 7 jours\./
     )
     expect(message?.desabonnement).toMatch(/\/preferences\?organisation=/)
 

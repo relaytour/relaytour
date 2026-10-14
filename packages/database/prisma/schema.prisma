@@ -926,6 +926,9 @@ model Notification {
   acteurId       String?
   tacheId        String?
   perimetreId    String?
+  // La période d'une notification d'admin liée à une période (affectation, souhait),
+  // pour la nommer quand l'activité en a plusieurs d'ouvertes (ADR 0033).
+  editionId      String?
   // Pour DEMANDE_RECUE : l'activité dont la file de demandes attend une revue.
   activiteId     String?
   // Pour TACHE_ASSIGNEE et TACHE_DESASSIGNEE : la personne concernée.

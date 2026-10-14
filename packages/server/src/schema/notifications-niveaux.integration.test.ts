@@ -2,7 +2,8 @@ import { randomUUID } from 'node:crypto'
 
 import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import type { Job } from 'bullmq'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 import { composer } from '../courriel/messages.ts'
@@ -10,7 +11,11 @@ import {
   composerNotifications,
   SELECTION_NOTIFICATION,
 } from '../lib/composition-notifications.ts'
+import { pushProcessor } from '../jobs/processors/push.processor.ts'
+import type { PushJobData } from '../jobs/queues.ts'
+import { accepterInvitation } from '../lib/invitations.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
+import { empreinteAdresse } from '../lib/push.ts'
 
 import { schema } from './index.ts'
 
@@ -19,6 +24,39 @@ import { schema } from './index.ts'
 // est référente dans A et dans B ; « Adèle » et « Arnaud » administrent l'activité
 // A1 ; « Albane » administre l'activité A2 ; « Orga » est admin de l'organisation A.
 // Un contrôle d'accès se prouve par le refus (invariant 11).
+
+// Les mises en file de push se notent sans atteindre Redis, et les envois du worker
+// se notent sans atteindre un service de push.
+const pousses = vi.hoisted(() => [] as string[])
+const envois = vi.hoisted(() => [] as string[])
+vi.mock('../lib/push-file.ts', () => ({
+  pousser: (notificationId: string) => {
+    pousses.push(notificationId)
+    return Promise.resolve()
+  },
+}))
+vi.mock('web-push', () => ({
+  default: {
+    sendNotification: (_abonnement: unknown, charge: string) => {
+      envois.push(charge)
+      return Promise.resolve()
+    },
+  },
+  WebPushError: class extends Error {
+    statusCode = 0
+  },
+}))
+vi.mock('../lib/push.ts', async importOriginal => {
+  const reel = await importOriginal<typeof import('../lib/push.ts')>()
+  return {
+    ...reel,
+    clesVapid: () => ({
+      publique: 'cle-publique-d-essai',
+      privee: 'cle-privee-d-essai',
+      sujet: 'mailto:contact@exemple.org',
+    }),
+  }
+})
 
 const s = randomUUID().slice(0, 8)
 const apollo = new ApolloServer<AppContext>({ schema })
@@ -528,5 +566,149 @@ describe('contexte des notifications (ADR 0032)', () => {
         data: { archiveLe: null },
       })
     }
+  })
+})
+
+describe('correctifs de la revue (#134)', () => {
+  const pousser = (notificationId: string) =>
+    pushProcessor({ data: { notificationId } } as Job<PushJobData>)
+
+  it('ne pousse une notification d’admin qu’à une personne qui tient encore le rôle', async () => {
+    const adresse = `https://fcm.googleapis.com/fcm/send/niv-${s}`
+    await prisma.abonnementPush.create({
+      data: {
+        userId: ids.arnaud,
+        empreinte: empreinteAdresse(adresse),
+        adresse,
+        p256dh:
+          'BNcRdreALRFXTkOOUHK1EtK2wtaz5Ry4YfYCA_0QTpQtUbVlUls0VJXg7A8u-Ts1XbjhazAkj7I99e8QcYP7DkM',
+        auth: 'tBHItJI5svbpez7KI4CCXg',
+        appareil: 'Android',
+      },
+    })
+    await prisma.preferenceOrganisation.update({
+      where: {
+        userId_organisationId: { userId: ids.arnaud, organisationId: ids.orgA },
+      },
+      data: { pushEquipe: true },
+    })
+    const notification = await prisma.notification.findFirstOrThrow({
+      where: { userId: ids.arnaud, type: 'AFFECTATION_AJOUTEE' },
+      select: { id: true },
+    })
+    await prisma.notification.update({
+      where: { id: notification.id },
+      data: { lueLe: null },
+    })
+    envois.length = 0
+    await pousser(notification.id)
+    expect(envois).toHaveLength(1)
+    const message = JSON.parse(envois[0]!) as { titre: string; corps: string }
+    expect(message.titre).toContain('· Rencontres')
+    expect(message.corps).toBe(
+      'Adèle a affecté Hugo au périmètre Natation (Rencontres).'
+    )
+    // Le rôle retiré entre la mise en file et l'envoi, rien ne part.
+    await prisma.adminActivite.deleteMany({
+      where: { userId: ids.arnaud, activiteId: ids.a1 },
+    })
+    try {
+      envois.length = 0
+      await pousser(notification.id)
+      expect(envois).toEqual([])
+    } finally {
+      await prisma.adminActivite.create({
+        data: {
+          userId: ids.arnaud,
+          activiteId: ids.a1,
+          organisationId: ids.orgA,
+        },
+      })
+    }
+  })
+
+  it('nomme la période d’une affectation quand l’activité en a plusieurs d’ouvertes', async () => {
+    const autre = await prisma.edition.create({
+      data: {
+        organisationId: ids.orgA,
+        activiteId: ids.a1,
+        annee: 2028,
+        nom: 'Rencontres 2028',
+        debut: new Date('2028-06-01'),
+        fin: new Date('2028-06-02'),
+      },
+    })
+    try {
+      const [ligne] = await prisma.notification.findMany({
+        where: { userId: ids.arnaud, type: 'AFFECTATION_AJOUTEE' },
+        select: SELECTION_NOTIFICATION,
+      })
+      expect(ligne?.editionId).toBe(ids.editionA1)
+      const [composee] = await composerNotifications(
+        prisma,
+        [ligne!],
+        ids.arnaud
+      )
+      expect(composee?.periode).toBe(`Période ${ids.a1.slice(-4)}`)
+    } finally {
+      await prisma.edition.delete({ where: { id: autre.id } })
+    }
+  })
+
+  it('n’annonce pas une nomination déjà faite', async () => {
+    const NOMMER = `mutation ($u: ID!, $a: ID!) { definirAdminActivite(personneId: $u, activiteId: $a, admin: true) }`
+    const places = () =>
+      prisma.notification.count({
+        where: { userId: ids.arnaud, type: 'PLACE_MODIFIEE' },
+      })
+    const avant = await places()
+    expect(
+      (await executer(ids.adele, NOMMER, { u: ids.arnaud, a: ids.a1 })).errors
+    ).toBeUndefined()
+    expect(await places()).toBe(avant)
+  })
+
+  it('pousse l’acceptation d’une invitation, et la range sous son activité seulement s’il n’y en a qu’une', async () => {
+    const accepter = async (
+      lots: { activiteId: string; editionId: string }[]
+    ) => {
+      const invite = await creerCompte(`Invite ${randomUUID().slice(0, 4)}`, [])
+      const invitation = await prisma.invitationOrganisation.create({
+        data: {
+          organisationId: ids.orgA,
+          userId: invite,
+          nom: 'Invité',
+          origine: 'PERSONNE',
+          inviteParId: ids.orga,
+          lots: lots.map(l => ({
+            ...l,
+            affectes: [],
+            souhaites: [],
+            contactPrincipal: [],
+          })),
+          expireLe: new Date(Date.now() + 24 * 3600 * 1000),
+        },
+      })
+      pousses.length = 0
+      await accepterInvitation(prisma, {
+        invitationId: invitation.id,
+        userId: invite,
+      })
+      return prisma.notification.findFirstOrThrow({
+        where: { type: 'INVITATION_ACCEPTEE', acteurId: invite },
+        select: { id: true, activiteId: true },
+      })
+    }
+    const une = await accepter([
+      { activiteId: ids.a1, editionId: ids.editionA1 },
+    ])
+    expect(une.activiteId).toBe(ids.a1)
+    expect(pousses).toContain(une.id)
+    const deux = await accepter([
+      { activiteId: ids.a1, editionId: ids.editionA1 },
+      { activiteId: ids.a2, editionId: ids.editionA2 },
+    ])
+    expect(deux.activiteId).toBeNull()
+    expect(pousses).toContain(deux.id)
   })
 })

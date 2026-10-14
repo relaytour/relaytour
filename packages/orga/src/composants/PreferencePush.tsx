@@ -56,6 +56,7 @@ const MODIFIER_PUSH = graphql(`
     $pushTaches: Boolean
     $pushEcheances: Boolean
     $pushDemandes: Boolean
+    $pushEquipe: Boolean
   ) {
     modifierPreferencesNotification(
       frequenceResume: $frequenceResume
@@ -64,10 +65,12 @@ const MODIFIER_PUSH = graphql(`
       pushTaches: $pushTaches
       pushEcheances: $pushEcheances
       pushDemandes: $pushDemandes
+      pushEquipe: $pushEquipe
     ) {
       pushTaches
       pushEcheances
       pushDemandes
+      pushEquipe
     }
   }
 `)
@@ -79,9 +82,13 @@ export interface PreferencesPourPush {
   pushTaches: boolean
   pushEcheances: boolean
   pushDemandes: boolean
+  pushEquipe: boolean
 }
 
-type Famille = 'pushTaches' | 'pushEcheances' | 'pushDemandes'
+type Famille = 'pushTaches' | 'pushEcheances' | 'pushDemandes' | 'pushEquipe'
+
+/** Les familles d'admin ne s'affichent qu'aux personnes qui administrent (ADR 0033). */
+const FAMILLES_ADMIN: Famille[] = ['pushDemandes', 'pushEquipe']
 
 const FAMILLES: { cle: Famille; titre: string; detail: string }[] = [
   {
@@ -98,8 +105,15 @@ const FAMILLES: { cle: Famille; titre: string; detail: string }[] = [
   },
   {
     cle: 'pushDemandes',
-    titre: 'Demandes pour rejoindre l’équipe',
-    detail: 'Une activité que vous administrez reçoit une demande.',
+    titre: 'Demandes et invitations',
+    detail:
+      'Une activité que vous administrez reçoit une demande, ou une personne accepte une invitation.',
+  },
+  {
+    cle: 'pushEquipe',
+    titre: 'Équipe de vos activités',
+    detail:
+      'Un autre admin affecte ou nomme une personne, ou une personne formule un souhait.',
   },
 ]
 
@@ -265,25 +279,25 @@ export default function PreferencePush({
             }
           />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-            {FAMILLES.filter(f => f.cle !== 'pushDemandes' || administre).map(
-              f => (
-                <div className="rt-reglage" key={f.cle}>
-                  <label htmlFor={f.cle}>
-                    <span className="rt-choix-titre">{f.titre}</span>
-                    <span className="rt-choix-detail">{f.detail}</span>
-                  </label>
-                  <Switch
-                    id={f.cle}
-                    checked={preferences[f.cle]}
-                    onChange={valeur => void regler(f.cle, valeur)}
-                  />
-                </div>
-              )
-            )}
+            {FAMILLES.filter(
+              f => !FAMILLES_ADMIN.includes(f.cle) || administre
+            ).map(f => (
+              <div className="rt-reglage" key={f.cle}>
+                <label htmlFor={f.cle}>
+                  <span className="rt-choix-titre">{f.titre}</span>
+                  <span className="rt-choix-detail">{f.detail}</span>
+                </label>
+                <Switch
+                  id={f.cle}
+                  checked={preferences[f.cle]}
+                  onChange={valeur => void regler(f.cle, valeur)}
+                />
+              </div>
+            ))}
           </div>
           <p className="rt-note">
-            Ces trois réglages valent pour tous vos appareils. Vos mails ne
-            changent pas.
+            Ces réglages valent pour tous vos appareils, dans cette
+            organisation. Vos mails ne changent pas.
           </p>
         </>
       )}

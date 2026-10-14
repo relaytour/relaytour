@@ -6,6 +6,7 @@
 //   node outils/captures.mjs --seulement editions,equipe
 //   node outils/captures.mjs --largeur 375 --hauteur 812 --mobile --sortie /tmp/captures-mobile
 //   node outils/captures.mjs --simulateur Relaytour --amont http://localhost:4571 --sortie site/captures/mobile
+//   node outils/captures.mjs --compte referent --organisation rencontres-de-la-vallee
 //
 // Chaque écran se photographie avec le compte du rôle que son mode d'emploi
 // décrit : `--compte` choisit le rôle, et une passe prend tous ses écrans. Le
@@ -58,6 +59,9 @@ const { values } = parseArgs({
     // Avec --simulateur : l'adresse où tourne l'espace organisateur. Le script le
     // relaie à l'adresse de --origine, celle que l'application installée ouvre.
     amont: { type: 'string' },
+    // Slug de l'organisation à afficher, pour un compte qui en a plusieurs : le
+    // script la choisit avant chaque écran (ADR 0032).
+    organisation: { type: 'string' },
   },
 })
 
@@ -227,8 +231,22 @@ const ECRANS = [
     avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
   },
   { nom: 'preferences', compte: 'referent', chemin: `${ACTIVITE}/preferences` },
+  // Le tiroir de la cloche, rangé par activité (ADR 0032). La cloche est dans la
+  // barre haute, hors de <main>.
+  {
+    nom: 'cloche',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/`,
+    apres: `(e => (e?.click(), Boolean(e)))(document.querySelector('button[aria-label^="Notifications"]'))`,
+  },
   // ── Guide de l'admin d'activité ────────────────────────────────────────────
   // L'équipe d'une activité, lue par un de ses admins (ADR 0018).
+  // Les notifications d'admin, rangées par activité puis par périmètre (ADR 0033).
+  {
+    nom: 'notifications-admin',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/admin/notifications`,
+  },
   {
     nom: 'equipe',
     compte: 'admin-activite',
@@ -778,7 +796,15 @@ await pilote.preparer()
 mkdirSync(values.sortie, { recursive: true })
 let echecs = 0
 
+// Le choix de l'organisation se garde par onglet, et le navigateur retient le
+// dernier (ADR 0032) : les deux sont posés avant le chargement de chaque écran.
+const choixOrganisation =
+  values.organisation === undefined
+    ? null
+    : `(c => (sessionStorage.setItem('relaytour.organisation', c), localStorage.setItem('relaytour.organisation', c), true))(${JSON.stringify(values.organisation)})`
+
 for (const ecran of aPrendre) {
+  if (choixOrganisation !== null) await pilote.evaluer(choixOrganisation)
   if (ecran.avant) await pilote.evaluer(ecran.avant)
   await pilote.naviguer(ecran.chemin)
   await attendre(2500)
