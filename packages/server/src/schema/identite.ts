@@ -259,7 +259,7 @@ const IdentiteActiviteRef = builder
 // Chaque activité expose son identité résolue : celle de l'organisation,
 // surchargée par la sienne. L'espace organisateur l'applique quand l'activité
 // s'affiche.
-async function configurationDe(
+export async function configurationDe(
   activite: Activite,
   organisationId: string
 ): Promise<ConfigurationActivite> {

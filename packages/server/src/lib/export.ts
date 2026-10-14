@@ -38,6 +38,7 @@ export async function construireExport(organisationId: string) {
         select: {
           role: true,
           archiveLe: true,
+          adresseVisible: true,
           user: { select: { email: true, name: true } },
         },
         orderBy: { user: { name: 'asc' } },
@@ -172,6 +173,8 @@ export async function construireExport(organisationId: string) {
       email: m.user.email,
       nom: m.user.name,
       role: m.role,
+      // Accord pour l'organigramme (ADR 0036).
+      adresseVisible: m.adresseVisible,
       archive: m.archiveLe !== null,
     })),
     activites: activites.map(a => ({
@@ -182,6 +185,7 @@ export async function construireExport(organisationId: string) {
       souhaitsOuverts: a.souhaitsOuverts,
       formulaire: lireFormulaire(a.formulaire),
       formulaireOuvert: a.formulaireOuvert,
+      adressesOrganigramme: a.adressesOrganigramme,
       groupes: lireGroupes(a.groupes),
       ordre: a.ordre,
       archive: a.archivedAt !== null,

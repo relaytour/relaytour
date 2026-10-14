@@ -1,4 +1,9 @@
-import { NatureActivite, Prisma, prisma } from '@relaytour/database'
+import {
+  AdressesOrganigramme,
+  NatureActivite,
+  Prisma,
+  prisma,
+} from '@relaytour/database'
 
 import {
   GROUPES_PAR_DEFAUT,
@@ -99,6 +104,12 @@ const FormulaireInput = builder.inputType('FormulaireInput', {
 // Accès d'une personne à une activité (ADR 0012). COMPLET : elle l'administre ou y
 // a été affectée, et lit ses tâches et ses fiches. DECOUVERTE : elle ne voit que la
 // page « Tous les périmètres » et formule ses souhaits.
+export const AdressesOrganigrammeEnum = builder.enumType(AdressesOrganigramme, {
+  name: 'AdressesOrganigramme',
+  description:
+    'Adresses personnelles que l’organigramme d’une activité peut afficher, avec l’accord de chaque personne (ADR 0035).',
+})
+
 const AccesActiviteEnum = builder.enumType('AccesActivite', {
   values: ['COMPLET', 'DECOUVERTE'] as const,
 })
@@ -137,6 +148,9 @@ export const ActiviteRef = builder.prismaObject('Activite', {
     formulaireOuvert: t.exposeBoolean('formulaireOuvert', {
       description:
         'Vrai quand le formulaire public de l’activité accepte des demandes (ADR 0015).',
+    }),
+    adressesOrganigramme: t.expose('adressesOrganigramme', {
+      type: AdressesOrganigrammeEnum,
     }),
     acces: t.field({
       type: AccesActiviteEnum,
@@ -306,6 +320,8 @@ builder.mutationFields(t => ({
       // (ADR 0015).
       formulaire: t.arg({ type: FormulaireInput }),
       formulaireOuvert: t.arg.boolean(),
+      // Absent, le réglage ne change pas (ADR 0035).
+      adressesOrganigramme: t.arg({ type: AdressesOrganigrammeEnum }),
     },
     resolve: async (query, _root, args, ctx) => {
       const organisationId = ctx.organisation!.id
@@ -347,6 +363,10 @@ builder.mutationFields(t => ({
         ...(args.souhaitsOuverts === null || args.souhaitsOuverts === undefined
           ? {}
           : { souhaitsOuverts: args.souhaitsOuverts }),
+        ...(args.adressesOrganigramme === null ||
+        args.adressesOrganigramme === undefined
+          ? {}
+          : { adressesOrganigramme: args.adressesOrganigramme }),
         ...formulaire,
       }
       return sousVerrouOrganisation(organisationId, async tx => {
