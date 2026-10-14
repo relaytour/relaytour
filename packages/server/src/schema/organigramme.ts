@@ -14,7 +14,7 @@ import { configurationDe } from './identite.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
 
-// Organigramme d'une activité (ADR 0035) : le contact de l'activité, ses admins,
+// Organigramme d'une activité (ADR 0036) : le contact de l'activité, ses admins,
 // puis chaque périmètre avec son contact principal et ses référentes et référents
 // de la période. Une personne qui découvre l'activité sans la voir lit seulement
 // les admins et les contacts principaux. Une adresse personnelle ne s'affiche que
@@ -227,7 +227,7 @@ builder.queryFields(t => ({
   }),
 }))
 
-// L'accord de la personne vaut pour son organisation active (ADR 0035). Elle seule
+// L'accord de la personne vaut pour son organisation active (ADR 0036). Elle seule
 // le lit et le change : toute autre personne lit null.
 builder.prismaObjectFields(PersonneRef, t => ({
   adresseVisible: t.boolean({

@@ -8,7 +8,7 @@ import { buildContext, type AppContext } from '../context.ts'
 
 import { schema } from './index.ts'
 
-// Organigramme d'une activité (ADR 0035). Une adresse personnelle ne s'affiche
+// Organigramme d'une activité (ADR 0036). Une adresse personnelle ne s'affiche
 // qu'avec deux accords : le réglage de l'activité et celui de la personne. Les
 // contrôles se prouvent par le refus (invariant 11). Le fichier crée ses propres
 // organisations et ne touche pas à l'organisation par défaut.

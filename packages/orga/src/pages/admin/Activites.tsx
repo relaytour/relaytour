@@ -181,7 +181,7 @@ interface Valeurs {
   phases: Phase[]
   archive: boolean
   souhaitsOuverts: boolean
-  // Adresses de l'organigramme (ADR 0035).
+  // Adresses de l'organigramme (ADR 0036).
   adressesOrganigramme: AdressesOrganigramme
   // Formulaire public pour rejoindre l'équipe (ADR 0015).
   formulaireOuvert: boolean

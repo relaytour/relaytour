@@ -7,7 +7,7 @@ import { messageErreur } from '../lib/erreurs'
 
 import { Panneau } from './Panneau'
 
-// Accord de la personne pour afficher son adresse dans l'organigramme (ADR 0035).
+// Accord de la personne pour afficher son adresse dans l'organigramme (ADR 0036).
 // Il vaut pour l'organisation active. L'adresse ne s'affiche que si le réglage de
 // l'activité l'autorise aussi.
 

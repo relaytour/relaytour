@@ -230,7 +230,7 @@ const ECRANS = [
     chemin: `${ACTIVITE}/perimetres/football`,
     avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
   },
-  // L'organigramme de l'activité (ADR 0035), lu par une référente.
+  // L'organigramme de l'activité (ADR 0036), lu par une référente.
   {
     nom: 'organigramme',
     compte: 'referent',

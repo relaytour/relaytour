@@ -107,7 +107,7 @@ const FormulaireInput = builder.inputType('FormulaireInput', {
 export const AdressesOrganigrammeEnum = builder.enumType(AdressesOrganigramme, {
   name: 'AdressesOrganigramme',
   description:
-    'Adresses personnelles que l’organigramme d’une activité peut afficher, avec l’accord de chaque personne (ADR 0035).',
+    'Adresses personnelles que l’organigramme d’une activité peut afficher, avec l’accord de chaque personne (ADR 0036).',
 })
 
 const AccesActiviteEnum = builder.enumType('AccesActivite', {
@@ -320,7 +320,7 @@ builder.mutationFields(t => ({
       // (ADR 0015).
       formulaire: t.arg({ type: FormulaireInput }),
       formulaireOuvert: t.arg.boolean(),
-      // Absent, le réglage ne change pas (ADR 0035).
+      // Absent, le réglage ne change pas (ADR 0036).
       adressesOrganigramme: t.arg({ type: AdressesOrganigrammeEnum }),
     },
     resolve: async (query, _root, args, ctx) => {

@@ -110,7 +110,7 @@ model Appartenance {
   // autres organisations.
   archiveLe      DateTime?
   // Accord de la personne pour afficher son adresse dans l'organigramme des
-  // activités de cette organisation (ADR 0035). Elle seule le change.
+  // activités de cette organisation (ADR 0036). Elle seule le change.
   adresseVisible Boolean          @default(false)
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
@@ -196,7 +196,7 @@ enum NatureActivite {
 // Ce qu'une organisation fait dans la durée : un événement, une section, une
 // instance (ADR 0008). Elle porte ses périodes (Edition), ses périmètres, ses
 // fiches et ses tâches types.
-// Étendue des adresses personnelles de l'organigramme d'une activité (ADR 0035).
+// Étendue des adresses personnelles de l'organigramme d'une activité (ADR 0036).
 enum AdressesOrganigramme {
   // Aucune adresse personnelle : des noms et le contact de l'activité.
   AUCUNE
@@ -234,7 +234,7 @@ model Activite {
   // Ouverture du formulaire public. En base seulement : un import de contenu ne
   // l'ouvre ni ne le ferme jamais.
   formulaireOuvert     Boolean              @default(false)
-  // Adresses personnelles que l'organigramme peut afficher (ADR 0035), avec
+  // Adresses personnelles que l'organigramme peut afficher (ADR 0036), avec
   // l'accord de chaque personne. En base seulement : un import ne le change jamais.
   adressesOrganigramme AdressesOrganigramme @default(AUCUNE)
   archivedAt           DateTime?

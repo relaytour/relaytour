@@ -10,7 +10,7 @@ import { graphql } from '../gql'
 import type { OrganigrammeQuery } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 
-// Organigramme de l'activité affichée (ADR 0035) : le contact de l'activité, ses
+// Organigramme de l'activité affichée (ADR 0036) : le contact de l'activité, ses
 // admins, puis chaque périmètre avec son contact principal et ses référentes et
 // référents de la période. Une personne en découverte ne lit que les admins et les
 // contacts principaux. Le serveur ne renvoie une adresse personnelle qu'avec le

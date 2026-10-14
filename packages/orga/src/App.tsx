@@ -42,7 +42,7 @@ const routeur = createBrowserRouter([
     element: <Coquille />,
     children: [
       { path: 'perimetres', element: <TousLesPerimetres /> },
-      // L'organigramme se lit aussi en découverte (ADR 0035).
+      // L'organigramme se lit aussi en découverte (ADR 0036).
       { path: 'organigramme', element: <Organigramme /> },
       { path: 'preferences', element: <Preferences /> },
       // Les écrans de l'équipe : une personne qui découvre l'activité (ADR 0012)

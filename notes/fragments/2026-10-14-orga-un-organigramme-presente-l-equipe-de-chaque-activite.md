@@ -14,6 +14,6 @@ fr:
     s'affiche qu'avec votre accord, donné dans « Préférences ».
 ---
 
-ADR 0035 : requête `organigramme`, réglage `Activite.adressesOrganigramme`,
+ADR 0036 : requête `organigramme`, réglage `Activite.adressesOrganigramme`,
 accord `Appartenance.adresseVisible` et mutation `modifierMonAdresseVisible`.
 
