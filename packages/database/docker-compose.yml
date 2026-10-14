@@ -5,7 +5,7 @@ name: relaytour
 services:
   db:
     # Image taguée : une montée de version majeure silencieuse peut casser le volume.
-    image: mariadb:11.8
+    image: mariadb:13.0
     container_name: mariadb_relaytour
     restart: unless-stopped
     environment:
