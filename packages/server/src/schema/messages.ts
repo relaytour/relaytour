@@ -1,6 +1,6 @@
 import { ChampDestinataires, prisma, StatutMessage } from '@relaytour/database'
 
-import { dansLEquipe } from '../lib/appartenances.ts'
+import { dansLEquipe, membreActif } from '../lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { publierMessage } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
@@ -183,8 +183,7 @@ builder.mutationFields(t => ({
       const lisibles = await prisma.user.count({
         where: {
           id: { in: ids },
-          archivedAt: null,
-          appartenances: { some: { organisationId } },
+          ...membreActif(organisationId),
           ...(activiteId === null ? {} : dansLEquipe([activiteId])),
         },
       })

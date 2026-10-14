@@ -29,7 +29,7 @@ const DELAI_ENVOI_MS = 10_000
 /**
  * Envoie une notification en push aux appareils de son destinataire (ADR 0024).
  * Le texte, les préférences et les abonnements se relisent en base au moment de
- * l'envoi : une notification déjà lue, un compte archivé ou une préférence coupée
+ * l'envoi : une notification déjà lue, une personne archivée dans l'organisation ou une préférence coupée
  * ne donnent aucun envoi.
  */
 export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
@@ -52,10 +52,19 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
       tache: SELECTION_TACHE_NOTIFIEE,
       fiche: SELECTION_FICHE_NOTIFIEE,
       activite: SELECTION_ACTIVITE_NOTIFIEE,
-      user: { select: { archivedAt: true } },
     },
   })
-  if (n === null || n.lueLe !== null || n.user.archivedAt !== null) return
+  if (n === null || n.lueLe !== null) return
+  // Une personne archivée dans l'organisation de la notification ne la reçoit plus
+  // (ADR 0031).
+  const active = await prisma.appartenance.count({
+    where: {
+      userId: n.userId,
+      organisationId: n.organisationId,
+      archiveLe: null,
+    },
+  })
+  if (active === 0) return
   if (!pushAutorise(await preferencesDe(prisma, n.userId), n.type)) return
 
   const abonnements = await prisma.abonnementPush.findMany({

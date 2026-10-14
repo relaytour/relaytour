@@ -388,17 +388,17 @@ describe('abonnement aux changements', () => {
     })
     expect((await lire()).entite).toBe('NOTIFICATION')
 
-    // Son compte est archivé : le flux se ferme au signal suivant.
-    await prisma.user.update({
-      where: { id: ids.alice },
-      data: { archivedAt: new Date() },
+    // Elle est archivée dans l'organisation : le flux se ferme au signal suivant.
+    await prisma.appartenance.updateMany({
+      where: { userId: ids.alice, organisationId: ids.org },
+      data: { archiveLe: new Date() },
     })
     await publierChangement(tache({ id: 'archivee' }))
     expect((await flux!.next()).done).toBe(true)
     expect(nombreDeFlux()).toBe(0)
-    await prisma.user.update({
-      where: { id: ids.alice },
-      data: { archivedAt: null },
+    await prisma.appartenance.updateMany({
+      where: { userId: ids.alice, organisationId: ids.org },
+      data: { archiveLe: null },
     })
     await prisma.affectation.create({
       data: {

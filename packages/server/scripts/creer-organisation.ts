@@ -61,7 +61,7 @@ try {
   // L'admin se vérifie avant la création : une adresse refusée ne laisse pas
   // derrière elle une organisation à moitié amorcée.
   if (values.admin !== undefined && values['admin-nom'] !== undefined) {
-    await validerInvitation(values.admin, values['admin-nom'])
+    validerInvitation(values.admin, values['admin-nom'])
   }
   await creerOrganisation({
     slug,

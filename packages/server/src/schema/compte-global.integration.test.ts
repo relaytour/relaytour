@@ -262,6 +262,75 @@ describe('un mail sans organisation désignée', () => {
   })
 })
 
+describe('une personne archivée dans une autre organisation', () => {
+  it('s’invite comme tout compte extérieur, accepte, et l’autre organisation n’en lit rien', async () => {
+    const INVITER = `mutation ($email: String!, $e: ID, $p: [ID!]) {
+      inviterPersonne(email: $email, nom: "Saisie", editionId: $e, perimetresAffectes: $p) { enAttente personne { id } }
+    }`
+    // B archive la personne ; elle n'a plus aucune appartenance active.
+    const archiver = await executer(
+      ids.adminB,
+      slugB,
+      `mutation ($id: ID!) { archiverPersonne(id: $id, archive: true) { id archive } }`,
+      { id: ids.ancienne }
+    )
+    expect(archiver.errors).toBeUndefined()
+    await prisma.affectation.deleteMany({ where: { userId: ids.ancienne } })
+    const { connection } = await import('../jobs/queues.ts')
+    await connection.del(`limite:${cleRelance(ids.orgA, ids.ancienne)}`)
+
+    // A l'invite : même réponse que pour tout compte connu ailleurs (ADR 0030),
+    // sans le refus « ne peut pas être invitée » qui révélait l'archivage.
+    const invitation = await executer(ids.adminA, slugA, INVITER, {
+      email: adresse('ancienne'),
+      e: ids.editionA,
+      p: [ids.perimetreA],
+    })
+    expect(invitation.errors).toBeUndefined()
+    expect(invitation.data?.inviterPersonne).toEqual({
+      enAttente: true,
+      personne: null,
+    })
+    // Elle accepte, bien qu'archivée dans B.
+    const recue = await prisma.invitationOrganisation.findFirstOrThrow({
+      where: { userId: ids.ancienne, organisationId: ids.orgA },
+      select: { id: true },
+    })
+    const accepter = await executer(
+      ids.ancienne,
+      slugB,
+      `mutation ($id: ID!) { accepterInvitation(id: $id) }`,
+      { id: recue.id }
+    )
+    expect(accepter.data).toEqual({ accepterInvitation: slugA })
+    const appartenances = await prisma.appartenance.findMany({
+      where: { userId: ids.ancienne },
+      select: { organisationId: true, archiveLe: true },
+    })
+    expect(
+      appartenances.find(a => a.organisationId === ids.orgA)?.archiveLe
+    ).toBeNull()
+    expect(
+      appartenances.find(a => a.organisationId === ids.orgB)?.archiveLe
+    ).not.toBeNull()
+    // Le compte a de nouveau une appartenance active.
+    expect(
+      (await prisma.user.findUniqueOrThrow({ where: { id: ids.ancienne } }))
+        .sansAppartenanceActiveLe
+    ).toBeNull()
+    // A la lit comme une membre active, sans rien savoir de B.
+    const vueDeA = await executer(
+      ids.adminA,
+      slugA,
+      `query { personnes { id archive } }`
+    )
+    expect(
+      (vueDeA.data as { personnes: { id: string; archive: boolean }[] })
+        .personnes
+    ).toContainEqual({ id: ids.ancienne, archive: false })
+  })
+})
+
 describe('nommerAdmin, pour la commande de l’opérateur', () => {
   it('n’accorde à un compte d’une autre organisation qu’une invitation au rôle d’admin', async () => {
     const admin = await nommerAdmin(ids.orgA, adresse('adminB'), 'Saisi')
@@ -297,31 +366,33 @@ describe('nommerAdmin, pour la commande de l’opérateur', () => {
     })
   })
 
-  it('ne rétablit un compte archivé que s’il n’appartient qu’à cette organisation', async () => {
-    await prisma.user.update({
-      where: { id: ids.zoe },
-      data: { archivedAt: new Date() },
+  it('rétablit une personne archivée dans l’organisation, sans toucher à son autre organisation', async () => {
+    const archiver = (organisationId: string, archiveLe: Date | null) =>
+      prisma.appartenance.updateMany({
+        where: { userId: ids.zoe, organisationId },
+        data: { archiveLe },
+      })
+    await archiver(ids.orgA, new Date())
+    await archiver(ids.orgB, new Date())
+    const retabli = await nommerAdmin(ids.orgA, adresse('zoe'), 'Zoé')
+    expect(retabli).toEqual({ userId: ids.zoe, issue: 'retabli' })
+    const appartenances = await prisma.appartenance.findMany({
+      where: { userId: ids.zoe },
+      select: { organisationId: true, role: true, archiveLe: true },
     })
-    await expect(nommerAdmin(ids.orgA, adresse('zoe'), 'Zoé')).rejects.toThrow(
-      /archivé/
-    )
+    expect(appartenances).toContainEqual({
+      organisationId: ids.orgA,
+      role: 'ADMIN',
+      archiveLe: null,
+    })
+    // L'archivage dans l'autre organisation demeure (ADR 0031).
     expect(
-      (await prisma.user.findUniqueOrThrow({ where: { id: ids.zoe } }))
-        .archivedAt
+      appartenances.find(a => a.organisationId === ids.orgB)?.archiveLe
     ).not.toBeNull()
-    await prisma.user.update({
-      where: { id: ids.zoe },
-      data: { archivedAt: null },
+    await archiver(ids.orgB, null)
+    await prisma.appartenance.updateMany({
+      where: { userId: ids.zoe, organisationId: ids.orgA },
+      data: { role: 'MEMBRE' },
     })
-    await prisma.user.update({
-      where: { id: ids.adminA },
-      data: { archivedAt: new Date() },
-    })
-    const retabli = await nommerAdmin(ids.orgA, adresse('adminA'), 'Admin')
-    expect(retabli.issue).toBe('retabli')
-    expect(
-      (await prisma.user.findUniqueOrThrow({ where: { id: ids.adminA } }))
-        .archivedAt
-    ).toBeNull()
   })
 })

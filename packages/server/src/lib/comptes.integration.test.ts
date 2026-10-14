@@ -166,7 +166,7 @@ describe('creerOuRattacherCompte', () => {
     ])
   })
 
-  it('n’écrit rien pour un compte archivé, membre ou non', async () => {
+  it('ne lit que l’archivage dans l’organisation visée, et n’écrit rien', async () => {
     const membre = randomUUID()
     const exterieur = randomUUID()
     await prisma.user.create({
@@ -174,8 +174,9 @@ describe('creerOuRattacherCompte', () => {
         id: membre,
         email: adresse('archive-membre'),
         name: 'Archivée',
-        archivedAt: new Date(),
-        appartenances: { create: { organisationId: ids.org } },
+        appartenances: {
+          create: { organisationId: ids.org, archiveLe: new Date() },
+        },
       },
     })
     await prisma.user.create({
@@ -183,7 +184,10 @@ describe('creerOuRattacherCompte', () => {
         id: exterieur,
         email: adresse('archive-exterieur'),
         name: 'Archivé',
-        archivedAt: new Date(),
+        // Archivé dans une autre organisation : cela ne se lit pas d'ici (ADR 0031).
+        appartenances: {
+          create: { organisationId: ids.autre, archiveLe: new Date() },
+        },
       },
     })
     expect(
@@ -191,8 +195,10 @@ describe('creerOuRattacherCompte', () => {
     ).toMatchObject({ userId: membre, issue: 'archive', dejaMembre: true })
     expect(
       await creerOuRattacherCompte(prisma, demande('archive-exterieur'))
-    ).toMatchObject({ userId: exterieur, issue: 'archive', dejaMembre: false })
-    expect(await appartenances(exterieur)).toEqual([])
+    ).toMatchObject({ userId: exterieur, issue: 'externe', dejaMembre: false })
+    expect(await appartenances(exterieur)).toEqual([
+      { organisationId: ids.autre, role: 'MEMBRE' },
+    ])
   })
 
   it('décide sans écrire en simulation', async () => {

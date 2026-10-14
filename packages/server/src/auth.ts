@@ -55,7 +55,6 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
     user: {
       additionalFields: {
         isAdmin: { type: 'boolean', defaultValue: false, input: false },
-        archivedAt: { type: 'date', required: false, input: false },
       },
     },
 
@@ -81,21 +80,6 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
       // qu'une valeur unique dans X-Forwarded-For : avec une chaîne d'adresses (un
       // intermédiaire devant Caddy), il rangerait tous les clients dans un même compteur.
       ipAddress: { ipAddressHeaders: [ENTETE_IP_CLIENT] },
-    },
-
-    databaseHooks: {
-      session: {
-        create: {
-          // Un compte archivé ne peut plus ouvrir de session, même avec un code valide.
-          before: async session => {
-            const user = await prisma.user.findUnique({
-              where: { id: session.userId },
-              select: { archivedAt: true },
-            })
-            if (user === null || user.archivedAt !== null) return false
-          },
-        },
-      },
     },
 
     hooks: {
@@ -187,9 +171,11 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
           if (type !== 'sign-in') return
           const user = await prisma.user.findUnique({
             where: { email: email.toLowerCase() },
-            select: { id: true, archivedAt: true },
+            select: { id: true },
           })
-          if (user === null || user.archivedAt !== null) return
+          // L'archivage ne ferme plus la connexion (ADR 0031) : une personne archivée
+          // dans son organisation doit pouvoir accepter l'invitation d'une autre.
+          if (user === null) return
           // Exception documentée (ADR 0002) : le job porte le code, il expire avec lui
           // et disparaît dès son traitement. La mise en file n'est pas attendue, pour que
           // la réponse ne soit pas plus lente qu'avec une adresse inconnue.

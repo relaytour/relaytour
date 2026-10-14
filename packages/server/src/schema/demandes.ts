@@ -451,8 +451,14 @@ builder.mutationFields(t => ({
             organisationId,
             role: 'MEMBRE',
           })
+          // La personne est archivée dans cette organisation (ADR 0031) : un admin
+          // de l'organisation la rétablit depuis l'annuaire.
           if (compte.issue === 'archive') {
-            throw erreurSaisie('Cette adresse ne peut pas être invitée.')
+            throw erreurSaisie(
+              ctx.personne!.estAdmin
+                ? 'Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire.'
+                : 'Cette adresse ne peut pas être invitée.'
+            )
           }
           const { userId } = compte
           const traitee = {

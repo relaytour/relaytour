@@ -763,6 +763,11 @@ type Mutation {
   Remplace l’identité de l’organisation. Le slug, le fuseau horaire, le statut et les limites ne changent pas ici.
   """
   modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, iconeApplication: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
+
+  """
+  La personne modifie son propre nom, qui vaut dans toutes ses organisations (ADR 0031).
+  """
+  modifierMonNom(nom: String!): Personne!
   modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
 
   """
@@ -1005,6 +1010,8 @@ type PeriodeInstallation {
 type Personne {
   activitesAdministrees: [ID!]!
   affectations(editionId: ID): [Affectation!]!
+
+  """Vrai quand la personne est archivée dans l’organisation active."""
   archive: Boolean!
   attributions: [AttributionActivite!]!
 
@@ -1014,6 +1021,11 @@ type Personne {
   estAdmin: Boolean
   id: ID!
   nom: String!
+
+  """
+  Vrai tant que la personne ne s’est jamais connectée : un admin de l’organisation peut alors corriger son nom.
+  """
+  nomModifiable: Boolean!
   souhaits(editionId: ID): [Souhait!]!
 }
 
@@ -1069,7 +1081,7 @@ type PostesPerimetre {
   perimetre: Perimetre!
 
   """
-  Souhaits en attente : la personne n’est pas encore affectée à ce périmètre. Les comptes archivés sont exclus.
+  Souhaits en attente : la personne n’est pas encore affectée à ce périmètre. Les personnes archivées dans l’organisation sont exclues.
   """
   souhaits: [Souhait!]!
 }

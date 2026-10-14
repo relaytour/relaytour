@@ -17,15 +17,16 @@ import type { Prisma, RoleOrganisation } from '@relaytour/database'
  * - `externe` : le compte existe hors de l'organisation, rien n'est écrit : l'appelant
  *   enregistre une invitation, et n'en lit ni le nom ni aucune autre donnée ;
  * - `membre` : le compte appartient déjà à l'organisation, rien n'est écrit ;
- * - `archive` : le compte est archivé, rien n'est écrit. Le rétablir lui rendrait
- *   l'accès à ses autres organisations.
+ * - `archive` : la personne est archivée dans cette organisation (ADR 0031), rien
+ *   n'est écrit : un admin de l'organisation la rétablit. Un archivage dans une
+ *   autre organisation ne se lit pas d'ici : le compte est alors `externe`.
  */
 export type IssueCompte = 'cree' | 'externe' | 'membre' | 'archive'
 
 export interface CompteRattache {
   userId: string
   issue: IssueCompte
-  /** Vrai quand le compte appartenait déjà à l'organisation, archivé ou non. */
+  /** Vrai quand le compte appartenait déjà à l'organisation, archivée ou non. */
   dejaMembre: boolean
   /**
    * Le nom porté par un compte déjà membre de l'organisation. Le nom appartient au
@@ -58,8 +59,10 @@ export async function creerOuRattacherCompte(
     select: {
       id: true,
       name: true,
-      archivedAt: true,
-      appartenances: { where: { organisationId }, select: { id: true } },
+      appartenances: {
+        where: { organisationId },
+        select: { id: true, archiveLe: true },
+      },
     },
   })
   if (existant === null) {
@@ -81,7 +84,9 @@ export async function creerOuRattacherCompte(
     dejaMembre: existant.appartenances.length > 0,
     nomDuCompte: existant.name,
   }
-  if (existant.archivedAt !== null) return { ...compte, issue: 'archive' }
-  if (compte.dejaMembre) return { ...compte, issue: 'membre' }
+  const ici = existant.appartenances[0]
+  if (ici !== undefined) {
+    return { ...compte, issue: ici.archiveLe === null ? 'membre' : 'archive' }
+  }
   return { ...compte, nomDuCompte: null, issue: 'externe' }
 }
