@@ -1,6 +1,6 @@
 # ADR 0036 — Organigramme d'une activité
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-14
 - Complète l'ADR 0011 (contact principal), l'ADR 0012 (page « Tous les périmètres ») et l'ADR 0014 (consultation). Ajoute une règle de lecture des adresses à l'ADR 0018.
 

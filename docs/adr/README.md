@@ -37,6 +37,6 @@
 | [0033](0033-notifications-d-admin.md) | Notifications d'admin, rangées par activité et par périmètre | Acceptée, réalisée |
 | [0034](0034-plafond-quotidien-des-mails.md) | Plafond quotidien des mails d'une installation | Acceptée, réalisée |
 | [0035](0035-connexion-uniforme-et-jeton-local.md) | Connexion à réponse uniforme et jeton d'administration local par défaut | Acceptée, réalisée |
-| [0036](0036-organigramme-d-une-activite.md) | Organigramme d'une activité | Proposée |
+| [0036](0036-organigramme-d-une-activite.md) | Organigramme d'une activité | Acceptée, réalisée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
