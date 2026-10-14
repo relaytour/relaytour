@@ -230,6 +230,12 @@ const ECRANS = [
     chemin: `${ACTIVITE}/perimetres/football`,
     avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
   },
+  // L'organigramme de l'activité (ADR 0035), lu par une référente.
+  {
+    nom: 'organigramme',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/organigramme`,
+  },
   { nom: 'preferences', compte: 'referent', chemin: `${ACTIVITE}/preferences` },
   // Le tiroir de la cloche, rangé par activité (ADR 0032). La cloche est dans la
   // barre haute, hors de <main>.
