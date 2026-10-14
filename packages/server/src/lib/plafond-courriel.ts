@@ -49,14 +49,16 @@ export async function reserverEnvoi(
   const admis = await limiter(
     cleDuJour(maintenant),
     plafond,
-    DUREE_DU_COMPTEUR_SECONDES
+    DUREE_DU_COMPTEUR_SECONDES,
+    { libelle: 'le plafond quotidien des mails' }
   )
   return admis ? 'libre' : 'atteint'
 }
 
 /**
  * Rend un envoi réservé qui n'est pas parti (panne du transport) : le nouvel essai
- * le réservera de nouveau. Ne lève jamais.
+ * le réservera de nouveau. `maintenant` est l'instant de la réservation, pour rendre
+ * la place au bon jour. Ne lève jamais.
  */
 export async function rendreEnvoi(
   sorte: string,

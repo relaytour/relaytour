@@ -44,17 +44,26 @@ export async function limiterParCle(
   cle: string,
   max: number,
   fenetreSecondes: number,
-  options: { siIndisponible?: 'laisser-passer' | 'refuser' } = {}
+  options: {
+    siIndisponible?: 'laisser-passer' | 'refuser'
+    /** Ce que la limite borne, pour le journal d'une panne : « la limite par adresse ». */
+    libelle?: string
+  } = {}
 ): Promise<boolean> {
   try {
     return (await compter(cle, fenetreSecondes)) <= max
   } catch (erreur) {
     const refuser = options.siIndisponible === 'refuser'
+    const libelle = options.libelle ?? 'la limite par adresse'
     journal.error(
-      { evenement: 'limite-indisponible', message: (erreur as Error).message },
+      {
+        evenement: 'limite-indisponible',
+        limite: libelle,
+        message: (erreur as Error).message,
+      },
       refuser
-        ? 'Redis ne répond pas : l’appel limité est refusé.'
-        : 'Redis ne répond pas : la limite par adresse est ignorée.'
+        ? `Redis ne répond pas : ${libelle} refuse l’appel.`
+        : `Redis ne répond pas : ${libelle} est ignorée.`
     )
     return !refuser
   }

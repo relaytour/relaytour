@@ -84,8 +84,11 @@ export async function courrielProcessor(
   // Plafond quotidien de l’installation (ADR 0034) : au-delà, le mail attend le
   // lendemain. Le job garde ses essais : un report n'en consomme aucun.
   const plafond = env.COURRIEL_PLAFOND_QUOTIDIEN
-  if ((await reserverEnvoi(sorte, plafond)) === 'atteint') {
-    const maintenant = new Date()
+  // Un seul instant pour la réservation, le report et la restitution : un envoi
+  // qui franchit minuit UTC rend sa place au jour où il l'a prise.
+  const reserveLe = new Date()
+  if ((await reserverEnvoi(sorte, plafond, reserveLe)) === 'atteint') {
+    const maintenant = reserveLe
     journal.warn(
       {
         evenement: 'courriel-plafond-atteint',
@@ -134,8 +137,10 @@ export async function courrielProcessor(
     throw new UnrecoverableError(`Adresse refusée définitivement (${sorte}).`)
   }
   if (issue === 'panne') {
-    // Le mail n'est pas parti : sa place est rendue, le nouvel essai la réservera.
-    await rendreEnvoi(sorte, plafond)
+    // Le mail n'est pas parti : sa place est rendue au jour de la réservation, et
+    // le nouvel essai la réservera. Un refus définitif garde la sienne : le serveur
+    // de mail l'a compté.
+    await rendreEnvoi(sorte, plafond, reserveLe)
     throw new Error(`Envoi impossible (${sorte}), nouvel essai prévu.`)
   }
   journal.debug(

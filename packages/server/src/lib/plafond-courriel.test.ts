@@ -54,10 +54,12 @@ describe('reserverEnvoi', () => {
   it('réserve un envoi sous le plafond, dans le compteur du jour', async () => {
     const limiter = vi.fn(() => Promise.resolve(true))
     expect(await reserverEnvoi('invitation', 200, midi, limiter)).toBe('libre')
+    // Le journal d'une panne de Redis nomme le plafond, pas la limite par adresse.
     expect(limiter).toHaveBeenCalledWith(
       'courriel-quotidien:2026-10-11',
       200,
-      2 * 24 * 3600
+      2 * 24 * 3600,
+      { libelle: 'le plafond quotidien des mails' }
     )
   })
 
@@ -71,6 +73,13 @@ describe('rendreEnvoi', () => {
   it('rend la place d’un envoi qui n’est pas parti', async () => {
     const rendre = vi.fn(() => Promise.resolve())
     await rendreEnvoi('invitation', 200, midi, rendre)
+    expect(rendre).toHaveBeenCalledWith('courriel-quotidien:2026-10-11')
+  })
+
+  it('rend la place au jour de la réservation, même après minuit', async () => {
+    const rendre = vi.fn(() => Promise.resolve())
+    const reserveLe = new Date('2026-10-11T23:59:59.500Z')
+    await rendreEnvoi('invitation', 200, reserveLe, rendre)
     expect(rendre).toHaveBeenCalledWith('courriel-quotidien:2026-10-11')
   })
 

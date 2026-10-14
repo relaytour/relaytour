@@ -26,7 +26,7 @@ Un hébergeur peut limiter les envois chez son fournisseur, mais cette limite va
 - Le worker compte un mail au moment de l'envoi, dans un compteur de Redis nommé par le jour UTC (`lib/plafond-courriel.ts`). Le compteur ne contient ni adresse ni contenu.
 - Au-delà du plafond, le mail n'est pas perdu : le worker le reporte au début du jour UTC suivant, étalé sur trente minutes. Un report ne consomme aucun essai du job.
 - Le code de connexion part toujours et n'est pas compté. Une personne doit pouvoir se connecter, et sa demande est déjà limitée par adresse (ADR 0002).
-- Un mail que le transport n'a pas pu remettre rend sa place : le nouvel essai la réserve de nouveau.
+- Un mail que le transport n'a pas pu envoyer, faute de joindre le serveur de mail, rend sa place au jour de sa réservation : le nouvel essai la réserve de nouveau. Un refus définitif du serveur de mail garde la sienne, car le fournisseur l'a compté.
 - Le worker journalise chaque report (`courriel-plafond-atteint`), avec la sorte du mail et le plafond, sans adresse (invariant 6).
 - Si Redis ne répond pas, le mail part : la file dépend elle-même de Redis, et une panne ne doit pas retenir les mails.
 
