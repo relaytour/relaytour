@@ -30,6 +30,14 @@ Avant l'ouverture, publiez sur le domaine de l'expéditeur :
 
 Vérifiez la délivrabilité avant l'ouverture avec un service d'analyse d'en-têtes : un mail classé indésirable prive les bénévoles de leur code de connexion.
 
+## Plafond quotidien
+
+`COURRIEL_PLAFOND_QUOTIDIEN` fixe le nombre de mails que l'installation envoie par jour (ADR 0034). La variable est facultative : vide, aucun plafond ne s'applique.
+
+- Réglez le plafond sous le quota quotidien de votre fournisseur, et au-dessus du volume normal de l'installation.
+- Au-delà du plafond, le worker reporte le mail au lendemain. Le code de connexion part toujours.
+- Le journal du worker porte l'événement `courriel-plafond-atteint` à chaque report. Un plafond atteint chaque jour est trop bas, ou signale un envoi anormal.
+
 ## Ce qui reste hors du dépôt
 
 Le fournisseur retenu par un hébergeur qui sert plusieurs organisations, et son choix entre un domaine d'envoi partagé et un domaine par organisation, relèvent de son exploitation (ADR 0007).
