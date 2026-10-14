@@ -26,6 +26,39 @@ const ROUTES_OUVERTES = new Set([
   '/sign-out',
 ])
 
+type ContexteDeHook = Parameters<Parameters<typeof createAuthMiddleware>[0]>[0]
+
+/**
+ * Better Auth renvoie le jeton de session dans le corps de `/get-session`, en plus du
+ * cookie httpOnly (ADR 0035). Personne ne lit ce corps : l'espace organisateur passe
+ * par GraphQL, et le serveur ne lit que l'identifiant de la personne. Le jeton
+ * disparaît donc du corps, comme pour la connexion.
+ */
+function sansJetonDeSession(ctx: ContexteDeHook): Promise<unknown> {
+  const rendu = ctx.context.returned
+  const corps =
+    rendu !== null &&
+    typeof rendu === 'object' &&
+    '_flag' in rendu &&
+    rendu._flag === 'json' &&
+    'body' in rendu
+      ? rendu.body
+      : rendu
+  if (
+    corps !== null &&
+    typeof corps === 'object' &&
+    'session' in corps &&
+    corps.session !== null &&
+    typeof corps.session === 'object' &&
+    'token' in corps.session
+  ) {
+    return Promise.resolve(
+      ctx.json({ ...corps, session: { ...corps.session, token: null } })
+    )
+  }
+  return Promise.resolve()
+}
+
 // Au plus 5 codes par adresse sur 15 minutes, en plus de la limite par IP de Better Auth.
 const LIMITE_CODES_PAR_ADRESSE = { max: 5, fenetreSecondes: 15 * 60 }
 // Et au plus 20 codes par adresse et par jour : avec 5 essais par code, un tiers qui
@@ -119,6 +152,7 @@ export function creerAuth(pluginsSupplementaires: BetterAuthPlugin[] = []) {
         }
       }),
       after: createAuthMiddleware(ctx => {
+        if (ctx.path === '/get-session') return sansJetonDeSession(ctx)
         if (ctx.path !== '/sign-in/email-otp') return Promise.resolve()
         const rendu = ctx.context.returned
         if (
