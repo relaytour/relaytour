@@ -5,6 +5,7 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { ouvrirLeFlux, type Changement } from '../lib/flux.ts'
 
 import { schema } from './index.ts'
 
@@ -426,5 +427,54 @@ describe('lecture en découverte', () => {
     expect(basket.referents).toEqual([])
     // Le réglage vaut REFERENTS et le contact a donné son accord : rien ne s'affiche.
     expect(Object.values(adresses(o)).every(a => a === null)).toBe(true)
+  })
+})
+
+describe('relecture et lecture seule', () => {
+  it('publie un signal d’équipe quand le réglage change', async () => {
+    const contexte = () => buildContext('127.0.0.1', ids.referent, slug)
+    const flux = await ouvrirLeFlux(await contexte(), {
+      relireLeContexte: contexte,
+    })
+    try {
+      await regler('AUCUNE')
+      const recu = await Promise.race([
+        flux!.next().then(r => r.value as Changement),
+        new Promise<null>(ok => setTimeout(() => ok(null), 3000)),
+      ])
+      expect(recu).toMatchObject({ entite: 'EQUIPE', activiteId: ids.activite })
+    } finally {
+      await flux!.return?.(undefined)
+    }
+  })
+
+  it('laisse retirer l’accord dans une organisation en lecture seule', async () => {
+    await prisma.organisation.update({
+      where: { id: ids.org },
+      data: { statut: 'LECTURE_SEULE' },
+    })
+    try {
+      await accord(ids.contact, false)
+      expect(code(await executer(ids.contact, ACCORD, { v: true }))).toBe(
+        'LECTURE_SEULE'
+      )
+      expect(
+        (
+          await prisma.appartenance.findUniqueOrThrow({
+            where: {
+              userId_organisationId: {
+                userId: ids.contact,
+                organisationId: ids.org,
+              },
+            },
+          })
+        ).adresseVisible
+      ).toBe(false)
+    } finally {
+      await prisma.organisation.update({
+        where: { id: ids.org },
+        data: { statut: 'ACTIVE' },
+      })
+    }
   })
 })

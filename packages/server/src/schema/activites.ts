@@ -23,6 +23,7 @@ import {
 } from '../lib/formulaire.ts'
 import { exigerPlaceActivite, sousVerrouOrganisation } from '../lib/limites.ts'
 import { lirePhases, phasesValides, type Phase } from '../lib/phases.ts'
+import { publierPourActivite } from '../lib/flux.ts'
 import { configurationActivite } from '../lib/organisation.ts'
 import { sansDoublon, texteRequis } from '../lib/saisie.ts'
 import { marquerContenuModifie } from '../lib/synchronisation.ts'
@@ -369,22 +370,38 @@ builder.mutationFields(t => ({
           : { adressesOrganigramme: args.adressesOrganigramme }),
         ...formulaire,
       }
-      return sousVerrouOrganisation(organisationId, async tx => {
-        const archivedAt =
-          args.archive === null || args.archive === undefined
-            ? undefined
-            : await archivage(tx, organisationId, id, args.archive)
-        const activite = await tx.activite.update({
-          ...query,
-          where: { id },
-          data: {
-            ...donnees,
-            ...(archivedAt === undefined ? {} : { archivedAt }),
-          },
-        })
-        await marquerContenuModifie(organisationId, tx)
-        return activite
+      const avant = await prisma.activite.findUniqueOrThrow({
+        where: { id },
+        select: { adressesOrganigramme: true },
       })
+      const activite = await sousVerrouOrganisation(
+        organisationId,
+        async tx => {
+          const archivedAt =
+            args.archive === null || args.archive === undefined
+              ? undefined
+              : await archivage(tx, organisationId, id, args.archive)
+          const activite = await tx.activite.update({
+            ...query,
+            where: { id },
+            data: {
+              ...donnees,
+              ...(archivedAt === undefined ? {} : { archivedAt }),
+            },
+          })
+          await marquerContenuModifie(organisationId, tx)
+          return activite
+        }
+      )
+      // Les organigrammes ouverts relisent leurs adresses (ADR 0036), après la
+      // validation de la transaction.
+      if (
+        donnees.adressesOrganigramme !== undefined &&
+        donnees.adressesOrganigramme !== avant.adressesOrganigramme
+      ) {
+        publierPourActivite('EQUIPE', organisationId, id)
+      }
+      return activite
     },
   }),
 

@@ -114,7 +114,11 @@ const listeSimple = {
 
 export default function Organigramme() {
   const { activite, lien, libelleGroupe } = useActivite()
-  const { data, loading } = useQuery(ORGANIGRAMME)
+  // Relire le serveur à chaque ouverture : un accord retiré ou un réglage changé
+  // depuis la dernière visite ne doit pas réafficher une adresse du cache.
+  const { data, loading } = useQuery(ORGANIGRAMME, {
+    fetchPolicy: 'cache-and-network',
+  })
 
   if (loading && data === undefined) return <Skeleton active />
   if (data === undefined) return null

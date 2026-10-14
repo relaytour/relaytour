@@ -6,6 +6,7 @@ import {
 } from '@relaytour/database'
 
 import { membreActif } from '../lib/appartenances.ts'
+import { organisationEnLectureSeule } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 
 import { AdressesOrganigrammeEnum } from './activites.ts'
@@ -248,8 +249,14 @@ builder.prismaObjectFields(PersonneRef, t => ({
 builder.mutationFields(t => ({
   modifierMonAdresseVisible: t.boolean({
     authScopes: { connecte: true },
+    // Une organisation en lecture seule montre encore l'organigramme : la personne
+    // doit pouvoir y retirer son accord. Donner son accord reste une écriture.
+    skipTypeScopes: true,
     args: { visible: t.arg.boolean({ required: true }) },
     resolve: async (_root, { visible }, ctx) => {
+      if (visible && ctx.organisation!.statut === 'LECTURE_SEULE') {
+        throw organisationEnLectureSeule()
+      }
       const organisationId = ctx.organisation!.id
       const userId = ctx.personne!.id
       await prisma.appartenance.update({
