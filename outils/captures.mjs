@@ -242,7 +242,8 @@ const ECRANS = [
     nom: 'preferences-organigramme',
     compte: 'referent',
     chemin: `${ACTIVITE}/preferences`,
-    apres: defiler('Votre adresse dans l’organigramme'),
+    // Le titre reste sous la barre haute flottante : le geste remonte un peu.
+    apres: `(e => (e?.scrollIntoView({ block: 'start' }), window.scrollBy(0, -140), Boolean(e)))([...document.querySelectorAll('main h2')].find(e => e.innerText.trim() === 'Votre adresse dans l’organigramme'))`,
   },
   // Le tiroir de la cloche, rangé par activité (ADR 0032). La cloche est dans la
   // barre haute, hors de <main>.
