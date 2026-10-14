@@ -5,7 +5,7 @@
   "version": "0.17.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.17.0",
       "notes": [
         {
           "id": "2026-10-14-orga-un-organigramme-presente-l-equipe-de-chaque-activite",
@@ -19,12 +19,7 @@
             "texte": "La page « Organigramme » affiche le contact de l'activité, ses admins, puis les personnes de chaque périmètre, contact principal en tête. Les admins de l'activité choisissent les adresses affichées. Votre adresse ne s'affiche qu'avec votre accord, donné dans « Préférences ».",
             "migration": null
           }
-        }
-      ]
-    },
-    {
-      "version": "0.17.0",
-      "notes": [
+        },
         {
           "id": "2026-10-14-orga-les-notifications-d-admin-ont-leur-ecran",
           "date": "2026-10-14",
