@@ -63,6 +63,8 @@ describe('requetesPour', () => {
     expect(requetesPour(['NOTIFICATION'])).toEqual([
       'NombreNotificationsNonLues',
       'ListeNotifications',
+      'NombreNotificationsAdmin',
+      'ListeNotificationsAdmin',
     ])
     const lot = requetesPour(['PERIMETRE', 'EQUIPE'])
     expect(new Set(lot).size).toBe(lot.length)
@@ -97,7 +99,7 @@ describe('requetesPour', () => {
     )
     // Une tâche ou une notification ne relit pas tout.
     expect(requetesPour(['TACHE'])).not.toContain('ListeFiches')
-    expect(requetesPour(['NOTIFICATION'])).toHaveLength(2)
+    expect(requetesPour(['NOTIFICATION'])).toHaveLength(4)
   })
 })
 

@@ -6,18 +6,20 @@ import type { TypeNotification } from '@relaytour/database'
 // l'environnement, pour que le schéma s'imprime sans `.env`.
 
 /** Les familles de notifications que la personne coupe une par une. */
-export type FamillePush = 'taches' | 'echeances' | 'demandes'
+export type FamillePush = 'taches' | 'echeances' | 'demandes' | 'equipe'
 
 export interface PreferencesPush {
   pushTaches: boolean
   pushEcheances: boolean
   pushDemandes: boolean
+  pushEquipe: boolean
 }
 
 /**
  * La famille d'une notification, ou null quand son type ne part jamais en push :
  * la création d'une tâche et les changements de fiche s'annoncent à tout un
- * périmètre, et restent dans la cloche.
+ * périmètre, et restent dans la cloche. Les demandes et les invitations, puis
+ * l'équipe, sont les deux familles d'admin (ADR 0033).
  */
 export function famillePush(type: TypeNotification): FamillePush | null {
   switch (type) {
@@ -31,7 +33,20 @@ export function famillePush(type: TypeNotification): FamillePush | null {
     case 'TACHE_EN_RETARD':
       return 'echeances'
     case 'DEMANDE_RECUE':
+    case 'DEMANDE_ACCEPTEE':
+    case 'DEMANDE_REFUSEE':
+    case 'INVITATION_ACCEPTEE':
       return 'demandes'
+    case 'AFFECTATION_AJOUTEE':
+    case 'AFFECTATION_RETIREE':
+    case 'SOUHAIT_FORMULE':
+    case 'ADMIN_ACTIVITE_NOMME':
+    case 'ADMIN_ACTIVITE_RETIRE':
+    case 'ADMIN_ORGANISATION_NOMME':
+    case 'ADMIN_ORGANISATION_RETIRE':
+    case 'PERSONNE_ARCHIVEE':
+    case 'PERSONNE_RETABLIE':
+      return 'equipe'
     default:
       return null
   }
@@ -49,6 +64,8 @@ export function pushAutorise(
       return preferences.pushEcheances
     case 'demandes':
       return preferences.pushDemandes
+    case 'equipe':
+      return preferences.pushEquipe
     default:
       return false
   }

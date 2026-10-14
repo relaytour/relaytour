@@ -16,6 +16,7 @@ import {
 } from '../lib/souhaits.ts'
 
 import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
+import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
@@ -422,6 +423,19 @@ builder.mutationFields(t => ({
         { evenement: 'souhait-formule', userId, ...cible },
         'Une personne a formulé un souhait.'
       )
+      // Les admins de l'activité l'apprennent (ADR 0033).
+      const { activiteId } = await prisma.perimetre.findUniqueOrThrow({
+        where: { id: cible.perimetreId },
+        select: { activiteId: true },
+      })
+      await notifierLesAdmins(prisma, {
+        type: 'SOUHAIT_FORMULE',
+        organisationId: ctx.organisation!.id,
+        activiteId,
+        perimetreId: cible.perimetreId,
+        editionId: cible.editionId,
+        acteurId: userId,
+      })
       publierPourPerimetre('EQUIPE', cible.perimetreId, {
         editionId: cible.editionId,
       })

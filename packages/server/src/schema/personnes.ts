@@ -17,7 +17,8 @@ import {
   verrouillerCompte,
 } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
-import { annoncerChangementEquipe } from '../lib/equipe.ts'
+import { annoncerChangementEquipe, notifierPlace } from '../lib/equipe.ts'
+import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 import {
   exigerAdminDeLEdition,
   exigerAdminDuPerimetre,
@@ -749,6 +750,19 @@ builder.mutationFields(t => ({
       if (role === 'ADMIN' && appartenance.role !== 'ADMIN') {
         await annoncerChangementEquipe(id, { organisationId, instant })
       }
+      // Les autres admins de l'organisation apprennent la nomination ou le retrait
+      // (ADR 0033).
+      if (role !== appartenance.role) {
+        await notifierLesAdmins(prisma, {
+          type:
+            role === 'ADMIN'
+              ? 'ADMIN_ORGANISATION_NOMME'
+              : 'ADMIN_ORGANISATION_RETIRE',
+          organisationId,
+          acteurId: ctx.personne!.id,
+          personneId: id,
+        })
+      }
       return personne
     },
   }),
@@ -789,10 +803,10 @@ builder.mutationFields(t => ({
       await exigerMembre(ctx, id)
       const organisationId = ctx.organisation!.id
       const instant = new Date()
-      await prisma.$transaction(async tx => {
+      const change = await prisma.$transaction(async tx => {
         await verrouillerCompte(tx, id)
         // Une personne déjà archivée garde la date de son archivage.
-        await tx.appartenance.updateMany({
+        const { count } = await tx.appartenance.updateMany({
           where: {
             userId: id,
             organisationId,
@@ -801,8 +815,18 @@ builder.mutationFields(t => ({
           data: { archiveLe: args.archive ? instant : null },
         })
         await synchroniserArchivageDuCompte(tx, id, instant)
+        return count > 0
       })
       equipesModifiees(ctx)
+      // Les autres admins de l'organisation l'apprennent (ADR 0033).
+      if (change) {
+        await notifierLesAdmins(prisma, {
+          type: args.archive ? 'PERSONNE_ARCHIVEE' : 'PERSONNE_RETABLIE',
+          organisationId,
+          acteurId: ctx.personne!.id,
+          personneId: id,
+        })
+      }
       const personne = await prisma.user.findUniqueOrThrow({
         ...query,
         where: { id },
@@ -870,6 +894,16 @@ builder.mutationFields(t => ({
         activiteId,
         instant,
       })
+      // Les autres admins de l'activité l'apprennent aussi (ADR 0033).
+      await notifierLesAdmins(prisma, {
+        type: 'AFFECTATION_AJOUTEE',
+        organisationId: ctx.organisation!.id,
+        activiteId,
+        perimetreId,
+        editionId,
+        acteurId: ctx.personne!.id,
+        personneId: userId,
+      })
       equipesModifiees(ctx)
       publierPourPerimetre('EQUIPE', perimetreId, { editionId })
       return affectation
@@ -909,6 +943,24 @@ builder.mutationFields(t => ({
       if (count === 1) {
         publierPourPerimetre('EQUIPE', affectation.perimetreId, {
           editionId: affectation.editionId,
+        })
+        // La personne et les autres admins de l'activité l'apprennent dans
+        // l'application, sans mail (ADR 0012 et 0033).
+        const organisationId = ctx.organisation!.id
+        const activiteId = affectation.perimetre.activiteId
+        await notifierPlace(affectation.userId, {
+          organisationId,
+          activiteId,
+          instant: new Date(),
+        })
+        await notifierLesAdmins(prisma, {
+          type: 'AFFECTATION_RETIREE',
+          organisationId,
+          activiteId,
+          perimetreId: affectation.perimetreId,
+          editionId: affectation.editionId,
+          acteurId: ctx.personne!.id,
+          personneId: affectation.userId,
         })
       }
       return count === 1
@@ -1003,6 +1055,10 @@ builder.mutationFields(t => ({
           'Vous ne pouvez pas retirer votre propre rôle d’admin de l’activité.'
         )
       }
+      // Seul un vrai changement de rôle prévient les autres admins (ADR 0033).
+      const dejaAdmin =
+        (await prisma.adminActivite.count({ where: { userId, activiteId } })) >
+        0
       if (args.admin) {
         const instant = new Date()
         await prisma.adminActivite.upsert({
@@ -1016,15 +1072,26 @@ builder.mutationFields(t => ({
             createdAt: instant,
           },
         })
-        // Une nomination déjà faite ne crée pas de ligne : le mail ne dira rien.
-        await annoncerChangementEquipe(userId, {
-          organisationId,
-          activiteId,
-          instant,
-        })
+        // Une nomination déjà faite ne s'annonce pas : ni mail ni notification.
+        if (!dejaAdmin) {
+          await annoncerChangementEquipe(userId, {
+            organisationId,
+            activiteId,
+            instant,
+          })
+        }
       } else {
         await prisma.adminActivite.deleteMany({
           where: { userId, activiteId, organisationId },
+        })
+      }
+      if (dejaAdmin !== args.admin) {
+        await notifierLesAdmins(prisma, {
+          type: args.admin ? 'ADMIN_ACTIVITE_NOMME' : 'ADMIN_ACTIVITE_RETIRE',
+          organisationId,
+          activiteId,
+          acteurId: ctx.personne!.id,
+          personneId: userId,
         })
       }
       equipesModifiees(ctx)

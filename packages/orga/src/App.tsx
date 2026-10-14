@@ -12,6 +12,7 @@ import Editions from './pages/admin/Editions'
 import Equipe from './pages/admin/Equipe'
 import Organisation from './pages/admin/Organisation'
 import MessagesActivite from './pages/admin/MessagesActivite'
+import NotificationsAdmin from './pages/admin/NotificationsAdmin'
 import Personnes from './pages/admin/Personnes'
 import Redaction from './pages/admin/Redaction'
 import Connexion from './pages/Connexion'
@@ -88,6 +89,8 @@ const routeur = createBrowserRouter([
           },
           { path: 'equipe', element: <Equipe /> },
           { path: 'messages', element: <MessagesActivite /> },
+          // Les notifications d'admin, à part de la cloche (ADR 0033).
+          { path: 'notifications', element: <NotificationsAdmin /> },
           { path: 'personnes', element: <Personnes /> },
           // Anciennes adresses des pages réunies dans « Équipe », conservées pour
           // les favoris.

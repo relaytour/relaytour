@@ -322,7 +322,10 @@ describe('contenu des mails', () => {
       activiteId: ids.activite,
       fenetre: autourDuTest(),
     })
-    expect(message?.sujet).toMatch(/^Votre place dans l’équipe .+ a changé$/)
+    // Le sujet nomme l'organisation, puis l'activité (ADR 0032).
+    expect(message?.sujet).toMatch(
+      /^.+ · .+ : votre place dans l’équipe a changé$/
+    )
     expect(message?.texte).toContain(
       '- Vous rejoignez le périmètre Natation (Tournoi 2027) : Treize épreuves sur une journée.'
     )

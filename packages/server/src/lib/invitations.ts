@@ -10,6 +10,8 @@ import { creerAffectations } from './affectations.ts'
 import { synchroniserArchivageDuCompte } from './appartenances.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
 import { publierNotification, publierPourActivite } from './flux.ts'
+import { niveauxDes } from './notifications.ts'
+import { pousser } from './push-file.ts'
 import { journal } from './journal.ts'
 import { SOUHAITS_MAX } from './souhaits.ts'
 
@@ -321,22 +323,36 @@ export async function accepterInvitation(
           ? await adminsDeLOrganisation(tx, organisationId)
           : []
     const destinataires = aPrevenir.filter(id => id !== userId)
+    // Une invitation qui touche une seule activité se range sous elle ; celle qui
+    // en touche plusieurs, ou aucune, reste au niveau de l'organisation, comme
+    // l'identité de son mail (ADR 0033).
+    const liees = [...new Set(activites.map(a => a.activiteId))]
+    const activiteId = liees.length === 1 ? liees[0]! : null
+    const notificationIds: string[] = []
     if (destinataires.length > 0) {
-      await tx.notification.createMany({
-        data: destinataires.map(destinataire => ({
-          organisationId,
-          userId: destinataire,
-          type: 'INVITATION_ACCEPTEE' as const,
-          acteurId: userId,
-          activiteId: activites[0]?.activiteId ?? null,
-        })),
-      })
+      // Le niveau dit à quel titre la personne reçoit la nouvelle (ADR 0033).
+      const niveaux = await niveauxDes(tx, destinataires, activiteId)
+      for (const destinataire of destinataires) {
+        const creee = await tx.notification.create({
+          data: {
+            organisationId,
+            userId: destinataire,
+            type: 'INVITATION_ACCEPTEE',
+            niveau: niveaux.get(destinataire) ?? 'ADMIN_ORGANISATION',
+            acteurId: userId,
+            activiteId,
+          },
+          select: { id: true },
+        })
+        notificationIds.push(creee.id)
+      }
     }
     return {
       organisationId,
       organisationSlug: invitation.organisation.slug,
       activites,
       destinataires,
+      notificationIds,
       origine: invitation.origine,
     }
   })
@@ -344,6 +360,8 @@ export async function accepterInvitation(
   for (const destinataire of issue.destinataires) {
     publierNotification(issue.organisationId, destinataire)
   }
+  // Le push part après la validation : le worker relit la notification en base.
+  for (const id of issue.notificationIds) await pousser(id)
   for (const { activiteId, editionId } of issue.activites) {
     publierPourActivite('EQUIPE', issue.organisationId, activiteId, {
       editionId,

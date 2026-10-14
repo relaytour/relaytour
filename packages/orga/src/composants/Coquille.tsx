@@ -13,6 +13,7 @@ import {
   MenuFoldOutlined,
   MenuOutlined,
   MenuUnfoldOutlined,
+  NotificationOutlined,
   ScheduleOutlined,
   SearchOutlined,
   SettingOutlined,
@@ -21,7 +22,7 @@ import {
   TeamOutlined,
 } from '@ant-design/icons'
 import { useApolloClient, useQuery } from '@apollo/client/react'
-import { Alert, Button, Drawer, Grid, Menu } from 'antd'
+import { Alert, Badge, Button, Drawer, Grid, Menu } from 'antd'
 import { useCallback, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
@@ -29,6 +30,7 @@ import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
 import { useOuvertureDepuisNotification } from '../lib/application'
 import { useRafraichissement } from '../lib/rafraichissement'
+import { NOMBRE_NOTIFICATIONS_ADMIN } from '../lib/requetes-notifications'
 import { choisirOrganisation } from '../lib/selection'
 import {
   ecrireVolet,
@@ -92,6 +94,11 @@ function Mise({ session }: { session: Session }) {
   const { moi, active } = session
   const { activite, lien, periode, gere, decouverte } = useActivite()
   const { data: menu } = useQuery(MENU_PERIMETRES)
+  // Le nombre des notifications d'admin, distinct de celui de la cloche (ADR 0033).
+  const { data: nombreAdmin } = useQuery(NOMBRE_NOTIFICATIONS_ADMIN, {
+    skip: !gere,
+  })
+  const nonLuesAdmin = nombreAdmin?.nombreNotificationsNonLues ?? 0
   useRafraichissement(active.slug)
   const navigate = useNavigate()
   // Une notification push peut venir d'une autre organisation de la personne
@@ -185,6 +192,21 @@ function Mise({ session }: { session: Session }) {
             // Du plus fréquent au plus rare : l'équipe et ses messages au fil de
             // la période, les réglages d'une période en dernier.
             children: [
+              // Les notifications d'admin ont leur écran et leur compteur (ADR 0033).
+              {
+                key: lien('/admin/notifications'),
+                icon: <NotificationOutlined />,
+                label: (
+                  <span className="rt-entree-compteur">
+                    Notifications d’admin
+                    <Badge
+                      count={nonLuesAdmin}
+                      size="small"
+                      color="var(--rt-accent)"
+                    />
+                  </span>
+                ),
+              },
               {
                 key: lien('/admin/equipe'),
                 icon: <SolutionOutlined />,

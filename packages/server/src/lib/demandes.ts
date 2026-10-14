@@ -6,6 +6,7 @@ import { membreActif } from './appartenances.ts'
 import { aujourdhui } from './droits.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { publierNotification } from './flux.ts'
+import { niveauxDes } from './notifications.ts'
 import { pousser } from './push-file.ts'
 import { journal } from './journal.ts'
 
@@ -119,6 +120,8 @@ export async function signalerDemande(
     })
     const jour = aujourdhui(maintenant, fuseauHoraire)
     const fenetre = fenetreDemandes(maintenant.getTime())
+    // Le niveau dit à quel titre l'admin reçoit la demande (ADR 0033).
+    const niveaux = await niveauxDes(prisma, admins, activiteId)
     for (const userId of admins) {
       if (userId === acteurId) continue
       // BullMQ refuse « : » dans un identifiant de job. Le worker relit la
@@ -139,6 +142,7 @@ export async function signalerDemande(
             organisationId,
             userId,
             type: 'DEMANDE_RECUE',
+            niveau: niveaux.get(userId) ?? 'ADMIN_ORGANISATION',
             acteurId: acteurId ?? null,
             activiteId,
             cle: `DEMANDE_RECUE-${activiteId}-${userId}-${jour}`,

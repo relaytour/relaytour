@@ -6,13 +6,11 @@ import { prisma } from '@relaytour/database'
 import { env } from '../../env.ts'
 import { journal, sansAdresses } from '../../lib/journal.ts'
 import {
-  lienNotification,
-  messageNotification,
-  preferencesDe,
-  SELECTION_ACTIVITE_NOTIFIEE,
-  SELECTION_FICHE_NOTIFIEE,
-  SELECTION_TACHE_NOTIFIEE,
-} from '../../lib/notifications.ts'
+  composerNotification,
+  SELECTION_NOTIFICATION,
+} from '../../lib/composition-notifications.ts'
+import { preferencesDe } from '../../lib/notifications.ts'
+import { filtreNotificationsAdmin } from '../../lib/notifications-admin.ts'
 import { configurationOrganisation } from '../../lib/organisation.ts'
 import {
   adressePushAcceptee,
@@ -39,20 +37,7 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
 
   const n = await prisma.notification.findUnique({
     where: { id: notificationId },
-    select: {
-      id: true,
-      userId: true,
-      organisationId: true,
-      lueLe: true,
-      type: true,
-      jours: true,
-      acteurId: true,
-      personneId: true,
-      statut: true,
-      tache: SELECTION_TACHE_NOTIFIEE,
-      fiche: SELECTION_FICHE_NOTIFIEE,
-      activite: SELECTION_ACTIVITE_NOTIFIEE,
-    },
+    select: { ...SELECTION_NOTIFICATION, userId: true, lueLe: true },
   })
   if (n === null || n.lueLe !== null) return
   // Une personne archivée dans l'organisation de la notification ne la reçoit plus
@@ -65,7 +50,27 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
     },
   })
   if (active === 0) return
-  if (!pushAutorise(await preferencesDe(prisma, n.userId), n.type)) return
+  // Une notification d'admin ne part qu'à une personne qui tient encore ce rôle :
+  // le même filtre que l'écran des admins et le résumé (ADR 0033).
+  const filtreAdmin = await filtreNotificationsAdmin(
+    prisma,
+    n.userId,
+    n.organisationId
+  )
+  if (n.niveau !== 'REFERENT') {
+    if (filtreAdmin === null) return
+    const lisible = await prisma.notification.count({
+      where: { id: n.id, ...filtreAdmin },
+    })
+    if (lisible === 0) return
+  }
+  if (
+    !pushAutorise(
+      await preferencesDe(prisma, n.userId, n.organisationId),
+      n.type
+    )
+  )
+    return
 
   const abonnements = await prisma.abonnementPush.findMany({
     where: { userId: n.userId },
@@ -73,30 +78,31 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
   })
   if (abonnements.length === 0) return
 
-  const [personnes, organisation, nonLues] = await Promise.all([
-    prisma.user.findMany({
-      where: {
-        id: { in: [n.acteurId, n.personneId].filter(id => id !== null) },
-      },
-      select: { id: true, name: true },
-    }),
+  const [composee, organisation, nonLues] = await Promise.all([
+    composerNotification(prisma, n, n.userId),
     configurationOrganisation(n.organisationId),
+    // La pastille de l'application compte les notifications non lues de la cloche
+    // et celles des rôles d'admin que la personne tient encore.
     prisma.notification.count({
       where: {
         userId: n.userId,
         organisationId: n.organisationId,
         lueLe: null,
+        OR: [
+          { niveau: 'REFERENT' },
+          ...(filtreAdmin === null ? [] : [filtreAdmin]),
+        ],
       },
     }),
   ])
+  // Le titre nomme l'organisation, puis l'activité (ADR 0032).
   const message: MessagePush = {
-    titre: organisation.nomCourt,
-    corps: messageNotification(
-      n,
-      new Map(personnes.map(p => [p.id, p.name])),
-      n.userId
-    ),
-    lien: lienNotification(n),
+    titre:
+      composee.activite === null
+        ? organisation.nomCourt
+        : `${organisation.nomCourt} · ${composee.activite.nom}`,
+    corps: composee.messageAvecContexte,
+    lien: composee.lien,
     organisation: organisation.slug,
     etiquette: `notification-${n.id}`,
     icone: organisation.iconeApplicationUrl ?? '/icon.png',
