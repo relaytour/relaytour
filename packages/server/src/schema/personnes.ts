@@ -12,7 +12,9 @@ import {
   membresDeLOrganisation,
   refuserAdminDeLOrganisation,
   membreActif,
+  refuserArchivee,
   synchroniserArchivageDuCompte,
+  verrouillerCompte,
 } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
 import { annoncerChangementEquipe } from '../lib/equipe.ts'
@@ -698,7 +700,9 @@ builder.mutationFields(t => ({
           'Vous ne pouvez pas retirer vos propres droits d’admin.'
         )
       }
-      await exigerMembre(ctx, id)
+      const membre = await exigerMembre(ctx, id)
+      // Une personne archivée ne devient pas admin : elle se rétablit d'abord.
+      if (args.estAdmin && membre.role !== 'ADMIN') refuserArchivee(membre)
       const nom = texteRequis(args.nom, 'Le nom')
       const organisationId = ctx.organisation!.id
       const [actuel, appartenance] = await Promise.all([
@@ -786,6 +790,7 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
       const instant = new Date()
       await prisma.$transaction(async tx => {
+        await verrouillerCompte(tx, id)
         // Une personne déjà archivée garde la date de son archivage.
         await tx.appartenance.updateMany({
           where: {
@@ -834,7 +839,7 @@ builder.mutationFields(t => ({
       const { activiteId } = await exigerAdminDuPerimetre(ctx, perimetreId)
       // Un admin d'activité n'affecte qu'une personne de ses équipes (ADR 0018). Il
       // y fait entrer une autre personne par une invitation.
-      await exigerMembreGere(ctx, userId)
+      refuserArchivee(await exigerMembreGere(ctx, userId))
       // Même contrôle qu'une écriture : périmètre et édition de la même activité de
       // l'organisation, édition non archivée.
       await exigerEcriture(ctx, perimetreId, editionId)
@@ -985,7 +990,8 @@ builder.mutationFields(t => ({
       const userId = String(args.personneId)
       const activiteId = await ctx.exigerActivite(args.activiteId)
       await ctx.exigerAdminDe(activiteId)
-      await exigerMembreGere(ctx, userId)
+      const membre = await exigerMembreGere(ctx, userId)
+      if (args.admin) refuserArchivee(membre)
       // Un admin d'activité ne retire pas son propre rôle : il ne pourrait plus le
       // rétablir. Un admin de l'organisation garde ses droits sans ce rôle.
       if (

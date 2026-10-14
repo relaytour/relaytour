@@ -16,7 +16,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "L'archivage d'une personne ne vaut que dans son organisation",
-            "texte": "Un admin qui archive une personne lui ferme l'accès à son organisation seulement. La personne garde son compte, se connecte encore et reste membre de ses autres organisations, qui n'apprennent rien de cet archivage. Le nom appartient à la personne : elle le modifie dans ses préférences, et un admin ne le corrige que tant qu'elle ne s'est jamais connectée. Une installation qui porte une seule organisation garde le même comportement, sauf pour le nom.",
+            "texte": "Un admin qui archive une personne lui ferme l'accès à son organisation seulement. La personne garde son compte, se connecte encore et reste membre de ses autres organisations, qui n'apprennent rien de cet archivage. Le nom appartient à la personne : elle le modifie dans ses préférences, et un admin ne le corrige que tant qu'elle ne s'est jamais connectée. Sur une installation qui porte une seule organisation, une personne archivée reçoit encore son code de connexion. Elle se connecte alors sans accès à aucune donnée, et l'application lui indique qu'elle n'appartient à aucune organisation ouverte.",
             "migration": null
           }
         },

@@ -6,6 +6,7 @@ import type {
 
 import { mettreEnFile } from '../courriel/file.ts'
 
+import { membreActif } from './appartenances.ts'
 import { publierNotification } from './flux.ts'
 import { pousser } from './push-file.ts'
 
@@ -57,11 +58,7 @@ export async function referentsAPrevenir(
         : { editionId }),
       userId: { not: acteurId },
       // Une personne archivée dans l'organisation ne reçoit rien (ADR 0031).
-      user: {
-        appartenances: {
-          some: { organisationId: perimetre.organisationId, archiveLe: null },
-        },
-      },
+      user: membreActif(perimetre.organisationId),
     },
     select: { userId: true },
     distinct: ['userId'],

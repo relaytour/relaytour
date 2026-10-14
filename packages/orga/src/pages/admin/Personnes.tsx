@@ -101,7 +101,7 @@ const PERSONNES = graphql(`
 `)
 
 const EQUIPE = graphql(`
-  query PersonnesEquipe($editionId: ID) {
+  query PersonnesEquipe($editionId: ID, $gereOrganisation: Boolean!) {
     equipe {
       id
       nom
@@ -109,6 +109,9 @@ const EQUIPE = graphql(`
       estAdmin
       activitesAdministrees
       archive
+      # Réservé aux admins de l'organisation, qui corrigent le nom d'une personne
+      # jamais connectée (ADR 0031).
+      nomModifiable @include(if: $gereOrganisation)
       affectations(editionId: $editionId) {
         id
         contactPrincipal
@@ -247,7 +250,7 @@ const RENVOYER = graphql(`
 type Membre = PersonnesQuery['personnes'][number]
 // Une ligne de l'annuaire ou de l'équipe : seul l'annuaire porte les attributions.
 type Personne = PersonnesEquipeQuery['equipe'][number] &
-  Partial<Pick<Membre, 'attributions' | 'nomModifiable'>>
+  Partial<Pick<Membre, 'attributions'>>
 
 // Filtre de l'annuaire : toutes les personnes, celles d'une activité, ou celles
 // qui ne participent à aucune.
@@ -529,8 +532,8 @@ export default function Personnes({
     fetchPolicy: 'cache-and-network',
   })
   const equipe = useQuery(EQUIPE, {
-    variables: { editionId: editionId ?? null },
-    skip: modeAnnuaire,
+    variables: { editionId: editionId ?? null, gereOrganisation },
+    skip: modeAnnuaire || session === undefined,
   })
   const liste: Personne[] | undefined = modeAnnuaire
     ? annuaire.data?.personnes

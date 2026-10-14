@@ -210,7 +210,11 @@ export async function accepterInvitation(
       where: { userId_organisationId: { userId, organisationId } },
       create: { userId, organisationId, role: invitation.role },
       // Le rôle d'admin de l'invitation s'ajoute ; il ne retire jamais un rôle.
-      update: invitation.role === 'ADMIN' ? { role: 'ADMIN' } : {},
+      // Accepter rétablit aussi une appartenance archivée (ADR 0031).
+      update: {
+        archiveLe: null,
+        ...(invitation.role === 'ADMIN' ? { role: 'ADMIN' as const } : {}),
+      },
     })
     // Le compte a de nouveau une appartenance active (ADR 0031).
     await synchroniserArchivageDuCompte(tx, userId, instant)

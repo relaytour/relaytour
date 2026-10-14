@@ -527,6 +527,81 @@ describe('personne membre de deux organisations', () => {
     expect(code(r)).toBe('FORBIDDEN')
   })
 
+  it('refuse d’affecter, de nommer ou d’accorder un droit à une personne archivée', async () => {
+    // Dans A, la personne est simple membre : sa promotion se refuse aussi.
+    await executer(ids.adminA, ARCHIVER, { id: ids.double, a: true }, slugA)
+    const message =
+      'Cette personne est archivée dans votre organisation : un admin de l’organisation la rétablit depuis l’annuaire.'
+    const essais = [
+      [
+        `mutation ($u: ID!, $p: ID!, $e: ID!) { affecter(personneId: $u, perimetreId: $p, editionId: $e) { id } }`,
+        { u: ids.double, p: ids.perimetreA2, e: ids.editionA2 },
+      ],
+      [
+        `mutation ($u: ID!, $a: ID!) { definirAdminActivite(personneId: $u, activiteId: $a, admin: true) }`,
+        { u: ids.double, a: ids.activiteA2 },
+      ],
+      [
+        `mutation ($u: ID!, $p: ID) { accorderDroitRedaction(personneId: $u, perimetreId: $p) { id } }`,
+        { u: ids.double, p: ids.perimetreA2 },
+      ],
+      [
+        `mutation ($u: ID!, $n: String!) { modifierPersonne(id: $u, nom: $n, estAdmin: true) { id } }`,
+        { u: ids.double, n: `double ${s}` },
+      ],
+    ] as const
+    try {
+      for (const [mutation, variables] of essais) {
+        const r = await executer(ids.adminA, mutation, variables, slugA)
+        expect(r.errors?.[0]?.message, mutation).toBe(message)
+      }
+      // Rien ne s'est écrit dans A.
+      expect(
+        await prisma.affectation.count({
+          where: { userId: ids.double, perimetreId: ids.perimetreA2 },
+        })
+      ).toBe(0)
+      expect(
+        await prisma.adminActivite.count({
+          where: { userId: ids.double, activiteId: ids.activiteA2 },
+        })
+      ).toBe(0)
+      expect(
+        await prisma.droitRedaction.count({ where: { userId: ids.double } })
+      ).toBe(0)
+      expect(
+        (
+          await prisma.appartenance.findUniqueOrThrow({
+            where: {
+              userId_organisationId: {
+                userId: ids.double,
+                organisationId: ids.orgA,
+              },
+            },
+          })
+        ).role
+      ).toBe('MEMBRE')
+    } finally {
+      await executer(ids.adminA, ARCHIVER, { id: ids.double, a: false }, slugA)
+    }
+  })
+
+  it('tient la valeur dérivée quand deux organisations archivent en même temps', async () => {
+    // Le verrou du compte fait compter les deux transactions l'une après l'autre.
+    const [a, b] = await Promise.all([
+      executer(ids.adminA, ARCHIVER, { id: ids.double, a: true }, slugA),
+      executer(ids.adminB, ARCHIVER, { id: ids.double, a: true }),
+    ])
+    expect(a.errors).toBeUndefined()
+    expect(b.errors).toBeUndefined()
+    expect(await compteDerive()).not.toBeNull()
+    await Promise.all([
+      executer(ids.adminA, ARCHIVER, { id: ids.double, a: false }, slugA),
+      executer(ids.adminB, ARCHIVER, { id: ids.double, a: false }),
+    ])
+    expect(await compteDerive()).toBeNull()
+  })
+
   // Le nom appartient à la personne (ADR 0031).
   const RENOMMER =
     'mutation ($id: ID!, $nom: String!) { modifierPersonne(id: $id, nom: $nom, estAdmin: true) { id nom } }'

@@ -115,13 +115,13 @@ export async function organisationParSlug(slug: string) {
  * caractères au plus. L'archivage d'une personne se lit ensuite dans l'organisation
  * visée, par `creerOuRattacherCompte` (ADR 0031).
  */
-export async function validerInvitation(
+export function validerInvitation(
   adresse: string,
   nom: string
-): Promise<{ email: string; nom: string }> {
+): { email: string; nom: string } {
   const email = adresseValide(adresse)
   const nomValide = texteRequis(nom, 'Le nom', 120)
-  return Promise.resolve({ email, nom: nomValide })
+  return { email, nom: nomValide }
 }
 
 /** Ce que `nommerAdmin` a fait du compte. */
@@ -194,7 +194,7 @@ export async function inviterAdmin(
   nom: string
 ): Promise<{ userId: string; enAttente: boolean }> {
   const { id: organisationId } = await organisationParSlug(slugOrganisation)
-  const invitation = await validerInvitation(adresse, nom)
+  const invitation = validerInvitation(adresse, nom)
   // Le verrou ne vaut que pour cette organisation. Une autre organisation peut
   // inviter la même adresse nouvelle au même instant : la seconde création du compte
   // échoue alors sur l'unicité de l'adresse, se rejoue et rattache le compte créé.

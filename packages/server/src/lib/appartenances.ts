@@ -35,6 +35,18 @@ export async function exigerMembre(
   return { role: ici.role, archive: ici.archiveLe !== null }
 }
 
+const PERSONNE_ARCHIVEE =
+  'Cette personne est archivée dans votre organisation : un admin de l’organisation la rétablit depuis l’annuaire.'
+
+/**
+ * Refuse d'affecter, de nommer ou d'accorder un droit à une personne archivée dans
+ * l'organisation (ADR 0031). Retirer une affectation, un rôle ou un droit reste
+ * permis : un admin range ainsi la place d'une personne partie.
+ */
+export function refuserArchivee(membre: Membre): void {
+  if (membre.archive) throw erreurSaisie(PERSONNE_ARCHIVEE)
+}
+
 /**
  * Le filtre Prisma d'un compte membre actif d'une organisation : il y appartient, et
  * n'y est pas archivé (ADR 0031). L'archivage d'une personne dans une autre
@@ -70,8 +82,23 @@ export function archiveePourCeMail(
  * dérivée : une date quand le compte n'a aucune appartenance active, rien sinon. Le
  * code ne la lit pas ; une version antérieure, elle, y lit l'archivage du compte
  * (ADR 0031). À appeler dans la transaction qui archive, rétablit ou crée une
- * appartenance.
+ * appartenance. Deux archivages simultanés du même compte se règlent par
+ * `verrouillerCompte`, pris en tête de transaction.
  */
+/**
+ * Verrouille la ligne du compte pour la transaction. À prendre avant toute lecture :
+ * sous l'isolation de MariaDB 11.8, une lecture ordinaire fige la vue de la
+ * transaction, et un verrou pris ensuite échoue sur une ligne modifiée entre-temps.
+ * Deux archivages simultanés dans deux organisations comptent ainsi l'un après
+ * l'autre les appartenances actives.
+ */
+export async function verrouillerCompte(
+  tx: Prisma.TransactionClient,
+  userId: string
+): Promise<void> {
+  await tx.$queryRaw`SELECT id FROM User WHERE id = ${userId} FOR UPDATE`
+}
+
 export async function synchroniserArchivageDuCompte(
   tx: Prisma.TransactionClient,
   userId: string,
