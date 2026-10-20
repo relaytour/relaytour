@@ -20,7 +20,9 @@ export const BENEVOLES_MAX = 2000
 export const MOIS_AVANT_PURGE = 24
 
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-const TELEPHONE = /^\+?[0-9 .()-]{6,40}$/
+const TELEPHONE = /^\+?[0-9 .()-]+$/
+/** La colonne `Benevole.telephone` compte 40 caractères. */
+const TELEPHONE_MAX = 40
 
 /** L'adresse d'une fiche : une adresse plausible, ou rien. */
 export function courrielValide(brut: string | null | undefined): string | null {
@@ -32,13 +34,17 @@ export function courrielValide(brut: string | null | undefined): string | null {
   return texte.toLowerCase()
 }
 
-/** Le téléphone d'une fiche : chiffres, espaces et signes usuels, ou rien. */
+/**
+ * Le téléphone d'une fiche : chiffres, espaces et signes usuels, ou rien. Il
+ * compte au moins six chiffres et 40 caractères au plus.
+ */
 export function telephoneValide(
   brut: string | null | undefined
 ): string | null {
   const texte = (brut ?? '').trim()
   if (texte === '') return null
-  if (!TELEPHONE.test(texte)) {
+  const chiffres = texte.replace(/[^0-9]/g, '').length
+  if (texte.length > TELEPHONE_MAX || chiffres < 6 || !TELEPHONE.test(texte)) {
     throw erreurSaisie('Le téléphone de la ou du bénévole n’est pas valide.')
   }
   return texte

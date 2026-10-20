@@ -8,7 +8,7 @@ import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import type { BenevolesQuery } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
-import { messageErreur } from '../lib/erreurs'
+import { estRefus, messageErreur } from '../lib/erreurs'
 import { BENEVOLES } from '../lib/requetes'
 
 const CREER = graphql(`
@@ -105,12 +105,20 @@ export default function Benevoles() {
   }, [form, fiche])
 
   if (error && !data) {
-    return (
+    // Un refus d'accès se distingue d'une panne : une panne propose de
+    // réessayer.
+    return estRefus(error) ? (
       <Result
         status="info"
         icon={<LockOutlined />}
         title="Les fiches bénévoles sont réservées aux personnes qui organisent."
         subTitle="Les admins de l’activité et les personnes affectées à un de ses périmètres les lisent."
+      />
+    ) : (
+      <Result
+        status="warning"
+        title="Les fiches bénévoles n’ont pas pu être chargées."
+        subTitle={messageErreur(error)}
       />
     )
   }
@@ -217,6 +225,23 @@ export default function Benevoles() {
               f.coordonneesVisibles ? (
                 f.courriel ? (
                   <a href={`mailto:${f.courriel}`}>{f.courriel}</a>
+                ) : (
+                  '—'
+                )
+              ) : (
+                <span className="rt-note">Réservée</span>
+              ),
+          },
+          {
+            // La note (disponibilités, compétences) se lit avec les
+            // coordonnées, même sans droit de modifier la fiche.
+            key: 'note',
+            title: 'Note',
+            ellipsis: true,
+            render: (_, f) =>
+              f.coordonneesVisibles ? (
+                f.note ? (
+                  <span title={f.note}>{f.note}</span>
                 ) : (
                   '—'
                 )

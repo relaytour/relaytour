@@ -1085,7 +1085,7 @@ const CAS: Cas[] = [
   {
     operation: 'modifierDateCle',
     query:
-      'mutation ($id: ID!) { modifierDateCle(id: $id, titre: "Intrusion", jour: "2027-03-02") { id } }',
+      'mutation ($id: ID!) { modifierDateCle(id: $id, titre: "Intrusion", jour: "2027-03-02", versionAttendue: 0) { id } }',
     variables: () => ({ id: a.dateCle }),
     attente: INTERDIT,
   },
@@ -1113,7 +1113,7 @@ const CAS: Cas[] = [
   {
     operation: 'modifierReunion',
     query:
-      'mutation ($id: ID!) { modifierReunion(id: $id, titre: "Intrusion", jour: "2027-03-02", heureDebut: "18:00", heureFin: "19:00") { id } }',
+      'mutation ($id: ID!) { modifierReunion(id: $id, titre: "Intrusion", jour: "2027-03-02", heureDebut: "18:00", heureFin: "19:00", versionAttendue: 0) { id } }',
     variables: () => ({ id: a.reunion }),
     attente: INTERDIT,
   },
@@ -1178,7 +1178,7 @@ const CAS: Cas[] = [
   {
     operation: 'modifierSondage',
     query:
-      'mutation ($id: ID!) { modifierSondage(id: $id, titre: "Intrusion", creneaux: [{ jour: "2027-03-02" }]) { id } }',
+      'mutation ($id: ID!) { modifierSondage(id: $id, titre: "Intrusion", creneaux: [{ jour: "2027-03-02" }], versionAttendue: 0) { id } }',
     variables: () => ({ id: a.sondage }),
     attente: INTERDIT,
   },
@@ -1227,7 +1227,7 @@ const CAS: Cas[] = [
   {
     operation: 'modifierSequence',
     query:
-      'mutation ($id: ID!) { modifierSequence(id: $id, titre: "Intrusion", jour: "2027-06-05", heureDebut: "09:00", heureFin: "10:00") { id } }',
+      'mutation ($id: ID!) { modifierSequence(id: $id, titre: "Intrusion", jour: "2027-06-05", heureDebut: "09:00", heureFin: "10:00", versionAttendue: 0) { id } }',
     variables: () => ({ id: a.sequence }),
     attente: INTERDIT,
   },

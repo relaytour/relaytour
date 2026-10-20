@@ -1,7 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { App, Button, Input, InputNumber, Modal, Switch } from 'antd'
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { graphql } from '../gql'
 import { messageErreur } from '../lib/erreurs'
@@ -74,28 +74,48 @@ export default function LieuxFenetre({
   const [modifier] = useMutation(MODIFIER, { refetchQueries: RELIRE })
   const [nouveau, setNouveau] = useState('')
   const lieux = data?.lieux ?? []
+  // Le dernier état voulu de chaque lieu, et la file de ses enregistrements :
+  // chaque envoi porte tous les champs à jour, et les envois partent l'un après
+  // l'autre. Un nom changé puis un archivage rapproché ne s'annulent donc pas.
+  const brouillons = useRef(
+    new Map<string, { nom: string; ordre: number; archive: boolean }>()
+  )
+  const file = useRef<Promise<unknown>>(Promise.resolve())
 
   const enregistrer = (
     lieu: (typeof lieux)[number],
     changement: Partial<{ nom: string; ordre: number; archive: boolean }>
   ) => {
-    void modifier({
-      variables: {
-        id: lieu.id,
-        nom: changement.nom ?? lieu.nom,
-        description: lieu.description ?? '',
-        ordre: changement.ordre ?? lieu.ordre,
-        archive: changement.archive ?? lieu.archive,
-      },
-    }).catch((e: unknown) => message.error(messageErreur(e)))
+    const voulu = {
+      nom: lieu.nom,
+      ordre: lieu.ordre,
+      archive: lieu.archive,
+      ...brouillons.current.get(lieu.id),
+      ...changement,
+    }
+    brouillons.current.set(lieu.id, voulu)
+    file.current = file.current.then(() =>
+      modifier({
+        variables: {
+          id: lieu.id,
+          description: lieu.description ?? '',
+          ...voulu,
+        },
+      }).catch((e: unknown) => message.error(messageErreur(e)))
+    )
+  }
+
+  const fermer = () => {
+    brouillons.current.clear()
+    onFermer()
   }
 
   return (
     <Modal
       open={ouvert}
       title="Lieux de l’activité"
-      footer={<Button onClick={onFermer}>Fermer</Button>}
-      onCancel={onFermer}
+      footer={<Button onClick={fermer}>Fermer</Button>}
+      onCancel={fermer}
       destroyOnHidden
       rootClassName="rt-modale-pleine"
     >

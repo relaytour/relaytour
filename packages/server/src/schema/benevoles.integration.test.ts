@@ -5,7 +5,7 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
-import { purgerBenevoles } from '../lib/benevoles.ts'
+import { BENEVOLES_MAX, purgerBenevoles } from '../lib/benevoles.ts'
 
 import { schema } from './index.ts'
 
@@ -356,5 +356,42 @@ describe('fiches bénévoles', () => {
     await purgerBenevoles(prisma, { organisationId: ids.org })
     expect(await prisma.benevole.count({ where: { id: ancienne.id } })).toBe(0)
     expect(await prisma.benevole.count({ where: { id: utilisee.id } })).toBe(1)
+  })
+})
+
+describe('plafond des fiches bénévoles', () => {
+  it('tient même pour deux créations simultanées', async () => {
+    const deja = await prisma.benevole.count({
+      where: { activiteId: ids.activite },
+    })
+    await prisma.benevole.createMany({
+      data: Array.from({ length: BENEVOLES_MAX - 1 - deja }, (_, i) => ({
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        nom: `Remplissage ${i}`,
+        accordLe: new Date(),
+      })),
+    })
+    try {
+      const reponses = await Promise.all(
+        ['Lou Fabre', 'Max Royer'].map(nom =>
+          executer(ids.referent, CREER, { a: ids.activite, n: nom, ok: true })
+        )
+      )
+      expect(reponses.map(code).sort()).toEqual(['SAISIE_INVALIDE', undefined])
+      expect(
+        await prisma.benevole.count({ where: { activiteId: ids.activite } })
+      ).toBe(BENEVOLES_MAX)
+    } finally {
+      await prisma.benevole.deleteMany({
+        where: {
+          activiteId: ids.activite,
+          OR: [
+            { nom: { startsWith: 'Remplissage ' } },
+            { nom: { in: ['Lou Fabre', 'Max Royer'] } },
+          ],
+        },
+      })
+    }
   })
 })

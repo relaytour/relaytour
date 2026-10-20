@@ -1,11 +1,12 @@
 import { CalendarOutlined, PlusOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
 import { Button } from 'antd'
+import { useState } from 'react'
 import { Link } from 'react-router'
 
 import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
-import { jourLocal, libelleJours } from '../lib/agenda'
+import { libelleJours } from '../lib/agenda'
 
 import { Panneau } from './Panneau'
 
@@ -16,6 +17,7 @@ const REUNIONS = graphql(`
       titre
       jour
       heureDebut
+      fin
       statut
       lieu
     }
@@ -39,9 +41,15 @@ export default function ReunionsDuPerimetre({
     variables: { editionId, perimetreId },
     fetchPolicy: 'cache-and-network',
   })
-  const aujourdhui = jourLocal()
+  // Une réunion terminée quitte la liste, même le jour même : la comparaison
+  // porte sur l'instant de fin, sans dépendre du fuseau du navigateur.
+  const [maintenant] = useState(() => Date.now())
   const prochaines = (data?.reunions ?? [])
-    .filter(r => r.statut === 'PREVUE' && r.jour >= aujourdhui)
+    .filter(
+      r =>
+        r.statut === 'PREVUE' &&
+        new Date(r.fin as string).getTime() > maintenant
+    )
     .slice(0, 5)
 
   return (

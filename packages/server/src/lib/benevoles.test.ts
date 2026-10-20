@@ -15,5 +15,11 @@ describe('coordonnées d’une fiche bénévole', () => {
     expect(telephoneValide('06.12.34.56.78')).toBe('06.12.34.56.78')
     expect(telephoneValide('  ')).toBeNull()
     expect(() => telephoneValide('appeler le soir')).toThrow()
+    // 41 caractères dépassent la colonne ; des signes sans chiffre ne sont pas un
+    // numéro.
+    expect(() => telephoneValide(`+${'1'.repeat(40)}`)).toThrow()
+    expect(telephoneValide(`+${'1'.repeat(39)}`)).toBe(`+${'1'.repeat(39)}`)
+    expect(() => telephoneValide('......')).toThrow()
+    expect(() => telephoneValide('()()()')).toThrow()
   })
 })

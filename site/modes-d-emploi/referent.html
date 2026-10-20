@@ -58,7 +58,7 @@
         <div class="grille-2">
           <article class="verre panneau">
             <h3>Le menu de gauche</h3>
-            <p>Il donne accès à Mon espace, au Rétroplanning, à l'Agenda, aux Fiches et aux Préférences. La section « Périmètres » commence par « Tous les périmètres » et « Organigramme », puis liste chaque périmètre où vous êtes affecté·e.</p>
+            <p>Il donne accès à Mon espace, au Rétroplanning, à l'Agenda, au Programme, aux Bénévoles, aux Fiches et aux Préférences. La section « Périmètres » commence par « Tous les périmètres » et « Organigramme », puis liste chaque périmètre où vous êtes affecté·e.</p>
           </article>
           <article class="verre panneau">
             <h3>La barre du haut</h3>
@@ -149,6 +149,37 @@
             <figcaption>Un sondage de dates du pôle Bénévoles, sur l'organisation d'exemple.</figcaption>
           </figure>
           <p class="note">Les personnes qui écrivent dans l'agenda d'une réunion lisent les réponses une à une. Une personne qui consulte un autre périmètre voit le titre et l'horaire de ses réunions, sans le lieu, le lien de visio ni la description. Quand vous quittez un périmètre, vous quittez aussi ses réunions à venir.</p>
+        </article>
+
+        <article class="verre ecran" id="e-programme">
+          <div class="ecran-tete"><h3>Programme</h3><span class="route">/&lt;activité&gt;/programme</span></div>
+          <p>Le programme décrit le déroulé du jour J, ou des jours J, de la période. Il se compose de <strong>séquences</strong> : un match, un accueil, une remise des prix. Une séquence porte un titre, un jour, une heure de début et de fin, un lieu facultatif et une description. Elle appartient à un périmètre, ou à toute l'activité quand ses admins la créent.</p>
+          <p>Chaque séquence place des personnes, cinquante au plus : des personnes de l'équipe, ou des bénévoles qui n'ont pas de compte. Une personne placée est <strong>responsable</strong> de la séquence ou vient en <strong>renfort</strong>. Vous créez et modifiez les séquences de vos périmètres. Les lieux appartiennent aux admins de l'activité.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Grille</span><span class="libelle">Par lieu</span><span class="libelle">Mon jour J</span></span><span>Choisir l'affichage. La grille range les séquences d'un jour par lieu et par heure ; elle n'existe pas sur un téléphone. « Mon jour J » liste les seules séquences où vous êtes placé·e.</span></li>
+            <li><span><span class="libelle">Nouvelle séquence</span></span><span>Ajouter une séquence au programme d'un de vos périmètres, puis y placer des personnes.</span></li>
+            <li><span><span class="libelle">Imprimer</span></span><span>Imprimer le programme du jour affiché, sans le menu ni les boutons.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/programme.webp" data-mobile="../captures/mobile/programme.webp" width="1440" height="900" loading="lazy" alt="Écran Programme en grille : une colonne par lieu, les heures à gauche, et les séquences avec leur périmètre et leurs personnes placées." />
+            <figcaption>Le programme du jour J en grille, sur l'organisation d'exemple. Les noms sont fictifs.</figcaption>
+          </figure>
+          <p>Une séquence s'ouvre dans un volet. Le volet indique l'horaire, le lieu, le périmètre et les personnes placées avec leur rôle. La page d'un périmètre liste aussi ses séquences, dans le panneau « Jour J ».</p>
+          <figure>
+            <img src="../captures/programme-moi.webp" data-mobile="../captures/mobile/programme-moi.webp" width="1440" height="900" loading="lazy" alt="Vue Mon jour J : les séquences de la référente, avec leur horaire, leur lieu et son rôle." />
+            <figcaption>La vue « Mon jour J » d'une référente du pôle Bénévoles.</figcaption>
+          </figure>
+          <p class="note">Vos séquences entrent dans votre abonnement à l'agenda, décrit dans vos <a href="#e-preferences">Préférences</a>. Elles n'envoient aucun mail : le programme sert de repère, pas de convocation.</p>
+        </article>
+
+        <article class="verre ecran" id="e-benevoles">
+          <div class="ecran-tete"><h3>Bénévoles</h3><span class="route">/&lt;activité&gt;/benevoles</span></div>
+          <p>L'écran « Bénévoles » liste les personnes qui aident l'activité sans compte dans l'application. Chaque fiche porte un nom, et parfois un téléphone, une adresse et une note. Elle indique le nombre de séquences où la personne est placée.</p>
+          <p>Vous créez une fiche avec l'accord de la personne, puis vous la placez dans les séquences de vos périmètres. Vous modifiez les fiches que vous avez créées. Les admins de l'activité modifient et suppriment toutes les fiches.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouvelle fiche</span></span><span>Enregistrer une ou un bénévole. La case d'accord est obligatoire.</span></li>
+          </ul>
+          <p class="note">Les coordonnées d'une fiche se lisent par les admins de l'activité, par la personne qui l'a créée et par les personnes d'un périmètre où la ou le bénévole est placé·e. Ailleurs, la cellule indique « Réservé ». Le serveur supprime une fiche qui ne sert plus depuis deux ans.</p>
         </article>
 
         <article class="verre ecran" id="e-tous-les-perimetres">

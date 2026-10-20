@@ -1,5 +1,5 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { App, Button, Form, Input, Modal, Radio, Select } from 'antd'
 import { useEffect } from 'react'
 
@@ -7,7 +7,7 @@ import { graphql } from '../gql'
 import type { RolePlace } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import type { AgendaEcrit } from '../lib/agendas-ecrits'
-import { lireConflit } from '../lib/conflit'
+import { lireConflit, relireApresConflit } from '../lib/conflit'
 import { messageErreur } from '../lib/erreurs'
 import { BENEVOLES, CONVOCABLES, LIEUX } from '../lib/requetes'
 
@@ -52,7 +52,7 @@ const MODIFIER = graphql(`
     $heureFin: String!
     $description: String
     $places: [PlaceSequenceInput!]
-    $versionAttendue: Int
+    $versionAttendue: Int!
   ) {
     modifierSequence(
       id: $id
@@ -125,6 +125,7 @@ export default function SequenceFormulaire({
   onFermer: () => void
 }) {
   const { message } = App.useApp()
+  const client = useApolloClient()
   const { activite } = useActivite()
   const [form] = Form.useForm<Valeurs>()
   const relire = { refetchQueries: ['Programme', 'ProgrammePerimetre'] }
@@ -233,10 +234,17 @@ export default function SequenceFormulaire({
       onFermer()
     } catch (e) {
       if (lireConflit(e) !== null) {
-        message.error(
-          'Une autre personne a modifié cette séquence depuis votre lecture. Le programme affiche maintenant sa version : reprenez votre modification.'
+        await relireApresConflit(
+          client,
+          relire.refetchQueries,
+          texte => message.error(texte),
+          {
+            relu: 'Une autre personne a modifié cette séquence depuis votre lecture. Le programme affiche maintenant sa version : reprenez votre modification.',
+            echec:
+              'La séquence n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.',
+          },
+          onFermer
         )
-        onFermer()
         return
       }
       message.error(messageErreur(e))
