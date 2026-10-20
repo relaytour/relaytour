@@ -41,6 +41,10 @@ const a = {
   // Un sondage de dates du périmètre, qui vise la référente (ADR 0037).
   sondage: '',
   creneau: '',
+  // Un lieu, une séquence et une fiche bénévole du programme (ADR 0038).
+  lieu: '',
+  sequence: '',
+  benevole: '',
   affectation: '',
   souhait: '',
   demande: '',
@@ -346,6 +350,37 @@ beforeAll(async () => {
     include: { creneaux: true },
   })
   a.sondage = sondage.id
+  a.lieu = (
+    await prisma.lieu.create({
+      data: { organisationId: a.org, activiteId: a.activite, nom: 'Bassin' },
+    })
+  ).id
+  a.benevole = (
+    await prisma.benevole.create({
+      data: {
+        organisationId: a.org,
+        activiteId: a.activite,
+        nom: 'Bénévole de A',
+        telephone: '0600000001',
+        accordLe: new Date(),
+      },
+    })
+  ).id
+  a.sequence = (
+    await prisma.sequence.create({
+      data: {
+        organisationId: a.org,
+        activiteId: a.activite,
+        editionId: a.edition,
+        perimetreId: a.perimetre,
+        lieuId: a.lieu,
+        titre: 'Finales',
+        debut: new Date('2027-06-05T07:00:00.000Z'),
+        fin: new Date('2027-06-05T10:00:00.000Z'),
+        places: { create: { benevoleId: a.benevole, role: 'RENFORT' } },
+      },
+    })
+  ).id
   a.creneau = sondage.creneaux[0]!.id
   // Un commentaire de la référente sur la tâche (ADR 0029).
   a.commentaire = (
@@ -444,6 +479,15 @@ afterAll(async () => {
     where: { organisationId: { in: organisations } },
   })
   await prisma.sondage.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
+  await prisma.sequence.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
+  await prisma.benevole.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
+  await prisma.lieu.deleteMany({
     where: { organisationId: { in: organisations } },
   })
   await prisma.reunion.deleteMany({
@@ -611,6 +655,14 @@ const MELES: Cas[] = [
       'query ($e: ID!, $p: [ID!]) { agenda(editionId: $e, echeances: true, perimetreIds: $p) { elements { cle titre } } }',
     variables: () => ({ e: b.edition, p: [a.perimetre] }),
     attente: INTERDIT,
+  },
+  // Une séquence de B ne place aucune fiche et n'utilise aucun lieu de A (ADR 0038).
+  {
+    operation: 'creerSequence',
+    query:
+      'mutation ($e: ID!, $l: ID, $b: ID) { creerSequence(editionId: $e, lieuId: $l, titre: "Mêlée", jour: "2027-06-05", heureDebut: "09:00", heureFin: "10:00", places: [{ benevoleId: $b, role: RENFORT }]) { id } }',
+    variables: () => ({ e: b.edition, l: a.lieu, b: a.benevole }),
+    attente: REFUSE,
   },
   // Une réunion de B ne lie aucune tâche et ne convoque personne de A (ADR 0037).
   {
@@ -1150,7 +1202,55 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.sondage }),
     attente: INTERDIT,
   },
+  // Programme du jour J (ADR 0038).
+  {
+    operation: 'creerLieu',
+    query:
+      'mutation ($a: ID!) { creerLieu(activiteId: $a, nom: "Intrusion") { id } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'modifierLieu',
+    query:
+      'mutation ($id: ID!) { modifierLieu(id: $id, nom: "Intrusion", ordre: 0, archive: true) { id } }',
+    variables: () => ({ id: a.lieu }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'creerSequence',
+    query:
+      'mutation ($e: ID!, $p: ID) { creerSequence(editionId: $e, perimetreId: $p, titre: "Intrusion", jour: "2027-06-05", heureDebut: "09:00", heureFin: "10:00") { id } }',
+    variables: () => ({ e: a.edition, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'modifierSequence',
+    query:
+      'mutation ($id: ID!) { modifierSequence(id: $id, titre: "Intrusion", jour: "2027-06-05", heureDebut: "09:00", heureFin: "10:00") { id } }',
+    variables: () => ({ id: a.sequence }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'supprimerSequence',
+    query: 'mutation ($id: ID!) { supprimerSequence(id: $id) }',
+    variables: () => ({ id: a.sequence }),
+    attente: INTERDIT,
+  },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  {
+    operation: 'lieux',
+    query: 'query ($a: ID!) { lieux(activiteId: $a) { id nom } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'programme',
+    query:
+      'query ($e: ID!) { programme(editionId: $e) { id titre places { nom } } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
   {
     operation: 'sondages',
     query: 'query ($e: ID!) { sondages(editionId: $e) { id titre } }',
@@ -1403,6 +1503,22 @@ async function etatDeA() {
           orderBy: { id: 'asc' },
         }),
         prisma.abonnementAgenda.count({ where: { organisationId: a.org } }),
+        prisma.sequence.findMany({
+          where: { organisationId: a.org },
+          select: {
+            id: true,
+            titre: true,
+            version: true,
+            lieuId: true,
+            places: { select: { benevoleId: true, userId: true, role: true } },
+          },
+          orderBy: { id: 'asc' },
+        }),
+        prisma.lieu.findMany({
+          where: { organisationId: a.org },
+          select: { id: true, nom: true, archivedAt: true },
+          orderBy: { id: 'asc' },
+        }),
         prisma.sondage.findMany({
           where: { organisationId: a.org },
           select: {
@@ -1432,6 +1548,8 @@ async function etatDeA() {
     prisma.reunion.count({ where: { organisationId: b.org } }),
     prisma.abonnementAgenda.count({ where: { organisationId: b.org } }),
     prisma.sondage.count({ where: { organisationId: b.org } }),
+    prisma.sequence.count({ where: { organisationId: b.org } }),
+    prisma.lieu.count({ where: { organisationId: b.org } }),
     prisma.invitationOrganisation.count({ where: { organisationId: b.org } }),
     prisma.appartenance.count({ where: { organisationId: b.org } }),
     prisma.droitRedaction.count({ where: { organisationId: b.org } }),

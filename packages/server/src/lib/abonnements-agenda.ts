@@ -200,7 +200,7 @@ export async function evenementsPersonnels(
     debut: { lte: f.jusquaInstant },
     fin: { gte: f.depuisInstant },
   }
-  const [reperes, reunions, taches] = await Promise.all([
+  const [reperes, reunions, taches, sequences] = await Promise.all([
     abonnement.inclureGlobal
       ? reperesDesPeriodes(activites, f, hote, organisation.fuseauHoraire)
       : [],
@@ -245,9 +245,42 @@ export async function evenementsPersonnels(
           take: EVENEMENTS_MAX,
         })
       : [],
+    // Les séquences du programme où la personne est placée (ADR 0038).
+    prisma.sequence.findMany({
+      where: {
+        organisationId: organisation.id,
+        activiteId: { in: activites },
+        edition: periodeOuverte,
+        places: { some: { userId: moi } },
+        debut: { lte: f.jusquaInstant },
+        fin: { gte: f.depuisInstant },
+      },
+      select: {
+        id: true,
+        titre: true,
+        debut: true,
+        fin: true,
+        description: true,
+        updatedAt: true,
+        lieu: { select: { nom: true } },
+        places: { where: { userId: moi }, select: { role: true } },
+      },
+      take: EVENEMENTS_MAX,
+    }),
   ])
   return [
     ...reperes,
+    ...sequences.map(s => ({
+      uid: `sequence-${s.id}@${hote}`,
+      titre:
+        s.places[0]?.role === 'RESPONSABLE'
+          ? `${s.titre} (responsable)`
+          : s.titre,
+      horaire: { debut: s.debut, fin: s.fin },
+      lieu: s.lieu?.nom ?? null,
+      description: s.description,
+      modifieLe: s.updatedAt,
+    })),
     ...reunions.map(r =>
       evenementDeReunion(r, origine, hote, configuration.slug)
     ),

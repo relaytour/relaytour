@@ -424,7 +424,7 @@ type ElementAgenda {
 }
 
 """
-Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre les dates clés de l’agenda d’une activité (ADR 0037).
+Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0038).
 """
 enum EntiteChangee {
   AGENDA
@@ -434,6 +434,7 @@ enum EntiteChangee {
   MESSAGE
   NOTIFICATION
   PERIMETRE
+  PROGRAMME
   TACHE
 }
 
@@ -716,6 +717,14 @@ The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](
 """
 scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
+type Lieu {
+  archive: Boolean!
+  description: String
+  id: ID!
+  nom: String!
+  ordre: Int!
+}
+
 type LigneClassement {
   personne: Personne!
   rang: Int!
@@ -863,6 +872,7 @@ type Mutation {
   creerDateCle(description: String, editionId: ID!, jour: Date!, jourFin: Date, titre: String!): DateCle!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
+  creerLieu(activiteId: ID!, description: String, nom: String!, ordre: Int = 0): Lieu!
   creerMessage(message: MessageInput!): Message!
 
   """
@@ -901,6 +911,22 @@ type Mutation {
     tacheIds: [ID!]
     titre: String!
   ): Reunion!
+  creerSequence(
+    description: String
+    editionId: ID!
+    heureDebut: String!
+    heureFin: String!
+    jour: Date!
+
+    """Pour une séquence qui passe minuit. Sans valeur : le jour."""
+    jourFin: Date
+    lieuId: ID
+
+    """Le périmètre ; sans valeur, toute l’activité."""
+    perimetreId: ID
+    places: [PlaceSequenceInput!]
+    titre: String!
+  ): Sequence!
   creerSondage(
     cible: CibleConvocation!
     creneaux: [CreneauSondageInput!]!
@@ -993,6 +1019,7 @@ type Mutation {
   Remplace l’identité de l’organisation. Le slug, le fuseau horaire, le statut et les limites ne changent pas ici.
   """
   modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, iconeApplication: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
+  modifierLieu(archive: Boolean!, description: String, id: ID!, nom: String!, ordre: Int!): Lieu!
   modifierMonAdresseVisible(visible: Boolean!): Boolean!
 
   """
@@ -1068,6 +1095,24 @@ type Mutation {
   ): Reunion!
 
   """
+  Change une séquence et ses places. Les places reçues remplacent les places actuelles.
+  """
+  modifierSequence(
+    description: String
+    heureDebut: String!
+    heureFin: String!
+    id: ID!
+    jour: Date!
+
+    """Pour une séquence qui passe minuit. Sans valeur : le jour."""
+    jourFin: Date
+    lieuId: ID
+    places: [PlaceSequenceInput!]
+    titre: String!
+    versionAttendue: Int
+  ): Sequence!
+
+  """
   Change le titre, la description et les créneaux d’un sondage ouvert. Un créneau retiré perd ses réponses.
   """
   modifierSondage(creneaux: [CreneauSondageInput!]!, description: String, id: ID!, titre: String!, versionAttendue: Int): Sondage!
@@ -1131,6 +1176,7 @@ type Mutation {
   """
   supprimerCommentaire(id: ID!): FilTache!
   supprimerDateCle(id: ID!): Boolean!
+  supprimerSequence(id: ID!): Boolean!
 
   """
   Supprime un sondage et ses réponses. Une réunion déjà créée reste dans l’agenda.
@@ -1435,6 +1481,25 @@ input PhaseInput {
   libelle: String!
 }
 
+type PlaceSequence {
+  """La fiche bénévole ; ses coordonnées se lisent à part."""
+  benevoleId: ID
+  estMoi: Boolean!
+  id: ID!
+  nom: String!
+  personneId: ID
+  role: RolePlace!
+}
+
+input PlaceSequenceInput {
+  """Ou une fiche bénévole de l’activité."""
+  benevoleId: ID
+
+  """Une personne de l’équipe."""
+  personneId: ID
+  role: RolePlace!
+}
+
 """Piles CSS complètes, prêtes pour font-family."""
 type PolicesTheme {
   mono: String!
@@ -1585,6 +1650,9 @@ type Query {
   """
   invitationsEnAttente(activiteId: ID): [InvitationEnAttente!]!
 
+  """Les lieux d’une activité, dans leur ordre d’affichage."""
+  lieux(activiteId: ID!, inclureArchives: Boolean = false): [Lieu!]!
+
   """
   Les invitations qui attendent l’accord de la personne connectée (ADR 0030).
   """
@@ -1650,6 +1718,11 @@ type Query {
   ): [PersonneConvocable!]!
   peutRedigerFichesCommunes(activiteId: ID): Boolean!
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
+
+  """
+  Les séquences d’une période, par début. Les filtres gardent un périmètre, ou les séquences où la personne connectée est placée.
+  """
+  programme(editionId: ID!, mesSequences: Boolean = false, perimetreId: ID): [Sequence!]!
   recherche(editionId: ID, texte: String!): Recherche!
   retroplanning(editionId: ID!): [Tache!]!
   reunion(id: ID!): Reunion!
@@ -1786,6 +1859,11 @@ enum RoleNoteDeVersion {
   REFERENT
 }
 
+enum RolePlace {
+  RENFORT
+  RESPONSABLE
+}
+
 type Score {
   fichesCreees: Int!
   fichesModifiees: Int!
@@ -1793,6 +1871,25 @@ type Score {
   tachesATemps: Int!
   tachesCreees: Int!
   tachesRealisees: Int!
+}
+
+"""Une séquence du programme du jour J (ADR 0038)."""
+type Sequence {
+  debut: DateTime!
+  description: String
+  editionId: ID!
+  fin: DateTime!
+  heureDebut: String!
+  heureFin: String!
+  id: ID!
+  jour: String!
+  jourFin: String!
+  lieu: Lieu
+  perimetre: Perimetre
+  peutModifier: Boolean!
+  places: [PlaceSequence!]!
+  titre: String!
+  version: Int!
 }
 
 """

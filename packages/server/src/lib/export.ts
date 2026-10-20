@@ -169,6 +169,32 @@ export async function construireExport(organisationId: string) {
     },
   })
 
+  // Le programme du jour J (ADR 0038) : lieux et séquences, avec leurs places.
+  const [lieux, sequences] = await Promise.all([
+    prisma.lieu.findMany({
+      where: { organisationId },
+      orderBy: [{ activiteId: 'asc' }, { ordre: 'asc' }, { id: 'asc' }],
+      include: { activite: { select: { slug: true } } },
+    }),
+    prisma.sequence.findMany({
+      where: { organisationId },
+      orderBy: [{ editionId: 'asc' }, { debut: 'asc' }, { id: 'asc' }],
+      include: {
+        activite: { select: { slug: true } },
+        edition: { select: { annee: true } },
+        perimetre: { select: { slug: true } },
+        lieu: { select: { nom: true } },
+        places: {
+          orderBy: { id: 'asc' },
+          include: {
+            user: { select: { email: true } },
+            benevole: { select: { nom: true } },
+          },
+        },
+      },
+    }),
+  ])
+
   // Les sondages de dates (ADR 0037), avec leurs créneaux et leurs réponses.
   const sondages = await prisma.sondage.findMany({
     where: { organisationId },
@@ -378,6 +404,28 @@ export async function construireExport(organisationId: string) {
       description: d.description,
       creePar: d.creePar?.email ?? null,
       creeLe: d.createdAt.toISOString(),
+    })),
+    lieux: lieux.map(l => ({
+      activite: l.activite.slug,
+      nom: l.nom,
+      description: l.description,
+      ordre: l.ordre,
+      archive: l.archivedAt !== null,
+    })),
+    sequences: sequences.map(s => ({
+      activite: s.activite.slug,
+      periode: s.edition.annee,
+      perimetre: s.perimetre?.slug ?? null,
+      lieu: s.lieu?.nom ?? null,
+      titre: s.titre,
+      description: s.description,
+      debut: s.debut.toISOString(),
+      fin: s.fin.toISOString(),
+      places: s.places.map(p => ({
+        role: p.role,
+        email: p.user?.email ?? null,
+        benevole: p.benevole?.nom ?? null,
+      })),
     })),
     sondages: sondages.map(s => ({
       activite: s.activite.slug,

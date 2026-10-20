@@ -374,6 +374,26 @@ describe('abonnement personnel', () => {
   })
 })
 
+describe('séquences du programme (ADR 0038)', () => {
+  it('ajoute les séquences où la personne est placée, avec son rôle', async () => {
+    const sequence = await prisma.sequence.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        titre: 'Accueil des équipes',
+        debut: new Date(Date.now() + 15 * 24 * 3600 * 1000),
+        fin: new Date(Date.now() + 15 * 24 * 3600 * 1000 + 2 * 3600 * 1000),
+        places: { create: { userId: ids.referent, role: 'RESPONSABLE' } },
+      },
+    })
+    const ics = await contenu(await creer(ids.referent))
+    expect(ics).toContain(`UID:sequence-${sequence.id}@`)
+    expect(ics).toContain('SUMMARY:Accueil des équipes (responsable)')
+    await prisma.sequence.delete({ where: { id: sequence.id } })
+  })
+})
+
 describe('abonnement d’activité', () => {
   const CREER_ACTIVITE = `mutation ($a: ID!) { creerAbonnementAgendaActivite(activiteId: $a) { adresse } }`
 
