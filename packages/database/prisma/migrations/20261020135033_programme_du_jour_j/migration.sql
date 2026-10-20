@@ -119,5 +119,5 @@ ALTER TABLE `Benevole` ADD CONSTRAINT `Benevole_activiteId_fkey` FOREIGN KEY (`a
 -- AddForeignKey
 ALTER TABLE `Benevole` ADD CONSTRAINT `Benevole_creeParId_fkey` FOREIGN KEY (`creeParId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
 
--- Une place désigne un compte ou une fiche bénévole, jamais les deux (ADR 0038).
+-- Une place désigne un compte ou une fiche bénévole, jamais les deux (ADR 0040).
 ALTER TABLE `PlaceSequence` ADD CONSTRAINT `PlaceSequence_personne_check` CHECK ((`userId` IS NULL) <> (`benevoleId` IS NULL));

@@ -925,7 +925,7 @@ model ConvocationReunion {
 
 // Ce que sert un abonnement : l'agenda d'une personne, ou l'agenda global d'une
 // activité (ADR 0037).
-// ── Programme du jour J (ADR 0038) ──────────────────────────────────────────────
+// ── Programme du jour J (ADR 0040) ──────────────────────────────────────────────
 
 // Endroit d'une activité : un terrain, un bassin, une salle. Il sert d'une période
 // à l'autre.
@@ -1010,7 +1010,7 @@ model PlaceSequence {
   @@index([benevoleId])
 }
 
-// Fiche d'une personne qui aide l'activité sans compte (ADR 0038). Elle ne donne
+// Fiche d'une personne qui aide l'activité sans compte (ADR 0040). Elle ne donne
 // aucun accès. Elle n'existe qu'avec l'accord de la personne, déclaré à la
 // création, et vit en base seulement.
 model Benevole {
