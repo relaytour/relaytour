@@ -185,6 +185,23 @@ type BaremeScore {
   tacheRealisee: Int!
 }
 
+"""Une fiche bénévole : une personne qui aide sans compte."""
+type Benevole {
+  accordLe: DateTime!
+
+  """Vrai si la personne connectée lit l’adresse, le téléphone et la note."""
+  coordonneesVisibles: Boolean!
+  courriel: String
+  id: ID!
+  nom: String!
+  note: String
+  peutModifier: Boolean!
+
+  """Le nombre de séquences où la fiche est placée."""
+  places: Int!
+  telephone: String
+}
+
 """
 Le champ de la messagerie qui reçoit les destinataires : « À » pour une seule personne, « Cc » (adresses visibles) ou « Cci » (adresses cachées).
 """
@@ -869,6 +886,19 @@ type Mutation {
   """
   creerAbonnementAgendaActivite(activiteId: ID!): AdresseAbonnement!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
+
+  """
+  Crée une fiche bénévole. La personne qui la crée déclare l’accord de la ou du bénévole.
+  """
+  creerBenevole(
+    """Vrai : la personne accepte que ses coordonnées soient enregistrées."""
+    accord: Boolean!
+    activiteId: ID!
+    courriel: String
+    nom: String!
+    note: String
+    telephone: String
+  ): Benevole!
   creerDateCle(description: String, editionId: ID!, jour: Date!, jourFin: Date, titre: String!): DateCle!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
@@ -997,12 +1027,24 @@ type Mutation {
     perimetreId: ID
   ): Int!
   modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
+  modifierBenevole(courriel: String, id: ID!, nom: String!, note: String, telephone: String): Benevole!
 
   """
   Modifie le texte d’un commentaire et rend le fil de sa tâche. Seul son auteur le modifie.
   """
   modifierCommentaire(id: ID!, texte: String!): FilTache!
-  modifierDateCle(description: String, id: ID!, jour: Date!, jourFin: Date, titre: String!, versionAttendue: Int): DateCle!
+  modifierDateCle(
+    description: String
+    id: ID!
+    jour: Date!
+    jourFin: Date
+    titre: String!
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
+  ): DateCle!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
 
   """
@@ -1091,7 +1133,11 @@ type Mutation {
     personneIds: [ID!]
     tacheIds: [ID!]
     titre: String!
-    versionAttendue: Int
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
   ): Reunion!
 
   """
@@ -1109,13 +1155,27 @@ type Mutation {
     lieuId: ID
     places: [PlaceSequenceInput!]
     titre: String!
-    versionAttendue: Int
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
   ): Sequence!
 
   """
   Change le titre, la description et les créneaux d’un sondage ouvert. Un créneau retiré perd ses réponses.
   """
-  modifierSondage(creneaux: [CreneauSondageInput!]!, description: String, id: ID!, titre: String!, versionAttendue: Int): Sondage!
+  modifierSondage(
+    creneaux: [CreneauSondageInput!]!
+    description: String
+    id: ID!
+    titre: String!
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
+  ): Sondage!
 
   """
   Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
@@ -1170,6 +1230,11 @@ type Mutation {
 
   """Révoque l’abonnement personnel : son adresse cesse de servir."""
   revoquerMonAbonnementAgenda: Boolean!
+
+  """
+  Supprime une fiche et la retire de toutes les séquences. Réservé aux admins de l’activité.
+  """
+  supprimerBenevole(id: ID!): Boolean!
 
   """
   Supprime un commentaire, définitivement, et rend le fil de sa tâche. Son auteur le supprime, ainsi qu’un admin de l’activité.
@@ -1613,6 +1678,11 @@ type Query {
   appelPostes(editionId: ID!): String
   avancementGlobal(editionId: ID!): [AvancementPerimetre!]!
   baremeScore: BaremeScore!
+
+  """
+  Les fiches bénévoles d’une activité, par nom, pour les personnes qui y écrivent.
+  """
+  benevoles(activiteId: ID!): [Benevole!]!
   classement(editionId: ID!): [LigneClassement!]!
 
   """

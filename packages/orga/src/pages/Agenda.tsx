@@ -200,7 +200,7 @@ const majuscule = (texte: string) =>
 const compteElements = (n: number) => `${n} ${n > 1 ? 'éléments' : 'élément'}`
 
 export default function Agenda() {
-  const { lien, periode, activite } = useActivite()
+  const { lien, periode, activite, gere } = useActivite()
   const { message, modal } = App.useApp()
   const ecrans = Grid.useBreakpoint()
   const [parametres, setParametres] = useSearchParams()
@@ -304,8 +304,18 @@ export default function Agenda() {
   }, [agenda, perimetres, moi])
 
   if (editionId === undefined && courante && !courante.editionCourante) {
+    // L'abonnement partagé ne dépend d'aucune période : ses admins le gèrent
+    // même sans période en préparation.
     return (
-      <Result status="info" title={`${periode.Aucune} n’est en préparation.`} />
+      <>
+        <Result
+          status="info"
+          title={`${periode.Aucune} n’est en préparation.`}
+        />
+        {gere && (
+          <AbonnementActivite activiteId={activite.id} nom={activite.nom} />
+        )}
+      </>
     )
   }
   if (error && !data) {
@@ -389,7 +399,10 @@ export default function Agenda() {
     if (element.sorte === 'ECHEANCE' && perimetre) {
       return (
         <Link
-          to={lien(`/perimetres/${perimetre.slug}?edition=${editionId}`)}
+          // La tâche visée s'affiche quel que soit le filtre du périmètre.
+          to={lien(
+            `/perimetres/${perimetre.slug}?edition=${editionId}${element.tacheId ? `&tache=${element.tacheId}` : ''}`
+          )}
           className={element.faite ? 'rt-agenda-faite' : undefined}
         >
           {element.titre}
@@ -730,7 +743,9 @@ export default function Agenda() {
                   )}
                 </Panneau>
               )}
-              {agenda.peutGerer && (
+              {/* L'abonnement partagé suit l'administration de l'activité, pas
+                  la période affichée : il reste là sur une période archivée. */}
+              {gere && (
                 <AbonnementActivite
                   activiteId={activite.id}
                   nom={activite.nom}
@@ -767,6 +782,8 @@ export default function Agenda() {
         />
       )}
       <SondageDetail
+        // Un autre sondage repart d'un volet neuf, même ouvert par « Précédent ».
+        key={sondageOuvert ?? 'aucun'}
         sondageId={sondageOuvert}
         agendas={agendasEcrits}
         onFermer={() => ouvrir('sondage', null)}

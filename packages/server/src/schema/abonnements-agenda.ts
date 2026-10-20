@@ -231,6 +231,9 @@ builder.mutationFields(t => ({
   }),
 
   revoquerMonAbonnementAgenda: t.boolean({
+    // Une adresse compromise se révoque même dans une organisation en lecture
+    // seule, qui continue de servir ses abonnements.
+    skipTypeScopes: true,
     authScopes: { connecte: true },
     description:
       'Révoque l’abonnement personnel : son adresse cesse de servir.',
@@ -260,6 +263,9 @@ builder.mutationFields(t => ({
   }),
 
   revoquerAbonnementAgendaActivite: t.boolean({
+    // Une adresse compromise se révoque même dans une organisation en lecture
+    // seule, qui continue de servir ses abonnements.
+    skipTypeScopes: true,
     authScopes: { gestion: true },
     args: { activiteId: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {

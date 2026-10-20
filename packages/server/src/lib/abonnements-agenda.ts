@@ -6,6 +6,7 @@ import { buildContext, type AppContext } from '../context.ts'
 
 import { bornesDesPhases, decalerJour, jourISO } from './agenda.ts'
 import { aujourdhui, perimetresLisibles } from './droits.ts'
+import { bornesDesJours } from './heures.ts'
 import { calendrier, type EvenementIcs } from './ics.ts'
 import { configurationOrganisation } from './organisation.ts'
 import { lirePhases } from './phases.ts'
@@ -49,11 +50,14 @@ function fenetre(maintenant: Date, fuseau: string): Fenetre {
   const jour = aujourdhui(maintenant, fuseau)
   const depuis = decalerJour(jour, -JOURS_AVANT)
   const jusqua = decalerJour(jour, JOURS_APRES)
+  const bornes = bornesDesJours(depuis, jusqua, fuseau)
   return {
     depuis,
     jusqua,
-    depuisInstant: new Date(`${depuis}T00:00:00.000Z`),
-    jusquaInstant: new Date(`${jusqua}T23:59:59.999Z`),
+    // Les bornes sont les minuits du fuseau de l'organisation, comme les jours
+    // de la fenêtre : la borne haute reste comprise, à la milliseconde près.
+    depuisInstant: bornes.debut,
+    jusquaInstant: bornes.fin,
   }
 }
 
