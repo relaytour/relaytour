@@ -1,5 +1,6 @@
 import {
   BookOutlined,
+  CalendarOutlined,
   CheckOutlined,
   EditOutlined,
   MessageOutlined,
@@ -55,6 +56,7 @@ export default function TacheCarte({
   enEvidence = false,
   filOuvert = false,
   onModifier,
+  onPlanifierReunion,
   perimetresCibles,
   editionId,
 }: {
@@ -78,6 +80,8 @@ export default function TacheCarte({
   /** Vrai quand une notification de commentaire vise la tâche : son fil s'ouvre. */
   filOuvert?: boolean
   onModifier?: (tache: TacheChampsFragment) => void
+  /** Ouvre la fenêtre d'une réunion liée à la tâche (ADR 0037). */
+  onPlanifierReunion?: (tache: TacheChampsFragment) => void
   /**
    * Les autres périmètres de l'activité où décliner la tâche (ADR 0026). Sans
    * cette liste, la carte ne propose pas de la décliner.
@@ -150,6 +154,15 @@ export default function TacheCarte({
       : []),
     ...(tache.statut === 'EN_COURS'
       ? [{ key: 'A_FAIRE', label: 'Remettre à faire' }]
+      : []),
+    ...(onPlanifierReunion && peutModifier && ouverte
+      ? [
+          {
+            key: 'reunion',
+            icon: <CalendarOutlined />,
+            label: 'Planifier une réunion',
+          },
+        ]
       : []),
     ...(declinable
       ? [
@@ -465,6 +478,7 @@ export default function TacheCarte({
                 onClick: ({ key }) => {
                   if (key === 'modifier') onModifier?.(tache)
                   if (key === 'decliner') setADecliner(true)
+                  if (key === 'reunion') onPlanifierReunion?.(tache)
                   if (key === 'EN_COURS')
                     void statut('EN_COURS', 'Tâche marquée en cours.')
                   if (key === 'A_FAIRE')

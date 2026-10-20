@@ -6,13 +6,15 @@ import type { TypeNotification } from '@relaytour/database'
 // l'environnement, pour que le schéma s'imprime sans `.env`.
 
 /** Les familles de notifications que la personne coupe une par une. */
-export type FamillePush = 'taches' | 'echeances' | 'demandes' | 'equipe'
+export type FamillePush =
+  'taches' | 'echeances' | 'demandes' | 'equipe' | 'agenda'
 
 export interface PreferencesPush {
   pushTaches: boolean
   pushEcheances: boolean
   pushDemandes: boolean
   pushEquipe: boolean
+  pushAgenda: boolean
 }
 
 /**
@@ -47,6 +49,12 @@ export function famillePush(type: TypeNotification): FamillePush | null {
     case 'PERSONNE_ARCHIVEE':
     case 'PERSONNE_RETABLIE':
       return 'equipe'
+    // Une réunion où la personne est convoquée (ADR 0037).
+    case 'REUNION_CONVOQUEE':
+    case 'REUNION_MODIFIEE':
+    case 'REUNION_ANNULEE':
+    case 'SONDAGE_OUVERT':
+      return 'agenda'
     default:
       return null
   }
@@ -66,6 +74,8 @@ export function pushAutorise(
       return preferences.pushDemandes
     case 'equipe':
       return preferences.pushEquipe
+    case 'agenda':
+      return preferences.pushAgenda
     default:
       return false
   }
