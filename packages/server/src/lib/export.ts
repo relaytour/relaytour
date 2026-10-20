@@ -62,6 +62,25 @@ export async function construireExport(organisationId: string) {
                 orderBy: { createdAt: 'asc' },
                 include: { auteur: { select: { email: true } } },
               },
+              // La liste « Concerne aussi » et les masquages (ADR 0039).
+              connexes: {
+                orderBy: { ajouteeLe: 'asc' },
+                include: {
+                  perimetre: { select: { slug: true } },
+                  ajouteePar: { select: { email: true } },
+                },
+              },
+              groupesConnexes: {
+                orderBy: { groupe: 'asc' },
+                include: { ajoutePar: { select: { email: true } } },
+              },
+              masquages: {
+                orderBy: { masqueeLe: 'asc' },
+                include: {
+                  perimetre: { select: { slug: true } },
+                  masqueePar: { select: { email: true } },
+                },
+              },
             },
           },
         },
@@ -222,6 +241,21 @@ export async function construireExport(organisationId: string) {
           auteur: v.auteur?.email ?? null,
           creeLe: v.createdAt.toISOString(),
           courante: v.id === f.versionCouranteId,
+        })),
+        concerne: f.connexes.map(c => ({
+          perimetre: c.perimetre.slug,
+          ajoutePar: c.ajouteePar?.email ?? null,
+          ajouteLe: c.ajouteeLe.toISOString(),
+        })),
+        concerneGroupes: f.groupesConnexes.map(g => ({
+          groupe: g.groupe,
+          ajoutePar: g.ajoutePar?.email ?? null,
+          ajouteLe: g.ajouteLe.toISOString(),
+        })),
+        masquages: f.masquages.map(m => ({
+          perimetre: m.perimetre.slug,
+          masqueePar: m.masqueePar?.email ?? null,
+          masqueeLe: m.masqueeLe.toISOString(),
         })),
       })),
       taches: taches

@@ -825,6 +825,28 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.fiche }),
     attente: INTERDIT,
   },
+  // Fiches connexes (ADR 0039).
+  {
+    operation: 'reglerConcerneAussi',
+    query:
+      'mutation ($id: ID!) { reglerConcerneAussi(ficheId: $id, perimetreIds: [], groupes: []) { id } }',
+    variables: () => ({ id: a.fiche }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'masquerFicheConnexe',
+    query:
+      'mutation ($id: ID!, $p: ID!) { masquerFicheConnexe(ficheId: $id, perimetreId: $p) { id } }',
+    variables: () => ({ id: a.fiche, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'afficherFicheConnexe',
+    query:
+      'mutation ($id: ID!, $p: ID!) { afficherFicheConnexe(ficheId: $id, perimetreId: $p) { id } }',
+    variables: () => ({ id: a.fiche, p: a.perimetre }),
+    attente: INTERDIT,
+  },
   {
     operation: 'modifierPerimetre',
     query:

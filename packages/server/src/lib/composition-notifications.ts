@@ -165,7 +165,12 @@ async function lireContexte(
   // Le périmètre de la notification, et celui de sa tâche pour le lien : une
   // déclinaison prévient le périmètre d'origine d'une tâche d'un autre périmètre.
   const perimetres = uniques(
-    notifications.flatMap(n => [perimetreIdDe(n), n.tache?.perimetreId ?? null])
+    notifications.flatMap(n => [
+      perimetreIdDe(n),
+      n.tache?.perimetreId ?? null,
+      // Une fiche connexe nomme le périmètre de la fiche (ADR 0039).
+      n.fiche?.perimetreId ?? null,
+    ])
   )
   const organisations = uniques(notifications.map(n => n.organisationId))
   const editions = uniques(notifications.map(n => n.editionId))
@@ -287,6 +292,13 @@ function phrase(
       return `${acteur} a rétabli ${personne} dans l’organisation`
     case 'PLACE_MODIFIEE':
       return `Votre place dans l’équipe a changé${activite}`
+    case 'FICHE_CONNEXE': {
+      if (n.fiche === null) return 'Cette fiche n’existe plus'
+      const origine =
+        (n.fiche.perimetreId && c.perimetres.get(n.fiche.perimetreId)?.nom) ??
+        'un autre périmètre'
+      return `La fiche « ${n.fiche.versionCourante?.titre ?? n.fiche.slug} » de ${origine} concerne aussi votre périmètre${lieu}`
+    }
     case 'FICHE_CREEE':
     case 'FICHE_MODIFIEE': {
       if (n.fiche === null) return 'Cette fiche n’existe plus'
@@ -394,6 +406,7 @@ function lien(n: NotificationLue, c: Contexte): string {
       return `/${slug}`
     case 'FICHE_CREEE':
     case 'FICHE_MODIFIEE':
+    case 'FICHE_CONNEXE':
       return n.fiche ? `/${slug}/fiches/${n.fiche.slug}` : `/${slug}`
     default:
       break

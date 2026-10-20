@@ -116,9 +116,12 @@ export const FichierPerimetres = z.strictObject({
   perimetres: z.array(PerimetreDeclare),
 })
 
+// `concerne` et `concerneGroupes` portent la liste « Concerne aussi » (ADR 0039).
 const EnteteFiche = z.strictObject({
   slug: Slug,
   titre: z.string().min(1).max(TITRE_MAX),
+  concerne: z.array(Slug).max(100).optional(),
+  concerneGroupes: z.array(z.string().min(1).max(64)).max(100).optional(),
 })
 
 // J-120 : 120 jours avant le premier jour de la période. J+3 : 3 jours après.
@@ -205,6 +208,9 @@ export interface FicheModele {
   contenu: string
   /** null pour une fiche commune à l'activité. */
   perimetre: string | null
+  /** La liste « Concerne aussi » (ADR 0039) : des slugs de périmètres et des clés de groupes. */
+  concerne: string[]
+  concerneGroupes: string[]
   fichier: string
 }
 
@@ -458,7 +464,40 @@ function lireActivite(
           `${nom} : données personnelles interdites dans Git (${personnelles.join(', ')}). Écrire un rôle à la place.`
         )
       }
-      fiches.push({ ...entete.data, contenu, perimetre, fichier: nom })
+      const concerne = [...new Set(entete.data.concerne ?? [])]
+      const concerneGroupes = [...new Set(entete.data.concerneGroupes ?? [])]
+      if (perimetre === null && concerne.length + concerneGroupes.length > 0) {
+        erreurs.push(
+          `${nom} : une fiche commune concerne déjà tous les périmètres, sans « concerne » ni « concerneGroupes »`
+        )
+      }
+      for (const cible of concerne) {
+        if (cible === perimetre) {
+          erreurs.push(
+            `${nom} : la fiche appartient déjà au périmètre ${cible}`
+          )
+        } else if (!slugsPerimetres.has(cible)) {
+          erreurs.push(
+            `${nom} : « concerne » cite ${cible}, qui n'existe pas dans ${nomPerimetres}`
+          )
+        }
+      }
+      for (const groupe of concerneGroupes) {
+        if (!groupes.has(groupe)) {
+          erreurs.push(
+            `${nom} : « concerneGroupes » cite le groupe ${groupe}, que l'activité ne déclare pas`
+          )
+        }
+      }
+      fiches.push({
+        slug: entete.data.slug,
+        titre: entete.data.titre,
+        contenu,
+        perimetre,
+        concerne,
+        concerneGroupes,
+        fichier: nom,
+      })
     }
   }
   const slugsFiches = new Map(fiches.map(f => [f.slug, f]))
@@ -570,9 +609,15 @@ function lireActivite(
           `${nom} : la déclinaison de ${tache.modele} cite la fiche ${declinaison.fiche}, qui n'existe pas dans cette activité`
         )
       }
-      if (fiche !== undefined && fiche.perimetre !== null) {
+      // Une déclinaison cite une fiche commune, ou une fiche du périmètre de la
+      // tâche partagée, qui devient connexe pour chaque cible (ADR 0039).
+      if (
+        fiche !== undefined &&
+        fiche.perimetre !== null &&
+        fiche.perimetre !== origine
+      ) {
         erreurs.push(
-          `${nom} : la déclinaison de ${tache.modele} ne cite qu'une fiche commune`
+          `${nom} : la déclinaison de ${tache.modele} cite une fiche d'un autre périmètre que celui de la tâche partagée`
         )
       }
       // Une tâche se retrouve par son périmètre et son modèle : un périmètre cible

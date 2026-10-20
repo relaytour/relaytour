@@ -168,6 +168,7 @@ export type TypeNotification =
   | 'DEMANDE_RECUE'
   | 'DEMANDE_REFUSEE'
   | 'ECHEANCE_PROCHE'
+  | 'FICHE_CONNEXE'
   | 'FICHE_CREEE'
   | 'FICHE_MODIFIEE'
   | 'INVITATION_ACCEPTEE'
