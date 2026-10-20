@@ -46,13 +46,16 @@ function saisieDe(s: SequenceLue): SequenceSaisie {
  */
 export default function SequenceDetail({
   sequence,
-  ecrit,
+  lisible,
   onModifier,
   onFermer,
 }: {
   sequence: SequenceLue | null
-  /** Vrai si la personne écrit dans l'activité : elle lit la liste des fiches. */
-  ecrit: boolean
+  /**
+   * Vrai si la personne lit la liste des fiches : un admin de l'activité, ou une
+   * personne qui écrit dans l'activité.
+   */
+  lisible: boolean
   onModifier: (s: SequenceSaisie) => void
   onFermer: () => void
 }) {
@@ -60,7 +63,7 @@ export default function SequenceDetail({
   const { message, modal } = App.useApp()
   const { data: benevoles } = useQuery(BENEVOLES, {
     variables: { activiteId: activite.id },
-    skip: sequence === null || !ecrit,
+    skip: sequence === null || !lisible,
   })
   const [supprimer] = useMutation(SUPPRIMER, {
     refetchQueries: ['Programme', 'ProgrammePerimetre'],

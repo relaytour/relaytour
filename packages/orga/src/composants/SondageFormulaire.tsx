@@ -1,11 +1,11 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { App, Button, Form, Input, Modal, Radio, Select } from 'antd'
 import { useEffect } from 'react'
 
 import { graphql } from '../gql'
 import type { CibleConvocation } from '../gql/graphql'
-import { lireConflit } from '../lib/conflit'
+import { lireConflit, relireApresConflit } from '../lib/conflit'
 import { messageErreur } from '../lib/erreurs'
 
 import { CONVOCABLES } from '../lib/requetes'
@@ -42,7 +42,7 @@ const MODIFIER = graphql(`
     $titre: String!
     $description: String
     $creneaux: [CreneauSondageInput!]!
-    $versionAttendue: Int
+    $versionAttendue: Int!
   ) {
     modifierSondage(
       id: $id
@@ -107,6 +107,7 @@ export default function SondageFormulaire({
   onFermer: () => void
 }) {
   const { message } = App.useApp()
+  const client = useApolloClient()
   const [form] = Form.useForm<Valeurs>()
   const relire = { refetchQueries: ['Sondages', 'Sondage'] }
   const [creer, creation] = useMutation(CREER, relire)
@@ -187,10 +188,17 @@ export default function SondageFormulaire({
       onFermer()
     } catch (e) {
       if (lireConflit(e) !== null) {
-        message.error(
-          'Une autre personne a modifié ce sondage depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.'
+        await relireApresConflit(
+          client,
+          relire.refetchQueries,
+          texte => message.error(texte),
+          {
+            relu: 'Une autre personne a modifié ce sondage depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.',
+            echec:
+              'Le sondage n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant.',
+          },
+          onFermer
         )
-        onFermer()
         return
       }
       message.error(messageErreur(e))

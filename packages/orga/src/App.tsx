@@ -16,6 +16,7 @@ import NotificationsAdmin from './pages/admin/NotificationsAdmin'
 import Personnes from './pages/admin/Personnes'
 import Redaction from './pages/admin/Redaction'
 import Agenda from './pages/Agenda'
+import Benevoles from './pages/Benevoles'
 import Connexion from './pages/Connexion'
 import Fiche from './pages/Fiche'
 import FicheEditeur from './pages/FicheEditeur'
@@ -56,6 +57,7 @@ const routeur = createBrowserRouter([
           { path: 'retroplanning', element: <Retroplanning /> },
           { path: 'agenda', element: <Agenda /> },
           { path: 'programme', element: <Programme /> },
+          { path: 'benevoles', element: <Benevoles /> },
           { path: 'perimetres/:slug', element: <Perimetre /> },
           { path: 'fiches', element: <Fiches /> },
           { path: 'fiches/nouvelle', element: <FicheEditeur /> },

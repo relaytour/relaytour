@@ -40,9 +40,13 @@ const VUES_DES_PERIMETRES = [
   'PostesAPourvoir',
   // Les affectations, les contacts principaux et les accords (ADR 0036).
   'Organigramme',
-  // Les personnes affectées décident des convocations (ADR 0037).
+  // Les personnes affectées décident des convocations (ADR 0037), et des
+  // agendas où une personne écrit.
   'Reunions',
   'ReunionsDuPerimetre',
+  'Reunion',
+  'AffectationsPourAgenda',
+  'AgendasEcrits',
 ] as const
 
 /**

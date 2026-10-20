@@ -6,6 +6,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 
+import { SEQUENCES_MAX } from '../lib/programme.ts'
+
 import { schema } from './index.ts'
 
 // Programme du jour J (ADR 0040). Les admins de l'activité gèrent les lieux et
@@ -55,7 +57,7 @@ const CHAMPS = `id titre jour heureDebut heureFin peutModifier version lieu { id
 const CREER = `mutation ($e: ID!, $p: ID, $l: ID, $t: String!, $j: Date!, $jf: Date, $d: String!, $f: String!, $pl: [PlaceSequenceInput!]) {
   creerSequence(editionId: $e, perimetreId: $p, lieuId: $l, titre: $t, jour: $j, jourFin: $jf, heureDebut: $d, heureFin: $f, places: $pl) { ${CHAMPS} }
 }`
-const MODIFIER = `mutation ($id: ID!, $l: ID, $t: String!, $j: Date!, $d: String!, $f: String!, $pl: [PlaceSequenceInput!], $v: Int) {
+const MODIFIER = `mutation ($id: ID!, $l: ID, $t: String!, $j: Date!, $d: String!, $f: String!, $pl: [PlaceSequenceInput!], $v: Int!) {
   modifierSequence(id: $id, lieuId: $l, titre: $t, jour: $j, heureDebut: $d, heureFin: $f, places: $pl, versionAttendue: $v) { ${CHAMPS} }
 }`
 const PROGRAMME = `query ($e: ID!, $p: ID, $m: Boolean) { programme(editionId: $e, perimetreId: $p, mesSequences: $m) { ${CHAMPS} } }`
@@ -393,18 +395,99 @@ describe('séquences', () => {
         role: 'RESPONSABLE',
       }),
     ])
-    expect(
-      code(
-        await executer(ids.referent, MODIFIER, {
-          id: sequence.id,
-          t: 'Conflit',
-          j: '2027-06-05',
-          d: '08:30',
-          f: '11:00',
-          v: 0,
-        })
+    const conflit = await executer(ids.referent, MODIFIER, {
+      id: sequence.id,
+      t: 'Conflit',
+      j: '2027-06-05',
+      d: '08:30',
+      f: '11:00',
+      v: 0,
+    })
+    expect(code(conflit)).toBe('CONFLIT_VERSION')
+    // Le conflit annonce la version validée, pas celle lue avant l'écriture.
+    expect(conflit.errors?.[0]?.extensions?.versionCourante).toBe(1)
+  })
+
+  it('gardent leur lieu archivé, sans pouvoir choisir un autre lieu archivé', async () => {
+    const sequence = await sequenceNatation({ t: 'Relais' })
+    await prisma.lieu.updateMany({
+      where: { id: { in: [ids.bassin, ids.terrain] } },
+      data: { archivedAt: new Date() },
+    })
+    try {
+      const commun = {
+        id: sequence.id,
+        t: 'Relais 4 × 50 m',
+        j: '2027-06-05',
+        d: '09:00',
+        f: '12:00',
+      }
+      expect(
+        code(
+          await executer(ids.referent, MODIFIER, {
+            ...commun,
+            l: ids.bassin,
+            v: 0,
+          })
+        )
+      ).toBeUndefined()
+      expect(
+        code(
+          await executer(ids.referent, MODIFIER, {
+            ...commun,
+            l: ids.terrain,
+            v: 1,
+          })
+        )
+      ).toBe('FORBIDDEN')
+    } finally {
+      await prisma.lieu.updateMany({
+        where: { id: { in: [ids.bassin, ids.terrain] } },
+        data: { archivedAt: null },
+      })
+    }
+  })
+
+  it('ne dépassent pas le plafond de la période, même créées en même temps', async () => {
+    const deja = await prisma.sequence.count({
+      where: { editionId: ids.edition },
+    })
+    const debut = new Date('2027-06-05T08:00:00.000Z')
+    await prisma.sequence.createMany({
+      data: Array.from({ length: SEQUENCES_MAX - 1 - deja }, (_, i) => ({
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        titre: `Remplissage ${i}`,
+        debut,
+        fin: new Date('2027-06-05T09:00:00.000Z'),
+      })),
+    })
+    try {
+      const reponses = await Promise.all(
+        ['Première', 'Seconde'].map(titre =>
+          executer(ids.referent, CREER, {
+            e: ids.edition,
+            p: ids.natation,
+            t: titre,
+            j: '2027-06-05',
+            d: '09:00',
+            f: '10:00',
+          })
+        )
       )
-    ).toBe('CONFLIT_VERSION')
+      expect(reponses.map(code).sort()).toEqual(['SAISIE_INVALIDE', undefined])
+      expect(
+        await prisma.sequence.count({ where: { editionId: ids.edition } })
+      ).toBe(SEQUENCES_MAX)
+    } finally {
+      await prisma.sequence.deleteMany({
+        where: {
+          editionId: ids.edition,
+          titre: { startsWith: 'Remplissage ' },
+        },
+      })
+    }
   })
 
   it('restent hors de portée d’un autre périmètre et d’une autre activité', async () => {
@@ -424,6 +507,7 @@ describe('séquences', () => {
         await executer(ids.basketteuse, MODIFIER, {
           id: sequence.id,
           ...commun,
+          v: 0,
         })
       )
     ).toBe('FORBIDDEN')

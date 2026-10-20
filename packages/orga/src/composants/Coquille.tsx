@@ -23,6 +23,7 @@ import {
   SolutionOutlined,
   TrophyOutlined,
   TeamOutlined,
+  UsergroupAddOutlined,
 } from '@ant-design/icons'
 import { useApolloClient, useQuery } from '@apollo/client/react'
 import { Alert, Badge, Button, Drawer, Grid, Menu } from 'antd'
@@ -61,11 +62,16 @@ const MENU_PERIMETRES = graphql(`
       id
       affectations {
         id
+        edition {
+          id
+          statut
+        }
         perimetre {
           id
           slug
           nom
           couleur
+          archive
           activite {
             id
           }
@@ -141,6 +147,18 @@ function Mise({ session }: { session: Session }) {
     ).values(),
   ].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
 
+  // Les fiches bénévoles s'ouvrent aux admins de l'activité et aux personnes
+  // affectées à un périmètre actif pour une période non archivée : la règle du
+  // serveur (`ecritDansLActivite`, ADR 0040).
+  const tientLesBenevoles =
+    gere ||
+    (menu?.moi?.affectations ?? []).some(
+      a =>
+        a.perimetre.activite.id === activite.id &&
+        !a.perimetre.archive &&
+        a.edition.statut !== 'ARCHIVEE'
+    )
+
   // Une personne qui découvre l'activité (ADR 0012) ne voit que « Tous les
   // périmètres » et ses préférences.
   const entrees = [
@@ -163,6 +181,15 @@ function Mise({ session }: { session: Session }) {
             icon: <ProjectOutlined />,
             label: 'Programme',
           },
+          ...(tientLesBenevoles
+            ? [
+                {
+                  key: lien('/benevoles'),
+                  icon: <UsergroupAddOutlined />,
+                  label: 'Bénévoles',
+                },
+              ]
+            : []),
           { key: lien('/fiches'), icon: <BookOutlined />, label: 'Fiches' },
         ]),
     {
