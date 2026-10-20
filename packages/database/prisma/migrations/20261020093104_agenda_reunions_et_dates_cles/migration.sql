@@ -34,7 +34,6 @@ CREATE TABLE `Reunion` (
     `activiteId` VARCHAR(191) NOT NULL,
     `editionId` VARCHAR(191) NOT NULL,
     `perimetreId` VARCHAR(191) NULL,
-    `tacheId` VARCHAR(191) NULL,
     `titre` VARCHAR(200) NOT NULL,
     `debut` DATETIME(3) NOT NULL,
     `fin` DATETIME(3) NOT NULL,
@@ -54,8 +53,18 @@ CREATE TABLE `Reunion` (
     INDEX `Reunion_perimetreId_debut_idx`(`perimetreId`, `debut`),
     INDEX `Reunion_organisationId_idx`(`organisationId`),
     INDEX `Reunion_activiteId_idx`(`activiteId`),
-    INDEX `Reunion_tacheId_idx`(`tacheId`),
     INDEX `Reunion_creeParId_idx`(`creeParId`),
+    PRIMARY KEY (`id`)
+) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+-- CreateTable
+CREATE TABLE `ReunionTache` (
+    `id` VARCHAR(191) NOT NULL,
+    `reunionId` VARCHAR(191) NOT NULL,
+    `tacheId` VARCHAR(191) NOT NULL,
+
+    INDEX `ReunionTache_tacheId_idx`(`tacheId`),
+    UNIQUE INDEX `ReunionTache_reunionId_tacheId_key`(`reunionId`, `tacheId`),
     PRIMARY KEY (`id`)
 ) DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
@@ -103,7 +112,10 @@ ALTER TABLE `Reunion` ADD CONSTRAINT `Reunion_editionId_fkey` FOREIGN KEY (`edit
 ALTER TABLE `Reunion` ADD CONSTRAINT `Reunion_perimetreId_fkey` FOREIGN KEY (`perimetreId`) REFERENCES `Perimetre`(`id`) ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE `Reunion` ADD CONSTRAINT `Reunion_tacheId_fkey` FOREIGN KEY (`tacheId`) REFERENCES `Tache`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE `ReunionTache` ADD CONSTRAINT `ReunionTache_reunionId_fkey` FOREIGN KEY (`reunionId`) REFERENCES `Reunion`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE `ReunionTache` ADD CONSTRAINT `ReunionTache_tacheId_fkey` FOREIGN KEY (`tacheId`) REFERENCES `Tache`(`id`) ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE `Reunion` ADD CONSTRAINT `Reunion_creeParId_fkey` FOREIGN KEY (`creeParId`) REFERENCES `User`(`id`) ON DELETE SET NULL ON UPDATE CASCADE;

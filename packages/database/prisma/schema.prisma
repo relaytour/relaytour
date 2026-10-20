@@ -727,7 +727,7 @@ model Tache {
   commentaires  CommentaireTache[]
   journal       Journal[]
   notifications Notification[]
-  reunions      Reunion[]
+  reunions      ReunionTache[]
 
   // Une déclinaison par périmètre cible. La clé est bornée par la tâche partagée,
   // elle-même rangée dans une activité (invariant 18).
@@ -828,9 +828,6 @@ model Reunion {
   activiteId     String
   editionId      String
   perimetreId    String?
-  // Tâche liée, facultative : de la même période, et du même périmètre pour une
-  // réunion de périmètre. Le lien n'ouvre aucun droit.
-  tacheId        String?
   titre          String            @db.VarChar(200)
   // Instants en UTC. La saisie et l'affichage suivent le fuseau de l'organisation.
   debut          DateTime
@@ -855,17 +852,31 @@ model Reunion {
   activite      Activite             @relation(fields: [activiteId], references: [id], onDelete: Restrict)
   edition       Edition              @relation(fields: [editionId], references: [id], onDelete: Restrict)
   perimetre     Perimetre?           @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
-  tache         Tache?               @relation(fields: [tacheId], references: [id], onDelete: SetNull)
   creePar       User?                @relation("ReunionAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
   convocations  ConvocationReunion[]
+  taches        ReunionTache[]
   notifications Notification[]
 
   @@index([editionId, debut])
   @@index([perimetreId, debut])
   @@index([organisationId])
   @@index([activiteId])
-  @@index([tacheId])
   @@index([creeParId])
+}
+
+// Tâche liée à une réunion, vingt au plus par réunion : de la même période, et
+// du même périmètre pour une réunion de périmètre. Le lien n'ouvre aucun droit.
+model ReunionTache {
+  id        String @id @default(cuid())
+  reunionId String
+  tacheId   String
+
+  reunion Reunion @relation(fields: [reunionId], references: [id], onDelete: Cascade)
+  tache   Tache   @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+
+  // Un lien par tâche, borné par la réunion (invariant 18).
+  @@unique([reunionId, tacheId])
+  @@index([tacheId])
 }
 
 // Convocation d'une personne de l'équipe à une réunion. Elle vise un compte,
