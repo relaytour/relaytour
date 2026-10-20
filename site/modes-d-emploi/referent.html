@@ -114,7 +114,7 @@
 
         <article class="verre ecran" id="e-agenda">
           <div class="ecran-tete"><h3>Agenda</h3><span class="route">/&lt;activité&gt;/agenda</span></div>
-          <p>L'agenda présente les repères de la période : ses phases, son premier et son dernier jour, et les dates clés placées par les admins de l'activité. Une date clé signale un jour qui compte pour toute l'équipe, par exemple un dossier à déposer ou une assemblée. L'agenda ajoute les échéances des tâches de vos périmètres.</p>
+          <p>L'agenda présente les repères de la période : ses phases, son premier et son dernier jour, et les dates clés placées par les admins de l'activité. Une date clé signale un jour qui compte pour toute l'équipe, par exemple un dossier à déposer ou une assemblée. L'agenda affiche aussi les réunions de l'activité et de ses périmètres, et les échéances des tâches de vos périmètres.</p>
           <p>La liste range ces éléments par mois, à partir d'aujourd'hui. Chaque échéance mène à son périmètre. Sur un écran large, la vue « Mois » affiche une grille du lundi au dimanche, avec la phase en cours au-dessus.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Liste</span><span class="libelle">Mois</span></span><span>Choisir l'affichage. La vue « Mois » n'existe pas sur un téléphone.</span></li>
@@ -126,6 +126,19 @@
             <figcaption>Écran Agenda, sur l'organisation d'exemple. Les dates sont fictives.</figcaption>
           </figure>
           <p class="note">La colonne de droite liste les phases, puis les dates clés de la période. Un liseré marque la phase en cours.</p>
+          <p>Une <strong>réunion</strong> appartient à l'agenda d'un périmètre, ou à l'agenda global de l'activité, que tiennent ses admins. Vous créez les réunions de vos périmètres : un titre, un jour, une heure de début et de fin, un lieu, un lien de visio, une description et des tâches liées. Les horaires suivent le fuseau de votre organisation.</p>
+          <p>Une réunion <strong>convoque</strong> tout le périmètre, toute l'équipe de l'activité, ou des personnes choisies dans l'équipe. Chaque personne convoquée reçoit un mail, deux minutes plus tard, avec un fichier qui ajoute la réunion à son agenda. Elle répond dans l'espace organisateur. Une réponse envoyée depuis Outlook ou Google n'y arrive pas.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouvelle réunion</span></span><span>Créer une réunion dans l'agenda d'un de vos périmètres. Le menu « Autres actions » d'une tâche propose aussi « Planifier une réunion », avec la tâche déjà liée.</span></li>
+            <li><span><span class="libelle">Présent·e</span><span class="libelle">Absent·e</span><span class="libelle">Peut-être</span></span><span>Répondre à une convocation, dans le volet de la réunion. Vous changez votre réponse à tout moment.</span></li>
+            <li><span><span class="libelle">Modifier</span></span><span>Changer une réunion de votre périmètre. Un changement d'horaire, de lieu ou de lien envoie une nouvelle version aux personnes convoquées.</span></li>
+            <li><span><span class="libelle">Annuler la réunion</span></span><span>Garder la réunion dans l'agenda, marquée annulée. Chaque personne convoquée reçoit un mail d'annulation.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/reunion.webp" data-mobile="../captures/mobile/reunion.webp" width="1440" height="900" loading="lazy" alt="Volet d'une réunion : l'horaire, le lieu, le bouton de visio, la tâche liée, la réponse de la personne et les réponses de l'équipe." />
+            <figcaption>Le volet d'une réunion du pôle Bénévoles, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p class="note">Les personnes qui écrivent dans l'agenda d'une réunion lisent les réponses une à une. Une personne qui consulte un autre périmètre voit le titre et l'horaire de ses réunions, sans le lieu, le lien de visio ni la description. Quand vous quittez un périmètre, vous quittez aussi ses réunions à venir.</p>
         </article>
 
         <article class="verre ecran" id="e-tous-les-perimetres">
@@ -168,6 +181,7 @@
             <li><span><span class="libelle">Par échéance</span><span class="libelle">Par phase</span><span class="libelle">Par fiche</span></span><span>Choisir le regroupement des tâches. Votre navigateur garde ce choix. Le regroupement par fiche demande d'être affecté·e au périmètre.</span></li>
             <li><span><span class="libelle">Nouvelle tâche</span></span><span>Ajouter une tâche à votre périmètre : titre, description, échéance et fiche liée. La case « Je m'en occupe » est cochée par défaut.</span></li>
             <li><span><span class="libelle">Modifier</span></span><span>Corriger une tâche existante depuis le menu « Autres actions » de sa carte.</span></li>
+            <li><span><span class="libelle">Prochaines réunions</span></span><span>Lire les cinq prochaines réunions du périmètre dans la colonne de droite, et en créer une avec « Nouvelle ».</span></li>
             <li><span><span class="libelle">Proposer une personne</span></span><span>Proposer à un admin une personne qui veut rejoindre votre périmètre : son prénom et son nom, son adresse, et un mot facultatif. Un admin examine la proposition, puis invite la personne. Elle ne reçoit aucun mail avant sa décision.</span></li>
           </ul>
           <p class="note">Ces actions sont ouvertes aux personnes affectées au périmètre pour la période consultée. Une période archivée passe ses tâches en lecture seule.</p>

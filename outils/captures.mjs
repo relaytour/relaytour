@@ -144,6 +144,14 @@ const ECRANS = [
     chemin: `${ACTIVITE}/agenda`,
     avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
   },
+  // Le volet d'une réunion du pôle Bénévoles, où la référente est convoquée.
+  {
+    nom: 'reunion',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
+    apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-agenda-ouvrir')].find(b => b.textContent.trim() === 'Point bénévoles'))`,
+  },
   {
     nom: 'fiches-cartes',
     compte: 'referent',
