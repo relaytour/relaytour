@@ -23,6 +23,7 @@ import {
   SolutionOutlined,
   TrophyOutlined,
   TeamOutlined,
+  UsergroupAddOutlined,
 } from '@ant-design/icons'
 import { useApolloClient, useQuery } from '@apollo/client/react'
 import { Alert, Badge, Button, Drawer, Grid, Menu } from 'antd'
@@ -163,6 +164,16 @@ function Mise({ session }: { session: Session }) {
             icon: <ProjectOutlined />,
             label: 'Programme',
           },
+          // Les fiches bénévoles s'ouvrent aux personnes qui organisent (ADR 0038).
+          ...(gere || perimetres.length > 0
+            ? [
+                {
+                  key: lien('/benevoles'),
+                  icon: <UsergroupAddOutlined />,
+                  label: 'Bénévoles',
+                },
+              ]
+            : []),
           { key: lien('/fiches'), icon: <BookOutlined />, label: 'Fiches' },
         ]),
     {

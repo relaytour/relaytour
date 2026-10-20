@@ -127,6 +127,9 @@ type Documents = {
     "\n  query Sondages($editionId: ID!) {\n    sondages(editionId: $editionId) {\n      id\n      titre\n      statut\n      estParticipant\n      aRepondu\n      participants\n      repondants\n      perimetre {\n        id\n      }\n    }\n  }\n": typeof types.SondagesDocument,
     "\n  query AffectationsPourAgenda($editionId: ID!) {\n    moi {\n      id\n      affectations(editionId: $editionId) {\n        id\n        perimetre {\n          id\n        }\n      }\n    }\n  }\n": typeof types.AffectationsPourAgendaDocument,
     "\n  mutation SupprimerDateCle($id: ID!) {\n    supprimerDateCle(id: $id)\n  }\n": typeof types.SupprimerDateCleDocument,
+    "\n  mutation CreerBenevole(\n    $activiteId: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n    $accord: Boolean!\n  ) {\n    creerBenevole(\n      activiteId: $activiteId\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n      accord: $accord\n    ) {\n      id\n    }\n  }\n": typeof types.CreerBenevoleDocument,
+    "\n  mutation ModifierBenevole(\n    $id: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n  ) {\n    modifierBenevole(\n      id: $id\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n    ) {\n      id\n    }\n  }\n": typeof types.ModifierBenevoleDocument,
+    "\n  mutation SupprimerBenevole($id: ID!) {\n    supprimerBenevole(id: $id)\n  }\n": typeof types.SupprimerBenevoleDocument,
     "\n  query PerimetreCibleFiche($slug: String!) {\n    perimetre(slug: $slug) {\n      id\n      nom\n      peutRedigerFiches\n    }\n  }\n": typeof types.PerimetreCibleFicheDocument,
     "\n  query DroitFichesCommunes {\n    peutRedigerFichesCommunes\n  }\n": typeof types.DroitFichesCommunesDocument,
     "\n  query MesTaches($editionId: ID!) {\n    moi {\n      id\n      affectations(editionId: $editionId) {\n        id\n        perimetre {\n          id\n          slug\n          nom\n          groupe\n          couleur\n          referents(editionId: $editionId) {\n            id\n            nom\n          }\n          avancement(editionId: $editionId) {\n            total\n            faites\n            abandonnees\n            enRetard\n            sansPersonne\n          }\n        }\n      }\n    }\n    mesTaches(editionId: $editionId) {\n      ...TacheChamps\n    }\n    tachesAPrendre(editionId: $editionId) {\n      ...TacheChamps\n    }\n  }\n": typeof types.MesTachesDocument,
@@ -288,6 +291,9 @@ const documents: Documents = {
     "\n  query Sondages($editionId: ID!) {\n    sondages(editionId: $editionId) {\n      id\n      titre\n      statut\n      estParticipant\n      aRepondu\n      participants\n      repondants\n      perimetre {\n        id\n      }\n    }\n  }\n": types.SondagesDocument,
     "\n  query AffectationsPourAgenda($editionId: ID!) {\n    moi {\n      id\n      affectations(editionId: $editionId) {\n        id\n        perimetre {\n          id\n        }\n      }\n    }\n  }\n": types.AffectationsPourAgendaDocument,
     "\n  mutation SupprimerDateCle($id: ID!) {\n    supprimerDateCle(id: $id)\n  }\n": types.SupprimerDateCleDocument,
+    "\n  mutation CreerBenevole(\n    $activiteId: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n    $accord: Boolean!\n  ) {\n    creerBenevole(\n      activiteId: $activiteId\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n      accord: $accord\n    ) {\n      id\n    }\n  }\n": types.CreerBenevoleDocument,
+    "\n  mutation ModifierBenevole(\n    $id: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n  ) {\n    modifierBenevole(\n      id: $id\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n    ) {\n      id\n    }\n  }\n": types.ModifierBenevoleDocument,
+    "\n  mutation SupprimerBenevole($id: ID!) {\n    supprimerBenevole(id: $id)\n  }\n": types.SupprimerBenevoleDocument,
     "\n  query PerimetreCibleFiche($slug: String!) {\n    perimetre(slug: $slug) {\n      id\n      nom\n      peutRedigerFiches\n    }\n  }\n": types.PerimetreCibleFicheDocument,
     "\n  query DroitFichesCommunes {\n    peutRedigerFichesCommunes\n  }\n": types.DroitFichesCommunesDocument,
     "\n  query MesTaches($editionId: ID!) {\n    moi {\n      id\n      affectations(editionId: $editionId) {\n        id\n        perimetre {\n          id\n          slug\n          nom\n          groupe\n          couleur\n          referents(editionId: $editionId) {\n            id\n            nom\n          }\n          avancement(editionId: $editionId) {\n            total\n            faites\n            abandonnees\n            enRetard\n            sansPersonne\n          }\n        }\n      }\n    }\n    mesTaches(editionId: $editionId) {\n      ...TacheChamps\n    }\n    tachesAPrendre(editionId: $editionId) {\n      ...TacheChamps\n    }\n  }\n": types.MesTachesDocument,
@@ -802,6 +808,18 @@ export function graphql(source: "\n  query AffectationsPourAgenda($editionId: ID
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation SupprimerDateCle($id: ID!) {\n    supprimerDateCle(id: $id)\n  }\n"): (typeof documents)["\n  mutation SupprimerDateCle($id: ID!) {\n    supprimerDateCle(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreerBenevole(\n    $activiteId: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n    $accord: Boolean!\n  ) {\n    creerBenevole(\n      activiteId: $activiteId\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n      accord: $accord\n    ) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreerBenevole(\n    $activiteId: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n    $accord: Boolean!\n  ) {\n    creerBenevole(\n      activiteId: $activiteId\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n      accord: $accord\n    ) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ModifierBenevole(\n    $id: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n  ) {\n    modifierBenevole(\n      id: $id\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n    ) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation ModifierBenevole(\n    $id: ID!\n    $nom: String!\n    $courriel: String\n    $telephone: String\n    $note: String\n  ) {\n    modifierBenevole(\n      id: $id\n      nom: $nom\n      courriel: $courriel\n      telephone: $telephone\n      note: $note\n    ) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation SupprimerBenevole($id: ID!) {\n    supprimerBenevole(id: $id)\n  }\n"): (typeof documents)["\n  mutation SupprimerBenevole($id: ID!) {\n    supprimerBenevole(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
