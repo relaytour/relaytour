@@ -54,6 +54,10 @@ export interface CourrielJobData {
   // Pour `convocation-reunion` et `annulation-reunion` (ADR 0037) : la réunion,
   // relue au moment de l'envoi.
   reunionId?: string
+  // La convocation et la version de la réunion au moment de la demande : seul le
+  // job de la version courante envoie.
+  convocationId?: string
+  sequenceReunion?: number
 }
 
 export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {
