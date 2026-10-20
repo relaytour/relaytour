@@ -5,9 +5,21 @@ import { useState } from 'react'
 
 import { graphql } from '../gql'
 import { messageErreur } from '../lib/erreurs'
-import { PERIMETRES } from '../lib/requetes'
 
 import { Panneau } from './Panneau'
+
+// Les périmètres qu'un abonnement peut suivre : ceux que la personne lit, comme
+// le serveur l'exige (`perimetresLisibles`). Une consultation ne suffit pas.
+const PERIMETRES_ABONNABLES = graphql(`
+  query PerimetresAbonnables {
+    perimetres {
+      id
+      nom
+      archive
+      acces
+    }
+  }
+`)
 
 const MON_ABONNEMENT = graphql(`
   query MonAbonnementAgenda {
@@ -149,8 +161,8 @@ const AIDE =
 /** L'abonnement personnel à l'agenda, dans les préférences (ADR 0037). */
 export function PreferenceAgenda() {
   const { message, modal } = App.useApp()
-  const { data, refetch } = useQuery(MON_ABONNEMENT)
-  const { data: perimetres } = useQuery(PERIMETRES)
+  const { data, loading, error, refetch } = useQuery(MON_ABONNEMENT)
+  const { data: perimetres } = useQuery(PERIMETRES_ABONNABLES)
   const [creer, creation] = useMutation(CREER)
   const [regler, reglage] = useMutation(REGLER)
   const [revoquer] = useMutation(REVOQUER)
@@ -245,7 +257,7 @@ export function PreferenceAgenda() {
           value={choisis}
           onChange={setChoisis}
           options={(perimetres?.perimetres ?? [])
-            .filter(p => !p.archive)
+            .filter(p => !p.archive && p.acces === 'COMPLET')
             .map(p => ({ value: p.id, label: p.nom }))}
         />
       )}
@@ -288,14 +300,23 @@ export function PreferenceAgenda() {
           </Space>
         </>
       ) : (
+        // La création révoque l'adresse existante : elle attend que la lecture
+        // ait établi qu'il n'y en a pas.
         <Button
           type="primary"
           loading={creation.loading}
+          disabled={data === undefined}
           onClick={() => void creerAdresse()}
           style={{ alignSelf: 'flex-start' }}
         >
           Créer mon adresse
         </Button>
+      )}
+      {error && !data && !loading && (
+        <p className="rt-note">
+          Votre abonnement n’a pas pu être lu. Rechargez la page dans un
+          instant.
+        </p>
       )}
       <p className="rt-note">{AIDE}</p>
     </Panneau>
@@ -311,7 +332,7 @@ export function AbonnementActivite({
   nom: string
 }) {
   const { message, modal } = App.useApp()
-  const { data, refetch } = useQuery(ABONNEMENT_ACTIVITE, {
+  const { data, loading, error, refetch } = useQuery(ABONNEMENT_ACTIVITE, {
     variables: { activiteId },
   })
   const [creer, creation] = useMutation(CREER_ACTIVITE)
@@ -370,10 +391,17 @@ export function AbonnementActivite({
                   okText: 'Révoquer',
                   okButtonProps: { danger: true },
                   cancelText: 'Annuler',
+                  // Un échec garde la fenêtre ouverte, pour réessayer.
                   onOk: async () => {
-                    await revoquer({ variables: { activiteId } })
+                    try {
+                      await revoquer({ variables: { activiteId } })
+                    } catch (e) {
+                      message.error(messageErreur(e))
+                      throw e
+                    }
                     setAdresse(null)
                     await refetch()
+                    message.success('Abonnement révoqué.')
                   },
                 })
               }
@@ -386,11 +414,18 @@ export function AbonnementActivite({
         <Button
           size="small"
           loading={creation.loading}
+          disabled={data === undefined}
           onClick={() => void creerAdresse()}
           style={{ alignSelf: 'flex-start' }}
         >
           Créer l’adresse
         </Button>
+      )}
+      {error && !data && !loading && (
+        <p className="rt-note">
+          L’abonnement de l’activité n’a pas pu être lu. Rechargez la page dans
+          un instant.
+        </p>
       )}
     </Panneau>
   )

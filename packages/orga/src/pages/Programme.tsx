@@ -26,6 +26,7 @@ import {
   grilleDuJour,
   heureCourte,
   joursDuProgramme,
+  segmentDuJour,
   TRANCHE_MINUTES,
 } from '../lib/programme'
 import { EDITION_COURANTE, LIEUX } from '../lib/requetes'
@@ -99,14 +100,33 @@ export default function Programme() {
   const sequences = useMemo(() => data?.programme ?? [], [data])
   const jours = useMemo(() => joursDuProgramme(sequences), [sequences])
   const aujourdhui = jourLocal()
+  // Le jour de l'adresse ne vaut que s'il porte encore une séquence.
+  const jourDemande = parametres.get('jour')
   const jourChoisi =
-    parametres.get('jour') ??
+    (jourDemande !== null && jours.includes(jourDemande)
+      ? jourDemande
+      : undefined) ??
     jours.find(j => j >= aujourdhui) ??
     jours[jours.length - 1] ??
     null
   const ouverte = sequences.find(s => s.id === parametres.get('sequence'))
-  const ordreLieux = (lieux?.lieux ?? []).map(l => l.id)
-  const nomLieu = new Map((lieux?.lieux ?? []).map(l => [l.id, l.nom]))
+  // Les lieux actifs dans leur ordre, puis les lieux archivés que des séquences
+  // gardent : le programme d'une période passée garde ses colonnes.
+  const actifs = lieux?.lieux ?? []
+  const nomLieu = new Map<string, string>([
+    ...sequences.flatMap(s =>
+      s.lieu ? [[s.lieu.id, s.lieu.nom] as [string, string]] : []
+    ),
+    ...actifs.map(l => [l.id, l.nom] as [string, string]),
+  ])
+  const archives = [
+    ...new Set(
+      sequences.flatMap(s =>
+        s.lieu && !actifs.some(l => l.id === s.lieu!.id) ? [s.lieu.id] : []
+      )
+    ),
+  ].sort((a, b) => nomLieu.get(a)!.localeCompare(nomLieu.get(b)!, 'fr'))
+  const ordreLieux = [...actifs.map(l => l.id), ...archives]
 
   const changer = (cle: string, valeur: string | null) => {
     const suite = new URLSearchParams(parametres)
@@ -154,7 +174,11 @@ export default function Programme() {
     </button>
   )
 
-  const duJour = sequences.filter(s => s.jour === jourChoisi)
+  // Une séquence de nuit paraît aussi le jour où elle finit.
+  const duJour =
+    jourChoisi === null
+      ? []
+      : sequences.filter(s => segmentDuJour(s, jourChoisi) !== null)
   const grille =
     jourChoisi === null
       ? null
@@ -369,7 +393,8 @@ export default function Programme() {
 
       <SequenceDetail
         sequence={ouverte ?? null}
-        ecrit={agendas.length > 0}
+        // Un admin de l'activité lit les fiches, même sur une période archivée.
+        lisible={gere || agendas.length > 0}
         onModifier={s => {
           changer('sequence', null)
           setSaisie(s)

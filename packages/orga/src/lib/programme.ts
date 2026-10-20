@@ -50,9 +50,32 @@ export interface Grille<T> {
 }
 
 /**
+ * La part d'une séquence dans un jour, en minutes depuis minuit : du début à
+ * minuit le premier jour, de minuit à la fin le lendemain pour une séquence de
+ * nuit. Null si la séquence ne touche pas ce jour, ou finit à minuit pile.
+ */
+export function segmentDuJour(
+  s: { jour: string; jourFin: string; heureDebut: string; heureFin: string },
+  jour: string
+): { debut: number; fin: number } | null {
+  if (s.jour === jour) {
+    return {
+      debut: minutes(s.heureDebut),
+      fin: s.jourFin !== s.jour ? 24 * 60 : minutes(s.heureFin),
+    }
+  }
+  if (s.jourFin === jour && minutes(s.heureFin) > 0) {
+    return { debut: 0, fin: minutes(s.heureFin) }
+  }
+  return null
+}
+
+/**
  * La grille d'un jour : les lieux dans l'ordre reçu, puis « sans lieu » s'il sert.
- * Une séquence qui finit un autre jour s'arrête à minuit. Dans un lieu, deux
- * séquences qui se chevauchent prennent deux couloirs voisins.
+ * Une séquence de nuit paraît sur ses deux jours, coupée à minuit. Les bornes
+ * affichées s'arrondissent à la tranche de 30 minutes : une ligne de grille est
+ * toujours un entier. Dans un lieu, deux séquences qui se chevauchent à
+ * l'affichage prennent deux couloirs voisins.
  */
 export function grilleDuJour<T extends SequenceDuJour>(
   sequences: readonly T[],
@@ -60,18 +83,17 @@ export function grilleDuJour<T extends SequenceDuJour>(
   jour: string
 ): Grille<T> {
   const duJour = sequences
-    .filter(s => s.jour === jour)
-    .map(s => ({
-      sequence: s,
-      debut: minutes(s.heureDebut),
-      fin:
-        s.jourFin !== s.jour
-          ? 24 * 60
-          : Math.max(
-              minutes(s.heureFin),
-              minutes(s.heureDebut) + TRANCHE_MINUTES
-            ),
-    }))
+    .flatMap(s => {
+      const segment = segmentDuJour(s, jour)
+      if (segment === null) return []
+      const debut =
+        Math.floor(segment.debut / TRANCHE_MINUTES) * TRANCHE_MINUTES
+      const fin = Math.max(
+        Math.ceil(segment.fin / TRANCHE_MINUTES) * TRANCHE_MINUTES,
+        debut + TRANCHE_MINUTES
+      )
+      return [{ sequence: s, debut, fin }]
+    })
     .sort((a, b) => a.debut - b.debut || b.fin - a.fin)
   if (duJour.length === 0) {
     return { debut: 8 * 60, tranches: 0, colonnes: [], placements: [] }
@@ -115,7 +137,7 @@ export function grilleDuJour<T extends SequenceDuJour>(
         sequence: p.sequence,
         colonne: suivante + p.couloir,
         ligneDebut: (p.debut - debut) / TRANCHE_MINUTES + 1,
-        ligneFin: Math.ceil((p.fin - debut) / TRANCHE_MINUTES) + 1,
+        ligneFin: (p.fin - debut) / TRANCHE_MINUTES + 1,
       })
     }
     suivante += largeur
@@ -128,9 +150,25 @@ export function grilleDuJour<T extends SequenceDuJour>(
   }
 }
 
-/** Les jours où le programme a au moins une séquence, dans l'ordre. */
+/**
+ * Les jours où le programme a au moins une séquence, dans l'ordre. Une séquence
+ * de nuit compte aussi son jour de fin, sauf si elle finit à minuit pile.
+ */
 export function joursDuProgramme(
-  sequences: readonly { jour: string }[]
+  sequences: readonly {
+    jour: string
+    jourFin: string
+    heureDebut: string
+    heureFin: string
+  }[]
 ): string[] {
-  return [...new Set(sequences.map(s => s.jour))].sort()
+  return [
+    ...new Set(
+      sequences.flatMap(s =>
+        segmentDuJour(s, s.jourFin) !== null && s.jourFin !== s.jour
+          ? [s.jour, s.jourFin]
+          : [s.jour]
+      )
+    ),
+  ].sort()
 }
