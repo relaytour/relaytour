@@ -73,6 +73,12 @@ export function creneauxValides(
       heureFin: fin,
     })
   }
+  // Un créneau existant ne se modifie qu'une fois : deux créneaux qui portent le
+  // même identifiant écraseraient l'un l'autre.
+  const ids = valides.flatMap(c => (c.id === null ? [] : [c.id]))
+  if (new Set(ids).size !== ids.length) {
+    throw erreurSaisie('Un créneau existant figure deux fois.')
+  }
   return valides
     .sort(
       (a, b) =>

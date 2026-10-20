@@ -49,6 +49,7 @@ Plusieurs options de synchronisation ont été envisagées. Une synchronisation 
 
 - Une **convocation** invite une personne de l'équipe à une réunion. Le mot « invitation » reste réservé à l'entrée dans une organisation (ADR 0030).
 - La personne qui crée la réunion choisit les personnes convoquées : tout le périmètre, toute l'équipe de l'activité, ou des personnes choisies dans l'équipe. Le serveur vérifie chaque personne.
+- Une personne qui n'a qu'un souhait découvre l'activité sans la voir (ADR 0012). Elle ne lit pas son agenda : une réunion ou un sondage ne la vise donc jamais.
 - Une convocation vise un compte, jamais une adresse saisie. Une personne sans compte n'est pas convoquée.
 - Une réunion compte 300 personnes convoquées au plus.
 - L'application envoie elle-même un mail de convocation, avec un fichier iCalendar (`METHOD:REQUEST`). Une modification du titre, de l'horaire, du lieu ou du lien envoie une nouvelle version. Une annulation envoie un fichier `METHOD:CANCEL`.
@@ -58,7 +59,7 @@ Plusieurs options de synchronisation ont été envisagées. Une synchronisation 
 - Une personne retirée d'un périmètre quitte les réunions à venir de ce périmètre. Sa convocation est retirée, et un mail d'annulation retire l'événement de son agenda. Les réunions passées gardent sa convocation.
 - Une personne archivée dans l'organisation (ADR 0031) quitte toutes les réunions à venir de l'organisation, sans mail.
 - Une personne affectée à un périmètre après la création d'une réunion qui convoque tout le périmètre est convoquée à son tour.
-- Les mails de convocation comptent dans le plafond quotidien (ADR 0034). Un mail reporté au lendemain par le plafond arrive après une réunion du jour même. L'écran indique « envoi en attente » tant que le mail n'est pas parti.
+- Les mails de convocation comptent dans le plafond quotidien (ADR 0034). Un mail reporté au lendemain par le plafond arrive après une réunion du jour même. Une convocation part tant que la réunion n'est pas terminée. L'écran indique « envoi en attente » tant que le mail n'est pas parti.
 - Une convocation crée aussi une notification dans l'application, et une notification push de la famille « agenda » (ADR 0024).
 
 ### Abonnements
@@ -88,7 +89,7 @@ Plusieurs options de synchronisation ont été envisagées. Une synchronisation 
 
 ## Conséquences
 
-- Une migration additive ajoute les tables `DateCle`, `Reunion`, `ReunionTache` et `ConvocationReunion`, puis `JetonAgenda`, puis les tables des sondages. Chaque table porte `organisationId`, et chaque unicité est bornée par un parent (invariant 18).
+- Une migration additive ajoute les tables `DateCle`, `Reunion`, `ReunionTache` et `ConvocationReunion`, puis `AbonnementAgenda`, puis les tables des sondages. Chaque table principale porte `organisationId` : `DateCle`, `Reunion`, `AbonnementAgenda` et `Sondage`. Les tables de liaison et les lignes filles (`ReunionTache`, `ConvocationReunion`, les créneaux, les participants et les réponses d'un sondage) se rattachent à l'organisation par leur parent, comme `TacheAssignation` et `MessageDestinataire`. Chaque unicité est bornée par un parent (invariant 18).
 - Le modèle `Notification` reçoit `reunionId` et `sondageId`. L'énumération `TypeNotification` reçoit les types des réunions et des sondages. `PreferenceOrganisation` reçoit `pushAgenda`.
 - Le serveur écrit lui-même ses fichiers iCalendar (`packages/server/src/lib/ics.ts`), sans dépendance nouvelle.
 - Le transport des mails accepte une pièce iCalendar. La charge utile de la file ne contient que des identifiants (invariant 5).

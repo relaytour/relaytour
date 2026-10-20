@@ -6,6 +6,7 @@ import { buildContext, type AppContext } from '../context.ts'
 
 import { bornesDesPhases, decalerJour, jourISO } from './agenda.ts'
 import { aujourdhui, perimetresLisibles } from './droits.ts'
+import { bornesDesJours } from './heures.ts'
 import { calendrier, type EvenementIcs } from './ics.ts'
 import { configurationOrganisation } from './organisation.ts'
 import { lirePhases } from './phases.ts'
@@ -49,11 +50,14 @@ function fenetre(maintenant: Date, fuseau: string): Fenetre {
   const jour = aujourdhui(maintenant, fuseau)
   const depuis = decalerJour(jour, -JOURS_AVANT)
   const jusqua = decalerJour(jour, JOURS_APRES)
+  const bornes = bornesDesJours(depuis, jusqua, fuseau)
   return {
     depuis,
     jusqua,
-    depuisInstant: new Date(`${depuis}T00:00:00.000Z`),
-    jusquaInstant: new Date(`${jusqua}T23:59:59.999Z`),
+    // Les bornes sont les minuits du fuseau de l'organisation, comme les jours
+    // de la fenêtre : la borne haute reste comprise, à la milliseconde près.
+    depuisInstant: bornes.debut,
+    jusquaInstant: bornes.fin,
   }
 }
 
@@ -200,7 +204,7 @@ export async function evenementsPersonnels(
     debut: { lte: f.jusquaInstant },
     fin: { gte: f.depuisInstant },
   }
-  const [reperes, reunions, taches] = await Promise.all([
+  const [reperes, reunions, taches, sequences] = await Promise.all([
     abonnement.inclureGlobal
       ? reperesDesPeriodes(activites, f, hote, organisation.fuseauHoraire)
       : [],
@@ -245,9 +249,42 @@ export async function evenementsPersonnels(
           take: EVENEMENTS_MAX,
         })
       : [],
+    // Les séquences du programme où la personne est placée (ADR 0040).
+    prisma.sequence.findMany({
+      where: {
+        organisationId: organisation.id,
+        activiteId: { in: activites },
+        edition: periodeOuverte,
+        places: { some: { userId: moi } },
+        debut: { lte: f.jusquaInstant },
+        fin: { gte: f.depuisInstant },
+      },
+      select: {
+        id: true,
+        titre: true,
+        debut: true,
+        fin: true,
+        description: true,
+        updatedAt: true,
+        lieu: { select: { nom: true } },
+        places: { where: { userId: moi }, select: { role: true } },
+      },
+      take: EVENEMENTS_MAX,
+    }),
   ])
   return [
     ...reperes,
+    ...sequences.map(s => ({
+      uid: `sequence-${s.id}@${hote}`,
+      titre:
+        s.places[0]?.role === 'RESPONSABLE'
+          ? `${s.titre} (responsable)`
+          : s.titre,
+      horaire: { debut: s.debut, fin: s.fin },
+      lieu: s.lieu?.nom ?? null,
+      description: s.description,
+      modifieLe: s.updatedAt,
+    })),
     ...reunions.map(r =>
       evenementDeReunion(r, origine, hote, configuration.slug)
     ),
