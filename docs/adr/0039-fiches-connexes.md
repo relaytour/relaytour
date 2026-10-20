@@ -102,7 +102,7 @@ La décision garde la mention comme raccourci de saisie, et porte le partage dan
 
 ### Notifications
 
-- L'ajout d'un périmètre à la liste prévient ses référentes et référents dans l'application : « Une fiche du pôle Bénévoles concerne aussi votre périmètre ». L'ajout d'un groupe prévient ceux de chacun de ses périmètres. Aucun mail ni aucune notification push ne part.
+- L'ajout d'un périmètre à la liste prévient ses référentes et référents dans l'application : « Une fiche du pôle Bénévoles concerne aussi votre périmètre ». L'ajout d'un groupe prévient ceux de chacun de ses périmètres. Aucun mail immédiat ni aucune notification push ne part : comme les autres nouvelles d'un périmètre, la notification entre dans le résumé.
 - Un périmètre qui rejoint plus tard un groupe de la liste ne déclenche aucune notification : la fiche apparaît dans ses fiches connexes.
 - Une clé par fiche et par tranche de dix minutes regroupe les ajouts successifs.
 - Le retrait d'un périmètre ou d'un groupe et le masquage ne préviennent personne.
