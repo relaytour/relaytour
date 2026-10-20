@@ -34,6 +34,8 @@ const a = {
   version: '',
   tache: '',
   commentaire: '',
+  // Une date clé de l'agenda de la période (ADR 0037).
+  dateCle: '',
   affectation: '',
   souhait: '',
   demande: '',
@@ -297,6 +299,18 @@ beforeAll(async () => {
       },
     })
   ).id
+  // Une date clé de l'agenda de la période (ADR 0037).
+  a.dateCle = (
+    await prisma.dateCle.create({
+      data: {
+        organisationId: a.org,
+        activiteId: a.activite,
+        editionId: a.edition,
+        titre: 'Dossier en préfecture',
+        jour: new Date('2027-03-01'),
+      },
+    })
+  ).id
   // Un commentaire de la référente sur la tâche (ADR 0029).
   a.commentaire = (
     await prisma.commentaireTache.create({
@@ -388,6 +402,9 @@ afterAll(async () => {
     data: { versionCouranteId: null },
   })
   await prisma.fiche.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
+  await prisma.dateCle.deleteMany({
     where: { organisationId: { in: organisations } },
   })
   await prisma.edition.deleteMany({
@@ -541,6 +558,14 @@ const MELES: Cas[] = [
       'mutation ($u: ID!, $p: ID!, $e: ID!) { affecter(personneId: $u, perimetreId: $p, editionId: $e) { id } }',
     variables: () => ({ u: b.admin, p: b.perimetre, e: a.edition }),
     attente: REFUSE,
+  },
+  // Les échéances de l'agenda de B ne lisent aucun périmètre de A (ADR 0037).
+  {
+    operation: 'agenda',
+    query:
+      'query ($e: ID!, $p: [ID!]) { agenda(editionId: $e, echeances: true, perimetreIds: $p) { elements { cle titre } } }',
+    variables: () => ({ e: b.edition, p: [a.perimetre] }),
+    attente: INTERDIT,
   },
 ]
 
@@ -937,7 +962,43 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.souhait }),
     attente: { sansEffet: d => expect(d.retirerSouhait).toBe(false) },
   },
+  // Dates clés de l'agenda (ADR 0037) : réservées aux admins de l'activité.
+  {
+    operation: 'creerDateCle',
+    query:
+      'mutation ($e: ID!) { creerDateCle(editionId: $e, titre: "Intrusion", jour: "2027-03-02") { id } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'modifierDateCle',
+    query:
+      'mutation ($id: ID!) { modifierDateCle(id: $id, titre: "Intrusion", jour: "2027-03-02") { id } }',
+    variables: () => ({ id: a.dateCle }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'supprimerDateCle',
+    query: 'mutation ($id: ID!) { supprimerDateCle(id: $id) }',
+    variables: () => ({ id: a.dateCle }),
+    attente: INTERDIT,
+  },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  // L'agenda d'une période (ADR 0037).
+  {
+    operation: 'agenda',
+    query:
+      'query ($e: ID!) { agenda(editionId: $e) { elements { cle titre } } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'agenda',
+    query:
+      'query ($e: ID!, $p: [ID!]) { agenda(editionId: $e, echeances: true, perimetreIds: $p) { elements { cle titre } } }',
+    variables: () => ({ e: a.edition, p: [a.perimetre] }),
+    attente: INTERDIT,
+  },
   // Le fil d'une tâche et ses commentaires (ADR 0029).
   {
     operation: 'filTache',
@@ -1124,6 +1185,11 @@ async function etatDeA() {
         prisma.commentaireTache.findMany({
           where: { tache: { perimetre: { organisationId: a.org } } },
           select: { id: true, texte: true, modifieLe: true },
+          orderBy: { id: 'asc' },
+        }),
+        prisma.dateCle.findMany({
+          where: { organisationId: a.org },
+          select: { id: true, titre: true, jour: true, version: true },
           orderBy: { id: 'asc' },
         }),
       ]),

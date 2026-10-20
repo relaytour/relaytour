@@ -17,7 +17,7 @@ import { builder } from './builder.ts'
 
 const EntiteChangeeEnum = builder.enumType('EntiteChangee', {
   description:
-    'Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message.',
+    'Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre les dates clés de l’agenda d’une activité (ADR 0037).',
   values: [
     'TACHE',
     'FICHE',
@@ -26,6 +26,7 @@ const EntiteChangeeEnum = builder.enumType('EntiteChangee', {
     'DEMANDE',
     'NOTIFICATION',
     'MESSAGE',
+    'AGENDA',
   ] as const,
 })
 

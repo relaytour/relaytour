@@ -99,6 +99,18 @@ type Affectation {
   personne: Personne!
 }
 
+type Agenda {
+  edition: Edition!
+
+  """Les éléments, par premier jour puis par sorte."""
+  elements: [ElementAgenda!]!
+
+  """
+  Vrai pour un admin de l’activité, tant que la période n’est pas archivée : il écrit les dates clés.
+  """
+  peutGerer: Boolean!
+}
+
 """
 Dossier de contenu de l’organisation, en archive zip encodée en base64. Il ne contient aucune donnée personnelle.
 """
@@ -223,6 +235,15 @@ A date string, such as 2007-12-03, compliant with the `full-date` format outline
 """
 scalar Date
 
+type DateCle {
+  description: String
+  id: ID!
+  jour: Date!
+  jourFin: Date
+  titre: String!
+  version: Int!
+}
+
 """
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
@@ -295,9 +316,36 @@ type Edition {
 }
 
 """
-Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message.
+Un élément de l’agenda, à champs plats. Les jours s’écrivent au format AAAA-MM-JJ.
+"""
+type ElementAgenda {
+  """Clé stable de l’élément, propre à sa sorte."""
+  cle: String!
+  dateCleId: ID
+  description: String
+
+  """Pour une échéance : vrai si la tâche est faite."""
+  faite: Boolean!
+
+  """Premier jour."""
+  jour: String!
+
+  """Dernier jour, compris. Nul pour un seul jour."""
+  jourFin: String
+  perimetreId: ID
+  sorte: SorteElementAgenda!
+  tacheId: ID
+  titre: String!
+
+  """Version d’une date clé, à renvoyer pour la modifier."""
+  version: Int
+}
+
+"""
+Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre les dates clés de l’agenda d’une activité (ADR 0037).
 """
 enum EntiteChangee {
+  AGENDA
   DEMANDE
   EQUIPE
   FICHE
@@ -719,6 +767,7 @@ type Mutation {
   """
   commenterTache(id: ID!, texte: String!): FilTache!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
+  creerDateCle(description: String, editionId: ID!, jour: Date!, jourFin: Date, titre: String!): DateCle!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
   creerMessage(message: MessageInput!): Message!
@@ -788,6 +837,7 @@ type Mutation {
   Modifie le texte d’un commentaire et rend le fil de sa tâche. Seul son auteur le modifie.
   """
   modifierCommentaire(id: ID!, texte: String!): FilTache!
+  modifierDateCle(description: String, id: ID!, jour: Date!, jourFin: Date, titre: String!, versionAttendue: Int): DateCle!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
 
   """
@@ -891,6 +941,7 @@ type Mutation {
   Supprime un commentaire, définitivement, et rend le fil de sa tâche. Son auteur le supprime, ainsi qu’un admin de l’activité.
   """
   supprimerCommentaire(id: ID!): FilTache!
+  supprimerDateCle(id: ID!): Boolean!
 
   """
   Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.
@@ -1269,6 +1320,20 @@ type Query {
   affectations(editionId: ID!): [Affectation!]!
 
   """
+  L’agenda global d’une période, pour toute personne qui voit son activité.
+  """
+  agenda(
+    """Ajoute les échéances des tâches."""
+    echeances: Boolean = false
+    editionId: ID!
+
+    """
+    Les périmètres des échéances. Sans valeur : les périmètres de la personne pour la période.
+    """
+    perimetreIds: [ID!]
+  ): Agenda!
+
+  """
   Message à diffuser pour trouver des référentes et des référents. Vaut null quand aucun périmètre n’est à pourvoir.
   """
   appelPostes(editionId: ID!): String
@@ -1407,6 +1472,23 @@ type Score {
   tachesATemps: Int!
   tachesCreees: Int!
   tachesRealisees: Int!
+}
+
+enum SorteElementAgenda {
+  """Une date clé placée par un admin de l’activité."""
+  DATE_CLE
+
+  """Le premier jour de la période."""
+  DEBUT_PERIODE
+
+  """L’échéance d’une tâche."""
+  ECHEANCE
+
+  """Le dernier jour de la période."""
+  FIN_PERIODE
+
+  """Une phase de l’activité, de son premier à son dernier jour."""
+  PHASE
 }
 
 type Souhait {
@@ -1568,6 +1650,9 @@ enum TypeNotification {
   PERSONNE_ARCHIVEE
   PERSONNE_RETABLIE
   PLACE_MODIFIEE
+  REUNION_ANNULEE
+  REUNION_CONVOQUEE
+  REUNION_MODIFIEE
   SOUHAIT_FORMULE
   TACHE_ASSIGNEE
   TACHE_COMMENTEE

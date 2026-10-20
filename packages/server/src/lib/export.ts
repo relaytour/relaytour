@@ -134,6 +134,17 @@ export async function construireExport(organisationId: string) {
     },
   })
 
+  // Les dates clés de l'agenda (ADR 0037).
+  const datesCles = await prisma.dateCle.findMany({
+    where: { organisationId },
+    orderBy: [{ editionId: 'asc' }, { jour: 'asc' }, { id: 'asc' }],
+    include: {
+      activite: { select: { slug: true } },
+      edition: { select: { annee: true } },
+      creePar: { select: { email: true } },
+    },
+  })
+
   const taches = await prisma.tache.findMany({
     where: { perimetre: { organisationId } },
     orderBy: [{ editionId: 'asc' }, { createdAt: 'asc' }],
@@ -308,6 +319,16 @@ export async function construireExport(organisationId: string) {
         email: d.user.email,
         enCopie: d.enCopie,
       })),
+    })),
+    datesCles: datesCles.map(d => ({
+      activite: d.activite.slug,
+      periode: d.edition.annee,
+      titre: d.titre,
+      jour: jour(d.jour),
+      jourFin: jour(d.jourFin),
+      description: d.description,
+      creePar: d.creePar?.email ?? null,
+      creeLe: d.createdAt.toISOString(),
     })),
   }
 }
