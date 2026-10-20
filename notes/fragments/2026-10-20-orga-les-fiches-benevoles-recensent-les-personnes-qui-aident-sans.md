@@ -14,5 +14,5 @@ fr:
     l'activité et aux personnes des périmètres où elles aident.
 ---
 
-ADR 0038 : requête `benevoles`, mutations `creerBenevole`, `modifierBenevole`
+ADR 0040 : requête `benevoles`, mutations `creerBenevole`, `modifierBenevole`
 et `supprimerBenevole`, purge des fiches inutilisées depuis 24 mois.

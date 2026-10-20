@@ -72,7 +72,7 @@ interface Valeurs {
 const RELIRE = ['Benevoles', 'Programme']
 
 /**
- * Fiches bénévoles d'une activité (ADR 0038) : des personnes qui aident sans
+ * Fiches bénévoles d'une activité (ADR 0040) : des personnes qui aident sans
  * compte. Les coordonnées ne s'affichent qu'aux personnes que le serveur autorise.
  */
 export default function Benevoles() {

@@ -164,7 +164,7 @@ function Mise({ session }: { session: Session }) {
             icon: <ProjectOutlined />,
             label: 'Programme',
           },
-          // Les fiches bénévoles s'ouvrent aux personnes qui organisent (ADR 0038).
+          // Les fiches bénévoles s'ouvrent aux personnes qui organisent (ADR 0040).
           ...(gere || perimetres.length > 0
             ? [
                 {
