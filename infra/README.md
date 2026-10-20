@@ -104,7 +104,7 @@ La clé privée est un secret : elle ne quitte pas le `.env`. Changer la paire d
 
 ### Espace de fichiers
 
-L'espace de fichiers est facultatif (ADR 0038). Un admin de l'organisation y connecte SharePoint ou OneDrive, puis lie des dossiers aux périmètres. Relaytour relaie les documents sans les copier. Pour ouvrir ce fournisseur :
+L'espace de fichiers est facultatif (ADR 0038). Un admin de l'organisation y connecte SharePoint, OneDrive ou Google Drive, puis lie des dossiers aux périmètres. Relaytour relaie les documents sans les copier. Pour ouvrir ce fournisseur :
 
 1. Créez la clé de chiffrement des jetons, une seule fois : `openssl rand -base64 32`. Renseignez-la dans `CLE_CHIFFREMENT_ESPACE_FICHIERS`. Changer cette clé rend illisibles les jetons gardés en base, et chaque organisation doit reconnecter son espace.
 2. Inscrivez une application dans le centre d'administration Microsoft Entra (« Inscriptions d'applications »). Choisissez les comptes professionnels de tout annuaire pour servir plusieurs organisations, ou votre seul annuaire.
@@ -112,6 +112,13 @@ L'espace de fichiers est facultatif (ADR 0038). Un admin de l'organisation y con
 4. Ajoutez les autorisations déléguées de Microsoft Graph : `offline_access`, `User.Read`, `Files.ReadWrite.All` et `Sites.Read.All`. L'écriture sert seulement à l'export des fiches.
 5. Créez un secret client. Renseignez `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` et, au besoin, `MICROSOFT_LOCATAIRE`, puis relancez la pile.
 6. Laissez l'API et le worker sortir en HTTPS vers `graph.microsoft.com`, `login.microsoftonline.com`, `*.sharepoint.com` et `*.svc.ms`. Le worker exporte les fiches et renouvelle chaque nuit l'accès de chaque organisation.
+
+Google Drive se connecte de deux façons :
+
+- **Par le compte d'un admin.** Créez un projet Google Cloud, activez l'API Google Drive, puis créez un client OAuth de type « Application Web ». Son adresse de retour est `<ORIGINE_ORGA>/medias/espace-fichiers/retour/google`, et sa portée `https://www.googleapis.com/auth/drive`. Renseignez `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET`. Cette portée est « restreinte » chez Google : une application non vérifiée affiche un avertissement et accepte cent comptes au plus. Une offre ouverte à de nombreuses organisations passe par la vérification de Google et par son audit de sécurité annuel.
+- **Par un compte de service.** Il suffit de `CLE_CHIFFREMENT_ESPACE_FICHIERS`. L'organisation crée elle-même un compte de service dans son projet Google Cloud, dépose sa clé JSON dans l'écran « Espace de fichiers », puis partage ses dossiers avec l'adresse du compte. Un compte de service n'a pas d'espace de stockage : l'export des fiches exige un Drive partagé dont il est gestionnaire de contenu.
+
+Laissez l'API et le worker sortir en HTTPS vers `www.googleapis.com`, `oauth2.googleapis.com` et `accounts.google.com`.
 
 Les routes de l'espace de fichiers vivent sous `/medias/`, que le `Caddyfile` d'exemple relaie déjà vers l'API. Le secret client et la clé de chiffrement ne quittent pas le `.env`. Un secret client Microsoft expire : notez sa date et remplacez-le avant.
 

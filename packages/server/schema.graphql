@@ -221,6 +221,13 @@ type ConnexionFichiers {
   exportDossier: String
   exportRapport: RapportExport
   fournisseur: FournisseurFichiers!
+  methode: MethodeConnexionFichiers!
+}
+
+"""Une façon de connecter l’espace de fichiers, ouverte par l’exploitant."""
+type ConnexionPossible {
+  fournisseur: FournisseurFichiers!
+  methode: MethodeConnexionFichiers!
 }
 
 type CouleursTheme {
@@ -370,9 +377,9 @@ type EspaceFichiers {
   connexion: ConnexionFichiers
 
   """
-  Fournisseurs ouverts par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.
+  Connexions ouvertes par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.
   """
-  fournisseursDisponibles: [FournisseurFichiers!]!
+  connexionsPossibles: [ConnexionPossible!]!
 }
 
 """
@@ -538,6 +545,7 @@ type FormulaireRejoindre {
 }
 
 enum FournisseurFichiers {
+  GOOGLE_DRIVE
   SHAREPOINT
 }
 
@@ -786,6 +794,11 @@ input MessageInput {
   perimetreId: ID
 }
 
+enum MethodeConnexionFichiers {
+  COMPTE
+  COMPTE_SERVICE
+}
+
 type Mutation {
   """
   Enregistre l’abonnement push de cet appareil pour la personne connectée. Reste possible dans une organisation en lecture seule.
@@ -835,6 +848,11 @@ type Mutation {
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
+
+  """
+  Connecte Google Drive par un compte de service : la clé JSON du compte, que l’organisation a créée. L’organisation partage ensuite ses dossiers avec l’adresse du compte.
+  """
+  connecterCompteServiceGoogle(cle: String!): ConnexionFichiers!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!

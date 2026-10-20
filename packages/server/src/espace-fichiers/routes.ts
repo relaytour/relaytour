@@ -5,22 +5,24 @@ import { prisma } from '@relaytour/database'
 import type express from 'express'
 
 import type { AppContext } from '../context.ts'
-import { chiffrer } from '../lib/chiffrement.ts'
 import { publierChangement } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
 
 import { cheminValide, disposition, formatApercu, typeServi } from './chemin.ts'
 import { dossierLisible } from './droits.ts'
 import { cheminDeLExportSous, dansLExport } from './isolement.ts'
+import { echangerCodeGoogle, nomDuCompteGoogle, type Jetons } from './google.ts'
 import {
-  cleDeChiffrement,
+  configurationGoogle,
   configurationMicrosoft,
+  enregistrerConnexion,
   memoriserJetonAcces,
   ouvrirEspace,
   PREFIXE_ROUTES,
   reprendreConnexion,
 } from './index.ts'
 import { echangerCode, nomDuCompte } from './sharepoint.ts'
+import type { Fournisseur } from './types.ts'
 
 // Routes de l'espace de fichiers (ADR 0038), sous /medias/ que le proxy de
 // l'installation relaie déjà vers l'API : le retour de la connexion chez le
@@ -36,8 +38,13 @@ export function routesEspaceFichiers(
   contexte: Contexte,
   origineOrga: string
 ): void {
-  app.get(`${PREFIXE_ROUTES}/retour/sharepoint`, (req, res) => {
-    void retourSharePoint(req, contexte).then(
+  app.get(`${PREFIXE_ROUTES}/retour/:fournisseur`, (req, res) => {
+    const connecteur = CONNECTEURS[req.params.fournisseur]
+    if (connecteur === undefined) {
+      res.status(404).end()
+      return
+    }
+    void retourOAuth(req, contexte, connecteur).then(
       issue => {
         res.redirect(
           303,
@@ -80,14 +87,48 @@ export function routesEspaceFichiers(
  * personne et l'organisation : la session doit être celle de cette personne, et
  * elle doit toujours administrer cette organisation active.
  */
-async function retourSharePoint(
+interface ConnecteurOAuth {
+  fournisseur: Fournisseur
+  /** Échange le code contre des jetons, ou null si le fournisseur est fermé. */
+  echanger: (code: string, verificateur: string) => Promise<Jetons | null>
+  nomDuCompte: (acces: string) => Promise<string>
+}
+
+/** Les fournisseurs à connexion OAuth, par le segment de leur adresse de retour. */
+const CONNECTEURS: Record<string, ConnecteurOAuth> = {
+  sharepoint: {
+    fournisseur: 'SHAREPOINT',
+    echanger: async (code, verificateur) => {
+      const c = await configurationMicrosoft()
+      return c === null ? null : echangerCode(c, code, verificateur)
+    },
+    nomDuCompte,
+  },
+  google: {
+    fournisseur: 'GOOGLE_DRIVE',
+    echanger: async (code, verificateur) => {
+      const c = await configurationGoogle()
+      return c === null ? null : echangerCodeGoogle(c, code, verificateur)
+    },
+    nomDuCompte: nomDuCompteGoogle,
+  },
+}
+
+/**
+ * Retour du fournisseur après l'accord de l'admin. L'état à usage unique désigne
+ * la personne, l'organisation et le fournisseur : la session doit être celle de
+ * cette personne, et elle doit toujours administrer cette organisation active.
+ */
+async function retourOAuth(
   req: express.Request,
-  contexte: Contexte
+  contexte: Contexte,
+  connecteur: ConnecteurOAuth
 ): Promise<'reussie' | 'refusee' | 'echec'> {
   const etat = typeof req.query.state === 'string' ? req.query.state : ''
   const code = typeof req.query.code === 'string' ? req.query.code : ''
   const reprise = await reprendreConnexion(etat)
-  if (reprise === null) return 'echec'
+  if (reprise === null || reprise.fournisseur !== connecteur.fournisseur)
+    return 'echec'
   if (typeof req.query.error === 'string') return 'refusee'
   const ctx = await contexte(req)
   if (ctx.personne?.id !== reprise.userId || code === '') return 'echec'
@@ -101,26 +142,17 @@ async function retourSharePoint(
     },
     select: { id: true },
   })
-  const [configuration, cle] = await Promise.all([
-    configurationMicrosoft(),
-    cleDeChiffrement(),
-  ])
-  if (admin === null || configuration === null || cle === null) return 'echec'
+  if (admin === null) return 'echec'
 
-  const jetons = await echangerCode(configuration, code, reprise.verificateur)
-  const compte = await nomDuCompte(jetons.acces)
-  const donnees = {
-    fournisseur: 'SHAREPOINT' as const,
-    compte,
-    jeton: chiffrer(jetons.rafraichissement, cle),
-    etat: 'ACTIVE' as const,
+  const jetons = await connecteur.echanger(code, reprise.verificateur)
+  if (jetons === null) return 'echec'
+  const connexion = await enregistrerConnexion({
+    organisationId: reprise.organisationId,
+    fournisseur: connecteur.fournisseur,
+    methode: 'COMPTE',
+    compte: await connecteur.nomDuCompte(jetons.acces),
+    secret: jetons.rafraichissement,
     connecteParId: reprise.userId,
-  }
-  const connexion = await prisma.connexionFichiers.upsert({
-    where: { organisationId: reprise.organisationId },
-    create: { organisationId: reprise.organisationId, ...donnees },
-    update: donnees,
-    select: { id: true, jeton: true },
   })
   memoriserJetonAcces(connexion.jeton, jetons.acces, jetons.expireLe)
   journal.info(
@@ -128,7 +160,7 @@ async function retourSharePoint(
       evenement: 'espace-fichiers-connecte',
       organisationId: reprise.organisationId,
       acteurId: reprise.userId,
-      fournisseur: 'SHAREPOINT',
+      fournisseur: connecteur.fournisseur,
     },
     'Un espace de fichiers a été connecté.'
   )
@@ -204,7 +236,9 @@ async function apercu(
   }
   const format = telecharger
     ? 'AUCUN'
-    : formatApercu(element.nom, nom => espace.convertitEnPdf(nom))
+    : formatApercu(element.nom, nom =>
+        espace.convertitEnPdf(nom, element.typeMime)
+      )
   const converti = format === 'PDF_CONVERTI'
   if (!converti && element.taille !== null && element.taille > APERCU_MAX) {
     res.status(413).json({ code: 'FICHIER_TROP_LOURD' })

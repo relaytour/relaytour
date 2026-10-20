@@ -15,6 +15,7 @@ import {
   type FicheLue,
 } from './conversion.ts'
 import { planifierExportFiches } from './export.ts'
+import { DOCUMENT_GOOGLE } from './google.ts'
 import { ouvrirEspace } from './index.ts'
 import type { ElementEspace, EspaceFichiers } from './types.ts'
 
@@ -154,7 +155,11 @@ export async function importerDepuisEspace(
       const nomComplet = `${nomSource} / ${fichier.nom}`
       const ecarter = (raison: string) =>
         rapport.nonImportes.push({ fichier: nomComplet, raison })
-      const format = formatImport(fichier.nom)
+      // Un document Google natif n'a pas d'extension : Drive l'exporte en Markdown.
+      const documentGoogle =
+        fichier.typeMime === DOCUMENT_GOOGLE &&
+        espace.lireMarkdown !== undefined
+      const format = documentGoogle ? 'GOOGLE' : formatImport(fichier.nom)
       if (format === null) {
         ecarter('format que Relaytour n’importe pas')
         continue
@@ -170,22 +175,34 @@ export async function importerDepuisEspace(
       lus += 1
       let texte: string
       try {
-        const octets = await lireOctets(espace, {
-          ...position,
-          chemin: [...source.chemin, fichier.nom],
-        })
-        if (format === 'WORD') {
-          const converti = await wordVersMarkdown(octets)
-          texte = converti.texte
+        if (format === 'GOOGLE') {
+          texte = await espace.lireMarkdown!({
+            ...position,
+            chemin: [...source.chemin, fichier.nom],
+          })
           rapport.converties.push({
             fichier: nomComplet,
-            raison:
-              converti.pertes.length === 0
-                ? 'converti en Markdown'
-                : `converti en Markdown, sans les ${converti.pertes.join(', ')}`,
+            raison: 'document Google exporté en Markdown',
           })
+          if (texte.length > TAILLE_MAX) throw new Error('Document trop long.')
         } else {
-          texte = octets.toString('utf8')
+          const octets = await lireOctets(espace, {
+            ...position,
+            chemin: [...source.chemin, fichier.nom],
+          })
+          if (format === 'WORD') {
+            const converti = await wordVersMarkdown(octets)
+            texte = converti.texte
+            rapport.converties.push({
+              fichier: nomComplet,
+              raison:
+                converti.pertes.length === 0
+                  ? 'converti en Markdown'
+                  : `converti en Markdown, sans les ${converti.pertes.join(', ')}`,
+            })
+          } else {
+            texte = octets.toString('utf8')
+          }
         }
       } catch (erreur) {
         journal.warn(
@@ -199,7 +216,11 @@ export async function importerDepuisEspace(
         ecarter('fichier illisible')
         continue
       }
-      const fiche = lireFiche(fichier.nom, texte)
+      // Le nom d'un document Google n'a pas d'extension : la lecture en ajoute une.
+      const fiche = lireFiche(
+        format === 'GOOGLE' ? `${fichier.nom}.gdoc` : fichier.nom,
+        texte
+      )
       if (!SLUG.test(fiche.slug) || fiche.slug.length > 60) {
         ecarter('nom de fichier sans identifiant utilisable')
         continue

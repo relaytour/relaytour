@@ -152,6 +152,11 @@ const EnvSchema = z
         'MICROSOFT_LOCATAIRE : identifiant d’annuaire ou « organizations » attendu'
       )
       .transform(s => s ?? 'organizations'),
+    // Google Drive par le compte d'un admin : le client OAuth du projet Google
+    // Cloud de l'exploitant. Un compte de service, lui, n'exige que la clé de
+    // chiffrement : l'organisation apporte sa propre clé.
+    GOOGLE_CLIENT_ID: optionnelle,
+    GOOGLE_CLIENT_SECRET: optionnelle,
     // Liste des modes d'emploi, liée depuis le menu du compte et le mail
     // d'invitation : un dossier ou une page. Les pages des rôles se placent dans
     // le même dossier. Un hébergeur qui modifie Relaytour y indique les siens.
@@ -188,8 +193,18 @@ const EnvSchema = z
           'MICROSOFT_CLIENT_ID et MICROSOFT_CLIENT_SECRET se renseignent ensemble.',
       })
     }
+    const google = [v.GOOGLE_CLIENT_ID, v.GOOGLE_CLIENT_SECRET]
+    if (google.some(Boolean) && !google.every(Boolean)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['GOOGLE_CLIENT_ID'],
+        message:
+          'GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET se renseignent ensemble.',
+      })
+    }
     if (
-      v.MICROSOFT_CLIENT_ID !== undefined &&
+      (v.MICROSOFT_CLIENT_ID !== undefined ||
+        v.GOOGLE_CLIENT_ID !== undefined) &&
       v.CLE_CHIFFREMENT_ESPACE_FICHIERS === undefined
     ) {
       ctx.addIssue({

@@ -1,13 +1,21 @@
 import { createHash, randomBytes } from 'node:crypto'
 
-import { prisma } from '@relaytour/database'
+import { Prisma, prisma } from '@relaytour/database'
 import { GraphQLError } from 'graphql'
 
 import { chiffrer, dechiffrer, lireCle } from '../lib/chiffrement.ts'
 import { avecDelai } from '../lib/delai.ts'
 import { journal } from '../lib/journal.ts'
+import { sousVerrouOrganisation } from '../lib/limites.ts'
 
 import { convertibleParMicrosoft } from './chemin.ts'
+import {
+  espaceGoogleDrive,
+  jetonCompteService,
+  rafraichirGoogle,
+  type CleCompteService,
+  type ConfigurationGoogle,
+} from './google.ts'
 import {
   espaceSharePoint,
   rafraichir,
@@ -49,16 +57,128 @@ export async function configurationMicrosoft(): Promise<ConfigurationMicrosoft |
   }
 }
 
-export async function fournisseursDisponibles(): Promise<Fournisseur[]> {
-  if (fabriqueDeTest !== null) return ['SHAREPOINT']
-  return (await configurationMicrosoft()) === null ? [] : ['SHAREPOINT']
+export async function configurationGoogle(): Promise<ConfigurationGoogle | null> {
+  const { env } = await import('../env.ts')
+  if (
+    env.GOOGLE_CLIENT_ID === undefined ||
+    env.GOOGLE_CLIENT_SECRET === undefined ||
+    lireCle(env.CLE_CHIFFREMENT_ESPACE_FICHIERS) === null
+  ) {
+    return null
+  }
+  return {
+    clientId: env.GOOGLE_CLIENT_ID,
+    clientSecret: env.GOOGLE_CLIENT_SECRET,
+    retour: `${env.ORIGINE_ORGA}${PREFIXE_ROUTES}/retour/google`,
+  }
 }
 
-/** Vrai quand ce fournisseur sait rendre ce document en PDF, sans l'appeler. */
+export type Methode = 'COMPTE' | 'COMPTE_SERVICE'
+
+/**
+ * Les connexions que l'exploitant a ouvertes. Un compte de service Google ne
+ * demande que la clé de chiffrement : l'organisation apporte sa propre clé.
+ */
+export async function connexionsPossibles(): Promise<
+  { fournisseur: Fournisseur; methode: Methode }[]
+> {
+  if (fabriqueDeTest !== null) {
+    return [
+      { fournisseur: 'SHAREPOINT', methode: 'COMPTE' },
+      { fournisseur: 'GOOGLE_DRIVE', methode: 'COMPTE_SERVICE' },
+    ]
+  }
+  const [microsoft, google, cle] = await Promise.all([
+    configurationMicrosoft(),
+    configurationGoogle(),
+    cleDeChiffrement(),
+  ])
+  return [
+    ...(microsoft === null
+      ? []
+      : [{ fournisseur: 'SHAREPOINT' as const, methode: 'COMPTE' as const }]),
+    ...(google === null
+      ? []
+      : [{ fournisseur: 'GOOGLE_DRIVE' as const, methode: 'COMPTE' as const }]),
+    ...(cle === null
+      ? []
+      : [
+          {
+            fournisseur: 'GOOGLE_DRIVE' as const,
+            methode: 'COMPTE_SERVICE' as const,
+          },
+        ]),
+  ]
+}
+
+/**
+ * Enregistre la connexion d'une organisation, secret chiffré. Un changement de
+ * fournisseur efface le dossier d'export et son suivi : ils appartiennent à
+ * l'ancien espace. Renvoie la génération de la connexion (le secret chiffré).
+ */
+export async function enregistrerConnexion(donnees: {
+  organisationId: string
+  fournisseur: Fournisseur
+  methode: Methode
+  compte: string
+  secret: string
+  connecteParId: string
+}): Promise<{ id: string; jeton: string }> {
+  const cle = await cleDeChiffrement()
+  if (cle === null) throw new EspaceIndisponible()
+  const { organisationId } = donnees
+  return sousVerrouOrganisation(organisationId, async tx => {
+    const ancienne = await tx.connexionFichiers.findUnique({
+      where: { organisationId },
+      select: { fournisseur: true },
+    })
+    const autreFournisseur =
+      ancienne !== null && ancienne.fournisseur !== donnees.fournisseur
+    if (autreFournisseur) {
+      await tx.ficheExportee.deleteMany({ where: { organisationId } })
+    }
+    const champs = {
+      fournisseur: donnees.fournisseur,
+      methode: donnees.methode,
+      compte: donnees.compte.slice(0, 255),
+      jeton: chiffrer(donnees.secret, cle),
+      etat: 'ACTIVE' as const,
+      connecteParId: donnees.connecteParId,
+      ...(autreFournisseur
+        ? {
+            exportEmplacement: null,
+            exportElement: null,
+            exportNom: null,
+            exportAncetres: Prisma.DbNull,
+            exportRapport: Prisma.DbNull,
+            exportLe: null,
+          }
+        : {}),
+    }
+    return tx.connexionFichiers.upsert({
+      where: { organisationId },
+      create: { organisationId, ...champs },
+      update: champs,
+      select: { id: true, jeton: true },
+    })
+  })
+}
+
+/** Vrai quand l'espace de test remplace les fournisseurs. */
+export function espaceDeTest(): boolean {
+  return fabriqueDeTest !== null
+}
+
+/**
+ * Vrai quand ce fournisseur sait rendre ce document en PDF, d'après son seul
+ * nom. Un document Google natif se reconnaît à son type, que seul le parcours lit.
+ */
 export function convertitEnPdf(fournisseur: Fournisseur, nom: string): boolean {
   switch (fournisseur) {
     case 'SHAREPOINT':
       return convertibleParMicrosoft(nom)
+    case 'GOOGLE_DRIVE':
+      return false
   }
 }
 
@@ -111,7 +231,13 @@ async function renouveler(
 ): Promise<string> {
   const connexion = await prisma.connexionFichiers.findUnique({
     where: { id: connexionId },
-    select: { jeton: true, etat: true, organisationId: true },
+    select: {
+      jeton: true,
+      etat: true,
+      organisationId: true,
+      fournisseur: true,
+      methode: true,
+    },
   })
   if (
     connexion === null ||
@@ -120,14 +246,11 @@ async function renouveler(
   ) {
     throw new EspaceIndisponible()
   }
-  const [cle, configuration] = await Promise.all([
-    cleDeChiffrement(),
-    configurationMicrosoft(),
-  ])
-  if (cle === null || configuration === null) throw new EspaceIndisponible()
+  const cle = await cleDeChiffrement()
+  if (cle === null) throw new EspaceIndisponible()
   const ancien = dechiffrer(generation, cle)
   try {
-    const nouveaux = await rafraichir(configuration, ancien)
+    const nouveaux = await obtenirJetons(connexion, ancien)
     let courante = generation
     if (nouveaux.rafraichissement !== ancien) {
       courante = chiffrer(nouveaux.rafraichissement, cle)
@@ -162,6 +285,31 @@ async function renouveler(
     }
     throw erreur
   }
+}
+
+/**
+ * De nouveaux jetons d'accès à partir du secret gardé : le jeton de
+ * rafraîchissement d'un compte, ou la clé d'un compte de service. Le secret rendu
+ * remplace l'ancien quand le fournisseur le fait tourner.
+ */
+async function obtenirJetons(
+  connexion: { fournisseur: Fournisseur; methode: Methode },
+  secret: string
+): Promise<{ acces: string; rafraichissement: string; expireLe: number }> {
+  if (connexion.fournisseur === 'SHAREPOINT') {
+    const configuration = await configurationMicrosoft()
+    if (configuration === null) throw new EspaceIndisponible()
+    return rafraichir(configuration, secret)
+  }
+  if (connexion.methode === 'COMPTE_SERVICE') {
+    const jetons = await jetonCompteService(
+      JSON.parse(secret) as CleCompteService
+    )
+    return { ...jetons, rafraichissement: secret }
+  }
+  const configuration = await configurationGoogle()
+  if (configuration === null) throw new EspaceIndisponible()
+  return rafraichirGoogle(configuration, secret)
 }
 
 function jetonDe(connexionId: string, generation: string) {
@@ -219,7 +367,13 @@ export async function ouvrirEspace(organisationId: string): Promise<{
 }> {
   const connexion = await prisma.connexionFichiers.findUnique({
     where: { organisationId },
-    select: { id: true, fournisseur: true, etat: true, jeton: true },
+    select: {
+      id: true,
+      fournisseur: true,
+      methode: true,
+      etat: true,
+      jeton: true,
+    },
   })
   if (connexion === null || connexion.etat !== 'ACTIVE') {
     throw new EspaceIndisponible()
@@ -227,10 +381,15 @@ export async function ouvrirEspace(organisationId: string): Promise<{
   if (fabriqueDeTest !== null) {
     return { espace: fabriqueDeTest(organisationId), connexionId: connexion.id }
   }
+  const jeton = jetonDe(connexion.id, connexion.jeton)
   switch (connexion.fournisseur) {
     case 'SHAREPOINT':
+      return { espace: espaceSharePoint(jeton), connexionId: connexion.id }
+    case 'GOOGLE_DRIVE':
       return {
-        espace: espaceSharePoint(jetonDe(connexion.id, connexion.jeton)),
+        espace: espaceGoogleDrive(jeton, {
+          compteService: connexion.methode === 'COMPTE_SERVICE',
+        }),
         connexionId: connexion.id,
       }
   }

@@ -16,9 +16,13 @@ import { activiteAffichee, organisationChoisie } from './selection'
 export const ESPACE_FICHIERS = graphql(`
   query EspaceFichiers {
     espaceFichiers {
-      fournisseursDisponibles
+      connexionsPossibles {
+        fournisseur
+        methode
+      }
       connexion {
         fournisseur
+        methode
         compte
         etat
         connecteeLe
@@ -46,6 +50,14 @@ export const COMMENCER_CONNEXION = graphql(`
     $fournisseur: FournisseurFichiers!
   ) {
     commencerConnexionEspaceFichiers(fournisseur: $fournisseur)
+  }
+`)
+
+export const CONNECTER_COMPTE_SERVICE = graphql(`
+  mutation ConnecterCompteServiceGoogle($cle: String!) {
+    connecterCompteServiceGoogle(cle: $cle) {
+      compte
+    }
   }
 `)
 
@@ -228,6 +240,7 @@ export const DELIER_DOSSIER = graphql(`
 
 export const NOMS_FOURNISSEURS: Record<string, string> = {
   SHAREPOINT: 'SharePoint',
+  GOOGLE_DRIVE: 'Google Drive',
 }
 
 /** L'icône d'un fichier, selon ce que la liseuse en affiche. */

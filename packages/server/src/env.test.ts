@@ -183,4 +183,17 @@ describe('resoudreEnv', () => {
       })
     ).toThrow(/32 octets/)
   })
+
+  it('ouvre Google avec ses deux valeurs et la clé de chiffrement', () => {
+    expect(() => resoudreEnv({ ...BASE, GOOGLE_CLIENT_ID: 'client' })).toThrow(
+      /GOOGLE_CLIENT_SECRET/
+    )
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        GOOGLE_CLIENT_ID: 'client',
+        GOOGLE_CLIENT_SECRET: 'secret',
+      })
+    ).toThrow(/CLE_CHIFFREMENT_ESPACE_FICHIERS/)
+  })
 })
