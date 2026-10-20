@@ -1,10 +1,10 @@
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { App, Form, Input, Modal, Radio, Select } from 'antd'
 import { useEffect } from 'react'
 
 import { graphql } from '../gql'
 import type { CibleConvocation } from '../gql/graphql'
-import { lireConflit } from '../lib/conflit'
+import { lireConflit, relireApresConflit } from '../lib/conflit'
 import { messageErreur } from '../lib/erreurs'
 import { CONVOCABLES } from '../lib/requetes'
 
@@ -60,7 +60,7 @@ const MODIFIER = graphql(`
     $tacheIds: [ID!]
     $cible: CibleConvocation
     $personneIds: [ID!]
-    $versionAttendue: Int
+    $versionAttendue: Int!
   ) {
     modifierReunion(
       id: $id
@@ -174,6 +174,7 @@ export default function ReunionFormulaire({
   onFermer: () => void
 }) {
   const { message } = App.useApp()
+  const client = useApolloClient()
   const [form] = Form.useForm<Valeurs>()
   const relire = {
     refetchQueries: [
@@ -238,7 +239,7 @@ export default function ReunionFormulaire({
             personneIds: reunion.personneIds ?? [],
           }
     )
-  }, [form, reunion, agendas])
+  }, [form, reunion])
 
   const optionsTaches = (taches?.retroplanning ?? [])
     .filter(t => perimetreId === null || t.perimetre.id === perimetreId)
@@ -292,10 +293,17 @@ export default function ReunionFormulaire({
       onFermer()
     } catch (e) {
       if (lireConflit(e) !== null) {
-        message.error(
-          'Une autre personne a modifié cette réunion depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.'
+        await relireApresConflit(
+          client,
+          relire.refetchQueries,
+          texte => message.error(texte),
+          {
+            relu: 'Une autre personne a modifié cette réunion depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.',
+            echec:
+              'La réunion n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.',
+          },
+          onFermer
         )
-        onFermer()
         return
       }
       message.error(messageErreur(e))
@@ -322,7 +330,14 @@ export default function ReunionFormulaire({
       >
         <Form.Item label="Agenda" name="agenda">
           <Select
-            disabled={existante !== null}
+            // Une réunion existante, ou née d'un sondage, garde son agenda : le
+            // serveur exige l'agenda du sondage.
+            disabled={
+              existante !== null ||
+              (reunion !== null &&
+                'sondageId' in reunion &&
+                !!reunion.sondageId)
+            }
             options={agendas.map(a => ({
               value: a.perimetreId ?? GLOBAL,
               label: a.nom,

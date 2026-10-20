@@ -179,6 +179,24 @@ export function dansLEquipe(activiteIds: string[]): Prisma.UserWhereInput {
   }
 }
 
+/**
+ * L'équipe d'une activité sans les personnes qui n'y ont qu'un souhait : une
+ * affectation ou un rôle d'admin de l'activité. Une personne qui n'a qu'un
+ * souhait découvre l'activité sans la voir (ADR 0012) : elle ne lit ni son
+ * agenda ni son programme, et une réunion ou une séquence ne la vise donc pas.
+ */
+export function dansLEquipeQuiVoit(
+  activiteIds: string[]
+): Prisma.UserWhereInput {
+  const ici = { activiteId: { in: activiteIds } }
+  return {
+    OR: [
+      { affectations: { some: { perimetre: ici } } },
+      { adminsActivite: { some: ici } },
+    ],
+  }
+}
+
 /** Le lien d'une personne avec une activité, toutes périodes confondues (ADR 0018). */
 export interface AttributionActivite {
   activiteId: string

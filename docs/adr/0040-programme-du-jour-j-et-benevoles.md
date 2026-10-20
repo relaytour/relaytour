@@ -25,7 +25,7 @@ Le mot « événement » désigne déjà une nature d'activité (ADR 0008). Ce c
 - Le **programme** d'une période réunit ses séquences. Il n'a pas d'existence propre : une période a un programme dès qu'elle a une séquence.
 - Une **séquence** est un moment du programme : un titre, un début et une fin, un lieu facultatif, un périmètre facultatif et une description. Une séquence sans périmètre appartient à l'activité entière (l'accueil, la cérémonie).
 - Un **lieu** est un endroit de l'activité : un terrain, un bassin, une salle. Les lieux appartiennent à l'activité et servent d'une période à l'autre. Un lieu porte un nom, une description facultative et un ordre d'affichage.
-- Une séquence reçoit des **personnes**, en responsabilité ou en renfort. Une personne est un membre de l'équipe de l'activité (ADR 0018) ou une ou un bénévole.
+- Une séquence reçoit des **personnes**, en responsabilité ou en renfort. Une personne est un membre de l'équipe de l'activité (ADR 0018) qui voit l'activité, ou une ou un bénévole. Une personne qui n'a qu'un souhait ne se place pas : elle ne lit pas le programme.
 - Une **fiche bénévole** décrit une personne qui aide l'activité sans compte dans l'application. Elle porte un nom, une adresse et un téléphone facultatifs, et une note. Elle appartient à l'activité.
 
 ### Droits
@@ -54,7 +54,7 @@ Le mot « événement » désigne déjà une nature d'activité (ADR 0008). Ce c
 
 ## Conséquences
 
-- Une migration additive crée les tables `Lieu`, `Sequence`, `PlaceSequence` et `Benevole`. Chaque table porte `organisationId` et `activiteId` ; chaque unicité est bornée par un parent (invariant 18).
+- Une migration additive crée les tables `Lieu`, `Sequence`, `PlaceSequence` et `Benevole`. `Lieu`, `Sequence` et `Benevole` portent `organisationId` et `activiteId`. `PlaceSequence` se rattache à l'organisation par sa séquence. Chaque unicité est bornée par un parent (invariant 18).
 - Une place de séquence désigne soit un compte, soit une fiche bénévole, jamais les deux.
 - Une séquence dure 24 heures au plus. Une période compte 1 000 séquences au plus, une séquence 50 places au plus.
 - La table des refus croisés couvre chaque requête et chaque mutation. Les tests prouvent qu'une coordonnée de bénévole reste nulle pour une personne qui ne la lit pas (invariant 11).

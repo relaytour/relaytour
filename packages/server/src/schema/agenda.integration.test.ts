@@ -6,6 +6,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 
+import { DATES_CLES_MAX } from '../lib/agenda.ts'
+
 import { schema } from './index.ts'
 
 // Agenda d'une période et dates clés (ADR 0037). Toute personne qui voit
@@ -65,7 +67,7 @@ const AGENDA = `query ($e: ID!, $ech: Boolean, $p: [ID!]) {
 const CREER = `mutation ($e: ID!, $t: String!, $j: Date!, $f: Date, $d: String) {
   creerDateCle(editionId: $e, titre: $t, jour: $j, jourFin: $f, description: $d) { id titre jour jourFin version }
 }`
-const MODIFIER = `mutation ($id: ID!, $t: String!, $j: Date!, $f: Date, $v: Int) {
+const MODIFIER = `mutation ($id: ID!, $t: String!, $j: Date!, $f: Date, $v: Int!) {
   modifierDateCle(id: $id, titre: $t, jour: $j, jourFin: $f, versionAttendue: $v) { id titre jour jourFin version }
 }`
 const SUPPRIMER = `mutation ($id: ID!) { supprimerDateCle(id: $id) }`
@@ -439,7 +441,12 @@ describe('dates clés', () => {
       ).toBe('FORBIDDEN')
       expect(
         code(
-          await executer(qui, MODIFIER, { id, t: 'Intrusion', j: '2027-03-01' })
+          await executer(qui, MODIFIER, {
+            id,
+            t: 'Intrusion',
+            j: '2027-03-01',
+            v: 0,
+          })
         )
       ).toBe('FORBIDDEN')
       expect(code(await executer(qui, SUPPRIMER, { id }))).toBe('FORBIDDEN')
@@ -472,5 +479,50 @@ describe('dates clés', () => {
     const r = await executer(ids.adminActivite, SUPPRIMER, { id })
     expect(r.errors).toBeUndefined()
     expect(await prisma.dateCle.count({ where: { id } })).toBe(0)
+  })
+})
+
+describe('plafond des dates clés', () => {
+  it('tient même pour deux créations simultanées', async () => {
+    const deja = await prisma.dateCle.count({
+      where: { editionId: ids.edition },
+    })
+    await prisma.dateCle.createMany({
+      data: Array.from({ length: DATES_CLES_MAX - 1 - deja }, (_, i) => ({
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        titre: `Remplissage ${i}`,
+        jour: new Date('2027-03-01T00:00:00.000Z'),
+      })),
+    })
+    try {
+      const reponses = await Promise.all(
+        ['Première', 'Seconde'].map(titre =>
+          executer(ids.adminActivite, CREER, {
+            e: ids.edition,
+            t: titre,
+            j: '2027-03-02',
+          })
+        )
+      )
+      expect(reponses.map(code).sort()).toEqual(['SAISIE_INVALIDE', undefined])
+      expect(
+        await prisma.dateCle.count({ where: { editionId: ids.edition } })
+      ).toBe(DATES_CLES_MAX)
+    } finally {
+      await prisma.dateCle.deleteMany({
+        where: {
+          editionId: ids.edition,
+          titre: { in: ['Première', 'Seconde'] },
+        },
+      })
+      await prisma.dateCle.deleteMany({
+        where: {
+          editionId: ids.edition,
+          titre: { startsWith: 'Remplissage ' },
+        },
+      })
+    }
   })
 })

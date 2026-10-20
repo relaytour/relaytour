@@ -188,3 +188,32 @@ export const CONVOCABLES = graphql(`
     }
   }
 `)
+
+// Les lieux d'une activité et ses fiches bénévoles (ADR 0040).
+export const LIEUX = graphql(`
+  query Lieux($activiteId: ID!) {
+    lieux(activiteId: $activiteId) {
+      id
+      nom
+      description
+      ordre
+      archive
+    }
+  }
+`)
+
+export const BENEVOLES = graphql(`
+  query Benevoles($activiteId: ID!) {
+    benevoles(activiteId: $activiteId) {
+      id
+      nom
+      courriel
+      telephone
+      note
+      coordonneesVisibles
+      peutModifier
+      places
+      accordLe
+    }
+  }
+`)

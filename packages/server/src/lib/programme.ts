@@ -1,6 +1,6 @@
 import { prisma, type RolePlace } from '@relaytour/database'
 
-import { dansLEquipe, membreActif } from './appartenances.ts'
+import { dansLEquipeQuiVoit, membreActif } from './appartenances.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
 
 // Programme du jour J (ADR 0040). Une séquence suit les droits d'écriture d'une
@@ -71,7 +71,10 @@ export async function placesValides(
       : prisma.user.count({
           where: {
             id: { in: userIds },
-            AND: [dansLEquipe([activiteId]), membreActif(organisationId)],
+            AND: [
+              dansLEquipeQuiVoit([activiteId]),
+              membreActif(organisationId),
+            ],
           },
         }),
     benevoleIds.length === 0
