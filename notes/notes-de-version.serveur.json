@@ -5,6 +5,24 @@
   "version": "0.17.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-20-serveur-le-code-de-connexion-compte-dans-le-plafond-des-mails-et-pas",
+          "date": "2026-10-20",
+          "type": "correctif",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le code de connexion compte dans le plafond des mails et passe en tête de la file",
+            "texte": "Le code de connexion entre désormais dans le plafond quotidien des mails, sans jamais être reporté. Le total du jour reste ainsi sous le quota du fournisseur de mail, qui pourrait sinon bloquer tous les envois. Le code passe aussi devant les autres mails de la file : il arrive avant d'expirer, même après l'invitation d'une longue liste. Gardez un écart entre `COURRIEL_PLAFOND_QUOTIDIEN` et le quota de votre fournisseur.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.17.0",
       "notes": [
         {

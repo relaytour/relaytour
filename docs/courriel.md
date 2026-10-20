@@ -36,6 +36,9 @@ Vérifiez la délivrabilité avant l'ouverture avec un service d'analyse d'en-t�
 
 - Réglez le plafond sous le quota quotidien de votre fournisseur, et au-dessus du volume normal de l'installation.
 - Au-delà du plafond, le worker reporte le mail au lendemain. Le code de connexion part toujours.
+- Le code de connexion compte dans le plafond. Un jour de nombreuses connexions, les autres mails atteignent donc le plafond plus tôt.
+- Les codes envoyés au-delà du plafond s'ajoutent au total du jour. Gardez un écart entre le plafond et le quota du fournisseur pour ces codes : par exemple, un plafond de 250 pour un quota de 300.
+- Le code de connexion passe devant les autres mails de la file, pour arriver avant d'expirer.
 - Le journal du worker porte l'événement `courriel-plafond-atteint` à chaque report. Un plafond atteint chaque jour est trop bas, ou signale un envoi anormal.
 
 ## Ce qui reste hors du dépôt
