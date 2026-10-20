@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client/react'
 import { App, Button, Form, Input, Radio, Skeleton, Switch } from 'antd'
 import { useState } from 'react'
 
+import { PreferenceAgenda } from '../composants/AbonnementAgenda'
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
 import PreferenceMessagerie from '../composants/PreferenceMessagerie'
 import PreferenceOrganigramme from '../composants/PreferenceOrganigramme'
@@ -445,6 +446,7 @@ export default function Preferences() {
             administre={administre}
             requeteARelire={PREFERENCES}
           />
+          <PreferenceAgenda />
           <PreferenceOrganigramme />
           {/* Seuls les admins écrivent un message (ADR 0020). */}
           {(administre || session?.moi?.estAdmin) && <PreferenceMessagerie />}

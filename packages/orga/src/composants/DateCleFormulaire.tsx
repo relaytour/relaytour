@@ -1,9 +1,9 @@
-import { useMutation } from '@apollo/client/react'
+import { useApolloClient, useMutation } from '@apollo/client/react'
 import { App, Form, Input, Modal } from 'antd'
 import { useEffect } from 'react'
 
 import { graphql } from '../gql'
-import { lireConflit } from '../lib/conflit'
+import { lireConflit, relireApresConflit } from '../lib/conflit'
 import { messageErreur } from '../lib/erreurs'
 
 const CREER = graphql(`
@@ -33,7 +33,7 @@ const MODIFIER = graphql(`
     $jour: Date!
     $jourFin: Date
     $description: String
-    $versionAttendue: Int
+    $versionAttendue: Int!
   ) {
     modifierDateCle(
       id: $id
@@ -83,6 +83,7 @@ export default function DateCleFormulaire({
   onFermer: () => void
 }) {
   const { message } = App.useApp()
+  const client = useApolloClient()
   const [form] = Form.useForm<Valeurs>()
   const relire = { refetchQueries: ['Agenda'] }
   const [creer, creation] = useMutation(CREER, relire)
@@ -126,10 +127,17 @@ export default function DateCleFormulaire({
       onFermer()
     } catch (e) {
       if (lireConflit(e) !== null) {
-        message.error(
-          'Une autre personne a modifié cette date clé depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.'
+        await relireApresConflit(
+          client,
+          relire.refetchQueries,
+          texte => message.error(texte),
+          {
+            relu: 'Une autre personne a modifié cette date clé depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.',
+            echec:
+              'La date clé n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.',
+          },
+          onFermer
         )
-        onFermer()
         return
       }
       message.error(messageErreur(e))
