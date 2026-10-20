@@ -8,6 +8,11 @@ import {
 
 import type { AppContext } from '../context.ts'
 import { jourISO } from '../lib/agenda.ts'
+import {
+  envoyerAnnulations,
+  envoyerConvocations,
+  notifierReunion,
+} from '../lib/convocations.ts'
 import { peutModifierPerimetre } from '../lib/droits.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
@@ -443,6 +448,13 @@ builder.mutationFields(t => {
           perimetreId: creee.perimetreId,
           editionId: creee.editionId,
         })
+        envoyerConvocations(creee, valides.convoquees)
+        await notifierReunion(
+          'REUNION_CONVOQUEE',
+          creee,
+          valides.convoquees,
+          ctx.personne!.id
+        )
         return lireReunion(ctx, creee)
       },
     }),
@@ -530,7 +542,30 @@ builder.mutationFields(t => {
           perimetreId: actuelle.perimetreId,
           editionId: actuelle.editionId,
         })
-        return lireReunion(ctx, await reunionVisible(ctx, actuelle.id))
+        const modifiee = await reunionVisible(ctx, actuelle.id)
+        const ajoutees = [...apres].filter(id => !avant.has(id))
+        const maintenues = [...apres].filter(id => avant.has(id))
+        // Une personne retirée reçoit l'annulation si elle avait reçu la convocation.
+        const retirees = actuelle.convocations
+          .filter(c => !apres.has(c.userId) && c.envoyeeLe !== null)
+          .map(c => c.userId)
+        envoyerConvocations(modifiee, majeur ? [...apres] : ajoutees)
+        envoyerAnnulations(modifiee, retirees)
+        await notifierReunion(
+          'REUNION_CONVOQUEE',
+          modifiee,
+          ajoutees,
+          ctx.personne!.id
+        )
+        if (majeur) {
+          await notifierReunion(
+            'REUNION_MODIFIEE',
+            modifiee,
+            maintenues,
+            ctx.personne!.id
+          )
+        }
+        return lireReunion(ctx, modifiee)
       },
     }),
 
@@ -559,7 +594,20 @@ builder.mutationFields(t => {
           perimetreId: actuelle.perimetreId,
           editionId: actuelle.editionId,
         })
-        return lireReunion(ctx, await reunionVisible(ctx, actuelle.id))
+        const annulee = await reunionVisible(ctx, actuelle.id)
+        envoyerAnnulations(
+          annulee,
+          actuelle.convocations
+            .filter(c => c.envoyeeLe !== null)
+            .map(c => c.userId)
+        )
+        await notifierReunion(
+          'REUNION_ANNULEE',
+          annulee,
+          actuelle.convocations.map(c => c.userId),
+          ctx.personne!.id
+        )
+        return lireReunion(ctx, annulee)
       },
     }),
 

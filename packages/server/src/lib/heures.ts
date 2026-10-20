@@ -90,3 +90,24 @@ export function heureLocale(
   const iso = new Date(murale(instant.getTime(), fuseau)).toISOString()
   return { jour: iso.slice(0, 10), heure: iso.slice(11, 16) }
 }
+
+/** « 18 h 30 », ou « 18 h » à l'heure pile. */
+function heureEnClair(heure: string): string {
+  const [h, m] = heure.split(':')
+  return m === '00' ? `${Number(h)} h` : `${Number(h)} h ${m}`
+}
+
+/**
+ * L'horaire d'une réunion en clair, dans le fuseau de l'organisation : « lundi
+ * 1 mars 2027, de 18 h 30 à 20 h ».
+ */
+export function horaireEnClair(debut: Date, fin: Date, fuseau: string): string {
+  const jour = new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: fuseau,
+  }).format(debut)
+  return `${jour}, de ${heureEnClair(heureLocale(debut, fuseau).heure)} à ${heureEnClair(heureLocale(fin, fuseau).heure)}`
+}

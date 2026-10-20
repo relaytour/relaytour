@@ -15,6 +15,7 @@ const tout = {
   pushEcheances: true,
   pushDemandes: true,
   pushEquipe: false,
+  pushAgenda: true,
 }
 
 describe('famillePush', () => {
@@ -73,6 +74,12 @@ describe('pushAutorise', () => {
     expect(
       pushAutorise({ ...tout, pushEquipe: true }, 'AFFECTATION_AJOUTEE')
     ).toBe(true)
+    // Les réunions forment la famille « agenda » (ADR 0037).
+    expect(famillePush('REUNION_CONVOQUEE')).toBe('agenda')
+    expect(pushAutorise(tout, 'REUNION_ANNULEE')).toBe(true)
+    expect(
+      pushAutorise({ ...tout, pushAgenda: false }, 'REUNION_MODIFIEE')
+    ).toBe(false)
   })
 })
 

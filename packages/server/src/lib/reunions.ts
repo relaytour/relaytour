@@ -2,6 +2,8 @@ import { prisma, type CibleConvocation, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 
+import { envoyerAnnulations, envoyerConvocations } from './convocations.ts'
+
 import { decalerJour, exigerEcritureGlobale } from './agenda.ts'
 import { membreActif, dansLEquipe } from './appartenances.ts'
 import { accesAuPerimetre, exigerEcriture } from './droits.ts'
@@ -192,13 +194,21 @@ export async function convoquerApresAffectation(
       cible: 'PERIMETRE',
       convocations: { none: { userId: demande.userId } },
     },
-    select: { id: true },
+    select: {
+      id: true,
+      organisationId: true,
+      activiteId: true,
+      sequence: true,
+    },
   })
   if (reunions.length === 0) return []
   await db.convocationReunion.createMany({
     data: reunions.map(r => ({ reunionId: r.id, userId: demande.userId })),
     skipDuplicates: true,
   })
+  // Le processeur relit la convocation à l'envoi : une transaction annulée
+  // n'envoie rien.
+  for (const reunion of reunions) envoyerConvocations(reunion, [demande.userId])
   return reunions.map(r => r.id)
 }
 
@@ -225,12 +235,29 @@ export async function retirerDesReunionsDuPerimetre(
         editionId: demande.editionId,
       },
     },
-    select: { id: true, reunionId: true },
+    select: {
+      id: true,
+      reunionId: true,
+      envoyeeLe: true,
+      reunion: {
+        select: {
+          id: true,
+          organisationId: true,
+          activiteId: true,
+          sequence: true,
+        },
+      },
+    },
   })
   if (convocations.length === 0) return []
   await db.convocationReunion.deleteMany({
     where: { id: { in: convocations.map(c => c.id) } },
   })
+  // Un mail d'annulation retire l'événement de l'agenda de la personne, si elle
+  // avait reçu la convocation (ADR 0037).
+  for (const c of convocations) {
+    if (c.envoyeeLe !== null) envoyerAnnulations(c.reunion, [demande.userId])
+  }
   return convocations.map(c => c.reunionId)
 }
 

@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest'
 
-import { heureLocale, instantDepuisHeureLocale } from './heures.ts'
+import {
+  heureLocale,
+  horaireEnClair,
+  instantDepuisHeureLocale,
+} from './heures.ts'
 
 const PARIS = 'Europe/Paris'
 
@@ -66,5 +70,17 @@ describe('heureLocale', () => {
       jour: '2027-06-15',
       heure: '00:30',
     })
+  })
+})
+
+describe('horaireEnClair', () => {
+  it('écrit le jour et les heures dans le fuseau', () => {
+    expect(
+      horaireEnClair(
+        new Date('2027-03-01T17:30:00.000Z'),
+        new Date('2027-03-01T19:00:00.000Z'),
+        PARIS
+      )
+    ).toBe('lundi 1 mars 2027, de 18 h 30 à 20 h')
   })
 })

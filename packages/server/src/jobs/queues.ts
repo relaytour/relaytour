@@ -20,6 +20,8 @@ export type SorteCourriel =
   | 'resume'
   | 'equipe'
   | 'demandes'
+  | 'convocation-reunion'
+  | 'annulation-reunion'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.
@@ -49,6 +51,9 @@ export interface CourrielJobData {
   activiteId?: string
   // Fenêtre des changements annoncés par un mail d'équipe (ADR 0012), en ISO 8601.
   fenetre?: { debut: string; fin: string }
+  // Pour `convocation-reunion` et `annulation-reunion` (ADR 0037) : la réunion,
+  // relue au moment de l'envoi.
+  reunionId?: string
 }
 
 export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {

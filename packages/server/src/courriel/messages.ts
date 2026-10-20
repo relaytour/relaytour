@@ -10,6 +10,8 @@ import {
   decouvreDesPerimetres,
   perimetresDeLaPersonne,
 } from '../lib/equipe.ts'
+import { horaireEnClair } from '../lib/heures.ts'
+import { calendrier } from '../lib/ics.ts'
 import { invitationEnAttente } from '../lib/invitations.ts'
 import {
   LIBELLES_ROLE,
@@ -60,6 +62,8 @@ export function sujets(
     resume: `${nomCourt} : votre résumé`,
     equipe: `${tete} : votre place dans l’équipe a changé`,
     demandes: `${tete} : demandes pour rejoindre l’équipe`,
+    'convocation-reunion': `${tete} : convocation à une réunion`,
+    'annulation-reunion': `${tete} : réunion annulée`,
   }
 }
 
@@ -81,6 +85,8 @@ export interface MessageCompose {
   repondreA?: string
   /** Appelé après le départ du mail : dates d'envoi et de résumé. */
   apresEnvoi?: () => Promise<void>
+  /** Fichier iCalendar joint (ADR 0037). */
+  icalEvent?: { methode: 'REQUEST' | 'CANCEL'; contenu: string }
 }
 
 /**
@@ -525,6 +531,142 @@ export async function composer(
     }
   }
 
+  let icalEvent: MessageCompose['icalEvent']
+  if (
+    job.sorte === 'convocation-reunion' ||
+    job.sorte === 'annulation-reunion'
+  ) {
+    if (job.reunionId === undefined || job.userId === undefined) {
+      throw new Error(
+        `Le mail « ${job.sorte} » exige une réunion et un compte.`
+      )
+    }
+    const [reunion, personne] = await Promise.all([
+      prisma.reunion.findUnique({
+        where: { id: job.reunionId },
+        include: {
+          perimetre: { select: { nom: true } },
+          activite: { select: { id: true, slug: true, nom: true } },
+          organisation: { select: { fuseauHoraire: true } },
+          convocations: { where: { userId: job.userId } },
+        },
+      }),
+      prisma.user.findUniqueOrThrow({
+        where: { id: job.userId },
+        select: { name: true, email: true },
+      }),
+    ])
+    if (reunion === null) return null
+    const convocation = reunion.convocations[0]
+    const maintenant = new Date()
+    if (job.sorte === 'convocation-reunion') {
+      // La convocation part pour une réunion prévue et à venir, à une personne
+      // encore convoquée, une fois par version.
+      if (
+        convocation === undefined ||
+        reunion.statut !== 'PREVUE' ||
+        reunion.debut.getTime() <= maintenant.getTime() ||
+        convocation.sequenceEnvoyee === reunion.sequence
+      ) {
+        return null
+      }
+    } else if (convocation !== undefined && reunion.statut === 'PREVUE') {
+      // La personne a été convoquée de nouveau : rien n'est annulé.
+      return null
+    }
+    configuration = await configurationActivite(reunion.activite.id)
+    const fuseau = reunion.organisation.fuseauHoraire
+    const lienAgenda = lienVers(
+      `/${reunion.activite.slug}/agenda?edition=${reunion.editionId}&reunion=${reunion.id}`
+    )
+    const agenda =
+      reunion.perimetre?.nom ?? `l’agenda de ${reunion.activite.nom}`
+    const miseAJour =
+      job.sorte === 'convocation-reunion' &&
+      convocation?.sequenceEnvoyee !== null &&
+      convocation?.sequenceEnvoyee !== undefined
+    const annulee = reunion.statut === 'ANNULEE'
+    variables.intitule =
+      job.sorte === 'annulation-reunion'
+        ? annulee
+          ? 'Réunion annulée'
+          : 'Vous n’êtes plus convoqué·e'
+        : miseAJour
+          ? 'Réunion modifiée'
+          : 'Convocation à une réunion'
+    variables.intro =
+      job.sorte === 'annulation-reunion'
+        ? annulee
+          ? `La réunion « ${reunion.titre} » (${agenda}) est annulée.`
+          : `Vous ne faites plus partie des personnes convoquées à la réunion « ${reunion.titre} » (${agenda}).`
+        : miseAJour
+          ? `La réunion « ${reunion.titre} » (${agenda}) a changé. Voici son horaire et son lieu à jour.`
+          : `Vous êtes convoqué·e à la réunion « ${reunion.titre} » (${agenda}).`
+    variables.details = [
+      `Quand : ${horaireEnClair(reunion.debut, reunion.fin, fuseau)}`,
+      ...(reunion.lieu ? [`Lieu : ${reunion.lieu}`] : []),
+      ...(reunion.lienVisio ? [`Visio : ${reunion.lienVisio}`] : []),
+    ]
+    variables.consigne =
+      job.sorte === 'annulation-reunion'
+        ? 'Le fichier joint retire la réunion de votre agenda.'
+        : 'Le fichier joint ajoute la réunion à votre agenda. Indiquez si vous serez présente ou présent dans l’espace organisateur : une réponse envoyée depuis votre agenda n’y arrive pas.'
+    variables.lienAgenda = lienAgenda
+    if (miseAJour) {
+      sujet = `${configuration.nomCourt} · ${reunion.activite.nom} : réunion modifiée`
+    }
+    if (job.sorte === 'annulation-reunion' && !annulee) {
+      sujet = `${configuration.nomCourt} · ${reunion.activite.nom} : vous n’êtes plus convoqué·e`
+    }
+    const expediteur = (await configurationOrganisation()).expediteur
+    const adresseOrganisateur =
+      configuration.contactRecrutement ??
+      /<([^>]+)>/.exec(expediteur)?.[1] ??
+      expediteur
+    const description = [
+      reunion.description,
+      reunion.lienVisio ? `Visio : ${reunion.lienVisio}` : null,
+      `Répondre : ${lienAgenda}`,
+    ]
+      .filter(Boolean)
+      .join('\n\n')
+    icalEvent = {
+      methode: job.sorte === 'annulation-reunion' ? 'CANCEL' : 'REQUEST',
+      contenu: calendrier({
+        methode: job.sorte === 'annulation-reunion' ? 'CANCEL' : 'REQUEST',
+        maintenant,
+        evenements: [
+          {
+            uid: `reunion-${reunion.id}@${new URL(origine).hostname}`,
+            titre: reunion.titre,
+            horaire: { debut: reunion.debut, fin: reunion.fin },
+            lieu: reunion.lieu,
+            description,
+            url: lienAgenda,
+            sequence: reunion.sequence,
+            annule: job.sorte === 'annulation-reunion',
+            modifieLe: reunion.updatedAt,
+            organisateur: {
+              nom: configuration.nomCourt,
+              adresse: adresseOrganisateur,
+            },
+            participant: { nom: personne.name, adresse: personne.email },
+          },
+        ],
+      }),
+    }
+    if (job.sorte === 'convocation-reunion') {
+      const { id: reunionId, sequence } = reunion
+      const userId = job.userId
+      apresEnvoi = async () => {
+        await prisma.convocationReunion.updateMany({
+          where: { reunionId, userId },
+          data: { envoyeeLe: new Date(), sequenceEnvoyee: sequence },
+        })
+      }
+    }
+  }
+
   const { html, texte } = rendre(
     job.sorte,
     variables,
@@ -542,5 +684,6 @@ export async function composer(
       ? undefined
       : configuration.contactRecrutement,
     apresEnvoi,
+    icalEvent,
   }
 }

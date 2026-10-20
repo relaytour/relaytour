@@ -25,6 +25,7 @@ export async function mettreEnFile(
     // Délai avant l'envoi, en millisecondes (mails regroupés, ADR 0012 et 0016).
     delai?: number
     fenetre?: CourrielJobData['fenetre']
+    reunionId?: string
   } = {}
 ): Promise<void> {
   try {
@@ -47,6 +48,9 @@ export async function mettreEnFile(
         ? {}
         : { activiteId: options.activiteId }),
       ...(options.fenetre === undefined ? {} : { fenetre: options.fenetre }),
+      ...(options.reunionId === undefined
+        ? {}
+        : { reunionId: options.reunionId }),
     }
     await avecDelai(
       courrielQueue.add(sorte, data, {

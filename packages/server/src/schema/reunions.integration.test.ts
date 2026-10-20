@@ -5,6 +5,11 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { composer } from '../courriel/messages.ts'
+import {
+  composerNotifications,
+  SELECTION_NOTIFICATION,
+} from '../lib/composition-notifications.ts'
 
 import { schema } from './index.ts'
 
@@ -647,5 +652,120 @@ describe('les convocations suivent les affectations', () => {
         },
       })
     ).toBe(0)
+  })
+})
+
+describe('mails et notifications', () => {
+  it('compose la convocation avec son fichier iCalendar, une fois par version', async () => {
+    const reunion = await reunionNatation({
+      c: 'CHOIX',
+      u: [ids.referent, ids.basketteuse],
+    })
+    const job = {
+      sorte: 'convocation-reunion' as const,
+      userId: ids.basketteuse,
+      reunionId: reunion.id,
+      organisationId: ids.org,
+      activiteId: ids.activite,
+    }
+    const message = await composer(prisma, job)
+    expect(message?.sujet).toMatch(/convocation à une réunion$/)
+    expect(message?.texte).toContain('lundi 1 mars 2027, de 18 h 30 à 20 h')
+    expect(message?.texte).toContain('Lieu : Piscine municipale')
+    expect(message?.icalEvent?.methode).toBe('REQUEST')
+    const ics = message!.icalEvent!.contenu.replace(/\r\n /g, '')
+    expect(ics).toContain('DTSTART:20270301T173000Z')
+    expect(ics).toContain(`UID:reunion-${reunion.id}@`)
+    expect(ics).toContain(`mailto:${adresseDe('basketteuse')}`)
+    // Le fichier ne nomme aucune autre personne convoquée.
+    expect(ics).not.toContain(adresseDe('referent'))
+    await message!.apresEnvoi!()
+    expect(await composer(prisma, job)).toBeNull()
+
+    // Une nouvelle version repart, avec un sujet qui annonce le changement.
+    donnees(
+      await executer(ids.referent, MODIFIER, {
+        id: reunion.id,
+        t: 'Point natation',
+        j: '2027-03-01',
+        d: '19:00',
+        f: '20:00',
+        c: 'CHOIX',
+        u: [ids.referent, ids.basketteuse],
+      }),
+      'modifierReunion'
+    )
+    const modifiee = await composer(prisma, job)
+    expect(modifiee?.sujet).toMatch(/réunion modifiée$/)
+    expect(modifiee?.icalEvent?.contenu).toContain('SEQUENCE:1')
+  })
+
+  it('compose l’annulation d’une personne retirée, et pas d’une personne encore convoquée', async () => {
+    const reunion = await reunionNatation({
+      c: 'CHOIX',
+      u: [ids.referent, ids.basketteuse],
+    })
+    const job = {
+      sorte: 'annulation-reunion' as const,
+      userId: ids.basketteuse,
+      reunionId: reunion.id,
+      organisationId: ids.org,
+      activiteId: ids.activite,
+    }
+    expect(await composer(prisma, job)).toBeNull()
+    donnees(
+      await executer(ids.referent, MODIFIER, {
+        id: reunion.id,
+        t: 'Point natation',
+        j: '2027-03-01',
+        d: '18:30',
+        f: '20:00',
+        c: 'CHOIX',
+        u: [ids.referent],
+      }),
+      'modifierReunion'
+    )
+    const message = await composer(prisma, job)
+    expect(message?.sujet).toMatch(/vous n’êtes plus convoqué·e$/)
+    expect(message?.icalEvent?.methode).toBe('CANCEL')
+    expect(message?.icalEvent?.contenu).toContain('STATUS:CANCELLED')
+  })
+
+  it('prévient les personnes convoquées, sauf l’auteur', async () => {
+    // La nageuse est archivée plus haut : la réunion convoque la basketteuse.
+    const reunion = await reunionNatation({
+      c: 'CHOIX',
+      u: [ids.referent, ids.basketteuse],
+    })
+    const notifications = await prisma.notification.findMany({
+      where: { reunionId: reunion.id },
+      select: { userId: true, type: true },
+    })
+    expect(notifications).toEqual([
+      { userId: ids.basketteuse, type: 'REUNION_CONVOQUEE' },
+    ])
+    const [composee] = await composerNotifications(
+      prisma,
+      await prisma.notification.findMany({
+        where: { reunionId: reunion.id },
+        select: SELECTION_NOTIFICATION,
+      }),
+      ids.basketteuse
+    )
+    expect(composee?.message).toBe(
+      `referent ${s} vous convoque à la réunion « Point natation ».`
+    )
+    expect(composee?.lien).toBe(
+      `/${slug}/agenda?edition=${ids.edition}&reunion=${reunion.id}`
+    )
+    donnees(
+      await executer(ids.referent, ANNULER, { id: reunion.id }),
+      'annulerReunion'
+    )
+    expect(
+      await prisma.notification.count({
+        where: { reunionId: reunion.id, type: 'REUNION_ANNULEE' },
+      })
+    ).toBe(1)
   })
 })
