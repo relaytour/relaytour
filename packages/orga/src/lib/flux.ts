@@ -82,7 +82,7 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   // L'historique des messages (ADR 0020), lu par les admins.
   MESSAGE: ['Messages'],
   // Les dates clés de l'agenda d'une période (ADR 0037).
-  // Les lieux, les séquences et les fiches bénévoles (ADR 0038).
+  // Les lieux, les séquences et les fiches bénévoles (ADR 0040).
   PROGRAMME: [
     'Programme',
     'ProgrammePerimetre',

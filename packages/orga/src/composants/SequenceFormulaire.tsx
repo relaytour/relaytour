@@ -112,7 +112,7 @@ interface Valeurs {
 
 const GLOBAL = 'global'
 
-/** Fenêtre de création ou de modification d'une séquence du programme (ADR 0038). */
+/** Fenêtre de création ou de modification d'une séquence du programme (ADR 0040). */
 export default function SequenceFormulaire({
   editionId,
   agendas,

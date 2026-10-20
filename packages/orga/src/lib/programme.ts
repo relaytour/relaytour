@@ -1,4 +1,4 @@
-// Programme du jour J (ADR 0038), côté navigateur : la grille d'un jour, une
+// Programme du jour J (ADR 0040), côté navigateur : la grille d'un jour, une
 // colonne par lieu et une ligne par tranche de 30 minutes. Les heures se lisent en
 // texte HH:MM, dans le fuseau de l'organisation que le serveur applique.
 
