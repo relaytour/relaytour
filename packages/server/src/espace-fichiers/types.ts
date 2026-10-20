@@ -51,6 +51,14 @@ export interface EspaceFichiers {
   /** Vrai quand le fournisseur sait rendre ce document en PDF. */
   convertitEnPdf(nom: string): boolean
   emplacements(): Promise<Emplacement[]>
+  /**
+   * L'élément désigné par son identifiant, puis ses dossiers parents jusqu'à la
+   * racine de la bibliothèque. Null si l'élément n'existe pas.
+   */
+  ancetres(
+    emplacement: string,
+    element: string
+  ): Promise<{ id: string; nom: string }[] | null>
   /** L'élément à cette position, ou null s'il n'existe pas. */
   element(position: Position): Promise<ElementEspace | null>
   /**

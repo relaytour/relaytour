@@ -6,6 +6,10 @@ import type { AppContext } from '../context.ts'
 import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
 import { dossierCompatible } from '../espace-fichiers/droits.ts'
 import {
+  cheminDeLExportSous,
+  dansLExport,
+} from '../espace-fichiers/isolement.ts'
+import {
   convertitEnPdf,
   erreurEspace,
   ouvrirEspace,
@@ -222,6 +226,14 @@ builder.mutationFields(t => ({
         const { espace } = await ouvrirEspace(fiche.organisationId)
         if (espace.fournisseur !== dossier.fournisseur) {
           throw erreurEspace(new Error('Fournisseur différent.'))
+        }
+        if (
+          dansLExport(
+            chemin,
+            await cheminDeLExportSous(espace, fiche.organisationId, dossier)
+          )
+        ) {
+          throw accesRefuse()
         }
         element = await espace.element({
           emplacement: dossier.emplacement,

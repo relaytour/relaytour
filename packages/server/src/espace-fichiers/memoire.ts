@@ -32,6 +32,16 @@ function chercher(noeud: NoeudMemoire, id: string): NoeudMemoire | null {
   return null
 }
 
+/** Le chemin de nœuds de la racine jusqu'au nœud cherché, ou null. */
+function parcours(noeud: NoeudMemoire, id: string): NoeudMemoire[] | null {
+  if (noeud.id === id) return [noeud]
+  for (const enfant of noeud.enfants ?? []) {
+    const suite = parcours(enfant, id)
+    if (suite !== null) return [noeud, ...suite]
+  }
+  return null
+}
+
 function versElement(n: NoeudMemoire): ElementEspace {
   return {
     id: n.id,
@@ -70,6 +80,15 @@ export function espaceEnMemoire(
     element: p => {
       const noeud = trouver(p)
       return Promise.resolve(noeud === null ? null : versElement(noeud))
+    },
+    ancetres: (emplacement, element) => {
+      const racine = emplacements.find(e => e.id === emplacement)?.racine
+      const chemin = racine === undefined ? null : parcours(racine, element)
+      return Promise.resolve(
+        chemin === null
+          ? null
+          : chemin.reverse().map(n => ({ id: n.id, nom: n.nom }))
+      )
     },
     lister: p => {
       const noeud = trouver(p)

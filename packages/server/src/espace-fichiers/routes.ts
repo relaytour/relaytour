@@ -11,6 +11,7 @@ import { journal } from '../lib/journal.ts'
 
 import { cheminValide, disposition, formatApercu, typeServi } from './chemin.ts'
 import { dossierLisible } from './droits.ts'
+import { cheminDeLExportSous, dansLExport } from './isolement.ts'
 import {
   cleDeChiffrement,
   configurationMicrosoft,
@@ -185,6 +186,16 @@ async function apercu(
     emplacement: dossier.emplacement,
     base: dossier.element,
     chemin,
+  }
+  // Le dossier d'export, s'il se trouve sous ce dossier lié, ne se lit pas.
+  if (
+    dansLExport(
+      chemin,
+      await cheminDeLExportSous(espace, dossier.organisationId, dossier)
+    )
+  ) {
+    res.status(404).json({ code: 'NOT_FOUND' })
+    return
   }
   const element = await espace.element(position)
   if (element === null || element.dossier) {

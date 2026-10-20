@@ -8,6 +8,11 @@ import {
 import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
 import { dossierLisible } from '../espace-fichiers/droits.ts'
 import {
+  ancetresDeLExport,
+  cheminDeLExportSous,
+  dansLExport,
+} from '../espace-fichiers/isolement.ts'
+import {
   lancerExportFiches,
   NOM_DOSSIER_EXPORT,
   type RapportExport,
@@ -388,6 +393,13 @@ builder.queryFields(t => ({
         if (espace.fournisseur !== dossier.fournisseur) {
           throw erreurEspace(new Error('Fournisseur différent.'))
         }
+        // Le dossier d'export, s'il se trouve sous ce dossier lié, ne s'y lit pas.
+        const exportation = await cheminDeLExportSous(
+          espace,
+          dossier.organisationId,
+          dossier
+        )
+        if (dansLExport(chemin, exportation)) throw accesRefuse()
         const liste = await espace.lister({
           emplacement: dossier.emplacement,
           base: dossier.element,
@@ -395,7 +407,11 @@ builder.queryFields(t => ({
         })
         if (liste === null) throw erreurSaisie('Dossier introuvable.')
         return {
-          elements: trier(liste.elements.map(e => vue(espace, e))),
+          elements: trier(
+            liste.elements
+              .filter(e => e.id !== exportation?.id)
+              .map(e => vue(espace, e))
+          ),
           complet: liste.complet,
         }
       })
@@ -440,8 +456,10 @@ builder.mutationFields(t => ({
         select: { id: true, jeton: true },
       })
       if (connexion === null) return false
-      await prisma.ficheExportee.deleteMany({ where: { organisationId } })
-      await prisma.connexionFichiers.delete({ where: { id: connexion.id } })
+      await sousVerrouOrganisation(organisationId, async tx => {
+        await tx.ficheExportee.deleteMany({ where: { organisationId } })
+        await tx.connexionFichiers.delete({ where: { id: connexion.id } })
+      })
       oublierJetonAcces(connexion.jeton)
       journal.info(
         {
@@ -511,17 +529,19 @@ builder.mutationFields(t => ({
           exportAncetres: true,
         },
       })
+      // Sa place se relit chez le fournisseur : un admin a pu le déplacer.
       if (
         exportation?.exportElement != null &&
         exportation.exportEmplacement === emplacement
       ) {
-        const ancetres = (exportation.exportAncetres as string[] | null) ?? []
-        const parcours = await avecEspace(ctx, e =>
-          idsDuChemin(e, emplacement, chemin)
-        )
+        const exportElement = exportation.exportElement
+        const { ancetres, parcours } = await avecEspace(ctx, async e => ({
+          ancetres: await ancetresDeLExport(e, exportation),
+          parcours: await idsDuChemin(e, emplacement, chemin),
+        }))
         if (
-          ancetres.includes(element.id) ||
-          parcours.includes(exportation.exportElement)
+          ancetres.some(a => a.id === element.id) ||
+          parcours.includes(exportElement)
         ) {
           throw erreurSaisie(
             'Ce dossier contient le dossier d’export des fiches, ou s’y trouve. Choisissez un autre dossier.'
@@ -538,9 +558,22 @@ builder.mutationFields(t => ({
       // Sous le verrou de l'organisation : deux liens simultanés du même dossier
       // n'en créent qu'un. Sans périmètre, la contrainte d'unicité ne l'empêche
       // pas, car MariaDB admet plusieurs valeurs nulles.
-      const dossier = await sousVerrouOrganisation(
-        organisationId,
-        async tx =>
+      // Le choix du dossier d'export prend le même verrou : un dossier d'export
+      // choisi entre le contrôle et le lien fait recommencer.
+      const dossier = await sousVerrouOrganisation(organisationId, async tx => {
+        const export_ = await tx.connexionFichiers.findUnique({
+          where: { organisationId },
+          select: { exportElement: true },
+        })
+        if (
+          (export_?.exportElement ?? null) !==
+          (exportation?.exportElement ?? null)
+        ) {
+          throw erreurSaisie(
+            'Le dossier d’export vient de changer. Recommencez le lien.'
+          )
+        }
+        return (
           (await tx.dossierLie.findFirst({ where: cle })) ??
           tx.dossierLie.create({
             data: {
@@ -550,7 +583,8 @@ builder.mutationFields(t => ({
               creeParId: ctx.personne!.id,
             },
           })
-      )
+        )
+      })
       publierPourActivite('FICHIERS', organisationId, activite.id, {
         id: dossier.id,
         perimetreId: dossier.perimetreId,
@@ -582,14 +616,15 @@ builder.mutationFields(t => ({
       if (parent === null || !parent.dossier) {
         throw erreurSaisie('Ce dossier n’existe pas dans l’espace de fichiers.')
       }
-      const lies = await prisma.dossierLie.count({
-        where: { organisationId, emplacement, element: { in: ids } },
-      })
-      if (lies > 0) {
-        throw erreurSaisie(
+      const refus = () =>
+        erreurSaisie(
           'Ce dossier est lié à une activité, ou se trouve dans un dossier lié. Les membres y liraient les fiches de tous les périmètres : choisissez un autre dossier.'
         )
-      }
+      const lies = (tx: Prisma.TransactionClient | typeof prisma) =>
+        tx.dossierLie.count({
+          where: { organisationId, emplacement, element: { in: ids } },
+        })
+      if ((await lies(prisma)) > 0) throw refus()
       const cree = await avecEspace(ctx, () =>
         espace.creerDossier(
           { emplacement, base: null, chemin },
@@ -597,22 +632,40 @@ builder.mutationFields(t => ({
           { renommer: true }
         )
       )
-      await prisma.ficheExportee.deleteMany({ where: { organisationId } })
-      const connexion = await prisma.connexionFichiers.update({
-        ...query,
-        where: { organisationId },
-        data: {
-          exportEmplacement: emplacement,
-          exportElement: cree.id,
-          exportNom: [...chemin, cree.nom].join(' / '),
-          exportAncetres: [...ids, cree.id],
-          exportRapport: Prisma.DbNull,
-          exportLe: null,
-        },
+      // Le lien d'un dossier prend le même verrou : un dossier lié entre le
+      // premier contrôle et l'écriture fait échouer le choix.
+      const accepte = await sousVerrouOrganisation(organisationId, async tx => {
+        if ((await lies(tx)) > 0) return false
+        await tx.ficheExportee.deleteMany({ where: { organisationId } })
+        await tx.connexionFichiers.update({
+          where: { organisationId },
+          data: {
+            exportEmplacement: emplacement,
+            exportElement: cree.id,
+            exportNom: [...chemin, cree.nom].join(' / '),
+            exportAncetres: [...ids, cree.id],
+            exportRapport: Prisma.DbNull,
+            exportLe: null,
+          },
+        })
+        return true
       })
+      if (!accepte) {
+        await espace
+          .supprimer({
+            emplacement,
+            base: null,
+            chemin: [...chemin, cree.nom],
+          })
+          .catch(() => undefined)
+        throw refus()
+      }
       await lancerExportFiches(organisationId).catch(() => undefined)
       void publierChangement({ entite: 'FICHIERS', organisationId })
-      return connexion
+      return prisma.connexionFichiers.findUniqueOrThrow({
+        ...query,
+        where: { organisationId },
+      })
     },
   }),
 
@@ -622,18 +675,23 @@ builder.mutationFields(t => ({
       'Arrête l’export des fiches. Les fichiers déjà écrits restent dans l’espace de fichiers.',
     resolve: async (_root, _args, ctx) => {
       const organisationId = ctx.organisation!.id
-      const { count } = await prisma.connexionFichiers.updateMany({
-        where: { organisationId },
-        data: {
-          exportEmplacement: null,
-          exportElement: null,
-          exportNom: null,
-          exportAncetres: Prisma.DbNull,
-          exportRapport: Prisma.DbNull,
-          exportLe: null,
-        },
+      // Sous le verrou de l'organisation : un export en cours ne réécrit plus
+      // son suivi une fois l'export arrêté.
+      const count = await sousVerrouOrganisation(organisationId, async tx => {
+        const { count } = await tx.connexionFichiers.updateMany({
+          where: { organisationId },
+          data: {
+            exportEmplacement: null,
+            exportElement: null,
+            exportNom: null,
+            exportAncetres: Prisma.DbNull,
+            exportRapport: Prisma.DbNull,
+            exportLe: null,
+          },
+        })
+        await tx.ficheExportee.deleteMany({ where: { organisationId } })
+        return count
       })
-      await prisma.ficheExportee.deleteMany({ where: { organisationId } })
       void publierChangement({ entite: 'FICHIERS', organisationId })
       return count > 0
     },

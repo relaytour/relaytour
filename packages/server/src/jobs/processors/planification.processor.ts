@@ -42,9 +42,10 @@ export async function planificationProcessor(
     return
   }
   // L'export des fiches d'une organisation, après une modification (ADR 0038).
+  // Sans organisation (lancement manuel), toutes les organisations actives.
   if (job.name === 'export-fiches') {
-    if (job.data.organisationId !== undefined) {
-      await exporterFiches(job.data.organisationId, { verifier: false })
+    for (const organisation of await organisationsVisees(job.data)) {
+      await exporterFiches(organisation.id, { verifier: false })
     }
     return
   }

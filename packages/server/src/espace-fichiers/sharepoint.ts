@@ -329,6 +329,25 @@ export function espaceSharePoint(jeton: Jeton): EspaceFichiers {
       return e === null ? null : versElement(e)
     },
 
+    async ancetres(emplacement, element) {
+      const chaine: { id: string; nom: string }[] = []
+      let courant: string | undefined = element
+      for (let i = 0; courant !== undefined && i < 40; i++) {
+        const e: {
+          id: string
+          name: string
+          parentReference?: { id?: string }
+        } | null = await lireJson(
+          `${GRAPH}/drives/${segment(emplacement)}/items/${segment(courant)}?$select=id,name,parentReference`,
+          jeton
+        )
+        if (e === null) return i === 0 ? null : chaine
+        chaine.push({ id: e.id, nom: e.name })
+        courant = e.parentReference?.id
+      }
+      return chaine
+    },
+
     async lister(position): Promise<ListeElements | null> {
       const pages = await toutesLesPages<ElementGraph>(
         `${adresseGraph(position)}/children?$select=${CHAMPS}&$top=200`,
