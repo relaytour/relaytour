@@ -137,8 +137,14 @@ export const ReunionRef = builder.objectRef<ReunionLue>('Reunion').implement({
     debut: t.field({ type: 'DateTime', resolve: l => l.reunion.debut }),
     fin: t.field({ type: 'DateTime', resolve: l => l.reunion.fin }),
     jour: t.string({
-      description: 'Le jour de la réunion, dans le fuseau de l’organisation.',
+      description:
+        'Le premier jour de la réunion, dans le fuseau de l’organisation.',
       resolve: l => heureLocale(l.reunion.debut, l.fuseau).jour,
+    }),
+    jourFin: t.string({
+      description:
+        'Le dernier jour de la réunion, dans le fuseau de l’organisation. Égal au premier jour pour une réunion d’une journée.',
+      resolve: l => heureLocale(l.reunion.fin, l.fuseau).jour,
     }),
     heureDebut: t.string({
       description: 'HH:MM, dans le fuseau de l’organisation.',
@@ -327,6 +333,7 @@ builder.queryFields(t => ({
 interface Saisie {
   titre: string
   jour: Date
+  jourFin?: Date | null
   heureDebut: string
   heureFin: string
   lieu?: string | null
@@ -350,6 +357,7 @@ async function champsValides(
   const horaire = horaireValide(
     {
       jour: jourISO(saisie.jour),
+      jourFin: saisie.jourFin ? jourISO(saisie.jourFin) : null,
       heureDebut: saisie.heureDebut,
       heureFin: saisie.heureFin,
     },
@@ -387,6 +395,11 @@ builder.mutationFields(t => {
   const champsSaisis = {
     titre: t.arg.string({ required: true }),
     jour: t.arg({ type: 'Date', required: true }),
+    jourFin: t.arg({
+      type: 'Date',
+      description:
+        'Le dernier jour, pour une réunion de plusieurs jours. Sans valeur : le premier jour.',
+    }),
     heureDebut: t.arg.string({
       required: true,
       description: 'HH:MM, dans le fuseau de l’organisation.',

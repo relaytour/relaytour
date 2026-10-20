@@ -384,6 +384,29 @@ describe('réunion d’un périmètre', () => {
     ).toBe('SAISIE_INVALIDE')
   })
 
+  it('accepte une réunion de plusieurs jours', async () => {
+    const reunion = donnees<Reunion & { jourFin: string }>(
+      await executer(
+        ids.referent,
+        `mutation ($e: ID!, $p: ID) { creerReunion(editionId: $e, perimetreId: $p, titre: "Stage", jour: "2027-03-06", jourFin: "2027-03-07", heureDebut: "09:00", heureFin: "17:00") { jour jourFin heureDebut heureFin debut fin } }`,
+        { e: ids.edition, p: ids.natation }
+      ),
+      'creerReunion'
+    )
+    expect(reunion).toMatchObject({
+      jour: '2027-03-06',
+      jourFin: '2027-03-07',
+      heureDebut: '09:00',
+      heureFin: '17:00',
+    })
+    const tropLongue = await executer(
+      ids.referent,
+      `mutation ($e: ID!, $p: ID) { creerReunion(editionId: $e, perimetreId: $p, titre: "Saison", jour: "2027-03-01", jourFin: "2027-04-15", heureDebut: "09:00", heureFin: "17:00") { id } }`,
+      { e: ids.edition, p: ids.natation }
+    )
+    expect(code(tropLongue)).toBe('SAISIE_INVALIDE')
+  })
+
   it('refuse une tâche d’un autre périmètre, un lien qui n’est pas web, une fin avant le début', async () => {
     for (const variables of [
       { taches: [ids.tacheBasket] },

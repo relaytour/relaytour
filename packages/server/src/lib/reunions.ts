@@ -2,7 +2,7 @@ import { prisma, type CibleConvocation, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 
-import { decalerJour, exigerEcritureGlobale } from './agenda.ts'
+import { decalerJour, ecartEnJours, exigerEcritureGlobale } from './agenda.ts'
 import { membreActif, dansLEquipe } from './appartenances.ts'
 import { accesAuPerimetre, exigerEcriture } from './droits.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
@@ -279,13 +279,21 @@ export async function detailOuvert(
   )
 }
 
+/** Une réunion dure 31 jours au plus, du premier au dernier jour. */
+export const REUNION_JOURS_MAX = 31
+
 /**
- * L'horaire d'une réunion : un jour, une heure de début et une heure de fin dans
- * le fuseau de l'organisation. La fin suit le début, et le jour reste dans les
- * deux ans qui entourent la période.
+ * L'horaire d'une réunion : un premier jour et une heure de début, un dernier jour
+ * facultatif et une heure de fin, dans le fuseau de l'organisation. La fin suit le
+ * début, et le premier jour reste dans les deux ans qui entourent la période.
  */
 export function horaireValide(
-  saisie: { jour: string; heureDebut: string; heureFin: string },
+  saisie: {
+    jour: string
+    jourFin?: string | null
+    heureDebut: string
+    heureFin: string
+  },
   periode: { debut: string; fin: string },
   fuseau: string
 ): { debut: Date; fin: Date } {
@@ -298,9 +306,13 @@ export function horaireValide(
     )
   }
   const debut = instantDepuisHeureLocale(saisie.jour, saisie.heureDebut, fuseau)
-  const fin = instantDepuisHeureLocale(saisie.jour, saisie.heureFin, fuseau)
+  const dernierJour = saisie.jourFin || saisie.jour
+  if (ecartEnJours(saisie.jour, dernierJour) > REUNION_JOURS_MAX - 1) {
+    throw erreurSaisie(`Une réunion dure ${REUNION_JOURS_MAX} jours au plus.`)
+  }
+  const fin = instantDepuisHeureLocale(dernierJour, saisie.heureFin, fuseau)
   if (fin.getTime() <= debut.getTime()) {
-    throw erreurSaisie('L’heure de fin suit l’heure de début.')
+    throw erreurSaisie('La fin de la réunion suit son début.')
   }
   return { debut, fin }
 }
