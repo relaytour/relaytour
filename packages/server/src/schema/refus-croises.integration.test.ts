@@ -41,7 +41,7 @@ const a = {
   // Un sondage de dates du périmètre, qui vise la référente (ADR 0037).
   sondage: '',
   creneau: '',
-  // Un lieu, une séquence et une fiche bénévole du programme (ADR 0038).
+  // Un lieu, une séquence et une fiche bénévole du programme (ADR 0040).
   lieu: '',
   sequence: '',
   benevole: '',
@@ -656,7 +656,7 @@ const MELES: Cas[] = [
     variables: () => ({ e: b.edition, p: [a.perimetre] }),
     attente: INTERDIT,
   },
-  // Une séquence de B ne place aucune fiche et n'utilise aucun lieu de A (ADR 0038).
+  // Une séquence de B ne place aucune fiche et n'utilise aucun lieu de A (ADR 0040).
   {
     operation: 'creerSequence',
     query:
@@ -1202,7 +1202,7 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.sondage }),
     attente: INTERDIT,
   },
-  // Programme du jour J (ADR 0038).
+  // Programme du jour J (ADR 0040).
   {
     operation: 'creerLieu',
     query:

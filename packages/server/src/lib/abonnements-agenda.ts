@@ -245,7 +245,7 @@ export async function evenementsPersonnels(
           take: EVENEMENTS_MAX,
         })
       : [],
-    // Les séquences du programme où la personne est placée (ADR 0038).
+    // Les séquences du programme où la personne est placée (ADR 0040).
     prisma.sequence.findMany({
       where: {
         organisationId: organisation.id,

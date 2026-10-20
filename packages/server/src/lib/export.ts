@@ -169,7 +169,7 @@ export async function construireExport(organisationId: string) {
     },
   })
 
-  // Le programme du jour J (ADR 0038) : lieux et séquences, avec leurs places.
+  // Le programme du jour J (ADR 0040) : lieux et séquences, avec leurs places.
   const [lieux, sequences] = await Promise.all([
     prisma.lieu.findMany({
       where: { organisationId },
