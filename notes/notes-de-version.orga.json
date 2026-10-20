@@ -5,6 +5,24 @@
   "version": "0.17.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-20-orga-un-agenda-reunit-les-phases-les-dates-cles-et-les-echeances",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un agenda réunit les phases, les dates clés et les échéances",
+            "texte": "L'écran « Agenda » présente les phases de la période, son premier et son dernier jour, les dates clés et les échéances de vos périmètres. Il s'affiche en liste, ou en mois sur un écran large. Les admins de l'activité y ajoutent les dates clés.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.17.0",
       "notes": [
         {

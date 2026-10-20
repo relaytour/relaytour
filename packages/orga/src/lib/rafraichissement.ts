@@ -45,6 +45,8 @@ export const VUES_TACHES = [
   // Commentaires (ADR 0029) : le nombre par tâche, et le fil quand il est ouvert.
   'CommentairesDeLaPeriode',
   'FilTache',
+  // L'agenda montre les échéances des tâches (ADR 0037).
+  'Agenda',
 ]
 
 /** Les requêtes relues, désignées par le nom de leur opération GraphQL. */

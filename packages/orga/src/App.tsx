@@ -15,6 +15,7 @@ import MessagesActivite from './pages/admin/MessagesActivite'
 import NotificationsAdmin from './pages/admin/NotificationsAdmin'
 import Personnes from './pages/admin/Personnes'
 import Redaction from './pages/admin/Redaction'
+import Agenda from './pages/Agenda'
 import Connexion from './pages/Connexion'
 import Fiche from './pages/Fiche'
 import FicheEditeur from './pages/FicheEditeur'
@@ -52,6 +53,7 @@ const routeur = createBrowserRouter([
         children: [
           { index: true, element: <MonEspace /> },
           { path: 'retroplanning', element: <Retroplanning /> },
+          { path: 'agenda', element: <Agenda /> },
           { path: 'perimetres/:slug', element: <Perimetre /> },
           { path: 'fiches', element: <Fiches /> },
           { path: 'fiches/nouvelle', element: <FicheEditeur /> },
