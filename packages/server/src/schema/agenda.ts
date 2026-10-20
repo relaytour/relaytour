@@ -11,6 +11,7 @@ import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { accesAuPerimetre, aujourdhui } from '../lib/droits.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { lirePhases } from '../lib/phases.ts'
 import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
@@ -361,31 +362,38 @@ builder.mutationFields(t => ({
         saisis.jourFin,
         await periodeDe(edition.id)
       )
-      const nombre = await prisma.dateCle.count({
-        where: { editionId: edition.id },
-      })
-      if (nombre >= DATES_CLES_MAX) {
-        throw erreurSaisie(
-          `Une période compte ${DATES_CLES_MAX} dates clés au plus.`
-        )
-      }
-      const creee = await prisma.dateCle.create({
-        ...query,
-        data: {
-          organisationId: ctx.organisation!.id,
-          activiteId: edition.activiteId,
-          editionId: edition.id,
-          titre: texteRequis(args.titre, 'Le titre', TITRE_DATE_CLE_MAX),
-          jour: enDate(jours.jour)!,
-          jourFin: enDate(jours.jourFin),
-          description: texteFacultatif(
-            args.description,
-            'La description',
-            DESCRIPTION_DATE_CLE_MAX
-          ),
-          creeParId: ctx.personne!.id,
-        },
-      })
+      // Le comptage et la création se font sous le verrou de l'organisation :
+      // deux créations simultanées ne dépassent pas le plafond.
+      const creee = await sousVerrouOrganisation(
+        ctx.organisation!.id,
+        async tx => {
+          const nombre = await tx.dateCle.count({
+            where: { editionId: edition.id },
+          })
+          if (nombre >= DATES_CLES_MAX) {
+            throw erreurSaisie(
+              `Une période compte ${DATES_CLES_MAX} dates clés au plus.`
+            )
+          }
+          return tx.dateCle.create({
+            ...query,
+            data: {
+              organisationId: ctx.organisation!.id,
+              activiteId: edition.activiteId,
+              editionId: edition.id,
+              titre: texteRequis(args.titre, 'Le titre', TITRE_DATE_CLE_MAX),
+              jour: enDate(jours.jour)!,
+              jourFin: enDate(jours.jourFin),
+              description: texteFacultatif(
+                args.description,
+                'La description',
+                DESCRIPTION_DATE_CLE_MAX
+              ),
+              creeParId: ctx.personne!.id,
+            },
+          })
+        }
+      )
       publierPourActivite('AGENDA', ctx.organisation!.id, edition.activiteId, {
         id: creee.id,
         editionId: edition.id,
@@ -403,7 +411,11 @@ builder.mutationFields(t => ({
       jour: t.arg({ type: 'Date', required: true }),
       jourFin: t.arg({ type: 'Date' }),
       description: t.arg.string(),
-      versionAttendue: t.arg.int(),
+      versionAttendue: t.arg.int({
+        required: true,
+        description:
+          'La version lue : le serveur refuse d’écraser une modification faite depuis.',
+      }),
     },
     resolve: async (query, _root, args, ctx) => {
       const actuelle = await dateCleModifiable(ctx, String(args.id))
@@ -413,12 +425,8 @@ builder.mutationFields(t => ({
         saisis.jourFin,
         await periodeDe(actuelle.editionId)
       )
-      const versionAttendue = args.versionAttendue ?? null
       const { count } = await prisma.dateCle.updateMany({
-        where: {
-          id: actuelle.id,
-          ...(versionAttendue === null ? {} : { version: versionAttendue }),
-        },
+        where: { id: actuelle.id, version: args.versionAttendue },
         data: {
           version: { increment: 1 },
           titre: texteRequis(args.titre, 'Le titre', TITRE_DATE_CLE_MAX),

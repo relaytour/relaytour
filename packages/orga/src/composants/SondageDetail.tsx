@@ -125,7 +125,11 @@ export default function SondageDetail({
 
   // La réponse affichée : celle en cours de saisie, sinon celle enregistrée.
   const choixDe = (c: Creneau) => choix[c.id] ?? c.monChoix ?? undefined
-  const modifies = Object.keys(choix).length > 0
+  // Une relecture peut retirer un créneau déjà répondu : seules comptent les
+  // réponses des créneaux encore proposés.
+  const presents = new Set(sondage?.creneaux.map(c => c.id) ?? [])
+  const enCours = Object.entries(choix).filter(([id]) => presents.has(id))
+  const modifies = enCours.length > 0
 
   const enregistrerReponses = async () => {
     if (!sondage) return
@@ -133,7 +137,7 @@ export default function SondageDetail({
       await repondre({
         variables: {
           id: sondage.id,
-          reponses: Object.entries(choix).map(([creneauId, valeur]) => ({
+          reponses: enCours.map(([creneauId, valeur]) => ({
             creneauId,
             choix: valeur,
           })),
@@ -195,7 +199,9 @@ export default function SondageDetail({
       heureDebut: retenu.heureDebut,
       heureFin: retenu.heureFin,
       sondageId: sondage.id,
-      cible: sondage.cible,
+      // La réunion convoque les personnes du sondage, nommément : une
+      // affectation changée pendant le sondage n'ajoute ni ne retire personne.
+      cible: 'CHOIX',
       personneIds: sondage.participantIds ?? [],
     })
   }
@@ -293,6 +299,10 @@ export default function SondageDetail({
                       size="small"
                       optionType="button"
                       buttonStyle="solid"
+                      aria-label={`Votre réponse pour le créneau ${libelleCreneau(c)}`}
+                      // Une réponse changée pendant l'enregistrement serait
+                      // effacée avec le brouillon : les boutons attendent.
+                      disabled={reponse.loading}
                       value={choixDe(c)}
                       onChange={e =>
                         setChoix(actuels => ({

@@ -61,4 +61,26 @@ describe('creneauxValides', () => {
       /deux ans/
     )
   })
+
+  it('refuse un créneau existant présent deux fois', () => {
+    expect(() =>
+      creneauxValides(
+        [
+          {
+            id: 'c1',
+            jour: '2027-03-02',
+            heureDebut: '18:00',
+            heureFin: '19:00',
+          },
+          {
+            id: 'c1',
+            jour: '2027-03-03',
+            heureDebut: '18:00',
+            heureFin: '19:00',
+          },
+        ],
+        PERIODE
+      )
+    ).toThrow(/figure deux fois/)
+  })
 })

@@ -169,6 +169,41 @@ export async function construireExport(organisationId: string) {
     },
   })
 
+  // Le programme du jour J (ADR 0040) : lieux, séquences avec leurs places, et
+  // fiches bénévoles.
+  const [lieux, sequences, benevoles] = await Promise.all([
+    prisma.lieu.findMany({
+      where: { organisationId },
+      orderBy: [{ activiteId: 'asc' }, { ordre: 'asc' }, { id: 'asc' }],
+      include: { activite: { select: { slug: true } } },
+    }),
+    prisma.sequence.findMany({
+      where: { organisationId },
+      orderBy: [{ editionId: 'asc' }, { debut: 'asc' }, { id: 'asc' }],
+      include: {
+        activite: { select: { slug: true } },
+        edition: { select: { annee: true } },
+        perimetre: { select: { slug: true } },
+        lieu: { select: { id: true, nom: true } },
+        places: {
+          orderBy: { id: 'asc' },
+          include: {
+            user: { select: { email: true } },
+            benevole: { select: { id: true, nom: true } },
+          },
+        },
+      },
+    }),
+    prisma.benevole.findMany({
+      where: { organisationId },
+      orderBy: [{ activiteId: 'asc' }, { nom: 'asc' }, { id: 'asc' }],
+      include: {
+        activite: { select: { slug: true } },
+        creePar: { select: { email: true } },
+      },
+    }),
+  ])
+
   // Les sondages de dates (ADR 0037), avec leurs créneaux et leurs réponses.
   const sondages = await prisma.sondage.findMany({
     where: { organisationId },
@@ -378,6 +413,43 @@ export async function construireExport(organisationId: string) {
       description: d.description,
       creePar: d.creePar?.email ?? null,
       creeLe: d.createdAt.toISOString(),
+    })),
+    // Deux lieux, ou deux fiches, peuvent porter le même nom : l'identifiant
+    // garde le lien exact avec les séquences, le nom reste pour la lecture.
+    lieux: lieux.map(l => ({
+      id: l.id,
+      activite: l.activite.slug,
+      nom: l.nom,
+      description: l.description,
+      ordre: l.ordre,
+      archive: l.archivedAt !== null,
+    })),
+    sequences: sequences.map(s => ({
+      activite: s.activite.slug,
+      periode: s.edition.annee,
+      perimetre: s.perimetre?.slug ?? null,
+      lieuId: s.lieu?.id ?? null,
+      lieu: s.lieu?.nom ?? null,
+      titre: s.titre,
+      description: s.description,
+      debut: s.debut.toISOString(),
+      fin: s.fin.toISOString(),
+      places: s.places.map(p => ({
+        role: p.role,
+        email: p.user?.email ?? null,
+        benevoleId: p.benevole?.id ?? null,
+        benevole: p.benevole?.nom ?? null,
+      })),
+    })),
+    benevoles: benevoles.map(b => ({
+      id: b.id,
+      activite: b.activite.slug,
+      nom: b.nom,
+      courriel: b.courriel,
+      telephone: b.telephone,
+      note: b.note,
+      accordLe: b.accordLe.toISOString(),
+      creePar: b.creePar?.email ?? null,
     })),
     sondages: sondages.map(s => ({
       activite: s.activite.slug,
