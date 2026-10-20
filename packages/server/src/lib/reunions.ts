@@ -2,13 +2,18 @@ import { prisma, type CibleConvocation, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 
-import { envoyerAnnulations, envoyerConvocations } from './convocations.ts'
+import {
+  envoyerAnnulations,
+  envoyerConvocations,
+  verrouillerReunions,
+} from './convocations.ts'
 
 import { decalerJour, ecartEnJours, exigerEcritureGlobale } from './agenda.ts'
-import { membreActif, dansLEquipe } from './appartenances.ts'
+import { dansLEquipeQuiVoit, membreActif } from './appartenances.ts'
 import { accesAuPerimetre, exigerEcriture } from './droits.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
 import { instantDepuisHeureLocale } from './heures.ts'
+import { journal } from './journal.ts'
 
 // Réunions de l'agenda (ADR 0037).
 //
@@ -133,7 +138,7 @@ export async function personnesConvoquees(
   } else if (demande.cible === 'EQUIPE') {
     ids = (
       await prisma.user.findMany({
-        where: { AND: [dansLEquipe([demande.activiteId]), actif] },
+        where: { AND: [dansLEquipeQuiVoit([demande.activiteId]), actif] },
         select: { id: true },
       })
     ).map(u => u.id)
@@ -151,7 +156,7 @@ export async function personnesConvoquees(
       await prisma.user.findMany({
         where: {
           id: { in: voulus },
-          AND: [dansLEquipe([demande.activiteId]), actif],
+          AND: [dansLEquipeQuiVoit([demande.activiteId]), actif],
         },
         select: { id: true },
       })
@@ -174,7 +179,10 @@ const aVenir = (maintenant: Date): Prisma.ReunionWhereInput => ({
 
 /**
  * Convoque une personne nouvellement affectée aux réunions à venir qui
- * convoquent tout le périmètre (ADR 0037). Renvoie les réunions concernées.
+ * convoquent tout le périmètre (ADR 0037). Le comptage et l'ajout se font sous
+ * le verrou de chaque réunion, dans la transaction de l'affectation : une
+ * réunion pleine (CONVOCATIONS_MAX) ne reçoit personne de plus, et l'affectation
+ * reste enregistrée. Renvoie les réunions où la personne est convoquée.
  */
 export async function convoquerApresAffectation(
   db: Prisma.TransactionClient,
@@ -186,36 +194,70 @@ export async function convoquerApresAffectation(
   }
 ): Promise<string[]> {
   if (demande.perimetreIds.length === 0) return []
+  const visees: Prisma.ReunionWhereInput = {
+    ...aVenir(demande.maintenant),
+    editionId: demande.editionId,
+    perimetreId: { in: demande.perimetreIds },
+    cible: 'PERIMETRE',
+    convocations: { none: { userId: demande.userId } },
+  }
+  const candidates = await db.reunion.findMany({
+    where: visees,
+    select: { id: true },
+  })
+  if (candidates.length === 0) return []
+  await verrouillerReunions(
+    db,
+    candidates.map(r => r.id)
+  )
   const reunions = await db.reunion.findMany({
-    where: {
-      ...aVenir(demande.maintenant),
-      editionId: demande.editionId,
-      perimetreId: { in: demande.perimetreIds },
-      cible: 'PERIMETRE',
-      convocations: { none: { userId: demande.userId } },
-    },
+    where: { ...visees, id: { in: candidates.map(r => r.id) } },
     select: {
       id: true,
       organisationId: true,
       activiteId: true,
       sequence: true,
+      _count: { select: { convocations: true } },
     },
   })
-  if (reunions.length === 0) return []
+  const ouvertes = reunions.filter(r => {
+    if (r._count.convocations < CONVOCATIONS_MAX) return true
+    journal.warn(
+      { evenement: 'reunion-pleine', reunionId: r.id, userId: demande.userId },
+      'Une réunion pleine ne convoque pas une personne nouvellement affectée.'
+    )
+    return false
+  })
+  if (ouvertes.length === 0) return []
   await db.convocationReunion.createMany({
-    data: reunions.map(r => ({ reunionId: r.id, userId: demande.userId })),
+    data: ouvertes.map(r => ({ reunionId: r.id, userId: demande.userId })),
     skipDuplicates: true,
   })
-  // Le processeur relit la convocation à l'envoi : une transaction annulée
-  // n'envoie rien.
-  for (const reunion of reunions) envoyerConvocations(reunion, [demande.userId])
-  return reunions.map(r => r.id)
+  const convocations = await db.convocationReunion.findMany({
+    where: {
+      userId: demande.userId,
+      reunionId: { in: ouvertes.map(r => r.id) },
+    },
+    select: { id: true, userId: true, reunionId: true },
+  })
+  // Le processeur relit la convocation après le délai d'envoi : une transaction
+  // annulée n'envoie rien.
+  for (const reunion of ouvertes) {
+    envoyerConvocations(
+      reunion,
+      convocations.filter(c => c.reunionId === reunion.id)
+    )
+  }
+  return ouvertes.map(r => r.id)
 }
 
 /**
  * Retire une personne des réunions à venir d'un périmètre, quand elle quitte ce
- * périmètre (ADR 0037). Les réunions passées gardent sa convocation. Renvoie les
- * réunions dont la convocation a été retirée.
+ * périmètre (ADR 0037). Les réunions passées gardent sa convocation. Le retrait
+ * se fait sous le verrou de chaque réunion. L'annulation part après le délai
+ * d'envoi : le processeur la lit après la fin de la transaction, et n'envoie
+ * rien si celle-ci a été annulée. Renvoie les réunions dont la convocation a été
+ * retirée.
  */
 export async function retirerDesReunionsDuPerimetre(
   db: Prisma.TransactionClient,
@@ -226,17 +268,28 @@ export async function retirerDesReunionsDuPerimetre(
     maintenant: Date
   }
 ): Promise<string[]> {
-  const convocations = await db.convocationReunion.findMany({
-    where: {
-      userId: demande.userId,
-      reunion: {
-        ...aVenir(demande.maintenant),
-        perimetreId: demande.perimetreId,
-        editionId: demande.editionId,
-      },
+  const visees: Prisma.ConvocationReunionWhereInput = {
+    userId: demande.userId,
+    reunion: {
+      ...aVenir(demande.maintenant),
+      perimetreId: demande.perimetreId,
+      editionId: demande.editionId,
     },
+  }
+  const candidates = await db.convocationReunion.findMany({
+    where: visees,
+    select: { reunionId: true },
+  })
+  if (candidates.length === 0) return []
+  await verrouillerReunions(
+    db,
+    candidates.map(c => c.reunionId)
+  )
+  const convocations = await db.convocationReunion.findMany({
+    where: visees,
     select: {
       id: true,
+      userId: true,
       reunionId: true,
       envoyeeLe: true,
       reunion: {
@@ -254,9 +307,10 @@ export async function retirerDesReunionsDuPerimetre(
     where: { id: { in: convocations.map(c => c.id) } },
   })
   // Un mail d'annulation retire l'événement de l'agenda de la personne, si elle
-  // avait reçu la convocation (ADR 0037).
+  // avait reçu la convocation (ADR 0037). Une convocation en cours d'envoi se
+  // rattrape à la fin de son envoi (`concilierApresEnvoi`).
   for (const c of convocations) {
-    if (c.envoyeeLe !== null) envoyerAnnulations(c.reunion, [demande.userId])
+    if (c.envoyeeLe !== null) envoyerAnnulations(c.reunion, [c])
   }
   return convocations.map(c => c.reunionId)
 }

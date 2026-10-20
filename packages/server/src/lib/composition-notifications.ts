@@ -49,6 +49,7 @@ export const SELECTION_NOTIFICATION = {
   },
   // Une réunion de l'agenda (ADR 0037).
   reunion: { select: { id: true, titre: true, editionId: true } },
+  sondage: { select: { id: true, titre: true, editionId: true } },
 } as const
 
 export interface NotificationLue {
@@ -82,6 +83,7 @@ export interface NotificationLue {
     versionCourante: { titre: string } | null
   } | null
   reunion?: { id: string; titre: string; editionId: string } | null
+  sondage?: { id: string; titre: string; editionId: string } | null
 }
 
 export interface ActiviteDeNotification {
@@ -302,6 +304,10 @@ function phrase(
         ? `${acteur} a modifié la réunion ${reunion}`
         : `${acteur} a annulé la réunion ${reunion}`
     }
+    case 'SONDAGE_OUVERT':
+      return n.sondage
+        ? `${acteur} vous demande vos disponibilités : « ${n.sondage.titre} »${lieu}`
+        : 'Ce sondage n’existe plus'
     case 'FICHE_CREEE':
     case 'FICHE_MODIFIEE': {
       if (n.fiche === null) return 'Cette fiche n’existe plus'
@@ -416,6 +422,10 @@ function lien(n: NotificationLue, c: Contexte): string {
       return n.reunion
         ? `/${slug}/agenda?edition=${n.reunion.editionId}&reunion=${n.reunion.id}`
         : `/${slug}/agenda`
+    case 'SONDAGE_OUVERT':
+      return n.sondage
+        ? `/${slug}/agenda?edition=${n.sondage.editionId}&sondage=${n.sondage.id}`
+        : `/${slug}/agenda`
     default:
       break
   }
@@ -463,7 +473,11 @@ export async function composerNotifications(
         ? nomPeriode
         : null
     const nomActivite = periode ?? activite?.nom ?? null
-    const objet = n.tache !== null || n.fiche !== null || Boolean(n.reunion)
+    const objet =
+      n.tache !== null ||
+      n.fiche !== null ||
+      Boolean(n.reunion) ||
+      Boolean(n.sondage)
     const lieu = !objet
       ? ''
       : [nomActivite, perimetre?.nom].filter(Boolean).length > 0
