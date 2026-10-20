@@ -3,7 +3,6 @@ import {
   Alert,
   App,
   Button,
-  Card,
   Col,
   Drawer,
   Form,
@@ -19,9 +18,10 @@ import {
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
-import EditeurMarkdown from '../composants/EditeurMarkdown'
+import EditeurMarkdown, {
+  type ModeEditeur,
+} from '../composants/EditeurMarkdown'
 import GuideMarkdown from '../composants/GuideMarkdown'
-import Markdown from '../composants/Markdown'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import {
@@ -58,6 +58,18 @@ const DROIT_COMMUNES = graphql(`
     peutRedigerFichesCommunes
   }
 `)
+
+// Le mode de l'éditeur est une commodité propre au navigateur. Le mode visuel
+// est le mode par défaut.
+const CLE_MODE = 'relaytour.fiches.editeur'
+
+function modeMemorise(): ModeEditeur {
+  try {
+    return localStorage.getItem(CLE_MODE) === 'markdown' ? 'markdown' : 'visuel'
+  } catch {
+    return 'visuel'
+  }
+}
 
 interface Valeurs {
   titre: string
@@ -178,14 +190,24 @@ function Formulaire({
     termine.current = true
     effacerBrouillon(cle)
   }
+  // Vrai dès que cet écran a écrit un brouillon.
+  const aEcrit = useRef(false)
   useEffect(() => {
     // Sans modification, rien ne s'écrit : un brouillon proposé à l'ouverture reste
     // intact. Dès que la personne modifie le texte, sa saisie se garde, même sans
     // réponse à la proposition : l'ancien brouillon reste offert par l'avis tant que
-    // l'écran est ouvert.
-    if (!modifie) return
+    // l'écran est ouvert. Une saisie annulée jusqu'au texte de départ efface le
+    // brouillon que cet écran a écrit.
+    if (!modifie) {
+      if (aEcrit.current) {
+        effacerBrouillon(cle)
+        aEcrit.current = false
+      }
+      return
+    }
     const minuteur = window.setTimeout(() => {
       if (termine.current) return
+      aEcrit.current = true
       ecrireBrouillon(cle, {
         titre,
         contenu,
@@ -195,7 +217,18 @@ function Formulaire({
     }, 400)
     return () => window.clearTimeout(minuteur)
   }, [cle, titre, contenu, versionDeDepart, modifie])
-  const [vue, setVue] = useState<'ecrire' | 'apercu'>('ecrire')
+  const [mode, setMode] = useState<ModeEditeur>(modeMemorise)
+  const changerMode = (valeur: ModeEditeur) => {
+    setMode(valeur)
+    try {
+      localStorage.setItem(CLE_MODE, valeur)
+    } catch {
+      // Le navigateur refuse le stockage : le choix vaut pour la visite.
+    }
+  }
+  // Un texte remplacé hors de l'éditeur (brouillon repris, sections du gabarit)
+  // remonte l'éditeur visuel, qui part du texte reçu.
+  const [cleVisuel, setCleVisuel] = useState(0)
   // Le guide s'ouvre dans un tiroir : la saisie reste à l'écran.
   const [aide, setAide] = useState(false)
   const [slugTouche, setSlugTouche] = useState(false)
@@ -248,6 +281,7 @@ function Formulaire({
     // fiche a changé depuis sa rédaction.
     setVersionDeDepart(brouillon.versionDeDepart)
     setBrouillon(null)
+    setCleVisuel(c => c + 1)
   }
 
   const ecraser = () => {
@@ -268,20 +302,6 @@ function Formulaire({
       )
     }
   }
-
-  const editeur = (
-    <EditeurMarkdown
-      valeur={contenu}
-      onChange={setContenu}
-      onAide={() => setAide(true)}
-      libelle="Contenu de la fiche en Markdown"
-    />
-  )
-  const apercu = (
-    <Card size="small" style={{ minHeight: 400 }}>
-      <Markdown contenu={contenu} />
-    </Card>
-  )
 
   return (
     <>
@@ -408,34 +428,28 @@ function Formulaire({
           title="Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels."
         />
 
-        {ecrans.lg ? (
-          <Row gutter={16}>
-            <Col span={12}>
-              <Typography.Text strong>Markdown</Typography.Text>
-              {editeur}
-            </Col>
-            <Col span={12}>
-              {/* L'aperçu suit la saisie et reste à l'écran pendant le défilement. */}
-              <div className="rt-apercu-markdown">
-                <Typography.Text strong>Aperçu</Typography.Text>
-                {apercu}
-              </div>
-            </Col>
-          </Row>
-        ) : (
-          <>
-            <Segmented
-              style={{ marginBottom: 12 }}
-              value={vue}
-              onChange={setVue}
-              options={[
-                { value: 'ecrire', label: 'Écrire' },
-                { value: 'apercu', label: 'Aperçu' },
-              ]}
-            />
-            {vue === 'ecrire' ? editeur : apercu}
-          </>
-        )}
+        <div className="rt-editeur-fiche-tete">
+          <Typography.Text strong id="contenu-fiche">
+            Contenu
+          </Typography.Text>
+          <Segmented
+            value={mode}
+            onChange={changerMode}
+            aria-labelledby="contenu-fiche"
+            options={[
+              { value: 'visuel', label: 'Visuel' },
+              { value: 'markdown', label: 'Markdown' },
+            ]}
+          />
+        </div>
+        <EditeurMarkdown
+          valeur={contenu}
+          onChange={setContenu}
+          onAide={() => setAide(true)}
+          libelle="Contenu de la fiche"
+          mode={mode}
+          cleVisuel={cleVisuel}
+        />
 
         {!creation && (
           <Form.Item
@@ -470,9 +484,10 @@ function Formulaire({
           {!creation && (
             <Button
               type="link"
-              onClick={() =>
+              onClick={() => {
                 setContenu(c => `${c.trimEnd()}\n\n${GABARIT_FICHE}`)
-              }
+                setCleVisuel(c => c + 1)
+              }}
             >
               Ajouter les sections du gabarit
             </Button>

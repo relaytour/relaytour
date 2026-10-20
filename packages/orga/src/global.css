@@ -973,12 +973,91 @@ button.rt-ligne-lien {
   overflow-y: hidden;
 }
 
-/* Sur grand écran, l'aperçu reste à côté de la saisie pendant le défilement. */
-.rt-apercu-markdown {
-  position: sticky;
-  top: 88px;
-  max-height: calc(100dvh - 104px);
-  overflow-y: auto;
+/* En-tête du contenu d'une fiche : son libellé, puis la bascule Visuel ou
+   Markdown. */
+.rt-editeur-fiche-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+
+/* Éditeur visuel (EditeurVisuel) : la zone se lit comme une fiche, dans le
+   cadre d'un champ. */
+.rt-editeur-visuel-zone {
+  min-height: 420px;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  background: var(--rt-surface-interne);
+  border: 1px solid var(--rt-encre-14);
+  border-radius: var(--rt-rayon-champ);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  outline: none;
+  transition: border-color var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-editeur-visuel-zone:focus {
+  border-color: var(--rt-primaire);
+  box-shadow: var(--rt-anneau-focus);
+}
+
+.rt-editeur-visuel-zone p {
+  margin: 0 0 0.8em;
+}
+
+/* Une case de la liste se dessine devant l'élément : un clic la coche. */
+.rt-editeur-visuel-zone li[data-item-type='task'] {
+  position: relative;
+  list-style: none;
+}
+
+.rt-editeur-visuel-zone li[data-item-type='task']::before {
+  content: '';
+  position: absolute;
+  left: -1.5em;
+  top: 0.35em;
+  width: 0.95em;
+  height: 0.95em;
+  box-sizing: border-box;
+  border: 1.5px solid var(--rt-encre-55);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.rt-editeur-visuel-zone li[data-item-type='task'][data-checked='true']::before {
+  background: var(--rt-primaire);
+  border-color: var(--rt-primaire);
+}
+
+.rt-editeur-visuel-zone li[data-item-type='task'][data-checked='true']::after {
+  content: '';
+  position: absolute;
+  left: calc(-1.5em + 0.32em);
+  top: calc(0.35em + 0.14em);
+  width: 0.25em;
+  height: 0.5em;
+  border: solid var(--rt-sol-1);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
+.rt-editeur-visuel-zone table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.rt-editeur-visuel-zone .selectedCell {
+  background: var(--rt-primaire-clair);
+}
+
+.rt-editeur-visuel-zone .ProseMirror-gapcursor,
+.rt-editeur-visuel-zone .ProseMirror-separator {
+  display: none;
 }
 
 /* Guide de la syntaxe (GuideMarkdown) : le texte à écrire, puis son affichage. */
