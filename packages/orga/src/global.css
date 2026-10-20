@@ -2751,3 +2751,13 @@ button.rt-ligne-declinaisons {
   text-decoration: line-through;
   color: var(--rt-encre-55);
 }
+
+/* Une réunion de la grille du mois est un bouton : il garde l'allure des autres
+   événements du jour. */
+button.rt-agenda-evenement {
+  width: 100%;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: start;
+}
