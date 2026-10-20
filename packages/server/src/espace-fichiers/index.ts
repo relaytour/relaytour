@@ -236,6 +236,20 @@ export async function ouvrirEspace(organisationId: string): Promise<{
   }
 }
 
+/**
+ * Renouvelle l'accès à l'espace de fichiers d'une organisation. Un jeton de
+ * rafraîchissement inutilisé expire : le worker l'utilise chaque nuit. Un accès
+ * retiré passe la connexion à l'état « à reconnecter ».
+ */
+export async function renouvelerAcces(organisationId: string): Promise<void> {
+  const connexion = await prisma.connexionFichiers.findUnique({
+    where: { organisationId },
+    select: { id: true, etat: true, jeton: true },
+  })
+  if (connexion?.etat !== 'ACTIVE' || fabriqueDeTest !== null) return
+  await jetonDe(connexion.id, connexion.jeton)(true)
+}
+
 // ── État d'une connexion en cours ────────────────────────────────────────────
 
 /** Ce que le retour du fournisseur doit retrouver : qui a commencé, où, et le vérificateur PKCE. */

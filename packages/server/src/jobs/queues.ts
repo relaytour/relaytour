@@ -67,10 +67,19 @@ export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {
 // planifications aux organisations actives. `purge` supprime chaque nuit les demandes
 // des périodes archivées, dans toutes les organisations (ADR 0015), les images que
 // l'identité ne cite plus, et les données techniques échues (sessions, vérifications,
-// compteurs, notifications lues). La planification vit dans le worker, et nulle part ailleurs.
+// compteurs, notifications lues). `espace-fichiers` renouvelle chaque nuit l'accès
+// aux espaces de fichiers et réconcilie l'export des fiches ; `export-fiches` exporte
+// les fiches d'une organisation après une modification (ADR 0038). La planification
+// vit dans le worker, et nulle part ailleurs.
 export const PLANIFICATION_QUEUE = 'planification'
 
-export type TachePlanifiee = 'rappels' | 'resumes' | 'synchro' | 'purge'
+export type TachePlanifiee =
+  | 'rappels'
+  | 'resumes'
+  | 'synchro'
+  | 'purge'
+  | 'espace-fichiers'
+  | 'export-fiches'
 
 export interface PlanificationJobData {
   organisationId?: string

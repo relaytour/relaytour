@@ -15,6 +15,8 @@ export interface NoeudMemoire {
   /** Absent pour un dossier. */
   contenu?: string
   enfants?: NoeudMemoire[]
+  /** Numéro de version, qui change à chaque écriture. */
+  version?: number
 }
 
 export interface EmplacementMemoire extends Emplacement {
@@ -39,6 +41,7 @@ function versElement(n: NoeudMemoire): ElementEspace {
     modifieLe: new Date('2026-10-01T08:00:00Z'),
     typeMime: null,
     lienWeb: `https://exemple.invalid/${n.id}`,
+    etag: `"${n.id}:${n.version ?? 1}"`,
   }
 }
 
@@ -75,6 +78,55 @@ export function espaceEnMemoire(
           ? null
           : { elements: (noeud.enfants ?? []).map(versElement), complet: true }
       )
+    },
+    creerDossier: (parent, nom, { renommer }) => {
+      const dossier = trouver(parent)
+      if (dossier === null || dossier.contenu !== undefined)
+        return Promise.reject(new Error('Dossier introuvable.'))
+      dossier.enfants ??= []
+      const pris = new Set(dossier.enfants.map(e => e.nom))
+      if (pris.has(nom) && !renommer) {
+        return Promise.resolve(
+          versElement(dossier.enfants.find(e => e.nom === nom)!)
+        )
+      }
+      let libre = nom
+      for (let n = 1; pris.has(libre); n++) libre = `${nom} ${n}`
+      const cree: NoeudMemoire = {
+        id: `${dossier.id}/${libre}`,
+        nom: libre,
+        enfants: [],
+      }
+      dossier.enfants.push(cree)
+      return Promise.resolve(versElement(cree))
+    },
+    ecrire: (p, texte) => {
+      const nom = p.chemin[p.chemin.length - 1]
+      const dossier = trouver({ ...p, chemin: p.chemin.slice(0, -1) })
+      if (
+        nom === undefined ||
+        dossier === null ||
+        dossier.contenu !== undefined
+      )
+        return Promise.reject(new Error('Dossier parent introuvable.'))
+      dossier.enfants ??= []
+      let fichier = dossier.enfants.find(e => e.nom === nom)
+      if (fichier === undefined) {
+        fichier = { id: `${dossier.id}/${nom}`, nom, contenu: texte }
+        dossier.enfants.push(fichier)
+      } else {
+        fichier.contenu = texte
+        fichier.version = (fichier.version ?? 1) + 1
+      }
+      return Promise.resolve({ etag: versElement(fichier).etag })
+    },
+    supprimer: p => {
+      const nom = p.chemin[p.chemin.length - 1]
+      const dossier = trouver({ ...p, chemin: p.chemin.slice(0, -1) })
+      if (nom !== undefined && dossier?.enfants !== undefined) {
+        dossier.enfants = dossier.enfants.filter(e => e.nom !== nom)
+      }
+      return Promise.resolve()
     },
     ouvrir: (p, { pdf }) => {
       const noeud = trouver(p)

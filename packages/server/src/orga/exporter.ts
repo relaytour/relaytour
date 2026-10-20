@@ -89,7 +89,11 @@ function vide(valeur: unknown[] | undefined): boolean {
 }
 
 /** Le texte d'une fiche : en-tête YAML entre deux lignes « --- », puis le Markdown. */
-function texteFiche(slug: string, titre: string, contenu: string): Buffer {
+export function texteFiche(
+  slug: string,
+  titre: string,
+  contenu: string
+): Buffer {
   const entete = stringify({ slug, titre }, { lineWidth: 0 }).trimEnd()
   return Buffer.from(`---\n${entete}\n---\n\n${normaliserContenu(contenu)}`)
 }

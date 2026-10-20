@@ -42,9 +42,12 @@ type Documents = {
     "\n  mutation CommenterTache($id: ID!, $texte: String!) {\n    commenterTache(id: $id, texte: $texte) {\n      ...FilChamps\n    }\n  }\n": typeof types.CommenterTacheDocument,
     "\n  mutation ModifierCommentaire($id: ID!, $texte: String!) {\n    modifierCommentaire(id: $id, texte: $texte) {\n      ...FilChamps\n    }\n  }\n": typeof types.ModifierCommentaireDocument,
     "\n  mutation SupprimerCommentaire($id: ID!) {\n    supprimerCommentaire(id: $id) {\n      ...FilChamps\n    }\n  }\n": typeof types.SupprimerCommentaireDocument,
-    "\n  query EspaceFichiers {\n    espaceFichiers {\n      fournisseursDisponibles\n      connexion {\n        fournisseur\n        compte\n        etat\n        connecteeLe\n        connecteePar\n      }\n    }\n  }\n": typeof types.EspaceFichiersDocument,
+    "\n  query EspaceFichiers {\n    espaceFichiers {\n      fournisseursDisponibles\n      connexion {\n        fournisseur\n        compte\n        etat\n        connecteeLe\n        connecteePar\n        exportDossier\n        exportRapport {\n          exporteLe\n          ecrites\n          inchangees\n          supprimees\n          refusees {\n            fiche\n            raison\n          }\n          modifieesALaMain\n          erreur\n        }\n      }\n    }\n  }\n": typeof types.EspaceFichiersDocument,
     "\n  mutation CommencerConnexionEspaceFichiers(\n    $fournisseur: FournisseurFichiers!\n  ) {\n    commencerConnexionEspaceFichiers(fournisseur: $fournisseur)\n  }\n": typeof types.CommencerConnexionEspaceFichiersDocument,
     "\n  mutation DeconnecterEspaceFichiers {\n    deconnecterEspaceFichiers\n  }\n": typeof types.DeconnecterEspaceFichiersDocument,
+    "\n  mutation ChoisirDossierExport($emplacement: String!, $chemin: [String!]!) {\n    choisirDossierExport(emplacement: $emplacement, chemin: $chemin) {\n      exportDossier\n    }\n  }\n": typeof types.ChoisirDossierExportDocument,
+    "\n  mutation RetirerDossierExport {\n    retirerDossierExport\n  }\n": typeof types.RetirerDossierExportDocument,
+    "\n  mutation ExporterFichesMaintenant {\n    exporterFichesMaintenant\n  }\n": typeof types.ExporterFichesMaintenantDocument,
     "\n  query DossiersLies($activiteId: ID, $perimetreId: ID) {\n    dossiersLies(activiteId: $activiteId, perimetreId: $perimetreId) {\n      id\n      nom\n      disponible\n      fournisseur\n      perimetre {\n        id\n        slug\n        nom\n        couleur\n      }\n    }\n  }\n": typeof types.DossiersLiesDocument,
     "\n  query ContenuDossierLie($id: ID!, $chemin: [String!]!) {\n    contenuDossierLie(id: $id, chemin: $chemin) {\n      complet\n      elements {\n        elementId\n        nom\n        dossier\n        taille\n        modifieLe\n        lienWeb\n        apercu\n      }\n    }\n  }\n": typeof types.ContenuDossierLieDocument,
     "\n  query PerimetresALier($activiteId: ID) {\n    perimetres(activiteId: $activiteId) {\n      id\n      nom\n      couleur\n    }\n  }\n": typeof types.PerimetresALierDocument,
@@ -177,9 +180,12 @@ const documents: Documents = {
     "\n  mutation CommenterTache($id: ID!, $texte: String!) {\n    commenterTache(id: $id, texte: $texte) {\n      ...FilChamps\n    }\n  }\n": types.CommenterTacheDocument,
     "\n  mutation ModifierCommentaire($id: ID!, $texte: String!) {\n    modifierCommentaire(id: $id, texte: $texte) {\n      ...FilChamps\n    }\n  }\n": types.ModifierCommentaireDocument,
     "\n  mutation SupprimerCommentaire($id: ID!) {\n    supprimerCommentaire(id: $id) {\n      ...FilChamps\n    }\n  }\n": types.SupprimerCommentaireDocument,
-    "\n  query EspaceFichiers {\n    espaceFichiers {\n      fournisseursDisponibles\n      connexion {\n        fournisseur\n        compte\n        etat\n        connecteeLe\n        connecteePar\n      }\n    }\n  }\n": types.EspaceFichiersDocument,
+    "\n  query EspaceFichiers {\n    espaceFichiers {\n      fournisseursDisponibles\n      connexion {\n        fournisseur\n        compte\n        etat\n        connecteeLe\n        connecteePar\n        exportDossier\n        exportRapport {\n          exporteLe\n          ecrites\n          inchangees\n          supprimees\n          refusees {\n            fiche\n            raison\n          }\n          modifieesALaMain\n          erreur\n        }\n      }\n    }\n  }\n": types.EspaceFichiersDocument,
     "\n  mutation CommencerConnexionEspaceFichiers(\n    $fournisseur: FournisseurFichiers!\n  ) {\n    commencerConnexionEspaceFichiers(fournisseur: $fournisseur)\n  }\n": types.CommencerConnexionEspaceFichiersDocument,
     "\n  mutation DeconnecterEspaceFichiers {\n    deconnecterEspaceFichiers\n  }\n": types.DeconnecterEspaceFichiersDocument,
+    "\n  mutation ChoisirDossierExport($emplacement: String!, $chemin: [String!]!) {\n    choisirDossierExport(emplacement: $emplacement, chemin: $chemin) {\n      exportDossier\n    }\n  }\n": types.ChoisirDossierExportDocument,
+    "\n  mutation RetirerDossierExport {\n    retirerDossierExport\n  }\n": types.RetirerDossierExportDocument,
+    "\n  mutation ExporterFichesMaintenant {\n    exporterFichesMaintenant\n  }\n": types.ExporterFichesMaintenantDocument,
     "\n  query DossiersLies($activiteId: ID, $perimetreId: ID) {\n    dossiersLies(activiteId: $activiteId, perimetreId: $perimetreId) {\n      id\n      nom\n      disponible\n      fournisseur\n      perimetre {\n        id\n        slug\n        nom\n        couleur\n      }\n    }\n  }\n": types.DossiersLiesDocument,
     "\n  query ContenuDossierLie($id: ID!, $chemin: [String!]!) {\n    contenuDossierLie(id: $id, chemin: $chemin) {\n      complet\n      elements {\n        elementId\n        nom\n        dossier\n        taille\n        modifieLe\n        lienWeb\n        apercu\n      }\n    }\n  }\n": types.ContenuDossierLieDocument,
     "\n  query PerimetresALier($activiteId: ID) {\n    perimetres(activiteId: $activiteId) {\n      id\n      nom\n      couleur\n    }\n  }\n": types.PerimetresALierDocument,
@@ -413,7 +419,7 @@ export function graphql(source: "\n  mutation SupprimerCommentaire($id: ID!) {\n
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
-export function graphql(source: "\n  query EspaceFichiers {\n    espaceFichiers {\n      fournisseursDisponibles\n      connexion {\n        fournisseur\n        compte\n        etat\n        connecteeLe\n        connecteePar\n      }\n    }\n  }\n"): (typeof documents)["\n  query EspaceFichiers {\n    espaceFichiers {\n      fournisseursDisponibles\n      connexion {\n        fournisseur\n        compte\n        etat\n        connecteeLe\n        connecteePar\n      }\n    }\n  }\n"];
+export function graphql(source: "\n  query EspaceFichiers {\n    espaceFichiers {\n      fournisseursDisponibles\n      connexion {\n        fournisseur\n        compte\n        etat\n        connecteeLe\n        connecteePar\n        exportDossier\n        exportRapport {\n          exporteLe\n          ecrites\n          inchangees\n          supprimees\n          refusees {\n            fiche\n            raison\n          }\n          modifieesALaMain\n          erreur\n        }\n      }\n    }\n  }\n"): (typeof documents)["\n  query EspaceFichiers {\n    espaceFichiers {\n      fournisseursDisponibles\n      connexion {\n        fournisseur\n        compte\n        etat\n        connecteeLe\n        connecteePar\n        exportDossier\n        exportRapport {\n          exporteLe\n          ecrites\n          inchangees\n          supprimees\n          refusees {\n            fiche\n            raison\n          }\n          modifieesALaMain\n          erreur\n        }\n      }\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -422,6 +428,18 @@ export function graphql(source: "\n  mutation CommencerConnexionEspaceFichiers(\
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation DeconnecterEspaceFichiers {\n    deconnecterEspaceFichiers\n  }\n"): (typeof documents)["\n  mutation DeconnecterEspaceFichiers {\n    deconnecterEspaceFichiers\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ChoisirDossierExport($emplacement: String!, $chemin: [String!]!) {\n    choisirDossierExport(emplacement: $emplacement, chemin: $chemin) {\n      exportDossier\n    }\n  }\n"): (typeof documents)["\n  mutation ChoisirDossierExport($emplacement: String!, $chemin: [String!]!) {\n    choisirDossierExport(emplacement: $emplacement, chemin: $chemin) {\n      exportDossier\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RetirerDossierExport {\n    retirerDossierExport\n  }\n"): (typeof documents)["\n  mutation RetirerDossierExport {\n    retirerDossierExport\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ExporterFichesMaintenant {\n    exporterFichesMaintenant\n  }\n"): (typeof documents)["\n  mutation ExporterFichesMaintenant {\n    exporterFichesMaintenant\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

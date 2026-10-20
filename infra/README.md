@@ -111,7 +111,7 @@ L'espace de fichiers est facultatif (ADR 0038). Un admin de l'organisation y con
 3. Ajoutez l'adresse de retour de type « Web » : `<ORIGINE_ORGA>/medias/espace-fichiers/retour/sharepoint`.
 4. Ajoutez les autorisations déléguées de Microsoft Graph : `offline_access`, `User.Read`, `Files.ReadWrite.All` et `Sites.Read.All`. L'écriture sert seulement à l'export des fiches.
 5. Créez un secret client. Renseignez `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` et, au besoin, `MICROSOFT_LOCATAIRE`, puis relancez la pile.
-6. Laissez l'API sortir en HTTPS vers `graph.microsoft.com`, `login.microsoftonline.com`, `*.sharepoint.com` et `*.svc.ms`.
+6. Laissez l'API et le worker sortir en HTTPS vers `graph.microsoft.com`, `login.microsoftonline.com`, `*.sharepoint.com` et `*.svc.ms`. Le worker exporte les fiches et renouvelle chaque nuit l'accès de chaque organisation.
 
 Les routes de l'espace de fichiers vivent sous `/medias/`, que le `Caddyfile` d'exemple relaie déjà vers l'API. Le secret client et la clé de chiffrement ne quittent pas le `.env`. Un secret client Microsoft expire : notez sa date et remplacez-le avant.
 

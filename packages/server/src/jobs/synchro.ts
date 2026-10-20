@@ -18,11 +18,13 @@ export const HEURES = {
 
 /**
  * Les planifications de l'installation, hors de toute organisation : elles survivent
- * à l'ajustement. La purge tourne chaque nuit à 3 h 15, à l'heure du serveur.
+ * à l'ajustement. La purge tourne chaque nuit à 3 h 15, à l'heure du serveur, et les
+ * espaces de fichiers à 3 h 45 (ADR 0038).
  */
 export const PLANIFICATIONS_GLOBALES = {
   synchro: '5 * * * *',
   purge: '15 3 * * *',
+  'espace-fichiers': '45 3 * * *',
 } as const
 
 /** Identifiant d'un scheduler. BullMQ refuse « : » dans un identifiant. */

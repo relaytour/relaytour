@@ -1,11 +1,17 @@
 import {
   EtatConnexionFichiers,
   FournisseurFichiers,
+  Prisma,
   prisma,
 } from '@relaytour/database'
 
 import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
 import { dossierLisible } from '../espace-fichiers/droits.ts'
+import {
+  lancerExportFiches,
+  NOM_DOSSIER_EXPORT,
+  type RapportExport,
+} from '../espace-fichiers/export.ts'
 import {
   commencerConnexion,
   configurationMicrosoft,
@@ -53,6 +59,34 @@ export const FormatApercuEnum = builder.enumType('FormatApercu', {
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
+const RefusExportRef = builder
+  .objectRef<{ fiche: string; raison: string }>('RefusExport')
+  .implement({
+    fields: t => ({
+      fiche: t.exposeString('fiche'),
+      raison: t.exposeString('raison'),
+    }),
+  })
+
+const RapportExportRef = builder
+  .objectRef<RapportExport>('RapportExport')
+  .implement({
+    description:
+      'Résultat du dernier export des fiches vers l’espace de fichiers.',
+    fields: t => ({
+      exporteLe: t.field({
+        type: 'DateTime',
+        resolve: r => new Date(r.exporteLe),
+      }),
+      ecrites: t.exposeInt('ecrites'),
+      inchangees: t.exposeInt('inchangees'),
+      supprimees: t.exposeInt('supprimees'),
+      refusees: t.field({ type: [RefusExportRef], resolve: r => r.refusees }),
+      modifieesALaMain: t.exposeStringList('modifieesALaMain'),
+      erreur: t.exposeString('erreur', { nullable: true }),
+    }),
+  })
+
 const ConnexionFichiersRef = builder.prismaObject('ConnexionFichiers', {
   description:
     'Connexion de l’organisation à son espace de fichiers. Le jeton ne sort jamais du serveur.',
@@ -66,8 +100,39 @@ const ConnexionFichiersRef = builder.prismaObject('ConnexionFichiers', {
       select: { connectePar: { select: { name: true } } },
       resolve: c => c.connectePar?.name ?? null,
     }),
+    exportDossier: t.exposeString('exportNom', {
+      nullable: true,
+      description:
+        'Chemin du dossier où Relaytour exporte les fiches. Null : aucun export.',
+    }),
+    exportRapport: t.field({
+      type: RapportExportRef,
+      nullable: true,
+      resolve: c => (c.exportRapport as RapportExport | null) ?? null,
+    }),
   }),
 })
+
+/**
+ * Identifiants de la racine d'une bibliothèque et de chaque dossier du chemin,
+ * jusqu'au dernier compris. Un dossier absent n'a pas d'identifiant.
+ */
+async function idsDuChemin(
+  espace: EspaceFichiers,
+  emplacement: string,
+  chemin: readonly string[]
+): Promise<string[]> {
+  const ids: string[] = []
+  for (let i = 0; i <= chemin.length; i++) {
+    const element = await espace.element({
+      emplacement,
+      base: null,
+      chemin: chemin.slice(0, i),
+    })
+    if (element !== null) ids.push(element.id)
+  }
+  return ids
+}
 
 interface EspaceFichiersVue {
   fournisseursDisponibles: FournisseurFichiers[]
@@ -375,6 +440,7 @@ builder.mutationFields(t => ({
         select: { id: true, jeton: true },
       })
       if (connexion === null) return false
+      await prisma.ficheExportee.deleteMany({ where: { organisationId } })
       await prisma.connexionFichiers.delete({ where: { id: connexion.id } })
       oublierJetonAcces(connexion.jeton)
       journal.info(
@@ -435,6 +501,33 @@ builder.mutationFields(t => ({
       if (element === null || !element.dossier) {
         throw erreurSaisie('Ce dossier n’existe pas dans l’espace de fichiers.')
       }
+      // Le dossier d'export contient les fiches de tous les périmètres : ni lui,
+      // ni un dossier qui le contient, ni un de ses sous-dossiers ne se lie.
+      const exportation = await prisma.connexionFichiers.findUnique({
+        where: { organisationId },
+        select: {
+          exportEmplacement: true,
+          exportElement: true,
+          exportAncetres: true,
+        },
+      })
+      if (
+        exportation?.exportElement != null &&
+        exportation.exportEmplacement === emplacement
+      ) {
+        const ancetres = (exportation.exportAncetres as string[] | null) ?? []
+        const parcours = await avecEspace(ctx, e =>
+          idsDuChemin(e, emplacement, chemin)
+        )
+        if (
+          ancetres.includes(element.id) ||
+          parcours.includes(exportation.exportElement)
+        ) {
+          throw erreurSaisie(
+            'Ce dossier contient le dossier d’export des fiches, ou s’y trouve. Choisissez un autre dossier.'
+          )
+        }
+      }
       const cle = {
         organisationId,
         activiteId: activite.id,
@@ -466,6 +559,107 @@ builder.mutationFields(t => ({
         ...query,
         where: { id: dossier.id },
       })
+    },
+  }),
+
+  choisirDossierExport: t.prismaField({
+    type: ConnexionFichiersRef,
+    authScopes: { admin: true },
+    description:
+      'Crée le dossier d’export des fiches dans le dossier choisi, puis lance un premier export. Le dossier choisi ne doit être ni lié, ni dans un dossier lié.',
+    args: {
+      emplacement: t.arg.string({ required: true }),
+      chemin: t.arg.stringList({ required: true }),
+    },
+    resolve: async (query, _root, { emplacement, chemin }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      exigerChemin(chemin)
+      const { parent, ids, espace } = await avecEspace(ctx, async espace => ({
+        espace,
+        parent: await espace.element({ emplacement, base: null, chemin }),
+        ids: await idsDuChemin(espace, emplacement, chemin),
+      }))
+      if (parent === null || !parent.dossier) {
+        throw erreurSaisie('Ce dossier n’existe pas dans l’espace de fichiers.')
+      }
+      const lies = await prisma.dossierLie.count({
+        where: { organisationId, emplacement, element: { in: ids } },
+      })
+      if (lies > 0) {
+        throw erreurSaisie(
+          'Ce dossier est lié à une activité, ou se trouve dans un dossier lié. Les membres y liraient les fiches de tous les périmètres : choisissez un autre dossier.'
+        )
+      }
+      const cree = await avecEspace(ctx, () =>
+        espace.creerDossier(
+          { emplacement, base: null, chemin },
+          NOM_DOSSIER_EXPORT,
+          { renommer: true }
+        )
+      )
+      await prisma.ficheExportee.deleteMany({ where: { organisationId } })
+      const connexion = await prisma.connexionFichiers.update({
+        ...query,
+        where: { organisationId },
+        data: {
+          exportEmplacement: emplacement,
+          exportElement: cree.id,
+          exportNom: [...chemin, cree.nom].join(' / '),
+          exportAncetres: [...ids, cree.id],
+          exportRapport: Prisma.DbNull,
+          exportLe: null,
+        },
+      })
+      await lancerExportFiches(organisationId).catch(() => undefined)
+      void publierChangement({ entite: 'FICHIERS', organisationId })
+      return connexion
+    },
+  }),
+
+  retirerDossierExport: t.boolean({
+    authScopes: { admin: true },
+    description:
+      'Arrête l’export des fiches. Les fichiers déjà écrits restent dans l’espace de fichiers.',
+    resolve: async (_root, _args, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const { count } = await prisma.connexionFichiers.updateMany({
+        where: { organisationId },
+        data: {
+          exportEmplacement: null,
+          exportElement: null,
+          exportNom: null,
+          exportAncetres: Prisma.DbNull,
+          exportRapport: Prisma.DbNull,
+          exportLe: null,
+        },
+      })
+      await prisma.ficheExportee.deleteMany({ where: { organisationId } })
+      void publierChangement({ entite: 'FICHIERS', organisationId })
+      return count > 0
+    },
+  }),
+
+  exporterFichesMaintenant: t.boolean({
+    authScopes: { admin: true },
+    description:
+      'Lance tout de suite l’export des fiches vers l’espace de fichiers. Le résultat arrive dans le rapport d’export.',
+    resolve: async (_root, _args, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const connexion = await prisma.connexionFichiers.findUnique({
+        where: { organisationId },
+        select: { exportElement: true, etat: true },
+      })
+      if (connexion?.exportElement == null || connexion.etat !== 'ACTIVE') {
+        throw erreurSaisie('Aucun dossier d’export n’est choisi.')
+      }
+      try {
+        await lancerExportFiches(organisationId)
+      } catch {
+        throw erreurSaisie(
+          'L’export n’a pas pu être lancé. Réessayez dans quelques instants.'
+        )
+      }
+      return true
     },
   }),
 

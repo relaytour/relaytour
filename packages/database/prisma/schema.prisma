@@ -72,6 +72,7 @@ model Organisation {
   connexionFichiers       ConnexionFichiers?
   dossiersLies            DossierLie[]
   ressourcesFiches        RessourceFiche[]
+  fichesExportees         FicheExportee[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -838,6 +839,7 @@ model Fiche {
   journal         Journal[]
   notifications   Notification[]
   ressources      RessourceFiche[]
+  exportCloud     FicheExportee?
 
   @@unique([organisationId, slug])
   @@index([perimetreId])
@@ -1096,17 +1098,28 @@ enum EtatConnexionFichiers {
 // avec les droits du compte connecté. Le jeton de rafraîchissement est chiffré
 // (lib/chiffrement.ts) et ne sort jamais du serveur, ni par l'API ni dans l'export.
 model ConnexionFichiers {
-  id             String                @id @default(cuid())
-  organisationId String                @unique
-  fournisseur    FournisseurFichiers
+  id                String                @id @default(cuid())
+  organisationId    String                @unique
+  fournisseur       FournisseurFichiers
   // Nom affiché du compte connecté chez le fournisseur, lu par les admins de
   // l'organisation. Jamais son adresse.
-  compte         String                @db.VarChar(255)
-  jeton          String                @db.Text
-  etat           EtatConnexionFichiers @default(ACTIVE)
-  connecteParId  String?
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
+  compte            String                @db.VarChar(255)
+  jeton             String                @db.Text
+  etat              EtatConnexionFichiers @default(ACTIVE)
+  connecteParId     String?
+  // Dossier d'export des fiches (ADR 0038), créé par Relaytour dans le dossier
+  // choisi par un admin. `exportAncetres` porte les identifiants de ses dossiers
+  // parents et le sien : aucun d'eux ne se lie à un périmètre.
+  exportEmplacement String?               @db.VarChar(255)
+  exportElement     String?               @db.VarChar(255)
+  exportNom         String?               @db.VarChar(1024)
+  exportAncetres    Json?
+  // Résultat du dernier export : fiches écrites, inchangées, supprimées,
+  // refusées, modifiées à la main dans l'espace de fichiers, erreur.
+  exportRapport     Json?
+  exportLe          DateTime?
+  createdAt         DateTime              @default(now())
+  updatedAt         DateTime              @updatedAt
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   connectePar  User?        @relation(fields: [connecteParId], references: [id], onDelete: SetNull)
@@ -1174,5 +1187,25 @@ model RessourceFiche {
 
   @@unique([ficheId, dossierLieId, empreinteChemin])
   @@index([dossierLieId])
+  @@index([organisationId])
+}
+
+// Dernière écriture d'une fiche dans le dossier d'export de l'espace de fichiers
+// (ADR 0038). L'empreinte évite de réécrire une fiche inchangée ; l'étiquette du
+// fournisseur révèle une modification faite à la main dans l'espace de fichiers.
+model FicheExportee {
+  id             String   @id @default(cuid())
+  organisationId String
+  ficheId        String   @unique
+  // Chemin depuis le dossier d'export : activité, périmètre ou « communes », fichier.
+  chemin         Json
+  // SHA-256 du texte écrit.
+  empreinte      String   @db.Char(64)
+  etag           String?  @db.VarChar(255)
+  exporteeLe     DateTime @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  fiche        Fiche        @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+
   @@index([organisationId])
 }

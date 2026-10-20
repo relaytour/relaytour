@@ -23,6 +23,19 @@ export const ESPACE_FICHIERS = graphql(`
         etat
         connecteeLe
         connecteePar
+        exportDossier
+        exportRapport {
+          exporteLe
+          ecrites
+          inchangees
+          supprimees
+          refusees {
+            fiche
+            raison
+          }
+          modifieesALaMain
+          erreur
+        }
       }
     }
   }
@@ -39,6 +52,26 @@ export const COMMENCER_CONNEXION = graphql(`
 export const DECONNECTER = graphql(`
   mutation DeconnecterEspaceFichiers {
     deconnecterEspaceFichiers
+  }
+`)
+
+export const CHOISIR_DOSSIER_EXPORT = graphql(`
+  mutation ChoisirDossierExport($emplacement: String!, $chemin: [String!]!) {
+    choisirDossierExport(emplacement: $emplacement, chemin: $chemin) {
+      exportDossier
+    }
+  }
+`)
+
+export const RETIRER_DOSSIER_EXPORT = graphql(`
+  mutation RetirerDossierExport {
+    retirerDossierExport
+  }
+`)
+
+export const EXPORTER_FICHES_MAINTENANT = graphql(`
+  mutation ExporterFichesMaintenant {
+    exporterFichesMaintenant
   }
 `)
 
