@@ -1,6 +1,6 @@
 # ADR 0038 — Fiches et espace de fichiers d'une organisation
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-20
 - Complète l'ADR 0009 (source de vérité du contenu) et l'ADR 0014 (accès aux périmètres). Ajoute des appels sortants vers des tiers, sur le modèle de l'ADR 0024. Respecte l'ADR 0007 : l'espace de fichiers est facultatif et se règle par des variables.
 
