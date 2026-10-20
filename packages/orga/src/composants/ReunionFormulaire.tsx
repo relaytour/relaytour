@@ -1,16 +1,18 @@
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { App, Form, Input, Modal, Radio, Select } from 'antd'
 import { useEffect } from 'react'
 
 import { graphql } from '../gql'
 import type { CibleConvocation } from '../gql/graphql'
-import { lireConflit } from '../lib/conflit'
+import { lireConflit, relireApresConflit } from '../lib/conflit'
 import { messageErreur } from '../lib/erreurs'
+import { CONVOCABLES } from '../lib/requetes'
 
 const CREER = graphql(`
   mutation CreerReunion(
     $editionId: ID!
     $perimetreId: ID
+    $sondageId: ID
     $titre: String!
     $jour: Date!
     $jourFin: Date
@@ -26,6 +28,7 @@ const CREER = graphql(`
     creerReunion(
       editionId: $editionId
       perimetreId: $perimetreId
+      sondageId: $sondageId
       titre: $titre
       jour: $jour
       jourFin: $jourFin
@@ -57,7 +60,7 @@ const MODIFIER = graphql(`
     $tacheIds: [ID!]
     $cible: CibleConvocation
     $personneIds: [ID!]
-    $versionAttendue: Int
+    $versionAttendue: Int!
   ) {
     modifierReunion(
       id: $id
@@ -94,16 +97,6 @@ const TACHES = graphql(`
   }
 `)
 
-const CONVOCABLES = graphql(`
-  query PersonnesConvocables($editionId: ID!, $perimetreId: ID) {
-    personnesConvocables(editionId: $editionId, perimetreId: $perimetreId) {
-      personneId
-      nom
-      duPerimetre
-    }
-  }
-`)
-
 /** Un agenda où la personne écrit : l'agenda global (`null`) ou un périmètre. */
 export interface AgendaEcrit {
   perimetreId: string | null
@@ -133,6 +126,13 @@ export interface NouvelleReunion {
   perimetreId: string | null
   titre?: string
   tacheIds?: string[]
+  /** Depuis un sondage clos (ADR 0037) : son créneau retenu et ses personnes. */
+  jour?: string
+  heureDebut?: string | null
+  heureFin?: string | null
+  cible?: CibleConvocation
+  personneIds?: string[]
+  sondageId?: string
 }
 
 type Cible = CibleConvocation | 'AUCUNE'
@@ -174,9 +174,17 @@ export default function ReunionFormulaire({
   onFermer: () => void
 }) {
   const { message } = App.useApp()
+  const client = useApolloClient()
   const [form] = Form.useForm<Valeurs>()
   const relire = {
-    refetchQueries: ['Agenda', 'Reunions', 'ReunionsDuPerimetre', 'Reunion'],
+    refetchQueries: [
+      'Agenda',
+      'Reunions',
+      'ReunionsDuPerimetre',
+      'Reunion',
+      'Sondages',
+      'Sondage',
+    ],
   }
   const [creer, creation] = useMutation(CREER, relire)
   const [modifier, modification] = useMutation(MODIFIER, relire)
@@ -217,19 +225,21 @@ export default function ReunionFormulaire({
         : {
             agenda: reunion.perimetreId ?? GLOBAL,
             titre: reunion.titre ?? '',
-            jour: '',
+            jour: reunion.jour ?? '',
             jourFin: '',
-            heureDebut: '18:00',
-            heureFin: '19:00',
+            heureDebut: reunion.heureDebut ?? '18:00',
+            heureFin: reunion.heureFin ?? '19:00',
             lieu: '',
             lienVisio: '',
             description: '',
             tacheIds: reunion.tacheIds ?? [],
-            cible: reunion.perimetreId === null ? 'EQUIPE' : 'PERIMETRE',
-            personneIds: [],
+            cible:
+              reunion.cible ??
+              (reunion.perimetreId === null ? 'EQUIPE' : 'PERIMETRE'),
+            personneIds: reunion.personneIds ?? [],
           }
     )
-  }, [form, reunion, agendas])
+  }, [form, reunion])
 
   const optionsTaches = (taches?.retroplanning ?? [])
     .filter(t => perimetreId === null || t.perimetre.id === perimetreId)
@@ -267,6 +277,10 @@ export default function ReunionFormulaire({
           variables: {
             editionId,
             perimetreId: v.agenda === GLOBAL ? null : v.agenda,
+            sondageId:
+              reunion !== null && !('id' in reunion)
+                ? (reunion.sondageId ?? null)
+                : null,
             ...champs,
           },
         })
@@ -279,10 +293,17 @@ export default function ReunionFormulaire({
       onFermer()
     } catch (e) {
       if (lireConflit(e) !== null) {
-        message.error(
-          'Une autre personne a modifié cette réunion depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.'
+        await relireApresConflit(
+          client,
+          relire.refetchQueries,
+          texte => message.error(texte),
+          {
+            relu: 'Une autre personne a modifié cette réunion depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.',
+            echec:
+              'La réunion n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.',
+          },
+          onFermer
         )
-        onFermer()
         return
       }
       message.error(messageErreur(e))
@@ -309,7 +330,14 @@ export default function ReunionFormulaire({
       >
         <Form.Item label="Agenda" name="agenda">
           <Select
-            disabled={existante !== null}
+            // Une réunion existante, ou née d'un sondage, garde son agenda : le
+            // serveur exige l'agenda du sondage.
+            disabled={
+              existante !== null ||
+              (reunion !== null &&
+                'sondageId' in reunion &&
+                !!reunion.sondageId)
+            }
             options={agendas.map(a => ({
               value: a.perimetreId ?? GLOBAL,
               label: a.nom,

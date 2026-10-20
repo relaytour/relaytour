@@ -144,6 +144,15 @@ const ECRANS = [
     chemin: `${ACTIVITE}/agenda`,
     avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
   },
+  // Le volet d'un sondage de dates du pôle Bénévoles, avant la réponse de la
+  // référente (ADR 0037).
+  {
+    nom: 'sondage',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
+    apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-ligne-lien')].find(b => b.textContent.includes('Date du point bénévoles de janvier')))`,
+  },
   // Le volet d'une réunion du pôle Bénévoles, où la référente est convoquée.
   {
     nom: 'reunion',
@@ -151,6 +160,18 @@ const ECRANS = [
     chemin: `${ACTIVITE}/agenda`,
     avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
     apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-agenda-ouvrir')].find(b => b.textContent.trim() === 'Point bénévoles'))`,
+  },
+  // Le programme du jour J en grille, puis la vue « Mon jour J » de la référente
+  // (ADR 0040).
+  {
+    nom: 'programme',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/programme?vue=grille`,
+  },
+  {
+    nom: 'programme-moi',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/programme?vue=moi`,
   },
   {
     nom: 'fiches-cartes',
@@ -287,6 +308,12 @@ const ECRANS = [
     avant: "localStorage.setItem('relaytour.agenda.vue', 'mois')",
     // Le mois suivant porte en général plus de dates que la fin du mois courant.
     apres: cliquerLibelle('Mois suivant'),
+  },
+  // Les fiches bénévoles, avec leurs coordonnées lues par un admin (ADR 0040).
+  {
+    nom: 'benevoles',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles`,
   },
   {
     nom: 'notifications-admin',

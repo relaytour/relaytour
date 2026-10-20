@@ -53,6 +53,7 @@ export function famillePush(type: TypeNotification): FamillePush | null {
     case 'REUNION_CONVOQUEE':
     case 'REUNION_MODIFIEE':
     case 'REUNION_ANNULEE':
+    case 'SONDAGE_OUVERT':
       return 'agenda'
     default:
       return null

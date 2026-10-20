@@ -26,6 +26,5 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 - **Fiches.** Relecture avant publication sur les périmètres choisis par l'admin ; recherche en texte libre sur toutes les fiches accessibles ; liste des tâches qui s'appuient sur une fiche.
 - **Indicateur de présence.** La carte d'une tâche et l'éditeur d'une fiche indiquent qu'une autre personne les a ouverts. Cette information évite un conflit d'écriture avant l'enregistrement (ADR 0017). Elle montre aussi qui est connecté, et à quel moment : les référentes et référents décident si elle leur convient.
 - **Agenda.** Réunions récurrentes ; convocation d'une personne sans compte ; page de sondage ouverte à d'autres sujets que les dates (ADR 0037).
-- **Événements du jour J.** Un événement de l'agenda contient des sous-événements, chacun avec son lieu, son horaire, son périmètre et ses personnes en responsabilité. Le jour J, une vue répartit les équipes et les bénévoles par lieu et par heure. Ce chantier s'appuie sur le rôle bénévole et sur une page de gestion des bénévoles sans accès à l'application.
 - **Annuaire interne.** Liste des rôles de l'édition, réservée aux personnes connectées. Chacune choisit les coordonnées qu'elle partage.
 - **Traduction.** L'espace organisateur passe dans une autre langue pour les membres qui ne lisent pas le français.

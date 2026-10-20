@@ -185,6 +185,23 @@ type BaremeScore {
   tacheRealisee: Int!
 }
 
+"""Une fiche bénévole : une personne qui aide sans compte."""
+type Benevole {
+  accordLe: DateTime!
+
+  """Vrai si la personne connectée lit l’adresse, le téléphone et la note."""
+  coordonneesVisibles: Boolean!
+  courriel: String
+  id: ID!
+  nom: String!
+  note: String
+  peutModifier: Boolean!
+
+  """Le nombre de séquences où la fiche est placée."""
+  places: Int!
+  telephone: String
+}
+
 """
 Le champ de la messagerie qui reçoit les destinataires : « À » pour une seule personne, « Cc » (adresses visibles) ou « Cci » (adresses cachées).
 """
@@ -203,6 +220,12 @@ type Changement {
   entite: EntiteChangee!
   id: ID
   perimetreId: ID
+}
+
+enum ChoixSondage {
+  NON
+  OUI
+  SI_BESOIN
 }
 
 """
@@ -272,6 +295,38 @@ type CouleursTheme {
   sol3: String!
   succes: String!
   succesClair: String!
+}
+
+type CreneauSondage {
+  """HH:MM, dans le fuseau de l’organisation."""
+  heureDebut: String
+  heureFin: String
+  id: ID!
+
+  """AAAA-MM-JJ."""
+  jour: String!
+  monChoix: ChoixSondage
+  non: Int!
+  oui: Int!
+
+  """
+  Les réponses nominatives, lues par les personnes visées et par celles qui écrivent dans l’agenda.
+  """
+  reponses: [ReponseSondage!]!
+  retenu: Boolean!
+  siBesoin: Int!
+}
+
+input CreneauSondageInput {
+  """HH:MM, ou rien."""
+  heureDebut: String
+
+  """HH:MM, ou rien."""
+  heureFin: String
+
+  """Un créneau existant, pour une modification."""
+  id: ID
+  jour: Date!
 }
 
 """
@@ -386,7 +441,7 @@ type ElementAgenda {
 }
 
 """
-Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre les dates clés de l’agenda d’une activité (ADR 0037).
+Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0040).
 """
 enum EntiteChangee {
   AGENDA
@@ -396,6 +451,7 @@ enum EntiteChangee {
   MESSAGE
   NOTIFICATION
   PERIMETRE
+  PROGRAMME
   TACHE
 }
 
@@ -678,6 +734,14 @@ The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](
 """
 scalar JSONObject @specifiedBy(url: "http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf")
 
+type Lieu {
+  archive: Boolean!
+  description: String
+  id: ID!
+  nom: String!
+  ordre: Int!
+}
+
 type LigneClassement {
   personne: Personne!
   rang: Int!
@@ -808,6 +872,11 @@ type Mutation {
   changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!, statutAttendu: StatutTache): Tache!
 
   """
+  Clôt un sondage sur le créneau retenu. La réunion se crée ensuite depuis ce créneau.
+  """
+  cloreSondage(creneauId: ID!, id: ID!): Sondage!
+
+  """
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
@@ -817,9 +886,23 @@ type Mutation {
   """
   creerAbonnementAgendaActivite(activiteId: ID!): AdresseAbonnement!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
+
+  """
+  Crée une fiche bénévole. La personne qui la crée déclare l’accord de la ou du bénévole.
+  """
+  creerBenevole(
+    """Vrai : la personne accepte que ses coordonnées soient enregistrées."""
+    accord: Boolean!
+    activiteId: ID!
+    courriel: String
+    nom: String!
+    note: String
+    telephone: String
+  ): Benevole!
   creerDateCle(description: String, editionId: ID!, jour: Date!, jourFin: Date, titre: String!): DateCle!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
+  creerLieu(activiteId: ID!, description: String, nom: String!, ordre: Int = 0): Lieu!
   creerMessage(message: MessageInput!): Message!
 
   """
@@ -852,9 +935,39 @@ type Mutation {
 
     """Les personnes convoquées, pour la cible CHOIX."""
     personneIds: [ID!]
+
+    """Le sondage clos dont la réunion découle, du même agenda (ADR 0037)."""
+    sondageId: ID
     tacheIds: [ID!]
     titre: String!
   ): Reunion!
+  creerSequence(
+    description: String
+    editionId: ID!
+    heureDebut: String!
+    heureFin: String!
+    jour: Date!
+
+    """Pour une séquence qui passe minuit. Sans valeur : le jour."""
+    jourFin: Date
+    lieuId: ID
+
+    """Le périmètre ; sans valeur, toute l’activité."""
+    perimetreId: ID
+    places: [PlaceSequenceInput!]
+    titre: String!
+  ): Sequence!
+  creerSondage(
+    cible: CibleConvocation!
+    creneaux: [CreneauSondageInput!]!
+    description: String
+    editionId: ID!
+
+    """Le périmètre ; sans valeur, l’agenda global."""
+    perimetreId: ID
+    personneIds: [ID!]
+    titre: String!
+  ): Sondage!
   creerTache(declinaison: DeclinaisonInput, description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
 
   """
@@ -914,12 +1027,24 @@ type Mutation {
     perimetreId: ID
   ): Int!
   modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
+  modifierBenevole(courriel: String, id: ID!, nom: String!, note: String, telephone: String): Benevole!
 
   """
   Modifie le texte d’un commentaire et rend le fil de sa tâche. Seul son auteur le modifie.
   """
   modifierCommentaire(id: ID!, texte: String!): FilTache!
-  modifierDateCle(description: String, id: ID!, jour: Date!, jourFin: Date, titre: String!, versionAttendue: Int): DateCle!
+  modifierDateCle(
+    description: String
+    id: ID!
+    jour: Date!
+    jourFin: Date
+    titre: String!
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
+  ): DateCle!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
 
   """
@@ -936,6 +1061,7 @@ type Mutation {
   Remplace l’identité de l’organisation. Le slug, le fuseau horaire, le statut et les limites ne changent pas ici.
   """
   modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, iconeApplication: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
+  modifierLieu(archive: Boolean!, description: String, id: ID!, nom: String!, ordre: Int!): Lieu!
   modifierMonAdresseVisible(visible: Boolean!): Boolean!
 
   """
@@ -1007,8 +1133,49 @@ type Mutation {
     personneIds: [ID!]
     tacheIds: [ID!]
     titre: String!
-    versionAttendue: Int
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
   ): Reunion!
+
+  """
+  Change une séquence et ses places. Les places reçues remplacent les places actuelles.
+  """
+  modifierSequence(
+    description: String
+    heureDebut: String!
+    heureFin: String!
+    id: ID!
+    jour: Date!
+
+    """Pour une séquence qui passe minuit. Sans valeur : le jour."""
+    jourFin: Date
+    lieuId: ID
+    places: [PlaceSequenceInput!]
+    titre: String!
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
+  ): Sequence!
+
+  """
+  Change le titre, la description et les créneaux d’un sondage ouvert. Un créneau retiré perd ses réponses.
+  """
+  modifierSondage(
+    creneaux: [CreneauSondageInput!]!
+    description: String
+    id: ID!
+    titre: String!
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
+  ): Sondage!
 
   """
   Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
@@ -1037,6 +1204,11 @@ type Mutation {
   repondreConvocation(reponse: ReponseConvocation!, reunionId: ID!): Reunion!
 
   """
+  Les réponses de la personne connectée, créneau par créneau. Un créneau absent garde sa réponse.
+  """
+  repondreSondage(id: ID!, reponses: [ReponseSondageInput!]!): Sondage!
+
+  """
   Restaure une version : son contenu devient une nouvelle version. Avec `versionDeDepart`, la version courante lue dans l’historique, le serveur refuse de restaurer par-dessus une version enregistrée entre-temps (code `CONFLIT_VERSION`).
   """
   restaurerVersionFiche(versionDeDepart: ID, versionId: ID!): Fiche!
@@ -1060,10 +1232,21 @@ type Mutation {
   revoquerMonAbonnementAgenda: Boolean!
 
   """
+  Supprime une fiche et la retire de toutes les séquences. Réservé aux admins de l’activité.
+  """
+  supprimerBenevole(id: ID!): Boolean!
+
+  """
   Supprime un commentaire, définitivement, et rend le fil de sa tâche. Son auteur le supprime, ainsi qu’un admin de l’activité.
   """
   supprimerCommentaire(id: ID!): FilTache!
   supprimerDateCle(id: ID!): Boolean!
+  supprimerSequence(id: ID!): Boolean!
+
+  """
+  Supprime un sondage et ses réponses. Une réunion déjà créée reste dans l’agenda.
+  """
+  supprimerSondage(id: ID!): Boolean!
 
   """
   Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.
@@ -1363,6 +1546,25 @@ input PhaseInput {
   libelle: String!
 }
 
+type PlaceSequence {
+  """La fiche bénévole ; ses coordonnées se lisent à part."""
+  benevoleId: ID
+  estMoi: Boolean!
+  id: ID!
+  nom: String!
+  personneId: ID
+  role: RolePlace!
+}
+
+input PlaceSequenceInput {
+  """Ou une fiche bénévole de l’activité."""
+  benevoleId: ID
+
+  """Une personne de l’équipe."""
+  personneId: ID
+  role: RolePlace!
+}
+
 """Piles CSS complètes, prêtes pour font-family."""
 type PolicesTheme {
   mono: String!
@@ -1476,6 +1678,11 @@ type Query {
   appelPostes(editionId: ID!): String
   avancementGlobal(editionId: ID!): [AvancementPerimetre!]!
   baremeScore: BaremeScore!
+
+  """
+  Les fiches bénévoles d’une activité, par nom, pour les personnes qui y écrivent.
+  """
+  benevoles(activiteId: ID!): [Benevole!]!
   classement(editionId: ID!): [LigneClassement!]!
 
   """
@@ -1512,6 +1719,9 @@ type Query {
   Les invitations de l’organisation qui attendent un accord (ADR 0030). Un admin d’activité lit celles de ses activités, avec leurs seuls périmètres.
   """
   invitationsEnAttente(activiteId: ID): [InvitationEnAttente!]!
+
+  """Les lieux d’une activité, dans leur ordre d’affichage."""
+  lieux(activiteId: ID!, inclureArchives: Boolean = false): [Lieu!]!
 
   """
   Les invitations qui attendent l’accord de la personne connectée (ADR 0030).
@@ -1578,6 +1788,11 @@ type Query {
   ): [PersonneConvocable!]!
   peutRedigerFichesCommunes(activiteId: ID): Boolean!
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
+
+  """
+  Les séquences d’une période, par début. Les filtres gardent un périmètre, ou les séquences où la personne connectée est placée.
+  """
+  programme(editionId: ID!, mesSequences: Boolean = false, perimetreId: ID): [Sequence!]!
   recherche(editionId: ID, texte: String!): Recherche!
   retroplanning(editionId: ID!): [Tache!]!
   reunion(id: ID!): Reunion!
@@ -1594,6 +1809,12 @@ type Query {
     """Un périmètre seulement. Sans valeur : toutes."""
     perimetreId: ID
   ): [Reunion!]!
+  sondage(id: ID!): Sondage!
+
+  """
+  Les sondages de dates d’une période que la personne lit, les plus récents d’abord.
+  """
+  sondages(editionId: ID!): [Sondage!]!
   tache(id: ID!): Tache!
   tachesAPrendre(editionId: ID!): [Tache!]!
   tousLesPerimetres(activiteId: ID): TousLesPerimetres!
@@ -1614,6 +1835,17 @@ enum ReponseConvocation {
   ABSENT
   PEUT_ETRE
   PRESENT
+}
+
+type ReponseSondage {
+  choix: ChoixSondage!
+  nom: String!
+  personneId: ID!
+}
+
+input ReponseSondageInput {
+  choix: ChoixSondage!
+  creneauId: ID!
 }
 
 type ReponsesReunion {
@@ -1697,6 +1929,11 @@ enum RoleNoteDeVersion {
   REFERENT
 }
 
+enum RolePlace {
+  RENFORT
+  RESPONSABLE
+}
+
 type Score {
   fichesCreees: Int!
   fichesModifiees: Int!
@@ -1704,6 +1941,58 @@ type Score {
   tachesATemps: Int!
   tachesCreees: Int!
   tachesRealisees: Int!
+}
+
+"""Une séquence du programme du jour J (ADR 0040)."""
+type Sequence {
+  debut: DateTime!
+  description: String
+  editionId: ID!
+  fin: DateTime!
+  heureDebut: String!
+  heureFin: String!
+  id: ID!
+  jour: String!
+  jourFin: String!
+  lieu: Lieu
+  perimetre: Perimetre
+  peutModifier: Boolean!
+  places: [PlaceSequence!]!
+  titre: String!
+  version: Int!
+}
+
+"""
+Un sondage de dates de l’agenda global d’une activité, ou de l’agenda d’un périmètre.
+"""
+type Sondage {
+  """Vrai si la personne connectée a répondu à chaque créneau."""
+  aRepondu: Boolean!
+  cible: CibleConvocation!
+  creneaux: [CreneauSondage!]!
+  description: String
+  editionId: ID!
+  estParticipant: Boolean!
+  id: ID!
+
+  """
+  Les personnes visées, pour les personnes qui écrivent dans l’agenda : la réunion créée depuis le sondage les convoque. Nul sinon.
+  """
+  participantIds: [ID!]
+
+  """Le nombre de personnes visées."""
+  participants: Int!
+  perimetre: Perimetre
+  peutModifier: Boolean!
+
+  """Le nombre de personnes qui ont répondu à au moins un créneau."""
+  repondants: Int!
+
+  """La réunion créée depuis le sondage clos."""
+  reunionId: ID
+  statut: StatutSondage!
+  titre: String!
+  version: Int!
 }
 
 enum SorteAbonnement {
@@ -1777,6 +2066,11 @@ enum StatutOrganisation {
 enum StatutReunion {
   ANNULEE
   PREVUE
+}
+
+enum StatutSondage {
+  CLOS
+  OUVERT
 }
 
 enum StatutTache {
@@ -1901,6 +2195,7 @@ enum TypeNotification {
   REUNION_ANNULEE
   REUNION_CONVOQUEE
   REUNION_MODIFIEE
+  SONDAGE_OUVERT
   SOUHAIT_FORMULE
   TACHE_ASSIGNEE
   TACHE_COMMENTEE
