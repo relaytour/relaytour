@@ -258,6 +258,14 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 scalar DateTime
 
 """
+Connexion à Nextcloud commencée : la page où l’admin accorde l’accès, et l’état à présenter ensuite.
+"""
+type DebutConnexionNextcloud {
+  connexion: String!
+  etat: String!
+}
+
+"""
 Les périmètres où décliner une tâche partagée. Un texte ou une échéance absents reprennent ceux de la tâche partagée.
 """
 input DeclinaisonInput {
@@ -547,6 +555,7 @@ type FormulaireRejoindre {
 enum FournisseurFichiers {
   DROPBOX
   GOOGLE_DRIVE
+  NEXTCLOUD
   SHAREPOINT
 }
 
@@ -846,6 +855,11 @@ type Mutation {
   commencerConnexionEspaceFichiers(fournisseur: FournisseurFichiers!): String!
 
   """
+  Commence la connexion au Nextcloud de l’association, à l’adresse donnée. L’admin ouvre ensuite la page rendue et y accorde l’accès ; Nextcloud crée un mot de passe d’application pour Relaytour.
+  """
+  commencerConnexionNextcloud(adresse: String!): DebutConnexionNextcloud!
+
+  """
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
@@ -1064,6 +1078,11 @@ type Mutation {
   Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.
   """
   televerserMedia(donnees: String!, format: FormatMedia!): MediaTeleverse!
+
+  """
+  Demande à Nextcloud si l’admin a accordé l’accès. Vrai une fois la connexion enregistrée ; faux tant qu’il n’a pas terminé.
+  """
+  terminerConnexionNextcloud(etat: String!): Boolean!
 }
 
 """

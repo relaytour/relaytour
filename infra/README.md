@@ -122,6 +122,8 @@ Laissez l'API et le worker sortir en HTTPS vers `www.googleapis.com`, `oauth2.go
 
 Dropbox se connecte par le compte d'un admin. Créez une application dans la console des développeurs Dropbox, avec l'accès « Full Dropbox ». Son adresse de retour est `<ORIGINE_ORGA>/medias/espace-fichiers/retour/dropbox`. Cochez les permissions `account_info.read`, `files.metadata.read`, `files.content.read` et `files.content.write`. Renseignez `DROPBOX_CLIENT_ID` (la clé de l'application) et `DROPBOX_CLIENT_SECRET`. Une application en mode « développement » accepte cinquante comptes au plus ; au-delà, elle demande une validation à Dropbox. Laissez l'API et le worker sortir en HTTPS vers `api.dropboxapi.com` et `content.dropboxapi.com`.
 
+Nextcloud ne demande aucune application à inscrire : chaque association héberge le sien, et un admin de l'organisation saisit son adresse. Renseignez dans `NEXTCLOUD_HOTES` les hôtes admis, séparés par des virgules. La valeur `*` admet tout hôte en https, sans port, dont les adresses sont publiques : le serveur refuse une adresse privée, locale ou réservée, au moment même de la connexion. Un hôte nommé (`cloud.exemple.org`, `nuage.lan:8443`) est admis tel quel, même sur votre réseau privé : nommez seulement des Nextcloud de confiance. L'API et le worker sortent alors en HTTPS vers ces hôtes. L'admin se connecte avec son compte Nextcloud, qui crée un mot de passe d'application pour Relaytour.
+
 Les routes de l'espace de fichiers vivent sous `/medias/`, que le `Caddyfile` d'exemple relaie déjà vers l'API. Le secret client et la clé de chiffrement ne quittent pas le `.env`. Un secret client Microsoft expire : notez sa date et remplacez-le avant.
 
 ## Adapter la pile à votre hébergement

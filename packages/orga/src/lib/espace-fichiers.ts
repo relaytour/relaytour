@@ -61,6 +61,21 @@ export const CONNECTER_COMPTE_SERVICE = graphql(`
   }
 `)
 
+export const COMMENCER_NEXTCLOUD = graphql(`
+  mutation CommencerConnexionNextcloud($adresse: String!) {
+    commencerConnexionNextcloud(adresse: $adresse) {
+      connexion
+      etat
+    }
+  }
+`)
+
+export const TERMINER_NEXTCLOUD = graphql(`
+  mutation TerminerConnexionNextcloud($etat: String!) {
+    terminerConnexionNextcloud(etat: $etat)
+  }
+`)
+
 export const DECONNECTER = graphql(`
   mutation DeconnecterEspaceFichiers {
     deconnecterEspaceFichiers
@@ -242,6 +257,7 @@ export const NOMS_FOURNISSEURS: Record<string, string> = {
   SHAREPOINT: 'SharePoint',
   GOOGLE_DRIVE: 'Google Drive',
   DROPBOX: 'Dropbox',
+  NEXTCLOUD: 'Nextcloud',
 }
 
 /** L'icône d'un fichier, selon ce que la liseuse en affiche. */
