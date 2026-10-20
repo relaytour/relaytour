@@ -31,12 +31,34 @@ const PAGES_MAX = 40
 /** Au-delà, un texte s'affiche tronqué. */
 const TEXTE_MAX = 500_000
 
-/** Rend chaque page d'un PDF dans un canevas, à la largeur du conteneur. */
-async function rendrePdf(
+/** Densité de pixels d'un canevas, et nombre de pixels d'une page, au plus. */
+const DENSITE_MAX = 2
+const PIXELS_MAX = 4_000_000
+/** Une page se rend quand elle approche de la zone visible, à cette distance. */
+const MARGE_RENDU = '800px 0px'
+
+/** Le texte d'une page, pour les lecteurs d'écran. */
+function texteDeLaPage(contenu: {
+  items: readonly ({ str: string; hasEOL: boolean } | object)[]
+}): string {
+  return contenu.items
+    .map(item => ('str' in item ? item.str + (item.hasEOL ? '\n' : ' ') : ''))
+    .join('')
+    .trim()
+}
+
+/**
+ * Prépare la lecture d'un PDF : une case par page, à la proportion de la page,
+ * avec son texte pour les lecteurs d'écran. Une page ne se rend dans un canevas
+ * que lorsqu'elle approche de la zone visible, et son canevas se libère quand
+ * elle s'en éloigne : un long document ne retient pas tous ses pixels. Renvoie
+ * le nombre de pages et de quoi tout libérer.
+ */
+async function ouvrirPdf(
   donnees: ArrayBuffer,
   conteneur: HTMLElement,
   annule: () => boolean
-): Promise<number> {
+): Promise<{ total: number; fermer: () => void }> {
   const [pdfjs, { default: adresseWorker }] = await Promise.all([
     import('pdfjs-dist'),
     import('pdfjs-dist/build/pdf.worker.min.mjs?url'),
@@ -46,28 +68,81 @@ async function rendrePdf(
     data: new Uint8Array(donnees),
     enableXfa: false,
   })
+  const fermerDocument = () => void chargement.destroy()
   const pdf = await chargement.promise
-  try {
-    const largeur = Math.max(conteneur.clientWidth, 280)
-    const densite = window.devicePixelRatio || 1
-    const total = Math.min(pdf.numPages, PAGES_MAX)
-    for (let numero = 1; numero <= total; numero++) {
-      if (annule()) break
-      const page = await pdf.getPage(numero)
-      const echelle = largeur / page.getViewport({ scale: 1 }).width
-      const vue = page.getViewport({ scale: echelle * densite })
-      const canevas = document.createElement('canvas')
-      canevas.width = Math.floor(vue.width)
-      canevas.height = Math.floor(vue.height)
-      canevas.className = 'rt-liseuse-page'
-      canevas.setAttribute('role', 'img')
-      canevas.setAttribute('aria-label', `Page ${numero}`)
-      conteneur.append(canevas)
-      await page.render({ canvas: canevas, viewport: vue }).promise
+  if (annule()) {
+    fermerDocument()
+    return { total: 0, fermer: () => undefined }
+  }
+  const largeur = Math.max(conteneur.clientWidth, 280)
+  const densite = Math.min(window.devicePixelRatio || 1, DENSITE_MAX)
+  const total = Math.min(pdf.numPages, PAGES_MAX)
+  const rendus = new Map<Element, { annuler: () => void }>()
+
+  const rendre = async (cadre: HTMLElement, numero: number) => {
+    const page = await pdf.getPage(numero)
+    const naturelle = page.getViewport({ scale: 1 })
+    let echelle = (largeur / naturelle.width) * densite
+    const pixels = naturelle.width * naturelle.height * echelle * echelle
+    if (pixels > PIXELS_MAX) echelle *= Math.sqrt(PIXELS_MAX / pixels)
+    const vue = page.getViewport({ scale: echelle })
+    const canevas = document.createElement('canvas')
+    canevas.width = Math.floor(vue.width)
+    canevas.height = Math.floor(vue.height)
+    canevas.setAttribute('aria-hidden', 'true')
+    const tache = page.render({ canvas: canevas, viewport: vue })
+    rendus.set(cadre, { annuler: () => tache.cancel() })
+    try {
+      await tache.promise
+      if (rendus.has(cadre)) cadre.replaceChildren(canevas)
+    } catch {
+      // Rendu annulé : la page s'est éloignée avant la fin.
     }
-    return pdf.numPages
-  } finally {
-    void chargement.destroy()
+  }
+
+  const observateur = new IntersectionObserver(
+    entrees => {
+      for (const entree of entrees) {
+        const cadre = entree.target as HTMLElement
+        if (entree.isIntersecting && !rendus.has(cadre)) {
+          void rendre(cadre, Number(cadre.dataset.page))
+        } else if (!entree.isIntersecting && rendus.has(cadre)) {
+          rendus.get(cadre)?.annuler()
+          rendus.delete(cadre)
+          cadre.replaceChildren()
+        }
+      }
+    },
+    { root: conteneur.parentElement, rootMargin: MARGE_RENDU }
+  )
+
+  for (let numero = 1; numero <= total; numero++) {
+    if (annule()) break
+    const page = await pdf.getPage(numero)
+    const naturelle = page.getViewport({ scale: 1 })
+    const section = document.createElement('section')
+    section.className = 'rt-liseuse-page'
+    section.setAttribute('aria-label', `Page ${numero}`)
+    const cadre = document.createElement('div')
+    cadre.className = 'rt-liseuse-cadre'
+    cadre.dataset.page = String(numero)
+    cadre.style.aspectRatio = `${naturelle.width} / ${naturelle.height}`
+    const texte = document.createElement('div')
+    texte.className = 'rt-sr'
+    texte.textContent = texteDeLaPage(await page.getTextContent())
+    section.append(cadre, texte)
+    conteneur.append(section)
+    observateur.observe(cadre)
+  }
+
+  return {
+    total: pdf.numPages,
+    fermer: () => {
+      observateur.disconnect()
+      for (const rendu of rendus.values()) rendu.annuler()
+      rendus.clear()
+      fermerDocument()
+    },
   }
 }
 
@@ -87,6 +162,7 @@ function ContenuLiseuse({ doc }: { doc: DocumentOuvert }) {
     const controleur = new AbortController()
     const conteneur = pages.current
     let adresseImage: string | null = null
+    let fermerPdf: (() => void) | null = null
     void (async () => {
       try {
         const blob = await lireFichier(
@@ -106,13 +182,14 @@ function ContenuLiseuse({ doc }: { doc: DocumentOuvert }) {
               : contenu
           )
         } else if (conteneur !== null) {
-          setPagesTotales(
-            await rendrePdf(
-              await blob.arrayBuffer(),
-              conteneur,
-              () => controleur.signal.aborted
-            )
+          const pdf = await ouvrirPdf(
+            await blob.arrayBuffer(),
+            conteneur,
+            () => controleur.signal.aborted
           )
+          fermerPdf = pdf.fermer
+          if (controleur.signal.aborted) pdf.fermer()
+          else setPagesTotales(pdf.total)
         }
       } catch (e) {
         if (!controleur.signal.aborted) setErreur(messageErreur(e))
@@ -123,6 +200,7 @@ function ContenuLiseuse({ doc }: { doc: DocumentOuvert }) {
     return () => {
       controleur.abort()
       if (adresseImage !== null) URL.revokeObjectURL(adresseImage)
+      fermerPdf?.()
       conteneur?.replaceChildren()
     }
   }, [doc, affiche])

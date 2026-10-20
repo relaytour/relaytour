@@ -62,13 +62,16 @@ export const DOSSIERS_LIES = graphql(`
 export const CONTENU_DOSSIER = graphql(`
   query ContenuDossierLie($id: ID!, $chemin: [String!]!) {
     contenuDossierLie(id: $id, chemin: $chemin) {
-      elementId
-      nom
-      dossier
-      taille
-      modifieLe
-      lienWeb
-      apercu
+      complet
+      elements {
+        elementId
+        nom
+        dossier
+        taille
+        modifieLe
+        lienWeb
+        apercu
+      }
     }
   }
 `)
@@ -96,8 +99,11 @@ export const EMPLACEMENTS = graphql(`
 export const PARCOURIR = graphql(`
   query ParcourirEspaceFichiers($emplacement: String!, $chemin: [String!]!) {
     parcourirEspaceFichiers(emplacement: $emplacement, chemin: $chemin) {
-      elementId
-      nom
+      complet
+      elements {
+        elementId
+        nom
+      }
     }
   }
 `)

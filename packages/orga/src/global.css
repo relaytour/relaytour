@@ -2565,13 +2565,20 @@ button.rt-carte-fiche {
   gap: 12px;
 }
 
-.rt-liseuse-page {
-  display: block;
+/* Une page de PDF : une case à la proportion de la page, qui reçoit son canevas
+   à l'approche de la zone visible. */
+.rt-liseuse-cadre {
   width: 100%;
-  height: auto;
+  overflow: hidden;
   border-radius: 6px;
   box-shadow: 0 1px 4px rgba(var(--rt-encre-rgb), 0.15);
   background: #fff;
+}
+
+.rt-liseuse-cadre canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .rt-liseuse-texte {

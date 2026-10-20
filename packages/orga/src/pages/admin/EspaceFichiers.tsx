@@ -197,14 +197,15 @@ function LierDossier({
               />
             ) : dossiers.loading && !dossiers.data ? (
               <Skeleton active paragraph={{ rows: 3 }} />
-            ) : (dossiers.data?.parcourirEspaceFichiers ?? []).length === 0 ? (
+            ) : (dossiers.data?.parcourirEspaceFichiers.elements ?? [])
+                .length === 0 ? (
               <Empty
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description="Aucun sous-dossier."
               />
             ) : (
               <ul className="rt-explorateur">
-                {dossiers.data?.parcourirEspaceFichiers.map(d => (
+                {dossiers.data?.parcourirEspaceFichiers.elements.map(d => (
                   <li key={d.elementId}>
                     <button
                       type="button"
@@ -219,6 +220,13 @@ function LierDossier({
                   </li>
                 ))}
               </ul>
+            )}
+            {dossiers.data?.parcourirEspaceFichiers.complet === false && (
+              <Alert
+                type="info"
+                showIcon
+                message="Ce dossier compte trop de sous-dossiers pour les afficher tous. Rangez le dossier à lier plus haut dans la bibliothèque."
+              />
             )}
             <p className="rt-texte-secondaire" style={{ marginBottom: 0 }}>
               {chemin.length === 0

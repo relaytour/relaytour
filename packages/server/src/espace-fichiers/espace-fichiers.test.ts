@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   cheminValide,
@@ -7,7 +7,11 @@ import {
   formatApercu,
   typeServi,
 } from './chemin.ts'
-import { adresseGraph, HOTES_MICROSOFT } from './sharepoint.ts'
+import {
+  adresseGraph,
+  espaceSharePoint,
+  HOTES_MICROSOFT,
+} from './sharepoint.ts'
 import { hoteAdmis } from './sortant.ts'
 
 describe('cheminValide', () => {
@@ -104,5 +108,58 @@ describe('adresseGraph', () => {
     ).toBe(
       'https://graph.microsoft.com/v1.0/drives/b!abc/items/01XYZ:/%C3%89t%C3%A9%202027/Plan%20%231.pdf:'
     )
+  })
+})
+
+describe('pagination de Microsoft Graph', () => {
+  afterEach(() => {
+    vi.unstubAllGlobals()
+  })
+
+  /** Graph simulé : une page d'un fichier, puis une suite tant que `pages` le permet. */
+  function graphSimule(pages: number) {
+    let appels = 0
+    vi.stubGlobal('fetch', () => {
+      appels++
+      const suite =
+        appels < pages
+          ? {
+              '@odata.nextLink': `https://graph.microsoft.com/v1.0/suite?p=${appels}`,
+            }
+          : {}
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            value: [{ id: `e${appels}`, name: `f${appels}.txt`, file: {} }],
+            ...suite,
+          }),
+          { status: 200, headers: { 'content-type': 'application/json' } }
+        )
+      )
+    })
+  }
+
+  const position = { emplacement: 'b!abc', base: '01XYZ', chemin: [] }
+
+  it('suit les pages jusqu’à la dernière', async () => {
+    graphSimule(3)
+    const liste = await espaceSharePoint(() => Promise.resolve('jeton')).lister(
+      position
+    )
+    expect(liste?.complet).toBe(true)
+    expect(liste?.elements.map(e => e.nom)).toEqual([
+      'f1.txt',
+      'f2.txt',
+      'f3.txt',
+    ])
+  })
+
+  it('dit qu’une liste est incomplète au-delà de la borne', async () => {
+    graphSimule(100)
+    const liste = await espaceSharePoint(() => Promise.resolve('jeton')).lister(
+      position
+    )
+    expect(liste?.complet).toBe(false)
+    expect(liste?.elements).toHaveLength(25)
   })
 })

@@ -14,6 +14,7 @@ import type { ElementEspace } from '../espace-fichiers/types.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { peutLireFiche, peutRedigerFiche } from '../lib/fiches.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { sousVerrouOrganisation } from '../lib/limites.ts'
 
 import { builder } from './builder.ts'
 import { DossierLieRef, FormatApercuEnum } from './espace-fichiers.ts'
@@ -215,30 +216,7 @@ builder.mutationFields(t => ({
       }
       if (!cheminValide(chemin)) throw erreurSaisie('Chemin invalide.')
       const empreinte = empreinteChemin(chemin)
-      const existante = await prisma.ressourceFiche.findUnique({
-        where: {
-          ficheId_dossierLieId_empreinteChemin: {
-            ficheId: fiche.id,
-            dossierLieId: dossier.id,
-            empreinteChemin: empreinte,
-          },
-        },
-        select: { id: true },
-      })
-      if (existante !== null) {
-        return prisma.ressourceFiche.findUniqueOrThrow({
-          ...query,
-          where: { id: existante.id },
-        })
-      }
-      const nombre = await prisma.ressourceFiche.count({
-        where: { ficheId: fiche.id },
-      })
-      if (nombre >= RESSOURCES_MAX) {
-        throw erreurSaisie(
-          `Une fiche porte ${RESSOURCES_MAX} ressources au plus. Retirez-en une avant d’en lier une autre.`
-        )
-      }
+      // La lecture chez le fournisseur se fait hors du verrou.
       let element: ElementEspace | null
       try {
         const { espace } = await ouvrirEspace(fiche.organisationId)
@@ -258,24 +236,55 @@ builder.mutationFields(t => ({
           'Cet élément n’existe pas dans l’espace de fichiers.'
         )
       }
-      const ressource = await prisma.ressourceFiche.create({
-        ...query,
-        data: {
-          organisationId: fiche.organisationId,
-          ficheId: fiche.id,
-          dossierLieId: dossier.id,
-          chemin,
-          empreinteChemin: empreinte,
-          type: element.dossier ? 'DOSSIER' : 'FICHIER',
-          nom: chemin.length === 0 ? dossier.nom : element.nom,
-          creeParId: ctx.personne!.id,
-        },
-      })
+      const trouve = element
+      // Sous le verrou de l'organisation : deux liens simultanés de la même
+      // ressource n'en créent qu'un, et la borne de trente tient.
+      const ressourceId = await sousVerrouOrganisation(
+        fiche.organisationId,
+        async tx => {
+          const existante = await tx.ressourceFiche.findUnique({
+            where: {
+              ficheId_dossierLieId_empreinteChemin: {
+                ficheId: fiche.id,
+                dossierLieId: dossier.id,
+                empreinteChemin: empreinte,
+              },
+            },
+            select: { id: true },
+          })
+          if (existante !== null) return existante.id
+          const nombre = await tx.ressourceFiche.count({
+            where: { ficheId: fiche.id },
+          })
+          if (nombre >= RESSOURCES_MAX) {
+            throw erreurSaisie(
+              `Une fiche porte ${RESSOURCES_MAX} ressources au plus. Retirez-en une avant d’en lier une autre.`
+            )
+          }
+          const creee = await tx.ressourceFiche.create({
+            data: {
+              organisationId: fiche.organisationId,
+              ficheId: fiche.id,
+              dossierLieId: dossier.id,
+              chemin,
+              empreinteChemin: empreinte,
+              type: trouve.dossier ? 'DOSSIER' : 'FICHIER',
+              nom: chemin.length === 0 ? dossier.nom : trouve.nom,
+              creeParId: ctx.personne!.id,
+            },
+            select: { id: true },
+          })
+          return creee.id
+        }
+      )
       publierPourActivite('FICHE', fiche.organisationId, fiche.activiteId, {
         id: fiche.id,
         perimetreId: fiche.perimetreId,
       })
-      return ressource
+      return prisma.ressourceFiche.findUniqueOrThrow({
+        ...query,
+        where: { id: ressourceId },
+      })
     },
   }),
 

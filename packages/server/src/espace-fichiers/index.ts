@@ -4,6 +4,7 @@ import { prisma } from '@relaytour/database'
 import { GraphQLError } from 'graphql'
 
 import { chiffrer, dechiffrer, lireCle } from '../lib/chiffrement.ts'
+import { avecDelai } from '../lib/delai.ts'
 import { journal } from '../lib/journal.ts'
 
 import { convertibleParMicrosoft } from './chemin.ts'
@@ -94,18 +95,29 @@ interface JetonEnCache {
   expireLe: number
 }
 
-// Le jeton d'accès vit une heure : chaque processus le garde en mémoire. Un seul
-// renouvellement à la fois par connexion.
+// Le jeton d'accès vit une heure : chaque processus le garde en mémoire. Une
+// connexion se désigne ici par sa génération : le jeton chiffré en base, qui
+// change à chaque connexion et à chaque rotation. Un jeton obtenu pour une
+// génération ne sert jamais à une autre : un renouvellement commencé avant une
+// reconnexion ne réinstalle pas l'ancien compte. Un seul renouvellement à la
+// fois par génération.
 const jetons = new Map<string, JetonEnCache>()
 const renouvellements = new Map<string, Promise<string>>()
 const MARGE_MS = 60_000
 
-async function renouveler(connexionId: string): Promise<string> {
+async function renouveler(
+  connexionId: string,
+  generation: string
+): Promise<string> {
   const connexion = await prisma.connexionFichiers.findUnique({
     where: { id: connexionId },
     select: { jeton: true, etat: true, organisationId: true },
   })
-  if (connexion === null || connexion.etat !== 'ACTIVE') {
+  if (
+    connexion === null ||
+    connexion.etat !== 'ACTIVE' ||
+    connexion.jeton !== generation
+  ) {
     throw new EspaceIndisponible()
   }
   const [cle, configuration] = await Promise.all([
@@ -113,42 +125,48 @@ async function renouveler(connexionId: string): Promise<string> {
     configurationMicrosoft(),
   ])
   if (cle === null || configuration === null) throw new EspaceIndisponible()
-  const ancien = dechiffrer(connexion.jeton, cle)
+  const ancien = dechiffrer(generation, cle)
   try {
     const nouveaux = await rafraichir(configuration, ancien)
+    let courante = generation
     if (nouveaux.rafraichissement !== ancien) {
-      await prisma.connexionFichiers.update({
-        where: { id: connexionId },
-        data: { jeton: chiffrer(nouveaux.rafraichissement, cle) },
+      courante = chiffrer(nouveaux.rafraichissement, cle)
+      // L'écriture ne vaut que pour la génération lue au départ.
+      const { count } = await prisma.connexionFichiers.updateMany({
+        where: { id: connexionId, jeton: generation },
+        data: { jeton: courante },
       })
+      if (count === 0) throw new EspaceIndisponible()
     }
-    jetons.set(connexionId, {
+    jetons.set(courante, {
       acces: nouveaux.acces,
       expireLe: nouveaux.expireLe,
     })
     return nouveaux.acces
   } catch (erreur) {
     if (erreur instanceof AccesRetire) {
-      jetons.delete(connexionId)
-      await prisma.connexionFichiers.update({
-        where: { id: connexionId },
+      jetons.delete(generation)
+      const { count } = await prisma.connexionFichiers.updateMany({
+        where: { id: connexionId, jeton: generation },
         data: { etat: 'A_RECONNECTER' },
       })
-      journal.warn(
-        {
-          evenement: 'espace-fichiers-a-reconnecter',
-          organisationId: connexion.organisationId,
-        },
-        'Le fournisseur a retiré l’accès à l’espace de fichiers.'
-      )
+      if (count > 0) {
+        journal.warn(
+          {
+            evenement: 'espace-fichiers-a-reconnecter',
+            organisationId: connexion.organisationId,
+          },
+          'Le fournisseur a retiré l’accès à l’espace de fichiers.'
+        )
+      }
     }
     throw erreur
   }
 }
 
-function jetonDe(connexionId: string) {
+function jetonDe(connexionId: string, generation: string) {
   return async (forcer = false): Promise<string> => {
-    const enCache = jetons.get(connexionId)
+    const enCache = jetons.get(generation)
     if (
       !forcer &&
       enCache !== undefined &&
@@ -156,28 +174,31 @@ function jetonDe(connexionId: string) {
     ) {
       return enCache.acces
     }
-    let enCours = renouvellements.get(connexionId)
+    let enCours = renouvellements.get(generation)
     if (enCours === undefined) {
-      enCours = renouveler(connexionId).finally(() =>
-        renouvellements.delete(connexionId)
+      enCours = renouveler(connexionId, generation).finally(() =>
+        renouvellements.delete(generation)
       )
-      renouvellements.set(connexionId, enCours)
+      renouvellements.set(generation, enCours)
     }
     return enCours
   }
 }
 
-/** Garde le jeton d'accès reçu à la connexion : le premier appel n'a pas à le renouveler. */
+/**
+ * Garde le jeton d'accès reçu à la connexion, pour sa génération : le premier
+ * appel n'a pas à le renouveler.
+ */
 export function memoriserJetonAcces(
-  connexionId: string,
+  generation: string,
   acces: string,
   expireLe: number
 ): void {
-  jetons.set(connexionId, { acces, expireLe })
+  jetons.set(generation, { acces, expireLe })
 }
 
-export function oublierJetonAcces(connexionId: string): void {
-  jetons.delete(connexionId)
+export function oublierJetonAcces(generation: string): void {
+  jetons.delete(generation)
 }
 
 // ── Ouverture ────────────────────────────────────────────────────────────────
@@ -198,7 +219,7 @@ export async function ouvrirEspace(organisationId: string): Promise<{
 }> {
   const connexion = await prisma.connexionFichiers.findUnique({
     where: { organisationId },
-    select: { id: true, fournisseur: true, etat: true },
+    select: { id: true, fournisseur: true, etat: true, jeton: true },
   })
   if (connexion === null || connexion.etat !== 'ACTIVE') {
     throw new EspaceIndisponible()
@@ -209,7 +230,7 @@ export async function ouvrirEspace(organisationId: string): Promise<{
   switch (connexion.fournisseur) {
     case 'SHAREPOINT':
       return {
-        espace: espaceSharePoint(jetonDe(connexion.id)),
+        espace: espaceSharePoint(jetonDe(connexion.id, connexion.jeton)),
         connexionId: connexion.id,
       }
   }
@@ -226,6 +247,8 @@ export interface EtatConnexion {
 }
 
 const DUREE_ETAT_S = 10 * 60
+// Valkey, sur le chemin d'une requête, répond en une seconde ou échoue (invariant 17).
+const DELAI_VALKEY_MS = 1_000
 const cleEtat = (etat: string) => `espace-fichiers:etat:${etat}`
 
 /** Prépare une connexion : un état à usage unique et le défi PKCE qui l'accompagne. */
@@ -235,11 +258,15 @@ export async function commencerConnexion(
   const etat = randomBytes(32).toString('base64url')
   const verificateur = randomBytes(32).toString('base64url')
   const { connection } = await import('../jobs/queues.ts')
-  await connection.set(
-    cleEtat(etat),
-    JSON.stringify({ ...donnees, verificateur } satisfies EtatConnexion),
-    'EX',
-    DUREE_ETAT_S
+  await avecDelai(
+    connection.set(
+      cleEtat(etat),
+      JSON.stringify({ ...donnees, verificateur } satisfies EtatConnexion),
+      'EX',
+      DUREE_ETAT_S
+    ),
+    DELAI_VALKEY_MS,
+    'État de connexion'
   )
   return {
     etat,
@@ -253,6 +280,10 @@ export async function reprendreConnexion(
 ): Promise<EtatConnexion | null> {
   if (!/^[A-Za-z0-9_-]{43}$/.test(etat)) return null
   const { connection } = await import('../jobs/queues.ts')
-  const brut = await connection.getdel(cleEtat(etat))
+  const brut = await avecDelai(
+    connection.getdel(cleEtat(etat)),
+    DELAI_VALKEY_MS,
+    'État de connexion'
+  )
   return brut === null ? null : (JSON.parse(brut) as EtatConnexion)
 }

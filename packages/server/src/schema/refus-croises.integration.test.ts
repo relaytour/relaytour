@@ -1010,7 +1010,7 @@ const CAS: Cas[] = [
   {
     operation: 'contenuDossierLie',
     query:
-      'query ($id: ID!) { contenuDossierLie(id: $id, chemin: []) { nom } }',
+      'query ($id: ID!) { contenuDossierLie(id: $id, chemin: []) { complet } }',
     variables: () => ({ id: a.dossierLie }),
     attente: INTERDIT,
   },

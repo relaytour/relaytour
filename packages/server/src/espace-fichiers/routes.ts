@@ -119,9 +119,9 @@ async function retourSharePoint(
     where: { organisationId: reprise.organisationId },
     create: { organisationId: reprise.organisationId, ...donnees },
     update: donnees,
-    select: { id: true },
+    select: { id: true, jeton: true },
   })
-  memoriserJetonAcces(connexion.id, jetons.acces, jetons.expireLe)
+  memoriserJetonAcces(connexion.jeton, jetons.acces, jetons.expireLe)
   journal.info(
     {
       evenement: 'espace-fichiers-connecte',

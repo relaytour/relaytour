@@ -133,6 +133,7 @@ export default function Fiches() {
             : 'Les fiches méthode expliquent comment mener chaque étape de l’organisation.'
         }
         actions={
+          !vueDocuments &&
           data?.peutRedigerFichesCommunes && (
             <Button
               type="primary"

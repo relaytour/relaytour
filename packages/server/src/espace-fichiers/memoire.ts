@@ -73,7 +73,7 @@ export function espaceEnMemoire(
       return Promise.resolve(
         noeud === null || noeud.contenu !== undefined
           ? null
-          : (noeud.enfants ?? []).map(versElement)
+          : { elements: (noeud.enfants ?? []).map(versElement), complet: true }
       )
     },
     ouvrir: (p, { pdf }) => {

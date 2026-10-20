@@ -33,6 +33,12 @@ export interface ElementEspace {
   lienWeb: string | null
 }
 
+/** Le contenu d'un dossier. `complet` est faux quand la liste a été coupée. */
+export interface ListeElements {
+  elements: ElementEspace[]
+  complet: boolean
+}
+
 export interface ContenuFichier {
   flux: ReadableStream<Uint8Array>
   taille: number | null
@@ -45,8 +51,11 @@ export interface EspaceFichiers {
   emplacements(): Promise<Emplacement[]>
   /** L'élément à cette position, ou null s'il n'existe pas. */
   element(position: Position): Promise<ElementEspace | null>
-  /** Les éléments du dossier à cette position. Null si le dossier n'existe pas. */
-  lister(position: Position): Promise<ElementEspace[] | null>
+  /**
+   * Les éléments du dossier à cette position, coupés au-delà d'une borne de coût.
+   * Null si le dossier n'existe pas.
+   */
+  lister(position: Position): Promise<ListeElements | null>
   /** Le contenu du fichier, tel quel ou converti en PDF. */
   ouvrir(position: Position, options: { pdf: boolean }): Promise<ContenuFichier>
 }

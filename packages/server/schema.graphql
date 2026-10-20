@@ -691,6 +691,14 @@ input LimitesOrganisationInput {
   periodesOuvertes: Int
 }
 
+"""
+Contenu d’un dossier. `complet` est faux quand le dossier compte plus d’éléments que Relaytour n’en lit en une fois.
+"""
+type ListeElementsFichiers {
+  complet: Boolean!
+  elements: [ElementFichiers!]!
+}
+
 """Image enregistrée pour l’organisation, désignée par son empreinte."""
 type MediaTeleverse {
   empreinte: String!
@@ -1394,7 +1402,7 @@ type Query {
   """
   Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms.
   """
-  contenuDossierLie(chemin: [String!]!, id: ID!): [ElementFichiers!]!
+  contenuDossierLie(chemin: [String!]!, id: ID!): ListeElementsFichiers!
   demandes(editionId: ID!, statut: StatutDemande): [Demande!]!
 
   """
@@ -1481,7 +1489,7 @@ type Query {
   """
   Sous-dossiers d’un dossier de l’espace connecté, pour choisir un dossier à lier. Les fichiers ne s’y listent pas.
   """
-  parcourirEspaceFichiers(chemin: [String!]!, emplacement: String!): [ElementFichiers!]!
+  parcourirEspaceFichiers(chemin: [String!]!, emplacement: String!): ListeElementsFichiers!
   perimetre(activiteId: ID, slug: String!): Perimetre
   perimetres(activiteId: ID, inclureArchives: Boolean = false): [Perimetre!]!
   personnes(inclureArchives: Boolean = false): [Personne!]!

@@ -6,6 +6,7 @@ import {
   type ElementEspace,
   type Emplacement,
   type EspaceFichiers,
+  type ListeElements,
   type Position,
 } from './types.ts'
 
@@ -34,7 +35,10 @@ const PORTEES = 'offline_access User.Read Files.ReadWrite.All Sites.Read.All'
 const GRAPH = 'https://graph.microsoft.com/v1.0'
 const DELAI_MS = 15_000
 const DELAI_CONTENU_MS = 120_000
-const PAGES_MAX = 5
+// Un dossier se lit par pages de 200 éléments, 25 pages au plus : au-delà, la
+// liste se dit incomplète. Les sites et leurs bibliothèques suivent la même règle.
+const PAGES_MAX = 25
+const PAGES_SITES_MAX = 10
 
 // ── Connexion ────────────────────────────────────────────────────────────────
 
@@ -142,7 +146,7 @@ export async function nomDuCompte(acces: string): Promise<string> {
     `${GRAPH}/me?$select=displayName`,
     () => Promise.resolve(acces)
   )
-  return moi?.displayName?.trim() || 'Compte Microsoft'
+  return (moi?.displayName?.trim() || 'Compte Microsoft').slice(0, 255)
 }
 
 // ── Lecture ──────────────────────────────────────────────────────────────────
@@ -201,6 +205,28 @@ interface ElementGraph {
 
 const CHAMPS = 'id,name,folder,file,size,lastModifiedDateTime,webUrl'
 
+/**
+ * Suit les pages d'une collection de Graph (`@odata.nextLink`), jusqu'à une borne.
+ * Null si la première page n'existe pas.
+ */
+async function toutesLesPages<T>(
+  adresse: string,
+  jeton: Jeton,
+  pagesMax: number
+): Promise<{ valeurs: T[]; complet: boolean } | null> {
+  const valeurs: T[] = []
+  let suivante: string | undefined = adresse
+  for (let page = 0; suivante !== undefined; page++) {
+    if (page === pagesMax) return { valeurs, complet: false }
+    const reponse: { value: T[]; '@odata.nextLink'?: string } | null =
+      await lireJson(suivante, jeton)
+    if (reponse === null) return page === 0 ? null : { valeurs, complet: false }
+    valeurs.push(...reponse.value)
+    suivante = reponse['@odata.nextLink']
+  }
+  return { valeurs, complet: true }
+}
+
 function versElement(e: ElementGraph): ElementEspace {
   return {
     id: e.id,
@@ -246,18 +272,22 @@ export function espaceSharePoint(jeton: Jeton): EspaceFichiers {
       if (personnel !== null) {
         resultat.push({ id: personnel.id, nom: 'OneDrive', site: null })
       }
-      const sites = await lireJson<{
-        value: { id: string; displayName?: string }[]
-      }>(`${GRAPH}/sites?search=*&$select=id,displayName&$top=50`, jeton)
+      const sites = await toutesLesPages<{ id: string; displayName?: string }>(
+        `${GRAPH}/sites?search=*&$select=id,displayName&$top=50`,
+        jeton,
+        PAGES_SITES_MAX
+      )
       const parSite = await Promise.all(
-        (sites?.value ?? []).map(async site => {
-          const bibliotheques = await lireJson<{
-            value: { id: string; name: string }[]
+        (sites?.valeurs ?? []).map(async site => {
+          const bibliotheques = await toutesLesPages<{
+            id: string
+            name: string
           }>(
             `${GRAPH}/sites/${segment(site.id)}/drives?$select=id,name`,
-            jeton
+            jeton,
+            PAGES_SITES_MAX
           ).catch(() => null)
-          return (bibliotheques?.value ?? []).map(b => ({
+          return (bibliotheques?.valeurs ?? []).map(b => ({
             id: b.id,
             nom: b.name,
             site: site.displayName ?? null,
@@ -275,20 +305,15 @@ export function espaceSharePoint(jeton: Jeton): EspaceFichiers {
       return e === null ? null : versElement(e)
     },
 
-    async lister(position) {
-      let adresse: string | undefined =
-        `${adresseGraph(position)}/children?$select=${CHAMPS}&$top=200`
-      const elements: ElementEspace[] = []
-      for (let page = 0; adresse !== undefined && page < PAGES_MAX; page++) {
-        const reponse: {
-          value: ElementGraph[]
-          '@odata.nextLink'?: string
-        } | null = await lireJson(adresse, jeton)
-        if (reponse === null) return page === 0 ? null : elements
-        elements.push(...reponse.value.map(versElement))
-        adresse = reponse['@odata.nextLink']
-      }
-      return elements
+    async lister(position): Promise<ListeElements | null> {
+      const pages = await toutesLesPages<ElementGraph>(
+        `${adresseGraph(position)}/children?$select=${CHAMPS}&$top=200`,
+        jeton,
+        PAGES_MAX
+      )
+      return pages === null
+        ? null
+        : { elements: pages.valeurs.map(versElement), complet: pages.complet }
     },
 
     async ouvrir(position, { pdf }) {

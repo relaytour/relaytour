@@ -16,7 +16,7 @@ import {
 } from '../lib/espace-fichiers'
 import Liseuse, { type DocumentOuvert } from './Liseuse'
 
-type Element = ContenuDossierLieQuery['contenuDossierLie'][number]
+type Element = ContenuDossierLieQuery['contenuDossierLie']['elements'][number]
 
 export interface DossierAffiche {
   id: string
@@ -72,7 +72,8 @@ export default function ExplorateurDossier({
     })
   }
 
-  const elements = data?.contenuDossierLie ?? []
+  const elements = data?.contenuDossierLie.elements ?? []
+  const incomplet = data?.contenuDossierLie.complet === false
   const nomCourant = chemin[chemin.length - 1] ?? dossier.nom
 
   return (
@@ -160,6 +161,15 @@ export default function ExplorateurDossier({
             )
           })}
         </ul>
+      )}
+
+      {incomplet && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginTop: 12 }}
+          message="Ce dossier compte trop d’éléments pour les afficher tous ici. Ouvrez-le dans l’espace de fichiers pour voir la suite."
+        />
       )}
 
       <Liseuse document={ouvert} onFermer={() => setOuvert(null)} />

@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 import { remplacerEspacePourLesTests } from '../espace-fichiers/index.ts'
 import { espaceEnMemoire } from '../espace-fichiers/memoire.ts'
+import { peutRecevoir } from '../lib/flux.ts'
 import { routesEspaceFichiers } from '../espace-fichiers/routes.ts'
 
 import { schema } from './index.ts'
@@ -115,9 +116,9 @@ const LIER = `mutation ($a: ID!, $p: ID, $c: [String!]!) {
 }`
 const DOSSIERS = `query ($a: ID, $p: ID) { dossiersLies(activiteId: $a, perimetreId: $p) { id nom disponible } }`
 const CONTENU = `query ($id: ID!, $c: [String!]!) {
-  contenuDossierLie(id: $id, chemin: $c) { elementId nom dossier taille apercu lienWeb }
+  contenuDossierLie(id: $id, chemin: $c) { complet elements { elementId nom dossier taille apercu lienWeb } }
 }`
-const PARCOURIR = `query ($c: [String!]!) { parcourirEspaceFichiers(emplacement: "bibliotheque", chemin: $c) { nom dossier } }`
+const PARCOURIR = `query ($c: [String!]!) { parcourirEspaceFichiers(emplacement: "bibliotheque", chemin: $c) { complet elements { nom dossier } } }`
 
 async function lier(chemin: string[], perimetreId: string | null) {
   const r = await executer(ids.admin, LIER, {
@@ -325,13 +326,20 @@ describe('connexion', () => {
     const r = await executer(ids.admin, PARCOURIR, { c: [] })
     expect(r.errors).toBeUndefined()
     expect(r.data).toEqual({
-      parcourirEspaceFichiers: ['Basket', 'Commun', 'Natation', 'RH'].map(
-        nom => ({ nom, dossier: true })
-      ),
+      parcourirEspaceFichiers: {
+        complet: true,
+        elements: ['Basket', 'Commun', 'Natation', 'RH'].map(nom => ({
+          nom,
+          dossier: true,
+        })),
+      },
     })
     const fichiers = await executer(ids.admin, PARCOURIR, { c: ['Natation'] })
     expect(fichiers.data).toEqual({
-      parcourirEspaceFichiers: [{ nom: 'Archives', dossier: true }],
+      parcourirEspaceFichiers: {
+        complet: true,
+        elements: [{ nom: 'Archives', dossier: true }],
+      },
     })
   })
 })
@@ -385,6 +393,33 @@ describe('dossiers liés', () => {
     expect(await lier(['Natation'], ids.natation)).toBe(ids.dossierNatation)
   })
 
+  it('ne crée qu’un lien pour deux demandes simultanées, même sans périmètre', async () => {
+    const [a, b] = await Promise.all([lier(['RH'], null), lier(['RH'], null)])
+    expect(a).toBe(b)
+    expect(await prisma.dossierLie.count({ where: { element: 'd-rh' } })).toBe(
+      1
+    )
+    await prisma.dossierLie.deleteMany({ where: { element: 'd-rh' } })
+  })
+
+  it('signale un dossier lié aux seules personnes qui le lisent', async () => {
+    const changement = (perimetreId: string | null) => ({
+      entite: 'FICHIERS' as const,
+      organisationId: ids.org,
+      activiteId: ids.activite,
+      perimetreId,
+    })
+    const recoit = async (qui: string, c: Parameters<typeof peutRecevoir>[1]) =>
+      peutRecevoir(await buildContext('127.0.0.1', qui, slug), c)
+    expect(await recoit(ids.nageuse, changement(ids.natation))).toBe(true)
+    expect(await recoit(ids.basketteur, changement(ids.natation))).toBe(false)
+    expect(await recoit(ids.basketteur, changement(null))).toBe(true)
+    // La connexion, sans activité, ne va qu'aux admins de l'organisation.
+    const connexion = { entite: 'FICHIERS' as const, organisationId: ids.org }
+    expect(await recoit(ids.admin, connexion)).toBe(true)
+    expect(await recoit(ids.adminActivite, connexion)).toBe(false)
+  })
+
   it('se lisent comme les fiches du périmètre', async () => {
     const lus = async (qui: string, p: string | null = null) => {
       const r = await executer(qui, DOSSIERS, { a: ids.activite, p })
@@ -417,32 +452,35 @@ describe('dossiers liés', () => {
     })
     expect(r.errors).toBeUndefined()
     expect(r.data).toEqual({
-      contenuDossierLie: [
-        {
-          elementId: 'd-archives',
-          nom: 'Archives',
-          dossier: true,
-          taille: null,
-          apercu: 'AUCUN',
-          lienWeb: 'https://exemple.invalid/d-archives',
-        },
-        {
-          elementId: 'f-plan',
-          nom: 'Plan.pdf',
-          dossier: false,
-          taille: 19,
-          apercu: 'PDF',
-          lienWeb: 'https://exemple.invalid/f-plan',
-        },
-      ],
+      contenuDossierLie: {
+        complet: true,
+        elements: [
+          {
+            elementId: 'd-archives',
+            nom: 'Archives',
+            dossier: true,
+            taille: null,
+            apercu: 'AUCUN',
+            lienWeb: 'https://exemple.invalid/d-archives',
+          },
+          {
+            elementId: 'f-plan',
+            nom: 'Plan.pdf',
+            dossier: false,
+            taille: 19,
+            apercu: 'PDF',
+            lienWeb: 'https://exemple.invalid/f-plan',
+          },
+        ],
+      },
     })
     const sous = await executer(ids.nageuse, CONTENU, {
       id: ids.dossierNatation,
       c: ['Archives'],
     })
     expect(
-      (sous.data as { contenuDossierLie: { apercu: string }[] })
-        .contenuDossierLie[0]?.apercu
+      (sous.data as { contenuDossierLie: { elements: { apercu: string }[] } })
+        .contenuDossierLie.elements[0]?.apercu
     ).toBe('PDF_CONVERTI')
     const commun = await executer(ids.basketteur, CONTENU, {
       id: ids.dossierCommun,
@@ -450,8 +488,10 @@ describe('dossiers liés', () => {
     })
     expect(
       (
-        commun.data as { contenuDossierLie: { nom: string; apercu: string }[] }
-      ).contenuDossierLie.map(e => [e.nom, e.apercu])
+        commun.data as {
+          contenuDossierLie: { elements: { nom: string; apercu: string }[] }
+        }
+      ).contenuDossierLie.elements.map(e => [e.nom, e.apercu])
     ).toEqual([
       ['Charte.md', 'MARKDOWN'],
       ['logo.svg', 'AUCUN'],
@@ -661,6 +701,20 @@ describe('ressources liées à une fiche', () => {
         where: { ficheId: ids.ficheNatation },
       })
     ).toBe(3)
+  })
+
+  it('ne crée qu’une ressource pour deux demandes simultanées', async () => {
+    const lier = () =>
+      executer(ids.nageuse, LIER_RESSOURCE, {
+        f: ids.ficheNatation,
+        d: ids.dossierNatation,
+        c: ['Archives'],
+      })
+    const [a, b] = await Promise.all([lier(), lier()])
+    expect(a.errors).toBeUndefined()
+    expect(b.errors).toBeUndefined()
+    expect(lue(a).id).toBe(lue(b).id)
+    await prisma.ressourceFiche.delete({ where: { id: lue(a).id } })
   })
 
   it('refuse un dossier que les lecteurs de la fiche ne lisent pas', async () => {

@@ -1101,7 +1101,7 @@ model ConnexionFichiers {
   fournisseur    FournisseurFichiers
   // Nom affiché du compte connecté chez le fournisseur, lu par les admins de
   // l'organisation. Jamais son adresse.
-  compte         String
+  compte         String                @db.VarChar(255)
   jeton          String                @db.Text
   etat           EtatConnexionFichiers @default(ACTIVE)
   connecteParId  String?
@@ -1126,7 +1126,8 @@ model DossierLie {
   emplacement    String              @db.VarChar(255)
   element        String              @db.VarChar(255)
   // Nom du dossier lors du lien, affiché quand le fournisseur ne répond pas.
-  nom            String
+  // Un nom de dossier compte jusqu'à 255 caractères.
+  nom            String              @db.VarChar(255)
   creeParId      String?
   createdAt      DateTime            @default(now())
 
@@ -1162,7 +1163,7 @@ model RessourceFiche {
   empreinteChemin String        @db.Char(64)
   type            TypeRessource
   // Nom lors du lien, affiché quand le fournisseur ne répond pas.
-  nom             String
+  nom             String        @db.VarChar(255)
   creeParId       String?
   createdAt       DateTime      @default(now())
 

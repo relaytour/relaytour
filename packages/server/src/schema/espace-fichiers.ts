@@ -21,6 +21,7 @@ import { peutLireFiche } from '../lib/fiches.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { publierChangement, publierPourActivite } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
+import { sousVerrouOrganisation } from '../lib/limites.ts'
 
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
@@ -130,6 +131,22 @@ const ElementFichiersRef = builder
     }),
   })
 
+const ListeElementsFichiersRef = builder
+  .objectRef<{ elements: ElementVue[]; complet: boolean }>(
+    'ListeElementsFichiers'
+  )
+  .implement({
+    description:
+      'Contenu d’un dossier. `complet` est faux quand le dossier compte plus d’éléments que Relaytour n’en lit en une fois.',
+    fields: t => ({
+      elements: t.field({
+        type: [ElementFichiersRef],
+        resolve: l => l.elements,
+      }),
+      complet: t.exposeBoolean('complet'),
+    }),
+  })
+
 export const DossierLieRef = builder.prismaObject('DossierLie', {
   description:
     'Dossier de l’espace de fichiers lié à un périmètre, ou à toute l’activité quand le périmètre est nul.',
@@ -222,7 +239,7 @@ builder.queryFields(t => ({
   }),
 
   parcourirEspaceFichiers: t.field({
-    type: [ElementFichiersRef],
+    type: ListeElementsFichiersRef,
     authScopes: { admin: true },
     description:
       'Sous-dossiers d’un dossier de l’espace connecté, pour choisir un dossier à lier. Les fichiers ne s’y listent pas.',
@@ -233,13 +250,18 @@ builder.queryFields(t => ({
     resolve: async (_root, { emplacement, chemin }, ctx) => {
       exigerChemin(chemin)
       return avecEspace(ctx, async espace => {
-        const elements = await espace.lister({
+        const liste = await espace.lister({
           emplacement,
           base: null,
           chemin,
         })
-        if (elements === null) throw erreurSaisie('Dossier introuvable.')
-        return trier(elements.filter(e => e.dossier).map(e => vue(espace, e)))
+        if (liste === null) throw erreurSaisie('Dossier introuvable.')
+        return {
+          elements: trier(
+            liste.elements.filter(e => e.dossier).map(e => vue(espace, e))
+          ),
+          complet: liste.complet,
+        }
       })
     },
   }),
@@ -285,7 +307,7 @@ builder.queryFields(t => ({
   }),
 
   contenuDossierLie: t.field({
-    type: [ElementFichiersRef],
+    type: ListeElementsFichiersRef,
     authScopes: { connecte: true },
     description:
       'Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms.',
@@ -301,13 +323,16 @@ builder.queryFields(t => ({
         if (espace.fournisseur !== dossier.fournisseur) {
           throw erreurEspace(new Error('Fournisseur différent.'))
         }
-        const elements = await espace.lister({
+        const liste = await espace.lister({
           emplacement: dossier.emplacement,
           base: dossier.element,
           chemin,
         })
-        if (elements === null) throw erreurSaisie('Dossier introuvable.')
-        return trier(elements.map(e => vue(espace, e)))
+        if (liste === null) throw erreurSaisie('Dossier introuvable.')
+        return {
+          elements: trier(liste.elements.map(e => vue(espace, e))),
+          complet: liste.complet,
+        }
       })
     },
   }),
@@ -347,11 +372,11 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
       const connexion = await prisma.connexionFichiers.findUnique({
         where: { organisationId },
-        select: { id: true },
+        select: { id: true, jeton: true },
       })
       if (connexion === null) return false
       await prisma.connexionFichiers.delete({ where: { id: connexion.id } })
-      oublierJetonAcces(connexion.id)
+      oublierJetonAcces(connexion.jeton)
       journal.info(
         {
           evenement: 'espace-fichiers-deconnecte',
@@ -417,17 +442,22 @@ builder.mutationFields(t => ({
         emplacement,
         element: element.id,
       }
-      const existant = await prisma.dossierLie.findFirst({ where: cle })
-      const dossier =
-        existant ??
-        (await prisma.dossierLie.create({
-          data: {
-            ...cle,
-            fournisseur: espace.fournisseur,
-            nom: element.nom,
-            creeParId: ctx.personne!.id,
-          },
-        }))
+      // Sous le verrou de l'organisation : deux liens simultanés du même dossier
+      // n'en créent qu'un. Sans périmètre, la contrainte d'unicité ne l'empêche
+      // pas, car MariaDB admet plusieurs valeurs nulles.
+      const dossier = await sousVerrouOrganisation(
+        organisationId,
+        async tx =>
+          (await tx.dossierLie.findFirst({ where: cle })) ??
+          tx.dossierLie.create({
+            data: {
+              ...cle,
+              fournisseur: espace.fournisseur,
+              nom: element.nom,
+              creeParId: ctx.personne!.id,
+            },
+          })
+      )
       publierPourActivite('FICHIERS', organisationId, activite.id, {
         id: dossier.id,
         perimetreId: dossier.perimetreId,
