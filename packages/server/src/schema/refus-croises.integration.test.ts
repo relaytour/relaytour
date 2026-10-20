@@ -1062,6 +1062,13 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'personnesConvocables',
+    query:
+      'query ($e: ID!, $p: ID) { personnesConvocables(editionId: $e, perimetreId: $p) { personneId nom } }',
+    variables: () => ({ e: a.edition, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'reunion',
     query: 'query ($id: ID!) { reunion(id: $id) { id titre lieu } }',
     variables: () => ({ id: a.reunion }),

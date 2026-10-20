@@ -1274,6 +1274,13 @@ type Personne {
   souhaits(editionId: ID): [Souhait!]!
 }
 
+type PersonneConvocable {
+  """Vrai pour une personne affectée au périmètre pour la période."""
+  duPerimetre: Boolean!
+  nom: String!
+  personneId: ID!
+}
+
 """
 Une personne trouvée par la recherche, avec les périmètres lisibles où elle est affectée.
 """
@@ -1497,6 +1504,16 @@ type Query {
   perimetre(activiteId: ID, slug: String!): Perimetre
   perimetres(activiteId: ID, inclureArchives: Boolean = false): [Perimetre!]!
   personnes(inclureArchives: Boolean = false): [Personne!]!
+
+  """
+  Les personnes de l’équipe qu’une réunion peut convoquer, pour les personnes qui écrivent dans cet agenda. Les personnes archivées n’y figurent pas.
+  """
+  personnesConvocables(
+    editionId: ID!
+
+    """Le périmètre ; sans valeur, l’agenda global."""
+    perimetreId: ID
+  ): [PersonneConvocable!]!
   peutRedigerFichesCommunes(activiteId: ID): Boolean!
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
   recherche(editionId: ID, texte: String!): Recherche!

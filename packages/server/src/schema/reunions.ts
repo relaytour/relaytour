@@ -17,7 +17,9 @@ import { peutModifierPerimetre } from '../lib/droits.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { heureLocale } from '../lib/heures.ts'
+import { dansLEquipe, membreActif } from '../lib/appartenances.ts'
 import {
+  CONVOCATIONS_MAX,
   DESCRIPTION_REUNION_MAX,
   detailOuvert,
   exigerEcritureReunion,
@@ -285,7 +287,72 @@ async function reunionVisible(
 /** Une période compte 500 réunions au plus dans une lecture. */
 const REUNIONS_LUES_MAX = 500
 
+interface PersonneConvocable {
+  id: string
+  nom: string
+  duPerimetre: boolean
+}
+
+const PersonneConvocableRef = builder
+  .objectRef<PersonneConvocable>('PersonneConvocable')
+  .implement({
+    fields: t => ({
+      // Pas de champ `id` : le cache ne fusionne pas ces lignes avec les personnes.
+      personneId: t.exposeID('id'),
+      nom: t.exposeString('nom'),
+      duPerimetre: t.exposeBoolean('duPerimetre', {
+        description:
+          'Vrai pour une personne affectée au périmètre pour la période.',
+      }),
+    }),
+  })
+
 builder.queryFields(t => ({
+  personnesConvocables: t.field({
+    type: [PersonneConvocableRef],
+    authScopes: { connecte: true },
+    description:
+      'Les personnes de l’équipe qu’une réunion peut convoquer, pour les personnes qui écrivent dans cet agenda. Les personnes archivées n’y figurent pas.',
+    args: {
+      editionId: t.arg.id({ required: true }),
+      perimetreId: t.arg.id({
+        description: 'Le périmètre ; sans valeur, l’agenda global.',
+      }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const lieu = {
+        editionId: String(args.editionId),
+        perimetreId: args.perimetreId ? String(args.perimetreId) : null,
+      }
+      const { activiteId } = await exigerEcritureReunion(ctx, lieu)
+      const personnes = await prisma.user.findMany({
+        where: {
+          AND: [dansLEquipe([activiteId]), membreActif(ctx.organisation!.id)],
+        },
+        select: {
+          id: true,
+          name: true,
+          affectations:
+            lieu.perimetreId === null
+              ? false
+              : {
+                  where: {
+                    perimetreId: lieu.perimetreId,
+                    editionId: lieu.editionId,
+                  },
+                  select: { id: true },
+                },
+        },
+        orderBy: { name: 'asc' },
+        take: CONVOCATIONS_MAX * 4,
+      })
+      return personnes.map(p => ({
+        id: p.id,
+        nom: p.name,
+        duPerimetre: (p.affectations?.length ?? 0) > 0,
+      }))
+    },
+  }),
   reunions: t.field({
     type: [ReunionRef],
     authScopes: { connecte: true },

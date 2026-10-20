@@ -769,3 +769,41 @@ describe('mails et notifications', () => {
     ).toBe(1)
   })
 })
+
+describe('personnes convocables', () => {
+  const CONVOCABLES = `query ($e: ID!, $p: ID) { personnesConvocables(editionId: $e, perimetreId: $p) { personneId duPerimetre } }`
+
+  it('liste l’équipe active pour une personne qui écrit dans le périmètre', async () => {
+    const liste = donnees<{ personneId: string; duPerimetre: boolean }[]>(
+      await executer(ids.referent, CONVOCABLES, {
+        e: ids.edition,
+        p: ids.natation,
+      }),
+      'personnesConvocables'
+    )
+    const ids_ = liste.map(p => p.personneId)
+    expect(ids_).toContain(ids.basketteuse)
+    expect(ids_).not.toContain(ids.archive)
+    expect(ids_).not.toContain(ids.etrangere)
+    expect(liste.find(p => p.personneId === ids.referent)?.duPerimetre).toBe(
+      true
+    )
+    expect(liste.find(p => p.personneId === ids.basketteuse)?.duPerimetre).toBe(
+      false
+    )
+  })
+
+  it('reste fermée aux personnes qui n’écrivent pas dans cet agenda', async () => {
+    expect(
+      code(
+        await executer(ids.basketteuse, CONVOCABLES, {
+          e: ids.edition,
+          p: ids.natation,
+        })
+      )
+    ).toBe('FORBIDDEN')
+    expect(
+      code(await executer(ids.referent, CONVOCABLES, { e: ids.edition }))
+    ).toBe('FORBIDDEN')
+  })
+})
