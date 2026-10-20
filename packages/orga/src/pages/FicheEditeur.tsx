@@ -5,6 +5,7 @@ import {
   Button,
   Card,
   Col,
+  Drawer,
   Form,
   Grid,
   Input,
@@ -16,8 +17,10 @@ import {
   Typography,
 } from 'antd'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
+import EditeurMarkdown from '../composants/EditeurMarkdown'
+import GuideMarkdown from '../composants/GuideMarkdown'
 import Markdown from '../composants/Markdown'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
@@ -193,6 +196,8 @@ function Formulaire({
     return () => window.clearTimeout(minuteur)
   }, [cle, titre, contenu, versionDeDepart, modifie])
   const [vue, setVue] = useState<'ecrire' | 'apercu'>('ecrire')
+  // Le guide s'ouvre dans un tiroir : la saisie reste à l'écran.
+  const [aide, setAide] = useState(false)
   const [slugTouche, setSlugTouche] = useState(false)
   const [creer, creationEnCours] = useMutation(CREER_FICHE, {
     refetchQueries: ['ListeFiches', 'PagePerimetre'],
@@ -265,12 +270,11 @@ function Formulaire({
   }
 
   const editeur = (
-    <Input.TextArea
-      value={contenu}
-      onChange={e => setContenu(e.target.value)}
-      autoSize={{ minRows: 18 }}
-      style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 14 }}
-      aria-label="Contenu de la fiche en Markdown"
+    <EditeurMarkdown
+      valeur={contenu}
+      onChange={setContenu}
+      onAide={() => setAide(true)}
+      libelle="Contenu de la fiche en Markdown"
     />
   )
   const apercu = (
@@ -411,8 +415,11 @@ function Formulaire({
               {editeur}
             </Col>
             <Col span={12}>
-              <Typography.Text strong>Aperçu</Typography.Text>
-              {apercu}
+              {/* L'aperçu suit la saisie et reste à l'écran pendant le défilement. */}
+              <div className="rt-apercu-markdown">
+                <Typography.Text strong>Aperçu</Typography.Text>
+                {apercu}
+              </div>
             </Col>
           </Row>
         ) : (
@@ -472,6 +479,23 @@ function Formulaire({
           )}
         </Space>
       </Form>
+
+      <Drawer
+        title="Aide Markdown"
+        open={aide}
+        onClose={() => setAide(false)}
+        size={ecrans.md ? 560 : '100%'}
+        // Sur téléphone, le tiroir occupe l'écran : il ne propose pas d'onglet.
+        extra={
+          ecrans.md ? (
+            <Link to={lien('/aide/markdown')} target="_blank">
+              Ouvrir dans un onglet
+            </Link>
+          ) : undefined
+        }
+      >
+        <GuideMarkdown compact />
+      </Drawer>
     </>
   )
 }
