@@ -1,7 +1,7 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import { dateCourte, jourDeLInstant, messageErreur } from './erreurs'
+import { dateCourte, estRefus, jourDeLInstant, messageErreur } from './erreurs'
 
 function erreurGraphQL(message: string, code: string) {
   return new CombinedGraphQLErrors({
@@ -88,5 +88,16 @@ describe('jourDeLInstant', () => {
     expect(jourDeLInstant(instant)).toBe('5 octobre 2026')
     vi.stubEnv('TZ', 'UTC')
     expect(jourDeLInstant(instant)).toBe('4 octobre 2026')
+  })
+})
+
+describe('estRefus', () => {
+  it('reconnaît un refus d’accès, pas une panne ni une saisie refusée', () => {
+    expect(estRefus(erreurGraphQL('Accès refusé.', 'FORBIDDEN'))).toBe(true)
+    expect(estRefus(erreurGraphQL('Erreur.', 'INTERNAL_SERVER_ERROR'))).toBe(
+      false
+    )
+    expect(estRefus(erreurGraphQL('Trop long.', 'SAISIE_INVALIDE'))).toBe(false)
+    expect(estRefus(new Error('Réseau indisponible'))).toBe(false)
   })
 })
