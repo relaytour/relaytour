@@ -29,8 +29,9 @@ La décision garde la mention comme raccourci de saisie, et porte le partage dan
 
 ### Fiche connexe
 
-- Une fiche de périmètre déclare une liste **« Concerne aussi »** : d'autres périmètres non archivés de la même activité.
-- Pour chacun de ces périmètres, elle est une **fiche connexe**. Elle reste la fiche de son périmètre d'origine, avec son historique et ses rédactrices et rédacteurs.
+- Une fiche de périmètre déclare une liste **« Concerne aussi »** : d'autres périmètres non archivés de la même activité, et des groupes de cette activité.
+- Un groupe de la liste concerne tous ses périmètres non archivés, aujourd'hui et plus tard. Un périmètre qui rejoint le groupe reçoit la fiche sans autre geste. Le périmètre de la fiche n'est jamais concerné par son propre groupe.
+- Pour chacun des périmètres concernés, elle est une **fiche connexe**. Elle reste la fiche de son périmètre d'origine, avec son historique et ses rédactrices et rédacteurs.
 - Une fiche commune n'a pas de liste « Concerne aussi » : elle concerne déjà tous les périmètres.
 - Une fiche connexe se lit dans le périmètre cible et ne s'y modifie pas. Le droit de rédaction reste celui du périmètre d'origine.
 - Une personne qui peut rédiger la fiche modifie sa liste. Un admin de l'activité aussi.
@@ -53,16 +54,16 @@ La décision garde la mention comme raccourci de saisie, et porte le partage dan
 ### Mention d'un périmètre ou d'un groupe
 
 - Dans le texte d'une fiche, `@` suivi de l'identifiant d'un périmètre de l'activité forme une **mention**, par exemple `@logistique`.
-- `@` suivi de la clé d'un groupe de l'activité mentionne tous ses périmètres non archivés, par exemple `@sport`. Quand un périmètre et un groupe portent le même identifiant, la mention désigne le périmètre.
+- `@groupe:` suivi de la clé d'un groupe de l'activité mentionne ce groupe, par exemple `@groupe:sport`. Le préfixe évite toute confusion entre un périmètre et un groupe.
 - L'éditeur propose les périmètres et les groupes de l'activité dès la saisie de `@`.
-- La lecture affiche une mention comme l'étiquette du périmètre ou du groupe. L'étiquette d'un périmètre mène à sa page. Une mention d'un périmètre ou d'un groupe inconnu reste du texte, comme celle d'un périmètre archivé.
-- Une mention ne donne aucun accès. À l'enregistrement, l'éditeur liste les périmètres mentionnés absents de « Concerne aussi », y compris ceux d'un groupe, et propose de les y ajouter. Rien ne s'ajoute sans l'accord de la personne qui enregistre.
-- La liste garde des périmètres, jamais un groupe. Un périmètre ajouté plus tard à un groupe n'entre pas dans la liste d'une fiche qui mentionne ce groupe.
-- Retirer une mention ne retire pas le périmètre de la liste.
+- La lecture affiche une mention comme l'étiquette du périmètre ou du groupe. L'étiquette d'un périmètre mène à sa page. L'étiquette d'un groupe ouvre une bulle qui liste ses périmètres : au survol sur un ordinateur, à l'appui sur un téléphone.
+- Une mention d'un périmètre ou d'un groupe inconnu reste du texte, comme celle d'un périmètre archivé.
+- Une mention ne donne aucun accès. À l'enregistrement, l'éditeur liste les périmètres et les groupes mentionnés absents de « Concerne aussi », et propose de les y ajouter. Un groupe s'ajoute comme groupe, et non comme la liste de ses périmètres du moment. Rien ne s'ajoute sans l'accord de la personne qui enregistre.
+- Retirer une mention ne retire rien de la liste.
 
 ### Seuil d'une large diffusion
 
-- Une liste d'au moins quatre périmètres, qui dépasse aussi la moitié des périmètres non archivés de l'activité, ouvre une fenêtre de confirmation à l'enregistrement. Une petite activité n'affiche donc pas cette fenêtre pour deux ou trois périmètres.
+- Le seuil compte les périmètres concernés, groupes compris. Une liste d'au moins quatre périmètres, qui dépasse aussi la moitié des périmètres non archivés de l'activité, ouvre une fenêtre de confirmation à l'enregistrement. Une petite activité n'affiche donc pas cette fenêtre pour deux ou trois périmètres.
 - La fenêtre s'affiche pour toute personne qui rédige la fiche, admin ou non. Une mention de groupe y mène souvent : elle reste admise.
 - La fenêtre rappelle que la fiche apparaîtra dans ces périmètres, et propose de la rendre commune.
 - La personne confirme la liste, ou revient à l'éditeur pour la modifier. Rien ne l'oblige à réduire la liste, et aucun admin ne valide la diffusion.
@@ -83,36 +84,41 @@ La décision garde la mention comme raccourci de saisie, et porte le partage dan
 
 ### Contenu
 
-- L'en-tête d'une fiche gagne une clé facultative `concerne`, avec la liste des identifiants des périmètres :
+- L'en-tête d'une fiche gagne deux clés facultatives : `concerne`, avec les identifiants des périmètres, et `concerneGroupes`, avec les clés des groupes.
 
   ```markdown
   ---
   slug: planifier-les-creneaux
   titre: Planifier les créneaux des bénévoles
   concerne: [logistique, accueil]
+  concerneGroupes: [sport]
   ---
   ```
 
-- La validation (`orga:valider`) refuse un périmètre inconnu, un périmètre d'une autre activité, le périmètre de la fiche et la clé sur une fiche commune.
-- L'import applique la liste. L'export l'écrit, triée par identifiant, et l'export vers l'espace de fichiers la reprend avec le reste de l'en-tête (ADR 0038).
+- La validation (`orga:valider`) refuse un périmètre inconnu, un périmètre d'une autre activité, le périmètre de la fiche, un groupe que l'activité ne déclare pas, et ces clés sur une fiche commune.
+- L'import applique la liste. L'export l'écrit, chaque clé triée, et l'export vers l'espace de fichiers la reprend avec le reste de l'en-tête (ADR 0038).
 - Le masquage et les liens venus d'une déclinaison vivent en base seulement. Ils n'entrent pas dans le contenu.
-- Une mention reste du texte dans le contenu. Elle se lit `@logistique` hors de Relaytour.
+- Une mention reste du texte dans le contenu. Elle se lit `@logistique` ou `@groupe:sport` hors de Relaytour.
 
 ### Notifications
 
-- L'ajout d'un périmètre à la liste prévient ses référentes et référents dans l'application : « Une fiche du pôle Bénévoles concerne aussi votre périmètre ». Aucun mail ni aucune notification push ne part.
+- L'ajout d'un périmètre à la liste prévient ses référentes et référents dans l'application : « Une fiche du pôle Bénévoles concerne aussi votre périmètre ». L'ajout d'un groupe prévient ceux de chacun de ses périmètres. Aucun mail ni aucune notification push ne part.
+- Un périmètre qui rejoint plus tard un groupe de la liste ne déclenche aucune notification : la fiche apparaît dans ses fiches connexes.
 - Une clé par fiche et par tranche de dix minutes regroupe les ajouts successifs.
-- Le retrait d'un périmètre et le masquage ne préviennent personne.
+- Le retrait d'un périmètre ou d'un groupe et le masquage ne préviennent personne.
 - L'ajout d'une fiche connexe ne donne aucun point de score.
 
 ## Conséquences
 
-- Une migration additive crée la table `FicheConnexe` : `ficheId`, `perimetreId`, `ajouteeParId`, `ajouteeLe`, `masqueeParId`, `masqueeLe`. Un index unique porte sur `(ficheId, perimetreId)`. Cette clé est bornée par la fiche, elle-même rangée dans une activité (invariant 18).
-- Le contrat GraphQL gagne les champs `concerneAussi`, `connexePar` et `masquee` de la fiche, la liste `fichesConnexes` du périmètre, et les mutations qui règlent la liste, masquent et affichent une fiche connexe.
+- Une migration additive crée trois tables, chacune avec un index unique borné par la fiche, elle-même rangée dans une activité (invariant 18) :
+  - `FicheConnexe` : `ficheId`, `perimetreId`, `ajouteeParId`, `ajouteeLe`, unique sur `(ficheId, perimetreId)` ;
+  - `FicheGroupeConnexe` : `ficheId`, `groupe`, `ajouteParId`, `ajouteLe`, unique sur `(ficheId, groupe)` ;
+  - `FicheConnexeMasquee` : `ficheId`, `perimetreId`, `masqueeParId`, `masqueeLe`, unique sur `(ficheId, perimetreId)`. Le masquage vaut quel que soit le chemin du partage : périmètre, groupe ou déclinaison.
+- Le contrat GraphQL gagne les champs `concerneAussi`, `concerneGroupes`, `connexePar` et `masquee` de la fiche, la liste `fichesConnexes` du périmètre, et les mutations qui règlent la liste, masquent et affichent une fiche connexe.
 - Une écriture de la liste ou un masquage publie le signal `FICHE` aux personnes qui lisent la fiche dans chaque périmètre concerné (ADR 0017).
-- La lecture d'une fiche ajoute une condition : le périmètre de la personne figure dans les fiches connexes actives de la fiche, ou une déclinaison acceptée la relie à la fiche.
+- La lecture d'une fiche ajoute une condition : la personne lit les fiches d'un périmètre concerné par la fiche, par la liste, par un groupe de la liste ou par une déclinaison acceptée.
 - Le rendu Markdown (`composants/Markdown.tsx`) reconnaît les mentions de périmètre et de groupe. Le guide de la syntaxe des fiches et le mode d'emploi « Écrire une fiche en Markdown » les présentent.
-- L'éditeur de fiche gagne le champ « Concerne aussi », la proposition des périmètres mentionnés et l'avertissement de large diffusion.
+- L'éditeur de fiche gagne le champ « Concerne aussi », la proposition des périmètres et des groupes mentionnés, et la fenêtre de confirmation de large diffusion.
 - L'export complet d'une organisation porte les fiches connexes, leur masquage et leurs auteurs.
 - Le glossaire gagne « fiche connexe » et « mention ».
 
