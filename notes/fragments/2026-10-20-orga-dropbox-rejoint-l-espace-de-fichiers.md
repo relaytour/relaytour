@@ -9,7 +9,7 @@ fr:
     Dropbox rejoint l'espace de fichiers
   texte: >-
     Vous connectez Dropbox avec votre compte. Avec un compte d'équipe, vous
-    choisissez entre votre dossier personnel et l'espace de l'équipe. Les
+    parcourez l'espace de l'équipe, qui contient aussi votre dossier. Les
     documents Word et PowerPoint s'ouvrent dans la liseuse, convertis en PDF
     par Dropbox.
 ---

@@ -522,6 +522,15 @@ describe('isolement et concurrence du dossier d’export', () => {
         })
       )
     ).toBe('FORBIDDEN')
+    // SharePoint et Dropbox résolvent un chemin sans tenir compte de la casse.
+    for (const nom of [
+      dossierExport.nom.toLowerCase(),
+      dossierExport.nom.toUpperCase(),
+    ]) {
+      expect(
+        code(await executer(ids.admin, CONTENU, { id: lie.id, c: [nom] }))
+      ).toBe('FORBIDDEN')
+    }
 
     // Le dossier qui contient maintenant le dossier d'export ne se lie plus.
     const LIER_PERIMETRE = `mutation ($a: ID!, $p: ID, $c: [String!]!) {

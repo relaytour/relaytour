@@ -15,7 +15,10 @@ import {
 // son chemin, ou par un chemin relatif à son identifiant (« id:…/sous/dossier »)
 // pour la lecture. L'écriture veut un chemin complet : Relaytour le reconstitue.
 // L'espace d'équipe de Dropbox Business se lit par l'en-tête
-// `Dropbox-API-Path-Root`.
+// `Dropbox-API-Path-Root`. Il contient le dossier du membre : un compte d'équipe
+// se parcourt donc depuis cet espace seulement, pour qu'un dossier n'ait qu'une
+// adresse et qu'un dossier lié ne puisse pas contenir le dossier d'export sous
+// une autre vue.
 
 export interface ConfigurationDropbox {
   clientId: string
@@ -265,6 +268,10 @@ interface PageDropbox {
   has_more: boolean
 }
 
+/** Un chemin Dropbox dans une adresse web : chaque nom s'encode, « # » compris. */
+const versAdresse = (chemin: string) =>
+  chemin.split('/').map(encodeURIComponent).join('/')
+
 function versElement(m: MetaDropbox): ElementEspace {
   const chemin = m.path_display ?? ''
   const dossier = m['.tag'] === 'folder'
@@ -281,8 +288,8 @@ function versElement(m: MetaDropbox): ElementEspace {
       chemin === ''
         ? null
         : dossier
-          ? `https://www.dropbox.com/home${encodeURI(chemin)}`
-          : `https://www.dropbox.com/home${encodeURI(parent)}?preview=${encodeURIComponent(m.name)}`,
+          ? `https://www.dropbox.com/home${versAdresse(chemin)}`
+          : `https://www.dropbox.com/home${versAdresse(parent)}?preview=${encodeURIComponent(m.name)}`,
     etag: m.rev ?? null,
   }
 }
@@ -330,21 +337,20 @@ export function espaceDropbox(jeton: Jeton): EspaceFichiers {
           home_namespace_id?: string
         }
       }>('users/get_current_account', null, jeton, MON_DROPBOX)
-      const liste: Emplacement[] = [
-        { id: MON_DROPBOX, nom: 'Mon Dropbox', site: null },
-      ]
       const racine = compte?.root_info
       if (
         racine?.root_namespace_id !== undefined &&
         racine.root_namespace_id !== racine.home_namespace_id
       ) {
-        liste.push({
-          id: `${prefixeEquipe}${racine.root_namespace_id}`,
-          nom: 'Espace d’équipe',
-          site: 'Dropbox Business',
-        })
+        return [
+          {
+            id: `${prefixeEquipe}${racine.root_namespace_id}`,
+            nom: 'Espace d’équipe',
+            site: 'Dropbox Business',
+          },
+        ]
       }
-      return liste
+      return [{ id: MON_DROPBOX, nom: 'Mon Dropbox', site: null }]
     },
 
     async ancetres(emplacement, element) {

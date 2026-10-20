@@ -70,7 +70,7 @@ interface Meta {
   contenu?: string
 }
 
-function dropboxSimule(elements: Meta[], parPage = 1000) {
+function dropboxSimule(elements: Meta[], parPage = 1000, compte: unknown = {}) {
   const appels: {
     route: string
     entetes: Record<string, string>
@@ -143,6 +143,9 @@ function dropboxSimule(elements: Meta[], parPage = 1000) {
       return Promise.resolve(
         json({ ...args, rev: 'r2', name: 'x', id: 'id:n' })
       )
+    }
+    if (route === 'users/get_current_account') {
+      return Promise.resolve(json(compte))
     }
     return Promise.resolve(json({}, 404))
   })
@@ -227,6 +230,52 @@ describe('Dropbox simulé', () => {
       { pdf: false }
     )
     expect(await new Response(contenu.flux).text()).toBe('%PDF')
+  })
+
+  it('encode chaque nom dans le lien web, « # » compris', async () => {
+    dropboxSimule([
+      ...elements,
+      {
+        '.tag': 'file',
+        id: 'id:diese',
+        name: 'Plan.pdf',
+        path_lower: '/asso#equipe/plan.pdf',
+        path_display: '/Asso#Equipe/Plan.pdf',
+        rev: 'r1',
+      },
+    ])
+    expect(
+      (
+        await espaceDropbox(jeton).element({
+          emplacement: 'dropbox',
+          base: null,
+          chemin: ['Asso#Equipe', 'Plan.pdf'],
+        })
+      )?.lienWeb
+    ).toBe('https://www.dropbox.com/home/Asso%23Equipe?preview=Plan.pdf')
+  })
+
+  it('parcourt un compte d’équipe depuis l’espace de l’équipe seulement', async () => {
+    dropboxSimule(elements, 1000, {
+      root_info: {
+        '.tag': 'team',
+        root_namespace_id: '42',
+        home_namespace_id: '7',
+      },
+    })
+    expect(await espaceDropbox(jeton).emplacements()).toEqual([
+      { id: 'equipe:42', nom: 'Espace d’équipe', site: 'Dropbox Business' },
+    ])
+    dropboxSimule(elements, 1000, {
+      root_info: {
+        '.tag': 'user',
+        root_namespace_id: '7',
+        home_namespace_id: '7',
+      },
+    })
+    expect(await espaceDropbox(jeton).emplacements()).toEqual([
+      { id: 'dropbox', nom: 'Mon Dropbox', site: null },
+    ])
   })
 
   it('suit les pages, et dit quand la liste est coupée', async () => {

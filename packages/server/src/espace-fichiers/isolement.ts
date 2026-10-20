@@ -120,6 +120,15 @@ export function dansLExport(
   return (
     cible !== null &&
     chemin.length >= cible.chemin.length &&
-    cible.chemin.every((nom, i) => chemin[i] === nom)
+    cible.chemin.every((nom, i) => memeNom(chemin[i]!, nom))
   )
+}
+
+/**
+ * Deux noms qu'un fournisseur peut confondre. SharePoint et Dropbox résolvent un
+ * chemin sans tenir compte de la casse : « fiches relaytour » y désigne le
+ * dossier d'export. La comparaison retient donc la règle la plus large.
+ */
+function memeNom(a: string, b: string): boolean {
+  return a.normalize('NFC').toLowerCase() === b.normalize('NFC').toLowerCase()
 }
