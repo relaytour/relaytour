@@ -1237,7 +1237,33 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.sequence }),
     attente: INTERDIT,
   },
+  {
+    operation: 'creerBenevole',
+    query:
+      'mutation ($a: ID!) { creerBenevole(activiteId: $a, nom: "Intrusion", accord: true) { id } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'modifierBenevole',
+    query:
+      'mutation ($id: ID!) { modifierBenevole(id: $id, nom: "Intrusion") { id } }',
+    variables: () => ({ id: a.benevole }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'supprimerBenevole',
+    query: 'mutation ($id: ID!) { supprimerBenevole(id: $id) }',
+    variables: () => ({ id: a.benevole }),
+    attente: INTERDIT,
+  },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  {
+    operation: 'benevoles',
+    query: 'query ($a: ID!) { benevoles(activiteId: $a) { id nom telephone } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
   {
     operation: 'lieux',
     query: 'query ($a: ID!) { lieux(activiteId: $a) { id nom } }',
@@ -1512,6 +1538,11 @@ async function etatDeA() {
             lieuId: true,
             places: { select: { benevoleId: true, userId: true, role: true } },
           },
+          orderBy: { id: 'asc' },
+        }),
+        prisma.benevole.findMany({
+          where: { organisationId: a.org },
+          select: { id: true, nom: true, telephone: true },
           orderBy: { id: 'asc' },
         }),
         prisma.lieu.findMany({

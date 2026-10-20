@@ -169,8 +169,9 @@ export async function construireExport(organisationId: string) {
     },
   })
 
-  // Le programme du jour J (ADR 0038) : lieux et séquences, avec leurs places.
-  const [lieux, sequences] = await Promise.all([
+  // Le programme du jour J (ADR 0038) : lieux, séquences avec leurs places, et
+  // fiches bénévoles.
+  const [lieux, sequences, benevoles] = await Promise.all([
     prisma.lieu.findMany({
       where: { organisationId },
       orderBy: [{ activiteId: 'asc' }, { ordre: 'asc' }, { id: 'asc' }],
@@ -191,6 +192,14 @@ export async function construireExport(organisationId: string) {
             benevole: { select: { nom: true } },
           },
         },
+      },
+    }),
+    prisma.benevole.findMany({
+      where: { organisationId },
+      orderBy: [{ activiteId: 'asc' }, { nom: 'asc' }, { id: 'asc' }],
+      include: {
+        activite: { select: { slug: true } },
+        creePar: { select: { email: true } },
       },
     }),
   ])
@@ -426,6 +435,15 @@ export async function construireExport(organisationId: string) {
         email: p.user?.email ?? null,
         benevole: p.benevole?.nom ?? null,
       })),
+    })),
+    benevoles: benevoles.map(b => ({
+      activite: b.activite.slug,
+      nom: b.nom,
+      courriel: b.courriel,
+      telephone: b.telephone,
+      note: b.note,
+      accordLe: b.accordLe.toISOString(),
+      creePar: b.creePar?.email ?? null,
     })),
     sondages: sondages.map(s => ({
       activite: s.activite.slug,
