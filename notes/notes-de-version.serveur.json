@@ -5,6 +5,24 @@
   "version": "0.17.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-20-serveur-les-abonnements-a-l-agenda-passent-par-agenda",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les abonnements à l'agenda passent par /agenda/",
+            "texte": "L'API sert les abonnements iCalendar de l'agenda sous /agenda/. Le proxy de l'installation relaie ce chemin vers l'API, comme /graphql et /medias/ : le Caddyfile de référence le fait déjà.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.17.0",
       "notes": [
         {
