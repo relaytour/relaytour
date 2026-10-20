@@ -127,6 +127,7 @@ interface Preferences {
   pushDemandes: boolean
   applicationEquipe: boolean
   pushEquipe: boolean
+  pushAgenda: boolean
   resumeAdmin: boolean
 }
 
@@ -168,6 +169,10 @@ const PreferencesRef = builder
       pushEquipe: t.exposeBoolean('pushEquipe', {
         description:
           'Notification push pour les nouvelles d’admin sur l’équipe.',
+      }),
+      pushAgenda: t.exposeBoolean('pushAgenda', {
+        description:
+          'Notification push quand la personne est convoquée à une réunion, ou quand une de ses réunions change ou s’annule (ADR 0037).',
       }),
       resumeAdmin: t.exposeBoolean('resumeAdmin', {
         description:
@@ -411,6 +416,9 @@ builder.mutationFields(t => ({
       pushEquipe: t.arg.boolean({
         description: 'Sans valeur, ce réglage ne change pas.',
       }),
+      pushAgenda: t.arg.boolean({
+        description: 'Sans valeur, ce réglage ne change pas.',
+      }),
       resumeAdmin: t.arg.boolean({
         description: 'Sans valeur, ce réglage ne change pas.',
       }),
@@ -424,6 +432,7 @@ builder.mutationFields(t => ({
         'pushDemandes',
         'applicationEquipe',
         'pushEquipe',
+        'pushAgenda',
         'resumeAdmin',
       ] as const
       const reglages: Partial<Record<(typeof facultatifs)[number], boolean>> =

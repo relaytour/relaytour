@@ -17,6 +17,7 @@ export type EntiteChangee =
   | 'NOTIFICATION'
   | 'MESSAGE'
   | 'AGENDA'
+  | 'PROGRAMME'
 
 // Les requêtes qui affichent des tâches, et celles qui affichent des fiches.
 const VUES_DES_TACHES = [
@@ -39,6 +40,13 @@ const VUES_DES_PERIMETRES = [
   'PostesAPourvoir',
   // Les affectations, les contacts principaux et les accords (ADR 0036).
   'Organigramme',
+  // Les personnes affectées décident des convocations (ADR 0037), et des
+  // agendas où une personne écrit.
+  'Reunions',
+  'ReunionsDuPerimetre',
+  'Reunion',
+  'AffectationsPourAgenda',
+  'AgendasEcrits',
 ] as const
 
 /**
@@ -78,7 +86,22 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   // L'historique des messages (ADR 0020), lu par les admins.
   MESSAGE: ['Messages'],
   // Les dates clés de l'agenda d'une période (ADR 0037).
-  AGENDA: ['Agenda'],
+  // Les lieux, les séquences et les fiches bénévoles (ADR 0040).
+  PROGRAMME: [
+    'Programme',
+    'ProgrammePerimetre',
+    'Lieux',
+    'LieuxTous',
+    'Benevoles',
+  ],
+  AGENDA: [
+    'Agenda',
+    'Reunions',
+    'ReunionsDuPerimetre',
+    'Reunion',
+    'Sondages',
+    'Sondage',
+  ],
 }
 
 /** Les requêtes à relire pour un lot de signaux, sans doublon. */

@@ -8,11 +8,19 @@ import {
 
 import type { AppContext } from '../context.ts'
 import { jourISO } from '../lib/agenda.ts'
+import {
+  envoyerAnnulations,
+  envoyerConvocations,
+  verrouillerReunions,
+  notifierReunion,
+} from '../lib/convocations.ts'
 import { peutModifierPerimetre } from '../lib/droits.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { heureLocale } from '../lib/heures.ts'
+import { dansLEquipeQuiVoit, membreActif } from '../lib/appartenances.ts'
 import {
+  CONVOCATIONS_MAX,
   DESCRIPTION_REUNION_MAX,
   detailOuvert,
   exigerEcritureReunion,
@@ -56,6 +64,7 @@ export const REUNION_CHARGEE = {
   },
   convocations: {
     select: {
+      id: true,
       userId: true,
       reponse: true,
       envoyeeLe: true,
@@ -286,7 +295,75 @@ async function reunionVisible(
 /** Une période compte 500 réunions au plus dans une lecture. */
 const REUNIONS_LUES_MAX = 500
 
+interface PersonneConvocable {
+  id: string
+  nom: string
+  duPerimetre: boolean
+}
+
+const PersonneConvocableRef = builder
+  .objectRef<PersonneConvocable>('PersonneConvocable')
+  .implement({
+    fields: t => ({
+      // Pas de champ `id` : le cache ne fusionne pas ces lignes avec les personnes.
+      personneId: t.exposeID('id'),
+      nom: t.exposeString('nom'),
+      duPerimetre: t.exposeBoolean('duPerimetre', {
+        description:
+          'Vrai pour une personne affectée au périmètre pour la période.',
+      }),
+    }),
+  })
+
 builder.queryFields(t => ({
+  personnesConvocables: t.field({
+    type: [PersonneConvocableRef],
+    authScopes: { connecte: true },
+    description:
+      'Les personnes de l’équipe qu’une réunion peut convoquer, pour les personnes qui écrivent dans cet agenda. Les personnes archivées n’y figurent pas.',
+    args: {
+      editionId: t.arg.id({ required: true }),
+      perimetreId: t.arg.id({
+        description: 'Le périmètre ; sans valeur, l’agenda global.',
+      }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const lieu = {
+        editionId: String(args.editionId),
+        perimetreId: args.perimetreId ? String(args.perimetreId) : null,
+      }
+      const { activiteId } = await exigerEcritureReunion(ctx, lieu)
+      const personnes = await prisma.user.findMany({
+        where: {
+          AND: [
+            dansLEquipeQuiVoit([activiteId]),
+            membreActif(ctx.organisation!.id),
+          ],
+        },
+        select: {
+          id: true,
+          name: true,
+          affectations:
+            lieu.perimetreId === null
+              ? false
+              : {
+                  where: {
+                    perimetreId: lieu.perimetreId,
+                    editionId: lieu.editionId,
+                  },
+                  select: { id: true },
+                },
+        },
+        orderBy: { name: 'asc' },
+        take: CONVOCATIONS_MAX * 4,
+      })
+      return personnes.map(p => ({
+        id: p.id,
+        nom: p.name,
+        duPerimetre: (p.affectations?.length ?? 0) > 0,
+      }))
+    },
+  }),
   reunions: t.field({
     type: [ReunionRef],
     authScopes: { connecte: true },
@@ -426,6 +503,10 @@ builder.mutationFields(t => {
         perimetreId: t.arg.id({
           description: 'Le périmètre ; sans valeur, l’agenda global.',
         }),
+        sondageId: t.arg.id({
+          description:
+            'Le sondage clos dont la réunion découle, du même agenda (ADR 0037).',
+        }),
         ...champsSaisis,
       },
       resolve: async (_root, args, ctx) => {
@@ -434,28 +515,65 @@ builder.mutationFields(t => {
           perimetreId: args.perimetreId ? String(args.perimetreId) : null,
         }
         const { activiteId } = await exigerEcritureReunion(ctx, lieu)
+        // Un sondage clos du même agenda, sans réunion encore, reçoit le lien.
+        const sondageId = args.sondageId ? String(args.sondageId) : null
+        if (sondageId !== null) {
+          const sondage = await prisma.sondage.findFirst({
+            where: {
+              id: sondageId,
+              organisationId: ctx.organisation!.id,
+              editionId: lieu.editionId,
+              perimetreId: lieu.perimetreId,
+            },
+            select: { id: true },
+          })
+          if (sondage === null) throw accesRefuse()
+        }
         const valides = await champsValides(ctx, args, { ...lieu, activiteId })
-        const creee = await prisma.reunion.create({
-          data: {
-            organisationId: ctx.organisation!.id,
-            activiteId,
-            ...lieu,
-            ...valides.champs,
-            creeParId: ctx.personne!.id,
-            taches: {
-              create: valides.tacheIds.map(tacheId => ({ tacheId })),
+        const creee = await prisma.$transaction(async tx => {
+          const reunion = await tx.reunion.create({
+            data: {
+              organisationId: ctx.organisation!.id,
+              activiteId,
+              ...lieu,
+              ...valides.champs,
+              creeParId: ctx.personne!.id,
+              taches: {
+                create: valides.tacheIds.map(tacheId => ({ tacheId })),
+              },
+              convocations: {
+                create: valides.convoquees.map(userId => ({ userId })),
+              },
             },
-            convocations: {
-              create: valides.convoquees.map(userId => ({ userId })),
-            },
-          },
-          include: REUNION_CHARGEE,
+            include: REUNION_CHARGEE,
+          })
+          // La réservation du sondage et la création forment une seule
+          // écriture : deux créations simultanées ne lient pas le même sondage.
+          if (sondageId !== null) {
+            const { count } = await tx.sondage.updateMany({
+              where: { id: sondageId, statut: 'CLOS', reunionId: null },
+              data: { reunionId: reunion.id },
+            })
+            if (count === 0) {
+              throw erreurSaisie(
+                'Ce sondage doit être clos, et sans réunion créée.'
+              )
+            }
+          }
+          return reunion
         })
         publierPourActivite('AGENDA', ctx.organisation!.id, activiteId, {
           id: creee.id,
           perimetreId: creee.perimetreId,
           editionId: creee.editionId,
         })
+        envoyerConvocations(creee, creee.convocations)
+        await notifierReunion(
+          'REUNION_CONVOQUEE',
+          creee,
+          valides.convoquees,
+          ctx.personne!.id
+        )
         return lireReunion(ctx, creee)
       },
     }),
@@ -466,7 +584,11 @@ builder.mutationFields(t => {
       args: {
         id: t.arg.id({ required: true }),
         ...champsSaisis,
-        versionAttendue: t.arg.int(),
+        versionAttendue: t.arg.int({
+          required: true,
+          description:
+            'La version lue : le serveur refuse d’écraser une modification faite depuis.',
+        }),
       },
       resolve: async (_root, args, ctx) => {
         const actuelle = await reunionVisible(ctx, String(args.id))
@@ -486,15 +608,16 @@ builder.mutationFields(t => {
             ? avant.getTime() !== apres.getTime()
             : avant !== apres
         })
-        const avant = new Set(actuelle.convocations.map(c => c.userId))
         const apres = new Set(valides.convoquees)
-        const versionAttendue = args.versionAttendue ?? null
-        await prisma.$transaction(async tx => {
+        // Les convocations se relisent sous le verrou de la réunion : une
+        // affectation ou un retrait validé entre-temps entre dans le calcul.
+        const { avant, retirees } = await prisma.$transaction(async tx => {
+          await verrouillerReunions(tx, [actuelle.id])
           const { count } = await tx.reunion.updateMany({
             where: {
               id: actuelle.id,
               statut: 'PREVUE',
-              ...(versionAttendue === null ? {} : { version: versionAttendue }),
+              version: args.versionAttendue,
             },
             data: {
               ...valides.champs,
@@ -512,6 +635,11 @@ builder.mutationFields(t => {
               { versionCourante: version, modifieeLe: updatedAt.toISOString() }
             )
           }
+          const presentes = await tx.convocationReunion.findMany({
+            where: { reunionId: actuelle.id },
+            select: { id: true, userId: true, envoyeeLe: true },
+          })
+          const sortantes = presentes.filter(c => !apres.has(c.userId))
           await tx.reunionTache.deleteMany({
             where: {
               reunionId: actuelle.id,
@@ -526,24 +654,50 @@ builder.mutationFields(t => {
             skipDuplicates: true,
           })
           await tx.convocationReunion.deleteMany({
-            where: {
-              reunionId: actuelle.id,
-              userId: { in: [...avant].filter(id => !apres.has(id)) },
-            },
+            where: { id: { in: sortantes.map(c => c.id) } },
           })
+          const deja = new Set(presentes.map(c => c.userId))
           await tx.convocationReunion.createMany({
             data: [...apres]
-              .filter(id => !avant.has(id))
+              .filter(id => !deja.has(id))
               .map(userId => ({ reunionId: actuelle.id, userId })),
             skipDuplicates: true,
           })
+          return { avant: deja, retirees: sortantes }
         })
         publierPourActivite('AGENDA', ctx.organisation!.id, activiteId, {
           id: actuelle.id,
           perimetreId: actuelle.perimetreId,
           editionId: actuelle.editionId,
         })
-        return lireReunion(ctx, await reunionVisible(ctx, actuelle.id))
+        const modifiee = await reunionVisible(ctx, actuelle.id)
+        const ajoutees = [...apres].filter(id => !avant.has(id))
+        const maintenues = [...apres].filter(id => avant.has(id))
+        envoyerConvocations(
+          modifiee,
+          modifiee.convocations.filter(c => majeur || !avant.has(c.userId))
+        )
+        // Une personne retirée reçoit l'annulation si elle avait reçu la
+        // convocation ; un envoi en cours se rattrape à sa fin.
+        envoyerAnnulations(
+          modifiee,
+          retirees.filter(c => c.envoyeeLe !== null)
+        )
+        await notifierReunion(
+          'REUNION_CONVOQUEE',
+          modifiee,
+          ajoutees,
+          ctx.personne!.id
+        )
+        if (majeur) {
+          await notifierReunion(
+            'REUNION_MODIFIEE',
+            modifiee,
+            maintenues,
+            ctx.personne!.id
+          )
+        }
+        return lireReunion(ctx, modifiee)
       },
     }),
 
@@ -558,21 +712,39 @@ builder.mutationFields(t => {
           perimetreId: actuelle.perimetreId,
         })
         if (actuelle.statut === 'ANNULEE') return lireReunion(ctx, actuelle)
-        await prisma.reunion.updateMany({
-          where: { id: actuelle.id, statut: 'PREVUE' },
-          data: {
-            statut: 'ANNULEE',
-            annuleeLe: new Date(),
-            version: { increment: 1 },
-            sequence: { increment: 1 },
-          },
+        // Sous le verrou de la réunion, les convocations lues sont celles que
+        // l'annulation retire des agendas ; un envoi en cours se rattrape à sa
+        // fin (`concilierApresEnvoi`).
+        const recues = await prisma.$transaction(async tx => {
+          await verrouillerReunions(tx, [actuelle.id])
+          await tx.reunion.updateMany({
+            where: { id: actuelle.id, statut: 'PREVUE' },
+            data: {
+              statut: 'ANNULEE',
+              annuleeLe: new Date(),
+              version: { increment: 1 },
+              sequence: { increment: 1 },
+            },
+          })
+          return tx.convocationReunion.findMany({
+            where: { reunionId: actuelle.id, envoyeeLe: { not: null } },
+            select: { id: true, userId: true },
+          })
         })
         publierPourActivite('AGENDA', ctx.organisation!.id, activiteId, {
           id: actuelle.id,
           perimetreId: actuelle.perimetreId,
           editionId: actuelle.editionId,
         })
-        return lireReunion(ctx, await reunionVisible(ctx, actuelle.id))
+        const annulee = await reunionVisible(ctx, actuelle.id)
+        envoyerAnnulations(annulee, recues)
+        await notifierReunion(
+          'REUNION_ANNULEE',
+          annulee,
+          annulee.convocations.map(c => c.userId),
+          ctx.personne!.id
+        )
+        return lireReunion(ctx, annulee)
       },
     }),
 
@@ -593,6 +765,12 @@ builder.mutationFields(t => {
         }
         if (reunion.statut === 'ANNULEE') {
           throw erreurSaisie('Cette réunion est annulée.')
+        }
+        const edition = await ctx.exigerEdition(reunion.editionId)
+        if (edition.statut === 'ARCHIVEE') {
+          throw erreurSaisie(
+            'Cette période est archivée : son agenda est en lecture seule.'
+          )
         }
         await prisma.convocationReunion.updateMany({
           where: { reunionId: reunion.id, userId: ctx.personne!.id },

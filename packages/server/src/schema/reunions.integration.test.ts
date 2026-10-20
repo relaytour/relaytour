@@ -5,6 +5,11 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { composer } from '../courriel/messages.ts'
+import {
+  composerNotifications,
+  SELECTION_NOTIFICATION,
+} from '../lib/composition-notifications.ts'
 
 import { schema } from './index.ts'
 
@@ -64,7 +69,7 @@ const CHAMPS = `id titre jour heureDebut heureFin debut fin statut cible version
 const CREER = `mutation ($e: ID!, $p: ID, $t: String!, $j: Date!, $d: String!, $f: String!, $l: String, $v: String, $desc: String, $taches: [ID!], $c: CibleConvocation, $u: [ID!]) {
   creerReunion(editionId: $e, perimetreId: $p, titre: $t, jour: $j, heureDebut: $d, heureFin: $f, lieu: $l, lienVisio: $v, description: $desc, tacheIds: $taches, cible: $c, personneIds: $u) { ${CHAMPS} }
 }`
-const MODIFIER = `mutation ($id: ID!, $t: String!, $j: Date!, $d: String!, $f: String!, $l: String, $v: String, $desc: String, $c: CibleConvocation, $u: [ID!], $version: Int) {
+const MODIFIER = `mutation ($id: ID!, $t: String!, $j: Date!, $d: String!, $f: String!, $l: String, $v: String, $desc: String, $c: CibleConvocation, $u: [ID!], $version: Int!) {
   modifierReunion(id: $id, titre: $t, jour: $j, heureDebut: $d, heureFin: $f, lieu: $l, lienVisio: $v, description: $desc, cible: $c, personneIds: $u, versionAttendue: $version) { ${CHAMPS} }
 }`
 const ANNULER = `mutation ($id: ID!) { annulerReunion(id: $id) { ${CHAMPS} } }`
@@ -362,7 +367,14 @@ describe('réunion d’un périmètre', () => {
       ],
       [
         MODIFIER,
-        { id, t: 'Intrusion', j: '2027-03-01', d: '10:00', f: '11:00' },
+        {
+          id,
+          t: 'Intrusion',
+          j: '2027-03-01',
+          d: '10:00',
+          f: '11:00',
+          version: 0,
+        },
       ],
       [ANNULER, { id }],
     ] as const) {
@@ -382,6 +394,25 @@ describe('réunion d’un périmètre', () => {
         })
       )
     ).toBe('SAISIE_INVALIDE')
+    // Une personne convoquée ne répond plus une fois la période archivée.
+    const { statut } = await prisma.edition.findUniqueOrThrow({
+      where: { id: ids.edition },
+      select: { statut: true },
+    })
+    await prisma.edition.update({
+      where: { id: ids.edition },
+      data: { statut: 'ARCHIVEE' },
+    })
+    try {
+      expect(
+        code(await executer(ids.nageuse, REPONDRE, { id, r: 'PRESENT' }))
+      ).toBe('SAISIE_INVALIDE')
+    } finally {
+      await prisma.edition.update({
+        where: { id: ids.edition },
+        data: { statut },
+      })
+    }
   })
 
   it('accepte une réunion de plusieurs jours', async () => {
@@ -523,6 +554,7 @@ describe('modification, réponses et annulation', () => {
           j: '2027-03-01',
           d: '10:00',
           f: '11:00',
+          version: 1,
         })
       )
     ).toBe('SAISIE_INVALIDE')
@@ -670,5 +702,261 @@ describe('les convocations suivent les affectations', () => {
         },
       })
     ).toBe(0)
+  })
+})
+
+describe('mails et notifications', () => {
+  it('compose la convocation avec son fichier iCalendar, une fois par version', async () => {
+    const reunion = await reunionNatation({
+      c: 'CHOIX',
+      u: [ids.referent, ids.basketteuse],
+    })
+    const convocation = await prisma.convocationReunion.findFirstOrThrow({
+      where: { reunionId: reunion.id, userId: ids.basketteuse },
+      select: { id: true },
+    })
+    const job = {
+      sorte: 'convocation-reunion' as const,
+      userId: ids.basketteuse,
+      reunionId: reunion.id,
+      convocationId: convocation.id,
+      sequenceReunion: 0,
+      organisationId: ids.org,
+      activiteId: ids.activite,
+    }
+    const message = await composer(prisma, job)
+    expect(message?.sujet).toMatch(/convocation à une réunion$/)
+    expect(message?.texte).toContain('lundi 1 mars 2027, de 18 h 30 à 20 h')
+    expect(message?.texte).toContain('Lieu : Piscine municipale')
+    expect(message?.icalEvent?.methode).toBe('REQUEST')
+    const ics = message!.icalEvent!.contenu.replace(/\r\n /g, '')
+    expect(ics).toContain('DTSTART:20270301T173000Z')
+    expect(ics).toContain(`UID:reunion-${reunion.id}@`)
+    expect(ics).toContain(`mailto:${adresseDe('basketteuse')}`)
+    // Le fichier ne nomme aucune autre personne convoquée.
+    expect(ics).not.toContain(adresseDe('referent'))
+    await message!.apresEnvoi!()
+    expect(await composer(prisma, job)).toBeNull()
+
+    // Une nouvelle version repart, avec un sujet qui annonce le changement.
+    donnees(
+      await executer(ids.referent, MODIFIER, {
+        id: reunion.id,
+        t: 'Point natation',
+        j: '2027-03-01',
+        d: '19:00',
+        f: '20:00',
+        c: 'CHOIX',
+        u: [ids.referent, ids.basketteuse],
+        version: 0,
+      }),
+      'modifierReunion'
+    )
+    // Le job de la version dépassée n'envoie rien : celui de la nouvelle
+    // version envoie.
+    expect(await composer(prisma, job)).toBeNull()
+    const modifiee = await composer(prisma, { ...job, sequenceReunion: 1 })
+    expect(modifiee?.sujet).toMatch(/réunion modifiée$/)
+    expect(modifiee?.icalEvent?.contenu).toContain('SEQUENCE:1')
+  })
+
+  it('compose l’annulation d’une personne retirée, et pas d’une personne encore convoquée', async () => {
+    const reunion = await reunionNatation({
+      c: 'CHOIX',
+      u: [ids.referent, ids.basketteuse],
+    })
+    const job = {
+      sorte: 'annulation-reunion' as const,
+      userId: ids.basketteuse,
+      reunionId: reunion.id,
+      organisationId: ids.org,
+      activiteId: ids.activite,
+    }
+    expect(await composer(prisma, job)).toBeNull()
+    donnees(
+      await executer(ids.referent, MODIFIER, {
+        id: reunion.id,
+        t: 'Point natation',
+        j: '2027-03-01',
+        d: '18:30',
+        f: '20:00',
+        c: 'CHOIX',
+        u: [ids.referent],
+        version: 0,
+      }),
+      'modifierReunion'
+    )
+    const message = await composer(prisma, job)
+    expect(message?.sujet).toMatch(/vous n’êtes plus convoqué·e$/)
+    expect(message?.icalEvent?.methode).toBe('CANCEL')
+    expect(message?.icalEvent?.contenu).toContain('STATUS:CANCELLED')
+    // La personne retirée ne lit plus le détail : ni lieu, ni description.
+    expect(message?.texte).not.toContain('Piscine municipale')
+    expect(message?.icalEvent?.contenu).not.toContain('LOCATION')
+  })
+
+  it('annule une convocation partie pendant le retrait de la personne', async () => {
+    const reunion = await reunionNatation({
+      c: 'CHOIX',
+      u: [ids.referent, ids.basketteuse],
+    })
+    const convocation = await prisma.convocationReunion.findFirstOrThrow({
+      where: { reunionId: reunion.id, userId: ids.basketteuse },
+      select: { id: true },
+    })
+    const message = await composer(prisma, {
+      sorte: 'convocation-reunion',
+      userId: ids.basketteuse,
+      reunionId: reunion.id,
+      convocationId: convocation.id,
+      sequenceReunion: 0,
+      organisationId: ids.org,
+      activiteId: ids.activite,
+    })
+    // Le retrait arrive pendant l'envoi : aucune convocation n'est encore
+    // enregistrée comme reçue, il ne demande donc aucune annulation.
+    donnees(
+      await executer(ids.referent, MODIFIER, {
+        id: reunion.id,
+        t: 'Point natation',
+        j: '2027-03-01',
+        d: '18:30',
+        f: '20:00',
+        c: 'CHOIX',
+        u: [ids.referent],
+        version: 0,
+      }),
+      'modifierReunion'
+    )
+    const { courrielQueue } = await import('../jobs/queues.ts')
+    const { sequence } = await prisma.reunion.findUniqueOrThrow({
+      where: { id: reunion.id },
+      select: { sequence: true },
+    })
+    const cle = `annulation-${convocation.id}-${sequence}`
+    expect(await courrielQueue.getJob(cle)).toBeUndefined()
+    // La fin de l'envoi rattrape le retrait.
+    await message!.apresEnvoi!()
+    // La mise en file ne s'attend pas : le test la guette deux secondes au plus.
+    let annulation = await courrielQueue.getJob(cle)
+    for (let essai = 0; annulation === undefined && essai < 20; essai++) {
+      await new Promise(fin => setTimeout(fin, 100))
+      annulation = await courrielQueue.getJob(cle)
+    }
+    expect(annulation?.data).toMatchObject({
+      sorte: 'annulation-reunion',
+      userId: ids.basketteuse,
+      reunionId: reunion.id,
+    })
+    await annulation?.remove()
+  })
+
+  it('prévient les personnes convoquées, sauf l’auteur', async () => {
+    // La nageuse est archivée plus haut : la réunion convoque la basketteuse.
+    const reunion = await reunionNatation({
+      c: 'CHOIX',
+      u: [ids.referent, ids.basketteuse],
+    })
+    const notifications = await prisma.notification.findMany({
+      where: { reunionId: reunion.id },
+      select: { userId: true, type: true },
+    })
+    expect(notifications).toEqual([
+      { userId: ids.basketteuse, type: 'REUNION_CONVOQUEE' },
+    ])
+    const [composee] = await composerNotifications(
+      prisma,
+      await prisma.notification.findMany({
+        where: { reunionId: reunion.id },
+        select: SELECTION_NOTIFICATION,
+      }),
+      ids.basketteuse
+    )
+    expect(composee?.message).toBe(
+      `referent ${s} vous convoque à la réunion « Point natation ».`
+    )
+    expect(composee?.lien).toBe(
+      `/${slug}/agenda?edition=${ids.edition}&reunion=${reunion.id}`
+    )
+    donnees(
+      await executer(ids.referent, ANNULER, { id: reunion.id }),
+      'annulerReunion'
+    )
+    expect(
+      await prisma.notification.count({
+        where: { reunionId: reunion.id, type: 'REUNION_ANNULEE' },
+      })
+    ).toBe(1)
+  })
+})
+
+describe('personnes convocables', () => {
+  const CONVOCABLES = `query ($e: ID!, $p: ID) { personnesConvocables(editionId: $e, perimetreId: $p) { personneId duPerimetre } }`
+
+  it('liste l’équipe active pour une personne qui écrit dans le périmètre', async () => {
+    const liste = donnees<{ personneId: string; duPerimetre: boolean }[]>(
+      await executer(ids.referent, CONVOCABLES, {
+        e: ids.edition,
+        p: ids.natation,
+      }),
+      'personnesConvocables'
+    )
+    const ids_ = liste.map(p => p.personneId)
+    expect(ids_).toContain(ids.basketteuse)
+    expect(ids_).not.toContain(ids.archive)
+    expect(ids_).not.toContain(ids.etrangere)
+    expect(liste.find(p => p.personneId === ids.referent)?.duPerimetre).toBe(
+      true
+    )
+    expect(liste.find(p => p.personneId === ids.basketteuse)?.duPerimetre).toBe(
+      false
+    )
+  })
+
+  it('écarte une personne qui n’a qu’un souhait, qui ne voit pas l’activité', async () => {
+    await prisma.souhait.create({
+      data: {
+        userId: ids.membre,
+        perimetreId: ids.natation,
+        editionId: ids.edition,
+      },
+    })
+    const liste = donnees<{ personneId: string }[]>(
+      await executer(ids.referent, CONVOCABLES, {
+        e: ids.edition,
+        p: ids.natation,
+      }),
+      'personnesConvocables'
+    )
+    expect(liste.map(p => p.personneId)).not.toContain(ids.membre)
+    expect(
+      code(
+        await executer(ids.referent, CREER, {
+          e: ids.edition,
+          p: ids.natation,
+          t: 'Accueil',
+          j: '2027-03-01',
+          d: '10:00',
+          f: '11:00',
+          c: 'CHOIX',
+          u: [ids.membre],
+        })
+      )
+    ).toBe('FORBIDDEN')
+    await prisma.souhait.deleteMany({ where: { userId: ids.membre } })
+  })
+
+  it('reste fermée aux personnes qui n’écrivent pas dans cet agenda', async () => {
+    expect(
+      code(
+        await executer(ids.basketteuse, CONVOCABLES, {
+          e: ids.edition,
+          p: ids.natation,
+        })
+      )
+    ).toBe('FORBIDDEN')
+    expect(
+      code(await executer(ids.referent, CONVOCABLES, { e: ids.edition }))
+    ).toBe('FORBIDDEN')
   })
 })

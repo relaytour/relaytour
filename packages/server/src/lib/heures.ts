@@ -46,10 +46,13 @@ function murale(instant: number, fuseau: string): number {
   )
 }
 
+const JOUR_MS = 24 * 60 * 60 * 1000
+
 /**
  * L'instant d'une heure murale dans un fuseau. Une heure qui n'existe pas, au
- * passage à l'heure d'été, avance d'une heure. Une heure doublée, au passage à
- * l'heure d'hiver, vaut sa première occurrence.
+ * passage à l'heure d'été, avance de la durée du saut. Une heure doublée, au
+ * passage à l'heure d'hiver, vaut sa première occurrence. Le saut dure une heure
+ * en général, trente minutes dans certains fuseaux (Australia/Lord_Howe).
  */
 export function instantDepuisHeureLocale(
   jour: string,
@@ -68,18 +71,45 @@ export function instantDepuisHeureLocale(
     Number(lue[1]),
     Number(lue[2])
   )
-  // Deux essais : le décalage du fuseau à l'heure voulue, puis à l'instant trouvé.
-  const premier = voulue - (murale(voulue, fuseau) - voulue)
-  const decalage = murale(premier, fuseau) - premier
-  const second = voulue - decalage
-  if (murale(second, fuseau) === voulue) {
-    // Une heure doublée a deux instants : le plus tôt des deux.
-    const plusTot = second - 60 * 60 * 1000
-    return new Date(murale(plusTot, fuseau) === voulue ? plusTot : second)
+  // Les décalages du fuseau la veille, le jour même et le lendemain encadrent
+  // toute transition de la journée. Chacun donne un instant candidat.
+  const decalage = (instant: number) => murale(instant, fuseau) - instant
+  const avant = decalage(voulue - JOUR_MS)
+  const decalages = new Set([
+    avant,
+    decalage(voulue),
+    decalage(voulue + JOUR_MS),
+  ])
+  const exacts = [...decalages]
+    .map(d => voulue - d)
+    .filter(instant => murale(instant, fuseau) === voulue)
+  // Une heure doublée a deux instants : le plus tôt des deux.
+  if (exacts.length > 0) return new Date(Math.min(...exacts))
+  // Une heure qui n'existe pas : le décalage d'avant le saut la repousse après.
+  return new Date(voulue - avant)
+}
+
+/**
+ * Les instants qui bornent une suite de jours dans un fuseau : le minuit du
+ * premier jour, et la dernière milliseconde du dernier jour.
+ */
+export function bornesDesJours(
+  depuis: string,
+  jusqua: string,
+  fuseau: string
+): { debut: Date; fin: Date } {
+  const lendemain = new Date(`${jusqua}T00:00:00.000Z`)
+  lendemain.setUTCDate(lendemain.getUTCDate() + 1)
+  return {
+    debut: instantDepuisHeureLocale(depuis, '00:00', fuseau),
+    fin: new Date(
+      instantDepuisHeureLocale(
+        lendemain.toISOString().slice(0, 10),
+        '00:00',
+        fuseau
+      ).getTime() - 1
+    ),
   }
-  if (murale(premier, fuseau) === voulue) return new Date(premier)
-  // Une heure qui n'existe pas : le plus tardif des deux essais, une heure après.
-  return new Date(Math.max(premier, second))
 }
 
 /** Le jour et l'heure d'un instant dans un fuseau. */
@@ -89,4 +119,31 @@ export function heureLocale(
 ): { jour: string; heure: string } {
   const iso = new Date(murale(instant.getTime(), fuseau)).toISOString()
   return { jour: iso.slice(0, 10), heure: iso.slice(11, 16) }
+}
+
+/** « 18 h 30 », ou « 18 h » à l'heure pile. */
+function heureEnClair(heure: string): string {
+  const [h, m] = heure.split(':')
+  return m === '00' ? `${Number(h)} h` : `${Number(h)} h ${m}`
+}
+
+/**
+ * L'horaire d'une réunion en clair, dans le fuseau de l'organisation : « lundi
+ * 1 mars 2027, de 18 h 30 à 20 h », ou « du samedi 6 mars 2027 à 9 h au dimanche
+ * 7 mars 2027 à 17 h » pour une réunion de plusieurs jours.
+ */
+export function horaireEnClair(debut: Date, fin: Date, fuseau: string): string {
+  const format = new Intl.DateTimeFormat('fr-FR', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+    timeZone: fuseau,
+  })
+  const du = heureLocale(debut, fuseau)
+  const au = heureLocale(fin, fuseau)
+  if (du.jour !== au.jour) {
+    return `du ${format.format(debut)} à ${heureEnClair(du.heure)} au ${format.format(fin)} à ${heureEnClair(au.heure)}`
+  }
+  return `${format.format(debut)}, de ${heureEnClair(du.heure)} à ${heureEnClair(au.heure)}`
 }
