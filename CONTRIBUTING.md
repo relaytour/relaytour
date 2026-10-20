@@ -155,6 +155,8 @@ Un seul mot par notion.
 | commentaire | Texte daté et signé qu'une personne écrit sur une tâche de son périmètre : un compte rendu, une information, une question (ADR 0029). Ne pas confondre avec une note de version. |
 | fil | Les commentaires d'une tâche et les événements de son journal, du plus ancien au plus récent (ADR 0029). |
 | fiche | Fiche méthode (« comment faire ») d'un périmètre ou commune. |
+| fiche connexe | Fiche d'un périmètre qui concerne aussi d'autres périmètres de la même activité. Elle s'y lit sans s'y modifier (ADR 0039). |
+| mention | `@` suivi de l'identifiant d'un périmètre, dans le texte d'une fiche. Elle s'affiche comme l'étiquette du périmètre et ne donne aucun accès (ADR 0039). |
 | mode d'emploi | Page publique du site (`site/modes-d-emploi/`) qui décrit les écrans d'un rôle : admin de l'organisation, admin d'activité, référent·e. Une page peut aussi traiter un point précis, commun à plusieurs rôles : la messagerie, l'installation de l'application. Ne pas confondre avec une fiche. |
 | admin de l'organisation | Membre du bureau qui gère toutes les activités, les comptes et l'identité de l'organisation. Il nomme les admins de l'organisation et les admins d'activité. |
 | admin d'activité | Personne qui gère une activité : ses périodes, ses périmètres, ses affectations et ses fiches. Elle ne voit ni les autres activités (ADR 0010), ni les personnes hors de son équipe (ADR 0018). Elle nomme les autres admins de son activité (ADR 0019). |
