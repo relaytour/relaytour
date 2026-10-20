@@ -10,6 +10,7 @@ import { App, Button, Empty, Grid, Result, Skeleton } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 
+import { AbonnementActivite } from '../composants/AbonnementAgenda'
 import ChoixEdition from '../composants/ChoixEdition'
 import DateCleFormulaire, {
   type DateCleSaisie,
@@ -178,7 +179,7 @@ const majuscule = (texte: string) =>
 const compteElements = (n: number) => `${n} ${n > 1 ? 'éléments' : 'élément'}`
 
 export default function Agenda() {
-  const { lien, periode } = useActivite()
+  const { lien, periode, activite } = useActivite()
   const { message, modal } = App.useApp()
   const ecrans = Grid.useBreakpoint()
   const [parametres, setParametres] = useSearchParams()
@@ -643,6 +644,12 @@ export default function Agenda() {
                   </ul>
                 )}
               </Panneau>
+              {agenda.peutGerer && (
+                <AbonnementActivite
+                  activiteId={activite.id}
+                  nom={activite.nom}
+                />
+              )}
             </>
           }
         >

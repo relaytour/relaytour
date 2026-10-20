@@ -14,6 +14,13 @@ import type { TypedDocumentNode as DocumentNode } from '@graphql-typed-document-
  * Learn more about it here: https://the-guild.dev/graphql/codegen/plugins/presets/preset-client#reducing-bundle-size
  */
 type Documents = {
+    "\n  query MonAbonnementAgenda {\n    monAbonnementAgenda {\n      id\n      fin\n      perimetreIds\n      inclureGlobal\n      inclureEcheances\n      creeLe\n      dernierAccesLe\n    }\n  }\n": typeof types.MonAbonnementAgendaDocument,
+    "\n  mutation CreerMonAbonnementAgenda(\n    $perimetreIds: [ID!]\n    $inclureGlobal: Boolean\n    $inclureEcheances: Boolean\n  ) {\n    creerMonAbonnementAgenda(\n      perimetreIds: $perimetreIds\n      inclureGlobal: $inclureGlobal\n      inclureEcheances: $inclureEcheances\n    ) {\n      adresse\n      abonnement {\n        id\n      }\n    }\n  }\n": typeof types.CreerMonAbonnementAgendaDocument,
+    "\n  mutation ReglerMonAbonnementAgenda(\n    $perimetreIds: [ID!]\n    $inclureGlobal: Boolean!\n    $inclureEcheances: Boolean!\n  ) {\n    reglerMonAbonnementAgenda(\n      perimetreIds: $perimetreIds\n      inclureGlobal: $inclureGlobal\n      inclureEcheances: $inclureEcheances\n    ) {\n      id\n      perimetreIds\n      inclureGlobal\n      inclureEcheances\n    }\n  }\n": typeof types.ReglerMonAbonnementAgendaDocument,
+    "\n  mutation RevoquerMonAbonnementAgenda {\n    revoquerMonAbonnementAgenda\n  }\n": typeof types.RevoquerMonAbonnementAgendaDocument,
+    "\n  query AbonnementAgendaActivite($activiteId: ID!) {\n    abonnementAgendaActivite(activiteId: $activiteId) {\n      id\n      fin\n      creeLe\n      dernierAccesLe\n    }\n  }\n": typeof types.AbonnementAgendaActiviteDocument,
+    "\n  mutation CreerAbonnementAgendaActivite($activiteId: ID!) {\n    creerAbonnementAgendaActivite(activiteId: $activiteId) {\n      adresse\n    }\n  }\n": typeof types.CreerAbonnementAgendaActiviteDocument,
+    "\n  mutation RevoquerAbonnementAgendaActivite($activiteId: ID!) {\n    revoquerAbonnementAgendaActivite(activiteId: $activiteId)\n  }\n": typeof types.RevoquerAbonnementAgendaActiviteDocument,
     "\n  query MonScore($editionId: ID!) {\n    monScore(editionId: $editionId) {\n      points\n      tachesRealisees\n      tachesATemps\n      tachesCreees\n      fichesCreees\n      fichesModifiees\n    }\n    baremeScore {\n      tacheRealisee\n      bonusATemps\n      tacheCreee\n      ficheCreee\n      ficheModifiee\n    }\n  }\n": typeof types.MonScoreDocument,
     "\n  query MenuPerimetres {\n    moi {\n      id\n      affectations {\n        id\n        perimetre {\n          id\n          slug\n          nom\n          couleur\n          activite {\n            id\n          }\n        }\n      }\n    }\n  }\n": typeof types.MenuPerimetresDocument,
     "\n  mutation CreerDateCle(\n    $editionId: ID!\n    $titre: String!\n    $jour: Date!\n    $jourFin: Date\n    $description: String\n  ) {\n    creerDateCle(\n      editionId: $editionId\n      titre: $titre\n      jour: $jour\n      jourFin: $jourFin\n      description: $description\n    ) {\n      id\n    }\n  }\n": typeof types.CreerDateCleDocument,
@@ -150,6 +157,13 @@ type Documents = {
     "\n  mutation RetirerDroitRedaction($id: ID!) {\n    retirerDroitRedaction(id: $id)\n  }\n": typeof types.RetirerDroitRedactionDocument,
 };
 const documents: Documents = {
+    "\n  query MonAbonnementAgenda {\n    monAbonnementAgenda {\n      id\n      fin\n      perimetreIds\n      inclureGlobal\n      inclureEcheances\n      creeLe\n      dernierAccesLe\n    }\n  }\n": types.MonAbonnementAgendaDocument,
+    "\n  mutation CreerMonAbonnementAgenda(\n    $perimetreIds: [ID!]\n    $inclureGlobal: Boolean\n    $inclureEcheances: Boolean\n  ) {\n    creerMonAbonnementAgenda(\n      perimetreIds: $perimetreIds\n      inclureGlobal: $inclureGlobal\n      inclureEcheances: $inclureEcheances\n    ) {\n      adresse\n      abonnement {\n        id\n      }\n    }\n  }\n": types.CreerMonAbonnementAgendaDocument,
+    "\n  mutation ReglerMonAbonnementAgenda(\n    $perimetreIds: [ID!]\n    $inclureGlobal: Boolean!\n    $inclureEcheances: Boolean!\n  ) {\n    reglerMonAbonnementAgenda(\n      perimetreIds: $perimetreIds\n      inclureGlobal: $inclureGlobal\n      inclureEcheances: $inclureEcheances\n    ) {\n      id\n      perimetreIds\n      inclureGlobal\n      inclureEcheances\n    }\n  }\n": types.ReglerMonAbonnementAgendaDocument,
+    "\n  mutation RevoquerMonAbonnementAgenda {\n    revoquerMonAbonnementAgenda\n  }\n": types.RevoquerMonAbonnementAgendaDocument,
+    "\n  query AbonnementAgendaActivite($activiteId: ID!) {\n    abonnementAgendaActivite(activiteId: $activiteId) {\n      id\n      fin\n      creeLe\n      dernierAccesLe\n    }\n  }\n": types.AbonnementAgendaActiviteDocument,
+    "\n  mutation CreerAbonnementAgendaActivite($activiteId: ID!) {\n    creerAbonnementAgendaActivite(activiteId: $activiteId) {\n      adresse\n    }\n  }\n": types.CreerAbonnementAgendaActiviteDocument,
+    "\n  mutation RevoquerAbonnementAgendaActivite($activiteId: ID!) {\n    revoquerAbonnementAgendaActivite(activiteId: $activiteId)\n  }\n": types.RevoquerAbonnementAgendaActiviteDocument,
     "\n  query MonScore($editionId: ID!) {\n    monScore(editionId: $editionId) {\n      points\n      tachesRealisees\n      tachesATemps\n      tachesCreees\n      fichesCreees\n      fichesModifiees\n    }\n    baremeScore {\n      tacheRealisee\n      bonusATemps\n      tacheCreee\n      ficheCreee\n      ficheModifiee\n    }\n  }\n": types.MonScoreDocument,
     "\n  query MenuPerimetres {\n    moi {\n      id\n      affectations {\n        id\n        perimetre {\n          id\n          slug\n          nom\n          couleur\n          activite {\n            id\n          }\n        }\n      }\n    }\n  }\n": types.MenuPerimetresDocument,
     "\n  mutation CreerDateCle(\n    $editionId: ID!\n    $titre: String!\n    $jour: Date!\n    $jourFin: Date\n    $description: String\n  ) {\n    creerDateCle(\n      editionId: $editionId\n      titre: $titre\n      jour: $jour\n      jourFin: $jourFin\n      description: $description\n    ) {\n      id\n    }\n  }\n": types.CreerDateCleDocument,
@@ -300,6 +314,34 @@ const documents: Documents = {
  */
 export function graphql(source: string): unknown;
 
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query MonAbonnementAgenda {\n    monAbonnementAgenda {\n      id\n      fin\n      perimetreIds\n      inclureGlobal\n      inclureEcheances\n      creeLe\n      dernierAccesLe\n    }\n  }\n"): (typeof documents)["\n  query MonAbonnementAgenda {\n    monAbonnementAgenda {\n      id\n      fin\n      perimetreIds\n      inclureGlobal\n      inclureEcheances\n      creeLe\n      dernierAccesLe\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreerMonAbonnementAgenda(\n    $perimetreIds: [ID!]\n    $inclureGlobal: Boolean\n    $inclureEcheances: Boolean\n  ) {\n    creerMonAbonnementAgenda(\n      perimetreIds: $perimetreIds\n      inclureGlobal: $inclureGlobal\n      inclureEcheances: $inclureEcheances\n    ) {\n      adresse\n      abonnement {\n        id\n      }\n    }\n  }\n"): (typeof documents)["\n  mutation CreerMonAbonnementAgenda(\n    $perimetreIds: [ID!]\n    $inclureGlobal: Boolean\n    $inclureEcheances: Boolean\n  ) {\n    creerMonAbonnementAgenda(\n      perimetreIds: $perimetreIds\n      inclureGlobal: $inclureGlobal\n      inclureEcheances: $inclureEcheances\n    ) {\n      adresse\n      abonnement {\n        id\n      }\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ReglerMonAbonnementAgenda(\n    $perimetreIds: [ID!]\n    $inclureGlobal: Boolean!\n    $inclureEcheances: Boolean!\n  ) {\n    reglerMonAbonnementAgenda(\n      perimetreIds: $perimetreIds\n      inclureGlobal: $inclureGlobal\n      inclureEcheances: $inclureEcheances\n    ) {\n      id\n      perimetreIds\n      inclureGlobal\n      inclureEcheances\n    }\n  }\n"): (typeof documents)["\n  mutation ReglerMonAbonnementAgenda(\n    $perimetreIds: [ID!]\n    $inclureGlobal: Boolean!\n    $inclureEcheances: Boolean!\n  ) {\n    reglerMonAbonnementAgenda(\n      perimetreIds: $perimetreIds\n      inclureGlobal: $inclureGlobal\n      inclureEcheances: $inclureEcheances\n    ) {\n      id\n      perimetreIds\n      inclureGlobal\n      inclureEcheances\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevoquerMonAbonnementAgenda {\n    revoquerMonAbonnementAgenda\n  }\n"): (typeof documents)["\n  mutation RevoquerMonAbonnementAgenda {\n    revoquerMonAbonnementAgenda\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query AbonnementAgendaActivite($activiteId: ID!) {\n    abonnementAgendaActivite(activiteId: $activiteId) {\n      id\n      fin\n      creeLe\n      dernierAccesLe\n    }\n  }\n"): (typeof documents)["\n  query AbonnementAgendaActivite($activiteId: ID!) {\n    abonnementAgendaActivite(activiteId: $activiteId) {\n      id\n      fin\n      creeLe\n      dernierAccesLe\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreerAbonnementAgendaActivite($activiteId: ID!) {\n    creerAbonnementAgendaActivite(activiteId: $activiteId) {\n      adresse\n    }\n  }\n"): (typeof documents)["\n  mutation CreerAbonnementAgendaActivite($activiteId: ID!) {\n    creerAbonnementAgendaActivite(activiteId: $activiteId) {\n      adresse\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation RevoquerAbonnementAgendaActivite($activiteId: ID!) {\n    revoquerAbonnementAgendaActivite(activiteId: $activiteId)\n  }\n"): (typeof documents)["\n  mutation RevoquerAbonnementAgendaActivite($activiteId: ID!) {\n    revoquerAbonnementAgendaActivite(activiteId: $activiteId)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

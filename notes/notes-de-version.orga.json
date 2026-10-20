@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-20-orga-votre-agenda-s-abonne-a-relaytour-depuis-outlook-google-ou-a",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Votre agenda s'abonne à Relaytour depuis Outlook, Google ou Apple",
+            "texte": "Dans vos préférences, une adresse secrète ajoute à votre agenda personnel l'agenda global de vos activités, les réunions de vos périmètres et vos convocations. Vous la régénérez ou la révoquez à tout moment. Les admins d'une activité publient aussi l'adresse de son agenda global.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-20-orga-un-agenda-reunit-les-phases-les-dates-cles-et-les-echeances",
           "date": "2026-10-20",
           "type": "fonctionnalite",

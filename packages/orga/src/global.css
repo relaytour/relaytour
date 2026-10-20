@@ -2761,3 +2761,16 @@ button.rt-agenda-evenement {
   font-family: inherit;
   text-align: start;
 }
+
+/* L'adresse d'un abonnement à l'agenda (ADR 0037), affichée une seule fois. */
+.rt-abonnement-adresse {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rt-abonnement-adresse code {
+  overflow-wrap: anywhere;
+  font-family: var(--rt-mono);
+  font-size: 12.5px;
+}
