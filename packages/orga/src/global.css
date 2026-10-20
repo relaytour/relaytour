@@ -2605,15 +2605,18 @@ button.rt-ligne-declinaisons {
 }
 
 .rt-agenda-evenement {
-  display: block;
+  display: -webkit-box;
   overflow: hidden;
   padding: 1px 6px;
   border-radius: 6px;
   background: var(--rt-encre-08);
   font-size: 12px;
   font-weight: 600;
-  white-space: nowrap;
-  text-overflow: ellipsis;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 
 .rt-agenda-evenement.rt-agenda-date_cle {
