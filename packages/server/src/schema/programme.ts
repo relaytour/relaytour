@@ -5,6 +5,7 @@ import { jourISO } from '../lib/agenda.ts'
 import { peutModifierPerimetre } from '../lib/droits.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { heureLocale } from '../lib/heures.ts'
 import {
   dureeValide,
@@ -177,14 +178,24 @@ async function sequenceVisible(
   return sequence
 }
 
-/** Le lieu d'une séquence : un lieu non archivé de la même activité. */
+/**
+ * Le lieu d'une séquence : un lieu non archivé de la même activité. Une séquence
+ * qui garde son lieu actuel le garde même archivé ; un autre lieu archivé ne se
+ * choisit pas.
+ */
 async function lieuValide(
   lieuId: string | number | null | undefined,
-  activiteId: string
+  activiteId: string,
+  lieuActuel: string | null = null
 ): Promise<string | null> {
   if (!lieuId) return null
+  const id = String(lieuId)
   const lieu = await prisma.lieu.findFirst({
-    where: { id: String(lieuId), activiteId, archivedAt: null },
+    where: {
+      id,
+      activiteId,
+      ...(id === lieuActuel ? {} : { archivedAt: null }),
+    },
     select: { id: true },
   })
   if (lieu === null) throw accesRefuse()
@@ -301,7 +312,7 @@ builder.mutationFields(t => {
           }[]
         | null
     },
-    lieu: { editionId: string; activiteId: string }
+    lieu: { editionId: string; activiteId: string; lieuActuel?: string | null }
   ) => {
     const edition = await prisma.edition.findUniqueOrThrow({
       where: { id: lieu.editionId },
@@ -328,7 +339,11 @@ builder.mutationFields(t => {
         ),
         debut: horaire.debut,
         fin: horaire.fin,
-        lieuId: await lieuValide(args.lieuId, lieu.activiteId),
+        lieuId: await lieuValide(
+          args.lieuId,
+          lieu.activiteId,
+          lieu.lieuActuel ?? null
+        ),
       },
       places: await placesValides(
         ctx.organisation!.id,
@@ -351,24 +366,30 @@ builder.mutationFields(t => {
       resolve: async (query, _root, args, ctx) => {
         const activiteId = await ctx.exigerActivite(args.activiteId)
         await ctx.exigerAdminDe(activiteId)
-        const nombre = await prisma.lieu.count({ where: { activiteId } })
-        if (nombre >= 200) {
-          throw erreurSaisie('Une activité compte 200 lieux au plus.')
-        }
-        const cree = await prisma.lieu.create({
-          ...query,
-          data: {
-            organisationId: ctx.organisation!.id,
-            activiteId,
-            nom: texteRequis(args.nom, 'Le nom', NOM_LIEU_MAX),
-            description: texteFacultatif(
-              args.description,
-              'La description',
-              2000
-            ),
-            ordre: args.ordre ?? 0,
-          },
-        })
+        // Le comptage et la création se font sous le verrou de l'organisation.
+        const cree = await sousVerrouOrganisation(
+          ctx.organisation!.id,
+          async tx => {
+            const nombre = await tx.lieu.count({ where: { activiteId } })
+            if (nombre >= 200) {
+              throw erreurSaisie('Une activité compte 200 lieux au plus.')
+            }
+            return tx.lieu.create({
+              ...query,
+              data: {
+                organisationId: ctx.organisation!.id,
+                activiteId,
+                nom: texteRequis(args.nom, 'Le nom', NOM_LIEU_MAX),
+                description: texteFacultatif(
+                  args.description,
+                  'La description',
+                  2000
+                ),
+                ordre: args.ordre ?? 0,
+              },
+            })
+          }
+        )
         publierPourActivite('PROGRAMME', ctx.organisation!.id, activiteId)
         return cree
       },
@@ -426,29 +447,36 @@ builder.mutationFields(t => {
           perimetreId: args.perimetreId ? String(args.perimetreId) : null,
         }
         const { activiteId } = await exigerEcritureReunion(ctx, lieu)
-        const nombre = await prisma.sequence.count({
-          where: { editionId: lieu.editionId },
-        })
-        if (nombre >= SEQUENCES_MAX) {
-          throw erreurSaisie(
-            `Une période compte ${SEQUENCES_MAX} séquences au plus.`
-          )
-        }
         const valides = await champsValides(ctx, args, {
           editionId: lieu.editionId,
           activiteId,
         })
-        const creee = await prisma.sequence.create({
-          data: {
-            organisationId: ctx.organisation!.id,
-            activiteId,
-            ...lieu,
-            ...valides.champs,
-            creeParId: ctx.personne!.id,
-            places: { create: valides.places },
-          },
-          include: SEQUENCE_CHARGEE,
-        })
+        // Le comptage et la création se font sous le verrou de l'organisation :
+        // deux créations simultanées ne dépassent pas le plafond.
+        const creee = await sousVerrouOrganisation(
+          ctx.organisation!.id,
+          async tx => {
+            const nombre = await tx.sequence.count({
+              where: { editionId: lieu.editionId },
+            })
+            if (nombre >= SEQUENCES_MAX) {
+              throw erreurSaisie(
+                `Une période compte ${SEQUENCES_MAX} séquences au plus.`
+              )
+            }
+            return tx.sequence.create({
+              data: {
+                organisationId: ctx.organisation!.id,
+                activiteId,
+                ...lieu,
+                ...valides.champs,
+                creeParId: ctx.personne!.id,
+                places: { create: valides.places },
+              },
+              include: SEQUENCE_CHARGEE,
+            })
+          }
+        )
         signal(creee)
         return lireSequence(ctx, creee)
       },
@@ -462,7 +490,11 @@ builder.mutationFields(t => {
       args: {
         id: t.arg.id({ required: true }),
         ...champsSequence,
-        versionAttendue: t.arg.int(),
+        versionAttendue: t.arg.int({
+          required: true,
+          description:
+            'La version lue : le serveur refuse d’écraser une modification faite depuis.',
+        }),
       },
       resolve: async (_root, args, ctx) => {
         const actuelle = await sequenceVisible(ctx, String(args.id))
@@ -470,20 +502,23 @@ builder.mutationFields(t => {
         const valides = await champsValides(ctx, args, {
           editionId: actuelle.editionId,
           activiteId,
+          lieuActuel: actuelle.lieuId,
         })
-        const versionAttendue = args.versionAttendue ?? null
         await prisma.$transaction(async tx => {
           const { count } = await tx.sequence.updateMany({
-            where: {
-              id: actuelle.id,
-              ...(versionAttendue === null ? {} : { version: versionAttendue }),
-            },
+            where: { id: actuelle.id, version: args.versionAttendue },
             data: { ...valides.champs, version: { increment: 1 } },
           })
           if (count === 0) {
+            // La version relue après l'échec : celle qu'une autre écriture a
+            // validée, et non celle lue avant la transaction.
+            const { version, updatedAt } = await tx.sequence.findUniqueOrThrow({
+              where: { id: actuelle.id },
+              select: { version: true, updatedAt: true },
+            })
             throw conflitDeVersion(
               'Cette séquence a été modifiée depuis votre lecture.',
-              { versionCourante: actuelle.version }
+              { versionCourante: version, modifieeLe: updatedAt.toISOString() }
             )
           }
           await tx.placeSequence.deleteMany({

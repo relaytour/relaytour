@@ -12,6 +12,7 @@ import {
 } from '../lib/benevoles.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
@@ -147,25 +148,30 @@ builder.mutationFields(t => ({
           'Une fiche ne s’enregistre qu’avec l’accord de la personne.'
         )
       }
-      const nombre = await prisma.benevole.count({ where: { activiteId } })
-      if (nombre >= BENEVOLES_MAX) {
-        throw erreurSaisie(
-          `Une activité compte ${BENEVOLES_MAX} fiches bénévoles au plus.`
-        )
+      const donnees = {
+        organisationId: ctx.organisation!.id,
+        activiteId,
+        nom: texteRequis(args.nom, 'Le nom', NOM_BENEVOLE_MAX),
+        courriel: courrielValide(args.courriel),
+        telephone: telephoneValide(args.telephone),
+        note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
+        accordLe: new Date(),
+        creeParId: ctx.personne!.id,
       }
-      const creee = await prisma.benevole.create({
-        data: {
-          organisationId: ctx.organisation!.id,
-          activiteId,
-          nom: texteRequis(args.nom, 'Le nom', NOM_BENEVOLE_MAX),
-          courriel: courrielValide(args.courriel),
-          telephone: telephoneValide(args.telephone),
-          note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
-          accordLe: new Date(),
-          creeParId: ctx.personne!.id,
-        },
-        include: AVEC_PLACES,
-      })
+      // Le comptage et la création se font sous le verrou de l'organisation :
+      // deux créations simultanées ne dépassent pas le plafond.
+      const creee = await sousVerrouOrganisation(
+        ctx.organisation!.id,
+        async tx => {
+          const nombre = await tx.benevole.count({ where: { activiteId } })
+          if (nombre >= BENEVOLES_MAX) {
+            throw erreurSaisie(
+              `Une activité compte ${BENEVOLES_MAX} fiches bénévoles au plus.`
+            )
+          }
+          return tx.benevole.create({ data: donnees, include: AVEC_PLACES })
+        }
+      )
       publierPourActivite('PROGRAMME', ctx.organisation!.id, activiteId)
       const [lue] = await lireBenevoles(ctx, activiteId, [creee])
       return lue!

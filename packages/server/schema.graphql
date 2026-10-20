@@ -1033,7 +1033,18 @@ type Mutation {
   Modifie le texte d’un commentaire et rend le fil de sa tâche. Seul son auteur le modifie.
   """
   modifierCommentaire(id: ID!, texte: String!): FilTache!
-  modifierDateCle(description: String, id: ID!, jour: Date!, jourFin: Date, titre: String!, versionAttendue: Int): DateCle!
+  modifierDateCle(
+    description: String
+    id: ID!
+    jour: Date!
+    jourFin: Date
+    titre: String!
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
+  ): DateCle!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
 
   """
@@ -1122,7 +1133,11 @@ type Mutation {
     personneIds: [ID!]
     tacheIds: [ID!]
     titre: String!
-    versionAttendue: Int
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
   ): Reunion!
 
   """
@@ -1140,13 +1155,27 @@ type Mutation {
     lieuId: ID
     places: [PlaceSequenceInput!]
     titre: String!
-    versionAttendue: Int
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
   ): Sequence!
 
   """
   Change le titre, la description et les créneaux d’un sondage ouvert. Un créneau retiré perd ses réponses.
   """
-  modifierSondage(creneaux: [CreneauSondageInput!]!, description: String, id: ID!, titre: String!, versionAttendue: Int): Sondage!
+  modifierSondage(
+    creneaux: [CreneauSondageInput!]!
+    description: String
+    id: ID!
+    titre: String!
+
+    """
+    La version lue : le serveur refuse d’écraser une modification faite depuis.
+    """
+    versionAttendue: Int!
+  ): Sondage!
 
   """
   Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
