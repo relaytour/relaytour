@@ -134,6 +134,24 @@ const EnvSchema = z
       s => s === undefined || /^(https:\/\/|mailto:)\S+$/.test(s),
       'PUSH_VAPID_SUJET : adresse https ou lien mailto: attendu'
     ),
+    // Espace de fichiers d'une organisation (ADR 0038). Chaque fournisseur s'ouvre
+    // par l'application que l'exploitant inscrit chez lui ; tous exigent la clé qui
+    // chiffre les jetons en base (32 octets en base64 : `openssl rand -base64 32`).
+    // Sans ces valeurs, l'espace organisateur masque le fournisseur.
+    CLE_CHIFFREMENT_ESPACE_FICHIERS: optionnelle.refine(
+      s => s === undefined || Buffer.from(s, 'base64').length === 32,
+      'CLE_CHIFFREMENT_ESPACE_FICHIERS : 32 octets en base64 attendus'
+    ),
+    MICROSOFT_CLIENT_ID: optionnelle,
+    MICROSOFT_CLIENT_SECRET: optionnelle,
+    // Annuaire Microsoft accepté : « organizations » (tout compte professionnel,
+    // pour une application multi-organisation), ou l'identifiant d'un seul annuaire.
+    MICROSOFT_LOCATAIRE: optionnelle
+      .refine(
+        s => s === undefined || /^[A-Za-z0-9.-]{1,100}$/.test(s),
+        'MICROSOFT_LOCATAIRE : identifiant d’annuaire ou « organizations » attendu'
+      )
+      .transform(s => s ?? 'organizations'),
     // Liste des modes d'emploi, liée depuis le menu du compte et le mail
     // d'invitation : un dossier ou une page. Les pages des rôles se placent dans
     // le même dossier. Un hébergeur qui modifie Relaytour y indique les siens.
@@ -159,6 +177,26 @@ const EnvSchema = z
         path: ['PUSH_VAPID_PUBLIQUE'],
         message:
           'PUSH_VAPID_PUBLIQUE, PUSH_VAPID_PRIVEE et PUSH_VAPID_SUJET vont ensemble.',
+      })
+    }
+    const microsoft = [v.MICROSOFT_CLIENT_ID, v.MICROSOFT_CLIENT_SECRET]
+    if (microsoft.some(Boolean) && !microsoft.every(Boolean)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['MICROSOFT_CLIENT_ID'],
+        message:
+          'MICROSOFT_CLIENT_ID et MICROSOFT_CLIENT_SECRET se renseignent ensemble.',
+      })
+    }
+    if (
+      v.MICROSOFT_CLIENT_ID !== undefined &&
+      v.CLE_CHIFFREMENT_ESPACE_FICHIERS === undefined
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['CLE_CHIFFREMENT_ESPACE_FICHIERS'],
+        message:
+          'Un espace de fichiers exige CLE_CHIFFREMENT_ESPACE_FICHIERS, qui chiffre ses jetons en base.',
       })
     }
     if (

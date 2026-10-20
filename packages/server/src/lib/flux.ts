@@ -30,6 +30,7 @@ export type EntiteChangee =
   | 'DEMANDE'
   | 'NOTIFICATION'
   | 'MESSAGE'
+  | 'FICHIERS'
 
 export interface Changement {
   entite: EntiteChangee
@@ -192,6 +193,8 @@ export function publierNotification(
  *   quand il vient de l'annuaire.
  * - Une fiche va aux personnes qui peuvent la lire : une fiche de périmètre ne se
  *   lit pas en consultation, à la différence des tâches (ADR 0014).
+ * - La connexion d'un espace de fichiers, sans activité, va aux admins de
+ *   l'organisation (ADR 0038).
  * - Tout autre changement va aux personnes qui voient l'activité.
  */
 export async function peutRecevoir(
@@ -208,6 +211,13 @@ export async function peutRecevoir(
     return activiteId === null || activiteId === undefined
       ? ctx.personne.estAdmin
       : ctx.estAdminDe(activiteId)
+  }
+  // La connexion de l'espace de fichiers se règle dans l'organisation (ADR 0038).
+  if (
+    changement.entite === 'FICHIERS' &&
+    (activiteId === null || activiteId === undefined)
+  ) {
+    return ctx.personne.estAdmin
   }
   if (activiteId === null || activiteId === undefined) return false
   if (changement.entite === 'DEMANDE') return ctx.estAdminDe(activiteId)

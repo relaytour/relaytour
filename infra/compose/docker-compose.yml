@@ -47,6 +47,11 @@ x-environnement-app: &environnement-app
   PUSH_VAPID_PUBLIQUE: '${PUSH_VAPID_PUBLIQUE:-}'
   PUSH_VAPID_PRIVEE: '${PUSH_VAPID_PRIVEE:-}'
   PUSH_VAPID_SUJET: '${PUSH_VAPID_SUJET:-}'
+  # Espace de fichiers (ADR 0038) : l'API connecte le fournisseur et relaie les documents.
+  CLE_CHIFFREMENT_ESPACE_FICHIERS: '${CLE_CHIFFREMENT_ESPACE_FICHIERS:-}'
+  MICROSOFT_CLIENT_ID: '${MICROSOFT_CLIENT_ID:-}'
+  MICROSOFT_CLIENT_SECRET: '${MICROSOFT_CLIENT_SECRET:-}'
+  MICROSOFT_LOCATAIRE: '${MICROSOFT_LOCATAIRE:-}'
   # Les exports d'organisation s'écrivent dans le volume exports (ADR 0008).
   EXPORTS_DIR: /exports
 

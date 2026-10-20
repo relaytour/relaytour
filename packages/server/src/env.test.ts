@@ -156,4 +156,31 @@ describe('resoudreEnv', () => {
     expect(() => lire('http://hebergeur.exemple.org')).toThrow(/SUPPORT_URL/)
     expect(() => lire('javascript:alert(1)')).toThrow(/SUPPORT_URL/)
   })
+
+  it('ouvre Microsoft avec ses deux valeurs et la clé de chiffrement', () => {
+    const cle = Buffer.alloc(32, 7).toString('base64')
+    const env = resoudreEnv({
+      ...BASE,
+      MICROSOFT_CLIENT_ID: 'client',
+      MICROSOFT_CLIENT_SECRET: 'secret',
+      CLE_CHIFFREMENT_ESPACE_FICHIERS: cle,
+    })
+    expect(env.MICROSOFT_LOCATAIRE).toBe('organizations')
+    expect(() =>
+      resoudreEnv({ ...BASE, MICROSOFT_CLIENT_ID: 'client' })
+    ).toThrow(/MICROSOFT_CLIENT_SECRET/)
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        MICROSOFT_CLIENT_ID: 'client',
+        MICROSOFT_CLIENT_SECRET: 'secret',
+      })
+    ).toThrow(/CLE_CHIFFREMENT_ESPACE_FICHIERS/)
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        CLE_CHIFFREMENT_ESPACE_FICHIERS: Buffer.alloc(16).toString('base64'),
+      })
+    ).toThrow(/32 octets/)
+  })
 })

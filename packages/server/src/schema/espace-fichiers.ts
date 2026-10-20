@@ -1,0 +1,460 @@
+import {
+  EtatConnexionFichiers,
+  FournisseurFichiers,
+  prisma,
+} from '@relaytour/database'
+
+import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
+import { dossierLisible } from '../espace-fichiers/droits.ts'
+import {
+  commencerConnexion,
+  configurationMicrosoft,
+  erreurEspace,
+  fournisseursDisponibles,
+  oublierJetonAcces,
+  ouvrirEspace,
+} from '../espace-fichiers/index.ts'
+import { adresseAutorisation } from '../espace-fichiers/sharepoint.ts'
+import type { ElementEspace, EspaceFichiers } from '../espace-fichiers/types.ts'
+import type { AppContext } from '../context.ts'
+import { peutLireFiche } from '../lib/fiches.ts'
+import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import { publierChangement, publierPourActivite } from '../lib/flux.ts'
+import { journal } from '../lib/journal.ts'
+
+import { builder } from './builder.ts'
+import { PerimetreRef } from './organisation.ts'
+
+// Espace de fichiers d'une organisation (ADR 0038). Un admin de l'organisation le
+// connecte et lie ses dossiers aux périmètres. Une personne lit un dossier lié
+// comme les fiches du même périmètre. Relaytour ne copie aucun document.
+
+const FournisseurFichiersEnum = builder.enumType(FournisseurFichiers, {
+  name: 'FournisseurFichiers',
+})
+
+const EtatConnexionFichiersEnum = builder.enumType(EtatConnexionFichiers, {
+  name: 'EtatConnexionFichiers',
+})
+
+const FormatApercuEnum = builder.enumType('FormatApercu', {
+  description:
+    'Ce que la liseuse affiche : un PDF, une image, un texte, du Markdown, un document bureautique converti en PDF par le fournisseur, ou rien (téléchargement).',
+  values: [
+    'PDF',
+    'IMAGE',
+    'TEXTE',
+    'MARKDOWN',
+    'PDF_CONVERTI',
+    'AUCUN',
+  ] as const,
+})
+
+// ── Types ────────────────────────────────────────────────────────────────────
+
+const ConnexionFichiersRef = builder.prismaObject('ConnexionFichiers', {
+  description:
+    'Connexion de l’organisation à son espace de fichiers. Le jeton ne sort jamais du serveur.',
+  fields: t => ({
+    fournisseur: t.expose('fournisseur', { type: FournisseurFichiersEnum }),
+    compte: t.exposeString('compte'),
+    etat: t.expose('etat', { type: EtatConnexionFichiersEnum }),
+    connecteeLe: t.expose('updatedAt', { type: 'DateTime' }),
+    connecteePar: t.string({
+      nullable: true,
+      select: { connectePar: { select: { name: true } } },
+      resolve: c => c.connectePar?.name ?? null,
+    }),
+  }),
+})
+
+interface EspaceFichiersVue {
+  fournisseursDisponibles: FournisseurFichiers[]
+  organisationId: string
+}
+
+const EspaceFichiersRef = builder
+  .objectRef<EspaceFichiersVue>('EspaceFichiers')
+  .implement({
+    fields: t => ({
+      fournisseursDisponibles: t.field({
+        type: [FournisseurFichiersEnum],
+        description:
+          'Fournisseurs ouverts par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.',
+        resolve: v => v.fournisseursDisponibles,
+      }),
+      connexion: t.prismaField({
+        type: ConnexionFichiersRef,
+        nullable: true,
+        resolve: (query, v) =>
+          prisma.connexionFichiers.findUnique({
+            ...query,
+            where: { organisationId: v.organisationId },
+          }),
+      }),
+    }),
+  })
+
+const EmplacementFichiersRef = builder
+  .objectRef<{ id: string; nom: string; site: string | null }>(
+    'EmplacementFichiers'
+  )
+  .implement({
+    description:
+      'Bibliothèque de documents visible par le compte connecté : son OneDrive, ou la bibliothèque d’un site.',
+    fields: t => ({
+      id: t.exposeString('id'),
+      nom: t.exposeString('nom'),
+      site: t.exposeString('site', { nullable: true }),
+    }),
+  })
+
+type ElementVue = ElementEspace & {
+  apercu: ReturnType<typeof formatApercu>
+}
+
+const ElementFichiersRef = builder
+  .objectRef<ElementVue>('ElementFichiers')
+  .implement({
+    description: 'Dossier ou fichier de l’espace de fichiers.',
+    fields: t => ({
+      // Pas de champ `id` : le cache du navigateur fusionnerait un même fichier
+      // lu depuis deux dossiers liés.
+      elementId: t.exposeString('id'),
+      nom: t.exposeString('nom'),
+      dossier: t.exposeBoolean('dossier'),
+      taille: t.exposeFloat('taille', { nullable: true }),
+      modifieLe: t.expose('modifieLe', { type: 'DateTime', nullable: true }),
+      lienWeb: t.exposeString('lienWeb', { nullable: true }),
+      apercu: t.expose('apercu', { type: FormatApercuEnum }),
+    }),
+  })
+
+const DossierLieRef = builder.prismaObject('DossierLie', {
+  description:
+    'Dossier de l’espace de fichiers lié à un périmètre, ou à toute l’activité quand le périmètre est nul.',
+  fields: t => ({
+    id: t.exposeID('id'),
+    nom: t.exposeString('nom'),
+    activiteId: t.exposeID('activiteId'),
+    perimetre: t.relation('perimetre', { type: PerimetreRef, nullable: true }),
+    fournisseur: t.expose('fournisseur', { type: FournisseurFichiersEnum }),
+    disponible: t.boolean({
+      description:
+        'Vrai quand l’espace connecté est actif et vient du même fournisseur que le dossier.',
+      resolve: async d => {
+        const connexion = await prisma.connexionFichiers.findUnique({
+          where: { organisationId: d.organisationId },
+          select: { fournisseur: true, etat: true },
+        })
+        return (
+          connexion?.etat === 'ACTIVE' &&
+          connexion.fournisseur === d.fournisseur
+        )
+      },
+    }),
+  }),
+})
+
+// ── Aides ────────────────────────────────────────────────────────────────────
+
+function vue(espace: EspaceFichiers, e: ElementEspace): ElementVue {
+  return {
+    ...e,
+    apercu: e.dossier
+      ? 'AUCUN'
+      : formatApercu(e.nom, nom => espace.convertitEnPdf(nom)),
+  }
+}
+
+/** Dossiers d'abord, puis fichiers, chacun par ordre alphabétique. */
+function trier(elements: ElementVue[]): ElementVue[] {
+  return [...elements].sort(
+    (a, b) =>
+      Number(b.dossier) - Number(a.dossier) ||
+      a.nom.localeCompare(b.nom, 'fr', { sensitivity: 'base' })
+  )
+}
+
+function exigerChemin(chemin: readonly string[]): void {
+  if (!cheminValide(chemin)) throw erreurSaisie('Chemin de dossier invalide.')
+}
+
+async function espaceDe(ctx: AppContext): Promise<EspaceFichiers> {
+  try {
+    return (await ouvrirEspace(ctx.organisation!.id)).espace
+  } catch (erreur) {
+    throw erreurEspace(erreur)
+  }
+}
+
+async function avecEspace<T>(
+  ctx: AppContext,
+  action: (espace: EspaceFichiers) => Promise<T>
+): Promise<T> {
+  const espace = await espaceDe(ctx)
+  try {
+    return await action(espace)
+  } catch (erreur) {
+    throw erreurEspace(erreur)
+  }
+}
+
+// ── Requêtes ─────────────────────────────────────────────────────────────────
+
+builder.queryFields(t => ({
+  espaceFichiers: t.field({
+    type: EspaceFichiersRef,
+    authScopes: { admin: true },
+    resolve: async (_root, _args, ctx) => ({
+      fournisseursDisponibles: await fournisseursDisponibles(),
+      organisationId: ctx.organisation!.id,
+    }),
+  }),
+
+  emplacementsFichiers: t.field({
+    type: [EmplacementFichiersRef],
+    authScopes: { admin: true },
+    description:
+      'Bibliothèques de documents du compte connecté, pour choisir un dossier à lier.',
+    resolve: (_root, _args, ctx) =>
+      avecEspace(ctx, espace => espace.emplacements()),
+  }),
+
+  parcourirEspaceFichiers: t.field({
+    type: [ElementFichiersRef],
+    authScopes: { admin: true },
+    description:
+      'Sous-dossiers d’un dossier de l’espace connecté, pour choisir un dossier à lier. Les fichiers ne s’y listent pas.',
+    args: {
+      emplacement: t.arg.string({ required: true }),
+      chemin: t.arg.stringList({ required: true }),
+    },
+    resolve: async (_root, { emplacement, chemin }, ctx) => {
+      exigerChemin(chemin)
+      return avecEspace(ctx, async espace => {
+        const elements = await espace.lister({
+          emplacement,
+          base: null,
+          chemin,
+        })
+        if (elements === null) throw erreurSaisie('Dossier introuvable.')
+        return trier(elements.filter(e => e.dossier).map(e => vue(espace, e)))
+      })
+    },
+  }),
+
+  dossiersLies: t.prismaField({
+    type: [DossierLieRef],
+    authScopes: { connecte: true },
+    description:
+      'Dossiers liés que la personne lit dans une activité. Avec un périmètre : ceux de ce périmètre et ceux de toute l’activité.',
+    args: {
+      activiteId: t.arg.id(),
+      perimetreId: t.arg.id(),
+    },
+    resolve: async (query, _root, { activiteId, perimetreId }, ctx) => {
+      const activite = await ctx.exigerActivite(activiteId)
+      const dossiers = await prisma.dossierLie.findMany({
+        ...query,
+        where: {
+          organisationId: ctx.organisation!.id,
+          activiteId: activite,
+          ...(perimetreId === null || perimetreId === undefined
+            ? {}
+            : {
+                OR: [
+                  { perimetreId: String(perimetreId) },
+                  { perimetreId: null },
+                ],
+              }),
+        },
+        orderBy: [{ perimetreId: 'asc' }, { nom: 'asc' }],
+      })
+      const lisibles = await Promise.all(
+        dossiers.map(d =>
+          peutLireFiche(ctx, {
+            organisationId: d.organisationId,
+            activiteId: d.activiteId,
+            perimetreId: d.perimetreId,
+          })
+        )
+      )
+      return dossiers.filter((_d, i) => lisibles[i])
+    },
+  }),
+
+  contenuDossierLie: t.field({
+    type: [ElementFichiersRef],
+    authScopes: { connecte: true },
+    description:
+      'Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms.',
+    args: {
+      id: t.arg.id({ required: true }),
+      chemin: t.arg.stringList({ required: true }),
+    },
+    resolve: async (_root, { id, chemin }, ctx) => {
+      const dossier = await dossierLisible(ctx, String(id))
+      if (dossier === null) throw accesRefuse()
+      exigerChemin(chemin)
+      return avecEspace(ctx, async espace => {
+        if (espace.fournisseur !== dossier.fournisseur) {
+          throw erreurEspace(new Error('Fournisseur différent.'))
+        }
+        const elements = await espace.lister({
+          emplacement: dossier.emplacement,
+          base: dossier.element,
+          chemin,
+        })
+        if (elements === null) throw erreurSaisie('Dossier introuvable.')
+        return trier(elements.map(e => vue(espace, e)))
+      })
+    },
+  }),
+}))
+
+// ── Mutations ────────────────────────────────────────────────────────────────
+
+builder.mutationFields(t => ({
+  commencerConnexionEspaceFichiers: t.string({
+    authScopes: { admin: true },
+    description:
+      'Adresse où l’admin se connecte chez le fournisseur pour accorder l’accès à Relaytour. Elle vaut dix minutes, une seule fois.',
+    args: {
+      fournisseur: t.arg({ type: FournisseurFichiersEnum, required: true }),
+    },
+    resolve: async (_root, { fournisseur }, ctx) => {
+      const configuration = await configurationMicrosoft()
+      if (fournisseur !== 'SHAREPOINT' || configuration === null) {
+        throw erreurSaisie(
+          'Ce fournisseur n’est pas ouvert sur cette installation.'
+        )
+      }
+      const { etat, defi } = await commencerConnexion({
+        organisationId: ctx.organisation!.id,
+        userId: ctx.personne!.id,
+        fournisseur,
+      })
+      return adresseAutorisation(configuration, etat, defi)
+    },
+  }),
+
+  deconnecterEspaceFichiers: t.boolean({
+    authScopes: { admin: true },
+    description:
+      'Efface le jeton de l’espace de fichiers. Les dossiers liés restent, indisponibles jusqu’à une nouvelle connexion.',
+    resolve: async (_root, _args, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const connexion = await prisma.connexionFichiers.findUnique({
+        where: { organisationId },
+        select: { id: true },
+      })
+      if (connexion === null) return false
+      await prisma.connexionFichiers.delete({ where: { id: connexion.id } })
+      oublierJetonAcces(connexion.id)
+      journal.info(
+        {
+          evenement: 'espace-fichiers-deconnecte',
+          organisationId,
+          acteurId: ctx.personne!.id,
+        },
+        'Un espace de fichiers a été déconnecté.'
+      )
+      void publierChangement({ entite: 'FICHIERS', organisationId })
+      return true
+    },
+  }),
+
+  lierDossier: t.prismaField({
+    type: DossierLieRef,
+    authScopes: { admin: true },
+    description:
+      'Lie un dossier de l’espace connecté à un périmètre, ou à toute l’activité sans périmètre.',
+    args: {
+      activiteId: t.arg.id({ required: true }),
+      perimetreId: t.arg.id(),
+      emplacement: t.arg.string({ required: true }),
+      chemin: t.arg.stringList({ required: true }),
+    },
+    resolve: async (
+      query,
+      _root,
+      { activiteId, perimetreId, emplacement, chemin },
+      ctx
+    ) => {
+      const organisationId = ctx.organisation!.id
+      exigerChemin(chemin)
+      // Une bibliothèque entière ne se lie pas : l'admin choisit un dossier.
+      if (chemin.length === 0) throw erreurSaisie('Choisissez un dossier.')
+      const activite = await prisma.activite.findFirst({
+        where: { id: String(activiteId), organisationId },
+        select: { id: true },
+      })
+      if (activite === null) throw accesRefuse()
+      const perimetre =
+        perimetreId === null || perimetreId === undefined
+          ? null
+          : await prisma.perimetre.findFirst({
+              where: {
+                id: String(perimetreId),
+                organisationId,
+                activiteId: activite.id,
+              },
+              select: { id: true },
+            })
+      if (perimetreId != null && perimetre === null) throw accesRefuse()
+      const { espace, element } = await avecEspace(ctx, async espace => ({
+        espace,
+        element: await espace.element({ emplacement, base: null, chemin }),
+      }))
+      if (element === null || !element.dossier) {
+        throw erreurSaisie('Ce dossier n’existe pas dans l’espace de fichiers.')
+      }
+      const cle = {
+        organisationId,
+        activiteId: activite.id,
+        perimetreId: perimetre?.id ?? null,
+        emplacement,
+        element: element.id,
+      }
+      const existant = await prisma.dossierLie.findFirst({ where: cle })
+      const dossier =
+        existant ??
+        (await prisma.dossierLie.create({
+          data: {
+            ...cle,
+            fournisseur: espace.fournisseur,
+            nom: element.nom,
+            creeParId: ctx.personne!.id,
+          },
+        }))
+      publierPourActivite('FICHIERS', organisationId, activite.id, {
+        id: dossier.id,
+        perimetreId: dossier.perimetreId,
+      })
+      return prisma.dossierLie.findUniqueOrThrow({
+        ...query,
+        where: { id: dossier.id },
+      })
+    },
+  }),
+
+  delierDossier: t.boolean({
+    authScopes: { admin: true },
+    args: { id: t.arg.id({ required: true }) },
+    resolve: async (_root, { id }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const dossier = await prisma.dossierLie.findFirst({
+        where: { id: String(id), organisationId },
+        select: { id: true, activiteId: true, perimetreId: true },
+      })
+      if (dossier === null) throw accesRefuse()
+      await prisma.dossierLie.delete({ where: { id: dossier.id } })
+      publierPourActivite('FICHIERS', organisationId, dossier.activiteId, {
+        id: dossier.id,
+        perimetreId: dossier.perimetreId,
+      })
+      return true
+    },
+  }),
+}))

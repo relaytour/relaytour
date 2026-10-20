@@ -16,6 +16,7 @@ export type EntiteChangee =
   | 'DEMANDE'
   | 'NOTIFICATION'
   | 'MESSAGE'
+  | 'FICHIERS'
 
 // Les requêtes qui affichent des tâches, et celles qui affichent des fiches.
 const VUES_DES_TACHES = [
@@ -74,6 +75,8 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   ],
   // L'historique des messages (ADR 0020), lu par les admins.
   MESSAGE: ['Messages'],
+  // La connexion de l'espace de fichiers et ses dossiers liés (ADR 0038).
+  FICHIERS: ['EspaceFichiers', 'DossiersLies', 'ContenuDossierLie'],
 }
 
 /** Les requêtes à relire pour un lot de signaux, sans doublon. */

@@ -102,6 +102,19 @@ Les notifications push sont facultatives (ADR 0024). Pour les ouvrir :
 
 La clé privée est un secret : elle ne quitte pas le `.env`. Changer la paire de clés annule tous les abonnements, et chaque personne doit réactiver les notifications sur ses appareils.
 
+### Espace de fichiers
+
+L'espace de fichiers est facultatif (ADR 0038). Un admin de l'organisation y connecte SharePoint ou OneDrive, puis lie des dossiers aux périmètres. Relaytour relaie les documents sans les copier. Pour ouvrir ce fournisseur :
+
+1. Créez la clé de chiffrement des jetons, une seule fois : `openssl rand -base64 32`. Renseignez-la dans `CLE_CHIFFREMENT_ESPACE_FICHIERS`. Changer cette clé rend illisibles les jetons gardés en base, et chaque organisation doit reconnecter son espace.
+2. Inscrivez une application dans le centre d'administration Microsoft Entra (« Inscriptions d'applications »). Choisissez les comptes professionnels de tout annuaire pour servir plusieurs organisations, ou votre seul annuaire.
+3. Ajoutez l'adresse de retour de type « Web » : `<ORIGINE_ORGA>/medias/espace-fichiers/retour/sharepoint`.
+4. Ajoutez les autorisations déléguées de Microsoft Graph : `offline_access`, `User.Read`, `Files.ReadWrite.All` et `Sites.Read.All`. L'écriture sert seulement à l'export des fiches.
+5. Créez un secret client. Renseignez `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` et, au besoin, `MICROSOFT_LOCATAIRE`, puis relancez la pile.
+6. Laissez l'API sortir en HTTPS vers `graph.microsoft.com`, `login.microsoftonline.com`, `*.sharepoint.com` et `*.svc.ms`.
+
+Les routes de l'espace de fichiers vivent sous `/medias/`, que le `Caddyfile` d'exemple relaie déjà vers l'API. Le secret client et la clé de chiffrement ne quittent pas le `.env`. Un secret client Microsoft expire : notez sa date et remplacez-le avant.
+
 ## Adapter la pile à votre hébergement
 
 Ne modifiez pas `docker-compose.yml` : ajoutez un fichier de surcharge, par exemple `compose.local.yml`, et lancez `docker compose -f docker-compose.yml -f compose.local.yml …`. C'est là que vont vos ports, vos limites mémoire, vos volumes et votre supervision. La base et le cache ne publient aucun port et ne sont joignables que sur le réseau interne de la pile : la file des mails contient des codes de connexion en clair pendant quelques minutes, et tout processus de la machine pourrait les lire. Valkey exige en plus le mot de passe `VALKEY_MOT_DE_PASSE`. Pour administrer la base, passez par `docker compose exec db mariadb -u root -p`. Si un outil de la machine doit joindre la base, publiez le port dans votre surcharge, sur `127.0.0.1` seulement. Si une adaptation exige un changement dans l'application, proposez-le dans le dépôt de Relaytour sous une forme générique.

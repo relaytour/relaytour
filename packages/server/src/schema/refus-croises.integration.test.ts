@@ -43,6 +43,8 @@ const a = {
   notification: '',
   // Une invitation en attente pour un compte extérieur (ADR 0030).
   invitation: '',
+  // Un dossier de l'espace de fichiers lié au périmètre (ADR 0038).
+  dossierLie: '',
   admin: '',
   referente: '',
   // Une autre activité de l'organisation A, son admin et sa référente (ADR 0010).
@@ -312,6 +314,19 @@ beforeAll(async () => {
       data: { organisationId: a.org, userId: a.referente, perimetreId: null },
     })
   ).id
+  a.dossierLie = (
+    await prisma.dossierLie.create({
+      data: {
+        organisationId: a.org,
+        activiteId: a.activite,
+        perimetreId: a.perimetre,
+        fournisseur: 'SHAREPOINT',
+        emplacement: 'bibliotheque',
+        element: 'dossier-natation',
+        nom: 'Natation',
+      },
+    })
+  ).id
   a.notification = (
     await prisma.notification.create({
       data: {
@@ -356,6 +371,9 @@ beforeAll(async () => {
 
 afterAll(async () => {
   const organisations = [a.org, b.org]
+  await prisma.dossierLie.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
   await prisma.notification.deleteMany({
     where: { organisationId: { in: organisations } },
   })
@@ -973,6 +991,27 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.commentaire }),
     attente: INTERDIT,
   },
+  // L'espace de fichiers (ADR 0038).
+  {
+    operation: 'contenuDossierLie',
+    query:
+      'query ($id: ID!) { contenuDossierLie(id: $id, chemin: []) { nom } }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'lierDossier',
+    query:
+      'mutation ($a: ID!, $p: ID) { lierDossier(activiteId: $a, perimetreId: $p, emplacement: "bibliotheque", chemin: ["Natation"]) { id } }',
+    variables: () => ({ a: a.activite, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'delierDossier',
+    query: 'mutation ($id: ID!) { delierDossier(id: $id) }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: INTERDIT,
+  },
   // Une tâche et ses déclinaisons (ADR 0026).
   {
     operation: 'tache',
@@ -1041,6 +1080,7 @@ const CAS: Cas[] = [
         'peutRedigerFichesCommunes',
         'peutRedigerFichesCommunes(activiteId: $a)',
       ],
+      ['dossiersLies', 'dossiersLies(activiteId: $a) { id }'],
     ] as const
   ).map(([operation, champ]) => ({
     operation,
@@ -1121,6 +1161,7 @@ async function etatDeA() {
         prisma.demandePerimetre.count({
           where: { demande: { organisationId: a.org } },
         }),
+        prisma.dossierLie.count({ where: { organisationId: a.org } }),
         prisma.commentaireTache.findMany({
           where: { tache: { perimetre: { organisationId: a.org } } },
           select: { id: true, texte: true, modifieLe: true },

@@ -69,6 +69,8 @@ model Organisation {
   demandes                Demande[]
   messages                Message[]
   invitations             InvitationOrganisation[]
+  connexionFichiers       ConnexionFichiers?
+  dossiersLies            DossierLie[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -249,6 +251,7 @@ model Activite {
   demandes      Demande[]
   messages      Message[]
   notifications Notification[]
+  dossiersLies  DossierLie[]
 
   @@unique([organisationId, slug])
 }
@@ -302,6 +305,8 @@ model User {
   invitationsEnvoyees     InvitationOrganisation[] @relation("InvitationEnvoyee")
   messagesEcrits          Message[]                @relation("MessageAuteur")
   messagesRecus           MessageDestinataire[]
+  connexionsFichiers      ConnexionFichiers[]
+  dossiersLies            DossierLie[]
 }
 
 model Session {
@@ -437,6 +442,7 @@ model Perimetre {
   souhaits        Souhait[]
   demandes        DemandePerimetre[]
   messages        Message[]
+  dossiersLies    DossierLie[]
 
   @@unique([activiteId, slug])
   @@index([organisationId])
@@ -1068,4 +1074,65 @@ model AbonnementPush {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, empreinte])
+}
+
+// ── Espace de fichiers (ADR 0038) ────────────────────────────────────────────
+
+enum FournisseurFichiers {
+  SHAREPOINT
+}
+
+// A_RECONNECTER : le fournisseur a refusé le jeton. Un admin de l'organisation
+// reconnecte l'espace de fichiers ; les dossiers liés attendent sans changer.
+enum EtatConnexionFichiers {
+  ACTIVE
+  A_RECONNECTER
+}
+
+// Espace de fichiers d'une organisation : une connexion au plus. Relaytour agit
+// avec les droits du compte connecté. Le jeton de rafraîchissement est chiffré
+// (lib/chiffrement.ts) et ne sort jamais du serveur, ni par l'API ni dans l'export.
+model ConnexionFichiers {
+  id             String                @id @default(cuid())
+  organisationId String                @unique
+  fournisseur    FournisseurFichiers
+  // Nom affiché du compte connecté chez le fournisseur, lu par les admins de
+  // l'organisation. Jamais son adresse.
+  compte         String
+  jeton          String                @db.Text
+  etat           EtatConnexionFichiers @default(ACTIVE)
+  connecteParId  String?
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  connectePar  User?        @relation(fields: [connecteParId], references: [id], onDelete: SetNull)
+}
+
+// Dossier de l'espace de fichiers lié à un périmètre, ou à toute l'activité
+// (perimetreId nul). Il se lit comme les fiches du même périmètre. Le lien survit
+// à une déconnexion : il attend une nouvelle connexion du même fournisseur.
+model DossierLie {
+  id             String              @id @default(cuid())
+  organisationId String
+  activiteId     String
+  perimetreId    String?
+  fournisseur    FournisseurFichiers
+  // Bibliothèque de documents et dossier chez le fournisseur : des identifiants
+  // stables, qui survivent à un renommage ou à un déplacement du dossier.
+  emplacement    String              @db.VarChar(255)
+  element        String              @db.VarChar(255)
+  // Nom du dossier lors du lien, affiché quand le fournisseur ne répond pas.
+  nom            String
+  creeParId      String?
+  createdAt      DateTime            @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  perimetre    Perimetre?   @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  creePar      User?        @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+
+  @@unique([organisationId, activiteId, perimetreId, emplacement, element])
+  @@index([activiteId])
+  @@index([perimetreId])
 }
