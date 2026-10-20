@@ -1,6 +1,6 @@
 # ADR 0037 — Agenda, réunions, convocations et abonnements
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-20
 - Complète l'ADR 0025 (phases), l'ADR 0014 (consultation), l'ADR 0017 (flux des changements), l'ADR 0024 (notifications push) et l'ADR 0034 (plafond quotidien des mails).
 
@@ -32,7 +32,7 @@ Plusieurs options de synchronisation ont été envisagées. Une synchronisation 
 - Une **date clé** est un jour, ou une suite de jours, qu'un admin de l'activité place dans l'agenda : un dossier à déposer, une assemblée, une visite du site. Elle porte un titre et une description facultative.
 - Une **réunion** porte un titre, un début et une fin, un lieu, un lien de visio et une description. Le lieu, le lien et la description sont facultatifs. La v1 ne gère pas la récurrence.
 - Une réunion appartient à l'**agenda global** de l'activité, ou à l'agenda d'un périmètre. Elle se rattache à une période, comme une tâche.
-- Une réunion peut se lier à une tâche de la même période. Pour une réunion de périmètre, la tâche appartient à ce périmètre. Le lien est facultatif et n'ouvre aucun droit.
+- Une réunion peut se lier à une ou plusieurs tâches de la même période, vingt au plus. Les tâches d'une réunion de périmètre appartiennent à ce périmètre. Les tâches d'une réunion globale appartiennent à un périmètre de l'activité. Le lien est facultatif et n'ouvre aucun droit.
 - Une réunion ne se supprime pas. Elle s'annule, et son annulation prévient les personnes convoquées.
 
 ### Droits
@@ -42,8 +42,8 @@ Plusieurs options de synchronisation ont été envisagées. Une synchronisation 
 - Une période archivée passe en lecture seule : aucune date clé ni réunion ne s'y écrit.
 - Toute personne qui voit l'activité lit son agenda global.
 - Une personne lit les réunions d'un périmètre quand elle lit ce périmètre, ou quand elle est convoquée.
-- En consultation, une personne lit le titre, l'horaire et le lieu d'une réunion de périmètre. Elle ne lit ni le lien de visio ni la description.
-- Une personne qui ne lit pas la tâche liée voit la réunion sans ce lien.
+- En consultation, une personne lit le titre et l'horaire d'une réunion de périmètre. Elle ne lit ni le lieu, ni le lien de visio, ni la description.
+- Une personne qui ne lit pas une tâche liée voit la réunion sans ce lien.
 
 ### Convocations
 
@@ -55,7 +55,9 @@ Plusieurs options de synchronisation ont été envisagées. Une synchronisation 
 - Les modifications rapprochées d'une même réunion produisent un seul mail : l'envoi attend deux minutes et lit la réunion au dernier moment.
 - La personne convoquée répond dans l'application : présente, absente ou peut-être. L'application ne lit pas les réponses envoyées depuis un agenda. Le mail le dit.
 - La personne qui organise et les personnes qui écrivent dans l'agenda lisent les réponses, nominativement. Les autres personnes convoquées lisent les compteurs.
-- Une personne retirée du périmètre ou archivée après sa convocation ne lit plus la réunion. Elle ne reçoit pas le mail d'annulation.
+- Une personne retirée d'un périmètre quitte les réunions à venir de ce périmètre. Sa convocation est retirée, et un mail d'annulation retire l'événement de son agenda. Les réunions passées gardent sa convocation.
+- Une personne archivée dans l'organisation (ADR 0031) quitte toutes les réunions à venir de l'organisation, sans mail.
+- Une personne affectée à un périmètre après la création d'une réunion qui convoque tout le périmètre est convoquée à son tour.
 - Les mails de convocation comptent dans le plafond quotidien (ADR 0034). Un mail reporté au lendemain par le plafond arrive après une réunion du jour même. L'écran indique « envoi en attente » tant que le mail n'est pas parti.
 - Une convocation crée aussi une notification dans l'application, et une notification push de la famille « agenda » (ADR 0024).
 
@@ -86,7 +88,7 @@ Plusieurs options de synchronisation ont été envisagées. Une synchronisation 
 
 ## Conséquences
 
-- Une migration additive ajoute les tables `DateCle`, `Reunion` et `ConvocationReunion`, puis `JetonAgenda`, puis les tables des sondages. Chaque table porte `organisationId`, et chaque unicité est bornée par un parent (invariant 18).
+- Une migration additive ajoute les tables `DateCle`, `Reunion`, `ReunionTache` et `ConvocationReunion`, puis `JetonAgenda`, puis les tables des sondages. Chaque table porte `organisationId`, et chaque unicité est bornée par un parent (invariant 18).
 - Le modèle `Notification` reçoit `reunionId` et `sondageId`. L'énumération `TypeNotification` reçoit les types des réunions et des sondages. `PreferenceOrganisation` reçoit `pushAgenda`.
 - Le serveur écrit lui-même ses fichiers iCalendar (`packages/server/src/lib/ics.ts`), sans dépendance nouvelle.
 - Le transport des mails accepte une pièce iCalendar. La charge utile de la file ne contient que des identifiants (invariant 5).
@@ -105,4 +107,4 @@ Plusieurs options de synchronisation ont été envisagées. Une synchronisation 
 - La réponse d'un abonnement porte `Cache-Control: private`, `X-Robots-Tag: noindex` et `Referrer-Policy: no-referrer`.
 - Le mail de convocation ne nomme que la personne destinataire. Il ne révèle aucune autre personne convoquée.
 - Une personne hors de l'équipe, ou d'une autre organisation, ne peut pas être convoquée. Le serveur la refuse comme un identifiant inconnu.
-- Le lien de visio ne s'affiche pas en consultation. Une personne qui n'est ni affectée ni convoquée ne rejoint donc pas une réunion de périmètre par l'application.
+- Ni le lieu ni le lien de visio ne s'affichent en consultation. Une personne qui n'est ni affectée ni convoquée ne rejoint donc pas une réunion de périmètre par l'application.
