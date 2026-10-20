@@ -77,18 +77,18 @@ export const DATE_CLE_JOURS_MAX = 366
 export const DATES_CLES_MAX = 200
 
 /**
- * Valide les jours d'une date clé : le dernier jour suit le premier, et la date
- * clé reste dans les deux ans qui entourent la période.
+ * Valide les jours d'une date clé : le dernier jour suit le premier, la date clé
+ * dure DATE_CLE_JOURS_MAX jours au plus, bornes comprises, et ses deux bornes
+ * restent dans les deux ans qui entourent la période.
  */
 export function joursDeDateCle(
   jour: string,
   jourFin: string | null,
   periode: { debut: string; fin: string }
 ): { jour: string; jourFin: string | null } {
-  if (
-    jour < decalerJour(periode.debut, -730) ||
-    jour > decalerJour(periode.fin, 730)
-  ) {
+  const horsFenetre = (j: string) =>
+    j < decalerJour(periode.debut, -730) || j > decalerJour(periode.fin, 730)
+  if (horsFenetre(jour) || (jourFin !== null && horsFenetre(jourFin))) {
     throw erreurSaisie(
       'Une date clé se place dans les deux ans qui entourent la période.'
     )
@@ -97,7 +97,8 @@ export function joursDeDateCle(
   if (jourFin < jour) {
     throw erreurSaisie('Le dernier jour suit le premier.')
   }
-  if (ecartEnJours(jour, jourFin) > DATE_CLE_JOURS_MAX) {
+  // Le premier et le dernier jour comptent tous les deux.
+  if (ecartEnJours(jour, jourFin) + 1 > DATE_CLE_JOURS_MAX) {
     throw erreurSaisie(`Une date clé dure ${DATE_CLE_JOURS_MAX} jours au plus.`)
   }
   return { jour, jourFin }

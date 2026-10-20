@@ -130,4 +130,22 @@ describe('joursDeDateCle', () => {
       /deux ans/
     )
   })
+
+  it('compte le premier et le dernier jour dans la durée', () => {
+    // Du 1er janvier 2027 au 1er janvier 2028 : 366 journées.
+    expect(joursDeDateCle('2027-01-01', '2028-01-01', PERIODE).jourFin).toBe(
+      '2028-01-01'
+    )
+    expect(() => joursDeDateCle('2027-01-01', '2028-01-02', PERIODE)).toThrow(
+      /366 jours au plus/
+    )
+  })
+
+  it('refuse un dernier jour au-delà des deux ans', () => {
+    // Le 5 juin 2029 est le dernier jour permis : la date clé n'en sort pas.
+    expect(joursDeDateCle('2029-06-05', null, PERIODE).jour).toBe('2029-06-05')
+    expect(() => joursDeDateCle('2029-06-05', '2029-07-05', PERIODE)).toThrow(
+      /deux ans/
+    )
+  })
 })

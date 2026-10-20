@@ -2,6 +2,7 @@ import type { PrismaClient } from '@relaytour/database'
 
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
+import { concilierApresEnvoi } from '../lib/convocations.ts'
 import { adminsAPrevenir, demandesEnAttente } from '../lib/demandes.ts'
 import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { aujourdhui } from '../lib/droits.ts'
@@ -548,7 +549,15 @@ export async function composer(
           perimetre: { select: { nom: true } },
           activite: { select: { id: true, slug: true, nom: true } },
           organisation: { select: { fuseauHoraire: true } },
-          convocations: { where: { userId: job.userId } },
+          // La convocation de ce job ; pour une annulation, toute convocation
+          // actuelle de la personne, qui l'aurait convoquée de nouveau.
+          convocations: {
+            where:
+              job.sorte === 'convocation-reunion' &&
+              job.convocationId !== undefined
+                ? { id: job.convocationId }
+                : { userId: job.userId },
+          },
         },
       }),
       prisma.user.findUniqueOrThrow({
@@ -560,12 +569,17 @@ export async function composer(
     const convocation = reunion.convocations[0]
     const maintenant = new Date()
     if (job.sorte === 'convocation-reunion') {
-      // La convocation part pour une réunion prévue et à venir, à une personne
-      // encore convoquée, une fois par version.
+      // La convocation part pour une réunion prévue et pas encore terminée, à
+      // une personne encore convoquée, une fois par version. Une convocation
+      // retardée par le plafond quotidien (ADR 0034) part donc même après le
+      // début de la réunion. Seul le job de la version courante envoie : un job
+      // d'une version dépassée laisse la place au suivant.
       if (
         convocation === undefined ||
         reunion.statut !== 'PREVUE' ||
-        reunion.debut.getTime() <= maintenant.getTime() ||
+        reunion.fin.getTime() <= maintenant.getTime() ||
+        (job.sequenceReunion !== undefined &&
+          job.sequenceReunion !== reunion.sequence) ||
         convocation.sequenceEnvoyee === reunion.sequence
       ) {
         return null
@@ -586,6 +600,9 @@ export async function composer(
       convocation?.sequenceEnvoyee !== null &&
       convocation?.sequenceEnvoyee !== undefined
     const annulee = reunion.statut === 'ANNULEE'
+    // Une personne retirée ne lit plus le détail de la réunion : son annulation
+    // ne porte ni le lieu, ni le lien de visio, ni la description.
+    const retrait = job.sorte === 'annulation-reunion' && !annulee
     variables.intitule =
       job.sorte === 'annulation-reunion'
         ? annulee
@@ -604,8 +621,10 @@ export async function composer(
           : `Vous êtes convoqué·e à la réunion « ${reunion.titre} » (${agenda}).`
     variables.details = [
       `Quand : ${horaireEnClair(reunion.debut, reunion.fin, fuseau)}`,
-      ...(reunion.lieu ? [`Lieu : ${reunion.lieu}`] : []),
-      ...(reunion.lienVisio ? [`Visio : ${reunion.lienVisio}`] : []),
+      ...(reunion.lieu && !retrait ? [`Lieu : ${reunion.lieu}`] : []),
+      ...(reunion.lienVisio && !retrait
+        ? [`Visio : ${reunion.lienVisio}`]
+        : []),
     ]
     variables.consigne =
       job.sorte === 'annulation-reunion'
@@ -623,13 +642,15 @@ export async function composer(
       configuration.contactRecrutement ??
       /<([^>]+)>/.exec(expediteur)?.[1] ??
       expediteur
-    const description = [
-      reunion.description,
-      reunion.lienVisio ? `Visio : ${reunion.lienVisio}` : null,
-      `Répondre : ${lienAgenda}`,
-    ]
-      .filter(Boolean)
-      .join('\n\n')
+    const description = retrait
+      ? null
+      : [
+          reunion.description,
+          reunion.lienVisio ? `Visio : ${reunion.lienVisio}` : null,
+          `Répondre : ${lienAgenda}`,
+        ]
+          .filter(Boolean)
+          .join('\n\n')
     icalEvent = {
       methode: job.sorte === 'annulation-reunion' ? 'CANCEL' : 'REQUEST',
       contenu: calendrier({
@@ -640,7 +661,7 @@ export async function composer(
             uid: `reunion-${reunion.id}@${new URL(origine).hostname}`,
             titre: reunion.titre,
             horaire: { debut: reunion.debut, fin: reunion.fin },
-            lieu: reunion.lieu,
+            lieu: retrait ? null : reunion.lieu,
             description,
             url: lienAgenda,
             sequence: reunion.sequence,
@@ -655,15 +676,14 @@ export async function composer(
         ],
       }),
     }
-    if (job.sorte === 'convocation-reunion') {
-      const { id: reunionId, sequence } = reunion
-      const userId = job.userId
-      apresEnvoi = async () => {
-        await prisma.convocationReunion.updateMany({
-          where: { reunionId, userId },
-          data: { envoyeeLe: new Date(), sequenceEnvoyee: sequence },
-        })
+    if (job.sorte === 'convocation-reunion' && convocation !== undefined) {
+      const envoyee = {
+        id: convocation.id,
+        userId: job.userId,
+        reunionId: reunion.id,
       }
+      const { sequence } = reunion
+      apresEnvoi = () => concilierApresEnvoi(envoyee, sequence)
     }
   }
 
