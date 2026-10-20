@@ -60,9 +60,9 @@ La décision garde la mention comme raccourci de saisie, et porte le partage dan
 
 ### Seuil d'une large diffusion
 
-- Au-delà de la moitié des périmètres non archivés de l'activité, l'éditeur affiche un avertissement. Il rappelle que la fiche apparaîtra dans ces périmètres, et propose de la rendre commune.
-- L'avertissement ne bloque pas l'enregistrement. La personne qui enregistre confirme la liste.
-- Quand cette personne n'est pas admin de l'activité, les admins de l'activité reçoivent une notification d'admin (ADR 0033), qui nomme la fiche et le nombre de périmètres. Ils retirent des périmètres de la liste s'ils le jugent utile.
+- Au-delà de la moitié des périmètres non archivés de l'activité, l'enregistrement ouvre une fenêtre de confirmation. Elle vaut pour toute personne qui rédige la fiche, admin ou non.
+- La fenêtre rappelle que la fiche apparaîtra dans ces périmètres, et propose de la rendre commune.
+- La personne confirme la liste, ou revient à l'éditeur pour la modifier. Rien ne l'oblige à réduire la liste, et aucun admin ne valide la diffusion.
 
 ### Masquage par le périmètre cible
 
