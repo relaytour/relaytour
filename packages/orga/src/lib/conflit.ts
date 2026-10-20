@@ -1,6 +1,9 @@
+import type { ApolloClient } from '@apollo/client'
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 
 import type { StatutTache } from '../gql/graphql'
+
+import { relireLesVues } from './rafraichissement'
 
 // Conflit d'écriture sur une tâche, une fiche ou un périmètre. Le serveur refuse
 // d'écraser ce qu'une autre personne a écrit depuis la lecture (code
@@ -124,4 +127,26 @@ export function annonceConflitFiche(
   return conflit.modifieePar === null
     ? `Une autre version de cette fiche a été enregistrée${moment}.`
     : `${conflit.modifieePar} a enregistré une autre version de cette fiche${moment}.`
+}
+
+/**
+ * Après un conflit de version sur une date clé, une réunion, un sondage ou une
+ * séquence : relit les vues qui montrent l'objet, puis ferme la saisie. Une
+ * mutation refusée ne lance pas ses `refetchQueries` : sans cette relecture, une
+ * nouvelle saisie reprendrait la version dépassée. Si la relecture échoue, la
+ * saisie reste à l'écran pour un nouvel essai.
+ */
+export async function relireApresConflit(
+  client: ApolloClient,
+  vues: readonly string[],
+  signaler: (texte: string) => void,
+  textes: { relu: string; echec: string },
+  fermer: () => void
+): Promise<void> {
+  if (await relireLesVues(client, vues)) {
+    signaler(textes.relu)
+    fermer()
+  } else {
+    signaler(textes.echec)
+  }
 }

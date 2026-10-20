@@ -26,6 +26,8 @@ export async function mettreEnFile(
     delai?: number
     fenetre?: CourrielJobData['fenetre']
     reunionId?: string
+    convocationId?: string
+    sequenceReunion?: number
   } = {}
 ): Promise<void> {
   try {
@@ -51,6 +53,12 @@ export async function mettreEnFile(
       ...(options.reunionId === undefined
         ? {}
         : { reunionId: options.reunionId }),
+      ...(options.convocationId === undefined
+        ? {}
+        : { convocationId: options.convocationId }),
+      ...(options.sequenceReunion === undefined
+        ? {}
+        : { sequenceReunion: options.sequenceReunion }),
     }
     await avecDelai(
       courrielQueue.add(sorte, data, {
