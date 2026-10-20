@@ -175,7 +175,10 @@ Un seul mot par notion.
 | adresse de rôle | Adresse d'une boîte partagée de l'organisation, jamais d'une personne : une adresse d'un domaine de rôle, ou une adresse déclarée une par une. Relaytour la publie sans la signaler comme donnée personnelle. |
 | image | Logo ou favicon d'une organisation ou d'une activité, gardé en base et désigné par son empreinte. |
 | limites | Plafonds d'une organisation (nombre d'activités, nombre de périodes ouvertes), fixés par l'administration de l'installation. Une limite ne bloque jamais la lecture ni l'export. Une organisation auto-hébergée n'en a aucune. |
-| bénévole | Personne qui aide pendant le tournoi sans être référent·e. |
+| bénévole | Personne qui aide l'activité sans compte dans l'application. Une fiche bénévole porte son nom et ses coordonnées, avec son accord (ADR 0038). |
+| programme | L'ensemble des séquences d'une période : le déroulé du jour J, par lieu et par heure (ADR 0038). |
+| séquence | Moment du programme : un titre, un horaire, un lieu et un périmètre facultatifs, et les personnes placées en responsabilité ou en renfort (ADR 0038). Ne pas confondre avec une réunion. |
+| lieu | Endroit d'une activité où se tient une séquence : un terrain, un bassin, une salle. Il sert d'une période à l'autre (ADR 0038). |
 | application installée | L'espace organisateur ajouté à l'écran d'accueil d'un téléphone ou d'un ordinateur. Elle s'ouvre sans barre d'adresse et porte le nom et l'icône de l'organisation (ADR 0023). |
 | icône d'application | Image carrée de 512 pixels qu'une organisation déclare pour son application installée (ADR 0023). |
 | hors connexion | État de l'appareil sans réseau. L'application affiche alors un écran d'attente et ne montre aucune donnée (ADR 0023). |
