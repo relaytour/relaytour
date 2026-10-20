@@ -350,6 +350,26 @@ describe('séquences', () => {
         })
       )
     ).toBe('SAISIE_INVALIDE')
+    // Une place désigne un compte ou une fiche, jamais les deux ni aucun : la
+    // base n'a pas de contrainte CHECK, le serveur porte seul cette règle.
+    for (const place of [
+      { personneId: ids.referent, benevoleId: ids.benevole, role: 'RENFORT' },
+      { role: 'RENFORT' },
+    ]) {
+      expect(
+        code(
+          await executer(ids.referent, CREER, {
+            e: ids.edition,
+            p: ids.natation,
+            t: 'Place ambiguë',
+            j: '2027-06-05',
+            d: '09:00',
+            f: '10:00',
+            pl: [place],
+          })
+        )
+      ).toBe('SAISIE_INVALIDE')
+    }
   })
 
   it('se modifient avec la version lue, et remplacent leurs places', async () => {
