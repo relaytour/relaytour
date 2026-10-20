@@ -191,14 +191,22 @@ export const SondageRef = builder.objectRef<SondageLu>('Sondage').implement({
             siBesoin: compte('SI_BESOIN'),
             non: compte('NON'),
             monChoix: c.reponses.find(r => r.userId === l.moi)?.choix ?? null,
-            reponses: c.reponses
-              .filter(r => noms.has(r.userId))
-              .map(r => ({
-                personneId: r.userId,
-                nom: noms.get(r.userId)!,
-                choix: r.choix,
-              }))
-              .sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+            // Les réponses nominatives se lisent par les personnes visées et
+            // par les personnes qui écrivent dans l'agenda ; les autres lecteurs
+            // ne voient que les décomptes.
+            reponses: !(
+              l.peutModifier ||
+              l.sondage.participants.some(p => p.userId === l.moi)
+            )
+              ? []
+              : c.reponses
+                  .filter(r => noms.has(r.userId))
+                  .map(r => ({
+                    personneId: r.userId,
+                    nom: noms.get(r.userId)!,
+                    choix: r.choix,
+                  }))
+                  .sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
           }
         })
       },
@@ -473,7 +481,11 @@ builder.mutationFields(t => ({
       titre: t.arg.string({ required: true }),
       description: t.arg.string(),
       creneaux: t.arg({ type: [CreneauInput], required: true }),
-      versionAttendue: t.arg.int(),
+      versionAttendue: t.arg.int({
+        required: true,
+        description:
+          'La version lue : le serveur refuse d’écraser une modification faite depuis.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const actuel = await sondageModifiable(ctx, String(args.id))
@@ -486,13 +498,16 @@ builder.mutationFields(t => ({
         throw accesRefuse()
       }
       const gardes = new Set(creneaux.map(c => c.id).filter(Boolean))
-      const versionAttendue = args.versionAttendue ?? null
+      const anciens = new Map(actuel.creneaux.map(c => [c.id, c]))
       await prisma.$transaction(async tx => {
+        // Le verrou du sondage ordonne la modification, les réponses et la
+        // clôture : aucune ne s'appuie sur un état dépassé.
+        await tx.$queryRaw`SELECT id FROM Sondage WHERE id = ${actuel.id} FOR UPDATE`
         const { count } = await tx.sondage.updateMany({
           where: {
             id: actuel.id,
             statut: 'OUVERT',
-            ...(versionAttendue === null ? {} : { version: versionAttendue }),
+            version: args.versionAttendue,
           },
           data: {
             version: { increment: 1 },
@@ -505,9 +520,13 @@ builder.mutationFields(t => ({
           },
         })
         if (count === 0) {
+          const { version } = await tx.sondage.findUniqueOrThrow({
+            where: { id: actuel.id },
+            select: { version: true },
+          })
           throw conflitDeVersion(
             'Ce sondage a été modifié depuis votre lecture.',
-            { versionCourante: actuel.version }
+            { versionCourante: version }
           )
         }
         await tx.creneauSondage.deleteMany({
@@ -527,12 +546,23 @@ builder.mutationFields(t => ({
             await tx.creneauSondage.create({
               data: { sondageId: actuel.id, ...donnees },
             })
-          } else {
-            await tx.creneauSondage.update({
-              where: { id: c.id },
-              data: donnees,
-            })
+            continue
           }
+          // Un créneau qui change de jour ou d'heure est une nouvelle
+          // proposition : ses réponses ne valent plus. Un créneau seulement
+          // déplacé dans la liste les garde.
+          const ancien = anciens.get(c.id)!
+          if (
+            jourISO(ancien.jour) !== c.jour ||
+            ancien.heureDebut !== c.heureDebut ||
+            ancien.heureFin !== c.heureFin
+          ) {
+            await tx.reponseSondage.deleteMany({ where: { creneauId: c.id } })
+          }
+          await tx.creneauSondage.update({
+            where: { id: c.id },
+            data: donnees,
+          })
         }
       })
       signal(actuel)
@@ -553,16 +583,29 @@ builder.mutationFields(t => ({
       const sondage = await sondageVisible(ctx, String(args.id))
       const moi = ctx.personne!.id
       if (!sondage.participants.some(p => p.userId === moi)) throw accesRefuse()
-      if (sondage.statut !== 'OUVERT') {
-        throw erreurSaisie('Ce sondage est clos.')
+      const edition = await ctx.exigerEdition(sondage.editionId)
+      if (edition.statut === 'ARCHIVEE') {
+        throw erreurSaisie(
+          'Cette période est archivée : son agenda est en lecture seule.'
+        )
       }
-      const creneaux = new Set(sondage.creneaux.map(c => c.id))
-      if (args.reponses.some(r => !creneaux.has(String(r.creneauId)))) {
-        throw accesRefuse()
-      }
-      await prisma.$transaction(
-        args.reponses.map(r =>
-          prisma.reponseSondage.upsert({
+      await prisma.$transaction(async tx => {
+        // Sous le verrou du sondage, le statut et les créneaux relus sont ceux
+        // qu'une clôture ou une modification simultanée a validés.
+        await tx.$queryRaw`SELECT id FROM Sondage WHERE id = ${sondage.id} FOR UPDATE`
+        const actuel = await tx.sondage.findUniqueOrThrow({
+          where: { id: sondage.id },
+          select: { statut: true, creneaux: { select: { id: true } } },
+        })
+        if (actuel.statut !== 'OUVERT') {
+          throw erreurSaisie('Ce sondage est clos.')
+        }
+        const creneaux = new Set(actuel.creneaux.map(c => c.id))
+        if (args.reponses.some(r => !creneaux.has(String(r.creneauId)))) {
+          throw accesRefuse()
+        }
+        for (const r of args.reponses) {
+          await tx.reponseSondage.upsert({
             where: {
               creneauId_userId: { creneauId: String(r.creneauId), userId: moi },
             },
@@ -573,8 +616,8 @@ builder.mutationFields(t => ({
               choix: r.choix,
             },
           })
-        )
-      )
+        }
+      })
       signal(sondage)
       return lireSondage(ctx, await sondageVisible(ctx, sondage.id))
     },
@@ -593,14 +636,40 @@ builder.mutationFields(t => ({
       const sondage = await sondageModifiable(ctx, String(args.id))
       const creneauId = String(args.creneauId)
       if (!sondage.creneaux.some(c => c.id === creneauId)) throw accesRefuse()
-      await prisma.sondage.update({
-        where: { id: sondage.id },
-        data: {
-          statut: 'CLOS',
-          creneauRetenuId: creneauId,
-          closLe: new Date(),
-          version: { increment: 1 },
-        },
+      await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM Sondage WHERE id = ${sondage.id} FOR UPDATE`
+        // La clôture vaut pour la version lue, encore ouverte, et pour un
+        // créneau qui existe encore : une clôture ou une modification
+        // simultanée l'emporte, et celle-ci reçoit un conflit.
+        const existe = await tx.creneauSondage.count({
+          where: { id: creneauId, sondageId: sondage.id },
+        })
+        const { count } =
+          existe === 0
+            ? { count: 0 }
+            : await tx.sondage.updateMany({
+                where: {
+                  id: sondage.id,
+                  statut: 'OUVERT',
+                  version: sondage.version,
+                },
+                data: {
+                  statut: 'CLOS',
+                  creneauRetenuId: creneauId,
+                  closLe: new Date(),
+                  version: { increment: 1 },
+                },
+              })
+        if (count === 0) {
+          const { version } = await tx.sondage.findUniqueOrThrow({
+            where: { id: sondage.id },
+            select: { version: true },
+          })
+          throw conflitDeVersion(
+            'Ce sondage a été modifié ou clos depuis votre lecture.',
+            { versionCourante: version }
+          )
+        }
       })
       signal(sondage)
       return lireSondage(ctx, await sondageVisible(ctx, sondage.id))

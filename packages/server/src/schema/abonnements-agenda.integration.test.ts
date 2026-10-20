@@ -293,6 +293,8 @@ afterAll(async () => {
   await apollo.stop()
 })
 
+const CREER_ACTIVITE = `mutation ($a: ID!) { creerAbonnementAgendaActivite(activiteId: $a) { adresse } }`
+
 describe('abonnement personnel', () => {
   it('sert l’agenda global, les réunions lues et les convocations, sans liste de personnes', async () => {
     const ics = await contenu(await creer(ids.referent))
@@ -354,6 +356,49 @@ describe('abonnement personnel', () => {
     expect((await lire(seconde)).statut).toBe(404)
   })
 
+  it('se révoquent dans une organisation en lecture seule', async () => {
+    const personnelle = await creer(ids.referent)
+    const r = await executer(ids.adminActivite, CREER_ACTIVITE, {
+      a: ids.activite,
+    })
+    const partagee = (
+      r.data as { creerAbonnementAgendaActivite: { adresse: string } }
+    ).creerAbonnementAgendaActivite.adresse
+    await prisma.organisation.update({
+      where: { id: ids.org },
+      data: { statut: 'LECTURE_SEULE' },
+    })
+    try {
+      // Une organisation en lecture seule sert encore ses abonnements : une
+      // adresse compromise doit donc pouvoir se révoquer.
+      expect((await lire(personnelle)).statut).toBe(200)
+      expect(
+        (
+          await executer(
+            ids.referent,
+            'mutation { revoquerMonAbonnementAgenda }'
+          )
+        ).data
+      ).toEqual({ revoquerMonAbonnementAgenda: true })
+      expect(
+        (
+          await executer(
+            ids.adminActivite,
+            'mutation ($a: ID!) { revoquerAbonnementAgendaActivite(activiteId: $a) }',
+            { a: ids.activite }
+          )
+        ).data
+      ).toEqual({ revoquerAbonnementAgendaActivite: true })
+      expect((await lire(personnelle)).statut).toBe(404)
+      expect((await lire(partagee)).statut).toBe(404)
+    } finally {
+      await prisma.organisation.update({
+        where: { id: ids.org },
+        data: { statut: 'ACTIVE' },
+      })
+    }
+  })
+
   it('suit les droits du moment : périmètre retiré, personne archivée', async () => {
     const adresse = await creer(ids.referent)
     await prisma.affectation.deleteMany({
@@ -374,9 +419,27 @@ describe('abonnement personnel', () => {
   })
 })
 
-describe('abonnement d’activité', () => {
-  const CREER_ACTIVITE = `mutation ($a: ID!) { creerAbonnementAgendaActivite(activiteId: $a) { adresse } }`
+describe('séquences du programme (ADR 0040)', () => {
+  it('ajoute les séquences où la personne est placée, avec son rôle', async () => {
+    const sequence = await prisma.sequence.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        titre: 'Accueil des équipes',
+        debut: new Date(Date.now() + 15 * 24 * 3600 * 1000),
+        fin: new Date(Date.now() + 15 * 24 * 3600 * 1000 + 2 * 3600 * 1000),
+        places: { create: { userId: ids.referent, role: 'RESPONSABLE' } },
+      },
+    })
+    const ics = await contenu(await creer(ids.referent))
+    expect(ics).toContain(`UID:sequence-${sequence.id}@`)
+    expect(ics).toContain('SUMMARY:Accueil des équipes (responsable)')
+    await prisma.sequence.delete({ where: { id: sequence.id } })
+  })
+})
 
+describe('abonnement d’activité', () => {
   it('sert l’agenda global d’une activité à ses admins seulement', async () => {
     const r = await executer(ids.adminActivite, CREER_ACTIVITE, {
       a: ids.activite,
