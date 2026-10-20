@@ -1,3 +1,23 @@
+"""
+Un abonnement à l’agenda. Son adresse ne se relit pas : elle s’affiche une seule fois, à sa création.
+"""
+type AbonnementAgenda {
+  creeLe: DateTime!
+
+  """La dernière lecture par un agenda, à une heure près."""
+  dernierAccesLe: DateTime
+
+  """Les derniers caractères de l’adresse, pour la reconnaître."""
+  fin: String!
+  id: ID!
+  inclureEcheances: Boolean!
+  inclureGlobal: Boolean!
+
+  """Les périmètres choisis. Nul : tous les périmètres que la personne lit."""
+  perimetreIds: [ID!]
+  sorte: SorteAbonnement!
+}
+
 enum AccesActivite {
   COMPLET
   DECOUVERTE
@@ -76,6 +96,13 @@ type ActiviteNotifiee {
   id: ID!
   nom: String!
   slug: String!
+}
+
+type AdresseAbonnement {
+  abonnement: AbonnementAgenda!
+
+  """L’adresse complète, affichée une seule fois."""
+  adresse: String!
 }
 
 """
@@ -784,11 +811,21 @@ type Mutation {
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
+
+  """
+  Crée l’abonnement à l’agenda global d’une activité, et révoque le précédent.
+  """
+  creerAbonnementAgendaActivite(activiteId: ID!): AdresseAbonnement!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
   creerDateCle(description: String, editionId: ID!, jour: Date!, jourFin: Date, titre: String!): DateCle!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
   creerMessage(message: MessageInput!): Message!
+
+  """
+  Crée l’abonnement personnel, et révoque le précédent : son adresse cesse de servir.
+  """
+  creerMonAbonnementAgenda(inclureEcheances: Boolean = false, inclureGlobal: Boolean = true, perimetreIds: [ID!]): AdresseAbonnement!
   creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, nom: String!, sigle: String, slug: String!): OrganisationInstallation!
   creerPerimetre(activiteId: ID, couleur: String, description: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
   creerReunion(
@@ -985,6 +1022,9 @@ type Mutation {
   """
   refuserInvitation(id: ID!): Boolean!
 
+  """Change le contenu de l’abonnement personnel. L’adresse ne change pas."""
+  reglerMonAbonnementAgenda(inclureEcheances: Boolean!, inclureGlobal: Boolean!, perimetreIds: [ID!]): AbonnementAgenda!
+
   """
   Renvoie le mail d’une invitation en attente, une fois par heure au plus.
   """
@@ -1014,6 +1054,10 @@ type Mutation {
   retirerMonSouhait(editionId: ID!, perimetreId: ID!): Boolean!
   retirerProposition(id: ID!): Boolean!
   retirerSouhait(id: ID!): Boolean!
+  revoquerAbonnementAgendaActivite(activiteId: ID!): Boolean!
+
+  """Révoque l’abonnement personnel : son adresse cesse de servir."""
+  revoquerMonAbonnementAgenda: Boolean!
 
   """
   Supprime un commentaire, définitivement, et rend le fil de sa tâche. Son auteur le supprime, ainsi qu’un admin de l’activité.
@@ -1405,6 +1449,9 @@ type Query {
   Vrai quand cet abonnement, désigné par son adresse, est enregistré pour la personne connectée.
   """
   abonnePush(adresse: String!): Boolean!
+
+  """L’abonnement actif à l’agenda global d’une activité, pour ses admins."""
+  abonnementAgendaActivite(activiteId: ID!): AbonnementAgenda
   activites(inclureArchives: Boolean = false): [Activite!]!
   adminsOrganisation: [Personne!]!
   affectations(editionId: ID!): [Affectation!]!
@@ -1481,6 +1528,11 @@ type Query {
   """
   messages(activiteId: ID): [Message!]!
   moi: Personne
+
+  """
+  L’abonnement personnel actif de la personne dans l’organisation active.
+  """
+  monAbonnementAgenda: AbonnementAgenda
   monScore(editionId: ID!): Score!
   nombreNotificationsNonLues(
     """
@@ -1652,6 +1704,11 @@ type Score {
   tachesATemps: Int!
   tachesCreees: Int!
   tachesRealisees: Int!
+}
+
+enum SorteAbonnement {
+  ACTIVITE
+  PERSONNEL
 }
 
 enum SorteElementAgenda {

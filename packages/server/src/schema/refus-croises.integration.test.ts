@@ -428,6 +428,9 @@ afterAll(async () => {
   await prisma.reunion.deleteMany({
     where: { organisationId: { in: organisations } },
   })
+  await prisma.abonnementAgenda.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
   await prisma.edition.deleteMany({
     where: { organisationId: { in: organisations } },
   })
@@ -1054,6 +1057,43 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.reunion }),
     attente: INTERDIT,
   },
+  // Abonnements à l'agenda (ADR 0037) : l'abonnement d'une activité revient à ses
+  // admins, et un abonnement personnel ne choisit que des périmètres lus.
+  {
+    operation: 'creerAbonnementAgendaActivite',
+    query:
+      'mutation ($a: ID!) { creerAbonnementAgendaActivite(activiteId: $a) { adresse } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'revoquerAbonnementAgendaActivite',
+    query:
+      'mutation ($a: ID!) { revoquerAbonnementAgendaActivite(activiteId: $a) }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'creerMonAbonnementAgenda',
+    query:
+      'mutation ($p: [ID!]) { creerMonAbonnementAgenda(perimetreIds: $p) { adresse } }',
+    variables: () => ({ p: [a.perimetre] }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'reglerMonAbonnementAgenda',
+    query:
+      'mutation ($p: [ID!]) { reglerMonAbonnementAgenda(perimetreIds: $p, inclureGlobal: true, inclureEcheances: false) { id } }',
+    variables: () => ({ p: [a.perimetre] }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'abonnementAgendaActivite',
+    query:
+      'query ($a: ID!) { abonnementAgendaActivite(activiteId: $a) { id } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
   // ── Requêtes ───────────────────────────────────────────────────────────────
   {
     operation: 'reunions',
@@ -1294,6 +1334,7 @@ async function etatDeA() {
           },
           orderBy: { id: 'asc' },
         }),
+        prisma.abonnementAgenda.count({ where: { organisationId: a.org } }),
       ]),
     ])
   const invitation = await prisma.invitationOrganisation.findUnique({
@@ -1308,6 +1349,7 @@ async function etatDeA() {
     }),
     prisma.message.count({ where: { organisationId: b.org } }),
     prisma.reunion.count({ where: { organisationId: b.org } }),
+    prisma.abonnementAgenda.count({ where: { organisationId: b.org } }),
     prisma.invitationOrganisation.count({ where: { organisationId: b.org } }),
     prisma.appartenance.count({ where: { organisationId: b.org } }),
     prisma.droitRedaction.count({ where: { organisationId: b.org } }),

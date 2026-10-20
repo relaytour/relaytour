@@ -63,6 +63,8 @@ export default defineConfig({
       '/api/auth': { target: API, xfwd: true },
       '/graphql': { target: API, xfwd: true },
       '/medias': { target: API, xfwd: true },
+      // Abonnements à l'agenda (ADR 0037).
+      '/agenda/': { target: API, xfwd: true },
     },
   },
   build: {
