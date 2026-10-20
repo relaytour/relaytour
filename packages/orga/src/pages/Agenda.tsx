@@ -33,6 +33,7 @@ import {
 } from '../lib/agenda'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
+import { ecrireRegroupement, lireRegroupement } from '../lib/regroupement'
 import { EDITION_COURANTE, PERIMETRES } from '../lib/requetes'
 import { libelleMois } from '../lib/retroplanning'
 
@@ -69,6 +70,9 @@ const SUPPRIMER = graphql(`
 
 type Element = AgendaQuery['agenda']['elements'][number]
 type Vue = 'liste' | 'mois'
+const VUES = ['liste', 'mois'] as const
+/** Clé de l'affichage de l'agenda, gardé dans le navigateur. */
+const CLE_VUE_AGENDA = 'relaytour.agenda.vue'
 
 const LIBELLES_SORTES: Record<SorteElementAgenda, string> = {
   PHASE: 'Phase',
@@ -93,7 +97,13 @@ export default function Agenda() {
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
   const [echeances, setEcheances] = useState(true)
   const [passe, setPasse] = useState(false)
-  const [vueChoisie, setVue] = useState<Vue>('liste')
+  const [vueChoisie, setVueChoisie] = useState<Vue>(() =>
+    lireRegroupement(CLE_VUE_AGENDA, VUES, 'liste')
+  )
+  const setVue = (valeur: Vue) => {
+    setVueChoisie(valeur)
+    ecrireRegroupement(CLE_VUE_AGENDA, valeur)
+  }
   const aujourdhui = jourLocal()
   const [mois, setMois] = useState(aujourdhui.slice(0, 7))
   const [saisie, setSaisie] = useState<DateCleSaisie | 'nouvelle' | null>(null)
