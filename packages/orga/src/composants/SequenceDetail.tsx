@@ -41,7 +41,7 @@ function saisieDe(s: SequenceLue): SequenceSaisie {
 }
 
 /**
- * Volet d'une séquence du programme (ADR 0038). Les coordonnées d'une ou d'un
+ * Volet d'une séquence du programme (ADR 0040). Les coordonnées d'une ou d'un
  * bénévole s'affichent quand le serveur les ouvre à la personne connectée.
  */
 export default function SequenceDetail({

@@ -1,6 +1,6 @@
-# ADR 0038 — Programme du jour J, séquences et bénévoles
+# ADR 0040 — Programme du jour J, séquences et bénévoles
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-20
 - Complète l'ADR 0037 (agenda). Précède le rôle bénévole avec compte, prévu dans la feuille de route.
 
@@ -43,7 +43,7 @@ Le mot « événement » désigne déjà une nature d'activité (ADR 0008). Ce c
 - Une fiche vit en base seulement. Elle n'entre jamais dans un dossier de contenu ni dans Git (invariants 2 et 16). L'export complet de l'organisation la reprend.
 - L'application n'envoie rien aux bénévoles dans ce chantier : ni mail, ni notification.
 - Supprimer une fiche la retire de toutes les séquences.
-- Une purge planifiée supprime chaque nuit les fiches qu'aucune séquence d'une période non archivée n'utilise, et qui n'ont pas changé depuis 24 mois.
+- Une purge planifiée supprime chaque nuit les fiches qu'aucune séquence d'une période non archivée n'utilise, et qui n'ont pas changé depuis 24 mois. L'issue #192 réexamine cette durée avec les autres purges, au regard de la mémoire d'une activité.
 
 ### Vues
 

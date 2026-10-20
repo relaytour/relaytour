@@ -8,7 +8,7 @@ import { buildContext, type AppContext } from '../context.ts'
 
 import { schema } from './index.ts'
 
-// Programme du jour J (ADR 0038). Les admins de l'activité gèrent les lieux et
+// Programme du jour J (ADR 0040). Les admins de l'activité gèrent les lieux et
 // toute séquence ; les personnes qui écrivent dans un périmètre écrivent ses
 // séquences. Toute personne qui voit l'activité lit le programme. Les contrôles se
 // prouvent par le refus (invariant 11).

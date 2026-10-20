@@ -23,7 +23,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
 
-// Programme du jour J (ADR 0038) : les lieux d'une activité, et les séquences
+// Programme du jour J (ADR 0040) : les lieux d'une activité, et les séquences
 // d'une période où se placent des membres de l'équipe et des bénévoles. Toute
 // personne qui voit l'activité lit le programme ; une fiche bénévole n'y montre
 // que son nom.
@@ -89,7 +89,7 @@ const PlaceLueRef = builder.objectRef<PlaceLue>('PlaceSequence').implement({
 export const SequenceRef = builder
   .objectRef<SequenceLue>('Sequence')
   .implement({
-    description: 'Une séquence du programme du jour J (ADR 0038).',
+    description: 'Une séquence du programme du jour J (ADR 0040).',
     fields: t => ({
       id: t.id({ resolve: l => l.sequence.id }),
       editionId: t.id({ resolve: l => l.sequence.editionId }),

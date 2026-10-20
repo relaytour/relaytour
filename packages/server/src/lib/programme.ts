@@ -3,7 +3,7 @@ import { prisma, type RolePlace } from '@relaytour/database'
 import { dansLEquipe, membreActif } from './appartenances.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
 
-// Programme du jour J (ADR 0038). Une séquence suit les droits d'écriture d'une
+// Programme du jour J (ADR 0040). Une séquence suit les droits d'écriture d'une
 // réunion (ADR 0037) : l'agenda global de l'activité pour ses admins, l'agenda
 // d'un périmètre pour les personnes qui y écrivent.
 
