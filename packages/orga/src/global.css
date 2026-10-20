@@ -2774,3 +2774,70 @@ button.rt-agenda-evenement {
   font-family: var(--rt-mono);
   font-size: 12.5px;
 }
+
+/* Sondage de dates (ADR 0037) : un créneau par ligne, ses décomptes, la réponse
+   de la personne. */
+.rt-sondage-creneaux {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.rt-sondage-creneaux legend {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.rt-sondage-creneau {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.rt-sondage-creneau .ant-form-item {
+  margin-bottom: 0;
+}
+
+.rt-sondage-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-sondage-liste > li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: var(--rt-bord-interne);
+  border-radius: var(--rt-rayon-chip);
+  background: var(--rt-surface-interne);
+}
+
+.rt-sondage-liste > li.rt-sondage-retenu {
+  border-inline-start: 4px solid var(--rt-succes);
+}
+
+.rt-sondage-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+@media (max-width: 767px) {
+  .rt-sondage-creneau {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  .rt-sondage-creneau > .ant-form-item:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+}

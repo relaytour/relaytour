@@ -81,7 +81,14 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   // L'historique des messages (ADR 0020), lu par les admins.
   MESSAGE: ['Messages'],
   // Les dates clés de l'agenda d'une période (ADR 0037).
-  AGENDA: ['Agenda', 'Reunions', 'ReunionsDuPerimetre', 'Reunion'],
+  AGENDA: [
+    'Agenda',
+    'Reunions',
+    'ReunionsDuPerimetre',
+    'Reunion',
+    'Sondages',
+    'Sondage',
+  ],
 }
 
 /** Les requêtes à relire pour un lot de signaux, sans doublon. */

@@ -6,11 +6,13 @@ import { graphql } from '../gql'
 import type { CibleConvocation } from '../gql/graphql'
 import { lireConflit } from '../lib/conflit'
 import { messageErreur } from '../lib/erreurs'
+import { CONVOCABLES } from '../lib/requetes'
 
 const CREER = graphql(`
   mutation CreerReunion(
     $editionId: ID!
     $perimetreId: ID
+    $sondageId: ID
     $titre: String!
     $jour: Date!
     $jourFin: Date
@@ -26,6 +28,7 @@ const CREER = graphql(`
     creerReunion(
       editionId: $editionId
       perimetreId: $perimetreId
+      sondageId: $sondageId
       titre: $titre
       jour: $jour
       jourFin: $jourFin
@@ -94,16 +97,6 @@ const TACHES = graphql(`
   }
 `)
 
-const CONVOCABLES = graphql(`
-  query PersonnesConvocables($editionId: ID!, $perimetreId: ID) {
-    personnesConvocables(editionId: $editionId, perimetreId: $perimetreId) {
-      personneId
-      nom
-      duPerimetre
-    }
-  }
-`)
-
 /** Un agenda où la personne écrit : l'agenda global (`null`) ou un périmètre. */
 export interface AgendaEcrit {
   perimetreId: string | null
@@ -133,6 +126,13 @@ export interface NouvelleReunion {
   perimetreId: string | null
   titre?: string
   tacheIds?: string[]
+  /** Depuis un sondage clos (ADR 0037) : son créneau retenu et ses personnes. */
+  jour?: string
+  heureDebut?: string | null
+  heureFin?: string | null
+  cible?: CibleConvocation
+  personneIds?: string[]
+  sondageId?: string
 }
 
 type Cible = CibleConvocation | 'AUCUNE'
@@ -176,7 +176,14 @@ export default function ReunionFormulaire({
   const { message } = App.useApp()
   const [form] = Form.useForm<Valeurs>()
   const relire = {
-    refetchQueries: ['Agenda', 'Reunions', 'ReunionsDuPerimetre', 'Reunion'],
+    refetchQueries: [
+      'Agenda',
+      'Reunions',
+      'ReunionsDuPerimetre',
+      'Reunion',
+      'Sondages',
+      'Sondage',
+    ],
   }
   const [creer, creation] = useMutation(CREER, relire)
   const [modifier, modification] = useMutation(MODIFIER, relire)
@@ -217,16 +224,18 @@ export default function ReunionFormulaire({
         : {
             agenda: reunion.perimetreId ?? GLOBAL,
             titre: reunion.titre ?? '',
-            jour: '',
+            jour: reunion.jour ?? '',
             jourFin: '',
-            heureDebut: '18:00',
-            heureFin: '19:00',
+            heureDebut: reunion.heureDebut ?? '18:00',
+            heureFin: reunion.heureFin ?? '19:00',
             lieu: '',
             lienVisio: '',
             description: '',
             tacheIds: reunion.tacheIds ?? [],
-            cible: reunion.perimetreId === null ? 'EQUIPE' : 'PERIMETRE',
-            personneIds: [],
+            cible:
+              reunion.cible ??
+              (reunion.perimetreId === null ? 'EQUIPE' : 'PERIMETRE'),
+            personneIds: reunion.personneIds ?? [],
           }
     )
   }, [form, reunion, agendas])
@@ -267,6 +276,10 @@ export default function ReunionFormulaire({
           variables: {
             editionId,
             perimetreId: v.agenda === GLOBAL ? null : v.agenda,
+            sondageId:
+              reunion !== null && !('id' in reunion)
+                ? (reunion.sondageId ?? null)
+                : null,
             ...champs,
           },
         })

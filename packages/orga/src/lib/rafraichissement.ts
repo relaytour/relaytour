@@ -50,6 +50,8 @@ export const VUES_TACHES = [
   'Reunions',
   'ReunionsDuPerimetre',
   'Reunion',
+  'Sondages',
+  'Sondage',
 ]
 
 /** Les requêtes relues, désignées par le nom de leur opération GraphQL. */

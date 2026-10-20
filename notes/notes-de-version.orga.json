@@ -21,6 +21,19 @@
           }
         },
         {
+          "id": "2026-10-20-orga-un-sondage-de-dates-trouve-le-creneau-de-la-prochaine-reunio",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un sondage de dates trouve le créneau de la prochaine réunion",
+            "texte": "Dans l'agenda, vous proposez plusieurs créneaux aux personnes de votre périmètre ou de l'équipe. Chacune répond oui, si besoin ou non. Vous retenez ensuite un créneau, et la réunion se crée avec l'horaire et les personnes du sondage.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-20-orga-un-agenda-reunit-les-phases-les-dates-cles-et-les-echeances",
           "date": "2026-10-20",
           "type": "fonctionnalite",

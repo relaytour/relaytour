@@ -18,6 +18,10 @@ import DateCleFormulaire, {
 import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
 import ReunionDetail from '../composants/ReunionDetail'
+import SondageDetail from '../composants/SondageDetail'
+import SondageFormulaire, {
+  type NouveauSondage,
+} from '../composants/SondageFormulaire'
 import ReunionFormulaire, {
   type AgendaEcrit,
   type NouvelleReunion,
@@ -88,6 +92,23 @@ const REUNIONS = graphql(`
       detailMasque
       estConvoquee
       maReponse
+      perimetre {
+        id
+      }
+    }
+  }
+`)
+
+const SONDAGES = graphql(`
+  query Sondages($editionId: ID!) {
+    sondages(editionId: $editionId) {
+      id
+      titre
+      statut
+      estParticipant
+      aRepondu
+      participants
+      repondants
       perimetre {
         id
       }
@@ -201,18 +222,28 @@ export default function Agenda() {
   const [nouvelleReunion, setNouvelleReunion] =
     useState<NouvelleReunion | null>(null)
   const reunionOuverte = parametres.get('reunion')
-  const ouvrirReunion = (id: string | null) => {
+  const sondageOuvert = parametres.get('sondage')
+  const ouvrir = (cle: 'reunion' | 'sondage', id: string | null) => {
     const suite = new URLSearchParams(parametres)
-    if (id === null) suite.delete('reunion')
-    else suite.set('reunion', id)
+    if (id === null) suite.delete(cle)
+    else suite.set(cle, id)
     setParametres(suite)
   }
+  const ouvrirReunion = (id: string | null) => ouvrir('reunion', id)
+  const [nouveauSondage, setNouveauSondage] = useState<NouveauSondage | null>(
+    null
+  )
   const { data, error } = useQuery(AGENDA, {
     variables: { editionId: editionId ?? '', echeances },
     skip: editionId === undefined,
     fetchPolicy: 'cache-and-network',
   })
   const { data: reunions } = useQuery(REUNIONS, {
+    variables: { editionId: editionId ?? '' },
+    skip: editionId === undefined,
+    fetchPolicy: 'cache-and-network',
+  })
+  const { data: sondages } = useQuery(SONDAGES, {
     variables: { editionId: editionId ?? '' },
     skip: editionId === undefined,
     fetchPolicy: 'cache-and-network',
@@ -644,6 +675,61 @@ export default function Agenda() {
                   </ul>
                 )}
               </Panneau>
+              {((sondages?.sondages.length ?? 0) > 0 ||
+                agendasEcrits.length > 0) && (
+                <Panneau
+                  titre="Sondages de dates"
+                  extra={
+                    agendasEcrits.length > 0 && (
+                      <Button
+                        size="small"
+                        icon={<PlusOutlined />}
+                        onClick={() =>
+                          setNouveauSondage({
+                            perimetreId: agendasEcrits[0]?.perimetreId ?? null,
+                          })
+                        }
+                      >
+                        Nouveau
+                      </Button>
+                    )
+                  }
+                >
+                  {(sondages?.sondages ?? []).length === 0 ? (
+                    <p className="rt-texte-secondaire">
+                      Un sondage propose plusieurs créneaux, puis donne la
+                      réunion qui convient au plus grand nombre.
+                    </p>
+                  ) : (
+                    <ul className="rt-liste-liens">
+                      {(sondages?.sondages ?? []).map(s => (
+                        <li key={s.id}>
+                          <button
+                            type="button"
+                            className="rt-ligne-lien"
+                            style={{ fontSize: 13.5 }}
+                            onClick={() => ouvrir('sondage', s.id)}
+                          >
+                            <span className="rt-agenda-compacte-texte">
+                              <span>{s.titre}</span>
+                              <span
+                                className="rt-note"
+                                style={{ fontWeight: 400 }}
+                              >
+                                {s.statut === 'CLOS'
+                                  ? 'Clos'
+                                  : s.estParticipant && !s.aRepondu
+                                    ? 'À vous de répondre'
+                                    : `${s.repondants} sur ${s.participants} réponses`}
+                              </span>
+                            </span>
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </Panneau>
+              )}
               {agenda.peutGerer && (
                 <AbonnementActivite
                   activiteId={activite.id}
@@ -672,6 +758,19 @@ export default function Agenda() {
           />
         </>
       )}
+      {editionId && (
+        <SondageFormulaire
+          editionId={editionId}
+          agendas={agendasEcrits}
+          sondage={nouveauSondage}
+          onFermer={() => setNouveauSondage(null)}
+        />
+      )}
+      <SondageDetail
+        sondageId={sondageOuvert}
+        agendas={agendasEcrits}
+        onFermer={() => ouvrir('sondage', null)}
+      />
       <ReunionDetail
         reunionId={reunionOuverte}
         agendas={agendasEcrits}

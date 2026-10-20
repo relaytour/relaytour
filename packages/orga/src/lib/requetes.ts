@@ -177,3 +177,14 @@ export const AVANCEMENT_GLOBAL = graphql(`
     }
   }
 `)
+
+// Les personnes qu'une réunion ou un sondage peut viser (ADR 0037).
+export const CONVOCABLES = graphql(`
+  query PersonnesConvocables($editionId: ID!, $perimetreId: ID) {
+    personnesConvocables(editionId: $editionId, perimetreId: $perimetreId) {
+      personneId
+      nom
+      duPerimetre
+    }
+  }
+`)
