@@ -468,6 +468,16 @@ describe('sondage de l’agenda global', () => {
       'sondage'
     )
     expect(lu).toMatchObject({ estParticipant: true, peutModifier: false })
+    const LIRE_IDS = `query ($id: ID!) { sondage(id: $id) { participantIds } }`
+    expect(
+      (await executer(ids.basketteuse, LIRE_IDS, { id: sondage.id })).data
+    ).toEqual({ sondage: { participantIds: null } })
+    expect(
+      (
+        (await executer(ids.adminActivite, LIRE_IDS, { id: sondage.id }))
+          .data as { sondage: { participantIds: string[] } }
+      ).sondage.participantIds
+    ).toHaveLength(4)
   })
 
   it('reste fermé aux référents en écriture et aux personnes extérieures', async () => {

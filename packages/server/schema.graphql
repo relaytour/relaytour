@@ -1808,6 +1808,11 @@ type Sondage {
   estParticipant: Boolean!
   id: ID!
 
+  """
+  Les personnes visées, pour les personnes qui écrivent dans l’agenda : la réunion créée depuis le sondage les convoque. Nul sinon.
+  """
+  participantIds: [ID!]
+
   """Le nombre de personnes visées."""
   participants: Int!
   perimetre: Perimetre

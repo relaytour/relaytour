@@ -154,6 +154,13 @@ export const SondageRef = builder.objectRef<SondageLu>('Sondage').implement({
       resolve: l =>
         l.sondage.creneaux.every(c => c.reponses.some(r => r.userId === l.moi)),
     }),
+    participantIds: t.idList({
+      nullable: true,
+      description:
+        'Les personnes visées, pour les personnes qui écrivent dans l’agenda : la réunion créée depuis le sondage les convoque. Nul sinon.',
+      resolve: l =>
+        l.peutModifier ? l.sondage.participants.map(p => p.userId) : null,
+    }),
     participants: t.int({
       description: 'Le nombre de personnes visées.',
       resolve: l => l.sondage.participants.length,
