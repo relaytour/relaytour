@@ -69,6 +69,8 @@ model Organisation {
   demandes                Demande[]
   messages                Message[]
   invitations             InvitationOrganisation[]
+  datesCles               DateCle[]
+  reunions                Reunion[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -249,6 +251,8 @@ model Activite {
   demandes      Demande[]
   messages      Message[]
   notifications Notification[]
+  datesCles     DateCle[]
+  reunions      Reunion[]
 
   @@unique([organisationId, slug])
 }
@@ -302,6 +306,9 @@ model User {
   invitationsEnvoyees     InvitationOrganisation[] @relation("InvitationEnvoyee")
   messagesEcrits          Message[]                @relation("MessageAuteur")
   messagesRecus           MessageDestinataire[]
+  datesClesCreees         DateCle[]                @relation("DateCleAuteur")
+  reunionsCreees          Reunion[]                @relation("ReunionAuteur")
+  convocations            ConvocationReunion[]
 }
 
 model Session {
@@ -387,6 +394,8 @@ model Edition {
   souhaits     Souhait[]
   demandes     Demande[]
   messages     Message[]
+  datesCles    DateCle[]
+  reunions     Reunion[]
 
   @@unique([activiteId, annee])
   @@index([organisationId])
@@ -437,6 +446,7 @@ model Perimetre {
   souhaits        Souhait[]
   demandes        DemandePerimetre[]
   messages        Message[]
+  reunions        Reunion[]
 
   @@unique([activiteId, slug])
   @@index([organisationId])
@@ -717,6 +727,7 @@ model Tache {
   commentaires  CommentaireTache[]
   journal       Journal[]
   notifications Notification[]
+  reunions      Reunion[]
 
   // Une déclinaison par périmètre cible. La clé est bornée par la tâche partagée,
   // elle-même rangée dans une activité (invariant 18).
@@ -755,6 +766,127 @@ model CommentaireTache {
 
   @@index([tacheId, createdAt])
   @@index([auteurId])
+}
+
+// ── Agenda (ADR 0037) ─────────────────────────────────────────────────────────
+
+// Jour, ou suite de jours, qu'un admin de l'activité place dans l'agenda d'une
+// période : un dossier à déposer, une assemblée, une visite du site.
+model DateCle {
+  id             String    @id @default(cuid())
+  organisationId String
+  activiteId     String
+  editionId      String
+  titre          String    @db.VarChar(120)
+  jour           DateTime  @db.Date
+  // Dernier jour d'une suite de jours ; null pour un seul jour.
+  jourFin        DateTime? @db.Date
+  description    String?   @db.Text
+  creeParId      String?
+  // Compte les modifications. Une modification porte la version lue : le serveur
+  // refuse d'écraser un changement fait entre-temps.
+  version        Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  edition      Edition      @relation(fields: [editionId], references: [id], onDelete: Restrict)
+  creePar      User?        @relation("DateCleAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+
+  @@index([editionId, jour])
+  @@index([organisationId])
+  @@index([activiteId])
+  @@index([creeParId])
+}
+
+enum StatutReunion {
+  PREVUE
+  ANNULEE
+}
+
+// Les personnes convoquées à une réunion : tout le périmètre, toute l'équipe de
+// l'activité, ou des personnes choisies dans l'équipe.
+enum CibleConvocation {
+  PERIMETRE
+  EQUIPE
+  CHOIX
+}
+
+enum ReponseConvocation {
+  PRESENT
+  ABSENT
+  PEUT_ETRE
+}
+
+// Réunion de l'agenda global d'une activité (`perimetreId` nul) ou de l'agenda
+// d'un périmètre, pour une période. Une réunion ne se supprime pas : elle
+// s'annule, et l'annulation prévient les personnes convoquées.
+model Reunion {
+  id             String            @id @default(cuid())
+  organisationId String
+  activiteId     String
+  editionId      String
+  perimetreId    String?
+  // Tâche liée, facultative : de la même période, et du même périmètre pour une
+  // réunion de périmètre. Le lien n'ouvre aucun droit.
+  tacheId        String?
+  titre          String            @db.VarChar(200)
+  // Instants en UTC. La saisie et l'affichage suivent le fuseau de l'organisation.
+  debut          DateTime
+  fin            DateTime
+  lieu           String?           @db.VarChar(200)
+  lienVisio      String?           @db.VarChar(500)
+  description    String?           @db.Text
+  statut         StatutReunion     @default(PREVUE)
+  // Les personnes convoquées ; null sans convocation.
+  cible          CibleConvocation?
+  // Version iCalendar (SEQUENCE) : elle monte à chaque changement du titre, de
+  // l'horaire, du lieu ou du lien, et à l'annulation.
+  sequence       Int               @default(0)
+  // Compte les modifications. Une modification porte la version lue.
+  version        Int               @default(0)
+  creeParId      String?
+  annuleeLe      DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organisation  Organisation         @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite      Activite             @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  edition       Edition              @relation(fields: [editionId], references: [id], onDelete: Restrict)
+  perimetre     Perimetre?           @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  tache         Tache?               @relation(fields: [tacheId], references: [id], onDelete: SetNull)
+  creePar       User?                @relation("ReunionAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  convocations  ConvocationReunion[]
+  notifications Notification[]
+
+  @@index([editionId, debut])
+  @@index([perimetreId, debut])
+  @@index([organisationId])
+  @@index([activiteId])
+  @@index([tacheId])
+  @@index([creeParId])
+}
+
+// Convocation d'une personne de l'équipe à une réunion. Elle vise un compte,
+// jamais une adresse. La personne répond dans l'application.
+model ConvocationReunion {
+  id              String              @id @default(cuid())
+  reunionId       String
+  userId          String
+  reponse         ReponseConvocation?
+  reponduLe       DateTime?
+  // Dernier mail parti, et la version de la réunion qu'il portait.
+  envoyeeLe       DateTime?
+  sequenceEnvoyee Int?
+  createdAt       DateTime            @default(now())
+
+  reunion Reunion @relation(fields: [reunionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Une convocation par personne, bornée par la réunion (invariant 18).
+  @@unique([reunionId, userId])
+  @@index([userId])
 }
 
 enum TypeJournal {
@@ -921,6 +1053,11 @@ enum TypeNotification {
   // La place d'une personne dans l'équipe a changé : elle accompagne le mail
   // d'équipe (ADR 0012), pour la personne concernée.
   PLACE_MODIFIEE
+  // Réunion de l'agenda (ADR 0037), pour chaque personne convoquée : convocation,
+  // modification de l'horaire, du lieu ou du lien, annulation. `reunionId` la désigne.
+  REUNION_CONVOQUEE
+  REUNION_MODIFIEE
+  REUNION_ANNULEE
 }
 
 // À quel titre une personne reçoit une notification (ADR 0033). Le niveau
@@ -956,6 +1093,8 @@ model Notification {
   // Pour TACHE_STATUT : le nouveau statut. Un passage à « faite » ne garde pas son
   // auteur : qui a coché reste réservé à la personne qui a coché et aux admins.
   statut         StatutTache?
+  // Pour les notifications d'une réunion (ADR 0037).
+  reunionId      String?
   // Empêche de créer deux fois le même rappel (type, tâche, personne, échéance).
   cle            String?            @unique
   lueLe          DateTime?
@@ -970,8 +1109,10 @@ model Notification {
   tache        Tache?       @relation(fields: [tacheId], references: [id], onDelete: Cascade)
   activite     Activite?    @relation(fields: [activiteId], references: [id], onDelete: Cascade)
   fiche        Fiche?       @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  reunion      Reunion?     @relation(fields: [reunionId], references: [id], onDelete: Cascade)
 
   @@index([userId, lueLe, createdAt])
+  @@index([reunionId])
   @@index([userId, resumeeLe])
   @@index([organisationId])
   @@index([userId, organisationId, niveau, lueLe])
@@ -1037,6 +1178,8 @@ model PreferenceOrganisation {
   pushEquipe           Boolean         @default(false)
   // La section « Pour vos rôles d'admin » du résumé.
   resumeAdmin          Boolean         @default(true)
+  // Vos réunions : convocation, modification, annulation (ADR 0037).
+  pushAgenda           Boolean         @default(true)
   dernierResumeLe      DateTime?
   updatedAt            DateTime        @updatedAt
 
