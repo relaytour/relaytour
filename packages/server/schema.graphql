@@ -802,6 +802,11 @@ type Mutation {
     """HH:MM, dans le fuseau de l’organisation."""
     heureFin: String!
     jour: Date!
+
+    """
+    Le dernier jour, pour une réunion de plusieurs jours. Sans valeur : le premier jour.
+    """
+    jourFin: Date
     lienVisio: String
     lieu: String
 
@@ -953,6 +958,11 @@ type Mutation {
     heureFin: String!
     id: ID!
     jour: Date!
+
+    """
+    Le dernier jour, pour une réunion de plusieurs jours. Sans valeur : le premier jour.
+    """
+    jourFin: Date
     lienVisio: String
     lieu: String
 
@@ -1603,8 +1613,13 @@ type Reunion {
   heureFin: String!
   id: ID!
 
-  """Le jour de la réunion, dans le fuseau de l’organisation."""
+  """Le premier jour de la réunion, dans le fuseau de l’organisation."""
   jour: String!
+
+  """
+  Le dernier jour de la réunion, dans le fuseau de l’organisation. Égal au premier jour pour une réunion d’une journée.
+  """
+  jourFin: String!
   lienVisio: String
   lieu: String
   maReponse: ReponseConvocation
