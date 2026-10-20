@@ -3,6 +3,7 @@ import type { Job } from 'bullmq'
 import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../../courriel/file.ts'
+import { purgerBenevoles } from '../../lib/benevoles.ts'
 import { purgerDemandes } from '../../lib/demandes.ts'
 import { aujourdhui } from '../../lib/droits.ts'
 import { journal } from '../../lib/journal.ts'
@@ -44,6 +45,7 @@ export async function planificationProcessor(
   if (job.name === 'purge') {
     await purgerDemandes(prisma, job.data)
     await purgerMedias(prisma, job.data)
+    await purgerBenevoles(prisma, job.data)
     await purgerDonneesTechniques(prisma)
     return
   }

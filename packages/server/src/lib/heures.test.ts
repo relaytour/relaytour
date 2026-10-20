@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  bornesDesJours,
   heureLocale,
   horaireEnClair,
   instantDepuisHeureLocale,
@@ -44,6 +45,21 @@ describe('instantDepuisHeureLocale', () => {
     ).toBe('2027-10-31T02:30:00.000Z')
   })
 
+  it('suit un changement d’heure de trente minutes', () => {
+    const LORD_HOWE = 'Australia/Lord_Howe'
+    // 01:45 existe deux fois le 4 avril 2027 : la première, à UTC+11.
+    expect(
+      instantDepuisHeureLocale('2027-04-04', '01:45', LORD_HOWE).toISOString()
+    ).toBe('2027-04-03T14:45:00.000Z')
+    // 02:15 n'existe pas le 3 octobre 2027 : l'heure avance de trente minutes.
+    expect(
+      heureLocale(
+        instantDepuisHeureLocale('2027-10-03', '02:15', LORD_HOWE),
+        LORD_HOWE
+      )
+    ).toEqual({ jour: '2027-10-03', heure: '02:45' })
+  })
+
   it('suit un autre fuseau', () => {
     expect(
       instantDepuisHeureLocale(
@@ -61,6 +77,18 @@ describe('instantDepuisHeureLocale', () => {
     expect(() =>
       instantDepuisHeureLocale('15/01/2027', '10:00', PARIS)
     ).toThrow(/AAAA-MM-JJ/)
+  })
+})
+
+describe('bornesDesJours', () => {
+  it('borne les jours aux minuits du fuseau, en été comme en hiver', () => {
+    const { debut, fin } = bornesDesJours('2027-07-01', '2027-12-31', PARIS)
+    expect(debut.toISOString()).toBe('2027-06-30T22:00:00.000Z')
+    expect(fin.toISOString()).toBe('2027-12-31T22:59:59.999Z')
+    // Une réunion de 00 h 30, heure de Paris, le premier jour, est dedans.
+    expect(
+      instantDepuisHeureLocale('2027-07-01', '00:30', PARIS) >= debut
+    ).toBe(true)
   })
 })
 

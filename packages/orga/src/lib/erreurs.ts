@@ -31,6 +31,14 @@ export function messageErreur(erreur: unknown): string {
   return 'L’opération a échoué. Réessayez dans un instant.'
 }
 
+/** Vrai si le serveur refuse l'accès (`FORBIDDEN`), et non pour une panne. */
+export function estRefus(erreur: unknown): boolean {
+  return (
+    CombinedGraphQLErrors.is(erreur) &&
+    erreur.errors.some(e => e.extensions?.code === 'FORBIDDEN')
+  )
+}
+
 /**
  * Formate une date sans heure « AAAA-MM-JJ » en français, sans décalage de fuseau
  * (échéance d'une tâche, début et fin d'une période). Un instant passe par
