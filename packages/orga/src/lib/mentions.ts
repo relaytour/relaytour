@@ -13,6 +13,8 @@ export interface PerimetreMentionnable {
 export interface Mentions {
   perimetres: Map<string, PerimetreMentionnable>
   groupes: Map<string, { libelle: string; perimetres: PerimetreMentionnable[] }>
+  /** Vrai pour des périmètres fictifs, comme ceux du guide : aucune étiquette ne mène à une page. */
+  sansLien?: boolean
 }
 
 export type Segment =

@@ -1334,3 +1334,20 @@ footer {
     grid-template-columns: 1fr;
   }
 }
+
+/* Une mention dans le rendu d'un exemple : l'étiquette d'un périmètre ou d'un
+   groupe, comme dans l'espace organisateur. */
+.rendu-markdown .etiquette-mention {
+  display: inline-flex;
+  padding: 1px 9px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--rt-primaire);
+  background: rgba(var(--rt-primaire-rgb), 0.13);
+}
+
+.rendu-markdown .etiquette-groupe {
+  color: var(--rt-encre);
+  background: rgba(var(--rt-encre-rgb), 0.08);
+}

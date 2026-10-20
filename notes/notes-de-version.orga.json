@@ -21,6 +21,19 @@
           }
         },
         {
+          "id": "2026-10-20-orga-l-editeur-regle-les-perimetres-qu-une-fiche-concerne-aussi",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Vous choisissez dans l’éditeur les périmètres qu’une fiche concerne aussi",
+            "texte": "Sous le texte d’une fiche, vous choisissez dans le champ « Concerne aussi » les périmètres et les groupes où elle se lit sans s’y modifier. Après une arobase, l’éditeur propose les périmètres et les groupes de l’activité. À l’enregistrement, il propose d’ajouter les périmètres que le texte mentionne. Vous confirmez une liste d’au moins quatre périmètres qui dépasse la moitié de l’activité. Le guide Markdown présente les mentions.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-20-orga-l-editeur-de-fiche-propose-une-barre-de-mise-en-forme-et-un-",
           "date": "2026-10-20",
           "type": "fonctionnalite",

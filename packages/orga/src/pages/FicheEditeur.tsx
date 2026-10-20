@@ -21,6 +21,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import EditeurMarkdown, {
   type ModeEditeur,
 } from '../composants/EditeurMarkdown'
+import ChampConcerneAussi from '../composants/ChampConcerneAussi'
 import GuideMarkdown from '../composants/GuideMarkdown'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
@@ -37,8 +38,19 @@ import {
   FICHE,
   GABARIT_FICHE,
   MODIFIER_FICHE,
+  REGLER_CONCERNE,
   slugDepuisTitre,
 } from '../lib/fiches'
+import {
+  aProposer,
+  AUCUNE,
+  largeDiffusion,
+  memeListe,
+  perimetresConcernes,
+  reunir,
+  type Concerne,
+} from '../lib/concerne'
+import { useMentions } from '../lib/useMentions'
 import { useActivite } from '../lib/activite'
 import { useSansRafraichissement } from '../lib/rafraichissement'
 import { organisationChoisie } from '../lib/selection'
@@ -143,6 +155,9 @@ function Formulaire({
     titre: string
     contenu: string
     versionCouranteId?: string | null
+    perimetre?: { id: string } | null
+    concerneGroupes: string[]
+    connexions: { par: string; perimetre: { id: string } }[]
   } | null
   perimetre: { id: string; nom: string } | null
   /** Pour une fiche nouvelle : le slug de son périmètre, ou `commune`. */
@@ -154,7 +169,7 @@ function Formulaire({
   useSansRafraichissement('Fiche')
   const navigate = useNavigate()
   const { lien, activite } = useActivite()
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const ecrans = Grid.useBreakpoint()
   const [form] = Form.useForm<Valeurs>()
   const depart = fiche?.contenu ?? GABARIT_FICHE
@@ -229,6 +244,26 @@ function Formulaire({
   // Un texte remplacé hors de l'éditeur (brouillon repris, sections du gabarit)
   // remonte l'éditeur visuel, qui part du texte reçu.
   const [cleVisuel, setCleVisuel] = useState(0)
+  // La liste « Concerne aussi » d'une fiche de périmètre (ADR 0039). Elle ne passe
+  // pas par le brouillon : elle s'enregistre avec la fiche.
+  const mentions = useMentions()
+  const perimetreDeLaFiche = fiche?.perimetre?.id ?? perimetre?.id ?? null
+  const [listeDeDepart] = useState<Concerne>(() =>
+    fiche === null
+      ? AUCUNE
+      : {
+          perimetres: fiche.connexions
+            .filter(c => c.par === 'LISTE')
+            .map(c => c.perimetre.id),
+          groupes: fiche.concerneGroupes,
+        }
+  )
+  const [concerne, setConcerne] = useState<Concerne>(listeDeDepart)
+  // Une proposition déclinée ne revient pas pendant la rédaction.
+  const declinees = useRef(new Set<string>())
+  const [regler] = useMutation(REGLER_CONCERNE, {
+    refetchQueries: ['Fiche', 'FichesDuPerimetre'],
+  })
   // Le guide s'ouvre dans un tiroir : la saisie reste à l'écran.
   const [aide, setAide] = useState(false)
   const [slugTouche, setSlugTouche] = useState(false)
@@ -237,7 +272,85 @@ function Formulaire({
   })
   const [modifier, modificationEnCours] = useMutation(MODIFIER_FICHE)
 
+  /**
+   * Avant l'enregistrement : propose d'ajouter les mentions du texte à la liste,
+   * puis demande une confirmation pour une large diffusion. Rend la liste à
+   * enregistrer, ou null quand la personne revient à l'éditeur.
+   */
+  const preparerLaListe = async (): Promise<Concerne | null> => {
+    if (perimetreDeLaFiche === null) return concerne
+    let liste = concerne
+    const proposition = aProposer(contenu, mentions, liste, perimetreDeLaFiche)
+    const nouvelles = {
+      perimetres: proposition.perimetres.filter(
+        id => !declinees.current.has(`p:${id}`)
+      ),
+      groupes: proposition.groupes.filter(
+        g => !declinees.current.has(`g:${g}`)
+      ),
+    }
+    const noms = [
+      ...nouvelles.groupes.map(g => mentions.groupes.get(g)?.libelle ?? g),
+      ...nouvelles.perimetres.map(
+        id =>
+          [...mentions.perimetres.values()].find(p => p.id === id)?.nom ?? id
+      ),
+    ]
+    if (noms.length > 0) {
+      const ajouter = await modal.confirm({
+        title: 'Ajouter les mentions à « Concerne aussi » ?',
+        content: `Le texte mentionne ${noms.join(', ')}. Une fois ces périmètres ajoutés, leurs référentes et référents liront la fiche sans pouvoir la modifier.`,
+        okText: 'Ajouter',
+        cancelText: 'Ne pas ajouter',
+      })
+      if (ajouter) {
+        liste = reunir(liste, nouvelles)
+        setConcerne(liste)
+      } else {
+        for (const id of nouvelles.perimetres) declinees.current.add(`p:${id}`)
+        for (const g of nouvelles.groupes) declinees.current.add(`g:${g}`)
+      }
+    }
+    const concernes = perimetresConcernes(
+      liste,
+      mentions,
+      perimetreDeLaFiche
+    ).size
+    const total = mentions.perimetres.size
+    if (!memeListe(liste, listeDeDepart) && largeDiffusion(concernes, total)) {
+      const confirme = await modal.confirm({
+        title: `Cette fiche apparaîtra dans ${concernes} périmètres sur ${total}.`,
+        content:
+          'Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux.',
+        okText: 'Confirmer la liste',
+        cancelText: 'Revenir à l’éditeur',
+      })
+      if (!confirme) return null
+    }
+    return liste
+  }
+
+  /** Enregistre la liste quand elle a changé. Une erreur laisse la fiche enregistrée. */
+  const enregistrerLaListe = async (ficheId: string, liste: Concerne) => {
+    if (perimetreDeLaFiche === null || memeListe(liste, listeDeDepart)) return
+    try {
+      await regler({
+        variables: {
+          ficheId,
+          perimetreIds: liste.perimetres,
+          groupes: liste.groupes,
+        },
+      })
+    } catch (e) {
+      message.error(
+        `La fiche est enregistrée, mais pas sa liste « Concerne aussi » : ${messageErreur(e)}`
+      )
+    }
+  }
+
   const enregistrer = async (v: Valeurs, depuis = versionDeDepart) => {
+    const liste = await preparerLaListe()
+    if (liste === null) return
     try {
       if (creation) {
         const r = await creer({
@@ -249,6 +362,8 @@ function Formulaire({
           },
         })
         oublierLeBrouillon()
+        if (r.data?.creerFiche.id)
+          await enregistrerLaListe(r.data.creerFiche.id, liste)
         message.success('Fiche créée.')
         navigate(lien(`/fiches/${r.data?.creerFiche.slug ?? v.slug}`))
       } else if (fiche) {
@@ -262,6 +377,7 @@ function Formulaire({
           },
         })
         oublierLeBrouillon()
+        await enregistrerLaListe(fiche.id, liste)
         message.success('Fiche enregistrée.')
         navigate(lien(`/fiches/${fiche.slug}`))
       }
@@ -449,7 +565,23 @@ function Formulaire({
           libelle="Contenu de la fiche"
           mode={mode}
           cleVisuel={cleVisuel}
+          mentions={mentions}
         />
+
+        {perimetreDeLaFiche !== null && (
+          <Form.Item
+            label="Concerne aussi"
+            style={{ marginTop: 16, marginBottom: 0 }}
+            extra="La fiche se lit, sans s’y modifier, dans ces périmètres. Un groupe concerne aussi les périmètres qui le rejoindront. Une mention @périmètre ou @groupe:clé du texte se propose à l’enregistrement."
+          >
+            <ChampConcerneAussi
+              valeur={concerne}
+              onChange={setConcerne}
+              mentions={mentions}
+              perimetreDeLaFiche={perimetreDeLaFiche}
+            />
+          </Form.Item>
+        )}
 
         {!creation && (
           <Form.Item

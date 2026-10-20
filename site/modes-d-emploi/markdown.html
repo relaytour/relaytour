@@ -59,6 +59,7 @@
           <span class="etiquette">Dans ce mode d'emploi</span>
           <ol>
             <li><a href="#m-barre">La barre de mise en forme</a></li>
+            <li><a href="#m-concerne">La liste « Concerne aussi »</a></li>
             <li><a href="#m-paragraphes">Paragraphes et retours à la ligne</a></li>
             <li><a href="#m-titres">Titres</a></li>
             <li><a href="#m-emphase">Gras, italique et texte barré</a></li>
@@ -69,6 +70,7 @@
             <li><a href="#m-citations">Encadrés</a></li>
             <li><a href="#m-separation">Ligne de séparation</a></li>
             <li><a href="#m-code">Texte tel quel</a></li>
+            <li><a href="#m-mentions">Mentions</a></li>
             <li><a href="#m-caracteres">Caractères réservés</a></li>
           </ol>
         </nav>
@@ -91,14 +93,34 @@
             <li><span><span class="libelle">Lien</span></span><span>Faire de la sélection le texte d'un lien. En mode visuel, l'éditeur demande l'adresse. En mode Markdown, il sélectionne l'adresse, que vous remplacez par la vôtre.</span></li>
             <li><span><span class="libelle">Tableau</span></span><span>Ajouter un tableau de deux colonnes sous la ligne du curseur.</span></li>
             <li><span><span class="libelle">Aide</span></span><span>Ouvrir ce guide à côté de votre texte, sans quitter l'éditeur.</span></li>
+            <li><span><span class="libelle">@</span></span><span>Saisir une arobase : l'éditeur propose les périmètres et les groupes de l'activité. Tab choisit la première proposition.</span></li>
           </ul>
           <p class="note">Sur un ordinateur, trois raccourcis existent : ⌘B ou Ctrl+B pour le gras, ⌘I ou Ctrl+I pour l'italique, ⌘K ou Ctrl+K pour un lien. ⌘Z ou Ctrl+Z annule une mise en forme. En mode visuel, un clic sur une case à cocher la coche ou la décoche.</p>
         </article>
       </section>
 
+      <section aria-labelledby="t-concerne">
+        <div class="entete">
+          <span class="etiquette">Plusieurs périmètres</span>
+          <h2 id="t-concerne">La liste « Concerne aussi »</h2>
+          <p class="texte">
+            Une fiche appartient à un périmètre. Elle peut aussi en concerner d'autres : les référentes et référents de la Logistique lisent alors la fiche des Bénévoles sur les créneaux, sans la modifier.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="m-concerne">
+          <ul class="gestes">
+            <li><span><span class="libelle">Concerne aussi</span></span><span>Choisir, sous le texte de la fiche, des périmètres et des groupes de l'activité. Un groupe concerne aussi les périmètres qui le rejoindront.</span></li>
+            <li><span><span class="libelle">Ajouter</span></span><span>Accepter, à l'enregistrement, les périmètres que le texte mentionne. Une mention écartée ne revient pas pendant la rédaction.</span></li>
+            <li><span><span class="libelle">Confirmer la liste</span></span><span>Confirmer une large diffusion : au moins quatre périmètres, et plus de la moitié de ceux de l'activité. Si la fiche concerne toute l'activité, une fiche commune convient mieux.</span></li>
+          </ul>
+          <p class="note">La page de chaque périmètre de la liste présente la fiche dans son panneau « Fiches connexes », en lecture seule. Ses référentes et référents la masquent quand elle ne leur sert pas. Le <a href="referent.html#e-perimetre">mode d'emploi des référentes et référents</a> décrit ce panneau.</p>
+        </article>
+      </section>
+
       <section aria-labelledby="t-syntaxe">
         <div class="entete">
-          <span class="etiquette">Onze notions</span>
+          <span class="etiquette">Douze notions</span>
           <h2 id="t-syntaxe">La syntaxe des fiches</h2>
           <p class="texte">
             Chaque exemple montre le texte à écrire, puis l'affichage de la fiche. Les fiches n'affichent ni image, ni code HTML.
@@ -342,6 +364,25 @@ Terrain 2 : 14 h - 18 h
 <pre><code>Terrain 1 : 9 h - 12 h
 Terrain 2 : 14 h - 18 h
 </code></pre>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-mentions">
+          <div class="ecran-tete"><h3>Mentions</h3></div>
+          <p>Une arobase suivie de l'identifiant d'un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d'un groupe mentionne tout le groupe.</p>
+          <p>Une mention s'affiche comme une étiquette. Celle d'un groupe liste ses périmètres au survol ou à l'appui. Dans l'éditeur, une arobase propose les périmètres et les groupes de l'activité.</p>
+          <p>Une mention ne partage pas la fiche. À l'enregistrement, l'éditeur propose d'ajouter les périmètres mentionnés à la liste « Concerne aussi ».</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">La @logistique prépare les lieux, et chaque @groupe:sport transmet ses horaires.</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<p>La <span class="etiquette-mention">Logistique</span> prépare les lieux, et chaque <span class="etiquette-mention etiquette-groupe">Sports</span> transmet ses horaires.</p>
               </div>
             </figure>
           </div>

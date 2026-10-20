@@ -2771,3 +2771,14 @@ button.rt-ligne-declinaisons {
   gap: 6px;
   font-size: 12.5px;
 }
+
+/* Suggestions d'une mention en cours (ADR 0039) : une rangée sous la barre de
+   mise en forme, dans les deux modes de l'éditeur. */
+.rt-suggestions-mention {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px 2px;
+  font-size: 12.5px;
+}

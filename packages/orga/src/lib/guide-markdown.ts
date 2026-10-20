@@ -1,3 +1,5 @@
+import type { Mentions, PerimetreMentionnable } from './mentions'
+
 // Le guide de la syntaxe Markdown des fiches. Il ne présente que ce que le rendu
 // des fiches affiche (composants/Markdown.tsx : react-markdown et remark-gfm, sans
 // HTML). La page « Écrire une fiche en Markdown » du site reprend ces exemples.
@@ -149,6 +151,17 @@ export const GUIDE_MARKDOWN: SectionDuGuide[] = [
     ].join('\n'),
   },
   {
+    id: 'mentions',
+    titre: 'Mentions',
+    explications: [
+      'Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe.',
+      'Une mention s’affiche comme une étiquette. Celle d’un groupe liste ses périmètres au survol ou à l’appui. Dans l’éditeur, une arobase propose les périmètres et les groupes de l’activité.',
+      'Une mention ne partage pas la fiche. À l’enregistrement, l’éditeur propose d’ajouter les périmètres mentionnés à la liste « Concerne aussi ».',
+    ],
+    exemple:
+      'La @logistique prépare les lieux, et chaque @groupe:sport transmet ses horaires.',
+  },
+  {
     id: 'caracteres',
     titre: 'Caractères réservés',
     explications: [
@@ -164,3 +177,35 @@ export const GUIDE_MARKDOWN: SectionDuGuide[] = [
     ].join('\n'),
   },
 ]
+
+const fictif = (
+  slug: string,
+  nom: string,
+  groupe: string
+): PerimetreMentionnable => ({
+  id: slug,
+  slug,
+  nom,
+  couleur: null,
+  groupe,
+})
+
+/** Des périmètres fictifs, pour que les exemples du guide affichent leurs mentions. */
+export const MENTIONS_DU_GUIDE: Mentions = {
+  perimetres: new Map([
+    ['logistique', fictif('logistique', 'Logistique', 'pole')],
+  ]),
+  groupes: new Map([
+    [
+      'sport',
+      {
+        libelle: 'Sports',
+        perimetres: [
+          fictif('natation', 'Natation', 'sport'),
+          fictif('volley', 'Volley', 'sport'),
+        ],
+      },
+    ],
+  ]),
+  sansLien: true,
+}
