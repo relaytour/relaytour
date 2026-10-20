@@ -1,6 +1,6 @@
-# ADR 0039 — Fiches connexes et mentions de périmètre
+# ADR 0039 — Fiches connexes et mentions de périmètre ou de groupe
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-20
 - Complète l'ADR 0009 (source de vérité du contenu) et l'ADR 0014 (consultation) : une fiche de périmètre se lit dans d'autres périmètres qu'elle désigne. Remplace, dans l'ADR 0026, la règle « une déclinaison ne cite qu'une fiche commune de l'activité ».
 
@@ -50,17 +50,20 @@ La décision garde la mention comme raccourci de saisie, et porte le partage dan
 - Dans un périmètre cible, la section « Fiches connexes » suit la section des fiches du périmètre. Chaque fiche y porte son périmètre d'origine et la mention « Lecture seule ».
 - L'écran « Fiches » range une fiche connexe sous son périmètre d'origine. Le filtre d'un périmètre cible l'affiche dans une section « Fiches connexes ».
 
-### Mention d'un périmètre
+### Mention d'un périmètre ou d'un groupe
 
 - Dans le texte d'une fiche, `@` suivi de l'identifiant d'un périmètre de l'activité forme une **mention**, par exemple `@logistique`.
-- L'éditeur propose les périmètres de l'activité dès la saisie de `@`.
-- La lecture affiche une mention comme l'étiquette du périmètre, avec un lien vers sa page. Une mention d'un périmètre inconnu ou archivé reste du texte.
-- Une mention ne donne aucun accès. À l'enregistrement, l'éditeur liste les périmètres mentionnés absents de « Concerne aussi », et propose de les y ajouter. Rien ne s'ajoute sans l'accord de la personne qui enregistre.
+- `@` suivi de la clé d'un groupe de l'activité mentionne tous ses périmètres non archivés, par exemple `@sport`. Quand un périmètre et un groupe portent le même identifiant, la mention désigne le périmètre.
+- L'éditeur propose les périmètres et les groupes de l'activité dès la saisie de `@`.
+- La lecture affiche une mention comme l'étiquette du périmètre ou du groupe. L'étiquette d'un périmètre mène à sa page. Une mention d'un périmètre ou d'un groupe inconnu reste du texte, comme celle d'un périmètre archivé.
+- Une mention ne donne aucun accès. À l'enregistrement, l'éditeur liste les périmètres mentionnés absents de « Concerne aussi », y compris ceux d'un groupe, et propose de les y ajouter. Rien ne s'ajoute sans l'accord de la personne qui enregistre.
+- La liste garde des périmètres, jamais un groupe. Un périmètre ajouté plus tard à un groupe n'entre pas dans la liste d'une fiche qui mentionne ce groupe.
 - Retirer une mention ne retire pas le périmètre de la liste.
 
 ### Seuil d'une large diffusion
 
-- Au-delà de la moitié des périmètres non archivés de l'activité, l'enregistrement ouvre une fenêtre de confirmation. Elle vaut pour toute personne qui rédige la fiche, admin ou non.
+- Une liste d'au moins quatre périmètres, qui dépasse aussi la moitié des périmètres non archivés de l'activité, ouvre une fenêtre de confirmation à l'enregistrement. Une petite activité n'affiche donc pas cette fenêtre pour deux ou trois périmètres.
+- La fenêtre s'affiche pour toute personne qui rédige la fiche, admin ou non. Une mention de groupe y mène souvent : elle reste admise.
 - La fenêtre rappelle que la fiche apparaîtra dans ces périmètres, et propose de la rendre commune.
 - La personne confirme la liste, ou revient à l'éditeur pour la modifier. Rien ne l'oblige à réduire la liste, et aucun admin ne valide la diffusion.
 
@@ -108,7 +111,7 @@ La décision garde la mention comme raccourci de saisie, et porte le partage dan
 - Le contrat GraphQL gagne les champs `concerneAussi`, `connexePar` et `masquee` de la fiche, la liste `fichesConnexes` du périmètre, et les mutations qui règlent la liste, masquent et affichent une fiche connexe.
 - Une écriture de la liste ou un masquage publie le signal `FICHE` aux personnes qui lisent la fiche dans chaque périmètre concerné (ADR 0017).
 - La lecture d'une fiche ajoute une condition : le périmètre de la personne figure dans les fiches connexes actives de la fiche, ou une déclinaison acceptée la relie à la fiche.
-- Le rendu Markdown (`composants/Markdown.tsx`) reconnaît les mentions. Le guide de la syntaxe des fiches et le mode d'emploi « Écrire une fiche en Markdown » les présentent.
+- Le rendu Markdown (`composants/Markdown.tsx`) reconnaît les mentions de périmètre et de groupe. Le guide de la syntaxe des fiches et le mode d'emploi « Écrire une fiche en Markdown » les présentent.
 - L'éditeur de fiche gagne le champ « Concerne aussi », la proposition des périmètres mentionnés et l'avertissement de large diffusion.
 - L'export complet d'une organisation porte les fiches connexes, leur masquage et leurs auteurs.
 - Le glossaire gagne « fiche connexe » et « mention ».
@@ -121,8 +124,3 @@ La décision garde la mention comme raccourci de saisie, et porte le partage dan
 - Le masquage n'écrit rien sur la fiche et ne la rend pas illisible. Seules les personnes qui écrivent dans le périmètre cible, et les admins de l'activité, le règlent.
 - Une fiche qui contient une coordonnée personnelle est lue par plus de personnes. Le rappel de l'éditeur et la validation du contenu (invariant 16) s'appliquent sans changement.
 - Les tests prouvent chaque refus : sans session, en consultation seule, depuis un périmètre absent de la liste, après un masquage pour la liste du périmètre, avec une déclinaison refusée ou en attente, depuis une autre activité et vers une autre organisation.
-
-## Questions ouvertes
-
-- Le seuil vaut « plus de la moitié des périmètres non archivés de l'activité ». Une activité de trois périmètres déclenche alors l'avertissement dès deux périmètres. Un minimum de quatre périmètres éviterait ce bruit.
-- Une mention d'un groupe (`@sports`) pourrait désigner tous ses périmètres. Cette ADR ne la retient pas : elle mènerait vite au seuil de large diffusion.
