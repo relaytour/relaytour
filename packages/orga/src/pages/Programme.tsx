@@ -73,7 +73,7 @@ function personnes(s: SequenceLue): string {
     .join(', ')
 }
 
-/** Programme du jour J d'une période (ADR 0038). */
+/** Programme du jour J d'une période (ADR 0040). */
 export default function Programme() {
   const { activite, gere, periode } = useActivite()
   const ecrans = Grid.useBreakpoint()

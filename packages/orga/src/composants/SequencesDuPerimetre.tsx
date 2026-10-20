@@ -29,7 +29,7 @@ const PROGRAMME = graphql(`
   }
 `)
 
-/** Les séquences du jour J d'un périmètre, dans la colonne de sa page (ADR 0038). */
+/** Les séquences du jour J d'un périmètre, dans la colonne de sa page (ADR 0040). */
 export default function SequencesDuPerimetre({
   perimetreId,
   editionId,

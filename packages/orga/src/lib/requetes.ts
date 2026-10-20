@@ -189,7 +189,7 @@ export const CONVOCABLES = graphql(`
   }
 `)
 
-// Les lieux d'une activité et ses fiches bénévoles (ADR 0038).
+// Les lieux d'une activité et ses fiches bénévoles (ADR 0040).
 export const LIEUX = graphql(`
   query Lieux($activiteId: ID!) {
     lieux(activiteId: $activiteId) {

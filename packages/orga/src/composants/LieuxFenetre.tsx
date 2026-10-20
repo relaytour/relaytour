@@ -52,7 +52,7 @@ const MODIFIER = graphql(`
 const RELIRE = ['LieuxTous', 'Lieux', 'Programme']
 
 /**
- * Fenêtre des lieux d'une activité (ADR 0038), pour ses admins : ajouter,
+ * Fenêtre des lieux d'une activité (ADR 0040), pour ses admins : ajouter,
  * renommer, ordonner, archiver. Un lieu archivé garde ses séquences passées et ne
  * se propose plus.
  */

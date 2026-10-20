@@ -2842,7 +2842,7 @@ button.rt-agenda-evenement {
   }
 }
 
-/* Programme du jour J (ADR 0038) : une carte par séquence, une grille par lieu et
+/* Programme du jour J (ADR 0040) : une carte par séquence, une grille par lieu et
    par heure sur un écran large, une liste par lieu sur un téléphone. */
 .rt-programme-jour {
   margin: 0 6px 12px;

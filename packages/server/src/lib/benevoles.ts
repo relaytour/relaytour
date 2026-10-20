@@ -5,7 +5,7 @@ import type { AppContext } from '../context.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { journal } from './journal.ts'
 
-// Fiches bénévoles (ADR 0038) : des personnes qui aident l'activité sans compte.
+// Fiches bénévoles (ADR 0040) : des personnes qui aident l'activité sans compte.
 // Une fiche ne donne aucun accès. Ses coordonnées ne sortent du serveur que pour
 // les admins de l'activité, pour la personne qui l'a créée, et pour les personnes
 // qui écrivent dans un périmètre où la fiche est placée.
@@ -116,7 +116,7 @@ export async function coordonneesLisibles(
 
 /**
  * Supprime les fiches qu'aucune séquence d'une période non archivée n'utilise, et
- * qui n'ont pas changé depuis MOIS_AVANT_PURGE mois (ADR 0038).
+ * qui n'ont pas changé depuis MOIS_AVANT_PURGE mois (ADR 0040).
  * `organisationId` limite la purge à une organisation.
  */
 export async function purgerBenevoles(

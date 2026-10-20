@@ -14,5 +14,5 @@ fr:
     J » liste vos séquences, et la page de votre périmètre montre les siennes.
 ---
 
-ADR 0038 : requêtes `programme` et `lieux`, mutations des séquences et des
+ADR 0040 : requêtes `programme` et `lieux`, mutations des séquences et des
 lieux, signal `PROGRAMME`.

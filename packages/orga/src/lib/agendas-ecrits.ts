@@ -6,7 +6,7 @@ import { graphql } from '../gql'
 import { useActivite } from './activite'
 import { EDITIONS, PERIMETRES } from './requetes'
 
-// Les agendas où la personne écrit pour une période (ADR 0037 et 0038) : l'agenda
+// Les agendas où la personne écrit pour une période (ADR 0037 et 0040) : l'agenda
 // global et tous les périmètres pour un admin de l'activité, ses périmètres de la
 // période sinon. Une période archivée n'en a aucun. Le serveur vérifie chaque
 // écriture.
