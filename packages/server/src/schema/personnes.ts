@@ -33,6 +33,10 @@ import {
 import { journal } from '../lib/journal.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import {
+  retirerDesReunionsDeLOrganisation,
+  retirerDesReunionsDuPerimetre,
+} from '../lib/reunions.ts'
+import {
   adresseValide,
   rejouerSurDoublon,
   sansDoublon,
@@ -815,6 +819,15 @@ builder.mutationFields(t => ({
           data: { archiveLe: args.archive ? instant : null },
         })
         await synchroniserArchivageDuCompte(tx, id, instant)
+        // Une personne archivée quitte les réunions à venir de l'organisation,
+        // sans mail (ADR 0037).
+        if (args.archive && count > 0) {
+          await retirerDesReunionsDeLOrganisation(tx, {
+            userId: id,
+            organisationId,
+            maintenant: instant,
+          })
+        }
         return count > 0
       })
       equipesModifiees(ctx)
@@ -936,8 +949,20 @@ builder.mutationFields(t => ({
         return false
       }
       await refuserAdminDeLOrganisation(ctx, affectation.userId)
-      const { count } = await prisma.affectation.deleteMany({
-        where: { id: affectation.id },
+      // La personne quitte aussi les réunions à venir du périmètre (ADR 0037).
+      const count = await prisma.$transaction(async tx => {
+        const supprimees = await tx.affectation.deleteMany({
+          where: { id: affectation.id },
+        })
+        if (supprimees.count === 1) {
+          await retirerDesReunionsDuPerimetre(tx, {
+            userId: affectation.userId,
+            perimetreId: affectation.perimetreId,
+            editionId: affectation.editionId,
+            maintenant: new Date(),
+          })
+        }
+        return supprimees.count
       })
       equipesModifiees(ctx)
       if (count === 1) {

@@ -36,6 +36,8 @@ const a = {
   commentaire: '',
   // Une date clé de l'agenda de la période (ADR 0037).
   dateCle: '',
+  // Une réunion du périmètre, qui convoque la référente (ADR 0037).
+  reunion: '',
   affectation: '',
   souhait: '',
   demande: '',
@@ -311,6 +313,22 @@ beforeAll(async () => {
       },
     })
   ).id
+  a.reunion = (
+    await prisma.reunion.create({
+      data: {
+        organisationId: a.org,
+        activiteId: a.activite,
+        editionId: a.edition,
+        perimetreId: a.perimetre,
+        titre: 'Point natation',
+        debut: new Date('2027-03-01T17:00:00.000Z'),
+        fin: new Date('2027-03-01T18:00:00.000Z'),
+        cible: 'PERIMETRE',
+        taches: { create: { tacheId: a.tache } },
+        convocations: { create: { userId: a.referente } },
+      },
+    })
+  ).id
   // Un commentaire de la référente sur la tâche (ADR 0029).
   a.commentaire = (
     await prisma.commentaireTache.create({
@@ -405,6 +423,9 @@ afterAll(async () => {
     where: { organisationId: { in: organisations } },
   })
   await prisma.dateCle.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
+  await prisma.reunion.deleteMany({
     where: { organisationId: { in: organisations } },
   })
   await prisma.edition.deleteMany({
@@ -566,6 +587,21 @@ const MELES: Cas[] = [
       'query ($e: ID!, $p: [ID!]) { agenda(editionId: $e, echeances: true, perimetreIds: $p) { elements { cle titre } } }',
     variables: () => ({ e: b.edition, p: [a.perimetre] }),
     attente: INTERDIT,
+  },
+  // Une réunion de B ne lie aucune tâche et ne convoque personne de A (ADR 0037).
+  {
+    operation: 'creerReunion',
+    query:
+      'mutation ($e: ID!, $t: [ID!]) { creerReunion(editionId: $e, titre: "Mêlée", jour: "2027-03-02", heureDebut: "18:00", heureFin: "19:00", tacheIds: $t) { id } }',
+    variables: () => ({ e: b.edition, t: [a.tache] }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'creerReunion',
+    query:
+      'mutation ($e: ID!, $u: [ID!]) { creerReunion(editionId: $e, titre: "Mêlée", jour: "2027-03-02", heureDebut: "18:00", heureFin: "19:00", cible: CHOIX, personneIds: $u) { id } }',
+    variables: () => ({ e: b.edition, u: [a.referente] }),
+    attente: REFUSE,
   },
 ]
 
@@ -983,7 +1019,54 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.dateCle }),
     attente: INTERDIT,
   },
+  // Réunions de l'agenda (ADR 0037).
+  {
+    operation: 'creerReunion',
+    query:
+      'mutation ($e: ID!, $p: ID) { creerReunion(editionId: $e, perimetreId: $p, titre: "Intrusion", jour: "2027-03-02", heureDebut: "18:00", heureFin: "19:00") { id } }',
+    variables: () => ({ e: a.edition, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'creerReunion',
+    query:
+      'mutation ($e: ID!) { creerReunion(editionId: $e, titre: "Intrusion", jour: "2027-03-02", heureDebut: "18:00", heureFin: "19:00", cible: EQUIPE) { id } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'modifierReunion',
+    query:
+      'mutation ($id: ID!) { modifierReunion(id: $id, titre: "Intrusion", jour: "2027-03-02", heureDebut: "18:00", heureFin: "19:00") { id } }',
+    variables: () => ({ id: a.reunion }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'annulerReunion',
+    query: 'mutation ($id: ID!) { annulerReunion(id: $id) { id } }',
+    variables: () => ({ id: a.reunion }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'repondreConvocation',
+    query:
+      'mutation ($id: ID!) { repondreConvocation(reunionId: $id, reponse: ABSENT) { id } }',
+    variables: () => ({ id: a.reunion }),
+    attente: INTERDIT,
+  },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  {
+    operation: 'reunions',
+    query: 'query ($e: ID!) { reunions(editionId: $e) { id titre lieu } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'reunion',
+    query: 'query ($id: ID!) { reunion(id: $id) { id titre lieu } }',
+    variables: () => ({ id: a.reunion }),
+    attente: INTERDIT,
+  },
   // L'agenda d'une période (ADR 0037).
   {
     operation: 'agenda',
@@ -1192,6 +1275,18 @@ async function etatDeA() {
           select: { id: true, titre: true, jour: true, version: true },
           orderBy: { id: 'asc' },
         }),
+        prisma.reunion.findMany({
+          where: { organisationId: a.org },
+          select: {
+            id: true,
+            titre: true,
+            statut: true,
+            version: true,
+            convocations: { select: { userId: true, reponse: true } },
+            taches: { select: { tacheId: true } },
+          },
+          orderBy: { id: 'asc' },
+        }),
       ]),
     ])
   const invitation = await prisma.invitationOrganisation.findUnique({
@@ -1205,6 +1300,7 @@ async function etatDeA() {
       where: { perimetre: { organisationId: b.org } },
     }),
     prisma.message.count({ where: { organisationId: b.org } }),
+    prisma.reunion.count({ where: { organisationId: b.org } }),
     prisma.invitationOrganisation.count({ where: { organisationId: b.org } }),
     prisma.appartenance.count({ where: { organisationId: b.org } }),
     prisma.droitRedaction.count({ where: { organisationId: b.org } }),

@@ -145,6 +145,30 @@ export async function construireExport(organisationId: string) {
     },
   })
 
+  // Les réunions de l'agenda (ADR 0037), avec leurs tâches et leurs convocations.
+  const reunions = await prisma.reunion.findMany({
+    where: { organisationId },
+    orderBy: [{ editionId: 'asc' }, { debut: 'asc' }, { id: 'asc' }],
+    include: {
+      activite: { select: { slug: true } },
+      edition: { select: { annee: true } },
+      perimetre: { select: { slug: true } },
+      creePar: { select: { email: true } },
+      taches: {
+        orderBy: { id: 'asc' },
+        include: {
+          tache: {
+            select: { titre: true, perimetre: { select: { slug: true } } },
+          },
+        },
+      },
+      convocations: {
+        orderBy: { id: 'asc' },
+        include: { user: { select: { email: true } } },
+      },
+    },
+  })
+
   const taches = await prisma.tache.findMany({
     where: { perimetre: { organisationId } },
     orderBy: [{ editionId: 'asc' }, { createdAt: 'asc' }],
@@ -329,6 +353,31 @@ export async function construireExport(organisationId: string) {
       description: d.description,
       creePar: d.creePar?.email ?? null,
       creeLe: d.createdAt.toISOString(),
+    })),
+    reunions: reunions.map(r => ({
+      activite: r.activite.slug,
+      periode: r.edition.annee,
+      perimetre: r.perimetre?.slug ?? null,
+      titre: r.titre,
+      debut: r.debut.toISOString(),
+      fin: r.fin.toISOString(),
+      lieu: r.lieu,
+      lienVisio: r.lienVisio,
+      description: r.description,
+      statut: r.statut,
+      cible: r.cible,
+      annuleeLe: r.annuleeLe?.toISOString() ?? null,
+      creePar: r.creePar?.email ?? null,
+      creeLe: r.createdAt.toISOString(),
+      taches: r.taches.map(t => ({
+        perimetre: t.tache.perimetre.slug,
+        titre: t.tache.titre,
+      })),
+      convocations: r.convocations.map(c => ({
+        email: c.user.email,
+        reponse: c.reponse,
+        reponduLe: c.reponduLe?.toISOString() ?? null,
+      })),
     })),
   }
 }

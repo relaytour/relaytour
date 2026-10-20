@@ -179,6 +179,15 @@ type Changement {
 }
 
 """
+Les personnes convoquées : tout le périmètre, toute l’équipe de l’activité, ou des personnes choisies dans l’équipe.
+"""
+enum CibleConvocation {
+  CHOIX
+  EQUIPE
+  PERIMETRE
+}
+
+"""
 Un commentaire écrit sur une tâche : un texte simple, daté et signé (ADR 0029).
 """
 type CommentaireTache {
@@ -211,6 +220,14 @@ type CommentairesPeriode {
 
   """Les périmètres de l’activité dont la personne lit les fils."""
   perimetresLus: [ID!]!
+}
+
+type ConvocationLue {
+  """Vrai quand le mail de convocation est parti."""
+  envoyee: Boolean!
+  nom: String!
+  personneId: ID!
+  reponse: ReponseConvocation
 }
 
 type CouleursTheme {
@@ -752,6 +769,7 @@ type Mutation {
   accorderDeclinaison(accepter: Boolean!, id: ID!): Tache!
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
+  annulerReunion(id: ID!): Reunion!
   archiverActivite(archive: Boolean!, id: ID!): Activite!
   archiverFiche(archive: Boolean!, id: ID!): Fiche!
   archiverPersonne(archive: Boolean!, id: ID!): Personne!
@@ -773,6 +791,28 @@ type Mutation {
   creerMessage(message: MessageInput!): Message!
   creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, nom: String!, sigle: String, slug: String!): OrganisationInstallation!
   creerPerimetre(activiteId: ID, couleur: String, description: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
+  creerReunion(
+    cible: CibleConvocation
+    description: String
+    editionId: ID!
+
+    """HH:MM, dans le fuseau de l’organisation."""
+    heureDebut: String!
+
+    """HH:MM, dans le fuseau de l’organisation."""
+    heureFin: String!
+    jour: Date!
+    lienVisio: String
+    lieu: String
+
+    """Le périmètre ; sans valeur, l’agenda global."""
+    perimetreId: ID
+
+    """Les personnes convoquées, pour la cible CHOIX."""
+    personneIds: [ID!]
+    tacheIds: [ID!]
+    titre: String!
+  ): Reunion!
   creerTache(declinaison: DeclinaisonInput, description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
 
   """
@@ -899,6 +939,26 @@ type Mutation {
     """Sans valeur, ce réglage ne change pas."""
     resumeAdmin: Boolean
   ): PreferencesNotification!
+  modifierReunion(
+    cible: CibleConvocation
+    description: String
+
+    """HH:MM, dans le fuseau de l’organisation."""
+    heureDebut: String!
+
+    """HH:MM, dans le fuseau de l’organisation."""
+    heureFin: String!
+    id: ID!
+    jour: Date!
+    lienVisio: String
+    lieu: String
+
+    """Les personnes convoquées, pour la cible CHOIX."""
+    personneIds: [ID!]
+    tacheIds: [ID!]
+    titre: String!
+    versionAttendue: Int
+  ): Reunion!
 
   """
   Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
@@ -917,6 +977,11 @@ type Mutation {
   """
   relancerInvitation(id: ID!): Boolean!
   renvoyerInvitation(id: ID!): Boolean!
+
+  """
+  La réponse de la personne connectée à sa convocation : présente, absente ou peut-être.
+  """
+  repondreConvocation(reponse: ReponseConvocation!, reunionId: ID!): Reunion!
 
   """
   Restaure une version : son contenu devient une nouvelle version. Avec `versionDeDepart`, la version courante lue dans l’historique, le serveur refuse de restaurer par-dessus une version enregistrée entre-temps (code `CONFLIT_VERSION`).
@@ -1428,6 +1493,20 @@ type Query {
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
   recherche(editionId: ID, texte: String!): Recherche!
   retroplanning(editionId: ID!): [Tache!]!
+  reunion(id: ID!): Reunion!
+
+  """
+  Les réunions d’une période, globales et de périmètre, de la plus proche à la plus lointaine.
+  """
+  reunions(
+    editionId: ID!
+
+    """Les réunions de l’agenda global seulement."""
+    globales: Boolean
+
+    """Un périmètre seulement. Sans valeur : toutes."""
+    perimetreId: ID
+  ): [Reunion!]!
   tache(id: ID!): Tache!
   tachesAPrendre(editionId: ID!): [Tache!]!
   tousLesPerimetres(activiteId: ID): TousLesPerimetres!
@@ -1444,6 +1523,19 @@ type Recherche {
   taches: [Tache!]!
 }
 
+enum ReponseConvocation {
+  ABSENT
+  PEUT_ETRE
+  PRESENT
+}
+
+type ReponsesReunion {
+  absentes: Int!
+  peutEtre: Int!
+  presentes: Int!
+  sansReponse: Int!
+}
+
 """
 L’état des déclinaisons d’une tâche partagée, en nombres. Les nombres `faites` et `abandonnees` se comptent parmi les déclinaisons acceptées.
 """
@@ -1454,6 +1546,54 @@ type ResumeDeclinaisons {
   faites: Int!
   refusees: Int!
   total: Int!
+}
+
+"""
+Une réunion de l’agenda global d’une activité, ou de l’agenda d’un périmètre.
+"""
+type Reunion {
+  cible: CibleConvocation
+
+  """
+  Les personnes convoquées et leur réponse, pour les personnes qui écrivent dans cet agenda. Nul sinon.
+  """
+  convocations: [ConvocationLue!]
+  debut: DateTime!
+  description: String
+
+  """
+  Vrai en consultation : le lieu, le lien de visio, la description et les tâches restent masqués.
+  """
+  detailMasque: Boolean!
+  editionId: ID!
+
+  """Vrai si la personne connectée est convoquée."""
+  estConvoquee: Boolean!
+  fin: DateTime!
+
+  """HH:MM, dans le fuseau de l’organisation."""
+  heureDebut: String!
+
+  """HH:MM, dans le fuseau de l’organisation."""
+  heureFin: String!
+  id: ID!
+
+  """Le jour de la réunion, dans le fuseau de l’organisation."""
+  jour: String!
+  lienVisio: String
+  lieu: String
+  maReponse: ReponseConvocation
+
+  """Le périmètre de la réunion ; nul pour l’agenda global."""
+  perimetre: Perimetre
+  peutModifier: Boolean!
+
+  """Les réponses des personnes convoquées, en nombre."""
+  reponses: ReponsesReunion
+  statut: StatutReunion!
+  taches: [TacheLieeReunion!]!
+  titre: String!
+  version: Int!
 }
 
 """
@@ -1537,6 +1677,11 @@ enum StatutOrganisation {
   SUSPENDUE
 }
 
+enum StatutReunion {
+  ANNULEE
+  PREVUE
+}
+
 enum StatutTache {
   ABANDONNEE
   A_FAIRE
@@ -1591,6 +1736,12 @@ type Tache {
   Nombre de modifications du contenu. `modifierTache` la reçoit en `versionAttendue`.
   """
   version: Int!
+}
+
+type TacheLieeReunion {
+  id: ID!
+  perimetreId: ID!
+  titre: String!
 }
 
 """
