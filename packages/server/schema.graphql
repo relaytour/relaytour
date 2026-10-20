@@ -422,6 +422,11 @@ type Fiche {
   nombreVersions: Int
   perimetre: Perimetre
   peutModifier: Boolean!
+
+  """
+  Ressources de l’espace de fichiers liées à la fiche, dans l’ordre du lien.
+  """
+  ressources: [RessourceFiche!]!
   slug: String!
   source: SourceFiche
   taches(editionId: ID!): [Tache!]!
@@ -826,6 +831,7 @@ type Mutation {
   definirSouhaits(editionId: ID!, perimetreIds: [ID!]!, personneId: ID!): [Souhait!]!
   definirStatutMessage(id: ID!, statut: StatutMessage!): Message!
   delierDossier(id: ID!): Boolean!
+  delierRessourceFiche(id: ID!): Boolean!
 
   """
   Écrit l’export complet d’une organisation dans le dossier EXPORTS_DIR du serveur et renvoie le nom du fichier. Le contenu ne transite jamais par l’API.
@@ -862,6 +868,11 @@ type Mutation {
   Lie un dossier de l’espace connecté à un périmètre, ou à toute l’activité sans périmètre.
   """
   lierDossier(activiteId: ID!, chemin: [String!]!, emplacement: String!, perimetreId: ID): DossierLie!
+
+  """
+  Lie à une fiche un dossier ou un fichier d’un dossier lié de son périmètre, ou de toute son activité.
+  """
+  lierRessourceFiche(chemin: [String!]!, dossierLieId: ID!, ficheId: ID!): RessourceFiche!
 
   """
   Sans identifiants, marque comme lues toutes les notifications du niveau choisi, ou celles d’une activité ou d’un périmètre. Reste possible dans une organisation en lecture seule.
@@ -1495,6 +1506,24 @@ type Recherche {
 }
 
 """
+Dossier ou fichier de l’espace de fichiers lié à une fiche, adressé depuis un dossier lié.
+"""
+type RessourceFiche {
+  apercu: FormatApercu!
+  chemin: [String!]!
+  dossierLie: DossierLie!
+
+  """
+  Faux quand la ressource n’existe plus chez le fournisseur. Null quand le fournisseur ne répond pas.
+  """
+  existe: Boolean
+  id: ID!
+  lienWeb: String
+  nom: String!
+  type: TypeRessource!
+}
+
+"""
 L’état des déclinaisons d’une tâche partagée, en nombres. Les nombres `faites` et `abandonnees` se comptent parmi les déclinaisons acceptées.
 """
 type ResumeDeclinaisons {
@@ -1696,6 +1725,11 @@ enum TypeNotification {
 enum TypePerimetre {
   POLE
   SPORT
+}
+
+enum TypeRessource {
+  DOSSIER
+  FICHIER
 }
 
 type TypographieTheme {

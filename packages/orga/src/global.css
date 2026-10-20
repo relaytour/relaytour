@@ -2485,7 +2485,7 @@ button.rt-carte-fiche {
   border-top: 1px solid var(--rt-encre-08);
 }
 
-.rt-explorateur button,
+.rt-explorateur button:not(.ant-btn),
 .rt-explorateur-ligne {
   display: flex;
   align-items: center;
@@ -2501,15 +2501,33 @@ button.rt-carte-fiche {
   text-align: start;
 }
 
-.rt-explorateur button {
+.rt-explorateur button:not(.ant-btn) {
   cursor: pointer;
   border-radius: 10px;
   transition: background var(--rt-duree) var(--rt-ease-fluide);
 }
 
-.rt-explorateur button:hover,
-.rt-explorateur button:focus-visible {
+.rt-explorateur button:not(.ant-btn):hover,
+.rt-explorateur button:not(.ant-btn):focus-visible {
   background: rgba(var(--rt-encre-rgb), 0.05);
+}
+
+/* Une ligne qui porte une action à droite : lier, retirer. */
+.rt-explorateur-element {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rt-explorateur-element > button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.rt-explorateur-detail {
+  display: block;
+  font-size: 12px;
+  color: var(--rt-encre-55);
 }
 
 .rt-explorateur-icone {

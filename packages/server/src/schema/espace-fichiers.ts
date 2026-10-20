@@ -29,7 +29,7 @@ import { PerimetreRef } from './organisation.ts'
 // connecte et lie ses dossiers aux périmètres. Une personne lit un dossier lié
 // comme les fiches du même périmètre. Relaytour ne copie aucun document.
 
-const FournisseurFichiersEnum = builder.enumType(FournisseurFichiers, {
+export const FournisseurFichiersEnum = builder.enumType(FournisseurFichiers, {
   name: 'FournisseurFichiers',
 })
 
@@ -37,7 +37,7 @@ const EtatConnexionFichiersEnum = builder.enumType(EtatConnexionFichiers, {
   name: 'EtatConnexionFichiers',
 })
 
-const FormatApercuEnum = builder.enumType('FormatApercu', {
+export const FormatApercuEnum = builder.enumType('FormatApercu', {
   description:
     'Ce que la liseuse affiche : un PDF, une image, un texte, du Markdown, un document bureautique converti en PDF par le fournisseur, ou rien (téléchargement).',
   values: [
@@ -130,7 +130,7 @@ const ElementFichiersRef = builder
     }),
   })
 
-const DossierLieRef = builder.prismaObject('DossierLie', {
+export const DossierLieRef = builder.prismaObject('DossierLie', {
   description:
     'Dossier de l’espace de fichiers lié à un périmètre, ou à toute l’activité quand le périmètre est nul.',
   fields: t => ({

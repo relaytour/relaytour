@@ -6,6 +6,7 @@ import { GraphQLError } from 'graphql'
 import { chiffrer, dechiffrer, lireCle } from '../lib/chiffrement.ts'
 import { journal } from '../lib/journal.ts'
 
+import { convertibleParMicrosoft } from './chemin.ts'
 import {
   espaceSharePoint,
   rafraichir,
@@ -50,6 +51,14 @@ export async function configurationMicrosoft(): Promise<ConfigurationMicrosoft |
 export async function fournisseursDisponibles(): Promise<Fournisseur[]> {
   if (fabriqueDeTest !== null) return ['SHAREPOINT']
   return (await configurationMicrosoft()) === null ? [] : ['SHAREPOINT']
+}
+
+/** Vrai quand ce fournisseur sait rendre ce document en PDF, sans l'appeler. */
+export function convertitEnPdf(fournisseur: Fournisseur, nom: string): boolean {
+  switch (fournisseur) {
+    case 'SHAREPOINT':
+      return convertibleParMicrosoft(nom)
+  }
 }
 
 // ── Erreurs ──────────────────────────────────────────────────────────────────

@@ -18,3 +18,28 @@ export async function dossierLisible(
   if (dossier === null) return null
   return (await peutLireFiche(ctx, dossier)) ? dossier : null
 }
+
+/**
+ * Vrai quand une ressource de ce dossier lié peut s'attacher à cette fiche : même
+ * activité, et un dossier du périmètre de la fiche ou de toute l'activité. Les
+ * lecteurs de la fiche lisent alors aussi la ressource. Une fiche commune n'admet
+ * que les dossiers de toute l'activité.
+ */
+export function dossierCompatible(
+  fiche: {
+    organisationId: string
+    activiteId: string
+    perimetreId: string | null
+  },
+  dossier: {
+    organisationId: string
+    activiteId: string
+    perimetreId: string | null
+  }
+): boolean {
+  return (
+    fiche.organisationId === dossier.organisationId &&
+    fiche.activiteId === dossier.activiteId &&
+    (dossier.perimetreId === null || dossier.perimetreId === fiche.perimetreId)
+  )
+}

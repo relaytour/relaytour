@@ -1,3 +1,10 @@
+import {
+  FileImageOutlined,
+  FileOutlined,
+  FilePdfOutlined,
+  FileTextOutlined,
+} from '@ant-design/icons'
+
 import { graphql } from '../gql'
 import type { FormatApercu } from '../gql/graphql'
 
@@ -123,6 +130,16 @@ export const NOMS_FOURNISSEURS: Record<string, string> = {
   SHAREPOINT: 'SharePoint',
 }
 
+/** L'icône d'un fichier, selon ce que la liseuse en affiche. */
+export const ICONES_APERCU: Record<FormatApercu, typeof FileOutlined> = {
+  PDF: FilePdfOutlined,
+  PDF_CONVERTI: FileTextOutlined,
+  IMAGE: FileImageOutlined,
+  TEXTE: FileTextOutlined,
+  MARKDOWN: FileTextOutlined,
+  AUCUN: FileOutlined,
+}
+
 /** Formats que la liseuse affiche dans la page. */
 export const FORMATS_AFFICHES: readonly FormatApercu[] = [
   'PDF',
@@ -219,3 +236,50 @@ export async function telechargerFichier(
   lien.remove()
   setTimeout(() => URL.revokeObjectURL(adresse), 10_000)
 }
+
+// ── Ressources liées à une fiche ─────────────────────────────────────────────
+
+export const RESSOURCES_FICHE = graphql(`
+  query RessourcesFiche($slug: String!) {
+    fiche(slug: $slug) {
+      id
+      ressources {
+        id
+        nom
+        type
+        chemin
+        apercu
+        existe
+        lienWeb
+        dossierLie {
+          id
+          nom
+          disponible
+          fournisseur
+        }
+      }
+    }
+  }
+`)
+
+export const LIER_RESSOURCE = graphql(`
+  mutation LierRessourceFiche(
+    $ficheId: ID!
+    $dossierLieId: ID!
+    $chemin: [String!]!
+  ) {
+    lierRessourceFiche(
+      ficheId: $ficheId
+      dossierLieId: $dossierLieId
+      chemin: $chemin
+    ) {
+      id
+    }
+  }
+`)
+
+export const DELIER_RESSOURCE = graphql(`
+  mutation DelierRessourceFiche($id: ID!) {
+    delierRessourceFiche(id: $id)
+  }
+`)

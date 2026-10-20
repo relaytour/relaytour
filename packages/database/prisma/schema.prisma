@@ -71,6 +71,7 @@ model Organisation {
   invitations             InvitationOrganisation[]
   connexionFichiers       ConnexionFichiers?
   dossiersLies            DossierLie[]
+  ressourcesFiches        RessourceFiche[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -307,6 +308,7 @@ model User {
   messagesRecus           MessageDestinataire[]
   connexionsFichiers      ConnexionFichiers[]
   dossiersLies            DossierLie[]
+  ressourcesFiches        RessourceFiche[]
 }
 
 model Session {
@@ -827,14 +829,15 @@ model Fiche {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  organisation    Organisation   @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  activite        Activite       @relation(fields: [activiteId], references: [id], onDelete: Restrict)
-  perimetre       Perimetre?     @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
-  versionCourante FicheVersion?  @relation("FicheVersionCourante", fields: [versionCouranteId], references: [id], onDelete: SetNull)
-  versions        FicheVersion[] @relation("FicheVersions")
+  organisation    Organisation     @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite        Activite         @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  perimetre       Perimetre?       @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  versionCourante FicheVersion?    @relation("FicheVersionCourante", fields: [versionCouranteId], references: [id], onDelete: SetNull)
+  versions        FicheVersion[]   @relation("FicheVersions")
   taches          Tache[]
   journal         Journal[]
   notifications   Notification[]
+  ressources      RessourceFiche[]
 
   @@unique([organisationId, slug])
   @@index([perimetreId])
@@ -1127,12 +1130,48 @@ model DossierLie {
   creeParId      String?
   createdAt      DateTime            @default(now())
 
-  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Cascade)
-  perimetre    Perimetre?   @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
-  creePar      User?        @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+  organisation Organisation     @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite         @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  perimetre    Perimetre?       @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  creePar      User?            @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+  ressources   RessourceFiche[]
 
   @@unique([organisationId, activiteId, perimetreId, emplacement, element])
   @@index([activiteId])
   @@index([perimetreId])
+}
+
+enum TypeRessource {
+  DOSSIER
+  FICHIER
+}
+
+// Dossier ou fichier de l'espace de fichiers lié à une fiche (ADR 0038). Il
+// s'adresse depuis un dossier lié par un chemin de noms. Le dossier lié est celui
+// du périmètre de la fiche, ou celui de toute son activité : les lecteurs de la
+// fiche le lisent donc aussi. La ressource n'entre pas dans le Markdown.
+model RessourceFiche {
+  id              String        @id @default(cuid())
+  organisationId  String
+  ficheId         String
+  dossierLieId    String
+  // Chemin de noms depuis le dossier lié (tableau de chaînes). Vide : le dossier
+  // lié lui-même.
+  chemin          Json
+  // SHA-256 du chemin : il rend la ressource unique dans sa fiche.
+  empreinteChemin String        @db.Char(64)
+  type            TypeRessource
+  // Nom lors du lien, affiché quand le fournisseur ne répond pas.
+  nom             String
+  creeParId       String?
+  createdAt       DateTime      @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  fiche        Fiche        @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  dossierLie   DossierLie   @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
+  creePar      User?        @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+
+  @@unique([ficheId, dossierLieId, empreinteChemin])
+  @@index([dossierLieId])
+  @@index([organisationId])
 }

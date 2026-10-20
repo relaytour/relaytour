@@ -19,6 +19,7 @@ import { Link, useNavigate, useParams } from 'react-router'
 import EtiquettePerimetre from '../composants/EtiquettePerimetre'
 import Markdown from '../composants/Markdown'
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
+import RessourcesFiche from '../composants/RessourcesFiche'
 import Titre from '../composants/Titre'
 import { dateCourte, messageErreur } from '../lib/erreurs'
 import { lireConflit } from '../lib/conflit'
@@ -236,6 +237,13 @@ export default function Fiche() {
         >
           <Markdown contenu={fiche.contenu} />
         </article>
+
+        <RessourcesFiche
+          slug={fiche.slug}
+          ficheId={fiche.id}
+          perimetreId={fiche.perimetre?.id ?? null}
+          peutModifier={fiche.peutModifier && !fiche.archive}
+        />
       </DeuxColonnes>
 
       <Drawer

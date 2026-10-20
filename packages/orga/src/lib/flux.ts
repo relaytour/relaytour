@@ -30,7 +30,13 @@ const VUES_DES_TACHES = [
   'CommentairesDeLaPeriode',
   'FilTache',
 ] as const
-const VUES_DES_FICHES = ['ListeFiches', 'Fiche', 'FichesDuPerimetre'] as const
+const VUES_DES_FICHES = [
+  'ListeFiches',
+  'Fiche',
+  'FichesDuPerimetre',
+  // Les ressources de l'espace de fichiers liées à une fiche (ADR 0038).
+  'RessourcesFiche',
+] as const
 const VUES_DES_PERIMETRES = [
   'MenuPerimetres',
   'TousLesPerimetres',
