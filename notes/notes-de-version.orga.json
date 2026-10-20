@@ -8,6 +8,32 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-20-orga-votre-agenda-s-abonne-a-relaytour-depuis-outlook-google-ou-a",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Votre agenda s'abonne à Relaytour depuis Outlook, Google ou Apple",
+            "texte": "Dans vos préférences, une adresse secrète ajoute à votre agenda personnel l'agenda global de vos activités, les réunions de vos périmètres et vos convocations. Vous la régénérez ou la révoquez à tout moment. Les admins d'une activité publient aussi l'adresse de son agenda global.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-un-sondage-de-dates-trouve-le-creneau-de-la-prochaine-reunio",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un sondage de dates trouve le créneau de la prochaine réunion",
+            "texte": "Dans l'agenda, vous proposez plusieurs créneaux aux personnes de votre périmètre ou de l'équipe. Chacune répond oui, si besoin ou non. Vous retenez ensuite un créneau, et la réunion se crée avec l'horaire et les personnes du sondage.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-20-orga-un-agenda-reunit-les-phases-les-dates-cles-et-les-echeances",
           "date": "2026-10-20",
           "type": "fonctionnalite",
@@ -17,6 +43,45 @@
           "fr": {
             "titre": "Un agenda réunit les phases, les dates clés et les échéances",
             "texte": "L'écran « Agenda » présente les phases de la période, son premier et son dernier jour, les dates clés et les échéances de vos périmètres. Il s'affiche en liste, ou en mois sur un écran large. Les admins de l'activité y ajoutent les dates clés.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-les-reunions-s-organisent-dans-l-agenda-avec-convocation-par",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les réunions s'organisent dans l'agenda, avec convocation par mail",
+            "texte": "Vous créez une réunion dans l'agenda de votre périmètre, avec un horaire, un lieu, un lien de visio et des tâches liées. Les personnes convoquées reçoivent un mail à ajouter à leur agenda et répondent dans l'espace organisateur. Les admins de l'activité tiennent l'agenda global.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-les-fiches-benevoles-recensent-les-personnes-qui-aident-sans",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les fiches bénévoles recensent les personnes qui aident sans compte",
+            "texte": "L'écran « Bénévoles » tient la liste des personnes qui aident l'activité sans compte dans l'application, avec leur accord. Vous les placez dans les séquences du programme. Leurs coordonnées restent réservées aux admins de l'activité et aux personnes des périmètres où elles aident.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-le-programme-du-jour-j-repartit-les-equipes-par-lieu-et-par-",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le programme du jour J répartit les équipes par lieu et par heure",
+            "texte": "L'écran « Programme » présente les séquences du jour J dans une grille par lieu et par heure, ou par lieu sur un téléphone. Chaque séquence nomme ses responsables et ses renforts, membres de l'équipe ou bénévoles. « Mon jour J » liste vos séquences, et la page de votre périmètre montre les siennes.",
             "migration": null
           }
         }

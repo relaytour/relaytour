@@ -2662,3 +2662,357 @@ button.rt-ligne-declinaisons {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Volet d'une réunion de l'agenda (ADR 0037). */
+.rt-reunion {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rt-reunion p {
+  margin: 0;
+}
+
+.rt-reunion section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rt-reunion-quand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--rt-mono);
+  font-size: 13.5px;
+}
+
+.rt-reunion-ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rt-reunion-description {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.rt-reunion-intertitre {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rt-reunion-convocations {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-reunion-convocations li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13.5px;
+}
+
+/* Une réunion dans la liste de l'agenda : un bouton qui ouvre son volet. */
+.rt-agenda-ligne.rt-agenda-reunion {
+  border-inline-start-color: var(--rt-primaire);
+}
+
+.rt-agenda-ligne button.rt-agenda-ouvrir {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--rt-primaire);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rt-agenda-ligne button.rt-agenda-ouvrir:hover {
+  text-decoration: underline;
+}
+
+.rt-agenda-evenement.rt-agenda-reunion {
+  background: var(--rt-primaire-clair);
+  cursor: pointer;
+}
+
+.rt-agenda-annulee {
+  text-decoration: line-through;
+  color: var(--rt-encre-55);
+}
+
+/* Une réunion de la grille du mois est un bouton : il garde l'allure des autres
+   événements du jour. */
+button.rt-agenda-evenement {
+  width: 100%;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  text-align: start;
+}
+
+/* L'adresse d'un abonnement à l'agenda (ADR 0037), affichée une seule fois. */
+.rt-abonnement-adresse {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rt-abonnement-adresse code {
+  overflow-wrap: anywhere;
+  font-family: var(--rt-mono);
+  font-size: 12.5px;
+}
+
+/* Sondage de dates (ADR 0037) : un créneau par ligne, ses décomptes, la réponse
+   de la personne. */
+.rt-sondage-creneaux {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.rt-sondage-creneaux legend {
+  margin-bottom: 4px;
+  font-weight: 600;
+}
+
+.rt-sondage-creneau {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.rt-sondage-creneau .ant-form-item {
+  margin-bottom: 0;
+}
+
+.rt-sondage-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-sondage-liste > li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 10px 12px;
+  border: var(--rt-bord-interne);
+  border-radius: var(--rt-rayon-chip);
+  background: var(--rt-surface-interne);
+}
+
+.rt-sondage-liste > li.rt-sondage-retenu {
+  border-inline-start: 4px solid var(--rt-succes);
+}
+
+.rt-sondage-ligne {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+
+@media (max-width: 767px) {
+  .rt-sondage-creneau {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) auto;
+  }
+
+  .rt-sondage-creneau > .ant-form-item:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Programme du jour J (ADR 0040) : une carte par séquence, une grille par lieu et
+   par heure sur un écran large, une liste par lieu sur un téléphone. */
+.rt-programme-jour {
+  margin: 0 6px 12px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.rt-sequences {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rt-sequence {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 8px 10px;
+  border: var(--rt-bord-interne);
+  border-inline-start: 4px solid var(--rt-primaire);
+  border-radius: var(--rt-rayon-chip);
+  background: var(--rt-surface-interne);
+  box-shadow: var(--rt-ombre-interne);
+  color: var(--rt-encre);
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.rt-sequence:hover {
+  background: var(--rt-surface-interne-survol);
+}
+
+.rt-sequence-titre {
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.rt-sequence-heure {
+  font-family: var(--rt-mono);
+  font-size: 12px;
+  color: var(--rt-encre-70);
+}
+
+.rt-sequence-perimetre,
+.rt-sequence-personnes {
+  font-size: 12.5px;
+  color: var(--rt-encre-70);
+  overflow-wrap: anywhere;
+}
+
+.rt-sequence-ligne {
+  display: grid;
+  grid-template-columns: 128px minmax(0, 1fr);
+  gap: 4px 12px;
+  align-items: start;
+}
+
+.rt-sequence-ligne > .rt-note {
+  grid-column: 2;
+}
+
+.rt-sequence-place {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.rt-sequence-place .ant-form-item {
+  margin-bottom: 0;
+}
+
+.rt-sequence-contact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+}
+
+.rt-grille-defilement {
+  overflow-x: auto;
+}
+
+.rt-grille {
+  display: grid;
+  gap: 4px;
+  min-width: min-content;
+}
+
+.rt-grille-lieu {
+  position: sticky;
+  top: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: var(--rt-primaire-clair);
+  font-weight: 600;
+  text-align: center;
+}
+
+.rt-grille-heure {
+  padding-top: 2px;
+  border-top: 1px solid var(--rt-encre-14);
+  font-family: var(--rt-mono);
+  font-size: 12px;
+  color: var(--rt-encre-55);
+}
+
+.rt-grille-case {
+  min-height: 0;
+}
+
+.rt-lieux {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0 0 12px;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-lieux li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rt-lieux-archive {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.rt-lieux-ajout {
+  display: flex;
+  gap: 8px;
+}
+
+@media (max-width: 767px) {
+  .rt-sequence-ligne {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .rt-sequence-ligne > .rt-note {
+    grid-column: 1;
+  }
+}
+
+/* À l'impression, le programme occupe la page, sans navigation ni boutons. */
+@media print {
+  .rt-barre-laterale,
+  .rt-barre-haute,
+  .rt-halo,
+  .rt-sans-impression,
+  .rt-entete-actions,
+  .ant-drawer,
+  .ant-message {
+    display: none !important;
+  }
+
+  .rt-grille-defilement {
+    overflow: visible;
+  }
+
+  .rt-sequence {
+    box-shadow: none;
+    break-inside: avoid;
+  }
+}

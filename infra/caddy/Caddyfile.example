@@ -33,10 +33,10 @@ api.exemple.org {
 # le navigateur ne parle qu'à une seule origine, et le cookie de session reste de
 # première partie (ADR 0002). Les mails citent les images sous /medias/ (ADR 0009).
 # /graphql porte aussi le flux des changements (SSE, ADR 0017) : Caddy le transmet
-# au fil de l'eau, sans réglage.
+# au fil de l'eau, sans réglage. /agenda/* sert les abonnements à l'agenda (ADR 0037).
 orga.exemple.org {
 	import entetes-securite
-	@api path /api/auth/* /graphql /medias/*
+	@api path /api/auth/* /graphql /medias/* /agenda/*
 	handle @api {
 		import relais-api
 	}
