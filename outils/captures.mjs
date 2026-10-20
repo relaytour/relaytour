@@ -252,6 +252,13 @@ const ECRANS = [
     chemin: `${ACTIVITE}/organigramme`,
   },
   { nom: 'preferences', compte: 'referent', chemin: `${ACTIVITE}/preferences` },
+  // L'abonnement personnel à l'agenda (ADR 0037), dans les préférences.
+  {
+    nom: 'preferences-agenda',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/preferences`,
+    apres: `(e => (e?.scrollIntoView({ block: 'start' }), window.scrollBy(0, -140), Boolean(e)))([...document.querySelectorAll('main h2')].find(e => e.innerText.trim() === 'Votre agenda dans Outlook, Google ou Apple'))`,
+  },
   // L'accord pour l'organigramme (ADR 0036), dans les préférences.
   {
     nom: 'preferences-organigramme',
