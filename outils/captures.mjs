@@ -144,6 +144,15 @@ const ECRANS = [
     chemin: `${ACTIVITE}/agenda`,
     avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
   },
+  // Le volet d'un sondage de dates du pôle Bénévoles, avant la réponse de la
+  // référente (ADR 0037).
+  {
+    nom: 'sondage',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
+    apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-ligne-lien')].find(b => b.textContent.includes('Date du point bénévoles de janvier')))`,
+  },
   // Le volet d'une réunion du pôle Bénévoles, où la référente est convoquée.
   {
     nom: 'reunion',
