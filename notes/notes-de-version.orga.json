@@ -58,6 +58,19 @@
             "texte": "Vous créez une réunion dans l'agenda de votre périmètre, avec un horaire, un lieu, un lien de visio et des tâches liées. Les personnes convoquées reçoivent un mail à ajouter à leur agenda et répondent dans l'espace organisateur. Les admins de l'activité tiennent l'agenda global.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-20-orga-le-programme-du-jour-j-repartit-les-equipes-par-lieu-et-par-",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le programme du jour J répartit les équipes par lieu et par heure",
+            "texte": "L'écran « Programme » présente les séquences du jour J dans une grille par lieu et par heure, ou par lieu sur un téléphone. Chaque séquence nomme ses responsables et ses renforts, membres de l'équipe ou bénévoles. « Mon jour J » liste vos séquences, et la page de votre périmètre montre les siennes.",
+            "migration": null
+          }
         }
       ]
     },
