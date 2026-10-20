@@ -137,6 +137,13 @@ const ECRANS = [
     avant:
       "localStorage.setItem('relaytour.retroplanning.regroupement', 'phase')",
   },
+  // L'agenda de la période, en liste (ADR 0037).
+  {
+    nom: 'agenda',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
+  },
   {
     nom: 'fiches-cartes',
     compte: 'referent',
@@ -256,6 +263,15 @@ const ECRANS = [
   // ── Guide de l'admin d'activité ────────────────────────────────────────────
   // L'équipe d'une activité, lue par un de ses admins (ADR 0018).
   // Les notifications d'admin, rangées par activité puis par périmètre (ADR 0033).
+  // L'agenda en vue Mois, avec les dates clés modifiables (ADR 0037).
+  {
+    nom: 'agenda-mois',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'mois')",
+    // Le mois suivant porte en général plus de dates que la fin du mois courant.
+    apres: cliquerLibelle('Mois suivant'),
+  },
   {
     nom: 'notifications-admin',
     compte: 'admin-activite',
