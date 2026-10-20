@@ -9,7 +9,7 @@ import { purgerBenevoles } from '../lib/benevoles.ts'
 
 import { schema } from './index.ts'
 
-// Fiches bénévoles (ADR 0038). Les coordonnées d'une fiche ne se lisent que par
+// Fiches bénévoles (ADR 0040). Les coordonnées d'une fiche ne se lisent que par
 // les admins de l'activité, par la personne qui l'a créée, et par les personnes
 // qui écrivent dans un périmètre où la fiche est placée. Les contrôles se
 // prouvent par le refus (invariant 11).

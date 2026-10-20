@@ -16,7 +16,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
 
-// Fiches bénévoles (ADR 0038). Les admins de l'activité et les personnes qui
+// Fiches bénévoles (ADR 0040). Les admins de l'activité et les personnes qui
 // écrivent dans un de ses périmètres lisent la liste des fiches et en créent. Les
 // coordonnées d'une fiche ne se lisent que par les admins de l'activité, par la
 // personne qui l'a créée, et par les personnes qui écrivent dans un périmètre où
