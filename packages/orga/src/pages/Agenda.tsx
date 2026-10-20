@@ -79,6 +79,7 @@ const REUNIONS = graphql(`
       id
       titre
       jour
+      jourFin
       heureDebut
       heureFin
       statut
@@ -160,7 +161,7 @@ function ligneDeReunion(r: ReunionDeListe): Ligne {
     sorte: 'REUNION',
     titre: r.titre,
     jour: r.jour,
-    jourFin: null,
+    jourFin: r.jourFin === r.jour ? null : r.jourFin,
     description: null,
     dateCleId: null,
     version: null,

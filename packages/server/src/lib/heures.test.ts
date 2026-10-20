@@ -83,4 +83,14 @@ describe('horaireEnClair', () => {
       )
     ).toBe('lundi 1 mars 2027, de 18 h 30 à 20 h')
   })
+
+  it('écrit les deux jours d’une réunion de plusieurs jours', () => {
+    expect(
+      horaireEnClair(
+        new Date('2027-03-06T08:00:00.000Z'),
+        new Date('2027-03-07T16:00:00.000Z'),
+        PARIS
+      )
+    ).toBe('du samedi 6 mars 2027 à 9 h au dimanche 7 mars 2027 à 17 h')
+  })
 })
