@@ -47,6 +47,11 @@ export interface ListeElements {
 export interface ContenuFichier {
   flux: ReadableStream<Uint8Array>
   taille: number | null
+  /**
+   * Nom sous lequel servir le contenu, quand il diffère du nom de l'élément :
+   * un document natif exporté gagne l'extension de son format.
+   */
+  nom?: string
 }
 
 export interface EspaceFichiers {

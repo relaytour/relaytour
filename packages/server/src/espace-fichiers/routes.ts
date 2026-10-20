@@ -17,6 +17,7 @@ import {
   configurationDropbox,
   configurationGoogle,
   configurationMicrosoft,
+  documentNatif,
   enregistrerConnexion,
   memoriserJetonAcces,
   ouvrirEspace,
@@ -246,8 +247,10 @@ async function apercu(
   }
   const format = telecharger
     ? 'AUCUN'
-    : formatApercu(element.nom, nom =>
-        espace.convertitEnPdf(nom, element.typeMime)
+    : formatApercu(
+        element.nom,
+        nom => espace.convertitEnPdf(nom, element.typeMime),
+        documentNatif(espace.fournisseur, element.typeMime)
       )
   const converti = format === 'PDF_CONVERTI'
   if (!converti && element.taille !== null && element.taille > APERCU_MAX) {
@@ -255,7 +258,7 @@ async function apercu(
     return
   }
   const contenu = await espace.ouvrir(position, { pdf: converti })
-  const nom = converti ? `${element.nom}.pdf` : element.nom
+  const nom = converti ? `${element.nom}.pdf` : (contenu.nom ?? element.nom)
   res.set({
     'Content-Type': typeServi(element.nom, format),
     'Content-Disposition': disposition(

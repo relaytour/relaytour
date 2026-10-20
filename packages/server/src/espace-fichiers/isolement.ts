@@ -6,6 +6,10 @@ import type { EspaceFichiers } from './types.ts'
 // fiches de tous les périmètres : il ne doit se trouver dans aucun dossier lié.
 // Un admin peut toutefois le déplacer chez le fournisseur après sa création. Sa
 // place se relit donc à chaque contrôle, et non d'après sa place à la création.
+// Un même dossier se voit parfois depuis deux emplacements (un Drive partagé et
+// « Partagés avec moi », l'espace d'une équipe Dropbox et le dossier d'un
+// membre), sous le même identifiant. Les contrôles comparent donc les
+// identifiants, quel que soit l'emplacement.
 
 export interface ExportConnu {
   exportEmplacement: string | null
@@ -34,6 +38,34 @@ export async function ancetresDeLExport(
   return [...connus].reverse().map(id => ({ id, nom: '' }))
 }
 
+/**
+ * Identifiants des dossiers du chemin, depuis la racine de l'emplacement, puis
+ * des dossiers parents du dernier tels que le fournisseur les connaît. Une vue
+ * comme « Partagés avec moi » commence en effet sous la racine réelle.
+ */
+export async function lignee(
+  espace: EspaceFichiers,
+  emplacement: string,
+  chemin: readonly string[]
+): Promise<string[]> {
+  const ids: string[] = []
+  let dernier: string | null = null
+  for (let i = 0; i <= chemin.length; i++) {
+    const element = await espace.element({
+      emplacement,
+      base: null,
+      chemin: chemin.slice(0, i),
+    })
+    if (element !== null) ids.push(element.id)
+    dernier = element?.id ?? null
+  }
+  if (dernier !== null && chemin.length > 0) {
+    const parents = await espace.ancetres(emplacement, dernier)
+    if (parents !== null) ids.push(...parents.map(a => a.id))
+  }
+  return [...new Set(ids)]
+}
+
 /** Vrai quand le dossier d'export se trouve aujourd'hui dans un dossier lié. */
 export async function exportDansUnDossierLie(
   espace: EspaceFichiers,
@@ -44,11 +76,7 @@ export async function exportDansUnDossierLie(
   const ids = (await ancetresDeLExport(espace, connexion)).map(a => a.id)
   return (
     (await prisma.dossierLie.count({
-      where: {
-        organisationId,
-        emplacement: connexion.exportEmplacement,
-        element: { in: ids },
-      },
+      where: { organisationId, element: { in: ids } },
     })) > 0
   )
 }
@@ -71,12 +99,7 @@ export async function cheminDeLExportSous(
       exportAncetres: true,
     },
   })
-  if (
-    connexion?.exportElement == null ||
-    connexion.exportEmplacement !== dossier.emplacement
-  ) {
-    return null
-  }
+  if (connexion?.exportElement == null) return null
   const ancetres = await ancetresDeLExport(espace, connexion)
   const rang = ancetres.findIndex(a => a.id === dossier.element)
   if (rang < 0) return null

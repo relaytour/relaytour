@@ -16,8 +16,10 @@ import {
   type ConfigurationDropbox,
 } from './dropbox.ts'
 import {
+  convertibleParGoogle,
   espaceGoogleDrive,
   jetonCompteService,
+  natifGoogle,
   rafraichirGoogle,
   type CleCompteService,
   type ConfigurationGoogle,
@@ -196,18 +198,30 @@ export function espaceDeTest(): boolean {
 }
 
 /**
- * Vrai quand ce fournisseur sait rendre ce document en PDF, d'après son seul
- * nom. Un document Google natif se reconnaît à son type, que seul le parcours lit.
+ * Vrai quand ce fournisseur sait rendre ce document en PDF. Un document Google
+ * natif se reconnaît à son type, lu chez le fournisseur.
  */
-export function convertitEnPdf(fournisseur: Fournisseur, nom: string): boolean {
+export function convertitEnPdf(
+  fournisseur: Fournisseur,
+  nom: string,
+  typeMime?: string | null
+): boolean {
   switch (fournisseur) {
     case 'SHAREPOINT':
       return convertibleParMicrosoft(nom)
     case 'GOOGLE_DRIVE':
-      return false
+      return convertibleParGoogle(nom, typeMime)
     case 'DROPBOX':
       return convertibleParDropbox(nom)
   }
+}
+
+/** Vrai pour un document natif du fournisseur, sans contenu propre (Google). */
+export function documentNatif(
+  fournisseur: Fournisseur,
+  typeMime: string | null | undefined
+): boolean {
+  return fournisseur === 'GOOGLE_DRIVE' && natifGoogle(typeMime)
 }
 
 // ── Erreurs ──────────────────────────────────────────────────────────────────

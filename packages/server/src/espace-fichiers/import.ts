@@ -16,6 +16,8 @@ import {
 } from './conversion.ts'
 import { planifierExportFiches } from './export.ts'
 import { DOCUMENT_GOOGLE } from './google.ts'
+import { documentNatif } from './index.ts'
+import { lignee } from './isolement.ts'
 import { ouvrirEspace } from './index.ts'
 import type { ElementEspace, EspaceFichiers } from './types.ts'
 
@@ -109,7 +111,7 @@ export async function importerDepuisEspace(
   const { espace } = await ouvrirEspace(organisationId)
   const exportation = await prisma.connexionFichiers.findUnique({
     where: { organisationId },
-    select: { exportEmplacement: true, exportElement: true },
+    select: { exportElement: true },
   })
   const configuration = await configurationOrganisation(organisationId)
   const role = {
@@ -127,22 +129,17 @@ export async function importerDepuisEspace(
       chemin: source.chemin,
     }
     // Le dossier d'export ne sert jamais de source : ses fichiers sont des
-    // copies écrites par Relaytour.
+    // copies écrites par Relaytour. Le contrôle vaut quel que soit
+    // l'emplacement par lequel l'admin le voit.
     if (
       exportation?.exportElement != null &&
-      exportation.exportEmplacement === source.emplacement
+      (await lignee(espace, source.emplacement, source.chemin)).includes(
+        exportation.exportElement
+      )
     ) {
-      for (let i = 0; i <= source.chemin.length; i++) {
-        const e = await espace.element({
-          ...position,
-          chemin: source.chemin.slice(0, i),
-        })
-        if (e?.id === exportation.exportElement) {
-          throw erreurSaisie(
-            'Le dossier d’export des fiches ne sert pas de source : ses fichiers sont des copies écrites par Relaytour.'
-          )
-        }
-      }
+      throw erreurSaisie(
+        'Le dossier d’export des fiches ne sert pas de source : ses fichiers sont des copies écrites par Relaytour.'
+      )
     }
     const liste = await espace.lister(position)
     if (liste === null) throw erreurSaisie('Un dossier source est introuvable.')
@@ -156,10 +153,16 @@ export async function importerDepuisEspace(
       const ecarter = (raison: string) =>
         rapport.nonImportes.push({ fichier: nomComplet, raison })
       // Un document Google natif n'a pas d'extension : Drive l'exporte en Markdown.
+      // Son nom ne dit rien de son contenu : un tableur nommé « Plan.md » ne
+      // s'importe pas.
       const documentGoogle =
         fichier.typeMime === DOCUMENT_GOOGLE &&
         espace.lireMarkdown !== undefined
-      const format = documentGoogle ? 'GOOGLE' : formatImport(fichier.nom)
+      const format = documentGoogle
+        ? 'GOOGLE'
+        : documentNatif(espace.fournisseur, fichier.typeMime)
+          ? null
+          : formatImport(fichier.nom)
       if (format === null) {
         ecarter('format que Relaytour n’importe pas')
         continue

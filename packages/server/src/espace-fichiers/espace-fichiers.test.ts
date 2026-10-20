@@ -50,6 +50,12 @@ describe('formatApercu et typeServi', () => {
     expect(formatApercu('budget.xlsx', () => false)).toBe('AUCUN')
   })
 
+  it('ne lit que la conversion d’un document natif, quel que soit son nom', () => {
+    expect(formatApercu('Planning.pdf', () => true, true)).toBe('PDF_CONVERTI')
+    expect(formatApercu('Notes.md', () => true, true)).toBe('PDF_CONVERTI')
+    expect(formatApercu('Inscription.png', () => false, true)).toBe('AUCUN')
+  })
+
   it('ne sert jamais le HTML ni le SVG comme une page', () => {
     for (const nom of ['page.html', 'logo.svg', 'page.htm', 'sans-extension']) {
       expect(formats(nom)).toBe('AUCUN')

@@ -12,6 +12,7 @@ import {
   ancetresDeLExport,
   cheminDeLExportSous,
   dansLExport,
+  lignee,
 } from '../espace-fichiers/isolement.ts'
 import {
   lancerExportFiches,
@@ -25,6 +26,7 @@ import {
   configurationDropbox,
   configurationGoogle,
   connexionsPossibles,
+  documentNatif,
   enregistrerConnexion,
   espaceDeTest,
   memoriserJetonAcces,
@@ -151,27 +153,6 @@ const ConnexionFichiersRef = builder.prismaObject('ConnexionFichiers', {
   }),
 })
 
-/**
- * Identifiants de la racine d'une bibliothèque et de chaque dossier du chemin,
- * jusqu'au dernier compris. Un dossier absent n'a pas d'identifiant.
- */
-async function idsDuChemin(
-  espace: EspaceFichiers,
-  emplacement: string,
-  chemin: readonly string[]
-): Promise<string[]> {
-  const ids: string[] = []
-  for (let i = 0; i <= chemin.length; i++) {
-    const element = await espace.element({
-      emplacement,
-      base: null,
-      chemin: chemin.slice(0, i),
-    })
-    if (element !== null) ids.push(element.id)
-  }
-  return ids
-}
-
 interface EspaceFichiersVue {
   connexionsPossibles: {
     fournisseur: FournisseurFichiers
@@ -286,7 +267,11 @@ function vue(espace: EspaceFichiers, e: ElementEspace): ElementVue {
     ...e,
     apercu: e.dossier
       ? 'AUCUN'
-      : formatApercu(e.nom, nom => espace.convertitEnPdf(nom, e.typeMime)),
+      : formatApercu(
+          e.nom,
+          nom => espace.convertitEnPdf(nom, e.typeMime),
+          documentNatif(espace.fournisseur, e.typeMime)
+        ),
   }
 }
 
@@ -634,15 +619,13 @@ builder.mutationFields(t => ({
           exportAncetres: true,
         },
       })
-      // Sa place se relit chez le fournisseur : un admin a pu le déplacer.
-      if (
-        exportation?.exportElement != null &&
-        exportation.exportEmplacement === emplacement
-      ) {
+      // Sa place se relit chez le fournisseur : un admin a pu le déplacer. Le
+      // contrôle vaut quel que soit l'emplacement par lequel l'admin le voit.
+      if (exportation?.exportElement != null) {
         const exportElement = exportation.exportElement
         const { ancetres, parcours } = await avecEspace(ctx, async e => ({
           ancetres: await ancetresDeLExport(e, exportation),
-          parcours: await idsDuChemin(e, emplacement, chemin),
+          parcours: await lignee(e, emplacement, chemin),
         }))
         if (
           ancetres.some(a => a.id === element.id) ||
@@ -716,7 +699,7 @@ builder.mutationFields(t => ({
       const { parent, ids, espace } = await avecEspace(ctx, async espace => ({
         espace,
         parent: await espace.element({ emplacement, base: null, chemin }),
-        ids: await idsDuChemin(espace, emplacement, chemin),
+        ids: await lignee(espace, emplacement, chemin),
       }))
       if (parent === null || !parent.dossier) {
         throw erreurSaisie('Ce dossier n’existe pas dans l’espace de fichiers.')
@@ -742,7 +725,7 @@ builder.mutationFields(t => ({
         )
       const lies = (tx: Prisma.TransactionClient | typeof prisma) =>
         tx.dossierLie.count({
-          where: { organisationId, emplacement, element: { in: ids } },
+          where: { organisationId, element: { in: ids } },
         })
       if ((await lies(prisma)) > 0) throw refus()
       const cree = await avecEspace(ctx, () =>

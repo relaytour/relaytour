@@ -4,6 +4,7 @@ import { appelSortant, type HotesAdmis } from './sortant.ts'
 import {
   AccesRetire,
   FournisseurIndisponible,
+  type ContenuFichier,
   type ElementEspace,
   type Emplacement,
   type EspaceFichiers,
@@ -74,6 +75,28 @@ const NATIFS: Record<string, { bureautique: string; pdf: boolean }> = {
 }
 
 export const DOCUMENT_GOOGLE = 'application/vnd.google-apps.document'
+
+/** Extension du fichier qu'un document natif devient à l'export. */
+const EXTENSIONS: Record<string, string> = {
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+    'docx',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': 'xlsx',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation':
+    'pptx',
+  'application/pdf': 'pdf',
+}
+
+/**
+ * Vrai pour un document Google natif (texte, tableur, présentation,
+ * formulaire…) : il n'a pas de contenu propre, et son nom ne dit rien de son
+ * format.
+ */
+export function natifGoogle(typeMime: string | null | undefined): boolean {
+  return (
+    typeMime?.startsWith('application/vnd.google-apps.') === true &&
+    typeMime !== DOSSIER
+  )
+}
 
 /** Vrai pour un document Google natif, que Drive sait rendre en PDF. */
 export function convertibleParGoogle(
@@ -327,6 +350,7 @@ interface FichierDrive {
   webViewLink?: string
   version?: string
   parents?: string[]
+  trashed?: boolean
 }
 
 function versElement(f: FichierDrive): ElementEspace {
@@ -394,11 +418,13 @@ export function espaceGoogleDrive(
     return { fichiers, complet: false }
   }
 
+  /** Un élément par son identifiant. Un élément mis à la corbeille est absent. */
   async function fichier(id: string): Promise<FichierDrive | null> {
-    return lireJson<FichierDrive>(
-      `${DRIVE}/files/${encodeURIComponent(id)}?supportsAllDrives=true&fields=${CHAMPS}`,
+    const f = await lireJson<FichierDrive>(
+      `${DRIVE}/files/${encodeURIComponent(id)}?supportsAllDrives=true&fields=${CHAMPS},trashed`,
       jeton
     )
+    return f?.trashed === true ? null : f
   }
 
   /** L'élément de base d'une position : la racine de l'emplacement, ou un dossier connu. */
@@ -441,7 +467,7 @@ export function espaceGoogleDrive(
   async function contenu(
     f: FichierDrive,
     typeExport: string | null
-  ): Promise<{ flux: ReadableStream<Uint8Array>; taille: number | null }> {
+  ): Promise<ContenuFichier> {
     const adresse =
       typeExport === null
         ? `${DRIVE}/files/${encodeURIComponent(f.id)}?alt=media&supportsAllDrives=true`
@@ -454,9 +480,11 @@ export function espaceGoogleDrive(
       )
     }
     const taille = Number(reponse.headers.get('content-length'))
+    const extension = typeExport === null ? undefined : EXTENSIONS[typeExport]
     return {
       flux: reponse.body,
       taille: Number.isFinite(taille) && taille > 0 ? taille : null,
+      ...(extension === undefined ? {} : { nom: `${f.name}.${extension}` }),
     }
   }
 
