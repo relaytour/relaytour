@@ -12,8 +12,8 @@ import type {
 export interface NoeudMemoire {
   id: string
   nom: string
-  /** Absent pour un dossier. */
-  contenu?: string
+  /** Absent pour un dossier. Un document binaire (Word) se donne en octets. */
+  contenu?: string | Uint8Array
   enfants?: NoeudMemoire[]
   /** Numéro de version, qui change à chaque écriture. */
   version?: number
@@ -151,9 +151,13 @@ export function espaceEnMemoire(
       const noeud = trouver(p)
       if (noeud?.contenu === undefined)
         return Promise.reject(new Error('Fichier introuvable.'))
-      const octets = new TextEncoder().encode(
-        pdf ? `%PDF converti : ${noeud.contenu}` : noeud.contenu
-      )
+      const contenu = noeud.contenu
+      const octets =
+        typeof contenu === 'string'
+          ? new TextEncoder().encode(
+              pdf ? `%PDF converti : ${contenu}` : contenu
+            )
+          : contenu
       return Promise.resolve({
         flux: new Blob([octets]).stream(),
         taille: octets.length,

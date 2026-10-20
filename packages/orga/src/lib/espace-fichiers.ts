@@ -75,6 +75,66 @@ export const EXPORTER_FICHES_MAINTENANT = graphql(`
   }
 `)
 
+export const SIMULER_IMPORT = graphql(`
+  query SimulerImportFiches(
+    $activiteId: ID!
+    $sources: [SourceImportFiches!]!
+  ) {
+    simulerImportFiches(activiteId: $activiteId, sources: $sources) {
+      creees
+      nouvellesVersions
+      inchangees
+      conflits {
+        fiche
+        raison
+      }
+      nonImportes {
+        fichier
+        raison
+      }
+      refusees {
+        fichier
+        raison
+      }
+      converties {
+        fichier
+        raison
+      }
+      incomplet
+    }
+  }
+`)
+
+export const IMPORTER_FICHES = graphql(`
+  mutation ImporterFichesEspace(
+    $activiteId: ID!
+    $sources: [SourceImportFiches!]!
+  ) {
+    importerFichesEspace(activiteId: $activiteId, sources: $sources) {
+      creees
+      nouvellesVersions
+      inchangees
+      conflits {
+        fiche
+        raison
+      }
+      nonImportes {
+        fichier
+        raison
+      }
+      refusees {
+        fichier
+        raison
+      }
+      converties {
+        fichier
+        raison
+      }
+      incomplet
+    }
+  }
+`)
+
 export const DOSSIERS_LIES = graphql(`
   query DossiersLies($activiteId: ID, $perimetreId: ID) {
     dossiersLies(activiteId: $activiteId, perimetreId: $perimetreId) {
@@ -113,6 +173,7 @@ export const PERIMETRES_A_LIER = graphql(`
   query PerimetresALier($activiteId: ID) {
     perimetres(activiteId: $activiteId) {
       id
+      slug
       nom
       couleur
     }

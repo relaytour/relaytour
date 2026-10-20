@@ -23,6 +23,7 @@ import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import EtiquettePerimetre from '../../composants/EtiquettePerimetre'
+import ImportFiches from '../../composants/ImportFiches'
 import { Panneau } from '../../composants/Panneau'
 import ParcoursEspace, {
   type PositionChoisie,
@@ -497,6 +498,10 @@ export default function EspaceFichiers() {
         </Panneau>
 
         {connexion !== null && <ExportFiches connexion={connexion} />}
+
+        {connexion !== null && (
+          <ImportFiches actif={connexion.etat === 'ACTIVE'} />
+        )}
 
         <Panneau
           titre={`Dossiers liés de l’activité « ${activite.nom} »`}

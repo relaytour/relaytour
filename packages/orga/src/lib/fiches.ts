@@ -1,5 +1,13 @@
 import { graphql } from '../gql'
+import type { SourceFiche } from '../gql/graphql'
 import gabaritBrut from '../../../../content/exemple/modeles/fiche.md?raw'
+
+/** D'où vient une version de fiche : dépôt, application ou espace de fichiers (ADR 0038). */
+export const LIBELLES_SOURCE: Record<SourceFiche, string> = {
+  GIT: 'Dépôt',
+  APP: 'Application',
+  ESPACE_FICHIERS: 'Espace de fichiers',
+}
 
 /** Le gabarit commun (content/orga/modeles/fiche.md), sans son en-tête. */
 export const GABARIT_FICHE = gabaritBrut.replace(/^---\n[\s\S]*?\n---\n+/, '')

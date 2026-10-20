@@ -1034,6 +1034,21 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.ressource }),
     attente: INTERDIT,
   },
+  // L'import des fiches depuis l'espace de fichiers (ADR 0038).
+  {
+    operation: 'simulerImportFiches',
+    query:
+      'query ($a: ID!) { simulerImportFiches(activiteId: $a, sources: []) { creees } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'importerFichesEspace',
+    query:
+      'mutation ($a: ID!) { importerFichesEspace(activiteId: $a, sources: []) { creees } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
   {
     operation: 'delierDossier',
     query: 'mutation ($id: ID!) { delierDossier(id: $id) }',
