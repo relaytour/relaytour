@@ -58,7 +58,7 @@
         <div class="grille-2">
           <article class="verre panneau">
             <h3>Le menu de gauche</h3>
-            <p>Il donne accès à Mon espace, au Rétroplanning, à l'Agenda, aux Fiches et aux Préférences. La section « Périmètres » commence par « Tous les périmètres » et « Organigramme », puis liste chaque périmètre où vous êtes affecté·e.</p>
+            <p>Il donne accès à Mon espace, au Rétroplanning, à l'Agenda, au Programme, aux Bénévoles, aux Fiches et aux Préférences. La section « Périmètres » commence par « Tous les périmètres » et « Organigramme », puis liste chaque périmètre où vous êtes affecté·e.</p>
           </article>
           <article class="verre panneau">
             <h3>La barre du haut</h3>
@@ -114,7 +114,7 @@
 
         <article class="verre ecran" id="e-agenda">
           <div class="ecran-tete"><h3>Agenda</h3><span class="route">/&lt;activité&gt;/agenda</span></div>
-          <p>L'agenda présente les repères de la période : ses phases, son premier et son dernier jour, et les dates clés placées par les admins de l'activité. Une date clé signale un jour qui compte pour toute l'équipe, par exemple un dossier à déposer ou une assemblée. L'agenda ajoute les échéances des tâches de vos périmètres.</p>
+          <p>L'agenda présente les repères de la période : ses phases, son premier et son dernier jour, et les dates clés placées par les admins de l'activité. Une date clé signale un jour qui compte pour toute l'équipe, par exemple un dossier à déposer ou une assemblée. L'agenda affiche aussi les réunions de l'activité et de ses périmètres, et les échéances des tâches de vos périmètres.</p>
           <p>La liste range ces éléments par mois, à partir d'aujourd'hui. Chaque échéance mène à son périmètre. Sur un écran large, la vue « Mois » affiche une grille du lundi au dimanche, avec la phase en cours au-dessus.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Liste</span><span class="libelle">Mois</span></span><span>Choisir l'affichage. La vue « Mois » n'existe pas sur un téléphone.</span></li>
@@ -126,6 +126,60 @@
             <figcaption>Écran Agenda, sur l'organisation d'exemple. Les dates sont fictives.</figcaption>
           </figure>
           <p class="note">La colonne de droite liste les phases, puis les dates clés de la période. Un liseré marque la phase en cours.</p>
+          <p>Une <strong>réunion</strong> appartient à l'agenda d'un périmètre, ou à l'agenda global de l'activité, que tiennent ses admins. Vous créez les réunions de vos périmètres : un titre, un jour, une heure de début et de fin, un lieu, un lien de visio, une description et des tâches liées. Une réunion peut durer plusieurs jours, un mois au plus. Les horaires suivent le fuseau de votre organisation.</p>
+          <p>Une réunion <strong>convoque</strong> tout le périmètre, toute l'équipe de l'activité, ou des personnes choisies dans l'équipe. Chaque personne convoquée reçoit un mail, deux minutes plus tard, avec un fichier qui ajoute la réunion à son agenda. Elle répond dans l'espace organisateur. Une réponse envoyée depuis Outlook ou Google n'y arrive pas.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouvelle réunion</span></span><span>Créer une réunion dans l'agenda d'un de vos périmètres. Le menu « Autres actions » d'une tâche propose aussi « Planifier une réunion », avec la tâche déjà liée.</span></li>
+            <li><span><span class="libelle">Présent·e</span><span class="libelle">Absent·e</span><span class="libelle">Peut-être</span></span><span>Répondre à une convocation, dans le volet de la réunion. Vous changez votre réponse à tout moment.</span></li>
+            <li><span><span class="libelle">Modifier</span></span><span>Changer une réunion de votre périmètre. Un changement d'horaire, de lieu ou de lien envoie une nouvelle version aux personnes convoquées.</span></li>
+            <li><span><span class="libelle">Annuler la réunion</span></span><span>Garder la réunion dans l'agenda, marquée annulée. Chaque personne convoquée reçoit un mail d'annulation.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/reunion.webp" data-mobile="../captures/mobile/reunion.webp" width="1440" height="900" loading="lazy" alt="Volet d'une réunion : l'horaire, le lieu, le bouton de visio, la tâche liée, la réponse de la personne et les réponses de l'équipe." />
+            <figcaption>Le volet d'une réunion du pôle Bénévoles, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p>Un <strong>sondage de dates</strong> propose plusieurs créneaux pour une réunion à venir. Un créneau est un jour, avec un horaire facultatif. Les personnes visées répondent à chaque créneau : oui, si besoin ou non. Une notification les prévient. Quand les réponses suffisent, une personne qui écrit dans l'agenda retient un créneau et crée la réunion, déjà remplie avec l'horaire et les personnes du sondage.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouveau</span></span><span>Ouvrir un sondage depuis le panneau « Sondages de dates » de l'agenda.</span></li>
+            <li><span><span class="libelle">Oui</span><span class="libelle">Si besoin</span><span class="libelle">Non</span></span><span>Répondre à chaque créneau, puis « Enregistrer mes réponses ». Vous changez vos réponses tant que le sondage est ouvert.</span></li>
+            <li><span><span class="libelle">Retenir ce créneau</span></span><span>Clore le sondage sur un créneau. Les réponses ne changent plus, et « Créer la réunion » prépare la réunion.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/sondage.webp" data-mobile="../captures/mobile/sondage.webp" width="1440" height="900" loading="lazy" alt="Volet d'un sondage de dates : trois créneaux avec leurs décomptes de réponses, et les boutons Oui, Si besoin et Non sous chacun." />
+            <figcaption>Un sondage de dates du pôle Bénévoles, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p class="note">Les personnes qui écrivent dans l'agenda d'une réunion lisent les réponses une à une. Une personne qui consulte un autre périmètre voit le titre et l'horaire de ses réunions, sans le lieu, le lien de visio ni la description. Quand vous quittez un périmètre, vous quittez aussi ses réunions à venir.</p>
+        </article>
+
+        <article class="verre ecran" id="e-programme">
+          <div class="ecran-tete"><h3>Programme</h3><span class="route">/&lt;activité&gt;/programme</span></div>
+          <p>Le programme décrit le déroulé du jour J, ou des jours J, de la période. Il se compose de <strong>séquences</strong> : un match, un accueil, une remise des prix. Une séquence porte un titre, un jour, une heure de début et de fin, un lieu facultatif et une description. Elle appartient à un périmètre, ou à toute l'activité quand ses admins la créent.</p>
+          <p>Chaque séquence place des personnes, cinquante au plus : des personnes de l'équipe, ou des bénévoles qui n'ont pas de compte. Une personne placée est <strong>responsable</strong> de la séquence ou vient en <strong>renfort</strong>. Vous créez et modifiez les séquences de vos périmètres. Les lieux appartiennent aux admins de l'activité.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Grille</span><span class="libelle">Par lieu</span><span class="libelle">Mon jour J</span></span><span>Choisir l'affichage. La grille range les séquences d'un jour par lieu et par heure ; elle n'existe pas sur un téléphone. « Mon jour J » liste les seules séquences où vous êtes placé·e.</span></li>
+            <li><span><span class="libelle">Nouvelle séquence</span></span><span>Ajouter une séquence au programme d'un de vos périmètres, puis y placer des personnes.</span></li>
+            <li><span><span class="libelle">Imprimer</span></span><span>Imprimer le programme du jour affiché, sans le menu ni les boutons.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/programme.webp" data-mobile="../captures/mobile/programme.webp" width="1440" height="900" loading="lazy" alt="Écran Programme en grille : une colonne par lieu, les heures à gauche, et les séquences avec leur périmètre et leurs personnes placées." />
+            <figcaption>Le programme du jour J en grille, sur l'organisation d'exemple. Les noms sont fictifs.</figcaption>
+          </figure>
+          <p>Une séquence s'ouvre dans un volet. Le volet indique l'horaire, le lieu, le périmètre et les personnes placées avec leur rôle. La page d'un périmètre liste aussi ses séquences, dans le panneau « Jour J ».</p>
+          <figure>
+            <img src="../captures/programme-moi.webp" data-mobile="../captures/mobile/programme-moi.webp" width="1440" height="900" loading="lazy" alt="Vue Mon jour J : les séquences de la référente, avec leur horaire, leur lieu et son rôle." />
+            <figcaption>La vue « Mon jour J » d'une référente du pôle Bénévoles.</figcaption>
+          </figure>
+          <p class="note">Vos séquences entrent dans votre abonnement à l'agenda, décrit dans vos <a href="#e-preferences">Préférences</a>. Elles n'envoient aucun mail : le programme sert de repère, pas de convocation.</p>
+        </article>
+
+        <article class="verre ecran" id="e-benevoles">
+          <div class="ecran-tete"><h3>Bénévoles</h3><span class="route">/&lt;activité&gt;/benevoles</span></div>
+          <p>L'écran « Bénévoles » liste les personnes qui aident l'activité sans compte dans l'application. Chaque fiche porte un nom, et parfois un téléphone, une adresse et une note. Elle indique le nombre de séquences où la personne est placée.</p>
+          <p>Vous créez une fiche avec l'accord de la personne, puis vous la placez dans les séquences de vos périmètres. Vous modifiez les fiches que vous avez créées. Les admins de l'activité modifient et suppriment toutes les fiches.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouvelle fiche</span></span><span>Enregistrer une ou un bénévole. La case d'accord est obligatoire.</span></li>
+          </ul>
+          <p class="note">Les coordonnées d'une fiche se lisent par les admins de l'activité, par la personne qui l'a créée et par les personnes d'un périmètre où la ou le bénévole est placé·e. Ailleurs, la cellule indique « Réservé ». Le serveur supprime une fiche qui ne sert plus depuis deux ans.</p>
         </article>
 
         <article class="verre ecran" id="e-tous-les-perimetres">
@@ -168,6 +222,7 @@
             <li><span><span class="libelle">Par échéance</span><span class="libelle">Par phase</span><span class="libelle">Par fiche</span></span><span>Choisir le regroupement des tâches. Votre navigateur garde ce choix. Le regroupement par fiche demande d'être affecté·e au périmètre.</span></li>
             <li><span><span class="libelle">Nouvelle tâche</span></span><span>Ajouter une tâche à votre périmètre : titre, description, échéance et fiche liée. La case « Je m'en occupe » est cochée par défaut.</span></li>
             <li><span><span class="libelle">Modifier</span></span><span>Corriger une tâche existante depuis le menu « Autres actions » de sa carte.</span></li>
+            <li><span><span class="libelle">Prochaines réunions</span></span><span>Lire les cinq prochaines réunions du périmètre dans la colonne de droite, et en créer une avec « Nouvelle ».</span></li>
             <li><span><span class="libelle">Proposer une personne</span></span><span>Proposer à un admin une personne qui veut rejoindre votre périmètre : son prénom et son nom, son adresse, et un mot facultatif. Un admin examine la proposition, puis invite la personne. Elle ne reçoit aucun mail avant sa décision.</span></li>
           </ul>
           <p class="note">Ces actions sont ouvertes aux personnes affectées au périmètre pour la période consultée. Une période archivée passe ses tâches en lecture seule.</p>
@@ -237,6 +292,11 @@
             <figcaption>Écran Préférences, sur l'organisation d'exemple.</figcaption>
           </figure>
           <figure>
+            <img src="../captures/preferences-agenda.webp" data-mobile="../captures/mobile/preferences-agenda.webp" width="1440" height="900" loading="lazy" alt="Panneau Votre agenda dans Outlook, Google ou Apple : le choix des périmètres, de l'agenda global et des échéances, et le bouton Créer mon adresse." />
+            <figcaption>L'abonnement à l'agenda, dans les préférences.</figcaption>
+          </figure>
+          <p class="note">L'adresse de votre abonnement s'affiche une seule fois, à sa création : copiez-la aussitôt. Elle donne accès au contenu de votre agenda : gardez-la pour vous. Relaytour revérifie vos droits à chaque lecture : un périmètre que vous quittez disparaît de votre agenda. Google Agenda relit une adresse à son rythme, parfois une seule fois par jour.</p>
+          <figure>
             <img src="../captures/preferences-organigramme.webp" data-mobile="../captures/mobile/preferences-organigramme.webp" width="1440" height="900" loading="lazy" alt="Panneau Votre adresse dans l'organigramme : l'interrupteur qui accepte l'affichage de votre adresse." />
             <figcaption>L'accord pour l'organigramme, dans les préférences.</figcaption>
           </figure>
@@ -246,6 +306,8 @@
             <li><span><span class="libelle">Modification de vos tâches</span></span><span>Recevoir un mail quand une autre personne modifie une tâche qui vous est assignée.</span></li>
             <li><span><span class="libelle">Échéances</span></span><span>Recevoir un mail quand une de vos tâches arrive à échéance ou passe en retard.</span></li>
             <li><span><span class="libelle">Demandes pour rejoindre l'équipe</span></span><span>Recevoir un mail, une fois par heure au plus, quand une activité que vous administrez reçoit des demandes. Ce réglage s'affiche pour les admins seulement.</span></li>
+            <li><span><span class="libelle">Créer mon adresse</span></span><span>Abonner votre agenda personnel (Outlook, Google, Apple) à Relaytour, en lecture seule. Vous choisissez vos périmètres, l'agenda global de vos activités et les échéances des tâches qui vous sont assignées. Vos convocations y figurent toujours.</span></li>
+            <li><span><span class="libelle">Nouvelle adresse</span><span class="libelle">Révoquer</span></span><span>Remplacer ou fermer l'adresse de votre abonnement. L'ancienne adresse cesse aussitôt de servir.</span></li>
             <li><span><span class="libelle">Afficher mon adresse dans l'organigramme</span></span><span>Accepter que votre adresse s'affiche dans l'organigramme des activités de votre organisation, si leurs admins l'autorisent. Seules les personnes de l'activité la lisent. Vous retirez votre accord à tout moment.</span></li>
             <li><span><span class="libelle">Activité de vos périmètres</span></span><span>Être prévenu·e par la cloche quand une autre personne crée, modifie ou termine une tâche ou une fiche de vos périmètres. Aucun mail ne part pour ces notifications.</span></li>
           </ul>

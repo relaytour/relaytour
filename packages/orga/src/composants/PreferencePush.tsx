@@ -57,6 +57,7 @@ const MODIFIER_PUSH = graphql(`
     $pushEcheances: Boolean
     $pushDemandes: Boolean
     $pushEquipe: Boolean
+    $pushAgenda: Boolean
   ) {
     modifierPreferencesNotification(
       frequenceResume: $frequenceResume
@@ -66,11 +67,13 @@ const MODIFIER_PUSH = graphql(`
       pushEcheances: $pushEcheances
       pushDemandes: $pushDemandes
       pushEquipe: $pushEquipe
+      pushAgenda: $pushAgenda
     ) {
       pushTaches
       pushEcheances
       pushDemandes
       pushEquipe
+      pushAgenda
     }
   }
 `)
@@ -83,9 +86,11 @@ export interface PreferencesPourPush {
   pushEcheances: boolean
   pushDemandes: boolean
   pushEquipe: boolean
+  pushAgenda: boolean
 }
 
-type Famille = 'pushTaches' | 'pushEcheances' | 'pushDemandes' | 'pushEquipe'
+type Famille =
+  'pushTaches' | 'pushEcheances' | 'pushAgenda' | 'pushDemandes' | 'pushEquipe'
 
 /** Les familles d'admin ne s'affichent qu'aux personnes qui administrent (ADR 0033). */
 const FAMILLES_ADMIN: Famille[] = ['pushDemandes', 'pushEquipe']
@@ -102,6 +107,12 @@ const FAMILLES: { cle: Famille; titre: string; detail: string }[] = [
     titre: 'Échéances',
     detail:
       'Une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou elle est en retard.',
+  },
+  {
+    cle: 'pushAgenda',
+    titre: 'Vos réunions',
+    detail:
+      'Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule.',
   },
   {
     cle: 'pushDemandes',
