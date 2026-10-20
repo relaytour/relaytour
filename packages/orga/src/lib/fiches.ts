@@ -29,6 +29,19 @@ export const FICHE = graphql(`
         nom
         couleur
       }
+      concerneGroupes
+      connexions {
+        par
+        groupe
+        tacheId
+        masquee
+        perimetre {
+          id
+          slug
+          nom
+          couleur
+        }
+      }
     }
   }
 `)

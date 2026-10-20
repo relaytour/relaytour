@@ -5,6 +5,24 @@
   "version": "0.17.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-20-orga-une-fiche-d-un-autre-perimetre-peut-concerner-aussi-le-votre",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une fiche d’un autre périmètre peut concerner aussi le vôtre",
+            "texte": "Une fiche peut concerner d’autres périmètres que le sien. Sa page indique les périmètres et les groupes qu’elle concerne. Dans un périmètre concerné, le panneau « Fiches connexes » la présente en lecture seule, avec son périmètre d’origine. Les référentes et référents de ce périmètre la masquent quand elle ne leur sert pas, puis l’affichent de nouveau. Dans le texte d’une fiche, une mention @périmètre ou @groupe:clé s’affiche comme une étiquette ; celle d’un groupe liste ses périmètres.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.17.0",
       "notes": [
         {

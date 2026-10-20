@@ -17,6 +17,7 @@ import { useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router'
 
 import EtiquettePerimetre from '../composants/EtiquettePerimetre'
+import ConnexionsFiche from '../composants/ConnexionsFiche'
 import Markdown from '../composants/Markdown'
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
 import Titre from '../composants/Titre'
@@ -31,6 +32,7 @@ import {
 import { relireLesVues } from '../lib/rafraichissement'
 import { EDITION_COURANTE } from '../lib/requetes'
 import { useActivite } from '../lib/activite'
+import { useMentions } from '../lib/useMentions'
 
 function dateHeure(iso: string) {
   return new Date(iso).toLocaleString('fr-FR', {
@@ -44,6 +46,7 @@ function dateHeure(iso: string) {
 
 export default function Fiche() {
   const { lien, gere } = useActivite()
+  const mentions = useMentions()
   const { slug = '' } = useParams()
   const navigate = useNavigate()
   const { message } = App.useApp()
@@ -139,6 +142,10 @@ export default function Fiche() {
               <dl className="rt-description">
                 <dt>Périmètre</dt>
                 <dd>{fiche.perimetre?.nom ?? 'Fiche commune'}</dd>
+                <ConnexionsFiche
+                  groupes={fiche.concerneGroupes}
+                  connexions={fiche.connexions}
+                />
                 <dt>Source</dt>
                 <dd>{fiche.source === 'GIT' ? 'Dépôt' : 'Application'}</dd>
                 <dt>Identifiant</dt>
@@ -234,7 +241,7 @@ export default function Fiche() {
             padding: '30px 36px 34px',
           }}
         >
-          <Markdown contenu={fiche.contenu} />
+          <Markdown contenu={fiche.contenu} mentions={mentions} />
         </article>
       </DeuxColonnes>
 
@@ -260,7 +267,7 @@ export default function Fiche() {
             <Typography.Title level={4}>
               {versionAffichee.titre}
             </Typography.Title>
-            <Markdown contenu={versionAffichee.contenu} />
+            <Markdown contenu={versionAffichee.contenu} mentions={mentions} />
           </>
         ) : (versions.data?.fiche?.versions ?? []).length === 0 ? (
           <Empty />
