@@ -19,6 +19,19 @@
             "texte": "Une fiche peut concerner d’autres périmètres que le sien. Sa page indique les périmètres et les groupes qu’elle concerne. Dans un périmètre concerné, le panneau « Fiches connexes » la présente en lecture seule, avec son périmètre d’origine. Les référentes et référents de ce périmètre la masquent quand elle ne leur sert pas, puis l’affichent de nouveau. Dans le texte d’une fiche, une mention @périmètre ou @groupe:clé s’affiche comme une étiquette ; celle d’un groupe liste ses périmètres.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-20-orga-l-editeur-de-fiche-propose-une-barre-de-mise-en-forme-et-un-",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L’éditeur de fiche s’ouvre en mode visuel, avec une barre de mise en forme et un guide Markdown",
+            "texte": "En mode visuel, vous écrivez directement dans la fiche telle qu’elle s’affiche. Le mode Markdown montre le texte source, et votre navigateur garde votre choix. Une barre au-dessus du texte met en gras ou en italique, pose un titre, une liste, une case à cocher, un lien ou un tableau. Le bouton « Aide » ouvre un guide de la syntaxe Markdown des fiches, sans quitter l’éditeur.",
+            "migration": null
+          }
         }
       ]
     },
