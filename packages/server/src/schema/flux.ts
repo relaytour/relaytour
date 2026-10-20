@@ -17,7 +17,7 @@ import { builder } from './builder.ts'
 
 const EntiteChangeeEnum = builder.enumType('EntiteChangee', {
   description:
-    'Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0038).',
+    'Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0040).',
   values: [
     'TACHE',
     'FICHE',

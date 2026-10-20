@@ -374,7 +374,7 @@ describe('abonnement personnel', () => {
   })
 })
 
-describe('séquences du programme (ADR 0038)', () => {
+describe('séquences du programme (ADR 0040)', () => {
   it('ajoute les séquences où la personne est placée, avec son rôle', async () => {
     const sequence = await prisma.sequence.create({
       data: {

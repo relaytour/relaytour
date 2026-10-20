@@ -441,7 +441,7 @@ type ElementAgenda {
 }
 
 """
-Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0038).
+Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0040).
 """
 enum EntiteChangee {
   AGENDA
@@ -1914,7 +1914,7 @@ type Score {
   tachesRealisees: Int!
 }
 
-"""Une séquence du programme du jour J (ADR 0038)."""
+"""Une séquence du programme du jour J (ADR 0040)."""
 type Sequence {
   debut: DateTime!
   description: String
