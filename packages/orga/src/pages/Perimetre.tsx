@@ -18,6 +18,7 @@ import ReunionFormulaire, {
   type NouvelleReunion,
 } from '../composants/ReunionFormulaire'
 import ReunionsDuPerimetre from '../composants/ReunionsDuPerimetre'
+import SequencesDuPerimetre from '../composants/SequencesDuPerimetre'
 import { Puces } from '../composants/Puces'
 import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
@@ -553,6 +554,13 @@ export default function Perimetre() {
                   personne.
                 </p>
               </Panneau>
+            )}
+
+            {editionId && (
+              <SequencesDuPerimetre
+                perimetreId={perimetre.id}
+                editionId={editionId}
+              />
             )}
 
             {editionId && (

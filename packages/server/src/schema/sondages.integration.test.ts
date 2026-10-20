@@ -56,7 +56,7 @@ const CHAMPS = `id titre statut peutModifier estParticipant aRepondu participant
 const CREER = `mutation ($e: ID!, $p: ID, $t: String!, $c: [CreneauSondageInput!]!, $cible: CibleConvocation!, $u: [ID!]) {
   creerSondage(editionId: $e, perimetreId: $p, titre: $t, creneaux: $c, cible: $cible, personneIds: $u) { ${CHAMPS} }
 }`
-const MODIFIER = `mutation ($id: ID!, $t: String!, $c: [CreneauSondageInput!]!, $v: Int) {
+const MODIFIER = `mutation ($id: ID!, $t: String!, $c: [CreneauSondageInput!]!, $v: Int!) {
   modifierSondage(id: $id, titre: $t, creneaux: $c, versionAttendue: $v) { ${CHAMPS} }
 }`
 const REPONDRE = `mutation ($id: ID!, $r: [ReponseSondageInput!]!) { repondreSondage(id: $id, reponses: $r) { ${CHAMPS} } }`
@@ -383,6 +383,7 @@ describe('sondage d’un périmètre', () => {
           id: sondage.id,
           t: 'Date du point',
           c: [{ id: premier!.id, jour: '2027-03-01' }],
+          v: 0,
         })
       )
     ).toBe('FORBIDDEN')
@@ -442,6 +443,92 @@ describe('sondage d’un périmètre', () => {
     ).toBe('FORBIDDEN')
   })
 
+  it('efface les réponses d’un créneau qui change de jour, pas d’un créneau déplacé', async () => {
+    const sondage = await sondageNatation()
+    const [premier, second, troisieme] = sondage.creneaux
+    donnees(
+      await executer(ids.nageuse, REPONDRE, {
+        id: sondage.id,
+        r: [
+          { creneauId: premier!.id, choix: 'OUI' },
+          { creneauId: second!.id, choix: 'OUI' },
+        ],
+      }),
+      'repondreSondage'
+    )
+    const modifie = donnees<Sondage>(
+      await executer(ids.referent, MODIFIER, {
+        id: sondage.id,
+        t: 'Date du point',
+        c: [
+          // Le premier créneau passe au 5 mars : une nouvelle proposition.
+          {
+            id: premier!.id,
+            jour: '2027-03-05',
+            heureDebut: '18:30',
+            heureFin: '20:00',
+          },
+          // Le second garde son jour et ses heures.
+          {
+            id: second!.id,
+            jour: second!.jour,
+            heureDebut: '18:30',
+            heureFin: '20:00',
+          },
+          { id: troisieme!.id, jour: troisieme!.jour },
+        ],
+        v: 0,
+      }),
+      'modifierSondage'
+    )
+    const parId = new Map(modifie.creneaux.map(c => [c.id, c]))
+    expect(parId.get(premier!.id)?.oui).toBe(0)
+    expect(parId.get(second!.id)?.oui).toBe(1)
+  })
+
+  it('ne se clôt qu’une fois, même sur deux demandes simultanées', async () => {
+    const sondage = await sondageNatation()
+    const [premier, second] = sondage.creneaux
+    const reponses = await Promise.all([
+      executer(ids.referent, CLORE, { id: sondage.id, c: premier!.id }),
+      executer(ids.referent, CLORE, { id: sondage.id, c: second!.id }),
+    ])
+    expect(reponses.map(code).sort()).toEqual(['CONFLIT_VERSION', undefined])
+    const lu = await prisma.sondage.findUniqueOrThrow({
+      where: { id: sondage.id },
+      select: { creneauRetenuId: true },
+    })
+    const gagnant = reponses.findIndex(r => code(r) === undefined)
+    expect(lu.creneauRetenuId).toBe([premier!.id, second!.id][gagnant])
+  })
+
+  it('refuse les réponses quand la période est archivée', async () => {
+    const sondage = await sondageNatation()
+    const { statut } = await prisma.edition.findUniqueOrThrow({
+      where: { id: ids.edition },
+      select: { statut: true },
+    })
+    await prisma.edition.update({
+      where: { id: ids.edition },
+      data: { statut: 'ARCHIVEE' },
+    })
+    try {
+      expect(
+        code(
+          await executer(ids.nageuse, REPONDRE, {
+            id: sondage.id,
+            r: [{ creneauId: sondage.creneaux[0]!.id, choix: 'OUI' }],
+          })
+        )
+      ).toBe('SAISIE_INVALIDE')
+    } finally {
+      await prisma.edition.update({
+        where: { id: ids.edition },
+        data: { statut },
+      })
+    }
+  })
+
   it('se supprime par une personne qui écrit dans le périmètre', async () => {
     const sondage = await sondageNatation()
     expect(
@@ -478,6 +565,40 @@ describe('sondage de l’agenda global', () => {
           .data as { sondage: { participantIds: string[] } }
       ).sondage.participantIds
     ).toHaveLength(4)
+  })
+
+  it('réserve les réponses nominatives aux personnes visées', async () => {
+    const sondage = donnees<Sondage>(
+      await executer(ids.adminActivite, CREER, {
+        e: ids.edition,
+        t: 'Date du bureau',
+        c: [{ jour: '2027-02-01' }],
+        cible: 'CHOIX',
+        u: [ids.referent],
+      }),
+      'creerSondage'
+    )
+    donnees(
+      await executer(ids.referent, REPONDRE, {
+        id: sondage.id,
+        r: [{ creneauId: sondage.creneaux[0]!.id, choix: 'OUI' }],
+      }),
+      'repondreSondage'
+    )
+    // La nageuse voit l'activité sans être visée : elle lit les décomptes, pas
+    // les noms.
+    const lu = donnees<Sondage>(
+      await executer(ids.nageuse, LIRE, { id: sondage.id }),
+      'sondage'
+    )
+    expect(lu.creneaux[0]).toMatchObject({ oui: 1, reponses: [] })
+    const vise = donnees<Sondage>(
+      await executer(ids.referent, LIRE, { id: sondage.id }),
+      'sondage'
+    )
+    expect(vise.creneaux[0]!.reponses).toEqual([
+      { personneId: ids.referent, choix: 'OUI' },
+    ])
   })
 
   it('reste fermé aux référents en écriture et aux personnes extérieures', async () => {
