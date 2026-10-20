@@ -498,6 +498,10 @@ builder.mutationFields(t => {
         perimetreId: t.arg.id({
           description: 'Le périmètre ; sans valeur, l’agenda global.',
         }),
+        sondageId: t.arg.id({
+          description:
+            'Le sondage clos dont la réunion découle, du même agenda (ADR 0037).',
+        }),
         ...champsSaisis,
       },
       resolve: async (_root, args, ctx) => {
@@ -506,6 +510,25 @@ builder.mutationFields(t => {
           perimetreId: args.perimetreId ? String(args.perimetreId) : null,
         }
         const { activiteId } = await exigerEcritureReunion(ctx, lieu)
+        // Un sondage clos du même agenda, sans réunion encore, reçoit le lien.
+        const sondageId = args.sondageId ? String(args.sondageId) : null
+        if (sondageId !== null) {
+          const sondage = await prisma.sondage.findFirst({
+            where: {
+              id: sondageId,
+              organisationId: ctx.organisation!.id,
+              editionId: lieu.editionId,
+              perimetreId: lieu.perimetreId,
+            },
+            select: { statut: true, reunionId: true },
+          })
+          if (sondage === null) throw accesRefuse()
+          if (sondage.statut !== 'CLOS' || sondage.reunionId !== null) {
+            throw erreurSaisie(
+              'Ce sondage doit être clos, et sans réunion créée.'
+            )
+          }
+        }
         const valides = await champsValides(ctx, args, { ...lieu, activiteId })
         const creee = await prisma.reunion.create({
           data: {
@@ -520,6 +543,9 @@ builder.mutationFields(t => {
             convocations: {
               create: valides.convoquees.map(userId => ({ userId })),
             },
+            ...(sondageId === null
+              ? {}
+              : { sondage: { connect: { id: sondageId } } }),
           },
           include: REUNION_CHARGEE,
         })

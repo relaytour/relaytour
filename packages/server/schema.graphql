@@ -205,6 +205,12 @@ type Changement {
   perimetreId: ID
 }
 
+enum ChoixSondage {
+  NON
+  OUI
+  SI_BESOIN
+}
+
 """
 Les personnes convoquées : tout le périmètre, toute l’équipe de l’activité, ou des personnes choisies dans l’équipe.
 """
@@ -272,6 +278,38 @@ type CouleursTheme {
   sol3: String!
   succes: String!
   succesClair: String!
+}
+
+type CreneauSondage {
+  """HH:MM, dans le fuseau de l’organisation."""
+  heureDebut: String
+  heureFin: String
+  id: ID!
+
+  """AAAA-MM-JJ."""
+  jour: String!
+  monChoix: ChoixSondage
+  non: Int!
+  oui: Int!
+
+  """
+  Les réponses nominatives, lues par les personnes visées et par celles qui écrivent dans l’agenda.
+  """
+  reponses: [ReponseSondage!]!
+  retenu: Boolean!
+  siBesoin: Int!
+}
+
+input CreneauSondageInput {
+  """HH:MM, ou rien."""
+  heureDebut: String
+
+  """HH:MM, ou rien."""
+  heureFin: String
+
+  """Un créneau existant, pour une modification."""
+  id: ID
+  jour: Date!
 }
 
 """
@@ -808,6 +846,11 @@ type Mutation {
   changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!, statutAttendu: StatutTache): Tache!
 
   """
+  Clôt un sondage sur le créneau retenu. La réunion se crée ensuite depuis ce créneau.
+  """
+  cloreSondage(creneauId: ID!, id: ID!): Sondage!
+
+  """
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
@@ -852,9 +895,23 @@ type Mutation {
 
     """Les personnes convoquées, pour la cible CHOIX."""
     personneIds: [ID!]
+
+    """Le sondage clos dont la réunion découle, du même agenda (ADR 0037)."""
+    sondageId: ID
     tacheIds: [ID!]
     titre: String!
   ): Reunion!
+  creerSondage(
+    cible: CibleConvocation!
+    creneaux: [CreneauSondageInput!]!
+    description: String
+    editionId: ID!
+
+    """Le périmètre ; sans valeur, l’agenda global."""
+    perimetreId: ID
+    personneIds: [ID!]
+    titre: String!
+  ): Sondage!
   creerTache(declinaison: DeclinaisonInput, description: String, echeance: Date, editionId: ID!, ficheId: ID, mAssigner: Boolean = false, perimetreId: ID!, titre: String!): Tache!
 
   """
@@ -1011,6 +1068,11 @@ type Mutation {
   ): Reunion!
 
   """
+  Change le titre, la description et les créneaux d’un sondage ouvert. Un créneau retiré perd ses réponses.
+  """
+  modifierSondage(creneaux: [CreneauSondageInput!]!, description: String, id: ID!, titre: String!, versionAttendue: Int): Sondage!
+
+  """
   Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
   """
   modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String, versionAttendue: Int): Tache!
@@ -1035,6 +1097,11 @@ type Mutation {
   La réponse de la personne connectée à sa convocation : présente, absente ou peut-être.
   """
   repondreConvocation(reponse: ReponseConvocation!, reunionId: ID!): Reunion!
+
+  """
+  Les réponses de la personne connectée, créneau par créneau. Un créneau absent garde sa réponse.
+  """
+  repondreSondage(id: ID!, reponses: [ReponseSondageInput!]!): Sondage!
 
   """
   Restaure une version : son contenu devient une nouvelle version. Avec `versionDeDepart`, la version courante lue dans l’historique, le serveur refuse de restaurer par-dessus une version enregistrée entre-temps (code `CONFLIT_VERSION`).
@@ -1064,6 +1131,11 @@ type Mutation {
   """
   supprimerCommentaire(id: ID!): FilTache!
   supprimerDateCle(id: ID!): Boolean!
+
+  """
+  Supprime un sondage et ses réponses. Une réunion déjà créée reste dans l’agenda.
+  """
+  supprimerSondage(id: ID!): Boolean!
 
   """
   Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.
@@ -1594,6 +1666,12 @@ type Query {
     """Un périmètre seulement. Sans valeur : toutes."""
     perimetreId: ID
   ): [Reunion!]!
+  sondage(id: ID!): Sondage!
+
+  """
+  Les sondages de dates d’une période que la personne lit, les plus récents d’abord.
+  """
+  sondages(editionId: ID!): [Sondage!]!
   tache(id: ID!): Tache!
   tachesAPrendre(editionId: ID!): [Tache!]!
   tousLesPerimetres(activiteId: ID): TousLesPerimetres!
@@ -1614,6 +1692,17 @@ enum ReponseConvocation {
   ABSENT
   PEUT_ETRE
   PRESENT
+}
+
+type ReponseSondage {
+  choix: ChoixSondage!
+  nom: String!
+  personneId: ID!
+}
+
+input ReponseSondageInput {
+  choix: ChoixSondage!
+  creneauId: ID!
 }
 
 type ReponsesReunion {
@@ -1706,6 +1795,34 @@ type Score {
   tachesRealisees: Int!
 }
 
+"""
+Un sondage de dates de l’agenda global d’une activité, ou de l’agenda d’un périmètre.
+"""
+type Sondage {
+  """Vrai si la personne connectée a répondu à chaque créneau."""
+  aRepondu: Boolean!
+  cible: CibleConvocation!
+  creneaux: [CreneauSondage!]!
+  description: String
+  editionId: ID!
+  estParticipant: Boolean!
+  id: ID!
+
+  """Le nombre de personnes visées."""
+  participants: Int!
+  perimetre: Perimetre
+  peutModifier: Boolean!
+
+  """Le nombre de personnes qui ont répondu à au moins un créneau."""
+  repondants: Int!
+
+  """La réunion créée depuis le sondage clos."""
+  reunionId: ID
+  statut: StatutSondage!
+  titre: String!
+  version: Int!
+}
+
 enum SorteAbonnement {
   ACTIVITE
   PERSONNEL
@@ -1777,6 +1894,11 @@ enum StatutOrganisation {
 enum StatutReunion {
   ANNULEE
   PREVUE
+}
+
+enum StatutSondage {
+  CLOS
+  OUVERT
 }
 
 enum StatutTache {
@@ -1901,6 +2023,7 @@ enum TypeNotification {
   REUNION_ANNULEE
   REUNION_CONVOQUEE
   REUNION_MODIFIEE
+  SONDAGE_OUVERT
   SOUHAIT_FORMULE
   TACHE_ASSIGNEE
   TACHE_COMMENTEE

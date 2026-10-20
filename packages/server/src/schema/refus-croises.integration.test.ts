@@ -38,6 +38,9 @@ const a = {
   dateCle: '',
   // Une réunion du périmètre, qui convoque la référente (ADR 0037).
   reunion: '',
+  // Un sondage de dates du périmètre, qui vise la référente (ADR 0037).
+  sondage: '',
+  creneau: '',
   affectation: '',
   souhait: '',
   demande: '',
@@ -329,6 +332,21 @@ beforeAll(async () => {
       },
     })
   ).id
+  const sondage = await prisma.sondage.create({
+    data: {
+      organisationId: a.org,
+      activiteId: a.activite,
+      editionId: a.edition,
+      perimetreId: a.perimetre,
+      titre: 'Date du point',
+      cible: 'PERIMETRE',
+      creneaux: { create: { jour: new Date('2027-03-01') } },
+      participants: { create: { userId: a.referente } },
+    },
+    include: { creneaux: true },
+  })
+  a.sondage = sondage.id
+  a.creneau = sondage.creneaux[0]!.id
   // Un commentaire de la référente sur la tâche (ADR 0029).
   a.commentaire = (
     await prisma.commentaireTache.create({
@@ -423,6 +441,9 @@ afterAll(async () => {
     where: { organisationId: { in: organisations } },
   })
   await prisma.dateCle.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
+  await prisma.sondage.deleteMany({
     where: { organisationId: { in: organisations } },
   })
   await prisma.reunion.deleteMany({
@@ -1094,7 +1115,54 @@ const CAS: Cas[] = [
     variables: () => ({ a: a.activite }),
     attente: INTERDIT,
   },
+  // Sondages de dates (ADR 0037).
+  {
+    operation: 'creerSondage',
+    query:
+      'mutation ($e: ID!, $p: ID) { creerSondage(editionId: $e, perimetreId: $p, titre: "Intrusion", creneaux: [{ jour: "2027-03-02" }], cible: PERIMETRE) { id } }',
+    variables: () => ({ e: a.edition, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'modifierSondage',
+    query:
+      'mutation ($id: ID!) { modifierSondage(id: $id, titre: "Intrusion", creneaux: [{ jour: "2027-03-02" }]) { id } }',
+    variables: () => ({ id: a.sondage }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'repondreSondage',
+    query:
+      'mutation ($id: ID!, $c: ID!) { repondreSondage(id: $id, reponses: [{ creneauId: $c, choix: NON }]) { id } }',
+    variables: () => ({ id: a.sondage, c: a.creneau }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'cloreSondage',
+    query:
+      'mutation ($id: ID!, $c: ID!) { cloreSondage(id: $id, creneauId: $c) { id } }',
+    variables: () => ({ id: a.sondage, c: a.creneau }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'supprimerSondage',
+    query: 'mutation ($id: ID!) { supprimerSondage(id: $id) }',
+    variables: () => ({ id: a.sondage }),
+    attente: INTERDIT,
+  },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  {
+    operation: 'sondages',
+    query: 'query ($e: ID!) { sondages(editionId: $e) { id titre } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'sondage',
+    query: 'query ($id: ID!) { sondage(id: $id) { id titre } }',
+    variables: () => ({ id: a.sondage }),
+    attente: INTERDIT,
+  },
   {
     operation: 'reunions',
     query: 'query ($e: ID!) { reunions(editionId: $e) { id titre lieu } }',
@@ -1335,6 +1403,19 @@ async function etatDeA() {
           orderBy: { id: 'asc' },
         }),
         prisma.abonnementAgenda.count({ where: { organisationId: a.org } }),
+        prisma.sondage.findMany({
+          where: { organisationId: a.org },
+          select: {
+            id: true,
+            titre: true,
+            statut: true,
+            version: true,
+            creneaux: {
+              select: { id: true, reponses: { select: { choix: true } } },
+            },
+          },
+          orderBy: { id: 'asc' },
+        }),
       ]),
     ])
   const invitation = await prisma.invitationOrganisation.findUnique({
@@ -1350,6 +1431,7 @@ async function etatDeA() {
     prisma.message.count({ where: { organisationId: b.org } }),
     prisma.reunion.count({ where: { organisationId: b.org } }),
     prisma.abonnementAgenda.count({ where: { organisationId: b.org } }),
+    prisma.sondage.count({ where: { organisationId: b.org } }),
     prisma.invitationOrganisation.count({ where: { organisationId: b.org } }),
     prisma.appartenance.count({ where: { organisationId: b.org } }),
     prisma.droitRedaction.count({ where: { organisationId: b.org } }),

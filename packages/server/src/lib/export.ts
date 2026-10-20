@@ -169,6 +169,31 @@ export async function construireExport(organisationId: string) {
     },
   })
 
+  // Les sondages de dates (ADR 0037), avec leurs créneaux et leurs réponses.
+  const sondages = await prisma.sondage.findMany({
+    where: { organisationId },
+    orderBy: [{ editionId: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+    include: {
+      activite: { select: { slug: true } },
+      edition: { select: { annee: true } },
+      perimetre: { select: { slug: true } },
+      creePar: { select: { email: true } },
+      participants: {
+        orderBy: { id: 'asc' },
+        include: { user: { select: { email: true } } },
+      },
+      creneaux: {
+        orderBy: { ordre: 'asc' },
+        include: {
+          reponses: {
+            orderBy: { id: 'asc' },
+            include: { user: { select: { email: true } } },
+          },
+        },
+      },
+    },
+  })
+
   const taches = await prisma.tache.findMany({
     where: { perimetre: { organisationId } },
     orderBy: [{ editionId: 'asc' }, { createdAt: 'asc' }],
@@ -353,6 +378,29 @@ export async function construireExport(organisationId: string) {
       description: d.description,
       creePar: d.creePar?.email ?? null,
       creeLe: d.createdAt.toISOString(),
+    })),
+    sondages: sondages.map(s => ({
+      activite: s.activite.slug,
+      periode: s.edition.annee,
+      perimetre: s.perimetre?.slug ?? null,
+      titre: s.titre,
+      description: s.description,
+      statut: s.statut,
+      cible: s.cible,
+      creePar: s.creePar?.email ?? null,
+      creeLe: s.createdAt.toISOString(),
+      closLe: s.closLe?.toISOString() ?? null,
+      participants: s.participants.map(p => p.user.email),
+      creneaux: s.creneaux.map(c => ({
+        jour: jour(c.jour),
+        heureDebut: c.heureDebut,
+        heureFin: c.heureFin,
+        retenu: s.creneauRetenuId === c.id,
+        reponses: c.reponses.map(r => ({
+          email: r.user.email,
+          choix: r.choix,
+        })),
+      })),
     })),
     reunions: reunions.map(r => ({
       activite: r.activite.slug,
