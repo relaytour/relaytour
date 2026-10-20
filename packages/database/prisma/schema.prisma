@@ -1089,6 +1089,7 @@ model AbonnementPush {
 enum FournisseurFichiers {
   SHAREPOINT
   GOOGLE_DRIVE
+  DROPBOX
 }
 
 // COMPTE : un admin se connecte avec son compte, par OAuth ; le secret gardé est

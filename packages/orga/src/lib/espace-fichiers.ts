@@ -241,6 +241,7 @@ export const DELIER_DOSSIER = graphql(`
 export const NOMS_FOURNISSEURS: Record<string, string> = {
   SHAREPOINT: 'SharePoint',
   GOOGLE_DRIVE: 'Google Drive',
+  DROPBOX: 'Dropbox',
 }
 
 /** L'icône d'un fichier, selon ce que la liseuse en affiche. */

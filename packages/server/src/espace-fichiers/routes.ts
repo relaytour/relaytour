@@ -11,8 +11,10 @@ import { journal } from '../lib/journal.ts'
 import { cheminValide, disposition, formatApercu, typeServi } from './chemin.ts'
 import { dossierLisible } from './droits.ts'
 import { cheminDeLExportSous, dansLExport } from './isolement.ts'
+import { echangerCodeDropbox, nomDuCompteDropbox } from './dropbox.ts'
 import { echangerCodeGoogle, nomDuCompteGoogle, type Jetons } from './google.ts'
 import {
+  configurationDropbox,
   configurationGoogle,
   configurationMicrosoft,
   enregistrerConnexion,
@@ -111,6 +113,14 @@ const CONNECTEURS: Record<string, ConnecteurOAuth> = {
       return c === null ? null : echangerCodeGoogle(c, code, verificateur)
     },
     nomDuCompte: nomDuCompteGoogle,
+  },
+  dropbox: {
+    fournisseur: 'DROPBOX',
+    echanger: async (code, verificateur) => {
+      const c = await configurationDropbox()
+      return c === null ? null : echangerCodeDropbox(c, code, verificateur)
+    },
+    nomDuCompte: nomDuCompteDropbox,
   },
 }
 

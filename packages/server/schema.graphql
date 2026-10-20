@@ -545,6 +545,7 @@ type FormulaireRejoindre {
 }
 
 enum FournisseurFichiers {
+  DROPBOX
   GOOGLE_DRIVE
   SHAREPOINT
 }

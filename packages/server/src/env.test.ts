@@ -196,4 +196,17 @@ describe('resoudreEnv', () => {
       })
     ).toThrow(/CLE_CHIFFREMENT_ESPACE_FICHIERS/)
   })
+
+  it('ouvre Dropbox avec ses deux valeurs et la clé de chiffrement', () => {
+    expect(() =>
+      resoudreEnv({ ...BASE, DROPBOX_CLIENT_SECRET: 'secret' })
+    ).toThrow(/DROPBOX_CLIENT_ID/)
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        DROPBOX_CLIENT_ID: 'cle',
+        DROPBOX_CLIENT_SECRET: 'secret',
+      })
+    ).toThrow(/CLE_CHIFFREMENT_ESPACE_FICHIERS/)
+  })
 })

@@ -10,6 +10,12 @@ import { sousVerrouOrganisation } from '../lib/limites.ts'
 
 import { convertibleParMicrosoft } from './chemin.ts'
 import {
+  convertibleParDropbox,
+  espaceDropbox,
+  rafraichirDropbox,
+  type ConfigurationDropbox,
+} from './dropbox.ts'
+import {
   espaceGoogleDrive,
   jetonCompteService,
   rafraichirGoogle,
@@ -73,6 +79,22 @@ export async function configurationGoogle(): Promise<ConfigurationGoogle | null>
   }
 }
 
+export async function configurationDropbox(): Promise<ConfigurationDropbox | null> {
+  const { env } = await import('../env.ts')
+  if (
+    env.DROPBOX_CLIENT_ID === undefined ||
+    env.DROPBOX_CLIENT_SECRET === undefined ||
+    lireCle(env.CLE_CHIFFREMENT_ESPACE_FICHIERS) === null
+  ) {
+    return null
+  }
+  return {
+    clientId: env.DROPBOX_CLIENT_ID,
+    clientSecret: env.DROPBOX_CLIENT_SECRET,
+    retour: `${env.ORIGINE_ORGA}${PREFIXE_ROUTES}/retour/dropbox`,
+  }
+}
+
 export type Methode = 'COMPTE' | 'COMPTE_SERVICE'
 
 /**
@@ -88,9 +110,10 @@ export async function connexionsPossibles(): Promise<
       { fournisseur: 'GOOGLE_DRIVE', methode: 'COMPTE_SERVICE' },
     ]
   }
-  const [microsoft, google, cle] = await Promise.all([
+  const [microsoft, google, dropbox, cle] = await Promise.all([
     configurationMicrosoft(),
     configurationGoogle(),
+    configurationDropbox(),
     cleDeChiffrement(),
   ])
   return [
@@ -108,6 +131,9 @@ export async function connexionsPossibles(): Promise<
             methode: 'COMPTE_SERVICE' as const,
           },
         ]),
+    ...(dropbox === null
+      ? []
+      : [{ fournisseur: 'DROPBOX' as const, methode: 'COMPTE' as const }]),
   ]
 }
 
@@ -179,6 +205,8 @@ export function convertitEnPdf(fournisseur: Fournisseur, nom: string): boolean {
       return convertibleParMicrosoft(nom)
     case 'GOOGLE_DRIVE':
       return false
+    case 'DROPBOX':
+      return convertibleParDropbox(nom)
   }
 }
 
@@ -301,6 +329,11 @@ async function obtenirJetons(
     if (configuration === null) throw new EspaceIndisponible()
     return rafraichir(configuration, secret)
   }
+  if (connexion.fournisseur === 'DROPBOX') {
+    const configuration = await configurationDropbox()
+    if (configuration === null) throw new EspaceIndisponible()
+    return rafraichirDropbox(configuration, secret)
+  }
   if (connexion.methode === 'COMPTE_SERVICE') {
     const jetons = await jetonCompteService(
       JSON.parse(secret) as CleCompteService
@@ -392,6 +425,8 @@ export async function ouvrirEspace(organisationId: string): Promise<{
         }),
         connexionId: connexion.id,
       }
+    case 'DROPBOX':
+      return { espace: espaceDropbox(jeton), connexionId: connexion.id }
   }
 }
 

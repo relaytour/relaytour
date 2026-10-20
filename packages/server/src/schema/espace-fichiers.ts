@@ -22,6 +22,7 @@ import {
   commencerConnexion,
   configurationMicrosoft,
   erreurEspace,
+  configurationDropbox,
   configurationGoogle,
   connexionsPossibles,
   enregistrerConnexion,
@@ -38,6 +39,7 @@ import {
   PARTAGES,
 } from '../espace-fichiers/google.ts'
 import { adresseAutorisation } from '../espace-fichiers/sharepoint.ts'
+import { adresseAutorisationDropbox } from '../espace-fichiers/dropbox.ts'
 import type { ElementEspace, EspaceFichiers } from '../espace-fichiers/types.ts'
 import type { AppContext } from '../context.ts'
 import { peutLireFiche } from '../lib/fiches.ts'
@@ -470,15 +472,18 @@ builder.mutationFields(t => ({
         fournisseur === 'SHAREPOINT' ? await configurationMicrosoft() : null
       const google =
         fournisseur === 'GOOGLE_DRIVE' ? await configurationGoogle() : null
-      if (microsoft === null && google === null) throw fermee()
+      const dropbox =
+        fournisseur === 'DROPBOX' ? await configurationDropbox() : null
+      if (microsoft === null && google === null && dropbox === null)
+        throw fermee()
       const { etat, defi } = await commencerConnexion({
         organisationId: ctx.organisation!.id,
         userId: ctx.personne!.id,
         fournisseur,
       })
-      return microsoft !== null
-        ? adresseAutorisation(microsoft, etat, defi)
-        : adresseAutorisationGoogle(google!, etat, defi)
+      if (microsoft !== null) return adresseAutorisation(microsoft, etat, defi)
+      if (google !== null) return adresseAutorisationGoogle(google, etat, defi)
+      return adresseAutorisationDropbox(dropbox!, etat, defi)
     },
   }),
 

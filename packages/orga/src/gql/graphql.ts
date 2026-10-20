@@ -75,6 +75,7 @@ export type FormulaireInput = {
 };
 
 export type FournisseurFichiers =
+  | 'DROPBOX'
   | 'GOOGLE_DRIVE'
   | 'SHAREPOINT';
 

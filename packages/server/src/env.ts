@@ -157,6 +157,10 @@ const EnvSchema = z
     // chiffrement : l'organisation apporte sa propre clé.
     GOOGLE_CLIENT_ID: optionnelle,
     GOOGLE_CLIENT_SECRET: optionnelle,
+    // Dropbox par le compte d'un admin : la clé et le secret de l'application
+    // Dropbox de l'exploitant.
+    DROPBOX_CLIENT_ID: optionnelle,
+    DROPBOX_CLIENT_SECRET: optionnelle,
     // Liste des modes d'emploi, liée depuis le menu du compte et le mail
     // d'invitation : un dossier ou une page. Les pages des rôles se placent dans
     // le même dossier. Un hébergeur qui modifie Relaytour y indique les siens.
@@ -193,6 +197,15 @@ const EnvSchema = z
           'MICROSOFT_CLIENT_ID et MICROSOFT_CLIENT_SECRET se renseignent ensemble.',
       })
     }
+    const dropbox = [v.DROPBOX_CLIENT_ID, v.DROPBOX_CLIENT_SECRET]
+    if (dropbox.some(Boolean) && !dropbox.every(Boolean)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['DROPBOX_CLIENT_ID'],
+        message:
+          'DROPBOX_CLIENT_ID et DROPBOX_CLIENT_SECRET se renseignent ensemble.',
+      })
+    }
     const google = [v.GOOGLE_CLIENT_ID, v.GOOGLE_CLIENT_SECRET]
     if (google.some(Boolean) && !google.every(Boolean)) {
       ctx.addIssue({
@@ -204,7 +217,8 @@ const EnvSchema = z
     }
     if (
       (v.MICROSOFT_CLIENT_ID !== undefined ||
-        v.GOOGLE_CLIENT_ID !== undefined) &&
+        v.GOOGLE_CLIENT_ID !== undefined ||
+        v.DROPBOX_CLIENT_ID !== undefined) &&
       v.CLE_CHIFFREMENT_ESPACE_FICHIERS === undefined
     ) {
       ctx.addIssue({

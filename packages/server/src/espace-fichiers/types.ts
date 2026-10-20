@@ -2,7 +2,7 @@
 // sait faire. Relaytour lit l'espace ; il n'y écrit que l'export des fiches.
 
 /** Fournisseurs connus du schéma. Un fournisseur s'ouvre par ses variables. */
-export type Fournisseur = 'SHAREPOINT' | 'GOOGLE_DRIVE'
+export type Fournisseur = 'SHAREPOINT' | 'GOOGLE_DRIVE' | 'DROPBOX'
 
 /** Jeton d'accès du fournisseur ; `forcer` le renouvelle. */
 export type Jeton = (forcer?: boolean) => Promise<string>
