@@ -131,6 +131,12 @@ Un seul mot par notion.
 | groupe | Catégorie de périmètre déclarée par l'activité dans son contenu. Le gabarit propose sport et pôle. |
 | pôle | Groupe de périmètres transverses (coordination, logistique, trésorerie…), proposé par défaut. Les pôles sont listés dans le `perimetres.yaml` de l'activité. |
 | phase | Partie de la période d'une activité, bornée en jours depuis son premier jour. L'activité déclare ses phases ; une tâche s'y range par son échéance, sans la déclarer (ADR 0025). |
+| agenda | Calendrier d'une activité pour une période : ses phases, ses dates clés, ses réunions et, en option, les échéances. L'agenda global appartient à l'activité ; chaque périmètre a aussi le sien (ADR 0037). |
+| date clé | Jour, ou suite de jours, qu'un admin de l'activité place dans l'agenda d'une période (ADR 0037). |
+| réunion | Rendez-vous de l'agenda global ou de l'agenda d'un périmètre, avec un horaire, un lieu et un lien de visio facultatifs. Elle ne se supprime pas, elle s'annule (ADR 0037). |
+| convocation | Appel d'une personne de l'équipe à une réunion. L'application l'envoie par mail avec un fichier iCalendar ; la personne répond dans l'application. Ne pas confondre avec une invitation en attente (ADR 0037). |
+| abonnement | Adresse secrète qui sert un agenda au format iCalendar, en lecture seule, à un agenda externe. Une personne a son abonnement personnel ; une activité peut avoir le sien (ADR 0037). Ne pas confondre avec l'abonnement d'un appareil aux notifications push. |
+| sondage | Choix d'un créneau pour une réunion : les personnes visées répondent oui, si besoin ou non à chaque créneau proposé (ADR 0037). |
 | référent·e | Personne membre de l'organisation, désignée pour un périmètre et une édition. |
 | affectation | Lien entre une personne, un périmètre et une édition. |
 | contact principal | Référent·e désigné·e par un admin comme première personne à solliciter pour un périmètre et une édition. Une information seulement, sans droit supplémentaire (ADR 0011). |
