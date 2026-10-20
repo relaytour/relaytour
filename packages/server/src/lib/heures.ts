@@ -99,15 +99,21 @@ function heureEnClair(heure: string): string {
 
 /**
  * L'horaire d'une réunion en clair, dans le fuseau de l'organisation : « lundi
- * 1 mars 2027, de 18 h 30 à 20 h ».
+ * 1 mars 2027, de 18 h 30 à 20 h », ou « du samedi 6 mars 2027 à 9 h au dimanche
+ * 7 mars 2027 à 17 h » pour une réunion de plusieurs jours.
  */
 export function horaireEnClair(debut: Date, fin: Date, fuseau: string): string {
-  const jour = new Intl.DateTimeFormat('fr-FR', {
+  const format = new Intl.DateTimeFormat('fr-FR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
     timeZone: fuseau,
-  }).format(debut)
-  return `${jour}, de ${heureEnClair(heureLocale(debut, fuseau).heure)} à ${heureEnClair(heureLocale(fin, fuseau).heure)}`
+  })
+  const du = heureLocale(debut, fuseau)
+  const au = heureLocale(fin, fuseau)
+  if (du.jour !== au.jour) {
+    return `du ${format.format(debut)} à ${heureEnClair(du.heure)} au ${format.format(fin)} à ${heureEnClair(au.heure)}`
+  }
+  return `${format.format(debut)}, de ${heureEnClair(du.heure)} à ${heureEnClair(au.heure)}`
 }
