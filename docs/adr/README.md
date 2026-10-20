@@ -38,5 +38,6 @@
 | [0034](0034-plafond-quotidien-des-mails.md) | Plafond quotidien des mails d'une installation | Acceptée, réalisée |
 | [0035](0035-connexion-uniforme-et-jeton-local.md) | Connexion à réponse uniforme et jeton d'administration local par défaut | Acceptée, réalisée |
 | [0036](0036-organigramme-d-une-activite.md) | Organigramme d'une activité | Acceptée, réalisée |
+| [0038](0038-fiches-et-espace-de-fichiers.md) | Fiches et espace de fichiers d'une organisation | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
