@@ -145,6 +145,90 @@ export async function construireExport(organisationId: string) {
     },
   })
 
+  // Les réunions de l'agenda (ADR 0037), avec leurs tâches et leurs convocations.
+  const reunions = await prisma.reunion.findMany({
+    where: { organisationId },
+    orderBy: [{ editionId: 'asc' }, { debut: 'asc' }, { id: 'asc' }],
+    include: {
+      activite: { select: { slug: true } },
+      edition: { select: { annee: true } },
+      perimetre: { select: { slug: true } },
+      creePar: { select: { email: true } },
+      taches: {
+        orderBy: { id: 'asc' },
+        include: {
+          tache: {
+            select: { titre: true, perimetre: { select: { slug: true } } },
+          },
+        },
+      },
+      convocations: {
+        orderBy: { id: 'asc' },
+        include: { user: { select: { email: true } } },
+      },
+    },
+  })
+
+  // Le programme du jour J (ADR 0040) : lieux, séquences avec leurs places, et
+  // fiches bénévoles.
+  const [lieux, sequences, benevoles] = await Promise.all([
+    prisma.lieu.findMany({
+      where: { organisationId },
+      orderBy: [{ activiteId: 'asc' }, { ordre: 'asc' }, { id: 'asc' }],
+      include: { activite: { select: { slug: true } } },
+    }),
+    prisma.sequence.findMany({
+      where: { organisationId },
+      orderBy: [{ editionId: 'asc' }, { debut: 'asc' }, { id: 'asc' }],
+      include: {
+        activite: { select: { slug: true } },
+        edition: { select: { annee: true } },
+        perimetre: { select: { slug: true } },
+        lieu: { select: { id: true, nom: true } },
+        places: {
+          orderBy: { id: 'asc' },
+          include: {
+            user: { select: { email: true } },
+            benevole: { select: { id: true, nom: true } },
+          },
+        },
+      },
+    }),
+    prisma.benevole.findMany({
+      where: { organisationId },
+      orderBy: [{ activiteId: 'asc' }, { nom: 'asc' }, { id: 'asc' }],
+      include: {
+        activite: { select: { slug: true } },
+        creePar: { select: { email: true } },
+      },
+    }),
+  ])
+
+  // Les sondages de dates (ADR 0037), avec leurs créneaux et leurs réponses.
+  const sondages = await prisma.sondage.findMany({
+    where: { organisationId },
+    orderBy: [{ editionId: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+    include: {
+      activite: { select: { slug: true } },
+      edition: { select: { annee: true } },
+      perimetre: { select: { slug: true } },
+      creePar: { select: { email: true } },
+      participants: {
+        orderBy: { id: 'asc' },
+        include: { user: { select: { email: true } } },
+      },
+      creneaux: {
+        orderBy: { ordre: 'asc' },
+        include: {
+          reponses: {
+            orderBy: { id: 'asc' },
+            include: { user: { select: { email: true } } },
+          },
+        },
+      },
+    },
+  })
+
   const taches = await prisma.tache.findMany({
     where: { perimetre: { organisationId } },
     orderBy: [{ editionId: 'asc' }, { createdAt: 'asc' }],
@@ -329,6 +413,91 @@ export async function construireExport(organisationId: string) {
       description: d.description,
       creePar: d.creePar?.email ?? null,
       creeLe: d.createdAt.toISOString(),
+    })),
+    // Deux lieux, ou deux fiches, peuvent porter le même nom : l'identifiant
+    // garde le lien exact avec les séquences, le nom reste pour la lecture.
+    lieux: lieux.map(l => ({
+      id: l.id,
+      activite: l.activite.slug,
+      nom: l.nom,
+      description: l.description,
+      ordre: l.ordre,
+      archive: l.archivedAt !== null,
+    })),
+    sequences: sequences.map(s => ({
+      activite: s.activite.slug,
+      periode: s.edition.annee,
+      perimetre: s.perimetre?.slug ?? null,
+      lieuId: s.lieu?.id ?? null,
+      lieu: s.lieu?.nom ?? null,
+      titre: s.titre,
+      description: s.description,
+      debut: s.debut.toISOString(),
+      fin: s.fin.toISOString(),
+      places: s.places.map(p => ({
+        role: p.role,
+        email: p.user?.email ?? null,
+        benevoleId: p.benevole?.id ?? null,
+        benevole: p.benevole?.nom ?? null,
+      })),
+    })),
+    benevoles: benevoles.map(b => ({
+      id: b.id,
+      activite: b.activite.slug,
+      nom: b.nom,
+      courriel: b.courriel,
+      telephone: b.telephone,
+      note: b.note,
+      accordLe: b.accordLe.toISOString(),
+      creePar: b.creePar?.email ?? null,
+    })),
+    sondages: sondages.map(s => ({
+      activite: s.activite.slug,
+      periode: s.edition.annee,
+      perimetre: s.perimetre?.slug ?? null,
+      titre: s.titre,
+      description: s.description,
+      statut: s.statut,
+      cible: s.cible,
+      creePar: s.creePar?.email ?? null,
+      creeLe: s.createdAt.toISOString(),
+      closLe: s.closLe?.toISOString() ?? null,
+      participants: s.participants.map(p => p.user.email),
+      creneaux: s.creneaux.map(c => ({
+        jour: jour(c.jour),
+        heureDebut: c.heureDebut,
+        heureFin: c.heureFin,
+        retenu: s.creneauRetenuId === c.id,
+        reponses: c.reponses.map(r => ({
+          email: r.user.email,
+          choix: r.choix,
+        })),
+      })),
+    })),
+    reunions: reunions.map(r => ({
+      activite: r.activite.slug,
+      periode: r.edition.annee,
+      perimetre: r.perimetre?.slug ?? null,
+      titre: r.titre,
+      debut: r.debut.toISOString(),
+      fin: r.fin.toISOString(),
+      lieu: r.lieu,
+      lienVisio: r.lienVisio,
+      description: r.description,
+      statut: r.statut,
+      cible: r.cible,
+      annuleeLe: r.annuleeLe?.toISOString() ?? null,
+      creePar: r.creePar?.email ?? null,
+      creeLe: r.createdAt.toISOString(),
+      taches: r.taches.map(t => ({
+        perimetre: t.tache.perimetre.slug,
+        titre: t.tache.titre,
+      })),
+      convocations: r.convocations.map(c => ({
+        email: c.user.email,
+        reponse: c.reponse,
+        reponduLe: c.reponduLe?.toISOString() ?? null,
+      })),
     })),
   }
 }
