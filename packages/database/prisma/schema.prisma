@@ -71,6 +71,7 @@ model Organisation {
   invitations             InvitationOrganisation[]
   datesCles               DateCle[]
   reunions                Reunion[]
+  abonnementsAgenda       AbonnementAgenda[]
 }
 
 // Image d'une organisation ou d'une activité (ADR 0009) : logo ou favicon. Le
@@ -243,7 +244,7 @@ model Activite {
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
-  organisation  Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  organisation  Organisation       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   editions      Edition[]
   perimetres    Perimetre[]
   fiches        Fiche[]
@@ -253,6 +254,7 @@ model Activite {
   notifications Notification[]
   datesCles     DateCle[]
   reunions      Reunion[]
+  abonnements   AbonnementAgenda[]
 
   @@unique([organisationId, slug])
 }
@@ -309,6 +311,8 @@ model User {
   datesClesCreees         DateCle[]                @relation("DateCleAuteur")
   reunionsCreees          Reunion[]                @relation("ReunionAuteur")
   convocations            ConvocationReunion[]
+  abonnementsAgenda       AbonnementAgenda[]       @relation("AbonnementPersonne")
+  abonnementsCrees        AbonnementAgenda[]       @relation("AbonnementAuteur")
 }
 
 model Session {
@@ -898,6 +902,56 @@ model ConvocationReunion {
   // Une convocation par personne, bornée par la réunion (invariant 18).
   @@unique([reunionId, userId])
   @@index([userId])
+}
+
+// Ce que sert un abonnement : l'agenda d'une personne, ou l'agenda global d'une
+// activité (ADR 0037).
+enum SorteAbonnement {
+  PERSONNEL
+  ACTIVITE
+}
+
+// Adresse secrète qui sert un agenda au format iCalendar, en lecture seule
+// (ADR 0037). Le jeton de l'adresse ne se garde pas : seule son empreinte SHA-256
+// le désigne. Une personne a au plus un abonnement actif par organisation, une
+// activité aussi : le code révoque l'ancien avant d'en créer un nouveau.
+model AbonnementAgenda {
+  id               String          @id @default(cuid())
+  organisationId   String
+  sorte            SorteAbonnement
+  // La personne d'un abonnement personnel.
+  userId           String?
+  // L'activité d'un abonnement d'activité.
+  activiteId       String?
+  empreinte        String          @db.Char(64)
+  // Les derniers caractères du jeton, pour reconnaître l'adresse à l'écran.
+  fin              String          @db.VarChar(8)
+  // Abonnement personnel : les périmètres choisis. Null : tous les périmètres
+  // que la personne lit.
+  perimetreIds     Json?
+  // Abonnement personnel : l'agenda global des activités, et les échéances des
+  // tâches assignées à la personne.
+  inclureGlobal    Boolean         @default(true)
+  inclureEcheances Boolean         @default(false)
+  // Dernière lecture par un agenda, posée au plus une fois par heure.
+  dernierAccesLe   DateTime?
+  revoqueLe        DateTime?
+  creeParId        String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  user         User?        @relation("AbonnementPersonne", fields: [userId], references: [id], onDelete: Cascade)
+  activite     Activite?    @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  creePar      User?        @relation("AbonnementAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+
+  // L'empreinte est unique dans son organisation (invariant 18) ; l'adresse ne
+  // porte pas l'organisation, d'où l'index sur l'empreinte seule.
+  @@unique([organisationId, empreinte])
+  @@index([empreinte])
+  @@index([userId])
+  @@index([activiteId])
+  @@index([creeParId])
 }
 
 enum TypeJournal {
