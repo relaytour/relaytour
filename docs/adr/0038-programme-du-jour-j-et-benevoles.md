@@ -34,8 +34,8 @@ Le mot « événement » désigne déjà une nature d'activité (ADR 0008). Ce c
 - Les admins de l'activité écrivent toute séquence. Une personne qui écrit dans un périmètre (ADR 0014) écrit les séquences de ce périmètre et y place des personnes.
 - Une période archivée passe en lecture seule.
 - Toute personne qui voit l'activité lit son programme, avec le nom des personnes placées dans chaque séquence. Une fiche bénévole n'y montre que son nom.
-- Les admins de l'activité et les personnes qui écrivent dans un périmètre de l'activité créent une fiche bénévole. Les admins de l'activité modifient et suppriment toute fiche ; la personne qui a créé une fiche la modifie aussi.
-- Les coordonnées d'une ou d'un bénévole (adresse, téléphone, note) se lisent par les admins de l'activité et par les personnes qui écrivent dans un périmètre où cette personne est placée. Elles ne sortent jamais du serveur dans une autre réponse (invariant 1).
+- Les admins de l'activité et les personnes qui écrivent dans un périmètre de l'activité créent une fiche bénévole. Les admins de l'activité modifient et suppriment toute fiche. La personne qui a créé une fiche la modifie aussi.
+- Les coordonnées d'une ou d'un bénévole (adresse, téléphone, note) se lisent par les admins de l'activité, par la personne qui a créé la fiche, et par les personnes qui écrivent dans un périmètre où cette personne est placée. Elles ne sortent jamais du serveur dans une autre réponse (invariant 1).
 
 ### Données personnelles des bénévoles
 
