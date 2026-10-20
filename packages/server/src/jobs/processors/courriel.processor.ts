@@ -79,7 +79,7 @@ export async function courrielProcessor(
     )
     return
   }
-  const { sujet, html, texte, desabonnement, repondreA } = message
+  const { sujet, html, texte, desabonnement, repondreA, icalEvent } = message
 
   // Plafond quotidien de l’installation (ADR 0034) : au-delà, le mail attend le
   // lendemain. Le job garde ses essais : un report n'en consomme aucun.
@@ -113,6 +113,7 @@ export async function courrielProcessor(
     texte,
     desabonnement,
     repondreA,
+    icalEvent,
   })
   if (issue === 'parti' && message.apresEnvoi !== undefined) {
     // Le mail est parti : un échec de la suite (date d'envoi, notification) se
@@ -159,6 +160,13 @@ async function organisationDuJob(
   donnees: CourrielJobData
 ): Promise<string | undefined> {
   if (donnees.organisationId !== undefined) return donnees.organisationId
+  if (donnees.reunionId !== undefined) {
+    const reunion = await prisma.reunion.findUnique({
+      where: { id: donnees.reunionId },
+      select: { organisationId: true },
+    })
+    return reunion?.organisationId
+  }
   if (donnees.tache === undefined) return undefined
   const tache = await prisma.tache.findUnique({
     where: { id: donnees.tache.tacheId },

@@ -25,6 +25,6 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 - **Lecture des tâches.** Les tâches liées à une fiche se rangent par phase, comme celles d'un périmètre (ADR 0025). Une activité déclare des thèmes, et une tâche type en porte un : cette lecture complète les phases et la fiche liée, si l'usage le demande.
 - **Fiches.** Relecture avant publication sur les périmètres choisis par l'admin ; recherche en texte libre sur toutes les fiches accessibles ; liste des tâches qui s'appuient sur une fiche.
 - **Indicateur de présence.** La carte d'une tâche et l'éditeur d'une fiche indiquent qu'une autre personne les a ouverts. Cette information évite un conflit d'écriture avant l'enregistrement (ADR 0017). Elle montre aussi qui est connecté, et à quel moment : les référentes et référents décident si elle leur convient.
-- **Calendrier.** Vue calendrier des échéances par périmètre ; abonnement personnel au format iCal.
+- **Agenda.** Réunions récurrentes ; convocation d'une personne sans compte ; page de sondage ouverte à d'autres sujets que les dates (ADR 0037).
 - **Annuaire interne.** Liste des rôles de l'édition, réservée aux personnes connectées. Chacune choisit les coordonnées qu'elle partage.
 - **Traduction.** L'espace organisateur passe dans une autre langue pour les membres qui ne lisent pas le français.
