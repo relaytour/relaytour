@@ -14,6 +14,10 @@ import {
   PersonneNommee,
 } from '../composants/Personne'
 import ProposerPersonne from '../composants/ProposerPersonne'
+import ReunionFormulaire, {
+  type NouvelleReunion,
+} from '../composants/ReunionFormulaire'
+import ReunionsDuPerimetre from '../composants/ReunionsDuPerimetre'
 import { Puces } from '../composants/Puces'
 import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
@@ -168,6 +172,8 @@ export default function Perimetre() {
   const [enEdition, setEnEdition] = useState<
     TacheChampsFragment | 'nouvelle' | null
   >(null)
+  const [nouvelleReunion, setNouvelleReunion] =
+    useState<NouvelleReunion | null>(null)
 
   const perimetre = data?.perimetre
   const consultation = perimetre?.acces === 'CONSULTATION'
@@ -297,6 +303,13 @@ export default function Perimetre() {
           enEvidence={tache.id === tacheVisee}
           filOuvert={tache.id === tacheVisee && parametres.get('fil') === '1'}
           onModifier={setEnEdition}
+          onPlanifierReunion={t =>
+            setNouvelleReunion({
+              perimetreId: perimetre.id,
+              titre: `Réunion : ${t.titre}`,
+              tacheIds: [t.id],
+            })
+          }
           perimetresCibles={perimetresCibles}
           editionId={editionId}
         />
@@ -542,6 +555,17 @@ export default function Perimetre() {
               </Panneau>
             )}
 
+            {editionId && (
+              <ReunionsDuPerimetre
+                perimetreId={perimetre.id}
+                editionId={editionId}
+                peutModifier={perimetre.peutModifier}
+                onNouvelle={() =>
+                  setNouvelleReunion({ perimetreId: perimetre.id })
+                }
+              />
+            )}
+
             {perimetre.peutModifier && editionId && (
               <ProposerPersonne
                 perimetreId={perimetre.id}
@@ -638,6 +662,14 @@ export default function Perimetre() {
           estAdmin={gere}
           onFermer={() => setEnEdition(null)}
           onEnregistree={() => setEnEdition(null)}
+        />
+      )}
+      {editionId && perimetre.peutModifier && (
+        <ReunionFormulaire
+          editionId={editionId}
+          agendas={[{ perimetreId: perimetre.id, nom: perimetre.nom }]}
+          reunion={nouvelleReunion}
+          onFermer={() => setNouvelleReunion(null)}
         />
       )}
     </>

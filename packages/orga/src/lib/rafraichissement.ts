@@ -47,6 +47,9 @@ export const VUES_TACHES = [
   'FilTache',
   // L'agenda montre les échéances des tâches (ADR 0037).
   'Agenda',
+  'Reunions',
+  'ReunionsDuPerimetre',
+  'Reunion',
 ]
 
 /** Les requêtes relues, désignées par le nom de leur opération GraphQL. */

@@ -29,6 +29,7 @@ const PREFERENCES = graphql(`
       pushEcheances
       pushDemandes
       pushEquipe
+      pushAgenda
       applicationEquipe
       resumeAdmin
     }

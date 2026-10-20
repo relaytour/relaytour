@@ -16,10 +16,20 @@ import DateCleFormulaire, {
 } from '../composants/DateCleFormulaire'
 import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
+import ReunionDetail from '../composants/ReunionDetail'
+import ReunionFormulaire, {
+  type AgendaEcrit,
+  type NouvelleReunion,
+} from '../composants/ReunionFormulaire'
 import { PuceBascule, Puces, SeparateurPuces } from '../composants/Puces'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
-import type { AgendaQuery, SorteElementAgenda } from '../gql/graphql'
+import type {
+  AgendaQuery,
+  ReponseConvocation,
+  ReunionsQuery,
+  SorteElementAgenda,
+} from '../gql/graphql'
 import {
   couvre,
   decalerMois,
@@ -44,6 +54,7 @@ const AGENDA = graphql(`
       edition {
         id
         nom
+        statut
       }
       elements {
         cle
@@ -62,6 +73,41 @@ const AGENDA = graphql(`
   }
 `)
 
+const REUNIONS = graphql(`
+  query Reunions($editionId: ID!) {
+    reunions(editionId: $editionId) {
+      id
+      titre
+      jour
+      heureDebut
+      heureFin
+      statut
+      lieu
+      detailMasque
+      estConvoquee
+      maReponse
+      perimetre {
+        id
+      }
+    }
+  }
+`)
+
+// Les périmètres où la personne écrit pour la période : ses affectations.
+const MES_AFFECTATIONS = graphql(`
+  query AffectationsPourAgenda($editionId: ID!) {
+    moi {
+      id
+      affectations(editionId: $editionId) {
+        id
+        perimetre {
+          id
+        }
+      }
+    }
+  }
+`)
+
 const SUPPRIMER = graphql(`
   mutation SupprimerDateCle($id: ID!) {
     supprimerDateCle(id: $id)
@@ -69,17 +115,60 @@ const SUPPRIMER = graphql(`
 `)
 
 type Element = AgendaQuery['agenda']['elements'][number]
+type ReunionDeListe = ReunionsQuery['reunions'][number]
+type Sorte = SorteElementAgenda | 'REUNION'
+/** Une ligne de l'agenda : un élément du serveur, ou une réunion. */
+type Ligne = Omit<Element, 'sorte'> & {
+  sorte: Sorte
+  reunion?: ReunionDeListe
+}
 type Vue = 'liste' | 'mois'
 const VUES = ['liste', 'mois'] as const
 /** Clé de l'affichage de l'agenda, gardé dans le navigateur. */
 const CLE_VUE_AGENDA = 'relaytour.agenda.vue'
 
-const LIBELLES_SORTES: Record<SorteElementAgenda, string> = {
+const LIBELLES_SORTES: Record<Sorte, string> = {
   PHASE: 'Phase',
   DEBUT_PERIODE: 'Période',
   FIN_PERIODE: 'Période',
   DATE_CLE: 'Date clé',
+  REUNION: 'Réunion',
   ECHEANCE: 'Échéance',
+}
+
+// Dans un même jour : les repères de la période, puis les réunions par heure,
+// puis les échéances.
+const ORDRE: Record<Sorte, number> = {
+  PHASE: 0,
+  DEBUT_PERIODE: 1,
+  FIN_PERIODE: 2,
+  DATE_CLE: 3,
+  REUNION: 4,
+  ECHEANCE: 5,
+}
+
+const REPONSES: Record<ReponseConvocation, string> = {
+  PRESENT: 'présent·e',
+  ABSENT: 'absent·e',
+  PEUT_ETRE: 'peut-être',
+}
+
+/** Une réunion, en ligne de l'agenda. */
+function ligneDeReunion(r: ReunionDeListe): Ligne {
+  return {
+    cle: `reunion-${r.id}`,
+    sorte: 'REUNION',
+    titre: r.titre,
+    jour: r.jour,
+    jourFin: null,
+    description: null,
+    dateCleId: null,
+    version: null,
+    tacheId: null,
+    perimetreId: r.perimetre?.id ?? null,
+    faite: false,
+    reunion: r,
+  }
 }
 
 const majuscule = (texte: string) =>
@@ -107,10 +196,28 @@ export default function Agenda() {
   const aujourdhui = jourLocal()
   const [mois, setMois] = useState(aujourdhui.slice(0, 7))
   const [saisie, setSaisie] = useState<DateCleSaisie | 'nouvelle' | null>(null)
+  const [nouvelleReunion, setNouvelleReunion] =
+    useState<NouvelleReunion | null>(null)
+  const reunionOuverte = parametres.get('reunion')
+  const ouvrirReunion = (id: string | null) => {
+    const suite = new URLSearchParams(parametres)
+    if (id === null) suite.delete('reunion')
+    else suite.set('reunion', id)
+    setParametres(suite)
+  }
   const { data, error } = useQuery(AGENDA, {
     variables: { editionId: editionId ?? '', echeances },
     skip: editionId === undefined,
     fetchPolicy: 'cache-and-network',
+  })
+  const { data: reunions } = useQuery(REUNIONS, {
+    variables: { editionId: editionId ?? '' },
+    skip: editionId === undefined,
+    fetchPolicy: 'cache-and-network',
+  })
+  const { data: moi } = useQuery(MES_AFFECTATIONS, {
+    variables: { editionId: editionId ?? '' },
+    skip: editionId === undefined,
   })
   const [supprimer] = useMutation(SUPPRIMER, { refetchQueries: ['Agenda'] })
 
@@ -124,10 +231,44 @@ export default function Agenda() {
     () => new Map((perimetres?.perimetres ?? []).map(p => [p.id, p])),
     [perimetres]
   )
+  // Les éléments du serveur et les réunions, rangés par jour.
+  const lignes = useMemo(() => {
+    const toutes: Ligne[] = [
+      ...elements,
+      ...(reunions?.reunions ?? []).map(ligneDeReunion),
+    ]
+    return toutes.sort(
+      (a, b) =>
+        a.jour.localeCompare(b.jour) ||
+        ORDRE[a.sorte] - ORDRE[b.sorte] ||
+        (a.reunion?.heureDebut ?? '').localeCompare(
+          b.reunion?.heureDebut ?? ''
+        ) ||
+        a.titre.localeCompare(b.titre, 'fr')
+    )
+  }, [elements, reunions])
   const groupes = useMemo(
-    () => grouperParMoisAgenda(elements, passe ? null : aujourdhui),
-    [elements, passe, aujourdhui]
+    () => grouperParMoisAgenda(lignes, passe ? null : aujourdhui),
+    [lignes, passe, aujourdhui]
   )
+  // Les agendas où la personne écrit : l'agenda global et tous les périmètres pour
+  // un admin de l'activité, ses périmètres de la période sinon.
+  const agendasEcrits = useMemo((): AgendaEcrit[] => {
+    if (!agenda || agenda.edition.statut === 'ARCHIVEE') return []
+    const tous = (perimetres?.perimetres ?? []).filter(p => !p.archive)
+    if (agenda.peutGerer) {
+      return [
+        { perimetreId: null, nom: 'Agenda global de l’activité' },
+        ...tous.map(p => ({ perimetreId: p.id, nom: p.nom })),
+      ]
+    }
+    const miens = new Set(
+      (moi?.moi?.affectations ?? []).map(a => a.perimetre.id)
+    )
+    return tous
+      .filter(p => miens.has(p.id))
+      .map(p => ({ perimetreId: p.id, nom: p.nom }))
+  }, [agenda, perimetres, moi])
 
   if (editionId === undefined && courante && !courante.editionCourante) {
     return (
@@ -144,7 +285,7 @@ export default function Agenda() {
     )
   }
 
-  const confirmerSuppression = (element: Element) => {
+  const confirmerSuppression = (element: Ligne) => {
     if (!element.dateCleId) return
     const id = element.dateCleId
     void modal.confirm({
@@ -164,7 +305,7 @@ export default function Agenda() {
     })
   }
 
-  const modifier = (element: Element) =>
+  const modifier = (element: Ligne) =>
     element.dateCleId &&
     setSaisie({
       id: element.dateCleId,
@@ -175,7 +316,7 @@ export default function Agenda() {
       version: element.version ?? 0,
     })
 
-  const gestesDateCle = (element: Element) =>
+  const gestesDateCle = (element: Ligne) =>
     agenda?.peutGerer &&
     element.sorte === 'DATE_CLE' && (
       <span className="rt-agenda-gestes">
@@ -196,7 +337,19 @@ export default function Agenda() {
       </span>
     )
 
-  const titreElement = (element: Element) => {
+  const titreElement = (element: Ligne) => {
+    const reunion = element.reunion
+    if (reunion) {
+      return (
+        <button
+          type="button"
+          className={`rt-agenda-ouvrir${reunion.statut === 'ANNULEE' ? ' rt-agenda-annulee' : ''}`}
+          onClick={() => ouvrirReunion(reunion.id)}
+        >
+          {element.titre}
+        </button>
+      )
+    }
     const perimetre = element.perimetreId
       ? perimetreDe.get(element.perimetreId)
       : undefined
@@ -213,10 +366,11 @@ export default function Agenda() {
     return <span>{element.titre}</span>
   }
 
-  const ligne = (element: Element) => {
+  const ligne = (element: Ligne) => {
     const perimetre = element.perimetreId
       ? perimetreDe.get(element.perimetreId)
       : undefined
+    const reunion = element.reunion
     return (
       <li
         key={element.cle}
@@ -224,6 +378,7 @@ export default function Agenda() {
       >
         <span className="rt-agenda-jour">
           {libelleJours(element.jour, element.jourFin)}
+          {reunion && ` · ${reunion.heureDebut}`}
         </span>
         <span className="rt-agenda-corps">
           <span className="rt-agenda-sorte">
@@ -239,6 +394,21 @@ export default function Agenda() {
           {element.description && (
             <span className="rt-note rt-agenda-description">
               {element.description}
+            </span>
+          )}
+          {reunion && (
+            <span className="rt-note rt-agenda-description">
+              {[
+                reunion.statut === 'ANNULEE' ? 'Annulée' : null,
+                reunion.lieu,
+                reunion.estConvoquee
+                  ? reunion.maReponse
+                    ? `Vous êtes convoqué·e, ${REPONSES[reunion.maReponse]}`
+                    : 'Vous êtes convoqué·e, sans réponse'
+                  : null,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
             </span>
           )}
         </span>
@@ -270,7 +440,7 @@ export default function Agenda() {
       ))
     )
 
-  const elementsDuMois = elements.filter(
+  const elementsDuMois = lignes.filter(
     e => e.sorte !== 'PHASE' && toucheLeMois(e, mois)
   )
   const phasesDuMois = phases.filter(p => toucheLeMois(p, mois))
@@ -329,15 +499,29 @@ export default function Agenda() {
                   ].join(' ')}
                 >
                   <span className="rt-agenda-quantieme">{quantieme(jour)}</span>
-                  {duJour.map(e => (
-                    <span
-                      key={e.cle}
-                      className={`rt-agenda-evenement rt-agenda-${e.sorte.toLowerCase()}`}
-                      title={`${LIBELLES_SORTES[e.sorte]} · ${e.titre}`}
-                    >
-                      {e.titre}
-                    </span>
-                  ))}
+                  {duJour.map(e => {
+                    const reunion = e.reunion
+                    const classe = `rt-agenda-evenement rt-agenda-${e.sorte.toLowerCase()}`
+                    return reunion ? (
+                      <button
+                        key={e.cle}
+                        type="button"
+                        className={`${classe}${reunion.statut === 'ANNULEE' ? ' rt-agenda-annulee' : ''}`}
+                        title={`Réunion · ${reunion.heureDebut} · ${e.titre}`}
+                        onClick={() => ouvrirReunion(reunion.id)}
+                      >
+                        {reunion.heureDebut} {e.titre}
+                      </button>
+                    ) : (
+                      <span
+                        key={e.cle}
+                        className={classe}
+                        title={`${LIBELLES_SORTES[e.sorte]} · ${e.titre}`}
+                      >
+                        {e.titre}
+                      </span>
+                    )
+                  })}
                 </div>
               )
             })}
@@ -350,12 +534,27 @@ export default function Agenda() {
   return (
     <>
       <Titre
-        sousTitre={`Les phases, les dates clés et les échéances ${periode.de}.`}
+        sousTitre={`Les phases, les dates clés, les réunions et les échéances ${periode.de}.`}
         actions={
-          <ChoixEdition
-            valeur={editionId}
-            onChange={id => setParametres({ edition: id })}
-          />
+          <>
+            {agendasEcrits.length > 0 && (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  setNouvelleReunion({
+                    perimetreId: agendasEcrits[0]?.perimetreId ?? null,
+                  })
+                }
+              >
+                Nouvelle réunion
+              </Button>
+            )}
+            <ChoixEdition
+              valeur={editionId}
+              onChange={id => setParametres({ edition: id })}
+            />
+          </>
         }
       >
         Agenda
@@ -451,12 +650,25 @@ export default function Agenda() {
       )}
 
       {editionId && (
-        <DateCleFormulaire
-          editionId={editionId}
-          dateCle={saisie}
-          onFermer={() => setSaisie(null)}
-        />
+        <>
+          <DateCleFormulaire
+            editionId={editionId}
+            dateCle={saisie}
+            onFermer={() => setSaisie(null)}
+          />
+          <ReunionFormulaire
+            editionId={editionId}
+            agendas={agendasEcrits}
+            reunion={nouvelleReunion}
+            onFermer={() => setNouvelleReunion(null)}
+          />
+        </>
       )}
+      <ReunionDetail
+        reunionId={reunionOuverte}
+        agendas={agendasEcrits}
+        onFermer={() => ouvrirReunion(null)}
+      />
     </>
   )
 }

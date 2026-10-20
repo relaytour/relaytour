@@ -2662,3 +2662,92 @@ button.rt-ligne-declinaisons {
   min-width: 0;
   overflow-wrap: anywhere;
 }
+
+/* Volet d'une réunion de l'agenda (ADR 0037). */
+.rt-reunion {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rt-reunion p {
+  margin: 0;
+}
+
+.rt-reunion section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rt-reunion-quand {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--rt-mono);
+  font-size: 13.5px;
+}
+
+.rt-reunion-ligne {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.rt-reunion-description {
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+
+.rt-reunion-intertitre {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.rt-reunion-convocations {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-reunion-convocations li {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font-size: 13.5px;
+}
+
+/* Une réunion dans la liste de l'agenda : un bouton qui ouvre son volet. */
+.rt-agenda-ligne.rt-agenda-reunion {
+  border-inline-start-color: var(--rt-primaire);
+}
+
+.rt-agenda-ligne button.rt-agenda-ouvrir {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--rt-primaire);
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rt-agenda-ligne button.rt-agenda-ouvrir:hover {
+  text-decoration: underline;
+}
+
+.rt-agenda-evenement.rt-agenda-reunion {
+  background: var(--rt-primaire-clair);
+  cursor: pointer;
+}
+
+.rt-agenda-annulee {
+  text-decoration: line-through;
+  color: var(--rt-encre-55);
+}

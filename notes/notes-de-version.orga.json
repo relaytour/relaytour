@@ -19,6 +19,19 @@
             "texte": "L'écran « Agenda » présente les phases de la période, son premier et son dernier jour, les dates clés et les échéances de vos périmètres. Il s'affiche en liste, ou en mois sur un écran large. Les admins de l'activité y ajoutent les dates clés.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-20-orga-les-reunions-s-organisent-dans-l-agenda-avec-convocation-par",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les réunions s'organisent dans l'agenda, avec convocation par mail",
+            "texte": "Vous créez une réunion dans l'agenda de votre périmètre, avec un horaire, un lieu, un lien de visio et des tâches liées. Les personnes convoquées reçoivent un mail à ajouter à leur agenda et répondent dans l'espace organisateur. Les admins de l'activité tiennent l'agenda global.",
+            "migration": null
+          }
         }
       ]
     },

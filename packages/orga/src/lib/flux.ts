@@ -39,6 +39,9 @@ const VUES_DES_PERIMETRES = [
   'PostesAPourvoir',
   // Les affectations, les contacts principaux et les accords (ADR 0036).
   'Organigramme',
+  // Les personnes affectées décident des convocations (ADR 0037).
+  'Reunions',
+  'ReunionsDuPerimetre',
 ] as const
 
 /**
@@ -78,7 +81,7 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   // L'historique des messages (ADR 0020), lu par les admins.
   MESSAGE: ['Messages'],
   // Les dates clés de l'agenda d'une période (ADR 0037).
-  AGENDA: ['Agenda'],
+  AGENDA: ['Agenda', 'Reunions', 'ReunionsDuPerimetre', 'Reunion'],
 }
 
 /** Les requêtes à relire pour un lot de signaux, sans doublon. */
