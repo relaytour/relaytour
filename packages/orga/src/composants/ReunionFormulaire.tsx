@@ -13,6 +13,7 @@ const CREER = graphql(`
     $perimetreId: ID
     $titre: String!
     $jour: Date!
+    $jourFin: Date
     $heureDebut: String!
     $heureFin: String!
     $lieu: String
@@ -27,6 +28,7 @@ const CREER = graphql(`
       perimetreId: $perimetreId
       titre: $titre
       jour: $jour
+      jourFin: $jourFin
       heureDebut: $heureDebut
       heureFin: $heureFin
       lieu: $lieu
@@ -46,6 +48,7 @@ const MODIFIER = graphql(`
     $id: ID!
     $titre: String!
     $jour: Date!
+    $jourFin: Date
     $heureDebut: String!
     $heureFin: String!
     $lieu: String
@@ -60,6 +63,7 @@ const MODIFIER = graphql(`
       id: $id
       titre: $titre
       jour: $jour
+      jourFin: $jourFin
       heureDebut: $heureDebut
       heureFin: $heureFin
       lieu: $lieu
@@ -112,6 +116,7 @@ export interface ReunionSaisie {
   perimetreId: string | null
   titre: string
   jour: string
+  jourFin?: string | null
   heureDebut: string
   heureFin: string
   lieu?: string | null
@@ -136,6 +141,7 @@ interface Valeurs {
   agenda: string
   titre: string
   jour: string
+  jourFin?: string | null
   heureDebut: string
   heureFin: string
   lieu?: string
@@ -195,6 +201,10 @@ export default function ReunionFormulaire({
             agenda: reunion.perimetreId ?? GLOBAL,
             titre: reunion.titre,
             jour: reunion.jour,
+            jourFin:
+              reunion.jourFin && reunion.jourFin !== reunion.jour
+                ? reunion.jourFin
+                : '',
             heureDebut: reunion.heureDebut,
             heureFin: reunion.heureFin,
             lieu: reunion.lieu ?? '',
@@ -208,6 +218,7 @@ export default function ReunionFormulaire({
             agenda: reunion.perimetreId ?? GLOBAL,
             titre: reunion.titre ?? '',
             jour: '',
+            jourFin: '',
             heureDebut: '18:00',
             heureFin: '19:00',
             lieu: '',
@@ -231,6 +242,7 @@ export default function ReunionFormulaire({
     const champs = {
       titre: v.titre,
       jour: v.jour,
+      jourFin: v.jourFin ? v.jourFin : null,
       heureDebut: v.heureDebut,
       heureFin: v.heureFin,
       lieu: v.lieu ?? '',
@@ -337,6 +349,25 @@ export default function ReunionFormulaire({
             <Input type="date" style={{ maxWidth: 180 }} />
           </Form.Item>
           <Form.Item
+            label="Dernier jour (facultatif)"
+            name="jourFin"
+            dependencies={['jour']}
+            rules={[
+              ({ getFieldValue }) => ({
+                validator: (_regle, valeur?: string) =>
+                  !valeur || valeur >= String(getFieldValue('jour'))
+                    ? Promise.resolve()
+                    : Promise.reject(
+                        new Error('Le dernier jour suit le premier.')
+                      ),
+              }),
+            ]}
+          >
+            <Input type="date" style={{ maxWidth: 180 }} />
+          </Form.Item>
+        </div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 16 }}>
+          <Form.Item
             label="Début"
             name="heureDebut"
             rules={[{ required: true, message: 'Choisissez une heure.' }]}
@@ -346,12 +377,16 @@ export default function ReunionFormulaire({
           <Form.Item
             label="Fin"
             name="heureFin"
-            dependencies={['heureDebut']}
+            dependencies={['heureDebut', 'jour', 'jourFin']}
             rules={[
               { required: true, message: 'Choisissez une heure.' },
               ({ getFieldValue }) => ({
+                // Sur plusieurs jours, l'heure de fin vaut pour le dernier jour.
                 validator: (_regle, valeur?: string) =>
-                  !valeur || valeur > String(getFieldValue('heureDebut'))
+                  !valeur ||
+                  (getFieldValue('jourFin') &&
+                    getFieldValue('jourFin') !== getFieldValue('jour')) ||
+                  valeur > String(getFieldValue('heureDebut'))
                     ? Promise.resolve()
                     : Promise.reject(
                         new Error('L’heure de fin suit l’heure de début.')

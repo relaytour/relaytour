@@ -29,6 +29,7 @@ const REUNION = graphql(`
       editionId
       titre
       jour
+      jourFin
       heureDebut
       heureFin
       statut
@@ -149,6 +150,7 @@ export default function ReunionDetail({
       perimetreId: reunion.perimetre?.id ?? null,
       titre: reunion.titre,
       jour: reunion.jour,
+      jourFin: reunion.jourFin,
       heureDebut: reunion.heureDebut,
       heureFin: reunion.heureFin,
       lieu: reunion.lieu,
@@ -195,8 +197,9 @@ export default function ReunionDetail({
             <p className="rt-reunion-quand">
               {annulee && <Tag color="error">Annulée</Tag>}
               <span className={annulee ? 'rt-agenda-faite' : undefined}>
-                {libelleJours(reunion.jour)}, {reunion.heureDebut} →{' '}
-                {reunion.heureFin}
+                {reunion.jourFin === reunion.jour
+                  ? `${libelleJours(reunion.jour)}, ${reunion.heureDebut} → ${reunion.heureFin}`
+                  : `${libelleJours(reunion.jour)} ${reunion.heureDebut} → ${libelleJours(reunion.jourFin)} ${reunion.heureFin}`}
               </span>
             </p>
             <p>
