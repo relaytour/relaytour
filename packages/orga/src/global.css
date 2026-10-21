@@ -1295,9 +1295,16 @@ button.rt-ligne-lien {
 
 .rt-panneau-titre {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+}
+
+/* Sur un téléphone, un titre long passe sur plusieurs lignes et le bouton du
+   panneau passe dessous, sans rétrécir son libellé. */
+.rt-panneau-titre > :not(h2) {
+  flex-shrink: 0;
 }
 
 .rt-panneau-titre h2 {

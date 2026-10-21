@@ -2,11 +2,24 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.18.0",
       "notes": [
+        {
+          "id": "2026-10-21-orga-le-titre-long-d-un-panneau-ne-deborde-plus-sur-son-bouton",
+          "date": "2026-10-21",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le titre long d’un panneau ne déborde plus sur son bouton",
+            "texte": "Sur un téléphone, le titre long d’un panneau passe sur plusieurs lignes, et son bouton se place dessous. Le libellé du bouton reste entier, par exemple « Lier un dossier » dans l’écran « Espace de fichiers ».",
+            "migration": null
+          }
+        },
         {
           "id": "2026-10-20-orga-votre-agenda-s-abonne-a-relaytour-depuis-outlook-google-ou-a",
           "date": "2026-10-20",
