@@ -4,6 +4,8 @@ import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../../courriel/file.ts'
 import { purgerBenevoles } from '../../lib/benevoles.ts'
+import { exporterFiches } from '../../espace-fichiers/export.ts'
+import { renouvelerAcces } from '../../espace-fichiers/index.ts'
 import { purgerDemandes } from '../../lib/demandes.ts'
 import { aujourdhui } from '../../lib/droits.ts'
 import { journal } from '../../lib/journal.ts'
@@ -38,6 +40,45 @@ export async function planificationProcessor(
 ): Promise<void> {
   if (job.name === 'synchro') {
     await synchroniserPlanification()
+    return
+  }
+  // L'export des fiches d'une organisation, après une modification (ADR 0038).
+  // Sans organisation (lancement manuel), toutes les organisations actives.
+  if (job.name === 'export-fiches') {
+    for (const organisation of await organisationsVisees(job.data)) {
+      await exporterFiches(organisation.id, { verifier: false })
+    }
+    return
+  }
+  // Chaque nuit, chaque espace de fichiers renouvelle son accès, qui expire sans
+  // usage, puis réconcilie l'export de ses fiches. Une organisation en échec
+  // n'empêche pas les suivantes.
+  if (job.name === 'espace-fichiers') {
+    const connexions = await prisma.connexionFichiers.findMany({
+      where: {
+        etat: 'ACTIVE',
+        organisation: { statut: 'ACTIVE' },
+        ...(job.data.organisationId === undefined
+          ? {}
+          : { organisationId: job.data.organisationId }),
+      },
+      select: { organisationId: true },
+    })
+    for (const { organisationId } of connexions) {
+      try {
+        await renouvelerAcces(organisationId)
+        await exporterFiches(organisationId, { verifier: true })
+      } catch (erreur) {
+        journal.warn(
+          {
+            evenement: 'espace-fichiers-nuit-en-echec',
+            organisationId,
+            message: (erreur as Error).message,
+          },
+          'L’espace de fichiers d’une organisation n’a pas répondu cette nuit.'
+        )
+      }
+    }
     return
   }
   // La purge ne dépend pas du statut d'une organisation : elle les parcourt toutes,

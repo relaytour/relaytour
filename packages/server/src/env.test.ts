@@ -156,4 +156,78 @@ describe('resoudreEnv', () => {
     expect(() => lire('http://hebergeur.exemple.org')).toThrow(/SUPPORT_URL/)
     expect(() => lire('javascript:alert(1)')).toThrow(/SUPPORT_URL/)
   })
+
+  it('ouvre Microsoft avec ses deux valeurs et la clé de chiffrement', () => {
+    const cle = Buffer.alloc(32, 7).toString('base64')
+    const env = resoudreEnv({
+      ...BASE,
+      MICROSOFT_CLIENT_ID: 'client',
+      MICROSOFT_CLIENT_SECRET: 'secret',
+      CLE_CHIFFREMENT_ESPACE_FICHIERS: cle,
+    })
+    expect(env.MICROSOFT_LOCATAIRE).toBe('organizations')
+    expect(() =>
+      resoudreEnv({ ...BASE, MICROSOFT_CLIENT_ID: 'client' })
+    ).toThrow(/MICROSOFT_CLIENT_SECRET/)
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        MICROSOFT_CLIENT_ID: 'client',
+        MICROSOFT_CLIENT_SECRET: 'secret',
+      })
+    ).toThrow(/CLE_CHIFFREMENT_ESPACE_FICHIERS/)
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        CLE_CHIFFREMENT_ESPACE_FICHIERS: Buffer.alloc(16).toString('base64'),
+      })
+    ).toThrow(/32 octets/)
+  })
+
+  it('ouvre Google avec ses deux valeurs et la clé de chiffrement', () => {
+    expect(() => resoudreEnv({ ...BASE, GOOGLE_CLIENT_ID: 'client' })).toThrow(
+      /GOOGLE_CLIENT_SECRET/
+    )
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        GOOGLE_CLIENT_ID: 'client',
+        GOOGLE_CLIENT_SECRET: 'secret',
+      })
+    ).toThrow(/CLE_CHIFFREMENT_ESPACE_FICHIERS/)
+  })
+
+  it('lit les hôtes Nextcloud admis, et exige la clé de chiffrement', () => {
+    const CLE = Buffer.alloc(32, 1).toString('base64')
+    expect(
+      resoudreEnv({
+        ...BASE,
+        CLE_CHIFFREMENT_ESPACE_FICHIERS: CLE,
+        NEXTCLOUD_HOTES: ' *, Nuage.lan:8443 ,',
+      }).NEXTCLOUD_HOTES
+    ).toEqual(['*', 'nuage.lan:8443'])
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        CLE_CHIFFREMENT_ESPACE_FICHIERS: CLE,
+        NEXTCLOUD_HOTES: 'https://nuage.lan',
+      })
+    ).toThrow(/NEXTCLOUD_HOTES/)
+    expect(() => resoudreEnv({ ...BASE, NEXTCLOUD_HOTES: '*' })).toThrow(
+      /CLE_CHIFFREMENT_ESPACE_FICHIERS/
+    )
+  })
+
+  it('ouvre Dropbox avec ses deux valeurs et la clé de chiffrement', () => {
+    expect(() =>
+      resoudreEnv({ ...BASE, DROPBOX_CLIENT_SECRET: 'secret' })
+    ).toThrow(/DROPBOX_CLIENT_ID/)
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        DROPBOX_CLIENT_ID: 'cle',
+        DROPBOX_CLIENT_SECRET: 'secret',
+      })
+    ).toThrow(/CLE_CHIFFREMENT_ESPACE_FICHIERS/)
+  })
 })

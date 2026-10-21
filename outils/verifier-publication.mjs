@@ -5,11 +5,14 @@ import { execFileSync } from 'node:child_process'
 import { readFileSync } from 'node:fs'
 
 const MOTIFS = [
-  // Une IP publique. Les plages privées, locales et de documentation sont admises.
+  // Une IP publique. Les plages privées, locales, de documentation et réservées
+  // (partagée 100.64/10, tests de performance 198.18/15, multidiffusion et futur
+  // usage 224/3, « ce réseau » 0/8, protocoles 192.0.0/24 et 192.88.99/24) sont
+  // admises : aucune ne désigne un serveur joignable.
   {
     nom: 'adresse IP publique',
     regex:
-      /(?<![\d.])(?!10\.|127\.|0\.0\.0\.0|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|255\.|192\.0\.2\.|198\.51\.100\.|203\.0\.113\.)(\d{1,3}\.){3}\d{1,3}(?!\.?\d)/,
+      /(?<![\d.])(?!10\.|127\.|0\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|169\.254\.|2(2[4-9]|[3-5]\d)\.|192\.0\.2\.|198\.51\.100\.|203\.0\.113\.|100\.(6[4-9]|[7-9]\d|1[01]\d|12[0-7])\.|198\.1[89]\.|192\.0\.0\.|192\.88\.99\.)(\d{1,3}\.){3}\d{1,3}(?!\.?\d)/,
   },
   { nom: 'clé privée', regex: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
   { nom: 'jeton GitHub', regex: /\bgh[pousr]_[A-Za-z0-9]{20,}\b/ },

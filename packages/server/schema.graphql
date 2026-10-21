@@ -272,6 +272,11 @@ type CommentairesPeriode {
   perimetresLus: [ID!]!
 }
 
+type ConflitImport {
+  fiche: String!
+  raison: String!
+}
+
 """
 Un périmètre qu’une fiche concerne, avec le chemin du partage et son masquage.
 """
@@ -281,6 +286,30 @@ type ConnexionFiche {
   par: OrigineConnexe!
   perimetre: Perimetre!
   tacheId: ID
+}
+
+"""
+Connexion de l’organisation à son espace de fichiers. Le jeton ne sort jamais du serveur.
+"""
+type ConnexionFichiers {
+  compte: String!
+  connecteeLe: DateTime!
+  connecteePar: String
+  etat: EtatConnexionFichiers!
+
+  """
+  Chemin du dossier où Relaytour exporte les fiches. Null : aucun export.
+  """
+  exportDossier: String
+  exportRapport: RapportExport
+  fournisseur: FournisseurFichiers!
+  methode: MethodeConnexionFichiers!
+}
+
+"""Une façon de connecter l’espace de fichiers, ouverte par l’exploitant."""
+type ConnexionPossible {
+  fournisseur: FournisseurFichiers!
+  methode: MethodeConnexionFichiers!
 }
 
 type ConvocationLue {
@@ -360,6 +389,14 @@ A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `dat
 scalar DateTime
 
 """
+Connexion à Nextcloud commencée : la page où l’admin accorde l’accès, et l’état à présenter ensuite.
+"""
+type DebutConnexionNextcloud {
+  connexion: String!
+  etat: String!
+}
+
+"""
 Les périmètres où décliner une tâche partagée. Un texte ou une échéance absents reprennent ceux de la tâche partagée.
 """
 input DeclinaisonInput {
@@ -408,6 +445,22 @@ type DemandePerimetre {
   proposePar: Personne
 }
 
+"""
+Dossier de l’espace de fichiers lié à un périmètre, ou à toute l’activité quand le périmètre est nul.
+"""
+type DossierLie {
+  activiteId: ID!
+
+  """
+  Vrai quand l’espace connecté est actif et vient du même fournisseur que le dossier.
+  """
+  disponible: Boolean!
+  fournisseur: FournisseurFichiers!
+  id: ID!
+  nom: String!
+  perimetre: Perimetre
+}
+
 type DroitRedaction {
   accordeLe: DateTime!
   id: ID!
@@ -451,19 +504,49 @@ type ElementAgenda {
   version: Int
 }
 
+"""Dossier ou fichier de l’espace de fichiers."""
+type ElementFichiers {
+  apercu: FormatApercu!
+  dossier: Boolean!
+  elementId: String!
+  lienWeb: String
+  modifieLe: DateTime
+  nom: String!
+  taille: Float
+}
+
 """
-Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0040).
+Bibliothèque de documents visible par le compte connecté : son OneDrive, ou la bibliothèque d’un site.
+"""
+type EmplacementFichiers {
+  id: String!
+  nom: String!
+  site: String
+}
+
+"""
+Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0040). FICHIERS couvre la connexion de l’espace de fichiers et ses dossiers liés (ADR 0038).
 """
 enum EntiteChangee {
   AGENDA
   DEMANDE
   EQUIPE
   FICHE
+  FICHIERS
   MESSAGE
   NOTIFICATION
   PERIMETRE
   PROGRAMME
   TACHE
+}
+
+type EspaceFichiers {
+  connexion: ConnexionFichiers
+
+  """
+  Connexions ouvertes par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.
+  """
+  connexionsPossibles: [ConnexionPossible!]!
 }
 
 """
@@ -483,6 +566,11 @@ type EtapeAccordDeclinaison {
   etape: EtapeAccord!
   le: DateTime!
   par: Personne!
+}
+
+enum EtatConnexionFichiers {
+  ACTIVE
+  A_RECONNECTER
 }
 
 enum EtatPostes {
@@ -522,6 +610,11 @@ type Fiche {
   nombreVersions: Int
   perimetre: Perimetre
   peutModifier: Boolean!
+
+  """
+  Ressources de l’espace de fichiers liées à la fiche, dans l’ordre du lien.
+  """
+  ressources: [RessourceFiche!]!
   slug: String!
   source: SourceFiche
   taches(editionId: ID!): [Tache!]!
@@ -538,6 +631,11 @@ type FicheVersion {
   resume: String
   source: SourceFiche!
   titre: String!
+}
+
+type FichierEcarte {
+  fichier: String!
+  raison: String!
 }
 
 """
@@ -560,6 +658,18 @@ type FondTheme {
 
   """L’arrêt à 18 % du dégradé du sol, entre sol1 et sol2."""
   transition: String!
+}
+
+"""
+Ce que la liseuse affiche : un PDF, une image, un texte, du Markdown, un document bureautique converti en PDF par le fournisseur, ou rien (téléchargement).
+"""
+enum FormatApercu {
+  AUCUN
+  IMAGE
+  MARKDOWN
+  PDF
+  PDF_CONVERTI
+  TEXTE
 }
 
 enum FormatMedia {
@@ -602,6 +712,13 @@ type FormulaireRejoindre {
 
   """Libellé de la question complémentaire propre à l’organisation."""
   question: String
+}
+
+enum FournisseurFichiers {
+  DROPBOX
+  GOOGLE_DRIVE
+  NEXTCLOUD
+  SHAREPOINT
 }
 
 enum FrequenceResume {
@@ -778,6 +895,14 @@ input LimitesOrganisationInput {
   periodesOuvertes: Int
 }
 
+"""
+Contenu d’un dossier. `complet` est faux quand le dossier compte plus d’éléments que Relaytour n’en lit en une fois.
+"""
+type ListeElementsFichiers {
+  complet: Boolean!
+  elements: [ElementFichiers!]!
+}
+
 """Image enregistrée pour l’organisation, désignée par son empreinte."""
 type MediaTeleverse {
   empreinte: String!
@@ -849,6 +974,11 @@ input MessageInput {
   perimetreId: ID
 }
 
+enum MethodeConnexionFichiers {
+  COMPTE
+  COMPTE_SERVICE
+}
+
 type Mutation {
   """
   Enregistre l’abonnement push de cet appareil pour la personne connectée. Reste possible dans une organisation en lecture seule.
@@ -887,14 +1017,34 @@ type Mutation {
   changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!, statutAttendu: StatutTache): Tache!
 
   """
+  Crée le dossier d’export des fiches dans le dossier choisi, puis lance un premier export. Le dossier choisi ne doit être ni lié, ni dans un dossier lié.
+  """
+  choisirDossierExport(chemin: [String!]!, emplacement: String!): ConnexionFichiers!
+
+  """
   Clôt un sondage sur le créneau retenu. La réunion se crée ensuite depuis ce créneau.
   """
   cloreSondage(creneauId: ID!, id: ID!): Sondage!
 
   """
+  Adresse où l’admin se connecte chez le fournisseur pour accorder l’accès à Relaytour. Elle vaut dix minutes, une seule fois.
+  """
+  commencerConnexionEspaceFichiers(fournisseur: FournisseurFichiers!): String!
+
+  """
+  Commence la connexion au Nextcloud de l’association, à l’adresse donnée. L’admin ouvre ensuite la page rendue et y accorde l’accès ; Nextcloud crée un mot de passe d’application pour Relaytour.
+  """
+  commencerConnexionNextcloud(adresse: String!): DebutConnexionNextcloud!
+
+  """
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
+
+  """
+  Connecte Google Drive par un compte de service : la clé JSON du compte, que l’organisation a créée. L’organisation partage ensuite ses dossiers avec l’adresse du compte.
+  """
+  connecterCompteServiceGoogle(cle: String!): ConnexionFichiers!
 
   """
   Crée l’abonnement à l’agenda global d’une activité, et révoque le précédent.
@@ -989,6 +1139,11 @@ type Mutation {
   Décline une tâche dans d’autres périmètres de son activité : elle devient une tâche partagée. Chaque déclinaison attend l’accord de son périmètre, sauf quand un admin de l’activité l’ajoute. Un périmètre déjà servi est ignoré.
   """
   declinerTache(description: String, echeance: Date, id: ID!, perimetreIds: [ID!]!, titre: String): Tache!
+
+  """
+  Efface le jeton de l’espace de fichiers. Les dossiers liés restent, indisponibles jusqu’à une nouvelle connexion.
+  """
+  deconnecterEspaceFichiers: Boolean!
   definirAdminActivite(activiteId: ID!, admin: Boolean!, personneId: ID!): Boolean!
   definirContactPrincipal(affectationId: ID!, contactPrincipal: Boolean!): Boolean!
   definirEffectif(editionId: ID!, effectif: Int!, perimetreId: ID!): Int!
@@ -996,6 +1151,8 @@ type Mutation {
   """Remplace l’ensemble des souhaits d’une personne pour une édition."""
   definirSouhaits(editionId: ID!, perimetreIds: [ID!]!, personneId: ID!): [Souhait!]!
   definirStatutMessage(id: ID!, statut: StatutMessage!): Message!
+  delierDossier(id: ID!): Boolean!
+  delierRessourceFiche(id: ID!): Boolean!
 
   """
   Écrit l’export complet d’une organisation dans le dossier EXPORTS_DIR du serveur et renvoie le nom du fichier. Le contenu ne transite jamais par l’API.
@@ -1013,9 +1170,19 @@ type Mutation {
   envoyerDemande(activite: String!, disponibilite: String, email: String!, nom: String!, organisation: String, perimetres: [String!]!, reponse: String, siteWeb: String, texte: String): Boolean!
 
   """
+  Lance tout de suite l’export des fiches vers l’espace de fichiers. Le résultat arrive dans le rapport d’export.
+  """
+  exporterFichesMaintenant: Boolean!
+
+  """
   La personne connectée note son intérêt pour un périmètre (ADR 0012). Aucun mail ne part.
   """
   formulerSouhait(editionId: ID!, perimetreId: ID!): Boolean!
+
+  """
+  Importe les fiches des dossiers sources dans l’activité. Une fiche modifiée dans Relaytour n’est pas remplacée.
+  """
+  importerFichesEspace(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
 
   """
   Ajoute une déclinaison aux tâches de son périmètre sans son accord, même après un refus. Réservé aux admins de l’activité.
@@ -1027,6 +1194,16 @@ type Mutation {
   Donne le rôle d’admin d’une organisation à une adresse et lui envoie une invitation. Vrai quand l’admin est en place ; faux quand l’adresse a déjà un compte hors de l’organisation, dont l’invitation attend l’accord (ADR 0030). La réponse ne renvoie aucune donnée du compte.
   """
   inviterPremierAdmin(email: String!, nom: String!, organisation: String!): Boolean!
+
+  """
+  Lie un dossier de l’espace connecté à un périmètre, ou à toute l’activité sans périmètre.
+  """
+  lierDossier(activiteId: ID!, chemin: [String!]!, emplacement: String!, perimetreId: ID): DossierLie!
+
+  """
+  Lie à une fiche un dossier ou un fichier d’un dossier lié de son périmètre, ou de toute son activité.
+  """
+  lierRessourceFiche(chemin: [String!]!, dossierLieId: ID!, ficheId: ID!): RessourceFiche!
 
   """
   Sans identifiants, marque comme lues toutes les notifications du niveau choisi, ou celles d’une activité ou d’un périmètre. Reste possible dans une organisation en lecture seule.
@@ -1230,6 +1407,11 @@ type Mutation {
   """
   restaurerVersionFiche(versionDeDepart: ID, versionId: ID!): Fiche!
   retirerAffectation(id: ID!): Boolean!
+
+  """
+  Arrête l’export des fiches. Les fichiers déjà écrits restent dans l’espace de fichiers.
+  """
+  retirerDossierExport: Boolean!
   retirerDroitRedaction(id: ID!): Boolean!
 
   """
@@ -1269,6 +1451,11 @@ type Mutation {
   Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.
   """
   televerserMedia(donnees: String!, format: FormatMedia!): MediaTeleverse!
+
+  """
+  Demande à Nextcloud si l’admin a accordé l’accès. Vrai une fois la connexion enregistrée ; faux tant qu’il n’a pas terminé.
+  """
+  terminerConnexionNextcloud(etat: String!): Boolean!
 }
 
 """
@@ -1722,11 +1909,27 @@ type Query {
   Pour une période : les périmètres dont la personne lit les fils, et le nombre de commentaires de chaque tâche commentée de ces périmètres. Une liste de tâches lit ces nombres à part.
   """
   commentairesDeLaPeriode(editionId: ID!): CommentairesPeriode!
+
+  """
+  Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms.
+  """
+  contenuDossierLie(chemin: [String!]!, id: ID!): ListeElementsFichiers!
   demandes(editionId: ID!, statut: StatutDemande): [Demande!]!
+
+  """
+  Dossiers liés que la personne lit dans une activité. Avec un périmètre : ceux de ce périmètre et ceux de toute l’activité.
+  """
+  dossiersLies(activiteId: ID, perimetreId: ID): [DossierLie!]!
   droitsRedaction: [DroitRedaction!]!
   editionCourante(activiteId: ID): Edition
   editions(activiteId: ID): [Edition!]!
+
+  """
+  Bibliothèques de documents du compte connecté, pour choisir un dossier à lier.
+  """
+  emplacementsFichiers: [EmplacementFichiers!]!
   equipe(activiteId: ID): [Personne!]!
+  espaceFichiers: EspaceFichiers!
   exportContenu: ArchiveContenu!
   fiche(activiteId: ID, slug: String!): Fiche
   fiches(activiteId: ID, inclureArchives: Boolean = false): [Fiche!]!
@@ -1801,6 +2004,11 @@ type Query {
   """
   organisation(slug: String): Organisation!
   organisations: [OrganisationInstallation!]!
+
+  """
+  Sous-dossiers d’un dossier de l’espace connecté, pour choisir un dossier à lier. Les fichiers ne s’y listent pas.
+  """
+  parcourirEspaceFichiers(chemin: [String!]!, emplacement: String!): ListeElementsFichiers!
   perimetre(activiteId: ID, slug: String!): Perimetre
   perimetres(activiteId: ID, inclureArchives: Boolean = false): [Perimetre!]!
   personnes(inclureArchives: Boolean = false): [Personne!]!
@@ -1837,6 +2045,11 @@ type Query {
     """Un périmètre seulement. Sans valeur : toutes."""
     perimetreId: ID
   ): [Reunion!]!
+
+  """
+  Simule l’import des fiches depuis l’espace de fichiers : rien ne change en base.
+  """
+  simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
   sondage(id: ID!): Sondage!
 
   """
@@ -1853,10 +2066,40 @@ type Query {
   versionInstallation: String!
 }
 
+"""Résultat du dernier export des fiches vers l’espace de fichiers."""
+type RapportExport {
+  ecrites: Int!
+  erreur: String
+  exporteLe: DateTime!
+  inchangees: Int!
+  modifieesALaMain: [String!]!
+  refusees: [RefusExport!]!
+  supprimees: Int!
+}
+
+"""
+Ce que l’import des fiches depuis l’espace de fichiers fait, ou ferait en simulation.
+"""
+type RapportImportFiches {
+  conflits: [ConflitImport!]!
+  converties: [FichierEcarte!]!
+  creees: [String!]!
+  inchangees: [String!]!
+  incomplet: Boolean!
+  nonImportes: [FichierEcarte!]!
+  nouvellesVersions: [String!]!
+  refusees: [FichierEcarte!]!
+}
+
 type Recherche {
   fiches: [Fiche!]!
   personnes: [PersonneTrouvee!]!
   taches: [Tache!]!
+}
+
+type RefusExport {
+  fiche: String!
+  raison: String!
 }
 
 enum ReponseConvocation {
@@ -1881,6 +2124,24 @@ type ReponsesReunion {
   peutEtre: Int!
   presentes: Int!
   sansReponse: Int!
+}
+
+"""
+Dossier ou fichier de l’espace de fichiers lié à une fiche, adressé depuis un dossier lié.
+"""
+type RessourceFiche {
+  apercu: FormatApercu!
+  chemin: [String!]!
+  dossierLie: DossierLie!
+
+  """
+  Faux quand la ressource n’existe plus chez le fournisseur. Null quand le fournisseur ne répond pas.
+  """
+  existe: Boolean
+  id: ID!
+  lienWeb: String
+  nom: String!
+  type: TypeRessource!
 }
 
 """
@@ -2060,7 +2321,17 @@ type Souhait {
 
 enum SourceFiche {
   APP
+  ESPACE_FICHIERS
   GIT
+}
+
+"""
+Dossier source des fiches d’un périmètre, ou des fiches communes quand le périmètre est nul.
+"""
+input SourceImportFiches {
+  chemin: [String!]!
+  emplacement: String!
+  perimetreId: ID
 }
 
 enum StatutDemande {
@@ -2238,6 +2509,11 @@ enum TypeNotification {
 enum TypePerimetre {
   POLE
   SPORT
+}
+
+enum TypeRessource {
+  DOSSIER
+  FICHIER
 }
 
 type TypographieTheme {

@@ -20,11 +20,13 @@ import EtiquettePerimetre from '../composants/EtiquettePerimetre'
 import ConnexionsFiche from '../composants/ConnexionsFiche'
 import Markdown from '../composants/Markdown'
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
+import RessourcesFiche from '../composants/RessourcesFiche'
 import Titre from '../composants/Titre'
 import { dateCourte, messageErreur } from '../lib/erreurs'
 import { lireConflit } from '../lib/conflit'
 import {
   FICHE,
+  LIBELLES_SOURCE,
   RESTAURER_VERSION,
   TACHES_FICHE,
   VERSIONS_FICHE,
@@ -149,7 +151,7 @@ export default function Fiche() {
                   perimetreDeLaFiche={fiche.perimetre?.id ?? null}
                 />
                 <dt>Source</dt>
-                <dd>{fiche.source === 'GIT' ? 'Dépôt' : 'Application'}</dd>
+                <dd>{LIBELLES_SOURCE[fiche.source ?? 'APP']}</dd>
                 <dt>Identifiant</dt>
                 <dd
                   className="rt-mono"
@@ -245,6 +247,13 @@ export default function Fiche() {
         >
           <Markdown contenu={fiche.contenu} mentions={mentions} />
         </article>
+
+        <RessourcesFiche
+          slug={fiche.slug}
+          ficheId={fiche.id}
+          perimetreId={fiche.perimetre?.id ?? null}
+          peutModifier={fiche.peutModifier && !fiche.archive}
+        />
       </DeuxColonnes>
 
       <Drawer
@@ -296,9 +305,7 @@ export default function Fiche() {
                         {dateHeure(version.creeLe)}
                       </Typography.Text>
                       {courante && <Tag color="blue">Actuelle</Tag>}
-                      <Tag>
-                        {version.source === 'GIT' ? 'Dépôt' : 'Application'}
-                      </Tag>
+                      <Tag>{LIBELLES_SOURCE[version.source]}</Tag>
                     </Space>
                     <div style={{ opacity: 0.7, fontSize: 13 }}>
                       {version.auteur?.nom ?? 'Import'}

@@ -18,6 +18,7 @@ export type EntiteChangee =
   | 'MESSAGE'
   | 'AGENDA'
   | 'PROGRAMME'
+  | 'FICHIERS'
 
 // Les requêtes qui affichent des tâches, et celles qui affichent des fiches.
 const VUES_DES_TACHES = [
@@ -33,7 +34,13 @@ const VUES_DES_TACHES = [
   // Les échéances de l'agenda (ADR 0037).
   'Agenda',
 ] as const
-const VUES_DES_FICHES = ['ListeFiches', 'Fiche', 'FichesDuPerimetre'] as const
+const VUES_DES_FICHES = [
+  'ListeFiches',
+  'Fiche',
+  'FichesDuPerimetre',
+  // Les ressources de l'espace de fichiers liées à une fiche (ADR 0038).
+  'RessourcesFiche',
+] as const
 const VUES_DES_PERIMETRES = [
   // La liste des périmètres, et avec elle le catalogue des mentions (ADR 0039).
   'Perimetres',
@@ -104,6 +111,8 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
     'Sondages',
     'Sondage',
   ],
+  // La connexion de l'espace de fichiers et ses dossiers liés (ADR 0038).
+  FICHIERS: ['EspaceFichiers', 'DossiersLies', 'ContenuDossierLie'],
 }
 
 /** Les requêtes à relire pour un lot de signaux, sans doublon. */

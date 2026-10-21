@@ -13,6 +13,7 @@ import {
 } from '../lib/fiches.ts'
 import { exigerMembreGere, refuserArchivee } from '../lib/appartenances.ts'
 import { notifierLePerimetre } from '../lib/notifications.ts'
+import { planifierExportFiches } from '../espace-fichiers/export.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { conditionsConnexes, publierFiche } from '../lib/fiches-connexes.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
@@ -455,6 +456,7 @@ builder.mutationFields(t => ({
         id: creee.id,
         perimetreId,
       })
+      planifierExportFiches(ctx.organisation!.id)
       await prevenirLePerimetre('FICHE_CREEE', creee.id, perimetreId, auteur.id)
       return creee
     },
@@ -542,6 +544,7 @@ builder.mutationFields(t => ({
       if (!ecrite) throw await conflitDeFiche(fiche.id)
       // Les périmètres que la fiche concerne relisent aussi leurs écrans (ADR 0039).
       publierFiche(fiche)
+      planifierExportFiches(fiche.organisationId)
       await prevenirLePerimetre(
         'FICHE_MODIFIEE',
         fiche.id,
@@ -626,6 +629,7 @@ builder.mutationFields(t => ({
         activiteId: ancienne.fiche.activiteId,
         perimetreId: ancienne.fiche.perimetreId,
       })
+      planifierExportFiches(ctx.organisation!.id)
       await prevenirLePerimetre(
         'FICHE_MODIFIEE',
         ancienne.ficheId,
@@ -659,6 +663,7 @@ builder.mutationFields(t => ({
         data: { archivedAt: archive ? new Date() : null },
       })
       publierFiche({ ...fiche, organisationId: ctx.organisation!.id })
+      planifierExportFiches(ctx.organisation!.id)
       return archivee
     },
   }),

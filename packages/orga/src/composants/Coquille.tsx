@@ -8,6 +8,7 @@ import {
   CalendarOutlined,
   CarryOutOutlined,
   CloseOutlined,
+  CloudOutlined,
   ClusterOutlined,
   EditOutlined,
   HomeOutlined,
@@ -313,6 +314,11 @@ function Mise({ session }: { session: Session }) {
                       key: lien('/admin/admins'),
                       icon: <SafetyCertificateOutlined />,
                       label: 'Admins',
+                    },
+                    {
+                      key: lien('/admin/espace-fichiers'),
+                      icon: <CloudOutlined />,
+                      label: 'Espace de fichiers',
                     },
                   ]
                 : []),

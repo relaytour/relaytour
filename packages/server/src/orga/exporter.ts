@@ -93,7 +93,7 @@ function vide(valeur: unknown[] | undefined): boolean {
  * La liste « Concerne aussi » (ADR 0039) n'apparaît que lorsqu'elle n'est pas vide,
  * chaque clé triée.
  */
-function texteFiche(
+export function texteFiche(
   slug: string,
   titre: string,
   contenu: string,

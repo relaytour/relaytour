@@ -1,0 +1,6 @@
+-- AlterTable
+ALTER TABLE `ConnexionFichiers` ADD COLUMN `methode` ENUM('COMPTE', 'COMPTE_SERVICE') NOT NULL DEFAULT 'COMPTE',
+    MODIFY `fournisseur` ENUM('SHAREPOINT', 'GOOGLE_DRIVE') NOT NULL;
+
+-- AlterTable
+ALTER TABLE `DossierLie` MODIFY `fournisseur` ENUM('SHAREPOINT', 'GOOGLE_DRIVE') NOT NULL;
