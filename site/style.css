@@ -649,7 +649,7 @@ footer {
   gap: 18px;
   padding: 24px;
   border-radius: 28px;
-  scroll-margin-top: 96px;
+  scroll-margin-top: var(--marge-ancre);
 }
 
 .ecran-tete {
@@ -1351,4 +1351,218 @@ footer {
 .rendu-markdown .etiquette-groupe {
   color: var(--rt-encre);
   background: rgba(var(--rt-encre-rgb), 0.08);
+}
+
+/* Sommaire latéral des modes d'emploi (sommaire.js). Une ancre s'arrête sous
+   la barre de navigation, et sous la bascule des captures quand elle existe. */
+:root {
+  --marge-ancre: 96px;
+}
+
+@media (min-width: 761px) {
+  [data-captures] {
+    --marge-ancre: 152px;
+  }
+}
+
+/* Sur un écran étroit, la barre de navigation tient sur deux lignes. */
+@media (max-width: 760px) {
+  :root {
+    --marge-ancre: 172px;
+  }
+}
+
+.page section,
+.page h3[id] {
+  scroll-margin-top: var(--marge-ancre);
+}
+
+/* Le titre d'une partie laisse voir son étiquette au-dessus de lui. */
+.page .entete h2[id] {
+  scroll-margin-top: calc(var(--marge-ancre) + 32px);
+}
+
+.sommaire-lateral-corps {
+  display: grid;
+  align-content: start;
+  gap: 10px;
+}
+
+.sommaire-lateral ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sommaire-lateral-corps > ol {
+  display: grid;
+  gap: 2px;
+}
+
+.sommaire-lateral a {
+  display: block;
+  padding: 6px 12px;
+  border-radius: 12px;
+  font-size: 0.92rem;
+  line-height: 1.35;
+  color: var(--rt-encre-70);
+  text-decoration: none;
+}
+
+.sommaire-lateral a:hover {
+  background: var(--rt-encre-08);
+  color: var(--rt-encre);
+}
+
+.sommaire-lateral a:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(var(--rt-primaire-rgb), 0.3);
+}
+
+.sommaire-lateral li > a {
+  font-weight: 600;
+}
+
+/* Les écrans d'une partie se lisent en retrait, sous son titre. */
+.sommaire-lateral li ol {
+  margin: 2px 0 6px 12px;
+  padding-left: 8px;
+  border-left: 2px solid var(--rt-encre-14);
+}
+
+.sommaire-lateral li li > a {
+  padding-block: 4px;
+  font-size: 0.86rem;
+  font-weight: 400;
+}
+
+.sommaire-lateral a[aria-current='location'] {
+  color: var(--rt-primaire);
+  background: rgba(var(--rt-primaire-rgb), 0.1);
+}
+
+.sommaire-lateral li.actif > a {
+  color: var(--rt-encre);
+}
+
+.sommaire-lateral li.actif > a[aria-current='location'] {
+  color: var(--rt-primaire);
+}
+
+.sommaire-lateral-bouton {
+  display: none;
+}
+
+/* Écran large : une colonne à gauche du texte, visible pendant la lecture.
+   Seule la partie en cours montre ses écrans. */
+@media (min-width: 1100px) {
+  .page.avec-sommaire {
+    position: relative;
+    padding-left: 268px;
+  }
+
+  .page.avec-sommaire > .barre {
+    margin-left: -268px;
+  }
+
+  .sommaire-lateral {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 228px;
+    /* Le sommaire commence à hauteur du titre de la page. */
+    padding-top: 186px;
+  }
+
+  .sommaire-lateral-corps {
+    position: sticky;
+    top: 104px;
+    max-height: calc(100vh - 128px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 18px 12px 18px 14px;
+    border-radius: 24px;
+    background: var(--rt-verre);
+    -webkit-backdrop-filter: var(--rt-flou);
+    backdrop-filter: var(--rt-flou);
+    box-shadow: var(--rt-ombre-verre), var(--rt-liseret);
+  }
+
+  .sommaire-lateral-corps > .etiquette {
+    padding-inline: 12px;
+  }
+
+  .sommaire-lateral li:not(.actif) ol {
+    display: none;
+  }
+}
+
+/* Écran étroit : un bouton en bas de l'écran ouvre le sommaire complet. */
+@media (max-width: 1099px) {
+  .sommaire-lateral {
+    position: fixed;
+    right: 16px;
+    bottom: max(16px, env(safe-area-inset-bottom));
+    z-index: 20;
+    display: grid;
+    justify-items: end;
+    gap: 10px;
+  }
+
+  .sommaire-lateral-bouton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 48px;
+    padding: 0 20px;
+    border: none;
+    border-radius: 999px;
+    background: var(--rt-encre);
+    color: #fff;
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    box-shadow: 0 8px 24px rgba(var(--rt-encre-rgb), 0.24);
+    cursor: pointer;
+  }
+
+  .sommaire-lateral-bouton::before {
+    content: '';
+    width: 14px;
+    height: 10px;
+    background:
+      linear-gradient(currentColor, currentColor) top / 100% 2px no-repeat,
+      linear-gradient(currentColor, currentColor) center / 100% 2px no-repeat,
+      linear-gradient(currentColor, currentColor) bottom / 100% 2px no-repeat;
+  }
+
+  .sommaire-lateral-bouton:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 4px rgba(var(--rt-encre-rgb), 0.24);
+  }
+
+  .sommaire-lateral-corps {
+    order: -1;
+    display: none;
+    box-sizing: border-box;
+    width: min(380px, calc(100vw - 32px));
+    max-height: min(70vh, 640px);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: 18px 12px;
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.94);
+    -webkit-backdrop-filter: blur(22px);
+    backdrop-filter: blur(22px);
+    box-shadow: 0 16px 48px rgba(var(--rt-encre-rgb), 0.18), var(--rt-liseret);
+  }
+
+  .sommaire-lateral[data-ouvert] .sommaire-lateral-corps {
+    display: grid;
+  }
+
+  .sommaire-lateral-corps > .etiquette {
+    padding-inline: 12px;
+  }
 }
