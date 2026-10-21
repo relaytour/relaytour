@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@relaytour/database'
 
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
+import { empreinteJeton, nouveauJeton } from '../lib/abonnements-agenda.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
 import { concilierApresEnvoi } from '../lib/convocations.ts'
 import { adminsAPrevenir, demandesEnAttente } from '../lib/demandes.ts'
@@ -13,6 +14,7 @@ import {
 } from '../lib/equipe.ts'
 import { horaireEnClair } from '../lib/heures.ts'
 import { calendrier } from '../lib/ics.ts'
+import { placesAVenir } from '../lib/espace-benevole.ts'
 import { invitationEnAttente } from '../lib/invitations.ts'
 import {
   LIBELLES_ROLE,
@@ -65,6 +67,8 @@ export function sujets(
     demandes: `${tete} : demandes pour rejoindre l’équipe`,
     'convocation-reunion': `${tete} : convocation à une réunion`,
     'annulation-reunion': `${tete} : réunion annulée`,
+    'benevole-lien': `${tete} : votre participation`,
+    'benevole-places': `${tete} : vos places ont changé`,
   }
 }
 
@@ -684,6 +688,68 @@ export async function composer(
       }
       const { sequence } = reunion
       apresEnvoi = () => concilierApresEnvoi(envoyee, sequence)
+    }
+  }
+
+  if (job.sorte === 'benevole-lien' || job.sorte === 'benevole-places') {
+    if (job.benevoleId === undefined) {
+      throw new Error(`Le mail « ${job.sorte} » exige une fiche bénévole.`)
+    }
+    const fiche = await prisma.benevole.findUnique({
+      where: { id: job.benevoleId },
+      include: {
+        activite: { select: { nom: true } },
+        organisation: { select: { fuseauHoraire: true } },
+      },
+    })
+    if (fiche === null || fiche.courriel === null) return null
+    const confirmee = fiche.courrielConfirmeLe !== null
+    // Le mail des places ne part qu'à une adresse confirmée (ADR 0041).
+    if (job.sorte === 'benevole-places' && !confirmee) return null
+    const maintenant = new Date()
+    const places = await placesAVenir(prisma, fiche.id, maintenant)
+    if (job.sorte === 'benevole-lien' && places.length === 0) return null
+    const fuseau = fiche.organisation.fuseauHoraire
+    // Le jeton naît à l'envoi : la file n'en porte aucun (invariant 5). Le lien
+    // précédent cesse de répondre.
+    const jeton = nouveauJeton()
+    await prisma.benevole.update({
+      where: { id: fiche.id },
+      data: { espaceEmpreinte: empreinteJeton(jeton) },
+    })
+    variables.lienEspace = `${origine.replace(/\/$/, '')}/benevole/${jeton}`
+    variables.places =
+      places.length === 0
+        ? ['Vous n’avez plus de place à venir.']
+        : places.map(
+            p =>
+              `${horaireEnClair(p.sequence.debut, p.sequence.fin, fuseau)} · ${p.sequence.titre}` +
+              (p.sequence.lieu ? ` (${p.sequence.lieu.nom})` : '') +
+              (p.confirmeeLe === null ? ' · à confirmer' : '')
+          )
+    const activite = fiche.activite.nom
+    if (job.sorte === 'benevole-lien' && !confirmee) {
+      variables.intitule = 'Votre candidature est retenue'
+      variables.intro = `L’équipe de ${activite} vous propose les places suivantes.`
+      variables.consigne =
+        'Confirmez votre participation depuis votre espace. Vous pouvez aussi y décliner une place.'
+      variables.libelleBouton = 'Confirmer ma participation'
+      variables.avertissement =
+        'Si vous n’êtes pas à l’origine de cette inscription, ignorez ce message. Vos données seront supprimées.'
+    } else if (job.sorte === 'benevole-lien') {
+      variables.intitule = 'Votre espace bénévole'
+      variables.intro = `Voici le lien de votre espace bénévole pour ${activite}.`
+      variables.consigne =
+        'Vous y retrouvez vos places, leurs consignes et le fichier pour votre agenda.'
+      variables.libelleBouton = 'Ouvrir mon espace'
+      variables.avertissement = 'Ce lien remplace celui des mails précédents.'
+    } else {
+      variables.intitule = 'Vos places ont changé'
+      variables.intro = `L’équipe de ${activite} a modifié vos places. Voici la liste à jour.`
+      variables.consigne = places.some(p => p.confirmeeLe === null)
+        ? 'Confirmez les places marquées « à confirmer » depuis votre espace.'
+        : 'Vous retrouvez vos places et leurs consignes dans votre espace.'
+      variables.avertissement = 'Ce lien remplace celui des mails précédents.'
     }
   }
 

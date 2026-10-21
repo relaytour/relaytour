@@ -7,7 +7,11 @@ import { SORTES_JAMAIS_REPORTEES } from '../lib/plafond-courriel.ts'
 // le code de connexion : il passe devant un envoi groupé et arrive avant d'expirer.
 const PRIORITE_DES_AUTRES_MAILS = 10
 
-export type CibleCourriel = { userId: string } | { destinataire: string }
+export type CibleCourriel =
+  | { userId: string }
+  | { destinataire: string }
+  // Une fiche bénévole : son adresse se relit à l'envoi (ADR 0041).
+  | { benevoleId: string }
 
 /**
  * Met un mail en file. Ne lève jamais : une file indisponible est journalisée,
@@ -88,7 +92,9 @@ export async function mettreEnFile(
         sorte,
         ...('userId' in cible
           ? { userId: cible.userId }
-          : { destinataire: courrielTronque(cible.destinataire) }),
+          : 'benevoleId' in cible
+            ? { benevoleId: cible.benevoleId }
+            : { destinataire: courrielTronque(cible.destinataire) }),
       },
       'Mail mis en file.'
     )

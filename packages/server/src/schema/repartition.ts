@@ -17,6 +17,10 @@ import {
 } from '../lib/appels.ts'
 import { coordonneesLisibles } from '../lib/benevoles.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import {
+  annoncerAcceptation,
+  signalerPlacesModifiees,
+} from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { peutEcrireSequence, PLACES_MAX } from '../lib/programme.ts'
 
@@ -400,14 +404,20 @@ builder.mutationFields(t => ({
         if (candidature === null || !voitLAppel(ecrits, candidature.appel)) {
           throw accesRefuse()
         }
-        await prisma.$transaction(async tx => {
-          await accepterSurSequence(tx, {
+        const { benevoleId } = await prisma.$transaction(async tx => {
+          const acceptee = await accepterSurSequence(tx, {
             candidatureId: candidature.id,
             sequenceId: sequence.id,
             acteurId: ctx.personne!.id,
             maintenant,
           })
           await incrementer(tx, sequence.id)
+          return acceptee
+        })
+        await annoncerAcceptation(prisma, {
+          benevoleId,
+          organisationId: sequence.organisationId,
+          activiteId: sequence.activiteId,
         })
         publierPourActivite(
           'CANDIDATURE',
@@ -459,6 +469,12 @@ builder.mutationFields(t => ({
           })
           await incrementer(tx, sequence.id)
         })
+        await signalerPlacesModifiees(
+          prisma,
+          [benevole.id],
+          sequence,
+          maintenant
+        )
       }
       signal(sequence)
       return lireSequence(ctx, await sequenceVisible(ctx, sequence.id))
@@ -477,7 +493,7 @@ builder.mutationFields(t => ({
           id: String(args.id),
           sequence: { organisationId: ctx.organisation!.id },
         },
-        select: { id: true, sequenceId: true },
+        select: { id: true, sequenceId: true, benevoleId: true },
       })
       if (place === null) throw accesRefuse()
       const sequence = await sequenceEcrite(ctx, place.sequenceId)
@@ -485,6 +501,9 @@ builder.mutationFields(t => ({
         await tx.placeSequence.delete({ where: { id: place.id } })
         await incrementer(tx, sequence.id)
       })
+      if (place.benevoleId !== null) {
+        await signalerPlacesModifiees(prisma, [place.benevoleId], sequence)
+      }
       signal(sequence)
       return lireSequence(ctx, await sequenceVisible(ctx, sequence.id))
     },

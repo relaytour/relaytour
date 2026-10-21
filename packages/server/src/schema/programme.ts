@@ -9,6 +9,7 @@ import {
   type EtatPlace,
 } from '../lib/appels.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
+import { signalerPlacesModifiees } from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { heureLocale } from '../lib/heures.ts'
@@ -232,6 +233,10 @@ const PlaceInput = builder.inputType('PlaceSequenceInput', {
     role: t.field({ type: RolePlaceEnum, required: true }),
   }),
 })
+
+/** Les fiches bénévoles d'une liste de places. */
+const fichesDe = (places: readonly { benevoleId: string | null }[]) =>
+  places.flatMap(p => (p.benevoleId ? [p.benevoleId] : []))
 
 export const signal = (s: {
   id: string
@@ -522,6 +527,7 @@ builder.mutationFields(t => {
             })
           }
         )
+        await signalerPlacesModifiees(prisma, fichesDe(valides.places), creee)
         signal(creee)
         return lireSequence(ctx, creee)
       },
@@ -581,6 +587,25 @@ builder.mutationFields(t => {
             ),
           })
         })
+        // Les bénévoles dont la place change reçoivent le mail de leurs places :
+        // toutes les fiches pour un horaire ou un lieu nouveau, sinon celles
+        // ajoutées ou retirées (ADR 0041).
+        const avant = fichesDe(actuelle.places)
+        const apres = fichesDe(valides.places)
+        const deplacee =
+          actuelle.debut.getTime() !== valides.champs.debut.getTime() ||
+          actuelle.fin.getTime() !== valides.champs.fin.getTime() ||
+          actuelle.lieuId !== valides.champs.lieuId
+        await signalerPlacesModifiees(
+          prisma,
+          deplacee
+            ? [...avant, ...apres]
+            : [
+                ...avant.filter(id => !apres.includes(id)),
+                ...apres.filter(id => !avant.includes(id)),
+              ],
+          actuelle
+        )
         signal(actuelle)
         return lireSequence(ctx, await sequenceVisible(ctx, actuelle.id))
       },
@@ -593,6 +618,11 @@ builder.mutationFields(t => {
         const sequence = await sequenceVisible(ctx, String(args.id))
         await exigerEcritureReunion(ctx, sequence)
         await prisma.sequence.delete({ where: { id: sequence.id } })
+        await signalerPlacesModifiees(
+          prisma,
+          fichesDe(sequence.places),
+          sequence
+        )
         signal(sequence)
         return true
       },

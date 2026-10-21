@@ -253,12 +253,28 @@ type BaremeScore {
 type Benevole {
   accordLe: DateTime!
 
+  """
+  La date à laquelle la personne a confirmé sa participation depuis son lien.
+  """
+  confirmeeLe: DateTime
+
   """Vrai si la personne connectée lit l’adresse, le téléphone et la note."""
   coordonneesVisibles: Boolean!
   courriel: String
   id: ID!
+  lienEnvoyeLe: DateTime
+
+  """
+  Vrai quand la personne connectée peut renvoyer le lien : il est parti une fois, sans relance.
+  """
+  lienRenvoyable: Boolean!
   nom: String!
   note: String
+
+  """
+  SAISIE : saisie par l’équipe. CANDIDATURE : née d’une candidature (ADR 0041).
+  """
+  origine: String!
   peutModifier: Boolean!
 
   """Le nombre de séquences où la fiche est placée."""
@@ -681,6 +697,23 @@ enum EntiteChangee {
   PERIMETRE
   PROGRAMME
   TACHE
+}
+
+"""
+L’espace d’une ou d’un bénévole, ouvert par son lien personnel (ADR 0041). Lisible sans session.
+"""
+type EspaceBenevole {
+  activite: String!
+
+  """Vrai quand la personne a confirmé sa participation."""
+  confirme: Boolean!
+  contact: String
+
+  """Les places à venir au format iCalendar, à télécharger."""
+  ics: String!
+  nom: String!
+  organisation: String!
+  places: [PlaceDeLEspace!]!
 }
 
 type EspaceFichiers {
@@ -1205,6 +1238,11 @@ type Mutation {
   commenterTache(id: ID!, texte: String!): FilTache!
 
   """
+  Confirme l’adresse de la fiche et toutes ses places à confirmer. Utilisable sans session.
+  """
+  confirmerParticipation(jeton: String!): Boolean!
+
+  """
   Connecte Google Drive par un compte de service : la clé JSON du compte, que l’organisation a créée. L’organisation partage ensuite ses dossiers avec l’adresse du compte.
   """
   connecterCompteServiceGoogle(cle: String!): ConnexionFichiers!
@@ -1598,6 +1636,11 @@ type Mutation {
   proposerPersonne(editionId: ID!, email: String!, mot: String, nom: String!, perimetreId: ID!): Boolean!
 
   """
+  Retire la personne d’une place à venir et prévient l’équipe. Une fiche non confirmée qu’aucune place ne retient est supprimée. Utilisable sans session.
+  """
+  quitterPlace(jeton: String!, ref: String!): Boolean!
+
+  """
   Refuse tous les choix en attente d’une candidature et la clôt. Réservé aux personnes qui gèrent l’appel. Aucun mail ne part.
   """
   refuserCandidature(id: ID!): Candidature!
@@ -1625,6 +1668,11 @@ type Mutation {
   """Remplace l’adresse publique d’un appel : l’ancienne cesse de répondre."""
   renouvelerAdresseAppelBenevoles(id: ID!): AppelEtAdresse!
   renvoyerInvitation(id: ID!): Boolean!
+
+  """
+  Renvoie le lien personnel d’une fiche née d’une candidature, une seule fois. Le nouveau lien remplace l’ancien. Réservé aux personnes qui lisent ses coordonnées.
+  """
+  renvoyerLienBenevole(benevoleId: ID!): Boolean!
 
   """
   La réponse de la personne connectée à sa convocation : présente, absente ou peut-être.
@@ -1682,6 +1730,11 @@ type Mutation {
   """
   supprimerCommentaire(id: ID!): FilTache!
   supprimerDateCle(id: ID!): Boolean!
+
+  """
+  Supprime la fiche de la personne, avec ses plages. Refusé tant qu’une place à venir la retient. Utilisable sans session.
+  """
+  supprimerMaFiche(jeton: String!): Boolean!
   supprimerSequence(id: ID!): Boolean!
 
   """
@@ -2003,6 +2056,19 @@ input PhaseInput {
   libelle: String!
 }
 
+type PlaceDeLEspace {
+  confirmee: Boolean!
+  consignes: String
+  heureDebut: String!
+  heureFin: String!
+  jour: String!
+  jourFin: String!
+  lieu: String
+  perimetre: String
+  ref: String!
+  titre: String!
+}
+
 type PlaceSequence {
   """La fiche bénévole ; ses coordonnées se lisent à part."""
   benevoleId: ID
@@ -2230,6 +2296,11 @@ type Query {
   """
   emplacementsFichiers: [EmplacementFichiers!]!
   equipe(activiteId: ID): [Personne!]!
+
+  """
+  L’espace d’une fiche bénévole, ou null pour un lien inconnu ou révoqué. Lisible sans session ; l’ouverture ne confirme rien.
+  """
+  espaceBenevole(jeton: String!): EspaceBenevole
   espaceFichiers: EspaceFichiers!
   exportContenu: ArchiveContenu!
   fiche(activiteId: ID, slug: String!): Fiche

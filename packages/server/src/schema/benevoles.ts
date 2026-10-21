@@ -56,6 +56,31 @@ const BenevoleRef = builder.objectRef<BenevoleLu>('Benevole').implement({
       description: 'Le nombre de séquences où la fiche est placée.',
       resolve: l => l.benevole._count.places,
     }),
+    origine: t.string({
+      description:
+        'SAISIE : saisie par l’équipe. CANDIDATURE : née d’une candidature (ADR 0041).',
+      resolve: l => l.benevole.origine,
+    }),
+    confirmeeLe: t.field({
+      type: 'DateTime',
+      nullable: true,
+      description:
+        'La date à laquelle la personne a confirmé sa participation depuis son lien.',
+      resolve: l => l.benevole.courrielConfirmeLe,
+    }),
+    lienEnvoyeLe: t.field({
+      type: 'DateTime',
+      nullable: true,
+      resolve: l => l.benevole.lienEnvoyeLe,
+    }),
+    lienRenvoyable: t.boolean({
+      description:
+        'Vrai quand la personne connectée peut renvoyer le lien : il est parti une fois, sans relance.',
+      resolve: l =>
+        l.coordonnees &&
+        l.benevole.lienEnvoyeLe !== null &&
+        l.benevole.relanceLe === null,
+    }),
     peutModifier: t.boolean({ resolve: l => l.peutModifier }),
   }),
 })

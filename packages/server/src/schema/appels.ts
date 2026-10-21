@@ -22,6 +22,7 @@ import {
   recalculerCandidature,
 } from '../lib/appels.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
+import { annoncerAcceptation } from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
@@ -716,8 +717,8 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const choix = await choixTraitable(ctx, String(args.id))
       if (choix.statut === 'ACCEPTE') return relire(ctx, choix.candidatureId)
-      await prisma.$transaction(async tx => {
-        await accepterSurSequence(tx, {
+      const { benevoleId } = await prisma.$transaction(async tx => {
+        const acceptee = await accepterSurSequence(tx, {
           candidatureId: choix.candidatureId,
           sequenceId: choix.sequenceId,
           acteurId: ctx.personne!.id,
@@ -727,6 +728,13 @@ builder.mutationFields(t => ({
           where: { id: choix.sequenceId },
           data: { version: { increment: 1 } },
         })
+        return acceptee
+      })
+      // Le mail suit la validation de la transaction : la file relit la fiche.
+      await annoncerAcceptation(prisma, {
+        benevoleId,
+        organisationId: choix.candidature.organisationId,
+        activiteId: choix.sequence.activiteId,
       })
       signaux(choix)
       return relire(ctx, choix.candidatureId)

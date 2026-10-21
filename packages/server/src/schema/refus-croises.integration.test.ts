@@ -1441,6 +1441,12 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'renvoyerLienBenevole',
+    query: 'mutation ($b: ID!) { renvoyerLienBenevole(benevoleId: $b) }',
+    variables: () => ({ b: a.benevole }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'modifierPlagesBenevole',
     query:
       'mutation ($b: ID!, $e: ID!) { modifierPlagesBenevole(benevoleId: $b, editionId: $e, plages: []) { debut } }',
