@@ -69,6 +69,13 @@ model Organisation {
   demandes                Demande[]
   messages                Message[]
   invitations             InvitationOrganisation[]
+  datesCles               DateCle[]
+  reunions                Reunion[]
+  abonnementsAgenda       AbonnementAgenda[]
+  sondages                Sondage[]
+  lieux                   Lieu[]
+  sequences               Sequence[]
+  benevoles               Benevole[]
   connexionFichiers       ConnexionFichiers?
   dossiersLies            DossierLie[]
   ressourcesFiches        RessourceFiche[]
@@ -245,7 +252,7 @@ model Activite {
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
-  organisation  Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  organisation  Organisation       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   editions      Edition[]
   perimetres    Perimetre[]
   fiches        Fiche[]
@@ -253,6 +260,13 @@ model Activite {
   demandes      Demande[]
   messages      Message[]
   notifications Notification[]
+  datesCles     DateCle[]
+  reunions      Reunion[]
+  abonnements   AbonnementAgenda[]
+  sondages      Sondage[]
+  lieux         Lieu[]
+  sequences     Sequence[]
+  benevoles     Benevole[]
   dossiersLies  DossierLie[]
 
   @@unique([organisationId, slug])
@@ -289,6 +303,9 @@ model User {
   tachesRealisees         Tache[]                  @relation("TacheRealisation")
   tachesAccordees         Tache[]                  @relation("TacheAccord")
   versionsFiches          FicheVersion[]
+  fichesConnexesAjoutees  FicheConnexe[]           @relation("FicheConnexeAuteur")
+  groupesConnexesAjoutes  FicheGroupeConnexe[]     @relation("FicheGroupeConnexeAuteur")
+  fichesConnexesMasquees  FicheConnexeMasquee[]    @relation("FicheConnexeMasqueePar")
   droitsRedaction         DroitRedaction[]         @relation("DroitRedactionPersonne")
   droitsAccordes          DroitRedaction[]         @relation("DroitRedactionAuteur")
   notifications           Notification[]           @relation("NotificationDestinataire")
@@ -307,6 +324,17 @@ model User {
   invitationsEnvoyees     InvitationOrganisation[] @relation("InvitationEnvoyee")
   messagesEcrits          Message[]                @relation("MessageAuteur")
   messagesRecus           MessageDestinataire[]
+  datesClesCreees         DateCle[]                @relation("DateCleAuteur")
+  reunionsCreees          Reunion[]                @relation("ReunionAuteur")
+  convocations            ConvocationReunion[]
+  abonnementsAgenda       AbonnementAgenda[]       @relation("AbonnementPersonne")
+  abonnementsCrees        AbonnementAgenda[]       @relation("AbonnementAuteur")
+  sondagesCrees           Sondage[]                @relation("SondageAuteur")
+  participationsSondage   ParticipantSondage[]
+  reponsesSondage         ReponseSondage[]
+  sequencesCreees         Sequence[]               @relation("SequenceAuteur")
+  placesSequence          PlaceSequence[]
+  benevolesCrees          Benevole[]               @relation("BenevoleAuteur")
   connexionsFichiers      ConnexionFichiers[]
   dossiersLies            DossierLie[]
   ressourcesFiches        RessourceFiche[]
@@ -395,6 +423,10 @@ model Edition {
   souhaits     Souhait[]
   demandes     Demande[]
   messages     Message[]
+  datesCles    DateCle[]
+  reunions     Reunion[]
+  sondages     Sondage[]
+  sequences    Sequence[]
 
   @@unique([activiteId, annee])
   @@index([organisationId])
@@ -434,8 +466,8 @@ model Perimetre {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  organisation    Organisation?       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  activite        Activite            @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  organisation    Organisation?         @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite        Activite              @relation(fields: [activiteId], references: [id], onDelete: Restrict)
   affectations    Affectation[]
   taches          Tache[]
   journal         Journal[]
@@ -445,7 +477,13 @@ model Perimetre {
   souhaits        Souhait[]
   demandes        DemandePerimetre[]
   messages        Message[]
+  reunions        Reunion[]
+  sondages        Sondage[]
+  sequences       Sequence[]
   dossiersLies    DossierLie[]
+  // Fiches d'autres périmètres qui concernent aussi celui-ci (ADR 0039).
+  fichesConnexes  FicheConnexe[]
+  fichesMasquees  FicheConnexeMasquee[]
 
   @@unique([activiteId, slug])
   @@index([organisationId])
@@ -726,6 +764,7 @@ model Tache {
   commentaires  CommentaireTache[]
   journal       Journal[]
   notifications Notification[]
+  reunions      ReunionTache[]
 
   // Une déclinaison par périmètre cible. La clé est bornée par la tâche partagée,
   // elle-même rangée dans une activité (invariant 18).
@@ -766,6 +805,402 @@ model CommentaireTache {
   @@index([auteurId])
 }
 
+// ── Agenda (ADR 0037) ─────────────────────────────────────────────────────────
+
+// Jour, ou suite de jours, qu'un admin de l'activité place dans l'agenda d'une
+// période : un dossier à déposer, une assemblée, une visite du site.
+model DateCle {
+  id             String    @id @default(cuid())
+  organisationId String
+  activiteId     String
+  editionId      String
+  titre          String    @db.VarChar(120)
+  jour           DateTime  @db.Date
+  // Dernier jour d'une suite de jours ; null pour un seul jour.
+  jourFin        DateTime? @db.Date
+  description    String?   @db.Text
+  creeParId      String?
+  // Compte les modifications. Une modification porte la version lue : le serveur
+  // refuse d'écraser un changement fait entre-temps.
+  version        Int       @default(0)
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  edition      Edition      @relation(fields: [editionId], references: [id], onDelete: Restrict)
+  creePar      User?        @relation("DateCleAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+
+  @@index([editionId, jour])
+  @@index([organisationId])
+  @@index([activiteId])
+  @@index([creeParId])
+}
+
+enum StatutReunion {
+  PREVUE
+  ANNULEE
+}
+
+// Les personnes convoquées à une réunion : tout le périmètre, toute l'équipe de
+// l'activité, ou des personnes choisies dans l'équipe.
+enum CibleConvocation {
+  PERIMETRE
+  EQUIPE
+  CHOIX
+}
+
+enum ReponseConvocation {
+  PRESENT
+  ABSENT
+  PEUT_ETRE
+}
+
+// Réunion de l'agenda global d'une activité (`perimetreId` nul) ou de l'agenda
+// d'un périmètre, pour une période. Une réunion ne se supprime pas : elle
+// s'annule, et l'annulation prévient les personnes convoquées.
+model Reunion {
+  id             String            @id @default(cuid())
+  organisationId String
+  activiteId     String
+  editionId      String
+  perimetreId    String?
+  titre          String            @db.VarChar(200)
+  // Instants en UTC. La saisie et l'affichage suivent le fuseau de l'organisation.
+  debut          DateTime
+  fin            DateTime
+  lieu           String?           @db.VarChar(200)
+  lienVisio      String?           @db.VarChar(500)
+  description    String?           @db.Text
+  statut         StatutReunion     @default(PREVUE)
+  // Les personnes convoquées ; null sans convocation.
+  cible          CibleConvocation?
+  // Version iCalendar (SEQUENCE) : elle monte à chaque changement du titre, de
+  // l'horaire, du lieu ou du lien, et à l'annulation.
+  sequence       Int               @default(0)
+  // Compte les modifications. Une modification porte la version lue.
+  version        Int               @default(0)
+  creeParId      String?
+  annuleeLe      DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  organisation  Organisation         @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite      Activite             @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  edition       Edition              @relation(fields: [editionId], references: [id], onDelete: Restrict)
+  perimetre     Perimetre?           @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  creePar       User?                @relation("ReunionAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  convocations  ConvocationReunion[]
+  taches        ReunionTache[]
+  notifications Notification[]
+  sondage       Sondage?
+
+  @@index([editionId, debut])
+  @@index([perimetreId, debut])
+  @@index([organisationId])
+  @@index([activiteId])
+  @@index([creeParId])
+}
+
+// Tâche liée à une réunion, vingt au plus par réunion : de la même période, et
+// du même périmètre pour une réunion de périmètre. Le lien n'ouvre aucun droit.
+model ReunionTache {
+  id        String @id @default(cuid())
+  reunionId String
+  tacheId   String
+
+  reunion Reunion @relation(fields: [reunionId], references: [id], onDelete: Cascade)
+  tache   Tache   @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+
+  // Un lien par tâche, borné par la réunion (invariant 18).
+  @@unique([reunionId, tacheId])
+  @@index([tacheId])
+}
+
+// Convocation d'une personne de l'équipe à une réunion. Elle vise un compte,
+// jamais une adresse. La personne répond dans l'application.
+model ConvocationReunion {
+  id              String              @id @default(cuid())
+  reunionId       String
+  userId          String
+  reponse         ReponseConvocation?
+  reponduLe       DateTime?
+  // Dernier mail parti, et la version de la réunion qu'il portait.
+  envoyeeLe       DateTime?
+  sequenceEnvoyee Int?
+  createdAt       DateTime            @default(now())
+
+  reunion Reunion @relation(fields: [reunionId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Une convocation par personne, bornée par la réunion (invariant 18).
+  @@unique([reunionId, userId])
+  @@index([userId])
+}
+
+// Ce que sert un abonnement : l'agenda d'une personne, ou l'agenda global d'une
+// activité (ADR 0037).
+// ── Programme du jour J (ADR 0040) ──────────────────────────────────────────────
+
+// Endroit d'une activité : un terrain, un bassin, une salle. Il sert d'une période
+// à l'autre.
+model Lieu {
+  id             String    @id @default(cuid())
+  organisationId String
+  activiteId     String
+  nom            String    @db.VarChar(120)
+  description    String?   @db.Text
+  ordre          Int       @default(0)
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  sequences    Sequence[]
+
+  @@index([activiteId, ordre])
+  @@index([organisationId])
+}
+
+// Moment du programme d'une période : un titre, un horaire, un lieu et un
+// périmètre facultatifs. Une séquence sans périmètre appartient à l'activité.
+model Sequence {
+  id             String   @id @default(cuid())
+  organisationId String
+  activiteId     String
+  editionId      String
+  perimetreId    String?
+  lieuId         String?
+  titre          String   @db.VarChar(200)
+  // Instants en UTC. La saisie et l'affichage suivent le fuseau de l'organisation.
+  debut          DateTime
+  fin            DateTime
+  description    String?  @db.Text
+  // Compte les modifications. Une modification porte la version lue.
+  version        Int      @default(0)
+  creeParId      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organisation Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite        @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  edition      Edition         @relation(fields: [editionId], references: [id], onDelete: Restrict)
+  perimetre    Perimetre?      @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  lieu         Lieu?           @relation(fields: [lieuId], references: [id], onDelete: SetNull)
+  creePar      User?           @relation("SequenceAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  places       PlaceSequence[]
+
+  @@index([editionId, debut])
+  @@index([perimetreId])
+  @@index([lieuId])
+  @@index([organisationId])
+  @@index([activiteId])
+  @@index([creeParId])
+}
+
+enum RolePlace {
+  RESPONSABLE
+  RENFORT
+}
+
+// Une personne placée dans une séquence : un compte de l'équipe, ou une fiche
+// bénévole, jamais les deux.
+model PlaceSequence {
+  id         String    @id @default(cuid())
+  sequenceId String
+  userId     String?
+  benevoleId String?
+  role       RolePlace @default(RENFORT)
+  createdAt  DateTime  @default(now())
+
+  sequence Sequence  @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+  user     User?     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  benevole Benevole? @relation(fields: [benevoleId], references: [id], onDelete: Cascade)
+
+  // Une place par personne et par séquence, bornée par la séquence (invariant 18).
+  @@unique([sequenceId, userId])
+  @@unique([sequenceId, benevoleId])
+  @@index([userId])
+  @@index([benevoleId])
+}
+
+// Fiche d'une personne qui aide l'activité sans compte (ADR 0040). Elle ne donne
+// aucun accès. Elle n'existe qu'avec l'accord de la personne, déclaré à la
+// création, et vit en base seulement.
+model Benevole {
+  id             String   @id @default(cuid())
+  organisationId String
+  activiteId     String
+  nom            String   @db.VarChar(120)
+  courriel       String?  @db.VarChar(254)
+  telephone      String?  @db.VarChar(40)
+  note           String?  @db.Text
+  // La date à laquelle la personne qui crée la fiche a déclaré l'accord.
+  accordLe       DateTime
+  creeParId      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organisation Organisation    @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite        @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  creePar      User?           @relation("BenevoleAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  places       PlaceSequence[]
+
+  @@index([activiteId, nom])
+  @@index([organisationId])
+  @@index([creeParId])
+}
+
+enum StatutSondage {
+  OUVERT
+  CLOS
+}
+
+enum ChoixSondage {
+  OUI
+  SI_BESOIN
+  NON
+}
+
+// Sondage de dates pour une réunion à venir (ADR 0037), dans l'agenda global
+// d'une activité ou dans l'agenda d'un périmètre. Les personnes visées répondent à
+// chaque créneau ; une personne qui écrit dans l'agenda le clôt sur un créneau,
+// puis crée la réunion.
+model Sondage {
+  id              String           @id @default(cuid())
+  organisationId  String
+  activiteId      String
+  editionId       String
+  perimetreId     String?
+  titre           String           @db.VarChar(200)
+  description     String?          @db.Text
+  cible           CibleConvocation
+  statut          StatutSondage    @default(OUVERT)
+  // Le créneau retenu à la clôture, et la réunion créée depuis le sondage.
+  creneauRetenuId String?          @unique
+  reunionId       String?          @unique
+  // Compte les modifications. Une modification porte la version lue.
+  version         Int              @default(0)
+  creeParId       String?
+  closLe          DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  organisation  Organisation         @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite      Activite             @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  edition       Edition              @relation(fields: [editionId], references: [id], onDelete: Restrict)
+  perimetre     Perimetre?           @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  creePar       User?                @relation("SondageAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  creneauRetenu CreneauSondage?      @relation("CreneauRetenu", fields: [creneauRetenuId], references: [id], onDelete: SetNull)
+  reunion       Reunion?             @relation(fields: [reunionId], references: [id], onDelete: SetNull)
+  creneaux      CreneauSondage[]     @relation("CreneauxDuSondage")
+  participants  ParticipantSondage[]
+  notifications Notification[]
+
+  @@index([editionId])
+  @@index([perimetreId])
+  @@index([organisationId])
+  @@index([activiteId])
+  @@index([creeParId])
+}
+
+// Un créneau proposé : un jour, avec un horaire facultatif dans le fuseau de
+// l'organisation (HH:MM).
+model CreneauSondage {
+  id         String   @id @default(cuid())
+  sondageId  String
+  jour       DateTime @db.Date
+  heureDebut String?  @db.VarChar(5)
+  heureFin   String?  @db.VarChar(5)
+  ordre      Int      @default(0)
+
+  sondage   Sondage          @relation("CreneauxDuSondage", fields: [sondageId], references: [id], onDelete: Cascade)
+  retenuPar Sondage?         @relation("CreneauRetenu")
+  reponses  ReponseSondage[]
+
+  @@index([sondageId, ordre])
+}
+
+// Une personne visée par un sondage, fixée à son ouverture.
+model ParticipantSondage {
+  id        String   @id @default(cuid())
+  sondageId String
+  userId    String
+  createdAt DateTime @default(now())
+
+  sondage Sondage @relation(fields: [sondageId], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Une participation par personne, bornée par le sondage (invariant 18).
+  @@unique([sondageId, userId])
+  @@index([userId])
+}
+
+// La réponse d'une personne à un créneau.
+model ReponseSondage {
+  id        String       @id @default(cuid())
+  creneauId String
+  userId    String
+  choix     ChoixSondage
+  updatedAt DateTime     @updatedAt
+
+  creneau CreneauSondage @relation(fields: [creneauId], references: [id], onDelete: Cascade)
+  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Une réponse par personne et par créneau, bornée par le créneau (invariant 18).
+  @@unique([creneauId, userId])
+  @@index([userId])
+}
+
+enum SorteAbonnement {
+  PERSONNEL
+  ACTIVITE
+}
+
+// Adresse secrète qui sert un agenda au format iCalendar, en lecture seule
+// (ADR 0037). Le jeton de l'adresse ne se garde pas : seule son empreinte SHA-256
+// le désigne. Une personne a au plus un abonnement actif par organisation, une
+// activité aussi : le code révoque l'ancien avant d'en créer un nouveau.
+model AbonnementAgenda {
+  id               String          @id @default(cuid())
+  organisationId   String
+  sorte            SorteAbonnement
+  // La personne d'un abonnement personnel.
+  userId           String?
+  // L'activité d'un abonnement d'activité.
+  activiteId       String?
+  empreinte        String          @db.Char(64)
+  // Les derniers caractères du jeton, pour reconnaître l'adresse à l'écran.
+  fin              String          @db.VarChar(8)
+  // Abonnement personnel : les périmètres choisis. Null : tous les périmètres
+  // que la personne lit.
+  perimetreIds     Json?
+  // Abonnement personnel : l'agenda global des activités, et les échéances des
+  // tâches assignées à la personne.
+  inclureGlobal    Boolean         @default(true)
+  inclureEcheances Boolean         @default(false)
+  // Dernière lecture par un agenda, posée au plus une fois par heure.
+  dernierAccesLe   DateTime?
+  revoqueLe        DateTime?
+  creeParId        String?
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  user         User?        @relation("AbonnementPersonne", fields: [userId], references: [id], onDelete: Cascade)
+  activite     Activite?    @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  creePar      User?        @relation("AbonnementAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+
+  // L'empreinte est unique dans son organisation (invariant 18) ; l'adresse ne
+  // porte pas l'organisation, d'où l'index sur l'empreinte seule.
+  @@unique([organisationId, empreinte])
+  @@index([empreinte])
+  @@index([userId])
+  @@index([activiteId])
+  @@index([creeParId])
+}
+
 enum TypeJournal {
   TACHE_CREEE
   TACHE_MODIFIEE
@@ -780,6 +1215,10 @@ enum TypeJournal {
   DECLINAISON_ACCEPTEE
   DECLINAISON_REFUSEE
   DECLINAISON_IMPOSEE
+  // Une fiche connexe masquée, puis affichée de nouveau, par un périmètre cible
+  // (ADR 0039) : le périmètre de la ligne est le périmètre cible.
+  FICHE_CONNEXE_MASQUEE
+  FICHE_CONNEXE_AFFICHEE
 }
 
 // Journal : qui a fait quoi, et quand. Il alimente les notifications et le score
@@ -833,14 +1272,18 @@ model Fiche {
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
-  organisation    Organisation     @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  activite        Activite         @relation(fields: [activiteId], references: [id], onDelete: Restrict)
-  perimetre       Perimetre?       @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
-  versionCourante FicheVersion?    @relation("FicheVersionCourante", fields: [versionCouranteId], references: [id], onDelete: SetNull)
-  versions        FicheVersion[]   @relation("FicheVersions")
+  organisation    Organisation          @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite        Activite              @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  perimetre       Perimetre?            @relation(fields: [perimetreId], references: [id], onDelete: Restrict)
+  versionCourante FicheVersion?         @relation("FicheVersionCourante", fields: [versionCouranteId], references: [id], onDelete: SetNull)
+  versions        FicheVersion[]        @relation("FicheVersions")
   taches          Tache[]
   journal         Journal[]
   notifications   Notification[]
+  // Liste « Concerne aussi » (ADR 0039) : des périmètres et des groupes de l'activité.
+  connexes        FicheConnexe[]
+  groupesConnexes FicheGroupeConnexe[]
+  masquages       FicheConnexeMasquee[]
   ressources      RessourceFiche[]
   exportCloud     FicheExportee?
 
@@ -868,6 +1311,62 @@ model FicheVersion {
   auteur        User?  @relation(fields: [auteurId], references: [id], onDelete: SetNull)
 
   @@index([ficheId, createdAt])
+}
+
+// ── Fiches connexes (ADR 0039) ───────────────────────────────────────────────
+// Une fiche de périmètre se lit, sans s'y modifier, dans d'autres périmètres de son
+// activité : ceux de sa liste « Concerne aussi », ceux des groupes de cette liste, et
+// ceux d'une déclinaison acceptée qui la cite. Chaque clé unique est bornée par la
+// fiche (invariant 18).
+
+// Un périmètre de la liste « Concerne aussi ». `ajouteeParId` est nul pour une ligne
+// venue du contenu.
+model FicheConnexe {
+  id           String   @id @default(cuid())
+  ficheId      String
+  perimetreId  String
+  ajouteeParId String?
+  ajouteeLe    DateTime @default(now())
+
+  fiche      Fiche     @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  perimetre  Perimetre @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  ajouteePar User?     @relation("FicheConnexeAuteur", fields: [ajouteeParId], references: [id], onDelete: SetNull)
+
+  @@unique([ficheId, perimetreId])
+  @@index([perimetreId])
+}
+
+// Un groupe de la liste « Concerne aussi », désigné par sa clé dans l'activité de la
+// fiche. Il concerne aussi les périmètres qui rejoignent le groupe plus tard.
+model FicheGroupeConnexe {
+  id          String   @id @default(cuid())
+  ficheId     String
+  groupe      String
+  ajouteParId String?
+  ajouteLe    DateTime @default(now())
+
+  fiche     Fiche @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  ajoutePar User? @relation("FicheGroupeConnexeAuteur", fields: [ajouteParId], references: [id], onDelete: SetNull)
+
+  @@unique([ficheId, groupe])
+}
+
+// Une fiche connexe masquée par un périmètre cible : elle quitte sa liste « Fiches
+// connexes » et reste lisible par son lien. Le masquage vaut quel que soit le chemin
+// du partage. Il vit en base seulement, jamais dans le contenu.
+model FicheConnexeMasquee {
+  id           String   @id @default(cuid())
+  ficheId      String
+  perimetreId  String
+  masqueeParId String?
+  masqueeLe    DateTime @default(now())
+
+  fiche      Fiche     @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  perimetre  Perimetre @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  masqueePar User?     @relation("FicheConnexeMasqueePar", fields: [masqueeParId], references: [id], onDelete: SetNull)
+
+  @@unique([ficheId, perimetreId])
+  @@index([perimetreId])
 }
 
 // Droit d'écrire les fiches, accordé par un admin : pour un périmètre, ou pour
@@ -935,6 +1434,16 @@ enum TypeNotification {
   // La place d'une personne dans l'équipe a changé : elle accompagne le mail
   // d'équipe (ADR 0012), pour la personne concernée.
   PLACE_MODIFIEE
+  // Réunion de l'agenda (ADR 0037), pour chaque personne convoquée : convocation,
+  // modification de l'horaire, du lieu ou du lien, annulation. `reunionId` la désigne.
+  REUNION_CONVOQUEE
+  REUNION_MODIFIEE
+  REUNION_ANNULEE
+  // Un sondage de dates vise la personne (ADR 0037). `sondageId` le désigne.
+  SONDAGE_OUVERT
+  // Une fiche d'un autre périmètre concerne aussi celui-ci (ADR 0039), dans
+  // l'application seulement. `perimetreId` désigne le périmètre cible.
+  FICHE_CONNEXE
 }
 
 // À quel titre une personne reçoit une notification (ADR 0033). Le niveau
@@ -970,6 +1479,10 @@ model Notification {
   // Pour TACHE_STATUT : le nouveau statut. Un passage à « faite » ne garde pas son
   // auteur : qui a coché reste réservé à la personne qui a coché et aux admins.
   statut         StatutTache?
+  // Pour les notifications d'une réunion (ADR 0037).
+  reunionId      String?
+  // Pour les notifications d'un sondage de dates (ADR 0037).
+  sondageId      String?
   // Empêche de créer deux fois le même rappel (type, tâche, personne, échéance).
   cle            String?            @unique
   lueLe          DateTime?
@@ -984,8 +1497,12 @@ model Notification {
   tache        Tache?       @relation(fields: [tacheId], references: [id], onDelete: Cascade)
   activite     Activite?    @relation(fields: [activiteId], references: [id], onDelete: Cascade)
   fiche        Fiche?       @relation(fields: [ficheId], references: [id], onDelete: Cascade)
+  reunion      Reunion?     @relation(fields: [reunionId], references: [id], onDelete: Cascade)
+  sondage      Sondage?     @relation(fields: [sondageId], references: [id], onDelete: Cascade)
 
   @@index([userId, lueLe, createdAt])
+  @@index([reunionId])
+  @@index([sondageId])
   @@index([userId, resumeeLe])
   @@index([organisationId])
   @@index([userId, organisationId, niveau, lueLe])
@@ -1051,6 +1568,8 @@ model PreferenceOrganisation {
   pushEquipe           Boolean         @default(false)
   // La section « Pour vos rôles d'admin » du résumé.
   resumeAdmin          Boolean         @default(true)
+  // Vos réunions : convocation, modification, annulation (ADR 0037).
+  pushAgenda           Boolean         @default(true)
   dernierResumeLe      DateTime?
   updatedAt            DateTime        @updatedAt
 

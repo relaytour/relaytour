@@ -16,6 +16,9 @@ import MessagesActivite from './pages/admin/MessagesActivite'
 import NotificationsAdmin from './pages/admin/NotificationsAdmin'
 import Personnes from './pages/admin/Personnes'
 import Redaction from './pages/admin/Redaction'
+import Agenda from './pages/Agenda'
+import AideMarkdown from './pages/AideMarkdown'
+import Benevoles from './pages/Benevoles'
 import Connexion from './pages/Connexion'
 import Fiche from './pages/Fiche'
 import FicheEditeur from './pages/FicheEditeur'
@@ -23,6 +26,7 @@ import Fiches from './pages/Fiches'
 import MonEspace from './pages/MonEspace'
 import Organigramme from './pages/Organigramme'
 import Perimetre from './pages/Perimetre'
+import Programme from './pages/Programme'
 import Preferences from './pages/Preferences'
 import Rejoindre from './pages/Rejoindre'
 import Retroplanning from './pages/Retroplanning'
@@ -53,11 +57,15 @@ const routeur = createBrowserRouter([
         children: [
           { index: true, element: <MonEspace /> },
           { path: 'retroplanning', element: <Retroplanning /> },
+          { path: 'agenda', element: <Agenda /> },
+          { path: 'programme', element: <Programme /> },
+          { path: 'benevoles', element: <Benevoles /> },
           { path: 'perimetres/:slug', element: <Perimetre /> },
           { path: 'fiches', element: <Fiches /> },
           { path: 'fiches/nouvelle', element: <FicheEditeur /> },
           { path: 'fiches/:slug', element: <Fiche /> },
           { path: 'fiches/:slug/modifier', element: <FicheEditeur /> },
+          { path: 'aide/markdown', element: <AideMarkdown /> },
         ],
       },
       {

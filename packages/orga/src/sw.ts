@@ -11,7 +11,8 @@ declare const __FICHIERS_COQUILLE__: string[]
 
 const CACHE = `relaytour-coquille-${__VERSION_COQUILLE__}`
 const PAGE = '/index.html'
-const HORS_CACHE = ['/graphql', '/api/', '/medias/']
+// `/agenda/` porte les abonnements à l'agenda (ADR 0037), servis par l'API.
+const HORS_CACHE = ['/graphql', '/api/', '/medias/', '/agenda/']
 
 sw.addEventListener('install', evenement => {
   evenement.waitUntil(

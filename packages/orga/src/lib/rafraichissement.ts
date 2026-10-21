@@ -45,6 +45,17 @@ export const VUES_TACHES = [
   // Commentaires (ADR 0029) : le nombre par tâche, et le fil quand il est ouvert.
   'CommentairesDeLaPeriode',
   'FilTache',
+  // L'agenda montre les échéances des tâches (ADR 0037).
+  'Agenda',
+  'Reunions',
+  'ReunionsDuPerimetre',
+  'Reunion',
+  'Sondages',
+  'Sondage',
+  'Programme',
+  'ProgrammePerimetre',
+  'Lieux',
+  'Benevoles',
 ]
 
 /** Les requêtes relues, désignées par le nom de leur opération GraphQL. */
@@ -61,8 +72,15 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   'DossiersLies',
   'ContenuDossierLie',
   'RessourcesFiche',
-  // Périmètres et équipe.
+  // Périmètres et équipe. `Perimetres` porte aussi le catalogue des mentions
+  // d'une fiche (ADR 0039).
+  'Perimetres',
   'MenuPerimetres',
+  // Les agendas où une personne écrit suivent ses affectations (ADR 0037).
+  'AffectationsPourAgenda',
+  'AgendasEcrits',
+  // Tous les lieux, archivés compris, dans la fenêtre des lieux (ADR 0040).
+  'LieuxTous',
   'TousLesPerimetres',
   'Organigramme',
   'PostesAPourvoir',

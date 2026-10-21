@@ -5,6 +5,8 @@ import type {
   TypeNotification,
 } from '@relaytour/database'
 
+import { lecteurDeLaFiche } from './fiches-connexes.ts'
+
 // Texte, lien et contexte des notifications (ADR 0032 et 0033). Une notification ne
 // stocke que des identifiants : ce module relit les noms à jour et compose, pour un
 // lot de notifications, ce que la cloche, l'écran des admins, le push et les mails
@@ -41,12 +43,16 @@ export const SELECTION_NOTIFICATION = {
   },
   fiche: {
     select: {
+      id: true,
       slug: true,
       activiteId: true,
       perimetreId: true,
       versionCourante: { select: { titre: true } },
     },
   },
+  // Une réunion de l'agenda (ADR 0037).
+  reunion: { select: { id: true, titre: true, editionId: true } },
+  sondage: { select: { id: true, titre: true, editionId: true } },
 } as const
 
 export interface NotificationLue {
@@ -74,11 +80,14 @@ export interface NotificationLue {
     origine?: { id: string; perimetre: { nom: string; slug: string } } | null
   } | null
   fiche: {
+    id: string
     slug: string
     activiteId: string
     perimetreId: string | null
     versionCourante: { titre: string } | null
   } | null
+  reunion?: { id: string; titre: string; editionId: string } | null
+  sondage?: { id: string; titre: string; editionId: string } | null
 }
 
 export interface ActiviteDeNotification {
@@ -149,12 +158,17 @@ interface Contexte {
   premiereActivite: Map<string, string>
   /** Le nom des périodes que portent les notifications d'admin. */
   periodes: Map<string, string>
+  /**
+   * Les notifications de fiche connexe dont la personne ne lit plus la fiche
+   * (ADR 0039) : elles ne nomment pas la fiche et ne mènent pas à elle.
+   */
+  illisibles: Set<string>
 }
 
 async function lireContexte(
   prisma: PrismaClient,
   notifications: NotificationLue[]
-): Promise<Contexte> {
+): Promise<Omit<Contexte, 'illisibles'>> {
   const uniques = (valeurs: (string | null)[]) => [
     ...new Set(valeurs.filter((v): v is string => v !== null)),
   ]
@@ -165,7 +179,12 @@ async function lireContexte(
   // Le périmètre de la notification, et celui de sa tâche pour le lien : une
   // déclinaison prévient le périmètre d'origine d'une tâche d'un autre périmètre.
   const perimetres = uniques(
-    notifications.flatMap(n => [perimetreIdDe(n), n.tache?.perimetreId ?? null])
+    notifications.flatMap(n => [
+      perimetreIdDe(n),
+      n.tache?.perimetreId ?? null,
+      // Une fiche connexe nomme le périmètre de la fiche (ADR 0039).
+      n.fiche?.perimetreId ?? null,
+    ])
   )
   const organisations = uniques(notifications.map(n => n.organisationId))
   const editions = uniques(notifications.map(n => n.editionId))
@@ -287,6 +306,31 @@ function phrase(
       return `${acteur} a rétabli ${personne} dans l’organisation`
     case 'PLACE_MODIFIEE':
       return `Votre place dans l’équipe a changé${activite}`
+    case 'REUNION_CONVOQUEE':
+    case 'REUNION_MODIFIEE':
+    case 'REUNION_ANNULEE': {
+      if (!n.reunion) return 'Cette réunion n’existe plus'
+      const reunion = `« ${n.reunion.titre} »${lieu}`
+      if (n.type === 'REUNION_CONVOQUEE') {
+        return `${acteur} vous convoque à la réunion ${reunion}`
+      }
+      return n.type === 'REUNION_MODIFIEE'
+        ? `${acteur} a modifié la réunion ${reunion}`
+        : `${acteur} a annulé la réunion ${reunion}`
+    }
+    case 'SONDAGE_OUVERT':
+      return n.sondage
+        ? `${acteur} vous demande vos disponibilités : « ${n.sondage.titre} »${lieu}`
+        : 'Ce sondage n’existe plus'
+    case 'FICHE_CONNEXE': {
+      if (n.fiche === null) return 'Cette fiche n’existe plus'
+      if (c.illisibles.has(n.id))
+        return `Une fiche d’un autre périmètre ne concerne plus votre périmètre${lieu}`
+      const origine =
+        (n.fiche.perimetreId && c.perimetres.get(n.fiche.perimetreId)?.nom) ??
+        'un autre périmètre'
+      return `La fiche « ${n.fiche.versionCourante?.titre ?? n.fiche.slug} » de ${origine} concerne aussi votre périmètre${lieu}`
+    }
     case 'FICHE_CREEE':
     case 'FICHE_MODIFIEE': {
       if (n.fiche === null) return 'Cette fiche n’existe plus'
@@ -395,6 +439,22 @@ function lien(n: NotificationLue, c: Contexte): string {
     case 'FICHE_CREEE':
     case 'FICHE_MODIFIEE':
       return n.fiche ? `/${slug}/fiches/${n.fiche.slug}` : `/${slug}`
+    case 'REUNION_CONVOQUEE':
+    case 'REUNION_MODIFIEE':
+    case 'REUNION_ANNULEE':
+      return n.reunion
+        ? `/${slug}/agenda?edition=${n.reunion.editionId}&reunion=${n.reunion.id}`
+        : `/${slug}/agenda`
+    case 'SONDAGE_OUVERT':
+      return n.sondage
+        ? `/${slug}/agenda?edition=${n.sondage.editionId}&sondage=${n.sondage.id}`
+        : `/${slug}/agenda`
+    case 'FICHE_CONNEXE': {
+      if (n.fiche !== null && !c.illisibles.has(n.id))
+        return `/${slug}/fiches/${n.fiche.slug}`
+      const cible = n.perimetreId ? c.perimetres.get(n.perimetreId) : undefined
+      return cible ? `/${slug}/perimetres/${cible.slug}` : `/${slug}`
+    }
     default:
       break
   }
@@ -426,7 +486,10 @@ export async function composerNotifications(
   moiId: string
 ): Promise<NotificationComposee[]> {
   if (notifications.length === 0) return []
-  const c = await lireContexte(prisma, notifications)
+  const c = {
+    ...(await lireContexte(prisma, notifications)),
+    illisibles: await fichesConnexesIllisibles(prisma, notifications, moiId),
+  }
   return notifications.map(n => {
     const activiteId = activiteIdDe(n)
     const perimetreId = perimetreIdDe(n)
@@ -442,7 +505,11 @@ export async function composerNotifications(
         ? nomPeriode
         : null
     const nomActivite = periode ?? activite?.nom ?? null
-    const objet = n.tache !== null || n.fiche !== null
+    const objet =
+      n.tache !== null ||
+      n.fiche !== null ||
+      Boolean(n.reunion) ||
+      Boolean(n.sondage)
     const lieu = !objet
       ? ''
       : [nomActivite, perimetre?.nom].filter(Boolean).length > 0
@@ -504,4 +571,29 @@ export async function composerNotification(
 ): Promise<NotificationComposee> {
   const [composee] = await composerNotifications(prisma, [notification], moiId)
   return composee!
+}
+
+/**
+ * Les notifications de fiche connexe dont la personne ne lit plus la fiche : un
+ * partage retiré ne laisse pas paraître les titres suivants de la fiche, ni dans
+ * la cloche ni dans le résumé (ADR 0039).
+ */
+async function fichesConnexesIllisibles(
+  prisma: PrismaClient,
+  notifications: NotificationLue[],
+  moiId: string
+): Promise<Set<string>> {
+  const illisibles = new Set<string>()
+  const lues = new Map<string, Promise<boolean>>()
+  for (const n of notifications) {
+    if (n.type !== 'FICHE_CONNEXE' || n.fiche === null) continue
+    const fiche = n.fiche
+    let lisible = lues.get(fiche.id)
+    if (lisible === undefined) {
+      lisible = lecteurDeLaFiche(prisma, moiId, n.organisationId, fiche)
+      lues.set(fiche.id, lisible)
+    }
+    if (!(await lisible)) illisibles.add(n.id)
+  }
+  return illisibles
 }

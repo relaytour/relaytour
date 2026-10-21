@@ -15,6 +15,7 @@ import { exigerMembreGere, refuserArchivee } from '../lib/appartenances.ts'
 import { notifierLePerimetre } from '../lib/notifications.ts'
 import { planifierExportFiches } from '../espace-fichiers/export.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { conditionsConnexes, publierFiche } from '../lib/fiches-connexes.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 import {
   RESUME_MAX,
@@ -120,6 +121,7 @@ const DroitRedactionRef = builder.prismaObject('DroitRedaction', {
 async function exigerLectureFiche(
   ctx: AppContext,
   fiche: {
+    id: string
     perimetreId: string | null
     organisationId: string
     activiteId: string
@@ -315,7 +317,13 @@ builder.queryFields(t => ({
           ...(inclureArchives && (await ctx.estAdminDe(activite))
             ? {}
             : { archivedAt: null }),
-          OR: [{ perimetreId: null }, { perimetreId: { in: perimetres } }],
+          // Les fiches communes, celles des périmètres lisibles, puis celles qu'un
+          // périmètre lisible reçoit par un partage (ADR 0039).
+          OR: [
+            { perimetreId: null },
+            { perimetreId: { in: perimetres } },
+            ...(await conditionsConnexes(ctx)),
+          ],
         },
         orderBy: [{ perimetreId: 'asc' }, { slug: 'asc' }],
       })
@@ -534,10 +542,8 @@ builder.mutationFields(t => ({
         return true
       })
       if (!ecrite) throw await conflitDeFiche(fiche.id)
-      publierPourActivite('FICHE', fiche.organisationId, fiche.activiteId, {
-        id: fiche.id,
-        perimetreId: fiche.perimetreId,
-      })
+      // Les périmètres que la fiche concerne relisent aussi leurs écrans (ADR 0039).
+      publierFiche(fiche)
       planifierExportFiches(fiche.organisationId)
       await prevenirLePerimetre(
         'FICHE_MODIFIEE',
@@ -617,12 +623,12 @@ builder.mutationFields(t => ({
         return true
       })
       if (!ecrite) throw await conflitDeFiche(ancienne.ficheId)
-      publierPourActivite(
-        'FICHE',
-        ctx.organisation!.id,
-        ancienne.fiche.activiteId,
-        { id: ancienne.ficheId, perimetreId: ancienne.fiche.perimetreId }
-      )
+      publierFiche({
+        id: ancienne.ficheId,
+        organisationId: ctx.organisation!.id,
+        activiteId: ancienne.fiche.activiteId,
+        perimetreId: ancienne.fiche.perimetreId,
+      })
       planifierExportFiches(ctx.organisation!.id)
       await prevenirLePerimetre(
         'FICHE_MODIFIEE',
@@ -656,10 +662,7 @@ builder.mutationFields(t => ({
         where: { id: fiche.id },
         data: { archivedAt: archive ? new Date() : null },
       })
-      publierPourActivite('FICHE', ctx.organisation!.id, fiche.activiteId, {
-        id: fiche.id,
-        perimetreId: fiche.perimetreId,
-      })
+      publierFiche({ ...fiche, organisationId: ctx.organisation!.id })
       planifierExportFiches(ctx.organisation!.id)
       return archivee
     },

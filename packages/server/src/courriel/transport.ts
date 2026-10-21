@@ -15,6 +15,9 @@ export interface Message {
   // Adresse de rôle qui reçoit les réponses (Reply-To) : le contact de l'activité ou
   // de l'organisation. Sans elle, les réponses vont à l'expéditeur.
   repondreA?: string
+  // Fichier iCalendar d'une convocation ou d'une annulation (ADR 0037), joint en
+  // partie text/calendar : les messageries proposent d'ajouter l'événement.
+  icalEvent?: { methode: 'REQUEST' | 'CANCEL'; contenu: string }
 }
 
 // parti : accepté par le serveur SMTP ; refuse : refus définitif (5xx) ;
@@ -110,6 +113,18 @@ export async function expedier(
           ? { 'List-Unsubscribe': `<${message.desabonnement}>` }
           : {}),
       },
+      ...(message.icalEvent
+        ? {
+            icalEvent: {
+              method: message.icalEvent.methode,
+              filename:
+                message.icalEvent.methode === 'CANCEL'
+                  ? 'annulation.ics'
+                  : 'invitation.ics',
+              content: message.icalEvent.contenu,
+            },
+          }
+        : {}),
     })) as { messageId?: string }
     journal.info(
       {

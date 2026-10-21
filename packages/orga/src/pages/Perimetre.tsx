@@ -7,6 +7,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import Avancement from '../composants/Avancement'
 import ChoixEdition from '../composants/ChoixEdition'
 import DeclinaisonsProposees from '../composants/DeclinaisonsProposees'
+import FichesConnexes from '../composants/FichesConnexes'
 import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import {
   Avatar,
@@ -14,6 +15,11 @@ import {
   PersonneNommee,
 } from '../composants/Personne'
 import ProposerPersonne from '../composants/ProposerPersonne'
+import ReunionFormulaire, {
+  type NouvelleReunion,
+} from '../composants/ReunionFormulaire'
+import ReunionsDuPerimetre from '../composants/ReunionsDuPerimetre'
+import SequencesDuPerimetre from '../composants/SequencesDuPerimetre'
 import { Puces } from '../composants/Puces'
 import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
@@ -105,6 +111,25 @@ const FICHES = graphql(`
         slug
         titre
       }
+      # Les fiches d'autres périmètres qui concernent celui-ci (ADR 0039), masquées
+      # comprises : l'écran sépare les deux listes.
+      peutMasquerFichesConnexes
+      fichesConnexes(inclureMasquees: true) {
+        id
+        slug
+        titre
+        perimetre {
+          id
+          nom
+          couleur
+        }
+        connexions {
+          masquee
+          perimetre {
+            id
+          }
+        }
+      }
     }
   }
 `)
@@ -168,6 +193,8 @@ export default function Perimetre() {
   const [enEdition, setEnEdition] = useState<
     TacheChampsFragment | 'nouvelle' | null
   >(null)
+  const [nouvelleReunion, setNouvelleReunion] =
+    useState<NouvelleReunion | null>(null)
 
   const perimetre = data?.perimetre
   const consultation = perimetre?.acces === 'CONSULTATION'
@@ -297,6 +324,13 @@ export default function Perimetre() {
           enEvidence={tache.id === tacheVisee}
           filOuvert={tache.id === tacheVisee && parametres.get('fil') === '1'}
           onModifier={setEnEdition}
+          onPlanifierReunion={t =>
+            setNouvelleReunion({
+              perimetreId: perimetre.id,
+              titre: `Réunion : ${t.titre}`,
+              tacheIds: [t.id],
+            })
+          }
           perimetresCibles={perimetresCibles}
           editionId={editionId}
         />
@@ -496,6 +530,14 @@ export default function Perimetre() {
               </Panneau>
             )}
 
+            {perimetre.acces === 'COMPLET' && methode?.perimetre && (
+              <FichesConnexes
+                perimetreId={methode.perimetre.id}
+                fiches={methode.perimetre.fichesConnexes}
+                peutMasquer={methode.perimetre.peutMasquerFichesConnexes}
+              />
+            )}
+
             {perimetre.referents.length > 0 && (
               <Panneau titre="Personnes affectées">
                 <ul
@@ -540,6 +582,24 @@ export default function Perimetre() {
                   personne.
                 </p>
               </Panneau>
+            )}
+
+            {editionId && (
+              <SequencesDuPerimetre
+                perimetreId={perimetre.id}
+                editionId={editionId}
+              />
+            )}
+
+            {editionId && (
+              <ReunionsDuPerimetre
+                perimetreId={perimetre.id}
+                editionId={editionId}
+                peutModifier={perimetre.peutModifier}
+                onNouvelle={() =>
+                  setNouvelleReunion({ perimetreId: perimetre.id })
+                }
+              />
             )}
 
             {perimetre.peutModifier && editionId && (
@@ -638,6 +698,14 @@ export default function Perimetre() {
           estAdmin={gere}
           onFermer={() => setEnEdition(null)}
           onEnregistree={() => setEnEdition(null)}
+        />
+      )}
+      {editionId && perimetre.peutModifier && (
+        <ReunionFormulaire
+          editionId={editionId}
+          agendas={[{ perimetreId: perimetre.id, nom: perimetre.nom }]}
+          reunion={nouvelleReunion}
+          onFermer={() => setNouvelleReunion(null)}
         />
       )}
     </>

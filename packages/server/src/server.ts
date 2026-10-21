@@ -19,6 +19,7 @@ import { env } from './env.ts'
 import { routesEspaceFichiers } from './espace-fichiers/routes.ts'
 import { creerGestionnaireFlux } from './flux-http.ts'
 import { manifestApplication, slugDuManifest } from './lib/application.ts'
+import { lireAbonnement } from './lib/abonnements-agenda.ts'
 import { adresseClient, ENTETE_IP_CLIENT } from './lib/adresse-client.ts'
 import { fermerLesFlux } from './lib/flux.ts'
 import { jetonValide } from './lib/jeton.ts'
@@ -194,6 +195,59 @@ app.get('/medias/application/:fichier', (req, res) => {
         res.status(503).end()
       }
     )
+})
+
+// Abonnements à l'agenda (ADR 0037) : une adresse secrète, lisible sans session,
+// que relisent Outlook, Google ou Apple. Le jeton ne sort jamais dans le journal :
+// une erreur s'y écrit sans l'adresse.
+app.get('/agenda/:fichier', (req, res) => {
+  const communs = {
+    'Cache-Control': 'private, max-age=900',
+    'X-Robots-Tag': 'noindex, nofollow',
+    'Referrer-Policy': 'no-referrer',
+  }
+  void lireAbonnement(
+    req.params.fichier,
+    adresseClient(req),
+    new Date(),
+    (cle, max, fenetre) =>
+      limiterParCle(cle, max, fenetre, {
+        libelle: 'la limite des abonnements à l’agenda',
+      })
+  ).then(
+    lecture => {
+      if (lecture.statut !== 200) {
+        res.status(lecture.statut).set(communs).end()
+        return
+      }
+      if (req.headers['if-none-match'] === lecture.etag) {
+        res
+          .status(304)
+          .set({ ...communs, ETag: lecture.etag })
+          .end()
+        return
+      }
+      res
+        .status(200)
+        .set({
+          ...communs,
+          'Content-Type': 'text/calendar; charset=utf-8',
+          'Content-Disposition': 'inline; filename="agenda.ics"',
+          ETag: lecture.etag,
+        })
+        .send(lecture.contenu)
+    },
+    (erreur: unknown) => {
+      journal.error(
+        {
+          evenement: 'abonnement-agenda-en-echec',
+          message: (erreur as Error).message,
+        },
+        'Un abonnement à l’agenda n’a pas pu être servi.'
+      )
+      res.status(503).set(communs).end()
+    }
+  )
 })
 
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().

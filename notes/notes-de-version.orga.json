@@ -5,6 +5,219 @@
   "version": "0.17.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-20-orga-votre-agenda-s-abonne-a-relaytour-depuis-outlook-google-ou-a",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Votre agenda s'abonne à Relaytour depuis Outlook, Google ou Apple",
+            "texte": "Dans vos préférences, une adresse secrète ajoute à votre agenda personnel l'agenda global de vos activités, les réunions de vos périmètres et vos convocations. Vous la régénérez ou la révoquez à tout moment. Les admins d'une activité publient aussi l'adresse de son agenda global.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-une-fiche-renvoie-aux-documents-de-l-espace-de-fichiers",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une fiche renvoie aux documents de l'espace de fichiers",
+            "texte": "Les personnes qui rédigent une fiche y lient des dossiers ou des fichiers de l'espace de fichiers, depuis le bloc « Ressources liées ». Vous ouvrez ces documents depuis la fiche, dans la liseuse. Un dossier lié à un autre périmètre ne peut pas être proposé.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-une-fiche-d-un-autre-perimetre-peut-concerner-aussi-le-votre",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une fiche d’un autre périmètre peut concerner aussi le vôtre",
+            "texte": "Une fiche peut concerner d’autres périmètres que le sien. Sa page indique les périmètres et les groupes qu’elle concerne. Dans un périmètre concerné, le panneau « Fiches connexes » la présente en lecture seule, avec son périmètre d’origine. Les référentes et référents de ce périmètre la masquent quand elle ne leur sert pas, puis l’affichent de nouveau. Dans le texte d’une fiche, une mention @périmètre ou @groupe:clé s’affiche comme une étiquette ; celle d’un groupe liste ses périmètres.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-un-sondage-de-dates-trouve-le-creneau-de-la-prochaine-reunio",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un sondage de dates trouve le créneau de la prochaine réunion",
+            "texte": "Dans l'agenda, vous proposez plusieurs créneaux aux personnes de votre périmètre ou de l'équipe. Chacune répond oui, si besoin ou non. Vous retenez ensuite un créneau, et la réunion se crée avec l'horaire et les personnes du sondage.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-un-agenda-reunit-les-phases-les-dates-cles-et-les-echeances",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un agenda réunit les phases, les dates clés et les échéances",
+            "texte": "L'écran « Agenda » présente les phases de la période, son premier et son dernier jour, les dates clés et les échéances de vos périmètres. Il s'affiche en liste, ou en mois sur un écran large. Les admins de l'activité y ajoutent les dates clés.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-nextcloud-rejoint-l-espace-de-fichiers",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Nextcloud rejoint l'espace de fichiers",
+            "texte": "Vous saisissez l'adresse du Nextcloud de l'association, puis vous y accordez l'accès avec votre compte. Nextcloud crée un mot de passe d'application pour Relaytour, que vous pouvez révoquer dans ses paramètres de sécurité. Les documents s'ouvrent dans la liseuse ou se téléchargent.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-les-reunions-s-organisent-dans-l-agenda-avec-convocation-par",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les réunions s'organisent dans l'agenda, avec convocation par mail",
+            "texte": "Vous créez une réunion dans l'agenda de votre périmètre, avec un horaire, un lieu, un lien de visio et des tâches liées. Les personnes convoquées reçoivent un mail à ajouter à leur agenda et répondent dans l'espace organisateur. Les admins de l'activité tiennent l'agenda global.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-les-fiches-s-exportent-dans-l-espace-de-fichiers",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les fiches s'exportent dans l'espace de fichiers",
+            "texte": "Dans l'écran « Espace de fichiers », vous choisissez où Relaytour crée le dossier « Fiches Relaytour ». Relaytour y écrit les fiches en Markdown après chaque modification, puis chaque nuit. Les fiches se modifient toujours dans Relaytour : l'écran signale une fiche modifiée dans le dossier, puis réécrite.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-les-fiches-de-l-espace-de-fichiers-s-importent",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les fiches rangées dans l'espace de fichiers s'importent",
+            "texte": "Dans l'écran « Espace de fichiers », vous importez les fiches que l'association range déjà dans son cloud : des fichiers Markdown, texte ou Word. Relaytour propose un dossier par périmètre, d'après son nom, et simule l'import avant d'écrire. Une fiche modifiée dans Relaytour n'est jamais remplacée.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-les-fiches-benevoles-recensent-les-personnes-qui-aident-sans",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les fiches bénévoles recensent les personnes qui aident sans compte",
+            "texte": "L'écran « Bénévoles » tient la liste des personnes qui aident l'activité sans compte dans l'application, avec leur accord. Vous les placez dans les séquences du programme. Leurs coordonnées restent réservées aux admins de l'activité et aux personnes des périmètres où elles aident.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-les-documents-de-l-association-se-lisent-dans-relaytour",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les documents de l'association se lisent dans Relaytour",
+            "texte": "Un admin de l'organisation connecte l'espace de fichiers de l'association (SharePoint et OneDrive), puis lie ses dossiers aux périmètres. Vous lisez ces documents dans l'onglet « Documents » de la page « Fiches », sans compte chez le fournisseur. Relaytour n'en garde aucune copie.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-le-programme-du-jour-j-repartit-les-equipes-par-lieu-et-par-",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le programme du jour J répartit les équipes par lieu et par heure",
+            "texte": "L'écran « Programme » présente les séquences du jour J dans une grille par lieu et par heure, ou par lieu sur un téléphone. Chaque séquence nomme ses responsables et ses renforts, membres de l'équipe ou bénévoles. « Mon jour J » liste vos séquences, et la page de votre périmètre montre les siennes.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-l-editeur-regle-les-perimetres-qu-une-fiche-concerne-aussi",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Vous choisissez dans l’éditeur les périmètres qu’une fiche concerne aussi",
+            "texte": "Sous le texte d’une fiche, vous choisissez dans le champ « Concerne aussi » les périmètres et les groupes où elle se lit sans s’y modifier. Après une arobase, l’éditeur propose les périmètres et les groupes de l’activité. À l’enregistrement, il propose d’ajouter les périmètres que le texte mentionne. Vous confirmez une liste d’au moins quatre périmètres qui dépasse la moitié de l’activité. Le guide Markdown présente les mentions.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-l-editeur-de-fiche-propose-une-barre-de-mise-en-forme-et-un-",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L’éditeur de fiche s’ouvre en mode visuel, avec une barre de mise en forme et un guide Markdown",
+            "texte": "En mode visuel, vous écrivez directement dans la fiche telle qu’elle s’affiche. Le mode Markdown montre le texte source, et votre navigateur garde votre choix. Une barre au-dessus du texte met en gras ou en italique, pose un titre, une liste, une case à cocher, un lien ou un tableau. Le bouton « Aide » ouvre un guide de la syntaxe Markdown des fiches, sans quitter l’éditeur.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-google-drive-rejoint-l-espace-de-fichiers",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Google Drive rejoint l'espace de fichiers",
+            "texte": "Vous connectez Google Drive avec votre compte, ou par un compte de service dont vous déposez la clé. Avec un compte de service, Relaytour ne lit que les dossiers que l'association partage avec lui. Les documents Google s'ouvrent dans la liseuse et s'importent en fiches.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-dropbox-rejoint-l-espace-de-fichiers",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Dropbox rejoint l'espace de fichiers",
+            "texte": "Vous connectez Dropbox avec votre compte. Avec un compte d'équipe, vous parcourez l'espace de l'équipe, qui contient aussi votre dossier. Les documents Word et PowerPoint s'ouvrent dans la liseuse, convertis en PDF par Dropbox.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.17.0",
       "notes": [
         {

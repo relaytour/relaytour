@@ -37,6 +37,19 @@ export const FICHE = graphql(`
         nom
         couleur
       }
+      concerneGroupes
+      connexions {
+        par
+        groupe
+        tacheId
+        masquee
+        perimetre {
+          id
+          slug
+          nom
+          couleur
+        }
+      }
     }
   }
 `)
@@ -179,3 +192,20 @@ export function slugDepuisTitre(titre: string): string {
     .slice(0, 60)
     .replace(/-+$/g, '')
 }
+
+// La liste « Concerne aussi » d'une fiche de périmètre (ADR 0039).
+export const REGLER_CONCERNE = graphql(`
+  mutation ReglerConcerneAussi(
+    $ficheId: ID!
+    $perimetreIds: [ID!]!
+    $groupes: [String!]!
+  ) {
+    reglerConcerneAussi(
+      ficheId: $ficheId
+      perimetreIds: $perimetreIds
+      groupes: $groupes
+    ) {
+      id
+    }
+  }
+`)

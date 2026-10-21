@@ -460,6 +460,7 @@ ${declinaison}
       'activites/tournoi/perimetres.yaml': PERIMETRES_TOURNOI,
       'activites/tournoi/fiches/communes/reserver.md': fiche('reserver'),
       'activites/tournoi/fiches/lieux/missions.md': fiche('missions'),
+      'activites/tournoi/fiches/volley/reglement.md': fiche('reglement'),
       ...fichiers,
     })
 
@@ -558,9 +559,9 @@ ${declinaison}
       /cite deux fois le même périmètre cible/,
     ],
     [
-      'une fiche de périmètre',
-      '      groupe: sport\n      fiche: missions',
-      /ne cite qu'une fiche commune/,
+      'une fiche d’un autre périmètre',
+      '      groupe: sport\n      fiche: reglement',
+      /cite une fiche d'un autre périmètre que celui de la tâche partagée/,
     ],
     [
       'une fiche inconnue',
@@ -582,6 +583,17 @@ ${declinaison}
       contenu({ 'activites/tournoi/taches/lieux.yaml': partagee(declinaison) })
     )
     expect(lues.join('\n')).toMatch(attendu)
+  })
+
+  it('accepte une fiche du périmètre de la tâche partagée (ADR 0039)', () => {
+    const lues = erreurs(
+      contenu({
+        'activites/tournoi/taches/lieux.yaml': partagee(
+          '      groupe: sport\n      fiche: missions'
+        ),
+      })
+    )
+    expect(lues).toEqual([])
   })
 
   it('refuse un modèle que le périmètre cible déclare déjà', () => {
@@ -608,6 +620,74 @@ ${declinaison}
     )
     expect(lues.join('\n')).toMatch(
       /le modèle besoins-de-lieux est déjà décliné dans volley depuis/
+    )
+  })
+})
+
+describe('fiches connexes (ADR 0039)', () => {
+  const ACTIVITE_CONNEXES = `slug: tournoi
+nom: Tournoi
+groupes:
+  - cle: sport
+    libelle: Sport
+    libellePluriel: Sports
+  - cle: pole
+    libelle: Pôle
+    libellePluriel: Pôles
+`
+  const PERIMETRES_CONNEXES = `perimetres:
+  - slug: lieux
+    nom: Lieux
+    groupe: pole
+  - slug: natation
+    nom: Natation
+    groupe: sport
+`
+  const avecEntete = (dossierFiche: string, entete: string) =>
+    dossier({
+      'activites/tournoi/activite.yaml': ACTIVITE_CONNEXES,
+      'activites/tournoi/perimetres.yaml': PERIMETRES_CONNEXES,
+      [`activites/tournoi/fiches/${dossierFiche}/tableau.md`]: `---\nslug: tableau\ntitre: Tableau des créneaux\n${entete}---\n\nLe contenu.\n`,
+    })
+
+  it('lit la liste « Concerne aussi » d’une fiche de périmètre', () => {
+    const modeles = lireModeles(
+      avecEntete('lieux', 'concerne: [natation]\nconcerneGroupes: [sport]\n')
+    )
+    expect(modeles.activites[0]!.fiches[0]).toMatchObject({
+      concerne: ['natation'],
+      concerneGroupes: ['sport'],
+    })
+  })
+
+  it.each([
+    [
+      'un périmètre inconnu',
+      'lieux',
+      'concerne: [escrime]\n',
+      /« concerne » cite escrime, qui n'existe pas/,
+    ],
+    [
+      'le périmètre de la fiche',
+      'lieux',
+      'concerne: [lieux]\n',
+      /la fiche appartient déjà au périmètre lieux/,
+    ],
+    [
+      'un groupe que l’activité ne déclare pas',
+      'lieux',
+      'concerneGroupes: [commission]\n',
+      /le groupe commission, que l'activité ne déclare pas/,
+    ],
+    [
+      'une liste sur une fiche commune',
+      'communes',
+      'concerne: [natation]\n',
+      /une fiche commune concerne déjà tous les périmètres/,
+    ],
+  ])('refuse %s', (_cas, dossierFiche, entete, attendu) => {
+    expect(erreurs(avecEntete(dossierFiche, entete)).join('\n')).toMatch(
+      attendu
     )
   })
 })
