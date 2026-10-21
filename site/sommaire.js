@@ -183,5 +183,8 @@
   }
   window.addEventListener('scroll', planifier, { passive: true })
   window.addEventListener('resize', planifier)
+  // Deux cartes d'une même rangée partagent leur position : passer de l'une à
+  // l'autre change l'ancre sans faire défiler la page.
+  window.addEventListener('hashchange', planifier)
   suivre()
 })()
