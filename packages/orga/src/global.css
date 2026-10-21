@@ -3814,3 +3814,134 @@ button.rt-carte-fiche {
     grid-template-columns: 170px minmax(0, 1fr);
   }
 }
+
+/* ── Pages publiques des bénévoles (ADR 0041) ─────────────────────────────── */
+
+.rt-page-publique {
+  min-height: 100dvh;
+  display: grid;
+  place-items: start center;
+  padding: max(24px, env(safe-area-inset-top)) 16px 32px;
+}
+.rt-carte-publique {
+  width: 100%;
+  max-width: 720px;
+}
+.rt-titre-public {
+  font-size: calc(30px * var(--rt-titre-echelle));
+  margin: 0 0 6px;
+}
+.rt-intertitre-public {
+  margin: 24px 0 10px;
+  font-size: 17px;
+  font-weight: var(--rt-titre-graisse);
+}
+.rt-moments.ant-checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 100%;
+}
+.rt-moments-jour {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.rt-moment.ant-checkbox-wrapper {
+  align-items: flex-start;
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: var(--rt-rayon-champ);
+  background: var(--rt-surface-interne);
+}
+.rt-moment .ant-checkbox + span {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.rt-moment-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+}
+.rt-moment-etiquettes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+.rt-moment-etiquettes .ant-tag {
+  margin: 0;
+}
+.rt-moment-texte {
+  overflow-wrap: anywhere;
+}
+.rt-plages {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+}
+.rt-plage {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) 120px 120px 44px;
+  align-items: end;
+  gap: 8px;
+  width: 100%;
+}
+.rt-plage .ant-form-item {
+  margin-bottom: 8px;
+}
+.rt-plage > .ant-btn {
+  margin-bottom: 8px;
+}
+.rt-piege {
+  position: absolute;
+  left: -9999px;
+  height: 0;
+  overflow: hidden;
+}
+.rt-places-publiques {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rt-place-publique {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+  padding: 14px 16px;
+  border-radius: var(--rt-rayon-champ);
+  background: var(--rt-surface-interne);
+}
+.rt-place-publique p {
+  margin: 0;
+}
+.rt-place-publique .ant-tag {
+  margin: 0;
+}
+.rt-espace-pied {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rt-encre-08);
+}
+@media (max-width: 767px) {
+  .rt-carte-publique .ant-card-body {
+    padding: 20px !important;
+  }
+  .rt-plage {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 44px;
+  }
+  .rt-plage > .ant-form-item:first-child {
+    grid-column: 1 / -1;
+  }
+}
