@@ -7,6 +7,8 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 import { exporterFiches, README_EXPORT } from '../espace-fichiers/export.ts'
 import { remplacerEspacePourLesTests } from '../espace-fichiers/index.ts'
+import type { EspaceFichiers } from '../espace-fichiers/types.ts'
+import { planificationProcessor } from '../jobs/processors/planification.processor.ts'
 import {
   espaceEnMemoire,
   type NoeudMemoire,
@@ -41,6 +43,7 @@ const racine: NoeudMemoire = {
   nom: 'Documents',
   enfants: [
     { id: 'd-partage', nom: 'Partage', enfants: [] },
+    { id: 'd-autre', nom: 'Autre', enfants: [] },
     {
       id: 'd-commun',
       nom: 'Commun',
@@ -48,8 +51,16 @@ const racine: NoeudMemoire = {
     },
   ],
 }
+// « Partagés avec moi » montre deux dossiers de la bibliothèque, sous le même
+// identifiant.
+const partages: NoeudMemoire = {
+  id: 'vue-partages',
+  nom: 'Partagés avec moi',
+  enfants: [racine.enfants![0]!, racine.enfants![2]!.enfants![0]!],
+}
 const ESPACE = espaceEnMemoire([
   { id: 'bibliotheque', nom: 'Documents', site: null, racine },
+  { id: 'partages', nom: 'Partagés', site: null, racine: partages, vue: true },
 ])
 
 async function executer(
@@ -74,6 +85,12 @@ const CHOISIR = `mutation ($c: [String!]!) {
 }`
 const LIER = `mutation ($a: ID!, $c: [String!]!) {
   lierDossier(activiteId: $a, emplacement: "bibliotheque", chemin: $c) { id }
+}`
+const CHOISIR_PARTAGE = `mutation ($c: [String!]!) {
+  choisirDossierExport(emplacement: "partages", chemin: $c) { exportDossier }
+}`
+const LIER_PARTAGE = `mutation ($a: ID!, $c: [String!]!) {
+  lierDossier(activiteId: $a, emplacement: "partages", chemin: $c) { id }
 }`
 const CONNEXION = `{ espaceFichiers { connexion { exportDossier exportRapport { ecrites inchangees supprimees refusees { fiche } modifieesALaMain erreur } } } }`
 
@@ -237,6 +254,10 @@ describe('dossier d’export', () => {
         'SAISIE_INVALIDE'
       )
     }
+    // Le même sous-dossier, vu depuis « Partagés avec moi ».
+    expect(
+      code(await executer(ids.admin, CHOISIR_PARTAGE, { c: ['Sous-dossier'] }))
+    ).toBe('SAISIE_INVALIDE')
   })
 
   it('se crée dans le dossier choisi', async () => {
@@ -251,6 +272,14 @@ describe('dossier d’export', () => {
     for (const c of [['Partage'], ['Partage', 'Fiches Relaytour']]) {
       expect(
         code(await executer(ids.admin, LIER, { a: ids.activite, c }))
+      ).toBe('SAISIE_INVALIDE')
+    }
+  })
+
+  it('ne se lie pas non plus depuis une autre vue du même dossier', async () => {
+    for (const c of [['Partage'], ['Partage', 'Fiches Relaytour']]) {
+      expect(
+        code(await executer(ids.admin, LIER_PARTAGE, { a: ids.activite, c }))
       ).toBe('SAISIE_INVALIDE')
     }
   })
@@ -372,5 +401,193 @@ describe('export des fiches', () => {
     ).toBe(0)
     // Les fichiers déjà écrits restent.
     expect(await lire('rencontres', 'communes', 'accueil.md')).not.toBeNull()
+  })
+})
+
+// ── Remarques de la revue de #179 ────────────────────────────────────────────
+
+/** Le nœud d'un dossier de l'espace en mémoire, par son identifiant. */
+function noeud(id: string, depuis: NoeudMemoire = racine): NoeudMemoire | null {
+  if (depuis.id === id) return depuis
+  for (const enfant of depuis.enfants ?? []) {
+    const trouve = noeud(id, enfant)
+    if (trouve !== null) return trouve
+  }
+  return null
+}
+
+async function exportElement(): Promise<string | null> {
+  return (
+    await prisma.connexionFichiers.findUniqueOrThrow({
+      where: { organisationId: ids.org },
+      select: { exportElement: true },
+    })
+  ).exportElement
+}
+
+async function arreterExport() {
+  await prisma.connexionFichiers.update({
+    where: { organisationId: ids.org },
+    data: { exportEmplacement: null, exportElement: null, exportNom: null },
+  })
+  await prisma.ficheExportee.deleteMany({ where: { organisationId: ids.org } })
+}
+
+describe('isolement et concurrence du dossier d’export', () => {
+  it('ne laisse pas réussir ensemble le choix du dossier d’export et le lien du même dossier', async () => {
+    const [choix, lien] = await Promise.all([
+      executer(ids.admin, CHOISIR, { c: ['Autre'] }),
+      executer(ids.admin, LIER, { a: ids.activite, c: ['Autre'] }),
+    ])
+    expect(
+      [choix.errors, lien.errors].filter(e => e === undefined)
+    ).toHaveLength(1)
+    await prisma.dossierLie.deleteMany({ where: { element: 'd-autre' } })
+    await arreterExport()
+  })
+
+  it('n’enregistre rien d’un export devenu obsolète', async () => {
+    const r = await executer(ids.admin, CHOISIR, { c: ['Partage'] })
+    expect(r.errors).toBeUndefined()
+    let premiere = true
+    // L'admin arrête l'export pendant la première écriture.
+    const interrompu: EspaceFichiers = {
+      ...ESPACE,
+      ecrire: async (position, texte) => {
+        const resultat = await ESPACE.ecrire(position, texte)
+        if (premiere && position.chemin.at(-1) !== 'README.md') {
+          premiere = false
+          await arreterExport()
+        }
+        return resultat
+      },
+    }
+    remplacerEspacePourLesTests(() => interrompu)
+    try {
+      expect(await exporterFiches(ids.org, { verifier: false })).toBeNull()
+    } finally {
+      remplacerEspacePourLesTests(() => ESPACE)
+    }
+    expect(
+      await prisma.ficheExportee.count({ where: { organisationId: ids.org } })
+    ).toBe(0)
+  })
+
+  it('exporte toutes les organisations quand la tâche n’en désigne aucune', async () => {
+    const r = await executer(ids.admin, CHOISIR, { c: ['Partage'] })
+    expect(r.errors).toBeUndefined()
+    await prisma.connexionFichiers.update({
+      where: { organisationId: ids.org },
+      data: { exportLe: null },
+    })
+    await planificationProcessor({
+      name: 'export-fiches',
+      data: {},
+    } as Parameters<typeof planificationProcessor>[0])
+    const connexion = await prisma.connexionFichiers.findUniqueOrThrow({
+      where: { organisationId: ids.org },
+      select: { exportLe: true },
+    })
+    expect(connexion.exportLe).not.toBeNull()
+  })
+
+  it('cesse d’écrire et se cache quand le dossier d’export est déplacé dans un dossier lié', async () => {
+    const element = (await exportElement())!
+    const partage = noeud('d-partage')!
+    const commun = noeud('d-commun')!
+    const dossierExport = noeud(element)!
+    partage.enfants = partage.enfants!.filter(e => e.id !== element)
+    commun.enfants!.push(dossierExport)
+
+    const rapport = await exporterFiches(ids.org, { verifier: false })
+    expect(rapport?.erreur).toContain('dossier lié')
+    expect(rapport?.ecrites).toBe(0)
+
+    const lie = await prisma.dossierLie.findFirstOrThrow({
+      where: { organisationId: ids.org, element: 'd-commun' },
+    })
+    const CONTENU = `query ($id: ID!, $c: [String!]!) { contenuDossierLie(id: $id, chemin: $c) { elements { nom } } }`
+    const liste = await executer(ids.admin, CONTENU, { id: lie.id, c: [] })
+    expect(liste.errors).toBeUndefined()
+    expect(
+      (
+        liste.data as { contenuDossierLie: { elements: { nom: string }[] } }
+      ).contenuDossierLie.elements.map(e => e.nom)
+    ).toEqual(['Sous-dossier'])
+    expect(
+      code(
+        await executer(ids.admin, CONTENU, {
+          id: lie.id,
+          c: [dossierExport.nom, 'rencontres'],
+        })
+      )
+    ).toBe('FORBIDDEN')
+    // SharePoint et Dropbox résolvent un chemin sans tenir compte de la casse.
+    for (const nom of [
+      dossierExport.nom.toLowerCase(),
+      dossierExport.nom.toUpperCase(),
+    ]) {
+      expect(
+        code(await executer(ids.admin, CONTENU, { id: lie.id, c: [nom] }))
+      ).toBe('FORBIDDEN')
+    }
+
+    // Le dossier qui contient maintenant le dossier d'export ne se lie plus.
+    const LIER_PERIMETRE = `mutation ($a: ID!, $p: ID, $c: [String!]!) {
+      lierDossier(activiteId: $a, perimetreId: $p, emplacement: "bibliotheque", chemin: $c) { id }
+    }`
+    expect(
+      code(
+        await executer(ids.admin, LIER_PERIMETRE, {
+          a: ids.activite,
+          p: ids.natation,
+          c: ['Commun'],
+        })
+      )
+    ).toBe('SAISIE_INVALIDE')
+
+    commun.enfants = commun.enfants!.filter(e => e.id !== element)
+    partage.enfants.push(dossierExport)
+  })
+
+  it('cesse d’écrire et se cache quand un lien vise son dossier depuis une autre vue', async () => {
+    // Un lien enregistré avant le contrôle entre les vues.
+    const lie = await prisma.dossierLie.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        fournisseur: 'SHAREPOINT',
+        emplacement: 'partages',
+        element: 'd-partage',
+        nom: 'Partage',
+      },
+    })
+    try {
+      const rapport = await exporterFiches(ids.org, { verifier: false })
+      expect(rapport?.erreur).toContain('dossier lié')
+      expect(rapport?.ecrites).toBe(0)
+
+      const dossierExport = noeud((await exportElement())!)!
+      const CONTENU = `query ($id: ID!, $c: [String!]!) { contenuDossierLie(id: $id, chemin: $c) { elements { elementId } } }`
+      const liste = await executer(ids.admin, CONTENU, { id: lie.id, c: [] })
+      expect(liste.errors).toBeUndefined()
+      expect(
+        (
+          liste.data as {
+            contenuDossierLie: { elements: { elementId: string }[] }
+          }
+        ).contenuDossierLie.elements.map(e => e.elementId)
+      ).not.toContain(dossierExport.id)
+      expect(
+        code(
+          await executer(ids.admin, CONTENU, {
+            id: lie.id,
+            c: [dossierExport.nom],
+          })
+        )
+      ).toBe('FORBIDDEN')
+    } finally {
+      await prisma.dossierLie.delete({ where: { id: lie.id } })
+    }
   })
 })

@@ -16,9 +16,13 @@ import { activiteAffichee, organisationChoisie } from './selection'
 export const ESPACE_FICHIERS = graphql(`
   query EspaceFichiers {
     espaceFichiers {
-      fournisseursDisponibles
+      connexionsPossibles {
+        fournisseur
+        methode
+      }
       connexion {
         fournisseur
+        methode
         compte
         etat
         connecteeLe
@@ -49,6 +53,29 @@ export const COMMENCER_CONNEXION = graphql(`
   }
 `)
 
+export const CONNECTER_COMPTE_SERVICE = graphql(`
+  mutation ConnecterCompteServiceGoogle($cle: String!) {
+    connecterCompteServiceGoogle(cle: $cle) {
+      compte
+    }
+  }
+`)
+
+export const COMMENCER_NEXTCLOUD = graphql(`
+  mutation CommencerConnexionNextcloud($adresse: String!) {
+    commencerConnexionNextcloud(adresse: $adresse) {
+      connexion
+      etat
+    }
+  }
+`)
+
+export const TERMINER_NEXTCLOUD = graphql(`
+  mutation TerminerConnexionNextcloud($etat: String!) {
+    terminerConnexionNextcloud(etat: $etat)
+  }
+`)
+
 export const DECONNECTER = graphql(`
   mutation DeconnecterEspaceFichiers {
     deconnecterEspaceFichiers
@@ -72,6 +99,66 @@ export const RETIRER_DOSSIER_EXPORT = graphql(`
 export const EXPORTER_FICHES_MAINTENANT = graphql(`
   mutation ExporterFichesMaintenant {
     exporterFichesMaintenant
+  }
+`)
+
+export const SIMULER_IMPORT = graphql(`
+  query SimulerImportFiches(
+    $activiteId: ID!
+    $sources: [SourceImportFiches!]!
+  ) {
+    simulerImportFiches(activiteId: $activiteId, sources: $sources) {
+      creees
+      nouvellesVersions
+      inchangees
+      conflits {
+        fiche
+        raison
+      }
+      nonImportes {
+        fichier
+        raison
+      }
+      refusees {
+        fichier
+        raison
+      }
+      converties {
+        fichier
+        raison
+      }
+      incomplet
+    }
+  }
+`)
+
+export const IMPORTER_FICHES = graphql(`
+  mutation ImporterFichesEspace(
+    $activiteId: ID!
+    $sources: [SourceImportFiches!]!
+  ) {
+    importerFichesEspace(activiteId: $activiteId, sources: $sources) {
+      creees
+      nouvellesVersions
+      inchangees
+      conflits {
+        fiche
+        raison
+      }
+      nonImportes {
+        fichier
+        raison
+      }
+      refusees {
+        fichier
+        raison
+      }
+      converties {
+        fichier
+        raison
+      }
+      incomplet
+    }
   }
 `)
 
@@ -113,6 +200,7 @@ export const PERIMETRES_A_LIER = graphql(`
   query PerimetresALier($activiteId: ID) {
     perimetres(activiteId: $activiteId) {
       id
+      slug
       nom
       couleur
     }
@@ -167,6 +255,9 @@ export const DELIER_DOSSIER = graphql(`
 
 export const NOMS_FOURNISSEURS: Record<string, string> = {
   SHAREPOINT: 'SharePoint',
+  GOOGLE_DRIVE: 'Google Drive',
+  DROPBOX: 'Dropbox',
+  NEXTCLOUD: 'Nextcloud',
 }
 
 /** L'icône d'un fichier, selon ce que la liseuse en affiche. */
@@ -244,6 +335,15 @@ export async function lireFichier(
   telecharger = false,
   signal?: AbortSignal
 ): Promise<Blob> {
+  return (await demanderFichier(dossierId, chemin, telecharger, signal)).blob()
+}
+
+async function demanderFichier(
+  dossierId: string,
+  chemin: readonly string[],
+  telecharger: boolean,
+  signal?: AbortSignal
+): Promise<Response> {
   const organisation = organisationChoisie()
   const activite = activiteAffichee()
   const reponse = await fetch(adresseApercu(dossierId, chemin, telecharger), {
@@ -257,19 +357,37 @@ export async function lireFichier(
     },
   })
   if (!reponse.ok) throw new Error(messageRefus(reponse.status))
-  return reponse.blob()
+  return reponse
 }
 
-/** Télécharge un fichier sous son nom. */
+/** Le nom que l'API donne au fichier (`filename*`), ou null. */
+export function nomServi(entete: string | null): string | null {
+  const nom = /filename\*=UTF-8''([^;]+)/i.exec(entete ?? '')?.[1]
+  if (nom === undefined) return null
+  try {
+    return decodeURIComponent(nom)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Télécharge un fichier sous le nom que l'API lui donne. Un document Google
+ * natif y gagne l'extension de son format d'export.
+ */
 export async function telechargerFichier(
   dossierId: string,
   chemin: readonly string[]
 ): Promise<void> {
-  const blob = await lireFichier(dossierId, chemin, true)
-  const adresse = URL.createObjectURL(blob)
+  const reponse = await demanderFichier(dossierId, chemin, true)
+  const nom =
+    nomServi(reponse.headers.get('content-disposition')) ??
+    chemin[chemin.length - 1] ??
+    'document'
+  const adresse = URL.createObjectURL(await reponse.blob())
   const lien = document.createElement('a')
   lien.href = adresse
-  lien.download = chemin[chemin.length - 1] ?? 'document'
+  lien.download = nom
   document.body.append(lien)
   lien.click()
   lien.remove()

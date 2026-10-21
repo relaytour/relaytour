@@ -12,8 +12,8 @@ import type {
 export interface NoeudMemoire {
   id: string
   nom: string
-  /** Absent pour un dossier. */
-  contenu?: string
+  /** Absent pour un dossier. Un document binaire (Word) se donne en octets. */
+  contenu?: string | Uint8Array
   enfants?: NoeudMemoire[]
   /** Numéro de version, qui change à chaque écriture. */
   version?: number
@@ -21,6 +21,11 @@ export interface NoeudMemoire {
 
 export interface EmplacementMemoire extends Emplacement {
   racine: NoeudMemoire
+  /**
+   * Vrai pour une vue comme « Partagés avec moi » : elle montre des éléments
+   * rangés dans un autre emplacement, sous le même identifiant.
+   */
+  vue?: boolean
 }
 
 function chercher(noeud: NoeudMemoire, id: string): NoeudMemoire | null {
@@ -28,6 +33,16 @@ function chercher(noeud: NoeudMemoire, id: string): NoeudMemoire | null {
   for (const enfant of noeud.enfants ?? []) {
     const trouve = chercher(enfant, id)
     if (trouve !== null) return trouve
+  }
+  return null
+}
+
+/** Le chemin de nœuds de la racine jusqu'au nœud cherché, ou null. */
+function parcours(noeud: NoeudMemoire, id: string): NoeudMemoire[] | null {
+  if (noeud.id === id) return [noeud]
+  for (const enfant of noeud.enfants ?? []) {
+    const suite = parcours(enfant, id)
+    if (suite !== null) return [noeud, ...suite]
   }
   return null
 }
@@ -70,6 +85,25 @@ export function espaceEnMemoire(
     element: p => {
       const noeud = trouver(p)
       return Promise.resolve(noeud === null ? null : versElement(noeud))
+    },
+    ancetres: (emplacement, element) => {
+      const cible = emplacements.find(e => e.id === emplacement)
+      if (cible === undefined) return Promise.resolve(null)
+      // Depuis une vue, les parents sont ceux de l'emplacement réel, comme chez
+      // Google : la vue ne coiffe la chaîne que faute de mieux.
+      const ordre =
+        cible.vue === true
+          ? [...emplacements.filter(e => e !== cible), cible]
+          : [cible]
+      for (const e of ordre) {
+        const chemin = parcours(e.racine, element)
+        if (chemin !== null) {
+          return Promise.resolve(
+            chemin.reverse().map(n => ({ id: n.id, nom: n.nom }))
+          )
+        }
+      }
+      return Promise.resolve(null)
     },
     lister: p => {
       const noeud = trouver(p)
@@ -132,9 +166,13 @@ export function espaceEnMemoire(
       const noeud = trouver(p)
       if (noeud?.contenu === undefined)
         return Promise.reject(new Error('Fichier introuvable.'))
-      const octets = new TextEncoder().encode(
-        pdf ? `%PDF converti : ${noeud.contenu}` : noeud.contenu
-      )
+      const contenu = noeud.contenu
+      const octets =
+        typeof contenu === 'string'
+          ? new TextEncoder().encode(
+              pdf ? `%PDF converti : ${contenu}` : contenu
+            )
+          : contenu
       return Promise.resolve({
         flux: new Blob([octets]).stream(),
         taille: octets.length,

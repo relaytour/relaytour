@@ -152,6 +152,34 @@ const EnvSchema = z
         'MICROSOFT_LOCATAIRE : identifiant d’annuaire ou « organizations » attendu'
       )
       .transform(s => s ?? 'organizations'),
+    // Google Drive par le compte d'un admin : le client OAuth du projet Google
+    // Cloud de l'exploitant. Un compte de service, lui, n'exige que la clé de
+    // chiffrement : l'organisation apporte sa propre clé.
+    GOOGLE_CLIENT_ID: optionnelle,
+    GOOGLE_CLIENT_SECRET: optionnelle,
+    // Dropbox par le compte d'un admin : la clé et le secret de l'application
+    // Dropbox de l'exploitant.
+    DROPBOX_CLIENT_ID: optionnelle,
+    DROPBOX_CLIENT_SECRET: optionnelle,
+    // Nextcloud par le compte d'un admin : les hôtes que l'organisation peut
+    // désigner. « * » admet tout hôte en https dont les adresses sont publiques ;
+    // un hôte nommé (« cloud.exemple.org », « nuage.lan:8443 ») est admis tel
+    // quel, même sur un réseau privé. Vide, Nextcloud reste fermé.
+    NEXTCLOUD_HOTES: optionnelle
+      .transform(s =>
+        s === undefined
+          ? undefined
+          : s
+              .split(',')
+              .map(h => h.trim().toLowerCase())
+              .filter(Boolean)
+      )
+      .refine(
+        l =>
+          l === undefined ||
+          l.every(h => h === '*' || /^[a-z0-9.-]+(:\d{1,5})?$/.test(h)),
+        'NEXTCLOUD_HOTES : « * » ou des noms d’hôte séparés par des virgules'
+      ),
     // Liste des modes d'emploi, liée depuis le menu du compte et le mail
     // d'invitation : un dossier ou une page. Les pages des rôles se placent dans
     // le même dossier. Un hébergeur qui modifie Relaytour y indique les siens.
@@ -188,8 +216,29 @@ const EnvSchema = z
           'MICROSOFT_CLIENT_ID et MICROSOFT_CLIENT_SECRET se renseignent ensemble.',
       })
     }
+    const dropbox = [v.DROPBOX_CLIENT_ID, v.DROPBOX_CLIENT_SECRET]
+    if (dropbox.some(Boolean) && !dropbox.every(Boolean)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['DROPBOX_CLIENT_ID'],
+        message:
+          'DROPBOX_CLIENT_ID et DROPBOX_CLIENT_SECRET se renseignent ensemble.',
+      })
+    }
+    const google = [v.GOOGLE_CLIENT_ID, v.GOOGLE_CLIENT_SECRET]
+    if (google.some(Boolean) && !google.every(Boolean)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['GOOGLE_CLIENT_ID'],
+        message:
+          'GOOGLE_CLIENT_ID et GOOGLE_CLIENT_SECRET se renseignent ensemble.',
+      })
+    }
     if (
-      v.MICROSOFT_CLIENT_ID !== undefined &&
+      (v.MICROSOFT_CLIENT_ID !== undefined ||
+        v.GOOGLE_CLIENT_ID !== undefined ||
+        v.DROPBOX_CLIENT_ID !== undefined ||
+        (v.NEXTCLOUD_HOTES?.length ?? 0) > 0) &&
       v.CLE_CHIFFREMENT_ESPACE_FICHIERS === undefined
     ) {
       ctx.addIssue({

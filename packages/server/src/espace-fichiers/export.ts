@@ -6,10 +6,12 @@ import { donneesPersonnelles } from '../lib/contenu.ts'
 import { avecDelai } from '../lib/delai.ts'
 import { publierChangement } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
+import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 import { texteFiche } from '../orga/exporter.ts'
 
 import { ouvrirEspace } from './index.ts'
+import { exportDansUnDossierLie } from './isolement.ts'
 import type { EspaceFichiers, Position } from './types.ts'
 
 // Export des fiches vers l'espace de fichiers (ADR 0038). Relaytour écrit les
@@ -42,6 +44,12 @@ export interface RapportExport {
   modifieesALaMain: string[]
   erreur: string | null
 }
+
+/**
+ * L'admin a changé de dossier d'export, arrêté l'export ou déconnecté l'espace
+ * pendant cet export : il s'arrête sans rien enregistrer.
+ */
+class ExportObsolete extends Error {}
 
 const empreinte = (texte: string) =>
   createHash('sha256').update(texte).digest('hex')
@@ -117,7 +125,12 @@ export async function exporterFiches(
 ): Promise<RapportExport | null> {
   const connexion = await prisma.connexionFichiers.findUnique({
     where: { organisationId },
-    select: { etat: true, exportEmplacement: true, exportElement: true },
+    select: {
+      etat: true,
+      exportEmplacement: true,
+      exportElement: true,
+      exportAncetres: true,
+    },
   })
   if (
     connexion?.etat !== 'ACTIVE' ||
@@ -135,14 +148,31 @@ export async function exporterFiches(
     modifieesALaMain: [],
     erreur: null,
   }
-  const enregistrer = async () => {
-    await prisma.connexionFichiers.update({
-      where: { organisationId },
-      data: {
-        exportRapport: rapport as unknown as Prisma.InputJsonValue,
-        exportLe: new Date(rapport.exporteLe),
-      },
+  // Chaque écriture en base vaut pour le dossier d'export lu au départ, sous le
+  // verrou que prennent aussi le choix du dossier, l'arrêt et la déconnexion : un
+  // export devenu obsolète ne rétablit jamais un suivi effacé.
+  const depart = connexion.exportElement
+  const sousGeneration = <T>(
+    action: (tx: Prisma.TransactionClient) => Promise<T>
+  ) =>
+    sousVerrouOrganisation(organisationId, async tx => {
+      const actuelle = await tx.connexionFichiers.findUnique({
+        where: { organisationId },
+        select: { exportElement: true },
+      })
+      if (actuelle?.exportElement !== depart) throw new ExportObsolete()
+      return action(tx)
     })
+  const enregistrer = async () => {
+    await sousGeneration(tx =>
+      tx.connexionFichiers.update({
+        where: { organisationId },
+        data: {
+          exportRapport: rapport as unknown as Prisma.InputJsonValue,
+          exportLe: new Date(rapport.exporteLe),
+        },
+      })
+    )
     void publierChangement({ entite: 'FICHIERS', organisationId })
   }
 
@@ -156,6 +186,15 @@ export async function exporterFiches(
     if ((await espace.element(position([]))) === null) {
       rapport.erreur =
         'Le dossier d’export n’existe plus dans l’espace de fichiers. Choisissez un autre dossier.'
+      await enregistrer()
+      return rapport
+    }
+    // Un admin a pu déplacer le dossier d'export dans un dossier lié : ses
+    // lecteurs y liraient les fiches de tous les périmètres. Relaytour n'y
+    // écrit plus, et l'écran le signale.
+    if (await exportDansUnDossierLie(espace, organisationId, connexion)) {
+      rapport.erreur =
+        'Le dossier d’export se trouve maintenant dans un dossier lié : ses lecteurs y liraient les fiches de tous les périmètres. Relaytour n’y écrit plus. Déplacez-le, ou choisissez un autre dossier.'
       await enregistrer()
       return rapport
     }
@@ -219,22 +258,24 @@ export async function exporterFiches(
       }
       await assurerDossiers(espace, fiche.chemin)
       const { etag } = await espace.ecrire(position(fiche.chemin), fiche.texte)
-      await prisma.ficheExportee.upsert({
-        where: { ficheId: fiche.id },
-        create: {
-          organisationId,
-          ficheId: fiche.id,
-          chemin: fiche.chemin,
-          empreinte: nouvelle,
-          etag,
-        },
-        update: {
-          chemin: fiche.chemin,
-          empreinte: nouvelle,
-          etag,
-          exporteeLe: new Date(),
-        },
-      })
+      await sousGeneration(tx =>
+        tx.ficheExportee.upsert({
+          where: { ficheId: fiche.id },
+          create: {
+            organisationId,
+            ficheId: fiche.id,
+            chemin: fiche.chemin,
+            empreinte: nouvelle,
+            etag,
+          },
+          update: {
+            chemin: fiche.chemin,
+            empreinte: nouvelle,
+            etag,
+            exporteeLe: new Date(),
+          },
+        })
+      )
       rapport.ecrites += 1
     }
 
@@ -242,16 +283,24 @@ export async function exporterFiches(
     for (const [ficheId, precedente] of exportees) {
       if (vues.has(ficheId)) continue
       await espace.supprimer(position(lireChemin(precedente.chemin)))
-      await prisma.ficheExportee.delete({ where: { id: precedente.id } })
+      await sousGeneration(tx =>
+        tx.ficheExportee.delete({ where: { id: precedente.id } })
+      )
       rapport.supprimees += 1
     }
   } catch (erreur) {
+    if (erreur instanceof ExportObsolete) return null
     rapport.erreur =
       'L’espace de fichiers n’a pas répondu pendant l’export. Relaytour recommencera.'
-    await enregistrer()
+    await enregistrer().catch(() => undefined)
     throw erreur
   }
-  await enregistrer()
+  try {
+    await enregistrer()
+  } catch (erreur) {
+    if (erreur instanceof ExportObsolete) return null
+    throw erreur
+  }
   journal.info(
     {
       evenement: 'fiches-exportees',

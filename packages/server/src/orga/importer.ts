@@ -1,6 +1,5 @@
 import { Prisma, type PrismaClient } from '@relaytour/database'
 
-import { empreinte } from '../lib/fiches.ts'
 import { lireLimites } from '../lib/limites.ts'
 import {
   invaliderConfigurationOrganisation,
@@ -16,6 +15,7 @@ import {
   type ActiviteModele,
   type Modeles,
 } from './modeles.ts'
+import { importerFiches } from './import-fiches.ts'
 
 export interface RapportActivite {
   slug: string
@@ -628,87 +628,30 @@ async function importerActivite(
     .sort()
 
   // Fiches. Le slug est unique dans l'organisation : une fiche passée d'une activité
-  // à une autre dans le dépôt suit ce changement.
-  const idsFiches = new Map<string, string>()
-  for (const fiche of modele.fiches) {
-    const perimetreId =
-      fiche.perimetre === null
-        ? null
-        : (idsPerimetres.get(fiche.perimetre) ?? null)
-    const nouvelleEmpreinte = empreinte(fiche.titre, fiche.contenu)
-    const existante =
-      organisationId === ''
-        ? null
-        : await tx.fiche.findUnique({
-            where: {
-              organisationId_slug: { organisationId, slug: fiche.slug },
-            },
-            include: {
-              versionCourante: { select: { empreinte: true, source: true } },
-            },
-          })
-    if (existante === null) {
-      rapport.fiches.creees.push(fiche.slug)
-      if (!ecrire) continue
-      const creee = await tx.fiche.create({
-        data: { slug: fiche.slug, perimetreId, organisationId, activiteId },
-      })
-      const version = await tx.ficheVersion.create({
-        data: {
-          ficheId: creee.id,
-          titre: fiche.titre,
-          contenu: fiche.contenu,
-          empreinte: nouvelleEmpreinte,
-          source: 'GIT',
-          resume: 'Import depuis le dépôt',
-        },
-      })
-      await tx.fiche.update({
-        where: { id: creee.id },
-        data: { versionCouranteId: version.id },
-      })
-      idsFiches.set(fiche.slug, creee.id)
-      continue
-    }
-    idsFiches.set(fiche.slug, existante.id)
-    const inchangee = existante.versionCourante?.empreinte === nouvelleEmpreinte
-    // Une fiche en conflit reste entière où elle est : ni son contenu, ni son
-    // activité, ni son périmètre ne changent tant que le conflit dure.
-    if (!inchangee && existante.versionCourante?.source === 'APP') {
-      rapport.fiches.conflits.push(fiche.slug)
-      continue
-    }
-    if (
-      ecrire &&
-      (existante.activiteId !== activiteId ||
-        existante.perimetreId !== perimetreId)
-    ) {
-      await tx.fiche.update({
-        where: { id: existante.id },
-        data: { activiteId, perimetreId },
-      })
-    }
-    if (inchangee) {
-      rapport.fiches.inchangees.push(fiche.slug)
-      continue
-    }
-    rapport.fiches.nouvellesVersions.push(fiche.slug)
-    if (!ecrire) continue
-    const version = await tx.ficheVersion.create({
-      data: {
-        ficheId: existante.id,
-        titre: fiche.titre,
-        contenu: fiche.contenu,
-        empreinte: nouvelleEmpreinte,
-        source: 'GIT',
-        resume: 'Import depuis le dépôt',
-      },
-    })
-    await tx.fiche.update({
-      where: { id: existante.id },
-      data: { versionCouranteId: version.id },
-    })
-  }
+  // à une autre dans le dépôt suit ce changement. Une version écrite dans
+  // l'application, ou importée de l'espace de fichiers, n'est pas remplacée.
+  const { ids: idsFiches } = await importerFiches(
+    tx,
+    modele.fiches.map(fiche => ({
+      slug: fiche.slug,
+      titre: fiche.titre,
+      contenu: fiche.contenu,
+      perimetreId:
+        fiche.perimetre === null
+          ? null
+          : (idsPerimetres.get(fiche.perimetre) ?? null),
+    })),
+    {
+      organisationId,
+      activiteId,
+      source: 'GIT',
+      resume: 'Import depuis le dépôt',
+      protegees: ['APP', 'ESPACE_FICHIERS'],
+      autreActivite: 'suivre',
+      ecrire,
+    },
+    rapport.fiches
+  )
 
   if (periode === null) return rapport
 

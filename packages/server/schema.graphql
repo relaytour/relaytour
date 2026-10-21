@@ -201,6 +201,11 @@ type CommentairesPeriode {
   perimetresLus: [ID!]!
 }
 
+type ConflitImport {
+  fiche: String!
+  raison: String!
+}
+
 """
 Connexion de l’organisation à son espace de fichiers. Le jeton ne sort jamais du serveur.
 """
@@ -216,6 +221,13 @@ type ConnexionFichiers {
   exportDossier: String
   exportRapport: RapportExport
   fournisseur: FournisseurFichiers!
+  methode: MethodeConnexionFichiers!
+}
+
+"""Une façon de connecter l’espace de fichiers, ouverte par l’exploitant."""
+type ConnexionPossible {
+  fournisseur: FournisseurFichiers!
+  methode: MethodeConnexionFichiers!
 }
 
 type CouleursTheme {
@@ -244,6 +256,14 @@ scalar Date
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
 scalar DateTime
+
+"""
+Connexion à Nextcloud commencée : la page où l’admin accorde l’accès, et l’état à présenter ensuite.
+"""
+type DebutConnexionNextcloud {
+  connexion: String!
+  etat: String!
+}
 
 """
 Les périmètres où décliner une tâche partagée. Un texte ou une échéance absents reprennent ceux de la tâche partagée.
@@ -365,9 +385,9 @@ type EspaceFichiers {
   connexion: ConnexionFichiers
 
   """
-  Fournisseurs ouverts par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.
+  Connexions ouvertes par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.
   """
-  fournisseursDisponibles: [FournisseurFichiers!]!
+  connexionsPossibles: [ConnexionPossible!]!
 }
 
 """
@@ -451,6 +471,11 @@ type FicheVersion {
   titre: String!
 }
 
+type FichierEcarte {
+  fichier: String!
+  raison: String!
+}
+
 """
 Le fil d’une tâche : ses commentaires et les événements de son journal, du plus ancien au plus récent. Chaque liste rend au plus ses 200 derniers éléments.
 """
@@ -528,6 +553,9 @@ type FormulaireRejoindre {
 }
 
 enum FournisseurFichiers {
+  DROPBOX
+  GOOGLE_DRIVE
+  NEXTCLOUD
   SHAREPOINT
 }
 
@@ -776,6 +804,11 @@ input MessageInput {
   perimetreId: ID
 }
 
+enum MethodeConnexionFichiers {
+  COMPTE
+  COMPTE_SERVICE
+}
+
 type Mutation {
   """
   Enregistre l’abonnement push de cet appareil pour la personne connectée. Reste possible dans une organisation en lecture seule.
@@ -822,9 +855,19 @@ type Mutation {
   commencerConnexionEspaceFichiers(fournisseur: FournisseurFichiers!): String!
 
   """
+  Commence la connexion au Nextcloud de l’association, à l’adresse donnée. L’admin ouvre ensuite la page rendue et y accorde l’accès ; Nextcloud crée un mot de passe d’application pour Relaytour.
+  """
+  commencerConnexionNextcloud(adresse: String!): DebutConnexionNextcloud!
+
+  """
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
+
+  """
+  Connecte Google Drive par un compte de service : la clé JSON du compte, que l’organisation a créée. L’organisation partage ensuite ses dossiers avec l’adresse du compte.
+  """
+  connecterCompteServiceGoogle(cle: String!): ConnexionFichiers!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
@@ -876,6 +919,11 @@ type Mutation {
   La personne connectée note son intérêt pour un périmètre (ADR 0012). Aucun mail ne part.
   """
   formulerSouhait(editionId: ID!, perimetreId: ID!): Boolean!
+
+  """
+  Importe les fiches des dossiers sources dans l’activité. Une fiche modifiée dans Relaytour n’est pas remplacée.
+  """
+  importerFichesEspace(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
 
   """
   Ajoute une déclinaison aux tâches de son périmètre sans son accord, même après un refus. Réservé aux admins de l’activité.
@@ -1030,6 +1078,11 @@ type Mutation {
   Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.
   """
   televerserMedia(donnees: String!, format: FormatMedia!): MediaTeleverse!
+
+  """
+  Demande à Nextcloud si l’admin a accordé l’accès. Vrai une fois la connexion enregistrée ; faux tant qu’il n’a pas terminé.
+  """
+  terminerConnexionNextcloud(etat: String!): Boolean!
 }
 
 """
@@ -1518,6 +1571,11 @@ type Query {
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
   recherche(editionId: ID, texte: String!): Recherche!
   retroplanning(editionId: ID!): [Tache!]!
+
+  """
+  Simule l’import des fiches depuis l’espace de fichiers : rien ne change en base.
+  """
+  simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
   tache(id: ID!): Tache!
   tachesAPrendre(editionId: ID!): [Tache!]!
   tousLesPerimetres(activiteId: ID): TousLesPerimetres!
@@ -1537,6 +1595,20 @@ type RapportExport {
   modifieesALaMain: [String!]!
   refusees: [RefusExport!]!
   supprimees: Int!
+}
+
+"""
+Ce que l’import des fiches depuis l’espace de fichiers fait, ou ferait en simulation.
+"""
+type RapportImportFiches {
+  conflits: [ConflitImport!]!
+  converties: [FichierEcarte!]!
+  creees: [String!]!
+  inchangees: [String!]!
+  incomplet: Boolean!
+  nonImportes: [FichierEcarte!]!
+  nouvellesVersions: [String!]!
+  refusees: [FichierEcarte!]!
 }
 
 type Recherche {
@@ -1613,7 +1685,17 @@ type Souhait {
 
 enum SourceFiche {
   APP
+  ESPACE_FICHIERS
   GIT
+}
+
+"""
+Dossier source des fiches d’un périmètre, ou des fiches communes quand le périmètre est nul.
+"""
+input SourceImportFiches {
+  chemin: [String!]!
+  emplacement: String!
+  perimetreId: ID
 }
 
 enum StatutDemande {

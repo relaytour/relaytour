@@ -6,7 +6,12 @@ import type { AppContext } from '../context.ts'
 import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
 import { dossierCompatible } from '../espace-fichiers/droits.ts'
 import {
+  cheminDeLExportSous,
+  dansLExport,
+} from '../espace-fichiers/isolement.ts'
+import {
   convertitEnPdf,
+  documentNatif,
   erreurEspace,
   ouvrirEspace,
 } from '../espace-fichiers/index.ts'
@@ -91,13 +96,27 @@ const RessourceFicheRef = builder.prismaObject('RessourceFiche', {
     dossierLie: t.relation('dossierLie', { type: DossierLieRef }),
     apercu: t.field({
       type: FormatApercuEnum,
-      select: { dossierLie: { select: { fournisseur: true } } },
-      resolve: r =>
-        r.type === 'DOSSIER'
-          ? 'AUCUN'
-          : formatApercu(r.nom, nom =>
-              convertitEnPdf(r.dossierLie.fournisseur, nom)
-            ),
+      select: {
+        dossierLie: {
+          select: { emplacement: true, element: true, fournisseur: true },
+        },
+      },
+      resolve: async (r, _args, ctx) => {
+        if (r.type === 'DOSSIER') return 'AUCUN'
+        const fournisseur = r.dossierLie.fournisseur
+        // Le type d'un document Google natif ne se lit que chez le fournisseur.
+        const etat =
+          fournisseur === 'GOOGLE_DRIVE'
+            ? await etatChezLeFournisseur(ctx, r)
+            : null
+        const typeMime =
+          etat === null || etat === 'absent' ? null : etat.typeMime
+        return formatApercu(
+          r.nom,
+          nom => convertitEnPdf(fournisseur, nom, typeMime),
+          documentNatif(fournisseur, typeMime)
+        )
+      },
     }),
     existe: t.boolean({
       nullable: true,
@@ -222,6 +241,14 @@ builder.mutationFields(t => ({
         const { espace } = await ouvrirEspace(fiche.organisationId)
         if (espace.fournisseur !== dossier.fournisseur) {
           throw erreurEspace(new Error('Fournisseur différent.'))
+        }
+        if (
+          dansLExport(
+            chemin,
+            await cheminDeLExportSous(espace, fiche.organisationId, dossier)
+          )
+        ) {
+          throw accesRefuse()
         }
         element = await espace.element({
           emplacement: dossier.emplacement,

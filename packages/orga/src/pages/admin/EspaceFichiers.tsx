@@ -1,5 +1,4 @@
 import {
-  CloudOutlined,
   CloudUploadOutlined,
   DeleteOutlined,
   FolderOutlined,
@@ -22,7 +21,9 @@ import {
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
+import ConnexionEspace from '../../composants/ConnexionEspace'
 import EtiquettePerimetre from '../../composants/EtiquettePerimetre'
+import ImportFiches from '../../composants/ImportFiches'
 import { Panneau } from '../../composants/Panneau'
 import ParcoursEspace, {
   type PositionChoisie,
@@ -33,14 +34,11 @@ import { useActivite } from '../../lib/activite'
 import { jourDeLInstant, messageErreur } from '../../lib/erreurs'
 import {
   CHOISIR_DOSSIER_EXPORT,
-  COMMENCER_CONNEXION,
-  DECONNECTER,
   DELIER_DOSSIER,
   DOSSIERS_LIES,
   ESPACE_FICHIERS,
   EXPORTER_FICHES_MAINTENANT,
   LIER_DOSSIER,
-  NOMS_FOURNISSEURS,
   PERIMETRES_A_LIER,
   RETIRER_DOSSIER_EXPORT,
 } from '../../lib/espace-fichiers'
@@ -362,10 +360,6 @@ export default function EspaceFichiers() {
   const liens = useQuery(DOSSIERS_LIES, {
     variables: { activiteId: activite.id },
   })
-  const [commencer, { loading: redirection }] = useMutation(COMMENCER_CONNEXION)
-  const [deconnecter] = useMutation(DECONNECTER, {
-    refetchQueries: ['EspaceFichiers', 'DossiersLies'],
-  })
   const [delier] = useMutation(DELIER_DOSSIER, {
     refetchQueries: ['DossiersLies'],
   })
@@ -381,20 +375,6 @@ export default function EspaceFichiers() {
 
   const espace = data?.espaceFichiers
   const connexion = espace?.connexion ?? null
-  const fournisseur = espace?.fournisseursDisponibles[0] ?? null
-  const nom = (f: string) => NOMS_FOURNISSEURS[f] ?? f
-
-  const connecter = async () => {
-    if (fournisseur === null) return
-    try {
-      const r = await commencer({ variables: { fournisseur } })
-      const adresse = r.data?.commencerConnexionEspaceFichiers
-      if (adresse) window.location.assign(adresse)
-    } catch (e) {
-      message.error(messageErreur(e))
-    }
-  }
-
   return (
     <>
       <Titre sousTitre="Les membres lisent les documents de l’association depuis Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document.">
@@ -402,101 +382,13 @@ export default function EspaceFichiers() {
       </Titre>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <Panneau titre="Connexion" icone={<CloudOutlined />}>
-          {loading && !data ? (
-            <Skeleton active paragraph={{ rows: 2 }} />
-          ) : fournisseur === null && connexion === null ? (
-            <Alert
-              type="info"
-              showIcon
-              message="L’hébergeur de cette installation n’a ouvert aucun espace de fichiers."
-            />
-          ) : connexion === null ? (
-            <>
-              <p>
-                Un admin de l’organisation se connecte avec son compte{' '}
-                {nom(fournisseur!)}. Relaytour lit ensuite les dossiers avec les
-                droits de ce compte, et seulement les dossiers que vous liez à
-                une activité.
-              </p>
-              <Button
-                type="primary"
-                icon={<LinkOutlined />}
-                loading={redirection}
-                onClick={() => void connecter()}
-              >
-                Connecter {nom(fournisseur!)}
-              </Button>
-            </>
-          ) : (
-            <>
-              {connexion.etat === 'A_RECONNECTER' && (
-                <Alert
-                  type="warning"
-                  showIcon
-                  style={{ marginBottom: 16 }}
-                  message={`${nom(connexion.fournisseur)} a retiré l’accès. Reconnectez l’espace de fichiers pour que les membres retrouvent leurs documents.`}
-                />
-              )}
-              <Descriptions
-                column={1}
-                size="small"
-                items={[
-                  {
-                    key: 'fournisseur',
-                    label: 'Fournisseur',
-                    children: nom(connexion.fournisseur),
-                  },
-                  {
-                    key: 'compte',
-                    label: 'Compte',
-                    children: connexion.compte,
-                  },
-                  {
-                    key: 'etat',
-                    label: 'État',
-                    children:
-                      connexion.etat === 'ACTIVE' ? (
-                        <Tag color="success">Connecté</Tag>
-                      ) : (
-                        <Tag color="warning">À reconnecter</Tag>
-                      ),
-                  },
-                  {
-                    key: 'date',
-                    label: 'Connecté le',
-                    children: `${jourDeLInstant(connexion.connecteeLe)}${connexion.connecteePar ? ` par ${connexion.connecteePar}` : ''}`,
-                  },
-                ]}
-              />
-              <div className="rt-puces" style={{ marginTop: 16 }}>
-                {fournisseur !== null && (
-                  <Button
-                    loading={redirection}
-                    onClick={() => void connecter()}
-                  >
-                    Reconnecter
-                  </Button>
-                )}
-                <Popconfirm
-                  title="Déconnecter l’espace de fichiers ?"
-                  description="Les dossiers liés restent, mais les membres ne lisent plus leurs documents jusqu’à une nouvelle connexion. L’export des fiches s’arrête."
-                  okText="Déconnecter"
-                  cancelText="Annuler"
-                  onConfirm={() =>
-                    deconnecter().catch((e: unknown) =>
-                      message.error(messageErreur(e))
-                    )
-                  }
-                >
-                  <Button danger>Déconnecter</Button>
-                </Popconfirm>
-              </div>
-            </>
-          )}
-        </Panneau>
+        <ConnexionEspace espace={espace} chargement={loading} />
 
         {connexion !== null && <ExportFiches connexion={connexion} />}
+
+        {connexion !== null && (
+          <ImportFiches actif={connexion.etat === 'ACTIVE'} />
+        )}
 
         <Panneau
           titre={`Dossiers liés de l’activité « ${activite.nom} »`}

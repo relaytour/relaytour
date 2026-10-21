@@ -44,6 +44,8 @@ function miseAJour(fiche: FicheListe): string {
   const date = jourDeLInstant(fiche.modifieeLe)
   if (fiche.source === 'GIT' && !fiche.modifieePar)
     return `Depuis le dépôt · ${date}`
+  if (fiche.source === 'ESPACE_FICHIERS')
+    return `Depuis l’espace de fichiers · ${date}`
   return fiche.modifieePar
     ? `Mise à jour le ${date} par ${fiche.modifieePar}`
     : `Mise à jour le ${date}`

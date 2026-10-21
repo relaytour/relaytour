@@ -1,12 +1,19 @@
 import {
   EtatConnexionFichiers,
   FournisseurFichiers,
+  MethodeConnexionFichiers,
   Prisma,
   prisma,
 } from '@relaytour/database'
 
 import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
 import { dossierLisible } from '../espace-fichiers/droits.ts'
+import {
+  ancetresDeLExport,
+  cheminDeLExportSous,
+  dansLExport,
+  lignee,
+} from '../espace-fichiers/isolement.ts'
 import {
   lancerExportFiches,
   NOM_DOSSIER_EXPORT,
@@ -16,12 +23,41 @@ import {
   commencerConnexion,
   configurationMicrosoft,
   erreurEspace,
-  fournisseursDisponibles,
+  configurationDropbox,
+  configurationGoogle,
+  configurationNextcloud,
+  connexionsPossibles,
+  documentNatif,
+  enregistrerConnexion,
+  espaceDeTest,
+  garderConnexionNextcloud,
+  lireConnexionNextcloud,
+  memoriserJetonAcces,
+  oublierConnexionNextcloud,
   oublierJetonAcces,
   ouvrirEspace,
 } from '../espace-fichiers/index.ts'
+import {
+  baseAdmise,
+  commencerLoginNextcloud,
+  compteNextcloud,
+  sonderLoginNextcloud,
+  type SecretNextcloud,
+} from '../espace-fichiers/nextcloud.ts'
+import {
+  adresseAutorisationGoogle,
+  jetonCompteService,
+  lireCleCompteService,
+  MON_DRIVE,
+  PARTAGES,
+} from '../espace-fichiers/google.ts'
 import { adresseAutorisation } from '../espace-fichiers/sharepoint.ts'
-import type { ElementEspace, EspaceFichiers } from '../espace-fichiers/types.ts'
+import { adresseAutorisationDropbox } from '../espace-fichiers/dropbox.ts'
+import {
+  FournisseurIndisponible,
+  type ElementEspace,
+  type EspaceFichiers,
+} from '../espace-fichiers/types.ts'
 import type { AppContext } from '../context.ts'
 import { peutLireFiche } from '../lib/fiches.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
@@ -68,6 +104,24 @@ const RefusExportRef = builder
     }),
   })
 
+const DebutConnexionNextcloudRef = builder
+  .objectRef<{ connexion: string; etat: string }>('DebutConnexionNextcloud')
+  .implement({
+    description:
+      'Connexion à Nextcloud commencée : la page où l’admin accorde l’accès, et l’état à présenter ensuite.',
+    fields: t => ({
+      connexion: t.exposeString('connexion'),
+      etat: t.exposeString('etat'),
+    }),
+  })
+
+/** Une erreur d'adresse ou de réponse de Nextcloud, que l'admin peut corriger. */
+function erreurNextcloud(erreur: unknown): Error {
+  return erreur instanceof FournisseurIndisponible
+    ? erreurSaisie(erreur.message)
+    : erreurEspace(erreur)
+}
+
 const RapportExportRef = builder
   .objectRef<RapportExport>('RapportExport')
   .implement({
@@ -87,11 +141,30 @@ const RapportExportRef = builder
     }),
   })
 
+const MethodeConnexionEnum = builder.enumType(MethodeConnexionFichiers, {
+  name: 'MethodeConnexionFichiers',
+})
+
+const ConnexionPossibleRef = builder
+  .objectRef<{
+    fournisseur: FournisseurFichiers
+    methode: MethodeConnexionFichiers
+  }>('ConnexionPossible')
+  .implement({
+    description:
+      'Une façon de connecter l’espace de fichiers, ouverte par l’exploitant.',
+    fields: t => ({
+      fournisseur: t.expose('fournisseur', { type: FournisseurFichiersEnum }),
+      methode: t.expose('methode', { type: MethodeConnexionEnum }),
+    }),
+  })
+
 const ConnexionFichiersRef = builder.prismaObject('ConnexionFichiers', {
   description:
     'Connexion de l’organisation à son espace de fichiers. Le jeton ne sort jamais du serveur.',
   fields: t => ({
     fournisseur: t.expose('fournisseur', { type: FournisseurFichiersEnum }),
+    methode: t.expose('methode', { type: MethodeConnexionEnum }),
     compte: t.exposeString('compte'),
     etat: t.expose('etat', { type: EtatConnexionFichiersEnum }),
     connecteeLe: t.expose('updatedAt', { type: 'DateTime' }),
@@ -113,29 +186,11 @@ const ConnexionFichiersRef = builder.prismaObject('ConnexionFichiers', {
   }),
 })
 
-/**
- * Identifiants de la racine d'une bibliothèque et de chaque dossier du chemin,
- * jusqu'au dernier compris. Un dossier absent n'a pas d'identifiant.
- */
-async function idsDuChemin(
-  espace: EspaceFichiers,
-  emplacement: string,
-  chemin: readonly string[]
-): Promise<string[]> {
-  const ids: string[] = []
-  for (let i = 0; i <= chemin.length; i++) {
-    const element = await espace.element({
-      emplacement,
-      base: null,
-      chemin: chemin.slice(0, i),
-    })
-    if (element !== null) ids.push(element.id)
-  }
-  return ids
-}
-
 interface EspaceFichiersVue {
-  fournisseursDisponibles: FournisseurFichiers[]
+  connexionsPossibles: {
+    fournisseur: FournisseurFichiers
+    methode: MethodeConnexionFichiers
+  }[]
   organisationId: string
 }
 
@@ -143,11 +198,11 @@ const EspaceFichiersRef = builder
   .objectRef<EspaceFichiersVue>('EspaceFichiers')
   .implement({
     fields: t => ({
-      fournisseursDisponibles: t.field({
-        type: [FournisseurFichiersEnum],
+      connexionsPossibles: t.field({
+        type: [ConnexionPossibleRef],
         description:
-          'Fournisseurs ouverts par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.',
-        resolve: v => v.fournisseursDisponibles,
+          'Connexions ouvertes par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.',
+        resolve: v => v.connexionsPossibles,
       }),
       connexion: t.prismaField({
         type: ConnexionFichiersRef,
@@ -245,7 +300,11 @@ function vue(espace: EspaceFichiers, e: ElementEspace): ElementVue {
     ...e,
     apercu: e.dossier
       ? 'AUCUN'
-      : formatApercu(e.nom, nom => espace.convertitEnPdf(nom)),
+      : formatApercu(
+          e.nom,
+          nom => espace.convertitEnPdf(nom, e.typeMime),
+          documentNatif(espace.fournisseur, e.typeMime)
+        ),
   }
 }
 
@@ -289,7 +348,7 @@ builder.queryFields(t => ({
     type: EspaceFichiersRef,
     authScopes: { admin: true },
     resolve: async (_root, _args, ctx) => ({
-      fournisseursDisponibles: await fournisseursDisponibles(),
+      connexionsPossibles: await connexionsPossibles(),
       organisationId: ctx.organisation!.id,
     }),
   }),
@@ -388,6 +447,13 @@ builder.queryFields(t => ({
         if (espace.fournisseur !== dossier.fournisseur) {
           throw erreurEspace(new Error('Fournisseur différent.'))
         }
+        // Le dossier d'export, s'il se trouve sous ce dossier lié, ne s'y lit pas.
+        const exportation = await cheminDeLExportSous(
+          espace,
+          dossier.organisationId,
+          dossier
+        )
+        if (dansLExport(chemin, exportation)) throw accesRefuse()
         const liste = await espace.lister({
           emplacement: dossier.emplacement,
           base: dossier.element,
@@ -395,7 +461,11 @@ builder.queryFields(t => ({
         })
         if (liste === null) throw erreurSaisie('Dossier introuvable.')
         return {
-          elements: trier(liste.elements.map(e => vue(espace, e))),
+          elements: trier(
+            liste.elements
+              .filter(e => e.id !== exportation?.id)
+              .map(e => vue(espace, e))
+          ),
           complet: liste.complet,
         }
       })
@@ -414,18 +484,200 @@ builder.mutationFields(t => ({
       fournisseur: t.arg({ type: FournisseurFichiersEnum, required: true }),
     },
     resolve: async (_root, { fournisseur }, ctx) => {
-      const configuration = await configurationMicrosoft()
-      if (fournisseur !== 'SHAREPOINT' || configuration === null) {
-        throw erreurSaisie(
-          'Ce fournisseur n’est pas ouvert sur cette installation.'
-        )
-      }
+      const fermee = () =>
+        erreurSaisie('Ce fournisseur n’est pas ouvert sur cette installation.')
+      const microsoft =
+        fournisseur === 'SHAREPOINT' ? await configurationMicrosoft() : null
+      const google =
+        fournisseur === 'GOOGLE_DRIVE' ? await configurationGoogle() : null
+      const dropbox =
+        fournisseur === 'DROPBOX' ? await configurationDropbox() : null
+      if (microsoft === null && google === null && dropbox === null)
+        throw fermee()
       const { etat, defi } = await commencerConnexion({
         organisationId: ctx.organisation!.id,
         userId: ctx.personne!.id,
         fournisseur,
       })
-      return adresseAutorisation(configuration, etat, defi)
+      if (microsoft !== null) return adresseAutorisation(microsoft, etat, defi)
+      if (google !== null) return adresseAutorisationGoogle(google, etat, defi)
+      return adresseAutorisationDropbox(dropbox!, etat, defi)
+    },
+  }),
+
+  connecterCompteServiceGoogle: t.prismaField({
+    type: ConnexionFichiersRef,
+    authScopes: { admin: true },
+    description:
+      'Connecte Google Drive par un compte de service : la clé JSON du compte, que l’organisation a créée. L’organisation partage ensuite ses dossiers avec l’adresse du compte.',
+    args: { cle: t.arg.string({ required: true }) },
+    resolve: async (query, _root, { cle }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const possible = (await connexionsPossibles()).some(
+        c => c.fournisseur === 'GOOGLE_DRIVE' && c.methode === 'COMPTE_SERVICE'
+      )
+      if (!possible) {
+        throw erreurSaisie(
+          'Le compte de service n’est pas ouvert sur cette installation.'
+        )
+      }
+      if (cle.length > 10_000) throw erreurSaisie('Cette clé est trop longue.')
+      let compteService
+      try {
+        compteService = lireCleCompteService(cle)
+      } catch (erreur) {
+        throw erreurSaisie((erreur as Error).message)
+      }
+      // Google accepte-t-il la clé ? Un essai l'établit avant l'enregistrement.
+      let premier: { acces: string; expireLe: number } | null = null
+      if (!espaceDeTest()) {
+        try {
+          premier = await jetonCompteService(compteService)
+        } catch {
+          throw erreurSaisie(
+            'Google refuse cette clé. Vérifiez que le compte de service existe et que l’API Google Drive est activée dans son projet.'
+          )
+        }
+      }
+      const connexion = await enregistrerConnexion({
+        organisationId,
+        fournisseur: 'GOOGLE_DRIVE',
+        methode: 'COMPTE_SERVICE',
+        compte: compteService.client_email,
+        secret: JSON.stringify(compteService),
+        connecteParId: ctx.personne!.id,
+      })
+      if (premier !== null) {
+        memoriserJetonAcces(connexion.jeton, premier.acces, premier.expireLe)
+      }
+      journal.info(
+        {
+          evenement: 'espace-fichiers-connecte',
+          organisationId,
+          acteurId: ctx.personne!.id,
+          fournisseur: 'GOOGLE_DRIVE',
+          methode: 'COMPTE_SERVICE',
+        },
+        'Un espace de fichiers a été connecté.'
+      )
+      void publierChangement({ entite: 'FICHIERS', organisationId })
+      return prisma.connexionFichiers.findUniqueOrThrow({
+        ...query,
+        where: { organisationId },
+      })
+    },
+  }),
+
+  commencerConnexionNextcloud: t.field({
+    type: DebutConnexionNextcloudRef,
+    authScopes: { admin: true },
+    description:
+      'Commence la connexion au Nextcloud de l’association, à l’adresse donnée. L’admin ouvre ensuite la page rendue et y accorde l’accès ; Nextcloud crée un mot de passe d’application pour Relaytour.',
+    args: { adresse: t.arg.string({ required: true }) },
+    resolve: async (_root, { adresse }, ctx) => {
+      const configuration = await configurationNextcloud()
+      if (configuration === null) {
+        throw erreurSaisie('Nextcloud n’est pas ouvert sur cette installation.')
+      }
+      if (adresse.length > 500)
+        throw erreurSaisie('Cette adresse est trop longue.')
+      const base = baseAdmise(adresse, configuration)
+      if (base === null) {
+        throw erreurSaisie(
+          configuration.tous
+            ? 'Saisissez l’adresse https de votre Nextcloud, sans port, par exemple https://cloud.exemple.org.'
+            : 'L’hébergeur de cette installation n’admet pas cette adresse. Demandez-lui d’ajouter votre Nextcloud.'
+        )
+      }
+      let debut
+      try {
+        debut = await commencerLoginNextcloud(configuration, base)
+      } catch (erreur) {
+        throw erreurNextcloud(erreur)
+      }
+      const etat = await garderConnexionNextcloud({
+        organisationId: ctx.organisation!.id,
+        userId: ctx.personne!.id,
+        base,
+        sondage: debut.sondage,
+        jeton: debut.jeton,
+      })
+      return { connexion: debut.connexion, etat }
+    },
+  }),
+
+  terminerConnexionNextcloud: t.boolean({
+    authScopes: { admin: true },
+    description:
+      'Demande à Nextcloud si l’admin a accordé l’accès. Vrai une fois la connexion enregistrée ; faux tant qu’il n’a pas terminé.',
+    args: { etat: t.arg.string({ required: true }) },
+    resolve: async (_root, { etat }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const configuration = await configurationNextcloud()
+      if (configuration === null) {
+        throw erreurSaisie('Nextcloud n’est pas ouvert sur cette installation.')
+      }
+      // L'état appartient à la personne qui a commencé, dans cette organisation.
+      const enCours = await lireConnexionNextcloud(etat)
+      if (
+        enCours === null ||
+        enCours.organisationId !== organisationId ||
+        enCours.userId !== ctx.personne!.id
+      ) {
+        throw erreurSaisie('Cette connexion a expiré. Recommencez.')
+      }
+      let accorde
+      try {
+        accorde = await sonderLoginNextcloud(
+          configuration,
+          enCours.base,
+          enCours.sondage,
+          enCours.jeton
+        )
+      } catch (erreur) {
+        throw erreurNextcloud(erreur)
+      }
+      if (accorde === null) return false
+      // Deux sondages simultanés : un seul enregistre la connexion.
+      if (!(await oublierConnexionNextcloud(etat))) return false
+      let compte
+      try {
+        compte = await compteNextcloud(
+          configuration,
+          enCours.base,
+          accorde.identifiant,
+          accorde.motDePasse
+        )
+      } catch (erreur) {
+        throw erreurNextcloud(erreur)
+      }
+      const secret = JSON.stringify({
+        base: enCours.base,
+        utilisateur: compte.utilisateur,
+        identifiant: accorde.identifiant,
+        motDePasse: accorde.motDePasse,
+      } satisfies SecretNextcloud)
+      const connexion = await enregistrerConnexion({
+        organisationId,
+        fournisseur: 'NEXTCLOUD',
+        methode: 'COMPTE',
+        compte: `${compte.nom} (${new URL(enCours.base).host})`,
+        secret,
+        connecteParId: ctx.personne!.id,
+      })
+      memoriserJetonAcces(connexion.jeton, secret, Date.now() + 60 * 60_000)
+      journal.info(
+        {
+          evenement: 'espace-fichiers-connecte',
+          organisationId,
+          acteurId: ctx.personne!.id,
+          fournisseur: 'NEXTCLOUD',
+          methode: 'COMPTE',
+        },
+        'Un espace de fichiers a été connecté.'
+      )
+      void publierChangement({ entite: 'FICHIERS', organisationId })
+      return true
     },
   }),
 
@@ -440,8 +692,10 @@ builder.mutationFields(t => ({
         select: { id: true, jeton: true },
       })
       if (connexion === null) return false
-      await prisma.ficheExportee.deleteMany({ where: { organisationId } })
-      await prisma.connexionFichiers.delete({ where: { id: connexion.id } })
+      await sousVerrouOrganisation(organisationId, async tx => {
+        await tx.ficheExportee.deleteMany({ where: { organisationId } })
+        await tx.connexionFichiers.delete({ where: { id: connexion.id } })
+      })
       oublierJetonAcces(connexion.jeton)
       journal.info(
         {
@@ -511,17 +765,17 @@ builder.mutationFields(t => ({
           exportAncetres: true,
         },
       })
-      if (
-        exportation?.exportElement != null &&
-        exportation.exportEmplacement === emplacement
-      ) {
-        const ancetres = (exportation.exportAncetres as string[] | null) ?? []
-        const parcours = await avecEspace(ctx, e =>
-          idsDuChemin(e, emplacement, chemin)
-        )
+      // Sa place se relit chez le fournisseur : un admin a pu le déplacer. Le
+      // contrôle vaut quel que soit l'emplacement par lequel l'admin le voit.
+      if (exportation?.exportElement != null) {
+        const exportElement = exportation.exportElement
+        const { ancetres, parcours } = await avecEspace(ctx, async e => ({
+          ancetres: await ancetresDeLExport(e, exportation),
+          parcours: await lignee(e, emplacement, chemin),
+        }))
         if (
-          ancetres.includes(element.id) ||
-          parcours.includes(exportation.exportElement)
+          ancetres.some(a => a.id === element.id) ||
+          parcours.includes(exportElement)
         ) {
           throw erreurSaisie(
             'Ce dossier contient le dossier d’export des fiches, ou s’y trouve. Choisissez un autre dossier.'
@@ -538,9 +792,22 @@ builder.mutationFields(t => ({
       // Sous le verrou de l'organisation : deux liens simultanés du même dossier
       // n'en créent qu'un. Sans périmètre, la contrainte d'unicité ne l'empêche
       // pas, car MariaDB admet plusieurs valeurs nulles.
-      const dossier = await sousVerrouOrganisation(
-        organisationId,
-        async tx =>
+      // Le choix du dossier d'export prend le même verrou : un dossier d'export
+      // choisi entre le contrôle et le lien fait recommencer.
+      const dossier = await sousVerrouOrganisation(organisationId, async tx => {
+        const export_ = await tx.connexionFichiers.findUnique({
+          where: { organisationId },
+          select: { exportElement: true },
+        })
+        if (
+          (export_?.exportElement ?? null) !==
+          (exportation?.exportElement ?? null)
+        ) {
+          throw erreurSaisie(
+            'Le dossier d’export vient de changer. Recommencez le lien.'
+          )
+        }
+        return (
           (await tx.dossierLie.findFirst({ where: cle })) ??
           tx.dossierLie.create({
             data: {
@@ -550,7 +817,8 @@ builder.mutationFields(t => ({
               creeParId: ctx.personne!.id,
             },
           })
-      )
+        )
+      })
       publierPourActivite('FICHIERS', organisationId, activite.id, {
         id: dossier.id,
         perimetreId: dossier.perimetreId,
@@ -577,19 +845,35 @@ builder.mutationFields(t => ({
       const { parent, ids, espace } = await avecEspace(ctx, async espace => ({
         espace,
         parent: await espace.element({ emplacement, base: null, chemin }),
-        ids: await idsDuChemin(espace, emplacement, chemin),
+        ids: await lignee(espace, emplacement, chemin),
       }))
       if (parent === null || !parent.dossier) {
         throw erreurSaisie('Ce dossier n’existe pas dans l’espace de fichiers.')
       }
-      const lies = await prisma.dossierLie.count({
-        where: { organisationId, emplacement, element: { in: ids } },
+      // Un compte de service Google n'a pas d'espace de stockage : il n'écrit que
+      // dans un Drive partagé.
+      const methode = await prisma.connexionFichiers.findUnique({
+        where: { organisationId },
+        select: { fournisseur: true, methode: true },
       })
-      if (lies > 0) {
+      if (
+        methode?.fournisseur === 'GOOGLE_DRIVE' &&
+        methode.methode === 'COMPTE_SERVICE' &&
+        (emplacement === MON_DRIVE || emplacement === PARTAGES)
+      ) {
         throw erreurSaisie(
-          'Ce dossier est lié à une activité, ou se trouve dans un dossier lié. Les membres y liraient les fiches de tous les périmètres : choisissez un autre dossier.'
+          'Un compte de service n’écrit que dans un Drive partagé. Choisissez un dossier d’un Drive partagé dont il est membre.'
         )
       }
+      const refus = () =>
+        erreurSaisie(
+          'Ce dossier est lié à une activité, ou se trouve dans un dossier lié. Les membres y liraient les fiches de tous les périmètres : choisissez un autre dossier.'
+        )
+      const lies = (tx: Prisma.TransactionClient | typeof prisma) =>
+        tx.dossierLie.count({
+          where: { organisationId, element: { in: ids } },
+        })
+      if ((await lies(prisma)) > 0) throw refus()
       const cree = await avecEspace(ctx, () =>
         espace.creerDossier(
           { emplacement, base: null, chemin },
@@ -597,22 +881,40 @@ builder.mutationFields(t => ({
           { renommer: true }
         )
       )
-      await prisma.ficheExportee.deleteMany({ where: { organisationId } })
-      const connexion = await prisma.connexionFichiers.update({
-        ...query,
-        where: { organisationId },
-        data: {
-          exportEmplacement: emplacement,
-          exportElement: cree.id,
-          exportNom: [...chemin, cree.nom].join(' / '),
-          exportAncetres: [...ids, cree.id],
-          exportRapport: Prisma.DbNull,
-          exportLe: null,
-        },
+      // Le lien d'un dossier prend le même verrou : un dossier lié entre le
+      // premier contrôle et l'écriture fait échouer le choix.
+      const accepte = await sousVerrouOrganisation(organisationId, async tx => {
+        if ((await lies(tx)) > 0) return false
+        await tx.ficheExportee.deleteMany({ where: { organisationId } })
+        await tx.connexionFichiers.update({
+          where: { organisationId },
+          data: {
+            exportEmplacement: emplacement,
+            exportElement: cree.id,
+            exportNom: [...chemin, cree.nom].join(' / '),
+            exportAncetres: [...ids, cree.id],
+            exportRapport: Prisma.DbNull,
+            exportLe: null,
+          },
+        })
+        return true
       })
+      if (!accepte) {
+        await espace
+          .supprimer({
+            emplacement,
+            base: null,
+            chemin: [...chemin, cree.nom],
+          })
+          .catch(() => undefined)
+        throw refus()
+      }
       await lancerExportFiches(organisationId).catch(() => undefined)
       void publierChangement({ entite: 'FICHIERS', organisationId })
-      return connexion
+      return prisma.connexionFichiers.findUniqueOrThrow({
+        ...query,
+        where: { organisationId },
+      })
     },
   }),
 
@@ -622,18 +924,23 @@ builder.mutationFields(t => ({
       'Arrête l’export des fiches. Les fichiers déjà écrits restent dans l’espace de fichiers.',
     resolve: async (_root, _args, ctx) => {
       const organisationId = ctx.organisation!.id
-      const { count } = await prisma.connexionFichiers.updateMany({
-        where: { organisationId },
-        data: {
-          exportEmplacement: null,
-          exportElement: null,
-          exportNom: null,
-          exportAncetres: Prisma.DbNull,
-          exportRapport: Prisma.DbNull,
-          exportLe: null,
-        },
+      // Sous le verrou de l'organisation : un export en cours ne réécrit plus
+      // son suivi une fois l'export arrêté.
+      const count = await sousVerrouOrganisation(organisationId, async tx => {
+        const { count } = await tx.connexionFichiers.updateMany({
+          where: { organisationId },
+          data: {
+            exportEmplacement: null,
+            exportElement: null,
+            exportNom: null,
+            exportAncetres: Prisma.DbNull,
+            exportRapport: Prisma.DbNull,
+            exportLe: null,
+          },
+        })
+        await tx.ficheExportee.deleteMany({ where: { organisationId } })
+        return count
       })
-      await prisma.ficheExportee.deleteMany({ where: { organisationId } })
       void publierChangement({ entite: 'FICHIERS', organisationId })
       return count > 0
     },
