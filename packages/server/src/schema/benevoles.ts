@@ -11,7 +11,9 @@ import {
   telephoneValide,
 } from '../lib/benevoles.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import { jetonEspace, lienEspace } from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { configurationOrganisation } from '../lib/organisation.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
@@ -55,6 +57,53 @@ const BenevoleRef = builder.objectRef<BenevoleLu>('Benevole').implement({
     places: t.int({
       description: 'Le nombre de séquences où la fiche est placée.',
       resolve: l => l.benevole._count.places,
+    }),
+    origine: t.string({
+      description:
+        'SAISIE : saisie par l’équipe. CANDIDATURE : née d’une candidature (ADR 0041).',
+      resolve: l => l.benevole.origine,
+    }),
+    confirmeeLe: t.field({
+      type: 'DateTime',
+      nullable: true,
+      description:
+        'La date à laquelle la personne a confirmé sa participation depuis son lien.',
+      resolve: l => l.benevole.courrielConfirmeLe,
+    }),
+    lienEnvoyeLe: t.field({
+      type: 'DateTime',
+      nullable: true,
+      resolve: l => l.benevole.lienEnvoyeLe,
+    }),
+    prevenirParMail: t.boolean({
+      description:
+        'L’option « Prévenir par mail ». Avec une adresse, la fiche est joignable : sa première place envoie le lien (ADR 0041).',
+      resolve: l => l.benevole.prevenirParMail,
+    }),
+    lienRenvoyable: t.boolean({
+      description:
+        'Vrai quand la personne connectée peut renvoyer le lien par mail, vers une fiche joignable : le lien est parti une fois sans relance, ou la fiche placée n’a pas pu recevoir son premier mail.',
+      resolve: l =>
+        l.coordonnees &&
+        l.benevole.prevenirParMail &&
+        l.benevole.courriel !== null &&
+        (l.benevole.lienEnvoyeLe === null
+          ? l.benevole._count.places > 0
+          : l.benevole.relanceLe === null),
+    }),
+    lienEspace: t.string({
+      nullable: true,
+      description:
+        'Le lien personnel, à copier, pour une personne qui lit les coordonnées ; null sans lien ou sans ce droit.',
+      resolve: async l => {
+        if (!l.coordonnees || l.benevole.espaceSel === null) return null
+        const { origineOrga } = await configurationOrganisation(
+          l.benevole.organisationId
+        )
+        // Le calcul réaligne l'empreinte gardée après un changement du secret :
+        // le lien copié répond aussitôt.
+        return lienEspace(origineOrga, await jetonEspace(prisma, l.benevole.id))
+      },
     }),
     peutModifier: t.boolean({ resolve: l => l.peutModifier }),
   }),
@@ -135,6 +184,11 @@ builder.mutationFields(t => ({
       courriel: t.arg.string(),
       telephone: t.arg.string(),
       note: t.arg.string(),
+      prevenirParMail: t.arg.boolean({
+        defaultValue: true,
+        description:
+          'Vrai : la fiche reçoit son lien par mail à sa première place, si elle a une adresse.',
+      }),
       accord: t.arg.boolean({
         required: true,
         description:
@@ -155,6 +209,7 @@ builder.mutationFields(t => ({
         courriel: courrielValide(args.courriel),
         telephone: telephoneValide(args.telephone),
         note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
+        prevenirParMail: args.prevenirParMail ?? true,
         accordLe: new Date(),
         creeParId: ctx.personne!.id,
       }
@@ -187,16 +242,37 @@ builder.mutationFields(t => ({
       courriel: t.arg.string(),
       telephone: t.arg.string(),
       note: t.arg.string(),
+      prevenirParMail: t.arg.boolean({
+        description: 'Sans valeur, l’option reste telle quelle.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const actuelle = await ficheModifiable(ctx, String(args.id))
+      const courriel = courrielValide(args.courriel)
+      // Une nouvelle adresse n'est pas confirmée : elle repart du premier lien,
+      // et l'ancien lien, envoyé à l'ancienne adresse, cesse de répondre
+      // (ADR 0041).
+      const autreAdresse = courriel !== actuelle.courriel
       const modifiee = await prisma.benevole.update({
         where: { id: actuelle.id },
         data: {
           nom: texteRequis(args.nom, 'Le nom', NOM_BENEVOLE_MAX),
-          courriel: courrielValide(args.courriel),
+          courriel,
+          ...(autreAdresse
+            ? {
+                courrielConfirmeLe: null,
+                lienEnvoyeLe: null,
+                relanceLe: null,
+                espaceSel: null,
+                espaceEmpreinte: null,
+              }
+            : {}),
           telephone: telephoneValide(args.telephone),
           note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
+          ...(args.prevenirParMail === null ||
+          args.prevenirParMail === undefined
+            ? {}
+            : { prevenirParMail: args.prevenirParMail }),
         },
         include: AVEC_PLACES,
       })

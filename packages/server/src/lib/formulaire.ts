@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { donneesPersonnelles, type AdressesDeRole } from './contenu.ts'
+import { erreurSaisie } from './erreurs.ts'
 
 // Formulaire public pour rejoindre l'équipe d'une activité (ADR 0015).
 //
@@ -83,4 +84,21 @@ const LIENS = [
  */
 export function contientUnLien(texte: string): boolean {
   return LIENS.some(lien => lien.test(texte))
+}
+
+/** Un texte libre d'un formulaire public : rogné, borné, sans lien. Vide, il vaut null. */
+export function texteLibre(
+  brut: string | null | undefined,
+  nom: string,
+  max: number
+): string | null {
+  const texte = (brut ?? '').trim()
+  if (texte === '') return null
+  if (texte.length > max) {
+    throw erreurSaisie(`${nom} compte ${max} caractères au plus.`)
+  }
+  if (contientUnLien(texte)) {
+    throw erreurSaisie('Les liens ne sont pas acceptés dans ce formulaire.')
+  }
+  return texte
 }

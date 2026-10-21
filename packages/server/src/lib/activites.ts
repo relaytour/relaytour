@@ -37,6 +37,9 @@ export const SLUGS_RESERVES = new Set([
   'admin',
   'api',
   'assets',
+  // Pages publiques des appels à bénévoles et de l'espace bénévole (ADR 0041).
+  'benevole',
+  'benevoles',
   'connexion',
   'fiches',
   'graphql',

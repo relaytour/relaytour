@@ -408,6 +408,44 @@ describe('séquences', () => {
     expect(conflit.errors?.[0]?.extensions?.versionCourante).toBe(1)
   })
 
+  it('confirment les places saisies, et gardent une place à confirmer à la modification', async () => {
+    const sequence = await sequenceNatation({ t: 'Relais' })
+    const places = await prisma.placeSequence.findMany({
+      where: { sequenceId: sequence.id },
+    })
+    expect(places.every(p => p.confirmeeLe !== null)).toBe(true)
+    // La place de la ou du bénévole devient une place à confirmer (ADR 0041).
+    await prisma.placeSequence.updateMany({
+      where: { sequenceId: sequence.id, benevoleId: ids.benevole },
+      data: { confirmeeLe: null },
+    })
+    donnees<Sequence>(
+      await executer(ids.referent, MODIFIER, {
+        id: sequence.id,
+        l: ids.bassin,
+        t: 'Relais 4 × 50 m',
+        j: '2027-06-05',
+        d: '09:00',
+        f: '12:00',
+        pl: [
+          { personneId: ids.referent, role: 'RESPONSABLE' },
+          { benevoleId: ids.benevole, role: 'RENFORT' },
+        ],
+        v: 0,
+      }),
+      'modifierSequence'
+    )
+    const apres = await prisma.placeSequence.findMany({
+      where: { sequenceId: sequence.id },
+    })
+    expect(
+      apres.find(p => p.benevoleId === ids.benevole)?.confirmeeLe
+    ).toBeNull()
+    expect(apres.find(p => p.userId === ids.referent)?.confirmeeLe).toEqual(
+      places.find(p => p.userId === ids.referent)?.confirmeeLe
+    )
+  })
+
   it('gardent leur lieu archivé, sans pouvoir choisir un autre lieu archivé', async () => {
     const sequence = await sequenceNatation({ t: 'Relais' })
     await prisma.lieu.updateMany({

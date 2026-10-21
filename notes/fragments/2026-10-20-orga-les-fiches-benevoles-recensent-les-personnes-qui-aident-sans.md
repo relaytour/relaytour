@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Les fiches bénévoles recensent les personnes qui aident sans compte

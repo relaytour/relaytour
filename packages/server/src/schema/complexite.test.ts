@@ -146,6 +146,30 @@ describe('limites de complexité des requêtes', () => {
     )
   })
 
+  // Appels à bénévoles (ADR 0041) : la file des candidatures et les bénévoles à
+  // répartir portent des listes dans une liste. L'espace organisateur les lit en
+  // entier, avec le __typename qu'ajoute Apollo.
+  it.each([
+    [
+      'la file des candidatures',
+      `{ candidatures(editionId: "e") { __typename id statut nom courriel telephone message precisionsDisponibilite ouAilleurs deposeeLe appelNom benevoleId peutEcarter
+        plages { __typename jour heureDebut jourFin heureFin }
+        choix { __typename id statut sequenceId titre jour heureDebut heureFin lieu peutTraiter perimetre { __typename id nom couleur } } } }`,
+    ],
+    [
+      'les bénévoles à répartir',
+      `{ benevolesARepartir(editionId: "e") { __typename cle candidatureId benevoleId nom precisionsDisponibilite message origine ouAilleurs adequation note
+        plages { __typename debut fin jour heureDebut jourFin heureFin }
+        choix { __typename sequenceId statut }
+        places { __typename sequenceId debut fin } } }`,
+    ],
+  ])('laisse passer %s', async (_nom, requete) => {
+    const resultat = await executer(requete)
+    expect((resultat.errors ?? []).map(e => e.extensions?.code)).not.toContain(
+      'REQUETE_TROP_COMPLEXE'
+    )
+  })
+
   it('laisse passer une requête simple jusqu’au résolveur', async () => {
     const resultat = await executer('{ baremeScore { tacheRealisee } }')
     expect(resultat.errors).toBeUndefined()

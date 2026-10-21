@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Un agenda réunit les phases, les dates clés et les échéances

@@ -40,6 +40,14 @@ export async function courrielProcessor(
   // dans l'organisation du mail ne le reçoit pas (ADR 0031) ; ses autres
   // organisations lui écrivent toujours. Le code de connexion part pour tout compte.
   let destinataire = job.data.destinataire
+  // Une fiche bénévole supprimée entre-temps ne reçoit rien (ADR 0041).
+  if (job.data.benevoleId !== undefined) {
+    const fiche = await prisma.benevole.findUnique({
+      where: { id: job.data.benevoleId },
+      select: { courriel: true },
+    })
+    destinataire = fiche?.courriel ?? undefined
+  }
   if (userId !== undefined) {
     const user = await prisma.user.findUnique({
       where: { id: userId },
