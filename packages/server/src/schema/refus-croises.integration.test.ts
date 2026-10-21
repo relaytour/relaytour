@@ -45,6 +45,11 @@ const a = {
   lieu: '',
   sequence: '',
   benevole: '',
+  // Un appel à bénévoles de la période, une candidature et son choix (ADR 0041).
+  appel: '',
+  candidature: '',
+  choix: '',
+  place: '',
   affectation: '',
   souhait: '',
   demande: '',
@@ -382,9 +387,54 @@ beforeAll(async () => {
         debut: new Date('2027-06-05T07:00:00.000Z'),
         fin: new Date('2027-06-05T10:00:00.000Z'),
         places: { create: { benevoleId: a.benevole, role: 'RENFORT' } },
+        besoinBenevoles: 3,
       },
     })
   ).id
+  a.place = (
+    await prisma.placeSequence.findFirstOrThrow({
+      where: { sequenceId: a.sequence },
+    })
+  ).id
+  a.appel = (
+    await prisma.appelBenevoles.create({
+      data: {
+        organisationId: a.org,
+        activiteId: a.activite,
+        editionId: a.edition,
+        portee: 'PERIODE',
+        nom: 'Appel de A',
+        ouvertLe: new Date(),
+        fermeLe: new Date('2027-06-05T20:00:00.000Z'),
+        empreinte: 'a'.repeat(64),
+        fin: 'aaaaaa',
+      },
+    })
+  ).id
+  const candidature = await prisma.candidature.create({
+    data: {
+      organisationId: a.org,
+      activiteId: a.activite,
+      editionId: a.edition,
+      appelId: a.appel,
+      nom: 'Candidate de A',
+      courriel: 'candidate-a@exemple.fr',
+      courrielEnAttente: 'candidate-a@exemple.fr',
+      telephone: '0639980001',
+      accordLe: new Date(),
+      choix: { create: { sequenceId: a.sequence, statut: 'EN_ATTENTE' } },
+      plages: {
+        create: {
+          editionId: a.edition,
+          debut: new Date('2027-06-05T07:00:00.000Z'),
+          fin: new Date('2027-06-05T10:00:00.000Z'),
+        },
+      },
+    },
+    include: { choix: true },
+  })
+  a.candidature = candidature.id
+  a.choix = candidature.choix[0]!.id
   a.creneau = sondage.creneaux[0]!.id
   // Un commentaire de la référente sur la tâche (ADR 0029).
   a.commentaire = (
@@ -512,6 +562,12 @@ afterAll(async () => {
     where: { organisationId: { in: organisations } },
   })
   await prisma.sondage.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
+  await prisma.candidature.deleteMany({
+    where: { organisationId: { in: organisations } },
+  })
+  await prisma.appelBenevoles.deleteMany({
     where: { organisationId: { in: organisations } },
   })
   await prisma.sequence.deleteMany({
@@ -1312,7 +1368,111 @@ const CAS: Cas[] = [
     variables: () => ({ id: a.benevole }),
     attente: INTERDIT,
   },
+  // Appels à bénévoles, candidatures et répartition (ADR 0041).
+  {
+    operation: 'creerAppelBenevoles',
+    query:
+      'mutation ($e: ID!, $p: ID) { creerAppelBenevoles(editionId: $e, portee: PERIMETRE, perimetreId: $p, nom: "Intrusion", ouvertLe: "2027-01-01T00:00:00Z", fermeLe: "2027-06-05T00:00:00Z") { adresse } }',
+    variables: () => ({ e: a.edition, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'modifierAppelBenevoles',
+    query:
+      'mutation ($id: ID!) { modifierAppelBenevoles(id: $id, nom: "Intrusion", ouvertLe: "2027-01-01T00:00:00Z", fermeLe: "2027-06-05T00:00:00Z", versionAttendue: 0) { id } }',
+    variables: () => ({ id: a.appel }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'fermerAppelBenevoles',
+    query: 'mutation ($id: ID!) { fermerAppelBenevoles(id: $id) { id } }',
+    variables: () => ({ id: a.appel }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'rouvrirAppelBenevoles',
+    query: 'mutation ($id: ID!) { rouvrirAppelBenevoles(id: $id) { id } }',
+    variables: () => ({ id: a.appel }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'renouvelerAdresseAppelBenevoles',
+    query:
+      'mutation ($id: ID!) { renouvelerAdresseAppelBenevoles(id: $id) { adresse } }',
+    variables: () => ({ id: a.appel }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'accepterChoixCandidature',
+    query: 'mutation ($id: ID!) { accepterChoixCandidature(id: $id) { id } }',
+    variables: () => ({ id: a.choix }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'refuserChoixCandidature',
+    query: 'mutation ($id: ID!) { refuserChoixCandidature(id: $id) { id } }',
+    variables: () => ({ id: a.choix }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'refuserCandidature',
+    query: 'mutation ($id: ID!) { refuserCandidature(id: $id) { id } }',
+    variables: () => ({ id: a.candidature }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'placerBenevole',
+    query:
+      'mutation ($sq: ID!, $c: ID) { placerBenevole(sequenceId: $sq, candidatureId: $c) { id } }',
+    variables: () => ({ sq: a.sequence, c: a.candidature }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'placerBenevole',
+    query:
+      'mutation ($sq: ID!, $b: ID) { placerBenevole(sequenceId: $sq, benevoleId: $b) { id } }',
+    variables: () => ({ sq: a.sequence, b: a.benevole }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'retirerPlaceSequence',
+    query: 'mutation ($id: ID!) { retirerPlaceSequence(id: $id) { id } }',
+    variables: () => ({ id: a.place }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'modifierPlagesBenevole',
+    query:
+      'mutation ($b: ID!, $e: ID!) { modifierPlagesBenevole(benevoleId: $b, editionId: $e, plages: []) { debut } }',
+    variables: () => ({ b: a.benevole, e: a.edition }),
+    attente: INTERDIT,
+  },
   // ── Requêtes ───────────────────────────────────────────────────────────────
+  {
+    operation: 'appelsBenevoles',
+    query: 'query ($e: ID!) { appelsBenevoles(editionId: $e) { id nom } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'candidatures',
+    query:
+      'query ($e: ID!) { candidatures(editionId: $e) { id courriel telephone } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'benevolesARepartir',
+    query: 'query ($e: ID!) { benevolesARepartir(editionId: $e) { nom } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'couvertureProgramme',
+    query: 'query ($e: ID!) { couvertureProgramme(editionId: $e) { besoin } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
   {
     operation: 'benevoles',
     query: 'query ($a: ID!) { benevoles(activiteId: $a) { id nom telephone } }',
@@ -1651,6 +1811,30 @@ async function etatDeA() {
           where: { organisationId: a.org },
           select: { id: true, nom: true, telephone: true },
           orderBy: { id: 'asc' },
+        }),
+        prisma.appelBenevoles.findMany({
+          where: { organisationId: a.org },
+          select: {
+            id: true,
+            nom: true,
+            version: true,
+            empreinte: true,
+            fermeManuellementLe: true,
+          },
+          orderBy: { id: 'asc' },
+        }),
+        prisma.candidature.findMany({
+          where: { organisationId: a.org },
+          select: {
+            id: true,
+            statut: true,
+            benevoleId: true,
+            choix: { select: { statut: true } },
+          },
+          orderBy: { id: 'asc' },
+        }),
+        prisma.plageDisponibilite.count({
+          where: { edition: { organisationId: a.org } },
         }),
         prisma.lieu.findMany({
           where: { organisationId: a.org },

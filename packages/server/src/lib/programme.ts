@@ -1,6 +1,9 @@
 import { prisma, type RolePlace } from '@relaytour/database'
 
+import type { AppContext } from '../context.ts'
+
 import { dansLEquipeQuiVoit, membreActif } from './appartenances.ts'
+import { peutModifierPerimetre } from './droits.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
 
 // Programme du jour J (ADR 0040). Une séquence suit les droits d'écriture d'une
@@ -53,6 +56,22 @@ export function placesDatees(
     const k = cle(p)
     return { ...p, confirmeeLe: dates.has(k) ? dates.get(k)! : maintenant }
   })
+}
+
+/**
+ * Vrai si la personne écrit la séquence : elle écrit dans son périmètre, ou elle
+ * administre l'activité pour une séquence sans périmètre. Une période archivée
+ * est en lecture seule.
+ */
+export async function peutEcrireSequence(
+  ctx: AppContext,
+  s: { editionId: string; activiteId: string; perimetreId: string | null }
+): Promise<boolean> {
+  if (s.perimetreId !== null) {
+    return peutModifierPerimetre(ctx, s.perimetreId, s.editionId)
+  }
+  const edition = await ctx.exigerEdition(s.editionId)
+  return edition.statut !== 'ARCHIVEE' && (await ctx.estAdminDe(s.activiteId))
 }
 
 /** Une séquence dure 24 heures au plus. */

@@ -19,6 +19,7 @@ export type EntiteChangee =
   | 'AGENDA'
   | 'PROGRAMME'
   | 'FICHIERS'
+  | 'CANDIDATURE'
 
 // Les requêtes qui affichent des tâches, et celles qui affichent des fiches.
 const VUES_DES_TACHES = [
@@ -113,6 +114,14 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   ],
   // La connexion de l'espace de fichiers et ses dossiers liés (ADR 0038).
   FICHIERS: ['EspaceFichiers', 'DossiersLies', 'ContenuDossierLie'],
+  // Les appels à bénévoles, les candidatures et la répartition (ADR 0041).
+  CANDIDATURE: [
+    'AppelsBenevoles',
+    'Candidatures',
+    'BenevolesARepartir',
+    'CouvertureProgramme',
+    'Programme',
+  ],
 }
 
 /** Les requêtes à relire pour un lot de signaux, sans doublon. */

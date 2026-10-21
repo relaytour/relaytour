@@ -2,7 +2,12 @@ import { prisma, RolePlace, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { jourISO } from '../lib/agenda.ts'
-import { peutModifierPerimetre } from '../lib/droits.ts'
+import {
+  besoinValide,
+  CONSIGNES_MAX,
+  etatPlace,
+  type EtatPlace,
+} from '../lib/appels.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
@@ -10,6 +15,7 @@ import { heureLocale } from '../lib/heures.ts'
 import {
   dureeValide,
   NOM_LIEU_MAX,
+  peutEcrireSequence,
   placesDatees,
   placesValides,
   SEQUENCES_MAX,
@@ -32,6 +38,12 @@ import { PerimetreRef } from './organisation.ts'
 
 const RolePlaceEnum = builder.enumType(RolePlace, { name: 'RolePlace' })
 
+const EtatPlaceEnum = builder.enumType('EtatPlace', {
+  description:
+    'CONFIRMEE : la place est tenue. A_CONFIRMER : la personne n’a pas encore confirmé. NON_CONFIRMEE : toujours à confirmer sept jours après sa création, ou la veille de la séquence (ADR 0041).',
+  values: ['CONFIRMEE', 'A_CONFIRMER', 'NON_CONFIRMEE'] as const,
+})
+
 export const LieuRef = builder.prismaObject('Lieu', {
   fields: t => ({
     id: t.exposeID('id'),
@@ -42,7 +54,7 @@ export const LieuRef = builder.prismaObject('Lieu', {
   }),
 })
 
-const SEQUENCE_CHARGEE = {
+export const SEQUENCE_CHARGEE = {
   perimetre: true,
   lieu: true,
   places: {
@@ -54,7 +66,7 @@ const SEQUENCE_CHARGEE = {
   },
 } satisfies Prisma.SequenceInclude
 
-type SequenceChargee = Prisma.SequenceGetPayload<{
+export type SequenceChargee = Prisma.SequenceGetPayload<{
   include: typeof SEQUENCE_CHARGEE
 }>
 
@@ -63,6 +75,7 @@ interface SequenceLue {
   peutModifier: boolean
   moi: string
   fuseau: string
+  maintenant: Date
 }
 
 interface PlaceLue {
@@ -72,6 +85,7 @@ interface PlaceLue {
   benevoleId: string | null
   nom: string
   estMoi: boolean
+  etat: EtatPlace
 }
 
 const PlaceLueRef = builder.objectRef<PlaceLue>('PlaceSequence').implement({
@@ -85,6 +99,7 @@ const PlaceLueRef = builder.objectRef<PlaceLue>('PlaceSequence').implement({
     }),
     nom: t.exposeString('nom'),
     estMoi: t.exposeBoolean('estMoi'),
+    etat: t.field({ type: EtatPlaceEnum, resolve: p => p.etat }),
   }),
 })
 
@@ -99,6 +114,23 @@ export const SequenceRef = builder
       description: t.string({
         nullable: true,
         resolve: l => l.sequence.description,
+      }),
+      besoinBenevoles: t.int({
+        nullable: true,
+        description:
+          'Le nombre de renforts recherchés ; null si la séquence ne cherche personne (ADR 0041).',
+        resolve: l => l.sequence.besoinBenevoles,
+      }),
+      consignesBenevoles: t.string({
+        nullable: true,
+        description: 'Le texte public pour les bénévoles.',
+        resolve: l => l.sequence.consignesBenevoles,
+      }),
+      renforts: t.int({
+        description:
+          'Les places en renfort, confirmées ou non : elles comptent dans le besoin.',
+        resolve: l =>
+          l.sequence.places.filter(p => p.role === 'RENFORT').length,
       }),
       debut: t.field({ type: 'DateTime', resolve: l => l.sequence.debut }),
       fin: t.field({ type: 'DateTime', resolve: l => l.sequence.fin }),
@@ -136,37 +168,27 @@ export const SequenceRef = builder
             benevoleId: p.benevoleId,
             nom: p.user?.name ?? p.benevole?.nom ?? '',
             estMoi: p.userId === l.moi,
+            etat: etatPlace(p, l.sequence.debut, l.maintenant, l.fuseau),
           })),
       }),
     }),
   })
 
-/** Vrai si la personne écrit dans l'agenda de la séquence. */
-async function peutEcrire(
-  ctx: AppContext,
-  s: { editionId: string; activiteId: string; perimetreId: string | null }
-): Promise<boolean> {
-  if (s.perimetreId !== null) {
-    return peutModifierPerimetre(ctx, s.perimetreId, s.editionId)
-  }
-  const edition = await ctx.exigerEdition(s.editionId)
-  return edition.statut !== 'ARCHIVEE' && (await ctx.estAdminDe(s.activiteId))
-}
-
-async function lireSequence(
+export async function lireSequence(
   ctx: AppContext,
   sequence: SequenceChargee
 ): Promise<SequenceLue> {
   return {
     sequence,
-    peutModifier: await peutEcrire(ctx, sequence),
+    peutModifier: await peutEcrireSequence(ctx, sequence),
     moi: ctx.personne!.id,
     fuseau: ctx.organisation!.fuseauHoraire,
+    maintenant: new Date(),
   }
 }
 
 /** La séquence si la personne voit son activité, sinon un refus. */
-async function sequenceVisible(
+export async function sequenceVisible(
   ctx: AppContext,
   id: string
 ): Promise<SequenceChargee> {
@@ -211,7 +233,7 @@ const PlaceInput = builder.inputType('PlaceSequenceInput', {
   }),
 })
 
-const signal = (s: {
+export const signal = (s: {
   id: string
   organisationId: string
   activiteId: string
@@ -292,6 +314,10 @@ builder.mutationFields(t => {
     lieuId: t.arg.id(),
     description: t.arg.string(),
     places: t.arg({ type: [PlaceInput] }),
+    besoinBenevoles: t.arg.int({
+      description: 'Le nombre de renforts recherchés ; 0 ou rien : aucun.',
+    }),
+    consignesBenevoles: t.arg.string(),
   }
 
   /** Les champs écrits en base, et les places vérifiées. */
@@ -305,6 +331,8 @@ builder.mutationFields(t => {
       heureFin: string
       lieuId?: string | number | null
       description?: string | null
+      besoinBenevoles?: number | null
+      consignesBenevoles?: string | null
       places?:
         | readonly {
             personneId?: string | number | null
@@ -338,6 +366,20 @@ builder.mutationFields(t => {
           'La description',
           DESCRIPTION_REUNION_MAX
         ),
+        // Un champ absent garde sa valeur : un client antérieur à l'ADR 0041
+        // ne l'efface pas.
+        ...(args.besoinBenevoles === undefined
+          ? {}
+          : { besoinBenevoles: besoinValide(args.besoinBenevoles) }),
+        ...(args.consignesBenevoles === undefined
+          ? {}
+          : {
+              consignesBenevoles: texteFacultatif(
+                args.consignesBenevoles,
+                'Les consignes',
+                CONSIGNES_MAX
+              ),
+            }),
         debut: horaire.debut,
         fin: horaire.fin,
         lieuId: await lieuValide(
