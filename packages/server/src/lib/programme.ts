@@ -27,6 +27,34 @@ export interface PlaceValide {
   role: RolePlace
 }
 
+/** Une place prête à écrire, avec sa date de confirmation (ADR 0041). */
+export interface PlaceDatee extends PlaceValide {
+  confirmeeLe: Date | null
+}
+
+/**
+ * Les places d'une séquence avec leur date de confirmation. Une place déjà tenue
+ * par la même personne garde la sienne, même nulle (place à confirmer). Une place
+ * nouvelle saisie par l'équipe naît confirmée.
+ */
+export function placesDatees(
+  places: readonly PlaceValide[],
+  actuelles: readonly {
+    userId: string | null
+    benevoleId: string | null
+    confirmeeLe: Date | null
+  }[],
+  maintenant: Date
+): PlaceDatee[] {
+  const cle = (p: { userId: string | null; benevoleId: string | null }) =>
+    p.userId ?? `b:${p.benevoleId}`
+  const dates = new Map(actuelles.map(p => [cle(p), p.confirmeeLe]))
+  return places.map(p => {
+    const k = cle(p)
+    return { ...p, confirmeeLe: dates.has(k) ? dates.get(k)! : maintenant }
+  })
+}
+
 /** Une séquence dure 24 heures au plus. */
 export function dureeValide(debut: Date, fin: Date): void {
   if (fin.getTime() - debut.getTime() > SEQUENCE_DUREE_MAX_MS) {

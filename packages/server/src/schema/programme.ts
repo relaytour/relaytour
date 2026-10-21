@@ -10,6 +10,7 @@ import { heureLocale } from '../lib/heures.ts'
 import {
   dureeValide,
   NOM_LIEU_MAX,
+  placesDatees,
   placesValides,
   SEQUENCES_MAX,
 } from '../lib/programme.ts'
@@ -471,7 +472,9 @@ builder.mutationFields(t => {
                 ...lieu,
                 ...valides.champs,
                 creeParId: ctx.personne!.id,
-                places: { create: valides.places },
+                places: {
+                  create: placesDatees(valides.places, [], new Date()),
+                },
               },
               include: SEQUENCE_CHARGEE,
             })
@@ -521,11 +524,19 @@ builder.mutationFields(t => {
               { versionCourante: version, modifieeLe: updatedAt.toISOString() }
             )
           }
+          // Une place gardée garde sa date de confirmation : une place à
+          // confirmer le reste (ADR 0041).
+          const actuelles = await tx.placeSequence.findMany({
+            where: { sequenceId: actuelle.id },
+            select: { userId: true, benevoleId: true, confirmeeLe: true },
+          })
           await tx.placeSequence.deleteMany({
             where: { sequenceId: actuelle.id },
           })
           await tx.placeSequence.createMany({
-            data: valides.places.map(p => ({ sequenceId: actuelle.id, ...p })),
+            data: placesDatees(valides.places, actuelles, new Date()).map(
+              p => ({ sequenceId: actuelle.id, ...p })
+            ),
           })
         })
         signal(actuelle)
