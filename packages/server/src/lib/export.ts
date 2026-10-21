@@ -228,9 +228,35 @@ export async function construireExport(organisationId: string) {
       include: {
         activite: { select: { slug: true } },
         creePar: { select: { email: true } },
+        plages: {
+          orderBy: { debut: 'asc' },
+          include: { edition: { select: { annee: true } } },
+        },
       },
     }),
   ])
+
+  // Les appels à bénévoles et leurs candidatures (ADR 0041), sans jeton.
+  const appels = await prisma.appelBenevoles.findMany({
+    where: { organisationId },
+    orderBy: [{ editionId: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+    include: {
+      activite: { select: { slug: true } },
+      edition: { select: { annee: true } },
+      perimetre: { select: { slug: true } },
+      creePar: { select: { email: true } },
+      candidatures: {
+        orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+        include: {
+          plages: { orderBy: { debut: 'asc' } },
+          choix: {
+            orderBy: { id: 'asc' },
+            include: { traitePar: { select: { email: true } } },
+          },
+        },
+      },
+    },
+  })
 
   // Les sondages de dates (ADR 0037), avec leurs créneaux et leurs réponses.
   const sondages = await prisma.sondage.findMany({
@@ -494,8 +520,11 @@ export async function construireExport(organisationId: string) {
       perimetre: s.perimetre?.slug ?? null,
       lieuId: s.lieu?.id ?? null,
       lieu: s.lieu?.nom ?? null,
+      id: s.id,
       titre: s.titre,
       description: s.description,
+      besoinBenevoles: s.besoinBenevoles,
+      consignesBenevoles: s.consignesBenevoles,
       debut: s.debut.toISOString(),
       fin: s.fin.toISOString(),
       places: s.places.map(p => ({
@@ -503,6 +532,7 @@ export async function construireExport(organisationId: string) {
         email: p.user?.email ?? null,
         benevoleId: p.benevole?.id ?? null,
         benevole: p.benevole?.nom ?? null,
+        confirmeeLe: p.confirmeeLe?.toISOString() ?? null,
       })),
     })),
     benevoles: benevoles.map(b => ({
@@ -513,7 +543,49 @@ export async function construireExport(organisationId: string) {
       telephone: b.telephone,
       note: b.note,
       accordLe: b.accordLe.toISOString(),
+      origine: b.origine,
+      courrielConfirmeLe: b.courrielConfirmeLe?.toISOString() ?? null,
       creePar: b.creePar?.email ?? null,
+      plages: b.plages.map(p => ({
+        periode: p.edition.annee,
+        debut: p.debut.toISOString(),
+        fin: p.fin.toISOString(),
+      })),
+    })),
+    appelsBenevoles: appels.map(a => ({
+      activite: a.activite.slug,
+      periode: a.edition.annee,
+      portee: a.portee,
+      perimetre: a.perimetre?.slug ?? null,
+      sequenceId: a.sequenceId,
+      nom: a.nom,
+      introduction: a.introduction,
+      ouvertLe: a.ouvertLe.toISOString(),
+      fermeLe: a.fermeLe.toISOString(),
+      fermeManuellementLe: a.fermeManuellementLe?.toISOString() ?? null,
+      creePar: a.creePar?.email ?? null,
+      candidatures: a.candidatures.map(c => ({
+        statut: c.statut,
+        nom: c.nom,
+        courriel: c.courriel,
+        telephone: c.telephone,
+        message: c.message,
+        precisionsDisponibilite: c.precisionsDisponibilite,
+        ouAilleurs: c.ouAilleurs,
+        accordLe: c.accordLe.toISOString(),
+        deposeeLe: c.createdAt.toISOString(),
+        benevoleId: c.benevoleId,
+        plages: c.plages.map(p => ({
+          debut: p.debut.toISOString(),
+          fin: p.fin.toISOString(),
+        })),
+        choix: c.choix.map(x => ({
+          sequenceId: x.sequenceId,
+          statut: x.statut,
+          traitePar: x.traitePar?.email ?? null,
+          traiteLe: x.traiteLe?.toISOString() ?? null,
+        })),
+      })),
     })),
     sondages: sondages.map(s => ({
       activite: s.activite.slug,

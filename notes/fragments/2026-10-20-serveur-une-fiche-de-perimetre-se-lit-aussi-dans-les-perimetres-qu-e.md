@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Une fiche de périmètre se lit aussi dans les périmètres qu’elle concerne

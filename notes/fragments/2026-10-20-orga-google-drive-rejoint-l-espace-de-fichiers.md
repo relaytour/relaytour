@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Google Drive rejoint l'espace de fichiers

@@ -9,6 +9,7 @@ import {
   contientUnLien,
   descriptionPubliable,
   lireFormulaire,
+  texteLibre,
   type Formulaire,
 } from '../lib/formulaire.ts'
 import { journal } from '../lib/journal.ts'
@@ -228,23 +229,6 @@ builder.queryField('formulaireRejoindre', t =>
 )
 
 // ── Dépôt ────────────────────────────────────────────────────────────────────
-
-/** Un texte libre du formulaire : rogné, borné, sans lien. Vide, il vaut null. */
-function texteLibre(
-  brut: string | null | undefined,
-  nom: string,
-  max: number
-): string | null {
-  const texte = (brut ?? '').trim()
-  if (texte === '') return null
-  if (texte.length > max) {
-    throw erreurSaisie(`${nom} compte ${max} caractères au plus.`)
-  }
-  if (contientUnLien(texte)) {
-    throw erreurSaisie('Les liens ne sont pas acceptés dans ce formulaire.')
-  }
-  return texte
-}
 
 /** Refuse le dépôt quand l'adresse IP ou l'adresse mail en envoient trop. */
 async function exigerDebitRaisonnable(

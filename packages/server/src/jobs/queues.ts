@@ -22,6 +22,9 @@ export type SorteCourriel =
   | 'demandes'
   | 'convocation-reunion'
   | 'annulation-reunion'
+  // Mails aux bénévoles (ADR 0041) : le lien personnel, et les places changées.
+  | 'benevole-lien'
+  | 'benevole-places'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.
@@ -58,6 +61,9 @@ export interface CourrielJobData {
   // job de la version courante envoie.
   convocationId?: string
   sequenceReunion?: number
+  // Pour `benevole-lien` et `benevole-places` (ADR 0041) : la fiche, dont l'adresse
+  // se relit à l'envoi. Le jeton du lien se crée à l'envoi, jamais dans la file.
+  benevoleId?: string
 }
 
 export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {

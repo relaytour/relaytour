@@ -2,14 +2,25 @@ import { prisma, RolePlace, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { jourISO } from '../lib/agenda.ts'
-import { peutModifierPerimetre } from '../lib/droits.ts'
+import {
+  besoinValide,
+  CONSIGNES_MAX,
+  etatPlace,
+  type EtatPlace,
+} from '../lib/appels.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
+import {
+  annoncerPlace,
+  fichesJoignables,
+  signalerPlacesModifiees,
+} from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { heureLocale } from '../lib/heures.ts'
 import {
   dureeValide,
   NOM_LIEU_MAX,
+  peutEcrireSequence,
   placesDatees,
   placesValides,
   SEQUENCES_MAX,
@@ -32,6 +43,12 @@ import { PerimetreRef } from './organisation.ts'
 
 const RolePlaceEnum = builder.enumType(RolePlace, { name: 'RolePlace' })
 
+const EtatPlaceEnum = builder.enumType('EtatPlace', {
+  description:
+    'CONFIRMEE : la place est tenue. A_CONFIRMER : la personne n’a pas encore confirmé. NON_CONFIRMEE : toujours à confirmer sept jours après sa création, ou la veille de la séquence (ADR 0041).',
+  values: ['CONFIRMEE', 'A_CONFIRMER', 'NON_CONFIRMEE'] as const,
+})
+
 export const LieuRef = builder.prismaObject('Lieu', {
   fields: t => ({
     id: t.exposeID('id'),
@@ -42,7 +59,7 @@ export const LieuRef = builder.prismaObject('Lieu', {
   }),
 })
 
-const SEQUENCE_CHARGEE = {
+export const SEQUENCE_CHARGEE = {
   perimetre: true,
   lieu: true,
   places: {
@@ -54,7 +71,7 @@ const SEQUENCE_CHARGEE = {
   },
 } satisfies Prisma.SequenceInclude
 
-type SequenceChargee = Prisma.SequenceGetPayload<{
+export type SequenceChargee = Prisma.SequenceGetPayload<{
   include: typeof SEQUENCE_CHARGEE
 }>
 
@@ -63,6 +80,7 @@ interface SequenceLue {
   peutModifier: boolean
   moi: string
   fuseau: string
+  maintenant: Date
 }
 
 interface PlaceLue {
@@ -72,6 +90,7 @@ interface PlaceLue {
   benevoleId: string | null
   nom: string
   estMoi: boolean
+  etat: EtatPlace
 }
 
 const PlaceLueRef = builder.objectRef<PlaceLue>('PlaceSequence').implement({
@@ -85,6 +104,7 @@ const PlaceLueRef = builder.objectRef<PlaceLue>('PlaceSequence').implement({
     }),
     nom: t.exposeString('nom'),
     estMoi: t.exposeBoolean('estMoi'),
+    etat: t.field({ type: EtatPlaceEnum, resolve: p => p.etat }),
   }),
 })
 
@@ -99,6 +119,23 @@ export const SequenceRef = builder
       description: t.string({
         nullable: true,
         resolve: l => l.sequence.description,
+      }),
+      besoinBenevoles: t.int({
+        nullable: true,
+        description:
+          'Le nombre de renforts recherchés ; null si la séquence ne cherche personne (ADR 0041).',
+        resolve: l => l.sequence.besoinBenevoles,
+      }),
+      consignesBenevoles: t.string({
+        nullable: true,
+        description: 'Le texte public pour les bénévoles.',
+        resolve: l => l.sequence.consignesBenevoles,
+      }),
+      renforts: t.int({
+        description:
+          'Les places en renfort, confirmées ou non : elles comptent dans le besoin.',
+        resolve: l =>
+          l.sequence.places.filter(p => p.role === 'RENFORT').length,
       }),
       debut: t.field({ type: 'DateTime', resolve: l => l.sequence.debut }),
       fin: t.field({ type: 'DateTime', resolve: l => l.sequence.fin }),
@@ -136,37 +173,27 @@ export const SequenceRef = builder
             benevoleId: p.benevoleId,
             nom: p.user?.name ?? p.benevole?.nom ?? '',
             estMoi: p.userId === l.moi,
+            etat: etatPlace(p, l.sequence.debut, l.maintenant, l.fuseau),
           })),
       }),
     }),
   })
 
-/** Vrai si la personne écrit dans l'agenda de la séquence. */
-async function peutEcrire(
-  ctx: AppContext,
-  s: { editionId: string; activiteId: string; perimetreId: string | null }
-): Promise<boolean> {
-  if (s.perimetreId !== null) {
-    return peutModifierPerimetre(ctx, s.perimetreId, s.editionId)
-  }
-  const edition = await ctx.exigerEdition(s.editionId)
-  return edition.statut !== 'ARCHIVEE' && (await ctx.estAdminDe(s.activiteId))
-}
-
-async function lireSequence(
+export async function lireSequence(
   ctx: AppContext,
   sequence: SequenceChargee
 ): Promise<SequenceLue> {
   return {
     sequence,
-    peutModifier: await peutEcrire(ctx, sequence),
+    peutModifier: await peutEcrireSequence(ctx, sequence),
     moi: ctx.personne!.id,
     fuseau: ctx.organisation!.fuseauHoraire,
+    maintenant: new Date(),
   }
 }
 
 /** La séquence si la personne voit son activité, sinon un refus. */
-async function sequenceVisible(
+export async function sequenceVisible(
   ctx: AppContext,
   id: string
 ): Promise<SequenceChargee> {
@@ -211,7 +238,25 @@ const PlaceInput = builder.inputType('PlaceSequenceInput', {
   }),
 })
 
-const signal = (s: {
+/** Les fiches bénévoles d'une liste de places. */
+const fichesDe = (places: readonly { benevoleId: string | null }[]) =>
+  places.flatMap(p => (p.benevoleId ? [p.benevoleId] : []))
+
+/** Annonce à chaque fiche sa place nouvelle dans une séquence (ADR 0041). */
+async function annoncerPlaces(
+  benevoleIds: readonly string[],
+  sequence: { organisationId: string; activiteId: string }
+) {
+  for (const benevoleId of benevoleIds) {
+    await annoncerPlace(prisma, {
+      benevoleId,
+      organisationId: sequence.organisationId,
+      activiteId: sequence.activiteId,
+    })
+  }
+}
+
+export const signal = (s: {
   id: string
   organisationId: string
   activiteId: string
@@ -292,6 +337,10 @@ builder.mutationFields(t => {
     lieuId: t.arg.id(),
     description: t.arg.string(),
     places: t.arg({ type: [PlaceInput] }),
+    besoinBenevoles: t.arg.int({
+      description: 'Le nombre de renforts recherchés ; 0 ou rien : aucun.',
+    }),
+    consignesBenevoles: t.arg.string(),
   }
 
   /** Les champs écrits en base, et les places vérifiées. */
@@ -305,6 +354,8 @@ builder.mutationFields(t => {
       heureFin: string
       lieuId?: string | number | null
       description?: string | null
+      besoinBenevoles?: number | null
+      consignesBenevoles?: string | null
       places?:
         | readonly {
             personneId?: string | number | null
@@ -338,6 +389,20 @@ builder.mutationFields(t => {
           'La description',
           DESCRIPTION_REUNION_MAX
         ),
+        // Un champ absent garde sa valeur : un client antérieur à l'ADR 0041
+        // ne l'efface pas.
+        ...(args.besoinBenevoles === undefined
+          ? {}
+          : { besoinBenevoles: besoinValide(args.besoinBenevoles) }),
+        ...(args.consignesBenevoles === undefined
+          ? {}
+          : {
+              consignesBenevoles: texteFacultatif(
+                args.consignesBenevoles,
+                'Les consignes',
+                CONSIGNES_MAX
+              ),
+            }),
         debut: horaire.debut,
         fin: horaire.fin,
         lieuId: await lieuValide(
@@ -452,6 +517,10 @@ builder.mutationFields(t => {
           editionId: lieu.editionId,
           activiteId,
         })
+        const joignables = await fichesJoignables(
+          prisma,
+          fichesDe(valides.places)
+        )
         // Le comptage et la création se font sous le verrou de l'organisation :
         // deux créations simultanées ne dépassent pas le plafond.
         const creee = await sousVerrouOrganisation(
@@ -473,13 +542,19 @@ builder.mutationFields(t => {
                 ...valides.champs,
                 creeParId: ctx.personne!.id,
                 places: {
-                  create: placesDatees(valides.places, [], new Date()),
+                  create: placesDatees(
+                    valides.places,
+                    [],
+                    new Date(),
+                    joignables
+                  ),
                 },
               },
               include: SEQUENCE_CHARGEE,
             })
           }
         )
+        await annoncerPlaces(fichesDe(valides.places), creee)
         signal(creee)
         return lireSequence(ctx, creee)
       },
@@ -507,6 +582,10 @@ builder.mutationFields(t => {
           activiteId,
           lieuActuel: actuelle.lieuId,
         })
+        const joignables = await fichesJoignables(
+          prisma,
+          fichesDe(valides.places)
+        )
         await prisma.$transaction(async tx => {
           const { count } = await tx.sequence.updateMany({
             where: { id: actuelle.id, version: args.versionAttendue },
@@ -528,17 +607,46 @@ builder.mutationFields(t => {
           // confirmer le reste (ADR 0041).
           const actuelles = await tx.placeSequence.findMany({
             where: { sequenceId: actuelle.id },
-            select: { userId: true, benevoleId: true, confirmeeLe: true },
+            select: {
+              userId: true,
+              benevoleId: true,
+              confirmeeLe: true,
+              createdAt: true,
+            },
           })
           await tx.placeSequence.deleteMany({
             where: { sequenceId: actuelle.id },
           })
           await tx.placeSequence.createMany({
-            data: placesDatees(valides.places, actuelles, new Date()).map(
-              p => ({ sequenceId: actuelle.id, ...p })
-            ),
+            data: placesDatees(
+              valides.places,
+              actuelles,
+              new Date(),
+              joignables
+            ).map(p => ({ sequenceId: actuelle.id, ...p })),
           })
         })
+        // Une fiche ajoutée reçoit son lien, ou le mail de ses places. Une fiche
+        // retirée reçoit le mail de ses places, comme toutes les fiches gardées
+        // quand l'horaire ou le lieu change (ADR 0041).
+        const avant = fichesDe(actuelle.places)
+        const apres = fichesDe(valides.places)
+        const deplacee =
+          actuelle.debut.getTime() !== valides.champs.debut.getTime() ||
+          actuelle.fin.getTime() !== valides.champs.fin.getTime() ||
+          actuelle.lieuId !== valides.champs.lieuId
+        await annoncerPlaces(
+          apres.filter(id => !avant.includes(id)),
+          actuelle
+        )
+        await signalerPlacesModifiees(
+          prisma,
+          [
+            ...avant.filter(id => !apres.includes(id)),
+            ...(deplacee ? apres.filter(id => avant.includes(id)) : []),
+          ],
+          actuelle
+        )
         signal(actuelle)
         return lireSequence(ctx, await sequenceVisible(ctx, actuelle.id))
       },
@@ -551,6 +659,11 @@ builder.mutationFields(t => {
         const sequence = await sequenceVisible(ctx, String(args.id))
         await exigerEcritureReunion(ctx, sequence)
         await prisma.sequence.delete({ where: { id: sequence.id } })
+        await signalerPlacesModifiees(
+          prisma,
+          fichesDe(sequence.places),
+          sequence
+        )
         signal(sequence)
         return true
       },
