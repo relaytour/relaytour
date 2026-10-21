@@ -1,6 +1,6 @@
 import { createHmac } from 'node:crypto'
 
-import type { PrismaClient } from '@relaytour/database'
+import type { Prisma, PrismaClient } from '@relaytour/database'
 
 import { membreActif } from './appartenances.ts'
 import { adminsAPrevenir } from './demandes.ts'
@@ -113,4 +113,53 @@ export async function signalerCandidature(
       'Une notification n’a pas pu être créée.'
     )
   }
+}
+
+/**
+ * La séquence au moment du dépôt, lue sous son verrou par une lecture courante :
+ * une vue transactionnelle plus ancienne ne cache ni un placement, ni un besoin
+ * retiré, ni un horaire avancé. L'appelant tient le verrou de la séquence.
+ */
+export async function sequenceAuDepot(
+  tx: Prisma.TransactionClient,
+  sequenceId: string
+): Promise<{
+  editionId: string
+  perimetreId: string | null
+  debut: Date
+  besoin: number
+  renforts: number
+} | null> {
+  const lignes = await tx.$queryRaw<
+    {
+      editionId: string
+      perimetreId: string | null
+      debut: Date
+      besoinBenevoles: number | null
+    }[]
+  >`SELECT editionId, perimetreId, debut, besoinBenevoles FROM Sequence WHERE id = ${sequenceId} FOR UPDATE`
+  const sequence = lignes[0]
+  if (sequence === undefined) return null
+  const compte = await tx.$queryRaw<{ n: bigint }[]>`
+    SELECT COUNT(*) AS n FROM PlaceSequence
+    WHERE sequenceId = ${sequenceId} AND role = 'RENFORT'
+    LOCK IN SHARE MODE`
+  return {
+    editionId: sequence.editionId,
+    perimetreId: sequence.perimetreId,
+    debut: sequence.debut,
+    besoin: sequence.besoinBenevoles ?? 0,
+    renforts: Number(compte[0]?.n ?? 0),
+  }
+}
+
+/**
+ * Le statut d'un choix nouveau : en attente tant que les renforts de la séquence
+ * restent sous son besoin, en liste d'attente sinon.
+ */
+export function statutAuDepot(s: {
+  besoin: number
+  renforts: number
+}): 'EN_ATTENTE' | 'LISTE_ATTENTE' {
+  return s.renforts < s.besoin ? 'EN_ATTENTE' : 'LISTE_ATTENTE'
 }

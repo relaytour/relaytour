@@ -176,9 +176,12 @@ export default function AppelsBenevoles({
   const { data: editions } = useQuery(EDITIONS)
   const agendas = useAgendasEcrits(editionId, 'Toute la période')
   const [appel, setAppel] = useState<Appel | 'nouveau' | null>(null)
+  // Relue à chaque ouverture de la fenêtre : une séquence ajoutée par une autre
+  // personne entre dans le choix.
   const { data: programme } = useQuery(SEQUENCES, {
     variables: { editionId },
     skip: appel === null,
+    fetchPolicy: 'network-only',
   })
   const relire = { refetchQueries: RELIRE }
   const [creer, creation] = useMutation(CREER, relire)

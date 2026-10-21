@@ -149,7 +149,15 @@ export default function SequenceFormulaire({
   const client = useApolloClient()
   const { activite } = useActivite()
   const [form] = Form.useForm<Valeurs>()
-  const relire = { refetchQueries: ['Programme', 'ProgrammePerimetre'] }
+  // La vue « Répartition » suit les besoins et les horaires des séquences.
+  const relire = {
+    refetchQueries: [
+      'Programme',
+      'ProgrammePerimetre',
+      'BenevolesARepartir',
+      'CouvertureProgramme',
+    ],
+  }
   const [creer, creation] = useMutation(CREER, relire)
   const [modifier, modification] = useMutation(MODIFIER, relire)
   const existante = sequence !== null && 'id' in sequence ? sequence : null

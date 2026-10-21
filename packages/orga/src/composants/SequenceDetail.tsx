@@ -69,7 +69,12 @@ export default function SequenceDetail({
     skip: sequence === null || !lisible,
   })
   const [supprimer] = useMutation(SUPPRIMER, {
-    refetchQueries: ['Programme', 'ProgrammePerimetre'],
+    refetchQueries: [
+      'Programme',
+      'ProgrammePerimetre',
+      'BenevolesARepartir',
+      'CouvertureProgramme',
+    ],
   })
   const fiches = new Map(
     (benevoles?.benevoles ?? []).map(b => [b.id, b] as const)
@@ -142,15 +147,18 @@ export default function SequenceDetail({
           {sequence.description && (
             <p className="rt-reunion-description">{sequence.description}</p>
           )}
-          {sequence.besoinBenevoles !== null && (
+          {(sequence.besoinBenevoles !== null ||
+            sequence.consignesBenevoles) && (
             <section>
-              <h3 className="rt-reunion-intertitre">Bénévoles recherchés</h3>
-              <p>
-                <Jauge
-                  renforts={sequence.renforts}
-                  besoin={sequence.besoinBenevoles}
-                />
-              </p>
+              <h3 className="rt-reunion-intertitre">Bénévoles</h3>
+              {sequence.besoinBenevoles !== null && (
+                <p>
+                  <Jauge
+                    renforts={sequence.renforts}
+                    besoin={sequence.besoinBenevoles}
+                  />
+                </p>
+              )}
               {sequence.consignesBenevoles && (
                 <p className="rt-reunion-description">
                   {sequence.consignesBenevoles}
