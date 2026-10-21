@@ -111,11 +111,16 @@ interface Valeurs {
   siteWeb?: string
 }
 
-/** Un horaire en minutes depuis minuit du premier jour, pour les chevauchements. */
+/**
+ * Un horaire sur un axe commun à tous les jours, en minutes : deux moments qui
+ * commencent des jours différents se comparent aussi.
+ */
 function intervalle(s: SequencePublique): { debut: number; fin: number } {
-  const debut = minutes(s.heureDebut)
-  const fin = minutes(s.heureFin) + (s.jourFin !== s.jour ? 24 * 60 : 0)
-  return { debut, fin }
+  const jour = (j: string) => Date.parse(`${j}T00:00:00Z`) / 60_000
+  return {
+    debut: jour(s.jour) + minutes(s.heureDebut),
+    fin: jour(s.jourFin) + minutes(s.heureFin),
+  }
 }
 
 /** Les paires de séquences choisies qui se chevauchent. */
@@ -123,7 +128,6 @@ function chevauchements(choisies: readonly SequencePublique[]): string[] {
   const paires: string[] = []
   choisies.forEach((a, i) =>
     choisies.slice(i + 1).forEach(b => {
-      if (a.jour !== b.jour) return
       const x = intervalle(a)
       const y = intervalle(b)
       if (x.debut < y.fin && y.debut < x.fin) {

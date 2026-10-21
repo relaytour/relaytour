@@ -86,7 +86,12 @@ export default function EspaceBenevole() {
   const [supprimer] = useMutation(SUPPRIMER)
   const [supprimee, setSupprimee] = useState(false)
   const espace = data?.espaceBenevole
-  const aConfirmer = espace?.places.some(p => !p.confirmee) ?? false
+  // Une adresse changée par l'équipe se confirme de nouveau, même quand toutes
+  // les places le sont déjà.
+  const aConfirmer =
+    espace !== undefined &&
+    espace !== null &&
+    (!espace.confirme || espace.places.some(p => !p.confirmee))
 
   const telechargerAgenda = () => {
     if (!espace) return
@@ -179,7 +184,9 @@ export default function EspaceBenevole() {
                 title={
                   espace.confirme
                     ? 'De nouvelles places attendent votre confirmation.'
-                    : 'L’équipe vous propose ces places. Confirmez-vous votre participation ?'
+                    : espace.places.some(p => !p.confirmee)
+                      ? 'L’équipe vous propose ces places. Confirmez-vous votre participation ?'
+                      : 'Confirmez votre participation pour recevoir les changements de vos places par mail.'
                 }
                 description={
                   <Button

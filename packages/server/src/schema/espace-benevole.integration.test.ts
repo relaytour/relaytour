@@ -344,7 +344,17 @@ describe('premier mail', () => {
     ])
     // La seconde acceptation, avant confirmation, n'envoie rien.
     expect(enFile.filter(j => j.sorte === 'benevole-places')).toEqual([])
-    expect(JSON.stringify(enFile)).not.toMatch(/[A-Za-z0-9_-]{43}/)
+    // L'identifiant du job porte la fiche et la date de l'envoi, jamais le jeton.
+    expect(
+      enFile.every(j =>
+        /^benevole-lien-[a-z0-9]+-\d+$/.test(String(j.options.jobId))
+      )
+    ).toBe(true)
+    expect(
+      JSON.stringify(
+        enFile.map(j => ({ ...j, options: { ...j.options, jobId: null } }))
+      )
+    ).not.toMatch(/[A-Za-z0-9_-]{43}/)
   })
 
   it('porte le lien, les places à confirmer et l’avertissement ; le jeton naît à l’envoi', async () => {
@@ -715,8 +725,17 @@ describe('robustesse', () => {
       where: { id: benevoleId },
     })
     expect(fiche.lienEnvoyeLe).toBeNull()
-    // La relance reste possible une fois la file rétablie.
+    // La relance reste possible une fois la file rétablie, et l'écran la propose.
     file.enPanne = false
+    const fiches = donnees<{ id: string; lienRenvoyable: boolean }[]>(
+      await executer(
+        ids.admin,
+        `query ($a: ID!) { benevoles(activiteId: $a) { id lienRenvoyable } }`,
+        { a: ids.activite }
+      ),
+      'benevoles'
+    )
+    expect(fiches.find(f => f.id === benevoleId)?.lienRenvoyable).toBe(true)
     expect(
       donnees<boolean>(
         await executer(

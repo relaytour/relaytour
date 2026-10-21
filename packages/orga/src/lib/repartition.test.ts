@@ -4,6 +4,7 @@ import {
   avertissements,
   axeDuJour,
   enManque,
+  intervalleAbsolu,
   intervallesDuJour,
   position,
 } from './repartition'
@@ -45,6 +46,52 @@ describe('axe et position', () => {
         '2027-04-11'
       )
     ).toEqual([{ debut: 0, fin: h(2) }])
+  })
+
+  it('couvre en entier un jour compris dans une plage de plusieurs jours', () => {
+    const plage = {
+      jour: '2027-04-10',
+      jourFin: '2027-04-12',
+      heureDebut: '08:00',
+      heureFin: '08:00',
+    }
+    expect(intervallesDuJour([plage], '2027-04-11')).toEqual([
+      { debut: 0, fin: h(24) },
+    ])
+    expect(intervallesDuJour([plage], '2027-04-13')).toEqual([])
+  })
+})
+
+describe('intervalleAbsolu', () => {
+  it('compare des horaires de nuit au-delà de minuit', () => {
+    const sequence = intervalleAbsolu({
+      jour: '2027-04-10',
+      jourFin: '2027-04-11',
+      heureDebut: '22:00',
+      heureFin: '02:00',
+    })
+    const plage = intervalleAbsolu({
+      jour: '2027-04-10',
+      jourFin: '2027-04-10',
+      heureDebut: '22:00',
+      heureFin: '23:59',
+    })
+    const place = intervalleAbsolu({
+      jour: '2027-04-11',
+      jourFin: '2027-04-11',
+      heureDebut: '01:00',
+      heureFin: '02:00',
+    })
+    expect(sequence.fin - sequence.debut).toBe(h(4))
+    expect(
+      avertissements({
+        sequence,
+        plages: [plage],
+        places: [place],
+        besoin: null,
+        renforts: 0,
+      })
+    ).toEqual(['PLAGE_PARTIELLE', 'CHEVAUCHEMENT'])
   })
 })
 

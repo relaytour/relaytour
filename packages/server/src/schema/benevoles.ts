@@ -82,13 +82,14 @@ const BenevoleRef = builder.objectRef<BenevoleLu>('Benevole').implement({
     }),
     lienRenvoyable: t.boolean({
       description:
-        'Vrai quand la personne connectée peut renvoyer le lien par mail : il est parti une fois, sans relance, vers une fiche joignable.',
+        'Vrai quand la personne connectée peut renvoyer le lien par mail, vers une fiche joignable : le lien est parti une fois sans relance, ou la fiche placée n’a pas pu recevoir son premier mail.',
       resolve: l =>
         l.coordonnees &&
         l.benevole.prevenirParMail &&
         l.benevole.courriel !== null &&
-        l.benevole.lienEnvoyeLe !== null &&
-        l.benevole.relanceLe === null,
+        (l.benevole.lienEnvoyeLe === null
+          ? l.benevole._count.places > 0
+          : l.benevole.relanceLe === null),
     }),
     lienEspace: t.string({
       nullable: true,

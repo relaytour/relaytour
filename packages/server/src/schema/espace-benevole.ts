@@ -317,7 +317,12 @@ builder.mutationFields(t => ({
       await prisma.$transaction(async tx => {
         // La séquence d'abord, comme modifierSequence et placerBenevole.
         await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${place.sequenceId} FOR UPDATE`
-        await tx.placeSequence.deleteMany({ where: { id: place.id } })
+        // Une modification de la séquence validée entre-temps a pu recréer la
+        // place sous un autre identifiant : la référence est alors périmée.
+        const { count } = await tx.placeSequence.deleteMany({
+          where: { id: place.id },
+        })
+        if (count === 0) throw erreurSaisie('Cette place n’existe plus.')
         await tx.sequence.update({
           where: { id: place.sequenceId },
           data: { version: { increment: 1 } },

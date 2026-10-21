@@ -345,23 +345,33 @@ builder.queryFields(t => ({
     type: [TrancheRef],
     authScopes: { connecte: true },
     description:
-      'La couverture du programme par tranches de 30 minutes. Les périmètres filtrent les séquences ; les bénévoles à répartir se comptent tous.',
+      'La couverture du programme par tranches de 30 minutes. Sans périmètre donné, toutes les séquences comptent. Sinon, seules comptent celles des périmètres donnés, et celles sans périmètre avec `sansPerimetre`. Les bénévoles à répartir se comptent tous.',
     args: {
       editionId: t.arg.id({ required: true }),
       perimetreIds: t.arg.idList(),
+      sansPerimetre: t.arg.boolean({ defaultValue: false }),
     },
     resolve: async (_root, args, ctx) => {
       const { edition, ecrits } = await editionRepartie(ctx, args.editionId)
       const filtre = args.perimetreIds?.map(String)
+      // Le même filtre que la frise : une liste vide avec `sansPerimetre` faux
+      // ne retient aucune séquence.
+      const portee =
+        filtre === undefined
+          ? {}
+          : {
+              OR: [
+                ...(filtre.length > 0 ? [{ perimetreId: { in: filtre } }] : []),
+                ...(args.sansPerimetre ? [{ perimetreId: null }] : []),
+              ],
+            }
       const [sequences, liste] = await Promise.all([
         prisma.sequence.findMany({
           where: {
             organisationId: ctx.organisation!.id,
             editionId: edition.id,
             besoinBenevoles: { gt: 0 },
-            ...(filtre && filtre.length > 0
-              ? { perimetreId: { in: filtre } }
-              : {}),
+            ...portee,
           },
           include: {
             places: {
@@ -547,7 +557,16 @@ builder.mutationFields(t => ({
       await prisma.$transaction(async tx => {
         // La séquence d'abord, comme modifierSequence et placerBenevole.
         await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${sequence.id} FOR UPDATE`
-        await tx.placeSequence.deleteMany({ where: { id: place.id } })
+        // Une modification de la séquence validée entre-temps a pu recréer la
+        // place sous un autre identifiant : l'écran doit alors se relire.
+        const { count } = await tx.placeSequence.deleteMany({
+          where: { id: place.id },
+        })
+        if (count === 0) {
+          throw erreurSaisie(
+            'Cette place a changé entre-temps. Rechargez le programme.'
+          )
+        }
         await incrementer(tx, sequence.id)
       })
       if (place.benevoleId !== null) {

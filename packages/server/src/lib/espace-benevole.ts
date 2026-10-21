@@ -111,11 +111,14 @@ export async function annoncerPlace(
       data: { lienEnvoyeLe: maintenant },
     })
     if (count === 1) {
+      // L'identifiant du job porte la date de la marque : après un changement
+      // d'adresse, un nouveau cycle d'envoi ne se confond pas avec un job terminé
+      // que la file garde encore.
       const enFile = await mettreEnFile(
         'benevole-lien',
         { benevoleId: fiche.benevoleId },
         {
-          jobId: `benevole-lien-${fiche.benevoleId}`,
+          jobId: `benevole-lien-${fiche.benevoleId}-${maintenant.getTime()}`,
           organisationId: fiche.organisationId,
           activiteId: fiche.activiteId,
         }
@@ -167,7 +170,7 @@ export async function relancer(
       'benevole-lien',
       { benevoleId: fiche.benevoleId },
       {
-        jobId: `benevole-lien-${fiche.benevoleId}`,
+        jobId: `benevole-lien-${fiche.benevoleId}-${maintenant.getTime()}`,
         organisationId: fiche.organisationId,
         activiteId: fiche.activiteId,
       }
@@ -193,7 +196,7 @@ export async function relancer(
     'benevole-lien',
     { benevoleId: fiche.benevoleId },
     {
-      jobId: `benevole-relance-${fiche.benevoleId}`,
+      jobId: `benevole-relance-${fiche.benevoleId}-${maintenant.getTime()}`,
       organisationId: fiche.organisationId,
       activiteId: fiche.activiteId,
     }

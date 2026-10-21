@@ -3963,3 +3963,9 @@ button.rt-carte-fiche {
     grid-column: 1 / -1;
   }
 }
+.rt-cellule-lien {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}

@@ -11,6 +11,7 @@ import {
   Select,
   Skeleton,
   Tag,
+  Tooltip,
 } from 'antd'
 import { useMemo, useState, type DragEvent } from 'react'
 
@@ -18,11 +19,14 @@ import { graphql } from '../gql'
 import type { BenevolesARepartirQuery, ProgrammeQuery } from '../gql/graphql'
 import type { AgendaEcrit } from '../lib/agendas-ecrits'
 import { messageErreur } from '../lib/erreurs'
+import { libelleJours } from '../lib/agenda'
 import { heureCourte, minutes, segmentDuJour } from '../lib/programme'
 import {
   avertissements,
   axeDuJour,
+  chevauchent,
   enManque,
+  intervalleAbsolu,
   intervallesDuJour,
   LIBELLES_AVERTISSEMENT,
   position,
@@ -69,8 +73,16 @@ const A_REPARTIR = graphql(`
 `)
 
 const COUVERTURE = graphql(`
-  query CouvertureProgramme($editionId: ID!, $perimetreIds: [ID!]) {
-    couvertureProgramme(editionId: $editionId, perimetreIds: $perimetreIds) {
+  query CouvertureProgramme(
+    $editionId: ID!
+    $perimetreIds: [ID!]
+    $sansPerimetre: Boolean
+  ) {
+    couvertureProgramme(
+      editionId: $editionId
+      perimetreIds: $perimetreIds
+      sansPerimetre: $sansPerimetre
+    ) {
       jour
       heure
       besoin
@@ -140,16 +152,27 @@ function Barre({
   couleur?: string
 }) {
   const { gauche, largeur } = position(intervalle, axe)
-  return (
+  const barre = (
     <span
       className={className}
-      title={titre}
+      // Une barre qui porte des effectifs s'atteint au clavier, et son
+      // libellé se lit au survol, au focus, à l'appui et par un lecteur d'écran.
+      tabIndex={titre ? 0 : undefined}
+      role={titre ? 'img' : undefined}
+      aria-label={titre}
       style={{
         left: `${gauche}%`,
         width: `${largeur}%`,
         ...(couleur ? { background: couleur } : {}),
       }}
     />
+  )
+  return titre ? (
+    <Tooltip title={titre} trigger={['hover', 'focus', 'click']}>
+      {barre}
+    </Tooltip>
+  ) : (
+    barre
   )
 }
 
@@ -169,9 +192,12 @@ export default function Repartition({
   const { message, modal } = App.useApp()
   const ecrans = Grid.useBreakpoint()
   const admin = agendas.some(a => a.perimetreId === null)
-  const [filtre, setFiltre] = useState<string[]>(
-    admin ? [TOUS] : agendas.map(a => a.perimetreId ?? SANS_PERIMETRE)
-  )
+  // Tant que la personne n'a rien choisi, le filtre suit ses agendas : ils
+  // arrivent parfois après la première lecture de la vue.
+  const [filtreChoisi, setFiltre] = useState<string[] | null>(null)
+  const filtre =
+    filtreChoisi ??
+    (admin ? [TOUS] : agendas.map(a => a.perimetreId ?? SANS_PERIMETRE))
   const [regroupement, setRegroupement] = useState<'perimetre' | 'lieu'>(
     'perimetre'
   )
@@ -179,6 +205,8 @@ export default function Repartition({
   const [glisse, setGlisse] = useState<string | null>(null)
 
   const tous = filtre.includes(TOUS)
+  // Le filtre dérivé change d'objet à chaque rendu : sa clé garde le calcul.
+  const cleFiltre = filtre.join(',')
   const retenue = (s: Sequence) =>
     tous || filtre.includes(s.perimetre?.id ?? SANS_PERIMETRE)
   const ecrite = (s: Sequence) =>
@@ -195,7 +223,7 @@ export default function Repartition({
         })
         .sort((a, b) => a.segment.debut - b.segment.debut),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sequences, jour, filtre]
+    [sequences, jour, cleFiltre]
   )
   const axe = axeDuJour(duJour.map(d => d.segment))
   const selection = duJour.find(d => d.s.id === choisie) ?? null
@@ -210,6 +238,8 @@ export default function Repartition({
       perimetreIds: tous
         ? null
         : filtre.filter(f => f !== SANS_PERIMETRE && f !== TOUS),
+      // « Toute l'activité » retient les séquences sans périmètre, comme la frise.
+      sansPerimetre: !tous && filtre.includes(SANS_PERIMETRE),
     },
     fetchPolicy: 'cache-and-network',
   })
@@ -223,12 +253,15 @@ export default function Repartition({
     t => t.jour === jour
   )
 
-  const intervallesDe = (p: Personne) => ({
-    plages: intervallesDuJour(p.plages, jour),
+  // Les plages du jour affiché, pour dessiner la piste de la personne.
+  const plagesDuJour = (p: Personne) => intervallesDuJour(p.plages, jour)
+  // Les horaires entiers, pour les avertissements : une séquence de nuit se
+  // compare au-delà de minuit.
+  const horairesDe = (p: Personne) => ({
+    plages: p.plages.map(intervalleAbsolu),
     places: p.places.flatMap(pl => {
       const s = parId.get(pl.sequenceId)
-      const segment = s ? segmentDuJour(s, jour) : null
-      return segment ? [segment] : []
+      return s ? [intervalleAbsolu(s)] : []
     }),
   })
 
@@ -237,8 +270,10 @@ export default function Repartition({
       await placer({
         variables: {
           sequenceId: s.id,
-          candidatureId: p.benevoleId ? null : p.candidatureId,
-          benevoleId: p.benevoleId,
+          // Une candidature en attente passe en premier : le placement accepte
+          // son choix et recalcule son statut, même quand une fiche existe déjà.
+          candidatureId: p.candidatureId,
+          benevoleId: p.candidatureId ? null : p.benevoleId,
         },
       })
       message.success(
@@ -250,11 +285,9 @@ export default function Repartition({
   }
 
   const proposerPlacement = (p: Personne, s: Sequence) => {
-    const segment = segmentDuJour(s, jour)
-    if (segment === null) return
     const liste = avertissements({
-      sequence: segment,
-      ...intervallesDe(p),
+      sequence: intervalleAbsolu(s),
+      ...horairesDe(p),
       besoin: s.besoinBenevoles,
       renforts: s.renforts,
     })
@@ -305,6 +338,17 @@ export default function Repartition({
 
   const details = (p: Personne) => (
     <div className="rt-repartition-details">
+      {p.plages.length > 0 && (
+        <p>
+          <span className="rt-libelle">Disponible</span>{' '}
+          {p.plages
+            .map(
+              pl =>
+                `${libelleJours(pl.jour)}, ${pl.heureDebut} → ${pl.jourFin !== pl.jour ? `${libelleJours(pl.jourFin)}, ` : ''}${pl.heureFin}`
+            )
+            .join(' ; ')}
+        </p>
+      )}
       {p.precisionsDisponibilite && (
         <p>
           <span className="rt-libelle">Précisions</span>{' '}
@@ -347,7 +391,7 @@ export default function Repartition({
   )
 
   const lignePersonne = (p: Personne, mobile = false) => {
-    const { plages } = intervallesDe(p)
+    const plages = plagesDuJour(p)
     const choisieIci =
       selection !== null && p.choix.some(c => c.sequenceId === selection.s.id)
     const attente =
@@ -357,9 +401,8 @@ export default function Repartition({
       )
     const occupe =
       selection !== null &&
-      intervallesDe(p).places.some(
-        pl =>
-          pl.debut < selection.segment.fin && selection.segment.debut < pl.fin
+      horairesDe(p).places.some(pl =>
+        chevauchent(pl, intervalleAbsolu(selection.s))
       )
     return (
       <li

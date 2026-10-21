@@ -137,6 +137,12 @@ export default function Benevoles() {
   })
   const [supprimer] = useMutation(SUPPRIMER, { refetchQueries: RELIRE })
   const [fiche, setFiche] = useState<Fiche | 'nouvelle' | null>(null)
+  // La fiche dont le lien personnel s'affiche, pour une personne qui lit ses
+  // coordonnées sans pouvoir la modifier.
+  const [lienDe, setLienDe] = useState<string | null>(null)
+  // Le panneau du lien lit la fiche actualisée : après une copie ou un renvoi,
+  // ses boutons suivent l'état du serveur.
+  const actuelle = (id: string) => data?.benevoles.find(b => b.id === id)
 
   useEffect(() => {
     if (fiche === null) return
@@ -347,20 +353,36 @@ export default function Benevoles() {
               },
               {
                 // L'état du lien personnel (ADR 0041) : confirmée, lien envoyé, ou
-                // aucun mail.
+                // aucun mail. Sans les coordonnées, l'absence d'adresse ne se
+                // lit pas : la cellule l'indique comme réservée.
                 key: 'lien',
                 title: 'Participation',
-                width: 150,
-                render: (_, f) =>
-                  f.confirmeeLe ? (
-                    <Tag color="success">Confirmée</Tag>
-                  ) : f.lienEnvoyeLe ? (
-                    <Tag color="warning">Lien envoyé</Tag>
-                  ) : f.prevenirParMail && f.courriel ? (
-                    <span className="rt-note">Lien à la première place</span>
-                  ) : (
-                    <span className="rt-note">Sans mail</span>
-                  ),
+                width: 170,
+                render: (_, f) => (
+                  <span className="rt-cellule-lien">
+                    {f.confirmeeLe ? (
+                      <Tag color="success">Confirmée</Tag>
+                    ) : f.lienEnvoyeLe ? (
+                      <Tag color="warning">Lien envoyé</Tag>
+                    ) : !f.coordonneesVisibles ? (
+                      <span className="rt-note">Réservée</span>
+                    ) : f.prevenirParMail && f.courriel ? (
+                      <span className="rt-note">Lien à la première place</span>
+                    ) : (
+                      <span className="rt-note">Sans mail</span>
+                    )}
+                    {f.coordonneesVisibles && !f.peutModifier && (
+                      <Button
+                        type="link"
+                        size="small"
+                        aria-label={`Lien personnel de ${f.nom}`}
+                        onClick={() => setLienDe(f.id)}
+                      >
+                        Lien
+                      </Button>
+                    )}
+                  </span>
+                ),
               },
               ...(gere
                 ? [
@@ -452,7 +474,9 @@ export default function Benevoles() {
           </Form.Item>
           {fiche !== null &&
             fiche !== 'nouvelle' &&
-            fiche.coordonneesVisibles && <LienBenevole fiche={fiche} />}
+            fiche.coordonneesVisibles && (
+              <LienBenevole fiche={actuelle(fiche.id) ?? fiche} />
+            )}
           {fiche === 'nouvelle' && (
             <Form.Item
               name="accord"
@@ -477,6 +501,18 @@ export default function Benevoles() {
             </Form.Item>
           )}
         </Form>
+      </Modal>
+
+      <Modal
+        open={lienDe !== null}
+        title={`Lien personnel de ${(lienDe && actuelle(lienDe)?.nom) ?? ''}`}
+        footer={null}
+        onCancel={() => setLienDe(null)}
+        destroyOnHidden
+      >
+        {lienDe !== null && actuelle(lienDe) && (
+          <LienBenevole fiche={actuelle(lienDe)!} />
+        )}
       </Modal>
     </>
   )
