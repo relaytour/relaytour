@@ -30,6 +30,8 @@ export type EntiteChangee =
   | 'DEMANDE'
   | 'NOTIFICATION'
   | 'MESSAGE'
+  | 'AGENDA'
+  | 'PROGRAMME'
 
 export interface Changement {
   entite: EntiteChangee

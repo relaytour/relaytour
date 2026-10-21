@@ -1,0 +1,18 @@
+{{marque}}
+
+{{intitule}}
+
+{{intro}}
+
+{{details}}
+
+{{consigne}}
+
+Ouvrir l’agenda : {{lienAgenda}}
+
+--
+Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}. Pour toute question, répondez à ce mail.
+
+Cet espace est propulsé par Relaytour, logiciel libre.
+https://github.com/relaytour/relaytour
