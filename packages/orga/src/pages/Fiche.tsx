@@ -145,6 +145,8 @@ export default function Fiche() {
                 <ConnexionsFiche
                   groupes={fiche.concerneGroupes}
                   connexions={fiche.connexions}
+                  mentions={mentions}
+                  perimetreDeLaFiche={fiche.perimetre?.id ?? null}
                 />
                 <dt>Source</dt>
                 <dd>{fiche.source === 'GIT' ? 'Dépôt' : 'Application'}</dd>

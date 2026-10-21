@@ -2734,6 +2734,7 @@ button.rt-ligne-declinaisons {
 
 /* Une mention de groupe est un bouton : il ouvre la liste de ses périmètres. */
 .rt-mention-groupe {
+  position: relative;
   border: none;
   font: inherit;
   font-size: 12.5px;
@@ -2781,4 +2782,19 @@ button.rt-ligne-declinaisons {
   gap: 6px;
   padding: 6px 4px 2px;
   font-size: 12.5px;
+}
+
+/* Au doigt, une mention de groupe reçoit une zone d'appui de 44 pixels de haut,
+   plus large que son dessin (docs/design-system.md, « Mobile »). */
+@media (pointer: coarse) {
+  /* L'étiquette coupe ce qui dépasse : la zone d'appui doit pouvoir dépasser. */
+  .rt-mention-groupe {
+    overflow: visible;
+  }
+
+  .rt-mention-groupe::after {
+    content: '';
+    position: absolute;
+    inset: -12px -4px;
+  }
 }

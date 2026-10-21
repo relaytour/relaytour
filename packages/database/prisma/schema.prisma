@@ -991,6 +991,13 @@ enum TypeNotification {
   // La place d'une personne dans l'équipe a changé : elle accompagne le mail
   // d'équipe (ADR 0012), pour la personne concernée.
   PLACE_MODIFIEE
+  // Réunion de l'agenda (ADR 0037), pour chaque personne convoquée : convocation,
+  // modification de l'horaire, du lieu ou du lien, annulation. `reunionId` la désigne.
+  REUNION_CONVOQUEE
+  REUNION_MODIFIEE
+  REUNION_ANNULEE
+  // Un sondage de dates vise la personne (ADR 0037). `sondageId` le désigne.
+  SONDAGE_OUVERT
   // Une fiche d'un autre périmètre concerne aussi celui-ci (ADR 0039), dans
   // l'application seulement. `perimetreId` désigne le périmètre cible.
   FICHE_CONNEXE

@@ -1,5 +1,6 @@
 import { Prisma, type PrismaClient } from '@relaytour/database'
 
+import { lireGroupes } from '../lib/activites.ts'
 import { empreinte } from '../lib/fiches.ts'
 import { lireLimites } from '../lib/limites.ts'
 import {
@@ -739,6 +740,28 @@ async function importerActivite(
     await tx.fiche.update({
       where: { id: existante.id },
       data: { versionCouranteId: version.id },
+    })
+  }
+
+  // Un groupe que l'activité ne déclare plus quitte la liste de toutes ses fiches,
+  // y compris des fiches absentes du dossier ou en conflit, comme dans
+  // `modifierActivite`. L'activité implicite garde les groupes qu'elle a en base.
+  if (ecrire && activiteId !== '') {
+    const declares = modele.implicite
+      ? lireGroupes(
+          (
+            await tx.activite.findUniqueOrThrow({
+              where: { id: activiteId },
+              select: { groupes: true },
+            })
+          ).groupes
+        )
+      : modele.declaration.groupes
+    await tx.ficheGroupeConnexe.deleteMany({
+      where: {
+        fiche: { activiteId },
+        groupe: { notIn: declares.map(g => g.cle) },
+      },
     })
   }
 
