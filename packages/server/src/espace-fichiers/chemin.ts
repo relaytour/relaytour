@@ -49,8 +49,12 @@ function extension(nom: string): string {
  */
 export function formatApercu(
   nom: string,
-  convertitEnPdf: (nom: string) => boolean
+  convertitEnPdf: (nom: string) => boolean,
+  natif = false
 ): FormatApercu {
+  // Un document natif du fournisseur n'a que sa conversion : son nom ne dit
+  // rien de son contenu, même s'il se termine par « .pdf ».
+  if (natif) return convertitEnPdf(nom) ? 'PDF_CONVERTI' : 'AUCUN'
   const ext = extension(nom)
   if (ext === 'pdf') return 'PDF'
   if (ext in IMAGES) return 'IMAGE'

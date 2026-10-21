@@ -12,6 +12,7 @@ import {
   espaceSharePoint,
   HOTES_MICROSOFT,
 } from './sharepoint.ts'
+import { dansLExport } from './isolement.ts'
 import { hoteAdmis } from './sortant.ts'
 
 describe('cheminValide', () => {
@@ -48,6 +49,12 @@ describe('formatApercu et typeServi', () => {
     expect(formats('budget.xlsx')).toBe('PDF_CONVERTI')
     expect(formats('archive.zip')).toBe('AUCUN')
     expect(formatApercu('budget.xlsx', () => false)).toBe('AUCUN')
+  })
+
+  it('ne lit que la conversion d’un document natif, quel que soit son nom', () => {
+    expect(formatApercu('Planning.pdf', () => true, true)).toBe('PDF_CONVERTI')
+    expect(formatApercu('Notes.md', () => true, true)).toBe('PDF_CONVERTI')
+    expect(formatApercu('Inscription.png', () => false, true)).toBe('AUCUN')
   })
 
   it('ne sert jamais le HTML ni le SVG comme une page', () => {
@@ -161,5 +168,24 @@ describe('pagination de Microsoft Graph', () => {
     )
     expect(liste?.complet).toBe(false)
     expect(liste?.elements).toHaveLength(25)
+  })
+})
+
+describe('dansLExport', () => {
+  const cible = { chemin: ['Fiches Relaytour'] }
+
+  it('reconnaît le dossier d’export et ce qu’il contient', () => {
+    expect(dansLExport(['Fiches Relaytour'], cible)).toBe(true)
+    expect(dansLExport(['Fiches Relaytour', 'rencontres'], cible)).toBe(true)
+    expect(dansLExport(['Natation'], cible)).toBe(false)
+    expect(dansLExport(['Natation'], null)).toBe(false)
+  })
+
+  it('ignore la casse et la forme Unicode, comme SharePoint et Dropbox', () => {
+    expect(dansLExport(['fiches relaytour', 'x.md'], cible)).toBe(true)
+    expect(dansLExport(['FICHES RELAYTOUR'], cible)).toBe(true)
+    expect(dansLExport(['E\u0301quipe'], { chemin: ['\u00c9quipe'] })).toBe(
+      true
+    )
   })
 })

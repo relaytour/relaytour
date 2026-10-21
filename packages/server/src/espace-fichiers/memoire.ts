@@ -21,6 +21,11 @@ export interface NoeudMemoire {
 
 export interface EmplacementMemoire extends Emplacement {
   racine: NoeudMemoire
+  /**
+   * Vrai pour une vue comme « Partagés avec moi » : elle montre des éléments
+   * rangés dans un autre emplacement, sous le même identifiant.
+   */
+  vue?: boolean
 }
 
 function chercher(noeud: NoeudMemoire, id: string): NoeudMemoire | null {
@@ -82,13 +87,23 @@ export function espaceEnMemoire(
       return Promise.resolve(noeud === null ? null : versElement(noeud))
     },
     ancetres: (emplacement, element) => {
-      const racine = emplacements.find(e => e.id === emplacement)?.racine
-      const chemin = racine === undefined ? null : parcours(racine, element)
-      return Promise.resolve(
-        chemin === null
-          ? null
-          : chemin.reverse().map(n => ({ id: n.id, nom: n.nom }))
-      )
+      const cible = emplacements.find(e => e.id === emplacement)
+      if (cible === undefined) return Promise.resolve(null)
+      // Depuis une vue, les parents sont ceux de l'emplacement réel, comme chez
+      // Google : la vue ne coiffe la chaîne que faute de mieux.
+      const ordre =
+        cible.vue === true
+          ? [...emplacements.filter(e => e !== cible), cible]
+          : [cible]
+      for (const e of ordre) {
+        const chemin = parcours(e.racine, element)
+        if (chemin !== null) {
+          return Promise.resolve(
+            chemin.reverse().map(n => ({ id: n.id, nom: n.nom }))
+          )
+        }
+      }
+      return Promise.resolve(null)
     },
     lister: p => {
       const noeud = trouver(p)

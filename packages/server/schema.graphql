@@ -221,6 +221,13 @@ type ConnexionFichiers {
   exportDossier: String
   exportRapport: RapportExport
   fournisseur: FournisseurFichiers!
+  methode: MethodeConnexionFichiers!
+}
+
+"""Une façon de connecter l’espace de fichiers, ouverte par l’exploitant."""
+type ConnexionPossible {
+  fournisseur: FournisseurFichiers!
+  methode: MethodeConnexionFichiers!
 }
 
 type CouleursTheme {
@@ -249,6 +256,14 @@ scalar Date
 A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.
 """
 scalar DateTime
+
+"""
+Connexion à Nextcloud commencée : la page où l’admin accorde l’accès, et l’état à présenter ensuite.
+"""
+type DebutConnexionNextcloud {
+  connexion: String!
+  etat: String!
+}
 
 """
 Les périmètres où décliner une tâche partagée. Un texte ou une échéance absents reprennent ceux de la tâche partagée.
@@ -370,9 +385,9 @@ type EspaceFichiers {
   connexion: ConnexionFichiers
 
   """
-  Fournisseurs ouverts par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.
+  Connexions ouvertes par l’exploitant de l’installation. Vide : l’espace de fichiers n’est pas proposé.
   """
-  fournisseursDisponibles: [FournisseurFichiers!]!
+  connexionsPossibles: [ConnexionPossible!]!
 }
 
 """
@@ -538,6 +553,9 @@ type FormulaireRejoindre {
 }
 
 enum FournisseurFichiers {
+  DROPBOX
+  GOOGLE_DRIVE
+  NEXTCLOUD
   SHAREPOINT
 }
 
@@ -786,6 +804,11 @@ input MessageInput {
   perimetreId: ID
 }
 
+enum MethodeConnexionFichiers {
+  COMPTE
+  COMPTE_SERVICE
+}
+
 type Mutation {
   """
   Enregistre l’abonnement push de cet appareil pour la personne connectée. Reste possible dans une organisation en lecture seule.
@@ -832,9 +855,19 @@ type Mutation {
   commencerConnexionEspaceFichiers(fournisseur: FournisseurFichiers!): String!
 
   """
+  Commence la connexion au Nextcloud de l’association, à l’adresse donnée. L’admin ouvre ensuite la page rendue et y accorde l’accès ; Nextcloud crée un mot de passe d’application pour Relaytour.
+  """
+  commencerConnexionNextcloud(adresse: String!): DebutConnexionNextcloud!
+
+  """
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
+
+  """
+  Connecte Google Drive par un compte de service : la clé JSON du compte, que l’organisation a créée. L’organisation partage ensuite ses dossiers avec l’adresse du compte.
+  """
+  connecterCompteServiceGoogle(cle: String!): ConnexionFichiers!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
   creerEdition(activiteId: ID, annee: Int!, debut: Date!, fin: Date!, nom: String!): Edition!
   creerFiche(activiteId: ID, contenu: String!, perimetreId: ID, slug: String!, titre: String!): Fiche!
@@ -1045,6 +1078,11 @@ type Mutation {
   Enregistre une image de l’organisation : PNG de 512 Ko au plus, ou SVG de 128 Ko au plus, sans script.
   """
   televerserMedia(donnees: String!, format: FormatMedia!): MediaTeleverse!
+
+  """
+  Demande à Nextcloud si l’admin a accordé l’accès. Vrai une fois la connexion enregistrée ; faux tant qu’il n’a pas terminé.
+  """
+  terminerConnexionNextcloud(etat: String!): Boolean!
 }
 
 """
