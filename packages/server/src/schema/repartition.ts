@@ -7,7 +7,7 @@ import {
   adequation,
   CHOIX_EN_ATTENTE,
   couverture,
-  fenetreDesPlages,
+  joursDesPlages,
   joursDeLaPeriode,
   perimetresEcrits,
   plagesValides,
@@ -356,7 +356,7 @@ const incrementer = (tx: Prisma.TransactionClient, sequenceId: string) =>
     data: { version: { increment: 1 } },
   })
 
-const PlageInput = builder.inputType('PlageDisponibiliteInput', {
+export const PlageInput = builder.inputType('PlageDisponibiliteInput', {
   fields: t => ({
     jour: t.field({ type: 'Date', required: true }),
     jourFin: t.field({
@@ -521,7 +521,7 @@ builder.mutationFields(t => ({
         where: { editionId: edition.id },
         select: { debut: true, fin: true },
       })
-      const fenetre = fenetreDesPlages(
+      const jours = joursDesPlages(
         await joursDeLaPeriode(prisma, edition.id),
         sequences,
         fuseau
@@ -533,7 +533,7 @@ builder.mutationFields(t => ({
           heureDebut: p.heureDebut,
           heureFin: p.heureFin,
         })),
-        fenetre,
+        jours,
         fuseau
       )
       await prisma.$transaction(async tx => {

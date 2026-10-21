@@ -7,7 +7,7 @@ import {
   datesAppelValides,
   etatAppel,
   etatPlace,
-  fenetreDesPlages,
+  joursDesPlages,
   fusionnerPlages,
   gereLAppel,
   PLAGES_MAX,
@@ -89,7 +89,7 @@ describe('datesAppelValides', () => {
 })
 
 describe('plages', () => {
-  const fenetre = fenetreDesPlages(
+  const jours = joursDesPlages(
     { debut: '2027-06-05', fin: '2027-06-06' },
     [],
     PARIS
@@ -119,7 +119,7 @@ describe('plages', () => {
             heureFin: '01:00',
           },
         ],
-        fenetre,
+        jours,
         PARIS
       )
     ).toEqual([
@@ -129,12 +129,12 @@ describe('plages', () => {
     ])
   })
 
-  it('refuse une plage inversée, trop longue, hors fenêtre, ou trop nombreuse', () => {
+  it('refuse une plage inversée, trop longue, hors des jours permis, ou trop nombreuse', () => {
     const une = (jour: string, heureDebut: string, heureFin: string) => [
       { jour, heureDebut, heureFin },
     ]
     expect(() =>
-      plagesValides(une('2027-06-05', '12:00', '09:00'), fenetre, PARIS)
+      plagesValides(une('2027-06-05', '12:00', '09:00'), jours, PARIS)
     ).toThrow(/suit son début/)
     expect(() =>
       plagesValides(
@@ -146,12 +146,12 @@ describe('plages', () => {
             heureFin: '09:00',
           },
         ],
-        fenetre,
+        jours,
         PARIS
       )
     ).toThrow(/24 heures/)
     expect(() =>
-      plagesValides(une('2027-06-04', '08:00', '09:00'), fenetre, PARIS)
+      plagesValides(une('2027-06-04', '08:00', '09:00'), jours, PARIS)
     ).toThrow(/jours de la période/)
     expect(() =>
       plagesValides(
@@ -160,20 +160,30 @@ describe('plages', () => {
           heureDebut: '08:00',
           heureFin: '09:00',
         })),
-        fenetre,
+        jours,
         PARIS
       )
     ).toThrow(/20 plages/)
   })
 
-  it('élargit la fenêtre aux jours des séquences du programme', () => {
-    const elargie = fenetreDesPlages(
-      { debut: '2027-06-05', fin: '2027-06-06' },
-      [{ debut: h('16:00', '2027-06-04'), fin: h('18:00', '2027-06-04') }],
-      PARIS
-    )
-    expect(elargie.debut).toEqual(h('00:00', '2027-06-04'))
-    expect(elargie.fin).toEqual(h('00:00', '2027-06-07'))
+  it('ajoute les jours des séquences du programme, sans les jours entre deux', () => {
+    expect(
+      joursDesPlages(
+        { debut: '2027-06-05', fin: '2027-06-06' },
+        [
+          { debut: h('16:00', '2027-06-04'), fin: h('18:00', '2027-06-04') },
+          // Le démontage, une semaine plus tard, passe minuit.
+          { debut: h('23:00', '2027-06-13'), fin: h('01:00', '2027-06-14') },
+        ],
+        PARIS
+      )
+    ).toEqual([
+      '2027-06-04',
+      '2027-06-05',
+      '2027-06-06',
+      '2027-06-13',
+      '2027-06-14',
+    ])
   })
 })
 

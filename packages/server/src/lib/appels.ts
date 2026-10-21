@@ -150,13 +150,13 @@ export interface PlageSaisie {
 }
 
 /**
- * Les plages saisies, vérifiées puis réunies. Chacune dure 24 heures au plus et
- * tombe dans la fenêtre donnée : les jours de la période, et ceux des séquences
- * de son programme.
+ * Les plages saisies, vérifiées puis réunies. Chacune dure 24 heures au plus,
+ * commence et finit un des jours permis : ceux de la période, et ceux des
+ * séquences de son programme.
  */
 export function plagesValides(
   saisies: readonly PlageSaisie[] | null | undefined,
-  fenetre: Plage,
+  jours: readonly string[],
   fuseau: string
 ): Plage[] {
   const liste = saisies ?? []
@@ -181,8 +181,8 @@ export function plagesValides(
       throw erreurSaisie('Une plage dure 24 heures au plus.')
     }
     if (
-      debut.getTime() < fenetre.debut.getTime() ||
-      fin.getTime() > fenetre.fin.getTime()
+      !jours.includes(saisie.jour) ||
+      !jours.includes(saisie.jourFin || saisie.jour)
     ) {
       throw erreurSaisie(
         'Une plage tombe dans les jours de la période ou de son programme.'
@@ -194,26 +194,27 @@ export function plagesValides(
 }
 
 /**
- * La fenêtre des plages d'une période : du premier au dernier jour de la
- * période, élargie aux jours des séquences de son programme.
+ * Les jours où une plage peut tomber, dans l'ordre : ceux de la période, et ceux
+ * des séquences de son programme (une installation la veille, par exemple).
  */
-export function fenetreDesPlages(
+export function joursDesPlages(
   periode: { debut: string; fin: string },
   sequences: readonly Plage[],
   fuseau: string
-): Plage {
-  let premier = periode.debut
-  let dernier = periode.fin
+): string[] {
+  const jours = new Set<string>()
+  for (
+    let jour = periode.debut;
+    jour <= periode.fin;
+    jour = decalerJour(jour, 1)
+  ) {
+    jours.add(jour)
+  }
   for (const s of sequences) {
-    const jourDebut = heureLocale(s.debut, fuseau).jour
-    const jourFin = heureLocale(s.fin, fuseau).jour
-    if (jourDebut < premier) premier = jourDebut
-    if (jourFin > dernier) dernier = jourFin
+    jours.add(heureLocale(s.debut, fuseau).jour)
+    jours.add(heureLocale(s.fin, fuseau).jour)
   }
-  return {
-    debut: instantDepuisHeureLocale(premier, '00:00', fuseau),
-    fin: instantDepuisHeureLocale(decalerJour(dernier, 1), '00:00', fuseau),
-  }
+  return [...jours].sort()
 }
 
 export type Adequation = 'TOTALE' | 'PARTIELLE' | 'AUCUNE'

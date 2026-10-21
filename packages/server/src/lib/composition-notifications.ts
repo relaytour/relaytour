@@ -279,6 +279,10 @@ function phrase(
     // ne le cite pas (ADR 0015).
     case 'DEMANDE_RECUE':
       return `Une demande pour rejoindre l’équipe attend votre revue${activite}`
+    // Une candidature porte le nom d'une personne sans compte : la notification ne
+    // le cite pas (ADR 0041).
+    case 'CANDIDATURE_RECUE':
+      return `Une candidature de bénévole attend votre revue${activite}`
     case 'DEMANDE_ACCEPTEE':
       return `${acteur} a accepté une demande pour rejoindre l’équipe${activite}`
     case 'DEMANDE_REFUSEE':
@@ -419,6 +423,10 @@ function lien(n: NotificationLue, c: Contexte): string {
     case 'DEMANDE_ACCEPTEE':
     case 'DEMANDE_REFUSEE':
       return `/${slug}/admin/personnes?onglet=demandes`
+    case 'CANDIDATURE_RECUE':
+      return n.editionId
+        ? `/${slug}/benevoles?onglet=candidatures&edition=${n.editionId}`
+        : `/${slug}/benevoles?onglet=candidatures`
     case 'INVITATION_ACCEPTEE':
     case 'AFFECTATION_AJOUTEE':
     case 'AFFECTATION_RETIREE':

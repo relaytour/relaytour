@@ -172,6 +172,30 @@ type AppelBenevoles {
   version: Int!
 }
 
+"""
+La page publique d’un appel à bénévoles (ADR 0041). Lisible sans session.
+"""
+type AppelBenevolesPublic {
+  activite: String!
+
+  """
+  Adresse de rôle à laquelle demander l’accès à ses données ou leur suppression.
+  """
+  contact: String!
+  introduction: String
+
+  """Les jours où une plage de disponibilité peut tomber."""
+  jours: [String!]!
+  organisation: String!
+
+  """
+  Vrai : la personne peut proposer son aide là où il manque du monde, sans choisir de séquence.
+  """
+  ouAilleurs: Boolean!
+  periode: String!
+  sequences: [SequencePublique!]!
+}
+
 type AppelEtAdresse {
   """L’adresse publique, lisible une seule fois."""
   adresse: String!
@@ -1320,6 +1344,26 @@ type Mutation {
   demanderExport(organisation: String!): String!
 
   """
+  Dépose une candidature sur un appel ouvert. La réponse est la même que l’adresse ait déjà une candidature, une fiche ou un compte. Aucun mail ne part. Utilisable sans session.
+  """
+  deposerCandidature(
+    """Vrai : la personne accepte l’enregistrement de ses données."""
+    accord: Boolean!
+    email: String!
+    jeton: String!
+    message: String
+    nom: String!
+    ouAilleurs: Boolean = false
+    plages: [PlageDisponibiliteInput!]
+    precisions: String
+
+    """Les références des séquences choisies."""
+    sequences: [String!]!
+    siteWeb: String
+    telephone: String
+  ): Boolean!
+
+  """
   Retire l’abonnement push de cet appareil. Rend vrai quand un abonnement de la personne connectée a été retiré.
   """
   desabonnerPush(adresse: String!): Boolean!
@@ -2120,6 +2164,11 @@ type Query {
   ): Agenda!
 
   """
+  La page publique d’un appel, ou null s’il est fermé ou inconnu. Lisible sans session.
+  """
+  appelBenevolesPublic(jeton: String!): AppelBenevolesPublic
+
+  """
   Message à diffuser pour trouver des référentes et des référents. Vaut null quand aucun périmètre n’est à pourvoir.
   """
   appelPostes(editionId: ID!): String
@@ -2522,6 +2571,38 @@ type Sequence {
   renforts: Int!
   titre: String!
   version: Int!
+}
+
+"""
+Une séquence qui cherche des bénévoles, telle que la page publique la montre.
+"""
+type SequencePublique {
+  """
+  Vrai quand le besoin est atteint : une candidature passe en liste d’attente.
+  """
+  complete: Boolean!
+
+  """
+  Vaut null sans consignes, ou si elles contiennent une coordonnée personnelle.
+  """
+  consignes: String
+  couleur: String
+  heureDebut: String!
+  heureFin: String!
+  jour: String!
+  jourFin: String!
+  lieu: String
+
+  """
+  Vaut null sans description, ou si elle contient une coordonnée personnelle.
+  """
+  lieuDescription: String
+  perimetre: String
+  placesRecherchees: Int!
+
+  """La référence de la séquence dans cet appel."""
+  ref: String!
+  titre: String!
 }
 
 """
