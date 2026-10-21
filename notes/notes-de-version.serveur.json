@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-20-serveur-une-fiche-de-perimetre-se-lit-aussi-dans-les-perimetres-qu-e",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une fiche de périmètre se lit aussi dans les périmètres qu’elle concerne",
+            "texte": "Une fiche de périmètre porte une liste « Concerne aussi » : des périmètres et des groupes de son activité. Les référentes et référents de ces périmètres lisent la fiche sans la modifier. Une déclinaison acceptée rend aussi connexe la fiche de sa tâche partagée. Un périmètre cible masque une fiche connexe de sa liste. Le dossier de contenu porte la liste dans les clés `concerne` et `concerneGroupes` de l’en-tête de la fiche.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-20-serveur-les-abonnements-a-l-agenda-passent-par-agenda",
           "date": "2026-10-20",
           "type": "fonctionnalite",

@@ -5,13 +5,14 @@ import {
   LinkOutlined,
   OrderedListOutlined,
   QuestionCircleOutlined,
+  TeamOutlined,
   TableOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons'
 import { Button, Input, Skeleton, Tooltip } from 'antd'
 import type { TextAreaRef } from 'antd/es/input/TextArea'
 import type { KeyboardEvent, ReactNode } from 'react'
-import { lazy, Suspense, useRef } from 'react'
+import { lazy, Suspense, useRef, useState } from 'react'
 
 import {
   appliquer,
@@ -19,6 +20,8 @@ import {
   type Format,
   type Remplacement,
 } from '../lib/mise-en-forme'
+import { mentionEnCours, suggestions } from '../lib/concerne'
+import type { Mentions } from '../lib/mentions'
 import type { PoigneeVisuel } from './EditeurVisuel'
 
 // Milkdown ne se charge qu'à l'ouverture de l'éditeur visuel.
@@ -106,6 +109,7 @@ export default function EditeurMarkdown({
   libelle,
   mode,
   cleVisuel,
+  mentions,
 }: {
   valeur: string
   onChange: (valeur: string) => void
@@ -115,9 +119,75 @@ export default function EditeurMarkdown({
   mode: ModeEditeur
   /** Change quand le texte est remplacé de l'extérieur : l'éditeur visuel repart. */
   cleVisuel: number
+  /** Les périmètres et les groupes que `@` propose (ADR 0039). */
+  mentions?: Mentions
 }) {
   const ref = useRef<TextAreaRef>(null)
   const visuel = useRef<PoigneeVisuel>(null)
+  // La mention que la personne saisit, et les périmètres ou groupes qui y répondent.
+  const [enCours, setEnCours] = useState<{
+    debut: number
+    requete: string
+  } | null>(null)
+  const proposees =
+    enCours !== null && mentions !== undefined
+      ? suggestions(enCours.requete, mentions)
+      : []
+
+  const suivreLeCurseur = (avant: string | null) =>
+    setEnCours(avant === null ? null : mentionEnCours(avant))
+
+  const suivreLaZone = () => {
+    const zone = ref.current?.resizableTextArea?.textArea
+    if (!zone || zone.selectionStart !== zone.selectionEnd) {
+      setEnCours(null)
+      return
+    }
+    suivreLeCurseur(zone.value.slice(0, zone.selectionStart))
+  }
+
+  /** Remplace la mention en cours par la mention choisie, suivie d'une espace. */
+  const mentionner = (texte: string) => {
+    if (enCours === null) return
+    const longueur = enCours.requete.length + 1
+    setEnCours(null)
+    if (mode === 'visuel') {
+      visuel.current?.remplacerAvant(longueur, `${texte} `)
+      return
+    }
+    const zone = ref.current?.resizableTextArea?.textArea
+    if (!zone) return
+    const fin = zone.selectionStart
+    const insertion = `${texte} `
+    remplacer(
+      zone,
+      {
+        debut: fin - longueur,
+        fin,
+        insertion,
+        selection: [
+          fin - longueur + insertion.length,
+          fin - longueur + insertion.length,
+        ],
+      },
+      onChange
+    )
+  }
+
+  // Tab choisit la première suggestion, Échap les ferme.
+  const surToucheMention = (e: KeyboardEvent<HTMLElement>) => {
+    if (proposees.length === 0) return false
+    if (e.key === 'Tab' && !e.shiftKey) {
+      e.preventDefault()
+      mentionner(proposees[0]!.texte)
+      return true
+    }
+    if (e.key === 'Escape') {
+      setEnCours(null)
+      return true
+    }
+    return false
+  }
 
   const formater = (format: Format) => {
     if (mode === 'visuel') {
@@ -135,6 +205,7 @@ export default function EditeurMarkdown({
   }
 
   const surTouche = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (surToucheMention(e)) return
     if (!(e.metaKey || e.ctrlKey) || e.altKey || e.shiftKey) return
     const format = RACCOURCIS[e.key.toLowerCase()]
     if (format === undefined) return
@@ -192,16 +263,36 @@ export default function EditeurMarkdown({
             </Button>
           </Tooltip>
         </div>
+        {proposees.length > 0 && (
+          <div className="rt-suggestions-mention" aria-label="Mentionner">
+            <span className="rt-texte-secondaire">Mentionner</span>
+            {proposees.map(p => (
+              <button
+                key={p.texte}
+                type="button"
+                className="rt-etiquette rt-mention-groupe"
+                // La zone garde le focus et son curseur pendant le clic.
+                onMouseDown={e => e.preventDefault()}
+                onClick={() => mentionner(p.texte)}
+              >
+                {p.groupe && <TeamOutlined aria-hidden />} {p.libelle}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
       {mode === 'visuel' ? (
         <Suspense fallback={<Skeleton active paragraph={{ rows: 8 }} />}>
-          <EditeurVisuel
-            key={cleVisuel}
-            ref={visuel}
-            valeur={valeur}
-            onChange={onChange}
-            libelle={libelle}
-          />
+          <div onKeyDownCapture={e => void surToucheMention(e)}>
+            <EditeurVisuel
+              key={cleVisuel}
+              ref={visuel}
+              valeur={valeur}
+              onChange={onChange}
+              onCurseur={mentions === undefined ? undefined : suivreLeCurseur}
+              libelle={libelle}
+            />
+          </div>
         </Suspense>
       ) : (
         <Input.TextArea
@@ -209,6 +300,9 @@ export default function EditeurMarkdown({
           value={valeur}
           onChange={e => onChange(e.target.value)}
           onKeyDown={surTouche}
+          onSelect={mentions === undefined ? undefined : suivreLaZone}
+          onKeyUp={mentions === undefined ? undefined : suivreLaZone}
+          onBlur={() => setEnCours(null)}
           autoSize={{ minRows: 18 }}
           className="rt-zone-markdown"
           aria-label={libelle}

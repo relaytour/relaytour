@@ -39,6 +39,7 @@
 | [0035](0035-connexion-uniforme-et-jeton-local.md) | Connexion à réponse uniforme et jeton d'administration local par défaut | Acceptée, réalisée |
 | [0036](0036-organigramme-d-une-activite.md) | Organigramme d'une activité | Acceptée, réalisée |
 | [0037](0037-agenda-reunions-et-abonnements.md) | Agenda, réunions, convocations et abonnements | Acceptée |
+| [0039](0039-fiches-connexes.md) | Fiches connexes et mentions de périmètre ou de groupe | Acceptée |
 | [0040](0040-programme-du-jour-j-et-benevoles.md) | Programme du jour J, séquences et bénévoles | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

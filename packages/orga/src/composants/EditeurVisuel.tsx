@@ -13,12 +13,15 @@ import {
   creerEditeurVisuel,
   formaterVisuel,
   lierVisuel,
+  remplacerAvantLeCurseur,
   selectionDe,
 } from '../lib/editeur-visuel'
 import type { Format } from '../lib/mise-en-forme'
 
 export interface PoigneeVisuel {
   formater: (format: Format) => void
+  /** Remplace les caractères qui précèdent le curseur (une mention en cours). */
+  remplacerAvant: (longueur: number, texte: string) => void
 }
 
 type SelectionGardee = ReturnType<typeof selectionDe>
@@ -31,20 +34,24 @@ type SelectionGardee = ReturnType<typeof selectionDe>
 export default function EditeurVisuel({
   valeur,
   onChange,
+  onCurseur,
   libelle,
   ref,
 }: {
   valeur: string
   onChange: (valeur: string) => void
+  onCurseur?: (avant: string | null) => void
   libelle: string
   ref?: Ref<PoigneeVisuel>
 }) {
   const racine = useRef<HTMLDivElement>(null)
   const editeur = useRef<Editor | null>(null)
   const surChangement = useRef(onChange)
+  const surCurseur = useRef(onCurseur)
   useEffect(() => {
     surChangement.current = onChange
-  }, [onChange])
+    surCurseur.current = onCurseur
+  }, [onChange, onCurseur])
   const depart = useRef(valeur)
   const [lien, setLien] = useState<SelectionGardee | null>(null)
   const [adresse, setAdresse] = useState('')
@@ -61,6 +68,7 @@ export default function EditeurVisuel({
       valeur: depart.current,
       libelle,
       onChange: markdown => surChangement.current(markdown),
+      onCurseur: avant => surCurseur.current?.(avant),
     }).then(e => {
       if (annule) {
         e.destroy()
@@ -88,6 +96,10 @@ export default function EditeurVisuel({
       if (!editeur.current) return
       if (format === 'lien') demanderLien()
       else formaterVisuel(editeur.current, format)
+    },
+    remplacerAvant: (longueur, texte) => {
+      if (editeur.current)
+        remplacerAvantLeCurseur(editeur.current, longueur, texte)
     },
   }))
 

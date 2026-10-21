@@ -66,7 +66,9 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   'Fiche',
   'TachesFiche',
   'FichesDuPerimetre',
-  // Périmètres et équipe.
+  // Périmètres et équipe. `Perimetres` porte aussi le catalogue des mentions
+  // d'une fiche (ADR 0039).
+  'Perimetres',
   'MenuPerimetres',
   // Les agendas où une personne écrit suivent ses affectations (ADR 0037).
   'AffectationsPourAgenda',

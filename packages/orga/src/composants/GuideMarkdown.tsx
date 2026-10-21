@@ -1,4 +1,4 @@
-import { GUIDE_MARKDOWN } from '../lib/guide-markdown'
+import { GUIDE_MARKDOWN, MENTIONS_DU_GUIDE } from '../lib/guide-markdown'
 import Markdown from './Markdown'
 import { Panneau } from './Panneau'
 
@@ -32,7 +32,10 @@ export default function GuideMarkdown({
               <figure>
                 <figcaption>La fiche affiche</figcaption>
                 <div className="rt-guide-rendu">
-                  <Markdown contenu={section.exemple} />
+                  <Markdown
+                    contenu={section.exemple}
+                    mentions={MENTIONS_DU_GUIDE}
+                  />
                 </div>
               </figure>
             </div>

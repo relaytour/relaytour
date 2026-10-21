@@ -111,6 +111,7 @@ export async function notifierLePerimetre(
       | 'TACHE_COMMENTEE'
       | 'FICHE_CREEE'
       | 'FICHE_MODIFIEE'
+      | 'FICHE_CONNEXE'
     perimetreId: string
     /** L'édition de la tâche, ou null pour une fiche. */
     editionId: string | null
@@ -153,8 +154,13 @@ export async function notifierLePerimetre(
             ficheId: notification.ficheId ?? null,
             perimetreId,
             statut: statut ?? null,
-            // La clé d'un passage à « faite » ne porte pas son auteur non plus.
-            cle: `${type}-${cible}-${statut ?? ''}-${statut === 'FAITE' ? '' : acteurId}-${userId}-${tranche}`,
+            // La clé d'un passage à « faite » ne porte pas son auteur non plus. Une
+            // fiche connexe (ADR 0039) prévient une fois par fiche et par tranche,
+            // quels que soient l'auteur et le chemin du partage.
+            cle:
+              type === 'FICHE_CONNEXE'
+                ? `${type}-${cible}-${userId}-${tranche}`
+                : `${type}-${cible}-${statut ?? ''}-${statut === 'FAITE' ? '' : acteurId}-${userId}-${tranche}`,
           },
         })
         publierNotification(organisationId, userId)

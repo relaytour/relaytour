@@ -1,5 +1,6 @@
 import { Prisma, type PrismaClient } from '@relaytour/database'
 
+import { lireGroupes } from '../lib/activites.ts'
 import { empreinte } from '../lib/fiches.ts'
 import { lireLimites } from '../lib/limites.ts'
 import {
@@ -477,14 +478,16 @@ async function activiteVide(tx: Transaction, activiteId: string) {
 }
 
 /**
- * La fiche d'une déclinaison, si elle est bien commune à l'activité en base. Une
- * fiche d'un périmètre ne se lie pas : les personnes des périmètres cibles ne la
- * lisent pas (ADR 0014 et 0026).
+ * La fiche d'une déclinaison, si elle est en base commune à l'activité ou rangée
+ * dans le périmètre de la tâche partagée. Une fiche du périmètre d'origine devient
+ * connexe pour chaque cible (ADR 0039). Une fiche d'un autre périmètre ne se lie
+ * pas : les personnes des périmètres cibles ne la liraient pas.
  */
-async function ficheCommuneEnBase(
+async function ficheDeDeclinaisonEnBase(
   tx: Transaction,
   ficheId: string | null,
-  activiteId: string
+  activiteId: string,
+  perimetreOrigineId: string | undefined
 ): Promise<string | null> {
   if (ficheId === null) return null
   const fiche = await tx.fiche.findUnique({
@@ -492,10 +495,40 @@ async function ficheCommuneEnBase(
     select: { perimetreId: true, activiteId: true },
   })
   return fiche !== null &&
-    fiche.perimetreId === null &&
-    fiche.activiteId === activiteId
+    fiche.activiteId === activiteId &&
+    (fiche.perimetreId === null || fiche.perimetreId === perimetreOrigineId)
     ? ficheId
     : null
+}
+
+/**
+ * Applique la liste « Concerne aussi » d'une fiche (ADR 0039). Une fiche commune
+ * n'en garde aucune. Le masquage vit en base seulement : l'import n'y touche pas.
+ */
+async function appliquerConcerneAussi(
+  tx: Transaction,
+  ficheId: string,
+  perimetreId: string | null,
+  idsCibles: string[],
+  groupes: string[]
+): Promise<void> {
+  const ids =
+    perimetreId === null ? [] : idsCibles.filter(id => id !== perimetreId)
+  const cles = perimetreId === null ? [] : groupes
+  await tx.ficheConnexe.deleteMany({
+    where: { ficheId, perimetreId: { notIn: ids } },
+  })
+  await tx.ficheGroupeConnexe.deleteMany({
+    where: { ficheId, groupe: { notIn: cles } },
+  })
+  await tx.ficheConnexe.createMany({
+    data: ids.map(cible => ({ ficheId, perimetreId: cible })),
+    skipDuplicates: true,
+  })
+  await tx.ficheGroupeConnexe.createMany({
+    data: cles.map(groupe => ({ ficheId, groupe })),
+    skipDuplicates: true,
+  })
 }
 
 async function importerActivite(
@@ -710,6 +743,47 @@ async function importerActivite(
     })
   }
 
+  // Un groupe que l'activité ne déclare plus quitte la liste de toutes ses fiches,
+  // y compris des fiches absentes du dossier ou en conflit, comme dans
+  // `modifierActivite`. L'activité implicite garde les groupes qu'elle a en base.
+  if (ecrire && activiteId !== '') {
+    const declares = modele.implicite
+      ? lireGroupes(
+          (
+            await tx.activite.findUniqueOrThrow({
+              where: { id: activiteId },
+              select: { groupes: true },
+            })
+          ).groupes
+        )
+      : modele.declaration.groupes
+    await tx.ficheGroupeConnexe.deleteMany({
+      where: {
+        fiche: { activiteId },
+        groupe: { notIn: declares.map(g => g.cle) },
+      },
+    })
+  }
+
+  // Liste « Concerne aussi » (ADR 0039), une fois tous les périmètres connus. Une
+  // fiche en conflit garde la sienne, comme son contenu.
+  if (ecrire) {
+    const enConflit = new Set(rapport.fiches.conflits)
+    for (const fiche of modele.fiches) {
+      const ficheId = idsFiches.get(fiche.slug)
+      if (ficheId === undefined || enConflit.has(fiche.slug)) continue
+      await appliquerConcerneAussi(
+        tx,
+        ficheId,
+        fiche.perimetre === null
+          ? null
+          : (idsPerimetres.get(fiche.perimetre) ?? null),
+        fiche.concerne.flatMap(slug => idsPerimetres.get(slug) ?? []),
+        fiche.concerneGroupes
+      )
+    }
+  }
+
   if (periode === null) return rapport
 
   // Effectifs de la période
@@ -741,9 +815,6 @@ async function importerActivite(
 
   // Tâches types. Une tâche se retrouve par sa période, son périmètre et son
   // modèle : déjà présente, elle n'est jamais modifiée.
-  const fichesCommunes = new Set(
-    modele.fiches.filter(f => f.perimetre === null).map(f => f.slug)
-  )
   const ficheDe = (slug: string | undefined) =>
     slug === undefined ? null : (idsFiches.get(slug) ?? null)
   for (const [slugPerimetre, taches] of modele.taches) {
@@ -786,18 +857,19 @@ async function importerActivite(
       }
 
       // Tâche partagée (ADR 0026) : une déclinaison par périmètre cible, acceptée
-      // d'office puisque le contenu la déclare. Une déclinaison ne cite qu'une
-      // fiche commune : celle qu'elle déclare, sinon celle de sa tâche partagée.
+      // d'office puisque le contenu la déclare. Une déclinaison cite la fiche
+      // qu'elle déclare, sinon celle de sa tâche partagée (ADR 0039).
       if (tache.declinaison === undefined) continue
       const textes = textesDeLaDeclinaison(tache)
-      const fiche =
-        tache.declinaison.fiche ??
-        (tache.fiche !== undefined && fichesCommunes.has(tache.fiche)
-          ? tache.fiche
-          : undefined)
+      const fiche = tache.declinaison.fiche ?? tache.fiche
       // La fiche se juge en base : une fiche en conflit garde le périmètre qu'elle
-      // avait, même quand le dossier la range parmi les fiches communes.
-      const ficheId = await ficheCommuneEnBase(tx, ficheDe(fiche), activiteId)
+      // avait, même quand le dossier la range ailleurs.
+      const ficheId = await ficheDeDeclinaisonEnBase(
+        tx,
+        ficheDe(fiche),
+        activiteId,
+        perimetreId
+      )
       for (const cible of ciblesDeLaDeclinaison(
         tache,
         slugPerimetre,

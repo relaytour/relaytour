@@ -154,6 +154,12 @@ export interface OptionsEditeurVisuel {
   valeur: string
   /** Appelé à chaque modification de la personne, avec le Markdown obtenu. */
   onChange?: (markdown: string) => void
+  /**
+   * Appelé quand le curseur bouge, avec le texte de son bloc qui le précède. Null
+   * pour une sélection qui n'est pas un curseur. Les suggestions de mention s'en
+   * servent (ADR 0039).
+   */
+  onCurseur?: (avant: string | null) => void
   libelle?: string
 }
 
@@ -161,6 +167,7 @@ export async function creerEditeurVisuel({
   racine,
   valeur,
   onChange,
+  onCurseur,
   libelle,
 }: OptionsEditeurVisuel): Promise<Editor> {
   return Editor.make()
@@ -187,6 +194,15 @@ export async function creerEditeurVisuel({
       if (onChange)
         ctx.get(listenerCtx).markdownUpdated((_ctx, markdown, precedent) => {
           if (markdown !== precedent) onChange(retoucher(markdown, valeur))
+        })
+      if (onCurseur)
+        ctx.get(listenerCtx).selectionUpdated((_ctx, selection) => {
+          const { $from, empty } = selection
+          onCurseur(
+            empty
+              ? $from.parent.textBetween(0, $from.parentOffset, undefined, ' ')
+              : null
+          )
         })
     })
     .use(commonmark)
@@ -352,6 +368,23 @@ export function lierVisuel(
       return
     }
     vue.dispatch(tr)
+    vue.focus()
+  })
+}
+
+/**
+ * Remplace les `longueur` caractères qui précèdent le curseur par `texte` : une
+ * mention en cours de saisie devient la mention choisie.
+ */
+export function remplacerAvantLeCurseur(
+  editeur: Editor,
+  longueur: number,
+  texte: string
+): void {
+  editeur.action(ctx => {
+    const vue = ctx.get(editorViewCtx)
+    const { from } = vue.state.selection
+    vue.dispatch(vue.state.tr.insertText(texte, from - longueur, from))
     vue.focus()
   })
 }

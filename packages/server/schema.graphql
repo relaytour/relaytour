@@ -272,6 +272,17 @@ type CommentairesPeriode {
   perimetresLus: [ID!]!
 }
 
+"""
+Un périmètre qu’une fiche concerne, avec le chemin du partage et son masquage.
+"""
+type ConnexionFiche {
+  groupe: String
+  masquee: Boolean!
+  par: OrigineConnexe!
+  perimetre: Perimetre!
+  tacheId: ID
+}
+
 type ConvocationLue {
   """Vrai quand le mail de convocation est parti."""
   envoyee: Boolean!
@@ -500,6 +511,9 @@ type EvenementTache {
 type Fiche {
   activite: Activite!
   archive: Boolean!
+  concerneAussi: [Perimetre!]!
+  concerneGroupes: [String!]!
+  connexions: [ConnexionFiche!]!
   contenu: String!
   donneesPersonnelles: [String!]!
   id: ID!
@@ -860,6 +874,7 @@ type Mutation {
   accorderDeclinaison(accepter: Boolean!, id: ID!): Tache!
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
+  afficherFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
   annulerReunion(id: ID!): Reunion!
   archiverActivite(archive: Boolean!, id: ID!): Activite!
   archiverFiche(archive: Boolean!, id: ID!): Fiche!
@@ -1026,6 +1041,7 @@ type Mutation {
     ids: [ID!]
     perimetreId: ID
   ): Int!
+  masquerFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
   modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierBenevole(courriel: String, id: ID!, nom: String!, note: String, telephone: String): Benevole!
 
@@ -1188,6 +1204,7 @@ type Mutation {
   La personne refuse une invitation. L’organisation n’en est pas informée : une invitation refusée et une invitation expirée ne se distinguent pas.
   """
   refuserInvitation(id: ID!): Boolean!
+  reglerConcerneAussi(ficheId: ID!, groupes: [String!]!, perimetreIds: [ID!]!): Fiche!
 
   """Change le contenu de l’abonnement personnel. L’adresse ne change pas."""
   reglerMonAbonnementAgenda(inclureEcheances: Boolean!, inclureGlobal: Boolean!, perimetreIds: [ID!]): AbonnementAgenda!
@@ -1393,6 +1410,15 @@ type OrganisationInstallation {
   statut: StatutOrganisation!
 }
 
+"""
+Chemin du partage d’une fiche vers un périmètre : sa liste « Concerne aussi », un groupe de cette liste, ou une déclinaison acceptée qui cite la fiche.
+"""
+enum OrigineConnexe {
+  DECLINAISON
+  GROUPE
+  LISTE
+}
+
 enum OrigineDemande {
   FORMULAIRE
   PROPOSITION
@@ -1419,10 +1445,12 @@ type Perimetre {
   """
   description: String
   fiches: [Fiche!]!
+  fichesConnexes(inclureMasquees: Boolean = false): [Fiche!]!
   groupe: String!
   id: ID!
   nom: String!
   ordre: Int!
+  peutMasquerFichesConnexes: Boolean!
   peutModifier(editionId: ID!): Boolean!
   peutRedigerFiches: Boolean!
   referents(editionId: ID!): [Personne!]!
@@ -2186,6 +2214,7 @@ enum TypeNotification {
   DEMANDE_RECUE
   DEMANDE_REFUSEE
   ECHEANCE_PROCHE
+  FICHE_CONNEXE
   FICHE_CREEE
   FICHE_MODIFIEE
   INVITATION_ACCEPTEE

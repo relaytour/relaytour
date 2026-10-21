@@ -3253,3 +3253,79 @@ button.rt-agenda-evenement {
     break-inside: avoid;
   }
 }
+
+/* Fiches connexes (ADR 0039) : les étiquettes des périmètres qu'une fiche
+   concerne, les mentions d'une fiche et la liste d'un périmètre cible. */
+.rt-description dd.rt-connexions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+/* Une mention de groupe est un bouton : il ouvre la liste de ses périmètres. */
+.rt-mention-groupe {
+  position: relative;
+  border: none;
+  font: inherit;
+  font-size: 12.5px;
+  font-weight: 600;
+  cursor: pointer;
+  color: var(--rt-encre);
+  background: var(--rt-encre-08);
+}
+
+.rt-mention-groupe:hover {
+  background: var(--rt-encre-14);
+}
+
+.rt-markdown .rt-etiquette {
+  vertical-align: 1px;
+}
+
+.rt-mention-membres {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 280px;
+}
+
+.rt-fiche-connexe {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rt-fiche-connexe-origine {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: 12.5px;
+}
+
+/* Suggestions d'une mention en cours (ADR 0039) : une rangée sous la barre de
+   mise en forme, dans les deux modes de l'éditeur. */
+.rt-suggestions-mention {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 4px 2px;
+  font-size: 12.5px;
+}
+
+/* Au doigt, une mention de groupe reçoit une zone d'appui de 44 pixels de haut,
+   plus large que son dessin (docs/design-system.md, « Mobile »). */
+@media (pointer: coarse) {
+  /* L'étiquette coupe ce qui dépasse : la zone d'appui doit pouvoir dépasser. */
+  .rt-mention-groupe {
+    overflow: visible;
+  }
+
+  .rt-mention-groupe::after {
+    content: '';
+    position: absolute;
+    inset: -12px -4px;
+  }
+}

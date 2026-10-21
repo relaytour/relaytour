@@ -399,8 +399,9 @@ describe('une référente propose une tâche partagée', () => {
     expect(natation.echeance?.toISOString().slice(0, 10)).toBe('2027-01-25')
     expect(natation.creeParId).toBe(ids.pauline)
     expect(natation.assignations).toEqual([])
-    // La fiche du pôle ne suit pas : les sports ne la lisent pas.
-    expect(natation.ficheId).toBeNull()
+    // La fiche du pôle suit : elle sera connexe pour natation une fois la
+    // déclinaison acceptée (ADR 0039).
+    expect(natation.ficheId).toBe(ids.ficheDuPole)
   })
 
   it('garde la déclinaison hors des tâches et de l’avancement du périmètre cible', async () => {

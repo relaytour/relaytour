@@ -88,9 +88,29 @@ function vide(valeur: unknown[] | undefined): boolean {
   return valeur === undefined || valeur.length === 0
 }
 
-/** Le texte d'une fiche : en-tête YAML entre deux lignes « --- », puis le Markdown. */
-function texteFiche(slug: string, titre: string, contenu: string): Buffer {
-  const entete = stringify({ slug, titre }, { lineWidth: 0 }).trimEnd()
+/**
+ * Le texte d'une fiche : en-tête YAML entre deux lignes « --- », puis le Markdown.
+ * La liste « Concerne aussi » (ADR 0039) n'apparaît que lorsqu'elle n'est pas vide,
+ * chaque clé triée.
+ */
+function texteFiche(
+  slug: string,
+  titre: string,
+  contenu: string,
+  concerne: string[] = [],
+  concerneGroupes: string[] = []
+): Buffer {
+  const entete = stringify(
+    {
+      slug,
+      titre,
+      ...(concerne.length > 0 ? { concerne: [...concerne].sort() } : {}),
+      ...(concerneGroupes.length > 0
+        ? { concerneGroupes: [...concerneGroupes].sort() }
+        : {}),
+    },
+    { lineWidth: 0 }
+  ).trimEnd()
   return Buffer.from(`---\n${entete}\n---\n\n${normaliserContenu(contenu)}`)
 }
 
@@ -379,9 +399,18 @@ export async function construireContenu(
 
     const fiches = await prisma.fiche.findMany({
       where: { activiteId: activite.id, archivedAt: null },
-      include: { versionCourante: { select: { titre: true, contenu: true } } },
+      include: {
+        versionCourante: { select: { titre: true, contenu: true } },
+        connexes: { select: { perimetreId: true } },
+        groupesConnexes: { select: { groupe: true } },
+      },
       orderBy: { slug: 'asc' },
     })
+    // Un périmètre archivé ou un groupe que l'activité ne déclare plus ne s'écrit
+    // pas : la validation du dossier les refuserait.
+    const groupesDeclares = new Set(
+      lireGroupes(activite.groupes).map(g => g.cle)
+    )
     for (const fiche of fiches) {
       const version = fiche.versionCourante
       if (version === null) continue
@@ -407,7 +436,23 @@ export async function construireContenu(
       }
       fichiers.set(
         chemin,
-        texteFiche(fiche.slug, version.titre, version.contenu)
+        texteFiche(
+          fiche.slug,
+          version.titre,
+          version.contenu,
+          fiche.perimetreId === null
+            ? []
+            : fiche.connexes.flatMap(c =>
+                c.perimetreId === fiche.perimetreId
+                  ? []
+                  : (slugsPerimetres.get(c.perimetreId) ?? [])
+              ),
+          fiche.perimetreId === null
+            ? []
+            : fiche.groupesConnexes
+                .map(g => g.groupe)
+                .filter(g => groupesDeclares.has(g))
+        )
       )
     }
   }
