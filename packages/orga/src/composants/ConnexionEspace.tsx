@@ -19,7 +19,7 @@ import {
   Typography,
   Upload,
 } from 'antd'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { EspaceFichiersQuery, FournisseurFichiers } from '../gql/graphql'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
@@ -145,22 +145,37 @@ function ConnexionNextcloud({
   } | null>(null)
   const [commencer, { loading }] = useMutation(COMMENCER_NEXTCLOUD)
   const [terminer] = useMutation(TERMINER_NEXTCLOUD)
+  // Numéro de la tentative en cours : une fermeture l'invalide, et la réponse
+  // tardive d'une tentative invalidée est ignorée.
+  const tentative = useRef(0)
+  const onglet = useRef<Window | null>(null)
+  // Un sondage à la fois : la finalisation côté serveur peut dépasser
+  // l'intervalle, et un second sondage trouverait l'état déjà consommé.
+  const sondageEnCours = useRef(false)
 
   const fermer = () => {
+    tentative.current += 1
+    onglet.current?.close()
+    onglet.current = null
     setDemande(null)
     onFermer()
   }
 
   useEffect(() => {
-    if (demande === null) return
+    if (demande === null || !ouvert) return
     let actif = true
     const minuterie = window.setInterval(() => {
+      if (sondageEnCours.current) return
       if (Date.now() - demande.debut > DEMANDE_NEXTCLOUD_MS) {
         setDemande(null)
         message.warning('La demande a expiré. Recommencez la connexion.')
         return
       }
+      sondageEnCours.current = true
       terminer({ variables: { etat: demande.etat } })
+        .finally(() => {
+          sondageEnCours.current = false
+        })
         .then(async r => {
           if (!actif || r.data?.terminerConnexionNextcloud !== true) return
           setDemande(null)
@@ -181,23 +196,27 @@ function ConnexionNextcloud({
       actif = false
       window.clearInterval(minuterie)
     }
-  }, [demande, terminer, client, message, onFermer])
+  }, [demande, ouvert, terminer, client, message, onFermer])
 
   const ouvrir = async () => {
+    const numero = ++tentative.current
     // L'onglet s'ouvre pendant le clic : un onglet ouvert après une requête
     // serait bloqué par le navigateur.
-    const onglet = window.open('about:blank', '_blank')
+    const ouvertIci = window.open('about:blank', '_blank')
+    onglet.current = ouvertIci
     try {
       const r = await commencer({ variables: { adresse } })
+      if (numero !== tentative.current) return
       const debut = r.data?.commencerConnexionNextcloud
       if (!debut) throw new Error('Nextcloud ne répond pas.')
-      if (onglet !== null) {
-        onglet.opener = null
-        onglet.location.href = debut.connexion
+      if (ouvertIci !== null) {
+        ouvertIci.opener = null
+        ouvertIci.location.href = debut.connexion
       }
       setDemande({ ...debut, debut: Date.now() })
     } catch (e) {
-      onglet?.close()
+      if (numero !== tentative.current) return
+      ouvertIci?.close()
       message.error(messageErreur(e))
     }
   }

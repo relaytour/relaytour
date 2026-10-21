@@ -20,7 +20,9 @@ import {
 // Nextcloud, qui crée un mot de passe d'application propre à Relaytour ; il le
 // révoque depuis ses réglages de sécurité. WebDAV adresse un élément par son
 // chemin : un dossier lié se retrouve par son identifiant (`oc:fileid`), même
-// déplacé, grâce à une recherche WebDAV.
+// déplacé, grâce à une recherche WebDAV. Les numéros de fichier ne valent que
+// sur une instance : l'emplacement d'un élément est l'adresse de son instance, et
+// une position sur une autre instance est introuvable.
 
 export interface ConfigurationNextcloud {
   /** Tout hôte en https dont les adresses sont publiques. */
@@ -43,9 +45,12 @@ const DELAI_MS = 15_000
 const DELAI_CONTENU_MS = 120_000
 /** Une réponse WebDAV plus lourde ne se lit pas. */
 const XML_MAX = 20 * 1024 * 1024
+/** Une réponse JSON de connexion ou de compte tient en quelques kilo-octets. */
+const JSON_MAX = 64 * 1024
+/** L'adresse de base sert d'emplacement : elle tient dans sa colonne. */
+const BASE_MAX = 200
 const PROFONDEUR_MAX = 40
 const AGENT = 'Relaytour'
-export const FICHIERS_NEXTCLOUD = 'fichiers'
 
 // ── Adresse ──────────────────────────────────────────────────────────────────
 
@@ -77,7 +82,8 @@ export function baseAdmise(
   const chemin = url.pathname
     .replace(/\/(index\.php|apps|login|remote\.php|s)(\/.*)?$/, '')
     .replace(/\/+$/, '')
-  return `https://${hote}${chemin}`
+  const base = `https://${hote}${chemin}`
+  return base.length > BASE_MAX ? null : base
 }
 
 function agentDe(base: string, c: ConfigurationNextcloud) {
@@ -147,6 +153,20 @@ async function texteBorne(reponse: Response, max = XML_MAX): Promise<string> {
   return Buffer.concat(morceaux).toString('utf8')
 }
 
+/**
+ * Le JSON d'une réponse, borné avant son décodage : l'hôte vient d'une
+ * organisation, et un corps sans limite épuiserait la mémoire du serveur. Un
+ * corps illisible donne un objet vide ; un corps trop lourd lève.
+ */
+async function jsonBorne(reponse: Response): Promise<unknown> {
+  const texte = await texteBorne(reponse, JSON_MAX)
+  try {
+    return JSON.parse(texte) as unknown
+  } catch {
+    return {}
+  }
+}
+
 // ── Connexion par le Login Flow v2 ───────────────────────────────────────────
 
 export interface DebutConnexionNextcloud {
@@ -164,7 +184,7 @@ export async function commencerLoginNextcloud(
   const reponse = await appelNextcloud(c, base, `${base}/index.php/login/v2`, {
     method: 'POST',
   })
-  const donnees = (await reponse.json().catch(() => ({}))) as {
+  const donnees = (await jsonBorne(reponse)) as {
     login?: string
     poll?: { token?: string; endpoint?: string }
   }
@@ -205,7 +225,7 @@ export async function sonderLoginNextcloud(
     await reponse.body?.cancel()
     return null
   }
-  const donnees = (await reponse.json().catch(() => ({}))) as {
+  const donnees = (await jsonBorne(reponse)) as {
     loginName?: string
     appPassword?: string
   }
@@ -249,7 +269,7 @@ export async function compteNextcloud(
     await reponse.body?.cancel()
     throw new AccesRetire('Nextcloud refuse le mot de passe d’application.')
   }
-  const donnees = (await reponse.json().catch(() => ({}))) as {
+  const donnees = (await jsonBorne(reponse)) as {
     ocs?: { data?: { id?: string; 'display-name'?: string } }
   }
   const id = donnees.ocs?.data?.id
@@ -469,8 +489,16 @@ export function espaceNextcloud(
     return entrees.find(e => e.fileid === fileid)?.chemin ?? null
   }
 
-  /** Le chemin complet d'une position, ou null quand sa base n'existe plus. */
+  /** Vrai quand l'emplacement désigne l'instance connectée. */
+  const surCetteInstance = async (emplacement: string) =>
+    emplacement === (await secret(false)).base
+
+  /**
+   * Le chemin complet d'une position, ou null quand sa base n'existe plus ou
+   * qu'elle appartient à une autre instance.
+   */
   async function cheminComplet(p: Position): Promise<string[] | null> {
+    if (!(await surCetteInstance(p.emplacement))) return null
     if (p.base === null) return [...p.chemin]
     const base = await cheminDe(p.base)
     return base === null ? null : [...base, ...p.chemin]
@@ -509,12 +537,11 @@ export function espaceNextcloud(
 
     async emplacements(): Promise<Emplacement[]> {
       const s = await secret(false)
-      return [
-        { id: FICHIERS_NEXTCLOUD, nom: 'Fichiers', site: new URL(s.base).host },
-      ]
+      return [{ id: s.base, nom: 'Fichiers', site: new URL(s.base).host }]
     },
 
-    async ancetres(_emplacement, element) {
+    async ancetres(emplacement, element) {
+      if (!(await surCetteInstance(emplacement))) return null
       const chemin = await cheminDe(element)
       if (chemin === null) return null
       const chaine: { id: string; nom: string }[] = []

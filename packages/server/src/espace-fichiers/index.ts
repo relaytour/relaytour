@@ -231,7 +231,9 @@ function identiteEspace(
 ): string | null {
   if (fournisseur !== 'NEXTCLOUD') return null
   try {
-    return (JSON.parse(secret()) as SecretNextcloud).base.toLowerCase()
+    // La base est déjà normalisée (hôte en minuscules) ; son chemin garde sa
+    // casse, car deux chemins de casse différente peuvent désigner deux instances.
+    return (JSON.parse(secret()) as SecretNextcloud).base
   } catch {
     return ''
   }

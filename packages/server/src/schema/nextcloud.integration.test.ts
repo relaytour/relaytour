@@ -33,8 +33,9 @@ function nextcloudSimule() {
     })
   vi.stubGlobal('fetch', (entree: string, init: RequestInit = {}) => {
     const adresse = new URL(entree)
-    const origine = adresse.origin
-    if (adresse.pathname === '/index.php/login/v2') {
+    // La base de l'instance : son origine et son chemin éventuel.
+    const origine = entree.slice(0, entree.search(/\/(index\.php|ocs)\//))
+    if (adresse.pathname.endsWith('/index.php/login/v2')) {
       numero += 1
       return Promise.resolve(
         json({
@@ -46,7 +47,7 @@ function nextcloudSimule() {
         })
       )
     }
-    if (adresse.pathname === '/index.php/login/v2/poll') {
+    if (adresse.pathname.endsWith('/index.php/login/v2/poll')) {
       const jeton = new URLSearchParams(init.body as string).get('token') ?? ''
       if (!accordees.has(jeton)) return Promise.resolve(json({}, 404))
       accordees.delete(jeton)
@@ -58,7 +59,7 @@ function nextcloudSimule() {
         })
       )
     }
-    if (adresse.pathname === '/ocs/v2.php/cloud/user') {
+    if (adresse.pathname.endsWith('/ocs/v2.php/cloud/user')) {
       const attendu = `Basic ${Buffer.from(`camille@asso.exemple.org:${MOT_DE_PASSE}`).toString('base64')}`
       const entetes = init.headers as Record<string, string>
       if (entetes.authorization !== attendu)
@@ -264,5 +265,25 @@ describe('connexion à Nextcloud', () => {
     accordees.add(autre.jeton)
     expect((await terminer(autre.etat)).errors).toBeUndefined()
     expect(await exportActuel()).toBeNull()
+  })
+
+  it('distingue deux chemins de casse différente sur le même hôte', async () => {
+    const premier = await commencer('https://exemple.org/Nextcloud')
+    accordees.add(premier.jeton)
+    expect((await terminer(premier.etat)).errors).toBeUndefined()
+    await prisma.connexionFichiers.update({
+      where: { organisationId: ids.org },
+      data: {
+        exportEmplacement: 'https://exemple.org/Nextcloud',
+        exportElement: '42',
+      },
+    })
+    const second = await commencer('https://exemple.org/nextcloud')
+    accordees.add(second.jeton)
+    expect((await terminer(second.etat)).errors).toBeUndefined()
+    const connexion = await prisma.connexionFichiers.findUniqueOrThrow({
+      where: { organisationId: ids.org },
+    })
+    expect(connexion.exportElement).toBeNull()
   })
 })

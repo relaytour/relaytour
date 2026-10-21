@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 
 import {
   baseAdmise,
+  commencerLoginNextcloud,
   espaceNextcloud,
   lireMultistatus,
   type ConfigurationNextcloud,
@@ -9,6 +10,7 @@ import {
 } from './nextcloud.ts'
 
 const TOUS: ConfigurationNextcloud = { tous: true, hotes: [] }
+const BASE = 'https://cloud.exemple.org'
 
 describe('baseAdmise', () => {
   it('ramène une adresse https à la base du Nextcloud', () => {
@@ -37,6 +39,12 @@ describe('baseAdmise', () => {
     }
     expect(
       baseAdmise('https://cloud.exemple.org', { tous: false, hotes: [] })
+    ).toBeNull()
+  })
+
+  it('refuse une adresse trop longue pour servir d’emplacement', () => {
+    expect(
+      baseAdmise(`https://cloud.exemple.org/${'a'.repeat(200)}`, TOUS)
     ).toBeNull()
   })
 
@@ -215,7 +223,7 @@ describe('Nextcloud simulé', () => {
     const appels = nextcloudSimule(noeuds())
     const espace = espaceNextcloud(jeton, TOUS)
     const position = {
-      emplacement: 'fichiers',
+      emplacement: BASE,
       base: '10',
       chemin: ['Natation', 'Plan.pdf'],
     }
@@ -239,12 +247,12 @@ describe('Nextcloud simulé', () => {
     nextcloudSimule(noeuds())
     const espace = espaceNextcloud(jeton, TOUS)
     const liste = await espace.lister({
-      emplacement: 'fichiers',
+      emplacement: BASE,
       base: null,
       chemin: ['Association'],
     })
     expect(liste?.elements.map(e => e.nom)).toEqual(['Natation'])
-    expect(await espace.ancetres('fichiers', '11')).toEqual([
+    expect(await espace.ancetres(BASE, '11')).toEqual([
       { id: '11', nom: 'Natation' },
       { id: '10', nom: 'Association' },
       { id: '1', nom: 'Fichiers' },
@@ -254,7 +262,7 @@ describe('Nextcloud simulé', () => {
   it('crée un dossier sous un nom libre, puis écrit un fichier', async () => {
     const appels = nextcloudSimule(noeuds())
     const espace = espaceNextcloud(jeton, TOUS)
-    const parent = { emplacement: 'fichiers', base: null, chemin: [] }
+    const parent = { emplacement: BASE, base: null, chemin: [] }
     const cree = await espace.creerDossier(parent, 'Association', {
       renommer: true,
     })
@@ -264,13 +272,41 @@ describe('Nextcloud simulé', () => {
     ).toMatchObject({ id: '10' })
     expect(
       await espace.ecrire(
-        { emplacement: 'fichiers', base: '10', chemin: ['accueil.md'] },
+        { emplacement: BASE, base: '10', chemin: ['accueil.md'] },
         'Texte.'
       )
     ).toEqual({ etag: 'e9' })
     const envoi = appels.find(a => a.methode === 'PUT')!
     expect(envoi.adresse.pathname).toBe(
       '/remote.php/dav/files/camille/Association/accueil.md'
+    )
+  })
+
+  it('ne lit pas une position d’une autre instance', async () => {
+    nextcloudSimule(noeuds())
+    const espace = espaceNextcloud(jeton, TOUS)
+    // Un lien créé sur une autre instance porte son adresse comme emplacement.
+    const ailleurs = 'https://autre.exemple.org'
+    expect(
+      await espace.element({ emplacement: ailleurs, base: '10', chemin: [] })
+    ).toBeNull()
+    expect(
+      await espace.lister({ emplacement: ailleurs, base: null, chemin: [] })
+    ).toBeNull()
+    expect(await espace.ancetres(ailleurs, '11')).toBeNull()
+    expect(await espace.emplacements()).toEqual([
+      { id: BASE, nom: 'Fichiers', site: 'cloud.exemple.org' },
+    ])
+  })
+
+  it('refuse une réponse JSON trop lourde avant de la décoder', async () => {
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(
+        new Response(`{"login":"${'x'.repeat(100_000)}"}`, { status: 200 })
+      )
+    )
+    await expect(commencerLoginNextcloud(TOUS, BASE)).rejects.toThrow(
+      /trop longuement/
     )
   })
 
@@ -285,11 +321,11 @@ describe('Nextcloud simulé', () => {
     )
     const espace = espaceNextcloud(jeton, TOUS)
     await expect(
-      espace.element({ emplacement: 'fichiers', base: null, chemin: [] })
+      espace.element({ emplacement: BASE, base: null, chemin: [] })
     ).rejects.toThrow(/autre adresse/)
     const ferme = espaceNextcloud(jeton, { tous: false, hotes: [] })
     await expect(
-      ferme.element({ emplacement: 'fichiers', base: null, chemin: [] })
+      ferme.element({ emplacement: BASE, base: null, chemin: [] })
     ).rejects.toThrow(/n’admet plus/)
   })
 })
