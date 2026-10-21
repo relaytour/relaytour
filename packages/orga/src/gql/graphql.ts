@@ -46,10 +46,23 @@ export type EtapeAccord =
   | 'PROPOSEE'
   | 'REFUSEE';
 
+export type EtatConnexionFichiers =
+  | 'ACTIVE'
+  | 'A_RECONNECTER';
+
 export type EtatPostes =
   | 'COMPLET'
   | 'INCOMPLET'
   | 'SANS_PERSONNE';
+
+/** Ce que la liseuse affiche : un PDF, une image, un texte, du Markdown, un document bureautique converti en PDF par le fournisseur, ou rien (téléchargement). */
+export type FormatApercu =
+  | 'AUCUN'
+  | 'IMAGE'
+  | 'MARKDOWN'
+  | 'PDF'
+  | 'PDF_CONVERTI'
+  | 'TEXTE';
 
 export type FormatMedia =
   | 'PNG'
@@ -60,6 +73,12 @@ export type FormulaireInput = {
   paliers?: Array<string> | null | undefined;
   question?: string | null | undefined;
 };
+
+export type FournisseurFichiers =
+  | 'DROPBOX'
+  | 'GOOGLE_DRIVE'
+  | 'NEXTCLOUD'
+  | 'SHAREPOINT';
 
 export type FrequenceResume =
   | 'AUCUN'
@@ -85,6 +104,10 @@ export type MessageInput = {
   objet: string;
   perimetreId?: string | number | null | undefined;
 };
+
+export type MethodeConnexionFichiers =
+  | 'COMPTE'
+  | 'COMPTE_SERVICE';
 
 /** Fixe le libellé de la période : édition pour un événement, saison pour une section, mandat pour une instance. */
 export type NatureActivite =
@@ -116,7 +139,15 @@ export type RoleNoteDeVersion =
 
 export type SourceFiche =
   | 'APP'
+  | 'ESPACE_FICHIERS'
   | 'GIT';
+
+/** Dossier source des fiches d’un périmètre, ou des fiches communes quand le périmètre est nul. */
+export type SourceImportFiches = {
+  chemin: Array<string>;
+  emplacement: string;
+  perimetreId?: string | number | null | undefined;
+};
 
 export type StatutDemande =
   | 'ACCEPTEE'
@@ -186,6 +217,10 @@ export type TypeNotification =
 export type TypePerimetre =
   | 'POLE'
   | 'SPORT';
+
+export type TypeRessource =
+  | 'DOSSIER'
+  | 'FICHIER';
 
 export type MonScoreQueryVariables = Exact<{
   editionId: string | number;
@@ -402,6 +437,154 @@ export type SupprimerCommentaireMutationVariables = Exact<{
 
 
 export type SupprimerCommentaireMutation = { supprimerCommentaire: { tacheId: string, nombreCommentaires: number, peutCommenter: boolean, commentaires: Array<{ id: string, texte: string, creeLe: string, modifieLe: string | null, peutModifier: boolean, peutSupprimer: boolean, auteur: { id: string, nom: string } | null }>, evenements: Array<{ id: string, type: TypeEvenementTache, le: string, statut: StatutTache | null, acteur: { id: string, nom: string } | null, personne: { id: string, nom: string } | null }> } };
+
+export type EspaceFichiersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type EspaceFichiersQuery = { espaceFichiers: { connexionsPossibles: Array<{ fournisseur: FournisseurFichiers, methode: MethodeConnexionFichiers }>, connexion: { fournisseur: FournisseurFichiers, methode: MethodeConnexionFichiers, compte: string, etat: EtatConnexionFichiers, connecteeLe: string, connecteePar: string | null, exportDossier: string | null, exportRapport: { exporteLe: string, ecrites: number, inchangees: number, supprimees: number, modifieesALaMain: Array<string>, erreur: string | null, refusees: Array<{ fiche: string, raison: string }> } | null } | null } };
+
+export type CommencerConnexionEspaceFichiersMutationVariables = Exact<{
+  fournisseur: FournisseurFichiers;
+}>;
+
+
+export type CommencerConnexionEspaceFichiersMutation = { commencerConnexionEspaceFichiers: string };
+
+export type ConnecterCompteServiceGoogleMutationVariables = Exact<{
+  cle: string;
+}>;
+
+
+export type ConnecterCompteServiceGoogleMutation = { connecterCompteServiceGoogle: { compte: string } };
+
+export type CommencerConnexionNextcloudMutationVariables = Exact<{
+  adresse: string;
+}>;
+
+
+export type CommencerConnexionNextcloudMutation = { commencerConnexionNextcloud: { connexion: string, etat: string } };
+
+export type TerminerConnexionNextcloudMutationVariables = Exact<{
+  etat: string;
+}>;
+
+
+export type TerminerConnexionNextcloudMutation = { terminerConnexionNextcloud: boolean };
+
+export type DeconnecterEspaceFichiersMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type DeconnecterEspaceFichiersMutation = { deconnecterEspaceFichiers: boolean };
+
+export type ChoisirDossierExportMutationVariables = Exact<{
+  emplacement: string;
+  chemin: Array<string> | string;
+}>;
+
+
+export type ChoisirDossierExportMutation = { choisirDossierExport: { exportDossier: string | null } };
+
+export type RetirerDossierExportMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type RetirerDossierExportMutation = { retirerDossierExport: boolean };
+
+export type ExporterFichesMaintenantMutationVariables = Exact<{ [key: string]: never; }>;
+
+
+export type ExporterFichesMaintenantMutation = { exporterFichesMaintenant: boolean };
+
+export type SimulerImportFichesQueryVariables = Exact<{
+  activiteId: string | number;
+  sources: Array<SourceImportFiches> | SourceImportFiches;
+}>;
+
+
+export type SimulerImportFichesQuery = { simulerImportFiches: { creees: Array<string>, nouvellesVersions: Array<string>, inchangees: Array<string>, incomplet: boolean, conflits: Array<{ fiche: string, raison: string }>, nonImportes: Array<{ fichier: string, raison: string }>, refusees: Array<{ fichier: string, raison: string }>, converties: Array<{ fichier: string, raison: string }> } };
+
+export type ImporterFichesEspaceMutationVariables = Exact<{
+  activiteId: string | number;
+  sources: Array<SourceImportFiches> | SourceImportFiches;
+}>;
+
+
+export type ImporterFichesEspaceMutation = { importerFichesEspace: { creees: Array<string>, nouvellesVersions: Array<string>, inchangees: Array<string>, incomplet: boolean, conflits: Array<{ fiche: string, raison: string }>, nonImportes: Array<{ fichier: string, raison: string }>, refusees: Array<{ fichier: string, raison: string }>, converties: Array<{ fichier: string, raison: string }> } };
+
+export type DossiersLiesQueryVariables = Exact<{
+  activiteId?: string | number | null | undefined;
+  perimetreId?: string | number | null | undefined;
+}>;
+
+
+export type DossiersLiesQuery = { dossiersLies: Array<{ id: string, nom: string, disponible: boolean, fournisseur: FournisseurFichiers, perimetre: { id: string, slug: string, nom: string, couleur: string | null } | null }> };
+
+export type ContenuDossierLieQueryVariables = Exact<{
+  id: string | number;
+  chemin: Array<string> | string;
+}>;
+
+
+export type ContenuDossierLieQuery = { contenuDossierLie: { complet: boolean, elements: Array<{ elementId: string, nom: string, dossier: boolean, taille: number | null, modifieLe: string | null, lienWeb: string | null, apercu: FormatApercu }> } };
+
+export type PerimetresALierQueryVariables = Exact<{
+  activiteId?: string | number | null | undefined;
+}>;
+
+
+export type PerimetresALierQuery = { perimetres: Array<{ id: string, slug: string, nom: string, couleur: string | null }> };
+
+export type EmplacementsFichiersQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type EmplacementsFichiersQuery = { emplacementsFichiers: Array<{ id: string, nom: string, site: string | null }> };
+
+export type ParcourirEspaceFichiersQueryVariables = Exact<{
+  emplacement: string;
+  chemin: Array<string> | string;
+}>;
+
+
+export type ParcourirEspaceFichiersQuery = { parcourirEspaceFichiers: { complet: boolean, elements: Array<{ elementId: string, nom: string }> } };
+
+export type LierDossierMutationVariables = Exact<{
+  activiteId: string | number;
+  perimetreId?: string | number | null | undefined;
+  emplacement: string;
+  chemin: Array<string> | string;
+}>;
+
+
+export type LierDossierMutation = { lierDossier: { id: string } };
+
+export type DelierDossierMutationVariables = Exact<{
+  id: string | number;
+}>;
+
+
+export type DelierDossierMutation = { delierDossier: boolean };
+
+export type RessourcesFicheQueryVariables = Exact<{
+  slug: string;
+}>;
+
+
+export type RessourcesFicheQuery = { fiche: { id: string, ressources: Array<{ id: string, nom: string, type: TypeRessource, chemin: Array<string>, apercu: FormatApercu, existe: boolean | null, lienWeb: string | null, dossierLie: { id: string, nom: string, disponible: boolean, fournisseur: FournisseurFichiers } }> } | null };
+
+export type LierRessourceFicheMutationVariables = Exact<{
+  ficheId: string | number;
+  dossierLieId: string | number;
+  chemin: Array<string> | string;
+}>;
+
+
+export type LierRessourceFicheMutation = { lierRessourceFiche: { id: string } };
+
+export type DelierRessourceFicheMutationVariables = Exact<{
+  id: string | number;
+}>;
+
+
+export type DelierRessourceFicheMutation = { delierRessourceFiche: boolean };
 
 export type FicheQueryVariables = Exact<{
   slug: string;
@@ -1136,6 +1319,27 @@ export const CommentairesDeLaPeriodeDocument = {"kind":"Document","definitions":
 export const CommenterTacheDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CommenterTache"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"texte"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"commenterTache"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"texte"},"value":{"kind":"Variable","name":{"kind":"Name","value":"texte"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"FilChamps"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"FilChamps"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"FilTache"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tacheId"}},{"kind":"Field","name":{"kind":"Name","value":"nombreCommentaires"}},{"kind":"Field","name":{"kind":"Name","value":"peutCommenter"}},{"kind":"Field","name":{"kind":"Name","value":"commentaires"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"texte"}},{"kind":"Field","name":{"kind":"Name","value":"creeLe"}},{"kind":"Field","name":{"kind":"Name","value":"modifieLe"}},{"kind":"Field","name":{"kind":"Name","value":"peutModifier"}},{"kind":"Field","name":{"kind":"Name","value":"peutSupprimer"}},{"kind":"Field","name":{"kind":"Name","value":"auteur"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"evenements"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"le"}},{"kind":"Field","name":{"kind":"Name","value":"statut"}},{"kind":"Field","name":{"kind":"Name","value":"acteur"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}},{"kind":"Field","name":{"kind":"Name","value":"personne"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}}]}}]}}]} as unknown as DocumentNode<CommenterTacheMutation, CommenterTacheMutationVariables>;
 export const ModifierCommentaireDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ModifierCommentaire"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"texte"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"modifierCommentaire"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"texte"},"value":{"kind":"Variable","name":{"kind":"Name","value":"texte"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"FilChamps"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"FilChamps"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"FilTache"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tacheId"}},{"kind":"Field","name":{"kind":"Name","value":"nombreCommentaires"}},{"kind":"Field","name":{"kind":"Name","value":"peutCommenter"}},{"kind":"Field","name":{"kind":"Name","value":"commentaires"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"texte"}},{"kind":"Field","name":{"kind":"Name","value":"creeLe"}},{"kind":"Field","name":{"kind":"Name","value":"modifieLe"}},{"kind":"Field","name":{"kind":"Name","value":"peutModifier"}},{"kind":"Field","name":{"kind":"Name","value":"peutSupprimer"}},{"kind":"Field","name":{"kind":"Name","value":"auteur"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"evenements"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"le"}},{"kind":"Field","name":{"kind":"Name","value":"statut"}},{"kind":"Field","name":{"kind":"Name","value":"acteur"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}},{"kind":"Field","name":{"kind":"Name","value":"personne"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}}]}}]}}]} as unknown as DocumentNode<ModifierCommentaireMutation, ModifierCommentaireMutationVariables>;
 export const SupprimerCommentaireDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SupprimerCommentaire"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"supprimerCommentaire"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"FragmentSpread","name":{"kind":"Name","value":"FilChamps"}}]}}]}},{"kind":"FragmentDefinition","name":{"kind":"Name","value":"FilChamps"},"typeCondition":{"kind":"NamedType","name":{"kind":"Name","value":"FilTache"}},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"tacheId"}},{"kind":"Field","name":{"kind":"Name","value":"nombreCommentaires"}},{"kind":"Field","name":{"kind":"Name","value":"peutCommenter"}},{"kind":"Field","name":{"kind":"Name","value":"commentaires"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"texte"}},{"kind":"Field","name":{"kind":"Name","value":"creeLe"}},{"kind":"Field","name":{"kind":"Name","value":"modifieLe"}},{"kind":"Field","name":{"kind":"Name","value":"peutModifier"}},{"kind":"Field","name":{"kind":"Name","value":"peutSupprimer"}},{"kind":"Field","name":{"kind":"Name","value":"auteur"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}}]}},{"kind":"Field","name":{"kind":"Name","value":"evenements"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"le"}},{"kind":"Field","name":{"kind":"Name","value":"statut"}},{"kind":"Field","name":{"kind":"Name","value":"acteur"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}},{"kind":"Field","name":{"kind":"Name","value":"personne"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}}]}}]}}]} as unknown as DocumentNode<SupprimerCommentaireMutation, SupprimerCommentaireMutationVariables>;
+export const EspaceFichiersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"EspaceFichiers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"espaceFichiers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"connexionsPossibles"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fournisseur"}},{"kind":"Field","name":{"kind":"Name","value":"methode"}}]}},{"kind":"Field","name":{"kind":"Name","value":"connexion"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fournisseur"}},{"kind":"Field","name":{"kind":"Name","value":"methode"}},{"kind":"Field","name":{"kind":"Name","value":"compte"}},{"kind":"Field","name":{"kind":"Name","value":"etat"}},{"kind":"Field","name":{"kind":"Name","value":"connecteeLe"}},{"kind":"Field","name":{"kind":"Name","value":"connecteePar"}},{"kind":"Field","name":{"kind":"Name","value":"exportDossier"}},{"kind":"Field","name":{"kind":"Name","value":"exportRapport"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exporteLe"}},{"kind":"Field","name":{"kind":"Name","value":"ecrites"}},{"kind":"Field","name":{"kind":"Name","value":"inchangees"}},{"kind":"Field","name":{"kind":"Name","value":"supprimees"}},{"kind":"Field","name":{"kind":"Name","value":"refusees"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fiche"}},{"kind":"Field","name":{"kind":"Name","value":"raison"}}]}},{"kind":"Field","name":{"kind":"Name","value":"modifieesALaMain"}},{"kind":"Field","name":{"kind":"Name","value":"erreur"}}]}}]}}]}}]}}]} as unknown as DocumentNode<EspaceFichiersQuery, EspaceFichiersQueryVariables>;
+export const CommencerConnexionEspaceFichiersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CommencerConnexionEspaceFichiers"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"fournisseur"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"FournisseurFichiers"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"commencerConnexionEspaceFichiers"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"fournisseur"},"value":{"kind":"Variable","name":{"kind":"Name","value":"fournisseur"}}}]}]}}]} as unknown as DocumentNode<CommencerConnexionEspaceFichiersMutation, CommencerConnexionEspaceFichiersMutationVariables>;
+export const ConnecterCompteServiceGoogleDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConnecterCompteServiceGoogle"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"cle"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"connecterCompteServiceGoogle"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"cle"},"value":{"kind":"Variable","name":{"kind":"Name","value":"cle"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"compte"}}]}}]}}]} as unknown as DocumentNode<ConnecterCompteServiceGoogleMutation, ConnecterCompteServiceGoogleMutationVariables>;
+export const CommencerConnexionNextcloudDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"CommencerConnexionNextcloud"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"adresse"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"commencerConnexionNextcloud"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"adresse"},"value":{"kind":"Variable","name":{"kind":"Name","value":"adresse"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"connexion"}},{"kind":"Field","name":{"kind":"Name","value":"etat"}}]}}]}}]} as unknown as DocumentNode<CommencerConnexionNextcloudMutation, CommencerConnexionNextcloudMutationVariables>;
+export const TerminerConnexionNextcloudDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"TerminerConnexionNextcloud"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"etat"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"terminerConnexionNextcloud"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"etat"},"value":{"kind":"Variable","name":{"kind":"Name","value":"etat"}}}]}]}}]} as unknown as DocumentNode<TerminerConnexionNextcloudMutation, TerminerConnexionNextcloudMutationVariables>;
+export const DeconnecterEspaceFichiersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeconnecterEspaceFichiers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deconnecterEspaceFichiers"}}]}}]} as unknown as DocumentNode<DeconnecterEspaceFichiersMutation, DeconnecterEspaceFichiersMutationVariables>;
+export const ChoisirDossierExportDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ChoisirDossierExport"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"emplacement"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"choisirDossierExport"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"emplacement"},"value":{"kind":"Variable","name":{"kind":"Name","value":"emplacement"}}},{"kind":"Argument","name":{"kind":"Name","value":"chemin"},"value":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exportDossier"}}]}}]}}]} as unknown as DocumentNode<ChoisirDossierExportMutation, ChoisirDossierExportMutationVariables>;
+export const RetirerDossierExportDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RetirerDossierExport"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"retirerDossierExport"}}]}}]} as unknown as DocumentNode<RetirerDossierExportMutation, RetirerDossierExportMutationVariables>;
+export const ExporterFichesMaintenantDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ExporterFichesMaintenant"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"exporterFichesMaintenant"}}]}}]} as unknown as DocumentNode<ExporterFichesMaintenantMutation, ExporterFichesMaintenantMutationVariables>;
+export const SimulerImportFichesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"SimulerImportFiches"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sources"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SourceImportFiches"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"simulerImportFiches"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"activiteId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}}},{"kind":"Argument","name":{"kind":"Name","value":"sources"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sources"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"creees"}},{"kind":"Field","name":{"kind":"Name","value":"nouvellesVersions"}},{"kind":"Field","name":{"kind":"Name","value":"inchangees"}},{"kind":"Field","name":{"kind":"Name","value":"conflits"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fiche"}},{"kind":"Field","name":{"kind":"Name","value":"raison"}}]}},{"kind":"Field","name":{"kind":"Name","value":"nonImportes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fichier"}},{"kind":"Field","name":{"kind":"Name","value":"raison"}}]}},{"kind":"Field","name":{"kind":"Name","value":"refusees"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fichier"}},{"kind":"Field","name":{"kind":"Name","value":"raison"}}]}},{"kind":"Field","name":{"kind":"Name","value":"converties"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fichier"}},{"kind":"Field","name":{"kind":"Name","value":"raison"}}]}},{"kind":"Field","name":{"kind":"Name","value":"incomplet"}}]}}]}}]} as unknown as DocumentNode<SimulerImportFichesQuery, SimulerImportFichesQueryVariables>;
+export const ImporterFichesEspaceDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ImporterFichesEspace"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sources"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"SourceImportFiches"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"importerFichesEspace"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"activiteId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}}},{"kind":"Argument","name":{"kind":"Name","value":"sources"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sources"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"creees"}},{"kind":"Field","name":{"kind":"Name","value":"nouvellesVersions"}},{"kind":"Field","name":{"kind":"Name","value":"inchangees"}},{"kind":"Field","name":{"kind":"Name","value":"conflits"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fiche"}},{"kind":"Field","name":{"kind":"Name","value":"raison"}}]}},{"kind":"Field","name":{"kind":"Name","value":"nonImportes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fichier"}},{"kind":"Field","name":{"kind":"Name","value":"raison"}}]}},{"kind":"Field","name":{"kind":"Name","value":"refusees"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fichier"}},{"kind":"Field","name":{"kind":"Name","value":"raison"}}]}},{"kind":"Field","name":{"kind":"Name","value":"converties"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fichier"}},{"kind":"Field","name":{"kind":"Name","value":"raison"}}]}},{"kind":"Field","name":{"kind":"Name","value":"incomplet"}}]}}]}}]} as unknown as DocumentNode<ImporterFichesEspaceMutation, ImporterFichesEspaceMutationVariables>;
+export const DossiersLiesDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"DossiersLies"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"perimetreId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"dossiersLies"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"activiteId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}}},{"kind":"Argument","name":{"kind":"Name","value":"perimetreId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"perimetreId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}},{"kind":"Field","name":{"kind":"Name","value":"disponible"}},{"kind":"Field","name":{"kind":"Name","value":"fournisseur"}},{"kind":"Field","name":{"kind":"Name","value":"perimetre"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}},{"kind":"Field","name":{"kind":"Name","value":"couleur"}}]}}]}}]}}]} as unknown as DocumentNode<DossiersLiesQuery, DossiersLiesQueryVariables>;
+export const ContenuDossierLieDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ContenuDossierLie"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"contenuDossierLie"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}},{"kind":"Argument","name":{"kind":"Name","value":"chemin"},"value":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"complet"}},{"kind":"Field","name":{"kind":"Name","value":"elements"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"elementId"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}},{"kind":"Field","name":{"kind":"Name","value":"dossier"}},{"kind":"Field","name":{"kind":"Name","value":"taille"}},{"kind":"Field","name":{"kind":"Name","value":"modifieLe"}},{"kind":"Field","name":{"kind":"Name","value":"lienWeb"}},{"kind":"Field","name":{"kind":"Name","value":"apercu"}}]}}]}}]}}]} as unknown as DocumentNode<ContenuDossierLieQuery, ContenuDossierLieQueryVariables>;
+export const PerimetresALierDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"PerimetresALier"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"perimetres"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"activiteId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}},{"kind":"Field","name":{"kind":"Name","value":"couleur"}}]}}]}}]} as unknown as DocumentNode<PerimetresALierQuery, PerimetresALierQueryVariables>;
+export const EmplacementsFichiersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"EmplacementsFichiers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"emplacementsFichiers"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}},{"kind":"Field","name":{"kind":"Name","value":"site"}}]}}]}}]} as unknown as DocumentNode<EmplacementsFichiersQuery, EmplacementsFichiersQueryVariables>;
+export const ParcourirEspaceFichiersDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ParcourirEspaceFichiers"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"emplacement"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"parcourirEspaceFichiers"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"emplacement"},"value":{"kind":"Variable","name":{"kind":"Name","value":"emplacement"}}},{"kind":"Argument","name":{"kind":"Name","value":"chemin"},"value":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"complet"}},{"kind":"Field","name":{"kind":"Name","value":"elements"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"elementId"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}}]}}]}}]} as unknown as DocumentNode<ParcourirEspaceFichiersQuery, ParcourirEspaceFichiersQueryVariables>;
+export const LierDossierDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"LierDossier"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"perimetreId"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"emplacement"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"lierDossier"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"activiteId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"activiteId"}}},{"kind":"Argument","name":{"kind":"Name","value":"perimetreId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"perimetreId"}}},{"kind":"Argument","name":{"kind":"Name","value":"emplacement"},"value":{"kind":"Variable","name":{"kind":"Name","value":"emplacement"}}},{"kind":"Argument","name":{"kind":"Name","value":"chemin"},"value":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<LierDossierMutation, LierDossierMutationVariables>;
+export const DelierDossierDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DelierDossier"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"delierDossier"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}]}}]} as unknown as DocumentNode<DelierDossierMutation, DelierDossierMutationVariables>;
+export const RessourcesFicheDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"RessourcesFiche"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fiche"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"ressources"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}},{"kind":"Field","name":{"kind":"Name","value":"type"}},{"kind":"Field","name":{"kind":"Name","value":"chemin"}},{"kind":"Field","name":{"kind":"Name","value":"apercu"}},{"kind":"Field","name":{"kind":"Name","value":"existe"}},{"kind":"Field","name":{"kind":"Name","value":"lienWeb"}},{"kind":"Field","name":{"kind":"Name","value":"dossierLie"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}},{"kind":"Field","name":{"kind":"Name","value":"disponible"}},{"kind":"Field","name":{"kind":"Name","value":"fournisseur"}}]}}]}}]}}]}}]} as unknown as DocumentNode<RessourcesFicheQuery, RessourcesFicheQueryVariables>;
+export const LierRessourceFicheDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"LierRessourceFiche"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ficheId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"dossierLieId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}},"type":{"kind":"NonNullType","type":{"kind":"ListType","type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"lierRessourceFiche"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ficheId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ficheId"}}},{"kind":"Argument","name":{"kind":"Name","value":"dossierLieId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"dossierLieId"}}},{"kind":"Argument","name":{"kind":"Name","value":"chemin"},"value":{"kind":"Variable","name":{"kind":"Name","value":"chemin"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}}]}}]}}]} as unknown as DocumentNode<LierRessourceFicheMutation, LierRessourceFicheMutationVariables>;
+export const DelierRessourceFicheDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DelierRessourceFiche"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"id"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"delierRessourceFiche"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"id"},"value":{"kind":"Variable","name":{"kind":"Name","value":"id"}}}]}]}}]} as unknown as DocumentNode<DelierRessourceFicheMutation, DelierRessourceFicheMutationVariables>;
 export const FicheDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"Fiche"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"moi"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"estAdmin"}}]}},{"kind":"Field","name":{"kind":"Name","value":"fiche"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"titre"}},{"kind":"Field","name":{"kind":"Name","value":"contenu"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"archive"}},{"kind":"Field","name":{"kind":"Name","value":"modifieeLe"}},{"kind":"Field","name":{"kind":"Name","value":"modifieePar"}},{"kind":"Field","name":{"kind":"Name","value":"peutModifier"}},{"kind":"Field","name":{"kind":"Name","value":"donneesPersonnelles"}},{"kind":"Field","name":{"kind":"Name","value":"nombreVersions"}},{"kind":"Field","name":{"kind":"Name","value":"versionCouranteId"}},{"kind":"Field","name":{"kind":"Name","value":"perimetre"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}},{"kind":"Field","name":{"kind":"Name","value":"couleur"}}]}}]}}]}}]} as unknown as DocumentNode<FicheQuery, FicheQueryVariables>;
 export const TachesFicheDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"TachesFiche"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"editionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"ID"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fiche"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"taches"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"editionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"editionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"titre"}},{"kind":"Field","name":{"kind":"Name","value":"echeance"}},{"kind":"Field","name":{"kind":"Name","value":"statut"}},{"kind":"Field","name":{"kind":"Name","value":"enRetard"}},{"kind":"Field","name":{"kind":"Name","value":"perimetre"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"slug"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}},{"kind":"Field","name":{"kind":"Name","value":"couleur"}}]}}]}}]}}]}}]} as unknown as DocumentNode<TachesFicheQuery, TachesFicheQueryVariables>;
 export const VersionsFicheDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"VersionsFiche"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"slug"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"fiche"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"slug"},"value":{"kind":"Variable","name":{"kind":"Name","value":"slug"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"versionCouranteId"}},{"kind":"Field","name":{"kind":"Name","value":"versions"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"titre"}},{"kind":"Field","name":{"kind":"Name","value":"contenu"}},{"kind":"Field","name":{"kind":"Name","value":"source"}},{"kind":"Field","name":{"kind":"Name","value":"resume"}},{"kind":"Field","name":{"kind":"Name","value":"creeLe"}},{"kind":"Field","name":{"kind":"Name","value":"auteur"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"nom"}}]}}]}}]}}]}}]} as unknown as DocumentNode<VersionsFicheQuery, VersionsFicheQueryVariables>;

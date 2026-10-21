@@ -10,6 +10,7 @@ import Admins from './pages/admin/Admins'
 import Classement from './pages/admin/Classement'
 import Editions from './pages/admin/Editions'
 import Equipe from './pages/admin/Equipe'
+import EspaceFichiers from './pages/admin/EspaceFichiers'
 import Organisation from './pages/admin/Organisation'
 import MessagesActivite from './pages/admin/MessagesActivite'
 import NotificationsAdmin from './pages/admin/NotificationsAdmin'
@@ -89,6 +90,12 @@ const routeur = createBrowserRouter([
             path: 'admins',
             element: <ReserveAdmin organisation />,
             children: [{ index: true, element: <Admins /> }],
+          },
+          // L'espace de fichiers de l'organisation (ADR 0038).
+          {
+            path: 'espace-fichiers',
+            element: <ReserveAdmin organisation />,
+            children: [{ index: true, element: <EspaceFichiers /> }],
           },
           { path: 'equipe', element: <Equipe /> },
           { path: 'messages', element: <MessagesActivite /> },

@@ -102,6 +102,30 @@ Les notifications push sont facultatives (ADR 0024). Pour les ouvrir :
 
 La clé privée est un secret : elle ne quitte pas le `.env`. Changer la paire de clés annule tous les abonnements, et chaque personne doit réactiver les notifications sur ses appareils.
 
+### Espace de fichiers
+
+L'espace de fichiers est facultatif (ADR 0038). Un admin de l'organisation y connecte SharePoint, OneDrive ou Google Drive, puis lie des dossiers aux périmètres. Relaytour relaie les documents sans les copier. Pour ouvrir ce fournisseur :
+
+1. Créez la clé de chiffrement des jetons, une seule fois : `openssl rand -base64 32`. Renseignez-la dans `CLE_CHIFFREMENT_ESPACE_FICHIERS`. Changer cette clé rend illisibles les jetons gardés en base, et chaque organisation doit reconnecter son espace.
+2. Inscrivez une application dans le centre d'administration Microsoft Entra (« Inscriptions d'applications »). Choisissez les comptes professionnels de tout annuaire pour servir plusieurs organisations, ou votre seul annuaire.
+3. Ajoutez l'adresse de retour de type « Web » : `<ORIGINE_ORGA>/medias/espace-fichiers/retour/sharepoint`.
+4. Ajoutez les autorisations déléguées de Microsoft Graph : `offline_access`, `User.Read`, `Files.ReadWrite.All` et `Sites.Read.All`. L'écriture sert seulement à l'export des fiches.
+5. Créez un secret client. Renseignez `MICROSOFT_CLIENT_ID`, `MICROSOFT_CLIENT_SECRET` et, au besoin, `MICROSOFT_LOCATAIRE`, puis relancez la pile.
+6. Laissez l'API et le worker sortir en HTTPS vers `graph.microsoft.com`, `login.microsoftonline.com`, `*.sharepoint.com` et `*.svc.ms`. Le worker exporte les fiches et renouvelle chaque nuit l'accès de chaque organisation.
+
+Google Drive se connecte de deux façons :
+
+- **Par le compte d'un admin.** Créez un projet Google Cloud, activez l'API Google Drive, puis créez un client OAuth de type « Application Web ». Son adresse de retour est `<ORIGINE_ORGA>/medias/espace-fichiers/retour/google`, et sa portée `https://www.googleapis.com/auth/drive`. Renseignez `GOOGLE_CLIENT_ID` et `GOOGLE_CLIENT_SECRET`. Cette portée est « restreinte » chez Google : une application non vérifiée affiche un avertissement et accepte cent comptes au plus. Une offre ouverte à de nombreuses organisations passe par la vérification de Google et par son audit de sécurité annuel.
+- **Par un compte de service.** Il suffit de `CLE_CHIFFREMENT_ESPACE_FICHIERS`. L'organisation crée elle-même un compte de service dans son projet Google Cloud, dépose sa clé JSON dans l'écran « Espace de fichiers », puis partage ses dossiers avec l'adresse du compte. Un compte de service n'a pas d'espace de stockage : l'export des fiches exige un Drive partagé dont il est gestionnaire de contenu.
+
+Laissez l'API et le worker sortir en HTTPS vers `www.googleapis.com`, `oauth2.googleapis.com` et `accounts.google.com`.
+
+Dropbox se connecte par le compte d'un admin. Créez une application dans la console des développeurs Dropbox, avec l'accès « Full Dropbox ». Son adresse de retour est `<ORIGINE_ORGA>/medias/espace-fichiers/retour/dropbox`. Cochez les permissions `account_info.read`, `files.metadata.read`, `files.content.read` et `files.content.write`. Renseignez `DROPBOX_CLIENT_ID` (la clé de l'application) et `DROPBOX_CLIENT_SECRET`. Une application en mode « développement » accepte cinquante comptes au plus ; au-delà, elle demande une validation à Dropbox. Laissez l'API et le worker sortir en HTTPS vers `api.dropboxapi.com` et `content.dropboxapi.com`.
+
+Nextcloud ne demande aucune application à inscrire : chaque association héberge le sien, et un admin de l'organisation saisit son adresse. Renseignez dans `NEXTCLOUD_HOTES` les hôtes admis, séparés par des virgules. La valeur `*` admet tout hôte en https, sans port, dont les adresses sont publiques : le serveur refuse une adresse privée, locale ou réservée, au moment même de la connexion. Un hôte nommé (`cloud.exemple.org`, `nuage.lan:8443`) est admis tel quel, même sur votre réseau privé : nommez seulement des Nextcloud de confiance. L'API et le worker sortent alors en HTTPS vers ces hôtes. L'admin se connecte avec son compte Nextcloud, qui crée un mot de passe d'application pour Relaytour.
+
+Les routes de l'espace de fichiers vivent sous `/medias/`, que le `Caddyfile` d'exemple relaie déjà vers l'API. Le secret client et la clé de chiffrement ne quittent pas le `.env`. Un secret client Microsoft expire : notez sa date et remplacez-le avant.
+
 ## Adapter la pile à votre hébergement
 
 Ne modifiez pas `docker-compose.yml` : ajoutez un fichier de surcharge, par exemple `compose.local.yml`, et lancez `docker compose -f docker-compose.yml -f compose.local.yml …`. C'est là que vont vos ports, vos limites mémoire, vos volumes et votre supervision. La base et le cache ne publient aucun port et ne sont joignables que sur le réseau interne de la pile : la file des mails contient des codes de connexion en clair pendant quelques minutes, et tout processus de la machine pourrait les lire. Valkey exige en plus le mot de passe `VALKEY_MOT_DE_PASSE`. Pour administrer la base, passez par `docker compose exec db mariadb -u root -p`. Si un outil de la machine doit joindre la base, publiez le port dans votre surcharge, sur `127.0.0.1` seulement. Si une adaptation exige un changement dans l'application, proposez-le dans le dépôt de Relaytour sous une forme générique.

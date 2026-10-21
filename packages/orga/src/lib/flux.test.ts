@@ -53,6 +53,7 @@ describe('requetesPour', () => {
       'EQUIPE',
       'DEMANDE',
       'NOTIFICATION',
+      'FICHIERS',
     ] as const
     for (const nom of requetesPour(entites)) {
       expect(REQUETES_RAFRAICHIES.has(nom), nom).toBe(true)

@@ -54,10 +54,19 @@ export async function construireExport(organisationId: string) {
             },
           },
           perimetres: { orderBy: [{ ordre: 'asc' }, { slug: 'asc' }] },
+          // L'espace de fichiers (ADR 0038) : les dossiers liés, sans jeton.
+          dossiersLies: {
+            orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+            include: { perimetre: { select: { slug: true } } },
+          },
           fiches: {
             orderBy: { slug: 'asc' },
             include: {
               perimetre: { select: { slug: true } },
+              ressources: {
+                orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+                include: { dossierLie: { select: { element: true } } },
+              },
               versions: {
                 orderBy: { createdAt: 'asc' },
                 include: { auteur: { select: { email: true } } },
@@ -134,6 +143,12 @@ export async function construireExport(organisationId: string) {
     },
   })
 
+  // La connexion de l'espace de fichiers, sans son jeton (ADR 0038).
+  const connexionFichiers = await prisma.connexionFichiers.findUnique({
+    where: { organisationId },
+    select: { fournisseur: true, compte: true },
+  })
+
   const taches = await prisma.tache.findMany({
     where: { perimetre: { organisationId } },
     orderBy: [{ editionId: 'asc' }, { createdAt: 'asc' }],
@@ -169,6 +184,7 @@ export async function construireExport(organisationId: string) {
       statut: organisation.statut,
       declaration: organisation.configuration,
     },
+    espaceFichiers: connexionFichiers,
     membres: membres.map(m => ({
       email: m.user.email,
       nom: m.user.name,
@@ -210,10 +226,24 @@ export async function construireExport(organisationId: string) {
         ordre: p.ordre,
         archive: p.archivedAt !== null,
       })),
+      dossiersLies: a.dossiersLies.map(d => ({
+        perimetre: d.perimetre?.slug ?? null,
+        fournisseur: d.fournisseur,
+        emplacement: d.emplacement,
+        element: d.element,
+        nom: d.nom,
+      })),
       fiches: a.fiches.map(f => ({
         slug: f.slug,
         perimetre: f.perimetre?.slug ?? null,
         archive: f.archivedAt !== null,
+        // Désignées par l'élément du dossier lié et un chemin de noms.
+        ressources: f.ressources.map(r => ({
+          dossier: r.dossierLie.element,
+          chemin: r.chemin,
+          type: r.type,
+          nom: r.nom,
+        })),
         versions: f.versions.map(v => ({
           titre: v.titre,
           contenu: v.contenu,

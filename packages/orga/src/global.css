@@ -2456,3 +2456,160 @@ button.rt-ligne-declinaisons {
 .rt-notifications .ant-collapse-body {
   padding-inline: 4px !important;
 }
+
+/* ── Espace de fichiers (ADR 0038) ─────────────────────────────────────────── */
+
+button.rt-carte-fiche {
+  width: 100%;
+  border: 0;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+
+.rt-explorateur-entete {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  min-width: 0;
+}
+
+.rt-explorateur {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.rt-explorateur li + li {
+  border-top: 1px solid var(--rt-encre-08);
+}
+
+.rt-explorateur button:not(.ant-btn),
+.rt-explorateur-ligne {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 6px;
+  box-sizing: border-box;
+  border: 0;
+  background: none;
+  color: var(--rt-encre);
+  font: inherit;
+  text-align: start;
+}
+
+.rt-explorateur button:not(.ant-btn) {
+  cursor: pointer;
+  border-radius: 10px;
+  transition: background var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-explorateur button:not(.ant-btn):hover,
+.rt-explorateur button:not(.ant-btn):focus-visible {
+  background: rgba(var(--rt-encre-rgb), 0.05);
+}
+
+/* Une ligne qui porte une action à droite : lier, retirer. */
+.rt-explorateur-element {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.rt-explorateur-element > button:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.rt-explorateur-detail {
+  display: block;
+  font-size: 12px;
+  color: var(--rt-encre-55);
+}
+
+.rt-explorateur-icone {
+  flex-shrink: 0;
+  font-size: 18px;
+  color: var(--rt-encre-70);
+}
+
+.rt-explorateur-nom {
+  flex: 1;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.rt-explorateur .rt-date {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--rt-encre-55);
+}
+
+.rt-liseuse {
+  max-height: 70vh;
+  overflow: auto;
+}
+
+.rt-liseuse img {
+  display: block;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.rt-liseuse-pages {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Une page de PDF : une case à la proportion de la page, qui reçoit son canevas
+   à l'approche de la zone visible. */
+.rt-liseuse-cadre {
+  width: 100%;
+  overflow: hidden;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(var(--rt-encre-rgb), 0.15);
+  background: #fff;
+}
+
+.rt-liseuse-cadre canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.rt-liseuse-texte {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: var(--rt-mono);
+  font-size: 13px;
+}
+
+.rt-liseuse-note {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: var(--rt-encre-70);
+}
+
+.rt-liseuse-chargement {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.rt-liseuse-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 575px) {
+  .rt-explorateur .rt-date {
+    display: none;
+  }
+}

@@ -55,6 +55,12 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   'Fiche',
   'TachesFiche',
   'FichesDuPerimetre',
+  // Espace de fichiers (ADR 0038) : la connexion, les dossiers liés, le contenu
+  // d'un dossier ouvert et les ressources d'une fiche.
+  'EspaceFichiers',
+  'DossiersLies',
+  'ContenuDossierLie',
+  'RessourcesFiche',
   // Périmètres et équipe.
   'MenuPerimetres',
   'TousLesPerimetres',
