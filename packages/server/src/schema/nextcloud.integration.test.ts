@@ -180,7 +180,7 @@ describe('connexion à Nextcloud', () => {
       'https://[::1]',
       'https://10.0.0.5',
       'https://localhost',
-      'https://camille:secret@cloud.exemple.org',
+      'https://camille:test-secret@cloud.exemple.org',
       'pas une adresse',
     ]) {
       expect(code(await executer(ids.admin, COMMENCER, { a }))).toBe(

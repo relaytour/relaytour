@@ -32,7 +32,7 @@ describe('baseAdmise', () => {
       'https://192.168.1.4',
       'https://[fd00::1]',
       'https://intranet.localhost',
-      'https://moi:secret@cloud.exemple.org',
+      'https://moi:test-secret@cloud.exemple.org',
       'cloud.exemple.org',
     ]) {
       expect(baseAdmise(a, TOUS)).toBeNull()
