@@ -912,18 +912,14 @@ button.rt-ligne-lien {
   margin: 1.5em 0;
 }
 
-/* Une liste de cases à cocher remplace ses puces par les cases. */
-.rt-markdown .contains-task-list {
+/* Un élément à cocher remplace sa puce par sa case. Les autres éléments d'une
+   liste mixte gardent leur puce ou leur numéro, et la liste garde son retrait. */
+.rt-markdown .task-list-item {
   list-style: none;
-  padding-inline-start: 0.2em;
-}
-
-.rt-markdown .contains-task-list .contains-task-list {
-  padding-inline-start: 1.4em;
 }
 
 .rt-markdown .task-list-item input {
-  margin: 0 0.5em 0 0;
+  margin: 0 0.45em 0 -1.35em;
   vertical-align: -1px;
   accent-color: var(--rt-primaire);
 }
@@ -973,12 +969,66 @@ button.rt-ligne-lien {
   overflow-y: hidden;
 }
 
-/* Sur grand écran, l'aperçu reste à côté de la saisie pendant le défilement. */
-.rt-apercu-markdown {
-  position: sticky;
-  top: 88px;
-  max-height: calc(100dvh - 104px);
-  overflow-y: auto;
+/* En-tête du contenu d'une fiche : son libellé, puis la bascule Visuel ou
+   Markdown. */
+.rt-editeur-fiche-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+
+/* Éditeur visuel (EditeurVisuel) : la zone se lit comme une fiche, dans le
+   cadre d'un champ. */
+.rt-editeur-visuel-zone {
+  min-height: 420px;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  background: var(--rt-surface-interne);
+  border: 1px solid var(--rt-encre-14);
+  border-radius: var(--rt-rayon-champ);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  outline: none;
+  transition: border-color var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-editeur-visuel-zone:focus {
+  border-color: var(--rt-primaire);
+  box-shadow: var(--rt-anneau-focus);
+}
+
+.rt-editeur-visuel-zone p {
+  margin: 0 0 0.8em;
+}
+
+/* Un élément à cocher porte une vraie case devant son texte (EditeurVisuel). */
+.rt-editeur-visuel-zone li[data-item-type='task'] {
+  list-style: none;
+}
+
+.rt-editeur-visuel-zone .rt-case-visuelle {
+  margin: 0 0.45em 0 -1.35em;
+  vertical-align: -1px;
+  accent-color: var(--rt-primaire);
+  cursor: pointer;
+}
+
+.rt-editeur-visuel-zone table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.rt-editeur-visuel-zone .selectedCell {
+  background: var(--rt-primaire-clair);
+}
+
+.rt-editeur-visuel-zone .ProseMirror-gapcursor,
+.rt-editeur-visuel-zone .ProseMirror-separator {
+  display: none;
 }
 
 /* Guide de la syntaxe (GuideMarkdown) : le texte à écrire, puis son affichage. */

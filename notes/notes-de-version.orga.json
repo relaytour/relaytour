@@ -15,8 +15,8 @@
           "role": "referent",
           "etat": "prevu",
           "fr": {
-            "titre": "L’éditeur de fiche propose une barre de mise en forme et un guide Markdown",
-            "texte": "Une barre au-dessus du texte met en gras ou en italique, pose un titre, une liste, une case à cocher, un lien ou un tableau. Un deuxième appui retire la mise en forme. Sur un ordinateur, l’aperçu reste à côté du texte pendant la saisie. Le bouton « Aide » ouvre un guide de la syntaxe Markdown des fiches, sans quitter l’éditeur.",
+            "titre": "L’éditeur de fiche s’ouvre en mode visuel, avec une barre de mise en forme et un guide Markdown",
+            "texte": "En mode visuel, vous écrivez directement dans la fiche telle qu’elle s’affiche. Le mode Markdown montre le texte source, et votre navigateur garde votre choix. Une barre au-dessus du texte met en gras ou en italique, pose un titre, une liste, une case à cocher, un lien ou un tableau. Le bouton « Aide » ouvre un guide de la syntaxe Markdown des fiches, sans quitter l’éditeur.",
             "migration": null
           }
         }

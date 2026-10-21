@@ -8,10 +8,10 @@ import {
   TableOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons'
-import { Button, Input, Tooltip } from 'antd'
+import { Button, Input, Skeleton, Tooltip } from 'antd'
 import type { TextAreaRef } from 'antd/es/input/TextArea'
 import type { KeyboardEvent, ReactNode } from 'react'
-import { useRef } from 'react'
+import { lazy, Suspense, useRef } from 'react'
 
 import {
   appliquer,
@@ -19,6 +19,13 @@ import {
   type Format,
   type Remplacement,
 } from '../lib/mise-en-forme'
+import type { PoigneeVisuel } from './EditeurVisuel'
+
+// Milkdown ne se charge qu'à l'ouverture de l'éditeur visuel.
+const EditeurVisuel = lazy(() => import('./EditeurVisuel'))
+
+/** Visuel : la personne écrit dans le rendu. Markdown : elle écrit le texte source. */
+export type ModeEditeur = 'visuel' | 'markdown'
 
 interface Outil {
   format: Format
@@ -87,26 +94,36 @@ const RACCOURCIS: Record<string, Format> = {
 }
 
 /**
- * Zone de saisie Markdown avec sa barre de mise en forme. Un bouton agit sur la
- * sélection : il ajoute la marque, ou la retire quand elle est déjà posée. Le
- * texte change par une insertion du navigateur, ce qui garde l'annulation
- * (⌘Z ou Ctrl+Z).
+ * Éditeur d'une fiche avec sa barre de mise en forme. En mode visuel, la personne
+ * écrit dans le rendu. En mode Markdown, un bouton agit sur la sélection du texte
+ * source : il ajoute la marque, ou la retire quand elle est déjà posée. Dans les
+ * deux modes, ⌘Z ou Ctrl+Z annule une mise en forme.
  */
 export default function EditeurMarkdown({
   valeur,
   onChange,
   onAide,
   libelle,
+  mode,
+  cleVisuel,
 }: {
   valeur: string
   onChange: (valeur: string) => void
   /** Ouvre le guide de la syntaxe. */
   onAide: () => void
   libelle: string
+  mode: ModeEditeur
+  /** Change quand le texte est remplacé de l'extérieur : l'éditeur visuel repart. */
+  cleVisuel: number
 }) {
   const ref = useRef<TextAreaRef>(null)
+  const visuel = useRef<PoigneeVisuel>(null)
 
   const formater = (format: Format) => {
+    if (mode === 'visuel') {
+      visuel.current?.formater(format)
+      return
+    }
     const zone = ref.current?.resizableTextArea?.textArea
     if (!zone) return
     const r = mettreEnForme(format, {
@@ -176,15 +193,27 @@ export default function EditeurMarkdown({
           </Tooltip>
         </div>
       </div>
-      <Input.TextArea
-        ref={ref}
-        value={valeur}
-        onChange={e => onChange(e.target.value)}
-        onKeyDown={surTouche}
-        autoSize={{ minRows: 18 }}
-        className="rt-zone-markdown"
-        aria-label={libelle}
-      />
+      {mode === 'visuel' ? (
+        <Suspense fallback={<Skeleton active paragraph={{ rows: 8 }} />}>
+          <EditeurVisuel
+            key={cleVisuel}
+            ref={visuel}
+            valeur={valeur}
+            onChange={onChange}
+            libelle={libelle}
+          />
+        </Suspense>
+      ) : (
+        <Input.TextArea
+          ref={ref}
+          value={valeur}
+          onChange={e => onChange(e.target.value)}
+          onKeyDown={surTouche}
+          autoSize={{ minRows: 18 }}
+          className="rt-zone-markdown"
+          aria-label={libelle}
+        />
+      )}
     </div>
   )
 }

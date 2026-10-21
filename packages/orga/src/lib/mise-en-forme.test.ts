@@ -150,3 +150,48 @@ describe('tableau', () => {
     )
   })
 })
+
+describe('remarques de revue', () => {
+  it('met en italique au milieu d’un mot avec un astérisque', () => {
+    expect(formater('italique', 'Bon[[jour]]')).toBe('Bon*[[jour]]*')
+    expect(formater('italique', 'Bon*[[jour]]*')).toBe('Bon[[jour]]')
+  })
+
+  it('retire le gras de plusieurs passages sans laisser de marque orpheline', () => {
+    expect(formater('gras', '[[**Un** et **Deux**]]')).toBe('[[Un et Deux]]')
+  })
+
+  it('met en gras chaque paragraphe d’une sélection, sans traverser la ligne vide', () => {
+    expect(formater('gras', '[[premier\n\nsecond]]')).toBe(
+      '[[**premier**\n\n**second**]]'
+    )
+    expect(formater('gras', '[[**premier**\n\n**second**]]')).toBe(
+      '[[premier\n\nsecond]]'
+    )
+  })
+
+  it('garde la marque d’une liste devant le gras d’une ligne', () => {
+    expect(formater('gras', '[[- Un\n- Deux]]')).toBe(
+      '[[- **Un**\n- **Deux**]]'
+    )
+  })
+
+  it('pose un titre sur une première ligne vide sans la dupliquer', () => {
+    expect(formater('titre2', '|\nSuite')).toBe('## |\nSuite')
+  })
+
+  it('garde l’imbrication en passant d’une liste à puces à une liste numérotée', () => {
+    expect(formater('numeros', '[[- Parent\n  - Enfant\n- Autre]]')).toBe(
+      '[[1. Parent\n   1. Enfant\n2. Autre]]'
+    )
+  })
+
+  it('retire un lien depuis son adresse ou depuis son texte', () => {
+    expect(formater('lien', 'Voir [site]([[https://]]).')).toBe(
+      'Voir [[site]].'
+    )
+    expect(formater('lien', 'Voir [[[site]]](https://exemple.org).')).toBe(
+      'Voir [[site]].'
+    )
+  })
+})
