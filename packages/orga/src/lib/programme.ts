@@ -67,6 +67,9 @@ export function segmentDuJour(
   if (s.jourFin === jour && minutes(s.heureFin) > 0) {
     return { debut: 0, fin: minutes(s.heureFin) }
   }
+  // Un jour strictement compris entre le début et la fin est couvert en entier :
+  // une plage fusionnée peut durer plusieurs jours.
+  if (s.jour < jour && jour < s.jourFin) return { debut: 0, fin: 24 * 60 }
   return null
 }
 

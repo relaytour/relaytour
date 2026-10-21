@@ -8,6 +8,7 @@ import { buildContext, type AppContext } from '../context.ts'
 
 import { empreinteJeton } from '../lib/abonnements-agenda.ts'
 import { purgerCandidatures } from '../lib/appels.ts'
+import { nouveauSel } from '../lib/liens.ts'
 
 import { schema } from './index.ts'
 
@@ -267,6 +268,7 @@ beforeAll(async () => {
         nom: `Appel ${portee} ${perimetreId ?? ''}`,
         ouvertLe: new Date(),
         fermeLe: h('20:00', '2027-06-06'),
+        sel: nouveauSel(),
         empreinte: empreinteJeton(randomUUID()),
         fin: 'abcdef',
       },
@@ -390,7 +392,10 @@ describe('appels', () => {
   })
 
   it('se modifient avec la version lue, se ferment, se rouvrent et changent d’adresse', async () => {
-    const { appel } = donnees<{ appel: { id: string; version: number } }>(
+    const { appel, adresse } = donnees<{
+      adresse: string
+      appel: { id: string; version: number }
+    }>(
       await executer(ids.referent, CREER_APPEL, {
         e: ids.edition,
         po: 'PERIMETRE',
@@ -399,6 +404,16 @@ describe('appels', () => {
       }),
       'creerAppelBenevoles'
     )
+    // L'adresse se recopie à tout moment : le serveur la recalcule.
+    const recopiee = donnees<{ id: string; adresse: string | null }[]>(
+      await executer(
+        ids.referent,
+        `query ($e: ID!) { appelsBenevoles(editionId: $e) { id adresse } }`,
+        { e: ids.edition }
+      ),
+      'appelsBenevoles'
+    ).find(a => a.id === appel.id)
+    expect(recopiee?.adresse).toBe(adresse)
     const MODIFIER = `mutation ($id: ID!, $o: DateTime!, $f: DateTime!, $v: Int!) { modifierAppelBenevoles(id: $id, nom: "Renfort natation", ouvertLe: $o, fermeLe: $f, versionAttendue: $v) { nom version } }`
     expect(
       donnees<{ version: number }>(
@@ -463,7 +478,7 @@ describe('appels', () => {
   })
 
   it('se listent selon les droits de la personne', async () => {
-    const LISTE = `query ($e: ID!) { appelsBenevoles(editionId: $e) { id portee peutModifier perimetre { id } } }`
+    const LISTE = `query ($e: ID!) { appelsBenevoles(editionId: $e) { id portee peutModifier adresse perimetre { id } } }`
     const pourAdmin = donnees<{ id: string }[]>(
       await executer(ids.adminActivite, LISTE, { e: ids.edition }),
       'appelsBenevoles'
@@ -473,6 +488,7 @@ describe('appels', () => {
         id: string
         portee: string
         peutModifier: boolean
+        adresse: string | null
         perimetre: { id: string } | null
       }[]
     >(
@@ -481,12 +497,14 @@ describe('appels', () => {
     )
     expect(pourAdmin.map(a => a.id)).toContain(ids.appelNatation)
     expect(pourBasket.map(a => a.id)).not.toContain(ids.appelNatation)
-    expect(pourBasket.find(a => a.id === ids.appelPeriode)?.peutModifier).toBe(
-      false
-    )
-    expect(pourBasket.find(a => a.id === ids.appelBasket)?.peutModifier).toBe(
-      true
-    )
+    expect(pourBasket.find(a => a.id === ids.appelPeriode)).toMatchObject({
+      peutModifier: false,
+      // L'adresse ne se recopie que par les personnes qui gèrent l'appel.
+      adresse: null,
+    })
+    const basket = pourBasket.find(a => a.id === ids.appelBasket)
+    expect(basket?.peutModifier).toBe(true)
+    expect(basket?.adresse).toMatch(/\/benevoles\/[A-Za-z0-9_-]{43}$/)
     expect(code(await executer(ids.passante, LISTE, { e: ids.edition }))).toBe(
       'FORBIDDEN'
     )
@@ -795,7 +813,7 @@ describe('répartition', () => {
     >(
       await executer(
         ids.adminActivite,
-        `query ($e: ID!, $p: [ID!]) { couvertureProgramme(editionId: $e, perimetreIds: $p) { debut besoin confirmees aConfirmer disponibles } }`,
+        `query ($e: ID!, $p: [ID!]) { couvertureProgramme(editionId: $e, perimetreIds: $p) { debut jour heure besoin confirmees aConfirmer disponibles } }`,
         { e: ids.edition, p: [ids.natation] }
       ),
       'couvertureProgramme'
@@ -804,6 +822,20 @@ describe('répartition', () => {
     expect(debuts[0]).toBe(h('09:00').toISOString())
     expect(debuts.at(-1)).toBe(h('15:30').toISOString())
     expect(tranches[debuts.indexOf(h('14:00').toISOString())]?.besoin).toBe(1)
+    // Le jour et l'heure se lisent dans le fuseau de l'organisation.
+    expect(tranches[0]).toMatchObject({ jour: '2027-06-05', heure: '09:00' })
+    // Une liste vide sans « Toute l'activité » ne retient aucune séquence,
+    // comme la frise.
+    expect(
+      donnees<unknown[]>(
+        await executer(
+          ids.adminActivite,
+          `query ($e: ID!) { couvertureProgramme(editionId: $e, perimetreIds: [], sansPerimetre: false) { heure } }`,
+          { e: ids.edition }
+        ),
+        'couvertureProgramme'
+      )
+    ).toEqual([])
   })
 
   it('remplace les plages d’une fiche par les personnes qui la modifient', async () => {

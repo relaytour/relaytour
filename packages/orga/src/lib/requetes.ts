@@ -214,6 +214,12 @@ export const BENEVOLES = graphql(`
       peutModifier
       places
       accordLe
+      origine
+      prevenirParMail
+      confirmeeLe
+      lienEnvoyeLe
+      lienRenvoyable
+      lienEspace
     }
   }
 `)

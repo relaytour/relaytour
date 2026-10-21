@@ -1,8 +1,10 @@
 -- AlterTable
 ALTER TABLE `Benevole` ADD COLUMN `courrielConfirmeLe` DATETIME(3) NULL,
     ADD COLUMN `espaceEmpreinte` CHAR(64) NULL,
+    ADD COLUMN `espaceSel` CHAR(43) NULL,
     ADD COLUMN `lienEnvoyeLe` DATETIME(3) NULL,
     ADD COLUMN `origine` ENUM('SAISIE', 'CANDIDATURE') NOT NULL DEFAULT 'SAISIE',
+    ADD COLUMN `prevenirParMail` BOOLEAN NOT NULL DEFAULT true,
     ADD COLUMN `relanceLe` DATETIME(3) NULL;
 
 -- AlterTable
@@ -34,6 +36,7 @@ CREATE TABLE `AppelBenevoles` (
     `ouvertLe` DATETIME(3) NOT NULL,
     `fermeLe` DATETIME(3) NOT NULL,
     `fermeManuellementLe` DATETIME(3) NULL,
+    `sel` CHAR(43) NOT NULL,
     `empreinte` CHAR(64) NOT NULL,
     `fin` VARCHAR(8) NOT NULL,
     `version` INTEGER NOT NULL DEFAULT 0,

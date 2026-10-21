@@ -151,13 +151,17 @@ type Agenda {
 Un appel à bénévoles : une adresse publique ouverte entre deux dates (ADR 0041).
 """
 type AppelBenevoles {
+  """
+  L’adresse publique, recalculée à la demande pour les personnes qui gèrent l’appel ; null sinon.
+  """
+  adresse: String
   candidaturesEnAttente: Int!
   editionId: ID!
   etat: EtatAppel!
   fermeLe: DateTime!
 
   """
-  Les derniers caractères du jeton, pour reconnaître l’adresse. L’adresse entière ne se lit qu’à sa création.
+  Les derniers caractères du jeton, pour reconnaître l’adresse d’un coup d’œil.
   """
   finAdresse: String!
   id: ID!
@@ -197,7 +201,7 @@ type AppelBenevolesPublic {
 }
 
 type AppelEtAdresse {
-  """L’adresse publique, lisible une seule fois."""
+  """L’adresse publique de l’appel."""
   adresse: String!
   appel: AppelBenevoles!
 }
@@ -253,16 +257,42 @@ type BaremeScore {
 type Benevole {
   accordLe: DateTime!
 
+  """
+  La date à laquelle la personne a confirmé sa participation depuis son lien.
+  """
+  confirmeeLe: DateTime
+
   """Vrai si la personne connectée lit l’adresse, le téléphone et la note."""
   coordonneesVisibles: Boolean!
   courriel: String
   id: ID!
+  lienEnvoyeLe: DateTime
+
+  """
+  Le lien personnel, à copier, pour une personne qui lit les coordonnées ; null sans lien ou sans ce droit.
+  """
+  lienEspace: String
+
+  """
+  Vrai quand la personne connectée peut renvoyer le lien par mail, vers une fiche joignable : le lien est parti une fois sans relance, ou la fiche placée n’a pas pu recevoir son premier mail.
+  """
+  lienRenvoyable: Boolean!
   nom: String!
   note: String
+
+  """
+  SAISIE : saisie par l’équipe. CANDIDATURE : née d’une candidature (ADR 0041).
+  """
+  origine: String!
   peutModifier: Boolean!
 
   """Le nombre de séquences où la fiche est placée."""
   places: Int!
+
+  """
+  L’option « Prévenir par mail ». Avec une adresse, la fiche est joignable : sa première place envoie le lien (ADR 0041).
+  """
+  prevenirParMail: Boolean!
   telephone: String
 }
 
@@ -355,6 +385,7 @@ type ChoixCandidature {
   heureFin: String!
   id: ID!
   jour: String!
+  jourFin: String!
   lieu: String
   perimetre: Perimetre
   peutTraiter: Boolean!
@@ -681,6 +712,28 @@ enum EntiteChangee {
   PERIMETRE
   PROGRAMME
   TACHE
+}
+
+"""
+L’espace d’une ou d’un bénévole, ouvert par son lien personnel (ADR 0041). Lisible sans session.
+"""
+type EspaceBenevole {
+  activite: String!
+
+  """Vrai quand la personne a confirmé sa participation."""
+  confirme: Boolean!
+  contact: String
+
+  """Les places à venir au format iCalendar, à télécharger."""
+  ics: String!
+  nom: String!
+  organisation: String!
+  places: [PlaceDeLEspace!]!
+
+  """
+  Les disponibilités à venir que la personne a données, ou que l’équipe a saisies.
+  """
+  plages: [PlageDisponibilite!]!
 }
 
 type EspaceFichiers {
@@ -1205,6 +1258,11 @@ type Mutation {
   commenterTache(id: ID!, texte: String!): FilTache!
 
   """
+  Confirme l’adresse de la fiche et toutes ses places à confirmer. Utilisable sans session.
+  """
+  confirmerParticipation(jeton: String!): Boolean!
+
+  """
   Connecte Google Drive par un compte de service : la clé JSON du compte, que l’organisation a créée. L’organisation partage ensuite ses dossiers avec l’adresse du compte.
   """
   connecterCompteServiceGoogle(cle: String!): ConnexionFichiers!
@@ -1215,9 +1273,7 @@ type Mutation {
   creerAbonnementAgendaActivite(activiteId: ID!): AdresseAbonnement!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
 
-  """
-  Ouvre un appel à bénévoles. L’adresse publique se lit dans la réponse, une seule fois.
-  """
+  """Ouvre un appel à bénévoles, et rend son adresse publique."""
   creerAppelBenevoles(
     editionId: ID!
     fermeLe: DateTime!
@@ -1243,6 +1299,11 @@ type Mutation {
     courriel: String
     nom: String!
     note: String
+
+    """
+    Vrai : la fiche reçoit son lien par mail à sa première place, si elle a une adresse.
+    """
+    prevenirParMail: Boolean = true
     telephone: String
   ): Benevole!
   creerDateCle(description: String, editionId: ID!, jour: Date!, jourFin: Date, titre: String!): DateCle!
@@ -1403,6 +1464,11 @@ type Mutation {
   inviterPremierAdmin(email: String!, nom: String!, organisation: String!): Boolean!
 
   """
+  Le lien personnel d’une fiche, à copier : créé s’il n’existe pas. `nouveau` tire un nouveau lien, qui révoque l’ancien. Aucun mail ne part. Réservé aux personnes qui lisent ses coordonnées.
+  """
+  lienEspaceBenevole(benevoleId: ID!, nouveau: Boolean = false): String!
+
+  """
   Lie un dossier de l’espace connecté à un périmètre, ou à toute l’activité sans périmètre.
   """
   lierDossier(activiteId: ID!, chemin: [String!]!, emplacement: String!, perimetreId: ID): DossierLie!
@@ -1428,7 +1494,16 @@ type Mutation {
   masquerFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
   modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierAppelBenevoles(fermeLe: DateTime!, id: ID!, introduction: String, nom: String!, ouvertLe: DateTime!, versionAttendue: Int!): AppelBenevoles!
-  modifierBenevole(courriel: String, id: ID!, nom: String!, note: String, telephone: String): Benevole!
+  modifierBenevole(
+    courriel: String
+    id: ID!
+    nom: String!
+    note: String
+
+    """Sans valeur, l’option reste telle quelle."""
+    prevenirParMail: Boolean
+    telephone: String
+  ): Benevole!
 
   """
   Modifie le texte d’un commentaire et rend le fil de sa tâche. Seul son auteur le modifie.
@@ -1598,6 +1673,11 @@ type Mutation {
   proposerPersonne(editionId: ID!, email: String!, mot: String, nom: String!, perimetreId: ID!): Boolean!
 
   """
+  Retire la personne d’une place à venir et prévient l’équipe. Une fiche non confirmée qu’aucune place ne retient est supprimée. Utilisable sans session.
+  """
+  quitterPlace(jeton: String!, ref: String!): Boolean!
+
+  """
   Refuse tous les choix en attente d’une candidature et la clôt. Réservé aux personnes qui gèrent l’appel. Aucun mail ne part.
   """
   refuserCandidature(id: ID!): Candidature!
@@ -1625,6 +1705,11 @@ type Mutation {
   """Remplace l’adresse publique d’un appel : l’ancienne cesse de répondre."""
   renouvelerAdresseAppelBenevoles(id: ID!): AppelEtAdresse!
   renvoyerInvitation(id: ID!): Boolean!
+
+  """
+  Renvoie par mail le lien personnel d’une fiche joignable, une seule fois. Le lien reste le même. Réservé aux personnes qui lisent ses coordonnées.
+  """
+  renvoyerLienBenevole(benevoleId: ID!): Boolean!
 
   """
   La réponse de la personne connectée à sa convocation : présente, absente ou peut-être.
@@ -1682,6 +1767,11 @@ type Mutation {
   """
   supprimerCommentaire(id: ID!): FilTache!
   supprimerDateCle(id: ID!): Boolean!
+
+  """
+  Supprime la fiche de la personne, avec ses plages. Refusé tant qu’une place à venir la retient. Utilisable sans session.
+  """
+  supprimerMaFiche(jeton: String!): Boolean!
   supprimerSequence(id: ID!): Boolean!
 
   """
@@ -2003,6 +2093,19 @@ input PhaseInput {
   libelle: String!
 }
 
+type PlaceDeLEspace {
+  confirmee: Boolean!
+  consignes: String
+  heureDebut: String!
+  heureFin: String!
+  jour: String!
+  jourFin: String!
+  lieu: String
+  perimetre: String
+  ref: String!
+  titre: String!
+}
+
 type PlaceSequence {
   """La fiche bénévole ; ses coordonnées se lisent à part."""
   benevoleId: ID
@@ -2212,9 +2315,9 @@ type Query {
   contenuDossierLie(chemin: [String!]!, id: ID!): ListeElementsFichiers!
 
   """
-  La couverture du programme par tranches de 30 minutes. Les périmètres filtrent les séquences ; les bénévoles à répartir se comptent tous.
+  La couverture du programme par tranches de 30 minutes. Sans périmètre donné, toutes les séquences comptent. Sinon, seules comptent celles des périmètres donnés, et celles sans périmètre avec `sansPerimetre`. Les bénévoles à répartir se comptent tous.
   """
-  couvertureProgramme(editionId: ID!, perimetreIds: [ID!]): [TrancheCouverture!]!
+  couvertureProgramme(editionId: ID!, perimetreIds: [ID!], sansPerimetre: Boolean = false): [TrancheCouverture!]!
   demandes(editionId: ID!, statut: StatutDemande): [Demande!]!
 
   """
@@ -2230,6 +2333,11 @@ type Query {
   """
   emplacementsFichiers: [EmplacementFichiers!]!
   equipe(activiteId: ID): [Personne!]!
+
+  """
+  L’espace d’une fiche bénévole, ou null pour un lien inconnu ou révoqué. Lisible sans session ; l’ouverture ne confirme rien.
+  """
+  espaceBenevole(jeton: String!): EspaceBenevole
   espaceFichiers: EspaceFichiers!
   exportContenu: ArchiveContenu!
   fiche(activiteId: ID, slug: String!): Fiche
@@ -2829,6 +2937,12 @@ type TrancheCouverture {
   debut: DateTime!
   disponibles: Int!
   fin: DateTime!
+
+  """L’heure de début de la tranche, HH:MM."""
+  heure: String!
+
+  """Le jour de la tranche, dans le fuseau de l’organisation."""
+  jour: String!
 }
 
 """

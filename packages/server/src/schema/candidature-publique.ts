@@ -1,4 +1,4 @@
-import { prisma, type Prisma } from '@relaytour/database'
+import { prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { jourISO } from '../lib/agenda.ts'
@@ -19,7 +19,9 @@ import { NOM_BENEVOLE_MAX, telephoneValide } from '../lib/benevoles.ts'
 import {
   jaugePublique,
   referencePublique,
+  sequenceAuDepot,
   signalerCandidature,
+  statutAuDepot,
 } from '../lib/candidatures.ts'
 import type { AdressesDeRole } from '../lib/contenu.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
@@ -30,7 +32,9 @@ import {
 } from '../lib/formulaire.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { heureLocale } from '../lib/heures.ts'
+import { jetonValide } from '../lib/jeton.ts'
 import { journal } from '../lib/journal.ts'
+import { jetonDe } from '../lib/liens.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import { configurationActivite } from '../lib/organisation.ts'
 import { adresseValide, texteRequis } from '../lib/saisie.ts'
@@ -76,6 +80,9 @@ interface AppelOuvert {
   activiteId: string
   editionId: string
   perimetreId: string | null
+  portee: string
+  /** La séquence d'un appel de portée « séquence ». */
+  sequenceCible: string | null
   organisation: string
   activite: string
   periode: string
@@ -111,7 +118,16 @@ async function appelOuvert(
       organisation: { select: { fuseauHoraire: true } },
     },
   })
-  if (appel === null || etatAppel(appel, maintenant) !== 'OUVERT') return null
+  // Le jeton doit dériver du secret courant : après un changement de secret,
+  // l'ancienne adresse cesse de répondre, même si l'empreinte gardée lui
+  // correspond.
+  if (
+    appel === null ||
+    etatAppel(appel, maintenant) !== 'OUVERT' ||
+    !jetonValide(jeton, await jetonDe('appel', appel.sel))
+  ) {
+    return null
+  }
   const configuration = await configurationActivite(appel.activiteId)
   if (configuration.contactRecrutement === undefined) return null
   const role: AdressesDeRole = {
@@ -156,6 +172,8 @@ async function appelOuvert(
     activiteId: appel.activiteId,
     editionId: appel.editionId,
     perimetreId: appel.perimetreId,
+    portee: appel.portee,
+    sequenceCible: appel.sequenceId,
     organisation: configuration.nomCourt,
     activite: appel.activite.nom,
     periode: appel.edition.nom,
@@ -266,7 +284,10 @@ builder.queryField('appelBenevolesPublic', t =>
 
 // ── Dépôt ────────────────────────────────────────────────────────────────────
 
-/** Refuse le dépôt quand l'adresse IP ou l'adresse mail en envoient trop. */
+/**
+ * Refuse le dépôt quand l'adresse IP ou l'adresse mail en envoient trop, ou quand
+ * l'appel en reçoit trop.
+ */
 async function exigerDebitRaisonnable(
   ctx: AppContext,
   appel: AppelOuvert,
@@ -293,28 +314,15 @@ async function exigerDebitRaisonnable(
     86_400,
     refuser
   )
-  if (!parIp || !parAdresse) throw erreurSaisie(TROP)
-}
-
-/**
- * Le statut d'un choix nouveau : en attente tant que les renforts de la séquence
- * restent sous son besoin, en liste d'attente sinon. L'appelant tient le verrou de
- * la séquence.
- */
-async function statutAuDepot(
-  tx: Prisma.TransactionClient,
-  sequenceId: string
-): Promise<'EN_ATTENTE' | 'LISTE_ATTENTE'> {
-  const [sequence, renforts] = await Promise.all([
-    tx.sequence.findUniqueOrThrow({
-      where: { id: sequenceId },
-      select: { besoinBenevoles: true },
-    }),
-    tx.placeSequence.count({ where: { sequenceId, role: 'RENFORT' } }),
-  ])
-  return renforts < (sequence.besoinBenevoles ?? 0)
-    ? 'EN_ATTENTE'
-    : 'LISTE_ATTENTE'
+  // Chaque dépôt compte, qu'il crée une candidature ou en complète une : la
+  // réponse ne dépend pas de l'adresse, ni des décisions de l'équipe.
+  const parAppel = await limiterParCle(
+    `benevoles-appel-${appel.appelId}`,
+    DEPOTS_PAR_APPEL_ET_PAR_HEURE,
+    3600,
+    refuser
+  )
+  if (!parIp || !parAdresse || !parAppel) throw erreurSaisie(TROP)
 }
 
 builder.mutationField('deposerCandidature', t =>
@@ -395,59 +403,91 @@ builder.mutationField('deposerCandidature', t =>
       await exigerDebitRaisonnable(ctx, appel, email)
 
       const nouvelles = await prisma.$transaction(async tx => {
-        await tx.$queryRaw`SELECT id FROM AppelBenevoles WHERE id = ${appel.appelId} FOR UPDATE`
-        const existante = await tx.candidature.findUnique({
-          where: {
-            appelId_courrielEnAttente: {
-              appelId: appel.appelId,
-              courrielEnAttente: email,
-            },
-          },
-          include: { choix: { select: { sequenceId: true } }, plages: true },
-        })
-        if (existante === null) {
-          const [recentes, enAttente] = await Promise.all([
-            tx.candidature.count({
-              where: {
-                appelId: appel.appelId,
-                createdAt: { gte: new Date(maintenant.getTime() - 3600_000) },
-              },
-            }),
-            tx.candidature.count({
-              where: { appelId: appel.appelId, statut: 'EN_ATTENTE' },
-            }),
-          ])
-          if (
-            recentes >= DEPOTS_PAR_APPEL_ET_PAR_HEURE ||
-            enAttente >= CANDIDATURES_EN_ATTENTE_MAX
-          ) {
-            throw erreurSaisie(TROP)
-          }
+        // Ordre des verrous : l'organisation, l'appel, la candidature, puis les
+        // séquences dans l'ordre de leurs identifiants. Les décisions de
+        // l'équipe prennent l'organisation, la candidature puis la séquence :
+        // aucun cycle. Sans le verrou de l'organisation, l'insertion de la
+        // candidature attendrait son verrou partagé en tenant les séquences,
+        // pendant qu'une acceptation tient l'organisation et attend une
+        // séquence. Tous les verrous se
+        // prennent avant la première lecture ordinaire : sous MariaDB 11.8, une
+        // lecture verrouillante d'une ligne modifiée depuis la vue de la
+        // transaction échoue (erreur 1020) au lieu de lire la ligne à jour.
+        await tx.$queryRaw`SELECT id FROM Organisation WHERE id = ${appel.organisationId} FOR UPDATE`
+        const [courant] = await tx.$queryRaw<
+          {
+            portee: string
+            sequenceId: string | null
+            ouvertLe: Date
+            fermeLe: Date
+            fermeManuellementLe: Date | null
+            empreinte: string
+          }[]
+        >`SELECT portee, sequenceId, ouvertLe, fermeLe, fermeManuellementLe, empreinte
+          FROM AppelBenevoles WHERE id = ${appel.appelId} FOR UPDATE`
+        // L'appel se relit sous son verrou : une fermeture ou une nouvelle
+        // adresse validée entre-temps refuse le dépôt.
+        if (
+          courant === undefined ||
+          courant.empreinte !== empreinteJeton(args.jeton) ||
+          etatAppel(courant, new Date()) !== 'OUVERT'
+        ) {
+          throw erreurSaisie(FERME)
         }
+        // La candidature en attente de l'adresse, verrouillée : une décision
+        // validée entre-temps l'a clôturée et libérée.
+        const trouvee = await tx.$queryRaw<{ id: string }[]>`
+          SELECT id FROM Candidature
+          WHERE appelId = ${appel.appelId} AND courrielEnAttente = ${email}
+          FOR UPDATE`
+        // Toutes les séquences demandées se revalident sous leur verrou, déjà
+        // choisies ou non : la réponse ne dépend pas de la candidature existante.
+        const maintenantSousVerrou = new Date()
+        const etats = new Map<string, { besoin: number; renforts: number }>()
+        for (const sequenceId of [...(sequenceIds as string[])].sort()) {
+          const sequence = await sequenceAuDepot(tx, sequenceId)
+          if (
+            sequence === null ||
+            sequence.editionId !== appel.editionId ||
+            sequence.besoin <= 0 ||
+            sequence.debut.getTime() <= maintenantSousVerrou.getTime() ||
+            (appel.portee === 'PERIMETRE' &&
+              sequence.perimetreId !== appel.perimetreId) ||
+            (appel.portee === 'SEQUENCE' && sequenceId !== appel.sequenceCible)
+          ) {
+            throw erreurSaisie('Une séquence choisie n’est plus proposée.')
+          }
+          etats.set(sequenceId, sequence)
+        }
+        // Le plafond des candidatures en attente vaut pour tout dépôt, que
+        // l'adresse ait déjà une candidature ou non : la réponse ne trahit rien.
+        const enAttente = await tx.candidature.count({
+          where: { appelId: appel.appelId, statut: 'EN_ATTENTE' },
+        })
+        if (enAttente >= CANDIDATURES_EN_ATTENTE_MAX) throw erreurSaisie(TROP)
+        const existante =
+          trouvee[0] === undefined
+            ? null
+            : await tx.candidature.findUniqueOrThrow({
+                where: { id: trouvee[0].id },
+                include: {
+                  choix: { select: { sequenceId: true } },
+                  plages: true,
+                },
+              })
         const dejaChoisies = new Set(
           existante?.choix.map(c => c.sequenceId) ?? []
         )
-        // Les séquences se verrouillent dans un ordre fixe : deux dépôts
-        // simultanés ne s'attendent pas l'un l'autre.
+        // Au-delà de CHOIX_MAX, les séquences en trop sont ignorées sans
+        // erreur : un refus trahirait les choix d'une candidature existante.
         const ajoutees = (sequenceIds as string[])
           .filter(id => !dejaChoisies.has(id))
           .sort()
-        if (dejaChoisies.size + ajoutees.length > CHOIX_MAX) {
-          throw erreurSaisie(
-            `Une candidature choisit ${CHOIX_MAX} séquences au plus.`
-          )
-        }
-        const choix: {
-          sequenceId: string
-          statut: 'EN_ATTENTE' | 'LISTE_ATTENTE'
-        }[] = []
-        for (const sequenceId of ajoutees) {
-          await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${sequenceId} FOR UPDATE`
-          choix.push({
-            sequenceId,
-            statut: await statutAuDepot(tx, sequenceId),
-          })
-        }
+          .slice(0, Math.max(0, CHOIX_MAX - dejaChoisies.size))
+        const choix = ajoutees.map(sequenceId => ({
+          sequenceId,
+          statut: statutAuDepot(etats.get(sequenceId)!),
+        }))
         if (existante === null) {
           await tx.candidature.create({
             data: {
@@ -499,6 +539,34 @@ builder.mutationField('deposerCandidature', t =>
             fin: p.fin,
           })),
         })
+        // Une candidature déjà rattachée à une fiche y verse aussi ses
+        // nouvelles plages : la répartition lit les plages de la fiche.
+        if (existante.benevoleId !== null && plages.length > 0) {
+          const deLaFiche = await tx.plageDisponibilite.findMany({
+            where: {
+              benevoleId: existante.benevoleId,
+              editionId: appel.editionId,
+            },
+          })
+          const fusion = fusionnerPlages([...deLaFiche, ...plages]).slice(
+            0,
+            PLAGES_MAX
+          )
+          await tx.plageDisponibilite.deleteMany({
+            where: {
+              benevoleId: existante.benevoleId,
+              editionId: appel.editionId,
+            },
+          })
+          await tx.plageDisponibilite.createMany({
+            data: fusion.map(p => ({
+              editionId: appel.editionId,
+              benevoleId: existante.benevoleId,
+              debut: p.debut,
+              fin: p.fin,
+            })),
+          })
+        }
         return ajoutees
       })
 

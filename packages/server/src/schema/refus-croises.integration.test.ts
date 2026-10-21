@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 import { empreinte } from '../lib/fiches.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
+import { nouveauSel } from '../lib/liens.ts'
 
 import { schema } from './index.ts'
 
@@ -406,6 +407,7 @@ beforeAll(async () => {
         nom: 'Appel de A',
         ouvertLe: new Date(),
         fermeLe: new Date('2027-06-05T20:00:00.000Z'),
+        sel: nouveauSel(),
         empreinte: 'a'.repeat(64),
         fin: 'aaaaaa',
       },
@@ -1438,6 +1440,19 @@ const CAS: Cas[] = [
     operation: 'retirerPlaceSequence',
     query: 'mutation ($id: ID!) { retirerPlaceSequence(id: $id) { id } }',
     variables: () => ({ id: a.place }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'lienEspaceBenevole',
+    query:
+      'mutation ($b: ID!) { lienEspaceBenevole(benevoleId: $b, nouveau: true) }',
+    variables: () => ({ b: a.benevole }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'renvoyerLienBenevole',
+    query: 'mutation ($b: ID!) { renvoyerLienBenevole(benevoleId: $b) }',
+    variables: () => ({ b: a.benevole }),
     attente: INTERDIT,
   },
   {

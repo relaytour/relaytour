@@ -9,6 +9,8 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import ChoixEdition from '../composants/ChoixEdition'
+import { Jauge } from '../composants/Jauge'
+import Repartition from '../composants/Repartition'
 import LieuxFenetre from '../composants/LieuxFenetre'
 import { Section } from '../composants/Panneau'
 import { Puces, SeparateurPuces } from '../composants/Puces'
@@ -38,6 +40,9 @@ const PROGRAMME = graphql(`
       editionId
       titre
       description
+      besoinBenevoles
+      consignesBenevoles
+      renforts
       jour
       jourFin
       heureDebut
@@ -60,12 +65,13 @@ const PROGRAMME = graphql(`
         benevoleId
         nom
         estMoi
+        etat
       }
     }
   }
 `)
 
-type Vue = 'grille' | 'liste' | 'moi'
+type Vue = 'grille' | 'liste' | 'moi' | 'repartition'
 
 /** Les personnes d'une séquence, responsables en tête, en une ligne. */
 function personnes(s: SequenceLue): string {
@@ -167,6 +173,9 @@ export default function Programme() {
       )}
       {s.perimetre && (
         <span className="rt-sequence-perimetre">{s.perimetre.nom}</span>
+      )}
+      {s.besoinBenevoles !== null && (
+        <Jauge renforts={s.renforts} besoin={s.besoinBenevoles} court />
       )}
       {s.places.length > 0 && (
         <span className="rt-sequence-personnes">{personnes(s)}</span>
@@ -339,6 +348,11 @@ export default function Programme() {
               : []),
             { valeur: 'liste', libelle: 'Par lieu' },
             { valeur: 'moi', libelle: 'Mon jour J' },
+            // La répartition des bénévoles, pour les personnes qui écrivent une
+            // séquence (ADR 0041).
+            ...(agendas.length > 0
+              ? [{ valeur: 'repartition' as const, libelle: 'Répartition' }]
+              : []),
           ]}
         />
         {vue !== 'moi' && jours.length > 1 && (
@@ -364,7 +378,7 @@ export default function Programme() {
               Lieux
             </Button>
           )}
-          {vue !== 'moi' && (
+          {vue !== 'moi' && vue !== 'repartition' && (
             <Button icon={<PrinterOutlined />} onClick={() => window.print()}>
               Imprimer
             </Button>
@@ -387,7 +401,19 @@ export default function Programme() {
           {jourChoisi && (
             <h2 className="rt-programme-jour">{libelleJours(jourChoisi)}</h2>
           )}
-          {vue === 'grille' ? vueGrille : vueListe}
+          {vue === 'repartition' && editionId && jourChoisi ? (
+            <Repartition
+              editionId={editionId}
+              jour={jourChoisi}
+              sequences={sequences}
+              agendas={agendas}
+              onOuvrir={id => changer('sequence', id)}
+            />
+          ) : vue === 'grille' ? (
+            vueGrille
+          ) : (
+            vueListe
+          )}
         </>
       )}
 

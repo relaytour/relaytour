@@ -38,4 +38,31 @@ describe('placesDatees', () => {
     )
     expect(places.map(p => p.confirmeeLe)).toEqual([HIER, null, MAINTENANT])
   })
+
+  it('garde la date de création d’une place tenue', () => {
+    const [place] = placesDatees(
+      [{ userId: null, benevoleId: 'b1', role: 'RENFORT' }],
+      [{ userId: null, benevoleId: 'b1', confirmeeLe: null, createdAt: HIER }],
+      MAINTENANT
+    )
+    expect(place).toMatchObject({ confirmeeLe: null, createdAt: HIER })
+  })
+
+  it('laisse à confirmer la place nouvelle d’une fiche joignable', () => {
+    const places = placesDatees(
+      [
+        { userId: null, benevoleId: 'joignable', role: 'RENFORT' },
+        { userId: null, benevoleId: 'sans-mail', role: 'RENFORT' },
+        { userId: 'membre', benevoleId: null, role: 'RENFORT' },
+      ],
+      [],
+      MAINTENANT,
+      new Set(['joignable'])
+    )
+    expect(places.map(p => p.confirmeeLe)).toEqual([
+      null,
+      MAINTENANT,
+      MAINTENANT,
+    ])
+  })
 })

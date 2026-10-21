@@ -53,6 +53,9 @@ export const SELECTION_NOTIFICATION = {
   // Une réunion de l'agenda (ADR 0037).
   reunion: { select: { id: true, titre: true, editionId: true } },
   sondage: { select: { id: true, titre: true, editionId: true } },
+  // Une séquence du programme et une fiche bénévole (ADR 0041).
+  sequence: { select: { id: true, titre: true, editionId: true } },
+  benevole: { select: { nom: true } },
 } as const
 
 export interface NotificationLue {
@@ -88,6 +91,8 @@ export interface NotificationLue {
   } | null
   reunion?: { id: string; titre: string; editionId: string } | null
   sondage?: { id: string; titre: string; editionId: string } | null
+  sequence?: { id: string; titre: string; editionId: string } | null
+  benevole?: { nom: string } | null
 }
 
 export interface ActiviteDeNotification {
@@ -326,6 +331,14 @@ function phrase(
       return n.sondage
         ? `${acteur} vous demande vos disponibilités : « ${n.sondage.titre} »${lieu}`
         : 'Ce sondage n’existe plus'
+    // Les personnes qui écrivent dans le périmètre lisent déjà son nom dans le
+    // programme (ADR 0040).
+    case 'BENEVOLE_RETIRE': {
+      const qui = n.benevole?.nom ?? 'Une personne bénévole'
+      return n.sequence
+        ? `${qui} a quitté la séquence « ${n.sequence.titre} »${lieu}`
+        : `${qui} a quitté une séquence du programme${lieu}`
+    }
     case 'FICHE_CONNEXE': {
       if (n.fiche === null) return 'Cette fiche n’existe plus'
       if (c.illisibles.has(n.id))
@@ -457,6 +470,10 @@ function lien(n: NotificationLue, c: Contexte): string {
       return n.sondage
         ? `/${slug}/agenda?edition=${n.sondage.editionId}&sondage=${n.sondage.id}`
         : `/${slug}/agenda`
+    case 'BENEVOLE_RETIRE':
+      return n.sequence
+        ? `/${slug}/programme?edition=${n.sequence.editionId}&sequence=${n.sequence.id}`
+        : `/${slug}/programme`
     case 'FICHE_CONNEXE': {
       if (n.fiche !== null && !c.illisibles.has(n.id))
         return `/${slug}/fiches/${n.fiche.slug}`

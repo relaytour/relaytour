@@ -6,6 +6,9 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 import { empreinteJeton, nouveauJeton } from '../lib/abonnements-agenda.ts'
+import { CHOIX_MAX, jetonAppel } from '../lib/appels.ts'
+import { sequenceAuDepot, statutAuDepot } from '../lib/candidatures.ts'
+import { jetonDe, jetonDerive, nouveauSel } from '../lib/liens.ts'
 
 import { schema } from './index.ts'
 
@@ -19,7 +22,7 @@ const enFile = vi.hoisted(() => [] as string[])
 vi.mock('../courriel/file.ts', () => ({
   mettreEnFile: (sorte: string) => {
     enFile.push(sorte)
-    return Promise.resolve()
+    return Promise.resolve(true)
   },
 }))
 
@@ -268,7 +271,8 @@ beforeAll(async () => {
     ['natation', 'PERIMETRE', ids.natation, false],
     ['ferme', 'PERIODE', null, true],
   ] as const) {
-    jetons[cle] = nouveauJeton()
+    const sel = nouveauSel()
+    jetons[cle] = await jetonDe('appel', sel)
     const appel = await prisma.appelBenevoles.create({
       data: {
         organisationId: ids.org,
@@ -281,6 +285,7 @@ beforeAll(async () => {
         ouvertLe: new Date(Date.now() - 3600_000),
         fermeLe: h('20:00', '2027-06-06'),
         fermeManuellementLe: ferme ? new Date() : null,
+        sel,
         empreinte: empreinteJeton(jetons[cle]),
         fin: jetons[cle].slice(-6),
       },
@@ -533,5 +538,115 @@ describe('dépôt', () => {
     expect(
       notifications.every(n => n.acteurId === null && n.personneId === null)
     ).toBe(true)
+  })
+})
+
+describe('secret du serveur', () => {
+  it('refuse l’adresse dérivée d’un ancien secret, puis sert la nouvelle adresse', async () => {
+    const sel = nouveauSel()
+    const ancien = jetonDerive('ancien-secret', 'appel', sel)
+    const appel = await prisma.appelBenevoles.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        portee: 'PERIODE',
+        nom: 'Appel d’avant',
+        ouvertLe: new Date(Date.now() - 3600_000),
+        fermeLe: h('20:00', '2027-06-06'),
+        sel,
+        empreinte: empreinteJeton(ancien),
+        fin: ancien.slice(-6),
+      },
+    })
+    expect(await lire(ancien)).toBeNull()
+    // La lecture de l'adresse par l'équipe réaligne l'empreinte sur le secret courant.
+    const nouveau = await jetonAppel(prisma, appel.id)
+    expect(nouveau).not.toBe(ancien)
+    expect(await lire(nouveau)).not.toBeNull()
+    expect(await lire(ancien)).toBeNull()
+  })
+})
+
+describe('jauge au dépôt', () => {
+  it('fait attendre une place validée pendant le dépôt, puis la compte au dépôt suivant', async () => {
+    const sequence = await prisma.sequence.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        titre: 'jauge',
+        debut: h('18:00'),
+        fin: h('19:00'),
+        besoinBenevoles: 1,
+      },
+    })
+    let inseree = false
+    let insertion: Promise<unknown> = Promise.resolve()
+    const pendant = await prisma.$transaction(
+      async tx => {
+        const lue = await sequenceAuDepot(tx, sequence.id)
+        // Une acceptation venue d'une autre connexion attend le verrou du dépôt.
+        insertion = prisma.placeSequence
+          .create({
+            data: {
+              sequenceId: sequence.id,
+              benevoleId: ids.benevole,
+              role: 'RENFORT',
+            },
+          })
+          .then(() => (inseree = true))
+        await new Promise(fin => setTimeout(fin, 400))
+        expect(inseree).toBe(false)
+        return statutAuDepot(lue!)
+      },
+      { timeout: 10_000 }
+    )
+    await insertion
+    expect(pendant).toBe('EN_ATTENTE')
+    const apres = await prisma.$transaction(async tx =>
+      statutAuDepot((await sequenceAuDepot(tx, sequence.id))!)
+    )
+    expect(apres).toBe('LISTE_ATTENTE')
+  })
+})
+
+describe('plafond de choix', () => {
+  it('ignore sans erreur les choix au-delà du plafond, que l’adresse ait une candidature ou non', async () => {
+    await prisma.sequence.createMany({
+      data: Array.from({ length: CHOIX_MAX + 5 }, (_, i) => ({
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        perimetreId: ids.basket,
+        titre: `poste-${String(i).padStart(2, '0')}`,
+        debut: h('07:00', '2027-06-06'),
+        fin: h('08:00', '2027-06-06'),
+        besoinBenevoles: 1,
+      })),
+    })
+    const r = await refs(jetons.periode)
+    const postes = [...r.entries()]
+      .filter(([titre]) => titre.startsWith('poste-'))
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, ref]) => ref)
+    const e = `plafond-${s}@exemple.fr`
+    const deposer = (sq: string[]) =>
+      executer(DEPOSER, {
+        j: jetons.periode,
+        n: 'Alex',
+        e,
+        sq,
+        a: true,
+      })
+    const premier = await deposer(postes.slice(0, 20))
+    const second = await deposer(postes.slice(20, 35))
+    expect(premier).toEqual(second)
+    expect(second.errors).toBeUndefined()
+    const candidature = await prisma.candidature.findFirstOrThrow({
+      where: { appelId: ids.appelPeriode, courriel: e },
+      include: { choix: true },
+    })
+    expect(candidature.choix).toHaveLength(CHOIX_MAX)
   })
 })
