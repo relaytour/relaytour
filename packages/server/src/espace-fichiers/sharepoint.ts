@@ -160,13 +160,21 @@ type Jeton = (forcer?: boolean) => Promise<string>
 async function graph(
   adresse: string,
   jeton: Jeton,
-  delaiMs = DELAI_MS
+  delaiMs = DELAI_MS,
+  requete: { method?: string; body?: string; type?: string } = {}
 ): Promise<Response> {
   for (const forcer of [false, true]) {
     const reponse = await appelSortant(
       adresse,
       {
-        headers: { authorization: `Bearer ${await jeton(forcer)}` },
+        method: requete.method ?? 'GET',
+        body: requete.body,
+        headers: {
+          authorization: `Bearer ${await jeton(forcer)}`,
+          ...(requete.type === undefined
+            ? {}
+            : { 'content-type': requete.type }),
+        },
         delaiMs,
       },
       HOTES_MICROSOFT
@@ -196,6 +204,7 @@ async function lireJson<T>(adresse: string, jeton: Jeton): Promise<T | null> {
 interface ElementGraph {
   id: string
   name: string
+  eTag?: string
   folder?: unknown
   file?: { mimeType?: string }
   size?: number
@@ -203,7 +212,7 @@ interface ElementGraph {
   webUrl?: string
 }
 
-const CHAMPS = 'id,name,folder,file,size,lastModifiedDateTime,webUrl'
+const CHAMPS = 'id,name,folder,file,size,lastModifiedDateTime,webUrl,eTag'
 
 /**
  * Suit les pages d'une collection de Graph (`@odata.nextLink`), jusqu'à une borne.
@@ -239,7 +248,22 @@ function versElement(e: ElementGraph): ElementEspace {
         : new Date(e.lastModifiedDateTime),
     typeMime: e.file?.mimeType ?? null,
     lienWeb: e.webUrl ?? null,
+    etag: e.eTag ?? null,
   }
+}
+
+/** Corps JSON d'une écriture, ou une erreur du fournisseur. */
+async function resultatEcriture<T>(
+  reponse: Response,
+  quoi: string
+): Promise<T> {
+  if (!reponse.ok) {
+    await reponse.body?.cancel()
+    throw new FournisseurIndisponible(
+      `Microsoft Graph refuse ${quoi} (${reponse.status}).`
+    )
+  }
+  return (await reponse.json()) as T
 }
 
 // Un identifiant de site contient des virgules (« hôte,collection,site ») : Graph
@@ -305,6 +329,25 @@ export function espaceSharePoint(jeton: Jeton): EspaceFichiers {
       return e === null ? null : versElement(e)
     },
 
+    async ancetres(emplacement, element) {
+      const chaine: { id: string; nom: string }[] = []
+      let courant: string | undefined = element
+      for (let i = 0; courant !== undefined && i < 40; i++) {
+        const e: {
+          id: string
+          name: string
+          parentReference?: { id?: string }
+        } | null = await lireJson(
+          `${GRAPH}/drives/${segment(emplacement)}/items/${segment(courant)}?$select=id,name,parentReference`,
+          jeton
+        )
+        if (e === null) return i === 0 ? null : chaine
+        chaine.push({ id: e.id, nom: e.name })
+        courant = e.parentReference?.id
+      }
+      return chaine
+    },
+
     async lister(position): Promise<ListeElements | null> {
       const pages = await toutesLesPages<ElementGraph>(
         `${adresseGraph(position)}/children?$select=${CHAMPS}&$top=200`,
@@ -314,6 +357,61 @@ export function espaceSharePoint(jeton: Jeton): EspaceFichiers {
       return pages === null
         ? null
         : { elements: pages.valeurs.map(versElement), complet: pages.complet }
+    },
+
+    async creerDossier(parent, nom, { renommer }) {
+      const reponse = await graph(
+        `${adresseGraph(parent)}/children`,
+        jeton,
+        DELAI_MS,
+        {
+          method: 'POST',
+          type: 'application/json',
+          body: JSON.stringify({
+            name: nom,
+            folder: {},
+            '@microsoft.graph.conflictBehavior': renommer ? 'rename' : 'fail',
+          }),
+        }
+      )
+      // Sans renommage, un dossier déjà présent est rendu tel quel.
+      if (reponse.status === 409 && !renommer) {
+        await reponse.body?.cancel()
+        const existant = await lireJson<ElementGraph>(
+          `${adresseGraph({ ...parent, chemin: [...parent.chemin, nom] })}?$select=${CHAMPS}`,
+          jeton
+        )
+        if (existant === null) {
+          throw new FournisseurIndisponible('Le dossier créé est introuvable.')
+        }
+        return versElement(existant)
+      }
+      return versElement(
+        await resultatEcriture<ElementGraph>(reponse, 'la création du dossier')
+      )
+    },
+
+    async ecrire(position, texte) {
+      const reponse = await graph(
+        `${adresseGraph(position)}/content`,
+        jeton,
+        DELAI_MS,
+        { method: 'PUT', type: 'text/markdown; charset=utf-8', body: texte }
+      )
+      const e = await resultatEcriture<ElementGraph>(reponse, 'l’écriture')
+      return { etag: e.eTag ?? null }
+    },
+
+    async supprimer(position) {
+      const reponse = await graph(adresseGraph(position), jeton, DELAI_MS, {
+        method: 'DELETE',
+      })
+      await reponse.body?.cancel()
+      if (!reponse.ok && reponse.status !== 404) {
+        throw new FournisseurIndisponible(
+          `Microsoft Graph refuse la suppression (${reponse.status}).`
+        )
+      }
     },
 
     async ouvrir(position, { pdf }) {

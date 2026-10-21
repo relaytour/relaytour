@@ -57,7 +57,7 @@ void synchroniserPlanification().catch((erreur: unknown) => {
     'Les planifications n’ont pas pu être ajustées au démarrage.'
   )
 })
-for (const tache of ['synchro', 'purge'] as const) {
+for (const tache of ['synchro', 'purge', 'espace-fichiers'] as const) {
   void planificationQueue.upsertJobScheduler(
     tache,
     { pattern: PLANIFICATIONS_GLOBALES[tache] },

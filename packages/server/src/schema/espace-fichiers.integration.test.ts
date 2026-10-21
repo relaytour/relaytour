@@ -110,7 +110,7 @@ async function executer(
 const code = (r: Awaited<ReturnType<typeof executer>>) =>
   r.errors?.[0]?.extensions?.code
 
-const ESPACE_FICHIERS = `{ espaceFichiers { fournisseursDisponibles connexion { fournisseur compte etat } } }`
+const ESPACE_FICHIERS = `{ espaceFichiers { connexionsPossibles { fournisseur methode } connexion { fournisseur compte etat } } }`
 const LIER = `mutation ($a: ID!, $p: ID, $c: [String!]!) {
   lierDossier(activiteId: $a, perimetreId: $p, emplacement: "bibliotheque", chemin: $c) { id nom disponible perimetre { slug } }
 }`
@@ -303,7 +303,10 @@ describe('connexion', () => {
     expect(r.errors).toBeUndefined()
     expect(r.data).toEqual({
       espaceFichiers: {
-        fournisseursDisponibles: ['SHAREPOINT'],
+        connexionsPossibles: [
+          { fournisseur: 'SHAREPOINT', methode: 'COMPTE' },
+          { fournisseur: 'GOOGLE_DRIVE', methode: 'COMPTE_SERVICE' },
+        ],
         connexion: null,
       },
     })
