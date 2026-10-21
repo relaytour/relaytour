@@ -100,6 +100,14 @@ const cliquer = texte =>
 const cliquerLibelle = libelle =>
   `(e => (e?.click(), Boolean(e)))(document.querySelector(${JSON.stringify(`main [aria-label="${libelle}"]`)}))`
 
+/**
+ * Place le titre de <main> dont le texte commence par `texte` à `marge` pixels
+ * du haut, sous la barre haute flottante. Le navigateur borne le défilement : un
+ * panneau en bas de page reste entier. `pret` ajoute une condition sur le panneau.
+ */
+const placer = (texte, marge, pret = 'true') =>
+  `(e => (e && window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - ${marge}), Boolean(e) && (p => ${pret})(e.closest('section'))))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim().startsWith(${JSON.stringify(texte)})))`
+
 /** Fait défiler jusqu'au titre dont le texte vaut `texte`. */
 const defiler = texte =>
   `(e => (e?.scrollIntoView({ block: 'start' }), Boolean(e)))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim() === ${JSON.stringify(texte)}))`
@@ -185,10 +193,38 @@ const ECRANS = [
     chemin: `${ACTIVITE}/fiches`,
     avant: "localStorage.setItem('relaytour.fiches.affichage', 'liste')",
   },
+  // L'onglet « Documents » : les dossiers liés de l'espace de fichiers (ADR 0038).
+  // L'instance d'exemple doit porter une connexion et au moins un dossier lié.
+  {
+    nom: 'documents',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/fiches?vue=documents`,
+    apres: `document.querySelectorAll('main .rt-carte-fiche').length > 0`,
+  },
   {
     nom: 'fiche',
     compte: 'referent',
     chemin: `${ACTIVITE}/fiches/planifier-les-creneaux`,
+  },
+  // Les ressources liées de la fiche (ADR 0038) : l'instance d'exemple doit en
+  // porter trois.
+  {
+    nom: 'fiche-ressources',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/fiches/planifier-les-creneaux`,
+    apres: placer(
+      'Ressources liées',
+      140,
+      'p?.querySelectorAll("li").length >= 3'
+    ),
+  },
+  // L'éditeur de la fiche en mode visuel, avec sa barre de mise en forme.
+  {
+    nom: 'fiche-editeur',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/fiches/planifier-les-creneaux/modifier`,
+    avant: "localStorage.setItem('relaytour.fiches.editeur', 'visuel')",
+    apres: `Boolean(document.querySelector('main [aria-label="Gras"]'))`,
   },
   // Le périmètre de la personne, avec ses tâches et le droit d'y écrire.
   {
@@ -286,8 +322,7 @@ const ECRANS = [
     nom: 'preferences-organigramme',
     compte: 'referent',
     chemin: `${ACTIVITE}/preferences`,
-    // Le titre reste sous la barre haute flottante : le geste remonte un peu.
-    apres: `(e => (e?.scrollIntoView({ block: 'start' }), window.scrollBy(0, -140), Boolean(e)))([...document.querySelectorAll('main h2')].find(e => e.innerText.trim() === 'Votre adresse dans l’organigramme'))`,
+    apres: placer('Votre adresse dans l’organigramme', 140),
   },
   // Le tiroir de la cloche, rangé par activité (ADR 0032). La cloche est dans la
   // barre haute, hors de <main>.
@@ -450,6 +485,17 @@ const ECRANS = [
     nom: 'activites-nouvelle',
     chemin: `${ACTIVITE}/admin/activites`,
     apres: cliquer('Nouvelle activité'),
+  },
+  // L'espace de fichiers de l'organisation (ADR 0038), puis ses dossiers liés.
+  { nom: 'espace-fichiers', chemin: `${ACTIVITE}/admin/espace-fichiers` },
+  {
+    nom: 'espace-fichiers-dossiers',
+    chemin: `${ACTIVITE}/admin/espace-fichiers`,
+    apres: placer(
+      'Dossiers liés',
+      140,
+      'p?.querySelectorAll(\'[aria-label^="Retirer le dossier"]\').length > 0'
+    ),
   },
   { nom: 'organisation', chemin: `${ACTIVITE}/admin/organisation` },
   {
