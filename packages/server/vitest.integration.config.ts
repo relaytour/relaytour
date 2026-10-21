@@ -12,6 +12,8 @@ try {
 process.env.CLE_CHIFFREMENT_ESPACE_FICHIERS ||= Buffer.alloc(32, 7).toString(
   'base64'
 )
+// Nextcloud ouvert à tout hôte public : les tests simulent ses réponses.
+process.env.NEXTCLOUD_HOTES ||= '*'
 
 export default defineConfig({
   test: {

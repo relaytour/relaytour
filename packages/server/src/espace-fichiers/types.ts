@@ -2,7 +2,8 @@
 // sait faire. Relaytour lit l'espace ; il n'y écrit que l'export des fiches.
 
 /** Fournisseurs connus du schéma. Un fournisseur s'ouvre par ses variables. */
-export type Fournisseur = 'SHAREPOINT' | 'GOOGLE_DRIVE'
+export type Fournisseur =
+  'SHAREPOINT' | 'GOOGLE_DRIVE' | 'DROPBOX' | 'NEXTCLOUD'
 
 /** Jeton d'accès du fournisseur ; `forcer` le renouvelle. */
 export type Jeton = (forcer?: boolean) => Promise<string>
@@ -47,6 +48,11 @@ export interface ListeElements {
 export interface ContenuFichier {
   flux: ReadableStream<Uint8Array>
   taille: number | null
+  /**
+   * Nom sous lequel servir le contenu, quand il diffère du nom de l'élément :
+   * un document natif exporté gagne l'extension de son format.
+   */
+  nom?: string
 }
 
 export interface EspaceFichiers {

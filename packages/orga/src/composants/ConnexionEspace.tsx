@@ -1,5 +1,10 @@
-import { CloudOutlined, KeyOutlined, LinkOutlined } from '@ant-design/icons'
-import { useMutation } from '@apollo/client/react'
+import {
+  CloudOutlined,
+  ExportOutlined,
+  KeyOutlined,
+  LinkOutlined,
+} from '@ant-design/icons'
+import { useApolloClient, useMutation } from '@apollo/client/react'
 import {
   Alert,
   App,
@@ -9,25 +14,32 @@ import {
   Modal,
   Popconfirm,
   Skeleton,
+  Spin,
   Tag,
   Typography,
   Upload,
 } from 'antd'
-import { useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { EspaceFichiersQuery, FournisseurFichiers } from '../gql/graphql'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import {
   COMMENCER_CONNEXION,
+  COMMENCER_NEXTCLOUD,
   CONNECTER_COMPTE_SERVICE,
   DECONNECTER,
   NOMS_FOURNISSEURS,
+  TERMINER_NEXTCLOUD,
 } from '../lib/espace-fichiers'
 import { Panneau } from './Panneau'
 
 // Connexion de l'espace de fichiers (ADR 0038) : par le compte d'un admin
-// (SharePoint, Google Drive), ou par un compte de service Google dont
-// l'organisation dépose la clé.
+// (SharePoint, Google Drive, Dropbox, Nextcloud), ou par un compte de service
+// Google dont l'organisation dépose la clé.
+
+/** Intervalle entre deux questions à Nextcloud, et durée de vie d'une demande. */
+const SONDAGE_MS = 3_000
+const DEMANDE_NEXTCLOUD_MS = 20 * 60_000
 
 type Espace = EspaceFichiersQuery['espaceFichiers']
 
@@ -111,6 +123,162 @@ function CompteService({
   )
 }
 
+/**
+ * Connexion à Nextcloud : l'admin saisit l'adresse, accorde l'accès dans un
+ * nouvel onglet, puis Relaytour demande à Nextcloud, toutes les trois secondes,
+ * si l'accès est accordé.
+ */
+function ConnexionNextcloud({
+  ouvert,
+  onFermer,
+}: {
+  ouvert: boolean
+  onFermer: () => void
+}) {
+  const { message } = App.useApp()
+  const client = useApolloClient()
+  const [adresse, setAdresse] = useState('')
+  const [demande, setDemande] = useState<{
+    connexion: string
+    etat: string
+    debut: number
+  } | null>(null)
+  const [commencer, { loading }] = useMutation(COMMENCER_NEXTCLOUD)
+  const [terminer] = useMutation(TERMINER_NEXTCLOUD)
+  // Numéro de la tentative en cours : une fermeture l'invalide, et la réponse
+  // tardive d'une tentative invalidée est ignorée.
+  const tentative = useRef(0)
+  const onglet = useRef<Window | null>(null)
+  // Un sondage à la fois : la finalisation côté serveur peut dépasser
+  // l'intervalle, et un second sondage trouverait l'état déjà consommé.
+  const sondageEnCours = useRef(false)
+
+  const fermer = () => {
+    tentative.current += 1
+    onglet.current?.close()
+    onglet.current = null
+    setDemande(null)
+    onFermer()
+  }
+
+  useEffect(() => {
+    if (demande === null || !ouvert) return
+    let actif = true
+    const minuterie = window.setInterval(() => {
+      if (sondageEnCours.current) return
+      if (Date.now() - demande.debut > DEMANDE_NEXTCLOUD_MS) {
+        setDemande(null)
+        message.warning('La demande a expiré. Recommencez la connexion.')
+        return
+      }
+      sondageEnCours.current = true
+      terminer({ variables: { etat: demande.etat } })
+        .finally(() => {
+          sondageEnCours.current = false
+        })
+        .then(async r => {
+          if (!actif || r.data?.terminerConnexionNextcloud !== true) return
+          setDemande(null)
+          setAdresse('')
+          onFermer()
+          message.success('Nextcloud est connecté.')
+          await client.refetchQueries({
+            include: ['EspaceFichiers', 'DossiersLies'],
+          })
+        })
+        .catch((e: unknown) => {
+          if (!actif) return
+          setDemande(null)
+          message.error(messageErreur(e))
+        })
+    }, SONDAGE_MS)
+    return () => {
+      actif = false
+      window.clearInterval(minuterie)
+    }
+  }, [demande, ouvert, terminer, client, message, onFermer])
+
+  const ouvrir = async () => {
+    const numero = ++tentative.current
+    // L'onglet s'ouvre pendant le clic : un onglet ouvert après une requête
+    // serait bloqué par le navigateur.
+    const ouvertIci = window.open('about:blank', '_blank')
+    onglet.current = ouvertIci
+    try {
+      const r = await commencer({ variables: { adresse } })
+      if (numero !== tentative.current) return
+      const debut = r.data?.commencerConnexionNextcloud
+      if (!debut) throw new Error('Nextcloud ne répond pas.')
+      if (ouvertIci !== null) {
+        ouvertIci.opener = null
+        ouvertIci.location.href = debut.connexion
+      }
+      setDemande({ ...debut, debut: Date.now() })
+    } catch (e) {
+      if (numero !== tentative.current) return
+      ouvertIci?.close()
+      message.error(messageErreur(e))
+    }
+  }
+
+  return (
+    <Modal
+      open={ouvert}
+      onCancel={fermer}
+      title="Connecter Nextcloud"
+      footer={
+        demande === null ? (
+          <Button
+            type="primary"
+            icon={<ExportOutlined />}
+            loading={loading}
+            disabled={adresse.trim() === ''}
+            onClick={() => void ouvrir()}
+          >
+            Ouvrir Nextcloud
+          </Button>
+        ) : (
+          <Button onClick={fermer}>Annuler</Button>
+        )
+      }
+      destroyOnHidden
+      width={560}
+    >
+      {demande === null ? (
+        <>
+          <p>
+            Saisissez l’adresse du Nextcloud de l’association. Un nouvel onglet
+            s’ouvre : connectez-vous avec votre compte, puis accordez l’accès à
+            Relaytour. Nextcloud crée alors un mot de passe d’application, que
+            vous pouvez révoquer dans ses paramètres de sécurité.
+          </p>
+          <Input
+            aria-label="Adresse du Nextcloud"
+            placeholder="https://cloud.exemple.org"
+            value={adresse}
+            onChange={e => setAdresse(e.target.value)}
+            onPressEnter={() => {
+              if (adresse.trim() !== '') void ouvrir()
+            }}
+            inputMode="url"
+            autoComplete="url"
+          />
+        </>
+      ) : (
+        <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+          <Spin size="small" />
+          <span>
+            En attente de votre accord dans Nextcloud.{' '}
+            <a href={demande.connexion} target="_blank" rel="noreferrer">
+              Rouvrir la page de Nextcloud
+            </a>
+          </span>
+        </div>
+      )}
+    </Modal>
+  )
+}
+
 export default function ConnexionEspace({
   espace,
   chargement,
@@ -120,6 +288,9 @@ export default function ConnexionEspace({
 }) {
   const { message } = App.useApp()
   const [compteService, setCompteService] = useState(false)
+  const [nextcloud, setNextcloud] = useState(false)
+  // Stable : la connexion Nextcloud relance son sondage quand elle change.
+  const fermerNextcloud = useCallback(() => setNextcloud(false), [])
   const [commencer, { loading: redirection }] = useMutation(COMMENCER_CONNEXION)
   const [deconnecter] = useMutation(DECONNECTER, {
     refetchQueries: ['EspaceFichiers', 'DossiersLies'],
@@ -146,11 +317,15 @@ export default function ConnexionEspace({
           type={principal ? 'primary' : 'default'}
           icon={<LinkOutlined />}
           loading={redirection}
-          onClick={() => void connecter(p.fournisseur)}
+          onClick={() =>
+            p.fournisseur === 'NEXTCLOUD'
+              ? setNextcloud(true)
+              : void connecter(p.fournisseur)
+          }
         >
-          {principal
-            ? `Connecter ${nom(p.fournisseur)}`
-            : `Reconnecter ${nom(p.fournisseur)}`}
+          {connexion?.fournisseur === p.fournisseur
+            ? `Reconnecter ${nom(p.fournisseur)}`
+            : `Connecter ${nom(p.fournisseur)}`}
         </Button>
       ) : (
         <Button
@@ -264,6 +439,7 @@ export default function ConnexionEspace({
         ouvert={compteService}
         onFermer={() => setCompteService(false)}
       />
+      <ConnexionNextcloud ouvert={nextcloud} onFermer={fermerNextcloud} />
     </Panneau>
   )
 }

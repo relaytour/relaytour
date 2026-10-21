@@ -133,6 +133,7 @@ interface Fichier {
   parents: string[]
   contenu?: string
   version: number
+  trashed?: boolean
 }
 
 const DOSSIER = 'application/vnd.google-apps.folder'
@@ -151,6 +152,7 @@ function driveSimule(fichiers: Fichier[]) {
     mimeType: f.mimeType,
     parents: f.parents,
     version: String(f.version),
+    trashed: f.trashed === true,
   })
   vi.stubGlobal('fetch', (entree: string, init: RequestInit = {}) => {
     const adresse = new URL(entree)
@@ -170,6 +172,7 @@ function driveSimule(fichiers: Fichier[]) {
       return Promise.resolve(
         json({
           files: fichiers
+            .filter(f => !q.includes('trashed = false') || f.trashed !== true)
             .filter(f => parent === undefined || f.parents.includes(parent))
             .filter(f => nom === undefined || f.name === nom)
             .map(vue),
@@ -253,6 +256,14 @@ describe('Google Drive simulé', () => {
         parents: ['d1'],
         version: 2,
       },
+      {
+        id: 'c1',
+        name: 'Ancien export',
+        mimeType: DOSSIER,
+        parents: ['d1'],
+        version: 1,
+        trashed: true,
+      },
     ])
     const espace = espaceGoogleDrive(jeton, { compteService: false })
     const position = {
@@ -260,6 +271,11 @@ describe('Google Drive simulé', () => {
       base: null,
       chemin: ["L'équipe"],
     }
+    // Un élément mis à la corbeille est absent, même par son identifiant.
+    expect(
+      await espace.element({ emplacement: 'mon-drive', base: 'c1', chemin: [] })
+    ).toBeNull()
+    expect(await espace.ancetres('mon-drive', 'c1')).toBeNull()
     expect(await espace.element(position)).toMatchObject({
       id: 'd1',
       dossier: true,
@@ -287,6 +303,19 @@ describe('Google Drive simulé', () => {
       { pdf: true }
     )
     expect(await new Response(pdf.flux).text()).toBe('export application/pdf')
+    // Téléchargé, un document natif gagne l'extension de son format d'export.
+    const docx = await espace.ouvrir(
+      { ...position, chemin: ["L'équipe", 'Compte rendu'] },
+      { pdf: false }
+    )
+    expect(docx.nom).toBe('Compte rendu.docx')
+    await docx.flux.cancel()
+    const ordinaire = await espace.ouvrir(
+      { ...position, chemin: ["L'équipe", 'Plan.pdf'] },
+      { pdf: false }
+    )
+    expect(ordinaire.nom).toBeUndefined()
+    await ordinaire.flux.cancel()
     expect(
       await espace.lireMarkdown!({
         ...position,

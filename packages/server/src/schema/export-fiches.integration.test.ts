@@ -51,8 +51,16 @@ const racine: NoeudMemoire = {
     },
   ],
 }
+// « Partagés avec moi » montre deux dossiers de la bibliothèque, sous le même
+// identifiant.
+const partages: NoeudMemoire = {
+  id: 'vue-partages',
+  nom: 'Partagés avec moi',
+  enfants: [racine.enfants![0]!, racine.enfants![2]!.enfants![0]!],
+}
 const ESPACE = espaceEnMemoire([
   { id: 'bibliotheque', nom: 'Documents', site: null, racine },
+  { id: 'partages', nom: 'Partagés', site: null, racine: partages, vue: true },
 ])
 
 async function executer(
@@ -77,6 +85,12 @@ const CHOISIR = `mutation ($c: [String!]!) {
 }`
 const LIER = `mutation ($a: ID!, $c: [String!]!) {
   lierDossier(activiteId: $a, emplacement: "bibliotheque", chemin: $c) { id }
+}`
+const CHOISIR_PARTAGE = `mutation ($c: [String!]!) {
+  choisirDossierExport(emplacement: "partages", chemin: $c) { exportDossier }
+}`
+const LIER_PARTAGE = `mutation ($a: ID!, $c: [String!]!) {
+  lierDossier(activiteId: $a, emplacement: "partages", chemin: $c) { id }
 }`
 const CONNEXION = `{ espaceFichiers { connexion { exportDossier exportRapport { ecrites inchangees supprimees refusees { fiche } modifieesALaMain erreur } } } }`
 
@@ -240,6 +254,10 @@ describe('dossier d’export', () => {
         'SAISIE_INVALIDE'
       )
     }
+    // Le même sous-dossier, vu depuis « Partagés avec moi ».
+    expect(
+      code(await executer(ids.admin, CHOISIR_PARTAGE, { c: ['Sous-dossier'] }))
+    ).toBe('SAISIE_INVALIDE')
   })
 
   it('se crée dans le dossier choisi', async () => {
@@ -254,6 +272,14 @@ describe('dossier d’export', () => {
     for (const c of [['Partage'], ['Partage', 'Fiches Relaytour']]) {
       expect(
         code(await executer(ids.admin, LIER, { a: ids.activite, c }))
+      ).toBe('SAISIE_INVALIDE')
+    }
+  })
+
+  it('ne se lie pas non plus depuis une autre vue du même dossier', async () => {
+    for (const c of [['Partage'], ['Partage', 'Fiches Relaytour']]) {
+      expect(
+        code(await executer(ids.admin, LIER_PARTAGE, { a: ids.activite, c }))
       ).toBe('SAISIE_INVALIDE')
     }
   })
@@ -496,6 +522,15 @@ describe('isolement et concurrence du dossier d’export', () => {
         })
       )
     ).toBe('FORBIDDEN')
+    // SharePoint et Dropbox résolvent un chemin sans tenir compte de la casse.
+    for (const nom of [
+      dossierExport.nom.toLowerCase(),
+      dossierExport.nom.toUpperCase(),
+    ]) {
+      expect(
+        code(await executer(ids.admin, CONTENU, { id: lie.id, c: [nom] }))
+      ).toBe('FORBIDDEN')
+    }
 
     // Le dossier qui contient maintenant le dossier d'export ne se lie plus.
     const LIER_PERIMETRE = `mutation ($a: ID!, $p: ID, $c: [String!]!) {
@@ -513,5 +548,46 @@ describe('isolement et concurrence du dossier d’export', () => {
 
     commun.enfants = commun.enfants!.filter(e => e.id !== element)
     partage.enfants.push(dossierExport)
+  })
+
+  it('cesse d’écrire et se cache quand un lien vise son dossier depuis une autre vue', async () => {
+    // Un lien enregistré avant le contrôle entre les vues.
+    const lie = await prisma.dossierLie.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        fournisseur: 'SHAREPOINT',
+        emplacement: 'partages',
+        element: 'd-partage',
+        nom: 'Partage',
+      },
+    })
+    try {
+      const rapport = await exporterFiches(ids.org, { verifier: false })
+      expect(rapport?.erreur).toContain('dossier lié')
+      expect(rapport?.ecrites).toBe(0)
+
+      const dossierExport = noeud((await exportElement())!)!
+      const CONTENU = `query ($id: ID!, $c: [String!]!) { contenuDossierLie(id: $id, chemin: $c) { elements { elementId } } }`
+      const liste = await executer(ids.admin, CONTENU, { id: lie.id, c: [] })
+      expect(liste.errors).toBeUndefined()
+      expect(
+        (
+          liste.data as {
+            contenuDossierLie: { elements: { elementId: string }[] }
+          }
+        ).contenuDossierLie.elements.map(e => e.elementId)
+      ).not.toContain(dossierExport.id)
+      expect(
+        code(
+          await executer(ids.admin, CONTENU, {
+            id: lie.id,
+            c: [dossierExport.nom],
+          })
+        )
+      ).toBe('FORBIDDEN')
+    } finally {
+      await prisma.dossierLie.delete({ where: { id: lie.id } })
+    }
   })
 })

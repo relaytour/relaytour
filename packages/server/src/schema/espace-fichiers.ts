@@ -12,6 +12,7 @@ import {
   ancetresDeLExport,
   cheminDeLExportSous,
   dansLExport,
+  lignee,
 } from '../espace-fichiers/isolement.ts'
 import {
   lancerExportFiches,
@@ -22,14 +23,27 @@ import {
   commencerConnexion,
   configurationMicrosoft,
   erreurEspace,
+  configurationDropbox,
   configurationGoogle,
+  configurationNextcloud,
   connexionsPossibles,
+  documentNatif,
   enregistrerConnexion,
   espaceDeTest,
+  garderConnexionNextcloud,
+  lireConnexionNextcloud,
   memoriserJetonAcces,
+  oublierConnexionNextcloud,
   oublierJetonAcces,
   ouvrirEspace,
 } from '../espace-fichiers/index.ts'
+import {
+  baseAdmise,
+  commencerLoginNextcloud,
+  compteNextcloud,
+  sonderLoginNextcloud,
+  type SecretNextcloud,
+} from '../espace-fichiers/nextcloud.ts'
 import {
   adresseAutorisationGoogle,
   jetonCompteService,
@@ -38,7 +52,12 @@ import {
   PARTAGES,
 } from '../espace-fichiers/google.ts'
 import { adresseAutorisation } from '../espace-fichiers/sharepoint.ts'
-import type { ElementEspace, EspaceFichiers } from '../espace-fichiers/types.ts'
+import { adresseAutorisationDropbox } from '../espace-fichiers/dropbox.ts'
+import {
+  FournisseurIndisponible,
+  type ElementEspace,
+  type EspaceFichiers,
+} from '../espace-fichiers/types.ts'
 import type { AppContext } from '../context.ts'
 import { peutLireFiche } from '../lib/fiches.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
@@ -84,6 +103,24 @@ const RefusExportRef = builder
       raison: t.exposeString('raison'),
     }),
   })
+
+const DebutConnexionNextcloudRef = builder
+  .objectRef<{ connexion: string; etat: string }>('DebutConnexionNextcloud')
+  .implement({
+    description:
+      'Connexion à Nextcloud commencée : la page où l’admin accorde l’accès, et l’état à présenter ensuite.',
+    fields: t => ({
+      connexion: t.exposeString('connexion'),
+      etat: t.exposeString('etat'),
+    }),
+  })
+
+/** Une erreur d'adresse ou de réponse de Nextcloud, que l'admin peut corriger. */
+function erreurNextcloud(erreur: unknown): Error {
+  return erreur instanceof FournisseurIndisponible
+    ? erreurSaisie(erreur.message)
+    : erreurEspace(erreur)
+}
 
 const RapportExportRef = builder
   .objectRef<RapportExport>('RapportExport')
@@ -148,27 +185,6 @@ const ConnexionFichiersRef = builder.prismaObject('ConnexionFichiers', {
     }),
   }),
 })
-
-/**
- * Identifiants de la racine d'une bibliothèque et de chaque dossier du chemin,
- * jusqu'au dernier compris. Un dossier absent n'a pas d'identifiant.
- */
-async function idsDuChemin(
-  espace: EspaceFichiers,
-  emplacement: string,
-  chemin: readonly string[]
-): Promise<string[]> {
-  const ids: string[] = []
-  for (let i = 0; i <= chemin.length; i++) {
-    const element = await espace.element({
-      emplacement,
-      base: null,
-      chemin: chemin.slice(0, i),
-    })
-    if (element !== null) ids.push(element.id)
-  }
-  return ids
-}
 
 interface EspaceFichiersVue {
   connexionsPossibles: {
@@ -284,7 +300,11 @@ function vue(espace: EspaceFichiers, e: ElementEspace): ElementVue {
     ...e,
     apercu: e.dossier
       ? 'AUCUN'
-      : formatApercu(e.nom, nom => espace.convertitEnPdf(nom, e.typeMime)),
+      : formatApercu(
+          e.nom,
+          nom => espace.convertitEnPdf(nom, e.typeMime),
+          documentNatif(espace.fournisseur, e.typeMime)
+        ),
   }
 }
 
@@ -470,15 +490,18 @@ builder.mutationFields(t => ({
         fournisseur === 'SHAREPOINT' ? await configurationMicrosoft() : null
       const google =
         fournisseur === 'GOOGLE_DRIVE' ? await configurationGoogle() : null
-      if (microsoft === null && google === null) throw fermee()
+      const dropbox =
+        fournisseur === 'DROPBOX' ? await configurationDropbox() : null
+      if (microsoft === null && google === null && dropbox === null)
+        throw fermee()
       const { etat, defi } = await commencerConnexion({
         organisationId: ctx.organisation!.id,
         userId: ctx.personne!.id,
         fournisseur,
       })
-      return microsoft !== null
-        ? adresseAutorisation(microsoft, etat, defi)
-        : adresseAutorisationGoogle(google!, etat, defi)
+      if (microsoft !== null) return adresseAutorisation(microsoft, etat, defi)
+      if (google !== null) return adresseAutorisationGoogle(google, etat, defi)
+      return adresseAutorisationDropbox(dropbox!, etat, defi)
     },
   }),
 
@@ -542,6 +565,119 @@ builder.mutationFields(t => ({
         ...query,
         where: { organisationId },
       })
+    },
+  }),
+
+  commencerConnexionNextcloud: t.field({
+    type: DebutConnexionNextcloudRef,
+    authScopes: { admin: true },
+    description:
+      'Commence la connexion au Nextcloud de l’association, à l’adresse donnée. L’admin ouvre ensuite la page rendue et y accorde l’accès ; Nextcloud crée un mot de passe d’application pour Relaytour.',
+    args: { adresse: t.arg.string({ required: true }) },
+    resolve: async (_root, { adresse }, ctx) => {
+      const configuration = await configurationNextcloud()
+      if (configuration === null) {
+        throw erreurSaisie('Nextcloud n’est pas ouvert sur cette installation.')
+      }
+      if (adresse.length > 500)
+        throw erreurSaisie('Cette adresse est trop longue.')
+      const base = baseAdmise(adresse, configuration)
+      if (base === null) {
+        throw erreurSaisie(
+          configuration.tous
+            ? 'Saisissez l’adresse https de votre Nextcloud, sans port, par exemple https://cloud.exemple.org.'
+            : 'L’hébergeur de cette installation n’admet pas cette adresse. Demandez-lui d’ajouter votre Nextcloud.'
+        )
+      }
+      let debut
+      try {
+        debut = await commencerLoginNextcloud(configuration, base)
+      } catch (erreur) {
+        throw erreurNextcloud(erreur)
+      }
+      const etat = await garderConnexionNextcloud({
+        organisationId: ctx.organisation!.id,
+        userId: ctx.personne!.id,
+        base,
+        sondage: debut.sondage,
+        jeton: debut.jeton,
+      })
+      return { connexion: debut.connexion, etat }
+    },
+  }),
+
+  terminerConnexionNextcloud: t.boolean({
+    authScopes: { admin: true },
+    description:
+      'Demande à Nextcloud si l’admin a accordé l’accès. Vrai une fois la connexion enregistrée ; faux tant qu’il n’a pas terminé.',
+    args: { etat: t.arg.string({ required: true }) },
+    resolve: async (_root, { etat }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const configuration = await configurationNextcloud()
+      if (configuration === null) {
+        throw erreurSaisie('Nextcloud n’est pas ouvert sur cette installation.')
+      }
+      // L'état appartient à la personne qui a commencé, dans cette organisation.
+      const enCours = await lireConnexionNextcloud(etat)
+      if (
+        enCours === null ||
+        enCours.organisationId !== organisationId ||
+        enCours.userId !== ctx.personne!.id
+      ) {
+        throw erreurSaisie('Cette connexion a expiré. Recommencez.')
+      }
+      let accorde
+      try {
+        accorde = await sonderLoginNextcloud(
+          configuration,
+          enCours.base,
+          enCours.sondage,
+          enCours.jeton
+        )
+      } catch (erreur) {
+        throw erreurNextcloud(erreur)
+      }
+      if (accorde === null) return false
+      // Deux sondages simultanés : un seul enregistre la connexion.
+      if (!(await oublierConnexionNextcloud(etat))) return false
+      let compte
+      try {
+        compte = await compteNextcloud(
+          configuration,
+          enCours.base,
+          accorde.identifiant,
+          accorde.motDePasse
+        )
+      } catch (erreur) {
+        throw erreurNextcloud(erreur)
+      }
+      const secret = JSON.stringify({
+        base: enCours.base,
+        utilisateur: compte.utilisateur,
+        identifiant: accorde.identifiant,
+        motDePasse: accorde.motDePasse,
+      } satisfies SecretNextcloud)
+      const connexion = await enregistrerConnexion({
+        organisationId,
+        fournisseur: 'NEXTCLOUD',
+        methode: 'COMPTE',
+        compte: `${compte.nom} (${new URL(enCours.base).host})`,
+        secret,
+        connecteParId: ctx.personne!.id,
+      })
+      memoriserJetonAcces(connexion.jeton, secret, Date.now() + 60 * 60_000)
+      journal.info(
+        {
+          evenement: 'espace-fichiers-connecte',
+          organisationId,
+          acteurId: ctx.personne!.id,
+          fournisseur: 'NEXTCLOUD',
+          methode: 'COMPTE',
+        },
+        'Un espace de fichiers a été connecté.'
+      )
+      void publierChangement({ entite: 'FICHIERS', organisationId })
+      return true
     },
   }),
 
@@ -629,15 +765,13 @@ builder.mutationFields(t => ({
           exportAncetres: true,
         },
       })
-      // Sa place se relit chez le fournisseur : un admin a pu le déplacer.
-      if (
-        exportation?.exportElement != null &&
-        exportation.exportEmplacement === emplacement
-      ) {
+      // Sa place se relit chez le fournisseur : un admin a pu le déplacer. Le
+      // contrôle vaut quel que soit l'emplacement par lequel l'admin le voit.
+      if (exportation?.exportElement != null) {
         const exportElement = exportation.exportElement
         const { ancetres, parcours } = await avecEspace(ctx, async e => ({
           ancetres: await ancetresDeLExport(e, exportation),
-          parcours: await idsDuChemin(e, emplacement, chemin),
+          parcours: await lignee(e, emplacement, chemin),
         }))
         if (
           ancetres.some(a => a.id === element.id) ||
@@ -711,7 +845,7 @@ builder.mutationFields(t => ({
       const { parent, ids, espace } = await avecEspace(ctx, async espace => ({
         espace,
         parent: await espace.element({ emplacement, base: null, chemin }),
-        ids: await idsDuChemin(espace, emplacement, chemin),
+        ids: await lignee(espace, emplacement, chemin),
       }))
       if (parent === null || !parent.dossier) {
         throw erreurSaisie('Ce dossier n’existe pas dans l’espace de fichiers.')
@@ -737,7 +871,7 @@ builder.mutationFields(t => ({
         )
       const lies = (tx: Prisma.TransactionClient | typeof prisma) =>
         tx.dossierLie.count({
-          where: { organisationId, emplacement, element: { in: ids } },
+          where: { organisationId, element: { in: ids } },
         })
       if ((await lies(prisma)) > 0) throw refus()
       const cree = await avecEspace(ctx, () =>

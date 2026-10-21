@@ -36,6 +36,7 @@
     "@prisma/client": "^6.19.0",
     "@relaytour/database": "workspace:*",
     "@relaytour/tokens": "workspace:*",
+    "@xmldom/xmldom": "^0.9.10",
     "better-auth": "1.7.5",
     "bullmq": "^5.80.0",
     "cors": "^2.8.5",
@@ -49,6 +50,7 @@
     "pino": "^10.3.1",
     "turndown": "^7.2.4",
     "turndown-plugin-gfm": "^1.0.2",
+    "undici": "^7.29.1",
     "web-push": "^3",
     "yaml": "^2.8.1",
     "zod": "^4.4.0"

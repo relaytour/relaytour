@@ -11,10 +11,13 @@ import { journal } from '../lib/journal.ts'
 import { cheminValide, disposition, formatApercu, typeServi } from './chemin.ts'
 import { dossierLisible } from './droits.ts'
 import { cheminDeLExportSous, dansLExport } from './isolement.ts'
+import { echangerCodeDropbox, nomDuCompteDropbox } from './dropbox.ts'
 import { echangerCodeGoogle, nomDuCompteGoogle, type Jetons } from './google.ts'
 import {
+  configurationDropbox,
   configurationGoogle,
   configurationMicrosoft,
+  documentNatif,
   enregistrerConnexion,
   memoriserJetonAcces,
   ouvrirEspace,
@@ -111,6 +114,14 @@ const CONNECTEURS: Record<string, ConnecteurOAuth> = {
       return c === null ? null : echangerCodeGoogle(c, code, verificateur)
     },
     nomDuCompte: nomDuCompteGoogle,
+  },
+  dropbox: {
+    fournisseur: 'DROPBOX',
+    echanger: async (code, verificateur) => {
+      const c = await configurationDropbox()
+      return c === null ? null : echangerCodeDropbox(c, code, verificateur)
+    },
+    nomDuCompte: nomDuCompteDropbox,
   },
 }
 
@@ -236,8 +247,10 @@ async function apercu(
   }
   const format = telecharger
     ? 'AUCUN'
-    : formatApercu(element.nom, nom =>
-        espace.convertitEnPdf(nom, element.typeMime)
+    : formatApercu(
+        element.nom,
+        nom => espace.convertitEnPdf(nom, element.typeMime),
+        documentNatif(espace.fournisseur, element.typeMime)
       )
   const converti = format === 'PDF_CONVERTI'
   if (!converti && element.taille !== null && element.taille > APERCU_MAX) {
@@ -245,7 +258,7 @@ async function apercu(
     return
   }
   const contenu = await espace.ouvrir(position, { pdf: converti })
-  const nom = converti ? `${element.nom}.pdf` : element.nom
+  const nom = converti ? `${element.nom}.pdf` : (contenu.nom ?? element.nom)
   res.set({
     'Content-Type': typeServi(element.nom, format),
     'Content-Disposition': disposition(

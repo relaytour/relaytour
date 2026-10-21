@@ -61,6 +61,21 @@ export const CONNECTER_COMPTE_SERVICE = graphql(`
   }
 `)
 
+export const COMMENCER_NEXTCLOUD = graphql(`
+  mutation CommencerConnexionNextcloud($adresse: String!) {
+    commencerConnexionNextcloud(adresse: $adresse) {
+      connexion
+      etat
+    }
+  }
+`)
+
+export const TERMINER_NEXTCLOUD = graphql(`
+  mutation TerminerConnexionNextcloud($etat: String!) {
+    terminerConnexionNextcloud(etat: $etat)
+  }
+`)
+
 export const DECONNECTER = graphql(`
   mutation DeconnecterEspaceFichiers {
     deconnecterEspaceFichiers
@@ -241,6 +256,8 @@ export const DELIER_DOSSIER = graphql(`
 export const NOMS_FOURNISSEURS: Record<string, string> = {
   SHAREPOINT: 'SharePoint',
   GOOGLE_DRIVE: 'Google Drive',
+  DROPBOX: 'Dropbox',
+  NEXTCLOUD: 'Nextcloud',
 }
 
 /** L'icône d'un fichier, selon ce que la liseuse en affiche. */
@@ -318,6 +335,15 @@ export async function lireFichier(
   telecharger = false,
   signal?: AbortSignal
 ): Promise<Blob> {
+  return (await demanderFichier(dossierId, chemin, telecharger, signal)).blob()
+}
+
+async function demanderFichier(
+  dossierId: string,
+  chemin: readonly string[],
+  telecharger: boolean,
+  signal?: AbortSignal
+): Promise<Response> {
   const organisation = organisationChoisie()
   const activite = activiteAffichee()
   const reponse = await fetch(adresseApercu(dossierId, chemin, telecharger), {
@@ -331,19 +357,37 @@ export async function lireFichier(
     },
   })
   if (!reponse.ok) throw new Error(messageRefus(reponse.status))
-  return reponse.blob()
+  return reponse
 }
 
-/** Télécharge un fichier sous son nom. */
+/** Le nom que l'API donne au fichier (`filename*`), ou null. */
+export function nomServi(entete: string | null): string | null {
+  const nom = /filename\*=UTF-8''([^;]+)/i.exec(entete ?? '')?.[1]
+  if (nom === undefined) return null
+  try {
+    return decodeURIComponent(nom)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Télécharge un fichier sous le nom que l'API lui donne. Un document Google
+ * natif y gagne l'extension de son format d'export.
+ */
 export async function telechargerFichier(
   dossierId: string,
   chemin: readonly string[]
 ): Promise<void> {
-  const blob = await lireFichier(dossierId, chemin, true)
-  const adresse = URL.createObjectURL(blob)
+  const reponse = await demanderFichier(dossierId, chemin, true)
+  const nom =
+    nomServi(reponse.headers.get('content-disposition')) ??
+    chemin[chemin.length - 1] ??
+    'document'
+  const adresse = URL.createObjectURL(await reponse.blob())
   const lien = document.createElement('a')
   lien.href = adresse
-  lien.download = chemin[chemin.length - 1] ?? 'document'
+  lien.download = nom
   document.body.append(lien)
   lien.click()
   lien.remove()
