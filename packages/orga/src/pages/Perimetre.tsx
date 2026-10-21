@@ -7,6 +7,7 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 import Avancement from '../composants/Avancement'
 import ChoixEdition from '../composants/ChoixEdition'
 import DeclinaisonsProposees from '../composants/DeclinaisonsProposees'
+import FichesConnexes from '../composants/FichesConnexes'
 import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import {
   Avatar,
@@ -104,6 +105,25 @@ const FICHES = graphql(`
         id
         slug
         titre
+      }
+      # Les fiches d'autres périmètres qui concernent celui-ci (ADR 0039), masquées
+      # comprises : l'écran sépare les deux listes.
+      peutMasquerFichesConnexes
+      fichesConnexes(inclureMasquees: true) {
+        id
+        slug
+        titre
+        perimetre {
+          id
+          nom
+          couleur
+        }
+        connexions {
+          masquee
+          perimetre {
+            id
+          }
+        }
       }
     }
   }
@@ -494,6 +514,14 @@ export default function Perimetre() {
                   </ul>
                 )}
               </Panneau>
+            )}
+
+            {perimetre.acces === 'COMPLET' && methode?.perimetre && (
+              <FichesConnexes
+                perimetreId={methode.perimetre.id}
+                fiches={methode.perimetre.fichesConnexes}
+                peutMasquer={methode.perimetre.peutMasquerFichesConnexes}
+              />
             )}
 
             {perimetre.referents.length > 0 && (

@@ -15,6 +15,7 @@ import MessagesActivite from './pages/admin/MessagesActivite'
 import NotificationsAdmin from './pages/admin/NotificationsAdmin'
 import Personnes from './pages/admin/Personnes'
 import Redaction from './pages/admin/Redaction'
+import AideMarkdown from './pages/AideMarkdown'
 import Connexion from './pages/Connexion'
 import Fiche from './pages/Fiche'
 import FicheEditeur from './pages/FicheEditeur'
@@ -57,6 +58,7 @@ const routeur = createBrowserRouter([
           { path: 'fiches/nouvelle', element: <FicheEditeur /> },
           { path: 'fiches/:slug', element: <Fiche /> },
           { path: 'fiches/:slug/modifier', element: <FicheEditeur /> },
+          { path: 'aide/markdown', element: <AideMarkdown /> },
         ],
       },
       {

@@ -456,3 +456,34 @@ describe('import qui contredit un lien existant', () => {
     ])
   })
 })
+
+describe('groupes de la liste « Concerne aussi » (ADR 0039)', () => {
+  const activite = (groupes: string[]) =>
+    `slug: ${ACTIVITE}\nnom: Tournoi\nnature: EVENEMENT\ngroupes:\n${groupes
+      .map(g => `  - cle: ${g}\n    libelle: ${g}\n    libellePluriel: ${g}s\n`)
+      .join('')}`
+  const fichier = `fiches/lieux/ateliers-${s}.md`
+  const groupes = async () =>
+    (
+      await prisma.ficheGroupeConnexe.findMany({
+        where: { fiche: { organisationId, slug: `ateliers-${s}` } },
+        select: { groupe: true },
+        orderBy: { groupe: 'asc' },
+      })
+    ).map(g => g.groupe)
+
+  it('retire un groupe que l’activité ne déclare plus, même pour une fiche absente du dossier', async () => {
+    ecrire('activite.yaml', activite(['sport', 'pole', 'atelier']))
+    ecrire(
+      fichier,
+      `---\nslug: ateliers-${s}\ntitre: Ateliers\nconcerneGroupes: [atelier, sport]\n---\n\nLe contenu.\n`
+    )
+    await importer()
+    expect(await groupes()).toEqual(['atelier', 'sport'])
+
+    rmSync(path.join(racine, 'activites', ACTIVITE, fichier))
+    ecrire('activite.yaml', activite(['sport', 'pole']))
+    await importer()
+    expect(await groupes()).toEqual(['sport'])
+  })
+})

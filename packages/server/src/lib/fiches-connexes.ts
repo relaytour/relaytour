@@ -1,4 +1,4 @@
-import { prisma, type Prisma } from '@relaytour/database'
+import { prisma, type Prisma, type PrismaClient } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 
@@ -70,30 +70,34 @@ export async function conditionsConnexes(
 ): Promise<Prisma.FicheWhereInput[]> {
   const actifs = await lisiblesActifs(ctx)
   if (actifs.length === 0) return []
-  const ids = actifs.map(p => p.id)
-  const groupesParActivite = new Map<string, Set<string>>()
+  const parActivite = new Map<string, { ids: string[]; groupes: Set<string> }>()
   for (const p of actifs) {
-    const groupes = groupesParActivite.get(p.activiteId) ?? new Set<string>()
-    groupes.add(p.groupe)
-    groupesParActivite.set(p.activiteId, groupes)
+    const lus = parActivite.get(p.activiteId) ?? { ids: [], groupes: new Set() }
+    lus.ids.push(p.id)
+    lus.groupes.add(p.groupe)
+    parActivite.set(p.activiteId, lus)
   }
-  return [
+  // Chaque chemin se lit dans l'activité de la fiche : une fiche déplacée vers une
+  // autre activité par un import ne s'ouvre pas par une liste, un groupe ou une
+  // déclinaison de son ancienne activité. La même clé de groupe peut aussi
+  // désigner un autre groupe dans une autre activité.
+  return [...parActivite].flatMap(([activiteId, { ids, groupes }]) => [
     {
+      activiteId,
       perimetreId: { not: null },
       connexes: { some: { perimetreId: { in: ids } } },
     },
-    // Un groupe se lit dans l'activité de la fiche : la même clé peut désigner un
-    // autre groupe dans une autre activité.
-    ...[...groupesParActivite].map(([activiteId, groupes]) => ({
+    {
       activiteId,
       perimetreId: { not: null },
       groupesConnexes: { some: { groupe: { in: [...groupes] } } },
-    })),
+    },
     {
+      activiteId,
       perimetreId: { not: null },
       taches: { some: { ...DECLINAISON_ACCEPTEE, perimetreId: { in: ids } } },
     },
-  ]
+  ])
 }
 
 /** La personne lit-elle cette fiche par un partage ? */
@@ -262,4 +266,37 @@ export function publierFiche(
       // Le flux est un accélérateur : les écrans se relisent à leur rythme.
     }
   })()
+}
+
+/**
+ * Une personne lit-elle une fiche de périmètre, sans contexte de requête ? Elle
+ * administre son activité, ou elle a été affectée à son périmètre ou à un
+ * périmètre qu'elle concerne. Le résumé et la cloche s'en servent pour ne jamais
+ * nommer une fiche devenue illisible.
+ */
+export async function lecteurDeLaFiche(
+  client: PrismaClient,
+  userId: string,
+  organisationId: string,
+  fiche: { id: string; perimetreId: string | null; activiteId: string }
+): Promise<boolean> {
+  const [admin, adminActivite] = await Promise.all([
+    client.appartenance.count({
+      where: { userId, organisationId, role: 'ADMIN' },
+    }),
+    client.adminActivite.count({
+      where: { userId, organisationId, activiteId: fiche.activiteId },
+    }),
+  ])
+  if (admin + adminActivite > 0) return true
+  const perimetres = new Set(
+    (await perimetresConcernes(fiche)).map(c => c.perimetreId)
+  )
+  if (fiche.perimetreId !== null) perimetres.add(fiche.perimetreId)
+  if (perimetres.size === 0) return false
+  return (
+    (await client.affectation.count({
+      where: { userId, perimetreId: { in: [...perimetres] } },
+    })) > 0
+  )
 }

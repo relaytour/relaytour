@@ -5,6 +5,50 @@
   "version": "0.17.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-20-orga-une-fiche-d-un-autre-perimetre-peut-concerner-aussi-le-votre",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une fiche d’un autre périmètre peut concerner aussi le vôtre",
+            "texte": "Une fiche peut concerner d’autres périmètres que le sien. Sa page indique les périmètres et les groupes qu’elle concerne. Dans un périmètre concerné, le panneau « Fiches connexes » la présente en lecture seule, avec son périmètre d’origine. Les référentes et référents de ce périmètre la masquent quand elle ne leur sert pas, puis l’affichent de nouveau. Dans le texte d’une fiche, une mention @périmètre ou @groupe:clé s’affiche comme une étiquette ; celle d’un groupe liste ses périmètres.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-l-editeur-regle-les-perimetres-qu-une-fiche-concerne-aussi",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Vous choisissez dans l’éditeur les périmètres qu’une fiche concerne aussi",
+            "texte": "Sous le texte d’une fiche, vous choisissez dans le champ « Concerne aussi » les périmètres et les groupes où elle se lit sans s’y modifier. Après une arobase, l’éditeur propose les périmètres et les groupes de l’activité. À l’enregistrement, il propose d’ajouter les périmètres que le texte mentionne. Vous confirmez une liste d’au moins quatre périmètres qui dépasse la moitié de l’activité. Le guide Markdown présente les mentions.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-20-orga-l-editeur-de-fiche-propose-une-barre-de-mise-en-forme-et-un-",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L’éditeur de fiche s’ouvre en mode visuel, avec une barre de mise en forme et un guide Markdown",
+            "texte": "En mode visuel, vous écrivez directement dans la fiche telle qu’elle s’affiche. Le mode Markdown montre le texte source, et votre navigateur garde votre choix. Une barre au-dessus du texte met en gras ou en italique, pose un titre, une liste, une case à cocher, un lien ou un tableau. Le bouton « Aide » ouvre un guide de la syntaxe Markdown des fiches, sans quitter l’éditeur.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.17.0",
       "notes": [
         {

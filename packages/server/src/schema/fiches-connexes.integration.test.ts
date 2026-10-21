@@ -504,6 +504,21 @@ describe('le masquage par le périmètre cible', () => {
     expect((await regler(ids.pauline, [])).errors).toBeUndefined()
     expect(code(await lireFiche(ids.nina))).toBe('FORBIDDEN')
   })
+
+  it('une notification d’une fiche devenue illisible ne la nomme plus', async () => {
+    const r = await executer(ids.nina, NOTIFICATIONS)
+    const connexes = (
+      r.data as {
+        notifications: { type: string; message: string; lien: string }[]
+      }
+    ).notifications.filter(n => n.type === 'FICHE_CONNEXE')
+    expect(connexes.length).toBeGreaterThan(0)
+    for (const n of connexes) {
+      expect(n.message).toMatch(/ne concerne plus votre périmètre/)
+      expect(n.message).not.toMatch(/tableau/)
+      expect(n.lien).not.toMatch(/fiches/)
+    }
+  })
 })
 
 describe('une déclinaison qui cite une fiche du pôle', () => {
@@ -580,5 +595,44 @@ describe('une déclinaison qui cite une fiche du pôle', () => {
     })
     expect(r.errors).toBeUndefined()
     expect(code(await lireFiche(ids.victor, 'declinee'))).toBe('FORBIDDEN')
+  })
+})
+
+describe('une fiche déplacée vers une autre activité', () => {
+  it('ne s’ouvre plus par une déclinaison de son ancienne activité', async () => {
+    // Alice lit Accueil par la déclinaison acceptée, et voit aussi l'autre activité.
+    const atelier = await prisma.perimetre.create({
+      data: {
+        organisationId: ids.organisation,
+        activiteId: ids.autreActivite,
+        slug: `atelier-${s}`,
+        nom: 'atelier',
+        groupe: 'pole',
+        type: 'POLE',
+      },
+    })
+    await prisma.affectation.create({
+      data: {
+        userId: ids.alice,
+        perimetreId: atelier.id,
+        editionId: ids.autreEdition,
+      },
+    })
+    expect(code(await lireFiche(ids.alice, 'declinee'))).toBeUndefined()
+    // Un import déplace la fiche vers l'autre activité, dans un périmètre qu'Alice
+    // ne lit pas ; la déclinaison reste dans la première activité.
+    await prisma.fiche.update({
+      where: { id: ids.ficheDeclinee },
+      data: { activiteId: ids.autreActivite, perimetreId: ids.ailleurs },
+    })
+    const r = await executer(ids.alice, FICHE, {
+      s: `declinee-${s}`,
+      a: ids.autreActivite,
+    })
+    expect(code(r)).toBe('FORBIDDEN')
+    const liste = await executer(ids.alice, FICHES, { a: ids.autreActivite })
+    expect(
+      (liste.data as { fiches: { id: string }[] }).fiches.map(f => f.id)
+    ).not.toContain(ids.ficheDeclinee)
   })
 })
