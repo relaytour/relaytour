@@ -18,7 +18,7 @@ import {
 import { coordonneesLisibles } from '../lib/benevoles.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import {
-  annoncerAcceptation,
+  annoncerPlace,
   signalerPlacesModifiees,
 } from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
@@ -414,7 +414,7 @@ builder.mutationFields(t => ({
           await incrementer(tx, sequence.id)
           return acceptee
         })
-        await annoncerAcceptation(prisma, {
+        await annoncerPlace(prisma, {
           benevoleId,
           organisationId: sequence.organisationId,
           activiteId: sequence.activiteId,
@@ -432,7 +432,7 @@ builder.mutationFields(t => ({
             organisationId: ctx.organisation!.id,
             activiteId: sequence.activiteId,
           },
-          select: { id: true, origine: true },
+          select: { id: true, courriel: true, prevenirParMail: true },
         })
         if (benevole === null) throw accesRefuse()
         await prisma.$transaction(async tx => {
@@ -462,19 +462,21 @@ builder.mutationFields(t => ({
               sequenceId: sequence.id,
               benevoleId: benevole.id,
               role: 'RENFORT',
-              // Une fiche saisie à la main naît confirmée ; une fiche née d'une
-              // candidature reçoit une place à confirmer (ADR 0041).
-              confirmeeLe: benevole.origine === 'SAISIE' ? maintenant : null,
+              // Une fiche joignable reçoit une place à confirmer ; une autre,
+              // une place confirmée (ADR 0041).
+              confirmeeLe:
+                benevole.courriel !== null && benevole.prevenirParMail
+                  ? null
+                  : maintenant,
             },
           })
           await incrementer(tx, sequence.id)
         })
-        await signalerPlacesModifiees(
-          prisma,
-          [benevole.id],
-          sequence,
-          maintenant
-        )
+        await annoncerPlace(prisma, {
+          benevoleId: benevole.id,
+          organisationId: sequence.organisationId,
+          activiteId: sequence.activiteId,
+        })
       }
       signal(sequence)
       return lireSequence(ctx, await sequenceVisible(ctx, sequence.id))

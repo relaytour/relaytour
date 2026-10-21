@@ -9,7 +9,11 @@ import {
   type EtatPlace,
 } from '../lib/appels.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
-import { signalerPlacesModifiees } from '../lib/espace-benevole.ts'
+import {
+  annoncerPlace,
+  fichesJoignables,
+  signalerPlacesModifiees,
+} from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { heureLocale } from '../lib/heures.ts'
@@ -237,6 +241,20 @@ const PlaceInput = builder.inputType('PlaceSequenceInput', {
 /** Les fiches bénévoles d'une liste de places. */
 const fichesDe = (places: readonly { benevoleId: string | null }[]) =>
   places.flatMap(p => (p.benevoleId ? [p.benevoleId] : []))
+
+/** Annonce à chaque fiche sa place nouvelle dans une séquence (ADR 0041). */
+async function annoncerPlaces(
+  benevoleIds: readonly string[],
+  sequence: { organisationId: string; activiteId: string }
+) {
+  for (const benevoleId of benevoleIds) {
+    await annoncerPlace(prisma, {
+      benevoleId,
+      organisationId: sequence.organisationId,
+      activiteId: sequence.activiteId,
+    })
+  }
+}
 
 export const signal = (s: {
   id: string
@@ -499,6 +517,10 @@ builder.mutationFields(t => {
           editionId: lieu.editionId,
           activiteId,
         })
+        const joignables = await fichesJoignables(
+          prisma,
+          fichesDe(valides.places)
+        )
         // Le comptage et la création se font sous le verrou de l'organisation :
         // deux créations simultanées ne dépassent pas le plafond.
         const creee = await sousVerrouOrganisation(
@@ -520,14 +542,19 @@ builder.mutationFields(t => {
                 ...valides.champs,
                 creeParId: ctx.personne!.id,
                 places: {
-                  create: placesDatees(valides.places, [], new Date()),
+                  create: placesDatees(
+                    valides.places,
+                    [],
+                    new Date(),
+                    joignables
+                  ),
                 },
               },
               include: SEQUENCE_CHARGEE,
             })
           }
         )
-        await signalerPlacesModifiees(prisma, fichesDe(valides.places), creee)
+        await annoncerPlaces(fichesDe(valides.places), creee)
         signal(creee)
         return lireSequence(ctx, creee)
       },
@@ -555,6 +582,10 @@ builder.mutationFields(t => {
           activiteId,
           lieuActuel: actuelle.lieuId,
         })
+        const joignables = await fichesJoignables(
+          prisma,
+          fichesDe(valides.places)
+        )
         await prisma.$transaction(async tx => {
           const { count } = await tx.sequence.updateMany({
             where: { id: actuelle.id, version: args.versionAttendue },
@@ -582,28 +613,33 @@ builder.mutationFields(t => {
             where: { sequenceId: actuelle.id },
           })
           await tx.placeSequence.createMany({
-            data: placesDatees(valides.places, actuelles, new Date()).map(
-              p => ({ sequenceId: actuelle.id, ...p })
-            ),
+            data: placesDatees(
+              valides.places,
+              actuelles,
+              new Date(),
+              joignables
+            ).map(p => ({ sequenceId: actuelle.id, ...p })),
           })
         })
-        // Les bénévoles dont la place change reçoivent le mail de leurs places :
-        // toutes les fiches pour un horaire ou un lieu nouveau, sinon celles
-        // ajoutées ou retirées (ADR 0041).
+        // Une fiche ajoutée reçoit son lien, ou le mail de ses places. Une fiche
+        // retirée reçoit le mail de ses places, comme toutes les fiches gardées
+        // quand l'horaire ou le lieu change (ADR 0041).
         const avant = fichesDe(actuelle.places)
         const apres = fichesDe(valides.places)
         const deplacee =
           actuelle.debut.getTime() !== valides.champs.debut.getTime() ||
           actuelle.fin.getTime() !== valides.champs.fin.getTime() ||
           actuelle.lieuId !== valides.champs.lieuId
+        await annoncerPlaces(
+          apres.filter(id => !avant.includes(id)),
+          actuelle
+        )
         await signalerPlacesModifiees(
           prisma,
-          deplacee
-            ? [...avant, ...apres]
-            : [
-                ...avant.filter(id => !apres.includes(id)),
-                ...apres.filter(id => !avant.includes(id)),
-              ],
+          [
+            ...avant.filter(id => !apres.includes(id)),
+            ...(deplacee ? apres.filter(id => avant.includes(id)) : []),
+          ],
           actuelle
         )
         signal(actuelle)

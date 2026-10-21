@@ -7,42 +7,96 @@ import { DELAI_CONVOCATION_MS } from './convocations.ts'
 import { adminsAPrevenir } from './demandes.ts'
 import { publierNotification } from './flux.ts'
 import { journal } from './journal.ts'
+import { empreinte, jetonDe, nouveauSel } from './liens.ts'
 import { niveauxDes } from './notifications.ts'
 
 // Espace bénévole et mails aux bénévoles (ADR 0041).
 //
-// Seule une décision de l'équipe déclenche un mail : la première acceptation
-// d'une candidature envoie le lien personnel, une seule fois. Ensuite, seule une
-// adresse confirmée reçoit un mail, à chaque changement de ses places, regroupé
-// sur deux minutes. Une fiche saisie à la main, sans candidature, ne reçoit
-// jamais rien.
+// Seule une décision de l'équipe déclenche un mail, et seulement vers une fiche
+// joignable : une adresse, et l'option « Prévenir par mail ». La première place
+// d'une fiche joignable envoie le lien personnel, une seule fois. Ensuite, seule
+// une adresse confirmée reçoit un mail, à chaque changement de ses places,
+// regroupé sur deux minutes. Une fiche qui n'est pas joignable ne reçoit rien.
 //
-// La charge utile d'un mail ne porte que l'identifiant de la fiche (invariant 5) :
-// le worker crée le jeton au moment de l'envoi et n'en garde que l'empreinte. Un
-// nouveau mail porte donc un nouveau lien, et l'ancien cesse de répondre.
+// Le lien se recalcule à partir du secret du serveur et du sel de la fiche
+// (lib/liens.ts) : il reste le même d'un mail à l'autre. La charge utile d'un
+// mail ne porte que l'identifiant de la fiche (invariant 5).
 
 type Base = PrismaClient | Prisma.TransactionClient
 
-/** Une adresse que la personne a déposée elle-même, par une candidature. */
-const ADRESSE_DEPOSEE = {
+/** Une fiche joignable : une adresse, et l'option « Prévenir par mail ». */
+export const JOIGNABLE = {
   courriel: { not: null },
-  candidatures: { some: {} },
+  prevenirParMail: true,
 } satisfies Prisma.BenevoleWhereInput
 
+/** Les fiches joignables parmi celles demandées. */
+export async function fichesJoignables(
+  base: Base,
+  benevoleIds: readonly string[]
+): Promise<Set<string>> {
+  if (benevoleIds.length === 0) return new Set()
+  const fiches = await base.benevole.findMany({
+    where: { id: { in: [...new Set(benevoleIds)] }, ...JOIGNABLE },
+    select: { id: true },
+  })
+  return new Set(fiches.map(f => f.id))
+}
+
 /**
- * Envoie le lien personnel après la première acceptation d'une candidature : la
- * fiche n'en a jamais reçu, et son adresse vient d'une candidature. Une fiche qui
- * a déjà reçu son lien, et dont l'adresse est confirmée, reçoit le mail de ses
- * places. Ne lève jamais.
+ * Le jeton du lien d'une fiche. Une fiche sans lien en reçoit un ; l'empreinte se
+ * réaligne quand le secret du serveur a changé. `nouveau` tire un nouveau sel, ce
+ * qui révoque l'ancien lien.
  */
-export async function annoncerAcceptation(
+export async function jetonEspace(
+  base: Base,
+  benevoleId: string,
+  options: { nouveau?: boolean } = {}
+): Promise<string> {
+  if (options.nouveau) {
+    await base.benevole.update({
+      where: { id: benevoleId },
+      data: { espaceSel: nouveauSel() },
+    })
+  } else {
+    // Deux appels simultanés ne tirent qu'un sel.
+    await base.benevole.updateMany({
+      where: { id: benevoleId, espaceSel: null },
+      data: { espaceSel: nouveauSel() },
+    })
+  }
+  const { espaceSel, espaceEmpreinte } = await base.benevole.findUniqueOrThrow({
+    where: { id: benevoleId },
+    select: { espaceSel: true, espaceEmpreinte: true },
+  })
+  const jeton = await jetonDe('espace', espaceSel!)
+  if (espaceEmpreinte !== empreinte(jeton)) {
+    await base.benevole.update({
+      where: { id: benevoleId },
+      data: { espaceEmpreinte: empreinte(jeton) },
+    })
+  }
+  return jeton
+}
+
+/** Le lien de l'espace d'une fiche, pour un mail ou pour le bouton « Copier ». */
+export function lienEspace(origine: string, jeton: string): string {
+  return `${origine.replace(/\/$/, '')}/benevole/${jeton}`
+}
+
+/**
+ * Annonce une place nouvelle à sa fiche. La première place d'une fiche joignable
+ * envoie le lien personnel ; une fiche qui l'a déjà reçu, et dont l'adresse est
+ * confirmée, reçoit le mail de ses places. Ne lève jamais.
+ */
+export async function annoncerPlace(
   prisma: PrismaClient,
   fiche: { benevoleId: string; organisationId: string; activiteId: string },
   maintenant = new Date()
 ): Promise<void> {
   try {
     const { count } = await prisma.benevole.updateMany({
-      where: { id: fiche.benevoleId, lienEnvoyeLe: null, ...ADRESSE_DEPOSEE },
+      where: { id: fiche.benevoleId, lienEnvoyeLe: null, ...JOIGNABLE },
       data: { lienEnvoyeLe: maintenant },
     })
     if (count === 1) {
@@ -70,9 +124,9 @@ export async function annoncerAcceptation(
 }
 
 /**
- * Renvoie le lien personnel, une seule fois par fiche : la relance. Rend faux
- * quand la fiche ne peut plus en recevoir (déjà relancée, jamais annoncée, ou
- * sans adresse déposée).
+ * Renvoie le lien personnel par mail, une seule fois par fiche : la relance. Rend
+ * faux quand la fiche ne peut plus en recevoir (déjà relancée, jamais annoncée,
+ * ou plus joignable).
  */
 export async function relancer(
   prisma: PrismaClient,
@@ -84,7 +138,7 @@ export async function relancer(
       id: fiche.benevoleId,
       lienEnvoyeLe: { not: null },
       relanceLe: null,
-      ...ADRESSE_DEPOSEE,
+      ...JOIGNABLE,
     },
     data: { relanceLe: maintenant },
   })
@@ -119,7 +173,7 @@ export async function signalerPlacesModifiees(
       where: {
         id: { in: [...new Set(benevoleIds)] },
         courrielConfirmeLe: { not: null },
-        ...ADRESSE_DEPOSEE,
+        ...JOIGNABLE,
       },
       select: { id: true },
     })
@@ -244,7 +298,7 @@ export async function revoquerEspaces(
       },
       candidatures: { none: { edition: { statut: { not: 'ARCHIVEE' } } } },
     },
-    data: { espaceEmpreinte: null },
+    data: { espaceSel: null, espaceEmpreinte: null },
   })
   return count
 }

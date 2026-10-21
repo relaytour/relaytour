@@ -38,7 +38,8 @@ export interface PlaceDatee extends PlaceValide {
 /**
  * Les places d'une séquence avec leur date de confirmation. Une place déjà tenue
  * par la même personne garde la sienne, même nulle (place à confirmer). Une place
- * nouvelle saisie par l'équipe naît confirmée.
+ * nouvelle d'une fiche joignable reste à confirmer ; toute autre place nouvelle
+ * naît confirmée (ADR 0041).
  */
 export function placesDatees(
   places: readonly PlaceValide[],
@@ -47,14 +48,17 @@ export function placesDatees(
     benevoleId: string | null
     confirmeeLe: Date | null
   }[],
-  maintenant: Date
+  maintenant: Date,
+  joignables: ReadonlySet<string> = new Set()
 ): PlaceDatee[] {
   const cle = (p: { userId: string | null; benevoleId: string | null }) =>
     p.userId ?? `b:${p.benevoleId}`
   const dates = new Map(actuelles.map(p => [cle(p), p.confirmeeLe]))
   return places.map(p => {
     const k = cle(p)
-    return { ...p, confirmeeLe: dates.has(k) ? dates.get(k)! : maintenant }
+    if (dates.has(k)) return { ...p, confirmeeLe: dates.get(k)! }
+    const aConfirmer = p.benevoleId !== null && joignables.has(p.benevoleId)
+    return { ...p, confirmeeLe: aConfirmer ? null : maintenant }
   })
 }
 

@@ -524,12 +524,24 @@ export async function accepterSurSequence(
     select: { id: true },
   })
   if (place === null) {
+    // Une fiche joignable reçoit une place à confirmer ; une autre, une place
+    // confirmée (ADR 0041).
+    const fiche = await tx.benevole.findUniqueOrThrow({
+      where: { id: benevoleId },
+      select: { courriel: true, prevenirParMail: true },
+    })
+    const joignable = fiche.courriel !== null && fiche.prevenirParMail
     const nombre = await tx.placeSequence.count({ where: { sequenceId } })
     if (nombre >= PLACES_MAX) {
       throw erreurSaisie(`Une séquence compte ${PLACES_MAX} places au plus.`)
     }
     await tx.placeSequence.create({
-      data: { sequenceId, benevoleId, role: 'RENFORT', confirmeeLe: null },
+      data: {
+        sequenceId,
+        benevoleId,
+        role: 'RENFORT',
+        confirmeeLe: joignable ? null : maintenant,
+      },
     })
   }
   await recalculerCandidature(tx, candidature.id)

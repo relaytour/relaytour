@@ -151,13 +151,17 @@ type Agenda {
 Un appel à bénévoles : une adresse publique ouverte entre deux dates (ADR 0041).
 """
 type AppelBenevoles {
+  """
+  L’adresse publique, recalculée à la demande pour les personnes qui gèrent l’appel ; null sinon.
+  """
+  adresse: String
   candidaturesEnAttente: Int!
   editionId: ID!
   etat: EtatAppel!
   fermeLe: DateTime!
 
   """
-  Les derniers caractères du jeton, pour reconnaître l’adresse. L’adresse entière ne se lit qu’à sa création.
+  Les derniers caractères du jeton, pour reconnaître l’adresse d’un coup d’œil.
   """
   finAdresse: String!
   id: ID!
@@ -197,7 +201,7 @@ type AppelBenevolesPublic {
 }
 
 type AppelEtAdresse {
-  """L’adresse publique, lisible une seule fois."""
+  """L’adresse publique de l’appel."""
   adresse: String!
   appel: AppelBenevoles!
 }
@@ -265,7 +269,12 @@ type Benevole {
   lienEnvoyeLe: DateTime
 
   """
-  Vrai quand la personne connectée peut renvoyer le lien : il est parti une fois, sans relance.
+  Le lien personnel, à copier, pour une personne qui lit les coordonnées ; null sans lien ou sans ce droit.
+  """
+  lienEspace: String
+
+  """
+  Vrai quand la personne connectée peut renvoyer le lien par mail : il est parti une fois, sans relance, vers une fiche joignable.
   """
   lienRenvoyable: Boolean!
   nom: String!
@@ -279,6 +288,11 @@ type Benevole {
 
   """Le nombre de séquences où la fiche est placée."""
   places: Int!
+
+  """
+  L’option « Prévenir par mail ». Avec une adresse, la fiche est joignable : sa première place envoie le lien (ADR 0041).
+  """
+  prevenirParMail: Boolean!
   telephone: String
 }
 
@@ -1253,9 +1267,7 @@ type Mutation {
   creerAbonnementAgendaActivite(activiteId: ID!): AdresseAbonnement!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
 
-  """
-  Ouvre un appel à bénévoles. L’adresse publique se lit dans la réponse, une seule fois.
-  """
+  """Ouvre un appel à bénévoles, et rend son adresse publique."""
   creerAppelBenevoles(
     editionId: ID!
     fermeLe: DateTime!
@@ -1281,6 +1293,11 @@ type Mutation {
     courriel: String
     nom: String!
     note: String
+
+    """
+    Vrai : la fiche reçoit son lien par mail à sa première place, si elle a une adresse.
+    """
+    prevenirParMail: Boolean = true
     telephone: String
   ): Benevole!
   creerDateCle(description: String, editionId: ID!, jour: Date!, jourFin: Date, titre: String!): DateCle!
@@ -1441,6 +1458,11 @@ type Mutation {
   inviterPremierAdmin(email: String!, nom: String!, organisation: String!): Boolean!
 
   """
+  Le lien personnel d’une fiche, à copier : créé s’il n’existe pas. `nouveau` tire un nouveau lien, qui révoque l’ancien. Aucun mail ne part. Réservé aux personnes qui lisent ses coordonnées.
+  """
+  lienEspaceBenevole(benevoleId: ID!, nouveau: Boolean = false): String!
+
+  """
   Lie un dossier de l’espace connecté à un périmètre, ou à toute l’activité sans périmètre.
   """
   lierDossier(activiteId: ID!, chemin: [String!]!, emplacement: String!, perimetreId: ID): DossierLie!
@@ -1466,7 +1488,16 @@ type Mutation {
   masquerFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
   modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierAppelBenevoles(fermeLe: DateTime!, id: ID!, introduction: String, nom: String!, ouvertLe: DateTime!, versionAttendue: Int!): AppelBenevoles!
-  modifierBenevole(courriel: String, id: ID!, nom: String!, note: String, telephone: String): Benevole!
+  modifierBenevole(
+    courriel: String
+    id: ID!
+    nom: String!
+    note: String
+
+    """Sans valeur, l’option reste telle quelle."""
+    prevenirParMail: Boolean
+    telephone: String
+  ): Benevole!
 
   """
   Modifie le texte d’un commentaire et rend le fil de sa tâche. Seul son auteur le modifie.
@@ -1670,7 +1701,7 @@ type Mutation {
   renvoyerInvitation(id: ID!): Boolean!
 
   """
-  Renvoie le lien personnel d’une fiche née d’une candidature, une seule fois. Le nouveau lien remplace l’ancien. Réservé aux personnes qui lisent ses coordonnées.
+  Renvoie par mail le lien personnel d’une fiche joignable, une seule fois. Le lien reste le même. Réservé aux personnes qui lisent ses coordonnées.
   """
   renvoyerLienBenevole(benevoleId: ID!): Boolean!
 

@@ -11,7 +11,10 @@ import {
   telephoneValide,
 } from '../lib/benevoles.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import { lienEspace } from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { jetonDe } from '../lib/liens.ts'
+import { configurationOrganisation } from '../lib/organisation.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
@@ -73,13 +76,35 @@ const BenevoleRef = builder.objectRef<BenevoleLu>('Benevole').implement({
       nullable: true,
       resolve: l => l.benevole.lienEnvoyeLe,
     }),
+    prevenirParMail: t.boolean({
+      description:
+        'L’option « Prévenir par mail ». Avec une adresse, la fiche est joignable : sa première place envoie le lien (ADR 0041).',
+      resolve: l => l.benevole.prevenirParMail,
+    }),
     lienRenvoyable: t.boolean({
       description:
-        'Vrai quand la personne connectée peut renvoyer le lien : il est parti une fois, sans relance.',
+        'Vrai quand la personne connectée peut renvoyer le lien par mail : il est parti une fois, sans relance, vers une fiche joignable.',
       resolve: l =>
         l.coordonnees &&
+        l.benevole.prevenirParMail &&
+        l.benevole.courriel !== null &&
         l.benevole.lienEnvoyeLe !== null &&
         l.benevole.relanceLe === null,
+    }),
+    lienEspace: t.string({
+      nullable: true,
+      description:
+        'Le lien personnel, à copier, pour une personne qui lit les coordonnées ; null sans lien ou sans ce droit.',
+      resolve: async l => {
+        if (!l.coordonnees || l.benevole.espaceSel === null) return null
+        const { origineOrga } = await configurationOrganisation(
+          l.benevole.organisationId
+        )
+        return lienEspace(
+          origineOrga,
+          await jetonDe('espace', l.benevole.espaceSel)
+        )
+      },
     }),
     peutModifier: t.boolean({ resolve: l => l.peutModifier }),
   }),
@@ -160,6 +185,11 @@ builder.mutationFields(t => ({
       courriel: t.arg.string(),
       telephone: t.arg.string(),
       note: t.arg.string(),
+      prevenirParMail: t.arg.boolean({
+        defaultValue: true,
+        description:
+          'Vrai : la fiche reçoit son lien par mail à sa première place, si elle a une adresse.',
+      }),
       accord: t.arg.boolean({
         required: true,
         description:
@@ -180,6 +210,7 @@ builder.mutationFields(t => ({
         courriel: courrielValide(args.courriel),
         telephone: telephoneValide(args.telephone),
         note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
+        prevenirParMail: args.prevenirParMail ?? true,
         accordLe: new Date(),
         creeParId: ctx.personne!.id,
       }
@@ -212,6 +243,9 @@ builder.mutationFields(t => ({
       courriel: t.arg.string(),
       telephone: t.arg.string(),
       note: t.arg.string(),
+      prevenirParMail: t.arg.boolean({
+        description: 'Sans valeur, l’option reste telle quelle.',
+      }),
     },
     resolve: async (_root, args, ctx) => {
       const actuelle = await ficheModifiable(ctx, String(args.id))
@@ -222,6 +256,10 @@ builder.mutationFields(t => ({
           courriel: courrielValide(args.courriel),
           telephone: telephoneValide(args.telephone),
           note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
+          ...(args.prevenirParMail === null ||
+          args.prevenirParMail === undefined
+            ? {}
+            : { prevenirParMail: args.prevenirParMail }),
         },
         include: AVEC_PLACES,
       })

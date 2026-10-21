@@ -7,6 +7,8 @@ import { referencePublique } from '../lib/candidatures.ts'
 import type { AdressesDeRole } from '../lib/contenu.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import {
+  jetonEspace,
+  lienEspace,
   notifierRetrait,
   placesAVenir,
   relancer,
@@ -16,7 +18,10 @@ import { descriptionPubliable } from '../lib/formulaire.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { calendrier } from '../lib/ics.ts'
 import { journal } from '../lib/journal.ts'
-import { configurationActivite } from '../lib/organisation.ts'
+import {
+  configurationActivite,
+  configurationOrganisation,
+} from '../lib/organisation.ts'
 
 import { builder } from './builder.ts'
 
@@ -186,6 +191,19 @@ async function exigerEspace(jeton: string): Promise<Espace> {
   return lu
 }
 
+/** La fiche, si la personne lit ses coordonnées (ADR 0040). */
+async function ficheDontLesCoordonneesSeLisent(ctx: AppContext, id: string) {
+  const fiche = await prisma.benevole.findFirst({
+    where: { id, organisationId: ctx.organisation!.id },
+    select: { id: true, organisationId: true, activiteId: true },
+  })
+  if (fiche === null) throw accesRefuse()
+  await ctx.exigerActivite(fiche.activiteId)
+  const lisibles = await coordonneesLisibles(ctx, fiche.activiteId, [fiche.id])
+  if (!lisibles.has(fiche.id)) throw accesRefuse()
+  return fiche
+}
+
 const signalProgramme = (e: Espace) =>
   publierPourActivite('PROGRAMME', e.organisationId, e.activiteId)
 
@@ -299,27 +317,42 @@ builder.mutationFields(t => ({
     },
   }),
 
-  // ── Geste de l'équipe ──────────────────────────────────────────────────────
+  // ── Gestes de l'équipe ─────────────────────────────────────────────────────
+
+  lienEspaceBenevole: t.string({
+    authScopes: { connecte: true },
+    description:
+      'Le lien personnel d’une fiche, à copier : créé s’il n’existe pas. `nouveau` tire un nouveau lien, qui révoque l’ancien. Aucun mail ne part. Réservé aux personnes qui lisent ses coordonnées.',
+    args: {
+      benevoleId: t.arg.id({ required: true }),
+      nouveau: t.arg.boolean({ defaultValue: false }),
+    },
+    resolve: async (_root, args, ctx: AppContext) => {
+      const fiche = await ficheDontLesCoordonneesSeLisent(
+        ctx,
+        String(args.benevoleId)
+      )
+      const jeton = await jetonEspace(prisma, fiche.id, {
+        nouveau: args.nouveau ?? false,
+      })
+      const { origineOrga } = await configurationOrganisation(
+        fiche.organisationId
+      )
+      publierPourActivite('PROGRAMME', fiche.organisationId, fiche.activiteId)
+      return lienEspace(origineOrga, jeton)
+    },
+  }),
 
   renvoyerLienBenevole: t.boolean({
     authScopes: { connecte: true },
     description:
-      'Renvoie le lien personnel d’une fiche née d’une candidature, une seule fois. Le nouveau lien remplace l’ancien. Réservé aux personnes qui lisent ses coordonnées.',
+      'Renvoie par mail le lien personnel d’une fiche joignable, une seule fois. Le lien reste le même. Réservé aux personnes qui lisent ses coordonnées.',
     args: { benevoleId: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx: AppContext) => {
-      const fiche = await prisma.benevole.findFirst({
-        where: {
-          id: String(args.benevoleId),
-          organisationId: ctx.organisation!.id,
-        },
-        select: { id: true, organisationId: true, activiteId: true },
-      })
-      if (fiche === null) throw accesRefuse()
-      await ctx.exigerActivite(fiche.activiteId)
-      const lisibles = await coordonneesLisibles(ctx, fiche.activiteId, [
-        fiche.id,
-      ])
-      if (!lisibles.has(fiche.id)) throw accesRefuse()
+      const fiche = await ficheDontLesCoordonneesSeLisent(
+        ctx,
+        String(args.benevoleId)
+      )
       const envoye = await relancer(prisma, {
         benevoleId: fiche.id,
         organisationId: fiche.organisationId,

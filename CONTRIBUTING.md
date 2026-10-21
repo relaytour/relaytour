@@ -196,7 +196,8 @@ Un seul mot par notion.
 | liste d'attente | Les candidatures déposées sur une séquence dont le besoin était déjà atteint. L'équipe peut les accepter (ADR 0041). |
 | place à confirmer | Place de bénévole créée par l'équipe, que la personne n'a pas encore confirmée (ADR 0041). |
 | bénévoles à répartir | Personnes disponibles qui ne sont pas placées dans une séquence donnée : candidatures en attente, fiches avec des plages de disponibilité (ADR 0041). |
-| espace bénévole | Page publique ouverte par le lien personnel d'une fiche née d'une candidature : ses places, ses consignes, la confirmation et le retrait (ADR 0041). |
+| espace bénévole | Page publique ouverte par le lien personnel d'une fiche bénévole : ses places, ses consignes, la confirmation et le retrait. Le lien reste le même d'un mail à l'autre (ADR 0041). |
+| fiche joignable | Fiche bénévole qui porte une adresse et l'option « Prévenir par mail ». Sa première place lui envoie son lien personnel (ADR 0041). |
 | application installée | L'espace organisateur ajouté à l'écran d'accueil d'un téléphone ou d'un ordinateur. Elle s'ouvre sans barre d'adresse et porte le nom et l'icône de l'organisation (ADR 0023). |
 | icône d'application | Image carrée de 512 pixels qu'une organisation déclare pour son application installée (ADR 0023). |
 | hors connexion | État de l'appareil sans réseau. L'application affiche alors un écran d'attente et ne montre aucune donnée (ADR 0023). |

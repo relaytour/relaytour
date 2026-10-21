@@ -281,6 +281,7 @@ beforeAll(async () => {
         ouvertLe: new Date(Date.now() - 3600_000),
         fermeLe: h('20:00', '2027-06-06'),
         fermeManuellementLe: ferme ? new Date() : null,
+        sel: 'x'.repeat(43),
         empreinte: empreinteJeton(jetons[cle]),
         fin: jetons[cle].slice(-6),
       },

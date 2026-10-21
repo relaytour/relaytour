@@ -7,7 +7,6 @@ import {
 } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
-import { empreinteJeton, nouveauJeton } from '../lib/abonnements-agenda.ts'
 import {
   accepterSurSequence,
   APPELS_OUVERTS_MAX,
@@ -22,7 +21,8 @@ import {
   recalculerCandidature,
 } from '../lib/appels.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
-import { annoncerAcceptation } from '../lib/espace-benevole.ts'
+import { annoncerPlace } from '../lib/espace-benevole.ts'
+import { empreinte, jetonDe, nouveauSel } from '../lib/liens.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
@@ -96,8 +96,20 @@ export const AppelRef = builder.objectRef<AppelLu>('AppelBenevoles').implement({
     }),
     finAdresse: t.string({
       description:
-        'Les derniers caractères du jeton, pour reconnaître l’adresse. L’adresse entière ne se lit qu’à sa création.',
+        'Les derniers caractères du jeton, pour reconnaître l’adresse d’un coup d’œil.',
       resolve: l => l.appel.fin,
+    }),
+    adresse: t.string({
+      nullable: true,
+      description:
+        'L’adresse publique, recalculée à la demande pour les personnes qui gèrent l’appel ; null sinon.',
+      resolve: async l => {
+        if (!l.peutModifier) return null
+        const { origineOrga } = await configurationOrganisation(
+          l.appel.organisationId
+        )
+        return adresseAppel(origineOrga, await jetonDe('appel', l.appel.sel))
+      },
     }),
     candidaturesEnAttente: t.int({
       resolve: l => l.appel._count.candidatures,
@@ -113,7 +125,7 @@ const AppelEtAdresseRef = builder
     fields: t => ({
       appel: t.field({ type: AppelRef, resolve: r => r.appel }),
       adresse: t.exposeString('adresse', {
-        description: 'L’adresse publique, lisible une seule fois.',
+        description: 'L’adresse publique de l’appel.',
       }),
     }),
   })
@@ -484,8 +496,7 @@ builder.mutationFields(t => ({
   creerAppelBenevoles: t.field({
     type: AppelEtAdresseRef,
     authScopes: { connecte: true },
-    description:
-      'Ouvre un appel à bénévoles. L’adresse publique se lit dans la réponse, une seule fois.',
+    description: 'Ouvre un appel à bénévoles, et rend son adresse publique.',
     args: {
       editionId: t.arg.id({ required: true }),
       portee: t.arg({ type: PorteeAppelEnum, required: true }),
@@ -532,7 +543,8 @@ builder.mutationFields(t => ({
         (await joursDeLaPeriode(prisma, edition.id)).fin,
         ctx.organisation!.fuseauHoraire
       )
-      const jeton = nouveauJeton()
+      const sel = nouveauSel()
+      const jeton = await jetonDe('appel', sel)
       const maintenant = new Date()
       const appel = await sousVerrouOrganisation(organisationId, async tx => {
         await exigerPlacePourUnAppel(tx, edition.id, maintenant)
@@ -552,7 +564,8 @@ builder.mutationFields(t => ({
             ),
             ouvertLe: args.ouvertLe,
             fermeLe: args.fermeLe,
-            empreinte: empreinteJeton(jeton),
+            sel,
+            empreinte: empreinte(jeton),
             fin: jeton.slice(-6),
             creeParId: ctx.personne!.id,
           },
@@ -692,10 +705,11 @@ builder.mutationFields(t => ({
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
       const appel = await appelGere(ctx, String(args.id))
-      const jeton = nouveauJeton()
+      const sel = nouveauSel()
+      const jeton = await jetonDe('appel', sel)
       await prisma.appelBenevoles.update({
         where: { id: appel.id },
-        data: { empreinte: empreinteJeton(jeton), fin: jeton.slice(-6) },
+        data: { sel, empreinte: empreinte(jeton), fin: jeton.slice(-6) },
       })
       signalAppel(appel)
       const { origineOrga } = await configurationOrganisation(
@@ -731,7 +745,7 @@ builder.mutationFields(t => ({
         return acceptee
       })
       // Le mail suit la validation de la transaction : la file relit la fiche.
-      await annoncerAcceptation(prisma, {
+      await annoncerPlace(prisma, {
         benevoleId,
         organisationId: choix.candidature.organisationId,
         activiteId: choix.sequence.activiteId,

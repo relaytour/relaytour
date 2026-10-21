@@ -49,8 +49,9 @@ Deux moyens étaient demandés. Le premier est un lien vers une seule séquence.
 - L'appel reçoit les candidatures entre sa date d'ouverture et sa date de fermeture. La date de fermeture est obligatoire. Elle tombe au plus tard à la fin du dernier jour de la période.
 - Une personne qui gère l'appel peut le fermer plus tôt, puis le rouvrir avant sa date de fermeture.
 - Une séquence commencée ne reçoit plus de candidature.
-- L'adresse publique a la forme `/benevoles/<jeton>`, avec un jeton aléatoire de 32 octets. Le serveur garde son empreinte SHA-256, comme pour les abonnements à l'agenda (ADR 0037).
-- Renouveler l'adresse révoque l'ancienne. L'archivage de la période ferme ses appels.
+- L'adresse publique a la forme `/benevoles/<jeton>`. Le jeton se calcule à partir du secret du serveur et d'un sel aléatoire propre à l'appel. Le serveur garde le sel et l'empreinte SHA-256 du jeton, jamais le jeton.
+- Les personnes qui gèrent l'appel recopient son adresse à tout moment : le serveur la recalcule.
+- Une nouvelle adresse tire un nouveau sel, ce qui révoque l'ancienne. L'archivage de la période ferme ses appels.
 
 ### Page publique et dépôt
 
@@ -87,24 +88,27 @@ Deux moyens étaient demandés. Le premier est un lien vers une seule séquence.
 ### Confirmation et mails
 
 - Seule une décision de l'équipe déclenche un mail. Une adresse saisie dans la page publique ne reçoit rien avant l'acceptation d'un choix.
-- La première acceptation d'une candidature envoie un seul mail. Il nomme l'organisation, l'activité et les séquences acceptées, et porte le lien personnel.
+- Une fiche est **joignable** quand elle porte une adresse et l'option « Prévenir par mail ». L'option est cochée par défaut, et l'équipe la décoche pour une personne qu'elle joint autrement. Une fiche née d'une candidature est joignable.
+- La première place d'une fiche joignable envoie un seul mail : une candidature acceptée, une fiche placée depuis la vue « Répartition » ou depuis une séquence. Ce mail nomme l'organisation, l'activité et les séquences, et porte le lien personnel.
 - Ce mail précise : « Si vous n'êtes pas à l'origine de cette inscription, ignorez ce message. Vos données seront supprimées. »
-- Une acceptation suivante, avant la confirmation, n'envoie rien. La page du lien montre toutes les places.
+- Une place suivante, avant la confirmation, n'envoie rien. La page du lien montre toutes les places.
 - Le lien ouvre une page où la personne confirme sa participation par un bouton. L'ouverture du lien ne confirme rien, car les messageries ouvrent parfois les liens d'un mail pour les analyser.
 - La confirmation date l'adresse de la fiche comme confirmée, et confirme toutes ses places à confirmer.
 - La personne peut aussi décliner une place, ou toutes. Une fiche qu'aucune place ne retient alors est supprimée.
 - Tant que l'adresse n'est pas confirmée, aucun autre mail ne part. L'équipe peut relancer la personne une seule fois.
 - Une place peut rester à confirmer sept jours après l'acceptation, ou jusqu'à la veille de sa séquence si elle arrive avant. Elle apparaît alors « non confirmée » dans les vues de l'équipe. L'équipe décide de la libérer ou de la garder.
 - Une adresse confirmée reçoit un mail à chaque changement de ses places : une place ajoutée, retirée, ou dont l'horaire change. Les changements se regroupent pendant deux minutes, comme les convocations (ADR 0037).
-- Une place ajoutée à une adresse confirmée reste à confirmer. La personne la confirme dans son espace.
-- Une fiche saisie à la main ne reçoit jamais de mail. Ses places naissent confirmées.
+- Une place ajoutée à une fiche joignable reste à confirmer, même après une première confirmation. La personne la confirme dans son espace.
+- Une fiche qui n'est pas joignable ne reçoit aucun mail. Ses places naissent confirmées. Une place d'un membre de l'équipe naît confirmée.
 - Ces mails comptent dans le plafond quotidien des mails de l'installation (ADR 0034).
 
 ### Espace bénévole
 
-- L'espace bénévole a la forme `/benevole/<jeton>`. Seule une fiche née d'une candidature en a un.
-- Le serveur garde l'empreinte du jeton sur la fiche. Le jeton se révoque à l'archivage de la dernière période où la fiche est placée.
-- L'équipe peut renouveler le lien. Le renouvellement renvoie le mail et compte comme la relance.
+- L'espace bénévole a la forme `/benevole/<jeton>`. Le jeton se calcule à partir du secret du serveur et d'un sel propre à la fiche, comme l'adresse d'un appel. Le lien reste donc le même d'un mail à l'autre.
+- Les personnes qui lisent les coordonnées de la fiche (ADR 0040) copient son lien pour l'envoyer par un autre moyen, un SMS par exemple. Elles en créent un pour une fiche qui n'en a pas encore.
+- Ces personnes peuvent aussi tirer un nouveau lien, qui révoque l'ancien sans envoyer de mail.
+- La relance renvoie le même lien par mail, une seule fois.
+- L'archivage de la dernière période de la fiche révoque son lien.
 - L'espace montre le nom de la personne et ses places à venir, avec leurs lieux, leurs horaires et leurs consignes. Il montre aussi ses plages de disponibilité. Il ne montre ni l'adresse ni le téléphone.
 - La personne y télécharge ses places au format iCalendar.
 - Elle s'y retire d'une place à venir. Le retrait notifie les personnes qui écrivent dans le périmètre de la séquence, ou les admins de l'activité.
@@ -134,7 +138,7 @@ Deux moyens étaient demandés. Le premier est un lien vers une seule séquence.
 
 ### Ce qui change dans l'ADR 0040
 
-- L'ADR 0040 excluait tout envoi aux bénévoles. Cette décision permet les mails décrits plus haut, et seulement vers une adresse que la personne a déposée elle-même.
+- L'ADR 0040 excluait tout envoi aux bénévoles. Cette décision permet les mails décrits plus haut, vers une fiche joignable, après une décision de l'équipe.
 - L'ADR 0040 réservait les noms des bénévoles aux personnes qui lisent le programme. Les personnes qui écrivent dans un périmètre lisent aussi les bénévoles à répartir, selon la section précédente.
 
 ### Conservation
@@ -156,14 +160,16 @@ Deux moyens étaient demandés. Le premier est un lien vers une seule séquence.
 ## Conséquences
 
 - Une migration additive ajoute à `Sequence` le besoin et les consignes, et à `PlaceSequence` sa date de confirmation.
-- Elle ajoute à `Benevole` son origine, la date de confirmation de l'adresse, l'empreinte du lien, et les dates d'envoi et de relance.
+- Elle ajoute à `Benevole` son origine, l'option « Prévenir par mail » et la date de confirmation de l'adresse.
+- Elle lui ajoute aussi le sel et l'empreinte du lien, et les dates d'envoi et de relance. `AppelBenevoles` porte aussi un sel.
 - Elle crée les tables `AppelBenevoles`, `Candidature`, `ChoixCandidature` et `PlageDisponibilite`. Chaque table porte `organisationId` ou s'y rattache par son parent. Chaque unicité est bornée par un parent (invariant 18).
 - Une plage appartient soit à une candidature, soit à une fiche. Le code porte cette règle et un test la prouve : une contrainte CHECK sur une clé étrangère en cascade échoue sous MariaDB (ADR 0040).
 - Les places existantes reçoivent une date de confirmation égale à leur date de création.
 - La table des refus croisés couvre chaque requête et chaque mutation. Des tests prouvent qu'une coordonnée reste nulle pour une personne qui ne la lit pas (invariant 11), et qu'aucun mail ne part au dépôt.
 - Le flux des changements reçoit l'entité `CANDIDATURE` (ADR 0017).
 - Les notifications reçoivent les types `CANDIDATURE_RECUE` et `BENEVOLE_RETIRE`.
-- Les gabarits de mail `candidature-acceptee` et `places-modifiees` s'ajoutent.
+- Les gabarits de mail `benevole-lien` et `benevole-places` s'ajoutent.
+- Changer le secret du serveur (`BETTER_AUTH_SECRET`) change tous les liens des appels et des espaces bénévoles. La documentation d'exploitation le signale.
 - Les adresses `/benevoles/*` et `/benevole/*` sont des routes de l'espace organisateur. Un serveur web qui renvoie les chemins inconnus vers l'application les sert sans réglage.
 - Le glossaire reçoit dix mots : appel à bénévoles, besoin en bénévoles, consignes pour les bénévoles, candidature, plage de disponibilité, précisions de disponibilité.
 - Il reçoit aussi liste d'attente, place à confirmer, bénévoles à répartir et espace bénévole.
@@ -177,5 +183,7 @@ Deux moyens étaient demandés. Le premier est un lien vers une seule séquence.
 - Une personne qui reçoit un mail sans s'être inscrite l'ignore, et sa candidature reste sans suite. La purge l'efface à l'archivage de la période.
 - La confirmation passe par un bouton. L'analyse automatique d'un lien ne confirme rien.
 - Le jeton de l'espace bénévole donne accès à une seule fiche. L'espace n'affiche ni l'adresse ni le téléphone, et la suppression demande une seconde confirmation.
+- Une copie de la base ne suffit pas à reconstituer un lien : il faut aussi le secret du serveur. Un lien se recopie seulement par les personnes qui lisent les coordonnées de la fiche, ou qui gèrent l'appel.
+- La première place d'une fiche saisie à la main envoie un mail à une adresse saisie par l'équipe. L'avertissement du mail et l'absence de tout autre envoi avant confirmation limitent l'effet d'une adresse erronée.
 - Une candidature et ses coordonnées se lisent par les seules personnes qui peuvent la traiter. Les bénévoles à répartir n'exposent aux personnes qui écrivent dans un périmètre que le nom, les plages, les précisions, les choix et les places.
 - Une activité invisible, un appel inconnu et un appel fermé reçoivent la même réponse publique.

@@ -1,7 +1,6 @@
 import type { PrismaClient } from '@relaytour/database'
 
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
-import { empreinteJeton, nouveauJeton } from '../lib/abonnements-agenda.ts'
 import { CODE_VALIDITE_SECONDES } from '../lib/connexion.ts'
 import { concilierApresEnvoi } from '../lib/convocations.ts'
 import { adminsAPrevenir, demandesEnAttente } from '../lib/demandes.ts'
@@ -14,7 +13,11 @@ import {
 } from '../lib/equipe.ts'
 import { horaireEnClair } from '../lib/heures.ts'
 import { calendrier } from '../lib/ics.ts'
-import { placesAVenir } from '../lib/espace-benevole.ts'
+import {
+  jetonEspace,
+  lienEspace,
+  placesAVenir,
+} from '../lib/espace-benevole.ts'
 import { invitationEnAttente } from '../lib/invitations.ts'
 import {
   LIBELLES_ROLE,
@@ -702,7 +705,10 @@ export async function composer(
         organisation: { select: { fuseauHoraire: true } },
       },
     })
-    if (fiche === null || fiche.courriel === null) return null
+    // Seule une fiche joignable reçoit un mail (ADR 0041).
+    if (fiche === null || fiche.courriel === null || !fiche.prevenirParMail) {
+      return null
+    }
     const confirmee = fiche.courrielConfirmeLe !== null
     // Le mail des places ne part qu'à une adresse confirmée (ADR 0041).
     if (job.sorte === 'benevole-places' && !confirmee) return null
@@ -710,14 +716,12 @@ export async function composer(
     const places = await placesAVenir(prisma, fiche.id, maintenant)
     if (job.sorte === 'benevole-lien' && places.length === 0) return null
     const fuseau = fiche.organisation.fuseauHoraire
-    // Le jeton naît à l'envoi : la file n'en porte aucun (invariant 5). Le lien
-    // précédent cesse de répondre.
-    const jeton = nouveauJeton()
-    await prisma.benevole.update({
-      where: { id: fiche.id },
-      data: { espaceEmpreinte: empreinteJeton(jeton) },
-    })
-    variables.lienEspace = `${origine.replace(/\/$/, '')}/benevole/${jeton}`
+    // Le lien se recalcule à l'envoi : la file n'en porte aucun (invariant 5),
+    // et il reste le même d'un mail à l'autre.
+    variables.lienEspace = lienEspace(
+      origine,
+      await jetonEspace(prisma, fiche.id)
+    )
     variables.places =
       places.length === 0
         ? ['Vous n’avez plus de place à venir.']
@@ -742,14 +746,14 @@ export async function composer(
       variables.consigne =
         'Vous y retrouvez vos places, leurs consignes et le fichier pour votre agenda.'
       variables.libelleBouton = 'Ouvrir mon espace'
-      variables.avertissement = 'Ce lien remplace celui des mails précédents.'
+      variables.avertissement = 'Gardez ce lien : il reste le même.'
     } else {
       variables.intitule = 'Vos places ont changé'
       variables.intro = `L’équipe de ${activite} a modifié vos places. Voici la liste à jour.`
       variables.consigne = places.some(p => p.confirmeeLe === null)
         ? 'Confirmez les places marquées « à confirmer » depuis votre espace.'
         : 'Vous retrouvez vos places et leurs consignes dans votre espace.'
-      variables.avertissement = 'Ce lien remplace celui des mails précédents.'
+      variables.avertissement = 'Votre lien personnel reste le même.'
     }
   }
 

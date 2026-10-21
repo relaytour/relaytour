@@ -60,6 +60,7 @@ const ids = {
   referent: '',
   basketteuse: '',
   saisie: '',
+  horsMail: '',
 }
 
 async function executer(
@@ -266,6 +267,7 @@ beforeAll(async () => {
         nom: 'Appel',
         ouvertLe: new Date(),
         fermeLe: h('20:00', '2027-06-06'),
+        sel: 'x'.repeat(43),
         empreinte: empreinteJeton(randomUUID()),
         fin: 'abcdef',
       },
@@ -278,6 +280,19 @@ beforeAll(async () => {
         activiteId: ids.activite,
         nom: 'Fiche saisie',
         courriel: `saisie-${s}@exemple.fr`,
+        accordLe: new Date(),
+        creeParId: ids.admin,
+      },
+    })
+  ).id
+  ids.horsMail = (
+    await prisma.benevole.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        nom: 'Jointe par téléphone',
+        courriel: `telephone-${s}@exemple.fr`,
+        prevenirParMail: false,
         accordLe: new Date(),
         creeParId: ids.admin,
       },
@@ -334,13 +349,34 @@ describe('premier mail', () => {
     expect(fiche.espaceEmpreinte).toBe(empreinteJeton(envoi!.jeton))
   })
 
-  it('ne part jamais vers une fiche saisie à la main', async () => {
-    await executer(
-      ids.admin,
-      `mutation ($sq: ID!, $b: ID) { placerBenevole(sequenceId: $sq, benevoleId: $b) { id } }`,
-      { sq: ids.accueil, b: ids.saisie }
+  it('part aussi vers une fiche saisie à la main, et jamais sans « Prévenir par mail »', async () => {
+    const PLACER = `mutation ($sq: ID!, $b: ID) { placerBenevole(sequenceId: $sq, benevoleId: $b) { places { benevoleId etat } } }`
+    const joignable = donnees<{
+      places: { benevoleId: string; etat: string }[]
+    }>(
+      await executer(ids.admin, PLACER, { sq: ids.accueil, b: ids.saisie }),
+      'placerBenevole'
     )
+    expect(joignable.places).toContainEqual({
+      benevoleId: ids.saisie,
+      etat: 'A_CONFIRMER',
+    })
+    expect(enFile.map(j => [j.sorte, j.cible])).toEqual([
+      ['benevole-lien', { benevoleId: ids.saisie }],
+    ])
+    enFile.length = 0
+    const horsMail = donnees<{
+      places: { benevoleId: string; etat: string }[]
+    }>(
+      await executer(ids.admin, PLACER, { sq: ids.accueil, b: ids.horsMail }),
+      'placerBenevole'
+    )
+    expect(horsMail.places).toContainEqual({
+      benevoleId: ids.horsMail,
+      etat: 'CONFIRMEE',
+    })
     expect(enFile).toEqual([])
+    expect(await envoyer('benevole-lien', ids.horsMail)).toBeNull()
   })
 })
 
@@ -386,7 +422,7 @@ describe('espace', () => {
     expect(confirme!.places.every(p => p.confirmee)).toBe(true)
   })
 
-  it('annonce ensuite les places changées à une adresse confirmée, avec un nouveau lien', async () => {
+  it('annonce ensuite les places changées à une adresse confirmée, avec le même lien', async () => {
     const { benevoleId } = await candidatAccepte('Inès Roy', [ids.finales])
     const { jeton } = (await envoyer('benevole-lien', benevoleId))!
     await executer(
@@ -408,9 +444,9 @@ describe('espace', () => {
     const envoi = await envoyer('benevole-places', benevoleId)
     expect(envoi!.message.texte).toContain('accueil')
     expect(envoi!.message.texte).toContain('à confirmer')
-    // Le lien précédent cesse de répondre.
-    expect(await lireEspace(jeton)).toBeNull()
-    expect(await lireEspace(envoi!.jeton)).not.toBeNull()
+    // Le lien reste le même d'un mail à l'autre.
+    expect(envoi!.jeton).toBe(jeton)
+    expect(await lireEspace(jeton)).not.toBeNull()
   })
 
   it('annonce un horaire changé à une adresse confirmée', async () => {
@@ -470,10 +506,7 @@ describe('espace', () => {
     })
     expect(notification).not.toBeNull()
     const liste = donnees<{ message: string; lien: string }[]>(
-      await executer(
-        ids.referent,
-        `query { notifications { message lien } }`
-      ),
+      await executer(ids.referent, `query { notifications { message lien } }`),
       'notifications'
     )
     expect(liste.map(n => n.message)).toContainEqual(
@@ -552,11 +585,58 @@ describe('relance', () => {
       (await executer(ids.admin, RENVOYER, { b: benevoleId })).errors?.[0]
         ?.message
     ).toMatch(/déjà été renvoyé/)
-    // Une fiche saisie à la main n'a jamais de lien.
+    // Une fiche sans « Prévenir par mail » ne reçoit pas de mail.
     expect(
-      (await executer(ids.admin, RENVOYER, { b: ids.saisie })).errors?.[0]
+      (await executer(ids.admin, RENVOYER, { b: ids.horsMail })).errors?.[0]
         ?.message
     ).toMatch(/pas reçu de premier lien/)
+  })
+})
+
+describe('lien à copier', () => {
+  const LIEN = `mutation ($b: ID!, $n: Boolean) { lienEspaceBenevole(benevoleId: $b, nouveau: $n) }`
+
+  it('rend le lien du mail aux personnes qui lisent les coordonnées, et un nouveau lien révoque l’ancien', async () => {
+    const { benevoleId } = await candidatAccepte('Sam Vidal', [ids.relais])
+    const { jeton } = (await envoyer('benevole-lien', benevoleId))!
+    const copie = donnees<string>(
+      await executer(ids.referent, LIEN, { b: benevoleId }),
+      'lienEspaceBenevole'
+    )
+    expect(copie.endsWith(`/benevole/${jeton}`)).toBe(true)
+    const fiches = donnees<{ id: string; lienEspace: string | null }[]>(
+      await executer(
+        ids.admin,
+        `query ($a: ID!) { benevoles(activiteId: $a) { id lienEspace } }`,
+        { a: ids.activite }
+      ),
+      'benevoles'
+    )
+    expect(fiches.find(f => f.id === benevoleId)?.lienEspace).toBe(copie)
+    expect(
+      (await executer(ids.basketteuse, LIEN, { b: benevoleId })).errors?.[0]
+        ?.extensions?.code
+    ).toBe('FORBIDDEN')
+    enFile.length = 0
+    const nouveau = donnees<string>(
+      await executer(ids.admin, LIEN, { b: benevoleId, n: true }),
+      'lienEspaceBenevole'
+    )
+    expect(nouveau).not.toBe(copie)
+    expect(enFile).toEqual([])
+    expect(await lireEspace(jeton)).toBeNull()
+    expect(await lireEspace(nouveau.split('/').at(-1)!)).not.toBeNull()
+  })
+
+  it('crée un lien pour une fiche qui n’en a pas, sans mail', async () => {
+    const lien = donnees<string>(
+      await executer(ids.admin, LIEN, { b: ids.horsMail }),
+      'lienEspaceBenevole'
+    )
+    expect(await lireEspace(lien.split('/').at(-1)!)).toMatchObject({
+      nom: 'Jointe par téléphone',
+    })
+    expect(enFile).toEqual([])
   })
 })
 

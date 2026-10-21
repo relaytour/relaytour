@@ -406,6 +406,7 @@ beforeAll(async () => {
         nom: 'Appel de A',
         ouvertLe: new Date(),
         fermeLe: new Date('2027-06-05T20:00:00.000Z'),
+        sel: 'x'.repeat(43),
         empreinte: 'a'.repeat(64),
         fin: 'aaaaaa',
       },
@@ -1438,6 +1439,13 @@ const CAS: Cas[] = [
     operation: 'retirerPlaceSequence',
     query: 'mutation ($id: ID!) { retirerPlaceSequence(id: $id) { id } }',
     variables: () => ({ id: a.place }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'lienEspaceBenevole',
+    query:
+      'mutation ($b: ID!) { lienEspaceBenevole(benevoleId: $b, nouveau: true) }',
+    variables: () => ({ b: a.benevole }),
     attente: INTERDIT,
   },
   {
