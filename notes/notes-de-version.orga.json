@@ -5,6 +5,50 @@
   "version": "0.18.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-21-orga-les-benevoles-se-proposent-par-l-adresse-publique-d-un-appel",
+          "date": "2026-10-21",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les bénévoles se proposent par l'adresse publique d'un appel",
+            "texte": "Une séquence du programme indique les renforts qu'elle recherche et des consignes publiques. Vous ouvrez un appel sur votre périmètre ou sur une séquence, puis vous diffusez son adresse. Les admins de l'activité ouvrent aussi un appel sur toute la période. Les bénévoles y choisissent des séquences et donnent leurs disponibilités. Vous acceptez ou refusez chaque séquence dans l'onglet « Candidatures » de l'écran « Bénévoles ». Aucun mail ne part au dépôt.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-21-orga-les-benevoles-confirment-leur-participation-depuis-leur-espa",
+          "date": "2026-10-21",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les bénévoles confirment leur participation depuis leur espace",
+            "texte": "La première place d'une fiche bénévole envoie un seul mail, avec un lien personnel qui reste le même. Ce lien ouvre l'espace de la personne : elle y relit ses places et ses disponibilités, confirme sa participation, ajoute ses places à son agenda ou quitte une place. Vous copiez ce lien depuis la fiche pour l'envoyer par SMS. L'option « Prévenir par mail » d'une fiche coupe ces mails.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-21-orga-la-vue-repartition-montre-les-heures-qui-manquent-de-benevol",
+          "date": "2026-10-21",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La vue « Répartition » montre les heures qui manquent de bénévoles",
+            "texte": "L'écran « Programme » reçoit une vue « Répartition ». Un bandeau découpe le jour en tranches de 30 minutes et signale les heures en manque. Le panneau « Bénévoles à répartir » classe les personnes disponibles pour la séquence choisie. Vous les y placez par un bouton, ou par glisser-déposer sur un ordinateur.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.18.0",
       "notes": [
         {

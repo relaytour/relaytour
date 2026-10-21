@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Recruter et répartir les bénévoles · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Le mode d'emploi des appels à bénévoles dans l'espace organisateur de Relaytour : renforts recherchés, appel et adresse publique, candidatures, confirmation par la personne et vue « Répartition » du programme."
+    />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          Relaytour
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Admins, référentes et référents</span>
+        <h1>Recruter et répartir les bénévoles</h1>
+        <p class="chapo">
+          Les bénévoles se proposent par l'adresse publique d'un appel. Vous traitez leurs candidatures, puis vous les placez dans les séquences du programme qui manquent de monde.
+        </p>
+        <p class="renvoi">
+          Ce mode d'emploi complète les sections « Programme » et « Bénévoles » du <a href="referent.html#e-programme">mode d'emploi des référentes et référents</a>. Il s'adresse aux personnes qui écrivent dans un périmètre et aux admins de l'activité.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-parcours">
+        <div class="entete">
+          <span class="etiquette">Point de départ</span>
+          <h2 id="t-parcours">Le parcours d'une ou d'un bénévole</h2>
+          <p class="texte">
+            Relaytour n'envoie aucun mail tant que l'équipe n'a pas décidé. Une adresse saisie sur la page publique ne reçoit rien avant l'acceptation d'une de ses séquences.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>1. Vous ouvrez un appel</h3>
+            <p>Vous indiquez les renforts recherchés dans vos séquences. Vous ouvrez ensuite un appel, puis vous diffusez son adresse : affiche, réseau social, lettre d'information.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>2. La personne candidate</h3>
+            <p>Elle choisit des séquences, donne ses disponibilités et coche son accord. Sa candidature attend votre revue. Aucun mail ne part.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>3. Vous acceptez</h3>
+            <p>Vous acceptez une séquence, depuis la file des candidatures ou depuis la vue « Répartition ». La personne reçoit alors un seul mail, avec son lien personnel.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>4. Elle confirme</h3>
+            <p>Le lien ouvre son espace bénévole. Elle y confirme sa participation par un bouton. Ouvrir le lien ne confirme rien.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>5. Vous suivez la couverture</h3>
+            <p>La vue « Répartition » montre les heures qui manquent de monde. Vous y placez les personnes disponibles, candidates ou déjà enregistrées.</p>
+          </div>
+        </div>
+        <nav class="verre sommaire" aria-label="Sommaire">
+          <span class="etiquette">Dans ce mode d'emploi</span>
+          <ol>
+            <li><a href="#e-sequences">Préparer les séquences</a> : les renforts recherchés et les consignes.</li>
+            <li><a href="#e-appels">Ouvrir un appel</a> : la portée, les dates et l'adresse publique.</li>
+            <li><a href="#e-page">La page de l'appel</a> : ce que voient les bénévoles.</li>
+            <li><a href="#e-candidatures">Traiter les candidatures</a> : accepter, refuser, la liste d'attente.</li>
+            <li><a href="#e-espace">Le lien personnel et l'espace bénévole</a> : le mail, la confirmation, la relance.</li>
+            <li><a href="#e-repartition">Répartir dans le programme</a> : la couverture et les bénévoles à répartir.</li>
+            <li><a href="#t-acces">Qui voit quoi</a> : les droits des admins, des référentes et des référents.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-ecrans">
+        <div class="entete">
+          <span class="etiquette">Écran par écran</span>
+          <h2 id="t-ecrans">Du programme à la place confirmée</h2>
+          <p class="texte">
+            Les adresses commencent par l'identifiant de l'activité affichée, par exemple <span class="route">/rencontres/benevoles</span>. Le mot « édition » devient « saison » ou « mandat » selon la nature de l'activité.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-sequences">
+          <div class="ecran-tete"><h3>Préparer les séquences</h3><span class="route">/&lt;activité&gt;/programme</span></div>
+          <p>Une séquence n'apparaît dans un appel que si elle recherche des renforts. Vous fixez ce nombre dans la fenêtre de la séquence, rubrique « Bénévoles ». Les personnes placées en responsabilité n'y comptent pas.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Renforts recherchés</span></span><span>Le nombre de bénévoles en renfort que la séquence recherche, 200 au plus. Une place à confirmer compte déjà.</span></li>
+            <li><span><span class="libelle">Consignes pour les bénévoles</span></span><span>La mission, le point de rendez-vous, la tenue. Ce texte est public, à la différence de la description de la séquence.</span></li>
+          </ul>
+          <p>La grille et la liste du programme affichent la jauge de chaque séquence : « 0/3 » indique trois renforts recherchés et aucun placé.</p>
+          <figure>
+            <img src="../captures/programme.webp" data-mobile="../captures/mobile/programme.webp" width="1440" height="900" loading="lazy" alt="Programme en grille : chaque séquence affiche sa jauge de renforts, par exemple 0/3 ou 3/4." />
+            <figcaption>Le programme du jour J en grille, avec la jauge de chaque séquence.</figcaption>
+          </figure>
+          <p class="note">Des consignes qui contiennent un numéro de téléphone ou une adresse personnelle ne sont pas publiées. Écrivez plutôt une adresse de rôle de l'organisation.</p>
+        </article>
+
+        <article class="verre ecran" id="e-appels">
+          <div class="ecran-tete"><h3>Ouvrir un appel</h3><span class="route">/&lt;activité&gt;/benevoles?onglet=appels</span></div>
+          <p>Un appel ouvre les candidatures sur une partie du programme, entre deux dates. L'onglet « Appels » de l'écran « Bénévoles » liste les appels de la période, leur état et le nombre de candidatures en attente.</p>
+          <p>La <strong>portée</strong> d'un appel désigne les séquences proposées :</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Toute la période</span></span><span>Toutes les séquences qui recherchent des renforts. Seuls les admins de l'activité ouvrent cet appel. La personne peut aussi proposer son aide là où il manque du monde.</span></li>
+            <li><span><span class="libelle">Un périmètre</span></span><span>Les séquences d'un périmètre où vous écrivez.</span></li>
+            <li><span><span class="libelle">Une séquence</span></span><span>Une seule séquence, pour un lien direct. Une séquence sans périmètre relève des admins de l'activité.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/benevoles-appels.webp" data-mobile="../captures/mobile/benevoles-appels.webp" width="1440" height="900" loading="lazy" alt="Onglet Appels : deux appels ouverts, leurs dates, leur état, le nombre de candidatures en attente et les boutons Copier l'adresse et Fermer." />
+            <figcaption>Les appels de la période, vus par une admin de l'activité.</figcaption>
+          </figure>
+          <ul class="gestes">
+            <li><span><span class="libelle">Nouvel appel</span></span><span>Choisir la portée, le nom de l'appel, l'ouverture, la fermeture et le texte d'introduction. L'adresse se copie à l'enregistrement.</span></li>
+            <li><span><span class="libelle">Copier l'adresse</span></span><span>Recopier l'adresse publique, à tout moment. Elle reste la même tant que vous n'en demandez pas une nouvelle.</span></li>
+            <li><span><span class="libelle">Fermer</span><span class="libelle">Rouvrir</span></span><span>Fermer l'appel avant sa date de fermeture, puis le rouvrir si besoin. Les candidatures reçues restent.</span></li>
+            <li><span><span class="libelle">Nouvelle adresse</span></span><span>Remplacer l'adresse, par exemple après une diffusion trop large. L'ancienne adresse cesse de répondre.</span></li>
+          </ul>
+          <p class="note">La fermeture tombe au plus tard à la fin du dernier jour de la période. Une période compte vingt appels ouverts au plus. L'archivage de la période ferme ses appels.</p>
+        </article>
+
+        <article class="verre ecran" id="e-page">
+          <div class="ecran-tete"><h3>La page de l'appel</h3><span class="route">/benevoles/&lt;adresse secrète&gt;</span></div>
+          <p>La page de l'appel se lit sans compte, sur un téléphone comme sur un ordinateur. Elle présente l'organisation, l'activité, la période et votre texte d'introduction. Elle liste ensuite les séquences proposées, par jour.</p>
+          <p>Chaque séquence indique son horaire, son lieu, son périmètre, ses consignes et l'état de ses renforts : « 3 places recherchées », ou « complète » avec une liste d'attente. La page ne montre aucun nom de personne placée.</p>
+          <figure>
+            <img src="../captures/appel-benevoles.webp" data-mobile="../captures/mobile/appel-benevoles.webp" width="1440" height="900" loading="lazy" alt="Page publique Devenir bénévole : les séquences du samedi, chacune avec son horaire, son lieu, son périmètre, ses places recherchées et ses consignes." />
+            <figcaption>La page d'un appel sur toute la période, ouverte par son adresse.</figcaption>
+          </figure>
+          <p>La personne coche une ou plusieurs séquences. La page la prévient quand deux séquences choisies se chevauchent. Elle ajoute ensuite ses disponibilités : un jour, une heure de début et une heure de fin, puis des précisions facultatives.</p>
+          <p>Elle donne son nom, son adresse mail et un téléphone facultatif, puis coche son accord. Un message à l'écran confirme la réception de la candidature.</p>
+          <p class="note">Une adresse a une seule candidature en attente par appel : un second dépôt complète la première. La page ne dit jamais si une adresse a déjà candidaté. Les dépôts sont limités par adresse mail, par adresse IP et par appel.</p>
+        </article>
+
+        <article class="verre ecran" id="e-candidatures">
+          <div class="ecran-tete"><h3>Traiter les candidatures</h3><span class="route">/&lt;activité&gt;/benevoles?onglet=candidatures</span></div>
+          <p>L'onglet « Candidatures » réunit les candidatures de la période. L'onglet « À traiter » montre celles qui attendent une décision. Les onglets « Traitées » et « Retirées » gardent les autres.</p>
+          <p>Chaque candidature indique les coordonnées de la personne, ses disponibilités, ses précisions et son message. Elle liste ensuite les séquences choisies, chacune avec son état.</p>
+          <figure>
+            <img src="../captures/benevoles-candidatures.webp" data-mobile="../captures/mobile/benevoles-candidatures.webp" width="1440" height="900" loading="lazy" alt="Onglet Candidatures : deux candidatures avec les coordonnées, les disponibilités et les séquences choisies, chacune en attente, en liste d'attente ou acceptée." />
+            <figcaption>La file des candidatures, avec les boutons Accepter et Refuser de chaque séquence.</figcaption>
+          </figure>
+          <ul class="gestes">
+            <li><span><span class="libelle">Accepter</span></span><span>Placer la personne en renfort dans la séquence. La fiche bénévole naît, ou rejoint la fiche qui porte la même adresse. La place attend la confirmation de la personne.</span></li>
+            <li><span><span class="libelle">Refuser</span></span><span>Écarter une séquence choisie. Aucun mail ne part.</span></li>
+            <li><span><span class="libelle">Refuser toute la candidature</span></span><span>Écarter toutes les séquences encore en attente. La personne peut déposer une nouvelle candidature.</span></li>
+          </ul>
+          <p>Une séquence choisie après que ses renforts sont atteints passe en <strong>liste d'attente</strong>. Vous pouvez l'accepter quand même : l'écran signale alors le dépassement. Une place libérée ne fait monter personne sans votre décision.</p>
+          <p class="note">Une candidature reçue vous prévient dans l'application, une fois par jour au plus et sans nom. Les candidatures d'une période sont supprimées à son archivage.</p>
+        </article>
+
+        <article class="verre ecran" id="e-espace">
+          <div class="ecran-tete"><h3>Le lien personnel et l'espace bénévole</h3><span class="route">/benevole/&lt;lien personnel&gt;</span></div>
+          <p>La première place d'une fiche envoie un seul mail. Il nomme l'organisation, l'activité et les séquences, et porte le lien personnel de la personne. Ce lien reste le même d'un mail à l'autre.</p>
+          <p>Le lien ouvre l'<strong>espace bénévole</strong>. La personne y lit ses places, leurs horaires, leurs lieux et leurs consignes, puis ses disponibilités. Elle confirme sa participation par le bouton « Je confirme ma participation ».</p>
+          <figure>
+            <img src="../captures/espace-benevole.webp" data-mobile="../captures/mobile/espace-benevole.webp" width="1440" height="900" loading="lazy" alt="Espace bénévole : une place à confirmer à la buvette, le bouton Je confirme ma participation, Ajouter à mon agenda, Je ne peux plus venir et les disponibilités de la personne." />
+            <figcaption>L'espace d'une bénévole dont la place attend sa confirmation.</figcaption>
+          </figure>
+          <ul class="gestes">
+            <li><span><span class="libelle">Ajouter à mon agenda</span></span><span>Télécharger ses places au format iCalendar, pour Outlook, Google ou Apple.</span></li>
+            <li><span><span class="libelle">Je ne peux plus venir</span></span><span>Quitter une place à venir. Les personnes qui écrivent dans le périmètre de la séquence en sont prévenues.</span></li>
+            <li><span><span class="libelle">Supprimer mes informations</span></span><span>Supprimer sa fiche, une fois ses places à venir quittées.</span></li>
+          </ul>
+          <p>Une fois l'adresse confirmée, la personne reçoit un mail quand ses places changent : une place ajoutée, retirée ou déplacée. Les changements se regroupent pendant deux minutes. Une place ajoutée reste à confirmer.</p>
+          <p>Une fiche reçoit ces mails quand elle porte une adresse et l'option « Prévenir par mail », cochée par défaut. Décochez l'option pour une personne que vous joignez autrement : ses places naissent alors confirmées.</p>
+          <p>La fenêtre d'une fiche, dans l'onglet « Fiches », porte le <strong>lien personnel</strong>. Une personne qui lit les coordonnées sans pouvoir modifier la fiche l'ouvre par le bouton « Lien » de la colonne « Participation ».</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Copier le lien</span></span><span>Recopier le lien pour l'envoyer par SMS ou par message. Une fiche sans lien en reçoit un.</span></li>
+            <li><span><span class="libelle">Renvoyer par mail</span></span><span>Renvoyer le lien à une personne qui n'a pas confirmé. Ce renvoi ne se fait qu'une fois.</span></li>
+            <li><span><span class="libelle">Nouveau lien</span></span><span>Remplacer le lien. L'ancien cesse de répondre, et aucun mail ne part.</span></li>
+          </ul>
+          <p class="note">Une place encore à confirmer sept jours après l'acceptation, ou la veille de sa séquence, apparaît « non confirmée ». Vous décidez alors de la libérer ou de la garder.</p>
+        </article>
+
+        <article class="verre ecran" id="e-repartition">
+          <div class="ecran-tete"><h3>Répartir dans le programme</h3><span class="route">/&lt;activité&gt;/programme?vue=repartition</span></div>
+          <p>La vue « Répartition » de l'écran « Programme » croise les renforts recherchés, les places et les disponibilités. Elle s'affiche pour les personnes qui écrivent dans au moins un périmètre.</p>
+          <p>Le bandeau <strong>Couverture</strong> découpe le jour en tranches de 30 minutes. Chaque tranche indique les renforts recherchés, les places confirmées, les places à confirmer et les bénévoles disponibles. Une tranche en manque se colore.</p>
+          <p>La frise montre les séquences sur l'axe des heures, par périmètre ou par lieu. Le panneau « Bénévoles à répartir » montre les personnes disponibles et leurs plages, sur le même axe.</p>
+          <figure>
+            <img src="../captures/programme-repartition.webp" data-mobile="../captures/mobile/programme-repartition.webp" width="1440" height="900" loading="lazy" alt="Vue Répartition : le bandeau de couverture, deux séquences du pôle Bénévoles, et à droite les bénévoles à répartir classés pour la séquence Point information." />
+            <figcaption>La vue « Répartition » d'une référente, avec la séquence « Point information » choisie.</figcaption>
+          </figure>
+          <p>Choisissez une séquence : le panneau classe les personnes selon leurs plages. Des marques signalent qui a choisi cette séquence, qui est en liste d'attente, et qui est déjà placé·e à la même heure.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Disponible</span><span class="libelle">En partie</span><span class="libelle">Hors plages</span></span><span>Une plage couvre toute la séquence, une partie seulement, ou aucune.</span></li>
+            <li><span><span class="libelle">Placer</span></span><span>Placer la personne dans la séquence choisie. Sur un ordinateur, vous pouvez aussi la glisser sur la séquence.</span></li>
+            <li><span><span class="libelle">Retirer</span></span><span>Retirer une place depuis la frise. La personne revient dans les bénévoles à répartir.</span></li>
+          </ul>
+          <p>Le survol d'un nom montre les précisions de la personne, son message, ses choix et ses places. Placer une candidature accepte la séquence, comme le bouton « Accepter ».</p>
+          <p class="note">Un placement hors des plages de la personne, en chevauchement ou au-delà des renforts recherchés demande une confirmation. Sur un téléphone, la vue liste les séquences en manque, chacune avec ses bénévoles à répartir.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-acces">
+        <div class="entete">
+          <span class="etiquette">Droits</span>
+          <h2 id="t-acces">Qui voit quoi</h2>
+          <p class="texte">
+            Les candidatures portent des coordonnées personnelles. Elles se lisent seulement par les personnes qui peuvent les traiter.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Les admins de l'activité</h3>
+            <p>Ils ouvrent des appels de toute portée et lisent toutes les candidatures, avec l'adresse et le téléphone. Ils acceptent pour les séquences sans périmètre.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Les référentes et référents</h3>
+            <p>Ils ouvrent des appels pour leur périmètre. Ils lisent les candidatures qui choisissent une de leurs séquences, et seulement ces choix.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Les bénévoles à répartir</h3>
+            <p>Les personnes d'un appel sur toute la période se voient par toute personne qui écrit dans un périmètre : nom, plages, précisions, choix et places. L'adresse et le téléphone restent réservés.</p>
+          </div>
+        </div>
+        <p class="note">Une fiche bénévole garde les règles de lecture des coordonnées décrites dans le <a href="referent.html#e-benevoles">mode d'emploi des référentes et référents</a>. Une place à confirmer compte comme une place pour ces règles.</p>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Autres modes d'emploi</span>
+          <h2 id="t-autres">Poursuivre</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="referent.html#e-programme">
+            <span class="role">Référent·e</span>
+            <h3>Tenir le programme</h3>
+            <p>Les séquences, les lieux, les personnes placées et la vue « Mon jour J ».</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="admin-activite.html#e-programme">
+            <span class="role">Admin d'une activité</span>
+            <h3>Programme et bénévoles</h3>
+            <p>Les séquences communes, les lieux et la gestion de toutes les fiches bénévoles.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">Tous les rôles</span>
+            <h3>Choisir un mode d'emploi</h3>
+            <p>La liste des modes d'emploi de l'espace organisateur.</p>
+            <span class="suite">Voir la liste</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.19.0.
+      </footer>
+    </main>
+    <script src="../bascule.js"></script>
+    <script src="../sommaire.js"></script>
+  </body>
+</html>

@@ -97,6 +97,11 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   'NombreNotificationsAdmin',
   'ListeNotificationsAdmin',
   'NotificationsAutresOrganisations',
+  // Appels à bénévoles, candidatures et répartition (ADR 0041).
+  'AppelsBenevoles',
+  'Candidatures',
+  'BenevolesARepartir',
+  'CouvertureProgramme',
 ])
 
 /** Délai entre deux relectures périodiques. */

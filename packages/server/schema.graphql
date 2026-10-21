@@ -98,6 +98,15 @@ type ActiviteNotifiee {
   slug: String!
 }
 
+"""
+TOTALE : une plage couvre toute la séquence. PARTIELLE : une plage en couvre une partie. AUCUNE : aucune plage ne la touche.
+"""
+enum Adequation {
+  AUCUNE
+  PARTIELLE
+  TOTALE
+}
+
 type AdresseAbonnement {
   abonnement: AbonnementAgenda!
 
@@ -136,6 +145,65 @@ type Agenda {
   Vrai pour un admin de l’activité, tant que la période n’est pas archivée : il écrit les dates clés.
   """
   peutGerer: Boolean!
+}
+
+"""
+Un appel à bénévoles : une adresse publique ouverte entre deux dates (ADR 0041).
+"""
+type AppelBenevoles {
+  """
+  L’adresse publique, recalculée à la demande pour les personnes qui gèrent l’appel ; null sinon.
+  """
+  adresse: String
+  candidaturesEnAttente: Int!
+  editionId: ID!
+  etat: EtatAppel!
+  fermeLe: DateTime!
+
+  """
+  Les derniers caractères du jeton, pour reconnaître l’adresse d’un coup d’œil.
+  """
+  finAdresse: String!
+  id: ID!
+  introduction: String
+  nom: String!
+  ouvertLe: DateTime!
+  perimetre: Perimetre
+  peutModifier: Boolean!
+  portee: PorteeAppel!
+  sequenceId: ID
+  sequenceTitre: String
+  version: Int!
+}
+
+"""
+La page publique d’un appel à bénévoles (ADR 0041). Lisible sans session.
+"""
+type AppelBenevolesPublic {
+  activite: String!
+
+  """
+  Adresse de rôle à laquelle demander l’accès à ses données ou leur suppression.
+  """
+  contact: String!
+  introduction: String
+
+  """Les jours où une plage de disponibilité peut tomber."""
+  jours: [String!]!
+  organisation: String!
+
+  """
+  Vrai : la personne peut proposer son aide là où il manque du monde, sans choisir de séquence.
+  """
+  ouAilleurs: Boolean!
+  periode: String!
+  sequences: [SequencePublique!]!
+}
+
+type AppelEtAdresse {
+  """L’adresse publique de l’appel."""
+  adresse: String!
+  appel: AppelBenevoles!
 }
 
 """
@@ -189,16 +257,98 @@ type BaremeScore {
 type Benevole {
   accordLe: DateTime!
 
+  """
+  La date à laquelle la personne a confirmé sa participation depuis son lien.
+  """
+  confirmeeLe: DateTime
+
   """Vrai si la personne connectée lit l’adresse, le téléphone et la note."""
   coordonneesVisibles: Boolean!
   courriel: String
   id: ID!
+  lienEnvoyeLe: DateTime
+
+  """
+  Le lien personnel, à copier, pour une personne qui lit les coordonnées ; null sans lien ou sans ce droit.
+  """
+  lienEspace: String
+
+  """
+  Vrai quand la personne connectée peut renvoyer le lien par mail, vers une fiche joignable : le lien est parti une fois sans relance, ou la fiche placée n’a pas pu recevoir son premier mail.
+  """
+  lienRenvoyable: Boolean!
   nom: String!
   note: String
+
+  """
+  SAISIE : saisie par l’équipe. CANDIDATURE : née d’une candidature (ADR 0041).
+  """
+  origine: String!
   peutModifier: Boolean!
 
   """Le nombre de séquences où la fiche est placée."""
   places: Int!
+
+  """
+  L’option « Prévenir par mail ». Avec une adresse, la fiche est joignable : sa première place envoie le lien (ADR 0041).
+  """
+  prevenirParMail: Boolean!
+  telephone: String
+}
+
+"""
+Une personne disponible : une candidature en attente, ou une fiche qui a des plages de disponibilité. Elle se lit sans adresse ni téléphone.
+"""
+type BenevoleARepartir {
+  """Pour la séquence demandée, s’il y en a une."""
+  adequation: Adequation
+  benevoleId: ID
+  candidatureId: ID
+  choix: [ChoixARepartir!]!
+  cle: String!
+  message: String
+  nom: String!
+
+  """
+  La note de la fiche, pour une personne qui lit ses coordonnées (ADR 0040).
+  """
+  note: String
+
+  """Le nom de l’appel, pour une candidature."""
+  origine: String
+  ouAilleurs: Boolean!
+  places: [PlaceTenue!]!
+  plages: [PlageDisponibilite!]!
+  precisionsDisponibilite: String
+}
+
+"""
+Le dépôt d’une personne sur un appel à bénévoles (ADR 0041). Il se lit par les personnes qui peuvent le traiter.
+"""
+type Candidature {
+  accordLe: DateTime!
+  appelId: ID!
+  appelNom: String!
+  benevoleId: ID
+  choix: [ChoixCandidature!]!
+  courriel: String
+  deposeeLe: DateTime!
+  id: ID!
+  message: String
+  nom: String!
+
+  """
+  Vrai : la personne aide là où il manque du monde, sans choisir de séquence.
+  """
+  ouAilleurs: Boolean!
+
+  """
+  Vrai si la personne gère l’appel : elle refuse alors toute la candidature.
+  """
+  peutEcarter: Boolean!
+  plages: [PlageDisponibilite!]!
+  precisionsDisponibilite: String
+  statut: StatutCandidature!
   telephone: String
 }
 
@@ -220,6 +370,29 @@ type Changement {
   entite: EntiteChangee!
   id: ID
   perimetreId: ID
+}
+
+type ChoixARepartir {
+  sequenceId: ID!
+  statut: String!
+}
+
+"""Une séquence choisie dans une candidature."""
+type ChoixCandidature {
+  debut: DateTime!
+  fin: DateTime!
+  heureDebut: String!
+  heureFin: String!
+  id: ID!
+  jour: String!
+  jourFin: String!
+  lieu: String
+  perimetre: Perimetre
+  peutTraiter: Boolean!
+  sequenceId: ID!
+  statut: StatutChoix!
+  titre: String!
+  traiteLe: DateTime
 }
 
 enum ChoixSondage {
@@ -525,10 +698,11 @@ type EmplacementFichiers {
 }
 
 """
-Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0040). FICHIERS couvre la connexion de l’espace de fichiers et ses dossiers liés (ADR 0038).
+Ce qui a changé. EQUIPE couvre les affectations et les souhaits. MESSAGE va aux admins qui lisent le message. AGENDA couvre l’agenda d’une activité (ADR 0037), PROGRAMME ses lieux et ses séquences (ADR 0040). FICHIERS couvre la connexion de l’espace de fichiers et ses dossiers liés (ADR 0038). CANDIDATURE couvre les appels à bénévoles et leurs candidatures (ADR 0041).
 """
 enum EntiteChangee {
   AGENDA
+  CANDIDATURE
   DEMANDE
   EQUIPE
   FICHE
@@ -538,6 +712,28 @@ enum EntiteChangee {
   PERIMETRE
   PROGRAMME
   TACHE
+}
+
+"""
+L’espace d’une ou d’un bénévole, ouvert par son lien personnel (ADR 0041). Lisible sans session.
+"""
+type EspaceBenevole {
+  activite: String!
+
+  """Vrai quand la personne a confirmé sa participation."""
+  confirme: Boolean!
+  contact: String
+
+  """Les places à venir au format iCalendar, à télécharger."""
+  ics: String!
+  nom: String!
+  organisation: String!
+  places: [PlaceDeLEspace!]!
+
+  """
+  Les disponibilités à venir que la personne a données, ou que l’équipe a saisies.
+  """
+  plages: [PlageDisponibilite!]!
 }
 
 type EspaceFichiers {
@@ -568,9 +764,24 @@ type EtapeAccordDeclinaison {
   par: Personne!
 }
 
+enum EtatAppel {
+  A_VENIR
+  FERME
+  OUVERT
+}
+
 enum EtatConnexionFichiers {
   ACTIVE
   A_RECONNECTER
+}
+
+"""
+CONFIRMEE : la place est tenue. A_CONFIRMER : la personne n’a pas encore confirmé. NON_CONFIRMEE : toujours à confirmer sept jours après sa création, ou la veille de la séquence (ADR 0041).
+"""
+enum EtatPlace {
+  A_CONFIRMER
+  CONFIRMEE
+  NON_CONFIRMEE
 }
 
 enum EtatPostes {
@@ -991,6 +1202,11 @@ type Mutation {
     auth: String!
     p256dh: String!
   ): Boolean!
+
+  """
+  Accepte une séquence choisie : la fiche bénévole naît ou se rattache par l’adresse, avec une place à confirmer en renfort.
+  """
+  accepterChoixCandidature(id: ID!): Candidature!
   accepterDemande(affecter: [ID!]!, id: ID!): Demande!
 
   """
@@ -1042,6 +1258,11 @@ type Mutation {
   commenterTache(id: ID!, texte: String!): FilTache!
 
   """
+  Confirme l’adresse de la fiche et toutes ses places à confirmer. Utilisable sans session.
+  """
+  confirmerParticipation(jeton: String!): Boolean!
+
+  """
   Connecte Google Drive par un compte de service : la clé JSON du compte, que l’organisation a créée. L’organisation partage ensuite ses dossiers avec l’adresse du compte.
   """
   connecterCompteServiceGoogle(cle: String!): ConnexionFichiers!
@@ -1051,6 +1272,22 @@ type Mutation {
   """
   creerAbonnementAgendaActivite(activiteId: ID!): AdresseAbonnement!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
+
+  """Ouvre un appel à bénévoles, et rend son adresse publique."""
+  creerAppelBenevoles(
+    editionId: ID!
+    fermeLe: DateTime!
+    introduction: String
+    nom: String!
+    ouvertLe: DateTime!
+
+    """Pour la portée PERIMETRE."""
+    perimetreId: ID
+    portee: PorteeAppel!
+
+    """Pour la portée SEQUENCE."""
+    sequenceId: ID
+  ): AppelEtAdresse!
 
   """
   Crée une fiche bénévole. La personne qui la crée déclare l’accord de la ou du bénévole.
@@ -1062,6 +1299,11 @@ type Mutation {
     courriel: String
     nom: String!
     note: String
+
+    """
+    Vrai : la fiche reçoit son lien par mail à sa première place, si elle a une adresse.
+    """
+    prevenirParMail: Boolean = true
     telephone: String
   ): Benevole!
   creerDateCle(description: String, editionId: ID!, jour: Date!, jourFin: Date, titre: String!): DateCle!
@@ -1107,6 +1349,9 @@ type Mutation {
     titre: String!
   ): Reunion!
   creerSequence(
+    """Le nombre de renforts recherchés ; 0 ou rien : aucun."""
+    besoinBenevoles: Int
+    consignesBenevoles: String
     description: String
     editionId: ID!
     heureDebut: String!
@@ -1160,6 +1405,26 @@ type Mutation {
   demanderExport(organisation: String!): String!
 
   """
+  Dépose une candidature sur un appel ouvert. La réponse est la même que l’adresse ait déjà une candidature, une fiche ou un compte. Aucun mail ne part. Utilisable sans session.
+  """
+  deposerCandidature(
+    """Vrai : la personne accepte l’enregistrement de ses données."""
+    accord: Boolean!
+    email: String!
+    jeton: String!
+    message: String
+    nom: String!
+    ouAilleurs: Boolean = false
+    plages: [PlageDisponibiliteInput!]
+    precisions: String
+
+    """Les références des séquences choisies."""
+    sequences: [String!]!
+    siteWeb: String
+    telephone: String
+  ): Boolean!
+
+  """
   Retire l’abonnement push de cet appareil. Rend vrai quand un abonnement de la personne connectée a été retiré.
   """
   desabonnerPush(adresse: String!): Boolean!
@@ -1173,6 +1438,9 @@ type Mutation {
   Lance tout de suite l’export des fiches vers l’espace de fichiers. Le résultat arrive dans le rapport d’export.
   """
   exporterFichesMaintenant: Boolean!
+
+  """Ferme un appel avant sa date de fermeture."""
+  fermerAppelBenevoles(id: ID!): AppelBenevoles!
 
   """
   La personne connectée note son intérêt pour un périmètre (ADR 0012). Aucun mail ne part.
@@ -1194,6 +1462,11 @@ type Mutation {
   Donne le rôle d’admin d’une organisation à une adresse et lui envoie une invitation. Vrai quand l’admin est en place ; faux quand l’adresse a déjà un compte hors de l’organisation, dont l’invitation attend l’accord (ADR 0030). La réponse ne renvoie aucune donnée du compte.
   """
   inviterPremierAdmin(email: String!, nom: String!, organisation: String!): Boolean!
+
+  """
+  Le lien personnel d’une fiche, à copier : créé s’il n’existe pas. `nouveau` tire un nouveau lien, qui révoque l’ancien. Aucun mail ne part. Réservé aux personnes qui lisent ses coordonnées.
+  """
+  lienEspaceBenevole(benevoleId: ID!, nouveau: Boolean = false): String!
 
   """
   Lie un dossier de l’espace connecté à un périmètre, ou à toute l’activité sans périmètre.
@@ -1220,7 +1493,17 @@ type Mutation {
   ): Int!
   masquerFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
   modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
-  modifierBenevole(courriel: String, id: ID!, nom: String!, note: String, telephone: String): Benevole!
+  modifierAppelBenevoles(fermeLe: DateTime!, id: ID!, introduction: String, nom: String!, ouvertLe: DateTime!, versionAttendue: Int!): AppelBenevoles!
+  modifierBenevole(
+    courriel: String
+    id: ID!
+    nom: String!
+    note: String
+
+    """Sans valeur, l’option reste telle quelle."""
+    prevenirParMail: Boolean
+    telephone: String
+  ): Benevole!
 
   """
   Modifie le texte d’un commentaire et rend le fil de sa tâche. Seul son auteur le modifie.
@@ -1268,6 +1551,11 @@ type Mutation {
   """
   modifierPerimetre(archive: Boolean!, couleur: String, description: String, groupe: String, id: ID!, nom: String!, ordre: Int!, type: TypePerimetre, versionAttendue: Int): Perimetre!
   modifierPersonne(estAdmin: Boolean!, id: ID!, nom: String!): Personne!
+
+  """
+  Remplace les plages de disponibilité d’une fiche pour une période. Réservé aux personnes qui modifient la fiche.
+  """
+  modifierPlagesBenevole(benevoleId: ID!, editionId: ID!, plages: [PlageDisponibiliteInput!]!): [PlageDisponibilite!]!
 
   """
   Modifie les préférences de la personne dans l’organisation active (ADR 0032).
@@ -1337,6 +1625,9 @@ type Mutation {
   Change une séquence et ses places. Les places reçues remplacent les places actuelles.
   """
   modifierSequence(
+    """Le nombre de renforts recherchés ; 0 ou rien : aucun."""
+    besoinBenevoles: Int
+    consignesBenevoles: String
     description: String
     heureDebut: String!
     heureFin: String!
@@ -1374,7 +1665,27 @@ type Mutation {
   Modifie le contenu d’une tâche. Un champ absent ne change pas ; null efface la description, l’échéance ou la fiche. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
   """
   modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String, versionAttendue: Int): Tache!
+
+  """
+  Place une personne à répartir dans une séquence, en renfort. Une candidature y est acceptée ; une fiche y reçoit une place, à confirmer si elle est née d’une candidature.
+  """
+  placerBenevole(benevoleId: ID, candidatureId: ID, sequenceId: ID!): Sequence!
   proposerPersonne(editionId: ID!, email: String!, mot: String, nom: String!, perimetreId: ID!): Boolean!
+
+  """
+  Retire la personne d’une place à venir et prévient l’équipe. Une fiche non confirmée qu’aucune place ne retient est supprimée. Utilisable sans session.
+  """
+  quitterPlace(jeton: String!, ref: String!): Boolean!
+
+  """
+  Refuse tous les choix en attente d’une candidature et la clôt. Réservé aux personnes qui gèrent l’appel. Aucun mail ne part.
+  """
+  refuserCandidature(id: ID!): Candidature!
+
+  """
+  Refuse une séquence choisie, en attente ou en liste d’attente. Aucun mail ne part.
+  """
+  refuserChoixCandidature(id: ID!): Candidature!
   refuserDemande(id: ID!): Demande!
 
   """
@@ -1390,7 +1701,15 @@ type Mutation {
   Renvoie le mail d’une invitation en attente, une fois par heure au plus.
   """
   relancerInvitation(id: ID!): Boolean!
+
+  """Remplace l’adresse publique d’un appel : l’ancienne cesse de répondre."""
+  renouvelerAdresseAppelBenevoles(id: ID!): AppelEtAdresse!
   renvoyerInvitation(id: ID!): Boolean!
+
+  """
+  Renvoie par mail le lien personnel d’une fiche joignable, une seule fois. Le lien reste le même. Réservé aux personnes qui lisent ses coordonnées.
+  """
+  renvoyerLienBenevole(benevoleId: ID!): Boolean!
 
   """
   La réponse de la personne connectée à sa convocation : présente, absente ou peut-être.
@@ -1423,12 +1742,20 @@ type Mutation {
   La personne connectée retire son propre souhait. Hors de ses activités, rien ne change.
   """
   retirerMonSouhait(editionId: ID!, perimetreId: ID!): Boolean!
+
+  """
+  Retire une place d’une séquence. Le choix accepté d’une candidature reste accepté.
+  """
+  retirerPlaceSequence(id: ID!): Sequence!
   retirerProposition(id: ID!): Boolean!
   retirerSouhait(id: ID!): Boolean!
   revoquerAbonnementAgendaActivite(activiteId: ID!): Boolean!
 
   """Révoque l’abonnement personnel : son adresse cesse de servir."""
   revoquerMonAbonnementAgenda: Boolean!
+
+  """Rouvre un appel fermé à la main, avant sa date de fermeture."""
+  rouvrirAppelBenevoles(id: ID!): AppelBenevoles!
 
   """
   Supprime une fiche et la retire de toutes les séquences. Réservé aux admins de l’activité.
@@ -1440,6 +1767,11 @@ type Mutation {
   """
   supprimerCommentaire(id: ID!): FilTache!
   supprimerDateCle(id: ID!): Boolean!
+
+  """
+  Supprime la fiche de la personne, avec ses plages. Refusé tant qu’une place à venir la retient. Utilisable sans session.
+  """
+  supprimerMaFiche(jeton: String!): Boolean!
   supprimerSequence(id: ID!): Boolean!
 
   """
@@ -1761,10 +2093,24 @@ input PhaseInput {
   libelle: String!
 }
 
+type PlaceDeLEspace {
+  confirmee: Boolean!
+  consignes: String
+  heureDebut: String!
+  heureFin: String!
+  jour: String!
+  jourFin: String!
+  lieu: String
+  perimetre: String
+  ref: String!
+  titre: String!
+}
+
 type PlaceSequence {
   """La fiche bénévole ; ses coordonnées se lisent à part."""
   benevoleId: ID
   estMoi: Boolean!
+  etat: EtatPlace!
   id: ID!
   nom: String!
   personneId: ID
@@ -1780,11 +2126,44 @@ input PlaceSequenceInput {
   role: RolePlace!
 }
 
+type PlaceTenue {
+  debut: DateTime!
+  fin: DateTime!
+  sequenceId: ID!
+}
+
+"""
+Un intervalle où une personne peut aider, dans le fuseau de l’organisation.
+"""
+type PlageDisponibilite {
+  debut: DateTime!
+  fin: DateTime!
+  heureDebut: String!
+  heureFin: String!
+  jour: String!
+  jourFin: String!
+}
+
+input PlageDisponibiliteInput {
+  heureDebut: String!
+  heureFin: String!
+  jour: Date!
+
+  """Pour une plage qui passe minuit. Sans valeur : le jour."""
+  jourFin: Date
+}
+
 """Piles CSS complètes, prêtes pour font-family."""
 type PolicesTheme {
   mono: String!
   texte: String!
   titre: String!
+}
+
+enum PorteeAppel {
+  PERIMETRE
+  PERIODE
+  SEQUENCE
 }
 
 type PostesPerimetre {
@@ -1888,9 +2267,19 @@ type Query {
   ): Agenda!
 
   """
+  La page publique d’un appel, ou null s’il est fermé ou inconnu. Lisible sans session.
+  """
+  appelBenevolesPublic(jeton: String!): AppelBenevolesPublic
+
+  """
   Message à diffuser pour trouver des référentes et des référents. Vaut null quand aucun périmètre n’est à pourvoir.
   """
   appelPostes(editionId: ID!): String
+
+  """
+  Les appels à bénévoles d’une période que la personne voit : tous pour un admin de l’activité ; ceux de la période et de ses périmètres sinon.
+  """
+  appelsBenevoles(editionId: ID!): [AppelBenevoles!]!
   avancementGlobal(editionId: ID!): [AvancementPerimetre!]!
   baremeScore: BaremeScore!
 
@@ -1898,6 +2287,16 @@ type Query {
   Les fiches bénévoles d’une activité, par nom, pour les personnes qui y écrivent.
   """
   benevoles(activiteId: ID!): [Benevole!]!
+
+  """
+  Les bénévoles à répartir d’une période. Avec une séquence : les personnes qui n’y sont pas placées, classées par adéquation de leurs plages, puis par choix de la séquence.
+  """
+  benevolesARepartir(editionId: ID!, sequenceId: ID): [BenevoleARepartir!]!
+
+  """
+  Les candidatures d’une période que la personne peut traiter, des plus anciennes aux plus récentes.
+  """
+  candidatures(appelId: ID, editionId: ID!, statut: StatutCandidature = EN_ATTENTE): [Candidature!]!
   classement(editionId: ID!): [LigneClassement!]!
 
   """
@@ -1914,6 +2313,11 @@ type Query {
   Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms.
   """
   contenuDossierLie(chemin: [String!]!, id: ID!): ListeElementsFichiers!
+
+  """
+  La couverture du programme par tranches de 30 minutes. Sans périmètre donné, toutes les séquences comptent. Sinon, seules comptent celles des périmètres donnés, et celles sans périmètre avec `sansPerimetre`. Les bénévoles à répartir se comptent tous.
+  """
+  couvertureProgramme(editionId: ID!, perimetreIds: [ID!], sansPerimetre: Boolean = false): [TrancheCouverture!]!
   demandes(editionId: ID!, statut: StatutDemande): [Demande!]!
 
   """
@@ -1929,6 +2333,11 @@ type Query {
   """
   emplacementsFichiers: [EmplacementFichiers!]!
   equipe(activiteId: ID): [Personne!]!
+
+  """
+  L’espace d’une fiche bénévole, ou null pour un lien inconnu ou révoqué. Lisible sans session ; l’ouverture ne confirme rien.
+  """
+  espaceBenevole(jeton: String!): EspaceBenevole
   espaceFichiers: EspaceFichiers!
   exportContenu: ArchiveContenu!
   fiche(activiteId: ID, slug: String!): Fiche
@@ -2243,6 +2652,13 @@ type Score {
 
 """Une séquence du programme du jour J (ADR 0040)."""
 type Sequence {
+  """
+  Le nombre de renforts recherchés ; null si la séquence ne cherche personne (ADR 0041).
+  """
+  besoinBenevoles: Int
+
+  """Le texte public pour les bénévoles."""
+  consignesBenevoles: String
   debut: DateTime!
   description: String
   editionId: ID!
@@ -2256,8 +2672,45 @@ type Sequence {
   perimetre: Perimetre
   peutModifier: Boolean!
   places: [PlaceSequence!]!
+
+  """
+  Les places en renfort, confirmées ou non : elles comptent dans le besoin.
+  """
+  renforts: Int!
   titre: String!
   version: Int!
+}
+
+"""
+Une séquence qui cherche des bénévoles, telle que la page publique la montre.
+"""
+type SequencePublique {
+  """
+  Vrai quand le besoin est atteint : une candidature passe en liste d’attente.
+  """
+  complete: Boolean!
+
+  """
+  Vaut null sans consignes, ou si elles contiennent une coordonnée personnelle.
+  """
+  consignes: String
+  couleur: String
+  heureDebut: String!
+  heureFin: String!
+  jour: String!
+  jourFin: String!
+  lieu: String
+
+  """
+  Vaut null sans description, ou si elle contient une coordonnée personnelle.
+  """
+  lieuDescription: String
+  perimetre: String
+  placesRecherchees: Int!
+
+  """La référence de la séquence dans cet appel."""
+  ref: String!
+  titre: String!
 }
 
 """
@@ -2341,6 +2794,19 @@ input SourceImportFiches {
   chemin: [String!]!
   emplacement: String!
   perimetreId: ID
+}
+
+enum StatutCandidature {
+  EN_ATTENTE
+  RETIREE
+  TRAITEE
+}
+
+enum StatutChoix {
+  ACCEPTE
+  EN_ATTENTE
+  LISTE_ATTENTE
+  REFUSE
 }
 
 enum StatutDemande {
@@ -2462,6 +2928,24 @@ type TousLesPerimetres {
 }
 
 """
+Une tranche de 30 minutes du programme : besoins, places en renfort et bénévoles à répartir.
+"""
+type TrancheCouverture {
+  aConfirmer: Int!
+  besoin: Int!
+  confirmees: Int!
+  debut: DateTime!
+  disponibles: Int!
+  fin: DateTime!
+
+  """L’heure de début de la tranche, HH:MM."""
+  heure: String!
+
+  """Le jour de la tranche, dans le fuseau de l’organisation."""
+  jour: String!
+}
+
+"""
 Un événement du journal d’une tâche, repris dans son fil. STATUT : le champ `statut` porte le nouveau statut.
 """
 enum TypeEvenementTache {
@@ -2487,6 +2971,8 @@ enum TypeNotification {
   ADMIN_ORGANISATION_RETIRE
   AFFECTATION_AJOUTEE
   AFFECTATION_RETIREE
+  BENEVOLE_RETIRE
+  CANDIDATURE_RECUE
   DECLINAISON_ACCEPTEE
   DECLINAISON_PROPOSEE
   DECLINAISON_REFUSEE

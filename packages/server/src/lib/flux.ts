@@ -3,6 +3,7 @@ import type { Redis } from 'ioredis'
 
 import type { AppContext } from '../context.ts'
 
+import { ecritDansLActivite } from './benevoles.ts'
 import { avecDelai } from './delai.ts'
 import { peutLireFiche } from './fiches.ts'
 import { journal } from './journal.ts'
@@ -33,6 +34,7 @@ export type EntiteChangee =
   | 'AGENDA'
   | 'PROGRAMME'
   | 'FICHIERS'
+  | 'CANDIDATURE'
 
 export interface Changement {
   entite: EntiteChangee
@@ -224,6 +226,11 @@ export async function peutRecevoir(
   }
   if (activiteId === null || activiteId === undefined) return false
   if (changement.entite === 'DEMANDE') return ctx.estAdminDe(activiteId)
+  // Les appels et les candidatures se lisent par les personnes qui écrivent dans
+  // l'activité (ADR 0041).
+  if (changement.entite === 'CANDIDATURE') {
+    return ecritDansLActivite(ctx, activiteId)
+  }
   if (changement.entite === 'FICHE' || changement.entite === 'FICHIERS') {
     return peutLireFiche(ctx, {
       organisationId: changement.organisationId,
