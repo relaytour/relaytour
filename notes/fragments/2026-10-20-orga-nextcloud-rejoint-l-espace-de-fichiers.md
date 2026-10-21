@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Nextcloud rejoint l'espace de fichiers

@@ -107,7 +107,7 @@ Deux moyens étaient demandés. Le premier est un lien vers une seule séquence.
 - L'espace bénévole a la forme `/benevole/<jeton>`. Le jeton se calcule à partir du secret du serveur et d'un sel propre à la fiche, comme l'adresse d'un appel. Le lien reste donc le même d'un mail à l'autre.
 - Les personnes qui lisent les coordonnées de la fiche (ADR 0040) copient son lien pour l'envoyer par un autre moyen, un SMS par exemple. Elles en créent un pour une fiche qui n'en a pas encore.
 - Ces personnes peuvent aussi tirer un nouveau lien, qui révoque l'ancien sans envoyer de mail.
-- La relance renvoie le même lien par mail, une seule fois.
+- La relance renvoie le même lien par mail, une seule fois. Quand le premier mail n'a pas pu partir, ce geste l'envoie sans compter comme la relance.
 - L'archivage de la dernière période de la fiche révoque son lien.
 - L'espace montre le nom de la personne et ses places à venir, avec leurs lieux, leurs horaires et leurs consignes. Il montre aussi ses plages de disponibilité. Il ne montre ni l'adresse ni le téléphone.
 - La personne y télécharge ses places au format iCalendar.

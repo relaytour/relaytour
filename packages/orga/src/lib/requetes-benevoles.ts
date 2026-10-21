@@ -31,6 +31,7 @@ export const CANDIDATURES = graphql(`
         titre
         jour
         heureDebut
+        jourFin
         heureFin
         lieu
         peutTraiter

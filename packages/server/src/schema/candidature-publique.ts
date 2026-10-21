@@ -284,7 +284,10 @@ builder.queryField('appelBenevolesPublic', t =>
 
 // ── Dépôt ────────────────────────────────────────────────────────────────────
 
-/** Refuse le dépôt quand l'adresse IP ou l'adresse mail en envoient trop. */
+/**
+ * Refuse le dépôt quand l'adresse IP ou l'adresse mail en envoient trop, ou quand
+ * l'appel en reçoit trop.
+ */
 async function exigerDebitRaisonnable(
   ctx: AppContext,
   appel: AppelOuvert,
@@ -311,7 +314,15 @@ async function exigerDebitRaisonnable(
     86_400,
     refuser
   )
-  if (!parIp || !parAdresse) throw erreurSaisie(TROP)
+  // Chaque dépôt compte, qu'il crée une candidature ou en complète une : la
+  // réponse ne dépend pas de l'adresse, ni des décisions de l'équipe.
+  const parAppel = await limiterParCle(
+    `benevoles-appel-${appel.appelId}`,
+    DEPOTS_PAR_APPEL_ET_PAR_HEURE,
+    3600,
+    refuser
+  )
+  if (!parIp || !parAdresse || !parAppel) throw erreurSaisie(TROP)
 }
 
 builder.mutationField('deposerCandidature', t =>
@@ -392,12 +403,17 @@ builder.mutationField('deposerCandidature', t =>
       await exigerDebitRaisonnable(ctx, appel, email)
 
       const nouvelles = await prisma.$transaction(async tx => {
-        // Ordre des verrous : l'appel, la candidature, puis les séquences dans
-        // l'ordre de leurs identifiants. Les décisions de l'équipe prennent la
-        // candidature puis la séquence : aucun cycle. Tous les verrous se
+        // Ordre des verrous : l'organisation, l'appel, la candidature, puis les
+        // séquences dans l'ordre de leurs identifiants. Les décisions de
+        // l'équipe prennent l'organisation, la candidature puis la séquence :
+        // aucun cycle. Sans le verrou de l'organisation, l'insertion de la
+        // candidature attendrait son verrou partagé en tenant les séquences,
+        // pendant qu'une acceptation tient l'organisation et attend une
+        // séquence. Tous les verrous se
         // prennent avant la première lecture ordinaire : sous MariaDB 11.8, une
         // lecture verrouillante d'une ligne modifiée depuis la vue de la
         // transaction échoue (erreur 1020) au lieu de lire la ligne à jour.
+        await tx.$queryRaw`SELECT id FROM Organisation WHERE id = ${appel.organisationId} FOR UPDATE`
         const [courant] = await tx.$queryRaw<
           {
             portee: string
@@ -443,26 +459,12 @@ builder.mutationField('deposerCandidature', t =>
           }
           etats.set(sequenceId, sequence)
         }
-        // Les plafonds valent pour tout dépôt, que l'adresse ait déjà une
-        // candidature ou non : la réponse ne trahit rien. Une candidature
-        // complétée compte par sa date de mise à jour.
-        const [recentes, enAttente] = await Promise.all([
-          tx.candidature.count({
-            where: {
-              appelId: appel.appelId,
-              updatedAt: { gte: new Date(maintenant.getTime() - 3600_000) },
-            },
-          }),
-          tx.candidature.count({
-            where: { appelId: appel.appelId, statut: 'EN_ATTENTE' },
-          }),
-        ])
-        if (
-          recentes >= DEPOTS_PAR_APPEL_ET_PAR_HEURE ||
-          enAttente >= CANDIDATURES_EN_ATTENTE_MAX
-        ) {
-          throw erreurSaisie(TROP)
-        }
+        // Le plafond des candidatures en attente vaut pour tout dépôt, que
+        // l'adresse ait déjà une candidature ou non : la réponse ne trahit rien.
+        const enAttente = await tx.candidature.count({
+          where: { appelId: appel.appelId, statut: 'EN_ATTENTE' },
+        })
+        if (enAttente >= CANDIDATURES_EN_ATTENTE_MAX) throw erreurSaisie(TROP)
         const existante =
           trouvee[0] === undefined
             ? null

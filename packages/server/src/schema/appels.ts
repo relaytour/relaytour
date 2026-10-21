@@ -276,6 +276,9 @@ const ChoixRef = builder.objectRef<ChoixLu>('ChoixCandidature').implement({
     heureDebut: t.string({
       resolve: c => heureLocale(c.choix.sequence.debut, c.fuseau).heure,
     }),
+    jourFin: t.string({
+      resolve: c => heureLocale(c.choix.sequence.fin, c.fuseau).jour,
+    }),
     heureFin: t.string({
       resolve: c => heureLocale(c.choix.sequence.fin, c.fuseau).heure,
     }),

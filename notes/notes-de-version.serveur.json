@@ -2,10 +2,28 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "versions": [
     {
       "version": null,
+      "notes": [
+        {
+          "id": "2026-10-21-serveur-les-liens-des-benevoles-dependent-du-secret-du-serveur",
+          "date": "2026-10-21",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les liens des bénévoles dépendent du secret du serveur",
+            "texte": "Les adresses des appels à bénévoles (/benevoles/) et des espaces bénévoles (/benevole/) sont des pages de l'espace organisateur : un proxy qui renvoie les chemins inconnus vers l'application les sert sans réglage. Leurs jetons dérivent de BETTER_AUTH_SECRET : changer ce secret change tous ces liens.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
+      "version": "0.18.0",
       "notes": [
         {
           "id": "2026-10-20-serveur-une-fiche-de-perimetre-se-lit-aussi-dans-les-perimetres-qu-e",

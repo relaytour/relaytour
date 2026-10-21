@@ -27,6 +27,7 @@ import {
   configurationOrganisation,
 } from '../lib/organisation.ts'
 
+import { PlageRef } from './appels.ts'
 import { builder } from './builder.ts'
 
 // Espace bénévole (ADR 0041). Le lien personnel d'une fiche ouvre ses places à
@@ -59,6 +60,8 @@ interface Espace {
   contact: string | null
   fuseau: string
   places: PlaceDeLEspace[]
+  /** Les plages de disponibilité à venir, des périodes non archivées. */
+  plages: { debut: Date; fin: Date }[]
   /** Les places, par référence. */
   placeIds: Map<string, string>
   ics: string
@@ -95,7 +98,18 @@ async function espace(
     domaines: configuration.domainesCourrielAutorises,
     adresses: configuration.adressesRoleAutorisees,
   }
-  const places = await placesAVenir(prisma, fiche.id, maintenant)
+  const [places, plages] = await Promise.all([
+    placesAVenir(prisma, fiche.id, maintenant),
+    prisma.plageDisponibilite.findMany({
+      where: {
+        benevoleId: fiche.id,
+        fin: { gt: maintenant },
+        edition: { statut: { not: 'ARCHIVEE' } },
+      },
+      select: { debut: true, fin: true },
+      orderBy: { debut: 'asc' },
+    }),
+  ])
   const lues = places.map(p => ({
     id: p.id,
     ref: referencePublique(empreinte, p.id),
@@ -121,6 +135,7 @@ async function espace(
     contact: configuration.contactRecrutement ?? null,
     fuseau: fiche.organisation.fuseauHoraire,
     places: lues,
+    plages,
     placeIds: new Map(lues.map(p => [p.ref, p.id])),
     // Le fichier ne porte pas le lien personnel : il circule hors de l'espace.
     ics: calendrier({
@@ -180,6 +195,12 @@ const EspaceRef = builder.objectRef<Espace>('EspaceBenevole').implement({
     places: t.field({
       type: [PlaceDeLEspaceRef],
       resolve: e => e.places.map(p => ({ ...p, fuseau: e.fuseau })),
+    }),
+    plages: t.field({
+      type: [PlageRef],
+      description:
+        'Les disponibilités à venir que la personne a données, ou que l’équipe a saisies.',
+      resolve: e => e.plages.map(p => ({ ...p, fuseau: e.fuseau })),
     }),
     ics: t.exposeString('ics', {
       description: 'Les places à venir au format iCalendar, à télécharger.',
@@ -296,7 +317,12 @@ builder.mutationFields(t => ({
       await prisma.$transaction(async tx => {
         // La séquence d'abord, comme modifierSequence et placerBenevole.
         await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${place.sequenceId} FOR UPDATE`
-        await tx.placeSequence.deleteMany({ where: { id: place.id } })
+        // Une modification de la séquence validée entre-temps a pu recréer la
+        // place sous un autre identifiant : la référence est alors périmée.
+        const { count } = await tx.placeSequence.deleteMany({
+          where: { id: place.id },
+        })
+        if (count === 0) throw erreurSaisie('Cette place n’existe plus.')
         await tx.sequence.update({
           where: { id: place.sequenceId },
           data: { version: { increment: 1 } },

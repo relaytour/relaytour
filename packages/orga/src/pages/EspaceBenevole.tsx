@@ -21,8 +21,8 @@ import { messageErreur } from '../lib/erreurs'
 
 // Espace d'une ou d'un bénévole (ADR 0041), ouvert par son lien personnel, sans
 // session. L'ouverture ne confirme rien : la personne confirme par un bouton. Elle
-// y lit ses places et leurs consignes, télécharge son agenda, quitte une place ou
-// supprime sa fiche.
+// y lit ses places, leurs consignes et ses disponibilités, télécharge son agenda,
+// quitte une place ou supprime sa fiche.
 
 const ESPACE = graphql(`
   query EspaceBenevole($jeton: String!) {
@@ -44,6 +44,12 @@ const ESPACE = graphql(`
         perimetre
         consignes
         confirmee
+      }
+      plages {
+        jour
+        jourFin
+        heureDebut
+        heureFin
       }
     }
   }
@@ -80,7 +86,12 @@ export default function EspaceBenevole() {
   const [supprimer] = useMutation(SUPPRIMER)
   const [supprimee, setSupprimee] = useState(false)
   const espace = data?.espaceBenevole
-  const aConfirmer = espace?.places.some(p => !p.confirmee) ?? false
+  // Une adresse changée par l'équipe se confirme de nouveau, même quand toutes
+  // les places le sont déjà.
+  const aConfirmer =
+    espace !== undefined &&
+    espace !== null &&
+    (!espace.confirme || espace.places.some(p => !p.confirmee))
 
   const telechargerAgenda = () => {
     if (!espace) return
@@ -173,7 +184,9 @@ export default function EspaceBenevole() {
                 title={
                   espace.confirme
                     ? 'De nouvelles places attendent votre confirmation.'
-                    : 'L’équipe vous propose ces places. Confirmez-vous votre participation ?'
+                    : espace.places.some(p => !p.confirmee)
+                      ? 'L’équipe vous propose ces places. Confirmez-vous votre participation ?'
+                      : 'Confirmez votre participation pour recevoir les changements de vos places par mail.'
                 }
                 description={
                   <Button
@@ -232,6 +245,25 @@ export default function EspaceBenevole() {
               >
                 Ajouter à mon agenda
               </Button>
+            )}
+
+            {espace.plages.length > 0 && (
+              <>
+                <h2 className="rt-intertitre-public">Vos disponibilités</h2>
+                <ul className="rt-plages-publiques">
+                  {espace.plages.map(p => (
+                    <li key={`${p.jour}-${p.heureDebut}-${p.jourFin}`}>
+                      <Tag>
+                        {libelleJours(p.jour)}, {p.heureDebut} → {p.heureFin}
+                        {p.jourFin !== p.jour && ' le lendemain'}
+                      </Tag>
+                    </li>
+                  ))}
+                </ul>
+                <Typography.Paragraph className="rt-note">
+                  Pour changer vos disponibilités, écrivez à l’organisation.
+                </Typography.Paragraph>
+              </>
             )}
 
             <section className="rt-espace-pied">
