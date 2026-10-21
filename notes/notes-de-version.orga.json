@@ -2,10 +2,10 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.17.0",
+  "version": "0.18.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.18.0",
       "notes": [
         {
           "id": "2026-10-21-orga-le-titre-long-d-un-panneau-ne-deborde-plus-sur-son-bouton",

@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Votre agenda s'abonne à Relaytour depuis Outlook, Google ou Apple

@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Les abonnements à l'agenda passent par /agenda/

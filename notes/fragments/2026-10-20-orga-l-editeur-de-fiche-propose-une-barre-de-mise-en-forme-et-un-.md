@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     L’éditeur de fiche s’ouvre en mode visuel, avec une barre de mise en forme et un guide Markdown
