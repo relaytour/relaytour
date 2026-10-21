@@ -29,7 +29,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "Une fiche renvoie aux documents de l'espace de fichiers",
-            "texte": "Les personnes qui rédigent une fiche y lient des dossiers ou des fichiers de l'espace de fichiers, depuis le bloc « Ressources liées ». Vous ouvrez ces documents depuis la fiche, dans la liseuse. Un dossier lié à un autre périmètre ne peut pas être proposé.",
+            "texte": "Les personnes qui rédigent une fiche y lient des dossiers ou des fichiers de l'espace de fichiers, depuis le bloc « Ressources liées ». Vous ouvrez ces documents depuis la fiche, dans la liseuse. Un dossier lié à un autre périmètre ne peut pas être proposé. Dans une fiche connexe, une ressource d'un dossier que vous ne lisez pas porte la mention « Réservée au périmètre d'origine » et ne s'ouvre pas.",
             "migration": null
           }
         },

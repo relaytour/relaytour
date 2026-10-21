@@ -5,6 +5,7 @@ import { prisma, type Prisma } from '@relaytour/database'
 import { donneesPersonnelles } from '../lib/contenu.ts'
 import { avecDelai } from '../lib/delai.ts'
 import { publierChangement } from '../lib/flux.ts'
+import { lireGroupes } from '../lib/activites.ts'
 import { journal } from '../lib/journal.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
@@ -31,7 +32,7 @@ Relaytour réécrit ce dossier après chaque modification d'une fiche, puis chaq
 
 Gardez ce dossier en lecture seule pour les membres de l'association.
 
-Chaque fichier commence par un en-tête qui donne l'identifiant de la fiche (\`slug\`) et son titre. Le dossier contient un sous-dossier par activité. Chaque activité range ses fiches communes dans \`communes/\`, puis les fiches de chaque périmètre dans un dossier à son nom.
+Chaque fichier commence par un en-tête qui donne l'identifiant de la fiche (\`slug\`) et son titre. L'en-tête d'une fiche qui concerne aussi d'autres périmètres les liste (\`concerne\`, \`concerneGroupes\`). Le dossier contient un sous-dossier par activité. Chaque activité range ses fiches communes dans \`communes/\`, puis les fiches de chaque périmètre dans un dossier à son nom.
 `
 
 export interface RapportExport {
@@ -77,9 +78,17 @@ async function fichesAExporter(organisationId: string) {
     select: {
       id: true,
       slug: true,
-      activite: { select: { slug: true } },
+      perimetreId: true,
+      activite: { select: { slug: true, groupes: true } },
       perimetre: { select: { slug: true, archivedAt: true } },
       versionCourante: { select: { titre: true, contenu: true } },
+      connexes: {
+        select: {
+          perimetreId: true,
+          perimetre: { select: { slug: true, archivedAt: true } },
+        },
+      },
+      groupesConnexes: { select: { groupe: true } },
     },
     orderBy: { slug: 'asc' },
   })
@@ -105,9 +114,24 @@ async function fichesAExporter(organisationId: string) {
         refus: `coordonnées personnelles (${personnelles.join(', ')})`,
       }
     }
-    const texte = texteFiche(f.slug, version.titre, version.contenu).toString(
-      'utf8'
-    )
+    // La liste « Concerne aussi » s'écrit comme dans `orga:exporter` : sans
+    // périmètre archivé, ni groupe que l'activité ne déclare plus.
+    const declares = new Set(lireGroupes(f.activite.groupes).map(g => g.cle))
+    const texte = texteFiche(
+      f.slug,
+      version.titre,
+      version.contenu,
+      f.perimetreId === null
+        ? []
+        : f.connexes.flatMap(c =>
+            c.perimetreId === f.perimetreId || c.perimetre.archivedAt !== null
+              ? []
+              : [c.perimetre.slug]
+          ),
+      f.perimetreId === null
+        ? []
+        : f.groupesConnexes.map(g => g.groupe).filter(g => declares.has(g))
+    ).toString('utf8')
     return { id: f.id, slug: f.slug, chemin, texte }
   })
 }

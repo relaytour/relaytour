@@ -3403,6 +3403,11 @@ button.rt-carte-fiche {
   color: var(--rt-encre-55);
 }
 
+.rt-explorateur-mention {
+  margin-top: 4px;
+  white-space: normal;
+}
+
 .rt-explorateur-icone {
   flex-shrink: 0;
   font-size: 18px;

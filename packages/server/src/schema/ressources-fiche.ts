@@ -28,7 +28,9 @@ import { FicheRef } from './fiches.ts'
 // Ressources liées à une fiche (ADR 0038). Une personne qui rédige une fiche y lie
 // un dossier ou un fichier d'un dossier lié du même périmètre, ou de toute
 // l'activité. Les lecteurs de la fiche lisent donc la ressource. Elle vit en base
-// et n'entre pas dans le Markdown de la fiche.
+// et n'entre pas dans le Markdown de la fiche. Une personne qui lit une fiche
+// connexe (ADR 0039) sans lire le dossier lié voit la ressource, sans l'ouvrir :
+// le serveur ne lui donne alors rien de ce que le fournisseur sait d'elle.
 
 /** Une fiche porte trente ressources au plus. */
 export const RESSOURCES_MAX = 30
@@ -46,8 +48,66 @@ function lireChemin(valeur: unknown): string[] {
 const empreinteChemin = (chemin: readonly string[]) =>
   createHash('sha256').update(JSON.stringify(chemin)).digest('hex')
 
+interface DossierDeRessource {
+  id: string
+  organisationId: string
+  activiteId: string
+  perimetreId: string | null
+  emplacement: string
+  element: string
+  fournisseur: string
+}
+
+const SELECTION_DOSSIER = {
+  dossierLie: {
+    select: {
+      id: true,
+      organisationId: true,
+      activiteId: true,
+      perimetreId: true,
+      emplacement: true,
+      element: true,
+      fournisseur: true,
+    },
+  },
+} as const
+
 // L'état d'une ressource chez le fournisseur, lu une fois par requête : null quand
-// le fournisseur ne répond pas ou que l'espace n'est pas connecté.
+// le fournisseur ne répond pas, que l'espace n'est pas connecté, ou que la
+// personne ne lit pas le dossier lié.
+const ouvertures = new WeakMap<AppContext, Map<string, Promise<boolean>>>()
+
+/**
+ * Vrai quand la personne lit le dossier lié de la ressource, comme `dossierLisible`.
+ * Lu une fois par dossier et par requête.
+ */
+function ouvrable(
+  ctx: AppContext,
+  dossier: {
+    id: string
+    organisationId: string
+    activiteId: string
+    perimetreId: string | null
+  }
+): Promise<boolean> {
+  let parDossier = ouvertures.get(ctx)
+  if (parDossier === undefined) {
+    parDossier = new Map()
+    ouvertures.set(ctx, parDossier)
+  }
+  let lu = parDossier.get(dossier.id)
+  if (lu === undefined) {
+    // Sans l'identifiant d'une fiche : un partage de fiche n'ouvre pas le dossier.
+    lu = peutLireFiche(ctx, {
+      organisationId: dossier.organisationId,
+      activiteId: dossier.activiteId,
+      perimetreId: dossier.perimetreId,
+    })
+    parDossier.set(dossier.id, lu)
+  }
+  return lu
+}
+
 const etats = new WeakMap<
   AppContext,
   Map<string, Promise<ElementEspace | 'absent' | null>>
@@ -55,9 +115,7 @@ const etats = new WeakMap<
 
 function etatChezLeFournisseur(
   ctx: AppContext,
-  r: RessourceFiche & {
-    dossierLie: { emplacement: string; element: string; fournisseur: string }
-  }
+  r: RessourceFiche & { dossierLie: DossierDeRessource }
 ): Promise<ElementEspace | 'absent' | null> {
   let parRessource = etats.get(ctx)
   if (parRessource === undefined) {
@@ -67,6 +125,7 @@ function etatChezLeFournisseur(
   let etat = parRessource.get(r.id)
   if (etat === undefined) {
     etat = (async () => {
+      if (!(await ouvrable(ctx, r.dossierLie))) return null
       try {
         const { espace } = await ouvrirEspace(r.organisationId)
         if (espace.fournisseur !== r.dossierLie.fournisseur) return null
@@ -94,13 +153,15 @@ const RessourceFicheRef = builder.prismaObject('RessourceFiche', {
     type: t.expose('type', { type: TypeRessourceEnum }),
     chemin: t.stringList({ resolve: r => lireChemin(r.chemin) }),
     dossierLie: t.relation('dossierLie', { type: DossierLieRef }),
+    ouvrable: t.boolean({
+      description:
+        'Vrai quand la personne lit le dossier lié de la ressource, et peut donc l’ouvrir. Faux pour une ressource d’un autre périmètre, lue dans une fiche connexe.',
+      select: SELECTION_DOSSIER,
+      resolve: (r, _args, ctx) => ouvrable(ctx, r.dossierLie),
+    }),
     apercu: t.field({
       type: FormatApercuEnum,
-      select: {
-        dossierLie: {
-          select: { emplacement: true, element: true, fournisseur: true },
-        },
-      },
+      select: SELECTION_DOSSIER,
       resolve: async (r, _args, ctx) => {
         if (r.type === 'DOSSIER') return 'AUCUN'
         const fournisseur = r.dossierLie.fournisseur
@@ -121,12 +182,8 @@ const RessourceFicheRef = builder.prismaObject('RessourceFiche', {
     existe: t.boolean({
       nullable: true,
       description:
-        'Faux quand la ressource n’existe plus chez le fournisseur. Null quand le fournisseur ne répond pas.',
-      select: {
-        dossierLie: {
-          select: { emplacement: true, element: true, fournisseur: true },
-        },
-      },
+        'Faux quand la ressource n’existe plus chez le fournisseur. Null quand le fournisseur ne répond pas, ou quand la ressource n’est pas ouvrable.',
+      select: SELECTION_DOSSIER,
       resolve: async (r, _args, ctx) => {
         const etat = await etatChezLeFournisseur(ctx, r)
         return etat === null ? null : etat !== 'absent'
@@ -134,11 +191,9 @@ const RessourceFicheRef = builder.prismaObject('RessourceFiche', {
     }),
     lienWeb: t.string({
       nullable: true,
-      select: {
-        dossierLie: {
-          select: { emplacement: true, element: true, fournisseur: true },
-        },
-      },
+      description:
+        'Adresse de la ressource chez le fournisseur. Null quand la ressource n’est pas ouvrable.',
+      select: SELECTION_DOSSIER,
       resolve: async (r, _args, ctx) => {
         const etat = await etatChezLeFournisseur(ctx, r)
         return etat === null || etat === 'absent' ? null : etat.lienWeb

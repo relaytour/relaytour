@@ -127,10 +127,34 @@ function LierRessource({
   )
 }
 
+function NomRessource({
+  ressource: r,
+  mention,
+}: {
+  ressource: Ressource
+  mention?: string
+}) {
+  return (
+    <span className="rt-explorateur-nom">
+      {r.nom}
+      <span className="rt-explorateur-detail">
+        {r.chemin.length === 0
+          ? 'Dossier lié'
+          : [r.dossierLie.nom, ...r.chemin.slice(0, -1)].join(' / ')}
+      </span>
+      {/* Sous le nom : une étiquette à droite écraserait le nom sur un téléphone. */}
+      {mention !== undefined && (
+        <Tag className="rt-explorateur-mention">{mention}</Tag>
+      )}
+    </span>
+  )
+}
+
 /**
  * Les ressources de l'espace de fichiers liées à une fiche (ADR 0038), sous son
  * texte. Un fichier s'ouvre dans la liseuse, un dossier dans l'explorateur. Une
- * personne qui rédige la fiche lie et retire les ressources.
+ * ressource dont la personne ne lit pas le dossier lié reste dans la liste, sans
+ * s'ouvrir. Une personne qui rédige la fiche lie et retire les ressources.
  */
 export default function RessourcesFiche({
   slug,
@@ -211,23 +235,28 @@ export default function RessourcesFiche({
               r.type === 'DOSSIER' ? FolderOutlined : ICONES_APERCU[r.apercu]
             return (
               <li key={r.id} className="rt-explorateur-element">
-                <button type="button" onClick={() => ouvrir(r)}>
-                  <Icone aria-hidden className="rt-explorateur-icone" />
-                  <span className="rt-explorateur-nom">
-                    {r.nom}
-                    <span className="rt-explorateur-detail">
-                      {r.chemin.length === 0
-                        ? 'Dossier lié'
-                        : [r.dossierLie.nom, ...r.chemin.slice(0, -1)].join(
-                            ' / '
-                          )}
-                    </span>
-                  </span>
-                  {r.existe === false && <Tag color="warning">Introuvable</Tag>}
-                  {!r.dossierLie.disponible && (
-                    <Tag color="warning">Indisponible</Tag>
-                  )}
-                </button>
+                {r.ouvrable ? (
+                  <button type="button" onClick={() => ouvrir(r)}>
+                    <Icone aria-hidden className="rt-explorateur-icone" />
+                    <NomRessource ressource={r} />
+                    {r.existe === false && (
+                      <Tag color="warning">Introuvable</Tag>
+                    )}
+                    {!r.dossierLie.disponible && (
+                      <Tag color="warning">Indisponible</Tag>
+                    )}
+                  </button>
+                ) : (
+                  // Une ressource d'un autre périmètre, lue dans une fiche
+                  // connexe (ADR 0039) : la personne ne lit pas son dossier lié.
+                  <div className="rt-explorateur-ligne">
+                    <Icone aria-hidden className="rt-explorateur-icone" />
+                    <NomRessource
+                      ressource={r}
+                      mention="Réservée au périmètre d’origine"
+                    />
+                  </div>
+                )}
                 {peutModifier && (
                   <Popconfirm
                     title="Retirer cette ressource ?"

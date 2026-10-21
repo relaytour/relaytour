@@ -405,6 +405,7 @@ export const RESSOURCES_FICHE = graphql(`
         nom
         type
         chemin
+        ouvrable
         apercu
         existe
         lienWeb

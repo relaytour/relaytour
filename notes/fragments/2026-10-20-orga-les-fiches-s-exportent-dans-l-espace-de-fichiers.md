@@ -20,4 +20,6 @@ mutations `choisirDossierExport`, `retirerDossierExport` et
 `exporterFichesMaintenant`, tâches `export-fiches` (regroupée sur une minute)
 et `espace-fichiers` (chaque nuit à 3 h 45 : renouvellement de l'accès et
 réconciliation). Écritures Microsoft Graph : création de dossier, écriture
-d'un fichier, suppression.
+d'un fichier, suppression. L'en-tête d'une fiche exportée porte `concerne` et
+`concerneGroupes`, comme `orga:exporter` (ADR 0039), et `reglerConcerneAussi`
+planifie l'export.
