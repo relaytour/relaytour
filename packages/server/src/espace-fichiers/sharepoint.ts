@@ -6,6 +6,7 @@ import {
   type ElementEspace,
   type Emplacement,
   type EspaceFichiers,
+  type ListeElements,
   type Position,
 } from './types.ts'
 
@@ -34,7 +35,10 @@ const PORTEES = 'offline_access User.Read Files.ReadWrite.All Sites.Read.All'
 const GRAPH = 'https://graph.microsoft.com/v1.0'
 const DELAI_MS = 15_000
 const DELAI_CONTENU_MS = 120_000
-const PAGES_MAX = 5
+// Un dossier se lit par pages de 200 éléments, 25 pages au plus : au-delà, la
+// liste se dit incomplète. Les sites et leurs bibliothèques suivent la même règle.
+const PAGES_MAX = 25
+const PAGES_SITES_MAX = 10
 
 // ── Connexion ────────────────────────────────────────────────────────────────
 
@@ -142,7 +146,7 @@ export async function nomDuCompte(acces: string): Promise<string> {
     `${GRAPH}/me?$select=displayName`,
     () => Promise.resolve(acces)
   )
-  return moi?.displayName?.trim() || 'Compte Microsoft'
+  return (moi?.displayName?.trim() || 'Compte Microsoft').slice(0, 255)
 }
 
 // ── Lecture ──────────────────────────────────────────────────────────────────
@@ -156,13 +160,21 @@ type Jeton = (forcer?: boolean) => Promise<string>
 async function graph(
   adresse: string,
   jeton: Jeton,
-  delaiMs = DELAI_MS
+  delaiMs = DELAI_MS,
+  requete: { method?: string; body?: string; type?: string } = {}
 ): Promise<Response> {
   for (const forcer of [false, true]) {
     const reponse = await appelSortant(
       adresse,
       {
-        headers: { authorization: `Bearer ${await jeton(forcer)}` },
+        method: requete.method ?? 'GET',
+        body: requete.body,
+        headers: {
+          authorization: `Bearer ${await jeton(forcer)}`,
+          ...(requete.type === undefined
+            ? {}
+            : { 'content-type': requete.type }),
+        },
         delaiMs,
       },
       HOTES_MICROSOFT
@@ -192,6 +204,7 @@ async function lireJson<T>(adresse: string, jeton: Jeton): Promise<T | null> {
 interface ElementGraph {
   id: string
   name: string
+  eTag?: string
   folder?: unknown
   file?: { mimeType?: string }
   size?: number
@@ -199,7 +212,29 @@ interface ElementGraph {
   webUrl?: string
 }
 
-const CHAMPS = 'id,name,folder,file,size,lastModifiedDateTime,webUrl'
+const CHAMPS = 'id,name,folder,file,size,lastModifiedDateTime,webUrl,eTag'
+
+/**
+ * Suit les pages d'une collection de Graph (`@odata.nextLink`), jusqu'à une borne.
+ * Null si la première page n'existe pas.
+ */
+async function toutesLesPages<T>(
+  adresse: string,
+  jeton: Jeton,
+  pagesMax: number
+): Promise<{ valeurs: T[]; complet: boolean } | null> {
+  const valeurs: T[] = []
+  let suivante: string | undefined = adresse
+  for (let page = 0; suivante !== undefined; page++) {
+    if (page === pagesMax) return { valeurs, complet: false }
+    const reponse: { value: T[]; '@odata.nextLink'?: string } | null =
+      await lireJson(suivante, jeton)
+    if (reponse === null) return page === 0 ? null : { valeurs, complet: false }
+    valeurs.push(...reponse.value)
+    suivante = reponse['@odata.nextLink']
+  }
+  return { valeurs, complet: true }
+}
 
 function versElement(e: ElementGraph): ElementEspace {
   return {
@@ -213,7 +248,22 @@ function versElement(e: ElementGraph): ElementEspace {
         : new Date(e.lastModifiedDateTime),
     typeMime: e.file?.mimeType ?? null,
     lienWeb: e.webUrl ?? null,
+    etag: e.eTag ?? null,
   }
+}
+
+/** Corps JSON d'une écriture, ou une erreur du fournisseur. */
+async function resultatEcriture<T>(
+  reponse: Response,
+  quoi: string
+): Promise<T> {
+  if (!reponse.ok) {
+    await reponse.body?.cancel()
+    throw new FournisseurIndisponible(
+      `Microsoft Graph refuse ${quoi} (${reponse.status}).`
+    )
+  }
+  return (await reponse.json()) as T
 }
 
 // Un identifiant de site contient des virgules (« hôte,collection,site ») : Graph
@@ -246,18 +296,22 @@ export function espaceSharePoint(jeton: Jeton): EspaceFichiers {
       if (personnel !== null) {
         resultat.push({ id: personnel.id, nom: 'OneDrive', site: null })
       }
-      const sites = await lireJson<{
-        value: { id: string; displayName?: string }[]
-      }>(`${GRAPH}/sites?search=*&$select=id,displayName&$top=50`, jeton)
+      const sites = await toutesLesPages<{ id: string; displayName?: string }>(
+        `${GRAPH}/sites?search=*&$select=id,displayName&$top=50`,
+        jeton,
+        PAGES_SITES_MAX
+      )
       const parSite = await Promise.all(
-        (sites?.value ?? []).map(async site => {
-          const bibliotheques = await lireJson<{
-            value: { id: string; name: string }[]
+        (sites?.valeurs ?? []).map(async site => {
+          const bibliotheques = await toutesLesPages<{
+            id: string
+            name: string
           }>(
             `${GRAPH}/sites/${segment(site.id)}/drives?$select=id,name`,
-            jeton
+            jeton,
+            PAGES_SITES_MAX
           ).catch(() => null)
-          return (bibliotheques?.value ?? []).map(b => ({
+          return (bibliotheques?.valeurs ?? []).map(b => ({
             id: b.id,
             nom: b.name,
             site: site.displayName ?? null,
@@ -275,20 +329,89 @@ export function espaceSharePoint(jeton: Jeton): EspaceFichiers {
       return e === null ? null : versElement(e)
     },
 
-    async lister(position) {
-      let adresse: string | undefined =
-        `${adresseGraph(position)}/children?$select=${CHAMPS}&$top=200`
-      const elements: ElementEspace[] = []
-      for (let page = 0; adresse !== undefined && page < PAGES_MAX; page++) {
-        const reponse: {
-          value: ElementGraph[]
-          '@odata.nextLink'?: string
-        } | null = await lireJson(adresse, jeton)
-        if (reponse === null) return page === 0 ? null : elements
-        elements.push(...reponse.value.map(versElement))
-        adresse = reponse['@odata.nextLink']
+    async ancetres(emplacement, element) {
+      const chaine: { id: string; nom: string }[] = []
+      let courant: string | undefined = element
+      for (let i = 0; courant !== undefined && i < 40; i++) {
+        const e: {
+          id: string
+          name: string
+          parentReference?: { id?: string }
+        } | null = await lireJson(
+          `${GRAPH}/drives/${segment(emplacement)}/items/${segment(courant)}?$select=id,name,parentReference`,
+          jeton
+        )
+        if (e === null) return i === 0 ? null : chaine
+        chaine.push({ id: e.id, nom: e.name })
+        courant = e.parentReference?.id
       }
-      return elements
+      return chaine
+    },
+
+    async lister(position): Promise<ListeElements | null> {
+      const pages = await toutesLesPages<ElementGraph>(
+        `${adresseGraph(position)}/children?$select=${CHAMPS}&$top=200`,
+        jeton,
+        PAGES_MAX
+      )
+      return pages === null
+        ? null
+        : { elements: pages.valeurs.map(versElement), complet: pages.complet }
+    },
+
+    async creerDossier(parent, nom, { renommer }) {
+      const reponse = await graph(
+        `${adresseGraph(parent)}/children`,
+        jeton,
+        DELAI_MS,
+        {
+          method: 'POST',
+          type: 'application/json',
+          body: JSON.stringify({
+            name: nom,
+            folder: {},
+            '@microsoft.graph.conflictBehavior': renommer ? 'rename' : 'fail',
+          }),
+        }
+      )
+      // Sans renommage, un dossier déjà présent est rendu tel quel.
+      if (reponse.status === 409 && !renommer) {
+        await reponse.body?.cancel()
+        const existant = await lireJson<ElementGraph>(
+          `${adresseGraph({ ...parent, chemin: [...parent.chemin, nom] })}?$select=${CHAMPS}`,
+          jeton
+        )
+        if (existant === null) {
+          throw new FournisseurIndisponible('Le dossier créé est introuvable.')
+        }
+        return versElement(existant)
+      }
+      return versElement(
+        await resultatEcriture<ElementGraph>(reponse, 'la création du dossier')
+      )
+    },
+
+    async ecrire(position, texte) {
+      const reponse = await graph(
+        `${adresseGraph(position)}/content`,
+        jeton,
+        DELAI_MS,
+        { method: 'PUT', type: 'text/markdown; charset=utf-8', body: texte }
+      )
+      const e = await resultatEcriture<ElementGraph>(reponse, 'l’écriture')
+      return { etag: e.eTag ?? null }
+    },
+
+    async supprimer(position) {
+      const reponse = await graph(adresseGraph(position), jeton, DELAI_MS, {
+        method: 'DELETE',
+      })
+      await reponse.body?.cancel()
+      if (!reponse.ok && reponse.status !== 404) {
+        throw new FournisseurIndisponible(
+          `Microsoft Graph refuse la suppression (${reponse.status}).`
+        )
+      }
     },
 
     async ouvrir(position, { pdf }) {

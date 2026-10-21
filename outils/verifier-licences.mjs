@@ -23,6 +23,15 @@ const AUTORISEES = new Set([
   'GPL-3.0-or-later',
   'AGPL-3.0-only',
   'AGPL-3.0-or-later',
+  // Licence permissive de zlib, compatible avec l'AGPL (pako, par mammoth, ADR 0038).
+  'Zlib',
+])
+
+// Paquets qui déclarent une licence imprécise, relue dans leur fichier LICENSE.
+// La clé porte la version : une nouvelle version se relit.
+const LICENCES_RELUES = new Map([
+  // Déclare « BSD » ; son fichier LICENSE est la BSD-2-Clause (par mammoth, ADR 0038).
+  ['duck@0.1.12', 'BSD-2-Clause'],
 ])
 
 // Une expression composée est acceptée si l'une de ses alternatives l'est (OR) ou si
@@ -50,9 +59,10 @@ const paquets = JSON.parse(json)
 const refusees = Object.entries(paquets)
   .map(([nom, info]) => [
     nom,
-    Array.isArray(info.licenses)
-      ? info.licenses.join(' OR ')
-      : String(info.licenses),
+    LICENCES_RELUES.get(nom) ??
+      (Array.isArray(info.licenses)
+        ? info.licenses.join(' OR ')
+        : String(info.licenses)),
   ])
   .filter(([, licence]) => !acceptable(licence))
 

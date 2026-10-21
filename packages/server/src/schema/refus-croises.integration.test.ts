@@ -45,6 +45,8 @@ const a = {
   invitation: '',
   // Un dossier de l'espace de fichiers lié au périmètre (ADR 0038).
   dossierLie: '',
+  // Un fichier de ce dossier lié à la fiche du périmètre (ADR 0038).
+  ressource: '',
   admin: '',
   referente: '',
   // Une autre activité de l'organisation A, son admin et sa référente (ADR 0010).
@@ -324,6 +326,19 @@ beforeAll(async () => {
         emplacement: 'bibliotheque',
         element: 'dossier-natation',
         nom: 'Natation',
+      },
+    })
+  ).id
+  a.ressource = (
+    await prisma.ressourceFiche.create({
+      data: {
+        organisationId: a.org,
+        ficheId: a.fiche,
+        dossierLieId: a.dossierLie,
+        chemin: ['Plan.pdf'],
+        empreinteChemin: 'c'.repeat(64),
+        type: 'FICHIER',
+        nom: 'Plan.pdf',
       },
     })
   ).id
@@ -995,7 +1010,7 @@ const CAS: Cas[] = [
   {
     operation: 'contenuDossierLie',
     query:
-      'query ($id: ID!) { contenuDossierLie(id: $id, chemin: []) { nom } }',
+      'query ($id: ID!) { contenuDossierLie(id: $id, chemin: []) { complet } }',
     variables: () => ({ id: a.dossierLie }),
     attente: INTERDIT,
   },
@@ -1004,6 +1019,34 @@ const CAS: Cas[] = [
     query:
       'mutation ($a: ID!, $p: ID) { lierDossier(activiteId: $a, perimetreId: $p, emplacement: "bibliotheque", chemin: ["Natation"]) { id } }',
     variables: () => ({ a: a.activite, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'lierRessourceFiche',
+    query:
+      'mutation ($f: ID!, $d: ID!) { lierRessourceFiche(ficheId: $f, dossierLieId: $d, chemin: ["Plan.pdf"]) { id } }',
+    variables: () => ({ f: a.fiche, d: a.dossierLie }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'delierRessourceFiche',
+    query: 'mutation ($id: ID!) { delierRessourceFiche(id: $id) }',
+    variables: () => ({ id: a.ressource }),
+    attente: INTERDIT,
+  },
+  // L'import des fiches depuis l'espace de fichiers (ADR 0038).
+  {
+    operation: 'simulerImportFiches',
+    query:
+      'query ($a: ID!) { simulerImportFiches(activiteId: $a, sources: []) { creees } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'importerFichesEspace',
+    query:
+      'mutation ($a: ID!) { importerFichesEspace(activiteId: $a, sources: []) { creees } }',
+    variables: () => ({ a: a.activite }),
     attente: INTERDIT,
   },
   {
@@ -1162,6 +1205,7 @@ async function etatDeA() {
           where: { demande: { organisationId: a.org } },
         }),
         prisma.dossierLie.count({ where: { organisationId: a.org } }),
+        prisma.ressourceFiche.count({ where: { organisationId: a.org } }),
         prisma.commentaireTache.findMany({
           where: { tache: { perimetre: { organisationId: a.org } } },
           select: { id: true, texte: true, modifieLe: true },

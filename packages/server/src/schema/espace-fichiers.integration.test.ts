@@ -10,6 +10,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 import { remplacerEspacePourLesTests } from '../espace-fichiers/index.ts'
 import { espaceEnMemoire } from '../espace-fichiers/memoire.ts'
+import { peutRecevoir } from '../lib/flux.ts'
 import { routesEspaceFichiers } from '../espace-fichiers/routes.ts'
 
 import { schema } from './index.ts'
@@ -40,6 +41,8 @@ const ids = {
   dossierNatation: '',
   dossierBasket: '',
   dossierCommun: '',
+  ficheNatation: '',
+  ficheCommune: '',
 }
 
 const ESPACE = espaceEnMemoire([
@@ -107,15 +110,15 @@ async function executer(
 const code = (r: Awaited<ReturnType<typeof executer>>) =>
   r.errors?.[0]?.extensions?.code
 
-const ESPACE_FICHIERS = `{ espaceFichiers { fournisseursDisponibles connexion { fournisseur compte etat } } }`
+const ESPACE_FICHIERS = `{ espaceFichiers { connexionsPossibles { fournisseur methode } connexion { fournisseur compte etat } } }`
 const LIER = `mutation ($a: ID!, $p: ID, $c: [String!]!) {
   lierDossier(activiteId: $a, perimetreId: $p, emplacement: "bibliotheque", chemin: $c) { id nom disponible perimetre { slug } }
 }`
 const DOSSIERS = `query ($a: ID, $p: ID) { dossiersLies(activiteId: $a, perimetreId: $p) { id nom disponible } }`
 const CONTENU = `query ($id: ID!, $c: [String!]!) {
-  contenuDossierLie(id: $id, chemin: $c) { elementId nom dossier taille apercu lienWeb }
+  contenuDossierLie(id: $id, chemin: $c) { complet elements { elementId nom dossier taille apercu lienWeb } }
 }`
-const PARCOURIR = `query ($c: [String!]!) { parcourirEspaceFichiers(emplacement: "bibliotheque", chemin: $c) { nom dossier } }`
+const PARCOURIR = `query ($c: [String!]!) { parcourirEspaceFichiers(emplacement: "bibliotheque", chemin: $c) { complet elements { nom dossier } } }`
 
 async function lier(chemin: string[], perimetreId: string | null) {
   const r = await executer(ids.admin, LIER, {
@@ -265,6 +268,12 @@ beforeAll(async () => {
 afterAll(async () => {
   remplacerEspacePourLesTests(null)
   serveur.close()
+  await prisma.droitRedaction.deleteMany({ where: { organisationId: ids.org } })
+  await prisma.fiche.updateMany({
+    where: { organisationId: ids.org },
+    data: { versionCouranteId: null },
+  })
+  await prisma.fiche.deleteMany({ where: { organisationId: ids.org } })
   await prisma.dossierLie.deleteMany({
     where: { organisationId: { in: [ids.org, ids.orgAutre] } },
   })
@@ -294,7 +303,10 @@ describe('connexion', () => {
     expect(r.errors).toBeUndefined()
     expect(r.data).toEqual({
       espaceFichiers: {
-        fournisseursDisponibles: ['SHAREPOINT'],
+        connexionsPossibles: [
+          { fournisseur: 'SHAREPOINT', methode: 'COMPTE' },
+          { fournisseur: 'GOOGLE_DRIVE', methode: 'COMPTE_SERVICE' },
+        ],
         connexion: null,
       },
     })
@@ -317,13 +329,20 @@ describe('connexion', () => {
     const r = await executer(ids.admin, PARCOURIR, { c: [] })
     expect(r.errors).toBeUndefined()
     expect(r.data).toEqual({
-      parcourirEspaceFichiers: ['Basket', 'Commun', 'Natation', 'RH'].map(
-        nom => ({ nom, dossier: true })
-      ),
+      parcourirEspaceFichiers: {
+        complet: true,
+        elements: ['Basket', 'Commun', 'Natation', 'RH'].map(nom => ({
+          nom,
+          dossier: true,
+        })),
+      },
     })
     const fichiers = await executer(ids.admin, PARCOURIR, { c: ['Natation'] })
     expect(fichiers.data).toEqual({
-      parcourirEspaceFichiers: [{ nom: 'Archives', dossier: true }],
+      parcourirEspaceFichiers: {
+        complet: true,
+        elements: [{ nom: 'Archives', dossier: true }],
+      },
     })
   })
 })
@@ -377,6 +396,33 @@ describe('dossiers liés', () => {
     expect(await lier(['Natation'], ids.natation)).toBe(ids.dossierNatation)
   })
 
+  it('ne crée qu’un lien pour deux demandes simultanées, même sans périmètre', async () => {
+    const [a, b] = await Promise.all([lier(['RH'], null), lier(['RH'], null)])
+    expect(a).toBe(b)
+    expect(await prisma.dossierLie.count({ where: { element: 'd-rh' } })).toBe(
+      1
+    )
+    await prisma.dossierLie.deleteMany({ where: { element: 'd-rh' } })
+  })
+
+  it('signale un dossier lié aux seules personnes qui le lisent', async () => {
+    const changement = (perimetreId: string | null) => ({
+      entite: 'FICHIERS' as const,
+      organisationId: ids.org,
+      activiteId: ids.activite,
+      perimetreId,
+    })
+    const recoit = async (qui: string, c: Parameters<typeof peutRecevoir>[1]) =>
+      peutRecevoir(await buildContext('127.0.0.1', qui, slug), c)
+    expect(await recoit(ids.nageuse, changement(ids.natation))).toBe(true)
+    expect(await recoit(ids.basketteur, changement(ids.natation))).toBe(false)
+    expect(await recoit(ids.basketteur, changement(null))).toBe(true)
+    // La connexion, sans activité, ne va qu'aux admins de l'organisation.
+    const connexion = { entite: 'FICHIERS' as const, organisationId: ids.org }
+    expect(await recoit(ids.admin, connexion)).toBe(true)
+    expect(await recoit(ids.adminActivite, connexion)).toBe(false)
+  })
+
   it('se lisent comme les fiches du périmètre', async () => {
     const lus = async (qui: string, p: string | null = null) => {
       const r = await executer(qui, DOSSIERS, { a: ids.activite, p })
@@ -409,32 +455,35 @@ describe('dossiers liés', () => {
     })
     expect(r.errors).toBeUndefined()
     expect(r.data).toEqual({
-      contenuDossierLie: [
-        {
-          elementId: 'd-archives',
-          nom: 'Archives',
-          dossier: true,
-          taille: null,
-          apercu: 'AUCUN',
-          lienWeb: 'https://exemple.invalid/d-archives',
-        },
-        {
-          elementId: 'f-plan',
-          nom: 'Plan.pdf',
-          dossier: false,
-          taille: 19,
-          apercu: 'PDF',
-          lienWeb: 'https://exemple.invalid/f-plan',
-        },
-      ],
+      contenuDossierLie: {
+        complet: true,
+        elements: [
+          {
+            elementId: 'd-archives',
+            nom: 'Archives',
+            dossier: true,
+            taille: null,
+            apercu: 'AUCUN',
+            lienWeb: 'https://exemple.invalid/d-archives',
+          },
+          {
+            elementId: 'f-plan',
+            nom: 'Plan.pdf',
+            dossier: false,
+            taille: 19,
+            apercu: 'PDF',
+            lienWeb: 'https://exemple.invalid/f-plan',
+          },
+        ],
+      },
     })
     const sous = await executer(ids.nageuse, CONTENU, {
       id: ids.dossierNatation,
       c: ['Archives'],
     })
     expect(
-      (sous.data as { contenuDossierLie: { apercu: string }[] })
-        .contenuDossierLie[0]?.apercu
+      (sous.data as { contenuDossierLie: { elements: { apercu: string }[] } })
+        .contenuDossierLie.elements[0]?.apercu
     ).toBe('PDF_CONVERTI')
     const commun = await executer(ids.basketteur, CONTENU, {
       id: ids.dossierCommun,
@@ -442,8 +491,10 @@ describe('dossiers liés', () => {
     })
     expect(
       (
-        commun.data as { contenuDossierLie: { nom: string; apercu: string }[] }
-      ).contenuDossierLie.map(e => [e.nom, e.apercu])
+        commun.data as {
+          contenuDossierLie: { elements: { nom: string; apercu: string }[] }
+        }
+      ).contenuDossierLie.elements.map(e => [e.nom, e.apercu])
     ).toEqual([
       ['Charte.md', 'MARKDOWN'],
       ['logo.svg', 'AUCUN'],
@@ -531,6 +582,238 @@ describe('aperçu d’un document', () => {
   })
 })
 
+// ── Ressources liées à une fiche ─────────────────────────────────────────────
+
+const LIER_RESSOURCE = `mutation ($f: ID!, $d: ID!, $c: [String!]!) {
+  lierRessourceFiche(ficheId: $f, dossierLieId: $d, chemin: $c) { id nom type apercu existe lienWeb chemin dossierLie { nom } }
+}`
+const DELIER_RESSOURCE = `mutation ($id: ID!) { delierRessourceFiche(id: $id) }`
+const RESSOURCES = `query ($s: String!, $a: ID) { fiche(slug: $s, activiteId: $a) { ressources { id nom type existe } } }`
+
+interface Ressource {
+  id: string
+  nom: string
+  type: string
+  apercu: string
+  existe: boolean | null
+  lienWeb: string | null
+  chemin: string[]
+  dossierLie: { nom: string }
+}
+
+const lue = (r: Awaited<ReturnType<typeof executer>>) =>
+  (r.data as { lierRessourceFiche: Ressource }).lierRessourceFiche
+
+async function creerFiche(slugFiche: string, perimetreId: string | null) {
+  const fiche = await prisma.fiche.create({
+    data: {
+      organisationId: ids.org,
+      activiteId: ids.activite,
+      slug: slugFiche,
+      perimetreId,
+    },
+  })
+  const version = await prisma.ficheVersion.create({
+    data: {
+      ficheId: fiche.id,
+      titre: slugFiche,
+      contenu: 'Contenu.',
+      empreinte: 'e'.repeat(64),
+      source: 'APP',
+    },
+  })
+  await prisma.fiche.update({
+    where: { id: fiche.id },
+    data: { versionCouranteId: version.id },
+  })
+  return fiche.id
+}
+
+async function ressourcesLues(qui: string, slugFiche: string) {
+  const r = await executer(qui, RESSOURCES, { s: slugFiche, a: ids.activite })
+  expect(r.errors).toBeUndefined()
+  return (
+    r.data as {
+      fiche: { ressources: { nom: string; existe: boolean | null }[] }
+    }
+  ).fiche.ressources
+}
+
+describe('ressources liées à une fiche', () => {
+  const ficheNatation = `natation-${s}`
+  const ficheCommune = `commune-${s}`
+
+  beforeAll(async () => {
+    ids.ficheNatation = await creerFiche(ficheNatation, ids.natation)
+    ids.ficheCommune = await creerFiche(ficheCommune, null)
+    await prisma.droitRedaction.create({
+      data: {
+        organisationId: ids.org,
+        userId: ids.nageuse,
+        perimetreId: ids.natation,
+      },
+    })
+  })
+
+  it('se lient depuis un dossier du périmètre ou de toute l’activité', async () => {
+    const plan = await executer(ids.nageuse, LIER_RESSOURCE, {
+      f: ids.ficheNatation,
+      d: ids.dossierNatation,
+      c: ['Plan.pdf'],
+    })
+    expect(plan.errors).toBeUndefined()
+    expect(lue(plan)).toMatchObject({
+      nom: 'Plan.pdf',
+      type: 'FICHIER',
+      apercu: 'PDF',
+      existe: true,
+      lienWeb: 'https://exemple.invalid/f-plan',
+      chemin: ['Plan.pdf'],
+      dossierLie: { nom: 'Natation' },
+    })
+    const charte = await executer(ids.nageuse, LIER_RESSOURCE, {
+      f: ids.ficheNatation,
+      d: ids.dossierCommun,
+      c: ['Charte.md'],
+    })
+    expect(charte.errors).toBeUndefined()
+    const dossier = await executer(ids.nageuse, LIER_RESSOURCE, {
+      f: ids.ficheNatation,
+      d: ids.dossierNatation,
+      c: [],
+    })
+    expect(lue(dossier)).toMatchObject({
+      nom: 'Natation',
+      type: 'DOSSIER',
+      apercu: 'AUCUN',
+    })
+  })
+
+  it('garde un seul lien pour la même ressource', async () => {
+    const lier = () =>
+      executer(ids.nageuse, LIER_RESSOURCE, {
+        f: ids.ficheNatation,
+        d: ids.dossierNatation,
+        c: ['Plan.pdf'],
+      })
+    const premier = await lier()
+    const second = await lier()
+    expect(lue(second).id).toBe(lue(premier).id)
+    expect(
+      await prisma.ressourceFiche.count({
+        where: { ficheId: ids.ficheNatation },
+      })
+    ).toBe(3)
+  })
+
+  it('ne crée qu’une ressource pour deux demandes simultanées', async () => {
+    const lier = () =>
+      executer(ids.nageuse, LIER_RESSOURCE, {
+        f: ids.ficheNatation,
+        d: ids.dossierNatation,
+        c: ['Archives'],
+      })
+    const [a, b] = await Promise.all([lier(), lier()])
+    expect(a.errors).toBeUndefined()
+    expect(b.errors).toBeUndefined()
+    expect(lue(a).id).toBe(lue(b).id)
+    await prisma.ressourceFiche.delete({ where: { id: lue(a).id } })
+  })
+
+  it('refuse un dossier que les lecteurs de la fiche ne lisent pas', async () => {
+    // Le dossier du basket n'est pas lisible par les lecteurs de la natation.
+    expect(
+      code(
+        await executer(ids.adminActivite, LIER_RESSOURCE, {
+          f: ids.ficheNatation,
+          d: ids.dossierBasket,
+          c: ['Equipes.txt'],
+        })
+      )
+    ).toBe('FORBIDDEN')
+    // Une fiche commune n'admet que les dossiers de toute l'activité.
+    expect(
+      code(
+        await executer(ids.adminActivite, LIER_RESSOURCE, {
+          f: ids.ficheCommune,
+          d: ids.dossierNatation,
+          c: ['Plan.pdf'],
+        })
+      )
+    ).toBe('FORBIDDEN')
+  })
+
+  it('refuse une personne sans droit de rédaction, un chemin invalide ou un élément absent', async () => {
+    expect(
+      code(
+        await executer(ids.basketteur, LIER_RESSOURCE, {
+          f: ids.ficheNatation,
+          d: ids.dossierCommun,
+          c: ['Charte.md'],
+        })
+      )
+    ).toBe('FORBIDDEN')
+    for (const c of [['..', 'RH'], ['Absent.pdf']]) {
+      expect(
+        code(
+          await executer(ids.nageuse, LIER_RESSOURCE, {
+            f: ids.ficheNatation,
+            d: ids.dossierNatation,
+            c,
+          })
+        )
+      ).toBe('SAISIE_INVALIDE')
+    }
+    const ressource = await prisma.ressourceFiche.findFirstOrThrow({
+      where: { ficheId: ids.ficheNatation },
+    })
+    expect(
+      code(
+        await executer(ids.basketteur, DELIER_RESSOURCE, { id: ressource.id })
+      )
+    ).toBe('FORBIDDEN')
+    expect(
+      code(
+        await executer(
+          ids.externe,
+          DELIER_RESSOURCE,
+          { id: ressource.id },
+          slugAutre
+        )
+      )
+    ).toBe('FORBIDDEN')
+  })
+
+  it('se lisent avec la fiche, et suivent son périmètre', async () => {
+    expect(
+      (await ressourcesLues(ids.nageuse, ficheNatation)).map(r => r.nom)
+    ).toEqual(['Plan.pdf', 'Charte.md', 'Natation'])
+    // Déplacée au basket, la fiche ne montre plus les ressources du dossier de la natation.
+    await prisma.fiche.update({
+      where: { id: ids.ficheNatation },
+      data: { perimetreId: ids.basket },
+    })
+    expect(
+      (await ressourcesLues(ids.adminActivite, ficheNatation)).map(r => r.nom)
+    ).toEqual(['Charte.md'])
+    await prisma.fiche.update({
+      where: { id: ids.ficheNatation },
+      data: { perimetreId: ids.natation },
+    })
+  })
+
+  it('se retirent par une personne qui rédige la fiche', async () => {
+    const charte = await prisma.ressourceFiche.findFirstOrThrow({
+      where: { ficheId: ids.ficheNatation, nom: 'Charte.md' },
+    })
+    const r = await executer(ids.nageuse, DELIER_RESSOURCE, { id: charte.id })
+    expect(r.errors).toBeUndefined()
+    expect(
+      (await ressourcesLues(ids.nageuse, ficheNatation)).map(r => r.nom)
+    ).toEqual(['Plan.pdf', 'Natation'])
+  })
+})
+
 describe('déconnexion', () => {
   it('efface la connexion et garde les dossiers liés, indisponibles', async () => {
     const r = await executer(
@@ -561,6 +844,19 @@ describe('déconnexion', () => {
     const r2 = await apercu(ids.nageuse, ids.dossierNatation, 'Plan.pdf')
     expect(r2.status).toBe(409)
     await r2.body?.cancel()
+    // Une ressource liée reste, avec un état inconnu.
+    expect(await ressourcesLues(ids.nageuse, `natation-${s}`)).toMatchObject([
+      {
+        nom: 'Plan.pdf',
+        type: 'FICHIER',
+        existe: null,
+      },
+      {
+        nom: 'Natation',
+        type: 'DOSSIER',
+        existe: null,
+      },
+    ])
   })
 
   it('retire un dossier lié', async () => {

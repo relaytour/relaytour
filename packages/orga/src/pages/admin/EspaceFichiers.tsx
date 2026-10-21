@@ -1,5 +1,5 @@
 import {
-  CloudOutlined,
+  CloudUploadOutlined,
   DeleteOutlined,
   FolderOutlined,
   LinkOutlined,
@@ -8,7 +8,6 @@ import { useMutation, useQuery } from '@apollo/client/react'
 import {
   Alert,
   App,
-  Breadcrumb,
   Button,
   Descriptions,
   Empty,
@@ -22,26 +21,33 @@ import {
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
+import ConnexionEspace from '../../composants/ConnexionEspace'
 import EtiquettePerimetre from '../../composants/EtiquettePerimetre'
+import ImportFiches from '../../composants/ImportFiches'
 import { Panneau } from '../../composants/Panneau'
+import ParcoursEspace, {
+  type PositionChoisie,
+} from '../../composants/ParcoursEspace'
 import Titre from '../../composants/Titre'
+import type { EspaceFichiersQuery } from '../../gql/graphql'
 import { useActivite } from '../../lib/activite'
 import { jourDeLInstant, messageErreur } from '../../lib/erreurs'
 import {
-  COMMENCER_CONNEXION,
-  DECONNECTER,
+  CHOISIR_DOSSIER_EXPORT,
   DELIER_DOSSIER,
   DOSSIERS_LIES,
-  EMPLACEMENTS,
   ESPACE_FICHIERS,
+  EXPORTER_FICHES_MAINTENANT,
   LIER_DOSSIER,
-  NOMS_FOURNISSEURS,
-  PARCOURIR,
   PERIMETRES_A_LIER,
+  RETIRER_DOSSIER_EXPORT,
 } from '../../lib/espace-fichiers'
 
 // Espace de fichiers de l'organisation (ADR 0038) : un admin de l'organisation
-// le connecte, puis lie ses dossiers aux périmètres de l'activité affichée.
+// le connecte, lie ses dossiers aux périmètres de l'activité affichée, et choisit
+// le dossier où Relaytour exporte les fiches.
+
+type Connexion = NonNullable<EspaceFichiersQuery['espaceFichiers']['connexion']>
 
 const ISSUES: Record<
   string,
@@ -60,6 +66,11 @@ const ISSUES: Record<
 }
 
 const TOUTE_L_ACTIVITE = ''
+const AUCUNE: PositionChoisie = { emplacement: null, chemin: [] }
+
+/** « 1 fiche écrite », « 3 fiches écrites ». */
+const accorder = (n: number, singulier: string, pluriel: string) =>
+  `${n} ${n > 1 ? pluriel : singulier}`
 
 /** Choix d'un dossier de l'espace connecté et du périmètre qui le lira. */
 function LierDossier({
@@ -72,48 +83,33 @@ function LierDossier({
   const { activite } = useActivite()
   const { message } = App.useApp()
   const [perimetre, setPerimetre] = useState<string>(TOUTE_L_ACTIVITE)
-  const [emplacement, setEmplacement] = useState<string | null>(null)
-  const [chemin, setChemin] = useState<string[]>([])
-  const emplacements = useQuery(EMPLACEMENTS, { skip: !ouvert })
+  const [position, setPosition] = useState<PositionChoisie>(AUCUNE)
   const perimetres = useQuery(PERIMETRES_A_LIER, {
     variables: { activiteId: activite.id },
     skip: !ouvert,
-  })
-  const dossiers = useQuery(PARCOURIR, {
-    variables: { emplacement: emplacement ?? '', chemin },
-    skip: !ouvert || emplacement === null,
   })
   const [lier, { loading: enCours }] = useMutation(LIER_DOSSIER, {
     refetchQueries: ['DossiersLies'],
   })
 
-  const choisirEmplacement = (id: string) => {
-    setEmplacement(id)
-    setChemin([])
-  }
-
   const valider = async () => {
-    if (emplacement === null || chemin.length === 0) return
+    if (position.emplacement === null || position.chemin.length === 0) return
     try {
       await lier({
         variables: {
           activiteId: activite.id,
           perimetreId: perimetre === TOUTE_L_ACTIVITE ? null : perimetre,
-          emplacement,
-          chemin,
+          emplacement: position.emplacement,
+          chemin: position.chemin,
         },
       })
       message.success('Le dossier est lié.')
-      setChemin([])
+      setPosition(AUCUNE)
       onFermer()
     } catch (e) {
       message.error(messageErreur(e))
     }
   }
-
-  const nomEmplacement =
-    emplacements.data?.emplacementsFichiers.find(e => e.id === emplacement)
-      ?.nom ?? ''
 
   return (
     <Modal
@@ -122,7 +118,7 @@ function LierDossier({
       title="Lier un dossier"
       okText="Lier ce dossier"
       okButtonProps={{
-        disabled: emplacement === null || chemin.length === 0,
+        disabled: position.emplacement === null || position.chemin.length === 0,
         loading: enCours,
       }}
       onOk={() => void valider()}
@@ -147,88 +143,211 @@ function LierDossier({
             ]}
           />
         </Form.Item>
-        <Form.Item label="Bibliothèque de documents">
-          <Select
-            value={emplacement}
-            onChange={choisirEmplacement}
-            loading={emplacements.loading}
-            placeholder="Choisissez une bibliothèque"
-            showSearch
-            optionFilterProp="label"
-            options={(emplacements.data?.emplacementsFichiers ?? []).map(e => ({
-              value: e.id,
-              label: e.site === null ? e.nom : `${e.site} · ${e.nom}`,
-            }))}
-          />
-        </Form.Item>
-        {emplacements.error && (
-          <Alert
-            type="error"
-            showIcon
-            message={messageErreur(emplacements.error)}
-          />
-        )}
-        {emplacement !== null && (
-          <div className="rt-verre rt-panneau">
-            <Breadcrumb
-              items={[nomEmplacement, ...chemin].map((nom, i) => ({
-                key: `${i}-${nom}`,
-                title:
-                  i === chemin.length ? (
-                    <strong>{nom}</strong>
-                  ) : (
-                    <a
-                      href="#"
-                      onClick={evenement => {
-                        evenement.preventDefault()
-                        setChemin(chemin.slice(0, i))
-                      }}
-                    >
-                      {nom}
-                    </a>
-                  ),
-              }))}
-            />
-            {dossiers.error ? (
-              <Alert
-                type="error"
-                showIcon
-                message={messageErreur(dossiers.error)}
-              />
-            ) : dossiers.loading && !dossiers.data ? (
-              <Skeleton active paragraph={{ rows: 3 }} />
-            ) : (dossiers.data?.parcourirEspaceFichiers ?? []).length === 0 ? (
-              <Empty
-                image={Empty.PRESENTED_IMAGE_SIMPLE}
-                description="Aucun sous-dossier."
-              />
-            ) : (
-              <ul className="rt-explorateur">
-                {dossiers.data?.parcourirEspaceFichiers.map(d => (
-                  <li key={d.elementId}>
-                    <button
-                      type="button"
-                      onClick={() => setChemin([...chemin, d.nom])}
-                    >
-                      <FolderOutlined
-                        aria-hidden
-                        className="rt-explorateur-icone"
-                      />
-                      <span className="rt-explorateur-nom">{d.nom}</span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-            <p className="rt-texte-secondaire" style={{ marginBottom: 0 }}>
-              {chemin.length === 0
-                ? 'Ouvrez le dossier à lier. Une bibliothèque entière ne se lie pas.'
-                : `Le dossier « ${chemin[chemin.length - 1]} » sera lié.`}
-            </p>
-          </div>
-        )}
+        <ParcoursEspace
+          actif={ouvert}
+          valeur={position}
+          onChange={setPosition}
+          aide={chemin =>
+            chemin.length === 0
+              ? 'Ouvrez le dossier à lier. Une bibliothèque entière ne se lie pas.'
+              : `Le dossier « ${chemin[chemin.length - 1]} » sera lié.`
+          }
+        />
       </Form>
     </Modal>
+  )
+}
+
+/** Choix du dossier où Relaytour crée le dossier d'export des fiches. */
+function ChoisirDossierExport({
+  ouvert,
+  onFermer,
+}: {
+  ouvert: boolean
+  onFermer: () => void
+}) {
+  const { message } = App.useApp()
+  const [position, setPosition] = useState<PositionChoisie>(AUCUNE)
+  const [choisir, { loading: enCours }] = useMutation(CHOISIR_DOSSIER_EXPORT, {
+    refetchQueries: ['EspaceFichiers'],
+  })
+
+  const valider = async () => {
+    if (position.emplacement === null) return
+    try {
+      await choisir({
+        variables: {
+          emplacement: position.emplacement,
+          chemin: position.chemin,
+        },
+      })
+      message.success('Le dossier d’export est créé. Le premier export part.')
+      setPosition(AUCUNE)
+      onFermer()
+    } catch (e) {
+      message.error(messageErreur(e))
+    }
+  }
+
+  return (
+    <Modal
+      open={ouvert}
+      onCancel={onFermer}
+      title="Choisir le dossier d’export"
+      okText="Créer le dossier d’export ici"
+      okButtonProps={{
+        disabled: position.emplacement === null,
+        loading: enCours,
+      }}
+      onOk={() => void valider()}
+      destroyOnHidden
+      width={640}
+    >
+      <p className="rt-texte-secondaire">
+        Relaytour crée un dossier « Fiches Relaytour » dans le dossier choisi,
+        et y écrit les fiches de toutes les activités. Ce dossier ne doit pas se
+        trouver dans un dossier lié : les membres y liraient les fiches de tous
+        les périmètres.
+      </p>
+      <Form layout="vertical" component="div">
+        <ParcoursEspace
+          actif={ouvert}
+          valeur={position}
+          onChange={setPosition}
+          aide={chemin =>
+            chemin.length === 0
+              ? 'Le dossier « Fiches Relaytour » sera créé à la racine de la bibliothèque.'
+              : `Le dossier « Fiches Relaytour » sera créé dans « ${chemin[chemin.length - 1]} ».`
+          }
+        />
+      </Form>
+    </Modal>
+  )
+}
+
+/** L'export des fiches : le dossier, le dernier résultat et les actions. */
+function ExportFiches({ connexion }: { connexion: Connexion }) {
+  const { message } = App.useApp()
+  const [choix, setChoix] = useState(false)
+  const [exporter, { loading: enCours }] = useMutation(
+    EXPORTER_FICHES_MAINTENANT
+  )
+  const [retirer] = useMutation(RETIRER_DOSSIER_EXPORT, {
+    refetchQueries: ['EspaceFichiers'],
+  })
+  const rapport = connexion.exportRapport
+  const active = connexion.etat === 'ACTIVE'
+
+  const lancer = async () => {
+    try {
+      await exporter()
+      message.success(
+        'L’export part. Son résultat s’affiche ici dans quelques instants.'
+      )
+    } catch (e) {
+      message.error(messageErreur(e))
+    }
+  }
+
+  return (
+    <Panneau titre="Export des fiches" icone={<CloudUploadOutlined />}>
+      <p className="rt-texte-secondaire">
+        Relaytour écrit les fiches en Markdown dans un dossier de l’espace de
+        fichiers, après chaque modification et chaque nuit. Les fiches se
+        modifient toujours dans Relaytour : une modification faite dans ce
+        dossier est remplacée à l’export suivant.
+      </p>
+      {connexion.exportDossier === null ? (
+        <Button
+          icon={<FolderOutlined />}
+          disabled={!active}
+          onClick={() => setChoix(true)}
+        >
+          Choisir le dossier d’export
+        </Button>
+      ) : (
+        <>
+          <Descriptions
+            column={1}
+            size="small"
+            items={[
+              {
+                key: 'dossier',
+                label: 'Dossier',
+                children: connexion.exportDossier,
+              },
+              {
+                key: 'dernier',
+                label: 'Dernier export',
+                children: rapport
+                  ? `${jourDeLInstant(rapport.exporteLe)} : ${accorder(rapport.ecrites, 'fiche écrite', 'fiches écrites')}, ${accorder(rapport.inchangees, 'inchangée', 'inchangées')}, ${accorder(rapport.supprimees, 'retirée', 'retirées')}`
+                  : 'En attente',
+              },
+            ]}
+          />
+          {rapport?.erreur && (
+            <Alert
+              type="error"
+              showIcon
+              style={{ marginTop: 12 }}
+              message={rapport.erreur}
+            />
+          )}
+          {rapport && rapport.refusees.length > 0 && (
+            <Alert
+              type="warning"
+              showIcon
+              style={{ marginTop: 12 }}
+              message="Ces fiches ne sont pas exportées."
+              description={
+                <ul style={{ margin: 0, paddingInlineStart: 18 }}>
+                  {rapport.refusees.map(r => (
+                    <li key={r.fiche}>
+                      {r.fiche} : {r.raison}
+                    </li>
+                  ))}
+                </ul>
+              }
+            />
+          )}
+          {rapport && rapport.modifieesALaMain.length > 0 && (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginTop: 12 }}
+              message="Ces fiches avaient été modifiées dans l’espace de fichiers. Relaytour les a réécrites."
+              description={rapport.modifieesALaMain.join(', ')}
+            />
+          )}
+          <div className="rt-puces" style={{ marginTop: 16 }}>
+            <Button
+              type="primary"
+              icon={<CloudUploadOutlined />}
+              loading={enCours}
+              disabled={!active}
+              onClick={() => void lancer()}
+            >
+              Exporter maintenant
+            </Button>
+            <Button disabled={!active} onClick={() => setChoix(true)}>
+              Changer de dossier
+            </Button>
+            <Popconfirm
+              title="Arrêter l’export des fiches ?"
+              description="Les fichiers déjà écrits restent dans l’espace de fichiers."
+              okText="Arrêter"
+              cancelText="Annuler"
+              onConfirm={() =>
+                retirer().catch((e: unknown) => message.error(messageErreur(e)))
+              }
+            >
+              <Button danger>Arrêter l’export</Button>
+            </Popconfirm>
+          </div>
+        </>
+      )}
+      <ChoisirDossierExport ouvert={choix} onFermer={() => setChoix(false)} />
+    </Panneau>
   )
 }
 
@@ -240,10 +359,6 @@ export default function EspaceFichiers() {
   const { data, loading } = useQuery(ESPACE_FICHIERS)
   const liens = useQuery(DOSSIERS_LIES, {
     variables: { activiteId: activite.id },
-  })
-  const [commencer, { loading: redirection }] = useMutation(COMMENCER_CONNEXION)
-  const [deconnecter] = useMutation(DECONNECTER, {
-    refetchQueries: ['EspaceFichiers', 'DossiersLies'],
   })
   const [delier] = useMutation(DELIER_DOSSIER, {
     refetchQueries: ['DossiersLies'],
@@ -260,20 +375,6 @@ export default function EspaceFichiers() {
 
   const espace = data?.espaceFichiers
   const connexion = espace?.connexion ?? null
-  const fournisseur = espace?.fournisseursDisponibles[0] ?? null
-  const nom = (f: string) => NOMS_FOURNISSEURS[f] ?? f
-
-  const connecter = async () => {
-    if (fournisseur === null) return
-    try {
-      const r = await commencer({ variables: { fournisseur } })
-      const adresse = r.data?.commencerConnexionEspaceFichiers
-      if (adresse) window.location.assign(adresse)
-    } catch (e) {
-      message.error(messageErreur(e))
-    }
-  }
-
   return (
     <>
       <Titre sousTitre="Les membres lisent les documents de l’association depuis Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document.">
@@ -281,99 +382,13 @@ export default function EspaceFichiers() {
       </Titre>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <Panneau titre="Connexion" icone={<CloudOutlined />}>
-          {loading && !data ? (
-            <Skeleton active paragraph={{ rows: 2 }} />
-          ) : fournisseur === null && connexion === null ? (
-            <Alert
-              type="info"
-              showIcon
-              message="L’hébergeur de cette installation n’a ouvert aucun espace de fichiers."
-            />
-          ) : connexion === null ? (
-            <>
-              <p>
-                Un admin de l’organisation se connecte avec son compte{' '}
-                {nom(fournisseur!)}. Relaytour lit ensuite les dossiers avec les
-                droits de ce compte, et seulement les dossiers que vous liez à
-                une activité.
-              </p>
-              <Button
-                type="primary"
-                icon={<LinkOutlined />}
-                loading={redirection}
-                onClick={() => void connecter()}
-              >
-                Connecter {nom(fournisseur!)}
-              </Button>
-            </>
-          ) : (
-            <>
-              {connexion.etat === 'A_RECONNECTER' && (
-                <Alert
-                  type="warning"
-                  showIcon
-                  style={{ marginBottom: 16 }}
-                  message={`${nom(connexion.fournisseur)} a retiré l’accès. Reconnectez l’espace de fichiers pour que les membres retrouvent leurs documents.`}
-                />
-              )}
-              <Descriptions
-                column={1}
-                size="small"
-                items={[
-                  {
-                    key: 'fournisseur',
-                    label: 'Fournisseur',
-                    children: nom(connexion.fournisseur),
-                  },
-                  {
-                    key: 'compte',
-                    label: 'Compte',
-                    children: connexion.compte,
-                  },
-                  {
-                    key: 'etat',
-                    label: 'État',
-                    children:
-                      connexion.etat === 'ACTIVE' ? (
-                        <Tag color="success">Connecté</Tag>
-                      ) : (
-                        <Tag color="warning">À reconnecter</Tag>
-                      ),
-                  },
-                  {
-                    key: 'date',
-                    label: 'Connecté le',
-                    children: `${jourDeLInstant(connexion.connecteeLe)}${connexion.connecteePar ? ` par ${connexion.connecteePar}` : ''}`,
-                  },
-                ]}
-              />
-              <div className="rt-puces" style={{ marginTop: 16 }}>
-                {fournisseur !== null && (
-                  <Button
-                    loading={redirection}
-                    onClick={() => void connecter()}
-                  >
-                    Reconnecter
-                  </Button>
-                )}
-                <Popconfirm
-                  title="Déconnecter l’espace de fichiers ?"
-                  description="Les dossiers liés restent, mais les membres ne lisent plus leurs documents jusqu’à une nouvelle connexion."
-                  okText="Déconnecter"
-                  cancelText="Annuler"
-                  onConfirm={() =>
-                    deconnecter().catch((e: unknown) =>
-                      message.error(messageErreur(e))
-                    )
-                  }
-                >
-                  <Button danger>Déconnecter</Button>
-                </Popconfirm>
-              </div>
-            </>
-          )}
-        </Panneau>
+        <ConnexionEspace espace={espace} chargement={loading} />
+
+        {connexion !== null && <ExportFiches connexion={connexion} />}
+
+        {connexion !== null && (
+          <ImportFiches actif={connexion.etat === 'ACTIVE'} />
+        )}
 
         <Panneau
           titre={`Dossiers liés de l’activité « ${activite.nom} »`}

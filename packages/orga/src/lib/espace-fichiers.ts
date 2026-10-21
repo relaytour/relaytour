@@ -1,3 +1,10 @@
+import {
+  FileImageOutlined,
+  FileOutlined,
+  FilePdfOutlined,
+  FileTextOutlined,
+} from '@ant-design/icons'
+
 import { graphql } from '../gql'
 import type { FormatApercu } from '../gql/graphql'
 
@@ -9,13 +16,30 @@ import { activiteAffichee, organisationChoisie } from './selection'
 export const ESPACE_FICHIERS = graphql(`
   query EspaceFichiers {
     espaceFichiers {
-      fournisseursDisponibles
+      connexionsPossibles {
+        fournisseur
+        methode
+      }
       connexion {
         fournisseur
+        methode
         compte
         etat
         connecteeLe
         connecteePar
+        exportDossier
+        exportRapport {
+          exporteLe
+          ecrites
+          inchangees
+          supprimees
+          refusees {
+            fiche
+            raison
+          }
+          modifieesALaMain
+          erreur
+        }
       }
     }
   }
@@ -29,9 +53,112 @@ export const COMMENCER_CONNEXION = graphql(`
   }
 `)
 
+export const CONNECTER_COMPTE_SERVICE = graphql(`
+  mutation ConnecterCompteServiceGoogle($cle: String!) {
+    connecterCompteServiceGoogle(cle: $cle) {
+      compte
+    }
+  }
+`)
+
+export const COMMENCER_NEXTCLOUD = graphql(`
+  mutation CommencerConnexionNextcloud($adresse: String!) {
+    commencerConnexionNextcloud(adresse: $adresse) {
+      connexion
+      etat
+    }
+  }
+`)
+
+export const TERMINER_NEXTCLOUD = graphql(`
+  mutation TerminerConnexionNextcloud($etat: String!) {
+    terminerConnexionNextcloud(etat: $etat)
+  }
+`)
+
 export const DECONNECTER = graphql(`
   mutation DeconnecterEspaceFichiers {
     deconnecterEspaceFichiers
+  }
+`)
+
+export const CHOISIR_DOSSIER_EXPORT = graphql(`
+  mutation ChoisirDossierExport($emplacement: String!, $chemin: [String!]!) {
+    choisirDossierExport(emplacement: $emplacement, chemin: $chemin) {
+      exportDossier
+    }
+  }
+`)
+
+export const RETIRER_DOSSIER_EXPORT = graphql(`
+  mutation RetirerDossierExport {
+    retirerDossierExport
+  }
+`)
+
+export const EXPORTER_FICHES_MAINTENANT = graphql(`
+  mutation ExporterFichesMaintenant {
+    exporterFichesMaintenant
+  }
+`)
+
+export const SIMULER_IMPORT = graphql(`
+  query SimulerImportFiches(
+    $activiteId: ID!
+    $sources: [SourceImportFiches!]!
+  ) {
+    simulerImportFiches(activiteId: $activiteId, sources: $sources) {
+      creees
+      nouvellesVersions
+      inchangees
+      conflits {
+        fiche
+        raison
+      }
+      nonImportes {
+        fichier
+        raison
+      }
+      refusees {
+        fichier
+        raison
+      }
+      converties {
+        fichier
+        raison
+      }
+      incomplet
+    }
+  }
+`)
+
+export const IMPORTER_FICHES = graphql(`
+  mutation ImporterFichesEspace(
+    $activiteId: ID!
+    $sources: [SourceImportFiches!]!
+  ) {
+    importerFichesEspace(activiteId: $activiteId, sources: $sources) {
+      creees
+      nouvellesVersions
+      inchangees
+      conflits {
+        fiche
+        raison
+      }
+      nonImportes {
+        fichier
+        raison
+      }
+      refusees {
+        fichier
+        raison
+      }
+      converties {
+        fichier
+        raison
+      }
+      incomplet
+    }
   }
 `)
 
@@ -55,13 +182,16 @@ export const DOSSIERS_LIES = graphql(`
 export const CONTENU_DOSSIER = graphql(`
   query ContenuDossierLie($id: ID!, $chemin: [String!]!) {
     contenuDossierLie(id: $id, chemin: $chemin) {
-      elementId
-      nom
-      dossier
-      taille
-      modifieLe
-      lienWeb
-      apercu
+      complet
+      elements {
+        elementId
+        nom
+        dossier
+        taille
+        modifieLe
+        lienWeb
+        apercu
+      }
     }
   }
 `)
@@ -70,6 +200,7 @@ export const PERIMETRES_A_LIER = graphql(`
   query PerimetresALier($activiteId: ID) {
     perimetres(activiteId: $activiteId) {
       id
+      slug
       nom
       couleur
     }
@@ -89,8 +220,11 @@ export const EMPLACEMENTS = graphql(`
 export const PARCOURIR = graphql(`
   query ParcourirEspaceFichiers($emplacement: String!, $chemin: [String!]!) {
     parcourirEspaceFichiers(emplacement: $emplacement, chemin: $chemin) {
-      elementId
-      nom
+      complet
+      elements {
+        elementId
+        nom
+      }
     }
   }
 `)
@@ -121,6 +255,19 @@ export const DELIER_DOSSIER = graphql(`
 
 export const NOMS_FOURNISSEURS: Record<string, string> = {
   SHAREPOINT: 'SharePoint',
+  GOOGLE_DRIVE: 'Google Drive',
+  DROPBOX: 'Dropbox',
+  NEXTCLOUD: 'Nextcloud',
+}
+
+/** L'icône d'un fichier, selon ce que la liseuse en affiche. */
+export const ICONES_APERCU: Record<FormatApercu, typeof FileOutlined> = {
+  PDF: FilePdfOutlined,
+  PDF_CONVERTI: FileTextOutlined,
+  IMAGE: FileImageOutlined,
+  TEXTE: FileTextOutlined,
+  MARKDOWN: FileTextOutlined,
+  AUCUN: FileOutlined,
 }
 
 /** Formats que la liseuse affiche dans la page. */
@@ -188,6 +335,15 @@ export async function lireFichier(
   telecharger = false,
   signal?: AbortSignal
 ): Promise<Blob> {
+  return (await demanderFichier(dossierId, chemin, telecharger, signal)).blob()
+}
+
+async function demanderFichier(
+  dossierId: string,
+  chemin: readonly string[],
+  telecharger: boolean,
+  signal?: AbortSignal
+): Promise<Response> {
   const organisation = organisationChoisie()
   const activite = activiteAffichee()
   const reponse = await fetch(adresseApercu(dossierId, chemin, telecharger), {
@@ -201,21 +357,86 @@ export async function lireFichier(
     },
   })
   if (!reponse.ok) throw new Error(messageRefus(reponse.status))
-  return reponse.blob()
+  return reponse
 }
 
-/** Télécharge un fichier sous son nom. */
+/** Le nom que l'API donne au fichier (`filename*`), ou null. */
+export function nomServi(entete: string | null): string | null {
+  const nom = /filename\*=UTF-8''([^;]+)/i.exec(entete ?? '')?.[1]
+  if (nom === undefined) return null
+  try {
+    return decodeURIComponent(nom)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * Télécharge un fichier sous le nom que l'API lui donne. Un document Google
+ * natif y gagne l'extension de son format d'export.
+ */
 export async function telechargerFichier(
   dossierId: string,
   chemin: readonly string[]
 ): Promise<void> {
-  const blob = await lireFichier(dossierId, chemin, true)
-  const adresse = URL.createObjectURL(blob)
+  const reponse = await demanderFichier(dossierId, chemin, true)
+  const nom =
+    nomServi(reponse.headers.get('content-disposition')) ??
+    chemin[chemin.length - 1] ??
+    'document'
+  const adresse = URL.createObjectURL(await reponse.blob())
   const lien = document.createElement('a')
   lien.href = adresse
-  lien.download = chemin[chemin.length - 1] ?? 'document'
+  lien.download = nom
   document.body.append(lien)
   lien.click()
   lien.remove()
   setTimeout(() => URL.revokeObjectURL(adresse), 10_000)
 }
+
+// ── Ressources liées à une fiche ─────────────────────────────────────────────
+
+export const RESSOURCES_FICHE = graphql(`
+  query RessourcesFiche($slug: String!) {
+    fiche(slug: $slug) {
+      id
+      ressources {
+        id
+        nom
+        type
+        chemin
+        apercu
+        existe
+        lienWeb
+        dossierLie {
+          id
+          nom
+          disponible
+          fournisseur
+        }
+      }
+    }
+  }
+`)
+
+export const LIER_RESSOURCE = graphql(`
+  mutation LierRessourceFiche(
+    $ficheId: ID!
+    $dossierLieId: ID!
+    $chemin: [String!]!
+  ) {
+    lierRessourceFiche(
+      ficheId: $ficheId
+      dossierLieId: $dossierLieId
+      chemin: $chemin
+    ) {
+      id
+    }
+  }
+`)
+
+export const DELIER_RESSOURCE = graphql(`
+  mutation DelierRessourceFiche($id: ID!) {
+    delierRessourceFiche(id: $id)
+  }
+`)

@@ -13,6 +13,7 @@ import {
 } from '../lib/fiches.ts'
 import { exigerMembreGere, refuserArchivee } from '../lib/appartenances.ts'
 import { notifierLePerimetre } from '../lib/notifications.ts'
+import { planifierExportFiches } from '../espace-fichiers/export.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 import {
@@ -447,6 +448,7 @@ builder.mutationFields(t => ({
         id: creee.id,
         perimetreId,
       })
+      planifierExportFiches(ctx.organisation!.id)
       await prevenirLePerimetre('FICHE_CREEE', creee.id, perimetreId, auteur.id)
       return creee
     },
@@ -536,6 +538,7 @@ builder.mutationFields(t => ({
         id: fiche.id,
         perimetreId: fiche.perimetreId,
       })
+      planifierExportFiches(fiche.organisationId)
       await prevenirLePerimetre(
         'FICHE_MODIFIEE',
         fiche.id,
@@ -620,6 +623,7 @@ builder.mutationFields(t => ({
         ancienne.fiche.activiteId,
         { id: ancienne.ficheId, perimetreId: ancienne.fiche.perimetreId }
       )
+      planifierExportFiches(ctx.organisation!.id)
       await prevenirLePerimetre(
         'FICHE_MODIFIEE',
         ancienne.ficheId,
@@ -656,6 +660,7 @@ builder.mutationFields(t => ({
         id: fiche.id,
         perimetreId: fiche.perimetreId,
       })
+      planifierExportFiches(ctx.organisation!.id)
       return archivee
     },
   }),

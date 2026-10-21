@@ -194,7 +194,8 @@ export function publierNotification(
  * - Une fiche va aux personnes qui peuvent la lire : une fiche de périmètre ne se
  *   lit pas en consultation, à la différence des tâches (ADR 0014).
  * - La connexion d'un espace de fichiers, sans activité, va aux admins de
- *   l'organisation (ADR 0038).
+ *   l'organisation. Un dossier lié va aux personnes qui le lisent : celles qui
+ *   lisent les fiches de son périmètre, ou de toute l'activité (ADR 0038).
  * - Tout autre changement va aux personnes qui voient l'activité.
  */
 export async function peutRecevoir(
@@ -221,7 +222,7 @@ export async function peutRecevoir(
   }
   if (activiteId === null || activiteId === undefined) return false
   if (changement.entite === 'DEMANDE') return ctx.estAdminDe(activiteId)
-  if (changement.entite === 'FICHE') {
+  if (changement.entite === 'FICHE' || changement.entite === 'FICHIERS') {
     return peutLireFiche(ctx, {
       organisationId: changement.organisationId,
       activiteId,
