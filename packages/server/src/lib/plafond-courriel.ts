@@ -5,8 +5,12 @@ import { limiterParCle, rendreTentative } from './limite.ts'
  * Redis, par jour UTC, pour toute l'installation. Sans plafond, rien n'est compté.
  */
 
-/** Sortes de mail qui partent toujours : une personne doit pouvoir se connecter. */
-export const SORTES_HORS_PLAFOND: ReadonlySet<string> = new Set([
+/**
+ * Sortes de mail qui partent toujours : une personne doit pouvoir se connecter.
+ * Elles entrent dans le compteur du jour, pour que le total reste sous le quota du
+ * fournisseur, mais ne sont jamais reportées.
+ */
+export const SORTES_JAMAIS_REPORTEES: ReadonlySet<string> = new Set([
   'code-connexion',
 ])
 
@@ -33,8 +37,9 @@ type Limiter = typeof limiterParCle
 
 /**
  * Réserve un envoi dans le compteur du jour. Renvoie « atteint » quand le plafond
- * est dépassé : l'appelant reporte alors le mail au lendemain. Sans plafond, ou
- * pour une sorte hors plafond, l'envoi est libre et rien n'est compté.
+ * est dépassé : l'appelant reporte alors le mail au lendemain. Sans plafond, l'envoi
+ * est libre et rien n'est compté. Une sorte jamais reportée est comptée et reste
+ * libre : les codes de connexion réduisent la place laissée aux autres mails.
  *
  * Si Redis ne répond pas, l'envoi passe : la file elle-même dépend de Redis, et
  * une panne ne doit pas retenir les mails.
@@ -45,14 +50,14 @@ export async function reserverEnvoi(
   maintenant: Date = new Date(),
   limiter: Limiter = limiterParCle
 ): Promise<'libre' | 'atteint'> {
-  if (plafond === undefined || SORTES_HORS_PLAFOND.has(sorte)) return 'libre'
+  if (plafond === undefined) return 'libre'
   const admis = await limiter(
     cleDuJour(maintenant),
     plafond,
     DUREE_DU_COMPTEUR_SECONDES,
     { libelle: 'le plafond quotidien des mails' }
   )
-  return admis ? 'libre' : 'atteint'
+  return admis || SORTES_JAMAIS_REPORTEES.has(sorte) ? 'libre' : 'atteint'
 }
 
 /**
@@ -61,11 +66,10 @@ export async function reserverEnvoi(
  * la place au bon jour. Ne lève jamais.
  */
 export async function rendreEnvoi(
-  sorte: string,
   plafond: number | undefined,
   maintenant: Date = new Date(),
   rendre: typeof rendreTentative = rendreTentative
 ): Promise<void> {
-  if (plafond === undefined || SORTES_HORS_PLAFOND.has(sorte)) return
+  if (plafond === undefined) return
   await rendre(cleDuJour(maintenant))
 }

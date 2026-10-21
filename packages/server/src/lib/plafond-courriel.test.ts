@@ -43,12 +43,19 @@ describe('reserverEnvoi', () => {
     expect(limiter).not.toHaveBeenCalled()
   })
 
-  it('laisse toujours partir un code de connexion, sans le compter', async () => {
+  it('compte un code de connexion et le laisse partir au-delà du plafond', async () => {
     const limiter = vi.fn(() => Promise.resolve(false))
     expect(await reserverEnvoi('code-connexion', 1, midi, limiter)).toBe(
       'libre'
     )
-    expect(limiter).not.toHaveBeenCalled()
+    // Le code prend sa place dans le compteur : le total reste sous le quota du
+    // fournisseur, et les autres mails atteignent le plafond plus tôt.
+    expect(limiter).toHaveBeenCalledWith(
+      'courriel-quotidien:2026-10-11',
+      1,
+      2 * 24 * 3600,
+      { libelle: 'le plafond quotidien des mails' }
+    )
   })
 
   it('réserve un envoi sous le plafond, dans le compteur du jour', async () => {
@@ -72,21 +79,20 @@ describe('reserverEnvoi', () => {
 describe('rendreEnvoi', () => {
   it('rend la place d’un envoi qui n’est pas parti', async () => {
     const rendre = vi.fn(() => Promise.resolve())
-    await rendreEnvoi('invitation', 200, midi, rendre)
+    await rendreEnvoi(200, midi, rendre)
     expect(rendre).toHaveBeenCalledWith('courriel-quotidien:2026-10-11')
   })
 
   it('rend la place au jour de la réservation, même après minuit', async () => {
     const rendre = vi.fn(() => Promise.resolve())
     const reserveLe = new Date('2026-10-11T23:59:59.500Z')
-    await rendreEnvoi('invitation', 200, reserveLe, rendre)
+    await rendreEnvoi(200, reserveLe, rendre)
     expect(rendre).toHaveBeenCalledWith('courriel-quotidien:2026-10-11')
   })
 
-  it('ne rend rien sans plafond, ni pour un code de connexion', async () => {
+  it('ne rend rien sans plafond', async () => {
     const rendre = vi.fn(() => Promise.resolve())
-    await rendreEnvoi('invitation', undefined, midi, rendre)
-    await rendreEnvoi('code-connexion', 200, midi, rendre)
+    await rendreEnvoi(undefined, midi, rendre)
     expect(rendre).not.toHaveBeenCalled()
   })
 })

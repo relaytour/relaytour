@@ -141,7 +141,7 @@ export async function courrielProcessor(
     // Le mail n'est pas parti : sa place est rendue au jour de la réservation, et
     // le nouvel essai la réservera. Un refus définitif garde la sienne : le serveur
     // de mail l'a compté.
-    await rendreEnvoi(sorte, plafond, reserveLe)
+    await rendreEnvoi(plafond, reserveLe)
     throw new Error(`Envoi impossible (${sorte}), nouvel essai prévu.`)
   }
   journal.debug(

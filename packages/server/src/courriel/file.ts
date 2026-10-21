@@ -1,6 +1,11 @@
 import type { CourrielJobData, SorteCourriel } from '../jobs/queues.ts'
 import { avecDelai } from '../lib/delai.ts'
 import { courrielTronque, journal } from '../lib/journal.ts'
+import { SORTES_JAMAIS_REPORTEES } from '../lib/plafond-courriel.ts'
+
+// BullMQ traite d'abord les jobs sans priorité. Tous les mails en portent une, sauf
+// le code de connexion : il passe devant un envoi groupé et arrive avant d'expirer.
+const PRIORITE_DES_AUTRES_MAILS = 10
 
 export type CibleCourriel = { userId: string } | { destinataire: string }
 
@@ -66,6 +71,9 @@ export async function mettreEnFile(
         ...(options.delai === undefined
           ? {}
           : { delay: Math.max(0, options.delai) }),
+        ...(SORTES_JAMAIS_REPORTEES.has(sorte)
+          ? {}
+          : { priority: PRIORITE_DES_AUTRES_MAILS }),
         // Un job qui porte un code disparaît de Redis dès son traitement, réussi ou non.
         ...(options.code === undefined
           ? {}

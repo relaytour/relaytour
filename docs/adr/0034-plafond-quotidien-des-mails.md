@@ -1,7 +1,7 @@
 # ADR 0034 — Plafond quotidien des mails d'une installation
 
 - **Statut** : acceptée
-- **Date** : 2026-10-11, renumérotée le 2026-10-14 (le numéro 0031 est pris par l'archivage par organisation)
+- **Date** : 2026-10-11, renumérotée le 2026-10-14 (le numéro 0031 est pris par l'archivage par organisation), révisée le 2026-10-20 (le code de connexion entre dans le compteur et passe en tête de la file)
 - Complète l'ADR 0007 (frontière entre le logiciel et son exploitation) et l'ADR 0008 (administration de l'installation).
 
 ## Contexte
@@ -25,7 +25,9 @@ Un hébergeur peut limiter les envois chez son fournisseur, mais cette limite va
 - Le plafond vaut pour l'installation entière, comme le transport SMTP et l'expéditeur. Une installation qui porte plusieurs organisations a un seul compteur.
 - Le worker compte un mail au moment de l'envoi, dans un compteur de Redis nommé par le jour UTC (`lib/plafond-courriel.ts`). Le compteur ne contient ni adresse ni contenu.
 - Au-delà du plafond, le mail n'est pas perdu : le worker le reporte au début du jour UTC suivant, étalé sur trente minutes. Un report ne consomme aucun essai du job.
-- Le code de connexion part toujours et n'est pas compté. Une personne doit pouvoir se connecter, et sa demande est déjà limitée par adresse (ADR 0002).
+- Le code de connexion part toujours, même au-delà du plafond. Une personne doit pouvoir se connecter, et sa demande est déjà limitée par adresse (ADR 0002).
+- Le code de connexion entre pourtant dans le compteur du jour. Sans cela, les codes s'ajouteraient au plafond, et le total pourrait dépasser le quota du fournisseur. Le fournisseur bloquerait alors tous les mails, codes compris. Les codes réduisent donc la place laissée aux autres mails.
+- Le code de connexion passe devant les autres mails de la file. Tous les autres mails portent une priorité BullMQ, et BullMQ traite d'abord les jobs sans priorité. Un code arrive ainsi avant d'expirer, même derrière l'invitation d'une longue liste.
 - Un mail que le transport n'a pas pu envoyer, faute de joindre le serveur de mail, rend sa place au jour de sa réservation : le nouvel essai la réserve de nouveau. Un refus définitif du serveur de mail garde la sienne, car le fournisseur l'a compté.
 - Le worker journalise chaque report (`courriel-plafond-atteint`), avec la sorte du mail et le plafond, sans adresse (invariant 6).
 - Si Redis ne répond pas, le mail part : la file dépend elle-même de Redis, et une panne ne doit pas retenir les mails.
