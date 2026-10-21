@@ -3,6 +3,7 @@ cible: orga
 type: correctif
 audience: organisateurs
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Le titre long d’un panneau ne déborde plus sur son bouton
