@@ -8,6 +8,7 @@ import { buildContext, type AppContext } from '../context.ts'
 
 import { empreinteJeton } from '../lib/abonnements-agenda.ts'
 import { purgerCandidatures } from '../lib/appels.ts'
+import { nouveauSel } from '../lib/liens.ts'
 
 import { schema } from './index.ts'
 
@@ -267,7 +268,7 @@ beforeAll(async () => {
         nom: `Appel ${portee} ${perimetreId ?? ''}`,
         ouvertLe: new Date(),
         fermeLe: h('20:00', '2027-06-06'),
-        sel: 'x'.repeat(43),
+        sel: nouveauSel(),
         empreinte: empreinteJeton(randomUUID()),
         fin: 'abcdef',
       },

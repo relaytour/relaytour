@@ -1,5 +1,7 @@
 import { prisma } from '@relaytour/database'
 
+import { createHash } from 'node:crypto'
+
 import type { AppContext } from '../context.ts'
 import { empreinteJeton } from '../lib/abonnements-agenda.ts'
 import { coordonneesLisibles } from '../lib/benevoles.ts'
@@ -17,7 +19,9 @@ import { publierPourActivite } from '../lib/flux.ts'
 import { descriptionPubliable } from '../lib/formulaire.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { calendrier } from '../lib/ics.ts'
+import { jetonValide } from '../lib/jeton.ts'
 import { journal } from '../lib/journal.ts'
+import { jetonDe } from '../lib/liens.ts'
 import {
   configurationActivite,
   configurationOrganisation,
@@ -77,7 +81,15 @@ async function espace(
       organisation: { select: { fuseauHoraire: true } },
     },
   })
-  if (fiche === null) return null
+  // Le jeton doit dériver du secret courant : après un changement de secret,
+  // l'ancien lien cesse de répondre, même si l'empreinte gardée lui correspond.
+  if (
+    fiche === null ||
+    fiche.espaceSel === null ||
+    !jetonValide(jeton, await jetonDe('espace', fiche.espaceSel))
+  ) {
+    return null
+  }
   const configuration = await configurationActivite(fiche.activiteId)
   const role: AdressesDeRole = {
     domaines: configuration.domainesCourrielAutorises,
@@ -94,6 +106,7 @@ async function espace(
     perimetre: p.sequence.perimetre?.nom ?? null,
     consignes: descriptionPubliable(p.sequence.consignesBenevoles, role),
     confirmee: p.confirmeeLe !== null,
+    sequenceId: p.sequenceId,
     version: p.sequence.version,
     modifieLe: p.sequence.updatedAt,
   }))
@@ -115,7 +128,12 @@ async function espace(
       maintenant,
       nom: `${fiche.activite.nom} : mes places`,
       evenements: lues.map(p => ({
-        uid: `place-${p.id}@relaytour`,
+        // Un identifiant stable pour la paire fiche et séquence : une place
+        // recréée par une modification de la séquence garde le même événement.
+        uid: `place-${createHash('sha256')
+          .update(`${fiche.id}:${p.sequenceId}`)
+          .digest('hex')
+          .slice(0, 32)}@relaytour`,
         titre: p.titre,
         horaire: { debut: p.debut, fin: p.fin },
         lieu: p.lieu,
@@ -215,7 +233,21 @@ builder.mutationFields(t => ({
     resolve: async (_root, args) => {
       const lu = await exigerEspace(args.jeton)
       const maintenant = new Date()
+      // Les séquences de la fiche se lisent hors de la transaction : sous
+      // MariaDB 11.8, une lecture ordinaire avant les verrous ferait échouer
+      // le verrou d'une séquence modifiée entre-temps (erreur 1020).
+      const sequences = await prisma.placeSequence.findMany({
+        where: { benevoleId: lu.benevoleId },
+        select: { sequenceId: true },
+        orderBy: { sequenceId: 'asc' },
+      })
       await prisma.$transaction(async tx => {
+        // Les séquences de la fiche se verrouillent d'abord, dans l'ordre de
+        // leurs identifiants : une modification de séquence en cours garde
+        // alors la confirmation au lieu de recréer la place à confirmer.
+        for (const { sequenceId } of sequences) {
+          await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${sequenceId} FOR UPDATE`
+        }
         await tx.benevole.updateMany({
           where: { id: lu.benevoleId, courrielConfirmeLe: null },
           data: { courrielConfirmeLe: maintenant },
@@ -262,7 +294,9 @@ builder.mutationFields(t => ({
         },
       })
       await prisma.$transaction(async tx => {
-        await tx.placeSequence.delete({ where: { id: place.id } })
+        // La séquence d'abord, comme modifierSequence et placerBenevole.
+        await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${place.sequenceId} FOR UPDATE`
+        await tx.placeSequence.deleteMany({ where: { id: place.id } })
         await tx.sequence.update({
           where: { id: place.sequenceId },
           data: { version: { increment: 1 } },
@@ -274,11 +308,15 @@ builder.mutationFields(t => ({
         sequence: place.sequence,
       })
       // Une personne qui décline tout avant de confirmer ne laisse aucune fiche.
-      if (!lu.confirme) {
-        await prisma.benevole.deleteMany({
-          where: { id: lu.benevoleId, places: { none: {} } },
-        })
-      }
+      // La condition se relit au moment de la suppression : une confirmation
+      // arrivée entre-temps garde la fiche.
+      await prisma.benevole.deleteMany({
+        where: {
+          id: lu.benevoleId,
+          courrielConfirmeLe: null,
+          places: { none: {} },
+        },
+      })
       publierPourActivite(
         'PROGRAMME',
         place.sequence.organisationId,
@@ -299,12 +337,26 @@ builder.mutationFields(t => ({
     args: { jeton: t.arg.string({ required: true }) },
     resolve: async (_root, args) => {
       const lu = await exigerEspace(args.jeton)
-      if (lu.places.length > 0) {
-        throw erreurSaisie(
-          'Quittez d’abord vos places à venir, puis supprimez votre fiche.'
-        )
-      }
-      await prisma.benevole.delete({ where: { id: lu.benevoleId } })
+      const refus = erreurSaisie(
+        'Quittez d’abord vos places à venir, puis supprimez votre fiche.'
+      )
+      if (lu.places.length > 0) throw refus
+      // La suppression porte la condition : une place ajoutée entre-temps la
+      // bloque.
+      const { count } = await prisma.benevole.deleteMany({
+        where: {
+          id: lu.benevoleId,
+          places: {
+            none: {
+              sequence: {
+                fin: { gt: new Date() },
+                edition: { statut: { not: 'ARCHIVEE' } },
+              },
+            },
+          },
+        },
+      })
+      if (count === 0) throw refus
       journal.info(
         {
           evenement: 'benevole-supprime-par-lui-meme',
@@ -358,9 +410,14 @@ builder.mutationFields(t => ({
         organisationId: fiche.organisationId,
         activiteId: fiche.activiteId,
       })
-      if (!envoye) {
+      if (envoye === 'impossible') {
         throw erreurSaisie(
           'Ce lien ne peut pas être renvoyé : il a déjà été renvoyé une fois, ou la fiche n’a pas reçu de premier lien.'
+        )
+      }
+      if (envoye === 'file') {
+        throw erreurSaisie(
+          'Le mail n’a pas pu partir. Réessayez dans un instant : le renvoi reste disponible.'
         )
       }
       publierPourActivite('PROGRAMME', fiche.organisationId, fiche.activiteId)

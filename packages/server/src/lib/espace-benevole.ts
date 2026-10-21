@@ -46,7 +46,8 @@ export async function fichesJoignables(
 /**
  * Le jeton du lien d'une fiche. Une fiche sans lien en reçoit un ; l'empreinte se
  * réaligne quand le secret du serveur a changé. `nouveau` tire un nouveau sel, ce
- * qui révoque l'ancien lien.
+ * qui révoque l'ancien lien. Chaque écriture porte le sel observé : un
+ * renouvellement simultané n'est jamais écrasé par un calcul fait sur l'ancien sel.
  */
 export async function jetonEspace(
   base: Base,
@@ -54,29 +55,39 @@ export async function jetonEspace(
   options: { nouveau?: boolean } = {}
 ): Promise<string> {
   if (options.nouveau) {
+    const sel = nouveauSel()
+    const jeton = await jetonDe('espace', sel)
     await base.benevole.update({
       where: { id: benevoleId },
-      data: { espaceSel: nouveauSel() },
+      data: { espaceSel: sel, espaceEmpreinte: empreinte(jeton) },
     })
-  } else {
-    // Deux appels simultanés ne tirent qu'un sel.
-    await base.benevole.updateMany({
-      where: { id: benevoleId, espaceSel: null },
-      data: { espaceSel: nouveauSel() },
-    })
+    return jeton
   }
-  const { espaceSel, espaceEmpreinte } = await base.benevole.findUniqueOrThrow({
-    where: { id: benevoleId },
-    select: { espaceSel: true, espaceEmpreinte: true },
-  })
-  const jeton = await jetonDe('espace', espaceSel!)
-  if (espaceEmpreinte !== empreinte(jeton)) {
-    await base.benevole.update({
+  for (let essai = 0; essai < 3; essai += 1) {
+    const fiche = await base.benevole.findUniqueOrThrow({
       where: { id: benevoleId },
+      select: { espaceSel: true, espaceEmpreinte: true },
+    })
+    if (fiche.espaceSel === null) {
+      // Deux appels simultanés ne posent qu'un sel : le second relit le premier.
+      const sel = nouveauSel()
+      const jeton = await jetonDe('espace', sel)
+      const { count } = await base.benevole.updateMany({
+        where: { id: benevoleId, espaceSel: null },
+        data: { espaceSel: sel, espaceEmpreinte: empreinte(jeton) },
+      })
+      if (count === 1) return jeton
+      continue
+    }
+    const jeton = await jetonDe('espace', fiche.espaceSel)
+    if (fiche.espaceEmpreinte === empreinte(jeton)) return jeton
+    const { count } = await base.benevole.updateMany({
+      where: { id: benevoleId, espaceSel: fiche.espaceSel },
       data: { espaceEmpreinte: empreinte(jeton) },
     })
+    if (count === 1) return jeton
   }
-  return jeton
+  throw new Error('Le lien de la fiche change trop souvent : réessayez.')
 }
 
 /** Le lien de l'espace d'une fiche, pour un mail ou pour le bouton « Copier ». */
@@ -100,7 +111,7 @@ export async function annoncerPlace(
       data: { lienEnvoyeLe: maintenant },
     })
     if (count === 1) {
-      await mettreEnFile(
+      const enFile = await mettreEnFile(
         'benevole-lien',
         { benevoleId: fiche.benevoleId },
         {
@@ -109,9 +120,16 @@ export async function annoncerPlace(
           activiteId: fiche.activiteId,
         }
       )
+      // Une file indisponible rend la marque : la place suivante réessaiera.
+      if (!enFile) {
+        await prisma.benevole.updateMany({
+          where: { id: fiche.benevoleId, lienEnvoyeLe: maintenant },
+          data: { lienEnvoyeLe: null },
+        })
+      }
       return
     }
-    await signalerPlacesModifiees(prisma, [fiche.benevoleId], fiche, maintenant)
+    await signalerPlacesModifiees(prisma, [fiche.benevoleId], fiche)
   } catch (erreur) {
     journal.error(
       {
@@ -124,15 +142,43 @@ export async function annoncerPlace(
 }
 
 /**
- * Renvoie le lien personnel par mail, une seule fois par fiche : la relance. Rend
- * faux quand la fiche ne peut plus en recevoir (déjà relancée, jamais annoncée,
- * ou plus joignable).
+ * Renvoie le lien personnel par mail, une seule fois par fiche : la relance. Une
+ * fiche placée dont le premier lien n'a pas pu partir le reçoit par ce geste, sans
+ * consommer la relance. Rend « impossible » quand la fiche ne peut plus en recevoir
+ * (déjà relancée, sans place, ou plus joignable), et « file » quand la file des
+ * mails ne répond pas : le geste reste alors disponible.
  */
 export async function relancer(
   prisma: PrismaClient,
   fiche: { benevoleId: string; organisationId: string; activiteId: string },
   maintenant = new Date()
-): Promise<boolean> {
+): Promise<'envoyee' | 'impossible' | 'file'> {
+  const premier = await prisma.benevole.updateMany({
+    where: {
+      id: fiche.benevoleId,
+      lienEnvoyeLe: null,
+      places: { some: {} },
+      ...JOIGNABLE,
+    },
+    data: { lienEnvoyeLe: maintenant },
+  })
+  if (premier.count === 1) {
+    const enFile = await mettreEnFile(
+      'benevole-lien',
+      { benevoleId: fiche.benevoleId },
+      {
+        jobId: `benevole-lien-${fiche.benevoleId}`,
+        organisationId: fiche.organisationId,
+        activiteId: fiche.activiteId,
+      }
+    )
+    if (enFile) return 'envoyee'
+    await prisma.benevole.updateMany({
+      where: { id: fiche.benevoleId, lienEnvoyeLe: maintenant },
+      data: { lienEnvoyeLe: null },
+    })
+    return 'file'
+  }
   const { count } = await prisma.benevole.updateMany({
     where: {
       id: fiche.benevoleId,
@@ -142,8 +188,8 @@ export async function relancer(
     },
     data: { relanceLe: maintenant },
   })
-  if (count === 0) return false
-  await mettreEnFile(
+  if (count === 0) return 'impossible'
+  const enFile = await mettreEnFile(
     'benevole-lien',
     { benevoleId: fiche.benevoleId },
     {
@@ -152,20 +198,24 @@ export async function relancer(
       activiteId: fiche.activiteId,
     }
   )
-  return true
+  if (enFile) return 'envoyee'
+  await prisma.benevole.updateMany({
+    where: { id: fiche.benevoleId, relanceLe: maintenant },
+    data: { relanceLe: null },
+  })
+  return 'file'
 }
 
 /**
  * Annonce un changement de places aux fiches dont l'adresse est confirmée. Les
- * changements d'une même fiche se regroupent sur deux minutes, comme les
- * convocations (ADR 0037) : le mail relit les places au moment de l'envoi. Ne
+ * changements d'une même fiche se regroupent : chaque changement repousse le
+ * départ de deux minutes, et le mail relit les places au moment de l'envoi. Ne
  * lève jamais.
  */
 export async function signalerPlacesModifiees(
   prisma: Base,
   benevoleIds: readonly string[],
-  contexte: { organisationId: string; activiteId: string },
-  maintenant = new Date()
+  contexte: { organisationId: string; activiteId: string }
 ): Promise<void> {
   if (benevoleIds.length === 0) return
   try {
@@ -177,13 +227,12 @@ export async function signalerPlacesModifiees(
       },
       select: { id: true },
     })
-    const fenetre = Math.floor(maintenant.getTime() / DELAI_CONVOCATION_MS)
     for (const { id } of confirmees) {
       await mettreEnFile(
         'benevole-places',
         { benevoleId: id },
         {
-          jobId: `benevole-places-${id}-${fenetre}`,
+          regroupement: `benevole-places-${id}`,
           delai: DELAI_CONVOCATION_MS,
           organisationId: contexte.organisationId,
           activiteId: contexte.activiteId,

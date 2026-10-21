@@ -11,9 +11,8 @@ import {
   telephoneValide,
 } from '../lib/benevoles.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
-import { lienEspace } from '../lib/espace-benevole.ts'
+import { jetonEspace, lienEspace } from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
-import { jetonDe } from '../lib/liens.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
@@ -100,10 +99,9 @@ const BenevoleRef = builder.objectRef<BenevoleLu>('Benevole').implement({
         const { origineOrga } = await configurationOrganisation(
           l.benevole.organisationId
         )
-        return lienEspace(
-          origineOrga,
-          await jetonDe('espace', l.benevole.espaceSel)
-        )
+        // Le calcul réaligne l'empreinte gardée après un changement du secret :
+        // le lien copié répond aussitôt.
+        return lienEspace(origineOrga, await jetonEspace(prisma, l.benevole.id))
       },
     }),
     peutModifier: t.boolean({ resolve: l => l.peutModifier }),
@@ -249,11 +247,25 @@ builder.mutationFields(t => ({
     },
     resolve: async (_root, args, ctx) => {
       const actuelle = await ficheModifiable(ctx, String(args.id))
+      const courriel = courrielValide(args.courriel)
+      // Une nouvelle adresse n'est pas confirmée : elle repart du premier lien,
+      // et l'ancien lien, envoyé à l'ancienne adresse, cesse de répondre
+      // (ADR 0041).
+      const autreAdresse = courriel !== actuelle.courriel
       const modifiee = await prisma.benevole.update({
         where: { id: actuelle.id },
         data: {
           nom: texteRequis(args.nom, 'Le nom', NOM_BENEVOLE_MAX),
-          courriel: courrielValide(args.courriel),
+          courriel,
+          ...(autreAdresse
+            ? {
+                courrielConfirmeLe: null,
+                lienEnvoyeLe: null,
+                relanceLe: null,
+                espaceSel: null,
+                espaceEmpreinte: null,
+              }
+            : {}),
           telephone: telephoneValide(args.telephone),
           note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
           ...(args.prevenirParMail === null ||

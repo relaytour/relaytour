@@ -607,7 +607,12 @@ builder.mutationFields(t => {
           // confirmer le reste (ADR 0041).
           const actuelles = await tx.placeSequence.findMany({
             where: { sequenceId: actuelle.id },
-            select: { userId: true, benevoleId: true, confirmeeLe: true },
+            select: {
+              userId: true,
+              benevoleId: true,
+              confirmeeLe: true,
+              createdAt: true,
+            },
           })
           await tx.placeSequence.deleteMany({
             where: { sequenceId: actuelle.id },

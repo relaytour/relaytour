@@ -12,6 +12,7 @@ import {
   APPELS_OUVERTS_MAX,
   CHOIX_EN_ATTENTE,
   datesAppelValides,
+  jetonAppel,
   etatAppel,
   gereLAppel,
   INTRODUCTION_MAX,
@@ -108,7 +109,7 @@ export const AppelRef = builder.objectRef<AppelLu>('AppelBenevoles').implement({
         const { origineOrga } = await configurationOrganisation(
           l.appel.organisationId
         )
-        return adresseAppel(origineOrga, await jetonDe('appel', l.appel.sel))
+        return adresseAppel(origineOrga, await jetonAppel(prisma, l.appel.id))
       },
     }),
     candidaturesEnAttente: t.int({
@@ -175,6 +176,8 @@ async function exigerPlacePourUnAppel(
       editionId,
       fermeManuellementLe: null,
       fermeLe: { gt: maintenant },
+      // Un appel de séquence dont la séquence a disparu est fermé.
+      NOT: { portee: 'SEQUENCE', sequenceId: null },
       ...(sauf ? { id: { not: sauf } } : {}),
     },
   })
@@ -621,11 +624,12 @@ builder.mutationFields(t => ({
       }
       const maintenant = new Date()
       await sousVerrouOrganisation(ctx.organisation!.id, async tx => {
-        // Un appel fermé qui rouvre par ses dates compte parmi les appels ouverts.
-        if (
-          etatAppel(appel, maintenant) === 'FERME' &&
-          etatAppel({ ...appel, ...donnees }, maintenant) !== 'FERME'
-        ) {
+        // L'état se relit sous le verrou : un appel qui reste ou devient ouvert
+        // compte parmi les appels ouverts, hors de lui-même.
+        const courant = await tx.appelBenevoles.findUniqueOrThrow({
+          where: { id: appel.id },
+        })
+        if (etatAppel({ ...courant, ...donnees }, maintenant) !== 'FERME') {
           await exigerPlacePourUnAppel(
             tx,
             appel.editionId,
@@ -687,7 +691,8 @@ builder.mutationFields(t => ({
         )
       }
       await sousVerrouOrganisation(ctx.organisation!.id, async tx => {
-        if (appel.fermeManuellementLe !== null) {
+        // La capacité se vérifie toujours sous le verrou, hors de l'appel rouvert.
+        {
           await exigerPlacePourUnAppel(
             tx,
             appel.editionId,
@@ -739,19 +744,24 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const choix = await choixTraitable(ctx, String(args.id))
       if (choix.statut === 'ACCEPTE') return relire(ctx, choix.candidatureId)
-      const { benevoleId } = await prisma.$transaction(async tx => {
-        const acceptee = await accepterSurSequence(tx, {
-          candidatureId: choix.candidatureId,
-          sequenceId: choix.sequenceId,
-          acteurId: ctx.personne!.id,
-          maintenant: new Date(),
-        })
-        await tx.sequence.update({
-          where: { id: choix.sequenceId },
-          data: { version: { increment: 1 } },
-        })
-        return acceptee
-      })
+      // Le verrou de l'organisation protège la recherche et la création de la
+      // fiche, comme creerBenevole.
+      const { benevoleId } = await sousVerrouOrganisation(
+        choix.candidature.organisationId,
+        async tx => {
+          const acceptee = await accepterSurSequence(tx, {
+            candidatureId: choix.candidatureId,
+            sequenceId: choix.sequenceId,
+            acteurId: ctx.personne!.id,
+            maintenant: new Date(),
+          })
+          await tx.sequence.update({
+            where: { id: choix.sequenceId },
+            data: { version: { increment: 1 } },
+          })
+          return acceptee
+        }
+      )
       // Le mail suit la validation de la transaction : la file relit la fiche.
       await annoncerPlace(prisma, {
         benevoleId,
@@ -777,14 +787,24 @@ builder.mutationFields(t => ({
         )
       }
       await prisma.$transaction(async tx => {
-        await tx.choixCandidature.update({
-          where: { id: choix.id },
+        // La candidature d'abord, comme tout traitement : deux refus
+        // simultanés des derniers choix clôturent bien la candidature.
+        await tx.$queryRaw`SELECT id FROM Candidature WHERE id = ${choix.candidatureId} FOR UPDATE`
+        // Le statut se vérifie dans l'écriture : une acceptation validée
+        // entre-temps n'est pas remplacée par un refus.
+        const { count } = await tx.choixCandidature.updateMany({
+          where: { id: choix.id, statut: { in: CHOIX_EN_ATTENTE } },
           data: {
             statut: 'REFUSE',
             traiteParId: ctx.personne!.id,
             traiteLe: new Date(),
           },
         })
+        if (count === 0) {
+          throw erreurSaisie(
+            'Ce choix est déjà traité : retirez la place depuis le programme.'
+          )
+        }
         await recalculerCandidature(tx, choix.candidatureId)
       })
       signalCandidature({ ...choix.candidature, id: choix.candidatureId })
@@ -809,6 +829,14 @@ builder.mutationFields(t => ({
       }
       const maintenant = new Date()
       await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM Candidature WHERE id = ${candidature.id} FOR UPDATE`
+        const { count } = await tx.candidature.updateMany({
+          where: { id: candidature.id, statut: 'EN_ATTENTE' },
+          data: { statut: 'TRAITEE', courrielEnAttente: null },
+        })
+        if (count === 0) {
+          throw erreurSaisie('Cette candidature est déjà traitée.')
+        }
         await tx.choixCandidature.updateMany({
           where: {
             candidatureId: candidature.id,
@@ -819,10 +847,6 @@ builder.mutationFields(t => ({
             traiteParId: ctx.personne!.id,
             traiteLe: maintenant,
           },
-        })
-        await tx.candidature.update({
-          where: { id: candidature.id },
-          data: { statut: 'TRAITEE', courrielEnAttente: null },
         })
       })
       signalCandidature(candidature)

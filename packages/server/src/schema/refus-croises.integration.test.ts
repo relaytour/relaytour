@@ -7,6 +7,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 import { buildContext, type AppContext } from '../context.ts'
 import { empreinte } from '../lib/fiches.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
+import { nouveauSel } from '../lib/liens.ts'
 
 import { schema } from './index.ts'
 
@@ -406,7 +407,7 @@ beforeAll(async () => {
         nom: 'Appel de A',
         ouvertLe: new Date(),
         fermeLe: new Date('2027-06-05T20:00:00.000Z'),
-        sel: 'x'.repeat(43),
+        sel: nouveauSel(),
         empreinte: 'a'.repeat(64),
         fin: 'aaaaaa',
       },
