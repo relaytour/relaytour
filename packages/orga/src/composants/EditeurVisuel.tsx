@@ -117,7 +117,9 @@ export default function EditeurVisuel({
         onCancel={() => setLien(null)}
         destroyOnHidden
         footer={[
-          lien?.dejaLie && (
+          // Retirer un lien demande de sélectionner son texte : au curseur, la plage
+          // à retirer serait vide.
+          lien?.dejaLie && !lien.empty && (
             <Button key="retirer" onClick={() => poser('')}>
               Retirer le lien
             </Button>

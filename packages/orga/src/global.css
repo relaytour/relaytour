@@ -912,18 +912,14 @@ button.rt-ligne-lien {
   margin: 1.5em 0;
 }
 
-/* Une liste de cases à cocher remplace ses puces par les cases. */
-.rt-markdown .contains-task-list {
+/* Un élément à cocher remplace sa puce par sa case. Les autres éléments d'une
+   liste mixte gardent leur puce ou leur numéro, et la liste garde son retrait. */
+.rt-markdown .task-list-item {
   list-style: none;
-  padding-inline-start: 0.2em;
-}
-
-.rt-markdown .contains-task-list .contains-task-list {
-  padding-inline-start: 1.4em;
 }
 
 .rt-markdown .task-list-item input {
-  margin: 0 0.5em 0 0;
+  margin: 0 0.45em 0 -1.35em;
   vertical-align: -1px;
   accent-color: var(--rt-primaire);
 }
@@ -1008,41 +1004,16 @@ button.rt-ligne-lien {
   margin: 0 0 0.8em;
 }
 
-/* Une case de la liste se dessine devant l'élément : un clic la coche. */
+/* Un élément à cocher porte une vraie case devant son texte (EditeurVisuel). */
 .rt-editeur-visuel-zone li[data-item-type='task'] {
-  position: relative;
   list-style: none;
 }
 
-.rt-editeur-visuel-zone li[data-item-type='task']::before {
-  content: '';
-  position: absolute;
-  left: -1.5em;
-  top: 0.35em;
-  width: 0.95em;
-  height: 0.95em;
-  box-sizing: border-box;
-  border: 1.5px solid var(--rt-encre-55);
-  border-radius: 4px;
+.rt-editeur-visuel-zone .rt-case-visuelle {
+  margin: 0 0.45em 0 -1.35em;
+  vertical-align: -1px;
+  accent-color: var(--rt-primaire);
   cursor: pointer;
-}
-
-.rt-editeur-visuel-zone li[data-item-type='task'][data-checked='true']::before {
-  background: var(--rt-primaire);
-  border-color: var(--rt-primaire);
-}
-
-.rt-editeur-visuel-zone li[data-item-type='task'][data-checked='true']::after {
-  content: '';
-  position: absolute;
-  left: calc(-1.5em + 0.32em);
-  top: calc(0.35em + 0.14em);
-  width: 0.25em;
-  height: 0.5em;
-  border: solid var(--rt-sol-1);
-  border-width: 0 2px 2px 0;
-  transform: rotate(45deg);
-  pointer-events: none;
 }
 
 .rt-editeur-visuel-zone table {
