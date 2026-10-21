@@ -893,6 +893,243 @@ button.rt-ligne-lien {
   padding: 6px 10px;
 }
 
+.rt-markdown pre {
+  margin: 1em 0;
+  padding: 10px 12px;
+  background: var(--rt-encre-08);
+  border-radius: var(--rt-rayon-chip);
+  overflow-x: auto;
+}
+
+.rt-markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+.rt-markdown hr {
+  border: none;
+  border-top: 1px solid var(--rt-encre-14);
+  margin: 1.5em 0;
+}
+
+/* Un élément à cocher remplace sa puce par sa case. Les autres éléments d'une
+   liste mixte gardent leur puce ou leur numéro, et la liste garde son retrait. */
+.rt-markdown .task-list-item {
+  list-style: none;
+}
+
+.rt-markdown .task-list-item input {
+  margin: 0 0.45em 0 -1.35em;
+  vertical-align: -1px;
+  accent-color: var(--rt-primaire);
+}
+
+/* Éditeur Markdown (EditeurMarkdown) : la barre de mise en forme reste au-dessus
+   de la zone pendant le défilement, sous la barre haute. */
+.rt-editeur-markdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.rt-barre-markdown {
+  position: sticky;
+  top: 88px;
+  z-index: 5;
+  padding: 4px 8px;
+  background: var(--rt-verre-barre);
+  backdrop-filter: var(--rt-flou-lg);
+  -webkit-backdrop-filter: var(--rt-flou-lg);
+  border-radius: var(--rt-rayon-champ);
+  box-shadow: var(--rt-liseret);
+}
+
+.rt-barre-markdown-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.rt-barre-markdown-groupe {
+  display: flex;
+  gap: 2px;
+}
+
+.rt-barre-markdown-aide {
+  margin-inline-start: auto;
+}
+
+/* La zone grandit avec son texte : sans défilement propre, une barre de défilement
+   ne réduit pas sa largeur et ne fausse pas le calcul de sa hauteur. */
+.rt-zone-markdown.ant-input {
+  font-family: var(--rt-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  overflow-y: hidden;
+}
+
+/* En-tête du contenu d'une fiche : son libellé, puis la bascule Visuel ou
+   Markdown. */
+.rt-editeur-fiche-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 12px;
+  margin-bottom: 8px;
+}
+
+/* Éditeur visuel (EditeurVisuel) : la zone se lit comme une fiche, dans le
+   cadre d'un champ. */
+.rt-editeur-visuel-zone {
+  min-height: 420px;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  background: var(--rt-surface-interne);
+  border: 1px solid var(--rt-encre-14);
+  border-radius: var(--rt-rayon-champ);
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  outline: none;
+  transition: border-color var(--rt-duree) var(--rt-ease-fluide);
+}
+
+.rt-editeur-visuel-zone:focus {
+  border-color: var(--rt-primaire);
+  box-shadow: var(--rt-anneau-focus);
+}
+
+.rt-editeur-visuel-zone p {
+  margin: 0 0 0.8em;
+}
+
+/* Un élément à cocher porte une vraie case devant son texte (EditeurVisuel). */
+.rt-editeur-visuel-zone li[data-item-type='task'] {
+  list-style: none;
+}
+
+.rt-editeur-visuel-zone .rt-case-visuelle {
+  margin: 0 0.45em 0 -1.35em;
+  vertical-align: -1px;
+  accent-color: var(--rt-primaire);
+  cursor: pointer;
+}
+
+.rt-editeur-visuel-zone table {
+  display: table;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.rt-editeur-visuel-zone .selectedCell {
+  background: var(--rt-primaire-clair);
+}
+
+.rt-editeur-visuel-zone .ProseMirror-gapcursor,
+.rt-editeur-visuel-zone .ProseMirror-separator {
+  display: none;
+}
+
+/* Guide de la syntaxe (GuideMarkdown) : le texte à écrire, puis son affichage. */
+.rt-guide-markdown {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rt-panneau .rt-guide-explication {
+  margin: 0 0 8px;
+  color: var(--rt-encre-80);
+}
+
+.rt-guide-exemple {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 16px;
+  margin-top: 12px;
+}
+
+.rt-guide-exemple-compact {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 8px;
+}
+
+.rt-guide-exemple figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.rt-guide-exemple figcaption {
+  margin-bottom: 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rt-encre-55);
+}
+
+.rt-guide-source {
+  margin: 0;
+  padding: 10px 12px;
+  font-family: var(--rt-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: var(--rt-encre-08);
+  border-radius: var(--rt-rayon-chip);
+}
+
+.rt-guide-rendu {
+  padding: 10px 12px;
+  border: 1px solid var(--rt-encre-14);
+  border-radius: var(--rt-rayon-chip);
+}
+
+/* Un panneau retire la marge de ses paragraphes : le rendu la retrouve. */
+.rt-panneau .rt-guide-rendu .rt-markdown p {
+  margin: 0 0 0.8em;
+}
+
+.rt-panneau .rt-guide-rendu .rt-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+/* Sur téléphone, la barre tient sur une rangée qui défile : elle laisse ainsi
+   plus de place au texte quand le clavier est ouvert. */
+@media (max-width: 767px) {
+  .rt-barre-markdown {
+    top: calc(max(12px, var(--rt-haut-sur)) + 72px);
+  }
+
+  .rt-barre-markdown-outils {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    /* Le bord droit s'estompe : il signale les boutons qui suivent. */
+    padding-inline-end: 28px;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      #000 calc(100% - 28px),
+      transparent
+    );
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+
+  .rt-barre-markdown-outils::-webkit-scrollbar {
+    display: none;
+  }
+
+  .rt-barre-markdown-groupe,
+  .rt-barre-markdown-aide {
+    flex-shrink: 0;
+  }
+
+  .rt-guide-exemple {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 8px;
+  }
+}
+
 /* ── Composants de l'espace organisateur ──────────────────────────────────
    Les écrans publics et l'administration partagent ces classes. Chaque bloc
    nomme le composant React qui le porte. */

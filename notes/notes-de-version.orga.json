@@ -84,6 +84,19 @@
             "texte": "L'écran « Programme » présente les séquences du jour J dans une grille par lieu et par heure, ou par lieu sur un téléphone. Chaque séquence nomme ses responsables et ses renforts, membres de l'équipe ou bénévoles. « Mon jour J » liste vos séquences, et la page de votre périmètre montre les siennes.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-20-orga-l-editeur-de-fiche-propose-une-barre-de-mise-en-forme-et-un-",
+          "date": "2026-10-20",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L’éditeur de fiche s’ouvre en mode visuel, avec une barre de mise en forme et un guide Markdown",
+            "texte": "En mode visuel, vous écrivez directement dans la fiche telle qu’elle s’affiche. Le mode Markdown montre le texte source, et votre navigateur garde votre choix. Une barre au-dessus du texte met en gras ou en italique, pose un titre, une liste, une case à cocher, un lien ou un tableau. Le bouton « Aide » ouvre un guide de la syntaxe Markdown des fiches, sans quitter l’éditeur.",
+            "migration": null
+          }
         }
       ]
     },
