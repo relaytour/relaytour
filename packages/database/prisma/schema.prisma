@@ -1062,10 +1062,15 @@ model Benevole {
   accordLe           DateTime
   // Saisie par l'équipe, ou née d'une candidature acceptée (ADR 0041).
   origine            OrigineBenevole @default(SAISIE)
+  // « Prévenir par mail » : avec une adresse, la fiche est joignable. Sa première
+  // place envoie le lien, et ses places restent à confirmer.
+  prevenirParMail    Boolean         @default(true)
   // Date à laquelle la personne a confirmé sa participation depuis son lien. Seule
   // une adresse confirmée reçoit d'autres mails que le premier.
   courrielConfirmeLe DateTime?
-  // Empreinte SHA-256 du jeton de l'espace bénévole. Le jeton n'est jamais gardé.
+  // Sel du lien de l'espace bénévole : le jeton se calcule à partir du secret du
+  // serveur et de ce sel, et le serveur ne garde que son empreinte SHA-256.
+  espaceSel          String?         @db.Char(43)
   espaceEmpreinte    String?         @db.Char(64)
   // Envoi du mail qui porte le lien, et relance unique.
   lienEnvoyeLe       DateTime?
@@ -1125,6 +1130,9 @@ model AppelBenevoles {
   fermeLe             DateTime
   // Fermeture anticipée. Null : l'appel suit ses dates.
   fermeManuellementLe DateTime?
+  // Le jeton se calcule à partir du secret du serveur et de ce sel : l'adresse se
+  // recopie à tout moment. Un nouveau sel révoque l'ancienne adresse.
+  sel                 String      @db.Char(43)
   empreinte           String      @db.Char(64)
   // Les derniers caractères du jeton, pour reconnaître l'adresse à l'écran.
   fin                 String      @db.VarChar(8)

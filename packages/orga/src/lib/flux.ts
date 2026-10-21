@@ -103,6 +103,12 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
     'Lieux',
     'LieuxTous',
     'Benevoles',
+    // Un besoin ou un horaire modifié change la jauge, la couverture et les
+    // bénévoles à répartir (ADR 0041).
+    'AppelsBenevoles',
+    'Candidatures',
+    'BenevolesARepartir',
+    'CouvertureProgramme',
   ],
   AGENDA: [
     'Agenda',
@@ -116,6 +122,7 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   FICHIERS: ['EspaceFichiers', 'DossiersLies', 'ContenuDossierLie'],
   // Les appels à bénévoles, les candidatures et la répartition (ADR 0041).
   CANDIDATURE: [
+    'Benevoles',
     'AppelsBenevoles',
     'Candidatures',
     'BenevolesARepartir',

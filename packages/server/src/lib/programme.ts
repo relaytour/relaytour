@@ -33,12 +33,16 @@ export interface PlaceValide {
 /** Une place prête à écrire, avec sa date de confirmation (ADR 0041). */
 export interface PlaceDatee extends PlaceValide {
   confirmeeLe: Date | null
+  /** La date de création d'une place gardée ; rien pour une place nouvelle. */
+  createdAt?: Date
 }
 
 /**
  * Les places d'une séquence avec leur date de confirmation. Une place déjà tenue
- * par la même personne garde la sienne, même nulle (place à confirmer). Une place
- * nouvelle saisie par l'équipe naît confirmée.
+ * par la même personne garde la sienne, même nulle (place à confirmer), et sa
+ * date de création. Une place
+ * nouvelle d'une fiche joignable reste à confirmer ; toute autre place nouvelle
+ * naît confirmée (ADR 0041).
  */
 export function placesDatees(
   places: readonly PlaceValide[],
@@ -46,15 +50,28 @@ export function placesDatees(
     userId: string | null
     benevoleId: string | null
     confirmeeLe: Date | null
+    createdAt?: Date
   }[],
-  maintenant: Date
+  maintenant: Date,
+  joignables: ReadonlySet<string> = new Set()
 ): PlaceDatee[] {
   const cle = (p: { userId: string | null; benevoleId: string | null }) =>
     p.userId ?? `b:${p.benevoleId}`
-  const dates = new Map(actuelles.map(p => [cle(p), p.confirmeeLe]))
+  const dates = new Map(actuelles.map(p => [cle(p), p] as const))
   return places.map(p => {
     const k = cle(p)
-    return { ...p, confirmeeLe: dates.has(k) ? dates.get(k)! : maintenant }
+    // Une place gardée garde ses dates : le délai de sept jours d'une place à
+    // confirmer court depuis sa vraie création.
+    const tenue = dates.get(k)
+    if (tenue !== undefined) {
+      return {
+        ...p,
+        confirmeeLe: tenue.confirmeeLe,
+        ...(tenue.createdAt ? { createdAt: tenue.createdAt } : {}),
+      }
+    }
+    const aConfirmer = p.benevoleId !== null && joignables.has(p.benevoleId)
+    return { ...p, confirmeeLe: aConfirmer ? null : maintenant }
   })
 }
 

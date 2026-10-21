@@ -9,6 +9,11 @@ import {
   type EtatPlace,
 } from '../lib/appels.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
+import {
+  annoncerPlace,
+  fichesJoignables,
+  signalerPlacesModifiees,
+} from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { heureLocale } from '../lib/heures.ts'
@@ -232,6 +237,24 @@ const PlaceInput = builder.inputType('PlaceSequenceInput', {
     role: t.field({ type: RolePlaceEnum, required: true }),
   }),
 })
+
+/** Les fiches bénévoles d'une liste de places. */
+const fichesDe = (places: readonly { benevoleId: string | null }[]) =>
+  places.flatMap(p => (p.benevoleId ? [p.benevoleId] : []))
+
+/** Annonce à chaque fiche sa place nouvelle dans une séquence (ADR 0041). */
+async function annoncerPlaces(
+  benevoleIds: readonly string[],
+  sequence: { organisationId: string; activiteId: string }
+) {
+  for (const benevoleId of benevoleIds) {
+    await annoncerPlace(prisma, {
+      benevoleId,
+      organisationId: sequence.organisationId,
+      activiteId: sequence.activiteId,
+    })
+  }
+}
 
 export const signal = (s: {
   id: string
@@ -494,6 +517,10 @@ builder.mutationFields(t => {
           editionId: lieu.editionId,
           activiteId,
         })
+        const joignables = await fichesJoignables(
+          prisma,
+          fichesDe(valides.places)
+        )
         // Le comptage et la création se font sous le verrou de l'organisation :
         // deux créations simultanées ne dépassent pas le plafond.
         const creee = await sousVerrouOrganisation(
@@ -515,13 +542,19 @@ builder.mutationFields(t => {
                 ...valides.champs,
                 creeParId: ctx.personne!.id,
                 places: {
-                  create: placesDatees(valides.places, [], new Date()),
+                  create: placesDatees(
+                    valides.places,
+                    [],
+                    new Date(),
+                    joignables
+                  ),
                 },
               },
               include: SEQUENCE_CHARGEE,
             })
           }
         )
+        await annoncerPlaces(fichesDe(valides.places), creee)
         signal(creee)
         return lireSequence(ctx, creee)
       },
@@ -549,6 +582,10 @@ builder.mutationFields(t => {
           activiteId,
           lieuActuel: actuelle.lieuId,
         })
+        const joignables = await fichesJoignables(
+          prisma,
+          fichesDe(valides.places)
+        )
         await prisma.$transaction(async tx => {
           const { count } = await tx.sequence.updateMany({
             where: { id: actuelle.id, version: args.versionAttendue },
@@ -570,17 +607,46 @@ builder.mutationFields(t => {
           // confirmer le reste (ADR 0041).
           const actuelles = await tx.placeSequence.findMany({
             where: { sequenceId: actuelle.id },
-            select: { userId: true, benevoleId: true, confirmeeLe: true },
+            select: {
+              userId: true,
+              benevoleId: true,
+              confirmeeLe: true,
+              createdAt: true,
+            },
           })
           await tx.placeSequence.deleteMany({
             where: { sequenceId: actuelle.id },
           })
           await tx.placeSequence.createMany({
-            data: placesDatees(valides.places, actuelles, new Date()).map(
-              p => ({ sequenceId: actuelle.id, ...p })
-            ),
+            data: placesDatees(
+              valides.places,
+              actuelles,
+              new Date(),
+              joignables
+            ).map(p => ({ sequenceId: actuelle.id, ...p })),
           })
         })
+        // Une fiche ajoutée reçoit son lien, ou le mail de ses places. Une fiche
+        // retirée reçoit le mail de ses places, comme toutes les fiches gardées
+        // quand l'horaire ou le lieu change (ADR 0041).
+        const avant = fichesDe(actuelle.places)
+        const apres = fichesDe(valides.places)
+        const deplacee =
+          actuelle.debut.getTime() !== valides.champs.debut.getTime() ||
+          actuelle.fin.getTime() !== valides.champs.fin.getTime() ||
+          actuelle.lieuId !== valides.champs.lieuId
+        await annoncerPlaces(
+          apres.filter(id => !avant.includes(id)),
+          actuelle
+        )
+        await signalerPlacesModifiees(
+          prisma,
+          [
+            ...avant.filter(id => !apres.includes(id)),
+            ...(deplacee ? apres.filter(id => avant.includes(id)) : []),
+          ],
+          actuelle
+        )
         signal(actuelle)
         return lireSequence(ctx, await sequenceVisible(ctx, actuelle.id))
       },
@@ -593,6 +659,11 @@ builder.mutationFields(t => {
         const sequence = await sequenceVisible(ctx, String(args.id))
         await exigerEcritureReunion(ctx, sequence)
         await prisma.sequence.delete({ where: { id: sequence.id } })
+        await signalerPlacesModifiees(
+          prisma,
+          fichesDe(sequence.places),
+          sequence
+        )
         signal(sequence)
         return true
       },

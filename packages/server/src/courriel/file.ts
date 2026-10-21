@@ -7,11 +7,17 @@ import { SORTES_JAMAIS_REPORTEES } from '../lib/plafond-courriel.ts'
 // le code de connexion : il passe devant un envoi groupé et arrive avant d'expirer.
 const PRIORITE_DES_AUTRES_MAILS = 10
 
-export type CibleCourriel = { userId: string } | { destinataire: string }
+export type CibleCourriel =
+  | { userId: string }
+  | { destinataire: string }
+  // Une fiche bénévole : son adresse se relit à l'envoi (ADR 0041).
+  | { benevoleId: string }
 
 /**
  * Met un mail en file. Ne lève jamais : une file indisponible est journalisée,
- * et l'action métier qui a demandé l'envoi aboutit quand même.
+ * et l'action métier qui a demandé l'envoi aboutit quand même. Rend vrai quand le
+ * mail est en file, faux sinon : un appelant qui marque l'envoi en base peut alors
+ * rendre sa marque.
  *
  * L'import de la file est paresseux : queues.ts valide l'environnement au chargement,
  * et le schéma doit pouvoir s'imprimer sans .env.
@@ -33,8 +39,11 @@ export async function mettreEnFile(
     reunionId?: string
     convocationId?: string
     sequenceReunion?: number
+    // Regroupement glissant : un mail de même identifiant, ajouté pendant son
+    // délai, remplace le mail en attente et repousse son départ (ADR 0041).
+    regroupement?: string
   } = {}
-): Promise<void> {
+): Promise<boolean> {
   try {
     const { courrielQueue } = await import('../jobs/queues.ts')
     const data: CourrielJobData = {
@@ -68,6 +77,16 @@ export async function mettreEnFile(
     await avecDelai(
       courrielQueue.add(sorte, data, {
         ...(options.jobId === undefined ? {} : { jobId: options.jobId }),
+        ...(options.regroupement === undefined
+          ? {}
+          : {
+              deduplication: {
+                id: options.regroupement,
+                ttl: Math.max(1, options.delai ?? 1),
+                extend: true,
+                replace: true,
+              },
+            }),
         ...(options.delai === undefined
           ? {}
           : { delay: Math.max(0, options.delai) }),
@@ -88,10 +107,13 @@ export async function mettreEnFile(
         sorte,
         ...('userId' in cible
           ? { userId: cible.userId }
-          : { destinataire: courrielTronque(cible.destinataire) }),
+          : 'benevoleId' in cible
+            ? { benevoleId: cible.benevoleId }
+            : { destinataire: courrielTronque(cible.destinataire) }),
       },
       'Mail mis en file.'
     )
+    return true
   } catch (erreur) {
     journal.error(
       {
@@ -101,5 +123,6 @@ export async function mettreEnFile(
       },
       'La file des mails ne répond pas : ce mail ne partira pas.'
     )
+    return false
   }
 }

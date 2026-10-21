@@ -30,6 +30,7 @@ export function familleAdmin(type: TypeNotification): FamilleAdmin | null {
     case 'DEMANDE_ACCEPTEE':
     case 'DEMANDE_REFUSEE':
     case 'INVITATION_ACCEPTEE':
+    case 'CANDIDATURE_RECUE':
       return 'demandes'
     case 'AFFECTATION_AJOUTEE':
     case 'AFFECTATION_RETIREE':

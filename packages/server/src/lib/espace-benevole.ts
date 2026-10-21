@@ -1,0 +1,382 @@
+import type { Prisma, PrismaClient } from '@relaytour/database'
+
+import { mettreEnFile } from '../courriel/file.ts'
+
+import { membreActif } from './appartenances.ts'
+import { DELAI_CONVOCATION_MS } from './convocations.ts'
+import { adminsAPrevenir } from './demandes.ts'
+import { publierNotification } from './flux.ts'
+import { journal } from './journal.ts'
+import { empreinte, jetonDe, nouveauSel } from './liens.ts'
+import { niveauxDes } from './notifications.ts'
+
+// Espace bénévole et mails aux bénévoles (ADR 0041).
+//
+// Seule une décision de l'équipe déclenche un mail, et seulement vers une fiche
+// joignable : une adresse, et l'option « Prévenir par mail ». La première place
+// d'une fiche joignable envoie le lien personnel, une seule fois. Ensuite, seule
+// une adresse confirmée reçoit un mail, à chaque changement de ses places,
+// regroupé sur deux minutes. Une fiche qui n'est pas joignable ne reçoit rien.
+//
+// Le lien se recalcule à partir du secret du serveur et du sel de la fiche
+// (lib/liens.ts) : il reste le même d'un mail à l'autre. La charge utile d'un
+// mail ne porte que l'identifiant de la fiche (invariant 5).
+
+type Base = PrismaClient | Prisma.TransactionClient
+
+/** Une fiche joignable : une adresse, et l'option « Prévenir par mail ». */
+export const JOIGNABLE = {
+  courriel: { not: null },
+  prevenirParMail: true,
+} satisfies Prisma.BenevoleWhereInput
+
+/** Les fiches joignables parmi celles demandées. */
+export async function fichesJoignables(
+  base: Base,
+  benevoleIds: readonly string[]
+): Promise<Set<string>> {
+  if (benevoleIds.length === 0) return new Set()
+  const fiches = await base.benevole.findMany({
+    where: { id: { in: [...new Set(benevoleIds)] }, ...JOIGNABLE },
+    select: { id: true },
+  })
+  return new Set(fiches.map(f => f.id))
+}
+
+/**
+ * Le jeton du lien d'une fiche. Une fiche sans lien en reçoit un ; l'empreinte se
+ * réaligne quand le secret du serveur a changé. `nouveau` tire un nouveau sel, ce
+ * qui révoque l'ancien lien. Chaque écriture porte le sel observé : un
+ * renouvellement simultané n'est jamais écrasé par un calcul fait sur l'ancien sel.
+ */
+export async function jetonEspace(
+  base: Base,
+  benevoleId: string,
+  options: { nouveau?: boolean } = {}
+): Promise<string> {
+  if (options.nouveau) {
+    const sel = nouveauSel()
+    const jeton = await jetonDe('espace', sel)
+    await base.benevole.update({
+      where: { id: benevoleId },
+      data: { espaceSel: sel, espaceEmpreinte: empreinte(jeton) },
+    })
+    return jeton
+  }
+  for (let essai = 0; essai < 3; essai += 1) {
+    const fiche = await base.benevole.findUniqueOrThrow({
+      where: { id: benevoleId },
+      select: { espaceSel: true, espaceEmpreinte: true },
+    })
+    if (fiche.espaceSel === null) {
+      // Deux appels simultanés ne posent qu'un sel : le second relit le premier.
+      const sel = nouveauSel()
+      const jeton = await jetonDe('espace', sel)
+      const { count } = await base.benevole.updateMany({
+        where: { id: benevoleId, espaceSel: null },
+        data: { espaceSel: sel, espaceEmpreinte: empreinte(jeton) },
+      })
+      if (count === 1) return jeton
+      continue
+    }
+    const jeton = await jetonDe('espace', fiche.espaceSel)
+    if (fiche.espaceEmpreinte === empreinte(jeton)) return jeton
+    const { count } = await base.benevole.updateMany({
+      where: { id: benevoleId, espaceSel: fiche.espaceSel },
+      data: { espaceEmpreinte: empreinte(jeton) },
+    })
+    if (count === 1) return jeton
+  }
+  throw new Error('Le lien de la fiche change trop souvent : réessayez.')
+}
+
+/** Le lien de l'espace d'une fiche, pour un mail ou pour le bouton « Copier ». */
+export function lienEspace(origine: string, jeton: string): string {
+  return `${origine.replace(/\/$/, '')}/benevole/${jeton}`
+}
+
+/**
+ * Annonce une place nouvelle à sa fiche. La première place d'une fiche joignable
+ * envoie le lien personnel ; une fiche qui l'a déjà reçu, et dont l'adresse est
+ * confirmée, reçoit le mail de ses places. Ne lève jamais.
+ */
+export async function annoncerPlace(
+  prisma: PrismaClient,
+  fiche: { benevoleId: string; organisationId: string; activiteId: string },
+  maintenant = new Date()
+): Promise<void> {
+  try {
+    const { count } = await prisma.benevole.updateMany({
+      where: { id: fiche.benevoleId, lienEnvoyeLe: null, ...JOIGNABLE },
+      data: { lienEnvoyeLe: maintenant },
+    })
+    if (count === 1) {
+      // L'identifiant du job porte la date de la marque : après un changement
+      // d'adresse, un nouveau cycle d'envoi ne se confond pas avec un job terminé
+      // que la file garde encore.
+      const enFile = await mettreEnFile(
+        'benevole-lien',
+        { benevoleId: fiche.benevoleId },
+        {
+          jobId: `benevole-lien-${fiche.benevoleId}-${maintenant.getTime()}`,
+          organisationId: fiche.organisationId,
+          activiteId: fiche.activiteId,
+        }
+      )
+      // Une file indisponible rend la marque : la place suivante réessaiera.
+      if (!enFile) {
+        await prisma.benevole.updateMany({
+          where: { id: fiche.benevoleId, lienEnvoyeLe: maintenant },
+          data: { lienEnvoyeLe: null },
+        })
+      }
+      return
+    }
+    await signalerPlacesModifiees(prisma, [fiche.benevoleId], fiche)
+  } catch (erreur) {
+    journal.error(
+      {
+        evenement: 'courriel-benevole-echoue',
+        message: (erreur as Error).message,
+      },
+      'Le mail d’une ou d’un bénévole n’a pas pu être mis en file.'
+    )
+  }
+}
+
+/**
+ * Renvoie le lien personnel par mail, une seule fois par fiche : la relance. Une
+ * fiche placée dont le premier lien n'a pas pu partir le reçoit par ce geste, sans
+ * consommer la relance. Rend « impossible » quand la fiche ne peut plus en recevoir
+ * (déjà relancée, sans place, ou plus joignable), et « file » quand la file des
+ * mails ne répond pas : le geste reste alors disponible.
+ */
+export async function relancer(
+  prisma: PrismaClient,
+  fiche: { benevoleId: string; organisationId: string; activiteId: string },
+  maintenant = new Date()
+): Promise<'envoyee' | 'impossible' | 'file'> {
+  const premier = await prisma.benevole.updateMany({
+    where: {
+      id: fiche.benevoleId,
+      lienEnvoyeLe: null,
+      places: { some: {} },
+      ...JOIGNABLE,
+    },
+    data: { lienEnvoyeLe: maintenant },
+  })
+  if (premier.count === 1) {
+    const enFile = await mettreEnFile(
+      'benevole-lien',
+      { benevoleId: fiche.benevoleId },
+      {
+        jobId: `benevole-lien-${fiche.benevoleId}-${maintenant.getTime()}`,
+        organisationId: fiche.organisationId,
+        activiteId: fiche.activiteId,
+      }
+    )
+    if (enFile) return 'envoyee'
+    await prisma.benevole.updateMany({
+      where: { id: fiche.benevoleId, lienEnvoyeLe: maintenant },
+      data: { lienEnvoyeLe: null },
+    })
+    return 'file'
+  }
+  const { count } = await prisma.benevole.updateMany({
+    where: {
+      id: fiche.benevoleId,
+      lienEnvoyeLe: { not: null },
+      relanceLe: null,
+      ...JOIGNABLE,
+    },
+    data: { relanceLe: maintenant },
+  })
+  if (count === 0) return 'impossible'
+  const enFile = await mettreEnFile(
+    'benevole-lien',
+    { benevoleId: fiche.benevoleId },
+    {
+      jobId: `benevole-relance-${fiche.benevoleId}-${maintenant.getTime()}`,
+      organisationId: fiche.organisationId,
+      activiteId: fiche.activiteId,
+    }
+  )
+  if (enFile) return 'envoyee'
+  await prisma.benevole.updateMany({
+    where: { id: fiche.benevoleId, relanceLe: maintenant },
+    data: { relanceLe: null },
+  })
+  return 'file'
+}
+
+/**
+ * Annonce un changement de places aux fiches dont l'adresse est confirmée. Les
+ * changements d'une même fiche se regroupent : chaque changement repousse le
+ * départ de deux minutes, et le mail relit les places au moment de l'envoi. Ne
+ * lève jamais.
+ */
+export async function signalerPlacesModifiees(
+  prisma: Base,
+  benevoleIds: readonly string[],
+  contexte: { organisationId: string; activiteId: string }
+): Promise<void> {
+  if (benevoleIds.length === 0) return
+  try {
+    const confirmees = await prisma.benevole.findMany({
+      where: {
+        id: { in: [...new Set(benevoleIds)] },
+        courrielConfirmeLe: { not: null },
+        ...JOIGNABLE,
+      },
+      select: { id: true },
+    })
+    for (const { id } of confirmees) {
+      await mettreEnFile(
+        'benevole-places',
+        { benevoleId: id },
+        {
+          regroupement: `benevole-places-${id}`,
+          delai: DELAI_CONVOCATION_MS,
+          organisationId: contexte.organisationId,
+          activiteId: contexte.activiteId,
+        }
+      )
+    }
+  } catch (erreur) {
+    journal.error(
+      {
+        evenement: 'courriel-benevole-echoue',
+        message: (erreur as Error).message,
+      },
+      'Le mail d’une ou d’un bénévole n’a pas pu être mis en file.'
+    )
+  }
+}
+
+/**
+ * Prévient l'équipe qu'une ou un bénévole a quitté une séquence depuis son
+ * espace : les personnes qui écrivent dans son périmètre, sinon les admins de
+ * l'activité. Ne lève jamais.
+ */
+export async function notifierRetrait(
+  prisma: PrismaClient,
+  retrait: {
+    placeId: string
+    benevoleId: string
+    sequence: {
+      id: string
+      organisationId: string
+      activiteId: string
+      editionId: string
+      perimetreId: string | null
+    }
+  }
+): Promise<void> {
+  const { sequence } = retrait
+  try {
+    const referents =
+      sequence.perimetreId === null
+        ? []
+        : (
+            await prisma.affectation.findMany({
+              where: {
+                editionId: sequence.editionId,
+                perimetreId: sequence.perimetreId,
+                user: membreActif(sequence.organisationId),
+              },
+              select: { userId: true },
+            })
+          ).map(a => a.userId)
+    const admins =
+      referents.length > 0
+        ? []
+        : await adminsAPrevenir(
+            prisma,
+            sequence.organisationId,
+            sequence.activiteId
+          )
+    const niveaux = await niveauxDes(prisma, admins, sequence.activiteId)
+    for (const userId of new Set([...referents, ...admins])) {
+      try {
+        await prisma.notification.create({
+          data: {
+            organisationId: sequence.organisationId,
+            userId,
+            type: 'BENEVOLE_RETIRE',
+            niveau: niveaux.get(userId) ?? 'REFERENT',
+            activiteId: sequence.activiteId,
+            perimetreId: sequence.perimetreId,
+            editionId: sequence.editionId,
+            sequenceId: sequence.id,
+            benevoleId: retrait.benevoleId,
+            cle: `BENEVOLE_RETIRE-${retrait.placeId}-${userId}`,
+          },
+          select: { id: true },
+        })
+        publierNotification(sequence.organisationId, userId)
+      } catch (erreur) {
+        if ((erreur as { code?: string }).code !== 'P2002') throw erreur
+      }
+    }
+  } catch (erreur) {
+    journal.error(
+      {
+        evenement: 'notification-echouee',
+        type: 'BENEVOLE_RETIRE',
+        message: (erreur as Error).message,
+      },
+      'Une notification n’a pas pu être créée.'
+    )
+  }
+}
+
+/**
+ * Révoque le lien des fiches qu'aucune place ni candidature d'une période non
+ * archivée ne retient : l'espace bénévole cesse de répondre à l'archivage de la
+ * dernière période de la fiche.
+ */
+export async function revoquerEspaces(
+  base: Base,
+  options: { organisationId?: string } = {}
+): Promise<number> {
+  const { count } = await base.benevole.updateMany({
+    where: {
+      ...(options.organisationId === undefined
+        ? {}
+        : { organisationId: options.organisationId }),
+      espaceEmpreinte: { not: null },
+      places: {
+        none: { sequence: { edition: { statut: { not: 'ARCHIVEE' } } } },
+      },
+      candidatures: { none: { edition: { statut: { not: 'ARCHIVEE' } } } },
+    },
+    data: { espaceSel: null, espaceEmpreinte: null },
+  })
+  return count
+}
+
+/** Les places à venir d'une fiche, dans les périodes non archivées, par début. */
+export function placesAVenir(
+  prisma: Base,
+  benevoleId: string,
+  maintenant = new Date()
+) {
+  return prisma.placeSequence.findMany({
+    where: {
+      benevoleId,
+      sequence: {
+        fin: { gt: maintenant },
+        edition: { statut: { not: 'ARCHIVEE' } },
+      },
+    },
+    include: {
+      sequence: {
+        include: {
+          lieu: { select: { nom: true } },
+          perimetre: { select: { nom: true } },
+        },
+      },
+    },
+    orderBy: [{ sequence: { debut: 'asc' } }, { id: 'asc' }],
+  })
+}

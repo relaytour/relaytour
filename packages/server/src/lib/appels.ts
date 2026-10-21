@@ -6,6 +6,7 @@ import { decalerJour, jourISO } from './agenda.ts'
 import { BENEVOLES_MAX } from './benevoles.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { journal } from './journal.ts'
+import { empreinte, jetonDe } from './liens.ts'
 import { heureLocale, instantDepuisHeureLocale } from './heures.ts'
 import { PLACES_MAX } from './programme.ts'
 
@@ -150,13 +151,13 @@ export interface PlageSaisie {
 }
 
 /**
- * Les plages saisies, vérifiées puis réunies. Chacune dure 24 heures au plus et
- * tombe dans la fenêtre donnée : les jours de la période, et ceux des séquences
- * de son programme.
+ * Les plages saisies, vérifiées puis réunies. Chacune dure 24 heures au plus,
+ * commence et finit un des jours permis : ceux de la période, et ceux des
+ * séquences de son programme.
  */
 export function plagesValides(
   saisies: readonly PlageSaisie[] | null | undefined,
-  fenetre: Plage,
+  jours: readonly string[],
   fuseau: string
 ): Plage[] {
   const liste = saisies ?? []
@@ -181,8 +182,8 @@ export function plagesValides(
       throw erreurSaisie('Une plage dure 24 heures au plus.')
     }
     if (
-      debut.getTime() < fenetre.debut.getTime() ||
-      fin.getTime() > fenetre.fin.getTime()
+      !jours.includes(saisie.jour) ||
+      !jours.includes(saisie.jourFin || saisie.jour)
     ) {
       throw erreurSaisie(
         'Une plage tombe dans les jours de la période ou de son programme.'
@@ -194,26 +195,27 @@ export function plagesValides(
 }
 
 /**
- * La fenêtre des plages d'une période : du premier au dernier jour de la
- * période, élargie aux jours des séquences de son programme.
+ * Les jours où une plage peut tomber, dans l'ordre : ceux de la période, et ceux
+ * des séquences de son programme (une installation la veille, par exemple).
  */
-export function fenetreDesPlages(
+export function joursDesPlages(
   periode: { debut: string; fin: string },
   sequences: readonly Plage[],
   fuseau: string
-): Plage {
-  let premier = periode.debut
-  let dernier = periode.fin
+): string[] {
+  const jours = new Set<string>()
+  for (
+    let jour = periode.debut;
+    jour <= periode.fin;
+    jour = decalerJour(jour, 1)
+  ) {
+    jours.add(jour)
+  }
   for (const s of sequences) {
-    const jourDebut = heureLocale(s.debut, fuseau).jour
-    const jourFin = heureLocale(s.fin, fuseau).jour
-    if (jourDebut < premier) premier = jourDebut
-    if (jourFin > dernier) dernier = jourFin
+    jours.add(heureLocale(s.debut, fuseau).jour)
+    jours.add(heureLocale(s.fin, fuseau).jour)
   }
-  return {
-    debut: instantDepuisHeureLocale(premier, '00:00', fuseau),
-    fin: instantDepuisHeureLocale(decalerJour(dernier, 1), '00:00', fuseau),
-  }
+  return [...jours].sort()
 }
 
 export type Adequation = 'TOTALE' | 'PARTIELLE' | 'AUCUNE'
@@ -349,6 +351,31 @@ export function couverture(
   return tranches
 }
 
+// ── Adresse ──────────────────────────────────────────────────────────────────
+
+/**
+ * Le jeton de l'adresse d'un appel, recalculé depuis son sel. L'empreinte et les
+ * derniers caractères gardés se réalignent après un changement du secret du
+ * serveur ; l'écriture porte le sel observé, pour ne jamais écraser un
+ * renouvellement simultané.
+ */
+export async function jetonAppel(base: Base, appelId: string): Promise<string> {
+  for (let essai = 0; essai < 3; essai += 1) {
+    const appel = await base.appelBenevoles.findUniqueOrThrow({
+      where: { id: appelId },
+      select: { sel: true, empreinte: true },
+    })
+    const jeton = await jetonDe('appel', appel.sel)
+    if (appel.empreinte === empreinte(jeton)) return jeton
+    const { count } = await base.appelBenevoles.updateMany({
+      where: { id: appelId, sel: appel.sel },
+      data: { empreinte: empreinte(jeton), fin: jeton.slice(-6) },
+    })
+    if (count === 1) return jeton
+  }
+  throw new Error('L’adresse de l’appel change trop souvent : réessayez.')
+}
+
 // ── Droits ───────────────────────────────────────────────────────────────────
 
 /**
@@ -426,7 +453,8 @@ export async function recalculerCandidature(
 }
 
 /**
- * Accepte une candidature sur une séquence, dans la transaction de l'appelant :
+ * Accepte une candidature sur une séquence, dans une transaction ouverte par
+ * `sousVerrouOrganisation` :
  * la fiche bénévole est créée, ou rattachée par son adresse ; elle reçoit les
  * plages de la candidature pour la période et une place à confirmer en renfort.
  * Le choix de la séquence passe à « accepté », créé s'il n'existait pas. La
@@ -443,6 +471,10 @@ export async function accepterSurSequence(
   }
 ): Promise<{ benevoleId: string; placeCreee: boolean }> {
   const { candidatureId, sequenceId, acteurId, maintenant } = entree
+  // Ordre des verrous, commun à tout traitement d'une candidature : la
+  // candidature, puis la séquence. L'appelant tient déjà le verrou de
+  // l'organisation, qui protège la recherche et la création de la fiche.
+  await tx.$queryRaw`SELECT id FROM Candidature WHERE id = ${candidatureId} FOR UPDATE`
   await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${sequenceId} FOR UPDATE`
   const candidature = await tx.candidature.findUniqueOrThrow({
     where: { id: candidatureId },
@@ -523,12 +555,24 @@ export async function accepterSurSequence(
     select: { id: true },
   })
   if (place === null) {
+    // Une fiche joignable reçoit une place à confirmer ; une autre, une place
+    // confirmée (ADR 0041).
+    const fiche = await tx.benevole.findUniqueOrThrow({
+      where: { id: benevoleId },
+      select: { courriel: true, prevenirParMail: true },
+    })
+    const joignable = fiche.courriel !== null && fiche.prevenirParMail
     const nombre = await tx.placeSequence.count({ where: { sequenceId } })
     if (nombre >= PLACES_MAX) {
       throw erreurSaisie(`Une séquence compte ${PLACES_MAX} places au plus.`)
     }
     await tx.placeSequence.create({
-      data: { sequenceId, benevoleId, role: 'RENFORT', confirmeeLe: null },
+      data: {
+        sequenceId,
+        benevoleId,
+        role: 'RENFORT',
+        confirmeeLe: joignable ? null : maintenant,
+      },
     })
   }
   await recalculerCandidature(tx, candidature.id)

@@ -7,12 +7,12 @@ import {
 } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
-import { empreinteJeton, nouveauJeton } from '../lib/abonnements-agenda.ts'
 import {
   accepterSurSequence,
   APPELS_OUVERTS_MAX,
   CHOIX_EN_ATTENTE,
   datesAppelValides,
+  jetonAppel,
   etatAppel,
   gereLAppel,
   INTRODUCTION_MAX,
@@ -22,6 +22,8 @@ import {
   recalculerCandidature,
 } from '../lib/appels.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
+import { annoncerPlace } from '../lib/espace-benevole.ts'
+import { empreinte, jetonDe, nouveauSel } from '../lib/liens.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { heureLocale } from '../lib/heures.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
@@ -95,8 +97,20 @@ export const AppelRef = builder.objectRef<AppelLu>('AppelBenevoles').implement({
     }),
     finAdresse: t.string({
       description:
-        'Les derniers caractères du jeton, pour reconnaître l’adresse. L’adresse entière ne se lit qu’à sa création.',
+        'Les derniers caractères du jeton, pour reconnaître l’adresse d’un coup d’œil.',
       resolve: l => l.appel.fin,
+    }),
+    adresse: t.string({
+      nullable: true,
+      description:
+        'L’adresse publique, recalculée à la demande pour les personnes qui gèrent l’appel ; null sinon.',
+      resolve: async l => {
+        if (!l.peutModifier) return null
+        const { origineOrga } = await configurationOrganisation(
+          l.appel.organisationId
+        )
+        return adresseAppel(origineOrga, await jetonAppel(prisma, l.appel.id))
+      },
     }),
     candidaturesEnAttente: t.int({
       resolve: l => l.appel._count.candidatures,
@@ -112,7 +126,7 @@ const AppelEtAdresseRef = builder
     fields: t => ({
       appel: t.field({ type: AppelRef, resolve: r => r.appel }),
       adresse: t.exposeString('adresse', {
-        description: 'L’adresse publique, lisible une seule fois.',
+        description: 'L’adresse publique de l’appel.',
       }),
     }),
   })
@@ -162,6 +176,8 @@ async function exigerPlacePourUnAppel(
       editionId,
       fermeManuellementLe: null,
       fermeLe: { gt: maintenant },
+      // Un appel de séquence dont la séquence a disparu est fermé.
+      NOT: { portee: 'SEQUENCE', sequenceId: null },
       ...(sauf ? { id: { not: sauf } } : {}),
     },
   })
@@ -260,6 +276,9 @@ const ChoixRef = builder.objectRef<ChoixLu>('ChoixCandidature').implement({
     heureDebut: t.string({
       resolve: c => heureLocale(c.choix.sequence.debut, c.fuseau).heure,
     }),
+    jourFin: t.string({
+      resolve: c => heureLocale(c.choix.sequence.fin, c.fuseau).jour,
+    }),
     heureFin: t.string({
       resolve: c => heureLocale(c.choix.sequence.fin, c.fuseau).heure,
     }),
@@ -328,9 +347,17 @@ const CandidatureRef = builder
         nullable: true,
         resolve: l => l.candidature.benevoleId,
       }),
-      choix: t.field({ type: [ChoixRef], resolve: l => l.choix }),
+      // Une candidature choisit 30 séquences et porte 20 plages au plus ; la file
+      // en compte quelques-unes en moyenne. Le multiplicateur borne le coût d'une
+      // requête sans refuser la file de revue.
+      choix: t.field({
+        type: [ChoixRef],
+        complexity: { field: 1, multiplier: 3 },
+        resolve: l => l.choix,
+      }),
       plages: t.field({
         type: [PlageRef],
+        complexity: { field: 1, multiplier: 2 },
         resolve: l =>
           l.candidature.plages.map(p => ({
             debut: p.debut,
@@ -483,8 +510,7 @@ builder.mutationFields(t => ({
   creerAppelBenevoles: t.field({
     type: AppelEtAdresseRef,
     authScopes: { connecte: true },
-    description:
-      'Ouvre un appel à bénévoles. L’adresse publique se lit dans la réponse, une seule fois.',
+    description: 'Ouvre un appel à bénévoles, et rend son adresse publique.',
     args: {
       editionId: t.arg.id({ required: true }),
       portee: t.arg({ type: PorteeAppelEnum, required: true }),
@@ -531,7 +557,8 @@ builder.mutationFields(t => ({
         (await joursDeLaPeriode(prisma, edition.id)).fin,
         ctx.organisation!.fuseauHoraire
       )
-      const jeton = nouveauJeton()
+      const sel = nouveauSel()
+      const jeton = await jetonDe('appel', sel)
       const maintenant = new Date()
       const appel = await sousVerrouOrganisation(organisationId, async tx => {
         await exigerPlacePourUnAppel(tx, edition.id, maintenant)
@@ -551,7 +578,8 @@ builder.mutationFields(t => ({
             ),
             ouvertLe: args.ouvertLe,
             fermeLe: args.fermeLe,
-            empreinte: empreinteJeton(jeton),
+            sel,
+            empreinte: empreinte(jeton),
             fin: jeton.slice(-6),
             creeParId: ctx.personne!.id,
           },
@@ -599,11 +627,12 @@ builder.mutationFields(t => ({
       }
       const maintenant = new Date()
       await sousVerrouOrganisation(ctx.organisation!.id, async tx => {
-        // Un appel fermé qui rouvre par ses dates compte parmi les appels ouverts.
-        if (
-          etatAppel(appel, maintenant) === 'FERME' &&
-          etatAppel({ ...appel, ...donnees }, maintenant) !== 'FERME'
-        ) {
+        // L'état se relit sous le verrou : un appel qui reste ou devient ouvert
+        // compte parmi les appels ouverts, hors de lui-même.
+        const courant = await tx.appelBenevoles.findUniqueOrThrow({
+          where: { id: appel.id },
+        })
+        if (etatAppel({ ...courant, ...donnees }, maintenant) !== 'FERME') {
           await exigerPlacePourUnAppel(
             tx,
             appel.editionId,
@@ -665,7 +694,8 @@ builder.mutationFields(t => ({
         )
       }
       await sousVerrouOrganisation(ctx.organisation!.id, async tx => {
-        if (appel.fermeManuellementLe !== null) {
+        // La capacité se vérifie toujours sous le verrou, hors de l'appel rouvert.
+        {
           await exigerPlacePourUnAppel(
             tx,
             appel.editionId,
@@ -691,10 +721,11 @@ builder.mutationFields(t => ({
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
       const appel = await appelGere(ctx, String(args.id))
-      const jeton = nouveauJeton()
+      const sel = nouveauSel()
+      const jeton = await jetonDe('appel', sel)
       await prisma.appelBenevoles.update({
         where: { id: appel.id },
-        data: { empreinte: empreinteJeton(jeton), fin: jeton.slice(-6) },
+        data: { sel, empreinte: empreinte(jeton), fin: jeton.slice(-6) },
       })
       signalAppel(appel)
       const { origineOrga } = await configurationOrganisation(
@@ -716,17 +747,29 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const choix = await choixTraitable(ctx, String(args.id))
       if (choix.statut === 'ACCEPTE') return relire(ctx, choix.candidatureId)
-      await prisma.$transaction(async tx => {
-        await accepterSurSequence(tx, {
-          candidatureId: choix.candidatureId,
-          sequenceId: choix.sequenceId,
-          acteurId: ctx.personne!.id,
-          maintenant: new Date(),
-        })
-        await tx.sequence.update({
-          where: { id: choix.sequenceId },
-          data: { version: { increment: 1 } },
-        })
+      // Le verrou de l'organisation protège la recherche et la création de la
+      // fiche, comme creerBenevole.
+      const { benevoleId } = await sousVerrouOrganisation(
+        choix.candidature.organisationId,
+        async tx => {
+          const acceptee = await accepterSurSequence(tx, {
+            candidatureId: choix.candidatureId,
+            sequenceId: choix.sequenceId,
+            acteurId: ctx.personne!.id,
+            maintenant: new Date(),
+          })
+          await tx.sequence.update({
+            where: { id: choix.sequenceId },
+            data: { version: { increment: 1 } },
+          })
+          return acceptee
+        }
+      )
+      // Le mail suit la validation de la transaction : la file relit la fiche.
+      await annoncerPlace(prisma, {
+        benevoleId,
+        organisationId: choix.candidature.organisationId,
+        activiteId: choix.sequence.activiteId,
       })
       signaux(choix)
       return relire(ctx, choix.candidatureId)
@@ -747,14 +790,24 @@ builder.mutationFields(t => ({
         )
       }
       await prisma.$transaction(async tx => {
-        await tx.choixCandidature.update({
-          where: { id: choix.id },
+        // La candidature d'abord, comme tout traitement : deux refus
+        // simultanés des derniers choix clôturent bien la candidature.
+        await tx.$queryRaw`SELECT id FROM Candidature WHERE id = ${choix.candidatureId} FOR UPDATE`
+        // Le statut se vérifie dans l'écriture : une acceptation validée
+        // entre-temps n'est pas remplacée par un refus.
+        const { count } = await tx.choixCandidature.updateMany({
+          where: { id: choix.id, statut: { in: CHOIX_EN_ATTENTE } },
           data: {
             statut: 'REFUSE',
             traiteParId: ctx.personne!.id,
             traiteLe: new Date(),
           },
         })
+        if (count === 0) {
+          throw erreurSaisie(
+            'Ce choix est déjà traité : retirez la place depuis le programme.'
+          )
+        }
         await recalculerCandidature(tx, choix.candidatureId)
       })
       signalCandidature({ ...choix.candidature, id: choix.candidatureId })
@@ -779,6 +832,14 @@ builder.mutationFields(t => ({
       }
       const maintenant = new Date()
       await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM Candidature WHERE id = ${candidature.id} FOR UPDATE`
+        const { count } = await tx.candidature.updateMany({
+          where: { id: candidature.id, statut: 'EN_ATTENTE' },
+          data: { statut: 'TRAITEE', courrielEnAttente: null },
+        })
+        if (count === 0) {
+          throw erreurSaisie('Cette candidature est déjà traitée.')
+        }
         await tx.choixCandidature.updateMany({
           where: {
             candidatureId: candidature.id,
@@ -789,10 +850,6 @@ builder.mutationFields(t => ({
             traiteParId: ctx.personne!.id,
             traiteLe: maintenant,
           },
-        })
-        await tx.candidature.update({
-          where: { id: candidature.id },
-          data: { statut: 'TRAITEE', courrielEnAttente: null },
         })
       })
       signalCandidature(candidature)

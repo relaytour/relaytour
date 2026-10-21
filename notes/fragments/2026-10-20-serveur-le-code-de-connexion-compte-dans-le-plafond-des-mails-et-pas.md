@@ -3,6 +3,7 @@ cible: serveur
 type: correctif
 audience: public
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Le code de connexion compte dans le plafond des mails et passe en tête de la file
