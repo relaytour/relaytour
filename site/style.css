@@ -1184,3 +1184,170 @@ footer {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
+
+/* Guide Markdown (modes-d-emploi/markdown.html) : le texte à écrire, puis
+   l'affichage de la fiche. Le rendu reprend .rt-markdown de l'espace
+   organisateur. */
+.exemple-markdown {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.exemple-markdown figure {
+  display: grid;
+  gap: 6px;
+  align-content: start;
+  margin: 0;
+  min-width: 0;
+}
+
+.exemple-markdown figcaption {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--rt-encre-55);
+}
+
+.source-markdown {
+  margin: 0;
+  padding: 12px 14px;
+  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.88rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  background: rgba(var(--rt-encre-rgb), 0.06);
+  border-radius: 14px;
+}
+
+.rendu-markdown {
+  padding: 12px 14px;
+  font-size: 0.97rem;
+  line-height: 1.6;
+  border: 1px solid rgba(var(--rt-encre-rgb), 0.14);
+  border-radius: 14px;
+  overflow-wrap: anywhere;
+}
+
+.rendu-markdown > :first-child {
+  margin-top: 0;
+}
+
+.rendu-markdown > :last-child {
+  margin-bottom: 0;
+}
+
+.rendu-markdown p {
+  margin: 0 0 0.8em;
+}
+
+.rendu-markdown h2 {
+  margin: 0.6em 0 0.4em;
+  padding-bottom: 6px;
+  font-size: 1.35rem;
+  border-bottom: 1px solid rgba(var(--rt-encre-rgb), 0.14);
+}
+
+.rendu-markdown h3 {
+  margin: 1em 0 0.3em;
+  font-size: 1.1rem;
+}
+
+.rendu-markdown ul,
+.rendu-markdown ol {
+  margin: 0 0 0.8em;
+  padding-inline-start: 1.4em;
+}
+
+.rendu-markdown li {
+  margin: 0.2em 0;
+}
+
+.rendu-markdown .contains-task-list {
+  list-style: none;
+  padding-inline-start: 0.2em;
+}
+
+.rendu-markdown .task-list-item input {
+  margin: 0 0.5em 0 0;
+  vertical-align: -1px;
+  accent-color: var(--rt-primaire);
+}
+
+.rendu-markdown a {
+  color: var(--rt-primaire);
+}
+
+.rendu-markdown blockquote {
+  margin: 0 0 0.8em;
+  padding: 0.7em 1em;
+  background: rgba(var(--rt-primaire-rgb), 0.08);
+  border-radius: 12px;
+}
+
+.rendu-markdown blockquote p {
+  margin: 0;
+}
+
+.rendu-markdown code {
+  font-family: 'IBM Plex Mono', ui-monospace, Menlo, monospace;
+  font-size: 0.9em;
+  padding: 1px 5px;
+  background: rgba(var(--rt-encre-rgb), 0.08);
+  border-radius: 6px;
+}
+
+.rendu-markdown pre {
+  margin: 0 0 0.8em;
+  padding: 10px 12px;
+  overflow-x: auto;
+  background: rgba(var(--rt-encre-rgb), 0.08);
+  border-radius: 12px;
+}
+
+.rendu-markdown pre code {
+  padding: 0;
+  background: none;
+}
+
+.rendu-markdown hr {
+  margin: 1.2em 0;
+  border: none;
+  border-top: 1px solid rgba(var(--rt-encre-rgb), 0.14);
+}
+
+.rendu-markdown table {
+  display: block;
+  overflow-x: auto;
+  border-collapse: collapse;
+}
+
+.rendu-markdown th,
+.rendu-markdown td {
+  padding: 6px 10px;
+  text-align: left;
+  border: 1px solid rgba(var(--rt-encre-rgb), 0.14);
+}
+
+@media (max-width: 760px) {
+  .exemple-markdown {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Une mention dans le rendu d'un exemple : l'étiquette d'un périmètre ou d'un
+   groupe, comme dans l'espace organisateur. */
+.rendu-markdown .etiquette-mention {
+  display: inline-flex;
+  padding: 1px 9px;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--rt-primaire);
+  background: rgba(var(--rt-primaire-rgb), 0.13);
+}
+
+.rendu-markdown .etiquette-groupe {
+  color: var(--rt-encre);
+  background: rgba(var(--rt-encre-rgb), 0.08);
+}

@@ -3,8 +3,8 @@ import {
   Alert,
   App,
   Button,
-  Card,
   Col,
+  Drawer,
   Form,
   Grid,
   Input,
@@ -16,9 +16,13 @@ import {
   Typography,
 } from 'antd'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams, useSearchParams } from 'react-router'
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router'
 
-import Markdown from '../composants/Markdown'
+import EditeurMarkdown, {
+  type ModeEditeur,
+} from '../composants/EditeurMarkdown'
+import ChampConcerneAussi from '../composants/ChampConcerneAussi'
+import GuideMarkdown from '../composants/GuideMarkdown'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import {
@@ -34,8 +38,19 @@ import {
   FICHE,
   GABARIT_FICHE,
   MODIFIER_FICHE,
+  REGLER_CONCERNE,
   slugDepuisTitre,
 } from '../lib/fiches'
+import {
+  aProposer,
+  AUCUNE,
+  largeDiffusion,
+  memeListe,
+  perimetresConcernes,
+  reunir,
+  type Concerne,
+} from '../lib/concerne'
+import { useMentions } from '../lib/useMentions'
 import { useActivite } from '../lib/activite'
 import { useSansRafraichissement } from '../lib/rafraichissement'
 import { organisationChoisie } from '../lib/selection'
@@ -55,6 +70,18 @@ const DROIT_COMMUNES = graphql(`
     peutRedigerFichesCommunes
   }
 `)
+
+// Le mode de l'éditeur est une commodité propre au navigateur. Le mode visuel
+// est le mode par défaut.
+const CLE_MODE = 'relaytour.fiches.editeur'
+
+function modeMemorise(): ModeEditeur {
+  try {
+    return localStorage.getItem(CLE_MODE) === 'markdown' ? 'markdown' : 'visuel'
+  } catch {
+    return 'visuel'
+  }
+}
 
 interface Valeurs {
   titre: string
@@ -128,6 +155,9 @@ function Formulaire({
     titre: string
     contenu: string
     versionCouranteId?: string | null
+    perimetre?: { id: string } | null
+    concerneGroupes: string[]
+    connexions: { par: string; perimetre: { id: string } }[]
   } | null
   perimetre: { id: string; nom: string } | null
   /** Pour une fiche nouvelle : le slug de son périmètre, ou `commune`. */
@@ -139,7 +169,7 @@ function Formulaire({
   useSansRafraichissement('Fiche')
   const navigate = useNavigate()
   const { lien, activite } = useActivite()
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const ecrans = Grid.useBreakpoint()
   const [form] = Form.useForm<Valeurs>()
   const depart = fiche?.contenu ?? GABARIT_FICHE
@@ -175,14 +205,24 @@ function Formulaire({
     termine.current = true
     effacerBrouillon(cle)
   }
+  // Vrai dès que cet écran a écrit un brouillon.
+  const aEcrit = useRef(false)
   useEffect(() => {
     // Sans modification, rien ne s'écrit : un brouillon proposé à l'ouverture reste
     // intact. Dès que la personne modifie le texte, sa saisie se garde, même sans
     // réponse à la proposition : l'ancien brouillon reste offert par l'avis tant que
-    // l'écran est ouvert.
-    if (!modifie) return
+    // l'écran est ouvert. Une saisie annulée jusqu'au texte de départ efface le
+    // brouillon que cet écran a écrit.
+    if (!modifie) {
+      if (aEcrit.current) {
+        effacerBrouillon(cle)
+        aEcrit.current = false
+      }
+      return
+    }
     const minuteur = window.setTimeout(() => {
       if (termine.current) return
+      aEcrit.current = true
       ecrireBrouillon(cle, {
         titre,
         contenu,
@@ -192,14 +232,125 @@ function Formulaire({
     }, 400)
     return () => window.clearTimeout(minuteur)
   }, [cle, titre, contenu, versionDeDepart, modifie])
-  const [vue, setVue] = useState<'ecrire' | 'apercu'>('ecrire')
+  const [mode, setMode] = useState<ModeEditeur>(modeMemorise)
+  const changerMode = (valeur: ModeEditeur) => {
+    setMode(valeur)
+    try {
+      localStorage.setItem(CLE_MODE, valeur)
+    } catch {
+      // Le navigateur refuse le stockage : le choix vaut pour la visite.
+    }
+  }
+  // Un texte remplacé hors de l'éditeur (brouillon repris, sections du gabarit)
+  // remonte l'éditeur visuel, qui part du texte reçu.
+  const [cleVisuel, setCleVisuel] = useState(0)
+  // La liste « Concerne aussi » d'une fiche de périmètre (ADR 0039). Elle ne passe
+  // pas par le brouillon : elle s'enregistre avec la fiche.
+  const mentions = useMentions()
+  const perimetreDeLaFiche = fiche?.perimetre?.id ?? perimetre?.id ?? null
+  const [listeDeDepart] = useState<Concerne>(() =>
+    fiche === null
+      ? AUCUNE
+      : {
+          perimetres: fiche.connexions
+            .filter(c => c.par === 'LISTE')
+            .map(c => c.perimetre.id),
+          groupes: fiche.concerneGroupes,
+        }
+  )
+  const [concerne, setConcerne] = useState<Concerne>(listeDeDepart)
+  // Une proposition déclinée ne revient pas pendant la rédaction.
+  const declinees = useRef(new Set<string>())
+  const [regler] = useMutation(REGLER_CONCERNE, {
+    refetchQueries: ['Fiche', 'FichesDuPerimetre'],
+  })
+  // Le guide s'ouvre dans un tiroir : la saisie reste à l'écran.
+  const [aide, setAide] = useState(false)
   const [slugTouche, setSlugTouche] = useState(false)
   const [creer, creationEnCours] = useMutation(CREER_FICHE, {
     refetchQueries: ['ListeFiches', 'PagePerimetre'],
   })
   const [modifier, modificationEnCours] = useMutation(MODIFIER_FICHE)
 
+  /**
+   * Avant l'enregistrement : propose d'ajouter les mentions du texte à la liste,
+   * puis demande une confirmation pour une large diffusion. Rend la liste à
+   * enregistrer, ou null quand la personne revient à l'éditeur.
+   */
+  const preparerLaListe = async (): Promise<Concerne | null> => {
+    if (perimetreDeLaFiche === null) return concerne
+    let liste = concerne
+    const proposition = aProposer(contenu, mentions, liste, perimetreDeLaFiche)
+    const nouvelles = {
+      perimetres: proposition.perimetres.filter(
+        id => !declinees.current.has(`p:${id}`)
+      ),
+      groupes: proposition.groupes.filter(
+        g => !declinees.current.has(`g:${g}`)
+      ),
+    }
+    const noms = [
+      ...nouvelles.groupes.map(g => mentions.groupes.get(g)?.libelle ?? g),
+      ...nouvelles.perimetres.map(
+        id =>
+          [...mentions.perimetres.values()].find(p => p.id === id)?.nom ?? id
+      ),
+    ]
+    if (noms.length > 0) {
+      const ajouter = await modal.confirm({
+        title: 'Ajouter les mentions à « Concerne aussi » ?',
+        content: `Le texte mentionne ${noms.join(', ')}. Une fois ces périmètres ajoutés, leurs référentes et référents liront la fiche sans pouvoir la modifier.`,
+        okText: 'Ajouter',
+        cancelText: 'Ne pas ajouter',
+      })
+      if (ajouter) {
+        liste = reunir(liste, nouvelles)
+        setConcerne(liste)
+      } else {
+        for (const id of nouvelles.perimetres) declinees.current.add(`p:${id}`)
+        for (const g of nouvelles.groupes) declinees.current.add(`g:${g}`)
+      }
+    }
+    const concernes = perimetresConcernes(
+      liste,
+      mentions,
+      perimetreDeLaFiche
+    ).size
+    const total = mentions.perimetres.size
+    if (!memeListe(liste, listeDeDepart) && largeDiffusion(concernes, total)) {
+      const confirme = await modal.confirm({
+        title: `Cette fiche apparaîtra dans ${concernes} périmètres sur ${total}.`,
+        content:
+          'Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux.',
+        okText: 'Confirmer la liste',
+        cancelText: 'Revenir à l’éditeur',
+      })
+      if (!confirme) return null
+    }
+    return liste
+  }
+
+  /** Enregistre la liste quand elle a changé. Une erreur laisse la fiche enregistrée. */
+  const enregistrerLaListe = async (ficheId: string, liste: Concerne) => {
+    if (perimetreDeLaFiche === null || memeListe(liste, listeDeDepart)) return
+    try {
+      await regler({
+        variables: {
+          ficheId,
+          perimetreIds: liste.perimetres,
+          groupes: liste.groupes,
+        },
+      })
+    } catch (e) {
+      message.error(
+        `La fiche est enregistrée, mais pas sa liste « Concerne aussi » : ${messageErreur(e)}`
+      )
+    }
+  }
+
   const enregistrer = async (v: Valeurs, depuis = versionDeDepart) => {
+    const liste = await preparerLaListe()
+    if (liste === null) return
     try {
       if (creation) {
         const r = await creer({
@@ -211,6 +362,8 @@ function Formulaire({
           },
         })
         oublierLeBrouillon()
+        if (r.data?.creerFiche.id)
+          await enregistrerLaListe(r.data.creerFiche.id, liste)
         message.success('Fiche créée.')
         navigate(lien(`/fiches/${r.data?.creerFiche.slug ?? v.slug}`))
       } else if (fiche) {
@@ -224,6 +377,7 @@ function Formulaire({
           },
         })
         oublierLeBrouillon()
+        await enregistrerLaListe(fiche.id, liste)
         message.success('Fiche enregistrée.')
         navigate(lien(`/fiches/${fiche.slug}`))
       }
@@ -243,6 +397,7 @@ function Formulaire({
     // fiche a changé depuis sa rédaction.
     setVersionDeDepart(brouillon.versionDeDepart)
     setBrouillon(null)
+    setCleVisuel(c => c + 1)
   }
 
   const ecraser = () => {
@@ -263,21 +418,6 @@ function Formulaire({
       )
     }
   }
-
-  const editeur = (
-    <Input.TextArea
-      value={contenu}
-      onChange={e => setContenu(e.target.value)}
-      autoSize={{ minRows: 18 }}
-      style={{ fontFamily: 'ui-monospace, Menlo, monospace', fontSize: 14 }}
-      aria-label="Contenu de la fiche en Markdown"
-    />
-  )
-  const apercu = (
-    <Card size="small" style={{ minHeight: 400 }}>
-      <Markdown contenu={contenu} />
-    </Card>
-  )
 
   return (
     <>
@@ -404,30 +544,43 @@ function Formulaire({
           title="Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels."
         />
 
-        {ecrans.lg ? (
-          <Row gutter={16}>
-            <Col span={12}>
-              <Typography.Text strong>Markdown</Typography.Text>
-              {editeur}
-            </Col>
-            <Col span={12}>
-              <Typography.Text strong>Aperçu</Typography.Text>
-              {apercu}
-            </Col>
-          </Row>
-        ) : (
-          <>
-            <Segmented
-              style={{ marginBottom: 12 }}
-              value={vue}
-              onChange={setVue}
-              options={[
-                { value: 'ecrire', label: 'Écrire' },
-                { value: 'apercu', label: 'Aperçu' },
-              ]}
+        <div className="rt-editeur-fiche-tete">
+          <Typography.Text strong id="contenu-fiche">
+            Contenu
+          </Typography.Text>
+          <Segmented
+            value={mode}
+            onChange={changerMode}
+            aria-labelledby="contenu-fiche"
+            options={[
+              { value: 'visuel', label: 'Visuel' },
+              { value: 'markdown', label: 'Markdown' },
+            ]}
+          />
+        </div>
+        <EditeurMarkdown
+          valeur={contenu}
+          onChange={setContenu}
+          onAide={() => setAide(true)}
+          libelle="Contenu de la fiche"
+          mode={mode}
+          cleVisuel={cleVisuel}
+          mentions={mentions}
+        />
+
+        {perimetreDeLaFiche !== null && (
+          <Form.Item
+            label="Concerne aussi"
+            style={{ marginTop: 16, marginBottom: 0 }}
+            extra="La fiche se lit, sans s’y modifier, dans ces périmètres. Un groupe concerne aussi les périmètres qui le rejoindront. Une mention @périmètre ou @groupe:clé du texte se propose à l’enregistrement."
+          >
+            <ChampConcerneAussi
+              valeur={concerne}
+              onChange={setConcerne}
+              mentions={mentions}
+              perimetreDeLaFiche={perimetreDeLaFiche}
             />
-            {vue === 'ecrire' ? editeur : apercu}
-          </>
+          </Form.Item>
         )}
 
         {!creation && (
@@ -463,15 +616,33 @@ function Formulaire({
           {!creation && (
             <Button
               type="link"
-              onClick={() =>
+              onClick={() => {
                 setContenu(c => `${c.trimEnd()}\n\n${GABARIT_FICHE}`)
-              }
+                setCleVisuel(c => c + 1)
+              }}
             >
               Ajouter les sections du gabarit
             </Button>
           )}
         </Space>
       </Form>
+
+      <Drawer
+        title="Aide Markdown"
+        open={aide}
+        onClose={() => setAide(false)}
+        size={ecrans.md ? 560 : '100%'}
+        // Sur téléphone, le tiroir occupe l'écran : il ne propose pas d'onglet.
+        extra={
+          ecrans.md ? (
+            <Link to={lien('/aide/markdown')} target="_blank">
+              Ouvrir dans un onglet
+            </Link>
+          ) : undefined
+        }
+      >
+        <GuideMarkdown compact />
+      </Drawer>
     </>
   )
 }

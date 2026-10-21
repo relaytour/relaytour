@@ -2,6 +2,7 @@ import { TeamOutlined } from '@ant-design/icons'
 import { Popover } from 'antd'
 
 import { useActivite } from '../lib/activite'
+import type { Mentions } from '../lib/mentions'
 import EtiquettePerimetre from './EtiquettePerimetre'
 
 interface PerimetreLu {
@@ -27,9 +28,14 @@ export interface ConnexionLue {
 export default function ConnexionsFiche({
   groupes,
   connexions,
+  mentions,
+  perimetreDeLaFiche,
 }: {
   groupes: string[]
   connexions: ConnexionLue[]
+  /** Le catalogue des périmètres de l'activité, qui donne les membres d'un groupe. */
+  mentions: Mentions
+  perimetreDeLaFiche: string | null
 }) {
   const { lien, libelleGroupe } = useActivite()
   const etiquette = (p: PerimetreLu) => (
@@ -52,9 +58,11 @@ export default function ConnexionsFiche({
           <dd className="rt-connexions">
             {liste.map(c => etiquette(c.perimetre))}
             {groupes.map(cle => {
-              const membres = connexions.filter(
-                c => c.par === 'GROUPE' && c.groupe === cle
-              )
+              // Les membres du groupe, quel que soit le chemin de leur partage : un
+              // périmètre aussi présent dans la liste reste dans la bulle.
+              const membres = (mentions.groupes.get(cle)?.perimetres ?? [])
+                .filter(p => p.id !== perimetreDeLaFiche)
+                .map(perimetre => ({ perimetre }))
               return (
                 <Popover
                   key={cle}

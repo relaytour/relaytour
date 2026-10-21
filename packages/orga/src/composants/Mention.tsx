@@ -30,7 +30,9 @@ export default function Mention({
       <EtiquettePerimetre
         nom={perimetre.nom}
         couleur={perimetre.couleur}
-        lien={lien(`/perimetres/${perimetre.slug}`)}
+        lien={
+          mentions.sansLien ? undefined : lien(`/perimetres/${perimetre.slug}`)
+        }
       />
     )
   }
@@ -52,7 +54,9 @@ export default function Mention({
                 key={p.id}
                 nom={p.nom}
                 couleur={p.couleur}
-                lien={lien(`/perimetres/${p.slug}`)}
+                lien={
+                  mentions.sansLien ? undefined : lien(`/perimetres/${p.slug}`)
+                }
               />
             ))}
           </span>
