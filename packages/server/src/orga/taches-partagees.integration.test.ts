@@ -265,9 +265,9 @@ describe('import des tâches partagées', () => {
     expect(escrime).toMatchObject({ origine: 'lieux', accord: 'ACCEPTE' })
   })
 
-  it('reprend la fiche commune de la tâche partagée, jamais la fiche de son périmètre', async () => {
-    // La déclinaison ne déclare plus de fiche : la tâche partagée cite une fiche de
-    // son pôle, que les sports ne lisent pas.
+  it('reprend la fiche de la tâche partagée, même une fiche de son périmètre', async () => {
+    // La déclinaison ne déclare plus de fiche : elle reprend la fiche du pôle de sa
+    // tâche partagée, qui devient connexe pour les sports (ADR 0039).
     ecrire(
       'taches/lieux.yaml',
       `taches:
@@ -295,7 +295,13 @@ describe('import des tâches partagées', () => {
         `reserver-${s}`,
         'lieux',
       ],
-      ['plan-des-lieux', 'Dresser le plan des lieux', null, null, 'lieux'],
+      [
+        'plan-des-lieux',
+        'Dresser le plan des lieux',
+        null,
+        `missions-${s}`,
+        'lieux',
+      ],
       ['reservation', 'Réserver les lieux', null, `reserver-${s}`, 'lieux'],
     ])
   })
@@ -437,16 +443,47 @@ describe('import qui contredit un lien existant', () => {
         .filter(([, , origine]) => origine !== null)
         .map(([perimetre, modele, origine]) => [perimetre, modele, origine])
     )
-    // Le périmètre archivé ne reçoit rien. La fiche du pôle ne suit pas dans les
-    // sports, même rangée parmi les fiches communes du dossier.
+    // Le périmètre archivé ne reçoit rien. La fiche, restée en base dans le pôle de
+    // la tâche partagée, suit dans les sports : elle y devient connexe (ADR 0039).
     expect(
       lues
         .filter(t => t.modele === 'clefs')
         .map(t => [t.perimetre, t.origine, t.fiche])
     ).toEqual([
       ['lieux', null, `reserver-${s}`],
-      ['natation', 'lieux', null],
-      ['volley', 'lieux', null],
+      ['natation', 'lieux', `reserver-${s}`],
+      ['volley', 'lieux', `reserver-${s}`],
     ])
+  })
+})
+
+describe('groupes de la liste « Concerne aussi » (ADR 0039)', () => {
+  const activite = (groupes: string[]) =>
+    `slug: ${ACTIVITE}\nnom: Tournoi\nnature: EVENEMENT\ngroupes:\n${groupes
+      .map(g => `  - cle: ${g}\n    libelle: ${g}\n    libellePluriel: ${g}s\n`)
+      .join('')}`
+  const fichier = `fiches/lieux/ateliers-${s}.md`
+  const groupes = async () =>
+    (
+      await prisma.ficheGroupeConnexe.findMany({
+        where: { fiche: { organisationId, slug: `ateliers-${s}` } },
+        select: { groupe: true },
+        orderBy: { groupe: 'asc' },
+      })
+    ).map(g => g.groupe)
+
+  it('retire un groupe que l’activité ne déclare plus, même pour une fiche absente du dossier', async () => {
+    ecrire('activite.yaml', activite(['sport', 'pole', 'atelier']))
+    ecrire(
+      fichier,
+      `---\nslug: ateliers-${s}\ntitre: Ateliers\nconcerneGroupes: [atelier, sport]\n---\n\nLe contenu.\n`
+    )
+    await importer()
+    expect(await groupes()).toEqual(['atelier', 'sport'])
+
+    rmSync(path.join(racine, 'activites', ACTIVITE, fichier))
+    ecrire('activite.yaml', activite(['sport', 'pole']))
+    await importer()
+    expect(await groupes()).toEqual(['sport'])
   })
 })

@@ -1,0 +1,442 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Écrire une fiche en Markdown · Modes d'emploi · Relaytour</title>
+    <meta
+      name="description"
+      content="Le guide de l'éditeur de fiche de Relaytour : mode visuel, mode Markdown, barre de mise en forme, puis titres, listes, cases à cocher, liens et tableaux."
+    />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Navigation du site">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" fill="none" stroke="var(--rt-primaire)" stroke-width="8" stroke-linecap="round" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" fill="none" stroke="var(--rt-accent)" stroke-width="8" stroke-linecap="round" />
+          </svg>
+          Relaytour
+        </a>
+        <ul class="liens">
+          <li><a href="../">Présentation</a></li>
+          <li><a href="../design-system.html">Design system</a></li>
+          <li><a href="./" aria-current="true">Modes d'emploi</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Tous les rôles</span>
+        <h1>Écrire une fiche en Markdown</h1>
+        <p class="chapo">
+          Les fiches méthode s'écrivent en Markdown. Quelques signes placés dans le texte donnent les titres, les listes, les liens et les tableaux. Ce guide présente tous les signes que les fiches affichent.
+        </p>
+        <p class="renvoi">
+          Ce mode d'emploi complète la section « Une fiche méthode » du <a href="referent.html#e-fiche">mode d'emploi des référentes et référents</a>. Rédiger une fiche demande un droit de rédaction, accordé par un admin.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-editeur">
+        <div class="entete">
+          <span class="etiquette">Point de départ</span>
+          <h2 id="t-editeur">L'éditeur de fiche</h2>
+          <p class="texte">
+            Le bouton <span class="libelle">Modifier</span> d'une fiche ouvre l'éditeur en mode <span class="libelle">Visuel</span> : vous écrivez directement dans la fiche telle qu'elle s'affiche. Le mode <span class="libelle">Markdown</span> montre le texte source, avec les signes de ce guide. Votre navigateur garde le mode choisi.
+          </p>
+          <p class="texte">
+            L'éditeur garde un brouillon dans votre navigateur. Une page rechargée par erreur ne perd donc pas votre texte.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Sommaire">
+          <span class="etiquette">Dans ce mode d'emploi</span>
+          <ol>
+            <li><a href="#m-barre">La barre de mise en forme</a></li>
+            <li><a href="#m-concerne">La liste « Concerne aussi »</a></li>
+            <li><a href="#m-paragraphes">Paragraphes et retours à la ligne</a></li>
+            <li><a href="#m-titres">Titres</a></li>
+            <li><a href="#m-emphase">Gras, italique et texte barré</a></li>
+            <li><a href="#m-listes">Listes</a></li>
+            <li><a href="#m-cases">Cases à cocher</a></li>
+            <li><a href="#m-liens">Liens</a></li>
+            <li><a href="#m-tableaux">Tableaux</a></li>
+            <li><a href="#m-citations">Encadrés</a></li>
+            <li><a href="#m-separation">Ligne de séparation</a></li>
+            <li><a href="#m-code">Texte tel quel</a></li>
+            <li><a href="#m-mentions">Mentions</a></li>
+            <li><a href="#m-caracteres">Caractères réservés</a></li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-barre">
+        <div class="entete">
+          <span class="etiquette">Sans rien retenir</span>
+          <h2 id="t-barre">La barre de mise en forme</h2>
+          <p class="texte">
+            La barre au-dessus du texte met en forme votre sélection, dans les deux modes. En mode Markdown, elle écrit les signes à votre place. Un deuxième appui sur le même bouton retire la mise en forme.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="m-barre">
+          <ul class="gestes">
+            <li><span><span class="libelle">Gras</span><span class="libelle">Italique</span></span><span>Mettre la sélection en valeur. En mode Markdown, sans sélection, le bouton insère un exemple à remplacer.</span></li>
+            <li><span><span class="libelle">Titre</span><span class="libelle">Sous-titre</span></span><span>Transformer la ligne du curseur en titre de section ou en sous-titre.</span></li>
+            <li><span><span class="libelle">Liste à puces</span><span class="libelle">Liste numérotée</span><span class="libelle">Cases à cocher</span></span><span>Transformer chaque ligne sélectionnée en élément de liste. Un autre bouton de liste change le type de la liste.</span></li>
+            <li><span><span class="libelle">Lien</span></span><span>Faire de la sélection le texte d'un lien. En mode visuel, l'éditeur demande l'adresse. En mode Markdown, il sélectionne l'adresse, que vous remplacez par la vôtre.</span></li>
+            <li><span><span class="libelle">Tableau</span></span><span>Ajouter un tableau de deux colonnes sous la ligne du curseur.</span></li>
+            <li><span><span class="libelle">Aide</span></span><span>Ouvrir ce guide à côté de votre texte, sans quitter l'éditeur.</span></li>
+            <li><span><span class="libelle">@</span></span><span>Saisir une arobase : l'éditeur propose les périmètres et les groupes de l'activité. Tab choisit la première proposition.</span></li>
+          </ul>
+          <p class="note">Sur un ordinateur, trois raccourcis existent : ⌘B ou Ctrl+B pour le gras, ⌘I ou Ctrl+I pour l'italique, ⌘K ou Ctrl+K pour un lien. ⌘Z ou Ctrl+Z annule une mise en forme. En mode visuel, un clic sur une case à cocher la coche ou la décoche.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-concerne">
+        <div class="entete">
+          <span class="etiquette">Plusieurs périmètres</span>
+          <h2 id="t-concerne">La liste « Concerne aussi »</h2>
+          <p class="texte">
+            Une fiche appartient à un périmètre. Elle peut aussi en concerner d'autres : les référentes et référents de la Logistique lisent alors la fiche des Bénévoles sur les créneaux, sans la modifier.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="m-concerne">
+          <ul class="gestes">
+            <li><span><span class="libelle">Concerne aussi</span></span><span>Choisir, sous le texte de la fiche, des périmètres et des groupes de l'activité. Un groupe concerne aussi les périmètres qui le rejoindront.</span></li>
+            <li><span><span class="libelle">Ajouter</span></span><span>Accepter, à l'enregistrement, les périmètres que le texte mentionne. Une mention écartée ne revient pas pendant la rédaction.</span></li>
+            <li><span><span class="libelle">Confirmer la liste</span></span><span>Confirmer une large diffusion : au moins quatre périmètres, et plus de la moitié de ceux de l'activité. Si la fiche concerne toute l'activité, une fiche commune convient mieux.</span></li>
+          </ul>
+          <p class="note">La page de chaque périmètre de la liste présente la fiche dans son panneau « Fiches connexes », en lecture seule. Ses référentes et référents la masquent quand elle ne leur sert pas. Le <a href="referent.html#e-perimetre">mode d'emploi des référentes et référents</a> décrit ce panneau.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-syntaxe">
+        <div class="entete">
+          <span class="etiquette">Douze notions</span>
+          <h2 id="t-syntaxe">La syntaxe des fiches</h2>
+          <p class="texte">
+            Chaque exemple montre le texte à écrire, puis l'affichage de la fiche. Les fiches n'affichent ni image, ni code HTML.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="m-paragraphes">
+          <div class="ecran-tete"><h3>Paragraphes et retours à la ligne</h3></div>
+          <p>Une ligne vide sépare deux paragraphes. Deux lignes qui se suivent sans ligne vide forment un seul paragraphe.</p>
+          <p>Une barre oblique inverse (\) en fin de ligne passe à la ligne suivante sans changer de paragraphe.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">Le gymnase ouvre à 8 h.
+Cette ligne continue la phrase précédente.
+
+Une ligne vide commence un nouveau paragraphe.\
+Cette ligne commence sous la précédente.</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<p>Le gymnase ouvre à 8 h.
+Cette ligne continue la phrase précédente.</p>
+<p>Une ligne vide commence un nouveau paragraphe.<br/>
+Cette ligne commence sous la précédente.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-titres">
+          <div class="ecran-tete"><h3>Titres</h3></div>
+          <p>Un titre commence par des dièses suivis d'une espace. Deux dièses font un titre de section, trois dièses un sous-titre.</p>
+          <p>Le titre de la fiche s'affiche déjà en haut de la page : commencez donc vos sections par deux dièses.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">## Avant la journée
+
+### Matériel à réserver
+
+Le texte de la section suit le titre.</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<h2>Avant la journée</h2>
+<h3>Matériel à réserver</h3>
+<p>Le texte de la section suit le titre.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-emphase">
+          <div class="ecran-tete"><h3>Gras, italique et texte barré</h3></div>
+          <p>Deux astérisques de chaque côté mettent un passage en gras. Un tiret bas de chaque côté le met en italique. Deux tildes le barrent.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">Le local ferme **à 19 h précises**.
+Pensez à _signer la feuille de présence_.
+Le rendez-vous a lieu ~~au stade~~ au gymnase.</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<p>Le local ferme <strong>à 19 h précises</strong>.
+Pensez à <em>signer la feuille de présence</em>.
+Le rendez-vous a lieu <del>au stade</del> au gymnase.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-listes">
+          <div class="ecran-tete"><h3>Listes</h3></div>
+          <p>Une liste à puces commence chaque ligne par un tiret suivi d'une espace. Une liste numérotée commence chaque ligne par un nombre suivi d'un point.</p>
+          <p>Sous une puce, deux espaces au début d'une ligne placent l'élément dans une sous-liste.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">- Clés du local
+- Chasubles
+  - 20 rouges
+  - 20 bleues
+
+1. Ouvrir le gymnase
+2. Installer les filets
+3. Accueillir les équipes</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<ul>
+<li>Clés du local</li>
+<li>Chasubles
+<ul>
+<li>20 rouges</li>
+<li>20 bleues</li>
+</ul>
+</li>
+</ul>
+<ol>
+<li>Ouvrir le gymnase</li>
+<li>Installer les filets</li>
+<li>Accueillir les équipes</li>
+</ol>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-cases">
+          <div class="ecran-tete"><h3>Cases à cocher</h3></div>
+          <p>Une case commence par un tiret, puis des crochets qui entourent une espace. Un x entre les crochets coche la case.</p>
+          <p>La case se coche en modifiant la fiche, et non d'un clic. Une case de fiche ne crée pas de tâche.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">- [x] Réserver le gymnase
+- [ ] Commander les médailles
+- [ ] Prévenir la mairie</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" disabled="" checked=""/> Réserver le gymnase</li>
+<li class="task-list-item"><input type="checkbox" disabled=""/> Commander les médailles</li>
+<li class="task-list-item"><input type="checkbox" disabled=""/> Prévenir la mairie</li>
+</ul>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-liens">
+          <div class="ecran-tete"><h3>Liens</h3></div>
+          <p>Un lien place son texte entre crochets, puis son adresse entre parenthèses. Une adresse écrite seule devient aussi un lien.</p>
+          <p>Un lien de fiche s'ouvre dans un nouvel onglet.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">Consultez le [règlement du tournoi](https://exemple.org/reglement).
+
+Plan d’accès : https://exemple.org/plan</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<p>Consultez le <a href="https://exemple.org/reglement" target="_blank" rel="noopener noreferrer">règlement du tournoi</a>.</p>
+<p>Plan d’accès : <a href="https://exemple.org/plan" target="_blank" rel="noopener noreferrer">https://exemple.org/plan</a></p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-tableaux">
+          <div class="ecran-tete"><h3>Tableaux</h3></div>
+          <p>Une barre verticale sépare les colonnes. La deuxième ligne, faite de tirets, sépare l'en-tête du reste du tableau.</p>
+          <p>Les colonnes n'ont pas besoin d'être alignées dans le texte : l'affichage les aligne.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">| Créneau | Terrain | Rôle |
+| --- | --- | --- |
+| 9 h | Terrain 1 | Arbitrage |
+| 14 h | Terrain 2 | Accueil |</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<table><thead><tr><th>Créneau</th><th>Terrain</th><th>Rôle</th></tr></thead><tbody><tr><td>9 h</td><td>Terrain 1</td><td>Arbitrage</td></tr><tr><td>14 h</td><td>Terrain 2</td><td>Accueil</td></tr></tbody></table>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-citations">
+          <div class="ecran-tete"><h3>Encadrés</h3></div>
+          <p>Un chevron fermant suivi d'une espace place la ligne dans un encadré. Un encadré met en avant une consigne à retenir.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">&gt; Les clés se rendent à l’accueil avant 19 h.</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<blockquote>
+<p>Les clés se rendent à l’accueil avant 19 h.</p>
+</blockquote>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-separation">
+          <div class="ecran-tete"><h3>Ligne de séparation</h3></div>
+          <p>Trois tirets seuls sur une ligne tracent une ligne de séparation. Une ligne vide doit les précéder : sans elle, le texte du dessus devient un titre.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">Fin de la partie matinale.
+
+---
+
+Début de l’après-midi.</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<p>Fin de la partie matinale.</p>
+<hr/>
+<p>Début de l’après-midi.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-code">
+          <div class="ecran-tete"><h3>Texte tel quel</h3></div>
+          <p>Des accents graves entourent un texte qui s'affiche tel quel, en police à chasse fixe : un nom de fichier, une référence.</p>
+          <p>Trois accents graves sur une ligne ouvrent un bloc de plusieurs lignes, et trois autres le ferment.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">Le fichier s’appelle `planning-2027.xlsx`.
+
+```
+Terrain 1 : 9 h - 12 h
+Terrain 2 : 14 h - 18 h
+```</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<p>Le fichier s’appelle <code>planning-2027.xlsx</code>.</p>
+<pre><code>Terrain 1 : 9 h - 12 h
+Terrain 2 : 14 h - 18 h
+</code></pre>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-mentions">
+          <div class="ecran-tete"><h3>Mentions</h3></div>
+          <p>Une arobase suivie de l'identifiant d'un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d'un groupe mentionne tout le groupe.</p>
+          <p>Une mention s'affiche comme une étiquette. Celle d'un groupe liste ses périmètres au survol ou à l'appui. Dans l'éditeur, une arobase propose les périmètres et les groupes de l'activité.</p>
+          <p>Une mention ne partage pas la fiche. À l'enregistrement, l'éditeur propose d'ajouter les périmètres mentionnés à la liste « Concerne aussi ».</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">La @logistique prépare les lieux, et chaque @groupe:sport transmet ses horaires.</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<p>La <span class="etiquette-mention">Logistique</span> prépare les lieux, et chaque <span class="etiquette-mention etiquette-groupe">Sports</span> transmet ses horaires.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-caracteres">
+          <div class="ecran-tete"><h3>Caractères réservés</h3></div>
+          <p>Une barre oblique inverse devant un caractère de mise en forme l'affiche tel quel : astérisque, tiret bas, dièse, crochet.</p>
+          <p>Une balise HTML s'affiche comme du texte. Les fiches n'acceptent que la syntaxe Markdown de ce guide.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>Vous écrivez</figcaption>
+              <pre class="source-markdown">Le tarif réduit\* s’applique aux moins de 18 ans.
+
+\* Sur présentation d’une pièce d’identité.
+
+&lt;b&gt;Cette balise reste du texte.&lt;/b&gt;</pre>
+            </figure>
+            <figure>
+              <figcaption>La fiche affiche</figcaption>
+              <div class="rendu-markdown">
+<p>Le tarif réduit* s’applique aux moins de 18 ans.</p>
+<p>* Sur présentation d’une pièce d’identité.</p>
+<p>&lt;b&gt;Cette balise reste du texte.&lt;/b&gt;</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-suite">
+        <div class="entete">
+          <span class="etiquette">Pour continuer</span>
+          <h2 id="t-suite">Autres modes d'emploi</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="referent.html">
+            <span class="role">Référent·e</span>
+            <h3>Suivre vos tâches et vos fiches</h3>
+            <p>Les écrans communs à tous les rôles : Mon espace, le rétroplanning, les fiches et les préférences.</p>
+            <span class="suite">Lire le mode d'emploi</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">Tous les rôles</span>
+            <h3>Choisir un mode d'emploi</h3>
+            <p>La liste des modes d'emploi de l'espace organisateur.</p>
+            <span class="suite">Voir la liste</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, espace organisateur. Mode d'emploi à jour de la version 0.17.0.
+      </footer>
+    </main>
+  </body>
+</html>

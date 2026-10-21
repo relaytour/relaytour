@@ -31,6 +31,8 @@ const VUES_DES_TACHES = [
 ] as const
 const VUES_DES_FICHES = ['ListeFiches', 'Fiche', 'FichesDuPerimetre'] as const
 const VUES_DES_PERIMETRES = [
+  // La liste des périmètres, et avec elle le catalogue des mentions (ADR 0039).
+  'Perimetres',
   'MenuPerimetres',
   'TousLesPerimetres',
   'PostesAPourvoir',

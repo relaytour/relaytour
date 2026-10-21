@@ -389,6 +389,14 @@ builder.mutationFields(t => ({
               ...(archivedAt === undefined ? {} : { archivedAt }),
             },
           })
+          // Un groupe retiré n'a plus de périmètre : il quitte aussi les listes
+          // « Concerne aussi » des fiches de l'activité (ADR 0039).
+          await tx.ficheGroupeConnexe.deleteMany({
+            where: {
+              fiche: { activiteId: id },
+              groupe: { notIn: groupes.map(g => g.cle) },
+            },
+          })
           await marquerContenuModifie(organisationId, tx)
           return activite
         }

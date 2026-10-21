@@ -652,7 +652,7 @@ type TacheChargee = Prisma.TacheGetPayload<{
   include: {
     assignations: { select: { userId: true } }
     perimetre: { select: { nom: true } }
-    origine: { select: { perimetreId: true } }
+    origine: { select: { perimetreId: true; ficheId: true } }
   }
 }>
 
@@ -662,8 +662,9 @@ async function chargerTache(id: string): Promise<TacheChargee> {
     include: {
       assignations: { select: { userId: true } },
       perimetre: { select: { nom: true } },
-      // Le périmètre de la tâche partagée, pour le prévenir (ADR 0026).
-      origine: { select: { perimetreId: true } },
+      // Le périmètre de la tâche partagée, pour le prévenir (ADR 0026), et sa
+      // fiche, qu'une déclinaison peut citer (ADR 0039).
+      origine: { select: { perimetreId: true, ficheId: true } },
     },
   })
   if (tache === null) throw accesRefuse()
@@ -791,11 +792,13 @@ async function exigerAffectee(
 
 /**
  * Une tâche se lie à une fiche commune de son activité ou à une fiche de son propre
- * périmètre.
+ * périmètre. Une déclinaison peut aussi citer la fiche de sa tâche partagée, même
+ * quand elle appartient au périmètre d'origine (ADR 0039).
  */
 async function ficheValide(
   ficheId: string | number | null | undefined,
-  perimetreId: string
+  perimetreId: string,
+  ficheDeLOrigine: string | null = null
 ): Promise<string | null> {
   if (ficheId === null || ficheId === undefined || ficheId === '') return null
   const [fiche, perimetre] = await Promise.all([
@@ -811,7 +814,9 @@ async function ficheValide(
   if (
     fiche === null ||
     fiche.activiteId !== perimetre.activiteId ||
-    (fiche.perimetreId !== null && fiche.perimetreId !== perimetreId)
+    (fiche.perimetreId !== null &&
+      fiche.perimetreId !== perimetreId &&
+      fiche.id !== ficheDeLOrigine)
   ) {
     throw erreurSaisie('Cette fiche ne peut pas être liée à cette tâche.')
   }
@@ -897,8 +902,9 @@ async function ciblesValides(
 
 /**
  * Crée une déclinaison par périmètre cible, dans la transaction de l'appelant. Une
- * déclinaison ne cite qu'une fiche commune : celle de la tâche partagée, si elle
- * l'est.
+ * déclinaison cite la fiche de sa tâche partagée : une fiche commune, ou une fiche
+ * du périmètre d'origine, qui devient connexe pour la cible une fois la déclinaison
+ * acceptée (ADR 0039).
  */
 async function creerDeclinaisons(
   tx: Prisma.TransactionClient,
@@ -914,13 +920,6 @@ async function creerDeclinaisons(
   textes: TextesDeclinaison,
   acteurId: string
 ): Promise<(CibleValide & { tacheId: string })[]> {
-  const fiche =
-    origine.ficheId === null
-      ? null
-      : await tx.fiche.findUnique({
-          where: { id: origine.ficheId },
-          select: { id: true, perimetreId: true },
-        })
   const titre = textes.titre?.trim()
     ? texteRequis(textes.titre, 'Le titre de la déclinaison', TITRE_MAX)
     : origine.titre
@@ -945,7 +944,7 @@ async function creerDeclinaisons(
         titre,
         description,
         echeance,
-        ficheId: fiche !== null && fiche.perimetreId === null ? fiche.id : null,
+        ficheId: origine.ficheId,
         creeParId: acteurId,
         origineId: origine.id,
         accord: cible.acceptee ? 'ACCEPTE' : 'EN_ATTENTE',
@@ -1134,7 +1133,13 @@ builder.mutationFields(t => ({
           : { echeance: echeanceValide(args.echeance) }),
         ...(args.ficheId === undefined
           ? {}
-          : { ficheId: await ficheValide(args.ficheId, tache.perimetreId) }),
+          : {
+              ficheId: await ficheValide(
+                args.ficheId,
+                tache.perimetreId,
+                tache.origine?.ficheId ?? null
+              ),
+            }),
       }
       const relire = () =>
         prisma.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })
@@ -1540,6 +1545,10 @@ builder.mutationFields(t => ({
           editionId: tache.editionId,
         })
       }
+      // La fiche citée devient connexe pour la cible, ou cesse de l'être (ADR 0039).
+      if (tache.ficheId !== null) {
+        publierPourPerimetre('FICHE', tache.perimetreId, { id: tache.ficheId })
+      }
       // Le périmètre d'origine apprend la réponse, avec la personne qui a proposé.
       await notifier(prisma, {
         type: args.accepter ? 'DECLINAISON_ACCEPTEE' : 'DECLINAISON_REFUSEE',
@@ -1633,6 +1642,10 @@ builder.mutationFields(t => ({
           id: tache.id,
           editionId: tache.editionId,
         })
+      }
+      // La fiche citée devient connexe pour la cible, ou cesse de l'être (ADR 0039).
+      if (tache.ficheId !== null) {
+        publierPourPerimetre('FICHE', tache.perimetreId, { id: tache.ficheId })
       }
       await notifier(prisma, {
         type: 'TACHE_CREEE',

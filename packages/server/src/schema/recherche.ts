@@ -1,9 +1,10 @@
-import { prisma } from '@relaytour/database'
+import { prisma, type Prisma } from '@relaytour/database'
 
 import { membreActif } from '../lib/appartenances.ts'
 import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { perimetresLisibles } from '../lib/droits.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
+import { conditionsConnexes } from '../lib/fiches-connexes.ts'
 
 import { builder } from './builder.ts'
 import { FicheRef } from './fiches.ts'
@@ -51,6 +52,8 @@ interface Resultats {
   lisibles: string[]
   /** Activités visibles (ADR 0010) : une fiche commune ne sort que de celles-ci. */
   visibles: string[]
+  /** Les fiches lues par un partage (ADR 0039). */
+  connexes: Prisma.FicheWhereInput[]
 }
 
 const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
@@ -85,7 +88,11 @@ const RechercheRef = builder.objectRef<Resultats>('Recherche').implement({
             activiteId: { in: r.visibles },
             archivedAt: null,
             versionCourante: { titre: { contains: r.texte } },
-            OR: [{ perimetreId: null }, { perimetreId: { in: r.lisibles } }],
+            OR: [
+              { perimetreId: null },
+              { perimetreId: { in: r.lisibles } },
+              ...r.connexes,
+            ],
           },
           orderBy: { slug: 'asc' },
           take: RESULTATS_MAX,
@@ -172,6 +179,7 @@ builder.queryFields(t => ({
         estAdmin: ctx.personne!.estAdmin,
         lisibles: await perimetresLisibles(ctx),
         visibles: [...(await ctx.activitesVisibles())],
+        connexes: await conditionsConnexes(ctx),
       }
     },
   }),
