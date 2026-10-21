@@ -1,0 +1,297 @@
+import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
+import { useMutation, useQuery } from '@apollo/client/react'
+import { App, Button, Empty, Result, Segmented, Skeleton, Tag } from 'antd'
+import { useState } from 'react'
+
+import { graphql } from '../gql'
+import type {
+  CandidaturesQuery,
+  StatutCandidature,
+  StatutChoix,
+} from '../gql/graphql'
+import { libelleJours } from '../lib/agenda'
+import { jourDeLInstant, messageErreur } from '../lib/erreurs'
+import { CANDIDATURES } from '../lib/requetes-benevoles'
+
+import PastillePerimetre from './PastillePerimetre'
+
+// File de revue des candidatures d'une période (ADR 0041). Le serveur ne montre
+// à une personne qui écrit dans un périmètre que les choix de ses séquences.
+// Accepter crée la fiche bénévole avec une place à confirmer ; refuser n'envoie
+// rien.
+
+const ACCEPTER = graphql(`
+  mutation AccepterChoixCandidature($id: ID!) {
+    accepterChoixCandidature(id: $id) {
+      id
+    }
+  }
+`)
+
+const REFUSER = graphql(`
+  mutation RefuserChoixCandidature($id: ID!) {
+    refuserChoixCandidature(id: $id) {
+      id
+    }
+  }
+`)
+
+const ECARTER = graphql(`
+  mutation RefuserCandidature($id: ID!) {
+    refuserCandidature(id: $id) {
+      id
+    }
+  }
+`)
+
+type Candidature = CandidaturesQuery['candidatures'][number]
+
+const STATUTS: Record<StatutChoix, { libelle: string; couleur: string }> = {
+  EN_ATTENTE: { libelle: 'En attente', couleur: 'processing' },
+  LISTE_ATTENTE: { libelle: 'Liste d’attente', couleur: 'warning' },
+  ACCEPTE: { libelle: 'Acceptée', couleur: 'success' },
+  REFUSE: { libelle: 'Refusée', couleur: 'default' },
+}
+
+const RELIRE = [
+  'Candidatures',
+  'Benevoles',
+  'Programme',
+  'BenevolesARepartir',
+  'CouvertureProgramme',
+  'AppelsBenevoles',
+]
+
+/** Une plage de disponibilité en clair : « sam. 5 juin, 8:00 → 13:00 ». */
+function plageEnClair(p: Candidature['plages'][number]): string {
+  return p.jourFin !== p.jour
+    ? `${libelleJours(p.jour)} ${p.heureDebut} → ${libelleJours(p.jourFin)} ${p.heureFin}`
+    : `${libelleJours(p.jour)}, ${p.heureDebut} → ${p.heureFin}`
+}
+
+export default function CandidaturesBenevoles({
+  editionId,
+  archivee,
+}: {
+  editionId: string
+  archivee: boolean
+}) {
+  const { message, modal } = App.useApp()
+  const [statut, setStatut] = useState<StatutCandidature>('EN_ATTENTE')
+  const { data, loading, error } = useQuery(CANDIDATURES, {
+    variables: { editionId, statut },
+    fetchPolicy: 'cache-and-network',
+  })
+  const relire = { refetchQueries: RELIRE }
+  const [accepter] = useMutation(ACCEPTER, relire)
+  const [refuser] = useMutation(REFUSER, relire)
+  const [ecarter] = useMutation(ECARTER, relire)
+  const [enCours, setEnCours] = useState<string | null>(null)
+
+  const agir = async (
+    cle: string,
+    action: () => Promise<unknown>,
+    ok: string
+  ) => {
+    setEnCours(cle)
+    try {
+      await action()
+      message.success(ok)
+    } catch (e) {
+      message.error(messageErreur(e))
+    } finally {
+      setEnCours(null)
+    }
+  }
+
+  const confirmerEcart = (c: Candidature) =>
+    void modal.confirm({
+      title: `Refuser toute la candidature de ${c.nom} ?`,
+      content:
+        'Les séquences encore en attente sont refusées. Aucun mail ne part, et la personne peut déposer de nouveau.',
+      okText: 'Refuser la candidature',
+      okButtonProps: { danger: true },
+      cancelText: 'Annuler',
+      onOk: () =>
+        agir(
+          `ecarter-${c.id}`,
+          () => ecarter({ variables: { id: c.id } }),
+          'Candidature refusée.'
+        ),
+    })
+
+  if (error && !data) {
+    return (
+      <Result
+        status="warning"
+        title="Les candidatures n’ont pas pu être chargées."
+        subTitle={messageErreur(error)}
+      />
+    )
+  }
+
+  const candidatures = data?.candidatures ?? []
+
+  return (
+    <div className="rt-candidatures">
+      <Segmented<StatutCandidature>
+        value={statut}
+        onChange={setStatut}
+        options={[
+          { value: 'EN_ATTENTE', label: 'À traiter' },
+          { value: 'TRAITEE', label: 'Traitées' },
+          { value: 'RETIREE', label: 'Retirées' },
+        ]}
+      />
+      {loading && !data ? (
+        <Skeleton active />
+      ) : candidatures.length === 0 ? (
+        <Empty
+          description={
+            statut === 'EN_ATTENTE'
+              ? 'Aucune candidature n’attend votre revue.'
+              : 'Aucune candidature ici.'
+          }
+        />
+      ) : (
+        <ul className="rt-candidatures-liste">
+          {candidatures.map(c => (
+            <li key={c.id} className="rt-verre rt-candidature">
+              <header className="rt-candidature-tete">
+                <strong>{c.nom}</strong>
+                <span className="rt-note">
+                  {c.appelNom} · déposée le {jourDeLInstant(c.deposeeLe)}
+                </span>
+              </header>
+              <p className="rt-candidature-contact">
+                {c.courriel && (
+                  <a href={`mailto:${c.courriel}`}>{c.courriel}</a>
+                )}
+                {c.telephone && (
+                  <a href={`tel:${c.telephone.replace(/\s/g, '')}`}>
+                    {c.telephone}
+                  </a>
+                )}
+              </p>
+              {c.plages.length > 0 && (
+                <p className="rt-candidature-plages">
+                  <span className="rt-libelle">Disponible</span>
+                  {c.plages.map(p => (
+                    <Tag key={`${p.jour}-${p.heureDebut}`}>
+                      {plageEnClair(p)}
+                    </Tag>
+                  ))}
+                </p>
+              )}
+              {c.precisionsDisponibilite && (
+                <p className="rt-candidature-texte">
+                  <span className="rt-libelle">Précisions</span>{' '}
+                  {c.precisionsDisponibilite}
+                </p>
+              )}
+              {c.message && (
+                <p className="rt-candidature-texte">
+                  <span className="rt-libelle">Message</span> {c.message}
+                </p>
+              )}
+              {c.ouAilleurs && (
+                <p className="rt-note">
+                  Aide là où il manque du monde : placez la personne depuis la
+                  vue « Répartition » du programme.
+                </p>
+              )}
+              {c.choix.length > 0 && (
+                <ul className="rt-candidature-choix">
+                  {c.choix.map(x => {
+                    const enAttente =
+                      x.statut === 'EN_ATTENTE' || x.statut === 'LISTE_ATTENTE'
+                    return (
+                      <li key={x.id}>
+                        <span className="rt-candidature-sequence">
+                          <span>
+                            {x.titre}
+                            <span className="rt-note">
+                              {' '}
+                              · {libelleJours(x.jour)}, {x.heureDebut} →{' '}
+                              {x.heureFin}
+                              {x.lieu && ` · ${x.lieu}`}
+                            </span>
+                          </span>
+                          {x.perimetre && (
+                            <PastillePerimetre
+                              nom={x.perimetre.nom}
+                              couleur={x.perimetre.couleur}
+                            />
+                          )}
+                          <Tag color={STATUTS[x.statut].couleur}>
+                            {STATUTS[x.statut].libelle}
+                          </Tag>
+                        </span>
+                        {x.peutTraiter &&
+                          !archivee &&
+                          x.statut !== 'ACCEPTE' && (
+                            <span className="rt-candidature-actions">
+                              <Button
+                                size="small"
+                                type="primary"
+                                icon={<CheckOutlined />}
+                                loading={enCours === `accepter-${x.id}`}
+                                onClick={() =>
+                                  void agir(
+                                    `accepter-${x.id}`,
+                                    () => accepter({ variables: { id: x.id } }),
+                                    'Séquence acceptée : la place attend la confirmation de la personne.'
+                                  )
+                                }
+                              >
+                                Accepter
+                              </Button>
+                              {enAttente && (
+                                <Button
+                                  size="small"
+                                  icon={<CloseOutlined />}
+                                  loading={enCours === `refuser-${x.id}`}
+                                  onClick={() =>
+                                    void agir(
+                                      `refuser-${x.id}`,
+                                      () =>
+                                        refuser({ variables: { id: x.id } }),
+                                      'Séquence refusée.'
+                                    )
+                                  }
+                                >
+                                  Refuser
+                                </Button>
+                              )}
+                            </span>
+                          )}
+                      </li>
+                    )
+                  })}
+                </ul>
+              )}
+              {c.peutEcarter && c.statut === 'EN_ATTENTE' && !archivee && (
+                <footer className="rt-candidature-pied">
+                  <Button
+                    danger
+                    size="small"
+                    loading={enCours === `ecarter-${c.id}`}
+                    onClick={() => confirmerEcart(c)}
+                  >
+                    Refuser toute la candidature
+                  </Button>
+                </footer>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+      <p className="rt-note">
+        Accepter une séquence crée la fiche bénévole avec une place à confirmer.
+        La première place envoie à la personne un mail avec son lien personnel.
+        Refuser n’envoie rien. Les candidatures disparaissent à l’archivage de
+        la période.
+      </p>
+    </div>
+  )
+}

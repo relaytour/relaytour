@@ -9,6 +9,7 @@ import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
 import ChoixEdition from '../composants/ChoixEdition'
+import { Jauge } from '../composants/Jauge'
 import LieuxFenetre from '../composants/LieuxFenetre'
 import { Section } from '../composants/Panneau'
 import { Puces, SeparateurPuces } from '../composants/Puces'
@@ -38,6 +39,9 @@ const PROGRAMME = graphql(`
       editionId
       titre
       description
+      besoinBenevoles
+      consignesBenevoles
+      renforts
       jour
       jourFin
       heureDebut
@@ -60,6 +64,7 @@ const PROGRAMME = graphql(`
         benevoleId
         nom
         estMoi
+        etat
       }
     }
   }
@@ -167,6 +172,9 @@ export default function Programme() {
       )}
       {s.perimetre && (
         <span className="rt-sequence-perimetre">{s.perimetre.nom}</span>
+      )}
+      {s.besoinBenevoles !== null && (
+        <Jauge renforts={s.renforts} besoin={s.besoinBenevoles} court />
       )}
       {s.places.length > 0 && (
         <span className="rt-sequence-personnes">{personnes(s)}</span>

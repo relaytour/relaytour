@@ -1,15 +1,32 @@
 import { useMutation, useQuery } from '@apollo/client/react'
 import { DeleteOutlined, LockOutlined, PlusOutlined } from '@ant-design/icons'
-import { App, Button, Checkbox, Form, Input, Modal, Result } from 'antd'
+import {
+  App,
+  Button,
+  Checkbox,
+  Empty,
+  Form,
+  Input,
+  Modal,
+  Result,
+  Tabs,
+  Tag,
+} from 'antd'
 import { useEffect, useState } from 'react'
+import { useSearchParams } from 'react-router'
 
+import AppelsBenevoles from '../composants/AppelsBenevoles'
+import CandidaturesBenevoles from '../composants/CandidaturesBenevoles'
+import ChoixEdition from '../composants/ChoixEdition'
+import LienBenevole from '../composants/LienBenevole'
 import Tableau from '../composants/Tableau'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import type { BenevolesQuery } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { estRefus, messageErreur } from '../lib/erreurs'
-import { BENEVOLES } from '../lib/requetes'
+import { BENEVOLES, EDITION_COURANTE, EDITIONS } from '../lib/requetes'
+import { CANDIDATURES } from '../lib/requetes-benevoles'
 
 const CREER = graphql(`
   mutation CreerBenevole(
@@ -18,6 +35,7 @@ const CREER = graphql(`
     $courriel: String
     $telephone: String
     $note: String
+    $prevenirParMail: Boolean
     $accord: Boolean!
   ) {
     creerBenevole(
@@ -26,6 +44,7 @@ const CREER = graphql(`
       courriel: $courriel
       telephone: $telephone
       note: $note
+      prevenirParMail: $prevenirParMail
       accord: $accord
     ) {
       id
@@ -40,6 +59,7 @@ const MODIFIER = graphql(`
     $courriel: String
     $telephone: String
     $note: String
+    $prevenirParMail: Boolean
   ) {
     modifierBenevole(
       id: $id
@@ -47,6 +67,7 @@ const MODIFIER = graphql(`
       courriel: $courriel
       telephone: $telephone
       note: $note
+      prevenirParMail: $prevenirParMail
     ) {
       id
     }
@@ -66,17 +87,44 @@ interface Valeurs {
   courriel?: string
   telephone?: string
   note?: string
+  prevenirParMail?: boolean
   accord?: boolean
 }
+
+type Onglet = 'fiches' | 'candidatures' | 'appels'
 
 const RELIRE = ['Benevoles', 'Programme']
 
 /**
- * Fiches bénévoles d'une activité (ADR 0040) : des personnes qui aident sans
- * compte. Les coordonnées ne s'affichent qu'aux personnes que le serveur autorise.
+ * Bénévoles d'une activité : les fiches (ADR 0040), les candidatures et les
+ * appels d'une période (ADR 0041). Les coordonnées ne s'affichent qu'aux
+ * personnes que le serveur autorise.
  */
 export default function Benevoles() {
-  const { activite, gere } = useActivite()
+  const { activite, gere, periode } = useActivite()
+  const [parametres, setParametres] = useSearchParams()
+  const { data: courante } = useQuery(EDITION_COURANTE)
+  const { data: editions } = useQuery(EDITIONS)
+  const editionId =
+    parametres.get('edition') ?? courante?.editionCourante?.id ?? undefined
+  const edition = editions?.editions.find(e => e.id === editionId)
+  const archivee = edition?.statut === 'ARCHIVEE'
+  const ongletDemande = parametres.get('onglet')
+  const onglet: Onglet =
+    ongletDemande === 'candidatures' || ongletDemande === 'appels'
+      ? ongletDemande
+      : 'fiches'
+  // Le nombre de candidatures à traiter, pour le libellé de l'onglet.
+  const { data: aTraiter } = useQuery(CANDIDATURES, {
+    variables: { editionId: editionId ?? '', statut: 'EN_ATTENTE' },
+    skip: editionId === undefined,
+  })
+  const changer = (cle: string, valeur: string | null) => {
+    const suite = new URLSearchParams(parametres)
+    if (valeur === null) suite.delete(cle)
+    else suite.set(cle, valeur)
+    setParametres(suite)
+  }
   const { message, modal } = App.useApp()
   const [form] = Form.useForm<Valeurs>()
   const { data, loading, error } = useQuery(BENEVOLES, {
@@ -94,12 +142,20 @@ export default function Benevoles() {
     if (fiche === null) return
     form.setFieldsValue(
       fiche === 'nouvelle'
-        ? { nom: '', courriel: '', telephone: '', note: '', accord: false }
+        ? {
+            nom: '',
+            courriel: '',
+            telephone: '',
+            note: '',
+            prevenirParMail: true,
+            accord: false,
+          }
         : {
             nom: fiche.nom,
             courriel: fiche.courriel ?? '',
             telephone: fiche.telephone ?? '',
             note: fiche.note ?? '',
+            prevenirParMail: fiche.prevenirParMail,
           }
     )
   }, [form, fiche])
@@ -129,6 +185,7 @@ export default function Benevoles() {
       courriel: v.courriel ?? '',
       telephone: v.telephone ?? '',
       note: v.note ?? '',
+      prevenirParMail: v.prevenirParMail ?? true,
     }
     try {
       if (fiche === 'nouvelle') {
@@ -173,115 +230,167 @@ export default function Benevoles() {
       <Titre
         sousTitre="Les personnes qui aident sans compte dans l’application. Une fiche ne s’enregistre qu’avec leur accord."
         actions={
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => setFiche('nouvelle')}
-          >
-            Nouvelle fiche
-          </Button>
+          onglet === 'fiches' ? (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={() => setFiche('nouvelle')}
+            >
+              Nouvelle fiche
+            </Button>
+          ) : (
+            <ChoixEdition
+              valeur={editionId}
+              onChange={id => changer('edition', id)}
+            />
+          )
         }
       >
         Bénévoles
       </Titre>
-      <Tableau<Fiche>
-        id="benevoles"
-        rowKey="id"
-        loading={loading && !data}
-        dataSource={data?.benevoles ?? []}
-        pagination={false}
-        ouvrir={f => setFiche(f)}
-        peutOuvrir={f => f.peutModifier}
-        libelleOuvrir={f => `Modifier la fiche de ${f.nom}`}
-        locale={{ emptyText: 'Aucune fiche bénévole pour cette activité.' }}
-        colonnes={[
+      <Tabs
+        activeKey={onglet}
+        onChange={cle => changer('onglet', cle === 'fiches' ? null : cle)}
+        items={[
+          { key: 'fiches', label: 'Fiches' },
           {
-            key: 'nom',
-            title: 'Nom',
-            dataIndex: 'nom',
-            tri: f => f.nom,
-            recherche: f => f.nom,
+            key: 'candidatures',
+            label:
+              (aTraiter?.candidatures.length ?? 0) > 0
+                ? `Candidatures (${aTraiter!.candidatures.length})`
+                : 'Candidatures',
           },
-          {
-            key: 'telephone',
-            title: 'Téléphone',
-            render: (_, f) =>
-              f.coordonneesVisibles ? (
-                f.telephone ? (
-                  <a href={`tel:${f.telephone.replace(/\s/g, '')}`}>
-                    {f.telephone}
-                  </a>
-                ) : (
-                  '—'
-                )
-              ) : (
-                <span className="rt-note">Réservé</span>
-              ),
-          },
-          {
-            key: 'courriel',
-            title: 'Adresse',
-            render: (_, f) =>
-              f.coordonneesVisibles ? (
-                f.courriel ? (
-                  <a href={`mailto:${f.courriel}`}>{f.courriel}</a>
-                ) : (
-                  '—'
-                )
-              ) : (
-                <span className="rt-note">Réservée</span>
-              ),
-          },
-          {
-            // La note (disponibilités, compétences) se lit avec les
-            // coordonnées, même sans droit de modifier la fiche.
-            key: 'note',
-            title: 'Note',
-            ellipsis: true,
-            render: (_, f) =>
-              f.coordonneesVisibles ? (
-                f.note ? (
-                  <span title={f.note}>{f.note}</span>
-                ) : (
-                  '—'
-                )
-              ) : (
-                <span className="rt-note">Réservée</span>
-              ),
-          },
-          {
-            key: 'places',
-            title: 'Séquences',
-            dataIndex: 'places',
-            width: 120,
-            tri: f => f.places,
-          },
-          ...(gere
-            ? [
-                {
-                  key: 'actions',
-                  title: '',
-                  width: 60,
-                  redimensionnable: false,
-                  render: (_: unknown, f: Fiche) => (
-                    <Button
-                      type="text"
-                      danger
-                      icon={<DeleteOutlined />}
-                      aria-label={`Supprimer la fiche de ${f.nom}`}
-                      onClick={() => confirmerSuppression(f)}
-                    />
-                  ),
-                },
-              ]
-            : []),
+          { key: 'appels', label: 'Appels' },
         ]}
       />
-      <p className="rt-note" style={{ margin: '12px 6px' }}>
-        Les coordonnées d’une fiche se lisent par les admins de l’activité, par
-        la personne qui l’a créée, et par les personnes d’un périmètre où elle
-        est placée. Le serveur supprime une fiche inutilisée depuis deux ans.
-      </p>
+      {onglet !== 'fiches' &&
+        (editionId === undefined ? (
+          <Empty description={`Créez d’abord ${periode.une}.`} />
+        ) : onglet === 'candidatures' ? (
+          <CandidaturesBenevoles editionId={editionId} archivee={archivee} />
+        ) : (
+          <AppelsBenevoles editionId={editionId} archivee={archivee} />
+        ))}
+      {onglet === 'fiches' && (
+        <>
+          <Tableau<Fiche>
+            id="benevoles"
+            rowKey="id"
+            loading={loading && !data}
+            dataSource={data?.benevoles ?? []}
+            pagination={false}
+            ouvrir={f => setFiche(f)}
+            peutOuvrir={f => f.peutModifier}
+            libelleOuvrir={f => `Modifier la fiche de ${f.nom}`}
+            locale={{ emptyText: 'Aucune fiche bénévole pour cette activité.' }}
+            colonnes={[
+              {
+                key: 'nom',
+                title: 'Nom',
+                dataIndex: 'nom',
+                tri: f => f.nom,
+                recherche: f => f.nom,
+              },
+              {
+                key: 'telephone',
+                title: 'Téléphone',
+                render: (_, f) =>
+                  f.coordonneesVisibles ? (
+                    f.telephone ? (
+                      <a href={`tel:${f.telephone.replace(/\s/g, '')}`}>
+                        {f.telephone}
+                      </a>
+                    ) : (
+                      '—'
+                    )
+                  ) : (
+                    <span className="rt-note">Réservé</span>
+                  ),
+              },
+              {
+                key: 'courriel',
+                title: 'Adresse',
+                render: (_, f) =>
+                  f.coordonneesVisibles ? (
+                    f.courriel ? (
+                      <a href={`mailto:${f.courriel}`}>{f.courriel}</a>
+                    ) : (
+                      '—'
+                    )
+                  ) : (
+                    <span className="rt-note">Réservée</span>
+                  ),
+              },
+              {
+                // La note (disponibilités, compétences) se lit avec les
+                // coordonnées, même sans droit de modifier la fiche.
+                key: 'note',
+                title: 'Note',
+                ellipsis: true,
+                render: (_, f) =>
+                  f.coordonneesVisibles ? (
+                    f.note ? (
+                      <span title={f.note}>{f.note}</span>
+                    ) : (
+                      '—'
+                    )
+                  ) : (
+                    <span className="rt-note">Réservée</span>
+                  ),
+              },
+              {
+                key: 'places',
+                title: 'Séquences',
+                dataIndex: 'places',
+                width: 120,
+                tri: f => f.places,
+              },
+              {
+                // L'état du lien personnel (ADR 0041) : confirmée, lien envoyé, ou
+                // aucun mail.
+                key: 'lien',
+                title: 'Participation',
+                width: 150,
+                render: (_, f) =>
+                  f.confirmeeLe ? (
+                    <Tag color="success">Confirmée</Tag>
+                  ) : f.lienEnvoyeLe ? (
+                    <Tag color="warning">Lien envoyé</Tag>
+                  ) : f.prevenirParMail && f.courriel ? (
+                    <span className="rt-note">Lien à la première place</span>
+                  ) : (
+                    <span className="rt-note">Sans mail</span>
+                  ),
+              },
+              ...(gere
+                ? [
+                    {
+                      key: 'actions',
+                      title: '',
+                      width: 60,
+                      redimensionnable: false,
+                      render: (_: unknown, f: Fiche) => (
+                        <Button
+                          type="text"
+                          danger
+                          icon={<DeleteOutlined />}
+                          aria-label={`Supprimer la fiche de ${f.nom}`}
+                          onClick={() => confirmerSuppression(f)}
+                        />
+                      ),
+                    },
+                  ]
+                : []),
+            ]}
+          />
+          <p className="rt-note" style={{ margin: '12px 6px' }}>
+            Les coordonnées d’une fiche se lisent par les admins de l’activité,
+            par la personne qui l’a créée, et par les personnes d’un périmètre
+            où elle est placée. Le serveur supprime une fiche inutilisée depuis
+            deux ans.
+          </p>
+        </>
+      )}
 
       <Modal
         open={fiche !== null}
@@ -328,12 +437,22 @@ export default function Benevoles() {
           >
             <Input inputMode="email" autoComplete="off" />
           </Form.Item>
+          <Form.Item
+            name="prevenirParMail"
+            valuePropName="checked"
+            extra="Avec une adresse, la première place envoie à la personne un mail avec son lien personnel. Ses places restent à confirmer. Décochez pour une personne jointe autrement."
+          >
+            <Checkbox>Prévenir par mail</Checkbox>
+          </Form.Item>
           <Form.Item label="Note (facultative)" name="note">
             <Input.TextArea
               autoSize={{ minRows: 2, maxRows: 6 }}
               placeholder="Disponibilités, compétences, taille de t-shirt…"
             />
           </Form.Item>
+          {fiche !== null &&
+            fiche !== 'nouvelle' &&
+            fiche.coordonneesVisibles && <LienBenevole fiche={fiche} />}
           {fiche === 'nouvelle' && (
             <Form.Item
               name="accord"

@@ -102,6 +102,7 @@ const ARepartirRef = builder
       nom: t.exposeString('nom'),
       plages: t.field({
         type: [PlageRef],
+        complexity: { field: 1, multiplier: 2 },
         resolve: r => r.plages.map(p => ({ ...p, fuseau: r.fuseau })),
       }),
       precisionsDisponibilite: t.exposeString('precisions', {
@@ -113,8 +114,16 @@ const ARepartirRef = builder
         description: 'Le nom de l’appel, pour une candidature.',
       }),
       ouAilleurs: t.exposeBoolean('ouAilleurs'),
-      choix: t.field({ type: [ChoixResumeRef], resolve: r => r.choix }),
-      places: t.field({ type: [PlaceTenueRef], resolve: r => r.places }),
+      choix: t.field({
+        type: [ChoixResumeRef],
+        complexity: { field: 1, multiplier: 2 },
+        resolve: r => r.choix,
+      }),
+      places: t.field({
+        type: [PlaceTenueRef],
+        complexity: { field: 1, multiplier: 2 },
+        resolve: r => r.places,
+      }),
       adequation: t.field({
         type: AdequationEnum,
         nullable: true,

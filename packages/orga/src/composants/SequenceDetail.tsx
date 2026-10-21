@@ -9,6 +9,7 @@ import { libelleJours } from '../lib/agenda'
 import { messageErreur } from '../lib/erreurs'
 import { BENEVOLES } from '../lib/requetes'
 
+import { EtatPlace, Jauge } from './Jauge'
 import PastillePerimetre from './PastillePerimetre'
 import type { SequenceSaisie } from './SequenceFormulaire'
 
@@ -32,6 +33,8 @@ function saisieDe(s: SequenceLue): SequenceSaisie {
     heureDebut: s.heureDebut,
     heureFin: s.heureFin,
     description: s.description,
+    besoinBenevoles: s.besoinBenevoles,
+    consignesBenevoles: s.consignesBenevoles,
     places: s.places.map(p => ({
       personne: p.benevoleId ? `b:${p.benevoleId}` : `p:${p.personneId}`,
       role: p.role,
@@ -139,6 +142,22 @@ export default function SequenceDetail({
           {sequence.description && (
             <p className="rt-reunion-description">{sequence.description}</p>
           )}
+          {sequence.besoinBenevoles !== null && (
+            <section>
+              <h3 className="rt-reunion-intertitre">Bénévoles recherchés</h3>
+              <p>
+                <Jauge
+                  renforts={sequence.renforts}
+                  besoin={sequence.besoinBenevoles}
+                />
+              </p>
+              {sequence.consignesBenevoles && (
+                <p className="rt-reunion-description">
+                  {sequence.consignesBenevoles}
+                </p>
+              )}
+            </section>
+          )}
           <section>
             <h3 className="rt-reunion-intertitre">Personnes placées</h3>
             {sequence.places.length === 0 ? (
@@ -178,6 +197,12 @@ export default function SequenceDetail({
                       </span>
                       <span className="rt-note">
                         {p.role === 'RESPONSABLE' ? 'Responsable' : 'Renfort'}
+                        {p.etat !== 'CONFIRMEE' && (
+                          <>
+                            {' '}
+                            <EtatPlace etat={p.etat} />
+                          </>
+                        )}
                       </span>
                     </li>
                   )

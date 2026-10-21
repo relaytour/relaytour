@@ -341,9 +341,17 @@ const CandidatureRef = builder
         nullable: true,
         resolve: l => l.candidature.benevoleId,
       }),
-      choix: t.field({ type: [ChoixRef], resolve: l => l.choix }),
+      // Une candidature choisit 30 séquences et porte 20 plages au plus ; la file
+      // en compte quelques-unes en moyenne. Le multiplicateur borne le coût d'une
+      // requête sans refuser la file de revue.
+      choix: t.field({
+        type: [ChoixRef],
+        complexity: { field: 1, multiplier: 3 },
+        resolve: l => l.choix,
+      }),
       plages: t.field({
         type: [PlageRef],
+        complexity: { field: 1, multiplier: 2 },
         resolve: l =>
           l.candidature.plages.map(p => ({
             debut: p.debut,

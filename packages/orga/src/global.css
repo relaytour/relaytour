@@ -3491,3 +3491,103 @@ button.rt-carte-fiche {
     display: none;
   }
 }
+
+/* ── Appels à bénévoles et candidatures (ADR 0041) ─────────────────────────── */
+
+.rt-candidatures,
+.rt-appels {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.rt-candidatures > .ant-segmented,
+.rt-appels > .ant-btn {
+  align-self: flex-start;
+}
+.rt-candidatures-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rt-candidature {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 18px;
+}
+.rt-candidature p {
+  margin: 0;
+}
+.rt-candidature-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.rt-candidature-contact,
+.rt-candidature-plages {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  font-size: 13.5px;
+}
+.rt-candidature-texte {
+  font-size: 13.5px;
+  color: var(--rt-encre-70);
+  overflow-wrap: anywhere;
+}
+.rt-candidature-choix {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 10px 0 0;
+  list-style: none;
+  border-top: 1px solid var(--rt-encre-08);
+}
+.rt-candidature-choix li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.rt-candidature-sequence {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 10px;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.rt-candidature-actions {
+  display: inline-flex;
+  gap: 6px;
+}
+.rt-candidature-pied {
+  display: flex;
+  justify-content: flex-end;
+}
+.rt-lien-benevole {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 4px 0 16px;
+  padding: 12px 14px;
+  border-radius: var(--rt-rayon-champ, 10px);
+  background: var(--rt-surface-interne);
+}
+.rt-lien-benevole p {
+  margin: 0;
+}
+.rt-sequence .rt-jauge {
+  align-self: flex-start;
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 18px;
+}

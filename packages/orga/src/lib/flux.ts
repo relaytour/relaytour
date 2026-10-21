@@ -116,6 +116,7 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   FICHIERS: ['EspaceFichiers', 'DossiersLies', 'ContenuDossierLie'],
   // Les appels à bénévoles, les candidatures et la répartition (ADR 0041).
   CANDIDATURE: [
+    'Benevoles',
     'AppelsBenevoles',
     'Candidatures',
     'BenevolesARepartir',
