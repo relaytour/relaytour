@@ -188,17 +188,24 @@ const ECRANS = [
     chemin: `${ACTIVITE}/programme?vue=moi`,
   },
   // La vue « Répartition » (ADR 0041) : le geste choisit le point information, et le
-  // panneau trie alors les bénévoles à répartir. L'instance d'exemple doit
-  // porter des séquences avec des renforts recherchés et des candidatures.
+  // panneau trie alors les bénévoles à répartir. Sur un téléphone, la séquence
+  // s'ouvre dans un volet. L'instance d'exemple doit porter des séquences avec des
+  // renforts recherchés et des candidatures.
   {
     nom: 'programme-repartition',
     compte: 'referent',
     chemin: `${ACTIVITE}/programme?vue=repartition`,
-    apres: `(b => {
-      if (!b) return false
-      if (b.getAttribute('aria-pressed') !== 'true') return (b.click(), false)
-      return document.querySelectorAll('main .rt-repartition-placer').length > 0
-    })([...document.querySelectorAll('main button[aria-pressed]')].find(b => b.innerText.trim() === 'Point information'))`,
+    apres: `(() => {
+      const pret = document.querySelectorAll('.rt-repartition-placer').length > 0
+      const bureau = [...document.querySelectorAll('main button[aria-pressed]')].find(b => b.innerText.trim() === 'Point information')
+      if (bureau) {
+        if (bureau.getAttribute('aria-pressed') !== 'true') return (bureau.click(), false)
+        return pret
+      }
+      const telephone = [...document.querySelectorAll('main button.rt-repartition-manque')].find(b => b.querySelector('strong')?.innerText.trim() === 'Point information')
+      if (!telephone) return false
+      return pret || (telephone.click(), false)
+    })()`,
   },
   {
     nom: 'fiches-cartes',
