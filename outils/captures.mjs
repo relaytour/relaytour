@@ -137,6 +137,42 @@ const ECRANS = [
     avant:
       "localStorage.setItem('relaytour.retroplanning.regroupement', 'phase')",
   },
+  // L'agenda de la période, en liste (ADR 0037).
+  {
+    nom: 'agenda',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
+  },
+  // Le volet d'un sondage de dates du pôle Bénévoles, avant la réponse de la
+  // référente (ADR 0037).
+  {
+    nom: 'sondage',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
+    apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-ligne-lien')].find(b => b.textContent.includes('Date du point bénévoles de janvier')))`,
+  },
+  // Le volet d'une réunion du pôle Bénévoles, où la référente est convoquée.
+  {
+    nom: 'reunion',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
+    apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-agenda-ouvrir')].find(b => b.textContent.trim() === 'Point bénévoles'))`,
+  },
+  // Le programme du jour J en grille, puis la vue « Mon jour J » de la référente
+  // (ADR 0040).
+  {
+    nom: 'programme',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/programme?vue=grille`,
+  },
+  {
+    nom: 'programme-moi',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/programme?vue=moi`,
+  },
   {
     nom: 'fiches-cartes',
     compte: 'referent',
@@ -237,6 +273,14 @@ const ECRANS = [
     chemin: `${ACTIVITE}/organigramme`,
   },
   { nom: 'preferences', compte: 'referent', chemin: `${ACTIVITE}/preferences` },
+  // L'abonnement personnel à l'agenda (ADR 0037), dans les préférences.
+  {
+    nom: 'preferences-agenda',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/preferences`,
+    // Le bouton du panneau précédent passe sous la barre haute flottante.
+    apres: `(e => (e?.scrollIntoView({ block: 'start' }), window.scrollBy(0, -190), Boolean(e)))([...document.querySelectorAll('main h2')].find(e => e.innerText.trim() === 'Votre agenda dans Outlook, Google ou Apple'))`,
+  },
   // L'accord pour l'organigramme (ADR 0036), dans les préférences.
   {
     nom: 'preferences-organigramme',
@@ -256,6 +300,21 @@ const ECRANS = [
   // ── Guide de l'admin d'activité ────────────────────────────────────────────
   // L'équipe d'une activité, lue par un de ses admins (ADR 0018).
   // Les notifications d'admin, rangées par activité puis par périmètre (ADR 0033).
+  // L'agenda en vue Mois, avec les dates clés modifiables (ADR 0037).
+  {
+    nom: 'agenda-mois',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/agenda`,
+    avant: "localStorage.setItem('relaytour.agenda.vue', 'mois')",
+    // Le mois suivant porte en général plus de dates que la fin du mois courant.
+    apres: cliquerLibelle('Mois suivant'),
+  },
+  // Les fiches bénévoles, avec leurs coordonnées lues par un admin (ADR 0040).
+  {
+    nom: 'benevoles',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles`,
+  },
   {
     nom: 'notifications-admin',
     compte: 'admin-activite',

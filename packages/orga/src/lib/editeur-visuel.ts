@@ -29,12 +29,13 @@ import {
 import { gfm, remarkGFMPlugin } from '@milkdown/preset-gfm'
 import type { Ctx } from '@milkdown/ctx'
 import type { Node } from '@milkdown/prose/model'
-import { TextSelection } from '@milkdown/prose/state'
+import { Plugin, PluginKey, TextSelection } from '@milkdown/prose/state'
+import { Decoration, DecorationSet } from '@milkdown/prose/view'
 import type { EditorView } from '@milkdown/prose/view'
-import { callCommand, insert } from '@milkdown/utils'
+import { $prose, callCommand, insert } from '@milkdown/utils'
 
 import { TABLEAU } from './mise-en-forme'
-import { retoucher } from './retouche-markdown'
+import { estLienLitteral, retoucher } from './retouche-markdown'
 import { defaultHandlers } from 'mdast-util-to-markdown'
 
 /**
@@ -63,18 +64,90 @@ function lien(
   ...[node, parent, state, info]: Parameters<typeof defaultHandlers.link>
 ) {
   const [enfant] = node.children
-  const litteral =
-    node.children.length === 1 &&
+  return node.children.length === 1 &&
     enfant?.type === 'text' &&
-    !node.title &&
-    [enfant.value, `mailto:${enfant.value}`, `http://${enfant.value}`].includes(
-      node.url
-    )
-  return litteral
+    estLienLitteral(node.url, enfant.value, node.title)
     ? enfant.value
     : defaultHandlers.link(node, parent, state, info)
 }
 lien.peek = defaultHandlers.link.peek
+
+/** Coche ou décoche l'élément à cocher qui contient la position. */
+function basculerLaCase(vue: EditorView, position: number): boolean {
+  const $pos = vue.state.doc.resolve(position)
+  for (let profondeur = $pos.depth; profondeur > 0; profondeur--) {
+    const noeud = $pos.node(profondeur)
+    if (noeud.type.name !== 'list_item') continue
+    if (noeud.attrs.checked == null) return false
+    vue.dispatch(
+      vue.state.tr.setNodeMarkup($pos.before(profondeur), undefined, {
+        ...noeud.attrs,
+        checked: !noeud.attrs.checked,
+      })
+    )
+    return true
+  }
+  return false
+}
+
+/**
+ * Les cases des éléments à cocher : une vraie case, avec son état annoncé, devant
+ * le texte de l'élément. Un clic, ou la touche Espace sur la case, la coche ; dans
+ * le texte de l'élément, ⌘Entrée ou Ctrl+Entrée fait de même.
+ */
+const casesACocher = $prose(
+  () =>
+    new Plugin({
+      key: new PluginKey('rt-cases-a-cocher'),
+      props: {
+        decorations: etat => {
+          const decorations: Decoration[] = []
+          etat.doc.descendants((noeud, position) => {
+            if (noeud.type.name !== 'list_item' || noeud.attrs.checked == null)
+              return
+            const cochee = Boolean(noeud.attrs.checked)
+            // La case se place au début du premier paragraphe de l'élément.
+            decorations.push(
+              Decoration.widget(
+                position + 2,
+                (vue, positionDeLaCase) => {
+                  const caseACocher = document.createElement('input')
+                  caseACocher.type = 'checkbox'
+                  caseACocher.checked = cochee
+                  caseACocher.className = 'rt-case-visuelle'
+                  caseACocher.contentEditable = 'false'
+                  caseACocher.setAttribute(
+                    'aria-label',
+                    noeud.textContent.trim() || 'Élément à cocher'
+                  )
+                  caseACocher.addEventListener('mousedown', e =>
+                    e.preventDefault()
+                  )
+                  caseACocher.addEventListener('change', () => {
+                    const ici = positionDeLaCase()
+                    if (ici !== undefined) basculerLaCase(vue, ici)
+                  })
+                  return caseACocher
+                },
+                {
+                  side: -1,
+                  ignoreSelection: true,
+                  key: `case-${position}-${cochee}`,
+                  stopEvent: () => true,
+                }
+              )
+            )
+          })
+          return DecorationSet.create(etat.doc, decorations)
+        },
+        handleKeyDown: (vue, evenement) => {
+          if (evenement.key !== 'Enter') return false
+          if (!(evenement.metaKey || evenement.ctrlKey)) return false
+          return basculerLaCase(vue, vue.state.selection.from)
+        },
+      },
+    })
+)
 
 export interface OptionsEditeurVisuel {
   racine: HTMLElement
@@ -111,26 +184,6 @@ export async function creerEditeurVisuel({
       ctx.set(remarkGFMPlugin.options.key, { tablePipeAlign: false })
       ctx.update(editorViewOptionsCtx, options => ({
         ...options,
-        // Un clic sur la case d'un élément de liste la coche ou la décoche : la
-        // case est dessinée par le style de l'élément lui-même.
-        handleClickOn: (
-          vue,
-          _position,
-          noeud,
-          positionNoeud,
-          _evenement,
-          direct
-        ) => {
-          if (!direct || noeud.type.name !== 'list_item') return false
-          if (noeud.attrs.checked == null) return false
-          vue.dispatch(
-            vue.state.tr.setNodeMarkup(positionNoeud, undefined, {
-              ...noeud.attrs,
-              checked: !noeud.attrs.checked,
-            })
-          )
-          return true
-        },
         attributes: {
           class: 'rt-markdown rt-editeur-visuel-zone',
           role: 'textbox',
@@ -154,6 +207,7 @@ export async function creerEditeurVisuel({
     })
     .use(commonmark)
     .use(gfm)
+    .use(casesACocher)
     .use(history)
     .use(listener)
     .use(clipboard)

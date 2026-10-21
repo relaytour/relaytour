@@ -1,5 +1,7 @@
 import type { Prisma } from '@relaytour/database'
 
+import { convoquerApresAffectation } from './reunions.ts'
+
 // Affectation d'une personne à des périmètres d'une période.
 //
 // L'affectation par un admin et l'import d'une équipe (ADR 0013) créent leurs
@@ -52,6 +54,14 @@ export async function creerAffectations(
         creeParId,
         createdAt: instant,
       })),
+    })
+    // Les réunions à venir qui convoquent tout le périmètre comptent la personne
+    // nouvellement affectée (ADR 0037).
+    await convoquerApresAffectation(db, {
+      userId,
+      perimetreIds: creees,
+      editionId,
+      maintenant: instant,
     })
   }
   return { creees, existantes: perimetreIds.filter(id => presentes.has(id)) }
