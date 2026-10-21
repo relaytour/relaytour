@@ -187,6 +187,16 @@ Un seul mot par notion.
 | programme | L'ensemble des séquences d'une période : le déroulé du jour J, par lieu et par heure (ADR 0040). |
 | séquence | Moment du programme : un titre, un horaire, un lieu et un périmètre facultatifs, et les personnes placées en responsabilité ou en renfort (ADR 0040). Ne pas confondre avec une réunion. |
 | lieu | Endroit d'une activité où se tient une séquence : un terrain, un bassin, une salle. Il sert d'une période à l'autre (ADR 0040). |
+| besoin en bénévoles | Nombre de renforts qu'une séquence recherche. Les places en renfort d'un membre ou d'une fiche bénévole y comptent (ADR 0041). |
+| consignes pour les bénévoles | Texte public d'une séquence : la mission, le point de rendez-vous, la tenue. Ne pas confondre avec sa description, qui reste interne (ADR 0041). |
+| appel à bénévoles | Ouverture des candidatures sur une partie du programme : la période, un périmètre ou une séquence. Il a une adresse publique secrète et des dates d'ouverture et de fermeture (ADR 0041). |
+| candidature | Dépôt d'une personne sur un appel à bénévoles : ses coordonnées, les séquences choisies et ses disponibilités. Elle attend la décision de l'équipe (ADR 0041). Ne pas confondre avec une demande. |
+| plage de disponibilité | Intervalle, avec un début et une fin, où une personne peut aider pendant la période (ADR 0041). Ne pas confondre avec le créneau d'un sondage. |
+| précisions de disponibilité | Texte libre où une personne décrit ses disponibilités : « à partir de 18 h, tout poste sauf la photo » (ADR 0041). |
+| liste d'attente | Les candidatures déposées sur une séquence dont le besoin était déjà atteint. L'équipe peut les accepter (ADR 0041). |
+| place à confirmer | Place de bénévole créée par l'équipe, que la personne n'a pas encore confirmée (ADR 0041). |
+| bénévoles à répartir | Personnes disponibles qui ne sont pas placées dans une séquence donnée : candidatures en attente, fiches avec des plages de disponibilité (ADR 0041). |
+| espace bénévole | Page publique ouverte par le lien personnel d'une fiche née d'une candidature : ses places, ses consignes, la confirmation et le retrait (ADR 0041). |
 | application installée | L'espace organisateur ajouté à l'écran d'accueil d'un téléphone ou d'un ordinateur. Elle s'ouvre sans barre d'adresse et porte le nom et l'icône de l'organisation (ADR 0023). |
 | icône d'application | Image carrée de 512 pixels qu'une organisation déclare pour son application installée (ADR 0023). |
 | hors connexion | État de l'appareil sans réseau. L'application affiche alors un écran d'attente et ne montre aucune donnée (ADR 0023). |

@@ -42,5 +42,6 @@
 | [0038](0038-fiches-et-espace-de-fichiers.md) | Fiches et espace de fichiers d'une organisation | Acceptée |
 | [0039](0039-fiches-connexes.md) | Fiches connexes et mentions de périmètre ou de groupe | Acceptée |
 | [0040](0040-programme-du-jour-j-et-benevoles.md) | Programme du jour J, séquences et bénévoles | Acceptée |
+| [0041](0041-appels-a-benevoles-et-repartition.md) | Appels à bénévoles, candidatures et répartition | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
