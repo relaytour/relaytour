@@ -2135,12 +2135,21 @@ type RessourceFiche {
   dossierLie: DossierLie!
 
   """
-  Faux quand la ressource n’existe plus chez le fournisseur. Null quand le fournisseur ne répond pas.
+  Faux quand la ressource n’existe plus chez le fournisseur. Null quand le fournisseur ne répond pas, ou quand la ressource n’est pas ouvrable.
   """
   existe: Boolean
   id: ID!
+
+  """
+  Adresse de la ressource chez le fournisseur. Null quand la ressource n’est pas ouvrable.
+  """
   lienWeb: String
   nom: String!
+
+  """
+  Vrai quand la personne lit le dossier lié de la ressource, et peut donc l’ouvrir. Faux pour une ressource d’un autre périmètre, lue dans une fiche connexe.
+  """
+  ouvrable: Boolean!
   type: TypeRessource!
 }
 

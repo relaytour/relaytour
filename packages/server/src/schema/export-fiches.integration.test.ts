@@ -392,6 +392,44 @@ describe('export des fiches', () => {
     })
   })
 
+  it('écrit la liste « Concerne aussi » dans l’en-tête, comme orga:exporter', async () => {
+    const perimetre = (slugPerimetre: string, archivedAt: Date | null) =>
+      prisma.perimetre.create({
+        data: {
+          organisationId: ids.org,
+          activiteId: ids.activite,
+          slug: slugPerimetre,
+          nom: slugPerimetre,
+          type: 'SPORT',
+          groupe: 'sport',
+          archivedAt,
+        },
+      })
+    const basket = await perimetre('basket', null)
+    const tennis = await perimetre('tennis', new Date())
+    const horaires = await creerFiche(
+      'horaires',
+      ids.natation,
+      'Ouvrir le bassin.'
+    )
+    await prisma.ficheConnexe.createMany({
+      data: [basket, tennis].map(p => ({
+        ficheId: horaires,
+        perimetreId: p.id,
+      })),
+    })
+    // Un groupe que l'activité ne déclare plus ne s'écrit pas.
+    await prisma.ficheGroupeConnexe.createMany({
+      data: ['sport', 'pole'].map(groupe => ({ ficheId: horaires, groupe })),
+    })
+    expect(await exporterFiches(ids.org, { verifier: false })).toMatchObject({
+      ecrites: 1,
+    })
+    expect(await lire('rencontres', 'natation', 'horaires.md')).toBe(
+      '---\nslug: horaires\ntitre: horaires\nconcerne:\n  - basket\nconcerneGroupes:\n  - sport\n---\n\nOuvrir le bassin.\n'
+    )
+  })
+
   it('s’arrête quand l’admin retire le dossier d’export', async () => {
     const r = await executer(ids.admin, 'mutation { retirerDossierExport }')
     expect(r.errors).toBeUndefined()

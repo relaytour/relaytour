@@ -589,6 +589,15 @@ const LIER_RESSOURCE = `mutation ($f: ID!, $d: ID!, $c: [String!]!) {
 }`
 const DELIER_RESSOURCE = `mutation ($id: ID!) { delierRessourceFiche(id: $id) }`
 const RESSOURCES = `query ($s: String!, $a: ID) { fiche(slug: $s, activiteId: $a) { ressources { id nom type existe } } }`
+const RESSOURCES_OUVRABLES = `query ($s: String!, $a: ID) { fiche(slug: $s, activiteId: $a) { ressources { nom ouvrable existe lienWeb apercu } } }`
+
+interface RessourceOuvrable {
+  nom: string
+  ouvrable: boolean
+  existe: boolean | null
+  lienWeb: string | null
+  apercu: string
+}
 
 interface Ressource {
   id: string
@@ -799,6 +808,71 @@ describe('ressources liées à une fiche', () => {
     await prisma.fiche.update({
       where: { id: ids.ficheNatation },
       data: { perimetreId: ids.natation },
+    })
+  })
+
+  it('se lisent dans une fiche connexe, et ne s’ouvrent que depuis un dossier lisible', async () => {
+    // La fiche de la natation concerne aussi le basket (ADR 0039).
+    await prisma.ficheConnexe.create({
+      data: { ficheId: ids.ficheNatation, perimetreId: ids.basket },
+    })
+    const lues = async (qui: string) => {
+      const r = await executer(qui, RESSOURCES_OUVRABLES, {
+        s: ficheNatation,
+        a: ids.activite,
+      })
+      expect(r.errors).toBeUndefined()
+      return (r.data as { fiche: { ressources: RessourceOuvrable[] } }).fiche
+        .ressources
+    }
+    // Le référent du basket voit les trois ressources. Celles du dossier de la
+    // natation ne lui donnent rien de ce que le fournisseur sait d'elles.
+    expect(await lues(ids.basketteur)).toEqual([
+      {
+        nom: 'Plan.pdf',
+        ouvrable: false,
+        existe: null,
+        lienWeb: null,
+        apercu: 'PDF',
+      },
+      {
+        nom: 'Charte.md',
+        ouvrable: true,
+        existe: true,
+        lienWeb: 'https://exemple.invalid/f-charte',
+        apercu: 'MARKDOWN',
+      },
+      {
+        nom: 'Natation',
+        ouvrable: false,
+        existe: null,
+        lienWeb: null,
+        apercu: 'AUCUN',
+      },
+    ])
+    // La nageuse lit le dossier de la natation : tout s'ouvre.
+    expect((await lues(ids.nageuse)).map(r => r.ouvrable)).toEqual([
+      true,
+      true,
+      true,
+    ])
+    // Le refus tient aussi à l'aperçu et dans l'explorateur.
+    const plan = await apercu(ids.basketteur, ids.dossierNatation, 'Plan.pdf')
+    expect(plan.status).toBe(404)
+    await plan.body?.cancel()
+    const charte = await apercu(ids.basketteur, ids.dossierCommun, 'Charte.md')
+    expect(charte.status).toBe(200)
+    await charte.body?.cancel()
+    expect(
+      code(
+        await executer(ids.basketteur, CONTENU, {
+          id: ids.dossierNatation,
+          c: [],
+        })
+      )
+    ).toBe('FORBIDDEN')
+    await prisma.ficheConnexe.deleteMany({
+      where: { ficheId: ids.ficheNatation },
     })
   })
 

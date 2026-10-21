@@ -1,6 +1,7 @@
 import { prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
+import { planifierExportFiches } from '../espace-fichiers/export.ts'
 import { lireGroupes } from '../lib/activites.ts'
 import { peutLirePerimetre } from '../lib/droits.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
@@ -246,6 +247,8 @@ builder.mutationFields(t => ({
         fiche,
         avant.map(c => c.perimetreId)
       )
+      // L'en-tête de la fiche exportée porte la liste « Concerne aussi ».
+      planifierExportFiches(fiche.organisationId)
       return prisma.fiche.findUniqueOrThrow({
         ...query,
         where: { id: fiche.id },

@@ -62,7 +62,7 @@ Apple ne publie aucune API serveur pour iCloud Drive. Ce service reste hors de c
 
 ### Export des fiches vers l'espace de fichiers
 
-- Un admin de l'organisation choisit un dossier d'export. Relaytour y écrit les fiches non archivées de toutes les activités, au format de `orga:exporter` (en-tête `slug` et `titre`, puis le Markdown) :
+- Un admin de l'organisation choisit un dossier d'export. Relaytour y écrit les fiches non archivées de toutes les activités, au format de `orga:exporter` (en-tête `slug` et `titre`, puis `concerne` et `concerneGroupes` pour une fiche connexe de l'ADR 0039, puis le Markdown) :
 
   ```
   <dossier d'export>/
