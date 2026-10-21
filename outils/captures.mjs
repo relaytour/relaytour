@@ -7,6 +7,7 @@
 //   node outils/captures.mjs --largeur 375 --hauteur 812 --mobile --sortie /tmp/captures-mobile
 //   node outils/captures.mjs --simulateur Relaytour --amont http://localhost:4571 --sortie site/captures/mobile
 //   node outils/captures.mjs --compte referent --organisation rencontres-de-la-vallee
+//   node outils/captures.mjs --compte admin-activite --appel <jeton> --espace <jeton>
 //
 // Chaque écran se photographie avec le compte du rôle que son mode d'emploi
 // décrit : `--compte` choisit le rôle, et une passe prend tous ses écrans. Le
@@ -62,6 +63,11 @@ const { values } = parseArgs({
     // Slug de l'organisation à afficher, pour un compte qui en a plusieurs : le
     // script la choisit avant chaque écran (ADR 0032).
     organisation: { type: 'string' },
+    // Jetons de la page d'un appel à bénévoles et d'un espace bénévole (ADR
+    // 0041), copiés depuis l'écran « Bénévoles » de l'instance d'exemple. Sans
+    // eux, ces deux pages publiques ne se photographient pas.
+    appel: { type: 'string' },
+    espace: { type: 'string' },
   },
 })
 
@@ -180,6 +186,19 @@ const ECRANS = [
     nom: 'programme-moi',
     compte: 'referent',
     chemin: `${ACTIVITE}/programme?vue=moi`,
+  },
+  // La vue « Répartition » (ADR 0041) : le geste choisit le point information, et le
+  // panneau trie alors les bénévoles à répartir. L'instance d'exemple doit
+  // porter des séquences avec des renforts recherchés et des candidatures.
+  {
+    nom: 'programme-repartition',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/programme?vue=repartition`,
+    apres: `(b => {
+      if (!b) return false
+      if (b.getAttribute('aria-pressed') !== 'true') return (b.click(), false)
+      return document.querySelectorAll('main .rt-repartition-placer').length > 0
+    })([...document.querySelectorAll('main button[aria-pressed]')].find(b => b.innerText.trim() === 'Point information'))`,
   },
   {
     nom: 'fiches-cartes',
@@ -349,6 +368,30 @@ const ECRANS = [
     nom: 'benevoles',
     compte: 'admin-activite',
     chemin: `${ACTIVITE}/benevoles`,
+  },
+  // La file des candidatures, puis les appels de la période (ADR 0041).
+  {
+    nom: 'benevoles-candidatures',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles?onglet=candidatures`,
+  },
+  {
+    nom: 'benevoles-appels',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles?onglet=appels`,
+  },
+  // Les deux pages publiques, ouvertes par leur lien (ADR 0041).
+  {
+    nom: 'appel-benevoles',
+    compte: 'admin-activite',
+    jeton: 'appel',
+    chemin: `/benevoles/${values.appel}`,
+  },
+  {
+    nom: 'espace-benevole',
+    compte: 'admin-activite',
+    jeton: 'espace',
+    chemin: `/benevole/${values.espace}`,
   },
   {
     nom: 'notifications-admin',
@@ -521,7 +564,11 @@ if (inconnus.length > 0) {
 
 const aPrendre = ECRANS.filter(e =>
   choisis ? choisis.includes(e.nom) : e.compte === values.compte
-)
+).filter(e => {
+  if (e.jeton === undefined || values[e.jeton] !== undefined) return true
+  console.warn(`Écran ${e.nom} écarté : il demande --${e.jeton}.`)
+  return false
+})
 
 const attendre = ms => new Promise(r => setTimeout(r, ms))
 
