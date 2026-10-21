@@ -274,7 +274,7 @@ type Benevole {
   lienEspace: String
 
   """
-  Vrai quand la personne connectée peut renvoyer le lien par mail : il est parti une fois, sans relance, vers une fiche joignable.
+  Vrai quand la personne connectée peut renvoyer le lien par mail, vers une fiche joignable : le lien est parti une fois sans relance, ou la fiche placée n’a pas pu recevoir son premier mail.
   """
   lienRenvoyable: Boolean!
   nom: String!
@@ -385,6 +385,7 @@ type ChoixCandidature {
   heureFin: String!
   id: ID!
   jour: String!
+  jourFin: String!
   lieu: String
   perimetre: Perimetre
   peutTraiter: Boolean!
@@ -728,6 +729,11 @@ type EspaceBenevole {
   nom: String!
   organisation: String!
   places: [PlaceDeLEspace!]!
+
+  """
+  Les disponibilités à venir que la personne a données, ou que l’équipe a saisies.
+  """
+  plages: [PlageDisponibilite!]!
 }
 
 type EspaceFichiers {
@@ -2309,9 +2315,9 @@ type Query {
   contenuDossierLie(chemin: [String!]!, id: ID!): ListeElementsFichiers!
 
   """
-  La couverture du programme par tranches de 30 minutes. Les périmètres filtrent les séquences ; les bénévoles à répartir se comptent tous.
+  La couverture du programme par tranches de 30 minutes. Sans périmètre donné, toutes les séquences comptent. Sinon, seules comptent celles des périmètres donnés, et celles sans périmètre avec `sansPerimetre`. Les bénévoles à répartir se comptent tous.
   """
-  couvertureProgramme(editionId: ID!, perimetreIds: [ID!]): [TrancheCouverture!]!
+  couvertureProgramme(editionId: ID!, perimetreIds: [ID!], sansPerimetre: Boolean = false): [TrancheCouverture!]!
   demandes(editionId: ID!, statut: StatutDemande): [Demande!]!
 
   """
@@ -2931,6 +2937,12 @@ type TrancheCouverture {
   debut: DateTime!
   disponibles: Int!
   fin: DateTime!
+
+  """L’heure de début de la tranche, HH:MM."""
+  heure: String!
+
+  """Le jour de la tranche, dans le fuseau de l’organisation."""
+  jour: String!
 }
 
 """

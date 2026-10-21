@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Une fiche renvoie aux documents de l'espace de fichiers

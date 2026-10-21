@@ -22,6 +22,8 @@ import {
   signalerPlacesModifiees,
 } from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { sousVerrouOrganisation } from '../lib/limites.ts'
+import { heureLocale } from '../lib/heures.ts'
 import { peutEcrireSequence, PLACES_MAX } from '../lib/programme.ts'
 
 import { PlageRef } from './appels.ts'
@@ -102,6 +104,7 @@ const ARepartirRef = builder
       nom: t.exposeString('nom'),
       plages: t.field({
         type: [PlageRef],
+        complexity: { field: 1, multiplier: 2 },
         resolve: r => r.plages.map(p => ({ ...p, fuseau: r.fuseau })),
       }),
       precisionsDisponibilite: t.exposeString('precisions', {
@@ -113,8 +116,16 @@ const ARepartirRef = builder
         description: 'Le nom de l’appel, pour une candidature.',
       }),
       ouAilleurs: t.exposeBoolean('ouAilleurs'),
-      choix: t.field({ type: [ChoixResumeRef], resolve: r => r.choix }),
-      places: t.field({ type: [PlaceTenueRef], resolve: r => r.places }),
+      choix: t.field({
+        type: [ChoixResumeRef],
+        complexity: { field: 1, multiplier: 2 },
+        resolve: r => r.choix,
+      }),
+      places: t.field({
+        type: [PlaceTenueRef],
+        complexity: { field: 1, multiplier: 2 },
+        resolve: r => r.places,
+      }),
       adequation: t.field({
         type: AdequationEnum,
         nullable: true,
@@ -132,6 +143,7 @@ const ARepartirRef = builder
 interface TrancheLue {
   debut: Date
   fin: Date
+  fuseau: string
   besoin: number
   confirmees: number
   aConfirmer: number
@@ -146,6 +158,14 @@ const TrancheRef = builder
     fields: t => ({
       debut: t.field({ type: 'DateTime', resolve: r => r.debut }),
       fin: t.field({ type: 'DateTime', resolve: r => r.fin }),
+      jour: t.string({
+        description: 'Le jour de la tranche, dans le fuseau de l’organisation.',
+        resolve: r => heureLocale(r.debut, r.fuseau).jour,
+      }),
+      heure: t.string({
+        description: 'L’heure de début de la tranche, HH:MM.',
+        resolve: r => heureLocale(r.debut, r.fuseau).heure,
+      }),
       besoin: t.exposeInt('besoin'),
       confirmees: t.exposeInt('confirmees'),
       aConfirmer: t.exposeInt('aConfirmer'),
@@ -172,26 +192,46 @@ async function benevolesARepartir(
   ecrits: 'TOUS' | Set<string>
 ): Promise<ARepartir[]> {
   const organisationId = ctx.organisation!.id
+  // Le filtre des droits s'applique en base : aucune limite arbitraire ne coupe
+  // la liste. Les plafonds bornent déjà son volume (500 candidatures en attente
+  // par appel, 20 appels ouverts, 2 000 fiches par activité).
+  const appelsVus: Prisma.AppelBenevolesWhereInput =
+    ecrits === 'TOUS'
+      ? {}
+      : {
+          OR: [{ portee: 'PERIODE' }, { perimetreId: { in: [...ecrits] } }],
+        }
+  const candidaturesVues: Prisma.CandidatureWhereInput = {
+    organisationId,
+    editionId: edition.id,
+    appel: appelsVus,
+  }
   const [candidatures, fiches] = await Promise.all([
+    // Les candidatures en attente qui n'ont pas encore de fiche.
     prisma.candidature.findMany({
-      where: {
-        organisationId,
-        editionId: edition.id,
-        OR: [{ statut: 'EN_ATTENTE' }, { benevoleId: { not: null } }],
-      },
+      where: { ...candidaturesVues, statut: 'EN_ATTENTE', benevoleId: null },
       include: {
-        appel: { select: { nom: true, portee: true, perimetreId: true } },
+        appel: { select: { nom: true } },
         plages: true,
         choix: { select: { sequenceId: true, statut: true } },
       },
-      orderBy: { createdAt: 'asc' },
-      take: 5000,
+      orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
     }),
+    // Les fiches qui ont des plages pour la période, ou une candidature visible
+    // encore en attente : une candidature acceptée en partie reste à répartir,
+    // même sans plage.
     prisma.benevole.findMany({
       where: {
         organisationId,
         activiteId: edition.activiteId,
-        plages: { some: { editionId: edition.id } },
+        OR: [
+          { plages: { some: { editionId: edition.id } } },
+          {
+            candidatures: {
+              some: { ...candidaturesVues, statut: 'EN_ATTENTE' },
+            },
+          },
+        ],
       },
       include: {
         plages: { where: { editionId: edition.id } },
@@ -201,41 +241,40 @@ async function benevolesARepartir(
             sequence: { select: { id: true, debut: true, fin: true } },
           },
         },
+        candidatures: {
+          where: candidaturesVues,
+          include: {
+            appel: { select: { nom: true } },
+            choix: { select: { sequenceId: true, statut: true } },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
       },
       orderBy: [{ nom: 'asc' }, { id: 'asc' }],
-      take: 5000,
     }),
   ])
-  const visibles = candidatures.filter(c => voitLAppel(ecrits, c.appel))
-  const parFiche = new Map<string, typeof visibles>()
-  for (const c of visibles) {
-    if (c.benevoleId === null) continue
-    parFiche.set(c.benevoleId, [...(parFiche.get(c.benevoleId) ?? []), c])
-  }
   const notes = await coordonneesLisibles(
     ctx,
     edition.activiteId,
     fiches.map(f => f.id)
   )
-  const resultat: ARepartir[] = visibles
-    .filter(c => c.benevoleId === null && c.statut === 'EN_ATTENTE')
-    .map(c => ({
-      cle: `candidature:${c.id}`,
-      candidatureId: c.id,
-      benevoleId: null,
-      nom: c.nom,
-      plages: c.plages,
-      precisions: c.precisionsDisponibilite,
-      message: c.message,
-      origine: c.appel.nom,
-      ouAilleurs: c.ouAilleurs,
-      choix: c.choix,
-      places: [],
-      adequation: null,
-      note: null,
-    }))
+  const resultat: ARepartir[] = candidatures.map(c => ({
+    cle: `candidature:${c.id}`,
+    candidatureId: c.id,
+    benevoleId: null,
+    nom: c.nom,
+    plages: c.plages,
+    precisions: c.precisionsDisponibilite,
+    message: c.message,
+    origine: c.appel.nom,
+    ouAilleurs: c.ouAilleurs,
+    choix: c.choix,
+    places: [],
+    adequation: null,
+    note: null,
+  }))
   for (const fiche of fiches) {
-    const siennes = parFiche.get(fiche.id) ?? []
+    const siennes = fiche.candidatures
     const enAttente = siennes.find(c => c.statut === 'EN_ATTENTE')
     resultat.push({
       cle: `benevole:${fiche.id}`,
@@ -306,23 +345,33 @@ builder.queryFields(t => ({
     type: [TrancheRef],
     authScopes: { connecte: true },
     description:
-      'La couverture du programme par tranches de 30 minutes. Les périmètres filtrent les séquences ; les bénévoles à répartir se comptent tous.',
+      'La couverture du programme par tranches de 30 minutes. Sans périmètre donné, toutes les séquences comptent. Sinon, seules comptent celles des périmètres donnés, et celles sans périmètre avec `sansPerimetre`. Les bénévoles à répartir se comptent tous.',
     args: {
       editionId: t.arg.id({ required: true }),
       perimetreIds: t.arg.idList(),
+      sansPerimetre: t.arg.boolean({ defaultValue: false }),
     },
     resolve: async (_root, args, ctx) => {
       const { edition, ecrits } = await editionRepartie(ctx, args.editionId)
       const filtre = args.perimetreIds?.map(String)
+      // Le même filtre que la frise : une liste vide avec `sansPerimetre` faux
+      // ne retient aucune séquence.
+      const portee =
+        filtre === undefined
+          ? {}
+          : {
+              OR: [
+                ...(filtre.length > 0 ? [{ perimetreId: { in: filtre } }] : []),
+                ...(args.sansPerimetre ? [{ perimetreId: null }] : []),
+              ],
+            }
       const [sequences, liste] = await Promise.all([
         prisma.sequence.findMany({
           where: {
             organisationId: ctx.organisation!.id,
             editionId: edition.id,
             besoinBenevoles: { gt: 0 },
-            ...(filtre && filtre.length > 0
-              ? { perimetreId: { in: filtre } }
-              : {}),
+            ...portee,
           },
           include: {
             places: {
@@ -333,6 +382,7 @@ builder.queryFields(t => ({
         }),
         benevolesARepartir(ctx, edition, ecrits),
       ])
+      const fuseau = ctx.organisation!.fuseauHoraire
       return couverture(
         sequences.map(s => ({
           debut: s.debut,
@@ -342,7 +392,7 @@ builder.queryFields(t => ({
           aConfirmer: s.places.filter(p => p.confirmeeLe === null).length,
         })),
         liste
-      )
+      ).map(t => ({ ...t, fuseau }))
     },
   }),
 }))
@@ -404,16 +454,21 @@ builder.mutationFields(t => ({
         if (candidature === null || !voitLAppel(ecrits, candidature.appel)) {
           throw accesRefuse()
         }
-        const { benevoleId } = await prisma.$transaction(async tx => {
-          const acceptee = await accepterSurSequence(tx, {
-            candidatureId: candidature.id,
-            sequenceId: sequence.id,
-            acteurId: ctx.personne!.id,
-            maintenant,
-          })
-          await incrementer(tx, sequence.id)
-          return acceptee
-        })
+        // Le verrou de l'organisation protège la recherche et la création de
+        // la fiche, comme creerBenevole.
+        const { benevoleId } = await sousVerrouOrganisation(
+          sequence.organisationId,
+          async tx => {
+            const acceptee = await accepterSurSequence(tx, {
+              candidatureId: candidature.id,
+              sequenceId: sequence.id,
+              acteurId: ctx.personne!.id,
+              maintenant,
+            })
+            await incrementer(tx, sequence.id)
+            return acceptee
+          }
+        )
         await annoncerPlace(prisma, {
           benevoleId,
           organisationId: sequence.organisationId,
@@ -500,7 +555,18 @@ builder.mutationFields(t => ({
       if (place === null) throw accesRefuse()
       const sequence = await sequenceEcrite(ctx, place.sequenceId)
       await prisma.$transaction(async tx => {
-        await tx.placeSequence.delete({ where: { id: place.id } })
+        // La séquence d'abord, comme modifierSequence et placerBenevole.
+        await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${sequence.id} FOR UPDATE`
+        // Une modification de la séquence validée entre-temps a pu recréer la
+        // place sous un autre identifiant : l'écran doit alors se relire.
+        const { count } = await tx.placeSequence.deleteMany({
+          where: { id: place.id },
+        })
+        if (count === 0) {
+          throw erreurSaisie(
+            'Cette place a changé entre-temps. Rechargez le programme.'
+          )
+        }
         await incrementer(tx, sequence.id)
       })
       if (place.benevoleId !== null) {

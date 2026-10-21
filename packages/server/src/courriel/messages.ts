@@ -734,7 +734,7 @@ export async function composer(
     const activite = fiche.activite.nom
     if (job.sorte === 'benevole-lien' && !confirmee) {
       variables.intitule = 'Votre candidature est retenue'
-      variables.intro = `L’équipe de ${activite} vous propose les places suivantes.`
+      variables.intro = `L’équipe d’organisation vous propose les places suivantes pour « ${activite} ».`
       variables.consigne =
         'Confirmez votre participation depuis votre espace. Vous pouvez aussi y décliner une place.'
       variables.libelleBouton = 'Confirmer ma participation'
@@ -742,14 +742,14 @@ export async function composer(
         'Si vous n’êtes pas à l’origine de cette inscription, ignorez ce message. Vos données seront supprimées.'
     } else if (job.sorte === 'benevole-lien') {
       variables.intitule = 'Votre espace bénévole'
-      variables.intro = `Voici le lien de votre espace bénévole pour ${activite}.`
+      variables.intro = `Voici le lien de votre espace bénévole pour « ${activite} ».`
       variables.consigne =
         'Vous y retrouvez vos places, leurs consignes et le fichier pour votre agenda.'
       variables.libelleBouton = 'Ouvrir mon espace'
       variables.avertissement = 'Gardez ce lien : il reste le même.'
     } else {
       variables.intitule = 'Vos places ont changé'
-      variables.intro = `L’équipe de ${activite} a modifié vos places. Voici la liste à jour.`
+      variables.intro = `L’équipe d’organisation a modifié vos places pour « ${activite} ». Voici la liste à jour.`
       variables.consigne = places.some(p => p.confirmeeLe === null)
         ? 'Confirmez les places marquées « à confirmer » depuis votre espace.'
         : 'Vous retrouvez vos places et leurs consignes dans votre espace.'

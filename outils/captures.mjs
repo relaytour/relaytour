@@ -7,6 +7,7 @@
 //   node outils/captures.mjs --largeur 375 --hauteur 812 --mobile --sortie /tmp/captures-mobile
 //   node outils/captures.mjs --simulateur Relaytour --amont http://localhost:4571 --sortie site/captures/mobile
 //   node outils/captures.mjs --compte referent --organisation rencontres-de-la-vallee
+//   node outils/captures.mjs --compte admin-activite --appel <jeton> --espace <jeton>
 //
 // Chaque écran se photographie avec le compte du rôle que son mode d'emploi
 // décrit : `--compte` choisit le rôle, et une passe prend tous ses écrans. Le
@@ -62,6 +63,11 @@ const { values } = parseArgs({
     // Slug de l'organisation à afficher, pour un compte qui en a plusieurs : le
     // script la choisit avant chaque écran (ADR 0032).
     organisation: { type: 'string' },
+    // Jetons de la page d'un appel à bénévoles et d'un espace bénévole (ADR
+    // 0041), copiés depuis l'écran « Bénévoles » de l'instance d'exemple. Sans
+    // eux, ces deux pages publiques ne se photographient pas.
+    appel: { type: 'string' },
+    espace: { type: 'string' },
   },
 })
 
@@ -99,6 +105,14 @@ const cliquer = texte =>
 /** Clique le premier élément de <main> dont le libellé d'accessibilité vaut `libelle`. */
 const cliquerLibelle = libelle =>
   `(e => (e?.click(), Boolean(e)))(document.querySelector(${JSON.stringify(`main [aria-label="${libelle}"]`)}))`
+
+/**
+ * Place le titre de <main> dont le texte commence par `texte` à `marge` pixels
+ * du haut, sous la barre haute flottante. Le navigateur borne le défilement : un
+ * panneau en bas de page reste entier. `pret` ajoute une condition sur le panneau.
+ */
+const placer = (texte, marge, pret = 'true') =>
+  `(e => (e && window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - ${marge}), Boolean(e) && (p => ${pret})(e.closest('section'))))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim().startsWith(${JSON.stringify(texte)})))`
 
 /** Fait défiler jusqu'au titre dont le texte vaut `texte`. */
 const defiler = texte =>
@@ -173,6 +187,26 @@ const ECRANS = [
     compte: 'referent',
     chemin: `${ACTIVITE}/programme?vue=moi`,
   },
+  // La vue « Répartition » (ADR 0041) : le geste choisit le point information, et le
+  // panneau trie alors les bénévoles à répartir. Sur un téléphone, la séquence
+  // s'ouvre dans un volet. L'instance d'exemple doit porter des séquences avec des
+  // renforts recherchés et des candidatures.
+  {
+    nom: 'programme-repartition',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/programme?vue=repartition`,
+    apres: `(() => {
+      const pret = document.querySelectorAll('.rt-repartition-placer').length > 0
+      const bureau = [...document.querySelectorAll('main button[aria-pressed]')].find(b => b.innerText.trim() === 'Point information')
+      if (bureau) {
+        if (bureau.getAttribute('aria-pressed') !== 'true') return (bureau.click(), false)
+        return pret
+      }
+      const telephone = [...document.querySelectorAll('main button.rt-repartition-manque')].find(b => b.querySelector('strong')?.innerText.trim() === 'Point information')
+      if (!telephone) return false
+      return pret || (telephone.click(), false)
+    })()`,
+  },
   {
     nom: 'fiches-cartes',
     compte: 'referent',
@@ -185,10 +219,38 @@ const ECRANS = [
     chemin: `${ACTIVITE}/fiches`,
     avant: "localStorage.setItem('relaytour.fiches.affichage', 'liste')",
   },
+  // L'onglet « Documents » : les dossiers liés de l'espace de fichiers (ADR 0038).
+  // L'instance d'exemple doit porter une connexion et au moins un dossier lié.
+  {
+    nom: 'documents',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/fiches?vue=documents`,
+    apres: `document.querySelectorAll('main .rt-carte-fiche').length > 0`,
+  },
   {
     nom: 'fiche',
     compte: 'referent',
     chemin: `${ACTIVITE}/fiches/planifier-les-creneaux`,
+  },
+  // Les ressources liées de la fiche (ADR 0038) : l'instance d'exemple doit en
+  // porter trois.
+  {
+    nom: 'fiche-ressources',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/fiches/planifier-les-creneaux`,
+    apres: placer(
+      'Ressources liées',
+      140,
+      'p?.querySelectorAll("li").length >= 3'
+    ),
+  },
+  // L'éditeur de la fiche en mode visuel, avec sa barre de mise en forme.
+  {
+    nom: 'fiche-editeur',
+    compte: 'referent',
+    chemin: `${ACTIVITE}/fiches/planifier-les-creneaux/modifier`,
+    avant: "localStorage.setItem('relaytour.fiches.editeur', 'visuel')",
+    apres: `Boolean(document.querySelector('main [aria-label="Gras"]'))`,
   },
   // Le périmètre de la personne, avec ses tâches et le droit d'y écrire.
   {
@@ -286,8 +348,7 @@ const ECRANS = [
     nom: 'preferences-organigramme',
     compte: 'referent',
     chemin: `${ACTIVITE}/preferences`,
-    // Le titre reste sous la barre haute flottante : le geste remonte un peu.
-    apres: `(e => (e?.scrollIntoView({ block: 'start' }), window.scrollBy(0, -140), Boolean(e)))([...document.querySelectorAll('main h2')].find(e => e.innerText.trim() === 'Votre adresse dans l’organigramme'))`,
+    apres: placer('Votre adresse dans l’organigramme', 140),
   },
   // Le tiroir de la cloche, rangé par activité (ADR 0032). La cloche est dans la
   // barre haute, hors de <main>.
@@ -314,6 +375,30 @@ const ECRANS = [
     nom: 'benevoles',
     compte: 'admin-activite',
     chemin: `${ACTIVITE}/benevoles`,
+  },
+  // La file des candidatures, puis les appels de la période (ADR 0041).
+  {
+    nom: 'benevoles-candidatures',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles?onglet=candidatures`,
+  },
+  {
+    nom: 'benevoles-appels',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles?onglet=appels`,
+  },
+  // Les deux pages publiques, ouvertes par leur lien (ADR 0041).
+  {
+    nom: 'appel-benevoles',
+    compte: 'admin-activite',
+    jeton: 'appel',
+    chemin: `/benevoles/${values.appel}`,
+  },
+  {
+    nom: 'espace-benevole',
+    compte: 'admin-activite',
+    jeton: 'espace',
+    chemin: `/benevole/${values.espace}`,
   },
   {
     nom: 'notifications-admin',
@@ -451,6 +536,17 @@ const ECRANS = [
     chemin: `${ACTIVITE}/admin/activites`,
     apres: cliquer('Nouvelle activité'),
   },
+  // L'espace de fichiers de l'organisation (ADR 0038), puis ses dossiers liés.
+  { nom: 'espace-fichiers', chemin: `${ACTIVITE}/admin/espace-fichiers` },
+  {
+    nom: 'espace-fichiers-dossiers',
+    chemin: `${ACTIVITE}/admin/espace-fichiers`,
+    apres: placer(
+      'Dossiers liés',
+      140,
+      'p?.querySelectorAll(\'[aria-label^="Retirer le dossier"]\').length > 0'
+    ),
+  },
   { nom: 'organisation', chemin: `${ACTIVITE}/admin/organisation` },
   {
     nom: 'organisation-contenu',
@@ -475,7 +571,11 @@ if (inconnus.length > 0) {
 
 const aPrendre = ECRANS.filter(e =>
   choisis ? choisis.includes(e.nom) : e.compte === values.compte
-)
+).filter(e => {
+  if (e.jeton === undefined || values[e.jeton] !== undefined) return true
+  console.warn(`Écran ${e.nom} écarté : il demande --${e.jeton}.`)
+  return false
+})
 
 const attendre = ms => new Promise(r => setTimeout(r, ms))
 

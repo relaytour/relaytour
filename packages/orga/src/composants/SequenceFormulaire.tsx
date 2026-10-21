@@ -1,6 +1,15 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
-import { App, Button, Form, Input, Modal, Radio, Select } from 'antd'
+import {
+  App,
+  Button,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Radio,
+  Select,
+} from 'antd'
 import { useEffect } from 'react'
 
 import { graphql } from '../gql'
@@ -23,6 +32,8 @@ const CREER = graphql(`
     $heureFin: String!
     $description: String
     $places: [PlaceSequenceInput!]
+    $besoinBenevoles: Int
+    $consignesBenevoles: String
   ) {
     creerSequence(
       editionId: $editionId
@@ -35,6 +46,8 @@ const CREER = graphql(`
       heureFin: $heureFin
       description: $description
       places: $places
+      besoinBenevoles: $besoinBenevoles
+      consignesBenevoles: $consignesBenevoles
     ) {
       id
     }
@@ -52,6 +65,8 @@ const MODIFIER = graphql(`
     $heureFin: String!
     $description: String
     $places: [PlaceSequenceInput!]
+    $besoinBenevoles: Int
+    $consignesBenevoles: String
     $versionAttendue: Int!
   ) {
     modifierSequence(
@@ -64,6 +79,8 @@ const MODIFIER = graphql(`
       heureFin: $heureFin
       description: $description
       places: $places
+      besoinBenevoles: $besoinBenevoles
+      consignesBenevoles: $consignesBenevoles
       versionAttendue: $versionAttendue
     ) {
       id
@@ -88,6 +105,8 @@ export interface SequenceSaisie {
   heureDebut: string
   heureFin: string
   description?: string | null
+  besoinBenevoles?: number | null
+  consignesBenevoles?: string | null
   places: PlaceSaisie[]
   version: number
 }
@@ -107,6 +126,8 @@ interface Valeurs {
   heureFin: string
   lieuId?: string | null
   description?: string
+  besoinBenevoles?: number | null
+  consignesBenevoles?: string
   places: PlaceSaisie[]
 }
 
@@ -128,7 +149,15 @@ export default function SequenceFormulaire({
   const client = useApolloClient()
   const { activite } = useActivite()
   const [form] = Form.useForm<Valeurs>()
-  const relire = { refetchQueries: ['Programme', 'ProgrammePerimetre'] }
+  // La vue « Répartition » suit les besoins et les horaires des séquences.
+  const relire = {
+    refetchQueries: [
+      'Programme',
+      'ProgrammePerimetre',
+      'BenevolesARepartir',
+      'CouvertureProgramme',
+    ],
+  }
   const [creer, creation] = useMutation(CREER, relire)
   const [modifier, modification] = useMutation(MODIFIER, relire)
   const existante = sequence !== null && 'id' in sequence ? sequence : null
@@ -161,6 +190,8 @@ export default function SequenceFormulaire({
             heureFin: sequence.heureFin,
             lieuId: sequence.lieuId,
             description: sequence.description ?? '',
+            besoinBenevoles: sequence.besoinBenevoles ?? null,
+            consignesBenevoles: sequence.consignesBenevoles ?? '',
             places: sequence.places,
           }
         : {
@@ -172,6 +203,8 @@ export default function SequenceFormulaire({
             heureFin: '10:00',
             lieuId: sequence.lieuId ?? null,
             description: '',
+            besoinBenevoles: null,
+            consignesBenevoles: '',
             places: [],
           }
     )
@@ -203,6 +236,8 @@ export default function SequenceFormulaire({
       heureFin: v.heureFin,
       lieuId: v.lieuId ?? null,
       description: v.description ?? '',
+      besoinBenevoles: v.besoinBenevoles ?? 0,
+      consignesBenevoles: v.consignesBenevoles ?? '',
       places: (v.places ?? [])
         .filter(p => p?.personne)
         .map(p =>
@@ -331,6 +366,32 @@ export default function SequenceFormulaire({
         <Form.Item label="Description (facultative)" name="description">
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} />
         </Form.Item>
+        <fieldset className="rt-sondage-creneaux">
+          <legend>Bénévoles</legend>
+          <Form.Item
+            label="Renforts recherchés (facultatif)"
+            name="besoinBenevoles"
+            extra="Les appels à bénévoles proposent la séquence tant que ce nombre n’est pas atteint. Les responsables n’y comptent pas."
+          >
+            <InputNumber min={0} max={200} precision={0} inputMode="numeric" />
+          </Form.Item>
+          <Form.Item
+            label="Consignes pour les bénévoles (facultatives)"
+            name="consignesBenevoles"
+            extra="Ce texte est public : la page d’un appel l’affiche. Il ne doit contenir aucune coordonnée personnelle."
+            rules={[
+              {
+                max: 2000,
+                message: 'Les consignes dépassent 2 000 caractères.',
+              },
+            ]}
+          >
+            <Input.TextArea
+              autoSize={{ minRows: 2, maxRows: 6 }}
+              placeholder="La mission, le point de rendez-vous, la tenue."
+            />
+          </Form.Item>
+        </fieldset>
         <Form.List name="places">
           {(champs, { add, remove }) => (
             <fieldset className="rt-sondage-creneaux">

@@ -169,16 +169,24 @@
             <img src="../captures/programme-moi.webp" data-mobile="../captures/mobile/programme-moi.webp" width="1440" height="900" loading="lazy" alt="Vue Mon jour J : les séquences de la référente, avec leur horaire, leur lieu et son rôle." />
             <figcaption>La vue « Mon jour J » d'une référente du pôle Bénévoles.</figcaption>
           </figure>
-          <p class="note">Vos séquences entrent dans votre abonnement à l'agenda, décrit dans vos <a href="#e-preferences">Préférences</a>. Elles n'envoient aucun mail : le programme sert de repère, pas de convocation.</p>
+          <p>Une séquence peut aussi rechercher des bénévoles en renfort, avec des consignes publiques. Sa jauge s'affiche alors dans la grille, par exemple « 0/3 ». La vue <strong>Répartition</strong> montre les heures qui manquent de monde, et les bénévoles disponibles à y placer.</p>
+          <figure>
+            <img src="../captures/programme-repartition.webp" data-mobile="../captures/mobile/programme-repartition.webp" width="1440" height="900" loading="lazy" alt="Vue Répartition : le bandeau de couverture, les séquences du pôle Bénévoles, et à droite les bénévoles à répartir." />
+            <figcaption>La vue « Répartition » d'une référente du pôle Bénévoles.</figcaption>
+          </figure>
+          <p class="note">Vos séquences entrent dans votre abonnement à l'agenda, décrit dans vos <a href="#e-preferences">Préférences</a>. Elles ne convoquent personne de l'équipe par mail. Le mode d'emploi <a href="benevoles.html">Recruter et répartir les bénévoles</a> décrit les renforts, les appels et la vue « Répartition ».</p>
         </article>
 
         <article class="verre ecran" id="e-benevoles">
           <div class="ecran-tete"><h3>Bénévoles</h3><span class="route">/&lt;activité&gt;/benevoles</span></div>
-          <p>L'écran « Bénévoles » liste les personnes qui aident l'activité sans compte dans l'application. Chaque fiche porte un nom, et parfois un téléphone, une adresse et une note. Elle indique le nombre de séquences où la personne est placée.</p>
+          <p>L'écran « Bénévoles » liste les personnes qui aident l'activité sans compte dans l'application. Il a trois onglets : « Fiches », « Candidatures » et « Appels ».</p>
+          <p>Chaque fiche porte un nom, et parfois un téléphone, une adresse et une note. Elle indique le nombre de séquences où la personne est placée, et l'état de son lien personnel.</p>
           <p>Vous créez une fiche avec l'accord de la personne, puis vous la placez dans les séquences de vos périmètres. Vous modifiez les fiches que vous avez créées. Les admins de l'activité modifient et suppriment toutes les fiches.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Nouvelle fiche</span></span><span>Enregistrer une ou un bénévole. La case d'accord est obligatoire.</span></li>
+            <li><span><span class="libelle">Prévenir par mail</span></span><span>Avec une adresse, la première place envoie à la personne son lien personnel. Décochez l'option pour une personne que vous joignez autrement.</span></li>
           </ul>
+          <p>Les onglets « Candidatures » et « Appels » servent au recrutement par une adresse publique. Le mode d'emploi <a href="benevoles.html">Recruter et répartir les bénévoles</a> les décrit.</p>
           <p class="note">Les coordonnées d'une fiche se lisent par les admins de l'activité, par la personne qui l'a créée et par les personnes d'un périmètre où la ou le bénévole est placé·e. Ailleurs, la cellule indique « Réservé ». Le serveur supprime une fiche qui ne sert plus depuis deux ans.</p>
         </article>
 
@@ -271,7 +279,17 @@
             <img src="../captures/fiches-cartes.webp" data-mobile="../captures/mobile/fiches-cartes.webp" width="1440" height="900" loading="lazy" alt="Écran Fiches : les fiches groupées par périmètre, affichées en cartes." />
             <figcaption>Écran Fiches, sur l'organisation d'exemple.</figcaption>
           </figure>
+          <figure>
+            <img src="../captures/fiches-liste.webp" data-mobile="../captures/mobile/fiches-liste.webp" width="1440" height="900" loading="lazy" alt="Écran Fiches en liste condensée : une ligne par fiche, avec sa source et sa date de mise à jour." />
+            <figcaption>Le même écran en liste condensée.</figcaption>
+          </figure>
           <p class="note">Chaque fiche indique sa date de mise à jour et son auteur, ou la mention « Depuis le dépôt » quand elle vient du dossier de contenu de l'organisation.</p>
+          <p>Quand l'association a connecté son espace de fichiers, l'onglet « Documents » s'ajoute à côté de l'onglet « Fiches ». Il présente les dossiers liés à vos périmètres et à toute l'activité. Un clic ouvre un dossier, puis un document. Relaytour affiche un PDF, une image, un texte ou un fichier Markdown, sans en garder de copie. Un document bureautique s'affiche converti en PDF par le fournisseur. Un autre document se télécharge, ou s'ouvre chez le fournisseur.</p>
+          <figure>
+            <img src="../captures/documents.webp" data-mobile="../captures/mobile/documents.webp" width="1440" height="900" loading="lazy" alt="Onglet Documents de l'écran Fiches : un dossier lu par toute l'activité, puis un dossier du périmètre Bénévoles." />
+            <figcaption>L'onglet Documents, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <p class="note">Un admin de l'organisation choisit les dossiers liés. Vous ne voyez que ceux de vos périmètres et ceux de toute l'activité.</p>
         </article>
 
         <article class="verre ecran" id="e-fiche">
@@ -285,6 +303,15 @@
             <li><span><span class="libelle">Modifier</span></span><span>Corriger la fiche, si un admin vous a accordé un droit de rédaction sur le périmètre. Chaque enregistrement crée une version. L'éditeur s'ouvre en mode visuel, avec une barre de mise en forme, décrite dans le guide <a href="markdown.html">Écrire une fiche en Markdown</a>.</span></li>
           </ul>
           <p>Le panneau « À propos » indique les périmètres et les groupes que la fiche concerne aussi. Les personnes de ces périmètres la lisent sans la modifier. Dans le texte, une mention comme @logistique ou @groupe:sport s'affiche comme une étiquette ; celle d'un groupe liste ses périmètres. Le guide <a href="markdown.html#m-concerne">Écrire une fiche en Markdown</a> décrit la liste « Concerne aussi ».</p>
+          <p>Le panneau « Ressources liées » cite les documents de l'espace de fichiers qui accompagnent la fiche : un modèle de tableau, un plan, une charte. Un clic ouvre le document. Une ressource marquée « Réservée au périmètre d'origine » vient d'un dossier que vous ne lisez pas : vous voyez son nom sans l'ouvrir.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Lier une ressource</span></span><span>Choisir un dossier ou un fichier dans un dossier lié du périmètre de la fiche, ou de toute l'activité. Ce bouton suit le droit de rédaction. Une fiche porte trente ressources au plus.</span></li>
+            <li><span><span class="libelle">Retirer</span></span><span>Retirer une ressource de la fiche. Le document reste dans l'espace de fichiers.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/fiche-ressources.webp" data-mobile="../captures/mobile/fiche-ressources.webp" width="1440" height="900" loading="lazy" alt="Bas d'une fiche méthode : le panneau Ressources liées avec deux documents du dossier Bénévoles et un document du dossier Commun." />
+            <figcaption>Les ressources liées d'une fiche, sur l'organisation d'exemple.</figcaption>
+          </figure>
           <p class="note">Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels : une fiche qui en contient ne peut pas être reversée dans le dépôt de l'organisation. L'historique des versions est réservé aux admins.</p>
         </article>
 
@@ -444,7 +471,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.17.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.18.0.
       </footer>
     </main>
     <script src="../bascule.js"></script>
