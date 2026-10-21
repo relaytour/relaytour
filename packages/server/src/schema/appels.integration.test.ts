@@ -8,6 +8,7 @@ import { buildContext, type AppContext } from '../context.ts'
 
 import { empreinteJeton } from '../lib/abonnements-agenda.ts'
 import { purgerCandidatures } from '../lib/appels.ts'
+import { nouveauSel } from '../lib/liens.ts'
 
 import { schema } from './index.ts'
 
@@ -267,7 +268,7 @@ beforeAll(async () => {
         nom: `Appel ${portee} ${perimetreId ?? ''}`,
         ouvertLe: new Date(),
         fermeLe: h('20:00', '2027-06-06'),
-        sel: 'x'.repeat(43),
+        sel: nouveauSel(),
         empreinte: empreinteJeton(randomUUID()),
         fin: 'abcdef',
       },
@@ -823,6 +824,18 @@ describe('répartition', () => {
     expect(tranches[debuts.indexOf(h('14:00').toISOString())]?.besoin).toBe(1)
     // Le jour et l'heure se lisent dans le fuseau de l'organisation.
     expect(tranches[0]).toMatchObject({ jour: '2027-06-05', heure: '09:00' })
+    // Une liste vide sans « Toute l'activité » ne retient aucune séquence,
+    // comme la frise.
+    expect(
+      donnees<unknown[]>(
+        await executer(
+          ids.adminActivite,
+          `query ($e: ID!) { couvertureProgramme(editionId: $e, perimetreIds: [], sansPerimetre: false) { heure } }`,
+          { e: ids.edition }
+        ),
+        'couvertureProgramme'
+      )
+    ).toEqual([])
   })
 
   it('remplace les plages d’une fiche par les personnes qui la modifient', async () => {

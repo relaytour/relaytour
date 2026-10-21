@@ -1,4 +1,4 @@
-import { segmentDuJour } from './programme'
+import { minutes, segmentDuJour } from './programme'
 
 // Vue « Répartition » du programme (ADR 0041), côté navigateur : l'axe des heures
 // d'un jour, la position d'un intervalle sur cet axe, et les avertissements d'un
@@ -38,6 +38,19 @@ export function position(
   return {
     gauche: ((debut - axe.debut) / duree) * 100,
     largeur: (Math.max(0, fin - debut) / duree) * 100,
+  }
+}
+
+/**
+ * Un horaire sur un axe commun à tous les jours, en minutes. Les avertissements et
+ * les chevauchements comparent les horaires entiers, après minuit compris ; le
+ * découpage par jour ne sert qu'à l'affichage.
+ */
+export function intervalleAbsolu(h: Horaire): Intervalle {
+  const jour = (j: string) => Date.parse(`${j}T00:00:00Z`) / 60_000
+  return {
+    debut: jour(h.jour) + minutes(h.heureDebut),
+    fin: jour(h.jourFin) + minutes(h.heureFin),
   }
 }
 

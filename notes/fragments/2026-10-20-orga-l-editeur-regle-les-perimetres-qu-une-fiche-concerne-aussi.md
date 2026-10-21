@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.18.0
 fr:
   titre: >-
     Vous choisissez dans l’éditeur les périmètres qu’une fiche concerne aussi

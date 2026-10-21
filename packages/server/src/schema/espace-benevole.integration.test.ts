@@ -17,6 +17,7 @@ import { composer } from '../courriel/messages.ts'
 import type { CourrielJobData } from '../jobs/queues.ts'
 import { empreinteJeton } from '../lib/abonnements-agenda.ts'
 import { revoquerEspaces } from '../lib/espace-benevole.ts'
+import { empreinte, jetonDerive, nouveauSel } from '../lib/liens.ts'
 
 import { schema } from './index.ts'
 
@@ -33,14 +34,17 @@ const enFile = vi.hoisted(
       options: Record<string, unknown>
     }[]
 )
+// Vrai : la file refuse les jobs, comme une file injoignable.
+const file = vi.hoisted(() => ({ enPanne: false }))
 vi.mock('../courriel/file.ts', () => ({
   mettreEnFile: (
     sorte: string,
     cible: Record<string, string>,
     options: Record<string, unknown> = {}
   ) => {
+    if (file.enPanne) return Promise.resolve(false)
     enFile.push({ sorte, cible, options })
-    return Promise.resolve()
+    return Promise.resolve(true)
   },
 }))
 
@@ -88,10 +92,11 @@ const h = (heure: string, jour = '2027-06-05') =>
   new Date(`${jour}T${heure}:00+02:00`)
 
 const ACCEPTER = `mutation ($id: ID!) { accepterChoixCandidature(id: $id) { benevoleId } }`
-const ESPACE = `query ($j: String!) { espaceBenevole(jeton: $j) { organisation activite nom confirme contact ics places { ref titre jour heureDebut heureFin lieu consignes confirmee } } }`
+const ESPACE = `query ($j: String!) { espaceBenevole(jeton: $j) { organisation activite nom confirme contact ics places { ref titre jour heureDebut heureFin lieu consignes confirmee } plages { jour heureDebut heureFin } } }`
 
 interface EspaceLu {
   nom: string
+  plages: { jour: string; heureDebut: string; heureFin: string }[]
   confirme: boolean
   ics: string
   places: {
@@ -110,7 +115,11 @@ const lireEspace = async (jeton: string) =>
   ).espaceBenevole
 
 /** Dépose une candidature, puis l'accepte sur ses séquences : rend la fiche. */
-async function candidatAccepte(nom: string, sequences: string[]) {
+async function candidatAccepte(
+  nom: string,
+  sequences: string[],
+  plages: { debut: Date; fin: Date }[] = []
+) {
   const courriel = `${nom.toLowerCase().replace(/\W/g, '')}-${s}@exemple.fr`
   const candidature = await prisma.candidature.create({
     data: {
@@ -127,6 +136,9 @@ async function candidatAccepte(nom: string, sequences: string[]) {
           sequenceId,
           statut: 'EN_ATTENTE',
         })),
+      },
+      plages: {
+        create: plages.map(p => ({ editionId: ids.edition, ...p })),
       },
     },
     include: { choix: true },
@@ -159,6 +171,7 @@ async function envoyer(
 
 beforeEach(() => {
   enFile.length = 0
+  file.enPanne = false
 })
 
 beforeAll(async () => {
@@ -267,7 +280,7 @@ beforeAll(async () => {
         nom: 'Appel',
         ouvertLe: new Date(),
         fermeLe: h('20:00', '2027-06-06'),
-        sel: 'x'.repeat(43),
+        sel: nouveauSel(),
         empreinte: empreinteJeton(randomUUID()),
         fin: 'abcdef',
       },
@@ -331,7 +344,17 @@ describe('premier mail', () => {
     ])
     // La seconde acceptation, avant confirmation, n'envoie rien.
     expect(enFile.filter(j => j.sorte === 'benevole-places')).toEqual([])
-    expect(JSON.stringify(enFile)).not.toMatch(/[A-Za-z0-9_-]{43}/)
+    // L'identifiant du job porte la fiche et la date de l'envoi, jamais le jeton.
+    expect(
+      enFile.every(j =>
+        /^benevole-lien-[a-z0-9]+-\d+$/.test(String(j.options.jobId))
+      )
+    ).toBe(true)
+    expect(
+      JSON.stringify(
+        enFile.map(j => ({ ...j, options: { ...j.options, jobId: null } }))
+      )
+    ).not.toMatch(/[A-Za-z0-9_-]{43}/)
   })
 
   it('porte le lien, les places à confirmer et l’avertissement ; le jeton naît à l’envoi', async () => {
@@ -382,10 +405,11 @@ describe('premier mail', () => {
 
 describe('espace', () => {
   it('s’ouvre sans confirmer, puis confirme toutes les places par le bouton', async () => {
-    const { benevoleId } = await candidatAccepte('Noa Petit', [
-      ids.finales,
-      ids.relais,
-    ])
+    const { benevoleId } = await candidatAccepte(
+      'Noa Petit',
+      [ids.finales, ids.relais],
+      [{ debut: h('08:00'), fin: h('17:00') }]
+    )
     const { jeton } = (await envoyer('benevole-lien', benevoleId))!
     const ouvert = await lireEspace(jeton)
     expect(ouvert).toMatchObject({ nom: 'Noa Petit', confirme: false })
@@ -394,6 +418,10 @@ describe('espace', () => {
     ).toEqual([
       ['finales', false, 'Tenue claire.'],
       ['relais', false, 'Tenue claire.'],
+    ])
+    // Les disponibilités de la candidature passent sur la fiche et s'affichent.
+    expect(ouvert!.plages).toEqual([
+      { jour: '2027-06-05', heureDebut: '08:00', heureFin: '17:00' },
     ])
     expect(ouvert!.ics).toContain('BEGIN:VCALENDAR')
     expect(ouvert!.ics).toContain('SUMMARY:finales')
@@ -659,5 +687,86 @@ describe('révocation', () => {
         data: { statut: 'PREPARATION' },
       })
     }
+  })
+})
+
+describe('robustesse', () => {
+  const CONFIRMER = `mutation ($j: String!) { confirmerParticipation(jeton: $j) }`
+
+  it('refuse le lien dérivé d’un ancien secret, puis sert le lien du secret courant', async () => {
+    const { benevoleId } = await candidatAccepte('Jo Garnier', [ids.relais])
+    await envoyer('benevole-lien', benevoleId)
+    const { espaceSel } = await prisma.benevole.findUniqueOrThrow({
+      where: { id: benevoleId },
+    })
+    const ancien = jetonDerive('ancien-secret', 'espace', espaceSel!)
+    await prisma.benevole.update({
+      where: { id: benevoleId },
+      data: { espaceEmpreinte: empreinte(ancien) },
+    })
+    expect(await lireEspace(ancien)).toBeNull()
+    const lien = donnees<string>(
+      await executer(
+        ids.admin,
+        `mutation ($b: ID!) { lienEspaceBenevole(benevoleId: $b) }`,
+        { b: benevoleId }
+      ),
+      'lienEspaceBenevole'
+    )
+    const courant = lien.split('/').at(-1)!
+    expect(courant).not.toBe(ancien)
+    expect(await lireEspace(courant)).not.toBeNull()
+  })
+
+  it('n’enregistre pas l’envoi du premier lien quand la file le refuse', async () => {
+    file.enPanne = true
+    const { benevoleId } = await candidatAccepte('Lina Faure', [ids.finales])
+    const fiche = await prisma.benevole.findUniqueOrThrow({
+      where: { id: benevoleId },
+    })
+    expect(fiche.lienEnvoyeLe).toBeNull()
+    // La relance reste possible une fois la file rétablie, et l'écran la propose.
+    file.enPanne = false
+    const fiches = donnees<{ id: string; lienRenvoyable: boolean }[]>(
+      await executer(
+        ids.admin,
+        `query ($a: ID!) { benevoles(activiteId: $a) { id lienRenvoyable } }`,
+        { a: ids.activite }
+      ),
+      'benevoles'
+    )
+    expect(fiches.find(f => f.id === benevoleId)?.lienRenvoyable).toBe(true)
+    expect(
+      donnees<boolean>(
+        await executer(
+          ids.admin,
+          `mutation ($b: ID!) { renvoyerLienBenevole(benevoleId: $b) }`,
+          { b: benevoleId }
+        ),
+        'renvoyerLienBenevole'
+      )
+    ).toBe(true)
+  })
+
+  it('confirme sous le verrou des séquences de la fiche', async () => {
+    const { benevoleId } = await candidatAccepte('Rémi Caron', [ids.accueil])
+    const { jeton } = (await envoyer('benevole-lien', benevoleId))!
+    let termine = false
+    let confirmation: Promise<unknown> = Promise.resolve()
+    await prisma.$transaction(
+      async tx => {
+        await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${ids.accueil} FOR UPDATE`
+        confirmation = executer(null, CONFIRMER, { j: jeton }).then(r => {
+          termine = true
+          return r
+        })
+        await new Promise(fin => setTimeout(fin, 400))
+        // Une modification de la séquence tient ce verrou : la confirmation attend.
+        expect(termine).toBe(false)
+      },
+      { timeout: 10_000 }
+    )
+    const reponse = (await confirmation) as Awaited<ReturnType<typeof executer>>
+    expect(donnees<boolean>(reponse, 'confirmerParticipation')).toBe(true)
   })
 })

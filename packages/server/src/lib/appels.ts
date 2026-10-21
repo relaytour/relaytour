@@ -6,6 +6,7 @@ import { decalerJour, jourISO } from './agenda.ts'
 import { BENEVOLES_MAX } from './benevoles.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { journal } from './journal.ts'
+import { empreinte, jetonDe } from './liens.ts'
 import { heureLocale, instantDepuisHeureLocale } from './heures.ts'
 import { PLACES_MAX } from './programme.ts'
 
@@ -350,6 +351,31 @@ export function couverture(
   return tranches
 }
 
+// ── Adresse ──────────────────────────────────────────────────────────────────
+
+/**
+ * Le jeton de l'adresse d'un appel, recalculé depuis son sel. L'empreinte et les
+ * derniers caractères gardés se réalignent après un changement du secret du
+ * serveur ; l'écriture porte le sel observé, pour ne jamais écraser un
+ * renouvellement simultané.
+ */
+export async function jetonAppel(base: Base, appelId: string): Promise<string> {
+  for (let essai = 0; essai < 3; essai += 1) {
+    const appel = await base.appelBenevoles.findUniqueOrThrow({
+      where: { id: appelId },
+      select: { sel: true, empreinte: true },
+    })
+    const jeton = await jetonDe('appel', appel.sel)
+    if (appel.empreinte === empreinte(jeton)) return jeton
+    const { count } = await base.appelBenevoles.updateMany({
+      where: { id: appelId, sel: appel.sel },
+      data: { empreinte: empreinte(jeton), fin: jeton.slice(-6) },
+    })
+    if (count === 1) return jeton
+  }
+  throw new Error('L’adresse de l’appel change trop souvent : réessayez.')
+}
+
 // ── Droits ───────────────────────────────────────────────────────────────────
 
 /**
@@ -427,7 +453,8 @@ export async function recalculerCandidature(
 }
 
 /**
- * Accepte une candidature sur une séquence, dans la transaction de l'appelant :
+ * Accepte une candidature sur une séquence, dans une transaction ouverte par
+ * `sousVerrouOrganisation` :
  * la fiche bénévole est créée, ou rattachée par son adresse ; elle reçoit les
  * plages de la candidature pour la période et une place à confirmer en renfort.
  * Le choix de la séquence passe à « accepté », créé s'il n'existait pas. La
@@ -444,6 +471,10 @@ export async function accepterSurSequence(
   }
 ): Promise<{ benevoleId: string; placeCreee: boolean }> {
   const { candidatureId, sequenceId, acteurId, maintenant } = entree
+  // Ordre des verrous, commun à tout traitement d'une candidature : la
+  // candidature, puis la séquence. L'appelant tient déjà le verrou de
+  // l'organisation, qui protège la recherche et la création de la fiche.
+  await tx.$queryRaw`SELECT id FROM Candidature WHERE id = ${candidatureId} FOR UPDATE`
   await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${sequenceId} FOR UPDATE`
   const candidature = await tx.candidature.findUniqueOrThrow({
     where: { id: candidatureId },

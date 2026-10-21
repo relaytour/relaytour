@@ -1,6 +1,6 @@
 # Choisir un fournisseur de mail
 
-Relaytour envoie des mails transactionnels : codes de connexion, invitations, rappels d'échéance, résumés. Il ne contient pas de serveur de mail et n'en aura pas : faire tourner un serveur d'envoi demande une surveillance de réputation qu'une association n'a pas à porter. L'application parle à un service SMTP fourni par l'organisation.
+Relaytour envoie des mails transactionnels : codes de connexion, invitations, rappels d'échéance, résumés, convocations aux réunions et annulations de réunions. Il ne contient pas de serveur de mail et n'en aura pas : faire tourner un serveur d'envoi demande une surveillance de réputation qu'une association n'a pas à porter. L'application parle à un service SMTP fourni par l'organisation.
 
 ## Sur un poste
 
@@ -39,6 +39,7 @@ Vérifiez la délivrabilité avant l'ouverture avec un service d'analyse d'en-t�
 - Le code de connexion compte dans le plafond. Un jour de nombreuses connexions, les autres mails atteignent donc le plafond plus tôt.
 - Les codes envoyés au-delà du plafond s'ajoutent au total du jour. Gardez un écart entre le plafond et le quota du fournisseur pour ces codes : par exemple, un plafond de 250 pour un quota de 300.
 - Le code de connexion passe devant les autres mails de la file, pour arriver avant d'expirer.
+- Une convocation à une réunion compte dans le plafond comme les autres mails : chaque personne convoquée reçoit un mail avec un fichier iCalendar (ADR 0037). Une réunion de toute une équipe peut donc consommer une part notable du plafond du jour.
 - Le journal du worker porte l'événement `courriel-plafond-atteint` à chaque report. Un plafond atteint chaque jour est trop bas, ou signale un envoi anormal.
 
 ## Ce qui reste hors du dépôt

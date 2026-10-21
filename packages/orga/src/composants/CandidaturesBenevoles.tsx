@@ -213,6 +213,8 @@ export default function CandidaturesBenevoles({
                             <span className="rt-note">
                               {' '}
                               · {libelleJours(x.jour)}, {x.heureDebut} →{' '}
+                              {x.jourFin !== x.jour &&
+                                `${libelleJours(x.jourFin)}, `}
                               {x.heureFin}
                               {x.lieu && ` · ${x.lieu}`}
                             </span>

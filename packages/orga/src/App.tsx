@@ -18,8 +18,10 @@ import Personnes from './pages/admin/Personnes'
 import Redaction from './pages/admin/Redaction'
 import Agenda from './pages/Agenda'
 import AideMarkdown from './pages/AideMarkdown'
+import AppelBenevoles from './pages/AppelBenevoles'
 import Benevoles from './pages/Benevoles'
 import Connexion from './pages/Connexion'
+import EspaceBenevole from './pages/EspaceBenevole'
 import Fiche from './pages/Fiche'
 import FicheEditeur from './pages/FicheEditeur'
 import Fiches from './pages/Fiches'
@@ -41,6 +43,10 @@ const routeur = createBrowserRouter([
   { path: '/connexion', element: <Connexion /> },
   // Formulaire public d'une activité (ADR 0015), lisible sans session.
   { path: '/rejoindre/:organisation/:activite', element: <Rejoindre /> },
+  // Page publique d'un appel à bénévoles et espace bénévole (ADR 0041), lisibles
+  // sans session.
+  { path: '/benevoles/:jeton', element: <AppelBenevoles /> },
+  { path: '/benevole/:jeton', element: <EspaceBenevole /> },
   { path: '/', element: versActivite },
   {
     path: '/:activite',
