@@ -197,6 +197,27 @@ describe('resoudreEnv', () => {
     ).toThrow(/CLE_CHIFFREMENT_ESPACE_FICHIERS/)
   })
 
+  it('lit les hôtes Nextcloud admis, et exige la clé de chiffrement', () => {
+    const CLE = Buffer.alloc(32, 1).toString('base64')
+    expect(
+      resoudreEnv({
+        ...BASE,
+        CLE_CHIFFREMENT_ESPACE_FICHIERS: CLE,
+        NEXTCLOUD_HOTES: ' *, Nuage.lan:8443 ,',
+      }).NEXTCLOUD_HOTES
+    ).toEqual(['*', 'nuage.lan:8443'])
+    expect(() =>
+      resoudreEnv({
+        ...BASE,
+        CLE_CHIFFREMENT_ESPACE_FICHIERS: CLE,
+        NEXTCLOUD_HOTES: 'https://nuage.lan',
+      })
+    ).toThrow(/NEXTCLOUD_HOTES/)
+    expect(() => resoudreEnv({ ...BASE, NEXTCLOUD_HOTES: '*' })).toThrow(
+      /CLE_CHIFFREMENT_ESPACE_FICHIERS/
+    )
+  })
+
   it('ouvre Dropbox avec ses deux valeurs et la clé de chiffrement', () => {
     expect(() =>
       resoudreEnv({ ...BASE, DROPBOX_CLIENT_SECRET: 'secret' })

@@ -45,6 +45,8 @@ type Documents = {
     "\n  query EspaceFichiers {\n    espaceFichiers {\n      connexionsPossibles {\n        fournisseur\n        methode\n      }\n      connexion {\n        fournisseur\n        methode\n        compte\n        etat\n        connecteeLe\n        connecteePar\n        exportDossier\n        exportRapport {\n          exporteLe\n          ecrites\n          inchangees\n          supprimees\n          refusees {\n            fiche\n            raison\n          }\n          modifieesALaMain\n          erreur\n        }\n      }\n    }\n  }\n": typeof types.EspaceFichiersDocument,
     "\n  mutation CommencerConnexionEspaceFichiers(\n    $fournisseur: FournisseurFichiers!\n  ) {\n    commencerConnexionEspaceFichiers(fournisseur: $fournisseur)\n  }\n": typeof types.CommencerConnexionEspaceFichiersDocument,
     "\n  mutation ConnecterCompteServiceGoogle($cle: String!) {\n    connecterCompteServiceGoogle(cle: $cle) {\n      compte\n    }\n  }\n": typeof types.ConnecterCompteServiceGoogleDocument,
+    "\n  mutation CommencerConnexionNextcloud($adresse: String!) {\n    commencerConnexionNextcloud(adresse: $adresse) {\n      connexion\n      etat\n    }\n  }\n": typeof types.CommencerConnexionNextcloudDocument,
+    "\n  mutation TerminerConnexionNextcloud($etat: String!) {\n    terminerConnexionNextcloud(etat: $etat)\n  }\n": typeof types.TerminerConnexionNextcloudDocument,
     "\n  mutation DeconnecterEspaceFichiers {\n    deconnecterEspaceFichiers\n  }\n": typeof types.DeconnecterEspaceFichiersDocument,
     "\n  mutation ChoisirDossierExport($emplacement: String!, $chemin: [String!]!) {\n    choisirDossierExport(emplacement: $emplacement, chemin: $chemin) {\n      exportDossier\n    }\n  }\n": typeof types.ChoisirDossierExportDocument,
     "\n  mutation RetirerDossierExport {\n    retirerDossierExport\n  }\n": typeof types.RetirerDossierExportDocument,
@@ -186,6 +188,8 @@ const documents: Documents = {
     "\n  query EspaceFichiers {\n    espaceFichiers {\n      connexionsPossibles {\n        fournisseur\n        methode\n      }\n      connexion {\n        fournisseur\n        methode\n        compte\n        etat\n        connecteeLe\n        connecteePar\n        exportDossier\n        exportRapport {\n          exporteLe\n          ecrites\n          inchangees\n          supprimees\n          refusees {\n            fiche\n            raison\n          }\n          modifieesALaMain\n          erreur\n        }\n      }\n    }\n  }\n": types.EspaceFichiersDocument,
     "\n  mutation CommencerConnexionEspaceFichiers(\n    $fournisseur: FournisseurFichiers!\n  ) {\n    commencerConnexionEspaceFichiers(fournisseur: $fournisseur)\n  }\n": types.CommencerConnexionEspaceFichiersDocument,
     "\n  mutation ConnecterCompteServiceGoogle($cle: String!) {\n    connecterCompteServiceGoogle(cle: $cle) {\n      compte\n    }\n  }\n": types.ConnecterCompteServiceGoogleDocument,
+    "\n  mutation CommencerConnexionNextcloud($adresse: String!) {\n    commencerConnexionNextcloud(adresse: $adresse) {\n      connexion\n      etat\n    }\n  }\n": types.CommencerConnexionNextcloudDocument,
+    "\n  mutation TerminerConnexionNextcloud($etat: String!) {\n    terminerConnexionNextcloud(etat: $etat)\n  }\n": types.TerminerConnexionNextcloudDocument,
     "\n  mutation DeconnecterEspaceFichiers {\n    deconnecterEspaceFichiers\n  }\n": types.DeconnecterEspaceFichiersDocument,
     "\n  mutation ChoisirDossierExport($emplacement: String!, $chemin: [String!]!) {\n    choisirDossierExport(emplacement: $emplacement, chemin: $chemin) {\n      exportDossier\n    }\n  }\n": types.ChoisirDossierExportDocument,
     "\n  mutation RetirerDossierExport {\n    retirerDossierExport\n  }\n": types.RetirerDossierExportDocument,
@@ -434,6 +438,14 @@ export function graphql(source: "\n  mutation CommencerConnexionEspaceFichiers(\
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation ConnecterCompteServiceGoogle($cle: String!) {\n    connecterCompteServiceGoogle(cle: $cle) {\n      compte\n    }\n  }\n"): (typeof documents)["\n  mutation ConnecterCompteServiceGoogle($cle: String!) {\n    connecterCompteServiceGoogle(cle: $cle) {\n      compte\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CommencerConnexionNextcloud($adresse: String!) {\n    commencerConnexionNextcloud(adresse: $adresse) {\n      connexion\n      etat\n    }\n  }\n"): (typeof documents)["\n  mutation CommencerConnexionNextcloud($adresse: String!) {\n    commencerConnexionNextcloud(adresse: $adresse) {\n      connexion\n      etat\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation TerminerConnexionNextcloud($etat: String!) {\n    terminerConnexionNextcloud(etat: $etat)\n  }\n"): (typeof documents)["\n  mutation TerminerConnexionNextcloud($etat: String!) {\n    terminerConnexionNextcloud(etat: $etat)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

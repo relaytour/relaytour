@@ -1090,6 +1090,7 @@ enum FournisseurFichiers {
   SHAREPOINT
   GOOGLE_DRIVE
   DROPBOX
+  NEXTCLOUD
 }
 
 // COMPTE : un admin se connecte avec son compte, par OAuth ; le secret gardé est

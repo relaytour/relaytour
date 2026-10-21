@@ -25,6 +25,12 @@ import {
   type ConfigurationGoogle,
 } from './google.ts'
 import {
+  compteNextcloud,
+  espaceNextcloud,
+  type ConfigurationNextcloud,
+  type SecretNextcloud,
+} from './nextcloud.ts'
+import {
   espaceSharePoint,
   rafraichir,
   type ConfigurationMicrosoft,
@@ -97,6 +103,21 @@ export async function configurationDropbox(): Promise<ConfigurationDropbox | nul
   }
 }
 
+/**
+ * Nextcloud n'a pas d'application à inscrire : l'exploitant fixe seulement les
+ * hôtes qu'une organisation peut désigner.
+ */
+export async function configurationNextcloud(): Promise<ConfigurationNextcloud | null> {
+  const { env } = await import('../env.ts')
+  const hotes = env.NEXTCLOUD_HOTES ?? []
+  if (
+    hotes.length === 0 ||
+    lireCle(env.CLE_CHIFFREMENT_ESPACE_FICHIERS) === null
+  )
+    return null
+  return { tous: hotes.includes('*'), hotes: hotes.filter(h => h !== '*') }
+}
+
 export type Methode = 'COMPTE' | 'COMPTE_SERVICE'
 
 /**
@@ -112,10 +133,11 @@ export async function connexionsPossibles(): Promise<
       { fournisseur: 'GOOGLE_DRIVE', methode: 'COMPTE_SERVICE' },
     ]
   }
-  const [microsoft, google, dropbox, cle] = await Promise.all([
+  const [microsoft, google, dropbox, nextcloud, cle] = await Promise.all([
     configurationMicrosoft(),
     configurationGoogle(),
     configurationDropbox(),
+    configurationNextcloud(),
     cleDeChiffrement(),
   ])
   return [
@@ -136,6 +158,9 @@ export async function connexionsPossibles(): Promise<
     ...(dropbox === null
       ? []
       : [{ fournisseur: 'DROPBOX' as const, methode: 'COMPTE' as const }]),
+    ...(nextcloud === null
+      ? []
+      : [{ fournisseur: 'NEXTCLOUD' as const, methode: 'COMPTE' as const }]),
   ]
 }
 
@@ -158,10 +183,14 @@ export async function enregistrerConnexion(donnees: {
   return sousVerrouOrganisation(organisationId, async tx => {
     const ancienne = await tx.connexionFichiers.findUnique({
       where: { organisationId },
-      select: { fournisseur: true },
+      select: { fournisseur: true, jeton: true },
     })
     const autreFournisseur =
-      ancienne !== null && ancienne.fournisseur !== donnees.fournisseur
+      ancienne !== null &&
+      (ancienne.fournisseur !== donnees.fournisseur ||
+        identiteEspace(ancienne.fournisseur, () =>
+          dechiffrer(ancienne.jeton, cle)
+        ) !== identiteEspace(donnees.fournisseur, () => donnees.secret))
     if (autreFournisseur) {
       await tx.ficheExportee.deleteMany({ where: { organisationId } })
     }
@@ -192,6 +221,24 @@ export async function enregistrerConnexion(donnees: {
   })
 }
 
+/**
+ * Ce qui distingue deux espaces d'un même fournisseur : le serveur, pour
+ * Nextcloud. Null pour un fournisseur qui n'a qu'un espace.
+ */
+function identiteEspace(
+  fournisseur: Fournisseur,
+  secret: () => string
+): string | null {
+  if (fournisseur !== 'NEXTCLOUD') return null
+  try {
+    // La base est déjà normalisée (hôte en minuscules) ; son chemin garde sa
+    // casse, car deux chemins de casse différente peuvent désigner deux instances.
+    return (JSON.parse(secret()) as SecretNextcloud).base
+  } catch {
+    return ''
+  }
+}
+
 /** Vrai quand l'espace de test remplace les fournisseurs. */
 export function espaceDeTest(): boolean {
   return fabriqueDeTest !== null
@@ -213,6 +260,8 @@ export function convertitEnPdf(
       return convertibleParGoogle(nom, typeMime)
     case 'DROPBOX':
       return convertibleParDropbox(nom)
+    case 'NEXTCLOUD':
+      return false
   }
 }
 
@@ -348,6 +397,19 @@ async function obtenirJetons(
     if (configuration === null) throw new EspaceIndisponible()
     return rafraichirDropbox(configuration, secret)
   }
+  if (connexion.fournisseur === 'NEXTCLOUD') {
+    // Le mot de passe d'application ne s'échange pas : il sert tel quel. Le
+    // renouvellement vérifie qu'il est toujours accepté.
+    const configuration = await configurationNextcloud()
+    if (configuration === null) throw new EspaceIndisponible()
+    const s = JSON.parse(secret) as SecretNextcloud
+    await compteNextcloud(configuration, s.base, s.identifiant, s.motDePasse)
+    return {
+      acces: secret,
+      rafraichissement: secret,
+      expireLe: Date.now() + 60 * 60_000,
+    }
+  }
   if (connexion.methode === 'COMPTE_SERVICE') {
     const jetons = await jetonCompteService(
       JSON.parse(secret) as CleCompteService
@@ -441,6 +503,14 @@ export async function ouvrirEspace(organisationId: string): Promise<{
       }
     case 'DROPBOX':
       return { espace: espaceDropbox(jeton), connexionId: connexion.id }
+    case 'NEXTCLOUD': {
+      const configuration = await configurationNextcloud()
+      if (configuration === null) throw new EspaceIndisponible()
+      return {
+        espace: espaceNextcloud(jeton, configuration),
+        connexionId: connexion.id,
+      }
+    }
   }
 }
 
@@ -494,6 +564,67 @@ export async function commencerConnexion(
     etat,
     defi: createHash('sha256').update(verificateur).digest('base64url'),
   }
+}
+
+/**
+ * Connexion Nextcloud en cours : la base saisie et le sondage du Login Flow v2.
+ * Nextcloud garde la demande vingt minutes ; l'état aussi.
+ */
+export interface EtatConnexionNextcloud {
+  organisationId: string
+  userId: string
+  base: string
+  sondage: string
+  jeton: string
+}
+
+const DUREE_NEXTCLOUD_S = 20 * 60
+const cleNextcloud = (etat: string) => `espace-fichiers:nextcloud:${etat}`
+
+export async function garderConnexionNextcloud(
+  donnees: EtatConnexionNextcloud
+): Promise<string> {
+  const etat = randomBytes(32).toString('base64url')
+  const { connection } = await import('../jobs/queues.ts')
+  await avecDelai(
+    connection.set(
+      cleNextcloud(etat),
+      JSON.stringify(donnees),
+      'EX',
+      DUREE_NEXTCLOUD_S
+    ),
+    DELAI_VALKEY_MS,
+    'État de connexion'
+  )
+  return etat
+}
+
+/** L'état d'une connexion Nextcloud, relu à chaque sondage. Null s'il est inconnu ou expiré. */
+export async function lireConnexionNextcloud(
+  etat: string
+): Promise<EtatConnexionNextcloud | null> {
+  if (!/^[A-Za-z0-9_-]{43}$/.test(etat)) return null
+  const { connection } = await import('../jobs/queues.ts')
+  const brut = await avecDelai(
+    connection.get(cleNextcloud(etat)),
+    DELAI_VALKEY_MS,
+    'État de connexion'
+  )
+  return brut === null ? null : (JSON.parse(brut) as EtatConnexionNextcloud)
+}
+
+/** Retire l'état d'une connexion Nextcloud. Vrai pour l'appel qui l'a retiré. */
+export async function oublierConnexionNextcloud(
+  etat: string
+): Promise<boolean> {
+  const { connection } = await import('../jobs/queues.ts')
+  return (
+    (await avecDelai(
+      connection.del(cleNextcloud(etat)),
+      DELAI_VALKEY_MS,
+      'État de connexion'
+    )) > 0
+  )
 }
 
 /** Reprend l'état d'une connexion, une seule fois. Null s'il est inconnu ou expiré. */
