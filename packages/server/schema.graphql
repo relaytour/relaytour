@@ -728,6 +728,11 @@ type EspaceBenevole {
   nom: String!
   organisation: String!
   places: [PlaceDeLEspace!]!
+
+  """
+  Les disponibilités à venir que la personne a données, ou que l’équipe a saisies.
+  """
+  plages: [PlageDisponibilite!]!
 }
 
 type EspaceFichiers {

@@ -21,8 +21,8 @@ import { messageErreur } from '../lib/erreurs'
 
 // Espace d'une ou d'un bénévole (ADR 0041), ouvert par son lien personnel, sans
 // session. L'ouverture ne confirme rien : la personne confirme par un bouton. Elle
-// y lit ses places et leurs consignes, télécharge son agenda, quitte une place ou
-// supprime sa fiche.
+// y lit ses places, leurs consignes et ses disponibilités, télécharge son agenda,
+// quitte une place ou supprime sa fiche.
 
 const ESPACE = graphql(`
   query EspaceBenevole($jeton: String!) {
@@ -44,6 +44,12 @@ const ESPACE = graphql(`
         perimetre
         consignes
         confirmee
+      }
+      plages {
+        jour
+        jourFin
+        heureDebut
+        heureFin
       }
     }
   }
@@ -232,6 +238,25 @@ export default function EspaceBenevole() {
               >
                 Ajouter à mon agenda
               </Button>
+            )}
+
+            {espace.plages.length > 0 && (
+              <>
+                <h2 className="rt-intertitre-public">Vos disponibilités</h2>
+                <ul className="rt-plages-publiques">
+                  {espace.plages.map(p => (
+                    <li key={`${p.jour}-${p.heureDebut}-${p.jourFin}`}>
+                      <Tag>
+                        {libelleJours(p.jour)}, {p.heureDebut} → {p.heureFin}
+                        {p.jourFin !== p.jour && ' le lendemain'}
+                      </Tag>
+                    </li>
+                  ))}
+                </ul>
+                <Typography.Paragraph className="rt-note">
+                  Pour changer vos disponibilités, écrivez à l’organisation.
+                </Typography.Paragraph>
+              </>
             )}
 
             <section className="rt-espace-pied">

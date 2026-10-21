@@ -10,8 +10,8 @@ fr:
   texte: >-
     La première place d'une fiche bénévole envoie un seul mail, avec un lien
     personnel qui reste le même. Ce lien ouvre l'espace de la personne : elle y
-    confirme sa participation, ajoute ses places à son agenda ou quitte une
-    place. Vous copiez ce lien depuis la fiche pour l'envoyer par SMS. L'option
+    relit ses places et ses disponibilités, confirme sa participation, ajoute
+    ses places à son agenda ou quitte une place. Vous copiez ce lien depuis la fiche pour l'envoyer par SMS. L'option
     « Prévenir par mail » d'une fiche coupe ces mails.
 ---
 

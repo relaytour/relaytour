@@ -16,7 +16,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "Les bénévoles se proposent par l'adresse publique d'un appel",
-            "texte": "Une séquence du programme indique les renforts qu'elle recherche et des consignes publiques. Vous ouvrez un appel sur toute la période, un périmètre ou une séquence, puis vous diffusez son adresse. Les bénévoles y choisissent des séquences et donnent leurs disponibilités. Vous acceptez ou refusez chaque séquence dans l'onglet « Candidatures » de l'écran « Bénévoles ». Aucun mail ne part au dépôt.",
+            "texte": "Une séquence du programme indique les renforts qu'elle recherche et des consignes publiques. Vous ouvrez un appel sur votre périmètre ou sur une séquence, puis vous diffusez son adresse. Les admins de l'activité ouvrent aussi un appel sur toute la période. Les bénévoles y choisissent des séquences et donnent leurs disponibilités. Vous acceptez ou refusez chaque séquence dans l'onglet « Candidatures » de l'écran « Bénévoles ». Aucun mail ne part au dépôt.",
             "migration": null
           }
         },
@@ -29,7 +29,7 @@
           "etat": "prevu",
           "fr": {
             "titre": "Les bénévoles confirment leur participation depuis leur espace",
-            "texte": "La première place d'une fiche bénévole envoie un seul mail, avec un lien personnel qui reste le même. Ce lien ouvre l'espace de la personne : elle y confirme sa participation, ajoute ses places à son agenda ou quitte une place. Vous copiez ce lien depuis la fiche pour l'envoyer par SMS. L'option « Prévenir par mail » d'une fiche coupe ces mails.",
+            "texte": "La première place d'une fiche bénévole envoie un seul mail, avec un lien personnel qui reste le même. Ce lien ouvre l'espace de la personne : elle y relit ses places et ses disponibilités, confirme sa participation, ajoute ses places à son agenda ou quitte une place. Vous copiez ce lien depuis la fiche pour l'envoyer par SMS. L'option « Prévenir par mail » d'une fiche coupe ces mails.",
             "migration": null
           }
         },

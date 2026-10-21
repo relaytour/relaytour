@@ -3936,6 +3936,17 @@ button.rt-carte-fiche {
 .rt-place-publique .ant-tag {
   margin: 0;
 }
+.rt-plages-publiques {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+}
+.rt-plages-publiques .ant-tag {
+  margin: 0;
+}
 .rt-espace-pied {
   margin-top: 24px;
   padding-top: 16px;

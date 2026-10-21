@@ -92,10 +92,11 @@ const h = (heure: string, jour = '2027-06-05') =>
   new Date(`${jour}T${heure}:00+02:00`)
 
 const ACCEPTER = `mutation ($id: ID!) { accepterChoixCandidature(id: $id) { benevoleId } }`
-const ESPACE = `query ($j: String!) { espaceBenevole(jeton: $j) { organisation activite nom confirme contact ics places { ref titre jour heureDebut heureFin lieu consignes confirmee } } }`
+const ESPACE = `query ($j: String!) { espaceBenevole(jeton: $j) { organisation activite nom confirme contact ics places { ref titre jour heureDebut heureFin lieu consignes confirmee } plages { jour heureDebut heureFin } } }`
 
 interface EspaceLu {
   nom: string
+  plages: { jour: string; heureDebut: string; heureFin: string }[]
   confirme: boolean
   ics: string
   places: {
@@ -114,7 +115,11 @@ const lireEspace = async (jeton: string) =>
   ).espaceBenevole
 
 /** Dépose une candidature, puis l'accepte sur ses séquences : rend la fiche. */
-async function candidatAccepte(nom: string, sequences: string[]) {
+async function candidatAccepte(
+  nom: string,
+  sequences: string[],
+  plages: { debut: Date; fin: Date }[] = []
+) {
   const courriel = `${nom.toLowerCase().replace(/\W/g, '')}-${s}@exemple.fr`
   const candidature = await prisma.candidature.create({
     data: {
@@ -131,6 +136,9 @@ async function candidatAccepte(nom: string, sequences: string[]) {
           sequenceId,
           statut: 'EN_ATTENTE',
         })),
+      },
+      plages: {
+        create: plages.map(p => ({ editionId: ids.edition, ...p })),
       },
     },
     include: { choix: true },
@@ -387,10 +395,11 @@ describe('premier mail', () => {
 
 describe('espace', () => {
   it('s’ouvre sans confirmer, puis confirme toutes les places par le bouton', async () => {
-    const { benevoleId } = await candidatAccepte('Noa Petit', [
-      ids.finales,
-      ids.relais,
-    ])
+    const { benevoleId } = await candidatAccepte(
+      'Noa Petit',
+      [ids.finales, ids.relais],
+      [{ debut: h('08:00'), fin: h('17:00') }]
+    )
     const { jeton } = (await envoyer('benevole-lien', benevoleId))!
     const ouvert = await lireEspace(jeton)
     expect(ouvert).toMatchObject({ nom: 'Noa Petit', confirme: false })
@@ -399,6 +408,10 @@ describe('espace', () => {
     ).toEqual([
       ['finales', false, 'Tenue claire.'],
       ['relais', false, 'Tenue claire.'],
+    ])
+    // Les disponibilités de la candidature passent sur la fiche et s'affichent.
+    expect(ouvert!.plages).toEqual([
+      { jour: '2027-06-05', heureDebut: '08:00', heureFin: '17:00' },
     ])
     expect(ouvert!.ics).toContain('BEGIN:VCALENDAR')
     expect(ouvert!.ics).toContain('SUMMARY:finales')
