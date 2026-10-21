@@ -1,6 +1,6 @@
 # ADR 0041 — Appels à bénévoles, candidatures et répartition
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-21
 - Complète l'ADR 0040 (programme du jour J). Remplace deux de ses règles : l'absence de tout mail aux bénévoles, et la lecture des noms des bénévoles réservée aux personnes qui lisent le programme. La section « Ce qui change dans l'ADR 0040 » les nomme.
 - L'import d'une liste de bénévoles tenue hors de Relaytour relève d'une ADR suivante (0042).
