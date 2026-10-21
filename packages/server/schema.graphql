@@ -2931,6 +2931,12 @@ type TrancheCouverture {
   debut: DateTime!
   disponibles: Int!
   fin: DateTime!
+
+  """L’heure de début de la tranche, HH:MM."""
+  heure: String!
+
+  """Le jour de la tranche, dans le fuseau de l’organisation."""
+  jour: String!
 }
 
 """

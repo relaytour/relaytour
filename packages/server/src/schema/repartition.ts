@@ -22,6 +22,7 @@ import {
   signalerPlacesModifiees,
 } from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { heureLocale } from '../lib/heures.ts'
 import { peutEcrireSequence, PLACES_MAX } from '../lib/programme.ts'
 
 import { PlageRef } from './appels.ts'
@@ -141,6 +142,7 @@ const ARepartirRef = builder
 interface TrancheLue {
   debut: Date
   fin: Date
+  fuseau: string
   besoin: number
   confirmees: number
   aConfirmer: number
@@ -155,6 +157,14 @@ const TrancheRef = builder
     fields: t => ({
       debut: t.field({ type: 'DateTime', resolve: r => r.debut }),
       fin: t.field({ type: 'DateTime', resolve: r => r.fin }),
+      jour: t.string({
+        description: 'Le jour de la tranche, dans le fuseau de l’organisation.',
+        resolve: r => heureLocale(r.debut, r.fuseau).jour,
+      }),
+      heure: t.string({
+        description: 'L’heure de début de la tranche, HH:MM.',
+        resolve: r => heureLocale(r.debut, r.fuseau).heure,
+      }),
       besoin: t.exposeInt('besoin'),
       confirmees: t.exposeInt('confirmees'),
       aConfirmer: t.exposeInt('aConfirmer'),
@@ -342,6 +352,7 @@ builder.queryFields(t => ({
         }),
         benevolesARepartir(ctx, edition, ecrits),
       ])
+      const fuseau = ctx.organisation!.fuseauHoraire
       return couverture(
         sequences.map(s => ({
           debut: s.debut,
@@ -351,7 +362,7 @@ builder.queryFields(t => ({
           aConfirmer: s.places.filter(p => p.confirmeeLe === null).length,
         })),
         liste
-      )
+      ).map(t => ({ ...t, fuseau }))
     },
   }),
 }))

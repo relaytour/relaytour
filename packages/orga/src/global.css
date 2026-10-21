@@ -3591,3 +3591,226 @@ button.rt-carte-fiche {
   font-size: 11.5px;
   line-height: 18px;
 }
+
+/* ── Vue « Répartition » (ADR 0041) ───────────────────────────────────────── */
+
+.rt-repartition {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.rt-repartition-filtres {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
+.rt-repartition-corps {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(280px, 2fr);
+  gap: 16px;
+  align-items: start;
+}
+.rt-repartition-frise {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 14px 16px;
+  min-width: 0;
+}
+.rt-repartition-ligne {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 4px 6px;
+  border-radius: var(--rt-rayon-champ);
+}
+.rt-repartition-ligne.rt-active {
+  background: rgba(var(--rt-primaire-rgb), 0.08);
+}
+.rt-repartition-ligne.rt-cible {
+  outline: 1px dashed rgba(var(--rt-primaire-rgb), 0.5);
+}
+.rt-repartition-entete {
+  min-height: 22px;
+}
+.rt-repartition-groupe h3 {
+  margin: 12px 6px 2px;
+}
+.rt-repartition-sequence {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 2px 8px;
+  min-width: 0;
+  font-size: 13.5px;
+}
+.rt-repartition-piste {
+  position: relative;
+  height: 24px;
+  min-width: 0;
+}
+.rt-repartition-heure {
+  position: absolute;
+  top: 2px;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: var(--rt-encre-70);
+  white-space: nowrap;
+}
+.rt-repartition-bandeau {
+  height: 18px;
+}
+.rt-repartition-tranche {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 3px;
+  background: rgba(var(--rt-primaire-rgb), 0.35);
+  box-shadow: inset -1px 0 0 var(--rt-sol-1);
+}
+.rt-repartition-tranche.rt-manque {
+  background: var(--rt-alerte);
+  opacity: 0.75;
+}
+.rt-repartition-barre {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  border-radius: 6px;
+  background: var(--rt-primaire);
+  opacity: 0.35;
+}
+.rt-repartition-colonne {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.rt-repartition-places {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  font-size: 12px;
+}
+.rt-repartition-place {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--rt-sol-1);
+}
+.rt-repartition-place .ant-tag {
+  margin: 0;
+  font-size: 11px;
+  line-height: 16px;
+}
+.rt-repartition-panneau {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+}
+.rt-repartition-personnes,
+.rt-repartition-manques {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rt-repartition-personne {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 8px;
+  border-radius: var(--rt-rayon-champ);
+  background: var(--rt-surface-interne);
+}
+.rt-repartition-personne[draggable='true'] {
+  cursor: grab;
+}
+.rt-repartition-personne-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  font-size: 13.5px;
+}
+.rt-repartition-personne-tete .ant-tag {
+  margin: 0;
+}
+.rt-repartition-placer {
+  margin-inline-start: auto;
+}
+.rt-repartition-personne .rt-repartition-piste {
+  height: 10px;
+}
+.rt-repartition-plage {
+  position: absolute;
+  top: 2px;
+  bottom: 2px;
+  border-radius: 3px;
+  background: var(--rt-succes);
+  opacity: 0.55;
+}
+.rt-repartition-repere {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border: 1px solid rgba(var(--rt-encre-rgb), 0.5);
+  border-radius: 3px;
+}
+.rt-repartition-details p {
+  margin: 0 0 6px;
+  max-width: 320px;
+  overflow-wrap: anywhere;
+}
+.rt-repartition-manque {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 12px 14px;
+  border: 0;
+  text-align: start;
+  cursor: pointer;
+  font: inherit;
+}
+.rt-poignee {
+  color: var(--rt-encre-70);
+}
+
+/* Un bouton qui se lit comme un texte : un nom, un titre de séquence. */
+.rt-lien-texte {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+}
+.rt-lien-texte:hover,
+.rt-lien-texte:focus-visible {
+  color: var(--rt-primaire);
+  text-decoration: underline;
+}
+.rt-liste-simple {
+  margin: 0;
+  padding-inline-start: 18px;
+}
+@media (max-width: 1279px) {
+  .rt-repartition-corps {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .rt-repartition-ligne {
+    grid-template-columns: 170px minmax(0, 1fr);
+  }
+}

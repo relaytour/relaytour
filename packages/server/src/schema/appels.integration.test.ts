@@ -812,7 +812,7 @@ describe('répartition', () => {
     >(
       await executer(
         ids.adminActivite,
-        `query ($e: ID!, $p: [ID!]) { couvertureProgramme(editionId: $e, perimetreIds: $p) { debut besoin confirmees aConfirmer disponibles } }`,
+        `query ($e: ID!, $p: [ID!]) { couvertureProgramme(editionId: $e, perimetreIds: $p) { debut jour heure besoin confirmees aConfirmer disponibles } }`,
         { e: ids.edition, p: [ids.natation] }
       ),
       'couvertureProgramme'
@@ -821,6 +821,8 @@ describe('répartition', () => {
     expect(debuts[0]).toBe(h('09:00').toISOString())
     expect(debuts.at(-1)).toBe(h('15:30').toISOString())
     expect(tranches[debuts.indexOf(h('14:00').toISOString())]?.besoin).toBe(1)
+    // Le jour et l'heure se lisent dans le fuseau de l'organisation.
+    expect(tranches[0]).toMatchObject({ jour: '2027-06-05', heure: '09:00' })
   })
 
   it('remplace les plages d’une fiche par les personnes qui la modifient', async () => {
