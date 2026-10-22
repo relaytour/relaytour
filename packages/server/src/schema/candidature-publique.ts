@@ -109,6 +109,8 @@ async function appelOuvert(
     where: {
       empreinte: empreinteJeton(jeton),
       organisation: { statut: 'ACTIVE' },
+      // Un appel d'import n'a pas d'adresse publique (ADR 0042).
+      sansAdresse: false,
       activite: { archivedAt: null },
       edition: { statut: { not: 'ARCHIVEE' } },
     },

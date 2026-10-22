@@ -7,6 +7,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `packages/server` : API GraphQL (Express 5, Apollo Server 5, Pothos, un seul schéma), connexion Better Auth et worker BullMQ.
 - `packages/orga` : espace organisateur, SPA React 19 + Vite + React Router 7 + Apollo Client 4 + antd 6. Types GraphQL générés dans `src/gql/`.
 - `packages/tokens` : modèle de thème, thème par défaut et thème alternatif de Relaytour, contraste. Le serveur le lit pour valider et compléter le thème d'une organisation ; l'espace organisateur le lit pour le thème de repli (ADR 0006).
+- `packages/commun` : règles pures partagées par le serveur et l'espace organisateur, comme le rapprochement des personnes d'un import (ADR 0042).
 - `content/exemple` : organisation d'exemple, fictive et anonyme (`organisation.yaml`, deux activités, leurs périmètres, fiches et tâches types). Le contenu réel d'une organisation vit hors du dépôt (voir son README).
 - `packages/database` : Prisma 6 sur MariaDB 11.8. Le client généré (`src/generated/`) n'est jamais commité.
 - `infra/` : déploiement de référence minimal (Compose, Caddyfile d'exemple, étapes). L'exploitation réelle vit hors du dépôt (ADR 0007).
@@ -253,7 +254,7 @@ Relaytour accueille les contributions : correctifs, évolutions, documentation, 
 
 - Relaytour porte un seul numéro de version, celui du `package.json` racine. Les paquets `packages/server` et `packages/orga` en portent une copie, et `yarn versionner valider` refuse tout écart.
 - Une installation choisit une seule étiquette d'image pour ses trois images. Ce numéro est donc celui de l'installation.
-- `packages/tokens` et `packages/database` sont internes au dépôt. Leur numéro ne se publie pas.
+- `packages/tokens`, `packages/commun` et `packages/database` sont internes au dépôt. Leur numéro ne se publie pas.
 - Les notes gardent leur cible : `notes/notes-de-version.serveur.json` et `notes/notes-de-version.orga.json` groupent les fragments de `notes/fragments/` par version, la prochaine version en tête.
 
 ### Numérotation

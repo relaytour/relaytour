@@ -39,12 +39,13 @@ type Client = Prisma.TransactionClient | typeof prisma
  */
 export async function sousVerrouOrganisation<T>(
   organisationId: string,
-  operation: (tx: Prisma.TransactionClient) => Promise<T>
+  operation: (tx: Prisma.TransactionClient) => Promise<T>,
+  options: { timeout?: number } = {}
 ): Promise<T> {
   return prisma.$transaction(async tx => {
     await tx.$queryRaw`SELECT id FROM Organisation WHERE id = ${organisationId} FOR UPDATE`
     return operation(tx)
-  })
+  }, options)
 }
 
 async function limitesDe(organisationId: string, db: Client): Promise<Limites> {

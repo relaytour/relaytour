@@ -30,6 +30,7 @@
     "@milkdown/prose": "^7.22.3",
     "@milkdown/transformer": "^7.22.3",
     "@milkdown/utils": "^7.22.3",
+    "@relaytour/commun": "workspace:*",
     "@relaytour/tokens": "workspace:*",
     "antd": "^6.6.4",
     "graphql": "^16.14.0",
