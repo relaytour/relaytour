@@ -220,6 +220,7 @@ function LierDossier({
             onChange={setLecteurs}
             mentions={mentions}
             toutPossible
+            archives={dossier?.perimetres.filter(p => p.archive) ?? []}
             placeholder="Choisissez les lecteurs"
             ariaLabel="Lu par"
           />
@@ -574,13 +575,17 @@ export default function EspaceFichiers() {
                 />
                 <Popconfirm
                   title="Retirer ce dossier ?"
-                  description="Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour."
+                  description={
+                    d.accesCrees > 0
+                      ? `Le dossier reste chez le fournisseur cloud. Relaytour y a créé ${d.accesCrees > 1 ? `${d.accesCrees} accès, qui restent` : 'un accès, qui reste'} sans suivi.`
+                      : 'Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour.'
+                  }
                   okText="Retirer"
                   cancelText="Annuler"
                   onConfirm={() =>
-                    delier({ variables: { id: d.id } }).catch((e: unknown) =>
-                      message.error(messageErreur(e))
-                    )
+                    delier({
+                      variables: { id: d.id, oublierAcces: d.accesCrees > 0 },
+                    }).catch((e: unknown) => message.error(messageErreur(e)))
                   }
                 >
                   <Button

@@ -45,7 +45,7 @@ const EXPLICATIONS: Partial<Record<EtatAccesFournisseur, string>> = {
     'L’annuaire du fournisseur ne connaît pas son adresse. Invitez la personne, ou saisissez l’adresse de son compte dans l’onglet « Comptes ».',
   SANS_ACCES: 'Son compte existe, mais aucun droit ne couvre ce dossier.',
   INCONNU:
-    'Un groupe du fournisseur couvre peut-être cette personne, mais ses membres ne se lisent pas.',
+    'Relaytour n’a pas pu lire les droits de ce dossier, ou les membres d’un groupe qui en a un.',
 }
 
 function LignePersonne({ ligne }: { ligne: Ligne }) {
@@ -244,9 +244,9 @@ export default function VerificationAcces({
       >
         <p>
           Relaytour peut comparer les équipes aux droits des dossiers liés chez
-          le fournisseur : qui a un compte, qui a accès, qui a un accès en trop.
-          La vérification lit l’annuaire et les groupes du fournisseur. Elle ne
-          change aucun droit.
+          le fournisseur. Vous apprenez ainsi qui a un compte, qui a accès et
+          qui a un accès en trop. Pour cela, Relaytour lit l’annuaire et les
+          groupes du fournisseur, sans changer aucun droit.
         </p>
         {onActiver === null ? (
           <p className="rt-texte-secondaire">

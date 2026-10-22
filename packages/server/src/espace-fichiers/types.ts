@@ -125,10 +125,19 @@ export interface AnnuaireFournisseur {
   chercherComptes(
     adresses: readonly string[]
   ): Promise<Map<string, CompteAnnuaire | null>>
-  /** Les droits de l'élément à cette position, hérités compris. */
-  droits(position: Position): Promise<DroitElement[]>
+  /**
+   * Les droits de l'élément à cette position, hérités compris. Null quand ils ne
+   * se lisent pas en entier (refus, élément absent, liste coupée) : Relaytour ne
+   * conclut alors à aucune absence de droit.
+   */
+  droits(position: Position): Promise<DroitElement[] | null>
   /** Les membres d'un groupe, sous-groupes compris, ou null s'ils ne se lisent pas. */
   membresDuGroupe(identifiant: string): Promise<CompteAnnuaire[] | null>
+  /**
+   * Faux pour un groupe que Relaytour ne doit jamais modifier : un groupe de site
+   * SharePoint, le groupe des admins d'un Nextcloud. Absent : tout groupe lu.
+   */
+  groupeGerable?(identifiant: string): boolean
 
   // Écriture : les propositions qu'un admin applique (ADR 0044). Absentes quand
   // la connexion ne permet pas la gestion des accès.

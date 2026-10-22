@@ -19,6 +19,7 @@ export default function ChoixLecteurs({
   mentions,
   exclure,
   toutPossible = false,
+  archives = [],
   placeholder,
   ariaLabel,
 }: {
@@ -28,6 +29,8 @@ export default function ChoixLecteurs({
   /** Un périmètre à ne pas proposer, comme celui de la fiche. */
   exclure?: string
   toutPossible?: boolean
+  /** Des périmètres archivés que la valeur nomme déjà : ils restent affichés. */
+  archives?: { id: string; nom: string }[]
   placeholder: string
   ariaLabel: string
 }) {
@@ -49,9 +52,15 @@ export default function ChoixLecteurs({
     },
     {
       label: 'Périmètres',
-      options: [...mentions.perimetres.values()]
-        .filter(p => p.id !== exclure)
-        .map(p => ({ value: `p:${p.id}`, label: p.nom })),
+      options: [
+        ...[...mentions.perimetres.values()]
+          .filter(p => p.id !== exclure)
+          .map(p => ({ value: `p:${p.id}`, label: p.nom })),
+        ...archives.map(p => ({
+          value: `p:${p.id}`,
+          label: `${p.nom} (archivé)`,
+        })),
+      ],
     },
   ]
   const valeurs = valeur.touteActivite ? [TOUT] : versValeurs(valeur)

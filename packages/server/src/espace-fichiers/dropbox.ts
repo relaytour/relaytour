@@ -50,6 +50,8 @@ const ADRESSE_JETON = 'https://api.dropboxapi.com/oauth2/token'
 const DELAI_MS = 15_000
 const DELAI_CONTENU_MS = 120_000
 const PAGES_MAX = 5
+/** Les vérifications d'une tâche de fond de Dropbox, une par seconde. */
+const SUIVI_MAX = 10
 
 /** Le Dropbox du compte connecté, et la racine d'un espace d'équipe. */
 export const MON_DROPBOX = 'dropbox'
@@ -422,18 +424,34 @@ export function espaceDropbox(
   // L'annuaire de Dropbox (ADR 0044) : les membres d'un dossier partagé. Dropbox
   // ne publie pas d'annuaire hors d'une application d'équipe : Relaytour compare
   // les adresses, et les membres d'un groupe ne se lisent pas.
-  const dossierPartage = async (p: Position): Promise<string | null> => {
+  /**
+   * Le partage du dossier lui-même (`propre`), et celui d'un dossier parent qui
+   * le contient (`parent`). Null quand le dossier n'existe pas.
+   */
+  const partagesDe = async (
+    p: Position
+  ): Promise<{ propre: string | null; parent: string | null } | null> => {
     const m = await rpc<{
       sharing_info?: {
         shared_folder_id?: string
         parent_shared_folder_id?: string
       }
     }>('files/get_metadata', { path: cheminDeLecture(p) }, jeton, p.emplacement)
-    return (
-      m?.sharing_info?.shared_folder_id ??
-      m?.sharing_info?.parent_shared_folder_id ??
-      null
-    )
+    if (m === null) return null
+    return {
+      propre: m.sharing_info?.shared_folder_id ?? null,
+      parent: m.sharing_info?.parent_shared_folder_id ?? null,
+    }
+  }
+  /** Relaytour ne partage que le dossier lié lui-même, jamais son parent. */
+  const partagePropre = async (p: Position): Promise<string> => {
+    const partage = (await partagesDe(p))?.propre ?? null
+    if (partage === null) {
+      throw new FournisseurIndisponible(
+        'partagez d’abord ce dossier lui-même dans Dropbox.'
+      )
+    }
+    return partage
   }
   const annuaire = (gestion: boolean): AnnuaireFournisseur => ({
     capacites: {
@@ -447,26 +465,48 @@ export function espaceDropbox(
       Promise.resolve(new Map(adresses.map(a => [a, null]))),
     membresDuGroupe: () => Promise.resolve(null),
     async droits(position) {
-      const partage = await dossierPartage(position)
+      const partages = await partagesDe(position)
+      if (partages === null) return null
+      const partage = partages.propre ?? partages.parent
       // Un dossier qui n'est pas partagé n'a que son propriétaire.
       if (partage === null) return []
-      const membres = await rpc<MembresDropbox>(
+      const tous: Required<MembresDropbox> = {
+        users: [],
+        groups: [],
+        invitees: [],
+      }
+      let page = await rpc<MembresDropbox & { cursor?: string }>(
         'sharing/list_folder_members',
         { shared_folder_id: partage, limit: 1000 },
         jeton,
         position.emplacement
       )
-      return droitsDropbox(membres ?? {})
+      for (let n = 0; ; n++) {
+        if (page === null) return null
+        tous.users.push(...(page.users ?? []))
+        tous.groups.push(...(page.groups ?? []))
+        tous.invitees.push(...(page.invitees ?? []))
+        if (page.cursor === undefined) break
+        // Au-delà de la borne, la liste est coupée : elle ne prouve rien.
+        if (n >= PAGES_MAX) return null
+        page = await rpc<MembresDropbox & { cursor?: string }>(
+          'sharing/list_folder_members/continue',
+          { cursor: page.cursor },
+          jeton,
+          position.emplacement
+        )
+      }
+      const droits = droitsDropbox(tous)
+      // Les membres du dossier parent ont accès par héritage : Relaytour ne les
+      // retire jamais d'ici.
+      return partages.propre === null
+        ? droits.map(d => ({ ...d, herite: true }))
+        : droits
     },
     ...(gestion
       ? {
           async partager(position, personne, { role, invitation }) {
-            const partage = await dossierPartage(position)
-            if (partage === null) {
-              throw new FournisseurIndisponible(
-                'Partagez d’abord ce dossier dans Dropbox.'
-              )
-            }
+            const partage = await partagePropre(position)
             const adresse = personne.adresse.toLowerCase()
             await rpc(
               'sharing/add_folder_member',
@@ -488,20 +528,48 @@ export function espaceDropbox(
             return { identifiant: `email:${adresse}` }
           },
           async retirerPartage(position, identifiant) {
-            const partage = await dossierPartage(position)
-            if (partage === null || !identifiant.startsWith('email:')) return
-            await rpc(
-              'sharing/remove_folder_member',
-              {
-                shared_folder_id: partage,
-                member: {
-                  '.tag': 'email',
-                  email: identifiant.slice('email:'.length),
+            if (!identifiant.startsWith('email:')) return
+            const partage = await partagePropre(position)
+            let travail: { '.tag'?: string; async_job_id?: string } | null
+            try {
+              travail = await rpc(
+                'sharing/remove_folder_member',
+                {
+                  shared_folder_id: partage,
+                  member: {
+                    '.tag': 'email',
+                    email: identifiant.slice('email:'.length),
+                  },
+                  leave_a_copy: false,
                 },
-                leave_a_copy: false,
-              },
-              jeton,
-              position.emplacement
+                jeton,
+                position.emplacement
+              )
+            } catch (erreur) {
+              // Une personne déjà partie n'a rien à retirer.
+              if (/not_a_member/.test((erreur as Error).message)) return
+              throw erreur
+            }
+            // Dropbox retire un membre en tâche de fond : Relaytour attend sa fin.
+            const id = travail?.async_job_id
+            if (travail?.['.tag'] !== 'async_job_id' || id === undefined) return
+            for (let essai = 0; essai < SUIVI_MAX; essai++) {
+              const etat = await rpc<{ '.tag'?: string }>(
+                'sharing/check_job_status',
+                { async_job_id: id },
+                jeton,
+                position.emplacement
+              )
+              if (etat?.['.tag'] === 'complete') return
+              if (etat?.['.tag'] === 'failed') {
+                throw new FournisseurIndisponible(
+                  'Dropbox n’a pas retiré le membre du dossier.'
+                )
+              }
+              await new Promise(resolve => setTimeout(resolve, 1_000))
+            }
+            throw new FournisseurIndisponible(
+              'Dropbox n’a pas fini de retirer le membre du dossier.'
             )
           },
         }

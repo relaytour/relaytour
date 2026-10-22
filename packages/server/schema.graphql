@@ -659,6 +659,10 @@ type DemandePerimetre {
 Dossier du fournisseur cloud lié à une activité. Il sert toute l’activité, ou une liste de périmètres et de groupes (ADR 0043).
 """
 type DossierLie {
+  """
+  Les accès que Relaytour a créés pour ce dossier chez le fournisseur. Zéro pour une personne qui n’est pas admin de l’organisation.
+  """
+  accesCrees: Int!
   accesFournisseur: AccesFournisseurDossier!
   activiteId: ID!
   ajoutsAutomatiques: Boolean!
@@ -669,6 +673,7 @@ type DossierLie {
   """
   disponible: Boolean!
   fournisseur: FournisseurFichiers!
+  groupeFournisseurId: ID
   groupeFournisseurNom: String
 
   """
@@ -884,6 +889,7 @@ enum EtatProposition {
   ECARTEE
   ECHEC
   EN_ATTENTE
+  EN_COURS
 }
 
 """
@@ -1554,7 +1560,11 @@ type Mutation {
   """Remplace l’ensemble des souhaits d’une personne pour une édition."""
   definirSouhaits(editionId: ID!, perimetreIds: [ID!]!, personneId: ID!): [Souhait!]!
   definirStatutMessage(id: ID!, statut: StatutMessage!): Message!
-  delierDossier(id: ID!): Boolean!
+
+  """
+  Retire un dossier lié. Quand Relaytour a créé des accès pour ce dossier chez le fournisseur, le retrait exige `oublierAcces` : ces accès restent chez le fournisseur et ne sont plus suivis (ADR 0044).
+  """
+  delierDossier(id: ID!, oublierAcces: Boolean): Boolean!
   delierRessourceFiche(id: ID!): Boolean!
 
   """
@@ -2461,9 +2471,17 @@ Un ajout ou un retrait d’accès chez le fournisseur, qu’un admin applique ou
 """
 type PropositionAcces {
   action: ActionProposition!
+
+  """
+  Le droit visé : « partage du dossier », ou le groupe. Un retrait nomme le droit que Relaytour a créé, quel que soit le mode actuel du dossier.
+  """
+  cible: String!
   erreur: String
   etat: EtatProposition!
   id: ID!
+
+  """Vrai quand la proposition vise un groupe du fournisseur."""
+  parGroupe: Boolean!
   personne: PersonneAcces!
 }
 

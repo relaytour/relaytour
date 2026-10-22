@@ -110,6 +110,15 @@ builder.prismaObjectFields(DossierLieRef, t => ({
   roleFournisseur: t.expose('roleFournisseur', { type: RoleFournisseurEnum }),
   ajoutsAutomatiques: t.exposeBoolean('ajoutsAutomatiques'),
   invitationFournisseur: t.exposeBoolean('invitationFournisseur'),
+  groupeFournisseurId: t.exposeID('groupeFournisseurId', { nullable: true }),
+  accesCrees: t.int({
+    description:
+      'Les accès que Relaytour a créés pour ce dossier chez le fournisseur. Zéro pour une personne qui n’est pas admin de l’organisation.',
+    resolve: (d, _args, ctx) =>
+      ctx.personne?.estAdmin === true
+        ? prisma.permissionCreee.count({ where: { dossierLieId: d.id } })
+        : 0,
+  }),
 }))
 
 interface PropositionVue {
@@ -118,6 +127,8 @@ interface PropositionVue {
   etat: EtatProposition
   erreur: string | null
   personne: PersonneAcces
+  cible: string
+  parGroupe: boolean
 }
 
 const PropositionRef = builder
@@ -131,6 +142,13 @@ const PropositionRef = builder
       etat: t.expose('etat', { type: EtatPropositionEnum }),
       erreur: t.exposeString('erreur', { nullable: true }),
       personne: t.field({ type: PersonneAccesRef, resolve: p => p.personne }),
+      parGroupe: t.exposeBoolean('parGroupe', {
+        description: 'Vrai quand la proposition vise un groupe du fournisseur.',
+      }),
+      cible: t.exposeString('cible', {
+        description:
+          'Le droit visé : « partage du dossier », ou le groupe. Un retrait nomme le droit que Relaytour a créé, quel que soit le mode actuel du dossier.',
+      }),
     }),
   })
 
@@ -179,9 +197,9 @@ const VerificationDossierRef = builder
         complexity: { field: 1, multiplier: 2 },
         description:
           'Les propositions en attente, et celles qui ont échoué, du plus ancien au plus récent.',
-        resolve: async v =>
-          (
-            await prisma.propositionAcces.findMany({
+        resolve: async v => {
+          const [propositions, dossier, creees] = await Promise.all([
+            prisma.propositionAcces.findMany({
               where: {
                 dossierLieId: v.dossierId,
                 etat: { in: ['EN_ATTENTE', 'ECHEC'] },
@@ -190,14 +208,46 @@ const VerificationDossierRef = builder
               include: {
                 user: { select: { id: true, name: true, email: true } },
               },
-            })
-          ).map(p => ({
+            }),
+            prisma.dossierLie.findUniqueOrThrow({
+              where: { id: v.dossierId },
+              select: {
+                accesFournisseur: true,
+                groupeFournisseurId: true,
+                groupeFournisseurNom: true,
+              },
+            }),
+            prisma.permissionCreee.findMany({
+              where: { dossierLieId: v.dossierId },
+              select: { userId: true, identifiant: true },
+            }),
+          ])
+          const groupe = (id: string) => ({
+            parGroupe: true,
+            cible: `groupe « ${id === dossier.groupeFournisseurId ? (dossier.groupeFournisseurNom ?? id) : id} »`,
+          })
+          const partage = { parGroupe: false, cible: 'partage du dossier' }
+          const cible = (action: ActionProposition, userId: string) => {
+            if (action === 'RETIRER') {
+              const creee = creees.find(c => c.userId === userId)
+              return creee?.identifiant.startsWith('groupe:') === true
+                ? groupe(creee.identifiant.slice('groupe:'.length))
+                : partage
+            }
+            return dossier.accesFournisseur === 'GROUPE' &&
+              dossier.groupeFournisseurId !== null
+              ? groupe(dossier.groupeFournisseurId)
+              : partage
+          }
+          return propositions.map(p => ({
             id: p.id,
             action: p.action,
             etat: p.etat,
             erreur: p.erreur,
             personne: { id: p.user.id, nom: p.user.name, email: p.user.email },
-          })),
+            ...cible(p.action, p.userId),
+          }))
+        },
       }),
       perimetres: t.prismaField({
         type: [PerimetreRef],
@@ -610,7 +660,8 @@ builder.mutationFields(t => ({
 
 /**
  * Les groupes qui ont un droit sur le dossier chez le fournisseur et dont la
- * connexion gère les membres. Un groupe d'un site SharePoint ne se gère pas.
+ * connexion gère les membres. Un groupe d'un site SharePoint, ou le groupe des
+ * admins d'un Nextcloud, ne se gère pas.
  */
 async function groupesGerables(
   organisationId: string,
@@ -632,8 +683,11 @@ async function groupesGerables(
       chemin: [],
     })
     const groupes = new Map<string, GroupeDuDossier>()
-    for (const { beneficiaire: b } of droits) {
-      if (b.type === 'groupe' && !b.identifiant.startsWith('site:')) {
+    for (const { beneficiaire: b } of droits ?? []) {
+      if (
+        b.type === 'groupe' &&
+        (annuaire.groupeGerable?.(b.identifiant) ?? true)
+      ) {
         groupes.set(b.identifiant, { identifiant: b.identifiant, nom: b.nom })
       }
     }

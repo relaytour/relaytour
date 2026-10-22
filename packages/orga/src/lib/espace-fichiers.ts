@@ -175,11 +175,13 @@ export const DOSSIERS_LIES = graphql(`
       fournisseur
       touteActivite
       attendus
+      accesCrees
       perimetres {
         id
         slug
         nom
         couleur
+        archive
       }
       groupes
       lecteursLus {
@@ -325,8 +327,8 @@ export const MODIFIER_DOSSIER_LIE = graphql(`
 `)
 
 export const DELIER_DOSSIER = graphql(`
-  mutation DelierDossier($id: ID!) {
-    delierDossier(id: $id)
+  mutation DelierDossier($id: ID!, $oublierAcces: Boolean) {
+    delierDossier(id: $id, oublierAcces: $oublierAcces)
   }
 `)
 
@@ -569,8 +571,10 @@ export const VERIFICATION_ACCES = graphql(`
         touteActivite
         attendus
         accesFournisseur
+        groupeFournisseurId
         groupeFournisseurNom
         roleFournisseur
+        fournisseur
         ajoutsAutomatiques
         invitationFournisseur
         groupes
@@ -590,6 +594,8 @@ export const VERIFICATION_ACCES = graphql(`
         action
         etat
         erreur
+        cible
+        parGroupe
         personne {
           id
           nom

@@ -2,6 +2,7 @@ import {
   prisma,
   type AccesFournisseurDossier,
   type EtatAccesFournisseur,
+  type RoleFournisseur,
 } from '@relaytour/database'
 
 import { journal } from '../lib/journal.ts'
@@ -10,6 +11,7 @@ import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 import { ouvrirEspace } from './index.ts'
 import type {
   AnnuaireFournisseur,
+  Beneficiaire,
   CompteAnnuaire,
   DroitElement,
   Position,
@@ -19,17 +21,22 @@ import type {
 // d'ajouter les personnes attendues qui n'ont pas accès, et de retirer les droits
 // qu'il a lui-même créés pour des personnes qui ne sont plus attendues. Un admin
 // de l'organisation applique ou écarte chaque proposition ; un réglage du dossier
-// applique les ajouts sans attendre. Un droit posé à la main n'est jamais retiré.
+// applique les ajouts sans attendre. Avant chaque écriture, Relaytour relit les
+// droits : il ne s'approprie pas un droit posé à la main, et ne retire un droit
+// que s'il le retrouve tel qu'il l'a créé.
 
 /** Le préfixe d'un droit créé par l'entrée dans un groupe. */
 const PREFIXE_GROUPE = 'groupe:'
 
+/** Une raison de ne pas appliquer, rendue telle quelle dans la proposition. */
+class Refus extends Error {}
+
 /** Une proposition ne garde qu'un message court et sans donnée personnelle. */
 const message = (erreur: unknown) =>
-  `Le fournisseur a refusé l’opération : ${(erreur as Error).message}`.slice(
-    0,
-    255
-  )
+  (erreur instanceof Refus
+    ? erreur.message
+    : `Le fournisseur a refusé l’opération : ${(erreur as Error).message}`
+  ).slice(0, 255)
 
 export interface DossierAGerer {
   id: string
@@ -41,42 +48,94 @@ export interface DossierAGerer {
   ajoutsAutomatiques: boolean
 }
 
-/** Retire de la table les droits créés par Relaytour qui n'existent plus chez le fournisseur. */
+/** Ce que Relaytour a créé, tel que `PermissionCreee` le garde. */
+interface TraceCreee {
+  identifiant: string
+  role: RoleFournisseur | null
+  adresse: string | null
+  compte: string | null
+}
+
+/** Vrai quand ce bénéficiaire désigne cette personne : même adresse, ou même compte. */
+function vise(
+  b: Beneficiaire,
+  cible: { adresse: string | null; compte: string | null }
+): boolean {
+  if (b.type !== 'personne') return false
+  return (
+    (b.adresse !== null &&
+      cible.adresse !== null &&
+      b.adresse === cible.adresse) ||
+    (b.identifiant !== null &&
+      cible.compte !== null &&
+      b.identifiant === cible.compte)
+  )
+}
+
+/**
+ * Vrai quand un partage créé par Relaytour existe toujours tel quel : même
+ * identifiant, propre au dossier, même personne et même rôle. Un droit modifié à
+ * la main n'appartient plus à Relaytour.
+ */
+export function partageIntact(
+  creee: TraceCreee,
+  droits: DroitElement[]
+): boolean {
+  if (
+    creee.role === null ||
+    (creee.adresse === null && creee.compte === null)
+  ) {
+    return false
+  }
+  const droit = droits.find(d => d.identifiant === creee.identifiant)
+  return (
+    droit !== undefined &&
+    !droit.herite &&
+    droit.role === creee.role &&
+    vise(droit.beneficiaire, creee)
+  )
+}
+
+/**
+ * Retire de la table les droits créés par Relaytour qui n'existent plus tels
+ * quels chez le fournisseur. Des droits illisibles (`null`) ne retirent rien.
+ */
 export async function elaguerPermissions(
   dossierLieId: string,
-  droits: DroitElement[],
-  comptes: Map<string, CompteAnnuaire | null>,
+  droits: DroitElement[] | null,
   membres: (groupe: string) => Promise<CompteAnnuaire[] | null>
 ): Promise<void> {
+  if (droits === null) return
   const creees = await prisma.permissionCreee.findMany({
     where: { dossierLieId },
   })
-  const identifiants = new Set(droits.map(d => d.identifiant))
   for (const p of creees) {
-    let present = true
+    let garde: boolean
     if (p.identifiant.startsWith(PREFIXE_GROUPE)) {
       const lus = await membres(p.identifiant.slice(PREFIXE_GROUPE.length))
-      const compte = comptes.get(p.userId)
-      // Un groupe illisible, ou une personne non cherchée : le droit reste.
-      if (lus !== null && compte !== undefined && compte !== null) {
-        present = lus.some(m => m.identifiant === compte.identifiant)
-      }
+      // Un groupe illisible : le droit reste.
+      garde =
+        lus === null ||
+        (p.compte !== null && lus.some(m => m.identifiant === p.compte))
     } else {
-      present = identifiants.has(p.identifiant)
+      garde = partageIntact(p, droits)
     }
-    if (!present) await prisma.permissionCreee.delete({ where: { id: p.id } })
+    if (!garde) await prisma.permissionCreee.deleteMany({ where: { id: p.id } })
   }
 }
 
 /**
  * Met à jour les propositions d'un dossier après une vérification. Rend le
- * nombre de propositions nouvelles qui attendent un admin.
+ * nombre de propositions nouvelles qui attendent un admin. `resteAttendu` dit si
+ * une personne reste attendue par un autre dossier qui passe par ce groupe : la
+ * sortir du groupe lui couperait cet autre dossier.
  */
 export async function mettreAJourPropositions(
   organisationId: string,
   dossier: DossierAGerer,
   lignes: { userId: string | null; etat: EtatAccesFournisseur }[],
-  annuaire: AnnuaireFournisseur
+  annuaire: AnnuaireFournisseur,
+  resteAttendu: (groupe: string, userId: string) => boolean
 ): Promise<number> {
   if (dossier.accesFournisseur === 'AUCUN') {
     await prisma.propositionAcces.deleteMany({
@@ -101,11 +160,18 @@ export async function mettreAJourPropositions(
     (
       await prisma.permissionCreee.findMany({
         where: { dossierLieId: dossier.id },
-        select: { userId: true },
+        select: { userId: true, identifiant: true },
       })
     )
+      .filter(
+        p =>
+          !attendus.has(p.userId) &&
+          !(
+            p.identifiant.startsWith(PREFIXE_GROUPE) &&
+            resteAttendu(p.identifiant.slice(PREFIXE_GROUPE.length), p.userId)
+          )
+      )
       .map(p => p.userId)
-      .filter(id => !attendus.has(id))
   )
   const enAttente = await prisma.propositionAcces.findMany({
     where: { dossierLieId: dossier.id, etat: 'EN_ATTENTE' },
@@ -116,7 +182,7 @@ export async function mettreAJourPropositions(
     p.action === 'AJOUTER' ? !ajouts.has(p.userId) : !retraits.has(p.userId)
   )
   await prisma.propositionAcces.deleteMany({
-    where: { id: { in: obsoletes.map(p => p.id) } },
+    where: { id: { in: obsoletes.map(p => p.id) }, etat: 'EN_ATTENTE' },
   })
   // Une proposition écartée ne revient pas tant que la situation de la personne
   // ne change pas : l'écart s'efface quand la proposition perd son objet.
@@ -137,8 +203,13 @@ export async function mettreAJourPropositions(
       },
     },
   })
+  // Une proposition en cours d'application ne se double pas.
+  const enCours = await prisma.propositionAcces.findMany({
+    where: { dossierLieId: dossier.id, etat: 'EN_COURS' },
+    select: { userId: true, action: true },
+  })
   const deja = new Set(
-    [...enAttente, ...ecartees].map(p => `${p.action}:${p.userId}`)
+    [...enAttente, ...ecartees, ...enCours].map(p => `${p.action}:${p.userId}`)
   )
   const nouvelles = [
     ...[...ajouts].map(userId => ({ userId, action: 'AJOUTER' as const })),
@@ -203,33 +274,48 @@ export async function annoncerPropositions(
 
 /**
  * Applique une proposition chez le fournisseur. `acteurId` est nul pour un ajout
- * automatique. Une erreur du fournisseur passe la proposition en échec, sans
- * lever : les propositions suivantes continuent.
+ * automatique. La proposition se réserve d'abord : une seconde application
+ * simultanée rend null. Une erreur passe la proposition en échec, sans lever :
+ * les propositions suivantes continuent.
  */
 export async function appliquerProposition(
   organisationId: string,
   id: string,
   acteurId: string | null
 ): Promise<'APPLIQUEE' | 'ECHEC' | null> {
-  const p = await prisma.propositionAcces.findFirst({
+  const { count } = await prisma.propositionAcces.updateMany({
     where: { id, organisationId, etat: 'EN_ATTENTE' },
+    data: { etat: 'EN_COURS' },
+  })
+  if (count === 0) return null
+  const p = await prisma.propositionAcces.findUniqueOrThrow({
+    where: { id },
     include: {
       user: { select: { email: true } },
       dossierLie: true,
     },
   })
-  if (p === null) return null
   const d = p.dossierLie
   const position: Position = {
     emplacement: d.emplacement,
     base: d.element,
     chemin: [],
   }
+  const terminer = async (
+    etat: 'APPLIQUEE' | 'ECHEC',
+    erreur: string | null
+  ) => {
+    await prisma.propositionAcces.update({
+      where: { id: p.id },
+      data: { etat, erreur, traiteeParId: acteurId, traiteeLe: new Date() },
+    })
+    return etat
+  }
   try {
     const { espace } = await ouvrirEspace(organisationId)
     const annuaire = espace.annuaire
     if (annuaire === undefined || espace.fournisseur !== d.fournisseur) {
-      throw new Error('la connexion ne permet pas la gestion des accès.')
+      throw new Refus('La connexion ne permet pas la gestion des accès.')
     }
     const compte = await prisma.compteFournisseur.findUnique({
       where: {
@@ -241,41 +327,30 @@ export async function appliquerProposition(
       },
       select: { identifiant: true, adresseSaisie: true },
     })
-    if (p.action === 'AJOUTER') {
-      let identifiant: string
-      if (d.accesFournisseur === 'PARTAGE') {
-        if (annuaire.partager === undefined) {
-          throw new Error('le partage n’est pas permis par la connexion.')
-        }
-        identifiant = (
-          await annuaire.partager(
-            position,
-            {
-              adresse: compte?.adresseSaisie ?? p.user.email,
-              identifiant: compte?.identifiant ?? null,
-            },
-            { role: d.roleFournisseur, invitation: d.invitationFournisseur }
-          )
-        ).identifiant
-      } else if (d.accesFournisseur === 'GROUPE') {
-        if (
-          annuaire.ajouterAuGroupe === undefined ||
-          d.groupeFournisseurId === null
-        ) {
-          throw new Error('aucun groupe n’est choisi pour ce dossier.')
-        }
-        if (compte?.identifiant == null) {
-          throw new Error('la personne n’a pas de compte dans l’annuaire.')
-        }
-        await annuaire.ajouterAuGroupe(
-          d.groupeFournisseurId,
-          compte.identifiant
+    const cible = {
+      adresse: (compte?.adresseSaisie ?? p.user.email).toLowerCase(),
+      compte: compte?.identifiant ?? null,
+    }
+    const relireDroits = async () => {
+      const droits = await annuaire.droits(position)
+      if (droits === null) {
+        throw new Refus(
+          'Relaytour ne lit pas les droits de ce dossier : rien n’a changé.'
         )
-        identifiant = `${PREFIXE_GROUPE}${d.groupeFournisseurId}`
-      } else {
-        throw new Error('le dossier ne propose plus d’accès.')
       }
-      await prisma.permissionCreee.upsert({
+      return droits
+    }
+    const relireGroupe = async (groupe: string) => {
+      const membres = await annuaire.membresDuGroupe(groupe)
+      if (membres === null) {
+        throw new Refus(
+          'Relaytour ne lit pas les membres de ce groupe : rien n’a changé.'
+        )
+      }
+      return membres
+    }
+    const tracer = (trace: TraceCreee) =>
+      prisma.permissionCreee.upsert({
         where: {
           dossierLieId_userId: { dossierLieId: d.id, userId: p.userId },
         },
@@ -283,10 +358,51 @@ export async function appliquerProposition(
           organisationId,
           dossierLieId: d.id,
           userId: p.userId,
-          identifiant,
+          ...trace,
         },
-        update: { identifiant },
+        update: trace,
       })
+
+    if (p.action === 'AJOUTER') {
+      if (d.accesFournisseur === 'PARTAGE') {
+        if (annuaire.partager === undefined) {
+          throw new Refus('La connexion ne permet pas le partage.')
+        }
+        // Un droit posé entre-temps, à la main, reste celui de l'association.
+        if ((await relireDroits()).some(x => vise(x.beneficiaire, cible))) {
+          return await terminer('APPLIQUEE', null)
+        }
+        const { identifiant } = await annuaire.partager(
+          position,
+          { adresse: cible.adresse, identifiant: cible.compte },
+          { role: d.roleFournisseur, invitation: d.invitationFournisseur }
+        )
+        await tracer({ identifiant, role: d.roleFournisseur, ...cible })
+      } else if (d.accesFournisseur === 'GROUPE') {
+        if (
+          annuaire.ajouterAuGroupe === undefined ||
+          d.groupeFournisseurId === null
+        ) {
+          throw new Refus('Aucun groupe n’est choisi pour ce dossier.')
+        }
+        if (cible.compte === null) {
+          throw new Refus('La personne n’a pas de compte dans l’annuaire.')
+        }
+        const groupe = d.groupeFournisseurId
+        if (
+          (await relireGroupe(groupe)).some(m => m.identifiant === cible.compte)
+        ) {
+          return await terminer('APPLIQUEE', null)
+        }
+        await annuaire.ajouterAuGroupe(groupe, cible.compte)
+        await tracer({
+          identifiant: `${PREFIXE_GROUPE}${groupe}`,
+          role: null,
+          ...cible,
+        })
+      } else {
+        throw new Refus('Le dossier ne propose plus d’accès.')
+      }
     } else {
       const creee = await prisma.permissionCreee.findUnique({
         where: {
@@ -295,34 +411,39 @@ export async function appliquerProposition(
       })
       if (creee !== null) {
         if (creee.identifiant.startsWith(PREFIXE_GROUPE)) {
-          if (
-            annuaire.retirerDuGroupe === undefined ||
-            compte?.identifiant == null
-          ) {
-            throw new Error('le retrait du groupe n’est pas possible.')
+          const groupe = creee.identifiant.slice(PREFIXE_GROUPE.length)
+          if (annuaire.retirerDuGroupe === undefined) {
+            throw new Refus('La connexion ne permet pas le retrait du groupe.')
           }
-          await annuaire.retirerDuGroupe(
-            creee.identifiant.slice(PREFIXE_GROUPE.length),
-            compte.identifiant
-          )
+          const present =
+            creee.compte !== null &&
+            (await relireGroupe(groupe)).some(
+              m => m.identifiant === creee.compte
+            )
+          // Relaytour retire le compte qu'il a ajouté, et non le compte du jour.
+          if (present && creee.compte !== null) {
+            await annuaire.retirerDuGroupe(groupe, creee.compte)
+          }
         } else {
           if (annuaire.retirerPartage === undefined) {
-            throw new Error('le retrait du partage n’est pas permis.')
+            throw new Refus('La connexion ne permet pas le retrait du partage.')
           }
-          await annuaire.retirerPartage(position, creee.identifiant)
+          const droits = await relireDroits()
+          if (partageIntact(creee, droits)) {
+            await annuaire.retirerPartage(position, creee.identifiant)
+          } else if (droits.some(x => x.identifiant === creee.identifiant)) {
+            // Le droit a changé à la main : il appartient désormais à
+            // l'association, et Relaytour l'oublie.
+            await prisma.permissionCreee.deleteMany({ where: { id: creee.id } })
+            return await terminer(
+              'ECHEC',
+              'Ce droit a changé chez le fournisseur depuis sa création : Relaytour ne le retire pas.'
+            )
+          }
         }
-        await prisma.permissionCreee.delete({ where: { id: creee.id } })
+        await prisma.permissionCreee.deleteMany({ where: { id: creee.id } })
       }
     }
-    await prisma.propositionAcces.update({
-      where: { id: p.id },
-      data: {
-        etat: 'APPLIQUEE',
-        erreur: null,
-        traiteeParId: acteurId,
-        traiteeLe: new Date(),
-      },
-    })
     journal.info(
       {
         evenement: 'proposition-acces-appliquee',
@@ -333,17 +454,8 @@ export async function appliquerProposition(
       },
       'Une proposition d’accès est appliquée chez le fournisseur.'
     )
-    return 'APPLIQUEE'
+    return await terminer('APPLIQUEE', null)
   } catch (erreur) {
-    await prisma.propositionAcces.update({
-      where: { id: p.id },
-      data: {
-        etat: 'ECHEC',
-        erreur: message(erreur),
-        traiteeParId: acteurId,
-        traiteeLe: new Date(),
-      },
-    })
     journal.warn(
       {
         evenement: 'proposition-acces-en-echec',
@@ -353,6 +465,6 @@ export async function appliquerProposition(
       },
       'Une proposition d’accès a échoué chez le fournisseur.'
     )
-    return 'ECHEC'
+    return terminer('ECHEC', message(erreur))
   }
 }

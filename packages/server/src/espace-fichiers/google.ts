@@ -474,14 +474,17 @@ function annuaireGoogle(
           `${DRIVE}/files/${encodeURIComponent(id)}/permissions?supportsAllDrives=true&pageSize=100&fields=nextPageToken,permissions(id,type,role,emailAddress,domain,displayName,deleted,permissionDetails)${jetonPage === undefined ? '' : `&pageToken=${encodeURIComponent(jetonPage)}`}`,
           jeton
         )
-        for (const p of reponse?.permissions ?? []) {
+        // Un élément absent : ses droits ne se lisent pas.
+        if (reponse === null) return null
+        for (const p of reponse.permissions ?? []) {
           const droit = droitGoogle(p)
           if (droit !== null) droits.push(droit)
         }
-        jetonPage = reponse?.nextPageToken
-        if (jetonPage === undefined) break
+        jetonPage = reponse.nextPageToken
+        if (jetonPage === undefined) return droits
       }
-      return droits
+      // Au-delà de la borne, la liste est coupée : elle ne prouve rien.
+      return null
     },
     ...(gestion
       ? {

@@ -411,6 +411,9 @@ export interface PartageNextcloud {
   permissions?: number
 }
 
+/** Le groupe des admins d'une instance Nextcloud. */
+const GROUPE_ADMINS = 'admin'
+
 /** Les droits de lecture et d'écriture de Nextcloud (lire = 1, modifier = 2). */
 const LECTURE = 1
 const ECRITURE = 1 | 2 | 4 | 8
@@ -680,7 +683,8 @@ export function espaceNextcloud(
       const { statut, donnees } = await ocs(
         `apps/files_sharing/api/v1/shares?path=${encodeURIComponent(await cheminPartage(position))}&reshares=true`
       )
-      if (statut === 404) return []
+      // Un dossier absent : ses droits ne se lisent pas.
+      if (statut === 404) return null
       if (statut !== 200) {
         throw new FournisseurIndisponible(
           `Nextcloud refuse la lecture des partages (${statut}).`
@@ -690,6 +694,9 @@ export function espaceNextcloud(
         .map(droitNextcloud)
         .filter((d): d is DroitElement => d !== null)
     },
+    // Le groupe des admins de l'instance ne reçoit jamais de membre de Relaytour.
+    groupeGerable: identifiant => identifiant !== GROUPE_ADMINS,
+
     async membresDuGroupe(identifiant) {
       // Seul un admin ou un sous-admin du groupe en lit les membres.
       const { statut, donnees } = await ocs(
@@ -722,16 +729,22 @@ export function espaceNextcloud(
     ...(gestion
       ? {
           async partager(position, personne, { role }) {
+            // Un partage par mail serait un lien porteur, ouvert à qui le
+            // reçoit : Relaytour ne partage qu'avec un compte de ce Nextcloud.
             const compte = personne.identifiant ?? null
+            if (compte === null) {
+              throw new FournisseurIndisponible(
+                'la personne n’a pas de compte sur ce Nextcloud.'
+              )
+            }
             const { statut, donnees } = await ocs(
               'apps/files_sharing/api/v1/shares',
               {
                 method: 'POST',
                 formulaire: {
                   path: await cheminPartage(position),
-                  // Un compte de ce Nextcloud, sinon un partage par adresse mail.
-                  shareType: compte === null ? '4' : '0',
-                  shareWith: compte ?? personne.adresse,
+                  shareType: '0',
+                  shareWith: compte,
                   permissions: String(role === 'ECRITURE' ? ECRITURE : LECTURE),
                 },
               }
@@ -756,6 +769,11 @@ export function espaceNextcloud(
             }
           },
           async ajouterAuGroupe(groupe, compte) {
+            if (groupe === GROUPE_ADMINS) {
+              throw new FournisseurIndisponible(
+                'Relaytour ne modifie pas le groupe des admins de Nextcloud.'
+              )
+            }
             const { statut } = await ocs(
               `cloud/users/${encodeURIComponent(compte)}/groups`,
               { method: 'POST', formulaire: { groupid: groupe } }

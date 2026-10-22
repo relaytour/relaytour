@@ -486,6 +486,12 @@ function exigerChemin(chemin: readonly string[]): void {
   if (!cheminValide(chemin)) throw erreurSaisie('Chemin de dossier invalide.')
 }
 
+/** Les lecteurs actuels d'un dossier lié, sous la forme que lit `validerLecteurs`. */
+const lecteursExistants = (d: LecteursDossier) => ({
+  perimetreIds: d.perimetres.map(p => p.perimetreId),
+  groupes: d.groupes.map(g => g.groupe),
+})
+
 /** Une liste de lecteurs compte au plus cent périmètres et groupes. */
 const LECTEURS_MAX = 100
 
@@ -512,6 +518,14 @@ async function validerLecteurs(
     touteActivite: boolean
     perimetreIds: readonly (string | number)[]
     groupes: readonly string[]
+  },
+  /**
+   * Les lecteurs actuels d'un lien qu'un admin modifie : un périmètre archivé ou
+   * un groupe vide qu'ils nomment déjà reste admis, pour ne pas perdre sa lecture.
+   */
+  existants: { perimetreIds: string[]; groupes: string[] } = {
+    perimetreIds: [],
+    groupes: [],
   }
 ): Promise<LecteursValides> {
   const perimetreIds = [...new Set(saisie.perimetreIds.map(String))]
@@ -537,7 +551,7 @@ async function validerLecteurs(
       id: { in: perimetreIds },
       organisationId,
       activiteId,
-      archivedAt: null,
+      OR: [{ archivedAt: null }, { id: { in: existants.perimetreIds } }],
     },
   })
   if (trouves !== perimetreIds.length) throw accesRefuse()
@@ -558,7 +572,9 @@ async function validerLecteurs(
           select: { id: true, groupe: true },
           orderBy: [{ nom: 'asc' }, { id: 'asc' }],
         })
-  const vide = groupes.find(g => !membres.some(m => m.groupe === g))
+  const vide = groupes.find(
+    g => !existants.groupes.includes(g) && !membres.some(m => m.groupe === g)
+  )
   if (vide !== undefined) {
     throw erreurSaisie(`Le groupe « ${vide} » ne compte aucun périmètre.`)
   }
@@ -1327,8 +1343,13 @@ builder.mutationFields(t => ({
 
   delierDossier: t.boolean({
     authScopes: { admin: true },
-    args: { id: t.arg.id({ required: true }) },
-    resolve: async (_root, { id }, ctx) => {
+    description:
+      'Retire un dossier lié. Quand Relaytour a créé des accès pour ce dossier chez le fournisseur, le retrait exige `oublierAcces` : ces accès restent chez le fournisseur et ne sont plus suivis (ADR 0044).',
+    args: {
+      id: t.arg.id({ required: true }),
+      oublierAcces: t.arg.boolean(),
+    },
+    resolve: async (_root, { id, oublierAcces }, ctx) => {
       const organisationId = ctx.organisation!.id
       const dossier = await prisma.dossierLie.findFirst({
         where: { id: String(id), organisationId },
@@ -1340,6 +1361,14 @@ builder.mutationFields(t => ({
         },
       })
       if (dossier === null) throw accesRefuse()
+      const crees = await prisma.permissionCreee.count({
+        where: { dossierLieId: dossier.id },
+      })
+      if (crees > 0 && oublierAcces !== true) {
+        throw erreurSaisie(
+          `Relaytour a créé ${crees > 1 ? `${crees} accès` : 'un accès'} chez le fournisseur pour ce dossier. Retirez-les d’abord, ou confirmez qu’ils restent sans suivi.`
+        )
+      }
       await prisma.dossierLie.delete({ where: { id: dossier.id } })
       publierDossierLie(dossier)
       return true
@@ -1383,7 +1412,8 @@ builder.mutationFields(t => ({
       const lecteurs = await validerLecteurs(
         organisationId,
         avant.activiteId,
-        saisie
+        saisie,
+        lecteursExistants(avant)
       )
       const nomAffiche = nom?.trim()
       if (
@@ -1499,7 +1529,12 @@ builder.queryField('effetsLecteursDossier', t =>
       const nouveaux = {
         ...dossier,
         ...enLecteurs(
-          await validerLecteurs(organisationId, dossier.activiteId, saisie)
+          await validerLecteurs(
+            organisationId,
+            dossier.activiteId,
+            saisie,
+            lecteursExistants(dossier)
+          )
         ),
       }
       let documentsMasques = 0

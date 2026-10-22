@@ -66,8 +66,8 @@ function versElement(n: NoeudMemoire): ElementEspace {
 /** L'annuaire d'un espace en mémoire (ADR 0044). */
 export interface AnnuaireMemoire {
   comptes: CompteAnnuaire[]
-  /** Les droits de chaque élément, par son identifiant. */
-  droits: Record<string, DroitElement[]>
+  /** Les droits de chaque élément, par son identifiant ; null : illisibles. */
+  droits: Record<string, DroitElement[] | null>
   /** Les membres de chaque groupe par identifiant de compte ; null : illisible. */
   groupes: Record<string, string[] | null>
   /** Vrai pour un fournisseur sans annuaire, comme Google Drive ou Dropbox. */
@@ -92,6 +92,9 @@ export function annuaireEnMemoire(
       )
       const identifiant = `partage-${++suivant}`
       const droits = (donnees.droits[position.base ?? ''] ??= [])
+      if (droits === null) {
+        return Promise.reject(new Error('Droits illisibles.'))
+      }
       droits.push({
         identifiant,
         beneficiaire: {
@@ -107,7 +110,7 @@ export function annuaireEnMemoire(
     },
     retirerPartage(position, identifiant) {
       const droits = donnees.droits[position.base ?? '']
-      if (droits !== undefined) {
+      if (droits !== undefined && droits !== null) {
         donnees.droits[position.base ?? ''] = droits.filter(
           d => d.identifiant !== identifiant
         )
@@ -132,6 +135,8 @@ export function annuaireEnMemoire(
       }
       return Promise.resolve()
     },
+    // Comme chez SharePoint, un groupe de site ne se gère pas.
+    groupeGerable: identifiant => !identifiant.startsWith('site:'),
     chercherComptes(adresses) {
       return Promise.resolve(
         new Map(
@@ -144,7 +149,8 @@ export function annuaireEnMemoire(
     },
     droits(position) {
       const id = position.base ?? ''
-      return Promise.resolve(donnees.droits[id] ?? [])
+      const droits = donnees.droits[id]
+      return Promise.resolve(droits === undefined ? [] : droits)
     },
     membresDuGroupe(identifiant) {
       const membres = donnees.groupes[identifiant]

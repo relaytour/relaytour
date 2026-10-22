@@ -1901,6 +1901,9 @@ enum ActionProposition {
 
 enum EtatProposition {
   EN_ATTENTE
+  // Un admin, ou un ajout automatique, l'applique en ce moment : une seconde
+  // application de la même proposition est refusée.
+  EN_COURS
   APPLIQUEE
   ECARTEE
   ECHEC
@@ -2010,13 +2013,19 @@ model PropositionAcces {
 // Un droit que Relaytour a créé chez le fournisseur (ADR 0044) : un partage du
 // dossier, ou l'entrée dans un groupe. Relaytour ne retire que ces droits-là.
 model PermissionCreee {
-  id             String   @id @default(cuid())
+  id             String           @id @default(cuid())
   organisationId String
   dossierLieId   String
   userId         String
   // Identifiant du droit chez le fournisseur, ou « groupe: » suivi du groupe.
-  identifiant    String   @db.VarChar(255)
-  creeLe         DateTime @default(now())
+  identifiant    String           @db.VarChar(255)
+  // Ce que Relaytour a créé : le rôle d'un partage, l'adresse qui l'a reçu, et le
+  // compte du fournisseur (pour un groupe, le compte qui y est entré). Relaytour
+  // ne retire le droit que s'il les retrouve tels quels chez le fournisseur.
+  role           RoleFournisseur?
+  adresse        String?          @db.VarChar(320)
+  compte         String?          @db.VarChar(255)
+  creeLe         DateTime         @default(now())
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
   dossierLie   DossierLie   @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
