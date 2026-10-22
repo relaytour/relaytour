@@ -29,6 +29,14 @@
   src: url('polices/ibm-plex-mono-latin-500-normal.woff2') format('woff2');
 }
 
+@font-face {
+  font-family: 'Baloo 2';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('polices/baloo-2-latin-600-normal.woff2') format('woff2');
+}
+
 :root {
   color-scheme: light;
   --rt-encre-80: rgba(var(--rt-encre-rgb), 0.84);
@@ -201,6 +209,22 @@ section,
   letter-spacing: -0.02em;
   color: var(--rt-encre);
   text-decoration: none;
+}
+
+/* Le logotype : Baloo 2 SemiBold, « Relay » en encre et « tour » en accent.
+   Sur l'encre, « tour » passe en accent éclairci. */
+.logotype {
+  font-family: 'Baloo 2', var(--rt-police-titre);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.logotype > span {
+  color: var(--rt-accent);
+}
+
+.logotype-encre > span {
+  color: #e8a28f;
 }
 
 .liens {

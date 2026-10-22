@@ -66,11 +66,12 @@ Les noms des variables datent des premières valeurs. Les gris ont été relevé
 
 ## Logotype
 
-- Le pictogramme est formé de deux arcs qui se passent le relais. Le premier prend la primaire, le second l'accent.
-- Il reste lisible à 16 pixels (`packages/orga/public/favicon.svg`).
-- Le nom s'écrit en Hanken Grotesk 600, avec un espacement de −0,02 em.
-- Le composant `Marque` affiche le pictogramme et le nom de l'organisation.
-
+- Le pictogramme est formé de deux arcs entrelacés qui se passent le relais. Le premier prend la primaire, le second l'accent.
+- Chaque extrémité passe au-dessus de l'autre arc. Le tracé dessine le premier arc, puis le second, puis l'extrémité droite du premier.
+- Les arcs sont des demi-cercles de rayon 15 sur une grille de 64, centrés en (25, 37) et en (39, 27), avec des extrémités rondes.
+- Le trait mesure 8 jusqu'à 64 pixels : favicon et pictogrammes de l'interface (`packages/orga/public/favicon.svg`, composant `Pictogramme`). Les grandes icônes portent un trait de 9 (`packages/orga/public/icon.png`).
+- Le nom « Relaytour » s'écrit en Baloo 2 SemiBold : « Relay » en encre et « tour » en accent. Sur l'encre, « Relay » passe en blanc et « tour » en accent éclairci. Baloo 2 ne sert que ce logotype.
+- Le composant `Marque` affiche le pictogramme et le nom de l'organisation. Il affiche le logotype quand l'espace porte l'identité de Relaytour elle-même.
 ## Matériau
 
 ### Verres

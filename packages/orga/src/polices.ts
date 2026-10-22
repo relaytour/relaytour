@@ -4,7 +4,9 @@
 //
 // Hanken Grotesk et IBM Plex Mono servent le thème par défaut. Bebas Neue et
 // Quicksand restent disponibles pour un thème d'organisation qui les nomme
-// (POLICES_DISPONIBLES dans @relaytour/tokens).
+// (POLICES_DISPONIBLES dans @relaytour/tokens). Baloo 2 sert le seul logotype
+// de Relaytour et n'entre pas dans les thèmes.
+import '@fontsource/baloo-2/600.css'
 import '@fontsource-variable/hanken-grotesk'
 import '@fontsource/ibm-plex-mono/400.css'
 import '@fontsource/ibm-plex-mono/500.css'

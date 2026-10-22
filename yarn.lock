@@ -1312,6 +1312,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@fontsource/baloo-2@npm:^5.3.0":
+  version: 5.3.0
+  resolution: "@fontsource/baloo-2@npm:5.3.0"
+  checksum: 10/ffacc617cc94a87873bf26ef38f9e7ef3e02d230d74285de861c1d39afd92f556e102d6975c0d8ac7d5d0a044bdd51a5a4e2adf8bbe5c3d4b50fc2e974d58aa8
+  languageName: node
+  linkType: hard
+
 "@fontsource/bebas-neue@npm:^5.3.0":
   version: 5.3.0
   resolution: "@fontsource/bebas-neue@npm:5.3.0"
@@ -3628,6 +3635,7 @@ __metadata:
     "@eslint/js": "npm:^9.39.0"
     "@fontsource-variable/hanken-grotesk": "npm:^5.3.0"
     "@fontsource-variable/quicksand": "npm:^5.3.0"
+    "@fontsource/baloo-2": "npm:^5.3.0"
     "@fontsource/bebas-neue": "npm:^5.3.0"
     "@fontsource/ibm-plex-mono": "npm:^5.3.0"
     "@graphql-codegen/cli": "npm:^7.4.1"

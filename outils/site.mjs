@@ -113,6 +113,7 @@ const POLICES = [
   '@fontsource-variable/hanken-grotesk/files/hanken-grotesk-latin-wght-normal.woff2',
   '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-400-normal.woff2',
   '@fontsource/ibm-plex-mono/files/ibm-plex-mono-latin-500-normal.woff2',
+  '@fontsource/baloo-2/files/baloo-2-latin-600-normal.woff2',
 ]
 mkdirSync(join(SITE, 'polices'), { recursive: true })
 for (const chemin of POLICES) {
@@ -123,6 +124,7 @@ for (const chemin of POLICES) {
 for (const [paquet, nom] of [
   ['@fontsource-variable/hanken-grotesk', 'OFL-hanken-grotesk.txt'],
   ['@fontsource/ibm-plex-mono', 'OFL-ibm-plex-mono.txt'],
+  ['@fontsource/baloo-2', 'OFL-baloo-2.txt'],
 ]) {
   copyFileSync(
     join(RACINE, 'node_modules', paquet, 'LICENSE'),
