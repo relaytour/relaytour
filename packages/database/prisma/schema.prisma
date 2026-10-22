@@ -81,6 +81,8 @@ model Organisation {
   connexionFichiers       ConnexionFichiers?
   dossiersLies            DossierLie[]
   ressourcesFiches        RessourceFiche[]
+  comptesFournisseur      CompteFournisseur[]
+  etatsAccesDossiers      EtatAccesDossier[]
   fichesExportees         FicheExportee[]
 }
 
@@ -344,6 +346,8 @@ model User {
   connexionsFichiers      ConnexionFichiers[]
   dossiersLies            DossierLie[]
   ressourcesFiches        RessourceFiche[]
+  comptesFournisseur      CompteFournisseur[]
+  etatsAccesDossiers      EtatAccesDossier[]
   ressourcesOuvertes      RessourceFiche[]         @relation("RessourceOuvertePar")
 }
 
@@ -1855,6 +1859,36 @@ enum EtatConnexionFichiers {
   A_RECONNECTER
 }
 
+// Ce que la connexion permet en plus des fichiers (ADR 0044) : lire l'annuaire et
+// les droits, puis appliquer les propositions d'accès.
+enum PorteeConnexionFichiers {
+  FICHIERS
+  ANNUAIRE
+  GESTION
+}
+
+// Les personnes qu'un dossier lié attend chez le fournisseur (ADR 0044).
+enum AttendusDossier {
+  MEMBRES
+  CONTACTS_PRINCIPAUX
+}
+
+// Un compte chez le fournisseur, rapproché d'une personne par son adresse.
+enum EtatCompteFournisseur {
+  TROUVE
+  INVITE
+  ABSENT
+}
+
+// L'état d'une personne face aux droits d'un dossier lié chez le fournisseur.
+enum EtatAccesFournisseur {
+  A_ACCES
+  SANS_COMPTE
+  SANS_ACCES
+  INCONNU
+  EN_TROP
+}
+
 // Espace de fichiers d'une organisation : une connexion au plus. Relaytour agit
 // avec les droits du compte connecté. Le secret (jeton de rafraîchissement ou clé
 // de compte de service) est chiffré (lib/chiffrement.ts) et ne sort jamais du
@@ -1882,11 +1916,61 @@ model ConnexionFichiers {
   // refusées, modifiées à la main dans l'espace de fichiers, erreur.
   exportRapport     Json?
   exportLe          DateTime?
+  // Autorisations accordées par l'admin au-delà des fichiers (ADR 0044).
+  portee            PorteeConnexionFichiers  @default(FICHIERS)
+  // Dernière vérification des accès, et son erreur éventuelle.
+  accesVerifieLe    DateTime?
+  accesErreur       String?                  @db.VarChar(255)
   createdAt         DateTime                 @default(now())
   updatedAt         DateTime                 @updatedAt
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   connectePar  User?        @relation(fields: [connecteParId], references: [id], onDelete: SetNull)
+}
+
+// Le compte d'une personne chez le fournisseur connecté (ADR 0044). Relaytour le
+// cherche par l'adresse de la personne, ou par l'adresse qu'un admin saisit pour
+// elle. Il n'entre jamais dans le dépôt de l'organisation.
+model CompteFournisseur {
+  id             String                @id @default(cuid())
+  organisationId String
+  userId         String
+  fournisseur    FournisseurFichiers
+  // Adresse saisie par un admin, quand la personne utilise un autre compte.
+  adresseSaisie  String?               @db.VarChar(320)
+  etat           EtatCompteFournisseur @default(ABSENT)
+  // Identifiant du compte chez le fournisseur, quand il est trouvé.
+  identifiant    String?               @db.VarChar(255)
+  verifieLe      DateTime?
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organisationId, fournisseur, userId])
+  @@index([userId])
+}
+
+// L'état d'une personne face aux droits d'un dossier lié, à la dernière
+// vérification (ADR 0044). Chaque vérification remplace les lignes du dossier. Un
+// accès en trop garde un nom, jamais d'adresse.
+model EtatAccesDossier {
+  id             String               @id @default(cuid())
+  organisationId String
+  dossierLieId   String
+  userId         String?
+  // Nom affiché d'un accès en trop, qui n'est pas une personne de Relaytour.
+  nom            String?              @db.VarChar(255)
+  etat           EtatAccesFournisseur
+  // Comment la personne a accès : « direct », « domaine », ou le nom du groupe.
+  via            String?              @db.VarChar(255)
+  verifieLe      DateTime             @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  dossierLie   DossierLie   @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId, dossierLieId])
+  @@index([userId])
 }
 
 // Dossier de l'espace de fichiers lié à un périmètre, ou à toute l'activité
@@ -1902,6 +1986,8 @@ model DossierLie {
   perimetreId    String?
   // Vrai : le dossier sert toute l'activité, et les listes restent vides.
   touteActivite  Boolean             @default(false)
+  // Les personnes que le dossier attend chez le fournisseur (ADR 0044).
+  attendus       AttendusDossier     @default(MEMBRES)
   fournisseur    FournisseurFichiers
   // Bibliothèque de documents et dossier chez le fournisseur : des identifiants
   // stables, qui survivent à un renommage ou à un déplacement du dossier.
@@ -1920,6 +2006,7 @@ model DossierLie {
   ressources   RessourceFiche[]
   perimetres   DossierLiePerimetre[]
   groupes      DossierLieGroupe[]
+  etatsAcces   EtatAccesDossier[]
 
   @@unique([organisationId, activiteId, perimetreId, emplacement, element])
   @@index([activiteId])

@@ -301,7 +301,10 @@ export default function ConnexionEspace({
 
   const connecter = async (fournisseur: FournisseurFichiers) => {
     try {
-      const r = await commencer({ variables: { fournisseur } })
+      // Une reconnexion garde les autorisations accordées (ADR 0044).
+      const portee =
+        connexion?.fournisseur === fournisseur ? connexion.portee : null
+      const r = await commencer({ variables: { fournisseur, portee } })
       const adresse = r.data?.commencerConnexionEspaceFichiers
       if (adresse) window.location.assign(adresse)
     } catch (e) {
@@ -402,6 +405,16 @@ export default function ConnexionEspace({
                   ) : (
                     <Tag color="warning">À reconnecter</Tag>
                   ),
+              },
+              {
+                key: 'acces',
+                label: 'Vérification des accès',
+                children:
+                  connexion.portee === 'FICHIERS'
+                    ? 'Non activée'
+                    : connexion.portee === 'GESTION'
+                      ? 'Activée, avec la gestion des accès'
+                      : 'Activée',
               },
               {
                 key: 'date',

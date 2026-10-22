@@ -1,4 +1,7 @@
 import type {
+  AnnuaireFournisseur,
+  CompteAnnuaire,
+  DroitElement,
   ElementEspace,
   Emplacement,
   EspaceFichiers,
@@ -60,8 +63,48 @@ function versElement(n: NoeudMemoire): ElementEspace {
   }
 }
 
+/** L'annuaire d'un espace en mémoire (ADR 0044). */
+export interface AnnuaireMemoire {
+  comptes: CompteAnnuaire[]
+  /** Les droits de chaque élément, par son identifiant. */
+  droits: Record<string, DroitElement[]>
+  /** Les membres de chaque groupe par identifiant de compte ; null : illisible. */
+  groupes: Record<string, string[] | null>
+}
+
+export function annuaireEnMemoire(
+  donnees: AnnuaireMemoire
+): AnnuaireFournisseur {
+  return {
+    capacites: { comptes: true, droits: true, membresDeGroupe: true },
+    chercherComptes(adresses) {
+      return Promise.resolve(
+        new Map(
+          adresses.map(a => [
+            a,
+            donnees.comptes.find(c => c.adresse === a.toLowerCase()) ?? null,
+          ])
+        )
+      )
+    },
+    droits(position) {
+      const id = position.base ?? ''
+      return Promise.resolve(donnees.droits[id] ?? [])
+    },
+    membresDuGroupe(identifiant) {
+      const membres = donnees.groupes[identifiant]
+      if (membres === null || membres === undefined)
+        return Promise.resolve(null)
+      return Promise.resolve(
+        donnees.comptes.filter(c => membres.includes(c.identifiant))
+      )
+    },
+  }
+}
+
 export function espaceEnMemoire(
-  emplacements: EmplacementMemoire[]
+  emplacements: EmplacementMemoire[],
+  annuaire?: AnnuaireFournisseur
 ): EspaceFichiers {
   const trouver = (p: Position): NoeudMemoire | null => {
     const emplacement = emplacements.find(e => e.id === p.emplacement)
@@ -77,6 +120,7 @@ export function espaceEnMemoire(
   }
   return {
     fournisseur: 'SHAREPOINT',
+    ...(annuaire === undefined ? {} : { annuaire }),
     convertitEnPdf: nom => nom.endsWith('.docx'),
     emplacements: () =>
       Promise.resolve(

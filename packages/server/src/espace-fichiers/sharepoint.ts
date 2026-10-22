@@ -3,10 +3,15 @@ import { appelSortant, type HotesAdmis } from './sortant.ts'
 import {
   AccesRetire,
   FournisseurIndisponible,
+  type AnnuaireFournisseur,
+  type Beneficiaire,
+  type CompteAnnuaire,
+  type DroitElement,
   type ElementEspace,
   type Emplacement,
   type EspaceFichiers,
   type ListeElements,
+  type Portee,
   type Position,
 } from './types.ts'
 
@@ -30,8 +35,15 @@ export const HOTES_MICROSOFT: HotesAdmis = {
 }
 
 // L'écriture sert à l'export des fiches. La lecture des sites liste leurs
-// bibliothèques de documents.
-const PORTEES = 'offline_access User.Read Files.ReadWrite.All Sites.Read.All'
+// bibliothèques de documents. La vérification des accès lit les comptes et les
+// membres des groupes ; la gestion les modifie (ADR 0044). Ces autorisations
+// demandent le consentement d'un admin Microsoft Entra.
+const FICHIERS = 'offline_access User.Read Files.ReadWrite.All Sites.Read.All'
+export const PORTEES_MICROSOFT: Record<Portee, string> = {
+  FICHIERS,
+  ANNUAIRE: `${FICHIERS} User.Read.All GroupMember.Read.All`,
+  GESTION: `${FICHIERS} User.Read.All GroupMember.ReadWrite.All`,
+}
 const GRAPH = 'https://graph.microsoft.com/v1.0'
 const DELAI_MS = 15_000
 const DELAI_CONTENU_MS = 120_000
@@ -48,14 +60,15 @@ const adresseJeton = (c: ConfigurationMicrosoft) =>
 export function adresseAutorisation(
   c: ConfigurationMicrosoft,
   etat: string,
-  defi: string
+  defi: string,
+  portee: Portee = 'FICHIERS'
 ): string {
   const parametres = new URLSearchParams({
     client_id: c.clientId,
     response_type: 'code',
     redirect_uri: c.retour,
     response_mode: 'query',
-    scope: PORTEES,
+    scope: PORTEES_MICROSOFT[portee],
     state: etat,
     code_challenge: defi,
     code_challenge_method: 'S256',
@@ -72,7 +85,8 @@ export interface Jetons {
 
 async function demanderJetons(
   c: ConfigurationMicrosoft,
-  corps: Record<string, string>
+  corps: Record<string, string>,
+  portee: Portee
 ): Promise<Jetons> {
   const reponse = await appelSortant(
     adresseJeton(c),
@@ -82,7 +96,7 @@ async function demanderJetons(
       body: new URLSearchParams({
         client_id: c.clientId,
         client_secret: c.clientSecret,
-        scope: PORTEES,
+        scope: PORTEES_MICROSOFT[portee],
         ...corps,
       }).toString(),
       delaiMs: DELAI_MS,
@@ -120,24 +134,32 @@ async function demanderJetons(
 export function echangerCode(
   c: ConfigurationMicrosoft,
   code: string,
-  verificateur: string
+  verificateur: string,
+  portee: Portee = 'FICHIERS'
 ): Promise<Jetons> {
-  return demanderJetons(c, {
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: c.retour,
-    code_verifier: verificateur,
-  })
+  return demanderJetons(
+    c,
+    {
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: c.retour,
+      code_verifier: verificateur,
+    },
+    portee
+  )
 }
 
+/** De nouveaux jetons, pour la portée accordée à la connexion. */
 export function rafraichir(
   c: ConfigurationMicrosoft,
-  rafraichissement: string
+  rafraichissement: string,
+  portee: Portee = 'FICHIERS'
 ): Promise<Jetons> {
-  return demanderJetons(c, {
-    grant_type: 'refresh_token',
-    refresh_token: rafraichissement,
-  })
+  return demanderJetons(
+    c,
+    { grant_type: 'refresh_token', refresh_token: rafraichissement },
+    portee
+  )
 }
 
 /** Le nom affiché du compte connecté, jamais son adresse. */
@@ -282,9 +304,197 @@ export function adresseGraph(p: Position): string {
     : `${racine}:/${p.chemin.map(encodeURIComponent).join('/')}:`
 }
 
-export function espaceSharePoint(jeton: Jeton): EspaceFichiers {
+// ── Annuaire (ADR 0044) ──────────────────────────────────────────────────────
+
+interface UtilisateurGraph {
+  id: string
+  displayName?: string
+  mail?: string | null
+  userPrincipalName?: string
+  userType?: string
+}
+
+const CHAMPS_UTILISATEUR = 'id,displayName,mail,userPrincipalName,userType'
+// Graph regroupe vingt requêtes au plus dans un lot.
+const LOT_MAX = 20
+
+function versCompte(u: UtilisateurGraph): CompteAnnuaire {
+  return {
+    identifiant: u.id,
+    adresse: (u.mail ?? u.userPrincipalName ?? '').toLowerCase(),
+    nom: u.displayName?.trim() || 'Compte Microsoft',
+    invite: u.userType === 'Guest',
+  }
+}
+
+/** L'adresse d'un compte SharePoint (`i:0#.f|membership|nom@exemple.org`). */
+function adresseDuLogin(login: string | undefined): string | null {
+  const fin = login?.split('|').pop()
+  return fin?.includes('@') ? fin.toLowerCase() : null
+}
+
+interface IdentiteGraph {
+  user?: { id?: string; displayName?: string; email?: string }
+  group?: { id?: string; displayName?: string }
+  siteGroup?: { id?: string | number; displayName?: string }
+  siteUser?: { displayName?: string; loginName?: string; email?: string }
+}
+
+export interface PermissionGraph {
+  id: string
+  roles?: string[]
+  inheritedFrom?: unknown
+  link?: { scope?: string }
+  grantedToV2?: IdentiteGraph
+  grantedToIdentitiesV2?: IdentiteGraph[]
+}
+
+/** Les bénéficiaires d'un droit de Graph. Un groupe de site se préfixe de `site:`. */
+export function beneficiaires(p: PermissionGraph): Beneficiaire[] {
+  const identites = [
+    ...(p.grantedToV2 === undefined ? [] : [p.grantedToV2]),
+    ...(p.grantedToIdentitiesV2 ?? []),
+  ]
+  const nommes = identites.flatMap((i): Beneficiaire[] => {
+    if (i.user !== undefined) {
+      return [
+        {
+          type: 'personne',
+          identifiant: i.user.id ?? null,
+          adresse: i.user.email?.toLowerCase() ?? null,
+          nom: i.user.displayName ?? 'Personne',
+        },
+      ]
+    }
+    if (i.group?.id !== undefined) {
+      return [
+        {
+          type: 'groupe',
+          identifiant: i.group.id,
+          nom: i.group.displayName ?? 'Groupe',
+        },
+      ]
+    }
+    if (i.siteGroup?.id !== undefined) {
+      return [
+        {
+          type: 'groupe',
+          identifiant: `site:${i.siteGroup.id}`,
+          nom: i.siteGroup.displayName ?? 'Groupe du site',
+        },
+      ]
+    }
+    if (i.siteUser !== undefined) {
+      return [
+        {
+          type: 'personne',
+          identifiant: null,
+          adresse:
+            i.siteUser.email?.toLowerCase() ??
+            adresseDuLogin(i.siteUser.loginName),
+          nom: i.siteUser.displayName ?? 'Personne',
+        },
+      ]
+    }
+    return []
+  })
+  if (nommes.length > 0) return nommes
+  if (p.link?.scope === 'organization') {
+    return [{ type: 'domaine', nom: 'Toute l’organisation' }]
+  }
+  return p.link === undefined ? [] : [{ type: 'lien', nom: 'Lien de partage' }]
+}
+
+export function annuaireSharePoint(jeton: Jeton): AnnuaireFournisseur {
+  return {
+    capacites: { comptes: true, droits: true, membresDeGroupe: true },
+
+    async chercherComptes(adresses) {
+      const resultat = new Map<string, CompteAnnuaire | null>()
+      for (let debut = 0; debut < adresses.length; debut += LOT_MAX) {
+        const lot = adresses.slice(debut, debut + LOT_MAX)
+        // Les adresses secondaires (`otherMails`) demandent une requête avancée.
+        const requests = lot.map((adresse, i) => {
+          const q = adresse.toLowerCase().replaceAll("'", "''")
+          const filtre = `mail eq '${q}' or userPrincipalName eq '${q}' or otherMails/any(x:x eq '${q}')`
+          return {
+            id: String(i),
+            method: 'GET',
+            url: `/users?$filter=${encodeURIComponent(filtre)}&$select=${CHAMPS_UTILISATEUR}&$count=true&$top=1`,
+            headers: { ConsistencyLevel: 'eventual' },
+          }
+        })
+        const reponse = await graph(`${GRAPH}/$batch`, jeton, DELAI_MS, {
+          method: 'POST',
+          body: JSON.stringify({ requests }),
+          type: 'application/json',
+        })
+        const corps = await resultatEcriture<{
+          responses: {
+            id: string
+            status: number
+            body?: { value?: UtilisateurGraph[] }
+          }[]
+        }>(reponse, 'la recherche de comptes')
+        for (const r of corps.responses) {
+          const adresse = lot[Number(r.id)]
+          if (adresse === undefined) continue
+          if (r.status !== 200) {
+            throw new FournisseurIndisponible(
+              `Microsoft Graph refuse la recherche d’un compte (${r.status}).`
+            )
+          }
+          const trouve = r.body?.value?.[0]
+          resultat.set(
+            adresse,
+            trouve === undefined ? null : versCompte(trouve)
+          )
+        }
+      }
+      return resultat
+    },
+
+    async droits(position) {
+      const pages = await toutesLesPages<PermissionGraph>(
+        `${adresseGraph(position)}/permissions`,
+        jeton,
+        PAGES_SITES_MAX
+      )
+      return (pages?.valeurs ?? []).flatMap(p =>
+        beneficiaires(p).map((beneficiaire): DroitElement => ({
+          identifiant: p.id,
+          beneficiaire,
+          role: (p.roles ?? []).some(r => r === 'write' || r === 'owner')
+            ? 'ECRITURE'
+            : 'LECTURE',
+          herite: p.inheritedFrom !== undefined,
+        }))
+      )
+    },
+
+    async membresDuGroupe(identifiant) {
+      // Graph ne lit pas les membres d'un groupe d'un site SharePoint.
+      if (identifiant.startsWith('site:')) return null
+      const pages = await toutesLesPages<UtilisateurGraph>(
+        `${GRAPH}/groups/${segment(identifiant)}/transitiveMembers/microsoft.graph.user?$select=${CHAMPS_UTILISATEUR}&$top=999`,
+        jeton,
+        PAGES_SITES_MAX
+      )
+      if (pages === null || !pages.complet) return null
+      return pages.valeurs.map(versCompte)
+    },
+  }
+}
+
+export function espaceSharePoint(
+  jeton: Jeton,
+  options: { annuaire?: boolean } = {}
+): EspaceFichiers {
   return {
     fournisseur: 'SHAREPOINT',
+    ...(options.annuaire === true
+      ? { annuaire: annuaireSharePoint(jeton) }
+      : {}),
     convertitEnPdf: convertibleParMicrosoft,
 
     async emplacements(): Promise<Emplacement[]> {

@@ -34,6 +34,19 @@
           }
         },
         {
+          "id": "2026-10-22-orga-les-admins-verifient-les-acces-des-equipes-chez-le-fournisse",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins vérifient les accès des équipes chez le fournisseur cloud",
+            "texte": "L'écran « Fournisseur cloud » reçoit les onglets « Vérification des accès » et « Comptes ». Avec SharePoint, un admin de l'organisation active la vérification par une nouvelle connexion, qu'un admin Microsoft Entra accepte. Relaytour compare alors, pour chaque dossier lié, les personnes attendues aux droits du dossier : il les range par équipe et dit qui a accès, qui n'a pas de compte, qui n'a pas d'accès. Il nomme aussi les accès en trop. Chaque dossier lié règle les personnes attendues : tous les membres, ou les contacts principaux seulement. Relaytour ne change aucun droit chez le fournisseur.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-22-orga-le-menu-fiches-devient-ressources-et-l-espace-de-fichiers-de",
           "date": "2026-10-22",
           "type": "fonctionnalite",

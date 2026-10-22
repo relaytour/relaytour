@@ -1,7 +1,9 @@
 import {
+  AttendusDossier,
   EtatConnexionFichiers,
   FournisseurFichiers,
   MethodeConnexionFichiers,
+  PorteeConnexionFichiers,
   Prisma,
   prisma,
 } from '@relaytour/database'
@@ -66,6 +68,7 @@ import {
   type EspaceFichiers,
 } from '../espace-fichiers/types.ts'
 import type { AppContext } from '../context.ts'
+import { planifierVerificationAcces } from '../espace-fichiers/acces.ts'
 import { lireGroupes } from '../lib/activites.ts'
 import { perimetresLisibles } from '../lib/droits.ts'
 import { perimetresLisiblesActifs } from '../lib/fiches-connexes.ts'
@@ -87,6 +90,21 @@ export const FournisseurFichiersEnum = builder.enumType(FournisseurFichiers, {
 
 const EtatConnexionFichiersEnum = builder.enumType(EtatConnexionFichiers, {
   name: 'EtatConnexionFichiers',
+})
+
+export const PorteeConnexionFichiersEnum = builder.enumType(
+  PorteeConnexionFichiers,
+  {
+    name: 'PorteeConnexionFichiers',
+    description:
+      'Ce que la connexion permet en plus des fichiers : lire l’annuaire et les droits, puis appliquer les propositions d’accès (ADR 0044).',
+  }
+)
+
+export const AttendusDossierEnum = builder.enumType(AttendusDossier, {
+  name: 'AttendusDossier',
+  description:
+    'Les personnes qu’un dossier lié attend chez le fournisseur : tous les membres de la période, ou les contacts principaux seulement (ADR 0044).',
 })
 
 export const FormatApercuEnum = builder.enumType('FormatApercu', {
@@ -192,6 +210,13 @@ const ConnexionFichiersRef = builder.prismaObject('ConnexionFichiers', {
       nullable: true,
       resolve: c => (c.exportRapport as RapportExport | null) ?? null,
     }),
+    portee: t.expose('portee', { type: PorteeConnexionFichiersEnum }),
+    accesVerifieLe: t.expose('accesVerifieLe', {
+      type: 'DateTime',
+      nullable: true,
+      description: 'Dernière vérification des accès chez le fournisseur.',
+    }),
+    accesErreur: t.exposeString('accesErreur', { nullable: true }),
   }),
 })
 
@@ -313,6 +338,7 @@ export const DossierLieRef = builder.prismaObject('DossierLie', {
     touteActivite: t.exposeBoolean('touteActivite', {
       description: 'Vrai : le dossier sert toute l’activité.',
     }),
+    attendus: t.expose('attendus', { type: AttendusDossierEnum }),
     perimetres: t.field({
       type: [PerimetreRef],
       description: 'Les périmètres nommés dans la liste des lecteurs.',
@@ -761,8 +787,19 @@ builder.mutationFields(t => ({
       'Adresse où l’admin se connecte chez le fournisseur pour accorder l’accès à Relaytour. Elle vaut dix minutes, une seule fois.',
     args: {
       fournisseur: t.arg({ type: FournisseurFichiersEnum, required: true }),
+      portee: t.arg({
+        type: PorteeConnexionFichiersEnum,
+        description:
+          'Les autorisations demandées au-delà des fichiers. Seul SharePoint lit aujourd’hui l’annuaire.',
+      }),
     },
-    resolve: async (_root, { fournisseur }, ctx) => {
+    resolve: async (_root, { fournisseur, portee: demandee }, ctx) => {
+      const portee = demandee ?? 'FICHIERS'
+      if (portee !== 'FICHIERS' && fournisseur !== 'SHAREPOINT') {
+        throw erreurSaisie(
+          'Ce fournisseur ne propose pas encore la vérification des accès.'
+        )
+      }
       const fermee = () =>
         erreurSaisie('Ce fournisseur n’est pas ouvert sur cette installation.')
       const microsoft =
@@ -777,8 +814,10 @@ builder.mutationFields(t => ({
         organisationId: ctx.organisation!.id,
         userId: ctx.personne!.id,
         fournisseur,
+        portee,
       })
-      if (microsoft !== null) return adresseAutorisation(microsoft, etat, defi)
+      if (microsoft !== null)
+        return adresseAutorisation(microsoft, etat, defi, portee)
       if (google !== null) return adresseAutorisationGoogle(google, etat, defi)
       return adresseAutorisationDropbox(dropbox!, etat, defi)
     },
@@ -1284,8 +1323,18 @@ builder.mutationFields(t => ({
       id: t.arg.id({ required: true }),
       lecteurs: t.arg({ type: LecteursDossierInput, required: true }),
       nom: t.arg.string(),
+      attendus: t.arg({
+        type: AttendusDossierEnum,
+        description:
+          'Les personnes que le dossier attend chez le fournisseur (ADR 0044). Absent : inchangé.',
+      }),
     },
-    resolve: async (query, _root, { id, lecteurs: saisie, nom }, ctx) => {
+    resolve: async (
+      query,
+      _root,
+      { id, lecteurs: saisie, nom, attendus },
+      ctx
+    ) => {
       const organisationId = ctx.organisation!.id
       const avant = await prisma.dossierLie.findFirst({
         where: { id: String(id), organisationId },
@@ -1326,6 +1375,9 @@ builder.mutationFields(t => ({
             touteActivite: lecteurs.touteActivite,
             perimetreId: await perimetreHistorique(tx, cle, lecteurs, avant.id),
             ...(nomAffiche === undefined ? {} : { nom: nomAffiche }),
+            ...(attendus === null || attendus === undefined
+              ? {}
+              : { attendus }),
           },
         })
         const listes = listesDeLecteurs(avant.id, lecteurs)
@@ -1348,6 +1400,8 @@ builder.mutationFields(t => ({
         })
       })
       publierDossierLie(apres, avant)
+      // Les personnes attendues changent avec les lecteurs (ADR 0044).
+      planifierVerificationAcces(organisationId)
       journal.info(
         {
           evenement: 'dossier-lie-modifie',

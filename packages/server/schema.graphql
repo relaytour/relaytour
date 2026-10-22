@@ -215,6 +215,14 @@ type ArchiveContenu {
 }
 
 """
+Les personnes qu’un dossier lié attend chez le fournisseur : tous les membres de la période, ou les contacts principaux seulement (ADR 0044).
+"""
+enum AttendusDossier {
+  CONTACTS_PRINCIPAUX
+  MEMBRES
+}
+
+"""
 Le lien d’une personne avec une activité de l’organisation, toutes périodes confondues (ADR 0018).
 """
 type AttributionActivite {
@@ -445,6 +453,16 @@ type CommentairesPeriode {
   perimetresLus: [ID!]!
 }
 
+"""
+Le compte d’un membre chez le fournisseur. Un état nul : la personne n’a pas encore été cherchée.
+"""
+type CompteFournisseurVue {
+  adresseSaisie: String
+  etat: EtatCompteFournisseur
+  personne: PersonneAcces!
+  verifieLe: DateTime
+}
+
 type ConflitImport {
   fiche: String!
   raison: String!
@@ -465,6 +483,10 @@ type ConnexionFiche {
 Connexion de l’organisation à son espace de fichiers. Le jeton ne sort jamais du serveur.
 """
 type ConnexionFichiers {
+  accesErreur: String
+
+  """Dernière vérification des accès chez le fournisseur."""
+  accesVerifieLe: DateTime
   compte: String!
   connecteeLe: DateTime!
   connecteePar: String
@@ -477,6 +499,7 @@ type ConnexionFichiers {
   exportRapport: RapportExport
   fournisseur: FournisseurFichiers!
   methode: MethodeConnexionFichiers!
+  portee: PorteeConnexionFichiers!
 }
 
 """Une façon de connecter l’espace de fichiers, ouverte par l’exploitant."""
@@ -623,6 +646,7 @@ Dossier du fournisseur cloud lié à une activité. Il sert toute l’activité,
 """
 type DossierLie {
   activiteId: ID!
+  attendus: AttendusDossier!
 
   """
   Vrai quand l’espace connecté est actif et vient du même fournisseur que le dossier.
@@ -793,10 +817,27 @@ type EtapeAccordDeclinaison {
   par: Personne!
 }
 
+"""
+A_ACCES : un droit couvre la personne. SANS_COMPTE : l’annuaire du fournisseur ne la connaît pas. SANS_ACCES : aucun droit ne la couvre. INCONNU : un groupe illisible la couvre peut-être. EN_TROP : un compte a un droit sans être attendu.
+"""
+enum EtatAccesFournisseur {
+  A_ACCES
+  EN_TROP
+  INCONNU
+  SANS_ACCES
+  SANS_COMPTE
+}
+
 enum EtatAppel {
   A_VENIR
   FERME
   OUVERT
+}
+
+enum EtatCompteFournisseur {
+  ABSENT
+  INVITE
+  TROUVE
 }
 
 enum EtatConnexionFichiers {
@@ -1134,6 +1175,25 @@ type Lieu {
   ordre: Int!
 }
 
+"""
+Une personne face aux droits d’un dossier lié. Un accès en trop porte un nom, sans personne ni adresse.
+"""
+type LigneAcces {
+  etat: EtatAccesFournisseur!
+  nom: String!
+
+  """
+  Les périmètres des lecteurs où la personne est affectée pour la période. Vide pour un admin de l’activité ou un accès en trop.
+  """
+  perimetreIds: [ID!]!
+  personne: PersonneAcces
+
+  """
+  « direct », « domaine », ou « groupe: » suivi du nom du groupe chez le fournisseur.
+  """
+  via: String
+}
+
 type LigneClassement {
   personne: Personne!
   rang: Int!
@@ -1295,7 +1355,14 @@ type Mutation {
   """
   Adresse où l’admin se connecte chez le fournisseur pour accorder l’accès à Relaytour. Elle vaut dix minutes, une seule fois.
   """
-  commencerConnexionEspaceFichiers(fournisseur: FournisseurFichiers!): String!
+  commencerConnexionEspaceFichiers(
+    fournisseur: FournisseurFichiers!
+
+    """
+    Les autorisations demandées au-delà des fichiers. Seul SharePoint lit aujourd’hui l’annuaire.
+    """
+    portee: PorteeConnexionFichiers
+  ): String!
 
   """
   Commence la connexion au Nextcloud de l’association, à l’adresse donnée. L’admin ouvre ensuite la page rendue et y accorde l’accès ; Nextcloud crée un mot de passe d’application pour Relaytour.
@@ -1575,7 +1642,15 @@ type Mutation {
   """
   Modifie les lecteurs et le nom affiché d’un dossier lié. Le dossier chez le fournisseur ne change pas, et ses documents liés gardent leur chemin (ADR 0043).
   """
-  modifierDossierLie(id: ID!, lecteurs: LecteursDossierInput!, nom: String): DossierLie!
+  modifierDossierLie(
+    """
+    Les personnes que le dossier attend chez le fournisseur (ADR 0044). Absent : inchangé.
+    """
+    attendus: AttendusDossier
+    id: ID!
+    lecteurs: LecteursDossierInput!
+    nom: String
+  ): DossierLie!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
 
   """
@@ -1818,6 +1893,11 @@ type Mutation {
   rouvrirAppelBenevoles(id: ID!): AppelBenevoles!
 
   """
+  Donne l’adresse du compte d’un membre chez le fournisseur, quand elle diffère de son adresse dans Relaytour. Null : Relaytour reprend son adresse.
+  """
+  saisirAdresseFournisseur(adresse: String, userId: ID!): CompteFournisseurVue!
+
+  """
   Supprime une fiche et la retire de toutes les séquences. Réservé aux admins de l’activité.
   """
   supprimerBenevole(id: ID!): Boolean!
@@ -1848,6 +1928,11 @@ type Mutation {
   Demande à Nextcloud si l’admin a accordé l’accès. Vrai une fois la connexion enregistrée ; faux tant qu’il n’a pas terminé.
   """
   terminerConnexionNextcloud(etat: String!): Boolean!
+
+  """
+  Lance la vérification des accès chez le fournisseur. Le résultat arrive par le flux des changements.
+  """
+  verifierAccesFournisseur: Boolean!
 }
 
 """
@@ -2118,6 +2203,12 @@ type Personne {
   souhaits(editionId: ID): [Souhait!]!
 }
 
+type PersonneAcces {
+  email: String!
+  id: ID!
+  nom: String!
+}
+
 type PersonneConvocable {
   """Vrai pour une personne affectée au périmètre pour la période."""
   duPerimetre: Boolean!
@@ -2224,6 +2315,15 @@ enum PorteeAppel {
   PERIMETRE
   PERIODE
   SEQUENCE
+}
+
+"""
+Ce que la connexion permet en plus des fichiers : lire l’annuaire et les droits, puis appliquer les propositions d’accès (ADR 0044).
+"""
+enum PorteeConnexionFichiers {
+  ANNUAIRE
+  FICHIERS
+  GESTION
 }
 
 type PostesPerimetre {
@@ -2368,6 +2468,11 @@ type Query {
   Pour une période : les périmètres dont la personne lit les fils, et le nombre de commentaires de chaque tâche commentée de ces périmètres. Une liste de tâches lit ces nombres à part.
   """
   commentairesDeLaPeriode(editionId: ID!): CommentairesPeriode!
+
+  """
+  Les membres de l’organisation et leur compte chez le fournisseur connecté (ADR 0044).
+  """
+  comptesFournisseur: [CompteFournisseurVue!]!
 
   """
   Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms. Avec `ressource`, un document lié ouvert aux lecteurs de sa fiche se lit sans ouvrir le reste du dossier.
@@ -2533,6 +2638,11 @@ type Query {
   tache(id: ID!): Tache!
   tachesAPrendre(editionId: ID!): [Tache!]!
   tousLesPerimetres(activiteId: ID): TousLesPerimetres!
+
+  """
+  Les accès chez le fournisseur des dossiers liés d’une activité, à la dernière vérification (ADR 0044).
+  """
+  verificationAcces(activiteId: ID!): [VerificationAccesDossier!]!
 
   """
   Numéro de version de l’installation. Lisible sans session, comme sur /health.
@@ -3091,6 +3201,15 @@ type TypographieTheme {
   espacementTitre: String!
   graisseCorps: Int!
   graisseTitre: Int!
+}
+
+type VerificationAccesDossier {
+  dossier: DossierLie!
+  lignes: [LigneAcces!]!
+
+  """Les périmètres que les lecteurs du dossier désignent."""
+  perimetres: [Perimetre!]!
+  verifieLe: DateTime
 }
 
 """

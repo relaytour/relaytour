@@ -27,6 +27,9 @@ export const ESPACE_FICHIERS = graphql(`
         etat
         connecteeLe
         connecteePar
+        portee
+        accesVerifieLe
+        accesErreur
         exportDossier
         exportRapport {
           exporteLe
@@ -48,8 +51,9 @@ export const ESPACE_FICHIERS = graphql(`
 export const COMMENCER_CONNEXION = graphql(`
   mutation CommencerConnexionEspaceFichiers(
     $fournisseur: FournisseurFichiers!
+    $portee: PorteeConnexionFichiers
   ) {
-    commencerConnexionEspaceFichiers(fournisseur: $fournisseur)
+    commencerConnexionEspaceFichiers(fournisseur: $fournisseur, portee: $portee)
   }
 `)
 
@@ -170,6 +174,7 @@ export const DOSSIERS_LIES = graphql(`
       disponible
       fournisseur
       touteActivite
+      attendus
       perimetres {
         id
         slug
@@ -300,8 +305,14 @@ export const MODIFIER_DOSSIER_LIE = graphql(`
     $id: ID!
     $lecteurs: LecteursDossierInput!
     $nom: String
+    $attendus: AttendusDossier
   ) {
-    modifierDossierLie(id: $id, lecteurs: $lecteurs, nom: $nom) {
+    modifierDossierLie(
+      id: $id
+      lecteurs: $lecteurs
+      nom: $nom
+      attendus: $attendus
+    ) {
       id
       nom
       touteActivite
@@ -545,3 +556,79 @@ export const DELIER_RESSOURCE = graphql(`
     delierRessourceFiche(id: $id)
   }
 `)
+
+// ── Vérification des accès chez le fournisseur (ADR 0044) ────────────────────
+
+export const VERIFICATION_ACCES = graphql(`
+  query VerificationAcces($activiteId: ID!) {
+    verificationAcces(activiteId: $activiteId) {
+      verifieLe
+      dossier {
+        id
+        nom
+        touteActivite
+        attendus
+        groupes
+        perimetres {
+          id
+          nom
+          couleur
+        }
+      }
+      perimetres {
+        id
+        nom
+        couleur
+      }
+      lignes {
+        nom
+        etat
+        via
+        perimetreIds
+        personne {
+          id
+          email
+        }
+      }
+    }
+  }
+`)
+
+export const COMPTES_FOURNISSEUR = graphql(`
+  query ComptesFournisseur {
+    comptesFournisseur {
+      etat
+      adresseSaisie
+      verifieLe
+      personne {
+        id
+        nom
+        email
+      }
+    }
+  }
+`)
+
+export const VERIFIER_ACCES = graphql(`
+  mutation VerifierAccesFournisseur {
+    verifierAccesFournisseur
+  }
+`)
+
+export const SAISIR_ADRESSE_FOURNISSEUR = graphql(`
+  mutation SaisirAdresseFournisseur($userId: ID!, $adresse: String) {
+    saisirAdresseFournisseur(userId: $userId, adresse: $adresse) {
+      adresseSaisie
+    }
+  }
+`)
+
+/** Comment une personne a accès, lisible : « directement », « par le groupe… ». */
+export function voieLisible(via: string | null): string | null {
+  if (via === null) return null
+  if (via === 'direct') return 'Directement'
+  if (via === 'domaine') return 'Par toute l’organisation'
+  return via.startsWith('groupe:')
+    ? `Par le groupe « ${via.slice('groupe:'.length)} »`
+    : via
+}

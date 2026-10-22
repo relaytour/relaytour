@@ -59,7 +59,9 @@ export async function construireExport(organisationId: string) {
           dossiersLies: {
             orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
             include: {
-              perimetres: { include: { perimetre: { select: { slug: true } } } },
+              perimetres: {
+                include: { perimetre: { select: { slug: true } } },
+              },
               groupes: { select: { groupe: true } },
             },
           },
@@ -288,9 +290,25 @@ export async function construireExport(organisationId: string) {
   })
 
   // La connexion de l'espace de fichiers, sans son jeton (ADR 0038).
+  // Les comptes chez le fournisseur et l'état des accès (ADR 0044).
+  const [comptesFournisseur, etatsAcces] = await Promise.all([
+    prisma.compteFournisseur.findMany({
+      where: { organisationId },
+      orderBy: [{ fournisseur: 'asc' }, { id: 'asc' }],
+      include: { user: { select: { email: true } } },
+    }),
+    prisma.etatAccesDossier.findMany({
+      where: { organisationId },
+      orderBy: [{ dossierLieId: 'asc' }, { id: 'asc' }],
+      include: {
+        user: { select: { email: true } },
+        dossierLie: { select: { element: true } },
+      },
+    }),
+  ])
   const connexionFichiers = await prisma.connexionFichiers.findUnique({
     where: { organisationId },
-    select: { fournisseur: true, compte: true },
+    select: { fournisseur: true, compte: true, portee: true },
   })
 
   const taches = await prisma.tache.findMany({
@@ -329,6 +347,21 @@ export async function construireExport(organisationId: string) {
       declaration: organisation.configuration,
     },
     espaceFichiers: connexionFichiers,
+    comptesFournisseur: comptesFournisseur.map(c => ({
+      personne: c.user.email,
+      fournisseur: c.fournisseur,
+      etat: c.etat,
+      adresseSaisie: c.adresseSaisie,
+      verifieLe: c.verifieLe?.toISOString() ?? null,
+    })),
+    etatsAcces: etatsAcces.map(e => ({
+      dossier: e.dossierLie.element,
+      personne: e.user?.email ?? null,
+      nom: e.nom,
+      etat: e.etat,
+      via: e.via,
+      verifieLe: e.verifieLe.toISOString(),
+    })),
     membres: membres.map(m => ({
       email: m.user.email,
       nom: m.user.name,

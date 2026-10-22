@@ -1,9 +1,16 @@
 // Espace de fichiers d'une organisation (ADR 0038) : ce que chaque fournisseur
-// sait faire. Relaytour lit l'espace ; il n'y écrit que l'export des fiches.
+// sait faire. Relaytour lit l'espace ; il n'y écrit que l'export des fiches. Un
+// annuaire facultatif lit les comptes et les droits (ADR 0044).
 
 /** Fournisseurs connus du schéma. Un fournisseur s'ouvre par ses variables. */
 export type Fournisseur =
   'SHAREPOINT' | 'GOOGLE_DRIVE' | 'DROPBOX' | 'NEXTCLOUD'
+
+/**
+ * Ce que la connexion permet en plus des fichiers (ADR 0044) : lire l'annuaire et
+ * les droits, puis appliquer des propositions d'accès.
+ */
+export type Portee = 'FICHIERS' | 'ANNUAIRE' | 'GESTION'
 
 /** Jeton d'accès du fournisseur ; `forcer` le renouvelle. */
 export type Jeton = (forcer?: boolean) => Promise<string>
@@ -55,8 +62,71 @@ export interface ContenuFichier {
   nom?: string
 }
 
+// ── Annuaire et droits (ADR 0044) ─────────────────────────────────────────────
+
+/** Un compte de l'annuaire du fournisseur. */
+export interface CompteAnnuaire {
+  identifiant: string
+  /** Adresse principale du compte, en minuscules. */
+  adresse: string
+  nom: string
+  /** Vrai pour un compte externe déjà accueilli (un invité). */
+  invite: boolean
+}
+
+/** Qui reçoit un droit sur un élément. */
+export type Beneficiaire =
+  | {
+      type: 'personne'
+      identifiant: string | null
+      adresse: string | null
+      nom: string
+    }
+  | { type: 'groupe'; identifiant: string; nom: string }
+  /** Tous les comptes de l'organisation du fournisseur, invités exclus. */
+  | { type: 'domaine'; nom: string }
+  /** Un lien de partage : il ne nomme personne. */
+  | { type: 'lien'; nom: string }
+
+export interface DroitElement {
+  /** Identifiant du droit chez le fournisseur. */
+  identifiant: string
+  beneficiaire: Beneficiaire
+  role: 'LECTURE' | 'ECRITURE'
+  /** Vrai quand le droit vient d'un dossier parent ou du site. */
+  herite: boolean
+}
+
+/** Ce que l'annuaire d'un fournisseur sait faire. */
+export interface CapacitesAnnuaire {
+  comptes: boolean
+  droits: boolean
+  membresDeGroupe: boolean
+}
+
+/**
+ * L'annuaire du fournisseur, lu pour vérifier les accès (ADR 0044). Relaytour y
+ * cherche des adresses précises et ne liste jamais tout l'annuaire.
+ */
+export interface AnnuaireFournisseur {
+  readonly capacites: CapacitesAnnuaire
+  /** Le compte de chaque adresse, ou null quand l'annuaire ne la connaît pas. */
+  chercherComptes(
+    adresses: readonly string[]
+  ): Promise<Map<string, CompteAnnuaire | null>>
+  /** Les droits de l'élément à cette position, hérités compris. */
+  droits(position: Position): Promise<DroitElement[]>
+  /** Les membres d'un groupe, sous-groupes compris, ou null s'ils ne se lisent pas. */
+  membresDuGroupe(identifiant: string): Promise<CompteAnnuaire[] | null>
+}
+
 export interface EspaceFichiers {
   readonly fournisseur: Fournisseur
+  /**
+   * L'annuaire du fournisseur, quand la connexion permet de le lire (ADR 0044).
+   * Absent sinon.
+   */
+  readonly annuaire?: AnnuaireFournisseur
   /**
    * Vrai quand le fournisseur sait rendre ce document en PDF. Le type compte
    * pour un document natif du fournisseur, qui n'a pas d'extension (Google).

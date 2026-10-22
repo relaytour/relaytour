@@ -1626,6 +1626,37 @@ const CAS: Cas[] = [
     variables: () => ({ f: a.fiche, d: a.dossierLie }),
     attente: INTERDIT,
   },
+  // La vérification des accès chez le fournisseur (ADR 0044).
+  {
+    operation: 'verificationAcces',
+    query:
+      'query ($a: ID!) { verificationAcces(activiteId: $a) { lignes { nom } } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'comptesFournisseur',
+    query: '{ comptesFournisseur { personne { email } } }',
+    variables: () => ({}),
+    // Sans identifiant de A : l'admin de B ne lit et ne vérifie que son propre
+    // fournisseur, absent ici.
+    attente: REFUSE,
+  },
+  {
+    operation: 'verifierAccesFournisseur',
+    query: 'mutation { verifierAccesFournisseur }',
+    variables: () => ({}),
+    // Sans identifiant de A : l'admin de B ne lit et ne vérifie que son propre
+    // fournisseur, absent ici.
+    attente: REFUSE,
+  },
+  {
+    operation: 'saisirAdresseFournisseur',
+    query:
+      'mutation ($u: ID!) { saisirAdresseFournisseur(userId: $u, adresse: "autre@exemple.net") { adresseSaisie } }',
+    variables: () => ({ u: a.referente }),
+    attente: INTERDIT,
+  },
   {
     operation: 'ouvrirDocumentLie',
     query:
