@@ -32,6 +32,7 @@ import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
 import {
   associationSuffisante,
+  champUnique,
   choixDuFichier,
   construirePersonnes,
   csvDesEcartees,
@@ -116,7 +117,9 @@ function telecharger(texte: string, nom: string) {
   a.href = lien
   a.download = nom
   a.click()
-  URL.revokeObjectURL(lien)
+  // Certains navigateurs lancent le téléchargement après le clic : le lien vit
+  // encore une minute.
+  setTimeout(() => URL.revokeObjectURL(lien), 60_000)
 }
 
 export default function ImportBenevoles() {
@@ -225,18 +228,23 @@ export default function ImportBenevoles() {
   const [accord, setAccord] = useState(false)
 
   // Étape 5 : l'écriture.
-  const [importer] = useMutation(IMPORTER, {
-    refetchQueries: [
-      'Benevoles',
-      'Candidatures',
-      'AppelsBenevoles',
-      'BenevolesARepartir',
-      'CouvertureProgramme',
-      'Programme',
-    ],
-  })
+  // Les écrans se relisent une fois, après le dernier lot.
+  const [importer] = useMutation(IMPORTER)
   const [progression, setProgression] = useState(0)
   const [resultat, setResultat] = useState<Bilan | null>(null)
+  // Un lot en échec arrête l'import : le rapport dit combien de personnes
+  // restent à traiter, et pourquoi.
+  const [echec, setEchec] = useState<{
+    motif: string
+    restantes: number
+  } | null>(null)
+
+  /** Oublie les choix qui dépendent de la période, de la portée ou du fichier. */
+  const oublierChoix = () => {
+    setCibles(new Map())
+    setDecisions(new Map())
+    setSimulation(null)
+  }
 
   const variablesCommunes = {
     editionId: editionId ?? '',
@@ -275,6 +283,7 @@ export default function ImportBenevoles() {
     setLecture(true)
     try {
       const lus = await lireFichier(fichier)
+      oublierChoix()
       setFeuilles(lus)
       setNomFeuille(lus[0]?.nom ?? null)
       if (source.trim() === '') setSource(fichier.name.replace(/\.[^.]+$/, ''))
@@ -383,7 +392,9 @@ export default function ImportBenevoles() {
   const lancer = async () => {
     setEtape(4)
     setProgression(0)
+    setEchec(null)
     let bilan = BILAN_VIDE
+    let traitees = 0
     const lots = enLots(lues.personnes)
     try {
       for (const [i, lot] of lots.entries()) {
@@ -395,13 +406,27 @@ export default function ImportBenevoles() {
           },
         })
         bilan = additionner(bilan, data!.importerBenevoles)
+        traitees += lot.length
         setProgression(Math.round(((i + 1) / lots.length) * 100))
       }
-      setResultat(bilan)
     } catch (e) {
-      message.error(messageErreur(e))
-      setResultat(bilan)
+      setEchec({
+        motif: messageErreur(e),
+        restantes: lues.personnes.length - traitees,
+      })
     }
+    setResultat(bilan)
+    await client.refetchQueries({
+      include: [
+        'Benevoles',
+        'Candidatures',
+        'AppelsBenevoles',
+        'BenevolesARepartir',
+        'CouvertureProgramme',
+        'Programme',
+        'DoublonsBenevoles',
+      ],
+    })
   }
 
   // Les lignes écartées, par le navigateur ou par le serveur, avec leur motif.
@@ -429,7 +454,11 @@ export default function ImportBenevoles() {
   const telechargerEcartees = async () => {
     if (!tableau) return
     telecharger(
-      await csvDesEcartees(tableau.entetes, ecarteesToutes),
+      await csvDesEcartees(
+        tableau.entetes,
+        ecarteesToutes,
+        tableau.separateur ?? ';'
+      ),
       'lignes-ecartees.csv'
     )
   }
@@ -492,6 +521,7 @@ export default function ImportBenevoles() {
               onChange={id => {
                 setEdition(id)
                 setPortee(undefined)
+                oublierChoix()
               }}
             />
             <label className="rt-import-champ">
@@ -500,7 +530,10 @@ export default function ImportBenevoles() {
                 aria-label="Portée de l’import"
                 style={{ minWidth: 220 }}
                 value={perimetreId ?? '__programme'}
-                onChange={v => setPortee(v === '__programme' ? null : v)}
+                onChange={v => {
+                  setPortee(v === '__programme' ? null : v)
+                  oublierChoix()
+                }}
                 options={portees.map(p => ({
                   value: p.perimetreId ?? '__programme',
                   label: p.nom,
@@ -600,13 +633,27 @@ export default function ImportBenevoles() {
                   style={{ minWidth: 260 }}
                   value={c.champ}
                   disabled={c.sensible}
-                  onChange={champ =>
+                  onChange={champ => {
+                    // Un champ unique passe d'une colonne à l'autre : l'ancienne
+                    // colonne revient à « Ignorer », et l'écran le dit.
+                    const avant = champUnique(champ)
+                      ? colonnes.find(x => x !== c && x.champ === champ)
+                      : undefined
                     setColonnes(
                       colonnes.map(x =>
-                        x === c ? { ...x, champ, confiance: 'HAUTE' } : x
+                        x === c
+                          ? { ...x, champ, confiance: 'HAUTE' }
+                          : x === avant
+                            ? { ...x, champ: 'IGNORER', confiance: 'HAUTE' }
+                            : x
                       )
                     )
-                  }
+                    if (avant) {
+                      message.info(
+                        `La colonne « ${avant.entete} » passe à « Ignorer » : « ${LIBELLES_CHAMP[champ]} » ne vient que d’une colonne.`
+                      )
+                    }
+                  }}
                   options={(Object.keys(LIBELLES_CHAMP) as Champ[]).map(
                     champ => ({
                       value: champ,
@@ -941,9 +988,23 @@ export default function ImportBenevoles() {
             </>
           ) : (
             <Result
-              status="success"
-              title={`${resultat.aImporter} personne${resultat.aImporter > 1 ? 's' : ''} importée${resultat.aImporter > 1 ? 's' : ''}.`}
-              subTitle={`${resultat.fichesCreees} fiches créées, ${resultat.fichesRattachees} fiches rejointes, ${resultat.places} places, ${resultat.dejaImportees} déjà importées.`}
+              status={echec ? 'warning' : 'success'}
+              title={
+                echec
+                  ? `L’import s’est arrêté : ${echec.restantes} personne${echec.restantes > 1 ? 's' : ''} n’${echec.restantes > 1 ? 'ont' : 'a'} pas été traitée${echec.restantes > 1 ? 's' : ''}.`
+                  : `${resultat.aImporter} personne${resultat.aImporter > 1 ? 's' : ''} importée${resultat.aImporter > 1 ? 's' : ''}.`
+              }
+              subTitle={
+                <>
+                  {echec && (
+                    <span className="rt-import-echec">
+                      {echec.motif} Relancez l’import du même fichier : les
+                      personnes déjà importées seront reconnues.
+                    </span>
+                  )}
+                  {`${resultat.aImporter} personnes importées, ${resultat.fichesCreees} fiches créées, ${resultat.fichesRattachees} fiches rejointes, ${resultat.places} places, ${resultat.dejaImportees} déjà importées.`}
+                </>
+              }
               extra={[
                 <Button
                   key="candidatures"

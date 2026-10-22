@@ -42,7 +42,7 @@ function resume(f: Fiche) {
 
 export default function DoublonsBenevoles() {
   const { activite } = useActivite()
-  const { message } = App.useApp()
+  const { message, modal } = App.useApp()
   const { data, loading, error } = useQuery(DOUBLONS, {
     variables: { activiteId: activite.id },
     fetchPolicy: 'cache-and-network',
@@ -85,14 +85,22 @@ export default function DoublonsBenevoles() {
     }
   }
 
-  const ecarter = async (d: Doublon) => {
-    try {
-      await distincts({ variables: { aId: d.a.id, bId: d.b.id } })
-      message.success('Cette paire ne sera plus proposée.')
-    } catch (e) {
-      message.error(messageErreur(e))
-    }
-  }
+  const ecarter = (d: Doublon) =>
+    void modal.confirm({
+      title: `« ${d.a.nom} » et « ${d.b.nom} » sont deux personnes ?`,
+      content:
+        'Cette paire ne sera plus proposée. L’écran ne permet pas de revenir sur ce choix.',
+      okText: 'Ce ne sont pas des doublons',
+      cancelText: 'Annuler',
+      onOk: async () => {
+        try {
+          await distincts({ variables: { aId: d.a.id, bId: d.b.id } })
+          message.success('Cette paire ne sera plus proposée.')
+        } catch (e) {
+          message.error(messageErreur(e))
+        }
+      },
+    })
 
   if (error) {
     return (
@@ -152,7 +160,7 @@ export default function DoublonsBenevoles() {
                   <Button type="primary" onClick={() => ouvrir(d)}>
                     Fusionner
                   </Button>
-                  <Button onClick={() => void ecarter(d)}>
+                  <Button onClick={() => ecarter(d)}>
                     Ce ne sont pas des doublons
                   </Button>
                 </div>

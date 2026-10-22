@@ -20,6 +20,8 @@ export const LOT = 500
 export interface Tableau {
   entetes: string[]
   lignes: string[][]
+  /** Le séparateur d'un CSV, repris pour le fichier des lignes écartées. */
+  separateur?: string
 }
 
 export interface Feuille {
@@ -81,7 +83,10 @@ export async function lireCsv(texte: string): Promise<Tableau> {
     delimitersToGuess: [';', ',', '\t'],
     skipEmptyLines: 'greedy',
   })
-  return tableauDepuis(resultat.data)
+  return {
+    ...tableauDepuis(resultat.data),
+    separateur: resultat.meta.delimiter,
+  }
 }
 
 /** Lit un fichier CSV ou XLSX : une feuille par feuille du classeur. */
@@ -306,9 +311,16 @@ export function posteDe(texte: string): string {
 export function lireDate(texte: string): string | null {
   const t = texte.trim()
   let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(t)
-  if (m) return `${m[1]}-${m[2]}-${m[3]}`
+  if (m) return dateValide(Number(m[1]), Number(m[2]), Number(m[3]))
   m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(t)
-  if (m) return `${m[3]}-${deux(Number(m[2]))}-${deux(Number(m[1]))}`
+  if (m) {
+    const [premier, second, annee] = [Number(m[1]), Number(m[2]), Number(m[3])]
+    // JJ/MM/AAAA, sauf quand le second nombre ne peut être qu'un jour : un
+    // export américain écrit MM/JJ/AAAA.
+    return second > 12 && premier <= 12
+      ? dateValide(annee, premier, second)
+      : dateValide(annee, second, premier)
+  }
   if (/^\d{5}(\.\d+)?$/.test(t)) {
     const jours = Math.floor(Number(t))
     // Le nombre de série compte les jours depuis le 30 décembre 1899.
@@ -316,6 +328,16 @@ export function lireDate(texte: string): string | null {
     return date.toISOString().slice(0, 10)
   }
   return null
+}
+
+/** AAAA-MM-JJ si le jour existe, sinon null : une date invalide n'atteint pas le serveur. */
+function dateValide(annee: number, mois: number, jour: number): string | null {
+  const date = new Date(Date.UTC(annee, mois - 1, jour))
+  return date.getUTCFullYear() === annee &&
+    date.getUTCMonth() === mois - 1 &&
+    date.getUTCDate() === jour
+    ? date.toISOString().slice(0, 10)
+    : null
 }
 
 // ── Choix ────────────────────────────────────────────────────────────────────
@@ -356,7 +378,8 @@ export function valeursDe(cellule: string): string[] {
     if (poste !== null && !posteServi) valeurs.push(poste)
     if (horaire) {
       valeurs.push(brute)
-      poste = null
+      // « Buvette 19h-20h, 20h-21h » : l'horaire seul qui suit reprend le poste.
+      poste = posteDe(brute) || null
       posteServi = true
     } else {
       poste = brute
@@ -591,7 +614,16 @@ export function construirePersonnes(
       continue
     }
     const deja = parGroupe.get(l.groupe)
-    if (deja) fusionner(deja, l)
+    // Deux adresses différentes dans un même groupe désignent deux personnes :
+    // une commande de deux billets, par exemple.
+    if (
+      deja &&
+      deja.courriel !== null &&
+      l.courriel !== null &&
+      deja.courriel.toLowerCase() !== l.courriel.toLowerCase()
+    ) {
+      seules.push(l)
+    } else if (deja) fusionner(deja, l)
     else parGroupe.set(l.groupe, l)
   }
   // Un groupe qui ne désigne toujours personne est écarté, ligne par ligne.
@@ -657,11 +689,22 @@ export function enLots<T>(liste: readonly T[], taille = LOT): T[][] {
 /** Les lignes écartées en CSV, avec leur motif en première colonne. */
 export async function csvDesEcartees(
   entetes: readonly string[],
-  ecartees: readonly LigneEcartee[]
+  ecartees: readonly LigneEcartee[],
+  separateur = ';'
 ): Promise<string> {
   const { default: Papa } = await import('papaparse')
-  return Papa.unparse({
-    fields: ['Ligne', 'Motif', ...entetes],
-    data: ecartees.map(e => [String(e.ligne), e.motif, ...e.valeurs]),
-  })
+  return Papa.unparse(
+    {
+      fields: ['Ligne', 'Motif', ...entetes],
+      data: ecartees.map(e => [String(e.ligne), e.motif, ...e.valeurs]),
+    },
+    // Le séparateur du fichier d'origine ; un point-virgule pour un classeur,
+    // que les tableurs en français ouvrent colonne par colonne.
+    { delimiter: separateur }
+  )
+}
+
+/** Les champs qu'une seule colonne peut recevoir. */
+export function champUnique(champ: Champ): boolean {
+  return UNIQUES.includes(champ)
 }

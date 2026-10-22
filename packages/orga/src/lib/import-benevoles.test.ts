@@ -54,6 +54,10 @@ describe('horaires et dates', () => {
     expect(lireDate('2027-03-12T10:00')).toBe('2027-03-12')
     expect(lireDate('46458')).toBe('2027-03-12')
     expect(lireDate('bientôt')).toBeNull()
+    // Un export américain, et une date impossible.
+    expect(lireDate('03/25/2026')).toBe('2026-03-25')
+    expect(lireDate('2026-13-45')).toBeNull()
+    expect(lireDate('31/02/2026')).toBeNull()
   })
 
   it('rattache les horaires seuls d’une cellule au poste qui les précède', () => {
@@ -64,6 +68,10 @@ describe('horaires et dates', () => {
     expect(valeursDe('Accueil; Buvette 19h-20h')).toEqual([
       'Accueil',
       'Buvette 19h-20h',
+    ])
+    expect(valeursDe('Buvette 19h-20h, 20h-21h')).toEqual([
+      'Buvette 19h-20h',
+      'Buvette 20h-21h',
     ])
   })
 })
@@ -232,6 +240,28 @@ describe('plusieurs lignes par personne', () => {
       ['Jules Fontaine', [2, 3], 2],
       ['Emma Girard', [4], 1],
       ['Léon Roux', [5, 6], 2],
+    ])
+  })
+})
+
+describe('commande de plusieurs personnes', () => {
+  it('garde deux personnes d’adresses différentes dans un même groupe', () => {
+    const tableau: Tableau = {
+      entetes: ['Commande', 'Nom complet', 'Email'],
+      lignes: [
+        ['C-9', 'Jules Fontaine', 'jules@exemple.org'],
+        ['C-9', 'Marie Fontaine', 'marie@exemple.org'],
+      ],
+    }
+    const { personnes } = construirePersonnes(
+      tableau,
+      ['REGROUPEMENT', 'NOM_COMPLET', 'COURRIEL'],
+      new Map(),
+      { valeursNon: [], jour: null }
+    )
+    expect(personnes.map(p => p.courriel)).toEqual([
+      'jules@exemple.org',
+      'marie@exemple.org',
     ])
   })
 })
