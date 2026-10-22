@@ -15,6 +15,7 @@ export const CANDIDATURES = graphql(`
       precisionsDisponibilite
       ouAilleurs
       deposeeLe
+      origine
       appelNom
       benevoleId
       peutEcarter

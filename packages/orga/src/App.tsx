@@ -20,6 +20,7 @@ import Agenda from './pages/Agenda'
 import AideMarkdown from './pages/AideMarkdown'
 import AppelBenevoles from './pages/AppelBenevoles'
 import Benevoles from './pages/Benevoles'
+import ImportBenevoles from './pages/ImportBenevoles'
 import Connexion from './pages/Connexion'
 import EspaceBenevole from './pages/EspaceBenevole'
 import Fiche from './pages/Fiche'
@@ -66,6 +67,7 @@ const routeur = createBrowserRouter([
           { path: 'agenda', element: <Agenda /> },
           { path: 'programme', element: <Programme /> },
           { path: 'benevoles', element: <Benevoles /> },
+          { path: 'benevoles/import', element: <ImportBenevoles /> },
           { path: 'perimetres/:slug', element: <Perimetre /> },
           { path: 'fiches', element: <Fiches /> },
           { path: 'fiches/nouvelle', element: <FicheEditeur /> },

@@ -3969,3 +3969,117 @@ button.rt-carte-fiche {
   align-items: center;
   gap: 4px;
 }
+/* Import de listes de bénévoles et doublons (ADR 0042). */
+.rt-import-etape {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+}
+.rt-import-reglages {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  align-items: flex-end;
+}
+.rt-import-champ {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+.rt-import-colonnes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rt-import-colonne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 12px;
+  border-radius: var(--rt-rayon-champ);
+  background: var(--rt-surface-interne);
+}
+.rt-import-colonne > div:first-child {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.rt-import-colonne .rt-note {
+  overflow-wrap: anywhere;
+}
+.rt-import-mode {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rt-import-bilan {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rt-import-bilan li {
+  padding: 4px 10px;
+  border-radius: var(--rt-rayon-champ);
+  background: var(--rt-surface-interne);
+}
+.rt-doublons-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.rt-doublon {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.rt-doublon-fiches {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 8px 20px;
+  flex: 1 1 360px;
+  min-width: 0;
+}
+.rt-doublon-fiches > div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.rt-doublon-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.rt-fusion-champ {
+  margin: 0 0 12px;
+  padding: 0;
+  border: 0;
+}
+.rt-fusion-champ legend {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.rt-import-ecartees {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  max-height: 240px;
+  overflow-y: auto;
+}
