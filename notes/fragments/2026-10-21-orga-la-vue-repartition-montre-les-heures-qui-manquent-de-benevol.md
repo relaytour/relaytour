@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.19.0
 fr:
   titre: >-
     La vue « Répartition » montre les heures qui manquent de bénévoles

@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.19.0
 fr:
   titre: >-
     Les liens des bénévoles dépendent du secret du serveur
