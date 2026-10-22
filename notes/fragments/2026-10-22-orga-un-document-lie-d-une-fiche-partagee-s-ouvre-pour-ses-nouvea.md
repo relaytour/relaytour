@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.20.0
 fr:
   titre: >-
     Un admin ouvre un document lié aux lecteurs d'une fiche partagée

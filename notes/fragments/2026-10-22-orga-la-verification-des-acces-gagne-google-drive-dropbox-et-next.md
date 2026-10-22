@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.20.0
 fr:
   titre: >-
     La vérification des accès fonctionne avec Google Drive, Dropbox et

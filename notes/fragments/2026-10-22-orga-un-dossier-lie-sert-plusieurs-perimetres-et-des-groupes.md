@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.20.0
 fr:
   titre: >-
     Un dossier lié sert plusieurs périmètres et des groupes

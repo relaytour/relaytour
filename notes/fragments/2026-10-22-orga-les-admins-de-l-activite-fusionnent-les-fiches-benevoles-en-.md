@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.20.0
 fr:
   titre: >-
     Les admins de l'activité fusionnent les fiches bénévoles en double

@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.20.0
 fr:
   titre: >-
     Nouveau logo de Relaytour : arcs entrelacés et nom en Baloo 2
