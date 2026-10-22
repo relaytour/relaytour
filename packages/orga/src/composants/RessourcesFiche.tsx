@@ -268,13 +268,16 @@ function AccesDocument({
               Étendre le dossier lié
             </Button>
           </Popconfirm>
-          <Button
-            size="small"
-            loading={ouverture}
-            onClick={() => void basculer(true)}
-          >
-            Ouvrir ce document aux lecteurs de la fiche
-          </Button>
+          {/* Le dossier lié entier n'est pas un document : ses lecteurs s'étendent. */}
+          {r.chemin.length > 0 && (
+            <Button
+              size="small"
+              loading={ouverture}
+              onClick={() => void basculer(true)}
+            >
+              Ouvrir ce document aux lecteurs de la fiche
+            </Button>
+          )}
         </Space>
       ) : (
         <p className="rt-texte-secondaire">
@@ -303,7 +306,7 @@ function AccesDocument({
         aria-label={
           r.ouverteAuxLecteurs
             ? `${r.nom} : ouvert aux lecteurs de la fiche`
-            : `${r.nom} : réservé, ${sans.length > 1 ? `${sans.length} périmètres ne l’ouvriront pas` : '1 périmètre ne l’ouvrira pas'}`
+            : `${r.nom} : réservé, fermé pour ${sans.length > 1 ? `${sans.length} périmètres` : 'un périmètre'}`
         }
       />
     </Popover>

@@ -928,6 +928,16 @@ describe('ressources liées à une fiche', () => {
     })
   })
 
+  const rendreLecteursNatation = async () => {
+    await prisma.dossierLieGroupe.deleteMany({
+      where: { dossierLieId: ids.dossierNatation },
+    })
+    await prisma.dossierLiePerimetre.createMany({
+      data: [{ dossierLieId: ids.dossierNatation, perimetreId: ids.natation }],
+      skipDuplicates: true,
+    })
+  }
+
   it('s’ouvrent aux lecteurs de la fiche par un admin, sans ouvrir le reste du dossier', async () => {
     await prisma.ficheConnexe.create({
       data: { ficheId: ids.ficheNatation, perimetreId: ids.basket },
@@ -1047,6 +1057,25 @@ describe('ressources liées à une fiche', () => {
       // Un document d'une autre fiche ne sert pas de passe.
       expect(code(await contenu(['Archives'], 'inconnu'))).toBe('FORBIDDEN')
 
+      // Le dossier lié entier ne s'ouvre pas : ses lecteurs s'étendent.
+      const entier = await prisma.ressourceFiche.findFirstOrThrow({
+        where: { ficheId: ids.ficheNatation, nom: 'Natation' },
+      })
+      expect(
+        code(await executer(ids.admin, OUVRIR, { id: entier.id, o: true }))
+      ).toBe('SAISIE_INVALIDE')
+
+      // Un dossier qui ne sert plus la fiche ne laisse plus lire le document.
+      await prisma.dossierLiePerimetre.deleteMany({
+        where: { dossierLieId: ids.dossierNatation },
+      })
+      await prisma.dossierLieGroupe.create({
+        data: { dossierLieId: ids.dossierNatation, groupe: 'pole' },
+      })
+      expect(await statut(ids.dossierNatation, 'Plan.pdf', plan.id)).toBe(404)
+      await rendreLecteursNatation()
+      expect(await statut(ids.dossierNatation, 'Plan.pdf', plan.id)).toBe(200)
+
       // Sans le partage, la fiche ne se lit plus, et le document non plus.
       await prisma.ficheConnexe.deleteMany({
         where: { ficheId: ids.ficheNatation },
@@ -1060,6 +1089,7 @@ describe('ressources liées à une fiche', () => {
         ouvrirDocumentLie: { id: plan.id, ouverteAuxLecteurs: false },
       })
     } finally {
+      await rendreLecteursNatation()
       await prisma.ficheConnexe.deleteMany({
         where: { ficheId: ids.ficheNatation },
       })
@@ -1271,6 +1301,54 @@ describe('lecteurs d’un dossier lié', () => {
       (await prisma.dossierLie.findUniqueOrThrow({ where: { id: perso.rh } }))
         .perimetreId
     ).toBe(perso.accueil)
+  })
+
+  it('refusent toute lecture et toute modification sans session', async () => {
+    for (const [query, variables] of [
+      [MODIFIER, { id: perso.rh, l: lecteurs(perso.accueil) }],
+      [EFFETS, { id: perso.rh, l: lecteurs(null) }],
+    ] as const) {
+      expect(code(await executer(null, query, variables))).toMatch(
+        /UNAUTHENTICATED|FORBIDDEN/
+      )
+    }
+  })
+
+  it('gardent un périmètre archivé ou un groupe vide déjà présent', async () => {
+    await prisma.dossierLiePerimetre.create({
+      data: { dossierLieId: perso.rh, perimetreId: perso.voile },
+    })
+    await prisma.dossierLieGroupe.create({
+      data: { dossierLieId: perso.rh, groupe: 'commission' },
+    })
+    try {
+      const r = await executer(ids.admin, MODIFIER, {
+        id: perso.rh,
+        l: lecteurs([perso.accueil, perso.voile], ['commission']),
+        n: 'RH',
+      })
+      expect(r.errors).toBeUndefined()
+      // Un périmètre archivé ne s'ajoute pas pour autant à un autre lien.
+      expect(
+        code(
+          await executer(ids.admin, MODIFIER, {
+            id: ids.dossierBasket,
+            l: lecteurs([ids.basket, perso.voile]),
+          })
+        )
+      ).toBe('FORBIDDEN')
+    } finally {
+      await prisma.dossierLiePerimetre.deleteMany({
+        where: { dossierLieId: perso.rh, perimetreId: perso.voile },
+      })
+      await prisma.dossierLieGroupe.deleteMany({
+        where: { dossierLieId: perso.rh },
+      })
+      await prisma.dossierLie.update({
+        where: { id: perso.rh },
+        data: { nom: 'Ressources humaines' },
+      })
+    }
   })
 
   it('annoncent les documents liés qu’une modification masquerait', async () => {

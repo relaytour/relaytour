@@ -23,6 +23,15 @@ enum AccesActivite {
   DECOUVERTE
 }
 
+"""
+Comment Relaytour propose les accès d’un dossier lié chez le fournisseur : rien, un partage du dossier, ou l’entrée dans un groupe (ADR 0044).
+"""
+enum AccesFournisseurDossier {
+  AUCUN
+  GROUPE
+  PARTAGE
+}
+
 enum AccesPerimetre {
   AUCUN
   COMPLET
@@ -36,6 +45,11 @@ enum AccordDeclinaison {
   ACCEPTE
   EN_ATTENTE
   REFUSE
+}
+
+enum ActionProposition {
+  AJOUTER
+  RETIRER
 }
 
 type Activite {
@@ -212,6 +226,14 @@ Dossier de contenu de l’organisation, en archive zip encodée en base64. Il ne
 type ArchiveContenu {
   donnees: String!
   nomFichier: String!
+}
+
+"""
+Les personnes qu’un dossier lié attend chez le fournisseur : tous les membres de la période, ou les contacts principaux seulement (ADR 0044).
+"""
+enum AttendusDossier {
+  CONTACTS_PRINCIPAUX
+  MEMBRES
 }
 
 """
@@ -445,6 +467,16 @@ type CommentairesPeriode {
   perimetresLus: [ID!]!
 }
 
+"""
+Le compte d’un membre chez le fournisseur. Un état nul : la personne n’a pas encore été cherchée.
+"""
+type CompteFournisseurVue {
+  adresseSaisie: String
+  etat: EtatCompteFournisseur
+  personne: PersonneAcces!
+  verifieLe: DateTime
+}
+
 type ConflitImport {
   fiche: String!
   raison: String!
@@ -465,6 +497,10 @@ type ConnexionFiche {
 Connexion de l’organisation à son espace de fichiers. Le jeton ne sort jamais du serveur.
 """
 type ConnexionFichiers {
+  accesErreur: String
+
+  """Dernière vérification des accès chez le fournisseur."""
+  accesVerifieLe: DateTime
   compte: String!
   connecteeLe: DateTime!
   connecteePar: String
@@ -477,6 +513,7 @@ type ConnexionFichiers {
   exportRapport: RapportExport
   fournisseur: FournisseurFichiers!
   methode: MethodeConnexionFichiers!
+  portee: PorteeConnexionFichiers!
 }
 
 """Une façon de connecter l’espace de fichiers, ouverte par l’exploitant."""
@@ -622,19 +659,29 @@ type DemandePerimetre {
 Dossier du fournisseur cloud lié à une activité. Il sert toute l’activité, ou une liste de périmètres et de groupes (ADR 0043).
 """
 type DossierLie {
+  """
+  Les accès que Relaytour a créés pour ce dossier chez le fournisseur. Zéro pour une personne qui n’est pas admin de l’organisation.
+  """
+  accesCrees: Int!
+  accesFournisseur: AccesFournisseurDossier!
   activiteId: ID!
+  ajoutsAutomatiques: Boolean!
+  attendus: AttendusDossier!
 
   """
   Vrai quand l’espace connecté est actif et vient du même fournisseur que le dossier.
   """
   disponible: Boolean!
   fournisseur: FournisseurFichiers!
+  groupeFournisseurId: ID
+  groupeFournisseurNom: String
 
   """
   Les clés des groupes de la liste. Un groupe vaut pour ses périmètres non archivés.
   """
   groupes: [String!]!
   id: ID!
+  invitationFournisseur: Boolean!
 
   """
   Les lecteurs par lesquels la personne lit ce dossier. La vue « Documents » range le dossier sous chacun.
@@ -645,6 +692,7 @@ type DossierLie {
 
   """Les périmètres nommés dans la liste des lecteurs."""
   perimetres: [Perimetre!]!
+  roleFournisseur: RoleFournisseur!
 
   """Vrai : le dossier sert toute l’activité."""
   touteActivite: Boolean!
@@ -793,10 +841,27 @@ type EtapeAccordDeclinaison {
   par: Personne!
 }
 
+"""
+A_ACCES : un droit couvre la personne. SANS_COMPTE : l’annuaire du fournisseur ne la connaît pas. SANS_ACCES : aucun droit ne la couvre. INCONNU : un groupe illisible la couvre peut-être. EN_TROP : un compte a un droit sans être attendu.
+"""
+enum EtatAccesFournisseur {
+  A_ACCES
+  EN_TROP
+  INCONNU
+  SANS_ACCES
+  SANS_COMPTE
+}
+
 enum EtatAppel {
   A_VENIR
   FERME
   OUVERT
+}
+
+enum EtatCompteFournisseur {
+  ABSENT
+  INVITE
+  TROUVE
 }
 
 enum EtatConnexionFichiers {
@@ -817,6 +882,14 @@ enum EtatPostes {
   COMPLET
   INCOMPLET
   SANS_PERSONNE
+}
+
+enum EtatProposition {
+  APPLIQUEE
+  ECARTEE
+  ECHEC
+  EN_ATTENTE
+  EN_COURS
 }
 
 """
@@ -968,6 +1041,11 @@ enum FrequenceResume {
   AUCUN
   HEBDOMADAIRE
   QUOTIDIEN
+}
+
+type GroupeDuDossier {
+  identifiant: ID!
+  nom: String!
 }
 
 type GroupeDuFormulaire {
@@ -1134,6 +1212,25 @@ type Lieu {
   ordre: Int!
 }
 
+"""
+Une personne face aux droits d’un dossier lié. Un accès en trop porte un nom, sans personne ni adresse.
+"""
+type LigneAcces {
+  etat: EtatAccesFournisseur!
+  nom: String!
+
+  """
+  Les périmètres des lecteurs où la personne est affectée pour la période. Vide pour un admin de l’activité ou un accès en trop.
+  """
+  perimetreIds: [ID!]!
+  personne: PersonneAcces
+
+  """
+  « direct », « domaine », ou « groupe: » suivi du nom du groupe chez le fournisseur.
+  """
+  via: String
+}
+
 type LigneClassement {
   personne: Personne!
   rang: Int!
@@ -1272,6 +1369,16 @@ type Mutation {
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
   afficherFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
   annulerReunion(id: ID!): Reunion!
+
+  """
+  Applique une proposition chez le fournisseur. Rend APPLIQUEE, ou ECHEC avec son message dans la proposition.
+  """
+  appliquerPropositionAcces(id: ID!): EtatProposition!
+
+  """
+  Applique les propositions en attente d’un dossier lié, cinquante au plus. Rend le nombre de propositions appliquées.
+  """
+  appliquerPropositionsDossier(dossierId: ID!): Int!
   archiverActivite(archive: Boolean!, id: ID!): Activite!
   archiverFiche(archive: Boolean!, id: ID!): Fiche!
   archiverPersonne(archive: Boolean!, id: ID!): Personne!
@@ -1295,7 +1402,14 @@ type Mutation {
   """
   Adresse où l’admin se connecte chez le fournisseur pour accorder l’accès à Relaytour. Elle vaut dix minutes, une seule fois.
   """
-  commencerConnexionEspaceFichiers(fournisseur: FournisseurFichiers!): String!
+  commencerConnexionEspaceFichiers(
+    fournisseur: FournisseurFichiers!
+
+    """
+    Les autorisations demandées au-delà des fichiers (ADR 0044). SharePoint et Dropbox les demandent à la connexion.
+    """
+    portee: PorteeConnexionFichiers
+  ): String!
 
   """
   Commence la connexion au Nextcloud de l’association, à l’adresse donnée. L’admin ouvre ensuite la page rendue et y accorde l’accès ; Nextcloud crée un mot de passe d’application pour Relaytour.
@@ -1446,7 +1560,11 @@ type Mutation {
   """Remplace l’ensemble des souhaits d’une personne pour une édition."""
   definirSouhaits(editionId: ID!, perimetreIds: [ID!]!, personneId: ID!): [Souhait!]!
   definirStatutMessage(id: ID!, statut: StatutMessage!): Message!
-  delierDossier(id: ID!): Boolean!
+
+  """
+  Retire un dossier lié. Quand Relaytour a créé des accès pour ce dossier chez le fournisseur, le retrait exige `oublierAcces` : ces accès restent chez le fournisseur et ne sont plus suivis (ADR 0044).
+  """
+  delierDossier(id: ID!, oublierAcces: Boolean): Boolean!
   delierRessourceFiche(id: ID!): Boolean!
 
   """
@@ -1478,6 +1596,11 @@ type Mutation {
   Retire l’abonnement push de cet appareil. Rend vrai quand un abonnement de la personne connectée a été retiré.
   """
   desabonnerPush(adresse: String!): Boolean!
+
+  """
+  Écarte une proposition : rien ne change chez le fournisseur. Elle ne revient pas tant que la situation de la personne ne change pas.
+  """
+  ecarterPropositionAcces(id: ID!): Boolean!
 
   """
   Dépose une demande pour rejoindre l’équipe d’une activité dont le formulaire est ouvert. La réponse est la même que l’adresse ait déjà un compte, une demande en attente, ou ni l’un ni l’autre. Utilisable sans session.
@@ -1575,7 +1698,15 @@ type Mutation {
   """
   Modifie les lecteurs et le nom affiché d’un dossier lié. Le dossier chez le fournisseur ne change pas, et ses documents liés gardent leur chemin (ADR 0043).
   """
-  modifierDossierLie(id: ID!, lecteurs: LecteursDossierInput!, nom: String): DossierLie!
+  modifierDossierLie(
+    """
+    Les personnes que le dossier attend chez le fournisseur (ADR 0044). Absent : inchangé.
+    """
+    attendus: AttendusDossier
+    id: ID!
+    lecteurs: LecteursDossierInput!
+    nom: String
+  ): DossierLie!
   modifierEdition(debut: Date!, fin: Date!, id: ID!, nom: String!, statut: StatutEdition!): Edition!
 
   """
@@ -1752,10 +1883,20 @@ type Mutation {
   La personne refuse une invitation. L’organisation n’en est pas informée : une invitation refusée et une invitation expirée ne se distinguent pas.
   """
   refuserInvitation(id: ID!): Boolean!
+
+  """
+  Règle comment Relaytour propose les accès d’un dossier lié chez le fournisseur. Un partage ou un groupe exige une connexion qui gère les accès (ADR 0044).
+  """
+  reglerAccesFournisseur(ajoutsAutomatiques: Boolean!, groupeId: ID, id: ID!, invitation: Boolean!, mode: AccesFournisseurDossier!, role: RoleFournisseur!): DossierLie!
   reglerConcerneAussi(ficheId: ID!, groupes: [String!]!, perimetreIds: [ID!]!): Fiche!
 
   """Change le contenu de l’abonnement personnel. L’adresse ne change pas."""
   reglerMonAbonnementAgenda(inclureEcheances: Boolean!, inclureGlobal: Boolean!, perimetreIds: [ID!]): AbonnementAgenda!
+
+  """
+  Active ou coupe la vérification et la gestion des accès sans reconnexion, pour un fournisseur dont l’accès accordé les couvre déjà : Google Drive et Nextcloud (ADR 0044).
+  """
+  reglerPorteeConnexion(portee: PorteeConnexionFichiers!): ConnexionFichiers!
 
   """
   Renvoie le mail d’une invitation en attente, une fois par heure au plus.
@@ -1818,6 +1959,11 @@ type Mutation {
   rouvrirAppelBenevoles(id: ID!): AppelBenevoles!
 
   """
+  Donne l’adresse du compte d’un membre chez le fournisseur, quand elle diffère de son adresse dans Relaytour. Null : Relaytour reprend son adresse.
+  """
+  saisirAdresseFournisseur(adresse: String, userId: ID!): CompteFournisseurVue!
+
+  """
   Supprime une fiche et la retire de toutes les séquences. Réservé aux admins de l’activité.
   """
   supprimerBenevole(id: ID!): Boolean!
@@ -1848,6 +1994,11 @@ type Mutation {
   Demande à Nextcloud si l’admin a accordé l’accès. Vrai une fois la connexion enregistrée ; faux tant qu’il n’a pas terminé.
   """
   terminerConnexionNextcloud(etat: String!): Boolean!
+
+  """
+  Lance la vérification des accès chez le fournisseur. Le résultat arrive par le flux des changements.
+  """
+  verifierAccesFournisseur: Boolean!
 }
 
 """
@@ -2118,6 +2269,12 @@ type Personne {
   souhaits(editionId: ID): [Souhait!]!
 }
 
+type PersonneAcces {
+  email: String!
+  id: ID!
+  nom: String!
+}
+
 type PersonneConvocable {
   """Vrai pour une personne affectée au périmètre pour la période."""
   duPerimetre: Boolean!
@@ -2226,6 +2383,15 @@ enum PorteeAppel {
   SEQUENCE
 }
 
+"""
+Ce que la connexion permet en plus des fichiers : lire l’annuaire et les droits, puis appliquer les propositions d’accès (ADR 0044).
+"""
+enum PorteeConnexionFichiers {
+  ANNUAIRE
+  FICHIERS
+  GESTION
+}
+
 type PostesPerimetre {
   aPourvoir: Int!
   affectations: [Affectation!]!
@@ -2300,6 +2466,25 @@ type Proposition {
   statut: StatutDemande!
 }
 
+"""
+Un ajout ou un retrait d’accès chez le fournisseur, qu’un admin applique ou écarte (ADR 0044).
+"""
+type PropositionAcces {
+  action: ActionProposition!
+
+  """
+  Le droit visé : « partage du dossier », ou le groupe. Un retrait nomme le droit que Relaytour a créé, quel que soit le mode actuel du dossier.
+  """
+  cible: String!
+  erreur: String
+  etat: EtatProposition!
+  id: ID!
+
+  """Vrai quand la proposition vise un groupe du fournisseur."""
+  parGroupe: Boolean!
+  personne: PersonneAcces!
+}
+
 type Query {
   """
   Vrai quand cet abonnement, désigné par son adresse, est enregistré pour la personne connectée.
@@ -2370,6 +2555,11 @@ type Query {
   commentairesDeLaPeriode(editionId: ID!): CommentairesPeriode!
 
   """
+  Les membres de l’organisation et leur compte chez le fournisseur connecté (ADR 0044).
+  """
+  comptesFournisseur: [CompteFournisseurVue!]!
+
+  """
   Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms. Avec `ressource`, un document lié ouvert aux lecteurs de sa fiche se lit sans ouvrir le reste du dossier.
   """
   contenuDossierLie(chemin: [String!]!, id: ID!, ressource: ID): ListeElementsFichiers!
@@ -2417,6 +2607,11 @@ type Query {
   Le formulaire d’une activité, ou null s’il est fermé. Sans slug d’organisation : l’unique organisation de l’installation. Lisible sans session.
   """
   formulaireRejoindre(activite: String!, organisation: String): FormulaireRejoindre
+
+  """
+  Les groupes du fournisseur qui ont un droit sur un dossier lié et dont Relaytour peut gérer les membres (ADR 0044).
+  """
+  groupesDuDossier(id: ID!): [GroupeDuDossier!]!
   health: String!
   identiteOrganisation: IdentiteOrganisation!
 
@@ -2533,6 +2728,11 @@ type Query {
   tache(id: ID!): Tache!
   tachesAPrendre(editionId: ID!): [Tache!]!
   tousLesPerimetres(activiteId: ID): TousLesPerimetres!
+
+  """
+  Les accès chez le fournisseur des dossiers liés d’une activité, à la dernière vérification (ADR 0044).
+  """
+  verificationAcces(activiteId: ID!): [VerificationAccesDossier!]!
 
   """
   Numéro de version de l’installation. Lisible sans session, comme sur /health.
@@ -2700,6 +2900,11 @@ type Reunion {
   taches: [TacheLieeReunion!]!
   titre: String!
   version: Int!
+}
+
+enum RoleFournisseur {
+  ECRITURE
+  LECTURE
 }
 
 """
@@ -3040,6 +3245,7 @@ enum TypeNoteDeVersion {
 }
 
 enum TypeNotification {
+  ACCES_FOURNISSEUR_A_VALIDER
   ADMIN_ACTIVITE_NOMME
   ADMIN_ACTIVITE_RETIRE
   ADMIN_ORGANISATION_NOMME
@@ -3091,6 +3297,20 @@ type TypographieTheme {
   espacementTitre: String!
   graisseCorps: Int!
   graisseTitre: Int!
+}
+
+type VerificationAccesDossier {
+  dossier: DossierLie!
+  lignes: [LigneAcces!]!
+
+  """Les périmètres que les lecteurs du dossier désignent."""
+  perimetres: [Perimetre!]!
+
+  """
+  Les propositions en attente, et celles qui ont échoué, du plus ancien au plus récent.
+  """
+  propositions: [PropositionAcces!]!
+  verifieLe: DateTime
 }
 
 """

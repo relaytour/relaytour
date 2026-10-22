@@ -63,7 +63,7 @@ Une personne peut avoir accès par plusieurs voies à la fois : directement, par
 - Un changement d'équipe met à jour les propositions de deux façons :
   - une affectation, une désignation comme contact principal ou une extension des lecteurs crée une proposition d'ajout ;
   - un retrait d'affectation ou un archivage crée une proposition de retrait, si Relaytour avait créé le droit.
-- Une proposition reste unique par dossier, par personne et par action. Une proposition écartée ne revient pas tant que la situation de la personne ne change pas. Une notification d'admin de l'organisation l'annonce une fois par jour au plus (ADR 0033).
+- Une proposition reste unique par dossier, par personne et par action. Le serveur réserve une proposition avant de l'appliquer, et la vérification ne double pas une proposition en cours. MariaDB n'offre pas d'index partiel : cette unicité reste une règle du serveur. Une proposition écartée ne revient pas tant que la situation de la personne ne change pas. Une notification d'admin de l'organisation l'annonce une fois par jour au plus (ADR 0033).
 
 ### Portée de la connexion
 
