@@ -317,11 +317,11 @@ function messageRefus(statut: number): string {
     case 404:
       return 'Ce document n’existe plus, ou vous n’y avez pas accès.'
     case 409:
-      return 'L’espace de fichiers n’est pas connecté.'
+      return 'Le fournisseur cloud n’est pas connecté.'
     case 413:
-      return 'Ce document dépasse 50 Mo. Ouvrez-le dans l’espace de fichiers.'
+      return 'Ce document dépasse 50 Mo. Ouvrez-le chez le fournisseur cloud.'
     default:
-      return 'L’espace de fichiers ne répond pas. Réessayez dans quelques instants.'
+      return 'Le fournisseur cloud ne répond pas. Réessayez dans quelques instants.'
   }
 }
 

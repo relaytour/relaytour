@@ -268,7 +268,7 @@ export async function importerDepuisEspace(
           organisationId,
           activiteId,
           source: 'ESPACE_FICHIERS',
-          resume: 'Import depuis l’espace de fichiers',
+          resume: 'Import depuis le fournisseur cloud',
           // Une fiche écrite dans Relaytour l'emporte ; une fiche venue du dépôt
           // ou d'un import précédent se met à jour.
           protegees: ['APP'],

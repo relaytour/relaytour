@@ -6,7 +6,7 @@
     <title>Admin de l'organisation · Modes d'emploi · Relaytour</title>
     <meta
       name="description"
-      content="Le mode d'emploi des admins de l'organisation dans l'espace organisateur de Relaytour : identité, contenu, activités, comptes, rôles et espace de fichiers."
+      content="Le mode d'emploi des admins de l'organisation dans l'espace organisateur de Relaytour : identité, contenu, activités, comptes, rôles et fournisseur cloud."
     />
     <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../jetons.css" />
@@ -49,7 +49,7 @@
           <span class="etiquette">Point de départ</span>
           <h2 id="t-ou">Où se trouvent vos écrans</h2>
           <p class="texte">
-            Le groupe <strong>Gérer l'organisation</strong> du menu se trouve sous le groupe « Gérer l'activité ». Il porte cinq entrées : Organisation, Activités, Annuaire, Admins et Espace de fichiers. Les entrées Organisation, Annuaire, Admins et Espace de fichiers n'apparaissent que pour votre rôle. Le <a href="admin-activite.html#e-notifications-admin">mode d'emploi de l'admin d'activité</a> décrit l'écran « Notifications d'admin ». Pour vous, il place en tête un groupe « Organisation ». Ce groupe annonce les archivages et les nominations d'admins faits par un autre admin de l'organisation. Une activité sans admin vous envoie aussi ses notifications d'admin. Vos autres leviers se trouvent sur les pages Activités et Rédaction, sous forme de champs et de boutons que les admins d'activité ne voient pas.
+            Le groupe <strong>Gérer l'organisation</strong> du menu se trouve sous le groupe « Gérer l'activité ». Il porte cinq entrées : Organisation, Activités, Annuaire, Admins et Fournisseur cloud. Les entrées Organisation, Annuaire, Admins et Fournisseur cloud n'apparaissent que pour votre rôle. Le <a href="admin-activite.html#e-notifications-admin">mode d'emploi de l'admin d'activité</a> décrit l'écran « Notifications d'admin ». Pour vous, il place en tête un groupe « Organisation ». Ce groupe annonce les archivages et les nominations d'admins faits par un autre admin de l'organisation. Une activité sans admin vous envoie aussi ses notifications d'admin. Vos autres leviers se trouvent sur les pages Activités et Rédaction, sous forme de champs et de boutons que les admins d'activité ne voient pas.
           </p>
           <p class="texte">
             Les tableaux de l'annuaire et des admins se trient, se filtrent et se redimensionnent comme ceux des activités. Le mode d'emploi de l'admin d'activité le décrit dans <a href="admin-activite.html#t-tableaux">« Où se trouvent vos écrans »</a>.
@@ -64,7 +64,7 @@
             <li><a href="#e-roles">Annuaire</a> : gérer les comptes et écrire aux membres.</li>
             <li><a href="#e-admins">Admins</a> : nommer les admins de l'organisation et de chaque activité.</li>
             <li><a href="#e-redaction">Rédaction</a> : accorder un droit sur toutes les fiches.</li>
-            <li><a href="#e-espace-fichiers">Espace de fichiers</a> : connecter les documents de l'association, exporter et importer les fiches.</li>
+            <li><a href="#e-espace-fichiers">Fournisseur cloud</a> : connecter les documents de l'association, exporter et importer les fiches.</li>
           </ol>
         </nav>
       </section>
@@ -168,8 +168,8 @@
         </article>
 
         <article class="verre ecran" id="e-espace-fichiers">
-          <div class="ecran-tete"><h3>Espace de fichiers</h3><span class="route">/&lt;activité&gt;/admin/espace-fichiers</span></div>
-          <p>L'espace de fichiers est le service en ligne où l'association range ses documents : SharePoint, Google Drive, Dropbox ou Nextcloud. Vous le connectez avec votre propre compte. Les membres lisent ensuite ses documents dans Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document : il le lit chez le fournisseur à chaque ouverture.</p>
+          <div class="ecran-tete"><h3>Fournisseur cloud</h3><span class="route">/&lt;activité&gt;/admin/espace-fichiers</span></div>
+          <p>Le fournisseur cloud est le service en ligne où l'association range ses documents : SharePoint, Google Drive, Dropbox ou Nextcloud. Vous le connectez avec votre propre compte. Les membres lisent ensuite ses documents dans Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document : il le lit chez le fournisseur à chaque ouverture.</p>
           <p class="note">La personne qui exploite le serveur choisit les fournisseurs proposés. Si elle n'en a ouvert aucun, la page l'indique et ne propose aucune connexion.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Connecter</span></span><span>Ouvrir la page de connexion du fournisseur, puis revenir dans Relaytour. Un Nextcloud se désigne par son adresse. Une seule connexion existe par organisation.</span></li>
@@ -177,26 +177,26 @@
             <li><span><span class="libelle">Reconnecter</span><span class="libelle">Déconnecter</span></span><span>Renouveler l'accès, ou le fermer. Après une déconnexion, les dossiers liés restent, mais les membres ne lisent plus leurs documents et l'export s'arrête.</span></li>
           </ul>
           <figure>
-            <img src="../captures/espace-fichiers.webp" data-mobile="../captures/mobile/espace-fichiers.webp" width="1440" height="900" loading="lazy" alt="Page Espace de fichiers : le panneau Connexion avec le fournisseur, le compte et l'état, puis les panneaux Export des fiches et Importer des fiches." />
-            <figcaption>Page Espace de fichiers, sur l'organisation d'exemple. Un dossier local tient lieu de fournisseur.</figcaption>
+            <img src="../captures/espace-fichiers.webp" data-mobile="../captures/mobile/espace-fichiers.webp" width="1440" height="900" loading="lazy" alt="Page Fournisseur cloud : le panneau Connexion avec le fournisseur, le compte et l'état, puis les panneaux Export des fiches et Importer des fiches." />
+            <figcaption>Page Fournisseur cloud, sur l'organisation d'exemple. Un dossier local tient lieu de fournisseur.</figcaption>
           </figure>
-          <p>Un dossier lié rend un dossier de l'espace lisible dans une activité. Vous choisissez qui le lit : les personnes d'un périmètre, ou toute l'activité. Un dossier lié se lit comme les fiches du même périmètre, ou comme les fiches communes.</p>
+          <p>Un dossier lié rend un dossier du fournisseur lisible dans une activité. Vous choisissez qui le lit : les personnes d'un périmètre, ou toute l'activité. Un dossier lié se lit comme les fiches du même périmètre, ou comme les fiches communes.</p>
           <ul class="gestes">
-            <li><span><span class="libelle">Lier un dossier</span></span><span>Parcourir l'espace, ouvrir le dossier à lier, puis choisir le périmètre qui le lit. Une bibliothèque entière ne se lie pas.</span></li>
-            <li><span><span class="libelle">Retirer</span></span><span>Retirer un dossier de l'activité. Le dossier reste chez le fournisseur, et les fiches ne citent plus ses ressources.</span></li>
+            <li><span><span class="libelle">Lier un dossier</span></span><span>Parcourir les dossiers du fournisseur, ouvrir le dossier à lier, puis choisir le périmètre qui le lit. Une bibliothèque entière ne se lie pas.</span></li>
+            <li><span><span class="libelle">Retirer</span></span><span>Retirer un dossier de l'activité. Le dossier reste chez le fournisseur, et les fiches ne citent plus ses documents.</span></li>
           </ul>
           <figure>
             <img src="../captures/espace-fichiers-dossiers.webp" data-mobile="../captures/mobile/espace-fichiers-dossiers.webp" width="1440" height="900" loading="lazy" alt="Panneau Dossiers liés de l'activité : un dossier lu par toute l'activité et un dossier lu par le périmètre Bénévoles." />
             <figcaption>Les dossiers liés d'une activité, sur l'organisation d'exemple.</figcaption>
           </figure>
-          <p>Relaytour peut aussi écrire les fiches dans l'espace, en Markdown, et reprendre les fiches que l'association y range déjà.</p>
+          <p>Relaytour peut aussi écrire les fiches chez le fournisseur, en Markdown, et reprendre les fiches que l'association y range déjà.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Choisir le dossier d'export</span></span><span>Indiquer où Relaytour crée le dossier « Fiches Relaytour ». Relaytour y écrit chaque fiche une minute après sa modification, puis chaque nuit.</span></li>
             <li><span><span class="libelle">Exporter maintenant</span><span class="libelle">Arrêter l'export</span></span><span>Lancer un export sans attendre, ou ne plus écrire dans le dossier. Le résultat du dernier export s'affiche dans le panneau.</span></li>
             <li><span><span class="libelle">Importer des fiches</span></span><span>Choisir un dossier source par périmètre, puis lire la simulation avant d'importer. Les fichiers Markdown et texte entrent tels quels, et les documents Word sont convertis en Markdown.</span></li>
           </ul>
           <p class="note">Les fiches se modifient toujours dans Relaytour. Une modification faite à la main dans « Fiches Relaytour » est remplacée à l'export suivant. Une fiche qui contient une coordonnée personnelle n'est ni exportée ni importée. Un import ne remplace jamais une fiche modifiée dans Relaytour.</p>
-          <p class="note">Le dossier « Fiches Relaytour » ne se lie pas à une activité. Un changement de fournisseur efface le dossier d'export de l'ancien espace.</p>
+          <p class="note">Le dossier « Fiches Relaytour » ne se lie pas à une activité. Un changement de fournisseur efface le dossier d'export de l'ancien fournisseur.</p>
         </article>
       </section>
 

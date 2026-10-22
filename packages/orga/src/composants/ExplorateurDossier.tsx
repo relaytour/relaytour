@@ -122,7 +122,7 @@ export default function ExplorateurDossier({
         <Alert
           type="warning"
           showIcon
-          message="L’espace de fichiers n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau."
+          message="Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau."
         />
       ) : error ? (
         <Alert type="error" showIcon message={messageErreur(error)} />
@@ -168,7 +168,7 @@ export default function ExplorateurDossier({
           type="info"
           showIcon
           style={{ marginTop: 12 }}
-          message="Ce dossier compte trop d’éléments pour les afficher tous ici. Ouvrez-le dans l’espace de fichiers pour voir la suite."
+          message="Ce dossier compte trop d’éléments pour les afficher tous ici. Ouvrez-le chez le fournisseur cloud pour voir la suite."
         />
       )}
 

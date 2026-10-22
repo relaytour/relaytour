@@ -74,7 +74,7 @@ function LierRessource({
     <Modal
       open={ouvert}
       onCancel={fermer}
-      title="Lier une ressource"
+      title="Lier un document"
       footer={null}
       width={640}
       destroyOnHidden
@@ -83,7 +83,7 @@ function LierRessource({
         dossiers.loading && !dossiers.data ? (
           <Skeleton active paragraph={{ rows: 3 }} />
         ) : compatibles.length === 0 ? (
-          <Empty description="Aucun dossier de l’espace de fichiers n’est lié à ce périmètre ni à toute l’activité." />
+          <Empty description="Aucun dossier du fournisseur cloud n’est lié à ce périmètre ni à toute l’activité." />
         ) : (
           <>
             <p className="rt-texte-secondaire">
@@ -208,7 +208,7 @@ export default function RessourcesFiche({
 
   return (
     <Panneau
-      titre="Ressources liées"
+      titre="Documents liés"
       extra={
         peutModifier && (
           <Button
@@ -216,7 +216,7 @@ export default function RessourcesFiche({
             icon={<LinkOutlined />}
             onClick={() => setChoix(true)}
           >
-            Lier une ressource
+            Lier un document
           </Button>
         )
       }
@@ -226,7 +226,7 @@ export default function RessourcesFiche({
       ) : ressources.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="Aucun document de l’espace de fichiers n’est lié à cette fiche."
+          description="Aucun document du fournisseur cloud n’est lié à cette fiche."
         />
       ) : (
         <ul className="rt-explorateur">
@@ -259,8 +259,8 @@ export default function RessourcesFiche({
                 )}
                 {peutModifier && (
                   <Popconfirm
-                    title="Retirer cette ressource ?"
-                    description="Le document reste dans l’espace de fichiers. La fiche ne le cite plus."
+                    title="Retirer ce document lié ?"
+                    description="Le document reste chez le fournisseur cloud. La fiche ne le cite plus."
                     okText="Retirer"
                     cancelText="Annuler"
                     onConfirm={() =>

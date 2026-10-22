@@ -60,7 +60,7 @@ export default function DocumentsActivite({
   if (dossiers.length === 0) {
     return (
       <div className="rt-verre rt-panneau">
-        <Empty description="Aucun dossier de l’espace de fichiers n’est lié à vos périmètres." />
+        <Empty description="Aucun dossier du fournisseur cloud n’est lié à vos périmètres." />
       </div>
     )
   }
@@ -103,7 +103,7 @@ export default function DocumentsActivite({
                   </span>
                   <span className="rt-date">
                     <CloudOutlined aria-hidden />{' '}
-                    {d.disponible ? 'Espace de fichiers' : 'Espace déconnecté'}
+                    {d.disponible ? 'Fournisseur cloud' : 'Fournisseur déconnecté'}
                   </span>
                 </button>
               </li>

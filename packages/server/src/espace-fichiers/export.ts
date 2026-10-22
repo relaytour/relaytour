@@ -209,7 +209,7 @@ export async function exporterFiches(
     })
     if ((await espace.element(position([]))) === null) {
       rapport.erreur =
-        'Le dossier d’export n’existe plus dans l’espace de fichiers. Choisissez un autre dossier.'
+        'Le dossier d’export n’existe plus chez le fournisseur cloud. Choisissez un autre dossier.'
       await enregistrer()
       return rapport
     }
@@ -315,7 +315,7 @@ export async function exporterFiches(
   } catch (erreur) {
     if (erreur instanceof ExportObsolete) return null
     rapport.erreur =
-      'L’espace de fichiers n’a pas répondu pendant l’export. Relaytour recommencera.'
+      'Le fournisseur cloud n’a pas répondu pendant l’export. Relaytour recommencera.'
     await enregistrer().catch(() => undefined)
     throw erreur
   }

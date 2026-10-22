@@ -282,7 +282,7 @@ export class EspaceIndisponible extends Error {}
 export function erreurEspace(erreur: unknown): Error {
   if (erreur instanceof EspaceIndisponible || erreur instanceof AccesRetire) {
     return new GraphQLError(
-      'L’espace de fichiers n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau.',
+      'Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau.',
       { extensions: { code: 'ESPACE_FICHIERS_INDISPONIBLE' } }
     )
   }
@@ -292,7 +292,7 @@ export function erreurEspace(erreur: unknown): Error {
       'Le fournisseur de l’espace de fichiers ne répond pas.'
     )
     return new GraphQLError(
-      'L’espace de fichiers ne répond pas. Réessayez dans quelques instants.',
+      'Le fournisseur cloud ne répond pas. Réessayez dans quelques instants.',
       { extensions: { code: 'FOURNISSEUR_INDISPONIBLE' } }
     )
   }

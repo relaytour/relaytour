@@ -209,7 +209,7 @@ function ContenuLiseuse({ doc }: { doc: DocumentOuvert }) {
     <>
       {erreur && <Alert type="error" showIcon message={erreur} />}
       {!affiche && (
-        <Empty description="La liseuse n’affiche pas ce format. Téléchargez le document, ou ouvrez-le dans l’espace de fichiers." />
+        <Empty description="La liseuse n’affiche pas ce format. Téléchargez le document, ou ouvrez-le chez le fournisseur cloud." />
       )}
       {chargement && (
         <div className="rt-liseuse-chargement">
@@ -255,7 +255,7 @@ export default function Liseuse({
   const nomFournisseur =
     doc === null
       ? ''
-      : (NOMS_FOURNISSEURS[doc.fournisseur] ?? 'l’espace de fichiers')
+      : (NOMS_FOURNISSEURS[doc.fournisseur] ?? 'le fournisseur cloud')
 
   return (
     <Modal

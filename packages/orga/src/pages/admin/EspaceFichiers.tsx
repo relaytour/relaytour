@@ -53,7 +53,7 @@ const ISSUES: Record<
   string,
   { type: 'success' | 'warning' | 'error'; texte: string }
 > = {
-  reussie: { type: 'success', texte: 'L’espace de fichiers est connecté.' },
+  reussie: { type: 'success', texte: 'Le fournisseur cloud est connecté.' },
   refusee: {
     type: 'warning',
     texte: 'La connexion a été annulée chez le fournisseur.',
@@ -315,7 +315,7 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
               type="info"
               showIcon
               style={{ marginTop: 12 }}
-              message="Ces fiches avaient été modifiées dans l’espace de fichiers. Relaytour les a réécrites."
+              message="Ces fiches avaient été modifiées chez le fournisseur cloud. Relaytour les a réécrites."
               description={rapport.modifieesALaMain.join(', ')}
             />
           )}
@@ -334,7 +334,7 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
             </Button>
             <Popconfirm
               title="Arrêter l’export des fiches ?"
-              description="Les fichiers déjà écrits restent dans l’espace de fichiers."
+              description="Les fichiers déjà écrits restent chez le fournisseur cloud."
               okText="Arrêter"
               cancelText="Annuler"
               onConfirm={() =>
@@ -378,7 +378,7 @@ export default function EspaceFichiers() {
   return (
     <>
       <Titre sousTitre="Les membres lisent les documents de l’association depuis Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document.">
-        Espace de fichiers
+        Fournisseur cloud
       </Titre>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -433,7 +433,7 @@ export default function EspaceFichiers() {
                   {!d.disponible && <Tag color="warning">Indisponible</Tag>}
                   <Popconfirm
                     title="Retirer ce dossier ?"
-                    description="Le dossier reste dans l’espace de fichiers. Les membres ne le lisent plus dans Relaytour."
+                    description="Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour."
                     okText="Retirer"
                     cancelText="Annuler"
                     onConfirm={() =>

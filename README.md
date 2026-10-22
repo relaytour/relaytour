@@ -10,7 +10,7 @@ Relaytour aide une association ou un collectif bénévole à organiser ses activ
 - **Postes à pourvoir, souhaits, notifications** : ce qu'il faut pour constituer l'équipe et tenir les échéances.
 - **Agenda** : les phases, les dates clés et les réunions de chaque activité. Les réunions se convoquent dans l'application, leurs dates se choisissent par un sondage, et l'agenda s'abonne depuis Outlook, Google ou Apple.
 - **Programme du jour J** : les séquences de la journée par lieu et par heure, avec les personnes en responsabilité ou en renfort. Une fiche bénévole recense une personne qui aide sans compte.
-- **Espace de fichiers** : les documents de l'association, rangés dans SharePoint, Google Drive, Dropbox ou Nextcloud, se lisent dans Relaytour sans copie. Les fiches s'y exportent en Markdown et s'en importent.
+- **Fournisseur cloud** : les documents de l'association, rangés dans SharePoint, Google Drive, Dropbox ou Nextcloud, se lisent dans Relaytour sans copie. Les fiches s'y exportent en Markdown et s'en importent.
 - **Plusieurs organisations** : une installation peut servir plusieurs associations. Un hébergeur les administre par script ou par API. L'API ne renvoie aucune donnée d'une organisation ; seul l'export d'une organisation, écrit sur le serveur, contient ses noms et ses adresses (ADR 0008).
 
 Relaytour est un logiciel libre (AGPL-3.0). Vous pouvez l'héberger vous-même. Le contenu de votre organisation reste chez vous : le dépôt ne contient qu'une organisation d'exemple.

@@ -753,7 +753,7 @@ builder.mutationFields(t => ({
         element: await espace.element({ emplacement, base: null, chemin }),
       }))
       if (element === null || !element.dossier) {
-        throw erreurSaisie('Ce dossier n’existe pas dans l’espace de fichiers.')
+        throw erreurSaisie('Ce dossier n’existe pas chez le fournisseur cloud.')
       }
       // Le dossier d'export contient les fiches de tous les périmètres : ni lui,
       // ni un dossier qui le contient, ni un de ses sous-dossiers ne se lie.
@@ -848,7 +848,7 @@ builder.mutationFields(t => ({
         ids: await lignee(espace, emplacement, chemin),
       }))
       if (parent === null || !parent.dossier) {
-        throw erreurSaisie('Ce dossier n’existe pas dans l’espace de fichiers.')
+        throw erreurSaisie('Ce dossier n’existe pas chez le fournisseur cloud.')
       }
       // Un compte de service Google n'a pas d'espace de stockage : il n'écrit que
       // dans un Drive partagé.

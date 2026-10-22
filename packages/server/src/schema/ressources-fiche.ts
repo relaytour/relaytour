@@ -315,7 +315,7 @@ builder.mutationFields(t => ({
       }
       if (element === null) {
         throw erreurSaisie(
-          'Cet élément n’existe pas dans l’espace de fichiers.'
+          'Cet élément n’existe pas chez le fournisseur cloud.'
         )
       }
       const trouve = element
@@ -340,7 +340,7 @@ builder.mutationFields(t => ({
           })
           if (nombre >= RESSOURCES_MAX) {
             throw erreurSaisie(
-              `Une fiche porte ${RESSOURCES_MAX} ressources au plus. Retirez-en une avant d’en lier une autre.`
+              `Une fiche porte ${RESSOURCES_MAX} documents liés au plus. Retirez-en un avant d’en lier un autre.`
             )
           }
           const creee = await tx.ressourceFiche.create({
