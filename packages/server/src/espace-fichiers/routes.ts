@@ -9,7 +9,7 @@ import { publierChangement } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
 
 import { cheminValide, disposition, formatApercu, typeServi } from './chemin.ts'
-import { dossierLisible } from './droits.ts'
+import { dossierLisiblePour } from './droits.ts'
 import { cheminDeLExportSous, dansLExport } from './isolement.ts'
 import { echangerCodeDropbox, nomDuCompteDropbox } from './dropbox.ts'
 import { echangerCodeGoogle, nomDuCompteGoogle, type Jetons } from './google.ts'
@@ -25,7 +25,7 @@ import {
   reprendreConnexion,
 } from './index.ts'
 import { echangerCode, nomDuCompte } from './sharepoint.ts'
-import type { Fournisseur } from './types.ts'
+import type { Fournisseur, Portee } from './types.ts'
 
 // Routes de l'espace de fichiers (ADR 0038), sous /medias/ que le proxy de
 // l'installation relaie déjà vers l'API : le retour de la connexion chez le
@@ -93,7 +93,11 @@ export function routesEspaceFichiers(
 interface ConnecteurOAuth {
   fournisseur: Fournisseur
   /** Échange le code contre des jetons, ou null si le fournisseur est fermé. */
-  echanger: (code: string, verificateur: string) => Promise<Jetons | null>
+  echanger: (
+    code: string,
+    verificateur: string,
+    portee: Portee
+  ) => Promise<Jetons | null>
   nomDuCompte: (acces: string) => Promise<string>
 }
 
@@ -101,9 +105,9 @@ interface ConnecteurOAuth {
 const CONNECTEURS: Record<string, ConnecteurOAuth> = {
   sharepoint: {
     fournisseur: 'SHAREPOINT',
-    echanger: async (code, verificateur) => {
+    echanger: async (code, verificateur, portee) => {
       const c = await configurationMicrosoft()
-      return c === null ? null : echangerCode(c, code, verificateur)
+      return c === null ? null : echangerCode(c, code, verificateur, portee)
     },
     nomDuCompte,
   },
@@ -155,7 +159,8 @@ async function retourOAuth(
   })
   if (admin === null) return 'echec'
 
-  const jetons = await connecteur.echanger(code, reprise.verificateur)
+  const portee = reprise.portee ?? 'FICHIERS'
+  const jetons = await connecteur.echanger(code, reprise.verificateur, portee)
   if (jetons === null) return 'echec'
   const connexion = await enregistrerConnexion({
     organisationId: reprise.organisationId,
@@ -164,6 +169,7 @@ async function retourOAuth(
     compte: await connecteur.nomDuCompte(jetons.acces),
     secret: jetons.rafraichissement,
     connecteParId: reprise.userId,
+    portee,
   })
   memoriserJetonAcces(connexion.jeton, jetons.acces, jetons.expireLe)
   journal.info(
@@ -208,7 +214,11 @@ async function apercu(
   const brut = typeof req.query.chemin === 'string' ? req.query.chemin : ''
   const chemin = brut.split('/')
   const telecharger = req.query.telecharger === '1'
-  const dossier = await dossierLisible(ctx, dossierId)
+  // Un document lié ouvert aux lecteurs de sa fiche se lit par son identifiant,
+  // sans ouvrir le reste du dossier (ADR 0043).
+  const ressourceId =
+    typeof req.query.ressource === 'string' ? req.query.ressource : null
+  const dossier = await dossierLisiblePour(ctx, dossierId, chemin, ressourceId)
   if (dossier === null || brut === '' || !cheminValide(chemin)) {
     res.status(404).json({ code: 'NOT_FOUND' })
     return

@@ -1,4 +1,7 @@
 import type {
+  AnnuaireFournisseur,
+  CompteAnnuaire,
+  DroitElement,
   ElementEspace,
   Emplacement,
   EspaceFichiers,
@@ -60,8 +63,109 @@ function versElement(n: NoeudMemoire): ElementEspace {
   }
 }
 
+/** L'annuaire d'un espace en mémoire (ADR 0044). */
+export interface AnnuaireMemoire {
+  comptes: CompteAnnuaire[]
+  /** Les droits de chaque élément, par son identifiant ; null : illisibles. */
+  droits: Record<string, DroitElement[] | null>
+  /** Les membres de chaque groupe par identifiant de compte ; null : illisible. */
+  groupes: Record<string, string[] | null>
+  /** Vrai pour un fournisseur sans annuaire, comme Google Drive ou Dropbox. */
+  sansAnnuaire?: boolean
+}
+
+export function annuaireEnMemoire(
+  donnees: AnnuaireMemoire
+): AnnuaireFournisseur {
+  let suivant = 0
+  return {
+    capacites: {
+      comptes: donnees.sansAnnuaire !== true,
+      droits: true,
+      membresDeGroupe: true,
+      partage: true,
+      gestionDeGroupe: true,
+    },
+    partager(position, personne, options) {
+      const compte = donnees.comptes.find(
+        c => c.adresse === personne.adresse.toLowerCase()
+      )
+      const identifiant = `partage-${++suivant}`
+      const droits = (donnees.droits[position.base ?? ''] ??= [])
+      if (droits === null) {
+        return Promise.reject(new Error('Droits illisibles.'))
+      }
+      droits.push({
+        identifiant,
+        beneficiaire: {
+          type: 'personne',
+          identifiant: compte?.identifiant ?? null,
+          adresse: personne.adresse.toLowerCase(),
+          nom: compte?.nom ?? personne.adresse,
+        },
+        role: options.role,
+        herite: false,
+      })
+      return Promise.resolve({ identifiant })
+    },
+    retirerPartage(position, identifiant) {
+      const droits = donnees.droits[position.base ?? '']
+      if (droits !== undefined && droits !== null) {
+        donnees.droits[position.base ?? ''] = droits.filter(
+          d => d.identifiant !== identifiant
+        )
+      }
+      return Promise.resolve()
+    },
+    ajouterAuGroupe(groupe, compte) {
+      const membres = donnees.groupes[groupe]
+      if (
+        membres !== null &&
+        membres !== undefined &&
+        !membres.includes(compte)
+      ) {
+        membres.push(compte)
+      }
+      return Promise.resolve()
+    },
+    retirerDuGroupe(groupe, compte) {
+      const membres = donnees.groupes[groupe]
+      if (membres !== null && membres !== undefined) {
+        donnees.groupes[groupe] = membres.filter(m => m !== compte)
+      }
+      return Promise.resolve()
+    },
+    // Comme chez SharePoint, un groupe de site ne se gère pas.
+    groupeGerable: identifiant => !identifiant.startsWith('site:'),
+    chercherComptes(adresses) {
+      return Promise.resolve(
+        new Map(
+          adresses.map(a => [
+            a,
+            donnees.comptes.find(c => c.adresse === a.toLowerCase()) ?? null,
+          ])
+        )
+      )
+    },
+    droits(position) {
+      const id = position.base ?? ''
+      const droits = donnees.droits[id]
+      return Promise.resolve(droits === undefined ? [] : droits)
+    },
+    membresDuGroupe(identifiant) {
+      const membres = donnees.groupes[identifiant]
+      if (membres === null || membres === undefined)
+        return Promise.resolve(null)
+      return Promise.resolve(
+        donnees.comptes.filter(c => membres.includes(c.identifiant))
+      )
+    },
+  }
+}
+
 export function espaceEnMemoire(
-  emplacements: EmplacementMemoire[]
+  emplacements: EmplacementMemoire[],
+  annuaire?: AnnuaireFournisseur
 ): EspaceFichiers {
   const trouver = (p: Position): NoeudMemoire | null => {
     const emplacement = emplacements.find(e => e.id === p.emplacement)
@@ -77,6 +181,7 @@ export function espaceEnMemoire(
   }
   return {
     fournisseur: 'SHAREPOINT',
+    ...(annuaire === undefined ? {} : { annuaire }),
     convertitEnPdf: nom => nom.endsWith('.docx'),
     emplacements: () =>
       Promise.resolve(

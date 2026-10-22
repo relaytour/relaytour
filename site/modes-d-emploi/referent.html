@@ -58,7 +58,7 @@
         <div class="grille-2">
           <article class="verre panneau">
             <h3>Le menu de gauche</h3>
-            <p>Il donne accès à Mon espace, au Rétroplanning, à l'Agenda, au Programme, aux Bénévoles, aux Fiches et aux Préférences. La section « Périmètres » commence par « Tous les périmètres » et « Organigramme », puis liste chaque périmètre où vous êtes affecté·e.</p>
+            <p>Il donne accès à Mon espace, au Rétroplanning, à l'Agenda, au Programme, aux Bénévoles, aux Ressources et aux Préférences. La section « Périmètres » commence par « Tous les périmètres » et « Organigramme », puis liste chaque périmètre où vous êtes affecté·e.</p>
           </article>
           <article class="verre panneau">
             <h3>La barre du haut</h3>
@@ -274,23 +274,23 @@
         </article>
 
         <article class="verre ecran" id="e-fiches">
-          <div class="ecran-tete"><h3>Les fiches</h3><span class="route">/&lt;activité&gt;/fiches</span></div>
-          <p>Les fiches méthode expliquent comment mener chaque étape de l'organisation. Elles se filtrent par périmètre, se cherchent par mot et s'affichent en cartes ou en liste condensée.</p>
+          <div class="ecran-tete"><h3>Les ressources</h3><span class="route">/&lt;activité&gt;/fiches</span></div>
+          <p>L'écran « Ressources » réunit les fiches méthode et, quand l'association en a lié, les documents de son fournisseur cloud. Les fiches méthode expliquent comment mener chaque étape de l'organisation. Elles se filtrent par périmètre, se cherchent par mot et s'affichent en cartes ou en liste condensée.</p>
           <figure>
-            <img src="../captures/fiches-cartes.webp" data-mobile="../captures/mobile/fiches-cartes.webp" width="1440" height="900" loading="lazy" alt="Écran Fiches : les fiches groupées par périmètre, affichées en cartes." />
-            <figcaption>Écran Fiches, sur l'organisation d'exemple.</figcaption>
+            <img src="../captures/fiches-cartes.webp" data-mobile="../captures/mobile/fiches-cartes.webp" width="1440" height="900" loading="lazy" alt="Écran Ressources : les fiches groupées par périmètre, affichées en cartes." />
+            <figcaption>Écran Ressources, vue Fiches, sur l'organisation d'exemple.</figcaption>
           </figure>
           <figure>
-            <img src="../captures/fiches-liste.webp" data-mobile="../captures/mobile/fiches-liste.webp" width="1440" height="900" loading="lazy" alt="Écran Fiches en liste condensée : une ligne par fiche, avec sa source et sa date de mise à jour." />
+            <img src="../captures/fiches-liste.webp" data-mobile="../captures/mobile/fiches-liste.webp" width="1440" height="900" loading="lazy" alt="Écran Ressources en liste condensée : une ligne par fiche, avec sa source et sa date de mise à jour." />
             <figcaption>Le même écran en liste condensée.</figcaption>
           </figure>
           <p class="note">Chaque fiche indique sa date de mise à jour et son auteur, ou la mention « Depuis le dépôt » quand elle vient du dossier de contenu de l'organisation.</p>
-          <p>Quand l'association a connecté son espace de fichiers, l'onglet « Documents » s'ajoute à côté de l'onglet « Fiches ». Il présente les dossiers liés à vos périmètres et à toute l'activité. Un clic ouvre un dossier, puis un document. Relaytour affiche un PDF, une image, un texte ou un fichier Markdown, sans en garder de copie. Un document bureautique s'affiche converti en PDF par le fournisseur. Un autre document se télécharge, ou s'ouvre chez le fournisseur.</p>
+          <p>Quand l'association a connecté son fournisseur cloud, la vue « Documents » s'ajoute à côté de la vue « Fiches ». Cette vue présente les dossiers liés à toute l'activité, puis ceux de vos groupes et de vos périmètres. Un clic ouvre un dossier, puis un document. Relaytour affiche un PDF, une image, un texte ou un fichier Markdown, sans en garder de copie. Un document bureautique s'affiche converti en PDF par le fournisseur. Un autre document se télécharge, ou s'ouvre chez le fournisseur.</p>
           <figure>
-            <img src="../captures/documents.webp" data-mobile="../captures/mobile/documents.webp" width="1440" height="900" loading="lazy" alt="Onglet Documents de l'écran Fiches : un dossier lu par toute l'activité, puis un dossier du périmètre Bénévoles." />
-            <figcaption>L'onglet Documents, sur l'organisation d'exemple.</figcaption>
+            <img src="../captures/documents.webp" data-mobile="../captures/mobile/documents.webp" width="1440" height="900" loading="lazy" alt="Vue Documents de l'écran Ressources : le dossier Commun lu par toute l'activité, le dossier Coordination lu par le groupe Pôles, puis le dossier du périmètre Bénévoles." />
+            <figcaption>La vue Documents, sur l'organisation d'exemple.</figcaption>
           </figure>
-          <p class="note">Un admin de l'organisation choisit les dossiers liés. Vous ne voyez que ceux de vos périmètres et ceux de toute l'activité.</p>
+          <p class="note">Un admin de l'organisation choisit les dossiers liés et leurs lecteurs. Vous ne voyez que les dossiers de toute l'activité, et ceux qui servent vos périmètres directement ou par leur groupe.</p>
         </article>
 
         <article class="verre ecran" id="e-fiche">
@@ -304,14 +304,15 @@
             <li><span><span class="libelle">Modifier</span></span><span>Corriger la fiche, si un admin vous a accordé un droit de rédaction sur le périmètre. Chaque enregistrement crée une version. L'éditeur s'ouvre en mode visuel, avec une barre de mise en forme, décrite dans le guide <a href="markdown.html">Écrire une fiche en Markdown</a>.</span></li>
           </ul>
           <p>Le panneau « À propos » indique les périmètres et les groupes que la fiche concerne aussi. Les personnes de ces périmètres la lisent sans la modifier. Dans le texte, une mention comme @logistique ou @groupe:sport s'affiche comme une étiquette ; celle d'un groupe liste ses périmètres. Le guide <a href="markdown.html#m-concerne">Écrire une fiche en Markdown</a> décrit la liste « Concerne aussi ».</p>
-          <p>Le panneau « Ressources liées » cite les documents de l'espace de fichiers qui accompagnent la fiche : un modèle de tableau, un plan, une charte. Un clic ouvre le document. Une ressource marquée « Réservée au périmètre d'origine » vient d'un dossier que vous ne lisez pas : vous voyez son nom sans l'ouvrir.</p>
+          <p>Le panneau « Documents liés » cite les documents du fournisseur cloud qui accompagnent la fiche : un modèle de tableau, un plan, une charte. Un clic ouvre le document. Un document marqué « Réservée au périmètre d'origine » vient d'un dossier que vous ne lisez pas : vous voyez son nom sans l'ouvrir.</p>
+          <p>Quand la fiche concerne aussi d'autres périmètres, la personne qui la rédige voit quels documents liés ces périmètres n'ouvriront pas. L'avertissement s'affiche sous la liste « Concerne aussi » de l'éditeur. Dans la fiche, le détail se lit par le bouton d'alerte du document. Un admin de l'organisation étend alors le dossier lié, ou ouvre ce seul document aux lecteurs de la fiche.</p>
           <ul class="gestes">
-            <li><span><span class="libelle">Lier une ressource</span></span><span>Choisir un dossier ou un fichier dans un dossier lié du périmètre de la fiche, ou de toute l'activité. Ce bouton suit le droit de rédaction. Une fiche porte trente ressources au plus.</span></li>
-            <li><span><span class="libelle">Retirer</span></span><span>Retirer une ressource de la fiche. Le document reste dans l'espace de fichiers.</span></li>
+            <li><span><span class="libelle">Lier un document</span></span><span>Choisir un dossier ou un fichier dans un dossier lié qui sert le périmètre de la fiche, ou toute l'activité. Ce bouton suit le droit de rédaction. Une fiche porte trente documents liés au plus.</span></li>
+            <li><span><span class="libelle">Retirer</span></span><span>Retirer un document lié de la fiche. Le document reste chez le fournisseur cloud.</span></li>
           </ul>
           <figure>
-            <img src="../captures/fiche-ressources.webp" data-mobile="../captures/mobile/fiche-ressources.webp" width="1440" height="900" loading="lazy" alt="Bas d'une fiche méthode : le panneau Ressources liées avec deux documents du dossier Bénévoles et un document du dossier Commun." />
-            <figcaption>Les ressources liées d'une fiche, sur l'organisation d'exemple.</figcaption>
+            <img src="../captures/fiche-ressources.webp" data-mobile="../captures/mobile/fiche-ressources.webp" width="1440" height="900" loading="lazy" alt="Bas d'une fiche méthode : le panneau Documents liés avec deux documents du dossier Bénévoles et un document du dossier Commun. Le premier porte un bouton d'alerte, le deuxième la mention Ouvert aux lecteurs de la fiche." />
+            <figcaption>Les documents liés d'une fiche, sur l'organisation d'exemple.</figcaption>
           </figure>
           <p class="note">Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels : une fiche qui en contient ne peut pas être reversée dans le dépôt de l'organisation. L'historique des versions est réservé aux admins.</p>
         </article>

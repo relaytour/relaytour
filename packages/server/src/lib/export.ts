@@ -5,6 +5,7 @@ import path from 'node:path'
 import { prisma } from '@relaytour/database'
 
 import { lireGroupes } from './activites.ts'
+import { membreActif } from './appartenances.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { lireFormulaire } from './formulaire.ts'
 
@@ -54,10 +55,16 @@ export async function construireExport(organisationId: string) {
             },
           },
           perimetres: { orderBy: [{ ordre: 'asc' }, { slug: 'asc' }] },
-          // L'espace de fichiers (ADR 0038) : les dossiers liés, sans jeton.
+          // Le fournisseur cloud (ADR 0038) : les dossiers liés et leurs
+          // lecteurs (ADR 0043), sans jeton.
           dossiersLies: {
             orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-            include: { perimetre: { select: { slug: true } } },
+            include: {
+              perimetres: {
+                include: { perimetre: { select: { slug: true } } },
+              },
+              groupes: { select: { groupe: true } },
+            },
           },
           fiches: {
             orderBy: { slug: 'asc' },
@@ -305,9 +312,47 @@ export async function construireExport(organisationId: string) {
   })
 
   // La connexion de l'espace de fichiers, sans son jeton (ADR 0038).
+  // Les comptes chez le fournisseur, l'état des accès, les propositions et les
+  // droits créés par Relaytour (ADR 0044).
+  const [comptesFournisseur, etatsAcces, propositionsAcces, permissionsCreees] =
+    await Promise.all([
+      // Seuls les membres actifs : un ancien membre ne laisse ni compte ni état.
+      prisma.compteFournisseur.findMany({
+        where: { organisationId, user: membreActif(organisationId) },
+        orderBy: [{ fournisseur: 'asc' }, { id: 'asc' }],
+        include: { user: { select: { email: true } } },
+      }),
+      prisma.etatAccesDossier.findMany({
+        where: {
+          organisationId,
+          OR: [{ userId: null }, { user: membreActif(organisationId) }],
+        },
+        orderBy: [{ dossierLieId: 'asc' }, { id: 'asc' }],
+        include: {
+          user: { select: { email: true } },
+          dossierLie: { select: { element: true } },
+        },
+      }),
+      prisma.propositionAcces.findMany({
+        where: { organisationId },
+        orderBy: [{ creeLe: 'asc' }, { id: 'asc' }],
+        include: {
+          user: { select: { email: true } },
+          dossierLie: { select: { element: true } },
+        },
+      }),
+      prisma.permissionCreee.findMany({
+        where: { organisationId },
+        orderBy: [{ creeLe: 'asc' }, { id: 'asc' }],
+        include: {
+          user: { select: { email: true } },
+          dossierLie: { select: { element: true } },
+        },
+      }),
+    ])
   const connexionFichiers = await prisma.connexionFichiers.findUnique({
     where: { organisationId },
-    select: { fournisseur: true, compte: true },
+    select: { fournisseur: true, compte: true, portee: true },
   })
 
   const taches = await prisma.tache.findMany({
@@ -346,6 +391,35 @@ export async function construireExport(organisationId: string) {
       declaration: organisation.configuration,
     },
     espaceFichiers: connexionFichiers,
+    comptesFournisseur: comptesFournisseur.map(c => ({
+      personne: c.user.email,
+      fournisseur: c.fournisseur,
+      etat: c.etat,
+      adresseSaisie: c.adresseSaisie,
+      verifieLe: c.verifieLe?.toISOString() ?? null,
+    })),
+    etatsAcces: etatsAcces.map(e => ({
+      dossier: e.dossierLie.element,
+      personne: e.user?.email ?? null,
+      nom: e.nom,
+      etat: e.etat,
+      via: e.via,
+      verifieLe: e.verifieLe.toISOString(),
+    })),
+    propositionsAcces: propositionsAcces.map(p => ({
+      dossier: p.dossierLie.element,
+      personne: p.user.email,
+      action: p.action,
+      etat: p.etat,
+      creeLe: p.creeLe.toISOString(),
+      traiteeLe: p.traiteeLe?.toISOString() ?? null,
+    })),
+    permissionsCreees: permissionsCreees.map(p => ({
+      dossier: p.dossierLie.element,
+      personne: p.user.email,
+      identifiant: p.identifiant,
+      creeLe: p.creeLe.toISOString(),
+    })),
     membres: membres.map(m => ({
       email: m.user.email,
       nom: m.user.name,
@@ -388,7 +462,9 @@ export async function construireExport(organisationId: string) {
         archive: p.archivedAt !== null,
       })),
       dossiersLies: a.dossiersLies.map(d => ({
-        perimetre: d.perimetre?.slug ?? null,
+        touteActivite: d.touteActivite,
+        perimetres: d.perimetres.map(p => p.perimetre.slug).sort(),
+        groupes: d.groupes.map(g => g.groupe).sort(),
         fournisseur: d.fournisseur,
         emplacement: d.emplacement,
         element: d.element,
@@ -404,6 +480,7 @@ export async function construireExport(organisationId: string) {
           chemin: r.chemin,
           type: r.type,
           nom: r.nom,
+          ouverteAuxLecteurs: r.ouverteAuxLecteurs,
         })),
         versions: f.versions.map(v => ({
           titre: v.titre,

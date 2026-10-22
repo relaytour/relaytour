@@ -83,6 +83,10 @@ model Organisation {
   connexionFichiers       ConnexionFichiers?
   dossiersLies            DossierLie[]
   ressourcesFiches        RessourceFiche[]
+  comptesFournisseur      CompteFournisseur[]
+  etatsAccesDossiers      EtatAccesDossier[]
+  propositionsAcces       PropositionAcces[]
+  permissionsCreees       PermissionCreee[]
   fichesExportees         FicheExportee[]
 }
 
@@ -350,6 +354,12 @@ model User {
   connexionsFichiers      ConnexionFichiers[]
   dossiersLies            DossierLie[]
   ressourcesFiches        RessourceFiche[]
+  comptesFournisseur      CompteFournisseur[]
+  etatsAccesDossiers      EtatAccesDossier[]
+  propositionsAcces       PropositionAcces[]       @relation("PropositionPersonne")
+  propositionsTraitees    PropositionAcces[]       @relation("PropositionTraitee")
+  permissionsCreees       PermissionCreee[]
+  ressourcesOuvertes      RessourceFiche[]         @relation("RessourceOuvertePar")
 }
 
 model Session {
@@ -498,6 +508,8 @@ model Perimetre {
   appelsBenevoles   AppelBenevoles[]
   benevolesImportes Benevole[]
   dossiersLies      DossierLie[]
+  // Dossiers liés dont la liste de lecteurs nomme ce périmètre (ADR 0043).
+  dossiersLecteur   DossierLiePerimetre[]
   // Fiches d'autres périmètres qui concernent aussi celui-ci (ADR 0039).
   fichesConnexes    FicheConnexe[]
   fichesMasquees    FicheConnexeMasquee[]
@@ -1698,6 +1710,9 @@ enum TypeNotification {
   CANDIDATURE_RECUE
   // Une ou un bénévole s'est retiré d'une séquence depuis son espace (ADR 0041).
   BENEVOLE_RETIRE
+  // Des propositions d'accès chez le fournisseur attendent un admin de
+  // l'organisation (ADR 0044), une fois par jour au plus.
+  ACCES_FOURNISSEUR_A_VALIDER
 }
 
 // À quel titre une personne reçoit une notification (ADR 0033). Le niveau
@@ -1890,6 +1905,64 @@ enum EtatConnexionFichiers {
   A_RECONNECTER
 }
 
+// Ce que la connexion permet en plus des fichiers (ADR 0044) : lire l'annuaire et
+// les droits, puis appliquer les propositions d'accès.
+enum PorteeConnexionFichiers {
+  FICHIERS
+  ANNUAIRE
+  GESTION
+}
+
+// Les personnes qu'un dossier lié attend chez le fournisseur (ADR 0044).
+enum AttendusDossier {
+  MEMBRES
+  CONTACTS_PRINCIPAUX
+}
+
+// Comment Relaytour propose les accès d'un dossier lié chez le fournisseur
+// (ADR 0044) : rien, un partage du dossier, ou l'entrée dans un groupe.
+enum AccesFournisseurDossier {
+  AUCUN
+  PARTAGE
+  GROUPE
+}
+
+enum RoleFournisseur {
+  LECTURE
+  ECRITURE
+}
+
+enum ActionProposition {
+  AJOUTER
+  RETIRER
+}
+
+enum EtatProposition {
+  EN_ATTENTE
+  // Un admin, ou un ajout automatique, l'applique en ce moment : une seconde
+  // application de la même proposition est refusée.
+  EN_COURS
+  APPLIQUEE
+  ECARTEE
+  ECHEC
+}
+
+// Un compte chez le fournisseur, rapproché d'une personne par son adresse.
+enum EtatCompteFournisseur {
+  TROUVE
+  INVITE
+  ABSENT
+}
+
+// L'état d'une personne face aux droits d'un dossier lié chez le fournisseur.
+enum EtatAccesFournisseur {
+  A_ACCES
+  SANS_COMPTE
+  SANS_ACCES
+  INCONNU
+  EN_TROP
+}
+
 // Espace de fichiers d'une organisation : une connexion au plus. Relaytour agit
 // avec les droits du compte connecté. Le secret (jeton de rafraîchissement ou clé
 // de compte de service) est chiffré (lib/chiffrement.ts) et ne sort jamais du
@@ -1917,6 +1990,11 @@ model ConnexionFichiers {
   // refusées, modifiées à la main dans l'espace de fichiers, erreur.
   exportRapport     Json?
   exportLe          DateTime?
+  // Autorisations accordées par l'admin au-delà des fichiers (ADR 0044).
+  portee            PorteeConnexionFichiers  @default(FICHIERS)
+  // Dernière vérification des accès, et son erreur éventuelle.
+  accesVerifieLe    DateTime?
+  accesErreur       String?                  @db.VarChar(255)
   createdAt         DateTime                 @default(now())
   updatedAt         DateTime                 @updatedAt
 
@@ -1924,34 +2002,177 @@ model ConnexionFichiers {
   connectePar  User?        @relation(fields: [connecteParId], references: [id], onDelete: SetNull)
 }
 
+// Le compte d'une personne chez le fournisseur connecté (ADR 0044). Relaytour le
+// cherche par l'adresse de la personne, ou par l'adresse qu'un admin saisit pour
+// elle. Il n'entre jamais dans le dépôt de l'organisation.
+model CompteFournisseur {
+  id             String                @id @default(cuid())
+  organisationId String
+  userId         String
+  fournisseur    FournisseurFichiers
+  // Adresse saisie par un admin, quand la personne utilise un autre compte.
+  adresseSaisie  String?               @db.VarChar(320)
+  etat           EtatCompteFournisseur @default(ABSENT)
+  // Identifiant du compte chez le fournisseur, quand il est trouvé.
+  identifiant    String?               @db.VarChar(255)
+  verifieLe      DateTime?
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organisationId, fournisseur, userId])
+  @@index([userId])
+}
+
+// Un ajout ou un retrait d'accès chez le fournisseur, que Relaytour propose et
+// qu'un admin de l'organisation applique ou écarte (ADR 0044). Une seule
+// proposition en attente par dossier, personne et action.
+model PropositionAcces {
+  id             String            @id @default(cuid())
+  organisationId String
+  dossierLieId   String
+  userId         String
+  action         ActionProposition
+  etat           EtatProposition   @default(EN_ATTENTE)
+  erreur         String?           @db.VarChar(255)
+  creeLe         DateTime          @default(now())
+  traiteeParId   String?
+  traiteeLe      DateTime?
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  dossierLie   DossierLie   @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
+  user         User         @relation("PropositionPersonne", fields: [userId], references: [id], onDelete: Cascade)
+  traiteePar   User?        @relation("PropositionTraitee", fields: [traiteeParId], references: [id], onDelete: SetNull)
+
+  @@index([organisationId, dossierLieId, etat])
+  @@index([userId])
+}
+
+// Un droit que Relaytour a créé chez le fournisseur (ADR 0044) : un partage du
+// dossier, ou l'entrée dans un groupe. Relaytour ne retire que ces droits-là.
+model PermissionCreee {
+  id             String           @id @default(cuid())
+  organisationId String
+  dossierLieId   String
+  userId         String
+  // Identifiant du droit chez le fournisseur, ou « groupe: » suivi du groupe.
+  identifiant    String           @db.VarChar(255)
+  // Ce que Relaytour a créé : le rôle d'un partage, l'adresse qui l'a reçu, et le
+  // compte du fournisseur (pour un groupe, le compte qui y est entré). Relaytour
+  // ne retire le droit que s'il les retrouve tels quels chez le fournisseur.
+  role           RoleFournisseur?
+  adresse        String?          @db.VarChar(320)
+  compte         String?          @db.VarChar(255)
+  creeLe         DateTime         @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  dossierLie   DossierLie   @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([dossierLieId, userId])
+  @@index([organisationId])
+  @@index([userId])
+}
+
+// L'état d'une personne face aux droits d'un dossier lié, à la dernière
+// vérification (ADR 0044). Chaque vérification remplace les lignes du dossier. Un
+// accès en trop garde un nom, jamais d'adresse.
+model EtatAccesDossier {
+  id             String               @id @default(cuid())
+  organisationId String
+  dossierLieId   String
+  userId         String?
+  // Nom affiché d'un accès en trop, qui n'est pas une personne de Relaytour.
+  nom            String?              @db.VarChar(255)
+  etat           EtatAccesFournisseur
+  // Comment la personne a accès : « direct », « domaine », ou le nom du groupe.
+  via            String?              @db.VarChar(255)
+  verifieLe      DateTime             @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Cascade)
+  dossierLie   DossierLie   @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
+  user         User?        @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([organisationId, dossierLieId])
+  @@index([userId])
+}
+
 // Dossier de l'espace de fichiers lié à un périmètre, ou à toute l'activité
 // (perimetreId nul). Il se lit comme les fiches du même périmètre. Le lien survit
 // à une déconnexion : il attend une nouvelle connexion du même fournisseur.
 model DossierLie {
-  id             String              @id @default(cuid())
-  organisationId String
-  activiteId     String
-  perimetreId    String?
-  fournisseur    FournisseurFichiers
+  id                    String                  @id @default(cuid())
+  organisationId        String
+  activiteId            String
+  // Ancien périmètre unique (ADR 0038), gardé pour une version antérieure : il
+  // porte le premier périmètre des lecteurs, ou rien pour toute l'activité. Les
+  // droits se lisent dans `touteActivite` et les deux listes (ADR 0043).
+  perimetreId           String?
+  // Vrai : le dossier sert toute l'activité, et les listes restent vides.
+  touteActivite         Boolean                 @default(false)
+  // Les personnes que le dossier attend chez le fournisseur (ADR 0044).
+  attendus              AttendusDossier         @default(MEMBRES)
+  // Comment Relaytour propose leurs accès, et avec quel rôle (ADR 0044). Le
+  // groupe se choisit parmi ceux qui ont déjà un droit sur le dossier.
+  accesFournisseur      AccesFournisseurDossier @default(AUCUN)
+  groupeFournisseurId   String?                 @db.VarChar(255)
+  groupeFournisseurNom  String?                 @db.VarChar(255)
+  roleFournisseur       RoleFournisseur         @default(LECTURE)
+  // Vrai : les ajouts s'appliquent sans attendre un admin. Un retrait attend
+  // toujours un admin.
+  ajoutsAutomatiques    Boolean                 @default(false)
+  // Vrai : le fournisseur envoie son mail d'invitation lors d'un partage.
+  invitationFournisseur Boolean                 @default(false)
+  fournisseur           FournisseurFichiers
   // Bibliothèque de documents et dossier chez le fournisseur : des identifiants
   // stables, qui survivent à un renommage ou à un déplacement du dossier.
-  emplacement    String              @db.VarChar(255)
-  element        String              @db.VarChar(255)
+  emplacement           String                  @db.VarChar(255)
+  element               String                  @db.VarChar(255)
   // Nom du dossier lors du lien, affiché quand le fournisseur ne répond pas.
   // Un nom de dossier compte jusqu'à 255 caractères.
-  nom            String              @db.VarChar(255)
-  creeParId      String?
-  createdAt      DateTime            @default(now())
+  nom                   String                  @db.VarChar(255)
+  creeParId             String?
+  createdAt             DateTime                @default(now())
 
-  organisation Organisation     @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  activite     Activite         @relation(fields: [activiteId], references: [id], onDelete: Cascade)
-  perimetre    Perimetre?       @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
-  creePar      User?            @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+  organisation Organisation          @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite              @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  perimetre    Perimetre?            @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  creePar      User?                 @relation(fields: [creeParId], references: [id], onDelete: SetNull)
   ressources   RessourceFiche[]
+  perimetres   DossierLiePerimetre[]
+  groupes      DossierLieGroupe[]
+  etatsAcces   EtatAccesDossier[]
+  propositions PropositionAcces[]
+  permissions  PermissionCreee[]
 
   @@unique([organisationId, activiteId, perimetreId, emplacement, element])
   @@index([activiteId])
   @@index([perimetreId])
+}
+
+// Un périmètre lecteur d'un dossier lié (ADR 0043). Un périmètre archivé ensuite
+// garde la lecture, comme ses fiches.
+model DossierLiePerimetre {
+  dossierLieId String
+  perimetreId  String
+
+  dossierLie DossierLie @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
+  perimetre  Perimetre  @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+
+  @@id([dossierLieId, perimetreId])
+  @@index([perimetreId])
+}
+
+// Un groupe lecteur d'un dossier lié, désigné par sa clé dans l'activité du dossier.
+// Il vaut pour les périmètres non archivés du groupe, y compris ceux qui le
+// rejoignent plus tard (ADR 0043).
+model DossierLieGroupe {
+  dossierLieId String
+  groupe       String
+
+  dossierLie DossierLie @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
+
+  @@id([dossierLieId, groupe])
 }
 
 enum TypeRessource {
@@ -1964,25 +2185,31 @@ enum TypeRessource {
 // du périmètre de la fiche, ou celui de toute son activité : les lecteurs de la
 // fiche le lisent donc aussi. La ressource n'entre pas dans le Markdown.
 model RessourceFiche {
-  id              String        @id @default(cuid())
-  organisationId  String
-  ficheId         String
-  dossierLieId    String
+  id                 String        @id @default(cuid())
+  organisationId     String
+  ficheId            String
+  dossierLieId       String
   // Chemin de noms depuis le dossier lié (tableau de chaînes). Vide : le dossier
   // lié lui-même.
-  chemin          Json
+  chemin             Json
   // SHA-256 du chemin : il rend la ressource unique dans sa fiche.
-  empreinteChemin String        @db.Char(64)
-  type            TypeRessource
+  empreinteChemin    String        @db.Char(64)
+  type               TypeRessource
   // Nom lors du lien, affiché quand le fournisseur ne répond pas.
-  nom             String        @db.VarChar(255)
-  creeParId       String?
-  createdAt       DateTime      @default(now())
+  nom                String        @db.VarChar(255)
+  creeParId          String?
+  createdAt          DateTime      @default(now())
+  // Vrai : un admin de l'organisation ouvre ce document à toute personne qui lit
+  // la fiche, partage compris, sans ouvrir le reste du dossier lié (ADR 0043).
+  ouverteAuxLecteurs Boolean       @default(false)
+  ouverteParId       String?
+  ouverteLe          DateTime?
 
   organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   fiche        Fiche        @relation(fields: [ficheId], references: [id], onDelete: Cascade)
   dossierLie   DossierLie   @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
   creePar      User?        @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+  ouvertePar   User?        @relation("RessourceOuvertePar", fields: [ouverteParId], references: [id], onDelete: SetNull)
 
   @@unique([ficheId, dossierLieId, empreinteChemin])
   @@index([dossierLieId])

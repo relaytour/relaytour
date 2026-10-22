@@ -6,6 +6,7 @@ import { mettreEnFile } from '../../courriel/file.ts'
 import { purgerCandidatures } from '../../lib/appels.ts'
 import { purgerBenevoles } from '../../lib/benevoles.ts'
 import { revoquerEspaces } from '../../lib/espace-benevole.ts'
+import { verifierAcces } from '../../espace-fichiers/acces.ts'
 import { exporterFiches } from '../../espace-fichiers/export.ts'
 import { renouvelerAcces } from '../../espace-fichiers/index.ts'
 import { purgerDemandes } from '../../lib/demandes.ts'
@@ -52,6 +53,14 @@ export async function planificationProcessor(
     }
     return
   }
+  // La vérification des accès d'une organisation chez son fournisseur (ADR 0044),
+  // à la demande d'un admin ou après un changement.
+  if (job.name === 'acces-fournisseur') {
+    for (const organisation of await organisationsVisees(job.data)) {
+      await verifierAcces(organisation.id)
+    }
+    return
+  }
   // Chaque nuit, chaque espace de fichiers renouvelle son accès, qui expire sans
   // usage, puis réconcilie l'export de ses fiches. Une organisation en échec
   // n'empêche pas les suivantes.
@@ -70,6 +79,8 @@ export async function planificationProcessor(
       try {
         await renouvelerAcces(organisationId)
         await exporterFiches(organisationId, { verifier: true })
+        // Une connexion qui lit l'annuaire vérifie aussi les accès (ADR 0044).
+        await verifierAcces(organisationId)
       } catch (erreur) {
         journal.warn(
           {

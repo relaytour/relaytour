@@ -3393,6 +3393,27 @@ button.rt-carte-fiche {
 }
 
 /* Une ligne qui porte une action à droite : lier, retirer. */
+/* Vérification des accès chez le fournisseur (ADR 0044). */
+.rt-acces-equipes {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.rt-acces-ligne {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+/* Accès à un document lié d'une fiche partagée (ADR 0043). */
+.rt-acces-document {
+  max-width: 340px;
+}
+
+.rt-acces-document p {
+  margin: 0 0 10px;
+}
+
 .rt-explorateur-element {
   display: flex;
   align-items: center;

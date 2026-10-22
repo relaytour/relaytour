@@ -394,7 +394,7 @@ function AssistantImport({
               showIcon
               style={{ marginBottom: 16 }}
               message="Simulation : rien n’a encore changé."
-              description="La conversion d’un document Word perd une partie de sa mise en forme. Les fiches s’écrivent ensuite en Markdown, et l’export vers l’espace de fichiers aussi."
+              description="La conversion d’un document Word perd une partie de sa mise en forme. Les fiches s’écrivent ensuite en Markdown, et l’export vers le fournisseur cloud aussi."
             />
           )}
           <RapportImport rapport={rapport} fait={fait} />
@@ -441,8 +441,8 @@ export default function ImportFiches({ actif }: { actif: boolean }) {
   return (
     <Panneau titre="Importer des fiches" icone={<ImportOutlined />}>
       <p className="rt-texte-secondaire">
-        Reprenez les fiches que l’association range déjà dans son espace de
-        fichiers : des fichiers Markdown, texte ou Word. L’import se simule
+        Reprenez les fiches que l’association range déjà chez son fournisseur
+        cloud : des fichiers Markdown, texte ou Word. L’import se simule
         d’abord. Une fiche modifiée dans Relaytour n’est jamais remplacée.
       </p>
       <Button

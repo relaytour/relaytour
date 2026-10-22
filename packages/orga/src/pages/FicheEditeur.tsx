@@ -22,6 +22,7 @@ import EditeurMarkdown, {
   type ModeEditeur,
 } from '../composants/EditeurMarkdown'
 import ChampConcerneAussi from '../composants/ChampConcerneAussi'
+import DocumentsReserves from '../composants/DocumentsReserves'
 import GuideMarkdown from '../composants/GuideMarkdown'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
@@ -581,6 +582,14 @@ function Formulaire({
               perimetreDeLaFiche={perimetreDeLaFiche}
             />
           </Form.Item>
+        )}
+        {perimetreDeLaFiche !== null && fiche && (
+          <DocumentsReserves
+            slug={fiche.slug}
+            concerne={concerne}
+            mentions={mentions}
+            perimetreDeLaFiche={perimetreDeLaFiche}
+          />
         )}
 
         {!creation && (
