@@ -6,7 +6,7 @@ import gabaritBrut from '../../../../content/exemple/modeles/fiche.md?raw'
 export const LIBELLES_SOURCE: Record<SourceFiche, string> = {
   GIT: 'Dépôt',
   APP: 'Application',
-  ESPACE_FICHIERS: 'Espace de fichiers',
+  ESPACE_FICHIERS: 'Fournisseur cloud',
 }
 
 /** Le gabarit commun (content/orga/modeles/fiche.md), sans son en-tête. */

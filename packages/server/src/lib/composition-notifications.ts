@@ -288,6 +288,9 @@ function phrase(
     // le cite pas (ADR 0041).
     case 'CANDIDATURE_RECUE':
       return `Une candidature de bénévole attend votre revue${activite}`
+    // Les propositions ne nomment personne ici : l'écran les détaille (ADR 0044).
+    case 'ACCES_FOURNISSEUR_A_VALIDER':
+      return 'Des accès chez le fournisseur cloud attendent votre validation'
     case 'DEMANDE_ACCEPTEE':
       return `${acteur} a accepté une demande pour rejoindre l’équipe${activite}`
     case 'DEMANDE_REFUSEE':
@@ -455,6 +458,8 @@ function lien(n: NotificationLue, c: Contexte): string {
     case 'PERSONNE_ARCHIVEE':
     case 'PERSONNE_RETABLIE':
       return `/${slug}/admin/annuaire`
+    case 'ACCES_FOURNISSEUR_A_VALIDER':
+      return `/${slug}/admin/espace-fichiers?onglet=acces`
     case 'PLACE_MODIFIEE':
       return `/${slug}`
     case 'FICHE_CREEE':

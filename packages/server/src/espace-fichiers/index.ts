@@ -40,6 +40,7 @@ import {
   FournisseurIndisponible,
   type EspaceFichiers,
   type Fournisseur,
+  type Portee,
 } from './types.ts'
 
 // Espace de fichiers d'une organisation (ADR 0038) : configuration des
@@ -176,6 +177,8 @@ export async function enregistrerConnexion(donnees: {
   compte: string
   secret: string
   connecteParId: string
+  /** Les autorisations accordées au-delà des fichiers (ADR 0044). */
+  portee?: Portee
 }): Promise<{ id: string; jeton: string }> {
   const cle = await cleDeChiffrement()
   if (cle === null) throw new EspaceIndisponible()
@@ -201,6 +204,7 @@ export async function enregistrerConnexion(donnees: {
       jeton: chiffrer(donnees.secret, cle),
       etat: 'ACTIVE' as const,
       connecteParId: donnees.connecteParId,
+      portee: donnees.portee ?? 'FICHIERS',
       ...(autreFournisseur
         ? {
             exportEmplacement: null,
@@ -282,7 +286,7 @@ export class EspaceIndisponible extends Error {}
 export function erreurEspace(erreur: unknown): Error {
   if (erreur instanceof EspaceIndisponible || erreur instanceof AccesRetire) {
     return new GraphQLError(
-      'L’espace de fichiers n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau.',
+      'Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau.',
       { extensions: { code: 'ESPACE_FICHIERS_INDISPONIBLE' } }
     )
   }
@@ -292,7 +296,7 @@ export function erreurEspace(erreur: unknown): Error {
       'Le fournisseur de l’espace de fichiers ne répond pas.'
     )
     return new GraphQLError(
-      'L’espace de fichiers ne répond pas. Réessayez dans quelques instants.',
+      'Le fournisseur cloud ne répond pas. Réessayez dans quelques instants.',
       { extensions: { code: 'FOURNISSEUR_INDISPONIBLE' } }
     )
   }
@@ -328,6 +332,7 @@ async function renouveler(
       organisationId: true,
       fournisseur: true,
       methode: true,
+      portee: true,
     },
   })
   if (
@@ -384,13 +389,13 @@ async function renouveler(
  * remplace l'ancien quand le fournisseur le fait tourner.
  */
 async function obtenirJetons(
-  connexion: { fournisseur: Fournisseur; methode: Methode },
+  connexion: { fournisseur: Fournisseur; methode: Methode; portee: Portee },
   secret: string
 ): Promise<{ acces: string; rafraichissement: string; expireLe: number }> {
   if (connexion.fournisseur === 'SHAREPOINT') {
     const configuration = await configurationMicrosoft()
     if (configuration === null) throw new EspaceIndisponible()
-    return rafraichir(configuration, secret)
+    return rafraichir(configuration, secret, connexion.portee)
   }
   if (connexion.fournisseur === 'DROPBOX') {
     const configuration = await configurationDropbox()
@@ -482,6 +487,7 @@ export async function ouvrirEspace(organisationId: string): Promise<{
       methode: true,
       etat: true,
       jeton: true,
+      portee: true,
     },
   })
   if (connexion === null || connexion.etat !== 'ACTIVE') {
@@ -491,23 +497,32 @@ export async function ouvrirEspace(organisationId: string): Promise<{
     return { espace: fabriqueDeTest(organisationId), connexionId: connexion.id }
   }
   const jeton = jetonDe(connexion.id, connexion.jeton)
+  // L'annuaire suit la portée accordée à la connexion (ADR 0044).
+  const acces = {
+    annuaire: connexion.portee !== 'FICHIERS',
+    gestion: connexion.portee === 'GESTION',
+  }
   switch (connexion.fournisseur) {
     case 'SHAREPOINT':
-      return { espace: espaceSharePoint(jeton), connexionId: connexion.id }
+      return {
+        espace: espaceSharePoint(jeton, acces),
+        connexionId: connexion.id,
+      }
     case 'GOOGLE_DRIVE':
       return {
         espace: espaceGoogleDrive(jeton, {
           compteService: connexion.methode === 'COMPTE_SERVICE',
+          ...acces,
         }),
         connexionId: connexion.id,
       }
     case 'DROPBOX':
-      return { espace: espaceDropbox(jeton), connexionId: connexion.id }
+      return { espace: espaceDropbox(jeton, acces), connexionId: connexion.id }
     case 'NEXTCLOUD': {
       const configuration = await configurationNextcloud()
       if (configuration === null) throw new EspaceIndisponible()
       return {
-        espace: espaceNextcloud(jeton, configuration),
+        espace: espaceNextcloud(jeton, configuration, acces),
         connexionId: connexion.id,
       }
     }
@@ -536,6 +551,8 @@ export interface EtatConnexion {
   userId: string
   fournisseur: Fournisseur
   verificateur: string
+  /** Les autorisations demandées au-delà des fichiers (ADR 0044). */
+  portee?: Portee
 }
 
 const DUREE_ETAT_S = 10 * 60

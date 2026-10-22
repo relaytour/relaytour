@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE `PermissionCreee` ADD COLUMN `adresse` VARCHAR(320) NULL,
+    ADD COLUMN `compte` VARCHAR(255) NULL,
+    ADD COLUMN `role` ENUM('LECTURE', 'ECRITURE') NULL;
+
+-- AlterTable
+ALTER TABLE `PropositionAcces` MODIFY `etat` ENUM('EN_ATTENTE', 'EN_COURS', 'APPLIQUEE', 'ECARTEE', 'ECHEC') NOT NULL DEFAULT 'EN_ATTENTE';

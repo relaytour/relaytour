@@ -48,6 +48,7 @@ export function famillePush(type: TypeNotification): FamillePush | null {
     case 'ADMIN_ORGANISATION_RETIRE':
     case 'PERSONNE_ARCHIVEE':
     case 'PERSONNE_RETABLIE':
+    case 'ACCES_FOURNISSEUR_A_VALIDER':
       return 'equipe'
     // Une réunion où la personne est convoquée (ADR 0037).
     case 'REUNION_CONVOQUEE':

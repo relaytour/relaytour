@@ -301,7 +301,10 @@ export default function ConnexionEspace({
 
   const connecter = async (fournisseur: FournisseurFichiers) => {
     try {
-      const r = await commencer({ variables: { fournisseur } })
+      // Une reconnexion garde les autorisations accordées (ADR 0044).
+      const portee =
+        connexion?.fournisseur === fournisseur ? connexion.portee : null
+      const r = await commencer({ variables: { fournisseur, portee } })
       const adresse = r.data?.commencerConnexionEspaceFichiers
       if (adresse) window.location.assign(adresse)
     } catch (e) {
@@ -346,7 +349,7 @@ export default function ConnexionEspace({
         <Alert
           type="info"
           showIcon
-          message="L’hébergeur de cette installation n’a ouvert aucun espace de fichiers."
+          message="L’hébergeur de cette installation n’a ouvert aucun fournisseur cloud."
         />
       ) : connexion === null ? (
         <>
@@ -366,7 +369,7 @@ export default function ConnexionEspace({
               type="warning"
               showIcon
               style={{ marginBottom: 16 }}
-              message={`${nom(connexion.fournisseur)} a retiré l’accès. Reconnectez l’espace de fichiers pour que les membres retrouvent leurs documents.`}
+              message={`${nom(connexion.fournisseur)} a retiré l’accès. Reconnectez le fournisseur cloud pour que les membres retrouvent leurs documents.`}
             />
           )}
           <Descriptions
@@ -404,6 +407,16 @@ export default function ConnexionEspace({
                   ),
               },
               {
+                key: 'acces',
+                label: 'Vérification des accès',
+                children:
+                  connexion.portee === 'FICHIERS'
+                    ? 'Non activée'
+                    : connexion.portee === 'GESTION'
+                      ? 'Activée, avec la gestion des accès'
+                      : 'Activée',
+              },
+              {
                 key: 'date',
                 label: 'Connecté le',
                 children: `${jourDeLInstant(connexion.connecteeLe)}${connexion.connecteePar ? ` par ${connexion.connecteePar}` : ''}`,
@@ -420,7 +433,7 @@ export default function ConnexionEspace({
           <div className="rt-puces" style={{ marginTop: 16 }}>
             {boutons(false)}
             <Popconfirm
-              title="Déconnecter l’espace de fichiers ?"
+              title="Déconnecter le fournisseur cloud ?"
               description="Les dossiers liés restent, mais les membres ne lisent plus leurs documents jusqu’à une nouvelle connexion. L’export des fiches s’arrête."
               okText="Déconnecter"
               cancelText="Annuler"

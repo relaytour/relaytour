@@ -191,7 +191,7 @@ function Mise({ session }: { session: Session }) {
                 },
               ]
             : []),
-          { key: lien('/fiches'), icon: <BookOutlined />, label: 'Fiches' },
+          { key: lien('/fiches'), icon: <BookOutlined />, label: 'Ressources' },
         ]),
     {
       key: lien('/preferences'),
@@ -318,7 +318,7 @@ function Mise({ session }: { session: Session }) {
                     {
                       key: lien('/admin/espace-fichiers'),
                       icon: <CloudOutlined />,
-                      label: 'Espace de fichiers',
+                      label: 'Fournisseur cloud',
                     },
                   ]
                 : []),

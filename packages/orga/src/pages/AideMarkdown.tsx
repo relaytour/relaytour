@@ -12,7 +12,7 @@ export default function AideMarkdown() {
       <Titre
         avant={
           <nav aria-label="Fil d’Ariane" className="rt-ariane">
-            <Link to={lien('/fiches')}>Fiches</Link>
+            <Link to={lien('/fiches')}>Ressources</Link>
             <span aria-hidden="true">/</span>
             <span>Aide</span>
           </nav>
