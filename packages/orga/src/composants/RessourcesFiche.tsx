@@ -22,8 +22,8 @@ type Ressource = NonNullable<
 >['ressources'][number]
 
 /**
- * Choix d'une ressource à lier : d'abord un dossier lié du périmètre de la fiche
- * ou de toute l'activité, puis un fichier ou un dossier dans ce dossier.
+ * Choix d'un document à lier : d'abord un dossier lié qui sert le périmètre de la
+ * fiche ou toute l'activité, puis un fichier ou un dossier dans ce dossier.
  */
 function LierRessource({
   ficheId,
@@ -36,7 +36,7 @@ function LierRessource({
   ouvert: boolean
   onFermer: () => void
 }) {
-  const { activite } = useActivite()
+  const { activite, libelleGroupe } = useActivite()
   const { message } = App.useApp()
   const [dossier, setDossier] = useState<DossierAffiche | null>(null)
   const dossiers = useQuery(DOSSIERS_LIES, {
@@ -47,9 +47,10 @@ function LierRessource({
     refetchQueries: ['RessourcesFiche'],
   })
 
-  // Une fiche commune n'admet que les dossiers de toute l'activité.
+  // Le serveur ne rend que les dossiers qui servent le périmètre de la fiche. Une
+  // fiche commune n'admet que les dossiers de toute l'activité.
   const compatibles = (dossiers.data?.dossiersLies ?? []).filter(
-    d => d.perimetre === null || d.perimetre?.id === perimetreId
+    d => perimetreId !== null || d.touteActivite
   )
 
   const fermer = () => {
@@ -83,7 +84,7 @@ function LierRessource({
         dossiers.loading && !dossiers.data ? (
           <Skeleton active paragraph={{ rows: 3 }} />
         ) : compatibles.length === 0 ? (
-          <Empty description="Aucun dossier du fournisseur cloud n’est lié à ce périmètre ni à toute l’activité." />
+          <Empty description="Aucun dossier du fournisseur cloud ne sert ce périmètre ni toute l’activité." />
         ) : (
           <>
             <p className="rt-texte-secondaire">
@@ -101,7 +102,12 @@ function LierRessource({
                     <span className="rt-explorateur-nom">
                       {d.nom}
                       <span className="rt-explorateur-detail">
-                        {d.perimetre ? d.perimetre.nom : 'Toute l’activité'}
+                        {d.touteActivite
+                          ? 'Toute l’activité'
+                          : [
+                              ...d.groupes.map(g => libelleGroupe(g, true)),
+                              ...d.perimetres.map(p => p.nom),
+                            ].join(', ')}
                       </span>
                     </span>
                   </button>
@@ -187,7 +193,7 @@ export default function RessourcesFiche({
 
   const ressources = data?.fiche?.ressources ?? []
   const lienPossible = (dossiers.data?.dossiersLies ?? []).some(
-    d => d.perimetre === null || d.perimetre?.id === perimetreId
+    d => perimetreId !== null || d.touteActivite
   )
   if (ressources.length === 0 && !(peutModifier && lienPossible)) return null
 

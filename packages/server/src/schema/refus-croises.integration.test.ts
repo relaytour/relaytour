@@ -463,6 +463,7 @@ beforeAll(async () => {
         emplacement: 'bibliotheque',
         element: 'dossier-natation',
         nom: 'Natation',
+        perimetres: { create: { perimetreId: a.perimetre } },
       },
     })
   ).id
@@ -1599,8 +1600,23 @@ const CAS: Cas[] = [
   {
     operation: 'lierDossier',
     query:
-      'mutation ($a: ID!, $p: ID) { lierDossier(activiteId: $a, perimetreId: $p, emplacement: "bibliotheque", chemin: ["Natation"]) { id } }',
+      'mutation ($a: ID!, $p: ID!) { lierDossier(activiteId: $a, lecteurs: { touteActivite: false, perimetreIds: [$p], groupes: [] }, emplacement: "bibliotheque", chemin: ["Natation"]) { id } }',
     variables: () => ({ a: a.activite, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  // Les lecteurs d'un dossier lié (ADR 0043).
+  {
+    operation: 'modifierDossierLie',
+    query:
+      'mutation ($id: ID!) { modifierDossierLie(id: $id, lecteurs: { touteActivite: true, perimetreIds: [], groupes: [] }) { id } }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'effetsLecteursDossier',
+    query:
+      'query ($id: ID!) { effetsLecteursDossier(id: $id, lecteurs: { touteActivite: true, perimetreIds: [], groupes: [] }) { documentsMasques } }',
+    variables: () => ({ id: a.dossierLie }),
     attente: INTERDIT,
   },
   {

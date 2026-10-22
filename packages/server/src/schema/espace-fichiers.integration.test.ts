@@ -111,19 +111,44 @@ const code = (r: Awaited<ReturnType<typeof executer>>) =>
   r.errors?.[0]?.extensions?.code
 
 const ESPACE_FICHIERS = `{ espaceFichiers { connexionsPossibles { fournisseur methode } connexion { fournisseur compte etat } } }`
-const LIER = `mutation ($a: ID!, $p: ID, $c: [String!]!) {
-  lierDossier(activiteId: $a, perimetreId: $p, emplacement: "bibliotheque", chemin: $c) { id nom disponible perimetre { slug } }
+const LIER = `mutation ($a: ID!, $l: LecteursDossierInput!, $c: [String!]!) {
+  lierDossier(activiteId: $a, lecteurs: $l, emplacement: "bibliotheque", chemin: $c) { id nom disponible touteActivite perimetres { slug } groupes }
 }`
+const MODIFIER = `mutation ($id: ID!, $l: LecteursDossierInput!, $n: String) {
+  modifierDossierLie(id: $id, lecteurs: $l, nom: $n) { id nom touteActivite perimetres { slug } groupes }
+}`
+const EFFETS = `query ($id: ID!, $l: LecteursDossierInput!) {
+  effetsLecteursDossier(id: $id, lecteurs: $l) { documentsMasques fiches { titre } }
+}`
+
+/** Les lecteurs d'un dossier lié : un périmètre, ou toute l'activité sans périmètre. */
+const lecteurs = (
+  perimetreIds: string | string[] | null,
+  groupes: string[] = []
+) => ({
+  touteActivite: perimetreIds === null && groupes.length === 0,
+  perimetreIds:
+    perimetreIds === null
+      ? []
+      : Array.isArray(perimetreIds)
+        ? perimetreIds
+        : [perimetreIds],
+  groupes,
+})
 const DOSSIERS = `query ($a: ID, $p: ID) { dossiersLies(activiteId: $a, perimetreId: $p) { id nom disponible } }`
 const CONTENU = `query ($id: ID!, $c: [String!]!) {
   contenuDossierLie(id: $id, chemin: $c) { complet elements { elementId nom dossier taille apercu lienWeb } }
 }`
 const PARCOURIR = `query ($c: [String!]!) { parcourirEspaceFichiers(emplacement: "bibliotheque", chemin: $c) { complet elements { nom dossier } } }`
 
-async function lier(chemin: string[], perimetreId: string | null) {
+async function lier(
+  chemin: string[],
+  perimetreId: string | string[] | null,
+  groupes: string[] = []
+) {
   const r = await executer(ids.admin, LIER, {
     a: ids.activite,
-    p: perimetreId,
+    l: lecteurs(perimetreId, groupes),
     c: chemin,
   })
   expect(r.errors).toBeUndefined()
@@ -185,7 +210,16 @@ beforeAll(async () => {
         organisationId: ids.org,
         slug,
         nom: 'Rencontres',
-        groupes: [{ cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' }],
+        groupes: [
+          { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },
+          { cle: 'pole', libelle: 'Pôle', libellePluriel: 'Pôles' },
+          // Un groupe déclaré sans aucun périmètre.
+          {
+            cle: 'commission',
+            libelle: 'Commission',
+            libellePluriel: 'Commissions',
+          },
+        ],
       },
     })
   ).id
@@ -318,7 +352,7 @@ describe('connexion', () => {
   it('refuse de lier un dossier sans espace connecté', async () => {
     const r = await executer(ids.admin, LIER, {
       a: ids.activite,
-      p: ids.natation,
+      l: lecteurs(ids.natation),
       c: ['Natation'],
     })
     expect(code(r)).toBe('ESPACE_FICHIERS_INDISPONIBLE')
@@ -356,7 +390,7 @@ describe('dossiers liés', () => {
   })
 
   it('ne se lient que par un admin de l’organisation, dans son organisation', async () => {
-    const variables = { a: ids.activite, p: ids.natation, c: ['RH'] }
+    const variables = { a: ids.activite, l: lecteurs(ids.natation), c: ['RH'] }
     for (const [qui, organisation] of [
       [ids.adminActivite, slug],
       [ids.nageuse, slug],
@@ -374,31 +408,46 @@ describe('dossiers liés', () => {
   it('refuse une bibliothèque entière, un fichier ou un chemin qui sort de sa base', async () => {
     const racine = await executer(ids.admin, LIER, {
       a: ids.activite,
-      p: null,
+      l: lecteurs(null),
       c: [],
     })
     expect(code(racine)).toBe('SAISIE_INVALIDE')
     const fichier = await executer(ids.admin, LIER, {
       a: ids.activite,
-      p: null,
+      l: lecteurs(null),
       c: ['Natation', 'Plan.pdf'],
     })
     expect(code(fichier)).toBe('SAISIE_INVALIDE')
     const sortie = await executer(ids.admin, LIER, {
       a: ids.activite,
-      p: null,
+      l: lecteurs(null),
       c: ['Natation', '..', 'RH'],
     })
     expect(code(sortie)).toBe('SAISIE_INVALIDE')
   })
 
-  it('garde un seul lien pour le même dossier et le même périmètre', async () => {
-    expect(await lier(['Natation'], ids.natation)).toBe(ids.dossierNatation)
+  it('refuse un second lien du même dossier dans l’activité', async () => {
+    const r = await executer(ids.admin, LIER, {
+      a: ids.activite,
+      l: lecteurs(ids.basket),
+      c: ['Natation'],
+    })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(
+      await prisma.dossierLie.count({ where: { element: 'd-natation' } })
+    ).toBe(1)
   })
 
   it('ne crée qu’un lien pour deux demandes simultanées, même sans périmètre', async () => {
-    const [a, b] = await Promise.all([lier(['RH'], null), lier(['RH'], null)])
-    expect(a).toBe(b)
+    const variables = { a: ids.activite, l: lecteurs(null), c: ['RH'] }
+    const reponses = await Promise.all([
+      executer(ids.admin, LIER, variables),
+      executer(ids.admin, LIER, variables),
+    ])
+    expect(reponses.map(r => code(r) ?? 'lie').sort()).toEqual([
+      'SAISIE_INVALIDE',
+      'lie',
+    ])
     expect(await prisma.dossierLie.count({ where: { element: 'd-rh' } })).toBe(
       1
     )
@@ -885,6 +934,249 @@ describe('ressources liées à une fiche', () => {
     expect(
       (await ressourcesLues(ids.nageuse, ficheNatation)).map(r => r.nom)
     ).toEqual(['Plan.pdf', 'Natation'])
+  })
+})
+
+// ── Lecteurs d'un dossier lié (ADR 0043) ─────────────────────────────────────
+
+describe('lecteurs d’un dossier lié', () => {
+  const perso = {
+    accueil: '',
+    accueillante: '',
+    voile: '',
+    navigatrice: '',
+    ailleurs: '',
+    rh: '',
+  }
+  const lit = async (qui: string, dossier: string) =>
+    code(await executer(qui, CONTENU, { id: dossier, c: [] }))
+
+  beforeAll(async () => {
+    const perimetre = (
+      slugPerimetre: string,
+      groupe: string,
+      activiteId = ids.activite
+    ) =>
+      prisma.perimetre.create({
+        data: {
+          organisationId: ids.org,
+          activiteId,
+          slug: `${slugPerimetre}-${s}`,
+          nom: slugPerimetre,
+          type: groupe === 'pole' ? 'POLE' : 'SPORT',
+          groupe,
+        },
+      })
+    perso.accueil = (await perimetre('accueil', 'pole')).id
+    const autre = await prisma.activite.create({
+      data: {
+        organisationId: ids.org,
+        slug: `ailleurs-${s}`,
+        nom: 'Ailleurs',
+        groupes: [],
+      },
+    })
+    perso.ailleurs = (await perimetre('ailleurs', 'sport', autre.id)).id
+    perso.accueillante = randomUUID()
+    await prisma.user.create({
+      data: {
+        id: perso.accueillante,
+        email: `accueillante-${slug}@exemple.fr`,
+        name: `accueillante ${s}`,
+        appartenances: { create: { organisationId: ids.org, role: 'MEMBRE' } },
+        affectations: {
+          create: { perimetreId: perso.accueil, editionId: ids.edition },
+        },
+      },
+    })
+    perso.rh = await lier(['RH'], [], ['sport'])
+  })
+
+  // Les blocs suivants ne connaissent que les dossiers du début.
+  afterAll(async () => {
+    await prisma.dossierLie.delete({ where: { id: perso.rh } })
+  })
+
+  it('servent les périmètres d’un groupe, et refusent les autres', async () => {
+    const lien = await prisma.dossierLie.findUniqueOrThrow({
+      where: { id: perso.rh },
+      include: { groupes: true, perimetres: true },
+    })
+    expect(lien.touteActivite).toBe(false)
+    expect(lien.groupes.map(g => g.groupe)).toEqual(['sport'])
+    expect(lien.perimetres).toEqual([])
+    // L'ancienne colonne porte un périmètre du groupe, jamais toute l'activité.
+    expect([ids.natation, ids.basket]).toContain(lien.perimetreId)
+    expect(await lit(ids.nageuse, perso.rh)).toBeUndefined()
+    expect(await lit(ids.basketteur, perso.rh)).toBeUndefined()
+    expect(await lit(perso.accueillante, perso.rh)).toBe('FORBIDDEN')
+    expect(await lit(ids.membre, perso.rh)).toBe('FORBIDDEN')
+    const dossiers = await executer(ids.adminActivite, DOSSIERS, {
+      a: ids.activite,
+      p: perso.accueil,
+    })
+    expect(
+      (dossiers.data as { dossiersLies: { nom: string }[] }).dossiersLies.map(
+        d => d.nom
+      )
+    ).toEqual(['Commun'])
+  })
+
+  it('valent pour un périmètre qui rejoint le groupe, et plus après son archivage', async () => {
+    perso.voile = (
+      await prisma.perimetre.create({
+        data: {
+          organisationId: ids.org,
+          activiteId: ids.activite,
+          slug: `voile-${s}`,
+          nom: 'voile',
+          type: 'SPORT',
+          groupe: 'sport',
+        },
+      })
+    ).id
+    perso.navigatrice = randomUUID()
+    await prisma.user.create({
+      data: {
+        id: perso.navigatrice,
+        email: `navigatrice-${slug}@exemple.fr`,
+        name: `navigatrice ${s}`,
+        appartenances: { create: { organisationId: ids.org, role: 'MEMBRE' } },
+        affectations: {
+          create: { perimetreId: perso.voile, editionId: ids.edition },
+        },
+      },
+    })
+    expect(await lit(perso.navigatrice, perso.rh)).toBeUndefined()
+    await prisma.perimetre.update({
+      where: { id: perso.voile },
+      data: { archivedAt: new Date() },
+    })
+    expect(await lit(perso.navigatrice, perso.rh)).toBe('FORBIDDEN')
+  })
+
+  it('refusent une liste vide, mêlée, un groupe inconnu ou vide', async () => {
+    for (const l of [
+      { touteActivite: false, perimetreIds: [], groupes: [] },
+      { touteActivite: true, perimetreIds: [ids.natation], groupes: [] },
+      lecteurs([], ['inconnu']),
+      lecteurs([], ['commission']),
+    ]) {
+      expect(
+        code(await executer(ids.admin, MODIFIER, { id: perso.rh, l }))
+      ).toBe('SAISIE_INVALIDE')
+    }
+  })
+
+  it('refusent un périmètre archivé, d’une autre activité ou d’une autre organisation', async () => {
+    for (const perimetreId of [perso.voile, perso.ailleurs, 'inconnu']) {
+      expect(
+        code(
+          await executer(ids.admin, MODIFIER, {
+            id: perso.rh,
+            l: lecteurs(perimetreId),
+          })
+        )
+      ).toBe('FORBIDDEN')
+    }
+  })
+
+  it('se modifient par un admin de l’organisation seulement', async () => {
+    const variables = { id: perso.rh, l: lecteurs(perso.accueil) }
+    for (const [qui, organisation] of [
+      [ids.adminActivite, slug],
+      [ids.nageuse, slug],
+      [ids.externe, slugAutre],
+      [ids.externe, slug],
+    ] as const) {
+      expect(code(await executer(qui, MODIFIER, variables, organisation))).toBe(
+        'FORBIDDEN'
+      )
+    }
+    expect(
+      (
+        await prisma.dossierLie.findUniqueOrThrow({
+          where: { id: perso.rh },
+          include: { groupes: true },
+        })
+      ).groupes
+    ).toHaveLength(1)
+    const r = await executer(ids.admin, MODIFIER, {
+      ...variables,
+      n: 'Ressources humaines',
+    })
+    expect(r.errors).toBeUndefined()
+    expect(r.data).toEqual({
+      modifierDossierLie: {
+        id: perso.rh,
+        nom: 'Ressources humaines',
+        touteActivite: false,
+        perimetres: [{ slug: `accueil-${s}` }],
+        groupes: [],
+      },
+    })
+    expect(await lit(perso.accueillante, perso.rh)).toBeUndefined()
+    expect(await lit(ids.nageuse, perso.rh)).toBe('FORBIDDEN')
+    expect(
+      (await prisma.dossierLie.findUniqueOrThrow({ where: { id: perso.rh } }))
+        .perimetreId
+    ).toBe(perso.accueil)
+  })
+
+  it('annoncent les documents liés qu’une modification masquerait', async () => {
+    expect(
+      (
+        await executer(ids.admin, MODIFIER, {
+          id: perso.rh,
+          l: lecteurs([], ['sport']),
+        })
+      ).errors
+    ).toBeUndefined()
+    const lien = await executer(ids.admin, LIER_RESSOURCE, {
+      f: ids.ficheNatation,
+      d: perso.rh,
+      c: ['Salaires.txt'],
+    })
+    expect(lien.errors).toBeUndefined()
+    const effets = async (l: ReturnType<typeof lecteurs>) => {
+      const r = await executer(ids.admin, EFFETS, { id: perso.rh, l })
+      expect(r.errors).toBeUndefined()
+      return (r.data as { effetsLecteursDossier: unknown })
+        .effetsLecteursDossier
+    }
+    expect(await effets(lecteurs(perso.accueil))).toEqual({
+      documentsMasques: 1,
+      fiches: [{ titre: `natation-${s}` }],
+    })
+    expect(await effets(lecteurs(null))).toEqual({
+      documentsMasques: 0,
+      fiches: [],
+    })
+    expect(await effets(lecteurs(ids.natation))).toEqual({
+      documentsMasques: 0,
+      fiches: [],
+    })
+    expect(
+      code(
+        await executer(ids.adminActivite, EFFETS, {
+          id: perso.rh,
+          l: lecteurs(null),
+        })
+      )
+    ).toBe('FORBIDDEN')
+    // La modification masque le document de la fiche, puis le rend.
+    await executer(ids.admin, MODIFIER, {
+      id: perso.rh,
+      l: lecteurs(perso.accueil),
+    })
+    const noms = async () =>
+      (await ressourcesLues(ids.admin, `natation-${s}`)).map(r => r.nom)
+    expect(await noms()).not.toContain('Salaires.txt')
+    await executer(ids.admin, MODIFIER, {
+      id: perso.rh,
+      l: lecteurs([], ['sport']),
+    })
+    expect(await noms()).toContain('Salaires.txt')
   })
 })
 

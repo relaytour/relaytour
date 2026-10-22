@@ -54,10 +54,14 @@ export async function construireExport(organisationId: string) {
             },
           },
           perimetres: { orderBy: [{ ordre: 'asc' }, { slug: 'asc' }] },
-          // L'espace de fichiers (ADR 0038) : les dossiers liés, sans jeton.
+          // Le fournisseur cloud (ADR 0038) : les dossiers liés et leurs
+          // lecteurs (ADR 0043), sans jeton.
           dossiersLies: {
             orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
-            include: { perimetre: { select: { slug: true } } },
+            include: {
+              perimetres: { include: { perimetre: { select: { slug: true } } } },
+              groupes: { select: { groupe: true } },
+            },
           },
           fiches: {
             orderBy: { slug: 'asc' },
@@ -367,7 +371,9 @@ export async function construireExport(organisationId: string) {
         archive: p.archivedAt !== null,
       })),
       dossiersLies: a.dossiersLies.map(d => ({
-        perimetre: d.perimetre?.slug ?? null,
+        touteActivite: d.touteActivite,
+        perimetres: d.perimetres.map(p => p.perimetre.slug).sort(),
+        groupes: d.groupes.map(g => g.groupe).sort(),
         fournisseur: d.fournisseur,
         emplacement: d.emplacement,
         element: d.element,

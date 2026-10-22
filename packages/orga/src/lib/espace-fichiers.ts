@@ -169,11 +169,59 @@ export const DOSSIERS_LIES = graphql(`
       nom
       disponible
       fournisseur
-      perimetre {
+      touteActivite
+      perimetres {
         id
         slug
         nom
         couleur
+      }
+      groupes
+      lecteursLus {
+        touteActivite
+        perimetres {
+          id
+          slug
+          nom
+          couleur
+        }
+        groupes
+      }
+    }
+  }
+`)
+
+/** Les lecteurs d'un dossier lié (ADR 0043) : toute l'activité, ou une liste. */
+export interface Lecteurs {
+  touteActivite: boolean
+  perimetres: string[]
+  groupes: string[]
+}
+
+export const TOUTE_L_ACTIVITE: Lecteurs = {
+  touteActivite: true,
+  perimetres: [],
+  groupes: [],
+}
+
+/** Les lecteurs sous la forme qu'attend le serveur. */
+export const versSaisie = (l: Lecteurs) => ({
+  touteActivite: l.touteActivite,
+  perimetreIds: l.touteActivite ? [] : l.perimetres,
+  groupes: l.touteActivite ? [] : l.groupes,
+})
+
+/** Vrai quand les lecteurs désignent toute l'activité ou au moins un élément. */
+export const lecteursValides = (l: Lecteurs) =>
+  l.touteActivite || l.perimetres.length + l.groupes.length > 0
+
+export const EFFETS_LECTEURS = graphql(`
+  query EffetsLecteursDossier($id: ID!, $lecteurs: LecteursDossierInput!) {
+    effetsLecteursDossier(id: $id, lecteurs: $lecteurs) {
+      documentsMasques
+      fiches {
+        id
+        titre
       }
     }
   }
@@ -232,17 +280,35 @@ export const PARCOURIR = graphql(`
 export const LIER_DOSSIER = graphql(`
   mutation LierDossier(
     $activiteId: ID!
-    $perimetreId: ID
+    $lecteurs: LecteursDossierInput!
     $emplacement: String!
     $chemin: [String!]!
   ) {
     lierDossier(
       activiteId: $activiteId
-      perimetreId: $perimetreId
+      lecteurs: $lecteurs
       emplacement: $emplacement
       chemin: $chemin
     ) {
       id
+    }
+  }
+`)
+
+export const MODIFIER_DOSSIER_LIE = graphql(`
+  mutation ModifierDossierLie(
+    $id: ID!
+    $lecteurs: LecteursDossierInput!
+    $nom: String
+  ) {
+    modifierDossierLie(id: $id, lecteurs: $lecteurs, nom: $nom) {
+      id
+      nom
+      touteActivite
+      perimetres {
+        id
+      }
+      groupes
     }
   }
 `)

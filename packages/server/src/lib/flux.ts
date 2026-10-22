@@ -197,9 +197,11 @@ export function publierNotification(
  *   quand il vient de l'annuaire.
  * - Une fiche va aux personnes qui peuvent la lire : une fiche de périmètre ne se
  *   lit pas en consultation, à la différence des tâches (ADR 0014).
- * - La connexion d'un espace de fichiers, sans activité, va aux admins de
- *   l'organisation. Un dossier lié va aux personnes qui le lisent : celles qui
- *   lisent les fiches de son périmètre, ou de toute l'activité (ADR 0038).
+ * - La connexion d'un fournisseur cloud, sans activité, va aux admins de
+ *   l'organisation. Un dossier lié publie un signal par périmètre que ses lecteurs
+ *   désignent, ou un signal d'activité pour toute l'activité : chacun va aux
+ *   personnes qui lisent les fiches de ce périmètre, ou les fiches communes
+ *   (ADR 0038, 0043).
  * - Tout autre changement va aux personnes qui voient l'activité.
  */
 export async function peutRecevoir(

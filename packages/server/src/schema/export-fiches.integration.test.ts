@@ -84,13 +84,13 @@ const CHOISIR = `mutation ($c: [String!]!) {
   choisirDossierExport(emplacement: "bibliotheque", chemin: $c) { exportDossier }
 }`
 const LIER = `mutation ($a: ID!, $c: [String!]!) {
-  lierDossier(activiteId: $a, emplacement: "bibliotheque", chemin: $c) { id }
+  lierDossier(activiteId: $a, lecteurs: { touteActivite: true, perimetreIds: [], groupes: [] }, emplacement: "bibliotheque", chemin: $c) { id }
 }`
 const CHOISIR_PARTAGE = `mutation ($c: [String!]!) {
   choisirDossierExport(emplacement: "partages", chemin: $c) { exportDossier }
 }`
 const LIER_PARTAGE = `mutation ($a: ID!, $c: [String!]!) {
-  lierDossier(activiteId: $a, emplacement: "partages", chemin: $c) { id }
+  lierDossier(activiteId: $a, lecteurs: { touteActivite: true, perimetreIds: [], groupes: [] }, emplacement: "partages", chemin: $c) { id }
 }`
 const CONNEXION = `{ espaceFichiers { connexion { exportDossier exportRapport { ecrites inchangees supprimees refusees { fiche } modifieesALaMain erreur } } } }`
 
@@ -203,6 +203,7 @@ beforeAll(async () => {
       emplacement: 'bibliotheque',
       element: 'd-commun',
       nom: 'Commun',
+      touteActivite: true,
     },
   })
   ids.accueil = await creerFiche('accueil', null, 'Accueillir les bénévoles.')
@@ -571,8 +572,8 @@ describe('isolement et concurrence du dossier d’export', () => {
     }
 
     // Le dossier qui contient maintenant le dossier d'export ne se lie plus.
-    const LIER_PERIMETRE = `mutation ($a: ID!, $p: ID, $c: [String!]!) {
-      lierDossier(activiteId: $a, perimetreId: $p, emplacement: "bibliotheque", chemin: $c) { id }
+    const LIER_PERIMETRE = `mutation ($a: ID!, $p: ID!, $c: [String!]!) {
+      lierDossier(activiteId: $a, lecteurs: { touteActivite: false, perimetreIds: [$p], groupes: [] }, emplacement: "bibliotheque", chemin: $c) { id }
     }`
     expect(
       code(
@@ -598,6 +599,7 @@ describe('isolement et concurrence du dossier d’export', () => {
         emplacement: 'partages',
         element: 'd-partage',
         nom: 'Partage',
+        touteActivite: true,
       },
     })
     try {

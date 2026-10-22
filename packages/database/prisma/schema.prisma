@@ -491,6 +491,8 @@ model Perimetre {
   sequences       Sequence[]
   appelsBenevoles AppelBenevoles[]
   dossiersLies    DossierLie[]
+  // Dossiers liés dont la liste de lecteurs nomme ce périmètre (ADR 0043).
+  dossiersLecteur DossierLiePerimetre[]
   // Fiches d'autres périmètres qui concernent aussi celui-ci (ADR 0039).
   fichesConnexes  FicheConnexe[]
   fichesMasquees  FicheConnexeMasquee[]
@@ -1893,7 +1895,12 @@ model DossierLie {
   id             String              @id @default(cuid())
   organisationId String
   activiteId     String
+  // Ancien périmètre unique (ADR 0038), gardé pour une version antérieure : il
+  // porte le premier périmètre des lecteurs, ou rien pour toute l'activité. Les
+  // droits se lisent dans `touteActivite` et les deux listes (ADR 0043).
   perimetreId    String?
+  // Vrai : le dossier sert toute l'activité, et les listes restent vides.
+  touteActivite  Boolean             @default(false)
   fournisseur    FournisseurFichiers
   // Bibliothèque de documents et dossier chez le fournisseur : des identifiants
   // stables, qui survivent à un renommage ou à un déplacement du dossier.
@@ -1905,15 +1912,42 @@ model DossierLie {
   creeParId      String?
   createdAt      DateTime            @default(now())
 
-  organisation Organisation     @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  activite     Activite         @relation(fields: [activiteId], references: [id], onDelete: Cascade)
-  perimetre    Perimetre?       @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
-  creePar      User?            @relation(fields: [creeParId], references: [id], onDelete: SetNull)
+  organisation Organisation          @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite              @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  perimetre    Perimetre?            @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+  creePar      User?                 @relation(fields: [creeParId], references: [id], onDelete: SetNull)
   ressources   RessourceFiche[]
+  perimetres   DossierLiePerimetre[]
+  groupes      DossierLieGroupe[]
 
   @@unique([organisationId, activiteId, perimetreId, emplacement, element])
   @@index([activiteId])
   @@index([perimetreId])
+}
+
+// Un périmètre lecteur d'un dossier lié (ADR 0043). Un périmètre archivé ensuite
+// garde la lecture, comme ses fiches.
+model DossierLiePerimetre {
+  dossierLieId String
+  perimetreId  String
+
+  dossierLie DossierLie @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
+  perimetre  Perimetre  @relation(fields: [perimetreId], references: [id], onDelete: Cascade)
+
+  @@id([dossierLieId, perimetreId])
+  @@index([perimetreId])
+}
+
+// Un groupe lecteur d'un dossier lié, désigné par sa clé dans l'activité du dossier.
+// Il vaut pour les périmètres non archivés du groupe, y compris ceux qui le
+// rejoignent plus tard (ADR 0043).
+model DossierLieGroupe {
+  dossierLieId String
+  groupe       String
+
+  dossierLie DossierLie @relation(fields: [dossierLieId], references: [id], onDelete: Cascade)
+
+  @@id([dossierLieId, groupe])
 }
 
 enum TypeRessource {

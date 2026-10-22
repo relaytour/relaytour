@@ -1,6 +1,7 @@
 import {
   CloudUploadOutlined,
   DeleteOutlined,
+  EditOutlined,
   FolderOutlined,
   LinkOutlined,
 } from '@ant-design/icons'
@@ -12,40 +13,47 @@ import {
   Descriptions,
   Empty,
   Form,
+  Input,
   Modal,
   Popconfirm,
-  Select,
   Skeleton,
   Tag,
 } from 'antd'
 import { useEffect, useState } from 'react'
 import { useSearchParams } from 'react-router'
 
+import ChoixLecteurs from '../../composants/ChoixLecteurs'
 import ConnexionEspace from '../../composants/ConnexionEspace'
-import EtiquettePerimetre from '../../composants/EtiquettePerimetre'
+import EtiquettesLecteurs from '../../composants/EtiquettesLecteurs'
 import ImportFiches from '../../composants/ImportFiches'
 import { Panneau } from '../../composants/Panneau'
 import ParcoursEspace, {
   type PositionChoisie,
 } from '../../composants/ParcoursEspace'
 import Titre from '../../composants/Titre'
-import type { EspaceFichiersQuery } from '../../gql/graphql'
+import type { DossiersLiesQuery, EspaceFichiersQuery } from '../../gql/graphql'
 import { useActivite } from '../../lib/activite'
 import { jourDeLInstant, messageErreur } from '../../lib/erreurs'
 import {
   CHOISIR_DOSSIER_EXPORT,
   DELIER_DOSSIER,
   DOSSIERS_LIES,
+  EFFETS_LECTEURS,
   ESPACE_FICHIERS,
   EXPORTER_FICHES_MAINTENANT,
   LIER_DOSSIER,
-  PERIMETRES_A_LIER,
+  lecteursValides,
+  MODIFIER_DOSSIER_LIE,
   RETIRER_DOSSIER_EXPORT,
+  TOUTE_L_ACTIVITE,
+  versSaisie,
+  type Lecteurs,
 } from '../../lib/espace-fichiers'
+import { useMentions } from '../../lib/useMentions'
 
-// Espace de fichiers de l'organisation (ADR 0038) : un admin de l'organisation
-// le connecte, lie ses dossiers aux périmètres de l'activité affichée, et choisit
-// le dossier où Relaytour exporte les fiches.
+// Fournisseur cloud de l'organisation (ADR 0038, 0043) : un admin de
+// l'organisation le connecte, lie ses dossiers à l'activité affichée avec leurs
+// lecteurs, et choisit le dossier où Relaytour exporte les fiches.
 
 type Connexion = NonNullable<EspaceFichiersQuery['espaceFichiers']['connexion']>
 
@@ -65,94 +73,159 @@ const ISSUES: Record<
   },
 }
 
-const TOUTE_L_ACTIVITE = ''
 const AUCUNE: PositionChoisie = { emplacement: null, chemin: [] }
 
 /** « 1 fiche écrite », « 3 fiches écrites ». */
 const accorder = (n: number, singulier: string, pluriel: string) =>
   `${n} ${n > 1 ? pluriel : singulier}`
 
-/** Choix d'un dossier de l'espace connecté et du périmètre qui le lira. */
+type DossierLie = DossiersLiesQuery['dossiersLies'][number]
+
+const lecteursDe = (d: DossierLie): Lecteurs => ({
+  touteActivite: d.touteActivite,
+  perimetres: d.perimetres.map(p => p.id),
+  groupes: d.groupes,
+})
+
+/**
+ * Lien d'un dossier (ADR 0043). Sans `dossier`, la fenêtre fait choisir un dossier
+ * du fournisseur et ses lecteurs. Avec `dossier`, elle modifie ses lecteurs et son
+ * nom, et annonce d'abord les documents liés que la modification masquerait.
+ */
 function LierDossier({
   ouvert,
+  dossier,
   onFermer,
 }: {
   ouvert: boolean
+  dossier: DossierLie | null
   onFermer: () => void
 }) {
   const { activite } = useActivite()
   const { message } = App.useApp()
-  const [perimetre, setPerimetre] = useState<string>(TOUTE_L_ACTIVITE)
+  const mentions = useMentions()
+  // La fenêtre se monte à chaque ouverture : elle part des lecteurs du dossier,
+  // ou de toute l'activité.
+  const [lecteurs, setLecteurs] = useState<Lecteurs>(() =>
+    dossier === null ? TOUTE_L_ACTIVITE : lecteursDe(dossier)
+  )
+  const [nom, setNom] = useState(dossier?.nom ?? '')
   const [position, setPosition] = useState<PositionChoisie>(AUCUNE)
-  const perimetres = useQuery(PERIMETRES_A_LIER, {
-    variables: { activiteId: activite.id },
-    skip: !ouvert,
+  const modification = dossier !== null
+
+  const valides = lecteursValides(lecteurs)
+  const effets = useQuery(EFFETS_LECTEURS, {
+    variables: { id: dossier?.id ?? '', lecteurs: versSaisie(lecteurs) },
+    skip: !ouvert || dossier === null || !valides,
   })
-  const [lier, { loading: enCours }] = useMutation(LIER_DOSSIER, {
+  const [lier, { loading: liaison }] = useMutation(LIER_DOSSIER, {
     refetchQueries: ['DossiersLies'],
   })
+  const [modifier, { loading: enregistrement }] = useMutation(
+    MODIFIER_DOSSIER_LIE,
+    { refetchQueries: ['DossiersLies', 'RessourcesFiche'] }
+  )
+
+  const pret = modification
+    ? valides && nom.trim().length > 0
+    : valides && position.emplacement !== null && position.chemin.length > 0
 
   const valider = async () => {
-    if (position.emplacement === null || position.chemin.length === 0) return
+    if (!pret) return
     try {
-      await lier({
-        variables: {
-          activiteId: activite.id,
-          perimetreId: perimetre === TOUTE_L_ACTIVITE ? null : perimetre,
-          emplacement: position.emplacement,
-          chemin: position.chemin,
-        },
-      })
-      message.success('Le dossier est lié.')
-      setPosition(AUCUNE)
+      if (dossier !== null) {
+        await modifier({
+          variables: {
+            id: dossier.id,
+            lecteurs: versSaisie(lecteurs),
+            nom: nom.trim() === dossier.nom ? null : nom.trim(),
+          },
+        })
+        message.success('Le dossier lié est modifié.')
+      } else if (position.emplacement !== null) {
+        await lier({
+          variables: {
+            activiteId: activite.id,
+            lecteurs: versSaisie(lecteurs),
+            emplacement: position.emplacement,
+            chemin: position.chemin,
+          },
+        })
+        message.success('Le dossier est lié.')
+      }
       onFermer()
     } catch (e) {
       message.error(messageErreur(e))
     }
   }
 
+  const masques = effets.data?.effetsLecteursDossier
   return (
     <Modal
       open={ouvert}
       onCancel={onFermer}
-      title="Lier un dossier"
-      okText="Lier ce dossier"
-      okButtonProps={{
-        disabled: position.emplacement === null || position.chemin.length === 0,
-        loading: enCours,
-      }}
+      title={
+        dossier === null ? 'Lier un dossier' : `Modifier « ${dossier.nom} »`
+      }
+      okText={modification ? 'Enregistrer' : 'Lier ce dossier'}
+      okButtonProps={{ disabled: !pret, loading: liaison || enregistrement }}
       onOk={() => void valider()}
       destroyOnHidden
       width={640}
     >
       <Form layout="vertical" component="div">
+        {modification && (
+          <Form.Item
+            label="Nom affiché"
+            extra="Relaytour affiche ce nom quand le fournisseur ne répond pas. Le dossier garde son nom chez le fournisseur."
+          >
+            <Input
+              value={nom}
+              maxLength={255}
+              onChange={e => setNom(e.target.value)}
+            />
+          </Form.Item>
+        )}
         <Form.Item
           label="Lu par"
-          extra="Un dossier lié à un périmètre se lit comme ses fiches : par les personnes qui y ont été affectées et par les admins de l’activité. Un dossier lié à toute l’activité se lit comme les fiches communes."
+          extra="Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes."
+          validateStatus={valides ? undefined : 'error'}
+          help={
+            valides
+              ? undefined
+              : 'Choisissez toute l’activité, ou au moins un périmètre ou un groupe.'
+          }
         >
-          <Select
-            value={perimetre}
-            onChange={setPerimetre}
-            loading={perimetres.loading}
-            options={[
-              { value: TOUTE_L_ACTIVITE, label: 'Toute l’activité' },
-              ...(perimetres.data?.perimetres ?? []).map(p => ({
-                value: p.id,
-                label: p.nom,
-              })),
-            ]}
+          <ChoixLecteurs
+            valeur={lecteurs}
+            onChange={setLecteurs}
+            mentions={mentions}
+            toutPossible
+            placeholder="Choisissez les lecteurs"
+            ariaLabel="Lu par"
           />
         </Form.Item>
-        <ParcoursEspace
-          actif={ouvert}
-          valeur={position}
-          onChange={setPosition}
-          aide={chemin =>
-            chemin.length === 0
-              ? 'Ouvrez le dossier à lier. Une bibliothèque entière ne se lie pas.'
-              : `Le dossier « ${chemin[chemin.length - 1]} » sera lié.`
-          }
-        />
+        {masques !== undefined && masques.documentsMasques > 0 && (
+          <Alert
+            type="warning"
+            showIcon
+            style={{ marginBottom: 16 }}
+            title={`${accorder(masques.documentsMasques, 'document lié ne sera plus lisible depuis sa fiche', 'documents liés ne seront plus lisibles depuis leur fiche')}.`}
+            description={`${masques.fiches.length > 1 ? 'Fiches concernées' : 'Fiche concernée'} : ${masques.fiches.map(f => `« ${f.titre} »`).join(', ')}. Une fiche masque ces documents tant que le dossier ne sert pas son périmètre.`}
+          />
+        )}
+        {!modification && (
+          <ParcoursEspace
+            actif={ouvert}
+            valeur={position}
+            onChange={setPosition}
+            aide={chemin =>
+              chemin.length === 0
+                ? 'Ouvrez le dossier à lier. Une bibliothèque entière ne se lie pas.'
+                : `Le dossier « ${chemin[chemin.length - 1]} » sera lié.`
+            }
+          />
+        )}
       </Form>
     </Modal>
   )
@@ -252,8 +325,8 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
   return (
     <Panneau titre="Export des fiches" icone={<CloudUploadOutlined />}>
       <p className="rt-texte-secondaire">
-        Relaytour écrit les fiches en Markdown dans un dossier de l’espace de
-        fichiers, après chaque modification et chaque nuit. Les fiches se
+        Relaytour écrit les fiches en Markdown dans un dossier du fournisseur
+        cloud, après chaque modification et chaque nuit. Les fiches se
         modifient toujours dans Relaytour : une modification faite dans ce
         dossier est remplacée à l’export suivant.
       </p>
@@ -355,7 +428,8 @@ export default function EspaceFichiers() {
   const { activite } = useActivite()
   const { message } = App.useApp()
   const [parametres, setParametres] = useSearchParams()
-  const [choix, setChoix] = useState(false)
+  const [choixDossier, setChoix] = useState(false)
+  const [modifie, setModifie] = useState<DossierLie | null>(null)
   const { data, loading } = useQuery(ESPACE_FICHIERS)
   const liens = useQuery(DOSSIERS_LIES, {
     variables: { activiteId: activite.id },
@@ -419,18 +493,18 @@ export default function EspaceFichiers() {
                     className="rt-explorateur-icone"
                   />
                   <span className="rt-explorateur-nom">{d.nom}</span>
-                  <span>
-                    {d.perimetre ? (
-                      <EtiquettePerimetre
-                        nom={d.perimetre.nom}
-                        couleur={d.perimetre.couleur}
-                        point
-                      />
-                    ) : (
-                      'Toute l’activité'
-                    )}
-                  </span>
+                  <EtiquettesLecteurs
+                    touteActivite={d.touteActivite}
+                    perimetres={d.perimetres}
+                    groupes={d.groupes}
+                  />
                   {!d.disponible && <Tag color="warning">Indisponible</Tag>}
+                  <Button
+                    type="text"
+                    icon={<EditOutlined />}
+                    aria-label={`Modifier le dossier ${d.nom}`}
+                    onClick={() => setModifie(d)}
+                  />
                   <Popconfirm
                     title="Retirer ce dossier ?"
                     description="Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour."
@@ -455,7 +529,17 @@ export default function EspaceFichiers() {
         </Panneau>
       </div>
 
-      <LierDossier ouvert={choix} onFermer={() => setChoix(false)} />
+      {(choixDossier || modifie !== null) && (
+        <LierDossier
+          key={modifie?.id ?? 'nouveau'}
+          ouvert
+          dossier={modifie}
+          onFermer={() => {
+            setChoix(false)
+            setModifie(null)
+          }}
+        />
+      )}
     </>
   )
 }

@@ -7,7 +7,14 @@ import {
 } from '@relaytour/database'
 
 import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
-import { dossierLisible } from '../espace-fichiers/droits.ts'
+import {
+  conditionDossiersLisibles,
+  dossierCompatible,
+  dossierLisible,
+  publierDossierLie,
+  SELECTION_LECTEURS,
+  type LecteursDossier,
+} from '../espace-fichiers/droits.ts'
 import {
   ancetresDeLExport,
   cheminDeLExportSous,
@@ -59,9 +66,11 @@ import {
   type EspaceFichiers,
 } from '../espace-fichiers/types.ts'
 import type { AppContext } from '../context.ts'
-import { peutLireFiche } from '../lib/fiches.ts'
+import { lireGroupes } from '../lib/activites.ts'
+import { perimetresLisibles } from '../lib/droits.ts'
+import { perimetresLisiblesActifs } from '../lib/fiches-connexes.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
-import { publierChangement, publierPourActivite } from '../lib/flux.ts'
+import { publierChangement } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 
@@ -267,14 +276,96 @@ const ListeElementsFichiersRef = builder
     }),
   })
 
+interface LecteursLus {
+  touteActivite: boolean
+  perimetres: Prisma.PerimetreGetPayload<object>[]
+  groupes: string[]
+}
+
+const LecteursLusRef = builder
+  .objectRef<LecteursLus>('LecteursLusDossier')
+  .implement({
+    description:
+      'Les lecteurs d’un dossier lié par lesquels la personne le lit : toute l’activité, des périmètres de la liste, des groupes de la liste.',
+    fields: t => ({
+      touteActivite: t.exposeBoolean('touteActivite'),
+      perimetres: t.field({
+        type: [PerimetreRef],
+        resolve: l => l.perimetres,
+      }),
+      groupes: t.exposeStringList('groupes'),
+    }),
+  })
+
 export const DossierLieRef = builder.prismaObject('DossierLie', {
   description:
-    'Dossier de l’espace de fichiers lié à un périmètre, ou à toute l’activité quand le périmètre est nul.',
+    'Dossier du fournisseur cloud lié à une activité. Il sert toute l’activité, ou une liste de périmètres et de groupes (ADR 0043).',
   fields: t => ({
     id: t.exposeID('id'),
     nom: t.exposeString('nom'),
     activiteId: t.exposeID('activiteId'),
-    perimetre: t.relation('perimetre', { type: PerimetreRef, nullable: true }),
+    perimetre: t.relation('perimetre', {
+      type: PerimetreRef,
+      nullable: true,
+      deprecationReason:
+        'Un dossier lié a plusieurs lecteurs : lire touteActivite, perimetres et groupes.',
+    }),
+    touteActivite: t.exposeBoolean('touteActivite', {
+      description: 'Vrai : le dossier sert toute l’activité.',
+    }),
+    perimetres: t.field({
+      type: [PerimetreRef],
+      description: 'Les périmètres nommés dans la liste des lecteurs.',
+      select: {
+        perimetres: { select: { perimetre: true } },
+      },
+      resolve: d =>
+        d.perimetres
+          .map(p => p.perimetre)
+          .sort((a, b) => a.nom.localeCompare(b.nom, 'fr')),
+    }),
+    groupes: t.stringList({
+      description:
+        'Les clés des groupes de la liste. Un groupe vaut pour ses périmètres non archivés.',
+      select: { groupes: { select: { groupe: true } } },
+      resolve: d => d.groupes.map(g => g.groupe).sort(),
+    }),
+    lecteursLus: t.field({
+      type: LecteursLusRef,
+      description:
+        'Les lecteurs par lesquels la personne lit ce dossier. La vue « Documents » range le dossier sous chacun.',
+      select: { activiteId: true, ...SELECTION_LECTEURS },
+      resolve: async (d, _args, ctx) => {
+        if (d.touteActivite) {
+          return { touteActivite: true, perimetres: [], groupes: [] }
+        }
+        const [lisibles, actifs] = await Promise.all([
+          perimetresLisibles(ctx),
+          perimetresLisiblesActifs(ctx),
+        ])
+        const lus = new Set(lisibles)
+        const groupesLus = new Set(
+          actifs.filter(p => p.activiteId === d.activiteId).map(p => p.groupe)
+        )
+        const ids = d.perimetres
+          .map(p => p.perimetreId)
+          .filter(id => lus.has(id))
+        return {
+          touteActivite: false,
+          perimetres:
+            ids.length === 0
+              ? []
+              : await prisma.perimetre.findMany({
+                  where: { id: { in: ids } },
+                  orderBy: [{ nom: 'asc' }, { id: 'asc' }],
+                }),
+          groupes: d.groupes
+            .map(g => g.groupe)
+            .filter(g => groupesLus.has(g))
+            .sort(),
+        }
+      },
+    }),
     fournisseur: t.expose('fournisseur', { type: FournisseurFichiersEnum }),
     disponible: t.boolean({
       description:
@@ -292,6 +383,53 @@ export const DossierLieRef = builder.prismaObject('DossierLie', {
     }),
   }),
 })
+
+const LecteursDossierInput = builder.inputType('LecteursDossierInput', {
+  description:
+    'Les lecteurs d’un dossier lié : toute l’activité, ou une liste de périmètres et de groupes de l’activité.',
+  fields: t => ({
+    touteActivite: t.boolean({ required: true }),
+    perimetreIds: t.idList({ required: true }),
+    groupes: t.stringList({ required: true }),
+  }),
+})
+
+interface FicheTouchee {
+  id: string
+  titre: string
+}
+
+const FicheToucheeRef = builder
+  .objectRef<FicheTouchee>('FicheToucheeParLecteurs')
+  .implement({
+    fields: t => ({
+      id: t.exposeID('id'),
+      titre: t.exposeString('titre'),
+    }),
+  })
+
+interface EffetsLecteurs {
+  documentsMasques: number
+  fiches: FicheTouchee[]
+}
+
+const EffetsLecteursRef = builder
+  .objectRef<EffetsLecteurs>('EffetsLecteursDossier')
+  .implement({
+    description:
+      'Ce que de nouveaux lecteurs changeraient aux documents liés des fiches.',
+    fields: t => ({
+      documentsMasques: t.exposeInt('documentsMasques', {
+        description:
+          'Documents liés que les lecteurs de leur fiche ne liraient plus : la fiche les masquerait.',
+      }),
+      fiches: t.field({
+        type: [FicheToucheeRef],
+        description: 'Les fiches qui portent ces documents.',
+        resolve: e => e.fiches,
+      }),
+    }),
+  })
 
 // ── Aides ────────────────────────────────────────────────────────────────────
 
@@ -319,6 +457,138 @@ function trier(elements: ElementVue[]): ElementVue[] {
 
 function exigerChemin(chemin: readonly string[]): void {
   if (!cheminValide(chemin)) throw erreurSaisie('Chemin de dossier invalide.')
+}
+
+/** Une liste de lecteurs compte au plus cent périmètres et groupes. */
+const LECTEURS_MAX = 100
+
+interface LecteursValides {
+  touteActivite: boolean
+  perimetreIds: string[]
+  groupes: string[]
+  /**
+   * Les périmètres que la liste désigne aujourd'hui, dans l'ordre de la saisie :
+   * l'ancienne colonne `perimetreId` prend le premier qui convient.
+   */
+  designes: string[]
+}
+
+/**
+ * Vérifie les lecteurs saisis pour un dossier de cette activité. Un périmètre d'une
+ * autre activité ou d'une autre organisation vaut un périmètre inconnu. Un groupe
+ * doit être déclaré par l'activité et compter au moins un périmètre non archivé.
+ */
+async function validerLecteurs(
+  organisationId: string,
+  activiteId: string,
+  saisie: {
+    touteActivite: boolean
+    perimetreIds: readonly (string | number)[]
+    groupes: readonly string[]
+  }
+): Promise<LecteursValides> {
+  const perimetreIds = [...new Set(saisie.perimetreIds.map(String))]
+  const groupes = [...new Set(saisie.groupes.map(g => g.trim()))]
+  if (saisie.touteActivite) {
+    if (perimetreIds.length + groupes.length > 0) {
+      throw erreurSaisie(
+        'Choisissez toute l’activité, ou une liste de périmètres et de groupes.'
+      )
+    }
+    return { touteActivite: true, perimetreIds: [], groupes: [], designes: [] }
+  }
+  if (perimetreIds.length + groupes.length === 0) {
+    throw erreurSaisie('Choisissez au moins un périmètre ou un groupe.')
+  }
+  if (perimetreIds.length + groupes.length > LECTEURS_MAX) {
+    throw erreurSaisie(
+      `Un dossier lié compte au plus ${LECTEURS_MAX} périmètres et groupes.`
+    )
+  }
+  const trouves = await prisma.perimetre.count({
+    where: {
+      id: { in: perimetreIds },
+      organisationId,
+      activiteId,
+      archivedAt: null,
+    },
+  })
+  if (trouves !== perimetreIds.length) throw accesRefuse()
+  const activite = await prisma.activite.findUniqueOrThrow({
+    where: { id: activiteId },
+    select: { groupes: true },
+  })
+  const declares = new Set(lireGroupes(activite.groupes).map(g => g.cle))
+  const inconnu = groupes.find(g => !declares.has(g))
+  if (inconnu !== undefined) {
+    throw erreurSaisie(`L’activité ne déclare pas le groupe « ${inconnu} ».`)
+  }
+  const membres =
+    groupes.length === 0
+      ? []
+      : await prisma.perimetre.findMany({
+          where: { activiteId, groupe: { in: groupes }, archivedAt: null },
+          select: { id: true, groupe: true },
+          orderBy: [{ nom: 'asc' }, { id: 'asc' }],
+        })
+  const vide = groupes.find(g => !membres.some(m => m.groupe === g))
+  if (vide !== undefined) {
+    throw erreurSaisie(`Le groupe « ${vide} » ne compte aucun périmètre.`)
+  }
+  const parGroupe = groupes.flatMap(g =>
+    membres.filter(m => m.groupe === g).map(m => m.id)
+  )
+  return {
+    touteActivite: false,
+    perimetreIds,
+    groupes,
+    designes: [...new Set([...perimetreIds, ...parGroupe])],
+  }
+}
+
+/**
+ * Le périmètre qu'écrit l'ancienne colonne `perimetreId` : le premier périmètre
+ * désigné qu'aucun autre lien du même dossier ne porte, ou null pour toute
+ * l'activité. Une version antérieure lit ainsi moins de personnes, jamais plus.
+ */
+async function perimetreHistorique(
+  tx: Prisma.TransactionClient,
+  cle: {
+    organisationId: string
+    activiteId: string
+    emplacement: string
+    element: string
+  },
+  lecteurs: LecteursValides,
+  sauf?: string
+): Promise<string | null> {
+  if (lecteurs.touteActivite) return null
+  const pris = new Set(
+    (
+      await tx.dossierLie.findMany({
+        where: { ...cle, ...(sauf === undefined ? {} : { id: { not: sauf } }) },
+        select: { perimetreId: true },
+      })
+    ).map(d => d.perimetreId)
+  )
+  const libre = lecteurs.designes.find(id => !pris.has(id))
+  if (libre === undefined) {
+    throw erreurSaisie(
+      'Ce dossier est aussi lié à ces périmètres par un autre lien. Retirez l’autre lien, puis recommencez.'
+    )
+  }
+  return libre
+}
+
+/** Les listes de lecteurs à écrire pour un dossier lié. */
+function listesDeLecteurs(dossierLieId: string, lecteurs: LecteursValides) {
+  return {
+    perimetres: lecteurs.perimetreIds.map(perimetreId => ({
+      dossierLieId,
+      perimetreId,
+    })),
+    groupes: lecteurs.groupes.map(groupe => ({ dossierLieId, groupe })),
+  }
 }
 
 async function espaceDe(ctx: AppContext): Promise<EspaceFichiers> {
@@ -394,39 +664,42 @@ builder.queryFields(t => ({
     type: [DossierLieRef],
     authScopes: { connecte: true },
     description:
-      'Dossiers liés que la personne lit dans une activité. Avec un périmètre : ceux de ce périmètre et ceux de toute l’activité.',
+      'Dossiers liés que la personne lit dans une activité. Avec un périmètre : ceux qui servent ce périmètre, directement, par son groupe ou pour toute l’activité.',
     args: {
       activiteId: t.arg.id(),
       perimetreId: t.arg.id(),
     },
     resolve: async (query, _root, { activiteId, perimetreId }, ctx) => {
       const activite = await ctx.exigerActivite(activiteId)
-      const dossiers = await prisma.dossierLie.findMany({
+      const lisibles = await conditionDossiersLisibles(ctx, activite)
+      if (lisibles === null) return []
+      let servi: Prisma.DossierLieWhereInput = {}
+      if (perimetreId !== null && perimetreId !== undefined) {
+        const perimetre = await prisma.perimetre.findFirst({
+          where: {
+            id: String(perimetreId),
+            organisationId: ctx.organisation!.id,
+            activiteId: activite,
+          },
+          select: { id: true, groupe: true, archivedAt: true },
+        })
+        if (perimetre === null) return []
+        servi = {
+          OR: [
+            { touteActivite: true },
+            { perimetres: { some: { perimetreId: perimetre.id } } },
+            // Un groupe ne couvre que ses périmètres non archivés.
+            ...(perimetre.archivedAt === null
+              ? [{ groupes: { some: { groupe: perimetre.groupe } } }]
+              : []),
+          ],
+        }
+      }
+      return prisma.dossierLie.findMany({
         ...query,
-        where: {
-          organisationId: ctx.organisation!.id,
-          activiteId: activite,
-          ...(perimetreId === null || perimetreId === undefined
-            ? {}
-            : {
-                OR: [
-                  { perimetreId: String(perimetreId) },
-                  { perimetreId: null },
-                ],
-              }),
-        },
-        orderBy: [{ perimetreId: 'asc' }, { nom: 'asc' }],
+        where: { AND: [lisibles, servi] },
+        orderBy: [{ touteActivite: 'desc' }, { nom: 'asc' }, { id: 'asc' }],
       })
-      const lisibles = await Promise.all(
-        dossiers.map(d =>
-          peutLireFiche(ctx, {
-            organisationId: d.organisationId,
-            activiteId: d.activiteId,
-            perimetreId: d.perimetreId,
-          })
-        )
-      )
-      return dossiers.filter((_d, i) => lisibles[i])
     },
   }),
 
@@ -714,17 +987,17 @@ builder.mutationFields(t => ({
     type: DossierLieRef,
     authScopes: { admin: true },
     description:
-      'Lie un dossier de l’espace connecté à un périmètre, ou à toute l’activité sans périmètre.',
+      'Lie un dossier du fournisseur connecté à une activité, avec ses lecteurs. Un dossier se lie une seule fois par activité.',
     args: {
       activiteId: t.arg.id({ required: true }),
-      perimetreId: t.arg.id(),
+      lecteurs: t.arg({ type: LecteursDossierInput, required: true }),
       emplacement: t.arg.string({ required: true }),
       chemin: t.arg.stringList({ required: true }),
     },
     resolve: async (
       query,
       _root,
-      { activiteId, perimetreId, emplacement, chemin },
+      { activiteId, lecteurs: saisie, emplacement, chemin },
       ctx
     ) => {
       const organisationId = ctx.organisation!.id
@@ -736,18 +1009,11 @@ builder.mutationFields(t => ({
         select: { id: true },
       })
       if (activite === null) throw accesRefuse()
-      const perimetre =
-        perimetreId === null || perimetreId === undefined
-          ? null
-          : await prisma.perimetre.findFirst({
-              where: {
-                id: String(perimetreId),
-                organisationId,
-                activiteId: activite.id,
-              },
-              select: { id: true },
-            })
-      if (perimetreId != null && perimetre === null) throw accesRefuse()
+      const lecteurs = await validerLecteurs(
+        organisationId,
+        activite.id,
+        saisie
+      )
       const { espace, element } = await avecEspace(ctx, async espace => ({
         espace,
         element: await espace.element({ emplacement, base: null, chemin }),
@@ -785,13 +1051,12 @@ builder.mutationFields(t => ({
       const cle = {
         organisationId,
         activiteId: activite.id,
-        perimetreId: perimetre?.id ?? null,
         emplacement,
         element: element.id,
       }
       // Sous le verrou de l'organisation : deux liens simultanés du même dossier
-      // n'en créent qu'un. Sans périmètre, la contrainte d'unicité ne l'empêche
-      // pas, car MariaDB admet plusieurs valeurs nulles.
+      // n'en créent qu'un, et un dossier déjà lié à l'activité se modifie au lieu
+      // de se lier une seconde fois (ADR 0043).
       // Le choix du dossier d'export prend le même verrou : un dossier d'export
       // choisi entre le contrôle et le lien fait recommencer.
       const dossier = await sousVerrouOrganisation(organisationId, async tx => {
@@ -807,22 +1072,35 @@ builder.mutationFields(t => ({
             'Le dossier d’export vient de changer. Recommencez le lien.'
           )
         }
-        return (
-          (await tx.dossierLie.findFirst({ where: cle })) ??
-          tx.dossierLie.create({
-            data: {
-              ...cle,
-              fournisseur: espace.fournisseur,
-              nom: element.nom,
-              creeParId: ctx.personne!.id,
-            },
-          })
-        )
+        if ((await tx.dossierLie.findFirst({ where: cle })) !== null) {
+          throw erreurSaisie(
+            'Ce dossier est déjà lié à cette activité. Modifiez ses lecteurs.'
+          )
+        }
+        const cree = await tx.dossierLie.create({
+          data: {
+            ...cle,
+            perimetreId: await perimetreHistorique(tx, cle, lecteurs),
+            touteActivite: lecteurs.touteActivite,
+            fournisseur: espace.fournisseur,
+            nom: element.nom,
+            creeParId: ctx.personne!.id,
+          },
+        })
+        const listes = listesDeLecteurs(cree.id, lecteurs)
+        await tx.dossierLiePerimetre.createMany({ data: listes.perimetres })
+        await tx.dossierLieGroupe.createMany({ data: listes.groupes })
+        return tx.dossierLie.findUniqueOrThrow({
+          where: { id: cree.id },
+          select: {
+            id: true,
+            organisationId: true,
+            activiteId: true,
+            ...SELECTION_LECTEURS,
+          },
+        })
       })
-      publierPourActivite('FICHIERS', organisationId, activite.id, {
-        id: dossier.id,
-        perimetreId: dossier.perimetreId,
-      })
+      publierDossierLie(dossier)
       return prisma.dossierLie.findUniqueOrThrow({
         ...query,
         where: { id: dossier.id },
@@ -977,15 +1255,188 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
       const dossier = await prisma.dossierLie.findFirst({
         where: { id: String(id), organisationId },
-        select: { id: true, activiteId: true, perimetreId: true },
+        select: {
+          id: true,
+          organisationId: true,
+          activiteId: true,
+          ...SELECTION_LECTEURS,
+        },
       })
       if (dossier === null) throw accesRefuse()
       await prisma.dossierLie.delete({ where: { id: dossier.id } })
-      publierPourActivite('FICHIERS', organisationId, dossier.activiteId, {
-        id: dossier.id,
-        perimetreId: dossier.perimetreId,
-      })
+      publierDossierLie(dossier)
       return true
     },
   }),
+
+  modifierDossierLie: t.prismaField({
+    type: DossierLieRef,
+    authScopes: { admin: true },
+    description:
+      'Modifie les lecteurs et le nom affiché d’un dossier lié. Le dossier chez le fournisseur ne change pas, et ses documents liés gardent leur chemin (ADR 0043).',
+    args: {
+      id: t.arg.id({ required: true }),
+      lecteurs: t.arg({ type: LecteursDossierInput, required: true }),
+      nom: t.arg.string(),
+    },
+    resolve: async (query, _root, { id, lecteurs: saisie, nom }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const avant = await prisma.dossierLie.findFirst({
+        where: { id: String(id), organisationId },
+        select: {
+          id: true,
+          organisationId: true,
+          activiteId: true,
+          emplacement: true,
+          element: true,
+          ...SELECTION_LECTEURS,
+        },
+      })
+      if (avant === null) throw accesRefuse()
+      const lecteurs = await validerLecteurs(
+        organisationId,
+        avant.activiteId,
+        saisie
+      )
+      const nomAffiche = nom?.trim()
+      if (
+        nomAffiche !== undefined &&
+        (nomAffiche.length === 0 || nomAffiche.length > 255)
+      ) {
+        throw erreurSaisie(
+          'Le nom d’un dossier lié compte de 1 à 255 caractères.'
+        )
+      }
+      const apres = await sousVerrouOrganisation(organisationId, async tx => {
+        const cle = {
+          organisationId,
+          activiteId: avant.activiteId,
+          emplacement: avant.emplacement,
+          element: avant.element,
+        }
+        await tx.dossierLie.update({
+          where: { id: avant.id },
+          data: {
+            touteActivite: lecteurs.touteActivite,
+            perimetreId: await perimetreHistorique(tx, cle, lecteurs, avant.id),
+            ...(nomAffiche === undefined ? {} : { nom: nomAffiche }),
+          },
+        })
+        const listes = listesDeLecteurs(avant.id, lecteurs)
+        await tx.dossierLiePerimetre.deleteMany({
+          where: { dossierLieId: avant.id },
+        })
+        await tx.dossierLieGroupe.deleteMany({
+          where: { dossierLieId: avant.id },
+        })
+        await tx.dossierLiePerimetre.createMany({ data: listes.perimetres })
+        await tx.dossierLieGroupe.createMany({ data: listes.groupes })
+        return tx.dossierLie.findUniqueOrThrow({
+          where: { id: avant.id },
+          select: {
+            id: true,
+            organisationId: true,
+            activiteId: true,
+            ...SELECTION_LECTEURS,
+          },
+        })
+      })
+      publierDossierLie(apres, avant)
+      journal.info(
+        {
+          evenement: 'dossier-lie-modifie',
+          organisationId,
+          dossierLieId: avant.id,
+        },
+        'Les lecteurs d’un dossier lié ont changé.'
+      )
+      return prisma.dossierLie.findUniqueOrThrow({
+        ...query,
+        where: { id: avant.id },
+      })
+    },
+  }),
 }))
+
+/** Les lecteurs validés, sous la forme que lit `dossierCompatible`. */
+function enLecteurs(lecteurs: LecteursValides): LecteursDossier {
+  return {
+    touteActivite: lecteurs.touteActivite,
+    perimetres: lecteurs.perimetreIds.map(perimetreId => ({ perimetreId })),
+    groupes: lecteurs.groupes.map(groupe => ({ groupe })),
+  }
+}
+
+builder.queryField('effetsLecteursDossier', t =>
+  t.field({
+    type: EffetsLecteursRef,
+    authScopes: { admin: true },
+    description:
+      'Annonce, avant une modification, les documents liés que les lecteurs de leur fiche ne liraient plus.',
+    args: {
+      id: t.arg.id({ required: true }),
+      lecteurs: t.arg({ type: LecteursDossierInput, required: true }),
+    },
+    resolve: async (_root, { id, lecteurs: saisie }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const dossier = await prisma.dossierLie.findFirst({
+        where: { id: String(id), organisationId },
+        select: {
+          organisationId: true,
+          activiteId: true,
+          ...SELECTION_LECTEURS,
+          ressources: {
+            where: { fiche: { archivedAt: null } },
+            select: {
+              fiche: {
+                select: {
+                  id: true,
+                  slug: true,
+                  organisationId: true,
+                  activiteId: true,
+                  perimetreId: true,
+                  perimetre: { select: { groupe: true, archivedAt: true } },
+                  versionCourante: { select: { titre: true } },
+                },
+              },
+            },
+          },
+        },
+      })
+      if (dossier === null) throw accesRefuse()
+      const nouveaux = {
+        ...dossier,
+        ...enLecteurs(
+          await validerLecteurs(organisationId, dossier.activiteId, saisie)
+        ),
+      }
+      let documentsMasques = 0
+      const fiches = new Map<string, FicheTouchee>()
+      for (const { fiche } of dossier.ressources) {
+        const situee = {
+          ...fiche,
+          groupe:
+            fiche.perimetre !== null && fiche.perimetre.archivedAt === null
+              ? fiche.perimetre.groupe
+              : null,
+        }
+        if (
+          dossierCompatible(situee, dossier) &&
+          !dossierCompatible(situee, nouveaux)
+        ) {
+          documentsMasques += 1
+          fiches.set(fiche.id, {
+            id: fiche.id,
+            titre: fiche.versionCourante?.titre ?? fiche.slug,
+          })
+        }
+      }
+      return {
+        documentsMasques,
+        fiches: [...fiches.values()].sort((a, b) =>
+          a.titre.localeCompare(b.titre, 'fr')
+        ),
+      }
+    },
+  })
+)
