@@ -103,9 +103,10 @@ export function ReglageAcces({
             ) : (
               <>
                 <p style={{ marginTop: 0 }}>
-                  Pour appliquer des propositions, reconnectez le fournisseur
-                  avec la gestion des accès. Chez Microsoft, un admin Microsoft
-                  Entra accepte une autorisation de plus.
+                  Pour appliquer des propositions, activez la gestion des accès.
+                  Chez Microsoft et Dropbox, elle demande une reconnexion ; chez
+                  Microsoft, un admin Microsoft Entra accepte une autorisation
+                  de plus.
                 </p>
                 <Button onClick={onActiverGestion}>
                   Activer la gestion des accès

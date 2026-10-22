@@ -250,7 +250,10 @@ export async function appliquerProposition(
         identifiant = (
           await annuaire.partager(
             position,
-            { adresse: compte?.adresseSaisie ?? p.user.email },
+            {
+              adresse: compte?.adresseSaisie ?? p.user.email,
+              identifiant: compte?.identifiant ?? null,
+            },
             { role: d.roleFournisseur, invitation: d.invitationFournisseur }
           )
         ).identifiant

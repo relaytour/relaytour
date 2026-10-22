@@ -70,6 +70,8 @@ export interface AnnuaireMemoire {
   droits: Record<string, DroitElement[]>
   /** Les membres de chaque groupe par identifiant de compte ; null : illisible. */
   groupes: Record<string, string[] | null>
+  /** Vrai pour un fournisseur sans annuaire, comme Google Drive ou Dropbox. */
+  sansAnnuaire?: boolean
 }
 
 export function annuaireEnMemoire(
@@ -78,7 +80,7 @@ export function annuaireEnMemoire(
   let suivant = 0
   return {
     capacites: {
-      comptes: true,
+      comptes: donnees.sansAnnuaire !== true,
       droits: true,
       membresDeGroupe: true,
       partage: true,

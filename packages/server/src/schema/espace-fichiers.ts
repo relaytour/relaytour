@@ -791,16 +791,11 @@ builder.mutationFields(t => ({
       portee: t.arg({
         type: PorteeConnexionFichiersEnum,
         description:
-          'Les autorisations demandées au-delà des fichiers. Seul SharePoint lit aujourd’hui l’annuaire.',
+          'Les autorisations demandées au-delà des fichiers (ADR 0044). SharePoint et Dropbox les demandent à la connexion.',
       }),
     },
     resolve: async (_root, { fournisseur, portee: demandee }, ctx) => {
       const portee = demandee ?? 'FICHIERS'
-      if (portee !== 'FICHIERS' && fournisseur !== 'SHAREPOINT') {
-        throw erreurSaisie(
-          'Ce fournisseur ne propose pas encore la vérification des accès.'
-        )
-      }
       const fermee = () =>
         erreurSaisie('Ce fournisseur n’est pas ouvert sur cette installation.')
       const microsoft =
@@ -820,7 +815,43 @@ builder.mutationFields(t => ({
       if (microsoft !== null)
         return adresseAutorisation(microsoft, etat, defi, portee)
       if (google !== null) return adresseAutorisationGoogle(google, etat, defi)
-      return adresseAutorisationDropbox(dropbox!, etat, defi)
+      // Google garde la même portée : la vérification s'y règle sans
+      // reconnexion (`reglerPorteeConnexion`).
+      return adresseAutorisationDropbox(dropbox!, etat, defi, portee)
+    },
+  }),
+
+  reglerPorteeConnexion: t.prismaField({
+    type: ConnexionFichiersRef,
+    authScopes: { admin: true },
+    description:
+      'Active ou coupe la vérification et la gestion des accès sans reconnexion, pour un fournisseur dont l’accès accordé les couvre déjà : Google Drive et Nextcloud (ADR 0044).',
+    args: {
+      portee: t.arg({ type: PorteeConnexionFichiersEnum, required: true }),
+    },
+    resolve: async (query, _root, { portee }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const connexion = await prisma.connexionFichiers.findUnique({
+        where: { organisationId },
+        select: { fournisseur: true },
+      })
+      if (connexion === null) {
+        throw erreurSaisie('Aucun fournisseur cloud n’est connecté.')
+      }
+      if (
+        connexion.fournisseur !== 'GOOGLE_DRIVE' &&
+        connexion.fournisseur !== 'NEXTCLOUD'
+      ) {
+        throw erreurSaisie(
+          'Ce fournisseur demande une reconnexion pour changer ses autorisations.'
+        )
+      }
+      void publierChangement({ entite: 'FICHIERS', organisationId })
+      return prisma.connexionFichiers.update({
+        ...query,
+        where: { organisationId },
+        data: { portee },
+      })
     },
   }),
 

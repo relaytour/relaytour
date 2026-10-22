@@ -118,6 +118,7 @@ type Documents = {
     "\n  query ComptesFournisseur {\n    comptesFournisseur {\n      etat\n      adresseSaisie\n      verifieLe\n      personne {\n        id\n        nom\n        email\n      }\n    }\n  }\n": typeof types.ComptesFournisseurDocument,
     "\n  mutation VerifierAccesFournisseur {\n    verifierAccesFournisseur\n  }\n": typeof types.VerifierAccesFournisseurDocument,
     "\n  mutation SaisirAdresseFournisseur($userId: ID!, $adresse: String) {\n    saisirAdresseFournisseur(userId: $userId, adresse: $adresse) {\n      adresseSaisie\n    }\n  }\n": typeof types.SaisirAdresseFournisseurDocument,
+    "\n  mutation ReglerPorteeConnexion($portee: PorteeConnexionFichiers!) {\n    reglerPorteeConnexion(portee: $portee) {\n      portee\n    }\n  }\n": typeof types.ReglerPorteeConnexionDocument,
     "\n  query GroupesDuDossier($id: ID!) {\n    groupesDuDossier(id: $id) {\n      identifiant\n      nom\n    }\n  }\n": typeof types.GroupesDuDossierDocument,
     "\n  mutation ReglerAccesFournisseur(\n    $id: ID!\n    $mode: AccesFournisseurDossier!\n    $groupeId: ID\n    $role: RoleFournisseur!\n    $ajoutsAutomatiques: Boolean!\n    $invitation: Boolean!\n  ) {\n    reglerAccesFournisseur(\n      id: $id\n      mode: $mode\n      groupeId: $groupeId\n      role: $role\n      ajoutsAutomatiques: $ajoutsAutomatiques\n      invitation: $invitation\n    ) {\n      id\n      accesFournisseur\n    }\n  }\n": typeof types.ReglerAccesFournisseurDocument,
     "\n  mutation AppliquerPropositionAcces($id: ID!) {\n    appliquerPropositionAcces(id: $id)\n  }\n": typeof types.AppliquerPropositionAccesDocument,
@@ -342,6 +343,7 @@ const documents: Documents = {
     "\n  query ComptesFournisseur {\n    comptesFournisseur {\n      etat\n      adresseSaisie\n      verifieLe\n      personne {\n        id\n        nom\n        email\n      }\n    }\n  }\n": types.ComptesFournisseurDocument,
     "\n  mutation VerifierAccesFournisseur {\n    verifierAccesFournisseur\n  }\n": types.VerifierAccesFournisseurDocument,
     "\n  mutation SaisirAdresseFournisseur($userId: ID!, $adresse: String) {\n    saisirAdresseFournisseur(userId: $userId, adresse: $adresse) {\n      adresseSaisie\n    }\n  }\n": types.SaisirAdresseFournisseurDocument,
+    "\n  mutation ReglerPorteeConnexion($portee: PorteeConnexionFichiers!) {\n    reglerPorteeConnexion(portee: $portee) {\n      portee\n    }\n  }\n": types.ReglerPorteeConnexionDocument,
     "\n  query GroupesDuDossier($id: ID!) {\n    groupesDuDossier(id: $id) {\n      identifiant\n      nom\n    }\n  }\n": types.GroupesDuDossierDocument,
     "\n  mutation ReglerAccesFournisseur(\n    $id: ID!\n    $mode: AccesFournisseurDossier!\n    $groupeId: ID\n    $role: RoleFournisseur!\n    $ajoutsAutomatiques: Boolean!\n    $invitation: Boolean!\n  ) {\n    reglerAccesFournisseur(\n      id: $id\n      mode: $mode\n      groupeId: $groupeId\n      role: $role\n      ajoutsAutomatiques: $ajoutsAutomatiques\n      invitation: $invitation\n    ) {\n      id\n      accesFournisseur\n    }\n  }\n": types.ReglerAccesFournisseurDocument,
     "\n  mutation AppliquerPropositionAcces($id: ID!) {\n    appliquerPropositionAcces(id: $id)\n  }\n": types.AppliquerPropositionAccesDocument,
@@ -892,6 +894,10 @@ export function graphql(source: "\n  mutation VerifierAccesFournisseur {\n    ve
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation SaisirAdresseFournisseur($userId: ID!, $adresse: String) {\n    saisirAdresseFournisseur(userId: $userId, adresse: $adresse) {\n      adresseSaisie\n    }\n  }\n"): (typeof documents)["\n  mutation SaisirAdresseFournisseur($userId: ID!, $adresse: String) {\n    saisirAdresseFournisseur(userId: $userId, adresse: $adresse) {\n      adresseSaisie\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ReglerPorteeConnexion($portee: PorteeConnexionFichiers!) {\n    reglerPorteeConnexion(portee: $portee) {\n      portee\n    }\n  }\n"): (typeof documents)["\n  mutation ReglerPorteeConnexion($portee: PorteeConnexionFichiers!) {\n    reglerPorteeConnexion(portee: $portee) {\n      portee\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

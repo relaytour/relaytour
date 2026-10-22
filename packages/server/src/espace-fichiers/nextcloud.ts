@@ -6,6 +6,10 @@ import { adressePublique, agentNomme, agentPublic } from './reseau.ts'
 import {
   AccesRetire,
   FournisseurIndisponible,
+  type AnnuaireFournisseur,
+  type Beneficiaire,
+  type CompteAnnuaire,
+  type DroitElement,
   type ElementEspace,
   type Emplacement,
   type EspaceFichiers,
@@ -395,9 +399,67 @@ export function lireMultistatus(
   return entrees
 }
 
+// ── Droits d'un élément (ADR 0044) ───────────────────────────────────────────
+
+/** Un partage de Nextcloud, tel que l'API OCS des partages le rend. */
+export interface PartageNextcloud {
+  id: string | number
+  share_type: number
+  share_with?: string | null
+  share_with_displayname?: string | null
+  share_with_displayname_unique?: string | null
+  permissions?: number
+}
+
+/** Les droits de lecture et d'écriture de Nextcloud (lire = 1, modifier = 2). */
+const LECTURE = 1
+const ECRITURE = 1 | 2 | 4 | 8
+
+/** Un partage de Nextcloud, dans les mots de Relaytour. */
+export function droitNextcloud(p: PartageNextcloud): DroitElement | null {
+  const nom =
+    p.share_with_displayname?.trim() || p.share_with?.trim() || 'Partage'
+  const unique = p.share_with_displayname_unique?.toLowerCase() ?? null
+  let beneficiaire: Beneficiaire
+  switch (p.share_type) {
+    // Un compte de ce Nextcloud.
+    case 0:
+      if (!p.share_with) return null
+      beneficiaire = {
+        type: 'personne',
+        identifiant: p.share_with,
+        adresse: unique?.includes('@') ? unique : null,
+        nom,
+      }
+      break
+    case 1:
+      if (!p.share_with) return null
+      beneficiaire = { type: 'groupe', identifiant: p.share_with, nom }
+      break
+    // Une adresse mail, sans compte sur ce Nextcloud.
+    case 4:
+      beneficiaire = {
+        type: 'personne',
+        identifiant: null,
+        adresse: p.share_with?.toLowerCase() ?? null,
+        nom,
+      }
+      break
+    default:
+      beneficiaire = { type: 'lien', nom: 'Lien de partage' }
+  }
+  return {
+    identifiant: String(p.id),
+    beneficiaire,
+    role: ((p.permissions ?? LECTURE) & 2) === 2 ? 'ECRITURE' : 'LECTURE',
+    herite: false,
+  }
+}
+
 export function espaceNextcloud(
   jeton: Jeton,
-  c: ConfigurationNextcloud
+  c: ConfigurationNextcloud,
+  options: { annuaire?: boolean; gestion?: boolean } = {}
 ): EspaceFichiers {
   const secret = async (forcer: boolean) =>
     JSON.parse(await jeton(forcer)) as SecretNextcloud
@@ -530,8 +592,200 @@ export function espaceNextcloud(
     return versElement(await secret(false), entree)
   }
 
+  // L'annuaire de Nextcloud (ADR 0044) : la recherche des comptes du dialogue de
+  // partage, les partages d'un dossier, et les groupes quand le compte connecté
+  // les administre.
+  const ocs = async (
+    route: string,
+    init: { method?: string; formulaire?: Record<string, string> } = {}
+  ): Promise<{ statut: number; donnees: unknown }> => {
+    const { reponse } = await appel(s => ({
+      adresse: `${s.base}/ocs/v2.php/${route}${route.includes('?') ? '&' : '?'}format=json`,
+      init: {
+        method: init.method ?? 'GET',
+        headers: {
+          'ocs-apirequest': 'true',
+          accept: 'application/json',
+          ...(init.formulaire === undefined
+            ? {}
+            : { 'content-type': 'application/x-www-form-urlencoded' }),
+        },
+        ...(init.formulaire === undefined
+          ? {}
+          : { body: new URLSearchParams(init.formulaire).toString() }),
+      },
+    }))
+    const texteRecu = await texteBorne(reponse)
+    let donnees: unknown = {}
+    try {
+      donnees = (JSON.parse(texteRecu) as { ocs?: { data?: unknown } }).ocs
+        ?.data
+    } catch {
+      donnees = {}
+    }
+    return { statut: reponse.status, donnees }
+  }
+  const cheminPartage = async (p: Position) => `/${(await exiger(p)).join('/')}`
+  const annuaire = (gestion: boolean): AnnuaireFournisseur => ({
+    capacites: {
+      comptes: true,
+      droits: true,
+      membresDeGroupe: true,
+      partage: gestion,
+      gestionDeGroupe: gestion,
+    },
+    async chercherComptes(adresses) {
+      const resultat = new Map<string, CompteAnnuaire | null>()
+      for (const adresse of adresses) {
+        const { statut, donnees } = await ocs(
+          `apps/files_sharing/api/v1/sharees?search=${encodeURIComponent(adresse)}&itemType=folder&perPage=5&lookup=false`
+        )
+        if (statut !== 200) {
+          throw new FournisseurIndisponible(
+            `Nextcloud refuse la recherche d’un compte (${statut}).`
+          )
+        }
+        const exacts =
+          (
+            donnees as {
+              exact?: {
+                users?: {
+                  label?: string
+                  shareWithDisplayNameUnique?: string
+                  value?: { shareWith?: string }
+                }[]
+              }
+            }
+          ).exact?.users ?? []
+        const trouve = exacts.find(
+          u =>
+            u.shareWithDisplayNameUnique?.toLowerCase() ===
+            adresse.toLowerCase()
+        )
+        resultat.set(
+          adresse,
+          trouve?.value?.shareWith === undefined
+            ? null
+            : {
+                identifiant: trouve.value.shareWith,
+                adresse: adresse.toLowerCase(),
+                nom: trouve.label ?? trouve.value.shareWith,
+                invite: false,
+              }
+        )
+      }
+      return resultat
+    },
+    async droits(position) {
+      const { statut, donnees } = await ocs(
+        `apps/files_sharing/api/v1/shares?path=${encodeURIComponent(await cheminPartage(position))}&reshares=true`
+      )
+      if (statut === 404) return []
+      if (statut !== 200) {
+        throw new FournisseurIndisponible(
+          `Nextcloud refuse la lecture des partages (${statut}).`
+        )
+      }
+      return (Array.isArray(donnees) ? (donnees as PartageNextcloud[]) : [])
+        .map(droitNextcloud)
+        .filter((d): d is DroitElement => d !== null)
+    },
+    async membresDuGroupe(identifiant) {
+      // Seul un admin ou un sous-admin du groupe en lit les membres.
+      const { statut, donnees } = await ocs(
+        `cloud/groups/${encodeURIComponent(identifiant)}/users/details`
+      )
+      if (statut !== 200) return null
+      const utilisateurs = Object.values(
+        (
+          donnees as {
+            users?: Record<
+              string,
+              { id?: string; email?: string | null; displayname?: string }
+            >
+          }
+        ).users ?? {}
+      )
+      return utilisateurs.flatMap(u =>
+        u.id === undefined
+          ? []
+          : [
+              {
+                identifiant: u.id,
+                adresse: u.email?.toLowerCase() ?? '',
+                nom: u.displayname ?? u.id,
+                invite: false,
+              },
+            ]
+      )
+    },
+    ...(gestion
+      ? {
+          async partager(position, personne, { role }) {
+            const compte = personne.identifiant ?? null
+            const { statut, donnees } = await ocs(
+              'apps/files_sharing/api/v1/shares',
+              {
+                method: 'POST',
+                formulaire: {
+                  path: await cheminPartage(position),
+                  // Un compte de ce Nextcloud, sinon un partage par adresse mail.
+                  shareType: compte === null ? '4' : '0',
+                  shareWith: compte ?? personne.adresse,
+                  permissions: String(role === 'ECRITURE' ? ECRITURE : LECTURE),
+                },
+              }
+            )
+            const id = (donnees as { id?: string | number }).id
+            if (statut !== 200 || id === undefined) {
+              throw new FournisseurIndisponible(
+                `Nextcloud refuse le partage (${statut}).`
+              )
+            }
+            return { identifiant: String(id) }
+          },
+          async retirerPartage(_position, identifiant) {
+            const { statut } = await ocs(
+              `apps/files_sharing/api/v1/shares/${encodeURIComponent(identifiant)}`,
+              { method: 'DELETE' }
+            )
+            if (statut !== 200 && statut !== 404) {
+              throw new FournisseurIndisponible(
+                `Nextcloud refuse le retrait du partage (${statut}).`
+              )
+            }
+          },
+          async ajouterAuGroupe(groupe, compte) {
+            const { statut } = await ocs(
+              `cloud/users/${encodeURIComponent(compte)}/groups`,
+              { method: 'POST', formulaire: { groupid: groupe } }
+            )
+            if (statut !== 200) {
+              throw new FournisseurIndisponible(
+                `Nextcloud refuse l’ajout au groupe (${statut}).`
+              )
+            }
+          },
+          async retirerDuGroupe(groupe, compte) {
+            const { statut } = await ocs(
+              `cloud/users/${encodeURIComponent(compte)}/groups?groupid=${encodeURIComponent(groupe)}`,
+              { method: 'DELETE' }
+            )
+            if (statut !== 200 && statut !== 404) {
+              throw new FournisseurIndisponible(
+                `Nextcloud refuse le retrait du groupe (${statut}).`
+              )
+            }
+          },
+        }
+      : {}),
+  })
+
   return {
     fournisseur: 'NEXTCLOUD',
+    ...(options.annuaire === true
+      ? { annuaire: annuaire(options.gestion === true) }
+      : {}),
     // Nextcloud ne fabrique pas de PDF : un document bureautique se télécharge.
     convertitEnPdf: () => false,
 

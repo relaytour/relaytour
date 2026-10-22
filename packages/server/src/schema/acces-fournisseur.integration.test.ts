@@ -708,3 +708,50 @@ describe('propositions d’accès', () => {
     expect(await propositions('Pôles')).toEqual([])
   })
 })
+
+describe('fournisseur sans annuaire', () => {
+  it('compare les adresses aux droits, domaine compris, sans garder de compte', async () => {
+    const avant = new Date()
+    remplacerEspacePourLesTests(() =>
+      espaceEnMemoire(
+        [],
+        annuaireEnMemoire({
+          sansAnnuaire: true,
+          comptes: [],
+          droits: {
+            'd-commun': [
+              {
+                identifiant: 'p-domaine',
+                beneficiaire: {
+                  type: 'domaine',
+                  nom: 'Domaine exemple.fr',
+                  domaine: 'exemple.fr',
+                },
+                role: 'LECTURE',
+                herite: false,
+              },
+            ],
+          },
+          groupes: {},
+        })
+      )
+    )
+    try {
+      await verifierAcces(ids.org)
+      expect(etats(await lignes('Commun'))).toEqual({
+        // Son adresse saisie n'appartient pas au domaine.
+        accueillante: ['SANS_ACCES', null],
+        adminActivite: ['A_ACCES', 'domaine'],
+      })
+      expect(
+        await prisma.compteFournisseur.count({
+          where: { organisationId: ids.org, verifieLe: { gt: avant } },
+        })
+      ).toBe(0)
+    } finally {
+      remplacerEspacePourLesTests(() =>
+        espaceEnMemoire([], annuaireEnMemoire(donnees))
+      )
+    }
+  })
+})

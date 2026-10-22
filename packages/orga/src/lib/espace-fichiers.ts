@@ -649,6 +649,41 @@ export function voieLisible(via: string | null): string | null {
     : via
 }
 
+export const REGLER_PORTEE = graphql(`
+  mutation ReglerPorteeConnexion($portee: PorteeConnexionFichiers!) {
+    reglerPorteeConnexion(portee: $portee) {
+      portee
+    }
+  }
+`)
+
+/**
+ * Comment chaque fournisseur active la vérification et la gestion des accès
+ * (ADR 0044) : une reconnexion qui demande de nouvelles autorisations, ou un
+ * simple réglage quand l'accès accordé les couvre déjà.
+ */
+export const ACTIVATION_ACCES: Record<string, 'reconnexion' | 'reglage'> = {
+  SHAREPOINT: 'reconnexion',
+  DROPBOX: 'reconnexion',
+  GOOGLE_DRIVE: 'reglage',
+  NEXTCLOUD: 'reglage',
+}
+
+/** Les fournisseurs qui publient un annuaire des comptes. */
+export const AVEC_ANNUAIRE = new Set(['SHAREPOINT', 'NEXTCLOUD'])
+
+/** Ce que l'activation demande chez le fournisseur, pour l'admin qui l'active. */
+export const CONSENTEMENT: Record<string, string> = {
+  SHAREPOINT:
+    'La connexion demande de nouvelles autorisations : un admin Microsoft Entra les accepte pour l’organisation.',
+  DROPBOX:
+    'La connexion demande de lire, puis de modifier, les membres des dossiers partagés.',
+  GOOGLE_DRIVE:
+    'L’accès déjà accordé à Google Drive suffit : aucune reconnexion n’est nécessaire.',
+  NEXTCLOUD:
+    'L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe.',
+}
+
 export const GROUPES_DU_DOSSIER = graphql(`
   query GroupesDuDossier($id: ID!) {
     groupesDuDossier(id: $id) {

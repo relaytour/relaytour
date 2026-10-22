@@ -1,12 +1,15 @@
 import { appelSortant, type HotesAdmis } from './sortant.ts'
 import {
   AccesRetire,
+  type AnnuaireFournisseur,
+  type DroitElement,
   FournisseurIndisponible,
   type ElementEspace,
   type Emplacement,
   type EspaceFichiers,
   type Jeton,
   type ListeElements,
+  type Portee,
   type Position,
 } from './types.ts'
 
@@ -32,8 +35,15 @@ export const HOTES_DROPBOX: HotesAdmis = {
   suffixes: [],
 }
 
-const PORTEES =
+const FICHIERS =
   'account_info.read files.metadata.read files.content.read files.content.write'
+// La vérification lit les membres des dossiers partagés ; la gestion les modifie
+// (ADR 0044). L'application Dropbox de l'exploitant coche ces permissions.
+export const PORTEES_DROPBOX: Record<Portee, string> = {
+  FICHIERS,
+  ANNUAIRE: `${FICHIERS} sharing.read`,
+  GESTION: `${FICHIERS} sharing.read sharing.write`,
+}
 const API = 'https://api.dropboxapi.com/2'
 const CONTENU = 'https://content.dropboxapi.com/2'
 const ADRESSE_JETON = 'https://api.dropboxapi.com/oauth2/token'
@@ -78,7 +88,8 @@ export interface Jetons {
 export function adresseAutorisationDropbox(
   c: ConfigurationDropbox,
   etat: string,
-  defi: string
+  defi: string,
+  portee: Portee = 'FICHIERS'
 ): string {
   const parametres = new URLSearchParams({
     client_id: c.clientId,
@@ -86,7 +97,7 @@ export function adresseAutorisationDropbox(
     redirect_uri: c.retour,
     state: etat,
     token_access_type: 'offline',
-    scope: PORTEES,
+    scope: PORTEES_DROPBOX[portee],
     code_challenge: defi,
     code_challenge_method: 'S256',
   })
@@ -300,7 +311,90 @@ export function cheminDeLecture(p: Position): string {
   return p.base === null || p.base === RACINE ? relatif : `${p.base}${relatif}`
 }
 
-export function espaceDropbox(jeton: Jeton): EspaceFichiers {
+// ── Droits d'un élément (ADR 0044) ───────────────────────────────────────────
+
+type AccesDropbox = { '.tag'?: string }
+
+/** Les membres d'un dossier partagé, tels que `sharing/list_folder_members` les rend. */
+export interface MembresDropbox {
+  users?: {
+    access_type?: AccesDropbox
+    user?: { account_id?: string; email?: string; display_name?: string }
+    is_inherited?: boolean
+  }[]
+  groups?: {
+    access_type?: AccesDropbox
+    group?: { group_id?: string; group_name?: string }
+    is_inherited?: boolean
+  }[]
+  invitees?: {
+    access_type?: AccesDropbox
+    invitee?: { '.tag'?: string; email?: string }
+    is_inherited?: boolean
+  }[]
+}
+
+const roleDropbox = (a: AccesDropbox | undefined): 'LECTURE' | 'ECRITURE' =>
+  a?.['.tag'] === 'owner' || a?.['.tag'] === 'editor' ? 'ECRITURE' : 'LECTURE'
+
+/**
+ * Les membres d'un dossier partagé, dans les mots de Relaytour. Un membre se
+ * désigne par son adresse (`email:`), que le retrait d'un membre accepte.
+ */
+export function droitsDropbox(m: MembresDropbox): DroitElement[] {
+  const droits: DroitElement[] = []
+  for (const u of m.users ?? []) {
+    const adresse = u.user?.email?.toLowerCase() ?? null
+    droits.push({
+      identifiant:
+        adresse === null
+          ? (u.user?.account_id ?? 'compte')
+          : `email:${adresse}`,
+      beneficiaire: {
+        type: 'personne',
+        identifiant: u.user?.account_id ?? null,
+        adresse,
+        nom: u.user?.display_name ?? adresse ?? 'Personne',
+      },
+      role: roleDropbox(u.access_type),
+      herite: u.is_inherited === true,
+    })
+  }
+  for (const g of m.groups ?? []) {
+    if (g.group?.group_id === undefined) continue
+    droits.push({
+      identifiant: `groupe:${g.group.group_id}`,
+      beneficiaire: {
+        type: 'groupe',
+        identifiant: g.group.group_id,
+        nom: g.group.group_name ?? 'Groupe',
+      },
+      role: roleDropbox(g.access_type),
+      herite: g.is_inherited === true,
+    })
+  }
+  for (const i of m.invitees ?? []) {
+    const adresse = i.invitee?.email?.toLowerCase()
+    if (adresse === undefined) continue
+    droits.push({
+      identifiant: `email:${adresse}`,
+      beneficiaire: {
+        type: 'personne',
+        identifiant: null,
+        adresse,
+        nom: adresse,
+      },
+      role: roleDropbox(i.access_type),
+      herite: i.is_inherited === true,
+    })
+  }
+  return droits
+}
+
+export function espaceDropbox(
+  jeton: Jeton,
+  options: { annuaire?: boolean; gestion?: boolean } = {}
+): EspaceFichiers {
   const meta = (chemin: string, emplacement: string) =>
     rpc<MetaDropbox>('files/get_metadata', { path: chemin }, jeton, emplacement)
 
@@ -325,8 +419,100 @@ export function espaceDropbox(jeton: Jeton): EspaceFichiers {
     etag: null,
   })
 
+  // L'annuaire de Dropbox (ADR 0044) : les membres d'un dossier partagé. Dropbox
+  // ne publie pas d'annuaire hors d'une application d'équipe : Relaytour compare
+  // les adresses, et les membres d'un groupe ne se lisent pas.
+  const dossierPartage = async (p: Position): Promise<string | null> => {
+    const m = await rpc<{
+      sharing_info?: {
+        shared_folder_id?: string
+        parent_shared_folder_id?: string
+      }
+    }>('files/get_metadata', { path: cheminDeLecture(p) }, jeton, p.emplacement)
+    return (
+      m?.sharing_info?.shared_folder_id ??
+      m?.sharing_info?.parent_shared_folder_id ??
+      null
+    )
+  }
+  const annuaire = (gestion: boolean): AnnuaireFournisseur => ({
+    capacites: {
+      comptes: false,
+      droits: true,
+      membresDeGroupe: false,
+      partage: gestion,
+      gestionDeGroupe: false,
+    },
+    chercherComptes: adresses =>
+      Promise.resolve(new Map(adresses.map(a => [a, null]))),
+    membresDuGroupe: () => Promise.resolve(null),
+    async droits(position) {
+      const partage = await dossierPartage(position)
+      // Un dossier qui n'est pas partagé n'a que son propriétaire.
+      if (partage === null) return []
+      const membres = await rpc<MembresDropbox>(
+        'sharing/list_folder_members',
+        { shared_folder_id: partage, limit: 1000 },
+        jeton,
+        position.emplacement
+      )
+      return droitsDropbox(membres ?? {})
+    },
+    ...(gestion
+      ? {
+          async partager(position, personne, { role, invitation }) {
+            const partage = await dossierPartage(position)
+            if (partage === null) {
+              throw new FournisseurIndisponible(
+                'Partagez d’abord ce dossier dans Dropbox.'
+              )
+            }
+            const adresse = personne.adresse.toLowerCase()
+            await rpc(
+              'sharing/add_folder_member',
+              {
+                shared_folder_id: partage,
+                members: [
+                  {
+                    member: { '.tag': 'email', email: adresse },
+                    access_level: {
+                      '.tag': role === 'ECRITURE' ? 'editor' : 'viewer',
+                    },
+                  },
+                ],
+                quiet: !invitation,
+              },
+              jeton,
+              position.emplacement
+            )
+            return { identifiant: `email:${adresse}` }
+          },
+          async retirerPartage(position, identifiant) {
+            const partage = await dossierPartage(position)
+            if (partage === null || !identifiant.startsWith('email:')) return
+            await rpc(
+              'sharing/remove_folder_member',
+              {
+                shared_folder_id: partage,
+                member: {
+                  '.tag': 'email',
+                  email: identifiant.slice('email:'.length),
+                },
+                leave_a_copy: false,
+              },
+              jeton,
+              position.emplacement
+            )
+          },
+        }
+      : {}),
+  })
+
   return {
     fournisseur: 'DROPBOX',
+    ...(options.annuaire === true
+      ? { annuaire: annuaire(options.gestion === true) }
+      : {}),
     convertitEnPdf: convertibleParDropbox,
 
     async emplacements(): Promise<Emplacement[]> {

@@ -1670,6 +1670,14 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'reglerPorteeConnexion',
+    query: 'mutation { reglerPorteeConnexion(portee: GESTION) { portee } }',
+    variables: () => ({}),
+    // Sans identifiant de A : l'admin de B ne règle que sa propre connexion,
+    // absente ici.
+    attente: REFUSE,
+  },
+  {
     operation: 'groupesDuDossier',
     query: 'query ($id: ID!) { groupesDuDossier(id: $id) { nom } }',
     variables: () => ({ id: a.dossierLie }),

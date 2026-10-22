@@ -83,8 +83,11 @@ export type Beneficiaire =
       nom: string
     }
   | { type: 'groupe'; identifiant: string; nom: string }
-  /** Tous les comptes de l'organisation du fournisseur, invités exclus. */
-  | { type: 'domaine'; nom: string }
+  /**
+   * Les comptes d'un domaine (`exemple.org`), ou, sans domaine, tous les comptes
+   * de l'organisation du fournisseur, invités exclus.
+   */
+  | { type: 'domaine'; nom: string; domaine?: string }
   /** Un lien de partage : il ne nomme personne. */
   | { type: 'lien'; nom: string }
 
@@ -99,6 +102,10 @@ export interface DroitElement {
 
 /** Ce que l'annuaire d'un fournisseur sait faire. */
 export interface CapacitesAnnuaire {
+  /**
+   * Chercher un compte par adresse. Sans annuaire, Relaytour compare les
+   * adresses des droits à celles des personnes.
+   */
   comptes: boolean
   droits: boolean
   membresDeGroupe: boolean
@@ -132,7 +139,7 @@ export interface AnnuaireFournisseur {
    */
   partager?(
     position: Position,
-    personne: { adresse: string },
+    personne: { adresse: string; identifiant?: string | null },
     options: { role: 'LECTURE' | 'ECRITURE'; invitation: boolean }
   ): Promise<{ identifiant: string }>
   /** Retire un droit de l'élément. Un droit absent ne lève pas. */

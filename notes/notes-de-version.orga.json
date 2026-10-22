@@ -71,6 +71,19 @@
             "texte": "L'écran « Ressources » réunit les fiches méthode et les documents de l'association. Ses vues « Fiches » et « Documents » ne changent pas. Le bloc « Ressources liées » d'une fiche s'appelle désormais « Documents liés ». Pour les admins de l'organisation, l'écran « Espace de fichiers » devient « Fournisseur cloud ». Les adresses des écrans restent les mêmes.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-22-orga-la-verification-des-acces-gagne-google-drive-dropbox-et-next",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La vérification des accès gagne Google Drive, Dropbox et Nextcloud",
+            "texte": "La vérification et la gestion des accès fonctionnent aussi avec Google Drive, Dropbox et Nextcloud. Google Drive et Nextcloud les activent sans reconnexion ; Dropbox demande une reconnexion. Google Drive et Dropbox ne publient pas d'annuaire : Relaytour compare alors l'adresse de chaque personne à celles des droits du dossier, domaine compris. Dans l'onglet « Comptes », vous saisissez l'adresse qu'une personne utilise chez le fournisseur quand elle diffère.",
+            "migration": null
+          }
         }
       ]
     },

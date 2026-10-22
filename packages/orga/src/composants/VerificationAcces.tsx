@@ -14,6 +14,8 @@ import type {
 import { useActivite } from '../lib/activite'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import {
+  AVEC_ANNUAIRE,
+  CONSENTEMENT,
   resumeMode,
   VERIFICATION_ACCES,
   VERIFIER_ACCES,
@@ -253,8 +255,7 @@ export default function VerificationAcces({
         ) : (
           <>
             <p className="rt-texte-secondaire">
-              La connexion demande de nouvelles autorisations. Chez Microsoft,
-              un admin Microsoft Entra doit les accepter pour l’organisation.
+              {CONSENTEMENT[connexion.fournisseur]}
             </p>
             <Button type="primary" onClick={onActiver}>
               Activer la vérification des accès
@@ -293,6 +294,14 @@ export default function VerificationAcces({
             : 'Aucune vérification pour l’instant. Relaytour vérifie aussi chaque nuit.'}
         </span>
       </div>
+      {!AVEC_ANNUAIRE.has(connexion.fournisseur) && (
+        <Alert
+          type="info"
+          showIcon
+          title="Ce fournisseur ne publie pas d’annuaire des comptes."
+          description="Relaytour compare les adresses des personnes à celles des droits du dossier. Une personne qui utilise une autre adresse chez le fournisseur paraît sans accès, et les membres d’un groupe ne se lisent pas."
+        />
+      )}
       {connexion.accesErreur && (
         <Alert type="warning" showIcon title={connexion.accesErreur} />
       )}

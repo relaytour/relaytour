@@ -100,7 +100,10 @@ interface DroitsLus {
   voies: Map<string, Voie>
   /** Les noms des comptes qui ont un droit, par la même clé. */
   noms: Map<string, string>
+  /** Vrai pour un droit de toute l'organisation du fournisseur. */
   domaine: boolean
+  /** Les domaines nommés (`exemple.org`) qui ont un droit. */
+  domaines: Set<string>
   /** Vrai quand un groupe ne se lit pas : il couvre peut-être d'autres personnes. */
   inconnu: boolean
 }
@@ -118,6 +121,7 @@ async function lireDroits(
     voies: new Map(),
     noms: new Map(),
     domaine: false,
+    domaines: new Set(),
     inconnu: false,
   }
   const ajouter = (cles: string[], nom: string, voie: Voie) => {
@@ -136,7 +140,10 @@ async function lireDroits(
   })
   lus.droits = droits
   for (const { beneficiaire: b } of droits) {
-    if (b.type === 'domaine') lus.domaine = true
+    if (b.type === 'domaine') {
+      if (b.domaine === undefined) lus.domaine = true
+      else lus.domaines.add(b.domaine.toLowerCase())
+    }
     if (b.type === 'personne') {
       const cles = [
         ...(b.identifiant === null ? [] : [cleId(b.identifiant)]),
@@ -193,6 +200,24 @@ async function rapprocherComptes(
   const saisies = new Map(existants.map(c => [c.userId, c.adresseSaisie]))
   const adresseDe = (p: PersonneAttendue) =>
     (saisies.get(p.userId) ?? p.email).toLowerCase()
+  // Sans annuaire, chaque personne vaut par son adresse : un droit à cette
+  // adresse la couvre, et aucun compte ne se garde.
+  if (!annuaire.capacites.comptes) {
+    return {
+      comptes: new Map(
+        personnes.map(p => [
+          p.userId,
+          {
+            identifiant: adresseDe(p),
+            adresse: adresseDe(p),
+            nom: adresseDe(p),
+            invite: false,
+          },
+        ])
+      ),
+      adresses: new Map(personnes.map(p => [p.userId, adresseDe(p)])),
+    }
+  }
   const trouves = await annuaire.chercherComptes([
     ...new Set(personnes.map(adresseDe)),
   ])
@@ -314,7 +339,10 @@ export async function verifierAcces(organisationId: string): Promise<void> {
         for (const cle of cles) vus.add(cle)
         const voie =
           cles.map(c => lus.voies.get(c)).find(v => v !== undefined) ??
-          (lus.domaine && !compte.invite ? 'domaine' : undefined)
+          ((lus.domaine && !compte.invite) ||
+          lus.domaines.has(compte.adresse.split('@').pop() ?? '')
+            ? 'domaine'
+            : undefined)
         lignes.push({
           userId: p.userId,
           nom: null,

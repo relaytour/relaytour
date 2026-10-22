@@ -82,7 +82,12 @@ function SaisirAdresse({
  * chez le fournisseur, trouvé, invité ou absent. Un admin y saisit l'adresse d'un
  * compte qui diffère de l'adresse Relaytour.
  */
-export default function ComptesFournisseur() {
+export default function ComptesFournisseur({
+  annuaire,
+}: {
+  /** Faux pour un fournisseur sans annuaire : seules les adresses comptent. */
+  annuaire: boolean
+}) {
   const { data, loading } = useQuery(COMPTES_FOURNISSEUR)
   const [recherche, setRecherche] = useState('')
   const [modifie, setModifie] = useState<Compte | null>(null)
@@ -99,9 +104,9 @@ export default function ComptesFournisseur() {
   return (
     <Panneau titre="Comptes chez le fournisseur" icone={<TeamOutlined />}>
       <p className="rt-texte-secondaire">
-        Relaytour cherche chaque personne attendue par un dossier lié dans
-        l’annuaire du fournisseur, par son adresse. Il ne lit jamais tout
-        l’annuaire. Une personne qu’aucun dossier n’attend n’est pas cherchée.
+        {annuaire
+          ? 'Relaytour cherche chaque personne attendue par un dossier lié dans l’annuaire du fournisseur, par son adresse. Il ne lit jamais tout l’annuaire. Une personne qu’aucun dossier n’attend n’est pas cherchée.'
+          : 'Ce fournisseur ne publie pas d’annuaire : Relaytour compare l’adresse de chaque personne à celles des droits. Saisissez l’adresse qu’une personne utilise chez le fournisseur quand elle diffère.'}
       </p>
       <Input.Search
         allowClear
@@ -131,7 +136,7 @@ export default function ComptesFournisseur() {
                       : `${c.adresseSaisie} (saisie par un admin)`}
                   </span>
                 </span>
-                {etat === null || etat === undefined ? (
+                {!annuaire ? null : etat === null || etat === undefined ? (
                   <Tag>Non cherché</Tag>
                 ) : (
                   <Tag color={etat.couleur}>{etat.libelle}</Tag>
