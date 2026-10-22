@@ -109,6 +109,9 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
     'Candidatures',
     'BenevolesARepartir',
     'CouvertureProgramme',
+    // Une fiche créée, modifiée ou fusionnée change les doublons possibles
+    // (ADR 0042).
+    'DoublonsBenevoles',
   ],
   AGENDA: [
     'Agenda',

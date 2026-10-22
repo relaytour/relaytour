@@ -6,7 +6,7 @@
     <title>Recruter et répartir les bénévoles · Modes d'emploi · Relaytour</title>
     <meta
       name="description"
-      content="Le mode d'emploi des appels à bénévoles dans l'espace organisateur de Relaytour : renforts recherchés, appel et adresse publique, candidatures, confirmation par la personne et vue « Répartition » du programme."
+      content="Le mode d'emploi des appels à bénévoles dans l'espace organisateur de Relaytour : renforts recherchés, appel et adresse publique, candidatures, confirmation par la personne, vue « Répartition » du programme, import d'une liste et fusion des doublons."
     />
     <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="stylesheet" href="../jetons.css" />
@@ -83,6 +83,8 @@
             <li><a href="#e-candidatures">Traiter les candidatures</a> : accepter, refuser, la liste d'attente.</li>
             <li><a href="#e-espace">Le lien personnel et l'espace bénévole</a> : le mail, la confirmation, la relance.</li>
             <li><a href="#e-repartition">Répartir dans le programme</a> : la couverture et les bénévoles à répartir.</li>
+            <li><a href="#e-import">Importer une liste</a> : un export de billetterie, un formulaire ou un tableur.</li>
+            <li><a href="#e-doublons">Doublons possibles et fusion</a> : réunir deux fiches de la même personne.</li>
             <li><a href="#t-acces">Qui voit quoi</a> : les droits des admins, des référentes et des référents.</li>
           </ol>
         </nav>
@@ -208,6 +210,69 @@
         </article>
       </section>
 
+      <section aria-labelledby="t-import">
+        <div class="entete">
+          <span class="etiquette">Listes existantes</span>
+          <h2 id="t-import">Importer une liste tenue ailleurs</h2>
+          <p class="texte">
+            Vos bénévoles sont parfois déjà inscrits ailleurs : une billetterie en ligne, un formulaire, un tableur. L'import les fait entrer dans Relaytour sans ressaisie.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="e-import">
+          <div class="ecran-tete"><h3>Importer une liste</h3><span class="route">/&lt;activité&gt;/benevoles/import</span></div>
+          <p>Le bouton « Importer une liste » de l'écran « Bénévoles » ouvre un assistant en cinq étapes. Il s'affiche pour les admins de l'activité et pour les personnes qui écrivent dans un périmètre.</p>
+          <p>Votre navigateur lit le fichier : un CSV ou un classeur XLSX de 2 Mo, 5 000 lignes et 200 colonnes au plus. Seules les colonnes associées partent vers le serveur, et le fichier n'est gardé nulle part.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Fichier</span></span><span>Choisir la période, la portée et le fichier, puis nommer la source (« Billetterie du 7 août »). Un admin importe pour tout le programme ; une référente ou un référent importe pour son périmètre.</span></li>
+            <li><span><span class="libelle">Colonnes</span></span><span>Vérifier le champ proposé pour chaque colonne : prénom, nom, adresse, téléphone, précisions, postes et créneaux, identifiant externe.</span></li>
+            <li><span><span class="libelle">Séquences</span></span><span>Associer chaque poste ou créneau du fichier à une séquence du programme, à une simple disponibilité, ou l'ignorer.</span></li>
+            <li><span><span class="libelle">Aperçu</span></span><span>Relire le bilan, trancher pour les fiches proches et confirmer l'accord des personnes, puis importer.</span></li>
+            <li><span><span class="libelle">Rapport</span></span><span>Lire le nombre de personnes importées, de fiches créées ou rejointes et de places.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/import-colonnes.webp" data-mobile="../captures/mobile/import-colonnes.webp" width="1440" height="900" loading="lazy" alt="Étape Colonnes de l'import : chaque colonne d'un export de billetterie fictif, avec trois exemples et le champ proposé, dont le numéro de billet en identifiant externe." />
+            <figcaption>L'étape « Colonnes » d'un export de billetterie fictif.</figcaption>
+          </figure>
+          <p>Relaytour propose un champ d'après l'en-tête et le contenu de chaque colonne. Une marque « À vérifier » signale une proposition incertaine. Une colonne de genre, de santé ou de paiement reste toujours ignorée.</p>
+          <p>Enregistrez une <strong>correspondance d'import</strong> pour retrouver vos choix au prochain fichier de la même source. Une correspondance garde les en-têtes et les associations, jamais les données des personnes.</p>
+          <p>Le fichier peut décrire les postes de trois façons. Une colonne par poste ou par créneau, dont une cellule remplie signifie « choisi ». Une cellule qui énumère plusieurs postes et horaires. Plusieurs lignes par personne, réunies par une colonne de regroupement.</p>
+          <figure>
+            <img src="../captures/import-sequences.webp" width="1440" height="900" loading="lazy" alt="Étape Séquences de l'import : les postes du fichier avec leurs horaires, chacun associé à une séquence du programme, et le choix entre À répartir et Places directes." />
+            <figcaption>L'étape « Séquences » : chaque poste du fichier rejoint une séquence du programme.</figcaption>
+          </figure>
+          <p>Un horaire sans jour reçoit le jour choisi en haut de l'étape. Indiquez aussi les valeurs qui signifient « non » dans votre outil, par exemple « non » ou « false ».</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">À répartir</span></span><span>Chaque personne devient une candidature à traiter, dans un appel propre à la source. L'option « Accepter tout » accepte d'un geste les séquences associées.</span></li>
+            <li><span><span class="libelle">Places directes</span></span><span>Chaque personne reçoit sa fiche et ses places dans les séquences associées. Ce mode exige au moins une séquence associée.</span></li>
+            <li><span><span class="libelle">Prévenir par mail</span></span><span>Envoyer le lien personnel à la première place d'une personne. Décochez l'option si votre équipe contacte ses bénévoles elle-même.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/import-apercu.webp" data-mobile="../captures/mobile/import-apercu.webp" width="1440" height="900" loading="lazy" alt="Étape Aperçu de l'import : quatre personnes à importer, une ligne écartée, deux fiches rejointes, puis les fiches proches avec le choix Rejoindre ou Créer une fiche." />
+            <figcaption>L'aperçu annonce le bilan avant toute écriture.</figcaption>
+          </figure>
+          <p>L'aperçu ne modifie rien. Il compte les personnes à importer, celles déjà importées et les lignes écartées. Une ligne sans nom, sans adresse et sans téléphone est écartée, comme un lot de billets anonymes.</p>
+          <p>Une personne qui porte l'adresse d'une fiche existante la rejoint d'office. Pour un même téléphone ou un nom proche, vous choisissez « Rejoindre » ou « Créer une fiche ». Les lignes écartées se téléchargent en CSV.</p>
+          <p class="note">Aucun mail ne part à l'import. Un identifiant externe, comme un numéro de billet, rend l'import rejouable : un fichier mis à jour n'ajoute que les nouvelles personnes. La date de l'accord vaut la date de l'import, sauf colonne associée.</p>
+        </article>
+
+        <article class="verre ecran" id="e-doublons">
+          <div class="ecran-tete"><h3>Doublons possibles et fusion</h3><span class="route">/&lt;activité&gt;/benevoles?onglet=doublons</span></div>
+          <p>L'onglet « Doublons possibles » de l'écran « Bénévoles » rapproche les fiches qui semblent décrire la même personne. Il s'affiche pour les admins de l'activité seulement, car la fusion touche des fiches créées par d'autres.</p>
+          <figure>
+            <img src="../captures/benevoles-doublons.webp" data-mobile="../captures/mobile/benevoles-doublons.webp" width="1440" height="900" loading="lazy" alt="Onglet Doublons possibles : deux paires de fiches fictives, l'une avec le même téléphone, l'autre avec un nom proche, chacune avec les boutons Fusionner et Ce ne sont pas des doublons." />
+            <figcaption>Deux paires de fiches à examiner après un import.</figcaption>
+          </figure>
+          <ul class="gestes">
+            <li><span><span class="libelle">Même adresse</span><span class="libelle">Même téléphone</span><span class="libelle">Nom proche</span></span><span>Le motif du rapprochement, du plus sûr au moins sûr.</span></li>
+            <li><span><span class="libelle">Fusionner</span></span><span>Choisir le nom, l'adresse et le téléphone gardés, puis réunir les deux fiches en une seule.</span></li>
+            <li><span><span class="libelle">Ce ne sont pas des doublons</span></span><span>Écarter la paire après confirmation. Elle ne sera plus proposée.</span></li>
+          </ul>
+          <p>La fusion garde la première fiche de la paire. Elle y réunit les places, les disponibilités et les candidatures de la seconde, puis supprime la seconde. Les notes se mettent bout à bout.</p>
+          <p class="note">Le lien personnel et la confirmation suivent l'adresse gardée. Deux places dans la même séquence n'en font plus qu'une.</p>
+        </article>
+      </section>
+
       <section aria-labelledby="t-acces">
         <div class="entete">
           <span class="etiquette">Droits</span>
@@ -227,7 +292,7 @@
           </div>
           <div class="verre panneau">
             <h3>Les bénévoles à répartir</h3>
-            <p>Les personnes d'un appel sur toute la période se voient par toute personne qui écrit dans un périmètre : nom, plages, précisions, choix et places. L'adresse et le téléphone restent réservés.</p>
+            <p>Les personnes d'un appel ou d'un import sur toute la période se voient par toute personne qui écrit dans un périmètre : nom, plages, précisions, choix et places. L'adresse et le téléphone restent réservés.</p>
           </div>
         </div>
         <p class="note">Une fiche bénévole garde les règles de lecture des coordonnées décrites dans le <a href="referent.html#e-benevoles">mode d'emploi des référentes et référents</a>. Une place à confirmer compte comme une place pour ces règles.</p>
@@ -261,7 +326,7 @@
       </section>
 
       <footer>
-        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.19.0.
+        Relaytour, espace organisateur. Les captures proviennent de l'organisation d'exemple, fictive et anonyme. Mode d'emploi à jour de la version 0.20.0.
       </footer>
     </main>
     <script src="../bascule.js"></script>
