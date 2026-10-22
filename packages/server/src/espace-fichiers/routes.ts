@@ -9,7 +9,7 @@ import { publierChangement } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
 
 import { cheminValide, disposition, formatApercu, typeServi } from './chemin.ts'
-import { dossierLisible } from './droits.ts'
+import { dossierLisiblePour } from './droits.ts'
 import { cheminDeLExportSous, dansLExport } from './isolement.ts'
 import { echangerCodeDropbox, nomDuCompteDropbox } from './dropbox.ts'
 import { echangerCodeGoogle, nomDuCompteGoogle, type Jetons } from './google.ts'
@@ -208,7 +208,11 @@ async function apercu(
   const brut = typeof req.query.chemin === 'string' ? req.query.chemin : ''
   const chemin = brut.split('/')
   const telecharger = req.query.telecharger === '1'
-  const dossier = await dossierLisible(ctx, dossierId)
+  // Un document lié ouvert aux lecteurs de sa fiche se lit par son identifiant,
+  // sans ouvrir le reste du dossier (ADR 0043).
+  const ressourceId =
+    typeof req.query.ressource === 'string' ? req.query.ressource : null
+  const dossier = await dossierLisiblePour(ctx, dossierId, chemin, ressourceId)
   if (dossier === null || brut === '' || !cheminValide(chemin)) {
     res.status(404).json({ code: 'NOT_FOUND' })
     return

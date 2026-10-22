@@ -389,6 +389,7 @@ export async function construireExport(organisationId: string) {
           chemin: r.chemin,
           type: r.type,
           nom: r.nom,
+          ouverteAuxLecteurs: r.ouverteAuxLecteurs,
         })),
         versions: f.versions.map(v => ({
           titre: v.titre,

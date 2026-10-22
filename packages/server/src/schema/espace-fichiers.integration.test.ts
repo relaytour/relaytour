@@ -139,6 +139,9 @@ const DOSSIERS = `query ($a: ID, $p: ID) { dossiersLies(activiteId: $a, perimetr
 const CONTENU = `query ($id: ID!, $c: [String!]!) {
   contenuDossierLie(id: $id, chemin: $c) { complet elements { elementId nom dossier taille apercu lienWeb } }
 }`
+const CONTENU_RESSOURCE = `query ($id: ID!, $c: [String!]!, $r: ID) {
+  contenuDossierLie(id: $id, chemin: $c, ressource: $r) { complet elements { nom } }
+}`
 const PARCOURIR = `query ($c: [String!]!) { parcourirEspaceFichiers(emplacement: "bibliotheque", chemin: $c) { complet elements { nom dossier } } }`
 
 async function lier(
@@ -923,6 +926,153 @@ describe('ressources liées à une fiche', () => {
     await prisma.ficheConnexe.deleteMany({
       where: { ficheId: ids.ficheNatation },
     })
+  })
+
+  it('s’ouvrent aux lecteurs de la fiche par un admin, sans ouvrir le reste du dossier', async () => {
+    await prisma.ficheConnexe.create({
+      data: { ficheId: ids.ficheNatation, perimetreId: ids.basket },
+    })
+    const plan = await prisma.ressourceFiche.findFirstOrThrow({
+      where: { ficheId: ids.ficheNatation, nom: 'Plan.pdf' },
+    })
+    const archives = lue(
+      await executer(ids.admin, LIER_RESSOURCE, {
+        f: ids.ficheNatation,
+        d: ids.dossierNatation,
+        c: ['Archives'],
+      })
+    )
+    const OUVRIR = `mutation ($id: ID!, $o: Boolean!) { ouvrirDocumentLie(id: $id, ouvert: $o) { id ouverteAuxLecteurs } }`
+    const SANS_ACCES = `query ($s: String!, $a: ID) { fiche(slug: $s, activiteId: $a) { ressources { nom ouverteAuxLecteurs perimetresSansAcces { slug } } } }`
+    const sansAcces = async (qui: string) => {
+      const r = await executer(qui, SANS_ACCES, {
+        s: ficheNatation,
+        a: ids.activite,
+      })
+      expect(r.errors).toBeUndefined()
+      return Object.fromEntries(
+        (
+          r.data as {
+            fiche: {
+              ressources: {
+                nom: string
+                perimetresSansAcces: { slug: string }[]
+              }[]
+            }
+          }
+        ).fiche.ressources.map(x => [
+          x.nom,
+          x.perimetresSansAcces.map(p => p.slug),
+        ])
+      )
+    }
+    try {
+      // La personne qui rédige lit les périmètres qui n'ouvriront pas le document.
+      expect(await sansAcces(ids.nageuse)).toEqual({
+        'Plan.pdf': ['basket'],
+        'Charte.md': [],
+        Natation: ['basket'],
+        Archives: ['basket'],
+      })
+      // Une personne qui ne rédige pas la fiche ne le lit pas.
+      expect(Object.values(await sansAcces(ids.basketteur)).flat()).toEqual([])
+
+      // Seul un admin de l'organisation ouvre un document.
+      for (const [qui, organisation] of [
+        [ids.nageuse, slug],
+        [ids.adminActivite, slug],
+        [ids.basketteur, slug],
+        [ids.externe, slugAutre],
+      ] as const) {
+        expect(
+          code(
+            await executer(qui, OUVRIR, { id: plan.id, o: true }, organisation)
+          )
+        ).toBe('FORBIDDEN')
+      }
+      for (const id of [plan.id, archives.id]) {
+        expect(
+          (await executer(ids.admin, OUVRIR, { id, o: true })).errors
+        ).toBeUndefined()
+      }
+      expect((await sansAcces(ids.nageuse))['Plan.pdf']).toEqual([])
+
+      // Le référent du basket ouvre le fichier, par son seul document.
+      const ouvrables = await executer(ids.basketteur, RESSOURCES_OUVRABLES, {
+        s: ficheNatation,
+        a: ids.activite,
+      })
+      expect(
+        (
+          ouvrables.data as { fiche: { ressources: RessourceOuvrable[] } }
+        ).fiche.ressources.find(r => r.nom === 'Plan.pdf')
+      ).toMatchObject({ ouvrable: true, existe: true })
+      const statut = async (
+        dossier: string,
+        chemin: string,
+        ressource?: string
+      ) => {
+        const r = await apercu(
+          ids.basketteur,
+          dossier,
+          chemin,
+          ressource === undefined ? '' : `&ressource=${ressource}`
+        )
+        await r.body?.cancel()
+        return r.status
+      }
+      expect(await statut(ids.dossierNatation, 'Plan.pdf', plan.id)).toBe(200)
+      expect(await statut(ids.dossierNatation, 'Plan.pdf')).toBe(404)
+      // Un fichier voisin, ou un fichier sous le document, reste fermé.
+      expect(
+        await statut(ids.dossierNatation, 'Archives/Ancien.docx', plan.id)
+      ).toBe(404)
+      expect(await statut(ids.dossierBasket, 'Equipes.txt', plan.id)).toBe(200)
+      expect(await statut(ids.dossierNatation, 'Plan.pdf', archives.id)).toBe(
+        404
+      )
+      // Un sous-dossier ouvert se parcourt vers le bas, jamais vers le haut.
+      expect(
+        await statut(ids.dossierNatation, 'Archives/Ancien.docx', archives.id)
+      ).toBe(200)
+      const contenu = async (c: string[], ressource: string) =>
+        executer(ids.basketteur, CONTENU_RESSOURCE, {
+          id: ids.dossierNatation,
+          c,
+          r: ressource,
+        })
+      expect((await contenu(['Archives'], archives.id)).errors).toBeUndefined()
+      expect(code(await contenu([], archives.id))).toBe('FORBIDDEN')
+      expect(code(await contenu([], plan.id))).toBe('FORBIDDEN')
+      // Un document d'une autre fiche ne sert pas de passe.
+      expect(code(await contenu(['Archives'], 'inconnu'))).toBe('FORBIDDEN')
+
+      // Sans le partage, la fiche ne se lit plus, et le document non plus.
+      await prisma.ficheConnexe.deleteMany({
+        where: { ficheId: ids.ficheNatation },
+      })
+      expect(await statut(ids.dossierNatation, 'Plan.pdf', plan.id)).toBe(404)
+
+      // Un admin referme le document.
+      expect(
+        (await executer(ids.admin, OUVRIR, { id: plan.id, o: false })).data
+      ).toEqual({
+        ouvrirDocumentLie: { id: plan.id, ouverteAuxLecteurs: false },
+      })
+    } finally {
+      await prisma.ficheConnexe.deleteMany({
+        where: { ficheId: ids.ficheNatation },
+      })
+      await prisma.ressourceFiche.update({
+        where: { id: plan.id },
+        data: {
+          ouverteAuxLecteurs: false,
+          ouverteParId: null,
+          ouverteLe: null,
+        },
+      })
+      await prisma.ressourceFiche.delete({ where: { id: archives.id } })
+    }
   })
 
   it('se retirent par une personne qui rédige la fiche', async () => {

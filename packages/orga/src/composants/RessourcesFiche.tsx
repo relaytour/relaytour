@@ -1,6 +1,21 @@
-import { DeleteOutlined, FolderOutlined, LinkOutlined } from '@ant-design/icons'
+import {
+  DeleteOutlined,
+  ExclamationCircleOutlined,
+  FolderOutlined,
+  LinkOutlined,
+} from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
-import { App, Button, Empty, Modal, Popconfirm, Skeleton, Tag } from 'antd'
+import {
+  App,
+  Button,
+  Empty,
+  Modal,
+  Popconfirm,
+  Popover,
+  Skeleton,
+  Space,
+  Tag,
+} from 'antd'
 import { useState } from 'react'
 
 import type { RessourcesFicheQuery } from '../gql/graphql'
@@ -11,8 +26,12 @@ import {
   DOSSIERS_LIES,
   ICONES_APERCU,
   LIER_RESSOURCE,
+  MODIFIER_DOSSIER_LIE,
+  OUVRIR_DOCUMENT,
   RESSOURCES_FICHE,
 } from '../lib/espace-fichiers'
+import { MOI } from '../lib/requetes'
+import { useMentions } from '../lib/useMentions'
 import ExplorateurDossier, { type DossierAffiche } from './ExplorateurDossier'
 import Liseuse, { type DocumentOuvert } from './Liseuse'
 import { Panneau } from './Panneau'
@@ -133,6 +152,164 @@ function LierRessource({
   )
 }
 
+/** « Basket », « Basket et Accueil », « Basket, Accueil et Voile ». */
+function enumerer(noms: string[]): string {
+  if (noms.length <= 1) return noms.join('')
+  return `${noms.slice(0, -1).join(', ')} et ${noms[noms.length - 1]}`
+}
+
+/**
+ * L'accès à un document lié d'une fiche partagée (ADR 0043). La personne qui
+ * rédige lit les périmètres qui n'ouvriront pas le document. Un admin de
+ * l'organisation étend le dossier lié aux périmètres et aux groupes de la fiche,
+ * ouvre ce seul document à ses lecteurs, ou le referme.
+ */
+function AccesDocument({
+  ressource: r,
+  groupesDeLaFiche,
+  admin,
+}: {
+  ressource: Ressource
+  groupesDeLaFiche: string[]
+  admin: boolean
+}) {
+  const { message } = App.useApp()
+  const { libelleGroupe } = useActivite()
+  const mentions = useMentions()
+  const [modifier, { loading: extension }] = useMutation(MODIFIER_DOSSIER_LIE, {
+    refetchQueries: ['RessourcesFiche', 'DossiersLies'],
+  })
+  const [ouvrir, { loading: ouverture }] = useMutation(OUVRIR_DOCUMENT, {
+    refetchQueries: ['RessourcesFiche'],
+  })
+  const sans = r.perimetresSansAcces
+  if (sans.length === 0 && !r.ouverteAuxLecteurs) return null
+
+  const groupeDe = new Map(
+    [...mentions.perimetres.values()].map(p => [p.id, p.groupe])
+  )
+  // Les groupes de la fiche restent des groupes ; les autres périmètres
+  // s'ajoutent un par un.
+  const groupes = [...new Set([...r.dossierLie.groupes, ...groupesDeLaFiche])]
+  const perimetres = [
+    ...new Set([
+      ...r.dossierLie.perimetres.map(p => p.id),
+      ...sans
+        .filter(p => !groupesDeLaFiche.includes(groupeDe.get(p.id) ?? ''))
+        .map(p => p.id),
+    ]),
+  ]
+  const ajouts = enumerer([
+    ...groupesDeLaFiche
+      .filter(g => !r.dossierLie.groupes.includes(g))
+      .map(g => libelleGroupe(g, true)),
+    ...sans
+      .filter(p => !groupesDeLaFiche.includes(groupeDe.get(p.id) ?? ''))
+      .map(p => p.nom),
+  ])
+
+  const etendre = () =>
+    modifier({
+      variables: {
+        id: r.dossierLie.id,
+        lecteurs: { touteActivite: false, perimetreIds: perimetres, groupes },
+        nom: null,
+      },
+    })
+      .then(() =>
+        message.success(`« ${r.dossierLie.nom} » est aussi lu par ${ajouts}.`)
+      )
+      .catch((e: unknown) => message.error(messageErreur(e)))
+  const basculer = (ouvert: boolean) =>
+    ouvrir({ variables: { id: r.id, ouvert } })
+      .then(() =>
+        message.success(
+          ouvert
+            ? 'Le document s’ouvre pour tous les lecteurs de la fiche.'
+            : 'Le document est réservé aux lecteurs de son dossier lié.'
+        )
+      )
+      .catch((e: unknown) => message.error(messageErreur(e)))
+
+  const contenu = r.ouverteAuxLecteurs ? (
+    <div className="rt-acces-document">
+      <p>
+        Un admin de l’organisation a ouvert ce document à toutes les personnes
+        qui lisent la fiche. Le reste du dossier lié reste réservé à ses
+        lecteurs.
+      </p>
+      {admin && (
+        <Button
+          size="small"
+          loading={ouverture}
+          onClick={() => void basculer(false)}
+        >
+          Réserver de nouveau
+        </Button>
+      )}
+    </div>
+  ) : (
+    <div className="rt-acces-document">
+      <p>
+        Les lecteurs de {enumerer(sans.map(p => p.nom))} n’ouvriront pas ce
+        document : le dossier lié « {r.dossierLie.nom} » ne sert pas ces
+        périmètres.
+      </p>
+      {admin ? (
+        <Space wrap>
+          <Popconfirm
+            title={`Étendre « ${r.dossierLie.nom} » ?`}
+            description={`Les lecteurs de ${ajouts} liront tout le dossier, et pas seulement ce document.`}
+            okText="Étendre"
+            cancelText="Annuler"
+            onConfirm={() => void etendre()}
+          >
+            <Button size="small" loading={extension}>
+              Étendre le dossier lié
+            </Button>
+          </Popconfirm>
+          <Button
+            size="small"
+            loading={ouverture}
+            onClick={() => void basculer(true)}
+          >
+            Ouvrir ce document aux lecteurs de la fiche
+          </Button>
+        </Space>
+      ) : (
+        <p className="rt-texte-secondaire">
+          Un admin de l’organisation peut étendre le dossier lié, ou ouvrir ce
+          seul document aux lecteurs de la fiche.
+        </p>
+      )}
+    </div>
+  )
+  return (
+    <Popover
+      trigger="click"
+      title={r.ouverteAuxLecteurs ? 'Document ouvert' : 'Document réservé'}
+      content={contenu}
+    >
+      <Button
+        type="text"
+        size="small"
+        icon={
+          r.ouverteAuxLecteurs ? (
+            <LinkOutlined />
+          ) : (
+            <ExclamationCircleOutlined style={{ color: 'var(--rt-alerte)' }} />
+          )
+        }
+        aria-label={
+          r.ouverteAuxLecteurs
+            ? `${r.nom} : ouvert aux lecteurs de la fiche`
+            : `${r.nom} : réservé, ${sans.length > 1 ? `${sans.length} périmètres ne l’ouvriront pas` : '1 périmètre ne l’ouvrira pas'}`
+        }
+      />
+    </Popover>
+  )
+}
+
 function NomRessource({
   ressource: r,
   mention,
@@ -157,10 +334,11 @@ function NomRessource({
 }
 
 /**
- * Les ressources de l'espace de fichiers liées à une fiche (ADR 0038), sous son
- * texte. Un fichier s'ouvre dans la liseuse, un dossier dans l'explorateur. Une
- * ressource dont la personne ne lit pas le dossier lié reste dans la liste, sans
- * s'ouvrir. Une personne qui rédige la fiche lie et retire les ressources.
+ * Les documents du fournisseur cloud liés à une fiche (ADR 0038, 0043), sous son
+ * texte. Un fichier s'ouvre dans la liseuse, un dossier dans l'explorateur. Un
+ * document dont la personne ne lit pas le dossier lié reste dans la liste, sans
+ * s'ouvrir, sauf s'il est ouvert aux lecteurs de la fiche. Une personne qui rédige
+ * la fiche lie et retire les documents, et apprend lesquels restent réservés.
  */
 export default function RessourcesFiche({
   slug,
@@ -175,6 +353,7 @@ export default function RessourcesFiche({
 }) {
   const { message } = App.useApp()
   const { activite } = useActivite()
+  const admin = useQuery(MOI).data?.moi?.estAdmin === true
   const { data, loading } = useQuery(RESSOURCES_FICHE, {
     variables: { slug },
   })
@@ -204,6 +383,7 @@ export default function RessourcesFiche({
     }
     setDocument({
       dossierId: r.dossierLie.id,
+      ressourceId: r.ouverteAuxLecteurs ? r.id : null,
       chemin: r.chemin,
       nom: r.nom,
       apercu: r.apercu,
@@ -244,7 +424,14 @@ export default function RessourcesFiche({
                 {r.ouvrable ? (
                   <button type="button" onClick={() => ouvrir(r)}>
                     <Icone aria-hidden className="rt-explorateur-icone" />
-                    <NomRessource ressource={r} />
+                    <NomRessource
+                      ressource={r}
+                      mention={
+                        r.ouverteAuxLecteurs && (peutModifier || admin)
+                          ? 'Ouvert aux lecteurs de la fiche'
+                          : undefined
+                      }
+                    />
                     {r.existe === false && (
                       <Tag color="warning">Introuvable</Tag>
                     )}
@@ -262,6 +449,13 @@ export default function RessourcesFiche({
                       mention="Réservée au périmètre d’origine"
                     />
                   </div>
+                )}
+                {(peutModifier || admin) && (
+                  <AccesDocument
+                    ressource={r}
+                    groupesDeLaFiche={data?.fiche?.concerneGroupes ?? []}
+                    admin={admin}
+                  />
                 )}
                 {peutModifier && (
                   <Popconfirm
@@ -302,6 +496,9 @@ export default function RessourcesFiche({
           <ExplorateurDossier
             dossier={dossierOuvert.dossierLie}
             cheminInitial={dossierOuvert.chemin}
+            ressourceId={
+              dossierOuvert.ouverteAuxLecteurs ? dossierOuvert.id : null
+            }
             sansCadre
           />
         )}

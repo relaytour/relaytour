@@ -10,7 +10,7 @@ import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
 import {
   conditionDossiersLisibles,
   dossierCompatible,
-  dossierLisible,
+  dossierLisiblePour,
   publierDossierLie,
   SELECTION_LECTEURS,
   type LecteursDossier,
@@ -707,13 +707,19 @@ builder.queryFields(t => ({
     type: ListeElementsFichiersRef,
     authScopes: { connecte: true },
     description:
-      'Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms.',
+      'Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms. Avec `ressource`, un document lié ouvert aux lecteurs de sa fiche se lit sans ouvrir le reste du dossier.',
     args: {
       id: t.arg.id({ required: true }),
       chemin: t.arg.stringList({ required: true }),
+      ressource: t.arg.id(),
     },
-    resolve: async (_root, { id, chemin }, ctx) => {
-      const dossier = await dossierLisible(ctx, String(id))
+    resolve: async (_root, { id, chemin, ressource }, ctx) => {
+      const dossier = await dossierLisiblePour(
+        ctx,
+        String(id),
+        chemin,
+        ressource === null || ressource === undefined ? null : String(ressource)
+      )
       if (dossier === null) throw accesRefuse()
       exigerChemin(chemin)
       return avecEspace(ctx, async espace => {

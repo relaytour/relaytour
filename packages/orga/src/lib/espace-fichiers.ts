@@ -228,8 +228,8 @@ export const EFFETS_LECTEURS = graphql(`
 `)
 
 export const CONTENU_DOSSIER = graphql(`
-  query ContenuDossierLie($id: ID!, $chemin: [String!]!) {
-    contenuDossierLie(id: $id, chemin: $chemin) {
+  query ContenuDossierLie($id: ID!, $chemin: [String!]!, $ressource: ID) {
+    contenuDossierLie(id: $id, chemin: $chemin, ressource: $ressource) {
       complet
       elements {
         elementId
@@ -361,17 +361,22 @@ export function tailleLisible(octets: number | null | undefined): string {
   return `${arrondi.replace('.', ',')} ${unites[i]}`
 }
 
-/** Adresse de la route d'aperçu d'un fichier d'un dossier lié. */
+/**
+ * Adresse de la route d'aperçu d'un fichier d'un dossier lié. `ressourceId` désigne
+ * un document lié ouvert aux lecteurs de sa fiche (ADR 0043).
+ */
 export function adresseApercu(
   dossierId: string,
   chemin: readonly string[],
-  telecharger = false
+  telecharger = false,
+  ressourceId: string | null = null
 ): string {
   const parametres = new URLSearchParams({
     dossier: dossierId,
     chemin: chemin.join('/'),
   })
   if (telecharger) parametres.set('telecharger', '1')
+  if (ressourceId !== null) parametres.set('ressource', ressourceId)
   return `/medias/espace-fichiers/apercu?${parametres.toString()}`
 }
 
@@ -399,20 +404,25 @@ export async function lireFichier(
   dossierId: string,
   chemin: readonly string[],
   telecharger = false,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  ressourceId: string | null = null
 ): Promise<Blob> {
-  return (await demanderFichier(dossierId, chemin, telecharger, signal)).blob()
+  return (
+    await demanderFichier(dossierId, chemin, telecharger, signal, ressourceId)
+  ).blob()
 }
 
 async function demanderFichier(
   dossierId: string,
   chemin: readonly string[],
   telecharger: boolean,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  ressourceId: string | null = null
 ): Promise<Response> {
   const organisation = organisationChoisie()
   const activite = activiteAffichee()
-  const reponse = await fetch(adresseApercu(dossierId, chemin, telecharger), {
+  const adresse = adresseApercu(dossierId, chemin, telecharger, ressourceId)
+  const reponse = await fetch(adresse, {
     credentials: 'same-origin',
     signal,
     headers: {
@@ -443,9 +453,16 @@ export function nomServi(entete: string | null): string | null {
  */
 export async function telechargerFichier(
   dossierId: string,
-  chemin: readonly string[]
+  chemin: readonly string[],
+  ressourceId: string | null = null
 ): Promise<void> {
-  const reponse = await demanderFichier(dossierId, chemin, true)
+  const reponse = await demanderFichier(
+    dossierId,
+    chemin,
+    true,
+    undefined,
+    ressourceId
+  )
   const nom =
     nomServi(reponse.headers.get('content-disposition')) ??
     chemin[chemin.length - 1] ??
@@ -466,22 +483,43 @@ export const RESSOURCES_FICHE = graphql(`
   query RessourcesFiche($slug: String!) {
     fiche(slug: $slug) {
       id
+      concerneGroupes
       ressources {
         id
         nom
         type
         chemin
         ouvrable
+        ouverteAuxLecteurs
         apercu
         existe
         lienWeb
+        perimetresSansAcces {
+          id
+          nom
+          couleur
+        }
         dossierLie {
           id
           nom
           disponible
           fournisseur
+          touteActivite
+          perimetres {
+            id
+          }
+          groupes
         }
       }
+    }
+  }
+`)
+
+export const OUVRIR_DOCUMENT = graphql(`
+  mutation OuvrirDocumentLie($id: ID!, $ouvert: Boolean!) {
+    ouvrirDocumentLie(id: $id, ouvert: $ouvert) {
+      id
+      ouverteAuxLecteurs
     }
   }
 `)

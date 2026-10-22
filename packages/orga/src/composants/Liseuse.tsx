@@ -19,6 +19,8 @@ import Markdown from './Markdown'
 
 export interface DocumentOuvert {
   dossierId: string
+  /** Un document lié ouvert aux lecteurs de sa fiche (ADR 0043). */
+  ressourceId?: string | null
   chemin: string[]
   nom: string
   apercu: FormatApercu
@@ -169,7 +171,8 @@ function ContenuLiseuse({ doc }: { doc: DocumentOuvert }) {
           doc.dossierId,
           doc.chemin,
           false,
-          controleur.signal
+          controleur.signal,
+          doc.ressourceId ?? null
         )
         if (doc.apercu === 'IMAGE') {
           adresseImage = URL.createObjectURL(blob)
@@ -247,9 +250,11 @@ export default function Liseuse({
 
   const telecharger = () => {
     if (doc === null) return
-    telechargerFichier(doc.dossierId, doc.chemin).catch((e: unknown) =>
-      message.error(messageErreur(e))
-    )
+    telechargerFichier(
+      doc.dossierId,
+      doc.chemin,
+      doc.ressourceId ?? null
+    ).catch((e: unknown) => message.error(messageErreur(e)))
   }
 
   const nomFournisseur =

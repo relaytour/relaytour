@@ -1722,6 +1722,11 @@ type Mutation {
   modifierTache(confirmer: Boolean = false, description: String, echeance: Date, ficheId: ID, id: ID!, titre: String, versionAttendue: Int): Tache!
 
   """
+  Ouvre un document lié à toute personne qui lit sa fiche, partage compris, ou retire cette ouverture (ADR 0043). Le reste du dossier lié ne s’ouvre pas.
+  """
+  ouvrirDocumentLie(id: ID!, ouvert: Boolean!): RessourceFiche!
+
+  """
   Place une personne à répartir dans une séquence, en renfort. Une candidature y est acceptée ; une fiche y reçoit une place, à confirmer si elle est née d’une candidature.
   """
   placerBenevole(benevoleId: ID, candidatureId: ID, sequenceId: ID!): Sequence!
@@ -2365,9 +2370,9 @@ type Query {
   commentairesDeLaPeriode(editionId: ID!): CommentairesPeriode!
 
   """
-  Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms.
+  Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms. Avec `ressource`, un document lié ouvert aux lecteurs de sa fiche se lit sans ouvrir le reste du dossier.
   """
-  contenuDossierLie(chemin: [String!]!, id: ID!): ListeElementsFichiers!
+  contenuDossierLie(chemin: [String!]!, id: ID!, ressource: ID): ListeElementsFichiers!
 
   """
   La couverture du programme par tranches de 30 minutes. Sans périmètre donné, toutes les séquences comptent. Sinon, seules comptent celles des périmètres donnés, et celles sans périmètre avec `sansPerimetre`. Les bénévoles à répartir se comptent tous.
@@ -2616,9 +2621,19 @@ type RessourceFiche {
   nom: String!
 
   """
-  Vrai quand la personne lit le dossier lié de la ressource, et peut donc l’ouvrir. Faux pour une ressource d’un autre périmètre, lue dans une fiche connexe.
+  Vrai quand un admin de l’organisation a ouvert ce document à toute personne qui lit la fiche (ADR 0043).
+  """
+  ouverteAuxLecteurs: Boolean!
+
+  """
+  Vrai quand la personne lit le dossier lié de la ressource, ou quand le document est ouvert aux lecteurs de la fiche. Faux pour une ressource d’un autre périmètre, lue dans une fiche connexe.
   """
   ouvrable: Boolean!
+
+  """
+  Les périmètres que la fiche concerne aussi et dont les lecteurs n’ouvrent pas ce document. Vide pour une personne qui ne rédige pas la fiche.
+  """
+  perimetresSansAcces: [Perimetre!]!
   type: TypeRessource!
 }
 

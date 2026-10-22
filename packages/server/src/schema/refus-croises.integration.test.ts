@@ -1627,6 +1627,13 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'ouvrirDocumentLie',
+    query:
+      'mutation ($id: ID!) { ouvrirDocumentLie(id: $id, ouvert: true) { id } }',
+    variables: () => ({ id: a.ressource }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'delierRessourceFiche',
     query: 'mutation ($id: ID!) { delierRessourceFiche(id: $id) }',
     variables: () => ({ id: a.ressource }),

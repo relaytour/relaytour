@@ -21,6 +21,19 @@
           }
         },
         {
+          "id": "2026-10-22-orga-un-document-lie-d-une-fiche-partagee-s-ouvre-pour-ses-nouvea",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un document lié d'une fiche partagée s'ouvre pour ses nouveaux lecteurs",
+            "texte": "Quand une fiche concerne aussi d'autres périmètres, la personne qui la rédige voit quels documents liés ces périmètres n'ouvriront pas. L'éditeur l'annonce sous la liste « Concerne aussi », et le bouton d'alerte d'un document le détaille dans la fiche. Un admin de l'organisation étend alors le dossier lié aux périmètres et aux groupes de la fiche, ou ouvre ce seul document à toutes les personnes qui lisent la fiche.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-22-orga-le-menu-fiches-devient-ressources-et-l-espace-de-fichiers-de",
           "date": "2026-10-22",
           "type": "fonctionnalite",
