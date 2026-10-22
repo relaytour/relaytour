@@ -2,10 +2,10 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.19.0",
+  "version": "0.20.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.20.0",
       "notes": [
         {
           "id": "2026-10-22-orga-une-liste-de-benevoles-tenue-ailleurs-s-importe-depuis-un-fi",

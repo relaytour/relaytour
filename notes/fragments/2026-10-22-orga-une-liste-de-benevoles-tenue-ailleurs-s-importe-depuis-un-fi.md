@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.20.0
 fr:
   titre: >-
     Une liste de bénévoles tenue ailleurs s'importe depuis un fichier

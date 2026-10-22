@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.20.0
 fr:
   titre: >-
     Relaytour propose les accès des équipes chez le fournisseur cloud
