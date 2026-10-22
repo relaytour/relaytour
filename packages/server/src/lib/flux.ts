@@ -88,6 +88,13 @@ async function ouvrirLEditeur(): Promise<Redis> {
  * perdu : il n'attend pas le retour de Valkey.
  */
 export async function publierChangement(changement: Changement): Promise<void> {
+  // Un changement d'équipe change les personnes attendues chez le fournisseur
+  // (ADR 0044) : la vérification des accès suit, regroupée sur une minute.
+  if (changement.entite === 'EQUIPE') {
+    void import('../espace-fichiers/acces.ts')
+      .then(m => m.planifierVerificationAcces(changement.organisationId))
+      .catch(() => undefined)
+  }
   try {
     editeur ??= ouvrirLEditeur()
     const connexion = await editeur

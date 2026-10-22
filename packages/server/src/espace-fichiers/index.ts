@@ -497,28 +497,32 @@ export async function ouvrirEspace(organisationId: string): Promise<{
     return { espace: fabriqueDeTest(organisationId), connexionId: connexion.id }
   }
   const jeton = jetonDe(connexion.id, connexion.jeton)
+  // L'annuaire suit la portée accordée à la connexion (ADR 0044).
+  const acces = {
+    annuaire: connexion.portee !== 'FICHIERS',
+    gestion: connexion.portee === 'GESTION',
+  }
   switch (connexion.fournisseur) {
     case 'SHAREPOINT':
       return {
-        espace: espaceSharePoint(jeton, {
-          annuaire: connexion.portee !== 'FICHIERS',
-        }),
+        espace: espaceSharePoint(jeton, acces),
         connexionId: connexion.id,
       }
     case 'GOOGLE_DRIVE':
       return {
         espace: espaceGoogleDrive(jeton, {
           compteService: connexion.methode === 'COMPTE_SERVICE',
+          ...acces,
         }),
         connexionId: connexion.id,
       }
     case 'DROPBOX':
-      return { espace: espaceDropbox(jeton), connexionId: connexion.id }
+      return { espace: espaceDropbox(jeton, acces), connexionId: connexion.id }
     case 'NEXTCLOUD': {
       const configuration = await configurationNextcloud()
       if (configuration === null) throw new EspaceIndisponible()
       return {
-        espace: espaceNextcloud(jeton, configuration),
+        espace: espaceNextcloud(jeton, configuration, acces),
         connexionId: connexion.id,
       }
     }

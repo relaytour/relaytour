@@ -16,10 +16,17 @@ import {
   type LecteursDossier,
 } from './droits.ts'
 import { ouvrirEspace } from './index.ts'
-import type {
-  AnnuaireFournisseur,
-  CompteAnnuaire,
-  Fournisseur,
+import {
+  annoncerPropositions,
+  elaguerPermissions,
+  mettreAJourPropositions,
+} from './propositions.ts'
+import {
+  AccesRetire,
+  type AnnuaireFournisseur,
+  type CompteAnnuaire,
+  type DroitElement,
+  type Fournisseur,
 } from './types.ts'
 
 // Vérification des accès chez le fournisseur (ADR 0044). Relaytour compare les
@@ -88,11 +95,16 @@ export async function personnesAttendues(
 type Voie = string
 
 interface DroitsLus {
+  /** Les droits tels que le fournisseur les rend. */
+  droits: DroitElement[]
   /** Les voies par identifiant de compte (`id:`) ou par adresse (`adr:`). */
   voies: Map<string, Voie>
   /** Les noms des comptes qui ont un droit, par la même clé. */
   noms: Map<string, string>
+  /** Vrai pour un droit de toute l'organisation du fournisseur. */
   domaine: boolean
+  /** Les domaines nommés (`exemple.org`) qui ont un droit. */
+  domaines: Set<string>
   /** Vrai quand un groupe ne se lit pas : il couvre peut-être d'autres personnes. */
   inconnu: boolean
 }
@@ -100,15 +112,22 @@ interface DroitsLus {
 const cleId = (identifiant: string) => `id:${identifiant}`
 const cleAdresse = (adresse: string) => `adr:${adresse.toLowerCase()}`
 
+/** Un nom d'accès en trop, sans adresse : un compte sans nom affiché reste anonyme. */
+const nomSansAdresse = (nom: string) =>
+  nom.includes('@') ? 'Compte sans nom affiché' : nom.slice(0, 255)
+
+/** Les droits d'un dossier, ou null quand le fournisseur ne les rend pas en entier. */
 async function lireDroits(
   annuaire: AnnuaireFournisseur,
   dossier: { emplacement: string; element: string },
   groupes: Map<string, Promise<CompteAnnuaire[] | null>>
-): Promise<DroitsLus> {
+): Promise<DroitsLus | null> {
   const lus: DroitsLus = {
+    droits: [],
     voies: new Map(),
     noms: new Map(),
     domaine: false,
+    domaines: new Set(),
     inconnu: false,
   }
   const ajouter = (cles: string[], nom: string, voie: Voie) => {
@@ -125,8 +144,13 @@ async function lireDroits(
     base: dossier.element,
     chemin: [],
   })
+  if (droits === null) return null
+  lus.droits = droits
   for (const { beneficiaire: b } of droits) {
-    if (b.type === 'domaine') lus.domaine = true
+    if (b.type === 'domaine') {
+      if (b.domaine === undefined) lus.domaine = true
+      else lus.domaines.add(b.domaine.toLowerCase())
+    }
     if (b.type === 'personne') {
       const cles = [
         ...(b.identifiant === null ? [] : [cleId(b.identifiant)]),
@@ -168,7 +192,10 @@ async function rapprocherComptes(
   fournisseur: Fournisseur,
   annuaire: AnnuaireFournisseur,
   personnes: PersonneAttendue[]
-): Promise<Map<string, CompteAnnuaire | null>> {
+): Promise<{
+  comptes: Map<string, CompteAnnuaire | null>
+  adresses: Map<string, string>
+}> {
   const existants = await prisma.compteFournisseur.findMany({
     where: {
       organisationId,
@@ -180,14 +207,34 @@ async function rapprocherComptes(
   const saisies = new Map(existants.map(c => [c.userId, c.adresseSaisie]))
   const adresseDe = (p: PersonneAttendue) =>
     (saisies.get(p.userId) ?? p.email).toLowerCase()
+  // Sans annuaire, chaque personne vaut par son adresse : un droit à cette
+  // adresse la couvre, et aucun compte ne se garde.
+  if (!annuaire.capacites.comptes) {
+    return {
+      comptes: new Map(
+        personnes.map(p => [
+          p.userId,
+          {
+            identifiant: adresseDe(p),
+            adresse: adresseDe(p),
+            nom: adresseDe(p),
+            invite: false,
+          },
+        ])
+      ),
+      adresses: new Map(personnes.map(p => [p.userId, adresseDe(p)])),
+    }
+  }
   const trouves = await annuaire.chercherComptes([
     ...new Set(personnes.map(adresseDe)),
   ])
   const parPersonne = new Map<string, CompteAnnuaire | null>()
+  const adresses = new Map<string, string>()
   const maintenant = new Date()
   for (const p of personnes) {
     const compte = trouves.get(adresseDe(p)) ?? null
     parPersonne.set(p.userId, compte)
+    adresses.set(p.userId, adresseDe(p))
     const etat: EtatCompteFournisseur =
       compte === null ? 'ABSENT' : compte.invite ? 'INVITE' : 'TROUVE'
     await prisma.compteFournisseur.upsert({
@@ -213,7 +260,32 @@ async function rapprocherComptes(
       },
     })
   }
-  return parPersonne
+  return { comptes: parPersonne, adresses }
+}
+
+/** Remplace l'état des accès d'un dossier par celui de la vérification. */
+async function remplacerEtats(
+  organisationId: string,
+  dossierLieId: string,
+  lignes: {
+    userId: string | null
+    nom: string | null
+    etat: EtatAccesFournisseur
+    via: string | null
+  }[]
+): Promise<void> {
+  const verifieLe = new Date()
+  await prisma.$transaction([
+    prisma.etatAccesDossier.deleteMany({ where: { dossierLieId } }),
+    prisma.etatAccesDossier.createMany({
+      data: lignes.map(l => ({
+        organisationId,
+        dossierLieId,
+        verifieLe,
+        ...l,
+      })),
+    }),
+  ])
 }
 
 /**
@@ -231,6 +303,10 @@ export async function verifierAcces(organisationId: string): Promise<void> {
     const { espace } = await ouvrirEspace(organisationId)
     const annuaire = espace.annuaire
     if (annuaire === undefined) return
+    // Un ancien membre ne garde ni compte ni adresse saisie.
+    await prisma.compteFournisseur.deleteMany({
+      where: { organisationId, user: { NOT: membreActif(organisationId) } },
+    })
     const dossiers = await prisma.dossierLie.findMany({
       where: { organisationId, fournisseur: espace.fournisseur },
       select: {
@@ -239,6 +315,9 @@ export async function verifierAcces(organisationId: string): Promise<void> {
         emplacement: true,
         element: true,
         attendus: true,
+        accesFournisseur: true,
+        groupeFournisseurId: true,
+        ajoutsAutomatiques: true,
         ...SELECTION_LECTEURS,
       },
     })
@@ -251,15 +330,75 @@ export async function verifierAcces(organisationId: string): Promise<void> {
         [...attendus.values()].flat().map(p => [p.userId, p])
       ).values(),
     ]
-    const comptes = await rapprocherComptes(
+    const { comptes, adresses } = await rapprocherComptes(
       organisationId,
       espace.fournisseur,
       annuaire,
       personnes
     )
     const groupes = new Map<string, Promise<CompteAnnuaire[] | null>>()
+    const membres = (groupe: string) => {
+      let lus = groupes.get(groupe)
+      if (lus === undefined) {
+        lus = annuaire.membresDuGroupe(groupe)
+        groupes.set(groupe, lus)
+      }
+      return lus
+    }
+    // Première passe : les droits de chaque dossier. Un dossier dont les droits
+    // ne se lisent pas, ou dont la lecture échoue, reste « Inconnu » sans arrêter
+    // les autres.
+    const droitsDe = new Map<string, DroitsLus | null>()
+    let illisibles = 0
     for (const d of dossiers) {
-      const lus = await lireDroits(annuaire, d, groupes)
+      let lus: DroitsLus | null
+      try {
+        lus = await lireDroits(annuaire, d, groupes)
+      } catch (erreur) {
+        if (erreur instanceof AccesRetire) throw erreur
+        journal.warn(
+          {
+            evenement: 'acces-fournisseur-dossier-illisible',
+            organisationId,
+            dossierLieId: d.id,
+            message: (erreur as Error).message,
+          },
+          'Les droits d’un dossier lié ne se lisent pas chez le fournisseur.'
+        )
+        lus = null
+      }
+      if (lus === null) illisibles += 1
+      droitsDe.set(d.id, lus)
+    }
+    // Les groupes par lesquels chaque dossier ouvre ses droits : sortir une
+    // personne d'un groupe lui couperait aussi les autres dossiers du groupe.
+    const groupesDe = new Map(
+      dossiers.map(d => [
+        d.id,
+        new Set([
+          ...(droitsDe.get(d.id)?.droits ?? []).flatMap(x =>
+            x.beneficiaire.type === 'groupe' ? [x.beneficiaire.identifiant] : []
+          ),
+          ...(d.groupeFournisseurId === null ? [] : [d.groupeFournisseurId]),
+        ]),
+      ])
+    )
+    let aValider = 0
+    for (const d of dossiers) {
+      const lus = droitsDe.get(d.id) ?? null
+      if (lus === null) {
+        await remplacerEtats(
+          organisationId,
+          d.id,
+          (attendus.get(d.id) ?? []).map(p => ({
+            userId: p.userId,
+            nom: null,
+            etat: 'INCONNU' as const,
+            via: null,
+          }))
+        )
+        continue
+      }
       const vus = new Set<string>()
       const lignes: {
         userId: string | null
@@ -270,11 +409,16 @@ export async function verifierAcces(organisationId: string): Promise<void> {
       for (const p of attendus.get(d.id) ?? []) {
         const compte = comptes.get(p.userId) ?? null
         if (compte === null) {
+          // Un partage par adresse couvre aussi une personne que l'annuaire ne
+          // connaît pas encore : le fournisseur l'invitera à sa connexion.
+          const cle = cleAdresse(adresses.get(p.userId) ?? p.email)
+          vus.add(cle)
+          const voie = lus.voies.get(cle)
           lignes.push({
             userId: p.userId,
             nom: null,
-            etat: 'SANS_COMPTE',
-            via: null,
+            etat: voie === undefined ? 'SANS_COMPTE' : 'A_ACCES',
+            via: voie ?? null,
           })
           continue
         }
@@ -282,7 +426,10 @@ export async function verifierAcces(organisationId: string): Promise<void> {
         for (const cle of cles) vus.add(cle)
         const voie =
           cles.map(c => lus.voies.get(c)).find(v => v !== undefined) ??
-          (lus.domaine && !compte.invite ? 'domaine' : undefined)
+          ((lus.domaine && !compte.invite) ||
+          lus.domaines.has(compte.adresse.split('@').pop() ?? '')
+            ? 'domaine'
+            : undefined)
         lignes.push({
           userId: p.userId,
           nom: null,
@@ -305,27 +452,38 @@ export async function verifierAcces(organisationId: string): Promise<void> {
       for (const { nom, via } of [...enTrop.values()].slice(0, EN_TROP_MAX)) {
         lignes.push({
           userId: null,
-          nom: nom.slice(0, 255),
+          nom: nomSansAdresse(nom),
           etat: 'EN_TROP',
-          via: via.slice(0, 255),
+          via: nomSansAdresse(via),
         })
       }
-      const verifieLe = new Date()
-      await prisma.$transaction([
-        prisma.etatAccesDossier.deleteMany({ where: { dossierLieId: d.id } }),
-        prisma.etatAccesDossier.createMany({
-          data: lignes.map(l => ({
-            organisationId,
-            dossierLieId: d.id,
-            verifieLe,
-            ...l,
-          })),
-        }),
-      ])
+      await remplacerEtats(organisationId, d.id, lignes)
+      // Les propositions d'accès, quand le dossier en demande (ADR 0044).
+      await elaguerPermissions(d.id, lus.droits, membres)
+      aValider += await mettreAJourPropositions(
+        organisationId,
+        d,
+        lignes,
+        annuaire,
+        (groupe, userId) =>
+          dossiers.some(
+            o =>
+              o.id !== d.id &&
+              groupesDe.get(o.id)?.has(groupe) === true &&
+              (attendus.get(o.id) ?? []).some(p => p.userId === userId)
+          )
+      )
     }
+    if (aValider > 0) await annoncerPropositions(organisationId)
     await prisma.connexionFichiers.update({
       where: { organisationId },
-      data: { accesVerifieLe: new Date(), accesErreur: null },
+      data: {
+        accesVerifieLe: new Date(),
+        accesErreur:
+          illisibles === 0
+            ? null
+            : `Relaytour ne lit pas les droits de ${illisibles > 1 ? `${illisibles} dossiers liés` : 'un dossier lié'} chez le fournisseur. Leurs personnes restent « Inconnu ».`,
+      },
     })
     journal.info(
       {
@@ -357,9 +515,58 @@ export async function verifierAcces(organisationId: string): Promise<void> {
   }
 }
 
+/** Ce que `planifierUnique` lit d'une file BullMQ. */
+export interface FileUnique {
+  getJob(
+    id: string
+  ): Promise<
+    | { getState(): Promise<string>; remove(): Promise<unknown> }
+    | undefined
+    | null
+  >
+  add(
+    nom: 'acces-fournisseur',
+    donnees: { organisationId: string },
+    options: { jobId: string; delay: number }
+  ): Promise<unknown>
+}
+
+/** Le délai qui regroupe les demandes rapprochées d'une organisation. */
+const REGROUPEMENT_MS = 5_000
+
 /**
- * Planifie la vérification des accès d'une organisation, regroupée sur une
- * minute. Ne lève jamais et ne retient pas la requête au-delà d'une seconde.
+ * Met en file une vérification par organisation. Un job en attente regroupe les
+ * demandes rapprochées. Un job terminé laisse sa place, et un job en cours
+ * reçoit une suite : aucune demande ne se perd jusqu'à la nuit.
+ */
+export async function planifierUnique(
+  file: FileUnique,
+  id: string,
+  organisationId: string
+): Promise<void> {
+  for (const candidat of [id, `${id}-suite`]) {
+    const existant = await file.getJob(candidat)
+    if (existant) {
+      const etat = await existant.getState()
+      if (etat === 'waiting' || etat === 'delayed' || etat === 'prioritized') {
+        return
+      }
+      // Un job en cours ne se remplace pas : la suite prend le relais.
+      if (etat === 'active') continue
+      await existant.remove()
+    }
+    await file.add(
+      'acces-fournisseur',
+      { organisationId },
+      { jobId: candidat, delay: REGROUPEMENT_MS }
+    )
+    return
+  }
+}
+
+/**
+ * Planifie la vérification des accès d'une organisation, regroupée sur quelques
+ * secondes. Ne lève jamais et ne retient pas la requête au-delà d'une seconde.
  */
 export function planifierVerificationAcces(organisationId: string): void {
   void (async () => {
@@ -369,17 +576,12 @@ export function planifierVerificationAcces(organisationId: string): void {
     })
     if (connexion?.etat !== 'ACTIVE' || connexion.portee === 'FICHIERS') return
     const { planificationQueue } = await import('../jobs/queues.ts')
-    const maintenant = Date.now()
-    const tranche = Math.floor(maintenant / 60_000)
     await avecDelai(
-      planificationQueue.add(
-        'acces-fournisseur',
-        { organisationId },
-        {
-          // BullMQ refuse « : » dans un identifiant de job.
-          jobId: `acces-fournisseur-${organisationId}-${tranche}`,
-          delay: Math.min(5_000, 60_000 - (maintenant % 60_000)),
-        }
+      planifierUnique(
+        planificationQueue,
+        // BullMQ refuse « : » dans un identifiant de job.
+        `acces-fournisseur-${organisationId}`,
+        organisationId
       ),
       1_000,
       'Vérification des accès'

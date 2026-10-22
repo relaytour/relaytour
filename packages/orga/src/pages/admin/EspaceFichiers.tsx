@@ -44,6 +44,8 @@ import { useActivite } from '../../lib/activite'
 import { jourDeLInstant, messageErreur } from '../../lib/erreurs'
 import {
   CHOISIR_DOSSIER_EXPORT,
+  ACTIVATION_ACCES,
+  AVEC_ANNUAIRE,
   COMMENCER_CONNEXION,
   DELIER_DOSSIER,
   DOSSIERS_LIES,
@@ -53,6 +55,7 @@ import {
   LIER_DOSSIER,
   lecteursValides,
   MODIFIER_DOSSIER_LIE,
+  REGLER_PORTEE,
   RETIRER_DOSSIER_EXPORT,
   TOUTE_L_ACTIVITE,
   versSaisie,
@@ -217,6 +220,7 @@ function LierDossier({
             onChange={setLecteurs}
             mentions={mentions}
             toutPossible
+            archives={dossier?.perimetres.filter(p => p.archive) ?? []}
             placeholder="Choisissez les lecteurs"
             ariaLabel="Lu par"
           />
@@ -475,6 +479,9 @@ export default function EspaceFichiers() {
     refetchQueries: ['DossiersLies'],
   })
   const [commencer] = useMutation(COMMENCER_CONNEXION)
+  const [reglerPortee] = useMutation(REGLER_PORTEE, {
+    refetchQueries: ['EspaceFichiers', 'VerificationAcces'],
+  })
 
   // Retour du fournisseur : le serveur redirige ici avec l'issue de la connexion.
   const issue = parametres.get('connexion')
@@ -488,13 +495,27 @@ export default function EspaceFichiers() {
   const espace = data?.espaceFichiers
   const connexion = espace?.connexion ?? null
   const verification = connexion !== null && connexion.portee !== 'FICHIERS'
-  // Seul SharePoint lit aujourd'hui l'annuaire (ADR 0044).
+  // Une reconnexion demande de nouvelles autorisations ; Google Drive et
+  // Nextcloud se règlent sans reconnexion (ADR 0044).
+  const activation =
+    connexion === null ? undefined : ACTIVATION_ACCES[connexion.fournisseur]
   const activable =
-    connexion?.fournisseur === 'SHAREPOINT' && connexion.methode === 'COMPTE'
-  const activer = async () => {
+    activation === 'reglage' ||
+    (activation === 'reconnexion' && connexion?.methode === 'COMPTE')
+  const activer = async (portee: 'ANNUAIRE' | 'GESTION') => {
+    if (connexion === null) return
     try {
+      if (activation === 'reglage') {
+        await reglerPortee({ variables: { portee } })
+        message.success(
+          portee === 'GESTION'
+            ? 'La gestion des accès est activée.'
+            : 'La vérification des accès est activée.'
+        )
+        return
+      }
       const r = await commencer({
-        variables: { fournisseur: 'SHAREPOINT', portee: 'ANNUAIRE' },
+        variables: { fournisseur: connexion.fournisseur, portee },
       })
       const adresse = r.data?.commencerConnexionEspaceFichiers
       if (adresse) window.location.assign(adresse)
@@ -554,13 +575,17 @@ export default function EspaceFichiers() {
                 />
                 <Popconfirm
                   title="Retirer ce dossier ?"
-                  description="Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour."
+                  description={
+                    d.accesCrees > 0
+                      ? `Le dossier reste chez le fournisseur cloud. Relaytour y a créé ${d.accesCrees > 1 ? `${d.accesCrees} accès, qui restent` : 'un accès, qui reste'} sans suivi.`
+                      : 'Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour.'
+                  }
                   okText="Retirer"
                   cancelText="Annuler"
                   onConfirm={() =>
-                    delier({ variables: { id: d.id } }).catch((e: unknown) =>
-                      message.error(messageErreur(e))
-                    )
+                    delier({
+                      variables: { id: d.id, oublierAcces: d.accesCrees > 0 },
+                    }).catch((e: unknown) => message.error(messageErreur(e)))
                   }
                 >
                   <Button
@@ -605,7 +630,10 @@ export default function EspaceFichiers() {
               children: (
                 <VerificationAcces
                   connexion={connexion}
-                  onActiver={activable ? () => void activer() : null}
+                  onActiver={activable ? () => void activer('ANNUAIRE') : null}
+                  onActiverGestion={
+                    activable ? () => void activer('GESTION') : null
+                  }
                 />
               ),
             },
@@ -614,7 +642,11 @@ export default function EspaceFichiers() {
                   {
                     key: 'comptes',
                     label: 'Comptes',
-                    children: <ComptesFournisseur />,
+                    children: (
+                      <ComptesFournisseur
+                        annuaire={AVEC_ANNUAIRE.has(connexion.fournisseur)}
+                      />
+                    ),
                   },
                 ]
               : []),

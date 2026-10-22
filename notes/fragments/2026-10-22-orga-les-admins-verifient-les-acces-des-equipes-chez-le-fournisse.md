@@ -8,15 +8,15 @@ fr:
   titre: >-
     Les admins vérifient les accès des équipes chez le fournisseur cloud
   texte: >-
-    L'écran « Fournisseur cloud » reçoit les onglets « Vérification des accès »
-    et « Comptes ». Avec SharePoint, un admin de l'organisation active la
-    vérification par une nouvelle connexion, qu'un admin Microsoft Entra
-    accepte. Relaytour compare alors, pour chaque dossier lié, les personnes
-    attendues aux droits du dossier : il les range par équipe et dit qui a
-    accès, qui n'a pas de compte, qui n'a pas d'accès. Il nomme aussi les accès
-    en trop. Chaque dossier lié règle les personnes attendues : tous les
-    membres, ou les contacts principaux seulement. Relaytour ne change aucun
-    droit chez le fournisseur.
+    L'écran « Fournisseur cloud » compte deux nouveaux onglets : «
+    Vérification des accès » et « Comptes ». Avec SharePoint, un admin de
+    l'organisation active la vérification par une nouvelle connexion, qu'un
+    admin Microsoft Entra accepte. Pour chaque dossier lié, Relaytour compare
+    alors les personnes attendues aux droits du dossier. Relaytour les range
+    par équipe : qui a accès, qui n'a pas de compte, qui n'a pas d'accès.
+    Relaytour nomme aussi les accès en trop. Chaque dossier lié règle les
+    personnes attendues : tous les membres, ou les contacts principaux
+    seulement. La vérification ne change aucun droit chez le fournisseur.
 ---
 
 ADR 0044 : `ConnexionFichiers.portee` (`FICHIERS`, `ANNUAIRE`, `GESTION`),

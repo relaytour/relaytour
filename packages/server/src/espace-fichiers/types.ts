@@ -83,8 +83,11 @@ export type Beneficiaire =
       nom: string
     }
   | { type: 'groupe'; identifiant: string; nom: string }
-  /** Tous les comptes de l'organisation du fournisseur, invités exclus. */
-  | { type: 'domaine'; nom: string }
+  /**
+   * Les comptes d'un domaine (`exemple.org`), ou, sans domaine, tous les comptes
+   * de l'organisation du fournisseur, invités exclus.
+   */
+  | { type: 'domaine'; nom: string; domaine?: string }
   /** Un lien de partage : il ne nomme personne. */
   | { type: 'lien'; nom: string }
 
@@ -99,9 +102,17 @@ export interface DroitElement {
 
 /** Ce que l'annuaire d'un fournisseur sait faire. */
 export interface CapacitesAnnuaire {
+  /**
+   * Chercher un compte par adresse. Sans annuaire, Relaytour compare les
+   * adresses des droits à celles des personnes.
+   */
   comptes: boolean
   droits: boolean
   membresDeGroupe: boolean
+  /** Partager un élément avec une personne, et retirer ce partage. */
+  partage: boolean
+  /** Faire entrer une personne dans un groupe, et l'en retirer. */
+  gestionDeGroupe: boolean
 }
 
 /**
@@ -114,10 +125,38 @@ export interface AnnuaireFournisseur {
   chercherComptes(
     adresses: readonly string[]
   ): Promise<Map<string, CompteAnnuaire | null>>
-  /** Les droits de l'élément à cette position, hérités compris. */
-  droits(position: Position): Promise<DroitElement[]>
+  /**
+   * Les droits de l'élément à cette position, hérités compris. Null quand ils ne
+   * se lisent pas en entier (refus, élément absent, liste coupée) : Relaytour ne
+   * conclut alors à aucune absence de droit.
+   */
+  droits(position: Position): Promise<DroitElement[] | null>
   /** Les membres d'un groupe, sous-groupes compris, ou null s'ils ne se lisent pas. */
   membresDuGroupe(identifiant: string): Promise<CompteAnnuaire[] | null>
+  /**
+   * Faux pour un groupe que Relaytour ne doit jamais modifier : un groupe de site
+   * SharePoint, le groupe des admins d'un Nextcloud. Absent : tout groupe lu.
+   */
+  groupeGerable?(identifiant: string): boolean
+
+  // Écriture : les propositions qu'un admin applique (ADR 0044). Absentes quand
+  // la connexion ne permet pas la gestion des accès.
+
+  /**
+   * Partage l'élément avec une personne, par son adresse. Rend l'identifiant du
+   * droit créé.
+   */
+  partager?(
+    position: Position,
+    personne: { adresse: string; identifiant?: string | null },
+    options: { role: 'LECTURE' | 'ECRITURE'; invitation: boolean }
+  ): Promise<{ identifiant: string }>
+  /** Retire un droit de l'élément. Un droit absent ne lève pas. */
+  retirerPartage?(position: Position, identifiant: string): Promise<void>
+  /** Fait entrer un compte dans un groupe. Un membre déjà présent ne lève pas. */
+  ajouterAuGroupe?(groupe: string, compte: string): Promise<void>
+  /** Retire un compte d'un groupe. Un compte absent ne lève pas. */
+  retirerDuGroupe?(groupe: string, compte: string): Promise<void>
 }
 
 export interface EspaceFichiers {

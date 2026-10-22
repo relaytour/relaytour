@@ -4,7 +4,10 @@ import { appelSortant, type HotesAdmis } from './sortant.ts'
 import {
   AccesRetire,
   FournisseurIndisponible,
+  type AnnuaireFournisseur,
+  type Beneficiaire,
   type ContenuFichier,
+  type DroitElement,
   type ElementEspace,
   type Emplacement,
   type EspaceFichiers,
@@ -379,9 +382,154 @@ function dansDossier(parent: string): string {
     : `${litteral(parent)} in parents`
 }
 
+// ── Droits d'un élément (ADR 0044) ───────────────────────────────────────────
+
+export interface PermissionDrive {
+  id: string
+  type?: 'user' | 'group' | 'domain' | 'anyone'
+  role?: string
+  emailAddress?: string
+  domain?: string
+  displayName?: string
+  deleted?: boolean
+  permissionDetails?: { inherited?: boolean }[]
+}
+
+/** Un droit de Drive, dans les mots de Relaytour. Un compte supprimé n'en a plus. */
+export function droitGoogle(p: PermissionDrive): DroitElement | null {
+  if (p.deleted === true) return null
+  const adresse = p.emailAddress?.toLowerCase() ?? null
+  let beneficiaire: Beneficiaire
+  switch (p.type) {
+    case 'user':
+      beneficiaire = {
+        type: 'personne',
+        identifiant: null,
+        adresse,
+        nom: p.displayName ?? adresse ?? 'Personne',
+      }
+      break
+    case 'group':
+      if (adresse === null) return null
+      beneficiaire = {
+        type: 'groupe',
+        identifiant: adresse,
+        nom: p.displayName ?? adresse,
+      }
+      break
+    case 'domain':
+      beneficiaire = {
+        type: 'domaine',
+        nom: `Domaine ${p.domain ?? ''}`.trim(),
+        ...(p.domain === undefined ? {} : { domaine: p.domain }),
+      }
+      break
+    default:
+      beneficiaire = { type: 'lien', nom: 'Lien de partage' }
+  }
+  return {
+    identifiant: p.id,
+    beneficiaire,
+    role: ['owner', 'organizer', 'fileOrganizer', 'writer'].includes(
+      p.role ?? ''
+    )
+      ? 'ECRITURE'
+      : 'LECTURE',
+    herite:
+      (p.permissionDetails ?? []).length > 0 &&
+      (p.permissionDetails ?? []).every(d => d.inherited === true),
+  }
+}
+
+/**
+ * L'annuaire de Google Drive : les droits d'un élément et leur partage. Drive ne
+ * publie pas d'annuaire sans l'API d'administration de Google Workspace :
+ * Relaytour compare les adresses, et un groupe Google ne se lit pas.
+ */
+function annuaireGoogle(
+  jeton: Jeton,
+  idDe: (p: Position) => Promise<string>,
+  gestion: boolean
+): AnnuaireFournisseur {
+  return {
+    capacites: {
+      comptes: false,
+      droits: true,
+      membresDeGroupe: false,
+      partage: gestion,
+      gestionDeGroupe: false,
+    },
+    chercherComptes: adresses =>
+      Promise.resolve(new Map(adresses.map(a => [a, null]))),
+    membresDuGroupe: () => Promise.resolve(null),
+    async droits(position) {
+      const id = await idDe(position)
+      const droits: DroitElement[] = []
+      let jetonPage: string | undefined
+      for (let page = 0; page < PAGES_MAX; page++) {
+        const reponse: {
+          permissions?: PermissionDrive[]
+          nextPageToken?: string
+        } | null = await lireJson(
+          `${DRIVE}/files/${encodeURIComponent(id)}/permissions?supportsAllDrives=true&pageSize=100&fields=nextPageToken,permissions(id,type,role,emailAddress,domain,displayName,deleted,permissionDetails)${jetonPage === undefined ? '' : `&pageToken=${encodeURIComponent(jetonPage)}`}`,
+          jeton
+        )
+        // Un élément absent : ses droits ne se lisent pas.
+        if (reponse === null) return null
+        for (const p of reponse.permissions ?? []) {
+          const droit = droitGoogle(p)
+          if (droit !== null) droits.push(droit)
+        }
+        jetonPage = reponse.nextPageToken
+        if (jetonPage === undefined) return droits
+      }
+      // Au-delà de la borne, la liste est coupée : elle ne prouve rien.
+      return null
+    },
+    ...(gestion
+      ? {
+          async partager(position, personne, { role, invitation }) {
+            const id = await idDe(position)
+            const reponse = await drive(
+              `${DRIVE}/files/${encodeURIComponent(id)}/permissions?supportsAllDrives=true&sendNotificationEmail=${invitation}&fields=id`,
+              jeton,
+              {
+                method: 'POST',
+                type: 'application/json',
+                body: JSON.stringify({
+                  type: 'user',
+                  role: role === 'ECRITURE' ? 'writer' : 'reader',
+                  emailAddress: personne.adresse,
+                }),
+              }
+            )
+            const { id: identifiant } = await ecritureJson<{ id: string }>(
+              reponse,
+              'le partage'
+            )
+            return { identifiant }
+          },
+          async retirerPartage(position, identifiant) {
+            const id = await idDe(position)
+            const reponse = await drive(
+              `${DRIVE}/files/${encodeURIComponent(id)}/permissions/${encodeURIComponent(identifiant)}?supportsAllDrives=true`,
+              jeton,
+              { method: 'DELETE' }
+            )
+            if (reponse.status === 404 || reponse.ok) {
+              await reponse.body?.cancel()
+              return
+            }
+            await ecritureJson(reponse, 'le retrait du partage')
+          },
+        }
+      : {}),
+  }
+}
+
 export function espaceGoogleDrive(
   jeton: Jeton,
-  options: { compteService: boolean }
+  options: { compteService: boolean; annuaire?: boolean; gestion?: boolean }
 ): EspaceFichiers {
   const corpora = (emplacement: string) =>
     emplacement === MON_DRIVE || emplacement === PARTAGES
@@ -490,6 +638,15 @@ export function espaceGoogleDrive(
 
   return {
     fournisseur: 'GOOGLE_DRIVE',
+    ...(options.annuaire === true
+      ? {
+          annuaire: annuaireGoogle(
+            jeton,
+            async p => (await exiger(p)).id,
+            options.gestion === true
+          ),
+        }
+      : {}),
     convertitEnPdf: convertibleParGoogle,
 
     async emplacements(): Promise<Emplacement[]> {

@@ -1,7 +1,11 @@
 import {
+  AccesFournisseurDossier,
+  ActionProposition,
   EtatAccesFournisseur,
   EtatCompteFournisseur,
+  EtatProposition,
   prisma,
+  RoleFournisseur,
 } from '@relaytour/database'
 
 import {
@@ -9,6 +13,9 @@ import {
   SELECTION_LECTEURS,
 } from '../espace-fichiers/droits.ts'
 import { planifierVerificationAcces } from '../espace-fichiers/acces.ts'
+import { erreurEspace, ouvrirEspace } from '../espace-fichiers/index.ts'
+import { appliquerProposition } from '../espace-fichiers/propositions.ts'
+import { journal } from '../lib/journal.ts'
 import { membreActif } from '../lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { adresseValide } from '../lib/saisie.ts'
@@ -78,6 +85,87 @@ const LigneAccesRef = builder.objectRef<LigneAcces>('LigneAcces').implement({
   }),
 })
 
+const AccesFournisseurEnum = builder.enumType(AccesFournisseurDossier, {
+  name: 'AccesFournisseurDossier',
+  description:
+    'Comment Relaytour propose les accès d’un dossier lié chez le fournisseur : rien, un partage du dossier, ou l’entrée dans un groupe (ADR 0044).',
+})
+const RoleFournisseurEnum = builder.enumType(RoleFournisseur, {
+  name: 'RoleFournisseur',
+})
+const ActionPropositionEnum = builder.enumType(ActionProposition, {
+  name: 'ActionProposition',
+})
+const EtatPropositionEnum = builder.enumType(EtatProposition, {
+  name: 'EtatProposition',
+})
+
+builder.prismaObjectFields(DossierLieRef, t => ({
+  accesFournisseur: t.expose('accesFournisseur', {
+    type: AccesFournisseurEnum,
+  }),
+  groupeFournisseurNom: t.exposeString('groupeFournisseurNom', {
+    nullable: true,
+  }),
+  roleFournisseur: t.expose('roleFournisseur', { type: RoleFournisseurEnum }),
+  ajoutsAutomatiques: t.exposeBoolean('ajoutsAutomatiques'),
+  invitationFournisseur: t.exposeBoolean('invitationFournisseur'),
+  groupeFournisseurId: t.exposeID('groupeFournisseurId', { nullable: true }),
+  accesCrees: t.int({
+    description:
+      'Les accès que Relaytour a créés pour ce dossier chez le fournisseur. Zéro pour une personne qui n’est pas admin de l’organisation.',
+    resolve: (d, _args, ctx) =>
+      ctx.personne?.estAdmin === true
+        ? prisma.permissionCreee.count({ where: { dossierLieId: d.id } })
+        : 0,
+  }),
+}))
+
+interface PropositionVue {
+  id: string
+  action: ActionProposition
+  etat: EtatProposition
+  erreur: string | null
+  personne: PersonneAcces
+  cible: string
+  parGroupe: boolean
+}
+
+const PropositionRef = builder
+  .objectRef<PropositionVue>('PropositionAcces')
+  .implement({
+    description:
+      'Un ajout ou un retrait d’accès chez le fournisseur, qu’un admin applique ou écarte (ADR 0044).',
+    fields: t => ({
+      id: t.exposeID('id'),
+      action: t.expose('action', { type: ActionPropositionEnum }),
+      etat: t.expose('etat', { type: EtatPropositionEnum }),
+      erreur: t.exposeString('erreur', { nullable: true }),
+      personne: t.field({ type: PersonneAccesRef, resolve: p => p.personne }),
+      parGroupe: t.exposeBoolean('parGroupe', {
+        description: 'Vrai quand la proposition vise un groupe du fournisseur.',
+      }),
+      cible: t.exposeString('cible', {
+        description:
+          'Le droit visé : « partage du dossier », ou le groupe. Un retrait nomme le droit que Relaytour a créé, quel que soit le mode actuel du dossier.',
+      }),
+    }),
+  })
+
+interface GroupeDuDossier {
+  identifiant: string
+  nom: string
+}
+
+const GroupeDuDossierRef = builder
+  .objectRef<GroupeDuDossier>('GroupeDuDossier')
+  .implement({
+    fields: t => ({
+      identifiant: t.exposeID('identifiant'),
+      nom: t.exposeString('nom'),
+    }),
+  })
+
 interface VerificationDossier {
   dossierId: string
   verifieLe: Date | null
@@ -98,9 +186,72 @@ const VerificationDossierRef = builder
           }),
       }),
       verifieLe: t.expose('verifieLe', { type: 'DateTime', nullable: true }),
-      lignes: t.field({ type: [LigneAccesRef], resolve: v => v.lignes }),
+      // Les listes d'un dossier restent courtes : une équipe, quelques groupes.
+      lignes: t.field({
+        type: [LigneAccesRef],
+        complexity: { field: 1, multiplier: 3 },
+        resolve: v => v.lignes,
+      }),
+      propositions: t.field({
+        type: [PropositionRef],
+        complexity: { field: 1, multiplier: 2 },
+        description:
+          'Les propositions en attente, et celles qui ont échoué, du plus ancien au plus récent.',
+        resolve: async v => {
+          const [propositions, dossier, creees] = await Promise.all([
+            prisma.propositionAcces.findMany({
+              where: {
+                dossierLieId: v.dossierId,
+                etat: { in: ['EN_ATTENTE', 'ECHEC'] },
+              },
+              orderBy: [{ creeLe: 'asc' }, { id: 'asc' }],
+              include: {
+                user: { select: { id: true, name: true, email: true } },
+              },
+            }),
+            prisma.dossierLie.findUniqueOrThrow({
+              where: { id: v.dossierId },
+              select: {
+                accesFournisseur: true,
+                groupeFournisseurId: true,
+                groupeFournisseurNom: true,
+              },
+            }),
+            prisma.permissionCreee.findMany({
+              where: { dossierLieId: v.dossierId },
+              select: { userId: true, identifiant: true },
+            }),
+          ])
+          const groupe = (id: string) => ({
+            parGroupe: true,
+            cible: `groupe « ${id === dossier.groupeFournisseurId ? (dossier.groupeFournisseurNom ?? id) : id} »`,
+          })
+          const partage = { parGroupe: false, cible: 'partage du dossier' }
+          const cible = (action: ActionProposition, userId: string) => {
+            if (action === 'RETIRER') {
+              const creee = creees.find(c => c.userId === userId)
+              return creee?.identifiant.startsWith('groupe:') === true
+                ? groupe(creee.identifiant.slice('groupe:'.length))
+                : partage
+            }
+            return dossier.accesFournisseur === 'GROUPE' &&
+              dossier.groupeFournisseurId !== null
+              ? groupe(dossier.groupeFournisseurId)
+              : partage
+          }
+          return propositions.map(p => ({
+            id: p.id,
+            action: p.action,
+            etat: p.etat,
+            erreur: p.erreur,
+            personne: { id: p.user.id, nom: p.user.name, email: p.user.email },
+            ...cible(p.action, p.userId),
+          }))
+        },
+      }),
       perimetres: t.prismaField({
         type: [PerimetreRef],
+        complexity: { field: 1, multiplier: 2 },
         description: 'Les périmètres que les lecteurs du dossier désignent.',
         resolve: (query, v) =>
           prisma.perimetre.findMany({
@@ -238,6 +389,21 @@ builder.queryFields(t => ({
     },
   }),
 
+  groupesDuDossier: t.field({
+    type: [GroupeDuDossierRef],
+    authScopes: { admin: true },
+    description:
+      'Les groupes du fournisseur qui ont un droit sur un dossier lié et dont Relaytour peut gérer les membres (ADR 0044).',
+    args: { id: t.arg.id({ required: true }) },
+    resolve: async (_root, { id }, ctx) => {
+      const dossier = await prisma.dossierLie.findFirst({
+        where: { id: String(id), organisationId: ctx.organisation!.id },
+      })
+      if (dossier === null) throw accesRefuse()
+      return groupesGerables(ctx.organisation!.id, dossier)
+    },
+  }),
+
   comptesFournisseur: t.field({
     type: [CompteVueRef],
     authScopes: { admin: true },
@@ -273,6 +439,153 @@ builder.queryFields(t => ({
 }))
 
 builder.mutationFields(t => ({
+  reglerAccesFournisseur: t.prismaField({
+    type: DossierLieRef,
+    authScopes: { admin: true },
+    description:
+      'Règle comment Relaytour propose les accès d’un dossier lié chez le fournisseur. Un partage ou un groupe exige une connexion qui gère les accès (ADR 0044).',
+    args: {
+      id: t.arg.id({ required: true }),
+      mode: t.arg({ type: AccesFournisseurEnum, required: true }),
+      groupeId: t.arg.id(),
+      role: t.arg({ type: RoleFournisseurEnum, required: true }),
+      ajoutsAutomatiques: t.arg.boolean({ required: true }),
+      invitation: t.arg.boolean({ required: true }),
+    },
+    resolve: async (query, _root, args, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const dossier = await prisma.dossierLie.findFirst({
+        where: { id: String(args.id), organisationId },
+      })
+      if (dossier === null) throw accesRefuse()
+      let groupe: GroupeDuDossier | null = null
+      if (args.mode !== 'AUCUN') {
+        const connexion = await prisma.connexionFichiers.findUnique({
+          where: { organisationId },
+          select: { portee: true, etat: true },
+        })
+        if (connexion?.etat !== 'ACTIVE' || connexion.portee !== 'GESTION') {
+          throw erreurSaisie(
+            'Activez d’abord la gestion des accès en reconnectant le fournisseur.'
+          )
+        }
+      }
+      if (args.mode === 'GROUPE') {
+        const groupes = await groupesGerables(organisationId, dossier)
+        groupe =
+          groupes.find(g => g.identifiant === String(args.groupeId ?? '')) ??
+          null
+        if (groupe === null) {
+          throw erreurSaisie(
+            'Choisissez un groupe qui a déjà un droit sur ce dossier.'
+          )
+        }
+      }
+      await prisma.dossierLie.update({
+        where: { id: dossier.id },
+        data: {
+          accesFournisseur: args.mode,
+          groupeFournisseurId: groupe?.identifiant ?? null,
+          groupeFournisseurNom: groupe?.nom ?? null,
+          roleFournisseur: args.role,
+          ajoutsAutomatiques: args.mode !== 'AUCUN' && args.ajoutsAutomatiques,
+          invitationFournisseur: args.invitation,
+        },
+      })
+      journal.info(
+        {
+          evenement: 'acces-fournisseur-regle',
+          organisationId,
+          dossierLieId: dossier.id,
+          mode: args.mode,
+          acteurId: ctx.personne!.id,
+        },
+        'Le mode d’accès d’un dossier lié chez le fournisseur a changé.'
+      )
+      planifierVerificationAcces(organisationId)
+      return prisma.dossierLie.findUniqueOrThrow({
+        ...query,
+        where: { id: dossier.id },
+      })
+    },
+  }),
+
+  appliquerPropositionAcces: t.field({
+    type: EtatPropositionEnum,
+    authScopes: { admin: true },
+    description:
+      'Applique une proposition chez le fournisseur. Rend APPLIQUEE, ou ECHEC avec son message dans la proposition.',
+    args: { id: t.arg.id({ required: true }) },
+    resolve: async (_root, { id }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const etat = await appliquerProposition(
+        organisationId,
+        String(id),
+        ctx.personne!.id
+      )
+      if (etat === null) throw accesRefuse()
+      planifierVerificationAcces(organisationId)
+      return etat
+    },
+  }),
+
+  appliquerPropositionsDossier: t.int({
+    authScopes: { admin: true },
+    description:
+      'Applique les propositions en attente d’un dossier lié, cinquante au plus. Rend le nombre de propositions appliquées.',
+    args: { dossierId: t.arg.id({ required: true }) },
+    resolve: async (_root, { dossierId }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const propositions = await prisma.propositionAcces.findMany({
+        where: {
+          organisationId,
+          dossierLieId: String(dossierId),
+          etat: 'EN_ATTENTE',
+        },
+        orderBy: [{ creeLe: 'asc' }, { id: 'asc' }],
+        take: 50,
+        select: { id: true },
+      })
+      let appliquees = 0
+      for (const p of propositions) {
+        if (
+          (await appliquerProposition(
+            organisationId,
+            p.id,
+            ctx.personne!.id
+          )) === 'APPLIQUEE'
+        ) {
+          appliquees += 1
+        }
+      }
+      planifierVerificationAcces(organisationId)
+      return appliquees
+    },
+  }),
+
+  ecarterPropositionAcces: t.boolean({
+    authScopes: { admin: true },
+    description:
+      'Écarte une proposition : rien ne change chez le fournisseur. Elle ne revient pas tant que la situation de la personne ne change pas.',
+    args: { id: t.arg.id({ required: true }) },
+    resolve: async (_root, { id }, ctx) => {
+      const { count } = await prisma.propositionAcces.updateMany({
+        where: {
+          id: String(id),
+          organisationId: ctx.organisation!.id,
+          etat: { in: ['EN_ATTENTE', 'ECHEC'] },
+        },
+        data: {
+          etat: 'ECARTEE',
+          traiteeParId: ctx.personne!.id,
+          traiteeLe: new Date(),
+        },
+      })
+      if (count === 0) throw accesRefuse()
+      return true
+    },
+  }),
+
   verifierAccesFournisseur: t.boolean({
     authScopes: { admin: true },
     description:
@@ -344,3 +657,44 @@ builder.mutationFields(t => ({
     },
   }),
 }))
+
+/**
+ * Les groupes qui ont un droit sur le dossier chez le fournisseur et dont la
+ * connexion gère les membres. Un groupe d'un site SharePoint, ou le groupe des
+ * admins d'un Nextcloud, ne se gère pas.
+ */
+async function groupesGerables(
+  organisationId: string,
+  dossier: { emplacement: string; element: string; fournisseur: string }
+): Promise<GroupeDuDossier[]> {
+  try {
+    const { espace } = await ouvrirEspace(organisationId)
+    const annuaire = espace.annuaire
+    if (
+      annuaire === undefined ||
+      espace.fournisseur !== dossier.fournisseur ||
+      !annuaire.capacites.gestionDeGroupe
+    ) {
+      return []
+    }
+    const droits = await annuaire.droits({
+      emplacement: dossier.emplacement,
+      base: dossier.element,
+      chemin: [],
+    })
+    const groupes = new Map<string, GroupeDuDossier>()
+    for (const { beneficiaire: b } of droits ?? []) {
+      if (
+        b.type === 'groupe' &&
+        (annuaire.groupeGerable?.(b.identifiant) ?? true)
+      ) {
+        groupes.set(b.identifiant, { identifiant: b.identifiant, nom: b.nom })
+      }
+    }
+    return [...groupes.values()].sort((a, b) =>
+      a.nom.localeCompare(b.nom, 'fr')
+    )
+  } catch (erreur) {
+    throw erreurEspace(erreur)
+  }
+}

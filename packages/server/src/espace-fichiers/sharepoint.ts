@@ -179,11 +179,51 @@ type Jeton = (forcer?: boolean) => Promise<string>
  * Appel à Graph avec le jeton d'accès. Un 401 renouvelle le jeton une fois : un
  * second refus signifie que l'accès a été retiré.
  */
+/** Graph limite le débit : Relaytour attend au plus 30 secondes, trois fois. */
+const ATTENTE_MAX_S = 30
+const ESSAIS_LIMITE = 3
+
+/** L'attente demandée par `Retry-After`, en secondes, bornée ; 2 s sans indication. */
+export function attenteDemandee(valeur: string | null | undefined): number {
+  const secondes = Number(valeur)
+  if (valeur != null && valeur !== '' && Number.isFinite(secondes)) {
+    return Math.min(Math.max(secondes, 0), ATTENTE_MAX_S)
+  }
+  const date = valeur == null ? NaN : Date.parse(valeur)
+  if (Number.isFinite(date)) {
+    return Math.min(Math.max((date - Date.now()) / 1000, 0), ATTENTE_MAX_S)
+  }
+  return 2
+}
+
+const attendre = (secondes: number) =>
+  new Promise(resolve => setTimeout(resolve, secondes * 1000))
+
 async function graph(
   adresse: string,
   jeton: Jeton,
   delaiMs = DELAI_MS,
   requete: { method?: string; body?: string; type?: string } = {}
+): Promise<Response> {
+  for (let essai = 1; ; essai++) {
+    const reponse = await graphUneFois(adresse, jeton, delaiMs, requete)
+    // Une limite de débit se respecte : Graph dit combien de temps attendre.
+    if (
+      (reponse.status !== 429 && reponse.status !== 503) ||
+      essai >= ESSAIS_LIMITE
+    ) {
+      return reponse
+    }
+    await reponse.body?.cancel()
+    await attendre(attenteDemandee(reponse.headers.get('retry-after')))
+  }
+}
+
+async function graphUneFois(
+  adresse: string,
+  jeton: Jeton,
+  delaiMs: number,
+  requete: { method?: string; body?: string; type?: string }
 ): Promise<Response> {
   for (const forcer of [false, true]) {
     const reponse = await appelSortant(
@@ -384,6 +424,11 @@ export function beneficiaires(p: PermissionGraph): Beneficiaire[] {
         },
       ]
     }
+    // « Tout le monde sauf les utilisateurs externes » : tous les comptes de
+    // l'organisation, invités exclus.
+    if (i.siteUser?.loginName?.includes('spo-grid-all-users') === true) {
+      return [{ type: 'domaine', nom: 'Tout le monde sauf les externes' }]
+    }
     if (i.siteUser !== undefined) {
       return [
         {
@@ -399,15 +444,113 @@ export function beneficiaires(p: PermissionGraph): Beneficiaire[] {
     return []
   })
   if (nommes.length > 0) return nommes
+  // Un lien, même limité à l'organisation, n'ouvre le dossier qu'à qui le reçoit.
   if (p.link?.scope === 'organization') {
-    return [{ type: 'domaine', nom: 'Toute l’organisation' }]
+    return [{ type: 'lien', nom: 'Lien de l’organisation' }]
   }
   return p.link === undefined ? [] : [{ type: 'lien', nom: 'Lien de partage' }]
 }
 
-export function annuaireSharePoint(jeton: Jeton): AnnuaireFournisseur {
+/** Une écriture de Graph qui tolère un élément déjà absent, ou déjà présent. */
+async function ecritureTolerante(
+  reponse: Response,
+  quoi: string,
+  toleres: number[]
+): Promise<void> {
+  if (reponse.ok || toleres.includes(reponse.status)) {
+    await reponse.body?.cancel()
+    return
+  }
+  // Un membre déjà présent dans un groupe répond 400 avec ce message.
+  const texte = await reponse.text().catch(() => '')
+  if (reponse.status === 400 && /already exist/i.test(texte)) return
+  throw new FournisseurIndisponible(
+    `Microsoft Graph refuse ${quoi} (${reponse.status}).`
+  )
+}
+
+export function annuaireSharePoint(
+  jeton: Jeton,
+  options: { gestion?: boolean } = {}
+): AnnuaireFournisseur {
+  const gestion = options.gestion === true
+  const ecritures: Pick<
+    AnnuaireFournisseur,
+    'partager' | 'retirerPartage' | 'ajouterAuGroupe' | 'retirerDuGroupe'
+  > = !gestion
+    ? {}
+    : {
+        async partager(position, personne, { role, invitation }) {
+          const reponse = await graph(
+            `${adresseGraph(position)}/invite`,
+            jeton,
+            DELAI_MS,
+            {
+              method: 'POST',
+              type: 'application/json',
+              body: JSON.stringify({
+                recipients: [{ email: personne.adresse }],
+                requireSignIn: true,
+                sendInvitation: invitation,
+                roles: [role === 'ECRITURE' ? 'write' : 'read'],
+              }),
+            }
+          )
+          const corps = await resultatEcriture<{ value?: { id: string }[] }>(
+            reponse,
+            'le partage'
+          )
+          const identifiant = corps.value?.[0]?.id
+          if (identifiant === undefined) {
+            throw new FournisseurIndisponible(
+              'Microsoft Graph ne rend aucun droit après le partage.'
+            )
+          }
+          return { identifiant }
+        },
+        async retirerPartage(position, identifiant) {
+          const reponse = await graph(
+            `${adresseGraph(position)}/permissions/${segment(identifiant)}`,
+            jeton,
+            DELAI_MS,
+            { method: 'DELETE' }
+          )
+          await ecritureTolerante(reponse, 'le retrait du partage', [404])
+        },
+        async ajouterAuGroupe(groupe, compte) {
+          const reponse = await graph(
+            `${GRAPH}/groups/${segment(groupe)}/members/$ref`,
+            jeton,
+            DELAI_MS,
+            {
+              method: 'POST',
+              type: 'application/json',
+              body: JSON.stringify({
+                '@odata.id': `${GRAPH}/directoryObjects/${segment(compte)}`,
+              }),
+            }
+          )
+          await ecritureTolerante(reponse, 'l’ajout au groupe', [])
+        },
+        async retirerDuGroupe(groupe, compte) {
+          const reponse = await graph(
+            `${GRAPH}/groups/${segment(groupe)}/members/${segment(compte)}/$ref`,
+            jeton,
+            DELAI_MS,
+            { method: 'DELETE' }
+          )
+          await ecritureTolerante(reponse, 'le retrait du groupe', [404])
+        },
+      }
   return {
-    capacites: { comptes: true, droits: true, membresDeGroupe: true },
+    ...ecritures,
+    capacites: {
+      comptes: true,
+      droits: true,
+      membresDeGroupe: true,
+      partage: gestion,
+      gestionDeGroupe: gestion,
+    },
 
     async chercherComptes(adresses) {
       const resultat = new Map<string, CompteAnnuaire | null>()
@@ -424,31 +567,53 @@ export function annuaireSharePoint(jeton: Jeton): AnnuaireFournisseur {
             headers: { ConsistencyLevel: 'eventual' },
           }
         })
-        const reponse = await graph(`${GRAPH}/$batch`, jeton, DELAI_MS, {
-          method: 'POST',
-          body: JSON.stringify({ requests }),
-          type: 'application/json',
-        })
-        const corps = await resultatEcriture<{
-          responses: {
-            id: string
-            status: number
-            body?: { value?: UtilisateurGraph[] }
-          }[]
-        }>(reponse, 'la recherche de comptes')
-        for (const r of corps.responses) {
-          const adresse = lot[Number(r.id)]
-          if (adresse === undefined) continue
-          if (r.status !== 200) {
-            throw new FournisseurIndisponible(
-              `Microsoft Graph refuse la recherche d’un compte (${r.status}).`
+        // Une requête du lot limitée par Graph se renvoie après l'attente demandée.
+        let restantes = requests
+        for (let essai = 1; restantes.length > 0; essai++) {
+          const reponse = await graph(`${GRAPH}/$batch`, jeton, DELAI_MS, {
+            method: 'POST',
+            body: JSON.stringify({ requests: restantes }),
+            type: 'application/json',
+          })
+          const corps = await resultatEcriture<{
+            responses: {
+              id: string
+              status: number
+              headers?: Record<string, string>
+              body?: { value?: UtilisateurGraph[] }
+            }[]
+          }>(reponse, 'la recherche de comptes')
+          const limitees = corps.responses.filter(r => r.status === 429)
+          for (const r of corps.responses) {
+            const adresse = lot[Number(r.id)]
+            if (adresse === undefined || r.status === 429) continue
+            if (r.status !== 200) {
+              throw new FournisseurIndisponible(
+                `Microsoft Graph refuse la recherche d’un compte (${r.status}).`
+              )
+            }
+            const trouve = r.body?.value?.[0]
+            resultat.set(
+              adresse,
+              trouve === undefined ? null : versCompte(trouve)
             )
           }
-          const trouve = r.body?.value?.[0]
-          resultat.set(
-            adresse,
-            trouve === undefined ? null : versCompte(trouve)
+          if (limitees.length === 0) break
+          if (essai >= ESSAIS_LIMITE) {
+            throw new FournisseurIndisponible(
+              'Microsoft Graph limite le débit de la recherche de comptes.'
+            )
+          }
+          await attendre(
+            Math.max(
+              ...limitees.map(r =>
+                attenteDemandee(
+                  r.headers?.['Retry-After'] ?? r.headers?.['retry-after']
+                )
+              )
+            )
           )
+          restantes = requests.filter(q => limitees.some(r => r.id === q.id))
         }
       }
       return resultat
@@ -460,7 +625,10 @@ export function annuaireSharePoint(jeton: Jeton): AnnuaireFournisseur {
         jeton,
         PAGES_SITES_MAX
       )
-      return (pages?.valeurs ?? []).flatMap(p =>
+      // Un refus, un dossier absent ou une liste coupée : les droits ne se
+      // lisent pas, et Relaytour ne conclut à aucune absence de droit.
+      if (pages === null || !pages.complet) return null
+      return pages.valeurs.flatMap(p =>
         beneficiaires(p).map((beneficiaire): DroitElement => ({
           identifiant: p.id,
           beneficiaire,
@@ -471,6 +639,8 @@ export function annuaireSharePoint(jeton: Jeton): AnnuaireFournisseur {
         }))
       )
     },
+
+    groupeGerable: identifiant => !identifiant.startsWith('site:'),
 
     async membresDuGroupe(identifiant) {
       // Graph ne lit pas les membres d'un groupe d'un site SharePoint.
@@ -488,12 +658,16 @@ export function annuaireSharePoint(jeton: Jeton): AnnuaireFournisseur {
 
 export function espaceSharePoint(
   jeton: Jeton,
-  options: { annuaire?: boolean } = {}
+  options: { annuaire?: boolean; gestion?: boolean } = {}
 ): EspaceFichiers {
   return {
     fournisseur: 'SHAREPOINT',
     ...(options.annuaire === true
-      ? { annuaire: annuaireSharePoint(jeton) }
+      ? {
+          annuaire: annuaireSharePoint(jeton, {
+            gestion: options.gestion === true,
+          }),
+        }
       : {}),
     convertitEnPdf: convertibleParMicrosoft,
 
