@@ -1,6 +1,6 @@
 # ADR 0042 — Import de listes de bénévoles, doublons et fusion des fiches
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-22
 - Complète l'ADR 0041 (appels à bénévoles, candidatures et répartition) et l'ADR 0040 (fiches bénévoles).
 
@@ -80,6 +80,7 @@ Plusieurs feuilles à combiner, des cellules fusionnées, des tableaux croisés 
 - Une colonne ou une valeur peut aussi devenir une plage de disponibilité seulement, ou être ignorée.
 - Sans aucune association à une séquence, l'import range quand même chaque personne par ses plages. Elle rejoint les bénévoles à répartir, et l'équipe la place plus tard dans la vue « Répartition » (ADR 0041).
 - Un texte libre devient les précisions de disponibilité. Aucune analyse automatique de ce texte n'est prévue.
+- Une fiche porte ses propres précisions de disponibilité, distinctes de sa note. Elles se lisent comme ses plages, dans la vue « Répartition ».
 
 ### Lignes écartées
 
@@ -107,8 +108,10 @@ La personne choisit le mode à chaque import :
 
 Dans les deux modes :
 
-- L'appel d'import est un appel sans adresse publique, fermé, créé pour l'occasion ou choisi parmi les appels d'import de la période. Il garde la portée de l'import. Les bénévoles à répartir de cet appel se lisent donc selon les règles de l'ADR 0041.
-- La personne qui importe déclare que les personnes du fichier ont donné leur accord. Elle nomme la source. La date et la source se gardent sur chaque candidature et sur chaque fiche créée.
+- L'appel d'import est un appel sans adresse publique et fermé. Chaque source a le sien : un fichier mis à jour réutilise l'appel de sa source.
+- L'appel d'import apparaît dans l'onglet « Appels », sans bouton d'adresse. Il garde la portée de l'import : ses bénévoles à répartir se lisent selon les règles de l'ADR 0041.
+- La personne qui importe déclare que les personnes du fichier ont donné leur accord. Elle nomme la source. La source se garde sur chaque candidature et sur chaque fiche créée.
+- La date de l'accord est la date de l'import. Une colonne de date du fichier, comme la date de commande, la remplace quand la personne l'associe.
 - Une fiche créée par un import a l'origine `IMPORT`. Elle garde le périmètre de l'import, qui borne la lecture de ses plages dans la vue « Répartition ».
 - Les mails suivent l'ADR 0041. L'import n'envoie rien. La première place d'une fiche joignable envoie le lien personnel. L'option « Prévenir par mail » de l'import, cochée par défaut, se reporte sur chaque fiche créée.
 - Une colonne d'identifiant externe rend l'import rejouable. Une ligne déjà importée dans le même appel d'import est ignorée : un fichier mis à jour n'ajoute que les nouvelles personnes.
@@ -155,10 +158,3 @@ Dans les deux modes :
 - Une personne qui écrit dans un périmètre n'importe que pour ses séquences. Elle n'apprend rien des comptes de l'organisation.
 - L'import n'envoie aucun mail. Un fichier qui contient des adresses erronées ne déclenche d'envoi qu'à la première place d'une fiche, après une décision de l'équipe.
 - La fusion est réservée aux admins de l'activité et laisse une trace au journal.
-
-## Questions ouvertes
-
-1. **Nom de la notion.** « Correspondance d'import » remplace « modèle d'import », car « modèle » désigne le texte de départ d'un message. Ce nom convient-il ?
-2. **Précisions sur la fiche.** En mode « places directes », les précisions de disponibilité n'ont pas de place sur la fiche aujourd'hui. Proposé : un champ « précisions de disponibilité » sur la fiche, distinct de sa note, lu comme ses plages.
-3. **Date de l'accord.** Proposé : la date de l'import, avec la source. Une colonne « date de commande » pourrait la remplacer quand le fichier en porte une.
-4. **Appel d'import.** Proposé : un appel d'import par source, réutilisable pour un fichier mis à jour. Il apparaît dans l'onglet « Appels », sans bouton d'adresse.

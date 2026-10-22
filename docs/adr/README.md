@@ -43,6 +43,6 @@
 | [0039](0039-fiches-connexes.md) | Fiches connexes et mentions de périmètre ou de groupe | Acceptée, réalisée |
 | [0040](0040-programme-du-jour-j-et-benevoles.md) | Programme du jour J, séquences et bénévoles | Acceptée, réalisée |
 | [0041](0041-appels-a-benevoles-et-repartition.md) | Appels à bénévoles, candidatures et répartition | Acceptée, réalisée |
-| [0042](0042-import-de-listes-de-benevoles.md) | Import de listes de bénévoles, doublons et fusion des fiches | Proposée |
+| [0042](0042-import-de-listes-de-benevoles.md) | Import de listes de bénévoles, doublons et fusion des fiches | Acceptée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
