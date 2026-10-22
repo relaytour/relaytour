@@ -44,7 +44,7 @@
 | [0040](0040-programme-du-jour-j-et-benevoles.md) | Programme du jour J, séquences et bénévoles | Acceptée, réalisée |
 | [0041](0041-appels-a-benevoles-et-repartition.md) | Appels à bénévoles, candidatures et répartition | Acceptée, réalisée |
 | [0042](0042-import-de-listes-de-benevoles.md) | Import de listes de bénévoles, doublons et fusion des fiches | Acceptée |
-| [0043](0043-dossiers-lies-a-plusieurs-lecteurs.md) | Dossiers liés à plusieurs lecteurs et documents liés d'une fiche partagée | Proposée |
-| [0044](0044-acces-chez-le-fournisseur-cloud.md) | Accès chez le fournisseur cloud : vérification et propositions | Proposée |
+| [0043](0043-dossiers-lies-a-plusieurs-lecteurs.md) | Dossiers liés à plusieurs lecteurs et documents liés d'une fiche partagée | Acceptée, réalisée |
+| [0044](0044-acces-chez-le-fournisseur-cloud.md) | Accès chez le fournisseur cloud : vérification et propositions | Acceptée, réalisée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
