@@ -21,6 +21,7 @@ import {
 } from './appels.ts'
 import {
   BENEVOLES_MAX,
+  coordonneesLisibles,
   courrielValide,
   NOM_BENEVOLE_MAX,
   telephoneValide,
@@ -238,8 +239,10 @@ const nomAppelImport = (source: string) =>
   `Import : ${source}`.slice(0, NOM_APPEL_MAX)
 
 /**
- * Simule ou écrit un lot. La simulation rend le rapport sans rien écrire ;
- * l'écriture refait les mêmes contrôles sous le verrou de l'organisation.
+ * Simule ou écrit un lot. La simulation rend le rapport sans rien écrire.
+ * L'écriture relit sous le verrou de l'organisation l'appel d'import, ses lignes
+ * déjà importées et le plafond des fiches : deux envois du même lot ne
+ * s'importent qu'une fois.
  */
 export async function importerLot(
   ctx: AppContext,
@@ -256,6 +259,10 @@ export async function importerLot(
   const source = texteRequis(demande.source, 'La source', SOURCE_MAX)
   if (demande.personnes.length === 0 || demande.personnes.length > LOT_MAX) {
     throw erreurSaisie(`Un lot compte de 1 à ${LOT_MAX} personnes.`)
+  }
+  const cles = demande.personnes.map(p => String(p.cle).slice(0, CLE_MAX))
+  if (new Set(cles).size !== cles.length) {
+    throw erreurSaisie('Chaque personne d’un lot porte une clé unique.')
   }
   const maintenant = new Date()
   const fuseau = ctx.organisation!.fuseauHoraire
@@ -330,7 +337,7 @@ export async function importerLot(
       portee: true,
       perimetreId: true,
       candidatures: {
-        select: { refExterne: true, courrielEnAttente: true },
+        select: { refExterne: true, courriel: true },
       },
     },
   })
@@ -345,15 +352,29 @@ export async function importerLot(
   const refsDeja = new Set(
     (appel?.candidatures ?? []).map(c => c.refExterne).filter(Boolean)
   )
+  // Une adresse déjà importée dans l'appel compte, que sa candidature soit
+  // encore en attente ou déjà traitée.
   const courrielsDeja = new Set(
-    (appel?.candidatures ?? []).map(c => c.courrielEnAttente).filter(Boolean)
+    (appel?.candidatures ?? []).map(c => c.courriel).filter(Boolean)
   )
 
-  // Rapprochement avec les fiches de l'activité, et avec les comptes pour un admin.
-  const fiches = await prisma.benevole.findMany({
+  // Rapprochement avec les fiches de l'activité, et avec les comptes pour un
+  // admin. Une personne qui n'administre pas l'activité ne se rapproche que des
+  // fiches dont elle lit les coordonnées : l'import ne lui apprend pas quelle
+  // fiche porte une adresse ou un numéro qu'elle ne lit pas.
+  const toutes = await prisma.benevole.findMany({
     where: { activiteId: edition.activiteId },
     select: { id: true, nom: true, courriel: true, telephone: true },
   })
+  const lisibles = portee.admin
+    ? null
+    : await coordonneesLisibles(
+        ctx,
+        edition.activiteId,
+        toutes.map(f => f.id)
+      )
+  const fiches =
+    lisibles === null ? toutes : toutes.filter(f => lisibles.has(f.id))
   const chercher = indexerFiches(fiches)
   const fichesConnues = new Set(fiches.map(f => f.id))
   const comptes = portee.admin
@@ -375,12 +396,39 @@ export async function importerLot(
     : new Set<string>()
 
   const accepter = demande.mode === 'PLACES_DIRECTES' || demande.accepterTout
-  const aImporter: (PersonneValide & { ficheId: string | null })[] = []
+  const trouvees = new Map(valides.map(p => [p.cle, chercher(p)] as const))
+  // Les places que les fiches rejointes tiennent déjà : une acceptation n'y
+  // ajoute rien, ni dans le compte des places, ni dans les dépassements.
+  const rejointes = [
+    ...new Set(
+      valides.flatMap(p => [
+        ...(p.rattachement ? [p.rattachement] : []),
+        ...(trouvees.get(p.cle)?.niveau === 'FORT'
+          ? [trouvees.get(p.cle)!.fiche.id]
+          : []),
+      ])
+    ),
+  ]
+  const placesTenues = new Set(
+    rejointes.length === 0
+      ? []
+      : (
+          await prisma.placeSequence.findMany({
+            where: {
+              benevoleId: { in: rejointes },
+              sequence: { editionId: edition.id },
+            },
+            select: { benevoleId: true, sequenceId: true },
+          })
+        ).map(p => `${p.benevoleId}:${p.sequenceId}`)
+  )
+  const aImporter: ImportPrevu[] = []
   let fichesCreees = 0
   let fichesRattachees = 0
+  let places = 0
   const renfortsApres = new Map<string, number>()
   for (const p of valides) {
-    const trouve = chercher(p)
+    const trouve = trouvees.get(p.cle) ?? null
     const ligne = ligneVide(p.cle, 'A_IMPORTER', null)
     ligne.rapprochement = trouve
       ? {
@@ -411,17 +459,24 @@ export async function importerLot(
       p.rattachement ??
       (!p.nouvelleFiche && trouve?.niveau === 'FORT' ? trouve.fiche.id : null)
     ligne.rattacheeA = ficheId
+    // Une fiche naît pour une personne acceptée aussitôt, ou pour une personne
+    // que l'aperçu demande de séparer d'une fiche de même adresse.
+    const creerFiche =
+      ficheId === null &&
+      ((accepter && p.sequenceIds.length > 0) || p.nouvelleFiche)
     if (ficheId !== null) fichesRattachees += 1
-    else if (accepter && p.sequenceIds.length > 0) fichesCreees += 1
+    else if (creerFiche) fichesCreees += 1
     if (accepter) {
       for (const id of p.sequenceIds) {
+        if (ficheId !== null && placesTenues.has(`${ficheId}:${id}`)) continue
+        places += 1
         renfortsApres.set(id, (renfortsApres.get(id) ?? 0) + 1)
       }
     }
-    refsDeja.add(p.refExterne ?? '')
+    if (p.refExterne !== null) refsDeja.add(p.refExterne)
     if (p.courriel !== null) courrielsDeja.add(p.courriel)
     lignes.set(p.cle, ligne)
-    aImporter.push({ ...p, ficheId })
+    aImporter.push({ ...p, ficheId, creerFiche })
   }
 
   const fichesRestantes = Math.max(0, BENEVOLES_MAX - fiches.length)
@@ -454,9 +509,7 @@ export async function importerLot(
     ecartees: [...lignes.values()].filter(l => l.etat === 'ECARTEE').length,
     fichesCreees,
     fichesRattachees,
-    places: accepter
-      ? aImporter.reduce((n, p) => n + p.sequenceIds.length, 0)
-      : 0,
+    places,
     fichesRestantes,
     depassements,
     lignes: demande.personnes
@@ -465,16 +518,17 @@ export async function importerLot(
   })
   if (!ecrire || aImporter.length === 0) return rapport(!ecrire)
 
-  const annonces = await ecrireLot(ctx, {
+  const { annonces, deja } = await ecrireLot(ctx, {
     portee,
     source,
-    appelId: appel?.id ?? null,
     personnes: aImporter,
     accepter,
     prevenirParMail: demande.prevenirParMail,
     maintenant,
   })
-  for (const p of aImporter) lignes.get(p.cle)!.etat = 'IMPORTEE'
+  for (const p of aImporter) {
+    lignes.get(p.cle)!.etat = deja.has(p.cle) ? 'DEJA_IMPORTEE' : 'IMPORTEE'
+  }
   // Les mails partent après la validation : la file relit chaque fiche.
   for (const benevoleId of annonces) {
     await annoncerPlace(prisma, {
@@ -522,23 +576,29 @@ function ligneVide(
   }
 }
 
+/** Une personne du lot, avec la fiche qu'elle rejoint ou qu'elle crée. */
+type ImportPrevu = PersonneValide & {
+  ficheId: string | null
+  creerFiche: boolean
+}
+
 /**
  * Écrit un lot dans une transaction, sous le verrou de l'organisation puis des
  * séquences du lot, dans l'ordre de leurs identifiants : l'ordre des acceptations
- * (ADR 0041). Rend les fiches qui ont reçu une place, pour leur premier mail.
+ * (ADR 0041). Rend les fiches qui ont reçu une place, pour leur premier mail, et
+ * les lignes qu'un envoi croisé a importées entre-temps.
  */
 async function ecrireLot(
   ctx: AppContext,
   lot: {
     portee: Portee
     source: string
-    appelId: string | null
-    personnes: (PersonneValide & { ficheId: string | null })[]
+    personnes: ImportPrevu[]
     accepter: boolean
     prevenirParMail: boolean
     maintenant: Date
   }
-): Promise<string[]> {
+): Promise<{ annonces: string[]; deja: Set<string> }> {
   const { edition, perimetreId } = lot.portee
   const acteurId = ctx.personne!.id
   const sequenceIds = [
@@ -551,10 +611,38 @@ async function ecrireLot(
       for (const id of sequenceIds) {
         await tx.$queryRaw`SELECT id FROM Sequence WHERE id = ${id} FOR UPDATE`
       }
-      const appelId = lot.appelId ?? (await creerAppelImport(tx, lot))
-      const fichesNouvelles = lot.personnes.filter(
-        p => p.ficheId === null && lot.accepter && p.sequenceIds.length > 0
-      ).length
+      // L'appel et ses lignes se relisent sous le verrou de l'organisation : un
+      // envoi croisé du même lot a pu les écrire entre la simulation et ici.
+      const existant = await tx.appelBenevoles.findUnique({
+        where: {
+          editionId_sourceImport: {
+            editionId: edition.id,
+            sourceImport: lot.source,
+          },
+        },
+        select: {
+          id: true,
+          candidatures: { select: { refExterne: true, courriel: true } },
+        },
+      })
+      const appelId = existant?.id ?? (await creerAppelImport(tx, lot))
+      const refs = new Set(
+        (existant?.candidatures ?? []).map(c => c.refExterne).filter(Boolean)
+      )
+      const courriels = new Set(
+        (existant?.candidatures ?? []).map(c => c.courriel).filter(Boolean)
+      )
+      const deja = new Set(
+        lot.personnes
+          .filter(
+            p =>
+              (p.refExterne !== null && refs.has(p.refExterne)) ||
+              (p.courriel !== null && courriels.has(p.courriel))
+          )
+          .map(p => p.cle)
+      )
+      const personnes = lot.personnes.filter(p => !deja.has(p.cle))
+      const fichesNouvelles = personnes.filter(p => p.creerFiche).length
       if (fichesNouvelles > 0) {
         const nombre = await tx.benevole.count({
           where: { activiteId: edition.activiteId },
@@ -581,9 +669,10 @@ async function ecrireLot(
         ])
       )
       const annonces: string[] = []
-      for (const p of lot.personnes) {
+      const touchees = new Set<string>()
+      for (const p of personnes) {
         let ficheId = p.ficheId
-        if (ficheId === null && lot.accepter && p.sequenceIds.length > 0) {
+        if (p.creerFiche) {
           ficheId = (
             await tx.benevole.create({
               data: {
@@ -649,14 +738,18 @@ async function ecrireLot(
             maintenant: lot.maintenant,
           })
           placeCreee ||= acceptee.placeCreee
-          await tx.sequence.update({
-            where: { id: sequenceId },
-            data: { version: { increment: 1 } },
-          })
+          touchees.add(sequenceId)
         }
         if (placeCreee && ficheId !== null) annonces.push(ficheId)
       }
-      return annonces
+      // Une seule nouvelle version par séquence acceptée dans le lot.
+      for (const sequenceId of touchees) {
+        await tx.sequence.update({
+          where: { id: sequenceId },
+          data: { version: { increment: 1 } },
+        })
+      }
+      return { annonces, deja }
     },
     { timeout: 60_000 }
   )

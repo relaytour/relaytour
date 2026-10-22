@@ -35,13 +35,15 @@ export function cleCourriel(
 
 /**
  * Le téléphone comparable, au format international : « 06 12 34 56 78 » et
- * « +33 6 12 34 56 78 » donnent « +33612345678 ». Un numéro à dix chiffres qui
+ * « +33 (0)6 12 34 56 78 » donnent « +33612345678 ». Un numéro à dix chiffres qui
  * commence par 0 est tenu pour français. Null sous six chiffres.
  */
 export function cleTelephone(
   telephone: string | null | undefined
 ): string | null {
-  const brut = (telephone ?? '').trim()
+  // « +33 (0)6 … » : le zéro entre parenthèses ne se compose pas depuis
+  // l'étranger.
+  const brut = (telephone ?? '').trim().replace(/\(\s*0\s*\)/g, '')
   let chiffres = brut.replace(/[^0-9]/g, '')
   if (chiffres.length < 6) return null
   if (brut.startsWith('00')) chiffres = chiffres.slice(2)

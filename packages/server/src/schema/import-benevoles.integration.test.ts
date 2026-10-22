@@ -449,7 +449,7 @@ describe('import à répartir', () => {
 })
 
 describe('places directes', () => {
-  it('crée les fiches et leurs places, rattache par l’adresse, et envoie le premier lien', async () => {
+  it('crée les fiches et leurs places, et envoie le premier lien ; une référente ne se rapproche pas d’une fiche qu’elle ne lit pas', async () => {
     const rapport = donnees<Rapport>(
       await executer(
         ids.referente,
@@ -476,11 +476,17 @@ describe('places directes', () => {
       ),
       'importerBenevoles'
     )
+    // La fiche « Lou Roux » porte la même adresse, mais la référente n'en lit pas
+    // les coordonnées : l'import ne la désigne pas et crée une fiche.
     expect(rapport).toMatchObject({
       aImporter: 2,
-      fichesCreees: 1,
-      fichesRattachees: 1,
+      fichesCreees: 2,
+      fichesRattachees: 0,
       places: 2,
+    })
+    expect(rapport.lignes[1]).toMatchObject({
+      rapprochement: null,
+      rattacheeA: null,
     })
     const ines = await prisma.benevole.findFirstOrThrow({
       where: { activiteId: ids.activite, nom: 'Inès Roy' },
@@ -498,8 +504,106 @@ describe('places directes', () => {
       await prisma.placeSequence.count({
         where: { sequenceId: ids.relais, benevoleId: ids.existante },
       })
-    ).toBe(1)
+    ).toBe(0)
     expect(enFile.map(j => j.sorte)).toEqual(['benevole-lien', 'benevole-lien'])
+  })
+
+  it('rattache par l’adresse pour un admin, sans compter une place déjà tenue, et se rejoue sans identifiant externe', async () => {
+    const sam = await prisma.benevole.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        nom: 'Sam Lenoir',
+        courriel: `sam-${s}@exemple.fr`,
+        accordLe: new Date(),
+        places: { create: { sequenceId: ids.finales, role: 'RENFORT' } },
+      },
+    })
+    const lot = variables({
+      m: 'PLACES_DIRECTES',
+      src: `rattachement ${s}`,
+      l: [
+        {
+          cle: '1',
+          nom: 'Sam L.',
+          courriel: `sam-${s}@exemple.fr`,
+          sequenceIds: [ids.finales, ids.relais],
+        },
+      ],
+    })
+    const simule = donnees<Rapport>(
+      await executer(ids.admin, SIMULER, lot),
+      'simulerImportBenevoles'
+    )
+    expect(simule).toMatchObject({
+      fichesRattachees: 1,
+      fichesCreees: 0,
+      places: 1,
+    })
+    expect(simule.lignes[0]!.rattacheeA).toBe(sam.id)
+    donnees(await executer(ids.admin, IMPORTER, lot), 'importerBenevoles')
+    expect(
+      await prisma.placeSequence.count({ where: { benevoleId: sam.id } })
+    ).toBe(2)
+    // Le même fichier, sans identifiant externe : l'adresse déjà importée suffit,
+    // même après l'acceptation de la candidature.
+    const rejoue = donnees<Rapport>(
+      await executer(ids.admin, IMPORTER, lot),
+      'importerBenevoles'
+    )
+    expect(rejoue).toMatchObject({ aImporter: 0, dejaImportees: 1 })
+    expect(
+      await prisma.candidature.count({
+        where: { sourceImport: `rattachement ${s}` },
+      })
+    ).toBe(1)
+  })
+
+  it('crée la fiche demandée à part, même sans acceptation', async () => {
+    const rapport = donnees<Rapport>(
+      await executer(
+        ids.admin,
+        IMPORTER,
+        variables({
+          src: `separee ${s}`,
+          l: [
+            {
+              cle: '1',
+              nom: 'Sam Lenoir bis',
+              courriel: `sam-${s}@exemple.fr`,
+              nouvelleFiche: true,
+            },
+          ],
+        })
+      ),
+      'importerBenevoles'
+    )
+    expect(rapport).toMatchObject({ fichesCreees: 1, fichesRattachees: 0 })
+    const candidature = await prisma.candidature.findFirstOrThrow({
+      where: { sourceImport: `separee ${s}` },
+      include: { benevole: true },
+    })
+    expect(candidature.benevole).toMatchObject({
+      nom: 'Sam Lenoir bis',
+      origine: 'IMPORT',
+    })
+  })
+
+  it('refuse un lot dont deux personnes portent la même clé', async () => {
+    expect(
+      (
+        await executer(
+          ids.admin,
+          SIMULER,
+          variables({
+            l: [
+              { cle: '1', nom: 'Une' },
+              { cle: '1', nom: 'Deux' },
+            ],
+          })
+        )
+      ).errors?.[0]?.message
+    ).toMatch(/clé unique/)
   })
 
   it('confirme d’office les places sans « Prévenir par mail », sans envoyer de mail', async () => {
@@ -702,6 +806,10 @@ describe('doublons et fusion', () => {
         },
       })
     const gardee = await creer('Zoé Blanc', `zoe-${s}@exemple.fr`, null)
+    await prisma.benevole.update({
+      where: { id: gardee.id },
+      data: { prevenirParMail: false },
+    })
     const autre = await creer(
       'Zoe Blanc',
       `zoe.b-${s}@exemple.fr`,
@@ -812,6 +920,8 @@ describe('doublons et fusion', () => {
       note: 'Note de Zoé Blanc\n\nNote de Zoe Blanc',
     })
     expect(relue.courrielConfirmeLe).not.toBeNull()
+    // « Prévenir par mail » suit l'adresse gardée.
+    expect(relue.prevenirParMail).toBe(true)
     expect(
       (
         await prisma.candidature.findUniqueOrThrow({

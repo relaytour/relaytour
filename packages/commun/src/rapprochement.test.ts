@@ -16,6 +16,7 @@ describe('clés de comparaison', () => {
     expect(cleTelephone('06 12 34 56 78')).toBe('+33612345678')
     expect(cleTelephone('+33 6 12 34 56 78')).toBe('+33612345678')
     expect(cleTelephone('0033 6 12 34 56 78')).toBe('+33612345678')
+    expect(cleTelephone('+33 (0)6 12 34 56 78')).toBe('+33612345678')
     expect(cleTelephone('12 34')).toBeNull()
   })
 

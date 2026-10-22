@@ -10,8 +10,9 @@ import { sousVerrouOrganisation } from './limites.ts'
 // les plages, les candidatures et les notifications de l'autre fiche, qui
 // disparaît. Le nom, l'adresse et le téléphone gardés se choisissent un par un.
 //
-// Le lien personnel et la confirmation suivent l'adresse gardée : la personne qui
-// lit cette adresse garde le lien qu'elle a reçu.
+// Le lien personnel, la confirmation et l'option « Prévenir par mail » suivent
+// l'adresse gardée : la personne qui lit cette adresse garde le lien qu'elle a
+// reçu, et reste joignable comme avant.
 
 export type Cote = 'GARDEE' | 'AUTRE'
 
@@ -162,6 +163,9 @@ export async function fusionnerFiches(entree: {
       data: {
         nom: entree.choix.nom === 'AUTRE' ? autre.nom : gardee.nom,
         courriel: depuis.courriel,
+        // « Prévenir par mail » suit l'adresse : la fiche reste joignable comme
+        // celle dont elle reprend l'adresse.
+        prevenirParMail: depuis.prevenirParMail,
         telephone:
           entree.choix.telephone === 'AUTRE'
             ? autre.telephone
