@@ -6,6 +6,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 import { BENEVOLES_MAX, purgerBenevoles } from '../lib/benevoles.ts'
+import { construireExport } from '../lib/export.ts'
 
 import { schema } from './index.ts'
 
@@ -393,5 +394,62 @@ describe('plafond des fiches bénévoles', () => {
         },
       })
     }
+  })
+})
+
+describe('import de listes (ADR 0042)', () => {
+  it('exporte les fiches importées, les correspondances et les paires distinctes', async () => {
+    const [a, b] = await Promise.all(
+      ['Import Un', 'Import Deux'].map(nom =>
+        prisma.benevole.create({
+          data: {
+            organisationId: ids.org,
+            activiteId: ids.activite,
+            nom,
+            accordLe: new Date(),
+            origine: 'IMPORT',
+            sourceImport: 'billetterie fictive',
+            perimetreImportId: ids.natation,
+            precisionsDisponibilite: 'À partir de 18 h.',
+          },
+        })
+      )
+    )
+    const [premiere, seconde] = [a!.id, b!.id].sort()
+    await prisma.correspondanceImport.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        nom: 'Billetterie',
+        entetes: ['Prénom', 'Nom', 'Email'],
+        associations: { Email: 'courriel' },
+        reglages: { mode: 'A_REPARTIR' },
+      },
+    })
+    await prisma.paireDistincte.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        benevoleAId: premiere!,
+        benevoleBId: seconde!,
+      },
+    })
+    const exporte = await construireExport(ids.org)
+    expect(exporte.benevoles.find(f => f.nom === 'Import Un')).toMatchObject({
+      origine: 'IMPORT',
+      sourceImport: 'billetterie fictive',
+      perimetreImport: 'natation',
+      precisionsDisponibilite: 'À partir de 18 h.',
+    })
+    expect(exporte.correspondancesImport).toHaveLength(1)
+    expect(exporte.correspondancesImport[0]).toMatchObject({
+      nom: 'Billetterie',
+      reglages: { mode: 'A_REPARTIR' },
+    })
+    expect(exporte.pairesDistinctes).toHaveLength(1)
+    expect(exporte.pairesDistinctes[0]).toMatchObject({
+      benevoleA: premiere,
+      benevoleB: seconde,
+    })
   })
 })

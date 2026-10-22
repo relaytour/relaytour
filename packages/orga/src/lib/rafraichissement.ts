@@ -104,6 +104,9 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   'Candidatures',
   'BenevolesARepartir',
   'CouvertureProgramme',
+  // Doublons possibles et correspondances d'import (ADR 0042).
+  'DoublonsBenevoles',
+  'CorrespondancesImport',
 ])
 
 /** Délai entre deux relectures périodiques. */

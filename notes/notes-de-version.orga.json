@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-22-orga-une-liste-de-benevoles-tenue-ailleurs-s-importe-depuis-un-fi",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une liste de bénévoles tenue ailleurs s'importe depuis un fichier",
+            "texte": "L'écran « Bénévoles » importe une liste tenue hors de Relaytour : un export de billetterie, un formulaire ou un tableur, en CSV ou en XLSX. Votre navigateur lit le fichier, et seules les colonnes associées partent vers le serveur. Vous vérifiez les colonnes proposées, associez les postes du fichier aux séquences du programme, puis relisez un aperçu avant d'importer. Un admin importe pour tout le programme, une référente ou un référent pour son périmètre. Aucun mail ne part à l'import.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-22-orga-un-dossier-lie-sert-plusieurs-perimetres-et-des-groupes",
           "date": "2026-10-22",
           "type": "fonctionnalite",
@@ -56,6 +69,19 @@
           "fr": {
             "titre": "Les admins vérifient les accès des équipes chez le fournisseur cloud",
             "texte": "L'écran « Fournisseur cloud » compte deux nouveaux onglets : « Vérification des accès » et « Comptes ». Avec SharePoint, un admin de l'organisation active la vérification par une nouvelle connexion, qu'un admin Microsoft Entra accepte. Pour chaque dossier lié, Relaytour compare alors les personnes attendues aux droits du dossier. Relaytour les range par équipe : qui a accès, qui n'a pas de compte, qui n'a pas d'accès. Relaytour nomme aussi les accès en trop. Chaque dossier lié règle les personnes attendues : tous les membres, ou les contacts principaux seulement. La vérification ne change aucun droit chez le fournisseur.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-22-orga-les-admins-de-l-activite-fusionnent-les-fiches-benevoles-en-",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins de l'activité fusionnent les fiches bénévoles en double",
+            "texte": "L'onglet « Doublons possibles » de l'écran « Bénévoles » rapproche les fiches qui portent la même adresse, le même téléphone ou un nom proche. Vous choisissez le nom, l'adresse et le téléphone gardés. Relaytour réunit ensuite les places, les disponibilités et les candidatures des deux fiches. Une paire écartée ne revient plus.",
             "migration": null
           }
         },

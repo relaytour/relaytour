@@ -1,0 +1,9 @@
+Numéro de billet;Nom participant;Prénom participant;Nom;Prénom;Email;Téléphone;Genre;Montant;Date de la commande;Prestations;Service au bar - 18h - 19h;Service au bar - 19h - 20h;Accueil - 17h - 18h;Je précise par écrit
+100201;Durand;Alix;Durand;Alix;alix.durand@exemple.org;+33 6 39 98 11 01;F;0;12/03/2026;"Service au bar
+18h - 19h
+19h - 20h";0;0;;
+100202;Leroy;Tom;Leroy;Tom;tom.leroy@exemple.org;+33 6 39 98 11 02;M;0;13/03/2026;"Accueil
+17h - 18h";;;0;À partir de 18 h, tout poste sauf photo
+100203;#100203;;;;;;;0;14/03/2026;;;;;
+100204;#100204;;;;;;;0;14/03/2026;;;;;
+100205;Vidal;Mia;;;mia.vidal@exemple.org;;F;0;15/03/2026;;0;;;

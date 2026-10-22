@@ -118,6 +118,55 @@ const placer = (texte, marge, pret = 'true') =>
 const defiler = texte =>
   `(e => (e?.scrollIntoView({ block: 'start' }), Boolean(e)))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim() === ${JSON.stringify(texte)}))`
 
+// Un export de billetterie fictif, pour photographier l'assistant d'import
+// (ADR 0042) : deux personnes proches de fiches de l'instance d'exemple, un lot de
+// billets sans personne et des colonnes sensibles.
+const IMPORT_FICTIF = [
+  'Numéro de billet;Nom participant;Prénom participant;Email;Téléphone;Genre;Montant;Date de la commande;Prestations;Service au bar - 18h - 19h;Accueil - 17h - 18h;Je précise par écrit',
+  '200101;Durand;Alix;alix.durand@exemple.org;+33 6 39 98 11 01;F;0;12/03/2026;"Service au bar\n18h - 19h";0;;',
+  '200102;Leroy;Tom;tom.leroy@exemple.org;+33 6 39 98 11 02;M;0;13/03/2026;"Accueil\n17h - 18h";;0;À partir de 18 h, tout poste sauf photo',
+  '200103;Renard;Paul;paul.renard@exemple.net;;M;0;14/03/2026;;0;;',
+  '200104;Morel;Nina;nina.morel@autre.exemple.net;06 39 98 12 02;F;0;14/03/2026;;;0;',
+  '200105;#200105;;;;;0;15/03/2026;;;;',
+].join('\n')
+
+/**
+ * Avance l'assistant d'import jusqu'à une étape : dépose le fichier fictif, donne
+ * une source, puis clique les boutons dans l'ordre. `etape` vaut 1 (colonnes),
+ * 2 (séquences) ou 3 (aperçu vérifié).
+ */
+const avancerImport = etape => `(async () => {
+  const w = window
+  const bouton = t => [...document.querySelectorAll('main button')].find(b => b.innerText.trim() === t)
+  if (!w.__importDepose) {
+    const input = document.querySelector('main input[type=file]')
+    if (!input) return false
+    const dt = new DataTransfer()
+    dt.items.add(new File([${JSON.stringify(IMPORT_FICTIF)}], 'billetterie.csv', { type: 'text/csv' }))
+    input.files = dt.files
+    input.dispatchEvent(new Event('change', { bubbles: true }))
+    w.__importDepose = true
+    return false
+  }
+  const source = document.querySelector('main input[aria-label="Source de la liste"]')
+  if (source && source.value !== 'Billetterie du 7 août') {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(source, 'Billetterie du 7 août')
+    source.dispatchEvent(new Event('input', { bubbles: true }))
+    return false
+  }
+  const suite = ['Associer les colonnes', 'Associer les séquences', 'Voir l’aperçu', 'Vérifier la liste']
+  w.__importClics = w.__importClics ?? 0
+  if (w.__importClics < ${etape === 3 ? 4 : etape}) {
+    const b = bouton(suite[w.__importClics])
+    if (!b || b.disabled) return false
+    b.click()
+    w.__importClics += 1
+    return false
+  }
+  ${etape === 3 ? `return document.querySelector('main .rt-import-bilan') !== null` : `window.scrollTo(0, 0)
+  return document.querySelector('main .rt-import-colonnes') !== null`}
+})()`
+
 // Le compte de chaque rôle, sur l'instance d'exemple. Un compte d'un rôle plus
 // large montrerait des menus et des boutons que le rôle décrit ne voit pas.
 const COMPTES = {
@@ -385,6 +434,34 @@ const ECRANS = [
     nom: 'benevoles-appels',
     compte: 'admin-activite',
     chemin: `${ACTIVITE}/benevoles?onglet=appels`,
+  },
+  // L'assistant d'import d'une liste (ADR 0042) : les colonnes, les séquences,
+  // puis l'aperçu vérifié. Le geste dépose un fichier fictif.
+  {
+    nom: 'import-colonnes',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles/import`,
+    apres: avancerImport(1),
+  },
+  {
+    nom: 'import-sequences',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles/import`,
+    apres: avancerImport(2),
+  },
+  {
+    nom: 'import-apercu',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles/import`,
+    apres: avancerImport(3),
+  },
+  // Les doublons possibles, réservés aux admins de l'activité (ADR 0042).
+  // L'instance d'exemple doit porter au moins une paire de fiches proches.
+  {
+    nom: 'benevoles-doublons',
+    compte: 'admin-activite',
+    chemin: `${ACTIVITE}/benevoles?onglet=doublons`,
+    apres: `document.querySelectorAll('main .rt-doublon').length > 0`,
   },
   // Les deux pages publiques, ouvertes par leur lien (ADR 0041).
   {

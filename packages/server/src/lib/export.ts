@@ -235,10 +235,31 @@ export async function construireExport(organisationId: string) {
       include: {
         activite: { select: { slug: true } },
         creePar: { select: { email: true } },
+        perimetreImport: { select: { slug: true } },
         plages: {
           orderBy: { debut: 'asc' },
           include: { edition: { select: { annee: true } } },
         },
+      },
+    }),
+  ])
+
+  // Les correspondances d'import et les paires déclarées distinctes (ADR 0042).
+  const [correspondances, paires] = await Promise.all([
+    prisma.correspondanceImport.findMany({
+      where: { organisationId },
+      orderBy: [{ activiteId: 'asc' }, { nom: 'asc' }],
+      include: {
+        activite: { select: { slug: true } },
+        creePar: { select: { email: true } },
+      },
+    }),
+    prisma.paireDistincte.findMany({
+      where: { organisationId },
+      orderBy: [{ activiteId: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+      include: {
+        activite: { select: { slug: true } },
+        creePar: { select: { email: true } },
       },
     }),
   ])
@@ -621,6 +642,9 @@ export async function construireExport(organisationId: string) {
       note: b.note,
       accordLe: b.accordLe.toISOString(),
       origine: b.origine,
+      precisionsDisponibilite: b.precisionsDisponibilite,
+      sourceImport: b.sourceImport,
+      perimetreImport: b.perimetreImport?.slug ?? null,
       courrielConfirmeLe: b.courrielConfirmeLe?.toISOString() ?? null,
       creePar: b.creePar?.email ?? null,
       plages: b.plages.map(p => ({
@@ -640,6 +664,8 @@ export async function construireExport(organisationId: string) {
       ouvertLe: a.ouvertLe.toISOString(),
       fermeLe: a.fermeLe.toISOString(),
       fermeManuellementLe: a.fermeManuellementLe?.toISOString() ?? null,
+      sansAdresse: a.sansAdresse,
+      sourceImport: a.sourceImport,
       creePar: a.creePar?.email ?? null,
       candidatures: a.candidatures.map(c => ({
         statut: c.statut,
@@ -649,6 +675,9 @@ export async function construireExport(organisationId: string) {
         message: c.message,
         precisionsDisponibilite: c.precisionsDisponibilite,
         ouAilleurs: c.ouAilleurs,
+        origine: c.origine,
+        sourceImport: c.sourceImport,
+        refExterne: c.refExterne,
         accordLe: c.accordLe.toISOString(),
         deposeeLe: c.createdAt.toISOString(),
         benevoleId: c.benevoleId,
@@ -663,6 +692,22 @@ export async function construireExport(organisationId: string) {
           traiteLe: x.traiteLe?.toISOString() ?? null,
         })),
       })),
+    })),
+    correspondancesImport: correspondances.map(c => ({
+      activite: c.activite.slug,
+      nom: c.nom,
+      entetes: c.entetes,
+      associations: c.associations,
+      reglages: c.reglages,
+      creePar: c.creePar?.email ?? null,
+      creeLe: c.createdAt.toISOString(),
+    })),
+    pairesDistinctes: paires.map(p => ({
+      activite: p.activite.slug,
+      benevoleA: p.benevoleAId,
+      benevoleB: p.benevoleBId,
+      creePar: p.creePar?.email ?? null,
+      creeLe: p.createdAt.toISOString(),
     })),
     sondages: sondages.map(s => ({
       activite: s.activite.slug,

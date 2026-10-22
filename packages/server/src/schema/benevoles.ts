@@ -10,6 +10,7 @@ import {
   NOTE_BENEVOLE_MAX,
   telephoneValide,
 } from '../lib/benevoles.ts'
+import { PRECISIONS_MAX } from '../lib/appels.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { jetonEspace, lienEspace } from '../lib/espace-benevole.ts'
 import { publierPourActivite } from '../lib/flux.ts'
@@ -31,7 +32,7 @@ interface BenevoleLu {
   peutModifier: boolean
 }
 
-const BenevoleRef = builder.objectRef<BenevoleLu>('Benevole').implement({
+export const BenevoleRef = builder.objectRef<BenevoleLu>('Benevole').implement({
   description: 'Une fiche bénévole : une personne qui aide sans compte.',
   fields: t => ({
     id: t.id({ resolve: l => l.benevole.id }),
@@ -54,13 +55,24 @@ const BenevoleRef = builder.objectRef<BenevoleLu>('Benevole').implement({
       resolve: l => (l.coordonnees ? l.benevole.note : null),
     }),
     accordLe: t.field({ type: 'DateTime', resolve: l => l.benevole.accordLe }),
+    precisionsDisponibilite: t.string({
+      nullable: true,
+      description:
+        'Les précisions de disponibilité de la personne, distinctes de la note (ADR 0042). Elles se lisent comme ses plages.',
+      resolve: l => l.benevole.precisionsDisponibilite,
+    }),
+    sourceImport: t.string({
+      nullable: true,
+      description: 'La source de l’import qui a créé la fiche.',
+      resolve: l => l.benevole.sourceImport,
+    }),
     places: t.int({
       description: 'Le nombre de séquences où la fiche est placée.',
       resolve: l => l.benevole._count.places,
     }),
     origine: t.string({
       description:
-        'SAISIE : saisie par l’équipe. CANDIDATURE : née d’une candidature (ADR 0041).',
+        'SAISIE : saisie par l’équipe. CANDIDATURE : née d’une candidature (ADR 0041). IMPORT : née d’un import de liste (ADR 0042).',
       resolve: l => l.benevole.origine,
     }),
     confirmeeLe: t.field({
@@ -109,9 +121,9 @@ const BenevoleRef = builder.objectRef<BenevoleLu>('Benevole').implement({
   }),
 })
 
-const AVEC_PLACES = { _count: { select: { places: true } } } as const
+export const AVEC_PLACES = { _count: { select: { places: true } } } as const
 
-async function lireBenevoles(
+export async function lireBenevoles(
   ctx: AppContext,
   activiteId: string,
   benevoles: (Benevole & { _count: { places: number } })[]
@@ -242,6 +254,9 @@ builder.mutationFields(t => ({
       courriel: t.arg.string(),
       telephone: t.arg.string(),
       note: t.arg.string(),
+      precisionsDisponibilite: t.arg.string({
+        description: 'Sans valeur, les précisions restent telles quelles.',
+      }),
       prevenirParMail: t.arg.boolean({
         description: 'Sans valeur, l’option reste telle quelle.',
       }),
@@ -269,6 +284,16 @@ builder.mutationFields(t => ({
             : {}),
           telephone: telephoneValide(args.telephone),
           note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
+          ...(args.precisionsDisponibilite === null ||
+          args.precisionsDisponibilite === undefined
+            ? {}
+            : {
+                precisionsDisponibilite: texteFacultatif(
+                  args.precisionsDisponibilite,
+                  'Les précisions',
+                  PRECISIONS_MAX
+                ),
+              }),
           ...(args.prevenirParMail === null ||
           args.prevenirParMail === undefined
             ? {}

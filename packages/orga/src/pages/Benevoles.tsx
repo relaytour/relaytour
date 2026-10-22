@@ -1,5 +1,10 @@
 import { useMutation, useQuery } from '@apollo/client/react'
-import { DeleteOutlined, LockOutlined, PlusOutlined } from '@ant-design/icons'
+import {
+  DeleteOutlined,
+  LockOutlined,
+  PlusOutlined,
+  UploadOutlined,
+} from '@ant-design/icons'
 import {
   App,
   Button,
@@ -9,15 +14,17 @@ import {
   Input,
   Modal,
   Result,
+  Space,
   Tabs,
   Tag,
 } from 'antd'
 import { useEffect, useState } from 'react'
-import { useSearchParams } from 'react-router'
+import { Link, useSearchParams } from 'react-router'
 
 import AppelsBenevoles from '../composants/AppelsBenevoles'
 import CandidaturesBenevoles from '../composants/CandidaturesBenevoles'
 import ChoixEdition from '../composants/ChoixEdition'
+import DoublonsBenevoles from '../composants/DoublonsBenevoles'
 import LienBenevole from '../composants/LienBenevole'
 import Tableau from '../composants/Tableau'
 import Titre from '../composants/Titre'
@@ -91,7 +98,7 @@ interface Valeurs {
   accord?: boolean
 }
 
-type Onglet = 'fiches' | 'candidatures' | 'appels'
+type Onglet = 'fiches' | 'candidatures' | 'appels' | 'doublons'
 
 const RELIRE = ['Benevoles', 'Programme']
 
@@ -101,7 +108,7 @@ const RELIRE = ['Benevoles', 'Programme']
  * personnes que le serveur autorise.
  */
 export default function Benevoles() {
-  const { activite, gere, periode } = useActivite()
+  const { activite, gere, lien, periode } = useActivite()
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
   const { data: editions } = useQuery(EDITIONS)
@@ -111,7 +118,9 @@ export default function Benevoles() {
   const archivee = edition?.statut === 'ARCHIVEE'
   const ongletDemande = parametres.get('onglet')
   const onglet: Onglet =
-    ongletDemande === 'candidatures' || ongletDemande === 'appels'
+    ongletDemande === 'candidatures' ||
+    ongletDemande === 'appels' ||
+    (ongletDemande === 'doublons' && gere)
       ? ongletDemande
       : 'fiches'
   // Le nombre de candidatures à traiter, pour le libellé de l'onglet.
@@ -237,14 +246,19 @@ export default function Benevoles() {
         sousTitre="Les personnes qui aident sans compte dans l’application. Une fiche ne s’enregistre qu’avec leur accord."
         actions={
           onglet === 'fiches' ? (
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={() => setFiche('nouvelle')}
-            >
-              Nouvelle fiche
-            </Button>
-          ) : (
+            <Space wrap>
+              <Link to={lien('/benevoles/import')}>
+                <Button icon={<UploadOutlined />}>Importer une liste</Button>
+              </Link>
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={() => setFiche('nouvelle')}
+              >
+                Nouvelle fiche
+              </Button>
+            </Space>
+          ) : onglet === 'doublons' ? null : (
             <ChoixEdition
               valeur={editionId}
               onChange={id => changer('edition', id)}
@@ -267,9 +281,12 @@ export default function Benevoles() {
                 : 'Candidatures',
           },
           { key: 'appels', label: 'Appels' },
+          // Les doublons possibles et la fusion, réservés aux admins (ADR 0042).
+          ...(gere ? [{ key: 'doublons', label: 'Doublons possibles' }] : []),
         ]}
       />
-      {onglet !== 'fiches' &&
+      {onglet === 'doublons' && <DoublonsBenevoles />}
+      {(onglet === 'candidatures' || onglet === 'appels') &&
         (editionId === undefined ? (
           <Empty description={`Créez d’abord ${periode.une}.`} />
         ) : onglet === 'candidatures' ? (

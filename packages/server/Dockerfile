@@ -19,13 +19,15 @@ COPY packages/server/package.json   packages/server/
 COPY packages/database/package.json packages/database/
 COPY packages/orga/package.json     packages/orga/
 COPY packages/tokens/package.json   packages/tokens/
+COPY packages/commun/package.json   packages/commun/
 RUN --mount=type=cache,target=/root/.yarn/berry/cache \
-  yarn workspaces focus @relaytour/server @relaytour/database @relaytour/tokens
+  yarn workspaces focus @relaytour/server @relaytour/database @relaytour/tokens @relaytour/commun
 
 FROM deps AS build
 COPY tsconfig.base.json ./
 COPY packages/database packages/database
 COPY packages/tokens   packages/tokens
+COPY packages/commun   packages/commun
 COPY packages/server   packages/server
 # Les notes de version compilées entrent dans le build du serveur (ADR 0021).
 COPY notes/notes-de-version.orga.json notes/notes-de-version.serveur.json notes/
@@ -38,7 +40,7 @@ RUN cp packages/database/src/generated/client/libquery_engine-*.node \
 
 FROM deps AS prod-deps
 RUN --mount=type=cache,target=/root/.yarn/berry/cache \
-  yarn workspaces focus @relaytour/server @relaytour/database @relaytour/tokens --production
+  yarn workspaces focus @relaytour/server @relaytour/database @relaytour/tokens @relaytour/commun --production
 
 # Applique les migrations (image -migrate). Placée avant `runtime`, qui reste la cible
 # par défaut. Elle part des dépendances installées (le CLI Prisma est une dépendance
@@ -55,11 +57,12 @@ CMD ["node", "node_modules/prisma/build/index.js", "migrate", "deploy", "--schem
 # seul build pour toutes les installations.
 FROM deps AS orga-deps
 RUN --mount=type=cache,target=/root/.yarn/berry/cache \
-  yarn workspaces focus @relaytour/orga @relaytour/tokens
+  yarn workspaces focus @relaytour/orga @relaytour/tokens @relaytour/commun
 
 FROM orga-deps AS orga-build
 COPY tsconfig.base.json ./
 COPY packages/tokens packages/tokens
+COPY packages/commun packages/commun
 COPY packages/orga   packages/orga
 # Le gabarit d'une fiche est importé tel quel par l'éditeur de fiches.
 COPY content/exemple/modeles/fiche.md content/exemple/modeles/fiche.md

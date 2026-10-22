@@ -185,8 +185,16 @@ type AppelBenevoles {
   perimetre: Perimetre
   peutModifier: Boolean!
   portee: PorteeAppel!
+
+  """
+  Vrai pour un appel d’import (ADR 0042) : il n’a pas d’adresse publique et reste fermé.
+  """
+  sansAdresse: Boolean!
   sequenceId: ID
   sequenceTitre: String
+
+  """La source d’un appel d’import."""
+  sourceImport: String
   version: Int!
 }
 
@@ -303,7 +311,7 @@ type Benevole {
   note: String
 
   """
-  SAISIE : saisie par l’équipe. CANDIDATURE : née d’une candidature (ADR 0041).
+  SAISIE : saisie par l’équipe. CANDIDATURE : née d’une candidature (ADR 0041). IMPORT : née d’un import de liste (ADR 0042).
   """
   origine: String!
   peutModifier: Boolean!
@@ -312,9 +320,17 @@ type Benevole {
   places: Int!
 
   """
+  Les précisions de disponibilité de la personne, distinctes de la note (ADR 0042). Elles se lisent comme ses plages.
+  """
+  precisionsDisponibilite: String
+
+  """
   L’option « Prévenir par mail ». Avec une adresse, la fiche est joignable : sa première place envoie le lien (ADR 0041).
   """
   prevenirParMail: Boolean!
+
+  """La source de l’import qui a créé la fiche."""
+  sourceImport: String
   telephone: String
 }
 
@@ -360,6 +376,11 @@ type Candidature {
   nom: String!
 
   """
+  PUBLIC : déposée sur la page d’un appel. IMPORT : venue d’un import de liste (ADR 0042).
+  """
+  origine: String!
+
+  """
   Vrai : la personne aide là où il manque du monde, sans choisir de séquence.
   """
   ouAilleurs: Boolean!
@@ -370,6 +391,7 @@ type Candidature {
   peutEcarter: Boolean!
   plages: [PlageDisponibilite!]!
   precisionsDisponibilite: String
+  sourceImport: String
   statut: StatutCandidature!
   telephone: String
 }
@@ -530,6 +552,25 @@ type ConvocationLue {
   reponse: ReponseConvocation
 }
 
+"""
+Une association enregistrée des colonnes d’un fichier aux champs de Relaytour. Elle ne contient aucune donnée personnelle.
+"""
+type CorrespondanceImport {
+  associations: JSONObject!
+  entetes: [String!]!
+  id: ID!
+  modifieeLe: DateTime!
+  nom: String!
+  peutSupprimer: Boolean!
+  reglages: JSONObject!
+}
+
+"""La fiche dont une valeur est gardée."""
+enum CoteFusion {
+  AUTRE
+  GARDEE
+}
+
 type CouleursTheme {
   accent: String!
   accentClair: String!
@@ -655,6 +696,13 @@ type DemandePerimetre {
   proposePar: Personne
 }
 
+type DepassementImport {
+  besoin: Int!
+  renforts: Int!
+  sequenceId: ID!
+  titre: String!
+}
+
 """
 Dossier du fournisseur cloud lié à une activité. Il sert toute l’activité, ou une liste de périmètres et de groupes (ADR 0043).
 """
@@ -696,6 +744,13 @@ type DossierLie {
 
   """Vrai : le dossier sert toute l’activité."""
   touteActivite: Boolean!
+}
+
+"""Deux fiches qui désignent peut-être la même personne."""
+type DoublonBenevoles {
+  a: Benevole!
+  b: Benevole!
+  niveau: NiveauRapprochement!
 }
 
 type DroitRedaction {
@@ -867,6 +922,13 @@ enum EtatCompteFournisseur {
 enum EtatConnexionFichiers {
   ACTIVE
   A_RECONNECTER
+}
+
+enum EtatLigneImport {
+  A_IMPORTER
+  DEJA_IMPORTEE
+  ECARTEE
+  IMPORTEE
 }
 
 """
@@ -1237,6 +1299,19 @@ type LigneClassement {
   score: Score!
 }
 
+type LigneImport {
+  cle: String!
+
+  """
+  Vrai si l’adresse est celle d’un compte de l’organisation. Toujours faux hors des admins de l’activité.
+  """
+  compte: Boolean!
+  etat: EtatLigneImport!
+  motif: String
+  rapprochement: RapprochementImport
+  rattacheeA: ID
+}
+
 """
 Plafonds d’une organisation. Un champ nul signifie aucune limite. Une limite bloque une création, jamais la lecture ni l’export.
 """
@@ -1335,6 +1410,14 @@ input MessageInput {
 enum MethodeConnexionFichiers {
   COMPTE
   COMPTE_SERVICE
+}
+
+"""
+A_REPARTIR : chaque personne devient une candidature à traiter. PLACES_DIRECTES : chaque personne reçoit sa fiche et ses places.
+"""
+enum ModeImport {
+  A_REPARTIR
+  PLACES_DIRECTES
 }
 
 type Mutation {
@@ -1603,6 +1686,11 @@ type Mutation {
   ecarterPropositionAcces(id: ID!): Boolean!
 
   """
+  Enregistre une correspondance d’import, ou remplace celle qui porte le même nom dans l’activité.
+  """
+  enregistrerCorrespondanceImport(activiteId: ID!, associations: JSONObject!, entetes: [String!]!, nom: String!, reglages: JSONObject!): CorrespondanceImport!
+
+  """
   Dépose une demande pour rejoindre l’équipe d’une activité dont le formulaire est ouvert. La réponse est la même que l’adresse ait déjà un compte, une demande en attente, ou ni l’un ni l’autre. Utilisable sans session.
   """
   envoyerDemande(activite: String!, disponibilite: String, email: String!, nom: String!, organisation: String, perimetres: [String!]!, reponse: String, siteWeb: String, texte: String): Boolean!
@@ -1619,6 +1707,31 @@ type Mutation {
   La personne connectée note son intérêt pour un périmètre (ADR 0012). Aucun mail ne part.
   """
   formulerSouhait(editionId: ID!, perimetreId: ID!): Boolean!
+
+  """
+  Fusionne deux fiches de la même activité : la fiche gardée reçoit les places, les plages et les candidatures de l’autre, qui disparaît. Réservé aux admins de l’activité.
+  """
+  fusionnerBenevoles(autreId: ID!, courrielDe: CoteFusion!, gardeeId: ID!, nomDe: CoteFusion!, telephoneDe: CoteFusion!): Benevole!
+
+  """
+  Importe un lot de 500 personnes au plus dans l’appel d’import de sa source. Aucun mail ne part à l’import ; la première place d’une fiche joignable envoie son lien.
+  """
+  importerBenevoles(
+    accepterTout: Boolean = false
+
+    """Vrai : les personnes du fichier ont donné leur accord."""
+    accord: Boolean!
+    editionId: ID!
+    mode: ModeImport!
+
+    """
+    Le périmètre d’un import de périmètre. Sans valeur : le programme entier.
+    """
+    perimetreId: ID
+    personnes: [PersonneImportInput!]!
+    prevenirParMail: Boolean = true
+    source: String!
+  ): RapportImportBenevoles!
 
   """
   Importe les fiches des dossiers sources dans l’activité. Une fiche modifiée dans Relaytour n’est pas remplacée.
@@ -1652,6 +1765,11 @@ type Mutation {
   lierRessourceFiche(chemin: [String!]!, dossierLieId: ID!, ficheId: ID!): RessourceFiche!
 
   """
+  Déclare deux fiches distinctes : leur fusion ne se propose plus. Réservé aux admins de l’activité.
+  """
+  marquerBenevolesDistincts(aId: ID!, bId: ID!): Boolean!
+
+  """
   Sans identifiants, marque comme lues toutes les notifications du niveau choisi, ou celles d’une activité ou d’un périmètre. Reste possible dans une organisation en lecture seule.
   """
   marquerNotificationsLues(
@@ -1672,6 +1790,9 @@ type Mutation {
     id: ID!
     nom: String!
     note: String
+
+    """Sans valeur, les précisions restent telles quelles."""
+    precisionsDisponibilite: String
 
     """Sans valeur, l’option reste telle quelle."""
     prevenirParMail: Boolean
@@ -1972,6 +2093,11 @@ type Mutation {
   Supprime un commentaire, définitivement, et rend le fil de sa tâche. Son auteur le supprime, ainsi qu’un admin de l’activité.
   """
   supprimerCommentaire(id: ID!): FilTache!
+
+  """
+  Supprime une correspondance d’import. Réservé à la personne qui l’a créée et aux admins de l’activité.
+  """
+  supprimerCorrespondanceImport(id: ID!): Boolean!
   supprimerDateCle(id: ID!): Boolean!
 
   """
@@ -2017,6 +2143,15 @@ enum NiveauNotification {
   ADMIN_ACTIVITE
   ADMIN_ORGANISATION
   REFERENT
+}
+
+"""
+FORT : même adresse. MOYEN : même téléphone. FAIBLE : même nom, ou nom très proche.
+"""
+enum NiveauRapprochement {
+  FAIBLE
+  FORT
+  MOYEN
 }
 
 """Le nombre de commentaires d’une tâche."""
@@ -2280,6 +2415,36 @@ type PersonneConvocable {
   duPerimetre: Boolean!
   nom: String!
   personneId: ID!
+}
+
+"""
+Une personne du fichier, après l’association des colonnes et la réunion de ses lignes dans le navigateur.
+"""
+input PersonneImportInput {
+  """
+  La date de l’accord lue dans le fichier. Sans valeur : la date de l’import.
+  """
+  accordLe: Date
+
+  """La clé de la personne dans le rapport."""
+  cle: String!
+  courriel: String
+  nom: String!
+
+  """Vrai : crée une fiche même quand une fiche a la même adresse."""
+  nouvelleFiche: Boolean
+  plages: [PlageDisponibiliteInput!]
+  precisions: String
+
+  """La fiche que la personne rejoint."""
+  rattachement: ID
+
+  """
+  L’identifiant de la ligne dans l’outil d’origine : rend l’import rejouable.
+  """
+  refExterne: String
+  sequenceIds: [ID!]
+  telephone: String
 }
 
 """
@@ -2565,6 +2730,11 @@ type Query {
   contenuDossierLie(chemin: [String!]!, id: ID!, ressource: ID): ListeElementsFichiers!
 
   """
+  Les correspondances d’import d’une activité, pour les personnes qui y importent.
+  """
+  correspondancesImport(activiteId: ID!): [CorrespondanceImport!]!
+
+  """
   La couverture du programme par tranches de 30 minutes. Sans périmètre donné, toutes les séquences comptent. Sinon, seules comptent celles des périmètres donnés, et celles sans périmètre avec `sansPerimetre`. Les bénévoles à répartir se comptent tous.
   """
   couvertureProgramme(editionId: ID!, perimetreIds: [ID!], sansPerimetre: Boolean = false): [TrancheCouverture!]!
@@ -2574,6 +2744,11 @@ type Query {
   Dossiers liés que la personne lit dans une activité. Avec un périmètre : ceux qui servent ce périmètre, directement, par son groupe ou pour toute l’activité.
   """
   dossiersLies(activiteId: ID, perimetreId: ID): [DossierLie!]!
+
+  """
+  Les doublons possibles parmi les fiches d’une activité, les plus forts d’abord. Réservé aux admins de l’activité.
+  """
+  doublonsBenevoles(activiteId: ID!): [DoublonBenevoles!]!
   droitsRedaction: [DroitRedaction!]!
   editionCourante(activiteId: ID): Edition
   editions(activiteId: ID): [Edition!]!
@@ -2716,6 +2891,26 @@ type Query {
   ): [Reunion!]!
 
   """
+  Simule l’import d’un lot de 500 personnes au plus, sans rien écrire : lignes écartées, déjà importées, rapprochements et dépassements.
+  """
+  simulerImportBenevoles(
+    accepterTout: Boolean = false
+
+    """Vrai : les personnes du fichier ont donné leur accord."""
+    accord: Boolean!
+    editionId: ID!
+    mode: ModeImport!
+
+    """
+    Le périmètre d’un import de périmètre. Sans valeur : le programme entier.
+    """
+    perimetreId: ID
+    personnes: [PersonneImportInput!]!
+    prevenirParMail: Boolean = true
+    source: String!
+  ): RapportImportBenevoles!
+
+  """
   Simule l’import des fiches depuis l’espace de fichiers : rien ne change en base.
   """
   simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
@@ -2751,6 +2946,20 @@ type RapportExport {
   supprimees: Int!
 }
 
+type RapportImportBenevoles {
+  aImporter: Int!
+  dejaImportees: Int!
+  depassements: [DepassementImport!]!
+  ecartees: Int!
+  fichesCreees: Int!
+  fichesRattachees: Int!
+  fichesRestantes: Int!
+  lignes: [LigneImport!]!
+  personnes: Int!
+  places: Int!
+  simulation: Boolean!
+}
+
 """
 Ce que l’import des fiches depuis l’espace de fichiers fait, ou ferait en simulation.
 """
@@ -2763,6 +2972,12 @@ type RapportImportFiches {
   nonImportes: [FichierEcarte!]!
   nouvellesVersions: [String!]!
   refusees: [FichierEcarte!]!
+}
+
+type RapprochementImport {
+  benevoleId: ID!
+  niveau: NiveauRapprochement!
+  nom: String!
 }
 
 type Recherche {
