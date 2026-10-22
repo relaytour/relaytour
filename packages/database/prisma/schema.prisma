@@ -77,6 +77,8 @@ model Organisation {
   sequences               Sequence[]
   benevoles               Benevole[]
   appelsBenevoles         AppelBenevoles[]
+  correspondancesImport   CorrespondanceImport[]
+  pairesDistinctes        PaireDistincte[]
   candidatures            Candidature[]
   connexionFichiers       ConnexionFichiers?
   dossiersLies            DossierLie[]
@@ -254,24 +256,26 @@ model Activite {
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt
 
-  organisation    Organisation       @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  editions        Edition[]
-  perimetres      Perimetre[]
-  fiches          Fiche[]
-  admins          AdminActivite[]
-  demandes        Demande[]
-  messages        Message[]
-  notifications   Notification[]
-  datesCles       DateCle[]
-  reunions        Reunion[]
-  abonnements     AbonnementAgenda[]
-  sondages        Sondage[]
-  lieux           Lieu[]
-  sequences       Sequence[]
-  benevoles       Benevole[]
-  appelsBenevoles AppelBenevoles[]
-  candidatures    Candidature[]
-  dossiersLies    DossierLie[]
+  organisation          Organisation           @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  editions              Edition[]
+  perimetres            Perimetre[]
+  fiches                Fiche[]
+  admins                AdminActivite[]
+  demandes              Demande[]
+  messages              Message[]
+  notifications         Notification[]
+  datesCles             DateCle[]
+  reunions              Reunion[]
+  abonnements           AbonnementAgenda[]
+  sondages              Sondage[]
+  lieux                 Lieu[]
+  sequences             Sequence[]
+  benevoles             Benevole[]
+  appelsBenevoles       AppelBenevoles[]
+  correspondancesImport CorrespondanceImport[]
+  pairesDistinctes      PaireDistincte[]
+  candidatures          Candidature[]
+  dossiersLies          DossierLie[]
 
   @@unique([organisationId, slug])
 }
@@ -340,6 +344,8 @@ model User {
   placesSequence          PlaceSequence[]
   benevolesCrees          Benevole[]               @relation("BenevoleAuteur")
   appelsBenevolesCrees    AppelBenevoles[]         @relation("AppelBenevolesAuteur")
+  correspondancesCreees   CorrespondanceImport[]   @relation("CorrespondanceImportAuteur")
+  pairesDistinctesCreees  PaireDistincte[]         @relation("PaireDistincteAuteur")
   choixTraites            ChoixCandidature[]       @relation("ChoixCandidatureTraitement")
   connexionsFichiers      ConnexionFichiers[]
   dossiersLies            DossierLie[]
@@ -475,25 +481,26 @@ model Perimetre {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 
-  organisation    Organisation?         @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  activite        Activite              @relation(fields: [activiteId], references: [id], onDelete: Restrict)
-  affectations    Affectation[]
-  taches          Tache[]
-  journal         Journal[]
-  fiches          Fiche[]
-  droitsRedaction DroitRedaction[]
-  effectifs       EffectifPerimetre[]
-  souhaits        Souhait[]
-  demandes        DemandePerimetre[]
-  messages        Message[]
-  reunions        Reunion[]
-  sondages        Sondage[]
-  sequences       Sequence[]
-  appelsBenevoles AppelBenevoles[]
-  dossiersLies    DossierLie[]
+  organisation      Organisation?         @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite          Activite              @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  affectations      Affectation[]
+  taches            Tache[]
+  journal           Journal[]
+  fiches            Fiche[]
+  droitsRedaction   DroitRedaction[]
+  effectifs         EffectifPerimetre[]
+  souhaits          Souhait[]
+  demandes          DemandePerimetre[]
+  messages          Message[]
+  reunions          Reunion[]
+  sondages          Sondage[]
+  sequences         Sequence[]
+  appelsBenevoles   AppelBenevoles[]
+  benevolesImportes Benevole[]
+  dossiersLies      DossierLie[]
   // Fiches d'autres périmètres qui concernent aussi celui-ci (ADR 0039).
-  fichesConnexes  FicheConnexe[]
-  fichesMasquees  FicheConnexeMasquee[]
+  fichesConnexes    FicheConnexe[]
+  fichesMasquees    FicheConnexeMasquee[]
 
   @@unique([activiteId, slug])
   @@index([organisationId])
@@ -1051,41 +1058,51 @@ model PlaceSequence {
 // aucun accès. Elle n'existe qu'avec l'accord de la personne, déclaré à la
 // création, et vit en base seulement.
 model Benevole {
-  id                 String          @id @default(cuid())
-  organisationId     String
-  activiteId         String
-  nom                String          @db.VarChar(120)
-  courriel           String?         @db.VarChar(254)
-  telephone          String?         @db.VarChar(40)
-  note               String?         @db.Text
+  id                      String          @id @default(cuid())
+  organisationId          String
+  activiteId              String
+  nom                     String          @db.VarChar(120)
+  courriel                String?         @db.VarChar(254)
+  telephone               String?         @db.VarChar(40)
+  note                    String?         @db.Text
   // La date à laquelle la personne qui crée la fiche a déclaré l'accord.
-  accordLe           DateTime
+  accordLe                DateTime
   // Saisie par l'équipe, ou née d'une candidature acceptée (ADR 0041).
-  origine            OrigineBenevole @default(SAISIE)
+  origine                 OrigineBenevole @default(SAISIE)
   // « Prévenir par mail » : avec une adresse, la fiche est joignable. Sa première
   // place envoie le lien, et ses places restent à confirmer.
-  prevenirParMail    Boolean         @default(true)
+  prevenirParMail         Boolean         @default(true)
   // Date à laquelle la personne a confirmé sa participation depuis son lien. Seule
   // une adresse confirmée reçoit d'autres mails que le premier.
-  courrielConfirmeLe DateTime?
+  courrielConfirmeLe      DateTime?
   // Sel du lien de l'espace bénévole : le jeton se calcule à partir du secret du
   // serveur et de ce sel, et le serveur ne garde que son empreinte SHA-256.
-  espaceSel          String?         @db.Char(43)
-  espaceEmpreinte    String?         @db.Char(64)
+  espaceSel               String?         @db.Char(43)
+  espaceEmpreinte         String?         @db.Char(64)
+  // Précisions de disponibilité de la personne, distinctes de la note de l'équipe :
+  // « à partir de 18 h, tout poste sauf la photo » (ADR 0042).
+  precisionsDisponibilite String?         @db.VarChar(600)
+  // Import d'origine (ADR 0042) : sa source, et le périmètre d'un import de
+  // périmètre, qui borne la lecture des plages dans la vue « Répartition ».
+  sourceImport            String?         @db.VarChar(120)
+  perimetreImportId       String?
   // Envoi du mail qui porte le lien, et relance unique.
-  lienEnvoyeLe       DateTime?
-  relanceLe          DateTime?
-  creeParId          String?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  lienEnvoyeLe            DateTime?
+  relanceLe               DateTime?
+  creeParId               String?
+  createdAt               DateTime        @default(now())
+  updatedAt               DateTime        @updatedAt
 
-  organisation  Organisation         @relation(fields: [organisationId], references: [id], onDelete: Restrict)
-  activite      Activite             @relation(fields: [activiteId], references: [id], onDelete: Restrict)
-  creePar       User?                @relation("BenevoleAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
-  places        PlaceSequence[]
-  candidatures  Candidature[]
-  plages        PlageDisponibilite[]
-  notifications Notification[]
+  organisation    Organisation         @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite        Activite             @relation(fields: [activiteId], references: [id], onDelete: Restrict)
+  creePar         User?                @relation("BenevoleAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+  perimetreImport Perimetre?           @relation(fields: [perimetreImportId], references: [id], onDelete: SetNull)
+  places          PlaceSequence[]
+  pairesA         PaireDistincte[]     @relation("PaireDistincteA")
+  pairesB         PaireDistincte[]     @relation("PaireDistincteB")
+  candidatures    Candidature[]
+  plages          PlageDisponibilite[]
+  notifications   Notification[]
 
   // L'empreinte est unique dans son organisation (invariant 18) ; l'adresse de
   // l'espace ne porte pas l'organisation, d'où l'index sur l'empreinte seule.
@@ -1094,11 +1111,21 @@ model Benevole {
   @@index([activiteId, nom])
   @@index([organisationId])
   @@index([creeParId])
+  @@index([perimetreImportId])
 }
 
 enum OrigineBenevole {
   SAISIE
   CANDIDATURE
+  // Née d'un import de liste (ADR 0042).
+  IMPORT
+}
+
+// L'origine d'une candidature : la page publique d'un appel, ou un import de liste
+// (ADR 0042).
+enum OrigineCandidature {
+  PUBLIC
+  IMPORT
 }
 
 // ── Appels à bénévoles (ADR 0041) ───────────────────────────────────────────────
@@ -1136,6 +1163,10 @@ model AppelBenevoles {
   empreinte           String      @db.Char(64)
   // Les derniers caractères du jeton, pour reconnaître l'adresse à l'écran.
   fin                 String      @db.VarChar(8)
+  // Appel d'import (ADR 0042) : sans adresse publique et fermé, un par source dans
+  // sa période. Son sel et son empreinte existent mais ne servent jamais.
+  sansAdresse         Boolean     @default(false)
+  sourceImport        String?     @db.VarChar(120)
   // Compte les modifications. Une modification porte la version lue.
   version             Int         @default(0)
   creeParId           String?
@@ -1153,6 +1184,7 @@ model AppelBenevoles {
   // L'empreinte est unique dans son organisation (invariant 18) ; l'adresse ne
   // porte pas l'organisation, d'où l'index sur l'empreinte seule.
   @@unique([organisationId, empreinte])
+  @@unique([editionId, sourceImport])
   @@index([empreinte])
   @@index([editionId])
   @@index([activiteId])
@@ -1171,29 +1203,34 @@ enum StatutCandidature {
 // personne sans compte : il vit en base seulement, et la purge le supprime à
 // l'archivage de sa période.
 model Candidature {
-  id                      String            @id @default(cuid())
+  id                      String             @id @default(cuid())
   organisationId          String
   activiteId              String
   editionId               String
   appelId                 String
-  statut                  StatutCandidature @default(EN_ATTENTE)
-  nom                     String            @db.VarChar(120)
+  statut                  StatutCandidature  @default(EN_ATTENTE)
+  nom                     String             @db.VarChar(120)
   // Obligatoire pour un dépôt en ligne.
-  courriel                String?           @db.VarChar(254)
+  courriel                String?            @db.VarChar(254)
   // L'adresse tant que la candidature attend, puis null : la contrainte d'unicité
   // garde une seule candidature en attente par adresse et par appel.
-  courrielEnAttente       String?           @db.VarChar(254)
-  telephone               String?           @db.VarChar(40)
-  message                 String?           @db.VarChar(600)
-  precisionsDisponibilite String?           @db.VarChar(600)
+  courrielEnAttente       String?            @db.VarChar(254)
+  telephone               String?            @db.VarChar(40)
+  message                 String?            @db.VarChar(600)
+  precisionsDisponibilite String?            @db.VarChar(600)
   // La personne aide là où il manque du monde, sans choisir de séquence.
-  ouAilleurs              Boolean           @default(false)
+  ouAilleurs              Boolean            @default(false)
   // La date à laquelle la personne a donné son accord, en déposant.
   accordLe                DateTime
+  // Origine (ADR 0042). Une candidature importée garde sa source et l'identifiant
+  // de sa ligne dans l'outil d'origine, qui rend l'import rejouable.
+  origine                 OrigineCandidature @default(PUBLIC)
+  sourceImport            String?            @db.VarChar(120)
+  refExterne              String?            @db.VarChar(120)
   // La fiche créée ou rattachée par la première acceptation.
   benevoleId              String?
-  createdAt               DateTime          @default(now())
-  updatedAt               DateTime          @updatedAt
+  createdAt               DateTime           @default(now())
+  updatedAt               DateTime           @updatedAt
 
   organisation Organisation         @relation(fields: [organisationId], references: [id], onDelete: Restrict)
   activite     Activite             @relation(fields: [activiteId], references: [id], onDelete: Cascade)
@@ -1204,6 +1241,7 @@ model Candidature {
   plages       PlageDisponibilite[]
 
   @@unique([appelId, courrielEnAttente])
+  @@unique([appelId, refExterne])
   @@index([appelId, statut, createdAt])
   @@index([editionId, statut])
   @@index([organisationId])
@@ -1969,4 +2007,56 @@ model FicheExportee {
   fiche        Fiche        @relation(fields: [ficheId], references: [id], onDelete: Cascade)
 
   @@index([organisationId])
+}
+
+// ── Import de listes de bénévoles (ADR 0042) ────────────────────────────────────
+
+// Association enregistrée des colonnes d'un fichier aux champs de Relaytour. Elle
+// ne contient aucune donnée personnelle ni aucune séquence.
+model CorrespondanceImport {
+  id             String   @id @default(cuid())
+  organisationId String
+  activiteId     String
+  nom            String   @db.VarChar(120)
+  // Les en-têtes attendus, dans l'ordre du fichier.
+  entetes        Json
+  // Colonne du fichier → champ de Relaytour, avec ses réglages de colonne.
+  associations   Json
+  // Valeurs « non », jour par défaut, mode, prévenir par mail.
+  reglages       Json
+  creeParId      String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  creePar      User?        @relation("CorrespondanceImportAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+
+  @@unique([activiteId, nom])
+  @@index([organisationId])
+  @@index([creeParId])
+}
+
+// Deux fiches qu'un admin de l'activité a déclarées distinctes : leur fusion ne
+// se propose plus. La paire se range dans l'ordre des identifiants.
+model PaireDistincte {
+  id             String   @id @default(cuid())
+  organisationId String
+  activiteId     String
+  benevoleAId    String
+  benevoleBId    String
+  creeParId      String?
+  createdAt      DateTime @default(now())
+
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  benevoleA    Benevole     @relation("PaireDistincteA", fields: [benevoleAId], references: [id], onDelete: Cascade)
+  benevoleB    Benevole     @relation("PaireDistincteB", fields: [benevoleBId], references: [id], onDelete: Cascade)
+  creePar      User?        @relation("PaireDistincteAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+
+  @@unique([activiteId, benevoleAId, benevoleBId])
+  @@index([organisationId])
+  @@index([benevoleAId])
+  @@index([benevoleBId])
+  @@index([creeParId])
 }

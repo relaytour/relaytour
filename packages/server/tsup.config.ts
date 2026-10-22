@@ -31,6 +31,11 @@ export default defineConfig({
   clean: true,
   // La source du workspace database est embarquée ; @prisma/client reste externe.
   // Les builds ESM de @pothos/* contiennent des imports sans extension que Node refuse.
-  noExternal: ['@relaytour/database', '@relaytour/tokens', /^@pothos\//],
+  noExternal: [
+    '@relaytour/database',
+    '@relaytour/tokens',
+    '@relaytour/commun',
+    /^@pothos\//,
+  ],
   external: [/\.node$/],
 })

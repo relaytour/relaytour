@@ -46,6 +46,10 @@ const a = {
   lieu: '',
   sequence: '',
   benevole: '',
+  // Une seconde fiche, proche de la première, et une correspondance d'import
+  // (ADR 0042).
+  benevole2: '',
+  correspondance: '',
   // Un appel à bénévoles de la période, une candidature et son choix (ADR 0041).
   appel: '',
   candidature: '',
@@ -373,6 +377,29 @@ beforeAll(async () => {
         nom: 'Bénévole de A',
         telephone: '0600000001',
         accordLe: new Date(),
+      },
+    })
+  ).id
+  a.benevole2 = (
+    await prisma.benevole.create({
+      data: {
+        organisationId: a.org,
+        activiteId: a.activite,
+        nom: 'Bénévole de A bis',
+        telephone: '0600000001',
+        accordLe: new Date(),
+      },
+    })
+  ).id
+  a.correspondance = (
+    await prisma.correspondanceImport.create({
+      data: {
+        organisationId: a.org,
+        activiteId: a.activite,
+        nom: 'Billetterie de A',
+        entetes: ['Nom'],
+        associations: {},
+        reglages: {},
       },
     })
   ).id
@@ -1392,6 +1419,59 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'simulerImportBenevoles',
+    query:
+      'query ($e: ID!) { simulerImportBenevoles(editionId: $e, source: "Intrusion", mode: A_REPARTIR, accord: true, personnes: [{ cle: "1", nom: "Intrusion" }]) { aImporter } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'importerBenevoles',
+    query:
+      'mutation ($e: ID!, $p: ID) { importerBenevoles(editionId: $e, perimetreId: $p, source: "Intrusion", mode: A_REPARTIR, accord: true, personnes: [{ cle: "1", nom: "Intrusion" }]) { aImporter } }',
+    variables: () => ({ e: a.edition, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'correspondancesImport',
+    query: 'query ($a: ID!) { correspondancesImport(activiteId: $a) { id } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'enregistrerCorrespondanceImport',
+    query:
+      'mutation ($a: ID!) { enregistrerCorrespondanceImport(activiteId: $a, nom: "Billetterie de A", entetes: [], associations: {}, reglages: {}) { id } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'supprimerCorrespondanceImport',
+    query: 'mutation ($id: ID!) { supprimerCorrespondanceImport(id: $id) }',
+    variables: () => ({ id: a.correspondance }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'doublonsBenevoles',
+    query: 'query ($a: ID!) { doublonsBenevoles(activiteId: $a) { niveau } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'fusionnerBenevoles',
+    query:
+      'mutation ($g: ID!, $x: ID!) { fusionnerBenevoles(gardeeId: $g, autreId: $x, nomDe: GARDEE, courrielDe: GARDEE, telephoneDe: GARDEE) { id } }',
+    variables: () => ({ g: a.benevole, x: a.benevole2 }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'marquerBenevolesDistincts',
+    query:
+      'mutation ($a: ID!, $b: ID!) { marquerBenevolesDistincts(aId: $a, bId: $b) }',
+    variables: () => ({ a: a.benevole, b: a.benevole2 }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'rouvrirAppelBenevoles',
     query: 'mutation ($id: ID!) { rouvrirAppelBenevoles(id: $id) { id } }',
     variables: () => ({ id: a.appel }),
@@ -1851,6 +1931,11 @@ async function etatDeA() {
         prisma.plageDisponibilite.count({
           where: { edition: { organisationId: a.org } },
         }),
+        prisma.correspondanceImport.findMany({
+          where: { organisationId: a.org },
+          select: { id: true, nom: true, updatedAt: true },
+        }),
+        prisma.paireDistincte.count({ where: { organisationId: a.org } }),
         prisma.lieu.findMany({
           where: { organisationId: a.org },
           select: { id: true, nom: true, archivedAt: true },

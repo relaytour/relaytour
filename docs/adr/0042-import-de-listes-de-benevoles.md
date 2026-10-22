@@ -96,6 +96,7 @@ Plusieurs feuilles à combiner, des cellules fusionnées, des tableaux croisés 
   - moyen : le même téléphone ;
   - faible : le même nom, ou un nom très proche (deux lettres d'écart au plus, même initiale).
 - Pour un niveau moyen ou faible, l'aperçu demande « Rattacher à la fiche existante » ou « Créer une fiche ».
+- Une personne qui écrit dans un périmètre ne se rapproche que des fiches dont elle lit les coordonnées (ADR 0040). L'import ne lui apprend pas quelle fiche porte une adresse ou un numéro.
 - **Avec les membres** : une personne du fichier qui a un compte n'est signalée qu'aux admins de l'activité. Une personne qui écrit dans un périmètre n'apprend rien de l'annuaire (ADR 0015).
 - Les règles de rapprochement vivent dans un module pur, partagé par le serveur et l'écran.
 
@@ -130,7 +131,7 @@ Dans les deux modes :
 - « Fusionner » ouvre une comparaison champ par champ. La personne choisit le nom, l'adresse et le téléphone gardés. Les notes se mettent bout à bout.
 - La fusion réunit les places, avec une seule place par séquence : « responsable » l'emporte sur « renfort », et une place confirmée sur une place à confirmer.
 - Elle réunit aussi les plages, sans doublon, et rattache les candidatures à la fiche gardée.
-- Elle garde l'accord le plus ancien et la confirmation d'adresse la plus récente. Le lien personnel de la fiche gardée reste valable, et celui de l'autre fiche cesse de répondre.
+- Elle garde l'accord le plus ancien. Le lien personnel, la confirmation et l'option « Prévenir par mail » suivent l'adresse gardée : la personne qui lit cette adresse garde le lien qu'elle a reçu. Quand les deux fiches ont la même adresse, la confirmation la plus récente l'emporte.
 - Tout s'écrit dans une transaction, sous le verrou de l'organisation, avec une ligne au journal.
 - « Ce ne sont pas des doublons » écarte une paire, qui ne revient plus.
 - Seuls les admins de l'activité fusionnent : la fusion touche des fiches créées par d'autres personnes.

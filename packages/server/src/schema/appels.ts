@@ -81,6 +81,16 @@ export const AppelRef = builder.objectRef<AppelLu>('AppelBenevoles').implement({
       resolve: l => l.appel.perimetre,
     }),
     sequenceId: t.id({ nullable: true, resolve: l => l.appel.sequenceId }),
+    sansAdresse: t.boolean({
+      description:
+        'Vrai pour un appel d’import (ADR 0042) : il n’a pas d’adresse publique et reste fermé.',
+      resolve: l => l.appel.sansAdresse,
+    }),
+    sourceImport: t.string({
+      nullable: true,
+      description: 'La source d’un appel d’import.',
+      resolve: l => l.appel.sourceImport,
+    }),
     sequenceTitre: t.string({
       nullable: true,
       resolve: l => l.appel.sequence?.titre ?? null,
@@ -105,7 +115,7 @@ export const AppelRef = builder.objectRef<AppelLu>('AppelBenevoles').implement({
       description:
         'L’adresse publique, recalculée à la demande pour les personnes qui gèrent l’appel ; null sinon.',
       resolve: async l => {
-        if (!l.peutModifier) return null
+        if (!l.peutModifier || l.appel.sansAdresse) return null
         const { origineOrga } = await configurationOrganisation(
           l.appel.organisationId
         )
@@ -327,6 +337,15 @@ const CandidatureRef = builder
       precisionsDisponibilite: t.string({
         nullable: true,
         resolve: l => l.candidature.precisionsDisponibilite,
+      }),
+      origine: t.string({
+        description:
+          'PUBLIC : déposée sur la page d’un appel. IMPORT : venue d’un import de liste (ADR 0042).',
+        resolve: l => l.candidature.origine,
+      }),
+      sourceImport: t.string({
+        nullable: true,
+        resolve: l => l.candidature.sourceImport,
       }),
       ouAilleurs: t.boolean({
         description:
@@ -608,6 +627,9 @@ builder.mutationFields(t => ({
     },
     resolve: async (_root, args, ctx) => {
       const appel = await appelGere(ctx, String(args.id))
+      if (appel.sansAdresse) {
+        throw erreurSaisie('Un appel d’import n’a pas d’adresse publique.')
+      }
       const edition = await ctx.exigerEdition(appel.editionId)
       datesAppelValides(
         args.ouvertLe,
@@ -687,6 +709,9 @@ builder.mutationFields(t => ({
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
       const appel = await appelGere(ctx, String(args.id))
+      if (appel.sansAdresse) {
+        throw erreurSaisie('Un appel d’import n’a pas d’adresse publique.')
+      }
       const maintenant = new Date()
       if (appel.fermeLe.getTime() <= maintenant.getTime()) {
         throw erreurSaisie(
@@ -721,6 +746,9 @@ builder.mutationFields(t => ({
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
       const appel = await appelGere(ctx, String(args.id))
+      if (appel.sansAdresse) {
+        throw erreurSaisie('Un appel d’import n’a pas d’adresse publique.')
+      }
       const sel = nouveauSel()
       const jeton = await jetonDe('appel', sel)
       await prisma.appelBenevoles.update({
