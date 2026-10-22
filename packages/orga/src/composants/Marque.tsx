@@ -1,10 +1,13 @@
 import { useContext } from 'react'
 
 import { ContexteActivite } from '../lib/activite'
-import { useOrganisation } from '../lib/organisation'
+import { ORGANISATION_PAR_DEFAUT, useOrganisation } from '../lib/organisation'
 
-// Le pictogramme de Relaytour : deux arcs qui se passent le relais. Le premier
-// prend la primaire du thème, le second son accent. Il reste lisible à 16 px.
+// Le pictogramme de Relaytour : deux arcs entrelacés qui se passent le relais.
+// Le premier prend la primaire du thème, le second son accent. Le second arc
+// recouvre le premier, puis l'extrémité droite du premier repasse au-dessus.
+// Le trait de 8 reste lisible à 16 px ; les grandes icônes portent un trait
+// de 9 (packages/orga/public/icon.png).
 export function Pictogramme({
   taille = 28,
   monochrome = false,
@@ -12,30 +15,40 @@ export function Pictogramme({
   taille?: number
   monochrome?: boolean
 }) {
+  const premier = monochrome ? 'currentColor' : 'var(--rt-primaire)'
   return (
     <svg
       width={taille}
       height={taille}
       viewBox="0 0 64 64"
+      fill="none"
+      strokeWidth={8}
+      strokeLinecap="round"
       aria-hidden="true"
       focusable="false"
     >
-      <path
-        d="M 10 37 A 15 15 0 0 1 40 37"
-        fill="none"
-        stroke={monochrome ? 'currentColor' : 'var(--rt-primaire)'}
-        strokeWidth={9}
-        strokeLinecap="round"
-      />
+      <path d="M 10 37 A 15 15 0 0 1 40 37" stroke={premier} />
       <path
         d="M 24 27 A 15 15 0 0 0 54 27"
-        fill="none"
         stroke={monochrome ? 'currentColor' : 'var(--rt-accent)'}
-        strokeWidth={9}
-        strokeLinecap="round"
         opacity={monochrome ? 0.55 : 1}
       />
+      <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke={premier} />
     </svg>
+  )
+}
+
+/**
+ * Le nom de Relaytour en logotype : Baloo 2 SemiBold, « Relay » en encre et
+ * « tour » en accent. La marque l'affiche à la place du nom quand l'espace porte
+ * l'identité de Relaytour elle-même : avant la réponse de l'API, ou dans une
+ * installation qui n'a pas nommé son organisation.
+ */
+function Logotype() {
+  return (
+    <span className="rt-marque-nom rt-logotype">
+      Relay<span className="rt-logotype-tour">tour</span>
+    </span>
   )
 }
 
@@ -68,7 +81,11 @@ export default function Marque({
       ) : (
         <Pictogramme taille={taille} />
       )}
-      <span className="rt-marque-nom">{libelle}</span>
+      {logo === null && libelle === ORGANISATION_PAR_DEFAUT.nomCourt ? (
+        <Logotype />
+      ) : (
+        <span className="rt-marque-nom">{libelle}</span>
+      )}
     </span>
   )
 }

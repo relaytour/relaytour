@@ -545,6 +545,18 @@ html {
   white-space: nowrap;
 }
 
+/* Le logotype de Relaytour garde sa police et ses couleurs, quel que soit le
+   thème : Baloo 2 SemiBold, « Relay » en encre et « tour » en accent. */
+.rt-logotype {
+  font-family: 'Baloo 2', var(--rt-police-titre);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.rt-logotype-tour {
+  color: var(--rt-accent);
+}
+
 /* Les cartes, posées dans la page, sont en verre clair. */
 .ant-card {
   background: var(--rt-verre);

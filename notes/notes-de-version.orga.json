@@ -60,6 +60,19 @@
           }
         },
         {
+          "id": "2026-10-22-orga-nouveau-logo-de-relaytour-arcs-entrelaces-et-nom-en-baloo-2",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Nouveau logo de Relaytour : arcs entrelacés et nom en Baloo 2",
+            "texte": "Les deux arcs du pictogramme sont entrelacés : chaque extrémité passe au-dessus de l'autre arc. Le favicon, l'icône de l'application installée, la signature de l'espace organisateur et le site utilisent ce dessin. Le nom « Relaytour » s'écrit en Baloo 2 SemiBold, avec « tour » en accent.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-22-orga-les-admins-verifient-les-acces-des-equipes-chez-le-fournisse",
           "date": "2026-10-22",
           "type": "fonctionnalite",
