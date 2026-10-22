@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.19.0
 fr:
   titre: >-
     Les bénévoles confirment leur participation depuis leur espace
