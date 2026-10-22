@@ -160,7 +160,9 @@ export default function CandidaturesBenevoles({
               <header className="rt-candidature-tete">
                 <strong>{c.nom}</strong>
                 <span className="rt-note">
-                  {c.appelNom} · déposée le {jourDeLInstant(c.deposeeLe)}
+                  {c.appelNom} ·{' '}
+                  {c.origine === 'IMPORT' ? 'importée' : 'déposée'} le{' '}
+                  {jourDeLInstant(c.deposeeLe)}
                 </span>
               </header>
               <p className="rt-candidature-contact">

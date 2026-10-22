@@ -225,7 +225,19 @@ async function benevolesARepartir(
         organisationId,
         activiteId: edition.activiteId,
         OR: [
-          { plages: { some: { editionId: edition.id } } },
+          {
+            plages: { some: { editionId: edition.id } },
+            // Une fiche d'un import de périmètre ne se lit que dans ce
+            // périmètre (ADR 0042).
+            ...(ecrits === 'TOUS'
+              ? {}
+              : {
+                  OR: [
+                    { perimetreImportId: null },
+                    { perimetreImportId: { in: [...ecrits] } },
+                  ],
+                }),
+          },
           {
             candidatures: {
               some: { ...candidaturesVues, statut: 'EN_ATTENTE' },
@@ -283,7 +295,9 @@ async function benevolesARepartir(
       nom: fiche.nom,
       plages: fiche.plages,
       precisions:
-        siennes.map(c => c.precisionsDisponibilite).find(Boolean) ?? null,
+        fiche.precisionsDisponibilite ??
+        siennes.map(c => c.precisionsDisponibilite).find(Boolean) ??
+        null,
       message: siennes.map(c => c.message).find(Boolean) ?? null,
       origine: siennes[0]?.appel.nom ?? null,
       ouAilleurs: siennes.some(c => c.ouAilleurs),
