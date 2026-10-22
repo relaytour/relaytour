@@ -464,6 +464,7 @@ builder.mutationFields(t => ({
         where: { id: String(id), organisationId: ctx.organisation!.id },
         select: {
           id: true,
+          chemin: true,
           fiche: {
             select: {
               id: true,
@@ -475,6 +476,12 @@ builder.mutationFields(t => ({
         },
       })
       if (ressource === null) throw accesRefuse()
+      // Le dossier lié entier n'est pas un document : ses lecteurs s'étendent.
+      if (ouvert && lireChemin(ressource.chemin).length === 0) {
+        throw erreurSaisie(
+          'Ce document est le dossier lié entier. Étendez plutôt les lecteurs du dossier.'
+        )
+      }
       await prisma.ressourceFiche.update({
         where: { id: ressource.id },
         data: ouvert

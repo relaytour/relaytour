@@ -52,7 +52,9 @@ export function ReglageAcces({
   const [mode, setMode] = useState<AccesFournisseurDossier>(
     dossier.accesFournisseur
   )
-  const [groupeId, setGroupeId] = useState<string | null>(null)
+  const [groupeId, setGroupeId] = useState<string | null>(
+    dossier.groupeFournisseurId ?? null
+  )
   const [role, setRole] = useState<RoleFournisseur>(dossier.roleFournisseur)
   const [auto, setAuto] = useState(dossier.ajoutsAutomatiques)
   const [invitation, setInvitation] = useState(dossier.invitationFournisseur)
@@ -96,16 +98,17 @@ export function ReglageAcces({
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="La connexion vérifie les accès sans pouvoir les changer."
+          title="Avec cette connexion, Relaytour vérifie les accès sans pouvoir les changer."
           description={
             onActiverGestion === null ? (
               'Ce fournisseur ne propose pas encore la gestion des accès.'
             ) : (
               <>
                 <p style={{ marginTop: 0 }}>
-                  Pour appliquer des propositions, reconnectez le fournisseur
-                  avec la gestion des accès. Chez Microsoft, un admin Microsoft
-                  Entra accepte une autorisation de plus.
+                  Pour appliquer des propositions, activez la gestion des accès.
+                  Chez Microsoft et Dropbox, elle demande une reconnexion ; chez
+                  Microsoft, un admin Microsoft Entra accepte une autorisation
+                  de plus.
                 </p>
                 <Button onClick={onActiverGestion}>
                   Activer la gestion des accès
@@ -128,7 +131,7 @@ export function ReglageAcces({
         {mode === 'GROUPE' && (
           <Form.Item
             label="Groupe"
-            extra="Seuls les groupes qui ont déjà un droit sur le dossier se proposent. Entrer dans un groupe ouvre tout ce que ce groupe ouvre chez le fournisseur."
+            extra="La liste ne compte que les groupes qui ont déjà un droit sur le dossier. Une personne qui entre dans un groupe reçoit tous les droits de ce groupe chez le fournisseur."
           >
             <Select
               value={groupeId}
@@ -157,18 +160,21 @@ export function ReglageAcces({
                 ]}
               />
             </Form.Item>
-            <Form.Item
-              label="Mail d’invitation du fournisseur"
-              extra="Le fournisseur prévient la personne du partage."
-            >
-              <Switch checked={invitation} onChange={setInvitation} />
-            </Form.Item>
+            {/* Nextcloud prévient la personne selon ses propres réglages. */}
+            {dossier.fournisseur !== 'NEXTCLOUD' && (
+              <Form.Item
+                label="Mail d’invitation du fournisseur"
+                extra="Le fournisseur prévient la personne du partage."
+              >
+                <Switch checked={invitation} onChange={setInvitation} />
+              </Form.Item>
+            )}
           </>
         )}
         {mode !== 'AUCUN' && (
           <Form.Item
             label="Appliquer les ajouts sans attendre"
-            extra="Un retrait attend toujours un admin. Relaytour ne retire que les accès qu’il a lui-même créés."
+            extra="Un retrait attend toujours la décision d’un admin. Relaytour ne retire que les accès qu’il a lui-même créés."
           >
             <Switch checked={auto} onChange={setAuto} />
           </Form.Item>
@@ -193,14 +199,15 @@ export function PropositionsDossier({ v }: { v: Verification }) {
   const [ecarter] = useMutation(ECARTER_PROPOSITION, relire)
   if (v.propositions.length === 0) return null
   const enAttente = v.propositions.filter(p => p.etat === 'EN_ATTENTE')
-  const groupe = v.dossier.accesFournisseur === 'GROUPE'
-  const libelle = (action: string) =>
-    action === 'AJOUTER'
-      ? groupe
-        ? `Ajouter au groupe « ${v.dossier.groupeFournisseurNom ?? ''} »`
+  // La cible vient du serveur : un retrait vise le droit que Relaytour a créé,
+  // quel que soit le mode actuel du dossier.
+  const libelle = (p: { action: string; cible: string; parGroupe: boolean }) =>
+    p.action === 'AJOUTER'
+      ? p.parGroupe
+        ? `Ajouter au ${p.cible}`
         : 'Partager le dossier'
-      : groupe
-        ? `Retirer du groupe « ${v.dossier.groupeFournisseurNom ?? ''} »`
+      : p.parGroupe
+        ? `Retirer du ${p.cible}`
         : 'Retirer le partage'
   return (
     <Section titre="Propositions" compte={`${enAttente.length} en attente`}>
@@ -232,7 +239,7 @@ export function PropositionsDossier({ v }: { v: Verification }) {
               {p.personne.nom}
               <span className="rt-explorateur-detail">
                 {[
-                  libelle(p.action),
+                  libelle(p),
                   p.personne.email,
                   p.etat === 'ECHEC'
                     ? `${p.erreur ?? 'Échec'} Relaytour le proposera de nouveau à la prochaine vérification.`
@@ -246,9 +253,9 @@ export function PropositionsDossier({ v }: { v: Verification }) {
               <Tag color="error">Échec</Tag>
             ) : (
               <Popconfirm
-                title={`${libelle(p.action)} pour ${p.personne.nom} ?`}
+                title={`${libelle(p)} pour ${p.personne.nom} ?`}
                 description={
-                  groupe && p.action === 'RETIRER'
+                  p.parGroupe && p.action === 'RETIRER'
                     ? 'La personne quitte le groupe pour tout ce que ce groupe ouvre chez le fournisseur.'
                     : 'Relaytour applique le changement chez le fournisseur.'
                 }

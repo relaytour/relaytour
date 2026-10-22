@@ -8,15 +8,17 @@ fr:
   titre: >-
     Relaytour propose les accès des équipes chez le fournisseur cloud
   texte: >-
-    Avec la gestion des accès, un dossier lié propose un partage du dossier, ou
-    l'entrée dans un groupe du fournisseur qui a déjà un droit sur lui. Quand
-    une équipe change, Relaytour propose d'ajouter les personnes attendues sans
-    accès et de retirer les accès qu'il a créés pour des personnes parties. Vous
-    appliquez ou écartez chaque proposition depuis l'onglet « Vérification des
-    accès ». Un réglage du dossier applique les ajouts sans attendre. Un retrait
-    attend toujours un admin, et un accès posé à la main n'est jamais retiré.
-    Une notification d'admin annonce les propositions, une fois par jour au
-    plus.
+    Avec la gestion des accès, un admin de l'organisation choisit ce que
+    Relaytour propose pour un dossier lié : un partage du dossier, ou l'entrée
+    dans un groupe du fournisseur qui a déjà un droit sur lui. Quand une
+    équipe change, Relaytour propose d'ajouter les personnes attendues sans
+    accès. Relaytour propose aussi de retirer les accès qu'il a créés pour des
+    personnes parties. Vous appliquez ou écartez chaque proposition d'accès
+    dans l'onglet « Vérification des accès ». Avec un réglage du dossier,
+    Relaytour applique les ajouts sans attendre. Un retrait attend toujours la
+    décision d'un admin, et Relaytour ne retire jamais un accès posé à la
+    main. Relaytour prévient les admins par une notification, une fois par
+    jour au plus.
 ---
 
 ADR 0044 : champs `DossierLie.accesFournisseur`, `groupeFournisseurId`,

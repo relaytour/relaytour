@@ -489,6 +489,9 @@ beforeAll(async () => {
         empreinteChemin: 'c'.repeat(64),
         type: 'FICHIER',
         nom: 'Plan.pdf',
+        // Un document ouvert aux lecteurs de sa fiche ne sert pas de passe hors
+        // de cette fiche (ADR 0043).
+        ouverteAuxLecteurs: true,
       },
     })
   ).id
@@ -1610,6 +1613,13 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'contenuDossierLie',
+    query:
+      'query ($id: ID!, $r: ID) { contenuDossierLie(id: $id, chemin: ["Plan.pdf"], ressource: $r) { complet } }',
+    variables: () => ({ id: a.dossierLie, r: a.ressource }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'lierDossier',
     query:
       'mutation ($a: ID!, $p: ID!) { lierDossier(activiteId: $a, lecteurs: { touteActivite: false, perimetreIds: [$p], groupes: [] }, emplacement: "bibliotheque", chemin: ["Natation"]) { id } }',
@@ -1668,6 +1678,14 @@ const CAS: Cas[] = [
       'mutation ($u: ID!) { saisirAdresseFournisseur(userId: $u, adresse: "autre@exemple.net") { adresseSaisie } }',
     variables: () => ({ u: a.referente }),
     attente: INTERDIT,
+  },
+  {
+    operation: 'reglerPorteeConnexion',
+    query: 'mutation { reglerPorteeConnexion(portee: GESTION) { portee } }',
+    variables: () => ({}),
+    // Sans identifiant de A : l'admin de B ne règle que sa propre connexion,
+    // absente ici.
+    attente: REFUSE,
   },
   {
     operation: 'groupesDuDossier',

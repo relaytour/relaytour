@@ -5,6 +5,7 @@ import path from 'node:path'
 import { prisma } from '@relaytour/database'
 
 import { lireGroupes } from './activites.ts'
+import { membreActif } from './appartenances.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { lireFormulaire } from './formulaire.ts'
 
@@ -294,13 +295,17 @@ export async function construireExport(organisationId: string) {
   // droits créés par Relaytour (ADR 0044).
   const [comptesFournisseur, etatsAcces, propositionsAcces, permissionsCreees] =
     await Promise.all([
+      // Seuls les membres actifs : un ancien membre ne laisse ni compte ni état.
       prisma.compteFournisseur.findMany({
-        where: { organisationId },
+        where: { organisationId, user: membreActif(organisationId) },
         orderBy: [{ fournisseur: 'asc' }, { id: 'asc' }],
         include: { user: { select: { email: true } } },
       }),
       prisma.etatAccesDossier.findMany({
-        where: { organisationId },
+        where: {
+          organisationId,
+          OR: [{ userId: null }, { user: membreActif(organisationId) }],
+        },
         orderBy: [{ dossierLieId: 'asc' }, { id: 'asc' }],
         include: {
           user: { select: { email: true } },

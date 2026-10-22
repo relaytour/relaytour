@@ -175,11 +175,13 @@ export const DOSSIERS_LIES = graphql(`
       fournisseur
       touteActivite
       attendus
+      accesCrees
       perimetres {
         id
         slug
         nom
         couleur
+        archive
       }
       groupes
       lecteursLus {
@@ -325,8 +327,8 @@ export const MODIFIER_DOSSIER_LIE = graphql(`
 `)
 
 export const DELIER_DOSSIER = graphql(`
-  mutation DelierDossier($id: ID!) {
-    delierDossier(id: $id)
+  mutation DelierDossier($id: ID!, $oublierAcces: Boolean) {
+    delierDossier(id: $id, oublierAcces: $oublierAcces)
   }
 `)
 
@@ -569,8 +571,10 @@ export const VERIFICATION_ACCES = graphql(`
         touteActivite
         attendus
         accesFournisseur
+        groupeFournisseurId
         groupeFournisseurNom
         roleFournisseur
+        fournisseur
         ajoutsAutomatiques
         invitationFournisseur
         groupes
@@ -590,6 +594,8 @@ export const VERIFICATION_ACCES = graphql(`
         action
         etat
         erreur
+        cible
+        parGroupe
         personne {
           id
           nom
@@ -647,6 +653,41 @@ export function voieLisible(via: string | null): string | null {
   return via.startsWith('groupe:')
     ? `Par le groupe « ${via.slice('groupe:'.length)} »`
     : via
+}
+
+export const REGLER_PORTEE = graphql(`
+  mutation ReglerPorteeConnexion($portee: PorteeConnexionFichiers!) {
+    reglerPorteeConnexion(portee: $portee) {
+      portee
+    }
+  }
+`)
+
+/**
+ * Comment chaque fournisseur active la vérification et la gestion des accès
+ * (ADR 0044) : une reconnexion qui demande de nouvelles autorisations, ou un
+ * simple réglage quand l'accès accordé les couvre déjà.
+ */
+export const ACTIVATION_ACCES: Record<string, 'reconnexion' | 'reglage'> = {
+  SHAREPOINT: 'reconnexion',
+  DROPBOX: 'reconnexion',
+  GOOGLE_DRIVE: 'reglage',
+  NEXTCLOUD: 'reglage',
+}
+
+/** Les fournisseurs qui publient un annuaire des comptes. */
+export const AVEC_ANNUAIRE = new Set(['SHAREPOINT', 'NEXTCLOUD'])
+
+/** Ce que l'activation demande chez le fournisseur, pour l'admin qui l'active. */
+export const CONSENTEMENT: Record<string, string> = {
+  SHAREPOINT:
+    'La connexion demande de nouvelles autorisations : un admin Microsoft Entra les accepte pour l’organisation.',
+  DROPBOX:
+    'La connexion demande de lire, puis de modifier, les membres des dossiers partagés.',
+  GOOGLE_DRIVE:
+    'L’accès déjà accordé à Google Drive suffit : aucune reconnexion n’est nécessaire.',
+  NEXTCLOUD:
+    'L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe.',
 }
 
 export const GROUPES_DU_DOSSIER = graphql(`

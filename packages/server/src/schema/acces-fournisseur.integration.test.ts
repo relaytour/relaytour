@@ -93,6 +93,7 @@ const VERIFICATION = `query ($a: ID!) { verificationAcces(activiteId: $a) {
 const COMPTES = `{ comptesFournisseur { personne { email } etat adresseSaisie } }`
 const SAISIR = `mutation ($u: ID!, $a: String) { saisirAdresseFournisseur(userId: $u, adresse: $a) { adresseSaisie } }`
 const VERIFIER = `mutation { verifierAccesFournisseur }`
+const PORTEE = `mutation { reglerPorteeConnexion(portee: GESTION) { portee } }`
 
 type Ligne = {
   nom: string
@@ -440,12 +441,21 @@ describe('vérification des accès', () => {
         [COMPTES, {}],
         [VERIFIER, {}],
         [SAISIR, { u: ids.nageuse, a: 'pirate@exemple.net' }],
+        [PORTEE, {}],
       ] as const) {
         expect(
           code(await executer(qui, query, variables, organisation))
         ).toMatch(/FORBIDDEN|UNAUTHENTICATED/)
       }
     }
+    // Aucun de ces refus n'a élargi la connexion.
+    expect(
+      (
+        await prisma.connexionFichiers.findUniqueOrThrow({
+          where: { organisationId: ids.org },
+        })
+      ).portee
+    ).toBe('ANNUAIRE')
     // L'activité d'une autre organisation se refuse aussi à son admin.
     expect(
       code(
@@ -706,5 +716,257 @@ describe('propositions d’accès', () => {
     // Une nouvelle vérification ne la propose pas de nouveau.
     await verifierAcces(ids.org)
     expect(await propositions('Pôles')).toEqual([])
+  })
+})
+
+describe('fournisseur sans annuaire', () => {
+  it('compare les adresses aux droits, domaine compris, sans garder de compte', async () => {
+    const avant = new Date()
+    remplacerEspacePourLesTests(() =>
+      espaceEnMemoire(
+        [],
+        annuaireEnMemoire({
+          sansAnnuaire: true,
+          comptes: [],
+          droits: {
+            'd-commun': [
+              {
+                identifiant: 'p-domaine',
+                beneficiaire: {
+                  type: 'domaine',
+                  nom: 'Domaine exemple.fr',
+                  domaine: 'exemple.fr',
+                },
+                role: 'LECTURE',
+                herite: false,
+              },
+            ],
+          },
+          groupes: {},
+        })
+      )
+    )
+    try {
+      await verifierAcces(ids.org)
+      expect(etats(await lignes('Commun'))).toEqual({
+        // Son adresse saisie n'appartient pas au domaine.
+        accueillante: ['SANS_ACCES', null],
+        adminActivite: ['A_ACCES', 'domaine'],
+      })
+      expect(
+        await prisma.compteFournisseur.count({
+          where: { organisationId: ids.org, verifieLe: { gt: avant } },
+        })
+      ).toBe(0)
+    } finally {
+      remplacerEspacePourLesTests(() =>
+        espaceEnMemoire([], annuaireEnMemoire(donnees))
+      )
+    }
+  })
+})
+
+// Les garde-fous de la revue : Relaytour ne retire jamais un droit qu'il n'a pas
+// créé tel quel, et ne conclut rien de droits illisibles.
+describe('garde-fous des propositions', () => {
+  const DELIER = `mutation ($id: ID!, $o: Boolean) { delierDossier(id: $id, oublierAcces: $o) }`
+  const affecter = (userId: string, perimetreId: string) =>
+    prisma.affectation.create({
+      data: { userId, perimetreId, editionId: ids.edition },
+    })
+  const partagesDuNageur = () =>
+    donnees.droits['d-natation']!.filter(
+      d =>
+        d.beneficiaire.type === 'personne' &&
+        d.beneficiaire.adresse === adresse('nageur')
+    )
+  const traces = (dossierLieId: string) =>
+    prisma.permissionCreee.count({
+      where: { dossierLieId, userId: ids.nageur },
+    })
+  const enAttente = async (nomDossier: string) =>
+    (await propositions(nomDossier)).filter(p => p.etat === 'EN_ATTENTE')
+  /** Propose puis applique le partage du dossier « Natation » au nageur. */
+  async function partagerAuNageur() {
+    await verifierAcces(ids.org)
+    const [ajout] = await enAttente('Natation')
+    expect(ajout?.action).toBe('AJOUTER')
+    return ajout!
+  }
+
+  it('n’enregistre pas un partage posé à la main avant l’application', async () => {
+    await affecter(ids.nageur, ids.natation)
+    const ajout = await partagerAuNageur()
+    donnees.droits['d-natation']!.push({
+      identifiant: 'p-main',
+      beneficiaire: {
+        type: 'personne',
+        identifiant: null,
+        adresse: adresse('nageur'),
+        nom: 'Nageur',
+      },
+      role: 'LECTURE',
+      herite: false,
+    })
+    expect(
+      (await executer(ids.admin, APPLIQUER, { id: ajout.id })).data
+    ).toEqual({ appliquerPropositionAcces: 'APPLIQUEE' })
+    expect(partagesDuNageur()).toHaveLength(1)
+    expect(await traces(ids.dNatation)).toBe(0)
+    donnees.droits['d-natation'] = donnees.droits['d-natation']!.filter(
+      d => d.identifiant !== 'p-main'
+    )
+  })
+
+  it('oublie un partage modifié à la main, sans jamais le retirer', async () => {
+    const ajout = await partagerAuNageur()
+    await executer(ids.admin, APPLIQUER, { id: ajout.id })
+    expect(await traces(ids.dNatation)).toBe(1)
+    partagesDuNageur()[0]!.role = 'ECRITURE'
+    await verifierAcces(ids.org)
+    expect(await traces(ids.dNatation)).toBe(0)
+    // Le nageur quitte la natation : son droit n'est plus qu'en trop.
+    await prisma.affectation.deleteMany({ where: { userId: ids.nageur } })
+    await verifierAcces(ids.org)
+    expect(await enAttente('Natation')).toEqual([])
+    expect(partagesDuNageur()).toHaveLength(1)
+    donnees.droits['d-natation'] = donnees.droits['d-natation']!.filter(
+      d => !partagesDuNageur().includes(d)
+    )
+  })
+
+  it('refuse de retirer un partage modifié entre la proposition et l’application', async () => {
+    await affecter(ids.nageur, ids.natation)
+    const ajout = await partagerAuNageur()
+    await executer(ids.admin, APPLIQUER, { id: ajout.id })
+    await prisma.affectation.deleteMany({ where: { userId: ids.nageur } })
+    await verifierAcces(ids.org)
+    const [retrait] = await enAttente('Natation')
+    expect(retrait?.action).toBe('RETIRER')
+    partagesDuNageur()[0]!.role = 'ECRITURE'
+    expect(
+      (await executer(ids.admin, APPLIQUER, { id: retrait!.id })).data
+    ).toEqual({ appliquerPropositionAcces: 'ECHEC' })
+    expect(partagesDuNageur()).toHaveLength(1)
+    expect(await traces(ids.dNatation)).toBe(0)
+    expect(
+      (
+        await prisma.propositionAcces.findUniqueOrThrow({
+          where: { id: retrait!.id },
+        })
+      ).erreur
+    ).toMatch(/a changé chez le fournisseur/)
+    donnees.droits['d-natation'] = donnees.droits['d-natation']!.filter(
+      d => !partagesDuNageur().includes(d)
+    )
+  })
+
+  it('n’enregistre pas une entrée dans un groupe dont la personne est déjà membre', async () => {
+    await prisma.dossierLie.update({
+      where: { id: ids.dPoles },
+      data: { ajoutsAutomatiques: false },
+    })
+    comptes.push({
+      identifiant: 'u-nageur',
+      adresse: adresse('nageur'),
+      nom: 'Nageur',
+      invite: false,
+    })
+    await affecter(ids.nageur, ids.accueil)
+    await verifierAcces(ids.org)
+    const [ajout] = await enAttente('Pôles')
+    expect(resume([ajout!])).toEqual([
+      `AJOUTER:${adresse('nageur')}:EN_ATTENTE`,
+    ])
+    donnees.groupes['g-poles']!.push('u-nageur')
+    expect(
+      (await executer(ids.admin, APPLIQUER, { id: ajout!.id })).data
+    ).toEqual({ appliquerPropositionAcces: 'APPLIQUEE' })
+    expect(await traces(ids.dPoles)).toBe(0)
+  })
+
+  it('ne retire pas d’un groupe une personne qu’un autre dossier du groupe attend, ni sur des droits illisibles', async () => {
+    // Relaytour fait entrer le nageur dans le groupe des pôles.
+    donnees.groupes['g-poles'] = donnees.groupes['g-poles']!.filter(
+      m => m !== 'u-nageur'
+    )
+    await verifierAcces(ids.org)
+    const [ajout] = await enAttente('Pôles')
+    await executer(ids.admin, APPLIQUER, { id: ajout!.id })
+    expect(await traces(ids.dPoles)).toBe(1)
+    // Un second dossier, lié à la natation, s'ouvre par le même groupe.
+    donnees.droits['d-natation-poles'] = [
+      {
+        identifiant: 'p-np',
+        beneficiaire: { type: 'groupe', identifiant: 'g-poles', nom: 'Pôles' },
+        role: 'LECTURE',
+        herite: false,
+      },
+    ]
+    await prisma.dossierLie.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        fournisseur: 'SHAREPOINT',
+        emplacement: 'bibliotheque',
+        element: 'd-natation-poles',
+        nom: 'Natation par les pôles',
+        accesFournisseur: 'GROUPE',
+        groupeFournisseurId: 'g-poles',
+        perimetres: { create: { perimetreId: ids.natation } },
+      },
+    })
+    await prisma.affectation.deleteMany({ where: { userId: ids.nageur } })
+    await affecter(ids.nageur, ids.natation)
+    await verifierAcces(ids.org)
+    expect(await enAttente('Pôles')).toEqual([])
+    // Le nageur quitte aussi la natation, mais les droits des pôles ne se
+    // lisent plus : Relaytour ne propose rien et ne conclut rien.
+    await prisma.affectation.deleteMany({ where: { userId: ids.nageur } })
+    const droitsPoles = donnees.droits['d-poles']!
+    donnees.droits['d-poles'] = null
+    await verifierAcces(ids.org)
+    expect(await enAttente('Pôles')).toEqual([])
+    expect(new Set((await lignes('Pôles')).map(l => l.etat))).toEqual(
+      new Set(['INCONNU'])
+    )
+    expect(await traces(ids.dPoles)).toBe(1)
+    expect(
+      (
+        await prisma.connexionFichiers.findUniqueOrThrow({
+          where: { organisationId: ids.org },
+        })
+      ).accesErreur
+    ).toMatch(/un dossier lié/)
+    // Les droits se lisent de nouveau : le retrait se propose.
+    donnees.droits['d-poles'] = droitsPoles
+    await verifierAcces(ids.org)
+    expect(resume(await enAttente('Pôles'))).toEqual([
+      `RETIRER:${adresse('nageur')}:EN_ATTENTE`,
+    ])
+    expect(
+      (
+        await prisma.connexionFichiers.findUniqueOrThrow({
+          where: { organisationId: ids.org },
+        })
+      ).accesErreur
+    ).toBeNull()
+  })
+
+  it('ne délie un dossier qui porte des accès créés qu’avec l’accord de les oublier', async () => {
+    expect(code(await executer(ids.admin, DELIER, { id: ids.dPoles }))).toBe(
+      'SAISIE_INVALIDE'
+    )
+    expect(
+      code(await executer(ids.nageuse, DELIER, { id: ids.dPoles, o: true }))
+    ).toBe('FORBIDDEN')
+    expect(
+      (await executer(ids.admin, DELIER, { id: ids.dPoles, o: true })).data
+    ).toEqual({ delierDossier: true })
+    expect(
+      await prisma.permissionCreee.count({
+        where: { dossierLieId: ids.dPoles },
+      })
+    ).toBe(0)
   })
 })

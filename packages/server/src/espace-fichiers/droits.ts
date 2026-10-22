@@ -112,18 +112,34 @@ export async function dossierLisiblePour(
       ouverteAuxLecteurs: true,
     },
     include: {
-      dossierLie: true,
+      dossierLie: {
+        include: {
+          perimetres: SELECTION_LECTEURS.perimetres,
+          groupes: SELECTION_LECTEURS.groupes,
+        },
+      },
       fiche: {
         select: {
           id: true,
           organisationId: true,
           activiteId: true,
           perimetreId: true,
+          perimetre: { select: { groupe: true, archivedAt: true } },
         },
       },
     },
   })
   if (ressource === null || !(await peutLireFiche(ctx, ressource.fiche))) {
+    return null
+  }
+  // Un document que la fiche ne montre plus, parce que son dossier ne la sert
+  // plus, ne se lit plus non plus.
+  const fiche = ressource.fiche
+  const groupe =
+    fiche.perimetre !== null && fiche.perimetre.archivedAt === null
+      ? fiche.perimetre.groupe
+      : null
+  if (!dossierCompatible({ ...fiche, groupe }, ressource.dossierLie)) {
     return null
   }
   const base = Array.isArray(ressource.chemin)

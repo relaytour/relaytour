@@ -6,14 +6,15 @@ role: referent
 etat: prevu
 fr:
   titre: >-
-    Un document lié d'une fiche partagée s'ouvre pour ses nouveaux lecteurs
+    Un admin ouvre un document lié aux lecteurs d'une fiche partagée
   texte: >-
     Quand une fiche concerne aussi d'autres périmètres, la personne qui la
-    rédige voit quels documents liés ces périmètres n'ouvriront pas. L'éditeur
-    l'annonce sous la liste « Concerne aussi », et le bouton d'alerte d'un
-    document le détaille dans la fiche. Un admin de l'organisation étend alors
-    le dossier lié aux périmètres et aux groupes de la fiche, ou ouvre ce seul
-    document à toutes les personnes qui lisent la fiche.
+    rédige voit quels documents liés ces périmètres n'ouvriront pas.
+    L'avertissement s'affiche sous la liste « Concerne aussi » de l'éditeur.
+    Dans la fiche, vous lisez le détail par le bouton d'alerte du document. Un
+    admin de l'organisation étend alors le dossier lié aux périmètres et aux
+    groupes de la fiche. Il peut aussi ouvrir ce seul document à toutes les
+    personnes qui lisent la fiche.
 ---
 
 ADR 0043 : champs `RessourceFiche.ouverteAuxLecteurs`, `ouverteParId` et
