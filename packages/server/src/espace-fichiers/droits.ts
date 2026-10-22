@@ -2,6 +2,7 @@ import { prisma, type DossierLie, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { perimetresLisibles } from '../lib/droits.ts'
+import { peutLireFiche } from '../lib/fiches.ts'
 import { perimetresLisiblesActifs } from '../lib/fiches-connexes.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 
@@ -84,6 +85,73 @@ export async function dossierLisible(
   })
   if (dossier === null) return null
   return (await peutLireDossier(ctx, dossier)) ? dossier : null
+}
+
+/**
+ * Le dossier lié par lequel la personne lit ce chemin, sinon null. Elle lit le
+ * dossier lui-même, ou elle lit la fiche d'un document lié ouvert à ses lecteurs
+ * (ADR 0043) : le chemin reste alors sous le document, et un fichier ne se lit que
+ * lui-même. `ressourceId` désigne ce document.
+ */
+export async function dossierLisiblePour(
+  ctx: AppContext,
+  dossierId: string,
+  chemin: readonly string[],
+  ressourceId: string | null | undefined
+): Promise<DossierLie | null> {
+  const dossier = await dossierLisible(ctx, dossierId)
+  if (dossier !== null || ressourceId === null || ressourceId === undefined) {
+    return dossier
+  }
+  if (ctx.organisation === null) return null
+  const ressource = await prisma.ressourceFiche.findFirst({
+    where: {
+      id: ressourceId,
+      organisationId: ctx.organisation.id,
+      dossierLieId: dossierId,
+      ouverteAuxLecteurs: true,
+    },
+    include: {
+      dossierLie: {
+        include: {
+          perimetres: SELECTION_LECTEURS.perimetres,
+          groupes: SELECTION_LECTEURS.groupes,
+        },
+      },
+      fiche: {
+        select: {
+          id: true,
+          organisationId: true,
+          activiteId: true,
+          perimetreId: true,
+          perimetre: { select: { groupe: true, archivedAt: true } },
+        },
+      },
+    },
+  })
+  if (ressource === null || !(await peutLireFiche(ctx, ressource.fiche))) {
+    return null
+  }
+  // Un document que la fiche ne montre plus, parce que son dossier ne la sert
+  // plus, ne se lit plus non plus.
+  const fiche = ressource.fiche
+  const groupe =
+    fiche.perimetre !== null && fiche.perimetre.archivedAt === null
+      ? fiche.perimetre.groupe
+      : null
+  if (!dossierCompatible({ ...fiche, groupe }, ressource.dossierLie)) {
+    return null
+  }
+  const base = Array.isArray(ressource.chemin)
+    ? ressource.chemin.filter((n): n is string => typeof n === 'string')
+    : []
+  const dessous =
+    chemin.length >= base.length && base.every((nom, i) => chemin[i] === nom)
+  const admis =
+    ressource.type === 'FICHIER'
+      ? dessous && chemin.length === base.length
+      : dessous
+  return admis ? ressource.dossierLie : null
 }
 
 /**

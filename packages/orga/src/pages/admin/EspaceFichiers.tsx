@@ -16,7 +16,9 @@ import {
   Input,
   Modal,
   Popconfirm,
+  Select,
   Skeleton,
+  Tabs,
   Tag,
 } from 'antd'
 import { useEffect, useState } from 'react'
@@ -31,11 +33,20 @@ import ParcoursEspace, {
   type PositionChoisie,
 } from '../../composants/ParcoursEspace'
 import Titre from '../../composants/Titre'
-import type { DossiersLiesQuery, EspaceFichiersQuery } from '../../gql/graphql'
+import ComptesFournisseur from '../../composants/ComptesFournisseur'
+import VerificationAcces from '../../composants/VerificationAcces'
+import type {
+  AttendusDossier,
+  DossiersLiesQuery,
+  EspaceFichiersQuery,
+} from '../../gql/graphql'
 import { useActivite } from '../../lib/activite'
 import { jourDeLInstant, messageErreur } from '../../lib/erreurs'
 import {
   CHOISIR_DOSSIER_EXPORT,
+  ACTIVATION_ACCES,
+  AVEC_ANNUAIRE,
+  COMMENCER_CONNEXION,
   DELIER_DOSSIER,
   DOSSIERS_LIES,
   EFFETS_LECTEURS,
@@ -44,6 +55,7 @@ import {
   LIER_DOSSIER,
   lecteursValides,
   MODIFIER_DOSSIER_LIE,
+  REGLER_PORTEE,
   RETIRER_DOSSIER_EXPORT,
   TOUTE_L_ACTIVITE,
   versSaisie,
@@ -95,10 +107,13 @@ const lecteursDe = (d: DossierLie): Lecteurs => ({
 function LierDossier({
   ouvert,
   dossier,
+  verification,
   onFermer,
 }: {
   ouvert: boolean
   dossier: DossierLie | null
+  /** Vrai quand la connexion vérifie les accès : les personnes attendues se règlent. */
+  verification: boolean
   onFermer: () => void
 }) {
   const { activite } = useActivite()
@@ -110,6 +125,9 @@ function LierDossier({
     dossier === null ? TOUTE_L_ACTIVITE : lecteursDe(dossier)
   )
   const [nom, setNom] = useState(dossier?.nom ?? '')
+  const [attendus, setAttendus] = useState<AttendusDossier>(
+    dossier?.attendus ?? 'MEMBRES'
+  )
   const [position, setPosition] = useState<PositionChoisie>(AUCUNE)
   const modification = dossier !== null
 
@@ -139,6 +157,7 @@ function LierDossier({
             id: dossier.id,
             lecteurs: versSaisie(lecteurs),
             nom: nom.trim() === dossier.nom ? null : nom.trim(),
+            attendus: verification ? attendus : null,
           },
         })
         message.success('Le dossier lié est modifié.')
@@ -201,10 +220,32 @@ function LierDossier({
             onChange={setLecteurs}
             mentions={mentions}
             toutPossible
+            archives={dossier?.perimetres.filter(p => p.archive) ?? []}
             placeholder="Choisissez les lecteurs"
             ariaLabel="Lu par"
           />
         </Form.Item>
+        {modification && verification && (
+          <Form.Item
+            label="Attendus chez le fournisseur"
+            extra="La vérification des accès compare ces personnes aux droits du dossier chez le fournisseur."
+          >
+            <Select
+              value={attendus}
+              onChange={setAttendus}
+              options={[
+                {
+                  value: 'MEMBRES',
+                  label: 'Tous les membres des périmètres lecteurs',
+                },
+                {
+                  value: 'CONTACTS_PRINCIPAUX',
+                  label: 'Les contacts principaux seulement',
+                },
+              ]}
+            />
+          </Form.Item>
+        )}
         {masques !== undefined && masques.documentsMasques > 0 && (
           <Alert
             type="warning"
@@ -326,9 +367,9 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
     <Panneau titre="Export des fiches" icone={<CloudUploadOutlined />}>
       <p className="rt-texte-secondaire">
         Relaytour écrit les fiches en Markdown dans un dossier du fournisseur
-        cloud, après chaque modification et chaque nuit. Les fiches se
-        modifient toujours dans Relaytour : une modification faite dans ce
-        dossier est remplacée à l’export suivant.
+        cloud, après chaque modification et chaque nuit. Les fiches se modifient
+        toujours dans Relaytour : une modification faite dans ce dossier est
+        remplacée à l’export suivant.
       </p>
       {connexion.exportDossier === null ? (
         <Button
@@ -437,6 +478,10 @@ export default function EspaceFichiers() {
   const [delier] = useMutation(DELIER_DOSSIER, {
     refetchQueries: ['DossiersLies'],
   })
+  const [commencer] = useMutation(COMMENCER_CONNEXION)
+  const [reglerPortee] = useMutation(REGLER_PORTEE, {
+    refetchQueries: ['EspaceFichiers', 'VerificationAcces'],
+  })
 
   // Retour du fournisseur : le serveur redirige ici avec l'issue de la connexion.
   const issue = parametres.get('connexion')
@@ -449,90 +494,171 @@ export default function EspaceFichiers() {
 
   const espace = data?.espaceFichiers
   const connexion = espace?.connexion ?? null
+  const verification = connexion !== null && connexion.portee !== 'FICHIERS'
+  // Une reconnexion demande de nouvelles autorisations ; Google Drive et
+  // Nextcloud se règlent sans reconnexion (ADR 0044).
+  const activation =
+    connexion === null ? undefined : ACTIVATION_ACCES[connexion.fournisseur]
+  const activable =
+    activation === 'reglage' ||
+    (activation === 'reconnexion' && connexion?.methode === 'COMPTE')
+  const activer = async (portee: 'ANNUAIRE' | 'GESTION') => {
+    if (connexion === null) return
+    try {
+      if (activation === 'reglage') {
+        await reglerPortee({ variables: { portee } })
+        message.success(
+          portee === 'GESTION'
+            ? 'La gestion des accès est activée.'
+            : 'La vérification des accès est activée.'
+        )
+        return
+      }
+      const r = await commencer({
+        variables: { fournisseur: connexion.fournisseur, portee },
+      })
+      const adresse = r.data?.commencerConnexionEspaceFichiers
+      if (adresse) window.location.assign(adresse)
+    } catch (e) {
+      message.error(messageErreur(e))
+    }
+  }
+  const onglet = parametres.get('onglet') ?? 'connexion'
+
+  const connexionEtDossiers = (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
+      <ConnexionEspace espace={espace} chargement={loading} />
+
+      {connexion !== null && <ExportFiches connexion={connexion} />}
+
+      {connexion !== null && (
+        <ImportFiches actif={connexion.etat === 'ACTIVE'} />
+      )}
+
+      <Panneau
+        titre={`Dossiers liés de l’activité « ${activite.nom} »`}
+        icone={<FolderOutlined />}
+        extra={
+          <Button
+            icon={<LinkOutlined />}
+            disabled={connexion?.etat !== 'ACTIVE'}
+            onClick={() => setChoix(true)}
+          >
+            Lier un dossier
+          </Button>
+        }
+      >
+        {liens.loading && !liens.data ? (
+          <Skeleton active paragraph={{ rows: 2 }} />
+        ) : (liens.data?.dossiersLies ?? []).length === 0 ? (
+          <Empty
+            image={Empty.PRESENTED_IMAGE_SIMPLE}
+            description="Aucun dossier n’est lié à cette activité."
+          />
+        ) : (
+          <ul className="rt-explorateur">
+            {liens.data?.dossiersLies.map(d => (
+              <li key={d.id} className="rt-explorateur-ligne">
+                <FolderOutlined aria-hidden className="rt-explorateur-icone" />
+                <span className="rt-explorateur-nom">{d.nom}</span>
+                <EtiquettesLecteurs
+                  touteActivite={d.touteActivite}
+                  perimetres={d.perimetres}
+                  groupes={d.groupes}
+                />
+                {!d.disponible && <Tag color="warning">Indisponible</Tag>}
+                <Button
+                  type="text"
+                  icon={<EditOutlined />}
+                  aria-label={`Modifier le dossier ${d.nom}`}
+                  onClick={() => setModifie(d)}
+                />
+                <Popconfirm
+                  title="Retirer ce dossier ?"
+                  description={
+                    d.accesCrees > 0
+                      ? `Le dossier reste chez le fournisseur cloud. Relaytour y a créé ${d.accesCrees > 1 ? `${d.accesCrees} accès, qui restent` : 'un accès, qui reste'} sans suivi.`
+                      : 'Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour.'
+                  }
+                  okText="Retirer"
+                  cancelText="Annuler"
+                  onConfirm={() =>
+                    delier({
+                      variables: { id: d.id, oublierAcces: d.accesCrees > 0 },
+                    }).catch((e: unknown) => message.error(messageErreur(e)))
+                  }
+                >
+                  <Button
+                    type="text"
+                    icon={<DeleteOutlined />}
+                    aria-label={`Retirer le dossier ${d.nom}`}
+                  />
+                </Popconfirm>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Panneau>
+    </div>
+  )
+
   return (
     <>
       <Titre sousTitre="Les membres lisent les documents de l’association depuis Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document.">
         Fournisseur cloud
       </Titre>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-        <ConnexionEspace espace={espace} chargement={loading} />
-
-        {connexion !== null && <ExportFiches connexion={connexion} />}
-
-        {connexion !== null && (
-          <ImportFiches actif={connexion.etat === 'ACTIVE'} />
-        )}
-
-        <Panneau
-          titre={`Dossiers liés de l’activité « ${activite.nom} »`}
-          icone={<FolderOutlined />}
-          extra={
-            <Button
-              icon={<LinkOutlined />}
-              disabled={connexion?.etat !== 'ACTIVE'}
-              onClick={() => setChoix(true)}
-            >
-              Lier un dossier
-            </Button>
+      {connexion === null ? (
+        connexionEtDossiers
+      ) : (
+        <Tabs
+          activeKey={onglet}
+          onChange={cle =>
+            setParametres(cle === 'connexion' ? {} : { onglet: cle }, {
+              replace: true,
+            })
           }
-        >
-          {liens.loading && !liens.data ? (
-            <Skeleton active paragraph={{ rows: 2 }} />
-          ) : (liens.data?.dossiersLies ?? []).length === 0 ? (
-            <Empty
-              image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="Aucun dossier n’est lié à cette activité."
-            />
-          ) : (
-            <ul className="rt-explorateur">
-              {liens.data?.dossiersLies.map(d => (
-                <li key={d.id} className="rt-explorateur-ligne">
-                  <FolderOutlined
-                    aria-hidden
-                    className="rt-explorateur-icone"
-                  />
-                  <span className="rt-explorateur-nom">{d.nom}</span>
-                  <EtiquettesLecteurs
-                    touteActivite={d.touteActivite}
-                    perimetres={d.perimetres}
-                    groupes={d.groupes}
-                  />
-                  {!d.disponible && <Tag color="warning">Indisponible</Tag>}
-                  <Button
-                    type="text"
-                    icon={<EditOutlined />}
-                    aria-label={`Modifier le dossier ${d.nom}`}
-                    onClick={() => setModifie(d)}
-                  />
-                  <Popconfirm
-                    title="Retirer ce dossier ?"
-                    description="Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour."
-                    okText="Retirer"
-                    cancelText="Annuler"
-                    onConfirm={() =>
-                      delier({ variables: { id: d.id } }).catch((e: unknown) =>
-                        message.error(messageErreur(e))
-                      )
-                    }
-                  >
-                    <Button
-                      type="text"
-                      icon={<DeleteOutlined />}
-                      aria-label={`Retirer le dossier ${d.nom}`}
-                    />
-                  </Popconfirm>
-                </li>
-              ))}
-            </ul>
-          )}
-        </Panneau>
-      </div>
+          items={[
+            {
+              key: 'connexion',
+              label: 'Connexion et dossiers',
+              children: connexionEtDossiers,
+            },
+            {
+              key: 'acces',
+              label: 'Vérification des accès',
+              children: (
+                <VerificationAcces
+                  connexion={connexion}
+                  onActiver={activable ? () => void activer('ANNUAIRE') : null}
+                  onActiverGestion={
+                    activable ? () => void activer('GESTION') : null
+                  }
+                />
+              ),
+            },
+            ...(verification
+              ? [
+                  {
+                    key: 'comptes',
+                    label: 'Comptes',
+                    children: (
+                      <ComptesFournisseur
+                        annuaire={AVEC_ANNUAIRE.has(connexion.fournisseur)}
+                      />
+                    ),
+                  },
+                ]
+              : []),
+          ]}
+        />
+      )}
 
       {(choixDossier || modifie !== null) && (
         <LierDossier
           key={modifie?.id ?? 'nouveau'}
           ouvert
+          verification={verification}
           dossier={modifie}
           onFermer={() => {
             setChoix(false)

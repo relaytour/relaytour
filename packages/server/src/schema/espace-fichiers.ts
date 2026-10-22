@@ -1,7 +1,9 @@
 import {
+  AttendusDossier,
   EtatConnexionFichiers,
   FournisseurFichiers,
   MethodeConnexionFichiers,
+  PorteeConnexionFichiers,
   Prisma,
   prisma,
 } from '@relaytour/database'
@@ -10,7 +12,7 @@ import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
 import {
   conditionDossiersLisibles,
   dossierCompatible,
-  dossierLisible,
+  dossierLisiblePour,
   publierDossierLie,
   SELECTION_LECTEURS,
   type LecteursDossier,
@@ -66,6 +68,7 @@ import {
   type EspaceFichiers,
 } from '../espace-fichiers/types.ts'
 import type { AppContext } from '../context.ts'
+import { planifierVerificationAcces } from '../espace-fichiers/acces.ts'
 import { lireGroupes } from '../lib/activites.ts'
 import { perimetresLisibles } from '../lib/droits.ts'
 import { perimetresLisiblesActifs } from '../lib/fiches-connexes.ts'
@@ -87,6 +90,21 @@ export const FournisseurFichiersEnum = builder.enumType(FournisseurFichiers, {
 
 const EtatConnexionFichiersEnum = builder.enumType(EtatConnexionFichiers, {
   name: 'EtatConnexionFichiers',
+})
+
+export const PorteeConnexionFichiersEnum = builder.enumType(
+  PorteeConnexionFichiers,
+  {
+    name: 'PorteeConnexionFichiers',
+    description:
+      'Ce que la connexion permet en plus des fichiers : lire l’annuaire et les droits, puis appliquer les propositions d’accès (ADR 0044).',
+  }
+)
+
+export const AttendusDossierEnum = builder.enumType(AttendusDossier, {
+  name: 'AttendusDossier',
+  description:
+    'Les personnes qu’un dossier lié attend chez le fournisseur : tous les membres de la période, ou les contacts principaux seulement (ADR 0044).',
 })
 
 export const FormatApercuEnum = builder.enumType('FormatApercu', {
@@ -192,6 +210,13 @@ const ConnexionFichiersRef = builder.prismaObject('ConnexionFichiers', {
       nullable: true,
       resolve: c => (c.exportRapport as RapportExport | null) ?? null,
     }),
+    portee: t.expose('portee', { type: PorteeConnexionFichiersEnum }),
+    accesVerifieLe: t.expose('accesVerifieLe', {
+      type: 'DateTime',
+      nullable: true,
+      description: 'Dernière vérification des accès chez le fournisseur.',
+    }),
+    accesErreur: t.exposeString('accesErreur', { nullable: true }),
   }),
 })
 
@@ -313,8 +338,10 @@ export const DossierLieRef = builder.prismaObject('DossierLie', {
     touteActivite: t.exposeBoolean('touteActivite', {
       description: 'Vrai : le dossier sert toute l’activité.',
     }),
+    attendus: t.expose('attendus', { type: AttendusDossierEnum }),
     perimetres: t.field({
       type: [PerimetreRef],
+      complexity: { field: 1, multiplier: 2 },
       description: 'Les périmètres nommés dans la liste des lecteurs.',
       select: {
         perimetres: { select: { perimetre: true } },
@@ -459,6 +486,12 @@ function exigerChemin(chemin: readonly string[]): void {
   if (!cheminValide(chemin)) throw erreurSaisie('Chemin de dossier invalide.')
 }
 
+/** Les lecteurs actuels d'un dossier lié, sous la forme que lit `validerLecteurs`. */
+const lecteursExistants = (d: LecteursDossier) => ({
+  perimetreIds: d.perimetres.map(p => p.perimetreId),
+  groupes: d.groupes.map(g => g.groupe),
+})
+
 /** Une liste de lecteurs compte au plus cent périmètres et groupes. */
 const LECTEURS_MAX = 100
 
@@ -485,6 +518,14 @@ async function validerLecteurs(
     touteActivite: boolean
     perimetreIds: readonly (string | number)[]
     groupes: readonly string[]
+  },
+  /**
+   * Les lecteurs actuels d'un lien qu'un admin modifie : un périmètre archivé ou
+   * un groupe vide qu'ils nomment déjà reste admis, pour ne pas perdre sa lecture.
+   */
+  existants: { perimetreIds: string[]; groupes: string[] } = {
+    perimetreIds: [],
+    groupes: [],
   }
 ): Promise<LecteursValides> {
   const perimetreIds = [...new Set(saisie.perimetreIds.map(String))]
@@ -510,7 +551,7 @@ async function validerLecteurs(
       id: { in: perimetreIds },
       organisationId,
       activiteId,
-      archivedAt: null,
+      OR: [{ archivedAt: null }, { id: { in: existants.perimetreIds } }],
     },
   })
   if (trouves !== perimetreIds.length) throw accesRefuse()
@@ -531,7 +572,9 @@ async function validerLecteurs(
           select: { id: true, groupe: true },
           orderBy: [{ nom: 'asc' }, { id: 'asc' }],
         })
-  const vide = groupes.find(g => !membres.some(m => m.groupe === g))
+  const vide = groupes.find(
+    g => !existants.groupes.includes(g) && !membres.some(m => m.groupe === g)
+  )
   if (vide !== undefined) {
     throw erreurSaisie(`Le groupe « ${vide} » ne compte aucun périmètre.`)
   }
@@ -707,13 +750,19 @@ builder.queryFields(t => ({
     type: ListeElementsFichiersRef,
     authScopes: { connecte: true },
     description:
-      'Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms.',
+      'Dossiers et fichiers d’un dossier lié, ou d’un de ses sous-dossiers désigné par un chemin de noms. Avec `ressource`, un document lié ouvert aux lecteurs de sa fiche se lit sans ouvrir le reste du dossier.',
     args: {
       id: t.arg.id({ required: true }),
       chemin: t.arg.stringList({ required: true }),
+      ressource: t.arg.id(),
     },
-    resolve: async (_root, { id, chemin }, ctx) => {
-      const dossier = await dossierLisible(ctx, String(id))
+    resolve: async (_root, { id, chemin, ressource }, ctx) => {
+      const dossier = await dossierLisiblePour(
+        ctx,
+        String(id),
+        chemin,
+        ressource === null || ressource === undefined ? null : String(ressource)
+      )
       if (dossier === null) throw accesRefuse()
       exigerChemin(chemin)
       return avecEspace(ctx, async espace => {
@@ -755,8 +804,14 @@ builder.mutationFields(t => ({
       'Adresse où l’admin se connecte chez le fournisseur pour accorder l’accès à Relaytour. Elle vaut dix minutes, une seule fois.',
     args: {
       fournisseur: t.arg({ type: FournisseurFichiersEnum, required: true }),
+      portee: t.arg({
+        type: PorteeConnexionFichiersEnum,
+        description:
+          'Les autorisations demandées au-delà des fichiers (ADR 0044). SharePoint et Dropbox les demandent à la connexion.',
+      }),
     },
-    resolve: async (_root, { fournisseur }, ctx) => {
+    resolve: async (_root, { fournisseur, portee: demandee }, ctx) => {
+      const portee = demandee ?? 'FICHIERS'
       const fermee = () =>
         erreurSaisie('Ce fournisseur n’est pas ouvert sur cette installation.')
       const microsoft =
@@ -771,10 +826,48 @@ builder.mutationFields(t => ({
         organisationId: ctx.organisation!.id,
         userId: ctx.personne!.id,
         fournisseur,
+        portee,
       })
-      if (microsoft !== null) return adresseAutorisation(microsoft, etat, defi)
+      if (microsoft !== null)
+        return adresseAutorisation(microsoft, etat, defi, portee)
       if (google !== null) return adresseAutorisationGoogle(google, etat, defi)
-      return adresseAutorisationDropbox(dropbox!, etat, defi)
+      // Google garde la même portée : la vérification s'y règle sans
+      // reconnexion (`reglerPorteeConnexion`).
+      return adresseAutorisationDropbox(dropbox!, etat, defi, portee)
+    },
+  }),
+
+  reglerPorteeConnexion: t.prismaField({
+    type: ConnexionFichiersRef,
+    authScopes: { admin: true },
+    description:
+      'Active ou coupe la vérification et la gestion des accès sans reconnexion, pour un fournisseur dont l’accès accordé les couvre déjà : Google Drive et Nextcloud (ADR 0044).',
+    args: {
+      portee: t.arg({ type: PorteeConnexionFichiersEnum, required: true }),
+    },
+    resolve: async (query, _root, { portee }, ctx) => {
+      const organisationId = ctx.organisation!.id
+      const connexion = await prisma.connexionFichiers.findUnique({
+        where: { organisationId },
+        select: { fournisseur: true },
+      })
+      if (connexion === null) {
+        throw erreurSaisie('Aucun fournisseur cloud n’est connecté.')
+      }
+      if (
+        connexion.fournisseur !== 'GOOGLE_DRIVE' &&
+        connexion.fournisseur !== 'NEXTCLOUD'
+      ) {
+        throw erreurSaisie(
+          'Ce fournisseur demande une reconnexion pour changer ses autorisations.'
+        )
+      }
+      void publierChangement({ entite: 'FICHIERS', organisationId })
+      return prisma.connexionFichiers.update({
+        ...query,
+        where: { organisationId },
+        data: { portee },
+      })
     },
   }),
 
@@ -1250,8 +1343,13 @@ builder.mutationFields(t => ({
 
   delierDossier: t.boolean({
     authScopes: { admin: true },
-    args: { id: t.arg.id({ required: true }) },
-    resolve: async (_root, { id }, ctx) => {
+    description:
+      'Retire un dossier lié. Quand Relaytour a créé des accès pour ce dossier chez le fournisseur, le retrait exige `oublierAcces` : ces accès restent chez le fournisseur et ne sont plus suivis (ADR 0044).',
+    args: {
+      id: t.arg.id({ required: true }),
+      oublierAcces: t.arg.boolean(),
+    },
+    resolve: async (_root, { id, oublierAcces }, ctx) => {
       const organisationId = ctx.organisation!.id
       const dossier = await prisma.dossierLie.findFirst({
         where: { id: String(id), organisationId },
@@ -1263,6 +1361,14 @@ builder.mutationFields(t => ({
         },
       })
       if (dossier === null) throw accesRefuse()
+      const crees = await prisma.permissionCreee.count({
+        where: { dossierLieId: dossier.id },
+      })
+      if (crees > 0 && oublierAcces !== true) {
+        throw erreurSaisie(
+          `Relaytour a créé ${crees > 1 ? `${crees} accès` : 'un accès'} chez le fournisseur pour ce dossier. Retirez-les d’abord, ou confirmez qu’ils restent sans suivi.`
+        )
+      }
       await prisma.dossierLie.delete({ where: { id: dossier.id } })
       publierDossierLie(dossier)
       return true
@@ -1278,8 +1384,18 @@ builder.mutationFields(t => ({
       id: t.arg.id({ required: true }),
       lecteurs: t.arg({ type: LecteursDossierInput, required: true }),
       nom: t.arg.string(),
+      attendus: t.arg({
+        type: AttendusDossierEnum,
+        description:
+          'Les personnes que le dossier attend chez le fournisseur (ADR 0044). Absent : inchangé.',
+      }),
     },
-    resolve: async (query, _root, { id, lecteurs: saisie, nom }, ctx) => {
+    resolve: async (
+      query,
+      _root,
+      { id, lecteurs: saisie, nom, attendus },
+      ctx
+    ) => {
       const organisationId = ctx.organisation!.id
       const avant = await prisma.dossierLie.findFirst({
         where: { id: String(id), organisationId },
@@ -1296,7 +1412,8 @@ builder.mutationFields(t => ({
       const lecteurs = await validerLecteurs(
         organisationId,
         avant.activiteId,
-        saisie
+        saisie,
+        lecteursExistants(avant)
       )
       const nomAffiche = nom?.trim()
       if (
@@ -1320,6 +1437,9 @@ builder.mutationFields(t => ({
             touteActivite: lecteurs.touteActivite,
             perimetreId: await perimetreHistorique(tx, cle, lecteurs, avant.id),
             ...(nomAffiche === undefined ? {} : { nom: nomAffiche }),
+            ...(attendus === null || attendus === undefined
+              ? {}
+              : { attendus }),
           },
         })
         const listes = listesDeLecteurs(avant.id, lecteurs)
@@ -1342,6 +1462,8 @@ builder.mutationFields(t => ({
         })
       })
       publierDossierLie(apres, avant)
+      // Les personnes attendues changent avec les lecteurs (ADR 0044).
+      planifierVerificationAcces(organisationId)
       journal.info(
         {
           evenement: 'dossier-lie-modifie',
@@ -1407,7 +1529,12 @@ builder.queryField('effetsLecteursDossier', t =>
       const nouveaux = {
         ...dossier,
         ...enLecteurs(
-          await validerLecteurs(organisationId, dossier.activiteId, saisie)
+          await validerLecteurs(
+            organisationId,
+            dossier.activiteId,
+            saisie,
+            lecteursExistants(dossier)
+          )
         ),
       }
       let documentsMasques = 0

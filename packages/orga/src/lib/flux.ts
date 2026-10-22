@@ -119,7 +119,14 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
     'Sondage',
   ],
   // La connexion de l'espace de fichiers et ses dossiers liés (ADR 0038).
-  FICHIERS: ['EspaceFichiers', 'DossiersLies', 'ContenuDossierLie'],
+  FICHIERS: [
+    'EspaceFichiers',
+    'DossiersLies',
+    'ContenuDossierLie',
+    // La vérification des accès chez le fournisseur (ADR 0044).
+    'VerificationAcces',
+    'ComptesFournisseur',
+  ],
   // Les appels à bénévoles, les candidatures et la répartition (ADR 0041).
   CANDIDATURE: [
     'Benevoles',

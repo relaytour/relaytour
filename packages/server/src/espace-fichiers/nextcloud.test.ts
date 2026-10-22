@@ -219,6 +219,27 @@ describe('Nextcloud simulé', () => {
     },
   ]
 
+  it('ne partage qu’avec un compte, et ne touche pas au groupe des admins', async () => {
+    const appels = nextcloudSimule(noeuds())
+    const annuaire = espaceNextcloud(jeton, TOUS, {
+      annuaire: true,
+      gestion: true,
+    }).annuaire!
+    await expect(
+      annuaire.partager!(
+        { emplacement: SECRET.base, base: '11', chemin: [] },
+        { adresse: 'camille@exemple.org', identifiant: null },
+        { role: 'LECTURE', invitation: false }
+      )
+    ).rejects.toThrow(/pas de compte/)
+    await expect(annuaire.ajouterAuGroupe!('admin', 'alex')).rejects.toThrow(
+      /admins/
+    )
+    expect(annuaire.groupeGerable!('admin')).toBe(false)
+    expect(annuaire.groupeGerable!('sports')).toBe(true)
+    expect(appels).toEqual([])
+  })
+
   it('retrouve un dossier lié par son identifiant, et lit sous lui', async () => {
     const appels = nextcloudSimule(noeuds())
     const espace = espaceNextcloud(jeton, TOUS)

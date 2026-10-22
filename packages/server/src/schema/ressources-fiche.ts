@@ -22,12 +22,15 @@ import {
 import type { ElementEspace } from '../espace-fichiers/types.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { peutLireFiche, peutRedigerFiche } from '../lib/fiches.ts'
+import { perimetresConcernes, publierFiche } from '../lib/fiches-connexes.ts'
+import { journal } from '../lib/journal.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 
 import { builder } from './builder.ts'
 import { DossierLieRef, FormatApercuEnum } from './espace-fichiers.ts'
 import { FicheRef } from './fiches.ts'
+import { PerimetreRef } from './organisation.ts'
 
 // Documents liés à une fiche (ADR 0038, 0043). Une personne qui rédige une fiche y
 // lie un dossier ou un fichier d'un dossier lié qui sert le périmètre de la fiche,
@@ -102,6 +105,20 @@ function ouvrable(
   return lu
 }
 
+/**
+ * Vrai quand la personne ouvre le document : elle lit son dossier lié, ou un admin
+ * de l'organisation l'a ouvert aux lecteurs de la fiche (ADR 0043). Le champ ne se
+ * lit que depuis une fiche que la personne lit.
+ */
+function ressourceOuvrable(
+  ctx: AppContext,
+  r: { ouverteAuxLecteurs: boolean; dossierLie: DossierDeRessource }
+): Promise<boolean> {
+  return r.ouverteAuxLecteurs
+    ? Promise.resolve(true)
+    : ouvrable(ctx, r.dossierLie)
+}
+
 const etats = new WeakMap<
   AppContext,
   Map<string, Promise<ElementEspace | 'absent' | null>>
@@ -119,7 +136,7 @@ function etatChezLeFournisseur(
   let etat = parRessource.get(r.id)
   if (etat === undefined) {
     etat = (async () => {
-      if (!(await ouvrable(ctx, r.dossierLie))) return null
+      if (!(await ressourceOuvrable(ctx, r))) return null
       try {
         const { espace } = await ouvrirEspace(r.organisationId)
         if (espace.fournisseur !== r.dossierLie.fournisseur) return null
@@ -149,9 +166,53 @@ const RessourceFicheRef = builder.prismaObject('RessourceFiche', {
     dossierLie: t.relation('dossierLie', { type: DossierLieRef }),
     ouvrable: t.boolean({
       description:
-        'Vrai quand la personne lit le dossier lié de la ressource, et peut donc l’ouvrir. Faux pour une ressource d’un autre périmètre, lue dans une fiche connexe.',
+        'Vrai quand la personne lit le dossier lié de la ressource, ou quand le document est ouvert aux lecteurs de la fiche. Faux pour une ressource d’un autre périmètre, lue dans une fiche connexe.',
       select: SELECTION_DOSSIER,
-      resolve: (r, _args, ctx) => ouvrable(ctx, r.dossierLie),
+      resolve: (r, _args, ctx) => ressourceOuvrable(ctx, r),
+    }),
+    ouverteAuxLecteurs: t.exposeBoolean('ouverteAuxLecteurs', {
+      description:
+        'Vrai quand un admin de l’organisation a ouvert ce document à toute personne qui lit la fiche (ADR 0043).',
+    }),
+    perimetresSansAcces: t.field({
+      type: [PerimetreRef],
+      description:
+        'Les périmètres que la fiche concerne aussi et dont les lecteurs n’ouvrent pas ce document. Vide pour une personne qui ne rédige pas la fiche.',
+      select: {
+        ouverteAuxLecteurs: true,
+        fiche: {
+          select: {
+            id: true,
+            organisationId: true,
+            activiteId: true,
+            perimetreId: true,
+          },
+        },
+        dossierLie: { select: SELECTION_LECTEURS },
+      },
+      resolve: async (r, _args, ctx) => {
+        const fiche = r.fiche
+        if (
+          r.ouverteAuxLecteurs ||
+          r.dossierLie.touteActivite ||
+          fiche.perimetreId === null ||
+          !(await peutRedigerFiche(ctx, fiche.perimetreId, fiche.activiteId))
+        ) {
+          return []
+        }
+        const concernes = await perimetresConcernes(fiche)
+        if (concernes.length === 0) return []
+        const listes = new Set(r.dossierLie.perimetres.map(p => p.perimetreId))
+        const groupes = new Set(r.dossierLie.groupes.map(g => g.groupe))
+        const perimetres = await prisma.perimetre.findMany({
+          where: { id: { in: concernes.map(c => c.perimetreId) } },
+          orderBy: [{ nom: 'asc' }, { id: 'asc' }],
+        })
+        // Les périmètres concernés ne sont jamais archivés : leur groupe les couvre.
+        return perimetres.filter(
+          p => !listes.has(p.id) && !groupes.has(p.groupe)
+        )
+      },
     }),
     apercu: t.field({
       type: FormatApercuEnum,
@@ -385,6 +446,67 @@ builder.mutationFields(t => ({
       return prisma.ressourceFiche.findUniqueOrThrow({
         ...query,
         where: { id: ressourceId },
+      })
+    },
+  }),
+
+  ouvrirDocumentLie: t.prismaField({
+    type: RessourceFicheRef,
+    authScopes: { admin: true },
+    description:
+      'Ouvre un document lié à toute personne qui lit sa fiche, partage compris, ou retire cette ouverture (ADR 0043). Le reste du dossier lié ne s’ouvre pas.',
+    args: {
+      id: t.arg.id({ required: true }),
+      ouvert: t.arg.boolean({ required: true }),
+    },
+    resolve: async (query, _root, { id, ouvert }, ctx) => {
+      const ressource = await prisma.ressourceFiche.findFirst({
+        where: { id: String(id), organisationId: ctx.organisation!.id },
+        select: {
+          id: true,
+          chemin: true,
+          fiche: {
+            select: {
+              id: true,
+              organisationId: true,
+              activiteId: true,
+              perimetreId: true,
+            },
+          },
+        },
+      })
+      if (ressource === null) throw accesRefuse()
+      // Le dossier lié entier n'est pas un document : ses lecteurs s'étendent.
+      if (ouvert && lireChemin(ressource.chemin).length === 0) {
+        throw erreurSaisie(
+          'Ce document est le dossier lié entier. Étendez plutôt les lecteurs du dossier.'
+        )
+      }
+      await prisma.ressourceFiche.update({
+        where: { id: ressource.id },
+        data: ouvert
+          ? {
+              ouverteAuxLecteurs: true,
+              ouverteParId: ctx.personne!.id,
+              ouverteLe: new Date(),
+            }
+          : { ouverteAuxLecteurs: false, ouverteParId: null, ouverteLe: null },
+      })
+      journal.info(
+        {
+          evenement: ouvert ? 'document-lie-ouvert' : 'document-lie-referme',
+          organisationId: ressource.fiche.organisationId,
+          ressourceId: ressource.id,
+          userId: ctx.personne!.id,
+        },
+        ouvert
+          ? 'Un document lié est ouvert aux lecteurs de sa fiche.'
+          : 'Un document lié n’est plus ouvert aux lecteurs de sa fiche.'
+      )
+      publierFiche(ressource.fiche)
+      return prisma.ressourceFiche.findUniqueOrThrow({
+        ...query,
+        where: { id: ressource.id },
       })
     },
   }),

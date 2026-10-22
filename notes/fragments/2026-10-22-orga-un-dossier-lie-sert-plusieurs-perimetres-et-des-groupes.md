@@ -11,11 +11,11 @@ fr:
     Dans l'écran « Fournisseur cloud », vous choisissez les lecteurs d'un
     dossier lié : toute l'activité, ou une liste de périmètres et de groupes.
     Un groupe, comme les sports ou les pôles, vaut aussi pour les périmètres
-    qui le rejoindront. Le bouton « Modifier » change les lecteurs et le nom
-    affiché d'un dossier sans le retirer. Avant l'enregistrement, la fenêtre
-    annonce les documents liés que les lecteurs de leur fiche ne liraient
-    plus. Dans la vue « Documents », chaque personne retrouve un dossier sous
-    son groupe ou sous son périmètre.
+    qui le rejoindront. Avec le bouton « Modifier », vous changez les lecteurs
+    et le nom affiché d'un dossier sans le retirer. Avant l'enregistrement,
+    Relaytour annonce les documents liés que les lecteurs de leur fiche ne
+    liraient plus. Dans la vue « Documents », chaque personne retrouve un
+    dossier sous son groupe ou sous son périmètre.
 ---
 
 ADR 0043 : `DossierLie.touteActivite`, tables `DossierLiePerimetre` et
