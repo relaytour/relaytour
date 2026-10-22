@@ -279,7 +279,9 @@ describe('classeur Excel', () => {
     const octets = readFileSync(
       new URL('./essais-import/classeur.xlsx', import.meta.url)
     )
-    const feuilles = await lireFichier(new File([octets], 'classeur.xlsx'))
+    const feuilles = await lireFichier(
+      new File([new Uint8Array(octets)], 'classeur.xlsx')
+    )
     expect(feuilles.map(f => f.nom)).toEqual(['Inscriptions', 'Notes'])
     const tableau = feuilles[0]!.tableau
     expect(tableau.entetes).toEqual([
