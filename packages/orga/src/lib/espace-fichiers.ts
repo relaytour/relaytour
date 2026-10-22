@@ -568,6 +568,11 @@ export const VERIFICATION_ACCES = graphql(`
         nom
         touteActivite
         attendus
+        accesFournisseur
+        groupeFournisseurNom
+        roleFournisseur
+        ajoutsAutomatiques
+        invitationFournisseur
         groupes
         perimetres {
           id
@@ -579,6 +584,17 @@ export const VERIFICATION_ACCES = graphql(`
         id
         nom
         couleur
+      }
+      propositions {
+        id
+        action
+        etat
+        erreur
+        personne {
+          id
+          nom
+          email
+        }
       }
       lignes {
         nom
@@ -631,4 +647,77 @@ export function voieLisible(via: string | null): string | null {
   return via.startsWith('groupe:')
     ? `Par le groupe « ${via.slice('groupe:'.length)} »`
     : via
+}
+
+export const GROUPES_DU_DOSSIER = graphql(`
+  query GroupesDuDossier($id: ID!) {
+    groupesDuDossier(id: $id) {
+      identifiant
+      nom
+    }
+  }
+`)
+
+export const REGLER_ACCES = graphql(`
+  mutation ReglerAccesFournisseur(
+    $id: ID!
+    $mode: AccesFournisseurDossier!
+    $groupeId: ID
+    $role: RoleFournisseur!
+    $ajoutsAutomatiques: Boolean!
+    $invitation: Boolean!
+  ) {
+    reglerAccesFournisseur(
+      id: $id
+      mode: $mode
+      groupeId: $groupeId
+      role: $role
+      ajoutsAutomatiques: $ajoutsAutomatiques
+      invitation: $invitation
+    ) {
+      id
+      accesFournisseur
+    }
+  }
+`)
+
+export const APPLIQUER_PROPOSITION = graphql(`
+  mutation AppliquerPropositionAcces($id: ID!) {
+    appliquerPropositionAcces(id: $id)
+  }
+`)
+
+export const APPLIQUER_PROPOSITIONS = graphql(`
+  mutation AppliquerPropositionsDossier($dossierId: ID!) {
+    appliquerPropositionsDossier(dossierId: $dossierId)
+  }
+`)
+
+export const ECARTER_PROPOSITION = graphql(`
+  mutation EcarterPropositionAcces($id: ID!) {
+    ecarterPropositionAcces(id: $id)
+  }
+`)
+
+/** Les modes d'accès d'un dossier lié chez le fournisseur (ADR 0044). */
+export const MODES_ACCES = {
+  AUCUN: 'Vérifier seulement',
+  PARTAGE: 'Partager le dossier',
+  GROUPE: 'Gérer un groupe du fournisseur',
+} as const
+
+/** Le résumé du mode d'accès d'un dossier lié. */
+export function resumeMode(d: {
+  accesFournisseur: keyof typeof MODES_ACCES
+  roleFournisseur: string
+  groupeFournisseurNom?: string | null
+  ajoutsAutomatiques: boolean
+}): string {
+  if (d.accesFournisseur === 'AUCUN') return MODES_ACCES.AUCUN
+  const role = d.roleFournisseur === 'ECRITURE' ? 'en écriture' : 'en lecture'
+  const base =
+    d.accesFournisseur === 'PARTAGE'
+      ? `Partage du dossier ${role}`
+      : `Groupe « ${d.groupeFournisseurNom ?? '?'} »`
+  return d.ajoutsAutomatiques ? `${base}, ajouts automatiques` : base
 }

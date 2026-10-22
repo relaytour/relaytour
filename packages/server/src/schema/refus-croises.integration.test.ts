@@ -64,6 +64,8 @@ const a = {
   dossierLie: '',
   // Un fichier de ce dossier lié à la fiche du périmètre (ADR 0038).
   ressource: '',
+  // Une proposition d'accès chez le fournisseur pour ce dossier (ADR 0044).
+  propositionAcces: '',
   admin: '',
   referente: '',
   // Une autre activité de l'organisation A, son admin et sa référente (ADR 0010).
@@ -464,6 +466,16 @@ beforeAll(async () => {
         element: 'dossier-natation',
         nom: 'Natation',
         perimetres: { create: { perimetreId: a.perimetre } },
+      },
+    })
+  ).id
+  a.propositionAcces = (
+    await prisma.propositionAcces.create({
+      data: {
+        organisationId: a.org,
+        dossierLieId: a.dossierLie,
+        userId: a.referente,
+        action: 'AJOUTER',
       },
     })
   ).id
@@ -1656,6 +1668,40 @@ const CAS: Cas[] = [
       'mutation ($u: ID!) { saisirAdresseFournisseur(userId: $u, adresse: "autre@exemple.net") { adresseSaisie } }',
     variables: () => ({ u: a.referente }),
     attente: INTERDIT,
+  },
+  {
+    operation: 'groupesDuDossier',
+    query: 'query ($id: ID!) { groupesDuDossier(id: $id) { nom } }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'reglerAccesFournisseur',
+    query:
+      'mutation ($id: ID!) { reglerAccesFournisseur(id: $id, mode: AUCUN, role: LECTURE, ajoutsAutomatiques: false, invitation: false) { id } }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'appliquerPropositionAcces',
+    query: 'mutation ($id: ID!) { appliquerPropositionAcces(id: $id) }',
+    variables: () => ({ id: a.propositionAcces }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'ecarterPropositionAcces',
+    query: 'mutation ($id: ID!) { ecarterPropositionAcces(id: $id) }',
+    variables: () => ({ id: a.propositionAcces }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'appliquerPropositionsDossier',
+    query:
+      'mutation ($id: ID!) { appliquerPropositionsDossier(dossierId: $id) }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: {
+      sansEffet: d => expect(d.appliquerPropositionsDossier).toBe(0),
+    },
   },
   {
     operation: 'ouvrirDocumentLie',

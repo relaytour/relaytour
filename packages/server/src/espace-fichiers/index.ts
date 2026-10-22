@@ -502,6 +502,7 @@ export async function ouvrirEspace(organisationId: string): Promise<{
       return {
         espace: espaceSharePoint(jeton, {
           annuaire: connexion.portee !== 'FICHIERS',
+          gestion: connexion.portee === 'GESTION',
         }),
         connexionId: connexion.id,
       }

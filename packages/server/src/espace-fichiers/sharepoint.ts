@@ -405,9 +405,106 @@ export function beneficiaires(p: PermissionGraph): Beneficiaire[] {
   return p.link === undefined ? [] : [{ type: 'lien', nom: 'Lien de partage' }]
 }
 
-export function annuaireSharePoint(jeton: Jeton): AnnuaireFournisseur {
+/** Une écriture de Graph qui tolère un élément déjà absent, ou déjà présent. */
+async function ecritureTolerante(
+  reponse: Response,
+  quoi: string,
+  toleres: number[]
+): Promise<void> {
+  if (reponse.ok || toleres.includes(reponse.status)) {
+    await reponse.body?.cancel()
+    return
+  }
+  // Un membre déjà présent dans un groupe répond 400 avec ce message.
+  const texte = await reponse.text().catch(() => '')
+  if (reponse.status === 400 && /already exist/i.test(texte)) return
+  throw new FournisseurIndisponible(
+    `Microsoft Graph refuse ${quoi} (${reponse.status}).`
+  )
+}
+
+export function annuaireSharePoint(
+  jeton: Jeton,
+  options: { gestion?: boolean } = {}
+): AnnuaireFournisseur {
+  const gestion = options.gestion === true
+  const ecritures: Pick<
+    AnnuaireFournisseur,
+    'partager' | 'retirerPartage' | 'ajouterAuGroupe' | 'retirerDuGroupe'
+  > = !gestion
+    ? {}
+    : {
+        async partager(position, personne, { role, invitation }) {
+          const reponse = await graph(
+            `${adresseGraph(position)}/invite`,
+            jeton,
+            DELAI_MS,
+            {
+              method: 'POST',
+              type: 'application/json',
+              body: JSON.stringify({
+                recipients: [{ email: personne.adresse }],
+                requireSignIn: true,
+                sendInvitation: invitation,
+                roles: [role === 'ECRITURE' ? 'write' : 'read'],
+              }),
+            }
+          )
+          const corps = await resultatEcriture<{ value?: { id: string }[] }>(
+            reponse,
+            'le partage'
+          )
+          const identifiant = corps.value?.[0]?.id
+          if (identifiant === undefined) {
+            throw new FournisseurIndisponible(
+              'Microsoft Graph ne rend aucun droit après le partage.'
+            )
+          }
+          return { identifiant }
+        },
+        async retirerPartage(position, identifiant) {
+          const reponse = await graph(
+            `${adresseGraph(position)}/permissions/${segment(identifiant)}`,
+            jeton,
+            DELAI_MS,
+            { method: 'DELETE' }
+          )
+          await ecritureTolerante(reponse, 'le retrait du partage', [404])
+        },
+        async ajouterAuGroupe(groupe, compte) {
+          const reponse = await graph(
+            `${GRAPH}/groups/${segment(groupe)}/members/$ref`,
+            jeton,
+            DELAI_MS,
+            {
+              method: 'POST',
+              type: 'application/json',
+              body: JSON.stringify({
+                '@odata.id': `${GRAPH}/directoryObjects/${segment(compte)}`,
+              }),
+            }
+          )
+          await ecritureTolerante(reponse, 'l’ajout au groupe', [])
+        },
+        async retirerDuGroupe(groupe, compte) {
+          const reponse = await graph(
+            `${GRAPH}/groups/${segment(groupe)}/members/${segment(compte)}/$ref`,
+            jeton,
+            DELAI_MS,
+            { method: 'DELETE' }
+          )
+          await ecritureTolerante(reponse, 'le retrait du groupe', [404])
+        },
+      }
   return {
-    capacites: { comptes: true, droits: true, membresDeGroupe: true },
+    ...ecritures,
+    capacites: {
+      comptes: true,
+      droits: true,
+      membresDeGroupe: true,
+      partage: gestion,
+      gestionDeGroupe: gestion,
+    },
 
     async chercherComptes(adresses) {
       const resultat = new Map<string, CompteAnnuaire | null>()
@@ -488,12 +585,16 @@ export function annuaireSharePoint(jeton: Jeton): AnnuaireFournisseur {
 
 export function espaceSharePoint(
   jeton: Jeton,
-  options: { annuaire?: boolean } = {}
+  options: { annuaire?: boolean; gestion?: boolean } = {}
 ): EspaceFichiers {
   return {
     fournisseur: 'SHAREPOINT',
     ...(options.annuaire === true
-      ? { annuaire: annuaireSharePoint(jeton) }
+      ? {
+          annuaire: annuaireSharePoint(jeton, {
+            gestion: options.gestion === true,
+          }),
+        }
       : {}),
     convertitEnPdf: convertibleParMicrosoft,
 

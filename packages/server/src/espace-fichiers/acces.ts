@@ -16,9 +16,15 @@ import {
   type LecteursDossier,
 } from './droits.ts'
 import { ouvrirEspace } from './index.ts'
+import {
+  annoncerPropositions,
+  elaguerPermissions,
+  mettreAJourPropositions,
+} from './propositions.ts'
 import type {
   AnnuaireFournisseur,
   CompteAnnuaire,
+  DroitElement,
   Fournisseur,
 } from './types.ts'
 
@@ -88,6 +94,8 @@ export async function personnesAttendues(
 type Voie = string
 
 interface DroitsLus {
+  /** Les droits tels que le fournisseur les rend. */
+  droits: DroitElement[]
   /** Les voies par identifiant de compte (`id:`) ou par adresse (`adr:`). */
   voies: Map<string, Voie>
   /** Les noms des comptes qui ont un droit, par la même clé. */
@@ -106,6 +114,7 @@ async function lireDroits(
   groupes: Map<string, Promise<CompteAnnuaire[] | null>>
 ): Promise<DroitsLus> {
   const lus: DroitsLus = {
+    droits: [],
     voies: new Map(),
     noms: new Map(),
     domaine: false,
@@ -125,6 +134,7 @@ async function lireDroits(
     base: dossier.element,
     chemin: [],
   })
+  lus.droits = droits
   for (const { beneficiaire: b } of droits) {
     if (b.type === 'domaine') lus.domaine = true
     if (b.type === 'personne') {
@@ -168,7 +178,10 @@ async function rapprocherComptes(
   fournisseur: Fournisseur,
   annuaire: AnnuaireFournisseur,
   personnes: PersonneAttendue[]
-): Promise<Map<string, CompteAnnuaire | null>> {
+): Promise<{
+  comptes: Map<string, CompteAnnuaire | null>
+  adresses: Map<string, string>
+}> {
   const existants = await prisma.compteFournisseur.findMany({
     where: {
       organisationId,
@@ -184,10 +197,12 @@ async function rapprocherComptes(
     ...new Set(personnes.map(adresseDe)),
   ])
   const parPersonne = new Map<string, CompteAnnuaire | null>()
+  const adresses = new Map<string, string>()
   const maintenant = new Date()
   for (const p of personnes) {
     const compte = trouves.get(adresseDe(p)) ?? null
     parPersonne.set(p.userId, compte)
+    adresses.set(p.userId, adresseDe(p))
     const etat: EtatCompteFournisseur =
       compte === null ? 'ABSENT' : compte.invite ? 'INVITE' : 'TROUVE'
     await prisma.compteFournisseur.upsert({
@@ -213,7 +228,7 @@ async function rapprocherComptes(
       },
     })
   }
-  return parPersonne
+  return { comptes: parPersonne, adresses }
 }
 
 /**
@@ -239,6 +254,9 @@ export async function verifierAcces(organisationId: string): Promise<void> {
         emplacement: true,
         element: true,
         attendus: true,
+        accesFournisseur: true,
+        groupeFournisseurId: true,
+        ajoutsAutomatiques: true,
         ...SELECTION_LECTEURS,
       },
     })
@@ -251,13 +269,22 @@ export async function verifierAcces(organisationId: string): Promise<void> {
         [...attendus.values()].flat().map(p => [p.userId, p])
       ).values(),
     ]
-    const comptes = await rapprocherComptes(
+    const { comptes, adresses } = await rapprocherComptes(
       organisationId,
       espace.fournisseur,
       annuaire,
       personnes
     )
     const groupes = new Map<string, Promise<CompteAnnuaire[] | null>>()
+    const membres = (groupe: string) => {
+      let lus = groupes.get(groupe)
+      if (lus === undefined) {
+        lus = annuaire.membresDuGroupe(groupe)
+        groupes.set(groupe, lus)
+      }
+      return lus
+    }
+    let aValider = 0
     for (const d of dossiers) {
       const lus = await lireDroits(annuaire, d, groupes)
       const vus = new Set<string>()
@@ -270,11 +297,16 @@ export async function verifierAcces(organisationId: string): Promise<void> {
       for (const p of attendus.get(d.id) ?? []) {
         const compte = comptes.get(p.userId) ?? null
         if (compte === null) {
+          // Un partage par adresse couvre aussi une personne que l'annuaire ne
+          // connaît pas encore : le fournisseur l'invitera à sa connexion.
+          const cle = cleAdresse(adresses.get(p.userId) ?? p.email)
+          vus.add(cle)
+          const voie = lus.voies.get(cle)
           lignes.push({
             userId: p.userId,
             nom: null,
-            etat: 'SANS_COMPTE',
-            via: null,
+            etat: voie === undefined ? 'SANS_COMPTE' : 'A_ACCES',
+            via: voie ?? null,
           })
           continue
         }
@@ -322,7 +354,16 @@ export async function verifierAcces(organisationId: string): Promise<void> {
           })),
         }),
       ])
+      // Les propositions d'accès, quand le dossier en demande (ADR 0044).
+      await elaguerPermissions(d.id, lus.droits, comptes, membres)
+      aValider += await mettreAJourPropositions(
+        organisationId,
+        d,
+        lignes,
+        annuaire
+      )
     }
+    if (aValider > 0) await annoncerPropositions(organisationId)
     await prisma.connexionFichiers.update({
       where: { organisationId },
       data: { accesVerifieLe: new Date(), accesErreur: null },

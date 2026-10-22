@@ -75,8 +75,61 @@ export interface AnnuaireMemoire {
 export function annuaireEnMemoire(
   donnees: AnnuaireMemoire
 ): AnnuaireFournisseur {
+  let suivant = 0
   return {
-    capacites: { comptes: true, droits: true, membresDeGroupe: true },
+    capacites: {
+      comptes: true,
+      droits: true,
+      membresDeGroupe: true,
+      partage: true,
+      gestionDeGroupe: true,
+    },
+    partager(position, personne, options) {
+      const compte = donnees.comptes.find(
+        c => c.adresse === personne.adresse.toLowerCase()
+      )
+      const identifiant = `partage-${++suivant}`
+      const droits = (donnees.droits[position.base ?? ''] ??= [])
+      droits.push({
+        identifiant,
+        beneficiaire: {
+          type: 'personne',
+          identifiant: compte?.identifiant ?? null,
+          adresse: personne.adresse.toLowerCase(),
+          nom: compte?.nom ?? personne.adresse,
+        },
+        role: options.role,
+        herite: false,
+      })
+      return Promise.resolve({ identifiant })
+    },
+    retirerPartage(position, identifiant) {
+      const droits = donnees.droits[position.base ?? '']
+      if (droits !== undefined) {
+        donnees.droits[position.base ?? ''] = droits.filter(
+          d => d.identifiant !== identifiant
+        )
+      }
+      return Promise.resolve()
+    },
+    ajouterAuGroupe(groupe, compte) {
+      const membres = donnees.groupes[groupe]
+      if (
+        membres !== null &&
+        membres !== undefined &&
+        !membres.includes(compte)
+      ) {
+        membres.push(compte)
+      }
+      return Promise.resolve()
+    },
+    retirerDuGroupe(groupe, compte) {
+      const membres = donnees.groupes[groupe]
+      if (membres !== null && membres !== undefined) {
+        donnees.groupes[groupe] = membres.filter(m => m !== compte)
+      }
+      return Promise.resolve()
+    },
     chercherComptes(adresses) {
       return Promise.resolve(
         new Map(

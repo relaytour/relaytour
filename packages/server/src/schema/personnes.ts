@@ -49,6 +49,7 @@ import {
 } from '../lib/souhaits.ts'
 
 import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
+import { planifierVerificationAcces } from '../espace-fichiers/acces.ts'
 
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
@@ -833,6 +834,8 @@ builder.mutationFields(t => ({
       equipesModifiees(ctx)
       // Les autres admins de l'organisation l'apprennent (ADR 0033).
       if (change) {
+        // Une personne archivée n'est plus attendue chez le fournisseur (ADR 0044).
+        planifierVerificationAcces(organisationId)
         await notifierLesAdmins(prisma, {
           type: args.archive ? 'PERSONNE_ARCHIVEE' : 'PERSONNE_RETABLIE',
           organisationId,

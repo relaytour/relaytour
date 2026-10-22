@@ -341,6 +341,7 @@ export const DossierLieRef = builder.prismaObject('DossierLie', {
     attendus: t.expose('attendus', { type: AttendusDossierEnum }),
     perimetres: t.field({
       type: [PerimetreRef],
+      complexity: { field: 1, multiplier: 2 },
       description: 'Les périmètres nommés dans la liste des lecteurs.',
       select: {
         perimetres: { select: { perimetre: true } },

@@ -102,6 +102,10 @@ export interface CapacitesAnnuaire {
   comptes: boolean
   droits: boolean
   membresDeGroupe: boolean
+  /** Partager un élément avec une personne, et retirer ce partage. */
+  partage: boolean
+  /** Faire entrer une personne dans un groupe, et l'en retirer. */
+  gestionDeGroupe: boolean
 }
 
 /**
@@ -118,6 +122,25 @@ export interface AnnuaireFournisseur {
   droits(position: Position): Promise<DroitElement[]>
   /** Les membres d'un groupe, sous-groupes compris, ou null s'ils ne se lisent pas. */
   membresDuGroupe(identifiant: string): Promise<CompteAnnuaire[] | null>
+
+  // Écriture : les propositions qu'un admin applique (ADR 0044). Absentes quand
+  // la connexion ne permet pas la gestion des accès.
+
+  /**
+   * Partage l'élément avec une personne, par son adresse. Rend l'identifiant du
+   * droit créé.
+   */
+  partager?(
+    position: Position,
+    personne: { adresse: string },
+    options: { role: 'LECTURE' | 'ECRITURE'; invitation: boolean }
+  ): Promise<{ identifiant: string }>
+  /** Retire un droit de l'élément. Un droit absent ne lève pas. */
+  retirerPartage?(position: Position, identifiant: string): Promise<void>
+  /** Fait entrer un compte dans un groupe. Un membre déjà présent ne lève pas. */
+  ajouterAuGroupe?(groupe: string, compte: string): Promise<void>
+  /** Retire un compte d'un groupe. Un compte absent ne lève pas. */
+  retirerDuGroupe?(groupe: string, compte: string): Promise<void>
 }
 
 export interface EspaceFichiers {

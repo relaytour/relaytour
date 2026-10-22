@@ -491,10 +491,10 @@ export default function EspaceFichiers() {
   // Seul SharePoint lit aujourd'hui l'annuaire (ADR 0044).
   const activable =
     connexion?.fournisseur === 'SHAREPOINT' && connexion.methode === 'COMPTE'
-  const activer = async () => {
+  const activer = async (portee: 'ANNUAIRE' | 'GESTION') => {
     try {
       const r = await commencer({
-        variables: { fournisseur: 'SHAREPOINT', portee: 'ANNUAIRE' },
+        variables: { fournisseur: 'SHAREPOINT', portee },
       })
       const adresse = r.data?.commencerConnexionEspaceFichiers
       if (adresse) window.location.assign(adresse)
@@ -605,7 +605,10 @@ export default function EspaceFichiers() {
               children: (
                 <VerificationAcces
                   connexion={connexion}
-                  onActiver={activable ? () => void activer() : null}
+                  onActiver={activable ? () => void activer('ANNUAIRE') : null}
+                  onActiverGestion={
+                    activable ? () => void activer('GESTION') : null
+                  }
                 />
               ),
             },

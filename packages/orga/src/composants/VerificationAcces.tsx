@@ -1,6 +1,11 @@
-import { FolderOutlined, SafetyCertificateOutlined } from '@ant-design/icons'
+import {
+  FolderOutlined,
+  SafetyCertificateOutlined,
+  SettingOutlined,
+} from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { Alert, App, Button, Empty, Skeleton, Tag } from 'antd'
+import { useState } from 'react'
 
 import type {
   EtatAccesFournisseur,
@@ -9,12 +14,14 @@ import type {
 import { useActivite } from '../lib/activite'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import {
+  resumeMode,
   VERIFICATION_ACCES,
   VERIFIER_ACCES,
   voieLisible,
 } from '../lib/espace-fichiers'
 import EtiquettePerimetre from './EtiquettePerimetre'
 import EtiquettesLecteurs from './EtiquettesLecteurs'
+import { PropositionsDossier, ReglageAcces } from './GestionAcces'
 import { Panneau, Section } from './Panneau'
 
 type Verification = VerificationAccesQuery['verificationAcces'][number]
@@ -64,7 +71,16 @@ function resume(lignes: Ligne[]): string {
   return `${avecAcces} sur ${lignes.length} ${avecAcces > 1 ? 'ont' : 'a'} accès`
 }
 
-function DossierVerifie({ v }: { v: Verification }) {
+function DossierVerifie({
+  v,
+  gestion,
+  onActiverGestion,
+}: {
+  v: Verification
+  gestion: boolean
+  onActiverGestion: (() => void) | null
+}) {
+  const [reglage, setReglage] = useState(false)
   const attendues = v.lignes.filter(l => l.etat !== 'EN_TROP')
   const enTrop = v.lignes.filter(l => l.etat === 'EN_TROP')
   const sansEquipe = attendues.filter(l => l.perimetreIds.length === 0)
@@ -87,6 +103,28 @@ function DossierVerifie({ v }: { v: Verification }) {
         />
       }
     >
+      <div
+        className="rt-puces"
+        style={{ alignItems: 'center', marginBottom: 8 }}
+      >
+        <span className="rt-texte-secondaire">{resumeMode(v.dossier)}</span>
+        <Button
+          size="small"
+          icon={<SettingOutlined />}
+          onClick={() => setReglage(true)}
+        >
+          Gérer les accès
+        </Button>
+      </div>
+      {reglage && (
+        <ReglageAcces
+          dossier={v.dossier}
+          gestion={gestion}
+          onActiverGestion={onActiverGestion}
+          onFermer={() => setReglage(false)}
+        />
+      )}
+      <PropositionsDossier v={v} />
       <p className="rt-texte-secondaire">
         {v.dossier.attendus === 'CONTACTS_PRINCIPAUX'
           ? 'Personnes attendues : les contacts principaux des périmètres lecteurs.'
@@ -173,6 +211,7 @@ function DossierVerifie({ v }: { v: Verification }) {
 export default function VerificationAcces({
   connexion,
   onActiver,
+  onActiverGestion,
 }: {
   connexion: {
     fournisseur: string
@@ -183,11 +222,13 @@ export default function VerificationAcces({
   }
   /** Ouvre la connexion qui lit l'annuaire, quand le fournisseur le permet. */
   onActiver: (() => void) | null
+  /** Ouvre la connexion qui gère les accès, quand le fournisseur le permet. */
+  onActiverGestion: (() => void) | null
 }) {
   const { activite } = useActivite()
   const { message } = App.useApp()
   const active = connexion.portee !== 'FICHIERS'
-  const { data, loading } = useQuery(VERIFICATION_ACCES, {
+  const { data, loading, error } = useQuery(VERIFICATION_ACCES, {
     variables: { activiteId: activite.id },
     skip: !active,
   })
@@ -257,10 +298,19 @@ export default function VerificationAcces({
       )}
       {loading && !data ? (
         <Skeleton active paragraph={{ rows: 4 }} />
+      ) : error && !data ? (
+        <Alert type="error" showIcon title={messageErreur(error)} />
       ) : verifications.length === 0 ? (
         <Empty description="Aucun dossier n’est lié à cette activité." />
       ) : (
-        verifications.map(v => <DossierVerifie key={v.dossier.id} v={v} />)
+        verifications.map(v => (
+          <DossierVerifie
+            key={v.dossier.id}
+            v={v}
+            gestion={connexion.portee === 'GESTION'}
+            onActiverGestion={onActiverGestion}
+          />
+        ))
       )}
     </div>
   )
