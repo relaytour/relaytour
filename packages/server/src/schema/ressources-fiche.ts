@@ -4,7 +4,11 @@ import { prisma, TypeRessource, type RessourceFiche } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { cheminValide, formatApercu } from '../espace-fichiers/chemin.ts'
-import { dossierCompatible } from '../espace-fichiers/droits.ts'
+import {
+  dossierCompatible,
+  peutLireDossier,
+  SELECTION_LECTEURS,
+} from '../espace-fichiers/droits.ts'
 import {
   cheminDeLExportSous,
   dansLExport,
@@ -18,16 +22,20 @@ import {
 import type { ElementEspace } from '../espace-fichiers/types.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { peutLireFiche, peutRedigerFiche } from '../lib/fiches.ts'
+import { perimetresConcernes, publierFiche } from '../lib/fiches-connexes.ts'
+import { journal } from '../lib/journal.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 
 import { builder } from './builder.ts'
 import { DossierLieRef, FormatApercuEnum } from './espace-fichiers.ts'
 import { FicheRef } from './fiches.ts'
+import { PerimetreRef } from './organisation.ts'
 
-// Ressources liées à une fiche (ADR 0038). Une personne qui rédige une fiche y lie
-// un dossier ou un fichier d'un dossier lié du même périmètre, ou de toute
-// l'activité. Les lecteurs de la fiche lisent donc la ressource. Elle vit en base
+// Documents liés à une fiche (ADR 0038, 0043). Une personne qui rédige une fiche y
+// lie un dossier ou un fichier d'un dossier lié qui sert le périmètre de la fiche,
+// directement, par son groupe ou pour toute l'activité. Les lecteurs de la fiche
+// lisent donc la ressource. Elle vit en base
 // et n'entre pas dans le Markdown de la fiche. Une personne qui lit une fiche
 // connexe (ADR 0039) sans lire le dossier lié voit la ressource, sans l'ouvrir :
 // le serveur ne lui donne alors rien de ce que le fournisseur sait d'elle.
@@ -52,7 +60,6 @@ interface DossierDeRessource {
   id: string
   organisationId: string
   activiteId: string
-  perimetreId: string | null
   emplacement: string
   element: string
   fournisseur: string
@@ -64,7 +71,6 @@ const SELECTION_DOSSIER = {
       id: true,
       organisationId: true,
       activiteId: true,
-      perimetreId: true,
       emplacement: true,
       element: true,
       fournisseur: true,
@@ -83,12 +89,7 @@ const ouvertures = new WeakMap<AppContext, Map<string, Promise<boolean>>>()
  */
 function ouvrable(
   ctx: AppContext,
-  dossier: {
-    id: string
-    organisationId: string
-    activiteId: string
-    perimetreId: string | null
-  }
+  dossier: { id: string; organisationId: string; activiteId: string }
 ): Promise<boolean> {
   let parDossier = ouvertures.get(ctx)
   if (parDossier === undefined) {
@@ -97,15 +98,25 @@ function ouvrable(
   }
   let lu = parDossier.get(dossier.id)
   if (lu === undefined) {
-    // Sans l'identifiant d'une fiche : un partage de fiche n'ouvre pas le dossier.
-    lu = peutLireFiche(ctx, {
-      organisationId: dossier.organisationId,
-      activiteId: dossier.activiteId,
-      perimetreId: dossier.perimetreId,
-    })
+    // Un partage de fiche n'ouvre pas le dossier (ADR 0043).
+    lu = peutLireDossier(ctx, dossier)
     parDossier.set(dossier.id, lu)
   }
   return lu
+}
+
+/**
+ * Vrai quand la personne ouvre le document : elle lit son dossier lié, ou un admin
+ * de l'organisation l'a ouvert aux lecteurs de la fiche (ADR 0043). Le champ ne se
+ * lit que depuis une fiche que la personne lit.
+ */
+function ressourceOuvrable(
+  ctx: AppContext,
+  r: { ouverteAuxLecteurs: boolean; dossierLie: DossierDeRessource }
+): Promise<boolean> {
+  return r.ouverteAuxLecteurs
+    ? Promise.resolve(true)
+    : ouvrable(ctx, r.dossierLie)
 }
 
 const etats = new WeakMap<
@@ -125,7 +136,7 @@ function etatChezLeFournisseur(
   let etat = parRessource.get(r.id)
   if (etat === undefined) {
     etat = (async () => {
-      if (!(await ouvrable(ctx, r.dossierLie))) return null
+      if (!(await ressourceOuvrable(ctx, r))) return null
       try {
         const { espace } = await ouvrirEspace(r.organisationId)
         if (espace.fournisseur !== r.dossierLie.fournisseur) return null
@@ -155,9 +166,53 @@ const RessourceFicheRef = builder.prismaObject('RessourceFiche', {
     dossierLie: t.relation('dossierLie', { type: DossierLieRef }),
     ouvrable: t.boolean({
       description:
-        'Vrai quand la personne lit le dossier lié de la ressource, et peut donc l’ouvrir. Faux pour une ressource d’un autre périmètre, lue dans une fiche connexe.',
+        'Vrai quand la personne lit le dossier lié de la ressource, ou quand le document est ouvert aux lecteurs de la fiche. Faux pour une ressource d’un autre périmètre, lue dans une fiche connexe.',
       select: SELECTION_DOSSIER,
-      resolve: (r, _args, ctx) => ouvrable(ctx, r.dossierLie),
+      resolve: (r, _args, ctx) => ressourceOuvrable(ctx, r),
+    }),
+    ouverteAuxLecteurs: t.exposeBoolean('ouverteAuxLecteurs', {
+      description:
+        'Vrai quand un admin de l’organisation a ouvert ce document à toute personne qui lit la fiche (ADR 0043).',
+    }),
+    perimetresSansAcces: t.field({
+      type: [PerimetreRef],
+      description:
+        'Les périmètres que la fiche concerne aussi et dont les lecteurs n’ouvrent pas ce document. Vide pour une personne qui ne rédige pas la fiche.',
+      select: {
+        ouverteAuxLecteurs: true,
+        fiche: {
+          select: {
+            id: true,
+            organisationId: true,
+            activiteId: true,
+            perimetreId: true,
+          },
+        },
+        dossierLie: { select: SELECTION_LECTEURS },
+      },
+      resolve: async (r, _args, ctx) => {
+        const fiche = r.fiche
+        if (
+          r.ouverteAuxLecteurs ||
+          r.dossierLie.touteActivite ||
+          fiche.perimetreId === null ||
+          !(await peutRedigerFiche(ctx, fiche.perimetreId, fiche.activiteId))
+        ) {
+          return []
+        }
+        const concernes = await perimetresConcernes(fiche)
+        if (concernes.length === 0) return []
+        const listes = new Set(r.dossierLie.perimetres.map(p => p.perimetreId))
+        const groupes = new Set(r.dossierLie.groupes.map(g => g.groupe))
+        const perimetres = await prisma.perimetre.findMany({
+          where: { id: { in: concernes.map(c => c.perimetreId) } },
+          orderBy: [{ nom: 'asc' }, { id: 'asc' }],
+        })
+        // Les périmètres concernés ne sont jamais archivés : leur groupe les couvre.
+        return perimetres.filter(
+          p => !listes.has(p.id) && !groupes.has(p.groupe)
+        )
+      },
     }),
     apercu: t.field({
       type: FormatApercuEnum,
@@ -205,17 +260,18 @@ const RessourceFicheRef = builder.prismaObject('RessourceFiche', {
 builder.prismaObjectField(FicheRef, 'ressources', t =>
   t.prismaField({
     type: [RessourceFicheRef],
-    description:
-      'Ressources de l’espace de fichiers liées à la fiche, dans l’ordre du lien.',
+    description: 'Documents liés à la fiche, dans l’ordre du lien.',
     select: {
       id: true,
       organisationId: true,
       activiteId: true,
       perimetreId: true,
+      perimetre: { select: { groupe: true, archivedAt: true } },
     },
     resolve: async (query, fiche) => {
-      // Une fiche déplacée vers un autre périmètre ne montre plus les
-      // ressources d'un dossier que ses nouveaux lecteurs ne lisent pas.
+      // Une fiche déplacée vers un autre périmètre, ou un dossier dont les
+      // lecteurs ont changé, ne montre plus les ressources d'un dossier que les
+      // lecteurs de la fiche ne lisent pas.
       const toutes = await prisma.ressourceFiche.findMany({
         where: { ficheId: fiche.id },
         select: {
@@ -224,13 +280,14 @@ builder.prismaObjectField(FicheRef, 'ressources', t =>
             select: {
               organisationId: true,
               activiteId: true,
-              perimetreId: true,
+              ...SELECTION_LECTEURS,
             },
           },
         },
       })
+      const situee = { ...fiche, groupe: groupeLecteur(fiche.perimetre) }
       const lisibles = toutes
-        .filter(r => dossierCompatible(fiche, r.dossierLie))
+        .filter(r => dossierCompatible(situee, r.dossierLie))
         .map(r => r.id)
       return prisma.ressourceFiche.findMany({
         ...query,
@@ -240,6 +297,18 @@ builder.prismaObjectField(FicheRef, 'ressources', t =>
     },
   })
 )
+
+/**
+ * Le groupe par lequel un dossier lié sert le périmètre d'une fiche : aucun pour une
+ * fiche commune ou un périmètre archivé, qu'un groupe ne couvre plus.
+ */
+function groupeLecteur(
+  perimetre: { groupe: string; archivedAt: Date | null } | null
+): string | null {
+  return perimetre !== null && perimetre.archivedAt === null
+    ? perimetre.groupe
+    : null
+}
 
 /** La fiche si la personne peut la rédiger, sinon un refus. */
 async function ficheRedigeable(ctx: AppContext, ficheId: string) {
@@ -251,6 +320,7 @@ async function ficheRedigeable(ctx: AppContext, ficheId: string) {
       activiteId: true,
       perimetreId: true,
       archivedAt: true,
+      perimetre: { select: { groupe: true, archivedAt: true } },
     },
   })
   if (
@@ -268,7 +338,7 @@ builder.mutationFields(t => ({
     type: RessourceFicheRef,
     authScopes: { connecte: true },
     description:
-      'Lie à une fiche un dossier ou un fichier d’un dossier lié de son périmètre, ou de toute son activité.',
+      'Lie à une fiche un dossier ou un fichier d’un dossier lié qui sert son périmètre, ou toute son activité.',
     args: {
       ficheId: t.arg.id({ required: true }),
       dossierLieId: t.arg.id({ required: true }),
@@ -284,8 +354,18 @@ builder.mutationFields(t => ({
           id: String(dossierLieId),
           organisationId: fiche.organisationId,
         },
+        include: {
+          perimetres: SELECTION_LECTEURS.perimetres,
+          groupes: SELECTION_LECTEURS.groupes,
+        },
       })
-      if (dossier === null || !dossierCompatible(fiche, dossier)) {
+      if (
+        dossier === null ||
+        !dossierCompatible(
+          { ...fiche, groupe: groupeLecteur(fiche.perimetre) },
+          dossier
+        )
+      ) {
         throw accesRefuse()
       }
       if (!cheminValide(chemin)) throw erreurSaisie('Chemin invalide.')
@@ -315,7 +395,7 @@ builder.mutationFields(t => ({
       }
       if (element === null) {
         throw erreurSaisie(
-          'Cet élément n’existe pas dans l’espace de fichiers.'
+          'Cet élément n’existe pas chez le fournisseur cloud.'
         )
       }
       const trouve = element
@@ -340,7 +420,7 @@ builder.mutationFields(t => ({
           })
           if (nombre >= RESSOURCES_MAX) {
             throw erreurSaisie(
-              `Une fiche porte ${RESSOURCES_MAX} ressources au plus. Retirez-en une avant d’en lier une autre.`
+              `Une fiche porte ${RESSOURCES_MAX} documents liés au plus. Retirez-en un avant d’en lier un autre.`
             )
           }
           const creee = await tx.ressourceFiche.create({
@@ -366,6 +446,67 @@ builder.mutationFields(t => ({
       return prisma.ressourceFiche.findUniqueOrThrow({
         ...query,
         where: { id: ressourceId },
+      })
+    },
+  }),
+
+  ouvrirDocumentLie: t.prismaField({
+    type: RessourceFicheRef,
+    authScopes: { admin: true },
+    description:
+      'Ouvre un document lié à toute personne qui lit sa fiche, partage compris, ou retire cette ouverture (ADR 0043). Le reste du dossier lié ne s’ouvre pas.',
+    args: {
+      id: t.arg.id({ required: true }),
+      ouvert: t.arg.boolean({ required: true }),
+    },
+    resolve: async (query, _root, { id, ouvert }, ctx) => {
+      const ressource = await prisma.ressourceFiche.findFirst({
+        where: { id: String(id), organisationId: ctx.organisation!.id },
+        select: {
+          id: true,
+          chemin: true,
+          fiche: {
+            select: {
+              id: true,
+              organisationId: true,
+              activiteId: true,
+              perimetreId: true,
+            },
+          },
+        },
+      })
+      if (ressource === null) throw accesRefuse()
+      // Le dossier lié entier n'est pas un document : ses lecteurs s'étendent.
+      if (ouvert && lireChemin(ressource.chemin).length === 0) {
+        throw erreurSaisie(
+          'Ce document est le dossier lié entier. Étendez plutôt les lecteurs du dossier.'
+        )
+      }
+      await prisma.ressourceFiche.update({
+        where: { id: ressource.id },
+        data: ouvert
+          ? {
+              ouverteAuxLecteurs: true,
+              ouverteParId: ctx.personne!.id,
+              ouverteLe: new Date(),
+            }
+          : { ouverteAuxLecteurs: false, ouverteParId: null, ouverteLe: null },
+      })
+      journal.info(
+        {
+          evenement: ouvert ? 'document-lie-ouvert' : 'document-lie-referme',
+          organisationId: ressource.fiche.organisationId,
+          ressourceId: ressource.id,
+          userId: ctx.personne!.id,
+        },
+        ouvert
+          ? 'Un document lié est ouvert aux lecteurs de sa fiche.'
+          : 'Un document lié n’est plus ouvert aux lecteurs de sa fiche.'
+      )
+      publierFiche(ressource.fiche)
+      return prisma.ressourceFiche.findUniqueOrThrow({
+        ...query,
+        where: { id: ressource.id },
       })
     },
   }),

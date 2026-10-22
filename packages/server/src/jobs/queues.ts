@@ -84,7 +84,8 @@ export const courrielQueue = new Queue<CourrielJobData>(COURRIEL_QUEUE, {
 // l'identité ne cite plus, et les données techniques échues (sessions, vérifications,
 // compteurs, notifications lues). `espace-fichiers` renouvelle chaque nuit l'accès
 // aux espaces de fichiers et réconcilie l'export des fiches ; `export-fiches` exporte
-// les fiches d'une organisation après une modification (ADR 0038). La planification
+// les fiches d'une organisation après une modification (ADR 0038) ;
+// `acces-fournisseur` vérifie les accès chez le fournisseur (ADR 0044). La planification
 // vit dans le worker, et nulle part ailleurs.
 export const PLANIFICATION_QUEUE = 'planification'
 
@@ -95,6 +96,7 @@ export type TachePlanifiee =
   | 'purge'
   | 'espace-fichiers'
   | 'export-fiches'
+  | 'acces-fournisseur'
 
 export interface PlanificationJobData {
   organisationId?: string

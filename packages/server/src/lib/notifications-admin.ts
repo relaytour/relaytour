@@ -41,6 +41,7 @@ export function familleAdmin(type: TypeNotification): FamilleAdmin | null {
     case 'ADMIN_ORGANISATION_RETIRE':
     case 'PERSONNE_ARCHIVEE':
     case 'PERSONNE_RETABLIE':
+    case 'ACCES_FOURNISSEUR_A_VALIDER':
       return 'equipe'
     default:
       return null

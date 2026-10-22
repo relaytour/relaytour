@@ -64,6 +64,8 @@ const a = {
   dossierLie: '',
   // Un fichier de ce dossier lié à la fiche du périmètre (ADR 0038).
   ressource: '',
+  // Une proposition d'accès chez le fournisseur pour ce dossier (ADR 0044).
+  propositionAcces: '',
   admin: '',
   referente: '',
   // Une autre activité de l'organisation A, son admin et sa référente (ADR 0010).
@@ -463,6 +465,17 @@ beforeAll(async () => {
         emplacement: 'bibliotheque',
         element: 'dossier-natation',
         nom: 'Natation',
+        perimetres: { create: { perimetreId: a.perimetre } },
+      },
+    })
+  ).id
+  a.propositionAcces = (
+    await prisma.propositionAcces.create({
+      data: {
+        organisationId: a.org,
+        dossierLieId: a.dossierLie,
+        userId: a.referente,
+        action: 'AJOUTER',
       },
     })
   ).id
@@ -476,6 +489,9 @@ beforeAll(async () => {
         empreinteChemin: 'c'.repeat(64),
         type: 'FICHIER',
         nom: 'Plan.pdf',
+        // Un document ouvert aux lecteurs de sa fiche ne sert pas de passe hors
+        // de cette fiche (ADR 0043).
+        ouverteAuxLecteurs: true,
       },
     })
   ).id
@@ -1597,10 +1613,32 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'contenuDossierLie',
+    query:
+      'query ($id: ID!, $r: ID) { contenuDossierLie(id: $id, chemin: ["Plan.pdf"], ressource: $r) { complet } }',
+    variables: () => ({ id: a.dossierLie, r: a.ressource }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'lierDossier',
     query:
-      'mutation ($a: ID!, $p: ID) { lierDossier(activiteId: $a, perimetreId: $p, emplacement: "bibliotheque", chemin: ["Natation"]) { id } }',
+      'mutation ($a: ID!, $p: ID!) { lierDossier(activiteId: $a, lecteurs: { touteActivite: false, perimetreIds: [$p], groupes: [] }, emplacement: "bibliotheque", chemin: ["Natation"]) { id } }',
     variables: () => ({ a: a.activite, p: a.perimetre }),
+    attente: INTERDIT,
+  },
+  // Les lecteurs d'un dossier lié (ADR 0043).
+  {
+    operation: 'modifierDossierLie',
+    query:
+      'mutation ($id: ID!) { modifierDossierLie(id: $id, lecteurs: { touteActivite: true, perimetreIds: [], groupes: [] }) { id } }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'effetsLecteursDossier',
+    query:
+      'query ($id: ID!) { effetsLecteursDossier(id: $id, lecteurs: { touteActivite: true, perimetreIds: [], groupes: [] }) { documentsMasques } }',
+    variables: () => ({ id: a.dossierLie }),
     attente: INTERDIT,
   },
   {
@@ -1608,6 +1646,86 @@ const CAS: Cas[] = [
     query:
       'mutation ($f: ID!, $d: ID!) { lierRessourceFiche(ficheId: $f, dossierLieId: $d, chemin: ["Plan.pdf"]) { id } }',
     variables: () => ({ f: a.fiche, d: a.dossierLie }),
+    attente: INTERDIT,
+  },
+  // La vérification des accès chez le fournisseur (ADR 0044).
+  {
+    operation: 'verificationAcces',
+    query:
+      'query ($a: ID!) { verificationAcces(activiteId: $a) { lignes { nom } } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'comptesFournisseur',
+    query: '{ comptesFournisseur { personne { email } } }',
+    variables: () => ({}),
+    // Sans identifiant de A : l'admin de B ne lit et ne vérifie que son propre
+    // fournisseur, absent ici.
+    attente: REFUSE,
+  },
+  {
+    operation: 'verifierAccesFournisseur',
+    query: 'mutation { verifierAccesFournisseur }',
+    variables: () => ({}),
+    // Sans identifiant de A : l'admin de B ne lit et ne vérifie que son propre
+    // fournisseur, absent ici.
+    attente: REFUSE,
+  },
+  {
+    operation: 'saisirAdresseFournisseur',
+    query:
+      'mutation ($u: ID!) { saisirAdresseFournisseur(userId: $u, adresse: "autre@exemple.net") { adresseSaisie } }',
+    variables: () => ({ u: a.referente }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'reglerPorteeConnexion',
+    query: 'mutation { reglerPorteeConnexion(portee: GESTION) { portee } }',
+    variables: () => ({}),
+    // Sans identifiant de A : l'admin de B ne règle que sa propre connexion,
+    // absente ici.
+    attente: REFUSE,
+  },
+  {
+    operation: 'groupesDuDossier',
+    query: 'query ($id: ID!) { groupesDuDossier(id: $id) { nom } }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'reglerAccesFournisseur',
+    query:
+      'mutation ($id: ID!) { reglerAccesFournisseur(id: $id, mode: AUCUN, role: LECTURE, ajoutsAutomatiques: false, invitation: false) { id } }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'appliquerPropositionAcces',
+    query: 'mutation ($id: ID!) { appliquerPropositionAcces(id: $id) }',
+    variables: () => ({ id: a.propositionAcces }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'ecarterPropositionAcces',
+    query: 'mutation ($id: ID!) { ecarterPropositionAcces(id: $id) }',
+    variables: () => ({ id: a.propositionAcces }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'appliquerPropositionsDossier',
+    query:
+      'mutation ($id: ID!) { appliquerPropositionsDossier(dossierId: $id) }',
+    variables: () => ({ id: a.dossierLie }),
+    attente: {
+      sansEffet: d => expect(d.appliquerPropositionsDossier).toBe(0),
+    },
+  },
+  {
+    operation: 'ouvrirDocumentLie',
+    query:
+      'mutation ($id: ID!) { ouvrirDocumentLie(id: $id, ouvert: true) { id } }',
+    variables: () => ({ id: a.ressource }),
     attente: INTERDIT,
   },
   {

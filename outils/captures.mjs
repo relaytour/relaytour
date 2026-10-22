@@ -219,8 +219,9 @@ const ECRANS = [
     chemin: `${ACTIVITE}/fiches`,
     avant: "localStorage.setItem('relaytour.fiches.affichage', 'liste')",
   },
-  // L'onglet « Documents » : les dossiers liés de l'espace de fichiers (ADR 0038).
-  // L'instance d'exemple doit porter une connexion et au moins un dossier lié.
+  // La vue « Documents » : les dossiers liés du fournisseur cloud, rangés par
+  // lecteur (ADR 0038, 0043). L'instance d'exemple doit porter une connexion et
+  // au moins un dossier lié.
   {
     nom: 'documents',
     compte: 'referent',
@@ -232,17 +233,15 @@ const ECRANS = [
     compte: 'referent',
     chemin: `${ACTIVITE}/fiches/planifier-les-creneaux`,
   },
-  // Les ressources liées de la fiche (ADR 0038) : l'instance d'exemple doit en
-  // porter trois.
+  // Les documents liés de la fiche (ADR 0038, 0043) : l'instance d'exemple doit
+  // en porter trois, dont un document réservé que la fiche partage.
   {
     nom: 'fiche-ressources',
     compte: 'referent',
     chemin: `${ACTIVITE}/fiches/planifier-les-creneaux`,
-    apres: placer(
-      'Ressources liées',
-      140,
-      'p?.querySelectorAll("li").length >= 3'
-    ),
+    // Le texte de la fiche porte aussi un titre « Documents liés » : le geste vise
+    // celui du panneau.
+    apres: `(e => (e && window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - 140), Boolean(e) && e.closest('section').querySelectorAll('li').length >= 3))([...document.querySelectorAll('main .rt-panneau-titre h2')].find(e => e.innerText.trim() === 'Documents liés'))`,
   },
   // L'éditeur de la fiche en mode visuel, avec sa barre de mise en forme.
   {
@@ -536,7 +535,7 @@ const ECRANS = [
     chemin: `${ACTIVITE}/admin/activites`,
     apres: cliquer('Nouvelle activité'),
   },
-  // L'espace de fichiers de l'organisation (ADR 0038), puis ses dossiers liés.
+  // Le fournisseur cloud de l'organisation (ADR 0038), puis ses dossiers liés.
   { nom: 'espace-fichiers', chemin: `${ACTIVITE}/admin/espace-fichiers` },
   {
     nom: 'espace-fichiers-dossiers',
@@ -546,6 +545,28 @@ const ECRANS = [
       140,
       'p?.querySelectorAll(\'[aria-label^="Retirer le dossier"]\').length > 0'
     ),
+  },
+  // La fenêtre « Modifier » d'un dossier lié : ses lecteurs, les personnes
+  // attendues et la gestion des accès (ADR 0043, 0044). L'instance d'exemple doit
+  // porter le dossier lié « Bénévoles ».
+  {
+    nom: 'espace-fichiers-modifier',
+    chemin: `${ACTIVITE}/admin/espace-fichiers`,
+    // antd place le focus sur la croix à l'ouverture : le geste l'en retire une
+    // fois la fenêtre ouverte, sinon l'application installée dessine son anneau.
+    apres: `(m => {
+      if (!m) return (${cliquerLibelle('Modifier le dossier Bénévoles')}, false)
+      window.__fenetreOuverte ??= Date.now()
+      document.activeElement?.blur()
+      return Date.now() - window.__fenetreOuverte > 800
+    })(document.querySelector('.ant-modal'))`,
+  },
+  // L'onglet « Vérification des accès » (ADR 0044) : l'instance d'exemple doit
+  // porter un résultat de vérification.
+  {
+    nom: 'espace-fichiers-acces',
+    chemin: `${ACTIVITE}/admin/espace-fichiers?onglet=acces`,
+    apres: `document.querySelectorAll('main .rt-acces-ligne').length > 0`,
   },
   { nom: 'organisation', chemin: `${ACTIVITE}/admin/organisation` },
   {

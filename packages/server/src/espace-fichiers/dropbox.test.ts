@@ -68,6 +68,7 @@ interface Meta {
   path_display: string
   rev?: string
   contenu?: string
+  sharing_info?: { shared_folder_id?: string; parent_shared_folder_id?: string }
 }
 
 function dropboxSimule(elements: Meta[], parPage = 1000, compte: unknown = {}) {
@@ -199,6 +200,27 @@ describe('Dropbox simulé', () => {
       rev: 'r1',
     },
   ]
+
+  it('ne partage que le dossier lié lui-même, jamais le dossier parent', async () => {
+    const appels = dropboxSimule([
+      {
+        ...elements[1]!,
+        sharing_info: { parent_shared_folder_id: 'sf-asso' },
+      },
+    ])
+    const annuaire = espaceDropbox(jeton, {
+      annuaire: true,
+      gestion: true,
+    }).annuaire!
+    await expect(
+      annuaire.partager!(
+        { emplacement: 'dropbox', base: 'id:nat', chemin: [] },
+        { adresse: 'camille@exemple.org' },
+        { role: 'LECTURE', invitation: false }
+      )
+    ).rejects.toThrow(/ce dossier lui-même/)
+    expect(appels.map(a => a.route)).not.toContain('sharing/add_folder_member')
+  })
 
   it('lit depuis un dossier connu par son identifiant', async () => {
     dropboxSimule(elements)

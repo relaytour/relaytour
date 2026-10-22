@@ -45,7 +45,7 @@ function miseAJour(fiche: FicheListe): string {
   if (fiche.source === 'GIT' && !fiche.modifieePar)
     return `Depuis le dépôt · ${date}`
   if (fiche.source === 'ESPACE_FICHIERS')
-    return `Depuis l’espace de fichiers · ${date}`
+    return `Depuis le fournisseur cloud · ${date}`
   return fiche.modifieePar
     ? `Mise à jour le ${date} par ${fiche.modifieePar}`
     : `Mise à jour le ${date}`
@@ -131,7 +131,7 @@ export default function Fiches() {
       <Titre
         sousTitre={
           vueDocuments
-            ? 'Vous lisez ici les documents que l’association range dans son espace de fichiers. Relaytour n’en garde aucune copie.'
+            ? 'Vous lisez ici les documents que l’association range chez son fournisseur cloud. Relaytour n’en garde aucune copie.'
             : 'Les fiches méthode expliquent comment mener chaque étape de l’organisation.'
         }
         actions={
@@ -148,7 +148,7 @@ export default function Fiches() {
           )
         }
       >
-        Fiches
+        Ressources
       </Titre>
 
       {dossiers.length > 0 && (

@@ -6,7 +6,7 @@ import { connection, planificationQueue } from '../src/jobs/queues.ts'
 import { organisationParSlug } from '../src/lib/installation.ts'
 
 // Lance tout de suite une tâche planifiée, sans attendre l'heure prévue. Le worker doit tourner.
-//   yarn workspace @relaytour/server planification:lancer rappels|resumes|synchro|purge|espace-fichiers|export-fiches [--organisation slug]
+//   yarn workspace @relaytour/server planification:lancer rappels|resumes|synchro|purge|espace-fichiers|export-fiches|acces-fournisseur [--organisation slug]
 // Sans --organisation, rappels et résumés partent pour toutes les organisations actives,
 // et la purge des demandes parcourt toutes les organisations.
 const { values, positionals } = parseArgs({
@@ -20,10 +20,11 @@ if (
   nom !== 'synchro' &&
   nom !== 'purge' &&
   nom !== 'espace-fichiers' &&
-  nom !== 'export-fiches'
+  nom !== 'export-fiches' &&
+  nom !== 'acces-fournisseur'
 ) {
   console.error(
-    'Usage : planification:lancer rappels|resumes|synchro|purge|espace-fichiers|export-fiches [--organisation <slug>]'
+    'Usage : planification:lancer rappels|resumes|synchro|purge|espace-fichiers|export-fiches|acces-fournisseur [--organisation <slug>]'
   )
   process.exit(1)
 }
