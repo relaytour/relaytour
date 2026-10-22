@@ -35,12 +35,18 @@ export default function ExplorateurDossier({
   dossier,
   onRetour,
   cheminInitial = [],
+  ressourceId = null,
   onChoisir,
   sansCadre = false,
 }: {
   dossier: DossierAffiche
   onRetour?: () => void
   cheminInitial?: string[]
+  /**
+   * Un document lié ouvert aux lecteurs de sa fiche (ADR 0043) : l'explorateur
+   * part de son chemin et ne remonte pas au-dessus.
+   */
+  ressourceId?: string | null
   onChoisir?: (chemin: string[], nom: string) => void
   /** Sans le panneau de verre, dans une fenêtre par exemple. */
   sansCadre?: boolean
@@ -48,7 +54,7 @@ export default function ExplorateurDossier({
   const [chemin, setChemin] = useState<string[]>(cheminInitial)
   const [ouvert, setOuvert] = useState<DocumentOuvert | null>(null)
   const { data, loading, error } = useQuery(CONTENU_DOSSIER, {
-    variables: { id: dossier.id, chemin },
+    variables: { id: dossier.id, chemin, ressource: ressourceId },
     skip: !dossier.disponible,
     fetchPolicy: 'cache-and-network',
   })
@@ -64,6 +70,7 @@ export default function ExplorateurDossier({
     }
     setOuvert({
       dossierId: dossier.id,
+      ressourceId,
       chemin: [...chemin, e.nom],
       nom: e.nom,
       apercu: e.apercu,
@@ -90,8 +97,10 @@ export default function ExplorateurDossier({
         <Breadcrumb
           items={[dossier.nom, ...chemin].map((nom, i) => ({
             key: `${i}-${nom}`,
+            // Un document ouvert ne se parcourt pas au-dessus de son chemin.
             title:
-              i === chemin.length ? (
+              i === chemin.length ||
+              (ressourceId !== null && i < cheminInitial.length) ? (
                 nom
               ) : (
                 <a

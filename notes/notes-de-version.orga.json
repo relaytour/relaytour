@@ -8,6 +8,58 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-22-orga-un-dossier-lie-sert-plusieurs-perimetres-et-des-groupes",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un dossier lié sert plusieurs périmètres et des groupes",
+            "texte": "Dans l'écran « Fournisseur cloud », vous choisissez les lecteurs d'un dossier lié : toute l'activité, ou une liste de périmètres et de groupes. Un groupe, comme les sports ou les pôles, vaut aussi pour les périmètres qui le rejoindront. Avec le bouton « Modifier », vous changez les lecteurs et le nom affiché d'un dossier sans le retirer. Avant l'enregistrement, Relaytour annonce les documents liés que les lecteurs de leur fiche ne liraient plus. Dans la vue « Documents », chaque personne retrouve un dossier sous son groupe ou sous son périmètre.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-22-orga-un-document-lie-d-une-fiche-partagee-s-ouvre-pour-ses-nouvea",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Un admin ouvre un document lié aux lecteurs d'une fiche partagée",
+            "texte": "Quand une fiche concerne aussi d'autres périmètres, la personne qui la rédige voit quels documents liés ces périmètres n'ouvriront pas. L'avertissement s'affiche sous la liste « Concerne aussi » de l'éditeur. Dans la fiche, vous lisez le détail par le bouton d'alerte du document. Un admin de l'organisation étend alors le dossier lié aux périmètres et aux groupes de la fiche. Il peut aussi ouvrir ce seul document à toutes les personnes qui lisent la fiche.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-22-orga-relaytour-propose-les-acces-des-equipes-chez-le-fournisseur-",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Relaytour propose les accès des équipes chez le fournisseur cloud",
+            "texte": "Avec la gestion des accès, un admin de l'organisation choisit ce que Relaytour propose pour un dossier lié : un partage du dossier, ou l'entrée dans un groupe du fournisseur qui a déjà un droit sur lui. Quand une équipe change, Relaytour propose d'ajouter les personnes attendues sans accès. Relaytour propose aussi de retirer les accès qu'il a créés pour des personnes parties. Vous appliquez ou écartez chaque proposition d'accès dans l'onglet « Vérification des accès ». Avec un réglage du dossier, Relaytour applique les ajouts sans attendre. Un retrait attend toujours la décision d'un admin, et Relaytour ne retire jamais un accès posé à la main. Relaytour prévient les admins par une notification, une fois par jour au plus.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-22-orga-les-admins-verifient-les-acces-des-equipes-chez-le-fournisse",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les admins vérifient les accès des équipes chez le fournisseur cloud",
+            "texte": "L'écran « Fournisseur cloud » compte deux nouveaux onglets : « Vérification des accès » et « Comptes ». Avec SharePoint, un admin de l'organisation active la vérification par une nouvelle connexion, qu'un admin Microsoft Entra accepte. Pour chaque dossier lié, Relaytour compare alors les personnes attendues aux droits du dossier. Relaytour les range par équipe : qui a accès, qui n'a pas de compte, qui n'a pas d'accès. Relaytour nomme aussi les accès en trop. Chaque dossier lié règle les personnes attendues : tous les membres, ou les contacts principaux seulement. La vérification ne change aucun droit chez le fournisseur.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-22-orga-le-menu-fiches-devient-ressources-et-l-espace-de-fichiers-de",
           "date": "2026-10-22",
           "type": "fonctionnalite",
@@ -17,6 +69,19 @@
           "fr": {
             "titre": "Le menu Fiches devient Ressources",
             "texte": "L'écran « Ressources » réunit les fiches méthode et les documents de l'association. Ses vues « Fiches » et « Documents » ne changent pas. Le bloc « Ressources liées » d'une fiche s'appelle désormais « Documents liés ». Pour les admins de l'organisation, l'écran « Espace de fichiers » devient « Fournisseur cloud ». Les adresses des écrans restent les mêmes.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-22-orga-la-verification-des-acces-gagne-google-drive-dropbox-et-next",
+          "date": "2026-10-22",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "La vérification des accès fonctionne avec Google Drive, Dropbox et Nextcloud",
+            "texte": "La vérification et la gestion des accès fonctionnent aussi avec Google Drive, Dropbox et Nextcloud. Avec Google Drive et Nextcloud, un admin de l'organisation les active sans reconnexion. Avec Dropbox, l'activation passe par une reconnexion. Google Drive et Dropbox n'ont pas d'annuaire des comptes : Relaytour compare alors l'adresse de chaque personne à celles des droits du dossier, domaine compris. Dans l'onglet « Comptes », vous saisissez l'adresse qu'une personne utilise chez le fournisseur quand elle diffère.",
             "migration": null
           }
         }

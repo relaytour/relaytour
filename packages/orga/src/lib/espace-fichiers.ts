@@ -27,6 +27,9 @@ export const ESPACE_FICHIERS = graphql(`
         etat
         connecteeLe
         connecteePar
+        portee
+        accesVerifieLe
+        accesErreur
         exportDossier
         exportRapport {
           exporteLe
@@ -48,8 +51,9 @@ export const ESPACE_FICHIERS = graphql(`
 export const COMMENCER_CONNEXION = graphql(`
   mutation CommencerConnexionEspaceFichiers(
     $fournisseur: FournisseurFichiers!
+    $portee: PorteeConnexionFichiers
   ) {
-    commencerConnexionEspaceFichiers(fournisseur: $fournisseur)
+    commencerConnexionEspaceFichiers(fournisseur: $fournisseur, portee: $portee)
   }
 `)
 
@@ -169,19 +173,70 @@ export const DOSSIERS_LIES = graphql(`
       nom
       disponible
       fournisseur
-      perimetre {
+      touteActivite
+      attendus
+      accesCrees
+      perimetres {
         id
         slug
         nom
         couleur
+        archive
+      }
+      groupes
+      lecteursLus {
+        touteActivite
+        perimetres {
+          id
+          slug
+          nom
+          couleur
+        }
+        groupes
+      }
+    }
+  }
+`)
+
+/** Les lecteurs d'un dossier lié (ADR 0043) : toute l'activité, ou une liste. */
+export interface Lecteurs {
+  touteActivite: boolean
+  perimetres: string[]
+  groupes: string[]
+}
+
+export const TOUTE_L_ACTIVITE: Lecteurs = {
+  touteActivite: true,
+  perimetres: [],
+  groupes: [],
+}
+
+/** Les lecteurs sous la forme qu'attend le serveur. */
+export const versSaisie = (l: Lecteurs) => ({
+  touteActivite: l.touteActivite,
+  perimetreIds: l.touteActivite ? [] : l.perimetres,
+  groupes: l.touteActivite ? [] : l.groupes,
+})
+
+/** Vrai quand les lecteurs désignent toute l'activité ou au moins un élément. */
+export const lecteursValides = (l: Lecteurs) =>
+  l.touteActivite || l.perimetres.length + l.groupes.length > 0
+
+export const EFFETS_LECTEURS = graphql(`
+  query EffetsLecteursDossier($id: ID!, $lecteurs: LecteursDossierInput!) {
+    effetsLecteursDossier(id: $id, lecteurs: $lecteurs) {
+      documentsMasques
+      fiches {
+        id
+        titre
       }
     }
   }
 `)
 
 export const CONTENU_DOSSIER = graphql(`
-  query ContenuDossierLie($id: ID!, $chemin: [String!]!) {
-    contenuDossierLie(id: $id, chemin: $chemin) {
+  query ContenuDossierLie($id: ID!, $chemin: [String!]!, $ressource: ID) {
+    contenuDossierLie(id: $id, chemin: $chemin, ressource: $ressource) {
       complet
       elements {
         elementId
@@ -232,13 +287,13 @@ export const PARCOURIR = graphql(`
 export const LIER_DOSSIER = graphql(`
   mutation LierDossier(
     $activiteId: ID!
-    $perimetreId: ID
+    $lecteurs: LecteursDossierInput!
     $emplacement: String!
     $chemin: [String!]!
   ) {
     lierDossier(
       activiteId: $activiteId
-      perimetreId: $perimetreId
+      lecteurs: $lecteurs
       emplacement: $emplacement
       chemin: $chemin
     ) {
@@ -247,9 +302,33 @@ export const LIER_DOSSIER = graphql(`
   }
 `)
 
+export const MODIFIER_DOSSIER_LIE = graphql(`
+  mutation ModifierDossierLie(
+    $id: ID!
+    $lecteurs: LecteursDossierInput!
+    $nom: String
+    $attendus: AttendusDossier
+  ) {
+    modifierDossierLie(
+      id: $id
+      lecteurs: $lecteurs
+      nom: $nom
+      attendus: $attendus
+    ) {
+      id
+      nom
+      touteActivite
+      perimetres {
+        id
+      }
+      groupes
+    }
+  }
+`)
+
 export const DELIER_DOSSIER = graphql(`
-  mutation DelierDossier($id: ID!) {
-    delierDossier(id: $id)
+  mutation DelierDossier($id: ID!, $oublierAcces: Boolean) {
+    delierDossier(id: $id, oublierAcces: $oublierAcces)
   }
 `)
 
@@ -295,17 +374,22 @@ export function tailleLisible(octets: number | null | undefined): string {
   return `${arrondi.replace('.', ',')} ${unites[i]}`
 }
 
-/** Adresse de la route d'aperçu d'un fichier d'un dossier lié. */
+/**
+ * Adresse de la route d'aperçu d'un fichier d'un dossier lié. `ressourceId` désigne
+ * un document lié ouvert aux lecteurs de sa fiche (ADR 0043).
+ */
 export function adresseApercu(
   dossierId: string,
   chemin: readonly string[],
-  telecharger = false
+  telecharger = false,
+  ressourceId: string | null = null
 ): string {
   const parametres = new URLSearchParams({
     dossier: dossierId,
     chemin: chemin.join('/'),
   })
   if (telecharger) parametres.set('telecharger', '1')
+  if (ressourceId !== null) parametres.set('ressource', ressourceId)
   return `/medias/espace-fichiers/apercu?${parametres.toString()}`
 }
 
@@ -333,20 +417,25 @@ export async function lireFichier(
   dossierId: string,
   chemin: readonly string[],
   telecharger = false,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  ressourceId: string | null = null
 ): Promise<Blob> {
-  return (await demanderFichier(dossierId, chemin, telecharger, signal)).blob()
+  return (
+    await demanderFichier(dossierId, chemin, telecharger, signal, ressourceId)
+  ).blob()
 }
 
 async function demanderFichier(
   dossierId: string,
   chemin: readonly string[],
   telecharger: boolean,
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  ressourceId: string | null = null
 ): Promise<Response> {
   const organisation = organisationChoisie()
   const activite = activiteAffichee()
-  const reponse = await fetch(adresseApercu(dossierId, chemin, telecharger), {
+  const adresse = adresseApercu(dossierId, chemin, telecharger, ressourceId)
+  const reponse = await fetch(adresse, {
     credentials: 'same-origin',
     signal,
     headers: {
@@ -377,9 +466,16 @@ export function nomServi(entete: string | null): string | null {
  */
 export async function telechargerFichier(
   dossierId: string,
-  chemin: readonly string[]
+  chemin: readonly string[],
+  ressourceId: string | null = null
 ): Promise<void> {
-  const reponse = await demanderFichier(dossierId, chemin, true)
+  const reponse = await demanderFichier(
+    dossierId,
+    chemin,
+    true,
+    undefined,
+    ressourceId
+  )
   const nom =
     nomServi(reponse.headers.get('content-disposition')) ??
     chemin[chemin.length - 1] ??
@@ -400,22 +496,43 @@ export const RESSOURCES_FICHE = graphql(`
   query RessourcesFiche($slug: String!) {
     fiche(slug: $slug) {
       id
+      concerneGroupes
       ressources {
         id
         nom
         type
         chemin
         ouvrable
+        ouverteAuxLecteurs
         apercu
         existe
         lienWeb
+        perimetresSansAcces {
+          id
+          nom
+          couleur
+        }
         dossierLie {
           id
           nom
           disponible
           fournisseur
+          touteActivite
+          perimetres {
+            id
+          }
+          groupes
         }
       }
+    }
+  }
+`)
+
+export const OUVRIR_DOCUMENT = graphql(`
+  mutation OuvrirDocumentLie($id: ID!, $ouvert: Boolean!) {
+    ouvrirDocumentLie(id: $id, ouvert: $ouvert) {
+      id
+      ouverteAuxLecteurs
     }
   }
 `)
@@ -441,3 +558,207 @@ export const DELIER_RESSOURCE = graphql(`
     delierRessourceFiche(id: $id)
   }
 `)
+
+// ── Vérification des accès chez le fournisseur (ADR 0044) ────────────────────
+
+export const VERIFICATION_ACCES = graphql(`
+  query VerificationAcces($activiteId: ID!) {
+    verificationAcces(activiteId: $activiteId) {
+      verifieLe
+      dossier {
+        id
+        nom
+        touteActivite
+        attendus
+        accesFournisseur
+        groupeFournisseurId
+        groupeFournisseurNom
+        roleFournisseur
+        fournisseur
+        ajoutsAutomatiques
+        invitationFournisseur
+        groupes
+        perimetres {
+          id
+          nom
+          couleur
+        }
+      }
+      perimetres {
+        id
+        nom
+        couleur
+      }
+      propositions {
+        id
+        action
+        etat
+        erreur
+        cible
+        parGroupe
+        personne {
+          id
+          nom
+          email
+        }
+      }
+      lignes {
+        nom
+        etat
+        via
+        perimetreIds
+        personne {
+          id
+          email
+        }
+      }
+    }
+  }
+`)
+
+export const COMPTES_FOURNISSEUR = graphql(`
+  query ComptesFournisseur {
+    comptesFournisseur {
+      etat
+      adresseSaisie
+      verifieLe
+      personne {
+        id
+        nom
+        email
+      }
+    }
+  }
+`)
+
+export const VERIFIER_ACCES = graphql(`
+  mutation VerifierAccesFournisseur {
+    verifierAccesFournisseur
+  }
+`)
+
+export const SAISIR_ADRESSE_FOURNISSEUR = graphql(`
+  mutation SaisirAdresseFournisseur($userId: ID!, $adresse: String) {
+    saisirAdresseFournisseur(userId: $userId, adresse: $adresse) {
+      adresseSaisie
+    }
+  }
+`)
+
+/** Comment une personne a accès, lisible : « directement », « par le groupe… ». */
+export function voieLisible(via: string | null): string | null {
+  if (via === null) return null
+  if (via === 'direct') return 'Directement'
+  if (via === 'domaine') return 'Par toute l’organisation'
+  return via.startsWith('groupe:')
+    ? `Par le groupe « ${via.slice('groupe:'.length)} »`
+    : via
+}
+
+export const REGLER_PORTEE = graphql(`
+  mutation ReglerPorteeConnexion($portee: PorteeConnexionFichiers!) {
+    reglerPorteeConnexion(portee: $portee) {
+      portee
+    }
+  }
+`)
+
+/**
+ * Comment chaque fournisseur active la vérification et la gestion des accès
+ * (ADR 0044) : une reconnexion qui demande de nouvelles autorisations, ou un
+ * simple réglage quand l'accès accordé les couvre déjà.
+ */
+export const ACTIVATION_ACCES: Record<string, 'reconnexion' | 'reglage'> = {
+  SHAREPOINT: 'reconnexion',
+  DROPBOX: 'reconnexion',
+  GOOGLE_DRIVE: 'reglage',
+  NEXTCLOUD: 'reglage',
+}
+
+/** Les fournisseurs qui publient un annuaire des comptes. */
+export const AVEC_ANNUAIRE = new Set(['SHAREPOINT', 'NEXTCLOUD'])
+
+/** Ce que l'activation demande chez le fournisseur, pour l'admin qui l'active. */
+export const CONSENTEMENT: Record<string, string> = {
+  SHAREPOINT:
+    'La connexion demande de nouvelles autorisations : un admin Microsoft Entra les accepte pour l’organisation.',
+  DROPBOX:
+    'La connexion demande de lire, puis de modifier, les membres des dossiers partagés.',
+  GOOGLE_DRIVE:
+    'L’accès déjà accordé à Google Drive suffit : aucune reconnexion n’est nécessaire.',
+  NEXTCLOUD:
+    'L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe.',
+}
+
+export const GROUPES_DU_DOSSIER = graphql(`
+  query GroupesDuDossier($id: ID!) {
+    groupesDuDossier(id: $id) {
+      identifiant
+      nom
+    }
+  }
+`)
+
+export const REGLER_ACCES = graphql(`
+  mutation ReglerAccesFournisseur(
+    $id: ID!
+    $mode: AccesFournisseurDossier!
+    $groupeId: ID
+    $role: RoleFournisseur!
+    $ajoutsAutomatiques: Boolean!
+    $invitation: Boolean!
+  ) {
+    reglerAccesFournisseur(
+      id: $id
+      mode: $mode
+      groupeId: $groupeId
+      role: $role
+      ajoutsAutomatiques: $ajoutsAutomatiques
+      invitation: $invitation
+    ) {
+      id
+      accesFournisseur
+    }
+  }
+`)
+
+export const APPLIQUER_PROPOSITION = graphql(`
+  mutation AppliquerPropositionAcces($id: ID!) {
+    appliquerPropositionAcces(id: $id)
+  }
+`)
+
+export const APPLIQUER_PROPOSITIONS = graphql(`
+  mutation AppliquerPropositionsDossier($dossierId: ID!) {
+    appliquerPropositionsDossier(dossierId: $dossierId)
+  }
+`)
+
+export const ECARTER_PROPOSITION = graphql(`
+  mutation EcarterPropositionAcces($id: ID!) {
+    ecarterPropositionAcces(id: $id)
+  }
+`)
+
+/** Les modes d'accès d'un dossier lié chez le fournisseur (ADR 0044). */
+export const MODES_ACCES = {
+  AUCUN: 'Vérifier seulement',
+  PARTAGE: 'Partager le dossier',
+  GROUPE: 'Gérer un groupe du fournisseur',
+} as const
+
+/** Le résumé du mode d'accès d'un dossier lié. */
+export function resumeMode(d: {
+  accesFournisseur: keyof typeof MODES_ACCES
+  roleFournisseur: string
+  groupeFournisseurNom?: string | null
+  ajoutsAutomatiques: boolean
+}): string {
+  if (d.accesFournisseur === 'AUCUN') return MODES_ACCES.AUCUN
+  const role = d.roleFournisseur === 'ECRITURE' ? 'en écriture' : 'en lecture'
+  const base =
+    d.accesFournisseur === 'PARTAGE'
+      ? `Partage du dossier ${role}`
+      : `Groupe « ${d.groupeFournisseurNom ?? '?'} »`
+  return d.ajoutsAutomatiques ? `${base}, ajouts automatiques` : base
+}

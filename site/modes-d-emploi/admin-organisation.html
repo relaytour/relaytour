@@ -177,17 +177,23 @@
             <li><span><span class="libelle">Reconnecter</span><span class="libelle">Déconnecter</span></span><span>Renouveler l'accès, ou le fermer. Après une déconnexion, les dossiers liés restent, mais les membres ne lisent plus leurs documents et l'export s'arrête.</span></li>
           </ul>
           <figure>
-            <img src="../captures/espace-fichiers.webp" data-mobile="../captures/mobile/espace-fichiers.webp" width="1440" height="900" loading="lazy" alt="Page Fournisseur cloud : le panneau Connexion avec le fournisseur, le compte et l'état, puis les panneaux Export des fiches et Importer des fiches." />
+            <img src="../captures/espace-fichiers.webp" data-mobile="../captures/mobile/espace-fichiers.webp" width="1440" height="900" loading="lazy" alt="Page Fournisseur cloud, onglet Connexion et dossiers : le panneau Connexion avec le fournisseur, le compte, l'état et la vérification des accès, puis le panneau Export des fiches." />
             <figcaption>Page Fournisseur cloud, sur l'organisation d'exemple. Un dossier local tient lieu de fournisseur.</figcaption>
           </figure>
-          <p>Un dossier lié rend un dossier du fournisseur lisible dans une activité. Vous choisissez qui le lit : les personnes d'un périmètre, ou toute l'activité. Un dossier lié se lit comme les fiches du même périmètre, ou comme les fiches communes.</p>
+          <p>Un dossier lié rend un dossier du fournisseur lisible dans une activité. Vous choisissez ses lecteurs : toute l'activité, ou une liste de périmètres et de groupes. Un groupe, comme les sports ou les pôles, vaut aussi pour les périmètres qui le rejoindront. Un dossier lié se lit comme les fiches de ces périmètres, ou comme les fiches communes.</p>
           <ul class="gestes">
-            <li><span><span class="libelle">Lier un dossier</span></span><span>Parcourir les dossiers du fournisseur, ouvrir le dossier à lier, puis choisir le périmètre qui le lit. Une bibliothèque entière ne se lie pas.</span></li>
+            <li><span><span class="libelle">Lier un dossier</span></span><span>Parcourir les dossiers du fournisseur, ouvrir le dossier à lier, puis choisir ses lecteurs. Une bibliothèque entière ne se lie pas, et un dossier se lie une seule fois par activité.</span></li>
+            <li><span><span class="libelle">Modifier</span></span><span>Changer les lecteurs d'un dossier lié ou son nom affiché, sans le retirer. Avant l'enregistrement, Relaytour annonce les documents liés que les lecteurs de leur fiche ne liraient plus. Ces documents restent masqués dans leur fiche tant que le dossier ne sert pas son périmètre.</span></li>
+            <li><span><span class="libelle">Étendre le dossier lié</span><span class="libelle">Ouvrir ce document</span></span><span>Ces deux réponses se trouvent derrière le bouton d'alerte d'un document lié, dans une fiche qui concerne aussi d'autres périmètres. La première ajoute les périmètres et les groupes de la fiche aux lecteurs du dossier. La seconde ouvre ce seul document à toutes les personnes qui lisent la fiche, sans ouvrir le reste du dossier. « Réserver de nouveau » retire cette ouverture.</span></li>
             <li><span><span class="libelle">Retirer</span></span><span>Retirer un dossier de l'activité. Le dossier reste chez le fournisseur, et les fiches ne citent plus ses documents.</span></li>
           </ul>
           <figure>
-            <img src="../captures/espace-fichiers-dossiers.webp" data-mobile="../captures/mobile/espace-fichiers-dossiers.webp" width="1440" height="900" loading="lazy" alt="Panneau Dossiers liés de l'activité : un dossier lu par toute l'activité et un dossier lu par le périmètre Bénévoles." />
+            <img src="../captures/espace-fichiers-dossiers.webp" data-mobile="../captures/mobile/espace-fichiers-dossiers.webp" width="1440" height="900" loading="lazy" alt="Panneau Dossiers liés de l'activité : cinq dossiers, lus par toute l'activité, par un périmètre ou par le groupe Pôles, chacun avec ses boutons Modifier et Retirer." />
             <figcaption>Les dossiers liés d'une activité, sur l'organisation d'exemple.</figcaption>
+          </figure>
+          <figure>
+            <img src="../captures/espace-fichiers-modifier.webp" data-mobile="../captures/mobile/espace-fichiers-modifier.webp" width="1440" height="900" loading="lazy" alt="Fenêtre Modifier du dossier lié Bénévoles : le nom affiché, la liste Lu par avec le périmètre Bénévoles, et le choix des personnes attendues chez le fournisseur." />
+            <figcaption>La fenêtre « Modifier » d'un dossier lié.</figcaption>
           </figure>
           <p>Relaytour peut aussi écrire les fiches chez le fournisseur, en Markdown, et reprendre les fiches que l'association y range déjà.</p>
           <ul class="gestes">
@@ -196,6 +202,19 @@
             <li><span><span class="libelle">Importer des fiches</span></span><span>Choisir un dossier source par périmètre, puis lire la simulation avant d'importer. Les fichiers Markdown et texte entrent tels quels, et les documents Word sont convertis en Markdown.</span></li>
           </ul>
           <p class="note">Les fiches se modifient toujours dans Relaytour. Une modification faite à la main dans « Fiches Relaytour » est remplacée à l'export suivant. Une fiche qui contient une coordonnée personnelle n'est ni exportée ni importée. Un import ne remplace jamais une fiche modifiée dans Relaytour.</p>
+          <p>Une fois le fournisseur connecté, la page porte trois onglets : « Connexion et dossiers », « Vérification des accès » et « Comptes ». La vérification compare les équipes aux droits des dossiers liés chez le fournisseur. Elle lit l'annuaire et les groupes du fournisseur, et ne change aucun droit. Avec SharePoint, un admin Microsoft Entra accepte d'abord deux autorisations de plus. Avec Dropbox, l'activation passe aussi par une reconnexion. Avec Google Drive et Nextcloud, vous l'activez sans reconnexion. Google Drive et Dropbox n'ont pas d'annuaire des comptes : Relaytour y compare les adresses des personnes à celles des droits.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Activer la vérification des accès</span></span><span>Reconnecter le fournisseur avec la lecture de l'annuaire. Une organisation qui ne l'active pas garde la connexion d'origine.</span></li>
+            <li><span><span class="libelle">Vérifier maintenant</span></span><span>Comparer, pour chaque dossier lié de l'activité, les personnes attendues à ses droits. Chaque personne apparaît sous son équipe, avec son état : « A accès » (directement, par un groupe ou par toute l'organisation), « Sans compte » ou « Sans accès ». L'état « Inconnu » signale un groupe ou des droits que Relaytour ne lit pas. Le bloc « Accès en trop » nomme les comptes qui ont un droit sans être attendus. Relaytour vérifie aussi chaque nuit.</span></li>
+            <li><span><span class="libelle">Attendus chez le fournisseur</span></span><span>Dans la fenêtre « Modifier » d'un dossier lié, choisir tous les membres des périmètres lecteurs, ou leurs contacts principaux seulement.</span></li>
+            <li><span><span class="libelle">Gérer les accès</span></span><span>Choisir, pour un dossier lié, ce que Relaytour propose : vérifier seulement, partager le dossier en lecture ou en écriture, ou faire entrer les personnes dans un groupe du fournisseur qui a déjà un droit sur le dossier. La gestion demande une reconnexion, et une autorisation de plus chez Microsoft.</span></li>
+            <li><span><span class="libelle">Appliquer</span><span class="libelle">Écarter</span><span class="libelle">Tout appliquer</span></span><span>Relaytour propose d'ajouter les personnes attendues sans accès. Relaytour propose aussi de retirer les accès qu'il a créés pour des personnes qui ne sont plus attendues. Relaytour ne retire jamais un accès posé à la main, ni un accès qui a changé depuis sa création. Une proposition d'accès écartée ne revient pas tant que la situation de la personne ne change pas. Avec un réglage du dossier, Relaytour applique les ajouts sans attendre ; un retrait attend toujours la décision d'un admin.</span></li>
+            <li><span><span class="libelle">Comptes</span></span><span>Lire, pour chaque membre, si son compte est trouvé, invité ou absent de l'annuaire, et saisir l'adresse de son compte quand elle diffère de son adresse Relaytour.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/espace-fichiers-acces.webp" data-mobile="../captures/mobile/espace-fichiers-acces.webp" width="1440" height="900" loading="lazy" alt="Onglet Vérification des accès : pour le dossier Bénévoles, une proposition de partage pour Léa Bernard, une personne avec accès, une personne sans accès et un accès en trop." />
+            <figcaption>L'onglet « Vérification des accès », sur l'organisation d'exemple. Un annuaire fictif tient lieu de fournisseur.</figcaption>
+          </figure>
           <p class="note">Le dossier « Fiches Relaytour » ne se lie pas à une activité. Un changement de fournisseur efface le dossier d'export de l'ancien fournisseur.</p>
         </article>
       </section>

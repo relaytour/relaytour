@@ -1,7 +1,6 @@
-import { Select } from 'antd'
-
-import { depuisValeurs, versValeurs, type Concerne } from '../lib/concerne'
+import type { Concerne } from '../lib/concerne'
 import type { Mentions } from '../lib/mentions'
+import ChoixLecteurs from './ChoixLecteurs'
 
 /**
  * Le choix de la liste « Concerne aussi » d'une fiche (ADR 0039) : les groupes de
@@ -18,31 +17,14 @@ export default function ChampConcerneAussi({
   mentions: Mentions
   perimetreDeLaFiche: string
 }) {
-  const options = [
-    {
-      label: 'Groupes',
-      options: [...mentions.groupes].map(([cle, g]) => ({
-        value: `g:${cle}`,
-        label: `${g.libelle} (tout le groupe)`,
-      })),
-    },
-    {
-      label: 'Périmètres',
-      options: [...mentions.perimetres.values()]
-        .filter(p => p.id !== perimetreDeLaFiche)
-        .map(p => ({ value: `p:${p.id}`, label: p.nom })),
-    },
-  ]
   return (
-    <Select
-      mode="multiple"
-      allowClear
-      value={versValeurs(valeur)}
-      onChange={valeurs => onChange(depuisValeurs(valeurs))}
-      options={options}
-      optionFilterProp="label"
+    <ChoixLecteurs
+      valeur={{ touteActivite: false, ...valeur }}
+      onChange={({ perimetres, groupes }) => onChange({ perimetres, groupes })}
+      mentions={mentions}
+      exclure={perimetreDeLaFiche}
       placeholder="Aucun autre périmètre"
-      aria-label="Concerne aussi"
+      ariaLabel="Concerne aussi"
     />
   )
 }

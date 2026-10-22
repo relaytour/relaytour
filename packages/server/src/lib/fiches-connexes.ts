@@ -40,7 +40,8 @@ const memo = new WeakMap<
   Promise<{ id: string; activiteId: string; groupe: string }[]>
 >()
 
-function lisiblesActifs(ctx: AppContext) {
+/** Les périmètres lisibles et non archivés de la personne, avec leur groupe. */
+export function perimetresLisiblesActifs(ctx: AppContext) {
   let lus = memo.get(ctx)
   if (lus === undefined) {
     lus = perimetresLisibles(ctx).then(ids =>
@@ -68,7 +69,7 @@ function lisiblesActifs(ctx: AppContext) {
 export async function conditionsConnexes(
   ctx: AppContext
 ): Promise<Prisma.FicheWhereInput[]> {
-  const actifs = await lisiblesActifs(ctx)
+  const actifs = await perimetresLisiblesActifs(ctx)
   if (actifs.length === 0) return []
   const parActivite = new Map<string, { ids: string[]; groupes: Set<string> }>()
   for (const p of actifs) {
