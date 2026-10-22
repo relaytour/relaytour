@@ -1,6 +1,6 @@
 # ADR 0044 — Accès chez le fournisseur cloud : vérification et propositions
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-22
 - Complète l'ADR 0038 (fiches et espace de fichiers) et l'ADR 0043 (dossiers liés à plusieurs lecteurs). Remplace deux règles de l'ADR 0038 :
   - la liste fermée des autorisations demandées à Microsoft ;
@@ -27,6 +27,7 @@ Une personne peut avoir accès par plusieurs voies à la fois : directement, par
 - Relaytour prépare des **propositions** : ajouter un accès, retirer un accès. Un admin de l'organisation les applique ou les écarte.
 - Un admin de l'organisation peut rendre les ajouts automatiques, dossier lié par dossier lié. Les retraits ne sont jamais automatiques.
 - **Relaytour ne retire qu'un droit qu'il a lui-même créé.** Un droit posé à la main chez le fournisseur n'est jamais retiré. Il apparaît seulement parmi les « accès en trop ».
+- Relaytour garde, pour chaque droit créé, son identifiant, son rôle et la personne visée. Un droit modifié à la main depuis sa création n'appartient plus à Relaytour, qui l'oublie sans le retirer.
 - La lecture dans Relaytour ne change pas : la vérification ne porte que sur les droits du fournisseur.
 
 ### Les personnes attendues
@@ -51,7 +52,8 @@ Une personne peut avoir accès par plusieurs voies à la fois : directement, par
   - **a accès**, avec la voie (directement, par tel groupe, par le domaine) ;
   - **sans compte** dans l'annuaire du fournisseur ;
   - **sans accès** : un compte existe, mais aucun droit ne le couvre ;
-  - **inconnu** : un groupe non lisible pourrait le couvrir.
+  - **inconnu** : Relaytour ne lit pas les droits du dossier, ou un groupe dont il ne lit pas les membres pourrait couvrir la personne.
+- Quand Relaytour ne lit pas les droits d'un dossier, il ne prépare aucune proposition pour ce dossier et garde ses traces de droits créés. L'écran de la connexion indique le nombre de dossiers concernés.
 - Les **accès en trop** sont les personnes qui ont un droit sans être attendues. Relaytour garde leur nom, sans leur adresse.
 - Un admin de l'organisation lit la vérification dans l'écran « Fournisseur cloud », onglet « Vérification des accès », rangée par équipe de périmètre. Il la relance à la demande. Le worker la refait chaque nuit, et après un changement d'équipe quand le dossier a un mode d'accès.
 
@@ -64,6 +66,8 @@ Une personne peut avoir accès par plusieurs voies à la fois : directement, par
   - une affectation, une désignation comme contact principal ou une extension des lecteurs crée une proposition d'ajout ;
   - un retrait d'affectation ou un archivage crée une proposition de retrait, si Relaytour avait créé le droit.
 - Une proposition reste unique par dossier, par personne et par action. Le serveur réserve une proposition avant de l'appliquer, et la vérification ne double pas une proposition en cours. MariaDB n'offre pas d'index partiel : cette unicité reste une règle du serveur. Une proposition écartée ne revient pas tant que la situation de la personne ne change pas. Une notification d'admin de l'organisation l'annonce une fois par jour au plus (ADR 0033).
+- Relaytour ne propose pas de sortir une personne d'un groupe quand un autre dossier lié qui passe par ce groupe l'attend encore.
+- Un admin ne délie un dossier qui porte des droits créés par Relaytour qu'en acceptant que ces droits restent chez le fournisseur, sans suivi.
 
 ### Portée de la connexion
 
@@ -74,14 +78,15 @@ Une personne peut avoir accès par plusieurs voies à la fois : directement, par
   - **annuaire** : `User.Read.All` et `GroupMember.Read.All`. La première cherche aussi les adresses secondaires et reconnaît un invité. Ces deux autorisations demandent le consentement d'un admin Microsoft Entra.
   - **gestion** : `GroupMember.ReadWrite.All` pour les groupes. Le partage d'un dossier utilise `Files.ReadWrite.All`, déjà accordé.
 - Graph ne lit pas les membres d'un groupe SharePoint d'un site. Ces groupes restent d'abord « composition non lisible ». Une réalisation suivante les lira par l'API REST de SharePoint, après une recette sur un vrai locataire.
+- Chez SharePoint, le droit « Tout le monde sauf les externes » compte comme le domaine de l'organisation. Un lien de portée organisation ne donne pas l'état « a accès », car il n'ouvre pas le dossier dans le site. La recette sur un vrai locataire confirmera ces deux lectures.
 - Les autres fournisseurs déclarent leurs capacités. L'écran masque ce qu'un fournisseur ne sait pas faire :
 
 | Fournisseur | Comptes | Droits d'un dossier | Membres d'un groupe | Partage | Gestion d'un groupe |
 |---|---|---|---|---|---|
 | SharePoint et OneDrive | par adresse, dans l'annuaire Entra | oui, hérités compris | groupes Microsoft 365 ; pas encore les groupes de site | oui | groupes Microsoft 365 |
 | Google Drive | aucun annuaire : Relaytour compare les adresses | oui, domaine compris | non | oui | non |
-| Dropbox | aucun annuaire : Relaytour compare les adresses | membres d'un dossier déjà partagé | non | dans un dossier déjà partagé | non |
-| Nextcloud | par la recherche du dialogue de partage | partages du dossier lui-même | si le compte connecté administre le groupe | oui, par compte ou par adresse | si le compte connecté administre le groupe |
+| Dropbox | aucun annuaire : Relaytour compare les adresses | membres du dossier partagé ; ceux d'un dossier parent comptent comme hérités | non | si le dossier lié est lui-même partagé, jamais son dossier parent | non |
+| Nextcloud | par la recherche du dialogue de partage | partages du dossier lui-même | si le compte connecté administre le groupe | par compte seulement, jamais par mail | si le compte connecté administre le groupe, jamais le groupe `admin` |
 
 - Google Drive et Nextcloud activent la vérification et la gestion sans reconnexion : l'accès déjà accordé les couvre. SharePoint et Dropbox demandent une reconnexion. Chez Dropbox, l'application de l'exploitant coche `sharing.read`, puis `sharing.write` pour la gestion.
 - Sans annuaire, une personne qui utilise une autre adresse chez le fournisseur paraît sans accès. L'admin saisit alors son adresse chez le fournisseur dans l'onglet « Comptes », ou partage le dossier avec son adresse Relaytour.
@@ -95,21 +100,22 @@ Une personne peut avoir accès par plusieurs voies à la fois : directement, par
     - les tables `CompteFournisseur` et `EtatAccesFournisseur`.
   - **Propositions** :
     - `DossierLie.accesFournisseur`, `groupeFournisseurId`, `groupeFournisseurNom`, `roleFournisseur` et `ajoutsAutomatiques` ;
-    - les tables `PropositionAcces` et `PermissionCreee`.
+    - les tables `PropositionAcces` et `PermissionCreee`. `PermissionCreee` garde le rôle, l'adresse et le compte du droit créé.
 - Chaque contrainte d'unicité contient l'organisation (invariant 18).
 - L'interface des fournisseurs reçoit un annuaire facultatif, avec ses capacités. Le fournisseur en mémoire le réalise pour les tests et la démo.
-- La file `planification` reçoit le travail `acces-fournisseur`. Ce travail est regroupé par organisation et par minute, comme l'export des fiches. La tâche de nuit de l'espace de fichiers le relance.
+- La file `planification` reçoit le travail `acces-fournisseur`. Un seul travail attend par organisation. Une demande faite pendant une vérification en cours reçoit une suite, et aucune demande ne se perd. La tâche de nuit de l'espace de fichiers le relance.
 - `creerAffectations`, le retrait d'une affectation, l'archivage d'une personne, le contact principal et la modification d'un dossier lié planifient ce travail. La planification ne lève jamais.
 - La notification d'admin `ACCES_FOURNISSEUR_A_VALIDER` s'ajoute au niveau de l'organisation.
 - Les comptes, les états et les propositions entrent dans l'export complet de l'organisation, jamais dans le dépôt Git.
+- La vérification supprime les comptes des personnes qui ne sont plus membres actives. L'export ne reprend que les membres actifs.
 - Le guide d'installation décrit les autorisations de chaque portée et le consentement de l'admin Entra.
 
 ## Revue de sécurité
 
 - La vérification, la correspondance des comptes, le réglage du mode d'accès et l'application d'une proposition exigent le rôle ADMIN dans l'organisation active. Ces données citent des adresses de toute l'équipe : elles suivent la règle de l'annuaire (ADR 0018). Des tests prouvent le refus sans session, pour un admin d'activité et pour une autre organisation.
 - Relaytour ne cherche chez le fournisseur que les adresses des membres de l'organisation. Il ne recopie pas l'annuaire du fournisseur. Les accès en trop gardent un nom, sans adresse, et chaque vérification les remplace.
-- Une écriture chez le fournisseur ne part que d'une proposition, appliquée par un admin ou par le réglage des ajouts automatiques. Le serveur relit la proposition et les droits avant chaque écriture.
-- Un retrait ne vise qu'un droit enregistré dans `PermissionCreee`. Un droit retiré ou modifié à la main chez le fournisseur sort de cette table à la vérification suivante.
-- Le serveur borne chaque appel par un délai. Il respecte `Retry-After` quand le fournisseur limite le débit, et une erreur sur une personne ne bloque pas les autres.
+- Une écriture chez le fournisseur ne part que d'une proposition, appliquée par un admin ou par le réglage des ajouts automatiques. Le serveur relit la proposition et les droits avant chaque écriture. Un droit que la personne a déjà n'est pas enregistré comme créé par Relaytour.
+- Un retrait ne vise qu'un droit enregistré dans `PermissionCreee`. Un droit retiré ou modifié à la main chez le fournisseur sort de cette table à la vérification suivante. Au moment du retrait, le serveur vérifie encore que le droit n'a pas changé. Sinon, la proposition échoue et le droit reste.
+- Le serveur borne chaque appel par un délai. Il respecte `Retry-After` quand le fournisseur limite le débit, et une erreur sur un dossier ou sur une personne ne bloque pas les autres.
 - Le journal ne porte que des identifiants, jamais d'adresse complète (invariant 6).
 - Les autorisations élargies ne se demandent qu'à l'admin qui les active. Une organisation qui ne s'en sert pas garde la portée de l'ADR 0038.

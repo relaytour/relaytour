@@ -1,6 +1,6 @@
 # ADR 0043 — Dossiers liés à plusieurs lecteurs et documents liés d'une fiche partagée
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-22
 - Complète l'ADR 0038 (fiches et espace de fichiers) et l'ADR 0039 (fiches connexes). Remplace trois règles de l'ADR 0038 :
   - un dossier lié ne sert plus un seul périmètre ou toute l'activité ;
@@ -32,6 +32,7 @@ L'écran « Espace de fichiers » porte aussi un nom technique, alors que les ad
 - Une personne lit le dossier lié dans deux cas. Elle lit toujours un dossier de toute l'activité, sous la même condition qu'une fiche commune. Elle lit un dossier à liste quand elle lit les fiches d'au moins un périmètre concerné.
 - La consultation (ADR 0014) n'ouvre toujours aucun dossier.
 - La liste compte au plus cent éléments. Elle ne contient ni périmètre archivé, ni groupe que l'activité ne déclare pas. Un groupe sans périmètre est refusé.
+- Ces refus ne visent que les ajouts. Une modification garde un périmètre archivé ou un groupe devenu vide que le lien nomme déjà.
 - Un dossier se lie une seule fois par activité. L'admin ajoute un lecteur à ce lien au lieu d'en créer un second.
 
 ### Modifier un lien
@@ -45,6 +46,7 @@ L'écran « Espace de fichiers » porte aussi un nom technique, alors que les ad
 - Un document lié s'attache à une fiche quand son dossier lié sert tous les lecteurs du périmètre de la fiche. Ce dossier vaut pour toute l'activité, ou sa liste contient le périmètre de la fiche, directement ou par son groupe.
 - Une fiche commune n'admet que les dossiers de toute l'activité.
 - Une personne ouvre un document lié quand elle lit son dossier lié, ou quand le document est ouvert aux lecteurs de la fiche.
+- Un document ouvert ne se lit que tant que son dossier lié sert encore la fiche. Après le déplacement de la fiche ou la réduction des lecteurs, Relaytour referme le document comme le reste du dossier.
 
 ### Fiche partagée et document réservé
 
@@ -52,6 +54,7 @@ L'écran « Espace de fichiers » porte aussi un nom technique, alors que les ad
 - Un admin de l'organisation dispose de deux réponses :
   - **Étendre le dossier lié.** Les périmètres et les groupes de « Concerne aussi » rejoignent les lecteurs du dossier. Un groupe reste un groupe. Tout le dossier devient lisible par ces périmètres.
   - **Ouvrir ce document aux lecteurs de la fiche.** Seul ce document devient lisible, par toute personne qui lit la fiche, partage compris. Pour un sous-dossier, l'ouverture vaut pour son contenu et rien d'autre.
+- Le dossier lié entier, cité par une fiche, ne s'ouvre pas comme un document. L'admin étend alors les lecteurs du dossier.
 - Une personne qui rédige sans être admin de l'organisation lit l'avertissement. L'avertissement l'invite à s'adresser à un admin de l'organisation.
 - Une personne qui ne peut pas ouvrir le document lit toujours « Réservée au périmètre d'origine ».
 - Le document garde l'auteur et la date de son ouverture. Un admin de l'organisation la retire à tout moment.
@@ -90,4 +93,7 @@ L'écran « Espace de fichiers » porte aussi un nom technique, alors que les ad
   - une personne d'un pôle face à un dossier lié au groupe des sports ;
   - un périmètre archivé du groupe ;
   - une personne qui rédige une fiche et tente une modification réservée aux admins de l'organisation ;
+  - un document ouvert dont le dossier ne sert plus la fiche ;
+  - le document ouvert d'une autre organisation ;
+  - une requête sans session ;
   - une autre organisation.
