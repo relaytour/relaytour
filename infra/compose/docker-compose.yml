@@ -81,7 +81,7 @@ services:
 
   # Valkey (BSD) remplace Redis, dont la licence n'est plus libre depuis la version 7.4.
   cache:
-    image: valkey/valkey:8-alpine
+    image: valkey/valkey:9-alpine
     restart: unless-stopped
     logging: *journal
     networks: [interne]
