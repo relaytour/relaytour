@@ -1769,6 +1769,9 @@ button.rt-ligne-declinaisons {
     align-items: center;
     justify-content: flex-start;
   }
+  .rt-carte-tache-actions > .ant-btn-icon-only {
+    align-self: auto;
+  }
 }
 
 /* Bouton d'engagement : la couleur d'accent porte « Je m'en occupe ». */
