@@ -1560,9 +1560,22 @@ export default function Personnes({
                   mode="multiple"
                   allowClear
                   placeholder="Aucune activité"
+                  // Une activité archivée ne reçoit plus de rattachement, mais un
+                  // rattachement existant garde son nom.
                   options={(toutesActivites?.activites ?? [])
-                    .filter(a => !a.archive)
-                    .map(a => ({ value: a.id, label: a.nom }))}
+                    .filter(
+                      a =>
+                        !a.archive ||
+                        (enEdition !== null &&
+                          enEdition !== 'nouvelle' &&
+                          (enEdition.attributions ?? []).some(
+                            x => x.activiteId === a.id && x.rattachee
+                          ))
+                    )
+                    .map(a => ({
+                      value: a.id,
+                      label: a.archive ? `${a.nom} (archivée)` : a.nom,
+                    }))}
                 />
               </Form.Item>
               <Form.Item
