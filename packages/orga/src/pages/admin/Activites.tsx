@@ -775,7 +775,7 @@ export default function Activites() {
               label="Ouverte aux souhaits"
               name="souhaitsOuverts"
               valuePropName="checked"
-              extra="Tous les membres de l’organisation découvrent les périmètres dans « Tous les périmètres » et formulent leurs souhaits. Les tâches et les fiches restent réservées aux personnes affectées."
+              extra="Les personnes de l’équipe de l’activité formulent elles-mêmes leurs souhaits dans « Tous les périmètres ». Sinon, seuls les admins de l’activité notent les souhaits. Le réglage ne montre pas l’activité aux membres hors de son équipe."
             >
               <Switch />
             </Form.Item>

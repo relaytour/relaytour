@@ -46,6 +46,7 @@
 | [0042](0042-import-de-listes-de-benevoles.md) | Import de listes de bénévoles, doublons et fusion des fiches | Acceptée |
 | [0043](0043-dossiers-lies-a-plusieurs-lecteurs.md) | Dossiers liés à plusieurs lecteurs et documents liés d'une fiche partagée | Acceptée, réalisée |
 | [0044](0044-acces-chez-le-fournisseur-cloud.md) | Accès chez le fournisseur cloud : vérification et propositions | Acceptée, réalisée |
+| [0045](0045-rattachement-a-une-activite.md) | Rattachement à une activité et visibilité limitée à ses activités | Proposée |
 | [0046](0046-appel-a-benevoles-sur-le-formulaire-de-l-equipe.md) | Appel à bénévoles indiqué sur le formulaire de l'équipe | Acceptée, réalisée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

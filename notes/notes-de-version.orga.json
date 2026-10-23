@@ -8,6 +8,19 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-23-orga-une-personne-rejoint-l-equipe-d-une-activite-sans-perimetre",
+          "date": "2026-10-23",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une personne rejoint l'équipe d'une activité sans périmètre",
+            "texte": "Vous invitez une personne dans votre activité sans lui choisir de périmètre. Une demande s'accepte aussi sans périmètre. La personne découvre alors les périmètres dans « Tous les périmètres ». L'écran « Personnes » l'affiche avec le rôle « Sans périmètre ». Vous la retirez de l'équipe par le bouton « Retirer de l'activité ». Le réglage « Ouverte aux souhaits » indique si l'équipe formule elle-même ses souhaits.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-23-orga-les-erreurs-passent-en-carmin-et-un-accent-de-texte-rejoint-",
           "date": "2026-10-23",
           "type": "fonctionnalite",
@@ -43,6 +56,19 @@
           "fr": {
             "titre": "Le formulaire public indique l'appel à bénévoles ouvert",
             "texte": "Le formulaire « Rejoindre l'équipe d'organisation » précise qu'il sert à rejoindre l'équipe qui prépare l'activité. Quand un appel à bénévoles est ouvert sur toute la période, le formulaire affiche son lien pour les personnes qui viennent aider le jour J. Sans appel ouvert, il indique l'adresse de contact de l'activité.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-23-orga-l-annuaire-rattache-une-personne-aux-equipes-des-activites",
+          "date": "2026-10-23",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'annuaire rattache une personne aux équipes des activités",
+            "texte": "La fenêtre d'un compte porte le champ « Équipes des activités ». Vous y choisissez les activités dont la personne rejoint l'équipe, sans périmètre. Une personne invitée sans activité ne voit aucune activité : le filtre « Sans activité » la retrouve dans l'annuaire.",
             "migration": null
           }
         }

@@ -462,21 +462,16 @@ export default function Demandes({
           <Form.Item
             label="Périmètres à affecter"
             name="affecter"
-            extra="Un périmètre demandé que vous n’affectez pas devient un souhait."
-            rules={[
-              {
-                // Sans périmètre demandé, la personne rejoint l'équipe par une
-                // affectation (ADR 0018).
-                required: enAcceptation?.perimetres.length === 0,
-                message:
-                  'Choisissez au moins un périmètre : la personne rejoint l’équipe par ce périmètre.',
-              },
-            ]}
+            extra="Un périmètre demandé que vous n’affectez pas devient un souhait. Sans périmètre, la personne rejoint l’équipe de l’activité et découvre ses périmètres."
           >
             <Select
               mode="multiple"
               allowClear
-              placeholder="Aucun périmètre : la personne garde ses souhaits"
+              placeholder={
+                enAcceptation?.perimetres.length === 0
+                  ? 'Aucun périmètre pour l’instant'
+                  : 'Aucun périmètre : la personne garde ses souhaits'
+              }
               optionFilterProp="label"
               options={options}
             />

@@ -119,6 +119,18 @@ describe('activiteParDefaut', () => {
     ).toBe('rencontres')
   })
 
+  it('préfère une activité vue à une activité découverte (ADR 0045)', () => {
+    expect(
+      activiteParDefaut([
+        activite('timm', { acces: 'DECOUVERTE' }),
+        activite('natation'),
+      ])?.slug
+    ).toBe('natation')
+    expect(
+      activiteParDefaut([activite('timm', { acces: 'DECOUVERTE' })])?.slug
+    ).toBe('timm')
+  })
+
   it('prend une activité archivée seulement s’il n’y a qu’elle', () => {
     expect(
       activiteParDefaut([activite('ancienne', { archive: true })])?.slug

@@ -32,6 +32,15 @@ export async function construireExport(organisationId: string) {
   const organisation = await prisma.organisation.findUniqueOrThrow({
     where: { id: organisationId },
   })
+  // Les rattachements aux activités (ADR 0045).
+  const rattachements = await prisma.rattachementActivite.findMany({
+    where: { organisationId },
+    include: {
+      user: { select: { email: true } },
+      activite: { select: { slug: true } },
+    },
+    orderBy: [{ createdAt: 'asc' }, { id: 'asc' }],
+  })
   const [membres, activites, affectations, souhaits, droits, demandes] =
     await Promise.all([
       prisma.appartenance.findMany({
@@ -543,6 +552,11 @@ export async function construireExport(organisationId: string) {
       perimetre: x.perimetre.slug,
       periode: x.edition.annee,
       contactPrincipal: x.contactPrincipal,
+    })),
+    rattachements: rattachements.map(x => ({
+      email: x.user.email,
+      activite: x.activite.slug,
+      creeLe: x.createdAt.toISOString(),
     })),
     souhaits: souhaits.map(x => ({
       email: x.user.email,

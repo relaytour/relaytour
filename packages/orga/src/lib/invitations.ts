@@ -24,6 +24,7 @@ export const INVITATIONS_EN_ATTENTE = graphql(`
         nom
         couleur
       }
+      activitesRattachees
     }
   }
 `)

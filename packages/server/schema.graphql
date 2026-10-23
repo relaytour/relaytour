@@ -83,7 +83,7 @@ type Activite {
   slug: String!
 
   """
-  Vrai quand tous les membres de l’organisation découvrent les périmètres de l’activité et formulent leurs souhaits (ADR 0012).
+  Vrai quand les personnes de l’équipe de l’activité formulent elles-mêmes leurs souhaits (ADR 0045). Le réglage ne rend l’activité visible à personne.
   """
   souhaitsOuverts: Boolean!
 
@@ -258,6 +258,11 @@ type AttributionActivite {
 
   """Vrai quand la personne y a au moins un souhait."""
   interessee: Boolean!
+
+  """
+  Vrai quand la personne est rattachée à l’activité (ADR 0045). Toute affectation la rattache aussi.
+  """
+  rattachee: Boolean!
 }
 
 type Avancement {
@@ -1207,6 +1212,10 @@ type IdentiteOrganisation {
 Une invitation qui attend l’accord de la personne, vue par l’organisation : ce qu’elle a saisi, et rien du compte invité.
 """
 type InvitationEnAttente {
+  """
+  Les activités où l’acceptation rattache la personne sans périmètre (ADR 0045).
+  """
+  activitesRattachees: [ID!]!
   creeLe: DateTime!
 
   """L’adresse saisie par la personne qui a invité."""
@@ -1752,7 +1761,7 @@ type Mutation {
   Ajoute une déclinaison aux tâches de son périmètre sans son accord, même après un refus. Réservé aux admins de l’activité.
   """
   imposerDeclinaison(id: ID!): Tache!
-  inviterPersonne(editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresAffectes: [ID!], perimetresSouhaites: [ID!]): InvitationEnvoyee!
+  inviterPersonne(activiteId: ID, editionId: ID, email: String!, estAdmin: Boolean = false, nom: String!, perimetresAffectes: [ID!], perimetresSouhaites: [ID!]): InvitationEnvoyee!
 
   """
   Donne le rôle d’admin d’une organisation à une adresse et lui envoie une invitation. Vrai quand l’admin est en place ; faux quand l’adresse a déjà un compte hors de l’organisation, dont l’invitation attend l’accord (ADR 0030). La réponse ne renvoie aucune donnée du compte.
@@ -1998,6 +2007,7 @@ type Mutation {
   Retire la personne d’une place à venir et prévient l’équipe. Une fiche non confirmée qu’aucune place ne retient est supprimée. Utilisable sans session.
   """
   quitterPlace(jeton: String!, ref: String!): Boolean!
+  rattacherALActivite(activiteId: ID!, userId: ID!): Boolean!
 
   """
   Refuse tous les choix en attente d’une candidature et la clôt. Réservé aux personnes qui gèrent l’appel. Aucun mail ne part.
@@ -2058,6 +2068,7 @@ type Mutation {
   """
   restaurerVersionFiche(versionDeDepart: ID, versionId: ID!): Fiche!
   retirerAffectation(id: ID!): Boolean!
+  retirerDeLActivite(activiteId: ID!, userId: ID!): Boolean!
 
   """
   Arrête l’export des fiches. Les fichiers déjà écrits restent dans l’espace de fichiers.
@@ -2066,7 +2077,7 @@ type Mutation {
   retirerDroitRedaction(id: ID!): Boolean!
 
   """
-  Retire une invitation en attente. Un admin d’activité retire les périmètres de ses activités ; l’invitation disparaît quand il n’en reste aucun.
+  Retire une invitation en attente. Un admin d’activité retire les périmètres et les rattachements de ses activités ; l’invitation disparaît quand il n’en reste aucun.
   """
   retirerInvitation(id: ID!): Boolean!
 

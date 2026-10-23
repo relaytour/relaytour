@@ -68,6 +68,7 @@ try {
     rapport.invitationsEnAttente
   )
   afficher('Comptes déjà membres', rapport.comptesExistants)
+  afficher('Rattachements à l’activité créés', rapport.rattachementsCrees)
   afficher('Noms différents, laissés tels quels', rapport.nomsDifferents)
   afficher('Affectations créées', rapport.affectationsCreees)
   afficher('Affectations déjà présentes', rapport.affectationsExistantes)

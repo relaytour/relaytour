@@ -14,6 +14,7 @@ import {
   refuserAdminDeLOrganisation,
 } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
+import { rattacher } from '../lib/rattachements.ts'
 import {
   motValide,
   PROPOSITIONS_EN_ATTENTE_MAX,
@@ -419,9 +420,10 @@ builder.mutationFields(t => ({
     },
   }),
 
-  // L'admin accepte la demande : le compte naît ou se rattache, les périmètres
-  // choisis deviennent des affectations, et les autres périmètres demandés des
-  // souhaits. Tout s'écrit ensemble.
+  // L'admin accepte la demande : le compte naît ou se rattache, la personne est
+  // rattachée à l'activité (ADR 0045), les périmètres choisis deviennent des
+  // affectations, et les autres périmètres demandés des souhaits. Tout s'écrit
+  // ensemble. Une demande s'accepte sans périmètre.
   accepterDemande: t.prismaField({
     type: DemandeRef,
     authScopes: { gestion: true },
@@ -477,9 +479,6 @@ builder.mutationFields(t => ({
               demande.id,
               affecter
             )
-            if (affecter.length + souhaites.length === 0) {
-              throw erreurSaisie(SANS_PERIMETRE)
-            }
             await inviterCompteExterne(tx, {
               organisationId,
               userId,
@@ -494,6 +493,7 @@ builder.mutationFields(t => ({
                 souhaites: souhaites.slice(0, SOUHAITS_MAX),
                 contactPrincipal: [],
               },
+              rattachements: [demande.activiteId],
               instant,
             })
             await tx.demande.update({
@@ -514,14 +514,15 @@ builder.mutationFields(t => ({
             instant,
           })
           await noterLesAutresSouhaits(tx, demande, userId, affecter)
-          // La personne rejoint l'équipe de l'activité par un périmètre (ADR 0018) :
-          // sans affectation ni souhait, aucun admin de l'activité ne la lirait.
-          const liee = await tx.user.count({
-            where: { id: userId, ...dansLEquipe([demande.activiteId]) },
+          // La personne rejoint l'équipe de l'activité, avec ou sans périmètre
+          // (ADR 0045) : les admins de l'activité la lisent.
+          await rattacher(tx, {
+            userId,
+            activiteIds: [demande.activiteId],
+            organisationId,
+            creeParId: ctx.personne!.id,
+            instant,
           })
-          if (liee === 0) {
-            throw erreurSaisie(SANS_PERIMETRE)
-          }
           await tx.demande.update({
             where: { id: demande.id },
             data: { ...traitee, userId },
@@ -628,9 +629,6 @@ builder.mutationFields(t => ({
     },
   }),
 }))
-
-const SANS_PERIMETRE =
-  'Choisissez au moins un périmètre : la personne rejoint l’équipe par ce périmètre.'
 
 /** Les périmètres demandés, non archivés, que l'admin n'a pas affectés. */
 async function autresPerimetresDemandes(

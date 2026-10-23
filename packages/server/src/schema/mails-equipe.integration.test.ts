@@ -401,7 +401,7 @@ describe('contenu des mails', () => {
     )
   })
 
-  it('explique comment obtenir un périmètre, selon l’ouverture aux souhaits', async () => {
+  it('nomme l’activité de rattachement et dit si les souhaits sont ouverts', async () => {
     const invitation = async () =>
       (
         await composer(prisma, {
@@ -410,13 +410,46 @@ describe('contenu des mails', () => {
           organisationId: ids.org,
         })
       )?.texte ?? ''
+    // Les affectations des tests précédents ont rattaché Sam à l'activité.
+    await prisma.rattachementActivite.deleteMany({ where: { userId: ids.sam } })
     expect(await invitation()).toContain(
       'Vous n’avez pas encore de périmètre : un admin vous affectera'
     )
+    // Une activité ouverte aux souhaits ne s'ouvre plus hors de son équipe
+    // (ADR 0045) : le mail n'en parle pas à une personne qui n'y est pas.
     await prisma.activite.update({
       where: { id: ids.activite },
       data: { souhaitsOuverts: true },
     })
-    expect(await invitation()).toContain('Dans « Tous les périmètres »')
+    expect(await invitation()).toContain(
+      'Vous n’avez pas encore de périmètre : un admin vous affectera'
+    )
+    await prisma.rattachementActivite.create({
+      data: {
+        userId: ids.sam,
+        activiteId: ids.activite,
+        organisationId: ids.org,
+      },
+    })
+    try {
+      const texte = await invitation()
+      expect(texte).toContain(
+        'Vous faites partie de l’équipe de l’activité « Tournoi », sans périmètre pour l’instant.'
+      )
+      expect(texte).toContain(
+        'vous découvrez les périmètres et formulez vos souhaits.'
+      )
+      await prisma.activite.update({
+        where: { id: ids.activite },
+        data: { souhaitsOuverts: false },
+      })
+      expect(await invitation()).toContain(
+        'Dans « Tous les périmètres », vous découvrez les périmètres. Un admin'
+      )
+    } finally {
+      await prisma.rattachementActivite.deleteMany({
+        where: { userId: ids.sam },
+      })
+    }
   })
 })
