@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: organisateurs
 etat: prevu
+version: 0.21.0
 fr:
   titre: >-
     Chaque personne ne voit que les activités de son équipe

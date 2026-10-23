@@ -3,6 +3,7 @@ cible: serveur
 type: interne
 audience: interne
 etat: prevu
+version: 0.21.0
 fr:
   titre: >-
     Chaque personne affectée est rattachée à son activité

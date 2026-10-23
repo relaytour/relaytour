@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.21.0
 fr:
   titre: >-
     Le formulaire public indique l'appel à bénévoles ouvert
