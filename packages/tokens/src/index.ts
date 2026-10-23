@@ -31,9 +31,14 @@ export interface CouleursTheme {
   primaire: string
   /** Fond des états « en cours » et des en-têtes de tableau. */
   primaireClair: string
-  /** Engagement d'une personne : « je m'en occupe », notification non lue. */
+  /**
+   * Engagement d'une personne : « je m'en occupe », notification non lue.
+   * L'accent colore des surfaces et des traits, jamais un texte.
+   */
   accent: string
   accentClair: string
+  /** L'accent d'un texte : plus sombre, pour qu'un titre ne se lise pas comme une erreur. */
+  accentTexte: string
   succes: string
   succesClair: string
   alerte: string
@@ -103,6 +108,26 @@ export interface ThemePartiel {
   typographie?: Partial<TypographieTheme>
 }
 
+/**
+ * L'accent d'un texte quand le thème ne le déclare pas : l'accent mêlé d'un
+ * tiers d'encre, dans l'espace sRGB.
+ */
+export function accentTexteDerive(accent: string, encre: string): string {
+  const a = parseInt(accent.slice(1), 16)
+  const e = parseInt(encre.slice(1), 16)
+  const composante = (decalage: number) =>
+    Math.round(
+      ((a >> decalage) & 255) * (2 / 3) + ((e >> decalage) & 255) * (1 / 3)
+    )
+  const n = (composante(16) << 16) | (composante(8) << 8) | composante(0)
+  return `#${n.toString(16).padStart(6, '0').toUpperCase()}`
+}
+
+/** Vrai quand deux couleurs hexadécimales désignent la même couleur, quelle que soit la casse. */
+export function memeCouleur(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase()
+}
+
 /** L'intensité maximale d'un halo : au-delà, il gênerait la lecture du texte posé sur le verre. */
 export const INTENSITE_HALO_MAX = 0.35
 
@@ -163,7 +188,8 @@ const TYPOGRAPHIE_RELAYTOUR: TypographieTheme = {
 
 /**
  * Thème par défaut de Relaytour : bleu-vert et terre cuite sur un sol froid.
- * Validé le 18 septembre 2026 (docs/design-system.md).
+ * Validé le 18 septembre 2026 ; l'accent de texte brun et l'erreur carmin, le
+ * 23 octobre 2026 (docs/design-system.md).
  */
 export const themeParDefaut: Theme = {
   couleurs: {
@@ -172,12 +198,13 @@ export const themeParDefaut: Theme = {
     primaireClair: '#DCEAEB',
     accent: '#AD412B',
     accentClair: '#F6E1DB',
+    accentTexte: '#7E3A24',
     succes: '#3A7042',
     succesClair: '#E3F0E4',
     alerte: '#8A5A0E',
     alerteClair: '#FBF0D8',
-    erreur: '#A23A2C',
-    erreurClair: '#F8E3DF',
+    erreur: '#B0283F',
+    erreurClair: '#F9E1E5',
     sol1: '#FFFFFF',
     sol2: '#F4F6F7',
     sol3: '#E9EEF0',
@@ -201,6 +228,7 @@ const COULEURS_ALTERNATIVES: CouleursTheme = {
   primaireClair: '#E6E9EB',
   accent: '#136D6C',
   accentClair: '#DCEFEE',
+  accentTexte: accentTexteDerive('#136D6C', themeParDefaut.couleurs.encre),
 }
 
 export const themeAlternatif: Theme = {
@@ -228,12 +256,23 @@ function sansIndefinis<T extends object>(objet: T | undefined): Partial<T> {
  * Complète un thème partiel avec le thème de base. Le fond se dérive des
  * couleurs fusionnées (`fondDerive`), puis reçoit les valeurs déclarées : une
  * organisation qui ne change que sa primaire obtient un halo de sa primaire.
+ * Un thème qui déclare un autre accent que sa base, sans accent de texte, reçoit
+ * un accent de texte dérivé du sien (`accentTexteDerive`). Un accent redéclaré à
+ * l'identique garde l'accent de texte de la base.
  */
 export function fusionnerTheme(
   partiel: ThemePartiel,
   base: Theme = themeParDefaut
 ): Theme {
-  const couleurs = { ...base.couleurs, ...sansIndefinis(partiel.couleurs) }
+  const declarees = sansIndefinis(partiel.couleurs)
+  const couleurs = { ...base.couleurs, ...declarees }
+  if (
+    declarees.accent !== undefined &&
+    declarees.accentTexte === undefined &&
+    !memeCouleur(declarees.accent, base.couleurs.accent)
+  ) {
+    couleurs.accentTexte = accentTexteDerive(couleurs.accent, couleurs.encre)
+  }
   const derive = fondDerive(couleurs)
   const fond = partiel.fond
   return {
@@ -280,6 +319,7 @@ export function variablesCss(theme: Theme): Record<string, string> {
     '--rt-accent': c.accent,
     '--rt-accent-rgb': rgb(c.accent),
     '--rt-accent-clair': c.accentClair,
+    '--rt-accent-texte': c.accentTexte,
     '--rt-succes': c.succes,
     '--rt-succes-clair': c.succesClair,
     '--rt-alerte': c.alerte,

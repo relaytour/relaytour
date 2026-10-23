@@ -42,10 +42,11 @@
 | [0038](0038-fiches-et-espace-de-fichiers.md) | Fiches et espace de fichiers d'une organisation | Acceptée, réalisée |
 | [0039](0039-fiches-connexes.md) | Fiches connexes et mentions de périmètre ou de groupe | Acceptée, réalisée |
 | [0040](0040-programme-du-jour-j-et-benevoles.md) | Programme du jour J, séquences et bénévoles | Acceptée, réalisée |
-| [0041](0041-appels-a-benevoles-et-repartition.md) | Appels à bénévoles, candidatures et répartition | Acceptée, réalisée |
+| [0041](0041-appels-a-benevoles-et-repartition.md) | Appels à bénévoles, candidatures et répartition | Acceptée, réalisée, secret de l'appel de période complété par l'ADR 0046 |
 | [0042](0042-import-de-listes-de-benevoles.md) | Import de listes de bénévoles, doublons et fusion des fiches | Acceptée |
 | [0043](0043-dossiers-lies-a-plusieurs-lecteurs.md) | Dossiers liés à plusieurs lecteurs et documents liés d'une fiche partagée | Acceptée, réalisée |
 | [0044](0044-acces-chez-le-fournisseur-cloud.md) | Accès chez le fournisseur cloud : vérification et propositions | Acceptée, réalisée |
 | [0045](0045-rattachement-a-une-activite.md) | Rattachement à une activité et visibilité limitée à ses activités | Proposée |
+| [0046](0046-appel-a-benevoles-sur-le-formulaire-de-l-equipe.md) | Appel à bénévoles indiqué sur le formulaire de l'équipe | Acceptée, réalisée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
