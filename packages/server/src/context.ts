@@ -89,16 +89,16 @@ export interface AppContext {
    */
   activitesVisibles: () => Promise<Set<string>>
   /**
-   * Activités que la personne découvre (ADR 0012) : les activités visibles, celles où
-   * elle a un souhait, et les activités ouvertes aux souhaits de l'organisation. Une
-   * activité découverte sans être visible n'ouvre que la page « Tous les
-   * périmètres » et les souhaits de la personne.
+   * Activités que la personne découvre (ADR 0012, 0045) : les activités visibles, et
+   * celles où elle est rattachée ou a un souhait. Une activité découverte sans être
+   * visible n'ouvre que la page « Tous les périmètres » et les souhaits de la
+   * personne.
    */
   activitesDecouvertes: () => Promise<Set<string>>
   /**
    * L'activité demandée si la personne la découvre, sinon un refus. Sans
    * identifiant, l'activité de l'en-tête si elle est découverte, sinon la première
-   * activité découverte et ouverte.
+   * activité visible et ouverte, sinon la première activité découverte et ouverte.
    */
   exigerActiviteDecouverte: (
     activiteId?: string | number | null
@@ -322,11 +322,14 @@ export async function buildContext(
       return Promise.resolve(new Set<string>())
     decouvertes ??= Promise.all([
       activitesVisibles(),
+      // Une personne découvre les activités où elle est rattachée ou a un souhait
+      // (ADR 0045). Une activité ouverte aux souhaits ne s'ouvre plus aux membres
+      // hors de son équipe.
       prisma.activite.findMany({
         where: {
           organisationId: organisation.id,
           OR: [
-            { souhaitsOuverts: true, archivedAt: null },
+            { rattachements: { some: { userId: personne.id } } },
             {
               perimetres: {
                 some: { souhaits: { some: { userId: personne.id } } },
@@ -365,17 +368,24 @@ export async function buildContext(
             },
             select: { id: true },
           })
+    // Sans activité demandée, une activité que la personne voit passe avant une
+    // activité qu'elle découvre seulement (ADR 0045).
+    const premiere = (ids: Set<string>) =>
+      ids.size === 0
+        ? Promise.resolve(null)
+        : prisma.activite.findFirst({
+            where: {
+              organisationId: organisation.id,
+              archivedAt: null,
+              id: { in: [...ids] },
+            },
+            orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+            select: { id: true },
+          })
     const activite =
       demandee ??
-      (await prisma.activite.findFirst({
-        where: {
-          organisationId: organisation.id,
-          archivedAt: null,
-          id: { in: [...ici] },
-        },
-        orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
-        select: { id: true },
-      }))
+      (await premiere(await activitesVisibles())) ??
+      (await premiere(ici))
     if (activite === null)
       throw erreurSaisie('Aucune activité ouverte ne vous est accessible.')
     return activite.id

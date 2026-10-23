@@ -222,6 +222,13 @@ describe('import', () => {
       `Nom mis à jour ${s} → restauration`,
     ])
     expect(rapport.souhaitsIgnores).toEqual([`Julien ${s} → ville (affecté·e)`])
+    // Chaque personne déclarée rejoint l'équipe de l'activité (ADR 0045).
+    expect(rapport.rattachementsCrees).toHaveLength(3)
+    expect(
+      await prisma.rattachementActivite.count({
+        where: { activiteId: ids.activite },
+      })
+    ).toBe(3)
     expect(enFile).toEqual([])
 
     // L'adresse est normalisée ; le nom d'un compte existant ne change pas.
@@ -260,7 +267,30 @@ describe('import', () => {
     expect(rapport.comptesCrees).toEqual([])
     expect(rapport.affectationsCreees).toEqual([])
     expect(rapport.souhaitsCrees).toEqual([])
+    expect(rapport.rattachementsCrees).toEqual([])
     expect(await compter()).toEqual(avant)
+  })
+
+  it('rattache à l’activité une personne déclarée sans périmètre', async () => {
+    const fichier = `
+personnes:
+  - nom: Sans périmètre ${s}
+    adresse: ${adresse('sans-perimetre')}
+`
+    const simulation = await importerEquipe(prisma, lireEquipe(fichier), {
+      ...options(),
+      simulation: true,
+    })
+    expect(simulation.rattachementsCrees).toEqual([`Sans périmètre ${s}`])
+    const rapport = await importerEquipe(prisma, lireEquipe(fichier), options())
+    expect(rapport.rattachementsCrees).toEqual([`Sans périmètre ${s}`])
+    const personne = await prisma.user.findUniqueOrThrow({
+      where: { email: adresse('sans-perimetre') },
+      select: { rattachementsActivite: { select: { activiteId: true } } },
+    })
+    expect(personne.rattachementsActivite).toEqual([
+      { activiteId: ids.activite },
+    ])
   })
 
   it('envoie les invitations et les mails d’équipe avec l’option d’envoi', async () => {

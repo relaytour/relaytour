@@ -412,11 +412,14 @@ describe('refus', () => {
 
 describe('lecture en découverte', () => {
   it('montre les admins et les contacts principaux, sans aucune adresse personnelle', async () => {
-    const ouvrir = await executer(ids.adminActivite, REGLER, {
-      id: ids.activite,
-      o: true,
+    // Le membre découvre l'activité par son rattachement (ADR 0045).
+    await prisma.rattachementActivite.create({
+      data: {
+        userId: ids.membre,
+        activiteId: ids.activite,
+        organisationId: ids.org,
+      },
     })
-    expect(ouvrir.errors).toBeUndefined()
     const o = await lire(ids.membre)
     expect(o.complet).toBe(false)
     expect(o.contactActivite).toBe('equipe@exemple.fr')

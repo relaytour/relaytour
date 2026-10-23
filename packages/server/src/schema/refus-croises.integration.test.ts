@@ -1062,6 +1062,14 @@ const CAS: Cas[] = [
     variables: () => ({ e: a.edition, p: [a.perimetre] }),
     attente: INTERDIT,
   },
+  // Une invitation sans périmètre dans une activité invisible (ADR 0045).
+  {
+    operation: 'inviterPersonne',
+    query:
+      'mutation ($a: ID) { inviterPersonne(email: "intrusion-refus@exemple.fr", nom: "X", activiteId: $a) { enAttente } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
   {
     operation: 'marquerNotificationsLues',
     query: 'mutation ($ids: [ID!]) { marquerNotificationsLues(ids: $ids) }',
@@ -1163,6 +1171,22 @@ const CAS: Cas[] = [
     query: 'mutation ($id: ID!) { retirerAffectation(id: $id) }',
     variables: () => ({ id: a.affectation }),
     attente: { sansEffet: d => expect(d.retirerAffectation).toBe(false) },
+  },
+  // Rattachement à une activité (ADR 0045) : une activité invisible vaut une
+  // activité inconnue, et un retrait hors de ses activités ne change rien.
+  {
+    operation: 'rattacherALActivite',
+    query:
+      'mutation ($u: ID!, $a: ID!) { rattacherALActivite(userId: $u, activiteId: $a) }',
+    variables: () => ({ u: a.referente, a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'retirerDeLActivite',
+    query:
+      'mutation ($u: ID!, $a: ID!) { retirerDeLActivite(userId: $u, activiteId: $a) }',
+    variables: () => ({ u: a.referente, a: a.activite }),
+    attente: { sansEffet: d => expect(d.retirerDeLActivite).toBe(false) },
   },
   {
     operation: 'retirerDroitRedaction',

@@ -66,6 +66,7 @@ model Organisation {
   droitsRedaction         DroitRedaction[]
   medias                  Media[]
   adminsActivite          AdminActivite[]
+  rattachementsActivite   RattachementActivite[]
   demandes                Demande[]
   messages                Message[]
   invitations             InvitationOrganisation[]
@@ -172,6 +173,9 @@ model InvitationOrganisation {
   // Ce que l'acceptation créera, par période : `[{ editionId, activiteId, affectes,
   // souhaites, contactPrincipal }]`, des identifiants de périmètres (lib/invitations.ts).
   lots           Json
+  // Les activités où l'acceptation rattache la personne sans périmètre (ADR 0045) :
+  // des identifiants d'activités. Null pour une invitation d'avant cette décision.
+  rattachements  Json?
   expireLe       DateTime
   createdAt      DateTime          @default(now())
   updatedAt      DateTime          @updatedAt
@@ -203,6 +207,28 @@ model AdminActivite {
   @@unique([userId, activiteId])
   @@index([organisationId])
   @@index([activiteId])
+}
+
+// Rattachement d'une personne à une activité, sans périmètre ni période (ADR 0045).
+// Il la fait entrer dans l'équipe de l'activité, et lui ouvre la découverte : la
+// page « Tous les périmètres ». Chaque affectation crée aussi le rattachement.
+model RattachementActivite {
+  id             String   @id @default(cuid())
+  userId         String
+  activiteId     String
+  organisationId String
+  creeParId      String?
+  createdAt      DateTime @default(now())
+
+  user         User         @relation("RattachementPersonne", fields: [userId], references: [id], onDelete: Cascade)
+  activite     Activite     @relation(fields: [activiteId], references: [id], onDelete: Cascade)
+  organisation Organisation @relation(fields: [organisationId], references: [id], onDelete: Restrict)
+  creePar      User?        @relation("RattachementAuteur", fields: [creeParId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, activiteId])
+  @@index([organisationId])
+  @@index([activiteId])
+  @@index([creeParId])
 }
 
 // La nature fixe le libellé de la période : édition, saison ou mandat.
@@ -265,6 +291,7 @@ model Activite {
   perimetres            Perimetre[]
   fiches                Fiche[]
   admins                AdminActivite[]
+  rattachements         RattachementActivite[]
   demandes              Demande[]
   messages              Message[]
   notifications         Notification[]
@@ -329,6 +356,8 @@ model User {
   souhaits                Souhait[]
   appartenances           Appartenance[]
   adminsActivite          AdminActivite[]
+  rattachementsActivite   RattachementActivite[]   @relation("RattachementPersonne")
+  rattachementsCrees      RattachementActivite[]   @relation("RattachementAuteur")
   demandes                Demande[]                @relation("DemandeCompte")
   demandesTraitees        Demande[]                @relation("DemandeTraitement")
   propositions            DemandePerimetre[]

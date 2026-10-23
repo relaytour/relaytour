@@ -9,7 +9,9 @@ import { buildContext, type AppContext } from '../context.ts'
 import { schema } from './index.ts'
 
 // Page « Tous les périmètres » et souhaits formulés par la personne (ADR 0012).
-// Une activité ouverte aux souhaits se découvre sans ouvrir ses tâches ni ses fiches.
+// Une personne rattachée à l'activité la découvre sans ouvrir ses tâches ni ses
+// fiches (ADR 0045). Une activité ouverte aux souhaits ne s'ouvre plus aux membres
+// hors de son équipe : le réglage dit seulement si l'équipe formule ses souhaits.
 // Les contrôles se prouvent par le refus (invariant 11). Le fichier crée sa propre
 // organisation et ne touche pas à l'organisation par défaut.
 
@@ -26,7 +28,8 @@ const ids = {
   archive: '',
   admin: '',
   referente: '', // affectée à la natation
-  membre: '', // aucune affectation, aucun souhait
+  membre: '', // aucun lien, puis rattaché quand l'activité s'ouvre aux souhaits
+  rattache: '', // rattaché à l'activité, sans affectation
   autreMembre: '',
   fiche: '',
 }
@@ -143,6 +146,7 @@ beforeAll(async () => {
     ['referente', 'MEMBRE'],
     ['membre', 'MEMBRE'],
     ['autreMembre', 'MEMBRE'],
+    ['rattache', 'MEMBRE'],
   ] as const) {
     ids[cle] = randomUUID()
     await prisma.user.create({
@@ -159,6 +163,13 @@ beforeAll(async () => {
       userId: ids.referente,
       perimetreId: ids.natation,
       editionId: ids.edition,
+    },
+  })
+  await prisma.rattachementActivite.create({
+    data: {
+      userId: ids.rattache,
+      activiteId: ids.activite,
+      organisationId: ids.org,
     },
   })
   // Natation cherche trois personnes et en a une ; basket n'a pas d'effectif.
@@ -178,6 +189,9 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await prisma.rattachementActivite.deleteMany({
+    where: { organisationId: ids.org },
+  })
   await prisma.souhait.deleteMany({
     where: { perimetre: { organisationId: ids.org } },
   })
@@ -197,7 +211,7 @@ afterAll(async () => {
 })
 
 describe('activité fermée aux souhaits', () => {
-  it('reste invisible pour un membre sans affectation', async () => {
+  it('reste invisible pour un membre sans lien avec l’activité', async () => {
     const r = await executer(ids.membre, ACTIVITES)
     expect(r.errors).toBeUndefined()
     expect((r.data as { activites: unknown[] }).activites).toEqual([])
@@ -233,6 +247,35 @@ describe('activité fermée aux souhaits', () => {
     ])
   })
 
+  it('se découvre par un membre rattaché, qui n’y formule aucun souhait', async () => {
+    const r = await executer(ids.rattache, ACTIVITES)
+    expect((r.data as { activites: { acces: string }[] }).activites).toEqual([
+      { id: ids.activite, acces: 'DECOUVERTE', souhaitsOuverts: false },
+    ])
+    const tous = (
+      (await executer(ids.rattache, TOUS, { a: ids.activite })).data as Tous
+    ).tousLesPerimetres
+    expect(tous.perimetres.map(p => p.perimetre.slug)).toEqual([
+      'basket',
+      'natation',
+    ])
+    const formule = await executer(ids.rattache, FORMULER, {
+      p: ids.basket,
+      e: ids.edition,
+    })
+    expect(code(formule)).toBe('SAISIE_INVALIDE')
+    expect(await souhaitsDe(ids.rattache)).toEqual([])
+  })
+
+  it('laisse un admin de l’activité formuler son propre souhait', async () => {
+    const r = await executer(ids.admin, FORMULER, {
+      p: ids.basket,
+      e: ids.edition,
+    })
+    expect(r.errors).toBeUndefined()
+    await executer(ids.admin, RETIRER, { p: ids.basket, e: ids.edition })
+  })
+
   it('refuse l’ouverture par une référente', async () => {
     const r = await executer(ids.referente, OUVRIR, {
       id: ids.activite,
@@ -248,7 +291,31 @@ describe('activité ouverte aux souhaits', () => {
     expect(r.errors).toBeUndefined()
   })
 
-  it('se découvre par un membre sans affectation', async () => {
+  it('reste invisible pour un membre hors de son équipe', async () => {
+    const r = await executer(ids.membre, ACTIVITES)
+    expect((r.data as { activites: unknown[] }).activites).toEqual([])
+    expect(code(await executer(ids.membre, TOUS, { a: ids.activite }))).toBe(
+      'FORBIDDEN'
+    )
+    expect(
+      code(
+        await executer(ids.membre, FORMULER, {
+          p: ids.basket,
+          e: ids.edition,
+        })
+      )
+    ).toBe('FORBIDDEN')
+    expect(await souhaitsDe(ids.membre)).toEqual([])
+  })
+
+  it('se découvre par un membre rattaché, sans affectation', async () => {
+    await prisma.rattachementActivite.createMany({
+      data: [ids.membre, ids.autreMembre].map(userId => ({
+        userId,
+        activiteId: ids.activite,
+        organisationId: ids.org,
+      })),
+    })
     const r = await executer(ids.membre, ACTIVITES)
     expect((r.data as { activites: { acces: string }[] }).activites).toEqual([
       { id: ids.activite, acces: 'DECOUVERTE', souhaitsOuverts: true },
@@ -481,9 +548,16 @@ describe('activité refermée', () => {
     ])
   })
 
-  it('redevient invisible pour un membre sans souhait', async () => {
-    expect(code(await executer(ids.membre, TOUS, { a: ids.activite }))).toBe(
-      'FORBIDDEN'
-    )
+  it('reste découverte pour un membre rattaché, qui ne formule plus de souhait', async () => {
+    const tous = await executer(ids.membre, TOUS, { a: ids.activite })
+    expect(tous.errors).toBeUndefined()
+    expect(
+      code(
+        await executer(ids.membre, FORMULER, {
+          p: ids.basket,
+          e: ids.edition,
+        })
+      )
+    ).toBe('SAISIE_INVALIDE')
   })
 })

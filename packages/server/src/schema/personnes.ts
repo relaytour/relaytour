@@ -17,6 +17,7 @@ import {
   verrouillerCompte,
 } from '../lib/appartenances.ts'
 import { creerOuRattacherCompte } from '../lib/comptes.ts'
+import { rattacher } from '../lib/rattachements.ts'
 import { annoncerChangementEquipe, notifierPlace } from '../lib/equipe.ts'
 import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 import {
@@ -70,6 +71,10 @@ const AttributionActiviteRef = builder
       'Le lien d’une personne avec une activité de l’organisation, toutes périodes confondues (ADR 0018).',
     fields: t => ({
       activiteId: t.exposeID('activiteId'),
+      rattachee: t.exposeBoolean('rattachee', {
+        description:
+          'Vrai quand la personne est rattachée à l’activité (ADR 0045). Toute affectation la rattache aussi.',
+      }),
       affectee: t.exposeBoolean('affectee', {
         description: 'Vrai quand la personne y a au moins une affectation.',
       }),
@@ -310,8 +315,9 @@ builder.queryFields(t => ({
       }),
   }),
 
-  // L'équipe d'une activité (ADR 0018) : les membres qui y ont une affectation, un
-  // souhait ou un rôle d'admin, toutes périodes confondues. Seuls ses admins la
+  // L'équipe d'une activité (ADR 0018, 0045) : les membres qui y ont un
+  // rattachement, une affectation, un souhait ou un rôle d'admin, toutes périodes
+  // confondues. Seuls ses admins la
   // lisent. Sans identifiant, la requête porte sur l'activité affichée.
   equipe: t.prismaField({
     type: [PersonneRef],
@@ -376,7 +382,11 @@ async function activiteDeLInvitation(
   userId: string
 ): Promise<string | undefined> {
   const dansLOrganisation = { perimetre: { organisationId } }
-  const [souhaits, affectations, admins] = await Promise.all([
+  const [rattachements, souhaits, affectations, admins] = await Promise.all([
+    prisma.rattachementActivite.findMany({
+      where: { userId, organisationId },
+      select: { activiteId: true },
+    }),
     prisma.souhait.findMany({
       where: { userId, ...dansLOrganisation },
       select: { perimetre: { select: { activiteId: true } } },
@@ -391,6 +401,7 @@ async function activiteDeLInvitation(
     }),
   ])
   const liees = new Set([
+    ...rattachements.map(r => r.activiteId),
     ...[...souhaits, ...affectations].map(l => l.perimetre.activiteId),
     ...admins.map(a => a.activiteId),
   ])
@@ -435,9 +446,11 @@ builder.mutationFields(t => ({
       email: t.arg.string({ required: true }),
       nom: t.arg.string({ required: true }),
       estAdmin: t.arg.boolean({ defaultValue: false }),
-      // Édition, périmètres souhaités et périmètres affectés. Un souhait ne donne
+      // Activité, édition, périmètres souhaités et périmètres affectés. L'activité
+      // seule rattache la personne sans périmètre (ADR 0045). Un souhait ne donne
       // aucun accès ; une affectation fait de la personne une référente ou un
       // référent dès l'invitation (ADR 0019).
+      activiteId: t.arg.id(),
       editionId: t.arg.id(),
       perimetresSouhaites: t.arg.idList(),
       perimetresAffectes: t.arg.idList(),
@@ -476,13 +489,32 @@ builder.mutationFields(t => ({
         )
         cible = { activiteId: edition.activiteId, editionId: edition.id }
       }
-      const perimetres = souhaits.length + affectes.length
-      // Un admin d'activité fait entrer une personne dans son équipe par un
-      // périmètre, souhaité ou affecté (ADR 0018, 0019). Le refus précède toute
-      // lecture de compte : il ne dit rien de l'adresse.
-      if (perimetres === 0 && !ctx.personne!.estAdmin) {
+      // L'activité où la personne est rattachée : celle des périmètres, sinon celle
+      // choisie sans périmètre (ADR 0045).
+      let activite: string | null = cible?.activiteId ?? null
+      if (args.activiteId) {
+        const choisie = await ctx.exigerActivite(args.activiteId)
+        if (activite !== null && activite !== choisie) {
+          throw erreurSaisie(
+            'Les périmètres choisis relèvent d’une autre activité.'
+          )
+        }
+        await ctx.exigerAdminDe(choisie)
+        const { archivedAt } = await prisma.activite.findUniqueOrThrow({
+          where: { id: choisie },
+          select: { archivedAt: true },
+        })
+        if (archivedAt !== null) {
+          throw erreurSaisie('Cette activité est archivée.')
+        }
+        activite = choisie
+      }
+      // Un admin d'activité fait entrer une personne dans l'une de ses activités
+      // (ADR 0018, 0045). Le refus précède toute lecture de compte : il ne dit rien
+      // de l'adresse.
+      if (activite === null && !ctx.personne!.estAdmin) {
         throw erreurSaisie(
-          'Choisissez au moins un périmètre : la personne rejoint votre équipe par ce périmètre.'
+          'Choisissez l’activité : la personne rejoint l’équipe de cette activité.'
         )
       }
       const organisationId = ctx.organisation!.id
@@ -532,16 +564,19 @@ builder.mutationFields(t => ({
                       contactPrincipal: [],
                     },
                   }),
+              rattachements:
+                activite === null || cible !== null ? [] : [activite],
               instant,
             })
             return { compte, creees: [] }
           }
-          // Un compte déjà membre rejoint l'équipe par ses périmètres, sans que la
-          // réponse le distingue d'un compte créé (ADR 0018). Sans périmètre, ou
-          // pour un rôle d'admin, la personne qui invite est admin de l'organisation.
+          // Un compte déjà membre rejoint l'équipe de l'activité, sans que la
+          // réponse le distingue d'un compte créé (ADR 0018, 0045). Sans activité,
+          // ou pour un rôle d'admin, la personne qui invite est admin de
+          // l'organisation.
           if (
             compte.issue === 'membre' &&
-            (perimetres === 0 || args.estAdmin)
+            (activite === null || args.estAdmin)
           ) {
             throw erreurSaisie(dejaLa)
           }
@@ -592,6 +627,15 @@ builder.mutationFields(t => ({
                   creeParId: ctx.personne!.id,
                   instant,
                 })
+          if (activite !== null) {
+            await rattacher(tx, {
+              userId: compte.userId,
+              activiteIds: [activite],
+              organisationId,
+              creeParId: ctx.personne!.id,
+              instant,
+            })
+          }
           return { compte, creees }
         })
       )
@@ -622,7 +666,7 @@ builder.mutationFields(t => ({
         // Un seul mail par personne et par heure, même si l'invitation se répète.
         await annoncerInvitation(compte.userId, {
           organisationId,
-          activiteId: cible?.activiteId,
+          activiteId: activite ?? undefined,
         })
       } else {
         await mettreEnFile(
@@ -638,9 +682,9 @@ builder.mutationFields(t => ({
         )
       }
       equipesModifiees(ctx)
-      if (cible !== null) {
-        publierPourActivite('EQUIPE', organisationId, cible.activiteId, {
-          editionId: cible.editionId,
+      if (activite !== null) {
+        publierPourActivite('EQUIPE', organisationId, activite, {
+          editionId: cible?.editionId ?? null,
         })
       }
       return {
@@ -992,6 +1036,112 @@ builder.mutationFields(t => ({
         })
       }
       return count === 1
+    },
+  }),
+
+  // Rattache une personne à une activité, sans périmètre (ADR 0045). Elle rejoint
+  // l'équipe de l'activité et découvre ses périmètres. Un admin de l'activité
+  // rattache une personne de ses équipes ; un admin de l'organisation, tout membre.
+  rattacherALActivite: t.boolean({
+    authScopes: { gestion: true },
+    args: {
+      userId: t.arg.id({ required: true }),
+      activiteId: t.arg.id({ required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const activiteId = await ctx.exigerActivite(args.activiteId)
+      await ctx.exigerAdminDe(activiteId)
+      const userId = String(args.userId)
+      refuserArchivee(await exigerMembreGere(ctx, userId))
+      const { archivedAt } = await prisma.activite.findUniqueOrThrow({
+        where: { id: activiteId },
+        select: { archivedAt: true },
+      })
+      if (archivedAt !== null) {
+        throw erreurSaisie('Cette activité est archivée.')
+      }
+      const organisationId = ctx.organisation!.id
+      const nouveaux = await rattacher(prisma, {
+        userId,
+        activiteIds: [activiteId],
+        organisationId,
+        creeParId: ctx.personne!.id,
+      })
+      equipesModifiees(ctx)
+      if (nouveaux.length > 0) {
+        journal.info(
+          {
+            evenement: 'personne-rattachee',
+            userId,
+            activiteId,
+            par: ctx.personne!.id,
+          },
+          'Une personne a été rattachée à une activité.'
+        )
+        publierPourActivite('EQUIPE', organisationId, activiteId)
+      }
+      return true
+    },
+  }),
+
+  // Retire une personne de l'équipe d'une activité (ADR 0045) : son rattachement et
+  // ses souhaits des périodes non archivées. Ses affectations en cours et son rôle
+  // d'admin se retirent d'abord. Hors des activités administrées, rien ne change.
+  retirerDeLActivite: t.boolean({
+    authScopes: { gestion: true },
+    args: {
+      userId: t.arg.id({ required: true }),
+      activiteId: t.arg.id({ required: true }),
+    },
+    resolve: async (_root, args, ctx) => {
+      const userId = String(args.userId)
+      const activiteId = String(args.activiteId)
+      const organisationId = ctx.organisation!.id
+      // Une activité hors de celles administrées vaut une activité inconnue.
+      if (!(await ctx.estAdminDe(activiteId))) return false
+      await refuserAdminDeLOrganisation(ctx, userId)
+      const enCours = { statut: { not: 'ARCHIVEE' as const }, activiteId }
+      const [affectations, admin] = await Promise.all([
+        prisma.affectation.count({ where: { userId, edition: enCours } }),
+        prisma.adminActivite.count({ where: { userId, activiteId } }),
+      ])
+      if (affectations > 0) {
+        throw erreurSaisie(
+          'Retirez d’abord les affectations de cette personne dans les périodes en cours.'
+        )
+      }
+      if (admin > 0) {
+        throw erreurSaisie(
+          'Retirez d’abord le rôle d’admin de cette personne dans l’activité.'
+        )
+      }
+      const retires = await prisma.$transaction(async tx => {
+        const rattachements = await tx.rattachementActivite.deleteMany({
+          where: { userId, activiteId, organisationId },
+        })
+        const souhaits = await tx.souhait.deleteMany({
+          where: {
+            userId,
+            edition: enCours,
+            perimetre: { organisationId },
+          },
+        })
+        return rattachements.count + souhaits.count
+      })
+      equipesModifiees(ctx)
+      if (retires > 0) {
+        journal.info(
+          {
+            evenement: 'personne-retiree-de-l-activite',
+            userId,
+            activiteId,
+            par: ctx.personne!.id,
+          },
+          'Une personne a été retirée de l’équipe d’une activité.'
+        )
+        publierPourActivite('EQUIPE', organisationId, activiteId)
+      }
+      return retires > 0
     },
   }),
 

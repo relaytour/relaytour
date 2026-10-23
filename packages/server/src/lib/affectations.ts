@@ -1,12 +1,14 @@
 import type { Prisma } from '@relaytour/database'
 
+import { rattacher } from './rattachements.ts'
 import { convoquerApresAffectation } from './reunions.ts'
 
 // Affectation d'une personne à des périmètres d'une période.
 //
 // L'affectation par un admin et l'import d'une équipe (ADR 0013) créent leurs
 // affectations ici. Chaque appelant vérifie d'abord ses droits, et que les
-// périmètres et la période relèvent de la même activité.
+// périmètres et la période relèvent de la même activité. Une affectation rattache
+// aussi la personne à l'activité (ADR 0045).
 
 export interface AffectationsCreees {
   /** Périmètres où l'affectation vient d'être créée, dans l'ordre demandé. */
@@ -54,6 +56,17 @@ export async function creerAffectations(
         creeParId,
         createdAt: instant,
       })),
+    })
+    const edition = await db.edition.findUniqueOrThrow({
+      where: { id: editionId },
+      select: { activiteId: true, organisationId: true },
+    })
+    await rattacher(db, {
+      userId,
+      activiteIds: [edition.activiteId],
+      organisationId: edition.organisationId,
+      creeParId,
+      instant,
     })
     // Les réunions à venir qui convoquent tout le périmètre comptent la personne
     // nouvellement affectée (ADR 0037).

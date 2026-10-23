@@ -7,6 +7,7 @@ import {
   accepterInvitation,
   annoncerInvitation,
   lireLots,
+  lireRattachements,
   perimetresProposes,
   refuserInvitation,
   vivante,
@@ -65,6 +66,8 @@ interface InvitationEnAttente {
   expireLe: Date
   affectes: string[]
   souhaites: string[]
+  /** Activités lisibles où l'acceptation rattache sans périmètre (ADR 0045). */
+  rattachements: string[]
 }
 
 const perimetresDe = (ids: string[], organisationId: string) =>
@@ -99,6 +102,11 @@ const InvitationEnAttenteRef = builder
         type: [PerimetreRef],
         resolve: i => perimetresDe(i.souhaites, i.organisationId),
       }),
+      activitesRattachees: t.idList({
+        description:
+          'Les activités où l’acceptation rattache la personne sans périmètre (ADR 0045).',
+        resolve: i => i.rattachements,
+      }),
     }),
   })
 
@@ -115,6 +123,16 @@ async function lotsLisibles(
   return lots.filter(l => administrees.has(l.activiteId))
 }
 
+/** Les activités à rattacher qu'une personne peut lire, selon la même règle. */
+async function rattachementsLisibles(
+  ctx: AppContext,
+  activites: string[]
+): Promise<string[]> {
+  if (ctx.personne!.estAdmin) return activites
+  const administrees = await ctx.activitesAdministrees()
+  return activites.filter(id => administrees.has(id))
+}
+
 const SELECTION = {
   id: true,
   organisationId: true,
@@ -123,6 +141,7 @@ const SELECTION = {
   role: true,
   globale: true,
   lots: true,
+  rattachements: true,
   createdAt: true,
   expireLe: true,
   user: { select: { email: true } },
@@ -141,8 +160,17 @@ async function exigerInvitation(ctx: AppContext, id: string) {
   if (invitation === null) throw accesRefuse()
   const lots = lireLots(invitation.lots)
   const lisibles = await lotsLisibles(ctx, lots)
-  if (!ctx.personne!.estAdmin && lisibles.length === 0) throw accesRefuse()
-  return { invitation, lots, lisibles }
+  const rattachements = await rattachementsLisibles(
+    ctx,
+    lireRattachements(invitation.rattachements)
+  )
+  if (
+    !ctx.personne!.estAdmin &&
+    lisibles.length === 0 &&
+    rattachements.length === 0
+  )
+    throw accesRefuse()
+  return { invitation, lots, lisibles, rattachements }
 }
 
 builder.queryFields(t => ({
@@ -206,10 +234,14 @@ builder.queryFields(t => ({
         const lisibles = (await lotsLisibles(ctx, lireLots(i.lots))).filter(
           l => activiteId === null || l.activiteId === activiteId
         )
-        // Sans lot lisible, seul un admin de l'organisation lit l'invitation, et
-        // seulement hors du filtre d'une activité.
+        const rattachements = (
+          await rattachementsLisibles(ctx, lireRattachements(i.rattachements))
+        ).filter(id => activiteId === null || id === activiteId)
+        // Sans lot ni activité lisible, seul un admin de l'organisation lit
+        // l'invitation, et seulement hors du filtre d'une activité.
         if (
           lisibles.length === 0 &&
+          rattachements.length === 0 &&
           (!ctx.personne!.estAdmin || activiteId !== null)
         ) {
           continue
@@ -224,6 +256,7 @@ builder.queryFields(t => ({
           expireLe: i.expireLe,
           affectes: lisibles.flatMap(l => l.affectes),
           souhaites: lisibles.flatMap(l => l.souhaites),
+          rattachements,
         })
       }
       return lues
@@ -268,14 +301,14 @@ builder.mutationFields(t => ({
       'Renvoie le mail d’une invitation en attente, une fois par heure au plus.',
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
-      const { invitation, lisibles } = await exigerInvitation(
+      const { invitation, lisibles, rattachements } = await exigerInvitation(
         ctx,
         String(args.id)
       )
       // La même limite que la relance d'un membre : une par personne et par heure.
       const partie = await annoncerInvitation(invitation.userId, {
         organisationId: invitation.organisationId,
-        activiteId: lisibles[0]?.activiteId,
+        activiteId: lisibles[0]?.activiteId ?? rattachements[0],
       })
       if (!partie) {
         throw erreurSaisie(
@@ -289,10 +322,10 @@ builder.mutationFields(t => ({
   retirerInvitation: t.boolean({
     authScopes: { gestion: true },
     description:
-      'Retire une invitation en attente. Un admin d’activité retire les périmètres de ses activités ; l’invitation disparaît quand il n’en reste aucun.',
+      'Retire une invitation en attente. Un admin d’activité retire les périmètres et les rattachements de ses activités ; l’invitation disparaît quand il n’en reste aucun.',
     args: { id: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
-      const { invitation, lisibles } = await exigerInvitation(
+      const { invitation, lisibles, rattachements } = await exigerInvitation(
         ctx,
         String(args.id)
       )
@@ -305,7 +338,12 @@ builder.mutationFields(t => ({
         await tx.$queryRaw`SELECT id FROM InvitationOrganisation WHERE id = ${invitation.id} FOR UPDATE`
         const courante = await tx.invitationOrganisation.findUnique({
           where: { id: invitation.id },
-          select: { lots: true, globale: true, role: true },
+          select: {
+            lots: true,
+            rattachements: true,
+            globale: true,
+            role: true,
+          },
         })
         // Acceptée, refusée ou retirée entre-temps : il n'y a plus rien à retirer.
         if (courante === null) return false
@@ -315,15 +353,24 @@ builder.mutationFields(t => ({
             : lireLots(courante.lots).filter(
                 l => !administrees.has(l.activiteId)
               )
+        const autresActivites =
+          administrees === null
+            ? []
+            : lireRattachements(courante.rattachements).filter(
+                id => !administrees.has(id)
+              )
         // Une invitation faite au niveau de l'organisation, ou au rôle d'admin,
-        // demeure quand un admin d'activité retire ses périmètres.
+        // demeure quand un admin d'activité retire ses périmètres et ses activités.
         const garder =
           administrees !== null &&
-          (restants.length > 0 || courante.globale || courante.role === 'ADMIN')
+          (restants.length > 0 ||
+            autresActivites.length > 0 ||
+            courante.globale ||
+            courante.role === 'ADMIN')
         if (garder) {
           await tx.invitationOrganisation.update({
             where: { id: invitation.id },
-            data: { lots: restants },
+            data: { lots: restants, rattachements: autresActivites },
           })
         } else {
           await tx.invitationOrganisation.delete({
@@ -348,6 +395,9 @@ builder.mutationFields(t => ({
           lot.activiteId,
           { editionId: lot.editionId }
         )
+      }
+      for (const activiteId of rattachements) {
+        publierPourActivite('EQUIPE', invitation.organisationId, activiteId)
       }
       return true
     },
