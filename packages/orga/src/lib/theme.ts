@@ -1,5 +1,6 @@
 import {
   contraste,
+  memeCouleur,
   rayons,
   rgb,
   texteSurCouleur,
@@ -150,4 +151,34 @@ export function teinteLisible(couleur: string, encre: string): string {
     if (contraste(melange, '#FFFFFF') >= 4.5) return melange
   }
   return encre
+}
+
+export type ThemeActivite = {
+  couleurs?: Record<string, string>
+  [cle: string]: unknown
+}
+
+/**
+ * Le thème de l'activité, avec la primaire et l'accent du formulaire. Un accent
+ * changé retire l'accent de texte déclaré : le serveur le dérive du nouvel accent.
+ */
+export function themeActivite(
+  actuel: ThemeActivite | null | undefined,
+  primaire: string | null,
+  accent: string | null
+): ThemeActivite | null {
+  const { accentTexte, ...autres } = actuel?.couleurs ?? {}
+  const accentInchange = memeCouleur(accent ?? '', autres.accent ?? '')
+  const couleurs = Object.fromEntries(
+    Object.entries({
+      ...autres,
+      ...(accentInchange ? { accentTexte } : {}),
+      primaire,
+      accent,
+    }).filter(([, v]) => typeof v === 'string' && v !== '')
+  ) as Record<string, string>
+  const theme: ThemeActivite = { ...actuel }
+  if (Object.keys(couleurs).length > 0) theme.couleurs = couleurs
+  else delete theme.couleurs
+  return Object.keys(theme).length > 0 ? theme : null
 }

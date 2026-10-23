@@ -364,6 +364,10 @@ const CouleursThemeRef = builder
       primaireClair: t.exposeString('primaireClair'),
       accent: t.exposeString('accent'),
       accentClair: t.exposeString('accentClair'),
+      accentTexte: t.exposeString('accentTexte', {
+        description:
+          "L'accent d'un texte, plus sombre que l'accent, qui reste aux surfaces et aux traits.",
+      }),
       succes: t.exposeString('succes'),
       succesClair: t.exposeString('succesClair'),
       alerte: t.exposeString('alerte'),

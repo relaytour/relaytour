@@ -8,6 +8,32 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-23-orga-les-erreurs-passent-en-carmin-et-un-accent-de-texte-rejoint-",
+          "date": "2026-10-23",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les erreurs passent en carmin, et un accent de texte rejoint le thème",
+            "texte": "Le thème par défaut affiche les erreurs et les retards en carmin. Ils ne se confondent plus avec l'accent terre cuite. L'accent colore désormais des surfaces et des traits, jamais un texte. Un texte qui reprend l'accent s'écrit dans un brun plus sombre, comme « tour » dans le logotype. Une organisation peut déclarer cet accent de texte (`accentTexte`) dans son thème. Sans déclaration, Relaytour le dérive de son accent.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-23-orga-le-texte-d-une-tache-reste-lisible-sur-un-ecran-de-taille",
+          "date": "2026-10-23",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le texte d'une tâche reste lisible sur un écran de taille moyenne",
+            "texte": "Sur une tablette, un petit ordinateur ou la page d'un périmètre avec son panneau latéral, les boutons d'une tâche s'affichent désormais en colonne à droite. Le titre et la description de la tâche disposent ainsi de plus de largeur. Sur un téléphone, les boutons restent alignés sous la tâche.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-23-orga-le-formulaire-public-indique-l-appel-a-benevoles",
           "date": "2026-10-23",
           "type": "correctif",
