@@ -12,7 +12,7 @@ import {
   Typography,
 } from 'antd'
 import { useState } from 'react'
-import { useParams } from 'react-router'
+import { Link, useParams } from 'react-router'
 
 import Marque, { SignatureRelaytour } from '../composants/Marque'
 import { graphql } from '../gql'
@@ -20,7 +20,9 @@ import { messageErreur } from '../lib/erreurs'
 
 // Formulaire public pour rejoindre l'équipe d'une activité (ADR 0015). La page se lit
 // sans session. Elle dépose une demande : aucun compte n'existe avant la décision d'un
-// admin, et aucun mail ne part vers l'adresse saisie.
+// admin, et aucun mail ne part vers l'adresse saisie. Elle recrute l'équipe qui
+// prépare l'activité : une personne qui vient aider le jour J passe par l'appel à
+// bénévoles ouvert sur le programme (ADR 0041), ou écrit au contact de l'activité.
 
 const FORMULAIRE = graphql(`
   query FormulaireRejoindre($organisation: String, $activite: String!) {
@@ -32,6 +34,7 @@ const FORMULAIRE = graphql(`
       question
       paliers
       contact
+      appelBenevoles
       groupes {
         libelle
         perimetres {
@@ -150,7 +153,7 @@ export default function Rejoindre() {
                 margin: '0 0 6px',
               }}
             >
-              Rejoindre l’équipe
+              Rejoindre l’équipe d’organisation
             </h1>
             <Typography.Paragraph style={{ color: 'var(--rt-encre-70)' }}>
               {formulaire.activite}, {formulaire.periode}
@@ -160,6 +163,31 @@ export default function Rejoindre() {
                 {formulaire.introduction}
               </Typography.Paragraph>
             )}
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+              title="Ce formulaire sert à rejoindre l’équipe qui prépare l’activité."
+              description={
+                formulaire.appelBenevoles ? (
+                  <>
+                    Vous souhaitez aider seulement le jour J ?{' '}
+                    <Link to={`/benevoles/${formulaire.appelBenevoles}`}>
+                      Inscrivez-vous comme bénévole
+                    </Link>
+                    .
+                  </>
+                ) : (
+                  <>
+                    Vous souhaitez aider seulement le jour J ? Écrivez à{' '}
+                    <a href={`mailto:${formulaire.contact}`}>
+                      {formulaire.contact}
+                    </a>
+                    .
+                  </>
+                )
+              }
+            />
 
             {erreur && (
               <Alert

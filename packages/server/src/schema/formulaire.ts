@@ -13,6 +13,7 @@ import {
   type Formulaire,
 } from '../lib/formulaire.ts'
 import { journal } from '../lib/journal.ts'
+import { empreinte, jetonDe } from '../lib/liens.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import { configurationActivite } from '../lib/organisation.ts'
 import { adresseValide, texteRequis } from '../lib/saisie.ts'
@@ -148,6 +149,39 @@ async function formulaireOuvert(
   }
 }
 
+/**
+ * Le jeton de l'appel à bénévoles ouvert sur toute la période (ADR 0046), ou null.
+ * Le formulaire recrute l'équipe qui prépare l'activité : il renvoie vers cet appel
+ * les personnes qui viennent aider le jour J. Le plus récemment ouvert l'emporte.
+ * Un appel d'import n'a pas d'adresse (ADR 0042). La lecture n'écrit rien : après
+ * un changement du secret du serveur, l'empreinte gardée ne correspond plus, et le
+ * formulaire n'affiche aucun lien.
+ */
+async function jetonDeLAppelDuProgramme(
+  editionId: string,
+  maintenant = new Date()
+): Promise<string | null> {
+  const appel = await prisma.appelBenevoles.findFirst({
+    where: {
+      editionId,
+      portee: 'PERIODE',
+      sansAdresse: false,
+      fermeManuellementLe: null,
+      ouvertLe: { lte: maintenant },
+      fermeLe: { gt: maintenant },
+    },
+    orderBy: [{ ouvertLe: 'desc' }, { id: 'asc' }],
+    select: { sel: true, empreinte: true },
+  })
+  if (appel === null) return null
+  try {
+    const jeton = await jetonDe('appel', appel.sel)
+    return empreinte(jeton) === appel.empreinte ? jeton : null
+  } catch {
+    return null
+  }
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 const PerimetreDuFormulaireRef = builder
@@ -207,6 +241,12 @@ const FormulaireRejoindreRef = builder
       contact: t.exposeString('contact', {
         description:
           'Adresse de rôle à laquelle demander l’accès à ses données ou leur suppression.',
+      }),
+      appelBenevoles: t.string({
+        nullable: true,
+        description:
+          'Jeton de l’appel à bénévoles ouvert sur tout le programme de la période (`/benevoles/<jeton>`), ou null.',
+        resolve: f => jetonDeLAppelDuProgramme(f.editionId),
       }),
     }),
   })
