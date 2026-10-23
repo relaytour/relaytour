@@ -1,6 +1,6 @@
 # ADR 0045 — Rattachement à une activité et visibilité limitée à ses activités
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-23
 - Complète les ADR 0010, 0012 et 0018. Remplace trois règles :
   - dans l'ADR 0012, « une personne voit une activité […] si l'activité est ouverte aux souhaits » ;
