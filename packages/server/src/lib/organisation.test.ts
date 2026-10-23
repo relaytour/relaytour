@@ -1,4 +1,4 @@
-import { pile, themeParDefaut } from '@relaytour/tokens'
+import { accentTexteDerive, pile, themeParDefaut } from '@relaytour/tokens'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -264,6 +264,30 @@ describe('identité d’une activité (ADR 0009)', () => {
         { fond: { halo1: { intensite: 0.1 } } }
       )?.fond?.halo1
     ).toEqual({ couleur: '#111111', intensite: 0.1 })
+  })
+
+  it('dérive l’accent de texte d’une activité qui change son accent', () => {
+    const organisationTimm = {
+      couleurs: { accent: '#6B2D8E', accentTexte: '#4A1F63' },
+    }
+    const theme = resoudreTheme(
+      fusionnerThemesDeclares(organisationTimm, {
+        couleurs: { accent: '#2E5B3B' },
+      })
+    )
+    expect(theme.couleurs.accentTexte).toBe(
+      accentTexteDerive('#2E5B3B', theme.couleurs.encre)
+    )
+    expect(
+      fusionnerThemesDeclares(organisationTimm, {
+        couleurs: { primaire: '#2E5B3B' },
+      })?.couleurs?.accentTexte
+    ).toBe('#4A1F63')
+    expect(
+      fusionnerThemesDeclares(organisationTimm, {
+        couleurs: { accent: '#6b2d8e' },
+      })?.couleurs?.accentTexte
+    ).toBe('#4A1F63')
   })
 })
 

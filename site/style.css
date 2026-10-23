@@ -211,8 +211,8 @@ section,
   text-decoration: none;
 }
 
-/* Le logotype : Baloo 2 SemiBold, « Relay » en encre et « tour » en accent.
-   Sur l'encre, « tour » passe en accent éclairci. */
+/* Le logotype : Baloo 2 SemiBold, « Relay » en encre et « tour » en accent de
+   texte. Sur l'encre, « tour » passe en accent éclairci. */
 .logotype {
   font-family: 'Baloo 2', var(--rt-police-titre);
   font-weight: 600;
@@ -220,7 +220,7 @@ section,
 }
 
 .logotype > span {
-  color: var(--rt-accent);
+  color: var(--rt-accent-texte);
 }
 
 .logotype-encre > span {
@@ -609,7 +609,7 @@ footer {
   font-size: 0.8rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--rt-accent);
+  color: var(--rt-accent-texte);
   background: var(--rt-accent-clair);
 }
 
@@ -770,7 +770,7 @@ footer {
 }
 
 .alerte .etiquette {
-  color: var(--rt-accent);
+  color: var(--rt-accent-texte);
 }
 
 .alerte p {

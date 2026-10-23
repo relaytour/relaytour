@@ -40,7 +40,7 @@ export function Pictogramme({
 
 /**
  * Le nom de Relaytour en logotype : Baloo 2 SemiBold, « Relay » en encre et
- * « tour » en accent. La marque l'affiche à la place du nom quand l'espace porte
+ * « tour » en accent de texte. La marque l'affiche à la place du nom quand l'espace porte
  * l'identité de Relaytour elle-même : avant la réponse de l'API, ou dans une
  * installation qui n'a pas nommé son organisation.
  */

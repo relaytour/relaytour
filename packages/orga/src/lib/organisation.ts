@@ -19,6 +19,7 @@ export const THEME_CHAMPS = graphql(`
       primaireClair
       accent
       accentClair
+      accentTexte
       succes
       succesClair
       alerte

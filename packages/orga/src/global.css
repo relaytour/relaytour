@@ -14,12 +14,13 @@
   --rt-accent: #ad412b;
   --rt-accent-rgb: 173, 65, 43;
   --rt-accent-clair: #f6e1db;
+  --rt-accent-texte: #7e3a24;
   --rt-succes: #3a7042;
   --rt-succes-clair: #e3f0e4;
   --rt-alerte: #8a5a0e;
   --rt-alerte-clair: #fbf0d8;
-  --rt-erreur: #a23a2c;
-  --rt-erreur-clair: #f8e3df;
+  --rt-erreur: #b0283f;
+  --rt-erreur-clair: #f9e1e5;
   --rt-sol-1: #ffffff;
   --rt-sol-2: #f4f6f7;
   --rt-sol-3: #e9eef0;
@@ -546,7 +547,7 @@ html {
 }
 
 /* Le logotype de Relaytour garde sa police et ses couleurs, quel que soit le
-   thème : Baloo 2 SemiBold, « Relay » en encre et « tour » en accent. */
+   thème : Baloo 2 SemiBold, « Relay » en encre et « tour » en accent de texte. */
 .rt-logotype {
   font-family: 'Baloo 2', var(--rt-police-titre);
   font-weight: 600;
@@ -554,7 +555,7 @@ html {
 }
 
 .rt-logotype-tour {
-  color: var(--rt-accent);
+  color: var(--rt-accent-texte);
 }
 
 /* Les cartes, posées dans la page, sont en verre clair. */
