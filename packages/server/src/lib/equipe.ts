@@ -221,23 +221,25 @@ export async function changementsEquipe(
 }
 
 /**
- * Vrai quand la personne peut ouvrir « Tous les périmètres » : une activité ouverte
- * aux souhaits dans l'organisation, ou une activité où elle a un souhait (ADR 0012).
+ * Les activités non archivées dont la personne ouvre « Tous les périmètres » sans y
+ * avoir de périmètre : elle y est rattachée ou y a un souhait (ADR 0012, 0045). Le
+ * réglage « ouverte aux souhaits » dit si elle y formule elle-même ses souhaits.
  */
-export async function decouvreDesPerimetres(
+export async function activitesADecouvrir(
   prisma: PrismaClient,
   userId: string,
   organisationId: string
-): Promise<boolean> {
-  const activites = await prisma.activite.count({
+): Promise<{ nom: string; souhaitsOuverts: boolean }[]> {
+  return prisma.activite.findMany({
     where: {
       organisationId,
       archivedAt: null,
       OR: [
-        { souhaitsOuverts: true },
+        { rattachements: { some: { userId } } },
         { perimetres: { some: { souhaits: { some: { userId } } } } },
       ],
     },
+    orderBy: [{ ordre: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+    select: { nom: true, souhaitsOuverts: true },
   })
-  return activites > 0
 }

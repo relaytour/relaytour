@@ -618,7 +618,7 @@ describe('accepter une demande', () => {
     expect(enFile).toEqual([{ sorte: 'invitation', cible: { userId } }])
   })
 
-  it('refuse d’accepter sans périmètre une demande qui n’en porte aucun', async () => {
+  it('accepte sans périmètre une demande qui n’en porte aucun, et rattache la personne', async () => {
     const demande = await prisma.demande.create({
       data: {
         organisationId: ids.org,
@@ -631,11 +631,21 @@ describe('accepter une demande', () => {
     })
     const avant = await compter()
     const r = await executer(ids.admin, ACCEPTER, { id: demande.id, p: [] })
-    expect(code(r)).toBe('SAISIE_INVALIDE')
-    expect(await compter()).toEqual(avant)
-    expect((await demandeDe('sans-choix'))?.statut).toBe('EN_ATTENTE')
-    expect(enFile).toEqual([])
-    await prisma.demande.delete({ where: { id: demande.id } })
+    expect(r.errors).toBeUndefined()
+    // Le compte naît sans affectation ; la personne rejoint l'équipe de
+    // l'activité par son rattachement (ADR 0045).
+    expect(await compter()).toEqual({
+      ...avant,
+      comptes: avant.comptes + 1,
+    })
+    const acceptee = await demandeDe('sans-choix')
+    expect(acceptee?.statut).toBe('ACCEPTEE')
+    expect(
+      await prisma.rattachementActivite.count({
+        where: { userId: acceptee!.userId!, activiteId: ids.activite },
+      })
+    ).toBe(1)
+    expect(enFile.map(m => m.sorte)).toEqual(['invitation'])
   })
 
   it('refuse une personne archivée dans l’organisation et laisse la demande en attente', async () => {

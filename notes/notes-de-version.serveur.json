@@ -5,6 +5,37 @@
   "version": "0.20.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-23-serveur-chaque-personne-ne-voit-que-les-activites-de-son-equipe",
+          "date": "2026-10-23",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque personne ne voit que les activités de son équipe",
+            "texte": "Vous voyez les activités que vous administrez, celles où vous êtes affecté·e et celles auxquelles un admin vous a rattaché·e. Une autre activité de l'organisation n'apparaît plus, même ouverte aux souhaits. À l'ouverture, l'espace organisateur affiche une activité où vous avez un périmètre avant une activité que vous découvrez seulement.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-23-serveur-chaque-personne-affectee-est-rattachee-a-son-activite",
+          "date": "2026-10-23",
+          "type": "interne",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Chaque personne affectée est rattachée à son activité",
+            "texte": "La migration rattache chaque personne à chaque activité où elle a une affectation, toutes périodes confondues, puis à l'activité de chaque demande acceptée. Une personne invitée sans périmètre avant cette version se rattache depuis l'annuaire.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.19.0",
       "notes": [
         {

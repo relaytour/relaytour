@@ -4,6 +4,7 @@ import { Alert, App, Button, Popconfirm, Space, Tag, Typography } from 'antd'
 import { graphql } from '../gql'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import { INVITATIONS_EN_ATTENTE } from '../lib/invitations'
+import { ACTIVITES } from '../lib/requetes'
 
 const RELANCER = graphql(`
   mutation RelancerInvitation($id: ID!) {
@@ -33,6 +34,10 @@ export default function InvitationsEnAttente({
   const { data } = useQuery(INVITATIONS_EN_ATTENTE, {
     variables: { activiteId: activiteId ?? null },
   })
+  // Le nom des activités où l'acceptation rattache la personne (ADR 0045).
+  const { data: activites } = useQuery(ACTIVITES)
+  const nomActivite = (id: string) =>
+    activites?.activites.find(a => a.id === id)?.nom
   const relire = { refetchQueries: [INVITATIONS_EN_ATTENTE] }
   const [relancer, relance] = useMutation(RELANCER)
   const [retirer, retrait] = useMutation(RETIRER, relire)
@@ -74,6 +79,12 @@ export default function InvitationsEnAttente({
                   <div style={{ marginTop: 4 }}>
                     <Space size={[4, 4]} wrap>
                       {i.estAdmin && <Tag>Admin de l’organisation</Tag>}
+                      {i.activitesRattachees.flatMap(id => {
+                        const nom = nomActivite(id)
+                        return nom === undefined
+                          ? []
+                          : [<Tag key={id}>Équipe : {nom}</Tag>]
+                      })}
                       {i.perimetresAffectes.map(p => (
                         <Tag
                           key={p.id}

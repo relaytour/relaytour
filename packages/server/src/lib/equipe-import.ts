@@ -5,14 +5,15 @@ import { z } from 'zod'
 import { mettreEnFile } from '../courriel/file.ts'
 
 import { creerAffectations } from './affectations.ts'
+import { estRattachee, rattacher } from './rattachements.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
 import { annoncerInvitation, inviterCompteExterne } from './invitations.ts'
 import { annoncerChangementEquipe } from './equipe.ts'
 import { adresseValide } from './saisie.ts'
 
-// Import d'une équipe depuis le serveur (ADR 0013) : les comptes, les affectations,
-// les contacts principaux et les souhaits d'une activité pour une période, décrits
-// dans un fichier YAML. La commande s'exécute dans le conteneur, sans route réseau.
+// Import d'une équipe depuis le serveur (ADR 0013) : les comptes, les rattachements
+// (ADR 0045), les affectations, les contacts principaux et les souhaits d'une
+// activité pour une période, décrits dans un fichier YAML. La commande s'exécute dans le conteneur, sans route réseau.
 //
 // L'import est additif et rejouable : il crée ce qui manque et ne retire rien. Le
 // fichier se valide en entier avant toute écriture, puis tout s'écrit dans une seule
@@ -112,6 +113,8 @@ export interface RapportEquipe {
   souhaitsCrees: string[]
   souhaitsExistants: string[]
   souhaitsIgnores: string[]
+  /** Personnes rattachées à l'activité par cet import (ADR 0045). */
+  rattachementsCrees: string[]
   mails: { invitations: number; equipe: number }
 }
 
@@ -170,6 +173,7 @@ export async function importerEquipe(
     souhaitsCrees: [],
     souhaitsExistants: [],
     souhaitsIgnores: [],
+    rattachementsCrees: [],
     mails: { invitations: 0, equipe: 0 },
   }
   const ecrire = options.simulation !== true
@@ -237,6 +241,21 @@ export async function importerEquipe(
           rapport.nomsDifferents.push(
             `${p.nom} (compte : ${compte.nomDuCompte})`
           )
+        }
+
+        // Chaque personne déclarée rejoint l'équipe de l'activité, avec ou sans
+        // périmètre (ADR 0045).
+        if (nouveau || !(await estRattachee(tx, userId, activiteId))) {
+          rapport.rattachementsCrees.push(p.nom)
+          if (ecrire) {
+            await rattacher(tx, {
+              userId,
+              activiteIds: [activiteId],
+              organisationId,
+              creeParId: null,
+              instant,
+            })
+          }
         }
 
         const { creees } = await creerAffectations(tx, {

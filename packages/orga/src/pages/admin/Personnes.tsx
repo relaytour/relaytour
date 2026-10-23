@@ -92,6 +92,7 @@ const PERSONNES = graphql(`
       }
       attributions {
         activiteId
+        rattachee
         affectee
         interessee
         admin
@@ -187,6 +188,7 @@ const INVITER = graphql(`
   mutation InviterPersonne(
     $email: String!
     $nom: String!
+    $activiteId: ID
     $editionId: ID
     $perimetresSouhaites: [ID!]
     $perimetresAffectes: [ID!]
@@ -194,6 +196,7 @@ const INVITER = graphql(`
     inviterPersonne(
       email: $email
       nom: $nom
+      activiteId: $activiteId
       editionId: $editionId
       perimetresSouhaites: $perimetresSouhaites
       perimetresAffectes: $perimetresAffectes
@@ -241,6 +244,19 @@ const DEFINIR_SOUHAITS = graphql(`
   }
 `)
 
+// Rattachement d'une personne à une activité, sans périmètre (ADR 0045).
+const RATTACHER = graphql(`
+  mutation RattacherALActivite($userId: ID!, $activiteId: ID!) {
+    rattacherALActivite(userId: $userId, activiteId: $activiteId)
+  }
+`)
+
+const RETIRER_DE_L_ACTIVITE = graphql(`
+  mutation RetirerDeLActivite($userId: ID!, $activiteId: ID!) {
+    retirerDeLActivite(userId: $userId, activiteId: $activiteId)
+  }
+`)
+
 const RENVOYER = graphql(`
   mutation RenvoyerInvitation($id: ID!) {
     renvoyerInvitation(id: $id)
@@ -261,7 +277,13 @@ const SANS_ACTIVITE = 'sans-activite'
 function libelleAttribution(a: Membre['attributions'][number]): string {
   const roles = [
     a.admin ? 'admin' : null,
-    a.affectee ? 'affecté·e' : a.interessee ? 'intéressé·e' : null,
+    a.affectee
+      ? 'affecté·e'
+      : a.interessee
+        ? 'intéressé·e'
+        : a.rattachee
+          ? 'sans périmètre'
+          : null,
   ].filter(role => role !== null)
   return roles.join(', ')
 }
@@ -277,6 +299,8 @@ const ROLES = {
   adminActivite: { libelle: 'Admin de l’activité', couleur: 'geekblue' },
   referent: { libelle: 'Référent·e' },
   interesse: { libelle: 'Intéressé·e' },
+  // Rattachée à l'activité, sans affectation ni souhait pour la période (ADR 0045).
+  equipe: { libelle: 'Sans périmètre' },
 } satisfies Record<string, Role>
 
 /** Valeur de filtre d'une personne sans périmètre dans la colonne. */
@@ -309,6 +333,8 @@ interface Valeurs {
   nom: string
   /** Activités dont la personne est admin (ADR 0010). */
   activitesAdministrees?: string[]
+  /** Activités où la personne est rattachée, dans l'annuaire (ADR 0045). */
+  activites?: string[]
   /** Périmètres souhaités, par identifiant d'édition. */
   souhaits?: Record<string, string[] | undefined>
   /** Périmètres affectés, par identifiant d'édition. */
@@ -592,6 +618,8 @@ export default function Personnes({
   // échec ne renvoie que le reste.
   const affectationsLues = useRef(new Map<string, Map<string, string>>())
   const [renvoyer] = useMutation(RENVOYER)
+  const [rattacher, rattachement] = useMutation(RATTACHER, rafraichir)
+  const [retirerDeLActivite] = useMutation(RETIRER_DE_L_ACTIVITE, rafraichir)
   const [definirAdminActivite] = useMutation(DEFINIR_ADMIN_ACTIVITE, rafraichir)
   const { data: toutesActivites } = useQuery(ACTIVITES)
   const moiId = session?.moi?.id
@@ -703,7 +731,7 @@ export default function Personnes({
             ? ROLES.referent
             : p.souhaits.length > 0
               ? ROLES.interesse
-              : null
+              : ROLES.equipe
 
   const ouvrir = (personne: Personne | 'nouvelle') => {
     setEnEdition(personne)
@@ -717,11 +745,15 @@ export default function Personnes({
             email: '',
             nom: '',
             activitesAdministrees: [],
+            activites: [],
           }
         : {
             email: personne.email,
             nom: personne.nom,
             activitesAdministrees: personne.activitesAdministrees,
+            activites: (personne.attributions ?? [])
+              .filter(a => a.rattachee)
+              .map(a => a.activiteId),
           }
     )
   }
@@ -764,16 +796,27 @@ export default function Personnes({
           }))
           .filter(i => i.souhaites.length + i.affectes.length > 0)
       : []
-    const premiers = invites[0]
-    // Un admin d'activité fait entrer la personne dans son équipe par un périmètre,
-    // souhaité ou affecté (ADR 0018, 0019). Le serveur refuse aussi une invitation
-    // sans périmètre.
-    if (enEdition === 'nouvelle' && !modeAnnuaire && premiers === undefined) {
-      message.error(
-        'Choisissez au moins un périmètre : la personne rejoint votre équipe par ce périmètre.'
-      )
-      return
-    }
+    // La personne rejoint l'équipe de chaque activité choisie, avec ou sans
+    // périmètre (ADR 0045) : l'activité affichée pour l'équipe d'une activité, les
+    // activités choisies dans l'annuaire.
+    const activitesInvitees = modeAnnuaire ? (v.activites ?? []) : [activite.id]
+    // Chaque appel ajoute sans rien retirer : les périmètres de chaque période, puis
+    // chaque activité. Sans rien de tout cela, l'invitation se fait au niveau de
+    // l'organisation.
+    const appels: {
+      activiteId?: string | null
+      editionId?: string
+      perimetresSouhaites?: string[]
+      perimetresAffectes?: string[]
+    }[] = [
+      ...invites.map(i => ({
+        editionId: i.editionId,
+        perimetresSouhaites: i.souhaites,
+        perimetresAffectes: i.affectes,
+      })),
+      ...activitesInvitees.map(activiteId => ({ activiteId })),
+    ]
+    if (appels.length === 0) appels.push({ activiteId: null })
     // Le compte créé par l'invitation, pour reprendre la suite si elle échoue.
     let cree: string | undefined
     // Vrai quand l'adresse a déjà un compte hors de l'organisation : l'invitation
@@ -784,13 +827,7 @@ export default function Personnes({
         ? await executer(
             async () => {
               const r = await inviter({
-                variables: {
-                  email: v.email,
-                  nom: v.nom,
-                  editionId: premiers?.editionId ?? null,
-                  perimetresSouhaites: premiers?.souhaites ?? [],
-                  perimetresAffectes: premiers?.affectes ?? [],
-                },
+                variables: { email: v.email, nom: v.nom, ...appels[0] },
               })
               enAttente = r.data?.inviterPersonne.enAttente ?? false
               const id = r.data?.inviterPersonne.personne?.id
@@ -805,18 +842,13 @@ export default function Personnes({
                   v.activitesAdministrees ?? []
                 )
               } else if (!enAttente) return
-              // Les autres périodes passent aussi par l'invitation, qui ajoute sans
-              // rien retirer : la personne a peut-être déjà un compte, des souhaits
-              // et des affectations, que ce formulaire n'a pas lus.
-              for (const i of invites.slice(1)) {
+              // Les autres périodes et les activités passent aussi par
+              // l'invitation, qui ajoute sans rien retirer : la personne a
+              // peut-être déjà un compte, des souhaits et des affectations, que ce
+              // formulaire n'a pas lus.
+              for (const appel of appels.slice(1)) {
                 await inviter({
-                  variables: {
-                    email: v.email,
-                    nom: v.nom,
-                    editionId: i.editionId,
-                    perimetresSouhaites: i.souhaites,
-                    perimetresAffectes: i.affectes,
-                  },
+                  variables: { email: v.email, nom: v.nom, ...appel },
                 })
               }
             },
@@ -855,6 +887,21 @@ export default function Personnes({
                 adminsAvant,
                 adminsReunis
               )
+              // Les rattachements de l'annuaire (ADR 0045) : les nouveaux d'abord,
+              // les retraits à la fin.
+              const rattacheesAvant = (enEdition.attributions ?? [])
+                .filter(a => a.rattachee)
+                .map(a => a.activiteId)
+              const rattacheesApres =
+                modeAnnuaire && form.isFieldTouched('activites')
+                  ? (v.activites ?? [])
+                  : rattacheesAvant
+              for (const activiteId of rattacheesApres) {
+                if (rattacheesAvant.includes(activiteId)) continue
+                await rattacher({
+                  variables: { userId: enEdition.id, activiteId },
+                })
+              }
               // Les affectations d'une édition ne sont envoyées que si le champ a
               // été modifié. Les nouvelles passent avant les souhaits, les retraits
               // après : la personne ne sort pas de l'équipe entre deux écritures
@@ -914,6 +961,12 @@ export default function Personnes({
                 adminsReunis,
                 adminsApres
               )
+              for (const activiteId of rattacheesAvant) {
+                if (rattacheesApres.includes(activiteId)) continue
+                await retirerDeLActivite({
+                  variables: { userId: enEdition.id, activiteId },
+                })
+              }
             }, 'Compte enregistré.')
           : false
     if (ok) {
@@ -979,7 +1032,7 @@ export default function Personnes({
         sousTitre={
           modeAnnuaire
             ? 'Tous les membres de l’organisation, avec les activités de chacun. Seules les personnes invitées peuvent se connecter à l’espace organisateur.'
-            : 'L’équipe de cette activité : les personnes affectées, intéressées ou admins. Vous y ajoutez une personne par son adresse.'
+            : 'L’équipe de cette activité : les personnes rattachées, affectées, intéressées ou admins. Vous y ajoutez une personne par son adresse.'
         }
         actions={
           modeAnnuaire ? undefined : (
@@ -1309,6 +1362,7 @@ export default function Personnes({
                         ROLES.adminActivite,
                         ROLES.referent,
                         ROLES.interesse,
+                        ROLES.equipe,
                       ]
                   ).map(r => ({ text: r.libelle, value: r.libelle })),
                   valeurs: p => roleDe(p)?.libelle ?? [],
@@ -1366,6 +1420,35 @@ export default function Personnes({
                       >
                         Renvoyer l’invitation
                       </Button>
+                      {/* Une personne sans affectation pour la période quitte
+                          l'équipe de l'activité (ADR 0045). Le serveur refuse si
+                          elle reste affectée dans une autre période en cours. */}
+                      {!modeAnnuaire &&
+                        p.id !== moiId &&
+                        p.estAdmin !== true &&
+                        p.affectations.length === 0 &&
+                        !p.activitesAdministrees.includes(activite.id) && (
+                          <Popconfirm
+                            title="Retirer cette personne de l’activité ?"
+                            description="Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation."
+                            okText="Retirer"
+                            cancelText="Annuler"
+                            onConfirm={() =>
+                              executer(
+                                () =>
+                                  retirerDeLActivite({
+                                    variables: {
+                                      userId: p.id,
+                                      activiteId: activite.id,
+                                    },
+                                  }),
+                                'Personne retirée de l’activité.'
+                              )
+                            }
+                          >
+                            <Button size="small">Retirer de l’activité</Button>
+                          </Popconfirm>
+                        )}
                       {p.id !== moiId && modeAnnuaire && (
                         <Popconfirm
                           title="Archiver cette personne ?"
@@ -1419,7 +1502,8 @@ export default function Personnes({
           modification.loading ||
           definition.loading ||
           affectation.loading ||
-          retrait.loading
+          retrait.loading ||
+          rattachement.loading
         }
         onOk={() => form.submit()}
         onCancel={() => setEnEdition(null)}
@@ -1468,6 +1552,33 @@ export default function Personnes({
           {modeAnnuaire && (
             <>
               <Form.Item
+                label="Équipes des activités"
+                name="activites"
+                extra="La personne rejoint l’équipe de chaque activité choisie, sans périmètre. Elle y découvre les périmètres. Une affectation l’ajoute aussi à l’équipe de son activité."
+              >
+                <Select
+                  mode="multiple"
+                  allowClear
+                  placeholder="Aucune activité"
+                  // Une activité archivée ne reçoit plus de rattachement, mais un
+                  // rattachement existant garde son nom.
+                  options={(toutesActivites?.activites ?? [])
+                    .filter(
+                      a =>
+                        !a.archive ||
+                        (enEdition !== null &&
+                          enEdition !== 'nouvelle' &&
+                          (enEdition.attributions ?? []).some(
+                            x => x.activiteId === a.id && x.rattachee
+                          ))
+                    )
+                    .map(a => ({
+                      value: a.id,
+                      label: a.archive ? `${a.nom} (archivée)` : a.nom,
+                    }))}
+                />
+              </Form.Item>
+              <Form.Item
                 label="Admin des activités"
                 name="activitesAdministrees"
                 extra="Un admin d’activité gère ses périodes, ses périmètres, ses affectations et ses fiches. Il ne voit pas les autres activités. Le rôle d’admin de l’organisation se donne depuis l’écran Admins."
@@ -1509,11 +1620,7 @@ export default function Personnes({
               type="info"
               showIcon
               style={{ marginBottom: 16 }}
-              title={
-                activitesSouhaits.length === 0
-                  ? `Ouvrez d’abord ${periode.une} : une invitation porte au moins un périmètre.`
-                  : 'Choisissez au moins un périmètre, affecté ou souhaité : la personne rejoint votre équipe par ce périmètre. Si elle a déjà un compte dans votre organisation, ce compte rejoint l’équipe et garde son nom. Si son compte existe hors de votre organisation, l’invitation attend son accord.'
-              }
+              title={`La personne rejoint l’équipe de ${activite.nom}, avec ou sans périmètre. Sans périmètre, elle découvre les périmètres de l’activité. Si elle a déjà un compte dans votre organisation, ce compte rejoint l’équipe et garde son nom. Si son compte existe hors de votre organisation, l’invitation attend son accord.`}
             />
           )}
           {champSouhaits && activitesSouhaits.length > 0 && (

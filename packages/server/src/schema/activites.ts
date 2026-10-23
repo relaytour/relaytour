@@ -140,7 +140,7 @@ export const ActiviteRef = builder.prismaObject('Activite', {
     }),
     souhaitsOuverts: t.exposeBoolean('souhaitsOuverts', {
       description:
-        'Vrai quand tous les membres de l’organisation découvrent les périmètres de l’activité et formulent leurs souhaits (ADR 0012).',
+        'Vrai quand les personnes de l’équipe de l’activité formulent elles-mêmes leurs souhaits (ADR 0045). Le réglage ne rend l’activité visible à personne.',
     }),
     formulaire: t.field({
       type: FormulaireRef,

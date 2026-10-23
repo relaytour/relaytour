@@ -165,13 +165,14 @@ export async function exigerMembreGere(
 
 /**
  * Le filtre des comptes qui font partie de l'équipe d'au moins une de ces activités
- * (ADR 0018) : une affectation, un souhait ou un rôle d'admin, toutes périodes
- * confondues. Aucune table ne porte ce lien : il se déduit.
+ * (ADR 0018) : un rattachement (ADR 0045), une affectation, un souhait ou un rôle
+ * d'admin, toutes périodes confondues.
  */
 export function dansLEquipe(activiteIds: string[]): Prisma.UserWhereInput {
   const ici = { activiteId: { in: activiteIds } }
   return {
     OR: [
+      { rattachementsActivite: { some: ici } },
       { affectations: { some: { perimetre: ici } } },
       { souhaits: { some: { perimetre: ici } } },
       { adminsActivite: { some: ici } },
@@ -180,10 +181,10 @@ export function dansLEquipe(activiteIds: string[]): Prisma.UserWhereInput {
 }
 
 /**
- * L'équipe d'une activité sans les personnes qui n'y ont qu'un souhait : une
- * affectation ou un rôle d'admin de l'activité. Une personne qui n'a qu'un
- * souhait découvre l'activité sans la voir (ADR 0012) : elle ne lit ni son
- * agenda ni son programme, et une réunion ou une séquence ne la vise donc pas.
+ * L'équipe d'une activité sans les personnes qui n'y ont qu'un souhait ou un
+ * rattachement : une affectation ou un rôle d'admin de l'activité. Ces personnes
+ * découvrent l'activité sans la voir (ADR 0012, 0045) : elles ne lisent ni son
+ * agenda ni son programme, et une réunion ou une séquence ne les vise donc pas.
  */
 export function dansLEquipeQuiVoit(
   activiteIds: string[]
@@ -200,6 +201,7 @@ export function dansLEquipeQuiVoit(
 /** Le lien d'une personne avec une activité, toutes périodes confondues (ADR 0018). */
 export interface AttributionActivite {
   activiteId: string
+  rattachee: boolean
   affectee: boolean
   interessee: boolean
   admin: boolean
@@ -223,24 +225,29 @@ export function attributionsDeLOrganisation(
       select: { userId: true, perimetre: { select: { activiteId: true } } },
     }
     attributions = Promise.all([
+      prisma.rattachementActivite.findMany({
+        where: { organisationId },
+        select: { userId: true, activiteId: true },
+      }),
       prisma.affectation.findMany(parPerimetre),
       prisma.souhait.findMany(parPerimetre),
       prisma.adminActivite.findMany({
         where: { organisationId },
         select: { userId: true, activiteId: true },
       }),
-    ]).then(([affectations, souhaits, admins]) => {
+    ]).then(([rattachements, affectations, souhaits, admins]) => {
       const parPersonne = new Map<string, Map<string, AttributionActivite>>()
       const noter = (
         userId: string,
         activiteId: string,
-        lien: 'affectee' | 'interessee' | 'admin'
+        lien: 'rattachee' | 'affectee' | 'interessee' | 'admin'
       ) => {
         const activites =
           parPersonne.get(userId) ?? new Map<string, AttributionActivite>()
         parPersonne.set(userId, activites)
         const attribution = activites.get(activiteId) ?? {
           activiteId,
+          rattachee: false,
           affectee: false,
           interessee: false,
           admin: false,
@@ -248,6 +255,7 @@ export function attributionsDeLOrganisation(
         attribution[lien] = true
         activites.set(activiteId, attribution)
       }
+      for (const r of rattachements) noter(r.userId, r.activiteId, 'rattachee')
       for (const a of affectations)
         noter(a.userId, a.perimetre.activiteId, 'affectee')
       for (const s of souhaits)

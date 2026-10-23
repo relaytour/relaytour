@@ -8,7 +8,7 @@ import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { aujourdhui } from '../lib/droits.ts'
 import {
   changementsEquipe,
-  decouvreDesPerimetres,
+  activitesADecouvrir,
   perimetresDeLaPersonne,
 } from '../lib/equipe.ts'
 import { horaireEnClair } from '../lib/heures.ts'
@@ -95,6 +95,29 @@ export interface MessageCompose {
   apresEnvoi?: () => Promise<void>
   /** Fichier iCalendar joint (ADR 0037). */
   icalEvent?: { methode: 'REQUEST' | 'CANCEL'; contenu: string }
+}
+
+/**
+ * La situation d'une personne invitée sans périmètre (ADR 0045) : les activités
+ * dont elle découvre les périmètres, sinon l'attente d'une affectation.
+ */
+export function situationSansPerimetre(
+  activites: { nom: string; souhaitsOuverts: boolean }[]
+): string {
+  const attente =
+    'En attendant, le mode d’emploi vous aide à découvrir l’espace.'
+  if (activites.length === 0) {
+    return `Vous n’avez pas encore de périmètre : un admin vous affectera à l’un d’eux. ${attente}`
+  }
+  const noms = activites.map(a => `« ${a.nom} »`)
+  const liste =
+    noms.length === 1
+      ? `de l’activité ${noms[0]}`
+      : `des activités ${noms.slice(0, -1).join(', ')} et ${noms.at(-1)}`
+  const souhaits = activites.some(a => a.souhaitsOuverts)
+    ? ' et formulez vos souhaits'
+    : ''
+  return `Vous faites partie de l’équipe ${liste}, sans périmètre pour l’instant. Dans « Tous les périmètres », vous découvrez les périmètres${souhaits}. Un admin vous affectera ensuite. ${attente}`
 }
 
 /**
@@ -204,10 +227,11 @@ export async function composer(
           : 'Vous choisirez vos périmètres avec l’équipe après votre accord.'
         : perimetres.length > 0
           ? 'Vous faites partie de l’équipe de ces périmètres :'
-          : idOrganisation !== null &&
-              (await decouvreDesPerimetres(prisma, user.id, idOrganisation))
-            ? 'Vous n’avez pas encore de périmètre. Dans « Tous les périmètres », vous découvrez les périmètres et formulez vos souhaits. Un admin vous affectera ensuite. En attendant, le mode d’emploi vous aide à découvrir l’espace.'
-            : 'Vous n’avez pas encore de périmètre : un admin vous affectera à l’un d’eux. En attendant, le mode d’emploi vous aide à découvrir l’espace.'
+          : situationSansPerimetre(
+              idOrganisation === null
+                ? []
+                : await activitesADecouvrir(prisma, user.id, idOrganisation)
+            )
   }
 
   if (job.sorte === 'equipe') {

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 
 import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import { afterAll, afterEach, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
@@ -147,6 +147,15 @@ beforeAll(async () => {
         editionId: ids.edition2,
       },
     ],
+  })
+})
+
+// Une affectation ou une invitation par l'API rattache aussi la personne à
+// l'activité (ADR 0045). Chaque test repart sans rattachement, comme le prévoit
+// la préparation : l'équipe s'y lit par les affectations, les souhaits et les rôles.
+afterEach(async () => {
+  await prisma.rattachementActivite.deleteMany({
+    where: { organisationId: ids.org },
   })
 })
 

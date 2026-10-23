@@ -12,6 +12,7 @@ import { accesRefuse, erreurSaisie } from './erreurs.ts'
 import { publierNotification, publierPourActivite } from './flux.ts'
 import { niveauxDes } from './notifications.ts'
 import { pousser } from './push-file.ts'
+import { rattacher } from './rattachements.ts'
 import { journal } from './journal.ts'
 import { SOUHAITS_MAX } from './souhaits.ts'
 
@@ -42,6 +43,17 @@ export type LotInvitation = z.infer<typeof LotSchema>
 /** Les lots d'une invitation, ou une liste vide si la colonne est illisible. */
 export function lireLots(valeur: unknown): LotInvitation[] {
   const lu = z.array(LotSchema).safeParse(valeur)
+  return lu.success ? lu.data : []
+}
+
+/**
+ * Les activités où l'acceptation rattache la personne sans périmètre (ADR 0045), ou
+ * une liste vide si la colonne est nulle ou illisible.
+ */
+export function lireRattachements(valeur: unknown): string[] {
+  const lu = Identifiants.safeParse(
+    typeof valeur === 'string' ? JSON.parse(valeur) : valeur
+  )
   return lu.success ? lu.data : []
 }
 
@@ -99,16 +111,25 @@ export async function inviterCompteExterne(
     origine: OrigineInvitation
     inviteParId: string | null
     lot?: LotInvitation
+    /** Activités où rattacher la personne sans périmètre (ADR 0045). */
+    rattachements?: string[]
     instant: Date
   }
 ): Promise<{ id: string }> {
   const { organisationId, userId, instant, lot } = invitation
+  const nouveaux = invitation.rattachements ?? []
   // Le verrou sur le compte sérialise deux invitations simultanées de la même adresse.
   await tx.$queryRaw`SELECT id FROM User WHERE id = ${userId} FOR UPDATE`
   const cle = { organisationId_userId: { organisationId, userId } }
   const enCours = await tx.invitationOrganisation.findUnique({
     where: cle,
-    select: { role: true, globale: true, lots: true, expireLe: true },
+    select: {
+      role: true,
+      globale: true,
+      lots: true,
+      rattachements: true,
+      expireLe: true,
+    },
   })
   // Une invitation expirée ne compte plus : la nouvelle la remplace entièrement.
   const reprise =
@@ -124,6 +145,10 @@ export async function inviterCompteExterne(
       )
     }
   }
+  const rattachements = reunion(
+    lireRattachements(reprise?.rattachements ?? null),
+    nouveaux
+  )
   const donnees = {
     role:
       reprise?.role === 'ADMIN' || invitation.role === 'ADMIN'
@@ -132,8 +157,12 @@ export async function inviterCompteExterne(
     nom: invitation.nom,
     origine: invitation.origine,
     inviteParId: invitation.inviteParId,
-    globale: (reprise?.globale ?? false) || lot === undefined,
+    // Une invitation sans activité se fait au niveau de l'organisation.
+    globale:
+      (reprise?.globale ?? false) ||
+      (lot === undefined && nouveaux.length === 0),
     lots,
+    rattachements,
     expireLe: expiration(instant),
   }
   return tx.invitationOrganisation.upsert({
@@ -198,6 +227,7 @@ export async function accepterInvitation(
         origine: true,
         inviteParId: true,
         lots: true,
+        rattachements: true,
         organisation: { select: { slug: true, statut: true } },
       },
     })
@@ -301,6 +331,29 @@ export async function accepterInvitation(
       activites.push({ activiteId: lot.activiteId, editionId: edition.id })
     }
 
+    // La personne rejoint l'équipe de chaque activité de ses lots, et de chaque
+    // activité désignée sans périmètre, si elle existe encore (ADR 0045).
+    const aRattacher = await tx.activite.findMany({
+      where: {
+        organisationId,
+        archivedAt: null,
+        id: {
+          in: [
+            ...activites.map(a => a.activiteId),
+            ...lireRattachements(invitation.rattachements),
+          ],
+        },
+      },
+      select: { id: true },
+    })
+    await rattacher(tx, {
+      userId,
+      activiteIds: aRattacher.map(a => a.id),
+      organisationId,
+      creeParId: invitation.inviteParId,
+      instant,
+    })
+
     await tx.invitationOrganisation.delete({ where: { id: invitation.id } })
 
     // Qui apprend l'acceptation : la personne qui a invité, les admins de
@@ -326,7 +379,7 @@ export async function accepterInvitation(
     // Une invitation qui touche une seule activité se range sous elle ; celle qui
     // en touche plusieurs, ou aucune, reste au niveau de l'organisation, comme
     // l'identité de son mail (ADR 0033).
-    const liees = [...new Set(activites.map(a => a.activiteId))]
+    const liees = [...new Set(aRattacher.map(a => a.id))]
     const activiteId = liees.length === 1 ? liees[0]! : null
     const notificationIds: string[] = []
     if (destinataires.length > 0) {
@@ -351,6 +404,7 @@ export async function accepterInvitation(
       organisationId,
       organisationSlug: invitation.organisation.slug,
       activites,
+      rattachees: aRattacher.map(a => a.id),
       destinataires,
       notificationIds,
       origine: invitation.origine,
@@ -366,6 +420,10 @@ export async function accepterInvitation(
     publierPourActivite('EQUIPE', issue.organisationId, activiteId, {
       editionId,
     })
+  }
+  for (const activiteId of issue.rattachees) {
+    if (issue.activites.some(a => a.activiteId === activiteId)) continue
+    publierPourActivite('EQUIPE', issue.organisationId, activiteId)
   }
   journal.info(
     {

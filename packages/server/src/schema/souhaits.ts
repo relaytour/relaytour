@@ -360,13 +360,27 @@ async function cibleDuSouhait(
   const organisationId = ctx.organisation!.id
   const perimetre = await prisma.perimetre.findFirst({
     where: { id: perimetreId, organisationId, archivedAt: null },
-    select: { id: true, activiteId: true },
+    select: {
+      id: true,
+      activiteId: true,
+      activite: { select: { souhaitsOuverts: true } },
+    },
   })
   if (
     perimetre === null ||
     !(await ctx.activitesDecouvertes()).has(perimetre.activiteId)
   ) {
     throw accesRefuse()
+  }
+  // Le réglage « ouverte aux souhaits » dit si l'équipe formule elle-même ses
+  // souhaits (ADR 0045). Sinon, seuls les admins de l'activité les notent.
+  if (
+    !perimetre.activite.souhaitsOuverts &&
+    !(await ctx.estAdminDe(perimetre.activiteId))
+  ) {
+    throw erreurSaisie(
+      'Cette activité n’est pas ouverte aux souhaits : ses admins notent les souhaits.'
+    )
   }
   const edition = await prisma.edition.findFirst({
     where: { id: editionId, organisationId, activiteId: perimetre.activiteId },
