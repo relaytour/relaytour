@@ -1,6 +1,7 @@
 import {
   fusionnerTheme,
   INTENSITE_HALO_MAX,
+  memeCouleur,
   pile,
   POLICES_DISPONIBLES,
   themeParDefaut,
@@ -131,9 +132,12 @@ export function fusionnerThemesDeclares(
         }
   // Une activité qui change son accent sans son accent de texte reçoit celui
   // qui se dérive de son accent, pas celui de l'organisation.
+  const accentActivite = surcharge.couleurs?.accent
   const baseCouleurs =
-    surcharge.couleurs?.accent !== undefined &&
-    surcharge.couleurs.accentTexte === undefined
+    accentActivite !== undefined &&
+    surcharge.couleurs?.accentTexte === undefined &&
+    (base.couleurs?.accent === undefined ||
+      !memeCouleur(accentActivite, base.couleurs.accent))
       ? { ...base.couleurs, accentTexte: undefined }
       : base.couleurs
   return {

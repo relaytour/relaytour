@@ -31,6 +31,7 @@ import { messageErreur } from '../../lib/erreurs'
 import { useOrganisation } from '../../lib/organisation'
 import { joursRelatifs } from '../../lib/regroupement'
 import { useSession } from '../../lib/session'
+import { themeActivite, type ThemeActivite } from '../../lib/theme'
 import { ACTIVITES } from '../../lib/requetes'
 
 // Les activités de l'organisation (ADR 0008) : un événement, une section, une
@@ -195,36 +196,6 @@ interface Valeurs {
   logoPng: string | null
   primaire: string | null
   accent: string | null
-}
-
-type ThemeActivite = {
-  couleurs?: Record<string, string>
-  [cle: string]: unknown
-}
-
-/**
- * Le thème de l'activité, avec la primaire et l'accent du formulaire. Un accent
- * changé retire l'accent de texte déclaré : le serveur le dérive du nouvel accent.
- */
-function themeActivite(
-  actuel: ThemeActivite | null | undefined,
-  primaire: string | null,
-  accent: string | null
-): ThemeActivite | null {
-  const { accentTexte, ...autres } = actuel?.couleurs ?? {}
-  const accentInchange = (accent ?? '') === (autres.accent ?? '')
-  const couleurs = Object.fromEntries(
-    Object.entries({
-      ...autres,
-      ...(accentInchange ? { accentTexte } : {}),
-      primaire,
-      accent,
-    }).filter(([, v]) => typeof v === 'string' && v !== '')
-  ) as Record<string, string>
-  const theme: ThemeActivite = { ...actuel }
-  if (Object.keys(couleurs).length > 0) theme.couleurs = couleurs
-  else delete theme.couleurs
-  return Object.keys(theme).length > 0 ? theme : null
 }
 
 const GROUPES_PAR_DEFAUT: Groupe[] = [

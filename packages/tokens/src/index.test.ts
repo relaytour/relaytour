@@ -105,6 +105,11 @@ describe('accent de texte', () => {
     expect(theme.couleurs.accentTexte).toBe('#4A1F63')
   })
 
+  it('garde celui de la base pour un accent redéclaré à l’identique', () => {
+    const theme = fusionnerTheme({ couleurs: { accent: '#ad412b' } })
+    expect(theme.couleurs.accentTexte).toBe('#7E3A24')
+  })
+
   it('garde celui de la base quand l’accent ne change pas', () => {
     const theme = fusionnerTheme({ couleurs: { primaire: '#2E2A6B' } })
     expect(theme.couleurs.accentTexte).toBe(themeParDefaut.couleurs.accentTexte)

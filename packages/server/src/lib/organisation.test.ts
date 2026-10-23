@@ -283,6 +283,11 @@ describe('identité d’une activité (ADR 0009)', () => {
         couleurs: { primaire: '#2E5B3B' },
       })?.couleurs?.accentTexte
     ).toBe('#4A1F63')
+    expect(
+      fusionnerThemesDeclares(organisationTimm, {
+        couleurs: { accent: '#6b2d8e' },
+      })?.couleurs?.accentTexte
+    ).toBe('#4A1F63')
   })
 })
 

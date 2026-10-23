@@ -123,6 +123,11 @@ export function accentTexteDerive(accent: string, encre: string): string {
   return `#${n.toString(16).padStart(6, '0').toUpperCase()}`
 }
 
+/** Vrai quand deux couleurs hexadécimales désignent la même couleur, quelle que soit la casse. */
+export function memeCouleur(a: string, b: string): boolean {
+  return a.toLowerCase() === b.toLowerCase()
+}
+
 /** L'intensité maximale d'un halo : au-delà, il gênerait la lecture du texte posé sur le verre. */
 export const INTENSITE_HALO_MAX = 0.35
 
@@ -251,8 +256,9 @@ function sansIndefinis<T extends object>(objet: T | undefined): Partial<T> {
  * Complète un thème partiel avec le thème de base. Le fond se dérive des
  * couleurs fusionnées (`fondDerive`), puis reçoit les valeurs déclarées : une
  * organisation qui ne change que sa primaire obtient un halo de sa primaire.
- * Un thème qui déclare son accent sans son accent de texte reçoit un accent de
- * texte dérivé du sien (`accentTexteDerive`).
+ * Un thème qui déclare un autre accent que sa base, sans accent de texte, reçoit
+ * un accent de texte dérivé du sien (`accentTexteDerive`). Un accent redéclaré à
+ * l'identique garde l'accent de texte de la base.
  */
 export function fusionnerTheme(
   partiel: ThemePartiel,
@@ -260,7 +266,11 @@ export function fusionnerTheme(
 ): Theme {
   const declarees = sansIndefinis(partiel.couleurs)
   const couleurs = { ...base.couleurs, ...declarees }
-  if (declarees.accent !== undefined && declarees.accentTexte === undefined) {
+  if (
+    declarees.accent !== undefined &&
+    declarees.accentTexte === undefined &&
+    !memeCouleur(declarees.accent, base.couleurs.accent)
+  ) {
     couleurs.accentTexte = accentTexteDerive(couleurs.accent, couleurs.encre)
   }
   const derive = fondDerive(couleurs)
