@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.21.0
 fr:
   titre: >-
     Le texte d'une tâche reste lisible sur un écran de taille moyenne

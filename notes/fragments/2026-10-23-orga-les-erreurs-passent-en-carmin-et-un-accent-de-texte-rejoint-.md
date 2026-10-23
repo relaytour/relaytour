@@ -3,6 +3,7 @@ cible: orga
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.21.0
 fr:
   titre: >-
     Les erreurs passent en carmin, et un accent de texte rejoint le thème

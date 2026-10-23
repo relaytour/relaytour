@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.21.0
 fr:
   titre: >-
     L'annuaire rattache une personne aux équipes des activités

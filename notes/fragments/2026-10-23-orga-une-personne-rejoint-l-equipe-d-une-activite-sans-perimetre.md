@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.21.0
 fr:
   titre: >-
     Une personne rejoint l'équipe d'une activité sans périmètre

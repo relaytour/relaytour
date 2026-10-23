@@ -2,10 +2,10 @@
   "schemaVersion": 4,
   "projet": "relaytour",
   "cible": "serveur",
-  "version": "0.20.0",
+  "version": "0.21.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.21.0",
       "notes": [
         {
           "id": "2026-10-23-serveur-chaque-personne-ne-voit-que-les-activites-de-son-equipe",
