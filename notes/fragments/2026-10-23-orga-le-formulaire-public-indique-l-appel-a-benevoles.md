@@ -15,5 +15,6 @@ fr:
     l'adresse de contact de l'activité.
 ---
 
-Champ public `FormulaireRejoindre.appelBenevoles` : le jeton de l'appel de portée
-« période » ouvert le plus récemment, hors appel d'import (ADR 0041, 0042).
+ADR 0046. Champ public `FormulaireRejoindre.appelBenevoles` : le jeton de l'appel
+de portée « période » ouvert le plus récemment, hors appel d'import (ADR 0041,
+0042). La lecture n'écrit rien en base.

@@ -2,7 +2,6 @@ import { prisma, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { lireGroupes } from '../lib/activites.ts'
-import { jetonAppel } from '../lib/appels.ts'
 import type { AdressesDeRole } from '../lib/contenu.ts'
 import { signalerDemande } from '../lib/demandes.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
@@ -14,6 +13,7 @@ import {
   type Formulaire,
 } from '../lib/formulaire.ts'
 import { journal } from '../lib/journal.ts'
+import { empreinte, jetonDe } from '../lib/liens.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import { configurationActivite } from '../lib/organisation.ts'
 import { adresseValide, texteRequis } from '../lib/saisie.ts'
@@ -150,10 +150,12 @@ async function formulaireOuvert(
 }
 
 /**
- * Le jeton de l'appel à bénévoles ouvert sur tout le programme de la période
- * (ADR 0041), ou null. Le formulaire recrute l'équipe qui prépare l'activité : il
- * renvoie vers cet appel les personnes qui viennent aider le jour J. Le plus
- * récemment ouvert l'emporte. Un appel d'import n'a pas d'adresse (ADR 0042).
+ * Le jeton de l'appel à bénévoles ouvert sur toute la période (ADR 0046), ou null.
+ * Le formulaire recrute l'équipe qui prépare l'activité : il renvoie vers cet appel
+ * les personnes qui viennent aider le jour J. Le plus récemment ouvert l'emporte.
+ * Un appel d'import n'a pas d'adresse (ADR 0042). La lecture n'écrit rien : après
+ * un changement du secret du serveur, l'empreinte gardée ne correspond plus, et le
+ * formulaire n'affiche aucun lien.
  */
 async function jetonDeLAppelDuProgramme(
   editionId: string,
@@ -169,9 +171,15 @@ async function jetonDeLAppelDuProgramme(
       fermeLe: { gt: maintenant },
     },
     orderBy: [{ ouvertLe: 'desc' }, { id: 'asc' }],
-    select: { id: true },
+    select: { sel: true, empreinte: true },
   })
-  return appel === null ? null : jetonAppel(prisma, appel.id)
+  if (appel === null) return null
+  try {
+    const jeton = await jetonDe('appel', appel.sel)
+    return empreinte(jeton) === appel.empreinte ? jeton : null
+  } catch {
+    return null
+  }
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────

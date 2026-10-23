@@ -325,6 +325,31 @@ describe('lire le formulaire sans session', () => {
     expect(await lireAppel()).toBeNull()
     const jeton = await creerAppel('PERIODE', ouvert)
     expect(await lireAppel()).toBe(jeton)
+    // Après un changement du secret, l'empreinte gardée ne correspond plus : le
+    // formulaire n'affiche aucun lien et la lecture n'écrit rien (ADR 0046).
+    const perimee = await prisma.appelBenevoles.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        editionId: ids.edition,
+        portee: 'PERIODE',
+        nom: 'Appel d’un ancien secret',
+        ouvertLe: new Date(Date.now() - heure / 2),
+        fermeLe: ouvert.fermeLe,
+        sel: nouveauSel(),
+        empreinte: '0'.repeat(64),
+        fin: '000000',
+      },
+    })
+    expect(await lireAppel()).toBeNull()
+    expect(
+      (
+        await prisma.appelBenevoles.findUniqueOrThrow({
+          where: { id: perimee.id },
+          select: { empreinte: true },
+        })
+      ).empreinte
+    ).toBe('0'.repeat(64))
     await prisma.appelBenevoles.deleteMany({ where: { organisationId: ids.org } })
   })
 
