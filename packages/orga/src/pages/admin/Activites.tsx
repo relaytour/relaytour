@@ -202,16 +202,24 @@ type ThemeActivite = {
   [cle: string]: unknown
 }
 
-/** Le thème de l'activité, avec la primaire et l'accent du formulaire. */
+/**
+ * Le thème de l'activité, avec la primaire et l'accent du formulaire. Un accent
+ * changé retire l'accent de texte déclaré : le serveur le dérive du nouvel accent.
+ */
 function themeActivite(
   actuel: ThemeActivite | null | undefined,
   primaire: string | null,
   accent: string | null
 ): ThemeActivite | null {
+  const { accentTexte, ...autres } = actuel?.couleurs ?? {}
+  const accentInchange = (accent ?? '') === (autres.accent ?? '')
   const couleurs = Object.fromEntries(
-    Object.entries({ ...actuel?.couleurs, primaire, accent }).filter(
-      ([, v]) => typeof v === 'string' && v !== ''
-    )
+    Object.entries({
+      ...autres,
+      ...(accentInchange ? { accentTexte } : {}),
+      primaire,
+      accent,
+    }).filter(([, v]) => typeof v === 'string' && v !== '')
   ) as Record<string, string>
   const theme: ThemeActivite = { ...actuel }
   if (Object.keys(couleurs).length > 0) theme.couleurs = couleurs

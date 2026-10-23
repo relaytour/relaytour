@@ -42,6 +42,7 @@ const ROLES = [
   ['encre', 'Encre'],
   ['primaire', 'Primaire'],
   ['accent', 'Accent'],
+  ['accentTexte', 'Accent de texte'],
   ['succes', 'Succès'],
   ['alerte', 'Alerte'],
   ['erreur', 'Erreur'],

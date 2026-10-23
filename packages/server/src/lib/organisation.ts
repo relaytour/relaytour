@@ -44,6 +44,7 @@ const CLES_COULEURS = [
   'primaireClair',
   'accent',
   'accentClair',
+  'accentTexte',
   'succes',
   'succesClair',
   'alerte',
@@ -128,12 +129,19 @@ export function fusionnerThemesDeclares(
           halo1: fusionnerObjets(base.fond?.halo1, surcharge.fond?.halo1),
           halo2: fusionnerObjets(base.fond?.halo2, surcharge.fond?.halo2),
         }
+  // Une activité qui change son accent sans son accent de texte reçoit celui
+  // qui se dérive de son accent, pas celui de l'organisation.
+  const baseCouleurs =
+    surcharge.couleurs?.accent !== undefined &&
+    surcharge.couleurs.accentTexte === undefined
+      ? { ...base.couleurs, accentTexte: undefined }
+      : base.couleurs
   return {
     ...base,
     couleurs:
-      base.couleurs === undefined && surcharge.couleurs === undefined
+      baseCouleurs === undefined && surcharge.couleurs === undefined
         ? undefined
-        : { ...base.couleurs, ...surcharge.couleurs },
+        : { ...baseCouleurs, ...surcharge.couleurs },
     fond,
   }
 }

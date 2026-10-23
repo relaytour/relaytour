@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  accentTexteDerive,
   contraste,
   contrastePercu,
   fondDerive,
@@ -12,6 +13,17 @@ import {
   variablesCss,
   verifierAccessibilite,
 } from './index.ts'
+
+/** L'écart de teinte entre deux couleurs, en degrés, de 0 à 180. */
+function ecartDeTeinte(a: string, b: string): number {
+  const teinte = (hex: string) => {
+    const n = parseInt(hex.slice(1), 16)
+    const [r, g, v] = [(n >> 16) & 255, (n >> 8) & 255, n & 255]
+    return (Math.atan2(Math.sqrt(3) * (g - v), 2 * r - g - v) * 180) / Math.PI
+  }
+  const d = Math.abs(teinte(a) - teinte(b)) % 360
+  return d > 180 ? 360 - d : d
+}
 
 describe('contraste', () => {
   it('vaut 21 entre le noir et le blanc, 1 entre deux couleurs identiques', () => {
@@ -35,8 +47,14 @@ describe('thèmes livrés', () => {
   })
 
   it('le thème alternatif ne change que la primaire et l’accent', () => {
-    const { primaire, primaireClair, accent, accentClair, ...reste } =
-      themeAlternatif.couleurs
+    const {
+      primaire,
+      primaireClair,
+      accent,
+      accentClair,
+      accentTexte,
+      ...reste
+    } = themeAlternatif.couleurs
     const base = themeParDefaut.couleurs
     expect(reste).toEqual({
       encre: base.encre,
@@ -56,6 +74,41 @@ describe('thèmes livrés', () => {
       base.accent,
       base.accentClair,
     ])
+    expect(accentTexte).toBe(accentTexteDerive(accent, base.encre))
+  })
+
+  it('l’erreur ne se confond pas avec l’accent', () => {
+    for (const theme of Object.values(THEMES)) {
+      expect(
+        ecartDeTeinte(theme.couleurs.accent, theme.couleurs.erreur)
+      ).toBeGreaterThan(15)
+    }
+  })
+})
+
+describe('accent de texte', () => {
+  it('mêle l’accent d’un tiers d’encre', () => {
+    expect(accentTexteDerive('#AD412B', '#1B2730')).toBe('#7C382D')
+  })
+
+  it('se dérive de l’accent déclaré sans accent de texte', () => {
+    const theme = fusionnerTheme({ couleurs: { accent: '#6B2D8E' } })
+    expect(theme.couleurs.accentTexte).toBe(
+      accentTexteDerive('#6B2D8E', theme.couleurs.encre)
+    )
+  })
+
+  it('garde l’accent de texte déclaré', () => {
+    const theme = fusionnerTheme({
+      couleurs: { accent: '#6B2D8E', accentTexte: '#4A1F63' },
+    })
+    expect(theme.couleurs.accentTexte).toBe('#4A1F63')
+  })
+
+  it('garde celui de la base quand l’accent ne change pas', () => {
+    const theme = fusionnerTheme({ couleurs: { primaire: '#2E2A6B' } })
+    expect(theme.couleurs.accentTexte).toBe(themeParDefaut.couleurs.accentTexte)
+    expect(variablesCss(theme)['--rt-accent-texte']).toBe('#7E3A24')
   })
 })
 
