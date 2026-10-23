@@ -11,15 +11,15 @@
 | [0007](0007-frontiere-entre-logiciel-et-exploitation.md) | Frontière entre le logiciel et son exploitation | Acceptée |
 | [0008](0008-activites-et-administration-de-l-installation.md) | Activités d'une organisation et administration de l'installation | Acceptée, réalisée |
 | [0009](0009-identite-des-activites-et-source-de-verite-du-contenu.md) | Identité des activités et source de vérité du contenu | Acceptée |
-| [0010](0010-admins-d-activite-et-visibilite-des-activites.md) | Admins d'activité et visibilité des activités | Acceptée, annuaire cloisonné par l'ADR 0018, nomination des admins élargie par l'ADR 0019, assignation d'une tâche ouverte par l'ADR 0028 |
+| [0010](0010-admins-d-activite-et-visibilite-des-activites.md) | Admins d'activité et visibilité des activités | Acceptée, annuaire cloisonné par l'ADR 0018, nomination des admins élargie par l'ADR 0019, assignation d'une tâche ouverte par l'ADR 0028, rattachement ajouté par l'ADR 0045 |
 | [0011](0011-contact-principal-d-un-perimetre.md) | Contact principal d'un périmètre | Acceptée, assignation d'une tâche ouverte par l'ADR 0028 |
-| [0012](0012-decouvrir-les-perimetres-et-rejoindre-l-equipe.md) | Découvrir les périmètres et rejoindre l'équipe | Acceptée, accès aux tâches élargi par l'ADR 0014 |
+| [0012](0012-decouvrir-les-perimetres-et-rejoindre-l-equipe.md) | Découvrir les périmètres et rejoindre l'équipe | Acceptée, accès aux tâches élargi par l'ADR 0014, découverte limitée à l'équipe par l'ADR 0045 |
 | [0013](0013-administrer-l-equipe-depuis-le-serveur.md) | Administrer l'équipe depuis le serveur | Acceptée |
 | [0014](0014-consulter-les-perimetres-de-son-activite.md) | Consulter les périmètres de son activité | Acceptée |
 | [0015](0015-demandes-pour-rejoindre-l-equipe.md) | Demandes pour rejoindre l'équipe | Acceptée, mail aux admins ajouté par l'ADR 0016 |
 | [0016](0016-prevenir-les-admins-d-une-demande-par-mail.md) | Prévenir les admins d'une demande par un mail regroupé | Acceptée |
 | [0017](0017-flux-des-changements.md) | Flux des changements poussé par le serveur | Acceptée |
-| [0018](0018-personnes-d-une-activite.md) | Personnes d'une activité | Acceptée, invitation avec affectation ajoutée par l'ADR 0019, rattachement entre organisations remplacé par l'ADR 0030 |
+| [0018](0018-personnes-d-une-activite.md) | Personnes d'une activité | Acceptée, invitation avec affectation ajoutée par l'ADR 0019, rattachement entre organisations remplacé par l'ADR 0030, rattachement à une activité ajouté par l'ADR 0045 |
 | [0019](0019-admins-lus-et-nommes-par-les-admins-d-activite.md) | Admins lus et nommés par les admins d'activité | Acceptée |
 | [0020](0020-messages-envoyes-depuis-la-messagerie-de-l-admin.md) | Messages écrits dans l'application, envoyés depuis la messagerie de l'admin | Acceptée, choix de la messagerie ajouté par l'ADR 0022, emplacement de l'historique d'une activité amendé par l'ADR 0027 |
 | [0021](0021-version-notes-de-version-et-support.md) | Version, notes de version et support dans l'espace organisateur | Acceptée |
@@ -46,7 +46,7 @@
 | [0042](0042-import-de-listes-de-benevoles.md) | Import de listes de bénévoles, doublons et fusion des fiches | Acceptée |
 | [0043](0043-dossiers-lies-a-plusieurs-lecteurs.md) | Dossiers liés à plusieurs lecteurs et documents liés d'une fiche partagée | Acceptée, réalisée |
 | [0044](0044-acces-chez-le-fournisseur-cloud.md) | Accès chez le fournisseur cloud : vérification et propositions | Acceptée, réalisée |
-| [0045](0045-rattachement-a-une-activite.md) | Rattachement à une activité et visibilité limitée à ses activités | Proposée |
+| [0045](0045-rattachement-a-une-activite.md) | Rattachement à une activité et visibilité limitée à ses activités | Acceptée, réalisée |
 | [0046](0046-appel-a-benevoles-sur-le-formulaire-de-l-equipe.md) | Appel à bénévoles indiqué sur le formulaire de l'équipe | Acceptée, réalisée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
