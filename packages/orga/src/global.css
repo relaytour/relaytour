@@ -1577,6 +1577,7 @@ a.rt-etiquette:hover {
 
 /* Carte de tâche (TacheCarte) : un rail de couleur, le contenu, les actions. */
 .rt-carte-tache {
+  container: carte-tache / inline-size;
   border-radius: 22px;
   padding: 16px 20px 16px 18px;
   display: grid;
@@ -1745,13 +1746,32 @@ button.rt-ligne-declinaisons {
   }
 }
 
+/* Sur une carte de largeur moyenne, les actions s'empilent en colonne : le texte
+   de la tâche garde ainsi l'essentiel de la largeur. */
+@container carte-tache (max-width: 960px) {
+  .rt-carte-tache-actions {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    align-items: stretch;
+  }
+  .rt-carte-tache-actions > .ant-btn-icon-only {
+    align-self: flex-end;
+  }
+}
+
 @media (max-width: 767px) {
   .rt-carte-tache {
     grid-template-columns: 6px minmax(0, 1fr);
   }
   .rt-carte-tache-actions {
     grid-column: 2;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
     justify-content: flex-start;
+  }
+  .rt-carte-tache-actions > .ant-btn-icon-only {
+    align-self: auto;
   }
 }
 
