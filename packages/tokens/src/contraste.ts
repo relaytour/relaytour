@@ -43,6 +43,7 @@ export function verifierAccessibilite(theme: Theme): Manquement[] {
     'encre',
     'primaire',
     'accent',
+    'accentTexte',
     'succes',
     'alerte',
     'erreur',

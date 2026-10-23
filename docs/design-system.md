@@ -21,14 +21,25 @@ Décisions du 18 et du 19 septembre 2026, après une planche de fondations et un
 | encre | `#1B2730` | texte, icônes, ombres ; les autres textes sont des transparences de l'encre |
 | primaire | `#1E5A63` | actions principales, liens, élément de menu actif |
 | primaire clair | `#DCEAEB` | état « en cours », choix actif, en-têtes de tableau |
-| accent | `#AD412B` | engagement d'une personne (« Je m'en occupe »), notification non lue |
+| accent | `#AD412B` | engagement d'une personne (« Je m'en occupe »), notification non lue ; surfaces et traits seulement |
 | accent clair | `#F6E1DB` | fond des éléments accentués |
+| accent de texte | `#7E3A24` | texte qui reprend l'accent : « tour » du logotype, étiquette sur l'accent clair |
 | succès | `#3A7042` / `#E3F0E4` | tâche faite |
 | alerte | `#8A5A0E` / `#FBF0D8` | échéance proche, tâche sans personne, fiche liée |
-| erreur | `#A23A2C` / `#F8E3DF` | retard ; une brique sourde, jamais un rouge vif |
+| erreur | `#B0283F` / `#F9E1E5` | retard, saisie refusée ; un carmin froid, distinct de l'accent |
 | sol | `#FFFFFF`, `#F4F6F7`, `#E9EEF0` | dégradé fixe à 138°, bande dense au milieu |
 
-Le test `packages/tokens/src/index.test.ts` vérifie le contraste de chaque couleur de texte sur le blanc, sur la bande dense du sol et sur l'arrêt de transition.
+Le test `packages/tokens/src/index.test.ts` vérifie le contraste de chaque couleur de texte sur le blanc, sur la bande dense du sol et sur l'arrêt de transition. Il vérifie aussi que l'erreur et l'accent ont des teintes distinctes.
+
+### Règle d'usage de l'accent
+
+Décision du 23 octobre 2026. Un texte en terre cuite se lisait comme un message d'erreur, car l'accent et l'erreur avaient presque la même teinte.
+
+- L'accent colore des surfaces et des traits : bouton d'engagement, pastille de notification, second arc du pictogramme, filet, contour de focus, halo.
+- L'accent ne colore jamais un texte. Un titre s'écrit en encre, une étiquette en primaire.
+- Un texte qui doit reprendre l'accent s'écrit en accent de texte (`--rt-accent-texte`).
+- Le rouge signale une erreur et rien d'autre.
+- Une organisation peut déclarer `accentTexte` dans son thème. Sans déclaration, l'accent de texte mêle son accent d'un tiers d'encre (`accentTexteDerive`).
 
 Le thème alternatif « encre-lagon » garde la même palette. Les actions passent en encre (`#1B2730`) et un seul accent lagon (`#136D6C`) les accompagne. Il est livré avec l'application, et une organisation peut le demander tel quel.
 
@@ -70,7 +81,7 @@ Les noms des variables datent des premières valeurs. Les gris ont été relevé
 - Chaque extrémité passe au-dessus de l'autre arc. Le tracé dessine le premier arc, puis le second, puis l'extrémité droite du premier.
 - Les arcs sont des demi-cercles de rayon 15 sur une grille de 64, centrés en (25, 37) et en (39, 27), avec des extrémités rondes.
 - Le trait mesure 8 jusqu'à 64 pixels : favicon et pictogrammes de l'interface (`packages/orga/public/favicon.svg`, composant `Pictogramme`). Les grandes icônes portent un trait de 9 (`packages/orga/public/icon.png`).
-- Le nom « Relaytour » s'écrit en Baloo 2 SemiBold : « Relay » en encre et « tour » en accent. Sur l'encre, « Relay » passe en blanc et « tour » en accent éclairci. Baloo 2 ne sert que ce logotype.
+- Le nom « Relaytour » s'écrit en Baloo 2 SemiBold : « Relay » en encre et « tour » en accent de texte. Le pictogramme garde l'accent. Sur l'encre, « Relay » passe en blanc et « tour » en accent éclairci. Baloo 2 ne sert que ce logotype.
 - Le composant `Marque` affiche le pictogramme et le nom de l'organisation. Il affiche le logotype quand l'espace porte l'identité de Relaytour elle-même.
 ## Matériau
 

@@ -574,6 +574,11 @@ enum CoteFusion {
 type CouleursTheme {
   accent: String!
   accentClair: String!
+
+  """
+  L'accent d'un texte, plus sombre que l'accent, qui reste aux surfaces et aux traits.
+  """
+  accentTexte: String!
   alerte: String!
   alerteClair: String!
   encre: String!
