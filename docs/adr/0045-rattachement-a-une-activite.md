@@ -24,7 +24,7 @@ Une personne ne doit voir que les activités auxquelles elle participe. Il faut 
 - Le rattachement fait entrer la personne dans l'équipe de l'activité (ADR 0018). L'équipe réunit désormais les rattachements, les affectations, les souhaits et les rôles d'admin.
 - Le rattachement naît :
   - à chaque affectation, quel que soit son chemin (écran Équipe, invitation, demande acceptée, import, invitation en attente acceptée) ;
-  - à une invitation qui désigne une activité sans périmètre ;
+  - à une invitation dans une activité, avec ou sans périmètre, dès que la personne est membre ;
   - à une demande acceptée, avec ou sans périmètre ;
   - à l'import d'une équipe, pour une personne déclarée sans affectation ni souhait ;
   - quand un admin rattache un membre depuis l'annuaire ou l'écran Équipe.
@@ -57,7 +57,7 @@ Une personne ne doit voir que les activités auxquelles elle participe. Il faut 
 ### Invitation, demande et import
 
 - Une invitation désigne une activité. Un admin d'activité invite dans l'une de ses activités, avec ou sans périmètre. Un admin de l'organisation peut encore inviter une personne sans activité, par exemple un autre admin de l'organisation.
-- Une invitation en attente (ADR 0030) garde les activités à rattacher dans une colonne nouvelle, facultative. L'acceptation crée les rattachements.
+- Une invitation en attente (ADR 0030) garde les activités à rattacher sans périmètre dans une colonne nouvelle, facultative. L'acceptation rattache la personne à ces activités et à celles de ses lots.
 - Une demande s'accepte sans périmètre : la personne est alors rattachée à l'activité de la demande.
 - L'import d'une équipe (ADR 0013) rattache à l'activité de l'import chaque personne déclarée, avec ou sans périmètre.
 - Le mail d'invitation sans périmètre nomme l'activité et renvoie vers sa page « Tous les périmètres ».
