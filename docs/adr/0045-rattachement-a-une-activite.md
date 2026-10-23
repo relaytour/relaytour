@@ -61,6 +61,7 @@ Une personne ne doit voir que les activités auxquelles elle participe. Il faut 
 - Une demande s'accepte sans périmètre : la personne est alors rattachée à l'activité de la demande.
 - L'import d'une équipe (ADR 0013) rattache à l'activité de l'import chaque personne déclarée, avec ou sans périmètre.
 - Le mail d'invitation sans périmètre nomme l'activité et renvoie vers sa page « Tous les périmètres ».
+- Un rattachement n'envoie aucun mail à une personne déjà membre, comme un souhait (ADR 0012). Le mail d'équipe part à sa première affectation.
 
 ### Reprise des données
 
