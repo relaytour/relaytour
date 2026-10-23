@@ -1086,7 +1086,9 @@ builder.mutationFields(t => ({
 
   // Retire une personne de l'équipe d'une activité (ADR 0045) : son rattachement et
   // ses souhaits des périodes non archivées. Ses affectations en cours et son rôle
-  // d'admin se retirent d'abord. Hors des activités administrées, rien ne change.
+  // d'admin se retirent d'abord. Une affectation d'une période archivée reste : elle
+  // garde la personne dans l'équipe et lui laisse voir l'activité (ADR 0010). Hors
+  // des activités administrées, rien ne change.
   retirerDeLActivite: t.boolean({
     authScopes: { gestion: true },
     args: {
@@ -1101,21 +1103,24 @@ builder.mutationFields(t => ({
       if (!(await ctx.estAdminDe(activiteId))) return false
       await refuserAdminDeLOrganisation(ctx, userId)
       const enCours = { statut: { not: 'ARCHIVEE' as const }, activiteId }
-      const [affectations, admin] = await Promise.all([
-        prisma.affectation.count({ where: { userId, edition: enCours } }),
-        prisma.adminActivite.count({ where: { userId, activiteId } }),
-      ])
-      if (affectations > 0) {
-        throw erreurSaisie(
-          'Retirez d’abord les affectations de cette personne dans les périodes en cours.'
-        )
-      }
-      if (admin > 0) {
-        throw erreurSaisie(
-          'Retirez d’abord le rôle d’admin de cette personne dans l’activité.'
-        )
-      }
+      // Le contrôle et la suppression se font sous le verrou de la personne, comme
+      // ses souhaits et ses invitations : une écriture simultanée attend.
       const retires = await prisma.$transaction(async tx => {
+        await tx.$queryRaw`SELECT id FROM User WHERE id = ${userId} FOR UPDATE`
+        const [affectations, admin] = await Promise.all([
+          tx.affectation.count({ where: { userId, edition: enCours } }),
+          tx.adminActivite.count({ where: { userId, activiteId } }),
+        ])
+        if (affectations > 0) {
+          throw erreurSaisie(
+            'Retirez d’abord les affectations de cette personne dans les périodes en cours.'
+          )
+        }
+        if (admin > 0) {
+          throw erreurSaisie(
+            'Retirez d’abord le rôle d’admin de cette personne dans l’activité.'
+          )
+        }
         const rattachements = await tx.rattachementActivite.deleteMany({
           where: { userId, activiteId, organisationId },
         })

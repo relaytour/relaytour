@@ -83,7 +83,7 @@ type Activite {
   slug: String!
 
   """
-  Vrai quand tous les membres de l’organisation découvrent les périmètres de l’activité et formulent leurs souhaits (ADR 0012).
+  Vrai quand les personnes de l’équipe de l’activité formulent elles-mêmes leurs souhaits (ADR 0045). Le réglage ne rend l’activité visible à personne.
   """
   souhaitsOuverts: Boolean!
 

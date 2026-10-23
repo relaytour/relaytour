@@ -90,9 +90,9 @@ export interface ContexteActiviteValeur {
    */
   gere: boolean
   /**
-   * Vrai quand la personne ne fait que découvrir l'activité (ADR 0012) : elle voit
-   * la page « Tous les périmètres » et formule ses souhaits, sans lire les tâches ni
-   * les fiches.
+   * Vrai quand la personne ne fait que découvrir l'activité (ADR 0012, 0045) : elle
+   * y est rattachée ou y a un souhait. Elle voit la page « Tous les périmètres »,
+   * sans lire les tâches ni les fiches.
    */
   decouverte: boolean
   /** Les activités ouvertes de l'organisation, pour le sélecteur. */
@@ -138,9 +138,17 @@ export function construireContexte(
   }
 }
 
-/** L'activité ouverte par défaut : la dernière affichée, sinon la première ouverte. */
+/**
+ * L'activité ouverte par défaut : la dernière affichée, sinon la première ouverte
+ * que la personne voit, avant une activité qu'elle découvre seulement (ADR 0045).
+ */
 export function activiteParDefaut(activites: Activite[]): Activite | undefined {
   const ouvertes = activites.filter(a => !a.archive)
   const derniere = derniereActivite()
-  return ouvertes.find(a => a.slug === derniere) ?? ouvertes[0] ?? activites[0]
+  return (
+    ouvertes.find(a => a.slug === derniere) ??
+    ouvertes.find(a => a.acces !== 'DECOUVERTE') ??
+    ouvertes[0] ??
+    activites[0]
+  )
 }

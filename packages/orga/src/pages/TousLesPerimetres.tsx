@@ -15,7 +15,9 @@ import { messageErreur } from '../lib/erreurs'
 // La page ne montre ni tâche, ni fiche, ni nom de personne. Le nombre de personnes
 // encore recherchées est une information : il n'empêche aucun souhait.
 // Une personne qui voit l'activité ouvre chaque périmètre en consultation
-// (ADR 0014). Une personne en découverte n'a pas ce lien.
+// (ADR 0014). Une personne en découverte n'a pas ce lien. Elle formule ses
+// souhaits quand l'activité est ouverte aux souhaits (ADR 0045) ; sinon, seuls
+// les admins de l'activité les notent.
 
 const TOUS = graphql(`
   query TousLesPerimetres {
@@ -63,7 +65,8 @@ function libelleRecherche(nombre: number): string {
 }
 
 export default function TousLesPerimetres() {
-  const { activite, lien, libelleGroupe, decouverte } = useActivite()
+  const { activite, lien, libelleGroupe, decouverte, gere } = useActivite()
+  const souhaitsLibres = activite.souhaitsOuverts || gere
   const { message } = App.useApp()
   const { data, loading } = useQuery(TOUS)
   const rafraichir = { refetchQueries: ['TousLesPerimetres'] }
@@ -108,7 +111,7 @@ export default function TousLesPerimetres() {
       >
         Retirer mon souhait
       </Button>
-    ) : (
+    ) : !souhaitsLibres ? null : (
       <Button
         size="small"
         type="primary"
@@ -251,7 +254,9 @@ export default function TousLesPerimetres() {
         sousTitre={
           edition === null
             ? `Les périmètres de ${activite.nom}.`
-            : `Les périmètres de ${edition.nom}. Choisissez ceux qui vous intéressent : un admin confirme ensuite les affectations.`
+            : souhaitsLibres
+              ? `Les périmètres de ${edition.nom}. Choisissez ceux qui vous intéressent : un admin confirme ensuite les affectations.`
+              : `Les périmètres de ${edition.nom}. Les admins de l’activité notent les souhaits et confirment les affectations.`
         }
       >
         Tous les périmètres
@@ -269,7 +274,11 @@ export default function TousLesPerimetres() {
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="Vous n’avez pas encore de périmètre dans cette activité. Formulez vos souhaits : un admin vous affectera ensuite."
+          title={
+            souhaitsLibres
+              ? 'Vous n’avez pas encore de périmètre dans cette activité. Formulez vos souhaits : un admin vous affectera ensuite.'
+              : 'Vous n’avez pas encore de périmètre dans cette activité. Un admin vous affectera à l’un d’eux.'
+          }
         />
       )}
       {lignes.length === 0 ? (

@@ -30,6 +30,7 @@ Une personne ne doit voir que les activités auxquelles elle participe. Il faut 
   - quand un admin rattache un membre depuis l'annuaire ou l'écran Équipe.
 - Un admin de l'activité retire le rattachement d'une personne de son équipe. Le serveur refuse ce retrait quand la personne a encore une affectation dans une période non archivée de l'activité, ou un rôle d'admin de l'activité. Le retrait supprime aussi ses souhaits des périodes non archivées de l'activité.
 - Retirer la dernière affectation d'une personne ne retire pas son rattachement. La personne reste dans l'équipe, sans périmètre.
+- Une affectation d'une période archivée n'empêche pas le retrait du rattachement. Elle garde pourtant la personne dans l'équipe, et lui laisse voir l'activité, comme le prévoit l'ADR 0010.
 
 ### Ce que voit chaque personne
 

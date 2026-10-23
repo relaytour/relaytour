@@ -450,6 +450,48 @@ describe('rattacher et retirer depuis l’espace organisateur', () => {
     expect(await rattachements(ids.membreA1)).toEqual([ids.a1])
   })
 
+  it('retire le rattachement sans effacer une affectation archivée, qui garde l’accès', async () => {
+    const archivee = await prisma.edition.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.a1,
+        annee: 2025,
+        nom: 'Période a1 archivée',
+        debut: new Date('2025-06-01'),
+        fin: new Date('2025-06-02'),
+        statut: 'ARCHIVEE',
+      },
+    })
+    try {
+      await prisma.affectation.create({
+        data: {
+          userId: ids.sansActivite,
+          perimetreId: ids.perimetre1,
+          editionId: archivee.id,
+        },
+      })
+      await prisma.rattachementActivite.create({
+        data: {
+          userId: ids.sansActivite,
+          activiteId: ids.a1,
+          organisationId: ids.org,
+        },
+      })
+      const r = await executer(ids.adminA1, RETIRER, {
+        u: ids.sansActivite,
+        a: ids.a1,
+      })
+      expect(r.data?.retirerDeLActivite).toBe(true)
+      expect(await rattachements(ids.sansActivite)).toEqual([])
+      // L'affectation archivée garde la personne dans l'équipe (ADR 0010).
+      const vues = await executer(ids.sansActivite, ACTIVITES)
+      expect(vues.data?.activites).toEqual([{ id: ids.a1, acces: 'COMPLET' }])
+    } finally {
+      await prisma.affectation.deleteMany({ where: { editionId: archivee.id } })
+      await prisma.edition.delete({ where: { id: archivee.id } })
+    }
+  })
+
   it('refuse le retrait d’un admin de l’activité', async () => {
     const r = await executer(ids.adminOrg, RETIRER, {
       u: ids.adminA1,
