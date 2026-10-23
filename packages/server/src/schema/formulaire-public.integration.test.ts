@@ -13,6 +13,8 @@ import {
 } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { empreinteJeton } from '../lib/abonnements-agenda.ts'
+import { jetonDe, nouveauSel } from '../lib/liens.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
 import { schema } from './index.ts'
@@ -223,6 +225,7 @@ beforeAll(async () => {
 afterAll(async () => {
   await prisma.notification.deleteMany({ where: { organisationId: ids.org } })
   await prisma.demande.deleteMany({ where: { organisationId: ids.org } })
+  await prisma.appelBenevoles.deleteMany({ where: { organisationId: ids.org } })
   await prisma.affectation.deleteMany({
     where: { perimetre: { organisationId: ids.org } },
   })
@@ -270,6 +273,59 @@ describe('lire le formulaire sans session', () => {
         },
       ],
     })
+  })
+
+  it('renvoie vers l’appel à bénévoles ouvert sur toute la période, et seulement vers lui', async () => {
+    const lireAppel = async () =>
+      (
+        (
+          await executer(
+            `query ($o: String, $a: String!) { formulaireRejoindre(organisation: $o, activite: $a) { appelBenevoles } }`,
+            { o: slug, a: slug }
+          )
+        ).data as { formulaireRejoindre: { appelBenevoles: string | null } }
+      ).formulaireRejoindre.appelBenevoles
+    const heure = 3600_000
+    const creerAppel = async (
+      portee: 'PERIODE' | 'PERIMETRE',
+      dates: { ouvertLe: Date; fermeLe: Date; fermeManuellementLe?: Date },
+      plus: { perimetreId?: string; sansAdresse?: boolean } = {}
+    ) => {
+      const sel = nouveauSel()
+      const jeton = await jetonDe('appel', sel)
+      await prisma.appelBenevoles.create({
+        data: {
+          organisationId: ids.org,
+          activiteId: ids.activite,
+          editionId: ids.edition,
+          portee,
+          nom: `Appel ${portee}`,
+          ...dates,
+          ...plus,
+          sel,
+          empreinte: empreinteJeton(jeton),
+          fin: jeton.slice(-6),
+        },
+      })
+      return jeton
+    }
+    const ouvert = {
+      ouvertLe: new Date(Date.now() - heure),
+      fermeLe: new Date(Date.now() + 24 * heure),
+    }
+    expect(await lireAppel()).toBeNull()
+    // Un appel limité à un périmètre, fermé, à venir ou d'import ne compte pas.
+    await creerAppel('PERIMETRE', ouvert, { perimetreId: ids.natation })
+    await creerAppel('PERIODE', { ...ouvert, fermeManuellementLe: new Date() })
+    await creerAppel('PERIODE', {
+      ouvertLe: new Date(Date.now() + heure),
+      fermeLe: new Date(Date.now() + 24 * heure),
+    })
+    await creerAppel('PERIODE', ouvert, { sansAdresse: true })
+    expect(await lireAppel()).toBeNull()
+    const jeton = await creerAppel('PERIODE', ouvert)
+    expect(await lireAppel()).toBe(jeton)
+    await prisma.appelBenevoles.deleteMany({ where: { organisationId: ids.org } })
   })
 
   it('refuse un champ réservé demandé dans la même requête', async () => {

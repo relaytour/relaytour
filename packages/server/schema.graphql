@@ -1077,6 +1077,11 @@ type FormulaireRejoindre {
   activite: String!
 
   """
+  Jeton de l’appel à bénévoles ouvert sur tout le programme de la période (`/benevoles/<jeton>`), ou null.
+  """
+  appelBenevoles: String
+
+  """
   Adresse de rôle à laquelle demander l’accès à ses données ou leur suppression.
   """
   contact: String!

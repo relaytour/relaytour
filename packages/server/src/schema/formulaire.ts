@@ -2,6 +2,7 @@ import { prisma, type Prisma } from '@relaytour/database'
 
 import type { AppContext } from '../context.ts'
 import { lireGroupes } from '../lib/activites.ts'
+import { jetonAppel } from '../lib/appels.ts'
 import type { AdressesDeRole } from '../lib/contenu.ts'
 import { signalerDemande } from '../lib/demandes.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
@@ -148,6 +149,31 @@ async function formulaireOuvert(
   }
 }
 
+/**
+ * Le jeton de l'appel à bénévoles ouvert sur tout le programme de la période
+ * (ADR 0041), ou null. Le formulaire recrute l'équipe qui prépare l'activité : il
+ * renvoie vers cet appel les personnes qui viennent aider le jour J. Le plus
+ * récemment ouvert l'emporte. Un appel d'import n'a pas d'adresse (ADR 0042).
+ */
+async function jetonDeLAppelDuProgramme(
+  editionId: string,
+  maintenant = new Date()
+): Promise<string | null> {
+  const appel = await prisma.appelBenevoles.findFirst({
+    where: {
+      editionId,
+      portee: 'PERIODE',
+      sansAdresse: false,
+      fermeManuellementLe: null,
+      ouvertLe: { lte: maintenant },
+      fermeLe: { gt: maintenant },
+    },
+    orderBy: [{ ouvertLe: 'desc' }, { id: 'asc' }],
+    select: { id: true },
+  })
+  return appel === null ? null : jetonAppel(prisma, appel.id)
+}
+
 // ── Types ────────────────────────────────────────────────────────────────────
 
 const PerimetreDuFormulaireRef = builder
@@ -207,6 +233,12 @@ const FormulaireRejoindreRef = builder
       contact: t.exposeString('contact', {
         description:
           'Adresse de rôle à laquelle demander l’accès à ses données ou leur suppression.',
+      }),
+      appelBenevoles: t.string({
+        nullable: true,
+        description:
+          'Jeton de l’appel à bénévoles ouvert sur tout le programme de la période (`/benevoles/<jeton>`), ou null.',
+        resolve: f => jetonDeLAppelDuProgramme(f.editionId),
       }),
     }),
   })
