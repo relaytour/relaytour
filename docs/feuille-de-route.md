@@ -27,4 +27,4 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 - **Indicateur de présence.** La carte d'une tâche et l'éditeur d'une fiche indiquent qu'une autre personne les a ouverts. Cette information évite un conflit d'écriture avant l'enregistrement (ADR 0017). Elle montre aussi qui est connecté, et à quel moment : les référentes et référents décident si elle leur convient.
 - **Agenda.** Réunions récurrentes ; convocation d'une personne sans compte ; page de sondage ouverte à d'autres sujets que les dates (ADR 0037).
 - **Annuaire interne.** Liste des rôles de l'édition, réservée aux personnes connectées. Chacune choisit les coordonnées qu'elle partage.
-- **Traduction.** L'espace organisateur passe dans une autre langue pour les membres qui ne lisent pas le français.
+- **Traduction.** L'espace organisateur passe dans une autre langue pour les membres qui ne lisent pas le français. L'ADR 0047 en fixe les règles : français par défaut, anglais en deuxième langue, traductions de la communauté par PR.

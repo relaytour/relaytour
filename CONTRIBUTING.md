@@ -122,102 +122,103 @@ Chaque règle vient d'un incident réel ou d'un risque constaté.
 - **Style neutre** pour tout texte : copie, mails, docs, commits, PR. Chaque phrase a un sujet et un verbe conjugué, une idée par phrase, 25 mots au plus, « vous » pour l'utilisateur, « nous » pour l'organisation, pas de « on », pas de tiret d'incise.
 - **Écriture inclusive obligatoire**, sur toutes les éditions : doublet dans une phrase (« les référentes et référents »), point médian seulement là où la place manque (« Devenir référent·e »), un seul point médian par mot, jamais de point simple. Préférer une tournure épicène quand elle existe.
 - Commentaires et messages de commit en français, commits conventionnels (`feat(server):`, `fix(orga):`).
+- Le dépôt garde le français comme langue de travail : code, identifiants, commentaires, ADR et titres de commit. Les issues et les PR s'écrivent en français ou en anglais (ADR 0047).
 
 ### Glossaire
 
-Un seul mot par notion.
+Un seul mot par notion. La colonne « Anglais » fixe le terme du catalogue anglais et de la documentation anglaise (ADR 0047).
 
-| Mot | Sens |
-|---|---|
-| organisation | L'association ou le collectif qui utilise une installation de Relaytour. Elle porte une ou plusieurs activités. Une installation peut porter plusieurs organisations (ADR 0008). |
-| activité | Ce qu'une organisation fait dans la durée : un événement, une section, une instance. Une activité porte ses périodes, ses périmètres, ses fiches et ses tâches types (ADR 0008). |
-| nature | Événement, saison ou mandat. La nature d'une activité fixe le libellé de sa période. |
-| édition | Une période d'une activité : l'édition d'un événement (2025, 2027), la saison d'une section, le mandat d'une instance. `Edition` reste le nom technique. |
-| périmètre | Une sous-partie d'une activité (un sport, un pôle, une commission…), rangée dans un groupe. |
-| groupe | Catégorie de périmètre déclarée par l'activité dans son contenu. Le gabarit propose sport et pôle. |
-| pôle | Groupe de périmètres transverses (coordination, logistique, trésorerie…), proposé par défaut. Les pôles sont listés dans le `perimetres.yaml` de l'activité. |
-| phase | Partie de la période d'une activité, bornée en jours depuis son premier jour. L'activité déclare ses phases ; une tâche s'y range par son échéance, sans la déclarer (ADR 0025). |
-| agenda | Calendrier d'une activité pour une période : ses phases, ses dates clés, ses réunions et, en option, les échéances. L'agenda global appartient à l'activité ; chaque périmètre a aussi le sien (ADR 0037). |
-| date clé | Jour, ou suite de jours, qu'un admin de l'activité place dans l'agenda d'une période (ADR 0037). |
-| réunion | Rendez-vous de l'agenda global ou de l'agenda d'un périmètre, avec un horaire, un lieu et un lien de visio facultatifs. Elle ne se supprime pas, elle s'annule (ADR 0037). |
-| convocation | Appel d'une personne de l'équipe à une réunion. L'application l'envoie par mail avec un fichier iCalendar ; la personne répond dans l'application. Ne pas confondre avec une invitation en attente (ADR 0037). |
-| abonnement | Adresse secrète qui sert un agenda au format iCalendar, en lecture seule, à un agenda externe. Une personne a son abonnement personnel ; une activité peut avoir le sien (ADR 0037). Ne pas confondre avec l'abonnement d'un appareil aux notifications push. |
-| sondage | Choix d'un créneau pour une réunion : les personnes visées répondent oui, si besoin ou non à chaque créneau proposé (ADR 0037). |
-| référent·e | Personne membre de l'organisation, désignée pour un périmètre et une édition. |
-| affectation | Lien entre une personne, un périmètre et une édition. |
-| contact principal | Référent·e désigné·e par un admin comme première personne à solliciter pour un périmètre et une édition. Une information seulement, sans droit supplémentaire (ADR 0011). |
-| organigramme | Page qui présente l'équipe d'une activité : son contact, ses admins, puis les personnes de chaque périmètre pour la période en cours (ADR 0036). |
-| signal | Message du flux des changements : il dit qu'un objet a changé, sans porter de donnée (ADR 0017). |
-| consultation | Lecture des tâches, de l'avancement et de l'équipe d'un périmètre par une personne de l'activité qui n'y est pas affectée. Elle n'ouvre ni les fiches ni l'écriture (ADR 0014). |
-| effectif | Nombre de référentes et de référents souhaité pour un périmètre et une édition. |
-| poste à pourvoir | Place de référent·e encore libre : l'effectif moins les affectations. |
-| souhait | Intérêt d'une personne pour un périmètre d'une édition, noté par un admin ou formulé par la personne. |
-| demande | Nom et adresse d'une personne qui veut rejoindre l'équipe d'une période, avec les périmètres qui l'intéressent. Elle attend la décision d'un admin : aucun compte n'existe avant (ADR 0015). |
-| proposition | Demande faite par une personne affectée à un périmètre, pour ce périmètre. Ne pas confondre avec une proposition d'accès. |
-| proposition d'accès | Ajout ou retrait d'un accès chez le fournisseur cloud, que Relaytour prépare et qu'un admin de l'organisation applique ou écarte. Un réglage du dossier lié applique les ajouts sans attendre (ADR 0044). |
-| invitation en attente | Proposition faite à une personne qui a déjà un compte hors de l'organisation de la rejoindre, avec un rôle et des périmètres. Rien n'est créé en son nom avant son accord, et l'organisation ne lit rien de son compte (ADR 0030). |
-| message | Texte qu'un admin prépare dans l'espace organisateur et envoie depuis sa propre messagerie, à une ou plusieurs personnes. L'application ne l'envoie pas (ADR 0020). Ne pas confondre avec un mail, que l'application envoie elle-même. |
-| messagerie | Le logiciel ou le service de mail de l'admin, que l'application ouvre avec le message préparé : l'application par défaut de son appareil, une messagerie en ligne ou une application choisie (ADR 0022). |
-| modèle | Texte de départ d'un message, que l'application complète avec ses informations : période, périmètre, tâches, adresses. |
-| formulaire public | Page lisible sans session où une personne dépose une demande pour rejoindre l'équipe d'une activité. Un admin l'ouvre, et règle son introduction, sa question complémentaire et ses paliers de disponibilité (ADR 0015). |
-| ouverte aux souhaits | Réglage d'une activité : les personnes de son équipe formulent elles-mêmes leurs souhaits dans « Tous les périmètres » (ADR 0012, 0045). Le réglage ne rend l'activité visible à personne. |
-| rattachement | Lien entre une personne et une activité, sans périmètre ni période. Il fait entrer la personne dans l'équipe de l'activité et lui ouvre la page « Tous les périmètres » (ADR 0045). |
-| tâche | Action datée d'un périmètre pour une édition. |
-| tâche partagée | Tâche d'un périmètre, déclinée dans d'autres périmètres de la même activité pour la même période. Elle garde son statut propre et montre l'état de ses déclinaisons (ADR 0026). |
-| déclinaison | Tâche créée dans un périmètre cible depuis une tâche partagée. Elle vit comme toute tâche de ce périmètre : statut, personnes assignées, échéance (ADR 0026). |
-| accord | Réponse d'un périmètre cible à une déclinaison proposée : acceptée ou refusée. Un admin de l'activité impose une déclinaison sans accord (ADR 0026). |
-| commentaire | Texte daté et signé qu'une personne écrit sur une tâche de son périmètre : un compte rendu, une information, une question (ADR 0029). Ne pas confondre avec une note de version. |
-| fil | Les commentaires d'une tâche et les événements de son journal, du plus ancien au plus récent (ADR 0029). |
-| fiche | Fiche méthode (« comment faire ») d'un périmètre ou commune. Les fiches et les documents d'une activité forment l'écran « Ressources » (ADR 0043). |
-| fournisseur cloud | Le service en ligne où l'association range ses documents (SharePoint, OneDrive, Google Drive, Dropbox ou Nextcloud), connecté par un admin de l'organisation. Le code le nomme `espace-fichiers` (ADR 0038, 0043). |
-| vérification des accès | Comparaison, faite par Relaytour, entre les personnes qu'un dossier lié attend et les droits de ce dossier chez le fournisseur cloud. Relaytour lit l'annuaire et les groupes ; seules les propositions d'accès changent des droits (ADR 0044). |
-| accès en trop | Compte qui a un droit sur un dossier lié sans être attendu. Relaytour n'en garde que le nom (ADR 0044). |
-| compte de service | Compte technique Google qu'une organisation crée, et avec lequel elle partage ses dossiers. Relaytour lit Google Drive par lui quand l'organisation dépose sa clé (ADR 0038). |
-| dossier lié | Dossier du fournisseur cloud qu'un admin de l'organisation lie à une activité, pour toute l'activité ou pour une liste de périmètres et de groupes : ses lecteurs. Il se lit comme les fiches correspondantes (ADR 0038, 0043). |
-| document | Fichier d'un dossier lié, lu dans Relaytour sans copie. Ne pas confondre avec une fiche, que Relaytour garde et versionne. |
-| document lié | Dossier ou fichier du fournisseur cloud qu'une personne qui rédige une fiche y lie. Ses lecteurs l'ouvrent depuis la fiche (ADR 0038, 0043). |
-| fiche connexe | Fiche d'un périmètre qui concerne aussi d'autres périmètres de la même activité. Elle s'y lit sans s'y modifier (ADR 0039). |
-| mention | `@` suivi de l'identifiant d'un périmètre, ou `@groupe:` suivi de la clé d'un groupe, dans le texte d'une fiche. Elle s'affiche comme une étiquette et ne donne aucun accès (ADR 0039). |
-| mode d'emploi | Page publique du site (`site/modes-d-emploi/`) qui décrit les écrans d'un rôle : admin de l'organisation, admin d'activité, référent·e. Une page peut aussi traiter un point précis, commun à plusieurs rôles : la messagerie, l'installation de l'application. Ne pas confondre avec une fiche. |
-| admin de l'organisation | Membre du bureau qui gère toutes les activités, les comptes et l'identité de l'organisation. Il nomme les admins de l'organisation et les admins d'activité. |
-| admin d'activité | Personne qui gère une activité : ses périodes, ses périmètres, ses affectations et ses fiches. Elle ne voit ni les autres activités (ADR 0010), ni les personnes hors de son équipe (ADR 0018). Elle nomme les autres admins de son activité (ADR 0019). |
-| note de version | Texte qui décrit un changement visible d'une version. Les notes d'audience `organisateurs` se lisent dans l'espace organisateur, selon le rôle de la personne (ADR 0021). |
-| support | Aide demandée depuis le menu du compte : un mail à l'adresse de support de l'organisation, sinon l'action indiquée par l'hébergeur (ADR 0021). |
-| équipe | Les membres de l'organisation liés à une activité par un rattachement, une affectation, un souhait ou un rôle d'admin, toutes périodes confondues (ADR 0018, 0045). |
-| annuaire | La liste de tous les membres de l'organisation, lue par ses admins seulement (ADR 0018). |
-| journal | Trace de qui a fait quoi, et quand. Le journal alimente les notifications et le score de participation. |
-| administration de l'installation | Actions d'hébergement, par script ou par jeton, sans accès aux données : créer, suspendre, limiter, exporter une organisation. |
-| identité | Nom, sigle, contacts, logo, favicon et thème d'une organisation. Une activité en surcharge les contacts, le logo, les couleurs et le fond (ADR 0009). |
-| adresse de rôle | Adresse d'une boîte partagée de l'organisation, jamais d'une personne : une adresse d'un domaine de rôle, ou une adresse déclarée une par une. Relaytour la publie sans la signaler comme donnée personnelle. |
-| image | Logo ou favicon d'une organisation ou d'une activité, gardé en base et désigné par son empreinte. |
-| limites | Plafonds d'une organisation (nombre d'activités, nombre de périodes ouvertes), fixés par l'administration de l'installation. Une limite ne bloque jamais la lecture ni l'export. Une organisation auto-hébergée n'en a aucune. |
-| bénévole | Personne qui aide l'activité sans compte dans l'application. Une fiche bénévole porte son nom et ses coordonnées, avec son accord (ADR 0040). |
-| programme | L'ensemble des séquences d'une période : le déroulé du jour J, par lieu et par heure (ADR 0040). |
-| séquence | Moment du programme : un titre, un horaire, un lieu et un périmètre facultatifs, et les personnes placées en responsabilité ou en renfort (ADR 0040). Ne pas confondre avec une réunion. |
-| lieu | Endroit d'une activité où se tient une séquence : un terrain, un bassin, une salle. Il sert d'une période à l'autre (ADR 0040). |
-| besoin en bénévoles | Nombre de renforts qu'une séquence recherche. Les places en renfort d'un membre ou d'une fiche bénévole y comptent (ADR 0041). |
-| consignes pour les bénévoles | Texte public d'une séquence : la mission, le point de rendez-vous, la tenue. Ne pas confondre avec sa description, qui reste interne (ADR 0041). |
-| appel à bénévoles | Ouverture des candidatures sur une partie du programme : la période, un périmètre ou une séquence. Il a une adresse publique secrète et des dates d'ouverture et de fermeture (ADR 0041). Le formulaire de l'équipe affiche l'adresse de l'appel ouvert sur toute la période (ADR 0046). |
-| candidature | Dépôt d'une personne sur un appel à bénévoles : ses coordonnées, les séquences choisies et ses disponibilités. Elle attend la décision de l'équipe (ADR 0041). Ne pas confondre avec une demande. |
-| plage de disponibilité | Intervalle, avec un début et une fin, où une personne peut aider pendant la période (ADR 0041). Ne pas confondre avec le créneau d'un sondage. |
-| précisions de disponibilité | Texte libre où une personne décrit ses disponibilités : « à partir de 18 h, tout poste sauf la photo » (ADR 0041). |
-| liste d'attente | Les candidatures déposées sur une séquence dont le besoin était déjà atteint. L'équipe peut les accepter (ADR 0041). |
-| place à confirmer | Place de bénévole créée par l'équipe, que la personne n'a pas encore confirmée (ADR 0041). |
-| bénévoles à répartir | Personnes disponibles qui ne sont pas placées dans une séquence donnée : candidatures en attente, fiches avec des plages de disponibilité (ADR 0041). |
-| espace bénévole | Page publique ouverte par le lien personnel d'une fiche bénévole : ses places, ses consignes, la confirmation et le retrait. Le lien reste le même d'un mail à l'autre (ADR 0041). |
-| import de bénévoles | Entrée des personnes d'un fichier CSV ou Excel dans une période d'une activité, pour le programme entier ou pour un périmètre. Le fichier se lit dans le navigateur et ne se garde nulle part (ADR 0042). |
-| correspondance d'import | Association enregistrée des colonnes d'un fichier aux champs de Relaytour, réutilisée pour un fichier aux mêmes en-têtes (ADR 0042). Ne pas confondre avec le modèle d'un message. |
-| source d'import | Libellé donné à un import par la personne qui importe : « billetterie du 7 août ». Il reste sur chaque fiche et chaque candidature (ADR 0042). |
-| identifiant externe | Valeur qui désigne une ligne dans l'outil d'origine, comme un numéro de billet. Elle rend un import rejouable (ADR 0042). |
-| rapprochement | Lien proposé entre une personne d'un fichier et une fiche bénévole, ou entre deux fiches : même adresse, même téléphone ou nom proche (ADR 0042). |
-| fusion de fiches | Réunion de deux fiches bénévoles en une seule, avec leurs places, leurs plages et leurs candidatures. Réservée aux admins de l'activité (ADR 0042). |
-| fiche joignable | Fiche bénévole qui porte une adresse et l'option « Prévenir par mail ». Sa première place lui envoie son lien personnel (ADR 0041). |
-| application installée | L'espace organisateur ajouté à l'écran d'accueil d'un téléphone ou d'un ordinateur. Elle s'ouvre sans barre d'adresse et porte le nom et l'icône de l'organisation (ADR 0023). |
-| icône d'application | Image carrée de 512 pixels qu'une organisation déclare pour son application installée (ADR 0023). |
-| hors connexion | État de l'appareil sans réseau. L'application affiche alors un écran d'attente et ne montre aucune donnée (ADR 0023). |
-| notification push | Notification affichée par le système de l'appareil, application fermée. Elle reprend une notification de l'application (ADR 0024). Ne pas confondre avec un mail. |
-| niveau de notification | À quel titre une personne reçoit une notification : référent·e, admin d'activité ou admin de l'organisation (ADR 0033). |
-| notification d'admin | Notification d'un niveau d'admin : une demande, une invitation acceptée, une nouvelle de l'équipe. Elle se lit dans l'écran « Notifications d'admin », à part de la cloche (ADR 0033). |
+| Mot | Anglais | Sens |
+|---|---|---|
+| organisation | organization | L'association ou le collectif qui utilise une installation de Relaytour. Elle porte une ou plusieurs activités. Une installation peut porter plusieurs organisations (ADR 0008). |
+| activité | activity | Ce qu'une organisation fait dans la durée : un événement, une section, une instance. Une activité porte ses périodes, ses périmètres, ses fiches et ses tâches types (ADR 0008). |
+| nature | kind | Événement, saison ou mandat. La nature d'une activité fixe le libellé de sa période. |
+| édition | edition | Une période d'une activité : l'édition d'un événement (2025, 2027), la saison d'une section, le mandat d'une instance. `Edition` reste le nom technique. |
+| périmètre | area | Une sous-partie d'une activité (un sport, un pôle, une commission…), rangée dans un groupe. |
+| groupe | group | Catégorie de périmètre déclarée par l'activité dans son contenu. Le gabarit propose sport et pôle. |
+| pôle | department | Groupe de périmètres transverses (coordination, logistique, trésorerie…), proposé par défaut. Les pôles sont listés dans le `perimetres.yaml` de l'activité. |
+| phase | phase | Partie de la période d'une activité, bornée en jours depuis son premier jour. L'activité déclare ses phases ; une tâche s'y range par son échéance, sans la déclarer (ADR 0025). |
+| agenda | calendar | Calendrier d'une activité pour une période : ses phases, ses dates clés, ses réunions et, en option, les échéances. L'agenda global appartient à l'activité ; chaque périmètre a aussi le sien (ADR 0037). |
+| date clé | key date | Jour, ou suite de jours, qu'un admin de l'activité place dans l'agenda d'une période (ADR 0037). |
+| réunion | meeting | Rendez-vous de l'agenda global ou de l'agenda d'un périmètre, avec un horaire, un lieu et un lien de visio facultatifs. Elle ne se supprime pas, elle s'annule (ADR 0037). |
+| convocation | meeting notice | Appel d'une personne de l'équipe à une réunion. L'application l'envoie par mail avec un fichier iCalendar ; la personne répond dans l'application. Ne pas confondre avec une invitation en attente (ADR 0037). |
+| abonnement | calendar subscription | Adresse secrète qui sert un agenda au format iCalendar, en lecture seule, à un agenda externe. Une personne a son abonnement personnel ; une activité peut avoir le sien (ADR 0037). Ne pas confondre avec l'abonnement d'un appareil aux notifications push. |
+| sondage | poll | Choix d'un créneau pour une réunion : les personnes visées répondent oui, si besoin ou non à chaque créneau proposé (ADR 0037). |
+| référent·e | coordinator | Personne membre de l'organisation, désignée pour un périmètre et une édition. |
+| affectation | appointment | Lien entre une personne, un périmètre et une édition. |
+| contact principal | main contact | Référent·e désigné·e par un admin comme première personne à solliciter pour un périmètre et une édition. Une information seulement, sans droit supplémentaire (ADR 0011). |
+| organigramme | org chart | Page qui présente l'équipe d'une activité : son contact, ses admins, puis les personnes de chaque périmètre pour la période en cours (ADR 0036). |
+| signal | signal | Message du flux des changements : il dit qu'un objet a changé, sans porter de donnée (ADR 0017). |
+| consultation | read-only access | Lecture des tâches, de l'avancement et de l'équipe d'un périmètre par une personne de l'activité qui n'y est pas affectée. Elle n'ouvre ni les fiches ni l'écriture (ADR 0014). |
+| effectif | target headcount | Nombre de référentes et de référents souhaité pour un périmètre et une édition. |
+| poste à pourvoir | open seat | Place de référent·e encore libre : l'effectif moins les affectations. |
+| souhait | interest | Intérêt d'une personne pour un périmètre d'une édition, noté par un admin ou formulé par la personne. |
+| demande | join request | Nom et adresse d'une personne qui veut rejoindre l'équipe d'une période, avec les périmètres qui l'intéressent. Elle attend la décision d'un admin : aucun compte n'existe avant (ADR 0015). |
+| proposition | referral | Demande faite par une personne affectée à un périmètre, pour ce périmètre. Ne pas confondre avec une proposition d'accès. |
+| proposition d'accès | access proposal | Ajout ou retrait d'un accès chez le fournisseur cloud, que Relaytour prépare et qu'un admin de l'organisation applique ou écarte. Un réglage du dossier lié applique les ajouts sans attendre (ADR 0044). |
+| invitation en attente | pending invitation | Proposition faite à une personne qui a déjà un compte hors de l'organisation de la rejoindre, avec un rôle et des périmètres. Rien n'est créé en son nom avant son accord, et l'organisation ne lit rien de son compte (ADR 0030). |
+| message | message | Texte qu'un admin prépare dans l'espace organisateur et envoie depuis sa propre messagerie, à une ou plusieurs personnes. L'application ne l'envoie pas (ADR 0020). Ne pas confondre avec un mail, que l'application envoie elle-même. |
+| messagerie | mail app | Le logiciel ou le service de mail de l'admin, que l'application ouvre avec le message préparé : l'application par défaut de son appareil, une messagerie en ligne ou une application choisie (ADR 0022). |
+| modèle | template | Texte de départ d'un message, que l'application complète avec ses informations : période, périmètre, tâches, adresses. |
+| formulaire public | public form | Page lisible sans session où une personne dépose une demande pour rejoindre l'équipe d'une activité. Un admin l'ouvre, et règle son introduction, sa question complémentaire et ses paliers de disponibilité (ADR 0015). |
+| ouverte aux souhaits | open to interests | Réglage d'une activité : les personnes de son équipe formulent elles-mêmes leurs souhaits dans « Tous les périmètres » (ADR 0012, 0045). Le réglage ne rend l'activité visible à personne. |
+| rattachement | affiliation | Lien entre une personne et une activité, sans périmètre ni période. Il fait entrer la personne dans l'équipe de l'activité et lui ouvre la page « Tous les périmètres » (ADR 0045). |
+| tâche | task | Action datée d'un périmètre pour une édition. |
+| tâche partagée | shared task | Tâche d'un périmètre, déclinée dans d'autres périmètres de la même activité pour la même période. Elle garde son statut propre et montre l'état de ses déclinaisons (ADR 0026). |
+| déclinaison | derived task | Tâche créée dans un périmètre cible depuis une tâche partagée. Elle vit comme toute tâche de ce périmètre : statut, personnes assignées, échéance (ADR 0026). |
+| accord | approval | Réponse d'un périmètre cible à une déclinaison proposée : acceptée ou refusée. Un admin de l'activité impose une déclinaison sans accord (ADR 0026). |
+| commentaire | comment | Texte daté et signé qu'une personne écrit sur une tâche de son périmètre : un compte rendu, une information, une question (ADR 0029). Ne pas confondre avec une note de version. |
+| fil | thread | Les commentaires d'une tâche et les événements de son journal, du plus ancien au plus récent (ADR 0029). |
+| fiche | sheet | Fiche méthode (« comment faire ») d'un périmètre ou commune. Les fiches et les documents d'une activité forment l'écran « Ressources » (ADR 0043). |
+| fournisseur cloud | cloud provider | Le service en ligne où l'association range ses documents (SharePoint, OneDrive, Google Drive, Dropbox ou Nextcloud), connecté par un admin de l'organisation. Le code le nomme `espace-fichiers` (ADR 0038, 0043). |
+| vérification des accès | access check | Comparaison, faite par Relaytour, entre les personnes qu'un dossier lié attend et les droits de ce dossier chez le fournisseur cloud. Relaytour lit l'annuaire et les groupes ; seules les propositions d'accès changent des droits (ADR 0044). |
+| accès en trop | extra access | Compte qui a un droit sur un dossier lié sans être attendu. Relaytour n'en garde que le nom (ADR 0044). |
+| compte de service | service account | Compte technique Google qu'une organisation crée, et avec lequel elle partage ses dossiers. Relaytour lit Google Drive par lui quand l'organisation dépose sa clé (ADR 0038). |
+| dossier lié | linked folder | Dossier du fournisseur cloud qu'un admin de l'organisation lie à une activité, pour toute l'activité ou pour une liste de périmètres et de groupes : ses lecteurs. Il se lit comme les fiches correspondantes (ADR 0038, 0043). |
+| document | document | Fichier d'un dossier lié, lu dans Relaytour sans copie. Ne pas confondre avec une fiche, que Relaytour garde et versionne. |
+| document lié | linked document | Dossier ou fichier du fournisseur cloud qu'une personne qui rédige une fiche y lie. Ses lecteurs l'ouvrent depuis la fiche (ADR 0038, 0043). |
+| fiche connexe | related sheet | Fiche d'un périmètre qui concerne aussi d'autres périmètres de la même activité. Elle s'y lit sans s'y modifier (ADR 0039). |
+| mention | mention | `@` suivi de l'identifiant d'un périmètre, ou `@groupe:` suivi de la clé d'un groupe, dans le texte d'une fiche. Elle s'affiche comme une étiquette et ne donne aucun accès (ADR 0039). |
+| mode d'emploi | user guide | Page publique du site (`site/modes-d-emploi/`) qui décrit les écrans d'un rôle : admin de l'organisation, admin d'activité, référent·e. Une page peut aussi traiter un point précis, commun à plusieurs rôles : la messagerie, l'installation de l'application. Ne pas confondre avec une fiche. |
+| admin de l'organisation | organization admin | Membre du bureau qui gère toutes les activités, les comptes et l'identité de l'organisation. Il nomme les admins de l'organisation et les admins d'activité. |
+| admin d'activité | activity admin | Personne qui gère une activité : ses périodes, ses périmètres, ses affectations et ses fiches. Elle ne voit ni les autres activités (ADR 0010), ni les personnes hors de son équipe (ADR 0018). Elle nomme les autres admins de son activité (ADR 0019). |
+| note de version | release note | Texte qui décrit un changement visible d'une version. Les notes d'audience `organisateurs` se lisent dans l'espace organisateur, selon le rôle de la personne (ADR 0021). |
+| support | support | Aide demandée depuis le menu du compte : un mail à l'adresse de support de l'organisation, sinon l'action indiquée par l'hébergeur (ADR 0021). |
+| équipe | team | Les membres de l'organisation liés à une activité par un rattachement, une affectation, un souhait ou un rôle d'admin, toutes périodes confondues (ADR 0018, 0045). |
+| annuaire | directory | La liste de tous les membres de l'organisation, lue par ses admins seulement (ADR 0018). |
+| journal | activity log | Trace de qui a fait quoi, et quand. Le journal alimente les notifications et le score de participation. |
+| administration de l'installation | instance administration | Actions d'hébergement, par script ou par jeton, sans accès aux données : créer, suspendre, limiter, exporter une organisation. |
+| identité | identity | Nom, sigle, contacts, logo, favicon et thème d'une organisation. Une activité en surcharge les contacts, le logo, les couleurs et le fond (ADR 0009). |
+| adresse de rôle | role address | Adresse d'une boîte partagée de l'organisation, jamais d'une personne : une adresse d'un domaine de rôle, ou une adresse déclarée une par une. Relaytour la publie sans la signaler comme donnée personnelle. |
+| image | image | Logo ou favicon d'une organisation ou d'une activité, gardé en base et désigné par son empreinte. |
+| limites | limits | Plafonds d'une organisation (nombre d'activités, nombre de périodes ouvertes), fixés par l'administration de l'installation. Une limite ne bloque jamais la lecture ni l'export. Une organisation auto-hébergée n'en a aucune. |
+| bénévole | volunteer | Personne qui aide l'activité sans compte dans l'application. Une fiche bénévole porte son nom et ses coordonnées, avec son accord (ADR 0040). |
+| programme | schedule | L'ensemble des séquences d'une période : le déroulé du jour J, par lieu et par heure (ADR 0040). |
+| séquence | slot | Moment du programme : un titre, un horaire, un lieu et un périmètre facultatifs, et les personnes placées en responsabilité ou en renfort (ADR 0040). Ne pas confondre avec une réunion. |
+| lieu | venue | Endroit d'une activité où se tient une séquence : un terrain, un bassin, une salle. Il sert d'une période à l'autre (ADR 0040). |
+| besoin en bénévoles | volunteer need | Nombre de renforts qu'une séquence recherche. Les places en renfort d'un membre ou d'une fiche bénévole y comptent (ADR 0041). |
+| consignes pour les bénévoles | volunteer instructions | Texte public d'une séquence : la mission, le point de rendez-vous, la tenue. Ne pas confondre avec sa description, qui reste interne (ADR 0041). |
+| appel à bénévoles | volunteer call | Ouverture des candidatures sur une partie du programme : la période, un périmètre ou une séquence. Il a une adresse publique secrète et des dates d'ouverture et de fermeture (ADR 0041). Le formulaire de l'équipe affiche l'adresse de l'appel ouvert sur toute la période (ADR 0046). |
+| candidature | application | Dépôt d'une personne sur un appel à bénévoles : ses coordonnées, les séquences choisies et ses disponibilités. Elle attend la décision de l'équipe (ADR 0041). Ne pas confondre avec une demande. |
+| plage de disponibilité | availability window | Intervalle, avec un début et une fin, où une personne peut aider pendant la période (ADR 0041). Ne pas confondre avec le créneau d'un sondage. |
+| précisions de disponibilité | availability notes | Texte libre où une personne décrit ses disponibilités : « à partir de 18 h, tout poste sauf la photo » (ADR 0041). |
+| liste d'attente | waiting list | Les candidatures déposées sur une séquence dont le besoin était déjà atteint. L'équipe peut les accepter (ADR 0041). |
+| place à confirmer | unconfirmed place | Place de bénévole créée par l'équipe, que la personne n'a pas encore confirmée (ADR 0041). |
+| bénévoles à répartir | unplaced volunteers | Personnes disponibles qui ne sont pas placées dans une séquence donnée : candidatures en attente, fiches avec des plages de disponibilité (ADR 0041). |
+| espace bénévole | volunteer page | Page publique ouverte par le lien personnel d'une fiche bénévole : ses places, ses consignes, la confirmation et le retrait. Le lien reste le même d'un mail à l'autre (ADR 0041). |
+| import de bénévoles | volunteer import | Entrée des personnes d'un fichier CSV ou Excel dans une période d'une activité, pour le programme entier ou pour un périmètre. Le fichier se lit dans le navigateur et ne se garde nulle part (ADR 0042). |
+| correspondance d'import | import mapping | Association enregistrée des colonnes d'un fichier aux champs de Relaytour, réutilisée pour un fichier aux mêmes en-têtes (ADR 0042). Ne pas confondre avec le modèle d'un message. |
+| source d'import | import source | Libellé donné à un import par la personne qui importe : « billetterie du 7 août ». Il reste sur chaque fiche et chaque candidature (ADR 0042). |
+| identifiant externe | external ID | Valeur qui désigne une ligne dans l'outil d'origine, comme un numéro de billet. Elle rend un import rejouable (ADR 0042). |
+| rapprochement | match | Lien proposé entre une personne d'un fichier et une fiche bénévole, ou entre deux fiches : même adresse, même téléphone ou nom proche (ADR 0042). |
+| fusion de fiches | record merge | Réunion de deux fiches bénévoles en une seule, avec leurs places, leurs plages et leurs candidatures. Réservée aux admins de l'activité (ADR 0042). |
+| fiche joignable | reachable record | Fiche bénévole qui porte une adresse et l'option « Prévenir par mail ». Sa première place lui envoie son lien personnel (ADR 0041). |
+| application installée | installed app | L'espace organisateur ajouté à l'écran d'accueil d'un téléphone ou d'un ordinateur. Elle s'ouvre sans barre d'adresse et porte le nom et l'icône de l'organisation (ADR 0023). |
+| icône d'application | app icon | Image carrée de 512 pixels qu'une organisation déclare pour son application installée (ADR 0023). |
+| hors connexion | offline | État de l'appareil sans réseau. L'application affiche alors un écran d'attente et ne montre aucune donnée (ADR 0023). |
+| notification push | push notification | Notification affichée par le système de l'appareil, application fermée. Elle reprend une notification de l'application (ADR 0024). Ne pas confondre avec un mail. |
+| niveau de notification | notification level | À quel titre une personne reçoit une notification : référent·e, admin d'activité ou admin de l'organisation (ADR 0033). |
+| notification d'admin | admin notification | Notification d'un niveau d'admin : une demande, une invitation acceptée, une nouvelle de l'équipe. Elle se lit dans l'écran « Notifications d'admin », à part de la cloche (ADR 0033). |
 
 ## Proposer une modification
 
