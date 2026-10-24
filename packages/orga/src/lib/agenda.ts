@@ -3,6 +3,8 @@
 // Les jours s'écrivent au format AAAA-MM-JJ et se comparent comme des chaînes :
 // aucun fuseau ne les décale. Les calculs passent par des instants UTC.
 
+import { formatDate } from './langue'
+
 const JOUR_MS = 24 * 60 * 60 * 1000
 
 function instantDuJour(jour: string): number {
@@ -108,22 +110,25 @@ export function grouperParMoisAgenda<T extends Etendue>(
     .sort((a, b) => a.mois.localeCompare(b.mois))
 }
 
-const formatJour = new Intl.DateTimeFormat('fr-FR', {
+// Les formats suivent la langue active : ils se lisent à chaque appel, et
+// `formatDate` les garde en cache.
+const OPTIONS_JOUR: Intl.DateTimeFormatOptions = {
   weekday: 'short',
   day: 'numeric',
   month: 'short',
   timeZone: 'UTC',
-})
-const formatJourSeul = new Intl.DateTimeFormat('fr-FR', {
+}
+const OPTIONS_JOUR_SEUL: Intl.DateTimeFormatOptions = {
   day: 'numeric',
   month: 'short',
   timeZone: 'UTC',
-})
+}
 
 /** « lun. 1 mars », ou « 1 mars → 3 mars » pour une suite de jours. */
 export function libelleJours(jour: string, jourFin?: string | null): string {
   const du = new Date(instantDuJour(jour))
-  if (!jourFin || jourFin === jour) return formatJour.format(du)
+  if (!jourFin || jourFin === jour) return formatDate(OPTIONS_JOUR).format(du)
+  const formatJourSeul = formatDate(OPTIONS_JOUR_SEUL)
   return `${formatJourSeul.format(du)} → ${formatJourSeul.format(
     new Date(instantDuJour(jourFin))
   )}`

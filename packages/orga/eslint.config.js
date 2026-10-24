@@ -1,4 +1,5 @@
 import js from '@eslint/js'
+import lingui from 'eslint-plugin-lingui'
 import globals from 'globals'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
@@ -7,7 +8,13 @@ import tseslint from 'typescript-eslint'
 export default tseslint.config(
   { ignores: ['dist', 'src/gql'] },
   {
-    extends: [js.configs.recommended, ...tseslint.configs.recommended],
+    extends: [
+      js.configs.recommended,
+      ...tseslint.configs.recommended,
+      // Règles d'écriture des messages traduits (ADR 0047). La règle qui signale un
+      // texte écrit en dur s'activera dossier par dossier, au fil de l'extraction.
+      lingui.configs['flat/recommended'],
+    ],
     files: ['**/*.{ts,tsx}'],
     languageOptions: {
       ecmaVersion: 2023,

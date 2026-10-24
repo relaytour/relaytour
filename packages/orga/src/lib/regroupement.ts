@@ -5,6 +5,7 @@
 // calendaires, lus dans leur texte : aucun fuseau horaire ne peut les décaler.
 
 import { dateCourte } from './erreurs'
+import { langueActive } from './langue'
 
 /** Une phase déclarée par l'activité. La dernière ne porte pas de borne. */
 export interface Phase {
@@ -196,7 +197,7 @@ export function grouperParPerimetre<T extends { perimetre: PerimetreRange }>(
     (a, b) =>
       rang(a.perimetre.groupe) - rang(b.perimetre.groupe) ||
       (a.perimetre.ordre ?? 0) - (b.perimetre.ordre ?? 0) ||
-      a.perimetre.nom.localeCompare(b.perimetre.nom, 'fr')
+      a.perimetre.nom.localeCompare(b.perimetre.nom, langueActive())
   )
 }
 

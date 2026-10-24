@@ -7,6 +7,7 @@ import { graphql } from '../gql'
 import { messageErreur } from '../lib/erreurs'
 
 import { Panneau } from './Panneau'
+import { langueActive } from '../lib/langue'
 
 // Les périmètres qu'un abonnement peut suivre : ceux que la personne lit, comme
 // le serveur l'exige (`perimetresLisibles`). Une consultation ne suffit pas.
@@ -105,7 +106,7 @@ const REVOQUER_ACTIVITE = graphql(`
 `)
 
 const dateCourte = (iso: string) =>
-  new Date(iso).toLocaleDateString('fr-FR', {
+  new Date(iso).toLocaleDateString(langueActive(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

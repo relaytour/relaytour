@@ -1,4 +1,5 @@
 // Rangement des notifications (ADR 0032 et 0033) : la cloche les range par
+import { langueActive } from './langue'
 // activité, l'écran des admins par activité puis par périmètre. Les notifications
 // sans activité forment un groupe à part, placé en tête.
 
@@ -48,7 +49,11 @@ function ranger<T extends NotificationRangee>(
   }
   // Le groupe sans clé en tête, puis les autres dans l'ordre alphabétique.
   return [...groupes.values()].sort((a, b) =>
-    a.cle === '' ? -1 : b.cle === '' ? 1 : a.titre.localeCompare(b.titre, 'fr')
+    a.cle === ''
+      ? -1
+      : b.cle === ''
+        ? 1
+        : a.titre.localeCompare(b.titre, langueActive())
   )
 }
 

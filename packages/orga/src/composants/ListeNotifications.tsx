@@ -8,6 +8,7 @@ import {
   grouperParPerimetre,
   type Groupe,
 } from '../lib/rangement-notifications'
+import { langueActive } from '../lib/langue'
 
 export type Notification = NotificationAfficheeFragment
 
@@ -25,7 +26,7 @@ function ilYA(iso: string): string {
   if (minutes < 60) return `il y a ${minutes} min`
   const heures = Math.round(minutes / 60)
   if (heures < 24) return `il y a ${heures} h`
-  return new Date(iso).toLocaleDateString('fr-FR', {
+  return new Date(iso).toLocaleDateString(langueActive(), {
     day: 'numeric',
     month: 'long',
   })

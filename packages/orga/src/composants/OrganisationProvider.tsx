@@ -1,6 +1,6 @@
 import { useQuery } from '@apollo/client/react'
+import { useLingui } from '@lingui/react'
 import { ConfigProvider, Spin } from 'antd'
-import frFR from 'antd/locale/fr_FR'
 import { useEffect, useMemo, type ReactNode } from 'react'
 
 import {
@@ -11,6 +11,7 @@ import {
   type Organisation,
 } from '../lib/organisation'
 import { declarerApplication } from '../lib/application'
+import { estUneLangue, localeAntd } from '../lib/langue'
 import { organisationChoisie } from '../lib/selection'
 import { appliquerTheme, construireTheme } from '../lib/theme'
 
@@ -20,6 +21,10 @@ import { appliquerTheme, construireTheme } from '../lib/theme'
  * couvre l'écran ; si elle ne répond pas, le thème de Relaytour reste en place.
  */
 export function OrganisationProvider({ children }: { children: ReactNode }) {
+  // La locale d'antd suit la langue active : `useLingui` rend à nouveau le
+  // composant quand elle change.
+  const { i18n } = useLingui()
+  const locale = localeAntd(estUneLangue(i18n.locale) ? i18n.locale : undefined)
   const { data, loading } = useQuery(ORGANISATION, {
     variables: { slug: organisationChoisie() },
   })
@@ -63,7 +68,7 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <ConfigProvider locale={frFR} theme={theme}>
+    <ConfigProvider locale={locale} theme={theme}>
       <ContexteOrganisation.Provider value={organisation}>
         {loading && !data ? <Spin fullscreen /> : children}
       </ContexteOrganisation.Provider>

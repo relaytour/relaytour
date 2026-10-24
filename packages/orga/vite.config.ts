@@ -1,5 +1,6 @@
 import { createHash } from 'node:crypto'
 
+import { lingui } from '@lingui/vite-plugin'
 import react from '@vitejs/plugin-react'
 import { defineConfig, type Plugin } from 'vite'
 
@@ -54,7 +55,19 @@ function serviceWorker(): Plugin {
 }
 
 export default defineConfig({
-  plugins: [react(), serviceWorker()],
+  plugins: [
+    // La macro de Lingui est un greffon Babel : elle transforme `t` et `<Trans>` à
+    // la compilation (ADR 0047). Le plugin de Lingui compile les catalogues `.po`
+    // à l'import, sans étape séparée en développement.
+    react({
+      babel: { plugins: ['@lingui/babel-plugin-lingui-macro'] },
+      // Les types générés ne portent aucun message, et Babel ralentit sur ce
+      // fichier de plus de 500 ko.
+      exclude: /\/src\/gql\//,
+    }),
+    lingui(),
+    serviceWorker(),
+  ],
   // Une dépendance remontée à la racine du monorepo ne doit jamais charger une
   // seconde copie de React dans cette SPA.
   resolve: { dedupe: ['react', 'react-dom'] },

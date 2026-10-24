@@ -4,6 +4,7 @@ import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import type { StatutTache } from '../gql/graphql'
 
 import { relireLesVues } from './rafraichissement'
+import { langueActive } from './langue'
 
 // Conflit d'écriture sur une tâche, une fiche ou un périmètre. Le serveur refuse
 // d'écraser ce qu'une autre personne a écrit depuis la lecture (code
@@ -61,13 +62,13 @@ export function lireConflit(erreur: unknown): Conflit | null {
 /** « le 4 octobre à 14 h 05 », dans le fuseau du navigateur ou dans `fuseau`. */
 function momentDe(iso: string, fuseau?: string): string {
   const instant = new Date(iso)
-  const jour = instant.toLocaleDateString('fr-FR', {
+  const jour = instant.toLocaleDateString(langueActive(), {
     day: 'numeric',
     month: 'long',
     timeZone: fuseau,
   })
   const [heures, minutes] = instant
-    .toLocaleTimeString('fr-FR', {
+    .toLocaleTimeString(langueActive(), {
       hour: '2-digit',
       minute: '2-digit',
       timeZone: fuseau,
