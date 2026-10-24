@@ -6,6 +6,7 @@ import type {
   FilTacheQuery,
   StatutTache,
 } from '../gql/graphql'
+import { langueActive } from './langue'
 
 // Commentaires d'une tâche (ADR 0029).
 //
@@ -187,7 +188,7 @@ export function texteEvenement(e: Evenement, moiId: string): string {
 
 /** Le jour et l'heure d'un instant, dans le fuseau du navigateur. */
 export function instantDuFil(iso: string, fuseau?: string): string {
-  return new Date(iso).toLocaleString('fr-FR', {
+  return new Date(iso).toLocaleString(langueActive(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

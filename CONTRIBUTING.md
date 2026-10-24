@@ -34,6 +34,7 @@ yarn workspace @relaytour/server test:integration   # base locale, worker arrêt
 yarn workspace @relaytour/server orga:exporter      # écrit tout le contenu de l'organisation dans le dossier de contenu (ADR 0009)
 yarn workspace @relaytour/server equipe:importer --fichier equipe.yaml --activite rencontres --edition 2027 --simulation   # équipe d'une période (ADR 0013)
 yarn codegen      # contrats commités
+yarn workspace @relaytour/orga langues:extraire   # catalogues de traduction, après un texte ajouté ou modifié (ADR 0047)
 node outils/site.mjs   # site de présentation, après un changement des jetons
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif d'admin de l'organisation
 node outils/captures.mjs --compte referent   # écrans d'un autre rôle : referent ou admin-activite, avec un compte de ce rôle
@@ -105,7 +106,7 @@ Chaque règle vient d'un incident réel ou d'un risque constaté.
 6. **Le journal ne contient ni adresse complète, ni code, ni jeton.** Utiliser l'identifiant utilisateur, ou `courrielTronque`.
 7. **Tout port Docker est publié sur `127.0.0.1`.** Les règles NAT de Docker contournent ufw.
 8. **Les migrations sont additives.** Un sens nouveau prend un nom de champ nouveau.
-9. **Les contrats générés sont commités et vérifiés en CI** : `packages/server/schema.graphql`, `packages/server/src/courriel/gabarits.genere.ts`, `packages/orga/src/gql/`, `notes/notes-de-version.*.json`.
+9. **Les contrats générés sont commités et vérifiés en CI** : `packages/server/schema.graphql`, `packages/server/src/courriel/gabarits.genere.ts`, `packages/orga/src/gql/`, `packages/orga/src/locales/`, `notes/notes-de-version.*.json`.
 10. **L'image ne contient pas le code source** : cartes sans `sourcesContent`, `.dockerignore` sans `.env`.
 11. **Un contrôle d'accès se prouve par le refus** (requête sans session, avec la session d'un autre périmètre), pas par la réussite avec la bonne session.
 12. **`env.ts` valide l'environnement à l'import.** Les modules que charge le schéma importent la file et la connexion Redis de façon paresseuse, sinon `yarn codegen` échoue sans `.env`.

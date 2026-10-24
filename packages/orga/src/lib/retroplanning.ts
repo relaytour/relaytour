@@ -1,4 +1,5 @@
 // Regroupement des tâches du rétroplanning par mois d'échéance.
+import { langueActive } from './langue'
 
 export interface GroupeMois<T> {
   /** Mois au format AAAA-MM, ou null pour les tâches sans échéance. */
@@ -33,7 +34,7 @@ export function grouperParMois<T extends { echeance?: string | null }>(
 /** Libellé d'un mois « AAAA-MM » en français, par exemple « mars 2027 ». */
 export function libelleMois(mois: string): string {
   const [annee, numero] = mois.split('-').map(Number)
-  return new Intl.DateTimeFormat('fr-FR', {
+  return new Intl.DateTimeFormat(langueActive(), {
     month: 'long',
     year: 'numeric',
   }).format(new Date(annee ?? 0, (numero ?? 1) - 1, 1))

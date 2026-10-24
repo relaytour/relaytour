@@ -35,9 +35,10 @@ import { relireLesVues } from '../lib/rafraichissement'
 import { EDITION_COURANTE } from '../lib/requetes'
 import { useActivite } from '../lib/activite'
 import { useMentions } from '../lib/useMentions'
+import { langueActive } from '../lib/langue'
 
 function dateHeure(iso: string) {
-  return new Date(iso).toLocaleString('fr-FR', {
+  return new Date(iso).toLocaleString(langueActive(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
