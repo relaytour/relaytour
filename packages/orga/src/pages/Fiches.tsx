@@ -23,6 +23,7 @@ import { useOrganisation } from '../lib/organisation'
 import { normaliser } from '../lib/recherche'
 import { teinteLisible } from '../lib/theme'
 import { useActivite } from '../lib/activite'
+import { langueActive } from '../lib/langue'
 
 type FicheListe = ListeFichesQuery['fiches'][number]
 type Affichage = 'cartes' | 'liste'
@@ -107,7 +108,7 @@ export default function Fiches() {
         ? -1
         : b.slug === null
           ? 1
-          : a.nom.localeCompare(b.nom, 'fr')
+          : a.nom.localeCompare(b.nom, langueActive())
     )
   }, [data])
 

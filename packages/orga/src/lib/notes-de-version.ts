@@ -2,6 +2,7 @@ import { graphql } from '../gql'
 import type { RoleNoteDeVersion, TypeNoteDeVersion } from '../gql/graphql'
 
 import type { VarianteEtat } from '../composants/Etat'
+import { langueActive } from './langue'
 
 // Version de l'installation et notes de version (ADR 0021). Le serveur ne rend
 // que les notes du rôle de la personne dans l'organisation active.
@@ -48,7 +49,7 @@ export const ROLES_NOTE: Record<RoleNoteDeVersion, string | null> = {
 
 /** « 5 octobre 2026 », à partir d'une date « AAAA-MM-JJ » lue en UTC. */
 export function dateDeVersion(iso: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', {
+  return new Date(iso).toLocaleDateString(langueActive(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',

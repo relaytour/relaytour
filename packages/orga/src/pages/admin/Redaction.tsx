@@ -11,6 +11,7 @@ import { messageErreur } from '../../lib/erreurs'
 import { PERIMETRES } from '../../lib/requetes'
 import { useSession } from '../../lib/session'
 import { comparer } from '../../lib/tableau'
+import { langueActive } from '../../lib/langue'
 
 const TOUTES_LES_FICHES = 'Toutes les fiches'
 
@@ -74,7 +75,7 @@ interface Admin {
 const TOUTES = 'toutes'
 
 const parNom = (a: { nom: string }, b: { nom: string }) =>
-  a.nom.localeCompare(b.nom, 'fr')
+  a.nom.localeCompare(b.nom, langueActive())
 
 export default function Redaction() {
   // Un droit sur toutes les fiches vaut pour toute l'organisation : seul un admin de
@@ -122,7 +123,10 @@ export default function Redaction() {
     .sort(
       (a, b) =>
         parNom(a.personne, b.personne) ||
-        (a.perimetre?.nom ?? '').localeCompare(b.perimetre?.nom ?? '', 'fr')
+        (a.perimetre?.nom ?? '').localeCompare(
+          b.perimetre?.nom ?? '',
+          langueActive()
+        )
     )
 
   const ajouter = async (v: { personneId: string; perimetre: string }) => {

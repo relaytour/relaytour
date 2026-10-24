@@ -66,6 +66,7 @@ import { estOuverte } from '../lib/taches'
 
 import ChoixMessagerie from './ChoixMessagerie'
 import CopierAdresses from './CopierAdresses'
+import { langueActive } from '../lib/langue'
 
 // Fenêtre de rédaction d'un message (ADR 0020). L'admin choisit un modèle, complète
 // le texte, puis ouvre sa propre messagerie : l'application n'envoie rien. Elle
@@ -98,7 +99,7 @@ interface Props {
 }
 
 const majuscule = (texte: string) =>
-  texte.charAt(0).toLocaleUpperCase('fr') + texte.slice(1)
+  texte.charAt(0).toLocaleUpperCase(langueActive()) + texte.slice(1)
 
 export default function EcrireMessage({ cible, fermer, ...reste }: Props) {
   // La dernière cible reste affichée pendant la fermeture de la fenêtre.

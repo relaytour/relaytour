@@ -1,4 +1,5 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { langueActive } from './langue'
 
 /**
  * Codes dont le serveur compose un message destiné à la personne (ADR 0008). Le
@@ -47,7 +48,7 @@ export function estRefus(erreur: unknown): boolean {
 export function dateCourte(iso: string): string {
   const [annee, mois, jour] = iso.slice(0, 10).split('-').map(Number)
   return new Date(annee ?? 0, (mois ?? 1) - 1, jour ?? 1).toLocaleDateString(
-    'fr-FR',
+    langueActive(),
     {
       day: 'numeric',
       month: 'long',
@@ -62,7 +63,7 @@ export function dateCourte(iso: string): string {
  * la veille. `fuseau` remplace le fuseau du navigateur dans les tests.
  */
 export function jourDeLInstant(iso: string, fuseau?: string): string {
-  return new Date(iso).toLocaleDateString('fr-FR', {
+  return new Date(iso).toLocaleDateString(langueActive(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
