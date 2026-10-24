@@ -457,6 +457,12 @@ const OrganisationRef = builder
         resolve: c => cheminManifest(c.slug),
       }),
       pageEquipe: t.exposeString('pageEquipe', { nullable: true }),
+      langue: t.string({
+        nullable: true,
+        description:
+          'Langue par défaut des membres qui n’en ont pas choisi (ADR 0047). Sans elle, le français s’applique.',
+        resolve: o => o.langue ?? null,
+      }),
       theme: t.field({ type: ThemeRef, resolve: o => o.theme }),
       codeSource: t.string({
         description:

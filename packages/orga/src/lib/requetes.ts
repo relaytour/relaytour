@@ -13,6 +13,16 @@ export const MOI = graphql(`
   }
 `)
 
+// La langue choisie par la personne (ADR 0047). Sans session, `moi` vaut null.
+export const LANGUE_DE_MOI = graphql(`
+  query LangueDeMoi {
+    moi {
+      id
+      langue
+    }
+  }
+`)
+
 // Réservée aux personnes connectées : elle ne fait pas partie de la requête de session.
 export const EDITION_COURANTE = graphql(`
   query EditionCourante {

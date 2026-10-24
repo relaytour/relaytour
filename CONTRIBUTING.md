@@ -35,6 +35,7 @@ yarn workspace @relaytour/server orga:exporter      # écrit tout le contenu de 
 yarn workspace @relaytour/server equipe:importer --fichier equipe.yaml --activite rencontres --edition 2027 --simulation   # équipe d'une période (ADR 0013)
 yarn codegen      # contrats commités
 yarn workspace @relaytour/orga langues:extraire   # catalogues de traduction, après un texte ajouté ou modifié (ADR 0047)
+node outils/langues.mjs etat   # taux de traduction de chaque langue ; une langue se propose à 90 % (ADR 0047)
 node outils/site.mjs   # site de présentation, après un changement des jetons
 node outils/captures.mjs --origine http://localhost:5305   # captures du site, avec le contenu d'exemple et un compte fictif d'admin de l'organisation
 node outils/captures.mjs --compte referent   # écrans d'un autre rôle : referent ou admin-activite, avec un compte de ce rôle

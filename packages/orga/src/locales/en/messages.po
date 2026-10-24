@@ -6,3 +6,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
+
+#: src/composants/PreferenceLangue.tsx
+msgid "L’espace organisateur, vos mails et vos notifications s’affichent dans cette langue. Le contenu écrit par votre organisation garde la sienne."
+msgstr ""
+
+#: src/composants/PreferenceLangue.tsx
+msgid "Langue"
+msgstr ""
+
+#: src/composants/PreferenceLangue.tsx
+msgid "Langue de {nomCourt}"
+msgstr ""
+
+#: src/composants/PreferenceLangue.tsx
+msgid "Votre langue est enregistrée."
+msgstr ""

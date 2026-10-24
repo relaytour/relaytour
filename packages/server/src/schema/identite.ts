@@ -1,3 +1,4 @@
+import { estUneLangue } from '@relaytour/commun'
 import { Prisma, prisma, type Activite } from '@relaytour/database'
 import type { z } from 'zod'
 
@@ -163,6 +164,12 @@ const IdentiteOrganisationRef = builder
       pageEquipe: t.string({
         nullable: true,
         resolve: i => i.declaration.pageEquipe,
+      }),
+      langue: t.string({
+        nullable: true,
+        description:
+          'Langue par défaut des membres qui n’en ont pas choisi (ADR 0047).',
+        resolve: i => i.declaration.langue,
       }),
       domainesCourrielAutorises: t.stringList({
         description:
@@ -424,6 +431,9 @@ builder.mutationFields(t => ({
       contactRecrutement: t.arg.string(),
       contactSupport: t.arg.string(),
       pageEquipe: t.arg.string(),
+      // Absente, la langue ne change pas : un client antérieur ne l'envoie pas.
+      // Nulle, elle s'efface et le français s'applique (ADR 0047).
+      langue: t.arg.string(),
       domainesCourrielAutorises: t.arg.stringList({ required: true }),
       adressesRoleAutorisees: t.arg.stringList({ required: true }),
       logoPng: t.arg.string(),
@@ -434,6 +444,13 @@ builder.mutationFields(t => ({
     },
     resolve: async (_root, args, ctx) => {
       const organisationId = ctx.organisation!.id
+      if (
+        args.langue !== undefined &&
+        args.langue !== null &&
+        !estUneLangue(args.langue)
+      ) {
+        throw erreurSaisie('Cette langue n’est pas proposée.')
+      }
       const actuelle = await declarationEnBase(organisationId)
       const logoPng = await exigerMedia(organisationId, args.logoPng, 'png')
       const logoSvg = await exigerMedia(organisationId, args.logoSvg, 'svg')
@@ -454,6 +471,10 @@ builder.mutationFields(t => ({
         contactRecrutement: texteFacultatif(args.contactRecrutement),
         contactSupport: texteFacultatif(args.contactSupport),
         pageEquipe: texteFacultatif(args.pageEquipe),
+        langue:
+          args.langue === undefined
+            ? actuelle.langue
+            : (args.langue ?? undefined),
         domainesCourrielAutorises: args.domainesCourrielAutorises,
         adressesRoleAutorisees: args.adressesRoleAutorisees,
         logo:

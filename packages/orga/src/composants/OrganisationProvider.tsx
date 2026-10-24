@@ -11,7 +11,14 @@ import {
   type Organisation,
 } from '../lib/organisation'
 import { declarerApplication } from '../lib/application'
-import { estUneLangue, localeAntd } from '../lib/langue'
+import {
+  activerLangue,
+  estUneLangue,
+  langueDeLaSession,
+  langueDuVisiteur,
+  localeAntd,
+} from '../lib/langue'
+import { LANGUE_DE_MOI } from '../lib/requetes'
 import { organisationChoisie } from '../lib/selection'
 import { appliquerTheme, construireTheme } from '../lib/theme'
 
@@ -28,6 +35,8 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
   const { data, loading } = useQuery(ORGANISATION, {
     variables: { slug: organisationChoisie() },
   })
+  // Sans session, `moi` vaut null : le visiteur reçoit la langue de son navigateur.
+  const session = useQuery(LANGUE_DE_MOI)
 
   const organisation = useMemo<Organisation>(() => {
     if (!data) return ORGANISATION_PAR_DEFAUT
@@ -42,12 +51,21 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
       iconeApplicationUrl: o.iconeApplicationUrl ?? null,
       manifestUrl: o.manifestUrl,
       pageEquipe: o.pageEquipe ?? null,
+      langue: o.langue ?? null,
       codeSource: o.codeSource,
       modesDEmploi: o.modesDEmploi,
       support: o.support ?? null,
       theme: themeDepuisApi(o.theme),
     }
   }, [data])
+
+  const moi = session.data?.moi
+  const langue = moi
+    ? langueDeLaSession(moi.langue, organisation.langue)
+    : langueDuVisiteur(organisation.langue)
+  useEffect(() => {
+    void activerLangue(langue)
+  }, [langue])
 
   useEffect(() => {
     appliquerTheme(organisation.theme)
@@ -70,7 +88,11 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
   return (
     <ConfigProvider locale={locale} theme={theme}>
       <ContexteOrganisation.Provider value={organisation}>
-        {loading && !data ? <Spin fullscreen /> : children}
+        {(loading && !data) || (session.loading && !session.data) ? (
+          <Spin fullscreen />
+        ) : (
+          children
+        )}
       </ContexteOrganisation.Provider>
     </ConfigProvider>
   )

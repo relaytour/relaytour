@@ -9,6 +9,7 @@ import {
   type CouleursTheme,
   type Theme,
 } from '@relaytour/tokens'
+import { LANGUES, type Langue } from '@relaytour/commun'
 import { z } from 'zod'
 
 import type { Env } from '../env.ts'
@@ -254,6 +255,9 @@ export const DeclarationOrganisationSchema = z
       .string()
       .default('Europe/Paris')
       .refine(fuseauValide, 'fuseau horaire inconnu (forme Europe/Paris)'),
+    // Langue par défaut des membres qui n'en ont pas choisi (ADR 0047). Sans elle,
+    // le français s'applique.
+    langue: z.enum(LANGUES).optional(),
     // Domaines des adresses de rôle : une adresse de ces domaines passe pour
     // institutionnelle. Aucune messagerie grand public (ADR 0009).
     domainesCourrielAutorises: z
@@ -379,6 +383,8 @@ export interface ConfigurationOrganisation {
   /** Le sigle s'il existe, sinon le nom : en-tête, sujets de mail, appel aux référent·es. */
   nomCourt: string
   fuseauHoraire: string
+  /** Langue par défaut des membres, déclarée par l'organisation (ADR 0047). */
+  langue: Langue | undefined
   expediteur: string
   origineOrga: string
   domainesCourrielAutorises: string[]
@@ -447,6 +453,7 @@ export function resoudreConfiguration(
     sigle: declaration.sigle,
     nomCourt,
     fuseauHoraire: declaration.fuseauHoraire,
+    langue: declaration.langue,
     expediteur: env.COURRIEL_EXPEDITEUR ?? `${nomCourt} <relaytour@localhost>`,
     origineOrga: env.ORIGINE_ORGA,
     domainesCourrielAutorises: declaration.domainesCourrielAutorises,

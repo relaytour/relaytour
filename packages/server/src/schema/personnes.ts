@@ -1,3 +1,4 @@
+import { estUneLangue } from '@relaytour/commun'
 import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
@@ -103,6 +104,14 @@ export const PersonneRef = builder.prismaObject('User', {
         (ctx.personne?.estAdmin === true &&
           (await membresDeLOrganisation(ctx)).has(personne.id)) ||
         (await ctx.equipeAdministree()).has(personne.id),
+    }),
+    // La langue choisie ne se lit que par la personne elle-même (ADR 0047).
+    langue: t.string({
+      nullable: true,
+      description:
+        'Langue choisie par la personne, lue par elle seule. Nulle quand elle suit la langue de l’organisation.',
+      select: { langue: true },
+      resolve: (u, _args, ctx) => (ctx.personne?.id === u.id ? u.langue : null),
     }),
     // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global. Il se
     // lit par la personne elle-même, par les admins de l'organisation et par les
@@ -831,6 +840,28 @@ builder.mutationFields(t => ({
         where: { id: ctx.personne!.id },
         data: { name: texteRequis(args.nom, 'Le nom') },
       }),
+  }),
+
+  modifierMaLangue: t.prismaField({
+    type: PersonneRef,
+    authScopes: { authentifie: true },
+    // La langue appartient à la personne, comme son nom : le statut de
+    // l'organisation active ne l'empêche pas de la changer.
+    skipTypeScopes: true,
+    description:
+      'La personne choisit la langue de son interface, de ses mails et de ses notifications (ADR 0047). Nulle, elle suit la langue de l’organisation.',
+    args: { langue: t.arg.string() },
+    resolve: (query, _root, args, ctx) => {
+      const langue = args.langue ?? null
+      if (langue !== null && !estUneLangue(langue)) {
+        throw erreurSaisie('Cette langue n’est pas proposée.')
+      }
+      return prisma.user.update({
+        ...query,
+        where: { id: ctx.personne!.id },
+        data: { langue },
+      })
+    },
   }),
 
   archiverPersonne: t.prismaField({

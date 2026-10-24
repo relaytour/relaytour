@@ -5,6 +5,7 @@ import { useState } from 'react'
 
 import { PreferenceAgenda } from '../composants/AbonnementAgenda'
 import { DeuxColonnes, Panneau } from '../composants/Panneau'
+import PreferenceLangue from '../composants/PreferenceLangue'
 import PreferenceMessagerie from '../composants/PreferenceMessagerie'
 import PreferenceOrganigramme from '../composants/PreferenceOrganigramme'
 import PreferencePush from '../composants/PreferencePush'
@@ -446,6 +447,7 @@ export default function Preferences() {
             administre={administre}
             requeteARelire={PREFERENCES}
           />
+          <PreferenceLangue />
           <PreferenceAgenda />
           <PreferenceOrganigramme />
           {/* Seuls les admins écrivent un message (ADR 0020). */}

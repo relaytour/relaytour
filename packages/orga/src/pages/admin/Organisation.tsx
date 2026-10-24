@@ -25,6 +25,11 @@ import { Panneau } from '../../composants/Panneau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import { jourDeLInstant, messageErreur } from '../../lib/erreurs'
+import {
+  LANGUE_SOURCE,
+  LANGUES_PROPOSEES,
+  NOMS_DES_LANGUES,
+} from '../../lib/langue'
 import { ORGANISATION } from '../../lib/organisation'
 import { ACTIVITES } from '../../lib/requetes'
 
@@ -41,6 +46,7 @@ const IDENTITE = graphql(`
       contactRecrutement
       contactSupport
       pageEquipe
+      langue
       domainesCourrielAutorises
       adressesRoleAutorisees
       logoPng
@@ -61,6 +67,7 @@ const MODIFIER = graphql(`
     $contactRecrutement: String
     $contactSupport: String
     $pageEquipe: String
+    $langue: String
     $domainesCourrielAutorises: [String!]!
     $adressesRoleAutorisees: [String!]!
     $logoPng: String
@@ -75,6 +82,7 @@ const MODIFIER = graphql(`
       contactRecrutement: $contactRecrutement
       contactSupport: $contactSupport
       pageEquipe: $pageEquipe
+      langue: $langue
       domainesCourrielAutorises: $domainesCourrielAutorises
       adressesRoleAutorisees: $adressesRoleAutorisees
       logoPng: $logoPng
@@ -124,6 +132,7 @@ interface Valeurs {
   contactRecrutement?: string
   contactSupport?: string
   pageEquipe?: string
+  langue?: string
   domainesCourrielAutorises: string[]
   adressesRoleAutorisees: string[]
   logoPng: string | null
@@ -198,6 +207,7 @@ export default function Organisation() {
       contactRecrutement: identite.contactRecrutement ?? '',
       contactSupport: identite.contactSupport ?? '',
       pageEquipe: identite.pageEquipe ?? '',
+      langue: identite.langue ?? LANGUE_SOURCE,
       domainesCourrielAutorises: identite.domainesCourrielAutorises,
       adressesRoleAutorisees: identite.adressesRoleAutorisees,
       logoPng: identite.logoPng ?? null,
@@ -224,6 +234,8 @@ export default function Organisation() {
           contactRecrutement: v.contactRecrutement || null,
           contactSupport: v.contactSupport || null,
           pageEquipe: v.pageEquipe || null,
+          // Sans choix possible, la langue déclarée ne change pas (ADR 0047).
+          langue: LANGUES_PROPOSEES.length > 1 ? v.langue : undefined,
           domainesCourrielAutorises: v.domainesCourrielAutorises,
           adressesRoleAutorisees: v.adressesRoleAutorisees,
           logoPng: v.logoPng,
@@ -335,6 +347,22 @@ export default function Organisation() {
                 <Input type="url" placeholder="https://" />
               </Form.Item>
             </Col>
+            {LANGUES_PROPOSEES.length > 1 && (
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label="Langue de l’organisation"
+                  name="langue"
+                  extra="L’espace organisateur, les mails et les notifications s’affichent dans cette langue pour les membres qui n’en ont pas choisi."
+                >
+                  <Select
+                    options={LANGUES_PROPOSEES.map(langue => ({
+                      value: langue,
+                      label: NOMS_DES_LANGUES[langue],
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+            )}
           </Row>
           <p className="rt-texte-secondaire" style={{ margin: 0 }}>
             L’identifiant « {identite?.slug} » ne change pas ici : il dépend de
