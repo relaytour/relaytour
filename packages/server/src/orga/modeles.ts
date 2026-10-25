@@ -273,19 +273,90 @@ export function separerEntete(
   return { entete: parse(m[1] ?? ''), corps: m[2] ?? '' }
 }
 
-function fichiers(dossier: string, extension: string): string[] {
-  if (!existsSync(dossier)) return []
-  return readdirSync(dossier, { withFileTypes: true })
-    .filter(e => e.isFile() && e.name.endsWith(extension))
-    .map(e => path.join(dossier, e.name))
+/**
+ * Ce que la lecture d'un dossier de contenu demande au système de fichiers. Le
+ * disque sert à la commande ; une archive déposée dans l'espace organisateur se lit
+ * en mémoire (ADR 0049), avec la même validation.
+ */
+export interface SystemeContenu {
+  existe(chemin: string): boolean
+  lireTexte(chemin: string): string
+  lireOctets(chemin: string): Buffer
+  /** Les entrées directes d'un dossier, avec leur nature. */
+  entrees(dossier: string): { nom: string; fichier: boolean }[]
+}
+
+export const DISQUE: SystemeContenu = {
+  existe: chemin => existsSync(chemin),
+  lireTexte: chemin => readFileSync(chemin, 'utf8'),
+  lireOctets: chemin => readFileSync(chemin),
+  entrees: dossier =>
+    readdirSync(dossier, { withFileTypes: true }).map(e => ({
+      nom: e.name,
+      fichier: e.isFile(),
+    })),
+}
+
+/** La racine fictive d'un dossier lu en mémoire. */
+export const RACINE_EN_MEMOIRE = '/contenu'
+
+/**
+ * Un dossier de contenu en mémoire, à partir de ses fichiers rangés par chemin
+ * relatif (« activites/club/perimetres.yaml »). Il se lit avec RACINE_EN_MEMOIRE.
+ */
+export function systemeEnMemoire(
+  fichiers: ReadonlyMap<string, Buffer>
+): SystemeContenu {
+  const relatif = (chemin: string) =>
+    path.posix.relative(RACINE_EN_MEMOIRE, chemin)
+  const dossierContient = (dossier: string) => {
+    const prefixe = dossier === '' ? '' : `${dossier}/`
+    return [...fichiers.keys()].filter(c => c.startsWith(prefixe))
+  }
+  const lire = (chemin: string) => {
+    const donnees = fichiers.get(relatif(chemin))
+    if (donnees === undefined) throw new Error(`${relatif(chemin)} est absent`)
+    return donnees
+  }
+  return {
+    existe: chemin => {
+      const r = relatif(chemin)
+      return fichiers.has(r) || dossierContient(r).length > 0
+    },
+    lireTexte: chemin => lire(chemin).toString('utf8'),
+    lireOctets: lire,
+    entrees: dossier => {
+      const r = relatif(dossier)
+      const prefixe = r === '' ? '' : `${r}/`
+      const vues = new Map<string, boolean>()
+      for (const chemin of dossierContient(r)) {
+        const [nom, ...reste] = chemin.slice(prefixe.length).split('/')
+        if (nom) vues.set(nom, (vues.get(nom) ?? true) && reste.length === 0)
+      }
+      return [...vues].map(([nom, fichier]) => ({ nom, fichier }))
+    },
+  }
+}
+
+function fichiers(
+  sys: SystemeContenu,
+  dossier: string,
+  extension: string
+): string[] {
+  if (!sys.existe(dossier)) return []
+  return sys
+    .entrees(dossier)
+    .filter(e => e.fichier && e.nom.endsWith(extension))
+    .map(e => path.join(dossier, e.nom))
     .sort()
 }
 
-function sousDossiers(dossier: string): string[] {
-  if (!existsSync(dossier)) return []
-  return readdirSync(dossier, { withFileTypes: true })
-    .filter(e => e.isDirectory())
-    .map(e => e.name)
+function sousDossiers(sys: SystemeContenu, dossier: string): string[] {
+  if (!sys.existe(dossier)) return []
+  return sys
+    .entrees(dossier)
+    .filter(e => !e.fichier)
+    .map(e => e.nom)
     .sort()
 }
 
@@ -295,6 +366,7 @@ function sousDossiers(dossier: string): string[] {
  * racine, ou undefined en cas d'erreur (consignée).
  */
 function lireImage(
+  sys: SystemeContenu,
   racine: string,
   dossier: string,
   reference: string,
@@ -316,12 +388,12 @@ function lireImage(
     return undefined
   }
   const chemin = relatif.split(path.sep).join('/')
-  if (!existsSync(cible)) {
+  if (!sys.existe(cible)) {
     erreurs.push(`${fichierDeclarant} : l'image ${chemin} est absente`)
     return undefined
   }
   try {
-    medias.set(chemin, verifierMedia(readFileSync(cible), attendu))
+    medias.set(chemin, verifierMedia(sys.lireOctets(cible), attendu))
     return chemin
   } catch (e) {
     erreurs.push(`${chemin} : ${(e as Error).message}`)
@@ -331,6 +403,7 @@ function lireImage(
 
 /** Lit le PNG et le SVG d'un logo ; les chemins deviennent relatifs à la racine. */
 function lireLogo(
+  sys: SystemeContenu,
   racine: string,
   dossier: string,
   logo: Logo | undefined,
@@ -340,6 +413,7 @@ function lireLogo(
 ): Logo | undefined {
   if (logo === undefined) return undefined
   const png = lireImage(
+    sys,
     racine,
     dossier,
     logo.png,
@@ -352,6 +426,7 @@ function lireLogo(
     logo.svg === undefined
       ? undefined
       : lireImage(
+          sys,
           racine,
           dossier,
           logo.svg,
@@ -373,6 +448,7 @@ const FICHIERS_D_ACTIVITE = ['perimetres.yaml', 'fiches', 'taches']
  * `racine/dossier`. Les messages nomment les fichiers depuis la racine.
  */
 function lireActivite(
+  sys: SystemeContenu,
   racine: string,
   dossier: string,
   declaration: ActiviteDeclaree,
@@ -400,11 +476,11 @@ function lireActivite(
   let perimetres: PerimetreModele[] = []
   const fichierPerimetres = path.join(base, 'perimetres.yaml')
   const nomPerimetres = relatif(fichierPerimetres)
-  if (!existsSync(fichierPerimetres)) {
+  if (!sys.existe(fichierPerimetres)) {
     erreurs.push(`${nomPerimetres} est absent`)
   } else {
     const r = FichierPerimetres.safeParse(
-      parse(readFileSync(fichierPerimetres, 'utf8'))
+      parse(sys.lireTexte(fichierPerimetres))
     )
     if (r.success) perimetres = r.data.perimetres
     else erreurs.push(...formaterZod(nomPerimetres, r.error))
@@ -434,7 +510,7 @@ function lireActivite(
   // Fiches : fiches/communes/*.md et fiches/<perimetre>/*.md
   const fiches: FicheModele[] = []
   const dossierFiches = path.join(base, 'fiches')
-  for (const nomDossier of sousDossiers(dossierFiches)) {
+  for (const nomDossier of sousDossiers(sys, dossierFiches)) {
     const perimetre = nomDossier === 'communes' ? null : nomDossier
     if (perimetre !== null && !slugsPerimetres.has(perimetre)) {
       erreurs.push(
@@ -443,11 +519,12 @@ function lireActivite(
       continue
     }
     for (const fichier of fichiers(
+      sys,
       path.join(dossierFiches, nomDossier),
       '.md'
     )) {
       const nom = relatif(fichier)
-      const separe = separerEntete(readFileSync(fichier, 'utf8'))
+      const separe = separerEntete(sys.lireTexte(fichier))
       if (separe === null) {
         erreurs.push(`${nom} : l'en-tête entre deux lignes « --- » est absent`)
         continue
@@ -514,14 +591,14 @@ function lireActivite(
 
   // Tâches types : taches/<perimetre>.yaml
   const taches = new Map<string, TacheModele[]>()
-  for (const fichier of fichiers(path.join(base, 'taches'), '.yaml')) {
+  for (const fichier of fichiers(sys, path.join(base, 'taches'), '.yaml')) {
     const nom = relatif(fichier)
     const perimetre = path.basename(fichier, '.yaml')
     if (!slugsPerimetres.has(perimetre)) {
       erreurs.push(`${nom} : ce périmètre n'existe pas dans ${nomPerimetres}`)
       continue
     }
-    const r = FichierTaches.safeParse(parse(readFileSync(fichier, 'utf8')))
+    const r = FichierTaches.safeParse(parse(sys.lireTexte(fichier)))
     if (!r.success) {
       erreurs.push(...formaterZod(nom, r.error))
       continue
@@ -663,7 +740,10 @@ function lireActivite(
  *
  * Les deux ne se mélangent pas. Le slug d'une fiche est unique dans l'organisation.
  */
-export function lireModeles(racine: string): Modeles {
+export function lireModeles(
+  racine: string,
+  sys: SystemeContenu = DISQUE
+): Modeles {
   const erreurs: string[] = []
 
   // Organisation : nom, domaines de mail autorisés, contact, thème.
@@ -671,13 +751,13 @@ export function lireModeles(racine: string): Modeles {
   // la validation en CI du dépôt d'organisation n'a besoin d'aucune variable.
   let organisation: DeclarationOrganisation | null = null
   const fichierOrganisation = path.join(racine, 'organisation.yaml')
-  if (!existsSync(fichierOrganisation)) {
+  if (!sys.existe(fichierOrganisation)) {
     erreurs.push(
       'organisation.yaml est absent (slug, nom, domainesCourrielAutorises au minimum)'
     )
   } else {
     const r = DeclarationOrganisationSchema.safeParse(
-      parse(readFileSync(fichierOrganisation, 'utf8'))
+      parse(sys.lireTexte(fichierOrganisation))
     )
     if (r.success) organisation = r.data
     else erreurs.push(...formaterZod('organisation.yaml', r.error))
@@ -689,6 +769,7 @@ export function lireModeles(racine: string): Modeles {
   const medias = new Map<string, MediaValide>()
   if (organisation !== null) {
     const logo = lireLogo(
+      sys,
       racine,
       '',
       organisation.logo,
@@ -700,6 +781,7 @@ export function lireModeles(racine: string): Modeles {
       organisation.favicon === undefined
         ? undefined
         : lireImage(
+            sys,
             racine,
             '',
             organisation.favicon,
@@ -712,6 +794,7 @@ export function lireModeles(racine: string): Modeles {
       organisation.iconeApplication === undefined
         ? undefined
         : lireImage(
+            sys,
             racine,
             '',
             organisation.iconeApplication,
@@ -739,9 +822,9 @@ export function lireModeles(racine: string): Modeles {
     if (iconeApplication === undefined) delete organisation.iconeApplication
   }
 
-  const plate = FICHIERS_D_ACTIVITE.some(f => existsSync(path.join(racine, f)))
+  const plate = FICHIERS_D_ACTIVITE.some(f => sys.existe(path.join(racine, f)))
   const dossierActivites = path.join(racine, 'activites')
-  const enActivites = existsSync(dossierActivites)
+  const enActivites = sys.existe(dossierActivites)
   const activites: ActiviteModele[] = []
 
   if (plate && enActivites) {
@@ -749,7 +832,7 @@ export function lireModeles(racine: string): Modeles {
       "le dossier mélange deux dispositions : perimetres.yaml, fiches/ ou taches/ à la racine, et activites/. Choisissez l'une des deux."
     )
   } else if (enActivites) {
-    const slugs = sousDossiers(dossierActivites)
+    const slugs = sousDossiers(sys, dossierActivites)
     if (slugs.length === 0) {
       erreurs.push('activites/ ne contient aucune activité')
     }
@@ -757,12 +840,12 @@ export function lireModeles(racine: string): Modeles {
       const dossier = path.join('activites', slug)
       const fichierActivite = path.join(racine, dossier, 'activite.yaml')
       const nom = path.join(dossier, 'activite.yaml')
-      if (!existsSync(fichierActivite)) {
+      if (!sys.existe(fichierActivite)) {
         erreurs.push(`${nom} est absent (slug, nom, nature au minimum)`)
         continue
       }
       const r = ActiviteDeclaree.safeParse(
-        parse(readFileSync(fichierActivite, 'utf8'))
+        parse(sys.lireTexte(fichierActivite))
       )
       if (!r.success) {
         erreurs.push(...formaterZod(nom, r.error))
@@ -785,6 +868,7 @@ export function lireModeles(racine: string): Modeles {
         }
       }
       const logo = lireLogo(
+        sys,
         racine,
         dossier,
         declaration.logo,
@@ -795,7 +879,7 @@ export function lireModeles(racine: string): Modeles {
       if (logo === undefined) delete declaration.logo
       else declaration.logo = logo
       activites.push(
-        lireActivite(racine, dossier, declaration, false, role, erreurs)
+        lireActivite(sys, racine, dossier, declaration, false, role, erreurs)
       )
     }
   } else {
@@ -809,7 +893,9 @@ export function lireModeles(racine: string): Modeles {
       groupes: GROUPES_PAR_DEFAUT,
       ordre: 0,
     }
-    activites.push(lireActivite(racine, '', declaration, true, role, erreurs))
+    activites.push(
+      lireActivite(sys, racine, '', declaration, true, role, erreurs)
+    )
   }
 
   // Le slug d'une fiche est unique dans l'organisation, toutes activités confondues.
