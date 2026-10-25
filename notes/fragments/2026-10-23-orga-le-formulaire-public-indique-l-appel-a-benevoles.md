@@ -14,6 +14,14 @@ fr:
     ouvert sur toute la période, le formulaire affiche son lien pour les
     personnes qui viennent aider le jour J. Sans appel ouvert, il indique
     l'adresse de contact de l'activité.
+en:
+  titre: >-
+    The public form shows the open volunteer call
+  texte: >-
+    The “Join the organizing team” form states that it is for joining the team
+    that prepares the activity. When a volunteer call is open for the whole
+    period, the form shows its link for people who come to help on event day.
+    Without an open call, it shows the activity’s contact email address.
 ---
 
 ADR 0046. Champ public `FormulaireRejoindre.appelBenevoles` : le jeton de l'appel

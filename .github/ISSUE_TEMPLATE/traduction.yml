@@ -1,0 +1,52 @@
+name: Traduction · Translation
+description: Corriger une traduction ou proposer une nouvelle langue. · Fix a translation or propose a new language.
+title: 'Traduction : '
+labels: ['traduction']
+body:
+  - type: markdown
+    attributes:
+      value: >-
+        Le guide [TRADUIRE.md](https://github.com/relaytour/relaytour/blob/develop/TRADUIRE.md)
+        explique les catalogues et leurs règles. Vous pouvez écrire en français ou en
+        anglais.
+
+
+        The [TRANSLATING.md](https://github.com/relaytour/relaytour/blob/develop/TRANSLATING.md)
+        guide explains the catalogs and their rules. You can write in French or English.
+  - type: dropdown
+    id: demande
+    attributes:
+      label: Demande · Request
+      options:
+        - Corriger une traduction · Fix a translation
+        - Ajouter une langue · Add a language
+    validations:
+      required: true
+  - type: input
+    id: langue
+    attributes:
+      label: Langue · Language
+      description: >-
+        Le nom de la langue et sa balise, par exemple « Español (es) ». · The language
+        name and its tag, for example “Español (es)”.
+    validations:
+      required: true
+  - type: textarea
+    id: details
+    attributes:
+      label: Détails · Details
+      description: >-
+        Pour une correction : l'écran ou le mail, le texte actuel et la proposition.
+        Pour une nouvelle langue : qui traduit, et les termes du glossaire proposés. ·
+        For a fix: the screen or email, the current text and your suggestion. For a
+        new language: who translates, and the proposed glossary terms.
+    validations:
+      required: true
+  - type: checkboxes
+    id: contribution
+    attributes:
+      label: Contribution
+      options:
+        - label: >-
+            Je peux traduire ou relire cette langue. · I can translate or review this
+            language.

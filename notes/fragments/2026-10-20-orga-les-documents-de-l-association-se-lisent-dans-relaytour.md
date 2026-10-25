@@ -13,6 +13,14 @@ fr:
     (SharePoint et OneDrive), puis lie ses dossiers aux périmètres. Vous lisez
     ces documents dans l'onglet « Documents » de la page « Fiches », sans
     compte chez le fournisseur. Relaytour n'en garde aucune copie.
+en:
+  titre: >-
+    The association’s documents can be read in Relaytour
+  texte: >-
+    An organization admin connects the association’s file space (SharePoint and
+    OneDrive), then links its folders to areas. You read these documents in the
+    “Documents” tab of the “Sheets” page, without an account at the provider.
+    Relaytour keeps no copy of them.
 ---
 
 ADR 0038 : connexion `ConnexionFichiers` (jeton chiffré par

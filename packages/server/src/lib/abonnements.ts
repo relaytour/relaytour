@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@relaytour/database'
 
 import { erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 /**
  * Enregistre l'abonnement push d'un appareil pour un compte (ADR 0024), et retire
@@ -26,7 +27,9 @@ export async function abonnerAppareil(
     >`SELECT GET_LOCK(${verrou}, 5) AS pris`
     if (Number(pris) !== 1) {
       throw erreurSaisie(
-        'Cet appareil est en cours d’abonnement. Réessayez dans un instant.'
+        i18n._(
+          'Cet appareil est en cours d’abonnement. Réessayez dans un instant.'
+        )
       )
     }
     try {

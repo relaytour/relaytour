@@ -17,6 +17,17 @@ fr:
     admins de l'organisation. L'adresse d'une personne ne se lit plus depuis
     une activité où vous êtes simple référente ou référent, même si vous
     administrez une autre activité.
+en:
+  titre: >-
+    An activity admin now reads only the team of their activities
+  texte: >-
+    An activity admin used to read the directory of the whole organization,
+    names and email addresses, and could appoint any member. They now read only
+    the team of their activities: the appointed, interested, or admin people.
+    They appoint, record an interest, or grant editing rights only for these
+    people. Organization admins can still read the full directory. A person’s
+    email address can no longer be read from an activity where you are only a
+    coordinator, even if you administer another activity.
 ---
 
 ADR 0018. `personnes` passe au scope `admin`. Le champ `Personne.email` s'ouvre à la

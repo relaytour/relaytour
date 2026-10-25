@@ -18,6 +18,18 @@ fr:
     Relaytour nomme aussi les accès en trop. Chaque dossier lié règle les
     personnes attendues : tous les membres, ou les contacts principaux
     seulement. La vérification ne change aucun droit chez le fournisseur.
+en:
+  titre: >-
+    Admins check team access at the cloud provider
+  texte: >-
+    The “Cloud provider” screen has two new tabs: “Access check” and “Accounts”.
+    With SharePoint, an organization admin turns on the check with a new
+    connection that a Microsoft Entra admin approves. For each linked folder,
+    Relaytour then compares the expected people with the folder’s rights.
+    Relaytour sorts them by team: who has access, who has no account, and who
+    has no access. Relaytour also lists extra access. Each linked folder sets
+    the expected people: all members, or main contacts only. The check changes
+    no rights at the provider.
 ---
 
 ADR 0044 : `ConnexionFichiers.portee` (`FICHIERS`, `ANNUAIRE`, `GESTION`),

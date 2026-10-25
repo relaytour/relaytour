@@ -14,6 +14,7 @@ import { accesAuPerimetre, exigerEcriture } from './droits.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
 import { instantDepuisHeureLocale } from './heures.ts'
 import { journal } from './journal.ts'
+import { i18n } from './langue.ts'
 
 // Réunions de l'agenda (ADR 0037).
 //
@@ -38,16 +39,22 @@ export function lienVisioValide(
   const texte = (brut ?? '').trim()
   if (texte === '') return null
   if (texte.length > LIEN_VISIO_MAX) {
-    throw erreurSaisie(`Le lien de visio dépasse ${LIEN_VISIO_MAX} caractères.`)
+    throw erreurSaisie(
+      i18n._('Le lien de visio dépasse {max} caractères.', {
+        max: LIEN_VISIO_MAX,
+      })
+    )
   }
   let adresse: URL
   try {
     adresse = new URL(texte)
   } catch {
-    throw erreurSaisie('Le lien de visio doit être une adresse web complète.')
+    throw erreurSaisie(
+      i18n._('Le lien de visio doit être une adresse web complète.')
+    )
   }
   if (adresse.protocol !== 'https:' && adresse.protocol !== 'http:') {
-    throw erreurSaisie('Le lien de visio commence par https://.')
+    throw erreurSaisie(i18n._('Le lien de visio commence par https://.'))
   }
   return adresse.toString()
 }
@@ -82,7 +89,9 @@ export async function tachesLieesValides(
   const uniques = [...new Set((ids ?? []).map(String))]
   if (uniques.length === 0) return []
   if (uniques.length > TACHES_LIEES_MAX) {
-    throw erreurSaisie(`Une réunion lie ${TACHES_LIEES_MAX} tâches au plus.`)
+    throw erreurSaisie(
+      i18n._('Une réunion lie {max} tâches au plus.', { max: TACHES_LIEES_MAX })
+    )
   }
   const trouvees = await prisma.tache.count({
     where: {
@@ -94,7 +103,9 @@ export async function tachesLieesValides(
     },
   })
   if (trouvees !== uniques.length) {
-    throw erreurSaisie('Une des tâches ne peut pas être liée à cette réunion.')
+    throw erreurSaisie(
+      i18n._('Une des tâches ne peut pas être liée à cette réunion.')
+    )
   }
   return uniques
 }
@@ -122,7 +133,9 @@ export async function personnesConvoquees(
   if (demande.cible === 'PERIMETRE') {
     if (demande.perimetreId === null) {
       throw erreurSaisie(
-        'Une réunion de l’agenda global convoque toute l’équipe ou des personnes choisies.'
+        i18n._(
+          'Une réunion de l’agenda global convoque toute l’équipe ou des personnes choisies.'
+        )
       )
     }
     ids = (
@@ -145,11 +158,15 @@ export async function personnesConvoquees(
   } else {
     const voulus = [...new Set((demande.personneIds ?? []).map(String))]
     if (voulus.length === 0) {
-      throw erreurSaisie('Choisissez au moins une personne à convoquer.')
+      throw erreurSaisie(
+        i18n._('Choisissez au moins une personne à convoquer.')
+      )
     }
     if (voulus.length > CONVOCATIONS_MAX) {
       throw erreurSaisie(
-        `Une réunion compte ${CONVOCATIONS_MAX} personnes convoquées au plus.`
+        i18n._('Une réunion compte {max} personnes convoquées au plus.', {
+          max: CONVOCATIONS_MAX,
+        })
       )
     }
     ids = (
@@ -165,7 +182,10 @@ export async function personnesConvoquees(
   }
   if (ids.length > CONVOCATIONS_MAX) {
     throw erreurSaisie(
-      `Une réunion compte ${CONVOCATIONS_MAX} personnes convoquées au plus : choisissez les personnes.`
+      i18n._(
+        'Une réunion compte {max} personnes convoquées au plus : choisissez les personnes.',
+        { max: CONVOCATIONS_MAX }
+      )
     )
   }
   return ids
@@ -383,17 +403,21 @@ export function horaireValide(
     saisie.jour > decalerJour(periode.fin, 730)
   ) {
     throw erreurSaisie(
-      'Une réunion se place dans les deux ans qui entourent la période.'
+      i18n._('Une réunion se place dans les deux ans qui entourent la période.')
     )
   }
   const debut = instantDepuisHeureLocale(saisie.jour, saisie.heureDebut, fuseau)
   const dernierJour = saisie.jourFin || saisie.jour
   if (ecartEnJours(saisie.jour, dernierJour) > REUNION_JOURS_MAX - 1) {
-    throw erreurSaisie(`Une réunion dure ${REUNION_JOURS_MAX} jours au plus.`)
+    throw erreurSaisie(
+      i18n._('Une réunion dure {max} jours au plus.', {
+        max: REUNION_JOURS_MAX,
+      })
+    )
   }
   const fin = instantDepuisHeureLocale(dernierJour, saisie.heureFin, fuseau)
   if (fin.getTime() <= debut.getTime()) {
-    throw erreurSaisie('La fin de la réunion suit son début.')
+    throw erreurSaisie(i18n._('La fin de la réunion suit son début.'))
   }
   return { debut, fin }
 }

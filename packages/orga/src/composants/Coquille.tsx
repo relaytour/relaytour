@@ -57,7 +57,7 @@ import { Pictogramme, SignatureRelaytour } from './Marque'
 import MenuCompte from './MenuCompte'
 import Notifications from './Notifications'
 import Recherche from './Recherche'
-import { langueActive } from '../lib/langue'
+import { comparerTextes } from '../lib/langue'
 
 const MENU_PERIMETRES = graphql(`
   query MenuPerimetres {
@@ -149,7 +149,7 @@ function Mise({ session }: { session: Session }) {
         .filter(a => a.perimetre.activite.id === activite.id)
         .map(a => [a.perimetre.id, a.perimetre])
     ).values(),
-  ].sort((a, b) => a.nom.localeCompare(b.nom, langueActive()))
+  ].sort((a, b) => comparerTextes(a.nom, b.nom))
 
   // Les fiches bénévoles s'ouvrent aux admins de l'activité et aux personnes
   // affectées à un périmètre actif pour une période non archivée : la règle du

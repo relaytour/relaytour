@@ -1,3 +1,5 @@
+import { i18n } from '../lib/langue.ts'
+
 import { convertibleParMicrosoft } from './chemin.ts'
 import { appelSortant, type HotesAdmis } from './sortant.ts'
 import {
@@ -362,7 +364,7 @@ function versCompte(u: UtilisateurGraph): CompteAnnuaire {
   return {
     identifiant: u.id,
     adresse: (u.mail ?? u.userPrincipalName ?? '').toLowerCase(),
-    nom: u.displayName?.trim() || 'Compte Microsoft',
+    nom: u.displayName?.trim() || i18n._('Compte Microsoft'),
     invite: u.userType === 'Guest',
   }
 }
@@ -402,7 +404,7 @@ export function beneficiaires(p: PermissionGraph): Beneficiaire[] {
           type: 'personne',
           identifiant: i.user.id ?? null,
           adresse: i.user.email?.toLowerCase() ?? null,
-          nom: i.user.displayName ?? 'Personne',
+          nom: i.user.displayName ?? i18n._('Personne'),
         },
       ]
     }
@@ -411,7 +413,7 @@ export function beneficiaires(p: PermissionGraph): Beneficiaire[] {
         {
           type: 'groupe',
           identifiant: i.group.id,
-          nom: i.group.displayName ?? 'Groupe',
+          nom: i.group.displayName ?? i18n._('Groupe'),
         },
       ]
     }
@@ -420,14 +422,16 @@ export function beneficiaires(p: PermissionGraph): Beneficiaire[] {
         {
           type: 'groupe',
           identifiant: `site:${i.siteGroup.id}`,
-          nom: i.siteGroup.displayName ?? 'Groupe du site',
+          nom: i.siteGroup.displayName ?? i18n._('Groupe du site'),
         },
       ]
     }
     // « Tout le monde sauf les utilisateurs externes » : tous les comptes de
     // l'organisation, invités exclus.
     if (i.siteUser?.loginName?.includes('spo-grid-all-users') === true) {
-      return [{ type: 'domaine', nom: 'Tout le monde sauf les externes' }]
+      return [
+        { type: 'domaine', nom: i18n._('Tout le monde sauf les externes') },
+      ]
     }
     if (i.siteUser !== undefined) {
       return [
@@ -437,7 +441,7 @@ export function beneficiaires(p: PermissionGraph): Beneficiaire[] {
           adresse:
             i.siteUser.email?.toLowerCase() ??
             adresseDuLogin(i.siteUser.loginName),
-          nom: i.siteUser.displayName ?? 'Personne',
+          nom: i.siteUser.displayName ?? i18n._('Personne'),
         },
       ]
     }
@@ -446,9 +450,11 @@ export function beneficiaires(p: PermissionGraph): Beneficiaire[] {
   if (nommes.length > 0) return nommes
   // Un lien, même limité à l'organisation, n'ouvre le dossier qu'à qui le reçoit.
   if (p.link?.scope === 'organization') {
-    return [{ type: 'lien', nom: 'Lien de l’organisation' }]
+    return [{ type: 'lien', nom: i18n._('Lien de l’organisation') }]
   }
-  return p.link === undefined ? [] : [{ type: 'lien', nom: 'Lien de partage' }]
+  return p.link === undefined
+    ? []
+    : [{ type: 'lien', nom: i18n._('Lien de partage') }]
 }
 
 /** Une écriture de Graph qui tolère un élément déjà absent, ou déjà présent. */

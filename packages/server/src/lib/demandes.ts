@@ -9,6 +9,7 @@ import { publierNotification } from './flux.ts'
 import { niveauxDes } from './notifications.ts'
 import { pousser } from './push-file.ts'
 import { journal } from './journal.ts'
+import { i18n } from './langue.ts'
 
 // Demandes pour rejoindre l'équipe d'une période (ADR 0015).
 //
@@ -30,7 +31,9 @@ export function motValide(brut: string | null | undefined): string | null {
   const mot = (brut ?? '').trim()
   if (mot === '') return null
   if (mot.length > MOT_MAX) {
-    throw erreurSaisie(`Le mot compte ${MOT_MAX} caractères au plus.`)
+    throw erreurSaisie(
+      i18n._('Le mot compte {max} caractères au plus.', { max: MOT_MAX })
+    )
   }
   return mot
 }

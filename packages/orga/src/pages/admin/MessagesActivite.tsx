@@ -1,4 +1,5 @@
 import { useQuery } from '@apollo/client/react'
+import { Trans } from '@lingui/react/macro'
 import { useMemo } from 'react'
 import { Link } from 'react-router'
 
@@ -32,13 +33,15 @@ export default function MessagesActivite() {
       <Titre
         sousTitre={
           <>
-            Vous écrivez un message depuis l’écran{' '}
-            <Link to={lien('/admin/equipe')}>Équipe</Link> ou depuis l’écran{' '}
-            <Link to={lien('/admin/personnes')}>Personnes</Link>.
+            <Trans>
+              Vous écrivez un message depuis l’écran{' '}
+              <Link to={lien('/admin/equipe')}>Équipe</Link> ou depuis l’écran{' '}
+              <Link to={lien('/admin/personnes')}>Personnes</Link>.
+            </Trans>
           </>
         }
       >
-        Messages
+        <Trans>Messages</Trans>
       </Titre>
       <Messages annuaire={false} personnes={personnes} />
     </>

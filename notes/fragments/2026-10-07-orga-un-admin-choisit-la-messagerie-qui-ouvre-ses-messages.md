@@ -17,6 +17,17 @@ fr:
     fenêtre « Écrire un message » permet de le changer pour un message. Le mode
     d'emploi « Choisir votre messagerie » décrit chaque choix et le réglage de
     chaque système.
+en:
+  titre: >-
+    An admin chooses the mail app that opens their messages
+  texte: >-
+    In “Preferences”, the “Your mail app” panel sets the mail app that opens
+    when you prepare a message: your device’s, an online mail app (Gmail,
+    Outlook, Yahoo Mail, Proton Mail), or the Gmail or Outlook app. The “Try”
+    button opens a test message addressed only to you. Your browser remembers
+    this choice, and the “Write a message” window lets you change it for one
+    message. The user guide “Choose your mail app” describes each choice and the
+    setting for each system.
 ---
 
 ADR 0022. Cibles et liens de composition dans `lib/messagerie.ts`, sélecteur
