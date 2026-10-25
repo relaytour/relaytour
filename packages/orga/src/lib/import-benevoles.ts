@@ -12,106 +12,34 @@ import {
 // serveur, sous la forme de personnes déjà réunies. Ce module ne dépend ni de
 // React ni des bibliothèques de lecture, que `lireFichier` charge à la demande.
 
-/** Bornes d'un fichier (ADR 0042). */
-export const TAILLE_MAX = 2 * 1024 * 1024
-export const LIGNES_MAX = 5000
-export const COLONNES_MAX = 200
-/** Le serveur reçoit les personnes par lots (corps de requête sous 1 Mo). */
-export const LOT = 500
+import {
+  detecterColonnesSelon,
+  lireDate,
+  part,
+  type ColonneDetectee,
+  type LigneEcartee,
+  type Tableau,
+} from './import-tableur'
 
-export interface Tableau {
-  entetes: string[]
-  lignes: string[][]
-  /** Le séparateur d'un CSV, repris pour le fichier des lignes écartées. */
-  separateur?: string
-}
-
-export interface Feuille {
-  nom: string
-  tableau: Tableau
-}
-
-// ── Lecture ──────────────────────────────────────────────────────────────────
-
-/** Le texte d'un CSV : UTF-8 (avec ou sans BOM), sinon Windows-1252. */
-export function decoderTexte(octets: ArrayBuffer): string {
-  try {
-    return new TextDecoder('utf-8', { fatal: true })
-      .decode(octets)
-      .replace(/^\uFEFF/, '')
-  } catch {
-    return new TextDecoder('windows-1252').decode(octets)
-  }
-}
-
-/** Une valeur de cellule en texte : une date devient AAAA-MM-JJ. */
-export function texteDeCellule(valeur: unknown): string {
-  if (valeur === null || valeur === undefined) return ''
-  if (valeur instanceof Date) return valeur.toISOString().slice(0, 10)
-  if (typeof valeur === 'string') return valeur.trim()
-  if (typeof valeur === 'number' || typeof valeur === 'boolean') {
-    return String(valeur)
-  }
-  return ''
-}
-
-/** Un tableau depuis des lignes brutes : la première ligne non vide donne les en-têtes. */
-export function tableauDepuis(lignes: readonly unknown[][]): Tableau {
-  const textes = lignes
-    .map(l => l.map(texteDeCellule))
-    .filter(l => l.some(c => c !== ''))
-  const [entetes = [], ...reste] = textes
-  const largeur = Math.max(entetes.length, ...reste.map(l => l.length))
-  if (largeur > COLONNES_MAX) {
-    throw new Error(t`Un fichier compte ${COLONNES_MAX} colonnes au plus.`)
-  }
-  if (reste.length > LIGNES_MAX) {
-    throw new Error(t`Un fichier compte ${LIGNES_MAX} lignes au plus.`)
-  }
-  const nommer = (e: string | undefined, i: number) => {
-    const numero = i + 1
-    return e && e !== '' ? e : t`Colonne ${numero}`
-  }
-  return {
-    entetes: Array.from({ length: largeur }, (_, i) => nommer(entetes[i], i)),
-    lignes: reste.map(l =>
-      Array.from({ length: largeur }, (_, i) => l[i] ?? '')
-    ),
-  }
-}
-
-/** Lit un CSV : le séparateur (point-virgule, virgule, tabulation) est détecté. */
-export async function lireCsv(texte: string): Promise<Tableau> {
-  const { default: Papa } = await import('papaparse')
-  const resultat = Papa.parse<string[]>(texte, {
-    delimitersToGuess: [';', ',', '\t'],
-    skipEmptyLines: 'greedy',
-  })
-  return {
-    ...tableauDepuis(resultat.data),
-    separateur: resultat.meta.delimiter,
-  }
-}
-
-/** Lit un fichier CSV ou XLSX : une feuille par feuille du classeur. */
-export async function lireFichier(fichier: File): Promise<Feuille[]> {
-  if (fichier.size > TAILLE_MAX) {
-    throw new Error(t`Un fichier pèse 2 Mo au plus.`)
-  }
-  const octets = await fichier.arrayBuffer()
-  if (/\.xlsx$/i.test(fichier.name)) {
-    const { default: lireClasseur } = await import('read-excel-file/universal')
-    const feuilles = await lireClasseur(octets)
-    return feuilles.map(f => ({
-      nom: f.sheet,
-      tableau: tableauDepuis(f.data as unknown[][]),
-    }))
-  }
-  if (/\.(csv|txt)$/i.test(fichier.name)) {
-    return [{ nom: fichier.name, tableau: await lireCsv(decoderTexte(octets)) }]
-  }
-  throw new Error(t`Choisissez un fichier CSV ou Excel (.xlsx).`)
-}
+// Lecture, dates et lots : le module commun des imports de tableurs (ADR 0049).
+export {
+  COLONNES_MAX,
+  csvDesEcartees,
+  decoderTexte,
+  enLots,
+  LIGNES_MAX,
+  lireCsv,
+  lireDate,
+  lireFichier,
+  LOT,
+  TAILLE_MAX,
+  tableauDepuis,
+  texteDeCellule,
+  type Confiance,
+  type Feuille,
+  type LigneEcartee,
+  type Tableau,
+} from './import-tableur'
 
 // ── Colonnes ─────────────────────────────────────────────────────────────────
 
@@ -209,93 +137,40 @@ const SYNONYMES: [Champ, RegExp][] = [
 const SENSIBLES =
   /\b(genre|sexe|civilite|pronom|sante|allergie|handicap|paiement|montant|prix|moyen de paiement|tarif|iban|carte|gender|sex|pronouns?|health|medical|allerg(y|ies)|disability|payment|amount|price|fee|card)\b/
 
-export type Confiance = 'HAUTE' | 'MOYENNE' | 'BASSE'
-
-export interface Colonne {
-  index: number
-  entete: string
-  exemples: string[]
-  champ: Champ
-  confiance: Confiance
-  /** Une colonne sensible ne peut qu'être ignorée. */
-  sensible: boolean
-  remplissage: number
-}
+export type Colonne = ColonneDetectee<Champ>
 
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const HORAIRE =
   /(\d{1,2})\s*(?:h|:)\s*(\d{2})?\s*(?:-|–|à|a|to|\/)\s*(\d{1,2})\s*(?:h|:)?\s*(\d{2})?/i
 
-/** La part de cellules non vides d'une colonne qui vérifie un test. */
-function part(valeurs: readonly string[], test: (v: string) => boolean) {
-  const remplies = valeurs.filter(v => v !== '')
-  if (remplies.length === 0) return 0
-  return remplies.filter(test).length / remplies.length
-}
-
 /** Propose un champ pour chaque colonne, par son en-tête puis par son contenu. */
 export function detecterColonnes(tableau: Tableau): Colonne[] {
-  const colonnes: Colonne[] = tableau.entetes.map((entete, index) => {
-    const valeurs = tableau.lignes.map(l => l[index] ?? '')
-    const remplies = valeurs.filter(v => v !== '')
-    const cle = sansAccent(entete)
-    const sensible = SENSIBLES.test(cle)
-    const base = {
-      index,
-      entete,
-      exemples: [...new Set(remplies)].slice(0, 3),
-      sensible,
-      remplissage:
-        tableau.lignes.length === 0
-          ? 0
-          : remplies.length / tableau.lignes.length,
-    }
-    if (sensible) return { ...base, champ: 'IGNORER', confiance: 'HAUTE' }
-    // Un en-tête qui porte un horaire désigne une colonne par poste ou par
-    // créneau : « Service au bar - 18h - 19h ».
-    if (HORAIRE.test(entete)) {
-      return { ...base, champ: 'CHOIX', confiance: 'HAUTE' }
-    }
-    const parContenu: [Champ, number][] = [
-      ['COURRIEL', part(valeurs, v => COURRIEL.test(v))],
-      // Neuf chiffres au moins : un numéro de billet ne passe pas pour un téléphone.
-      [
-        'TELEPHONE',
-        part(
-          valeurs,
-          v => v.replace(/\D/g, '').length >= 9 && /^[+0-9 ().-]+$/.test(v)
-        ),
+  return detecterColonnesSelon<Champ>(
+    tableau,
+    {
+      ignorer: 'IGNORER',
+      synonymes: SYNONYMES,
+      sensibles: SENSIBLES,
+      // Un en-tête qui porte un horaire désigne une colonne par poste ou par
+      // créneau : « Service au bar - 18h - 19h ».
+      parEntete: entete => (HORAIRE.test(entete) ? 'CHOIX' : null),
+      parContenu: valeurs => [
+        ['COURRIEL', part(valeurs, v => COURRIEL.test(v))],
+        // Neuf chiffres au moins : un numéro de billet ne passe pas pour un
+        // téléphone.
+        [
+          'TELEPHONE',
+          part(
+            valeurs,
+            v => v.replace(/\D/g, '').length >= 9 && /^[+0-9 ().-]+$/.test(v)
+          ),
+        ],
+        ['VALEURS', part(valeurs, v => v.includes('\n') && HORAIRE.test(v))],
       ],
-      ['VALEURS', part(valeurs, v => v.includes('\n') && HORAIRE.test(v))],
-    ]
-    const synonyme = SYNONYMES.find(([, motif]) => motif.test(cle))?.[0]
-    const contenu = parContenu.find(([, taux]) => taux >= 0.8)?.[0]
-    // L'en-tête l'emporte ; le contenu le confirme, ou propose un champ quand
-    // l'en-tête ne dit rien.
-    if (synonyme) {
-      return {
-        ...base,
-        champ: synonyme,
-        confiance: contenu === synonyme ? 'HAUTE' : 'MOYENNE',
-      }
-    }
-    if (contenu) return { ...base, champ: contenu, confiance: 'MOYENNE' }
-    return { ...base, champ: 'IGNORER', confiance: 'BASSE' }
-  })
-  // Un champ unique revient à la colonne la plus remplie (« Prénom participant »
-  // et « Prénom » : la colonne remplie l'emporte).
-  for (const champ of UNIQUES) {
-    const candidates = colonnes.filter(c => c.champ === champ)
-    if (candidates.length < 2) continue
-    const gardee = [...candidates].sort(
-      (a, b) => b.remplissage - a.remplissage
-    )[0]!
-    for (const c of candidates) {
-      if (c !== gardee)
-        Object.assign(c, { champ: 'IGNORER', confiance: 'BASSE' })
-    }
-  }
-  return colonnes
+      uniques: UNIQUES,
+    },
+    sansAccent
+  )
 }
 
 /** Vrai si les colonnes associées désignent au moins une personne. */
@@ -305,7 +180,7 @@ export function associationSuffisante(champs: readonly Champ[]): boolean {
   )
 }
 
-// ── Horaires et dates ────────────────────────────────────────────────────────
+// ── Horaires ─────────────────────────────────────────────────────────────────
 
 export interface Horaire {
   heureDebut: string
@@ -332,42 +207,6 @@ export function posteDe(texte: string): string {
     .replace(HORAIRE, '')
     .replace(/[\s\-–:,·]+$/, '')
     .trim()
-}
-
-/**
- * Lit une date : AAAA-MM-JJ, JJ/MM/AAAA, ou un nombre de série Excel. Rend
- * AAAA-MM-JJ, ou null.
- */
-export function lireDate(texte: string): string | null {
-  const t = texte.trim()
-  let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(t)
-  if (m) return dateValide(Number(m[1]), Number(m[2]), Number(m[3]))
-  m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(t)
-  if (m) {
-    const [premier, second, annee] = [Number(m[1]), Number(m[2]), Number(m[3])]
-    // JJ/MM/AAAA, sauf quand le second nombre ne peut être qu'un jour : un
-    // export américain écrit MM/JJ/AAAA.
-    return second > 12 && premier <= 12
-      ? dateValide(annee, premier, second)
-      : dateValide(annee, second, premier)
-  }
-  if (/^\d{5}(\.\d+)?$/.test(t)) {
-    const jours = Math.floor(Number(t))
-    // Le nombre de série compte les jours depuis le 30 décembre 1899.
-    const date = new Date(Date.UTC(1899, 11, 30) + jours * 86_400_000)
-    return date.toISOString().slice(0, 10)
-  }
-  return null
-}
-
-/** AAAA-MM-JJ si le jour existe, sinon null : une date invalide n'atteint pas le serveur. */
-function dateValide(annee: number, mois: number, jour: number): string | null {
-  const date = new Date(Date.UTC(annee, mois - 1, jour))
-  return date.getUTCFullYear() === annee &&
-    date.getUTCMonth() === mois - 1 &&
-    date.getUTCDate() === jour
-    ? date.toISOString().slice(0, 10)
-    : null
 }
 
 // ── Choix ────────────────────────────────────────────────────────────────────
@@ -532,12 +371,6 @@ export interface PersonneLue extends Identite {
   accordLe: string | null
   sequenceIds: string[]
   plages: PlageSaisie[]
-}
-
-export interface LigneEcartee {
-  ligne: number
-  motif: string
-  valeurs: string[]
 }
 
 /** Les personnes du fichier, réunies, et les lignes écartées avec leur motif. */
@@ -705,42 +538,6 @@ function fusionner(a: PersonneLue, b: PersonneLue) {
   for (const p of b.plages) {
     if (!vues.has(`${p.jour}${p.heureDebut}${p.heureFin}`)) a.plages.push(p)
   }
-}
-
-/** Les personnes par lots de LOT, dans l'ordre. */
-export function enLots<T>(liste: readonly T[], taille = LOT): T[][] {
-  const lots: T[][] = []
-  for (let i = 0; i < liste.length; i += taille)
-    lots.push(liste.slice(i, i + taille))
-  return lots
-}
-
-/** Les lignes écartées en CSV, avec leur motif en première colonne. */
-export async function csvDesEcartees(
-  entetes: readonly string[],
-  ecartees: readonly LigneEcartee[],
-  separateur = ';'
-): Promise<string> {
-  const { default: Papa } = await import('papaparse')
-  return Papa.unparse(
-    {
-      fields: [
-        t({
-          message: 'Ligne',
-          comment: 'En-tête d’une colonne du fichier des lignes écartées',
-        }),
-        t({
-          message: 'Motif',
-          comment: 'En-tête d’une colonne du fichier des lignes écartées',
-        }),
-        ...entetes,
-      ],
-      data: ecartees.map(e => [String(e.ligne), e.motif, ...e.valeurs]),
-    },
-    // Le séparateur du fichier d'origine ; un point-virgule pour un classeur,
-    // que les tableurs en français ouvrent colonne par colonne.
-    { delimiter: separateur }
-  )
 }
 
 /** Les champs qu'une seule colonne peut recevoir. */

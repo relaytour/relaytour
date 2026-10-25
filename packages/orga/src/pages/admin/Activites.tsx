@@ -1,7 +1,6 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
-import type { MessageDescriptor } from '@lingui/core'
-import { msg, t } from '@lingui/core/macro'
+import { t } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
@@ -24,6 +23,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import ChampCouleur from '../../composants/ChampCouleur'
+import { ChampGroupes, ChampNature } from '../../composants/ChampsActivite'
 import ChampImage from '../../composants/ChampImage'
 import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
@@ -32,6 +32,7 @@ import type { AdressesOrganigramme, NatureActivite } from '../../gql/graphql'
 import { formesPeriode, useActivite, type Activite } from '../../lib/activite'
 import { messageErreur } from '../../lib/erreurs'
 import { useOrganisation } from '../../lib/organisation'
+import { groupesSaisis, NATURES, type Groupe } from '../../lib/natures'
 import { joursRelatifs } from '../../lib/regroupement'
 import { useSession } from '../../lib/session'
 import { themeActivite, type ThemeActivite } from '../../lib/theme'
@@ -120,34 +121,6 @@ const MODIFIER_IDENTITE = graphql(`
     }
   }
 `)
-
-const NATURES: {
-  value: NatureActivite
-  label: MessageDescriptor
-  aide: MessageDescriptor
-}[] = [
-  {
-    value: 'EVENEMENT',
-    label: msg({ message: 'Événement', comment: 'Nature d’une activité' }),
-    aide: msg`Une manifestation qui revient, une édition à la fois.`,
-  },
-  {
-    value: 'SAISON',
-    label: msg({ message: 'Section', comment: 'Nature d’une activité' }),
-    aide: msg`Une activité permanente, une saison à la fois.`,
-  },
-  {
-    value: 'MANDAT',
-    label: msg({ message: 'Instance', comment: 'Nature d’une activité' }),
-    aide: msg`Un bureau ou un conseil, un mandat à la fois.`,
-  },
-]
-
-interface Groupe {
-  cle: string
-  libelle: string
-  libellePluriel: string
-}
 
 // Une phase de l'activité (ADR 0025). La borne compte les jours depuis le premier
 // jour de la période ; la dernière phase n'en porte pas.
@@ -296,11 +269,7 @@ export default function Activites() {
 
   const enregistrer = async (v: Valeurs) => {
     setErreur(null)
-    const groupes = v.groupes.map(g => ({
-      cle: g.cle.trim(),
-      libelle: g.libelle.trim(),
-      libellePluriel: g.libellePluriel.trim(),
-    }))
+    const groupes = groupesSaisis(v.groupes)
     const sigle = v.sigle?.trim() || null
     const identite = (id: string, actuel?: Activite) => ({
       id,
@@ -573,102 +542,8 @@ export default function Activites() {
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item
-            label={t`Nature`}
-            name="nature"
-            extra={
-              <Form.Item noStyle shouldUpdate>
-                {({ getFieldValue }) => {
-                  const aide = NATURES.find(
-                    n => n.value === getFieldValue('nature')
-                  )?.aide
-                  return aide ? t(aide) : undefined
-                }}
-              </Form.Item>
-            }
-          >
-            <Select
-              options={NATURES.map(({ value, label }) => ({
-                value,
-                label: t(label),
-              }))}
-            />
-          </Form.Item>
-          <Form.Item
-            label={t`Groupes de périmètres`}
-            extra={t`Chaque périmètre appartient à un groupe : un sport, un pôle, une équipe, une commission…`}
-          >
-            <Form.List name="groupes">
-              {(champs, { add, remove }) => (
-                <>
-                  {champs.map(champ => (
-                    <Row gutter={8} key={champ.key} align="top">
-                      <Col xs={24} sm={7}>
-                        <Form.Item
-                          name={[champ.name, 'cle']}
-                          rules={[
-                            { required: true, message: t`Clé requise.` },
-                            {
-                              pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-                              message: t`Minuscules, chiffres, tirets.`,
-                            },
-                          ]}
-                        >
-                          <Input
-                            placeholder={t`clé`}
-                            aria-label={t`Clé du groupe`}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={11} sm={7}>
-                        <Form.Item
-                          name={[champ.name, 'libelle']}
-                          rules={[
-                            { required: true, message: t`Libellé requis.` },
-                          ]}
-                        >
-                          <Input
-                            placeholder={t`Équipe`}
-                            aria-label={t`Libellé du groupe`}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={11} sm={8}>
-                        <Form.Item
-                          name={[champ.name, 'libellePluriel']}
-                          rules={[
-                            { required: true, message: t`Pluriel requis.` },
-                          ]}
-                        >
-                          <Input
-                            placeholder={t`Équipes`}
-                            aria-label={t`Libellé pluriel du groupe`}
-                          />
-                        </Form.Item>
-                      </Col>
-                      <Col xs={2} sm={2}>
-                        <Button
-                          icon={<DeleteOutlined />}
-                          aria-label={t`Retirer le groupe`}
-                          disabled={champs.length === 1}
-                          onClick={() => remove(champ.name)}
-                        />
-                      </Col>
-                    </Row>
-                  ))}
-                  <Button
-                    icon={<PlusOutlined />}
-                    onClick={() =>
-                      add({ cle: '', libelle: '', libellePluriel: '' })
-                    }
-                    disabled={champs.length >= 10}
-                  >
-                    <Trans>Ajouter un groupe</Trans>
-                  </Button>
-                </>
-              )}
-            </Form.List>
-          </Form.Item>
+          <ChampNature />
+          <ChampGroupes />
           {enEdition !== 'nouvelle' && (
             <Form.Item
               label={t`Phases`}

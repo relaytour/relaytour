@@ -161,6 +161,16 @@ export const FichierTaches = z.strictObject({
 })
 
 export type PerimetreModele = z.output<typeof PerimetreDeclare>
+
+/**
+ * Les tâches types d'un périmètre lues en base, ou null quand la colonne est vide
+ * ou illisible. L'import les y écrit telles que le dossier les déclare.
+ */
+export function lireTachesTypes(valeur: unknown): TacheModele[] | null {
+  if (valeur === null || valeur === undefined) return null
+  const lues = FichierTaches.shape.taches.safeParse(valeur)
+  return lues.success ? lues.data : null
+}
 export type TacheModele = z.infer<typeof TacheModele>
 export type ActiviteDeclaree = z.output<typeof ActiviteDeclaree>
 
@@ -172,7 +182,7 @@ export type ActiviteDeclaree = z.output<typeof ActiviteDeclaree>
 export function ciblesDeLaDeclinaison(
   tache: TacheModele,
   origine: string,
-  perimetres: readonly PerimetreModele[]
+  perimetres: readonly Pick<PerimetreModele, 'slug' | 'groupe'>[]
 ): string[] {
   const declinaison = tache.declinaison
   if (declinaison === undefined) return []

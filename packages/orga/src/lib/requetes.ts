@@ -233,3 +233,18 @@ export const BENEVOLES = graphql(`
     }
   }
 `)
+
+// Liste « Premiers pas » d'une activité (ADR 0048), lue par Mon espace et le menu
+// du compte.
+export const PREMIERS_PAS = graphql(`
+  query PremiersPas {
+    premiersPas {
+      etapes {
+        etape
+        faite
+      }
+      masques
+      termines
+    }
+  }
+`)
