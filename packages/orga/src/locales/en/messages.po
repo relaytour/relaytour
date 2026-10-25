@@ -84,6 +84,30 @@ msgstr ""
 msgid "{acteur} vous a retiré·e de la tâche."
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "{action} pour {personne} ?"
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "{adresseSaisie} (saisie par un admin)"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "{appliquees} proposition(s) appliquée(s)."
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "{arrondi} Go"
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "{arrondi} Ko"
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "{arrondi} Mo"
+msgstr ""
+
 #: src/pages/MonEspace.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
@@ -106,8 +130,20 @@ msgstr ""
 msgid "{auteur} a modifié cette tâche. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne."
 msgstr ""
 
+#: src/composants/VerificationAcces.tsx
+msgid "{avecAcces} sur {total} a accès"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "{avecAcces} sur {total} ont accès"
+msgstr ""
+
 #: src/pages/Perimetre.tsx
 msgid "{cettePeriodeMajuscule} est {periodeArchivee}. Ses tâches sont consultables en lecture seule."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "{ecrites, plural, one {# fiche écrite} other {# fiches écrites}}"
 msgstr ""
 
 #: src/lib/declinaisons.ts
@@ -122,6 +158,10 @@ msgstr ""
 msgid "{faites, plural, one {# faite sur {gardees}} other {# faites sur {gardees}}}"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "{fiche} : {raison}"
+msgstr ""
+
 #: src/lib/declinaisons.ts
 msgid "{gardees, plural, one {faite} other {toutes faites}}"
 msgstr ""
@@ -130,8 +170,32 @@ msgstr ""
 msgid "{heritee} (héritée)"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "{inchangees, plural, one {# inchangée} other {# inchangées}}"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "{jourConnexion} par {auteurConnexion}"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "{jourExport} : {fichesEcrites}, {fichesInchangees}, {fichesRetirees}"
+msgstr ""
+
 #: src/composants/Tableau.tsx
 msgid "{largeur} pixels"
+msgstr ""
+
+#: src/composants/ChoixLecteurs.tsx
+msgid "{libelleGroupe} (tout le groupe)"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "{manques} n’a pas d’accès certain."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "{manques} n’ont pas d’accès certain."
 msgstr ""
 
 #: src/pages/Perimetre.tsx
@@ -263,8 +327,20 @@ msgstr ""
 msgid "{nombreDePersonnes, plural, one {{nomsDesPersonnes} recevra un mail pour les prévenir de votre modification.} other {{nomsDesPersonnes} recevront un mail pour les prévenir de votre modification.}}"
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "{nombreEnAttente} en attente"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "{nombreEnTrop, plural, one {# compte} other {# comptes}}"
+msgstr ""
+
 #: src/composants/MenuCompte.tsx
 msgid "{nombreInvitations, plural, one {# invitation en attente} other {# invitations en attente}}"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "{nombreMasques, plural, one {# document lié ne sera plus lisible depuis sa fiche.} other {# documents liés ne seront plus lisibles depuis leur fiche.}}"
 msgstr ""
 
 #: src/pages/MonEspace.tsx
@@ -281,6 +357,10 @@ msgstr ""
 
 #: src/pages/Retroplanning.tsx
 msgid "{nombreTaches} tâches, dont <0>{enRetard} en retard</0>"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "{nomConnecte} a retiré l’accès. Reconnectez le fournisseur cloud pour que les membres retrouvent leurs documents."
 msgstr ""
 
 #: src/composants/OrganisationProvider.tsx
@@ -307,6 +387,10 @@ msgstr ""
 msgid "{nomFournisseur} a converti ce document en PDF pour l’affichage. Sa mise en page peut différer de l’original."
 msgstr ""
 
+#: src/composants/ChoixLecteurs.tsx
+msgid "{nomPerimetre} (archivé)"
+msgstr ""
+
 #: src/composants/CarteAvancement.tsx
 msgid "{nomPersonne} (contact principal)"
 msgstr ""
@@ -319,6 +403,10 @@ msgstr ""
 msgid "{nonLues, plural, one {# non lue} other {# non lues}}"
 msgstr ""
 
+#: src/lib/espace-fichiers.ts
+msgid "{octets} o"
+msgstr ""
+
 #: src/composants/Contribution.tsx
 msgid "{points, plural, one {point} other {points}} pour {nomEdition}"
 msgstr ""
@@ -327,12 +415,20 @@ msgstr ""
 msgid "{pourcentage} % des tâches faites"
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "{raison} Relaytour le proposera de nouveau à la prochaine vérification."
+msgstr ""
+
 #: src/lib/declinaisons.ts
 msgid "{refusees, plural, one {# refusée} other {# refusées}}"
 msgstr ""
 
 #: src/composants/Jauge.tsx
 msgid "{renforts} / {besoin} renforts"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "{retirees, plural, one {# retirée} other {# retirées}}"
 msgstr ""
 
 #: src/pages/Fiches.tsx
@@ -365,6 +461,10 @@ msgstr ""
 
 #: src/lib/guide-markdown.ts
 msgid "9 h"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "A accès"
 msgstr ""
 
 #: src/composants/Jauge.tsx
@@ -400,6 +500,10 @@ msgstr ""
 msgid "À propos"
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "À reconnecter"
+msgstr ""
+
 #. Statut d’une tâche
 #. Statut d’une tâche
 #: src/lib/conflit.ts
@@ -418,6 +522,10 @@ msgstr ""
 msgid "Abandonner"
 msgstr ""
 
+#: src/composants/ComptesFournisseur.tsx
+msgid "Absent de l’annuaire"
+msgstr ""
+
 #: src/lib/declinaisons.ts
 msgid "Acceptée par {personne} le {jour}"
 msgstr ""
@@ -425,6 +533,14 @@ msgstr ""
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/MesInvitations.tsx
 msgid "Accepter"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Accès chez le fournisseur : « {nomDossier} »"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Accès en trop"
 msgstr ""
 
 #: src/pages/admin/Redaction.tsx
@@ -439,8 +555,28 @@ msgstr ""
 msgid "Accueillir les équipes"
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "Activée"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Activée, avec la gestion des accès"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Activer la gestion des accès"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Activer la vérification des accès"
+msgstr ""
+
 #: src/composants/PreferencePush.tsx
 msgid "Activer sur cet appareil"
+msgstr ""
+
+#: src/composants/ChoixLecteurs.tsx
+msgid "Activité"
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -475,6 +611,10 @@ msgstr ""
 msgid "Admins d’activité"
 msgstr ""
 
+#: src/composants/VerificationAcces.tsx
+msgid "Admins de l’activité"
+msgstr ""
+
 #: src/lib/notes-de-version.ts
 msgid "Admins de l’organisation"
 msgstr ""
@@ -483,8 +623,24 @@ msgstr ""
 msgid "Adresse"
 msgstr ""
 
+#: src/composants/ComptesFournisseur.tsx
+msgid "Adresse chez le fournisseur"
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "Adresse du compte de {nomMembre}"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Adresse du Nextcloud"
+msgstr ""
+
 #: src/pages/Connexion.tsx
 msgid "Adresse mail"
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "adresse@exemple.org"
 msgstr ""
 
 #: src/pages/TousLesPerimetres.tsx
@@ -533,6 +689,10 @@ msgstr ""
 msgid "Ajouter"
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "Ajouter au {cible}"
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Ajouter les mentions à « Concerne aussi » ?"
 msgstr ""
@@ -553,10 +713,12 @@ msgstr ""
 msgid "Annuaire"
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/DeclinerTache.tsx
 #: src/composants/EditeurVisuel.tsx
 #: src/composants/FilTache.tsx
+#: src/composants/GestionAcces.tsx
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/MesInvitations.tsx
 #: src/composants/ReglagePerimetre.tsx
@@ -564,6 +726,7 @@ msgstr ""
 #: src/composants/TacheCarte.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/lib/taches.ts
+#: src/pages/admin/EspaceFichiers.tsx
 #: src/pages/admin/Redaction.tsx
 #: src/pages/Fiche.tsx
 #: src/pages/FicheEditeur.tsx
@@ -574,6 +737,18 @@ msgstr ""
 #. Origine d’une version de fiche : rédigée dans Relaytour
 #: src/lib/fiches.ts
 msgid "Application"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Appliquer"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Appliquer les ajouts sans attendre"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Appliquer toutes les propositions de ce dossier ?"
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -588,6 +763,18 @@ msgstr ""
 msgid "Archivée"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Arrêter"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Arrêter l’export"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Arrêter l’export des fiches ?"
+msgstr ""
+
 #: src/pages/Retroplanning.tsx
 msgid "Assignées à moi"
 msgstr ""
@@ -598,6 +785,10 @@ msgstr ""
 
 #: src/composants/TacheCarte.tsx
 msgid "Assigner une personne"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Attendus chez le fournisseur"
 msgstr ""
 
 #: src/composants/ImportFiches.tsx
@@ -630,6 +821,15 @@ msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
 msgid "Aucun dossier du fournisseur cloud ne sert ce périmètre ni toute l’activité."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Aucun dossier n’est lié à cette activité."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Aucun groupe du fournisseur n’a de droit sur ce dossier."
 msgstr ""
 
 #: src/composants/Recherche.tsx
@@ -693,6 +893,10 @@ msgstr ""
 msgid "Aucune personne n’est affectée à ce périmètre pour {cettePeriode}."
 msgstr ""
 
+#: src/composants/VerificationAcces.tsx
+msgid "Aucune personne n’est attendue pour ce dossier."
+msgstr ""
+
 #: src/composants/Avancement.tsx
 msgid "Aucune tâche"
 msgstr ""
@@ -717,6 +921,10 @@ msgstr ""
 msgid "Aucune tâche."
 msgstr ""
 
+#: src/composants/VerificationAcces.tsx
+msgid "Aucune vérification pour l’instant. Relaytour vérifie aussi chaque nuit."
+msgstr ""
+
 #: src/composants/PreferencePush.tsx
 msgid "Autorisez-les dans les réglages de votre navigateur ou de votre téléphone, puis revenez sur cet écran."
 msgstr ""
@@ -735,6 +943,10 @@ msgstr ""
 
 #: src/lib/guide-markdown.ts
 msgid "Avant la journée"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Avec cette connexion, Relaytour vérifie les accès sans pouvoir les changer."
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -769,8 +981,40 @@ msgstr ""
 msgid "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le changer pour un message dans la fenêtre « Écrire un message »."
 msgstr ""
 
+#: src/lib/espace-fichiers.ts
+msgid "Ce document dépasse 50 Mo. Ouvrez-le chez le fournisseur cloud."
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Ce document n’existe plus, ou vous n’y avez pas accès."
+msgstr ""
+
+#: src/composants/ExplorateurDossier.tsx
+msgid "Ce dossier compte trop d’éléments pour les afficher tous ici. Ouvrez-le chez le fournisseur cloud pour voir la suite."
+msgstr ""
+
 #: src/composants/ParcoursEspace.tsx
 msgid "Ce dossier compte trop de sous-dossiers pour les afficher tous. Rangez le dossier voulu plus haut dans la bibliothèque."
+msgstr ""
+
+#: src/composants/ExplorateurDossier.tsx
+msgid "Ce dossier est vide."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Ce fournisseur ne propose pas encore la gestion des accès."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Ce fournisseur ne propose pas encore la vérification des accès."
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "Ce fournisseur ne publie pas d’annuaire : Relaytour compare l’adresse de chaque personne à celles des droits. Saisissez l’adresse qu’une personne utilise chez le fournisseur quand elle diffère."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Ce fournisseur ne publie pas d’annuaire des comptes."
 msgstr ""
 
 #: src/composants/Mention.tsx
@@ -805,12 +1049,24 @@ msgstr ""
 msgid "Ces adresses ont déjà un compte hors de votre organisation. Chaque personne accepte ou refuse l’invitation depuis son compte. Rien n’est créé en son nom avant son accord, et elle n’apparaît pas dans l’équipe."
 msgstr ""
 
+#: src/composants/VerificationAcces.tsx
+msgid "Ces comptes ont un droit sur le dossier sans être attendus : coordination, ancienne équipe, compte d’une autre adresse. Relaytour n’en garde que le nom."
+msgstr ""
+
 #: src/composants/ImportFiches.tsx
 msgid "Ces documents Word sont convertis en Markdown."
 msgstr ""
 
 #: src/composants/FichesConnexes.tsx
 msgid "Ces fiches appartiennent à d’autres périmètres et concernent aussi celui-ci."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Ces fiches avaient été modifiées chez le fournisseur cloud. Relaytour les a réécrites."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Ces fiches ne sont pas exportées."
 msgstr ""
 
 #: src/composants/ImportFiches.tsx
@@ -917,6 +1173,10 @@ msgstr ""
 msgid "Changer d’adresse ou demander un nouveau code"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Changer de dossier"
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique."
 msgstr ""
@@ -950,12 +1210,24 @@ msgstr ""
 msgid "Chasubles"
 msgstr ""
 
+#: src/composants/ComptesFournisseur.tsx
+msgid "Chercher une personne"
+msgstr ""
+
 #: src/composants/ChoixPerimetresCibles.tsx
 msgid "Choisir des périmètres"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Choisir le dossier d’export"
+msgstr ""
+
 #: src/composants/ImportFiches.tsx
 msgid "Choisir le dossier source"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Choisir le fichier de la clé"
 msgstr ""
 
 #: src/composants/ChampImage.tsx
@@ -978,8 +1250,16 @@ msgstr ""
 msgid "Choisissez le point-virgule si votre messagerie par défaut est Outlook : il ne découpe pas des adresses collées avec des virgules. Vous pouvez changer ce signe à côté des boutons de copie de chaque message."
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Choisissez les lecteurs"
+msgstr ""
+
 #: src/pages/Preferences.tsx
 msgid "Choisissez les mails et les notifications que vous recevez de {nomOrganisation}. Vos autres organisations gardent leurs propres réglages."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Choisissez toute l’activité, ou au moins un périmètre ou un groupe."
 msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
@@ -988,6 +1268,10 @@ msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
 msgid "Choisissez un fichier, ou liez un dossier entier."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Choisissez un groupe"
 msgstr ""
 
 #: src/composants/ReglagePerimetre.tsx
@@ -1012,6 +1296,10 @@ msgstr ""
 
 #: src/composants/Coquille.tsx
 msgid "Classement"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Clé JSON du compte de service"
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -1073,12 +1361,40 @@ msgstr ""
 msgid "Communes"
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "Compte"
+msgstr ""
+
 #: src/composants/MenuCompte.tsx
 msgid "Compte de {nom}"
 msgstr ""
 
+#: src/composants/ComptesFournisseur.tsx
+msgid "Compte de {nomPersonne}"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Compte de service"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Compte de service Google"
+msgstr ""
+
 #: src/composants/FilTache.tsx
 msgid "Compte supprimé"
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "Compte trouvé"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Comptes"
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "Comptes chez le fournisseur"
 msgstr ""
 
 #: src/composants/ChampConcerneAussi.tsx
@@ -1097,6 +1413,38 @@ msgstr ""
 
 #: src/pages/FicheEditeur.tsx
 msgid "Confirmer la liste"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Connecté"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Connecté le"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Connecter"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Connecter {nomFournisseur}"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Connecter Google Drive par un compte de service"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Connecter Nextcloud"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Connexion"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Connexion et dossiers"
 msgstr ""
 
 #: src/pages/TousLesPerimetres.tsx
@@ -1139,6 +1487,14 @@ msgstr ""
 msgid "Couleur"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Créer le dossier d’export ici"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Créez un compte de service, puis une clé au format JSON pour ce compte."
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Créneau"
 msgstr ""
@@ -1149,6 +1505,10 @@ msgstr ""
 
 #: src/pages/Preferences.tsx
 msgid "Dans l’espace organisateur"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Dans la console Google Cloud de l’association, créez un projet et activez l’API Google Drive."
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -1166,6 +1526,14 @@ msgstr ""
 
 #: src/composants/TacheFormulaire.tsx
 msgid "Décliner dans d’autres périmètres (facultatif)"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Déconnecter"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Déconnecter le fournisseur cloud ?"
 msgstr ""
 
 #: src/composants/DeclinaisonsProposees.tsx
@@ -1189,6 +1557,10 @@ msgstr ""
 msgid "Déplier le volet latéral"
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "Déposez ce fichier ici, ou collez son contenu."
+msgstr ""
+
 #. Origine d’une version de fiche : le dépôt Git
 #: src/lib/fiches.ts
 msgid "Dépôt"
@@ -1200,6 +1572,14 @@ msgstr ""
 
 #: src/pages/Fiches.tsx
 msgid "Depuis le fournisseur cloud · {date}"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Dernier export"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Dernière vérification le {derniereVerification}. Relaytour vérifie aussi chaque nuit."
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -1227,6 +1607,15 @@ msgstr ""
 msgid "Deux astérisques de chaque côté mettent un passage en gras. Un tiret bas de chaque côté le met en italique. Deux tildes le barrent."
 msgstr ""
 
+#: src/lib/espace-fichiers.ts
+msgid "Directement"
+msgstr ""
+
+#. Nom d’un fichier téléchargé sans nom connu
+#: src/lib/espace-fichiers.ts
+msgid "document"
+msgstr ""
+
 #: src/composants/RessourcesFiche.tsx
 msgid "Document ouvert"
 msgstr ""
@@ -1247,8 +1636,16 @@ msgstr ""
 msgid "Dont à temps"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Dossier"
+msgstr ""
+
 #: src/composants/RessourcesFiche.tsx
 msgid "Dossier lié"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Dossiers liés de l’activité « {nomActivite} »"
 msgstr ""
 
 #: src/pages/admin/Redaction.tsx
@@ -1261,6 +1658,10 @@ msgstr ""
 
 #: src/pages/admin/Redaction.tsx
 msgid "Droits accordés"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Écarter"
 msgstr ""
 
 #: src/composants/TacheFormulaire.tsx
@@ -1282,6 +1683,10 @@ msgstr ""
 msgid "Échéances"
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "Échec"
+msgstr ""
+
 #: src/composants/ReglagePerimetre.tsx
 #: src/lib/taches.ts
 msgid "Écraser"
@@ -1299,6 +1704,10 @@ msgstr ""
 msgid "Écrire une fiche en Markdown"
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "Écriture"
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels."
 msgstr ""
@@ -1311,8 +1720,16 @@ msgstr ""
 msgid "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "En attente"
+msgstr ""
+
 #: src/composants/DeclinaisonsTache.tsx
 msgid "En attente d’accord"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "En attente de votre accord dans Nextcloud. <0>Rouvrir la page de Nextcloud</0>"
 msgstr ""
 
 #. Statut d’une tâche
@@ -1339,10 +1756,13 @@ msgstr ""
 msgid "Encadrés"
 msgstr ""
 
+#: src/composants/ComptesFournisseur.tsx
 #: src/composants/FilTache.tsx
+#: src/composants/GestionAcces.tsx
 #: src/composants/PreferenceMessagerie.tsx
 #: src/composants/ReglagePerimetre.tsx
 #: src/composants/TacheFormulaire.tsx
+#: src/pages/admin/EspaceFichiers.tsx
 #: src/pages/FicheEditeur.tsx
 #: src/pages/Preferences.tsx
 msgid "Enregistrer"
@@ -1381,6 +1801,10 @@ msgstr ""
 msgid "Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils."
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "État"
+msgstr ""
+
 #: src/composants/RessourcesFiche.tsx
 msgid "Étendre"
 msgstr ""
@@ -1396,6 +1820,14 @@ msgstr ""
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/MesInvitations.tsx
 msgid "Expire le {jourExpiration}"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Export des fiches"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Exporter maintenant"
 msgstr ""
 
 #. Bouton qui marque une tâche comme faite
@@ -1433,6 +1865,10 @@ msgstr ""
 
 #: src/pages/Fiche.tsx
 msgid "Fiche commune"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Fiche concernée : {fichesConcernees}. Une fiche masque ces documents tant que le dossier ne sert pas son périmètre."
 msgstr ""
 
 #: src/composants/Contribution.tsx
@@ -1480,6 +1916,10 @@ msgstr ""
 msgid "Fiches concernées"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Fiches concernées : {fichesConcernees}. Une fiche masque ces documents tant que le dossier ne sert pas son périmètre."
+msgstr ""
+
 #: src/composants/FichesConnexes.tsx
 msgid "Fiches connexes"
 msgstr ""
@@ -1505,9 +1945,14 @@ msgstr ""
 msgid "Fin de la partie matinale."
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "Fournisseur"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 #: src/composants/DocumentsActivite.tsx
 #: src/lib/fiches.ts
+#: src/pages/admin/EspaceFichiers.tsx
 msgid "Fournisseur cloud"
 msgstr ""
 
@@ -1539,6 +1984,18 @@ msgstr ""
 msgid "Gérer l’organisation"
 msgstr ""
 
+#: src/composants/VerificationAcces.tsx
+msgid "Gérer les accès"
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Gérer un groupe du fournisseur"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Google Drive est connecté par le compte de service."
+msgstr ""
+
 #: src/composants/EditeurMarkdown.tsx
 msgid "Gras"
 msgstr ""
@@ -1547,12 +2004,26 @@ msgstr ""
 msgid "Gras, italique et texte barré"
 msgstr ""
 
+#. Groupe chez le fournisseur cloud
+#: src/composants/GestionAcces.tsx
 #: src/composants/ReglagePerimetre.tsx
 msgid "Groupe"
 msgstr ""
 
+#: src/lib/espace-fichiers.ts
+msgid "Groupe « {nomGroupe} »"
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Groupe « {nomGroupe} », ajouts automatiques"
+msgstr ""
+
 #: src/pages/Retroplanning.tsx
 msgid "Groupe de périmètres"
+msgstr ""
+
+#: src/composants/ChoixLecteurs.tsx
+msgid "Groupes"
 msgstr ""
 
 #: src/composants/EditeurMarkdown.tsx
@@ -1571,6 +2042,10 @@ msgstr ""
 
 #: src/composants/HorsConnexion.tsx
 msgid "Hors connexion"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "https://cloud.exemple.org"
 msgstr ""
 
 #: src/composants/ReglagePerimetre.tsx
@@ -1619,7 +2094,12 @@ msgstr ""
 msgid "Importer des fiches dans « {nomActivite} »"
 msgstr ""
 
+#: src/composants/VerificationAcces.tsx
+msgid "Inconnu"
+msgstr ""
+
 #: src/composants/RessourcesFiche.tsx
+#: src/pages/admin/EspaceFichiers.tsx
 msgid "Indisponible"
 msgstr ""
 
@@ -1642,6 +2122,10 @@ msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
 msgid "Introuvable"
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "Invité"
 msgstr ""
 
 #: src/composants/EditeurMarkdown.tsx
@@ -1669,8 +2153,24 @@ msgstr ""
 msgid "jusqu’au {dateDeFin} · {borneRelative}"
 msgstr ""
 
+#: src/lib/espace-fichiers.ts
+msgid "L’accès déjà accordé à Google Drive suffit : aucune reconnexion n’est nécessaire."
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe."
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "L’adresse est enregistrée. Relaytour cherche le compte de nouveau."
+msgstr ""
+
 #: src/composants/EditeurVisuel.tsx
 msgid "L’adresse s’insère à l’emplacement du curseur."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "L’annuaire du fournisseur ne connaît pas son adresse. Invitez la personne, ou saisissez l’adresse de son compte dans l’onglet « Comptes »."
 msgstr ""
 
 #: src/composants/InstallerApplication.tsx
@@ -1717,8 +2217,16 @@ msgstr ""
 msgid "L’essai a réussi"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "L’export part. Son résultat s’affiche ici dans quelques instants."
+msgstr ""
+
 #: src/composants/ImportFiches.tsx
 msgid "L’export suivant écrit ces fiches en Markdown dans le dossier d’export."
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "L’hébergeur de cette installation n’a ouvert aucun fournisseur cloud."
 msgstr ""
 
 #: src/composants/MesInvitations.tsx
@@ -1766,8 +2274,24 @@ msgstr ""
 msgid "La connexion a échoué."
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "La connexion a échoué. Recommencez depuis cette page, avec un compte admin de l’organisation."
+msgstr ""
+
 #: src/lib/connexion.ts
 msgid "La connexion a échoué. Réessayez."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "La connexion a été annulée chez le fournisseur."
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "La connexion demande de lire, puis de modifier, les membres des dossiers partagés."
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "La connexion demande de nouvelles autorisations : un admin Microsoft Entra les accepte pour l’organisation."
 msgstr ""
 
 #: src/composants/ImportFiches.tsx
@@ -1776,6 +2300,10 @@ msgstr ""
 
 #: src/pages/FicheEditeur.tsx
 msgid "La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même."
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "La demande a expiré. Recommencez la connexion."
 msgstr ""
 
 #: src/composants/GuideMarkdown.tsx
@@ -1798,6 +2326,10 @@ msgstr ""
 msgid "La fiche se lit, sans s’y modifier, dans ces périmètres. Un groupe concerne aussi les périmètres qui le rejoindront. Une mention @périmètre ou @groupe:clé du texte se propose à l’enregistrement."
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "La gestion des accès est activée."
+msgstr ""
+
 #: src/composants/Liseuse.tsx
 msgid "La liseuse affiche les {PAGES_MAX} premières pages sur {pagesTotales}. Téléchargez le document pour lire la suite."
 msgstr ""
@@ -1806,12 +2338,20 @@ msgstr ""
 msgid "La liseuse n’affiche pas ce format. Téléchargez le document, ou ouvrez-le chez le fournisseur cloud."
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "La liste ne compte que les groupes qui ont déjà un droit sur le dossier. Une personne qui entre dans un groupe reçoit tous les droits de ce groupe chez le fournisseur."
+msgstr ""
+
 #: src/composants/Jauge.tsx
 msgid "La personne n’a pas confirmé depuis sept jours, ou la séquence arrive demain."
 msgstr ""
 
 #: src/composants/InvitationsEnAttente.tsx
 msgid "La personne ne pourra plus l’accepter."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "La personne quitte le groupe pour tout ce que ce groupe ouvre chez le fournisseur."
 msgstr ""
 
 #: src/composants/ImportFiches.tsx
@@ -1858,6 +2398,18 @@ msgstr ""
 msgid "La tâche vous est assignée."
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "La vérification des accès compare ces personnes aux droits du dossier chez le fournisseur."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "La vérification des accès est activée."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "La vérification est lancée. Le résultat s’affiche dans quelques instants."
+msgstr ""
+
 #: src/composants/PreferenceLangue.tsx
 msgid "Langue"
 msgstr ""
@@ -1890,6 +2442,10 @@ msgstr ""
 msgid "Le besoin est dépassé."
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "Le changement est appliqué."
+msgstr ""
+
 #: src/lib/connexion.ts
 msgid "Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code."
 msgstr ""
@@ -1910,8 +2466,40 @@ msgstr ""
 msgid "Le document s’ouvre pour tous les lecteurs de la fiche."
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Le dossier « {dernier} » sera lié."
+msgstr ""
+
 #: src/composants/ImportFiches.tsx
 msgid "Le dossier « {dernierDossier} » sera le dossier des fiches."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Le dossier « Fiches Relaytour » sera créé à la racine de la bibliothèque."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Le dossier « Fiches Relaytour » sera créé dans « {dernier} »."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Le dossier d’export est créé. Le premier export part."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Le dossier est lié."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Le dossier lié est modifié."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Le dossier reste chez le fournisseur cloud. Relaytour y a créé {accesCrees, plural, one {un accès, qui reste} other {# accès, qui restent}} sans suivi."
 msgstr ""
 
 #: src/lib/medias.ts
@@ -1930,8 +2518,32 @@ msgstr ""
 msgid "Le fil n’a pas pu être chargé. Rechargez la page dans un instant."
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "Le fournisseur a refusé le changement."
+msgstr ""
+
 #: src/composants/Liseuse.tsx
 msgid "le fournisseur cloud"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Le fournisseur cloud est connecté."
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Le fournisseur cloud n’est pas connecté."
+msgstr ""
+
+#: src/composants/ExplorateurDossier.tsx
+msgid "Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau."
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Le fournisseur cloud ne répond pas. Réessayez dans quelques instants."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Le fournisseur prévient la personne du partage."
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -1972,6 +2584,10 @@ msgstr ""
 
 #: src/composants/ReglagePerimetre.tsx
 msgid "Le pôle obtient les gymnases, la piscine et les autorisations."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Le réglage des accès est enregistré."
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -2031,6 +2647,10 @@ msgstr ""
 msgid "Le titre dépasse {TITRE_MAX} caractères."
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "Lecture"
+msgstr ""
+
 #: src/composants/FichesConnexes.tsx
 msgid "Lecture seule"
 msgstr ""
@@ -2051,8 +2671,16 @@ msgstr ""
 msgid "Les colonnes n’ont pas besoin d’être alignées dans le texte : l’affichage les aligne."
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Les contacts principaux seulement"
+msgstr ""
+
 #: src/composants/DeclinaisonsTache.tsx
 msgid "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Les dossiers liés restent, mais les membres ne lisent plus leurs documents jusqu’à une nouvelle connexion. L’export des fiches s’arrête."
 msgstr ""
 
 #: src/composants/ImportFiches.tsx
@@ -2071,6 +2699,10 @@ msgstr ""
 msgid "Les fiches sont importées."
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Les fichiers déjà écrits restent chez le fournisseur cloud."
+msgstr ""
+
 #: src/composants/RessourcesFiche.tsx
 msgid "Les lecteurs de {ajouts} liront tout le dossier, et pas seulement ce document."
 msgstr ""
@@ -2081,6 +2713,10 @@ msgstr ""
 
 #: src/pages/Preferences.tsx
 msgid "Les mails de connexion et d’invitation partent toujours : ils sont nécessaires pour accéder à l’espace."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Les membres lisent les documents de l’association depuis Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document."
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -2125,6 +2761,10 @@ msgstr ""
 
 #: src/composants/DeclinerTache.tsx
 msgid "Les périmètres qui portent déjà cette tâche n’ont pas pu être chargés."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes."
 msgstr ""
 
 #: src/composants/DeclinaisonsProposees.tsx
@@ -2172,8 +2812,21 @@ msgstr ""
 msgid "Liens"
 msgstr ""
 
+#: src/composants/ExplorateurDossier.tsx
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Lier ce dossier"
+msgstr ""
+
+#: src/composants/ExplorateurDossier.tsx
+msgid "Lier le dossier {nomElement}"
+msgstr ""
+
 #: src/composants/RessourcesFiche.tsx
 msgid "Lier un document"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Lier un dossier"
 msgstr ""
 
 #: src/composants/TacheFormulaire.tsx
@@ -2220,6 +2873,14 @@ msgstr ""
 
 #: src/lib/guide-markdown.ts
 msgid "Logistique"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Lu par"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Mail d’invitation du fournisseur"
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -2326,12 +2987,20 @@ msgstr ""
 msgid "Modifier"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Modifier « {nomDossier} »"
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Modifier la fiche"
 msgstr ""
 
 #: src/composants/TacheFormulaire.tsx
 msgid "Modifier la tâche"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Modifier le dossier {nomDossierLie}"
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -2363,8 +3032,16 @@ msgstr ""
 msgid "Ne pas ajouter"
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "Nextcloud est connecté."
+msgstr ""
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "Nom"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Nom affiché"
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -2373,6 +3050,14 @@ msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Non"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Non activée"
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "Non cherché"
 msgstr ""
 
 #: src/composants/Jauge.tsx
@@ -2484,6 +3169,10 @@ msgstr ""
 msgid "Ouvrez cette page dans Safari."
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Ouvrez le dossier à lier. Une bibliothèque entière ne se lie pas."
+msgstr ""
+
 #: src/composants/ImportFiches.tsx
 msgid "Ouvrez le dossier qui range les fiches de l’activité. Relaytour y cherche un sous-dossier par périmètre, à son nom, et un sous-dossier « communes » pour les fiches communes."
 msgstr ""
@@ -2521,6 +3210,10 @@ msgstr ""
 msgid "Ouvrir le périmètre"
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "Ouvrir Nextcloud"
+msgstr ""
+
 #: src/composants/Liseuse.tsx
 msgid "Page {numero}"
 msgstr ""
@@ -2533,6 +3226,10 @@ msgstr ""
 msgid "Par fiche"
 msgstr ""
 
+#: src/lib/espace-fichiers.ts
+msgid "Par le groupe « {nomGroupe} »"
+msgstr ""
+
 #: src/pages/Retroplanning.tsx
 msgid "Par mois"
 msgstr ""
@@ -2542,12 +3239,45 @@ msgstr ""
 msgid "Par phase"
 msgstr ""
 
+#: src/lib/espace-fichiers.ts
+msgid "Par toute l’organisation"
+msgstr ""
+
 #: src/composants/ConnexionsFiche.tsx
 msgid "Par une tâche partagée"
 msgstr ""
 
 #: src/lib/guide-markdown.ts
 msgid "Paragraphes et retours à la ligne"
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Partage du dossier en écriture"
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Partage du dossier en écriture, ajouts automatiques"
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Partage du dossier en lecture"
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Partage du dossier en lecture, ajouts automatiques"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+#: src/lib/espace-fichiers.ts
+msgid "Partager le dossier"
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Partagez avec cette adresse les dossiers que les membres liront. Pour l’export des fiches, ajoutez-la comme gestionnaire de contenu d’un Drive partagé."
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Partagez avec l’adresse du compte de service les dossiers que les membres liront. Pour l’export des fiches, ajoutez-le comme gestionnaire de contenu d’un Drive partagé."
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -2574,6 +3304,7 @@ msgstr ""
 msgid "Périmètre enregistré."
 msgstr ""
 
+#: src/composants/ChoixLecteurs.tsx
 #: src/composants/ChoixPerimetresCibles.tsx
 #: src/composants/Coquille.tsx
 #: src/composants/DeclinerTache.tsx
@@ -2591,6 +3322,10 @@ msgstr ""
 msgid "Personne n’est assigné·e"
 msgstr ""
 
+#: src/composants/ComptesFournisseur.tsx
+msgid "Personne."
+msgstr ""
+
 #: src/composants/Coquille.tsx
 #: src/composants/Recherche.tsx
 msgid "Personnes"
@@ -2598,6 +3333,14 @@ msgstr ""
 
 #: src/pages/Perimetre.tsx
 msgid "Personnes affectées"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Personnes attendues : les contacts principaux des périmètres lecteurs."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Personnes attendues : les membres des périmètres lecteurs pour la période."
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -2610,6 +3353,10 @@ msgstr ""
 
 #: src/composants/EditeurVisuel.tsx
 msgid "Poser le lien"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Pour appliquer des propositions, activez la gestion des accès. Chez Microsoft et Dropbox, elle demande une reconnexion ; chez Microsoft, un admin Microsoft Entra accepte une autorisation de plus."
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -2644,6 +3391,10 @@ msgstr ""
 
 #: src/composants/DeclinerTache.tsx
 msgid "Proposer"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Propositions"
 msgstr ""
 
 #: src/composants/Marque.tsx
@@ -2722,6 +3473,10 @@ msgstr ""
 msgid "Rechercher une tâche, une fiche, une personne"
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "Reconnecter {nomFournisseur}"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Rédaction"
 msgstr ""
@@ -2786,6 +3541,54 @@ msgstr ""
 msgid "Relancer"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Relaytour affiche ce nom quand le fournisseur ne répond pas. Le dossier garde son nom chez le fournisseur."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Relaytour applique le changement chez le fournisseur."
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "Relaytour cherche chaque personne attendue par un dossier lié dans l’annuaire du fournisseur, par son adresse. Il ne lit jamais tout l’annuaire. Une personne qu’aucun dossier n’attend n’est pas cherchée."
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "Relaytour cherche le compte par l’adresse {adresseRelaytour}. Si la personne utilise une autre adresse chez le fournisseur, saisissez-la ici."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Relaytour compare les adresses des personnes à celles des droits du dossier. Une personne qui utilise une autre adresse chez le fournisseur paraît sans accès, et les membres d’un groupe ne se lisent pas."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Relaytour crée un dossier « Fiches Relaytour » dans le dossier choisi, et y écrit les fiches de toutes les activités. Ce dossier ne doit pas se trouver dans un dossier lié : les membres y liraient les fiches de tous les périmètres."
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Relaytour écrit les fiches en Markdown dans un dossier du fournisseur cloud, après chaque modification et chaque nuit. Les fiches se modifient toujours dans Relaytour : une modification faite dans ce dossier est remplacée à l’export suivant."
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Relaytour garde cette clé chiffrée et ne l’affiche plus jamais."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Relaytour les applique une à une chez le fournisseur."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Relaytour n’a pas pu lire les droits de ce dossier, ou les membres d’un groupe qui en a un."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Relaytour peut comparer les équipes aux droits des dossiers liés chez le fournisseur. Vous apprenez ainsi qui a un compte, qui a accès et qui a un accès en trop. Pour cela, Relaytour lit l’annuaire et les groupes du fournisseur, sans changer aucun droit."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Relaytour propose"
+msgstr ""
+
 #: src/composants/TacheCarte.tsx
 msgid "Remettre à faire"
 msgstr ""
@@ -2804,6 +3607,10 @@ msgstr ""
 
 #: src/pages/FicheEditeur.tsx
 msgid "Reprendre le brouillon"
+msgstr ""
+
+#: src/composants/ComptesFournisseur.tsx
+msgid "Reprendre son adresse Relaytour"
 msgstr ""
 
 #: src/composants/ImportFiches.tsx
@@ -2852,6 +3659,7 @@ msgstr ""
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/RessourcesFiche.tsx
 #: src/composants/TacheCarte.tsx
+#: src/pages/admin/EspaceFichiers.tsx
 #: src/pages/admin/Redaction.tsx
 msgid "Retirer"
 msgstr ""
@@ -2877,6 +3685,10 @@ msgstr ""
 msgid "Retirer ce document lié ?"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Retirer ce dossier ?"
+msgstr ""
+
 #: src/pages/admin/Redaction.tsx
 msgid "Retirer ce droit ?"
 msgstr ""
@@ -2885,8 +3697,20 @@ msgstr ""
 msgid "Retirer cette invitation ?"
 msgstr ""
 
+#: src/composants/GestionAcces.tsx
+msgid "Retirer du {cible}"
+msgstr ""
+
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Retirer le dossier {nomDossierLie}"
+msgstr ""
+
 #: src/composants/EditeurVisuel.tsx
 msgid "Retirer le lien"
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Retirer le partage"
 msgstr ""
 
 #: src/pages/TousLesPerimetres.tsx
@@ -2914,11 +3738,13 @@ msgstr ""
 msgid "Revenir à l’éditeur"
 msgstr ""
 
+#: src/composants/ExplorateurDossier.tsx
 #: src/composants/ImportFiches.tsx
 msgid "Revenir aux dossiers"
 msgstr ""
 
 #. En-tête de colonne d’un tableau d’exemple : rôle d’un bénévole
+#: src/composants/GestionAcces.tsx
 #: src/lib/guide-markdown.ts
 #: src/pages/admin/Redaction.tsx
 msgid "Rôle"
@@ -2940,6 +3766,10 @@ msgstr ""
 msgid "Saisissez ici le code du mail. Le lien du mail ouvre votre navigateur, pas l’application installée."
 msgstr ""
 
+#: src/composants/ConnexionEspace.tsx
+msgid "Saisissez l’adresse du Nextcloud de l’association. Un nouvel onglet s’ouvre : connectez-vous avec votre compte, puis accordez l’accès à Relaytour. Nextcloud crée alors un mot de passe d’application, que vous pouvez révoquer dans ses paramètres de sécurité."
+msgstr ""
+
 #: src/composants/ReglagePerimetre.tsx
 #: src/pages/FicheEditeur.tsx
 msgid "Saisissez un identifiant."
@@ -2957,6 +3787,14 @@ msgstr ""
 
 #: src/pages/Connexion.tsx
 msgid "Saisissez une adresse mail valide."
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Sans accès"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Sans compte"
 msgstr ""
 
 #: src/composants/DeclinerTache.tsx
@@ -3010,6 +3848,10 @@ msgstr ""
 
 #: src/composants/ImportFiches.tsx
 msgid "Simuler l’import"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Son compte existe, mais aucun droit ne couvre ce dossier."
 msgstr ""
 
 #. Étiquette d’un périmètre que la personne souhaite rejoindre
@@ -3256,6 +4098,10 @@ msgstr ""
 msgid "Tous"
 msgstr ""
 
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Tous les membres des périmètres lecteurs"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 #: src/pages/Retroplanning.tsx
 #: src/pages/TousLesPerimetres.tsx
@@ -3264,6 +4110,10 @@ msgstr ""
 
 #: src/composants/DeclinerTache.tsx
 msgid "Tous les périmètres de l’activité portent déjà cette tâche."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Tout appliquer"
 msgstr ""
 
 #: src/composants/ListeNotifications.tsx
@@ -3275,7 +4125,9 @@ msgstr ""
 msgid "Tout marquer comme lu"
 msgstr ""
 
+#: src/composants/ChoixLecteurs.tsx
 #: src/composants/DocumentsActivite.tsx
+#: src/composants/EtiquettesLecteurs.tsx
 #: src/composants/ListeNotifications.tsx
 #: src/composants/RessourcesFiche.tsx
 msgid "Toute l’activité"
@@ -3313,6 +4165,10 @@ msgstr ""
 msgid "Toutes les fiches, communes comprises"
 msgstr ""
 
+#: src/composants/VerificationAcces.tsx
+msgid "Toutes ont accès chez le fournisseur."
+msgstr ""
+
 #: src/pages/Connexion.tsx
 msgid "Transmettez le savoir-faire de votre organisation d’une période à l’autre."
 msgstr ""
@@ -3347,6 +4203,10 @@ msgstr ""
 
 #: src/composants/DocumentsReserves.tsx
 msgid "Un admin de l’organisation peut étendre le dossier lié, ou ouvrir le document aux lecteurs de la fiche, depuis la fiche."
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+msgid "Un admin de l’organisation se connecte avec son compte. Relaytour lit ensuite les dossiers avec les droits de ce compte, et seulement les dossiers que vous liez à une activité. Avec Google Drive, un compte de service ne lit que les dossiers que l’association partage avec lui."
 msgstr ""
 
 #: src/composants/GardeSession.tsx
@@ -3407,6 +4267,10 @@ msgstr ""
 
 #: src/composants/TacheFormulaire.tsx
 msgid "Un pôle demande par exemple la même tâche à chaque sport."
+msgstr ""
+
+#: src/composants/GestionAcces.tsx
+msgid "Un retrait attend toujours la décision d’un admin. Relaytour ne retire que les accès qu’il a lui-même créés."
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -3527,6 +4391,20 @@ msgstr ""
 
 #: src/composants/PreferencePush.tsx
 msgid "Une tâche vous est assignée ou retirée, ou une autre personne modifie une de vos tâches."
+msgstr ""
+
+#: src/composants/ConnexionEspace.tsx
+#: src/composants/VerificationAcces.tsx
+#: src/pages/admin/EspaceFichiers.tsx
+msgid "Vérification des accès"
+msgstr ""
+
+#: src/composants/VerificationAcces.tsx
+msgid "Vérifier maintenant"
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Vérifier seulement"
 msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
@@ -3671,6 +4549,10 @@ msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message."
+msgstr ""
+
+#: src/lib/espace-fichiers.ts
+msgid "Votre session a expiré. Reconnectez-vous."
 msgstr ""
 
 #: src/pages/TousLesPerimetres.tsx
