@@ -1,5 +1,7 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { plural, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   Button,
@@ -131,14 +133,22 @@ function chevauchements(choisies: readonly SequencePublique[]): string[] {
       const x = intervalle(a)
       const y = intervalle(b)
       if (x.debut < y.fin && y.debut < x.fin) {
-        paires.push(`« ${a.titre} » et « ${b.titre} »`)
+        const titrePremier = a.titre
+        const titreSecond = b.titre
+        paires.push(t`« ${titrePremier} » et « ${titreSecond} »`)
       }
     })
   )
   return paires
 }
 
+/** Le nombre de places recherchées sur une séquence. */
+function libellePlaces(places: number): string {
+  return t`${plural(places, { one: '# place recherchée', other: '# places recherchées' })}`
+}
+
 export default function AppelBenevoles() {
+  const { t } = useLingui()
   const { jeton = '' } = useParams()
   const [form] = Form.useForm<Valeurs>()
   const { data, loading } = useQuery(APPEL, { variables: { jeton } })
@@ -154,6 +164,9 @@ export default function AppelBenevoles() {
   }
   const choisies = (appel?.sequences ?? []).filter(s => refs.includes(s.ref))
   const conflits = chevauchements(choisies)
+  const listeConflits = conflits.join(', ')
+  const nomOrganisation = appel?.organisation
+  const adresseContact = appel?.contact
 
   const envoyer = async (v: Valeurs) => {
     setErreur(null)
@@ -202,18 +215,20 @@ export default function AppelBenevoles() {
         ) : !appel ? (
           <Result
             status="info"
-            title="Cet appel n’est pas ouvert."
-            subTitle="Il est peut-être fermé, ou son adresse a changé. Contactez l’organisation pour proposer votre aide."
+            title={t`Cet appel n’est pas ouvert.`}
+            subTitle={t`Il est peut-être fermé, ou son adresse a changé. Contactez l’organisation pour proposer votre aide.`}
           />
         ) : envoyee ? (
           <Result
             status="success"
-            title="Votre candidature est enregistrée."
-            subTitle="L’équipe l’examine. Si elle vous propose une place, vous recevez un mail avec un lien pour confirmer votre participation."
+            title={t`Votre candidature est enregistrée.`}
+            subTitle={t`L’équipe l’examine. Si elle vous propose une place, vous recevez un mail avec un lien pour confirmer votre participation.`}
           />
         ) : (
           <>
-            <h1 className="rt-titre rt-titre-public">Devenir bénévole</h1>
+            <h1 className="rt-titre rt-titre-public">
+              <Trans>Devenir bénévole</Trans>
+            </h1>
             <Typography.Paragraph style={{ color: 'var(--rt-encre-70)' }}>
               {appel.activite}, {appel.periode}
             </Typography.Paragraph>
@@ -238,11 +253,13 @@ export default function AppelBenevoles() {
               onFinish={v => void envoyer(v)}
             >
               <h2 className="rt-intertitre-public">
-                Les moments où nous avons besoin de vous
+                <Trans>Les moments où nous avons besoin de vous</Trans>
               </h2>
               {appel.sequences.length === 0 ? (
                 <Typography.Paragraph className="rt-note">
-                  Aucun moment ne cherche de bénévoles pour l’instant.
+                  <Trans>
+                    Aucun moment ne cherche de bénévoles pour l’instant.
+                  </Trans>
                 </Typography.Paragraph>
               ) : (
                 <Form.Item
@@ -256,8 +273,8 @@ export default function AppelBenevoles() {
                           : Promise.reject(
                               new Error(
                                 appel.ouAilleurs
-                                  ? 'Choisissez au moins un moment, ou proposez votre aide là où il manque du monde.'
-                                  : 'Choisissez au moins un moment.'
+                                  ? t`Choisissez au moins un moment, ou proposez votre aide là où il manque du monde.`
+                                  : t`Choisissez au moins un moment.`
                               )
                             ),
                     },
@@ -291,14 +308,11 @@ export default function AppelBenevoles() {
                               )}
                               {s.complete ? (
                                 <Tag color="warning">
-                                  Complet : liste d’attente
+                                  <Trans>Complet : liste d’attente</Trans>
                                 </Tag>
                               ) : (
                                 <Tag color="success">
-                                  {s.placesRecherchees} place
-                                  {s.placesRecherchees > 1 ? 's' : ''}{' '}
-                                  recherchée
-                                  {s.placesRecherchees > 1 ? 's' : ''}
+                                  {libellePlaces(s.placesRecherchees)}
                                 </Tag>
                               )}
                             </span>
@@ -324,7 +338,7 @@ export default function AppelBenevoles() {
                   type="warning"
                   showIcon
                   style={{ marginBottom: 16 }}
-                  title={`Ces moments se chevauchent : ${conflits.join(', ')}. L’équipe choisira avec vous.`}
+                  title={t`Ces moments se chevauchent : ${listeConflits}. L’équipe choisira avec vous.`}
                 />
               )}
               {appel.ouAilleurs && (
@@ -332,15 +346,19 @@ export default function AppelBenevoles() {
                   <Checkbox
                     onChange={() => void form.validateFields(['sequences'])}
                   >
-                    Je peux aussi aider là où il manque du monde.
+                    <Trans>Je peux aussi aider là où il manque du monde.</Trans>
                   </Checkbox>
                 </Form.Item>
               )}
 
-              <h2 className="rt-intertitre-public">Vos disponibilités</h2>
+              <h2 className="rt-intertitre-public">
+                <Trans>Vos disponibilités</Trans>
+              </h2>
               <Typography.Paragraph className="rt-note">
-                Indiquez les plages horaires où vous pouvez aider. Une fin avant
-                le début passe minuit.
+                <Trans>
+                  Indiquez les plages horaires où vous pouvez aider. Une fin
+                  avant le début passe minuit.
+                </Trans>
               </Typography.Paragraph>
               <Form.List name="plages">
                 {(champs, { add, remove }) => (
@@ -349,13 +367,13 @@ export default function AppelBenevoles() {
                       <div key={champ.key} className="rt-plage">
                         <Form.Item
                           name={[champ.name, 'jour']}
-                          label="Jour"
+                          label={t`Jour`}
                           rules={[
-                            { required: true, message: 'Choisissez un jour.' },
+                            { required: true, message: t`Choisissez un jour.` },
                           ]}
                         >
                           <Select
-                            placeholder="Jour"
+                            placeholder={t`Jour`}
                             options={appel.jours.map(j => ({
                               value: j,
                               label: libelleJours(j),
@@ -364,22 +382,30 @@ export default function AppelBenevoles() {
                         </Form.Item>
                         <Form.Item
                           name={[champ.name, 'heureDebut']}
-                          label="De"
-                          rules={[{ required: true, message: 'Heure ?' }]}
+                          label={t({
+                            message: 'De',
+                            comment:
+                              'Heure de début d’une plage de disponibilité',
+                          })}
+                          rules={[{ required: true, message: t`Heure ?` }]}
                         >
                           <Input type="time" />
                         </Form.Item>
                         <Form.Item
                           name={[champ.name, 'heureFin']}
-                          label="À"
-                          rules={[{ required: true, message: 'Heure ?' }]}
+                          label={t({
+                            message: 'À',
+                            comment:
+                              'Heure de fin d’une plage de disponibilité',
+                          })}
+                          rules={[{ required: true, message: t`Heure ?` }]}
                         >
                           <Input type="time" />
                         </Form.Item>
                         <Button
                           type="text"
                           icon={<DeleteOutlined />}
-                          aria-label="Retirer cette plage"
+                          aria-label={t`Retirer cette plage`}
                           onClick={() => remove(champ.name)}
                         />
                       </div>
@@ -389,13 +415,13 @@ export default function AppelBenevoles() {
                       disabled={champs.length >= 20}
                       onClick={() => add({})}
                     >
-                      Ajouter une plage
+                      <Trans>Ajouter une plage</Trans>
                     </Button>
                   </div>
                 )}
               </Form.List>
               <Form.Item
-                label="Précisions (facultatives)"
+                label={t`Précisions (facultatives)`}
                 name="precisions"
                 style={{ marginTop: 16 }}
               >
@@ -403,43 +429,45 @@ export default function AppelBenevoles() {
                   rows={2}
                   maxLength={600}
                   showCount
-                  placeholder="À partir de 18 h, tout poste sauf la photo…"
+                  placeholder={t`À partir de 18 h, tout poste sauf la photo…`}
                 />
               </Form.Item>
 
-              <h2 className="rt-intertitre-public">Vos coordonnées</h2>
+              <h2 className="rt-intertitre-public">
+                <Trans>Vos coordonnées</Trans>
+              </h2>
               <Form.Item
-                label="Prénom et nom"
+                label={t`Prénom et nom`}
                 name="nom"
                 rules={[
                   {
                     required: true,
                     whitespace: true,
-                    message: 'Saisissez votre prénom et votre nom.',
+                    message: t`Saisissez votre prénom et votre nom.`,
                   },
                 ]}
               >
                 <Input maxLength={120} autoComplete="name" />
               </Form.Item>
               <Form.Item
-                label="Adresse mail"
+                label={t`Adresse mail`}
                 name="email"
-                extra="L’équipe vous écrit à cette adresse si elle vous propose une place."
+                extra={t`L’équipe vous écrit à cette adresse si elle vous propose une place.`}
                 rules={[
                   {
                     required: true,
                     type: 'email',
-                    message: 'Saisissez une adresse mail valide.',
+                    message: t`Saisissez une adresse mail valide.`,
                   },
                 ]}
               >
                 <Input type="email" inputMode="email" autoComplete="email" />
               </Form.Item>
-              <Form.Item label="Téléphone (facultatif)" name="telephone">
+              <Form.Item label={t`Téléphone (facultatif)`} name="telephone">
                 <Input type="tel" inputMode="tel" autoComplete="tel" />
               </Form.Item>
               <Form.Item
-                label="Un mot pour l’équipe (facultatif)"
+                label={t`Un mot pour l’équipe (facultatif)`}
                 name="message"
               >
                 <Input.TextArea rows={2} maxLength={600} showCount />
@@ -447,7 +475,7 @@ export default function AppelBenevoles() {
 
               {/* Champ piège : une personne ne le voit pas, un robot le remplit. */}
               <div aria-hidden="true" className="rt-piege">
-                <Form.Item label="Site web" name="siteWeb">
+                <Form.Item label={t`Site web`} name="siteWeb">
                   <Input tabIndex={-1} autoComplete="off" />
                 </Form.Item>
               </div>
@@ -462,24 +490,28 @@ export default function AppelBenevoles() {
                         ? Promise.resolve()
                         : Promise.reject(
                             new Error(
-                              'Votre candidature ne s’enregistre qu’avec votre accord.'
+                              t`Votre candidature ne s’enregistre qu’avec votre accord.`
                             )
                           ),
                   },
                 ]}
               >
                 <Checkbox>
-                  J’accepte que {appel.organisation} enregistre ces informations
-                  pour organiser l’activité.
+                  <Trans>
+                    J’accepte que {nomOrganisation} enregistre ces informations
+                    pour organiser l’activité.
+                  </Trans>
                 </Checkbox>
               </Form.Item>
               <Typography.Paragraph className="rt-note">
-                Les personnes de l’équipe qui organisent ces moments lisent
-                votre candidature. Elle est supprimée à l’archivage de la
-                période. Si l’équipe vous propose une place, votre fiche de
-                bénévole est gardée deux ans au plus sans nouvelle place. Vous
-                pouvez demander l’accès à vos informations ou leur suppression à{' '}
-                <a href={`mailto:${appel.contact}`}>{appel.contact}</a>.
+                <Trans>
+                  Les personnes de l’équipe qui organisent ces moments lisent
+                  votre candidature. Elle est supprimée à l’archivage de la
+                  période. Si l’équipe vous propose une place, votre fiche de
+                  bénévole est gardée deux ans au plus sans nouvelle place. Vous
+                  pouvez demander l’accès à vos informations ou leur suppression
+                  à <a href={`mailto:${adresseContact}`}>{adresseContact}</a>.
+                </Trans>
               </Typography.Paragraph>
 
               <Button
@@ -489,7 +521,7 @@ export default function AppelBenevoles() {
                 loading={depot.loading}
                 block
               >
-                Envoyer ma candidature
+                <Trans>Envoyer ma candidature</Trans>
               </Button>
             </Form>
           </>

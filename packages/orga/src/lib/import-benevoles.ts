@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, t } from '@lingui/core/macro'
 import {
   nomVide,
   regrouper,
@@ -61,13 +63,15 @@ export function tableauDepuis(lignes: readonly unknown[][]): Tableau {
   const [entetes = [], ...reste] = textes
   const largeur = Math.max(entetes.length, ...reste.map(l => l.length))
   if (largeur > COLONNES_MAX) {
-    throw new Error(`Un fichier compte ${COLONNES_MAX} colonnes au plus.`)
+    throw new Error(t`Un fichier compte ${COLONNES_MAX} colonnes au plus.`)
   }
   if (reste.length > LIGNES_MAX) {
-    throw new Error(`Un fichier compte ${LIGNES_MAX} lignes au plus.`)
+    throw new Error(t`Un fichier compte ${LIGNES_MAX} lignes au plus.`)
   }
-  const nommer = (e: string | undefined, i: number) =>
-    e && e !== '' ? e : `Colonne ${i + 1}`
+  const nommer = (e: string | undefined, i: number) => {
+    const numero = i + 1
+    return e && e !== '' ? e : t`Colonne ${numero}`
+  }
   return {
     entetes: Array.from({ length: largeur }, (_, i) => nommer(entetes[i], i)),
     lignes: reste.map(l =>
@@ -92,7 +96,7 @@ export async function lireCsv(texte: string): Promise<Tableau> {
 /** Lit un fichier CSV ou XLSX : une feuille par feuille du classeur. */
 export async function lireFichier(fichier: File): Promise<Feuille[]> {
   if (fichier.size > TAILLE_MAX) {
-    throw new Error('Un fichier pèse 2 Mo au plus.')
+    throw new Error(t`Un fichier pèse 2 Mo au plus.`)
   }
   const octets = await fichier.arrayBuffer()
   if (/\.xlsx$/i.test(fichier.name)) {
@@ -106,7 +110,7 @@ export async function lireFichier(fichier: File): Promise<Feuille[]> {
   if (/\.(csv|txt)$/i.test(fichier.name)) {
     return [{ nom: fichier.name, tableau: await lireCsv(decoderTexte(octets)) }]
   }
-  throw new Error('Choisissez un fichier CSV ou Excel (.xlsx).')
+  throw new Error(t`Choisissez un fichier CSV ou Excel (.xlsx).`)
 }
 
 // ── Colonnes ─────────────────────────────────────────────────────────────────
@@ -125,19 +129,36 @@ export type Champ =
   | 'REGROUPEMENT'
   | 'DATE_ACCORD'
 
-export const LIBELLES_CHAMP: Record<Champ, string> = {
-  IGNORER: 'Ignorer',
-  PRENOM: 'Prénom',
-  NOM: 'Nom',
-  NOM_COMPLET: 'Prénom et nom',
-  COURRIEL: 'Adresse mail',
-  TELEPHONE: 'Téléphone',
-  PRECISIONS: 'Précisions de disponibilité',
-  CHOIX: 'Un poste ou un créneau (une colonne par choix)',
-  VALEURS: 'Postes et créneaux (plusieurs par cellule)',
-  REF_EXTERNE: 'Identifiant externe',
-  REGROUPEMENT: 'Regroupement des lignes',
-  DATE_ACCORD: 'Date de l’accord',
+/** Les libellés des champs, à traduire à l'affichage : `t(LIBELLES_CHAMP[champ])`. */
+export const LIBELLES_CHAMP: Record<Champ, MessageDescriptor> = {
+  IGNORER: msg({
+    message: 'Ignorer',
+    comment:
+      'Champ à associer à une colonne d’un fichier : ne pas importer la colonne',
+  }),
+  PRENOM: msg({
+    message: 'Prénom',
+    comment: 'Champ à associer à une colonne d’un fichier',
+  }),
+  NOM: msg({
+    message: 'Nom',
+    comment: 'Champ à associer à une colonne d’un fichier : nom de famille',
+  }),
+  NOM_COMPLET: msg`Prénom et nom`,
+  COURRIEL: msg({
+    message: 'Adresse mail',
+    comment: 'Champ à associer à une colonne d’un fichier',
+  }),
+  TELEPHONE: msg({
+    message: 'Téléphone',
+    comment: 'Champ à associer à une colonne d’un fichier',
+  }),
+  PRECISIONS: msg`Précisions de disponibilité`,
+  CHOIX: msg`Un poste ou un créneau (une colonne par choix)`,
+  VALEURS: msg`Postes et créneaux (plusieurs par cellule)`,
+  REF_EXTERNE: msg`Identifiant externe`,
+  REGROUPEMENT: msg`Regroupement des lignes`,
+  DATE_ACCORD: msg`Date de l’accord`,
 }
 
 /** Les champs qu'une seule colonne reçoit. */
@@ -543,7 +564,7 @@ export function construirePersonnes(
     ) {
       ecartees.push({
         ligne: numero,
-        motif: 'La ligne ne porte ni nom, ni adresse, ni téléphone.',
+        motif: t`La ligne ne porte ni nom, ni adresse, ni téléphone.`,
         valeurs: ligne,
       })
       return
@@ -634,8 +655,7 @@ export function construirePersonnes(
     for (const numero of l.lignes) {
       ecartees.push({
         ligne: numero,
-        motif:
-          'Le groupe de la ligne ne porte ni nom, ni adresse, ni téléphone.',
+        motif: t`Le groupe de la ligne ne porte ni nom, ni adresse, ni téléphone.`,
         valeurs: tableau.lignes[numero - 2] ?? [],
       })
     }
@@ -695,7 +715,17 @@ export async function csvDesEcartees(
   const { default: Papa } = await import('papaparse')
   return Papa.unparse(
     {
-      fields: ['Ligne', 'Motif', ...entetes],
+      fields: [
+        t({
+          message: 'Ligne',
+          comment: 'En-tête d’une colonne du fichier des lignes écartées',
+        }),
+        t({
+          message: 'Motif',
+          comment: 'En-tête d’une colonne du fichier des lignes écartées',
+        }),
+        ...entetes,
+      ],
       data: ecartees.map(e => [String(e.ligne), e.motif, ...e.valeurs]),
     },
     // Le séparateur du fichier d'origine ; un point-virgule pour un classeur,

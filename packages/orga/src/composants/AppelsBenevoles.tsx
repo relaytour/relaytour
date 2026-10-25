@@ -5,6 +5,9 @@ import {
   ReloadOutlined,
 } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   App,
   Button,
@@ -135,11 +138,32 @@ interface Valeurs {
   fermeLe: string
 }
 
-const ETATS = {
-  A_VENIR: { libelle: 'À venir', couleur: 'default' },
-  OUVERT: { libelle: 'Ouvert', couleur: 'success' },
-  FERME: { libelle: 'Fermé', couleur: 'default' },
-} as const
+const ETATS: Record<
+  Appel['etat'],
+  { libelle: MessageDescriptor; couleur: string }
+> = {
+  A_VENIR: {
+    libelle: msg({
+      message: 'À venir',
+      comment: 'État d’un appel à bénévoles qui n’est pas encore ouvert',
+    }),
+    couleur: 'default',
+  },
+  OUVERT: {
+    libelle: msg({
+      message: 'Ouvert',
+      comment: 'État d’un appel à bénévoles',
+    }),
+    couleur: 'success',
+  },
+  FERME: {
+    libelle: msg({
+      message: 'Fermé',
+      comment: 'État d’un appel à bénévoles',
+    }),
+    couleur: 'default',
+  },
+}
 
 const RELIRE = ['AppelsBenevoles']
 
@@ -152,12 +176,20 @@ function versChamp(iso: string): string {
 
 /** La portée d'un appel en clair. */
 function portee(a: Appel): string {
-  if (a.portee === 'PERIODE') return 'Toute la période'
-  if (a.portee === 'SEQUENCE')
-    return a.sequenceTitre
-      ? `Séquence « ${a.sequenceTitre} »`
-      : 'Séquence supprimée'
-  return a.perimetre?.nom ?? 'Périmètre'
+  if (a.portee === 'PERIODE') return t`Toute la période`
+  if (a.portee === 'SEQUENCE') {
+    const titreSequence = a.sequenceTitre
+    return titreSequence
+      ? t`Séquence « ${titreSequence} »`
+      : t`Séquence supprimée`
+  }
+  return (
+    a.perimetre?.nom ??
+    t({
+      message: 'Périmètre',
+      comment: 'Portée d’un appel à bénévoles dont le périmètre est inconnu',
+    })
+  )
 }
 
 export default function AppelsBenevoles({
@@ -167,6 +199,7 @@ export default function AppelsBenevoles({
   editionId: string
   archivee: boolean
 }) {
+  const { t } = useLingui()
   const { message, modal } = App.useApp()
   const [form] = Form.useForm<Valeurs>()
   const { data, loading, error } = useQuery(APPELS, {
@@ -174,7 +207,7 @@ export default function AppelsBenevoles({
     fetchPolicy: 'cache-and-network',
   })
   const { data: editions } = useQuery(EDITIONS)
-  const agendas = useAgendasEcrits(editionId, 'Toute la période')
+  const agendas = useAgendasEcrits(editionId, t`Toute la période`)
   const [appel, setAppel] = useState<Appel | 'nouveau' | null>(null)
   // Relue à chaque ouverture de la fenêtre : une séquence ajoutée par une autre
   // personne entre dans le choix.
@@ -192,6 +225,7 @@ export default function AppelsBenevoles({
   const porteeChoisie = Form.useWatch('portee', form)
 
   const edition = editions?.editions.find(e => e.id === editionId)
+  const finEdition = edition ? dateCourte(edition.fin) : undefined
   const admin = agendas.some(a => a.perimetreId === null)
   const perimetres = agendas.filter(a => a.perimetreId !== null)
   const ecrits = new Set(perimetres.map(p => p.perimetreId))
@@ -231,19 +265,19 @@ export default function AppelsBenevoles({
 
   // Un navigateur peut refuser le presse-papiers : l'adresse s'affiche alors
   // dans une fenêtre, avec son bouton de copie.
-  const copier = async (adresse: string, texte = 'Adresse copiée.') => {
+  const copier = async (adresse: string, texte = t`Adresse copiée.`) => {
     try {
       await navigator.clipboard.writeText(adresse)
       message.success(texte)
     } catch {
       void modal.info({
-        title: 'Adresse de l’appel',
+        title: t`Adresse de l’appel`,
         content: (
           <Typography.Paragraph copyable={{ text: adresse }}>
             <code>{adresse}</code>
           </Typography.Paragraph>
         ),
-        okText: 'Fermer',
+        okText: t`Fermer`,
       })
     }
   }
@@ -268,7 +302,7 @@ export default function AppelsBenevoles({
         })
         const adresse = cree?.creerAppelBenevoles.adresse
         if (adresse)
-          await copier(adresse, 'Appel ouvert. Son adresse est copiée.')
+          await copier(adresse, t`Appel ouvert. Son adresse est copiée.`)
       } else if (appel) {
         await modifier({
           variables: {
@@ -279,13 +313,13 @@ export default function AppelsBenevoles({
             ...dates,
           },
         })
-        message.success('Appel enregistré.')
+        message.success(t`Appel enregistré.`)
       }
       setAppel(null)
     } catch (e) {
       message.error(
         lireConflit(e) !== null
-          ? 'Une autre personne a modifié cet appel. Rouvrez-le pour reprendre.'
+          ? t`Une autre personne a modifié cet appel. Rouvrez-le pour reprendre.`
           : messageErreur(e)
       )
     }
@@ -302,18 +336,17 @@ export default function AppelsBenevoles({
 
   const confirmerRenouvellement = (a: Appel) =>
     void modal.confirm({
-      title: 'Donner une nouvelle adresse à cet appel ?',
-      content:
-        'L’ancienne adresse cesse de répondre. Les candidatures déjà reçues restent.',
-      okText: 'Nouvelle adresse',
-      cancelText: 'Annuler',
+      title: t`Donner une nouvelle adresse à cet appel ?`,
+      content: t`L’ancienne adresse cesse de répondre. Les candidatures déjà reçues restent.`,
+      okText: t`Nouvelle adresse`,
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           const { data: renouvele } = await renouveler({
             variables: { id: a.id },
           })
           const adresse = renouvele?.renouvelerAdresseAppelBenevoles.adresse
-          if (adresse) await copier(adresse, 'Nouvelle adresse copiée.')
+          if (adresse) await copier(adresse, t`Nouvelle adresse copiée.`)
         } catch (e) {
           message.error(messageErreur(e))
         }
@@ -324,16 +357,16 @@ export default function AppelsBenevoles({
     return (
       <Result
         status="warning"
-        title="Les appels n’ont pas pu être chargés."
+        title={t`Les appels n’ont pas pu être chargés.`}
         subTitle={messageErreur(error)}
       />
     )
   }
 
   const optionsPortee = [
-    ...(admin ? [{ value: 'PERIODE', label: 'Toute la période' }] : []),
-    { value: 'PERIMETRE', label: 'Un périmètre' },
-    { value: 'SEQUENCE', label: 'Une séquence' },
+    ...(admin ? [{ value: 'PERIODE', label: t`Toute la période` }] : []),
+    { value: 'PERIMETRE', label: t`Un périmètre` },
+    { value: 'SEQUENCE', label: t`Une séquence` },
   ]
 
   return (
@@ -344,7 +377,7 @@ export default function AppelsBenevoles({
           icon={<PlusOutlined />}
           onClick={() => setAppel('nouveau')}
         >
-          Nouvel appel
+          <Trans>Nouvel appel</Trans>
         </Button>
       )}
       <Tableau<Appel>
@@ -355,13 +388,18 @@ export default function AppelsBenevoles({
         pagination={false}
         locale={{
           emptyText: (
-            <Empty description="Aucun appel à bénévoles pour cette période." />
+            <Empty
+              description={t`Aucun appel à bénévoles pour cette période.`}
+            />
           ),
         }}
         colonnes={[
           {
             key: 'nom',
-            title: 'Appel',
+            title: t({
+              message: 'Appel',
+              comment: 'Colonne du tableau des appels à bénévoles',
+            }),
             render: (_, a) => (
               <span>
                 <strong>{a.nom}</strong>
@@ -374,21 +412,36 @@ export default function AppelsBenevoles({
           },
           {
             key: 'dates',
-            title: 'Ouvert',
-            render: (_, a) =>
-              `du ${jourDeLInstant(a.ouvertLe)} au ${jourDeLInstant(a.fermeLe)}`,
+            title: t({
+              message: 'Ouvert',
+              comment: 'Colonne des dates d’ouverture d’un appel à bénévoles',
+            }),
+            render: (_, a) => {
+              const jourOuverture = jourDeLInstant(a.ouvertLe)
+              const jourFermeture = jourDeLInstant(a.fermeLe)
+              return t`du ${jourOuverture} au ${jourFermeture}`
+            },
           },
           {
             key: 'etat',
-            title: 'État',
+            title: t({
+              message: 'État',
+              comment: 'Colonne du tableau des appels à bénévoles',
+            }),
             width: 110,
             render: (_, a) => (
-              <Tag color={ETATS[a.etat].couleur}>{ETATS[a.etat].libelle}</Tag>
+              <Tag color={ETATS[a.etat].couleur}>
+                {t(ETATS[a.etat].libelle)}
+              </Tag>
             ),
           },
           {
             key: 'attente',
-            title: 'En attente',
+            title: t({
+              message: 'En attente',
+              comment:
+                'Colonne : nombre de candidatures qui attendent une revue',
+            }),
             width: 110,
             dataIndex: 'candidaturesEnAttente',
             tri: a => a.candidaturesEnAttente,
@@ -397,78 +450,89 @@ export default function AppelsBenevoles({
             key: 'actions',
             title: '',
             redimensionnable: false,
-            render: (_, a) =>
-              a.peutModifier && (
-                <Space wrap size={4}>
-                  {a.adresse && (
-                    <Button
-                      size="small"
-                      icon={<CopyOutlined />}
-                      onClick={() => void copier(a.adresse!)}
-                    >
-                      Copier l’adresse
-                    </Button>
-                  )}
-                  {!archivee && (
-                    <>
+            render: (_, a) => {
+              const nomAppel = a.nom
+              return (
+                a.peutModifier && (
+                  <Space wrap size={4}>
+                    {a.adresse && (
                       <Button
                         size="small"
-                        icon={<EditOutlined />}
-                        aria-label={`Modifier l’appel ${a.nom}`}
-                        onClick={() => setAppel(a)}
-                      />
-                      {a.etat === 'FERME' ? (
+                        icon={<CopyOutlined />}
+                        onClick={() => void copier(a.adresse!)}
+                      >
+                        {t`Copier l’adresse`}
+                      </Button>
+                    )}
+                    {!archivee && (
+                      <>
                         <Button
                           size="small"
-                          onClick={() =>
-                            void agir(
-                              () => rouvrir({ variables: { id: a.id } }),
-                              'Appel rouvert.'
-                            )
-                          }
-                        >
-                          Rouvrir
-                        </Button>
-                      ) : (
+                          icon={<EditOutlined />}
+                          aria-label={t`Modifier l’appel ${nomAppel}`}
+                          onClick={() => setAppel(a)}
+                        />
+                        {a.etat === 'FERME' ? (
+                          <Button
+                            size="small"
+                            onClick={() =>
+                              void agir(
+                                () => rouvrir({ variables: { id: a.id } }),
+                                t`Appel rouvert.`
+                              )
+                            }
+                          >
+                            {t`Rouvrir`}
+                          </Button>
+                        ) : (
+                          <Button
+                            size="small"
+                            onClick={() =>
+                              void agir(
+                                () => fermer({ variables: { id: a.id } }),
+                                t`Appel fermé.`
+                              )
+                            }
+                          >
+                            {t({
+                              message: 'Fermer',
+                              context: 'appel à bénévoles',
+                            })}
+                          </Button>
+                        )}
                         <Button
                           size="small"
-                          onClick={() =>
-                            void agir(
-                              () => fermer({ variables: { id: a.id } }),
-                              'Appel fermé.'
-                            )
-                          }
-                        >
-                          Fermer
-                        </Button>
-                      )}
-                      <Button
-                        size="small"
-                        icon={<ReloadOutlined />}
-                        aria-label={`Nouvelle adresse pour ${a.nom}`}
-                        title="Nouvelle adresse"
-                        onClick={() => confirmerRenouvellement(a)}
-                      />
-                    </>
-                  )}
-                </Space>
-              ),
+                          icon={<ReloadOutlined />}
+                          aria-label={t`Nouvelle adresse pour ${nomAppel}`}
+                          title={t`Nouvelle adresse`}
+                          onClick={() => confirmerRenouvellement(a)}
+                        />
+                      </>
+                    )}
+                  </Space>
+                )
+              )
+            },
           },
         ]}
       />
       <p className="rt-note">
-        Une personne qui ouvre l’adresse choisit les séquences qui cherchent des
-        bénévoles et donne ses disponibilités. Aucun mail ne part au dépôt : la
-        candidature attend votre revue dans l’onglet « Candidatures ».
+        <Trans>
+          Une personne qui ouvre l’adresse choisit les séquences qui cherchent
+          des bénévoles et donne ses disponibilités. Aucun mail ne part au dépôt
+          : la candidature attend votre revue dans l’onglet « Candidatures ».
+        </Trans>
       </p>
 
       <Modal
         open={appel !== null}
         title={
-          appel === 'nouveau' ? 'Nouvel appel à bénévoles' : 'Modifier l’appel'
+          appel === 'nouveau'
+            ? t`Nouvel appel à bénévoles`
+            : t`Modifier l’appel`
         }
-        okText={appel === 'nouveau' ? 'Ouvrir l’appel' : 'Enregistrer'}
-        cancelText="Annuler"
+        okText={appel === 'nouveau' ? t`Ouvrir l’appel` : t`Enregistrer`}
+        cancelText={t`Annuler`}
         confirmLoading={creation.loading || modification.loading}
         onOk={() => form.submit()}
         onCancel={() => setAppel(null)}
@@ -482,28 +546,31 @@ export default function AppelsBenevoles({
           onFinish={v => void enregistrer(v)}
         >
           <Form.Item
-            label="Nom de l’appel"
+            label={t`Nom de l’appel`}
             name="nom"
-            extra="Pour l’équipe seulement : la page publique ne l’affiche pas."
+            extra={t`Pour l’équipe seulement : la page publique ne l’affiche pas.`}
             rules={[
               {
                 required: true,
                 whitespace: true,
-                message: 'Saisissez un nom.',
+                message: t`Saisissez un nom.`,
               },
-              { max: 120, message: 'Le nom dépasse 120 caractères.' },
+              { max: 120, message: t`Le nom dépasse 120 caractères.` },
             ]}
           >
-            <Input placeholder="Bénévoles du samedi" />
+            <Input placeholder={t`Bénévoles du samedi`} />
           </Form.Item>
-          <Form.Item label="Portée" name="portee">
+          <Form.Item label={t`Portée`} name="portee">
             <Select options={optionsPortee} disabled={appel !== 'nouveau'} />
           </Form.Item>
           {appel === 'nouveau' && porteeChoisie === 'PERIMETRE' && (
             <Form.Item
-              label="Périmètre"
+              label={t({
+                message: 'Périmètre',
+                comment: 'Champ du formulaire d’un appel à bénévoles',
+              })}
               name="perimetreId"
-              rules={[{ required: true, message: 'Choisissez un périmètre.' }]}
+              rules={[{ required: true, message: t`Choisissez un périmètre.` }]}
             >
               <Select
                 options={perimetres.map(p => ({
@@ -515,30 +582,38 @@ export default function AppelsBenevoles({
           )}
           {appel === 'nouveau' && porteeChoisie === 'SEQUENCE' && (
             <Form.Item
-              label="Séquence"
+              label={t({
+                message: 'Séquence',
+                comment: 'Champ du formulaire d’un appel à bénévoles',
+              })}
               name="sequenceId"
-              extra="Seules les séquences qui cherchent des renforts se proposent."
-              rules={[{ required: true, message: 'Choisissez une séquence.' }]}
+              extra={t`Seules les séquences qui cherchent des renforts se proposent.`}
+              rules={[{ required: true, message: t`Choisissez une séquence.` }]}
             >
               <Select
                 showSearch
                 optionFilterProp="label"
-                notFoundContent="Aucune séquence ne cherche de bénévoles."
-                options={sequences.map(s => ({
-                  value: s.id,
-                  label: `${s.titre} · ${libelleJours(s.jour)}, ${s.heureDebut}`,
-                }))}
+                notFoundContent={t`Aucune séquence ne cherche de bénévoles.`}
+                options={sequences.map(s => {
+                  const titreSequence = s.titre
+                  const jourSequence = libelleJours(s.jour)
+                  const heureSequence = s.heureDebut
+                  return {
+                    value: s.id,
+                    label: t`${titreSequence} · ${jourSequence}, ${heureSequence}`,
+                  }
+                })}
               />
             </Form.Item>
           )}
           <Form.Item
-            label="Texte d’introduction (facultatif)"
+            label={t`Texte d’introduction (facultatif)`}
             name="introduction"
-            extra="Ce texte est public : il ouvre la page de l’appel."
+            extra={t`Ce texte est public : il ouvre la page de l’appel.`}
             rules={[
               {
                 max: 2000,
-                message: 'L’introduction dépasse 2 000 caractères.',
+                message: t`L’introduction dépasse 2 000 caractères.`,
               },
             ]}
           >
@@ -546,19 +621,19 @@ export default function AppelsBenevoles({
           </Form.Item>
           <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 16 }}>
             <Form.Item
-              label="Ouverture"
+              label={t`Ouverture`}
               name="ouvertLe"
-              rules={[{ required: true, message: 'Choisissez une date.' }]}
+              rules={[{ required: true, message: t`Choisissez une date.` }]}
             >
               <Input type="datetime-local" />
             </Form.Item>
             <Form.Item
-              label="Fermeture"
+              label={t`Fermeture`}
               name="fermeLe"
-              rules={[{ required: true, message: 'Choisissez une date.' }]}
+              rules={[{ required: true, message: t`Choisissez une date.` }]}
               extra={
-                edition
-                  ? `Au plus tard à la fin du ${dateCourte(edition.fin)}.`
+                finEdition
+                  ? t`Au plus tard à la fin du ${finEdition}.`
                   : undefined
               }
             >

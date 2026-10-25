@@ -23,9 +23,17 @@ msgstr "« {nomDocument} » : {perimetresManquants}"
 msgid "« {nomDossierLie} » est aussi lu par {ajouts}."
 msgstr "« {nomDossierLie} » est aussi lu par {ajouts}."
 
+#: src/composants/DoublonsBenevoles.tsx
+msgid "« {nomPremiereFiche} » et « {nomSecondeFiche} » sont deux personnes ?"
+msgstr "« {nomPremiereFiche} » et « {nomSecondeFiche} » sont deux personnes ?"
+
 #: src/pages/Agenda.tsx
 msgid "« {titreDateCle} » disparaît de l’agenda de chaque personne."
 msgstr "« {titreDateCle} » disparaît de l’agenda de chaque personne."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "« {titrePremier} » et « {titreSecond} »"
+msgstr "« {titrePremier} » et « {titreSecond} »"
 
 #: src/composants/SequenceDetail.tsx
 msgid "« {titreSequence} » quitte le programme, avec ses personnes placées."
@@ -103,6 +111,14 @@ msgstr "{action} pour {personne} ?"
 #: src/composants/ComptesFournisseur.tsx
 msgid "{adresseSaisie} (saisie par un admin)"
 msgstr "{adresseSaisie} (saisie par un admin)"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "{appelNom} · déposée le {jourDepot}"
+msgstr "{appelNom} · déposée le {jourDepot}"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "{appelNom} · importée le {jourDepot}"
+msgstr "{appelNom} · importée le {jourDepot}"
 
 #: src/composants/GestionAcces.tsx
 msgid "{appliquees} proposition(s) appliquée(s)."
@@ -231,6 +247,10 @@ msgstr "{jour}, {debut} → {jourFin} {fin}"
 msgid "{jourConnexion} par {auteurConnexion}"
 msgstr "{jourConnexion} par {auteurConnexion}"
 
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "{jourDebut} {heureDebut} → {jourFin} {heureFin}"
+msgstr "{jourDebut} {heureDebut} → {jourFin} {heureFin}"
+
 #: src/composants/Repartition.tsx
 msgid "{jourDebut}, {debut} → {fin}"
 msgstr "{jourDebut}, {debut} → {fin}"
@@ -239,9 +259,29 @@ msgstr "{jourDebut}, {debut} → {fin}"
 msgid "{jourDebut}, {debut} → {jourFin}, {fin}"
 msgstr "{jourDebut}, {debut} → {jourFin}, {fin}"
 
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "{jourDebut}, {heureDebut} → {heureFin}"
+msgstr "{jourDebut}, {heureDebut} → {heureFin}"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "{jourDebut}, {heureDebut} → {jourFin}, {heureFin}"
+msgstr "{jourDebut}, {heureDebut} → {jourFin}, {heureFin}"
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "{jourExport} : {fichesEcrites}, {fichesInchangees}, {fichesRetirees}"
 msgstr "{jourExport} : {fichesEcrites}, {fichesInchangees}, {fichesRetirees}"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "{jourPlace}, {heureDebut} → {heureFin}"
+msgstr "{jourPlace}, {heureDebut} → {heureFin}"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "{jourPlage}, {heureDebut} → {heureFin}"
+msgstr "{jourPlage}, {heureDebut} → {heureFin}"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "{jourPlage}, {heureDebut} → {heureFin} le lendemain"
+msgstr "{jourPlage}, {heureDebut} → {heureFin} le lendemain"
 
 #: src/composants/Tableau.tsx
 msgid "{largeur} pixels"
@@ -332,6 +372,22 @@ msgstr "{nbAbandonnees, plural, one {# abandonnée} other {# abandonnées}}"
 msgid "{nbAFaire} à faire"
 msgstr "{nbAFaire} à faire"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbAImporter} à importer"
+msgstr "{nbAImporter} à importer"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbComptes, plural, one {# adresse est celle d’un compte de l’organisation.} other {# adresses sont celles d’un compte de l’organisation.}}"
+msgstr "{nbComptes, plural, one {# adresse est celle d’un compte de l’organisation.} other {# adresses sont celles d’un compte de l’organisation.}}"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbDejaImportees} déjà importées"
+msgstr "{nbDejaImportees} déjà importées"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbEcarteesTotal} écartées"
+msgstr "{nbEcarteesTotal} écartées"
+
 #: src/composants/Avancement.tsx
 msgid "{nbEnCours} en cours"
 msgstr "{nbEnCours} en cours"
@@ -344,9 +400,37 @@ msgstr "{nbEnRetard} en retard"
 msgid "{nbFaites, plural, one {# faite} other {# faites}}"
 msgstr "{nbFaites, plural, one {# faite} other {# faites}}"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbFichesCreees} fiches créées"
+msgstr "{nbFichesCreees} fiches créées"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbFichesRattachees} fiches rejointes"
+msgstr "{nbFichesRattachees} fiches rejointes"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbImportees, plural, one {# personne importée} other {# personnes importées}}."
+msgstr "{nbImportees, plural, one {# personne importée} other {# personnes importées}}."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbImportees} personnes importées, {nbFichesCreeesFinal} fiches créées, {nbFichesRattacheesFinal} fiches rejointes, {nbPlacesFinal} places, {nbDejaImporteesFinal} déjà importées."
+msgstr "{nbImportees} personnes importées, {nbFichesCreeesFinal} fiches créées, {nbFichesRattacheesFinal} fiches rejointes, {nbPlacesFinal} places, {nbDejaImporteesFinal} déjà importées."
+
 #: src/composants/InvitationsEnAttente.tsx
 msgid "{nbInvitations, plural, one {# invitation attend un accord} other {# invitations attendent un accord}}"
 msgstr "{nbInvitations, plural, one {# invitation attend un accord} other {# invitations attendent un accord}}"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbLignesLues} lignes et {nbColonnesLues} colonnes lues."
+msgstr "{nbLignesLues} lignes et {nbColonnesLues} colonnes lues."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbPersonnes, plural, one {# personne} other {# personnes}}, {nbEcarteesNavigateur, plural, one {# ligne écartée} other {# lignes écartées}}."
+msgstr "{nbPersonnes, plural, one {# personne} other {# personnes}}, {nbEcarteesNavigateur, plural, one {# ligne écartée} other {# lignes écartées}}."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{nbPlaces} places"
+msgstr "{nbPlaces} places"
 
 #: src/composants/Avancement.tsx
 msgid "{nbSansPersonne} sans personne"
@@ -509,6 +593,14 @@ msgstr "{participants, plural, one {{repondants} sur # personne a répondu.} oth
 msgid "{periodeAucune} n’est en préparation."
 msgstr "{periodeAucune} n’est en préparation."
 
+#: src/pages/AppelBenevoles.tsx
+msgid "{places, plural, one {# place recherchée} other {# places recherchées}}"
+msgstr "{places, plural, one {# place recherchée} other {# places recherchées}}"
+
+#: src/composants/DoublonsBenevoles.tsx
+msgid "{places, plural, one {# séquence} other {# séquences}}"
+msgstr "{places, plural, one {# séquence} other {# séquences}}"
+
 #: src/composants/Contribution.tsx
 msgid "{points, plural, one {point} other {points}} pour {nomEdition}"
 msgstr "{points, plural, one {point} other {points}} pour {nomEdition}"
@@ -541,6 +633,18 @@ msgstr "{repondants} sur {participants} réponses"
 msgid "{retirees, plural, one {# retirée} other {# retirées}}"
 msgstr "{retirees, plural, one {# retirée} other {# retirées}}"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "{titreSequence} : {renforts} pour {besoin}"
+msgstr "{titreSequence} : {renforts} pour {besoin}"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "{titreSequence} · {jourSequence}, {heureDebut} → {heureFin}"
+msgstr "{titreSequence} · {jourSequence}, {heureDebut} → {heureFin}"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "{titreSequence} · {jourSequence}, {heureSequence}"
+msgstr "{titreSequence} · {jourSequence}, {heureSequence}"
+
 #: src/pages/Fiches.tsx
 msgid "{total, plural, one {# fiche} other {# fiches}}"
 msgstr "{total, plural, one {# fiche} other {# fiches}}"
@@ -548,6 +652,10 @@ msgstr "{total, plural, one {# fiche} other {# fiches}}"
 #: src/lib/declinaisons.ts
 msgid "{total, plural, one {Déclinée dans # périmètre} other {Déclinée dans # périmètres}}"
 msgstr "{total, plural, one {Déclinée dans # périmètre} other {Déclinée dans # périmètres}}"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "← Bénévoles"
+msgstr "← Bénévoles"
 
 #: src/lib/guide-markdown.ts
 msgid "<b>Cette balise reste du texte.</b>"
@@ -561,6 +669,10 @@ msgstr "1 tâche, dont <0>{enRetard} en retard</0>"
 msgid "14 h"
 msgstr "14 h"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "2 Mo, 5 000 lignes et 200 colonnes au plus."
+msgstr "2 Mo, 5 000 lignes et 200 colonnes au plus."
+
 #: src/lib/guide-markdown.ts
 msgid "20 bleues"
 msgstr "20 bleues"
@@ -573,6 +685,11 @@ msgstr "20 rouges"
 msgid "9 h"
 msgstr "9 h"
 
+#. Heure de fin d’une plage de disponibilité
+#: src/pages/AppelBenevoles.tsx
+msgid "À"
+msgstr "À"
+
 #: src/composants/VerificationAcces.tsx
 msgid "A accès"
 msgstr "A accès"
@@ -581,7 +698,9 @@ msgstr "A accès"
 msgid "A choisi"
 msgstr "A choisi"
 
+#. Statut d’une place de bénévole
 #: src/composants/Jauge.tsx
+#: src/pages/EspaceBenevole.tsx
 msgid "À confirmer"
 msgstr "À confirmer"
 
@@ -602,6 +721,10 @@ msgstr "à l’instant"
 msgid "À la première ouverture, saisissez le code reçu par mail."
 msgstr "À la première ouverture, saisissez le code reçu par mail."
 
+#: src/pages/AppelBenevoles.tsx
+msgid "À partir de 18 h, tout poste sauf la photo…"
+msgstr "À partir de 18 h, tout poste sauf la photo…"
+
 #: src/lib/regroupement.ts
 msgid "à partir du {dateDeDebut}"
 msgstr "à partir du {dateDeDebut}"
@@ -617,6 +740,23 @@ msgstr "À propos"
 #: src/composants/ConnexionEspace.tsx
 msgid "À reconnecter"
 msgstr "À reconnecter"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "À répartir : chaque personne devient une candidature à traiter."
+msgstr "À répartir : chaque personne devient une candidature à traiter."
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "À traiter"
+msgstr "À traiter"
+
+#. État d’un appel à bénévoles qui n’est pas encore ouvert
+#: src/composants/AppelsBenevoles.tsx
+msgid "À venir"
+msgstr "À venir"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "À vérifier"
+msgstr "À vérifier"
 
 #: src/pages/Agenda.tsx
 msgid "À vous de répondre"
@@ -666,14 +806,28 @@ msgstr "absent·e"
 msgid "Absent·e"
 msgstr "Absent·e"
 
+#. Statut du choix de séquence d’une candidature de bénévole
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Acceptée"
+msgstr "Acceptée"
+
 #: src/lib/declinaisons.ts
 msgid "Acceptée par {personne} le {jour}"
 msgstr "Acceptée par {personne} le {jour}"
 
+#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/MesInvitations.tsx
 msgid "Accepter"
 msgstr "Accepter"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Accepter tout : les séquences associées sont acceptées dès l’import."
+msgstr "Accepter tout : les séquences associées sont acceptées dès l’import."
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Accepter une séquence crée la fiche bénévole avec une place à confirmer. La première place envoie à la personne un mail avec son lien personnel. Refuser n’envoie rien. Les candidatures disparaissent à l’archivage de la période."
+msgstr "Accepter une séquence crée la fiche bénévole avec une place à confirmer. La première place envoie à la personne un mail avec son lien personnel. Refuser n’envoie rien. Les candidatures disparaissent à l’archivage de la période."
 
 #: src/composants/GestionAcces.tsx
 msgid "Accès chez le fournisseur : « {nomDossier} »"
@@ -759,9 +913,17 @@ msgstr "Admins de l’activité"
 msgid "Admins de l’organisation"
 msgstr "Admins de l’organisation"
 
+#. Adresse de courriel d’une fiche bénévole à fusionner
+#. Colonne : adresse de courriel d’une fiche bénévole
+#: src/composants/DoublonsBenevoles.tsx
 #: src/composants/EditeurVisuel.tsx
+#: src/pages/Benevoles.tsx
 msgid "Adresse"
 msgstr "Adresse"
+
+#: src/pages/Benevoles.tsx
+msgid "Adresse (facultative)"
+msgstr "Adresse (facultative)"
 
 #: src/composants/AbonnementAgenda.tsx
 msgid "Adresse active, créée le {creeLe}, se terminant par « {finAdresse} »."
@@ -775,6 +937,14 @@ msgstr "Adresse active, se terminant par « {finAdresse} »."
 msgid "Adresse chez le fournisseur"
 msgstr "Adresse chez le fournisseur"
 
+#: src/composants/AppelsBenevoles.tsx
+msgid "Adresse copiée."
+msgstr "Adresse copiée."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Adresse de l’appel"
+msgstr "Adresse de l’appel"
+
 #: src/composants/ComptesFournisseur.tsx
 msgid "Adresse du compte de {nomMembre}"
 msgstr "Adresse du compte de {nomMembre}"
@@ -783,6 +953,9 @@ msgstr "Adresse du compte de {nomMembre}"
 msgid "Adresse du Nextcloud"
 msgstr "Adresse du Nextcloud"
 
+#. Champ à associer à une colonne d’un fichier
+#: src/lib/import-benevoles.ts
+#: src/pages/AppelBenevoles.tsx
 #: src/pages/Connexion.tsx
 msgid "Adresse mail"
 msgstr "Adresse mail"
@@ -837,6 +1010,10 @@ msgstr "Agenda global de l’activité"
 msgid "Aide"
 msgstr "Aide"
 
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Aide là où il manque du monde : placez la personne depuis la vue « Répartition » du programme."
+msgstr "Aide là où il manque du monde : placez la personne depuis la vue « Répartition » du programme."
+
 #: src/composants/Repartition.tsx
 msgid "Aide là où il manque du monde."
 msgstr "Aide là où il manque du monde."
@@ -859,6 +1036,10 @@ msgstr "Ajoutée sans accord par {personne} le {jour}"
 #: src/pages/FicheEditeur.tsx
 msgid "Ajouter"
 msgstr "Ajouter"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Ajouter à mon agenda"
+msgstr "Ajouter à mon agenda"
 
 #: src/composants/GestionAcces.tsx
 msgid "Ajouter au {cible}"
@@ -884,6 +1065,10 @@ msgstr "Ajouter tous les périmètres du groupe {nomDuGroupe}"
 msgid "Ajouter un créneau"
 msgstr "Ajouter un créneau"
 
+#: src/pages/AppelBenevoles.tsx
+msgid "Ajouter une plage"
+msgstr "Ajouter une plage"
+
 #: src/pages/Agenda.tsx
 msgid "Ajoutez les jours qui comptent pour toute l’équipe {periodeDe} : un dossier à déposer, une assemblée, une visite."
 msgstr "Ajoutez les jours qui comptent pour toute l’équipe {periodeDe} : un dossier à déposer, une assemblée, une visite."
@@ -898,14 +1083,18 @@ msgid "Annulée"
 msgstr "Annulée"
 
 #: src/composants/AbonnementAgenda.tsx
+#: src/composants/AppelsBenevoles.tsx
+#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/ConnexionEspace.tsx
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/DeclinerTache.tsx
+#: src/composants/DoublonsBenevoles.tsx
 #: src/composants/EditeurVisuel.tsx
 #: src/composants/FilTache.tsx
 #: src/composants/GestionAcces.tsx
 #: src/composants/InvitationsEnAttente.tsx
+#: src/composants/LienBenevole.tsx
 #: src/composants/MesInvitations.tsx
 #: src/composants/ReglagePerimetre.tsx
 #: src/composants/Repartition.tsx
@@ -921,6 +1110,8 @@ msgstr "Annulée"
 #: src/pages/admin/EspaceFichiers.tsx
 #: src/pages/admin/Redaction.tsx
 #: src/pages/Agenda.tsx
+#: src/pages/Benevoles.tsx
+#: src/pages/EspaceBenevole.tsx
 #: src/pages/Fiche.tsx
 #: src/pages/FicheEditeur.tsx
 #: src/pages/Preferences.tsx
@@ -934,6 +1125,36 @@ msgstr "Annuler cette réunion ?"
 #: src/composants/ReunionDetail.tsx
 msgid "Annuler la réunion"
 msgstr "Annuler la réunion"
+
+#. Quatrième étape de l’assistant d’import de bénévoles
+#: src/pages/ImportBenevoles.tsx
+msgid "Aperçu"
+msgstr "Aperçu"
+
+#. Colonne du tableau des appels à bénévoles
+#: src/composants/AppelsBenevoles.tsx
+msgid "Appel"
+msgstr "Appel"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Appel enregistré."
+msgstr "Appel enregistré."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Appel fermé."
+msgstr "Appel fermé."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Appel ouvert. Son adresse est copiée."
+msgstr "Appel ouvert. Son adresse est copiée."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Appel rouvert."
+msgstr "Appel rouvert."
+
+#: src/pages/Benevoles.tsx
+msgid "Appels"
+msgstr "Appels"
 
 #. Origine d’une version de fiche : rédigée dans Relaytour
 #: src/lib/fiches.ts
@@ -951,6 +1172,10 @@ msgstr "Appliquer les ajouts sans attendre"
 #: src/composants/GestionAcces.tsx
 msgid "Appliquer toutes les propositions de ce dossier ?"
 msgstr "Appliquer toutes les propositions de ce dossier ?"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Appliquer une correspondance"
+msgstr "Appliquer une correspondance"
 
 #: src/lib/guide-markdown.ts
 msgid "Arbitrage"
@@ -994,9 +1219,25 @@ msgstr "Assigner"
 msgid "Assigner une personne"
 msgstr "Assigner une personne"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Associer les colonnes"
+msgstr "Associer les colonnes"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Associer les séquences"
+msgstr "Associer les séquences"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Associez au moins un nom, une adresse ou un téléphone."
+msgstr "Associez au moins un nom, une adresse ou un téléphone."
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Attendus chez le fournisseur"
 msgstr "Attendus chez le fournisseur"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Au plus tard à la fin du {finEdition}."
+msgstr "Au plus tard à la fin du {finEdition}."
 
 #: src/composants/ImportFiches.tsx
 msgid "Aucun"
@@ -1005,6 +1246,10 @@ msgstr "Aucun"
 #: src/composants/AbonnementAgenda.tsx
 msgid "Aucun agenda ne l’a encore lue."
 msgstr "Aucun agenda ne l’a encore lue."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Aucun appel à bénévoles pour cette période."
+msgstr "Aucun appel à bénévoles pour cette période."
 
 #: src/composants/ChampConcerneAussi.tsx
 msgid "Aucun autre périmètre"
@@ -1039,9 +1284,25 @@ msgstr "Aucun dossier du fournisseur cloud ne sert ce périmètre ni toute l’a
 msgid "Aucun dossier n’est lié à cette activité."
 msgstr "Aucun dossier n’est lié à cette activité."
 
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Aucun doublon possible parmi les fiches."
+msgstr "Aucun doublon possible parmi les fiches."
+
 #: src/composants/GestionAcces.tsx
 msgid "Aucun groupe du fournisseur n’a de droit sur ce dossier."
 msgstr "Aucun groupe du fournisseur n’a de droit sur ce dossier."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Aucun mail ne part à l’import. La première place d’une personne joignable lui envoie son lien personnel."
+msgstr "Aucun mail ne part à l’import. La première place d’une personne joignable lui envoie son lien personnel."
+
+#: src/composants/LienBenevole.tsx
+msgid "Aucun mail ne part vers cette fiche."
+msgstr "Aucun mail ne part vers cette fiche."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Aucun moment ne cherche de bénévoles pour l’instant."
+msgstr "Aucun moment ne cherche de bénévoles pour l’instant."
 
 #: src/composants/Recherche.tsx
 msgid "Aucun résultat."
@@ -1060,6 +1321,18 @@ msgstr "Aucune"
 msgid "Aucune activité ne vous est encore ouverte."
 msgstr "Aucune activité ne vous est encore ouverte."
 
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Aucune candidature ici."
+msgstr "Aucune candidature ici."
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Aucune candidature n’attend votre revue."
+msgstr "Aucune candidature n’attend votre revue."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Aucune colonne ne porte de poste ni de créneau. Les personnes rejoindront les bénévoles à répartir, avec leurs précisions."
+msgstr "Aucune colonne ne porte de poste ni de créneau. Les personnes rejoindront les bénévoles à répartir, avec leurs précisions."
+
 #: src/pages/Agenda.tsx
 msgid "Aucune date à venir dans l’agenda."
 msgstr "Aucune date à venir dans l’agenda."
@@ -1067,6 +1340,10 @@ msgstr "Aucune date à venir dans l’agenda."
 #: src/pages/TousLesPerimetres.tsx
 msgid "Aucune description pour ce périmètre."
 msgstr "Aucune description pour ce périmètre."
+
+#: src/pages/Benevoles.tsx
+msgid "Aucune fiche bénévole pour cette activité."
+msgstr "Aucune fiche bénévole pour cette activité."
 
 #: src/pages/Fiches.tsx
 msgid "Aucune fiche ne correspond."
@@ -1124,6 +1401,10 @@ msgstr "Aucune séquence de ce jour ne cherche de bénévoles. Fixez des renfort
 msgid "Aucune séquence de ce jour ne manque de bénévoles."
 msgstr "Aucune séquence de ce jour ne manque de bénévoles."
 
+#: src/composants/AppelsBenevoles.tsx
+msgid "Aucune séquence ne cherche de bénévoles."
+msgstr "Aucune séquence ne cherche de bénévoles."
+
 #: src/composants/Avancement.tsx
 msgid "Aucune tâche"
 msgstr "Aucune tâche"
@@ -1180,9 +1461,14 @@ msgstr "Avant la journée"
 msgid "Avec cette connexion, Relaytour vérifie les accès sans pouvoir les changer."
 msgstr "Avec cette connexion, Relaytour vérifie les accès sans pouvoir les changer."
 
+#: src/pages/Benevoles.tsx
+msgid "Avec une adresse, la première place envoie à la personne un mail avec son lien personnel. Ses places restent à confirmer. Décochez pour une personne jointe autrement."
+msgstr "Avec une adresse, la première place envoie à la personne un mail avec son lien personnel. Ses places restent à confirmer. Décochez pour une personne jointe autrement."
+
 #: src/composants/Coquille.tsx
 #: src/composants/SequenceDetail.tsx
 #: src/composants/SequenceFormulaire.tsx
+#: src/pages/Benevoles.tsx
 msgid "Bénévoles"
 msgstr "Bénévoles"
 
@@ -1190,9 +1476,21 @@ msgstr "Bénévoles"
 msgid "Bénévoles à répartir"
 msgstr "Bénévoles à répartir"
 
+#: src/composants/AppelsBenevoles.tsx
+msgid "Bénévoles du samedi"
+msgstr "Bénévoles du samedi"
+
 #: src/composants/ParcoursEspace.tsx
 msgid "Bibliothèque de documents"
 msgstr "Bibliothèque de documents"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Billetterie du 7 août"
+msgstr "Billetterie du 7 août"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Bonjour {nomBenevole}"
+msgstr "Bonjour {nomBenevole}"
 
 #: src/pages/MonEspace.tsx
 msgid "Bonjour {prenomPersonne}"
@@ -1205,6 +1503,18 @@ msgstr "Cacher les fiches masquées"
 #: src/composants/Repartition.tsx
 msgid "Candidature : {origine}"
 msgstr "Candidature : {origine}"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Candidature refusée."
+msgstr "Candidature refusée."
+
+#: src/pages/Benevoles.tsx
+msgid "Candidatures"
+msgstr "Candidatures"
+
+#: src/pages/Benevoles.tsx
+msgid "Candidatures ({nbCandidatures})"
+msgstr "Candidatures ({nbCandidatures})"
 
 #: src/lib/guide-markdown.ts
 msgid "Caractères réservés"
@@ -1262,6 +1572,14 @@ msgstr "Ce fournisseur ne publie pas d’annuaire des comptes."
 msgid "Ce groupe ne compte aucun périmètre."
 msgstr "Ce groupe ne compte aucun périmètre."
 
+#: src/pages/EspaceBenevole.tsx
+msgid "Ce lien n’est plus valable."
+msgstr "Ce lien n’est plus valable."
+
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Ce ne sont pas des doublons"
+msgstr "Ce ne sont pas des doublons"
+
 #: src/pages/Preferences.tsx
 msgid "Ce nom s’affiche dans toutes vos organisations."
 msgstr "Ce nom s’affiche dans toutes vos organisations."
@@ -1289,6 +1607,10 @@ msgstr "Ce score n’est visible que par vous et par les admins."
 #: src/composants/SondageDetail.tsx
 msgid "Ce sondage n’existe pas ou ne vous est pas accessible."
 msgstr "Ce sondage n’existe pas ou ne vous est pas accessible."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Ce texte est public : il ouvre la page de l’appel."
+msgstr "Ce texte est public : il ouvre la page de l’appel."
 
 #: src/composants/SequenceFormulaire.tsx
 msgid "Ce texte est public : la page d’un appel l’affiche. Il ne doit contenir aucune coordonnée personnelle."
@@ -1330,6 +1652,10 @@ msgstr "Ces fichiers contiennent une coordonnée personnelle : ils ne s’import
 msgid "Ces fichiers ne s’importent pas."
 msgstr "Ces fichiers ne s’importent pas."
 
+#: src/pages/AppelBenevoles.tsx
+msgid "Ces moments se chevauchent : {listeConflits}. L’équipe choisira avec vous."
+msgstr "Ces moments se chevauchent : {listeConflits}. L’équipe choisira avec vous."
+
 #: src/composants/PreferencePush.tsx
 msgid "Ces réglages valent pour tous vos appareils, dans cette organisation. Vos mails ne changent pas."
 msgstr "Ces réglages valent pour tous vos appareils, dans cette organisation. Vos mails ne changent pas."
@@ -1337,6 +1663,10 @@ msgstr "Ces réglages valent pour tous vos appareils, dans cette organisation. V
 #: src/pages/Retroplanning.tsx
 msgid "Ces tâches ouvertes de vos périmètres n’ont aucune personne assignée. Vous pouvez les prendre depuis leur périmètre."
 msgstr "Ces tâches ouvertes de vos périmètres n’ont aucune personne assignée. Vous pouvez les prendre depuis leur périmètre."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Cet appel n’est pas ouvert."
+msgstr "Cet appel n’est pas ouvert."
 
 #: src/composants/AvisRelecture.tsx
 msgid "Cet écran affiche peut-être des données que vous ne pouvez plus relire. Rechargez la page pour retrouver vos accès actuels."
@@ -1398,6 +1728,14 @@ msgstr "Cette page est réservée aux admins de l’activité."
 msgid "Cette page est réservée aux admins de l’organisation."
 msgstr "Cette page est réservée aux admins de l’organisation."
 
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Cette paire ne sera plus proposée."
+msgstr "Cette paire ne sera plus proposée."
+
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Cette paire ne sera plus proposée. L’écran ne permet pas de revenir sur ce choix."
+msgstr "Cette paire ne sera plus proposée. L’écran ne permet pas de revenir sur ce choix."
+
 #: src/composants/ReunionDetail.tsx
 msgid "Cette réunion n’existe pas ou ne vous est pas accessible."
 msgstr "Cette réunion n’existe pas ou ne vous est pas accessible."
@@ -1413,6 +1751,10 @@ msgstr "Cette tâche est assignée à d’autres personnes"
 #: src/lib/conflit.ts
 msgid "Cette tâche est maintenant « {statutCourant} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel."
 msgstr "Cette tâche est maintenant « {statutCourant} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Champ de la colonne {entete}"
+msgstr "Champ de la colonne {entete}"
 
 #: src/lib/notes-de-version.ts
 msgid "Changement important"
@@ -1517,6 +1859,14 @@ msgstr "Choisir une organisation"
 msgid "Choisir une personne"
 msgstr "Choisir une personne"
 
+#: src/pages/AppelBenevoles.tsx
+msgid "Choisissez au moins un moment, ou proposez votre aide là où il manque du monde."
+msgstr "Choisissez au moins un moment, ou proposez votre aide là où il manque du monde."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Choisissez au moins un moment."
+msgstr "Choisissez au moins un moment."
+
 #: src/composants/DeclinerTache.tsx
 msgid "Choisissez au moins un périmètre."
 msgstr "Choisissez au moins un périmètre."
@@ -1546,6 +1896,10 @@ msgstr "Choisissez toute l’activité, ou au moins un périmètre ou un groupe.
 msgid "Choisissez un dossier lié. Les lecteurs de la fiche lisent ses documents."
 msgstr "Choisissez un dossier lié. Les lecteurs de la fiche lisent ses documents."
 
+#: src/lib/import-benevoles.ts
+msgid "Choisissez un fichier CSV ou Excel (.xlsx)."
+msgstr "Choisissez un fichier CSV ou Excel (.xlsx)."
+
 #: src/composants/RessourcesFiche.tsx
 msgid "Choisissez un fichier, ou liez un dossier entier."
 msgstr "Choisissez un fichier, ou liez un dossier entier."
@@ -1562,9 +1916,11 @@ msgstr "Choisissez un groupe."
 #: src/composants/ReunionFormulaire.tsx
 #: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
+#: src/pages/AppelBenevoles.tsx
 msgid "Choisissez un jour."
 msgstr "Choisissez un jour."
 
+#: src/composants/AppelsBenevoles.tsx
 #: src/pages/admin/Redaction.tsx
 msgid "Choisissez un périmètre."
 msgstr "Choisissez un périmètre."
@@ -1576,6 +1932,10 @@ msgstr "Choisissez une autre messagerie"
 #: src/composants/ParcoursEspace.tsx
 msgid "Choisissez une bibliothèque"
 msgstr "Choisissez une bibliothèque"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Choisissez une date."
+msgstr "Choisissez une date."
 
 #: src/composants/ReunionFormulaire.tsx
 msgid "Choisissez une heure."
@@ -1589,6 +1949,10 @@ msgstr "Choisissez une personne."
 #: src/composants/Repartition.tsx
 msgid "Choisissez une séquence pour classer les personnes selon leurs disponibilités."
 msgstr "Choisissez une séquence pour classer les personnes selon leurs disponibilités."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Choisissez une séquence."
+msgstr "Choisissez une séquence."
 
 #: src/composants/Coquille.tsx
 msgid "Classement"
@@ -1641,6 +2005,10 @@ msgstr "Code à 6 chiffres"
 msgid "Code source de Relaytour"
 msgstr "Code source de Relaytour"
 
+#: src/lib/import-benevoles.ts
+msgid "Colonne {numero}"
+msgstr "Colonne {numero}"
+
 #. En-tête d’un tableau d’exemple inséré dans une fiche.
 #: src/lib/mise-en-forme.ts
 msgid "Colonne 1"
@@ -1650,6 +2018,15 @@ msgstr "Colonne 1"
 #: src/lib/mise-en-forme.ts
 msgid "Colonne 2"
 msgstr "Colonne 2"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Colonne vide"
+msgstr "Colonne vide"
+
+#. Deuxième étape de l’assistant d’import de bénévoles
+#: src/pages/ImportBenevoles.tsx
+msgid "Colonnes"
+msgstr "Colonnes"
 
 #: src/lib/guide-markdown.ts
 msgid "Commander les médailles"
@@ -1671,6 +2048,10 @@ msgstr "Commune"
 #: src/pages/Fiches.tsx
 msgid "Communes"
 msgstr "Communes"
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Complet : liste d’attente"
+msgstr "Complet : liste d’attente"
 
 #: src/composants/ConnexionEspace.tsx
 msgid "Compte"
@@ -1714,7 +2095,11 @@ msgstr "Comptes chez le fournisseur"
 msgid "Concerne aussi"
 msgstr "Concerne aussi"
 
+#. Participation d’un bénévole
+#. Statut d’une place de bénévole
 #: src/composants/Jauge.tsx
+#: src/pages/Benevoles.tsx
+#: src/pages/EspaceBenevole.tsx
 msgid "Confirmée"
 msgstr "Confirmée"
 
@@ -1725,6 +2110,10 @@ msgstr "Confirmer"
 #: src/pages/FicheEditeur.tsx
 msgid "Confirmer la liste"
 msgstr "Confirmer la liste"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Confirmez votre participation pour recevoir les changements de vos places par mail."
+msgstr "Confirmez votre participation pour recevoir les changements de vos places par mail."
 
 #: src/composants/ConnexionEspace.tsx
 msgid "Connecté"
@@ -1791,8 +2180,13 @@ msgid "Contenu de la fiche"
 msgstr "Contenu de la fiche"
 
 #: src/composants/AbonnementAgenda.tsx
+#: src/composants/AppelsBenevoles.tsx
 msgid "Copier l’adresse"
 msgstr "Copier l’adresse"
+
+#: src/composants/LienBenevole.tsx
+msgid "Copier le lien"
+msgstr "Copier le lien"
 
 #: src/pages/FicheEditeur.tsx
 msgid "Copier mon texte"
@@ -1801,6 +2195,10 @@ msgstr "Copier mon texte"
 #: src/lib/notes-de-version.ts
 msgid "Correctif"
 msgstr "Correctif"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Correspondance enregistrée."
+msgstr "Correspondance enregistrée."
 
 #: src/composants/ReglagePerimetre.tsx
 msgid "Couleur"
@@ -1814,6 +2212,10 @@ msgstr "Couverture"
 #: src/composants/Repartition.tsx
 msgid "Couverture par tranche de 30 minutes"
 msgstr "Couverture par tranche de 30 minutes"
+
+#: src/composants/LienBenevole.tsx
+msgid "Créer et copier le lien"
+msgstr "Créer et copier le lien"
 
 #: src/composants/AbonnementAgenda.tsx
 msgid "Créer l’adresse"
@@ -1831,9 +2233,17 @@ msgstr "Créer le dossier d’export ici"
 msgid "Créer mon adresse"
 msgstr "Créer mon adresse"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Créer une fiche"
+msgstr "Créer une fiche"
+
 #: src/composants/AbonnementAgenda.tsx
 msgid "Créer une nouvelle adresse ?"
 msgstr "Créer une nouvelle adresse ?"
+
+#: src/pages/Benevoles.tsx
+msgid "Créez d’abord {periodeUne}."
+msgstr "Créez d’abord {periodeUne}."
 
 #: src/composants/ConnexionEspace.tsx
 msgid "Créez un compte de service, puis une clé au format JSON pour ce compte."
@@ -1884,6 +2294,10 @@ msgstr "Date clé enregistrée."
 msgid "Date clé supprimée."
 msgstr "Date clé supprimée."
 
+#: src/lib/import-benevoles.ts
+msgid "Date de l’accord"
+msgstr "Date de l’accord"
+
 #: src/composants/SondageFormulaire.tsx
 msgid "Date du point d’étape"
 msgstr "Date du point d’étape"
@@ -1891,6 +2305,15 @@ msgstr "Date du point d’étape"
 #: src/pages/Agenda.tsx
 msgid "Dates clés"
 msgstr "Dates clés"
+
+#. Heure de début d’une plage de disponibilité
+#: src/pages/AppelBenevoles.tsx
+msgid "De"
+msgstr "De"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "De nouvelles places attendent votre confirmation."
+msgstr "De nouvelles places attendent votre confirmation."
 
 #. Libellé : heure de début d’un créneau
 #. Libellé : heure de début d’une réunion
@@ -1950,6 +2373,10 @@ msgstr "Déplier le volet latéral"
 msgid "Déposez ce fichier ici, ou collez son contenu."
 msgstr "Déposez ce fichier ici, ou collez son contenu."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Déposez un fichier CSV ou Excel (.xlsx), ou cliquez pour le choisir."
+msgstr "Déposez un fichier CSV ou Excel (.xlsx), ou cliquez pour le choisir."
+
 #. Origine d’une version de fiche : le dépôt Git
 #: src/lib/fiches.ts
 msgid "Dépôt"
@@ -1997,6 +2424,10 @@ msgstr "Des accents graves entourent un texte qui s’affiche tel quel, en polic
 msgid "Des personnes choisies"
 msgstr "Des personnes choisies"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Des séquences dépassent leurs renforts recherchés."
+msgstr "Des séquences dépassent leurs renforts recherchés."
+
 #: src/composants/Avancement.tsx
 msgid "des tâches faites"
 msgstr "des tâches faites"
@@ -2029,12 +2460,25 @@ msgstr "Détail"
 msgid "Deux astérisques de chaque côté mettent un passage en gras. Un tiret bas de chaque côté le met en italique. Deux tildes le barrent."
 msgstr "Deux astérisques de chaque côté mettent un passage en gras. Un tiret bas de chaque côté le met en italique. Deux tildes le barrent."
 
+#: src/pages/AppelBenevoles.tsx
+msgid "Devenir bénévole"
+msgstr "Devenir bénévole"
+
 #: src/lib/espace-fichiers.ts
 msgid "Directement"
 msgstr "Directement"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Disponibilité seulement"
+msgstr "Disponibilité seulement"
+
+#: src/pages/Benevoles.tsx
+msgid "Disponibilités, compétences, taille de t-shirt…"
+msgstr "Disponibilités, compétences, taille de t-shirt…"
+
 #. Les plages où la personne est libre
 #. Une personne est libre sur toute la séquence
+#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/Repartition.tsx
 msgid "Disponible"
 msgstr "Disponible"
@@ -2060,6 +2504,14 @@ msgstr "Documents"
 msgid "Documents liés"
 msgstr "Documents liés"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Donnée sensible : ignorée"
+msgstr "Donnée sensible : ignorée"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Donner une nouvelle adresse à cet appel ?"
+msgstr "Donner une nouvelle adresse à cet appel ?"
+
 #: src/composants/Contribution.tsx
 msgid "Dont à temps"
 msgstr "Dont à temps"
@@ -2076,6 +2528,10 @@ msgstr "Dossier lié"
 msgid "Dossiers liés de l’activité « {nomActivite} »"
 msgstr "Dossiers liés de l’activité « {nomActivite} »"
 
+#: src/pages/Benevoles.tsx
+msgid "Doublons possibles"
+msgstr "Doublons possibles"
+
 #: src/pages/admin/Redaction.tsx
 msgid "Droit accordé."
 msgstr "Droit accordé."
@@ -2087,6 +2543,10 @@ msgstr "Droit retiré."
 #: src/pages/admin/Redaction.tsx
 msgid "Droits accordés"
 msgstr "Droits accordés"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "du {jourOuverture} au {jourFermeture}"
+msgstr "du {jourOuverture} au {jourFermeture}"
 
 #: src/composants/ReunionFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
@@ -2159,6 +2619,10 @@ msgstr "Élément à cocher"
 msgid "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
 msgstr "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
 
+#. Colonne : nombre de candidatures qui attendent une revue
+#. Statut du choix de séquence d’une candidature de bénévole
+#: src/composants/AppelsBenevoles.tsx
+#: src/composants/CandidaturesBenevoles.tsx
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "En attente"
 msgstr "En attente"
@@ -2205,6 +2669,7 @@ msgid "Encadrés"
 msgstr "Encadrés"
 
 #: src/composants/AbonnementAgenda.tsx
+#: src/composants/AppelsBenevoles.tsx
 #: src/composants/ComptesFournisseur.tsx
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/FilTache.tsx
@@ -2216,10 +2681,15 @@ msgstr "Encadrés"
 #: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/admin/EspaceFichiers.tsx
+#: src/pages/Benevoles.tsx
 #: src/pages/FicheEditeur.tsx
 #: src/pages/Preferences.tsx
 msgid "Enregistrer"
 msgstr "Enregistrer"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Enregistrer la correspondance"
+msgstr "Enregistrer la correspondance"
 
 #: src/composants/SondageDetail.tsx
 msgid "Enregistrer mes réponses"
@@ -2232,6 +2702,10 @@ msgstr "Enregistrez votre travail en cours, puis rechargez l’application pour 
 #: src/composants/ReunionDetail.tsx
 msgid "envoi en attente"
 msgstr "envoi en attente"
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Envoyer ma candidature"
+msgstr "Envoyer ma candidature"
 
 #: src/composants/Tableau.tsx
 msgid "Épingler les premières colonnes"
@@ -2263,6 +2737,16 @@ msgstr "Essayer"
 msgid "Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils."
 msgstr "Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Et {nbAutresEcartees} autres lignes, dans le fichier à télécharger."
+msgstr "Et {nbAutresEcartees} autres lignes, dans le fichier à télécharger."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Étape {numeroEtape} sur {nombreEtapes} : {nomEtape}"
+msgstr "Étape {numeroEtape} sur {nombreEtapes} : {nomEtape}"
+
+#. Colonne du tableau des appels à bénévoles
+#: src/composants/AppelsBenevoles.tsx
 #: src/composants/ConnexionEspace.tsx
 msgid "État"
 msgstr "État"
@@ -2308,13 +2792,29 @@ msgstr "Faite"
 msgid "Faites"
 msgstr "Faites"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Faites entrer une liste tenue hors de Relaytour : un export de billetterie, un formulaire, un tableur. Le fichier reste sur votre appareil."
+msgstr "Faites entrer une liste tenue hors de Relaytour : un export de billetterie, un formulaire, un tableur. Le fichier reste sur votre appareil."
+
 #: src/composants/Tableau.tsx
 msgid "Faites glisser pour ajuster la largeur. Un double-clic rétablit la largeur automatique."
 msgstr "Faites glisser pour ajuster la largeur. Un double-clic rétablit la largeur automatique."
 
+#. État d’un appel à bénévoles
+#: src/composants/AppelsBenevoles.tsx
+msgid "Fermé"
+msgstr "Fermé"
+
+#: src/composants/AppelsBenevoles.tsx
 #: src/composants/ImportFiches.tsx
+#: src/composants/LienBenevole.tsx
 #: src/composants/LieuxFenetre.tsx
 #: src/composants/Liseuse.tsx
+msgid "Fermer"
+msgstr "Fermer"
+
+#: src/composants/AppelsBenevoles.tsx
+msgctxt "appel à bénévoles"
 msgid "Fermer"
 msgstr "Fermer"
 
@@ -2322,9 +2822,21 @@ msgstr "Fermer"
 msgid "Fermer la recherche"
 msgstr "Fermer la recherche"
 
+#: src/composants/AppelsBenevoles.tsx
+msgid "Fermeture"
+msgstr "Fermeture"
+
 #: src/composants/DeclinerTache.tsx
 msgid "Fermez cette fenêtre et réessayez dans un instant."
 msgstr "Fermez cette fenêtre et réessayez dans un instant."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Feuille"
+msgstr "Feuille"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Feuille du classeur"
+msgstr "Feuille du classeur"
 
 #: src/pages/Fiche.tsx
 msgid "Fiche commune"
@@ -2338,10 +2850,12 @@ msgstr "Fiche concernée : {fichesConcernees}. Une fiche masque ces documents ta
 msgid "Fiche créée : {pointsFicheCreee} points."
 msgstr "Fiche créée : {pointsFicheCreee} points."
 
+#: src/pages/Benevoles.tsx
 #: src/pages/FicheEditeur.tsx
 msgid "Fiche créée."
 msgstr "Fiche créée."
 
+#: src/pages/Benevoles.tsx
 #: src/pages/FicheEditeur.tsx
 msgid "Fiche enregistrée."
 msgstr "Fiche enregistrée."
@@ -2354,9 +2868,14 @@ msgstr "Fiche méthode"
 msgid "Fiche modifiée : {pointsFicheModifiee} points, une fois par jour au plus."
 msgstr "Fiche modifiée : {pointsFicheModifiee} points, une fois par jour au plus."
 
+#: src/pages/Benevoles.tsx
+msgid "Fiche supprimée."
+msgstr "Fiche supprimée."
+
 #: src/composants/Contribution.tsx
 #: src/composants/Recherche.tsx
 #: src/pages/admin/Redaction.tsx
+#: src/pages/Benevoles.tsx
 #: src/pages/Fiches.tsx
 msgid "Fiches"
 msgstr "Fiches"
@@ -2399,6 +2918,15 @@ msgstr "Fiches inchangées"
 msgid "Fiches méthode"
 msgstr "Fiches méthode"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Fiches proches"
+msgstr "Fiches proches"
+
+#. Première étape de l’assistant d’import de bénévoles
+#: src/pages/ImportBenevoles.tsx
+msgid "Fichier"
+msgstr "Fichier"
+
 #: src/pages/AideMarkdown.tsx
 #: src/pages/Fiche.tsx
 msgid "Fil d’Ariane"
@@ -2431,9 +2959,25 @@ msgstr "Fournisseur cloud"
 msgid "Fournisseur déconnecté"
 msgstr "Fournisseur déconnecté"
 
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Fusionner"
+msgstr "Fusionner"
+
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Fusionner deux fiches"
+msgstr "Fusionner deux fiches"
+
 #: src/composants/ReunionDetail.tsx
 msgid "Garder"
 msgstr "Garder"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Gardez ce lien : il reste le même. Pour toute question, écrivez à l’organisation à <0>{adresseContact}</0>."
+msgstr "Gardez ce lien : il reste le même. Pour toute question, écrivez à l’organisation à <0>{adresseContact}</0>."
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Gardez ce lien : il reste le même. Pour toute question, écrivez à l’organisation."
+msgstr "Gardez ce lien : il reste le même. Pour toute question, écrivez à l’organisation."
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Gardez la messagerie par défaut de l’appareil, ou choisissez une messagerie en ligne."
@@ -2509,6 +3053,10 @@ msgstr "Groupes"
 msgid "Guide de la syntaxe Markdown"
 msgstr "Guide de la syntaxe Markdown"
 
+#: src/pages/AppelBenevoles.tsx
+msgid "Heure ?"
+msgstr "Heure ?"
+
 #: src/composants/FilTache.tsx
 #: src/composants/TacheCarte.tsx
 #: src/pages/Fiche.tsx
@@ -2538,6 +3086,15 @@ msgstr "https://cloud.exemple.org"
 msgid "Identifiant"
 msgstr "Identifiant"
 
+#: src/lib/import-benevoles.ts
+msgid "Identifiant externe"
+msgstr "Identifiant externe"
+
+#. Champ à associer à une colonne d’un fichier : ne pas importer la colonne
+#: src/lib/import-benevoles.ts
+msgid "Ignorer"
+msgstr "Ignorer"
+
 #: src/pages/FicheEditeur.tsx
 msgid "Il apparaît dans l’adresse de la fiche et ne change plus."
 msgstr "Il apparaît dans l’adresse de la fiche et ne change plus."
@@ -2545,6 +3102,10 @@ msgstr "Il apparaît dans l’adresse de la fiche et ne change plus."
 #: src/pages/FicheEditeur.tsx
 msgid "Il est gardé dans ce navigateur. Reprenez-le pour continuer votre rédaction, ou supprimez-le pour repartir de la fiche. Si vous modifiez la fiche sans le reprendre, votre nouvelle saisie le remplace."
 msgstr "Il est gardé dans ce navigateur. Reprenez-le pour continuer votre rédaction, ou supprimez-le pour repartir de la fiche. Si vous modifiez la fiche sans le reprendre, votre nouvelle saisie le remplace."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Il est peut-être fermé, ou son adresse a changé. Contactez l’organisation pour proposer votre aide."
+msgstr "Il est peut-être fermé, ou son adresse a changé. Contactez l’organisation pour proposer votre aide."
 
 #: src/composants/Jauge.tsx
 msgid "Il manque {manque, plural, one {# renfort} other {# renforts}}."
@@ -2562,11 +3123,20 @@ msgstr "il y a {minutes} min"
 msgid "Import"
 msgstr "Import"
 
+#: src/composants/DoublonsBenevoles.tsx
+msgid "import « {sourceImport} »"
+msgstr "import « {sourceImport} »"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Import en cours…"
+msgstr "Import en cours…"
+
 #: src/composants/ImportFiches.tsx
 msgid "Import terminé"
 msgstr "Import terminé"
 
 #: src/composants/ImportFiches.tsx
+#: src/pages/ImportBenevoles.tsx
 msgid "Importer"
 msgstr "Importer"
 
@@ -2578,6 +3148,14 @@ msgstr "Importer des fiches"
 msgid "Importer des fiches dans « {nomActivite} »"
 msgstr "Importer des fiches dans « {nomActivite} »"
 
+#: src/pages/Benevoles.tsx
+msgid "Importer une liste"
+msgstr "Importer une liste"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Importer une liste de bénévoles"
+msgstr "Importer une liste de bénévoles"
+
 #: src/pages/Programme.tsx
 msgid "Imprimer"
 msgstr "Imprimer"
@@ -2585,6 +3163,10 @@ msgstr "Imprimer"
 #: src/composants/VerificationAcces.tsx
 msgid "Inconnu"
 msgstr "Inconnu"
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Indiquez les plages horaires où vous pouvez aider. Une fin avant le début passe minuit."
+msgstr "Indiquez les plages horaires où vous pouvez aider. Une fin avant le début passe minuit."
 
 #: src/composants/RessourcesFiche.tsx
 #: src/pages/admin/EspaceFichiers.tsx
@@ -2620,14 +3202,30 @@ msgstr "Invité"
 msgid "Italique"
 msgstr "Italique"
 
+#: src/pages/AppelBenevoles.tsx
+msgid "J’accepte que {nomOrganisation} enregistre ces informations pour organiser l’activité."
+msgstr "J’accepte que {nomOrganisation} enregistre ces informations pour organiser l’activité."
+
 #: src/pages/Preferences.tsx
 msgid "Jamais"
 msgstr "Jamais"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Je confirme ma participation"
+msgstr "Je confirme ma participation"
 
 #: src/composants/TacheCarte.tsx
 #: src/composants/TacheFormulaire.tsx
 msgid "Je m’en occupe"
 msgstr "Je m’en occupe"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Je ne peux plus venir"
+msgstr "Je ne peux plus venir"
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Je peux aussi aider là où il manque du monde."
+msgstr "Je peux aussi aider là où il manque du monde."
 
 #: src/pages/TousLesPerimetres.tsx
 msgid "Je suis intéressé·e"
@@ -2644,8 +3242,13 @@ msgstr "Je suis intéressé·e par {nomPerimetre}"
 #: src/composants/ReunionFormulaire.tsx
 #: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
+#: src/pages/AppelBenevoles.tsx
 msgid "Jour"
 msgstr "Jour"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Jour des horaires sans jour"
+msgstr "Jour des horaires sans jour"
 
 #: src/pages/Programme.tsx
 msgid "Jour du programme"
@@ -2678,6 +3281,10 @@ msgstr "L’accès déjà accordé à Google Drive suffit : aucune reconnexion n
 #: src/lib/espace-fichiers.ts
 msgid "L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe."
 msgstr "L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "L’activité peut encore recevoir {fichesRestantes} fiches : réduisez la liste."
+msgstr "L’activité peut encore recevoir {fichesRestantes} fiches : réduisez la liste."
 
 #: src/composants/AbonnementAgenda.tsx
 msgid "L’adresse actuelle cesse aussitôt de servir pour tous les agendas abonnés."
@@ -2715,6 +3322,14 @@ msgstr "L’agenda global : phases, dates clés et réunions de l’activité"
 msgid "L’agenda n’a pas pu être chargé."
 msgstr "L’agenda n’a pas pu être chargé."
 
+#: src/composants/LienBenevole.tsx
+msgid "L’ancien lien cesse de répondre, y compris celui des mails déjà reçus. Aucun mail ne part : envoyez le nouveau lien vous-même."
+msgstr "L’ancien lien cesse de répondre, y compris celui des mails déjà reçus. Aucun mail ne part : envoyez le nouveau lien vous-même."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "L’ancienne adresse cesse de répondre. Les candidatures déjà reçues restent."
+msgstr "L’ancienne adresse cesse de répondre. Les candidatures déjà reçues restent."
+
 #: src/composants/VerificationAcces.tsx
 msgid "L’annuaire du fournisseur ne connaît pas son adresse. Invitez la personne, ou saisissez l’adresse de son compte dans l’onglet « Comptes »."
 msgstr "L’annuaire du fournisseur ne connaît pas son adresse. Invitez la personne, ou saisissez l’adresse de son compte dans l’onglet « Comptes »."
@@ -2747,6 +3362,22 @@ msgstr "L’envoi du code a échoué."
 msgid "L’équipe est au complet."
 msgstr "L’équipe est au complet."
 
+#: src/pages/EspaceBenevole.tsx
+msgid "L’équipe est prévenue que vous ne viendrez pas sur ce moment."
+msgstr "L’équipe est prévenue que vous ne viendrez pas sur ce moment."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "L’équipe l’examine. Si elle vous propose une place, vous recevez un mail avec un lien pour confirmer votre participation."
+msgstr "L’équipe l’examine. Si elle vous propose une place, vous recevez un mail avec un lien pour confirmer votre participation."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "L’équipe vous écrit à cette adresse si elle vous propose une place."
+msgstr "L’équipe vous écrit à cette adresse si elle vous propose une place."
+
+#: src/pages/EspaceBenevole.tsx
+msgid "L’équipe vous propose ces places. Confirmez-vous votre participation ?"
+msgstr "L’équipe vous propose ces places. Confirmez-vous votre participation ?"
+
 #: src/pages/Connexion.tsx
 msgid "L’espace ne demande pas de mot de passe. Vous recevez un code par mail à chaque connexion."
 msgstr "L’espace ne demande pas de mot de passe. Vous recevez un code par mail à chaque connexion."
@@ -2778,6 +3409,14 @@ msgstr "L’hébergeur de cette installation n’a ouvert aucun fournisseur clou
 #: src/composants/ReunionFormulaire.tsx
 msgid "L’heure de fin suit l’heure de début."
 msgstr "L’heure de fin suit l’heure de début."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "L’import s’est arrêté : {nbNonTraitees, plural, one {# personne n’a pas été traitée} other {# personnes n’ont pas été traitées}}."
+msgstr "L’import s’est arrêté : {nbNonTraitees, plural, one {# personne n’a pas été traitée} other {# personnes n’ont pas été traitées}}."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "L’introduction dépasse 2 000 caractères."
+msgstr "L’introduction dépasse 2 000 caractères."
 
 #: src/composants/MesInvitations.tsx
 msgid "L’invitation est refusée."
@@ -2820,6 +3459,10 @@ msgstr "La case se coche en modifiant la fiche, et non d’un clic. Une case de 
 msgid "La cloche de la barre haute affiche les nouvelles de vos tâches, quel que soit votre choix pour les mails. Elle se met à jour sans recharger la page."
 msgstr "La cloche de la barre haute affiche les nouvelles de vos tâches, quel que soit votre choix pour les mails. Elle se met à jour sans recharger la page."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "La colonne « {enteteColonne} » passe à « Ignorer » : « {libelleChampUnique} » ne vient que d’une colonne."
+msgstr "La colonne « {enteteColonne} » passe à « Ignorer » : « {libelleChampUnique} » ne vient que d’une colonne."
+
 #: src/pages/Connexion.tsx
 msgid "La connexion a échoué."
 msgstr "La connexion a échoué."
@@ -2856,6 +3499,10 @@ msgstr "La copie a échoué : sélectionnez l’adresse à la main."
 msgid "La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même."
 msgstr "La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "La correspondance « {nomCorrespondanceAppliquee} » s’applique."
+msgstr "La correspondance « {nomCorrespondanceAppliquee} » s’applique."
+
 #: src/composants/DateCleFormulaire.tsx
 msgid "La date clé n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 msgstr "La date clé n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
@@ -2872,9 +3519,17 @@ msgstr "La disponibilité de la personne ne couvre qu’une partie de la séquen
 msgid "La fiche affiche"
 msgstr "La fiche affiche"
 
+#: src/composants/DoublonsBenevoles.tsx
+msgid "La fiche de « {nomFicheGardee} » reçoit les places, les disponibilités et les candidatures de « {nomFicheAbsorbee} », qui disparaît. Choisissez les valeurs gardées."
+msgstr "La fiche de « {nomFicheGardee} » reçoit les places, les disponibilités et les candidatures de « {nomFicheAbsorbee} », qui disparaît. Choisissez les valeurs gardées."
+
 #: src/pages/FicheEditeur.tsx
 msgid "La fiche est enregistrée, mais pas sa liste « Concerne aussi » : {detailErreur}"
 msgstr "La fiche est enregistrée, mais pas sa liste « Concerne aussi » : {detailErreur}"
+
+#: src/pages/Benevoles.tsx
+msgid "La fiche et ses coordonnées disparaissent. La personne quitte les séquences où elle est placée."
+msgstr "La fiche et ses coordonnées disparaissent. La personne quitte les séquences où elle est placée."
 
 #: src/composants/FichesConnexes.tsx
 msgid "La fiche quitte les fiches connexes de ce périmètre."
@@ -2892,6 +3547,10 @@ msgstr "La fiche se lit, sans s’y modifier, dans ces périmètres. Un groupe c
 msgid "La gestion des accès est activée."
 msgstr "La gestion des accès est activée."
 
+#: src/lib/import-benevoles.ts
+msgid "La ligne ne porte ni nom, ni adresse, ni téléphone."
+msgstr "La ligne ne porte ni nom, ni adresse, ni téléphone."
+
 #: src/composants/Liseuse.tsx
 msgid "La liseuse affiche les {PAGES_MAX} premières pages sur {pagesTotales}. Téléchargez le document pour lire la suite."
 msgstr "La liseuse affiche les {PAGES_MAX} premières pages sur {pagesTotales}. Téléchargez le document pour lire la suite."
@@ -2907,6 +3566,10 @@ msgstr "La liste ne compte que les groupes qui ont déjà un droit sur le dossie
 #: src/composants/SequenceFormulaire.tsx
 msgid "La mission, le point de rendez-vous, la tenue."
 msgstr "La mission, le point de rendez-vous, la tenue."
+
+#: src/pages/Benevoles.tsx
+msgid "La personne accepte que ses coordonnées soient enregistrées pour organiser l’activité."
+msgstr "La personne accepte que ses coordonnées soient enregistrées pour organiser l’activité."
 
 #: src/lib/repartition.ts
 msgid "La personne n’a donné aucune disponibilité sur cet horaire."
@@ -3153,6 +3816,10 @@ msgstr "Le fournisseur cloud ne répond pas. Réessayez dans quelques instants."
 msgid "Le fournisseur prévient la personne du partage."
 msgstr "Le fournisseur prévient la personne du partage."
 
+#: src/lib/import-benevoles.ts
+msgid "Le groupe de la ligne ne porte ni nom, ni adresse, ni téléphone."
+msgstr "Le groupe de la ligne ne porte ni nom, ni adresse, ni téléphone."
+
 #: src/lib/guide-markdown.ts
 msgid "Le gymnase ouvre à 8 h."
 msgstr "Le gymnase ouvre à 8 h."
@@ -3169,13 +3836,34 @@ msgstr "Le lien « Ouvrir dans {nomFournisseur} » fonctionne si votre compte {n
 msgid "Le lien du mail ouvre votre navigateur, pas l’application installée."
 msgstr "Le lien du mail ouvre votre navigateur, pas l’application installée."
 
+#: src/composants/LienBenevole.tsx
+msgid "Le lien partira par mail à sa première place."
+msgstr "Le lien partira par mail à sa première place."
+
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Le lien personnel et la confirmation suivent l’adresse gardée. Les notes se mettent bout à bout."
+msgstr "Le lien personnel et la confirmation suivent l’adresse gardée. Les notes se mettent bout à bout."
+
+#: src/composants/LienBenevole.tsx
+msgid "Le lien repart par mail. Ce renvoi ne se fait qu’une fois."
+msgstr "Le lien repart par mail. Ce renvoi ne se fait qu’une fois."
+
 #: src/lib/guide-markdown.ts
 msgid "Le local ferme **à 19 h précises**."
 msgstr "Le local ferme **à 19 h précises**."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Le mode « places directes » exige au moins une colonne associée à une séquence."
+msgstr "Le mode « places directes » exige au moins une colonne associée à une séquence."
+
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Le mode d’emploi décrit chaque choix."
 msgstr "Le mode d’emploi décrit chaque choix."
+
+#: src/composants/AppelsBenevoles.tsx
+#: src/pages/Benevoles.tsx
+msgid "Le nom dépasse 120 caractères."
+msgstr "Le nom dépasse 120 caractères."
 
 #: src/pages/Perimetre.tsx
 msgid "Le nombre compte les tâches ouvertes assignées à chaque personne."
@@ -3292,6 +3980,10 @@ msgstr "Lecture"
 msgid "Lecture seule"
 msgstr "Lecture seule"
 
+#: src/pages/Benevoles.tsx
+msgid "Les admins de l’activité et les personnes affectées à un de ses périmètres les lisent."
+msgstr "Les admins de l’activité et les personnes affectées à un de ses périmètres les lisent."
+
 #: src/pages/Agenda.tsx
 msgid "Les admins de l’activité n’ont placé aucune date clé dans {periodeCette}."
 msgstr "Les admins de l’activité n’ont placé aucune date clé dans {periodeCette}."
@@ -3307,6 +3999,14 @@ msgstr "Les admins rédigent toutes les fiches. Les autres personnes ont besoin 
 #: src/composants/SequenceFormulaire.tsx
 msgid "Les appels à bénévoles proposent la séquence tant que ce nombre n’est pas atteint. Les responsables n’y comptent pas."
 msgstr "Les appels à bénévoles proposent la séquence tant que ce nombre n’est pas atteint. Les responsables n’y comptent pas."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Les appels n’ont pas pu être chargés."
+msgstr "Les appels n’ont pas pu être chargés."
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Les candidatures n’ont pas pu être chargées."
+msgstr "Les candidatures n’ont pas pu être chargées."
 
 #: src/lib/guide-markdown.ts
 msgid "Les clés se rendent à l’accueil avant 19 h."
@@ -3324,17 +4024,41 @@ msgstr "Les consignes dépassent 2 000 caractères."
 msgid "Les contacts principaux seulement"
 msgstr "Les contacts principaux seulement"
 
+#: src/pages/Benevoles.tsx
+msgid "Les coordonnées d’une fiche se lisent par les admins de l’activité, par la personne qui l’a créée, et par les personnes d’un périmètre où elle est placée. Le serveur supprime une fiche inutilisée depuis deux ans."
+msgstr "Les coordonnées d’une fiche se lisent par les admins de l’activité, par la personne qui l’a créée, et par les personnes d’un périmètre où elle est placée. Le serveur supprime une fiche inutilisée depuis deux ans."
+
 #: src/composants/DeclinaisonsTache.tsx
 msgid "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
+
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Les deux fiches n’en font plus qu’une."
+msgstr "Les deux fiches n’en font plus qu’une."
 
 #: src/composants/ConnexionEspace.tsx
 msgid "Les dossiers liés restent, mais les membres ne lisent plus leurs documents jusqu’à une nouvelle connexion. L’export des fiches s’arrête."
 msgstr "Les dossiers liés restent, mais les membres ne lisent plus leurs documents jusqu’à une nouvelle connexion. L’export des fiches s’arrête."
 
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Les doublons possibles n’ont pas pu être chargés."
+msgstr "Les doublons possibles n’ont pas pu être chargés."
+
+#: src/composants/DoublonsBenevoles.tsx
+msgid "Les doublons possibles se calculent sur l’adresse, le téléphone et le nom. La fusion garde la première fiche de la paire et y réunit les places, les disponibilités et les candidatures de la seconde."
+msgstr "Les doublons possibles se calculent sur l’adresse, le téléphone et le nom. La fusion garde la première fiche de la paire et y réunit les places, les disponibilités et les candidatures de la seconde."
+
 #: src/composants/AbonnementAgenda.tsx
 msgid "Les échéances des tâches qui me sont assignées"
 msgstr "Les échéances des tâches qui me sont assignées"
+
+#: src/pages/Benevoles.tsx
+msgid "Les fiches bénévoles n’ont pas pu être chargées."
+msgstr "Les fiches bénévoles n’ont pas pu être chargées."
+
+#: src/pages/Benevoles.tsx
+msgid "Les fiches bénévoles sont réservées aux personnes qui organisent."
+msgstr "Les fiches bénévoles sont réservées aux personnes qui organisent."
 
 #: src/composants/ImportFiches.tsx
 msgid "Les fiches de « {dossierSource} » seront importées."
@@ -3375,6 +4099,10 @@ msgstr "Les mails de connexion et d’invitation partent toujours : ils sont né
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Les membres lisent les documents de l’association depuis Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document."
 msgstr "Les membres lisent les documents de l’association depuis Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Les moments où nous avons besoin de vous"
+msgstr "Les moments où nous avons besoin de vous"
 
 #: src/pages/Preferences.tsx
 msgid "Les notifications d’admin ont leur écran, à part de la cloche. Les demandes et les invitations s’y affichent toujours."
@@ -3424,6 +4152,18 @@ msgstr "Les périmètres qui portent déjà cette tâche n’ont pas pu être ch
 msgid "Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes."
 msgstr "Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Les personnes de cette liste ont accepté que leurs coordonnées soient enregistrées pour organiser l’activité."
+msgstr "Les personnes de cette liste ont accepté que leurs coordonnées soient enregistrées pour organiser l’activité."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Les personnes de l’équipe qui organisent ces moments lisent votre candidature. Elle est supprimée à l’archivage de la période. Si l’équipe vous propose une place, votre fiche de bénévole est gardée deux ans au plus sans nouvelle place. Vous pouvez demander l’accès à vos informations ou leur suppression à <0>{adresseContact}</0>."
+msgstr "Les personnes de l’équipe qui organisent ces moments lisent votre candidature. Elle est supprimée à l’archivage de la période. Si l’équipe vous propose une place, votre fiche de bénévole est gardée deux ans au plus sans nouvelle place. Vous pouvez demander l’accès à vos informations ou leur suppression à <0>{adresseContact}</0>."
+
+#: src/pages/Benevoles.tsx
+msgid "Les personnes qui aident sans compte dans l’application. Une fiche ne s’enregistre qu’avec leur accord."
+msgstr "Les personnes qui aident sans compte dans l’application. Une fiche ne s’enregistre qu’avec leur accord."
+
 #: src/pages/Agenda.tsx
 msgid "Les phases, les dates clés, les réunions et les échéances {periodeDe}."
 msgstr "Les phases, les dates clés, les réunions et les échéances {periodeDe}."
@@ -3431,6 +4171,10 @@ msgstr "Les phases, les dates clés, les réunions et les échéances {periodeDe
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
 msgstr "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Les séquences encore en attente sont refusées. Aucun mail ne part, et la personne peut déposer de nouveau."
+msgstr "Les séquences encore en attente sont refusées. Aucun mail ne part, et la personne peut déposer de nouveau."
 
 #: src/pages/Retroplanning.tsx
 msgid "Les tâches {dePeriode} sont rangées par phase, puis par périmètre."
@@ -3464,14 +4208,45 @@ msgstr "Leurs référentes et référents la liront dans leurs fiches connexes, 
 msgid "Libérer les premières colonnes"
 msgstr "Libérer les premières colonnes"
 
+#. Bouton qui ouvre le lien personnel d’un bénévole
 #: src/composants/EditeurMarkdown.tsx
 #: src/composants/EditeurVisuel.tsx
+#: src/pages/Benevoles.tsx
 msgid "Lien"
 msgstr "Lien"
+
+#: src/pages/Benevoles.tsx
+msgid "Lien à la première place"
+msgstr "Lien à la première place"
+
+#: src/composants/LienBenevole.tsx
+msgid "Lien copié. Vous pouvez l’envoyer par SMS ou par message."
+msgstr "Lien copié. Vous pouvez l’envoyer par SMS ou par message."
 
 #: src/composants/ReunionFormulaire.tsx
 msgid "Lien de visio (facultatif)"
 msgstr "Lien de visio (facultatif)"
+
+#: src/pages/Benevoles.tsx
+msgid "Lien envoyé"
+msgstr "Lien envoyé"
+
+#: src/composants/LienBenevole.tsx
+msgid "Lien envoyé le {jourEnvoi}, sans confirmation."
+msgstr "Lien envoyé le {jourEnvoi}, sans confirmation."
+
+#: src/composants/LienBenevole.tsx
+msgid "Lien personnel"
+msgstr "Lien personnel"
+
+#: src/composants/LienBenevole.tsx
+#: src/pages/Benevoles.tsx
+msgid "Lien personnel de {nomBenevole}"
+msgstr "Lien personnel de {nomBenevole}"
+
+#: src/pages/Benevoles.tsx
+msgid "Lien personnel de {nomLien}"
+msgstr "Lien personnel de {nomLien}"
 
 #: src/lib/guide-markdown.ts
 msgid "Liens"
@@ -3511,9 +4286,30 @@ msgstr "Lieux"
 msgid "Lieux de l’activité"
 msgstr "Lieux de l’activité"
 
+#. En-tête d’une colonne du fichier des lignes écartées
+#: src/lib/import-benevoles.ts
+msgid "Ligne"
+msgstr "Ligne"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Ligne {lignesPersonne} · fiche « {nomFiche} »"
+msgstr "Ligne {lignesPersonne} · fiche « {nomFiche} »"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Ligne {numero}"
+msgstr "Ligne {numero}"
+
 #: src/lib/guide-markdown.ts
 msgid "Ligne de séparation"
 msgstr "Ligne de séparation"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Ligne écartée par le serveur."
+msgstr "Ligne écartée par le serveur."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Lignes écartées"
+msgstr "Lignes écartées"
 
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/TacheCarte.tsx
@@ -3542,6 +4338,8 @@ msgstr "Liste à puces"
 msgid "Liste condensée"
 msgstr "Liste condensée"
 
+#. Statut du choix de séquence d’une candidature de bénévole
+#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/Repartition.tsx
 msgid "Liste d’attente"
 msgstr "Liste d’attente"
@@ -3614,6 +4412,19 @@ msgstr "Matériel à réserver"
 msgid "Me retirer"
 msgstr "Me retirer"
 
+#. Raison pour laquelle deux fiches bénévoles semblent identiques : même adresse de courriel
+#. Raison pour laquelle deux fiches bénévoles semblent identiques : même adresse de courriel
+#: src/composants/DoublonsBenevoles.tsx
+#: src/pages/ImportBenevoles.tsx
+msgid "Même adresse"
+msgstr "Même adresse"
+
+#. Raison pour laquelle deux fiches bénévoles semblent identiques
+#: src/composants/DoublonsBenevoles.tsx
+#: src/pages/ImportBenevoles.tsx
+msgid "Même téléphone"
+msgstr "Même téléphone"
+
 #: src/composants/EditeurMarkdown.tsx
 msgid "Mentionner"
 msgstr "Mentionner"
@@ -3622,10 +4433,19 @@ msgstr "Mentionner"
 msgid "Mentions"
 msgstr "Mentions"
 
+#: src/pages/EspaceBenevole.tsx
+msgid "Merci ! Votre participation est confirmée."
+msgstr "Merci ! Votre participation est confirmée."
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Merci pour votre aide."
+msgstr "Merci pour votre aide."
+
 #: src/pages/Retroplanning.tsx
 msgid "Mes périmètres"
 msgstr "Mes périmètres"
 
+#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/Repartition.tsx
 msgid "Message"
 msgstr "Message"
@@ -3697,13 +4517,26 @@ msgstr "Modifier « {nomDossier} »"
 msgid "Modifier « {titreDateCle} »"
 msgstr "Modifier « {titreDateCle} »"
 
+#: src/composants/AppelsBenevoles.tsx
+msgid "Modifier l’appel"
+msgstr "Modifier l’appel"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Modifier l’appel {nomAppel}"
+msgstr "Modifier l’appel {nomAppel}"
+
 #: src/composants/DateCleFormulaire.tsx
 msgid "Modifier la date clé"
 msgstr "Modifier la date clé"
 
+#: src/pages/Benevoles.tsx
 #: src/pages/FicheEditeur.tsx
 msgid "Modifier la fiche"
 msgstr "Modifier la fiche"
+
+#: src/pages/Benevoles.tsx
+msgid "Modifier la fiche de {nomBenevole}"
+msgstr "Modifier la fiche de {nomBenevole}"
 
 #: src/composants/ReunionFormulaire.tsx
 msgid "Modifier la réunion"
@@ -3754,6 +4587,11 @@ msgstr "Mon espace"
 msgid "Mon jour J"
 msgstr "Mon jour J"
 
+#. En-tête d’une colonne du fichier des lignes écartées
+#: src/lib/import-benevoles.ts
+msgid "Motif"
+msgstr "Motif"
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "natation"
 msgstr "natation"
@@ -3775,13 +4613,31 @@ msgstr "Ne pas ajouter"
 msgid "Nextcloud est connecté."
 msgstr "Nextcloud est connecté."
 
+#. Champ d’une fiche bénévole à fusionner
+#. Champ à associer à une colonne d’un fichier : nom de famille
+#. Colonne du tableau des fiches bénévoles
+#: src/composants/DoublonsBenevoles.tsx
 #: src/composants/ReglagePerimetre.tsx
+#: src/lib/import-benevoles.ts
+#: src/pages/Benevoles.tsx
 msgid "Nom"
 msgstr "Nom"
 
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Nom affiché"
 msgstr "Nom affiché"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Nom de l’appel"
+msgstr "Nom de l’appel"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Nom de la correspondance"
+msgstr "Nom de la correspondance"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Nom de la correspondance, par exemple « Billetterie »"
+msgstr "Nom de la correspondance, par exemple « Billetterie »"
 
 #: src/composants/LieuxFenetre.tsx
 msgid "Nom du lieu"
@@ -3790,6 +4646,12 @@ msgstr "Nom du lieu"
 #: src/pages/Preferences.tsx
 msgid "Nom enregistré."
 msgstr "Nom enregistré."
+
+#. Raison pour laquelle deux fiches bénévoles semblent identiques
+#: src/composants/DoublonsBenevoles.tsx
+#: src/pages/ImportBenevoles.tsx
+msgid "Nom proche"
+msgstr "Nom proche"
 
 #. Réponse à un créneau d’un sondage de dates
 #: src/composants/PreferenceMessagerie.tsx
@@ -3809,9 +4671,15 @@ msgstr "Non cherché"
 msgid "Non confirmée"
 msgstr "Non confirmée"
 
+#. Colonne du tableau des fiches bénévoles
 #: src/composants/Repartition.tsx
+#: src/pages/Benevoles.tsx
 msgid "Note"
 msgstr "Note"
+
+#: src/pages/Benevoles.tsx
+msgid "Note (facultative)"
+msgstr "Note (facultative)"
 
 #: src/composants/MenuCompte.tsx
 #: src/composants/NotesDeVersion.tsx
@@ -3844,6 +4712,14 @@ msgstr "Notifications, {nonLues, plural, one {# non lue} other {# non lues}}"
 msgid "Nouveau"
 msgstr "Nouveau"
 
+#: src/composants/LienBenevole.tsx
+msgid "Nouveau lien"
+msgstr "Nouveau lien"
+
+#: src/composants/LienBenevole.tsx
+msgid "Nouveau lien copié. L’ancien ne répond plus."
+msgstr "Nouveau lien copié. L’ancien ne répond plus."
+
 #: src/composants/LieuxFenetre.tsx
 msgid "Nouveau lieu"
 msgstr "Nouveau lieu"
@@ -3860,23 +4736,45 @@ msgstr "Nouveau sondage de dates"
 msgid "Nouveauté"
 msgstr "Nouveauté"
 
+#: src/composants/AppelsBenevoles.tsx
+msgid "Nouvel appel"
+msgstr "Nouvel appel"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Nouvel appel à bénévoles"
+msgstr "Nouvel appel à bénévoles"
+
 #. Bouton : créer une réunion
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Nouvelle"
 msgstr "Nouvelle"
 
 #: src/composants/AbonnementAgenda.tsx
+#: src/composants/AppelsBenevoles.tsx
 msgid "Nouvelle adresse"
 msgstr "Nouvelle adresse"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Nouvelle adresse copiée."
+msgstr "Nouvelle adresse copiée."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Nouvelle adresse pour {nomAppel}"
+msgstr "Nouvelle adresse pour {nomAppel}"
 
 #: src/composants/DateCleFormulaire.tsx
 msgid "Nouvelle date clé"
 msgstr "Nouvelle date clé"
 
+#: src/pages/Benevoles.tsx
 #: src/pages/FicheEditeur.tsx
 #: src/pages/Perimetre.tsx
 msgid "Nouvelle fiche"
 msgstr "Nouvelle fiche"
+
+#: src/pages/Benevoles.tsx
+msgid "Nouvelle fiche bénévole"
+msgstr "Nouvelle fiche bénévole"
 
 #: src/pages/Fiches.tsx
 msgid "Nouvelle fiche commune"
@@ -3940,7 +4838,10 @@ msgstr "Oui"
 msgid "Oui, le message s’est ouvert"
 msgstr "Oui, le message s’est ouvert"
 
+#. Colonne des dates d’ouverture d’un appel à bénévoles
 #. Statut d’un sondage
+#. État d’un appel à bénévoles
+#: src/composants/AppelsBenevoles.tsx
 #: src/composants/SondageDetail.tsx
 msgid "Ouvert"
 msgstr "Ouvert"
@@ -3955,6 +4856,10 @@ msgstr "Ouvert aux lecteurs de la fiche"
 #: src/pages/Retroplanning.tsx
 msgid "Ouvertes"
 msgstr "Ouvertes"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Ouverture"
+msgstr "Ouverture"
 
 #: src/composants/InstallerApplication.tsx
 msgid "Ouvrez cette page dans Chrome ou dans Edge."
@@ -3996,6 +4901,10 @@ msgstr "Ouvrir dans mon agenda"
 #: src/pages/FicheEditeur.tsx
 msgid "Ouvrir dans un onglet"
 msgstr "Ouvrir dans un onglet"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Ouvrir l’appel"
+msgstr "Ouvrir l’appel"
 
 #: src/composants/Tableau.tsx
 msgid "Ouvrir la fiche"
@@ -4092,6 +5001,14 @@ msgstr "Partagez avec cette adresse les dossiers que les membres liront. Pour l�
 msgid "Partagez avec l’adresse du compte de service les dossiers que les membres liront. Pour l’export des fiches, ajoutez-le comme gestionnaire de contenu d’un Drive partagé."
 msgstr "Partagez avec l’adresse du compte de service les dossiers que les membres liront. Pour l’export des fiches, ajoutez-le comme gestionnaire de contenu d’un Drive partagé."
 
+#: src/pages/Benevoles.tsx
+msgid "Participation"
+msgstr "Participation"
+
+#: src/composants/LienBenevole.tsx
+msgid "Participation confirmée le {jourConfirmation}."
+msgstr "Participation confirmée le {jourConfirmation}."
+
 #: src/lib/guide-markdown.ts
 msgid "Pensez à _signer la feuille de présence_."
 msgstr "Pensez à _signer la feuille de présence_."
@@ -4100,6 +5017,9 @@ msgstr "Pensez à _signer la feuille de présence_."
 msgid "Performance"
 msgstr "Performance"
 
+#. Champ du formulaire d’un appel à bénévoles
+#. Portée d’un appel à bénévoles dont le périmètre est inconnu
+#: src/composants/AppelsBenevoles.tsx
 #: src/composants/SequenceFormulaire.tsx
 #: src/pages/Fiche.tsx
 msgid "Périmètre"
@@ -4234,6 +5154,10 @@ msgstr "Placer quand même"
 msgid "Placer une personne"
 msgstr "Placer une personne"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Places directes : chaque personne reçoit sa fiche et ses places."
+msgstr "Places directes : chaque personne reçoit sa fiche et ses places."
+
 #: src/lib/guide-markdown.ts
 msgid "Plan d’accès : https://exemple.org/plan"
 msgstr "Plan d’accès : https://exemple.org/plan"
@@ -4246,9 +5170,22 @@ msgstr "Planifier une réunion"
 msgid "Point d’étape du pôle"
 msgstr "Point d’étape du pôle"
 
+#: src/composants/AppelsBenevoles.tsx
+#: src/pages/ImportBenevoles.tsx
+msgid "Portée"
+msgstr "Portée"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Portée de l’import"
+msgstr "Portée de l’import"
+
 #: src/composants/EditeurVisuel.tsx
 msgid "Poser le lien"
 msgstr "Poser le lien"
+
+#: src/lib/import-benevoles.ts
+msgid "Postes et créneaux (plusieurs par cellule)"
+msgstr "Postes et créneaux (plusieurs par cellule)"
 
 #: src/composants/Repartition.tsx
 msgid "Pour « {titreSequence} », {debut} → {fin}"
@@ -4258,13 +5195,34 @@ msgstr "Pour « {titreSequence} », {debut} → {fin}"
 msgid "Pour appliquer des propositions, activez la gestion des accès. Chez Microsoft et Dropbox, elle demande une reconnexion ; chez Microsoft, un admin Microsoft Entra accepte une autorisation de plus."
 msgstr "Pour appliquer des propositions, activez la gestion des accès. Chez Microsoft et Dropbox, elle demande une reconnexion ; chez Microsoft, un admin Microsoft Entra accepte une autorisation de plus."
 
+#: src/pages/EspaceBenevole.tsx
+msgid "Pour changer vos disponibilités, écrivez à l’organisation."
+msgstr "Pour changer vos disponibilités, écrivez à l’organisation."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Pour l’équipe seulement : la page publique ne l’affiche pas."
+msgstr "Pour l’équipe seulement : la page publique ne l’affiche pas."
+
 #: src/composants/SequenceFormulaire.tsx
 msgid "Pour une séquence qui passe minuit."
 msgstr "Pour une séquence qui passe minuit."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Précédent"
+msgstr "Précédent"
+
+#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/Repartition.tsx
 msgid "Précisions"
 msgstr "Précisions"
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Précisions (facultatives)"
+msgstr "Précisions (facultatives)"
+
+#: src/lib/import-benevoles.ts
+msgid "Précisions de disponibilité"
+msgstr "Précisions de disponibilité"
 
 #: src/composants/Coquille.tsx
 #: src/composants/MenuCompte.tsx
@@ -4280,6 +5238,14 @@ msgstr "Préférences enregistrées."
 msgid "Prendre ce dossier"
 msgstr "Prendre ce dossier"
 
+#. Champ à associer à une colonne d’un fichier
+#: src/lib/import-benevoles.ts
+msgid "Prénom"
+msgstr "Prénom"
+
+#: src/lib/import-benevoles.ts
+#: src/pages/AppelBenevoles.tsx
+#: src/pages/Benevoles.tsx
 #: src/pages/Preferences.tsx
 msgid "Prénom et nom"
 msgstr "Prénom et nom"
@@ -4297,6 +5263,14 @@ msgstr "Présent·e"
 #: src/lib/guide-markdown.ts
 msgid "Prévenir la mairie"
 msgstr "Prévenir la mairie"
+
+#: src/pages/Benevoles.tsx
+msgid "Prévenir par mail"
+msgstr "Prévenir par mail"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Prévenir par mail : la première place d’une personne lui envoie son lien personnel."
+msgstr "Prévenir par mail : la première place d’une personne lui envoie son lien personnel."
 
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Prochaines réunions"
@@ -4343,9 +5317,26 @@ msgstr "Publier"
 msgid "Quand vous préparez un message, l’espace organisateur ouvre votre messagerie par un lien <0>mailto:</0>. Ce lien ouvre l’application de mail réglée par défaut sur votre appareil. Vous pouvez choisir ici une autre messagerie."
 msgstr "Quand vous préparez un message, l’espace organisateur ouvre votre messagerie par un lien <0>mailto:</0>. Ce lien ouvre l’application de mail réglée par défaut sur votre appareil. Vous pouvez choisir ici une autre messagerie."
 
+#: src/pages/EspaceBenevole.tsx
+msgid "Quitter « {titre} » ?"
+msgstr "Quitter « {titre} » ?"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Quitter cette place"
+msgstr "Quitter cette place"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Quittez d’abord vos places à venir pour supprimer vos informations."
+msgstr "Quittez d’abord vos places à venir pour supprimer vos informations."
+
 #: src/composants/ImportFiches.tsx
 msgid "Racine"
 msgstr "Racine"
+
+#. Dernière étape de l’assistant d’import de bénévoles
+#: src/pages/ImportBenevoles.tsx
+msgid "Rapport"
+msgstr "Rapport"
 
 #: src/composants/TacheCarte.tsx
 msgid "Réalisée par (facultatif)"
@@ -4434,7 +5425,9 @@ msgstr "Réessayer"
 msgid "Référent·es :"
 msgstr "Référent·es :"
 
+#. Statut du choix de séquence d’une candidature de bénévole
 #. État d’une déclinaison de tâche refusée par un périmètre
+#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/DeclinaisonsTache.tsx
 msgid "Refusée"
 msgstr "Refusée"
@@ -4443,6 +5436,7 @@ msgstr "Refusée"
 msgid "Refusée par {personne} le {jour}"
 msgstr "Refusée par {personne} le {jour}"
 
+#: src/composants/CandidaturesBenevoles.tsx
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/MesInvitations.tsx
 msgid "Refuser"
@@ -4456,9 +5450,25 @@ msgstr "Refuser cette invitation ?"
 msgid "Refuser cette tâche ?"
 msgstr "Refuser cette tâche ?"
 
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Refuser la candidature"
+msgstr "Refuser la candidature"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Refuser toute la candidature"
+msgstr "Refuser toute la candidature"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Refuser toute la candidature de {nomCandidat} ?"
+msgstr "Refuser toute la candidature de {nomCandidat} ?"
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "Régler le périmètre"
 msgstr "Régler le périmètre"
+
+#: src/lib/import-benevoles.ts
+msgid "Regroupement des lignes"
+msgstr "Regroupement des lignes"
 
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
@@ -4469,6 +5479,10 @@ msgstr "Regroupement des tâches"
 msgid "Réinitialiser"
 msgstr "Réinitialiser"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Rejoindre « {nomFiche} »"
+msgstr "Rejoindre « {nomFiche} »"
+
 #: src/composants/ReunionDetail.tsx
 msgid "Rejoindre la visio"
 msgstr "Rejoindre la visio"
@@ -4476,6 +5490,10 @@ msgstr "Rejoindre la visio"
 #: src/composants/InvitationsEnAttente.tsx
 msgid "Relancer"
 msgstr "Relancer"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Relancez l’import du même fichier : les personnes déjà importées seront reconnues."
+msgstr "Relancez l’import du même fichier : les personnes déjà importées seront reconnues."
 
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Relaytour affiche ce nom quand le fournisseur ne répond pas. Le dossier garde son nom chez le fournisseur."
@@ -4525,6 +5543,10 @@ msgstr "Relaytour peut comparer les équipes aux droits des dossiers liés chez 
 msgid "Relaytour propose"
 msgstr "Relaytour propose"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Relaytour propose un champ pour chaque colonne, d’après son en-tête et son contenu. Corrigez au besoin. Une colonne ignorée ne quitte pas votre appareil."
+msgstr "Relaytour propose un champ pour chaque colonne, d’après son en-tête et son contenu. Corrigez au besoin. Une colonne ignorée ne quitte pas votre appareil."
+
 #: src/composants/TacheCarte.tsx
 msgid "Remettre à faire"
 msgstr "Remettre à faire"
@@ -4543,6 +5565,14 @@ msgstr "Renfort"
 #: src/composants/SequenceFormulaire.tsx
 msgid "Renforts recherchés (facultatif)"
 msgstr "Renforts recherchés (facultatif)"
+
+#: src/composants/LienBenevole.tsx
+msgid "Renvoyer par mail"
+msgstr "Renvoyer par mail"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Répartir dans le programme"
+msgstr "Répartir dans le programme"
 
 #: src/pages/Programme.tsx
 msgid "Répartition"
@@ -4571,6 +5601,18 @@ msgstr "Reprendre son adresse Relaytour"
 #: src/composants/ImportFiches.tsx
 msgid "Reprenez les fiches que l’association range déjà chez son fournisseur cloud : des fichiers Markdown, texte ou Word. L’import se simule d’abord. Une fiche modifiée dans Relaytour n’est jamais remplacée."
 msgstr "Reprenez les fiches que l’association range déjà chez son fournisseur cloud : des fichiers Markdown, texte ou Word. L’import se simule d’abord. Une fiche modifiée dans Relaytour n’est jamais remplacée."
+
+#. Téléphone d’une fiche bénévole que la personne ne peut pas lire
+#: src/pages/Benevoles.tsx
+msgid "Réservé"
+msgstr "Réservé"
+
+#. Adresse de courriel d’une fiche bénévole que la personne ne peut pas lire
+#. Note d’une fiche bénévole que la personne ne peut pas lire
+#. Participation d’un bénévole que la personne ne peut pas lire
+#: src/pages/Benevoles.tsx
+msgid "Réservée"
+msgstr "Réservée"
 
 #: src/composants/RessourcesFiche.tsx
 msgid "Réservée au périmètre d’origine"
@@ -4626,6 +5668,10 @@ msgstr "Retenir ce créneau"
 #: src/composants/SondageDetail.tsx
 msgid "Retenu"
 msgstr "Retenu"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Retirées"
+msgstr "Retirées"
 
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/Repartition.tsx
@@ -4684,6 +5730,10 @@ msgstr "Retirer cette invitation ?"
 #: src/composants/SequenceFormulaire.tsx
 msgid "Retirer cette personne"
 msgstr "Retirer cette personne"
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Retirer cette plage"
+msgstr "Retirer cette plage"
 
 #: src/composants/GestionAcces.tsx
 msgid "Retirer du {cible}"
@@ -4784,6 +5834,7 @@ msgstr "Rôle"
 msgid "Rôle d’admin"
 msgstr "Rôle d’admin"
 
+#: src/composants/AppelsBenevoles.tsx
 #: src/composants/TacheCarte.tsx
 msgid "Rouvrir"
 msgstr "Rouvrir"
@@ -4805,7 +5856,9 @@ msgstr "Saisissez l’adresse du Nextcloud de l’association. Un nouvel onglet 
 msgid "Saisissez un identifiant."
 msgstr "Saisissez un identifiant."
 
+#: src/composants/AppelsBenevoles.tsx
 #: src/composants/ReglagePerimetre.tsx
+#: src/pages/Benevoles.tsx
 #: src/pages/Preferences.tsx
 msgid "Saisissez un nom."
 msgstr "Saisissez un nom."
@@ -4823,9 +5876,18 @@ msgstr "Saisissez un titre."
 msgid "Saisissez une adresse complète, en https://."
 msgstr "Saisissez une adresse complète, en https://."
 
+#: src/pages/AppelBenevoles.tsx
 #: src/pages/Connexion.tsx
 msgid "Saisissez une adresse mail valide."
 msgstr "Saisissez une adresse mail valide."
+
+#: src/pages/Benevoles.tsx
+msgid "Saisissez une adresse valide."
+msgstr "Saisissez une adresse valide."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Saisissez votre prénom et votre nom."
+msgstr "Saisissez votre prénom et votre nom."
 
 #: src/composants/ReunionFormulaire.tsx
 msgid "Salle des associations"
@@ -4858,6 +5920,10 @@ msgstr "Sans fiche"
 msgid "Sans lieu"
 msgstr "Sans lieu"
 
+#: src/pages/Benevoles.tsx
+msgid "Sans mail"
+msgstr "Sans mail"
+
 #: src/composants/ReunionDetail.tsx
 msgid "Sans réponse"
 msgstr "Sans réponse"
@@ -4885,21 +5951,50 @@ msgstr "Sécurité"
 msgid "Séparateur des adresses copiées"
 msgstr "Séparateur des adresses copiées"
 
+#. Champ du formulaire d’un appel à bénévoles
+#: src/composants/AppelsBenevoles.tsx
 #: src/composants/SequenceDetail.tsx
 msgid "Séquence"
 msgstr "Séquence"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Séquence « {titreSequence} »"
+msgstr "Séquence « {titreSequence} »"
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Séquence acceptée : la place attend la confirmation de la personne."
+msgstr "Séquence acceptée : la place attend la confirmation de la personne."
 
 #: src/composants/SequenceFormulaire.tsx
 msgid "Séquence ajoutée au programme."
 msgstr "Séquence ajoutée au programme."
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Séquence de {libelle}"
+msgstr "Séquence de {libelle}"
+
 #: src/composants/SequenceFormulaire.tsx
 msgid "Séquence enregistrée."
 msgstr "Séquence enregistrée."
 
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Séquence refusée."
+msgstr "Séquence refusée."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Séquence supprimée"
+msgstr "Séquence supprimée"
+
 #: src/composants/SequenceDetail.tsx
 msgid "Séquence supprimée."
 msgstr "Séquence supprimée."
+
+#. Colonne : nombre de places d’une fiche bénévole
+#. Troisième étape de l’assistant d’import de bénévoles
+#: src/pages/Benevoles.tsx
+#: src/pages/ImportBenevoles.tsx
+msgid "Séquences"
+msgstr "Séquences"
 
 #: src/composants/AbonnementAgenda.tsx
 msgid "Seulement ces périmètres"
@@ -4908,6 +6003,10 @@ msgstr "Seulement ces périmètres"
 #: src/composants/PreferenceOrganigramme.tsx
 msgid "Seules les personnes de l’activité lisent votre adresse. Vous pouvez retirer votre accord à tout moment. Une adresse déjà copiée par une autre personne reste en sa possession."
 msgstr "Seules les personnes de l’activité lisent votre adresse. Vous pouvez retirer votre accord à tout moment. Une adresse déjà copiée par une autre personne reste en sa possession."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Seules les séquences qui cherchent des renforts se proposent."
+msgstr "Seules les séquences qui cherchent des renforts se proposent."
 
 #. Réponse à un créneau d’un sondage de dates
 #: src/composants/SondageDetail.tsx
@@ -4925,6 +6024,10 @@ msgstr "Simulation : rien n’a encore changé."
 #: src/composants/ImportFiches.tsx
 msgid "Simuler l’import"
 msgstr "Simuler l’import"
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Site web"
+msgstr "Site web"
 
 #: src/composants/VerificationAcces.tsx
 msgid "Son compte existe, mais aucun droit ne couvre ce dossier."
@@ -4964,8 +6067,13 @@ msgid "Souhait : {nomPerimetre}"
 msgstr "Souhait : {nomPerimetre}"
 
 #: src/pages/Fiche.tsx
+#: src/pages/ImportBenevoles.tsx
 msgid "Source"
 msgstr "Source"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Source de la liste"
+msgstr "Source de la liste"
 
 #: src/lib/guide-markdown.ts
 msgid "Sous une puce, deux espaces au début d’une ligne placent l’élément dans une sous-liste."
@@ -5000,6 +6108,8 @@ msgstr "Support {organisation} ({relaytour})"
 #: src/composants/SequenceDetail.tsx
 #: src/composants/SondageDetail.tsx
 #: src/pages/Agenda.tsx
+#: src/pages/Benevoles.tsx
+#: src/pages/EspaceBenevole.tsx
 msgid "Supprimer"
 msgstr "Supprimer"
 
@@ -5023,6 +6133,14 @@ msgstr "Supprimer cette date clé ?"
 msgid "Supprimer cette séquence ?"
 msgstr "Supprimer cette séquence ?"
 
+#: src/pages/Benevoles.tsx
+msgid "Supprimer la fiche de {nomBenevole}"
+msgstr "Supprimer la fiche de {nomBenevole}"
+
+#: src/pages/Benevoles.tsx
+msgid "Supprimer la fiche de {nomBenevole} ?"
+msgstr "Supprimer la fiche de {nomBenevole} ?"
+
 #: src/composants/SequenceDetail.tsx
 msgid "Supprimer la séquence"
 msgstr "Supprimer la séquence"
@@ -5034,6 +6152,14 @@ msgstr "Supprimer le brouillon"
 #: src/composants/SondageDetail.tsx
 msgid "Supprimer le sondage"
 msgstr "Supprimer le sondage"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Supprimer mes informations"
+msgstr "Supprimer mes informations"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Supprimer vos informations ?"
+msgstr "Supprimer vos informations ?"
 
 #: src/pages/Retroplanning.tsx
 msgid "Sur cette sélection"
@@ -5140,6 +6266,24 @@ msgstr "Tâches réalisées"
 msgid "Télécharger"
 msgstr "Télécharger"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Télécharger les lignes écartées"
+msgstr "Télécharger les lignes écartées"
+
+#. Champ d’une fiche bénévole à fusionner
+#. Champ à associer à une colonne d’un fichier
+#. Colonne du tableau des fiches bénévoles
+#: src/composants/DoublonsBenevoles.tsx
+#: src/lib/import-benevoles.ts
+#: src/pages/Benevoles.tsx
+msgid "Téléphone"
+msgstr "Téléphone"
+
+#: src/pages/AppelBenevoles.tsx
+#: src/pages/Benevoles.tsx
+msgid "Téléphone (facultatif)"
+msgstr "Téléphone (facultatif)"
+
 #. En-tête de colonne d’un tableau d’exemple : terrain de sport
 #: src/lib/guide-markdown.ts
 msgid "Terrain"
@@ -5170,6 +6314,10 @@ msgstr "Terrain 2, bassin, salle des fêtes…"
 msgid "Texte"
 msgstr "Texte"
 
+#: src/composants/AppelsBenevoles.tsx
+msgid "Texte d’introduction (facultatif)"
+msgstr "Texte d’introduction (facultatif)"
+
 #. Texte d’exemple inséré dans une fiche par le bouton « Lien ».
 #: src/lib/mise-en-forme.ts
 msgid "texte du lien"
@@ -5188,6 +6336,10 @@ msgstr "texte en italique"
 #: src/lib/guide-markdown.ts
 msgid "Texte tel quel"
 msgstr "Texte tel quel"
+
+#: src/composants/LienBenevole.tsx
+msgid "Tirer un nouveau lien ?"
+msgstr "Tirer un nouveau lien ?"
 
 #. Bouton de la barre de mise en forme : titre de section
 #: src/composants/DateCleFormulaire.tsx
@@ -5266,6 +6418,10 @@ msgstr "Tout appliquer"
 msgid "Tout le périmètre"
 msgstr "Tout le périmètre"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Tout le programme"
+msgstr "Tout le programme"
+
 #: src/composants/ListeNotifications.tsx
 msgid "Tout lire"
 msgstr "Tout lire"
@@ -5294,6 +6450,10 @@ msgstr "Toute l’équipe"
 #: src/lib/regroupement.ts
 msgid "toute la période"
 msgstr "toute la période"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Toute la période"
+msgstr "Toute la période"
 
 #. Filtre : toutes les tâches
 #. Filtre : toutes les tâches
@@ -5326,6 +6486,10 @@ msgstr "Toutes les fiches, communes comprises"
 #: src/composants/VerificationAcces.tsx
 msgid "Toutes ont accès chez le fournisseur."
 msgstr "Toutes ont accès chez le fournisseur."
+
+#: src/composants/CandidaturesBenevoles.tsx
+msgid "Traitées"
+msgstr "Traitées"
 
 #: src/pages/Connexion.tsx
 msgid "Transmettez le savoir-faire de votre organisation d’une période à l’autre."
@@ -5395,6 +6559,18 @@ msgstr "Un créneau est un jour, avec un horaire facultatif."
 msgid "Un dossier source compte trop d’éléments pour les lire tous. Rangez ses fiches dans plusieurs dossiers."
 msgstr "Un dossier source compte trop d’éléments pour les lire tous. Rangez ses fiches dans plusieurs dossiers."
 
+#: src/lib/import-benevoles.ts
+msgid "Un fichier compte {COLONNES_MAX} colonnes au plus."
+msgstr "Un fichier compte {COLONNES_MAX} colonnes au plus."
+
+#: src/lib/import-benevoles.ts
+msgid "Un fichier compte {LIGNES_MAX} lignes au plus."
+msgstr "Un fichier compte {LIGNES_MAX} lignes au plus."
+
+#: src/lib/import-benevoles.ts
+msgid "Un fichier pèse 2 Mo au plus."
+msgstr "Un fichier pèse 2 Mo au plus."
+
 #: src/lib/guide-markdown.ts
 msgid "Un lien de fiche s’ouvre dans un nouvel onglet."
 msgstr "Un lien de fiche s’ouvre dans un nouvel onglet."
@@ -5423,6 +6599,14 @@ msgstr "Un mail par heure au plus quand une activité que vous administrez reço
 msgid "Un message d’essai s’est-il ouvert dans « {libelleMessagerie} » ?"
 msgstr "Un message d’essai s’est-il ouvert dans « {libelleMessagerie} » ?"
 
+#: src/pages/AppelBenevoles.tsx
+msgid "Un mot pour l’équipe (facultatif)"
+msgstr "Un mot pour l’équipe (facultatif)"
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Un périmètre"
+msgstr "Un périmètre"
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "Un périmètre archivé disparaît des listes, mais son historique reste consultable."
 msgstr "Un périmètre archivé disparaît des listes, mais son historique reste consultable."
@@ -5430,6 +6614,10 @@ msgstr "Un périmètre archivé disparaît des listes, mais son historique reste
 #: src/composants/TacheFormulaire.tsx
 msgid "Un pôle demande par exemple la même tâche à chaque sport."
 msgstr "Un pôle demande par exemple la même tâche à chaque sport."
+
+#: src/lib/import-benevoles.ts
+msgid "Un poste ou un créneau (une colonne par choix)"
+msgstr "Un poste ou un créneau (une colonne par choix)"
 
 #: src/composants/GestionAcces.tsx
 msgid "Un retrait attend toujours la décision d’un admin. Relaytour ne retire que les accès qu’il a lui-même créés."
@@ -5470,6 +6658,10 @@ msgstr "Une autre personne"
 #: src/composants/SondageFormulaire.tsx
 msgid "Une autre personne a modifié ce sondage depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification."
 msgstr "Une autre personne a modifié ce sondage depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Une autre personne a modifié cet appel. Rouvrez-le pour reprendre."
+msgstr "Une autre personne a modifié cet appel. Rouvrez-le pour reprendre."
 
 #: src/composants/DateCleFormulaire.tsx
 msgid "Une autre personne a modifié cette date clé depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification."
@@ -5514,6 +6706,10 @@ msgstr "Une case commence par un tiret, puis des crochets qui entourent une espa
 #: src/composants/PreferencePush.tsx
 msgid "Une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou elle est en retard."
 msgstr "Une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou elle est en retard."
+
+#: src/pages/Benevoles.tsx
+msgid "Une fiche ne s’enregistre qu’avec l’accord de la personne."
+msgstr "Une fiche ne s’enregistre qu’avec l’accord de la personne."
 
 #: src/lib/guide-markdown.ts
 msgid "Une ligne vide commence un nouveau paragraphe."
@@ -5567,6 +6763,10 @@ msgstr "Une personne"
 msgid "Une personne de l’équipe, ou une ou un bénévole"
 msgstr "Une personne de l’équipe, ou une ou un bénévole"
 
+#: src/composants/AppelsBenevoles.tsx
+msgid "Une personne qui ouvre l’adresse choisit les séquences qui cherchent des bénévoles et donne ses disponibilités. Aucun mail ne part au dépôt : la candidature attend votre revue dans l’onglet « Candidatures »."
+msgstr "Une personne qui ouvre l’adresse choisit les séquences qui cherchent des bénévoles et donne ses disponibilités. Aucun mail ne part au dépôt : la candidature attend votre revue dans l’onglet « Candidatures »."
+
 #: src/composants/PreferencePush.tsx
 msgid "Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule."
 msgstr "Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule."
@@ -5574,6 +6774,10 @@ msgstr "Une personne vous convoque à une réunion, ou une de vos réunions chan
 #: src/composants/ReunionFormulaire.tsx
 msgid "Une réunion lie 20 tâches au plus."
 msgstr "Une réunion lie 20 tâches au plus."
+
+#: src/composants/AppelsBenevoles.tsx
+msgid "Une séquence"
+msgstr "Une séquence"
 
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Une tâche acceptée entre parmi les tâches du périmètre. Une tâche refusée n’y entre pas."
@@ -5595,11 +6799,27 @@ msgstr "Une tâche se décline dans {CIBLES_MAX} périmètres au plus."
 msgid "Une tâche vous est assignée ou retirée, ou une autre personne modifie une de vos tâches."
 msgstr "Une tâche vous est assignée ou retirée, ou une autre personne modifie une de vos tâches."
 
+#: src/pages/EspaceBenevole.tsx
+msgid "Utilisez le lien du dernier mail reçu, ou contactez l’organisation."
+msgstr "Utilisez le lien du dernier mail reçu, ou contactez l’organisation."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Valeurs qui signifient « non »"
+msgstr "Valeurs qui signifient « non »"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Valeurs qui signifient non"
+msgstr "Valeurs qui signifient non"
+
 #: src/composants/ConnexionEspace.tsx
 #: src/composants/VerificationAcces.tsx
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Vérification des accès"
 msgstr "Vérification des accès"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Vérifier la liste"
+msgstr "Vérifier la liste"
 
 #: src/composants/VerificationAcces.tsx
 msgid "Vérifier maintenant"
@@ -5641,6 +6861,10 @@ msgstr "Voir"
 msgid "Voir l’agenda"
 msgstr "Voir l’agenda"
 
+#: src/pages/ImportBenevoles.tsx
+msgid "Voir l’aperçu"
+msgstr "Voir l’aperçu"
+
 #: src/pages/FicheEditeur.tsx
 msgid "Voir la version actuelle"
 msgstr "Voir la version actuelle"
@@ -5648,6 +6872,10 @@ msgstr "Voir la version actuelle"
 #: src/pages/MonEspace.tsx
 msgid "Voir le rétroplanning"
 msgstr "Voir le rétroplanning"
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Voir les candidatures"
+msgstr "Voir les candidatures"
 
 #: src/composants/FichesConnexes.tsx
 msgid "Voir les fiches masquées ({nombreMasquees})"
@@ -5665,6 +6893,19 @@ msgstr "Volley"
 msgid "Vos accès ont changé, ou votre session a pris fin."
 msgstr "Vos accès ont changé, ou votre session a pris fin."
 
+#: src/pages/AppelBenevoles.tsx
+msgid "Vos coordonnées"
+msgstr "Vos coordonnées"
+
+#: src/pages/AppelBenevoles.tsx
+#: src/pages/EspaceBenevole.tsx
+msgid "Vos disponibilités"
+msgstr "Vos disponibilités"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Vos informations sont supprimées."
+msgstr "Vos informations sont supprimées."
+
 #: src/composants/FournisseurActivite.tsx
 #: src/composants/GardeSession.tsx
 #: src/composants/MesInvitations.tsx
@@ -5675,6 +6916,10 @@ msgstr "Vos invitations"
 #: src/pages/TousLesPerimetres.tsx
 msgid "Vos périmètres"
 msgstr "Vos périmètres"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Vos places de bénévole pour « {nomActivite} »"
+msgstr "Vos places de bénévole pour « {nomActivite} »"
 
 #: src/composants/SondageDetail.tsx
 msgid "Vos réponses sont enregistrées."
@@ -5733,6 +6978,14 @@ msgstr "Votre appareil n’a pas pu s’abonner aux notifications. Vérifiez vot
 msgid "Votre appareil n’a plus de réseau, et vos modifications ne s’enregistrent pas. Gardez cet écran ouvert, puis réessayez au retour du réseau."
 msgstr "Votre appareil n’a plus de réseau, et vos modifications ne s’enregistrent pas. Gardez cet écran ouvert, puis réessayez au retour du réseau."
 
+#: src/pages/AppelBenevoles.tsx
+msgid "Votre candidature est enregistrée."
+msgstr "Votre candidature est enregistrée."
+
+#: src/pages/AppelBenevoles.tsx
+msgid "Votre candidature ne s’enregistre qu’avec votre accord."
+msgstr "Votre candidature ne s’enregistre qu’avec votre accord."
+
 #: src/composants/FilTache.tsx
 msgid "Votre commentaire"
 msgstr "Votre commentaire"
@@ -5752,6 +7005,10 @@ msgstr "Votre compte n’appartient à aucune organisation ouverte."
 #: src/composants/Contribution.tsx
 msgid "Votre contribution"
 msgstr "Votre contribution"
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Votre fiche de bénévole et vos disponibilités disparaissent. Ce lien cessera de fonctionner."
+msgstr "Votre fiche de bénévole et vos disponibilités disparaissent. Ce lien cessera de fonctionner."
 
 #: src/composants/NotesDeVersion.tsx
 msgid "Votre installation utilise Relaytour {version}. Cette fenêtre liste les changements de chaque version. Vous y lisez les notes qui concernent votre rôle."
@@ -5776,6 +7033,10 @@ msgstr "Votre navigateur n’a pas quitté cette page. L’application n’est p
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message."
 msgstr "Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message."
+
+#: src/pages/EspaceBenevole.tsx
+msgid "Votre place est libérée."
+msgstr "Votre place est libérée."
 
 #: src/composants/ReunionDetail.tsx
 msgid "Votre réponse"
@@ -5909,6 +7170,10 @@ msgstr "Vous lisez ici les documents que l’association range chez son fourniss
 msgid "Vous lisez ses tâches et son équipe. Vous ne pouvez pas les modifier. Pour rejoindre ce périmètre, formulez un souhait dans <0>Tous les périmètres</0>."
 msgstr "Vous lisez ses tâches et son équipe. Vous ne pouvez pas les modifier. Pour rejoindre ce périmètre, formulez un souhait dans <0>Tous les périmètres</0>."
 
+#: src/pages/EspaceBenevole.tsx
+msgid "Vous n’avez aucune place à venir."
+msgstr "Vous n’avez aucune place à venir."
+
 #: src/pages/Perimetre.tsx
 msgid "Vous n’avez pas accès à ce périmètre."
 msgstr "Vous n’avez pas accès à ce périmètre."
@@ -5932,6 +7197,10 @@ msgstr "Vous n’avez pas encore de périmètre dans cette activité. Un admin v
 #: src/pages/FicheEditeur.tsx
 msgid "Vous n’avez pas le droit de rédiger cette fiche."
 msgstr "Vous n’avez pas le droit de rédiger cette fiche."
+
+#: src/pages/ImportBenevoles.tsx
+msgid "Vous n’écrivez dans aucun périmètre de {periodeCette}."
+msgstr "Vous n’écrivez dans aucun périmètre de {periodeCette}."
 
 #: src/pages/Retroplanning.tsx
 msgid "Vous n’êtes affecté·e à aucun périmètre pour {cettePeriode}."

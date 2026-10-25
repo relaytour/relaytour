@@ -5,6 +5,7 @@ import {
   PlusOutlined,
   UploadOutlined,
 } from '@ant-design/icons'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   App,
   Button,
@@ -108,6 +109,7 @@ const RELIRE = ['Benevoles', 'Programme']
  * personnes que le serveur autorise.
  */
 export default function Benevoles() {
+  const { t } = useLingui()
   const { activite, gere, lien, periode } = useActivite()
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
@@ -182,13 +184,13 @@ export default function Benevoles() {
       <Result
         status="info"
         icon={<LockOutlined />}
-        title="Les fiches bénévoles sont réservées aux personnes qui organisent."
-        subTitle="Les admins de l’activité et les personnes affectées à un de ses périmètres les lisent."
+        title={t`Les fiches bénévoles sont réservées aux personnes qui organisent.`}
+        subTitle={t`Les admins de l’activité et les personnes affectées à un de ses périmètres les lisent.`}
       />
     ) : (
       <Result
         status="warning"
-        title="Les fiches bénévoles n’ont pas pu être chargées."
+        title={t`Les fiches bénévoles n’ont pas pu être chargées.`}
         subTitle={messageErreur(error)}
       />
     )
@@ -211,10 +213,10 @@ export default function Benevoles() {
             accord: v.accord === true,
           },
         })
-        message.success('Fiche créée.')
+        message.success(t`Fiche créée.`)
       } else if (fiche) {
         await modifier({ variables: { id: fiche.id, ...champs } })
-        message.success('Fiche enregistrée.')
+        message.success(t`Fiche enregistrée.`)
       }
       setFiche(null)
     } catch (e) {
@@ -222,40 +224,55 @@ export default function Benevoles() {
     }
   }
 
-  const confirmerSuppression = (f: Fiche) =>
+  const confirmerSuppression = (f: Fiche) => {
+    const nomBenevole = f.nom
     void modal.confirm({
-      title: `Supprimer la fiche de ${f.nom} ?`,
-      content:
-        'La fiche et ses coordonnées disparaissent. La personne quitte les séquences où elle est placée.',
-      okText: 'Supprimer',
+      title: t`Supprimer la fiche de ${nomBenevole} ?`,
+      content: t`La fiche et ses coordonnées disparaissent. La personne quitte les séquences où elle est placée.`,
+      okText: t`Supprimer`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await supprimer({ variables: { id: f.id } })
-          message.success('Fiche supprimée.')
+          message.success(t`Fiche supprimée.`)
         } catch (e) {
           message.error(messageErreur(e))
         }
       },
     })
+  }
+
+  const periodeUne = periode.une
+  const libelleLienDe = (f: Fiche) => {
+    const nomBenevole = f.nom
+    return t`Lien personnel de ${nomBenevole}`
+  }
+  const libelleSuppression = (f: Fiche) => {
+    const nomBenevole = f.nom
+    return t`Supprimer la fiche de ${nomBenevole}`
+  }
+  const nbCandidatures = aTraiter?.candidatures.length ?? 0
+  const nomLien = (lienDe && actuelle(lienDe)?.nom) ?? ''
 
   return (
     <>
       <Titre
-        sousTitre="Les personnes qui aident sans compte dans l’application. Une fiche ne s’enregistre qu’avec leur accord."
+        sousTitre={t`Les personnes qui aident sans compte dans l’application. Une fiche ne s’enregistre qu’avec leur accord.`}
         actions={
           onglet === 'fiches' ? (
             <Space wrap>
               <Link to={lien('/benevoles/import')}>
-                <Button icon={<UploadOutlined />}>Importer une liste</Button>
+                <Button icon={<UploadOutlined />}>
+                  <Trans>Importer une liste</Trans>
+                </Button>
               </Link>
               <Button
                 type="primary"
                 icon={<PlusOutlined />}
                 onClick={() => setFiche('nouvelle')}
               >
-                Nouvelle fiche
+                <Trans>Nouvelle fiche</Trans>
               </Button>
             </Space>
           ) : onglet === 'doublons' ? null : (
@@ -266,29 +283,29 @@ export default function Benevoles() {
           )
         }
       >
-        Bénévoles
+        <Trans>Bénévoles</Trans>
       </Titre>
       <Tabs
         activeKey={onglet}
         onChange={cle => changer('onglet', cle === 'fiches' ? null : cle)}
         items={[
-          { key: 'fiches', label: 'Fiches' },
+          { key: 'fiches', label: t`Fiches` },
           {
             key: 'candidatures',
             label:
-              (aTraiter?.candidatures.length ?? 0) > 0
-                ? `Candidatures (${aTraiter!.candidatures.length})`
-                : 'Candidatures',
+              nbCandidatures > 0
+                ? t`Candidatures (${nbCandidatures})`
+                : t`Candidatures`,
           },
-          { key: 'appels', label: 'Appels' },
+          { key: 'appels', label: t`Appels` },
           // Les doublons possibles et la fusion, réservés aux admins (ADR 0042).
-          ...(gere ? [{ key: 'doublons', label: 'Doublons possibles' }] : []),
+          ...(gere ? [{ key: 'doublons', label: t`Doublons possibles` }] : []),
         ]}
       />
       {onglet === 'doublons' && <DoublonsBenevoles />}
       {(onglet === 'candidatures' || onglet === 'appels') &&
         (editionId === undefined ? (
-          <Empty description={`Créez d’abord ${periode.une}.`} />
+          <Empty description={t`Créez d’abord ${periodeUne}.`} />
         ) : onglet === 'candidatures' ? (
           <CandidaturesBenevoles editionId={editionId} archivee={archivee} />
         ) : (
@@ -304,19 +321,30 @@ export default function Benevoles() {
             pagination={false}
             ouvrir={f => setFiche(f)}
             peutOuvrir={f => f.peutModifier}
-            libelleOuvrir={f => `Modifier la fiche de ${f.nom}`}
-            locale={{ emptyText: 'Aucune fiche bénévole pour cette activité.' }}
+            libelleOuvrir={f => {
+              const nomBenevole = f.nom
+              return t`Modifier la fiche de ${nomBenevole}`
+            }}
+            locale={{
+              emptyText: t`Aucune fiche bénévole pour cette activité.`,
+            }}
             colonnes={[
               {
                 key: 'nom',
-                title: 'Nom',
+                title: t({
+                  message: 'Nom',
+                  comment: 'Colonne du tableau des fiches bénévoles',
+                }),
                 dataIndex: 'nom',
                 tri: f => f.nom,
                 recherche: f => f.nom,
               },
               {
                 key: 'telephone',
-                title: 'Téléphone',
+                title: t({
+                  message: 'Téléphone',
+                  comment: 'Colonne du tableau des fiches bénévoles',
+                }),
                 render: (_, f) =>
                   f.coordonneesVisibles ? (
                     f.telephone ? (
@@ -327,12 +355,21 @@ export default function Benevoles() {
                       '—'
                     )
                   ) : (
-                    <span className="rt-note">Réservé</span>
+                    <span className="rt-note">
+                      {t({
+                        message: 'Réservé',
+                        comment:
+                          'Téléphone d’une fiche bénévole que la personne ne peut pas lire',
+                      })}
+                    </span>
                   ),
               },
               {
                 key: 'courriel',
-                title: 'Adresse',
+                title: t({
+                  message: 'Adresse',
+                  comment: 'Colonne : adresse de courriel d’une fiche bénévole',
+                }),
                 render: (_, f) =>
                   f.coordonneesVisibles ? (
                     f.courriel ? (
@@ -341,14 +378,23 @@ export default function Benevoles() {
                       '—'
                     )
                   ) : (
-                    <span className="rt-note">Réservée</span>
+                    <span className="rt-note">
+                      {t({
+                        message: 'Réservée',
+                        comment:
+                          'Adresse de courriel d’une fiche bénévole que la personne ne peut pas lire',
+                      })}
+                    </span>
                   ),
               },
               {
                 // La note (disponibilités, compétences) se lit avec les
                 // coordonnées, même sans droit de modifier la fiche.
                 key: 'note',
-                title: 'Note',
+                title: t({
+                  message: 'Note',
+                  comment: 'Colonne du tableau des fiches bénévoles',
+                }),
                 ellipsis: true,
                 render: (_, f) =>
                   f.coordonneesVisibles ? (
@@ -358,12 +404,21 @@ export default function Benevoles() {
                       '—'
                     )
                   ) : (
-                    <span className="rt-note">Réservée</span>
+                    <span className="rt-note">
+                      {t({
+                        message: 'Réservée',
+                        comment:
+                          'Note d’une fiche bénévole que la personne ne peut pas lire',
+                      })}
+                    </span>
                   ),
               },
               {
                 key: 'places',
-                title: 'Séquences',
+                title: t({
+                  message: 'Séquences',
+                  comment: 'Colonne : nombre de places d’une fiche bénévole',
+                }),
                 dataIndex: 'places',
                 width: 120,
                 tri: f => f.places,
@@ -373,29 +428,46 @@ export default function Benevoles() {
                 // aucun mail. Sans les coordonnées, l'absence d'adresse ne se
                 // lit pas : la cellule l'indique comme réservée.
                 key: 'lien',
-                title: 'Participation',
+                title: t`Participation`,
                 width: 170,
                 render: (_, f) => (
                   <span className="rt-cellule-lien">
                     {f.confirmeeLe ? (
-                      <Tag color="success">Confirmée</Tag>
+                      <Tag color="success">
+                        {t({
+                          message: 'Confirmée',
+                          comment: 'Participation d’un bénévole',
+                        })}
+                      </Tag>
                     ) : f.lienEnvoyeLe ? (
-                      <Tag color="warning">Lien envoyé</Tag>
+                      <Tag color="warning">{t`Lien envoyé`}</Tag>
                     ) : !f.coordonneesVisibles ? (
-                      <span className="rt-note">Réservée</span>
+                      <span className="rt-note">
+                        {t({
+                          message: 'Réservée',
+                          comment:
+                            'Participation d’un bénévole que la personne ne peut pas lire',
+                        })}
+                      </span>
                     ) : f.prevenirParMail && f.courriel ? (
-                      <span className="rt-note">Lien à la première place</span>
+                      <span className="rt-note">
+                        {t`Lien à la première place`}
+                      </span>
                     ) : (
-                      <span className="rt-note">Sans mail</span>
+                      <span className="rt-note">{t`Sans mail`}</span>
                     )}
                     {f.coordonneesVisibles && !f.peutModifier && (
                       <Button
                         type="link"
                         size="small"
-                        aria-label={`Lien personnel de ${f.nom}`}
+                        aria-label={libelleLienDe(f)}
                         onClick={() => setLienDe(f.id)}
                       >
-                        Lien
+                        {t({
+                          message: 'Lien',
+                          comment:
+                            'Bouton qui ouvre le lien personnel d’un bénévole',
+                        })}
                       </Button>
                     )}
                   </span>
@@ -413,7 +485,7 @@ export default function Benevoles() {
                           type="text"
                           danger
                           icon={<DeleteOutlined />}
-                          aria-label={`Supprimer la fiche de ${f.nom}`}
+                          aria-label={libelleSuppression(f)}
                           onClick={() => confirmerSuppression(f)}
                         />
                       ),
@@ -423,10 +495,12 @@ export default function Benevoles() {
             ]}
           />
           <p className="rt-note" style={{ margin: '12px 6px' }}>
-            Les coordonnées d’une fiche se lisent par les admins de l’activité,
-            par la personne qui l’a créée, et par les personnes d’un périmètre
-            où elle est placée. Le serveur supprime une fiche inutilisée depuis
-            deux ans.
+            <Trans>
+              Les coordonnées d’une fiche se lisent par les admins de
+              l’activité, par la personne qui l’a créée, et par les personnes
+              d’un périmètre où elle est placée. Le serveur supprime une fiche
+              inutilisée depuis deux ans.
+            </Trans>
           </p>
         </>
       )}
@@ -434,10 +508,12 @@ export default function Benevoles() {
       <Modal
         open={fiche !== null}
         title={
-          fiche === 'nouvelle' ? 'Nouvelle fiche bénévole' : 'Modifier la fiche'
+          fiche === 'nouvelle'
+            ? t`Nouvelle fiche bénévole`
+            : t`Modifier la fiche`
         }
-        okText="Enregistrer"
-        cancelText="Annuler"
+        okText={t`Enregistrer`}
+        cancelText={t`Annuler`}
         confirmLoading={creation.loading || modification.loading}
         onOk={() => form.submit()}
         onCancel={() => setFiche(null)}
@@ -451,27 +527,27 @@ export default function Benevoles() {
           requiredMark={false}
         >
           <Form.Item
-            label="Prénom et nom"
+            label={t`Prénom et nom`}
             name="nom"
             rules={[
               {
                 required: true,
                 whitespace: true,
-                message: 'Saisissez un nom.',
+                message: t`Saisissez un nom.`,
               },
-              { max: 120, message: 'Le nom dépasse 120 caractères.' },
+              { max: 120, message: t`Le nom dépasse 120 caractères.` },
             ]}
           >
             <Input autoComplete="off" />
           </Form.Item>
-          <Form.Item label="Téléphone (facultatif)" name="telephone">
+          <Form.Item label={t`Téléphone (facultatif)`} name="telephone">
             <Input inputMode="tel" autoComplete="off" />
           </Form.Item>
           <Form.Item
-            label="Adresse (facultative)"
+            label={t`Adresse (facultative)`}
             name="courriel"
             rules={[
-              { type: 'email', message: 'Saisissez une adresse valide.' },
+              { type: 'email', message: t`Saisissez une adresse valide.` },
             ]}
           >
             <Input inputMode="email" autoComplete="off" />
@@ -479,14 +555,16 @@ export default function Benevoles() {
           <Form.Item
             name="prevenirParMail"
             valuePropName="checked"
-            extra="Avec une adresse, la première place envoie à la personne un mail avec son lien personnel. Ses places restent à confirmer. Décochez pour une personne jointe autrement."
+            extra={t`Avec une adresse, la première place envoie à la personne un mail avec son lien personnel. Ses places restent à confirmer. Décochez pour une personne jointe autrement.`}
           >
-            <Checkbox>Prévenir par mail</Checkbox>
+            <Checkbox>
+              <Trans>Prévenir par mail</Trans>
+            </Checkbox>
           </Form.Item>
-          <Form.Item label="Note (facultative)" name="note">
+          <Form.Item label={t`Note (facultative)`} name="note">
             <Input.TextArea
               autoSize={{ minRows: 2, maxRows: 6 }}
-              placeholder="Disponibilités, compétences, taille de t-shirt…"
+              placeholder={t`Disponibilités, compétences, taille de t-shirt…`}
             />
           </Form.Item>
           {fiche !== null &&
@@ -505,15 +583,17 @@ export default function Benevoles() {
                       ? Promise.resolve()
                       : Promise.reject(
                           new Error(
-                            'Une fiche ne s’enregistre qu’avec l’accord de la personne.'
+                            t`Une fiche ne s’enregistre qu’avec l’accord de la personne.`
                           )
                         ),
                 },
               ]}
             >
               <Checkbox>
-                La personne accepte que ses coordonnées soient enregistrées pour
-                organiser l’activité.
+                <Trans>
+                  La personne accepte que ses coordonnées soient enregistrées
+                  pour organiser l’activité.
+                </Trans>
               </Checkbox>
             </Form.Item>
           )}
@@ -522,7 +602,7 @@ export default function Benevoles() {
 
       <Modal
         open={lienDe !== null}
-        title={`Lien personnel de ${(lienDe && actuelle(lienDe)?.nom) ?? ''}`}
+        title={t`Lien personnel de ${nomLien}`}
         footer={null}
         onCancel={() => setLienDe(null)}
         destroyOnHidden
