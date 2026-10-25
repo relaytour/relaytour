@@ -209,9 +209,10 @@ export async function buildContext(
     : null
 
   // La langue de la requête (ADR 0047) : le choix de la personne, sinon la langue
-  // de son organisation active, sinon le français. Sans personne, la langue du
-  // navigateur, posée avant le contexte, reste en place.
-  if (user !== null) {
+  // de son organisation active, sinon le français. Sans personne, ou pour un compte
+  // sans choix ni organisation active, la langue du navigateur, posée avant le
+  // contexte, reste en place.
+  if (user !== null && (user.langue !== null || organisation !== null)) {
     const langueOrganisation =
       user.langue === null && organisation !== null
         ? (await configurationOrganisation(organisation.id)).langue

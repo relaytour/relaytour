@@ -36,6 +36,22 @@ describe('gabarits', () => {
     }
   })
 
+  it('insère une valeur saisie dans un texte traduit sans la réinterpréter', () => {
+    // Un nom saisi qui ressemble à une variable, à une case ou à du HTML reste
+    // une valeur : échappée dans le HTML, telle quelle dans le texte (ADR 0047).
+    const nom = '{{lienConnexion}} {{§0}} {nom} <b>gras</b>'
+    const rendu = rendre(
+      'invitation',
+      { ...VARIABLES_VIDES(GABARITS.invitation.variables), nom },
+      ORGANISATION
+    )
+    expect(rendu.html).toContain(
+      'Bonjour {{lienConnexion}} {{§0}} {nom} &lt;b&gt;gras&lt;/b&gt;,'
+    )
+    expect(rendu.html).not.toContain('<b>gras</b>')
+    expect(rendu.texte).toContain(`Bonjour ${nom},`)
+  })
+
   it('rend le gabarit d’essai avec le nom et les couleurs de l’organisation', () => {
     const { html, texte } = rendre('essai', {}, ORGANISATION)
     expect(html).toContain('Essai d’envoi')

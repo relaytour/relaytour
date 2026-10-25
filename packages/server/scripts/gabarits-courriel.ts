@@ -67,6 +67,13 @@ const SEGMENT = /\[\[([\s\S]*?)\]\]/g
  */
 function segmenter(source: string, messages: string[], nom: string): string {
   return source.replaceAll(SEGMENT, (_m, interieur: string) => {
+    // La marque se compose en HTML ou en texte selon la partie : elle reste hors
+    // d'un texte à traduire.
+    if (/\{\{marque\}\}/.test(interieur)) {
+      throw new Error(
+        `${nom} : {{marque}} ne peut pas entrer dans un texte à traduire.`
+      )
+    }
     if (/<[a-z/!]/i.test(interieur)) {
       throw new Error(
         `${nom} : un texte à traduire contient une balise HTML (« ${interieur.trim().slice(0, 60)} »).`
@@ -120,6 +127,10 @@ const noms = readdirSync(DOSSIER)
   .sort()
 
 if (noms.length === 0) throw new Error(`Aucun gabarit dans ${DOSSIER}.`)
+
+// Un gabarit sans texte à traduire, ou dont aucun texte ne cite de variable,
+// n'emploie pas ses valeurs : le fichier généré l'annonce alors à ESLint.
+let valeursInutilisees = false
 
 const entrees = await Promise.all(
   noms.map(async nom => {
@@ -179,6 +190,8 @@ const entrees = await Promise.all(
       }
     }
 
+    if (!messages.some(m => /\{\w+\}/.test(m))) valeursInutilisees = true
+
     return [
       `  '${nom}': {`,
       `    html: ${JSON.stringify(htmlSegmente)},`,
@@ -197,7 +210,13 @@ writeFileSync(
   `// Généré par scripts/gabarits-courriel.ts. Ne pas modifier à la main.
 // Régénérer : yarn workspace @relaytour/server gabarits:print
 
-import { i18n } from '../lib/langue.ts'
+${
+  valeursInutilisees
+    ? `/* eslint-disable @typescript-eslint/no-unused-vars -- Un gabarit sans texte à
+   traduire n'emploie ni i18n ni ses valeurs. */
+`
+    : ''
+}import { i18n } from '../lib/langue.ts'
 
 type Valeurs = Record<string, string | undefined>
 
