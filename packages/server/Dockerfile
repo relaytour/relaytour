@@ -81,6 +81,10 @@ ENV NODE_ENV=production \
 COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=build     /app/packages/server/dist ./packages/server/dist
 COPY packages/server/package.json ./packages/server/package.json
+# Les modèles de départ (ADR 0048) sont des activités du contenu d'exemple, lues
+# par le serveur depuis ../../content.
+COPY content/exemple    /app/content/exemple
+COPY content/exemple-en /app/content/exemple-en
 # Commandes disponibles dans dist/ : creer-admin, creer-edition, creer-organisation,
 # exporter-organisation, orga-valider, orga-importer, orga-exporter, essai-courriel,
 # planification-lancer (liste tenue par tsup.config.ts).

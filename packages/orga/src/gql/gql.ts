@@ -54,6 +54,8 @@ type Documents = {
     "\n  mutation AfficherPremiersPas {\n    afficherPremiersPas {\n      masques\n    }\n  }\n": typeof types.AfficherPremiersPasDocument,
     "\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n": typeof types.AccepterInvitationDocument,
     "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n": typeof types.RefuserInvitationDocument,
+    "\n  query SimulerModeleDeDepart {\n    simulerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n        nom\n        groupe\n        tachesTypes\n      }\n      fiches\n      groupesAjoutes\n      fichesEnConflit\n      periode\n      tachesCreees\n    }\n  }\n": typeof types.SimulerModeleDeDepartDocument,
+    "\n  mutation AppliquerModeleDeDepart {\n    appliquerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n      }\n      tachesCreees\n    }\n  }\n": typeof types.AppliquerModeleDeDepartDocument,
     "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": typeof types.CreerEditionDocument,
     "\n  mutation ModifierMaLangue($langue: String) {\n    modifierMaLangue(langue: $langue) {\n      id\n      langue\n    }\n  }\n": typeof types.ModifierMaLangueDocument,
     "\n  query MonAdresseVisible {\n    moi {\n      id\n      adresseVisible\n    }\n  }\n": typeof types.MonAdresseVisibleDocument,
@@ -301,6 +303,8 @@ const documents: Documents = {
     "\n  mutation AfficherPremiersPas {\n    afficherPremiersPas {\n      masques\n    }\n  }\n": types.AfficherPremiersPasDocument,
     "\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n": types.AccepterInvitationDocument,
     "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n": types.RefuserInvitationDocument,
+    "\n  query SimulerModeleDeDepart {\n    simulerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n        nom\n        groupe\n        tachesTypes\n      }\n      fiches\n      groupesAjoutes\n      fichesEnConflit\n      periode\n      tachesCreees\n    }\n  }\n": types.SimulerModeleDeDepartDocument,
+    "\n  mutation AppliquerModeleDeDepart {\n    appliquerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n      }\n      tachesCreees\n    }\n  }\n": types.AppliquerModeleDeDepartDocument,
     "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": types.CreerEditionDocument,
     "\n  mutation ModifierMaLangue($langue: String) {\n    modifierMaLangue(langue: $langue) {\n      id\n      langue\n    }\n  }\n": types.ModifierMaLangueDocument,
     "\n  query MonAdresseVisible {\n    moi {\n      id\n      adresseVisible\n    }\n  }\n": types.MonAdresseVisibleDocument,
@@ -682,6 +686,14 @@ export function graphql(source: "\n  mutation AccepterInvitation($id: ID!) {\n  
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n"): (typeof documents)["\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  query SimulerModeleDeDepart {\n    simulerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n        nom\n        groupe\n        tachesTypes\n      }\n      fiches\n      groupesAjoutes\n      fichesEnConflit\n      periode\n      tachesCreees\n    }\n  }\n"): (typeof documents)["\n  query SimulerModeleDeDepart {\n    simulerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n        nom\n        groupe\n        tachesTypes\n      }\n      fiches\n      groupesAjoutes\n      fichesEnConflit\n      periode\n      tachesCreees\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation AppliquerModeleDeDepart {\n    appliquerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n      }\n      tachesCreees\n    }\n  }\n"): (typeof documents)["\n  mutation AppliquerModeleDeDepart {\n    appliquerModeleDeDepart(modele: EVENEMENT_MULTISPORTS) {\n      perimetres {\n        slug\n      }\n      tachesCreees\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

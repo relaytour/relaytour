@@ -161,6 +161,13 @@ type Agenda {
   peutGerer: Boolean!
 }
 
+type ApercuPerimetreModele {
+  groupe: String!
+  nom: String!
+  slug: String!
+  tachesTypes: Int!
+}
+
 """
 Un appel à bénévoles : une adresse publique ouverte entre deux dates (ADR 0041).
 """
@@ -1478,6 +1485,10 @@ enum ModeImport {
   PLACES_DIRECTES
 }
 
+enum ModeleDeDepart {
+  EVENEMENT_MULTISPORTS
+}
+
 type Mutation {
   """
   Enregistre l’abonnement push de cet appareil pour la personne connectée. Reste possible dans une organisation en lecture seule.
@@ -1513,6 +1524,11 @@ type Mutation {
   """Affiche de nouveau la liste « Premiers pas » de l’activité."""
   afficherPremiersPas(activiteId: ID): PremiersPas!
   annulerReunion(id: ID!): Reunion!
+
+  """
+  Crée dans une activité sans périmètre les périmètres, les tâches types et les fiches d’un modèle de départ, puis les tâches de la période courante.
+  """
+  appliquerModeleDeDepart(activiteId: ID, modele: ModeleDeDepart!): RapportModeleDeDepart!
 
   """
   Applique une proposition chez le fournisseur. Rend APPLIQUEE, ou ECHEC avec son message dans la proposition.
@@ -3026,6 +3042,11 @@ type Query {
   simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
 
   """
+  Décrit un modèle de départ et ce qu’il créerait dans l’activité : rien ne change en base.
+  """
+  simulerModeleDeDepart(activiteId: ID, modele: ModeleDeDepart!): RapportModeleDeDepart!
+
+  """
   Simule la reconduction des tâches d’une période vers une autre de la même activité : rien ne change en base. Sans `tacheIds`, toutes les tâches qui n’ont pas été abandonnées.
   """
   simulerReconduction(cibleId: ID!, sourceId: ID!, tacheIds: [ID!]): RapportReconduction!
@@ -3092,6 +3113,19 @@ type RapportImportFiches {
   nonImportes: [FichierEcarte!]!
   nouvellesVersions: [String!]!
   refusees: [FichierEcarte!]!
+}
+
+"""
+Ce qu’un modèle de départ apporte à une activité, ou apporterait en simulation.
+"""
+type RapportModeleDeDepart {
+  effectifsCrees: [String!]!
+  fiches: [String!]!
+  fichesEnConflit: [String!]!
+  groupesAjoutes: [String!]!
+  perimetres: [ApercuPerimetreModele!]!
+  periode: String
+  tachesCreees: [String!]!
 }
 
 """

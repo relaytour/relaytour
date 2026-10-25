@@ -696,6 +696,11 @@ msgid "Une personne en copie visible fait partie des destinataires."
 msgstr "A person in visible copy is one of the recipients."
 
 #. js-lingui-explicit-id
+#: src/schema/modele-de-depart.ts
+msgid "Un modèle de départ s’applique à une activité sans périmètre."
+msgstr "A starter template applies to an activity with no areas."
+
+#. js-lingui-explicit-id
 #: src/schema/organisation.ts
 msgid "Choisissez le groupe du périmètre."
 msgstr "Choose the area’s group."

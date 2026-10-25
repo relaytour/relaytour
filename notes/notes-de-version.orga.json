@@ -26,6 +26,24 @@
           }
         },
         {
+          "id": "2026-10-25-orga-une-activite-vide-part-d-un-modele",
+          "date": "2026-10-25",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une activité vide peut partir d’un modèle d’événement multisports",
+            "texte": "Dans la liste « Premiers pas », l’étape des périmètres propose un modèle de départ : sept périmètres d’un rassemblement sportif fictif, leurs tâches types et trois fiches. Les tâches de l’édition en cours sont créées dans la foulée. Vous renommez, archivez ou complétez ensuite chaque élément. Le modèle ne s’applique qu’à une activité qui n’a encore aucun périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An empty activity can start from a multisport event template",
+            "texte": "In the “First steps” list, the areas step offers a starter template: seven areas of a fictional sports gathering, their task templates, and three sheets. The tasks of the current edition are created at the same time. You then rename, archive, or complete each item. The template only applies to an activity that has no areas yet.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-25-orga-mon-espace-guide-les-premiers-pas-d-une-activite",
           "date": "2026-10-25",
           "type": "fonctionnalite",

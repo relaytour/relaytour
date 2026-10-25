@@ -696,6 +696,11 @@ msgid "Une personne en copie visible fait partie des destinataires."
 msgstr "Une personne en copie visible fait partie des destinataires."
 
 #. js-lingui-explicit-id
+#: src/schema/modele-de-depart.ts
+msgid "Un modèle de départ s’applique à une activité sans périmètre."
+msgstr "Un modèle de départ s’applique à une activité sans périmètre."
+
+#. js-lingui-explicit-id
 #: src/schema/organisation.ts
 msgid "Choisissez le groupe du périmètre."
 msgstr "Choisissez le groupe du périmètre."

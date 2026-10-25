@@ -1875,6 +1875,18 @@ const CAS: Cas[] = [
     variables: () => ({ e: b.edition, p: [a.perimetre] }),
     attente: REFUSE,
   },
+  // Modèle de départ (ADR 0048).
+  ...(
+    [
+      ['simulerModeleDeDepart', 'query'],
+      ['appliquerModeleDeDepart', 'mutation'],
+    ] as const
+  ).map(([operation, sorte]) => ({
+    operation,
+    query: `${sorte} ($a: ID!) { ${operation}(activiteId: $a, modele: EVENEMENT_MULTISPORTS) { periode } }`,
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  })),
   // Premiers pas d'une activité (ADR 0048).
   ...(
     [

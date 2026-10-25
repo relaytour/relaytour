@@ -375,6 +375,10 @@ msgstr "{Mot} 2027"
 msgid "{n, plural, one {# élément} other {# éléments}}"
 msgstr "{n, plural, one {# item} other {# items}}"
 
+#: src/composants/ModeleDeDepart.tsx
+msgid "{n, plural, one {# tâche type} other {# tâches types}}"
+msgstr "{n, plural, one {# task template} other {# task templates}}"
+
 #: src/composants/ReconductionEdition.tsx
 #: src/composants/TachesTypesEdition.tsx
 #: src/pages/Perimetre.tsx
@@ -603,6 +607,10 @@ msgstr "{nombrePhases, plural, one {Phase: {listePhases}} other {Phases: {listeP
 msgid "{nombreReserves, plural, one {Un document lié ne s’ouvrira pas pour tous les périmètres concernés.} other {# documents liés ne s’ouvriront pas pour tous les périmètres concernés.}}"
 msgstr "{nombreReserves, plural, one {One linked document will not open for all the areas concerned.} other {# linked documents will not open for all the areas concerned.}}"
 
+#: src/composants/ModeleDeDepart.tsx
+msgid "{nombreTaches, plural, one {# tâche sera créée} other {# tâches seront créées}} dans {nomPeriode}."
+msgstr "{nombreTaches, plural, one {# task will be created} other {# tasks will be created}} in {nomPeriode}."
+
 #: src/pages/Retroplanning.tsx
 msgid "{nombreTaches} tâches, dont <0>{enRetard} en retard</0>"
 msgstr "{nombreTaches} tasks, including <0>{enRetard} overdue</0>"
@@ -707,6 +715,10 @@ msgstr "{participants, plural, one {{repondants} of # person has responded.} oth
 #: src/lib/messages.ts
 msgid "{perimetre} : {titreTache}"
 msgstr "{perimetre}: {titreTache}"
+
+#: src/composants/ModeleDeDepart.tsx
+msgid "{perimetres, plural, one {# périmètre créé.} other {# périmètres créés.}}"
+msgstr "{perimetres, plural, one {# area created.} other {# areas created.}}"
 
 #: src/lib/messages.ts
 msgid "{periode} : des nouvelles de l’équipe"
@@ -1766,6 +1778,7 @@ msgstr "Canceled"
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/LienBenevole.tsx
 #: src/composants/MesInvitations.tsx
+#: src/composants/ModeleDeDepart.tsx
 #: src/composants/NouvelleEdition.tsx
 #: src/composants/ProposerPersonne.tsx
 #: src/composants/ReconductionEdition.tsx
@@ -1867,6 +1880,10 @@ msgstr "Apps (to try)"
 #: src/composants/GestionAcces.tsx
 msgid "Appliquer"
 msgstr "Apply"
+
+#: src/composants/ModeleDeDepart.tsx
+msgid "Appliquer le modèle"
+msgstr "Apply the template"
 
 #: src/composants/GestionAcces.tsx
 msgid "Appliquer les ajouts sans attendre"
@@ -4270,6 +4287,10 @@ msgctxt "fiches bénévoles"
 msgid "Fiches"
 msgstr "Records"
 
+#: src/composants/ModeleDeDepart.tsx
+msgid "Fiches : {fiches}."
+msgstr "Sheets: {fiches}."
+
 #: src/composants/ImportFiches.tsx
 msgid "Fiches à créer"
 msgstr "Sheets to create"
@@ -5632,6 +5653,10 @@ msgstr "The “direct places” mode requires at least one column mapped to a sl
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Le mode d’emploi décrit chaque choix."
 msgstr "The user guide describes each option."
+
+#: src/composants/ModeleDeDepart.tsx
+msgid "Le modèle décrit un rassemblement sportif fictif. Vous renommez, archivez ou complétez ensuite chaque élément comme le vôtre."
+msgstr "The template describes a fictional sports gathering. You then rename, archive, or complete each item as your own."
 
 #: src/composants/EcrireMessage.tsx
 msgid "Le modèle remplace l’objet et le texte que vous avez modifiés."
@@ -7160,6 +7185,14 @@ msgstr "Participation"
 #: src/composants/LienBenevole.tsx
 msgid "Participation confirmée le {jourConfirmation}."
 msgstr "Participation confirmed on {jourConfirmation}."
+
+#: src/composants/PremiersPas.tsx
+msgid "Partir d’un modèle"
+msgstr "Start from a template"
+
+#: src/composants/ModeleDeDepart.tsx
+msgid "Partir d’un modèle : événement multisports"
+msgstr "Start from a template: multisport event"
 
 #: src/composants/NouvelleEdition.tsx
 msgid "Partir de"
@@ -9385,8 +9418,8 @@ msgid "Un périmètre demandé que vous n’affectez pas devient un souhait. San
 msgstr "A requested area that you don’t appoint the person to becomes an interest. With no area, the person joins the activity’s team and discovers its areas."
 
 #: src/composants/PremiersPas.tsx
-msgid "Un périmètre regroupe les tâches d’un sport, d’un pôle ou d’une commission."
-msgstr "An area groups the tasks of a sport, a department, or a committee."
+msgid "Un périmètre regroupe les tâches d’un sport, d’un pôle ou d’une commission. Un modèle propose des périmètres, leurs tâches types et des fiches."
+msgstr "An area groups the tasks of a sport, a department, or a committee. A template offers areas, their task templates, and sheets."
 
 #: src/composants/TacheFormulaire.tsx
 msgid "Un pôle demande par exemple la même tâche à chaque sport."
@@ -9463,6 +9496,10 @@ msgstr "An appointment makes the person a coordinator of the area: they edit its
 #: src/lib/guide-markdown.ts
 msgid "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 msgstr "An at sign followed by an area’s identifier mentions it, for example @logistique. A @groupe: mention followed by a group’s key mentions the whole group."
+
+#: src/composants/ModeleDeDepart.tsx
+msgid "Une autre activité porte déjà ces fiches, qui ne seront pas reprises : {conflits}."
+msgstr "Another activity already holds these sheets, which will not be carried over: {conflits}."
 
 #: src/lib/conflit.ts
 msgid "Une autre personne"

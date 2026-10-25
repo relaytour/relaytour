@@ -466,7 +466,7 @@ async function activiteVide(tx: Transaction, activiteId: string) {
  * Applique la liste « Concerne aussi » d'une fiche (ADR 0039). Une fiche commune
  * n'en garde aucune. Le masquage vit en base seulement : l'import n'y touche pas.
  */
-async function appliquerConcerneAussi(
+export async function appliquerConcerneAussi(
   tx: Transaction,
   ficheId: string,
   perimetreId: string | null,
