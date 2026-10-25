@@ -1,6 +1,6 @@
 # ADR 0049 — Imports depuis l'espace organisateur
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-25
 - Complète l'ADR 0009 (source de vérité du contenu), l'ADR 0013 (import d'une équipe) et l'ADR 0042 (import de listes de bénévoles).
 - Précise une règle de l'ADR 0038 (fiches et espace de fichiers) : l'import de fiches par les admins d'activité.
@@ -39,7 +39,7 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 - Les champs sont le périmètre, le titre, la description, l'échéance, la fiche liée et la personne responsable. Seuls le périmètre et le titre sont obligatoires.
 - L'échéance s'écrit en date, en `J-n` ou `J+n`, ou en « n jours avant ». Le décalage se compte depuis le premier jour de la période.
 - La fiche se désigne par son titre ou par son slug. Une fiche introuvable est signalée, et la tâche est importée sans fiche.
-- La personne responsable se désigne par son adresse. Elle doit déjà faire partie de l'équipe du périmètre ; sinon, la tâche est importée sans assignation (ADR 0028).
+- La personne responsable se désigne par son adresse. Elle doit déjà être affectée au périmètre pour la période ; sinon, la tâche est importée sans assignation (ADR 0028).
 - Pour un périmètre inconnu, l'admin choisit avant l'écriture : créer le périmètre dans un groupe de l'activité, ou écarter ses lignes.
 - Une ligne dont le périmètre, le titre et l'échéance existent déjà dans la période est « déjà importée ».
 - Une option enregistre aussi les lignes comme tâches types de leur périmètre. Les périodes suivantes les reprennent alors (ADR 0048). Les tâches types existantes d'un périmètre ne sont jamais remplacées : l'import ajoute seulement celles qui manquent.
@@ -58,7 +58,7 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 
 - Un admin de l'organisation dépose une archive zip au format de l'export (ADR 0009). Le dépôt vaut `orga:importer` sans `--edition`.
 - Un admin d'activité dépose une archive pour son activité seulement. Le serveur ne lit alors que `activites/<slug>/` de cette activité, ou le dossier entier dans la disposition plate. Il ignore `organisation.yaml` et les autres activités. Une fiche d'une autre activité qui porte le même slug n'est ni déplacée ni remplacée : elle se signale en conflit.
-- Le slug de l'organisation reste celui de la base. Celui que déclare `organisation.yaml` est ignoré, et le rapport le signale.
+- Le dépôt d'un admin de l'organisation applique `organisation.yaml`, comme la commande. Le nom, le sigle, le fuseau horaire, le thème et les images de l'organisation suivent donc l'archive. Le slug de l'organisation reste celui de la base. Celui que déclare `organisation.yaml` est ignoré, et le rapport le signale. Le rapport de simulation n'annonce pas encore les autres changements d'identité : ce complément reste à faire.
 - L'archive se simule d'abord. Le rapport reprend celui de la commande : éléments créés, modifiés, absents de l'archive, et conflits de fiches. Il liste aussi les fichiers de l'archive que l'import n'a pas lus.
 - L'archive part vers une route dédiée, `POST /medias/contenu/depot`, et non vers GraphQL : une requête GraphQL est bornée à 1 Mo. Le serveur vérifie la session, l'origine et les droits avant de lire le corps de la requête.
 - Un import limité à une activité ne met pas à jour la date de synchronisation de l'organisation : les autres activités ont pu changer dans l'application.
@@ -66,9 +66,9 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 - Le serveur lit l'archive en mémoire, sans l'écrire sur le disque. Il refuse :
   - une archive de plus de 20 Mo, ou plus de 50 Mo une fois décompressée ;
   - plus de 2 000 fichiers ;
-  - un chemin absolu, un chemin qui contient `..`, ou un chemin hors de la disposition attendue ;
+  - un chemin absolu, un chemin qui contient `..` ou une barre oblique inverse ;
   - le format zip64 et le chiffrement.
-- Il ignore les fichiers ajoutés par les systèmes d'exploitation (`__MACOSX/`, `.DS_Store`).
+- Il ignore les fichiers ajoutés par les systèmes d'exploitation (`__MACOSX/`, `.DS_Store`). Un fichier que la disposition ne prévoit pas (un `README.md`, par exemple) n'est pas lu : le rapport le cite parmi les fichiers ignorés.
 - La lecture de l'archive suit l'écriture déjà présente (`lib/zip.ts`) : un code court, sans dépendance nouvelle.
 
 ### Dépôt direct de fiches
@@ -96,8 +96,8 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 - Le dépôt du dossier de contenu passe par la route `POST /medias/contenu/depot`, et le dépôt de fiches par la route `POST /medias/fiches/depot`. Chacun se simule avec le paramètre `simulation=1`.
 - `lireModeles` lit un dossier de contenu depuis le disque ou depuis une liste de fichiers en mémoire. `importerModeles` gagne une option qui ignore `organisation.yaml`.
 - Une migration additive ajoute la valeur `DEPOT` à l'énumération `SourceFiche`.
-- Les classeurs modèles sont livrés comme fichiers statiques de l'espace organisateur.
-- Les essais d'import gagnent des fichiers CSV et XLSX fictifs pour les tâches et pour l'équipe.
+- Les classeurs modèles ne sont pas des fichiers livrés : le navigateur les produit en CSV à partir des colonnes de chaque import.
+- Les essais unitaires de l'espace organisateur couvrent la détection des colonnes et la lecture des échéances des imports de tâches et d'équipe, sur des tableaux en mémoire.
 - Les modes d'emploi des admins gagnent une section « Importer vos données ».
 
 ## Revue de sécurité

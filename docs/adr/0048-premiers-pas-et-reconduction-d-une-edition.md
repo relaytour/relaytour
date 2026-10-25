@@ -1,6 +1,6 @@
 # ADR 0048 — Premiers pas d'une activité et reconduction d'une édition
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-25
 - Réalise le point « Transmission d'une période à la suivante » de la feuille de route, sauf la note de passation. Complète l'ADR 0003 (tâches types), l'ADR 0009 (source de vérité du contenu) et l'ADR 0026 (tâches partagées).
 
@@ -29,15 +29,15 @@ Les tâches types d'un périmètre ne deviennent des tâches datées que par la 
 |---|---|
 | Décrire l'activité | Un admin a confirmé le nom, la nature et les groupes de l'activité |
 | Créer la première période | L'activité a au moins une période non archivée |
-| Créer les périmètres | L'activité a au moins un périmètre |
-| Préparer les tâches | La période courante a au moins une tâche |
-| Inviter l'équipe | Une autre personne que l'admin fait partie de l'équipe (ADR 0045) |
+| Créer les périmètres | L'activité a au moins un périmètre non archivé |
+| Préparer les tâches | La période courante a au moins une tâche non abandonnée |
+| Inviter l'équipe | Une autre personne que celle qui lit la liste est rattachée à l'activité, admin de l'activité ou affectée à un périmètre (ADR 0045) |
 
+- La période courante est la plus récente des périodes non archivées de l'activité.
 - Le serveur calcule l'état de chaque étape à partir des données, sauf pour la première étape. Une étape faite par un autre chemin (un autre écran, un import, la ligne de commande) est donc cochée.
 - Chaque étape ouvre une fenêtre qui contient le formulaire de l'écran concerné. L'admin n'a pas besoin de quitter « Mon espace ».
 - L'étape « Préparer les tâches » propose plusieurs voies : appliquer les tâches types, importer un tableur (ADR 0049) ou créer une tâche dans un périmètre.
 - Un admin masque la liste pour toute l'activité, et peut l'afficher de nouveau depuis le menu du compte. La liste disparaît d'elle-même quand toutes les étapes sont faites.
-- Un admin de l'organisation lit aussi un lien vers l'écran « Activités », pour créer une autre activité.
 - Une personne qui n'administre pas l'activité ne voit pas la liste. Quand aucune période n'existe, elle lit un texte d'attente, par exemple « Les admins de l'activité préparent la prochaine édition. » Le mot suit la nature de l'activité (édition, saison ou mandat).
 - Les écrans vides (Rétroplanning, périmètre, Équipe) renvoient vers l'étape qui les remplit.
 
@@ -60,6 +60,7 @@ Les tâches types d'un périmètre ne deviennent des tâches datées que par la 
 
 ### La reconduction d'une période
 
+- L'interface parle de « reprise des tâches » et du verbe « reprendre ». Le mot « reconduction » reste dans le titre de cette décision et dans les noms techniques (`reconduireEdition`, `simulerReconduction`).
 - À la création d'une période, l'admin choisit son point de départ : une période vide, les tâches types, ou une période précédente de la même activité.
 - Avec une période précédente, l'admin lit la liste de ses tâches, toutes cochées, et décoche celles qu'il ne reprend pas. La reconduction reste possible plus tard, depuis l'écran « Éditions ».
 - Une tâche reconduite garde son titre, sa description, sa fiche liée, son périmètre et sa tâche type d'origine.
