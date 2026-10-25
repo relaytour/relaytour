@@ -1,5 +1,6 @@
 import { PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Input, InputNumber, Modal, Switch } from 'antd'
 import { useRef, useState } from 'react'
 
@@ -66,6 +67,7 @@ export default function LieuxFenetre({
   onFermer: () => void
 }) {
   const { message } = App.useApp()
+  const { t } = useLingui()
   const { data } = useQuery(LIEUX_TOUS, {
     variables: { activiteId },
     skip: !ouvert,
@@ -113,22 +115,28 @@ export default function LieuxFenetre({
   return (
     <Modal
       open={ouvert}
-      title="Lieux de l’activité"
-      footer={<Button onClick={fermer}>Fermer</Button>}
+      title={t`Lieux de l’activité`}
+      footer={
+        <Button onClick={fermer}>
+          <Trans>Fermer</Trans>
+        </Button>
+      }
       onCancel={fermer}
       destroyOnHidden
       rootClassName="rt-modale-pleine"
     >
       <p className="rt-texte-secondaire">
-        Les lieux servent d’une période à l’autre. Le programme les affiche par
-        ordre croissant. Un lieu archivé ne se propose plus.
+        <Trans>
+          Les lieux servent d’une période à l’autre. Le programme les affiche
+          par ordre croissant. Un lieu archivé ne se propose plus.
+        </Trans>
       </p>
       <ul className="rt-lieux">
         {lieux.map(lieu => (
           <li key={lieu.id}>
             <Input
               defaultValue={lieu.nom}
-              aria-label="Nom du lieu"
+              aria-label={t`Nom du lieu`}
               onBlur={e => {
                 const nom = e.target.value.trim()
                 if (nom && nom !== lieu.nom) enregistrer(lieu, { nom })
@@ -136,7 +144,7 @@ export default function LieuxFenetre({
             />
             <InputNumber
               defaultValue={lieu.ordre}
-              aria-label="Ordre du lieu"
+              aria-label={t`Ordre du lieu`}
               style={{ width: 80 }}
               onBlur={e => {
                 const ordre = Number(e.target.value)
@@ -150,9 +158,11 @@ export default function LieuxFenetre({
                 size="small"
                 checked={lieu.archive}
                 onChange={archive => enregistrer(lieu, { archive })}
-                aria-label="Archiver le lieu"
+                aria-label={t`Archiver le lieu`}
               />
-              <span className="rt-note">Archivé</span>
+              <span className="rt-note">
+                <Trans comment="Statut d’un lieu mis de côté">Archivé</Trans>
+              </span>
             </span>
           </li>
         ))}
@@ -173,15 +183,15 @@ export default function LieuxFenetre({
         <Input
           value={nouveau}
           onChange={e => setNouveau(e.target.value)}
-          placeholder="Terrain 2, bassin, salle des fêtes…"
-          aria-label="Nouveau lieu"
+          placeholder={t`Terrain 2, bassin, salle des fêtes…`}
+          aria-label={t`Nouveau lieu`}
         />
         <Button
           htmlType="submit"
           icon={<PlusOutlined />}
           loading={creation.loading}
         >
-          Ajouter
+          <Trans>Ajouter</Trans>
         </Button>
       </form>
     </Modal>

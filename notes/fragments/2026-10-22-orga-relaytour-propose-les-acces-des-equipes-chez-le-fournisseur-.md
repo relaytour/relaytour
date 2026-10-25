@@ -20,6 +20,19 @@ fr:
     décision d'un admin, et Relaytour ne retire jamais un accès posé à la
     main. Relaytour prévient les admins par une notification, une fois par
     jour au plus.
+en:
+  titre: >-
+    Relaytour proposes team access at the cloud provider
+  texte: >-
+    With access management, an organization admin chooses what Relaytour
+    proposes for a linked folder: a share of the folder, or membership in a
+    provider group that already has a right on it. When a team changes,
+    Relaytour proposes adding the expected people who have no access. Relaytour
+    also proposes removing the access it created for people who have left. You
+    apply or dismiss each access proposal in the “Access check” tab. With a
+    folder setting, Relaytour applies additions without waiting. A removal
+    always waits for an admin’s decision, and Relaytour never removes access
+    that was set by hand. Relaytour notifies admins at most once a day.
 ---
 
 ADR 0044 : champs `DossierLie.accesFournisseur`, `groupeFournisseurId`,

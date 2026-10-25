@@ -1,3 +1,6 @@
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Badge, Button, Collapse, Tag, Typography } from 'antd'
 
 import type { NotificationAfficheeFragment } from '../gql/graphql'
@@ -8,6 +11,7 @@ import {
   grouperParPerimetre,
   type Groupe,
 } from '../lib/rangement-notifications'
+import { langueActive } from '../lib/langue'
 
 export type Notification = NotificationAfficheeFragment
 
@@ -21,19 +25,19 @@ export interface CibleGroupe {
 
 function ilYA(iso: string): string {
   const minutes = Math.round((Date.now() - new Date(iso).getTime()) / 60000)
-  if (minutes < 1) return 'à l’instant'
-  if (minutes < 60) return `il y a ${minutes} min`
+  if (minutes < 1) return t`à l’instant`
+  if (minutes < 60) return t`il y a ${minutes} min`
   const heures = Math.round(minutes / 60)
-  if (heures < 24) return `il y a ${heures} h`
-  return new Date(iso).toLocaleDateString('fr-FR', {
+  if (heures < 24) return t`il y a ${heures} h`
+  return new Date(iso).toLocaleDateString(langueActive(), {
     day: 'numeric',
     month: 'long',
   })
 }
 
-const ROLES: Record<string, string> = {
-  ADMIN_ACTIVITE: 'Admin de l’activité',
-  ADMIN_ORGANISATION: 'Admin de l’organisation',
+const ROLES: Record<string, MessageDescriptor> = {
+  ADMIN_ACTIVITE: msg`Admin de l’activité`,
+  ADMIN_ORGANISATION: msg`Admin de l’organisation`,
 }
 
 function Ligne({
@@ -47,6 +51,8 @@ function Ligne({
   avecRole: boolean
   onOuvrir: (n: Notification) => void
 }) {
+  const { t } = useLingui()
+  const role = ROLES[n.niveau]
   // Le périmètre, et la période quand l'activité en a plusieurs d'ouvertes,
   // s'affichent au-dessus du texte (ADR 0032).
   const contexte = [avecPerimetre ? n.perimetre?.nom : null, n.periode]
@@ -60,7 +66,7 @@ function Ligne({
         onClick={() => onOuvrir(n)}
       >
         <span style={{ minWidth: 0 }}>
-          {(contexte !== '' || (avecRole && ROLES[n.niveau])) && (
+          {(contexte !== '' || (avecRole && role)) && (
             <span
               style={{
                 display: 'flex',
@@ -86,12 +92,12 @@ function Ligne({
                   {contexte}
                 </Typography.Text>
               )}
-              {avecRole && ROLES[n.niveau] && (
+              {avecRole && role && (
                 <Tag
                   bordered={false}
                   style={{ marginInlineEnd: 0, fontSize: 11 }}
                 >
-                  {ROLES[n.niveau]}
+                  {t(role)}
                 </Tag>
               )}
             </span>
@@ -123,6 +129,7 @@ function EnTete({
   couleur?: string | null
   onMarquer: () => void
 }) {
+  const { t } = useLingui()
   return (
     <span
       style={{
@@ -157,7 +164,7 @@ function EnTete({
           count={nonLues}
           size="small"
           color="var(--rt-accent)"
-          aria-label={`${nonLues} non lue${nonLues > 1 ? 's' : ''}`}
+          aria-label={t`${plural(nonLues, { one: '# non lue', other: '# non lues' })}`}
         />
       </span>
       {nonLues > 0 && (
@@ -169,7 +176,7 @@ function EnTete({
             onMarquer()
           }}
         >
-          Tout lire
+          <Trans>Tout lire</Trans>
         </Button>
       )}
     </span>
@@ -197,8 +204,10 @@ export default function ListeNotifications({
   onOuvrir: (n: Notification) => void
   onMarquer: (cible: CibleGroupe) => void
 }) {
+  const { t } = useLingui()
   const { activites } = useActivite()
   const organisation = useOrganisation()
+  const touteLActivite = t`Toute l’activité`
   const logoDe = (activiteId: string | null) =>
     activiteId === null
       ? organisation.logoUrl
@@ -243,34 +252,29 @@ export default function ListeNotifications({
             <Collapse
               ghost
               size="small"
-              defaultActiveKey={grouperParPerimetre(
-                g.elements,
-                'Toute l’activité'
-              )
+              defaultActiveKey={grouperParPerimetre(g.elements, touteLActivite)
                 .filter(p => p.nonLues > 0)
                 .map(p => p.cle)}
-              items={grouperParPerimetre(g.elements, 'Toute l’activité').map(
-                p => ({
-                  key: p.cle,
-                  label: (
-                    <EnTete
-                      titre={p.titre}
-                      nonLues={p.nonLues}
-                      couleur={p.perimetreId === null ? undefined : p.couleur}
-                      onMarquer={() =>
-                        // « Toute l'activité » se marque par ses identifiants : un
-                        // marquage par activité toucherait aussi ses périmètres.
-                        onMarquer(
-                          p.perimetreId === null
-                            ? { ...cible(p), activiteId: null }
-                            : cible(p)
-                        )
-                      }
-                    />
-                  ),
-                  children: lignes(p.elements, false),
-                })
-              )}
+              items={grouperParPerimetre(g.elements, touteLActivite).map(p => ({
+                key: p.cle,
+                label: (
+                  <EnTete
+                    titre={p.titre}
+                    nonLues={p.nonLues}
+                    couleur={p.perimetreId === null ? undefined : p.couleur}
+                    onMarquer={() =>
+                      // « Toute l'activité » se marque par ses identifiants : un
+                      // marquage par activité toucherait aussi ses périmètres.
+                      onMarquer(
+                        p.perimetreId === null
+                          ? { ...cible(p), activiteId: null }
+                          : cible(p)
+                      )
+                    }
+                  />
+                ),
+                children: lignes(p.elements, false),
+              }))}
             />
           ) : (
             lignes(g.elements, true)

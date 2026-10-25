@@ -1,5 +1,8 @@
 import { EditOutlined, TeamOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Empty, Input, Modal, Skeleton, Tag } from 'antd'
 import { useMemo, useState } from 'react'
 
@@ -13,10 +16,10 @@ import { Panneau } from './Panneau'
 
 type Compte = ComptesFournisseurQuery['comptesFournisseur'][number]
 
-const ETATS: Record<string, { libelle: string; couleur: string }> = {
-  TROUVE: { libelle: 'Compte trouvé', couleur: 'success' },
-  INVITE: { libelle: 'Invité', couleur: 'processing' },
-  ABSENT: { libelle: 'Absent de l’annuaire', couleur: 'error' },
+const ETATS: Record<string, { libelle: MessageDescriptor; couleur: string }> = {
+  TROUVE: { libelle: msg`Compte trouvé`, couleur: 'success' },
+  INVITE: { libelle: msg`Invité`, couleur: 'processing' },
+  ABSENT: { libelle: msg`Absent de l’annuaire`, couleur: 'error' },
 }
 
 /** La fenêtre où un admin donne l'adresse du compte d'un membre chez le fournisseur. */
@@ -27,6 +30,7 @@ function SaisirAdresse({
   compte: Compte
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const [adresse, setAdresse] = useState(compte.adresseSaisie ?? '')
   const [saisir, { loading }] = useMutation(SAISIR_ADRESSE_FOURNISSEUR, {
@@ -36,24 +40,26 @@ function SaisirAdresse({
     saisir({ variables: { userId: compte.personne.id, adresse: valeur } })
       .then(() => {
         message.success(
-          'L’adresse est enregistrée. Relaytour cherche le compte de nouveau.'
+          t`L’adresse est enregistrée. Relaytour cherche le compte de nouveau.`
         )
         onFermer()
       })
       .catch((e: unknown) => message.error(messageErreur(e)))
+  const nomPersonne = compte.personne.nom
+  const adresseRelaytour = compte.personne.email
   return (
     <Modal
       open
-      title={`Compte de ${compte.personne.nom}`}
+      title={t`Compte de ${nomPersonne}`}
       onCancel={onFermer}
-      okText="Enregistrer"
+      okText={t`Enregistrer`}
       okButtonProps={{ loading, disabled: adresse.trim() === '' }}
       onOk={() => void enregistrer(adresse)}
       footer={(_, { OkBtn, CancelBtn }) => (
         <>
           {compte.adresseSaisie !== null && (
             <Button onClick={() => void enregistrer(null)}>
-              Reprendre son adresse Relaytour
+              {t`Reprendre son adresse Relaytour`}
             </Button>
           )}
           <CancelBtn />
@@ -62,16 +68,18 @@ function SaisirAdresse({
       )}
     >
       <p>
-        Relaytour cherche le compte par l’adresse {compte.personne.email}. Si la
-        personne utilise une autre adresse chez le fournisseur, saisissez-la
-        ici.
+        <Trans>
+          Relaytour cherche le compte par l’adresse {adresseRelaytour}. Si la
+          personne utilise une autre adresse chez le fournisseur, saisissez-la
+          ici.
+        </Trans>
       </p>
       <Input
         type="email"
         value={adresse}
         onChange={e => setAdresse(e.target.value)}
-        placeholder="adresse@exemple.org"
-        aria-label="Adresse chez le fournisseur"
+        placeholder={t`adresse@exemple.org`}
+        aria-label={t`Adresse chez le fournisseur`}
       />
     </Modal>
   )
@@ -88,6 +96,7 @@ export default function ComptesFournisseur({
   /** Faux pour un fournisseur sans annuaire : seules les adresses comptent. */
   annuaire: boolean
 }) {
+  const { t } = useLingui()
   const { data, loading } = useQuery(COMPTES_FOURNISSEUR)
   const [recherche, setRecherche] = useState('')
   const [modifie, setModifie] = useState<Compte | null>(null)
@@ -102,15 +111,15 @@ export default function ComptesFournisseur({
   }, [data, recherche])
 
   return (
-    <Panneau titre="Comptes chez le fournisseur" icone={<TeamOutlined />}>
+    <Panneau titre={t`Comptes chez le fournisseur`} icone={<TeamOutlined />}>
       <p className="rt-texte-secondaire">
         {annuaire
-          ? 'Relaytour cherche chaque personne attendue par un dossier lié dans l’annuaire du fournisseur, par son adresse. Il ne lit jamais tout l’annuaire. Une personne qu’aucun dossier n’attend n’est pas cherchée.'
-          : 'Ce fournisseur ne publie pas d’annuaire : Relaytour compare l’adresse de chaque personne à celles des droits. Saisissez l’adresse qu’une personne utilise chez le fournisseur quand elle diffère.'}
+          ? t`Relaytour cherche chaque personne attendue par un dossier lié dans l’annuaire du fournisseur, par son adresse. Il ne lit jamais tout l’annuaire. Une personne qu’aucun dossier n’attend n’est pas cherchée.`
+          : t`Ce fournisseur ne publie pas d’annuaire : Relaytour compare l’adresse de chaque personne à celles des droits. Saisissez l’adresse qu’une personne utilise chez le fournisseur quand elle diffère.`}
       </p>
       <Input.Search
         allowClear
-        placeholder="Chercher une personne"
+        placeholder={t`Chercher une personne`}
         value={recherche}
         onChange={e => setRecherche(e.target.value)}
         style={{ marginBottom: 12, maxWidth: 360 }}
@@ -118,11 +127,16 @@ export default function ComptesFournisseur({
       {loading && !data ? (
         <Skeleton active paragraph={{ rows: 4 }} />
       ) : comptes.length === 0 ? (
-        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Personne." />
+        <Empty
+          image={Empty.PRESENTED_IMAGE_SIMPLE}
+          description={t`Personne.`}
+        />
       ) : (
         <ul className="rt-explorateur">
           {comptes.map(c => {
             const etat = c.etat === null ? null : ETATS[c.etat]
+            const adresseSaisie = c.adresseSaisie
+            const nomMembre = c.personne.nom
             return (
               <li
                 key={c.personne.id}
@@ -133,18 +147,18 @@ export default function ComptesFournisseur({
                   <span className="rt-explorateur-detail">
                     {c.adresseSaisie === null
                       ? c.personne.email
-                      : `${c.adresseSaisie} (saisie par un admin)`}
+                      : t`${adresseSaisie} (saisie par un admin)`}
                   </span>
                 </span>
                 {!annuaire ? null : etat === null || etat === undefined ? (
-                  <Tag>Non cherché</Tag>
+                  <Tag>{t`Non cherché`}</Tag>
                 ) : (
-                  <Tag color={etat.couleur}>{etat.libelle}</Tag>
+                  <Tag color={etat.couleur}>{t(etat.libelle)}</Tag>
                 )}
                 <Button
                   type="text"
                   icon={<EditOutlined />}
-                  aria-label={`Adresse du compte de ${c.personne.nom}`}
+                  aria-label={t`Adresse du compte de ${nomMembre}`}
                   onClick={() => setModifie(c)}
                 />
               </li>

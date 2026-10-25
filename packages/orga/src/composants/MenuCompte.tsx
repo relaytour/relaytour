@@ -9,6 +9,8 @@ import {
   TagOutlined,
 } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Badge, Dropdown } from 'antd'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -43,6 +45,7 @@ export default function MenuCompte({
   nom: string
   afficherNom: boolean
 }) {
+  const { t } = useLingui()
   const navigate = useNavigate()
   const deconnecter = useDeconnexion()
   const { organisations } = useSession()
@@ -56,6 +59,7 @@ export default function MenuCompte({
   // (ADR 0030). Sans invitation, l'entrée n'apparaît pas.
   const invitations = useMesInvitations()
   const [invitationsOuvertes, setInvitationsOuvertes] = useState(false)
+  const nombreInvitations = invitations.length
   const entreeInvitations =
     invitations.length === 0
       ? []
@@ -63,10 +67,10 @@ export default function MenuCompte({
           {
             key: 'invitations',
             icon: <MailOutlined />,
-            label:
-              invitations.length === 1
-                ? '1 invitation en attente'
-                : `${invitations.length} invitations en attente`,
+            label: t`${plural(nombreInvitations, {
+              one: '# invitation en attente',
+              other: '# invitations en attente',
+            })}`,
           },
           { type: 'divider' as const },
         ]
@@ -77,7 +81,7 @@ export default function MenuCompte({
         {
           key: 'installer',
           icon: <DownloadOutlined />,
-          label: 'Installer l’application',
+          label: t`Installer l’application`,
         },
       ]
   const entreeSupport =
@@ -96,7 +100,7 @@ export default function MenuCompte({
                   ? { target: '_blank', rel: 'noopener noreferrer' }
                   : {})}
               >
-                Support
+                <Trans>Support</Trans>
               </a>
             ),
           },
@@ -106,7 +110,7 @@ export default function MenuCompte({
       ? [
           {
             type: 'group' as const,
-            label: 'Organisation',
+            label: t`Organisation`,
             children: organisations.map(o => ({
               key: `organisation:${o.slug}`,
               icon: o.active ? <CheckOutlined /> : <span />,
@@ -128,7 +132,7 @@ export default function MenuCompte({
             {
               key: 'preferences',
               icon: <SettingOutlined />,
-              label: 'Préférences',
+              label: t`Préférences`,
             },
             {
               key: 'modes-d-emploi',
@@ -140,7 +144,7 @@ export default function MenuCompte({
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  Modes d’emploi
+                  <Trans>Modes d’emploi</Trans>
                 </a>
               ),
             },
@@ -151,7 +155,7 @@ export default function MenuCompte({
               icon: <TagOutlined />,
               label: (
                 <>
-                  Notes de version
+                  <Trans>Notes de version</Trans>
                   {version !== undefined && (
                     <span className="rt-mono rt-compte-version">{version}</span>
                   )}
@@ -162,7 +166,7 @@ export default function MenuCompte({
             {
               key: 'deconnexion',
               icon: <LogoutOutlined />,
-              label: 'Se déconnecter',
+              label: t`Se déconnecter`,
             },
           ],
           onClick: ({ key }) => {
@@ -183,7 +187,7 @@ export default function MenuCompte({
         <button
           type="button"
           className="rt-compte-bouton"
-          aria-label={`Compte de ${nom}`}
+          aria-label={t`Compte de ${nom}`}
         >
           <Badge dot={invitations.length > 0} offset={[-2, 4]}>
             <Avatar nom={nom} encre />

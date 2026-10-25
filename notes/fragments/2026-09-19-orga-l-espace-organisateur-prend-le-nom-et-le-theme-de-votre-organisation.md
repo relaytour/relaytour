@@ -13,6 +13,14 @@ fr:
     le nom court de votre organisation, et son logo si elle en fournit un.
     Ses couleurs et ses polices s'appliquent dès la réponse de l'API. Un
     seul build de l'espace organisateur sert toutes les installations.
+en:
+  titre: >-
+    The organizer workspace takes your organization’s name and theme
+  texte: >-
+    The sidebar, the sign-in screen, and the tab title show your organization’s
+    short name, and its logo if it provides one. Its colors and fonts apply as
+    soon as the API responds. A single build of the organizer workspace serves
+    all installations.
 ---
 
 - `src/lib/organisation.tsx` : requête publique `organisation`, contexte

@@ -35,6 +35,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Réunions de l'agenda (ADR 0037). Une réunion appartient à l'agenda global d'une
 // activité ou à l'agenda d'un périmètre, pour une période. Elle ne se supprime
@@ -444,14 +445,14 @@ async function champsValides(
   const cible = saisie.cible ?? null
   return {
     champs: {
-      titre: texteRequis(saisie.titre, 'Le titre', TITRE_REUNION_MAX),
+      titre: texteRequis(saisie.titre, i18n._('Le titre'), TITRE_REUNION_MAX),
       debut: horaire.debut,
       fin: horaire.fin,
-      lieu: texteFacultatif(saisie.lieu, 'Le lieu', LIEU_MAX),
+      lieu: texteFacultatif(saisie.lieu, i18n._('Le lieu'), LIEU_MAX),
       lienVisio: lienVisioValide(saisie.lienVisio),
       description: texteFacultatif(
         saisie.description,
-        'La description',
+        i18n._('La description'),
         DESCRIPTION_REUNION_MAX
       ),
       cible,
@@ -556,7 +557,7 @@ builder.mutationFields(t => {
             })
             if (count === 0) {
               throw erreurSaisie(
-                'Ce sondage doit être clos, et sans réunion créée.'
+                i18n._('Ce sondage doit être clos, et sans réunion créée.')
               )
             }
           }
@@ -593,7 +594,9 @@ builder.mutationFields(t => {
       resolve: async (_root, args, ctx) => {
         const actuelle = await reunionVisible(ctx, String(args.id))
         if (actuelle.statut === 'ANNULEE') {
-          throw erreurSaisie('Cette réunion est annulée : elle ne change plus.')
+          throw erreurSaisie(
+            i18n._('Cette réunion est annulée : elle ne change plus.')
+          )
         }
         const lieu = {
           editionId: actuelle.editionId,
@@ -631,7 +634,7 @@ builder.mutationFields(t => {
               select: { version: true, updatedAt: true },
             })
             throw conflitDeVersion(
-              'Cette réunion a été modifiée depuis votre lecture.',
+              i18n._('Cette réunion a été modifiée depuis votre lecture.'),
               { versionCourante: version, modifieeLe: updatedAt.toISOString() }
             )
           }
@@ -764,12 +767,14 @@ builder.mutationFields(t => {
           throw accesRefuse()
         }
         if (reunion.statut === 'ANNULEE') {
-          throw erreurSaisie('Cette réunion est annulée.')
+          throw erreurSaisie(i18n._('Cette réunion est annulée.'))
         }
         const edition = await ctx.exigerEdition(reunion.editionId)
         if (edition.statut === 'ARCHIVEE') {
           throw erreurSaisie(
-            'Cette période est archivée : son agenda est en lecture seule.'
+            i18n._(
+              'Cette période est archivée : son agenda est en lecture seule.'
+            )
           )
         }
         await prisma.convocationReunion.updateMany({

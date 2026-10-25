@@ -4,6 +4,7 @@ import {
   PushpinOutlined,
   SearchOutlined,
 } from '@ant-design/icons'
+import { useLingui } from '@lingui/react/macro'
 import { Button, Grid, Input, Space, Table } from 'antd'
 import type { TableColumnType, TableProps } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
@@ -70,6 +71,7 @@ interface Props<T> extends Omit<
 const PAS_CLAVIER = 16
 
 const INTERACTIFS =
+  // eslint-disable-next-line lingui/no-unlocalized-strings -- Sélecteurs CSS des éléments interactifs.
   'a, button, input, select, textarea, label, [role="button"], [role="separator"], .ant-table-selection-column, .ant-popover, .ant-select, .ant-dropdown, .ant-modal-root'
 
 interface PropsEnTete extends ThHTMLAttributes<HTMLTableCellElement> {
@@ -88,6 +90,7 @@ function EnTete({
   children,
   ...reste
 }: PropsEnTete) {
+  const { t } = useLingui()
   if (redimensionner === undefined) return <th {...reste}>{children}</th>
 
   const largeurActuelle = (poignee: Element) =>
@@ -134,15 +137,19 @@ function EnTete({
         className="rt-poignee-colonne"
         role="separator"
         aria-orientation="vertical"
-        aria-label={`Largeur de la colonne ${libelle ?? ''}`.trim()}
+        aria-label={
+          libelle
+            ? t`Largeur de la colonne ${libelle}`
+            : t`Largeur de la colonne`
+        }
         // Un séparateur focalisable annonce sa valeur et ses bornes.
         aria-valuemin={LARGEUR_MIN}
         aria-valuemax={LARGEUR_MAX}
         aria-valuenow={largeur}
         aria-valuetext={
-          largeur === undefined ? 'Largeur automatique' : `${largeur} pixels`
+          largeur === undefined ? t`Largeur automatique` : t`${largeur} pixels`
         }
-        title="Faites glisser pour ajuster la largeur. Un double-clic rétablit la largeur automatique."
+        title={t`Faites glisser pour ajuster la largeur. Un double-clic rétablit la largeur automatique.`}
         tabIndex={0}
         onPointerDown={saisir}
         onKeyDown={auClavier}
@@ -170,6 +177,7 @@ export default function Tableau<T extends object>({
   libelleOuvrir,
   ...reste
 }: Props<T>) {
+  const { t } = useLingui()
   const [largeurs, setLargeurs] = useState<Largeurs>(() => lireLargeurs(id))
   useEffect(() => ecrireLargeurs(id, largeurs), [id, largeurs])
 
@@ -201,6 +209,9 @@ export default function Tableau<T extends object>({
 
     // Dans un tableau étroit, l'en-tête de la première colonne porte le bouton
     // qui épingle ou libère les premières colonnes.
+    const libelleEpingle = epingle
+      ? t`Libérer les premières colonnes`
+      : t`Épingler les premières colonnes`
     const punaise = etroit && (
       <Button
         className="rt-punaise"
@@ -208,16 +219,8 @@ export default function Tableau<T extends object>({
         size="small"
         icon={epingle ? <PushpinFilled /> : <PushpinOutlined />}
         aria-pressed={epingle}
-        aria-label={
-          epingle
-            ? 'Libérer les premières colonnes'
-            : 'Épingler les premières colonnes'
-        }
-        title={
-          epingle
-            ? 'Libérer les premières colonnes'
-            : 'Épingler les premières colonnes'
-        }
+        aria-label={libelleEpingle}
+        title={libelleEpingle}
         onClick={evenement => {
           // L'en-tête trie au clic : le bouton garde le sien.
           evenement.stopPropagation()
@@ -280,8 +283,12 @@ export default function Tableau<T extends object>({
                 <Input
                   autoFocus
                   allowClear
-                  placeholder="Rechercher"
-                  aria-label={`Rechercher dans la colonne ${libelle ?? ''}`.trim()}
+                  placeholder={t`Rechercher`}
+                  aria-label={
+                    libelle
+                      ? t`Rechercher dans la colonne ${libelle}`
+                      : t`Rechercher dans la colonne`
+                  }
                   value={String(selectedKeys[0] ?? '')}
                   onChange={e =>
                     setSelectedKeys(e.target.value ? [e.target.value] : [])
@@ -296,10 +303,10 @@ export default function Tableau<T extends object>({
                       confirm()
                     }}
                   >
-                    Réinitialiser
+                    {t`Réinitialiser`}
                   </Button>
                   <Button size="small" type="primary" onClick={() => confirm()}>
-                    Rechercher
+                    {t`Rechercher`}
                   </Button>
                 </Space>
               </div>
@@ -330,7 +337,14 @@ export default function Tableau<T extends object>({
     return [
       {
         key: 'ouvrir',
-        title: <span className="rt-masque">Ouvrir</span>,
+        title: (
+          <span className="rt-masque">
+            {t({
+              message: 'Ouvrir',
+              comment: 'En-tête masqué de la colonne du bouton d’ouverture',
+            })}
+          </span>
+        ),
         width: 48,
         fixed: figees ? ('left' as const) : undefined,
         // Le bouton rend l'ouverture accessible au clavier ; le clic sur la ligne
@@ -340,8 +354,8 @@ export default function Tableau<T extends object>({
             <Button
               size="small"
               icon={<EditOutlined />}
-              aria-label={libelleOuvrir?.(ligne) ?? 'Ouvrir la fiche'}
-              title={libelleOuvrir?.(ligne) ?? 'Ouvrir la fiche'}
+              aria-label={libelleOuvrir?.(ligne) ?? t`Ouvrir la fiche`}
+              title={libelleOuvrir?.(ligne) ?? t`Ouvrir la fiche`}
               onClick={() => ouvrir(ligne)}
             />
           ),
@@ -358,6 +372,7 @@ export default function Tableau<T extends object>({
     etroit,
     epingle,
     id,
+    t,
   ])
 
   return (

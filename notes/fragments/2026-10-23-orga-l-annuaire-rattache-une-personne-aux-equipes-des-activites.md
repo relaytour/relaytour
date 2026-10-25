@@ -13,6 +13,14 @@ fr:
     choisissez les activités dont la personne rejoint l'équipe, sans périmètre.
     Une personne invitée sans activité ne voit aucune activité : le filtre « Sans
     activité » la retrouve dans l'annuaire.
+en:
+  titre: >-
+    The directory adds a person to activity teams
+  texte: >-
+    The window for an account has an “Activity teams” field. You choose the
+    activities whose team the person joins, without an area. A person invited
+    without an activity sees no activity. The “No activity” filter finds them in
+    the directory.
 ---
 
 ADR 0045 : `rattacherALActivite` et `retirerDeLActivite` depuis l'annuaire,

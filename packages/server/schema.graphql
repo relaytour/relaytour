@@ -1194,6 +1194,9 @@ type IdentiteOrganisation {
   """
   iconeApplication: String
   iconeApplicationUrl: String
+
+  """Langue par défaut des membres qui n’en ont pas choisi (ADR 0047)."""
+  langue: String
   logoPng: String
   logoSvg: String
   logoUrl: String
@@ -1862,8 +1865,13 @@ type Mutation {
   """
   Remplace l’identité de l’organisation. Le slug, le fuseau horaire, le statut et les limites ne changent pas ici.
   """
-  modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, iconeApplication: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
+  modifierIdentiteOrganisation(adressesRoleAutorisees: [String!]!, contactRecrutement: String, contactSupport: String, domainesCourrielAutorises: [String!]!, favicon: String, iconeApplication: String, langue: String, logoPng: String, logoSvg: String, nom: String!, pageEquipe: String, sigle: String, theme: JSONObject): IdentiteOrganisation!
   modifierLieu(archive: Boolean!, description: String, id: ID!, nom: String!, ordre: Int!): Lieu!
+
+  """
+  La personne choisit la langue de son interface, de ses mails et de ses notifications (ADR 0047). Nulle, elle suit la langue de l’organisation.
+  """
+  modifierMaLangue(langue: String): Personne!
   modifierMonAdresseVisible(visible: Boolean!): Boolean!
 
   """
@@ -2249,6 +2257,11 @@ type Organisation {
   codeSource: String!
   faviconUrl: String
   iconeApplicationUrl: String
+
+  """
+  Langue par défaut des membres qui n’en ont pas choisi (ADR 0047). Sans elle, le français s’applique.
+  """
+  langue: String
   logoUrl: String
 
   """
@@ -2416,6 +2429,11 @@ type Personne {
   email: String!
   estAdmin: Boolean
   id: ID!
+
+  """
+  Langue choisie par la personne, lue par elle seule. Nulle quand elle suit la langue de l’organisation.
+  """
+  langue: String
   nom: String!
 
   """

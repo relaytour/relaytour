@@ -2,11 +2,12 @@ import { prisma, type StatutOrganisation } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
 
-import { GROUPES_PAR_DEFAUT } from './activites.ts'
+import { groupesParDefaut } from './activites.ts'
 import { synchroniserArchivageDuCompte } from './appartenances.ts'
 import { creerOuRattacherCompte } from './comptes.ts'
 import { annoncerInvitation, inviterCompteExterne } from './invitations.ts'
 import { erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 import {
   LimitesSchema,
   lireLimites,
@@ -44,7 +45,12 @@ export interface NouvelleOrganisation {
 
 function messageValidation(issues: { path: PropertyKey[]; message: string }[]) {
   return issues
-    .map(i => `${i.path.map(String).join('.') || 'déclaration'} : ${i.message}`)
+    .map(i =>
+      i18n._('{chemin} : {message}', {
+        chemin: i.path.map(String).join('.') || i18n._('déclaration'),
+        message: i.message,
+      })
+    )
     .join(' ; ')
 }
 
@@ -88,13 +94,13 @@ export async function creerOrganisation(
             nom: d.nom,
             sigle: d.sigle ?? null,
             nature: 'EVENEMENT',
-            groupes: GROUPES_PAR_DEFAUT,
+            groupes: groupesParDefaut(),
           },
         },
       },
       select: { id: true },
     }),
-    'Une organisation utilise déjà cet identifiant.'
+    i18n._('Une organisation utilise déjà cet identifiant.')
   )
   return organisation.id
 }
@@ -105,7 +111,9 @@ export async function organisationParSlug(slug: string) {
     select: { id: true, slug: true },
   })
   if (organisation === null) {
-    throw erreurSaisie(`Aucune organisation ne porte le slug « ${slug} ».`)
+    throw erreurSaisie(
+      i18n._('Aucune organisation ne porte le slug « {slug} ».', { slug })
+    )
   }
   return organisation
 }
@@ -120,7 +128,7 @@ export function validerInvitation(
   nom: string
 ): { email: string; nom: string } {
   const email = adresseValide(adresse)
-  const nomValide = texteRequis(nom, 'Le nom', 120)
+  const nomValide = texteRequis(nom, i18n._('Le nom'), 120)
   return { email, nom: nomValide }
 }
 
@@ -146,7 +154,7 @@ export async function nommerAdmin(
   nom: string
 ): Promise<{ userId: string; issue: IssueNomination }> {
   const email = adresseValide(adresse)
-  const nomValide = texteRequis(nom, 'Le nom', 120)
+  const nomValide = texteRequis(nom, i18n._('Le nom'), 120)
   return rejouerSurDoublon(() =>
     sousVerrouOrganisation(organisationId, async tx => {
       const compte = await creerOuRattacherCompte(tx, {
@@ -207,7 +215,9 @@ export async function inviterAdmin(
       })
       if (admins > 0) {
         throw erreurSaisie(
-          'Cette organisation a déjà un admin : ses admins invitent les autres personnes.'
+          i18n._(
+            'Cette organisation a déjà un admin : ses admins invitent les autres personnes.'
+          )
         )
       }
       const compte = await creerOuRattacherCompte(tx, {
@@ -272,7 +282,9 @@ export async function modifierOrganisation(
     select: { id: true, limites: true },
   })
   if (organisation === null) {
-    throw erreurSaisie(`Aucune organisation ne porte le slug « ${slug} ».`)
+    throw erreurSaisie(
+      i18n._('Aucune organisation ne porte le slug « {slug} ».', { slug })
+    )
   }
   let limites: Limites | undefined
   if (changement.limites !== undefined) {
@@ -424,8 +436,11 @@ export async function organisationEtActivite(
   if (activite === null) {
     throw erreurSaisie(
       slugActivite === undefined
-        ? 'Cette organisation n’a aucune activité ouverte.'
-        : `Aucune activité ne porte le slug « ${slugActivite} » dans cette organisation.`
+        ? i18n._('Cette organisation n’a aucune activité ouverte.')
+        : i18n._(
+            'Aucune activité ne porte le slug « {slug} » dans cette organisation.',
+            { slug: slugActivite }
+          )
     )
   }
   return { organisationId, activiteId: activite.id }

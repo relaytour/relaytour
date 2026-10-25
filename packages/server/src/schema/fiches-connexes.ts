@@ -6,6 +6,7 @@ import { lireGroupes } from '../lib/activites.ts'
 import { peutLirePerimetre } from '../lib/droits.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { peutLireFiche, peutRedigerFiche } from '../lib/fiches.ts'
+import { i18n } from '../lib/langue.ts'
 import {
   conditionFichesConnexesDe,
   perimetresConcernes,
@@ -165,22 +166,28 @@ builder.mutationFields(t => ({
       }
       if (fiche.perimetreId === null) {
         throw erreurSaisie(
-          'Une fiche commune concerne déjà tous les périmètres : elle n’a pas de liste « Concerne aussi ».'
+          i18n._(
+            'Une fiche commune concerne déjà tous les périmètres : elle n’a pas de liste « Concerne aussi ».'
+          )
         )
       }
       if (fiche.archivedAt !== null) {
-        throw erreurSaisie('Cette fiche est archivée.')
+        throw erreurSaisie(i18n._('Cette fiche est archivée.'))
       }
       const ids = [...new Set(args.perimetreIds.map(String))]
       const groupes = [...new Set(args.groupes.map(g => g.trim()))]
       if (ids.length + groupes.length > LISTE_MAX) {
         throw erreurSaisie(
-          `Une fiche concerne au plus ${LISTE_MAX} périmètres et groupes.`
+          i18n._('Une fiche concerne au plus {max} périmètres et groupes.', {
+            max: LISTE_MAX,
+          })
         )
       }
       if (ids.includes(fiche.perimetreId)) {
         throw erreurSaisie(
-          'La fiche appartient déjà à ce périmètre : retirez-le de la liste.'
+          i18n._(
+            'La fiche appartient déjà à ce périmètre : retirez-le de la liste.'
+          )
         )
       }
       // Les périmètres : de l'activité de la fiche, non archivés. Un périmètre d'une
@@ -202,7 +209,9 @@ builder.mutationFields(t => ({
       const inconnu = groupes.find(g => !declares.has(g))
       if (inconnu !== undefined) {
         throw erreurSaisie(
-          `L’activité ne déclare pas le groupe « ${inconnu} ».`
+          i18n._('L’activité ne déclare pas le groupe « {groupe} ».', {
+            groupe: inconnu,
+          })
         )
       }
 
@@ -326,7 +335,7 @@ async function changerMasquage(
   if (fiche === null) throw accesRefuse()
   const concernes = await perimetresConcernes(fiche)
   if (!concernes.some(c => c.perimetreId === perimetre.id)) {
-    throw erreurSaisie('Cette fiche ne concerne pas ce périmètre.')
+    throw erreurSaisie(i18n._('Cette fiche ne concerne pas ce périmètre.'))
   }
   const acteurId = ctx.personne.id
   if (masquer) {

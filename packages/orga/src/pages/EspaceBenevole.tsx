@@ -1,5 +1,7 @@
 import { CalendarOutlined, CheckOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -73,7 +75,39 @@ const SUPPRIMER = graphql(`
   }
 `)
 
+/** L'horaire d'une place, suivi du lieu et du périmètre quand ils existent. */
+function horairePlace(p: {
+  jour: string
+  heureDebut: string
+  heureFin: string
+  lieu?: string | null
+  perimetre?: string | null
+}): string {
+  const jourPlace = libelleJours(p.jour)
+  const heureDebut = p.heureDebut
+  const heureFin = p.heureFin
+  return [t`${jourPlace}, ${heureDebut} → ${heureFin}`, p.lieu, p.perimetre]
+    .filter(Boolean)
+    .join(' · ')
+}
+
+/** Une plage de disponibilité, avec la mention du lendemain quand elle passe minuit. */
+function libellePlage(p: {
+  jour: string
+  jourFin?: string | null
+  heureDebut: string
+  heureFin: string
+}): string {
+  const jourPlage = libelleJours(p.jour)
+  const heureDebut = p.heureDebut
+  const heureFin = p.heureFin
+  return p.jourFin !== p.jour
+    ? t`${jourPlage}, ${heureDebut} → ${heureFin} le lendemain`
+    : t`${jourPlage}, ${heureDebut} → ${heureFin}`
+}
+
 export default function EspaceBenevole() {
+  const { t } = useLingui()
   const { jeton = '' } = useParams()
   const { message, modal } = App.useApp()
   const relire = { refetchQueries: ['EspaceBenevole'] }
@@ -86,6 +120,9 @@ export default function EspaceBenevole() {
   const [supprimer] = useMutation(SUPPRIMER)
   const [supprimee, setSupprimee] = useState(false)
   const espace = data?.espaceBenevole
+  const nomBenevole = espace?.nom
+  const nomActivite = espace?.activite
+  const adresseContact = espace?.contact
   // Une adresse changée par l'équipe se confirme de nouveau, même quand toutes
   // les places le sont déjà.
   const aConfirmer =
@@ -108,7 +145,7 @@ export default function EspaceBenevole() {
   const confirmerParticipation = async () => {
     try {
       await confirmer({ variables: { jeton } })
-      message.success('Merci ! Votre participation est confirmée.')
+      message.success(t`Merci ! Votre participation est confirmée.`)
     } catch (e) {
       message.error(messageErreur(e))
     }
@@ -116,15 +153,15 @@ export default function EspaceBenevole() {
 
   const quitterPlace = (ref: string, titre: string) =>
     void modal.confirm({
-      title: `Quitter « ${titre} » ?`,
-      content: 'L’équipe est prévenue que vous ne viendrez pas sur ce moment.',
-      okText: 'Quitter cette place',
+      title: t`Quitter « ${titre} » ?`,
+      content: t`L’équipe est prévenue que vous ne viendrez pas sur ce moment.`,
+      okText: t`Quitter cette place`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await quitter({ variables: { jeton, ref } })
-          message.success('Votre place est libérée.')
+          message.success(t`Votre place est libérée.`)
         } catch (e) {
           message.error(messageErreur(e))
         }
@@ -133,12 +170,11 @@ export default function EspaceBenevole() {
 
   const supprimerFiche = () =>
     void modal.confirm({
-      title: 'Supprimer vos informations ?',
-      content:
-        'Votre fiche de bénévole et vos disponibilités disparaissent. Ce lien cessera de fonctionner.',
-      okText: 'Supprimer',
+      title: t`Supprimer vos informations ?`,
+      content: t`Votre fiche de bénévole et vos disponibilités disparaissent. Ce lien cessera de fonctionner.`,
+      okText: t`Supprimer`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await supprimer({ variables: { jeton } })
@@ -158,22 +194,24 @@ export default function EspaceBenevole() {
         {supprimee ? (
           <Result
             status="success"
-            title="Vos informations sont supprimées."
-            subTitle="Merci pour votre aide."
+            title={t`Vos informations sont supprimées.`}
+            subTitle={t`Merci pour votre aide.`}
           />
         ) : loading && !data ? (
           <Skeleton active />
         ) : !espace ? (
           <Result
             status="info"
-            title="Ce lien n’est plus valable."
-            subTitle="Utilisez le lien du dernier mail reçu, ou contactez l’organisation."
+            title={t`Ce lien n’est plus valable.`}
+            subTitle={t`Utilisez le lien du dernier mail reçu, ou contactez l’organisation.`}
           />
         ) : (
           <>
-            <h1 className="rt-titre rt-titre-public">Bonjour {espace.nom}</h1>
+            <h1 className="rt-titre rt-titre-public">
+              <Trans>Bonjour {nomBenevole}</Trans>
+            </h1>
             <Typography.Paragraph style={{ color: 'var(--rt-encre-70)' }}>
-              Vos places de bénévole pour « {espace.activite} »
+              <Trans>Vos places de bénévole pour « {nomActivite} »</Trans>
             </Typography.Paragraph>
 
             {aConfirmer && (
@@ -183,10 +221,10 @@ export default function EspaceBenevole() {
                 style={{ marginBottom: 16 }}
                 title={
                   espace.confirme
-                    ? 'De nouvelles places attendent votre confirmation.'
+                    ? t`De nouvelles places attendent votre confirmation.`
                     : espace.places.some(p => !p.confirmee)
-                      ? 'L’équipe vous propose ces places. Confirmez-vous votre participation ?'
-                      : 'Confirmez votre participation pour recevoir les changements de vos places par mail.'
+                      ? t`L’équipe vous propose ces places. Confirmez-vous votre participation ?`
+                      : t`Confirmez votre participation pour recevoir les changements de vos places par mail.`
                 }
                 description={
                   <Button
@@ -196,14 +234,14 @@ export default function EspaceBenevole() {
                     onClick={() => void confirmerParticipation()}
                     style={{ marginTop: 8 }}
                   >
-                    Je confirme ma participation
+                    <Trans>Je confirme ma participation</Trans>
                   </Button>
                 }
               />
             )}
 
             {espace.places.length === 0 ? (
-              <Empty description="Vous n’avez aucune place à venir." />
+              <Empty description={t`Vous n’avez aucune place à venir.`} />
             ) : (
               <ul className="rt-places-publiques">
                 {espace.places.map(p => (
@@ -211,14 +249,18 @@ export default function EspaceBenevole() {
                     <div className="rt-moment-tete">
                       <strong>{p.titre}</strong>
                       <Tag color={p.confirmee ? 'success' : 'warning'}>
-                        {p.confirmee ? 'Confirmée' : 'À confirmer'}
+                        {p.confirmee
+                          ? t({
+                              message: 'Confirmée',
+                              comment: 'Statut d’une place de bénévole',
+                            })
+                          : t({
+                              message: 'À confirmer',
+                              comment: 'Statut d’une place de bénévole',
+                            })}
                       </Tag>
                     </div>
-                    <span className="rt-note">
-                      {libelleJours(p.jour)}, {p.heureDebut} → {p.heureFin}
-                      {p.lieu && ` · ${p.lieu}`}
-                      {p.perimetre && ` · ${p.perimetre}`}
-                    </span>
+                    <span className="rt-note">{horairePlace(p)}</span>
                     {p.consignes && (
                       <Typography.Paragraph className="rt-texte-secondaire">
                         {p.consignes}
@@ -229,7 +271,7 @@ export default function EspaceBenevole() {
                       danger
                       onClick={() => quitterPlace(p.ref, p.titre)}
                     >
-                      Je ne peux plus venir
+                      <Trans>Je ne peux plus venir</Trans>
                     </Button>
                   </li>
                 ))}
@@ -243,40 +285,44 @@ export default function EspaceBenevole() {
                 block
                 style={{ marginTop: 16 }}
               >
-                Ajouter à mon agenda
+                <Trans>Ajouter à mon agenda</Trans>
               </Button>
             )}
 
             {espace.plages.length > 0 && (
               <>
-                <h2 className="rt-intertitre-public">Vos disponibilités</h2>
+                <h2 className="rt-intertitre-public">
+                  <Trans>Vos disponibilités</Trans>
+                </h2>
                 <ul className="rt-plages-publiques">
                   {espace.plages.map(p => (
                     <li key={`${p.jour}-${p.heureDebut}-${p.jourFin}`}>
-                      <Tag>
-                        {libelleJours(p.jour)}, {p.heureDebut} → {p.heureFin}
-                        {p.jourFin !== p.jour && ' le lendemain'}
-                      </Tag>
+                      <Tag>{libellePlage(p)}</Tag>
                     </li>
                   ))}
                 </ul>
                 <Typography.Paragraph className="rt-note">
-                  Pour changer vos disponibilités, écrivez à l’organisation.
+                  <Trans>
+                    Pour changer vos disponibilités, écrivez à l’organisation.
+                  </Trans>
                 </Typography.Paragraph>
               </>
             )}
 
             <section className="rt-espace-pied">
               <Typography.Paragraph className="rt-note">
-                Gardez ce lien : il reste le même. Pour toute question, écrivez
-                à l’organisation
-                {espace.contact && (
-                  <>
-                    {' '}
-                    à <a href={`mailto:${espace.contact}`}>{espace.contact}</a>
-                  </>
+                {adresseContact ? (
+                  <Trans>
+                    Gardez ce lien : il reste le même. Pour toute question,
+                    écrivez à l’organisation à{' '}
+                    <a href={`mailto:${adresseContact}`}>{adresseContact}</a>.
+                  </Trans>
+                ) : (
+                  <Trans>
+                    Gardez ce lien : il reste le même. Pour toute question,
+                    écrivez à l’organisation.
+                  </Trans>
                 )}
-                .
               </Typography.Paragraph>
               <Button
                 type="link"
@@ -285,12 +331,14 @@ export default function EspaceBenevole() {
                 onClick={supprimerFiche}
                 style={{ paddingInline: 0 }}
               >
-                Supprimer mes informations
+                <Trans>Supprimer mes informations</Trans>
               </Button>
               {espace.places.length > 0 && (
                 <Typography.Paragraph className="rt-note">
-                  Quittez d’abord vos places à venir pour supprimer vos
-                  informations.
+                  <Trans>
+                    Quittez d’abord vos places à venir pour supprimer vos
+                    informations.
+                  </Trans>
                 </Typography.Paragraph>
               )}
             </section>

@@ -4,6 +4,8 @@ import {
   PlusOutlined,
   PrinterOutlined,
 } from '@ant-design/icons'
+import { plural, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Empty, Grid, Result, Skeleton } from 'antd'
 import { useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router'
@@ -32,6 +34,12 @@ import {
   TRANCHE_MINUTES,
 } from '../lib/programme'
 import { EDITION_COURANTE, LIEUX } from '../lib/requetes'
+import { comparerTextes } from '../lib/langue'
+
+/** « 3 séquences ». */
+function nombreDeSequences(nombre: number): string {
+  return t`${plural(nombre, { one: '# séquence', other: '# séquences' })}`
+}
 
 const PROGRAMME = graphql(`
   query Programme($editionId: ID!, $mesSequences: Boolean) {
@@ -73,16 +81,22 @@ const PROGRAMME = graphql(`
 
 type Vue = 'grille' | 'liste' | 'moi' | 'repartition'
 
-/** Les personnes d'une séquence, responsables en tête, en une ligne. */
-function personnes(s: SequenceLue): string {
-  return s.places
-    .map(p => (p.role === 'RESPONSABLE' ? `${p.nom} (resp.)` : p.nom))
-    .join(', ')
-}
-
 /** Programme du jour J d'une période (ADR 0040). */
 export default function Programme() {
+  const { t } = useLingui()
   const { activite, gere, periode } = useActivite()
+  /** Les personnes d'une séquence, responsables en tête, en une ligne. */
+  const personnes = (s: SequenceLue): string => {
+    return s.places
+      .map(p => {
+        const nomPersonne = p.nom
+        return p.role === 'RESPONSABLE'
+          ? t`${nomPersonne} (resp.)`
+          : nomPersonne
+      })
+      .join(', ')
+  }
+
   const ecrans = Grid.useBreakpoint()
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
@@ -131,7 +145,7 @@ export default function Programme() {
         s.lieu && !actifs.some(l => l.id === s.lieu!.id) ? [s.lieu.id] : []
       )
     ),
-  ].sort((a, b) => nomLieu.get(a)!.localeCompare(nomLieu.get(b)!, 'fr'))
+  ].sort((a, b) => comparerTextes(nomLieu.get(a)!, nomLieu.get(b)!))
   const ordreLieux = [...actifs.map(l => l.id), ...archives]
 
   const changer = (cle: string, valeur: string | null) => {
@@ -142,16 +156,17 @@ export default function Programme() {
   }
 
   if (editionId === undefined && courante && !courante.editionCourante) {
+    const aucunePeriode = periode.Aucune
     return (
-      <Result status="info" title={`${periode.Aucune} n’est en préparation.`} />
+      <Result status="info" title={t`${aucunePeriode} n’est en préparation.`} />
     )
   }
   if (error && !data) {
     return (
       <Result
         status="warning"
-        title="Le programme n’a pas pu être chargé."
-        subTitle="Rechargez la page dans un instant."
+        title={t`Le programme n’a pas pu être chargé.`}
+        subTitle={t`Rechargez la page dans un instant.`}
       />
     )
   }
@@ -197,12 +212,15 @@ export default function Programme() {
           jourChoisi
         )
 
+  const libelleJourChoisi = jourChoisi === null ? '' : libelleJours(jourChoisi)
+  const libelleProgrammeDuJour = t`Programme du ${libelleJourChoisi}`
+
   const vueGrille = grille && grille.placements.length > 0 && (
     <div className="rt-grille-defilement">
       <div
         className="rt-grille"
         role="table"
-        aria-label={`Programme du ${libelleJours(jourChoisi!)}`}
+        aria-label={libelleProgrammeDuJour}
         style={{
           gridTemplateColumns: `56px repeat(${grille.colonnes.reduce((n, c) => n + c.couloirs, 0)}, minmax(150px, 1fr))`,
           gridTemplateRows: `auto repeat(${grille.tranches}, 30px)`,
@@ -218,7 +236,7 @@ export default function Programme() {
               gridRow: 1,
             }}
           >
-            {c.lieuId === null ? 'Sans lieu' : nomLieu.get(c.lieuId)}
+            {c.lieuId === null ? t`Sans lieu` : nomLieu.get(c.lieuId)}
           </div>
         ))}
         {Array.from({ length: grille.tranches / 2 }, (_, i) => (
@@ -255,7 +273,7 @@ export default function Programme() {
     })),
     {
       cle: 'sans-lieu',
-      titre: 'Sans lieu',
+      titre: t`Sans lieu`,
       sequences: duJour.filter(s => !s.lieu || !ordreLieux.includes(s.lieu.id)),
     },
   ].filter(g => g.sequences.length > 0)
@@ -264,7 +282,7 @@ export default function Programme() {
     <Section
       key={g.cle}
       titre={g.titre}
-      compte={`${g.sequences.length} ${g.sequences.length > 1 ? 'séquences' : 'séquence'}`}
+      compte={nombreDeSequences(g.sequences.length)}
     >
       <div className="rt-sequences">{g.sequences.map(s => carte(s))}</div>
     </Section>
@@ -273,7 +291,9 @@ export default function Programme() {
   const vueMoi =
     sequences.length === 0 ? (
       <div className="rt-verre rt-panneau">
-        <Empty description="Vous n’êtes placé·e dans aucune séquence du programme." />
+        <Empty
+          description={t`Vous n’êtes placé·e dans aucune séquence du programme.`}
+        />
       </div>
     ) : (
       jours.map(jour => (
@@ -293,9 +313,10 @@ export default function Programme() {
                         <EnvironmentOutlined aria-hidden /> {s.lieu.nom}
                       </>
                     ) : null}
+                    {' · '}
                     {s.places.find(p => p.estMoi)?.role === 'RESPONSABLE'
-                      ? ' · vous êtes responsable'
-                      : ' · en renfort'}
+                      ? t`vous êtes responsable`
+                      : t`en renfort`}
                   </span>
                 </div>
               ))}
@@ -304,10 +325,11 @@ export default function Programme() {
       ))
     )
 
+  const dePeriode = periode.de
   return (
     <>
       <Titre
-        sousTitre={`Le déroulé du jour J ${periode.de}, par lieu et par heure.`}
+        sousTitre={t`Le déroulé du jour J ${dePeriode}, par lieu et par heure.`}
         actions={
           <>
             {agendas.length > 0 && (
@@ -321,7 +343,7 @@ export default function Programme() {
                   })
                 }
               >
-                Nouvelle séquence
+                <Trans>Nouvelle séquence</Trans>
               </Button>
             )}
             <ChoixEdition
@@ -331,7 +353,7 @@ export default function Programme() {
           </>
         }
       >
-        Programme
+        <Trans>Programme</Trans>
       </Titre>
 
       <div
@@ -339,19 +361,19 @@ export default function Programme() {
         style={{ marginBottom: 22, rowGap: 10 }}
       >
         <Puces<Vue>
-          libelle="Affichage du programme"
+          libelle={t`Affichage du programme`}
           valeur={vue}
           onChange={v => changer('vue', v)}
           options={[
             ...(ecrans.md
-              ? [{ valeur: 'grille' as const, libelle: 'Grille' }]
+              ? [{ valeur: 'grille' as const, libelle: t`Grille` }]
               : []),
-            { valeur: 'liste', libelle: 'Par lieu' },
-            { valeur: 'moi', libelle: 'Mon jour J' },
+            { valeur: 'liste', libelle: t`Par lieu` },
+            { valeur: 'moi', libelle: t`Mon jour J` },
             // La répartition des bénévoles, pour les personnes qui écrivent une
             // séquence (ADR 0041).
             ...(agendas.length > 0
-              ? [{ valeur: 'repartition' as const, libelle: 'Répartition' }]
+              ? [{ valeur: 'repartition' as const, libelle: t`Répartition` }]
               : []),
           ]}
         />
@@ -359,7 +381,7 @@ export default function Programme() {
           <>
             <SeparateurPuces />
             <Puces<string>
-              libelle="Jour du programme"
+              libelle={t`Jour du programme`}
               valeur={jourChoisi ?? ''}
               onChange={j => changer('jour', j)}
               options={jours.map(j => ({
@@ -375,12 +397,12 @@ export default function Programme() {
               icon={<EnvironmentOutlined />}
               onClick={() => setLieuxOuverts(true)}
             >
-              Lieux
+              <Trans>Lieux</Trans>
             </Button>
           )}
           {vue !== 'moi' && vue !== 'repartition' && (
             <Button icon={<PrinterOutlined />} onClick={() => window.print()}>
-              Imprimer
+              <Trans>Imprimer</Trans>
             </Button>
           )}
         </span>
@@ -393,7 +415,7 @@ export default function Programme() {
       ) : sequences.length === 0 ? (
         <div className="rt-verre rt-panneau">
           <Empty
-            description={`Le programme ${periode.de} n’a encore aucune séquence.`}
+            description={t`Le programme ${dePeriode} n’a encore aucune séquence.`}
           />
         </div>
       ) : (

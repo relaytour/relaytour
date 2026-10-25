@@ -1,3 +1,4 @@
+import { comparateur } from './langue'
 import { normaliser } from './recherche'
 
 /** Valeur qu'une colonne fournit pour trier ses lignes. */
@@ -8,24 +9,21 @@ export const LARGEUR_MIN = 64
 /** Largeur maximale d'une colonne redimensionnée, en pixels. */
 export const LARGEUR_MAX = 960
 
-const comparateur = new Intl.Collator('fr', {
-  sensitivity: 'base',
-  numeric: true,
-})
+const OPTIONS_TRI: Intl.CollatorOptions = { sensitivity: 'base', numeric: true }
 
 function estVide(valeur: ValeurTri): valeur is null | undefined | '' {
   return valeur === null || valeur === undefined || valeur === ''
 }
 
 /**
- * Compare deux valeurs de tri. Les textes suivent l'ordre alphabétique français,
+ * Compare deux valeurs de tri. Les textes suivent l'ordre alphabétique de la langue active,
  * sans tenir compte des accents ni de la casse. Une valeur vide se place après
  * les autres.
  */
 export function comparer(a: ValeurTri, b: ValeurTri): number {
   if (estVide(a) || estVide(b)) return Number(estVide(a)) - Number(estVide(b))
   if (typeof a === 'string' || typeof b === 'string') {
-    return comparateur.compare(String(a), String(b))
+    return comparateur(OPTIONS_TRI).compare(String(a), String(b))
   }
   return Number(a) - Number(b)
 }

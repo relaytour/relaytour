@@ -1,6 +1,9 @@
 // Appels à Better Auth (/api/auth). Ils passent par fetch : l'interface n'a besoin que
 // de quatre routes, sans la bibliothèque cliente.
 
+import { i18n, type MessageDescriptor } from '@lingui/core'
+import { msg, t } from '@lingui/core/macro'
+
 const CLE_ADRESSE = 'relaytour.connexion.adresse'
 
 export class ErreurConnexion extends Error {
@@ -14,9 +17,8 @@ export class ErreurConnexion extends Error {
 
 // Le serveur répond « INVALID_OTP » pour un code faux, un code expiré et un code
 // épuisé : il ne dit pas si l'adresse a un compte (ADR 0002). Le message couvre les trois cas.
-const MESSAGES: Record<string, string> = {
-  INVALID_OTP:
-    'Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code.',
+const MESSAGES: Record<string, MessageDescriptor> = {
+  INVALID_OTP: msg`Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code.`,
 }
 
 async function appeler(chemin: string, corps: unknown): Promise<void> {
@@ -29,13 +31,16 @@ async function appeler(chemin: string, corps: unknown): Promise<void> {
   if (reponse.ok) return
   if (reponse.status === 429) {
     throw new ErreurConnexion(
-      'Trop de demandes. Réessayez dans quelques minutes.',
+      t`Trop de demandes. Réessayez dans quelques minutes.`,
       'TOO_MANY_REQUESTS'
     )
   }
   const detail = (await reponse.json().catch(() => ({}))) as { code?: string }
+  const messageConnu = MESSAGES[detail.code ?? '']
   throw new ErreurConnexion(
-    MESSAGES[detail.code ?? ''] ?? 'La connexion a échoué. Réessayez.',
+    messageConnu === undefined
+      ? t`La connexion a échoué. Réessayez.`
+      : i18n._(messageConnu),
     detail.code
   )
 }

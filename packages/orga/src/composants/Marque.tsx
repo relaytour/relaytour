@@ -1,3 +1,4 @@
+import { Trans, useLingui } from '@lingui/react/macro'
 import { useContext } from 'react'
 
 import { ContexteActivite } from '../lib/activite'
@@ -101,6 +102,7 @@ export function SignatureRelaytour({
   /** Dans le rail du volet de navigation : le pictogramme seul porte le lien. */
   compacte?: boolean
 }) {
+  const { t } = useLingui()
   const { codeSource } = useOrganisation()
   if (compacte)
     return (
@@ -109,8 +111,8 @@ export function SignatureRelaytour({
           href={codeSource}
           target="_blank"
           rel="noreferrer"
-          aria-label="Propulsé par Relaytour : code source"
-          title="Propulsé par Relaytour : code source"
+          aria-label={t`Propulsé par Relaytour : code source`}
+          title={t`Propulsé par Relaytour : code source`}
           style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}
         >
           <Pictogramme taille={16} monochrome />
@@ -123,16 +125,18 @@ export function SignatureRelaytour({
         <Pictogramme taille={14} monochrome />
       </span>
       <span>
-        Propulsé par{' '}
-        <a
-          href={codeSource}
-          target="_blank"
-          rel="noreferrer"
-          title="Code source de Relaytour"
-          style={{ color: 'inherit', textDecoration: 'underline' }}
-        >
-          Relaytour
-        </a>
+        <Trans>
+          Propulsé par{' '}
+          <a
+            href={codeSource}
+            target="_blank"
+            rel="noreferrer"
+            title={t`Code source de Relaytour`}
+            style={{ color: 'inherit', textDecoration: 'underline' }}
+          >
+            Relaytour
+          </a>
+        </Trans>
       </span>
     </div>
   )

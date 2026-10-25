@@ -10,7 +10,11 @@
   if (images.length === 0) return
 
   const CLE = 'relaytour.site.captures'
-  const TAILLES = { ordinateur: 'Ordinateur', telephone: 'Téléphone' }
+  // Les libellés suivent la langue de la page : le site existe aussi en anglais.
+  const anglais = document.documentElement.lang === 'en'
+  const TAILLES = anglais
+    ? { ordinateur: 'Computer', telephone: 'Phone' }
+    : { ordinateur: 'Ordinateur', telephone: 'Téléphone' }
   // Dimensions des captures du simulateur : deux pixels par point d'écran.
   const LARGEUR_MOBILE = 804
   const HAUTEUR_MOBILE = 1748
@@ -39,7 +43,10 @@
   const groupe = document.createElement('div')
   groupe.className = 'bascule'
   groupe.setAttribute('role', 'group')
-  groupe.setAttribute('aria-label', 'Taille des captures')
+  groupe.setAttribute(
+    'aria-label',
+    anglais ? 'Screenshot size' : 'Taille des captures'
+  )
   const boutons = Object.entries(TAILLES).map(([taille, libelle]) => {
     const bouton = document.createElement('button')
     bouton.type = 'button'

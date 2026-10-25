@@ -1,4 +1,5 @@
 import { InfoCircleOutlined, WarningOutlined } from '@ant-design/icons'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Popover, Select } from 'antd'
 
 import {
@@ -54,12 +55,13 @@ function IconeMessagerie({ cle }: { cle: CleMessagerie }) {
  * par son schéma d'URL ne répond pas sur tous les appareils.
  */
 export function AvisMessagerie({ cle }: { cle: CleMessagerie }) {
+  const { t } = useLingui()
   const { genre, detail, systemes } = messagerie(cle)
   if (genre === 'web') return null
   const application = genre === 'application'
   const titre = application
-    ? 'Ce lien ne fonctionne pas sur tous les appareils'
-    : 'La messagerie par défaut se règle dans votre système'
+    ? t`Ce lien ne fonctionne pas sur tous les appareils`
+    : t`La messagerie par défaut se règle dans votre système`
   return (
     <Popover
       trigger={['hover', 'click']}
@@ -69,22 +71,29 @@ export function AvisMessagerie({ cle }: { cle: CleMessagerie }) {
           <p>{detail}</p>
           {application ? (
             <>
-              <p>Systèmes concernés : {systemes}.</p>
               <p>
-                Les champs « Cc » et « Cci » ne sont pas garantis. Essayez cette
-                application dans vos préférences avant de vous en servir.
+                <Trans>Systèmes concernés : {systemes}.</Trans>
+              </p>
+              <p>
+                <Trans>
+                  Les champs « Cc » et « Cci » ne sont pas garantis. Essayez
+                  cette application dans vos préférences avant de vous en
+                  servir.
+                </Trans>
               </p>
             </>
           ) : (
             <p>
-              Si une autre application s’ouvre, vous pouvez changer ce réglage
-              dans votre système ou dans votre navigateur.
+              <Trans>
+                Si une autre application s’ouvre, vous pouvez changer ce réglage
+                dans votre système ou dans votre navigateur.
+              </Trans>
             </p>
           )}
           <LienGuideMessagerie>
             {application
-              ? 'Lire le mode d’emploi des messageries'
-              : 'Régler la messagerie par défaut de votre système'}
+              ? t`Lire le mode d’emploi des messageries`
+              : t`Régler la messagerie par défaut de votre système`}
           </LienGuideMessagerie>
         </div>
       }
@@ -108,10 +117,11 @@ interface Props {
 
 /** Le sélecteur, puis le bouton d'explication de la cible choisie. */
 export default function ChoixMessagerie({ valeur, choisir, style }: Props) {
+  const { t } = useLingui()
   return (
     <span className="rt-choix-messagerie" style={style}>
       <Select<CleMessagerie>
-        aria-label="Messagerie"
+        aria-label={t`Messagerie`}
         value={valeur}
         onChange={choisir}
         style={{ flex: 1, minWidth: 0 }}

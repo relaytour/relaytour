@@ -1,4 +1,6 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Popconfirm, Space, Tag, Typography } from 'antd'
 
 import { graphql } from '../gql'
@@ -30,6 +32,7 @@ export default function InvitationsEnAttente({
   /** L'activité affichée ; sans elle, toutes les invitations de l'organisation. */
   activiteId?: string
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const { data } = useQuery(INVITATIONS_EN_ATTENTE, {
     variables: { activiteId: activiteId ?? null },
@@ -43,6 +46,7 @@ export default function InvitationsEnAttente({
   const [retirer, retrait] = useMutation(RETIRER, relire)
   const invitations = data?.invitationsEnAttente ?? []
   if (invitations.length === 0) return null
+  const nbInvitations = invitations.length
 
   const agir = async (action: () => Promise<unknown>, succes: string) => {
     try {
@@ -57,87 +61,104 @@ export default function InvitationsEnAttente({
     <Alert
       type="info"
       style={{ marginBottom: 16 }}
-      title={
-        invitations.length === 1
-          ? '1 invitation attend un accord'
-          : `${invitations.length} invitations attendent un accord`
-      }
+      title={t`${plural(nbInvitations, {
+        one: '# invitation attend un accord',
+        other: '# invitations attendent un accord',
+      })}`}
       description={
         <>
           <p style={{ marginTop: 0 }}>
-            Ces adresses ont déjà un compte hors de votre organisation. Chaque
-            personne accepte ou refuse l’invitation depuis son compte. Rien
-            n’est créé en son nom avant son accord, et elle n’apparaît pas dans
-            l’équipe.
+            <Trans>
+              Ces adresses ont déjà un compte hors de votre organisation. Chaque
+              personne accepte ou refuse l’invitation depuis son compte. Rien
+              n’est créé en son nom avant son accord, et elle n’apparaît pas
+              dans l’équipe.
+            </Trans>
           </p>
           <ul className="rt-invitations">
-            {invitations.map(i => (
-              <li key={i.id}>
-                <div>
-                  <span style={{ fontWeight: 600 }}>{i.nom}</span>{' '}
-                  <Typography.Text type="secondary">{i.email}</Typography.Text>
-                  <div style={{ marginTop: 4 }}>
-                    <Space size={[4, 4]} wrap>
-                      {i.estAdmin && <Tag>Admin de l’organisation</Tag>}
-                      {i.activitesRattachees.flatMap(id => {
-                        const nom = nomActivite(id)
-                        return nom === undefined
-                          ? []
-                          : [<Tag key={id}>Équipe : {nom}</Tag>]
-                      })}
-                      {i.perimetresAffectes.map(p => (
-                        <Tag
-                          key={p.id}
-                          style={{
-                            borderInlineStart: `4px solid ${p.couleur ?? 'var(--rt-primaire)'}`,
-                          }}
-                        >
-                          {p.nom}
-                        </Tag>
-                      ))}
-                      {i.perimetresSouhaites.map(p => (
-                        <Tag key={p.id} style={{ borderStyle: 'dashed' }}>
-                          Souhait : {p.nom}
-                        </Tag>
-                      ))}
-                      <Typography.Text type="secondary">
-                        Expire le {jourDeLInstant(i.expireLe)}
-                      </Typography.Text>
-                    </Space>
+            {invitations.map(i => {
+              const jourExpiration = jourDeLInstant(i.expireLe)
+              return (
+                <li key={i.id}>
+                  <div>
+                    <span style={{ fontWeight: 600 }}>{i.nom}</span>{' '}
+                    <Typography.Text type="secondary">
+                      {i.email}
+                    </Typography.Text>
+                    <div style={{ marginTop: 4 }}>
+                      <Space size={[4, 4]} wrap>
+                        {i.estAdmin && (
+                          <Tag>
+                            <Trans>Admin de l’organisation</Trans>
+                          </Tag>
+                        )}
+                        {i.activitesRattachees.flatMap(id => {
+                          const nom = nomActivite(id)
+                          return nom === undefined
+                            ? []
+                            : [
+                                <Tag key={id}>
+                                  <Trans>Équipe : {nom}</Trans>
+                                </Tag>,
+                              ]
+                        })}
+                        {i.perimetresAffectes.map(p => (
+                          <Tag
+                            key={p.id}
+                            style={{
+                              borderInlineStart: `4px solid ${p.couleur ?? 'var(--rt-primaire)'}`,
+                            }}
+                          >
+                            {p.nom}
+                          </Tag>
+                        ))}
+                        {i.perimetresSouhaites.map(p => {
+                          const nomPerimetre = p.nom
+                          return (
+                            <Tag key={p.id} style={{ borderStyle: 'dashed' }}>
+                              <Trans>Souhait : {nomPerimetre}</Trans>
+                            </Tag>
+                          )
+                        })}
+                        <Typography.Text type="secondary">
+                          <Trans>Expire le {jourExpiration}</Trans>
+                        </Typography.Text>
+                      </Space>
+                    </div>
                   </div>
-                </div>
-                <Space wrap>
-                  <Button
-                    size="small"
-                    loading={relance.loading}
-                    onClick={() =>
-                      void agir(
-                        () => relancer({ variables: { id: i.id } }),
-                        'L’invitation est renvoyée.'
-                      )
-                    }
-                  >
-                    Relancer
-                  </Button>
-                  <Popconfirm
-                    title="Retirer cette invitation ?"
-                    description="La personne ne pourra plus l’accepter."
-                    okText="Retirer"
-                    cancelText="Annuler"
-                    onConfirm={() =>
-                      agir(
-                        () => retirer({ variables: { id: i.id } }),
-                        'L’invitation est retirée.'
-                      )
-                    }
-                  >
-                    <Button size="small" danger loading={retrait.loading}>
-                      Retirer
+                  <Space wrap>
+                    <Button
+                      size="small"
+                      loading={relance.loading}
+                      onClick={() =>
+                        void agir(
+                          () => relancer({ variables: { id: i.id } }),
+                          t`L’invitation est renvoyée.`
+                        )
+                      }
+                    >
+                      <Trans>Relancer</Trans>
                     </Button>
-                  </Popconfirm>
-                </Space>
-              </li>
-            ))}
+                    <Popconfirm
+                      title={t`Retirer cette invitation ?`}
+                      description={t`La personne ne pourra plus l’accepter.`}
+                      okText={t`Retirer`}
+                      cancelText={t`Annuler`}
+                      onConfirm={() =>
+                        agir(
+                          () => retirer({ variables: { id: i.id } }),
+                          t`L’invitation est retirée.`
+                        )
+                      }
+                    >
+                      <Button size="small" danger loading={retrait.loading}>
+                        <Trans>Retirer</Trans>
+                      </Button>
+                    </Popconfirm>
+                  </Space>
+                </li>
+              )
+            })}
           </ul>
         </>
       }

@@ -8,6 +8,7 @@ import {
 } from '../lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { etatPostes } from '../lib/postes.ts'
 import {
   exigerEditionOuverte,
@@ -122,7 +123,7 @@ builder.mutationFields(t => ({
       const membre = await exigerMembreGere(ctx, userId)
       if (membre.archive) {
         throw erreurSaisie(
-          'Cette personne est archivée dans votre organisation.'
+          i18n._('Cette personne est archivée dans votre organisation.')
         )
       }
       const edition = await exigerEditionOuverte(ctx, args.editionId)
@@ -379,7 +380,9 @@ async function cibleDuSouhait(
     !(await ctx.estAdminDe(perimetre.activiteId))
   ) {
     throw erreurSaisie(
-      'Cette activité n’est pas ouverte aux souhaits : ses admins notent les souhaits.'
+      i18n._(
+        'Cette activité n’est pas ouverte aux souhaits : ses admins notent les souhaits.'
+      )
     )
   }
   const edition = await prisma.edition.findFirst({
@@ -388,7 +391,9 @@ async function cibleDuSouhait(
   })
   if (edition === null) throw accesRefuse()
   if (edition.statut === 'ARCHIVEE') {
-    throw erreurSaisie('Cette période est archivée : ses souhaits sont figés.')
+    throw erreurSaisie(
+      i18n._('Cette période est archivée : ses souhaits sont figés.')
+    )
   }
   return { perimetreId: perimetre.id, editionId: edition.id }
 }
@@ -425,7 +430,9 @@ builder.mutationFields(t => ({
         })
         if (deja >= SOUHAITS_MAX) {
           throw erreurSaisie(
-            `Vous avez déjà ${SOUHAITS_MAX} souhaits pour cette période.`
+            i18n._('Vous avez déjà {max} souhaits pour cette période.', {
+              max: SOUHAITS_MAX,
+            })
           )
         }
         await tx.souhait.createMany({
@@ -479,7 +486,7 @@ builder.mutationFields(t => ({
       if (souhait === null) return false
       if (souhait.edition.statut === 'ARCHIVEE') {
         throw erreurSaisie(
-          'Cette période est archivée : ses souhaits sont figés.'
+          i18n._('Cette période est archivée : ses souhaits sont figés.')
         )
       }
       const { count } = await prisma.souhait.deleteMany({

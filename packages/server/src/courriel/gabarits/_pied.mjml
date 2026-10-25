@@ -2,11 +2,11 @@
   <mj-column>
     <mj-divider border-width="1px" border-color="#D9DEE2" padding="0 0 16px" />
     <mj-text font-size="12px" line-height="18px" color="#5B6670" padding="0 0 10px">
-      Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
-      organisateur de {{organisation}}. Pour toute question, répondez à ce mail.
+      [[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+      organisateur de {{organisation}}. Pour toute question, répondez à ce mail.]]
     </mj-text>
     <mj-text font-size="11px" line-height="17px" color="#7A848C" padding="0">
-      Cet espace est propulsé par Relaytour, logiciel libre.<br />
+      [[Cet espace est propulsé par Relaytour, logiciel libre.]]<br />
       <a href="https://github.com/relaytour/relaytour" style="color:#7A848C">github.com/relaytour/relaytour</a>
     </mj-text>
   </mj-column>

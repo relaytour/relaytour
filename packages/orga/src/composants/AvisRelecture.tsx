@@ -1,3 +1,4 @@
+import { t } from '@lingui/core/macro'
 import { Alert, Button } from 'antd'
 
 import { useRefusDeRelecture } from '../lib/rafraichissement'
@@ -9,17 +10,19 @@ import { useRefusDeRelecture } from '../lib/rafraichissement'
  * cours reste à l'écran jusqu'au rechargement.
  */
 export default function AvisRelecture() {
+  // Le test de la relecture rend cet avis sans fournisseur de langue : `t` du cœur
+  // convient, car l'application se remonte à chaque changement de langue.
   const refus = useRefusDeRelecture()
   if (!refus) return null
   return (
     <Alert
       type="warning"
       showIcon
-      title="Vos accès ont changé, ou votre session a pris fin."
-      description="Cet écran affiche peut-être des données que vous ne pouvez plus relire. Rechargez la page pour retrouver vos accès actuels."
+      title={t`Vos accès ont changé, ou votre session a pris fin.`}
+      description={t`Cet écran affiche peut-être des données que vous ne pouvez plus relire. Rechargez la page pour retrouver vos accès actuels.`}
       action={
         <Button onClick={() => window.location.reload()}>
-          Recharger la page
+          {t`Recharger la page`}
         </Button>
       }
       style={{ marginBottom: 16 }}

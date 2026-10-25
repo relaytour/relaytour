@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react/macro'
 import { Alert, Button } from 'antd'
 
 import { useMiseAJour } from '../lib/application'
@@ -8,15 +9,16 @@ import { useMiseAJour } from '../lib/application'
  * à l'écran tant que la personne n'a pas choisi de recharger.
  */
 export default function AvisMiseAJour() {
+  const { t } = useLingui()
   const { disponible, recharger } = useMiseAJour()
   if (!disponible) return null
   return (
     <Alert
       type="info"
       showIcon
-      title="Une nouvelle version est disponible."
-      description="Enregistrez votre travail en cours, puis rechargez l’application pour l’utiliser."
-      action={<Button onClick={recharger}>Recharger</Button>}
+      title={t`Une nouvelle version est disponible.`}
+      description={t`Enregistrez votre travail en cours, puis rechargez l’application pour l’utiliser.`}
+      action={<Button onClick={recharger}>{t`Recharger`}</Button>}
       style={{ marginBottom: 16 }}
     />
   )

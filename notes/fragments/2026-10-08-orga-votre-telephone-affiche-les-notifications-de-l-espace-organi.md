@@ -15,6 +15,15 @@ fr:
     demande attend votre revue, même application fermée. Sur iPhone, installez
     d'abord l'application sur l'écran d'accueil. Le panneau n'apparaît que si
     votre organisation a ouvert ce canal.
+en:
+  titre: >-
+    Your phone shows organizer workspace notifications
+  texte: >-
+    The preferences have a new “Notifications on this device” panel. Once turned
+    on, your phone or computer alerts you when a task is assigned to you, when a
+    due date approaches, or when a request awaits your review, even with the app
+    closed. On an iPhone, first install the app on the home screen. The panel
+    appears only if your organization has opened this channel.
 ---
 
 ADR 0024. `PreferencePush`, `lib/push.ts`, gestionnaires `push` et

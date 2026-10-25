@@ -7,6 +7,7 @@ import { avecDelai } from '../lib/delai.ts'
 import { publierChangement } from '../lib/flux.ts'
 import { lireGroupes } from '../lib/activites.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 import { texteFiche } from '../orga/exporter.ts'
@@ -100,7 +101,12 @@ async function fichesAExporter(organisationId: string) {
       `${f.slug}.md`,
     ]
     if (f.perimetre?.archivedAt) {
-      return { id: f.id, slug: f.slug, chemin, refus: 'périmètre archivé' }
+      return {
+        id: f.id,
+        slug: f.slug,
+        chemin,
+        refus: i18n._('périmètre archivé'),
+      }
     }
     const personnelles = donneesPersonnelles(
       `${version.titre}\n${version.contenu}`,
@@ -111,7 +117,9 @@ async function fichesAExporter(organisationId: string) {
         id: f.id,
         slug: f.slug,
         chemin,
-        refus: `coordonnées personnelles (${personnelles.join(', ')})`,
+        refus: i18n._('coordonnées personnelles ({valeurs})', {
+          valeurs: personnelles.join(', '),
+        }),
       }
     }
     // La liste « Concerne aussi » s'écrit comme dans `orga:exporter` : sans
@@ -208,8 +216,9 @@ export async function exporterFiches(
       chemin,
     })
     if ((await espace.element(position([]))) === null) {
-      rapport.erreur =
+      rapport.erreur = i18n._(
         'Le dossier d’export n’existe plus chez le fournisseur cloud. Choisissez un autre dossier.'
+      )
       await enregistrer()
       return rapport
     }
@@ -217,8 +226,9 @@ export async function exporterFiches(
     // lecteurs y liraient les fiches de tous les périmètres. Relaytour n'y
     // écrit plus, et l'écran le signale.
     if (await exportDansUnDossierLie(espace, organisationId, connexion)) {
-      rapport.erreur =
+      rapport.erreur = i18n._(
         'Le dossier d’export se trouve maintenant dans un dossier lié : ses lecteurs y liraient les fiches de tous les périmètres. Relaytour n’y écrit plus. Déplacez-le, ou choisissez un autre dossier.'
+      )
       await enregistrer()
       return rapport
     }
@@ -314,8 +324,9 @@ export async function exporterFiches(
     }
   } catch (erreur) {
     if (erreur instanceof ExportObsolete) return null
-    rapport.erreur =
+    rapport.erreur = i18n._(
       'Le fournisseur cloud n’a pas répondu pendant l’export. Relaytour recommencera.'
+    )
     await enregistrer().catch(() => undefined)
     throw erreur
   }

@@ -5,6 +5,9 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -275,32 +278,53 @@ const SANS_ACTIVITE = 'sans-activite'
 
 /** Le rôle d'une personne dans une activité, pour l'étiquette de l'annuaire. */
 function libelleAttribution(a: Membre['attributions'][number]): string {
+  // Le commentaire s'écrit en toutes lettres : l'extraction ne lit pas une variable.
   const roles = [
-    a.admin ? 'admin' : null,
+    a.admin
+      ? t({
+          message: 'admin',
+          comment: 'Rôle d’une personne dans une activité, en liste',
+        })
+      : null,
     a.affectee
-      ? 'affecté·e'
+      ? t({
+          message: 'affecté·e',
+          comment: 'Rôle d’une personne dans une activité, en liste',
+        })
       : a.interessee
-        ? 'intéressé·e'
+        ? t({
+            message: 'intéressé·e',
+            comment: 'Rôle d’une personne dans une activité, en liste',
+          })
         : a.rattachee
-          ? 'sans périmètre'
+          ? t({
+              message: 'sans périmètre',
+              comment: 'Rôle d’une personne dans une activité, en liste',
+            })
           : null,
   ].filter(role => role !== null)
   return roles.join(', ')
 }
 
 interface Role {
-  libelle: string
+  libelle: MessageDescriptor
   couleur?: string
 }
 
 const ROLES = {
-  admin: { libelle: 'Admin de l’organisation', couleur: 'blue' },
-  membre: { libelle: 'Membre' },
-  adminActivite: { libelle: 'Admin de l’activité', couleur: 'geekblue' },
-  referent: { libelle: 'Référent·e' },
-  interesse: { libelle: 'Intéressé·e' },
+  admin: { libelle: msg`Admin de l’organisation`, couleur: 'blue' },
+  membre: {
+    libelle: msg({ message: 'Membre', comment: 'Rôle d’une personne' }),
+  },
+  adminActivite: { libelle: msg`Admin de l’activité`, couleur: 'geekblue' },
+  referent: {
+    libelle: msg({ message: 'Référent·e', comment: 'Rôle d’une personne' }),
+  },
+  interesse: {
+    libelle: msg({ message: 'Intéressé·e', comment: 'Rôle d’une personne' }),
+  },
   // Rattachée à l'activité, sans affectation ni souhait pour la période (ADR 0045).
-  equipe: { libelle: 'Sans périmètre' },
+  equipe: { libelle: msg`Sans périmètre` },
 } satisfies Record<string, Role>
 
 /** Valeur de filtre d'une personne sans périmètre dans la colonne. */
@@ -316,7 +340,7 @@ function filtreParPerimetre<T>(
   )
   return {
     options: [
-      { text: 'Aucun périmètre', value: AUCUN },
+      { text: t`Aucun périmètre`, value: AUCUN },
       ...[...noms]
         .sort((a, b) => comparer(a[1], b[1]))
         .map(([value, text]) => ({ text, value })),
@@ -374,6 +398,7 @@ function ChampsPerimetres({
   /** Reçoit les affectations lues, pour calculer celles à créer et à retirer. */
   surLecture: (editionId: string, affectations: AffectationLue[]) => void
 }) {
+  const { t } = useLingui()
   const form = Form.useFormInstance<Valeurs>()
   const { data } = useQuery(SOUHAITS_ACTIVITE, {
     variables: { activiteId: activite.id },
@@ -436,6 +461,7 @@ function ChampsPerimetres({
   }, [form, editionId, pret, nouvelle])
 
   if (edition === undefined) return null
+  const nomEdition = edition.nom
   const options = activite.groupes
     .map(groupe => ({
       label: groupe.libellePluriel,
@@ -466,22 +492,22 @@ function ChampsPerimetres({
       <Form.Item
         label={
           seul
-            ? `Périmètres affectés pour ${edition.nom}`
-            : 'Périmètres affectés'
+            ? t`Périmètres affectés pour ${nomEdition}`
+            : t`Périmètres affectés`
         }
         name={['affectations', edition.id]}
       >
-        {champ('Aucune affectation')}
+        {champ(t`Aucune affectation`)}
       </Form.Item>
       <Form.Item
         label={
           seul
-            ? `Périmètres souhaités pour ${edition.nom}`
-            : 'Périmètres souhaités'
+            ? t`Périmètres souhaités pour ${nomEdition}`
+            : t`Périmètres souhaités`
         }
         name={['souhaits', edition.id]}
       >
-        {champ('Aucun souhait')}
+        {champ(t`Aucun souhait`)}
       </Form.Item>
     </>
   )
@@ -525,7 +551,11 @@ export default function Personnes({
 }: {
   annuaire?: boolean
 }) {
+  const { t } = useLingui()
   const { activite, periode, libelleGroupe, lien } = useActivite()
+  const periodeUne = periode.une
+  const periodeCette = periode.cette
+  const nomActivite = activite.nom
   const { message } = App.useApp()
   const [inclureArchives, setInclureArchives] = useState(false)
   const [recherche, setRecherche] = useState('')
@@ -633,6 +663,7 @@ export default function Personnes({
     [liste, moiId]
   )
   const selectionnees = joignables.filter(p => selection.includes(p.id))
+  const nbSelectionnees = selectionnees.length
   const contactsPrincipaux = (liste ?? [])
     .filter(p => p.affectations.some(a => a.contactPrincipal))
     .map(p => p.id)
@@ -732,6 +763,11 @@ export default function Personnes({
             : p.souhaits.length > 0
               ? ROLES.interesse
               : ROLES.equipe
+
+  const libelleRole = (p: Personne) => {
+    const role = roleDe(p)
+    return role ? t(role.libelle) : undefined
+  }
 
   const ouvrir = (personne: Personne | 'nouvelle') => {
     setEnEdition(personne)
@@ -854,120 +890,121 @@ export default function Personnes({
             },
             () =>
               enAttente
-                ? `Invitation envoyée. Cette adresse a déjà un compte : la personne accepte ou refuse depuis son compte, et rien n’est créé avant son accord.${
-                    (v.activitesAdministrees ?? []).length > 0
-                      ? ' Le rôle d’admin d’activité n’est pas gardé : nommez la personne après son accord.'
-                      : ''
-                  }`
-                : 'Invitation enregistrée. Une personne sans compte reçoit un mail avec le lien de connexion.'
+                ? (v.activitesAdministrees ?? []).length > 0
+                  ? t`Invitation envoyée. Cette adresse a déjà un compte : la personne accepte ou refuse depuis son compte, et rien n’est créé avant son accord. Le rôle d’admin d’activité n’est pas gardé : nommez la personne après son accord.`
+                  : t`Invitation envoyée. Cette adresse a déjà un compte : la personne accepte ou refuse depuis son compte, et rien n’est créé avant son accord.`
+                : t`Invitation enregistrée. Une personne sans compte reçoit un mail avec le lien de connexion.`
           )
         : enEdition
-          ? await executer(async () => {
-              if (gereOrganisation) {
-                await modifier({
-                  variables: {
-                    id: enEdition.id,
-                    nom: v.nom,
-                    // Le rôle d'admin de l'organisation se donne sur l'écran
-                    // « Admins » : cette fenêtre le laisse tel quel.
-                    estAdmin: enEdition.estAdmin ?? false,
-                  },
-                })
-              }
-              // Les nominations passent avant tout le reste, les retraits de rôle
-              // à la fin : la personne ne sort pas de l'équipe entre deux écritures
-              // (ADR 0018).
-              const adminsAvant = enEdition.activitesAdministrees
-              const adminsApres = v.activitesAdministrees ?? adminsAvant
-              const adminsReunis = [
-                ...new Set([...adminsAvant, ...adminsApres]),
-              ]
-              await ajusterAdminsActivite(
-                enEdition.id,
-                adminsAvant,
-                adminsReunis
-              )
-              // Les rattachements de l'annuaire (ADR 0045) : les nouveaux d'abord,
-              // les retraits à la fin.
-              const rattacheesAvant = (enEdition.attributions ?? [])
-                .filter(a => a.rattachee)
-                .map(a => a.activiteId)
-              const rattacheesApres =
-                modeAnnuaire && form.isFieldTouched('activites')
-                  ? (v.activites ?? [])
-                  : rattacheesAvant
-              for (const activiteId of rattacheesApres) {
-                if (rattacheesAvant.includes(activiteId)) continue
-                await rattacher({
-                  variables: { userId: enEdition.id, activiteId },
-                })
-              }
-              // Les affectations d'une édition ne sont envoyées que si le champ a
-              // été modifié. Les nouvelles passent avant les souhaits, les retraits
-              // après : la personne ne sort pas de l'équipe entre deux écritures
-              // (ADR 0018).
-              const affectations = champSouhaits
-                ? Object.entries(v.affectations ?? {}).flatMap(
-                    ([editionId, ids]) => {
-                      const lues = affectationsLues.current.get(editionId)
-                      return lues !== undefined &&
-                        form.isFieldTouched(['affectations', editionId])
-                        ? [{ editionId, ids: ids ?? [], lues }]
-                        : []
-                    }
-                  )
-                : []
-              for (const { editionId, ids, lues } of affectations) {
-                for (const perimetreId of ids) {
-                  if (lues.has(perimetreId)) continue
-                  const r = await affecter({
+          ? await executer(
+              async () => {
+                if (gereOrganisation) {
+                  await modifier({
                     variables: {
-                      personneId: enEdition.id,
-                      perimetreId,
-                      editionId,
+                      id: enEdition.id,
+                      nom: v.nom,
+                      // Le rôle d'admin de l'organisation se donne sur l'écran
+                      // « Admins » : cette fenêtre le laisse tel quel.
+                      estAdmin: enEdition.estAdmin ?? false,
                     },
                   })
-                  const id = r.data?.affecter.id
-                  if (id !== undefined) lues.set(perimetreId, id)
                 }
-              }
-              // Les souhaits d'une édition ne sont envoyés que si le champ a été
-              // modifié. Les périodes qui gardent des souhaits passent avant celles
-              // qui se vident : une personne déplacée d'une activité à l'autre ne
-              // sort pas de l'équipe entre les deux écritures (ADR 0018).
-              const ordonnes = [
-                ...souhaits.filter(s => s.ids.length > 0),
-                ...souhaits.filter(s => s.ids.length === 0),
-              ]
-              for (const s of ordonnes) {
-                if (!form.isFieldTouched(['souhaits', s.editionId])) continue
-                await definirSouhaits({
-                  variables: {
-                    personneId: enEdition.id,
-                    editionId: s.editionId,
-                    perimetreIds: s.ids,
-                  },
-                })
-              }
-              for (const { ids, lues } of affectations) {
-                for (const [perimetreId, id] of [...lues]) {
-                  if (ids.includes(perimetreId)) continue
-                  await retirerAffectation({ variables: { id } })
-                  lues.delete(perimetreId)
+                // Les nominations passent avant tout le reste, les retraits de rôle
+                // à la fin : la personne ne sort pas de l'équipe entre deux écritures
+                // (ADR 0018).
+                const adminsAvant = enEdition.activitesAdministrees
+                const adminsApres = v.activitesAdministrees ?? adminsAvant
+                const adminsReunis = [
+                  ...new Set([...adminsAvant, ...adminsApres]),
+                ]
+                await ajusterAdminsActivite(
+                  enEdition.id,
+                  adminsAvant,
+                  adminsReunis
+                )
+                // Les rattachements de l'annuaire (ADR 0045) : les nouveaux d'abord,
+                // les retraits à la fin.
+                const rattacheesAvant = (enEdition.attributions ?? [])
+                  .filter(a => a.rattachee)
+                  .map(a => a.activiteId)
+                const rattacheesApres =
+                  modeAnnuaire && form.isFieldTouched('activites')
+                    ? (v.activites ?? [])
+                    : rattacheesAvant
+                for (const activiteId of rattacheesApres) {
+                  if (rattacheesAvant.includes(activiteId)) continue
+                  await rattacher({
+                    variables: { userId: enEdition.id, activiteId },
+                  })
                 }
-              }
-              await ajusterAdminsActivite(
-                enEdition.id,
-                adminsReunis,
-                adminsApres
-              )
-              for (const activiteId of rattacheesAvant) {
-                if (rattacheesApres.includes(activiteId)) continue
-                await retirerDeLActivite({
-                  variables: { userId: enEdition.id, activiteId },
-                })
-              }
-            }, 'Compte enregistré.')
+                // Les affectations d'une édition ne sont envoyées que si le champ a
+                // été modifié. Les nouvelles passent avant les souhaits, les retraits
+                // après : la personne ne sort pas de l'équipe entre deux écritures
+                // (ADR 0018).
+                const affectations = champSouhaits
+                  ? Object.entries(v.affectations ?? {}).flatMap(
+                      ([editionId, ids]) => {
+                        const lues = affectationsLues.current.get(editionId)
+                        return lues !== undefined &&
+                          form.isFieldTouched(['affectations', editionId])
+                          ? [{ editionId, ids: ids ?? [], lues }]
+                          : []
+                      }
+                    )
+                  : []
+                for (const { editionId, ids, lues } of affectations) {
+                  for (const perimetreId of ids) {
+                    if (lues.has(perimetreId)) continue
+                    const r = await affecter({
+                      variables: {
+                        personneId: enEdition.id,
+                        perimetreId,
+                        editionId,
+                      },
+                    })
+                    const id = r.data?.affecter.id
+                    if (id !== undefined) lues.set(perimetreId, id)
+                  }
+                }
+                // Les souhaits d'une édition ne sont envoyés que si le champ a été
+                // modifié. Les périodes qui gardent des souhaits passent avant celles
+                // qui se vident : une personne déplacée d'une activité à l'autre ne
+                // sort pas de l'équipe entre les deux écritures (ADR 0018).
+                const ordonnes = [
+                  ...souhaits.filter(s => s.ids.length > 0),
+                  ...souhaits.filter(s => s.ids.length === 0),
+                ]
+                for (const s of ordonnes) {
+                  if (!form.isFieldTouched(['souhaits', s.editionId])) continue
+                  await definirSouhaits({
+                    variables: {
+                      personneId: enEdition.id,
+                      editionId: s.editionId,
+                      perimetreIds: s.ids,
+                    },
+                  })
+                }
+                for (const { ids, lues } of affectations) {
+                  for (const [perimetreId, id] of [...lues]) {
+                    if (ids.includes(perimetreId)) continue
+                    await retirerAffectation({ variables: { id } })
+                    lues.delete(perimetreId)
+                  }
+                }
+                await ajusterAdminsActivite(
+                  enEdition.id,
+                  adminsReunis,
+                  adminsApres
+                )
+                for (const activiteId of rattacheesAvant) {
+                  if (rattacheesApres.includes(activiteId)) continue
+                  await retirerDeLActivite({
+                    variables: { userId: enEdition.id, activiteId },
+                  })
+                }
+              },
+              t`Compte enregistré.`
+            )
           : false
     if (ok) {
       setEnEdition(null)
@@ -987,7 +1024,7 @@ export default function Personnes({
     }
     setEnEdition(creee)
     message.warning(
-      'Le compte est créé et l’invitation est envoyée. Une partie des rôles ou des souhaits n’a pas été enregistrée : vérifiez-les, puis enregistrez de nouveau.'
+      t`Le compte est créé et l’invitation est envoyée. Une partie des rôles ou des souhaits n’a pas été enregistrée : vérifiez-les, puis enregistrez de nouveau.`
     )
   }
 
@@ -1031,8 +1068,8 @@ export default function Personnes({
       <Titre
         sousTitre={
           modeAnnuaire
-            ? 'Tous les membres de l’organisation, avec les activités de chacun. Seules les personnes invitées peuvent se connecter à l’espace organisateur.'
-            : 'L’équipe de cette activité : les personnes rattachées, affectées, intéressées ou admins. Vous y ajoutez une personne par son adresse.'
+            ? t`Tous les membres de l’organisation, avec les activités de chacun. Seules les personnes invitées peuvent se connecter à l’espace organisateur.`
+            : t`L’équipe de cette activité : les personnes rattachées, affectées, intéressées ou admins. Vous y ajoutez une personne par son adresse.`
         }
         actions={
           modeAnnuaire ? undefined : (
@@ -1042,7 +1079,7 @@ export default function Personnes({
                 style={{ minWidth: 200 }}
                 value={editionId}
                 onChange={setChoix}
-                placeholder={`Choisir ${periode.une}`}
+                placeholder={t`Choisir ${periodeUne}`}
                 options={(editions?.editions ?? []).map(e => ({
                   value: e.id,
                   label: e.nom,
@@ -1052,7 +1089,7 @@ export default function Personnes({
           )
         }
       >
-        {modeAnnuaire ? 'Annuaire' : 'Personnes'}
+        {modeAnnuaire ? t`Annuaire` : t`Personnes`}
       </Titre>
       <Tabs
         activeKey={onglet}
@@ -1062,7 +1099,7 @@ export default function Personnes({
         items={[
           {
             key: 'annuaire',
-            label: modeAnnuaire ? 'Annuaire' : 'Équipe de l’activité',
+            label: modeAnnuaire ? t`Annuaire` : t`Équipe de l’activité`,
           },
           // Les demandes valent pour une période d'une activité.
           ...(modeAnnuaire
@@ -1072,16 +1109,16 @@ export default function Personnes({
                   key: 'demandes',
                   label:
                     demandesEnAttente > 0
-                      ? `Demandes (${demandesEnAttente})`
-                      : 'Demandes',
+                      ? t`Demandes (${demandesEnAttente})`
+                      : t`Demandes`,
                 },
               ]),
-          ...(modeAnnuaire ? [{ key: 'messages', label: 'Messages' }] : []),
+          ...(modeAnnuaire ? [{ key: 'messages', label: t`Messages` }] : []),
         ]}
       />
       {onglet === 'demandes' &&
         (editionId === undefined ? (
-          <Empty description={`Créez d’abord ${periode.une}.`} />
+          <Empty description={t`Créez d’abord ${periodeUne}.`} />
         ) : (
           <Demandes
             editionId={editionId}
@@ -1106,7 +1143,7 @@ export default function Personnes({
               icon={<UserAddOutlined />}
               onClick={() => ouvrir('nouvelle')}
             >
-              Inviter une personne
+              <Trans>Inviter une personne</Trans>
             </Button>
             {modeAnnuaire && (
               <Space>
@@ -1114,25 +1151,40 @@ export default function Personnes({
                   checked={inclureArchives}
                   onChange={setInclureArchives}
                 />
-                <span>Afficher les personnes archivées</span>
+                <span>
+                  <Trans>Afficher les personnes archivées</Trans>
+                </span>
               </Space>
             )}
           </Space>
           <Space wrap size={[16, 12]} style={{ marginBottom: 16 }}>
             <Segmented<FiltreRole>
-              aria-label="Filtrer par rôle"
+              aria-label={t`Filtrer par rôle`}
               value={filtreRole}
               onChange={setFiltreRole}
               options={[
-                { value: 'tous', label: 'Tous' },
-                { value: 'admins', label: 'Admins' },
-                { value: 'membres', label: 'Membres' },
+                {
+                  value: 'tous',
+                  label: t({
+                    message: 'Tous',
+                    comment:
+                      'Filtre : toutes les personnes, quel que soit le rôle',
+                  }),
+                },
+                { value: 'admins', label: t`Admins` },
+                {
+                  value: 'membres',
+                  label: t({
+                    message: 'Membres',
+                    comment: 'Filtre : les personnes qui ne sont pas admins',
+                  }),
+                },
               ]}
             />
             <Input.Search
               allowClear
-              placeholder="Rechercher un nom ou une adresse"
-              aria-label="Rechercher un nom ou une adresse"
+              placeholder={t`Rechercher un nom ou une adresse`}
+              aria-label={t`Rechercher un nom ou une adresse`}
               style={{ width: 320, maxWidth: '100%' }}
               value={recherche}
               onChange={e => setRecherche(e.target.value)}
@@ -1140,16 +1192,16 @@ export default function Personnes({
             {modeAnnuaire && (
               <Select
                 style={{ minWidth: 220 }}
-                aria-label="Filtrer par activité"
+                aria-label={t`Filtrer par activité`}
                 value={filtreActivite}
                 onChange={setFiltreActivite}
                 options={[
-                  { value: TOUTES, label: 'Toutes les activités' },
+                  { value: TOUTES, label: t`Toutes les activités` },
                   ...(toutesActivites?.activites ?? []).map(a => ({
                     value: a.id,
                     label: a.nom,
                   })),
-                  { value: SANS_ACTIVITE, label: 'Sans activité' },
+                  { value: SANS_ACTIVITE, label: t`Sans activité` },
                 ]}
               />
             )}
@@ -1159,8 +1211,8 @@ export default function Personnes({
                 allowClear
                 maxTagCount="responsive"
                 style={{ minWidth: 260 }}
-                placeholder="Tous les périmètres"
-                aria-label="Filtrer par périmètre"
+                placeholder={t`Tous les périmètres`}
+                aria-label={t`Filtrer par périmètre`}
                 optionFilterProp="label"
                 value={filtrePerimetres}
                 onChange={setFiltrePerimetres}
@@ -1180,13 +1232,13 @@ export default function Personnes({
                 disabled={editionId === undefined}
                 onChange={e => setSansAffectation(e.target.checked)}
               >
-                Sans affectation pour {periode.cette}
+                <Trans>Sans affectation pour {periodeCette}</Trans>
               </Checkbox>
             )}
             <Tooltip
               title={
                 selectionnees.length === 0
-                  ? 'Cochez d’abord des personnes dans le tableau.'
+                  ? t`Cochez d’abord des personnes dans le tableau.`
                   : undefined
               }
             >
@@ -1201,8 +1253,8 @@ export default function Personnes({
                 }
               >
                 {selectionnees.length === 0
-                  ? 'Écrire à la sélection'
-                  : `Écrire à la sélection (${selectionnees.length})`}
+                  ? t`Écrire à la sélection`
+                  : t`Écrire à la sélection (${nbSelectionnees})`}
               </Button>
             </Tooltip>
           </Space>
@@ -1221,30 +1273,40 @@ export default function Personnes({
               onChange: cles => setSelection(cles.map(String)),
               preserveSelectedRowKeys: true,
               selections: [Table.SELECTION_ALL, Table.SELECTION_NONE],
-              getCheckboxProps: p => ({
-                disabled: p.archive || p.id === moiId,
-                'aria-label': `Sélectionner ${p.nom}`,
-              }),
+              getCheckboxProps: p => {
+                const nomPersonne = p.nom
+                return {
+                  disabled: p.archive || p.id === moiId,
+                  'aria-label': t`Sélectionner ${nomPersonne}`,
+                }
+              },
             }}
             ouvrir={ouvrir}
             peutOuvrir={modifiable}
-            libelleOuvrir={p => `Modifier le compte de ${p.nom}`}
+            libelleOuvrir={p => {
+              const nomPersonne = p.nom
+              return t`Modifier le compte de ${nomPersonne}`
+            }}
             colonnes={[
               {
                 key: 'nom',
-                title: 'Nom',
+                title: t`Nom`,
                 dataIndex: 'nom',
                 tri: p => p.nom,
                 render: (nom: string, p) => (
                   <Space>
                     <span style={{ fontWeight: 600 }}>{nom}</span>
-                    {p.id === moiId && <Tag>Vous</Tag>}
+                    {p.id === moiId && (
+                      <Tag>
+                        <Trans>Vous</Trans>
+                      </Tag>
+                    )}
                   </Space>
                 ),
               },
               {
                 key: 'email',
-                title: 'Adresse mail',
+                title: t`Adresse mail`,
                 dataIndex: 'email',
                 tri: p => p.email,
               },
@@ -1254,7 +1316,7 @@ export default function Personnes({
                 ? []
                 : ([
                     {
-                      title: 'Affectations',
+                      title: t`Affectations`,
                       key: 'affectations',
                       filtre: filtreParPerimetre(
                         personnes,
@@ -1263,7 +1325,10 @@ export default function Personnes({
                       render: (_, p) =>
                         p.affectations.length === 0 ? (
                           <Typography.Text type="secondary">
-                            Aucune
+                            {t({
+                              message: 'Aucune',
+                              comment: 'Aucune affectation',
+                            })}
                           </Typography.Text>
                         ) : (
                           <Space size={[4, 4]} wrap>
@@ -1281,13 +1346,16 @@ export default function Personnes({
                         ),
                     },
                     {
-                      title: 'Souhaits',
+                      title: t`Souhaits`,
                       key: 'souhaits',
                       filtre: filtreParPerimetre(personnes, p => p.souhaits),
                       render: (_, p) =>
                         p.souhaits.length === 0 ? (
                           <Typography.Text type="secondary">
-                            Aucun
+                            {t({
+                              message: 'Aucun',
+                              comment: 'Aucun souhait',
+                            })}
                           </Typography.Text>
                         ) : (
                           <Space size={[4, 4]} wrap>
@@ -1296,7 +1364,9 @@ export default function Personnes({
                                 key={souhait.id}
                                 icon={
                                   souhait.satisfait ? (
-                                    <CheckOutlined aria-label="Satisfait :" />
+                                    <CheckOutlined
+                                      aria-label={t`Satisfait :`}
+                                    />
                                   ) : undefined
                                 }
                                 style={{
@@ -1315,7 +1385,7 @@ export default function Personnes({
               ...(modeAnnuaire
                 ? [
                     {
-                      title: 'Activités',
+                      title: t`Activités`,
                       key: 'activites',
                       render: (_: unknown, p: Personne) => {
                         const attributions = (
@@ -1328,7 +1398,10 @@ export default function Personnes({
                         })
                         return attributions.length === 0 ? (
                           <Typography.Text type="secondary">
-                            Aucune
+                            {t({
+                              message: 'Aucune',
+                              comment: 'Aucune activité',
+                            })}
                           </Typography.Text>
                         ) : (
                           <Space size={[4, 4]} wrap>
@@ -1347,13 +1420,17 @@ export default function Personnes({
                   ]
                 : []),
               {
-                title: modeAnnuaire ? 'Rôle' : 'Rôle dans l’activité',
+                title: modeAnnuaire
+                  ? t({ message: 'Rôle', comment: 'Colonne de l’annuaire' })
+                  : t`Rôle dans l’activité`,
                 key: 'role',
                 render: (_, p) => {
                   const role = roleDe(p)
-                  return role && <Tag color={role.couleur}>{role.libelle}</Tag>
+                  return (
+                    role && <Tag color={role.couleur}>{t(role.libelle)}</Tag>
+                  )
                 },
-                tri: p => roleDe(p)?.libelle,
+                tri: p => libelleRole(p),
                 filtre: {
                   options: (modeAnnuaire
                     ? [ROLES.admin, ROLES.membre]
@@ -1364,17 +1441,18 @@ export default function Personnes({
                         ROLES.interesse,
                         ROLES.equipe,
                       ]
-                  ).map(r => ({ text: r.libelle, value: r.libelle })),
-                  valeurs: p => roleDe(p)?.libelle ?? [],
+                  ).map(r => ({ text: t(r.libelle), value: t(r.libelle) })),
+                  valeurs: p => libelleRole(p) ?? [],
                 },
               },
               {
-                title: 'Actions',
+                title: t`Actions`,
                 key: 'actions',
                 redimensionnable: false,
-                render: (_, p) =>
-                  !modifiable(p) ||
-                  (p.archive && !modeAnnuaire) ? null : p.archive ? (
+                render: (_, p) => {
+                  const nomPersonne = p.nom
+                  return !modifiable(p) ||
+                    (p.archive && !modeAnnuaire) ? null : p.archive ? (
                     <Button
                       size="small"
                       onClick={() =>
@@ -1383,11 +1461,11 @@ export default function Personnes({
                             archiver({
                               variables: { id: p.id, archive: false },
                             }),
-                          'Personne restaurée.'
+                          t`Personne restaurée.`
                         )
                       }
                     >
-                      Restaurer
+                      <Trans>Restaurer</Trans>
                     </Button>
                   ) : (
                     <Space>
@@ -1395,7 +1473,7 @@ export default function Personnes({
                         <Button
                           size="small"
                           icon={<SendOutlined />}
-                          aria-label={`Écrire à ${p.nom}`}
+                          aria-label={t`Écrire à ${nomPersonne}`}
                           onClick={() =>
                             setCibleMessage({
                               destinataires: [
@@ -1405,7 +1483,7 @@ export default function Personnes({
                             })
                           }
                         >
-                          Écrire
+                          <Trans>Écrire</Trans>
                         </Button>
                       )}
                       <Button
@@ -1414,11 +1492,11 @@ export default function Personnes({
                         onClick={() =>
                           void executer(
                             () => renvoyer({ variables: { id: p.id } }),
-                            'Invitation renvoyée.'
+                            t`Invitation renvoyée.`
                           )
                         }
                       >
-                        Renvoyer l’invitation
+                        <Trans>Renvoyer l’invitation</Trans>
                       </Button>
                       {/* Une personne sans affectation pour la période quitte
                           l'équipe de l'activité (ADR 0045). Le serveur refuse si
@@ -1429,10 +1507,10 @@ export default function Personnes({
                         p.affectations.length === 0 &&
                         !p.activitesAdministrees.includes(activite.id) && (
                           <Popconfirm
-                            title="Retirer cette personne de l’activité ?"
-                            description="Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation."
-                            okText="Retirer"
-                            cancelText="Annuler"
+                            title={t`Retirer cette personne de l’activité ?`}
+                            description={t`Elle quitte l’équipe de l’activité, et ses souhaits des périodes en cours sont retirés. Son compte reste dans l’organisation.`}
+                            okText={t`Retirer`}
+                            cancelText={t`Annuler`}
                             onConfirm={() =>
                               executer(
                                 () =>
@@ -1442,36 +1520,39 @@ export default function Personnes({
                                       activiteId: activite.id,
                                     },
                                   }),
-                                'Personne retirée de l’activité.'
+                                t`Personne retirée de l’activité.`
                               )
                             }
                           >
-                            <Button size="small">Retirer de l’activité</Button>
+                            <Button size="small">
+                              <Trans>Retirer de l’activité</Trans>
+                            </Button>
                           </Popconfirm>
                         )}
                       {p.id !== moiId && modeAnnuaire && (
                         <Popconfirm
-                          title="Archiver cette personne ?"
-                          description="La personne perd l’accès à votre organisation. Son compte et son historique restent conservés."
-                          okText="Archiver"
-                          cancelText="Annuler"
+                          title={t`Archiver cette personne ?`}
+                          description={t`La personne perd l’accès à votre organisation. Son compte et son historique restent conservés.`}
+                          okText={t`Archiver`}
+                          cancelText={t`Annuler`}
                           onConfirm={() =>
                             executer(
                               () =>
                                 archiver({
                                   variables: { id: p.id, archive: true },
                                 }),
-                              'Personne archivée.'
+                              t`Personne archivée.`
                             )
                           }
                         >
                           <Button size="small" danger>
-                            Archiver
+                            <Trans>Archiver</Trans>
                           </Button>
                         </Popconfirm>
                       )}
                     </Space>
-                  ),
+                  )
+                },
               },
             ]}
           />
@@ -1490,13 +1571,13 @@ export default function Personnes({
         open={enEdition !== null}
         title={
           enEdition === 'nouvelle'
-            ? 'Inviter une personne'
-            : 'Modifier le compte'
+            ? t`Inviter une personne`
+            : t`Modifier le compte`
         }
         okText={
-          enEdition === 'nouvelle' ? 'Envoyer l’invitation' : 'Enregistrer'
+          enEdition === 'nouvelle' ? t`Envoyer l’invitation` : t`Enregistrer`
         }
-        cancelText="Annuler"
+        cancelText={t`Annuler`}
         confirmLoading={
           invitation.loading ||
           modification.loading ||
@@ -1516,12 +1597,12 @@ export default function Personnes({
           requiredMark={false}
         >
           <Form.Item
-            label="Prénom et nom"
+            label={t`Prénom et nom`}
             name="nom"
-            rules={[{ required: true, message: 'Saisissez un nom.' }]}
+            rules={[{ required: true, message: t`Saisissez un nom.` }]}
             extra={
               nomVerrouille
-                ? 'Cette personne s’est déjà connectée : elle modifie son nom dans ses préférences.'
+                ? t`Cette personne s’est déjà connectée : elle modifie son nom dans ses préférences.`
                 : undefined
             }
           >
@@ -1533,13 +1614,13 @@ export default function Personnes({
             />
           </Form.Item>
           <Form.Item
-            label="Adresse mail"
+            label={t`Adresse mail`}
             name="email"
             rules={[
               {
                 required: true,
                 type: 'email',
-                message: 'Saisissez une adresse mail valide.',
+                message: t`Saisissez une adresse mail valide.`,
               },
             ]}
           >
@@ -1552,14 +1633,14 @@ export default function Personnes({
           {modeAnnuaire && (
             <>
               <Form.Item
-                label="Équipes des activités"
+                label={t`Équipes des activités`}
                 name="activites"
-                extra="La personne rejoint l’équipe de chaque activité choisie, sans périmètre. Elle y découvre les périmètres. Une affectation l’ajoute aussi à l’équipe de son activité."
+                extra={t`La personne rejoint l’équipe de chaque activité choisie, sans périmètre. Elle y découvre les périmètres. Une affectation l’ajoute aussi à l’équipe de son activité.`}
               >
                 <Select
                   mode="multiple"
                   allowClear
-                  placeholder="Aucune activité"
+                  placeholder={t`Aucune activité`}
                   // Une activité archivée ne reçoit plus de rattachement, mais un
                   // rattachement existant garde son nom.
                   options={(toutesActivites?.activites ?? [])
@@ -1572,21 +1653,24 @@ export default function Personnes({
                             x => x.activiteId === a.id && x.rattachee
                           ))
                     )
-                    .map(a => ({
-                      value: a.id,
-                      label: a.archive ? `${a.nom} (archivée)` : a.nom,
-                    }))}
+                    .map(a => {
+                      const nomAffiche = a.nom
+                      return {
+                        value: a.id,
+                        label: a.archive ? t`${nomAffiche} (archivée)` : a.nom,
+                      }
+                    })}
                 />
               </Form.Item>
               <Form.Item
-                label="Admin des activités"
+                label={t`Admin des activités`}
                 name="activitesAdministrees"
-                extra="Un admin d’activité gère ses périodes, ses périmètres, ses affectations et ses fiches. Il ne voit pas les autres activités. Le rôle d’admin de l’organisation se donne depuis l’écran Admins."
+                extra={t`Un admin d’activité gère ses périodes, ses périmètres, ses affectations et ses fiches. Il ne voit pas les autres activités. Le rôle d’admin de l’organisation se donne depuis l’écran Admins.`}
               >
                 <Select
                   mode="multiple"
                   allowClear
-                  placeholder="Aucune activité"
+                  placeholder={t`Aucune activité`}
                   options={(toutesActivites?.activites ?? []).map(a => ({
                     value: a.id,
                     label: a.nom,
@@ -1597,12 +1681,12 @@ export default function Personnes({
           )}
           {!modeAnnuaire && (
             <Form.Item
-              label="Admin de l’activité"
+              label={t`Admin de l’activité`}
               name="activitesAdministrees"
               extra={
                 gereOrganisation
-                  ? 'Un admin de l’activité gère ses périodes, ses périmètres, ses affectations et ses fiches.'
-                  : 'Un admin de l’activité gère avec vous ses périodes, ses périmètres, ses affectations et ses fiches. Vous ne retirez pas votre propre rôle.'
+                  ? t`Un admin de l’activité gère ses périodes, ses périmètres, ses affectations et ses fiches.`
+                  : t`Un admin de l’activité gère avec vous ses périodes, ses périmètres, ses affectations et ses fiches. Vous ne retirez pas votre propre rôle.`
               }
             >
               <InterrupteurAdmin
@@ -1620,19 +1704,21 @@ export default function Personnes({
               type="info"
               showIcon
               style={{ marginBottom: 16 }}
-              title={`La personne rejoint l’équipe de ${activite.nom}, avec ou sans périmètre. Sans périmètre, elle découvre les périmètres de l’activité. Si elle a déjà un compte dans votre organisation, ce compte rejoint l’équipe et garde son nom. Si son compte existe hors de votre organisation, l’invitation attend son accord.`}
+              title={t`La personne rejoint l’équipe de ${nomActivite}, avec ou sans périmètre. Sans périmètre, elle découvre les périmètres de l’activité. Si elle a déjà un compte dans votre organisation, ce compte rejoint l’équipe et garde son nom. Si son compte existe hors de votre organisation, l’invitation attend son accord.`}
             />
           )}
           {champSouhaits && activitesSouhaits.length > 0 && (
             <>
               <Typography.Title level={5}>
-                Affectations et souhaits
+                <Trans>Affectations et souhaits</Trans>
               </Typography.Title>
               <Typography.Paragraph type="secondary">
-                Une affectation rend la personne référent·e du périmètre : elle
-                y modifie les tâches et reçoit un mail qui l’annonce. Un souhait
-                note seulement un intérêt : il ne donne aucun accès, et seuls
-                les admins le voient.
+                <Trans>
+                  Une affectation rend la personne référent·e du périmètre :
+                  elle y modifie les tâches et reçoit un mail qui l’annonce. Un
+                  souhait note seulement un intérêt : il ne donne aucun accès,
+                  et seuls les admins le voient.
+                </Trans>
               </Typography.Paragraph>
             </>
           )}
@@ -1652,8 +1738,8 @@ export default function Personnes({
                   key: 'autres',
                   label:
                     enEdition === 'nouvelle'
-                      ? 'Inviter aussi dans d’autres activités'
-                      : 'Affecter aussi dans d’autres activités',
+                      ? t`Inviter aussi dans d’autres activités`
+                      : t`Affecter aussi dans d’autres activités`,
                   children: autresActivites.map(a =>
                     champsPerimetres(a, false)
                   ),

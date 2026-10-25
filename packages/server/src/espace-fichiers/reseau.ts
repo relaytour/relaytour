@@ -3,6 +3,8 @@ import { BlockList, isIP, type LookupFunction } from 'node:net'
 
 import { Agent } from 'undici'
 
+import { i18n } from '../lib/langue.ts'
+
 // Adresses joignables par un appel vers un hôte que l'organisation désigne
 // elle-même, comme son Nextcloud (ADR 0038). Un tel hôte ne doit pas mener le
 // serveur vers son propre réseau : la base, Valkey, l'API de métadonnées d'un
@@ -72,7 +74,9 @@ export const resolutionPublique: LookupFunction = (hote, options, rappel) => {
     const liste = adresses
     if (liste.length === 0 || liste.some(a => !adressePublique(a.address))) {
       rappel(
-        new AdresseRefusee(`L’hôte ${hote} n’a pas une adresse publique.`),
+        new AdresseRefusee(
+          i18n._('L’hôte {hote} n’a pas une adresse publique.', { hote })
+        ),
         '',
         0
       )

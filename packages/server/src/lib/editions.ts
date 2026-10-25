@@ -1,4 +1,5 @@
 import { erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 import { texteRequis } from './saisie.ts'
 
 // Règles de saisie d'une édition, partagées par la mutation GraphQL et la
@@ -17,10 +18,10 @@ export interface SaisieEdition {
 
 export function validerDates(debut: Date, fin: Date): void {
   if (Number.isNaN(debut.getTime()) || Number.isNaN(fin.getTime())) {
-    throw erreurSaisie('Les dates attendues ont la forme AAAA-MM-JJ.')
+    throw erreurSaisie(i18n._('Les dates attendues ont la forme AAAA-MM-JJ.'))
   }
   if (debut > fin) {
-    throw erreurSaisie('La date de fin doit suivre la date de début.')
+    throw erreurSaisie(i18n._('La date de fin doit suivre la date de début.'))
   }
 }
 
@@ -32,13 +33,16 @@ export function validerEdition(saisie: SaisieEdition): SaisieEdition {
     saisie.annee > ANNEE_MAX
   ) {
     throw erreurSaisie(
-      `L’année doit être comprise entre ${ANNEE_MIN} et ${ANNEE_MAX}.`
+      i18n._('L’année doit être comprise entre {min} et {max}.', {
+        min: ANNEE_MIN,
+        max: ANNEE_MAX,
+      })
     )
   }
   validerDates(saisie.debut, saisie.fin)
   return {
     annee: saisie.annee,
-    nom: texteRequis(saisie.nom, 'Le nom'),
+    nom: texteRequis(saisie.nom, i18n._('Le nom')),
     debut: saisie.debut,
     fin: saisie.fin,
   }
