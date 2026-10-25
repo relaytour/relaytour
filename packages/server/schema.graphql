@@ -1361,6 +1361,16 @@ type LigneImport {
 }
 
 """
+Ce que l’import fait d’une ligne du fichier, numérotée en-têtes compris.
+"""
+type LigneImportTableur {
+  avertissements: [String!]!
+  etat: EtatLigneImport!
+  ligne: Int!
+  raison: String
+}
+
+"""
 Une tâche de la période source et ce que la reconduction en fait. Une tâche partagée compte ses déclinaisons recréées.
 """
 type LigneReconduction {
@@ -1374,6 +1384,24 @@ type LigneReconduction {
   retenue: Boolean!
   statutSource: StatutTache!
   tacheId: ID!
+  titre: String!
+}
+
+input LigneTacheImport {
+  description: String
+
+  """
+  Une date AAAA-MM-JJ, ou un décalage depuis le premier jour : J-30, J+3.
+  """
+  echeance: String
+
+  """Le titre ou l’identifiant d’une fiche."""
+  fiche: String
+  ligne: Int!
+  perimetre: String!
+
+  """L’adresse d’une personne affectée au périmètre."""
+  responsable: String
   titre: String!
 }
 
@@ -1824,6 +1852,11 @@ type Mutation {
   Importe les fiches des dossiers sources dans l’activité. Une fiche modifiée dans Relaytour n’est pas remplacée.
   """
   importerFichesEspace(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
+
+  """
+  Importe un lot de lignes de tâches dans une période. Une tâche déjà présente (même périmètre, même titre, même échéance) n’est pas recréée.
+  """
+  importerTaches(editionId: ID!, enregistrerTachesTypes: Boolean, groupeNouveaux: String, lignes: [LigneTacheImport!]!): RapportImportTaches!
 
   """
   Ajoute une déclinaison aux tâches de son périmètre sans son accord, même après un refus. Réservé aux admins de l’activité.
@@ -3041,6 +3074,18 @@ type Query {
   """
   simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
 
+  """Simule l’import d’un lot de lignes de tâches : rien ne change en base."""
+  simulerImportTaches(
+    editionId: ID!
+    enregistrerTachesTypes: Boolean
+
+    """
+    Le groupe des périmètres inconnus, créés par l’import. Sans valeur, leurs lignes sont écartées.
+    """
+    groupeNouveaux: String
+    lignes: [LigneTacheImport!]!
+  ): RapportImportTaches!
+
   """
   Décrit un modèle de départ et ce qu’il créerait dans l’activité : rien ne change en base.
   """
@@ -3113,6 +3158,12 @@ type RapportImportFiches {
   nonImportes: [FichierEcarte!]!
   nouvellesVersions: [String!]!
   refusees: [FichierEcarte!]!
+}
+
+type RapportImportTaches {
+  lignes: [LigneImportTableur!]!
+  perimetresCrees: [String!]!
+  tachesTypesAjoutees: Int!
 }
 
 """

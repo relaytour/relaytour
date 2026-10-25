@@ -1875,6 +1875,18 @@ const CAS: Cas[] = [
     variables: () => ({ e: b.edition, p: [a.perimetre] }),
     attente: REFUSE,
   },
+  // Import des tâches depuis un tableur (ADR 0049).
+  ...(
+    [
+      ['simulerImportTaches', 'query'],
+      ['importerTaches', 'mutation'],
+    ] as const
+  ).map(([operation, sorte]) => ({
+    operation,
+    query: `${sorte} ($e: ID!) { ${operation}(editionId: $e, lignes: []) { tachesTypesAjoutees } }`,
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  })),
   // Modèle de départ (ADR 0048).
   ...(
     [

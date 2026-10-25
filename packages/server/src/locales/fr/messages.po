@@ -655,6 +655,19 @@ msgid "Choisissez deux fiches différentes."
 msgstr "Choisissez deux fiches différentes."
 
 #. js-lingui-explicit-id
+#: src/lib/droits.ts
+#: src/schema/import-taches.ts
+#: src/schema/reconduction.ts
+#: src/schema/taches-types.ts
+msgid "Cette édition est archivée : ses tâches sont en lecture seule."
+msgstr "Cette édition est archivée : ses tâches sont en lecture seule."
+
+#. js-lingui-explicit-id
+#: src/schema/import-taches.ts
+msgid "Un envoi compte {max} lignes au plus."
+msgstr "Un envoi compte {max} lignes au plus."
+
+#. js-lingui-explicit-id
 #: src/lib/installation.ts
 #: src/schema/installation.ts
 msgid "Aucune organisation ne porte le slug « {slug} »."
@@ -861,13 +874,6 @@ msgstr "La recherche dépasse {max} caractères."
 #: src/schema/reconduction.ts
 msgid "Choisissez une autre édition comme source."
 msgstr "Choisissez une autre édition comme source."
-
-#. js-lingui-explicit-id
-#: src/lib/droits.ts
-#: src/schema/reconduction.ts
-#: src/schema/taches-types.ts
-msgid "Cette édition est archivée : ses tâches sont en lecture seule."
-msgstr "Cette édition est archivée : ses tâches sont en lecture seule."
 
 #. js-lingui-explicit-id
 #: src/schema/repartition.ts
@@ -1714,6 +1720,52 @@ msgid "Une activité compte {max} fiches bénévoles au plus : ce lot en créera
 msgstr "Une activité compte {max} fiches bénévoles au plus : ce lot en créerait {fichesCreees}, il en reste {fichesRestantes}."
 
 #. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+msgid "Le titre est vide."
+msgstr "Le titre est vide."
+
+#. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+msgid "Le titre dépasse {max} caractères."
+msgstr "Le titre dépasse {max} caractères."
+
+#. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+#: src/lib/saisie.ts
+msgid "La description dépasse {max} caractères."
+msgstr "La description dépasse {max} caractères."
+
+#. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+msgid "Échéance illisible : « {echeance} »."
+msgstr "Échéance illisible : « {echeance} »."
+
+#. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+msgid "Le périmètre est vide."
+msgstr "Le périmètre est vide."
+
+#. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+msgid "Périmètre inconnu : « {perimetre} »."
+msgstr "Périmètre inconnu : « {perimetre} »."
+
+#. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+msgid "Fiche introuvable : « {fiche} »."
+msgstr "Fiche introuvable : « {fiche} »."
+
+#. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+msgid "La fiche « {fiche} » appartient à un autre périmètre."
+msgstr "La fiche « {fiche} » appartient à un autre périmètre."
+
+#. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+msgid "« {adresse} » n’est pas affecté·e à ce périmètre pour la période : la tâche reste sans personne assignée."
+msgstr "« {adresse} » n’est pas affecté·e à ce périmètre pour la période : la tâche reste sans personne assignée."
+
+#. js-lingui-explicit-id
 #: src/lib/installation.ts
 msgid "{chemin} : {message}"
 msgstr "{chemin} : {message}"
@@ -2125,11 +2177,6 @@ msgstr "{libelle} est obligatoire."
 #: src/lib/saisie.ts
 msgid "{libelle} dépasse {max} caractères."
 msgstr "{libelle} dépasse {max} caractères."
-
-#. js-lingui-explicit-id
-#: src/lib/saisie.ts
-msgid "La description dépasse {max} caractères."
-msgstr "La description dépasse {max} caractères."
 
 #. js-lingui-explicit-id
 #: src/lib/saisie.ts

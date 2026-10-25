@@ -112,6 +112,9 @@ export default function PremiersPas() {
       actions: edition && (
         <Space wrap>
           {bouton('TACHES', t`Appliquer les tâches types`, 'taches')}
+          <Link to={lien('/admin/import/taches')}>
+            <Trans>Importer un tableur</Trans>
+          </Link>
           <Link to={lien('/perimetres')}>
             <Trans>Tous les périmètres</Trans>
           </Link>
