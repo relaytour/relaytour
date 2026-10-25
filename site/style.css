@@ -494,6 +494,61 @@ section {
   color: var(--rt-primaire);
 }
 
+/* Étiquettes teintées des cas d'usage : couleurs des périmètres de l'exemple, fond à 13 %
+   et texte assombri jusqu'à 4,5:1, comme l'étiquette d'un périmètre. */
+.teinte {
+  justify-self: start;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.teinte-primaire {
+  background: #e2eaeb;
+  color: #1e5a63;
+}
+
+.teinte-vert {
+  background: #e4ece8;
+  color: #2f6b4f;
+}
+
+.teinte-violet {
+  background: #ece7f3;
+  color: #6f4aa3;
+}
+
+.teinte-lagon {
+  background: #def4f6;
+  color: #0c7782;
+}
+
+.teinte-ocre {
+  background: #fef0e5;
+  color: #965e33;
+}
+
+.teinte-neutre {
+  background: var(--rt-encre-08);
+  color: var(--rt-encre-70);
+}
+
+.natures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.natures span {
+  padding: 1px 9px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--rt-encre-14);
+  font-family: var(--rt-mono);
+  font-size: 0.75rem;
+  color: var(--rt-encre-55);
+}
+
 /* Trois façons d'utiliser Relaytour : même tableau que relaytour.com. */
 .voies {
   min-width: 720px;
