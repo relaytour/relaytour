@@ -6,6 +6,7 @@ import { GraphQLError } from 'graphql'
 import { chiffrer, dechiffrer, lireCle } from '../lib/chiffrement.ts'
 import { avecDelai } from '../lib/delai.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 
 import { convertibleParMicrosoft } from './chemin.ts'
@@ -286,7 +287,9 @@ export class EspaceIndisponible extends Error {}
 export function erreurEspace(erreur: unknown): Error {
   if (erreur instanceof EspaceIndisponible || erreur instanceof AccesRetire) {
     return new GraphQLError(
-      'Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau.',
+      i18n._(
+        'Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau.'
+      ),
       { extensions: { code: 'ESPACE_FICHIERS_INDISPONIBLE' } }
     )
   }
@@ -296,7 +299,9 @@ export function erreurEspace(erreur: unknown): Error {
       'Le fournisseur de l’espace de fichiers ne répond pas.'
     )
     return new GraphQLError(
-      'Le fournisseur cloud ne répond pas. Réessayez dans quelques instants.',
+      i18n._(
+        'Le fournisseur cloud ne répond pas. Réessayez dans quelques instants.'
+      ),
       { extensions: { code: 'FOURNISSEUR_INDISPONIBLE' } }
     )
   }

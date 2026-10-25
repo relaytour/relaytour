@@ -1,5 +1,8 @@
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -105,10 +108,30 @@ type Filtre = 'EN_ATTENTE' | 'traitees'
 /** Valeur de filtre d'une demande sans périmètre. */
 const AUCUN = 'aucun'
 
-const STATUTS: Record<StatutDemande, { libelle: string; couleur?: string }> = {
-  EN_ATTENTE: { libelle: 'En attente', couleur: 'gold' },
-  ACCEPTEE: { libelle: 'Acceptée', couleur: 'green' },
-  REFUSEE: { libelle: 'Refusée' },
+const STATUTS: Record<
+  StatutDemande,
+  { libelle: MessageDescriptor; couleur?: string }
+> = {
+  EN_ATTENTE: {
+    libelle: msg({
+      message: 'En attente',
+      comment: 'Statut d’une demande pour rejoindre l’équipe',
+    }),
+    couleur: 'gold',
+  },
+  ACCEPTEE: {
+    libelle: msg({
+      message: 'Acceptée',
+      comment: 'Statut d’une demande pour rejoindre l’équipe',
+    }),
+    couleur: 'green',
+  },
+  REFUSEE: {
+    libelle: msg({
+      message: 'Refusée',
+      comment: 'Statut d’une demande pour rejoindre l’équipe',
+    }),
+  },
 }
 
 export default function Demandes({
@@ -119,8 +142,10 @@ export default function Demandes({
   /** Une période archivée garde ses demandes en lecture seule. */
   archivee: boolean
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const { activite, lien, periode } = useActivite()
+  const periodeCette = periode.cette
   // Un admin d'activité n'apprend « déjà membre » que pour son équipe (ADR 0018).
   const gereOrganisation = useSession().moi.estAdmin === true
   const [filtre, setFiltre] = useState<Filtre>('EN_ATTENTE')
@@ -151,6 +176,7 @@ export default function Demandes({
 
   const toutes = data?.demandes ?? []
   const enAttente = toutes.filter(d => d.statut === 'EN_ATTENTE')
+  const nbEnAttente = enAttente.length
   const affichees =
     filtre === 'EN_ATTENTE'
       ? enAttente
@@ -169,6 +195,7 @@ export default function Demandes({
     }))
     .filter(groupe => groupe.options.length > 0)
 
+  const nomEnAcceptation = enAcceptation?.nom ?? ''
   const ouvrir = (demande: Demande) => {
     setEnAcceptation(demande)
     // Les périmètres demandés sont proposés d'office : l'admin retire ceux qu'il
@@ -189,8 +216,8 @@ export default function Demandes({
       await accepter({ variables: { id: enAcceptation.id, affecter } })
       message.success(
         enAcceptation.dejaMembre
-          ? 'Demande acceptée. La personne est affectée.'
-          : 'Demande acceptée. Une personne sans compte reçoit son invitation par mail.'
+          ? t`Demande acceptée. La personne est affectée.`
+          : t`Demande acceptée. Une personne sans compte reçoit son invitation par mail.`
       )
       setEnAcceptation(null)
     } catch (e) {
@@ -201,9 +228,11 @@ export default function Demandes({
   return (
     <>
       <p className="rt-texte-secondaire" style={{ marginTop: 0 }}>
-        Une demande vient d’une référente ou d’un référent, qui propose une
-        personne pour son périmètre, ou du formulaire public de l’activité.
-        Aucun compte n’existe avant votre décision.
+        <Trans>
+          Une demande vient d’une référente ou d’un référent, qui propose une
+          personne pour son périmètre, ou du formulaire public de l’activité.
+          Aucun compte n’existe avant votre décision.
+        </Trans>
       </p>
       {souhaits > 0 && (
         <Alert
@@ -211,13 +240,17 @@ export default function Demandes({
           showIcon
           style={{ marginBottom: 16 }}
           title={
-            <>
-              {souhaits === 1
-                ? '1 souhait d’un membre attend'
-                : `${souhaits} souhaits de membres attendent`}{' '}
-              aussi une affectation dans{' '}
-              <Link to={lien('/admin/equipe')}>Équipe</Link>.
-            </>
+            souhaits === 1 ? (
+              <Trans>
+                1 souhait d’un membre attend aussi une affectation dans{' '}
+                <Link to={lien('/admin/equipe')}>Équipe</Link>.
+              </Trans>
+            ) : (
+              <Trans>
+                {souhaits} souhaits de membres attendent aussi une affectation
+                dans <Link to={lien('/admin/equipe')}>Équipe</Link>.
+              </Trans>
+            )
           }
         />
       )}
@@ -226,8 +259,8 @@ export default function Demandes({
         value={filtre}
         onChange={setFiltre}
         options={[
-          { value: 'EN_ATTENTE', label: `En attente (${enAttente.length})` },
-          { value: 'traitees', label: 'Traitées' },
+          { value: 'EN_ATTENTE', label: t`En attente (${nbEnAttente})` },
+          { value: 'traitees', label: t`Traitées` },
         ]}
       />
       <Tableau<Demande>
@@ -243,19 +276,19 @@ export default function Demandes({
             <dl className="rt-reponses" style={{ margin: 0 }}>
               {d.disponibilite && (
                 <>
-                  <dt>Disponibilité</dt>
+                  <dt>{t`Disponibilité`}</dt>
                   <dd>{d.disponibilite}</dd>
                 </>
               )}
               {d.reponse && (
                 <>
-                  <dt>{d.question ?? 'Question complémentaire'}</dt>
+                  <dt>{d.question ?? t`Question complémentaire`}</dt>
                   <dd>{d.reponse}</dd>
                 </>
               )}
               {d.texte && (
                 <>
-                  <dt>Ce que la personne aime faire ou sait faire</dt>
+                  <dt>{t`Ce que la personne aime faire ou sait faire`}</dt>
                   <dd style={{ whiteSpace: 'pre-wrap' }}>{d.texte}</dd>
                 </>
               )}
@@ -265,33 +298,37 @@ export default function Demandes({
         locale={{
           emptyText:
             filtre === 'EN_ATTENTE'
-              ? `Aucune demande n’attend pour ${periode.cette}.`
-              : `Aucune demande traitée pour ${periode.cette}.`,
+              ? t`Aucune demande n’attend pour ${periodeCette}.`
+              : t`Aucune demande traitée pour ${periodeCette}.`,
         }}
         colonnes={[
           {
             key: 'nom',
-            title: 'Nom',
+            title: t`Nom`,
             dataIndex: 'nom',
             tri: d => d.nom,
             recherche: d => d.nom,
             render: (nom: string, d) => (
               <Space style={{ whiteSpace: 'nowrap' }}>
                 <span style={{ fontWeight: 600 }}>{nom}</span>
-                {d.origine === 'FORMULAIRE' && <Tag>Formulaire public</Tag>}
+                {d.origine === 'FORMULAIRE' && (
+                  <Tag>
+                    <Trans>Formulaire public</Trans>
+                  </Tag>
+                )}
                 {d.dejaMembre && (
                   <Tooltip
                     trigger={['hover', 'click', 'focus']}
                     title={
                       gereOrganisation
-                        ? 'Un compte de l’organisation porte déjà cette adresse. Accepter la demande ne crée aucun compte.'
-                        : 'Une personne de votre équipe porte déjà cette adresse. Accepter la demande ne crée aucun compte.'
+                        ? t`Un compte de l’organisation porte déjà cette adresse. Accepter la demande ne crée aucun compte.`
+                        : t`Une personne de votre équipe porte déjà cette adresse. Accepter la demande ne crée aucun compte.`
                     }
                   >
                     <Tag tabIndex={0}>
                       {gereOrganisation
-                        ? 'Déjà membre'
-                        : 'Déjà dans votre équipe'}
+                        ? t`Déjà membre`
+                        : t`Déjà dans votre équipe`}
                     </Tag>
                   </Tooltip>
                 )}
@@ -300,18 +337,18 @@ export default function Demandes({
           },
           {
             key: 'adresse',
-            title: 'Adresse mail',
+            title: t`Adresse mail`,
             dataIndex: 'adresse',
             tri: d => d.adresse,
             recherche: d => d.adresse,
           },
           {
             key: 'perimetres',
-            title: 'Périmètres demandés',
+            title: t`Périmètres demandés`,
             dataIndex: 'perimetres',
             filtre: {
               options: [
-                { text: 'Aucun périmètre', value: AUCUN },
+                { text: t`Aucun périmètre`, value: AUCUN },
                 ...[
                   ...new Map(
                     affichees.flatMap(d =>
@@ -330,119 +367,130 @@ export default function Demandes({
             render: (_, d) =>
               d.perimetres.length === 0 ? (
                 <Typography.Text type="secondary">
-                  Aucun : un rôle est à lui proposer
+                  <Trans>Aucun : un rôle est à lui proposer</Trans>
                 </Typography.Text>
               ) : (
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                  {d.perimetres.map(p => (
-                    <li key={p.id} style={{ padding: '2px 0' }}>
-                      <EtiquettePerimetre
-                        nom={p.perimetre.nom}
-                        couleur={p.perimetre.couleur}
-                      />
-                      {p.proposePar && (
-                        <Typography.Text type="secondary">
-                          {' '}
-                          proposé par {p.proposePar.nom}
-                        </Typography.Text>
-                      )}
-                      {p.mot && (
-                        <div style={{ maxWidth: '48ch', fontSize: 13 }}>
-                          « {p.mot} »
-                        </div>
-                      )}
-                    </li>
-                  ))}
+                  {d.perimetres.map(p => {
+                    const nomProposant = p.proposePar?.nom
+                    const mot = p.mot
+                    return (
+                      <li key={p.id} style={{ padding: '2px 0' }}>
+                        <EtiquettePerimetre
+                          nom={p.perimetre.nom}
+                          couleur={p.perimetre.couleur}
+                        />
+                        {p.proposePar && (
+                          <Typography.Text type="secondary">
+                            {' '}
+                            <Trans>proposé par {nomProposant}</Trans>
+                          </Typography.Text>
+                        )}
+                        {p.mot && (
+                          <div style={{ maxWidth: '48ch', fontSize: 13 }}>
+                            {t`« ${mot} »`}
+                          </div>
+                        )}
+                      </li>
+                    )
+                  })}
                 </ul>
               ),
           },
           {
             key: 'creeLe',
-            title: 'Reçue le',
+            title: t`Reçue le`,
             dataIndex: 'creeLe',
             tri: d => d.creeLe,
             render: (creeLe: string) => jourDeLInstant(creeLe),
           },
           {
             key: 'statut',
-            title: 'État',
+            title: t`État`,
             dataIndex: 'statut',
             ...(filtre === 'traitees' && {
               filtre: {
                 options: (['ACCEPTEE', 'REFUSEE'] as const).map(value => ({
-                  text: STATUTS[value].libelle,
+                  text: t(STATUTS[value].libelle),
                   value,
                 })),
                 valeurs: d => d.statut,
               },
             }),
-            render: (statut: StatutDemande, d) => (
-              <Space size={4} wrap>
-                <Tag
-                  color={STATUTS[statut].couleur}
-                  style={{ marginInlineEnd: 0 }}
-                >
-                  {STATUTS[statut].libelle}
-                </Tag>
-                {d.traiteePar && (
-                  <Typography.Text type="secondary">
-                    par {d.traiteePar.nom}
-                  </Typography.Text>
-                )}
-              </Space>
-            ),
+            render: (statut: StatutDemande, d) => {
+              const nomDecideur = d.traiteePar?.nom
+              return (
+                <Space size={4} wrap>
+                  <Tag
+                    color={STATUTS[statut].couleur}
+                    style={{ marginInlineEnd: 0 }}
+                  >
+                    {t(STATUTS[statut].libelle)}
+                  </Tag>
+                  {d.traiteePar && (
+                    <Typography.Text type="secondary">
+                      <Trans>par {nomDecideur}</Trans>
+                    </Typography.Text>
+                  )}
+                </Space>
+              )
+            },
           },
           {
-            title: 'Actions',
+            title: t`Actions`,
             key: 'actions',
             redimensionnable: false,
-            render: (_, d) =>
-              d.statut === 'EN_ATTENTE' && (
-                <Space>
-                  <Button
-                    size="small"
-                    type="primary"
-                    icon={<CheckOutlined />}
-                    // Sans la liste des périmètres, la fenêtre ne saurait pas
-                    // lesquels proposer d'office à l'affectation.
-                    disabled={archivee || perimetres === undefined}
-                    aria-label={`Accepter la demande de ${d.nom}`}
-                    onClick={() => ouvrir(d)}
-                  >
-                    Accepter
-                  </Button>
-                  <Popconfirm
-                    title="Refuser cette demande ?"
-                    description="Aucun compte n’est créé et aucun mail ne part."
-                    okText="Refuser"
-                    cancelText="Annuler"
-                    disabled={archivee}
-                    onConfirm={() =>
-                      refuser({ variables: { id: d.id } }).catch((e: unknown) =>
-                        message.error(messageErreur(e))
-                      )
-                    }
-                  >
+            render: (_, d) => {
+              const nomDemandeur = d.nom
+              return (
+                d.statut === 'EN_ATTENTE' && (
+                  <Space>
                     <Button
                       size="small"
-                      icon={<CloseOutlined />}
-                      disabled={archivee}
-                      aria-label={`Refuser la demande de ${d.nom}`}
+                      type="primary"
+                      icon={<CheckOutlined />}
+                      // Sans la liste des périmètres, la fenêtre ne saurait pas
+                      // lesquels proposer d'office à l'affectation.
+                      disabled={archivee || perimetres === undefined}
+                      aria-label={t`Accepter la demande de ${nomDemandeur}`}
+                      onClick={() => ouvrir(d)}
                     >
-                      Refuser
+                      <Trans>Accepter</Trans>
                     </Button>
-                  </Popconfirm>
-                </Space>
-              ),
+                    <Popconfirm
+                      title={t`Refuser cette demande ?`}
+                      description={t`Aucun compte n’est créé et aucun mail ne part.`}
+                      okText={t`Refuser`}
+                      cancelText={t`Annuler`}
+                      disabled={archivee}
+                      onConfirm={() =>
+                        refuser({ variables: { id: d.id } }).catch(
+                          (e: unknown) => message.error(messageErreur(e))
+                        )
+                      }
+                    >
+                      <Button
+                        size="small"
+                        icon={<CloseOutlined />}
+                        disabled={archivee}
+                        aria-label={t`Refuser la demande de ${nomDemandeur}`}
+                      >
+                        <Trans>Refuser</Trans>
+                      </Button>
+                    </Popconfirm>
+                  </Space>
+                )
+              )
+            },
           },
         ]}
       />
 
       <Modal
         open={enAcceptation !== null}
-        title={`Accepter la demande de ${enAcceptation?.nom ?? ''}`}
-        okText="Accepter"
-        cancelText="Annuler"
+        title={t`Accepter la demande de ${nomEnAcceptation}`}
+        okText={t`Accepter`}
+        cancelText={t`Annuler`}
         confirmLoading={acceptation.loading}
         onOk={() => form.submit()}
         onCancel={() => setEnAcceptation(null)}
@@ -450,8 +498,8 @@ export default function Demandes({
       >
         <p style={{ marginTop: 0 }}>
           {enAcceptation?.dejaMembre
-            ? 'Cette personne a déjà un compte : l’acceptation n’en crée aucun. Un mail lui annonce ses nouveaux périmètres.'
-            : 'L’acceptation fait entrer cette personne dans l’équipe. Si elle n’a pas de compte, elle reçoit une invitation par mail, avec ses périmètres.'}
+            ? t`Cette personne a déjà un compte : l’acceptation n’en crée aucun. Un mail lui annonce ses nouveaux périmètres.`
+            : t`L’acceptation fait entrer cette personne dans l’équipe. Si elle n’a pas de compte, elle reçoit une invitation par mail, avec ses périmètres.`}
         </p>
         <Form
           form={form}
@@ -460,17 +508,17 @@ export default function Demandes({
           requiredMark={false}
         >
           <Form.Item
-            label="Périmètres à affecter"
+            label={t`Périmètres à affecter`}
             name="affecter"
-            extra="Un périmètre demandé que vous n’affectez pas devient un souhait. Sans périmètre, la personne rejoint l’équipe de l’activité et découvre ses périmètres."
+            extra={t`Un périmètre demandé que vous n’affectez pas devient un souhait. Sans périmètre, la personne rejoint l’équipe de l’activité et découvre ses périmètres.`}
           >
             <Select
               mode="multiple"
               allowClear
               placeholder={
                 enAcceptation?.perimetres.length === 0
-                  ? 'Aucun périmètre pour l’instant'
-                  : 'Aucun périmètre : la personne garde ses souhaits'
+                  ? t`Aucun périmètre pour l’instant`
+                  : t`Aucun périmètre : la personne garde ses souhaits`
               }
               optionFilterProp="label"
               options={options}

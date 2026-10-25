@@ -18,6 +18,17 @@ fr:
     celles des droits du dossier, domaine compris. Dans l'onglet « Comptes »,
     vous saisissez l'adresse qu'une personne utilise chez le fournisseur quand
     elle diffère.
+en:
+  titre: >-
+    Access check works with Google Drive, Dropbox, and Nextcloud
+  texte: >-
+    Access check and access management also work with Google Drive, Dropbox, and
+    Nextcloud. With Google Drive and Nextcloud, an organization admin turns them
+    on without reconnecting. With Dropbox, turning them on requires a
+    reconnection. Google Drive and Dropbox have no account directory, so
+    Relaytour compares each person’s email address with those in the folder’s
+    rights, domain included. In the “Accounts” tab, you enter the email address
+    a person uses at the provider when it differs.
 ---
 
 ADR 0044 : annuaires facultatifs de Google Drive (`permissions`), Dropbox

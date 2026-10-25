@@ -8,6 +8,7 @@
 //   node outils/captures.mjs --simulateur Relaytour --amont http://localhost:4571 --sortie site/captures/mobile
 //   node outils/captures.mjs --compte referent --organisation rencontres-de-la-vallee
 //   node outils/captures.mjs --compte admin-activite --appel <jeton> --espace <jeton>
+//   node outils/captures.mjs --langue en --origine http://localhost:4790
 //
 // Chaque écran se photographie avec le compte du rôle que son mode d'emploi
 // décrit : `--compte` choisit le rôle, et une passe prend tous ses écrans. Le
@@ -27,6 +28,11 @@
 //
 // Utilisez une instance au contenu fictif (content/exemple) et des comptes
 // fictifs : les captures sont publiques.
+//
+// Avec --langue en, le script vise l'interface anglaise (ADR 0047) : une instance
+// au contenu d'exemple anglais (content/exemple-en), dont l'organisation déclare
+// l'anglais. Les gestes cherchent alors les libellés anglais, et les captures vont
+// dans site/en/captures/.
 
 import { execFileSync, spawn } from 'node:child_process'
 import http from 'node:http'
@@ -41,7 +47,9 @@ const RACINE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const { values } = parseArgs({
   options: {
     origine: { type: 'string', default: 'http://localhost:4460' },
-    sortie: { type: 'string', default: join(RACINE, 'site/captures') },
+    // Langue de l'interface photographiée : fr ou en (ADR 0047).
+    langue: { type: 'string', default: 'fr' },
+    sortie: { type: 'string' },
     chrome: { type: 'string' },
     port: { type: 'string', default: '9333' },
     // Rôle du compte connecté : la passe prend les écrans de ce rôle.
@@ -70,6 +78,59 @@ const { values } = parseArgs({
     espace: { type: 'string' },
   },
 })
+
+if (!['fr', 'en'].includes(values.langue)) {
+  console.error('✖ --langue vaut fr ou en.')
+  process.exit(1)
+}
+const ANGLAIS = values.langue === 'en'
+values.sortie ??= join(RACINE, ANGLAIS ? 'site/en/captures' : 'site/captures')
+
+/**
+ * Les textes que les gestes cherchent, en anglais : libellés de l'interface
+ * (catalogue anglais) et données du contenu d'exemple anglais. Une clé absente
+ * garde le texte français.
+ */
+const ANGLAIS_DES_GESTES = {
+  // Interface
+  'Nouvelle tâche': 'New task',
+  'Ajouter tous les périmètres du groupe Sports':
+    'Add all areas of the group Sports',
+  'Décliner dans': 'Derive in',
+  Gras: 'Bold',
+  'Documents liés': 'Linked documents',
+  'Votre adresse dans l’organigramme': 'Your address in the org chart',
+  'Votre agenda dans Outlook, Google ou Apple':
+    'Your calendar in Outlook, Google or Apple',
+  'Mois suivant': 'Next month',
+  'Modifier le compte de Sofia Lambert': 'Edit the account of Sofia Lambert',
+  'Modifier le compte de Léa Bernard': 'Edit the account of Léa Bernard',
+  'Écrire à l’équipe': 'Message the team',
+  Messagerie: 'Mail app',
+  'Votre messagerie': 'Your mail app',
+  'Régler le périmètre Football': 'Set up the area Soccer',
+  'Modifier Les Rencontres de la Vallée': 'Edit The Valley Games',
+  Phases: 'Phases',
+  'Nouvelle activité': 'New activity',
+  'Dossiers liés': 'Linked folders',
+  'Retirer le dossier': 'Remove the folder',
+  'Modifier le dossier Bénévoles': 'Edit the folder Event volunteers',
+  'Contenu de l’organisation': 'Organization content',
+  'Source de la liste': 'List source',
+  'Associer les colonnes': 'Map columns',
+  'Associer les séquences': 'Map slots',
+  'Voir l’aperçu': 'View preview',
+  'Vérifier la liste': 'Check the list',
+  commentaire: 'comment',
+  // Données du contenu d'exemple anglais
+  'Date du point bénévoles de janvier': 'Date of the January volunteer meeting',
+  'Point bénévoles': 'Volunteer check-in',
+  'Point information': 'Information desk',
+  'Billetterie du 7 août': 'Ticketing of August 7',
+}
+
+/** Le texte qu'un geste cherche, dans la langue photographiée. */
+const x = texte => (ANGLAIS ? (ANGLAIS_DES_GESTES[texte] ?? texte) : texte)
 
 const CHROME =
   values.chrome ??
@@ -100,11 +161,11 @@ const ACTIVITE = '/rencontres'
 
 /** Clique le premier élément de <main> dont le texte vaut `texte`. */
 const cliquer = texte =>
-  `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main a, main button')].find(e => e.innerText.trim() === ${JSON.stringify(texte)}))`
+  `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main a, main button')].find(e => e.innerText.trim() === ${JSON.stringify(x(texte))}))`
 
 /** Clique le premier élément de <main> dont le libellé d'accessibilité vaut `libelle`. */
 const cliquerLibelle = libelle =>
-  `(e => (e?.click(), Boolean(e)))(document.querySelector(${JSON.stringify(`main [aria-label="${libelle}"]`)}))`
+  `(e => (e?.click(), Boolean(e)))(document.querySelector(${JSON.stringify(`main [aria-label="${x(libelle)}"]`)}))`
 
 /**
  * Place le titre de <main> dont le texte commence par `texte` à `marge` pixels
@@ -112,11 +173,11 @@ const cliquerLibelle = libelle =>
  * panneau en bas de page reste entier. `pret` ajoute une condition sur le panneau.
  */
 const placer = (texte, marge, pret = 'true') =>
-  `(e => (e && window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - ${marge}), Boolean(e) && (p => ${pret})(e.closest('section'))))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim().startsWith(${JSON.stringify(texte)})))`
+  `(e => (e && window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - ${marge}), Boolean(e) && (p => ${pret})(e.closest('section'))))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim().startsWith(${JSON.stringify(x(texte))})))`
 
 /** Fait défiler jusqu'au titre dont le texte vaut `texte`. */
 const defiler = texte =>
-  `(e => (e?.scrollIntoView({ block: 'start' }), Boolean(e)))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim() === ${JSON.stringify(texte)}))`
+  `(e => (e?.scrollIntoView({ block: 'start' }), Boolean(e)))([...document.querySelectorAll('main h2, main h3, main .ant-card-head-title')].find(e => e.innerText.trim() === ${JSON.stringify(x(texte))}))`
 
 // Un export de billetterie fictif, pour photographier l'assistant d'import
 // (ADR 0042) : deux personnes proches de fiches de l'instance d'exemple, un lot de
@@ -128,6 +189,16 @@ const IMPORT_FICTIF = [
   '200103;Renard;Paul;paul.renard@exemple.net;;M;0;14/03/2026;;0;;',
   '200104;Morel;Nina;nina.morel@autre.exemple.net;06 39 98 12 02;F;0;14/03/2026;;;0;',
   '200105;#200105;;;;;0;15/03/2026;;;;',
+].join('\n')
+
+/** Le même export fictif, en anglais : les séquences de l'exemple anglais. */
+const IMPORT_FICTIF_ANGLAIS = [
+  'Ticket number;Participant last name;Participant first name;Email;Phone;Gender;Amount;Order date;Services;Bar service - 18:00 - 19:00;Welcome desk - 17:00 - 18:00;I add details in writing',
+  '200101;Durand;Alix;alix.durand@exemple.org;+44 7700 900101;F;0;2026-03-12;"Bar service\n18:00 - 19:00";0;;',
+  '200102;Leroy;Tom;tom.leroy@exemple.org;+44 7700 900102;M;0;2026-03-13;"Welcome desk\n17:00 - 18:00";;0;From 6 pm, any role except photos',
+  '200103;Renard;Paul;paul.renard@exemple.net;;M;0;2026-03-14;;0;;',
+  '200104;Morel;Nina;nina.morel@autre.exemple.net;07700 900204;F;0;2026-03-14;;;0;',
+  '200105;#200105;;;;;0;2026-03-15;;;;',
 ].join('\n')
 
 /**
@@ -142,19 +213,19 @@ const avancerImport = etape => `(async () => {
     const input = document.querySelector('main input[type=file]')
     if (!input) return false
     const dt = new DataTransfer()
-    dt.items.add(new File([${JSON.stringify(IMPORT_FICTIF)}], 'billetterie.csv', { type: 'text/csv' }))
+    dt.items.add(new File([${JSON.stringify(ANGLAIS ? IMPORT_FICTIF_ANGLAIS : IMPORT_FICTIF)}], ${JSON.stringify(ANGLAIS ? 'ticketing.csv' : 'billetterie.csv')}, { type: 'text/csv' }))
     input.files = dt.files
     input.dispatchEvent(new Event('change', { bubbles: true }))
     w.__importDepose = true
     return false
   }
-  const source = document.querySelector('main input[aria-label="Source de la liste"]')
-  if (source && source.value !== 'Billetterie du 7 août') {
-    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(source, 'Billetterie du 7 août')
+  const source = document.querySelector(${JSON.stringify(`main input[aria-label="${x('Source de la liste')}"]`)})
+  if (source && source.value !== ${JSON.stringify(x('Billetterie du 7 août'))}) {
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set.call(source, ${JSON.stringify(x('Billetterie du 7 août'))})
     source.dispatchEvent(new Event('input', { bubbles: true }))
     return false
   }
-  const suite = ['Associer les colonnes', 'Associer les séquences', 'Voir l’aperçu', 'Vérifier la liste']
+  const suite = ${JSON.stringify(['Associer les colonnes', 'Associer les séquences', 'Voir l’aperçu', 'Vérifier la liste'].map(x))}
   w.__importClics = w.__importClics ?? 0
   if (w.__importClics < ${etape === 3 ? 4 : etape}) {
     const b = bouton(suite[w.__importClics])
@@ -214,7 +285,7 @@ const ECRANS = [
     compte: 'referent',
     chemin: `${ACTIVITE}/agenda`,
     avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
-    apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-ligne-lien')].find(b => b.textContent.includes('Date du point bénévoles de janvier')))`,
+    apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-ligne-lien')].find(b => b.textContent.includes(${JSON.stringify(x('Date du point bénévoles de janvier'))})))`,
   },
   // Le volet d'une réunion du pôle Bénévoles, où la référente est convoquée.
   {
@@ -222,7 +293,7 @@ const ECRANS = [
     compte: 'referent',
     chemin: `${ACTIVITE}/agenda`,
     avant: "localStorage.setItem('relaytour.agenda.vue', 'liste')",
-    apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-agenda-ouvrir')].find(b => b.textContent.trim() === 'Point bénévoles'))`,
+    apres: `(e => (e?.click(), Boolean(e)))([...document.querySelectorAll('main button.rt-agenda-ouvrir')].find(b => b.textContent.trim() === ${JSON.stringify(x('Point bénévoles'))}))`,
   },
   // Le programme du jour J en grille, puis la vue « Mon jour J » de la référente
   // (ADR 0040).
@@ -246,12 +317,12 @@ const ECRANS = [
     chemin: `${ACTIVITE}/programme?vue=repartition`,
     apres: `(() => {
       const pret = document.querySelectorAll('.rt-repartition-placer').length > 0
-      const bureau = [...document.querySelectorAll('main button[aria-pressed]')].find(b => b.innerText.trim() === 'Point information')
+      const bureau = [...document.querySelectorAll('main button[aria-pressed]')].find(b => b.innerText.trim() === ${JSON.stringify(x('Point information'))})
       if (bureau) {
         if (bureau.getAttribute('aria-pressed') !== 'true') return (bureau.click(), false)
         return pret
       }
-      const telephone = [...document.querySelectorAll('main button.rt-repartition-manque')].find(b => b.querySelector('strong')?.innerText.trim() === 'Point information')
+      const telephone = [...document.querySelectorAll('main button.rt-repartition-manque')].find(b => b.querySelector('strong')?.innerText.trim() === ${JSON.stringify(x('Point information'))})
       if (!telephone) return false
       return pret || (telephone.click(), false)
     })()`,
@@ -290,7 +361,7 @@ const ECRANS = [
     chemin: `${ACTIVITE}/fiches/planifier-les-creneaux`,
     // Le texte de la fiche porte aussi un titre « Documents liés » : le geste vise
     // celui du panneau.
-    apres: `(e => (e && window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - 140), Boolean(e) && e.closest('section').querySelectorAll('li').length >= 3))([...document.querySelectorAll('main .rt-panneau-titre h2')].find(e => e.innerText.trim() === 'Documents liés'))`,
+    apres: `(e => (e && window.scrollTo(0, e.getBoundingClientRect().top + window.scrollY - 140), Boolean(e) && e.closest('section').querySelectorAll('li').length >= 3))([...document.querySelectorAll('main .rt-panneau-titre h2')].find(e => e.innerText.trim() === ${JSON.stringify(x('Documents liés'))}))`,
   },
   // L'éditeur de la fiche en mode visuel, avec sa barre de mise en forme.
   {
@@ -298,7 +369,7 @@ const ECRANS = [
     compte: 'referent',
     chemin: `${ACTIVITE}/fiches/planifier-les-creneaux/modifier`,
     avant: "localStorage.setItem('relaytour.fiches.editeur', 'visuel')",
-    apres: `Boolean(document.querySelector('main [aria-label="Gras"]'))`,
+    apres: `Boolean(document.querySelector(${JSON.stringify(`main [aria-label="${x('Gras')}"]`)}))`,
   },
   // Le périmètre de la personne, avec ses tâches et le droit d'y écrire.
   {
@@ -338,7 +409,7 @@ const ECRANS = [
     avant: "localStorage.setItem('relaytour.taches.regroupement', 'echeance')",
     apres: `(volet => {
       if (volet) return volet.querySelectorAll('.rt-fil-commentaire').length > 0
-      const bouton = [...document.querySelectorAll('main .rt-ouvrir-fil')].find(b => /commentaire/.test(b.innerText))
+      const bouton = [...document.querySelectorAll('main .rt-ouvrir-fil')].find(b => b.innerText.includes(${JSON.stringify(x('commentaire'))}))
       return (bouton?.click(), false)
     })(document.querySelector('.rt-fil-volet'))`,
   },
@@ -350,10 +421,10 @@ const ECRANS = [
     chemin: `${ACTIVITE}/perimetres/benevoles`,
     apres: `(fenetre => {
       if (!fenetre) return (${cliquer('Nouvelle tâche')}, false)
-      const sports = fenetre.querySelector('[aria-label="Ajouter tous les périmètres du groupe Sports"]')
+      const sports = fenetre.querySelector(${JSON.stringify(`[aria-label="${x('Ajouter tous les périmètres du groupe Sports')}"]`)})
       if (!sports) return false
       if (!sports.disabled) return (sports.click(), false)
-      const champ = [...fenetre.querySelectorAll('label')].find(l => l.innerText.trim().startsWith('Décliner dans'))
+      const champ = [...fenetre.querySelectorAll('label')].find(l => l.innerText.trim().startsWith(${JSON.stringify(x('Décliner dans'))}))
       if (!champ) return false
       champ.scrollIntoView({ block: 'start' })
       fenetre.dataset.defilements = Number(fenetre.dataset.defilements ?? 0) + 1
@@ -389,7 +460,7 @@ const ECRANS = [
     compte: 'referent',
     chemin: `${ACTIVITE}/preferences`,
     // Le bouton du panneau précédent passe sous la barre haute flottante.
-    apres: `(e => (e?.scrollIntoView({ block: 'start' }), window.scrollBy(0, -190), Boolean(e)))([...document.querySelectorAll('main h2')].find(e => e.innerText.trim() === 'Votre agenda dans Outlook, Google ou Apple'))`,
+    apres: `(e => (e?.scrollIntoView({ block: 'start' }), window.scrollBy(0, -190), Boolean(e)))([...document.querySelectorAll('main h2')].find(e => e.innerText.trim() === ${JSON.stringify(x('Votre agenda dans Outlook, Google ou Apple'))}))`,
   },
   // L'accord pour l'organigramme (ADR 0036), dans les préférences.
   {
@@ -516,7 +587,7 @@ const ECRANS = [
     chemin: `${ACTIVITE}/admin/equipe`,
     apres: `(fenetre => {
       if (!fenetre) return (${cliquer('Écrire à l’équipe')}, false)
-      if (!fenetre.querySelector('[aria-label="Messagerie"]')) return false
+      if (!fenetre.querySelector(${JSON.stringify(`[aria-label="${x('Messagerie')}"]`)})) return false
       fenetre.scrollTo(0, fenetre.scrollHeight)
       fenetre.dataset.defilements = Number(fenetre.dataset.defilements ?? 0) + 1
       return Number(fenetre.dataset.defilements) >= 5
@@ -583,7 +654,7 @@ const ECRANS = [
     chemin: `${ACTIVITE}/admin/activites`,
     apres: `(fenetre => {
       if (!fenetre) return (${cliquerLibelle('Modifier Les Rencontres de la Vallée')}, false)
-      const phases = [...fenetre.querySelectorAll('label')].find(l => l.innerText.trim() === 'Phases')
+      const phases = [...fenetre.querySelectorAll('label')].find(l => l.innerText.trim() === ${JSON.stringify(x('Phases'))})
       if (!phases) return false
       // Sur un téléphone, la fenêtre occupe l'écran : le libellé reste sous la barre d'état.
       if (window.innerWidth < 768) phases.style.scrollMarginTop = '96px'
@@ -620,7 +691,7 @@ const ECRANS = [
     apres: placer(
       'Dossiers liés',
       140,
-      'p?.querySelectorAll(\'[aria-label^="Retirer le dossier"]\').length > 0'
+      `p?.querySelectorAll(${JSON.stringify(`[aria-label^="${x('Retirer le dossier')}"]`)}).length > 0`
     ),
   },
   // La fenêtre « Modifier » d'un dossier lié : ses lecteurs, les personnes
@@ -918,8 +989,11 @@ async function piloteSimulateur() {
       return
     }
     // Sans compression, pour lire la page ; l'hôte reste celui de l'origine, que
-    // la connexion vérifie.
+    // la connexion vérifie. Sans requête conditionnelle : une réponse 304 rendrait
+    // une page gardée en cache, qui ne porte peut-être pas le pilote.
     const enTetes = { ...req.headers, 'accept-encoding': 'identity' }
+    delete enTetes['if-none-match']
+    delete enTetes['if-modified-since']
     const versAmont = http.request(
       {
         hostname: amont.hostname,

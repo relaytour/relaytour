@@ -25,6 +25,7 @@ import { annoncerChangementEquipe } from '../lib/equipe.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { annoncerInvitation, inviterCompteExterne } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 import { adresseValide, rejouerSurDoublon, texteRequis } from '../lib/saisie.ts'
 import { perimetresSouhaitesValides, SOUHAITS_MAX } from '../lib/souhaits.ts'
@@ -169,7 +170,7 @@ async function exigerDemande(ctx: AppContext, id: string | number) {
   return demande
 }
 
-const DEJA_TRAITEE = 'Cette demande est déjà traitée.'
+const dejaTraitee = () => i18n._('Cette demande est déjà traitée.')
 
 /**
  * Verrouille la demande jusqu'à la fin de la transaction. Renvoie faux si elle
@@ -191,7 +192,7 @@ async function exigerPeriodeOuverte(ctx: AppContext, editionId: string) {
   const edition = await ctx.exigerEdition(editionId)
   if (edition.statut === 'ARCHIVEE') {
     throw erreurSaisie(
-      'Cette édition est archivée : ses demandes ne se traitent plus.'
+      i18n._('Cette édition est archivée : ses demandes ne se traitent plus.')
     )
   }
   return edition
@@ -280,7 +281,7 @@ builder.mutationFields(t => ({
       // admin de l'activité, sur une période non archivée.
       const acteur = await exigerEcriture(ctx, perimetreId, editionId)
       const email = adresseValide(args.email)
-      const nom = texteRequis(args.nom, 'Le nom', 120)
+      const nom = texteRequis(args.nom, i18n._('Le nom'), 120)
       const mot = motValide(args.mot)
       const edition = await ctx.exigerEdition(editionId)
       const organisationId = ctx.organisation!.id
@@ -299,7 +300,10 @@ builder.mutationFields(t => ({
           })
           if (enAttente >= PROPOSITIONS_EN_ATTENTE_MAX) {
             throw erreurSaisie(
-              `Vous avez déjà ${PROPOSITIONS_EN_ATTENTE_MAX} propositions en attente. Un admin doit d’abord les traiter.`
+              i18n._(
+                'Vous avez déjà {max} propositions en attente. Un admin doit d’abord les traiter.',
+                { max: PROPOSITIONS_EN_ATTENTE_MAX }
+              )
             )
           }
           const ligne = { perimetreId, proposeParId: acteur.id, mot }
@@ -446,7 +450,7 @@ builder.mutationFields(t => ({
           // Deux admins peuvent accepter en même temps : le verrou sérialise, et le
           // second lit une demande déjà traitée.
           if (!(await verrouillerEnAttente(tx, demande.id))) {
-            throw erreurSaisie(DEJA_TRAITEE)
+            throw erreurSaisie(dejaTraitee())
           }
           const compte = await creerOuRattacherCompte(tx, {
             email: demande.adresse,
@@ -459,8 +463,10 @@ builder.mutationFields(t => ({
           if (compte.issue === 'archive') {
             throw erreurSaisie(
               ctx.personne!.estAdmin
-                ? 'Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire.'
-                : 'Cette adresse ne peut pas être invitée.'
+                ? i18n._(
+                    'Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire.'
+                  )
+                : i18n._('Cette adresse ne peut pas être invitée.')
             )
           }
           const { userId } = compte
@@ -604,7 +610,7 @@ builder.mutationFields(t => ({
           adresseEnAttente: null,
         },
       })
-      if (count === 0) throw erreurSaisie(DEJA_TRAITEE)
+      if (count === 0) throw erreurSaisie(dejaTraitee())
       journal.info(
         {
           evenement: 'demande-refusee',

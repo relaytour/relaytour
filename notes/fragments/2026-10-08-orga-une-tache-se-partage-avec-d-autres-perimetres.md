@@ -17,6 +17,17 @@ fr:
     indique le périmètre qui la demande. Les admins d'activité ajoutent une
     tâche à un périmètre sans attendre son accord. Le rétroplanning réunit sur
     une ligne les déclinaisons d'une même tâche qui tombent le même jour.
+en:
+  titre: >-
+    A task can be shared with other areas
+  texte: >-
+    From your area’s page, you create derived tasks in other areas of the
+    activity, when you create a task or from the “More actions” menu. Each
+    chosen area receives its own task, which its coordinators accept or decline.
+    Your task shows the status of its derived tasks, for example “6 done of 9”.
+    A received task shows the area that requests it. Activity admins add a task
+    to an area without waiting for its approval. The timeline combines derived
+    tasks of the same task that fall on the same day into one row.
 ---
 
 ADR 0026. Composants `DeclinaisonsTache`, `DeclinerTache`,

@@ -14,6 +14,14 @@ fr:
     une personne sans changer de page. Le bouton « Copier l'appel » prépare un
     message qui liste les périmètres à pourvoir. La page des personnes gagne une
     recherche et un filtre.
+en:
+  titre: >-
+    Open seats appear area by area
+  texte: >-
+    The “Open seats” page puts the areas that lack coordinators first. You
+    change the target headcount and appoint a person without leaving the page.
+    The “Copy volunteer call” button prepares a message that lists the areas to
+    fill. The People page gains a search and a filter.
 ---
 
 - Page admin/Postes (remplace admin/Affectations, redirection conservée).

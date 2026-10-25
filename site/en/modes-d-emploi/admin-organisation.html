@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Organization admin · User guides · Relaytour</title>
+    <meta
+      name="description"
+      content="The user guide for organization admins in the Relaytour organizer workspace: identity, content, activities, accounts, roles and cloud provider."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/admin-organisation.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/admin-organisation.html" />
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../jetons.css" />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Site navigation">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Overview</a></li>
+          <li><a href="../../design-system.html" hreflang="fr">Design system</a></li>
+          <li><a href="./" aria-current="true">User guides</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
+          <li><a href="../../modes-d-emploi/admin-organisation.html" hreflang="fr" lang="fr">Français</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Organization admin</span>
+        <h1>Run the organization in Relaytour</h1>
+        <p class="chapo">
+          You manage what goes beyond a single activity: the organization’s identity, the list of activities, accounts and roles. This is the board level. You also administer every activity, without having to be appointed to it.
+        </p>
+        <p class="renvoi">
+          This guide covers only the features specific to this role. Day-to-day management of an activity (periods, areas, appointments, progress) is described in the <a href="admin-activite.html">activity admin guide</a>.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-ou">
+        <div class="entete">
+          <span class="etiquette">Starting point</span>
+          <h2 id="t-ou">Where your screens are</h2>
+          <p class="texte">
+            The <strong>Manage the organization</strong> group of the menu sits below the “Manage the activity” group. It has five entries: Organization, Activities, Directory, Admins and Cloud provider. The Organization, Directory, Admins and Cloud provider entries appear only for your role. The <a href="admin-activite.html#e-notifications-admin">activity admin guide</a> describes the “Admin notifications” screen. For you, it adds an “Organization” group at the top. This group reports the archivings and admin appointments made by another organization admin. An activity without an admin also sends you its admin notifications. Your other controls are on the Activities and Sheet editing pages, as fields and buttons that activity admins do not see.
+          </p>
+          <p class="texte">
+            The directory and admin tables can be sorted, filtered and resized like those of the activities. The activity admin guide describes this in <a href="admin-activite.html#t-tableaux">“Where your screens are”</a>.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Contents">
+          <span class="etiquette">Your seven controls</span>
+          <ol>
+            <li><a href="#e-organisation">Organization</a>: identity, role addresses, logo and theme.</li>
+            <li><a href="#e-contenu">Organization content</a>: download the archive before any import.</li>
+            <li><a href="#e-activites">Activities</a>: create and archive an activity.</li>
+            <li><a href="#e-roles">Directory</a>: manage accounts and write to members.</li>
+            <li><a href="#e-admins">Admins</a>: appoint the admins of the organization and of each activity.</li>
+            <li><a href="#e-redaction">Sheet editing</a>: grant a right over all sheets.</li>
+            <li><a href="#e-espace-fichiers">Cloud provider</a>: connect the association’s documents, export and import sheets.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-ecrans">
+        <div class="entete">
+          <span class="etiquette">Your screens</span>
+          <h2 id="t-ecrans">What only you can do</h2>
+        </div>
+
+        <article class="verre ecran" id="e-organisation">
+          <div class="ecran-tete"><h3>Organization identity</h3><span class="route">/&lt;activity&gt;/admin/organisation</span></div>
+          <p>The page gathers the organization’s name, contacts, logo and theme. Each activity can then override the contacts, logo and colors for itself.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Identity</span></span><span>The name, the acronym, the organization’s contact, the support address and the team page. The contact receives replies to emails. The support address is a role address: the “Support” entry of the account menu opens an email to this address.</span></li>
+            <li><span><span class="libelle">Role addresses</span></span><span>The domains allowed for the addresses quoted in sheets, and the shared mailboxes hosted with a consumer mail provider.</span></li>
+            <li><span><span class="libelle">Logo and favicon</span></span><span>The PNG logo, its SVG variant and the favicon.</span></li>
+            <li><span><span class="libelle">Theme</span></span><span>The colors and the two fonts. Relaytour checks the contrast before saving, and a color left empty uses the Relaytour color.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/organisation.webp" data-mobile="../captures/mobile/organisation.webp" width="1440" height="900" loading="lazy" alt="Organization page: the Identity and Role addresses panels." />
+            <figcaption>Organization page, on the sample organization shipped with Relaytour.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-contenu">
+          <div class="ecran-tete"><h3>Organization content</h3><span class="route">/&lt;activity&gt;/admin/organisation</span></div>
+          <p>The application is the source of truth for the content. The panel at the bottom of the Organization page shows the date of the last import or export, and reports whether admins have changed the content since.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Download the content (zip)</span></span><span>Get the identity, activities, areas, sheets and task templates in one archive.</span></li>
+          </ul>
+          <p class="note">The archive contains no people, no appointments and no dated tasks. Download it before any import: an import refuses to overwrite more recent changes.</p>
+          <figure>
+            <img src="../captures/organisation-contenu.webp" data-mobile="../captures/mobile/organisation-contenu.webp" width="1440" height="900" loading="lazy" alt="Bottom of the Organization page: the theme and the Organization content panel, with the download button." />
+            <figcaption>The Organization content panel, on the sample organization.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-activites">
+          <div class="ecran-tete"><h3>Create and archive an activity</h3><span class="route">/&lt;activity&gt;/admin/activites</span></div>
+          <p>You see all the activities of the organization, including those you are not appointed to administer. Two commands are reserved for you.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">New activity</span></span><span>Create an event, a section or a body, with its identifier, its kind and its area groups.</span></li>
+            <li><span><span class="libelle">Archived</span></span><span>Archive a finished activity. It disappears from the selector and stays available for reading.</span></li>
+          </ul>
+          <p class="note">The identifier appears in the page address and no longer changes after creation.</p>
+          <figure>
+            <img src="../captures/activites-nouvelle.webp" data-mobile="../captures/mobile/activites-nouvelle.webp" width="1440" height="900" loading="lazy" alt="New activity window: the name, the identifier, the kind and the area groups." />
+            <figcaption>Creating an activity, on the sample organization.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-roles">
+          <div class="ecran-tete"><h3>Directory and accounts</h3><span class="route">/&lt;activity&gt;/admin/annuaire</span></div>
+          <p>An account is shared across the whole organization, and the same person can belong to several organizations. Only you can change the account itself and the roles. Only you can read the full directory, in the “Manage the organization” group: the “Activities” column shows where each person takes part. Filters separate admins from members, isolate one activity, or keep only the members with “No activity”. The “People” screen of an activity shows only its team. In the “Team” screen, the appointment list also offers you the members of other activities, followed by the names of their activities.</p>
+          <figure>
+            <img src="../captures/annuaire.webp" data-mobile="../captures/mobile/annuaire.webp" width="1440" height="900" loading="lazy" alt="Directory screen: the filters, then the name, email address, activities and role of each member of the organization." />
+            <figcaption>Organization directory, on the sample organization. The people and addresses are fictional.</figcaption>
+          </figure>
+          <ul class="gestes">
+            <li><span><span class="libelle">Invite a person</span></span><span>Create an account, then choose the activity teams the person joins without an area, the activities they administer and their areas, appointed or of interest. A person invited without an activity sees no activity. An address that already has an account outside your organization receives an invitation, listed in the “Pending invitations” box: the person accepts or declines it from their account, and nothing is created in their name before they agree. The invitation does not keep the activity admin role: you appoint the person after they agree.</span></li>
+            <li><span><span class="libelle">Edit the account</span></span><span>Open an account’s window with the pencil on its row, or by clicking the row. There you set the activity teams the person joins, the activities they administer, their appointed areas and their areas of interest, in each activity. A person with “No activity” joins an activity team here.</span></li>
+            <li><span><span class="libelle">First and last name</span></span><span>Correct a person’s name as long as they have never signed in. After their first sign-in, the person edits their own name in their preferences.</span></li>
+            <li><span><span class="libelle">Archive</span></span><span>Close the access of a person who leaves your organization. They keep their account, and their history is preserved.</span></li>
+            <li><span><span class="libelle">Restore</span></span><span>Reopen the access of an archived person. The “Show archived people” switch makes them appear in the table.</span></li>
+            <li><span><span class="libelle">Message</span></span><span>Prepare a message for one member, or for the checked members with “Message the selection”. The message leaves from your own mail app. The “Messages” tab lists all the messages of the organization, including those of the activities.</span></li>
+          </ul>
+          <p class="note">A message from the directory is addressed to members of the organization, whatever their activity. The activity admin guide describes the writing window in <a href="admin-activite.html#e-messages">“Messages to your team”</a>.</p>
+          <figure>
+            <img src="../captures/personnes-roles.webp" data-mobile="../captures/mobile/personnes-roles.webp" width="1440" height="900" loading="lazy" alt="Edit the account window: the name, the email address, the administered activities, the appointed areas and the areas of interest." />
+            <figcaption>Editing an account, on the sample organization. The person is fictional.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-admins">
+          <div class="ecran-tete"><h3>Admins</h3><span class="route">/&lt;activity&gt;/admin/admins</span></div>
+          <p>The screen lists the organization admins, then the admins of each activity. You appoint and remove both.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Make admin</span></span><span>Choose a person in a block’s list, then make them organization admin or admin of this activity.</span></li>
+            <li><span><span class="libelle">Remove</span></span><span>Remove a person’s role, after confirmation. You cannot remove your own organization admin role.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/admins.webp" data-mobile="../captures/mobile/admins.webp" width="1440" height="900" loading="lazy" alt="Admins screen: the organization block with its admin, then one block per activity with its admins and the Remove button." />
+            <figcaption>Admins screen, on the sample organization. The people are fictional.</figcaption>
+          </figure>
+          <p class="note">An activity admin sees neither the other activities nor their people. They appoint the other admins of their activity from the “People” screen.</p>
+          <p class="note">The invitation email contains the link to the user guide for the person’s role. After an appointment, resend the invitation from the directory to give them the user guide for their new role.</p>
+        </article>
+
+        <article class="verre ecran" id="e-redaction">
+          <div class="ecran-tete"><h3>Right over all sheets</h3><span class="route">/&lt;activity&gt;/admin/redaction</span></div>
+          <p>You see all the sheet editing rights of the organization, and you have one more option in the list of sheets concerned.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">All sheets, common ones included</span></span><span>Give the editing of common sheets to a person, for example the coordination.</span></li>
+          </ul>
+          <p class="note">An activity admin grants a right only over the areas of their activity.</p>
+          <figure>
+            <img src="../captures/redaction-organisation.webp" data-mobile="../captures/mobile/redaction-organisation.webp" width="1440" height="900" loading="lazy" alt="Sheet editing screen: one right covers all sheets, the others cover one area, and a second table lists the admins." />
+            <figcaption>Sheet editing screen, on the sample organization.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-espace-fichiers">
+          <div class="ecran-tete"><h3>Cloud provider</h3><span class="route">/&lt;activity&gt;/admin/espace-fichiers</span></div>
+          <p>The cloud provider is the online service where the association keeps its documents: SharePoint, Google Drive, Dropbox or Nextcloud. You connect it with your own account. Members then read its documents in Relaytour, without an account with the provider. Relaytour copies no document: it reads the document from the provider each time it is opened.</p>
+          <p class="note">The person who runs the server chooses the providers offered. If they have enabled none, the page says so and offers no connection.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Connect</span></span><span>Open the provider’s sign-in page, then come back to Relaytour. A Nextcloud is identified by its address. There is only one connection per organization.</span></li>
+            <li><span><span class="libelle">Google service account</span></span><span>Connect Google Drive through a technical account of the association, whose key you upload. This account exports sheets only to a shared drive.</span></li>
+            <li><span><span class="libelle">Reconnect</span><span class="libelle">Disconnect</span></span><span>Renew the access, or close it. After a disconnection, linked folders remain, but members can no longer read their documents and the export stops.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/espace-fichiers.webp" data-mobile="../captures/mobile/espace-fichiers.webp" width="1440" height="900" loading="lazy" alt="Cloud provider page, Connection and folders tab: the Connection panel with the provider, the account, the status and the access check, then the Sheet export panel." />
+            <figcaption>Cloud provider page, on the sample organization. A local folder stands in for the provider.</figcaption>
+          </figure>
+          <p>A linked folder makes a provider folder readable in an activity. You choose its readers: the whole activity, or a list of areas and groups. A group, such as sports or departments, also applies to the areas that join it later. A linked folder is read like the sheets of those areas, or like the common sheets.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Link a folder</span></span><span>Browse the provider’s folders, open the folder to link, then choose its readers. An entire library cannot be linked, and a folder is linked only once per activity.</span></li>
+            <li><span><span class="libelle">Edit</span></span><span>Change the readers of a linked folder or its display name, without removing it. Before saving, Relaytour announces the linked documents that the readers of their sheet would no longer read. These documents stay hidden in their sheet as long as the folder does not serve its area.</span></li>
+            <li><span><span class="libelle">Extend the linked folder</span><span class="libelle">Open this document</span></span><span>These two responses are behind the alert button of a linked document, in a sheet that also concerns other areas. The first adds the sheet’s areas and groups to the folder’s readers. The second opens this one document to everyone who reads the sheet, without opening the rest of the folder. “Restrict again” removes this opening.</span></li>
+            <li><span><span class="libelle">Remove</span></span><span>Remove a folder from the activity. The folder stays with the provider, and sheets no longer cite its documents.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/espace-fichiers-dossiers.webp" data-mobile="../captures/mobile/espace-fichiers-dossiers.webp" width="1440" height="900" loading="lazy" alt="Linked folders panel of the activity: five folders, read by the whole activity, by one area or by the Departments group, each with its Edit and Remove buttons." />
+            <figcaption>The linked folders of an activity, on the sample organization.</figcaption>
+          </figure>
+          <figure>
+            <img src="../captures/espace-fichiers-modifier.webp" data-mobile="../captures/mobile/espace-fichiers-modifier.webp" width="1440" height="900" loading="lazy" alt="Edit window of the Volunteers linked folder: the display name, the Read by list with the Volunteers area, and the choice of people expected at the provider." />
+            <figcaption>The “Edit” window of a linked folder.</figcaption>
+          </figure>
+          <p>Relaytour can also write the sheets to the provider, in Markdown, and import the sheets the association already keeps there.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Choose the export folder</span></span><span>Indicate where Relaytour creates the “Fiches Relaytour” folder. Relaytour writes each sheet there one minute after it is edited, then every night.</span></li>
+            <li><span><span class="libelle">Export now</span><span class="libelle">Stop the export</span></span><span>Start an export without waiting, or stop writing to the folder. The result of the last export appears in the panel.</span></li>
+            <li><span><span class="libelle">Import sheets</span></span><span>Choose one source folder per area, then read the simulation before importing. Markdown and text files are imported as they are, and Word documents are converted to Markdown.</span></li>
+          </ul>
+          <p class="note">Sheets are always edited in Relaytour. A manual change made in “Fiches Relaytour” is replaced at the next export. A sheet that contains a personal contact detail is neither exported nor imported. An import never replaces a sheet edited in Relaytour.</p>
+          <p>Once the provider is connected, the page has three tabs: “Connection and folders”, “Access check” and “Accounts”. The check compares the teams with the rights on the linked folders at the provider. It reads the provider’s directory and groups, and changes no right. With SharePoint, a Microsoft Entra admin must first approve two more permissions. With Dropbox, enabling it also requires reconnecting. With Google Drive and Nextcloud, you enable it without reconnecting. Google Drive and Dropbox have no account directory: Relaytour compares people’s addresses with those of the rights.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Enable the access check</span></span><span>Reconnect the provider with read access to the directory. An organization that does not enable it keeps the original connection.</span></li>
+            <li><span><span class="libelle">Check now</span></span><span>Compare, for each linked folder of the activity, the expected people with its rights. Each person appears under their team, with their status: “Has access” (directly, through a group or through the whole organization), “No account” or “No access”. The “Unknown” status flags a group or rights that Relaytour does not read. The “Extra access” block names the accounts that have a right without being expected. Relaytour also checks every night.</span></li>
+            <li><span><span class="libelle">Expected at the provider</span></span><span>In the “Edit” window of a linked folder, choose all the members of the reader areas, or only their main contacts.</span></li>
+            <li><span><span class="libelle">Manage access</span></span><span>Choose, for a linked folder, what Relaytour offers: check only, share the folder for reading or writing, or add people to a provider group that already has a right on the folder. Management requires reconnecting, and one more permission with Microsoft.</span></li>
+            <li><span><span class="libelle">Apply</span><span class="libelle">Dismiss</span><span class="libelle">Apply all</span></span><span>Relaytour offers to add the expected people who have no access. Relaytour also offers to remove the access it created for people who are no longer expected. Relaytour never removes access set by hand, or access that has changed since it was created. A dismissed access proposal does not come back until the person’s situation changes. With a folder setting, Relaytour applies additions without waiting; a removal always waits for an admin’s decision.</span></li>
+            <li><span><span class="libelle">Accounts</span></span><span>Read, for each member, whether their account is found, invited or absent from the directory, and enter their account address when it differs from their Relaytour address.</span></li>
+          </ul>
+          <figure>
+            <img src="../captures/espace-fichiers-acces.webp" data-mobile="../captures/mobile/espace-fichiers-acces.webp" width="1440" height="900" loading="lazy" alt="Access check tab: for the Volunteers folder, a sharing proposal for Léa Bernard, a person with access, a person without access and an extra access." />
+            <figcaption>The “Access check” tab, on the sample organization. A fictional directory stands in for the provider.</figcaption>
+          </figure>
+          <p class="note">The “Fiches Relaytour” folder cannot be linked to an activity. A change of provider deletes the export folder of the previous provider.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-veiller">
+        <div class="entete">
+          <span class="etiquette">Good to know</span>
+          <h2 id="t-veiller">Four points to watch</h2>
+        </div>
+        <div class="grille-2">
+          <article class="verre panneau">
+            <h3>Export before importing</h3>
+            <p>Changes made in the application take precedence over the content folder. Download the archive before any reimport, otherwise the import stops to protect your work.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>One account, several organizations</h3>
+            <p>A person keeps a single account for all their organizations. Archiving applies only within your organization: it changes nothing elsewhere, and no other organization is informed. The name belongs to the person, who edits it in their preferences.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Role addresses protect people</h3>
+            <p>Relaytour refuses personal contact details in sheets. Open the allowed domains only to shared mailboxes of the organization.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>Visibility stays partitioned</h3>
+            <p>A person sees an activity if they administer it or are appointed to it. Appointing an activity admin opens nothing else for them: they read their activity’s team, not the organization directory.</p>
+          </article>
+        </div>
+        <div class="alerte">
+          <span class="etiquette">Outside the organizer workspace</span>
+          <p>Creating the organization, its limits, its suspension and the full export of its data belong to the person who runs the server. These actions go through administration scripts, not through this screen.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">The other roles</span>
+          <h2 id="t-autres">The other user guides</h2>
+          <p class="texte">You also administer every activity, and you use the screens shared by everyone. These two guides complement this one.</p>
+        </div>
+        <div class="grille-2">
+          <a class="verre panneau lien-guide" href="admin-activite.html">
+            <span class="role">Activity admin</span>
+            <h3>Manage an activity</h3>
+            <p>Periods, areas, open seats, people, sheet editing and progress.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="referent.html">
+            <span class="role">Coordinator</span>
+            <h3>Follow your tasks and sheets</h3>
+            <p>Signing in, My space, the timeline, sheets and preferences.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.18.0.
+      </footer>
+    </main>
+    <script src="../../bascule.js"></script>
+    <script src="../../sommaire.js"></script>
+  </body>
+</html>

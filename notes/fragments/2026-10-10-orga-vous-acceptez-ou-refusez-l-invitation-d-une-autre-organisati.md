@@ -14,6 +14,15 @@ fr:
     les périmètres proposés, puis vous acceptez ou refusez. Cette organisation ne
     lit rien de votre compte et ne vous compte pas dans son équipe avant votre
     accord. Elle n'est pas informée d'un refus.
+en:
+  titre: >-
+    You accept or decline an invitation from another organization
+  texte: >-
+    When another organization invites you, your account menu shows it with a
+    badge on your initials. You read the organization’s name and the proposed
+    areas there, then accept or decline. That organization reads nothing from
+    your account and does not count you in its team before you agree. It is not
+    told when you decline.
 ---
 
 ADR 0030. L'écran d'un compte sans organisation et celui d'un compte sans activité

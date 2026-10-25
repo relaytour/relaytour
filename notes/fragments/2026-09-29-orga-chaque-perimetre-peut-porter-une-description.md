@@ -12,6 +12,13 @@ fr:
     Les admins décrivent chaque périmètre en une ou deux phrases, dans la page
     « Périmètres » ou dans le fichier perimetres.yaml du contenu. La
     description s'affiche sous le titre de la page du périmètre.
+en:
+  titre: >-
+    Each area can have a description
+  texte: >-
+    Admins describe each area in one or two sentences, on the “Areas” page or in
+    the perimetres.yaml file of the content. The description appears below the
+    title of the area’s page.
 ---
 
 - Migration additive `20260929120000_description_perimetres` :

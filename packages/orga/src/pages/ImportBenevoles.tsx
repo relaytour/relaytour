@@ -1,5 +1,8 @@
 import { InboxOutlined } from '@ant-design/icons'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -67,13 +70,56 @@ type Ligne =
   SimulerImportBenevolesQuery['simulerImportBenevoles']['lignes'][number]
 type Decision = 'RATTACHER' | 'CREER'
 
-const LIBELLES_NIVEAU = {
-  FORT: { libelle: 'Même adresse', couleur: 'success' },
-  MOYEN: { libelle: 'Même téléphone', couleur: 'warning' },
-  FAIBLE: { libelle: 'Nom proche', couleur: 'default' },
-} as const
+const LIBELLES_NIVEAU: Record<
+  'FORT' | 'MOYEN' | 'FAIBLE',
+  { libelle: MessageDescriptor; couleur: string }
+> = {
+  FORT: {
+    libelle: msg({
+      message: 'Même adresse',
+      comment:
+        'Raison pour laquelle deux fiches bénévoles semblent identiques : même adresse de courriel',
+    }),
+    couleur: 'success',
+  },
+  MOYEN: {
+    libelle: msg({
+      message: 'Même téléphone',
+      comment: 'Raison pour laquelle deux fiches bénévoles semblent identiques',
+    }),
+    couleur: 'warning',
+  },
+  FAIBLE: {
+    libelle: msg({
+      message: 'Nom proche',
+      comment: 'Raison pour laquelle deux fiches bénévoles semblent identiques',
+    }),
+    couleur: 'default',
+  },
+}
 
-const ETAPES = ['Fichier', 'Colonnes', 'Séquences', 'Aperçu', 'Rapport']
+const ETAPES: MessageDescriptor[] = [
+  msg({
+    message: 'Fichier',
+    comment: 'Première étape de l’assistant d’import de bénévoles',
+  }),
+  msg({
+    message: 'Colonnes',
+    comment: 'Deuxième étape de l’assistant d’import de bénévoles',
+  }),
+  msg({
+    message: 'Séquences',
+    comment: 'Troisième étape de l’assistant d’import de bénévoles',
+  }),
+  msg({
+    message: 'Aperçu',
+    comment: 'Quatrième étape de l’assistant d’import de bénévoles',
+  }),
+  msg({
+    message: 'Rapport',
+    comment: 'Dernière étape de l’assistant d’import de bénévoles',
+  }),
+]
 
 interface Bilan {
   aImporter: number
@@ -123,6 +169,7 @@ function telecharger(texte: string, nom: string) {
 }
 
 export default function ImportBenevoles() {
+  const { t } = useLingui()
   const { activite, gere, lien, periode } = useActivite()
   const { message } = App.useApp()
   const client = useApolloClient()
@@ -136,7 +183,7 @@ export default function ImportBenevoles() {
   const [editionChoisie, setEdition] = useState<string | undefined>()
   const editionId = editionChoisie ?? courante?.editionCourante?.id ?? undefined
   const edition = editions?.editions.find(e => e.id === editionId)
-  const portees = useAgendasEcrits(editionId, 'Tout le programme')
+  const portees = useAgendasEcrits(editionId, t`Tout le programme`)
   const [porteeChoisie, setPortee] = useState<string | null | undefined>()
   const perimetreId =
     porteeChoisie === undefined
@@ -305,7 +352,10 @@ export default function ImportBenevoles() {
     if (memes) {
       setNomCorrespondance(memes.nom)
       appliquerReglages(memes.reglages)
-      message.info(`La correspondance « ${memes.nom} » s’applique.`)
+      const nomCorrespondanceAppliquee = memes.nom
+      message.info(
+        t`La correspondance « ${nomCorrespondanceAppliquee} » s’applique.`
+      )
     }
     setEtape(1)
   }
@@ -351,7 +401,7 @@ export default function ImportBenevoles() {
           reglages: { valeursNon, mode, prevenirParMail },
         },
       })
-      message.success('Correspondance enregistrée.')
+      message.success(t`Correspondance enregistrée.`)
     } catch (e) {
       message.error(messageErreur(e))
     }
@@ -443,13 +493,13 @@ export default function ImportBenevoles() {
         return p
           ? p.lignes.map(numero => ({
               ligne: numero,
-              motif: l.motif ?? 'Ligne écartée par le serveur.',
+              motif: l.motif ?? t`Ligne écartée par le serveur.`,
               valeurs: tableau.lignes[numero - 2] ?? [],
             }))
           : []
       }),
     ].sort((a, b) => a.ligne - b.ligne)
-  }, [tableau, simulation, lues])
+  }, [tableau, simulation, lues, t])
 
   const telechargerEcartees = async () => {
     if (!tableau) return
@@ -464,12 +514,21 @@ export default function ImportBenevoles() {
   }
 
   const optionsCible = [
-    { value: 'IGNORER', label: 'Ignorer' },
-    { value: 'PLAGE', label: 'Disponibilité seulement' },
-    ...sequences.map(s => ({
-      value: s.id,
-      label: `${s.titre} · ${libelleJours(s.jour)}, ${s.heureDebut} → ${s.heureFin}`,
-    })),
+    {
+      value: 'IGNORER',
+      label: t(LIBELLES_CHAMP.IGNORER),
+    },
+    { value: 'PLAGE', label: t`Disponibilité seulement` },
+    ...sequences.map(s => {
+      const titreSequence = s.titre
+      const jourSequence = libelleJours(s.jour)
+      const heureDebut = s.heureDebut
+      const heureFin = s.heureFin
+      return {
+        value: s.id,
+        label: t`${titreSequence} · ${jourSequence}, ${heureDebut} → ${heureFin}`,
+      }
+    }),
   ]
   const valeurCible = (c: Cible) =>
     c.type === 'SEQUENCE' ? c.sequenceId : c.type
@@ -488,28 +547,60 @@ export default function ImportBenevoles() {
     mode === 'PLACES_DIRECTES' &&
     !lues.personnes.some(p => p.sequenceIds.length > 0)
 
+  // Les valeurs des messages sont des identifiants simples.
+  const periodeCette = periode.cette
+  const nbLignesLues = tableau?.lignes.length ?? 0
+  const nbColonnesLues = tableau?.entetes.length ?? 0
+  const numeroEtape = etape + 1
+  const nombreEtapes = ETAPES.length
+  const nomEtape = t(ETAPES[etape]!)
+  const nbPersonnes = lues.personnes.length
+  const nbEcarteesNavigateur = lues.ecartees.length
+  const bilanSimule = simulation?.bilan
+  const nbAImporter = bilanSimule?.aImporter ?? 0
+  const nbDejaImportees = bilanSimule?.dejaImportees ?? 0
+  const nbEcarteesTotal = (bilanSimule?.ecartees ?? 0) + nbEcarteesNavigateur
+  const nbFichesCreees = bilanSimule?.fichesCreees ?? 0
+  const nbFichesRattachees = bilanSimule?.fichesRattachees ?? 0
+  const nbPlaces = bilanSimule?.places ?? 0
+  const fichesRestantes = simulation?.fichesRestantes ?? 0
+  const nbComptes = comptes.length
+  const nbAutresEcartees = ecarteesToutes.length - 50
+  const nbNonTraitees = echec?.restantes ?? 0
+  const nbImportees = resultat?.aImporter ?? 0
+  const nbFichesCreeesFinal = resultat?.fichesCreees ?? 0
+  const nbFichesRattacheesFinal = resultat?.fichesRattachees ?? 0
+  const nbPlacesFinal = resultat?.places ?? 0
+  const nbDejaImporteesFinal = resultat?.dejaImportees ?? 0
+  const libelleLigne = (numero: number) => t`Ligne ${numero}`
+  const libelleChampColonne = (entete: string) =>
+    t`Champ de la colonne ${entete}`
+  const libelleSequenceDe = (libelle: string) => t`Séquence de ${libelle}`
+
   return (
     <>
       <Titre
-        sousTitre="Faites entrer une liste tenue hors de Relaytour : un export de billetterie, un formulaire, un tableur. Le fichier reste sur votre appareil."
+        sousTitre={t`Faites entrer une liste tenue hors de Relaytour : un export de billetterie, un formulaire, un tableur. Le fichier reste sur votre appareil.`}
         avant={
           <Link to={lien('/benevoles')} className="rt-note">
-            ← Bénévoles
+            <Trans>← Bénévoles</Trans>
           </Link>
         }
       >
-        Importer une liste de bénévoles
+        <Trans>Importer une liste de bénévoles</Trans>
       </Titre>
       {ecrans.md ? (
         <Steps
           current={etape}
           size="small"
-          items={ETAPES.map(title => ({ title }))}
+          items={ETAPES.map(etapeNom => ({ title: t(etapeNom) }))}
           style={{ marginBottom: 24 }}
         />
       ) : (
         <p className="rt-note">
-          Étape {etape + 1} sur {ETAPES.length} : {ETAPES[etape]}
+          <Trans>
+            Étape {numeroEtape} sur {nombreEtapes} : {nomEtape}
+          </Trans>
         </p>
       )}
 
@@ -525,9 +616,9 @@ export default function ImportBenevoles() {
               }}
             />
             <label className="rt-import-champ">
-              <span className="rt-libelle">Portée</span>
+              <span className="rt-libelle">{t`Portée`}</span>
               <Select
-                aria-label="Portée de l’import"
+                aria-label={t`Portée de l’import`}
                 style={{ minWidth: 220 }}
                 value={perimetreId ?? '__programme'}
                 onChange={v => {
@@ -541,10 +632,10 @@ export default function ImportBenevoles() {
               />
             </label>
             <label className="rt-import-champ">
-              <span className="rt-libelle">Source</span>
+              <span className="rt-libelle">{t`Source`}</span>
               <Input
-                aria-label="Source de la liste"
-                placeholder="Billetterie du 7 août"
+                aria-label={t`Source de la liste`}
+                placeholder={t`Billetterie du 7 août`}
                 maxLength={120}
                 value={source}
                 onChange={e => setSource(e.target.value)}
@@ -555,7 +646,7 @@ export default function ImportBenevoles() {
             <Alert
               type="warning"
               showIcon
-              title={`Vous n’écrivez dans aucun périmètre de ${periode.cette}.`}
+              title={t`Vous n’écrivez dans aucun périmètre de ${periodeCette}.`}
             />
           )}
           <Upload.Dragger
@@ -571,18 +662,20 @@ export default function ImportBenevoles() {
               <InboxOutlined />
             </p>
             <p>
-              Déposez un fichier CSV ou Excel (.xlsx), ou cliquez pour le
-              choisir.
+              <Trans>
+                Déposez un fichier CSV ou Excel (.xlsx), ou cliquez pour le
+                choisir.
+              </Trans>
             </p>
             <p className="rt-note">
-              2 Mo, 5 000 lignes et 200 colonnes au plus.
+              <Trans>2 Mo, 5 000 lignes et 200 colonnes au plus.</Trans>
             </p>
           </Upload.Dragger>
           {feuilles.length > 1 && (
             <label className="rt-import-champ">
-              <span className="rt-libelle">Feuille</span>
+              <span className="rt-libelle">{t`Feuille`}</span>
               <Select
-                aria-label="Feuille du classeur"
+                aria-label={t`Feuille du classeur`}
                 value={feuille?.nom}
                 onChange={setNomFeuille}
                 options={feuilles.map(f => ({ value: f.nom, label: f.nom }))}
@@ -591,8 +684,9 @@ export default function ImportBenevoles() {
           )}
           {tableau && (
             <p className="rt-note">
-              {tableau.lignes.length} lignes et {tableau.entetes.length}{' '}
-              colonnes lues.
+              <Trans>
+                {nbLignesLues} lignes et {nbColonnesLues} colonnes lues.
+              </Trans>
             </p>
           )}
           <Space>
@@ -604,7 +698,7 @@ export default function ImportBenevoles() {
               loading={lecture}
               onClick={versColonnes}
             >
-              Associer les colonnes
+              <Trans>Associer les colonnes</Trans>
             </Button>
           </Space>
         </section>
@@ -613,9 +707,11 @@ export default function ImportBenevoles() {
       {etape === 1 && tableau && (
         <section className="rt-verre rt-import-etape">
           <p>
-            Relaytour propose un champ pour chaque colonne, d’après son en-tête
-            et son contenu. Corrigez au besoin. Une colonne ignorée ne quitte
-            pas votre appareil.
+            <Trans>
+              Relaytour propose un champ pour chaque colonne, d’après son
+              en-tête et son contenu. Corrigez au besoin. Une colonne ignorée ne
+              quitte pas votre appareil.
+            </Trans>
           </p>
           <ul className="rt-import-colonnes">
             {colonnes.map(c => (
@@ -625,11 +721,11 @@ export default function ImportBenevoles() {
                   <span className="rt-note">
                     {c.exemples.length > 0
                       ? c.exemples.join(' · ')
-                      : 'Colonne vide'}
+                      : t`Colonne vide`}
                   </span>
                 </div>
                 <Select
-                  aria-label={`Champ de la colonne ${c.entete}`}
+                  aria-label={libelleChampColonne(c.entete)}
                   style={{ minWidth: 260 }}
                   value={c.champ}
                   disabled={c.sensible}
@@ -649,30 +745,32 @@ export default function ImportBenevoles() {
                       )
                     )
                     if (avant) {
+                      const enteteColonne = avant.entete
+                      const libelleChampUnique = t(LIBELLES_CHAMP[champ])
                       message.info(
-                        `La colonne « ${avant.entete} » passe à « Ignorer » : « ${LIBELLES_CHAMP[champ]} » ne vient que d’une colonne.`
+                        t`La colonne « ${enteteColonne} » passe à « Ignorer » : « ${libelleChampUnique} » ne vient que d’une colonne.`
                       )
                     }
                   }}
                   options={(Object.keys(LIBELLES_CHAMP) as Champ[]).map(
                     champ => ({
                       value: champ,
-                      label: LIBELLES_CHAMP[champ],
+                      label: t(LIBELLES_CHAMP[champ]),
                     })
                   )}
                 />
                 {c.sensible ? (
-                  <Tag>Donnée sensible : ignorée</Tag>
+                  <Tag>{t`Donnée sensible : ignorée`}</Tag>
                 ) : c.champ !== 'IGNORER' && c.confiance !== 'HAUTE' ? (
-                  <Tag color="warning">À vérifier</Tag>
+                  <Tag color="warning">{t`À vérifier`}</Tag>
                 ) : null}
               </li>
             ))}
           </ul>
           <div className="rt-import-reglages">
             <Input
-              aria-label="Nom de la correspondance"
-              placeholder="Nom de la correspondance, par exemple « Billetterie »"
+              aria-label={t`Nom de la correspondance`}
+              placeholder={t`Nom de la correspondance, par exemple « Billetterie »`}
               style={{ maxWidth: 320 }}
               value={nomCorrespondance}
               onChange={e => setNomCorrespondance(e.target.value)}
@@ -682,12 +780,12 @@ export default function ImportBenevoles() {
               loading={enregistrement.loading}
               onClick={() => void enregistrerCorrespondance()}
             >
-              Enregistrer la correspondance
+              <Trans>Enregistrer la correspondance</Trans>
             </Button>
             {(correspondances?.correspondancesImport.length ?? 0) > 0 && (
               <Select
-                aria-label="Appliquer une correspondance"
-                placeholder="Appliquer une correspondance"
+                aria-label={t`Appliquer une correspondance`}
+                placeholder={t`Appliquer une correspondance`}
                 style={{ minWidth: 240 }}
                 value={null}
                 onChange={id => {
@@ -710,17 +808,19 @@ export default function ImportBenevoles() {
             <Alert
               type="warning"
               showIcon
-              title="Associez au moins un nom, une adresse ou un téléphone."
+              title={t`Associez au moins un nom, une adresse ou un téléphone.`}
             />
           )}
           <Space>
-            <Button onClick={() => setEtape(0)}>Précédent</Button>
+            <Button onClick={() => setEtape(0)}>
+              <Trans>Précédent</Trans>
+            </Button>
             <Button
               type="primary"
               disabled={!associationSuffisante(champs)}
               onClick={() => setEtape(2)}
             >
-              Associer les séquences
+              <Trans>Associer les séquences</Trans>
             </Button>
           </Space>
         </section>
@@ -730,9 +830,9 @@ export default function ImportBenevoles() {
         <section className="rt-verre rt-import-etape">
           <div className="rt-import-reglages">
             <label className="rt-import-champ">
-              <span className="rt-libelle">Jour des horaires sans jour</span>
+              <span className="rt-libelle">{t`Jour des horaires sans jour`}</span>
               <Select
-                aria-label="Jour des horaires sans jour"
+                aria-label={t`Jour des horaires sans jour`}
                 style={{ minWidth: 200 }}
                 value={jourRetenu}
                 onChange={setJour}
@@ -740,9 +840,11 @@ export default function ImportBenevoles() {
               />
             </label>
             <label className="rt-import-champ">
-              <span className="rt-libelle">Valeurs qui signifient « non »</span>
+              <span className="rt-libelle">
+                {t`Valeurs qui signifient « non »`}
+              </span>
               <Select
-                aria-label="Valeurs qui signifient non"
+                aria-label={t`Valeurs qui signifient non`}
                 mode="tags"
                 style={{ minWidth: 260 }}
                 value={valeursNon}
@@ -752,8 +854,10 @@ export default function ImportBenevoles() {
           </div>
           {choix.length === 0 ? (
             <p className="rt-note">
-              Aucune colonne ne porte de poste ni de créneau. Les personnes
-              rejoindront les bénévoles à répartir, avec leurs précisions.
+              <Trans>
+                Aucune colonne ne porte de poste ni de créneau. Les personnes
+                rejoindront les bénévoles à répartir, avec leurs précisions.
+              </Trans>
             </p>
           ) : (
             <ul className="rt-import-colonnes">
@@ -768,7 +872,7 @@ export default function ImportBenevoles() {
                     )}
                   </div>
                   <Select
-                    aria-label={`Séquence de ${c.libelle}`}
+                    aria-label={libelleSequenceDe(c.libelle)}
                     style={{ minWidth: 320, maxWidth: '100%' }}
                     showSearch={{ optionFilterProp: 'label' }}
                     value={valeurCible(cibles.get(c.cle)!)}
@@ -789,10 +893,14 @@ export default function ImportBenevoles() {
             className="rt-import-mode"
           >
             <Radio value="A_REPARTIR">
-              À répartir : chaque personne devient une candidature à traiter.
+              <Trans>
+                À répartir : chaque personne devient une candidature à traiter.
+              </Trans>
             </Radio>
             <Radio value="PLACES_DIRECTES">
-              Places directes : chaque personne reçoit sa fiche et ses places.
+              <Trans>
+                Places directes : chaque personne reçoit sa fiche et ses places.
+              </Trans>
             </Radio>
           </Radio.Group>
           {mode === 'A_REPARTIR' && (
@@ -800,19 +908,25 @@ export default function ImportBenevoles() {
               checked={accepterTout}
               onChange={e => setAccepterTout(e.target.checked)}
             >
-              Accepter tout : les séquences associées sont acceptées dès
-              l’import.
+              <Trans>
+                Accepter tout : les séquences associées sont acceptées dès
+                l’import.
+              </Trans>
             </Checkbox>
           )}
           <Checkbox
             checked={prevenirParMail}
             onChange={e => setPrevenirParMail(e.target.checked)}
           >
-            Prévenir par mail : la première place d’une personne lui envoie son
-            lien personnel.
+            <Trans>
+              Prévenir par mail : la première place d’une personne lui envoie
+              son lien personnel.
+            </Trans>
           </Checkbox>
           <Space>
-            <Button onClick={() => setEtape(1)}>Précédent</Button>
+            <Button onClick={() => setEtape(1)}>
+              <Trans>Précédent</Trans>
+            </Button>
             <Button
               type="primary"
               onClick={() => {
@@ -821,7 +935,7 @@ export default function ImportBenevoles() {
                 setEtape(3)
               }}
             >
-              Voir l’aperçu
+              <Trans>Voir l’aperçu</Trans>
             </Button>
           </Space>
         </section>
@@ -830,16 +944,13 @@ export default function ImportBenevoles() {
       {etape === 3 && tableau && (
         <section className="rt-verre rt-import-etape">
           <p>
-            {lues.personnes.length} personne
-            {lues.personnes.length > 1 ? 's' : ''}, {lues.ecartees.length} ligne
-            {lues.ecartees.length > 1 ? 's' : ''} écartée
-            {lues.ecartees.length > 1 ? 's' : ''}.
+            {t`${plural(nbPersonnes, { one: '# personne', other: '# personnes' })}, ${plural(nbEcarteesNavigateur, { one: '# ligne écartée', other: '# lignes écartées' })}.`}
           </p>
           {placesDirectesSansSequence && (
             <Alert
               type="warning"
               showIcon
-              title="Le mode « places directes » exige au moins une colonne associée à une séquence."
+              title={t`Le mode « places directes » exige au moins une colonne associée à une séquence.`}
             />
           )}
           {!simulation ? (
@@ -851,44 +962,63 @@ export default function ImportBenevoles() {
               }
               onClick={() => void simuler()}
             >
-              Vérifier la liste
+              <Trans>Vérifier la liste</Trans>
             </Button>
           ) : (
             <>
               <ul className="rt-import-bilan">
-                <li>{simulation.bilan.aImporter} à importer</li>
-                <li>{simulation.bilan.dejaImportees} déjà importées</li>
                 <li>
-                  {simulation.bilan.ecartees + lues.ecartees.length} écartées
+                  <Trans>{nbAImporter} à importer</Trans>
                 </li>
-                <li>{simulation.bilan.fichesCreees} fiches créées</li>
-                <li>{simulation.bilan.fichesRattachees} fiches rejointes</li>
-                <li>{simulation.bilan.places} places</li>
+                <li>
+                  <Trans>{nbDejaImportees} déjà importées</Trans>
+                </li>
+                <li>
+                  <Trans>{nbEcarteesTotal} écartées</Trans>
+                </li>
+                <li>
+                  <Trans>{nbFichesCreees} fiches créées</Trans>
+                </li>
+                <li>
+                  <Trans>{nbFichesRattachees} fiches rejointes</Trans>
+                </li>
+                <li>
+                  <Trans>{nbPlaces} places</Trans>
+                </li>
               </ul>
               {simulation.bilan.fichesCreees > simulation.fichesRestantes && (
                 <Alert
                   type="error"
                   showIcon
-                  title={`L’activité peut encore recevoir ${simulation.fichesRestantes} fiches : réduisez la liste.`}
+                  title={t`L’activité peut encore recevoir ${fichesRestantes} fiches : réduisez la liste.`}
                 />
               )}
               {simulation.depassements.length > 0 && (
                 <Alert
                   type="warning"
                   showIcon
-                  title="Des séquences dépassent leurs renforts recherchés."
+                  title={t`Des séquences dépassent leurs renforts recherchés.`}
                   description={simulation.depassements
-                    .map(d => `${d.titre} : ${d.renforts} pour ${d.besoin}`)
+                    .map(d => {
+                      const titreSequence = d.titre
+                      const renforts = d.renforts
+                      const besoin = d.besoin
+                      return t`${titreSequence} : ${renforts} pour ${besoin}`
+                    })
                     .join(' · ')}
                 />
               )}
               {rapprochees.length > 0 && (
                 <>
-                  <h2 className="rt-intertitre">Fiches proches</h2>
+                  <h2 className="rt-intertitre">
+                    <Trans>Fiches proches</Trans>
+                  </h2>
                   <ul className="rt-import-colonnes">
                     {rapprochees.map(p => {
                       const r = simulation.lignes.get(p.cle)!.rapprochement!
                       const niveau = LIBELLES_NIVEAU[r.niveau]
+                      const lignesPersonne = p.lignes.join(', ')
+                      const nomFiche = r.nom
                       const decision =
                         decisions.get(p.cle) ??
                         (r.niveau === 'FORT' ? 'RATTACHER' : 'CREER')
@@ -897,10 +1027,10 @@ export default function ImportBenevoles() {
                           <div>
                             <strong>{p.nom}</strong>
                             <span className="rt-note">
-                              Ligne {p.lignes.join(', ')} · fiche « {r.nom} »
+                              {t`Ligne ${lignesPersonne} · fiche « ${nomFiche} »`}
                             </span>
                           </div>
-                          <Tag color={niveau.couleur}>{niveau.libelle}</Tag>
+                          <Tag color={niveau.couleur}>{t(niveau.libelle)}</Tag>
                           <Radio.Group
                             value={decision}
                             onChange={e =>
@@ -913,9 +1043,11 @@ export default function ImportBenevoles() {
                             }
                           >
                             <Radio value="RATTACHER">
-                              Rejoindre « {r.nom} »
+                              <Trans>Rejoindre « {nomFiche} »</Trans>
                             </Radio>
-                            <Radio value="CREER">Créer une fiche</Radio>
+                            <Radio value="CREER">
+                              <Trans>Créer une fiche</Trans>
+                            </Radio>
                           </Radio.Group>
                         </li>
                       )
@@ -927,28 +1059,32 @@ export default function ImportBenevoles() {
                 <Alert
                   type="info"
                   showIcon
-                  title={`${comptes.length} adresse${comptes.length > 1 ? 's sont celles' : ' est celle'} d’un compte de l’organisation.`}
+                  title={t`${plural(nbComptes, { one: '# adresse est celle d’un compte de l’organisation.', other: '# adresses sont celles d’un compte de l’organisation.' })}`}
                   description={comptes.map(p => p.nom).join(', ')}
                 />
               )}
               {ecarteesToutes.length > 0 && (
                 <>
-                  <h2 className="rt-intertitre">Lignes écartées</h2>
+                  <h2 className="rt-intertitre">
+                    <Trans>Lignes écartées</Trans>
+                  </h2>
                   <ul className="rt-import-ecartees">
                     {ecarteesToutes.slice(0, 50).map(e => (
                       <li key={`${e.ligne}-${e.motif}`}>
-                        <strong>Ligne {e.ligne}</strong> · {e.motif}
+                        <strong>{libelleLigne(e.ligne)}</strong> · {e.motif}
                       </li>
                     ))}
                   </ul>
                   {ecarteesToutes.length > 50 && (
                     <p className="rt-note">
-                      Et {ecarteesToutes.length - 50} autres lignes, dans le
-                      fichier à télécharger.
+                      <Trans>
+                        Et {nbAutresEcartees} autres lignes, dans le fichier à
+                        télécharger.
+                      </Trans>
                     </p>
                   )}
                   <Button onClick={() => void telechargerEcartees()}>
-                    Télécharger les lignes écartées
+                    <Trans>Télécharger les lignes écartées</Trans>
                   </Button>
                 </>
               )}
@@ -956,13 +1092,17 @@ export default function ImportBenevoles() {
                 checked={accord}
                 onChange={e => setAccord(e.target.checked)}
               >
-                Les personnes de cette liste ont accepté que leurs coordonnées
-                soient enregistrées pour organiser l’activité.
+                <Trans>
+                  Les personnes de cette liste ont accepté que leurs coordonnées
+                  soient enregistrées pour organiser l’activité.
+                </Trans>
               </Checkbox>
             </>
           )}
           <Space>
-            <Button onClick={() => setEtape(2)}>Précédent</Button>
+            <Button onClick={() => setEtape(2)}>
+              <Trans>Précédent</Trans>
+            </Button>
             <Button
               type="primary"
               disabled={
@@ -973,7 +1113,7 @@ export default function ImportBenevoles() {
               }
               onClick={() => void lancer()}
             >
-              Importer
+              <Trans>Importer</Trans>
             </Button>
           </Space>
         </section>
@@ -983,7 +1123,9 @@ export default function ImportBenevoles() {
         <section className="rt-verre rt-import-etape">
           {resultat === null ? (
             <>
-              <p>Import en cours…</p>
+              <p>
+                <Trans>Import en cours…</Trans>
+              </p>
               <Progress percent={progression} />
             </>
           ) : (
@@ -991,18 +1133,21 @@ export default function ImportBenevoles() {
               status={echec ? 'warning' : 'success'}
               title={
                 echec
-                  ? `L’import s’est arrêté : ${echec.restantes} personne${echec.restantes > 1 ? 's' : ''} n’${echec.restantes > 1 ? 'ont' : 'a'} pas été traitée${echec.restantes > 1 ? 's' : ''}.`
-                  : `${resultat.aImporter} personne${resultat.aImporter > 1 ? 's' : ''} importée${resultat.aImporter > 1 ? 's' : ''}.`
+                  ? t`L’import s’est arrêté : ${plural(nbNonTraitees, { one: '# personne n’a pas été traitée', other: '# personnes n’ont pas été traitées' })}.`
+                  : t`${plural(nbImportees, { one: '# personne importée', other: '# personnes importées' })}.`
               }
               subTitle={
                 <>
                   {echec && (
                     <span className="rt-import-echec">
-                      {echec.motif} Relancez l’import du même fichier : les
-                      personnes déjà importées seront reconnues.
+                      {echec.motif}{' '}
+                      <Trans>
+                        Relancez l’import du même fichier : les personnes déjà
+                        importées seront reconnues.
+                      </Trans>
                     </span>
                   )}
-                  {`${resultat.aImporter} personnes importées, ${resultat.fichesCreees} fiches créées, ${resultat.fichesRattachees} fiches rejointes, ${resultat.places} places, ${resultat.dejaImportees} déjà importées.`}
+                  {t`${nbImportees} personnes importées, ${nbFichesCreeesFinal} fiches créées, ${nbFichesRattacheesFinal} fiches rejointes, ${nbPlacesFinal} places, ${nbDejaImporteesFinal} déjà importées.`}
                 </>
               }
               extra={[
@@ -1013,7 +1158,7 @@ export default function ImportBenevoles() {
                     void naviguer(lien('/benevoles?onglet=candidatures'))
                   }
                 >
-                  Voir les candidatures
+                  <Trans>Voir les candidatures</Trans>
                 </Button>,
                 <Button
                   key="repartition"
@@ -1021,14 +1166,16 @@ export default function ImportBenevoles() {
                     void naviguer(lien('/programme?vue=repartition'))
                   }
                 >
-                  Répartir dans le programme
+                  <Trans>Répartir dans le programme</Trans>
                 </Button>,
               ]}
             />
           )}
           <Typography.Paragraph className="rt-note">
-            Aucun mail ne part à l’import. La première place d’une personne
-            joignable lui envoie son lien personnel.
+            <Trans>
+              Aucun mail ne part à l’import. La première place d’une personne
+              joignable lui envoie son lien personnel.
+            </Trans>
           </Typography.Paragraph>
         </section>
       )}

@@ -24,6 +24,7 @@ import { adresseClient, ENTETE_IP_CLIENT } from './lib/adresse-client.ts'
 import { fermerLesFlux } from './lib/flux.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
+import { avecLangue, langueDe, languesDuNavigateur } from './lib/langue.ts'
 import { formaterErreur } from './lib/erreurs.ts'
 import { limiterParCle, rendreTentative } from './lib/limite.ts'
 import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
@@ -321,6 +322,13 @@ app.use(
   '/graphql',
   cors({ origin: env.CORS_ORIGIN, credentials: true }),
   express.json({ limit: '1mb' }),
+  // La requête s'exécute dans la langue du navigateur ; le contexte la remplace par
+  // celle de la personne connectée (ADR 0047).
+  (req, _res, suite) =>
+    avecLangue(
+      langueDe(null, null, languesDuNavigateur(req.get('accept-language'))),
+      suite
+    ),
   // Les abonnements partent en SSE (ADR 0017) ; le reste continue vers Apollo.
   creerGestionnaireFlux({ contexte: contexteDeRequete }),
   expressMiddleware(apollo, { context: ({ req }) => contexteDeRequete(req) })

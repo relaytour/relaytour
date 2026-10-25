@@ -5,6 +5,7 @@ import type { AppContext } from '../context.ts'
 import { dansLEquipeQuiVoit, membreActif } from './appartenances.ts'
 import { peutModifierPerimetre } from './droits.ts'
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 // Programme du jour J (ADR 0040). Une séquence suit les droits d'écriture d'une
 // réunion (ADR 0037) : l'agenda global de l'activité pour ses admins, l'agenda
@@ -94,7 +95,7 @@ export async function peutEcrireSequence(
 /** Une séquence dure 24 heures au plus. */
 export function dureeValide(debut: Date, fin: Date): void {
   if (fin.getTime() - debut.getTime() > SEQUENCE_DUREE_MAX_MS) {
-    throw erreurSaisie('Une séquence dure 24 heures au plus.')
+    throw erreurSaisie(i18n._('Une séquence dure 24 heures au plus.'))
   }
 }
 
@@ -110,7 +111,9 @@ export async function placesValides(
 ): Promise<PlaceValide[]> {
   const liste = places ?? []
   if (liste.length > PLACES_MAX) {
-    throw erreurSaisie(`Une séquence compte ${PLACES_MAX} places au plus.`)
+    throw erreurSaisie(
+      i18n._('Une séquence compte {max} places au plus.', { max: PLACES_MAX })
+    )
   }
   const valides: PlaceValide[] = []
   const vues = new Set<string>()
@@ -119,7 +122,9 @@ export async function placesValides(
     const benevoleId = place.benevoleId ? String(place.benevoleId) : null
     if ((userId === null) === (benevoleId === null)) {
       throw erreurSaisie(
-        'Une place désigne une personne de l’équipe ou une fiche bénévole.'
+        i18n._(
+          'Une place désigne une personne de l’équipe ou une fiche bénévole.'
+        )
       )
     }
     const cle = userId ?? `b:${benevoleId}`

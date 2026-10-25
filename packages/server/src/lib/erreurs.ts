@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { GraphQLError, type GraphQLFormattedError } from 'graphql'
 
 import { journal } from './journal.ts'
+import { i18n } from './langue.ts'
 
 /** Erreur de saisie lisible par l'interface. */
 export function erreurSaisie(message: string): GraphQLError {
@@ -11,7 +12,7 @@ export function erreurSaisie(message: string): GraphQLError {
 
 /** Refus d'accès. Le message ne dit pas si la ressource existe. */
 export function accesRefuse(): GraphQLError {
-  return new GraphQLError('Accès refusé.', {
+  return new GraphQLError(i18n._('Accès refusé.'), {
     extensions: { code: 'FORBIDDEN' },
   })
 }
@@ -32,7 +33,9 @@ export function conflitDeVersion(
 /** Refus d'une écriture dans une organisation en lecture seule (ADR 0008). */
 export function organisationEnLectureSeule(): GraphQLError {
   return new GraphQLError(
-    'Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier.',
+    i18n._(
+      'Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier.'
+    ),
     { extensions: { code: 'LECTURE_SEULE' } }
   )
 }
@@ -46,9 +49,11 @@ export function limiteAtteinte(
   contactHebergeur: string | undefined
 ): GraphQLError {
   const suite = contactHebergeur
-    ? ` Contactez votre hébergeur : ${contactHebergeur}.`
-    : ' Contactez un admin de votre organisation.'
-  return new GraphQLError(message + suite, {
+    ? i18n._('Contactez votre hébergeur : {contact}.', {
+        contact: contactHebergeur,
+      })
+    : i18n._('Contactez un admin de votre organisation.')
+  return new GraphQLError(`${message} ${suite}`, {
     extensions: { code: 'LIMITE_ATTEINTE' },
   })
 }
@@ -71,20 +76,34 @@ export function requeteTropLourde(
   nature: 'Depth' | 'Breadth' | 'Complexity',
   mesure: MesureRequete
 ): GraphQLError {
-  const details = {
-    Depth: {
-      code: 'REQUETE_TROP_PROFONDE',
-      message: `La requête est trop profonde (${mesure.depth} niveaux, maximum ${mesure.maxDepth}).`,
-    },
-    Breadth: {
-      code: 'REQUETE_TROP_LARGE',
-      message: `La requête sélectionne trop de champs (${mesure.breadth}, maximum ${mesure.maxBreadth}).`,
-    },
-    Complexity: {
-      code: 'REQUETE_TROP_COMPLEXE',
-      message: `La requête est trop coûteuse (complexité ${mesure.complexity}, maximum ${mesure.maxComplexity}).`,
-    },
-  }[nature]
+  const details = (() => {
+    switch (nature) {
+      case 'Depth':
+        return {
+          code: 'REQUETE_TROP_PROFONDE',
+          message: i18n._(
+            'La requête est trop profonde ({niveaux} niveaux, maximum {maximum}).',
+            { niveaux: mesure.depth, maximum: mesure.maxDepth }
+          ),
+        }
+      case 'Breadth':
+        return {
+          code: 'REQUETE_TROP_LARGE',
+          message: i18n._(
+            'La requête sélectionne trop de champs ({champs}, maximum {maximum}).',
+            { champs: mesure.breadth, maximum: mesure.maxBreadth }
+          ),
+        }
+      case 'Complexity':
+        return {
+          code: 'REQUETE_TROP_COMPLEXE',
+          message: i18n._(
+            'La requête est trop coûteuse (complexité {complexite}, maximum {maximum}).',
+            { complexite: mesure.complexity, maximum: mesure.maxComplexity }
+          ),
+        }
+    }
+  })()
   return new GraphQLError(details.message, {
     extensions: {
       code: details.code,
@@ -147,7 +166,10 @@ export function formaterErreur(
     'Une erreur interne a été masquée dans la réponse.'
   )
   return {
-    message: `Le serveur a rencontré une erreur (référence ${reference}). Réessayez, puis contactez un admin si elle persiste.`,
+    message: i18n._(
+      'Le serveur a rencontré une erreur (référence {reference}). Réessayez, puis contactez un admin si elle persiste.',
+      { reference }
+    ),
     ...(formatee.path === undefined ? {} : { path: formatee.path }),
     ...(formatee.locations === undefined
       ? {}
