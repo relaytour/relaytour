@@ -5,9 +5,13 @@ import {
   FileTextOutlined,
 } from '@ant-design/icons'
 
+import { i18n, type MessageDescriptor } from '@lingui/core'
+import { msg, t } from '@lingui/core/macro'
+
 import { graphql } from '../gql'
 import type { FormatApercu } from '../gql/graphql'
 
+import { langueActive } from './langue'
 import { activiteAffichee, organisationChoisie } from './selection'
 
 // Espace de fichiers d'une organisation (ADR 0038) : requêtes et lecture des
@@ -361,17 +365,21 @@ export const FORMATS_AFFICHES: readonly FormatApercu[] = [
 /** Taille lisible d'un fichier : « 12 Ko », « 3,4 Mo ». */
 export function tailleLisible(octets: number | null | undefined): string {
   if (octets === null || octets === undefined) return ''
-  if (octets < 1024) return `${octets} o`
-  const unites = ['Ko', 'Mo', 'Go']
+  if (octets < 1024) return t`${octets} o`
   let valeur = octets / 1024
   let i = 0
-  while (valeur >= 1024 && i < unites.length - 1) {
+  while (valeur >= 1024 && i < 2) {
     valeur /= 1024
     i++
   }
-  const arrondi =
-    valeur < 10 ? valeur.toFixed(1) : Math.round(valeur).toString()
-  return `${arrondi.replace('.', ',')} ${unites[i]}`
+  const arrondi = new Intl.NumberFormat(langueActive(), {
+    useGrouping: false,
+    minimumFractionDigits: valeur < 10 ? 1 : 0,
+    maximumFractionDigits: valeur < 10 ? 1 : 0,
+  }).format(valeur)
+  if (i === 0) return t`${arrondi} Ko`
+  if (i === 1) return t`${arrondi} Mo`
+  return t`${arrondi} Go`
 }
 
 /**
@@ -397,15 +405,15 @@ export function adresseApercu(
 function messageRefus(statut: number): string {
   switch (statut) {
     case 401:
-      return 'Votre session a expiré. Reconnectez-vous.'
+      return t`Votre session a expiré. Reconnectez-vous.`
     case 404:
-      return 'Ce document n’existe plus, ou vous n’y avez pas accès.'
+      return t`Ce document n’existe plus, ou vous n’y avez pas accès.`
     case 409:
-      return 'Le fournisseur cloud n’est pas connecté.'
+      return t`Le fournisseur cloud n’est pas connecté.`
     case 413:
-      return 'Ce document dépasse 50 Mo. Ouvrez-le chez le fournisseur cloud.'
+      return t`Ce document dépasse 50 Mo. Ouvrez-le chez le fournisseur cloud.`
     default:
-      return 'Le fournisseur cloud ne répond pas. Réessayez dans quelques instants.'
+      return t`Le fournisseur cloud ne répond pas. Réessayez dans quelques instants.`
   }
 }
 
@@ -479,7 +487,10 @@ export async function telechargerFichier(
   const nom =
     nomServi(reponse.headers.get('content-disposition')) ??
     chemin[chemin.length - 1] ??
-    'document'
+    t({
+      message: 'document',
+      comment: 'Nom d’un fichier téléchargé sans nom connu',
+    })
   const adresse = URL.createObjectURL(await reponse.blob())
   const lien = document.createElement('a')
   lien.href = adresse
@@ -648,11 +659,13 @@ export const SAISIR_ADRESSE_FOURNISSEUR = graphql(`
 /** Comment une personne a accès, lisible : « directement », « par le groupe… ». */
 export function voieLisible(via: string | null): string | null {
   if (via === null) return null
-  if (via === 'direct') return 'Directement'
-  if (via === 'domaine') return 'Par toute l’organisation'
-  return via.startsWith('groupe:')
-    ? `Par le groupe « ${via.slice('groupe:'.length)} »`
-    : via
+  if (via === 'direct') return t`Directement`
+  if (via === 'domaine') return t`Par toute l’organisation`
+  if (via.startsWith('groupe:')) {
+    const nomGroupe = via.slice('groupe:'.length)
+    return t`Par le groupe « ${nomGroupe} »`
+  }
+  return via
 }
 
 export const REGLER_PORTEE = graphql(`
@@ -679,15 +692,11 @@ export const ACTIVATION_ACCES: Record<string, 'reconnexion' | 'reglage'> = {
 export const AVEC_ANNUAIRE = new Set(['SHAREPOINT', 'NEXTCLOUD'])
 
 /** Ce que l'activation demande chez le fournisseur, pour l'admin qui l'active. */
-export const CONSENTEMENT: Record<string, string> = {
-  SHAREPOINT:
-    'La connexion demande de nouvelles autorisations : un admin Microsoft Entra les accepte pour l’organisation.',
-  DROPBOX:
-    'La connexion demande de lire, puis de modifier, les membres des dossiers partagés.',
-  GOOGLE_DRIVE:
-    'L’accès déjà accordé à Google Drive suffit : aucune reconnexion n’est nécessaire.',
-  NEXTCLOUD:
-    'L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe.',
+export const CONSENTEMENT: Record<string, MessageDescriptor> = {
+  SHAREPOINT: msg`La connexion demande de nouvelles autorisations : un admin Microsoft Entra les accepte pour l’organisation.`,
+  DROPBOX: msg`La connexion demande de lire, puis de modifier, les membres des dossiers partagés.`,
+  GOOGLE_DRIVE: msg`L’accès déjà accordé à Google Drive suffit : aucune reconnexion n’est nécessaire.`,
+  NEXTCLOUD: msg`L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe.`,
 }
 
 export const GROUPES_DU_DOSSIER = graphql(`
@@ -742,10 +751,10 @@ export const ECARTER_PROPOSITION = graphql(`
 
 /** Les modes d'accès d'un dossier lié chez le fournisseur (ADR 0044). */
 export const MODES_ACCES = {
-  AUCUN: 'Vérifier seulement',
-  PARTAGE: 'Partager le dossier',
-  GROUPE: 'Gérer un groupe du fournisseur',
-} as const
+  AUCUN: msg`Vérifier seulement`,
+  PARTAGE: msg`Partager le dossier`,
+  GROUPE: msg`Gérer un groupe du fournisseur`,
+} satisfies Record<string, MessageDescriptor>
 
 /** Le résumé du mode d'accès d'un dossier lié. */
 export function resumeMode(d: {
@@ -754,11 +763,20 @@ export function resumeMode(d: {
   groupeFournisseurNom?: string | null
   ajoutsAutomatiques: boolean
 }): string {
-  if (d.accesFournisseur === 'AUCUN') return MODES_ACCES.AUCUN
-  const role = d.roleFournisseur === 'ECRITURE' ? 'en écriture' : 'en lecture'
-  const base =
-    d.accesFournisseur === 'PARTAGE'
-      ? `Partage du dossier ${role}`
-      : `Groupe « ${d.groupeFournisseurNom ?? '?'} »`
-  return d.ajoutsAutomatiques ? `${base}, ajouts automatiques` : base
+  if (d.accesFournisseur === 'AUCUN') return i18n._(MODES_ACCES.AUCUN)
+  const auto = d.ajoutsAutomatiques
+  if (d.accesFournisseur === 'PARTAGE') {
+    if (d.roleFournisseur === 'ECRITURE') {
+      return auto
+        ? t`Partage du dossier en écriture, ajouts automatiques`
+        : t`Partage du dossier en écriture`
+    }
+    return auto
+      ? t`Partage du dossier en lecture, ajouts automatiques`
+      : t`Partage du dossier en lecture`
+  }
+  const nomGroupe = d.groupeFournisseurNom ?? '?'
+  return auto
+    ? t`Groupe « ${nomGroupe} », ajouts automatiques`
+    : t`Groupe « ${nomGroupe} »`
 }

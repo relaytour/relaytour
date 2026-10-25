@@ -1,4 +1,5 @@
 import { CloseOutlined, StarFilled } from '@ant-design/icons'
+import { useLingui } from '@lingui/react/macro'
 import { Tag } from 'antd'
 
 import { initiales } from '../lib/personnes'
@@ -45,6 +46,7 @@ export function PersonneNommee({
   retirer?: () => void
   desactive?: boolean
 }) {
+  const { t } = useLingui()
   return (
     <span className={`rt-personne${retirer ? ' rt-personne-retirable' : ''}`}>
       <Avatar nom={initialesDe ?? nom} />
@@ -53,7 +55,7 @@ export function PersonneNommee({
         <button
           type="button"
           className="rt-personne-retirer"
-          aria-label={`Retirer ${nom}`}
+          aria-label={t`Retirer ${nom}`}
           disabled={desactive}
           onClick={retirer}
         >
@@ -69,13 +71,14 @@ export function PersonneNommee({
  * pour l'organisation : elle ne donne aucun droit.
  */
 export function MentionContactPrincipal() {
+  const { t } = useLingui()
   return (
     <Tag
       icon={<StarFilled aria-hidden />}
       color="gold"
       style={{ marginInlineEnd: 0 }}
     >
-      Contact principal
+      {t`Contact principal`}
     </Tag>
   )
 }

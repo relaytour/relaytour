@@ -14,6 +14,14 @@ fr:
     « Bénévoles à répartir » classe les personnes disponibles pour la séquence
     choisie. Vous les y placez par un bouton, ou par glisser-déposer sur un
     ordinateur.
+en:
+  titre: >-
+    The “Placement” view shows the hours that lack volunteers
+  texte: >-
+    The “Schedule” screen has a new “Placement” view. A band splits the day into
+    30-minute blocks and flags the hours that are short. The “Unplaced
+    volunteers” panel ranks the people available for the chosen slot. You place
+    them with a button, or by drag and drop on a computer.
 ---
 
 ADR 0041 : requêtes `couvertureProgramme` et `benevolesARepartir`, mutations

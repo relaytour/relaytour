@@ -1,4 +1,5 @@
 import { useApolloClient } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, Button, Card, Form, Input, Typography } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -26,6 +27,7 @@ function lienUneFois(): LienConnexion | null {
 }
 
 export default function Connexion() {
+  const { t } = useLingui()
   const navigate = useNavigate()
   const apollo = useApolloClient()
   const [etape, setEtape] = useState<Etape>(() =>
@@ -48,7 +50,7 @@ export default function Connexion() {
       navigate('/', { replace: true })
     } catch (e) {
       setErreur(
-        e instanceof ErreurConnexion ? e.message : 'La connexion a échoué.'
+        e instanceof ErreurConnexion ? e.message : t`La connexion a échoué.`
       )
       setCode('')
     } finally {
@@ -83,7 +85,7 @@ export default function Connexion() {
       setEtape('code')
     } catch (e) {
       setErreur(
-        e instanceof ErreurConnexion ? e.message : 'L’envoi du code a échoué.'
+        e instanceof ErreurConnexion ? e.message : t`L’envoi du code a échoué.`
       )
     } finally {
       setEnvoiEnCours(false)
@@ -113,11 +115,13 @@ export default function Connexion() {
             margin: '0 0 6px',
           }}
         >
-          Espace organisateur
+          <Trans>Espace organisateur</Trans>
         </h1>
         <Typography.Paragraph style={{ color: 'var(--rt-encre-70)' }}>
-          Transmettez le savoir-faire de votre organisation d’une période à
-          l’autre.
+          <Trans>
+            Transmettez le savoir-faire de votre organisation d’une période à
+            l’autre.
+          </Trans>
         </Typography.Paragraph>
 
         {erreur && (
@@ -136,14 +140,14 @@ export default function Connexion() {
             requiredMark={false}
           >
             <Form.Item
-              label="Adresse mail"
+              label={t`Adresse mail`}
               name="adresse"
               initialValue={adresse}
               rules={[
                 {
                   required: true,
                   type: 'email',
-                  message: 'Saisissez une adresse mail valide.',
+                  message: t`Saisissez une adresse mail valide.`,
                 },
               ]}
             >
@@ -162,14 +166,16 @@ export default function Connexion() {
               block
               loading={envoiEnCours}
             >
-              Recevoir un code
+              <Trans>Recevoir un code</Trans>
             </Button>
             <Typography.Paragraph
               type="secondary"
               style={{ marginTop: 16, marginBottom: 0 }}
             >
-              L’espace ne demande pas de mot de passe. Vous recevez un code par
-              mail à chaque connexion.
+              <Trans>
+                L’espace ne demande pas de mot de passe. Vous recevez un code
+                par mail à chaque connexion.
+              </Trans>
             </Typography.Paragraph>
           </Form>
         ) : (
@@ -182,9 +188,9 @@ export default function Connexion() {
               type="info"
               showIcon
               style={{ marginBottom: 16 }}
-              title="Si cette adresse a un accès, un code vient de lui être envoyé. Il est valable 10 minutes."
+              title={t`Si cette adresse a un accès, un code vient de lui être envoyé. Il est valable 10 minutes.`}
             />
-            <Form.Item label="Adresse mail">
+            <Form.Item label={t`Adresse mail`}>
               <Input
                 size="large"
                 type="email"
@@ -193,7 +199,7 @@ export default function Connexion() {
                 onChange={e => setAdresse(e.target.value)}
               />
             </Form.Item>
-            <Form.Item label="Code à 6 chiffres">
+            <Form.Item label={t`Code à 6 chiffres`}>
               <Input.OTP
                 size="large"
                 length={6}
@@ -209,8 +215,10 @@ export default function Connexion() {
                 revenir dans l'application. */}
             {estInstallee() && appareil() === 'iphone' && (
               <Typography.Paragraph type="secondary">
-                Saisissez ici le code du mail. Le lien du mail ouvre votre
-                navigateur, pas l’application installée.
+                <Trans>
+                  Saisissez ici le code du mail. Le lien du mail ouvre votre
+                  navigateur, pas l’application installée.
+                </Trans>
               </Typography.Paragraph>
             )}
             <Button
@@ -221,7 +229,7 @@ export default function Connexion() {
               loading={envoiEnCours}
               disabled={code.length !== 6 || adresse.trim() === ''}
             >
-              Se connecter
+              <Trans>Se connecter</Trans>
             </Button>
             <Button
               type="link"
@@ -235,7 +243,7 @@ export default function Connexion() {
                 setCode('')
               }}
             >
-              Changer d’adresse ou demander un nouveau code
+              <Trans>Changer d’adresse ou demander un nouveau code</Trans>
             </Button>
           </Form>
         )}

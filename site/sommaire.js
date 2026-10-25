@@ -59,14 +59,21 @@
     .filter(Boolean)
   if (parties.length === 0) return
 
+  // Les libellés suivent la langue de la page : le site existe aussi en anglais.
+  const anglais = document.documentElement.lang === 'en'
+  const SOMMAIRE = anglais ? 'Contents' : 'Sommaire'
+
   const nav = document.createElement('nav')
   nav.className = 'sommaire-lateral'
-  nav.setAttribute('aria-label', 'Sommaire de la page')
+  nav.setAttribute(
+    'aria-label',
+    anglais ? 'Contents of the page' : 'Sommaire de la page'
+  )
 
   const bouton = document.createElement('button')
   bouton.type = 'button'
   bouton.className = 'sommaire-lateral-bouton'
-  bouton.textContent = 'Sommaire'
+  bouton.textContent = SOMMAIRE
   bouton.setAttribute('aria-expanded', 'false')
 
   const corps = document.createElement('div')
@@ -76,7 +83,7 @@
 
   const etiquette = document.createElement('span')
   etiquette.className = 'etiquette'
-  etiquette.textContent = 'Sommaire'
+  etiquette.textContent = SOMMAIRE
   const liste = document.createElement('ol')
   corps.append(etiquette, liste)
 

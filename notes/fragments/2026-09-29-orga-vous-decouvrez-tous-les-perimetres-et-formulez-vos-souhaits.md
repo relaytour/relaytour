@@ -15,6 +15,15 @@ fr:
     les autres. Le bouton « Je suis intéressé·e »
     note un souhait, qu'un admin retrouve dans « Postes à pourvoir ». Une
     activité ouverte aux souhaits s'y découvre par tous les membres.
+en:
+  titre: >-
+    You discover all areas and state your interests
+  texte: >-
+    The “All areas” page opens the “Areas” section of the menu. It presents each
+    area with its description and the number of people still wanted, then groups
+    your areas, your interests, and the others. The “I’m interested” button
+    records an interest, which an admin finds in “Open seats”. All members can
+    discover an activity that is open to interests there.
 ---
 
 - `TousLesPerimetres.tsx` (route `/<activité>/perimetres`), entrée de menu en

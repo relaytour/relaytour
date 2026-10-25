@@ -14,6 +14,14 @@ fr:
     Celui de l'admin de l'organisation décrit les écrans Annuaire et Admins.
     Chaque capture d'écran montre le compte du rôle que son mode d'emploi
     décrit.
+en:
+  titre: >-
+    The user guides describe messages, ranking, and tables
+  texte: >-
+    The activity admin user guide describes the Ranking screen, messages to the
+    team, the account window, and the table settings. The organization admin
+    guide describes the Directory and Admins screens. Each screenshot shows the
+    account of the role that its guide describes.
 ---
 
 - `site/modes-d-emploi/`, `site/captures/` (28 captures reprises), `outils/captures.mjs`

@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react/macro'
 import { Result } from 'antd'
 import { Outlet } from 'react-router'
 
@@ -14,6 +15,7 @@ export default function ReserveAdmin({
 }: {
   organisation?: boolean
 }) {
+  const { t } = useLingui()
   const { moi } = useSession()
   const { gere } = useActivite()
   const autorise = organisation ? moi.estAdmin : gere
@@ -24,8 +26,8 @@ export default function ReserveAdmin({
       status="403"
       title={
         organisation
-          ? 'Cette page est réservée aux admins de l’organisation.'
-          : 'Cette page est réservée aux admins de l’activité.'
+          ? t`Cette page est réservée aux admins de l’organisation.`
+          : t`Cette page est réservée aux admins de l’activité.`
       }
     />
   )

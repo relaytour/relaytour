@@ -1,4 +1,5 @@
 import { TeamOutlined } from '@ant-design/icons'
+import { Trans } from '@lingui/react/macro'
 import { Popover } from 'antd'
 
 import { useActivite } from '../lib/activite'
@@ -54,7 +55,9 @@ export default function ConnexionsFiche({
     <>
       {liste.length + groupes.length > 0 && (
         <>
-          <dt>Concerne aussi</dt>
+          <dt>
+            <Trans>Concerne aussi</Trans>
+          </dt>
           <dd className="rt-connexions">
             {liste.map(c => etiquette(c.perimetre))}
             {groupes.map(cle => {
@@ -71,7 +74,7 @@ export default function ConnexionsFiche({
                   content={
                     membres.length === 0 ? (
                       <span className="rt-texte-secondaire">
-                        Aucun autre périmètre dans ce groupe.
+                        <Trans>Aucun autre périmètre dans ce groupe.</Trans>
                       </span>
                     ) : (
                       <span className="rt-mention-membres">
@@ -94,7 +97,9 @@ export default function ConnexionsFiche({
       )}
       {parTache.length > 0 && (
         <>
-          <dt>Par une tâche partagée</dt>
+          <dt>
+            <Trans>Par une tâche partagée</Trans>
+          </dt>
           <dd className="rt-connexions">
             {parTache.map(c => etiquette(c.perimetre))}
           </dd>
@@ -102,7 +107,9 @@ export default function ConnexionsFiche({
       )}
       {masquees.length > 0 && (
         <>
-          <dt>Masquée par</dt>
+          <dt>
+            <Trans>Masquée par</Trans>
+          </dt>
           <dd className="rt-connexions">
             {masquees.map(c => etiquette(c.perimetre))}
           </dd>

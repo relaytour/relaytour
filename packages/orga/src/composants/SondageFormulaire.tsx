@@ -1,5 +1,6 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Form, Input, Modal, Radio, Select } from 'antd'
 import { useEffect } from 'react'
 
@@ -106,6 +107,7 @@ export default function SondageFormulaire({
   sondage: SondageSaisi | NouveauSondage | null
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const client = useApolloClient()
   const [form] = Form.useForm<Valeurs>()
@@ -168,7 +170,7 @@ export default function SondageFormulaire({
             versionAttendue: existant.version,
           },
         })
-        message.success('Sondage enregistré.')
+        message.success(t`Sondage enregistré.`)
       } else {
         await creer({
           variables: {
@@ -182,7 +184,7 @@ export default function SondageFormulaire({
           },
         })
         message.success(
-          'Sondage ouvert. Les personnes visées le trouvent dans leur agenda.'
+          t`Sondage ouvert. Les personnes visées le trouvent dans leur agenda.`
         )
       }
       onFermer()
@@ -193,9 +195,8 @@ export default function SondageFormulaire({
           relire.refetchQueries,
           texte => message.error(texte),
           {
-            relu: 'Une autre personne a modifié ce sondage depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.',
-            echec:
-              'Le sondage n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant.',
+            relu: t`Une autre personne a modifié ce sondage depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.`,
+            echec: t`Le sondage n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant.`,
           },
           onFermer
         )
@@ -208,9 +209,9 @@ export default function SondageFormulaire({
   return (
     <Modal
       open={sondage !== null}
-      title={existant ? 'Modifier le sondage' : 'Nouveau sondage de dates'}
-      okText="Enregistrer"
-      cancelText="Annuler"
+      title={existant ? t`Modifier le sondage` : t`Nouveau sondage de dates`}
+      okText={t`Enregistrer`}
+      cancelText={t`Annuler`}
       confirmLoading={creation.loading || modification.loading}
       onOk={() => form.submit()}
       onCancel={onFermer}
@@ -223,7 +224,7 @@ export default function SondageFormulaire({
         onFinish={v => void enregistrer(v)}
         requiredMark={false}
       >
-        <Form.Item label="Agenda" name="agenda">
+        <Form.Item label={t`Agenda`} name="agenda">
           <Select
             disabled={existant !== null}
             options={agendas.map(a => ({
@@ -239,20 +240,20 @@ export default function SondageFormulaire({
           />
         </Form.Item>
         <Form.Item
-          label="Titre"
+          label={t`Titre`}
           name="titre"
           rules={[
             {
               required: true,
               whitespace: true,
-              message: 'Saisissez un titre.',
+              message: t`Saisissez un titre.`,
             },
-            { max: 200, message: 'Le titre dépasse 200 caractères.' },
+            { max: 200, message: t`Le titre dépasse 200 caractères.` },
           ]}
         >
-          <Input placeholder="Date du point d’étape" />
+          <Input placeholder={t`Date du point d’étape`} />
         </Form.Item>
-        <Form.Item label="Description (facultative)" name="description">
+        <Form.Item label={t`Description (facultative)`} name="description">
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} />
         </Form.Item>
         <Form.List
@@ -262,17 +263,21 @@ export default function SondageFormulaire({
               validator: (_regle, liste?: unknown[]) =>
                 liste && liste.length > 0
                   ? Promise.resolve()
-                  : Promise.reject(new Error('Proposez au moins un créneau.')),
+                  : Promise.reject(new Error(t`Proposez au moins un créneau.`)),
             },
           ]}
         >
           {(champs, { add, remove }, { errors }) => (
             <fieldset className="rt-sondage-creneaux">
-              <legend>Créneaux proposés</legend>
+              <legend>
+                <Trans>Créneaux proposés</Trans>
+              </legend>
               <p className="rt-note">
-                Un créneau est un jour, avec un horaire facultatif.
+                <Trans>
+                  Un créneau est un jour, avec un horaire facultatif.
+                </Trans>
                 {existant &&
-                  ' Retirer un créneau efface les réponses qu’il a reçues.'}
+                  ` ${t`Retirer un créneau efface les réponses qu’il a reçues.`}`}
               </p>
               {champs.map(champ => (
                 <div key={champ.key} className="rt-sondage-creneau">
@@ -281,20 +286,40 @@ export default function SondageFormulaire({
                   </Form.Item>
                   <Form.Item
                     name={[champ.name, 'jour']}
-                    rules={[{ required: true, message: 'Choisissez un jour.' }]}
+                    rules={[
+                      { required: true, message: t`Choisissez un jour.` },
+                    ]}
                   >
-                    <Input type="date" aria-label="Jour" />
+                    <Input
+                      type="date"
+                      aria-label={t({
+                        message: 'Jour',
+                        comment: 'Libellé : jour d’un créneau',
+                      })}
+                    />
                   </Form.Item>
                   <Form.Item name={[champ.name, 'heureDebut']}>
-                    <Input type="time" aria-label="Début" />
+                    <Input
+                      type="time"
+                      aria-label={t({
+                        message: 'Début',
+                        comment: 'Libellé : heure de début d’un créneau',
+                      })}
+                    />
                   </Form.Item>
                   <Form.Item name={[champ.name, 'heureFin']}>
-                    <Input type="time" aria-label="Fin" />
+                    <Input
+                      type="time"
+                      aria-label={t({
+                        message: 'Fin',
+                        comment: 'Libellé : heure de fin d’un créneau',
+                      })}
+                    />
                   </Form.Item>
                   <Button
                     type="text"
                     icon={<DeleteOutlined />}
-                    aria-label="Retirer ce créneau"
+                    aria-label={t`Retirer ce créneau`}
                     onClick={() => remove(champ.name)}
                   />
                 </div>
@@ -305,7 +330,7 @@ export default function SondageFormulaire({
                 disabled={champs.length >= CRENEAUX_MAX}
                 onClick={() => add({ jour: '', heureDebut: '', heureFin: '' })}
               >
-                Ajouter un créneau
+                <Trans>Ajouter un créneau</Trans>
               </Button>
             </fieldset>
           )}
@@ -313,7 +338,7 @@ export default function SondageFormulaire({
         {!existant && (
           <>
             <Form.Item
-              label="Personnes visées"
+              label={t`Personnes visées`}
               name="cible"
               style={{ marginTop: 16 }}
             >
@@ -321,9 +346,9 @@ export default function SondageFormulaire({
                 options={[
                   ...(perimetreId === null
                     ? []
-                    : [{ value: 'PERIMETRE', label: 'Tout le périmètre' }]),
-                  { value: 'EQUIPE', label: 'Toute l’équipe' },
-                  { value: 'CHOIX', label: 'Des personnes choisies' },
+                    : [{ value: 'PERIMETRE', label: t`Tout le périmètre` }]),
+                  { value: 'EQUIPE', label: t`Toute l’équipe` },
+                  { value: 'CHOIX', label: t`Des personnes choisies` },
                 ]}
               />
             </Form.Item>
@@ -335,17 +360,19 @@ export default function SondageFormulaire({
                     required: true,
                     type: 'array',
                     min: 1,
-                    message: 'Choisissez au moins une personne.',
+                    message: t`Choisissez au moins une personne.`,
                   },
                 ]}
               >
                 <Select
                   mode="multiple"
                   optionFilterProp="label"
-                  placeholder="Choisir des personnes de l’équipe"
+                  placeholder={t`Choisir des personnes de l’équipe`}
                   options={(convocables?.personnesConvocables ?? []).map(p => ({
                     value: p.personneId,
-                    label: p.duPerimetre ? `${p.nom} · du périmètre` : p.nom,
+                    label: p.duPerimetre
+                      ? `${p.nom} · ${t`du périmètre`}`
+                      : p.nom,
                   }))}
                 />
               </Form.Item>

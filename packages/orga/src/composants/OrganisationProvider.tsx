@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client/react'
-import { useLingui } from '@lingui/react'
+import { useLingui } from '@lingui/react/macro'
 import { ConfigProvider, Spin } from 'antd'
-import { useEffect, useMemo, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, type ReactNode } from 'react'
 
 import {
   ContexteOrganisation,
@@ -30,7 +30,7 @@ import { appliquerTheme, construireTheme } from '../lib/theme'
 export function OrganisationProvider({ children }: { children: ReactNode }) {
   // La locale d'antd suit la langue active : `useLingui` rend à nouveau le
   // composant quand elle change.
-  const { i18n } = useLingui()
+  const { i18n, t } = useLingui()
   const locale = localeAntd(estUneLangue(i18n.locale) ? i18n.locale : undefined)
   const { data, loading } = useQuery(ORGANISATION, {
     variables: { slug: organisationChoisie() },
@@ -69,7 +69,8 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     appliquerTheme(organisation.theme)
-    document.title = `${organisation.nomCourt} · Espace organisateur`
+    const nomCourt = organisation.nomCourt
+    document.title = t`${nomCourt} · Espace organisateur`
     if (organisation.faviconUrl !== null) {
       for (const lien of document.querySelectorAll<HTMLLinkElement>(
         'link[rel="icon"]'
@@ -78,7 +79,7 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
       }
     }
     declarerApplication(organisation)
-  }, [organisation])
+  }, [organisation, t])
 
   const theme = useMemo(
     () => construireTheme(organisation.theme),
@@ -91,7 +92,10 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
         {(loading && !data) || (session.loading && !session.data) ? (
           <Spin fullscreen />
         ) : (
-          children
+          // Un changement de langue remonte les écrans : un texte traduit hors
+          // d'un composant qui lit la langue (`t` d'un module, libellé calculé
+          // une fois) se relit ainsi dans la nouvelle langue.
+          <Fragment key={i18n.locale}>{children}</Fragment>
         )}
       </ContexteOrganisation.Provider>
     </ConfigProvider>

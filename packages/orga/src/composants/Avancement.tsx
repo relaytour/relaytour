@@ -1,3 +1,6 @@
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
+
 import { PastilleEtat } from './Etat'
 
 export interface AvancementDonnees {
@@ -11,6 +14,10 @@ export interface AvancementDonnees {
 }
 
 function Signalements({ avancement }: { avancement: AvancementDonnees }) {
+  const { t } = useLingui()
+  const nbTaches = avancement.total
+  const nbEnRetard = avancement.enRetard
+  const nbSansPersonne = avancement.sansPersonne
   const toutesAbandonnees =
     avancement.total > 0 && avancement.abandonnees === avancement.total
   if (
@@ -23,19 +30,20 @@ function Signalements({ avancement }: { avancement: AvancementDonnees }) {
     <div className="rt-meta">
       {toutesAbandonnees && (
         <PastilleEtat variante="abandonnee">
-          {avancement.total > 1
-            ? `Les ${avancement.total} tâches sont abandonnées`
-            : 'La tâche est abandonnée'}
+          {t`${plural(nbTaches, {
+            one: 'La tâche est abandonnée',
+            other: 'Les # tâches sont abandonnées',
+          })}`}
         </PastilleEtat>
       )}
       {avancement.enRetard > 0 && (
         <PastilleEtat variante="retard">
-          {avancement.enRetard} en retard
+          <Trans>{nbEnRetard} en retard</Trans>
         </PastilleEtat>
       )}
       {avancement.sansPersonne > 0 && (
         <PastilleEtat variante="alerte">
-          {avancement.sansPersonne} sans personne
+          <Trans>{nbSansPersonne} sans personne</Trans>
         </PastilleEtat>
       )}
     </div>
@@ -60,6 +68,7 @@ export default function Avancement({
   /** Couleur de la barre compacte, par exemple celle du périmètre. */
   couleur?: string
 }) {
+  const { t } = useLingui()
   const utiles = avancement.total - avancement.abandonnees
   const pourcentage =
     utiles === 0 ? 0 : Math.round((avancement.faites / utiles) * 100)
@@ -69,7 +78,7 @@ export default function Avancement({
   if (avancement.total === 0) {
     return (
       <div className="rt-meta">
-        <PastilleEtat>Aucune tâche</PastilleEtat>
+        <PastilleEtat>{t`Aucune tâche`}</PastilleEtat>
       </div>
     )
   }
@@ -86,7 +95,7 @@ export default function Avancement({
           }}
         >
           <span style={{ color: 'var(--rt-encre-70)' }}>
-            {pourcentage} % des tâches faites
+            <Trans>{pourcentage} % des tâches faites</Trans>
           </span>
           <span className="rt-compte">
             {avancement.faites} / {utiles}
@@ -98,7 +107,7 @@ export default function Avancement({
           aria-valuenow={pourcentage}
           aria-valuemin={0}
           aria-valuemax={100}
-          aria-label="Tâches faites"
+          aria-label={t`Tâches faites`}
         >
           <span style={{ width: `${pourcentage}%`, background: couleur }} />
         </div>
@@ -107,13 +116,19 @@ export default function Avancement({
     )
   }
 
+  const nbFaites = avancement.faites
+  const nbEnCours = avancement.enCours
+  const nbAFaire = avancement.aFaire
+  const nbAbandonnees = avancement.abandonnees
   const detaille =
     avancement.aFaire !== undefined && avancement.enCours !== undefined
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
         <span className="rt-grand-nombre">{pourcentage} %</span>
-        <span className="rt-texte-secondaire">des tâches faites</span>
+        <span className="rt-texte-secondaire">
+          <Trans>des tâches faites</Trans>
+        </span>
       </div>
       <div
         className="rt-barre-empilee"
@@ -121,7 +136,7 @@ export default function Avancement({
         aria-valuenow={pourcentage}
         aria-valuemin={0}
         aria-valuemax={100}
-        aria-label="Tâches faites"
+        aria-label={t`Tâches faites`}
       >
         <span
           style={{
@@ -153,29 +168,31 @@ export default function Avancement({
               className="rt-point"
               style={{ background: 'var(--rt-succes)' }}
             />
-            {avancement.faites} {avancement.faites > 1 ? 'faites' : 'faite'}
+            {t`${plural(nbFaites, { one: '# faite', other: '# faites' })}`}
           </li>
           <li>
             <span
               className="rt-point"
               style={{ background: 'var(--rt-primaire)' }}
             />
-            {avancement.enCours} en cours
+            <Trans>{nbEnCours} en cours</Trans>
           </li>
           <li>
             <span
               className="rt-point"
               style={{ background: 'var(--rt-encre-40)' }}
             />
-            {avancement.aFaire} à faire
+            <Trans>{nbAFaire} à faire</Trans>
           </li>
           <li style={{ color: 'var(--rt-encre-55)' }}>
             <span
               className="rt-point"
               style={{ background: 'var(--rt-encre-14)' }}
             />
-            {avancement.abandonnees}{' '}
-            {avancement.abandonnees > 1 ? 'abandonnées' : 'abandonnée'}
+            {t`${plural(nbAbandonnees, {
+              one: '# abandonnée',
+              other: '# abandonnées',
+            })}`}
           </li>
         </ul>
       )}

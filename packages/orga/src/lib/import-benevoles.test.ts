@@ -45,6 +45,10 @@ describe('horaires et dates', () => {
       heureDebut: '09:00',
       heureFin: '12:00',
     })
+    expect(lireHoraire('Bar service 18:00 to 19:00')).toEqual({
+      heureDebut: '18:00',
+      heureFin: '19:00',
+    })
     expect(lireHoraire('Accueil')).toBeNull()
     expect(posteDe('Service au bar - 18h - 19h')).toBe('Service au bar')
   })
@@ -156,6 +160,55 @@ describe('imitation d’un export de billetterie', () => {
       .filter(c => c.sensible)
       .map(c => c.entete)
     expect(sensibles).toEqual(['Genre', 'Montant'])
+  })
+
+  it('reconnaît les en-têtes anglais, colonnes sensibles comprises', async () => {
+    const tableau = await lireCsv(essai('ticketing.csv'))
+    expect(champsDe(tableau)).toMatchObject({
+      'Ticket number': 'REF_EXTERNE',
+      'Participant last name': 'NOM',
+      'Participant first name': 'PRENOM',
+      Email: 'COURRIEL',
+      Phone: 'TELEPHONE',
+      Gender: 'IGNORER',
+      Amount: 'IGNORER',
+      'Order date': 'DATE_ACCORD',
+      Services: 'VALEURS',
+      'I add details in writing': 'PRECISIONS',
+    })
+    const sensibles = detecterColonnes(tableau)
+      .filter(c => c.sensible)
+      .map(c => c.entete)
+    expect(sensibles).toEqual(['Gender', 'Amount'])
+  })
+
+  it('ne prend pas une adresse, un régime ou un statut de commande pour des précisions', () => {
+    expect(
+      champsDe({
+        entetes: [
+          'Billing details',
+          'Dietary notes',
+          'Order status',
+          'Order number',
+          'Additional notes',
+        ],
+        lignes: [
+          ['1 High St, Leeds', 'gluten free', 'completed', '4521', 'Mornings'],
+        ],
+      })
+    ).toMatchObject({
+      'Billing details': 'IGNORER',
+      'Dietary notes': 'IGNORER',
+      'Order status': 'IGNORER',
+      'Order number': 'REGROUPEMENT',
+      'Additional notes': 'PRECISIONS',
+    })
+    expect(
+      champsDe({
+        entetes: ['Détails de la commande'],
+        lignes: [['2 billets']],
+      })
+    ).toEqual({ 'Détails de la commande': 'REGROUPEMENT' })
   })
 
   it('écarte le lot de billets, lit « 0 » comme choisi et associe les postes aux séquences', async () => {

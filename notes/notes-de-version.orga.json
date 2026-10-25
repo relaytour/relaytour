@@ -1,9 +1,50 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "orga",
   "version": "0.21.0",
   "versions": [
+    {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-25-orga-l-import-d-une-liste-de-benevoles-reconnait-les-colonnes-en-",
+          "date": "2026-10-25",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L’import d’une liste de bénévoles reconnaît les colonnes en anglais",
+            "texte": "L’assistant d’import associe aussi les colonnes d’un fichier en anglais, comme le nom de famille, les disponibilités, les postes ou la date d’inscription. Il écarte aussi les colonnes sensibles en anglais, comme le genre, la santé ou le montant payé. Une séquence se reconnaît aussi sous la forme « 18:00 to 19:00 ».",
+            "migration": null
+          },
+          "en": {
+            "titre": "The volunteer list import recognizes English column headers",
+            "texte": "The import wizard also maps the columns of a file in English, such as the surname, availability, positions, or registration date. It also sets aside sensitive columns in English, such as gender, health, or the amount paid. A slot is also recognized in the form “18:00 to 19:00”.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-25-orga-l-espace-organisateur-existe-en-anglais",
+          "date": "2026-10-25",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L’espace organisateur existe en anglais",
+            "texte": "Vous choisissez votre langue dans vos préférences : français, anglais ou la langue de votre organisation. L’espace organisateur, vos mails et vos notifications s’affichent dans cette langue. Le contenu écrit par votre organisation garde la sienne. Les admins de l’organisation règlent sa langue par défaut dans l’écran « Organisation ».",
+            "migration": null
+          },
+          "en": {
+            "titre": "The organizer workspace is available in English",
+            "texte": "You choose your language in your preferences: French, English, or your organization’s language. The organizer workspace, your emails, and your notifications appear in that language. Content written by your organization keeps its own language. Organization admins set the default language in the “Organization” screen.",
+            "migration": null
+          }
+        }
+      ]
+    },
     {
       "version": "0.21.0",
       "notes": [
@@ -18,6 +59,11 @@
             "titre": "Une personne rejoint l'équipe d'une activité sans périmètre",
             "texte": "Vous invitez une personne dans votre activité sans lui choisir de périmètre. Une demande s'accepte aussi sans périmètre. La personne découvre alors les périmètres dans « Tous les périmètres ». L'écran « Personnes » l'affiche avec le rôle « Sans périmètre ». Vous la retirez de l'équipe par le bouton « Retirer de l'activité ». Le réglage « Ouverte aux souhaits » indique si l'équipe formule elle-même ses souhaits.",
             "migration": null
+          },
+          "en": {
+            "titre": "A person can join an activity’s team without an area",
+            "texte": "You can invite a person to your activity without choosing an area for them. A join request can also be accepted without an area. The person then finds the areas in “All areas”. The “People” screen shows them with the role “No area”. You remove them from the team with the “Remove from the activity” button. The “Open to interests” setting shows whether the team members state their own interests.",
+            "migration": null
           }
         },
         {
@@ -31,7 +77,8 @@
             "titre": "Les erreurs passent en carmin, et un accent de texte rejoint le thème",
             "texte": "Le thème par défaut affiche les erreurs et les retards en carmin. Ils ne se confondent plus avec l'accent terre cuite. L'accent colore désormais des surfaces et des traits, jamais un texte. Un texte qui reprend l'accent s'écrit dans un brun plus sombre, comme « tour » dans le logotype. Une organisation peut déclarer cet accent de texte (`accentTexte`) dans son thème. Sans déclaration, Relaytour le dérive de son accent.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-23-orga-le-texte-d-une-tache-reste-lisible-sur-un-ecran-de-taille",
@@ -43,6 +90,11 @@
           "fr": {
             "titre": "Le texte d'une tâche reste lisible sur un écran de taille moyenne",
             "texte": "Sur une tablette, un petit ordinateur ou la page d'un périmètre avec son panneau latéral, les boutons d'une tâche s'affichent désormais en colonne à droite. Le titre et la description de la tâche disposent ainsi de plus de largeur. Sur un téléphone, les boutons restent alignés sous la tâche.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Task text stays readable on a medium-sized screen",
+            "texte": "On a tablet, a small computer, or an area page with its side panel, the buttons of a task now appear in a column on the right. The title and description of the task get more width. On a phone, the buttons stay in a row below the task.",
             "migration": null
           }
         },
@@ -57,6 +109,11 @@
             "titre": "Le formulaire public indique l'appel à bénévoles ouvert",
             "texte": "Le formulaire « Rejoindre l'équipe d'organisation » précise qu'il sert à rejoindre l'équipe qui prépare l'activité. Quand un appel à bénévoles est ouvert sur toute la période, le formulaire affiche son lien pour les personnes qui viennent aider le jour J. Sans appel ouvert, il indique l'adresse de contact de l'activité.",
             "migration": null
+          },
+          "en": {
+            "titre": "The public form shows the open volunteer call",
+            "texte": "The “Join the organizing team” form states that it is for joining the team that prepares the activity. When a volunteer call is open for the whole period, the form shows its link for people who come to help on event day. Without an open call, it shows the activity’s contact email address.",
+            "migration": null
           }
         },
         {
@@ -69,6 +126,11 @@
           "fr": {
             "titre": "L'annuaire rattache une personne aux équipes des activités",
             "texte": "La fenêtre d'un compte porte le champ « Équipes des activités ». Vous y choisissez les activités dont la personne rejoint l'équipe, sans périmètre. Une personne invitée sans activité ne voit aucune activité : le filtre « Sans activité » la retrouve dans l'annuaire.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The directory adds a person to activity teams",
+            "texte": "The window for an account has an “Activity teams” field. You choose the activities whose team the person joins, without an area. A person invited without an activity sees no activity. The “No activity” filter finds them in the directory.",
             "migration": null
           }
         }
@@ -88,6 +150,11 @@
             "titre": "Une liste de bénévoles tenue ailleurs s'importe depuis un fichier",
             "texte": "L'écran « Bénévoles » importe une liste tenue hors de Relaytour : un export de billetterie, un formulaire ou un tableur, en CSV ou en XLSX. Votre navigateur lit le fichier, et seules les colonnes associées partent vers le serveur. Vous vérifiez les colonnes proposées, associez les postes du fichier aux séquences du programme, puis relisez un aperçu avant d'importer. Un admin importe pour tout le programme, une référente ou un référent pour son périmètre. Aucun mail ne part à l'import.",
             "migration": null
+          },
+          "en": {
+            "titre": "A volunteer list kept elsewhere can be imported from a file",
+            "texte": "The “Volunteers” screen imports a list kept outside Relaytour, such as a ticketing export, a form, or a spreadsheet, as CSV or XLSX. Your browser reads the file, and only the mapped columns go to the server. You check the suggested columns, match the file’s roles to the slots in the schedule, and review a preview before importing. An admin imports for the whole schedule, and a coordinator imports for their area. No email is sent during the import.",
+            "migration": null
           }
         },
         {
@@ -100,6 +167,11 @@
           "fr": {
             "titre": "Un dossier lié sert plusieurs périmètres et des groupes",
             "texte": "Dans l'écran « Fournisseur cloud », vous choisissez les lecteurs d'un dossier lié : toute l'activité, ou une liste de périmètres et de groupes. Un groupe, comme les sports ou les pôles, vaut aussi pour les périmètres qui le rejoindront. Avec le bouton « Modifier », vous changez les lecteurs et le nom affiché d'un dossier sans le retirer. Avant l'enregistrement, Relaytour annonce les documents liés que les lecteurs de leur fiche ne liraient plus. Dans la vue « Documents », chaque personne retrouve un dossier sous son groupe ou sous son périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A linked folder can serve several areas and groups",
+            "texte": "In the “Cloud provider” screen, you choose the readers of a linked folder: the whole activity, or a list of areas and groups. A group, such as sports or departments, also covers the areas that join it later. With the “Edit” button, you change the readers and the displayed name of a folder without removing it. Before you save, Relaytour lists the linked documents that readers of their sheet would no longer be able to read. In the “Documents” view, each person finds a folder under their group or their area.",
             "migration": null
           }
         },
@@ -114,6 +186,11 @@
             "titre": "Un admin ouvre un document lié aux lecteurs d'une fiche partagée",
             "texte": "Quand une fiche concerne aussi d'autres périmètres, la personne qui la rédige voit quels documents liés ces périmètres n'ouvriront pas. L'avertissement s'affiche sous la liste « Concerne aussi » de l'éditeur. Dans la fiche, vous lisez le détail par le bouton d'alerte du document. Un admin de l'organisation étend alors le dossier lié aux périmètres et aux groupes de la fiche. Il peut aussi ouvrir ce seul document à toutes les personnes qui lisent la fiche.",
             "migration": null
+          },
+          "en": {
+            "titre": "An admin opens a linked document to the readers of a shared sheet",
+            "texte": "When a sheet also concerns other areas, the person who writes it sees which linked documents those areas cannot open. The warning appears below the “Also concerns” list in the editor. In the sheet, you read the details with the alert button on the document. An organization admin can then extend the linked folder to the areas and groups of the sheet. They can also open that one document to everyone who reads the sheet.",
+            "migration": null
           }
         },
         {
@@ -126,6 +203,11 @@
           "fr": {
             "titre": "Relaytour propose les accès des équipes chez le fournisseur cloud",
             "texte": "Avec la gestion des accès, un admin de l'organisation choisit ce que Relaytour propose pour un dossier lié : un partage du dossier, ou l'entrée dans un groupe du fournisseur qui a déjà un droit sur lui. Quand une équipe change, Relaytour propose d'ajouter les personnes attendues sans accès. Relaytour propose aussi de retirer les accès qu'il a créés pour des personnes parties. Vous appliquez ou écartez chaque proposition d'accès dans l'onglet « Vérification des accès ». Avec un réglage du dossier, Relaytour applique les ajouts sans attendre. Un retrait attend toujours la décision d'un admin, et Relaytour ne retire jamais un accès posé à la main. Relaytour prévient les admins par une notification, une fois par jour au plus.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Relaytour proposes team access at the cloud provider",
+            "texte": "With access management, an organization admin chooses what Relaytour proposes for a linked folder: a share of the folder, or membership in a provider group that already has a right on it. When a team changes, Relaytour proposes adding the expected people who have no access. Relaytour also proposes removing the access it created for people who have left. You apply or dismiss each access proposal in the “Access check” tab. With a folder setting, Relaytour applies additions without waiting. A removal always waits for an admin’s decision, and Relaytour never removes access that was set by hand. Relaytour notifies admins at most once a day.",
             "migration": null
           }
         },
@@ -140,7 +222,8 @@
             "titre": "Nouveau logo de Relaytour : arcs entrelacés et nom en Baloo 2",
             "texte": "Les deux arcs du pictogramme sont entrelacés : chaque extrémité passe au-dessus de l'autre arc. Le favicon, l'icône de l'application installée, la signature de l'espace organisateur et le site utilisent ce dessin. Le nom « Relaytour » s'écrit en Baloo 2 SemiBold, avec « tour » en accent.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-22-orga-les-admins-verifient-les-acces-des-equipes-chez-le-fournisse",
@@ -152,6 +235,11 @@
           "fr": {
             "titre": "Les admins vérifient les accès des équipes chez le fournisseur cloud",
             "texte": "L'écran « Fournisseur cloud » compte deux nouveaux onglets : « Vérification des accès » et « Comptes ». Avec SharePoint, un admin de l'organisation active la vérification par une nouvelle connexion, qu'un admin Microsoft Entra accepte. Pour chaque dossier lié, Relaytour compare alors les personnes attendues aux droits du dossier. Relaytour les range par équipe : qui a accès, qui n'a pas de compte, qui n'a pas d'accès. Relaytour nomme aussi les accès en trop. Chaque dossier lié règle les personnes attendues : tous les membres, ou les contacts principaux seulement. La vérification ne change aucun droit chez le fournisseur.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Admins check team access at the cloud provider",
+            "texte": "The “Cloud provider” screen has two new tabs: “Access check” and “Accounts”. With SharePoint, an organization admin turns on the check with a new connection that a Microsoft Entra admin approves. For each linked folder, Relaytour then compares the expected people with the folder’s rights. Relaytour sorts them by team: who has access, who has no account, and who has no access. Relaytour also lists extra access. Each linked folder sets the expected people: all members, or main contacts only. The check changes no rights at the provider.",
             "migration": null
           }
         },
@@ -166,6 +254,11 @@
             "titre": "Les admins de l'activité fusionnent les fiches bénévoles en double",
             "texte": "L'onglet « Doublons possibles » de l'écran « Bénévoles » rapproche les fiches qui portent la même adresse, le même téléphone ou un nom proche. Vous choisissez le nom, l'adresse et le téléphone gardés. Relaytour réunit ensuite les places, les disponibilités et les candidatures des deux fiches. Une paire écartée ne revient plus.",
             "migration": null
+          },
+          "en": {
+            "titre": "Activity admins merge duplicate volunteer records",
+            "texte": "The “Possible duplicates” tab of the “Volunteers” screen matches records that have the same email address, the same phone number, or a similar name. You choose which name, email address, and phone number to keep. Relaytour then combines the places, availability, and applications of both records. A pair you dismiss does not come back.",
+            "migration": null
           }
         },
         {
@@ -179,6 +272,11 @@
             "titre": "Le menu Fiches devient Ressources",
             "texte": "L'écran « Ressources » réunit les fiches méthode et les documents de l'association. Ses vues « Fiches » et « Documents » ne changent pas. Le bloc « Ressources liées » d'une fiche s'appelle désormais « Documents liés ». Pour les admins de l'organisation, l'écran « Espace de fichiers » devient « Fournisseur cloud ». Les adresses des écrans restent les mêmes.",
             "migration": null
+          },
+          "en": {
+            "titre": "The Sheets menu becomes Resources",
+            "texte": "The “Resources” screen brings together the how-to sheets and the documents of the association. Its “Sheets” and “Documents” views do not change. The “Linked resources” block of a sheet is now called “Linked documents”. For organization admins, the “File space” screen becomes “Cloud provider”. The screen addresses stay the same.",
+            "migration": null
           }
         },
         {
@@ -191,6 +289,11 @@
           "fr": {
             "titre": "La vérification des accès fonctionne avec Google Drive, Dropbox et Nextcloud",
             "texte": "La vérification et la gestion des accès fonctionnent aussi avec Google Drive, Dropbox et Nextcloud. Avec Google Drive et Nextcloud, un admin de l'organisation les active sans reconnexion. Avec Dropbox, l'activation passe par une reconnexion. Google Drive et Dropbox n'ont pas d'annuaire des comptes : Relaytour compare alors l'adresse de chaque personne à celles des droits du dossier, domaine compris. Dans l'onglet « Comptes », vous saisissez l'adresse qu'une personne utilise chez le fournisseur quand elle diffère.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Access check works with Google Drive, Dropbox, and Nextcloud",
+            "texte": "Access check and access management also work with Google Drive, Dropbox, and Nextcloud. With Google Drive and Nextcloud, an organization admin turns them on without reconnecting. With Dropbox, turning them on requires a reconnection. Google Drive and Dropbox have no account directory, so Relaytour compares each person’s email address with those in the folder’s rights, domain included. In the “Accounts” tab, you enter the email address a person uses at the provider when it differs.",
             "migration": null
           }
         }
@@ -210,6 +313,11 @@
             "titre": "Les bénévoles se proposent par l'adresse publique d'un appel",
             "texte": "Une séquence du programme indique les renforts qu'elle recherche et des consignes publiques. Vous ouvrez un appel sur votre périmètre ou sur une séquence, puis vous diffusez son adresse. Les admins de l'activité ouvrent aussi un appel sur toute la période. Les bénévoles y choisissent des séquences et donnent leurs disponibilités. Vous acceptez ou refusez chaque séquence dans l'onglet « Candidatures » de l'écran « Bénévoles ». Aucun mail ne part au dépôt.",
             "migration": null
+          },
+          "en": {
+            "titre": "Volunteers sign up through the public address of a call",
+            "texte": "A slot in the schedule states the helpers it needs and public instructions. You open a call for your area or for a slot, then share its address. Activity admins can also open a call for the whole period. Volunteers choose slots there and give their availability. You accept or decline each slot in the “Applications” tab of the “Volunteers” screen. No email is sent when an application is submitted.",
+            "migration": null
           }
         },
         {
@@ -223,6 +331,11 @@
             "titre": "Les bénévoles confirment leur participation depuis leur espace",
             "texte": "La première place d'une fiche bénévole envoie un seul mail, avec un lien personnel qui reste le même. Ce lien ouvre l'espace de la personne : elle y relit ses places et ses disponibilités, confirme sa participation, ajoute ses places à son agenda ou quitte une place. Vous copiez ce lien depuis la fiche pour l'envoyer par SMS. L'option « Prévenir par mail » d'une fiche coupe ces mails.",
             "migration": null
+          },
+          "en": {
+            "titre": "Volunteers confirm their participation from their own page",
+            "texte": "A volunteer record’s first place sends a single email with a personal link that stays the same. This link opens the person’s page, where they review their places and availability, confirm their participation, add their places to their calendar, or leave a place. You copy this link from the record to send it by text message. The “Notify by email” option on a record turns these emails off.",
+            "migration": null
           }
         },
         {
@@ -235,6 +348,11 @@
           "fr": {
             "titre": "La vue « Répartition » montre les heures qui manquent de bénévoles",
             "texte": "L'écran « Programme » reçoit une vue « Répartition ». Un bandeau découpe le jour en tranches de 30 minutes et signale les heures en manque. Le panneau « Bénévoles à répartir » classe les personnes disponibles pour la séquence choisie. Vous les y placez par un bouton, ou par glisser-déposer sur un ordinateur.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The “Placement” view shows the hours that lack volunteers",
+            "texte": "The “Schedule” screen has a new “Placement” view. A band splits the day into 30-minute blocks and flags the hours that are short. The “Unplaced volunteers” panel ranks the people available for the chosen slot. You place them with a button, or by drag and drop on a computer.",
             "migration": null
           }
         }
@@ -254,6 +372,11 @@
             "titre": "Le titre long d’un panneau ne déborde plus sur son bouton",
             "texte": "Sur un téléphone, le titre long d’un panneau passe sur plusieurs lignes, et son bouton se place dessous. Le libellé du bouton reste entier, par exemple « Lier un dossier » dans l’écran « Espace de fichiers ».",
             "migration": null
+          },
+          "en": {
+            "titre": "A long panel title no longer overflows its button",
+            "texte": "On a phone, a long panel title wraps onto several lines, and its button moves below. The button label stays complete, for example “Link a folder” in the “Cloud provider” screen.",
+            "migration": null
           }
         },
         {
@@ -266,6 +389,11 @@
           "fr": {
             "titre": "Votre agenda s'abonne à Relaytour depuis Outlook, Google ou Apple",
             "texte": "Dans vos préférences, une adresse secrète ajoute à votre agenda personnel l'agenda global de vos activités, les réunions de vos périmètres et vos convocations. Vous la régénérez ou la révoquez à tout moment. Les admins d'une activité publient aussi l'adresse de son agenda global.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Your calendar can subscribe to Relaytour from Outlook, Google, or Apple",
+            "texte": "In your preferences, a secret address adds the global calendar of your activities, your areas’ meetings, and your meeting notices to your personal calendar. You can regenerate or revoke it at any time. Activity admins also publish the address of an activity’s global calendar.",
             "migration": null
           }
         },
@@ -280,6 +408,11 @@
             "titre": "Une fiche renvoie aux documents de l'espace de fichiers",
             "texte": "Les personnes qui rédigent une fiche y lient des dossiers ou des fichiers de l'espace de fichiers, depuis le bloc « Ressources liées ». Vous ouvrez ces documents depuis la fiche, dans la liseuse. Un dossier lié à un autre périmètre ne peut pas être proposé. Dans une fiche connexe, une ressource d'un dossier que vous ne lisez pas porte la mention « Réservée au périmètre d'origine » et ne s'ouvre pas.",
             "migration": null
+          },
+          "en": {
+            "titre": "A sheet links to documents in the file space",
+            "texte": "People who write a sheet link folders or files from the file space to it, using the “Linked documents” block. You open these documents from the sheet, in the viewer. A folder linked to another area cannot be proposed. In a related sheet, a resource from a folder you cannot read shows the label “Restricted to the original area” and does not open.",
+            "migration": null
           }
         },
         {
@@ -292,6 +425,11 @@
           "fr": {
             "titre": "Une fiche d’un autre périmètre peut concerner aussi le vôtre",
             "texte": "Une fiche peut concerner d’autres périmètres que le sien. Sa page indique les périmètres et les groupes qu’elle concerne. Dans un périmètre concerné, le panneau « Fiches connexes » la présente en lecture seule, avec son périmètre d’origine. Les référentes et référents de ce périmètre la masquent quand elle ne leur sert pas, puis l’affichent de nouveau. Dans le texte d’une fiche, une mention @périmètre ou @groupe:clé s’affiche comme une étiquette ; celle d’un groupe liste ses périmètres.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A sheet from another area can also concern yours",
+            "texte": "A sheet can concern areas other than its own. Its page lists the areas and groups it concerns. In a concerned area, the “Related sheets” panel shows it as read-only, with its original area. Coordinators of that area hide it when it is not useful to them, and show it again later. In the text of a sheet, an @area or @group:key mention appears as a label, and a group’s label lists its areas.",
             "migration": null
           }
         },
@@ -306,6 +444,11 @@
             "titre": "Un sondage de dates trouve le créneau de la prochaine réunion",
             "texte": "Dans l'agenda, vous proposez plusieurs créneaux aux personnes de votre périmètre ou de l'équipe. Chacune répond oui, si besoin ou non. Vous retenez ensuite un créneau, et la réunion se crée avec l'horaire et les personnes du sondage.",
             "migration": null
+          },
+          "en": {
+            "titre": "A date poll finds the time for the next meeting",
+            "texte": "In the calendar, you propose several time options to the people in your area or team. Each person answers yes, if needed, or no. You then pick an option, and the meeting is created with the time and the people from the poll.",
+            "migration": null
           }
         },
         {
@@ -318,6 +461,11 @@
           "fr": {
             "titre": "Un agenda réunit les phases, les dates clés et les échéances",
             "texte": "L'écran « Agenda » présente les phases de la période, son premier et son dernier jour, les dates clés et les échéances de vos périmètres. Il s'affiche en liste, ou en mois sur un écran large. Les admins de l'activité y ajoutent les dates clés.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A calendar brings together phases, key dates, and due dates",
+            "texte": "The “Calendar” screen shows the phases of the period, its first and last day, the key dates, and the due dates of your areas. It appears as a list, or as a month on a wide screen. Activity admins add key dates there.",
             "migration": null
           }
         },
@@ -332,6 +480,11 @@
             "titre": "Nextcloud rejoint l'espace de fichiers",
             "texte": "Vous saisissez l'adresse du Nextcloud de l'association, puis vous y accordez l'accès avec votre compte. Nextcloud crée un mot de passe d'application pour Relaytour, que vous pouvez révoquer dans ses paramètres de sécurité. Les documents s'ouvrent dans la liseuse ou se téléchargent.",
             "migration": null
+          },
+          "en": {
+            "titre": "Nextcloud joins the file space",
+            "texte": "You enter the address of the association’s Nextcloud, then grant access with your account. Nextcloud creates an app password for Relaytour, which you can revoke in its security settings. Documents open in the viewer or can be downloaded.",
+            "migration": null
           }
         },
         {
@@ -344,6 +497,11 @@
           "fr": {
             "titre": "Les réunions s'organisent dans l'agenda, avec convocation par mail",
             "texte": "Vous créez une réunion dans l'agenda de votre périmètre, avec un horaire, un lieu, un lien de visio et des tâches liées. Les personnes convoquées reçoivent un mail à ajouter à leur agenda et répondent dans l'espace organisateur. Les admins de l'activité tiennent l'agenda global.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Meetings are organized in the calendar, with a meeting notice by email",
+            "texte": "You create a meeting in your area’s calendar, with a time, a venue, a video link, and linked tasks. The people you invite receive an email they can add to their calendar, and they reply in the organizer workspace. Activity admins manage the global calendar.",
             "migration": null
           }
         },
@@ -358,6 +516,11 @@
             "titre": "Les fiches s'exportent dans l'espace de fichiers",
             "texte": "Dans l'écran « Espace de fichiers », vous choisissez où Relaytour crée le dossier « Fiches Relaytour ». Relaytour y écrit les fiches en Markdown après chaque modification, puis chaque nuit. Les fiches se modifient toujours dans Relaytour : l'écran signale une fiche modifiée dans le dossier, puis réécrite.",
             "migration": null
+          },
+          "en": {
+            "titre": "Sheets are exported to the file space",
+            "texte": "In the “Cloud provider” screen, you choose where Relaytour creates the “Fiches Relaytour” folder. Relaytour writes the sheets there as Markdown after each change, then every night. Sheets are always edited in Relaytour. The screen flags a sheet that was modified in the folder and then overwritten.",
+            "migration": null
           }
         },
         {
@@ -370,6 +533,11 @@
           "fr": {
             "titre": "Les fiches rangées dans l'espace de fichiers s'importent",
             "texte": "Dans l'écran « Espace de fichiers », vous importez les fiches que l'association range déjà dans son cloud : des fichiers Markdown, texte ou Word. Relaytour propose un dossier par périmètre, d'après son nom, et simule l'import avant d'écrire. Une fiche modifiée dans Relaytour n'est jamais remplacée.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Sheets stored in the file space can be imported",
+            "texte": "In the “Cloud provider” screen, you import the sheets the association already stores in its cloud: Markdown, text, or Word files. Relaytour proposes one folder per area, based on its name, and simulates the import before writing anything. A sheet edited in Relaytour is never replaced.",
             "migration": null
           }
         },
@@ -384,6 +552,11 @@
             "titre": "Les fiches bénévoles recensent les personnes qui aident sans compte",
             "texte": "L'écran « Bénévoles » tient la liste des personnes qui aident l'activité sans compte dans l'application, avec leur accord. Vous les placez dans les séquences du programme. Leurs coordonnées restent réservées aux admins de l'activité et aux personnes des périmètres où elles aident.",
             "migration": null
+          },
+          "en": {
+            "titre": "Volunteer records list the people who help without an account",
+            "texte": "The “Volunteers” screen keeps the list of people who help the activity without an account in the application, with their consent. You place them in the slots of the schedule. Their contact details are visible only to activity admins and to people in the areas where they help.",
+            "migration": null
           }
         },
         {
@@ -396,6 +569,11 @@
           "fr": {
             "titre": "Les documents de l'association se lisent dans Relaytour",
             "texte": "Un admin de l'organisation connecte l'espace de fichiers de l'association (SharePoint et OneDrive), puis lie ses dossiers aux périmètres. Vous lisez ces documents dans l'onglet « Documents » de la page « Fiches », sans compte chez le fournisseur. Relaytour n'en garde aucune copie.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The association’s documents can be read in Relaytour",
+            "texte": "An organization admin connects the association’s file space (SharePoint and OneDrive), then links its folders to areas. You read these documents in the “Documents” tab of the “Sheets” page, without an account at the provider. Relaytour keeps no copy of them.",
             "migration": null
           }
         },
@@ -410,6 +588,11 @@
             "titre": "Le programme du jour J répartit les équipes par lieu et par heure",
             "texte": "L'écran « Programme » présente les séquences du jour J dans une grille par lieu et par heure, ou par lieu sur un téléphone. Chaque séquence nomme ses responsables et ses renforts, membres de l'équipe ou bénévoles. « Mon jour J » liste vos séquences, et la page de votre périmètre montre les siennes.",
             "migration": null
+          },
+          "en": {
+            "titre": "The event-day schedule arranges teams by venue and by time",
+            "texte": "The “Schedule” screen shows the event-day slots in a grid by venue and by time, or by venue on a phone. Each slot names its leads and helpers, who are team members or volunteers. “My day-of schedule” lists your slots, and your area’s page shows its own.",
+            "migration": null
           }
         },
         {
@@ -422,6 +605,11 @@
           "fr": {
             "titre": "Vous choisissez dans l’éditeur les périmètres qu’une fiche concerne aussi",
             "texte": "Sous le texte d’une fiche, vous choisissez dans le champ « Concerne aussi » les périmètres et les groupes où elle se lit sans s’y modifier. Après une arobase, l’éditeur propose les périmètres et les groupes de l’activité. À l’enregistrement, il propose d’ajouter les périmètres que le texte mentionne. Vous confirmez une liste d’au moins quatre périmètres qui dépasse la moitié de l’activité. Le guide Markdown présente les mentions.",
+            "migration": null
+          },
+          "en": {
+            "titre": "You choose in the editor which areas a sheet also concerns",
+            "texte": "Below the text of a sheet, you use the “Also concerns” field to choose the areas and groups where it can be read but not edited. After an @ sign, the editor suggests the activity’s areas and groups. When you save, it offers to add the areas that the text mentions. You confirm a list of at least four areas that is more than half of the activity. The Markdown guide explains mentions.",
             "migration": null
           }
         },
@@ -436,6 +624,11 @@
             "titre": "L’éditeur de fiche s’ouvre en mode visuel, avec une barre de mise en forme et un guide Markdown",
             "texte": "En mode visuel, vous écrivez directement dans la fiche telle qu’elle s’affiche. Le mode Markdown montre le texte source, et votre navigateur garde votre choix. Une barre au-dessus du texte met en gras ou en italique, pose un titre, une liste, une case à cocher, un lien ou un tableau. Le bouton « Aide » ouvre un guide de la syntaxe Markdown des fiches, sans quitter l’éditeur.",
             "migration": null
+          },
+          "en": {
+            "titre": "The sheet editor opens in visual mode, with a formatting bar and a Markdown guide",
+            "texte": "In visual mode, you write directly in the sheet as it will appear. Markdown mode shows the source text, and your browser remembers your choice. A bar above the text applies bold or italic and inserts a heading, a list, a checkbox, a link, or a table. The “Help” button opens a guide to the Markdown syntax for sheets without leaving the editor.",
+            "migration": null
           }
         },
         {
@@ -449,6 +642,11 @@
             "titre": "Google Drive rejoint l'espace de fichiers",
             "texte": "Vous connectez Google Drive avec votre compte, ou par un compte de service dont vous déposez la clé. Avec un compte de service, Relaytour ne lit que les dossiers que l'association partage avec lui. Les documents Google s'ouvrent dans la liseuse et s'importent en fiches.",
             "migration": null
+          },
+          "en": {
+            "titre": "Google Drive joins the file space",
+            "texte": "You connect Google Drive with your account, or with a service account whose key you upload. With a service account, Relaytour reads only the folders the association shares with it. Google documents open in the viewer and can be imported as sheets.",
+            "migration": null
           }
         },
         {
@@ -461,6 +659,11 @@
           "fr": {
             "titre": "Dropbox rejoint l'espace de fichiers",
             "texte": "Vous connectez Dropbox avec votre compte. Avec un compte d'équipe, vous parcourez l'espace de l'équipe, qui contient aussi votre dossier. Les documents Word et PowerPoint s'ouvrent dans la liseuse, convertis en PDF par Dropbox.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Dropbox joins the file space",
+            "texte": "You connect Dropbox with your account. With a team account, you browse the team space, which also contains your own folder. Word and PowerPoint documents open in the viewer, converted to PDF by Dropbox.",
             "migration": null
           }
         }
@@ -480,6 +683,11 @@
             "titre": "Un organigramme présente l'équipe de chaque activité",
             "texte": "La page « Organigramme » affiche le contact de l'activité, ses admins, puis les personnes de chaque périmètre, contact principal en tête. Les admins de l'activité choisissent les adresses affichées. Votre adresse ne s'affiche qu'avec votre accord, donné dans « Préférences ».",
             "migration": null
+          },
+          "en": {
+            "titre": "An org chart shows the team of each activity",
+            "texte": "The “Org chart” page shows the activity’s contact, its admins, then the people of each area, with the main contact first. Activity admins choose which email addresses are displayed. Your email address appears only with your consent, which you give in “Preferences”.",
+            "migration": null
           }
         },
         {
@@ -492,6 +700,11 @@
           "fr": {
             "titre": "Les notifications d'admin ont leur écran",
             "texte": "L'écran « Notifications d'admin », en tête du menu de gestion, réunit les demandes, les invitations acceptées et les nouvelles de votre équipe. Il les range par activité, puis par périmètre, avec un nombre de non lues pour chaque groupe. Vous apprenez ainsi qu'un autre admin a affecté ou nommé une personne, ou qu'une personne a formulé un souhait. Vos préférences règlent ces nouvelles dans une section « Vos rôles d'admin ».",
+            "migration": null
+          },
+          "en": {
+            "titre": "Admin notifications have their own screen",
+            "texte": "The “Admin notifications” screen, at the top of the management menu, brings together requests, accepted invitations, and news about your team. It sorts them by activity, then by area, with an unread count for each group. You learn, for example, that another admin assigned or appointed a person, or that a person stated an interest. Your preferences control these updates in a “Your admin roles” section.",
             "migration": null
           }
         },
@@ -506,6 +719,11 @@
             "titre": "La cloche range les notifications par activité",
             "texte": "La cloche compte les notifications de l'organisation affichée. Son tiroir les range par activité, en groupes repliables qui portent chacun leur nombre de non lues. Chaque notification affiche son périmètre au-dessus de son texte. Un encadré signale les nouvelles de vos autres organisations : chacune s'ouvre dans un nouvel onglet. Les préférences de notification se règlent désormais dans chaque organisation.",
             "migration": null
+          },
+          "en": {
+            "titre": "The bell groups notifications by activity",
+            "texte": "The bell counts the notifications of the organization you are viewing. Its drawer groups them by activity, in collapsible groups that each show an unread count. Each notification shows its area above its text. A box points to news from your other organizations, and each one opens in a new tab. Notification preferences are now set in each organization.",
+            "migration": null
           }
         },
         {
@@ -518,6 +736,11 @@
           "fr": {
             "titre": "Un refus de limite ou de lecture seule affiche son motif",
             "texte": "Quand votre organisation atteint une limite d'activités ou de périodes ouvertes, l'espace organisateur affiche maintenant le motif du refus. Il indique aussi qui contacter : l'hébergeur s'il est renseigné, sinon un admin de votre organisation. Quand votre organisation est en lecture seule, il rappelle que ses données restent consultables et exportables. Il affichait auparavant un message d'échec sans explication.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A refusal due to a limit or read-only mode shows its reason",
+            "texte": "When your organization reaches a limit on activities or open periods, the organizer workspace now shows the reason for the refusal. It also says whom to contact: the host if one is set, otherwise an admin of your organization. When your organization is read-only, it reminds you that the data can still be viewed and exported. Before, it showed a failure message with no explanation.",
             "migration": null
           }
         },
@@ -532,6 +755,11 @@
             "titre": "Chaque personne modifie son nom dans ses préférences",
             "texte": "Le panneau « Votre compte » des préférences porte le bouton « Modifier mon nom ». Ce nom s'affiche dans toutes vos organisations. Un admin de l'organisation corrige encore le nom d'une personne tant qu'elle ne s'est jamais connectée. L'annuaire parle de « personnes archivées » : archiver une personne ferme son accès à votre organisation, et elle garde son compte.",
             "migration": null
+          },
+          "en": {
+            "titre": "Everyone can edit their own name in their preferences",
+            "texte": "The “Your account” panel in the preferences has an “Edit my name” button. This name appears in all your organizations. An organization admin can still correct a person’s name until they have signed in for the first time. The directory refers to “archived people”: archiving a person closes their access to your organization, and they keep their account.",
+            "migration": null
           }
         },
         {
@@ -544,6 +772,11 @@
           "fr": {
             "titre": "Vous acceptez ou refusez l'invitation d'une autre organisation",
             "texte": "Quand une autre organisation vous invite, le menu de votre compte l'annonce, avec une pastille sur vos initiales. Vous y lisez le nom de l'organisation et les périmètres proposés, puis vous acceptez ou refusez. Cette organisation ne lit rien de votre compte et ne vous compte pas dans son équipe avant votre accord. Elle n'est pas informée d'un refus.",
+            "migration": null
+          },
+          "en": {
+            "titre": "You accept or decline an invitation from another organization",
+            "texte": "When another organization invites you, your account menu shows it with a badge on your initials. You read the organization’s name and the proposed areas there, then accept or decline. That organization reads nothing from your account and does not count you in its team before you agree. It is not told when you decline.",
             "migration": null
           }
         },
@@ -558,6 +791,11 @@
             "titre": "Une adresse connue d'une autre organisation reçoit une invitation à accepter",
             "texte": "Quand vous invitez une adresse qui a déjà un compte hors de votre organisation, la personne n'entre plus d'office dans votre équipe. Les écrans « Personnes » et « Équipe » affichent un encadré « Invitations en attente », avec le nom et l'adresse que vous avez saisis et les périmètres proposés. Vous relancez une invitation une fois par heure, ou vous la retirez. La personne apparaît dans l'équipe après son accord. Une invitation expire après 30 jours.",
             "migration": null
+          },
+          "en": {
+            "titre": "An address known to another organization receives an invitation to accept",
+            "texte": "When you invite an email address that already has an account outside your organization, the person no longer joins your team automatically. The “People” and “Team” screens show a “Pending invitations” box, with the name and email address you entered and the proposed areas. You resend an invitation once an hour, or you withdraw it. The person appears in the team after they agree. An invitation expires after 30 days.",
+            "migration": null
           }
         },
         {
@@ -570,6 +808,11 @@
           "fr": {
             "titre": "Un code refusé affiche un seul message",
             "texte": "Quand le code saisi est refusé, l'écran de connexion affiche « Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code. », quel que soit le cas. Le serveur ne distingue plus ces cas, pour ne pas révéler si une adresse a un compte.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A rejected code shows a single message",
+            "texte": "When the code entered is rejected, the sign-in screen shows “The code is incorrect, expired or used up. Check it, or request a new code.” in every case. The server no longer tells these cases apart, so it does not reveal whether an email address has an account.",
             "migration": null
           }
         }
@@ -589,6 +832,11 @@
             "titre": "Chaque tâche porte un fil de commentaires",
             "texte": "Le bouton « Commenter » d'une tâche ouvre son fil. Vous y écrivez un compte rendu, une information ou une question, avec votre nom et la date. Le fil montre aussi l'historique de la tâche : création, modifications, assignations et changements de statut. Une adresse web écrite dans un commentaire devient un lien. Les personnes assignées à la tâche reçoivent une notification, sans mail immédiat. Vous modifiez et supprimez vos propres commentaires.",
             "migration": null
+          },
+          "en": {
+            "titre": "Each task has a comment thread",
+            "texte": "The “Comment” button on a task opens its thread. You write a report, a piece of information, or a question there, with your name and the date. The thread also shows the task’s history: creation, edits, assignments, and status changes. A web address written in a comment becomes a link. The task’s assignees receive a notification, with no immediate email. You edit and delete your own comments.",
+            "migration": null
           }
         },
         {
@@ -601,6 +849,11 @@
           "fr": {
             "titre": "Chaque personne d'un périmètre assigne ses tâches aux autres",
             "texte": "Vous assignez une tâche de votre périmètre à une autre personne de son équipe, depuis le bouton « Assigner » de la tâche. Cette personne reçoit une notification qui porte votre nom. Le message de confirmation propose d'annuler. Retirer une autre personne demande une confirmation. Ce geste était réservé aux admins de l'activité.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Everyone in an area can assign their tasks to others",
+            "texte": "You assign a task of your area to another person on its team, using the task’s “Assign” button. That person receives a notification with your name. The confirmation message offers to undo. Removing another person asks for confirmation. Only activity admins could do this before.",
             "migration": null
           }
         }
@@ -620,6 +873,11 @@
             "titre": "L'historique des messages s'ouvre depuis le menu",
             "texte": "Le menu « Gérer l'activité » porte une entrée « Messages », qui liste les messages préparés pour l'équipe de l'activité. L'onglet « Messages » quitte l'écran « Personnes », et vos anciens favoris mènent au nouvel écran. L'écran « Équipe » y mène aussi, par le lien « Historique des messages ». L'annuaire garde son onglet « Messages » pour les admins de l'organisation. Le menu « Gérer l'activité » range ses écrans du plus fréquent au plus rare : Équipe, Personnes, Messages, Classement, Rédaction, puis les périodes.",
             "migration": null
+          },
+          "en": {
+            "titre": "The message history opens from the menu",
+            "texte": "The “Manage the activity” menu has a “Messages” entry that lists the messages prepared for the activity’s team. The “Messages” tab leaves the “People” screen, and your old bookmarks lead to the new screen. The “Team” screen also leads there, through the “Message history” link. The directory keeps its “Messages” tab for organization admins. The “Manage the activity” menu lists its screens from most to least frequent: Team, People, Messages, Ranking, Sheet editing, then the periods.",
+            "migration": null
           }
         },
         {
@@ -632,6 +890,11 @@
           "fr": {
             "titre": "L'écran Équipe réunit l'équipe et l'avancement",
             "texte": "L'écran « Équipe » a deux vues : « Équipe » et « Avancement ». L'entrée « Avancement » quitte le menu, et vos anciens favoris mènent à cette vue. Les deux vues partagent la période, un filtre par groupe de périmètres, une recherche par nom de périmètre ou de personne, et un tri. Vous gardez ces réglages en changeant de vue. Le nom d'une carte ouvre la page du périmètre, et le bouton « Gérer l'équipe » de cette page vous ramène à sa carte.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The Team screen combines the team and progress",
+            "texte": "The “Team” screen has two views: “Team” and “Progress”. The “Progress” entry leaves the menu, and your old bookmarks lead to this view. Both views share the period, a filter by area group, a search by area or person name, and a sort order. You keep these settings when you switch views. The name on a card opens the area’s page, and the “Manage the team” button on that page brings you back to its card.",
             "migration": null
           }
         }
@@ -651,6 +914,11 @@
             "titre": "La barre haute sort du flou qu'iOS pose en haut de l'application installée",
             "texte": "Depuis iOS 26, l'iPhone floute lui-même le haut d'une application installée. L'application ajoutait son propre flou, et sa barre haute restait prise dedans. Sur ces versions, elle ne pose plus aucun flou. La barre haute, le menu, les fenêtres en plein écran et les messages de confirmation commencent 14 pixels plus bas.",
             "migration": null
+          },
+          "en": {
+            "titre": "The top bar escapes the blur iOS adds at the top of the installed app",
+            "texte": "Since iOS 26, the iPhone blurs the top of an installed app on its own. The app added its own blur, and its top bar stayed caught inside it. On these versions, the app no longer adds any blur. The top bar, the menu, full-screen windows, and confirmation messages start 14 pixels lower.",
+            "migration": null
           }
         }
       ]
@@ -669,6 +937,11 @@
             "titre": "Vous réglez les phases d'une activité",
             "texte": "L'écran « Activités » permet de modifier les phases d'une activité : leur nom, leur ordre et leur dernier jour. Le dernier jour se compte depuis le premier jour de la période, par exemple J-120 pour 120 jours avant. La dernière phase reçoit toutes les tâches qui suivent. Les tâches changent de phase dès l'enregistrement, sans être modifiées. Une activité que vous ne réglez pas garde quatre phases : Lancement, Préparation, Derniers réglages, Déroulement et bilan.",
             "migration": null
+          },
+          "en": {
+            "titre": "You set the phases of an activity",
+            "texte": "The “Activities” screen lets you edit an activity’s phases: their name, their order, and their last day. The last day is counted from the first day of the period, for example D-120 for 120 days before. The last phase receives all the tasks that follow. Tasks move to their phase as soon as you save, without being modified. An activity you do not configure keeps four phases: Launch, Preparation, Final adjustments, and Event and review.",
+            "migration": null
           }
         },
         {
@@ -682,6 +955,11 @@
             "titre": "Une tâche se partage avec d'autres périmètres",
             "texte": "Depuis la page de votre périmètre, vous déclinez une tâche dans d'autres périmètres de l'activité, à sa création ou depuis le menu « Autres actions ». Chaque périmètre choisi reçoit sa propre tâche, que ses référentes et référents acceptent ou refusent. Votre tâche indique où en sont ses déclinaisons, par exemple « 6 faites sur 9 ». Une tâche reçue indique le périmètre qui la demande. Les admins d'activité ajoutent une tâche à un périmètre sans attendre son accord. Le rétroplanning réunit sur une ligne les déclinaisons d'une même tâche qui tombent le même jour.",
             "migration": null
+          },
+          "en": {
+            "titre": "A task can be shared with other areas",
+            "texte": "From your area’s page, you create derived tasks in other areas of the activity, when you create a task or from the “More actions” menu. Each chosen area receives its own task, which its coordinators accept or decline. Your task shows the status of its derived tasks, for example “6 done of 9”. A received task shows the area that requests it. Activity admins add a task to an area without waiting for its approval. The timeline combines derived tasks of the same task that fall on the same day into one row.",
+            "migration": null
           }
         },
         {
@@ -694,6 +972,11 @@
           "fr": {
             "titre": "Les tâches se regroupent par phase ou par fiche",
             "texte": "La page d'un périmètre propose trois lectures de ses tâches : par échéance, par phase ou par fiche méthode. Le rétroplanning en propose deux : par mois, ou par phase puis par périmètre. Une phase est une partie de la période, par exemple « Préparation ». Chaque tâche s'y range par son échéance. Votre navigateur garde le regroupement choisi.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Tasks can be grouped by phase or by sheet",
+            "texte": "An area’s page offers three ways to read its tasks: by due date, by phase, or by how-to sheet. The timeline offers two: by month, or by phase and then by area. A phase is a part of the period, for example “Preparation”. Each task is placed in a phase by its due date. Your browser remembers the grouping you chose.",
             "migration": null
           }
         }
@@ -713,6 +996,11 @@
             "titre": "Le haut de l'application installée garde la couleur du fond",
             "texte": "Dans l'application installée sur un iPhone, une bande claire restait visible sous l'heure, sur le fond coloré d'une organisation. Une fenêtre en plein écran défilait aussi sous l'heure. Le haut de l'écran est maintenant flouté sans teinte, y compris au-dessus des fenêtres, et le texte ne se lit plus à côté des angles de la barre haute.",
             "migration": null
+          },
+          "en": {
+            "titre": "The top of the installed app keeps the background color",
+            "texte": "In the app installed on an iPhone, a light band stayed visible below the time, on an organization’s colored background. A full-screen window also scrolled under the time. The top of the screen is now blurred without a tint, including above windows, and text no longer shows next to the corners of the top bar.",
+            "migration": null
           }
         }
       ]
@@ -730,6 +1018,11 @@
           "fr": {
             "titre": "L'application installée sur un iPhone ne laisse plus rien passer sous la barre d'état",
             "texte": "Dans l'application installée, le texte d'un écran se lisait sous l'heure pendant le défilement. L'en-tête du menu et les messages de confirmation s'affichaient derrière la barre d'état. Le voile du haut de l'écran couvre maintenant toute cette zone, et le menu comme les messages commencent en dessous.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The app installed on an iPhone no longer shows anything under the status bar",
+            "texte": "In the installed app, the text of a screen could be read under the time while scrolling. The menu header and confirmation messages appeared behind the status bar. The overlay at the top of the screen now covers this whole area, and the menu and messages start below it.",
             "migration": null
           }
         }
@@ -749,6 +1042,11 @@
             "titre": "Votre téléphone affiche les notifications de l'espace organisateur",
             "texte": "Les préférences reçoivent le panneau « Notifications sur cet appareil ». Une fois activées, votre téléphone ou votre ordinateur vous prévient quand une tâche vous est assignée, quand une échéance approche ou quand une demande attend votre revue, même application fermée. Sur iPhone, installez d'abord l'application sur l'écran d'accueil. Le panneau n'apparaît que si votre organisation a ouvert ce canal.",
             "migration": null
+          },
+          "en": {
+            "titre": "Your phone shows organizer workspace notifications",
+            "texte": "The preferences have a new “Notifications on this device” panel. Once turned on, your phone or computer alerts you when a task is assigned to you, when a due date approaches, or when a request awaits your review, even with the app closed. On an iPhone, first install the app on the home screen. The panel appears only if your organization has opened this channel.",
+            "migration": null
           }
         },
         {
@@ -761,6 +1059,11 @@
           "fr": {
             "titre": "Une adresse inconnue mène à l'accueil de l'activité",
             "texte": "Une adresse inconnue qui portait déjà le nom d'une activité laissait l'écran vide. L'espace organisateur ouvre maintenant l'accueil de cette activité.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An unknown address leads to the activity’s home page",
+            "texte": "An unknown address that already contained an activity’s name used to leave the screen empty. The organizer workspace now opens that activity’s home page.",
             "migration": null
           }
         },
@@ -775,6 +1078,11 @@
             "titre": "Les tableaux gardent leur en-tête, leur barre de défilement et leurs premières colonnes à l'écran",
             "texte": "Dans un tableau long, l'en-tête reste sous la barre haute et la barre de défilement horizontale reste en bas de l'écran. Les premières colonnes (ouverture, sélection, nom) restent visibles quand vous faites défiler les autres. Sur un petit écran, une punaise dans l'en-tête de la première colonne les fige sur votre choix.",
             "migration": null
+          },
+          "en": {
+            "titre": "Tables keep their header, scroll bar, and first columns on screen",
+            "texte": "In a long table, the header stays below the top bar and the horizontal scroll bar stays at the bottom of the screen. The first columns (expand, select, name) stay visible while you scroll the others. On a small screen, a pin in the header of the first column freezes them to your choice.",
+            "migration": null
           }
         },
         {
@@ -787,6 +1095,11 @@
           "fr": {
             "titre": "Le menu et le volet latéral se replient pour laisser la place au contenu",
             "texte": "Un bouton, à côté du nom de l'organisation, réduit le menu à une colonne d'icônes collée au bord de l'écran. Votre navigateur retient ce choix. Dans les écrans à deux colonnes, la colonne de droite se replie aussi, et elle reste à l'écran pendant que vous faites défiler la page.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The menu and side panel collapse to leave room for content",
+            "texte": "A button next to the organization’s name reduces the menu to a column of icons along the edge of the screen. Your browser remembers this choice. In two-column screens, the right column also collapses, and it stays on screen while you scroll the page.",
             "migration": null
           }
         },
@@ -801,6 +1114,11 @@
             "titre": "Le contenu occupe toute la largeur disponible sur un grand écran",
             "texte": "Le contenu d'un écran s'arrêtait à 1180 pixels de large, alors que la barre haute suivait l'écran. Le contenu et la barre haute partagent maintenant la même largeur. Replié, le volet latéral se colle au bord droit de l'écran.",
             "migration": null
+          },
+          "en": {
+            "titre": "Content uses the full available width on a large screen",
+            "texte": "The content of a screen used to stop at 1180 pixels wide, while the top bar followed the screen. The content and the top bar now share the same width. When collapsed, the side panel sticks to the right edge of the screen.",
+            "migration": null
           }
         },
         {
@@ -813,6 +1131,11 @@
           "fr": {
             "titre": "Les écrans d'administration restent utilisables sur un téléphone",
             "texte": "Sur un téléphone, les fenêtres « Écrire un message », « Notes de version » et « Modifier l'activité » occupent tout l'écran. Un appui affiche les destinataires d'un message et l'explication « Déjà membre » d'une demande. Un tableau défile au doigt sans déplacer la largeur de ses colonnes.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Admin screens stay usable on a phone",
+            "texte": "On a phone, the “Write a message”, “Release notes”, and “Edit the activity” windows fill the whole screen. A tap shows the recipients of a message and the “Already a member” explanation on a request. A table scrolls with your finger without changing its column widths.",
             "migration": null
           }
         },
@@ -827,6 +1150,11 @@
             "titre": "Le menu du compte explique comment installer l'application",
             "texte": "Le menu du compte reçoit l'entrée « Installer l'application ». La fenêtre affiche les étapes de votre appareil : iPhone, Android ou ordinateur. Quand le navigateur le permet, un bouton installe l'application en un appui. Un mode d'emploi public décrit les mêmes étapes.",
             "migration": null
+          },
+          "en": {
+            "titre": "The account menu explains how to install the app",
+            "texte": "The account menu has a new “Install the app” entry. The window shows the steps for your device: iPhone, Android, or computer. When the browser allows it, a button installs the app with one tap. A public user guide describes the same steps.",
+            "migration": null
           }
         },
         {
@@ -839,6 +1167,11 @@
           "fr": {
             "titre": "Le code de connexion se saisit plus vite sur un téléphone",
             "texte": "L'écran de connexion ouvre le clavier numérique, et le téléphone propose le code reçu quand il le reconnaît.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The sign-in code is quicker to enter on a phone",
+            "texte": "The sign-in screen opens the numeric keypad, and the phone suggests the code it received when it recognizes it.",
             "migration": null
           }
         },
@@ -853,6 +1186,11 @@
             "titre": "L'espace organisateur s'installe sur l'écran d'accueil d'un téléphone",
             "texte": "L'espace organisateur s'ajoute à l'écran d'accueil d'un téléphone, sous le nom et l'icône de votre organisation. Il s'ouvre alors sans barre d'adresse. Sans réseau, il affiche un écran « Hors connexion » et reprend au retour du réseau. Un avis annonce une nouvelle version : vous rechargez quand vous le voulez.",
             "migration": null
+          },
+          "en": {
+            "titre": "The organizer workspace can be installed on a phone’s home screen",
+            "texte": "The organizer workspace can be added to a phone’s home screen, under your organization’s name and icon. It then opens without an address bar. Without a network, it shows an “Offline” screen and resumes when the network returns. A notice announces a new version, and you reload when you choose.",
+            "migration": null
           }
         },
         {
@@ -865,6 +1203,11 @@
           "fr": {
             "titre": "L'espace organisateur s'adapte mieux au téléphone",
             "texte": "Sur un téléphone, la recherche se replie en un bouton et occupe toute la barre quand vous l'ouvrez. Les champs ne déclenchent plus de zoom sur iPhone. Les petits boutons offrent une zone d'appui plus large, et les marges suivent les bords de l'écran.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The organizer workspace adapts better to phones",
+            "texte": "On a phone, search collapses into a button and fills the whole bar when you open it. Fields no longer trigger zoom on iPhone. Small buttons have a larger tap area, and margins follow the edges of the screen.",
             "migration": null
           }
         }
@@ -884,6 +1227,11 @@
             "titre": "Les adresses copiées se collent dans Outlook",
             "texte": "Outlook ne découpait pas plusieurs adresses copiées depuis la fenêtre « Écrire un message », parce qu'une virgule les séparait. Les adresses se copient maintenant avec un point-virgule quand vous avez choisi Outlook, et avec une virgule pour les autres messageries. Le choix « Séparateur des adresses », sous les boutons de copie, change ce signe pour un message. Pour la messagerie par défaut de l'appareil, vos préférences fixent le signe proposé.",
             "migration": null
+          },
+          "en": {
+            "titre": "Copied addresses paste correctly into Outlook",
+            "texte": "Outlook did not split several addresses copied from the “Write a message” window, because a comma separated them. Addresses are now copied with a semicolon when you have chosen Outlook, and with a comma for other mail apps. The “Address separator” choice, below the copy buttons, changes this sign for one message. For the device’s default mail app, your preferences set the proposed sign.",
+            "migration": null
           }
         }
       ]
@@ -901,6 +1249,11 @@
           "fr": {
             "titre": "Un admin choisit la messagerie qui ouvre ses messages",
             "texte": "Dans « Préférences », le panneau « Votre messagerie » fixe la messagerie qui s'ouvre quand vous préparez un message : celle de votre appareil, une messagerie en ligne (Gmail, Outlook, Yahoo Mail, Proton Mail) ou l'application Gmail ou Outlook. Le bouton « Essayer » ouvre un message d'essai adressé à vous seul·e. Votre navigateur garde ce choix, et la fenêtre « Écrire un message » permet de le changer pour un message. Le mode d'emploi « Choisir votre messagerie » décrit chaque choix et le réglage de chaque système.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An admin chooses the mail app that opens their messages",
+            "texte": "In “Preferences”, the “Your mail app” panel sets the mail app that opens when you prepare a message: your device’s, an online mail app (Gmail, Outlook, Yahoo Mail, Proton Mail), or the Gmail or Outlook app. The “Try” button opens a test message addressed only to you. Your browser remembers this choice, and the “Write a message” window lets you change it for one message. The user guide “Choose your mail app” describes each choice and the setting for each system.",
             "migration": null
           }
         }
@@ -920,6 +1273,11 @@
             "titre": "Un bouton Support ouvre un mail à votre organisation",
             "texte": "Le menu du compte propose l'entrée « Support » quand votre organisation a déclaré une adresse de support. L'entrée ouvre un mail à cette adresse dans votre messagerie. L'objet du mail indique l'organisation et la version de Relaytour. Sans adresse déclarée, l'entrée ouvre le mail ou la page d'assistance de votre hébergeur, s'il en a réglé une. Elle n'apparaît pas quand aucune des deux n'existe.",
             "migration": null
+          },
+          "en": {
+            "titre": "A Support button opens an email to your organization",
+            "texte": "The account menu offers a “Support” entry when your organization has declared a support address. The entry opens an email to that address in your mail app. The subject of the email states the organization and the Relaytour version. Without a declared address, the entry opens the email or the support page of your host, if it has set one. It does not appear when neither exists.",
+            "migration": null
           }
         },
         {
@@ -932,6 +1290,11 @@
           "fr": {
             "titre": "Un admin écrit à son équipe depuis l'espace organisateur",
             "texte": "Dans « Personnes », vous cochez des personnes, ou vous écrivez à une seule personne. Dans « Équipe », vous écrivez à toute l'équipe ou aux référentes et aux référents d'un périmètre. Vous choisissez un modèle, vous complétez le texte, puis votre propre messagerie s'ouvre avec le message : l'application n'envoie rien. L'onglet « Messages » garde chaque message préparé et l'état que vous déclarez : en cours, envoyé ou annulé.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An admin writes to their team from the organizer workspace",
+            "texte": "In “People”, you select people, or you write to a single person. In “Team”, you write to the whole team or to the coordinators of an area. You choose a template, complete the text, and your own mail app opens with the message. The application sends nothing. The “Messages” tab keeps each prepared message and the status you declare: in progress, sent, or canceled.",
             "migration": null
           }
         },
@@ -946,6 +1309,11 @@
             "titre": "Un admin affecte une personne depuis la fenêtre de son compte",
             "texte": "La fenêtre d'un compte, sur l'écran Personnes, propose désormais les périmètres affectés en plus des périmètres souhaités, pour chaque activité que vous administrez. Un texte rappelle la différence : une affectation rend la personne référent·e du périmètre, un souhait note seulement un intérêt. L'écran Rédaction liste les admins à part, sans les proposer au choix : leur rôle leur donne déjà la rédaction des fiches.",
             "migration": null
+          },
+          "en": {
+            "titre": "An admin appoints a person from their account window",
+            "texte": "The account window on the People screen now offers appointed areas as well as areas of interest, for each activity you administer. A text explains the difference: an appointment makes the person a coordinator of the area, while an interest only records their wish. The Sheet editing screen lists admins separately, without offering them as a choice, because their role already gives them sheet editing.",
+            "migration": null
           }
         },
         {
@@ -958,6 +1326,11 @@
           "fr": {
             "titre": "Les tableaux se trient, se filtrent et leurs colonnes se redimensionnent",
             "texte": "Vous triez un tableau par un clic sur l'en-tête d'une colonne, et vous le filtrez par l'icône de cet en-tête. Vous ajustez la largeur d'une colonne en faisant glisser son bord droit ; un double-clic rétablit la largeur automatique. Un clic sur une ligne des tableaux Personnes, Périodes et Activités ouvre sa fiche, comme le bouton placé au début de la ligne.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Tables can be sorted, filtered, and have resizable columns",
+            "texte": "You sort a table by clicking a column header, and you filter it with the icon in that header. You adjust a column’s width by dragging its right edge, and a double-click restores the automatic width. Clicking a row in the People, Periods, and Activities tables opens its details, like the button at the start of the row.",
             "migration": null
           }
         },
@@ -972,6 +1345,11 @@
             "titre": "Les modes d'emploi décrivent les messages, le classement et les tableaux",
             "texte": "Le mode d'emploi de l'admin d'activité décrit l'écran Classement, les messages à l'équipe, la fenêtre d'un compte et le réglage des tableaux. Celui de l'admin de l'organisation décrit les écrans Annuaire et Admins. Chaque capture d'écran montre le compte du rôle que son mode d'emploi décrit.",
             "migration": null
+          },
+          "en": {
+            "titre": "The user guides describe messages, ranking, and tables",
+            "texte": "The activity admin user guide describes the Ranking screen, messages to the team, the account window, and the table settings. The organization admin guide describes the Directory and Admins screens. Each screenshot shows the account of the role that its guide describes.",
+            "migration": null
           }
         },
         {
@@ -984,6 +1362,11 @@
           "fr": {
             "titre": "Les cartes de l'écran Équipe gardent leur place pendant les modifications",
             "texte": "Sur l'écran Équipe, une affectation ne déplace plus la carte du périmètre : l'ordre se recalcule au chargement de la page. Le menu sépare la gestion de l'activité et celle de l'organisation. Les sections de la page Organisation sont espacées.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Cards on the Team screen keep their place during changes",
+            "texte": "On the Team screen, an appointment no longer moves the area’s card: the order is recalculated when the page loads. The menu separates activity management from organization management. The sections of the Organization page are spaced out.",
             "migration": null
           }
         },
@@ -998,6 +1381,11 @@
             "titre": "Le menu du compte affiche la version et les notes de version",
             "texte": "Le menu du compte affiche le numéro de version de Relaytour. L'entrée « Notes de version » ouvre une fenêtre qui liste les changements de chaque version, de la plus récente à la plus ancienne. Vous y lisez les notes qui concernent votre rôle : une note réservée aux admins porte une étiquette.",
             "migration": null
+          },
+          "en": {
+            "titre": "The account menu shows the version and release notes",
+            "texte": "The account menu shows the Relaytour version number. The “Release notes” entry opens a window that lists the changes in each version, from newest to oldest. You read the notes that concern your role there, and a note reserved for admins carries a label.",
+            "migration": null
           }
         },
         {
@@ -1010,6 +1398,11 @@
           "fr": {
             "titre": "L'écran Admins liste les admins de l'organisation et de chaque activité",
             "texte": "Le groupe « Gérer l'organisation » du menu porte un écran « Admins ». Il liste les admins de l'organisation, puis ceux de chaque activité, et permet de les nommer ou de les retirer. Le rôle d'admin de l'organisation ne se donne plus depuis la fenêtre d'un compte. L'écran est réservé aux admins de l'organisation, comme le nouvel écran Annuaire, qui liste tous les membres et se filtre par activité. L'écran Personnes d'une activité ne liste plus que son équipe, avec un filtre par périmètre. Un filtre y sépare les admins et les membres, et un admin d'activité nomme les admins de son activité depuis la fenêtre d'un compte. La fenêtre d'invitation propose les périmètres affectés en plus des périmètres souhaités.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The Admins screen lists the admins of the organization and of each activity",
+            "texte": "The “Manage the organization” group in the menu has an “Admins” screen. It lists the organization’s admins, then those of each activity, and lets you appoint or remove them. The organization admin role can no longer be given from an account window. The screen is reserved for organization admins, like the new Directory screen, which lists all members and can be filtered by activity. An activity’s People screen now lists only its team, with a filter by area. A filter there separates admins from members, and an activity admin appoints the admins of their activity from an account window. The invitation window offers appointed areas as well as areas of interest.",
             "migration": null
           }
         }
@@ -1029,6 +1422,11 @@
             "titre": "L'annuaire indique les activités de chaque personne",
             "texte": "Pour un admin de l'organisation, l'écran « Personnes » gagne une colonne « Activités » : elle indique où chaque personne est affectée, intéressée ou admin, toutes périodes confondues. Un filtre isole les personnes d'une activité, ou celles qui ne participent à aucune. Dans l'écran « Équipe », la liste d'affectation range les personnes en trois groupes : intéressées, équipe de l'activité, autres membres de l'organisation avec le nom de leurs activités. Un admin d'activité voit l'onglet « Votre équipe », avec le rôle de chaque personne dans son activité.",
             "migration": null
+          },
+          "en": {
+            "titre": "The directory shows each person’s activities",
+            "texte": "For an organization admin, the “People” screen has a new “Activities” column. It shows where each person is appointed, interested, or admin, across all periods. A filter isolates the people of one activity, or those who take part in none. In the “Team” screen, the assignment list sorts people into three groups: interested, activity team, and other organization members with the names of their activities. An activity admin sees the “Your team” tab, with each person’s role in their activity.",
+            "migration": null
           }
         }
       ]
@@ -1047,6 +1445,11 @@
             "titre": "Les écrans suivent le travail des autres au fil de l'eau",
             "texte": "Quand une autre personne modifie une tâche, une fiche, un périmètre ou l'équipe, votre écran se met à jour en moins d'une seconde, sans recharger la page. La cloche fait de même pour une notification nouvelle. Ce suivi s'arrête quand l'onglet est caché et reprend à votre retour. Sans lui, par exemple derrière un réseau qui le bloque, les écrans se relisent chaque minute comme avant.",
             "migration": null
+          },
+          "en": {
+            "titre": "Screens follow other people’s work as it happens",
+            "texte": "When another person edits a task, a sheet, an area, or the team, your screen updates in under a second, without reloading the page. The bell does the same for a new notification. This live tracking pauses while the tab is hidden and resumes when you return. Without it, for example behind a network that blocks it, screens refresh every minute as before.",
+            "migration": null
           }
         },
         {
@@ -1059,6 +1462,11 @@
           "fr": {
             "titre": "Les écrans se mettent à jour pendant que vous travaillez",
             "texte": "Les tâches, l'avancement, les fiches, l'équipe et la cloche se relisent quand vous revenez sur l'onglet, quand le réseau revient, et chaque minute tant que l'onglet est visible. Vous voyez ainsi les changements des autres personnes sans recharger la page. L'écran garde son contenu pendant la relecture, et l'éditeur de fiche garde votre texte. Quand vos accès changent ou que votre session prend fin, un avis vous propose de recharger la page.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Screens update while you work",
+            "texte": "Tasks, progress, sheets, the team, and the bell refresh when you return to the tab, when the network comes back, and every minute while the tab is visible. You see other people’s changes without reloading the page. The screen keeps its content during the refresh, and the sheet editor keeps your text. When your access changes or your session ends, a notice offers to reload the page.",
             "migration": null
           }
         },
@@ -1073,6 +1481,11 @@
             "titre": "Le mode d'emploi décrit le travail à plusieurs",
             "texte": "Le mode d'emploi des référentes et référents reçoit une section « Travailler à plusieurs ». Elle donne quatre habitudes : prendre une tâche avant de la modifier, la passer « en cours », rédiger une fiche à tour de rôle, recharger avant d'écraser. Elle décrit aussi les fenêtres de conflit, le brouillon d'une fiche et les notifications d'un périmètre.",
             "migration": null
+          },
+          "en": {
+            "titre": "The user guide describes working together",
+            "texte": "The coordinator user guide gains a “Working together” section. It lists four habits: take a task before editing it, set it to “In progress”, edit a sheet in turns, and reload before overwriting. It also describes conflict windows, a sheet’s draft, and an area’s notifications.",
+            "migration": null
           }
         },
         {
@@ -1085,6 +1498,11 @@
           "fr": {
             "titre": "La date d'une demande ou d'une fiche suit votre fuseau horaire",
             "texte": "L'onglet « Demandes » de « Personnes », la liste des fiches et le panneau « Contenu de l'organisation » calculaient le jour d'après l'heure universelle (UTC). En France, une demande déposée entre minuit et 2 h s'affichait avec la date de la veille. Ces écrans affichent désormais le jour dans le fuseau horaire de votre navigateur. Les échéances des tâches et les dates des périodes ne changent pas.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The date of a join request or a sheet follows your time zone",
+            "texte": "The “Join requests” tab of “People”, the sheet list, and the “Organization content” panel calculated the day from universal time (UTC). In France, a join request submitted between midnight and 2 a.m. showed the previous day’s date. These screens now show the day in your browser’s time zone. Task due dates and period dates do not change.",
             "migration": null
           }
         },
@@ -1099,6 +1517,11 @@
             "titre": "Vous consultez les tâches des autres périmètres de votre activité",
             "texte": "Dès votre première affectation dans une activité, vous ouvrez chaque périmètre de cette activité depuis « Tous les périmètres ». Vous y lisez les tâches, l'avancement, les retards et les personnes affectées. Vous ne pouvez rien y modifier, et les fiches restent réservées aux personnes affectées au périmètre. Le rétroplanning couvre désormais toute l'activité : la bascule « Mes périmètres » le ramène à vos périmètres. La page d'un périmètre et le rétroplanning filtrent aussi les tâches en retard.",
             "migration": null
+          },
+          "en": {
+            "titre": "You view the tasks of the other areas in your activity",
+            "texte": "As soon as you have your first appointment in an activity, you can open every area of that activity from “All areas”. You read the tasks, the progress, the overdue tasks, and the people appointed. You cannot edit anything there, and sheets stay reserved for people appointed to the area. The timeline now covers the whole activity: the “My areas” toggle brings it back to your areas. An area’s page and the timeline also filter overdue tasks.",
+            "migration": null
           }
         },
         {
@@ -1111,6 +1534,11 @@
           "fr": {
             "titre": "Une référente ou un référent propose une personne, un admin décide",
             "texte": "La page d'un périmètre porte un panneau « Proposer une personne ». Vous y saisissez le prénom et le nom d'une personne qui veut rejoindre votre périmètre, son adresse et un mot facultatif. Les admins retrouvent la demande dans l'onglet « Demandes » de l'écran « Personnes », et la cloche les prévient. Un admin accepte la demande et choisit les périmètres à affecter : le compte est alors créé et la personne reçoit son invitation. Il peut aussi la refuser, sans qu'aucun mail ne parte. Aucun compte n'existe avant sa décision. L'écran « Équipe » compte les demandes en attente de chaque périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A coordinator refers a person, an admin decides",
+            "texte": "An area’s page has a “Refer a person” panel. You enter the first and last name of a person who wants to join your area, their email address, and an optional note. Admins find the join request in the “Join requests” tab of the “People” screen, and the bell notifies them. An admin accepts the request and chooses the areas to appoint: the account is then created and the person receives their invitation. An admin can also decline it, and no email is sent. No account exists before their decision. The “Team” screen counts the pending join requests of each area.",
             "migration": null
           }
         },
@@ -1125,6 +1553,11 @@
             "titre": "Un formulaire public recueille les demandes pour rejoindre l'équipe",
             "texte": "Dans l'écran « Activités », vous ouvrez le formulaire public de votre activité et copiez son adresse. Une personne extérieure le remplit sans compte : son prénom et son nom, son adresse, les périmètres qui l'intéressent, sa disponibilité et ce qu'elle sait faire. Vous réglez le texte d'introduction, une question complémentaire et les paliers de disponibilité. La demande arrive dans l'onglet « Demandes » de l'écran « Personnes », avec ses réponses. La personne ne reçoit aucun mail avant votre décision. Le formulaire est fermé par défaut.",
             "migration": null
+          },
+          "en": {
+            "titre": "A public form collects requests to join the team",
+            "texte": "In the “Activities” screen, you open your activity’s public form and copy its link. A person outside the team fills it in without an account: their first and last name, email address, the areas that interest them, their availability, and what they can do. You set the introduction text, an additional question, and the availability levels. The join request arrives in the “Join requests” tab of the “People” screen, with its answers. The person receives no email before your decision. The form is closed by default.",
+            "migration": null
           }
         },
         {
@@ -1138,6 +1571,11 @@
             "titre": "L'écran Équipe réunit les postes à pourvoir et le réglage des périmètres",
             "texte": "Dans l'administration, « Postes à pourvoir » devient « Équipe ». Chaque carte de périmètre garde son effectif, ses personnes affectées et ses souhaits. Sa roue dentée ouvre le réglage du périmètre : nom, groupe, description, couleur, ordre et archivage. Le bouton « Nouveau périmètre » et la liste « Périmètres archivés » se trouvent sur le même écran. La page « Périmètres » quitte le menu, et vos anciens favoris mènent à « Équipe ».",
             "migration": null
+          },
+          "en": {
+            "titre": "The Team screen combines open seats and area settings",
+            "texte": "In the admin menu, “Open seats” becomes “Team”. Each area card keeps its target headcount, its appointed people, and its interests. Its gear icon opens the area settings: name, group, description, color, order, and archiving. The “New area” button and the “Archived areas” list are on the same screen. The “Areas” page leaves the menu, and your old bookmarks lead to “Team”.",
+            "migration": null
           }
         },
         {
@@ -1150,6 +1588,11 @@
           "fr": {
             "titre": "Les souhaits se notent dans chaque activité",
             "texte": "Dans une organisation qui porte plusieurs activités, la fenêtre d'invitation et de modification d'un compte propose un champ de souhaits par activité que vous administrez. Chaque champ porte sur l'édition en cours de son activité et liste ses propres périmètres. Auparavant, seuls les périmètres de l'activité affichée étaient proposés.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Interests are recorded in each activity",
+            "texte": "In an organization with several activities, the dialog for inviting and editing an account offers an interests field for each activity you administer. Each field applies to the current edition of its activity and lists its own areas. Previously, only the areas of the displayed activity were offered.",
             "migration": null
           }
         }
@@ -1169,6 +1612,11 @@
             "titre": "Les cartes de « Tous les périmètres » ne se chevauchent plus",
             "texte": "Chaque carte de la page « Tous les périmètres » reste dans sa colonne. Les titres des groupes et les cartes de la rangée suivante restent visibles.",
             "migration": null
+          },
+          "en": {
+            "titre": "The cards on “All areas” no longer overlap",
+            "texte": "Each card on the “All areas” page stays in its column. Group titles and the cards of the next row remain visible.",
+            "migration": null
           }
         }
       ]
@@ -1187,6 +1635,11 @@
             "titre": "Vous découvrez tous les périmètres et formulez vos souhaits",
             "texte": "La page « Tous les périmètres » ouvre la section « Périmètres » du menu. Elle présente chaque périmètre avec sa description et le nombre de personnes encore recherchées, puis range vos périmètres, vos souhaits et les autres. Le bouton « Je suis intéressé·e » note un souhait, qu'un admin retrouve dans « Postes à pourvoir ». Une activité ouverte aux souhaits s'y découvre par tous les membres.",
             "migration": null
+          },
+          "en": {
+            "titre": "You discover all areas and state your interests",
+            "texte": "The “All areas” page opens the “Areas” section of the menu. It presents each area with its description and the number of people still wanted, then groups your areas, your interests, and the others. The “I’m interested” button records an interest, which an admin finds in “Open seats”. All members can discover an activity that is open to interests there.",
+            "migration": null
           }
         },
         {
@@ -1199,6 +1652,11 @@
           "fr": {
             "titre": "Chaque périmètre peut porter une description",
             "texte": "Les admins décrivent chaque périmètre en une ou deux phrases, dans la page « Périmètres » ou dans le fichier perimetres.yaml du contenu. La description s'affiche sous le titre de la page du périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Each area can have a description",
+            "texte": "Admins describe each area in one or two sentences, on the “Areas” page or in the perimetres.yaml file of the content. The description appears below the title of the area’s page.",
             "migration": null
           }
         }
@@ -1218,6 +1676,11 @@
             "titre": "Chaque périmètre peut avoir un contact principal",
             "texte": "Dans « Postes à pourvoir », l'étoile d'une personne affectée la désigne comme contact principal du périmètre pour la période. La page du périmètre et l'avancement global l'affichent en tête des référentes et référents. Ce rôle ne donne aucun droit supplémentaire.",
             "migration": null
+          },
+          "en": {
+            "titre": "Each area can have a main contact",
+            "texte": "In “Open seats”, the star next to an appointed person designates them as the area’s main contact for the period. The area’s page and the overall progress show them first among the coordinators. This role grants no additional rights.",
+            "migration": null
           }
         },
         {
@@ -1230,6 +1693,11 @@
           "fr": {
             "titre": "Mon espace masque les actions sur une tâche que vous ne pouvez plus modifier",
             "texte": "Une tâche vous reste assignée après le retrait de votre affectation au périmètre. Mon espace affichait alors les boutons « Faite », « Me retirer » et le menu « Autres actions », et le serveur refusait l'action. Ces boutons ne s'affichent plus, comme sur la page d'un périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "My space hides actions on a task you can no longer edit",
+            "texte": "A task stays assigned to you after your appointment to the area is removed. My space then displayed the “Done” and “Remove me” buttons and the “More actions” menu, and the server rejected the action. These buttons no longer appear, as on an area’s page.",
             "migration": null
           }
         }
@@ -1249,6 +1717,11 @@
             "titre": "Vous ouvrez les modes d'emploi depuis le menu du compte",
             "texte": "L'entrée « Modes d'emploi » apparaît sous « Préférences », dans le menu du compte. Elle ouvre dans un nouvel onglet la liste des modes d'emploi publiés sur le site de Relaytour, un par rôle.",
             "migration": null
+          },
+          "en": {
+            "titre": "You open the user guides from the account menu",
+            "texte": "The “User guides” entry appears under “Preferences” in the account menu. It opens, in a new tab, the list of user guides published on the Relaytour site, one per role.",
+            "migration": null
           }
         }
       ]
@@ -1266,6 +1739,11 @@
           "fr": {
             "titre": "Le sélecteur d'activité passe dans la barre latérale",
             "texte": "La barre latérale affiche le logo et le sigle de l'activité que vous consultez. Un bouton à côté du sigle ouvre la liste des autres activités de votre organisation, sur ordinateur comme dans le menu de la vue mobile. La barre de recherche occupe de nouveau toute la largeur de la barre haute. Le nom de votre organisation reste rappelé au-dessus de l'activité, et la signature du pied tient en trois mots, « Propulsé par Relaytour », dont le nom mène au code source.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The activity selector moves to the sidebar",
+            "texte": "The sidebar shows the logo and acronym of the activity you are viewing. A button next to the acronym opens the list of your organization’s other activities, on desktop and in the mobile menu. The search bar again spans the full width of the top bar. Your organization’s name stays above the activity, and the footer signature has three words, “Powered by Relaytour”, where the name links to the source code.",
             "migration": null
           }
         }
@@ -1285,6 +1763,11 @@
             "titre": "Les admins modifient l'identité de l'organisation et de ses activités",
             "texte": "La page « Organisation » permet de changer le nom, les contacts, les adresses de rôle, le logo, le favicon et le thème. Elle télécharge aussi le contenu de l'organisation en archive. Chaque activité peut recevoir son logo, ses couleurs et ses contacts ; ses écrans prennent son thème.",
             "migration": null
+          },
+          "en": {
+            "titre": "Admins edit the identity of the organization and its activities",
+            "texte": "The “Organization” page lets admins change the name, contacts, role addresses, logo, favicon, and theme. It also downloads the organization’s content as an archive. Each activity can have its own logo, colors, and contacts, and its screens take its theme.",
+            "migration": null
           }
         },
         {
@@ -1297,6 +1780,11 @@
           "fr": {
             "titre": "L'espace organisateur suit le rôle de chaque personne dans chaque activité",
             "texte": "Le sélecteur ne montre que vos activités. Le menu d'administration s'ouvre dans les activités que vous administrez. La page « Personnes » permet aux admins de l'organisation de nommer les admins de chaque activité.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The organizer workspace follows each person’s role in each activity",
+            "texte": "The selector shows only your activities. The admin menu opens in the activities you administer. The “People” page lets organization admins name the admins of each activity.",
             "migration": null
           }
         },
@@ -1311,6 +1799,11 @@
             "titre": "L'espace organisateur suit l'organisation et l'activité choisies",
             "texte": "Les pages d'une activité vivent sous son identifiant, par exemple /rencontres/retroplanning. Un sélecteur change d'activité, et le menu du compte change d'organisation pour une personne qui en a plusieurs. Les périmètres se rangent dans les groupes de l'activité, et la période prend le nom d'édition, de saison ou de mandat. Les admins gèrent les activités dans une nouvelle page.",
             "migration": null
+          },
+          "en": {
+            "titre": "The organizer workspace follows the chosen organization and activity",
+            "texte": "An activity’s pages live under its identifier, for example /rencontres/retroplanning. A selector switches activities, and the account menu switches organizations for a person who belongs to several. Areas are sorted into the activity’s groups, and the period takes the name of edition, season, or term. Admins manage activities on a new page.",
+            "migration": null
           }
         },
         {
@@ -1323,6 +1816,11 @@
           "fr": {
             "titre": "Votre organisation choisit le fond de son espace",
             "texte": "Le thème de votre organisation peut maintenant décrire le fond de l'espace organisateur. Vous choisissez la couleur de transition du dégradé et la couleur et l'intensité de ses deux halos. Sans ces valeurs, le fond suit les couleurs de votre thème, comme avant.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Your organization chooses the background of its workspace",
+            "texte": "Your organization’s theme can now describe the background of the organizer workspace. You choose the transition color of the gradient and the color and intensity of its two glows. Without these values, the background follows the colors of your theme, as before.",
             "migration": null
           }
         },
@@ -1337,6 +1835,11 @@
             "titre": "Un lien de connexion ne connecte plus sans votre accord",
             "texte": "Le lien du mail de code vous connecte sans clic seulement dans l'onglet où vous avez demandé le code, avec la même adresse. Ouvert ailleurs, il préremplit l'adresse et le code, et vous validez vous-même. Un lien forgé par une autre personne ne peut plus vous connecter à son compte à votre insu.",
             "migration": null
+          },
+          "en": {
+            "titre": "A sign-in link no longer signs you in without your consent",
+            "texte": "The link in the sign-in code email signs you in without a click only in the tab where you requested the code, with the same email address. Opened elsewhere, it prefills the email address and the code, and you confirm yourself. A link forged by someone else can no longer sign you in to their account without your knowledge.",
+            "migration": null
           }
         },
         {
@@ -1349,6 +1852,11 @@
           "fr": {
             "titre": "Les listes de liens deviennent des lignes cliquables",
             "texte": "Les tâches du rétroplanning, les fiches d'un périmètre et les notifications s'affichent comme des lignes bordées, dont le fond s'assombrit au survol. Dans le rétroplanning, toute la ligne mène au périmètre de la tâche. Les cartes de périmètre de « Mon espace » et de « Avancement » portent le même liseré et le même survol. La barre de navigation ne change pas.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Link lists become clickable rows",
+            "texte": "Timeline tasks, an area’s sheets, and notifications appear as bordered rows whose background darkens on hover. In the timeline, the whole row leads to the task’s area. The area cards in “My space” and “Progress” have the same border and hover effect. The navigation bar does not change.",
             "migration": null
           }
         },
@@ -1363,6 +1871,11 @@
             "titre": "Les fenêtres et les listes s'affichent en verre blanc dépoli",
             "texte": "Les fenêtres modales, les tiroirs, les listes déroulantes, les menus, les bulles et les messages s'affichent sur un verre blanc presque opaque et très flou. Le contenu de la page ne gêne plus la lecture. Le voile sous une fenêtre floute la page au lieu de l'assombrir.",
             "migration": null
+          },
+          "en": {
+            "titre": "Windows and lists appear in frosted white glass",
+            "texte": "Modal windows, drawers, dropdown lists, menus, tooltips, and messages appear on an almost opaque, heavily blurred white glass. The page content no longer interferes with reading. The overlay behind a window blurs the page instead of darkening it.",
+            "migration": null
           }
         },
         {
@@ -1375,6 +1888,11 @@
           "fr": {
             "titre": "Les éléments cliquables et les pastilles se lisent mieux",
             "texte": "Les boutons sans fond plein portent un liseré de verre, et leur fond s'assombrit au survol. Dans la page Fiches, chaque fiche s'affiche comme une ligne cliquable, et chaque sport ou pôle comme une pastille à sa couleur. Le texte des pastilles passe en gras et suit le contraste perçu plutôt que la formule WCAG 2.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Clickable elements and badges are easier to read",
+            "texte": "Buttons without a solid fill have a glass outline, and their background darkens on hover. On the Sheets page, each sheet appears as a clickable row, and each sport or department as a badge in its color. Badge text is now bold and follows perceived contrast instead of the WCAG 2 formula.",
             "migration": null
           }
         },
@@ -1389,6 +1907,11 @@
             "titre": "Les écrans de l'espace organisateur changent d'allure",
             "texte": "Mon espace, le rétroplanning, les fiches, les périmètres et les préférences suivent le nouveau design system. Une colonne de droite résume l'avancement, vos périmètres et votre contribution. Les fiches s'affichent en cartes ou en liste condensée, selon votre choix. Chaque périmètre indique ses personnes affectées et leur nombre de tâches ouvertes.",
             "migration": null
+          },
+          "en": {
+            "titre": "The organizer workspace screens get a new look",
+            "texte": "My space, the timeline, sheets, areas, and preferences follow the new design system. A right column summarizes progress, your areas, and your contribution. Sheets appear as cards or as a condensed list, as you choose. Each area shows its appointed people and their number of open tasks.",
+            "migration": null
           }
         },
         {
@@ -1401,6 +1924,11 @@
           "fr": {
             "titre": "Le lien du mail de code remplit l'adresse et le code",
             "texte": "Le bouton « Se connecter avec ce code » du mail ouvre l'espace organisateur avec l'adresse et le code déjà remplis. Dans l'onglet où vous avez demandé le code, la connexion part aussitôt. Auparavant, seul le code était rempli, et l'adresse seulement si elle avait été saisie dans le même onglet.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The sign-in code email link fills in the email address and the code",
+            "texte": "The “Sign in with this code” button in the email opens the organizer workspace with the email address and the code already filled in. In the tab where you requested the code, sign-in starts immediately. Previously, only the code was filled in, and the email address only if it had been entered in the same tab.",
             "migration": null
           }
         },
@@ -1415,6 +1943,11 @@
             "titre": "Le filtre du rétroplanning montre la couleur de chaque périmètre",
             "texte": "Dans le filtre des périmètres du rétroplanning, chaque périmètre s'affiche sur sa couleur pleine, dans la liste comme dans le champ. Le texte passe en blanc ou en noir selon le contraste le plus lisible.",
             "migration": null
+          },
+          "en": {
+            "titre": "The timeline filter shows the color of each area",
+            "texte": "In the timeline’s area filter, each area appears on its full color, in the list and in the field. The text turns white or black, whichever is more readable.",
+            "migration": null
           }
         },
         {
@@ -1427,6 +1960,11 @@
           "fr": {
             "titre": "L'espace organisateur prend le nom et le thème de votre organisation",
             "texte": "La barre latérale, l'écran de connexion et le titre de l'onglet affichent le nom court de votre organisation, et son logo si elle en fournit un. Ses couleurs et ses polices s'appliquent dès la réponse de l'API. Un seul build de l'espace organisateur sert toutes les installations.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The organizer workspace takes your organization’s name and theme",
+            "texte": "The sidebar, the sign-in screen, and the tab title show your organization’s short name, and its logo if it provides one. Its colors and fonts apply as soon as the API responds. A single build of the organizer workspace serves all installations.",
             "migration": null
           }
         },
@@ -1441,7 +1979,8 @@
             "titre": "L'espace organisateur se déploie depuis l'image",
             "texte": "Le dépôt publie une troisième image, suffixée -orga, qui contient le site statique de l'espace organisateur. Dans la pile de référence, un service la copie vers un dossier de l'hôte à chaque démarrage. Un hébergeur n'a plus besoin de Node ni de Yarn sur son serveur pour mettre à jour.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-18-orga-l-espace-organisateur-prend-l-identite-de-relaytour",
@@ -1453,6 +1992,11 @@
           "fr": {
             "titre": "L'espace organisateur prend l'identité de Relaytour",
             "texte": "L'espace organisateur adopte une identité neutre : un logo, une palette bleu-vert et terre cuite, la police Hanken Grotesk et des surfaces de verre posées sur un fond clair. Les couleurs de vos périmètres restent celles de votre organisation. Aucune police n'est chargée depuis un site tiers.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The organizer workspace takes on the Relaytour identity",
+            "texte": "The organizer workspace adopts a neutral identity: a logo, a teal and terracotta palette, the Hanken Grotesk font, and glass surfaces on a light background. The colors of your areas remain those of your organization. No font is loaded from a third-party site.",
             "migration": null
           }
         },
@@ -1467,6 +2011,11 @@
             "titre": "Les souhaits guident les affectations",
             "texte": "L'invitation d'une personne accepte un ou plusieurs périmètres souhaités. La page « Postes à pourvoir » affiche ces souhaits sur chaque périmètre, avec un bouton « Affecter ». La page des personnes montre les souhaits de l'édition choisie.",
             "migration": null
+          },
+          "en": {
+            "titre": "Interests guide appointments",
+            "texte": "Inviting a person accepts one or more areas of interest. The “Open seats” page shows these interests on each area, with an “Appoint” button. The People page shows the interests of the chosen edition.",
+            "migration": null
           }
         },
         {
@@ -1479,6 +2028,11 @@
           "fr": {
             "titre": "Les postes à pourvoir s'affichent périmètre par périmètre",
             "texte": "La page « Postes à pourvoir » place en premier les périmètres qui manquent de référentes et de référents. Vous modifiez l'effectif souhaité et affectez une personne sans changer de page. Le bouton « Copier l'appel » prépare un message qui liste les périmètres à pourvoir. La page des personnes gagne une recherche et un filtre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Open seats appear area by area",
+            "texte": "The “Open seats” page puts the areas that lack coordinators first. You change the target headcount and appoint a person without leaving the page. The “Copy volunteer call” button prepares a message that lists the areas to fill. The People page gains a search and a filter.",
             "migration": null
           }
         },
@@ -1493,6 +2047,11 @@
             "titre": "Les admins assignent une tâche à une autre personne",
             "texte": "Sur la carte d'une tâche, les admins choisissent une personne parmi les référentes et référents du périmètre. Les admins peuvent aussi retirer une personne de la tâche. La personne concernée le voit dans ses notifications.",
             "migration": null
+          },
+          "en": {
+            "titre": "Admins assign a task to another person",
+            "texte": "On a task card, admins choose a person from the area’s coordinators. Admins can also remove a person from the task. The person concerned sees it in their notifications.",
+            "migration": null
           }
         },
         {
@@ -1505,6 +2064,11 @@
           "fr": {
             "titre": "Le rétroplanning montre les échéances d'une édition",
             "texte": "La page « Rétroplanning » regroupe les tâches par mois, de la plus proche à la plus lointaine. Vous filtrez par périmètre, par type ou par statut, ou gardez seulement vos périmètres et vos tâches. Les tâches en retard ressortent en rouge.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The timeline shows the due dates of an edition",
+            "texte": "The “Timeline” page groups tasks by month, from the nearest to the furthest. You filter by area, type, or status, or keep only your areas and your tasks. Overdue tasks stand out in red.",
             "migration": null
           }
         },
@@ -1519,6 +2083,11 @@
             "titre": "Votre contribution et le classement des admins s'affichent",
             "texte": "« Mon espace » affiche vos points de l'édition, le détail de vos contributions et le barème. Les admins consultent le classement de chaque édition. Sur toutes les pages, un tableau large ne déborde plus de l'écran.",
             "migration": null
+          },
+          "en": {
+            "titre": "Your contribution and the admin ranking are displayed",
+            "texte": "“My space” shows your points for the edition, the detail of your contributions, and the scoring scale. Admins view the ranking of each edition. On all pages, a wide table no longer overflows the screen.",
+            "migration": null
           }
         },
         {
@@ -1531,6 +2100,11 @@
           "fr": {
             "titre": "Les notifications et les préférences de mail arrivent dans l'espace organisateur",
             "texte": "Une cloche indique le nombre de notifications non lues et ouvre leur liste ; un clic mène au périmètre concerné. La page « Préférences » règle la fréquence du résumé et les mails immédiats.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Notifications and email preferences arrive in the organizer workspace",
+            "texte": "A bell shows the number of unread notifications and opens their list; a click leads to the relevant area. The “Preferences” page sets the digest frequency and the immediate emails.",
             "migration": null
           }
         },
@@ -1545,6 +2119,11 @@
             "titre": "Les fiches méthode se lisent et se rédigent dans l'espace organisateur",
             "texte": "La page « Fiches » regroupe les fiches communes et celles de vos périmètres. Les personnes qui ont le droit de rédaction écrivent en Markdown avec un aperçu, à partir du gabarit commun. Une tâche peut renvoyer vers sa fiche, et les admins consultent l'historique de chaque fiche.",
             "migration": null
+          },
+          "en": {
+            "titre": "How-to sheets can be read and edited in the organizer workspace",
+            "texte": "The “Sheets” page gathers the common sheets and those of your areas. People with editing rights write in Markdown with a preview, starting from the common template. A task can link to its sheet, and admins view the history of each sheet.",
+            "migration": null
           }
         },
         {
@@ -1558,6 +2137,11 @@
             "titre": "L'espace organisateur ouvre ses premiers écrans",
             "texte": "Vous vous connectez avec un code reçu par mail, ou en un clic depuis le lien du mail. L'écran « Mon espace » affiche vos périmètres de l'édition en cours. Les admins gèrent les éditions, les périmètres, les personnes et les affectations.",
             "migration": null
+          },
+          "en": {
+            "titre": "The organizer workspace opens its first screens",
+            "texte": "You sign in with a code received by email, or in one click from the link in the email. The “My space” screen shows your areas for the current edition. Admins manage editions, areas, people, and appointments.",
+            "migration": null
           }
         },
         {
@@ -1570,6 +2154,11 @@
           "fr": {
             "titre": "Chaque périmètre a sa liste de tâches et son avancement",
             "texte": "La page d'un périmètre affiche ses tâches, triées par échéance, et la progression de l'édition. Vous prenez une tâche, la marquez comme faite et indiquez si besoin qui l'a réalisée. « Mon espace » regroupe vos tâches et celles à prendre, et les admins suivent l'avancement de tous les périmètres.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Each area has its task list and its progress",
+            "texte": "An area’s page shows its tasks, sorted by due date, and the progress of the edition. You take a task, mark it as done, and state who completed it if needed. “My space” gathers your tasks and those to take, and admins follow the progress of all areas.",
             "migration": null
           }
         }

@@ -1,4 +1,6 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
+import { t } from '@lingui/core/macro'
+
 import { langueActive } from './langue'
 
 /**
@@ -26,10 +28,10 @@ export function messageErreur(erreur: unknown): string {
     )
       return premiere.message
     if (premiere?.extensions?.code === 'FORBIDDEN') {
-      return 'Vous n’avez pas accès à cette action.'
+      return t`Vous n’avez pas accès à cette action.`
     }
   }
-  return 'L’opération a échoué. Réessayez dans un instant.'
+  return t`L’opération a échoué. Réessayez dans un instant.`
 }
 
 /** Vrai si le serveur refuse l'accès (`FORBIDDEN`), et non pour une panne. */

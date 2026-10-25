@@ -9,6 +9,9 @@ import {
   TableOutlined,
   UnorderedListOutlined,
 } from '@ant-design/icons'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Input, Skeleton, Tooltip } from 'antd'
 import type { TextAreaRef } from 'antd/es/input/TextArea'
 import type { KeyboardEvent, ReactNode } from 'react'
@@ -32,8 +35,10 @@ export type ModeEditeur = 'visuel' | 'markdown'
 
 interface Outil {
   format: Format
-  libelle: string
-  icone: ReactNode
+  libelle: MessageDescriptor
+  icone?: ReactNode
+  /** Le texte du bouton quand il n'a pas d'icône. */
+  texte?: MessageDescriptor
   raccourci?: string
 }
 
@@ -47,46 +52,53 @@ const GROUPES: Outil[][] = [
   [
     {
       format: 'gras',
-      libelle: 'Gras',
+      libelle: msg`Gras`,
       icone: <BoldOutlined />,
       raccourci: 'B',
     },
     {
       format: 'italique',
-      libelle: 'Italique',
+      libelle: msg`Italique`,
       icone: <ItalicOutlined />,
       raccourci: 'I',
     },
   ],
   [
-    { format: 'titre2', libelle: 'Titre de section', icone: 'Titre' },
-    { format: 'titre3', libelle: 'Sous-titre', icone: 'Sous-titre' },
+    {
+      format: 'titre2',
+      libelle: msg`Titre de section`,
+      texte: msg({
+        message: 'Titre',
+        comment: 'Bouton de la barre de mise en forme : titre de section',
+      }),
+    },
+    { format: 'titre3', libelle: msg`Sous-titre`, texte: msg`Sous-titre` },
   ],
   [
     {
       format: 'puces',
-      libelle: 'Liste à puces',
+      libelle: msg`Liste à puces`,
       icone: <UnorderedListOutlined />,
     },
     {
       format: 'numeros',
-      libelle: 'Liste numérotée',
+      libelle: msg`Liste numérotée`,
       icone: <OrderedListOutlined />,
     },
     {
       format: 'cases',
-      libelle: 'Liste de cases à cocher',
+      libelle: msg`Liste de cases à cocher`,
       icone: <CheckSquareOutlined />,
     },
   ],
   [
     {
       format: 'lien',
-      libelle: 'Lien',
+      libelle: msg`Lien`,
       icone: <LinkOutlined />,
       raccourci: 'K',
     },
-    { format: 'tableau', libelle: 'Tableau', icone: <TableOutlined /> },
+    { format: 'tableau', libelle: msg`Tableau`, icone: <TableOutlined /> },
   ],
 ]
 
@@ -122,6 +134,7 @@ export default function EditeurMarkdown({
   /** Les périmètres et les groupes que `@` propose (ADR 0039). */
   mentions?: Mentions
 }) {
+  const { t } = useLingui()
   const ref = useRef<TextAreaRef>(null)
   const visuel = useRef<PoigneeVisuel>(null)
   // La mention que la personne saisit, et les périmètres ou groupes qui y répondent.
@@ -218,7 +231,7 @@ export default function EditeurMarkdown({
       <div
         className="rt-barre-markdown"
         role="toolbar"
-        aria-label="Mise en forme"
+        aria-label={t`Mise en forme`}
       >
         {/* Sur téléphone, ce conteneur défile et estompe son bord droit, sous le
             fond de la barre. */}
@@ -226,32 +239,28 @@ export default function EditeurMarkdown({
           {GROUPES.map((groupe, i) => (
             <div key={i} className="rt-barre-markdown-groupe">
               {groupe.map(outil => {
-                const titre = outil.raccourci
-                  ? `${outil.libelle} (${COMMANDE}${outil.raccourci})`
-                  : outil.libelle
+                const nom = t(outil.libelle)
+                const raccourci = `${COMMANDE}${outil.raccourci ?? ''}`
+                const titre = outil.raccourci ? t`${nom} (${raccourci})` : nom
                 return (
                   <Tooltip key={outil.format} title={titre}>
                     <Button
                       type="text"
                       size="small"
-                      aria-label={outil.libelle}
+                      aria-label={nom}
                       // La zone garde le focus et sa sélection pendant le clic.
                       onMouseDown={e => e.preventDefault()}
                       onClick={() => formater(outil.format)}
-                      icon={
-                        typeof outil.icone === 'string'
-                          ? undefined
-                          : outil.icone
-                      }
+                      icon={outil.icone}
                     >
-                      {typeof outil.icone === 'string' ? outil.icone : null}
+                      {outil.texte ? t(outil.texte) : null}
                     </Button>
                   </Tooltip>
                 )
               })}
             </div>
           ))}
-          <Tooltip title="Guide de la syntaxe Markdown">
+          <Tooltip title={t`Guide de la syntaxe Markdown`}>
             <Button
               type="link"
               size="small"
@@ -259,13 +268,15 @@ export default function EditeurMarkdown({
               icon={<QuestionCircleOutlined />}
               onClick={onAide}
             >
-              Aide
+              <Trans>Aide</Trans>
             </Button>
           </Tooltip>
         </div>
         {proposees.length > 0 && (
-          <div className="rt-suggestions-mention" aria-label="Mentionner">
-            <span className="rt-texte-secondaire">Mentionner</span>
+          <div className="rt-suggestions-mention" aria-label={t`Mentionner`}>
+            <span className="rt-texte-secondaire">
+              <Trans>Mentionner</Trans>
+            </span>
             {proposees.map(p => (
               <button
                 key={p.texte}

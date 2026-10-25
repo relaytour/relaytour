@@ -1,7 +1,7 @@
 <mjml>
   <mj-head>
-    <mj-title>Échéances de vos tâches</mj-title>
-    <mj-preview>Des tâches qui vous sont assignées arrivent à échéance.</mj-preview>
+    <mj-title>[[Échéances de vos tâches]]</mj-title>
+    <mj-preview>[[Des tâches qui vous sont assignées arrivent à échéance.]]</mj-preview>
     <mj-attributes>
       <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
       <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
@@ -14,10 +14,10 @@
     <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
       <mj-column>
         <mj-text font-size="20px" line-height="28px" font-weight="700">
-          Échéances de vos tâches
+          [[Échéances de vos tâches]]
         </mj-text>
         <mj-text>
-          Ces tâches vous sont assignées et demandent votre attention :
+          [[Ces tâches vous sont assignées et demandent votre attention :]]
         </mj-text>
         <mj-text>
           {{rappels}}
@@ -25,10 +25,10 @@
         <mj-button href="{{lienConnexion}}" background-color="#010101" color="#FFFFFF"
                    border-radius="10px" font-size="15px" font-weight="700"
                    padding="8px 0 16px" inner-padding="13px 24px">
-          Ouvrir mon espace
+          [[Ouvrir mon espace]]
         </mj-button>
         <mj-text font-size="13px" line-height="20px" color="#5B6670" padding="0">
-          Vous pouvez désactiver ces rappels dans vos préférences : {{lienPreferences}}
+          [[Vous pouvez désactiver ces rappels dans vos préférences :]] {{lienPreferences}}
         </mj-text>
       </mj-column>
     </mj-section>

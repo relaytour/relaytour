@@ -1,5 +1,6 @@
 import { SearchOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { useLingui } from '@lingui/react/macro'
 import { AutoComplete, Input } from 'antd'
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -76,6 +77,7 @@ export default function Recherche({
   large?: boolean
   apresChoix?: () => void
 }) {
+  const { t } = useLingui()
   const navigate = useNavigate()
   const { lien } = useActivite()
   const [saisie, setSaisie] = useState('')
@@ -101,22 +103,24 @@ export default function Recherche({
     const groupes = []
     if (r.taches.length > 0) {
       groupes.push({
-        label: 'Tâches',
-        options: r.taches.map(t => {
-          const cle = `tache:${t.id}`
+        label: t`Tâches`,
+        options: r.taches.map(tache => {
+          const cle = `tache:${tache.id}`
           // Les tâches se cherchent dans la période de l'activité affichée.
           liens.set(
             cle,
-            lien(`/perimetres/${t.perimetre.slug}?edition=${t.edition.id}`)
+            lien(
+              `/perimetres/${tache.perimetre.slug}?edition=${tache.edition.id}`
+            )
           )
           return {
             value: cle,
             label: (
               <span className="rt-resultat">
-                <span className="rt-resultat-titre">{t.titre}</span>
+                <span className="rt-resultat-titre">{tache.titre}</span>
                 <EtiquettePerimetre
-                  nom={t.perimetre.nom}
-                  couleur={t.perimetre.couleur}
+                  nom={tache.perimetre.nom}
+                  couleur={tache.perimetre.couleur}
                 />
               </span>
             ),
@@ -126,7 +130,7 @@ export default function Recherche({
     }
     if (r.fiches.length > 0) {
       groupes.push({
-        label: 'Fiches',
+        label: t`Fiches`,
         options: r.fiches.map(f => {
           const cle = `fiche:${f.id}`
           // Une fiche peut venir d'une autre activité de l'organisation.
@@ -142,7 +146,13 @@ export default function Recherche({
                     couleur={f.perimetre.couleur}
                   />
                 ) : (
-                  <span className="rt-compte">Commune</span>
+                  <span className="rt-compte">
+                    {t({
+                      message: 'Commune',
+                      comment:
+                        'Étiquette d’une fiche partagée, qui n’appartient à aucun périmètre',
+                    })}
+                  </span>
                 )}
               </span>
             ),
@@ -152,7 +162,7 @@ export default function Recherche({
     }
     if (r.personnes.length > 0) {
       groupes.push({
-        label: 'Personnes',
+        label: t`Personnes`,
         options: r.personnes.map(p => {
           const cle = `personne:${p.id}`
           const premier = p.perimetres[0]
@@ -179,7 +189,7 @@ export default function Recherche({
       })
     }
     return { options: groupes, liens }
-  }, [data, texte, estAdmin, lien])
+  }, [data, texte, estAdmin, lien, t])
 
   const vide =
     texte.length >= LONGUEUR_MIN && !loading && data && options.length === 0
@@ -197,16 +207,18 @@ export default function Recherche({
         if (lien) navigate(lien)
         apresChoix?.()
       }}
-      notFoundContent={vide ? 'Aucun résultat.' : null}
+      notFoundContent={vide ? t`Aucun résultat.` : null}
       popupMatchSelectWidth={large ? true : 420}
     >
       <Input
         allowClear
         autoFocus={large}
         maxLength={LONGUEUR_MAX}
-        aria-label="Rechercher une tâche, une fiche ou une personne"
+        aria-label={t`Rechercher une tâche, une fiche ou une personne`}
         placeholder={
-          large ? 'Rechercher' : 'Rechercher une tâche, une fiche, une personne'
+          large
+            ? t`Rechercher`
+            : t`Rechercher une tâche, une fiche, une personne`
         }
         prefix={
           <SearchOutlined aria-hidden style={{ color: 'var(--rt-encre-55)' }} />

@@ -1,4 +1,5 @@
 import { useMutation } from '@apollo/client/react'
+import { useLingui } from '@lingui/react/macro'
 import { Checkbox, Form, Input, Modal, Select } from 'antd'
 import { useEffect } from 'react'
 
@@ -58,6 +59,7 @@ export default function TacheFormulaire({
   onFermer: () => void
   onEnregistree: () => void
 }) {
+  const { t } = useLingui()
   const [form] = Form.useForm<Valeurs>()
   const cibles = Form.useWatch('cibles', form) ?? []
   const executer = useActionTache()
@@ -121,10 +123,10 @@ export default function TacheFormulaire({
                 },
               }),
             (v.cibles ?? []).length === 0
-              ? 'Tâche créée.'
+              ? t`Tâche créée.`
               : estAdmin
-                ? 'Tâche créée et ajoutée aux périmètres choisis.'
-                : 'Tâche créée et partagée avec les périmètres choisis.'
+                ? t`Tâche créée et ajoutée aux périmètres choisis.`
+                : t`Tâche créée et partagée avec les périmètres choisis.`
           )
         : tache
           ? await executer(
@@ -139,7 +141,7 @@ export default function TacheFormulaire({
                     versionAttendue: reprise.versionAttendue ?? tache.version,
                   },
                 }),
-              'Tâche enregistrée.',
+              t`Tâche enregistrée.`,
               { apresRechargement: onFermer }
             )
           : false
@@ -149,9 +151,9 @@ export default function TacheFormulaire({
   return (
     <Modal
       open={tache !== null}
-      title={tache === 'nouvelle' ? 'Nouvelle tâche' : 'Modifier la tâche'}
-      okText="Enregistrer"
-      cancelText="Annuler"
+      title={tache === 'nouvelle' ? t`Nouvelle tâche` : t`Modifier la tâche`}
+      okText={t`Enregistrer`}
+      cancelText={t`Annuler`}
       confirmLoading={creation.loading || modification.loading}
       onOk={() => form.submit()}
       onCancel={onFermer}
@@ -165,46 +167,46 @@ export default function TacheFormulaire({
         requiredMark={false}
       >
         <Form.Item
-          label="Titre"
+          label={t`Titre`}
           name="titre"
           rules={[
-            { required: true, message: 'Saisissez un titre.' },
+            { required: true, message: t`Saisissez un titre.` },
             {
               max: TITRE_MAX,
-              message: `Le titre dépasse ${TITRE_MAX} caractères.`,
+              message: t`Le titre dépasse ${TITRE_MAX} caractères.`,
             },
           ]}
         >
-          <Input placeholder="Réserver les lignes d’eau" />
+          <Input placeholder={t`Réserver les lignes d’eau`} />
         </Form.Item>
-        <Form.Item label="Description" name="description">
+        <Form.Item label={t`Description`} name="description">
           <Input.TextArea autoSize={{ minRows: 3, maxRows: 10 }} />
         </Form.Item>
-        <Form.Item label="Échéance" name="echeance">
+        <Form.Item label={t`Échéance`} name="echeance">
           <Input type="date" style={{ maxWidth: 200 }} />
         </Form.Item>
         {fiches.length > 0 && (
-          <Form.Item label="Fiche méthode" name="ficheId">
+          <Form.Item label={t`Fiche méthode`} name="ficheId">
             <Select
               allowClear
               showSearch
               optionFilterProp="label"
-              placeholder="Lier une fiche (facultatif)"
+              placeholder={t`Lier une fiche (facultatif)`}
               options={fiches.map(f => ({ value: f.id, label: f.titre }))}
             />
           </Form.Item>
         )}
         {tache === 'nouvelle' && (
           <Form.Item name="mAssigner" valuePropName="checked">
-            <Checkbox>Je m’en occupe</Checkbox>
+            <Checkbox>{t`Je m’en occupe`}</Checkbox>
           </Form.Item>
         )}
         {tache === 'nouvelle' && perimetresCibles.length > 0 && (
           <>
             <Form.Item
-              label="Décliner dans d’autres périmètres (facultatif)"
+              label={t`Décliner dans d’autres périmètres (facultatif)`}
               name="cibles"
-              extra="Un pôle demande par exemple la même tâche à chaque sport."
+              extra={t`Un pôle demande par exemple la même tâche à chaque sport.`}
             >
               <ChoixPerimetresCibles perimetres={perimetresCibles} />
             </Form.Item>
@@ -212,26 +214,26 @@ export default function TacheFormulaire({
               <>
                 <AideDeclinaison estAdmin={estAdmin} />
                 <Form.Item
-                  label="Titre dans ces périmètres (facultatif)"
+                  label={t`Titre dans ces périmètres (facultatif)`}
                   name="titreDeclinaison"
-                  extra="Sans titre, les périmètres reçoivent celui de cette tâche."
+                  extra={t`Sans titre, les périmètres reçoivent celui de cette tâche.`}
                   rules={[
                     {
                       max: TITRE_MAX,
-                      message: `Le titre dépasse ${TITRE_MAX} caractères.`,
+                      message: t`Le titre dépasse ${TITRE_MAX} caractères.`,
                     },
                   ]}
                 >
-                  <Input placeholder="Transmettre les besoins au pôle" />
+                  <Input placeholder={t`Transmettre les besoins au pôle`} />
                 </Form.Item>
                 <Form.Item
-                  label="Description dans ces périmètres (facultatif)"
+                  label={t`Description dans ces périmètres (facultatif)`}
                   name="descriptionDeclinaison"
                 >
                   <Input.TextArea autoSize={{ minRows: 2, maxRows: 8 }} />
                 </Form.Item>
                 <Form.Item
-                  label="Échéance dans ces périmètres (facultatif)"
+                  label={t`Échéance dans ces périmètres (facultatif)`}
                   name="echeanceDeclinaison"
                 >
                   <Input type="date" style={{ maxWidth: 200 }} />

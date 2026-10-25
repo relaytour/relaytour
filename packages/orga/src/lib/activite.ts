@@ -1,3 +1,4 @@
+import { select, t } from '@lingui/core/macro'
 import { createContext, useContext } from 'react'
 
 import type { ActivitesQuery, NatureActivite } from '../gql/graphql'
@@ -9,7 +10,7 @@ import { derniereActivite } from './selection'
 
 export type Activite = ActivitesQuery['activites'][number]
 
-/** Les formes du mot qui désigne une période, accordées en genre. */
+/** Les formes du mot qui désigne une période, accordées dans la langue active. */
 export interface FormesPeriode {
   /** édition, saison, mandat */
   nom: string
@@ -39,47 +40,54 @@ export interface FormesPeriode {
   dUneALAutre: string
 }
 
-const FEMININ = (nom: string, elision: boolean): FormesPeriode => {
-  const Nom = nom.charAt(0).toUpperCase() + nom.slice(1)
-  return {
-    nom,
-    Nom,
-    Pluriel: `${Nom}s`,
-    la: elision ? `l’${nom}` : `la ${nom}`,
-    une: `une ${nom}`,
-    cette: `cette ${nom}`,
-    Aucune: `Aucune ${nom}`,
-    Nouvelle: `Nouvelle ${nom}`,
-    archivee: 'archivée',
-    creee: 'créée',
-    enregistree: 'enregistrée',
-    de: elision ? `de l’${nom}` : `de la ${nom}`,
-    dUneALAutre: `d’une ${nom} à l’autre`,
-  }
-}
-
-const FORMES: Record<NatureActivite, FormesPeriode> = {
-  EVENEMENT: FEMININ('édition', true),
-  SAISON: FEMININ('saison', false),
-  MANDAT: {
-    nom: 'mandat',
-    Nom: 'Mandat',
-    Pluriel: 'Mandats',
-    la: 'le mandat',
-    une: 'un mandat',
-    cette: 'ce mandat',
-    Aucune: 'Aucun mandat',
-    Nouvelle: 'Nouveau mandat',
-    archivee: 'archivé',
-    creee: 'créé',
-    enregistree: 'enregistré',
-    de: 'du mandat',
-    dUneALAutre: 'd’un mandat à l’autre',
-  },
-}
-
+// Chaque forme est un message dont le texte dépend de la nature (ADR 0047) : une
+// langue accorde le mot à sa façon, sans que le code connaisse son genre. Les
+// formes se calculent à chaque appel, dans la langue active ; l'application se
+// remonte quand la langue change.
 export function formesPeriode(nature: NatureActivite): FormesPeriode {
-  return FORMES[nature]
+  return {
+    nom: t({
+      message: select(nature, {
+        EVENEMENT: 'édition',
+        SAISON: 'saison',
+        other: 'mandat',
+      }),
+      comment: 'Le mot qui désigne une période d’une activité, en minuscules.',
+    }),
+    Nom: t`${select(nature, { EVENEMENT: 'Édition', SAISON: 'Saison', other: 'Mandat' })}`,
+    Pluriel: t`${select(nature, { EVENEMENT: 'Éditions', SAISON: 'Saisons', other: 'Mandats' })}`,
+    la: t`${select(nature, { EVENEMENT: 'l’édition', SAISON: 'la saison', other: 'le mandat' })}`,
+    une: t`${select(nature, { EVENEMENT: 'une édition', SAISON: 'une saison', other: 'un mandat' })}`,
+    cette: t`${select(nature, { EVENEMENT: 'cette édition', SAISON: 'cette saison', other: 'ce mandat' })}`,
+    Aucune: t`${select(nature, { EVENEMENT: 'Aucune édition', SAISON: 'Aucune saison', other: 'Aucun mandat' })}`,
+    Nouvelle: t`${select(nature, { EVENEMENT: 'Nouvelle édition', SAISON: 'Nouvelle saison', other: 'Nouveau mandat' })}`,
+    archivee: t({
+      message: select(nature, {
+        EVENEMENT: 'archivée',
+        SAISON: 'archivée',
+        other: 'archivé',
+      }),
+      comment: 'Participe accordé avec le mot qui désigne la période.',
+    }),
+    creee: t({
+      message: select(nature, {
+        EVENEMENT: 'créée',
+        SAISON: 'créée',
+        other: 'créé',
+      }),
+      comment: 'Participe accordé avec le mot qui désigne la période.',
+    }),
+    enregistree: t({
+      message: select(nature, {
+        EVENEMENT: 'enregistrée',
+        SAISON: 'enregistrée',
+        other: 'enregistré',
+      }),
+      comment: 'Participe accordé avec le mot qui désigne la période.',
+    }),
+    de: t`${select(nature, { EVENEMENT: 'de l’édition', SAISON: 'de la saison', other: 'du mandat' })}`,
+    dUneALAutre: t`${select(nature, { EVENEMENT: 'd’une édition à l’autre', SAISON: 'd’une saison à l’autre', other: 'd’un mandat à l’autre' })}`,
+  }
 }
 
 export interface ContexteActiviteValeur {

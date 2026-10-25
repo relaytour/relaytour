@@ -1,3 +1,5 @@
+import { t } from '@lingui/core/macro'
+
 import { estInstallee, appareil } from './installation'
 
 // Notifications push (ADR 0024) : état de l'appareil, abonnement et retrait. Le
@@ -149,7 +151,7 @@ export async function abonner(cle: string): Promise<AbonnementAEnvoyer | null> {
 export class ErreurAbonnement extends Error {
   constructor() {
     super(
-      'Votre appareil n’a pas pu s’abonner aux notifications. Vérifiez votre connexion, puis réessayez.'
+      t`Votre appareil n’a pas pu s’abonner aux notifications. Vérifiez votre connexion, puis réessayez.`
     )
   }
 }

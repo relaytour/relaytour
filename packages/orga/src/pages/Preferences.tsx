@@ -1,5 +1,6 @@
 import { EditOutlined, LogoutOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Form, Input, Radio, Skeleton, Switch } from 'antd'
 import { useState } from 'react'
 
@@ -91,11 +92,13 @@ interface Valeurs {
 }
 
 export default function Preferences() {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const deconnecter = useDeconnexion()
   const { data: session } = useQuery(MOI)
   const { activites } = useActivite()
   const organisation = useOrganisation()
+  const nomOrganisation = organisation.nom
   // Les réglages d'admin ne s'affichent qu'à une personne qui administre une
   // activité ou l'organisation (ADR 0033).
   const administre =
@@ -115,7 +118,7 @@ export default function Preferences() {
     try {
       await renommer({ variables: { nom } })
       setNomEnEdition(false)
-      message.success('Nom enregistré.')
+      message.success(t`Nom enregistré.`)
     } catch (e) {
       message.error(messageErreur(e))
     }
@@ -131,7 +134,7 @@ export default function Preferences() {
           resumeAdmin: v.resumeAdmin ?? null,
         },
       })
-      message.success('Préférences enregistrées.')
+      message.success(t`Préférences enregistrées.`)
     } catch (e) {
       message.error(messageErreur(e))
     }
@@ -140,9 +143,9 @@ export default function Preferences() {
   return (
     <>
       <Titre
-        sousTitre={`Choisissez les mails et les notifications que vous recevez de ${organisation.nom}. Vos autres organisations gardent leurs propres réglages.`}
+        sousTitre={t`Choisissez les mails et les notifications que vous recevez de ${nomOrganisation}. Vos autres organisations gardent leurs propres réglages.`}
       >
-        Préférences
+        <Trans>Préférences</Trans>
       </Titre>
       {loading || !data ? (
         <Skeleton active />
@@ -151,7 +154,7 @@ export default function Preferences() {
           cote={
             <>
               {session?.moi && (
-                <Panneau titre="Votre compte">
+                <Panneau titre={t`Votre compte`}>
                   <div
                     style={{ display: 'flex', alignItems: 'center', gap: 12 }}
                   >
@@ -184,16 +187,16 @@ export default function Preferences() {
                       onFinish={v => void enregistrerNom(v)}
                     >
                       <Form.Item
-                        label="Prénom et nom"
+                        label={t`Prénom et nom`}
                         name="nom"
                         rules={[
                           {
                             required: true,
                             whitespace: true,
-                            message: 'Saisissez un nom.',
+                            message: t`Saisissez un nom.`,
                           },
                         ]}
-                        extra="Ce nom s’affiche dans toutes vos organisations."
+                        extra={t`Ce nom s’affiche dans toutes vos organisations.`}
                       >
                         <Input autoComplete="name" maxLength={120} />
                       </Form.Item>
@@ -203,10 +206,10 @@ export default function Preferences() {
                           htmlType="submit"
                           loading={renommage.loading}
                         >
-                          Enregistrer
+                          <Trans>Enregistrer</Trans>
                         </Button>
                         <Button onClick={() => setNomEnEdition(false)}>
-                          Annuler
+                          <Trans>Annuler</Trans>
                         </Button>
                       </div>
                     </Form>
@@ -216,26 +219,30 @@ export default function Preferences() {
                       style={{ alignSelf: 'flex-start' }}
                       onClick={() => setNomEnEdition(true)}
                     >
-                      Modifier mon nom
+                      <Trans>Modifier mon nom</Trans>
                     </Button>
                   )}
                   <p className="rt-note">
-                    Les admins gèrent votre adresse et vos affectations.
+                    <Trans>
+                      Les admins gèrent votre adresse et vos affectations.
+                    </Trans>
                   </p>
                   <Button
                     icon={<LogoutOutlined />}
                     style={{ alignSelf: 'flex-start' }}
                     onClick={() => void deconnecter()}
                   >
-                    Se déconnecter
+                    <Trans>Se déconnecter</Trans>
                   </Button>
                 </Panneau>
               )}
-              <Panneau teinte titre="Les notifications dans l’espace">
+              <Panneau teinte titre={t`Les notifications dans l’espace`}>
                 <p className="rt-texte-secondaire">
-                  La cloche de la barre haute affiche les nouvelles de vos
-                  tâches, quel que soit votre choix pour les mails. Elle se met
-                  à jour sans recharger la page.
+                  <Trans>
+                    La cloche de la barre haute affiche les nouvelles de vos
+                    tâches, quel que soit votre choix pour les mails. Elle se
+                    met à jour sans recharger la page.
+                  </Trans>
                 </p>
               </Panneau>
             </>
@@ -252,29 +259,35 @@ export default function Preferences() {
               className="rt-choix"
               label={
                 <span style={{ fontSize: 16, fontWeight: 600 }}>
-                  Résumé par mail
+                  <Trans>Résumé par mail</Trans>
                 </span>
               }
               name="frequenceResume"
-              extra="Le résumé regroupe les nouvelles non lues de vos périmètres et vos échéances des 14 prochains jours. Il part à 7 h, à l’heure de votre organisation."
+              extra={t`Le résumé regroupe les nouvelles non lues de vos périmètres et vos échéances des 14 prochains jours. Il part à 7 h, à l’heure de votre organisation.`}
             >
               <Radio.Group>
                 <Radio value="QUOTIDIEN">
-                  <span className="rt-choix-titre">Chaque jour</span>
+                  <span className="rt-choix-titre">
+                    <Trans>Chaque jour</Trans>
+                  </span>
                   <span className="rt-choix-detail">
-                    Un mail chaque matin, s’il y a du nouveau.
+                    <Trans>Un mail chaque matin, s’il y a du nouveau.</Trans>
                   </span>
                 </Radio>
                 <Radio value="HEBDOMADAIRE">
-                  <span className="rt-choix-titre">Chaque lundi</span>
+                  <span className="rt-choix-titre">
+                    <Trans>Chaque lundi</Trans>
+                  </span>
                   <span className="rt-choix-detail">
-                    Un seul mail pour la semaine.
+                    <Trans>Un seul mail pour la semaine.</Trans>
                   </span>
                 </Radio>
                 <Radio value="AUCUN">
-                  <span className="rt-choix-titre">Jamais</span>
+                  <span className="rt-choix-titre">
+                    <Trans>Jamais</Trans>
+                  </span>
                   <span className="rt-choix-detail">
-                    Vous consultez l’espace vous-même.
+                    <Trans>Vous consultez l’espace vous-même.</Trans>
                   </span>
                 </Radio>
               </Radio.Group>
@@ -282,16 +295,18 @@ export default function Preferences() {
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <span style={{ fontSize: 16, fontWeight: 600 }}>
-                Mails immédiats
+                <Trans>Mails immédiats</Trans>
               </span>
               <div className="rt-reglage">
                 <label htmlFor="mailModification">
                   <span className="rt-choix-titre">
-                    Modification de vos tâches
+                    <Trans>Modification de vos tâches</Trans>
                   </span>
                   <span className="rt-choix-detail">
-                    Un mail immédiat quand une autre personne modifie une tâche
-                    qui vous est assignée.
+                    <Trans>
+                      Un mail immédiat quand une autre personne modifie une
+                      tâche qui vous est assignée.
+                    </Trans>
                   </span>
                 </label>
                 <Form.Item
@@ -304,10 +319,14 @@ export default function Preferences() {
               </div>
               <div className="rt-reglage">
                 <label htmlFor="mailEcheance">
-                  <span className="rt-choix-titre">Échéances</span>
+                  <span className="rt-choix-titre">
+                    <Trans>Échéances</Trans>
+                  </span>
                   <span className="rt-choix-detail">
-                    Un mail le matin quand une de vos tâches arrive à échéance
-                    dans 7 jours ou le lendemain, ou qu’elle est en retard.
+                    <Trans>
+                      Un mail le matin quand une de vos tâches arrive à échéance
+                      dans 7 jours ou le lendemain, ou qu’elle est en retard.
+                    </Trans>
                   </span>
                 </label>
                 <Form.Item name="mailEcheance" valuePropName="checked" noStyle>
@@ -325,17 +344,19 @@ export default function Preferences() {
               }}
             >
               <span style={{ fontSize: 16, fontWeight: 600 }}>
-                Dans l’espace organisateur
+                <Trans>Dans l’espace organisateur</Trans>
               </span>
               <div className="rt-reglage">
                 <label htmlFor="applicationPerimetre">
                   <span className="rt-choix-titre">
-                    Activité de vos périmètres
+                    <Trans>Activité de vos périmètres</Trans>
                   </span>
                   <span className="rt-choix-detail">
-                    Une notification quand une autre personne crée, modifie ou
-                    termine une tâche ou une fiche de vos périmètres. Aucun mail
-                    ne part.
+                    <Trans>
+                      Une notification quand une autre personne crée, modifie ou
+                      termine une tâche ou une fiche de vos périmètres. Aucun
+                      mail ne part.
+                    </Trans>
                   </span>
                 </label>
                 <Form.Item
@@ -358,20 +379,25 @@ export default function Preferences() {
                 }}
               >
                 <span style={{ fontSize: 16, fontWeight: 600 }}>
-                  Vos rôles d’admin
+                  <Trans>Vos rôles d’admin</Trans>
                 </span>
                 <p className="rt-texte-secondaire" style={{ margin: 0 }}>
-                  Les notifications d’admin ont leur écran, à part de la cloche.
-                  Les demandes et les invitations s’y affichent toujours.
+                  <Trans>
+                    Les notifications d’admin ont leur écran, à part de la
+                    cloche. Les demandes et les invitations s’y affichent
+                    toujours.
+                  </Trans>
                 </p>
                 <div className="rt-reglage">
                   <label htmlFor="mailDemandes">
                     <span className="rt-choix-titre">
-                      Demandes pour rejoindre l’équipe
+                      <Trans>Demandes pour rejoindre l’équipe</Trans>
                     </span>
                     <span className="rt-choix-detail">
-                      Un mail par heure au plus quand une activité que vous
-                      administrez reçoit des demandes.
+                      <Trans>
+                        Un mail par heure au plus quand une activité que vous
+                        administrez reçoit des demandes.
+                      </Trans>
                     </span>
                   </label>
                   <Form.Item
@@ -385,12 +411,14 @@ export default function Preferences() {
                 <div className="rt-reglage">
                   <label htmlFor="applicationEquipe">
                     <span className="rt-choix-titre">
-                      Équipe de vos activités
+                      <Trans>Équipe de vos activités</Trans>
                     </span>
                     <span className="rt-choix-detail">
-                      Une notification quand un autre admin affecte, retire ou
-                      nomme une personne, ou quand une personne formule un
-                      souhait. Aucun mail ne part.
+                      <Trans>
+                        Une notification quand un autre admin affecte, retire ou
+                        nomme une personne, ou quand une personne formule un
+                        souhait. Aucun mail ne part.
+                      </Trans>
                     </span>
                   </label>
                   <Form.Item
@@ -404,11 +432,13 @@ export default function Preferences() {
                 <div className="rt-reglage">
                   <label htmlFor="resumeAdmin">
                     <span className="rt-choix-titre">
-                      Dans le résumé par mail
+                      <Trans>Dans le résumé par mail</Trans>
                     </span>
                     <span className="rt-choix-detail">
-                      Le résumé reprend aussi vos notifications d’admin non
-                      lues, dans une section à part.
+                      <Trans>
+                        Le résumé reprend aussi vos notifications d’admin non
+                        lues, dans une section à part.
+                      </Trans>
                     </span>
                   </label>
                   <Form.Item name="resumeAdmin" valuePropName="checked" noStyle>
@@ -429,8 +459,10 @@ export default function Preferences() {
               }}
             >
               <p className="rt-note" style={{ maxWidth: 400 }}>
-                Les mails de connexion et d’invitation partent toujours : ils
-                sont nécessaires pour accéder à l’espace.
+                <Trans>
+                  Les mails de connexion et d’invitation partent toujours : ils
+                  sont nécessaires pour accéder à l’espace.
+                </Trans>
               </p>
               <Button
                 type="primary"
@@ -438,7 +470,7 @@ export default function Preferences() {
                 htmlType="submit"
                 loading={modification.loading}
               >
-                Enregistrer
+                <Trans>Enregistrer</Trans>
               </Button>
             </div>
           </Form>

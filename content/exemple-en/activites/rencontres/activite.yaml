@@ -1,0 +1,45 @@
+# The Valley Games sports gathering: one event, one edition per year.
+slug: rencontres
+nom: The Valley Games
+sigle: Valley Games
+nature: EVENEMENT
+# Groups of areas, in display order. Without this key, sport and department.
+groupes:
+  - cle: sport
+    libelle: Sport
+    libellePluriel: Sports
+  - cle: pole
+    libelle: Department
+    libellePluriel: Departments
+# Phases of the activity, in order (ADR 0025). A bound counts days from the
+# first day of the period. The last phase has none. Without this key, the
+# activity keeps the four default phases.
+phases:
+  - cle: cadrage
+    libelle: Scoping
+    jusquA: J-180
+  - cle: preparation
+    libelle: Preparation
+    jusquA: J-60
+  - cle: mobilisation
+    libelle: Mobilization
+    jusquA: J-7
+  - cle: deroulement
+    libelle: Event days
+    jusquA: J+1
+  - cle: bilan
+    libelle: Review
+ordre: 1
+# All members can browse the areas and express interests (ADR 0012).
+souhaitsOuverts: true
+# Public form to join the team (ADR 0015). An admin opens it in the organizer
+# workspace: its opening is not declared here.
+formulaire:
+  introduction: >-
+    The Valley Games are looking for people to prepare the next edition.
+    Tell us what interests you, and the team will get back to you.
+  question: Your club or your town
+  paliers:
+    - A few hours during the edition
+    - Two to four hours a month
+    - Several hours a week

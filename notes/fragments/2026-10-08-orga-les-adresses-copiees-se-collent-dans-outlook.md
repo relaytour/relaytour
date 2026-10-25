@@ -16,6 +16,16 @@ fr:
     adresses », sous les boutons de copie, change ce signe pour un message.
     Pour la messagerie par défaut de l'appareil, vos préférences fixent le
     signe proposé.
+en:
+  titre: >-
+    Copied addresses paste correctly into Outlook
+  texte: >-
+    Outlook did not split several addresses copied from the “Write a message”
+    window, because a comma separated them. Addresses are now copied with a
+    semicolon when you have chosen Outlook, and with a comma for other mail
+    apps. The “Address separator” choice, below the copy buttons, changes this
+    sign for one message. For the device’s default mail app, your preferences
+    set the proposed sign.
 ---
 
 `adressesACopier` reçoit le séparateur. Chaque cible de `lib/messagerie.ts`
