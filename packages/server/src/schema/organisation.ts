@@ -18,6 +18,7 @@ import { cheminManifest } from '../lib/application.ts'
 import { validerDates, validerEdition } from '../lib/editions.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { i18n } from '../lib/langue.ts'
 import {
   couleurValide,
   descriptionValide,
@@ -142,7 +143,7 @@ async function groupeDuPerimetre(
 ): Promise<string> {
   const demande = groupe?.trim() || (type ? groupeDepuisType(type) : undefined)
   if (demande === undefined) {
-    throw erreurSaisie('Choisissez le groupe du périmètre.')
+    throw erreurSaisie(i18n._('Choisissez le groupe du périmètre.'))
   }
   const activite = await prisma.activite.findUniqueOrThrow({
     where: { id: activiteId },
@@ -151,7 +152,10 @@ async function groupeDuPerimetre(
   const groupes = lireGroupes(activite.groupes)
   if (!groupes.some(g => g.cle === demande)) {
     throw erreurSaisie(
-      `L’activité ne déclare pas le groupe « ${demande} » (${groupes.map(g => g.cle).join(', ')}).`
+      i18n._('L’activité ne déclare pas le groupe « {groupe} » ({groupes}).', {
+        groupe: demande,
+        groupes: groupes.map(g => g.cle).join(', '),
+      })
     )
   }
   return demande
@@ -180,7 +184,7 @@ builder.mutationFields(t => ({
             ...query,
             data: { ...edition, organisationId, activiteId },
           }),
-          `Une édition existe déjà pour ${args.annee}.`
+          i18n._('Une édition existe déjà pour {annee}.', { annee: args.annee })
         )
       })
     },
@@ -210,7 +214,7 @@ builder.mutationFields(t => ({
           ...query,
           where: { id: String(args.id) },
           data: {
-            nom: texteRequis(args.nom, 'Le nom'),
+            nom: texteRequis(args.nom, i18n._('Le nom')),
             debut: args.debut,
             fin: args.fin,
             statut: args.statut,
@@ -245,7 +249,7 @@ builder.mutationFields(t => ({
             organisationId: ctx.organisation!.id,
             activiteId,
             slug: slugValide(args.slug),
-            nom: texteRequis(args.nom, 'Le nom'),
+            nom: texteRequis(args.nom, i18n._('Le nom')),
             description: descriptionValide(args.description),
             type: typeDepuisGroupe(groupe),
             groupe,
@@ -253,7 +257,7 @@ builder.mutationFields(t => ({
             ordre: args.ordre ?? 0,
           },
         }),
-        'Un périmètre utilise déjà cet identifiant.'
+        i18n._('Un périmètre utilise déjà cet identifiant.')
       )
       await marquerContenuModifie(ctx.organisation!.id)
       publierPourActivite('PERIMETRE', ctx.organisation!.id, activiteId, {
@@ -303,7 +307,7 @@ builder.mutationFields(t => ({
           }
         )
         return conflitDeVersion(
-          'Ce périmètre a été modifié depuis votre lecture.',
+          i18n._('Ce périmètre a été modifié depuis votre lecture.'),
           { versionCourante: version, modifieeLe: updatedAt.toISOString() }
         )
       }
@@ -324,7 +328,7 @@ builder.mutationFields(t => ({
         },
         data: {
           version: { increment: 1 },
-          nom: texteRequis(args.nom, 'Le nom'),
+          nom: texteRequis(args.nom, i18n._('Le nom')),
           type: typeDepuisGroupe(groupe),
           groupe,
           couleur: couleurValide(args.couleur),

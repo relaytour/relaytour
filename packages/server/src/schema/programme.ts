@@ -35,6 +35,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Programme du jour J (ADR 0040) : les lieux d'une activité, et les séquences
 // d'une période où se placent des membres de l'équipe et des bénévoles. Toute
@@ -383,10 +384,10 @@ builder.mutationFields(t => {
     dureeValide(horaire.debut, horaire.fin)
     return {
       champs: {
-        titre: texteRequis(args.titre, 'Le titre', TITRE_REUNION_MAX),
+        titre: texteRequis(args.titre, i18n._('Le titre'), TITRE_REUNION_MAX),
         description: texteFacultatif(
           args.description,
-          'La description',
+          i18n._('La description'),
           DESCRIPTION_REUNION_MAX
         ),
         // Un champ absent garde sa valeur : un client antérieur à l'ADR 0041
@@ -399,7 +400,7 @@ builder.mutationFields(t => {
           : {
               consignesBenevoles: texteFacultatif(
                 args.consignesBenevoles,
-                'Les consignes',
+                i18n._('Les consignes'),
                 CONSIGNES_MAX
               ),
             }),
@@ -438,17 +439,19 @@ builder.mutationFields(t => {
           async tx => {
             const nombre = await tx.lieu.count({ where: { activiteId } })
             if (nombre >= 200) {
-              throw erreurSaisie('Une activité compte 200 lieux au plus.')
+              throw erreurSaisie(
+                i18n._('Une activité compte 200 lieux au plus.')
+              )
             }
             return tx.lieu.create({
               ...query,
               data: {
                 organisationId: ctx.organisation!.id,
                 activiteId,
-                nom: texteRequis(args.nom, 'Le nom', NOM_LIEU_MAX),
+                nom: texteRequis(args.nom, i18n._('Le nom'), NOM_LIEU_MAX),
                 description: texteFacultatif(
                   args.description,
-                  'La description',
+                  i18n._('La description'),
                   2000
                 ),
                 ordre: args.ordre ?? 0,
@@ -482,10 +485,10 @@ builder.mutationFields(t => {
           ...query,
           where: { id: lieu.id },
           data: {
-            nom: texteRequis(args.nom, 'Le nom', NOM_LIEU_MAX),
+            nom: texteRequis(args.nom, i18n._('Le nom'), NOM_LIEU_MAX),
             description: texteFacultatif(
               args.description,
-              'La description',
+              i18n._('La description'),
               2000
             ),
             ordre: args.ordre,
@@ -531,7 +534,9 @@ builder.mutationFields(t => {
             })
             if (nombre >= SEQUENCES_MAX) {
               throw erreurSaisie(
-                `Une période compte ${SEQUENCES_MAX} séquences au plus.`
+                i18n._('Une période compte {max} séquences au plus.', {
+                  max: SEQUENCES_MAX,
+                })
               )
             }
             return tx.sequence.create({
@@ -599,7 +604,7 @@ builder.mutationFields(t => {
               select: { version: true, updatedAt: true },
             })
             throw conflitDeVersion(
-              'Cette séquence a été modifiée depuis votre lecture.',
+              i18n._('Cette séquence a été modifiée depuis votre lecture.'),
               { versionCourante: version, modifieeLe: updatedAt.toISOString() }
             )
           }

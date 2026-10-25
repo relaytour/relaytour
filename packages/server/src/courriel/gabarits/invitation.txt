@@ -1,6 +1,6 @@
 {{marque}}
 
-Bonjour {{nom}},
+[[Bonjour {{nom}},]]
 
 {{accroche}}
 
@@ -8,17 +8,17 @@ Bonjour {{nom}},
 
 {{perimetres}}
 
-L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre
-adresse et vous recevez un code par mail.
+[[L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre
+adresse et vous recevez un code par mail.]]
 
-Se connecter : {{lienConnexion}}
+[[Se connecter]] : {{lienConnexion}}
 
-Le mode d’emploi {{roleModeDEmploi}} présente vos écrans et vos actions.
-Lire le mode d’emploi : {{lienModeDEmploi}}
+[[Le mode d’emploi {{roleModeDEmploi}} présente vos écrans et vos actions.]]
+[[Lire le mode d’emploi]] : {{lienModeDEmploi}}
 
 --
-Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
-organisateur de {{organisation}}. Pour toute question, répondez à ce mail.
+[[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}. Pour toute question, répondez à ce mail.]]
 
-Cet espace est propulsé par Relaytour, logiciel libre.
+[[Cet espace est propulsé par Relaytour, logiciel libre.]]
 https://github.com/relaytour/relaytour

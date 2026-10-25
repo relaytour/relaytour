@@ -1,17 +1,17 @@
 {{marque}}
 
-Une de vos tâches a été modifiée
+[[Une de vos tâches a été modifiée]]
 
-{{acteur}} a modifié la tâche « {{titre}} » du périmètre {{perimetre}}.
+[[{{acteur}} a modifié la tâche « {{titre}} » du périmètre {{perimetre}}.]]
 {{changement}}
 
-Vous recevez ce message parce que cette tâche vous est assignée.
+[[Vous recevez ce message parce que cette tâche vous est assignée.]]
 
-Voir le périmètre : {{lienPerimetre}}
+[[Voir le périmètre]] : {{lienPerimetre}}
 
 --
-Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
-organisateur de {{organisation}}. Pour toute question, répondez à ce mail.
+[[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}. Pour toute question, répondez à ce mail.]]
 
-Cet espace est propulsé par Relaytour, logiciel libre.
+[[Cet espace est propulsé par Relaytour, logiciel libre.]]
 https://github.com/relaytour/relaytour

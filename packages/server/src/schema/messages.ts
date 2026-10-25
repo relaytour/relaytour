@@ -4,6 +4,7 @@ import { dansLEquipe, membreActif } from '../lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { publierMessage } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import {
   CORPS_MAX,
   destinatairesValides,
@@ -144,8 +145,8 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, { message: saisie }, ctx) => {
       const organisationId = ctx.organisation!.id
       const modele = modeleValide(saisie.modele)
-      const objet = texteRequis(saisie.objet, 'L’objet', OBJET_MAX)
-      const corps = texteRequis(saisie.corps, 'Le texte', CORPS_MAX)
+      const objet = texteRequis(saisie.objet, i18n._('L’objet'), OBJET_MAX)
+      const corps = texteRequis(saisie.corps, i18n._('Le texte'), CORPS_MAX)
       const ids = destinatairesValides(saisie.destinataireIds)
 
       let activiteId: string | null = null
@@ -192,26 +193,30 @@ builder.mutationFields(t => ({
       // L'auteur reçoit déjà son message : il ne figure pas parmi ses destinataires.
       if (ids.includes(ctx.personne!.id)) {
         throw erreurSaisie(
-          'Vous ne pouvez pas figurer parmi les destinataires de votre message.'
+          i18n._(
+            'Vous ne pouvez pas figurer parmi les destinataires de votre message.'
+          )
         )
       }
       // Le champ « À » va avec une seule personne, et avec elle seulement.
       if ((saisie.champ === 'A') !== (ids.length === 1)) {
         throw erreurSaisie(
           ids.length === 1
-            ? 'Un message à une seule personne utilise le champ « À ».'
-            : 'Le champ « À » convient à un seul destinataire.'
+            ? i18n._('Un message à une seule personne utilise le champ « À ».')
+            : i18n._('Le champ « À » convient à un seul destinataire.')
         )
       }
       const enCopie = new Set((saisie.enCopieIds ?? []).map(String))
       if (enCopie.size > 0 && saisie.champ !== 'CCI') {
         throw erreurSaisie(
-          'Une copie visible accompagne seulement un message en copie cachée.'
+          i18n._(
+            'Une copie visible accompagne seulement un message en copie cachée.'
+          )
         )
       }
       if ([...enCopie].some(id => !ids.includes(id))) {
         throw erreurSaisie(
-          'Une personne en copie visible fait partie des destinataires.'
+          i18n._('Une personne en copie visible fait partie des destinataires.')
         )
       }
 

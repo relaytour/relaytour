@@ -1,5 +1,7 @@
 import { createSign, randomBytes } from 'node:crypto'
 
+import { i18n } from '../lib/langue.ts'
+
 import { appelSortant, type HotesAdmis } from './sortant.ts'
 import {
   AccesRetire,
@@ -229,23 +231,27 @@ export function lireCleCompteService(texte: string): CleCompteService {
   try {
     lu = JSON.parse(texte)
   } catch {
-    throw new Error('La clé n’est pas un fichier JSON.')
+    throw new Error(i18n._('La clé n’est pas un fichier JSON.'))
   }
   const cle = lu as Partial<Record<string, unknown>>
   if (cle.type !== 'service_account')
-    throw new Error('La clé n’est pas celle d’un compte de service.')
+    throw new Error(i18n._('La clé n’est pas celle d’un compte de service.'))
   if (
     typeof cle.client_email !== 'string' ||
     !/^[^@\s]+@[^@\s]+\.iam\.gserviceaccount\.com$/.test(cle.client_email)
   )
-    throw new Error('La clé ne donne pas l’adresse du compte de service.')
+    throw new Error(
+      i18n._('La clé ne donne pas l’adresse du compte de service.')
+    )
   if (
     typeof cle.private_key !== 'string' ||
     !cle.private_key.includes('PRIVATE KEY')
   )
-    throw new Error('La clé ne contient pas de clé privée.')
+    throw new Error(i18n._('La clé ne contient pas de clé privée.'))
   if (cle.token_uri !== undefined && cle.token_uri !== ADRESSE_JETON)
-    throw new Error('La clé désigne un autre service de jetons que Google.')
+    throw new Error(
+      i18n._('La clé désigne un autre service de jetons que Google.')
+    )
   return { client_email: cle.client_email, private_key: cle.private_key }
 }
 
@@ -406,7 +412,7 @@ export function droitGoogle(p: PermissionDrive): DroitElement | null {
         type: 'personne',
         identifiant: null,
         adresse,
-        nom: p.displayName ?? adresse ?? 'Personne',
+        nom: p.displayName ?? adresse ?? i18n._('Personne'),
       }
       break
     case 'group':
@@ -420,12 +426,12 @@ export function droitGoogle(p: PermissionDrive): DroitElement | null {
     case 'domain':
       beneficiaire = {
         type: 'domaine',
-        nom: `Domaine ${p.domain ?? ''}`.trim(),
+        nom: i18n._('Domaine {domaine}', { domaine: p.domain ?? '' }).trim(),
         ...(p.domain === undefined ? {} : { domaine: p.domain }),
       }
       break
     default:
-      beneficiaire = { type: 'lien', nom: 'Lien de partage' }
+      beneficiaire = { type: 'lien', nom: i18n._('Lien de partage') }
   }
   return {
     identifiant: p.id,
@@ -578,7 +584,11 @@ export function espaceGoogleDrive(
   /** L'élément de base d'une position : la racine de l'emplacement, ou un dossier connu. */
   async function base(p: Position): Promise<FichierDrive | null> {
     if (p.base === null && p.emplacement === PARTAGES) {
-      return { id: PARTAGES, name: 'Partagés avec moi', mimeType: DOSSIER }
+      return {
+        id: PARTAGES,
+        name: i18n._('Partagés avec moi'),
+        mimeType: DOSSIER,
+      }
     }
     if (p.base === null && p.emplacement !== MON_DRIVE) {
       const d = await lireJson<{ id: string; name: string }>(
@@ -653,9 +663,13 @@ export function espaceGoogleDrive(
       const liste: Emplacement[] = []
       // Un compte de service n'a pas de Drive à lui : il lit ce qu'on lui partage.
       if (!options.compteService) {
-        liste.push({ id: MON_DRIVE, nom: 'Mon Drive', site: null })
+        liste.push({ id: MON_DRIVE, nom: i18n._('Mon Drive'), site: null })
       }
-      liste.push({ id: PARTAGES, nom: 'Partagés avec moi', site: null })
+      liste.push({
+        id: PARTAGES,
+        nom: i18n._('Partagés avec moi'),
+        site: null,
+      })
       let jetonPage: string | undefined
       for (let page = 0; page < PAGES_MAX; page++) {
         const reponse: {
@@ -666,7 +680,7 @@ export function espaceGoogleDrive(
           jeton
         )
         for (const d of reponse?.drives ?? []) {
-          liste.push({ id: d.id, nom: d.name, site: 'Drive partagé' })
+          liste.push({ id: d.id, nom: d.name, site: i18n._('Drive partagé') })
         }
         jetonPage = reponse?.nextPageToken
         if (jetonPage === undefined) break
@@ -687,7 +701,7 @@ export function espaceGoogleDrive(
       // Un élément partagé remonte jusqu'à un dossier que le compte ne voit pas :
       // la vue « Partagés avec moi » le coiffe.
       if (emplacement === PARTAGES) {
-        chaine.push({ id: PARTAGES, nom: 'Partagés avec moi' })
+        chaine.push({ id: PARTAGES, nom: i18n._('Partagés avec moi') })
       }
       return chaine
     },

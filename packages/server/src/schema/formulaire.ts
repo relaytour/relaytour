@@ -13,6 +13,7 @@ import {
   type Formulaire,
 } from '../lib/formulaire.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { empreinte, jetonDe } from '../lib/liens.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import { configurationActivite } from '../lib/organisation.ts'
@@ -39,8 +40,9 @@ const DEMANDES_EN_ATTENTE_MAX = 300
 const REPONSE_MAX = 120
 const TEXTE_MAX = 600
 
-const FERME = 'Ce formulaire n’est pas ouvert.'
-const TROP = 'Trop de demandes ont été envoyées. Réessayez plus tard.'
+const ferme = () => i18n._('Ce formulaire n’est pas ouvert.')
+const trop = () =>
+  i18n._('Trop de demandes ont été envoyées. Réessayez plus tard.')
 
 interface PerimetreDuFormulaire {
   slug: string
@@ -296,7 +298,7 @@ async function exigerDebitRaisonnable(
     86_400,
     refuser
   )
-  if (!parIp || !parAdresse) throw erreurSaisie(TROP)
+  if (!parIp || !parAdresse) throw erreurSaisie(trop())
 }
 
 /**
@@ -322,7 +324,7 @@ async function exigerPlaceDansLActivite(
     recentes >= DEPOTS_PAR_ACTIVITE_ET_PAR_HEURE ||
     enAttente >= DEMANDES_EN_ATTENTE_MAX
   ) {
-    throw erreurSaisie(TROP)
+    throw erreurSaisie(trop())
   }
 }
 
@@ -349,27 +351,35 @@ builder.mutationField('envoyerDemande', t =>
         args.organisation,
         args.activite
       )
-      if (formulaire === null) throw erreurSaisie(FERME)
+      if (formulaire === null) throw erreurSaisie(ferme())
       // Un dépôt piégé reçoit la même réponse qu'un dépôt accepté, sans écriture.
       if ((args.siteWeb ?? '').trim() !== '') return true
 
       const email = adresseValide(args.email)
-      const nom = texteRequis(args.nom, 'Le nom', 120)
+      const nom = texteRequis(args.nom, i18n._('Le nom'), 120)
       if (contientUnLien(nom)) {
-        throw erreurSaisie('Les liens ne sont pas acceptés dans ce formulaire.')
+        throw erreurSaisie(
+          i18n._('Les liens ne sont pas acceptés dans ce formulaire.')
+        )
       }
       const slugs = identifiantsSouhaites(args.perimetres)
       const perimetreIds = slugs.map(slug => formulaire.perimetres.get(slug))
       if (perimetreIds.some(id => id === undefined)) {
-        throw erreurSaisie('Un périmètre choisi est introuvable.')
+        throw erreurSaisie(i18n._('Un périmètre choisi est introuvable.'))
       }
       const paliers = formulaire.formulaire.paliers ?? []
       const disponibilite = (args.disponibilite ?? '').trim() || null
       if (disponibilite !== null && !paliers.includes(disponibilite)) {
-        throw erreurSaisie('Choisissez une disponibilité dans la liste.')
+        throw erreurSaisie(
+          i18n._('Choisissez une disponibilité dans la liste.')
+        )
       }
-      const reponse = texteLibre(args.reponse, 'La réponse', REPONSE_MAX)
-      const texte = texteLibre(args.texte, 'Le texte', TEXTE_MAX)
+      const reponse = texteLibre(
+        args.reponse,
+        i18n._('La réponse'),
+        REPONSE_MAX
+      )
+      const texte = texteLibre(args.texte, i18n._('Le texte'), TEXTE_MAX)
 
       await exigerDebitRaisonnable(ctx, formulaire, email)
 

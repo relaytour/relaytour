@@ -21,6 +21,7 @@ import { texteRequis } from '../lib/saisie.ts'
 import { builder } from './builder.ts'
 import { PersonneRef } from './personnes.ts'
 import { StatutTacheEnum } from './taches.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Commentaires d'une tâche (ADR 0029).
 //
@@ -235,13 +236,15 @@ async function exigerLectureDeLaTache(
 function exigerTacheDuPerimetre(tache: { accord: AccordDeclinaison | null }) {
   if (tache.accord === 'EN_ATTENTE' || tache.accord === 'REFUSE') {
     throw erreurSaisie(
-      'Cette déclinaison n’est pas acceptée par son périmètre : elle ne reçoit aucun commentaire.'
+      i18n._(
+        'Cette déclinaison n’est pas acceptée par son périmètre : elle ne reçoit aucun commentaire.'
+      )
     )
   }
 }
 
 function texteValide(brut: string): string {
-  return texteRequis(brut, 'Le commentaire', COMMENTAIRE_MAX)
+  return texteRequis(brut, i18n._('Le commentaire'), COMMENTAIRE_MAX)
 }
 
 async function lireLeFil(ctx: AppContext, tacheId: string): Promise<Fil> {

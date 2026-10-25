@@ -1,3 +1,5 @@
+import { i18n } from '../lib/langue.ts'
+
 import { appelSortant, type HotesAdmis } from './sortant.ts'
 import {
   AccesRetire,
@@ -356,7 +358,7 @@ export function droitsDropbox(m: MembresDropbox): DroitElement[] {
         type: 'personne',
         identifiant: u.user?.account_id ?? null,
         adresse,
-        nom: u.user?.display_name ?? adresse ?? 'Personne',
+        nom: u.user?.display_name ?? adresse ?? i18n._('Personne'),
       },
       role: roleDropbox(u.access_type),
       herite: u.is_inherited === true,
@@ -369,7 +371,7 @@ export function droitsDropbox(m: MembresDropbox): DroitElement[] {
       beneficiaire: {
         type: 'groupe',
         identifiant: g.group.group_id,
-        nom: g.group.group_name ?? 'Groupe',
+        nom: g.group.group_name ?? i18n._('Groupe'),
       },
       role: roleDropbox(g.access_type),
       herite: g.is_inherited === true,
@@ -412,7 +414,10 @@ export function espaceDropbox(
 
   const racineVirtuelle = (emplacement: string): ElementEspace => ({
     id: RACINE,
-    nom: emplacement === MON_DROPBOX ? 'Mon Dropbox' : 'Espace d’équipe',
+    nom:
+      emplacement === MON_DROPBOX
+        ? i18n._('Mon Dropbox')
+        : i18n._('Espace d’équipe'),
     dossier: true,
     taille: null,
     modifieLe: null,
@@ -599,12 +604,12 @@ export function espaceDropbox(
         return [
           {
             id: `${prefixeEquipe}${racine.root_namespace_id}`,
-            nom: 'Espace d’équipe',
+            nom: i18n._('Espace d’équipe'),
             site: 'Dropbox Business',
           },
         ]
       }
-      return [{ id: MON_DROPBOX, nom: 'Mon Dropbox', site: null }]
+      return [{ id: MON_DROPBOX, nom: i18n._('Mon Dropbox'), site: null }]
     },
 
     async ancetres(emplacement, element) {

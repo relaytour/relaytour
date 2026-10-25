@@ -1,15 +1,46 @@
 import type { PrismaClient } from '@relaytour/database'
 
+import { i18n } from './langue.ts'
+
 // Modes d'emploi publics de l'espace organisateur, un par rôle. Le mail
 // d'invitation lie celui du rôle de la personne ; le menu du compte lie la liste.
 
 export type RoleModeDEmploi =
   'admin-organisation' | 'admin-activite' | 'referent'
 
+// Des accesseurs : le libellé se compose dans la langue de l'envoi, pas au chargement.
+// Chaque libellé complète « Le mode d’emploi … présente vos écrans et vos actions. »
 export const LIBELLES_ROLE: Record<RoleModeDEmploi, string> = {
-  'admin-organisation': 'de l’admin de l’organisation',
-  'admin-activite': 'de l’admin d’activité',
-  referent: 'des référentes et référents',
+  get 'admin-organisation'() {
+    return i18n._(
+      'de l’admin de l’organisation',
+      {},
+      {
+        comment:
+          'Rôle de la personne, dans « Le mode d’emploi … présente vos écrans et vos actions. »',
+      }
+    )
+  },
+  get 'admin-activite'() {
+    return i18n._(
+      'de l’admin d’activité',
+      {},
+      {
+        comment:
+          'Rôle de la personne, dans « Le mode d’emploi … présente vos écrans et vos actions. »',
+      }
+    )
+  },
+  get referent() {
+    return i18n._(
+      'des référentes et référents',
+      {},
+      {
+        comment:
+          'Rôle de la personne, dans « Le mode d’emploi … présente vos écrans et vos actions. »',
+      }
+    )
+  },
 }
 
 /**

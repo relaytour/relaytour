@@ -14,6 +14,7 @@ import {
   type LotInvitation,
 } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
@@ -312,7 +313,9 @@ builder.mutationFields(t => ({
       })
       if (!partie) {
         throw erreurSaisie(
-          'Cette personne a déjà reçu un mail d’invitation il y a moins d’une heure.'
+          i18n._(
+            'Cette personne a déjà reçu un mail d’invitation il y a moins d’une heure.'
+          )
         )
       }
       return true

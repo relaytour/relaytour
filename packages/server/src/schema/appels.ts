@@ -33,6 +33,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Appels à bénévoles et candidatures (ADR 0041). Un admin de l'activité ouvre un
 // appel de toute portée ; une personne qui écrit dans un périmètre ouvre un appel
@@ -193,7 +194,9 @@ async function exigerPlacePourUnAppel(
   })
   if (ouverts >= APPELS_OUVERTS_MAX) {
     throw erreurSaisie(
-      `Une période compte ${APPELS_OUVERTS_MAX} appels ouverts au plus.`
+      i18n._('Une période compte {max} appels ouverts au plus.', {
+        max: APPELS_OUVERTS_MAX,
+      })
     )
   }
 }
@@ -546,7 +549,8 @@ builder.mutationFields(t => ({
       let perimetreId: string | null = null
       let sequenceId: string | null = null
       if (args.portee === 'PERIMETRE') {
-        if (!args.perimetreId) throw erreurSaisie('Choisissez un périmètre.')
+        if (!args.perimetreId)
+          throw erreurSaisie(i18n._('Choisissez un périmètre.'))
         const perimetre = await prisma.perimetre.findFirst({
           where: {
             id: String(args.perimetreId),
@@ -558,7 +562,8 @@ builder.mutationFields(t => ({
         if (perimetre === null) throw accesRefuse()
         perimetreId = perimetre.id
       } else if (args.portee === 'SEQUENCE') {
-        if (!args.sequenceId) throw erreurSaisie('Choisissez une séquence.')
+        if (!args.sequenceId)
+          throw erreurSaisie(i18n._('Choisissez une séquence.'))
         const sequence = await prisma.sequence.findFirst({
           where: { id: String(args.sequenceId), editionId: edition.id },
           select: { id: true, perimetreId: true },
@@ -589,10 +594,10 @@ builder.mutationFields(t => ({
             portee: args.portee,
             perimetreId,
             sequenceId,
-            nom: texteRequis(args.nom, 'Le nom', NOM_APPEL_MAX),
+            nom: texteRequis(args.nom, i18n._('Le nom'), NOM_APPEL_MAX),
             introduction: texteFacultatif(
               args.introduction,
-              'L’introduction',
+              i18n._('L’introduction'),
               INTRODUCTION_MAX
             ),
             ouvertLe: args.ouvertLe,
@@ -628,7 +633,9 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const appel = await appelGere(ctx, String(args.id))
       if (appel.sansAdresse) {
-        throw erreurSaisie('Un appel d’import n’a pas d’adresse publique.')
+        throw erreurSaisie(
+          i18n._('Un appel d’import n’a pas d’adresse publique.')
+        )
       }
       const edition = await ctx.exigerEdition(appel.editionId)
       datesAppelValides(
@@ -638,10 +645,10 @@ builder.mutationFields(t => ({
         ctx.organisation!.fuseauHoraire
       )
       const donnees = {
-        nom: texteRequis(args.nom, 'Le nom', NOM_APPEL_MAX),
+        nom: texteRequis(args.nom, i18n._('Le nom'), NOM_APPEL_MAX),
         introduction: texteFacultatif(
           args.introduction,
-          'L’introduction',
+          i18n._('L’introduction'),
           INTRODUCTION_MAX
         ),
         ouvertLe: args.ouvertLe,
@@ -673,7 +680,7 @@ builder.mutationFields(t => ({
               select: { version: true, updatedAt: true },
             })
           throw conflitDeVersion(
-            'Cet appel a été modifié depuis votre lecture.',
+            i18n._('Cet appel a été modifié depuis votre lecture.'),
             {
               versionCourante: version,
               modifieeLe: updatedAt.toISOString(),
@@ -710,12 +717,16 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const appel = await appelGere(ctx, String(args.id))
       if (appel.sansAdresse) {
-        throw erreurSaisie('Un appel d’import n’a pas d’adresse publique.')
+        throw erreurSaisie(
+          i18n._('Un appel d’import n’a pas d’adresse publique.')
+        )
       }
       const maintenant = new Date()
       if (appel.fermeLe.getTime() <= maintenant.getTime()) {
         throw erreurSaisie(
-          'Cet appel a passé sa date de fermeture : changez d’abord ses dates.'
+          i18n._(
+            'Cet appel a passé sa date de fermeture : changez d’abord ses dates.'
+          )
         )
       }
       await sousVerrouOrganisation(ctx.organisation!.id, async tx => {
@@ -747,7 +758,9 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const appel = await appelGere(ctx, String(args.id))
       if (appel.sansAdresse) {
-        throw erreurSaisie('Un appel d’import n’a pas d’adresse publique.')
+        throw erreurSaisie(
+          i18n._('Un appel d’import n’a pas d’adresse publique.')
+        )
       }
       const sel = nouveauSel()
       const jeton = await jetonDe('appel', sel)
@@ -814,7 +827,9 @@ builder.mutationFields(t => ({
       const choix = await choixTraitable(ctx, String(args.id))
       if (!CHOIX_EN_ATTENTE.includes(choix.statut)) {
         throw erreurSaisie(
-          'Ce choix est déjà traité : retirez la place depuis le programme.'
+          i18n._(
+            'Ce choix est déjà traité : retirez la place depuis le programme.'
+          )
         )
       }
       await prisma.$transaction(async tx => {
@@ -833,7 +848,9 @@ builder.mutationFields(t => ({
         })
         if (count === 0) {
           throw erreurSaisie(
-            'Ce choix est déjà traité : retirez la place depuis le programme.'
+            i18n._(
+              'Ce choix est déjà traité : retirez la place depuis le programme.'
+            )
           )
         }
         await recalculerCandidature(tx, choix.candidatureId)
@@ -856,7 +873,7 @@ builder.mutationFields(t => ({
       )
       if (!gereLAppel(ecrits, candidature.appel)) throw accesRefuse()
       if (candidature.statut !== 'EN_ATTENTE') {
-        throw erreurSaisie('Cette candidature est déjà traitée.')
+        throw erreurSaisie(i18n._('Cette candidature est déjà traitée.'))
       }
       const maintenant = new Date()
       await prisma.$transaction(async tx => {
@@ -866,7 +883,7 @@ builder.mutationFields(t => ({
           data: { statut: 'TRAITEE', courrielEnAttente: null },
         })
         if (count === 0) {
-          throw erreurSaisie('Cette candidature est déjà traitée.')
+          throw erreurSaisie(i18n._('Cette candidature est déjà traitée.'))
         }
         await tx.choixCandidature.updateMany({
           where: {
@@ -919,7 +936,7 @@ async function choixTraitable(ctx: AppContext, id: string) {
   await ctx.exigerEdition(choix.sequence.editionId)
   if (!(await peutEcrireSequence(ctx, choix.sequence))) throw accesRefuse()
   if (choix.candidature.statut === 'RETIREE') {
-    throw erreurSaisie('La personne a retiré cette candidature.')
+    throw erreurSaisie(i18n._('La personne a retiré cette candidature.'))
   }
   return choix
 }

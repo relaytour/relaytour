@@ -19,6 +19,7 @@ import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Fiches bénévoles (ADR 0040). Les admins de l'activité et les personnes qui
 // écrivent dans un de ses périmètres lisent la liste des fiches et en créent. Les
@@ -211,16 +212,16 @@ builder.mutationFields(t => ({
       const activiteId = await activiteEcrite(ctx, args.activiteId)
       if (!args.accord) {
         throw erreurSaisie(
-          'Une fiche ne s’enregistre qu’avec l’accord de la personne.'
+          i18n._('Une fiche ne s’enregistre qu’avec l’accord de la personne.')
         )
       }
       const donnees = {
         organisationId: ctx.organisation!.id,
         activiteId,
-        nom: texteRequis(args.nom, 'Le nom', NOM_BENEVOLE_MAX),
+        nom: texteRequis(args.nom, i18n._('Le nom'), NOM_BENEVOLE_MAX),
         courriel: courrielValide(args.courriel),
         telephone: telephoneValide(args.telephone),
-        note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
+        note: texteFacultatif(args.note, i18n._('La note'), NOTE_BENEVOLE_MAX),
         prevenirParMail: args.prevenirParMail ?? true,
         accordLe: new Date(),
         creeParId: ctx.personne!.id,
@@ -233,7 +234,9 @@ builder.mutationFields(t => ({
           const nombre = await tx.benevole.count({ where: { activiteId } })
           if (nombre >= BENEVOLES_MAX) {
             throw erreurSaisie(
-              `Une activité compte ${BENEVOLES_MAX} fiches bénévoles au plus.`
+              i18n._('Une activité compte {max} fiches bénévoles au plus.', {
+                max: BENEVOLES_MAX,
+              })
             )
           }
           return tx.benevole.create({ data: donnees, include: AVEC_PLACES })
@@ -271,7 +274,7 @@ builder.mutationFields(t => ({
       const modifiee = await prisma.benevole.update({
         where: { id: actuelle.id },
         data: {
-          nom: texteRequis(args.nom, 'Le nom', NOM_BENEVOLE_MAX),
+          nom: texteRequis(args.nom, i18n._('Le nom'), NOM_BENEVOLE_MAX),
           courriel,
           ...(autreAdresse
             ? {
@@ -283,14 +286,18 @@ builder.mutationFields(t => ({
               }
             : {}),
           telephone: telephoneValide(args.telephone),
-          note: texteFacultatif(args.note, 'La note', NOTE_BENEVOLE_MAX),
+          note: texteFacultatif(
+            args.note,
+            i18n._('La note'),
+            NOTE_BENEVOLE_MAX
+          ),
           ...(args.precisionsDisponibilite === null ||
           args.precisionsDisponibilite === undefined
             ? {}
             : {
                 precisionsDisponibilite: texteFacultatif(
                   args.precisionsDisponibilite,
-                  'Les précisions',
+                  i18n._('Les précisions'),
                   PRECISIONS_MAX
                 ),
               }),

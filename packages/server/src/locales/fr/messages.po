@@ -1,8 +1,3084 @@
 msgid ""
 msgstr ""
-"POT-Creation-Date: 2026-10-25 12:48+0100\n"
+"POT-Creation-Date: 2026-10-25 12:32+0100\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=utf-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: @lingui/cli\n"
 "Language: fr\n"
+
+#. js-lingui-explicit-id
+#: src/lib/souhaits.ts
+#: src/schema/abonnements-agenda.ts
+msgid "Choisissez {max} périmètres au plus."
+msgstr "Choisissez {max} périmètres au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/abonnements-agenda.ts
+msgid "Créez d’abord votre abonnement."
+msgstr "Créez d’abord votre abonnement."
+
+#. js-lingui-explicit-id
+#: src/schema/acces-fournisseur.ts
+msgid "groupe « {nom} »"
+msgstr "groupe « {nom} »"
+
+#. js-lingui-explicit-id
+#: src/schema/acces-fournisseur.ts
+msgid "partage du dossier"
+msgstr "partage du dossier"
+
+#. js-lingui-explicit-id
+#: src/schema/acces-fournisseur.ts
+#: src/schema/espace-fichiers.ts
+msgid "Aucun fournisseur cloud n’est connecté."
+msgstr "Aucun fournisseur cloud n’est connecté."
+
+#. js-lingui-explicit-id
+#: src/schema/acces-fournisseur.ts
+msgid "Activez d’abord la gestion des accès en reconnectant le fournisseur."
+msgstr "Activez d’abord la gestion des accès en reconnectant le fournisseur."
+
+#. js-lingui-explicit-id
+#: src/schema/acces-fournisseur.ts
+msgid "Choisissez un groupe qui a déjà un droit sur ce dossier."
+msgstr "Choisissez un groupe qui a déjà un droit sur ce dossier."
+
+#. js-lingui-explicit-id
+#: src/schema/acces-fournisseur.ts
+msgid "Reconnectez le fournisseur avec la vérification des accès."
+msgstr "Reconnectez le fournisseur avec la vérification des accès."
+
+#. js-lingui-explicit-id
+#: src/schema/activites.ts
+msgid "Le formulaire accepte une introduction de 600 caractères, une question de 120 caractères et 8 paliers de 80 caractères au plus."
+msgstr "Le formulaire accepte une introduction de 600 caractères, une question de 120 caractères et 8 paliers de 80 caractères au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/activites.ts
+msgid "Le formulaire est public : n’y écrivez ni adresse personnelle ni numéro de téléphone."
+msgstr "Le formulaire est public : n’y écrivez ni adresse personnelle ni numéro de téléphone."
+
+#. js-lingui-explicit-id
+#: src/schema/activites.ts
+msgid "Renseignez d’abord le contact de l’activité ou de l’organisation : le formulaire le cite pour l’accès aux données et leur suppression."
+msgstr "Renseignez d’abord le contact de l’activité ou de l’organisation : le formulaire le cite pour l’accès aux données et leur suppression."
+
+#. js-lingui-explicit-id
+#: src/lib/editions.ts
+#: src/lib/import-benevoles.ts
+#: src/lib/installation.ts
+#: src/schema/activites.ts
+#: src/schema/appels.ts
+#: src/schema/benevoles.ts
+#: src/schema/candidature-publique.ts
+#: src/schema/demandes.ts
+#: src/schema/formulaire.ts
+#: src/schema/identite.ts
+#: src/schema/import-benevoles.ts
+#: src/schema/organisation.ts
+#: src/schema/personnes.ts
+#: src/schema/programme.ts
+msgid "Le nom"
+msgstr "Le nom"
+
+#. js-lingui-explicit-id
+#: src/schema/activites.ts
+msgid "Le sigle"
+msgstr "Le sigle"
+
+#. js-lingui-explicit-id
+#: src/schema/activites.ts
+msgid "Une activité utilise déjà cet identifiant."
+msgstr "Une activité utilise déjà cet identifiant."
+
+#. js-lingui-explicit-id
+#: src/schema/activites.ts
+msgid "Des périmètres appartiennent encore au groupe « {cle} » : changez-les de groupe avant de le retirer."
+msgstr "Des périmètres appartiennent encore au groupe « {cle} » : changez-les de groupe avant de le retirer."
+
+#. js-lingui-explicit-id
+#: src/schema/activites.ts
+msgid "Une organisation garde au moins une activité ouverte."
+msgstr "Une organisation garde au moins une activité ouverte."
+
+#. js-lingui-explicit-id
+#: src/schema/agenda.ts
+msgid "Choisissez 60 périmètres au plus."
+msgstr "Choisissez 60 périmètres au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/agenda.ts
+msgid "Premier jour · {nom}"
+msgstr "Premier jour · {nom}"
+
+#. js-lingui-explicit-id
+#: src/schema/agenda.ts
+msgid "Dernier jour · {nom}"
+msgstr "Dernier jour · {nom}"
+
+#. js-lingui-explicit-id
+#: src/schema/agenda.ts
+msgid "Une période compte {max} dates clés au plus."
+msgstr "Une période compte {max} dates clés au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/agenda.ts
+#: src/schema/fiches.ts
+#: src/schema/programme.ts
+#: src/schema/reunions.ts
+#: src/schema/sondages.ts
+#: src/schema/taches.ts
+msgid "Le titre"
+msgstr "Le titre"
+
+#. js-lingui-explicit-id
+#: src/schema/agenda.ts
+#: src/schema/programme.ts
+#: src/schema/reunions.ts
+#: src/schema/sondages.ts
+#: src/schema/taches.ts
+msgid "La description"
+msgstr "La description"
+
+#. js-lingui-explicit-id
+#: src/schema/agenda.ts
+msgid "Cette date clé a été modifiée depuis votre lecture."
+msgstr "Cette date clé a été modifiée depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Une période compte {max} appels ouverts au plus."
+msgstr "Une période compte {max} appels ouverts au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Choisissez un périmètre."
+msgstr "Choisissez un périmètre."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Choisissez une séquence."
+msgstr "Choisissez une séquence."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "L’introduction"
+msgstr "L’introduction"
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Un appel d’import n’a pas d’adresse publique."
+msgstr "Un appel d’import n’a pas d’adresse publique."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Cet appel a été modifié depuis votre lecture."
+msgstr "Cet appel a été modifié depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Cet appel a passé sa date de fermeture : changez d’abord ses dates."
+msgstr "Cet appel a passé sa date de fermeture : changez d’abord ses dates."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Ce choix est déjà traité : retirez la place depuis le programme."
+msgstr "Ce choix est déjà traité : retirez la place depuis le programme."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "Cette candidature est déjà traitée."
+msgstr "Cette candidature est déjà traitée."
+
+#. js-lingui-explicit-id
+#: src/schema/appels.ts
+msgid "La personne a retiré cette candidature."
+msgstr "La personne a retiré cette candidature."
+
+#. js-lingui-explicit-id
+#: src/schema/benevoles.ts
+msgid "Une fiche ne s’enregistre qu’avec l’accord de la personne."
+msgstr "Une fiche ne s’enregistre qu’avec l’accord de la personne."
+
+#. js-lingui-explicit-id
+#: src/schema/benevoles.ts
+msgid "La note"
+msgstr "La note"
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+#: src/lib/import-benevoles.ts
+#: src/schema/benevoles.ts
+msgid "Une activité compte {max} fiches bénévoles au plus."
+msgstr "Une activité compte {max} fiches bénévoles au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+#: src/schema/benevoles.ts
+#: src/schema/candidature-publique.ts
+msgid "Les précisions"
+msgstr "Les précisions"
+
+#. js-lingui-explicit-id
+#: src/schema/candidature-publique.ts
+msgid "Trop de candidatures ont été envoyées. Réessayez plus tard."
+msgstr "Trop de candidatures ont été envoyées. Réessayez plus tard."
+
+#. js-lingui-explicit-id
+#: src/schema/candidature-publique.ts
+msgid "Cet appel n’est pas ouvert."
+msgstr "Cet appel n’est pas ouvert."
+
+#. js-lingui-explicit-id
+#: src/schema/candidature-publique.ts
+msgid "Une candidature ne s’enregistre qu’avec votre accord."
+msgstr "Une candidature ne s’enregistre qu’avec votre accord."
+
+#. js-lingui-explicit-id
+#: src/lib/formulaire.ts
+#: src/schema/candidature-publique.ts
+#: src/schema/formulaire.ts
+msgid "Les liens ne sont pas acceptés dans ce formulaire."
+msgstr "Les liens ne sont pas acceptés dans ce formulaire."
+
+#. js-lingui-explicit-id
+#: src/schema/candidature-publique.ts
+msgid "Le message"
+msgstr "Le message"
+
+#. js-lingui-explicit-id
+#: src/schema/candidature-publique.ts
+msgid "Une candidature choisit {max} séquences au plus."
+msgstr "Une candidature choisit {max} séquences au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/candidature-publique.ts
+msgid "Une séquence choisie n’est plus proposée."
+msgstr "Une séquence choisie n’est plus proposée."
+
+#. js-lingui-explicit-id
+#: src/schema/candidature-publique.ts
+msgid "Choisissez au moins une séquence."
+msgstr "Choisissez au moins une séquence."
+
+#. js-lingui-explicit-id
+#: src/schema/commentaires.ts
+msgid "Cette déclinaison n’est pas acceptée par son périmètre : elle ne reçoit aucun commentaire."
+msgstr "Cette déclinaison n’est pas acceptée par son périmètre : elle ne reçoit aucun commentaire."
+
+#. js-lingui-explicit-id
+#: src/schema/commentaires.ts
+msgid "Le commentaire"
+msgstr "Le commentaire"
+
+#. js-lingui-explicit-id
+#: src/schema/demandes.ts
+msgid "Cette demande est déjà traitée."
+msgstr "Cette demande est déjà traitée."
+
+#. js-lingui-explicit-id
+#: src/schema/demandes.ts
+msgid "Cette édition est archivée : ses demandes ne se traitent plus."
+msgstr "Cette édition est archivée : ses demandes ne se traitent plus."
+
+#. js-lingui-explicit-id
+#: src/schema/demandes.ts
+msgid "Vous avez déjà {max} propositions en attente. Un admin doit d’abord les traiter."
+msgstr "Vous avez déjà {max} propositions en attente. Un admin doit d’abord les traiter."
+
+#. js-lingui-explicit-id
+#: src/schema/demandes.ts
+#: src/schema/personnes.ts
+msgid "Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire."
+msgstr "Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire."
+
+#. js-lingui-explicit-id
+#: src/schema/demandes.ts
+#: src/schema/personnes.ts
+msgid "Cette adresse ne peut pas être invitée."
+msgstr "Cette adresse ne peut pas être invitée."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-benevole.ts
+msgid "Ce lien n’est plus valable."
+msgstr "Ce lien n’est plus valable."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-benevole.ts
+msgid "Cette place n’existe plus."
+msgstr "Cette place n’existe plus."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-benevole.ts
+msgid "Quittez d’abord vos places à venir, puis supprimez votre fiche."
+msgstr "Quittez d’abord vos places à venir, puis supprimez votre fiche."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-benevole.ts
+msgid "Ce lien ne peut pas être renvoyé : il a déjà été renvoyé une fois, ou la fiche n’a pas reçu de premier lien."
+msgstr "Ce lien ne peut pas être renvoyé : il a déjà été renvoyé une fois, ou la fiche n’a pas reçu de premier lien."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-benevole.ts
+msgid "Le mail n’a pas pu partir. Réessayez dans un instant : le renvoi reste disponible."
+msgstr "Le mail n’a pas pu partir. Réessayez dans un instant : le renvoi reste disponible."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Chemin de dossier invalide."
+msgstr "Chemin de dossier invalide."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Choisissez toute l’activité, ou une liste de périmètres et de groupes."
+msgstr "Choisissez toute l’activité, ou une liste de périmètres et de groupes."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Choisissez au moins un périmètre ou un groupe."
+msgstr "Choisissez au moins un périmètre ou un groupe."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Un dossier lié compte au plus {max} périmètres et groupes."
+msgstr "Un dossier lié compte au plus {max} périmètres et groupes."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+#: src/schema/fiches-connexes.ts
+msgid "L’activité ne déclare pas le groupe « {groupe} »."
+msgstr "L’activité ne déclare pas le groupe « {groupe} »."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Le groupe « {groupe} » ne compte aucun périmètre."
+msgstr "Le groupe « {groupe} » ne compte aucun périmètre."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Ce dossier est aussi lié à ces périmètres par un autre lien. Retirez l’autre lien, puis recommencez."
+msgstr "Ce dossier est aussi lié à ces périmètres par un autre lien. Retirez l’autre lien, puis recommencez."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Dossier introuvable."
+msgstr "Dossier introuvable."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Ce fournisseur n’est pas ouvert sur cette installation."
+msgstr "Ce fournisseur n’est pas ouvert sur cette installation."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Ce fournisseur demande une reconnexion pour changer ses autorisations."
+msgstr "Ce fournisseur demande une reconnexion pour changer ses autorisations."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Le compte de service n’est pas ouvert sur cette installation."
+msgstr "Le compte de service n’est pas ouvert sur cette installation."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Cette clé est trop longue."
+msgstr "Cette clé est trop longue."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Google refuse cette clé. Vérifiez que le compte de service existe et que l’API Google Drive est activée dans son projet."
+msgstr "Google refuse cette clé. Vérifiez que le compte de service existe et que l’API Google Drive est activée dans son projet."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Nextcloud n’est pas ouvert sur cette installation."
+msgstr "Nextcloud n’est pas ouvert sur cette installation."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Cette adresse est trop longue."
+msgstr "Cette adresse est trop longue."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Saisissez l’adresse https de votre Nextcloud, sans port, par exemple https://cloud.exemple.org."
+msgstr "Saisissez l’adresse https de votre Nextcloud, sans port, par exemple https://cloud.exemple.org."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "L’hébergeur de cette installation n’admet pas cette adresse. Demandez-lui d’ajouter votre Nextcloud."
+msgstr "L’hébergeur de cette installation n’admet pas cette adresse. Demandez-lui d’ajouter votre Nextcloud."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Cette connexion a expiré. Recommencez."
+msgstr "Cette connexion a expiré. Recommencez."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Choisissez un dossier."
+msgstr "Choisissez un dossier."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Ce dossier n’existe pas chez le fournisseur cloud."
+msgstr "Ce dossier n’existe pas chez le fournisseur cloud."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Ce dossier contient le dossier d’export des fiches, ou s’y trouve. Choisissez un autre dossier."
+msgstr "Ce dossier contient le dossier d’export des fiches, ou s’y trouve. Choisissez un autre dossier."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Le dossier d’export vient de changer. Recommencez le lien."
+msgstr "Le dossier d’export vient de changer. Recommencez le lien."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Ce dossier est déjà lié à cette activité. Modifiez ses lecteurs."
+msgstr "Ce dossier est déjà lié à cette activité. Modifiez ses lecteurs."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Un compte de service n’écrit que dans un Drive partagé. Choisissez un dossier d’un Drive partagé dont il est membre."
+msgstr "Un compte de service n’écrit que dans un Drive partagé. Choisissez un dossier d’un Drive partagé dont il est membre."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Ce dossier est lié à une activité, ou se trouve dans un dossier lié. Les membres y liraient les fiches de tous les périmètres : choisissez un autre dossier."
+msgstr "Ce dossier est lié à une activité, ou se trouve dans un dossier lié. Les membres y liraient les fiches de tous les périmètres : choisissez un autre dossier."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Aucun dossier d’export n’est choisi."
+msgstr "Aucun dossier d’export n’est choisi."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "L’export n’a pas pu être lancé. Réessayez dans quelques instants."
+msgstr "L’export n’a pas pu être lancé. Réessayez dans quelques instants."
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "{crees, plural, one {Relaytour a créé un accès chez le fournisseur pour ce dossier. Retirez-les d’abord, ou confirmez qu’ils restent sans suivi.} other {Relaytour a créé # accès chez le fournisseur pour ce dossier. Retirez-les d’abord, ou confirmez qu’ils restent sans suivi.}}"
+msgstr "{crees, plural, one {Relaytour a créé un accès chez le fournisseur pour ce dossier. Retirez-les d’abord, ou confirmez qu’ils restent sans suivi.} other {Relaytour a créé # accès chez le fournisseur pour ce dossier. Retirez-les d’abord, ou confirmez qu’ils restent sans suivi.}}"
+
+#. js-lingui-explicit-id
+#: src/schema/espace-fichiers.ts
+msgid "Le nom d’un dossier lié compte de 1 à 255 caractères."
+msgstr "Le nom d’un dossier lié compte de 1 à 255 caractères."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches-connexes.ts
+msgid "Une fiche commune concerne déjà tous les périmètres : elle n’a pas de liste « Concerne aussi »."
+msgstr "Une fiche commune concerne déjà tous les périmètres : elle n’a pas de liste « Concerne aussi »."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches-connexes.ts
+#: src/schema/ressources-fiche.ts
+msgid "Cette fiche est archivée."
+msgstr "Cette fiche est archivée."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches-connexes.ts
+msgid "Une fiche concerne au plus {max} périmètres et groupes."
+msgstr "Une fiche concerne au plus {max} périmètres et groupes."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches-connexes.ts
+msgid "La fiche appartient déjà à ce périmètre : retirez-le de la liste."
+msgstr "La fiche appartient déjà à ce périmètre : retirez-le de la liste."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches-connexes.ts
+msgid "Cette fiche ne concerne pas ce périmètre."
+msgstr "Cette fiche ne concerne pas ce périmètre."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches.ts
+msgid "Une autre version de cette fiche a été enregistrée depuis votre lecture."
+msgstr "Une autre version de cette fiche a été enregistrée depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches.ts
+msgid "Le contenu est obligatoire."
+msgstr "Le contenu est obligatoire."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches.ts
+msgid "Le contenu dépasse la taille autorisée."
+msgstr "Le contenu dépasse la taille autorisée."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches.ts
+msgid "Une fiche utilise déjà cet identifiant."
+msgstr "Une fiche utilise déjà cet identifiant."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches.ts
+msgid "Le résumé"
+msgstr "Le résumé"
+
+#. js-lingui-explicit-id
+#: src/schema/fiches.ts
+msgid "Cette version est introuvable."
+msgstr "Cette version est introuvable."
+
+#. js-lingui-explicit-id
+#: src/schema/fiches.ts
+msgid "Cette personne a déjà ce droit de rédaction."
+msgstr "Cette personne a déjà ce droit de rédaction."
+
+#. js-lingui-explicit-id
+#: src/schema/flux.ts
+msgid "Le flux des changements ne répond pas."
+msgstr "Le flux des changements ne répond pas."
+
+#. js-lingui-explicit-id
+#: src/schema/flux.ts
+msgid "Vous avez déjà {max} flux ouverts. Fermez un onglet, puis réessayez."
+msgstr "Vous avez déjà {max} flux ouverts. Fermez un onglet, puis réessayez."
+
+#. js-lingui-explicit-id
+#: src/schema/formulaire.ts
+msgid "Ce formulaire n’est pas ouvert."
+msgstr "Ce formulaire n’est pas ouvert."
+
+#. js-lingui-explicit-id
+#: src/schema/formulaire.ts
+msgid "Trop de demandes ont été envoyées. Réessayez plus tard."
+msgstr "Trop de demandes ont été envoyées. Réessayez plus tard."
+
+#. js-lingui-explicit-id
+#: src/schema/formulaire.ts
+msgid "Un périmètre choisi est introuvable."
+msgstr "Un périmètre choisi est introuvable."
+
+#. js-lingui-explicit-id
+#: src/schema/formulaire.ts
+msgid "Choisissez une disponibilité dans la liste."
+msgstr "Choisissez une disponibilité dans la liste."
+
+#. js-lingui-explicit-id
+#: src/schema/formulaire.ts
+msgid "La réponse"
+msgstr "La réponse"
+
+#. js-lingui-explicit-id
+#: src/schema/formulaire.ts
+#: src/schema/messages.ts
+msgid "Le texte"
+msgstr "Le texte"
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "identité"
+msgstr "identité"
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "La configuration de l’organisation est invalide : l’hébergeur doit la réimporter."
+msgstr "La configuration de l’organisation est invalide : l’hébergeur doit la réimporter."
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "Choisissez une image PNG téléversée pour cette organisation."
+msgstr "Choisissez une image PNG téléversée pour cette organisation."
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "Choisissez une image SVG téléversée pour cette organisation."
+msgstr "Choisissez une image SVG téléversée pour cette organisation."
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "L’export est incomplet : {fichiers}. Corrigez ces fichiers, puis relancez l’export."
+msgstr "L’export est incomplet : {fichiers}. Corrigez ces fichiers, puis relancez l’export."
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "L’organisation a déjà {max} images : les images que l’identité ne cite plus sont retirées chaque nuit."
+msgstr "L’organisation a déjà {max} images : les images que l’identité ne cite plus sont retirées chaque nuit."
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+#: src/schema/personnes.ts
+msgid "Cette langue n’est pas proposée."
+msgstr "Cette langue n’est pas proposée."
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "Un logo SVG s’accompagne d’un logo PNG : les mails n’affichent pas le SVG."
+msgstr "Un logo SVG s’accompagne d’un logo PNG : les mails n’affichent pas le SVG."
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "L’activité « {nom} » ne serait plus valide : {details}."
+msgstr "L’activité « {nom} » ne serait plus valide : {details}."
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "Le formulaire public de l’activité « {nom} » cite ce contact : fermez d’abord le formulaire, ou gardez un contact."
+msgstr "Le formulaire public de l’activité « {nom} » cite ce contact : fermez d’abord le formulaire, ou gardez un contact."
+
+#. js-lingui-explicit-id
+#: src/schema/identite.ts
+msgid "Le formulaire public de l’activité cite ce contact : fermez d’abord le formulaire, ou gardez un contact."
+msgstr "Le formulaire public de l’activité cite ce contact : fermez d’abord le formulaire, ou gardez un contact."
+
+#. js-lingui-explicit-id
+#: src/schema/import-benevoles.ts
+msgid "Les associations dépassent la taille permise."
+msgstr "Les associations dépassent la taille permise."
+
+#. js-lingui-explicit-id
+#: src/schema/import-benevoles.ts
+msgid "Les réglages dépassent la taille permise."
+msgstr "Les réglages dépassent la taille permise."
+
+#. js-lingui-explicit-id
+#: src/schema/import-benevoles.ts
+msgid "Une correspondance compte {max} colonnes au plus."
+msgstr "Une correspondance compte {max} colonnes au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/import-benevoles.ts
+msgid "Une correspondance porte déjà ce nom. Choisissez un autre nom."
+msgstr "Une correspondance porte déjà ce nom. Choisissez un autre nom."
+
+#. js-lingui-explicit-id
+#: src/lib/fusion-benevoles.ts
+#: src/schema/import-benevoles.ts
+msgid "Choisissez deux fiches différentes."
+msgstr "Choisissez deux fiches différentes."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+#: src/schema/installation.ts
+msgid "Aucune organisation ne porte le slug « {slug} »."
+msgstr "Aucune organisation ne porte le slug « {slug} »."
+
+#. js-lingui-explicit-id
+#: src/schema/invitations.ts
+msgid "Cette personne a déjà reçu un mail d’invitation il y a moins d’une heure."
+msgstr "Cette personne a déjà reçu un mail d’invitation il y a moins d’une heure."
+
+#. js-lingui-explicit-id
+#: src/schema/messages.ts
+msgid "L’objet"
+msgstr "L’objet"
+
+#. js-lingui-explicit-id
+#: src/schema/messages.ts
+msgid "Vous ne pouvez pas figurer parmi les destinataires de votre message."
+msgstr "Vous ne pouvez pas figurer parmi les destinataires de votre message."
+
+#. js-lingui-explicit-id
+#: src/schema/messages.ts
+msgid "Un message à une seule personne utilise le champ « À »."
+msgstr "Un message à une seule personne utilise le champ « À »."
+
+#. js-lingui-explicit-id
+#: src/schema/messages.ts
+msgid "Le champ « À » convient à un seul destinataire."
+msgstr "Le champ « À » convient à un seul destinataire."
+
+#. js-lingui-explicit-id
+#: src/schema/messages.ts
+msgid "Une copie visible accompagne seulement un message en copie cachée."
+msgstr "Une copie visible accompagne seulement un message en copie cachée."
+
+#. js-lingui-explicit-id
+#: src/schema/messages.ts
+msgid "Une personne en copie visible fait partie des destinataires."
+msgstr "Une personne en copie visible fait partie des destinataires."
+
+#. js-lingui-explicit-id
+#: src/schema/organisation.ts
+msgid "Choisissez le groupe du périmètre."
+msgstr "Choisissez le groupe du périmètre."
+
+#. js-lingui-explicit-id
+#: src/schema/organisation.ts
+msgid "L’activité ne déclare pas le groupe « {groupe} » ({groupes})."
+msgstr "L’activité ne déclare pas le groupe « {groupe} » ({groupes})."
+
+#. js-lingui-explicit-id
+#: src/schema/organisation.ts
+msgid "Une édition existe déjà pour {annee}."
+msgstr "Une édition existe déjà pour {annee}."
+
+#. js-lingui-explicit-id
+#: src/schema/organisation.ts
+msgid "Un périmètre utilise déjà cet identifiant."
+msgstr "Un périmètre utilise déjà cet identifiant."
+
+#. js-lingui-explicit-id
+#: src/schema/organisation.ts
+msgid "Ce périmètre a été modifié depuis votre lecture."
+msgstr "Ce périmètre a été modifié depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Choisissez l’édition des périmètres."
+msgstr "Choisissez l’édition des périmètres."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Les périmètres choisis relèvent d’une autre activité."
+msgstr "Les périmètres choisis relèvent d’une autre activité."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Cette activité est archivée."
+msgstr "Cette activité est archivée."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Choisissez l’activité : la personne rejoint l’équipe de cette activité."
+msgstr "Choisissez l’activité : la personne rejoint l’équipe de cette activité."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Un compte existe déjà pour cette adresse."
+msgstr "Un compte existe déjà pour cette adresse."
+
+#. js-lingui-explicit-id
+#: src/lib/invitations.ts
+#: src/schema/personnes.ts
+msgid "Une personne a {max} souhaits au plus pour une période."
+msgstr "Une personne a {max} souhaits au plus pour une période."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+#: src/schema/souhaits.ts
+msgid "Cette personne est archivée dans votre organisation."
+msgstr "Cette personne est archivée dans votre organisation."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Cette personne a déjà été relancée il y a moins d’une heure."
+msgstr "Cette personne a déjà été relancée il y a moins d’une heure."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Vous ne pouvez pas retirer vos propres droits d’admin."
+msgstr "Vous ne pouvez pas retirer vos propres droits d’admin."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Cette personne s’est déjà connectée : elle seule modifie son nom, dans ses préférences."
+msgstr "Cette personne s’est déjà connectée : elle seule modifie son nom, dans ses préférences."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Vous ne pouvez pas archiver votre propre compte."
+msgstr "Vous ne pouvez pas archiver votre propre compte."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Cette personne est déjà affectée à ce périmètre pour cette édition."
+msgstr "Cette personne est déjà affectée à ce périmètre pour cette édition."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Retirez d’abord les affectations de cette personne dans les périodes en cours."
+msgstr "Retirez d’abord les affectations de cette personne dans les périodes en cours."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Retirez d’abord le rôle d’admin de cette personne dans l’activité."
+msgstr "Retirez d’abord le rôle d’admin de cette personne dans l’activité."
+
+#. js-lingui-explicit-id
+#: src/schema/personnes.ts
+msgid "Vous ne pouvez pas retirer votre propre rôle d’admin de l’activité."
+msgstr "Vous ne pouvez pas retirer votre propre rôle d’admin de l’activité."
+
+#. js-lingui-explicit-id
+#: src/schema/postes.ts
+msgid "L’effectif est un nombre entier entre 0 et {max}."
+msgstr "L’effectif est un nombre entier entre 0 et {max}."
+
+#. js-lingui-explicit-id
+#: src/schema/postes.ts
+msgid "Cette édition est archivée : ses effectifs ne se modifient plus."
+msgstr "Cette édition est archivée : ses effectifs ne se modifient plus."
+
+#. js-lingui-explicit-id
+#: src/schema/programme.ts
+msgid "Les consignes"
+msgstr "Les consignes"
+
+#. js-lingui-explicit-id
+#: src/schema/programme.ts
+msgid "Une activité compte 200 lieux au plus."
+msgstr "Une activité compte 200 lieux au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/programme.ts
+msgid "Une période compte {max} séquences au plus."
+msgstr "Une période compte {max} séquences au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/programme.ts
+msgid "Cette séquence a été modifiée depuis votre lecture."
+msgstr "Cette séquence a été modifiée depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/push.ts
+msgid "Les notifications push ne sont pas activées sur cette installation."
+msgstr "Les notifications push ne sont pas activées sur cette installation."
+
+#. js-lingui-explicit-id
+#: src/schema/push.ts
+msgid "Cet abonnement ne vient pas d’un service de push reconnu."
+msgstr "Cet abonnement ne vient pas d’un service de push reconnu."
+
+#. js-lingui-explicit-id
+#: src/schema/push.ts
+msgid "Les clés de cet abonnement sont invalides."
+msgstr "Les clés de cet abonnement sont invalides."
+
+#. js-lingui-explicit-id
+#: src/schema/recherche.ts
+msgid "La recherche demande au moins {min} caractères."
+msgstr "La recherche demande au moins {min} caractères."
+
+#. js-lingui-explicit-id
+#: src/schema/recherche.ts
+msgid "La recherche dépasse {max} caractères."
+msgstr "La recherche dépasse {max} caractères."
+
+#. js-lingui-explicit-id
+#: src/schema/repartition.ts
+msgid "Choisissez une candidature ou une fiche bénévole."
+msgstr "Choisissez une candidature ou une fiche bénévole."
+
+#. js-lingui-explicit-id
+#: src/schema/repartition.ts
+msgid "Cette personne est déjà placée ici."
+msgstr "Cette personne est déjà placée ici."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+#: src/lib/programme.ts
+#: src/schema/repartition.ts
+msgid "Une séquence compte {max} places au plus."
+msgstr "Une séquence compte {max} places au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/repartition.ts
+msgid "Cette place a changé entre-temps. Rechargez le programme."
+msgstr "Cette place a changé entre-temps. Rechargez le programme."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+#: src/schema/repartition.ts
+msgid "Cette période est archivée."
+msgstr "Cette période est archivée."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+#: src/schema/ressources-fiche.ts
+msgid "Chemin invalide."
+msgstr "Chemin invalide."
+
+#. js-lingui-explicit-id
+#: src/schema/ressources-fiche.ts
+msgid "Cet élément n’existe pas chez le fournisseur cloud."
+msgstr "Cet élément n’existe pas chez le fournisseur cloud."
+
+#. js-lingui-explicit-id
+#: src/schema/ressources-fiche.ts
+msgid "Une fiche porte {max} documents liés au plus. Retirez-en un avant d’en lier un autre."
+msgstr "Une fiche porte {max} documents liés au plus. Retirez-en un avant d’en lier un autre."
+
+#. js-lingui-explicit-id
+#: src/schema/ressources-fiche.ts
+msgid "Ce document est le dossier lié entier. Étendez plutôt les lecteurs du dossier."
+msgstr "Ce document est le dossier lié entier. Étendez plutôt les lecteurs du dossier."
+
+#. js-lingui-explicit-id
+#: src/schema/reunions.ts
+msgid "Le lieu"
+msgstr "Le lieu"
+
+#. js-lingui-explicit-id
+#: src/schema/reunions.ts
+msgid "Ce sondage doit être clos, et sans réunion créée."
+msgstr "Ce sondage doit être clos, et sans réunion créée."
+
+#. js-lingui-explicit-id
+#: src/schema/reunions.ts
+msgid "Cette réunion est annulée : elle ne change plus."
+msgstr "Cette réunion est annulée : elle ne change plus."
+
+#. js-lingui-explicit-id
+#: src/schema/reunions.ts
+msgid "Cette réunion a été modifiée depuis votre lecture."
+msgstr "Cette réunion a été modifiée depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/reunions.ts
+msgid "Cette réunion est annulée."
+msgstr "Cette réunion est annulée."
+
+#. js-lingui-explicit-id
+#: src/lib/agenda.ts
+#: src/schema/reunions.ts
+#: src/schema/sondages.ts
+msgid "Cette période est archivée : son agenda est en lecture seule."
+msgstr "Cette période est archivée : son agenda est en lecture seule."
+
+#. js-lingui-explicit-id
+#: src/schema/sondages.ts
+msgid "Ce sondage est clos : il ne change plus."
+msgstr "Ce sondage est clos : il ne change plus."
+
+#. js-lingui-explicit-id
+#: src/schema/sondages.ts
+msgid "Ce sondage a été modifié depuis votre lecture."
+msgstr "Ce sondage a été modifié depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/sondages.ts
+msgid "Ce sondage est clos."
+msgstr "Ce sondage est clos."
+
+#. js-lingui-explicit-id
+#: src/schema/sondages.ts
+msgid "Ce sondage a été modifié ou clos depuis votre lecture."
+msgstr "Ce sondage a été modifié ou clos depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/souhaits.ts
+msgid "Cette activité n’est pas ouverte aux souhaits : ses admins notent les souhaits."
+msgstr "Cette activité n’est pas ouverte aux souhaits : ses admins notent les souhaits."
+
+#. js-lingui-explicit-id
+#: src/schema/souhaits.ts
+msgid "Cette période est archivée : ses souhaits sont figés."
+msgstr "Cette période est archivée : ses souhaits sont figés."
+
+#. js-lingui-explicit-id
+#: src/schema/souhaits.ts
+msgid "Vous avez déjà {max} souhaits pour cette période."
+msgstr "Vous avez déjà {max} souhaits pour cette période."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette déclinaison attend l’accord de son périmètre : acceptez-la d’abord."
+msgstr "Cette déclinaison attend l’accord de son périmètre : acceptez-la d’abord."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette déclinaison a été refusée par son périmètre."
+msgstr "Cette déclinaison a été refusée par son périmètre."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette tâche est assignée à d’autres personnes."
+msgstr "Cette tâche est assignée à d’autres personnes."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Une autre personne a modifié cette tâche depuis votre lecture."
+msgstr "Une autre personne a modifié cette tâche depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Le statut de cette tâche a changé depuis votre lecture."
+msgstr "Le statut de cette tâche a changé depuis votre lecture."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette personne n’est pas affectée à ce périmètre pour cette édition."
+msgstr "Cette personne n’est pas affectée à ce périmètre pour cette édition."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette fiche ne peut pas être liée à cette tâche."
+msgstr "Cette fiche ne peut pas être liée à cette tâche."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Choisissez au moins un périmètre."
+msgstr "Choisissez au moins un périmètre."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Une tâche se décline dans {max} périmètres au plus."
+msgstr "Une tâche se décline dans {max} périmètres au plus."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Une tâche ne se décline pas dans son propre périmètre."
+msgstr "Une tâche ne se décline pas dans son propre périmètre."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Le périmètre « {nom} » est archivé."
+msgstr "Le périmètre « {nom} » est archivé."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Le titre de la déclinaison"
+msgstr "Le titre de la déclinaison"
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Une déclinaison ne se décline pas."
+msgstr "Une déclinaison ne se décline pas."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette tâche n’est pas une déclinaison."
+msgstr "Cette tâche n’est pas une déclinaison."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette déclinaison est déjà acceptée. Abandonnez la tâche si elle ne concerne pas votre périmètre."
+msgstr "Cette déclinaison est déjà acceptée. Abandonnez la tâche si elle ne concerne pas votre périmètre."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
+msgid "Cette déclinaison a déjà été refusée. Un admin de l’activité peut l’imposer."
+msgstr "Cette déclinaison a déjà été refusée. Un admin de l’activité peut l’imposer."
+
+#. js-lingui-explicit-id
+#: src/orga/import-fiches.ts
+msgid "une fiche d’une autre activité porte ce slug"
+msgstr "une fiche d’une autre activité porte ce slug"
+
+#. js-lingui-explicit-id
+#: src/orga/import-fiches.ts
+msgid "la fiche a été modifiée dans Relaytour"
+msgstr "la fiche a été modifiée dans Relaytour"
+
+#. js-lingui-explicit-id
+#: src/lib/abonnements.ts
+msgid "Cet appareil est en cours d’abonnement. Réessayez dans un instant."
+msgstr "Cet appareil est en cours d’abonnement. Réessayez dans un instant."
+
+#. Groupe de périmètres par défaut, au singulier
+#. js-lingui-explicit-id
+#: src/lib/activites.ts
+msgid "Sport"
+msgstr "Sport"
+
+#. Groupe de périmètres par défaut, au pluriel
+#. js-lingui-explicit-id
+#: src/lib/activites.ts
+msgid "Sports"
+msgstr "Sports"
+
+#. Groupe de périmètres par défaut, au singulier
+#. js-lingui-explicit-id
+#: src/lib/activites.ts
+msgid "Pôle"
+msgstr "Pôle"
+
+#. Groupe de périmètres par défaut, au pluriel
+#. js-lingui-explicit-id
+#: src/lib/activites.ts
+msgid "Pôles"
+msgstr "Pôles"
+
+#. js-lingui-explicit-id
+#: src/lib/activites.ts
+msgid "« {slug} » est réservé par l’espace organisateur : choisissez un autre identifiant."
+msgstr "« {slug} » est réservé par l’espace organisateur : choisissez un autre identifiant."
+
+#. js-lingui-explicit-id
+#: src/lib/activites.ts
+msgid "Une activité déclare entre 1 et {max} groupes de périmètres."
+msgstr "Une activité déclare entre 1 et {max} groupes de périmètres."
+
+#. js-lingui-explicit-id
+#: src/lib/activites.ts
+msgid "Le groupe « {cle} » est déclaré deux fois."
+msgstr "Le groupe « {cle} » est déclaré deux fois."
+
+#. js-lingui-explicit-id
+#: src/lib/activites.ts
+msgid "Le libellé du groupe"
+msgstr "Le libellé du groupe"
+
+#. js-lingui-explicit-id
+#: src/lib/activites.ts
+msgid "Le libellé pluriel du groupe"
+msgstr "Le libellé pluriel du groupe"
+
+#. js-lingui-explicit-id
+#: src/lib/agenda.ts
+msgid "Une date clé se place dans les deux ans qui entourent la période."
+msgstr "Une date clé se place dans les deux ans qui entourent la période."
+
+#. js-lingui-explicit-id
+#: src/lib/agenda.ts
+msgid "Le dernier jour suit le premier."
+msgstr "Le dernier jour suit le premier."
+
+#. js-lingui-explicit-id
+#: src/lib/agenda.ts
+msgid "Une date clé dure {max} jours au plus."
+msgstr "Une date clé dure {max} jours au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/appartenances.ts
+msgid "Cette personne est archivée dans votre organisation : un admin de l’organisation la rétablit depuis l’annuaire."
+msgstr "Cette personne est archivée dans votre organisation : un admin de l’organisation la rétablit depuis l’annuaire."
+
+#. js-lingui-explicit-id
+#: src/lib/appartenances.ts
+msgid "Seul un admin de l’organisation agit sur le compte d’un admin de l’organisation."
+msgstr "Seul un admin de l’organisation agit sur le compte d’un admin de l’organisation."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+msgid "Le besoin en bénévoles est un nombre entier de 0 à {max}."
+msgstr "Le besoin en bénévoles est un nombre entier de 0 à {max}."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+msgid "La fermeture de l’appel suit son ouverture."
+msgstr "La fermeture de l’appel suit son ouverture."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+msgid "L’appel se ferme au plus tard à la fin du dernier jour de la période."
+msgstr "L’appel se ferme au plus tard à la fin du dernier jour de la période."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+msgid "Une disponibilité compte {max} plages au plus."
+msgstr "Une disponibilité compte {max} plages au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+msgid "La fin d’une plage suit son début."
+msgstr "La fin d’une plage suit son début."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+msgid "Une plage dure 24 heures au plus."
+msgstr "Une plage dure 24 heures au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/appels.ts
+msgid "Une plage tombe dans les jours de la période ou de son programme."
+msgstr "Une plage tombe dans les jours de la période ou de son programme."
+
+#. js-lingui-explicit-id
+#: src/lib/application.ts
+msgid "Espace organisateur · {nom}"
+msgstr "Espace organisateur · {nom}"
+
+#. js-lingui-explicit-id
+#: src/lib/benevoles.ts
+msgid "L’adresse de la ou du bénévole n’est pas valide."
+msgstr "L’adresse de la ou du bénévole n’est pas valide."
+
+#. js-lingui-explicit-id
+#: src/lib/benevoles.ts
+msgid "Le téléphone de la ou du bénévole n’est pas valide."
+msgstr "Le téléphone de la ou du bénévole n’est pas valide."
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Une personne"
+msgstr "Une personne"
+
+#. Complément d’une phrase de notification, à la place du nom de la personne qui lit
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "vous"
+msgstr "vous"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "une personne"
+msgstr "une personne"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "un périmètre"
+msgstr "un périmètre"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Une demande pour rejoindre l’équipe attend votre revue{activite}"
+msgstr "Une demande pour rejoindre l’équipe attend votre revue{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Une candidature de bénévole attend votre revue{activite}"
+msgstr "Une candidature de bénévole attend votre revue{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Des accès chez le fournisseur cloud attendent votre validation"
+msgstr "Des accès chez le fournisseur cloud attendent votre validation"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a accepté une demande pour rejoindre l’équipe{activite}"
+msgstr "{acteur} a accepté une demande pour rejoindre l’équipe{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a refusé une demande pour rejoindre l’équipe{activite}"
+msgstr "{acteur} a refusé une demande pour rejoindre l’équipe{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a accepté l’invitation et rejoint l’organisation{activite}"
+msgstr "{acteur} a accepté l’invitation et rejoint l’organisation{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a affecté {personne} au périmètre {perimetre}{activite}"
+msgstr "{acteur} a affecté {personne} au périmètre {perimetre}{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a retiré {personne} du périmètre {perimetre}{activite}"
+msgstr "{acteur} a retiré {personne} du périmètre {perimetre}{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} souhaite rejoindre le périmètre {perimetre}{activite}"
+msgstr "{acteur} souhaite rejoindre le périmètre {perimetre}{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a nommé {personne} admin de l’activité{activite}"
+msgstr "{acteur} a nommé {personne} admin de l’activité{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a retiré à {personne} le rôle d’admin de l’activité{activite}"
+msgstr "{acteur} a retiré à {personne} le rôle d’admin de l’activité{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a nommé {personne} admin de l’organisation"
+msgstr "{acteur} a nommé {personne} admin de l’organisation"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a retiré à {personne} le rôle d’admin de l’organisation"
+msgstr "{acteur} a retiré à {personne} le rôle d’admin de l’organisation"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a archivé {personne} dans l’organisation"
+msgstr "{acteur} a archivé {personne} dans l’organisation"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a rétabli {personne} dans l’organisation"
+msgstr "{acteur} a rétabli {personne} dans l’organisation"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Votre place dans l’équipe a changé{activite}"
+msgstr "Votre place dans l’équipe a changé{activite}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Cette réunion n’existe plus"
+msgstr "Cette réunion n’existe plus"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} vous convoque à la réunion « {titre} »{lieu}"
+msgstr "{acteur} vous convoque à la réunion « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a modifié la réunion « {titre} »{lieu}"
+msgstr "{acteur} a modifié la réunion « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a annulé la réunion « {titre} »{lieu}"
+msgstr "{acteur} a annulé la réunion « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} vous demande vos disponibilités : « {titre} »{lieu}"
+msgstr "{acteur} vous demande vos disponibilités : « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Ce sondage n’existe plus"
+msgstr "Ce sondage n’existe plus"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Une personne bénévole"
+msgstr "Une personne bénévole"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{qui} a quitté la séquence « {titre} »{lieu}"
+msgstr "{qui} a quitté la séquence « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{qui} a quitté une séquence du programme{lieu}"
+msgstr "{qui} a quitté une séquence du programme{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Cette fiche n’existe plus"
+msgstr "Cette fiche n’existe plus"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Une fiche d’un autre périmètre ne concerne plus votre périmètre{lieu}"
+msgstr "Une fiche d’un autre périmètre ne concerne plus votre périmètre{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "un autre périmètre"
+msgstr "un autre périmètre"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "La fiche « {titre} » de {origine} concerne aussi votre périmètre{lieu}"
+msgstr "La fiche « {titre} » de {origine} concerne aussi votre périmètre{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a créé la fiche « {titre} »{lieu}"
+msgstr "{acteur} a créé la fiche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a modifié la fiche « {titre} »{lieu}"
+msgstr "{acteur} a modifié la fiche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "Cette tâche n’existe plus"
+msgstr "Cette tâche n’existe plus"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a créé la tâche « {titre} »{lieu}"
+msgstr "{acteur} a créé la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a ajouté la tâche « {titre} »{lieu}, demandée par {demandeur}"
+msgstr "{acteur} a ajouté la tâche « {titre} »{lieu}, demandée par {demandeur}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} propose la tâche « {titre} »{lieu}. Elle attend l’accord du périmètre"
+msgstr "{acteur} propose la tâche « {titre} »{lieu}. Elle attend l’accord du périmètre"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} propose la tâche « {titre} »{lieu}, demandée par {demandeur}. Elle attend l’accord du périmètre"
+msgstr "{acteur} propose la tâche « {titre} »{lieu}, demandée par {demandeur}. Elle attend l’accord du périmètre"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a accepté la tâche « {titre} »{lieu}"
+msgstr "{acteur} a accepté la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a refusé la tâche « {titre} »{lieu}"
+msgstr "{acteur} a refusé la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a modifié la tâche « {titre} »{lieu}"
+msgstr "{acteur} a modifié la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a commenté la tâche « {titre} »{lieu}"
+msgstr "{acteur} a commenté la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} s’occupe de la tâche « {titre} »{lieu}"
+msgstr "{acteur} s’occupe de la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} vous a assigné la tâche « {titre} »{lieu}"
+msgstr "{acteur} vous a assigné la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a assigné la tâche « {titre} »{lieu} à {personne}"
+msgstr "{acteur} a assigné la tâche « {titre} »{lieu} à {personne}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} ne s’occupe plus de la tâche « {titre} »{lieu}"
+msgstr "{acteur} ne s’occupe plus de la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} vous a retiré·e de la tâche « {titre} »{lieu}"
+msgstr "{acteur} vous a retiré·e de la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a retiré {personne} de la tâche « {titre} »{lieu}"
+msgstr "{acteur} a retiré {personne} de la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{jours, plural, =0 {La tâche « {titre} »{lieu} arrive à échéance aujourd’hui} =1 {La tâche « {titre} »{lieu} arrive à échéance demain} other {La tâche « {titre} »{lieu} arrive à échéance dans # jours}}"
+msgstr "{jours, plural, =0 {La tâche « {titre} »{lieu} arrive à échéance aujourd’hui} =1 {La tâche « {titre} »{lieu} arrive à échéance demain} other {La tâche « {titre} »{lieu} arrive à échéance dans # jours}}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "La tâche « {titre} »{lieu} est en retard depuis le {date}"
+msgstr "La tâche « {titre} »{lieu} est en retard depuis le {date}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "La tâche « {titre} »{lieu} est en retard"
+msgstr "La tâche « {titre} »{lieu} est en retard"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "La tâche « {titre} »{lieu} est faite"
+msgstr "La tâche « {titre} »{lieu} est faite"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a commencé la tâche « {titre} »{lieu}"
+msgstr "{acteur} a commencé la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a abandonné la tâche « {titre} »{lieu}"
+msgstr "{acteur} a abandonné la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a remis la tâche « {titre} »{lieu} à faire"
+msgstr "{acteur} a remis la tâche « {titre} »{lieu} à faire"
+
+#. js-lingui-explicit-id
+#: src/lib/composition-notifications.ts
+msgid "{acteur} a agi sur la tâche « {titre} »{lieu}"
+msgstr "{acteur} a agi sur la tâche « {titre} »{lieu}"
+
+#. js-lingui-explicit-id
+#: src/lib/demandes.ts
+msgid "Le mot compte {max} caractères au plus."
+msgstr "Le mot compte {max} caractères au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/droits.ts
+msgid "Cette édition est archivée : ses tâches sont en lecture seule."
+msgstr "Cette édition est archivée : ses tâches sont en lecture seule."
+
+#. js-lingui-explicit-id
+#: src/lib/editions.ts
+msgid "Les dates attendues ont la forme AAAA-MM-JJ."
+msgstr "Les dates attendues ont la forme AAAA-MM-JJ."
+
+#. js-lingui-explicit-id
+#: src/lib/editions.ts
+msgid "La date de fin doit suivre la date de début."
+msgstr "La date de fin doit suivre la date de début."
+
+#. js-lingui-explicit-id
+#: src/lib/editions.ts
+msgid "L’année doit être comprise entre {min} et {max}."
+msgstr "L’année doit être comprise entre {min} et {max}."
+
+#. js-lingui-explicit-id
+#: src/lib/equipe.ts
+msgid "{perimetre} ({edition})"
+msgstr "{perimetre} ({edition})"
+
+#. js-lingui-explicit-id
+#: src/lib/equipe.ts
+msgid "{perimetre} ({edition}) : {description}"
+msgstr "{perimetre} ({edition}) : {description}"
+
+#. js-lingui-explicit-id
+#: src/lib/equipe.ts
+msgid "Vous rejoignez le périmètre {perimetre}"
+msgstr "Vous rejoignez le périmètre {perimetre}"
+
+#. js-lingui-explicit-id
+#: src/lib/equipe.ts
+msgid "Vous devenez admin de l’activité {activite} : vous gérez ses périodes, ses périmètres et son équipe."
+msgstr "Vous devenez admin de l’activité {activite} : vous gérez ses périodes, ses périmètres et son équipe."
+
+#. js-lingui-explicit-id
+#: src/lib/equipe.ts
+msgid "Vous devenez admin de l’organisation {organisation} : vous gérez toutes ses activités et ses comptes."
+msgstr "Vous devenez admin de l’organisation {organisation} : vous gérez toutes ses activités et ses comptes."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Accès refusé."
+msgstr "Accès refusé."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier."
+msgstr "Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Contactez votre hébergeur : {contact}."
+msgstr "Contactez votre hébergeur : {contact}."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Contactez un admin de votre organisation."
+msgstr "Contactez un admin de votre organisation."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "La requête est trop profonde ({niveaux} niveaux, maximum {maximum})."
+msgstr "La requête est trop profonde ({niveaux} niveaux, maximum {maximum})."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "La requête sélectionne trop de champs ({champs}, maximum {maximum})."
+msgstr "La requête sélectionne trop de champs ({champs}, maximum {maximum})."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "La requête est trop coûteuse (complexité {complexite}, maximum {maximum})."
+msgstr "La requête est trop coûteuse (complexité {complexite}, maximum {maximum})."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Le serveur a rencontré une erreur (référence {reference}). Réessayez, puis contactez un admin si elle persiste."
+msgstr "Le serveur a rencontré une erreur (référence {reference}). Réessayez, puis contactez un admin si elle persiste."
+
+#. js-lingui-explicit-id
+#: src/lib/formulaire.ts
+msgid "{nom} compte {max} caractères au plus."
+msgstr "{nom} compte {max} caractères au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/fusion-benevoles.ts
+msgid "Une des deux fiches n’existe plus."
+msgstr "Une des deux fiches n’existe plus."
+
+#. js-lingui-explicit-id
+#: src/lib/heures.ts
+msgid "Le jour attendu est au format AAAA-MM-JJ."
+msgstr "Le jour attendu est au format AAAA-MM-JJ."
+
+#. js-lingui-explicit-id
+#: src/lib/heures.ts
+#: src/lib/sondages.ts
+msgid "L’heure attendue est au format HH:MM."
+msgstr "L’heure attendue est au format HH:MM."
+
+#. Heure pile, par exemple 18 h
+#. js-lingui-explicit-id
+#: src/lib/heures.ts
+msgid "{heures} h"
+msgstr "{heures} h"
+
+#. Heure avec minutes, par exemple 18 h 30
+#. js-lingui-explicit-id
+#: src/lib/heures.ts
+msgid "{heures} h {minutes}"
+msgstr "{heures} h {minutes}"
+
+#. js-lingui-explicit-id
+#: src/lib/heures.ts
+msgid "du {jourDebut} à {heureDebut} au {jourFin} à {heureFin}"
+msgstr "du {jourDebut} à {heureDebut} au {jourFin} à {heureFin}"
+
+#. js-lingui-explicit-id
+#: src/lib/heures.ts
+msgid "{jour}, de {heureDebut} à {heureFin}"
+msgstr "{jour}, de {heureDebut} à {heureFin}"
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "La ligne ne porte aucun nom."
+msgstr "La ligne ne porte aucun nom."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Une personne choisit {max} séquences au plus."
+msgstr "Une personne choisit {max} séquences au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "La date de l’accord ne peut pas être future."
+msgstr "La date de l’accord ne peut pas être future."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "L’identifiant externe"
+msgstr "L’identifiant externe"
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Un import exige que les personnes du fichier aient donné leur accord."
+msgstr "Un import exige que les personnes du fichier aient donné leur accord."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "La source"
+msgstr "La source"
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Un lot compte de 1 à {max} personnes."
+msgstr "Un lot compte de 1 à {max} personnes."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Chaque personne d’un lot porte une clé unique."
+msgstr "Chaque personne d’un lot porte une clé unique."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Une séquence associée n’appartient pas à la portée de l’import."
+msgstr "Une séquence associée n’appartient pas à la portée de l’import."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Le mode « places directes » exige au moins une colonne associée à une séquence."
+msgstr "Le mode « places directes » exige au moins une colonne associée à une séquence."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Cette source sert déjà à un autre appel. Choisissez une autre source."
+msgstr "Cette source sert déjà à un autre appel. Choisissez une autre source."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "La fiche à rattacher n’existe plus."
+msgstr "La fiche à rattacher n’existe plus."
+
+#. js-lingui-explicit-id
+#: src/lib/import-benevoles.ts
+msgid "Une activité compte {max} fiches bénévoles au plus : ce lot en créerait {fichesCreees}, il en reste {fichesRestantes}."
+msgstr "Une activité compte {max} fiches bénévoles au plus : ce lot en créerait {fichesCreees}, il en reste {fichesRestantes}."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "{chemin} : {message}"
+msgstr "{chemin} : {message}"
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "déclaration"
+msgstr "déclaration"
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "Une organisation utilise déjà cet identifiant."
+msgstr "Une organisation utilise déjà cet identifiant."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "Cette organisation a déjà un admin : ses admins invitent les autres personnes."
+msgstr "Cette organisation a déjà un admin : ses admins invitent les autres personnes."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "Cette organisation n’a aucune activité ouverte."
+msgstr "Cette organisation n’a aucune activité ouverte."
+
+#. js-lingui-explicit-id
+#: src/lib/installation.ts
+msgid "Aucune activité ne porte le slug « {slug} » dans cette organisation."
+msgstr "Aucune activité ne porte le slug « {slug} » dans cette organisation."
+
+#. js-lingui-explicit-id
+#: src/lib/invitations.ts
+msgid "Cette organisation n’accueille pas de nouvelle personne pour le moment."
+msgstr "Cette organisation n’accueille pas de nouvelle personne pour le moment."
+
+#. js-lingui-explicit-id
+#: src/lib/limites.ts
+msgid "{activites, plural, one {Votre organisation a atteint sa limite de # activité. Archivez une activité ou demandez une limite plus haute.} other {Votre organisation a atteint sa limite de # activités. Archivez une activité ou demandez une limite plus haute.}}"
+msgstr "{activites, plural, one {Votre organisation a atteint sa limite de # activité. Archivez une activité ou demandez une limite plus haute.} other {Votre organisation a atteint sa limite de # activités. Archivez une activité ou demandez une limite plus haute.}}"
+
+#. js-lingui-explicit-id
+#: src/lib/limites.ts
+msgid "{periodes, plural, one {Votre organisation a atteint sa limite de # période ouverte. Archivez une période terminée ou demandez une limite plus haute. Les périodes archivées restent consultables.} other {Votre organisation a atteint sa limite de # périodes ouvertes. Archivez une période terminée ou demandez une limite plus haute. Les périodes archivées restent consultables.}}"
+msgstr "{periodes, plural, one {Votre organisation a atteint sa limite de # période ouverte. Archivez une période terminée ou demandez une limite plus haute. Les périodes archivées restent consultables.} other {Votre organisation a atteint sa limite de # périodes ouvertes. Archivez une période terminée ou demandez une limite plus haute. Les périodes archivées restent consultables.}}"
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "Le fichier SVG contient un script : il est refusé."
+msgstr "Le fichier SVG contient un script : il est refusé."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "Le fichier SVG contient un contenu HTML : il est refusé."
+msgstr "Le fichier SVG contient un contenu HTML : il est refusé."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "Le fichier SVG contient un gestionnaire d’événement : il est refusé."
+msgstr "Le fichier SVG contient un gestionnaire d’événement : il est refusé."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "Le fichier SVG contient un lien javascript : il est refusé."
+msgstr "Le fichier SVG contient un lien javascript : il est refusé."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "Le fichier SVG contient une entité XML : il est refusé."
+msgstr "Le fichier SVG contient une entité XML : il est refusé."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "Le fichier SVG contient une ressource externe : il est refusé."
+msgstr "Le fichier SVG contient une ressource externe : il est refusé."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "L’image doit être un fichier PNG ou SVG."
+msgstr "L’image doit être un fichier PNG ou SVG."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "Cette image doit être au format PNG : les mails n’affichent pas le SVG."
+msgstr "Cette image doit être au format PNG : les mails n’affichent pas le SVG."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "Cette image doit être au format SVG."
+msgstr "Cette image doit être au format SVG."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "L’image dépasse {taille} Ko : réduisez sa taille."
+msgstr "L’image dépasse {taille} Ko : réduisez sa taille."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "L’image est vide."
+msgstr "L’image est vide."
+
+#. js-lingui-explicit-id
+#: src/lib/medias.ts
+msgid "L’icône d’application doit être un PNG carré de {cote} pixels de côté."
+msgstr "L’icône d’application doit être un PNG carré de {cote} pixels de côté."
+
+#. js-lingui-explicit-id
+#: src/lib/messages.ts
+msgid "Le modèle du message n’est pas reconnu."
+msgstr "Le modèle du message n’est pas reconnu."
+
+#. js-lingui-explicit-id
+#: src/lib/messages.ts
+msgid "Choisissez au moins une personne."
+msgstr "Choisissez au moins une personne."
+
+#. js-lingui-explicit-id
+#: src/lib/messages.ts
+msgid "Un message compte {max} destinataires au plus."
+msgstr "Un message compte {max} destinataires au plus."
+
+#. Rôle de la personne, dans « Le mode d’emploi … présente vos écrans et vos actions. »
+#. js-lingui-explicit-id
+#: src/lib/modes-d-emploi.ts
+msgid "de l’admin de l’organisation"
+msgstr "de l’admin de l’organisation"
+
+#. Rôle de la personne, dans « Le mode d’emploi … présente vos écrans et vos actions. »
+#. js-lingui-explicit-id
+#: src/lib/modes-d-emploi.ts
+msgid "de l’admin d’activité"
+msgstr "de l’admin d’activité"
+
+#. Rôle de la personne, dans « Le mode d’emploi … présente vos écrans et vos actions. »
+#. js-lingui-explicit-id
+#: src/lib/modes-d-emploi.ts
+msgid "des référentes et référents"
+msgstr "des référentes et référents"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "couleur au format #RRGGBB"
+msgstr "couleur au format #RRGGBB"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "intensité entre 0 et {max}"
+msgstr "intensité entre 0 et {max}"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "espacement en em, par exemple -0.02em"
+msgstr "espacement en em, par exemple -0.02em"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "contraste {rapport} sur {fond}, 4,5 attendu"
+msgstr "contraste {rapport} sur {fond}, 4,5 attendu"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "La page d’équipe est une adresse https."
+msgstr "La page d’équipe est une adresse https."
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "adresse mail attendue"
+msgstr "adresse mail attendue"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+#: src/lib/phases.ts
+msgid "minuscules, chiffres et tirets seulement"
+msgstr "minuscules, chiffres et tirets seulement"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "identifiant réservé par l’espace organisateur"
+msgstr "identifiant réservé par l’espace organisateur"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "fuseau horaire inconnu (forme Europe/Paris)"
+msgstr "fuseau horaire inconnu (forme Europe/Paris)"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "domaine attendu"
+msgstr "domaine attendu"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "messagerie grand public refusée : déclarez plutôt l’adresse complète dans adressesRoleAutorisees"
+msgstr "messagerie grand public refusée : déclarez plutôt l’adresse complète dans adressesRoleAutorisees"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "adresse https ou chemin absolu"
+msgstr "adresse https ou chemin absolu"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "le domaine {domaine} n'est pas dans domainesCourrielAutorises, et l'adresse n'est pas dans adressesRoleAutorisees"
+msgstr "le domaine {domaine} n'est pas dans domainesCourrielAutorises, et l'adresse n'est pas dans adressesRoleAutorisees"
+
+#. js-lingui-explicit-id
+#: src/lib/organisation.ts
+msgid "le domaine {domaine} n'est pas dans les domainesCourrielAutorises de l'organisation, et l'adresse n'est pas dans ses adressesRoleAutorisees"
+msgstr "le domaine {domaine} n'est pas dans les domainesCourrielAutorises de l'organisation, et l'adresse n'est pas dans ses adressesRoleAutorisees"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "clé de 60 caractères au plus"
+msgstr "clé de 60 caractères au plus"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "libellé attendu"
+msgstr "libellé attendu"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "libellé de 60 caractères au plus"
+msgstr "libellé de 60 caractères au plus"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "borne attendue de la forme J-120 ou J+3"
+msgstr "borne attendue de la forme J-120 ou J+3"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "une phase au moins"
+msgstr "une phase au moins"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "{max} phases au plus"
+msgstr "{max} phases au plus"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "la clé {cle} est déclarée deux fois"
+msgstr "la clé {cle} est déclarée deux fois"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "la dernière phase ne porte pas de borne : elle reçoit tout ce qui suit"
+msgstr "la dernière phase ne porte pas de borne : elle reçoit tout ce qui suit"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "borne attendue : seule la dernière phase n’en porte pas"
+msgstr "borne attendue : seule la dernière phase n’en porte pas"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "les bornes se suivent dans l’ordre croissant"
+msgstr "les bornes se suivent dans l’ordre croissant"
+
+#. Phase par défaut d’une activité
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "Lancement"
+msgstr "Lancement"
+
+#. Phase par défaut d’une activité
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "Préparation"
+msgstr "Préparation"
+
+#. Phase par défaut d’une activité
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "Derniers réglages"
+msgstr "Derniers réglages"
+
+#. Dernière phase par défaut d’une activité
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "Déroulement et bilan"
+msgstr "Déroulement et bilan"
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "La phase {numero} n’est pas valide : {motif}."
+msgstr "La phase {numero} n’est pas valide : {motif}."
+
+#. js-lingui-explicit-id
+#: src/lib/phases.ts
+msgid "Les phases ne sont pas valides : {motif}."
+msgstr "Les phases ne sont pas valides : {motif}."
+
+#. js-lingui-explicit-id
+#: src/lib/postes.ts
+msgid "{nom} {annee} : rejoignez l’équipe d’organisation"
+msgstr "{nom} {annee} : rejoignez l’équipe d’organisation"
+
+#. js-lingui-explicit-id
+#: src/lib/postes.ts
+msgid "Nous préparons {nom} {annee}. Nous cherchons encore des référentes et des référents pour ces périmètres :"
+msgstr "Nous préparons {nom} {annee}. Nous cherchons encore des référentes et des référents pour ces périmètres :"
+
+#. js-lingui-explicit-id
+#: src/lib/postes.ts
+msgid "Vous pouvez proposer votre aide par mail :\n"
+"{contact}"
+msgstr "Vous pouvez proposer votre aide par mail :\n"
+"{contact}"
+
+#. js-lingui-explicit-id
+#: src/lib/postes.ts
+msgid "Vous trouverez plus d’informations sur la page de l’équipe :\n"
+"{pageEquipe}"
+msgstr "Vous trouverez plus d’informations sur la page de l’équipe :\n"
+"{pageEquipe}"
+
+#. js-lingui-explicit-id
+#: src/lib/programme.ts
+msgid "Une séquence dure 24 heures au plus."
+msgstr "Une séquence dure 24 heures au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/programme.ts
+msgid "Une place désigne une personne de l’équipe ou une fiche bénévole."
+msgstr "Une place désigne une personne de l’équipe ou une fiche bénévole."
+
+#. Libellé d’un appareil dont le système n’est pas reconnu
+#. js-lingui-explicit-id
+#: src/lib/push.ts
+msgid "Appareil"
+msgstr "Appareil"
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Le lien de visio dépasse {max} caractères."
+msgstr "Le lien de visio dépasse {max} caractères."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Le lien de visio doit être une adresse web complète."
+msgstr "Le lien de visio doit être une adresse web complète."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Le lien de visio commence par https://."
+msgstr "Le lien de visio commence par https://."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Une réunion lie {max} tâches au plus."
+msgstr "Une réunion lie {max} tâches au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Une des tâches ne peut pas être liée à cette réunion."
+msgstr "Une des tâches ne peut pas être liée à cette réunion."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Une réunion de l’agenda global convoque toute l’équipe ou des personnes choisies."
+msgstr "Une réunion de l’agenda global convoque toute l’équipe ou des personnes choisies."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Choisissez au moins une personne à convoquer."
+msgstr "Choisissez au moins une personne à convoquer."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Une réunion compte {max} personnes convoquées au plus."
+msgstr "Une réunion compte {max} personnes convoquées au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Une réunion compte {max} personnes convoquées au plus : choisissez les personnes."
+msgstr "Une réunion compte {max} personnes convoquées au plus : choisissez les personnes."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Une réunion se place dans les deux ans qui entourent la période."
+msgstr "Une réunion se place dans les deux ans qui entourent la période."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "Une réunion dure {max} jours au plus."
+msgstr "Une réunion dure {max} jours au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/reunions.ts
+msgid "La fin de la réunion suit son début."
+msgstr "La fin de la réunion suit son début."
+
+#. js-lingui-explicit-id
+#: src/lib/saisie.ts
+msgid "L’adresse mail n’est pas valide."
+msgstr "L’adresse mail n’est pas valide."
+
+#. js-lingui-explicit-id
+#: src/lib/saisie.ts
+msgid "{libelle} est obligatoire."
+msgstr "{libelle} est obligatoire."
+
+#. js-lingui-explicit-id
+#: src/lib/saisie.ts
+msgid "{libelle} dépasse {max} caractères."
+msgstr "{libelle} dépasse {max} caractères."
+
+#. js-lingui-explicit-id
+#: src/lib/saisie.ts
+msgid "La description dépasse {max} caractères."
+msgstr "La description dépasse {max} caractères."
+
+#. js-lingui-explicit-id
+#: src/lib/saisie.ts
+msgid "L’identifiant ne contient que des minuscules, des chiffres et des tirets."
+msgstr "L’identifiant ne contient que des minuscules, des chiffres et des tirets."
+
+#. js-lingui-explicit-id
+#: src/lib/saisie.ts
+msgid "La couleur attendue a la forme #RRGGBB."
+msgstr "La couleur attendue a la forme #RRGGBB."
+
+#. js-lingui-explicit-id
+#: src/lib/sondages.ts
+msgid "Proposez au moins un créneau."
+msgstr "Proposez au moins un créneau."
+
+#. js-lingui-explicit-id
+#: src/lib/sondages.ts
+msgid "Un sondage propose {max} créneaux au plus."
+msgstr "Un sondage propose {max} créneaux au plus."
+
+#. js-lingui-explicit-id
+#: src/lib/sondages.ts
+msgid "Un créneau se place dans les deux ans qui entourent la période."
+msgstr "Un créneau se place dans les deux ans qui entourent la période."
+
+#. js-lingui-explicit-id
+#: src/lib/sondages.ts
+msgid "Un créneau porte une heure de début et une heure de fin, ou aucune."
+msgstr "Un créneau porte une heure de début et une heure de fin, ou aucune."
+
+#. js-lingui-explicit-id
+#: src/lib/sondages.ts
+msgid "L’heure de fin suit l’heure de début."
+msgstr "L’heure de fin suit l’heure de début."
+
+#. js-lingui-explicit-id
+#: src/lib/sondages.ts
+msgid "Un créneau existant figure deux fois."
+msgstr "Un créneau existant figure deux fois."
+
+#. js-lingui-explicit-id
+#: src/lib/souhaits.ts
+msgid "Cette édition est archivée : ses souhaits ne se modifient plus."
+msgstr "Cette édition est archivée : ses souhaits ne se modifient plus."
+
+#. js-lingui-explicit-id
+#: src/lib/souhaits.ts
+msgid "Un périmètre choisi est introuvable ou archivé."
+msgstr "Un périmètre choisi est introuvable ou archivé."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/acces.ts
+msgid "Compte sans nom affiché"
+msgstr "Compte sans nom affiché"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/acces.ts
+msgid "{nombre, plural, one {Relaytour ne lit pas les droits de un dossier lié chez le fournisseur. Leurs personnes restent « Inconnu ».} other {Relaytour ne lit pas les droits de # dossiers liés chez le fournisseur. Leurs personnes restent « Inconnu ».}}"
+msgstr "{nombre, plural, one {Relaytour ne lit pas les droits de un dossier lié chez le fournisseur. Leurs personnes restent « Inconnu ».} other {Relaytour ne lit pas les droits de # dossiers liés chez le fournisseur. Leurs personnes restent « Inconnu ».}}"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/acces.ts
+msgid "Le fournisseur n’a pas permis la vérification. Réessayez, ou reconnectez le fournisseur avec la vérification des accès."
+msgstr "Le fournisseur n’a pas permis la vérification. Réessayez, ou reconnectez le fournisseur avec la vérification des accès."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/dropbox.ts
+#: src/espace-fichiers/google.ts
+#: src/espace-fichiers/sharepoint.ts
+msgid "Personne"
+msgstr "Personne"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/dropbox.ts
+#: src/espace-fichiers/sharepoint.ts
+msgid "Groupe"
+msgstr "Groupe"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/dropbox.ts
+msgid "Mon Dropbox"
+msgstr "Mon Dropbox"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/dropbox.ts
+msgid "Espace d’équipe"
+msgstr "Espace d’équipe"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/export.ts
+msgid "périmètre archivé"
+msgstr "périmètre archivé"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/export.ts
+#: src/espace-fichiers/import.ts
+msgid "coordonnées personnelles ({valeurs})"
+msgstr "coordonnées personnelles ({valeurs})"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/export.ts
+msgid "Le dossier d’export n’existe plus chez le fournisseur cloud. Choisissez un autre dossier."
+msgstr "Le dossier d’export n’existe plus chez le fournisseur cloud. Choisissez un autre dossier."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/export.ts
+msgid "Le dossier d’export se trouve maintenant dans un dossier lié : ses lecteurs y liraient les fiches de tous les périmètres. Relaytour n’y écrit plus. Déplacez-le, ou choisissez un autre dossier."
+msgstr "Le dossier d’export se trouve maintenant dans un dossier lié : ses lecteurs y liraient les fiches de tous les périmètres. Relaytour n’y écrit plus. Déplacez-le, ou choisissez un autre dossier."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/export.ts
+msgid "Le fournisseur cloud n’a pas répondu pendant l’export. Relaytour recommencera."
+msgstr "Le fournisseur cloud n’a pas répondu pendant l’export. Relaytour recommencera."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+msgid "La clé n’est pas un fichier JSON."
+msgstr "La clé n’est pas un fichier JSON."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+msgid "La clé n’est pas celle d’un compte de service."
+msgstr "La clé n’est pas celle d’un compte de service."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+msgid "La clé ne donne pas l’adresse du compte de service."
+msgstr "La clé ne donne pas l’adresse du compte de service."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+msgid "La clé ne contient pas de clé privée."
+msgstr "La clé ne contient pas de clé privée."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+msgid "La clé désigne un autre service de jetons que Google."
+msgstr "La clé désigne un autre service de jetons que Google."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+msgid "Domaine {domaine}"
+msgstr "Domaine {domaine}"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+#: src/espace-fichiers/nextcloud.ts
+#: src/espace-fichiers/sharepoint.ts
+msgid "Lien de partage"
+msgstr "Lien de partage"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+msgid "Partagés avec moi"
+msgstr "Partagés avec moi"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+msgid "Mon Drive"
+msgstr "Mon Drive"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/google.ts
+msgid "Drive partagé"
+msgstr "Drive partagé"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "Ce périmètre n’appartient pas à l’activité."
+msgstr "Ce périmètre n’appartient pas à l’activité."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "Un périmètre reçoit un seul dossier source."
+msgstr "Un périmètre reçoit un seul dossier source."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "Le dossier d’export des fiches ne sert pas de source : ses fichiers sont des copies écrites par Relaytour."
+msgstr "Le dossier d’export des fiches ne sert pas de source : ses fichiers sont des copies écrites par Relaytour."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "Un dossier source est introuvable."
+msgstr "Un dossier source est introuvable."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "racine"
+msgstr "racine"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "format que Relaytour n’importe pas"
+msgstr "format que Relaytour n’importe pas"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "au-delà de {max} fichiers par import"
+msgstr "au-delà de {max} fichiers par import"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "plus de 2 Mo"
+msgstr "plus de 2 Mo"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "document Google exporté en Markdown"
+msgstr "document Google exporté en Markdown"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "converti en Markdown"
+msgstr "converti en Markdown"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "converti en Markdown, sans les images"
+msgstr "converti en Markdown, sans les images"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "fichier illisible"
+msgstr "fichier illisible"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "nom de fichier sans identifiant utilisable"
+msgstr "nom de fichier sans identifiant utilisable"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "plus de 200 000 caractères"
+msgstr "plus de 200 000 caractères"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "même identifiant que {fichier}"
+msgstr "même identifiant que {fichier}"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+msgid "conflit"
+msgstr "conflit"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/index.ts
+msgid "Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau."
+msgstr "Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/index.ts
+msgid "Le fournisseur cloud ne répond pas. Réessayez dans quelques instants."
+msgstr "Le fournisseur cloud ne répond pas. Réessayez dans quelques instants."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "L’hébergeur n’admet plus l’adresse de ce Nextcloud."
+msgstr "L’hébergeur n’admet plus l’adresse de ce Nextcloud."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Nextcloud ne répond pas : {detail}"
+msgstr "Nextcloud ne répond pas : {detail}"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Nextcloud renvoie vers une autre adresse. Vérifiez l’adresse saisie."
+msgstr "Nextcloud renvoie vers une autre adresse. Vérifiez l’adresse saisie."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Nextcloud répond trop longuement."
+msgstr "Nextcloud répond trop longuement."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Cette adresse ne répond pas comme un Nextcloud ({statut})."
+msgstr "Cette adresse ne répond pas comme un Nextcloud ({statut})."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Ce Nextcloud annonce une autre adresse que celle saisie. Saisissez l’adresse qu’il utilise (réglage overwrite.cli.url)."
+msgstr "Ce Nextcloud annonce une autre adresse que celle saisie. Saisissez l’adresse qu’il utilise (réglage overwrite.cli.url)."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Nextcloud refuse la connexion ({statut})."
+msgstr "Nextcloud refuse la connexion ({statut})."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Nextcloud ne décrit pas le compte ({statut})."
+msgstr "Nextcloud ne décrit pas le compte ({statut})."
+
+#. Nom d’un droit de partage sans nom affiché
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Partage"
+msgstr "Partage"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Fichiers"
+msgstr "Fichiers"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/nextcloud.ts
+msgid "Relaytour ne modifie pas le groupe des admins de Nextcloud."
+msgstr "Relaytour ne modifie pas le groupe des admins de Nextcloud."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "Le fournisseur a refusé l’opération : {detail}"
+msgstr "Le fournisseur a refusé l’opération : {detail}"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "La connexion ne permet pas la gestion des accès."
+msgstr "La connexion ne permet pas la gestion des accès."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "Relaytour ne lit pas les droits de ce dossier : rien n’a changé."
+msgstr "Relaytour ne lit pas les droits de ce dossier : rien n’a changé."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "Relaytour ne lit pas les membres de ce groupe : rien n’a changé."
+msgstr "Relaytour ne lit pas les membres de ce groupe : rien n’a changé."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "La connexion ne permet pas le partage."
+msgstr "La connexion ne permet pas le partage."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "Aucun groupe n’est choisi pour ce dossier."
+msgstr "Aucun groupe n’est choisi pour ce dossier."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "La personne n’a pas de compte dans l’annuaire."
+msgstr "La personne n’a pas de compte dans l’annuaire."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "Le dossier ne propose plus d’accès."
+msgstr "Le dossier ne propose plus d’accès."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "La connexion ne permet pas le retrait du groupe."
+msgstr "La connexion ne permet pas le retrait du groupe."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "La connexion ne permet pas le retrait du partage."
+msgstr "La connexion ne permet pas le retrait du partage."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/propositions.ts
+msgid "Ce droit a changé chez le fournisseur depuis sa création : Relaytour ne le retire pas."
+msgstr "Ce droit a changé chez le fournisseur depuis sa création : Relaytour ne le retire pas."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/reseau.ts
+msgid "L’hôte {hote} n’a pas une adresse publique."
+msgstr "L’hôte {hote} n’a pas une adresse publique."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/sharepoint.ts
+msgid "Compte Microsoft"
+msgstr "Compte Microsoft"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/sharepoint.ts
+msgid "Groupe du site"
+msgstr "Groupe du site"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/sharepoint.ts
+msgid "Tout le monde sauf les externes"
+msgstr "Tout le monde sauf les externes"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/sharepoint.ts
+msgid "Lien de l’organisation"
+msgstr "Lien de l’organisation"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ouvrir l’agenda"
+msgstr "Ouvrir l’agenda"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous recevez ce message parce que votre adresse est enregistrée dans l’espace organisateur de {organisation}. Pour toute question, répondez à ce mail."
+msgstr "Vous recevez ce message parce que votre adresse est enregistrée dans l’espace organisateur de {organisation}. Pour toute question, répondez à ce mail."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Cet espace est propulsé par Relaytour, logiciel libre."
+msgstr "Cet espace est propulsé par Relaytour, logiciel libre."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+#: src/courriel/messages.ts
+msgid "Ouvrir mon espace"
+msgstr "Ouvrir mon espace"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Votre code de connexion"
+msgstr "Votre code de connexion"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Votre code de connexion est valable {validite}."
+msgstr "Votre code de connexion est valable {validite}."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Saisissez ce code dans l’espace organisateur. Il est valable {validite}."
+msgstr "Saisissez ce code dans l’espace organisateur. Il est valable {validite}."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Se connecter avec ce code"
+msgstr "Se connecter avec ce code"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si vous n’avez pas demandé ce code, ignorez ce message. Personne ne peut se connecter sans accès à votre boîte mail."
+msgstr "Si vous n’avez pas demandé ce code, ignorez ce message. Personne ne peut se connecter sans accès à votre boîte mail."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Répondre dans l’agenda"
+msgstr "Répondre dans l’agenda"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Demandes pour rejoindre l’équipe"
+msgstr "Demandes pour rejoindre l’équipe"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Des demandes pour rejoindre l’équipe attendent votre décision."
+msgstr "Des demandes pour rejoindre l’équipe attendent votre décision."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Bonjour {nom},"
+msgstr "Bonjour {nom},"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Aucun compte n’existe avant votre décision. Vous acceptez ou refusez chaque demande dans l’onglet « Demandes » de l’écran « Personnes »."
+msgstr "Aucun compte n’existe avant votre décision. Vous acceptez ou refusez chaque demande dans l’onglet « Demandes » de l’écran « Personnes »."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Voir les demandes"
+msgstr "Voir les demandes"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous pouvez désactiver ces mails dans vos préférences :"
+msgstr "Vous pouvez désactiver ces mails dans vos préférences :"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Votre place dans l’équipe a changé"
+msgstr "Votre place dans l’équipe a changé"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Votre place dans l’équipe d’organisation a changé."
+msgstr "Votre place dans l’équipe d’organisation a changé."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur."
+msgstr "Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ouvrir l’espace organisateur"
+msgstr "Ouvrir l’espace organisateur"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Le mode d’emploi {roleModeDEmploi} présente vos écrans et vos actions."
+msgstr "Le mode d’emploi {roleModeDEmploi} présente vos écrans et vos actions."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Lire le mode d’emploi"
+msgstr "Lire le mode d’emploi"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+#: src/courriel/messages.ts
+msgid "Essai d’envoi du serveur Relaytour"
+msgstr "Essai d’envoi du serveur Relaytour"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ce message vérifie la chaîne d’envoi des mails."
+msgstr "Ce message vérifie la chaîne d’envoi des mails."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Essai d’envoi"
+msgstr "Essai d’envoi"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ce message vérifie la chaîne d’envoi des mails du serveur Relaytour. Vous n’avez rien à faire."
+msgstr "Ce message vérifie la chaîne d’envoi des mails du serveur Relaytour. Vous n’avez rien à faire."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Votre accès à l’espace organisateur"
+msgstr "Votre accès à l’espace organisateur"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "L’équipe d’organisation vous a ouvert un accès à l’espace organisateur."
+msgstr "L’équipe d’organisation vous a ouvert un accès à l’espace organisateur."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre adresse et vous recevez un code par mail."
+msgstr "L’espace ne demande aucun mot de passe. À chaque connexion, vous saisissez votre adresse et vous recevez un code par mail."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Se connecter"
+msgstr "Se connecter"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Échéances de vos tâches"
+msgstr "Échéances de vos tâches"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Des tâches qui vous sont assignées arrivent à échéance."
+msgstr "Des tâches qui vous sont assignées arrivent à échéance."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ces tâches vous sont assignées et demandent votre attention :"
+msgstr "Ces tâches vous sont assignées et demandent votre attention :"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous pouvez désactiver ces rappels dans vos préférences :"
+msgstr "Vous pouvez désactiver ces rappels dans vos préférences :"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Votre résumé"
+msgstr "Votre résumé"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Les nouvelles de vos périmètres et vos prochaines échéances."
+msgstr "Les nouvelles de vos périmètres et vos prochaines échéances."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Nouvelles non lues"
+msgstr "Nouvelles non lues"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vos échéances des 14 prochains jours"
+msgstr "Vos échéances des 14 prochains jours"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences :"
+msgstr "Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences :"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Une de vos tâches a été modifiée"
+msgstr "Une de vos tâches a été modifiée"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "{acteur} a modifié la tâche « {titre} »."
+msgstr "{acteur} a modifié la tâche « {titre} »."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "{acteur} a modifié la tâche « {titre} » du périmètre {perimetre}."
+msgstr "{acteur} a modifié la tâche « {titre} » du périmètre {perimetre}."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous recevez ce message parce que cette tâche vous est assignée."
+msgstr "Vous recevez ce message parce que cette tâche vous est assignée."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Voir le périmètre"
+msgstr "Voir le périmètre"
+
+#. Statut d’une tâche
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "À faire"
+msgstr "À faire"
+
+#. Statut d’une tâche
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "En cours"
+msgstr "En cours"
+
+#. Statut d’une tâche
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Faite"
+msgstr "Faite"
+
+#. Statut d’une tâche
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Abandonnée"
+msgstr "Abandonnée"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : votre accès à l’espace organisateur"
+msgstr "{tete} : votre accès à l’espace organisateur"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} : votre code de connexion"
+msgstr "{nomCourt} : votre code de connexion"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : une de vos tâches a été modifiée"
+msgstr "{tete} : une de vos tâches a été modifiée"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : échéances de vos tâches"
+msgstr "{tete} : échéances de vos tâches"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} : votre résumé"
+msgstr "{nomCourt} : votre résumé"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : votre place dans l’équipe a changé"
+msgstr "{tete} : votre place dans l’équipe a changé"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : demandes pour rejoindre l’équipe"
+msgstr "{tete} : demandes pour rejoindre l’équipe"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : convocation à une réunion"
+msgstr "{tete} : convocation à une réunion"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : réunion annulée"
+msgstr "{tete} : réunion annulée"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : votre participation"
+msgstr "{tete} : votre participation"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : vos places ont changé"
+msgstr "{tete} : vos places ont changé"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "En attendant, le mode d’emploi vous aide à découvrir l’espace."
+msgstr "En attendant, le mode d’emploi vous aide à découvrir l’espace."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous n’avez pas encore de périmètre : un admin vous affectera à l’un d’eux."
+msgstr "Vous n’avez pas encore de périmètre : un admin vous affectera à l’un d’eux."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{n, plural, one {Vous faites partie de l’équipe de l’activité {noms}, sans périmètre pour l’instant.} other {Vous faites partie de l’équipe des activités {noms}, sans périmètre pour l’instant.}}"
+msgstr "{n, plural, one {Vous faites partie de l’équipe de l’activité {noms}, sans périmètre pour l’instant.} other {Vous faites partie de l’équipe des activités {noms}, sans périmètre pour l’instant.}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Dans « Tous les périmètres », vous découvrez les périmètres et formulez vos souhaits."
+msgstr "Dans « Tous les périmètres », vous découvrez les périmètres et formulez vos souhaits."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Dans « Tous les périmètres », vous découvrez les périmètres."
+msgstr "Dans « Tous les périmètres », vous découvrez les périmètres."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Un admin vous affectera ensuite."
+msgstr "Un admin vous affectera ensuite."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez vos périmètres, vos tâches et les fiches méthode des éditions précédentes."
+msgstr "L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez vos périmètres, vos tâches et les fiches méthode des éditions précédentes."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : invitation à rejoindre l’espace organisateur"
+msgstr "{tete} : invitation à rejoindre l’espace organisateur"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} vous invite à rejoindre son espace organisateur. Vous avez déjà un compte à cette adresse : après connexion, vous acceptez ou refusez cette invitation depuis le menu de votre compte. Rien n’est partagé avec cette organisation avant votre accord."
+msgstr "{nomCourt} vous invite à rejoindre son espace organisateur. Vous avez déjà un compte à cette adresse : après connexion, vous acceptez ou refusez cette invitation depuis le menu de votre compte. Rien n’est partagé avec cette organisation avant votre accord."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "L’invitation vous propose ces périmètres :"
+msgstr "L’invitation vous propose ces périmètres :"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous choisirez vos périmètres avec l’équipe après votre accord."
+msgstr "Vous choisirez vos périmètres avec l’équipe après votre accord."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous faites partie de l’équipe de ces périmètres :"
+msgstr "Vous faites partie de l’équipe de ces périmètres :"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{n, plural, one {Une demande pour rejoindre l’équipe de l’activité {activite} attend votre décision.} other {# demandes pour rejoindre l’équipe de l’activité {activite} attendent votre décision.}}"
+msgstr "{n, plural, one {Une demande pour rejoindre l’équipe de l’activité {activite} attend votre décision.} other {# demandes pour rejoindre l’équipe de l’activité {activite} attendent votre décision.}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{n, plural, one {# minute} other {# minutes}}"
+msgstr "{n, plural, one {# minute} other {# minutes}}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Une autre personne"
+msgstr "Une autre personne"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le nouveau statut de la tâche est « {statut} »."
+msgstr "Le nouveau statut de la tâche est « {statut} »."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le titre, la description ou l’échéance de la tâche ont changé."
+msgstr "Le titre, la description ou l’échéance de la tâche ont changé."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Voici les nouvelles de vos périmètres depuis hier."
+msgstr "Voici les nouvelles de vos périmètres depuis hier."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Voici les nouvelles de vos périmètres de la semaine."
+msgstr "Voici les nouvelles de vos périmètres de la semaine."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Pour vos rôles d’admin"
+msgstr "Pour vos rôles d’admin"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Aucune nouvelle."
+msgstr "Aucune nouvelle."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{date} : {titre} ({perimetre}) (en retard)"
+msgstr "{date} : {titre} ({perimetre}) (en retard)"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{date} : {titre} ({perimetre})"
+msgstr "{date} : {titre} ({perimetre})"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Aucune échéance."
+msgstr "Aucune échéance."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "l’agenda de {activite}"
+msgstr "l’agenda de {activite}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Réunion annulée"
+msgstr "Réunion annulée"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous n’êtes plus convoqué·e"
+msgstr "Vous n’êtes plus convoqué·e"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Réunion modifiée"
+msgstr "Réunion modifiée"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Convocation à une réunion"
+msgstr "Convocation à une réunion"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "La réunion « {titre} » ({agenda}) est annulée."
+msgstr "La réunion « {titre} » ({agenda}) est annulée."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous ne faites plus partie des personnes convoquées à la réunion « {titre} » ({agenda})."
+msgstr "Vous ne faites plus partie des personnes convoquées à la réunion « {titre} » ({agenda})."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "La réunion « {titre} » ({agenda}) a changé. Voici son horaire et son lieu à jour."
+msgstr "La réunion « {titre} » ({agenda}) a changé. Voici son horaire et son lieu à jour."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous êtes convoqué·e à la réunion « {titre} » ({agenda})."
+msgstr "Vous êtes convoqué·e à la réunion « {titre} » ({agenda})."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Quand : {horaire}"
+msgstr "Quand : {horaire}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Lieu : {lieu}"
+msgstr "Lieu : {lieu}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Visio : {lien}"
+msgstr "Visio : {lien}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le fichier joint retire la réunion de votre agenda."
+msgstr "Le fichier joint retire la réunion de votre agenda."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Le fichier joint ajoute la réunion à votre agenda. Indiquez si vous serez présente ou présent dans l’espace organisateur : une réponse envoyée depuis votre agenda n’y arrive pas."
+msgstr "Le fichier joint ajoute la réunion à votre agenda. Indiquez si vous serez présente ou présent dans l’espace organisateur : une réponse envoyée depuis votre agenda n’y arrive pas."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : réunion modifiée"
+msgstr "{tete} : réunion modifiée"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{tete} : vous n’êtes plus convoqué·e"
+msgstr "{tete} : vous n’êtes plus convoqué·e"
+
+#. Marque d’une place que la personne doit encore confirmer
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "à confirmer"
+msgstr "à confirmer"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous n’avez plus de place à venir."
+msgstr "Vous n’avez plus de place à venir."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{horaire} · {titre} ({lieu}) · {aConfirmer}"
+msgstr "{horaire} · {titre} ({lieu}) · {aConfirmer}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{horaire} · {titre} ({lieu})"
+msgstr "{horaire} · {titre} ({lieu})"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{horaire} · {titre} · {aConfirmer}"
+msgstr "{horaire} · {titre} · {aConfirmer}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{horaire} · {titre}"
+msgstr "{horaire} · {titre}"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Votre candidature est retenue"
+msgstr "Votre candidature est retenue"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "L’équipe d’organisation vous propose les places suivantes pour « {activite} »."
+msgstr "L’équipe d’organisation vous propose les places suivantes pour « {activite} »."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Confirmez votre participation depuis votre espace. Vous pouvez aussi y décliner une place."
+msgstr "Confirmez votre participation depuis votre espace. Vous pouvez aussi y décliner une place."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Confirmer ma participation"
+msgstr "Confirmer ma participation"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Si vous n’êtes pas à l’origine de cette inscription, ignorez ce message. Vos données seront supprimées."
+msgstr "Si vous n’êtes pas à l’origine de cette inscription, ignorez ce message. Vos données seront supprimées."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Votre espace bénévole"
+msgstr "Votre espace bénévole"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Voici le lien de votre espace bénévole pour « {activite} »."
+msgstr "Voici le lien de votre espace bénévole pour « {activite} »."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous y retrouvez vos places, leurs consignes et le fichier pour votre agenda."
+msgstr "Vous y retrouvez vos places, leurs consignes et le fichier pour votre agenda."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Gardez ce lien : il reste le même."
+msgstr "Gardez ce lien : il reste le même."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vos places ont changé"
+msgstr "Vos places ont changé"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "L’équipe d’organisation a modifié vos places pour « {activite} ». Voici la liste à jour."
+msgstr "L’équipe d’organisation a modifié vos places pour « {activite} ». Voici la liste à jour."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Confirmez les places marquées « {aConfirmer} » depuis votre espace."
+msgstr "Confirmez les places marquées « {aConfirmer} » depuis votre espace."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Vous retrouvez vos places et leurs consignes dans votre espace."
+msgstr "Vous retrouvez vos places et leurs consignes dans votre espace."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Votre lien personnel reste le même."
+msgstr "Votre lien personnel reste le même."

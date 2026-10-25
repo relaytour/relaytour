@@ -1,7 +1,7 @@
 <mjml>
   <mj-head>
-    <mj-title>Une de vos tâches a été modifiée</mj-title>
-    <mj-preview>{{acteur}} a modifié la tâche « {{titre}} ».</mj-preview>
+    <mj-title>[[Une de vos tâches a été modifiée]]</mj-title>
+    <mj-preview>[[{{acteur}} a modifié la tâche « {{titre}} ».]]</mj-preview>
     <mj-attributes>
       <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
       <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
@@ -14,19 +14,19 @@
     <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
       <mj-column>
         <mj-text font-size="20px" line-height="28px" font-weight="700">
-          Une de vos tâches a été modifiée
+          [[Une de vos tâches a été modifiée]]
         </mj-text>
         <mj-text>
-          {{acteur}} a modifié la tâche « {{titre}} » du périmètre {{perimetre}}.
+          [[{{acteur}} a modifié la tâche « {{titre}} » du périmètre {{perimetre}}.]]
           {{changement}}
         </mj-text>
         <mj-text>
-          Vous recevez ce message parce que cette tâche vous est assignée.
+          [[Vous recevez ce message parce que cette tâche vous est assignée.]]
         </mj-text>
         <mj-button href="{{lienPerimetre}}" background-color="#010101" color="#FFFFFF"
                    border-radius="10px" font-size="15px" font-weight="700"
                    padding="8px 0 16px" inner-padding="13px 24px">
-          Voir le périmètre
+          [[Voir le périmètre]]
         </mj-button>
       </mj-column>
     </mj-section>
