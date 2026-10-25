@@ -1,4 +1,6 @@
 import { DownOutlined, UpOutlined } from '@ant-design/icons'
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { useId, useState } from 'react'
 import { Link } from 'react-router'
 
@@ -37,10 +39,11 @@ export default function LigneTache({
   /** Vrai sous un titre qui nomme déjà le périmètre : son étiquette ne se répète pas. */
   sansPerimetre?: boolean
 }) {
+  const { t } = useLingui()
   const { lien } = useActivite()
   const echeance = etatEcheance(tache)
   const personnes = tache.assignes
-    .map(p => (p.id === moiId ? 'Vous' : p.nom))
+    .map(p => (p.id === moiId ? t`Vous` : p.nom))
     .join(', ')
   return (
     <li>
@@ -59,7 +62,7 @@ export default function LigneTache({
           className={`rt-date${echeance === 'retard' ? ' rt-date-retard' : echeance === 'proche' ? ' rt-date-proche' : ''}`}
           style={{ fontSize: 13 }}
         >
-          {tache.echeance ? dateCourte(tache.echeance) : 'Sans échéance'}
+          {tache.echeance ? dateCourte(tache.echeance) : t`Sans échéance`}
         </span>
         <span className="rt-ligne-tache-titre">
           <span>{tache.titre}</span>
@@ -74,7 +77,10 @@ export default function LigneTache({
           {tache.assignes.length === 0 ? (
             estOuverte(tache) && (
               <PastilleEtat variante="alerte" sansPoint>
-                Personne
+                {t({
+                  message: 'Personne',
+                  comment: 'Aucune personne n’est assignée à la tâche',
+                })}
               </PastilleEtat>
             )
           ) : (
@@ -86,7 +92,9 @@ export default function LigneTache({
             </span>
           )}
           {tache.enRetard && (
-            <PastilleEtat variante="retard">En retard</PastilleEtat>
+            <PastilleEtat variante="retard">
+              <Trans>En retard</Trans>
+            </PastilleEtat>
           )}
           <PastilleStatut statut={tache.statut} />
         </span>
@@ -111,16 +119,18 @@ export function LigneDeclinaisons({
   moiId: string
   editionId: string
 }) {
+  const { t } = useLingui()
   const [ouvert, setOuvert] = useState(false)
   const detail = useId()
   const premiere = taches[0]
   if (premiere === undefined) return null
-  const faites = taches.filter(t => t.statut === 'FAITE').length
-  const enRetard = taches.some(t => t.enRetard)
+  const faites = taches.filter(x => x.statut === 'FAITE').length
+  const nombrePerimetres = taches.length
+  const enRetard = taches.some(x => x.enRetard)
   // L'échéance est commune au groupe : la plus pressante de ses tâches donne l'état.
   const echeance = enRetard
     ? 'retard'
-    : taches.some(t => etatEcheance(t) === 'proche')
+    : taches.some(x => etatEcheance(x) === 'proche')
       ? 'proche'
       : 'normale'
   return (
@@ -141,33 +151,39 @@ export function LigneDeclinaisons({
           className={`rt-date${echeance === 'retard' ? ' rt-date-retard' : echeance === 'proche' ? ' rt-date-proche' : ''}`}
           style={{ fontSize: 13 }}
         >
-          {premiere.echeance ? dateCourte(premiere.echeance) : 'Sans échéance'}
+          {premiere.echeance ? dateCourte(premiere.echeance) : t`Sans échéance`}
         </span>
         <span className="rt-ligne-tache-titre">
           <span>{titre}</span>
-          {taches.map(t => (
+          {taches.map(x => (
             <EtiquettePerimetre
-              key={t.id}
-              nom={t.perimetre.nom}
-              couleur={t.perimetre.couleur}
+              key={x.id}
+              nom={x.perimetre.nom}
+              couleur={x.perimetre.couleur}
             />
           ))}
         </span>
         <span className="rt-ligne-tache-fin">
-          {enRetard && <PastilleEtat variante="retard">En retard</PastilleEtat>}
+          {enRetard && (
+            <PastilleEtat variante="retard">
+              <Trans>En retard</Trans>
+            </PastilleEtat>
+          )}
           <span className="rt-compte">
-            {taches.length} périmètres · {faites}{' '}
-            {faites > 1 ? 'faites' : 'faite'}
+            {t`${plural(faites, {
+              one: `${nombrePerimetres} périmètres · # faite`,
+              other: `${nombrePerimetres} périmètres · # faites`,
+            })}`}
           </span>
           {ouvert ? <UpOutlined aria-hidden /> : <DownOutlined aria-hidden />}
         </span>
       </button>
       {ouvert && (
         <ul id={detail} className="rt-liste-liens rt-ligne-declinaisons-detail">
-          {taches.map(t => (
+          {taches.map(x => (
             <LigneTache
-              key={t.id}
-              tache={t}
+              key={x.id}
+              tache={x}
               moiId={moiId}
               editionId={editionId}
             />

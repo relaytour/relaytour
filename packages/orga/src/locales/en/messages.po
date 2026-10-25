@@ -7,7 +7,74 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "« {titreTache} »"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "« {titreTache} ». {nomPersonne} en sera prévenu·e."
+msgstr ""
+
+#: src/lib/declinaisons.ts
+msgid "{abandonnees, plural, one {# abandonnée} other {# abandonnées}}"
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} a abandonné la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} a assigné la tâche à {personneConcernee}."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} a changé le statut de la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} a commencé la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} a créé la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} a marqué la tâche comme faite."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} a modifié la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} a remis la tâche à faire."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} a retiré {personneConcernee} de la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} ne s’occupe plus de la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} s’occupe de la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} vous a assigné la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "{acteur} vous a retiré·e de la tâche."
+msgstr ""
+
 #: src/pages/MonEspace.tsx
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
 msgid "{aucunePeriode} n’est en préparation."
 msgstr ""
 
@@ -27,12 +94,37 @@ msgstr ""
 msgid "{auteur} a modifié cette tâche. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne."
 msgstr ""
 
+#: src/pages/Perimetre.tsx
+msgid "{cettePeriodeMajuscule} est {periodeArchivee}. Ses tâches sont consultables en lecture seule."
+msgstr ""
+
+#: src/lib/declinaisons.ts
+msgid "{enAttente} en attente d’accord"
+msgstr ""
+
+#: src/composants/LigneTache.tsx
+msgid "{faites, plural, one {{nombrePerimetres} périmètres · # faite} other {{nombrePerimetres} périmètres · # faites}}"
+msgstr ""
+
+#: src/lib/declinaisons.ts
+msgid "{faites, plural, one {# faite sur {gardees}} other {# faites sur {gardees}}}"
+msgstr ""
+
+#: src/lib/declinaisons.ts
+msgid "{gardees, plural, one {faite} other {toutes faites}}"
+msgstr ""
+
 #: src/composants/ChampCouleur.tsx
 msgid "{heritee} (héritée)"
 msgstr ""
 
 #: src/composants/Tableau.tsx
 msgid "{largeur} pixels"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "{n, plural, one {# tâche} other {# tâches}}"
 msgstr ""
 
 #. Participe accordé avec le mot qui désigne la période.
@@ -123,8 +215,28 @@ msgstr ""
 msgid "{nbTaches, plural, one {La tâche est abandonnée} other {Les # tâches sont abandonnées}}"
 msgstr ""
 
+#: src/pages/TousLesPerimetres.tsx
+msgid "{nombre, plural, one {# personne recherchée} other {# personnes recherchées}}"
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "{nombreAAccepter} à accepter"
+msgstr ""
+
 #: src/pages/MonEspace.tsx
 msgid "{nombreAPrendre, plural, one {# tâche sans personne} other {# tâches sans personne}}"
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "{nombreAPrendre, plural, one {Une tâche attend une personne} other {# tâches attendent une personne}}"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "{nombreCommentaires, plural, one {# commentaire} other {# commentaires}}"
+msgstr ""
+
+#: src/lib/taches.ts
+msgid "{nombreDePersonnes, plural, one {{nomsDesPersonnes} recevra un mail pour les prévenir de votre modification.} other {{nomsDesPersonnes} recevront un mail pour les prévenir de votre modification.}}"
 msgstr ""
 
 #: src/composants/MenuCompte.tsx
@@ -137,6 +249,10 @@ msgstr ""
 
 #: src/pages/MonEspace.tsx
 msgid "{nombreMesTaches, plural, one {# ouverte} other {# ouvertes}} · {enRetard} en retard"
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "{nombreTaches} tâches, dont <0>{enRetard} en retard</0>"
 msgstr ""
 
 #: src/composants/OrganisationProvider.tsx
@@ -155,6 +271,10 @@ msgstr ""
 msgid "{nomPersonne} (contact principal)"
 msgstr ""
 
+#: src/composants/TacheCarte.tsx
+msgid "{nomPersonne} est retiré·e de la tâche."
+msgstr ""
+
 #: src/composants/ListeNotifications.tsx
 msgid "{nonLues, plural, one {# non lue} other {# non lues}}"
 msgstr ""
@@ -167,8 +287,20 @@ msgstr ""
 msgid "{pourcentage} % des tâches faites"
 msgstr ""
 
+#: src/lib/declinaisons.ts
+msgid "{refusees, plural, one {# refusée} other {# refusées}}"
+msgstr ""
+
 #: src/composants/Jauge.tsx
 msgid "{renforts} / {besoin} renforts"
+msgstr ""
+
+#: src/lib/declinaisons.ts
+msgid "{total, plural, one {Déclinée dans # périmètre} other {Déclinée dans # périmètres}}"
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "1 tâche, dont <0>{enRetard} en retard</0>"
 msgstr ""
 
 #: src/composants/Jauge.tsx
@@ -176,7 +308,11 @@ msgid "À confirmer"
 msgstr ""
 
 #. Statut d’une tâche
+#. Statut d’une tâche
+#. Statut d’une tâche
 #: src/lib/conflit.ts
+#: src/lib/taches.ts
+#: src/pages/Retroplanning.tsx
 msgid "À faire"
 msgstr ""
 
@@ -188,15 +324,37 @@ msgstr ""
 msgid "À la première ouverture, saisissez le code reçu par mail."
 msgstr ""
 
+#: src/lib/regroupement.ts
+msgid "à partir du {dateDeDebut}"
+msgstr ""
+
 #: src/pages/MonEspace.tsx
 msgid "À prendre dans vos périmètres"
 msgstr ""
 
 #. Statut d’une tâche
+#. Statut d’une tâche
 #: src/lib/conflit.ts
+#: src/lib/taches.ts
 msgid "Abandonnée"
 msgstr ""
 
+#. Filtre : les tâches abandonnées
+#. Nombre de tâches abandonnées, au pluriel
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "Abandonnées"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Abandonner"
+msgstr ""
+
+#: src/lib/declinaisons.ts
+msgid "Acceptée par {personne} le {jour}"
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/MesInvitations.tsx
 msgid "Accepter"
 msgstr ""
@@ -238,6 +396,10 @@ msgstr ""
 msgid "Adresse mail"
 msgstr ""
 
+#: src/pages/TousLesPerimetres.tsx
+msgid "Affecté·e"
+msgstr ""
+
 #: src/composants/PreferenceOrganigramme.tsx
 msgid "Afficher mon adresse dans l’organigramme"
 msgstr ""
@@ -250,14 +412,57 @@ msgstr ""
 msgid "Aide"
 msgstr ""
 
+#: src/lib/declinaisons.ts
+msgid "Ajoutée sans accord par {personne} le {jour}"
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+msgid "Ajouter"
+msgstr ""
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Ajouter sans accord"
+msgstr ""
+
+#: src/composants/ChoixPerimetresCibles.tsx
+msgid "Ajouter tous les périmètres du groupe {nomDuGroupe}"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Annuaire"
 msgstr ""
 
+#: src/composants/DeclinaisonsProposees.tsx
+#: src/composants/DeclinerTache.tsx
+#: src/composants/FilTache.tsx
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/MesInvitations.tsx
+#: src/composants/ReglagePerimetre.tsx
+#: src/composants/TacheCarte.tsx
+#: src/composants/TacheFormulaire.tsx
+#: src/lib/taches.ts
 #: src/pages/Preferences.tsx
 msgid "Annuler"
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Archivé"
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Assignées à moi"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Assigner"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Assigner une personne"
+msgstr ""
+
+#: src/composants/FilTache.tsx
+msgid "Aucun commentaire pour l’instant."
 msgstr ""
 
 #: src/composants/Recherche.tsx
@@ -277,6 +482,14 @@ msgstr ""
 msgid "Aucune activité ne vous est encore ouverte."
 msgstr ""
 
+#: src/pages/TousLesPerimetres.tsx
+msgid "Aucune description pour ce périmètre."
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Aucune fiche pour ce périmètre."
+msgstr ""
+
 #: src/composants/MesInvitations.tsx
 msgid "Aucune invitation n’attend votre accord."
 msgstr ""
@@ -293,12 +506,28 @@ msgstr ""
 msgid "Aucune notification."
 msgstr ""
 
+#: src/pages/TousLesPerimetres.tsx
+msgid "Aucune période n’est en préparation. Les souhaits se formulent quand une période s’ouvre."
+msgstr ""
+
 #: src/composants/CarteAvancement.tsx
 msgid "Aucune personne affectée"
 msgstr ""
 
+#: src/pages/Perimetre.tsx
+msgid "Aucune personne n’est affectée à ce périmètre pour {cettePeriode}."
+msgstr ""
+
 #: src/composants/Avancement.tsx
 msgid "Aucune tâche"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Aucune tâche dans cette catégorie."
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Aucune tâche ne correspond à ces filtres."
 msgstr ""
 
 #: src/pages/MonEspace.tsx
@@ -311,6 +540,18 @@ msgstr ""
 
 #: src/composants/PreferencePush.tsx
 msgid "Autorisez-les dans les réglages de votre navigateur ou de votre téléphone, puis revenez sur cet écran."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Autres actions"
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Autres périmètres"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Avancement"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -349,6 +590,10 @@ msgstr ""
 msgid "Ce périmètre a été modifié. « Écraser » enregistre votre réglage à la place du réglage actuel. « Recharger » abandonne votre saisie et affiche le réglage actuel."
 msgstr ""
 
+#: src/pages/Perimetre.tsx
+msgid "Ce périmètre est introuvable."
+msgstr ""
+
 #: src/composants/Contribution.tsx
 msgid "Ce score n’est visible que par vous et par les admins."
 msgstr ""
@@ -361,6 +606,10 @@ msgstr ""
 msgid "Ces réglages valent pour tous vos appareils, dans cette organisation. Vos mails ne changent pas."
 msgstr ""
 
+#: src/pages/Retroplanning.tsx
+msgid "Ces tâches ouvertes de vos périmètres n’ont aucune personne assignée. Vous pouvez les prendre depuis leur périmètre."
+msgstr ""
+
 #: src/composants/AvisRelecture.tsx
 msgid "Cet écran affiche peut-être des données que vous ne pouvez plus relire. Rechargez la page pour retrouver vos accès actuels."
 msgstr ""
@@ -369,8 +618,16 @@ msgstr ""
 msgid "Cette activité est archivée : elle reste consultable."
 msgstr ""
 
+#: src/pages/TousLesPerimetres.tsx
+msgid "Cette activité n’a encore aucun périmètre."
+msgstr ""
+
 #: src/composants/NotesDeVersion.tsx
 msgid "Cette fenêtre liste les changements de chaque version de Relaytour. Vous y lisez les notes qui concernent votre rôle."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Cette information n’est visible que par vous et par les admins."
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -391,6 +648,10 @@ msgstr ""
 
 #: src/lib/conflit.ts
 msgid "Cette tâche a changé depuis votre lecture"
+msgstr ""
+
+#: src/lib/taches.ts
+msgid "Cette tâche est assignée à d’autres personnes"
 msgstr ""
 
 #: src/lib/conflit.ts
@@ -417,9 +678,21 @@ msgstr ""
 msgid "Chaque lundi"
 msgstr ""
 
+#: src/composants/DeclinerTache.tsx
+msgid "Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses personnes assignées. Vous suivez leur avancement depuis cette tâche. Comme admin de l’activité, vous ajoutez ces tâches sans attendre l’accord des périmètres."
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+msgid "Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses personnes assignées. Vous suivez leur avancement depuis cette tâche. Les référentes et référents de chaque périmètre acceptent ou refusent la tâche. Elle entre sans attendre dans un périmètre où vous êtes vous-même affecté·e."
+msgstr ""
+
 #: src/composants/FournisseurActivite.tsx
 #: src/composants/GardeSession.tsx
 msgid "Chargement"
+msgstr ""
+
+#: src/composants/ChoixPerimetresCibles.tsx
+msgid "Choisir des périmètres"
 msgstr ""
 
 #: src/composants/ChampImage.tsx
@@ -430,12 +703,24 @@ msgstr ""
 msgid "Choisir une organisation"
 msgstr ""
 
+#: src/composants/TacheCarte.tsx
+msgid "Choisir une personne"
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+msgid "Choisissez au moins un périmètre."
+msgstr ""
+
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Choisissez le point-virgule si votre messagerie par défaut est Outlook : il ne découpe pas des adresses collées avec des virgules. Vous pouvez changer ce signe à côté des boutons de copie de chaque message."
 msgstr ""
 
 #: src/pages/Preferences.tsx
 msgid "Choisissez les mails et les notifications que vous recevez de {nomOrganisation}. Vos autres organisations gardent leurs propres réglages."
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Choisissez un groupe."
 msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
@@ -458,6 +743,14 @@ msgstr ""
 msgid "Cliquez sur l’icône d’installation, à droite de la barre d’adresse."
 msgstr ""
 
+#: src/composants/TacheCarte.tsx
+msgid "Cochée par {nomCloture}."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Cochée par vous."
+msgstr ""
+
 #: src/pages/Connexion.tsx
 msgid "Code à 6 chiffres"
 msgstr ""
@@ -470,6 +763,10 @@ msgstr ""
 msgid "Comment les points se calculent"
 msgstr ""
 
+#: src/composants/TacheCarte.tsx
+msgid "Commenter"
+msgstr ""
+
 #. Étiquette d’une fiche partagée, qui n’appartient à aucun périmètre
 #: src/composants/Recherche.tsx
 msgid "Commune"
@@ -479,8 +776,24 @@ msgstr ""
 msgid "Compte de {nom}"
 msgstr ""
 
+#: src/composants/FilTache.tsx
+msgid "Compte supprimé"
+msgstr ""
+
 #: src/composants/Jauge.tsx
 msgid "Confirmée"
+msgstr ""
+
+#: src/lib/taches.ts
+msgid "Confirmer"
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Consulter les tâches"
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Consulter les tâches de {nomPerimetre}"
 msgstr ""
 
 #: src/composants/Personne.tsx
@@ -491,12 +804,34 @@ msgstr ""
 msgid "Correctif"
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+msgid "Couleur"
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Dans chaque groupe, les périmètres se rangent par ordre croissant, puis par nom."
+msgstr ""
+
 #: src/pages/Preferences.tsx
 msgid "Dans l’espace organisateur"
 msgstr ""
 
 #: src/pages/Preferences.tsx
 msgid "Dans le résumé par mail"
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Décliner dans d’autres périmètres"
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Décliner dans d’autres périmètres (facultatif)"
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Demandée par"
 msgstr ""
 
 #: src/composants/PreferencePush.tsx
@@ -523,8 +858,31 @@ msgstr ""
 msgid "Désactiver"
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Description"
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Description dans ces périmètres (facultatif)"
+msgstr ""
+
 #: src/composants/Contribution.tsx
 msgid "Dont à temps"
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Échéance"
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Échéance {dateEcheance}"
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Échéance dans ces périmètres (facultatif)"
 msgstr ""
 
 #: src/composants/PreferencePush.tsx
@@ -532,16 +890,47 @@ msgstr ""
 msgid "Échéances"
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+#: src/lib/taches.ts
+msgid "Écraser"
+msgstr ""
+
+#: src/composants/FilTache.tsx
+msgid "Écrire un commentaire : un compte rendu, une information, une question."
+msgstr ""
+
 #: src/pages/AideMarkdown.tsx
 msgid "Écrire une fiche en Markdown"
 msgstr ""
 
+#: src/composants/DeclinaisonsTache.tsx
+msgid "En attente d’accord"
+msgstr ""
+
+#. Statut d’une tâche
+#. Statut d’une tâche
 #. Statut d’une tâche
 #: src/lib/conflit.ts
+#: src/lib/taches.ts
+#: src/pages/Retroplanning.tsx
 msgid "En cours"
 msgstr ""
 
+#: src/composants/DeclinaisonsTache.tsx
+#: src/composants/LigneTache.tsx
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "En retard"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "En retard : {dateEcheance}"
+msgstr ""
+
+#: src/composants/FilTache.tsx
 #: src/composants/PreferenceMessagerie.tsx
+#: src/composants/ReglagePerimetre.tsx
+#: src/composants/TacheFormulaire.tsx
 #: src/pages/Preferences.tsx
 msgid "Enregistrer"
 msgstr ""
@@ -584,9 +973,20 @@ msgstr ""
 msgid "Expire le {jourExpiration}"
 msgstr ""
 
+#. Bouton qui marque une tâche comme faite
 #. Statut d’une tâche
+#. Statut d’une tâche
+#: src/composants/TacheCarte.tsx
 #: src/lib/conflit.ts
+#: src/lib/taches.ts
 msgid "Faite"
+msgstr ""
+
+#. Filtre : les tâches faites
+#. Nombre de tâches faites, au pluriel
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "Faites"
 msgstr ""
 
 #: src/composants/Tableau.tsx
@@ -597,8 +997,16 @@ msgstr ""
 msgid "Fermer la recherche"
 msgstr ""
 
+#: src/composants/DeclinerTache.tsx
+msgid "Fermez cette fenêtre et réessayez dans un instant."
+msgstr ""
+
 #: src/composants/Contribution.tsx
 msgid "Fiche créée : {pointsFicheCreee} points."
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Fiche méthode"
 msgstr ""
 
 #: src/composants/Contribution.tsx
@@ -608,6 +1016,10 @@ msgstr ""
 #: src/composants/Contribution.tsx
 #: src/composants/Recherche.tsx
 msgid "Fiches"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Fiches méthode"
 msgstr ""
 
 #: src/pages/AideMarkdown.tsx
@@ -626,6 +1038,10 @@ msgstr ""
 msgid "Gérer l’activité"
 msgstr ""
 
+#: src/pages/Perimetre.tsx
+msgid "Gérer l’équipe"
+msgstr ""
+
 #: src/composants/CarteAvancement.tsx
 msgid "Gérer l’équipe de ce périmètre"
 msgstr ""
@@ -638,8 +1054,25 @@ msgstr ""
 msgid "Gérer l’organisation"
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+msgid "Groupe"
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Groupe de périmètres"
+msgstr ""
+
+#: src/composants/FilTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Historique"
+msgstr ""
+
 #: src/composants/HorsConnexion.tsx
 msgid "Hors connexion"
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Identifiant"
 msgstr ""
 
 #: src/composants/Jauge.tsx
@@ -671,6 +1104,23 @@ msgstr ""
 msgid "Jamais"
 msgstr ""
 
+#: src/composants/TacheCarte.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Je m’en occupe"
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Je suis intéressé·e"
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Je suis intéressé·e par {nomPerimetre}"
+msgstr ""
+
+#: src/lib/regroupement.ts
+msgid "jusqu’au {dateDeFin} · {borneRelative}"
+msgstr ""
+
 #: src/composants/InstallerApplication.tsx
 msgid "L’application est installée."
 msgstr ""
@@ -687,8 +1137,16 @@ msgstr ""
 msgid "L’application reprend dès le retour du réseau."
 msgstr ""
 
+#: src/composants/TacheCarte.tsx
+msgid "L’assignation est annulée."
+msgstr ""
+
 #: src/pages/Connexion.tsx
 msgid "L’envoi du code a échoué."
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "L’équipe est au complet."
 msgstr ""
 
 #: src/pages/Connexion.tsx
@@ -717,6 +1175,10 @@ msgstr ""
 
 #: src/composants/InvitationsEnAttente.tsx
 msgid "L’invitation est retirée."
+msgstr ""
+
+#: src/lib/taches.ts
+msgid "L’opération a échoué. Rechargez la page, puis réessayez."
 msgstr ""
 
 #: src/lib/erreurs.ts
@@ -749,6 +1211,42 @@ msgstr ""
 
 #: src/composants/InvitationsEnAttente.tsx
 msgid "La personne ne pourra plus l’accepter."
+msgstr ""
+
+#: src/composants/FilTache.tsx
+msgid "La suppression est définitive."
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "La tâche est ajoutée à votre périmètre."
+msgstr ""
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "La tâche est ajoutée au périmètre {nomPerimetre}."
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+msgid "La tâche est ajoutée aux périmètres choisis."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "La tâche est faite."
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+msgid "La tâche est partagée avec les périmètres choisis."
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "La tâche est refusée."
+msgstr ""
+
+#: src/lib/taches.ts
+msgid "La tâche n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "La tâche vous est assignée."
 msgstr ""
 
 #: src/composants/PreferenceLangue.tsx
@@ -787,12 +1285,44 @@ msgstr ""
 msgid "Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code."
 msgstr ""
 
+#: src/composants/FilTache.tsx
+msgid "Le commentaire est supprimé."
+msgstr ""
+
+#: src/composants/FilTache.tsx
+msgid "Le fil affiche les {nombreAffiche} derniers commentaires sur {nombreTotal}."
+msgstr ""
+
+#: src/composants/FilTache.tsx
+msgid "Le fil n’a pas pu être chargé. Rechargez la page dans un instant."
+msgstr ""
+
 #: src/composants/InstallerApplication.tsx
 msgid "Le lien du mail ouvre votre navigateur, pas l’application installée."
 msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Le mode d’emploi décrit chaque choix."
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Le nombre compte les tâches ouvertes assignées à chaque personne."
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "Le périmètre {nomPerimetreDemandeur} apprend votre refus. Un admin de l’activité peut ajouter la tâche à votre périmètre malgré ce refus."
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Le périmètre n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant."
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "Le périmètre qui la propose apprend votre refus. Un admin de l’activité peut ajouter la tâche à votre périmètre malgré ce refus."
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Le pôle obtient les gymnases, la piscine et les autorisations."
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -803,12 +1333,25 @@ msgstr ""
 msgid "Le résumé reprend aussi vos notifications d’admin non lues, dans une section à part."
 msgstr ""
 
+#: src/pages/Retroplanning.tsx
+msgid "Le rétroplanning n’a pas pu être chargé."
+msgstr ""
+
 #: src/lib/conflit.ts
 msgid "Le statut de cette tâche a changé"
 msgstr ""
 
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Le titre dépasse {TITRE_MAX} caractères."
+msgstr ""
+
 #: src/pages/Preferences.tsx
 msgid "Les admins gèrent votre adresse et vos affectations."
+msgstr ""
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr ""
 
 #: src/pages/AideMarkdown.tsx
@@ -843,8 +1386,65 @@ msgstr ""
 msgid "Les nouvelles de vos rôles d’admin : demandes, invitations et équipe, rangées par activité puis par périmètre."
 msgstr ""
 
+#: src/pages/TousLesPerimetres.tsx
+msgid "Les périmètres"
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Les périmètres de {nomActivite}."
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Les périmètres de {nomPeriode}. Choisissez ceux qui vous intéressent : un admin confirme ensuite les affectations."
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Les périmètres de {nomPeriode}. Les admins de l’activité notent les souhaits et confirment les affectations."
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+msgid "Les périmètres qui portent déjà cette tâche n’ont pas pu être chargés."
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Les tâches {dePeriode} sont rangées par phase, puis par périmètre."
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Les tâches {dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine."
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "Les tâches proposées à ce périmètre n’ont pas pu être chargées. Rechargez la page dans un instant."
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Les tâches sont rangées par fiche méthode, puis par échéance. Une tâche ne se supprime pas : elle s’abandonne."
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Les tâches sont rangées par phase, puis par échéance. Une tâche se range dans une phase par son échéance. Une tâche ne se supprime pas : elle s’abandonne."
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Les tâches sont triées par échéance. Une tâche ne se supprime pas : elle s’abandonne."
+msgstr ""
+
 #: src/composants/Tableau.tsx
 msgid "Libérer les premières colonnes"
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Lier une fiche (facultatif)"
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Lire la suite"
 msgstr ""
 
 #: src/composants/InstallerApplication.tsx
@@ -860,8 +1460,36 @@ msgstr ""
 msgid "Mails immédiats"
 msgstr ""
 
+#: src/composants/TacheCarte.tsx
+msgid "Marquer comme faite"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Marquer en cours"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Marquer la tâche comme faite"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Me retirer"
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Mes périmètres"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Messages"
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Minuscules, chiffres et tirets seulement."
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Minuscules, chiffres et tirets. Il ne change plus après la création."
 msgstr ""
 
 #: src/composants/MenuCompte.tsx
@@ -872,16 +1500,50 @@ msgstr ""
 msgid "Modification de vos tâches"
 msgstr ""
 
+#. Mention sur un commentaire modifié après sa publication
+#: src/composants/FilTache.tsx
+msgid "modifié"
+msgstr ""
+
+#: src/composants/FilTache.tsx
+msgid "Modifié le {dateModification}"
+msgstr ""
+
+#: src/composants/FilTache.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Modifier"
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Modifier la tâche"
+msgstr ""
+
 #: src/pages/Preferences.tsx
 msgid "Modifier mon nom"
+msgstr ""
+
+#: src/composants/FilTache.tsx
+msgid "Modifier votre commentaire"
 msgstr ""
 
 #: src/composants/Coquille.tsx
 msgid "Mon espace"
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+msgid "natation"
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Natation"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Navigation principale"
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Nom"
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -901,6 +1563,10 @@ msgstr ""
 msgid "Notes de version"
 msgstr ""
 
+#: src/composants/FilTache.tsx
+msgid "Notez ici où vous en êtes : toute l’équipe du périmètre le lira."
+msgstr ""
+
 #: src/composants/Notifications.tsx
 msgid "Notifications"
 msgstr ""
@@ -918,12 +1584,29 @@ msgstr ""
 msgid "Notifications, {nonLues, plural, one {# non lue} other {# non lues}}"
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+msgid "Nouveau périmètre"
+msgstr ""
+
 #: src/lib/notes-de-version.ts
 msgid "Nouveauté"
 msgstr ""
 
+#: src/pages/Perimetre.tsx
+msgid "Nouvelle fiche"
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+#: src/pages/Perimetre.tsx
+msgid "Nouvelle tâche"
+msgstr ""
+
 #: src/composants/InstallerApplication.tsx
 msgid "Ordinateur"
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Ordre d’affichage"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -938,6 +1621,13 @@ msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Oui, le message s’est ouvert"
+msgstr ""
+
+#. Filtre : les tâches ni faites ni abandonnées
+#. Filtre : les tâches ni faites ni abandonnées
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "Ouvertes"
 msgstr ""
 
 #: src/composants/InstallerApplication.tsx
@@ -965,17 +1655,66 @@ msgstr ""
 msgid "Ouvrir le menu"
 msgstr ""
 
+#: src/pages/TousLesPerimetres.tsx
+msgid "Ouvrir le périmètre"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Par échéance"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Par fiche"
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Par mois"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "Par phase"
+msgstr ""
+
 #: src/lib/notes-de-version.ts
 msgid "Performance"
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+msgid "Périmètre créé."
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Périmètre enregistré."
+msgstr ""
+
+#: src/composants/ChoixPerimetresCibles.tsx
 #: src/composants/Coquille.tsx
+#: src/composants/DeclinerTache.tsx
+#: src/pages/Retroplanning.tsx
 msgid "Périmètres"
+msgstr ""
+
+#. Aucune personne n’est assignée à la tâche
+#: src/composants/LigneTache.tsx
+msgid "Personne"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Personne n’est assigné·e"
 msgstr ""
 
 #: src/composants/Coquille.tsx
 #: src/composants/Recherche.tsx
 msgid "Personnes"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Personnes affectées"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Planifier une réunion"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -996,6 +1735,14 @@ msgstr ""
 msgid "Programme"
 msgstr ""
 
+#: src/lib/declinaisons.ts
+msgid "Proposée par {personne} le {jour}"
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+msgid "Proposer"
+msgstr ""
+
 #: src/composants/Marque.tsx
 msgid "Propulsé par <0>Relaytour</0>"
 msgstr ""
@@ -1004,8 +1751,24 @@ msgstr ""
 msgid "Propulsé par Relaytour : code source"
 msgstr ""
 
+#: src/composants/FilTache.tsx
+msgid "Publier"
+msgstr ""
+
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Quand vous préparez un message, l’espace organisateur ouvre votre messagerie par un lien <0>mailto:</0>. Ce lien ouvre l’application de mail réglée par défaut sur votre appareil. Vous pouvez choisir ici une autre messagerie."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Réalisée par (facultatif)"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Réalisée par {nomRealisation}."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Réalisée par vous."
 msgstr ""
 
 #: src/pages/Connexion.tsx
@@ -1013,11 +1776,17 @@ msgid "Recevoir un code"
 msgstr ""
 
 #: src/composants/AvisMiseAJour.tsx
+#: src/composants/ReglagePerimetre.tsx
+#: src/lib/taches.ts
 msgid "Recharger"
 msgstr ""
 
 #: src/composants/AvisRelecture.tsx
 msgid "Recharger la page"
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Rechargez la page dans un instant."
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -1046,10 +1815,29 @@ msgstr ""
 msgid "Rédaction"
 msgstr ""
 
+#: src/composants/DeclinaisonsProposees.tsx
+#: src/composants/TacheCarte.tsx
+msgid "Réduire"
+msgstr ""
+
 #: src/composants/HorsConnexion.tsx
 msgid "Réessayer"
 msgstr ""
 
+#: src/pages/Perimetre.tsx
+msgid "Référent·es :"
+msgstr ""
+
+#. État d’une déclinaison de tâche refusée par un périmètre
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Refusée"
+msgstr ""
+
+#: src/lib/declinaisons.ts
+msgid "Refusée par {personne} le {jour}"
+msgstr ""
+
+#: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/MesInvitations.tsx
 msgid "Refuser"
 msgstr ""
@@ -1058,12 +1846,29 @@ msgstr ""
 msgid "Refuser cette invitation ?"
 msgstr ""
 
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "Refuser cette tâche ?"
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
+msgid "Régler le périmètre"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "Regroupement des tâches"
+msgstr ""
+
 #: src/composants/Tableau.tsx
 msgid "Réinitialiser"
 msgstr ""
 
 #: src/composants/InvitationsEnAttente.tsx
 msgid "Relancer"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Remettre à faire"
 msgstr ""
 
 #: src/composants/ChampImage.tsx
@@ -1078,6 +1883,10 @@ msgstr ""
 msgid "Replier le volet latéral"
 msgstr ""
 
+#: src/composants/TacheFormulaire.tsx
+msgid "Réserver les lignes d’eau"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 #: src/pages/AideMarkdown.tsx
 msgid "Ressources"
@@ -1088,6 +1897,7 @@ msgid "Résumé par mail"
 msgstr ""
 
 #: src/composants/InvitationsEnAttente.tsx
+#: src/composants/TacheCarte.tsx
 msgid "Retirer"
 msgstr ""
 
@@ -1100,16 +1910,33 @@ msgstr ""
 msgid "Retirer {nom}"
 msgstr ""
 
+#: src/composants/TacheCarte.tsx
+msgid "Retirer {nomPersonne} de cette tâche ?"
+msgstr ""
+
 #: src/composants/InvitationsEnAttente.tsx
 msgid "Retirer cette invitation ?"
 msgstr ""
 
+#: src/pages/TousLesPerimetres.tsx
+msgid "Retirer mon souhait"
+msgstr ""
+
 #: src/composants/Coquille.tsx
+#: src/pages/Retroplanning.tsx
 msgid "Rétroplanning"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Réunion : {titreTache}"
 msgstr ""
 
 #: src/composants/MesInvitations.tsx
 msgid "Rôle d’admin"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Rouvrir"
 msgstr ""
 
 #: src/composants/Notifications.tsx
@@ -1120,12 +1947,40 @@ msgstr ""
 msgid "Saisissez ici le code du mail. Le lien du mail ouvre votre navigateur, pas l’application installée."
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+msgid "Saisissez un identifiant."
+msgstr ""
+
+#: src/composants/ReglagePerimetre.tsx
 #: src/pages/Preferences.tsx
 msgid "Saisissez un nom."
 msgstr ""
 
+#: src/composants/TacheFormulaire.tsx
+msgid "Saisissez un titre."
+msgstr ""
+
 #: src/pages/Connexion.tsx
 msgid "Saisissez une adresse mail valide."
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+msgid "Sans date, les périmètres reçoivent l’échéance de cette tâche."
+msgstr ""
+
+#: src/composants/LigneTache.tsx
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "Sans échéance"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Sans fiche"
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Sans titre, les périmètres reçoivent celui de cette tâche."
 msgstr ""
 
 #: src/pages/Connexion.tsx
@@ -1154,8 +2009,18 @@ msgstr ""
 msgid "Si cette adresse a un accès, un code vient de lui être envoyé. Il est valable 10 minutes."
 msgstr ""
 
+#. Étiquette d’un périmètre que la personne souhaite rejoindre
+#: src/pages/TousLesPerimetres.tsx
+msgid "Souhait"
+msgstr ""
+
 #: src/composants/InvitationsEnAttente.tsx
 msgid "Souhait : {nomPerimetre}"
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "Statut des tâches"
 msgstr ""
 
 #: src/composants/MenuCompte.tsx
@@ -1166,16 +2031,72 @@ msgstr ""
 msgid "Support {organisation} ({relaytour})"
 msgstr ""
 
+#: src/composants/FilTache.tsx
+msgid "Supprimer"
+msgstr ""
+
+#: src/composants/FilTache.tsx
+msgid "Supprimer ce commentaire ?"
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Sur cette sélection"
+msgstr ""
+
 #: src/composants/PreferencePush.tsx
 msgid "Sur iPhone et iPad, les notifications n’existent que dans l’application installée sur l’écran d’accueil."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Tâche abandonnée."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Tâche assignée à {nomPersonne}."
 msgstr ""
 
 #: src/composants/Contribution.tsx
 msgid "Tâche créée : {pointsTacheCreee} point."
 msgstr ""
 
+#: src/composants/TacheFormulaire.tsx
+msgid "Tâche créée et ajoutée aux périmètres choisis."
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Tâche créée et partagée avec les périmètres choisis."
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Tâche créée."
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Tâche enregistrée."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Tâche marquée comme faite."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Tâche marquée en cours."
+msgstr ""
+
 #: src/composants/Contribution.tsx
 msgid "Tâche réalisée : {pointsTacheRealisee} points, +{pointsBonusATemps} si elle est faite à temps."
+msgstr ""
+
+#: src/composants/DeclinaisonsTache.tsx
+msgid "Tâche reçue par ces périmètres : « {titreCommun} »"
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Tâche remise à faire."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Tâche rouverte."
 msgstr ""
 
 #: src/composants/Recherche.tsx
@@ -1190,8 +2111,21 @@ msgstr ""
 msgid "Tâches faites"
 msgstr ""
 
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "Tâches proposées à ce périmètre"
+msgstr ""
+
 #: src/composants/Contribution.tsx
 msgid "Tâches réalisées"
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Titre"
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+#: src/composants/TacheFormulaire.tsx
+msgid "Titre dans ces périmètres (facultatif)"
 msgstr ""
 
 #: src/composants/InstallerApplication.tsx
@@ -1214,8 +2148,19 @@ msgstr ""
 msgid "Touchez le menu « ⋮ », en haut à droite."
 msgstr ""
 
+#. Tous les groupes de périmètres
+#: src/pages/Retroplanning.tsx
+msgid "Tous"
+msgstr ""
+
 #: src/composants/Coquille.tsx
+#: src/pages/Retroplanning.tsx
+#: src/pages/TousLesPerimetres.tsx
 msgid "Tous les périmètres"
+msgstr ""
+
+#: src/composants/DeclinerTache.tsx
+msgid "Tous les périmètres de l’activité portent déjà cette tâche."
 msgstr ""
 
 #: src/composants/ListeNotifications.tsx
@@ -1231,8 +2176,23 @@ msgstr ""
 msgid "Toute l’activité"
 msgstr ""
 
+#: src/lib/regroupement.ts
+msgid "toute la période"
+msgstr ""
+
+#. Filtre : toutes les tâches
+#. Filtre : toutes les tâches
+#: src/pages/Perimetre.tsx
+#: src/pages/Retroplanning.tsx
+msgid "Toutes"
+msgstr ""
+
 #: src/pages/Connexion.tsx
 msgid "Transmettez le savoir-faire de votre organisation d’une période à l’autre."
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Transmettre les besoins au pôle"
 msgstr ""
 
 #: src/lib/connexion.ts
@@ -1275,6 +2235,14 @@ msgstr ""
 msgid "Un message d’essai s’est-il ouvert dans « {libelleMessagerie} » ?"
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+msgid "Un périmètre archivé disparaît des listes, mais son historique reste consultable."
+msgstr ""
+
+#: src/composants/TacheFormulaire.tsx
+msgid "Un pôle demande par exemple la même tâche à chaque sport."
+msgstr ""
+
 #: src/pages/Preferences.tsx
 msgid "Un seul mail pour la semaine."
 msgstr ""
@@ -1311,12 +2279,32 @@ msgstr ""
 msgid "Une nouvelle version est disponible."
 msgstr ""
 
+#: src/composants/ReglagePerimetre.tsx
+msgid "Une ou deux phrases qui présentent le périmètre aux membres de l’équipe."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "Une personne"
+msgstr ""
+
 #: src/composants/PreferencePush.tsx
 msgid "Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule."
 msgstr ""
 
+#: src/composants/DeclinaisonsProposees.tsx
+msgid "Une tâche acceptée entre parmi les tâches du périmètre. Une tâche refusée n’y entre pas."
+msgstr ""
+
 #: src/composants/Contribution.tsx
 msgid "Une tâche rouverte ou abandonnée perd ses points."
+msgstr ""
+
+#: src/composants/ChoixPerimetresCibles.tsx
+msgid "Une tâche se décline dans {CIBLES_MAX} périmètres au plus en une fois."
+msgstr ""
+
+#: src/composants/ChoixPerimetresCibles.tsx
+msgid "Une tâche se décline dans {CIBLES_MAX} périmètres au plus."
 msgstr ""
 
 #: src/composants/PreferencePush.tsx
@@ -1350,6 +2338,7 @@ msgid "Vos invitations"
 msgstr ""
 
 #: src/pages/MonEspace.tsx
+#: src/pages/TousLesPerimetres.tsx
 msgid "Vos périmètres"
 msgstr ""
 
@@ -1359,6 +2348,10 @@ msgstr ""
 
 #: src/pages/Preferences.tsx
 msgid "Vos rôles d’admin"
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Vos souhaits"
 msgstr ""
 
 #: src/composants/PreferencePush.tsx
@@ -1388,6 +2381,10 @@ msgstr ""
 
 #: src/composants/HorsConnexion.tsx
 msgid "Votre appareil n’a plus de réseau, et vos modifications ne s’enregistrent pas. Gardez cet écran ouvert, puis réessayez au retour du réseau."
+msgstr ""
+
+#: src/composants/FilTache.tsx
+msgid "Votre commentaire"
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -1430,12 +2427,43 @@ msgstr ""
 msgid "Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message."
 msgstr ""
 
+#: src/pages/TousLesPerimetres.tsx
+msgid "Votre souhait est noté. Un admin confirme ensuite les affectations."
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Votre souhait est retiré."
+msgstr ""
+
 #: src/composants/PreferencePush.tsx
 msgid "Votre téléphone ou votre ordinateur affiche une notification, même quand l’espace organisateur est fermé."
 msgstr ""
 
+#: src/composants/FilTache.tsx
+#: src/composants/LigneTache.tsx
+#: src/composants/TacheCarte.tsx
+#: src/pages/Perimetre.tsx
+msgid "Vous"
+msgstr ""
+
 #: src/composants/Notifications.tsx
 msgid "Vous avez {nonLuesAdmin, plural, one {# notification d’admin non lue} other {# notifications d’admin non lues}}."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "Vous avez abandonné la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "Vous avez assigné la tâche à {personneConcernee}."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "Vous avez commencé la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "Vous avez créé la tâche."
 msgstr ""
 
 #: src/composants/Notifications.tsx
@@ -1446,22 +2474,82 @@ msgstr ""
 msgid "Vous avez déjà un compte. Une organisation qui vous invite ne lit rien de ce compte et ne vous compte pas dans son équipe avant votre accord."
 msgstr ""
 
+#: src/lib/commentaires.ts
+msgid "Vous avez marqué la tâche comme faite."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "Vous avez modifié la tâche."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "Vous avez remis la tâche à faire."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "Vous avez retiré {personneConcernee} de la tâche."
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Vous consultez ce périmètre sans y être affecté·e."
+msgstr ""
+
 #: src/pages/Preferences.tsx
 msgid "Vous consultez l’espace vous-même."
+msgstr ""
+
+#: src/composants/TacheCarte.tsx
+msgid "Vous êtes retiré·e de la tâche."
 msgstr ""
 
 #: src/composants/MesInvitations.tsx
 msgid "Vous faites partie de {nomOrganisation}."
 msgstr ""
 
+#: src/composants/FilTache.tsx
+msgid "Vous lisez ce fil sans pouvoir y écrire."
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Vous lisez ses tâches et son équipe. Vous ne pouvez pas les modifier. Pour rejoindre ce périmètre, formulez un souhait dans <0>Tous les périmètres</0>."
+msgstr ""
+
+#: src/pages/Perimetre.tsx
+msgid "Vous n’avez pas accès à ce périmètre."
+msgstr ""
+
 #: src/lib/erreurs.ts
 msgid "Vous n’avez pas accès à cette action."
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Vous n’avez pas encore de périmètre dans cette activité. Formulez vos souhaits : un admin vous affectera ensuite."
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Vous n’avez pas encore de périmètre dans cette activité. Un admin vous affectera à l’un d’eux."
+msgstr ""
+
+#: src/pages/Retroplanning.tsx
+msgid "Vous n’êtes affecté·e à aucun périmètre pour {cettePeriode}."
 msgstr ""
 
 #: src/pages/MonEspace.tsx
 msgid "Vous n’êtes affecté·e à aucun périmètre pour {cettePeriode}. Les admins gèrent les affectations. Dans <0>Tous les périmètres</0>, vous découvrez les périmètres et formulez vos souhaits."
 msgstr ""
 
+#: src/lib/commentaires.ts
+msgid "Vous ne vous occupez plus de la tâche."
+msgstr ""
+
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Vous pouvez fermer le message d’essai sans l’envoyer."
+msgstr ""
+
+#: src/pages/TousLesPerimetres.tsx
+msgid "Vous suivez déjà tous les périmètres de cette activité."
+msgstr ""
+
+#: src/lib/commentaires.ts
+msgid "Vous vous occupez de la tâche."
 msgstr ""
