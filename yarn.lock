@@ -4052,6 +4052,10 @@ __metadata:
   dependencies:
     "@apollo/server": "npm:^5.5.1"
     "@as-integrations/express5": "npm:^1.1.2"
+    "@lingui/cli": "npm:~6.9.1"
+    "@lingui/conf": "npm:~6.9.1"
+    "@lingui/core": "npm:~6.9.1"
+    "@lingui/format-po": "npm:~6.9.1"
     "@pothos/core": "npm:^4.13.0"
     "@pothos/plugin-complexity": "npm:^4.2.3"
     "@pothos/plugin-prisma": "npm:^4.14.0"

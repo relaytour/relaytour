@@ -88,11 +88,13 @@ jobs:
           yarn workspace @relaytour/server orga:valider
           node outils/site.mjs
           yarn workspace @relaytour/orga langues:extraire
+          yarn workspace @relaytour/server langues:extraire
           git diff --exit-code \
             packages/server/schema.graphql \
             packages/server/src/courriel/gabarits.genere.ts \
             packages/orga/src/gql \
             packages/orga/src/locales \
+            packages/server/src/locales \
             notes/ \
             site/
 

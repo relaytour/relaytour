@@ -8,6 +8,8 @@ import { env } from '../../env.ts'
 import { archiveePourCeMail } from '../../lib/appartenances.ts'
 import { CODE_VALIDITE_SECONDES } from '../../lib/connexion.ts'
 import { courrielTronque, journal, sansAdresses } from '../../lib/journal.ts'
+import { avecLangue } from '../../lib/langue.ts'
+import { langueDuDestinataire } from '../../lib/langue-destinataire.ts'
 import {
   attenteJusquAuLendemain,
   rendreEnvoi,
@@ -79,7 +81,13 @@ export async function courrielProcessor(
     return
   }
 
-  const message = await composer(prisma, job.data)
+  // Le mail se compose dans la langue de son destinataire (ADR 0047).
+  const langue = await langueDuDestinataire(
+    prisma,
+    userId,
+    await organisationDuJob(job.data)
+  )
+  const message = await avecLangue(langue, () => composer(prisma, job.data))
   if (message === null) {
     journal.debug(
       { evenement: 'courriel-sans-objet', sorte, userId: userId ?? null },
