@@ -1876,6 +1876,20 @@ const CAS: Cas[] = [
     attente: REFUSE,
   },
   {
+    operation: 'simulerReconduction',
+    query:
+      'query ($s: ID!, $c: ID!) { simulerReconduction(sourceId: $s, cibleId: $c) { ignorees } }',
+    variables: () => ({ s: a.edition, c: b.edition }),
+    attente: REFUSE,
+  },
+  {
+    operation: 'reconduireEdition',
+    query:
+      'mutation ($s: ID!, $c: ID!) { reconduireEdition(sourceId: $s, cibleId: $c) { ignorees } }',
+    variables: () => ({ s: b.edition, c: a.edition }),
+    attente: REFUSE,
+  },
+  {
     operation: 'delierDossier',
     query: 'mutation ($id: ID!) { delierDossier(id: $id) }',
     variables: () => ({ id: a.dossierLie }),
