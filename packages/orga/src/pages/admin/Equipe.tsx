@@ -10,6 +10,9 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   App,
   Button,
@@ -160,36 +163,40 @@ const ETATS: Record<EtatPostes, { couleur: string }> = {
   COMPLET: { couleur: 'green' },
 }
 
-const LIBELLES_FILTRE: Record<Filtre, string> = {
-  tous: 'Tous',
-  aPourvoir: 'À pourvoir',
-  retard: 'Tâches en retard',
-  sansPersonne: 'Tâches sans personne',
+const LIBELLES_FILTRE: Record<Filtre, MessageDescriptor> = {
+  tous: msg({ message: 'Tous', comment: 'Filtre : tous les périmètres' }),
+  aPourvoir: msg({
+    message: 'À pourvoir',
+    comment: 'Filtre : les périmètres qui ont des postes à pourvoir',
+  }),
+  retard: msg`Tâches en retard`,
+  sansPersonne: msg`Tâches sans personne`,
 }
 
-const TRIS: { value: Tri; label: string }[] = [
-  { value: 'priorite', label: 'Postes à pourvoir d’abord' },
-  { value: 'ordre', label: 'Ordre de l’activité' },
-  { value: 'nom', label: 'Nom' },
-  { value: 'retard', label: 'Tâches en retard d’abord' },
-  { value: 'avancement', label: 'Moins avancés d’abord' },
+const TRIS: { value: Tri; label: MessageDescriptor }[] = [
+  { value: 'priorite', label: msg`Postes à pourvoir d’abord` },
+  { value: 'ordre', label: msg`Ordre de l’activité` },
+  {
+    value: 'nom',
+    label: msg({ message: 'Nom', comment: 'Tri des périmètres par nom' }),
+  },
+  { value: 'retard', label: msg`Tâches en retard d’abord` },
+  { value: 'avancement', label: msg`Moins avancés d’abord` },
 ]
 
-const SOUS_TITRES: Record<Vue, string> = {
-  equipe:
-    'Chaque carte porte l’effectif, les personnes affectées et les souhaits d’un périmètre. Les cartes gardent leur place pendant vos modifications.',
-  avancement:
-    'Chaque carte porte les tâches faites, en retard et sans personne d’un périmètre.',
+const SOUS_TITRES: Record<Vue, MessageDescriptor> = {
+  equipe: msg`Chaque carte porte l’effectif, les personnes affectées et les souhaits d’un périmètre. Les cartes gardent leur place pendant vos modifications.`,
+  avancement: msg`Chaque carte porte les tâches faites, en retard et sans personne d’un périmètre.`,
 }
 
 /** Libellé lu par les lecteurs d'écran à la place de « 1 / 2 ». */
 function libelleCompte(affectes: number, effectif: number | null): string {
   const personnes =
     affectes === 0
-      ? 'Aucune personne affectée'
-      : `${affectes} ${affectes > 1 ? 'personnes affectées' : 'personne affectée'}`
-  if (effectif === null) return `${personnes}. Effectif à définir.`
-  return `${personnes} sur ${effectif} ${effectif > 1 ? 'souhaitées' : 'souhaitée'}.`
+      ? t`Aucune personne affectée`
+      : t`${plural(affectes, { one: '# personne affectée', other: '# personnes affectées' })}`
+  if (effectif === null) return t`${personnes}. Effectif à définir.`
+  return t`${personnes} sur ${plural(effectif, { one: '# souhaitée', other: '# souhaitées' })}.`
 }
 
 // Effectif souhaité d'un périmètre, enregistré à la sortie du champ ou avec Entrée.
@@ -206,6 +213,7 @@ function ChampEffectif({
   desactive: boolean
   enregistrer: (valeur: number) => Promise<boolean>
 }) {
+  const { t } = useLingui()
   const [valeur, setValeur] = useState<number | null>(effectif)
   // Les références évitent un double envoi quand Entrée précède la sortie du champ.
   const saisie = useRef<number | null>(effectif)
@@ -230,10 +238,12 @@ function ChampEffectif({
 
   return (
     <Space>
-      <label htmlFor={id}>Effectif souhaité</label>
+      <label htmlFor={id}>
+        <Trans>Effectif souhaité</Trans>
+      </label>
       <InputNumber
         id={id}
-        aria-label={`Effectif souhaité pour ${perimetre}`}
+        aria-label={t`Effectif souhaité pour ${perimetre}`}
         size="small"
         min={0}
         max={EFFECTIF_MAX}
@@ -260,7 +270,9 @@ function ChampEffectif({
  * Les deux vues partagent la période, le filtre, la recherche et le tri.
  */
 export default function Equipe() {
+  const { t } = useLingui()
   const { activite, periode, libelleGroupe, lien } = useActivite()
+  const periodeUne = periode.une
   // Un admin d'activité affecte les personnes de son équipe. Seul un admin de
   // l'organisation lit l'annuaire et choisit hors de l'équipe (ADR 0018).
   const gereOrganisation = useSession().moi.estAdmin === true
@@ -291,6 +303,7 @@ export default function Equipe() {
     variables: { inclureArchives: true },
   })
   const archives = (tous?.perimetres ?? []).filter(p => p.archive)
+  const nbArchives = archives.length
   const edition =
     editions?.editions.find(e => e.id === reglages.edition) ??
     editions?.editions.find(e => e.statut !== 'ARCHIVEE')
@@ -389,11 +402,11 @@ export default function Equipe() {
     if (appel === null) return
     try {
       await navigator.clipboard.writeText(appel)
-      message.success('L’appel est copié.')
+      message.success(t`L’appel est copié.`)
       setAppelOuvert(false)
     } catch {
       message.error(
-        'La copie a échoué. Utilisez l’icône de copie à la fin du texte.'
+        t`La copie a échoué. Utilisez l’icône de copie à la fin du texte.`
       )
     }
   }
@@ -401,7 +414,7 @@ export default function Equipe() {
   return (
     <>
       <Titre
-        sousTitre={SOUS_TITRES[vue]}
+        sousTitre={t(SOUS_TITRES[vue])}
         actions={
           <Button
             type="primary"
@@ -409,21 +422,24 @@ export default function Equipe() {
             icon={<PlusOutlined />}
             onClick={() => setEnReglage('nouveau')}
           >
-            Nouveau périmètre
+            <Trans>Nouveau périmètre</Trans>
           </Button>
         }
       >
-        Équipe
+        {t`Équipe`}
       </Titre>
       {vue === 'equipe' && <InvitationsEnAttente activiteId={activite.id} />}
       <Space wrap size={[16, 12]} style={{ marginBottom: 16 }}>
         <Segmented<Vue>
-          aria-label="Vue"
+          aria-label={t({
+            message: 'Vue',
+            comment: 'Choix entre la vue Équipe et la vue Avancement',
+          })}
           value={vue}
           onChange={valeur => regler({ vue: valeur, filtre: 'tous' })}
           options={[
-            { value: 'equipe', label: 'Équipe' },
-            { value: 'avancement', label: 'Avancement' },
+            { value: 'equipe', label: t`Équipe` },
+            { value: 'avancement', label: t`Avancement` },
           ]}
         />
         <Space>
@@ -432,7 +448,7 @@ export default function Equipe() {
             style={{ minWidth: 200 }}
             value={editionId}
             onChange={(id: string) => regler({ edition: id })}
-            placeholder={`Choisir ${periode.une}`}
+            placeholder={t`Choisir ${periodeUne}`}
             options={(editions?.editions ?? []).map(e => ({
               value: e.id,
               label: e.nom,
@@ -444,7 +460,7 @@ export default function Equipe() {
           disabled={appel === null}
           onClick={() => setAppelOuvert(true)}
         >
-          Copier l’appel
+          <Trans>Copier l’appel</Trans>
         </Button>
         <Button
           icon={<SendOutlined />}
@@ -453,21 +469,26 @@ export default function Equipe() {
             setCibleMessage({ personneIds: affectees, toutLeMonde: true })
           }
         >
-          Écrire à l’équipe
+          <Trans>Écrire à l’équipe</Trans>
         </Button>
-        <Link to={lien('/admin/messages')}>Historique des messages</Link>
+        <Link to={lien('/admin/messages')}>
+          <Trans>Historique des messages</Trans>
+        </Link>
       </Space>
       <div className="rt-puces" style={{ marginBottom: 24, rowGap: 10 }}>
         {activite.groupes.length > 1 && (
           <>
             <Puces<string>
-              libelle="Groupe de périmètres"
+              libelle={t`Groupe de périmètres`}
               valeur={groupe}
               onChange={valeur => regler({ groupe: valeur })}
               options={[
                 {
                   valeur: TOUS_LES_GROUPES,
-                  libelle: 'Tous',
+                  libelle: t({
+                    message: 'Tous',
+                    comment: 'Filtre : tous les groupes de périmètres',
+                  }),
                   compte: postes.length,
                 },
                 ...activite.groupes.map(g => ({
@@ -482,19 +503,19 @@ export default function Equipe() {
           </>
         )}
         <Puces<Filtre>
-          libelle="Filtre des périmètres"
+          libelle={t`Filtre des périmètres`}
           valeur={filtre}
           onChange={valeur => regler({ filtre: valeur })}
           options={FILTRES[vue].map(valeur => ({
             valeur,
-            libelle: LIBELLES_FILTRE[valeur],
+            libelle: t(LIBELLES_FILTRE[valeur]),
           }))}
         />
         <Input
           allowClear
           prefix={<SearchOutlined aria-hidden />}
-          aria-label="Rechercher un périmètre ou une personne"
-          placeholder="Rechercher un périmètre ou une personne"
+          aria-label={t`Rechercher un périmètre ou une personne`}
+          placeholder={t`Rechercher un périmètre ou une personne`}
           value={q}
           onChange={e => regler({ q: e.target.value }, true)}
           style={{
@@ -504,16 +525,16 @@ export default function Equipe() {
           }}
         />
         <Select<Tri>
-          aria-label="Tri des périmètres"
+          aria-label={t`Tri des périmètres`}
           value={tri}
           onChange={valeur => regler({ tri: valeur })}
-          options={TRIS}
+          options={TRIS.map(o => ({ value: o.value, label: t(o.label) }))}
           style={{ flex: '0 1 240px', minWidth: 0 }}
         />
       </div>
 
       {editionId === undefined ? (
-        <Empty description={`Créez d’abord ${periode.une}.`} />
+        <Empty description={t`Créez d’abord ${periodeUne}.`} />
       ) : (loading && data === undefined) ||
         (chargementTaches && taches === undefined) ? (
         <Skeleton active />
@@ -524,7 +545,7 @@ export default function Equipe() {
               <Col xs={12} md={6}>
                 <Card>
                   <Statistic
-                    title="Tâches faites"
+                    title={t`Tâches faites`}
                     value={totaux.faites}
                     suffix={`/ ${totaux.utiles}`}
                   />
@@ -533,7 +554,7 @@ export default function Equipe() {
               <Col xs={12} md={6}>
                 <Card>
                   <Statistic
-                    title="En retard"
+                    title={t`En retard`}
                     value={totaux.enRetard}
                     styles={
                       totaux.enRetard > 0
@@ -546,14 +567,14 @@ export default function Equipe() {
               <Col xs={12} md={6}>
                 <Card>
                   <Statistic
-                    title="Sans personne"
+                    title={t`Sans personne`}
                     value={totaux.sansPersonne}
                   />
                 </Card>
               </Col>
               <Col xs={12} md={6}>
                 <Card>
-                  <Statistic title="Périmètres" value={postes.length} />
+                  <Statistic title={t`Périmètres`} value={postes.length} />
                 </Card>
               </Col>
             </Row>
@@ -562,7 +583,7 @@ export default function Equipe() {
               <Col xs={12} md={6}>
                 <Card>
                   <Statistic
-                    title="Postes à pourvoir"
+                    title={t`Postes à pourvoir`}
                     value={totalAPourvoir}
                     styles={
                       totalAPourvoir > 0
@@ -575,7 +596,7 @@ export default function Equipe() {
               <Col xs={12} md={6}>
                 <Card>
                   <Statistic
-                    title="Périmètres sans personne"
+                    title={t`Périmètres sans personne`}
                     value={sansPersonne}
                     styles={
                       sansPersonne > 0
@@ -588,7 +609,7 @@ export default function Equipe() {
               <Col xs={12} md={6}>
                 <Card>
                   <Statistic
-                    title="Souhaits en attente"
+                    title={t`Souhaits en attente`}
                     value={souhaitsEnAttente}
                   />
                 </Card>
@@ -600,10 +621,10 @@ export default function Equipe() {
             <Empty
               description={
                 postes.length === 0
-                  ? 'Cette activité n’a aucun périmètre actif. Créez-en un avec « Nouveau périmètre ».'
+                  ? t`Cette activité n’a aucun périmètre actif. Créez-en un avec « Nouveau périmètre ».`
                   : filtre === 'aPourvoir' && groupe === TOUS_LES_GROUPES && !q
-                    ? 'Tous les périmètres ont leurs référentes et référents.'
-                    : 'Aucun périmètre ne correspond à ces filtres.'
+                    ? t`Tous les périmètres ont leurs référentes et référents.`
+                    : t`Aucun périmètre ne correspond à ces filtres.`
               }
             >
               {postes.length > 0 && filtres && (
@@ -612,7 +633,7 @@ export default function Equipe() {
                     regler({ groupe: TOUS_LES_GROUPES, q: '', filtre: 'tous' })
                   }
                 >
-                  Effacer les filtres
+                  <Trans>Effacer les filtres</Trans>
                 </Button>
               )}
             </Empty>
@@ -620,6 +641,8 @@ export default function Equipe() {
             <Row gutter={[16, 16]}>
               {affiches.map(({ poste, avancement }) => {
                 const { perimetre, affectations, effectif, souhaits } = poste
+                const nomPerimetre = perimetre.nom
+                const demandesEnAttente = poste.demandesEnAttente
                 const versPerimetre = lien(
                   `/perimetres/${perimetre.slug}?edition=${editionId}`
                 )
@@ -681,14 +704,14 @@ export default function Equipe() {
                 // l'activité. Seul un admin de l'organisation choisit hors de l'équipe.
                 const options: SelectProps['options'] = [
                   {
-                    label: 'Intéressé·es',
+                    label: t`Intéressé·es`,
                     options: souhaits.map(x => ({
                       value: x.personne.id,
                       label: x.personne.nom,
                     })),
                   },
                   {
-                    label: 'Équipe de l’activité',
+                    label: t`Équipe de l’activité`,
                     // Un admin d'activité n'affecte pas un admin de
                     // l'organisation (ADR 0019).
                     options: libres(
@@ -698,7 +721,7 @@ export default function Equipe() {
                     ),
                   },
                   {
-                    label: 'Autres membres de l’organisation',
+                    label: t`Autres membres de l’organisation`,
                     // Chaque nom porte ses activités : l'admin de l'organisation
                     // voit d'où vient la personne avant de l'affecter.
                     options: libres(
@@ -710,7 +733,7 @@ export default function Equipe() {
                             p.attributions
                               .map(a => nomsActivites.get(a.activiteId))
                               .filter(nom => nom !== undefined)
-                              .join(', ') || 'sans activité'
+                              .join(', ') || t`sans activité`
                           })`,
                         }))
                     ),
@@ -728,19 +751,21 @@ export default function Equipe() {
                       extra={
                         <Space size={4}>
                           {effectif === null ? (
-                            <Tooltip title="Effectif à définir">
+                            <Tooltip title={t`Effectif à définir`}>
                               {compte}
                             </Tooltip>
                           ) : (
                             compte
                           )}
-                          <Tooltip title="Écrire aux référentes et aux référents">
+                          <Tooltip
+                            title={t`Écrire aux référentes et aux référents`}
+                          >
                             <Button
                               type="text"
                               size="small"
                               icon={<SendOutlined />}
                               disabled={affectations.length === 0}
-                              aria-label={`Écrire aux référentes et aux référents du périmètre ${perimetre.nom}`}
+                              aria-label={t`Écrire aux référentes et aux référents du périmètre ${nomPerimetre}`}
                               onClick={() =>
                                 setCibleMessage({
                                   personneIds: affectations.map(
@@ -752,12 +777,12 @@ export default function Equipe() {
                               }
                             />
                           </Tooltip>
-                          <Tooltip title="Régler le périmètre">
+                          <Tooltip title={t`Régler le périmètre`}>
                             <Button
                               type="text"
                               size="small"
                               icon={<SettingOutlined />}
-                              aria-label={`Régler le périmètre ${perimetre.nom}`}
+                              aria-label={t`Régler le périmètre ${nomPerimetre}`}
                               onClick={() => setEnReglage(perimetre)}
                             />
                           </Tooltip>
@@ -791,75 +816,76 @@ export default function Equipe() {
                       <Space wrap style={{ marginBottom: 12, minHeight: 24 }}>
                         {affectations.length === 0 && (
                           <Typography.Text type="secondary">
-                            Aucune personne affectée.
+                            <Trans>Aucune personne affectée.</Trans>
                           </Typography.Text>
                         )}
-                        {affectations.map(a => (
-                          <Tag
-                            key={a.id}
-                            color={a.contactPrincipal ? 'gold' : undefined}
-                            closable
-                            closeIcon={
-                              <CloseOutlined
-                                aria-label={`Retirer ${a.personne.nom}`}
-                              />
-                            }
-                            onClose={e => {
-                              e.preventDefault()
-                              void executer(() =>
-                                retirer({ variables: { id: a.id } })
-                              )
-                            }}
-                          >
-                            <Tooltip
-                              title={
-                                a.contactPrincipal
-                                  ? 'Contact principal. Cliquez pour retirer la désignation.'
-                                  : 'Désigner comme contact principal, sans droit supplémentaire.'
+                        {affectations.map(a => {
+                          const nomPersonne = a.personne.nom
+                          return (
+                            <Tag
+                              key={a.id}
+                              color={a.contactPrincipal ? 'gold' : undefined}
+                              closable
+                              closeIcon={
+                                <CloseOutlined
+                                  aria-label={t`Retirer ${nomPersonne}`}
+                                />
                               }
+                              onClose={e => {
+                                e.preventDefault()
+                                void executer(() =>
+                                  retirer({ variables: { id: a.id } })
+                                )
+                              }}
                             >
-                              <Button
-                                type="text"
-                                size="small"
-                                className="rt-bouton-etoile"
-                                icon={
-                                  a.contactPrincipal ? (
-                                    <StarFilled aria-hidden />
-                                  ) : (
-                                    <StarOutlined aria-hidden />
-                                  )
+                              <Tooltip
+                                title={
+                                  a.contactPrincipal
+                                    ? t`Contact principal. Cliquez pour retirer la désignation.`
+                                    : t`Désigner comme contact principal, sans droit supplémentaire.`
                                 }
-                                aria-pressed={a.contactPrincipal}
-                                aria-label={`${a.personne.nom}, contact principal de ${perimetre.nom}`}
-                                disabled={archivee}
-                                onClick={() =>
-                                  void executer(() =>
-                                    definirContact({
-                                      variables: {
-                                        id: a.id,
-                                        contactPrincipal: !a.contactPrincipal,
-                                      },
-                                    })
-                                  )
-                                }
-                                style={{
-                                  height: 20,
-                                  width: 20,
-                                  minWidth: 20,
-                                  marginInlineEnd: 2,
-                                }}
-                              />
-                            </Tooltip>
-                            {a.personne.nom}
-                          </Tag>
-                        ))}
+                              >
+                                <Button
+                                  type="text"
+                                  size="small"
+                                  className="rt-bouton-etoile"
+                                  icon={
+                                    a.contactPrincipal ? (
+                                      <StarFilled aria-hidden />
+                                    ) : (
+                                      <StarOutlined aria-hidden />
+                                    )
+                                  }
+                                  aria-pressed={a.contactPrincipal}
+                                  aria-label={t`${nomPersonne}, contact principal de ${nomPerimetre}`}
+                                  disabled={archivee}
+                                  onClick={() =>
+                                    void executer(() =>
+                                      definirContact({
+                                        variables: {
+                                          id: a.id,
+                                          contactPrincipal: !a.contactPrincipal,
+                                        },
+                                      })
+                                    )
+                                  }
+                                  style={{
+                                    height: 20,
+                                    width: 20,
+                                    minWidth: 20,
+                                    marginInlineEnd: 2,
+                                  }}
+                                />
+                              </Tooltip>
+                              {a.personne.nom}
+                            </Tag>
+                          )
+                        })}
                       </Space>
                       {poste.demandesEnAttente > 0 && (
                         <div style={{ marginBottom: 12 }}>
                           <Link to={lien('/admin/personnes?onglet=demandes')}>
-                            {poste.demandesEnAttente === 1
-                              ? '1 demande en attente'
-                              : `${poste.demandesEnAttente} demandes en attente`}
+                            {t`${plural(demandesEnAttente, { one: '# demande en attente', other: '# demandes en attente' })}`}
                           </Link>
                         </div>
                       )}
@@ -869,7 +895,7 @@ export default function Equipe() {
                             strong
                             id={`interesses-${perimetre.slug}`}
                           >
-                            Intéressé·es
+                            <Trans>Intéressé·es</Trans>
                           </Typography.Text>
                           <ul
                             aria-labelledby={`interesses-${perimetre.slug}`}
@@ -879,69 +905,74 @@ export default function Equipe() {
                               padding: 0,
                             }}
                           >
-                            {souhaits.map(souhait => (
-                              <li
-                                key={souhait.id}
-                                style={{
-                                  display: 'flex',
-                                  flexWrap: 'wrap',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  gap: 8,
-                                  padding: '4px 0',
-                                }}
-                              >
-                                <span>{souhait.personne.nom}</span>
-                                <Space size={4}>
-                                  <Button
-                                    size="small"
-                                    icon={<UserAddOutlined />}
-                                    aria-label={`Affecter ${souhait.personne.nom} à ${perimetre.nom}`}
-                                    onClick={() =>
-                                      void affecterPersonne(souhait.personne.id)
-                                    }
-                                  >
-                                    Affecter
-                                  </Button>
-                                  <Popconfirm
-                                    title="Retirer ce souhait ?"
-                                    okText="Retirer"
-                                    cancelText="Annuler"
-                                    disabled={archivee}
-                                    onConfirm={() =>
-                                      executer(() =>
-                                        retirerSouhait({
-                                          variables: { id: souhait.id },
-                                        })
-                                      )
-                                    }
-                                  >
+                            {souhaits.map(souhait => {
+                              const nomSouhaitant = souhait.personne.nom
+                              return (
+                                <li
+                                  key={souhait.id}
+                                  style={{
+                                    display: 'flex',
+                                    flexWrap: 'wrap',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: 8,
+                                    padding: '4px 0',
+                                  }}
+                                >
+                                  <span>{souhait.personne.nom}</span>
+                                  <Space size={4}>
                                     <Button
                                       size="small"
-                                      type="text"
-                                      icon={<CloseOutlined />}
-                                      aria-label={`Retirer le souhait de ${souhait.personne.nom}`}
+                                      icon={<UserAddOutlined />}
+                                      aria-label={t`Affecter ${nomSouhaitant} à ${nomPerimetre}`}
+                                      onClick={() =>
+                                        void affecterPersonne(
+                                          souhait.personne.id
+                                        )
+                                      }
+                                    >
+                                      <Trans>Affecter</Trans>
+                                    </Button>
+                                    <Popconfirm
+                                      title={t`Retirer ce souhait ?`}
+                                      okText={t`Retirer`}
+                                      cancelText={t`Annuler`}
                                       disabled={archivee}
-                                    />
-                                  </Popconfirm>
-                                </Space>
-                              </li>
-                            ))}
+                                      onConfirm={() =>
+                                        executer(() =>
+                                          retirerSouhait({
+                                            variables: { id: souhait.id },
+                                          })
+                                        )
+                                      }
+                                    >
+                                      <Button
+                                        size="small"
+                                        type="text"
+                                        icon={<CloseOutlined />}
+                                        aria-label={t`Retirer le souhait de ${nomSouhaitant}`}
+                                        disabled={archivee}
+                                      />
+                                    </Popconfirm>
+                                  </Space>
+                                </li>
+                              )
+                            })}
                           </ul>
                         </div>
                       )}
                       <Select
                         showSearch
                         style={{ width: '100%' }}
-                        placeholder="Affecter une personne"
-                        aria-label={`Affecter une personne à ${perimetre.nom}`}
+                        placeholder={t`Affecter une personne`}
+                        aria-label={t`Affecter une personne à ${nomPerimetre}`}
                         value={null}
                         optionFilterProp="label"
                         options={options}
                         notFoundContent={
                           gereOrganisation
-                            ? 'Aucune personne à affecter.'
-                            : 'Aucune autre personne dans votre équipe. Invitez-la par son adresse depuis l’écran Personnes.'
+                            ? t`Aucune personne à affecter.`
+                            : t`Aucune autre personne dans votre équipe. Invitez-la par son adresse depuis l’écran Personnes.`
                         }
                         onChange={(personneId: string) =>
                           void affecterPersonne(personneId)
@@ -967,35 +998,38 @@ export default function Equipe() {
           items={[
             {
               key: 'archives',
-              label: `Périmètres archivés (${archives.length})`,
+              label: t`Périmètres archivés (${nbArchives})`,
               children: (
                 <ul style={{ listStyle: 'none', margin: 0, padding: 0 }}>
-                  {archives.map(p => (
-                    <li
-                      key={p.id}
-                      style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        alignItems: 'center',
-                        justifyContent: 'space-between',
-                        gap: 8,
-                        padding: '4px 0',
-                      }}
-                    >
-                      <Space wrap size={8}>
-                        <span>{p.nom}</span>
-                        <Tag>{libelleGroupe(p.groupe)}</Tag>
-                      </Space>
-                      <Button
-                        size="small"
-                        icon={<SettingOutlined />}
-                        aria-label={`Régler le périmètre ${p.nom}`}
-                        onClick={() => setEnReglage(p)}
+                  {archives.map(p => {
+                    const nomArchive = p.nom
+                    return (
+                      <li
+                        key={p.id}
+                        style={{
+                          display: 'flex',
+                          flexWrap: 'wrap',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          gap: 8,
+                          padding: '4px 0',
+                        }}
                       >
-                        Régler
-                      </Button>
-                    </li>
-                  ))}
+                        <Space wrap size={8}>
+                          <span>{p.nom}</span>
+                          <Tag>{libelleGroupe(p.groupe)}</Tag>
+                        </Space>
+                        <Button
+                          size="small"
+                          icon={<SettingOutlined />}
+                          aria-label={t`Régler le périmètre ${nomArchive}`}
+                          onClick={() => setEnReglage(p)}
+                        >
+                          <Trans>Régler</Trans>
+                        </Button>
+                      </li>
+                    )
+                  })}
                 </ul>
               ),
             },
@@ -1010,10 +1044,10 @@ export default function Equipe() {
 
       <Modal
         open={appelOuvert}
-        title="Appel aux référentes et référents"
-        okText="Copier"
+        title={t`Appel aux référentes et référents`}
+        okText={t`Copier`}
         okButtonProps={{ icon: <CopyOutlined /> }}
-        cancelText="Fermer"
+        cancelText={t`Fermer`}
         onOk={() => void copierAppel()}
         onCancel={() => setAppelOuvert(false)}
         destroyOnHidden
