@@ -33,8 +33,8 @@ const slugA = `ident-a-${s}`
 const slugB = `ident-b-${s}`
 
 async function executer(
-  userId: string,
-  organisation: string,
+  userId: string | null,
+  organisation: string | null,
   query: string,
   variables: Record<string, unknown> = {}
 ) {
@@ -192,6 +192,55 @@ describe('support (ADR 0021)', () => {
     const r = await executer(ids.adminB, slugB, MODIFIER, { support: null })
     expect(r.errors).toBeUndefined()
     expect(await support()).toBeNull()
+  })
+})
+
+describe('langue de l’organisation (ADR 0047)', () => {
+  // Sans variable $langue, l'argument est absent de l'appel : la langue déclarée
+  // ne change pas. Avec null, elle s'efface.
+  const AVEC_LANGUE = `mutation ($langue: String) {
+    modifierIdentiteOrganisation(nom: "Identité B", langue: $langue, domainesCourrielAutorises: ["exemple.org"], adressesRoleAutorisees: []) { langue }
+  }`
+  const SANS_LANGUE = `mutation {
+    modifierIdentiteOrganisation(nom: "Identité B", domainesCourrielAutorises: ["exemple.org"], adressesRoleAutorisees: []) { langue }
+  }`
+  const PUBLIQUE =
+    'query ($slug: String) { organisation(slug: $slug) { langue } }'
+  const langueLue = async () =>
+    (
+      (await executer(null, null, PUBLIQUE, { slug: slugB })).data as {
+        organisation: { langue: string | null }
+      }
+    ).organisation.langue
+
+  it('déclare, conserve puis efface la langue de l’organisation', async () => {
+    const declare = await executer(ids.adminB, slugB, AVEC_LANGUE, {
+      langue: 'en',
+    })
+    expect(declare.errors).toBeUndefined()
+    expect(await langueLue()).toBe('en')
+
+    // Un appel qui n'envoie pas la langue la garde.
+    const sans = await executer(ids.adminB, slugB, SANS_LANGUE)
+    expect(sans.errors).toBeUndefined()
+    expect(await langueLue()).toBe('en')
+
+    const efface = await executer(ids.adminB, slugB, AVEC_LANGUE, {
+      langue: null,
+    })
+    expect(efface.errors).toBeUndefined()
+    expect(await langueLue()).toBeNull()
+  })
+
+  it('refuse une langue que le logiciel ne propose pas', async () => {
+    const r = await executer(ids.adminB, slugB, AVEC_LANGUE, { langue: 'de' })
+    expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(await langueLue()).toBeNull()
+  })
+
+  it('refuse à un membre de déclarer la langue', async () => {
+    const r = await executer(ids.membreA, slugA, AVEC_LANGUE, { langue: 'en' })
+    expect(code(r)).toBe('FORBIDDEN')
   })
 })
 

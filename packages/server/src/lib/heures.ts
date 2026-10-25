@@ -1,4 +1,5 @@
 import { erreurSaisie } from './erreurs.ts'
+import { i18n, langueCourante } from './langue.ts'
 
 // Heures d'une réunion dans le fuseau de l'organisation (ADR 0037).
 //
@@ -60,9 +61,10 @@ export function instantDepuisHeureLocale(
   fuseau: string
 ): Date {
   if (!JOUR.test(jour))
-    throw erreurSaisie('Le jour attendu est au format AAAA-MM-JJ.')
+    throw erreurSaisie(i18n._('Le jour attendu est au format AAAA-MM-JJ.'))
   const lue = HEURE.exec(heure)
-  if (lue === null) throw erreurSaisie('L’heure attendue est au format HH:MM.')
+  if (lue === null)
+    throw erreurSaisie(i18n._('L’heure attendue est au format HH:MM.'))
   const [annee, mois, quantieme] = jour.split('-').map(Number)
   const voulue = Date.UTC(
     annee!,
@@ -124,7 +126,18 @@ export function heureLocale(
 /** « 18 h 30 », ou « 18 h » à l'heure pile. */
 function heureEnClair(heure: string): string {
   const [h, m] = heure.split(':')
-  return m === '00' ? `${Number(h)} h` : `${Number(h)} h ${m}`
+  const heures = Number(h)
+  return m === '00'
+    ? i18n._(
+        '{heures} h',
+        { heures },
+        { comment: 'Heure pile, par exemple 18 h' }
+      )
+    : i18n._(
+        '{heures} h {minutes}',
+        { heures, minutes: m },
+        { comment: 'Heure avec minutes, par exemple 18 h 30' }
+      )
 }
 
 /**
@@ -133,7 +146,7 @@ function heureEnClair(heure: string): string {
  * 7 mars 2027 à 17 h » pour une réunion de plusieurs jours.
  */
 export function horaireEnClair(debut: Date, fin: Date, fuseau: string): string {
-  const format = new Intl.DateTimeFormat('fr-FR', {
+  const format = new Intl.DateTimeFormat(langueCourante(), {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
@@ -143,7 +156,16 @@ export function horaireEnClair(debut: Date, fin: Date, fuseau: string): string {
   const du = heureLocale(debut, fuseau)
   const au = heureLocale(fin, fuseau)
   if (du.jour !== au.jour) {
-    return `du ${format.format(debut)} à ${heureEnClair(du.heure)} au ${format.format(fin)} à ${heureEnClair(au.heure)}`
+    return i18n._('du {jourDebut} à {heureDebut} au {jourFin} à {heureFin}', {
+      jourDebut: format.format(debut),
+      heureDebut: heureEnClair(du.heure),
+      jourFin: format.format(fin),
+      heureFin: heureEnClair(au.heure),
+    })
   }
-  return `${format.format(debut)}, de ${heureEnClair(du.heure)} à ${heureEnClair(au.heure)}`
+  return i18n._('{jour}, de {heureDebut} à {heureFin}', {
+    jour: format.format(debut),
+    heureDebut: heureEnClair(du.heure),
+    heureFin: heureEnClair(au.heure),
+  })
 }

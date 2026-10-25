@@ -1,5 +1,5 @@
-name: Signaler un défaut
-description: Un comportement de Relaytour ne correspond pas à ce qui est attendu.
+name: Signaler un défaut · Report a bug
+description: Un comportement de Relaytour ne correspond pas à ce qui est attendu. · Relaytour does not behave as expected.
 title: 'Défaut : '
 labels: ['défaut']
 body:
@@ -8,26 +8,32 @@ body:
       value: >-
         Merci de votre signalement. N'indiquez ni nom, ni adresse, ni contenu réel
         de votre organisation : décrivez le défaut avec des exemples fictifs.
+        Vous pouvez écrire en français ou en anglais.
+
+
+        Thank you for your report. Do not include any name, address or real content
+        of your organization: describe the bug with fictional examples. You can write
+        in French or English.
   - type: textarea
     id: constat
     attributes:
-      label: Ce qui se passe
-      description: Décrivez le comportement observé.
+      label: Ce qui se passe · What happens
+      description: Décrivez le comportement observé. · Describe the behavior you see.
     validations:
       required: true
   - type: textarea
     id: attendu
     attributes:
-      label: Ce qui était attendu
+      label: Ce qui était attendu · What you expected
     validations:
       required: true
   - type: textarea
     id: etapes
     attributes:
-      label: Étapes pour reproduire
+      label: Étapes pour reproduire · Steps to reproduce
       placeholder: |
-        1. Ouvrir le rétroplanning
-        2. Filtrer sur « Mes périmètres »
+        1. Ouvrir le rétroplanning · Open the timeline
+        2. Filtrer sur « Mes périmètres » · Filter on “My areas”
         3. …
     validations:
       required: true
@@ -35,17 +41,27 @@ body:
     id: version
     attributes:
       label: Version
-      description: La version de l'image ou le commit utilisé, si vous le connaissez.
+      description: >-
+        La version de l'image ou le commit utilisé, si vous le connaissez. · The
+        image version or commit, if you know it.
+  - type: dropdown
+    id: langue
+    attributes:
+      label: Langue de l'interface · Interface language
+      options:
+        - Français
+        - English
   - type: dropdown
     id: partie
     attributes:
-      label: Partie concernée
+      label: Partie concernée · Affected part
       options:
-        - Espace organisateur
+        - Espace organisateur · Organizer workspace
         - Administration
-        - Mails
-        - Installation et exploitation
-        - Import du contenu d'une organisation
-        - Autre
+        - Mails · Emails
+        - Installation et exploitation · Installation and operations
+        - Import du contenu d'une organisation · Organization content import
+        - Traduction · Translation
+        - Autre · Other
     validations:
       required: true

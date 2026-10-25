@@ -17,6 +17,7 @@ import { texteRequis } from '../lib/saisie.ts'
 import { AVEC_PLACES, BenevoleRef, lireBenevoles } from './benevoles.ts'
 import { builder } from './builder.ts'
 import { PlageInput } from './repartition.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Import de listes de bénévoles, correspondances d'import, doublons possibles et
 // fusion des fiches (ADR 0042). Les admins de l'activité importent pour le
@@ -204,14 +205,21 @@ async function activiteImportable(ctx: AppContext, id: string | number) {
   return activiteId
 }
 
-function objetBorne(valeur: unknown, quoi: string): Prisma.InputJsonObject {
+function objetBorne(
+  valeur: unknown,
+  quoi: 'associations' | 'reglages'
+): Prisma.InputJsonObject {
   if (
     valeur === null ||
     typeof valeur !== 'object' ||
     Array.isArray(valeur) ||
     JSON.stringify(valeur).length > JSON_MAX
   ) {
-    throw erreurSaisie(`${quoi} dépassent la taille permise.`)
+    throw erreurSaisie(
+      quoi === 'associations'
+        ? i18n._('Les associations dépassent la taille permise.')
+        : i18n._('Les réglages dépassent la taille permise.')
+    )
   }
   return valeur
 }
@@ -355,15 +363,21 @@ builder.mutationFields(t => ({
       const entetes = Entetes.safeParse(args.entetes)
       if (!entetes.success) {
         throw erreurSaisie(
-          `Une correspondance compte ${ENTETES_MAX} colonnes au plus.`
+          i18n._('Une correspondance compte {max} colonnes au plus.', {
+            max: ENTETES_MAX,
+          })
         )
       }
       const donnees = {
         entetes: entetes.data,
-        associations: objetBorne(args.associations, 'Les associations'),
-        reglages: objetBorne(args.reglages, 'Les réglages'),
+        associations: objetBorne(args.associations, 'associations'),
+        reglages: objetBorne(args.reglages, 'reglages'),
       }
-      const nom = texteRequis(args.nom, 'Le nom', NOM_CORRESPONDANCE_MAX)
+      const nom = texteRequis(
+        args.nom,
+        i18n._('Le nom'),
+        NOM_CORRESPONDANCE_MAX
+      )
       const existante = await prisma.correspondanceImport.findUnique({
         where: { activiteId_nom: { activiteId, nom } },
       })
@@ -374,7 +388,9 @@ builder.mutationFields(t => ({
         existante.creeParId !== ctx.personne!.id
       ) {
         throw erreurSaisie(
-          'Une correspondance porte déjà ce nom. Choisissez un autre nom.'
+          i18n._(
+            'Une correspondance porte déjà ce nom. Choisissez un autre nom.'
+          )
         )
       }
       const correspondance = await prisma.correspondanceImport.upsert({
@@ -481,7 +497,7 @@ builder.mutationFields(t => ({
     resolve: async (_root, args, ctx) => {
       const [premiere, seconde] = [String(args.aId), String(args.bId)].sort()
       if (premiere === seconde) {
-        throw erreurSaisie('Choisissez deux fiches différentes.')
+        throw erreurSaisie(i18n._('Choisissez deux fiches différentes.'))
       }
       const fiches = await prisma.benevole.findMany({
         where: {

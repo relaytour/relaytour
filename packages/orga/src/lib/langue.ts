@@ -104,16 +104,21 @@ export function langueActive(): Langue {
   return estUneLangue(langue) ? langue : LANGUE_SOURCE
 }
 
+// La dernière langue demandée. Deux demandes rapprochées chargent chacune leur
+// catalogue : seule la plus récente s'active, quel que soit l'ordre des chargements.
+let demandee: Langue = LANGUE_SOURCE
+
 /** Charge le catalogue d'une langue s'il manque, puis l'active. */
 export async function activerLangue(langue: Langue): Promise<void> {
-  if (langue === langueActive()) return
+  demandee = langue
   if (langue !== 'fr' && !chargees.has(langue)) {
     const { messages } = await CHARGEURS[langue]()
     i18n.load(langue, messages)
     chargees.add(langue)
   }
+  if (demandee !== langue || langue === langueActive()) return
   i18n.activate(langue)
-  document.documentElement.lang = langue
+  if (typeof document !== 'undefined') document.documentElement.lang = langue
 }
 
 export function localeAntd(langue: Langue = langueActive()): Locale {

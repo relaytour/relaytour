@@ -14,6 +14,15 @@ fr:
     d'un téléphone qui installe l'espace organisateur. Sans elle, l'application
     porte l'icône de Relaytour. Le fichier `organisation.yaml` la déclare par le
     champ `iconeApplication`.
+en:
+  titre: >-
+    An organization declares its app icon
+  texte: >-
+    The “Organization” screen gains an “App icon” field: a square PNG, 512
+    pixels per side. This icon appears on the home screen of a phone that
+    installs the organizer workspace. Without it, the app uses the Relaytour
+    icon. The `organisation.yaml` file declares it in the `iconeApplication`
+    field.
 ---
 
 ADR 0023. Route `GET /medias/application/<slug>.webmanifest`, sans session,

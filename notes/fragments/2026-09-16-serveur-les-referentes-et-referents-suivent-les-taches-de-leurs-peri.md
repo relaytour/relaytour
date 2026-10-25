@@ -13,6 +13,14 @@ fr:
     statut et les personnes qui s'en occupent. Modifier la tâche d'une autre
     personne demande une confirmation, et cette personne reçoit un mail. Les
     éditions archivées restent consultables en lecture seule.
+en:
+  titre: >-
+    Coordinators follow the tasks of their areas
+  texte: >-
+    Each area has its tasks for an edition, with a due date, a status, and the
+    people handling them. Editing another person’s task requires a confirmation,
+    and that person receives an email. Archived editions remain viewable in
+    read-only mode.
 ---
 
 Phase 2 du plan de l'espace organisateur.

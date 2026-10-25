@@ -15,6 +15,16 @@ fr:
     les souhaits créés par une demande acceptée restent. L'écran des périodes
     le rappelle au moment d'archiver. L'export d'une organisation contient
     désormais les demandes de ses périodes ouvertes.
+en:
+  titre: >-
+    The join requests of an archived period are deleted
+  texte: >-
+    Admins read join requests until their period is archived. The following
+    night, Relaytour deletes all the join requests of that period, whatever
+    their state. The accounts, appointments, and interests created by an
+    accepted request remain. The periods screen reminds you of this when you
+    archive. An organization’s export now contains the join requests of its open
+    periods.
 ---
 
 `purgerDemandes` (`lib/demandes.ts`) parcourt chaque organisation, quel que soit

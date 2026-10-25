@@ -24,6 +24,7 @@ import { creneauxValides, type CreneauSaisi } from '../lib/sondages.ts'
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
 import { CibleConvocationEnum } from './reunions.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Sondages de dates (ADR 0037). Un sondage propose des créneaux pour une réunion à
 // venir, dans l'agenda global d'une activité ou dans l'agenda d'un périmètre. Les
@@ -277,7 +278,7 @@ async function sondageModifiable(ctx: AppContext, id: string) {
   const sondage = await sondageVisible(ctx, id)
   await exigerEcritureReunion(ctx, sondage)
   if (sondage.statut !== 'OUVERT') {
-    throw erreurSaisie('Ce sondage est clos : il ne change plus.')
+    throw erreurSaisie(i18n._('Ce sondage est clos : il ne change plus.'))
   }
   return sondage
 }
@@ -443,10 +444,10 @@ builder.mutationFields(t => ({
           organisationId: ctx.organisation!.id,
           activiteId,
           ...lieu,
-          titre: texteRequis(args.titre, 'Le titre', TITRE_REUNION_MAX),
+          titre: texteRequis(args.titre, i18n._('Le titre'), TITRE_REUNION_MAX),
           description: texteFacultatif(
             args.description,
-            'La description',
+            i18n._('La description'),
             DESCRIPTION_REUNION_MAX
           ),
           cible: args.cible,
@@ -511,10 +512,14 @@ builder.mutationFields(t => ({
           },
           data: {
             version: { increment: 1 },
-            titre: texteRequis(args.titre, 'Le titre', TITRE_REUNION_MAX),
+            titre: texteRequis(
+              args.titre,
+              i18n._('Le titre'),
+              TITRE_REUNION_MAX
+            ),
             description: texteFacultatif(
               args.description,
-              'La description',
+              i18n._('La description'),
               DESCRIPTION_REUNION_MAX
             ),
           },
@@ -525,7 +530,7 @@ builder.mutationFields(t => ({
             select: { version: true },
           })
           throw conflitDeVersion(
-            'Ce sondage a été modifié depuis votre lecture.',
+            i18n._('Ce sondage a été modifié depuis votre lecture.'),
             { versionCourante: version }
           )
         }
@@ -586,7 +591,9 @@ builder.mutationFields(t => ({
       const edition = await ctx.exigerEdition(sondage.editionId)
       if (edition.statut === 'ARCHIVEE') {
         throw erreurSaisie(
-          'Cette période est archivée : son agenda est en lecture seule.'
+          i18n._(
+            'Cette période est archivée : son agenda est en lecture seule.'
+          )
         )
       }
       await prisma.$transaction(async tx => {
@@ -598,7 +605,7 @@ builder.mutationFields(t => ({
           select: { statut: true, creneaux: { select: { id: true } } },
         })
         if (actuel.statut !== 'OUVERT') {
-          throw erreurSaisie('Ce sondage est clos.')
+          throw erreurSaisie(i18n._('Ce sondage est clos.'))
         }
         const creneaux = new Set(actuel.creneaux.map(c => c.id))
         if (args.reponses.some(r => !creneaux.has(String(r.creneauId)))) {
@@ -666,7 +673,7 @@ builder.mutationFields(t => ({
             select: { version: true },
           })
           throw conflitDeVersion(
-            'Ce sondage a été modifié ou clos depuis votre lecture.',
+            i18n._('Ce sondage a été modifié ou clos depuis votre lecture.'),
             { versionCourante: version }
           )
         }

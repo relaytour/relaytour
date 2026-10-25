@@ -15,6 +15,7 @@ import { pousser } from './push-file.ts'
 import { rattacher } from './rattachements.ts'
 import { journal } from './journal.ts'
 import { SOUHAITS_MAX } from './souhaits.ts'
+import { i18n } from './langue.ts'
 
 // Invitation d'un compte qui existe déjà hors de l'organisation (ADR 0030).
 //
@@ -141,7 +142,9 @@ export async function inviterCompteExterne(
   for (const l of lots) {
     if (l.souhaites.length > SOUHAITS_MAX) {
       throw erreurSaisie(
-        `Une personne a ${SOUHAITS_MAX} souhaits au plus pour une période.`
+        i18n._('Une personne a {max} souhaits au plus pour une période.', {
+          max: SOUHAITS_MAX,
+        })
       )
     }
   }
@@ -235,7 +238,9 @@ export async function accepterInvitation(
     const { organisationId } = invitation
     if (invitation.organisation.statut !== 'ACTIVE') {
       throw erreurSaisie(
-        'Cette organisation n’accueille pas de nouvelle personne pour le moment.'
+        i18n._(
+          'Cette organisation n’accueille pas de nouvelle personne pour le moment.'
+        )
       )
     }
     await tx.appartenance.upsert({

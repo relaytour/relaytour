@@ -29,6 +29,7 @@ import {
 
 import { PlageRef } from './appels.ts'
 import { builder } from './builder.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Espace bénévole (ADR 0041). Le lien personnel d'une fiche ouvre ses places à
 // venir, sans session. La personne y confirme sa participation, quitte une place
@@ -36,7 +37,6 @@ import { builder } from './builder.ts'
 // identifiant de la base : une place se désigne par une référence calculée.
 
 const JETON = /^[A-Za-z0-9_-]{43}$/
-const INCONNU = 'Ce lien n’est plus valable.'
 
 interface PlaceDeLEspace {
   ref: string
@@ -226,7 +226,7 @@ builder.queryField('espaceBenevole', t =>
 /** L'espace du jeton, ou un refus qui ne dit pas pourquoi. */
 async function exigerEspace(jeton: string): Promise<Espace> {
   const lu = await espace(jeton)
-  if (lu === null) throw erreurSaisie(INCONNU)
+  if (lu === null) throw erreurSaisie(i18n._('Ce lien n’est plus valable.'))
   return lu
 }
 
@@ -299,7 +299,7 @@ builder.mutationFields(t => ({
       const lu = await exigerEspace(args.jeton)
       const placeId = lu.placeIds.get(args.ref)
       if (placeId === undefined)
-        throw erreurSaisie('Cette place n’existe plus.')
+        throw erreurSaisie(i18n._('Cette place n’existe plus.'))
       const place = await prisma.placeSequence.findUniqueOrThrow({
         where: { id: placeId },
         include: {
@@ -322,7 +322,8 @@ builder.mutationFields(t => ({
         const { count } = await tx.placeSequence.deleteMany({
           where: { id: place.id },
         })
-        if (count === 0) throw erreurSaisie('Cette place n’existe plus.')
+        if (count === 0)
+          throw erreurSaisie(i18n._('Cette place n’existe plus.'))
         await tx.sequence.update({
           where: { id: place.sequenceId },
           data: { version: { increment: 1 } },
@@ -364,7 +365,9 @@ builder.mutationFields(t => ({
     resolve: async (_root, args) => {
       const lu = await exigerEspace(args.jeton)
       const refus = erreurSaisie(
-        'Quittez d’abord vos places à venir, puis supprimez votre fiche.'
+        i18n._(
+          'Quittez d’abord vos places à venir, puis supprimez votre fiche.'
+        )
       )
       if (lu.places.length > 0) throw refus
       // La suppression porte la condition : une place ajoutée entre-temps la
@@ -438,12 +441,16 @@ builder.mutationFields(t => ({
       })
       if (envoye === 'impossible') {
         throw erreurSaisie(
-          'Ce lien ne peut pas être renvoyé : il a déjà été renvoyé une fois, ou la fiche n’a pas reçu de premier lien.'
+          i18n._(
+            'Ce lien ne peut pas être renvoyé : il a déjà été renvoyé une fois, ou la fiche n’a pas reçu de premier lien.'
+          )
         )
       }
       if (envoye === 'file') {
         throw erreurSaisie(
-          'Le mail n’a pas pu partir. Réessayez dans un instant : le renvoi reste disponible.'
+          i18n._(
+            'Le mail n’a pas pu partir. Réessayez dans un instant : le renvoi reste disponible.'
+          )
         )
       }
       publierPourActivite('PROGRAMME', fiche.organisationId, fiche.activiteId)

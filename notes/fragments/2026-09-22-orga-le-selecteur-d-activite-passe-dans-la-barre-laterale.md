@@ -16,6 +16,16 @@ fr:
     nom de votre organisation reste rappelé au-dessus de l'activité, et la
     signature du pied tient en trois mots, « Propulsé par Relaytour », dont le
     nom mène au code source.
+en:
+  titre: >-
+    The activity selector moves to the sidebar
+  texte: >-
+    The sidebar shows the logo and acronym of the activity you are viewing. A
+    button next to the acronym opens the list of your organization’s other
+    activities, on desktop and in the mobile menu. The search bar again spans
+    the full width of the top bar. Your organization’s name stays above the
+    activity, and the footer signature has three words, “Powered by Relaytour”,
+    where the name links to the source code.
 ---
 
 Le sélecteur quitte la barre haute pour le nouveau composant `ChoixActivite`,

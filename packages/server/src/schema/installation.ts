@@ -2,6 +2,7 @@ import { StatutOrganisation } from '@relaytour/database'
 
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import type { Limites } from '../lib/limites.ts'
 import {
   creerOrganisation,
@@ -97,7 +98,9 @@ async function uneOrganisation(slug: string) {
     o => o.slug === slug
   )
   if (organisation === undefined) {
-    throw erreurSaisie(`Aucune organisation ne porte le slug « ${slug} ».`)
+    throw erreurSaisie(
+      i18n._('Aucune organisation ne porte le slug « {slug} ».', { slug })
+    )
   }
   return organisation
 }

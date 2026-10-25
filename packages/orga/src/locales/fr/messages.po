@@ -4148,8 +4148,12 @@ msgstr "Fiche supprimée."
 #: src/composants/Contribution.tsx
 #: src/composants/Recherche.tsx
 #: src/pages/admin/Redaction.tsx
-#: src/pages/Benevoles.tsx
 #: src/pages/Fiches.tsx
+msgid "Fiches"
+msgstr "Fiches"
+
+#: src/pages/Benevoles.tsx
+msgctxt "fiches bénévoles"
 msgid "Fiches"
 msgstr "Fiches"
 
@@ -5927,10 +5931,14 @@ msgstr "Libellé requis."
 msgid "Libérer les premières colonnes"
 msgstr "Libérer les premières colonnes"
 
-#. Bouton qui ouvre le lien personnel d’un bénévole
 #: src/composants/EditeurMarkdown.tsx
 #: src/composants/EditeurVisuel.tsx
+msgid "Lien"
+msgstr "Lien"
+
+#. Bouton qui ouvre le lien personnel d’un bénévole
 #: src/pages/Benevoles.tsx
+msgctxt "lien personnel d’un bénévole"
 msgid "Lien"
 msgstr "Lien"
 
@@ -6337,8 +6345,12 @@ msgstr "Modifier l’appel {nomAppel}"
 msgid "Modifier la date clé"
 msgstr "Modifier la date clé"
 
-#: src/pages/Benevoles.tsx
 #: src/pages/FicheEditeur.tsx
+msgid "Modifier la fiche"
+msgstr "Modifier la fiche"
+
+#: src/pages/Benevoles.tsx
+msgctxt "fiche bénévole"
 msgid "Modifier la fiche"
 msgstr "Modifier la fiche"
 
@@ -7051,14 +7063,18 @@ msgstr "Périmètres souhaités pour {nomEdition}"
 msgid "Période"
 msgstr "Période"
 
-#. Aucune personne convoquée
-#. Aucune personne n’est assignée à la tâche
-#: src/composants/LigneTache.tsx
-#: src/composants/ReunionFormulaire.tsx
 #: src/composants/SequenceFormulaire.tsx
 #: src/pages/admin/Admins.tsx
 #: src/pages/admin/Classement.tsx
 #: src/pages/admin/Redaction.tsx
+msgid "Personne"
+msgstr "Personne"
+
+#. Aucune personne convoquée
+#. Aucune personne n’est assignée à la tâche
+#: src/composants/LigneTache.tsx
+#: src/composants/ReunionFormulaire.tsx
+msgctxt "aucune personne"
 msgid "Personne"
 msgstr "Personne"
 

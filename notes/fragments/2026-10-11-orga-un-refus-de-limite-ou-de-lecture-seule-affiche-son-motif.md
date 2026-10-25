@@ -15,6 +15,16 @@ fr:
     de votre organisation. Quand votre organisation est en lecture seule, il
     rappelle que ses données restent consultables et exportables. Il affichait
     auparavant un message d'échec sans explication.
+en:
+  titre: >-
+    A refusal due to a limit or read-only mode shows its reason
+  texte: >-
+    When your organization reaches a limit on activities or open periods, the
+    organizer workspace now shows the reason for the refusal. It also says whom
+    to contact: the host if one is set, otherwise an admin of your organization.
+    When your organization is read-only, it reminds you that the data can still
+    be viewed and exported. Before, it showed a failure message with no
+    explanation.
 ---
 
 `messageErreur` (`packages/orga/src/lib/erreurs.ts`) laisse passer le message des

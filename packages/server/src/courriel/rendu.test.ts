@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { GABARITS } from './gabarits.genere.ts'
+import { GABARITS, type NomGabarit } from './gabarits.genere.ts'
 import { rendre, type VariablesOrganisation } from './rendu.ts'
 
 const ORGANISATION: VariablesOrganisation = {
@@ -12,16 +12,44 @@ const ORGANISATION: VariablesOrganisation = {
   couleurSol: '#F4F6F7',
 }
 
+/** Une valeur pour chaque variable d'un gabarit : une adresse pour un lien. */
+const VARIABLES_VIDES = (noms: readonly string[]) =>
+  Object.fromEntries(
+    noms.map(n => [n, /lien|url/i.test(n) ? 'https://exemple.org/' : 'x'])
+  )
+
 describe('gabarits', () => {
   it('portent tous le nom de l’organisation et le crédit Relaytour', () => {
     for (const [nom, gabarit] of Object.entries(GABARITS)) {
-      expect(gabarit.html, nom).toContain('{{organisation}}')
-      expect(gabarit.texte, nom).toContain('{{organisation}}')
+      // Le nom de l'organisation entre dans le texte traduit du pied (ADR 0047).
+      const pied = rendre(
+        nom as NomGabarit,
+        VARIABLES_VIDES(gabarit.variables),
+        ORGANISATION
+      )
+      expect(pied.html, nom).toContain(ORGANISATION.organisation)
+      expect(pied.texte, nom).toContain(ORGANISATION.organisation)
       expect(gabarit.html, nom).toContain('github.com/relaytour/relaytour')
       expect(gabarit.texte, nom).toContain('github.com/relaytour/relaytour')
       expect(gabarit.html, nom).not.toMatch(/#0[1-4]0[1-4]0[1-4]/i)
       expect(gabarit.variables, nom).not.toContain('organisation')
     }
+  })
+
+  it('insère une valeur saisie dans un texte traduit sans la réinterpréter', () => {
+    // Un nom saisi qui ressemble à une variable, à une case ou à du HTML reste
+    // une valeur : échappée dans le HTML, telle quelle dans le texte (ADR 0047).
+    const nom = '{{lienConnexion}} {{§0}} {nom} <b>gras</b>'
+    const rendu = rendre(
+      'invitation',
+      { ...VARIABLES_VIDES(GABARITS.invitation.variables), nom },
+      ORGANISATION
+    )
+    expect(rendu.html).toContain(
+      'Bonjour {{lienConnexion}} {{§0}} {nom} &lt;b&gt;gras&lt;/b&gt;,'
+    )
+    expect(rendu.html).not.toContain('<b>gras</b>')
+    expect(rendu.texte).toContain(`Bonjour ${nom},`)
   })
 
   it('rend le gabarit d’essai avec le nom et les couleurs de l’organisation', () => {

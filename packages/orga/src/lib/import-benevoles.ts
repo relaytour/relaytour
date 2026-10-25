@@ -173,7 +173,7 @@ const UNIQUES: Champ[] = [
   'DATE_ACCORD',
 ]
 
-/** Les synonymes d'en-tête, comparés sans accent ni casse. */
+/** Les synonymes d'en-tête, en français et en anglais (ADR 0047), comparés sans accent ni casse. */
 const SYNONYMES: [Champ, RegExp][] = [
   ['COURRIEL', /\b(e-?mail|courriel|mail|adresse electronique)\b/],
   ['TELEPHONE', /\b(tel|telephone|portable|mobile|gsm|phone)\b/],
@@ -182,23 +182,32 @@ const SYNONYMES: [Champ, RegExp][] = [
     'NOM_COMPLET',
     /^(nom complet|nom et prenom|prenom et nom|participant|name|full name)$/,
   ],
-  ['NOM', /\b(nom|last ?name|nom de famille)\b/],
+  ['NOM', /\b(nom|last ?name|nom de famille|surname|family name)\b/],
   [
     'PRECISIONS',
-    /\b(disponibilites?|precisions?|commentaires?|remarques?|precise)\b/,
+    // En anglais, seules des formes explicites : « notes » ou « details » seuls
+    // désignent aussi une adresse (« Billing details ») ou un régime (« Dietary notes »).
+    /\b(disponibilites?|precisions?|commentaires?|remarques?|precise|availability|availabilities|additional (notes|details|information)|in writing|comments?|remarks?)\b/,
   ],
-  ['VALEURS', /\b(prestations?|postes?|creneaux|missions?)\b/],
+  [
+    'VALEURS',
+    /\b(prestations?|postes?|creneaux|missions?|services?|shifts?|positions?|slots?)\b/,
+  ],
   [
     'DATE_ACCORD',
-    /\b(date (de )?(la )?commande|date (de )?creation|date d'inscription|inscrit le)\b/,
+    /\b(date (de )?(la )?commande|date (de )?creation|date d'inscription|inscrit le|order date|registration date|registered on|signed up)\b/,
   ],
   ['REF_EXTERNE', /\b(billet|ticket|numero de billet|identifiant|id)\b/],
-  ['REGROUPEMENT', /\b(commande|transaction|numero de commande)\b/],
+  [
+    'REGROUPEMENT',
+    // « Order » seul désignerait aussi « Order status » : seul le numéro regroupe.
+    /\b(commande|transaction|numero de commande|order (number|no))\b|\border #/,
+  ],
 ]
 
 /** Les colonnes qui ne doivent jamais partir : elles restent ignorées. */
 const SENSIBLES =
-  /\b(genre|sexe|civilite|pronom|sante|allergie|handicap|paiement|montant|prix|moyen de paiement|tarif|iban|carte)\b/
+  /\b(genre|sexe|civilite|pronom|sante|allergie|handicap|paiement|montant|prix|moyen de paiement|tarif|iban|carte|gender|sex|pronouns?|health|medical|allerg(y|ies)|disability|payment|amount|price|fee|card)\b/
 
 export type Confiance = 'HAUTE' | 'MOYENNE' | 'BASSE'
 
@@ -215,7 +224,7 @@ export interface Colonne {
 
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const HORAIRE =
-  /(\d{1,2})\s*(?:h|:)\s*(\d{2})?\s*(?:-|–|à|a|\/)\s*(\d{1,2})\s*(?:h|:)?\s*(\d{2})?/i
+  /(\d{1,2})\s*(?:h|:)\s*(\d{2})?\s*(?:-|–|à|a|to|\/)\s*(\d{1,2})\s*(?:h|:)?\s*(\d{2})?/i
 
 /** La part de cellules non vides d'une colonne qui vérifie un test. */
 function part(valeurs: readonly string[], test: (v: string) => boolean) {

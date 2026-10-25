@@ -289,7 +289,10 @@ export default function Benevoles() {
         activeKey={onglet}
         onChange={cle => changer('onglet', cle === 'fiches' ? null : cle)}
         items={[
-          { key: 'fiches', label: t`Fiches` },
+          {
+            key: 'fiches',
+            label: t({ message: 'Fiches', context: 'fiches bénévoles' }),
+          },
           {
             key: 'candidatures',
             label:
@@ -465,6 +468,7 @@ export default function Benevoles() {
                       >
                         {t({
                           message: 'Lien',
+                          context: 'lien personnel d’un bénévole',
                           comment:
                             'Bouton qui ouvre le lien personnel d’un bénévole',
                         })}
@@ -510,7 +514,7 @@ export default function Benevoles() {
         title={
           fiche === 'nouvelle'
             ? t`Nouvelle fiche bénévole`
-            : t`Modifier la fiche`
+            : t({ message: 'Modifier la fiche', context: 'fiche bénévole' })
         }
         okText={t`Enregistrer`}
         cancelText={t`Annuler`}

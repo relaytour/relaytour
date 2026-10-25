@@ -1,4 +1,5 @@
 import { erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 // Messages écrits dans l'application et envoyés depuis la messagerie de leur auteur
 // (ADR 0020). Le serveur n'envoie rien : il garde ce que l'admin a préparé.
@@ -18,7 +19,7 @@ const MODELE = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
 export function modeleValide(brut: string): string {
   const modele = brut.trim()
   if (!MODELE.test(modele) || modele.length > 60) {
-    throw erreurSaisie('Le modèle du message n’est pas reconnu.')
+    throw erreurSaisie(i18n._('Le modèle du message n’est pas reconnu.'))
   }
   return modele
 }
@@ -27,11 +28,13 @@ export function modeleValide(brut: string): string {
 export function destinatairesValides(bruts: readonly (string | number)[]) {
   const ids = [...new Set(bruts.map(String))]
   if (ids.length === 0) {
-    throw erreurSaisie('Choisissez au moins une personne.')
+    throw erreurSaisie(i18n._('Choisissez au moins une personne.'))
   }
   if (ids.length > DESTINATAIRES_MAX) {
     throw erreurSaisie(
-      `Un message compte ${DESTINATAIRES_MAX} destinataires au plus.`
+      i18n._('Un message compte {max} destinataires au plus.', {
+        max: DESTINATAIRES_MAX,
+      })
     )
   }
   return ids
