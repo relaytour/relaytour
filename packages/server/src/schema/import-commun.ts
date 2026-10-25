@@ -1,4 +1,4 @@
-import type { LigneRapport } from '../lib/import-taches.ts'
+import { ETATS_LIGNE, type LigneRapport } from '../lib/import-taches.ts'
 
 import { builder } from './builder.ts'
 
@@ -10,7 +10,7 @@ export const LIGNES_PAR_LOT = 500
 
 /** L'état d'une ligne, commun à tous les imports, bénévoles compris (ADR 0042). */
 export const EtatLigneImportEnum = builder.enumType('EtatLigneImport', {
-  values: ['A_IMPORTER', 'IMPORTEE', 'DEJA_IMPORTEE', 'ECARTEE'] as const,
+  values: ETATS_LIGNE,
 })
 
 export const LigneImportRef = builder

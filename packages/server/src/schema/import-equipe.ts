@@ -59,7 +59,7 @@ async function executer(
   await ctx.exigerAdminDe(edition.activiteId)
   if (edition.statut === 'ARCHIVEE') {
     throw erreurSaisie(
-      i18n._('Cette édition est archivée : ses tâches sont en lecture seule.')
+      i18n._('Cette édition est archivée : son équipe est en lecture seule.')
     )
   }
   if (args.lignes.length > LIGNES_PAR_LOT) {
@@ -75,7 +75,8 @@ async function executer(
   const rapport = await importerEquipeDuTableur(args.lignes, {
     organisationId,
     activiteId: edition.activiteId,
-    annee,
+    edition: { id: edition.id, annee },
+    adminOrganisation: ctx.personne!.estAdmin,
     envoyerMails: args.envoyerMails === true,
     ecrire,
   })

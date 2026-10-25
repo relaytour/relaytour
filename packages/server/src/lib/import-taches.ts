@@ -2,6 +2,7 @@ import type { PrismaClient } from '@relaytour/database'
 import { sansAccent } from '@relaytour/commun'
 
 import { lireGroupes, typeDepuisGroupe } from './activites.ts'
+import { erreurSaisie } from './erreurs.ts'
 import { i18n } from './langue.ts'
 import { decaler, ecartEnJours } from './reconduction.ts'
 import { DESCRIPTION_TACHE_MAX, TITRE_MAX } from './saisie.ts'
@@ -16,7 +17,15 @@ import { lireTachesTypes, type TacheModele } from '../orga/modeles.ts'
 
 type Transaction = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0]
 
-export type EtatLigne = 'A_IMPORTER' | 'DEJA_IMPORTEE' | 'ECARTEE' | 'IMPORTEE'
+/** Les états d'une ligne importée, communs à tous les imports (ADR 0042, 0049). */
+export const ETATS_LIGNE = [
+  'A_IMPORTER',
+  'IMPORTEE',
+  'DEJA_IMPORTEE',
+  'ECARTEE',
+] as const
+
+export type EtatLigne = (typeof ETATS_LIGNE)[number]
 
 export interface LigneRapport {
   /** Le numéro de la ligne dans le fichier, en-têtes compris. */
@@ -138,15 +147,19 @@ export async function importerTaches(
     id: string
     slug: string
     types: TacheModele[]
+    /** La colonne des tâches types ne se lit pas : l'import n'y touche pas. */
+    typesIllisibles: boolean
     typesChanges: boolean
   }
   const parCle = new Map<string, PerimetreConnu>()
   for (const p of perimetres) {
     if (p.archivedAt !== null) continue
+    const lues = lireTachesTypes(p.tachesTypes)
     const connu = {
       id: p.id,
       slug: p.slug,
-      types: lireTachesTypes(p.tachesTypes) ?? [],
+      types: lues ?? [],
+      typesIllisibles: lues === null && p.tachesTypes !== null,
       typesChanges: false,
     }
     parCle.set(cle(p.nom), connu)
@@ -160,11 +173,12 @@ export async function importerTaches(
       })
     ).groupes
   )
-  const groupe =
-    options.groupeNouveaux !== null &&
-    groupes.some(g => g.cle === options.groupeNouveaux)
-      ? options.groupeNouveaux
-      : null
+  const groupe = options.groupeNouveaux
+  if (groupe !== null && !groupes.some(g => g.cle === groupe)) {
+    throw erreurSaisie(
+      i18n._('L’activité ne déclare pas le groupe « {groupe} ».', { groupe })
+    )
+  }
 
   // Fiches de l'activité, retrouvées par leur titre ou leur identifiant.
   const fiches = await tx.fiche.findMany({
@@ -281,17 +295,22 @@ export async function importerTaches(
           })
         ).id
       }
-      perimetre = { id, slug, types: [], typesChanges: false }
+      perimetre = {
+        id,
+        slug,
+        types: [],
+        typesIllisibles: false,
+        typesChanges: false,
+      }
       parCle.set(cle(nomPerimetre), perimetre)
       rapport.perimetresCrees.push(nomPerimetre)
     }
 
     const date = echeance.date
     const marque = empreinte(perimetre.id, titre, date)
-    if (presentes.has(marque)) {
-      sortie.etat = 'DEJA_IMPORTEE'
-      continue
-    }
+    // Une tâche déjà présente n'est pas recréée ; elle peut encore devenir une
+    // tâche type, quand l'admin coche l'option à un deuxième import.
+    const deja = presentes.has(marque)
     presentes.add(marque)
 
     // Fiche : commune, ou du périmètre de la tâche.
@@ -301,18 +320,20 @@ export async function importerTaches(
     if (nomFiche !== '') {
       const fiche = ficheDe.get(nomFiche) ?? ficheDe.get(cle(nomFiche))
       if (fiche === undefined) {
-        sortie.avertissements.push(
-          i18n._('Fiche introuvable : « {fiche} ».', { fiche: nomFiche })
-        )
+        if (!deja)
+          sortie.avertissements.push(
+            i18n._('Fiche introuvable : « {fiche} ».', { fiche: nomFiche })
+          )
       } else if (
         fiche.perimetreId !== null &&
         fiche.perimetreId !== perimetre.id
       ) {
-        sortie.avertissements.push(
-          i18n._('La fiche « {fiche} » appartient à un autre périmètre.', {
-            fiche: nomFiche,
-          })
-        )
+        if (!deja)
+          sortie.avertissements.push(
+            i18n._('La fiche « {fiche} » appartient à un autre périmètre.', {
+              fiche: nomFiche,
+            })
+          )
       } else {
         ficheId = fiche.id
         ficheSlug = fiche.slug
@@ -322,7 +343,7 @@ export async function importerTaches(
     // Personne responsable : affectée au périmètre pour la période.
     let responsableId: string | null = null
     const adresse = ligne.responsable?.trim().toLowerCase() ?? ''
-    if (adresse !== '') {
+    if (adresse !== '' && !deja) {
       responsableId = affectee.get(`${perimetre.id}|${adresse}`) ?? null
       if (responsableId === null) {
         sortie.avertissements.push(
@@ -336,7 +357,13 @@ export async function importerTaches(
 
     // Tâche type, si l'admin le demande et qu'aucune tâche type ne porte ce titre.
     let modeleSlug: string | null = null
-    if (options.enregistrerTachesTypes) {
+    if (options.enregistrerTachesTypes && perimetre.typesIllisibles) {
+      sortie.avertissements.push(
+        i18n._(
+          'Les tâches types de ce périmètre sont illisibles : la tâche type n’est pas enregistrée.'
+        )
+      )
+    } else if (options.enregistrerTachesTypes) {
       const existante = perimetre.types.find(t => cle(t.titre) === cle(titre))
       if (existante !== undefined) {
         modeleSlug = existante.modele
@@ -361,6 +388,10 @@ export async function importerTaches(
       }
     }
 
+    if (deja) {
+      sortie.etat = 'DEJA_IMPORTEE'
+      continue
+    }
     if (!ecrire) continue
     await tx.tache.create({
       data: {

@@ -288,6 +288,7 @@ msgid "Vous avez déjà {max} propositions en attente. Un admin doit d’abord l
 msgstr "You already have {max} pending referrals. An admin must process them first."
 
 #. js-lingui-explicit-id
+#: src/lib/import-equipe-tableur.ts
 #: src/schema/demandes.ts
 #: src/schema/personnes.ts
 msgid "Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire."
@@ -345,6 +346,7 @@ msgid "Un dossier lié compte au plus {max} périmètres et groupes."
 msgstr "A linked folder has {max} areas and groups at most."
 
 #. js-lingui-explicit-id
+#: src/lib/import-taches.ts
 #: src/schema/espace-fichiers.ts
 #: src/schema/fiches-connexes.ts
 msgid "L’activité ne déclare pas le groupe « {groupe} »."
@@ -655,19 +657,23 @@ msgid "Choisissez deux fiches différentes."
 msgstr "Choose two different records."
 
 #. js-lingui-explicit-id
-#: src/lib/droits.ts
 #: src/schema/import-equipe.ts
-#: src/schema/import-taches.ts
-#: src/schema/reconduction.ts
-#: src/schema/taches-types.ts
-msgid "Cette édition est archivée : ses tâches sont en lecture seule."
-msgstr "This edition is archived: its tasks are read-only."
+msgid "Cette édition est archivée : son équipe est en lecture seule."
+msgstr "This edition is archived: its team is read-only."
 
 #. js-lingui-explicit-id
 #: src/schema/import-equipe.ts
 #: src/schema/import-taches.ts
 msgid "Un envoi compte {max} lignes au plus."
 msgstr "A batch has at most {max} rows."
+
+#. js-lingui-explicit-id
+#: src/lib/droits.ts
+#: src/schema/import-taches.ts
+#: src/schema/reconduction.ts
+#: src/schema/taches-types.ts
+msgid "Cette édition est archivée : ses tâches sont en lecture seule."
+msgstr "This edition is archived: its tasks are read-only."
 
 #. js-lingui-explicit-id
 #: src/lib/installation.ts
@@ -1744,6 +1750,16 @@ msgstr "Unknown area: “{perimetre}”."
 
 #. js-lingui-explicit-id
 #: src/lib/import-equipe-tableur.ts
+msgid "Cette adresse ne peut pas être importée."
+msgstr "This address cannot be imported."
+
+#. js-lingui-explicit-id
+#: src/lib/import-equipe-tableur.ts
+msgid "Le périmètre « {perimetre} » a déjà un contact principal : il le reste."
+msgstr "The area “{perimetre}” already has a main contact, who stays."
+
+#. js-lingui-explicit-id
+#: src/lib/import-equipe-tableur.ts
 msgid "Le périmètre « {perimetre} » a déjà un contact principal plus haut dans le fichier."
 msgstr "The area “{perimetre}” already has a main contact higher up in the file."
 
@@ -1787,6 +1803,11 @@ msgstr "The sheet “{fiche}” belongs to another area."
 #: src/lib/import-taches.ts
 msgid "« {adresse} » n’est pas affecté·e à ce périmètre pour la période : la tâche reste sans personne assignée."
 msgstr "“{adresse}” is not appointed to this area for the period: the task stays unassigned."
+
+#. js-lingui-explicit-id
+#: src/lib/import-taches.ts
+msgid "Les tâches types de ce périmètre sont illisibles : la tâche type n’est pas enregistrée."
+msgstr "This area’s task templates cannot be read: the task template is not saved."
 
 #. js-lingui-explicit-id
 #: src/lib/installation.ts

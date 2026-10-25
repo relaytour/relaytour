@@ -5219,6 +5219,10 @@ msgstr "The ID “{identifiant}” cannot be changed here: it depends on the hos
 msgid "L’import s’est arrêté : {nbNonTraitees, plural, one {# personne n’a pas été traitée} other {# personnes n’ont pas été traitées}}."
 msgstr "The import stopped: {nbNonTraitees, plural, one {# person was not processed} other {# people were not processed}}."
 
+#: src/composants/AssistantTableur.tsx
+msgid "L’import s’est arrêté avant la fin : {echec}"
+msgstr "The import stopped before the end: {echec}"
+
 #: src/composants/AppelsBenevoles.tsx
 msgid "L’introduction dépasse 2 000 caractères."
 msgstr "The introduction exceeds 2,000 characters."
@@ -6137,6 +6141,10 @@ msgstr "Readers of {perimetresSansAcces} won’t be able to open this document: 
 #: src/composants/LieuxFenetre.tsx
 msgid "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus."
 msgstr "Venues carry over from one period to the next. The schedule lists them in ascending order. An archived venue is no longer offered."
+
+#: src/composants/AssistantTableur.tsx
+msgid "Les lignes ci-dessous sont écrites. Revenez à la vérification pour relancer l’import : une ligne déjà importée ne sera pas recréée."
+msgstr "The rows below are written. Go back to the check to restart the import: a row that is already imported will not be created again."
 
 #: src/pages/Preferences.tsx
 msgid "Les mails de connexion et d’invitation partent toujours : ils sont nécessaires pour accéder à l’espace."
@@ -7491,6 +7499,10 @@ msgstr "Areas requested"
 msgid "Périmètres inconnus"
 msgstr "Unknown areas"
 
+#: src/pages/admin/ImportTaches.tsx
+msgid "Périmètres qui seront créés : {listeACreer}."
+msgstr "Areas that will be created: {listeACreer}."
+
 #: src/pages/admin/Equipe.tsx
 msgid "Périmètres sans personne"
 msgstr "Areas with no one"
@@ -8569,6 +8581,10 @@ msgstr "Meeting saved."
 #: src/pages/FicheEditeur.tsx
 msgid "Revenir à l’éditeur"
 msgstr "Back to the editor"
+
+#: src/composants/AssistantTableur.tsx
+msgid "Revenir à la vérification"
+msgstr "Back to the check"
 
 #: src/composants/ExplorateurDossier.tsx
 #: src/composants/ImportFiches.tsx
@@ -9966,6 +9982,10 @@ msgstr "Check now"
 #: src/lib/espace-fichiers.ts
 msgid "Vérifier seulement"
 msgstr "Check only"
+
+#: src/pages/admin/ImportTaches.tsx
+msgid "Vérifiez l’orthographe : un nom mal écrit créerait un périmètre de plus."
+msgstr "Check the spelling: a misspelled name would create an extra area."
 
 #: src/composants/EcrireMessage.tsx
 msgid "Vérifiez les champs « Cc » et « Cci » avant d’envoyer"
