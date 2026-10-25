@@ -30,6 +30,8 @@ La langue affichée se résout dans cet ordre :
 
 Une langue n'apparaît dans le sélecteur que si son catalogue est traduit à 90 % au moins. Un message absent d'un catalogue s'affiche en français.
 
+Le service worker fait exception. Il n'a ni session ni catalogue : quand une notification push arrive sans texte lisible, il affiche son texte de repli dans la première langue connue du navigateur. Le serveur compose le titre et le corps de chaque push dans la langue du destinataire, et ce repli ne sert qu'à une charge illisible.
+
 ### Ce qui se traduit
 
 - L'interface de l'espace organisateur, avec les formats de date, l'ordre de tri et les composants d'antd.
