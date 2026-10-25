@@ -676,7 +676,7 @@ msgstr "{octets} B"
 
 #: src/lib/messages.ts
 msgid "{organisation} : votre accès à l’espace organisateur"
-msgstr "{organisation}: your access to the Organizer workspace"
+msgstr "{organisation}: your access to the organizer workspace"
 
 #: src/composants/SondageDetail.tsx
 msgid "{oui} oui · {siBesoin} si besoin · {non} non"
@@ -2736,7 +2736,7 @@ msgstr "Each area receives the Markdown, text, and Word sheets from its folder. 
 
 #: src/composants/ReunionFormulaire.tsx
 msgid "Chaque personne convoquée reçoit un mail avec la réunion à ajouter à son agenda, et répond dans l’espace organisateur."
-msgstr "Each invited person receives an email with the meeting to add to their calendar, and replies in the Organizer workspace."
+msgstr "Each invited person receives an email with the meeting to add to their calendar, and replies in the organizer workspace."
 
 #: src/pages/admin/Classement.tsx
 msgid "Chaque personne voit seulement son propre score. Un palmarès public se décide en fin {periodeDe}."
@@ -3308,7 +3308,7 @@ msgstr "In Google Calendar, choose “Other calendars”, then “From URL”. I
 
 #: src/pages/Preferences.tsx
 msgid "Dans l’espace organisateur"
-msgstr "In the Organizer workspace"
+msgstr "In the organizer workspace"
 
 #: src/composants/ConnexionEspace.tsx
 msgid "Dans la console Google Cloud de l’association, créez un projet et activez l’API Google Drive."
@@ -4148,10 +4148,14 @@ msgstr "Volunteer record deleted."
 #: src/composants/Contribution.tsx
 #: src/composants/Recherche.tsx
 #: src/pages/admin/Redaction.tsx
-#: src/pages/Benevoles.tsx
 #: src/pages/Fiches.tsx
 msgid "Fiches"
 msgstr "Sheets"
+
+#: src/pages/Benevoles.tsx
+msgctxt "fiches bénévoles"
+msgid "Fiches"
+msgstr "Records"
 
 #: src/composants/ImportFiches.tsx
 msgid "Fiches à créer"
@@ -6515,7 +6519,7 @@ msgstr "Similar name"
 
 #: src/pages/admin/Admins.tsx
 msgid "Nommer"
-msgstr "Appoint"
+msgstr "Make admin"
 
 #. Réponse à un créneau d’un sondage de dates
 #: src/composants/PreferenceMessagerie.tsx
@@ -8843,7 +8847,7 @@ msgstr "All recipients receive the same text. It contains no information specifi
 
 #: src/pages/admin/Personnes.tsx
 msgid "Tous les membres de l’organisation, avec les activités de chacun. Seules les personnes invitées peuvent se connecter à l’espace organisateur."
-msgstr "All members of the organization, with each member’s activities. Only invited people can sign in to the Organizer workspace."
+msgstr "All members of the organization, with each member’s activities. Only invited people can sign in to the organizer workspace."
 
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Tous les membres des périmètres lecteurs"

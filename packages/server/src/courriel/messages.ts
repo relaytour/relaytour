@@ -23,6 +23,7 @@ import { i18n, langueCourante } from '../lib/langue.ts'
 import {
   LIBELLES_ROLE,
   lienModeDEmploi,
+  listeDesModesDEmploi,
   roleDuModeDEmploi,
 } from '../lib/modes-d-emploi.ts'
 import {
@@ -215,7 +216,10 @@ export async function composer(
     )
     const { env } = await import('../env.ts')
     variables.roleModeDEmploi = LIBELLES_ROLE[role]
-    variables.lienModeDEmploi = lienModeDEmploi(env.MODES_D_EMPLOI_URL, role)
+    variables.lienModeDEmploi = lienModeDEmploi(
+      listeDesModesDEmploi(env, langueCourante()),
+      role
+    )
     // Les périmètres de la personne, avec leur description (ADR 0012). Sans
     // périmètre, le mail explique comment en obtenir un.
     const idOrganisation = organisationId ?? configuration.id
@@ -252,7 +256,7 @@ export async function composer(
         attente.role === 'ADMIN' ? 'admin-organisation' : 'referent'
       variables.roleModeDEmploi = LIBELLES_ROLE[propose]
       variables.lienModeDEmploi = lienModeDEmploi(
-        env.MODES_D_EMPLOI_URL,
+        listeDesModesDEmploi(env, langueCourante()),
         propose
       )
     }
@@ -297,7 +301,10 @@ export async function composer(
     const role = await roleDuModeDEmploi(prisma, user.id, idOrganisation)
     const { env } = await import('../env.ts')
     variables.roleModeDEmploi = LIBELLES_ROLE[role]
-    variables.lienModeDEmploi = lienModeDEmploi(env.MODES_D_EMPLOI_URL, role)
+    variables.lienModeDEmploi = lienModeDEmploi(
+      listeDesModesDEmploi(env, langueCourante()),
+      role
+    )
   }
 
   if (job.sorte === 'demandes') {

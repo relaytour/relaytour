@@ -13,6 +13,15 @@ fr:
     l'organisation n'apparaît plus, même ouverte aux souhaits. À l'ouverture,
     l'espace organisateur affiche une activité où vous avez un périmètre avant une
     activité que vous découvrez seulement.
+en:
+  titre: >-
+    Each person sees only the activities of their team
+  texte: >-
+    You see the activities you administer, those where you are appointed, and
+    those you were affiliated with by an admin. Another activity of the
+    organization no longer appears, even if it is open to interests. On opening,
+    the organizer workspace shows an activity where you have an area before an
+    activity you only discover.
 ---
 
 ADR 0045 : table `RattachementActivite`, découverte par rattachement ou souhait,

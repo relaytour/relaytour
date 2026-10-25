@@ -15,6 +15,15 @@ fr:
     s'arrête quand l'onglet est caché et reprend à votre retour. Sans lui, par
     exemple derrière un réseau qui le bloque, les écrans se relisent chaque
     minute comme avant.
+en:
+  titre: >-
+    Screens follow other people’s work as it happens
+  texte: >-
+    When another person edits a task, a sheet, an area, or the team, your screen
+    updates in under a second, without reloading the page. The bell does the
+    same for a new notification. This live tracking pauses while the tab is
+    hidden and resumes when you return. Without it, for example behind a network
+    that blocks it, screens refresh every minute as before.
 ---
 
 `lib/flux.ts` tient le flux des changements ouvert (ADR 0017) et relit, 400 ms

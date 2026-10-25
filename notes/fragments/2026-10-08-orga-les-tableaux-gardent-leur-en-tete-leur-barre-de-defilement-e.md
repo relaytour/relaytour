@@ -14,6 +14,14 @@ fr:
     (ouverture, sélection, nom) restent visibles quand vous faites défiler les
     autres. Sur un petit écran, une punaise dans l'en-tête de la première
     colonne les fige sur votre choix.
+en:
+  titre: >-
+    Tables keep their header, scroll bar, and first columns on screen
+  texte: >-
+    In a long table, the header stays below the top bar and the horizontal
+    scroll bar stays at the bottom of the screen. The first columns (expand,
+    select, name) stay visible while you scroll the others. On a small screen, a
+    pin in the header of the first column freezes them to your choice.
 ---
 
 Composant `Tableau` : `sticky` d'Ant Design, colonnes `fixed` selon la largeur

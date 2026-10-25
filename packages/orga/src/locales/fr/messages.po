@@ -4148,8 +4148,12 @@ msgstr "Fiche supprimée."
 #: src/composants/Contribution.tsx
 #: src/composants/Recherche.tsx
 #: src/pages/admin/Redaction.tsx
-#: src/pages/Benevoles.tsx
 #: src/pages/Fiches.tsx
+msgid "Fiches"
+msgstr "Fiches"
+
+#: src/pages/Benevoles.tsx
+msgctxt "fiches bénévoles"
 msgid "Fiches"
 msgstr "Fiches"
 

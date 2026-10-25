@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { lienModeDEmploi } from './modes-d-emploi.ts'
+import { lienModeDEmploi, listeDesModesDEmploi } from './modes-d-emploi.ts'
 
 describe('lienModeDEmploi', () => {
   it('lie la page de chaque rôle sous la liste', () => {
@@ -35,5 +35,42 @@ describe('lienModeDEmploi', () => {
     expect(
       lienModeDEmploi('https://hebergeur.exemple.org/aide', 'referent')
     ).toBe('https://hebergeur.exemple.org/aide/referent.html')
+  })
+})
+
+describe('listeDesModesDEmploi', () => {
+  const site = { MODES_D_EMPLOI_URL: 'https://relaytour.org/modes-d-emploi/' }
+  const hebergeur = { MODES_D_EMPLOI_URL: 'https://aide.exemple.org/guides/' }
+
+  it('garde la liste déclarée en français', () => {
+    expect(listeDesModesDEmploi(site, 'fr')).toBe(site.MODES_D_EMPLOI_URL)
+    expect(listeDesModesDEmploi(hebergeur, 'fr')).toBe(
+      hebergeur.MODES_D_EMPLOI_URL
+    )
+  })
+
+  it('lie la version anglaise du site de Relaytour', () => {
+    expect(listeDesModesDEmploi(site, 'en')).toBe(
+      'https://relaytour.org/en/modes-d-emploi/'
+    )
+    // Sans barre finale, l'adresse du site reste reconnue.
+    expect(
+      listeDesModesDEmploi(
+        { MODES_D_EMPLOI_URL: 'https://relaytour.org/modes-d-emploi' },
+        'en'
+      )
+    ).toBe('https://relaytour.org/en/modes-d-emploi/')
+  })
+
+  it('suit la liste anglaise d’un hébergeur, sinon sa liste française', () => {
+    expect(
+      listeDesModesDEmploi(
+        { ...hebergeur, MODES_D_EMPLOI_URL_EN: 'https://aide.exemple.org/en/' },
+        'en'
+      )
+    ).toBe('https://aide.exemple.org/en/')
+    expect(listeDesModesDEmploi(hebergeur, 'en')).toBe(
+      hebergeur.MODES_D_EMPLOI_URL
+    )
   })
 })

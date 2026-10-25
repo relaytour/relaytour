@@ -14,6 +14,15 @@ fr:
     vous avez demandé le code, la connexion part aussitôt. Auparavant, seul
     le code était rempli, et l'adresse seulement si elle avait été saisie
     dans le même onglet.
+en:
+  titre: >-
+    The sign-in code email link fills in the email address and the code
+  texte: >-
+    The “Sign in with this code” button in the email opens the organizer
+    workspace with the email address and the code already filled in. In the tab
+    where you requested the code, sign-in starts immediately. Previously, only
+    the code was filled in, and the email address only if it had been entered in
+    the same tab.
 ---
 
 - L'adresse rejoint le code dans le fragment du lien (`#code=…&adresse=…`),

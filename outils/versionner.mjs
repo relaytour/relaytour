@@ -50,7 +50,16 @@ const ETATS = ['prevu', 'differe', 'retire']
 const ROLES = ['referent', 'admin-activite', 'admin-organisation']
 const ROLE_PAR_DEFAUT = 'referent'
 const AUDIENCE_A_ROLE = 'organisateurs'
-const CHAMPS = ['cible', 'type', 'audience', 'role', 'etat', 'version', 'fr']
+const CHAMPS = [
+  'cible',
+  'type',
+  'audience',
+  'role',
+  'etat',
+  'version',
+  'fr',
+  'en',
+]
 /** Les audiences reprises dans le texte d'une release. */
 const AUDIENCES_PUBLIEES = ['organisateurs', 'public']
 
@@ -316,6 +325,20 @@ function controler(fragment, produit) {
     }
   }
 
+  // La version anglaise est facultative (ADR 0047). Présente, elle porte les mêmes
+  // champs que la version française : l'espace organisateur l'affiche à la place.
+  if (c.en !== undefined) {
+    if (!c.en || typeof c.en !== 'object') {
+      erreurs.push('bloc « en » invalide')
+    } else {
+      if (!c.en.titre) erreurs.push('« en.titre » manquant')
+      if (!c.en.texte) erreurs.push('« en.texte » manquant')
+      if (c.type === 'rupture' && !c.en.migration) {
+        erreurs.push('« en.migration » obligatoire quand type est « rupture »')
+      }
+    }
+  }
+
   if (c.version !== undefined) {
     if (typeof c.version !== 'string' || !FORME_VERSION.test(c.version)) {
       erreurs.push(`« version » : « ${c.version} » n'est pas un numéro x.y.z`)
@@ -362,6 +385,21 @@ function commandeValider() {
     }
   }
 
+  // Une note des organisateurs sans version anglaise s'affiche en français : le
+  // contrôle le signale sans échouer (ADR 0047).
+  const sansAnglais = fragments.filter(
+    f =>
+      f.champs.audience === AUDIENCE_A_ROLE &&
+      f.champs.etat !== 'retire' &&
+      f.champs.en === undefined
+  )
+  if (sansAnglais.length) {
+    console.log(
+      `${sansAnglais.length} note${sansAnglais.length > 1 ? 's' : ''} des organisateurs sans version anglaise (bloc « en ») : elles s'affichent en français.`
+    )
+    for (const f of sansAnglais) console.log(`  · ${f.id}`)
+  }
+
   if (nErreurs === 0) {
     if (fragments.length) console.log('Aucune erreur.')
   } else {
@@ -388,6 +426,13 @@ function entree(fragment) {
       texte: c.fr.texte,
       migration: c.fr.migration ?? null,
     },
+    en: c.en
+      ? {
+          titre: c.en.titre,
+          texte: c.en.texte,
+          migration: c.en.migration ?? null,
+        }
+      : null,
   }
 }
 
@@ -418,7 +463,7 @@ function compilerCible(cible, fragments, produit) {
     version => ({ version, notes: groupes.get(version).reverse() })
   )
   return {
-    schemaVersion: 4,
+    schemaVersion: 5,
     projet: nomDuProjet(),
     cible,
     version: produit,
@@ -549,8 +594,12 @@ function commandePublier(options) {
   if (existsSync(join(RACINE, 'packages/orga/src/locales'))) {
     const verification = spawnSync(
       process.execPath,
-      [join(RACINE, 'outils/langues.mjs'), 'verifier', 'en'],
-      { stdio: 'inherit' }
+      [
+        join(dirname(fileURLToPath(import.meta.url)), 'langues.mjs'),
+        'verifier',
+        'en',
+      ],
+      { stdio: 'inherit', env: { ...process.env, LANGUES_RACINE: RACINE } }
     )
     if (verification.status !== 0) {
       mourir('le catalogue anglais doit être complet avant une publication')
@@ -719,6 +768,17 @@ function commandeNoter(options) {
     '  texte: >-',
     ...(options.type === 'rupture' ? ['  migration: >-'] : []),
   ].join('\n')
+  // La version anglaise, facultative (ADR 0047), s'amorce de la même façon.
+  const blocEn =
+    options['titre-en'] === undefined
+      ? []
+      : [
+          'en:',
+          '  titre: >-',
+          `    ${options['titre-en']}`,
+          '  texte: >-',
+          ...(options.type === 'rupture' ? ['  migration: >-'] : []),
+        ]
 
   writeFileSync(
     chemin,
@@ -732,6 +792,7 @@ function commandeNoter(options) {
         : []),
       'etat: prevu',
       blocFr,
+      ...blocEn,
       '---',
       '',
       'Sous le frontmatter : le détail technique, jamais compilé.',
@@ -749,8 +810,9 @@ function commandeNoter(options) {
 
 const USAGE = `versionner : journal des changements du dépôt
 
-  noter --cible <c> --type <t> --audience <a> [--role <r>] --titre "…"
-      Crée un fragment dans notes/fragments/.
+  noter --cible <c> --type <t> --audience <a> [--role <r>] --titre "…" [--titre-en "…"]
+      Crée un fragment dans notes/fragments/. --titre-en amorce sa version
+      anglaise, facultative.
       cibles : ${CIBLES.join(', ')}
       types : ${TYPES.join(', ')}
       audiences : ${AUDIENCES.join(', ')}
@@ -787,6 +849,7 @@ function principal() {
       audience: { type: 'string' },
       role: { type: 'string' },
       titre: { type: 'string' },
+      'titre-en': { type: 'string' },
       version: { type: 'string' },
       simulation: { type: 'boolean' },
     },

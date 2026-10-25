@@ -12,6 +12,12 @@ fr:
     Les tâches d'une édition se lisent en une fois, triées par échéance.
     Chaque personne reçoit seulement les tâches des périmètres qu'elle peut
     consulter.
+en:
+  titre: >-
+    The timeline respects read rights
+  texte: >-
+    The tasks of an edition are read in one go, sorted by due date. Each person
+    receives only the tasks of the areas they can view.
 ---
 
 Requête `retroplanning(editionId)`, réservée aux personnes connectées.
