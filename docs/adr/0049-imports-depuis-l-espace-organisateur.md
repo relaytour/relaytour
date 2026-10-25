@@ -30,8 +30,8 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 - Seules les colonnes associées partent au serveur. Le fichier lui-même n'est jamais envoyé ni conservé.
 - L'écriture se fait par lots de 500 lignes, chacun dans une transaction. Le rapport donne l'état de chaque ligne : à importer, déjà importée ou écartée, avec la raison. Les lignes écartées se téléchargent en CSV.
 - Un import se relance sans créer de doublon.
-- Chaque import propose un classeur modèle, en CSV et en XLSX, avec les colonnes attendues et deux lignes d'exemple fictives.
-- Les correspondances de colonnes s'enregistrent comme pour les bénévoles. Chaque type d'import garde sa propre liste.
+- Chaque import propose un classeur modèle en CSV, produit par le navigateur, avec les colonnes attendues et deux lignes d'exemple fictives. Les tableurs l'ouvrent directement.
+- L'enregistrement des correspondances de colonnes reste propre à l'import des bénévoles. Son extension aux autres imports demandera une migration de `CorrespondanceImport` et se fera à part.
 
 ### Import des tâches et des périmètres
 
@@ -84,14 +84,15 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 
 ## Conséquences
 
-- Les fonctions génériques de lecture et de détection de `lib/import-benevoles.ts` passent dans un module commun de l'espace organisateur. Les étapes de l'assistant d'import deviennent un composant partagé. Les essais de l'import des bénévoles ne changent pas.
+- Les fonctions génériques de lecture et de détection de `lib/import-benevoles.ts` passent dans un module commun de l'espace organisateur (`lib/import-tableur.ts`). Les essais de l'import des bénévoles ne changent pas.
+- Les nouveaux imports partagent un assistant en quatre étapes (fichier, colonnes, vérification, import). L'assistant des bénévoles garde ses étapes propres (portée, choix, doublons).
 - Le contrat GraphQL gagne :
   - `simulerImportTaches` et `importerTaches` ;
   - `simulerImportEquipe` et `importerEquipe` ;
   - `simulerImportContenu` et `importerContenu` ;
   - `simulerDepotFiches` et `deposerFiches`.
 - `lireModeles` lit un dossier de contenu depuis le disque ou depuis une liste de fichiers en mémoire. `importerModeles` gagne une option qui ignore `organisation.yaml`.
-- Une migration additive ajoute la valeur `DEPOT` à l'énumération `SourceFiche`, et la colonne `type` à `CorrespondanceImport`. Les correspondances existantes prennent le type « bénévoles ».
+- Une migration additive ajoute la valeur `DEPOT` à l'énumération `SourceFiche`.
 - Les classeurs modèles sont livrés comme fichiers statiques de l'espace organisateur.
 - Les essais d'import gagnent des fichiers CSV et XLSX fictifs pour les tâches et pour l'équipe.
 - Les modes d'emploi des admins gagnent une section « Importer vos données ».
