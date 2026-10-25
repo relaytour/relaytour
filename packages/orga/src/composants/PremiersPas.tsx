@@ -101,6 +101,9 @@ export default function PremiersPas() {
           <Link to={lien('/admin/equipe')}>
             <Trans>Ouvrir l’écran Équipe</Trans>
           </Link>
+          <Link to={lien('/admin/activites')}>
+            <Trans>Importer un dossier de contenu</Trans>
+          </Link>
         </Space>
       ),
     },

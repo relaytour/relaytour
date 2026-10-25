@@ -57,8 +57,11 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 ### Dépôt du dossier de contenu
 
 - Un admin de l'organisation dépose une archive zip au format de l'export (ADR 0009). Le dépôt vaut `orga:importer` sans `--edition`.
-- Un admin d'activité dépose une archive pour son activité seulement. Le serveur ne lit alors que `activites/<slug>/` de cette activité, ou le dossier entier dans la disposition plate. Il ignore `organisation.yaml` et les autres activités.
-- L'archive se simule d'abord. Le rapport reprend celui de la commande : éléments créés, modifiés, absents de l'archive, et conflits de fiches.
+- Un admin d'activité dépose une archive pour son activité seulement. Le serveur ne lit alors que `activites/<slug>/` de cette activité, ou le dossier entier dans la disposition plate. Il ignore `organisation.yaml` et les autres activités. Une fiche d'une autre activité qui porte le même slug n'est ni déplacée ni remplacée : elle se signale en conflit.
+- Le slug de l'organisation reste celui de la base. Celui que déclare `organisation.yaml` est ignoré, et le rapport le signale.
+- L'archive se simule d'abord. Le rapport reprend celui de la commande : éléments créés, modifiés, absents de l'archive, et conflits de fiches. Il liste aussi les fichiers de l'archive que l'import n'a pas lus.
+- L'archive part vers une route dédiée, `POST /medias/contenu/depot`, et non vers GraphQL : une requête GraphQL est bornée à 1 Mo. Le serveur vérifie la session, l'origine et les droits avant de lire le corps de la requête.
+- Un import limité à une activité ne met pas à jour la date de synchronisation de l'organisation : les autres activités ont pu changer dans l'application.
 - Une modification faite dans l'application depuis la dernière synchronisation bloque l'import, comme dans la commande. L'admin peut passer outre après un avertissement explicite, ce qui équivaut à `--forcer`.
 - Le serveur lit l'archive en mémoire, sans l'écrire sur le disque. Il refuse :
   - une archive de plus de 20 Mo, ou plus de 50 Mo une fois décompressée ;
@@ -71,8 +74,9 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 ### Dépôt direct de fiches
 
 - Un admin de l'activité dépose des fichiers `.md`, `.markdown`, `.txt` ou `.docx` depuis l'écran « Ressources », pour un périmètre ou pour les fiches communes.
-- Le dépôt suit les règles de l'import depuis l'espace de fichiers (ADR 0038) : même conversion, mêmes limites, même traitement des conflits.
-- Une version déposée porte la source nouvelle `DEPOT`. Elle se distingue ainsi d'une version écrite dans l'éditeur ou lue dans l'espace de fichiers.
+- Le dépôt suit les règles de l'import depuis l'espace de fichiers (ADR 0038) : même conversion, même limite de 2 Mo par fichier, même traitement des conflits. Un dépôt lit 50 fichiers et 20 Mo au plus.
+- Les fichiers partent vers la route `POST /medias/fiches/depot`, leur contenu en base64, pour la même raison que l'archive du contenu. Le dépôt se simule avec le paramètre `simulation=1`.
+- Une version déposée porte la source nouvelle `DEPOT`. Elle se distingue ainsi d'une version écrite dans l'éditeur ou lue dans l'espace de fichiers. Comme une version de l'espace de fichiers, elle n'est pas remplacée par `orga:importer`.
 - L'ADR 0038 réserve aux admins de l'organisation le lien d'un dossier cloud, parce que le choix d'un dossier montre tous les dossiers du compte connecté. Le dépôt direct ne montre aucun dossier : il est donc ouvert aux admins d'activité.
 - L'import depuis l'espace de fichiers reste réservé aux admins de l'organisation. Les modes d'emploi le décrivent désormais ainsi, à la place de la phrase de l'ADR 0038 qui l'attribuait aux admins d'activité.
 
@@ -88,9 +92,8 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 - Les nouveaux imports partagent un assistant en quatre étapes (fichier, colonnes, vérification, import). L'assistant des bénévoles garde ses étapes propres (portée, choix, doublons).
 - Le contrat GraphQL gagne :
   - `simulerImportTaches` et `importerTaches` ;
-  - `simulerImportEquipe` et `importerEquipe` ;
-  - `simulerImportContenu` et `importerContenu` ;
-  - `simulerDepotFiches` et `deposerFiches`.
+  - `simulerImportEquipe` et `importerEquipe`.
+- Le dépôt du dossier de contenu passe par la route `POST /medias/contenu/depot`, et le dépôt de fiches par la route `POST /medias/fiches/depot`. Chacun se simule avec le paramètre `simulation=1`.
 - `lireModeles` lit un dossier de contenu depuis le disque ou depuis une liste de fichiers en mémoire. `importerModeles` gagne une option qui ignore `organisation.yaml`.
 - Une migration additive ajoute la valeur `DEPOT` à l'énumération `SourceFiche`.
 - Les classeurs modèles sont livrés comme fichiers statiques de l'espace organisateur.
@@ -99,7 +102,7 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 
 ## Revue de sécurité
 
-- Chaque import exige un admin de l'activité visée et une organisation en écriture. `importerContenu` sans activité désignée exige un admin de l'organisation.
+- Chaque import exige un admin de l'activité visée et une organisation en écriture. Le dépôt d'un dossier de contenu sans activité désignée exige un admin de l'organisation.
 - Un périmètre, une fiche ou une période d'une autre activité donne le même refus qu'un identifiant inconnu (invariant 18).
 - L'import de l'équipe ne donne aucun rôle d'admin. Un admin d'activité n'y lit pas l'annuaire : le rapport ne dit pas si une adresse appartient déjà à un membre d'une autre activité (ADR 0018).
 - Les données personnelles de l'import de l'équipe ne sont écrites dans aucun journal ni aucun fichier du serveur. Seules les colonnes associées traversent le réseau.

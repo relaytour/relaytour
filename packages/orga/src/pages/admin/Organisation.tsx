@@ -24,6 +24,7 @@ import { useEffect, useState } from 'react'
 
 import ChampCouleur from '../../composants/ChampCouleur'
 import ChampImage from '../../composants/ChampImage'
+import DepotContenu from '../../composants/DepotContenu'
 import { Panneau } from '../../composants/Panneau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
@@ -533,39 +534,54 @@ export default function Organisation() {
         </Button>
       </Form>
 
-      <Panneau titre={t`Contenu de l’organisation`}>
-        <p className="rt-texte-secondaire">
-          <Trans>
-            L’archive contient l’identité, les activités, les périmètres, les
-            fiches, les tâches types et les images, dans la forme du dépôt
-            organisation-modele. Elle ne contient aucune personne, aucune
-            affectation ni aucune tâche datée.
-          </Trans>
-        </p>
-        {aExporter && (
-          <Alert
-            type="info"
-            showIcon
-            style={{ marginBottom: 16 }}
-            title={t`Le dossier de contenu ne reflète pas les dernières modifications.`}
-            description={t`Des admins ont modifié le contenu le ${dateModification}. Exportez-le avant tout import, sinon l’import refusera d’écraser ces modifications.`}
-          />
-        )}
-        <Space wrap>
-          <Button
-            icon={<DownloadOutlined />}
-            loading={exportEnCours}
-            onClick={() => void telecharger()}
-          >
-            <Trans>Télécharger le contenu (zip)</Trans>
-          </Button>
-          {identite?.contenuSynchroniseLe && (
-            <span className="rt-texte-secondaire">
-              <Trans>Dernier import ou export : {dateSynchronisation}</Trans>
-            </span>
+      <div className="rt-colonne" style={{ gap: 24 }}>
+        <Panneau titre={t`Contenu de l’organisation`}>
+          <p className="rt-texte-secondaire">
+            <Trans>
+              L’archive contient l’identité, les activités, les périmètres, les
+              fiches, les tâches types et les images, dans la forme du dépôt
+              organisation-modele. Elle ne contient aucune personne, aucune
+              affectation ni aucune tâche datée.
+            </Trans>
+          </p>
+          {aExporter && (
+            <Alert
+              type="info"
+              showIcon
+              style={{ marginBottom: 16 }}
+              title={t`Le dossier de contenu ne reflète pas les dernières modifications.`}
+              description={t`Des admins ont modifié le contenu le ${dateModification}. Exportez-le avant tout import, sinon l’import refusera d’écraser ces modifications.`}
+            />
           )}
-        </Space>
-      </Panneau>
+          <Space wrap>
+            <Button
+              icon={<DownloadOutlined />}
+              loading={exportEnCours}
+              onClick={() => void telecharger()}
+            >
+              <Trans>Télécharger le contenu (zip)</Trans>
+            </Button>
+            {identite?.contenuSynchroniseLe && (
+              <span className="rt-texte-secondaire">
+                <Trans>Dernier import ou export : {dateSynchronisation}</Trans>
+              </span>
+            )}
+          </Space>
+        </Panneau>
+
+        <Panneau titre={t`Importer un dossier de contenu`}>
+          <p className="rt-texte-secondaire">
+            <Trans>
+              L’import reprend une archive au format de l’export : celle d’une
+              autre installation, ou un dossier modifié hors de l’application.
+              Il crée ou met à jour les activités, les périmètres, les fiches et
+              les tâches types. Il ne retire rien et ne change pas l’identifiant
+              de l’organisation.
+            </Trans>
+          </p>
+          <DepotContenu />
+        </Panneau>
+      </div>
     </>
   )
 }
