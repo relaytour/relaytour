@@ -74,9 +74,10 @@ Les tâches types d'un périmètre ne deviennent des tâches datées que par la 
 - Le contrat GraphQL gagne :
   - la requête `premiersPas(activiteId)` ;
   - les mutations `confirmerActivite`, `masquerPremiersPas` et `afficherPremiersPas` ;
-  - la mutation `appliquerTachesTypes(editionId, perimetreIds, simulation)` ;
-  - la mutation `reconduireEdition(sourceId, cibleId, tacheIds, simulation)` ;
-  - la mutation `appliquerModeleDeDepart(activiteId, modele, simulation)`.
+  - la requête `simulerTachesTypes` et la mutation `appliquerTachesTypes(editionId, perimetreIds)` ;
+  - la requête `simulerReconduction` et la mutation `reconduireEdition(sourceId, cibleId, tacheIds)` ;
+  - la requête `simulerModeleDeDepart` et la mutation `appliquerModeleDeDepart(activiteId, modele)`.
+- Comme pour l'import des fiches, la simulation est une requête qui suit le même chemin que la mutation, sans rien écrire.
 - La création des tâches à partir des tâches types sort de `orga/importer.ts` dans une fonction partagée par la commande et par l'API.
 - Trois formulaires deviennent des composants partagés avec les volets des « Premiers pas » : la création d'une période, le réglage d'un périmètre et l'invitation.
 - La CI valide chaque modèle de départ avec `orga:valider`.
