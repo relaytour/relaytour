@@ -1,6 +1,6 @@
 # ADR 0047 — Langues de l'interface et traduction communautaire
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-24
 - Réalise le point « Traduction » de la feuille de route. Complète l'ADR 0021 (notes de version) et l'ADR 0032 (notifications composées à la lecture).
 
@@ -73,7 +73,7 @@ Le service worker fait exception. Il n'a ni session ni catalogue : quand une not
 - La publication d'une version vérifie que le catalogue anglais est complet.
 - Les tests de l'espace organisateur activent le français. Leurs assertions sur les textes ne changent pas.
 - Un fragment de note de version accepte une clé `en`, facultative, avec les mêmes champs que `fr`.
-- Les captures des modes d'emploi anglais reprennent d'abord les captures françaises. Des captures en anglais demandent un contenu d'exemple en anglais.
+- Les modes d'emploi anglais montrent l'interface anglaise. Leurs captures se prennent sur le contenu d'exemple anglais (`content/exemple-en`), avec `outils/captures.mjs --langue en`.
 - Le style neutre a un équivalent anglais : « you » pour l'utilisateur, « we » pour l'organisation, une idée par phrase, aucun effet de style. L'écriture inclusive se traduit par des formes épicènes (« they », des noms sans genre).
 
 ## Revue de sécurité
