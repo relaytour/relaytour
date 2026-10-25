@@ -4,7 +4,7 @@
 # La cible `orga` livre l'espace organisateur (site statique) dans une image minimale
 # qui le copie vers un volume de l'hôte, servi ensuite par Caddy.
 
-FROM node:24-bookworm-slim AS base
+FROM node:26-bookworm-slim AS base
 RUN apt-get update \
   && apt-get install -y --no-install-recommends openssl ca-certificates \
   && rm -rf /var/lib/apt/lists/*
