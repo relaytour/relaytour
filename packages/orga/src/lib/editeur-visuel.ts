@@ -10,6 +10,7 @@ import {
   rootCtx,
   serializerCtx,
 } from '@milkdown/core'
+import { t } from '@lingui/core/macro'
 import { clipboard } from '@milkdown/plugin-clipboard'
 import { history } from '@milkdown/plugin-history'
 import { listener, listenerCtx } from '@milkdown/plugin-listener'
@@ -34,7 +35,7 @@ import { Decoration, DecorationSet } from '@milkdown/prose/view'
 import type { EditorView } from '@milkdown/prose/view'
 import { $prose, callCommand, insert } from '@milkdown/utils'
 
-import { TABLEAU } from './mise-en-forme'
+import { tableauDExemple } from './mise-en-forme'
 import { estLienLitteral, retoucher } from './retouche-markdown'
 import { defaultHandlers } from 'mdast-util-to-markdown'
 
@@ -118,7 +119,7 @@ const casesACocher = $prose(
                   caseACocher.contentEditable = 'false'
                   caseACocher.setAttribute(
                     'aria-label',
-                    noeud.textContent.trim() || 'Élément à cocher'
+                    noeud.textContent.trim() || t`Élément à cocher`
                   )
                   caseACocher.addEventListener('mousedown', e =>
                     e.preventDefault()
@@ -254,7 +255,7 @@ export function formaterVisuel(editeur: Editor, format: FormatVisuel): void {
         break
       case 'tableau':
         // Le même tableau que le mode Markdown, avec ses titres de colonnes.
-        insert(TABLEAU)(ctx)
+        insert(tableauDExemple())(ctx)
         break
     }
     ctx.get(editorViewCtx).focus()

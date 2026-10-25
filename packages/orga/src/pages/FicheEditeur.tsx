@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -92,6 +93,7 @@ interface Valeurs {
 
 /** Création (/fiches/nouvelle?perimetre=slug) ou modification (/fiches/:slug/modifier). */
 export default function FicheEditeur() {
+  const { t } = useLingui()
   const { slug } = useParams()
   const [parametres] = useSearchParams()
   const creation = slug === undefined
@@ -125,7 +127,7 @@ export default function FicheEditeur() {
     return (
       <Result
         status="403"
-        title="Vous n’avez pas le droit de rédiger cette fiche."
+        title={t`Vous n’avez pas le droit de rédiger cette fiche.`}
       />
     )
 
@@ -164,6 +166,7 @@ function Formulaire({
   /** Pour une fiche nouvelle : le slug de son périmètre, ou `commune`. */
   cible: string
 }) {
+  const { t } = useLingui()
   const creation = fiche === null
   // L'éditeur garde la version de la fiche qu'il a chargée : la relecture
   // périodique ne la remplace pas sous la saisie.
@@ -298,11 +301,12 @@ function Formulaire({
       ),
     ]
     if (noms.length > 0) {
+      const nomsMentionnes = noms.join(', ')
       const ajouter = await modal.confirm({
-        title: 'Ajouter les mentions à « Concerne aussi » ?',
-        content: `Le texte mentionne ${noms.join(', ')}. Une fois ces périmètres ajoutés, leurs référentes et référents liront la fiche sans pouvoir la modifier.`,
-        okText: 'Ajouter',
-        cancelText: 'Ne pas ajouter',
+        title: t`Ajouter les mentions à « Concerne aussi » ?`,
+        content: t`Le texte mentionne ${nomsMentionnes}. Une fois ces périmètres ajoutés, leurs référentes et référents liront la fiche sans pouvoir la modifier.`,
+        okText: t`Ajouter`,
+        cancelText: t`Ne pas ajouter`,
       })
       if (ajouter) {
         liste = reunir(liste, nouvelles)
@@ -320,11 +324,10 @@ function Formulaire({
     const total = mentions.perimetres.size
     if (!memeListe(liste, listeDeDepart) && largeDiffusion(concernes, total)) {
       const confirme = await modal.confirm({
-        title: `Cette fiche apparaîtra dans ${concernes} périmètres sur ${total}.`,
-        content:
-          'Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux.',
-        okText: 'Confirmer la liste',
-        cancelText: 'Revenir à l’éditeur',
+        title: t`Cette fiche apparaîtra dans ${concernes} périmètres sur ${total}.`,
+        content: t`Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux.`,
+        okText: t`Confirmer la liste`,
+        cancelText: t`Revenir à l’éditeur`,
       })
       if (!confirme) return null
     }
@@ -343,8 +346,9 @@ function Formulaire({
         },
       })
     } catch (e) {
+      const detailErreur = messageErreur(e)
       message.error(
-        `La fiche est enregistrée, mais pas sa liste « Concerne aussi » : ${messageErreur(e)}`
+        t`La fiche est enregistrée, mais pas sa liste « Concerne aussi » : ${detailErreur}`
       )
     }
   }
@@ -365,7 +369,7 @@ function Formulaire({
         oublierLeBrouillon()
         if (r.data?.creerFiche.id)
           await enregistrerLaListe(r.data.creerFiche.id, liste)
-        message.success('Fiche créée.')
+        message.success(t`Fiche créée.`)
         navigate(lien(`/fiches/${r.data?.creerFiche.slug ?? v.slug}`))
       } else if (fiche) {
         await modifier({
@@ -379,7 +383,7 @@ function Formulaire({
         })
         oublierLeBrouillon()
         await enregistrerLaListe(fiche.id, liste)
-        message.success('Fiche enregistrée.')
+        message.success(t`Fiche enregistrée.`)
         navigate(lien(`/fiches/${fiche.slug}`))
       }
     } catch (e) {
@@ -412,13 +416,16 @@ function Formulaire({
   const copier = async () => {
     try {
       await navigator.clipboard.writeText(contenu)
-      message.success('Votre texte est copié.')
+      message.success(t`Votre texte est copié.`)
     } catch {
       message.error(
-        'La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même.'
+        t`La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même.`
       )
     }
   }
+
+  const nomPerimetre = perimetre?.nom ?? ''
+  const dateBrouillon = brouillon ? jourDeLInstant(brouillon.enregistreLe) : ''
 
   return (
     <>
@@ -426,12 +433,12 @@ function Formulaire({
         sousTitre={
           creation
             ? perimetre !== null
-              ? `Nouvelle fiche du périmètre ${perimetre.nom}`
-              : 'Nouvelle fiche commune à tous les périmètres'
-            : 'Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique.'
+              ? t`Nouvelle fiche du périmètre ${nomPerimetre}`
+              : t`Nouvelle fiche commune à tous les périmètres`
+            : t`Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique.`
         }
       >
-        {creation ? 'Nouvelle fiche' : 'Modifier la fiche'}
+        {creation ? t`Nouvelle fiche` : t`Modifier la fiche`}
       </Titre>
 
       <Form
@@ -446,9 +453,9 @@ function Formulaire({
         <Row gutter={16}>
           <Col xs={24} md={14}>
             <Form.Item
-              label="Titre"
+              label={t`Titre`}
               name="titre"
-              rules={[{ required: true, message: 'Saisissez un titre.' }]}
+              rules={[{ required: true, message: t`Saisissez un titre.` }]}
             >
               <Input
                 onChange={e => {
@@ -460,18 +467,18 @@ function Formulaire({
           </Col>
           <Col xs={24} md={10}>
             <Form.Item
-              label="Identifiant"
+              label={t`Identifiant`}
               name="slug"
               extra={
                 creation
-                  ? 'Il apparaît dans l’adresse de la fiche et ne change plus.'
+                  ? t`Il apparaît dans l’adresse de la fiche et ne change plus.`
                   : undefined
               }
               rules={[
-                { required: true, message: 'Saisissez un identifiant.' },
+                { required: true, message: t`Saisissez un identifiant.` },
                 {
                   pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/,
-                  message: 'Minuscules, chiffres et tirets seulement.',
+                  message: t`Minuscules, chiffres et tirets seulement.`,
                 },
               ]}
             >
@@ -488,12 +495,12 @@ function Formulaire({
             type="warning"
             showIcon
             style={{ marginBottom: 16 }}
-            title={`Un brouillon du ${jourDeLInstant(brouillon.enregistreLe)} n’a pas été enregistré.`}
-            description="Il est gardé dans ce navigateur. Reprenez-le pour continuer votre rédaction, ou supprimez-le pour repartir de la fiche. Si vous modifiez la fiche sans le reprendre, votre nouvelle saisie le remplace."
+            title={t`Un brouillon du ${dateBrouillon} n’a pas été enregistré.`}
+            description={t`Il est gardé dans ce navigateur. Reprenez-le pour continuer votre rédaction, ou supprimez-le pour repartir de la fiche. Si vous modifiez la fiche sans le reprendre, votre nouvelle saisie le remplace.`}
             action={
               <Space wrap>
                 <Button onClick={reprendreLeBrouillon}>
-                  Reprendre le brouillon
+                  <Trans>Reprendre le brouillon</Trans>
                 </Button>
                 <Button
                   onClick={() => {
@@ -502,7 +509,7 @@ function Formulaire({
                     setBrouillon(null)
                   }}
                 >
-                  Supprimer le brouillon
+                  <Trans>Supprimer le brouillon</Trans>
                 </Button>
               </Space>
             }
@@ -515,7 +522,7 @@ function Formulaire({
             showIcon
             style={{ marginBottom: 16 }}
             title={annonceConflitFiche(conflit)}
-            description="Votre texte reste à l’écran et n’est pas enregistré. Consultez la version actuelle avant de choisir."
+            description={t`Votre texte reste à l’écran et n’est pas enregistré. Consultez la version actuelle avant de choisir.`}
             action={
               <Space wrap>
                 <Button
@@ -523,15 +530,17 @@ function Formulaire({
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Voir la version actuelle
+                  <Trans>Voir la version actuelle</Trans>
                 </Button>
-                <Button onClick={() => void copier()}>Copier mon texte</Button>
+                <Button onClick={() => void copier()}>
+                  <Trans>Copier mon texte</Trans>
+                </Button>
                 <Button
                   danger
                   loading={modificationEnCours.loading}
                   onClick={ecraser}
                 >
-                  Écraser avec mon texte
+                  <Trans>Écraser avec mon texte</Trans>
                 </Button>
               </Space>
             }
@@ -542,19 +551,19 @@ function Formulaire({
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels."
+          title={t`Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels.`}
         />
 
         <div className="rt-editeur-fiche-tete">
           <Typography.Text strong id="contenu-fiche">
-            Contenu
+            <Trans>Contenu</Trans>
           </Typography.Text>
           <Segmented
             value={mode}
             onChange={changerMode}
             aria-labelledby="contenu-fiche"
             options={[
-              { value: 'visuel', label: 'Visuel' },
+              { value: 'visuel', label: t`Visuel` },
               { value: 'markdown', label: 'Markdown' },
             ]}
           />
@@ -563,7 +572,7 @@ function Formulaire({
           valeur={contenu}
           onChange={setContenu}
           onAide={() => setAide(true)}
-          libelle="Contenu de la fiche"
+          libelle={t`Contenu de la fiche`}
           mode={mode}
           cleVisuel={cleVisuel}
           mentions={mentions}
@@ -571,9 +580,9 @@ function Formulaire({
 
         {perimetreDeLaFiche !== null && (
           <Form.Item
-            label="Concerne aussi"
+            label={t`Concerne aussi`}
             style={{ marginTop: 16, marginBottom: 0 }}
-            extra="La fiche se lit, sans s’y modifier, dans ces périmètres. Un groupe concerne aussi les périmètres qui le rejoindront. Une mention @périmètre ou @groupe:clé du texte se propose à l’enregistrement."
+            extra={t`La fiche se lit, sans s’y modifier, dans ces périmètres. Un groupe concerne aussi les périmètres qui le rejoindront. Une mention @périmètre ou @groupe:clé du texte se propose à l’enregistrement.`}
           >
             <ChampConcerneAussi
               valeur={concerne}
@@ -594,13 +603,13 @@ function Formulaire({
 
         {!creation && (
           <Form.Item
-            label="Résumé de la modification (facultatif)"
+            label={t`Résumé de la modification (facultatif)`}
             name="resume"
             style={{ marginTop: 16 }}
           >
             <Input
               maxLength={191}
-              placeholder="Ajout des horaires d’ouverture de la piscine"
+              placeholder={t`Ajout des horaires d’ouverture de la piscine`}
             />
           </Form.Item>
         )}
@@ -611,7 +620,7 @@ function Formulaire({
             htmlType="submit"
             loading={creationEnCours.loading || modificationEnCours.loading}
           >
-            Enregistrer
+            <Trans>Enregistrer</Trans>
           </Button>
           <Button
             onClick={() => {
@@ -620,7 +629,7 @@ function Formulaire({
               navigate(-1)
             }}
           >
-            Annuler
+            <Trans>Annuler</Trans>
           </Button>
           {!creation && (
             <Button
@@ -630,14 +639,14 @@ function Formulaire({
                 setCleVisuel(c => c + 1)
               }}
             >
-              Ajouter les sections du gabarit
+              <Trans>Ajouter les sections du gabarit</Trans>
             </Button>
           )}
         </Space>
       </Form>
 
       <Drawer
-        title="Aide Markdown"
+        title={t`Aide Markdown`}
         open={aide}
         onClose={() => setAide(false)}
         size={ecrans.md ? 560 : '100%'}
@@ -645,7 +654,7 @@ function Formulaire({
         extra={
           ecrans.md ? (
             <Link to={lien('/aide/markdown')} target="_blank">
-              Ouvrir dans un onglet
+              <Trans>Ouvrir dans un onglet</Trans>
             </Link>
           ) : undefined
         }

@@ -7,6 +7,18 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: fr\n"
 
+#: src/composants/RessourcesFiche.tsx
+msgid "« {nom} » est lié à la fiche."
+msgstr "« {nom} » est lié à la fiche."
+
+#: src/composants/DocumentsReserves.tsx
+msgid "« {nomDocument} » : {perimetresManquants}"
+msgstr "« {nomDocument} » : {perimetresManquants}"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "« {nomDossierLie} » est aussi lu par {ajouts}."
+msgstr "« {nomDossierLie} » est aussi lu par {ajouts}."
+
 #: src/composants/DeclinerTache.tsx
 #: src/composants/TacheCarte.tsx
 msgid "« {titreTache} »"
@@ -215,6 +227,18 @@ msgstr "{nbSansPersonne} sans personne"
 msgid "{nbTaches, plural, one {La tâche est abandonnée} other {Les # tâches sont abandonnées}}"
 msgstr "{nbTaches, plural, one {La tâche est abandonnée} other {Les # tâches sont abandonnées}}"
 
+#: src/composants/EditeurMarkdown.tsx
+msgid "{nom} ({raccourci})"
+msgstr "{nom} ({raccourci})"
+
+#: src/composants/DocumentsActivite.tsx
+msgid "{nombre, plural, one {# dossier} other {# dossiers}}"
+msgstr "{nombre, plural, one {# dossier} other {# dossiers}}"
+
+#: src/pages/Fiches.tsx
+msgid "{nombre, plural, one {# fiche} other {# fiches}}"
+msgstr "{nombre, plural, one {# fiche} other {# fiches}}"
+
 #: src/pages/TousLesPerimetres.tsx
 msgid "{nombre, plural, one {# personne recherchée} other {# personnes recherchées}}"
 msgstr "{nombre, plural, one {# personne recherchée} other {# personnes recherchées}}"
@@ -251,6 +275,10 @@ msgstr "{nombreMesTaches, plural, one {# ouverte} other {# ouvertes}}"
 msgid "{nombreMesTaches, plural, one {# ouverte} other {# ouvertes}} · {enRetard} en retard"
 msgstr "{nombreMesTaches, plural, one {# ouverte} other {# ouvertes}} · {enRetard} en retard"
 
+#: src/composants/DocumentsReserves.tsx
+msgid "{nombreReserves, plural, one {Un document lié ne s’ouvrira pas pour tous les périmètres concernés.} other {# documents liés ne s’ouvriront pas pour tous les périmètres concernés.}}"
+msgstr "{nombreReserves, plural, one {Un document lié ne s’ouvrira pas pour tous les périmètres concernés.} other {# documents liés ne s’ouvriront pas pour tous les périmètres concernés.}}"
+
 #: src/pages/Retroplanning.tsx
 msgid "{nombreTaches} tâches, dont <0>{enRetard} en retard</0>"
 msgstr "{nombreTaches} tâches, dont <0>{enRetard} en retard</0>"
@@ -259,6 +287,14 @@ msgstr "{nombreTaches} tâches, dont <0>{enRetard} en retard</0>"
 msgid "{nomCourt} · Espace organisateur"
 msgstr "{nomCourt} · Espace organisateur"
 
+#: src/composants/RessourcesFiche.tsx
+msgid "{nomDocument} : ouvert aux lecteurs de la fiche"
+msgstr "{nomDocument} : ouvert aux lecteurs de la fiche"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "{nomDocument} : réservé, fermé pour {nombreSans, plural, one {un périmètre} other {# périmètres}}"
+msgstr "{nomDocument} : réservé, fermé pour {nombreSans, plural, one {un périmètre} other {# périmètres}}"
+
 #: src/pages/MonEspace.tsx
 msgid "{nomEdition}, du {debutEdition} au {finEdition}."
 msgstr "{nomEdition}, du {debutEdition} au {finEdition}."
@@ -266,6 +302,10 @@ msgstr "{nomEdition}, du {debutEdition} au {finEdition}."
 #: src/pages/MonEspace.tsx
 msgid "{nomEdition}, du {debutEdition} au {finEdition}. {nombreMesTaches, plural, one {# tâche ouverte vous est assignée} other {# tâches ouvertes vous sont assignées}}."
 msgstr "{nomEdition}, du {debutEdition} au {finEdition}. {nombreMesTaches, plural, one {# tâche ouverte vous est assignée} other {# tâches ouvertes vous sont assignées}}."
+
+#: src/composants/Liseuse.tsx
+msgid "{nomFournisseur} a converti ce document en PDF pour l’affichage. Sa mise en page peut différer de l’original."
+msgstr "{nomFournisseur} a converti ce document en PDF pour l’affichage. Sa mise en page peut différer de l’original."
 
 #: src/composants/CarteAvancement.tsx
 msgid "{nomPersonne} (contact principal)"
@@ -295,13 +335,37 @@ msgstr "{refusees, plural, one {# refusée} other {# refusées}}"
 msgid "{renforts} / {besoin} renforts"
 msgstr "{renforts} / {besoin} renforts"
 
+#: src/pages/Fiches.tsx
+msgid "{total, plural, one {# fiche} other {# fiches}}"
+msgstr "{total, plural, one {# fiche} other {# fiches}}"
+
 #: src/lib/declinaisons.ts
 msgid "{total, plural, one {Déclinée dans # périmètre} other {Déclinée dans # périmètres}}"
 msgstr "{total, plural, one {Déclinée dans # périmètre} other {Déclinée dans # périmètres}}"
 
+#: src/lib/guide-markdown.ts
+msgid "<b>Cette balise reste du texte.</b>"
+msgstr "<b>Cette balise reste du texte.</b>"
+
 #: src/pages/Retroplanning.tsx
 msgid "1 tâche, dont <0>{enRetard} en retard</0>"
 msgstr "1 tâche, dont <0>{enRetard} en retard</0>"
+
+#: src/lib/guide-markdown.ts
+msgid "14 h"
+msgstr "14 h"
+
+#: src/lib/guide-markdown.ts
+msgid "20 bleues"
+msgstr "20 bleues"
+
+#: src/lib/guide-markdown.ts
+msgid "20 rouges"
+msgstr "20 rouges"
+
+#: src/lib/guide-markdown.ts
+msgid "9 h"
+msgstr "9 h"
 
 #: src/composants/Jauge.tsx
 msgid "À confirmer"
@@ -332,6 +396,10 @@ msgstr "à partir du {dateDeDebut}"
 msgid "À prendre dans vos périmètres"
 msgstr "À prendre dans vos périmètres"
 
+#: src/pages/Fiche.tsx
+msgid "À propos"
+msgstr "À propos"
+
 #. Statut d’une tâche
 #. Statut d’une tâche
 #: src/lib/conflit.ts
@@ -359,6 +427,18 @@ msgstr "Acceptée par {personne} le {jour}"
 msgid "Accepter"
 msgstr "Accepter"
 
+#: src/pages/admin/Redaction.tsx
+msgid "Accorder"
+msgstr "Accorder"
+
+#: src/lib/guide-markdown.ts
+msgid "Accueil"
+msgstr "Accueil"
+
+#: src/lib/guide-markdown.ts
+msgid "Accueillir les équipes"
+msgstr "Accueillir les équipes"
+
 #: src/composants/PreferencePush.tsx
 msgid "Activer sur cet appareil"
 msgstr "Activer sur cet appareil"
@@ -371,16 +451,23 @@ msgstr "Activité de vos périmètres"
 msgid "Activités"
 msgstr "Activités"
 
+#: src/pages/Fiche.tsx
+msgid "Actuelle"
+msgstr "Actuelle"
+
 #: src/composants/ListeNotifications.tsx
+#: src/pages/admin/Redaction.tsx
 msgid "Admin de l’activité"
 msgstr "Admin de l’activité"
 
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/ListeNotifications.tsx
+#: src/pages/admin/Redaction.tsx
 msgid "Admin de l’organisation"
 msgstr "Admin de l’organisation"
 
 #: src/composants/Coquille.tsx
+#: src/pages/admin/Redaction.tsx
 msgid "Admins"
 msgstr "Admins"
 
@@ -392,6 +479,10 @@ msgstr "Admins d’activité"
 msgid "Admins de l’organisation"
 msgstr "Admins de l’organisation"
 
+#: src/composants/EditeurVisuel.tsx
+msgid "Adresse"
+msgstr "Adresse"
+
 #: src/pages/Connexion.tsx
 msgid "Adresse mail"
 msgstr "Adresse mail"
@@ -399,6 +490,18 @@ msgstr "Adresse mail"
 #: src/pages/TousLesPerimetres.tsx
 msgid "Affecté·e"
 msgstr "Affecté·e"
+
+#: src/pages/Fiches.tsx
+msgid "Affichage des fiches"
+msgstr "Affichage des fiches"
+
+#: src/composants/FichesConnexes.tsx
+msgid "Afficher de nouveau cette fiche"
+msgstr "Afficher de nouveau cette fiche"
+
+#: src/composants/FichesConnexes.tsx
+msgid "Afficher la fiche"
+msgstr "Afficher la fiche"
 
 #: src/composants/PreferenceOrganigramme.tsx
 msgid "Afficher mon adresse dans l’organigramme"
@@ -408,17 +511,35 @@ msgstr "Afficher mon adresse dans l’organigramme"
 msgid "Agenda"
 msgstr "Agenda"
 
+#: src/composants/EditeurMarkdown.tsx
 #: src/pages/AideMarkdown.tsx
 msgid "Aide"
 msgstr "Aide"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Aide Markdown"
+msgstr "Aide Markdown"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Ajout des horaires d’ouverture de la piscine"
+msgstr "Ajout des horaires d’ouverture de la piscine"
 
 #: src/lib/declinaisons.ts
 msgid "Ajoutée sans accord par {personne} le {jour}"
 msgstr "Ajoutée sans accord par {personne} le {jour}"
 
 #: src/composants/DeclinerTache.tsx
+#: src/pages/FicheEditeur.tsx
 msgid "Ajouter"
 msgstr "Ajouter"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Ajouter les mentions à « Concerne aussi » ?"
+msgstr "Ajouter les mentions à « Concerne aussi » ?"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Ajouter les sections du gabarit"
+msgstr "Ajouter les sections du gabarit"
 
 #: src/composants/DeclinaisonsTache.tsx
 msgid "Ajouter sans accord"
@@ -434,20 +555,38 @@ msgstr "Annuaire"
 
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/DeclinerTache.tsx
+#: src/composants/EditeurVisuel.tsx
 #: src/composants/FilTache.tsx
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/MesInvitations.tsx
 #: src/composants/ReglagePerimetre.tsx
+#: src/composants/RessourcesFiche.tsx
 #: src/composants/TacheCarte.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/lib/taches.ts
+#: src/pages/admin/Redaction.tsx
+#: src/pages/Fiche.tsx
+#: src/pages/FicheEditeur.tsx
 #: src/pages/Preferences.tsx
 msgid "Annuler"
 msgstr "Annuler"
 
+#. Origine d’une version de fiche : rédigée dans Relaytour
+#: src/lib/fiches.ts
+msgid "Application"
+msgstr "Application"
+
+#: src/lib/guide-markdown.ts
+msgid "Arbitrage"
+msgstr "Arbitrage"
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "Archivé"
 msgstr "Archivé"
+
+#: src/pages/Fiche.tsx
+msgid "Archivée"
+msgstr "Archivée"
 
 #: src/pages/Retroplanning.tsx
 msgid "Assignées à moi"
@@ -461,9 +600,37 @@ msgstr "Assigner"
 msgid "Assigner une personne"
 msgstr "Assigner une personne"
 
+#: src/composants/ImportFiches.tsx
+msgid "Aucun"
+msgstr "Aucun"
+
+#: src/composants/ChampConcerneAussi.tsx
+msgid "Aucun autre périmètre"
+msgstr "Aucun autre périmètre"
+
+#: src/composants/ConnexionsFiche.tsx
+msgid "Aucun autre périmètre dans ce groupe."
+msgstr "Aucun autre périmètre dans ce groupe."
+
 #: src/composants/FilTache.tsx
 msgid "Aucun commentaire pour l’instant."
 msgstr "Aucun commentaire pour l’instant."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Aucun document du fournisseur cloud n’est lié à cette fiche."
+msgstr "Aucun document du fournisseur cloud n’est lié à cette fiche."
+
+#: src/composants/ImportFiches.tsx
+msgid "Aucun dossier"
+msgstr "Aucun dossier"
+
+#: src/composants/DocumentsActivite.tsx
+msgid "Aucun dossier du fournisseur cloud n’est lié à vos périmètres."
+msgstr "Aucun dossier du fournisseur cloud n’est lié à vos périmètres."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Aucun dossier du fournisseur cloud ne sert ce périmètre ni toute l’activité."
+msgstr "Aucun dossier du fournisseur cloud ne sert ce périmètre ni toute l’activité."
 
 #: src/composants/Recherche.tsx
 msgid "Aucun résultat."
@@ -486,9 +653,17 @@ msgstr "Aucune activité ne vous est encore ouverte."
 msgid "Aucune description pour ce périmètre."
 msgstr "Aucune description pour ce périmètre."
 
+#: src/pages/Fiches.tsx
+msgid "Aucune fiche ne correspond."
+msgstr "Aucune fiche ne correspond."
+
 #: src/pages/Perimetre.tsx
 msgid "Aucune fiche pour ce périmètre."
 msgstr "Aucune fiche pour ce périmètre."
+
+#: src/pages/Fiches.tsx
+msgid "Aucune fiche pour le moment."
+msgstr "Aucune fiche pour le moment."
 
 #: src/composants/MesInvitations.tsx
 msgid "Aucune invitation n’attend votre accord."
@@ -526,6 +701,10 @@ msgstr "Aucune tâche"
 msgid "Aucune tâche dans cette catégorie."
 msgstr "Aucune tâche dans cette catégorie."
 
+#: src/pages/Fiche.tsx
+msgid "Aucune tâche de l’édition en cours ne renvoie à cette fiche."
+msgstr "Aucune tâche de l’édition en cours ne renvoie à cette fiche."
+
 #: src/pages/Retroplanning.tsx
 msgid "Aucune tâche ne correspond à ces filtres."
 msgstr "Aucune tâche ne correspond à ces filtres."
@@ -554,6 +733,10 @@ msgstr "Autres périmètres"
 msgid "Avancement"
 msgstr "Avancement"
 
+#: src/lib/guide-markdown.ts
+msgid "Avant la journée"
+msgstr "Avant la journée"
+
 #: src/composants/Coquille.tsx
 msgid "Bénévoles"
 msgstr "Bénévoles"
@@ -566,6 +749,22 @@ msgstr "Bibliothèque de documents"
 msgid "Bonjour {prenomPersonne}"
 msgstr "Bonjour {prenomPersonne}"
 
+#: src/composants/FichesConnexes.tsx
+msgid "Cacher les fiches masquées"
+msgstr "Cacher les fiches masquées"
+
+#: src/lib/guide-markdown.ts
+msgid "Caractères réservés"
+msgstr "Caractères réservés"
+
+#: src/pages/Fiches.tsx
+msgid "Cartes"
+msgstr "Cartes"
+
+#: src/lib/guide-markdown.ts
+msgid "Cases à cocher"
+msgstr "Cases à cocher"
+
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le changer pour un message dans la fenêtre « Écrire un message »."
 msgstr "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le changer pour un message dans la fenêtre « Écrire un message »."
@@ -573,6 +772,10 @@ msgstr "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le chang
 #: src/composants/ParcoursEspace.tsx
 msgid "Ce dossier compte trop de sous-dossiers pour les afficher tous. Rangez le dossier voulu plus haut dans la bibliothèque."
 msgstr "Ce dossier compte trop de sous-dossiers pour les afficher tous. Rangez le dossier voulu plus haut dans la bibliothèque."
+
+#: src/composants/Mention.tsx
+msgid "Ce groupe ne compte aucun périmètre."
+msgstr "Ce groupe ne compte aucun périmètre."
 
 #: src/pages/Preferences.tsx
 msgid "Ce nom s’affiche dans toutes vos organisations."
@@ -602,6 +805,26 @@ msgstr "Ce score n’est visible que par vous et par les admins."
 msgid "Ces adresses ont déjà un compte hors de votre organisation. Chaque personne accepte ou refuse l’invitation depuis son compte. Rien n’est créé en son nom avant son accord, et elle n’apparaît pas dans l’équipe."
 msgstr "Ces adresses ont déjà un compte hors de votre organisation. Chaque personne accepte ou refuse l’invitation depuis son compte. Rien n’est créé en son nom avant son accord, et elle n’apparaît pas dans l’équipe."
 
+#: src/composants/ImportFiches.tsx
+msgid "Ces documents Word sont convertis en Markdown."
+msgstr "Ces documents Word sont convertis en Markdown."
+
+#: src/composants/FichesConnexes.tsx
+msgid "Ces fiches appartiennent à d’autres périmètres et concernent aussi celui-ci."
+msgstr "Ces fiches appartiennent à d’autres périmètres et concernent aussi celui-ci."
+
+#: src/composants/ImportFiches.tsx
+msgid "Ces fiches restent telles quelles dans Relaytour."
+msgstr "Ces fiches restent telles quelles dans Relaytour."
+
+#: src/composants/ImportFiches.tsx
+msgid "Ces fichiers contiennent une coordonnée personnelle : ils ne s’importent pas."
+msgstr "Ces fichiers contiennent une coordonnée personnelle : ils ne s’importent pas."
+
+#: src/composants/ImportFiches.tsx
+msgid "Ces fichiers ne s’importent pas."
+msgstr "Ces fichiers ne s’importent pas."
+
 #: src/composants/PreferencePush.tsx
 msgid "Ces réglages valent pour tous vos appareils, dans cette organisation. Vos mails ne changent pas."
 msgstr "Ces réglages valent pour tous vos appareils, dans cette organisation. Vos mails ne changent pas."
@@ -626,9 +849,29 @@ msgstr "Cette activité n’a encore aucun périmètre."
 msgid "Cette fenêtre liste les changements de chaque version de Relaytour. Vous y lisez les notes qui concernent votre rôle."
 msgstr "Cette fenêtre liste les changements de chaque version de Relaytour. Vous y lisez les notes qui concernent votre rôle."
 
+#: src/pages/FicheEditeur.tsx
+msgid "Cette fiche apparaîtra dans {concernes} périmètres sur {total}."
+msgstr "Cette fiche apparaîtra dans {concernes} périmètres sur {total}."
+
+#: src/pages/Fiche.tsx
+msgid "Cette fiche contient une adresse ou un numéro personnel."
+msgstr "Cette fiche contient une adresse ou un numéro personnel."
+
+#: src/pages/Fiche.tsx
+msgid "Cette fiche est introuvable."
+msgstr "Cette fiche est introuvable."
+
 #: src/composants/TacheCarte.tsx
 msgid "Cette information n’est visible que par vous et par les admins."
 msgstr "Cette information n’est visible que par vous et par les admins."
+
+#: src/lib/guide-markdown.ts
+msgid "Cette ligne commence sous la précédente."
+msgstr "Cette ligne commence sous la précédente."
+
+#: src/lib/guide-markdown.ts
+msgid "Cette ligne continue la phrase précédente."
+msgstr "Cette ligne continue la phrase précédente."
 
 #: src/composants/Coquille.tsx
 msgid "Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier."
@@ -662,6 +905,10 @@ msgstr "Cette tâche est maintenant « {statutCourant} ». « Écraser » appliq
 msgid "Changement important"
 msgstr "Changement important"
 
+#: src/composants/ImportFiches.tsx
+msgid "Changer"
+msgstr "Changer"
+
 #: src/composants/ChoixActivite.tsx
 msgid "Changer d’activité"
 msgstr "Changer d’activité"
@@ -669,6 +916,10 @@ msgstr "Changer d’activité"
 #: src/pages/Connexion.tsx
 msgid "Changer d’adresse ou demander un nouveau code"
 msgstr "Changer d’adresse ou demander un nouveau code"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique."
+msgstr "Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique."
 
 #: src/pages/Preferences.tsx
 msgid "Chaque jour"
@@ -686,14 +937,26 @@ msgstr "Chaque périmètre choisi reçoit sa propre tâche, avec son statut et s
 msgid "Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses personnes assignées. Vous suivez leur avancement depuis cette tâche. Les référentes et référents de chaque périmètre acceptent ou refusent la tâche. Elle entre sans attendre dans un périmètre où vous êtes vous-même affecté·e."
 msgstr "Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses personnes assignées. Vous suivez leur avancement depuis cette tâche. Les référentes et référents de chaque périmètre acceptent ou refusent la tâche. Elle entre sans attendre dans un périmètre où vous êtes vous-même affecté·e."
 
+#: src/composants/ImportFiches.tsx
+msgid "Chaque périmètre reçoit les fiches Markdown, texte et Word de son dossier. Les sous-dossiers ne sont pas lus."
+msgstr "Chaque périmètre reçoit les fiches Markdown, texte et Word de son dossier. Les sous-dossiers ne sont pas lus."
+
 #: src/composants/FournisseurActivite.tsx
 #: src/composants/GardeSession.tsx
 msgid "Chargement"
 msgstr "Chargement"
 
+#: src/lib/guide-markdown.ts
+msgid "Chasubles"
+msgstr "Chasubles"
+
 #: src/composants/ChoixPerimetresCibles.tsx
 msgid "Choisir des périmètres"
 msgstr "Choisir des périmètres"
+
+#: src/composants/ImportFiches.tsx
+msgid "Choisir le dossier source"
+msgstr "Choisir le dossier source"
 
 #: src/composants/ChampImage.tsx
 msgid "Choisir un fichier {format}"
@@ -719,9 +982,21 @@ msgstr "Choisissez le point-virgule si votre messagerie par défaut est Outlook 
 msgid "Choisissez les mails et les notifications que vous recevez de {nomOrganisation}. Vos autres organisations gardent leurs propres réglages."
 msgstr "Choisissez les mails et les notifications que vous recevez de {nomOrganisation}. Vos autres organisations gardent leurs propres réglages."
 
+#: src/composants/RessourcesFiche.tsx
+msgid "Choisissez un dossier lié. Les lecteurs de la fiche lisent ses documents."
+msgstr "Choisissez un dossier lié. Les lecteurs de la fiche lisent ses documents."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Choisissez un fichier, ou liez un dossier entier."
+msgstr "Choisissez un fichier, ou liez un dossier entier."
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "Choisissez un groupe."
 msgstr "Choisissez un groupe."
+
+#: src/pages/admin/Redaction.tsx
+msgid "Choisissez un périmètre."
+msgstr "Choisissez un périmètre."
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Choisissez une autre messagerie"
@@ -731,9 +1006,17 @@ msgstr "Choisissez une autre messagerie"
 msgid "Choisissez une bibliothèque"
 msgstr "Choisissez une bibliothèque"
 
+#: src/pages/admin/Redaction.tsx
+msgid "Choisissez une personne."
+msgstr "Choisissez une personne."
+
 #: src/composants/Coquille.tsx
 msgid "Classement"
 msgstr "Classement"
+
+#: src/lib/guide-markdown.ts
+msgid "Clés du local"
+msgstr "Clés du local"
 
 #: src/composants/InstallerApplication.tsx
 msgid "Cliquez sur « Installer »."
@@ -759,6 +1042,20 @@ msgstr "Code à 6 chiffres"
 msgid "Code source de Relaytour"
 msgstr "Code source de Relaytour"
 
+#. En-tête d’un tableau d’exemple inséré dans une fiche.
+#: src/lib/mise-en-forme.ts
+msgid "Colonne 1"
+msgstr "Colonne 1"
+
+#. En-tête d’un tableau d’exemple inséré dans une fiche.
+#: src/lib/mise-en-forme.ts
+msgid "Colonne 2"
+msgstr "Colonne 2"
+
+#: src/lib/guide-markdown.ts
+msgid "Commander les médailles"
+msgstr "Commander les médailles"
+
 #: src/composants/Contribution.tsx
 msgid "Comment les points se calculent"
 msgstr "Comment les points se calculent"
@@ -772,6 +1069,10 @@ msgstr "Commenter"
 msgid "Commune"
 msgstr "Commune"
 
+#: src/pages/Fiches.tsx
+msgid "Communes"
+msgstr "Communes"
+
 #: src/composants/MenuCompte.tsx
 msgid "Compte de {nom}"
 msgstr "Compte de {nom}"
@@ -779,6 +1080,12 @@ msgstr "Compte de {nom}"
 #: src/composants/FilTache.tsx
 msgid "Compte supprimé"
 msgstr "Compte supprimé"
+
+#: src/composants/ChampConcerneAussi.tsx
+#: src/composants/ConnexionsFiche.tsx
+#: src/pages/FicheEditeur.tsx
+msgid "Concerne aussi"
+msgstr "Concerne aussi"
 
 #: src/composants/Jauge.tsx
 msgid "Confirmée"
@@ -788,6 +1095,10 @@ msgstr "Confirmée"
 msgid "Confirmer"
 msgstr "Confirmer"
 
+#: src/pages/FicheEditeur.tsx
+msgid "Confirmer la liste"
+msgstr "Confirmer la liste"
+
 #: src/pages/TousLesPerimetres.tsx
 msgid "Consulter les tâches"
 msgstr "Consulter les tâches"
@@ -796,9 +1107,29 @@ msgstr "Consulter les tâches"
 msgid "Consulter les tâches de {nomPerimetre}"
 msgstr "Consulter les tâches de {nomPerimetre}"
 
+#: src/lib/guide-markdown.ts
+msgid "Consultez le [règlement du tournoi](https://exemple.org/reglement)."
+msgstr "Consultez le [règlement du tournoi](https://exemple.org/reglement)."
+
 #: src/composants/Personne.tsx
 msgid "Contact principal"
 msgstr "Contact principal"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Contenu"
+msgstr "Contenu"
+
+#: src/pages/Fiches.tsx
+msgid "Contenu affiché"
+msgstr "Contenu affiché"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Contenu de la fiche"
+msgstr "Contenu de la fiche"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Copier mon texte"
+msgstr "Copier mon texte"
 
 #: src/lib/notes-de-version.ts
 msgid "Correctif"
@@ -807,6 +1138,10 @@ msgstr "Correctif"
 #: src/composants/ReglagePerimetre.tsx
 msgid "Couleur"
 msgstr "Couleur"
+
+#: src/lib/guide-markdown.ts
+msgid "Créneau"
+msgstr "Créneau"
 
 #: src/composants/ReglagePerimetre.tsx
 msgid "Dans chaque groupe, les périmètres se rangent par ordre croissant, puis par nom."
@@ -819,6 +1154,10 @@ msgstr "Dans l’espace organisateur"
 #: src/pages/Preferences.tsx
 msgid "Dans le résumé par mail"
 msgstr "Dans le résumé par mail"
+
+#: src/lib/guide-markdown.ts
+msgid "Début de l’après-midi."
+msgstr "Début de l’après-midi."
 
 #: src/composants/DeclinerTache.tsx
 #: src/composants/TacheCarte.tsx
@@ -850,6 +1189,23 @@ msgstr "Déplier le menu"
 msgid "Déplier le volet latéral"
 msgstr "Déplier le volet latéral"
 
+#. Origine d’une version de fiche : le dépôt Git
+#: src/lib/fiches.ts
+msgid "Dépôt"
+msgstr "Dépôt"
+
+#: src/pages/Fiches.tsx
+msgid "Depuis le dépôt · {date}"
+msgstr "Depuis le dépôt · {date}"
+
+#: src/pages/Fiches.tsx
+msgid "Depuis le fournisseur cloud · {date}"
+msgstr "Depuis le fournisseur cloud · {date}"
+
+#: src/lib/guide-markdown.ts
+msgid "Des accents graves entourent un texte qui s’affiche tel quel, en police à chasse fixe : un nom de fichier, une référence."
+msgstr "Des accents graves entourent un texte qui s’affiche tel quel, en police à chasse fixe : un nom de fichier, une référence."
+
 #: src/composants/Avancement.tsx
 msgid "des tâches faites"
 msgstr "des tâches faites"
@@ -867,9 +1223,45 @@ msgstr "Description"
 msgid "Description dans ces périmètres (facultatif)"
 msgstr "Description dans ces périmètres (facultatif)"
 
+#: src/lib/guide-markdown.ts
+msgid "Deux astérisques de chaque côté mettent un passage en gras. Un tiret bas de chaque côté le met en italique. Deux tildes le barrent."
+msgstr "Deux astérisques de chaque côté mettent un passage en gras. Un tiret bas de chaque côté le met en italique. Deux tildes le barrent."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Document ouvert"
+msgstr "Document ouvert"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Document réservé"
+msgstr "Document réservé"
+
+#: src/pages/Fiches.tsx
+msgid "Documents"
+msgstr "Documents"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Documents liés"
+msgstr "Documents liés"
+
 #: src/composants/Contribution.tsx
 msgid "Dont à temps"
 msgstr "Dont à temps"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Dossier lié"
+msgstr "Dossier lié"
+
+#: src/pages/admin/Redaction.tsx
+msgid "Droit accordé."
+msgstr "Droit accordé."
+
+#: src/pages/admin/Redaction.tsx
+msgid "Droit retiré."
+msgstr "Droit retiré."
+
+#: src/pages/admin/Redaction.tsx
+msgid "Droits accordés"
+msgstr "Droits accordés"
 
 #: src/composants/TacheFormulaire.tsx
 msgid "Échéance"
@@ -895,6 +1287,10 @@ msgstr "Échéances"
 msgid "Écraser"
 msgstr "Écraser"
 
+#: src/pages/FicheEditeur.tsx
+msgid "Écraser avec mon texte"
+msgstr "Écraser avec mon texte"
+
 #: src/composants/FilTache.tsx
 msgid "Écrire un commentaire : un compte rendu, une information, une question."
 msgstr "Écrire un commentaire : un compte rendu, une information, une question."
@@ -902,6 +1298,18 @@ msgstr "Écrire un commentaire : un compte rendu, une information, une question.
 #: src/pages/AideMarkdown.tsx
 msgid "Écrire une fiche en Markdown"
 msgstr "Écrire une fiche en Markdown"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels."
+msgstr "Écrivez les contacts sous forme de rôles, sans adresse ni numéro personnels."
+
+#: src/lib/editeur-visuel.ts
+msgid "Élément à cocher"
+msgstr "Élément à cocher"
+
+#: src/pages/Fiche.tsx
+msgid "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
+msgstr "Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
 
 #: src/composants/DeclinaisonsTache.tsx
 msgid "En attente d’accord"
@@ -927,10 +1335,15 @@ msgstr "En retard"
 msgid "En retard : {dateEcheance}"
 msgstr "En retard : {dateEcheance}"
 
+#: src/lib/guide-markdown.ts
+msgid "Encadrés"
+msgstr "Encadrés"
+
 #: src/composants/FilTache.tsx
 #: src/composants/PreferenceMessagerie.tsx
 #: src/composants/ReglagePerimetre.tsx
 #: src/composants/TacheFormulaire.tsx
+#: src/pages/FicheEditeur.tsx
 #: src/pages/Preferences.tsx
 msgid "Enregistrer"
 msgstr "Enregistrer"
@@ -968,6 +1381,18 @@ msgstr "Essayer"
 msgid "Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils."
 msgstr "Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils."
 
+#: src/composants/RessourcesFiche.tsx
+msgid "Étendre"
+msgstr "Étendre"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Étendre « {nomDossierLie} » ?"
+msgstr "Étendre « {nomDossierLie} » ?"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Étendre le dossier lié"
+msgstr "Étendre le dossier lié"
+
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/MesInvitations.tsx
 msgid "Expire le {jourExpiration}"
@@ -993,6 +1418,11 @@ msgstr "Faites"
 msgid "Faites glisser pour ajuster la largeur. Un double-clic rétablit la largeur automatique."
 msgstr "Faites glisser pour ajuster la largeur. Un double-clic rétablit la largeur automatique."
 
+#: src/composants/ImportFiches.tsx
+#: src/composants/Liseuse.tsx
+msgid "Fermer"
+msgstr "Fermer"
+
 #: src/composants/Coquille.tsx
 msgid "Fermer la recherche"
 msgstr "Fermer la recherche"
@@ -1001,9 +1431,21 @@ msgstr "Fermer la recherche"
 msgid "Fermez cette fenêtre et réessayez dans un instant."
 msgstr "Fermez cette fenêtre et réessayez dans un instant."
 
+#: src/pages/Fiche.tsx
+msgid "Fiche commune"
+msgstr "Fiche commune"
+
 #: src/composants/Contribution.tsx
 msgid "Fiche créée : {pointsFicheCreee} points."
 msgstr "Fiche créée : {pointsFicheCreee} points."
+
+#: src/pages/FicheEditeur.tsx
+msgid "Fiche créée."
+msgstr "Fiche créée."
+
+#: src/pages/FicheEditeur.tsx
+msgid "Fiche enregistrée."
+msgstr "Fiche enregistrée."
 
 #: src/composants/TacheFormulaire.tsx
 msgid "Fiche méthode"
@@ -1015,20 +1457,63 @@ msgstr "Fiche modifiée : {pointsFicheModifiee} points, une fois par jour au plu
 
 #: src/composants/Contribution.tsx
 #: src/composants/Recherche.tsx
+#: src/pages/admin/Redaction.tsx
+#: src/pages/Fiches.tsx
 msgid "Fiches"
 msgstr "Fiches"
+
+#: src/composants/ImportFiches.tsx
+msgid "Fiches à créer"
+msgstr "Fiches à créer"
+
+#: src/composants/ImportFiches.tsx
+msgid "Fiches à mettre à jour"
+msgstr "Fiches à mettre à jour"
+
+#: src/composants/ImportFiches.tsx
+#: src/pages/Fiche.tsx
+#: src/pages/Fiches.tsx
+msgid "Fiches communes"
+msgstr "Fiches communes"
+
+#: src/pages/admin/Redaction.tsx
+msgid "Fiches concernées"
+msgstr "Fiches concernées"
+
+#: src/composants/FichesConnexes.tsx
+msgid "Fiches connexes"
+msgstr "Fiches connexes"
+
+#: src/composants/ImportFiches.tsx
+msgid "Fiches créées"
+msgstr "Fiches créées"
+
+#: src/composants/ImportFiches.tsx
+msgid "Fiches inchangées"
+msgstr "Fiches inchangées"
 
 #: src/pages/Perimetre.tsx
 msgid "Fiches méthode"
 msgstr "Fiches méthode"
 
 #: src/pages/AideMarkdown.tsx
+#: src/pages/Fiche.tsx
 msgid "Fil d’Ariane"
 msgstr "Fil d’Ariane"
 
+#: src/lib/guide-markdown.ts
+msgid "Fin de la partie matinale."
+msgstr "Fin de la partie matinale."
+
 #: src/composants/Coquille.tsx
+#: src/composants/DocumentsActivite.tsx
+#: src/lib/fiches.ts
 msgid "Fournisseur cloud"
 msgstr "Fournisseur cloud"
+
+#: src/composants/DocumentsActivite.tsx
+msgid "Fournisseur déconnecté"
+msgstr "Fournisseur déconnecté"
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Gardez la messagerie par défaut de l’appareil, ou choisissez une messagerie en ligne."
@@ -1054,6 +1539,14 @@ msgstr "Gérer l’équipe du périmètre {nomPerimetre}"
 msgid "Gérer l’organisation"
 msgstr "Gérer l’organisation"
 
+#: src/composants/EditeurMarkdown.tsx
+msgid "Gras"
+msgstr "Gras"
+
+#: src/lib/guide-markdown.ts
+msgid "Gras, italique et texte barré"
+msgstr "Gras, italique et texte barré"
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "Groupe"
 msgstr "Groupe"
@@ -1062,18 +1555,37 @@ msgstr "Groupe"
 msgid "Groupe de périmètres"
 msgstr "Groupe de périmètres"
 
+#: src/composants/EditeurMarkdown.tsx
+msgid "Guide de la syntaxe Markdown"
+msgstr "Guide de la syntaxe Markdown"
+
 #: src/composants/FilTache.tsx
 #: src/composants/TacheCarte.tsx
+#: src/pages/Fiche.tsx
 msgid "Historique"
 msgstr "Historique"
+
+#: src/pages/Fiche.tsx
+msgid "Historique de la fiche"
+msgstr "Historique de la fiche"
 
 #: src/composants/HorsConnexion.tsx
 msgid "Hors connexion"
 msgstr "Hors connexion"
 
 #: src/composants/ReglagePerimetre.tsx
+#: src/pages/Fiche.tsx
+#: src/pages/FicheEditeur.tsx
 msgid "Identifiant"
 msgstr "Identifiant"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Il apparaît dans l’adresse de la fiche et ne change plus."
+msgstr "Il apparaît dans l’adresse de la fiche et ne change plus."
+
+#: src/pages/FicheEditeur.tsx
+msgid "Il est gardé dans ce navigateur. Reprenez-le pour continuer votre rédaction, ou supprimez-le pour repartir de la fiche. Si vous modifiez la fiche sans le reprendre, votre nouvelle saisie le remplace."
+msgstr "Il est gardé dans ce navigateur. Reprenez-le pour continuer votre rédaction, ou supprimez-le pour repartir de la fiche. Si vous modifiez la fiche sans le reprendre, votre nouvelle saisie le remplace."
 
 #: src/composants/Jauge.tsx
 msgid "Il manque {manque, plural, one {# renfort} other {# renforts}}."
@@ -1087,6 +1599,30 @@ msgstr "il y a {heures} h"
 msgid "il y a {minutes} min"
 msgstr "il y a {minutes} min"
 
+#: src/pages/Fiche.tsx
+msgid "Import"
+msgstr "Import"
+
+#: src/composants/ImportFiches.tsx
+msgid "Import terminé"
+msgstr "Import terminé"
+
+#: src/composants/ImportFiches.tsx
+msgid "Importer"
+msgstr "Importer"
+
+#: src/composants/ImportFiches.tsx
+msgid "Importer des fiches"
+msgstr "Importer des fiches"
+
+#: src/composants/ImportFiches.tsx
+msgid "Importer des fiches dans « {nomActivite} »"
+msgstr "Importer des fiches dans « {nomActivite} »"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Indisponible"
+msgstr "Indisponible"
+
 #: src/composants/InstallerApplication.tsx
 msgid "Installer"
 msgstr "Installer"
@@ -1096,9 +1632,21 @@ msgstr "Installer"
 msgid "Installer l’application"
 msgstr "Installer l’application"
 
+#: src/lib/guide-markdown.ts
+msgid "Installer les filets"
+msgstr "Installer les filets"
+
 #: src/composants/PreferencePush.tsx
 msgid "Installez d’abord l’application."
 msgstr "Installez d’abord l’application."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Introuvable"
+msgstr "Introuvable"
+
+#: src/composants/EditeurMarkdown.tsx
+msgid "Italique"
+msgstr "Italique"
 
 #: src/pages/Preferences.tsx
 msgid "Jamais"
@@ -1120,6 +1668,10 @@ msgstr "Je suis intéressé·e par {nomPerimetre}"
 #: src/lib/regroupement.ts
 msgid "jusqu’au {dateDeFin} · {borneRelative}"
 msgstr "jusqu’au {dateDeFin} · {borneRelative}"
+
+#: src/composants/EditeurVisuel.tsx
+msgid "L’adresse s’insère à l’emplacement du curseur."
+msgstr "L’adresse s’insère à l’emplacement du curseur."
 
 #: src/composants/InstallerApplication.tsx
 msgid "L’application est installée."
@@ -1165,6 +1717,10 @@ msgstr "L’espace organisateur, vos mails et vos notifications s’affichent da
 msgid "L’essai a réussi"
 msgstr "L’essai a réussi"
 
+#: src/composants/ImportFiches.tsx
+msgid "L’export suivant écrit ces fiches en Markdown dans le dossier d’export."
+msgstr "L’export suivant écrit ces fiches en Markdown dans le dossier d’export."
+
 #: src/composants/MesInvitations.tsx
 msgid "L’invitation est refusée."
 msgstr "L’invitation est refusée."
@@ -1193,6 +1749,15 @@ msgstr "L’organigramme présente l’équipe de chaque activité. Votre adress
 msgid "L’organisation n’en est pas informée."
 msgstr "L’organisation n’en est pas informée."
 
+#. Exemple de syntaxe : les mentions @logistique et @groupe:sport restent telles quelles.
+#: src/lib/guide-markdown.ts
+msgid "La @logistique prépare les lieux, et chaque @groupe:sport transmet ses horaires."
+msgstr "La @logistique prépare les lieux, et chaque @groupe:sport transmet ses horaires."
+
+#: src/lib/guide-markdown.ts
+msgid "La case se coche en modifiant la fiche, et non d’un clic. Une case de fiche ne crée pas de tâche."
+msgstr "La case se coche en modifiant la fiche, et non d’un clic. Une case de fiche ne crée pas de tâche."
+
 #: src/pages/Preferences.tsx
 msgid "La cloche de la barre haute affiche les nouvelles de vos tâches, quel que soit votre choix pour les mails. Elle se met à jour sans recharger la page."
 msgstr "La cloche de la barre haute affiche les nouvelles de vos tâches, quel que soit votre choix pour les mails. Elle se met à jour sans recharger la page."
@@ -1205,6 +1770,42 @@ msgstr "La connexion a échoué."
 msgid "La connexion a échoué. Réessayez."
 msgstr "La connexion a échoué. Réessayez."
 
+#: src/composants/ImportFiches.tsx
+msgid "La conversion d’un document Word perd une partie de sa mise en forme. Les fiches s’écrivent ensuite en Markdown, et l’export vers le fournisseur cloud aussi."
+msgstr "La conversion d’un document Word perd une partie de sa mise en forme. Les fiches s’écrivent ensuite en Markdown, et l’export vers le fournisseur cloud aussi."
+
+#: src/pages/FicheEditeur.tsx
+msgid "La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même."
+msgstr "La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même."
+
+#: src/composants/GuideMarkdown.tsx
+msgid "La fiche affiche"
+msgstr "La fiche affiche"
+
+#: src/pages/FicheEditeur.tsx
+msgid "La fiche est enregistrée, mais pas sa liste « Concerne aussi » : {detailErreur}"
+msgstr "La fiche est enregistrée, mais pas sa liste « Concerne aussi » : {detailErreur}"
+
+#: src/composants/FichesConnexes.tsx
+msgid "La fiche quitte les fiches connexes de ce périmètre."
+msgstr "La fiche quitte les fiches connexes de ce périmètre."
+
+#: src/composants/FichesConnexes.tsx
+msgid "La fiche revient dans les fiches connexes de ce périmètre."
+msgstr "La fiche revient dans les fiches connexes de ce périmètre."
+
+#: src/pages/FicheEditeur.tsx
+msgid "La fiche se lit, sans s’y modifier, dans ces périmètres. Un groupe concerne aussi les périmètres qui le rejoindront. Une mention @périmètre ou @groupe:clé du texte se propose à l’enregistrement."
+msgstr "La fiche se lit, sans s’y modifier, dans ces périmètres. Un groupe concerne aussi les périmètres qui le rejoindront. Une mention @périmètre ou @groupe:clé du texte se propose à l’enregistrement."
+
+#: src/composants/Liseuse.tsx
+msgid "La liseuse affiche les {PAGES_MAX} premières pages sur {pagesTotales}. Téléchargez le document pour lire la suite."
+msgstr "La liseuse affiche les {PAGES_MAX} premières pages sur {pagesTotales}. Téléchargez le document pour lire la suite."
+
+#: src/composants/Liseuse.tsx
+msgid "La liseuse n’affiche pas ce format. Téléchargez le document, ou ouvrez-le chez le fournisseur cloud."
+msgstr "La liseuse n’affiche pas ce format. Téléchargez le document, ou ouvrez-le chez le fournisseur cloud."
+
 #: src/composants/Jauge.tsx
 msgid "La personne n’a pas confirmé depuis sept jours, ou la séquence arrive demain."
 msgstr "La personne n’a pas confirmé depuis sept jours, ou la séquence arrive demain."
@@ -1212,6 +1813,14 @@ msgstr "La personne n’a pas confirmé depuis sept jours, ou la séquence arriv
 #: src/composants/InvitationsEnAttente.tsx
 msgid "La personne ne pourra plus l’accepter."
 msgstr "La personne ne pourra plus l’accepter."
+
+#: src/composants/ImportFiches.tsx
+msgid "la racine"
+msgstr "la racine"
+
+#: src/composants/ImportFiches.tsx
+msgid "La racine de la bibliothèque sera le dossier des fiches."
+msgstr "La racine de la bibliothèque sera le dossier des fiches."
 
 #: src/composants/FilTache.tsx
 msgid "La suppression est définitive."
@@ -1289,6 +1898,30 @@ msgstr "Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un
 msgid "Le commentaire est supprimé."
 msgstr "Le commentaire est supprimé."
 
+#: src/composants/RessourcesFiche.tsx
+msgid "Le document est réservé aux lecteurs de son dossier lié."
+msgstr "Le document est réservé aux lecteurs de son dossier lié."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Le document reste chez le fournisseur cloud. La fiche ne le cite plus."
+msgstr "Le document reste chez le fournisseur cloud. La fiche ne le cite plus."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Le document s’ouvre pour tous les lecteurs de la fiche."
+msgstr "Le document s’ouvre pour tous les lecteurs de la fiche."
+
+#: src/composants/ImportFiches.tsx
+msgid "Le dossier « {dernierDossier} » sera le dossier des fiches."
+msgstr "Le dossier « {dernierDossier} » sera le dossier des fiches."
+
+#: src/lib/medias.ts
+msgid "Le fichier ne peut pas être lu."
+msgstr "Le fichier ne peut pas être lu."
+
+#: src/lib/guide-markdown.ts
+msgid "Le fichier s’appelle `planning-2027.xlsx`."
+msgstr "Le fichier s’appelle `planning-2027.xlsx`."
+
 #: src/composants/FilTache.tsx
 msgid "Le fil affiche les {nombreAffiche} derniers commentaires sur {nombreTotal}."
 msgstr "Le fil affiche les {nombreAffiche} derniers commentaires sur {nombreTotal}."
@@ -1297,9 +1930,25 @@ msgstr "Le fil affiche les {nombreAffiche} derniers commentaires sur {nombreTota
 msgid "Le fil n’a pas pu être chargé. Rechargez la page dans un instant."
 msgstr "Le fil n’a pas pu être chargé. Rechargez la page dans un instant."
 
+#: src/composants/Liseuse.tsx
+msgid "le fournisseur cloud"
+msgstr "le fournisseur cloud"
+
+#: src/lib/guide-markdown.ts
+msgid "Le gymnase ouvre à 8 h."
+msgstr "Le gymnase ouvre à 8 h."
+
+#: src/composants/Liseuse.tsx
+msgid "Le lien « Ouvrir dans {nomFournisseur} » fonctionne si votre compte {nomFournisseur} a accès à ce document."
+msgstr "Le lien « Ouvrir dans {nomFournisseur} » fonctionne si votre compte {nomFournisseur} a accès à ce document."
+
 #: src/composants/InstallerApplication.tsx
 msgid "Le lien du mail ouvre votre navigateur, pas l’application installée."
 msgstr "Le lien du mail ouvre votre navigateur, pas l’application installée."
+
+#: src/lib/guide-markdown.ts
+msgid "Le local ferme **à 19 h précises**."
+msgstr "Le local ferme **à 19 h précises**."
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Le mode d’emploi décrit chaque choix."
@@ -1325,6 +1974,10 @@ msgstr "Le périmètre qui la propose apprend votre refus. Un admin de l’activ
 msgid "Le pôle obtient les gymnases, la piscine et les autorisations."
 msgstr "Le pôle obtient les gymnases, la piscine et les autorisations."
 
+#: src/lib/guide-markdown.ts
+msgid "Le rendez-vous a lieu ~~au stade~~ au gymnase."
+msgstr "Le rendez-vous a lieu ~~au stade~~ au gymnase."
+
 #: src/pages/Preferences.tsx
 msgid "Le résumé regroupe les nouvelles non lues de vos périmètres et vos échéances des 14 prochains jours. Il part à 7 h, à l’heure de votre organisation."
 msgstr "Le résumé regroupe les nouvelles non lues de vos périmètres et vos échéances des 14 prochains jours. Il part à 7 h, à l’heure de votre organisation."
@@ -1337,26 +1990,94 @@ msgstr "Le résumé reprend aussi vos notifications d’admin non lues, dans une
 msgid "Le rétroplanning n’a pas pu être chargé."
 msgstr "Le rétroplanning n’a pas pu être chargé."
 
+#: src/pages/admin/Redaction.tsx
+msgid "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie depuis l’écran Admins."
+msgstr "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie depuis l’écran Admins."
+
+#: src/pages/admin/Redaction.tsx
+msgid "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie depuis l’écran Personnes."
+msgstr "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie depuis l’écran Personnes."
+
 #: src/lib/conflit.ts
 msgid "Le statut de cette tâche a changé"
 msgstr "Le statut de cette tâche a changé"
+
+#: src/lib/guide-markdown.ts
+msgid "Le tarif réduit{etoile} s’applique aux moins de 18 ans."
+msgstr "Le tarif réduit{etoile} s’applique aux moins de 18 ans."
+
+#: src/lib/medias.ts
+msgid "Le téléversement a échoué."
+msgstr "Le téléversement a échoué."
+
+#: src/lib/guide-markdown.ts
+msgid "Le texte de la section suit le titre."
+msgstr "Le texte de la section suit le titre."
+
+#: src/pages/FicheEditeur.tsx
+msgid "Le texte mentionne {nomsMentionnes}. Une fois ces périmètres ajoutés, leurs référentes et référents liront la fiche sans pouvoir la modifier."
+msgstr "Le texte mentionne {nomsMentionnes}. Une fois ces périmètres ajoutés, leurs référentes et référents liront la fiche sans pouvoir la modifier."
+
+#: src/composants/EditeurVisuel.tsx
+msgid "Le texte sélectionné devient le texte du lien."
+msgstr "Le texte sélectionné devient le texte du lien."
+
+#: src/lib/guide-markdown.ts
+msgid "Le titre de la fiche s’affiche déjà en haut de la page : commencez donc vos sections par deux dièses."
+msgstr "Le titre de la fiche s’affiche déjà en haut de la page : commencez donc vos sections par deux dièses."
 
 #: src/composants/DeclinerTache.tsx
 #: src/composants/TacheFormulaire.tsx
 msgid "Le titre dépasse {TITRE_MAX} caractères."
 msgstr "Le titre dépasse {TITRE_MAX} caractères."
 
+#: src/composants/FichesConnexes.tsx
+msgid "Lecture seule"
+msgstr "Lecture seule"
+
 #: src/pages/Preferences.tsx
 msgid "Les admins gèrent votre adresse et vos affectations."
 msgstr "Les admins gèrent votre adresse et vos affectations."
+
+#: src/pages/admin/Redaction.tsx
+msgid "Les admins rédigent toutes les fiches. Les autres personnes ont besoin d’un droit de rédaction."
+msgstr "Les admins rédigent toutes les fiches. Les autres personnes ont besoin d’un droit de rédaction."
+
+#: src/lib/guide-markdown.ts
+msgid "Les clés se rendent à l’accueil avant 19 h."
+msgstr "Les clés se rendent à l’accueil avant 19 h."
+
+#: src/lib/guide-markdown.ts
+msgid "Les colonnes n’ont pas besoin d’être alignées dans le texte : l’affichage les aligne."
+msgstr "Les colonnes n’ont pas besoin d’être alignées dans le texte : l’affichage les aligne."
 
 #: src/composants/DeclinaisonsTache.tsx
 msgid "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
 
+#: src/composants/ImportFiches.tsx
+msgid "Les fiches de « {dossierSource} » seront importées."
+msgstr "Les fiches de « {dossierSource} » seront importées."
+
+#: src/pages/Fiches.tsx
+msgid "Les fiches méthode expliquent comment mener chaque étape de l’organisation."
+msgstr "Les fiches méthode expliquent comment mener chaque étape de l’organisation."
+
 #: src/pages/AideMarkdown.tsx
 msgid "Les fiches s’écrivent en Markdown : quelques signes placés dans le texte donnent les titres, les listes et les liens. Ce guide présente tous les signes que les fiches affichent."
 msgstr "Les fiches s’écrivent en Markdown : quelques signes placés dans le texte donnent les titres, les listes et les liens. Ce guide présente tous les signes que les fiches affichent."
+
+#: src/composants/ImportFiches.tsx
+msgid "Les fiches sont importées."
+msgstr "Les fiches sont importées."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Les lecteurs de {ajouts} liront tout le dossier, et pas seulement ce document."
+msgstr "Les lecteurs de {ajouts} liront tout le dossier, et pas seulement ce document."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Les lecteurs de {perimetresSansAcces} n’ouvriront pas ce document : le dossier lié « {nomDossierLie} » ne sert pas ces périmètres."
+msgstr "Les lecteurs de {perimetresSansAcces} n’ouvriront pas ce document : le dossier lié « {nomDossierLie} » ne sert pas ces périmètres."
 
 #: src/pages/Preferences.tsx
 msgid "Les mails de connexion et d’invitation partent toujours : ils sont nécessaires pour accéder à l’espace."
@@ -1434,13 +2155,34 @@ msgstr "Les tâches sont rangées par phase, puis par échéance. Une tâche se 
 msgid "Les tâches sont triées par échéance. Une tâche ne se supprime pas : elle s’abandonne."
 msgstr "Les tâches sont triées par échéance. Une tâche ne se supprime pas : elle s’abandonne."
 
+#: src/pages/FicheEditeur.tsx
+msgid "Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux."
+msgstr "Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux."
+
 #: src/composants/Tableau.tsx
 msgid "Libérer les premières colonnes"
 msgstr "Libérer les premières colonnes"
 
+#: src/composants/EditeurMarkdown.tsx
+#: src/composants/EditeurVisuel.tsx
+msgid "Lien"
+msgstr "Lien"
+
+#: src/lib/guide-markdown.ts
+msgid "Liens"
+msgstr "Liens"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Lier un document"
+msgstr "Lier un document"
+
 #: src/composants/TacheFormulaire.tsx
 msgid "Lier une fiche (facultatif)"
 msgstr "Lier une fiche (facultatif)"
+
+#: src/lib/guide-markdown.ts
+msgid "Ligne de séparation"
+msgstr "Ligne de séparation"
 
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/TacheCarte.tsx
@@ -1455,6 +2197,30 @@ msgstr "Lire le guide d’installation"
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Lire le mode d’emploi « Choisir votre messagerie »"
 msgstr "Lire le mode d’emploi « Choisir votre messagerie »"
+
+#: src/composants/EditeurMarkdown.tsx
+msgid "Liste à puces"
+msgstr "Liste à puces"
+
+#: src/pages/Fiches.tsx
+msgid "Liste condensée"
+msgstr "Liste condensée"
+
+#: src/composants/EditeurMarkdown.tsx
+msgid "Liste de cases à cocher"
+msgstr "Liste de cases à cocher"
+
+#: src/composants/EditeurMarkdown.tsx
+msgid "Liste numérotée"
+msgstr "Liste numérotée"
+
+#: src/lib/guide-markdown.ts
+msgid "Listes"
+msgstr "Listes"
+
+#: src/lib/guide-markdown.ts
+msgid "Logistique"
+msgstr "Logistique"
 
 #: src/pages/Preferences.tsx
 msgid "Mails immédiats"
@@ -1472,9 +2238,33 @@ msgstr "Marquer en cours"
 msgid "Marquer la tâche comme faite"
 msgstr "Marquer la tâche comme faite"
 
+#: src/composants/ConnexionsFiche.tsx
+msgid "Masquée par"
+msgstr "Masquée par"
+
+#: src/composants/FichesConnexes.tsx
+msgid "Masquer cette fiche pour ce périmètre"
+msgstr "Masquer cette fiche pour ce périmètre"
+
+#: src/composants/FichesConnexes.tsx
+msgid "Masquer la fiche"
+msgstr "Masquer la fiche"
+
+#: src/lib/guide-markdown.ts
+msgid "Matériel à réserver"
+msgstr "Matériel à réserver"
+
 #: src/composants/TacheCarte.tsx
 msgid "Me retirer"
 msgstr "Me retirer"
+
+#: src/composants/EditeurMarkdown.tsx
+msgid "Mentionner"
+msgstr "Mentionner"
+
+#: src/lib/guide-markdown.ts
+msgid "Mentions"
+msgstr "Mentions"
 
 #: src/pages/Retroplanning.tsx
 msgid "Mes périmètres"
@@ -1485,12 +2275,33 @@ msgid "Messages"
 msgstr "Messages"
 
 #: src/composants/ReglagePerimetre.tsx
+#: src/pages/FicheEditeur.tsx
 msgid "Minuscules, chiffres et tirets seulement."
 msgstr "Minuscules, chiffres et tirets seulement."
 
 #: src/composants/ReglagePerimetre.tsx
 msgid "Minuscules, chiffres et tirets. Il ne change plus après la création."
 msgstr "Minuscules, chiffres et tirets. Il ne change plus après la création."
+
+#: src/pages/Fiches.tsx
+msgid "Mise à jour le {date}"
+msgstr "Mise à jour le {date}"
+
+#: src/pages/Fiches.tsx
+msgid "Mise à jour le {date} par {auteur}"
+msgstr "Mise à jour le {date} par {auteur}"
+
+#: src/pages/Fiche.tsx
+msgid "Mise à jour le {dateMiseAJour} depuis le dépôt."
+msgstr "Mise à jour le {dateMiseAJour} depuis le dépôt."
+
+#: src/pages/Fiche.tsx
+msgid "Mise à jour le {dateMiseAJour} par {auteurMiseAJour}."
+msgstr "Mise à jour le {dateMiseAJour} par {auteurMiseAJour}."
+
+#: src/composants/EditeurMarkdown.tsx
+msgid "Mise en forme"
+msgstr "Mise en forme"
 
 #: src/composants/MenuCompte.tsx
 msgid "Modes d’emploi"
@@ -1511,8 +2322,13 @@ msgstr "Modifié le {dateModification}"
 
 #: src/composants/FilTache.tsx
 #: src/composants/TacheCarte.tsx
+#: src/pages/Fiche.tsx
 msgid "Modifier"
 msgstr "Modifier"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Modifier la fiche"
+msgstr "Modifier la fiche"
 
 #: src/composants/TacheFormulaire.tsx
 msgid "Modifier la tâche"
@@ -1535,12 +2351,17 @@ msgid "natation"
 msgstr "natation"
 
 #: src/composants/ReglagePerimetre.tsx
+#: src/lib/guide-markdown.ts
 msgid "Natation"
 msgstr "Natation"
 
 #: src/composants/Coquille.tsx
 msgid "Navigation principale"
 msgstr "Navigation principale"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Ne pas ajouter"
+msgstr "Ne pas ajouter"
 
 #: src/composants/ReglagePerimetre.tsx
 msgid "Nom"
@@ -1592,14 +2413,31 @@ msgstr "Nouveau périmètre"
 msgid "Nouveauté"
 msgstr "Nouveauté"
 
+#: src/pages/FicheEditeur.tsx
 #: src/pages/Perimetre.tsx
 msgid "Nouvelle fiche"
 msgstr "Nouvelle fiche"
+
+#: src/pages/Fiches.tsx
+msgid "Nouvelle fiche commune"
+msgstr "Nouvelle fiche commune"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Nouvelle fiche commune à tous les périmètres"
+msgstr "Nouvelle fiche commune à tous les périmètres"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Nouvelle fiche du périmètre {nomPerimetre}"
+msgstr "Nouvelle fiche du périmètre {nomPerimetre}"
 
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/Perimetre.tsx
 msgid "Nouvelle tâche"
 msgstr "Nouvelle tâche"
+
+#: src/composants/ImportFiches.tsx
+msgid "Nouvelles versions"
+msgstr "Nouvelles versions"
 
 #: src/composants/InstallerApplication.tsx
 msgid "Ordinateur"
@@ -1623,6 +2461,10 @@ msgstr "Organisation"
 msgid "Oui, le message s’est ouvert"
 msgstr "Oui, le message s’est ouvert"
 
+#: src/composants/RessourcesFiche.tsx
+msgid "Ouvert aux lecteurs de la fiche"
+msgstr "Ouvert aux lecteurs de la fiche"
+
 #. Filtre : les tâches ni faites ni abandonnées
 #. Filtre : les tâches ni faites ni abandonnées
 #: src/pages/Perimetre.tsx
@@ -1642,14 +2484,34 @@ msgstr "Ouvrez cette page dans Chrome."
 msgid "Ouvrez cette page dans Safari."
 msgstr "Ouvrez cette page dans Safari."
 
+#: src/composants/ImportFiches.tsx
+msgid "Ouvrez le dossier qui range les fiches de l’activité. Relaytour y cherche un sous-dossier par périmètre, à son nom, et un sous-dossier « communes » pour les fiches communes."
+msgstr "Ouvrez le dossier qui range les fiches de l’activité. Relaytour y cherche un sous-dossier par périmètre, à son nom, et un sous-dossier « communes » pour les fiches communes."
+
 #. En-tête masqué de la colonne du bouton d’ouverture
 #: src/composants/Tableau.tsx
 msgid "Ouvrir"
 msgstr "Ouvrir"
 
+#: src/composants/RessourcesFiche.tsx
+msgid "Ouvrir ce document aux lecteurs de la fiche"
+msgstr "Ouvrir ce document aux lecteurs de la fiche"
+
+#: src/composants/Liseuse.tsx
+msgid "Ouvrir dans {nomFournisseur}"
+msgstr "Ouvrir dans {nomFournisseur}"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Ouvrir dans un onglet"
+msgstr "Ouvrir dans un onglet"
+
 #: src/composants/Tableau.tsx
 msgid "Ouvrir la fiche"
 msgstr "Ouvrir la fiche"
+
+#: src/lib/guide-markdown.ts
+msgid "Ouvrir le gymnase"
+msgstr "Ouvrir le gymnase"
 
 #: src/composants/Coquille.tsx
 msgid "Ouvrir le menu"
@@ -1658,6 +2520,10 @@ msgstr "Ouvrir le menu"
 #: src/pages/TousLesPerimetres.tsx
 msgid "Ouvrir le périmètre"
 msgstr "Ouvrir le périmètre"
+
+#: src/composants/Liseuse.tsx
+msgid "Page {numero}"
+msgstr "Page {numero}"
 
 #: src/pages/Perimetre.tsx
 msgid "Par échéance"
@@ -1676,13 +2542,33 @@ msgstr "Par mois"
 msgid "Par phase"
 msgstr "Par phase"
 
+#: src/composants/ConnexionsFiche.tsx
+msgid "Par une tâche partagée"
+msgstr "Par une tâche partagée"
+
+#: src/lib/guide-markdown.ts
+msgid "Paragraphes et retours à la ligne"
+msgstr "Paragraphes et retours à la ligne"
+
+#: src/lib/guide-markdown.ts
+msgid "Pensez à _signer la feuille de présence_."
+msgstr "Pensez à _signer la feuille de présence_."
+
 #: src/lib/notes-de-version.ts
 msgid "Performance"
 msgstr "Performance"
 
+#: src/pages/Fiche.tsx
+msgid "Périmètre"
+msgstr "Périmètre"
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "Périmètre créé."
 msgstr "Périmètre créé."
+
+#: src/pages/Fiches.tsx
+msgid "Périmètre des fiches"
+msgstr "Périmètre des fiches"
 
 #: src/composants/ReglagePerimetre.tsx
 msgid "Périmètre enregistré."
@@ -1697,6 +2583,7 @@ msgstr "Périmètres"
 
 #. Aucune personne n’est assignée à la tâche
 #: src/composants/LigneTache.tsx
+#: src/pages/admin/Redaction.tsx
 msgid "Personne"
 msgstr "Personne"
 
@@ -1713,9 +2600,17 @@ msgstr "Personnes"
 msgid "Personnes affectées"
 msgstr "Personnes affectées"
 
+#: src/lib/guide-markdown.ts
+msgid "Plan d’accès : https://exemple.org/plan"
+msgstr "Plan d’accès : https://exemple.org/plan"
+
 #: src/composants/TacheCarte.tsx
 msgid "Planifier une réunion"
 msgstr "Planifier une réunion"
+
+#: src/composants/EditeurVisuel.tsx
+msgid "Poser le lien"
+msgstr "Poser le lien"
 
 #: src/composants/Coquille.tsx
 #: src/composants/MenuCompte.tsx
@@ -1727,9 +2622,17 @@ msgstr "Préférences"
 msgid "Préférences enregistrées."
 msgstr "Préférences enregistrées."
 
+#: src/composants/ImportFiches.tsx
+msgid "Prendre ce dossier"
+msgstr "Prendre ce dossier"
+
 #: src/pages/Preferences.tsx
 msgid "Prénom et nom"
 msgstr "Prénom et nom"
+
+#: src/lib/guide-markdown.ts
+msgid "Prévenir la mairie"
+msgstr "Prévenir la mairie"
 
 #: src/composants/Coquille.tsx
 msgid "Programme"
@@ -1758,6 +2661,10 @@ msgstr "Publier"
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Quand vous préparez un message, l’espace organisateur ouvre votre messagerie par un lien <0>mailto:</0>. Ce lien ouvre l’application de mail réglée par défaut sur votre appareil. Vous pouvez choisir ici une autre messagerie."
 msgstr "Quand vous préparez un message, l’espace organisateur ouvre votre messagerie par un lien <0>mailto:</0>. Ce lien ouvre l’application de mail réglée par défaut sur votre appareil. Vous pouvez choisir ici une autre messagerie."
+
+#: src/composants/ImportFiches.tsx
+msgid "Racine"
+msgstr "Racine"
 
 #: src/composants/TacheCarte.tsx
 msgid "Réalisée par (facultatif)"
@@ -1803,6 +2710,10 @@ msgstr "Rechercher dans la colonne"
 msgid "Rechercher dans la colonne {libelle}"
 msgstr "Rechercher dans la colonne {libelle}"
 
+#: src/pages/Fiches.tsx
+msgid "Rechercher une fiche"
+msgstr "Rechercher une fiche"
+
 #: src/composants/Recherche.tsx
 msgid "Rechercher une tâche, une fiche ou une personne"
 msgstr "Rechercher une tâche, une fiche ou une personne"
@@ -1814,6 +2725,14 @@ msgstr "Rechercher une tâche, une fiche, une personne"
 #: src/composants/Coquille.tsx
 msgid "Rédaction"
 msgstr "Rédaction"
+
+#: src/pages/admin/Redaction.tsx
+msgid "Rédaction déjà accordée"
+msgstr "Rédaction déjà accordée"
+
+#: src/pages/admin/Redaction.tsx
+msgid "Rédaction des fiches"
+msgstr "Rédaction des fiches"
 
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/TacheCarte.tsx
@@ -1883,21 +2802,57 @@ msgstr "Replier le menu"
 msgid "Replier le volet latéral"
 msgstr "Replier le volet latéral"
 
+#: src/pages/FicheEditeur.tsx
+msgid "Reprendre le brouillon"
+msgstr "Reprendre le brouillon"
+
+#: src/composants/ImportFiches.tsx
+msgid "Reprenez les fiches que l’association range déjà chez son fournisseur cloud : des fichiers Markdown, texte ou Word. L’import se simule d’abord. Une fiche modifiée dans Relaytour n’est jamais remplacée."
+msgstr "Reprenez les fiches que l’association range déjà chez son fournisseur cloud : des fichiers Markdown, texte ou Word. L’import se simule d’abord. Une fiche modifiée dans Relaytour n’est jamais remplacée."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Réservée au périmètre d’origine"
+msgstr "Réservée au périmètre d’origine"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Réserver de nouveau"
+msgstr "Réserver de nouveau"
+
+#: src/lib/guide-markdown.ts
+msgid "Réserver le gymnase"
+msgstr "Réserver le gymnase"
+
 #: src/composants/TacheFormulaire.tsx
 msgid "Réserver les lignes d’eau"
 msgstr "Réserver les lignes d’eau"
 
 #: src/composants/Coquille.tsx
 #: src/pages/AideMarkdown.tsx
+#: src/pages/Fiche.tsx
+#: src/pages/Fiches.tsx
 msgid "Ressources"
 msgstr "Ressources"
+
+#: src/pages/Fiche.tsx
+msgid "Restaurer"
+msgstr "Restaurer"
+
+#: src/pages/Fiche.tsx
+msgid "Restaurer cette version ?"
+msgstr "Restaurer cette version ?"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Résumé de la modification (facultatif)"
+msgstr "Résumé de la modification (facultatif)"
 
 #: src/pages/Preferences.tsx
 msgid "Résumé par mail"
 msgstr "Résumé par mail"
 
 #: src/composants/InvitationsEnAttente.tsx
+#: src/composants/RessourcesFiche.tsx
 #: src/composants/TacheCarte.tsx
+#: src/pages/admin/Redaction.tsx
 msgid "Retirer"
 msgstr "Retirer"
 
@@ -1910,17 +2865,41 @@ msgstr "Retirer : {libelle}"
 msgid "Retirer {nom}"
 msgstr "Retirer {nom}"
 
+#: src/composants/RessourcesFiche.tsx
+msgid "Retirer {nomDocument}"
+msgstr "Retirer {nomDocument}"
+
 #: src/composants/TacheCarte.tsx
 msgid "Retirer {nomPersonne} de cette tâche ?"
 msgstr "Retirer {nomPersonne} de cette tâche ?"
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Retirer ce document lié ?"
+msgstr "Retirer ce document lié ?"
+
+#: src/pages/admin/Redaction.tsx
+msgid "Retirer ce droit ?"
+msgstr "Retirer ce droit ?"
 
 #: src/composants/InvitationsEnAttente.tsx
 msgid "Retirer cette invitation ?"
 msgstr "Retirer cette invitation ?"
 
+#: src/composants/EditeurVisuel.tsx
+msgid "Retirer le lien"
+msgstr "Retirer le lien"
+
 #: src/pages/TousLesPerimetres.tsx
 msgid "Retirer mon souhait"
 msgstr "Retirer mon souhait"
+
+#: src/composants/ImportFiches.tsx
+msgid "Retour"
+msgstr "Retour"
+
+#: src/pages/Fiche.tsx
+msgid "Retour à la liste"
+msgstr "Retour à la liste"
 
 #: src/composants/Coquille.tsx
 #: src/pages/Retroplanning.tsx
@@ -1930,6 +2909,20 @@ msgstr "Rétroplanning"
 #: src/pages/Perimetre.tsx
 msgid "Réunion : {titreTache}"
 msgstr "Réunion : {titreTache}"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Revenir à l’éditeur"
+msgstr "Revenir à l’éditeur"
+
+#: src/composants/ImportFiches.tsx
+msgid "Revenir aux dossiers"
+msgstr "Revenir aux dossiers"
+
+#. En-tête de colonne d’un tableau d’exemple : rôle d’un bénévole
+#: src/lib/guide-markdown.ts
+#: src/pages/admin/Redaction.tsx
+msgid "Rôle"
+msgstr "Rôle"
 
 #: src/composants/MesInvitations.tsx
 msgid "Rôle d’admin"
@@ -1948,6 +2941,7 @@ msgid "Saisissez ici le code du mail. Le lien du mail ouvre votre navigateur, pa
 msgstr "Saisissez ici le code du mail. Le lien du mail ouvre votre navigateur, pas l’application installée."
 
 #: src/composants/ReglagePerimetre.tsx
+#: src/pages/FicheEditeur.tsx
 msgid "Saisissez un identifiant."
 msgstr "Saisissez un identifiant."
 
@@ -1957,6 +2951,7 @@ msgid "Saisissez un nom."
 msgstr "Saisissez un nom."
 
 #: src/composants/TacheFormulaire.tsx
+#: src/pages/FicheEditeur.tsx
 msgid "Saisissez un titre."
 msgstr "Saisissez un titre."
 
@@ -2009,6 +3004,14 @@ msgstr "Seules les personnes de l’activité lisent votre adresse. Vous pouvez 
 msgid "Si cette adresse a un accès, un code vient de lui être envoyé. Il est valable 10 minutes."
 msgstr "Si cette adresse a un accès, un code vient de lui être envoyé. Il est valable 10 minutes."
 
+#: src/composants/ImportFiches.tsx
+msgid "Simulation : rien n’a encore changé."
+msgstr "Simulation : rien n’a encore changé."
+
+#: src/composants/ImportFiches.tsx
+msgid "Simuler l’import"
+msgstr "Simuler l’import"
+
 #. Étiquette d’un périmètre que la personne souhaite rejoindre
 #: src/pages/TousLesPerimetres.tsx
 msgid "Souhait"
@@ -2018,10 +3021,30 @@ msgstr "Souhait"
 msgid "Souhait : {nomPerimetre}"
 msgstr "Souhait : {nomPerimetre}"
 
+#: src/pages/Fiche.tsx
+msgid "Source"
+msgstr "Source"
+
+#: src/lib/guide-markdown.ts
+msgid "Sous une puce, deux espaces au début d’une ligne placent l’élément dans une sous-liste."
+msgstr "Sous une puce, deux espaces au début d’une ligne placent l’élément dans une sous-liste."
+
+#: src/composants/EditeurMarkdown.tsx
+msgid "Sous-titre"
+msgstr "Sous-titre"
+
+#: src/lib/guide-markdown.ts
+msgid "Sports"
+msgstr "Sports"
+
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Statut des tâches"
 msgstr "Statut des tâches"
+
+#: src/composants/ImportFiches.tsx
+msgid "Suivant"
+msgstr "Suivant"
 
 #: src/composants/MenuCompte.tsx
 msgid "Support"
@@ -2039,6 +3062,10 @@ msgstr "Supprimer"
 msgid "Supprimer ce commentaire ?"
 msgstr "Supprimer ce commentaire ?"
 
+#: src/pages/FicheEditeur.tsx
+msgid "Supprimer le brouillon"
+msgstr "Supprimer le brouillon"
+
 #: src/pages/Retroplanning.tsx
 msgid "Sur cette sélection"
 msgstr "Sur cette sélection"
@@ -2046,6 +3073,18 @@ msgstr "Sur cette sélection"
 #: src/composants/PreferencePush.tsx
 msgid "Sur iPhone et iPad, les notifications n’existent que dans l’application installée sur l’écran d’accueil."
 msgstr "Sur iPhone et iPad, les notifications n’existent que dans l’application installée sur l’écran d’accueil."
+
+#: src/lib/guide-markdown.ts
+msgid "Sur présentation d’une pièce d’identité."
+msgstr "Sur présentation d’une pièce d’identité."
+
+#: src/composants/EditeurMarkdown.tsx
+msgid "Tableau"
+msgstr "Tableau"
+
+#: src/lib/guide-markdown.ts
+msgid "Tableaux"
+msgstr "Tableaux"
 
 #: src/composants/TacheCarte.tsx
 msgid "Tâche abandonnée."
@@ -2111,6 +3150,10 @@ msgstr "Tâches créées"
 msgid "Tâches faites"
 msgstr "Tâches faites"
 
+#: src/pages/Fiche.tsx
+msgid "Tâches liées"
+msgstr "Tâches liées"
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Tâches proposées à ce périmètre"
 msgstr "Tâches proposées à ce périmètre"
@@ -2119,7 +3162,59 @@ msgstr "Tâches proposées à ce périmètre"
 msgid "Tâches réalisées"
 msgstr "Tâches réalisées"
 
+#: src/composants/Liseuse.tsx
+msgid "Télécharger"
+msgstr "Télécharger"
+
+#. En-tête de colonne d’un tableau d’exemple : terrain de sport
+#: src/lib/guide-markdown.ts
+msgid "Terrain"
+msgstr "Terrain"
+
+#: src/lib/guide-markdown.ts
+msgid "Terrain 1"
+msgstr "Terrain 1"
+
+#: src/lib/guide-markdown.ts
+msgid "Terrain 1 : 9 h - 12 h"
+msgstr "Terrain 1 : 9 h - 12 h"
+
+#: src/lib/guide-markdown.ts
+msgid "Terrain 2"
+msgstr "Terrain 2"
+
+#: src/lib/guide-markdown.ts
+msgid "Terrain 2 : 14 h - 18 h"
+msgstr "Terrain 2 : 14 h - 18 h"
+
+#. Cellule d’un tableau d’exemple inséré dans une fiche.
+#: src/lib/mise-en-forme.ts
+msgid "Texte"
+msgstr "Texte"
+
+#. Texte d’exemple inséré dans une fiche par le bouton « Lien ».
+#: src/lib/mise-en-forme.ts
+msgid "texte du lien"
+msgstr "texte du lien"
+
+#. Texte d’exemple inséré dans une fiche par le bouton « Gras ».
+#: src/lib/mise-en-forme.ts
+msgid "texte en gras"
+msgstr "texte en gras"
+
+#. Texte d’exemple inséré dans une fiche par le bouton « Italique ».
+#: src/lib/mise-en-forme.ts
+msgid "texte en italique"
+msgstr "texte en italique"
+
+#: src/lib/guide-markdown.ts
+msgid "Texte tel quel"
+msgstr "Texte tel quel"
+
+#. Bouton de la barre de mise en forme : titre de section
+#: src/composants/EditeurMarkdown.tsx
 #: src/composants/TacheFormulaire.tsx
+#: src/pages/FicheEditeur.tsx
 msgid "Titre"
 msgstr "Titre"
 
@@ -2127,6 +3222,14 @@ msgstr "Titre"
 #: src/composants/TacheFormulaire.tsx
 msgid "Titre dans ces périmètres (facultatif)"
 msgstr "Titre dans ces périmètres (facultatif)"
+
+#: src/composants/EditeurMarkdown.tsx
+msgid "Titre de section"
+msgstr "Titre de section"
+
+#: src/lib/guide-markdown.ts
+msgid "Titres"
+msgstr "Titres"
 
 #: src/composants/InstallerApplication.tsx
 msgid "Touchez « Ajouter »."
@@ -2172,7 +3275,9 @@ msgstr "Tout lire"
 msgid "Tout marquer comme lu"
 msgstr "Tout marquer comme lu"
 
+#: src/composants/DocumentsActivite.tsx
 #: src/composants/ListeNotifications.tsx
+#: src/composants/RessourcesFiche.tsx
 msgid "Toute l’activité"
 msgstr "Toute l’activité"
 
@@ -2182,10 +3287,31 @@ msgstr "toute la période"
 
 #. Filtre : toutes les tâches
 #. Filtre : toutes les tâches
+#: src/pages/Fiches.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Toutes"
 msgstr "Toutes"
+
+#: src/pages/admin/Redaction.tsx
+msgid "Toutes les fiches"
+msgstr "Toutes les fiches"
+
+#: src/pages/admin/Redaction.tsx
+msgid "Toutes les fiches de l’activité"
+msgstr "Toutes les fiches de l’activité"
+
+#: src/pages/admin/Redaction.tsx
+msgid "Toutes les fiches de l’organisation"
+msgstr "Toutes les fiches de l’organisation"
+
+#: src/composants/FichesConnexes.tsx
+msgid "Toutes les fiches sont masquées."
+msgstr "Toutes les fiches sont masquées."
+
+#: src/pages/admin/Redaction.tsx
+msgid "Toutes les fiches, communes comprises"
+msgstr "Toutes les fiches, communes comprises"
 
 #: src/pages/Connexion.tsx
 msgid "Transmettez le savoir-faire de votre organisation d’une période à l’autre."
@@ -2195,13 +3321,33 @@ msgstr "Transmettez le savoir-faire de votre organisation d’une période à l�
 msgid "Transmettre les besoins au pôle"
 msgstr "Transmettre les besoins au pôle"
 
+#: src/lib/guide-markdown.ts
+msgid "Trois accents graves sur une ligne ouvrent un bloc de plusieurs lignes, et trois autres le ferment."
+msgstr "Trois accents graves sur une ligne ouvrent un bloc de plusieurs lignes, et trois autres le ferment."
+
+#: src/lib/guide-markdown.ts
+msgid "Trois tirets seuls sur une ligne tracent une ligne de séparation. Une ligne vide doit les précéder : sans elle, le texte du dessus devient un titre."
+msgstr "Trois tirets seuls sur une ligne tracent une ligne de séparation. Une ligne vide doit les précéder : sans elle, le texte du dessus devient un titre."
+
 #: src/lib/connexion.ts
 msgid "Trop de demandes. Réessayez dans quelques minutes."
 msgstr "Trop de demandes. Réessayez dans quelques minutes."
 
+#: src/composants/RessourcesFiche.tsx
+msgid "Un admin de l’organisation a ouvert ce document à toutes les personnes qui lisent la fiche. Le reste du dossier lié reste réservé à ses lecteurs."
+msgstr "Un admin de l’organisation a ouvert ce document à toutes les personnes qui lisent la fiche. Le reste du dossier lié reste réservé à ses lecteurs."
+
 #: src/composants/FournisseurActivite.tsx
 msgid "Un admin de l’organisation crée la première activité, ou l’import du dépôt d’organisation la crée."
 msgstr "Un admin de l’organisation crée la première activité, ou l’import du dépôt d’organisation la crée."
+
+#: src/composants/RessourcesFiche.tsx
+msgid "Un admin de l’organisation peut étendre le dossier lié, ou ouvrir ce seul document aux lecteurs de la fiche."
+msgstr "Un admin de l’organisation peut étendre le dossier lié, ou ouvrir ce seul document aux lecteurs de la fiche."
+
+#: src/composants/DocumentsReserves.tsx
+msgid "Un admin de l’organisation peut étendre le dossier lié, ou ouvrir le document aux lecteurs de la fiche, depuis la fiche."
+msgstr "Un admin de l’organisation peut étendre le dossier lié, ou ouvrir le document aux lecteurs de la fiche, depuis la fiche."
 
 #: src/composants/GardeSession.tsx
 msgid "Un admin de votre organisation peut vous inviter de nouveau."
@@ -2214,6 +3360,26 @@ msgstr "Un admin vous ouvre une activité en vous affectant à l’un de ses pé
 #: src/composants/PreferencePush.tsx
 msgid "Un autre admin affecte ou nomme une personne, ou une personne formule un souhait."
 msgstr "Un autre admin affecte ou nomme une personne, ou une personne formule un souhait."
+
+#: src/pages/FicheEditeur.tsx
+msgid "Un brouillon du {dateBrouillon} n’a pas été enregistré."
+msgstr "Un brouillon du {dateBrouillon} n’a pas été enregistré."
+
+#: src/lib/guide-markdown.ts
+msgid "Un chevron fermant suivi d’une espace place la ligne dans un encadré. Un encadré met en avant une consigne à retenir."
+msgstr "Un chevron fermant suivi d’une espace place la ligne dans un encadré. Un encadré met en avant une consigne à retenir."
+
+#: src/composants/ImportFiches.tsx
+msgid "Un dossier source compte trop d’éléments pour les lire tous. Rangez ses fiches dans plusieurs dossiers."
+msgstr "Un dossier source compte trop d’éléments pour les lire tous. Rangez ses fiches dans plusieurs dossiers."
+
+#: src/lib/guide-markdown.ts
+msgid "Un lien de fiche s’ouvre dans un nouvel onglet."
+msgstr "Un lien de fiche s’ouvre dans un nouvel onglet."
+
+#: src/lib/guide-markdown.ts
+msgid "Un lien place son texte entre crochets, puis son adresse entre parenthèses. Une adresse écrite seule devient aussi un lien."
+msgstr "Un lien place son texte entre crochets, puis son adresse entre parenthèses. Une adresse écrite seule devient aussi un lien."
 
 #: src/pages/Preferences.tsx
 msgid "Un mail chaque matin, s’il y a du nouveau."
@@ -2247,9 +3413,17 @@ msgstr "Un pôle demande par exemple la même tâche à chaque sport."
 msgid "Un seul mail pour la semaine."
 msgstr "Un seul mail pour la semaine."
 
+#: src/lib/guide-markdown.ts
+msgid "Un titre commence par des dièses suivis d’une espace. Deux dièses font un titre de section, trois dièses un sous-titre."
+msgstr "Un titre commence par des dièses suivis d’une espace. Deux dièses font un titre de section, trois dièses un sous-titre."
+
 #: src/composants/PreferencePush.tsx
 msgid "Une activité que vous administrez reçoit une demande, ou une personne accepte une invitation."
 msgstr "Une activité que vous administrez reçoit une demande, ou une personne accepte une invitation."
+
+#: src/lib/guide-markdown.ts
+msgid "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
+msgstr "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 
 #: src/lib/conflit.ts
 msgid "Une autre personne"
@@ -2263,9 +3437,49 @@ msgstr "Une autre version de cette fiche a été enregistrée {moment}."
 msgid "Une autre version de cette fiche a été enregistrée."
 msgstr "Une autre version de cette fiche a été enregistrée."
 
+#: src/lib/guide-markdown.ts
+msgid "Une balise HTML s’affiche comme du texte. Les fiches n’acceptent que la syntaxe Markdown de ce guide."
+msgstr "Une balise HTML s’affiche comme du texte. Les fiches n’acceptent que la syntaxe Markdown de ce guide."
+
+#: src/lib/guide-markdown.ts
+msgid "Une barre oblique inverse ({barre}) en fin de ligne passe à la ligne suivante sans changer de paragraphe."
+msgstr "Une barre oblique inverse ({barre}) en fin de ligne passe à la ligne suivante sans changer de paragraphe."
+
+#: src/lib/guide-markdown.ts
+msgid "Une barre oblique inverse devant un caractère de mise en forme l’affiche tel quel : astérisque, tiret bas, dièse, crochet."
+msgstr "Une barre oblique inverse devant un caractère de mise en forme l’affiche tel quel : astérisque, tiret bas, dièse, crochet."
+
+#: src/lib/guide-markdown.ts
+msgid "Une barre verticale sépare les colonnes. La deuxième ligne, faite de tirets, sépare l’en-tête du reste du tableau."
+msgstr "Une barre verticale sépare les colonnes. La deuxième ligne, faite de tirets, sépare l’en-tête du reste du tableau."
+
+#: src/lib/guide-markdown.ts
+msgid "Une case commence par un tiret, puis des crochets qui entourent une espace. Un x entre les crochets coche la case."
+msgstr "Une case commence par un tiret, puis des crochets qui entourent une espace. Un x entre les crochets coche la case."
+
 #: src/composants/PreferencePush.tsx
 msgid "Une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou elle est en retard."
 msgstr "Une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou elle est en retard."
+
+#: src/lib/guide-markdown.ts
+msgid "Une ligne vide commence un nouveau paragraphe."
+msgstr "Une ligne vide commence un nouveau paragraphe."
+
+#: src/lib/guide-markdown.ts
+msgid "Une ligne vide sépare deux paragraphes. Deux lignes qui se suivent sans ligne vide forment un seul paragraphe."
+msgstr "Une ligne vide sépare deux paragraphes. Deux lignes qui se suivent sans ligne vide forment un seul paragraphe."
+
+#: src/lib/guide-markdown.ts
+msgid "Une liste à puces commence chaque ligne par un tiret suivi d’une espace. Une liste numérotée commence chaque ligne par un nombre suivi d’un point."
+msgstr "Une liste à puces commence chaque ligne par un tiret suivi d’une espace. Une liste numérotée commence chaque ligne par un nombre suivi d’un point."
+
+#: src/lib/guide-markdown.ts
+msgid "Une mention ne partage pas la fiche. À l’enregistrement, l’éditeur propose d’ajouter les périmètres mentionnés à la liste « Concerne aussi »."
+msgstr "Une mention ne partage pas la fiche. À l’enregistrement, l’éditeur propose d’ajouter les périmètres mentionnés à la liste « Concerne aussi »."
+
+#: src/lib/guide-markdown.ts
+msgid "Une mention s’affiche comme une étiquette. Celle d’un groupe liste ses périmètres au survol ou à l’appui. Dans l’éditeur, une arobase propose les périmètres et les groupes de l’activité."
+msgstr "Une mention s’affiche comme une étiquette. Celle d’un groupe liste ses périmètres au survol ou à l’appui. Dans l’éditeur, une arobase propose les périmètres et les groupes de l’activité."
 
 #: src/pages/Preferences.tsx
 msgid "Une notification quand un autre admin affecte, retire ou nomme une personne, ou quand une personne formule un souhait. Aucun mail ne part."
@@ -2274,6 +3488,10 @@ msgstr "Une notification quand un autre admin affecte, retire ou nomme une perso
 #: src/pages/Preferences.tsx
 msgid "Une notification quand une autre personne crée, modifie ou termine une tâche ou une fiche de vos périmètres. Aucun mail ne part."
 msgstr "Une notification quand une autre personne crée, modifie ou termine une tâche ou une fiche de vos périmètres. Aucun mail ne part."
+
+#: src/pages/Fiche.tsx
+msgid "Une nouvelle version est créée : l’historique reste complet."
+msgstr "Une nouvelle version est créée : l’historique reste complet."
 
 #: src/composants/AvisMiseAJour.tsx
 msgid "Une nouvelle version est disponible."
@@ -2323,9 +3541,37 @@ msgstr "Vérifiez votre connexion, puis rechargez la page."
 msgid "Version {numero}"
 msgstr "Version {numero}"
 
+#: src/pages/Fiche.tsx
+msgid "Version restaurée."
+msgstr "Version restaurée."
+
+#: src/pages/Fiche.tsx
+msgid "Versions"
+msgstr "Versions"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Visuel"
+msgstr "Visuel"
+
+#: src/pages/Fiche.tsx
+msgid "Voir"
+msgstr "Voir"
+
+#: src/pages/FicheEditeur.tsx
+msgid "Voir la version actuelle"
+msgstr "Voir la version actuelle"
+
 #: src/pages/MonEspace.tsx
 msgid "Voir le rétroplanning"
 msgstr "Voir le rétroplanning"
+
+#: src/composants/FichesConnexes.tsx
+msgid "Voir les fiches masquées ({nombreMasquees})"
+msgstr "Voir les fiches masquées ({nombreMasquees})"
+
+#: src/lib/guide-markdown.ts
+msgid "Volley"
+msgstr "Volley"
 
 #: src/composants/AvisRelecture.tsx
 msgid "Vos accès ont changé, ou votre session a pris fin."
@@ -2439,6 +3685,14 @@ msgstr "Votre souhait est retiré."
 msgid "Votre téléphone ou votre ordinateur affiche une notification, même quand l’espace organisateur est fermé."
 msgstr "Votre téléphone ou votre ordinateur affiche une notification, même quand l’espace organisateur est fermé."
 
+#: src/pages/FicheEditeur.tsx
+msgid "Votre texte est copié."
+msgstr "Votre texte est copié."
+
+#: src/pages/FicheEditeur.tsx
+msgid "Votre texte reste à l’écran et n’est pas enregistré. Consultez la version actuelle avant de choisir."
+msgstr "Votre texte reste à l’écran et n’est pas enregistré. Consultez la version actuelle avant de choisir."
+
 #: src/composants/FilTache.tsx
 #: src/composants/LigneTache.tsx
 #: src/composants/TacheCarte.tsx
@@ -2498,6 +3752,10 @@ msgstr "Vous consultez ce périmètre sans y être affecté·e."
 msgid "Vous consultez l’espace vous-même."
 msgstr "Vous consultez l’espace vous-même."
 
+#: src/composants/GuideMarkdown.tsx
+msgid "Vous écrivez"
+msgstr "Vous écrivez"
+
 #: src/composants/TacheCarte.tsx
 msgid "Vous êtes retiré·e de la tâche."
 msgstr "Vous êtes retiré·e de la tâche."
@@ -2509,6 +3767,10 @@ msgstr "Vous faites partie de {nomOrganisation}."
 #: src/composants/FilTache.tsx
 msgid "Vous lisez ce fil sans pouvoir y écrire."
 msgstr "Vous lisez ce fil sans pouvoir y écrire."
+
+#: src/pages/Fiches.tsx
+msgid "Vous lisez ici les documents que l’association range chez son fournisseur cloud. Relaytour n’en garde aucune copie."
+msgstr "Vous lisez ici les documents que l’association range chez son fournisseur cloud. Relaytour n’en garde aucune copie."
 
 #: src/pages/Perimetre.tsx
 msgid "Vous lisez ses tâches et son équipe. Vous ne pouvez pas les modifier. Pour rejoindre ce périmètre, formulez un souhait dans <0>Tous les périmètres</0>."
@@ -2522,6 +3784,10 @@ msgstr "Vous n’avez pas accès à ce périmètre."
 msgid "Vous n’avez pas accès à cette action."
 msgstr "Vous n’avez pas accès à cette action."
 
+#: src/pages/Fiche.tsx
+msgid "Vous n’avez pas accès à cette fiche."
+msgstr "Vous n’avez pas accès à cette fiche."
+
 #: src/pages/TousLesPerimetres.tsx
 msgid "Vous n’avez pas encore de périmètre dans cette activité. Formulez vos souhaits : un admin vous affectera ensuite."
 msgstr "Vous n’avez pas encore de périmètre dans cette activité. Formulez vos souhaits : un admin vous affectera ensuite."
@@ -2529,6 +3795,10 @@ msgstr "Vous n’avez pas encore de périmètre dans cette activité. Formulez v
 #: src/pages/TousLesPerimetres.tsx
 msgid "Vous n’avez pas encore de périmètre dans cette activité. Un admin vous affectera à l’un d’eux."
 msgstr "Vous n’avez pas encore de périmètre dans cette activité. Un admin vous affectera à l’un d’eux."
+
+#: src/pages/FicheEditeur.tsx
+msgid "Vous n’avez pas le droit de rédiger cette fiche."
+msgstr "Vous n’avez pas le droit de rédiger cette fiche."
 
 #: src/pages/Retroplanning.tsx
 msgid "Vous n’êtes affecté·e à aucun périmètre pour {cettePeriode}."

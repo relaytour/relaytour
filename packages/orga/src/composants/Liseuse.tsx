@@ -1,4 +1,6 @@
 import { DownloadOutlined, ExportOutlined } from '@ant-design/icons'
+import { t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Empty, Modal, Spin } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 
@@ -37,6 +39,7 @@ const TEXTE_MAX = 500_000
 const DENSITE_MAX = 2
 const PIXELS_MAX = 4_000_000
 /** Une page se rend quand elle approche de la zone visible, à cette distance. */
+// eslint-disable-next-line lingui/no-unlocalized-strings -- Marge CSS de l'observateur d'intersection.
 const MARGE_RENDU = '800px 0px'
 
 /** Le texte d'une page, pour les lecteurs d'écran. */
@@ -124,7 +127,7 @@ async function ouvrirPdf(
     const naturelle = page.getViewport({ scale: 1 })
     const section = document.createElement('section')
     section.className = 'rt-liseuse-page'
-    section.setAttribute('aria-label', `Page ${numero}`)
+    section.setAttribute('aria-label', t`Page ${numero}`)
     const cadre = document.createElement('div')
     cadre.className = 'rt-liseuse-cadre'
     cadre.dataset.page = String(numero)
@@ -150,6 +153,7 @@ async function ouvrirPdf(
 
 /** Le contenu de la liseuse, monté à l'ouverture : il lit le document une fois. */
 function ContenuLiseuse({ doc }: { doc: DocumentOuvert }) {
+  const { t } = useLingui()
   const affiche = FORMATS_AFFICHES.includes(doc.apercu)
   const estPdf = doc.apercu === 'PDF' || doc.apercu === 'PDF_CONVERTI'
   const [chargement, setChargement] = useState(affiche)
@@ -212,7 +216,9 @@ function ContenuLiseuse({ doc }: { doc: DocumentOuvert }) {
     <>
       {erreur && <Alert type="error" showIcon message={erreur} />}
       {!affiche && (
-        <Empty description="La liseuse n’affiche pas ce format. Téléchargez le document, ou ouvrez-le chez le fournisseur cloud." />
+        <Empty
+          description={t`La liseuse n’affiche pas ce format. Téléchargez le document, ou ouvrez-le chez le fournisseur cloud.`}
+        />
       )}
       {chargement && (
         <div className="rt-liseuse-chargement">
@@ -230,8 +236,10 @@ function ContenuLiseuse({ doc }: { doc: DocumentOuvert }) {
         {estPdf && <div ref={pages} className="rt-liseuse-pages" />}
         {pagesTotales > PAGES_MAX && (
           <p className="rt-liseuse-note">
-            La liseuse affiche les {PAGES_MAX} premières pages sur{' '}
-            {pagesTotales}. Téléchargez le document pour lire la suite.
+            <Trans>
+              La liseuse affiche les {PAGES_MAX} premières pages sur{' '}
+              {pagesTotales}. Téléchargez le document pour lire la suite.
+            </Trans>
           </p>
         )}
       </div>
@@ -246,6 +254,7 @@ export default function Liseuse({
   document: DocumentOuvert | null
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
 
   const telecharger = () => {
@@ -260,7 +269,7 @@ export default function Liseuse({
   const nomFournisseur =
     doc === null
       ? ''
-      : (NOMS_FOURNISSEURS[doc.fournisseur] ?? 'le fournisseur cloud')
+      : (NOMS_FOURNISSEURS[doc.fournisseur] ?? t`le fournisseur cloud`)
 
   return (
     <Modal
@@ -279,28 +288,32 @@ export default function Liseuse({
               target="_blank"
               rel="noopener noreferrer"
             >
-              Ouvrir dans {nomFournisseur}
+              <Trans>Ouvrir dans {nomFournisseur}</Trans>
             </Button>
           )}
           <Button icon={<DownloadOutlined />} onClick={telecharger}>
-            Télécharger
+            <Trans>Télécharger</Trans>
           </Button>
           <Button type="primary" onClick={onFermer}>
-            Fermer
+            <Trans>Fermer</Trans>
           </Button>
         </div>
       }
     >
       {doc?.lienWeb && (
         <p className="rt-liseuse-note">
-          Le lien « Ouvrir dans {nomFournisseur} » fonctionne si votre compte{' '}
-          {nomFournisseur} a accès à ce document.
+          <Trans>
+            Le lien « Ouvrir dans {nomFournisseur} » fonctionne si votre compte{' '}
+            {nomFournisseur} a accès à ce document.
+          </Trans>
         </p>
       )}
       {doc?.apercu === 'PDF_CONVERTI' && (
         <p className="rt-liseuse-note">
-          {nomFournisseur} a converti ce document en PDF pour l’affichage. Sa
-          mise en page peut différer de l’original.
+          <Trans>
+            {nomFournisseur} a converti ce document en PDF pour l’affichage. Sa
+            mise en page peut différer de l’original.
+          </Trans>
         </p>
       )}
       {doc !== null && (

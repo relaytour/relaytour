@@ -6,6 +6,8 @@ import {
   UnorderedListOutlined,
 } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { plural, t } from '@lingui/core/macro'
+import { Plural, Trans, useLingui } from '@lingui/react/macro'
 import { Button, Empty, Input, Segmented, Skeleton } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
@@ -28,6 +30,11 @@ import { langueActive } from '../lib/langue'
 type FicheListe = ListeFichesQuery['fiches'][number]
 type Affichage = 'cartes' | 'liste'
 
+/** « 3 fiches ». */
+function nombreDeFiches(nombre: number): string {
+  return t`${plural(nombre, { one: '# fiche', other: '# fiches' })}`
+}
+
 const COMMUNES = 'communes'
 const TOUTES = 'toutes'
 // Le choix d'affichage est une commodité propre au navigateur.
@@ -43,16 +50,17 @@ function affichageMemorise(): Affichage {
 
 function miseAJour(fiche: FicheListe): string {
   const date = jourDeLInstant(fiche.modifieeLe)
-  if (fiche.source === 'GIT' && !fiche.modifieePar)
-    return `Depuis le dépôt · ${date}`
+  const auteur = fiche.modifieePar
+  if (fiche.source === 'GIT' && !auteur) return t`Depuis le dépôt · ${date}`
   if (fiche.source === 'ESPACE_FICHIERS')
-    return `Depuis le fournisseur cloud · ${date}`
-  return fiche.modifieePar
-    ? `Mise à jour le ${date} par ${fiche.modifieePar}`
-    : `Mise à jour le ${date}`
+    return t`Depuis le fournisseur cloud · ${date}`
+  return auteur
+    ? t`Mise à jour le ${date} par ${auteur}`
+    : t`Mise à jour le ${date}`
 }
 
 export default function Fiches() {
+  const { t } = useLingui()
   const { lien, activite } = useActivite()
   const navigate = useNavigate()
   const { theme } = useOrganisation()
@@ -95,7 +103,7 @@ export default function Fiches() {
       const cle = fiche.perimetre?.id ?? COMMUNES
       const groupe = map.get(cle) ?? {
         cle,
-        nom: fiche.perimetre?.nom ?? 'Fiches communes',
+        nom: fiche.perimetre?.nom ?? t`Fiches communes`,
         slug: fiche.perimetre?.slug ?? null,
         couleur: fiche.perimetre?.couleur ?? null,
         fiches: [],
@@ -110,7 +118,7 @@ export default function Fiches() {
           ? 1
           : a.nom.localeCompare(b.nom, langueActive())
     )
-  }, [data])
+  }, [data, t])
 
   const groupes = useMemo(() => {
     const filtre = normaliser(recherche.trim())
@@ -132,8 +140,8 @@ export default function Fiches() {
       <Titre
         sousTitre={
           vueDocuments
-            ? 'Vous lisez ici les documents que l’association range chez son fournisseur cloud. Relaytour n’en garde aucune copie.'
-            : 'Les fiches méthode expliquent comment mener chaque étape de l’organisation.'
+            ? t`Vous lisez ici les documents que l’association range chez son fournisseur cloud. Relaytour n’en garde aucune copie.`
+            : t`Les fiches méthode expliquent comment mener chaque étape de l’organisation.`
         }
         actions={
           !vueDocuments &&
@@ -144,17 +152,17 @@ export default function Fiches() {
               icon={<PlusOutlined />}
               onClick={() => navigate(lien('/fiches/nouvelle'))}
             >
-              Nouvelle fiche commune
+              <Trans>Nouvelle fiche commune</Trans>
             </Button>
           )
         }
       >
-        Ressources
+        <Trans>Ressources</Trans>
       </Titre>
 
       {dossiers.length > 0 && (
         <Segmented
-          aria-label="Contenu affiché"
+          aria-label={t`Contenu affiché`}
           style={{ marginBottom: 18 }}
           value={vueDocuments ? 'documents' : 'fiches'}
           onChange={valeur =>
@@ -163,8 +171,8 @@ export default function Fiches() {
             })
           }
           options={[
-            { value: 'fiches', label: 'Fiches' },
-            { value: 'documents', label: 'Documents' },
+            { value: 'fiches', label: t`Fiches` },
+            { value: 'documents', label: t`Documents` },
           ]}
         />
       )}
@@ -176,8 +184,8 @@ export default function Fiches() {
           <div className="rt-puces" style={{ marginBottom: 22, rowGap: 10 }}>
             <Input
               allowClear
-              aria-label="Rechercher une fiche"
-              placeholder="Rechercher une fiche"
+              aria-label={t`Rechercher une fiche`}
+              placeholder={t`Rechercher une fiche`}
               prefix={
                 <SearchOutlined
                   aria-hidden
@@ -190,16 +198,16 @@ export default function Fiches() {
             />
             {tousGroupes.length > 1 && (
               <Puces
-                libelle="Périmètre des fiches"
+                libelle={t`Périmètre des fiches`}
                 valeur={perimetre}
                 onChange={setPerimetre}
                 options={[
-                  { valeur: TOUTES, libelle: 'Toutes' },
+                  { valeur: TOUTES, libelle: t`Toutes` },
                   ...tousGroupes.map(g => ({
                     valeur: g.cle,
                     libelle:
                       g.slug === null ? (
-                        'Communes'
+                        t`Communes`
                       ) : (
                         <>
                           <span
@@ -225,24 +233,24 @@ export default function Fiches() {
               }}
             >
               <span className="rt-compte">
-                {total} {total > 1 ? 'fiches' : 'fiche'}
+                <Plural value={total} one="# fiche" other="# fiches" />
               </span>
               <Segmented<Affichage>
-                aria-label="Affichage des fiches"
+                aria-label={t`Affichage des fiches`}
                 value={affichage}
                 onChange={changerAffichage}
                 options={[
                   {
                     value: 'cartes',
                     icon: <AppstoreOutlined />,
-                    title: 'Cartes',
-                    label: <span className="rt-sr">Cartes</span>,
+                    title: t`Cartes`,
+                    label: <span className="rt-sr">{t`Cartes`}</span>,
                   },
                   {
                     value: 'liste',
                     icon: <UnorderedListOutlined />,
-                    title: 'Liste condensée',
-                    label: <span className="rt-sr">Liste condensée</span>,
+                    title: t`Liste condensée`,
+                    label: <span className="rt-sr">{t`Liste condensée`}</span>,
                   },
                 ]}
               />
@@ -256,8 +264,8 @@ export default function Fiches() {
               <Empty
                 description={
                   recherche || perimetre !== TOUTES
-                    ? 'Aucune fiche ne correspond.'
-                    : 'Aucune fiche pour le moment.'
+                    ? t`Aucune fiche ne correspond.`
+                    : t`Aucune fiche pour le moment.`
                 }
               />
             </div>
@@ -290,7 +298,7 @@ export default function Fiches() {
                         groupe.nom
                       )
                     }
-                    compte={`${groupe.fiches.length} ${groupe.fiches.length > 1 ? 'fiches' : 'fiche'}`}
+                    compte={nombreDeFiches(groupe.fiches.length)}
                   >
                     <ul
                       className={
