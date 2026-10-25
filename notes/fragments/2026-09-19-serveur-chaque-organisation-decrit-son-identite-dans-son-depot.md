@@ -14,6 +14,14 @@ fr:
     équipe et thème. La validation le lit avec les périmètres, les fiches et
     les tâches types, et n'a plus besoin de variable d'environnement pour les
     domaines autorisés.
+en:
+  titre: >-
+    Each organization describes its identity in its repository
+  texte: >-
+    The content folder carries an organisation.yaml file: name, acronym, time
+    zone, allowed email domains, recruitment contact, team page, and theme.
+    Validation reads it along with the areas, sheets, and task templates, and no
+    longer needs an environment variable for the allowed domains.
 ---
 
 - `organisation.yaml` obligatoire, validé par `DeclarationOrganisationSchema`

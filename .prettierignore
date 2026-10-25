@@ -5,6 +5,7 @@
 .yarn
 notes/notes-de-version.*.json
 packages/server/src/courriel/gabarits.genere.ts
+packages/server/src/locales
 packages/server/schema.graphql
 *.md
 *.mjml

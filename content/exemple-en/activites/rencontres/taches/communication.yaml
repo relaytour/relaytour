@@ -1,0 +1,17 @@
+# Task templates of the Communication department.
+taches:
+  - modele: annoncer-les-dates
+    titre: Announce the dates of the edition
+    description: >-
+      The coordinators publish the dates on the organization’s website and social networks as soon as the Coordination department has set them.
+    echeance: J-150
+  - modele: preparer-l-affiche
+    titre: Prepare the poster and the schedule
+    description: >-
+      The coordinators gather the times of each sport, have the Coordination department review the poster, and start printing.
+    echeance: J-45
+  - modele: publier-le-bilan
+    titre: Publish the review of the edition
+    description: >-
+      The coordinators gather the results and photos of each sport and publish a look back at the edition.
+    echeance: J+7

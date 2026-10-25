@@ -12,6 +12,13 @@ fr:
     Sur la carte d'une tâche, les admins choisissent une personne parmi les référentes et
     référents du périmètre. Les admins peuvent aussi retirer une
     personne de la tâche. La personne concernée le voit dans ses notifications.
+en:
+  titre: >-
+    Admins assign a task to another person
+  texte: >-
+    On a task card, admins choose a person from the area’s coordinators. Admins
+    can also remove a person from the task. The person concerned sees it in
+    their notifications.
 ---
 
 La mutation assignerTache acceptait déjà personneId pour les admins ; seul l'écran

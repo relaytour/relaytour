@@ -8,6 +8,7 @@ import {
   type Changement,
 } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 
 import { builder } from './builder.ts'
 
@@ -76,13 +77,19 @@ builder.subscriptionField('changements', t =>
           },
           'Un flux n’a pas pu s’ouvrir : le navigateur garde sa relecture périodique.'
         )
-        throw new GraphQLError('Le flux des changements ne répond pas.', {
-          extensions: { code: 'FLUX_INDISPONIBLE' },
-        })
+        throw new GraphQLError(
+          i18n._('Le flux des changements ne répond pas.'),
+          {
+            extensions: { code: 'FLUX_INDISPONIBLE' },
+          }
+        )
       }
       if (flux === null) {
         throw new GraphQLError(
-          `Vous avez déjà ${FLUX_PAR_PERSONNE} flux ouverts. Fermez un onglet, puis réessayez.`,
+          i18n._(
+            'Vous avez déjà {max} flux ouverts. Fermez un onglet, puis réessayez.',
+            { max: FLUX_PAR_PERSONNE }
+          ),
           { extensions: { code: 'TROP_DE_FLUX' } }
         )
       }

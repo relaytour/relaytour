@@ -1,4 +1,5 @@
 import { TeamOutlined } from '@ant-design/icons'
+import { Trans } from '@lingui/react/macro'
 
 import { useActivite } from '../lib/activite'
 import EtiquettePerimetre from './EtiquettePerimetre'
@@ -17,7 +18,12 @@ export default function EtiquettesLecteurs({
   groupes: string[]
 }) {
   const { libelleGroupe } = useActivite()
-  if (touteActivite) return <span>Toute l’activité</span>
+  if (touteActivite)
+    return (
+      <span>
+        <Trans>Toute l’activité</Trans>
+      </span>
+    )
   return (
     <span className="rt-connexions">
       {groupes.map(cle => (

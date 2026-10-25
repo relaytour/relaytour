@@ -1,3 +1,5 @@
+import { useLingui } from '@lingui/react/macro'
+
 import type { Concerne } from '../lib/concerne'
 import type { Mentions } from '../lib/mentions'
 import ChoixLecteurs from './ChoixLecteurs'
@@ -17,14 +19,15 @@ export default function ChampConcerneAussi({
   mentions: Mentions
   perimetreDeLaFiche: string
 }) {
+  const { t } = useLingui()
   return (
     <ChoixLecteurs
       valeur={{ touteActivite: false, ...valeur }}
       onChange={({ perimetres, groupes }) => onChange({ perimetres, groupes })}
       mentions={mentions}
       exclure={perimetreDeLaFiche}
-      placeholder="Aucun autre périmètre"
-      ariaLabel="Concerne aussi"
+      placeholder={t`Aucun autre périmètre`}
+      ariaLabel={t`Concerne aussi`}
     />
   )
 }

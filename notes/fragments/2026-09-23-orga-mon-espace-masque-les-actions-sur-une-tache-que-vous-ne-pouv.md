@@ -13,6 +13,14 @@ fr:
     périmètre. Mon espace affichait alors les boutons « Faite », « Me retirer »
     et le menu « Autres actions », et le serveur refusait l'action. Ces boutons
     ne s'affichent plus, comme sur la page d'un périmètre.
+en:
+  titre: >-
+    My space hides actions on a task you can no longer edit
+  texte: >-
+    A task stays assigned to you after your appointment to the area is removed.
+    My space then displayed the “Done” and “Remove me” buttons and the “More
+    actions” menu, and the server rejected the action. These buttons no longer
+    appear, as on an area’s page.
 ---
 
 L'API expose `peutModifier` sur la tâche, sans argument : la tâche porte son

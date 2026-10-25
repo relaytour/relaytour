@@ -14,6 +14,14 @@ fr:
     et ses tâches types. La disposition plate reste valide pour une seule
     activité. Un périmètre déclare son groupe ; le type SPORT ou POLE reste
     accepté.
+en:
+  titre: >-
+    An organization repository describes several activities
+  texte: >-
+    An organization repository can describe several activities in an activites/
+    folder, each with its kind, its area groups, its sheets, and its task
+    templates. The flat layout remains valid for a single activity. An area
+    declares its group; the SPORT or POLE type is still accepted.
 ---
 
 - Lecteur de modèles : dispositions plate et `activites/`, `activite.yaml`,

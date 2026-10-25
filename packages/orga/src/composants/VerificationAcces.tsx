@@ -4,6 +4,9 @@ import {
   SettingOutlined,
 } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { i18n, type MessageDescriptor } from '@lingui/core'
+import { msg, plural, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Empty, Skeleton, Tag } from 'antd'
 import { useState } from 'react'
 
@@ -31,29 +34,31 @@ type Ligne = Verification['lignes'][number]
 
 const ETATS: Record<
   EtatAccesFournisseur,
-  { libelle: string; couleur: string }
+  { libelle: MessageDescriptor; couleur: string }
 > = {
-  A_ACCES: { libelle: 'A accès', couleur: 'success' },
-  SANS_COMPTE: { libelle: 'Sans compte', couleur: 'error' },
-  SANS_ACCES: { libelle: 'Sans accès', couleur: 'warning' },
-  INCONNU: { libelle: 'Inconnu', couleur: 'default' },
-  EN_TROP: { libelle: 'Accès en trop', couleur: 'default' },
+  A_ACCES: { libelle: msg`A accès`, couleur: 'success' },
+  SANS_COMPTE: { libelle: msg`Sans compte`, couleur: 'error' },
+  SANS_ACCES: { libelle: msg`Sans accès`, couleur: 'warning' },
+  INCONNU: { libelle: msg`Inconnu`, couleur: 'default' },
+  EN_TROP: { libelle: msg`Accès en trop`, couleur: 'default' },
 }
 
-const EXPLICATIONS: Partial<Record<EtatAccesFournisseur, string>> = {
-  SANS_COMPTE:
-    'L’annuaire du fournisseur ne connaît pas son adresse. Invitez la personne, ou saisissez l’adresse de son compte dans l’onglet « Comptes ».',
-  SANS_ACCES: 'Son compte existe, mais aucun droit ne couvre ce dossier.',
-  INCONNU:
-    'Relaytour n’a pas pu lire les droits de ce dossier, ou les membres d’un groupe qui en a un.',
+const EXPLICATIONS: Partial<Record<EtatAccesFournisseur, MessageDescriptor>> = {
+  SANS_COMPTE: msg`L’annuaire du fournisseur ne connaît pas son adresse. Invitez la personne, ou saisissez l’adresse de son compte dans l’onglet « Comptes ».`,
+  SANS_ACCES: msg`Son compte existe, mais aucun droit ne couvre ce dossier.`,
+  INCONNU: msg`Relaytour n’a pas pu lire les droits de ce dossier, ou les membres d’un groupe qui en a un.`,
 }
 
 function LignePersonne({ ligne }: { ligne: Ligne }) {
+  const { t } = useLingui()
   const etat = ETATS[ligne.etat]
+  const explication = EXPLICATIONS[ligne.etat]
   const detail =
     ligne.etat === 'A_ACCES'
       ? voieLisible(ligne.via)
-      : (EXPLICATIONS[ligne.etat] ?? null)
+      : explication === undefined
+        ? null
+        : t(explication)
   return (
     <li className="rt-explorateur-ligne rt-acces-ligne">
       <span className="rt-explorateur-nom">
@@ -62,7 +67,7 @@ function LignePersonne({ ligne }: { ligne: Ligne }) {
           {[ligne.personne?.email, detail].filter(Boolean).join(' · ')}
         </span>
       </span>
-      <Tag color={etat.couleur}>{etat.libelle}</Tag>
+      <Tag color={etat.couleur}>{t(etat.libelle)}</Tag>
     </li>
   )
 }
@@ -70,7 +75,10 @@ function LignePersonne({ ligne }: { ligne: Ligne }) {
 /** Le résumé d'une équipe : « 4 sur 5 ont accès ». */
 function resume(lignes: Ligne[]): string {
   const avecAcces = lignes.filter(l => l.etat === 'A_ACCES').length
-  return `${avecAcces} sur ${lignes.length} ${avecAcces > 1 ? 'ont' : 'a'} accès`
+  const total = lignes.length
+  return avecAcces > 1
+    ? t`${avecAcces} sur ${total} ont accès`
+    : t`${avecAcces} sur ${total} a accès`
 }
 
 function DossierVerifie({
@@ -82,6 +90,7 @@ function DossierVerifie({
   gestion: boolean
   onActiverGestion: (() => void) | null
 }) {
+  const { t } = useLingui()
   const [reglage, setReglage] = useState(false)
   const attendues = v.lignes.filter(l => l.etat !== 'EN_TROP')
   const enTrop = v.lignes.filter(l => l.etat === 'EN_TROP')
@@ -93,6 +102,7 @@ function DossierVerifie({
     }))
     .filter(e => e.lignes.length > 0)
   const manques = attendues.filter(l => l.etat !== 'A_ACCES').length
+  const nombreEnTrop = enTrop.length
   return (
     <Panneau
       titre={v.dossier.nom}
@@ -115,7 +125,7 @@ function DossierVerifie({
           icon={<SettingOutlined />}
           onClick={() => setReglage(true)}
         >
-          Gérer les accès
+          {t`Gérer les accès`}
         </Button>
       </div>
       {reglage && (
@@ -129,18 +139,20 @@ function DossierVerifie({
       <PropositionsDossier v={v} />
       <p className="rt-texte-secondaire">
         {v.dossier.attendus === 'CONTACTS_PRINCIPAUX'
-          ? 'Personnes attendues : les contacts principaux des périmètres lecteurs.'
-          : 'Personnes attendues : les membres des périmètres lecteurs pour la période.'}{' '}
+          ? t`Personnes attendues : les contacts principaux des périmètres lecteurs.`
+          : t`Personnes attendues : les membres des périmètres lecteurs pour la période.`}{' '}
         {attendues.length === 0
           ? ''
           : manques === 0
-            ? 'Toutes ont accès chez le fournisseur.'
-            : `${manques} ${manques > 1 ? 'n’ont pas d’accès certain' : 'n’a pas d’accès certain'}.`}
+            ? t`Toutes ont accès chez le fournisseur.`
+            : manques > 1
+              ? t`${manques} n’ont pas d’accès certain.`
+              : t`${manques} n’a pas d’accès certain.`}
       </p>
       {attendues.length === 0 && enTrop.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="Aucune personne n’est attendue pour ce dossier."
+          description={t`Aucune personne n’est attendue pour ce dossier.`}
         />
       ) : (
         <div className="rt-acces-equipes">
@@ -164,7 +176,10 @@ function DossierVerifie({
             </Section>
           ))}
           {sansEquipe.length > 0 && (
-            <Section titre="Admins de l’activité" compte={resume(sansEquipe)}>
+            <Section
+              titre={t`Admins de l’activité`}
+              compte={resume(sansEquipe)}
+            >
               <ul className="rt-explorateur">
                 {sansEquipe.map(l => (
                   <LignePersonne key={l.personne?.id ?? l.nom} ligne={l} />
@@ -174,13 +189,15 @@ function DossierVerifie({
           )}
           {enTrop.length > 0 && (
             <Section
-              titre="Accès en trop"
-              compte={`${enTrop.length} ${enTrop.length > 1 ? 'comptes' : 'compte'}`}
+              titre={t`Accès en trop`}
+              compte={t`${plural(nombreEnTrop, { one: '# compte', other: '# comptes' })}`}
             >
               <p className="rt-texte-secondaire">
-                Ces comptes ont un droit sur le dossier sans être attendus :
-                coordination, ancienne équipe, compte d’une autre adresse.
-                Relaytour n’en garde que le nom.
+                <Trans>
+                  Ces comptes ont un droit sur le dossier sans être attendus :
+                  coordination, ancienne équipe, compte d’une autre adresse.
+                  Relaytour n’en garde que le nom.
+                </Trans>
               </p>
               <ul className="rt-explorateur">
                 {enTrop.map(l => (
@@ -227,6 +244,7 @@ export default function VerificationAcces({
   /** Ouvre la connexion qui gère les accès, quand le fournisseur le permet. */
   onActiverGestion: (() => void) | null
 }) {
+  const { t } = useLingui()
   const { activite } = useActivite()
   const { message } = App.useApp()
   const active = connexion.portee !== 'FICHIERS'
@@ -235,30 +253,35 @@ export default function VerificationAcces({
     skip: !active,
   })
   const [verifier, { loading: lancement }] = useMutation(VERIFIER_ACCES)
+  const consentement = CONSENTEMENT[connexion.fournisseur]
 
   if (!active) {
     return (
       <Panneau
-        titre="Vérification des accès"
+        titre={t`Vérification des accès`}
         icone={<SafetyCertificateOutlined />}
       >
         <p>
-          Relaytour peut comparer les équipes aux droits des dossiers liés chez
-          le fournisseur. Vous apprenez ainsi qui a un compte, qui a accès et
-          qui a un accès en trop. Pour cela, Relaytour lit l’annuaire et les
-          groupes du fournisseur, sans changer aucun droit.
+          <Trans>
+            Relaytour peut comparer les équipes aux droits des dossiers liés
+            chez le fournisseur. Vous apprenez ainsi qui a un compte, qui a
+            accès et qui a un accès en trop. Pour cela, Relaytour lit l’annuaire
+            et les groupes du fournisseur, sans changer aucun droit.
+          </Trans>
         </p>
         {onActiver === null ? (
           <p className="rt-texte-secondaire">
-            Ce fournisseur ne propose pas encore la vérification des accès.
+            <Trans>
+              Ce fournisseur ne propose pas encore la vérification des accès.
+            </Trans>
           </p>
         ) : (
           <>
             <p className="rt-texte-secondaire">
-              {CONSENTEMENT[connexion.fournisseur]}
+              {consentement === undefined ? null : i18n._(consentement)}
             </p>
             <Button type="primary" onClick={onActiver}>
-              Activer la vérification des accès
+              {t`Activer la vérification des accès`}
             </Button>
           </>
         )}
@@ -270,12 +293,15 @@ export default function VerificationAcces({
     verifier()
       .then(() =>
         message.success(
-          'La vérification est lancée. Le résultat s’affiche dans quelques instants.'
+          t`La vérification est lancée. Le résultat s’affiche dans quelques instants.`
         )
       )
       .catch((e: unknown) => message.error(messageErreur(e)))
 
   const verifications = data?.verificationAcces ?? []
+  const derniereVerification = connexion.accesVerifieLe
+    ? jourDeLInstant(connexion.accesVerifieLe)
+    : ''
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
       <div className="rt-puces" style={{ alignItems: 'center' }}>
@@ -286,20 +312,20 @@ export default function VerificationAcces({
           disabled={connexion.etat !== 'ACTIVE'}
           onClick={() => void lancer()}
         >
-          Vérifier maintenant
+          {t`Vérifier maintenant`}
         </Button>
         <span className="rt-texte-secondaire">
           {connexion.accesVerifieLe
-            ? `Dernière vérification le ${jourDeLInstant(connexion.accesVerifieLe)}. Relaytour vérifie aussi chaque nuit.`
-            : 'Aucune vérification pour l’instant. Relaytour vérifie aussi chaque nuit.'}
+            ? t`Dernière vérification le ${derniereVerification}. Relaytour vérifie aussi chaque nuit.`
+            : t`Aucune vérification pour l’instant. Relaytour vérifie aussi chaque nuit.`}
         </span>
       </div>
       {!AVEC_ANNUAIRE.has(connexion.fournisseur) && (
         <Alert
           type="info"
           showIcon
-          title="Ce fournisseur ne publie pas d’annuaire des comptes."
-          description="Relaytour compare les adresses des personnes à celles des droits du dossier. Une personne qui utilise une autre adresse chez le fournisseur paraît sans accès, et les membres d’un groupe ne se lisent pas."
+          title={t`Ce fournisseur ne publie pas d’annuaire des comptes.`}
+          description={t`Relaytour compare les adresses des personnes à celles des droits du dossier. Une personne qui utilise une autre adresse chez le fournisseur paraît sans accès, et les membres d’un groupe ne se lisent pas.`}
         />
       )}
       {connexion.accesErreur && (
@@ -310,7 +336,7 @@ export default function VerificationAcces({
       ) : error && !data ? (
         <Alert type="error" showIcon title={messageErreur(error)} />
       ) : verifications.length === 0 ? (
-        <Empty description="Aucun dossier n’est lié à cette activité." />
+        <Empty description={t`Aucun dossier n’est lié à cette activité.`} />
       ) : (
         verifications.map(v => (
           <DossierVerifie

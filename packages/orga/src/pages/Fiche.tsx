@@ -1,5 +1,6 @@
 import { EditOutlined, HistoryOutlined } from '@ant-design/icons'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -48,6 +49,7 @@ function dateHeure(iso: string) {
 }
 
 export default function Fiche() {
+  const { t } = useLingui()
   const { lien, gere } = useActivite()
   const mentions = useMentions()
   const { slug = '' } = useParams()
@@ -73,24 +75,30 @@ export default function Fiche() {
   })
 
   if (error)
-    return <Result status="403" title="Vous n’avez pas accès à cette fiche." />
+    return (
+      <Result status="403" title={t`Vous n’avez pas accès à cette fiche.`} />
+    )
   if (!data) return <Skeleton active />
   const fiche = data.fiche
   if (!fiche)
-    return <Result status="404" title="Cette fiche est introuvable." />
+    return <Result status="404" title={t`Cette fiche est introuvable.`} />
 
   const versionAffichee = versions.data?.fiche?.versions.find(
     v => v.id === apercu
   )
 
   const taches = liees.data?.fiche?.taches ?? []
+  const dateMiseAJour = dateHeure(fiche.modifieeLe)
+  const auteurMiseAJour = fiche.modifieePar
 
   return (
     <>
       <Titre
         avant={
-          <nav aria-label="Fil d’Ariane" className="rt-ariane">
-            <Link to={lien('/fiches')}>Ressources</Link>
+          <nav aria-label={t`Fil d’Ariane`} className="rt-ariane">
+            <Link to={lien('/fiches')}>
+              <Trans>Ressources</Trans>
+            </Link>
             <span aria-hidden="true">/</span>
             {fiche.perimetre ? (
               <EtiquettePerimetre
@@ -100,27 +108,32 @@ export default function Fiche() {
                 point
               />
             ) : (
-              <span>Fiches communes</span>
+              <span>
+                <Trans>Fiches communes</Trans>
+              </span>
             )}
           </nav>
         }
         sousTitre={
           <>
-            Mise à jour le {dateHeure(fiche.modifieeLe)}
-            {fiche.modifieePar
-              ? ` par ${fiche.modifieePar}.`
-              : ' depuis le dépôt.'}
+            {auteurMiseAJour
+              ? t`Mise à jour le ${dateMiseAJour} par ${auteurMiseAJour}.`
+              : t`Mise à jour le ${dateMiseAJour} depuis le dépôt.`}
           </>
         }
         actions={
           <>
-            {fiche.archive && <Tag>Archivée</Tag>}
+            {fiche.archive && (
+              <Tag>
+                <Trans>Archivée</Trans>
+              </Tag>
+            )}
             {gere && (
               <Button
                 icon={<HistoryOutlined />}
                 onClick={() => setHistorique(true)}
               >
-                Historique
+                <Trans>Historique</Trans>
               </Button>
             )}
             {fiche.peutModifier && (
@@ -129,7 +142,7 @@ export default function Fiche() {
                 icon={<EditOutlined />}
                 onClick={() => navigate(lien(`/fiches/${fiche.slug}/modifier`))}
               >
-                Modifier
+                <Trans>Modifier</Trans>
               </Button>
             )}
           </>
@@ -141,19 +154,25 @@ export default function Fiche() {
       <DeuxColonnes
         cote={
           <>
-            <Panneau titre="À propos">
+            <Panneau titre={t`À propos`}>
               <dl className="rt-description">
-                <dt>Périmètre</dt>
-                <dd>{fiche.perimetre?.nom ?? 'Fiche commune'}</dd>
+                <dt>
+                  <Trans>Périmètre</Trans>
+                </dt>
+                <dd>{fiche.perimetre?.nom ?? t`Fiche commune`}</dd>
                 <ConnexionsFiche
                   groupes={fiche.concerneGroupes}
                   connexions={fiche.connexions}
                   mentions={mentions}
                   perimetreDeLaFiche={fiche.perimetre?.id ?? null}
                 />
-                <dt>Source</dt>
-                <dd>{LIBELLES_SOURCE[fiche.source ?? 'APP']}</dd>
-                <dt>Identifiant</dt>
+                <dt>
+                  <Trans>Source</Trans>
+                </dt>
+                <dd>{t(LIBELLES_SOURCE[fiche.source ?? 'APP'])}</dd>
+                <dt>
+                  <Trans>Identifiant</Trans>
+                </dt>
                 <dd
                   className="rt-mono"
                   style={{ fontWeight: 400, fontSize: 12.5 }}
@@ -163,7 +182,9 @@ export default function Fiche() {
                 {fiche.nombreVersions !== null &&
                   fiche.nombreVersions !== undefined && (
                     <>
-                      <dt>Versions</dt>
+                      <dt>
+                        <Trans>Versions</Trans>
+                      </dt>
                       <dd>{fiche.nombreVersions}</dd>
                     </>
                   )}
@@ -171,7 +192,7 @@ export default function Fiche() {
             </Panneau>
             {editionId && (
               <Panneau
-                titre="Tâches liées"
+                titre={t`Tâches liées`}
                 extra={
                   <span className="rt-compte">
                     {courante?.editionCourante?.annee}
@@ -182,17 +203,20 @@ export default function Fiche() {
                   <Skeleton active paragraph={{ rows: 2 }} title={false} />
                 ) : taches.length === 0 ? (
                   <p className="rt-texte-secondaire">
-                    Aucune tâche de l’édition en cours ne renvoie à cette fiche.
+                    <Trans>
+                      Aucune tâche de l’édition en cours ne renvoie à cette
+                      fiche.
+                    </Trans>
                   </p>
                 ) : (
                   <ul className="rt-liste-liens">
-                    {taches.map(t => (
-                      <li key={t.id}>
+                    {taches.map(tache => (
+                      <li key={tache.id}>
                         <Link
                           className="rt-ligne-lien"
                           style={{ fontSize: 13.5 }}
                           to={lien(
-                            `/perimetres/${t.perimetre.slug}?edition=${editionId}`
+                            `/perimetres/${tache.perimetre.slug}?edition=${editionId}`
                           )}
                         >
                           <span
@@ -207,17 +231,18 @@ export default function Fiche() {
                               className="rt-point"
                               style={{
                                 background:
-                                  t.perimetre.couleur ?? 'var(--rt-primaire)',
+                                  tache.perimetre.couleur ??
+                                  'var(--rt-primaire)',
                               }}
                             />
-                            {t.titre}
+                            {tache.titre}
                           </span>
-                          {t.echeance && (
+                          {tache.echeance && (
                             <span
-                              className={`rt-date${t.enRetard ? ' rt-date-retard' : ''}`}
+                              className={`rt-date${tache.enRetard ? ' rt-date-retard' : ''}`}
                               style={{ fontWeight: 400, whiteSpace: 'nowrap' }}
                             >
-                              {dateCourte(t.echeance)}
+                              {dateCourte(tache.echeance)}
                             </span>
                           )}
                         </Link>
@@ -234,8 +259,8 @@ export default function Fiche() {
           <Alert
             type="warning"
             showIcon
-            title="Cette fiche contient une adresse ou un numéro personnel."
-            description="Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »)."
+            title={t`Cette fiche contient une adresse ou un numéro personnel.`}
+            description={t`Elle ne pourra pas être reversée dans le dépôt Git. Remplacez les coordonnées par un rôle (par exemple « service des sports de la Ville »).`}
           />
         )}
 
@@ -263,7 +288,7 @@ export default function Fiche() {
           setHistorique(false)
           setApercu(null)
         }}
-        title="Historique de la fiche"
+        title={t`Historique de la fiche`}
         size={560}
       >
         {versions.loading && !versions.data ? (
@@ -274,7 +299,7 @@ export default function Fiche() {
               style={{ marginBottom: 16 }}
               onClick={() => setApercu(null)}
             >
-              Retour à la liste
+              <Trans>Retour à la liste</Trans>
             </Button>
             <Typography.Title level={4}>
               {versionAffichee.titre}
@@ -305,24 +330,28 @@ export default function Fiche() {
                       <Typography.Text strong>
                         {dateHeure(version.creeLe)}
                       </Typography.Text>
-                      {courante && <Tag color="blue">Actuelle</Tag>}
-                      <Tag>{LIBELLES_SOURCE[version.source]}</Tag>
+                      {courante && (
+                        <Tag color="blue">
+                          <Trans>Actuelle</Trans>
+                        </Tag>
+                      )}
+                      <Tag>{t(LIBELLES_SOURCE[version.source])}</Tag>
                     </Space>
                     <div style={{ opacity: 0.7, fontSize: 13 }}>
-                      {version.auteur?.nom ?? 'Import'}
+                      {version.auteur?.nom ?? t`Import`}
                       {version.resume ? ` · ${version.resume}` : ''}
                     </div>
                   </div>
                   <Space>
                     <Button size="small" onClick={() => setApercu(version.id)}>
-                      Voir
+                      <Trans>Voir</Trans>
                     </Button>
                     {!courante && (
                       <Popconfirm
-                        title="Restaurer cette version ?"
-                        description="Une nouvelle version est créée : l’historique reste complet."
-                        okText="Restaurer"
-                        cancelText="Annuler"
+                        title={t`Restaurer cette version ?`}
+                        description={t`Une nouvelle version est créée : l’historique reste complet.`}
+                        okText={t`Restaurer`}
+                        cancelText={t`Annuler`}
                         onConfirm={async () => {
                           try {
                             await restaurer({
@@ -332,7 +361,7 @@ export default function Fiche() {
                                 versionDeDepart: fiche.versionCouranteId,
                               },
                             })
-                            message.success('Version restaurée.')
+                            message.success(t`Version restaurée.`)
                           } catch (e) {
                             message.error(messageErreur(e))
                             // Une autre version existe : la fiche et son
@@ -347,7 +376,7 @@ export default function Fiche() {
                         }}
                       >
                         <Button size="small" loading={restauration.loading}>
-                          Restaurer
+                          <Trans>Restaurer</Trans>
                         </Button>
                       </Popconfirm>
                     )}

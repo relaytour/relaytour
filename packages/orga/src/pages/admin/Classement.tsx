@@ -1,4 +1,5 @@
 import { useQuery } from '@apollo/client/react'
+import { useLingui } from '@lingui/react/macro'
 import { Alert, Empty, Select, Space } from 'antd'
 import { useState } from 'react'
 
@@ -32,7 +33,11 @@ const CLASSEMENT = graphql(`
 type Ligne = ClassementQuery['classement'][number]
 
 export default function Classement() {
+  const { t } = useLingui()
   const { periode } = useActivite()
+  const periodeUne = periode.une
+  const periodeDe = periode.de
+  const periodeCette = periode.cette
   const { data: editions } = useQuery(EDITIONS)
   const [choix, setChoix] = useState<string | undefined>()
   const editionId =
@@ -45,16 +50,16 @@ export default function Classement() {
   return (
     <>
       <Titre
-        sousTitre={`Les contributions de chaque personne sur ${periode.une}.`}
+        sousTitre={t`Les contributions de chaque personne sur ${periodeUne}.`}
       >
-        Classement
+        {t`Classement`}
       </Titre>
       <Alert
         type="info"
         showIcon
         style={{ marginBottom: 16 }}
-        title="Ce classement n’est visible que par les admins."
-        description={`Chaque personne voit seulement son propre score. Un palmarès public se décide en fin ${periode.de}.`}
+        title={t`Ce classement n’est visible que par les admins.`}
+        description={t`Chaque personne voit seulement son propre score. Un palmarès public se décide en fin ${periodeDe}.`}
       />
       <Space style={{ marginBottom: 16 }}>
         <span>{periode.Nom}</span>
@@ -69,7 +74,7 @@ export default function Classement() {
         />
       </Space>
       {editionId === undefined ? (
-        <Empty description={`Créez d’abord ${periode.une}.`} />
+        <Empty description={t`Créez d’abord ${periodeUne}.`} />
       ) : (
         <Tableau<Ligne>
           id="classement"
@@ -77,49 +82,49 @@ export default function Classement() {
           loading={loading}
           dataSource={data?.classement ?? []}
           pagination={false}
-          locale={{ emptyText: `Aucune contribution pour ${periode.cette}.` }}
+          locale={{ emptyText: t`Aucune contribution pour ${periodeCette}.` }}
           colonnes={[
             {
               key: 'rang',
-              title: 'Rang',
+              title: t`Rang`,
               dataIndex: 'rang',
               width: 90,
               tri: l => l.rang,
             },
             {
               key: 'personne',
-              title: 'Personne',
+              title: t`Personne`,
               render: (_, l) => l.personne.nom,
               tri: l => l.personne.nom,
               recherche: l => l.personne.nom,
             },
             {
               key: 'points',
-              title: 'Points',
+              title: t`Points`,
               render: (_, l) => <strong>{l.score.points}</strong>,
               tri: l => l.score.points,
             },
             {
               key: 'tachesRealisees',
-              title: 'Tâches réalisées',
+              title: t`Tâches réalisées`,
               render: (_, l) => l.score.tachesRealisees,
               tri: l => l.score.tachesRealisees,
             },
             {
               key: 'tachesATemps',
-              title: 'Dont à temps',
+              title: t`Dont à temps`,
               render: (_, l) => l.score.tachesATemps,
               tri: l => l.score.tachesATemps,
             },
             {
               key: 'tachesCreees',
-              title: 'Tâches créées',
+              title: t`Tâches créées`,
               render: (_, l) => l.score.tachesCreees,
               tri: l => l.score.tachesCreees,
             },
             {
               key: 'fiches',
-              title: 'Fiches créées ou modifiées',
+              title: t`Fiches créées ou modifiées`,
               render: (_, l) => l.score.fichesCreees + l.score.fichesModifiees,
               tri: l => l.score.fichesCreees + l.score.fichesModifiees,
             },

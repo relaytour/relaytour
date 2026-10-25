@@ -7,7 +7,7 @@
 import { t } from '@lingui/core/macro'
 
 import { dateCourte } from './erreurs'
-import { langueActive } from './langue'
+import { comparerTextes } from './langue'
 
 /** Une phase déclarée par l'activité. La dernière ne porte pas de borne. */
 export interface Phase {
@@ -201,7 +201,7 @@ export function grouperParPerimetre<T extends { perimetre: PerimetreRange }>(
     (a, b) =>
       rang(a.perimetre.groupe) - rang(b.perimetre.groupe) ||
       (a.perimetre.ordre ?? 0) - (b.perimetre.ordre ?? 0) ||
-      a.perimetre.nom.localeCompare(b.perimetre.nom, langueActive())
+      comparerTextes(a.perimetre.nom, b.perimetre.nom)
   )
 }
 

@@ -6,6 +6,9 @@ import {
   PlusOutlined,
   RightOutlined,
 } from '@ant-design/icons'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Empty, Grid, Result, Skeleton } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
@@ -40,7 +43,7 @@ import {
   decalerMois,
   grilleDuMois,
   grouperParMoisAgenda,
-  JOURS_DE_LA_SEMAINE,
+  joursDeLaSemaine,
   jourLocal,
   libelleJours,
   quantieme,
@@ -51,7 +54,7 @@ import { messageErreur } from '../lib/erreurs'
 import { ecrireRegroupement, lireRegroupement } from '../lib/regroupement'
 import { EDITION_COURANTE, PERIMETRES } from '../lib/requetes'
 import { libelleMois } from '../lib/retroplanning'
-import { langueActive } from '../lib/langue'
+import { comparerTextes } from '../lib/langue'
 
 const AGENDA = graphql(`
   query Agenda($editionId: ID!, $echeances: Boolean) {
@@ -151,13 +154,25 @@ const VUES = ['liste', 'mois'] as const
 /** Clé de l'affichage de l'agenda, gardé dans le navigateur. */
 const CLE_VUE_AGENDA = 'relaytour.agenda.vue'
 
-const LIBELLES_SORTES: Record<Sorte, string> = {
-  PHASE: 'Phase',
-  DEBUT_PERIODE: 'Période',
-  FIN_PERIODE: 'Période',
-  DATE_CLE: 'Date clé',
-  REUNION: 'Réunion',
-  ECHEANCE: 'Échéance',
+const LIBELLES_SORTES: Record<Sorte, MessageDescriptor> = {
+  PHASE: msg({ message: 'Phase', comment: 'Sorte d’élément de l’agenda' }),
+  DEBUT_PERIODE: msg({
+    message: 'Période',
+    comment: 'Sorte d’élément de l’agenda : le début de la période',
+  }),
+  FIN_PERIODE: msg({
+    message: 'Période',
+    comment: 'Sorte d’élément de l’agenda : la fin de la période',
+  }),
+  DATE_CLE: msg({
+    message: 'Date clé',
+    comment: 'Sorte d’élément de l’agenda',
+  }),
+  REUNION: msg({ message: 'Réunion', comment: 'Sorte d’élément de l’agenda' }),
+  ECHEANCE: msg({
+    message: 'Échéance',
+    comment: 'Sorte d’élément de l’agenda : l’échéance d’une tâche',
+  }),
 }
 
 // Dans un même jour : les repères de la période, puis les réunions par heure,
@@ -171,10 +186,22 @@ const ORDRE: Record<Sorte, number> = {
   ECHEANCE: 5,
 }
 
-const REPONSES: Record<ReponseConvocation, string> = {
-  PRESENT: 'présent·e',
-  ABSENT: 'absent·e',
-  PEUT_ETRE: 'peut-être',
+const REPONSES: Record<ReponseConvocation, MessageDescriptor> = {
+  PRESENT: msg({
+    message: 'présent·e',
+    comment:
+      'Réponse à une convocation, en minuscules, après « Vous êtes convoqué·e, »',
+  }),
+  ABSENT: msg({
+    message: 'absent·e',
+    comment:
+      'Réponse à une convocation, en minuscules, après « Vous êtes convoqué·e, »',
+  }),
+  PEUT_ETRE: msg({
+    message: 'peut-être',
+    comment:
+      'Réponse à une convocation, en minuscules, après « Vous êtes convoqué·e, »',
+  }),
 }
 
 /** Une réunion, en ligne de l'agenda. */
@@ -198,10 +225,15 @@ function ligneDeReunion(r: ReunionDeListe): Ligne {
 const majuscule = (texte: string) =>
   texte.charAt(0).toUpperCase() + texte.slice(1)
 
-const compteElements = (n: number) => `${n} ${n > 1 ? 'éléments' : 'élément'}`
+const compteElements = (n: number) =>
+  t`${plural(n, { one: '# élément', other: '# éléments' })}`
 
 export default function Agenda() {
+  const { t } = useLingui()
   const { lien, periode, activite, gere } = useActivite()
+  const periodeAucune = periode.Aucune
+  const periodeDe = periode.de
+  const periodeCette = periode.cette
   const { message, modal } = App.useApp()
   const ecrans = Grid.useBreakpoint()
   const [parametres, setParametres] = useSearchParams()
@@ -278,7 +310,7 @@ export default function Agenda() {
         (a.reunion?.heureDebut ?? '').localeCompare(
           b.reunion?.heureDebut ?? ''
         ) ||
-        a.titre.localeCompare(b.titre, langueActive())
+        comparerTextes(a.titre, b.titre)
     )
   }, [elements, reunions])
   const groupes = useMemo(
@@ -292,7 +324,7 @@ export default function Agenda() {
     const tous = (perimetres?.perimetres ?? []).filter(p => !p.archive)
     if (agenda.peutGerer) {
       return [
-        { perimetreId: null, nom: 'Agenda global de l’activité' },
+        { perimetreId: null, nom: t`Agenda global de l’activité` },
         ...tous.map(p => ({ perimetreId: p.id, nom: p.nom })),
       ]
     }
@@ -302,7 +334,7 @@ export default function Agenda() {
     return tous
       .filter(p => miens.has(p.id))
       .map(p => ({ perimetreId: p.id, nom: p.nom }))
-  }, [agenda, perimetres, moi])
+  }, [agenda, perimetres, moi, t])
 
   if (editionId === undefined && courante && !courante.editionCourante) {
     // L'abonnement partagé ne dépend d'aucune période : ses admins le gèrent
@@ -311,7 +343,7 @@ export default function Agenda() {
       <>
         <Result
           status="info"
-          title={`${periode.Aucune} n’est en préparation.`}
+          title={t`${periodeAucune} n’est en préparation.`}
         />
         {gere && (
           <AbonnementActivite activiteId={activite.id} nom={activite.nom} />
@@ -323,8 +355,8 @@ export default function Agenda() {
     return (
       <Result
         status="warning"
-        title="L’agenda n’a pas pu être chargé."
-        subTitle="Rechargez la page dans un instant."
+        title={t`L’agenda n’a pas pu être chargé.`}
+        subTitle={t`Rechargez la page dans un instant.`}
       />
     )
   }
@@ -332,16 +364,17 @@ export default function Agenda() {
   const confirmerSuppression = (element: Ligne) => {
     if (!element.dateCleId) return
     const id = element.dateCleId
+    const titreDateCle = element.titre
     void modal.confirm({
-      title: 'Supprimer cette date clé ?',
-      content: `« ${element.titre} » disparaît de l’agenda de chaque personne.`,
-      okText: 'Supprimer',
+      title: t`Supprimer cette date clé ?`,
+      content: t`« ${titreDateCle} » disparaît de l’agenda de chaque personne.`,
+      okText: t`Supprimer`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await supprimer({ variables: { id } })
-          message.success('Date clé supprimée.')
+          message.success(t`Date clé supprimée.`)
         } catch (e) {
           message.error(messageErreur(e))
         }
@@ -360,26 +393,28 @@ export default function Agenda() {
       version: element.version ?? 0,
     })
 
-  const gestesDateCle = (element: Ligne) =>
-    agenda?.peutGerer &&
-    element.sorte === 'DATE_CLE' && (
+  const gestesDateCle = (element: Ligne) => {
+    if (!agenda?.peutGerer || element.sorte !== 'DATE_CLE') return false
+    const titreDateCle = element.titre
+    return (
       <span className="rt-agenda-gestes">
         <Button
           type="text"
           size="small"
           icon={<EditOutlined />}
-          aria-label={`Modifier « ${element.titre} »`}
+          aria-label={t`Modifier « ${titreDateCle} »`}
           onClick={() => modifier(element)}
         />
         <Button
           type="text"
           size="small"
           icon={<DeleteOutlined />}
-          aria-label={`Supprimer « ${element.titre} »`}
+          aria-label={t`Supprimer « ${titreDateCle} »`}
           onClick={() => confirmerSuppression(element)}
         />
       </span>
     )
+  }
 
   const titreElement = (element: Ligne) => {
     const reunion = element.reunion
@@ -418,6 +453,9 @@ export default function Agenda() {
       ? perimetreDe.get(element.perimetreId)
       : undefined
     const reunion = element.reunion
+    const reponseConvocation = reunion?.maReponse
+      ? t(REPONSES[reunion.maReponse])
+      : null
     return (
       <li
         key={element.cle}
@@ -429,7 +467,7 @@ export default function Agenda() {
         </span>
         <span className="rt-agenda-corps">
           <span className="rt-agenda-sorte">
-            {LIBELLES_SORTES[element.sorte]}
+            {t(LIBELLES_SORTES[element.sorte])}
           </span>
           <span className="rt-agenda-titre">{titreElement(element)}</span>
           {perimetre && (
@@ -446,12 +484,12 @@ export default function Agenda() {
           {reunion && (
             <span className="rt-note rt-agenda-description">
               {[
-                reunion.statut === 'ANNULEE' ? 'Annulée' : null,
+                reunion.statut === 'ANNULEE' ? t`Annulée` : null,
                 reunion.lieu,
                 reunion.estConvoquee
-                  ? reunion.maReponse
-                    ? `Vous êtes convoqué·e, ${REPONSES[reunion.maReponse]}`
-                    : 'Vous êtes convoqué·e, sans réponse'
+                  ? reponseConvocation
+                    ? t`Vous êtes convoqué·e, ${reponseConvocation}`
+                    : t`Vous êtes convoqué·e, sans réponse`
                   : null,
               ]
                 .filter(Boolean)
@@ -470,8 +508,8 @@ export default function Agenda() {
         <Empty
           description={
             passe
-              ? `L’agenda ${periode.de} est vide.`
-              : 'Aucune date à venir dans l’agenda.'
+              ? t`L’agenda ${periodeDe} est vide.`
+              : t`Aucune date à venir dans l’agenda.`
           }
         />
       </div>
@@ -491,6 +529,10 @@ export default function Agenda() {
     e => e.sorte !== 'PHASE' && toucheLeMois(e, mois)
   )
   const phasesDuMois = phases.filter(p => toucheLeMois(p, mois))
+  const nombrePhases = phasesDuMois.length
+  const listePhases = phasesDuMois
+    .map(p => `${p.titre} (${libelleJours(p.jour, p.jourFin)})`)
+    .join(', ')
   const grille = (
     <Section
       titre={majuscule(libelleMois(mois))}
@@ -500,16 +542,16 @@ export default function Agenda() {
           <Button
             size="small"
             icon={<LeftOutlined />}
-            aria-label="Mois précédent"
+            aria-label={t`Mois précédent`}
             onClick={() => setMois(m => decalerMois(m, -1))}
           />
           <Button size="small" onClick={() => setMois(aujourdhui.slice(0, 7))}>
-            Aujourd’hui
+            <Trans>Aujourd’hui</Trans>
           </Button>
           <Button
             size="small"
             icon={<RightOutlined />}
-            aria-label="Mois suivant"
+            aria-label={t`Mois suivant`}
             onClick={() => setMois(m => decalerMois(m, 1))}
           />
         </span>
@@ -517,15 +559,19 @@ export default function Agenda() {
     >
       {phasesDuMois.length > 0 && (
         <p className="rt-note" style={{ margin: '0 6px' }}>
-          {phasesDuMois.length > 1 ? 'Phases' : 'Phase'} :{' '}
-          {phasesDuMois
-            .map(p => `${p.titre} (${libelleJours(p.jour, p.jourFin)})`)
-            .join(', ')}
+          {t`${plural(nombrePhases, {
+            one: `Phase : ${listePhases}`,
+            other: `Phases : ${listePhases}`,
+          })}`}
         </p>
       )}
-      <div className="rt-agenda-grille" role="grid" aria-label="Jours du mois">
+      <div
+        className="rt-agenda-grille"
+        role="grid"
+        aria-label={t`Jours du mois`}
+      >
         <div role="row" className="rt-agenda-semaine">
-          {JOURS_DE_LA_SEMAINE.map(j => (
+          {joursDeLaSemaine().map(j => (
             <span key={j} role="columnheader" className="rt-agenda-entete">
               {j}
             </span>
@@ -548,13 +594,15 @@ export default function Agenda() {
                   <span className="rt-agenda-quantieme">{quantieme(jour)}</span>
                   {duJour.map(e => {
                     const reunion = e.reunion
+                    const heureReunion = reunion?.heureDebut
+                    const titreEvenement = e.titre
                     const classe = `rt-agenda-evenement rt-agenda-${e.sorte.toLowerCase()}`
                     return reunion ? (
                       <button
                         key={e.cle}
                         type="button"
                         className={`${classe}${reunion.statut === 'ANNULEE' ? ' rt-agenda-annulee' : ''}`}
-                        title={`Réunion · ${reunion.heureDebut} · ${e.titre}`}
+                        title={t`Réunion · ${heureReunion} · ${titreEvenement}`}
                         onClick={() => ouvrirReunion(reunion.id)}
                       >
                         {reunion.heureDebut} {e.titre}
@@ -563,7 +611,7 @@ export default function Agenda() {
                       <span
                         key={e.cle}
                         className={classe}
-                        title={`${LIBELLES_SORTES[e.sorte]} · ${e.titre}`}
+                        title={`${t(LIBELLES_SORTES[e.sorte])} · ${e.titre}`}
                       >
                         {e.titre}
                       </span>
@@ -581,7 +629,7 @@ export default function Agenda() {
   return (
     <>
       <Titre
-        sousTitre={`Les phases, les dates clés, les réunions et les échéances ${periode.de}.`}
+        sousTitre={t`Les phases, les dates clés, les réunions et les échéances ${periodeDe}.`}
         actions={
           <>
             {agendasEcrits.length > 0 && (
@@ -594,7 +642,7 @@ export default function Agenda() {
                   })
                 }
               >
-                Nouvelle réunion
+                <Trans>Nouvelle réunion</Trans>
               </Button>
             )}
             <ChoixEdition
@@ -604,30 +652,42 @@ export default function Agenda() {
           </>
         }
       >
-        Agenda
+        {t`Agenda`}
       </Titre>
 
       <div className="rt-puces" style={{ marginBottom: 22, rowGap: 10 }}>
         {ecrans.md && (
           <>
             <Puces<Vue>
-              libelle="Affichage de l’agenda"
+              libelle={t`Affichage de l’agenda`}
               valeur={vueChoisie}
               onChange={setVue}
               options={[
-                { valeur: 'liste', libelle: 'Liste' },
-                { valeur: 'mois', libelle: 'Mois' },
+                {
+                  valeur: 'liste',
+                  libelle: t({
+                    message: 'Liste',
+                    comment: 'Affichage de l’agenda en liste',
+                  }),
+                },
+                {
+                  valeur: 'mois',
+                  libelle: t({
+                    message: 'Mois',
+                    comment: 'Affichage de l’agenda en grille du mois',
+                  }),
+                },
               ]}
             />
             <SeparateurPuces />
           </>
         )}
         <PuceBascule actif={echeances} onChange={setEcheances}>
-          Échéances de mes périmètres
+          <Trans>Échéances de mes périmètres</Trans>
         </PuceBascule>
         {vue === 'liste' && (
           <PuceBascule actif={passe} onChange={setPasse}>
-            Jours passés
+            <Trans>Jours passés</Trans>
           </PuceBascule>
         )}
       </div>
@@ -638,7 +698,7 @@ export default function Agenda() {
         <DeuxColonnes
           cote={
             <>
-              <Panneau titre="Phases">
+              <Panneau titre={t`Phases`}>
                 <ul className="rt-agenda-liste">
                   {phases.map(p => (
                     <li
@@ -654,7 +714,7 @@ export default function Agenda() {
                 </ul>
               </Panneau>
               <Panneau
-                titre="Dates clés"
+                titre={t`Dates clés`}
                 extra={
                   agenda.peutGerer && (
                     <Button
@@ -662,7 +722,7 @@ export default function Agenda() {
                       icon={<PlusOutlined />}
                       onClick={() => setSaisie('nouvelle')}
                     >
-                      Ajouter
+                      <Trans>Ajouter</Trans>
                     </Button>
                   )
                 }
@@ -670,8 +730,8 @@ export default function Agenda() {
                 {datesCles.length === 0 ? (
                   <p className="rt-texte-secondaire">
                     {agenda.peutGerer
-                      ? `Ajoutez les jours qui comptent pour toute l’équipe ${periode.de} : un dossier à déposer, une assemblée, une visite.`
-                      : `Les admins de l’activité n’ont placé aucune date clé dans ${periode.cette}.`}
+                      ? t`Ajoutez les jours qui comptent pour toute l’équipe ${periodeDe} : un dossier à déposer, une assemblée, une visite.`
+                      : t`Les admins de l’activité n’ont placé aucune date clé dans ${periodeCette}.`}
                   </p>
                 ) : (
                   <ul className="rt-agenda-liste">
@@ -692,7 +752,7 @@ export default function Agenda() {
               {((sondages?.sondages.length ?? 0) > 0 ||
                 agendasEcrits.length > 0) && (
                 <Panneau
-                  titre="Sondages de dates"
+                  titre={t`Sondages de dates`}
                   extra={
                     agendasEcrits.length > 0 && (
                       <Button
@@ -704,42 +764,54 @@ export default function Agenda() {
                           })
                         }
                       >
-                        Nouveau
+                        {t({
+                          message: 'Nouveau',
+                          comment: 'Bouton : créer un sondage de dates',
+                        })}
                       </Button>
                     )
                   }
                 >
                   {(sondages?.sondages ?? []).length === 0 ? (
                     <p className="rt-texte-secondaire">
-                      Un sondage propose plusieurs créneaux, puis donne la
-                      réunion qui convient au plus grand nombre.
+                      <Trans>
+                        Un sondage propose plusieurs créneaux, puis donne la
+                        réunion qui convient au plus grand nombre.
+                      </Trans>
                     </p>
                   ) : (
                     <ul className="rt-liste-liens">
-                      {(sondages?.sondages ?? []).map(s => (
-                        <li key={s.id}>
-                          <button
-                            type="button"
-                            className="rt-ligne-lien"
-                            style={{ fontSize: 13.5 }}
-                            onClick={() => ouvrir('sondage', s.id)}
-                          >
-                            <span className="rt-agenda-compacte-texte">
-                              <span>{s.titre}</span>
-                              <span
-                                className="rt-note"
-                                style={{ fontWeight: 400 }}
-                              >
-                                {s.statut === 'CLOS'
-                                  ? 'Clos'
-                                  : s.estParticipant && !s.aRepondu
-                                    ? 'À vous de répondre'
-                                    : `${s.repondants} sur ${s.participants} réponses`}
+                      {(sondages?.sondages ?? []).map(s => {
+                        const repondants = s.repondants
+                        const participants = s.participants
+                        return (
+                          <li key={s.id}>
+                            <button
+                              type="button"
+                              className="rt-ligne-lien"
+                              style={{ fontSize: 13.5 }}
+                              onClick={() => ouvrir('sondage', s.id)}
+                            >
+                              <span className="rt-agenda-compacte-texte">
+                                <span>{s.titre}</span>
+                                <span
+                                  className="rt-note"
+                                  style={{ fontWeight: 400 }}
+                                >
+                                  {s.statut === 'CLOS'
+                                    ? t({
+                                        message: 'Clos',
+                                        comment: 'Statut d’un sondage',
+                                      })
+                                    : s.estParticipant && !s.aRepondu
+                                      ? t`À vous de répondre`
+                                      : t`${repondants} sur ${participants} réponses`}
+                                </span>
                               </span>
-                            </span>
-                          </button>
-                        </li>
-                      ))}
+                            </button>
+                          </li>
+                        )
+                      })}
                     </ul>
                   )}
                 </Panneau>

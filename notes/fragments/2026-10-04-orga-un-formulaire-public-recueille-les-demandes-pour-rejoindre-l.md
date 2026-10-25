@@ -17,6 +17,18 @@ fr:
     disponibilité. La demande arrive dans l'onglet « Demandes » de l'écran
     « Personnes », avec ses réponses. La personne ne reçoit aucun mail avant
     votre décision. Le formulaire est fermé par défaut.
+en:
+  titre: >-
+    A public form collects requests to join the team
+  texte: >-
+    In the “Activities” screen, you open your activity’s public form and copy
+    its link. A person outside the team fills it in without an account: their
+    first and last name, email address, the areas that interest them, their
+    availability, and what they can do. You set the introduction text, an
+    additional question, and the availability levels. The join request arrives
+    in the “Join requests” tab of the “People” screen, with its answers. The
+    person receives no email before your decision. The form is closed by
+    default.
 ---
 
 `pages/Rejoindre.tsx` porte la page publique, sous `/rejoindre/<organisation>/<activité>`.

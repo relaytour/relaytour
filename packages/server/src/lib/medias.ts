@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto'
 
+import { i18n } from './langue.ts'
+
 // Images d'une organisation ou d'une activité (ADR 0009) : logo, favicon et
 // icône d'application (ADR 0023). Ce
 // module est pur ; il n'importe ni Prisma ni l'environnement, pour servir aussi
@@ -26,19 +28,46 @@ const SIGNATURE_PNG = Buffer.from([
 // ressource externe, ni contenu HTML. La route qui le sert ajoute une politique de
 // sécurité qui bloque tout script : ce contrôle refuse en amont ce qui n'a pas sa
 // place dans un logo.
-const SVG_INTERDITS: { motif: RegExp; raison: string }[] = [
-  { motif: /<script[\s>/]/i, raison: 'un script' },
-  { motif: /<foreignObject[\s>/]/i, raison: 'un contenu HTML' },
-  { motif: /\son[a-z]+\s*=/i, raison: 'un gestionnaire d’événement' },
-  { motif: /javascript:/i, raison: 'un lien javascript' },
-  { motif: /<!ENTITY/i, raison: 'une entité XML' },
+const SVG_INTERDITS: { motif: RegExp; message: () => string }[] = [
+  {
+    motif: /<script[\s>/]/i,
+    message: () => i18n._('Le fichier SVG contient un script : il est refusé.'),
+  },
+  {
+    motif: /<foreignObject[\s>/]/i,
+    message: () =>
+      i18n._('Le fichier SVG contient un contenu HTML : il est refusé.'),
+  },
+  {
+    motif: /\son[a-z]+\s*=/i,
+    message: () =>
+      i18n._(
+        'Le fichier SVG contient un gestionnaire d’événement : il est refusé.'
+      ),
+  },
+  {
+    motif: /javascript:/i,
+    message: () =>
+      i18n._('Le fichier SVG contient un lien javascript : il est refusé.'),
+  },
+  {
+    motif: /<!ENTITY/i,
+    message: () =>
+      i18n._('Le fichier SVG contient une entité XML : il est refusé.'),
+  },
   {
     motif: /(?:href|src)\s*=\s*["'](?!#|data:image\/(?:png|jpeg|webp);)/i,
-    raison: 'une ressource externe',
+    message: ressourceExterneRefusee,
   },
-  { motif: /url\(\s*["']?(?!#)/i, raison: 'une ressource externe' },
-  { motif: /@import/i, raison: 'une ressource externe' },
+  { motif: /url\(\s*["']?(?!#)/i, message: ressourceExterneRefusee },
+  { motif: /@import/i, message: ressourceExterneRefusee },
 ]
+
+function ressourceExterneRefusee(): string {
+  return i18n._(
+    'Le fichier SVG contient une ressource externe : il est refusé.'
+  )
+}
 
 /**
  * Le texte d'un SVG dont les entités numériques et les entités XML de base sont
@@ -105,14 +134,14 @@ export function verifierMedia(
     if (
       !/^\s*(?:<\?xml[^>]*>\s*)?(?:<!--[\s\S]*?-->\s*)*<svg[\s>]/i.test(texte)
     ) {
-      throw new Error('L’image doit être un fichier PNG ou SVG.')
+      throw new Error(i18n._('L’image doit être un fichier PNG ou SVG.'))
     }
     // Les motifs s'appliquent au texte brut et au texte dont les entités numériques
     // sont décodées : « javascript&#58; » dans une valeur d'attribut vaut « javascript: ».
     for (const forme of [texte, decoderEntites(texte)]) {
-      for (const { motif, raison } of SVG_INTERDITS) {
+      for (const { motif, message } of SVG_INTERDITS) {
         if (motif.test(forme)) {
-          throw new Error(`Le fichier SVG contient ${raison} : il est refusé.`)
+          throw new Error(message())
         }
       }
     }
@@ -121,17 +150,21 @@ export function verifierMedia(
   if (attendu !== undefined && EXTENSIONS[type] !== attendu) {
     throw new Error(
       attendu === 'png'
-        ? 'Cette image doit être au format PNG : les mails n’affichent pas le SVG.'
-        : 'Cette image doit être au format SVG.'
+        ? i18n._(
+            'Cette image doit être au format PNG : les mails n’affichent pas le SVG.'
+          )
+        : i18n._('Cette image doit être au format SVG.')
     )
   }
   const max = OCTETS_MAX[type]
   if (donnees.length > max) {
     throw new Error(
-      `L’image dépasse ${Math.round(max / 1024)} Ko : réduisez sa taille.`
+      i18n._('L’image dépasse {taille} Ko : réduisez sa taille.', {
+        taille: Math.round(max / 1024),
+      })
     )
   }
-  if (donnees.length === 0) throw new Error('L’image est vide.')
+  if (donnees.length === 0) throw new Error(i18n._('L’image est vide.'))
   return {
     type,
     empreinte: empreinteMedia(donnees),
@@ -171,7 +204,10 @@ export function verifierIconeApplication(donnees: Buffer): void {
     d.hauteur !== COTE_ICONE_APPLICATION
   ) {
     throw new Error(
-      `L’icône d’application doit être un PNG carré de ${COTE_ICONE_APPLICATION} pixels de côté.`
+      i18n._(
+        'L’icône d’application doit être un PNG carré de {cote} pixels de côté.',
+        { cote: COTE_ICONE_APPLICATION }
+      )
     )
   }
 }

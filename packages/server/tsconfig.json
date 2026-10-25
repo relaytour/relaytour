@@ -7,6 +7,7 @@
     "src",
     "scripts",
     "tsup.config.ts",
+    "lingui.config.ts",
     "vitest.config.ts",
     "vitest.integration.config.ts"
   ]

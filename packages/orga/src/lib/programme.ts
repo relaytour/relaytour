@@ -1,3 +1,5 @@
+import { t } from '@lingui/core/macro'
+
 // Programme du jour J (ADR 0040), côté navigateur : la grille d'un jour, une
 // colonne par lieu et une ligne par tranche de 30 minutes. Les heures se lisent en
 // texte HH:MM, dans le fuseau de l'organisation que le serveur applique.
@@ -13,7 +15,9 @@ export function minutes(heure: string): number {
 export function heureCourte(total: number): string {
   const h = Math.floor(total / 60)
   const m = total % 60
-  return m === 0 ? `${h} h` : `${h} h ${String(m).padStart(2, '0')}`
+  if (m === 0) return t`${h} h`
+  const minutesDeuxChiffres = String(m).padStart(2, '0')
+  return t`${h} h ${minutesDeuxChiffres}`
 }
 
 export interface SequenceDuJour {

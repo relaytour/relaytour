@@ -2,6 +2,8 @@
 // de texte à remplacer et la sélection à poser ensuite. Le composant applique le
 // remplacement dans la zone, ce qui garde l'historique d'annulation du navigateur.
 
+import { t } from '@lingui/core/macro'
+
 export type Format =
   | 'gras'
   | 'italique'
@@ -29,18 +31,55 @@ export interface Remplacement {
   selection: [number, number]
 }
 
+// Les textes d'exemple s'insèrent dans la fiche, dans la langue de l'interface
+// (ADR 0047) : les accesseurs les traduisent à chaque lecture.
 export const EXEMPLES = {
-  gras: 'texte en gras',
-  italique: 'texte en italique',
-  lien: 'texte du lien',
+  get gras() {
+    return t({
+      message: 'texte en gras',
+      comment: 'Texte d’exemple inséré dans une fiche par le bouton « Gras ».',
+    })
+  },
+  get italique() {
+    return t({
+      message: 'texte en italique',
+      comment:
+        'Texte d’exemple inséré dans une fiche par le bouton « Italique ».',
+    })
+  },
+  get lien() {
+    return t({
+      message: 'texte du lien',
+      comment: 'Texte d’exemple inséré dans une fiche par le bouton « Lien ».',
+    })
+  },
   adresse: 'https://',
-} as const
+}
 
-export const TABLEAU = [
-  '| Colonne 1 | Colonne 2 |',
-  '| --- | --- |',
-  '| Texte | Texte |',
-].join('\n')
+/** Première cellule d'en-tête du tableau inséré, sélectionnée après l'insertion. */
+function premiereColonne(): string {
+  return t({
+    message: 'Colonne 1',
+    comment: 'En-tête d’un tableau d’exemple inséré dans une fiche.',
+  })
+}
+
+/** Le tableau d'exemple inséré dans une fiche, dans la langue de l'interface. */
+export function tableauDExemple(): string {
+  const colonne2 = t({
+    message: 'Colonne 2',
+    comment: 'En-tête d’un tableau d’exemple inséré dans une fiche.',
+  })
+  const cellule = t({
+    message: 'Texte',
+    comment: 'Cellule d’un tableau d’exemple inséré dans une fiche.',
+  })
+  return [
+    `| ${premiereColonne()} | ${colonne2} |`,
+    '| --- | --- |',
+    `| ${cellule} | ${cellule} |`,
+  ].join('\n')
+}
 
 /** Le texte obtenu après un remplacement. */
 export function appliquer(texte: string, r: Remplacement): string {
@@ -87,14 +126,18 @@ function auMilieuDUnMot(texte: string, debut: number, fin: number): boolean {
 
 const GRAS: Emphase = {
   marques: ['**', '__'],
-  exemple: EXEMPLES.gras,
+  get exemple() {
+    return EXEMPLES.gras
+  },
   choisir: () => '**',
 }
 
 // Le tiret bas ne marque pas l'italique au milieu d'un mot : l'astérisque le fait.
 const ITALIQUE: Emphase = {
   marques: ['_', '*'],
-  exemple: EXEMPLES.italique,
+  get exemple() {
+    return EXEMPLES.italique
+  },
   choisir: (texte, debut, fin) =>
     auMilieuDUnMot(texte, debut, fin) ? '*' : '_',
 }
@@ -460,7 +503,7 @@ function tableau({ texte, fin }: Saisie): Remplacement {
   return {
     debut: position,
     fin: position,
-    insertion: ouverture + TABLEAU + fermeture,
-    selection: [debutDuTableau, debutDuTableau + 'Colonne 1'.length],
+    insertion: ouverture + tableauDExemple() + fermeture,
+    selection: [debutDuTableau, debutDuTableau + premiereColonne().length],
   }
 }
