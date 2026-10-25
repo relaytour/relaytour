@@ -28,6 +28,9 @@
                    padding="8px 0 16px" inner-padding="13px 24px">
           Voir le périmètre
         </mj-button>
+        <mj-text font-size="13px" line-height="20px" color="#5B6670" padding="0">
+          Vous pouvez désactiver ces mails dans vos préférences : {{lienPreferences}}
+        </mj-text>
       </mj-column>
     </mj-section>
 
