@@ -59,9 +59,14 @@ interface MessagePush {
 }
 
 // Textes de repli d'une notification sans texte (ADR 0047). Le serveur compose
-// le titre et le corps dans la langue du destinataire ; le service worker, sans
-// catalogue, suit la langue du navigateur.
-const REPLI = sw.navigator.language.toLowerCase().startsWith('en')
+// le titre et le corps dans la langue du destinataire. Le service worker, sans
+// catalogue ni session, suit la première langue connue du navigateur, comme un
+// visiteur : l'ADR consigne cette exception.
+const anglais =
+  sw.navigator.languages
+    .map(l => l.toLowerCase().slice(0, 2))
+    .find(l => l === 'fr' || l === 'en') === 'en'
+const REPLI = anglais
   ? {
       titre: 'Organizer workspace',
       corps: 'A notification is waiting for you.',
