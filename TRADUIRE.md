@@ -81,7 +81,7 @@ Les mails partent dans la langue de leur destinataire. En local, Mailpit les aff
 
 ## Notes de version
 
-Une note de version affichée dans l'espace organisateur (`notes/fragments/`, audience `organisateurs`) porte sa version anglaise dans un bloc `en:`, avec les mêmes champs que `fr:`. Une autre langue n’a pas encore de bloc : ses lecteurs voient la note en français.
+Une note de version affichée dans l'espace organisateur (`notes/fragments/`, audience `organisateurs`) peut porter sa version anglaise dans un bloc `en:`, avec les mêmes champs que `fr:`. Sans ce bloc, elle s'affiche en français, et `yarn versionner valider` le signale. Une autre langue n’a pas encore de bloc : ses lecteurs voient la note en français.
 
 ## Relecture
 

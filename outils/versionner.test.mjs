@@ -544,3 +544,24 @@ test('noter amorce la version anglaise avec --titre-en', () => {
     texte
   )
 })
+
+test('valider signale sans échouer une note des organisateurs sans version anglaise', () => {
+  const racine = depot('0.2.0')
+  fragment(racine, '2026-01-01-orga-francaise', { type: 'correctif' })
+  fragment(racine, '2026-01-02-orga-traduite', {
+    type: 'correctif',
+    en: { titre: 'English title', texte: 'English text.' },
+  })
+  fragment(racine, '2026-01-03-orga-interne', {
+    type: 'interne',
+    audience: 'interne',
+  })
+  const { code, sortie } = lancer(racine, 'valider')
+  assert.equal(code, 0)
+  assert.ok(
+    sortie.includes('1 note des organisateurs sans version anglaise'),
+    sortie
+  )
+  assert.ok(sortie.includes('· 2026-01-01-orga-francaise'), sortie)
+  assert.ok(!sortie.includes('· 2026-01-03-orga-interne'), sortie)
+})

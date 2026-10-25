@@ -1,5 +1,5 @@
 import { GlobalOutlined } from '@ant-design/icons'
-import { useMutation, useQuery } from '@apollo/client/react'
+import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Radio } from 'antd'
 
@@ -31,10 +31,8 @@ export default function PreferenceLangue() {
   const { message } = App.useApp()
   const { nomCourt } = useOrganisation()
   const { data } = useQuery(LANGUE_DE_MOI)
-  // L'organisation se relit : le lien des modes d'emploi suit la langue (ADR 0047).
-  const [modifier, modification] = useMutation(MODIFIER, {
-    refetchQueries: ['Organisation'],
-  })
+  const apollo = useApolloClient()
+  const [modifier, modification] = useMutation(MODIFIER)
 
   // Une seule langue proposée : aucun choix à faire.
   if (LANGUES_PROPOSEES.length < 2) return null
@@ -46,6 +44,10 @@ export default function PreferenceLangue() {
         variables: { langue: valeur === ORGANISATION ? null : valeur },
       })
       message.success(t`Votre langue est enregistrée.`)
+      // Le serveur compose une partie des textes (notes de version, notifications,
+      // lien des modes d'emploi) : le cache se vide pour qu'ils se relisent dans
+      // la nouvelle langue (ADR 0047).
+      await apollo.resetStore()
     } catch (e) {
       message.error(messageErreur(e))
     }

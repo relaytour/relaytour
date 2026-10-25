@@ -385,6 +385,21 @@ function commandeValider() {
     }
   }
 
+  // Une note des organisateurs sans version anglaise s'affiche en français : le
+  // contrôle le signale sans échouer (ADR 0047).
+  const sansAnglais = fragments.filter(
+    f =>
+      f.champs.audience === AUDIENCE_A_ROLE &&
+      f.champs.etat !== 'retire' &&
+      f.champs.en === undefined
+  )
+  if (sansAnglais.length) {
+    console.log(
+      `${sansAnglais.length} note${sansAnglais.length > 1 ? 's' : ''} des organisateurs sans version anglaise (bloc « en ») : elles s'affichent en français.`
+    )
+    for (const f of sansAnglais) console.log(`  · ${f.id}`)
+  }
+
   if (nErreurs === 0) {
     if (fragments.length) console.log('Aucune erreur.')
   } else {

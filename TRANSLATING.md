@@ -81,7 +81,7 @@ Emails go out in the language of their recipient. Locally, Mailpit shows them at
 
 ## Release notes
 
-A release note shown in the organizer workspace (`notes/fragments/`, audience `organisateurs`) carries its English version in an `en:` block, with the same fields as `fr:`. Other languages have no block yet: their readers see the note in French.
+A release note shown in the organizer workspace (`notes/fragments/`, audience `organisateurs`) can carry its English version in an `en:` block, with the same fields as `fr:`. Without it, the note shows in French, and `yarn versionner valider` reports it. Other languages have no block yet: their readers see the note in French.
 
 ## Review
 
