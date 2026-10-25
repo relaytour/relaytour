@@ -32,6 +32,11 @@ import {
   grouperParActivite,
   SELECTION_NOTIFICATION,
 } from '../lib/composition-notifications.ts'
+import {
+  adresseDesabonnement,
+  jetonDesabonnement,
+  type MailDesabonnable,
+} from '../lib/desabonnement.ts'
 import { preferencesDe } from '../lib/notifications.ts'
 import { filtreNotificationsAdmin } from '../lib/notifications-admin.ts'
 import {
@@ -196,6 +201,23 @@ export async function composer(
   const lienVers = (chemin: string) =>
     `${origine}${avecOrganisation(chemin, configuration.slug)}`
   const lienPreferences = lienVers('/preferences')
+  // L'adresse de désabonnement en un clic d'un mail désactivable (ADR 0050).
+  const lienDesabonnement = async (
+    sorte: MailDesabonnable,
+    userId: string,
+    idOrganisation: string
+  ) => {
+    if (idOrganisation === '') return undefined
+    const { env } = await import('../env.ts')
+    return adresseDesabonnement(
+      origine,
+      jetonDesabonnement(env.BETTER_AUTH_SECRET, {
+        sorte,
+        userId,
+        organisationId: idOrganisation,
+      })
+    )
+  }
 
   if (job.sorte === 'invitation') {
     const user = await prisma.user.findUniqueOrThrow({
@@ -349,7 +371,11 @@ export async function composer(
       `/${activite.slug}/admin/personnes?onglet=demandes`
     )
     variables.lienPreferences = lienPreferences
-    desabonnement = lienPreferences
+    desabonnement = await lienDesabonnement(
+      'demandes',
+      userId,
+      activite.organisationId
+    )
     apresEnvoi = async () => {
       await prisma.notification.updateMany({
         where: {
@@ -436,6 +462,14 @@ export async function composer(
     variables.lienPerimetre = lienVers(
       `/${tache.perimetre.activite.slug}/perimetres/${tache.perimetre.slug}`
     )
+    variables.lienPreferences = lienPreferences
+    if (job.userId) {
+      desabonnement = await lienDesabonnement(
+        'tache-modifiee',
+        job.userId,
+        organisationDesPreferences
+      )
+    }
     const notificationId = job.notificationId
     if (notificationId) {
       apresEnvoi = async () => {
@@ -470,7 +504,11 @@ export async function composer(
     if (seule) sujet = sujets(configuration.nomCourt, seule)['rappels-echeance']
     variables.lienConnexion = lienVers('/')
     variables.lienPreferences = lienPreferences
-    desabonnement = lienPreferences
+    desabonnement = await lienDesabonnement(
+      'rappels-echeance',
+      userId,
+      organisationDesPreferences
+    )
     apresEnvoi = async () => {
       await prisma.notification.updateMany({
         where: { id: { in: notifications.map(n => n.id) } },
@@ -599,7 +637,7 @@ export async function composer(
         : [i18n._('Aucune échéance.')]
     variables.lienConnexion = lienVers('/')
     variables.lienPreferences = lienPreferences
-    desabonnement = lienPreferences
+    desabonnement = await lienDesabonnement('resume', userId, idOrganisation)
     apresEnvoi = async () => {
       const maintenant = new Date()
       await prisma.notification.updateMany({

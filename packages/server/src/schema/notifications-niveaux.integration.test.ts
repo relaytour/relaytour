@@ -7,6 +7,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
 import { composer } from '../courriel/messages.ts'
+import { env } from '../env.ts'
+import { lireJetonDesabonnement } from '../lib/desabonnement.ts'
 import {
   composerNotifications,
   SELECTION_NOTIFICATION,
@@ -18,6 +20,13 @@ import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 import { empreinteAdresse } from '../lib/push.ts'
 
 import { schema } from './index.ts'
+
+// Le désabonnement qu'une adresse List-Unsubscribe désigne (ADR 0050).
+const desabonnementDe = (adresse: string | undefined) =>
+  lireJetonDesabonnement(
+    env.BETTER_AUTH_SECRET,
+    adresse?.split('/').at(-1) ?? ''
+  )
 
 // Préférences par organisation (ADR 0032) et notifications d'admin rangées à part
 // (ADR 0033). Deux organisations : A porte deux activités, B une seule. « Double »
@@ -353,7 +362,12 @@ describe('préférences par organisation (ADR 0032)', () => {
     })
     expect(resumeB?.texte).toContain('Saison')
     expect(resumeB?.texte).toContain('Votre place dans l’équipe a changé.')
-    expect(resumeB?.desabonnement).toContain(`organisation=${slugB}`)
+    // Le désabonnement coupe le résumé de l'organisation B seulement (ADR 0032).
+    expect(desabonnementDe(resumeB?.desabonnement)).toEqual({
+      sorte: 'resume',
+      userId: ids.double,
+      organisationId: ids.orgB,
+    })
   })
 })
 

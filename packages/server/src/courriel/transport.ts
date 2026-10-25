@@ -10,7 +10,8 @@ export interface Message {
   html: string
   // La partie texte est obligatoire : sans elle, les filtres anti-spam pénalisent le mail.
   texte: string
-  // Page de réglage des mails, pour l'en-tête List-Unsubscribe des résumés.
+  // Adresse de désabonnement en un clic d'un mail désactivable (ADR 0050), pour les
+  // en-têtes List-Unsubscribe et List-Unsubscribe-Post (RFC 8058).
   desabonnement?: string
   // Adresse de rôle qui reçoit les réponses (Reply-To) : le contact de l'activité ou
   // de l'organisation. Sans elle, les réponses vont à l'expéditeur.
@@ -110,7 +111,10 @@ export async function expedier(
       headers: {
         'Auto-Submitted': 'auto-generated',
         ...(message.desabonnement
-          ? { 'List-Unsubscribe': `<${message.desabonnement}>` }
+          ? {
+              'List-Unsubscribe': `<${message.desabonnement}>`,
+              'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click',
+            }
           : {}),
       },
       ...(message.icalEvent
