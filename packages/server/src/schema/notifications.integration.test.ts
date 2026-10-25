@@ -7,6 +7,8 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import type { AppContext } from '../context.ts'
 import { activiteParDefaut, contexteDeTest } from '../test/contexte.ts'
 import { composer } from '../courriel/messages.ts'
+import { env } from '../env.ts'
+import { lireJetonDesabonnement } from '../lib/desabonnement.ts'
 import { genererRappels, personnesAResumer } from '../jobs/planification.ts'
 
 import { schema } from './index.ts'
@@ -15,6 +17,13 @@ import {
   TRANCHE_PERIMETRE_MS,
 } from '../lib/notifications.ts'
 import { organisationParDefaut } from '../lib/organisation.ts'
+
+// Le désabonnement qu'une adresse List-Unsubscribe désigne (ADR 0050).
+const desabonnementDe = (adresse: string | undefined) =>
+  lireJetonDesabonnement(
+    env.BETTER_AUTH_SECRET,
+    adresse?.split('/').at(-1) ?? ''
+  )
 
 // Les mails mis en file se notent au passage, sans rien changer à leur envoi : un
 // test prouve qu'une notification du périmètre n'en produit aucun.
@@ -336,7 +345,10 @@ describe('rappels d’échéance', () => {
     expect(message?.texte).toMatch(
       /- La tâche « Commander les bonnets » \((?:Essai [^,]+, )?Natation\) arrive à échéance dans 7 jours\./
     )
-    expect(message?.desabonnement).toMatch(/\/preferences\?organisation=/)
+    expect(desabonnementDe(message?.desabonnement)).toMatchObject({
+      sorte: 'rappels-echeance',
+      userId: ids.bruno,
+    })
 
     await prisma.preferenceOrganisation.create({
       data: {
@@ -574,6 +586,12 @@ describe('activité du périmètre pour les autres référent·es', () => {
     for (const corps of [mail?.texte, mail?.html]) {
       expect(corps).not.toContain('Bruno')
     }
+    // Le mail se désactive en un clic, et son texte mène aux préférences (ADR 0050).
+    expect(desabonnementDe(mail?.desabonnement)).toMatchObject({
+      sorte: 'tache-modifiee',
+      userId: ids.alice,
+    })
+    expect(mail?.texte).toMatch(/préférences : .+\/preferences\?organisation=/)
     // Le passage à « en cours », lui, nomme son auteur dans le mail.
     expect(
       enFile.some(
