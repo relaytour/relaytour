@@ -1,5 +1,7 @@
 # Contribuer à Relaytour
 
+[English summary](CONTRIBUTING.en.md)
+
 Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techniques, style d'écriture, glossaire et pièges connus. Il doit rester lisible sans autre contexte.
 
 ## Paquets
@@ -225,7 +227,7 @@ Un seul mot par notion. La colonne « Anglais » fixe le terme du catalogue angl
 
 ## Proposer une modification
 
-Relaytour accueille les contributions : correctifs, évolutions, documentation, traductions de la documentation. Ouvrez d'abord un ticket pour une évolution importante, afin d'en discuter avant d'écrire le code.
+Relaytour accueille les contributions : correctifs, évolutions, documentation, traductions de l'interface et de la documentation ([TRADUIRE.md](TRADUIRE.md)). Ouvrez d'abord un ticket pour une évolution importante, afin d'en discuter avant d'écrire le code.
 
 1. Travaillez dans un fork ou, pour les personnes mainteneuses, dans une branche du dépôt. Nommez la branche `type/sujet`, par exemple `fix/recherche-sans-edition` ou `feat/export-calendrier`.
 2. Partez de `develop` et visez `develop`. `main` n'avance qu'à la publication d'une version.

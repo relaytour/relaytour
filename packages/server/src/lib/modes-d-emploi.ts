@@ -1,3 +1,4 @@
+import type { Langue } from '@relaytour/commun'
 import type { PrismaClient } from '@relaytour/database'
 
 import { i18n } from './langue.ts'
@@ -41,6 +42,25 @@ export const LIBELLES_ROLE: Record<RoleModeDEmploi, string> = {
       }
     )
   },
+}
+
+const LISTE_PAR_DEFAUT = 'https://relaytour.org/modes-d-emploi/'
+const LISTE_ANGLAISE_PAR_DEFAUT = 'https://relaytour.org/en/modes-d-emploi/'
+
+/**
+ * La liste des modes d'emploi dans une langue (ADR 0047). En anglais : la liste
+ * déclarée par l'hébergeur, sinon la version anglaise du site de Relaytour quand
+ * l'hébergeur garde les modes d'emploi du site, sinon sa liste française.
+ */
+export function listeDesModesDEmploi(
+  env: { MODES_D_EMPLOI_URL: string; MODES_D_EMPLOI_URL_EN?: string },
+  langue: Langue
+): string {
+  if (langue !== 'en') return env.MODES_D_EMPLOI_URL
+  if (env.MODES_D_EMPLOI_URL_EN !== undefined) return env.MODES_D_EMPLOI_URL_EN
+  return env.MODES_D_EMPLOI_URL === LISTE_PAR_DEFAUT
+    ? LISTE_ANGLAISE_PAR_DEFAUT
+    : env.MODES_D_EMPLOI_URL
 }
 
 /**

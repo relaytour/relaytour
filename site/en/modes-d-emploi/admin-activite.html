@@ -1,0 +1,381 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Activity admin · User guides · Relaytour</title>
+    <meta
+      name="description"
+      content="The user guide for activity admins in the Relaytour organizer workspace: periods, areas, open seats, people, and sheet editing."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/admin-activite.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/admin-activite.html" />
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../jetons.css" />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Site navigation">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Overview</a></li>
+          <li><a href="../../design-system.html" hreflang="fr">Design system</a></li>
+          <li><a href="./" aria-current="true">User guides</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
+          <li><a href="../../modes-d-emploi/admin-activite.html" hreflang="fr" lang="fr">Français</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Activity admin</span>
+        <h1>Run an activity in Relaytour</h1>
+        <p class="chapo">
+          You administer an activity: an event, a section, or a committee. You open its periods, create its areas, build its team, and track its progress. The organization’s other activities and their people stay invisible to you.
+        </p>
+        <p class="renvoi">
+          This user guide covers only the “Manage the activity” and “Manage the organization” groups of the menu. The screens shared by everyone (My space, Timeline, Sheets, Preferences) are described in the <a href="referent.html">coordinator user guide</a>.
+        </p>
+        <p class="renvoi">
+          The screenshots show the French interface with the sample organization.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-ou">
+        <div class="entete">
+          <span class="etiquette">Starting point</span>
+          <h2 id="t-ou">Where your screens are</h2>
+          <p class="texte">
+            The <strong>Manage the activity</strong> group appears in the left menu when you administer the activity on display. It is followed by the <strong>Manage the organization</strong> group, which holds only the “Activities” entry for you. The web addresses of these screens start with the activity ID, for example <span class="route">/rencontres/admin/equipe</span>.
+          </p>
+          <p class="texte">
+            The label of the periods follows the kind of activity: <strong>Editions</strong> for an event, <strong>Seasons</strong> for a section, <strong>Terms</strong> for a committee. The examples below use “edition”.
+          </p>
+          <p class="texte" id="t-tableaux">
+            The tables on these screens work the same way. A column you can sort has two arrows in its header: clicking the header sorts the table. A column you can filter or search has a funnel or magnifier icon. The other columns, such as “Actions”, have neither sorting nor filtering. You adjust a column’s width by dragging its right edge, and a double-click restores the automatic width. Your browser remembers these widths. Clicking a row of the People, Editions, and Activities tables opens its window, like the pencil at the start of the row.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Contents">
+          <span class="etiquette">Your nine screens</span>
+          <ol>
+            <li><a href="#e-notifications-admin">Admin notifications</a>: news from your team, sorted by area.</li>
+            <li><a href="#e-equipe">Team</a>: target headcounts, interests, appointments, area settings, and the progress of each area.</li>
+            <li><a href="#e-personnes">People</a>: invite your team and handle join requests.</li>
+            <li><a href="#e-messages">Messages</a>: write to your team and review prepared messages.</li>
+            <li><a href="#e-classement">Ranking</a>: each person’s contributions over the period.</li>
+            <li><a href="#e-redaction">Sheet editing</a>: grant the right to edit the sheets of an area.</li>
+            <li><a href="#e-editions">Editions</a>: open and date the activity’s periods, place their key dates.</li>
+            <li><a href="#e-historique">Sheet history</a>: view and restore a version.</li>
+            <li><a href="#e-activite">Activities</a>: set the name, groups, and identity of your activity.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-ecrans">
+        <div class="entete">
+          <span class="etiquette">Your screens</span>
+          <h2 id="t-ecrans">What you do, screen by screen</h2>
+        </div>
+
+        <article class="verre ecran" id="e-notifications-admin">
+          <div class="ecran-tete"><h3>Admin notifications</h3><span class="route">/&lt;activity&gt;/admin/notifications</span></div>
+          <p>This screen gathers the news about your admin role, separate from the bell. It sorts the news by activity, then by area. Each group shows its count of unread notifications, and a group with no news opens collapsed. The menu entry shows the same count.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Join requests and invitations</span></span><span>A request is waiting for your review, another admin handled one, or a person accepted an invitation. A declined or expired invitation triggers no notification.</span></li>
+            <li><span><span class="libelle">Team</span></span><span>Another admin of the activity appoints or removes a person, or makes them an admin. A person states an interest in “All areas”.</span></li>
+            <li><span><span class="libelle">Read all</span></span><span>Mark the notifications of one group as read: an activity or a single area.</span></li>
+          </ul>
+          <figure>
+            <img src="../../captures/notifications-admin.webp" data-mobile="../../captures/mobile/notifications-admin.webp" width="1440" height="900" loading="lazy" alt="Admin notifications screen: one activity, then the Whole activity group and one group per area, each with its count of unread notifications." />
+            <figcaption>Admin notifications, on the sample organization. The people are fictional.</figcaption>
+          </figure>
+          <p class="note">An action never notifies you about something you did yourself. Your preferences control this news in the “Your admin roles” section: its display, its place in the email summary, and its push notification.</p>
+        </article>
+
+        <article class="verre ecran" id="e-equipe">
+          <div class="ecran-tete"><h3>Team</h3><span class="route">/&lt;activity&gt;/admin/equipe</span></div>
+          <p>The screen shows one card per area, for the selected period. It has two views: <strong>Team</strong> to build the team, and <strong>Progress</strong> to track tasks. Both views share the period, the filters, the search, and the sort. The page address keeps these settings, so you find them again when you come back from an area’s page.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Group</span></span><span>Keep only the areas of one group of the activity, for example the sports or the departments.</span></li>
+            <li><span><span class="libelle">Search</span></span><span>Find an area by its name, or by the name of an appointed person.</span></li>
+            <li><span><span class="libelle">Sort</span></span><span>Order the cards: open seats first, activity order, name, overdue tasks first, or least progress first.</span></li>
+            <li><span><span class="libelle">Open an area</span></span><span>Click the name of a card to open the area’s page. The “Manage the team” button on that page brings you back to its card.</span></li>
+          </ul>
+          <p>The <strong>Team</strong> view shows the target headcount, the appointed people, and the interests of each area, then a reminder of its progress. Areas that lack coordinators appear first when the page loads. The cards then keep their position while you make changes. The “Open seats” filter keeps only incomplete areas. Three counters sum up the situation: <strong>Open seats</strong>, <strong>Areas with no one</strong>, and <strong>Pending interests</strong>.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Target headcount</span></span><span>Set the number of people expected on an area. The difference with the appointments gives the open seats.</span></li>
+            <li><span><span class="libelle">Appoint</span></span><span>Appoint a person who stated an interest, or pick another person of your team from the list. A person missing from the list is invited from the “People” screen.</span></li>
+            <li><span><span class="libelle">Main contact</span></span><span>Click the star of an appointed person to make them the main contact of the area. An area has only one per period. This role grants no extra rights.</span></li>
+            <li><span><span class="libelle">Remove</span></span><span>Remove an appointment, or remove an interest that no longer applies.</span></li>
+            <li><span><span class="libelle">Copy volunteer call</span></span><span>Copy a call to the coordinators, to paste into an email or a message.</span></li>
+            <li><span><span class="libelle">Message the team</span></span><span>Prepare a message for the whole team of the activity. The send icon of a card prepares a message for the coordinators of that area. The <a href="#e-messages">“Messages”</a> section describes what happens next.</span></li>
+          </ul>
+          <p class="note">On an archived period, the target headcount, the main contact, and the removal of interests are disabled.</p>
+          <figure>
+            <img src="../../captures/equipe.webp" data-mobile="../../captures/mobile/equipe.webp" width="1440" height="900" loading="lazy" alt="Team screen: three counters, then one card per area with its target headcount, its appointments, the interested people, the message button, and the settings button." />
+            <figcaption>Team screen, on the sample organization. The people are fictional.</figcaption>
+          </figure>
+          <p id="e-avancement">The <strong>Progress</strong> view shows the done, overdue, and unassigned tasks of each area, with its appointed people and its target headcount. Four counters sum up the selected period: <strong>Done tasks</strong>, <strong>Overdue</strong>, <strong>No one</strong>, and <strong>Areas</strong>. The “Overdue tasks” and “Unassigned tasks” filters keep only the areas concerned. The icon of a card brings you back to the “Team” view, on that area.</p>
+          <figure>
+            <img src="../../captures/avancement.webp" data-mobile="../../captures/mobile/avancement.webp" width="1440" height="900" loading="lazy" alt="Team screen, Progress view: four counters and one card per area with its progress bar." />
+            <figcaption>Progress view of the Team screen, on the sample organization. The people and the areas are fictional.</figcaption>
+          </figure>
+          <p>On an area’s page, a <strong>shared task</strong> shows you more than it shows other people. Its detail tells, for each area, who proposed, accepted, or declined the task, and when.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Derive in other areas</span></span><span>Add a task to other areas without waiting for their approval. A coordinator can only propose it.</span></li>
+            <li><span><span class="libelle">Add without approval</span></span><span>Add to an area a task it has not accepted yet, or that it has declined. The history keeps this action, with your name.</span></li>
+          </ul>
+          <p class="note">A task template from the content folder can be shared too, with the <code>declinaison</code> key. The import then adds the task to each area, without asking for approval.</p>
+          <p>The same screen sets up the areas. An area is a part of the activity, filed in a group. It stays the same from one period to the next, which lets the history follow it.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">New area</span></span><span>Enter the name, the ID, the group, the description, the color, and the display order. The description introduces the area in one or two sentences.</span></li>
+            <li><span><span class="libelle">Set up</span></span><span>Open an area’s settings from the gear on its card, to edit or archive it. An archived area leaves the cards, and its history stays available to read.</span></li>
+            <li><span><span class="libelle">Archived areas</span></span><span>Expand this list, at the bottom of the screen, to set up an archived area or unarchive it.</span></li>
+          </ul>
+          <p class="note">The ID no longer changes after creation: it links the sheets, the task templates, and the history.</p>
+          <p class="note">If an area changed while you were editing its settings, a window offers “Reload” or “Overwrite”. The coordinator user guide describes these windows in <a href="referent.html#t-plusieurs">“Working together”</a>.</p>
+          <figure>
+            <img src="../../captures/equipe-reglage.webp" data-mobile="../../captures/mobile/equipe-reglage.webp" width="1440" height="900" loading="lazy" alt="Area settings window: name, ID, group, description, color, order, and archiving." />
+            <figcaption>Settings of an area, on the sample organization.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-personnes">
+          <div class="ecran-tete"><h3>People</h3><span class="route">/&lt;activity&gt;/admin/personnes</span></div>
+          <p>Only the people invited here can sign in to the organizer workspace. The screen has two tabs. “Activity team” gives the name, the email address, the appointments, the interests, and the role of each person of the activity. “Join requests” holds the queue of people proposed to join the team.</p>
+          <p>In the first tab, filters separate admins from members, isolate one area, or keep only the people with no appointment for the selected period. A field searches for a name or an address.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Invite a person</span></span><span>Enter the name and the address. The person joins the team of your activity, with or without an appointed or wished-for area. Without an area, they discover the areas of the activity. The same window can make them an admin of the activity. A person without an account receives an email with their sign-in link and the user guide for their role. A person who already has an account in the organization joins your team without a new email, and keeps their account name. An address that already has an account outside your organization receives an invitation: the person accepts or declines it from their account, and nothing is created in their name before they approve.</span></li>
+            <li><span><span class="libelle">Edit the account</span></span><span>Open the window of an account with the pencil on its row, or by clicking the row. There you set the person’s appointed areas and wished-for areas, and their role as activity admin.</span></li>
+            <li><span><span class="libelle">Resend the invitation</span></span><span>Follow up with a person of your team who has not signed in yet.</span></li>
+            <li><span><span class="libelle">Remove from the activity</span></span><span>Take a person with no appointment for the selected period off the team of the activity. Their interests for the current periods are removed, and their account stays in the organization. First remove their appointments from the other current periods and their role as activity admin.</span></li>
+            <li><span><span class="libelle">Pending invitations</span></span><span>A box lists the invitations awaiting approval, with the name and address you entered and the proposed areas. You resend an invitation once an hour, or you withdraw it. An invitation expires after 30 days. The person appears in the team only after approving; a declined invitation and an expired invitation look the same.</span></li>
+            <li><span><span class="libelle">Message</span></span><span>Prepare a message for one person. “Message the selection” prepares a message for the checked people.</span></li>
+          </ul>
+          <p class="note">Your team gathers the people affiliated with, appointed to, interested in, or admins of your activity. A person affiliated without an area has the “No area” role. Each appointment also affiliates the person with the activity. You do not read the other members of the organization: only its admins read the full directory. The appointments and interests you see are those of your activities only. An organization admin edits the name of an existing account.</p>
+          <figure>
+            <img src="../../captures/personnes.webp" data-mobile="../../captures/mobile/personnes.webp" width="1440" height="900" loading="lazy" alt="People screen, Activity team tab: the filters, then the name, the address, the appointments, the interests, and the role of each person." />
+            <figcaption>People screen, on the sample organization. The people and the addresses are fictional.</figcaption>
+          </figure>
+          <p>In the window of an account, an appointment makes the person a coordinator of the area: they edit its tasks, and an email announces their appointment. An interest only records interest. It grants no access, and only admins see it.</p>
+          <figure>
+            <img src="../../captures/personnes-compte.webp" data-mobile="../../captures/mobile/personnes-compte.webp" width="1440" height="900" loading="lazy" alt="Edit the account window: the read-only name and address, the activity admin role, the appointed areas, and the wished-for areas." />
+            <figcaption>Window of an account, on the sample organization. The person is fictional.</figcaption>
+          </figure>
+          <p>A coordinator proposes a person for their area, or a person fills in the activity’s public form. The request arrives in the “Join requests” tab, with the address, the requested areas, and the note of the person proposing or the answers to the form. No account exists before your decision. The bell notifies you at most once a day, and each card of the “Team” screen counts its pending requests. An email also notifies you, at most once an hour: it gives the number of pending requests, without names. You turn it off in your preferences.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Accept</span></span><span>Bring the person into your team and choose their areas. A requested area that you do not appoint becomes an interest. A request can also be accepted without an area: the person joins the team and discovers the areas. A person without an account receives their invitation by email.</span></li>
+            <li><span><span class="libelle">Decline</span></span><span>Dismiss the request. No account is created and no email is sent.</span></li>
+          </ul>
+          <p class="note">A person who is already a member of the organization shows the “Already a member” label: accepting their request appoints them without creating an account. The requests of an archived period can no longer be handled.</p>
+          <figure>
+            <img src="../../captures/personnes-demandes.webp" data-mobile="../../captures/mobile/personnes-demandes.webp" width="1440" height="900" loading="lazy" alt="People screen, Join requests tab: one pending request, with its area, the person proposing, and the Accept and Decline buttons." />
+            <figcaption>Join requests tab, on the sample organization. The people and the addresses are fictional.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-messages">
+          <div class="ecran-tete"><h3>Messages to your team</h3><span class="route">/&lt;activity&gt;/admin/messages</span></div>
+          <p>You prepare a message in Relaytour, then send it from your own mail app. Relaytour sends nothing: it composes the text, opens your mail app, and keeps what you prepared. The message goes out from your address, and replies come back to you.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Template</span></span><span>Start from a free message or from a prepared text: period launch, reminder of overdue tasks, volunteer call, thank-you, among others. Relaytour fills in the name of the activity, the dates, and the tasks of the selected area.</span></li>
+            <li><span><span class="libelle">Insert information</span></span><span>Place a piece of information from the application in your text, at the cursor. A passage in square brackets remains to be completed, and the window points it out.</span></li>
+            <li><span><span class="libelle">Cc or Bcc</span></span><span>Choose between visible addresses (Cc) and hidden addresses (Bcc) for a message to several people. With Cc, each recipient sees the others’ addresses. With Bcc, you can keep the main contacts in visible copy.</span></li>
+            <li><span><span class="libelle">Open in your mail app</span></span><span>Open your mail app with the recipients, the subject, and the text. Relaytour records the message at that moment.</span></li>
+            <li><span><span class="libelle">Mail app</span></span><span>Choose the mail app that opens for this message: your device’s, a webmail, or an app. Your preferences set the default choice. The <a href="messagerie.html">“Choose your mail app”</a> user guide describes each choice.</span></li>
+            <li><span><span class="libelle">Copy</span></span><span>Copy the addresses, the subject, or the text, to paste them yourself into your mail app. The “Address separator” choice places a comma or a semicolon between the addresses: Outlook expects a semicolon.</span></li>
+          </ul>
+          <figure>
+            <img src="../../captures/message.webp" data-mobile="../../captures/mobile/message.webp" width="1440" height="900" loading="lazy" alt="Write a message window: the recipients, the choice between Cc and Bcc, the template, the area, the subject, and the text." />
+            <figcaption>A message prepared for the whole team, on the sample organization. The people are fictional.</figcaption>
+          </figure>
+          <p>The “Messages” screen lists the messages of the activity: the date, the subject, the template, the author, the recipients, and the status. A message is “In progress” when the mail app opens. Its author then marks it “Sent” or “Canceled”, and can reopen it in their mail app. The “Message history” link on the “Team” screen leads to this screen.</p>
+          <figure>
+            <img src="../../captures/messages-historique.webp" data-mobile="../../captures/mobile/messages-historique.webp" width="1440" height="900" loading="lazy" alt="Messages screen: two messages with their date, subject, template, author, recipients, and status." />
+            <figcaption>Messages screen, on the sample organization. The people and the messages are fictional.</figcaption>
+          </figure>
+          <p class="note">The status of a message is the one its author declares: Relaytour does not know whether the message went out. A message has at most 500 recipients, and a prepared message can no longer be edited.</p>
+          <p class="note">A very long text or a very large number of recipients exceeds what a link to the mail app can carry. The window then asks you to copy the text, or the addresses, and paste them into the message.</p>
+        </article>
+
+        <article class="verre ecran" id="e-classement">
+          <div class="ecran-tete"><h3>Ranking</h3><span class="route">/&lt;activity&gt;/admin/classement</span></div>
+          <p>The table ranks people by their contribution to the selected period. For each person, it gives their points, their completed tasks, the tasks completed on time, their tasks created, and their sheets created or edited.</p>
+          <figure>
+            <img src="../../captures/classement.webp" data-mobile="../../captures/mobile/classement.webp" width="1440" height="900" loading="lazy" alt="Ranking screen: a table with the rank, the person, the points, and the breakdown of their contributions." />
+            <figcaption>Ranking screen, on the sample organization. The people are fictional.</figcaption>
+          </figure>
+          <p class="note">Only admins read this ranking. Each person sees their own score in “My space”, and no one else’s.</p>
+        </article>
+
+        <article class="verre ecran" id="e-redaction">
+          <div class="ecran-tete"><h3>Sheet editing</h3><span class="route">/&lt;activity&gt;/admin/redaction</span></div>
+          <p>Admins edit all the sheets of their activity. Other people need an editing right, granted area by area.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Grant</span></span><span>Choose a person and an area of your activity.</span></li>
+            <li><span><span class="libelle">Remove</span></span><span>Remove a right that is no longer needed, after confirmation.</span></li>
+          </ul>
+          <p class="note">The right covering all sheets, shared ones included, belongs to organization admins.</p>
+          <p class="note">A second table lists the admins. Their role already gives them sheet editing: the “Person” list does not offer them.</p>
+          <figure>
+            <img src="../../captures/redaction.webp" data-mobile="../../captures/mobile/redaction.webp" width="1440" height="900" loading="lazy" alt="Sheet editing screen: the grant form, the list of granted rights, and the list of admins." />
+            <figcaption>Sheet editing screen, on the sample organization.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-editions">
+          <div class="ecran-tete"><h3>Editions, seasons, or terms</h3><span class="route">/&lt;activity&gt;/admin/editions</span></div>
+          <p>A period is the reference point for all due dates: a task template at D-120 is dated from the first day. The table lists the year, the name, the dates, and the status, which is <strong>In preparation</strong>, <strong>In progress</strong>, or <strong>Archived</strong>.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">New edition</span></span><span>Open the next period. You enter the year, the name, the first day, and the last day.</span></li>
+            <li><span><span class="libelle">Save</span></span><span>Edit the name, the dates, or the status of a period. The year no longer changes after creation.</span></li>
+          </ul>
+          <p>The key dates of a period are placed from the <strong>Calendar</strong> screen, in the right-hand column. A key date has a title, a day or a series of days, and an optional description. The whole team of the activity sees it in their calendar.</p>
+          <p>You also manage the activity’s <strong>global calendar</strong>: its meetings and date polls target the whole team or chosen people, across all areas. You write in each area’s calendar as well. A global meeting can link tasks from several areas, twenty at most.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Add</span></span><span>Place a key date in the calendar of the displayed period.</span></li>
+            <li><span><span class="libelle">Create address</span></span><span>Publish the activity’s global calendar (phases, key dates, global meetings) at a secret address, which a shared calendar of the association subscribes to. Area meetings do not appear in it.</span></li>
+          </ul>
+          <figure>
+            <img src="../../captures/agenda-mois.webp" data-mobile="../../captures/mobile/agenda.webp" width="1440" height="900" loading="lazy" alt="Calendar screen in Month view: the month grid with the key dates, and the editable key dates on the right." />
+            <figcaption>The calendar in Month view, as seen by an activity admin.</figcaption>
+          </figure>
+          <p class="note">Archiving a period makes its tasks and its calendar read-only. Its join requests are deleted the following night, whatever their status. The accounts and the appointments stay.</p>
+          <figure>
+            <img src="../../captures/editions.webp" data-mobile="../../captures/mobile/editions.webp" width="1440" height="900" loading="lazy" alt="Editions screen: the list of editions, with one edition in preparation and one archived edition." />
+            <figcaption>Editions screen, on the sample organization shipped with Relaytour.</figcaption>
+          </figure>
+        </article>
+
+        <article class="verre ecran" id="e-programme">
+          <div class="ecran-tete"><h3>Schedule and volunteers</h3><span class="route">/&lt;activity&gt;/programme</span></div>
+          <p>You manage the schedule of the whole activity. You create the shared slots, such as the welcome or the awards ceremony, and you write in the slots of each area. The coordinator user guide describes the screen and its views.</p>
+          <p>The <strong>venues</strong> are yours: a field, a room, a welcome desk. They carry over from one period to the next and form the columns of the grid, in the order you set.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Venues</span></span><span>Add, rename, reorder, or archive a venue. An archived venue keeps its past slots and is no longer offered.</span></li>
+          </ul>
+          <p>The <strong>Volunteers</strong> screen (<span class="route">/&lt;activity&gt;/benevoles</span>) lists the people who help without an account. You read the contact details of each record. Activity admins are the only people who delete a record. A deleted record leaves the slots where it was placed.</p>
+          <figure>
+            <img src="../../captures/benevoles.webp" data-mobile="../../captures/mobile/benevoles.webp" width="1440" height="900" loading="lazy" alt="Volunteers screen: the table of volunteer records with their name, phone number, email address, and number of slots." />
+            <figcaption>The volunteer records, as seen by an activity admin. The names and numbers are fictional.</figcaption>
+          </figure>
+          <p>You open <strong>volunteer calls</strong> of any scope: the whole period, one area, or a single slot. You read all applications, and you accept those for slots with no area.</p>
+          <figure>
+            <img src="../../captures/benevoles-candidatures.webp" data-mobile="../../captures/mobile/benevoles-candidatures.webp" width="1440" height="900" loading="lazy" alt="Applications tab: the applications to handle, with their contact details, their availability, and the chosen slots." />
+            <figcaption>The queue of applications, as seen by an activity admin.</figcaption>
+          </figure>
+          <p>You import a <strong>volunteer list</strong> kept elsewhere for the whole schedule, with the “Import a list” button. The <strong>Possible duplicates</strong> tab, reserved for activity admins, matches the records of the same person and merges them.</p>
+          <p class="note">A record exists only with the person’s consent. The server deletes the records unused for two years every night. The organization’s full export contains the records, the calls, and the applications. The <a href="benevoles.html">Recruit and place volunteers</a> user guide describes the calls, the <a href="benevoles.html#e-import">list import</a>, and the <a href="benevoles.html#e-doublons">merge of duplicates</a> step by step.</p>
+        </article>
+
+        <article class="verre ecran" id="e-historique">
+          <div class="ecran-tete"><h3>Sheet history</h3><span class="route">/&lt;activity&gt;/fiches/&lt;sheet&gt;</span></div>
+          <p>On each sheet of your activity, a <strong>History</strong> button opens the list of versions. There you view a past version and restore it if a change needs to be undone.</p>
+          <p class="note">Coordinators who have an editing right edit the sheet, but do not see this history.</p>
+        </article>
+
+        <article class="verre ecran" id="e-activite">
+          <div class="ecran-tete"><h3>Activities</h3><span class="route">/&lt;activity&gt;/admin/activites</span></div>
+          <p>The table lists the activities you can see. The edit button appears only on those you administer.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Save</span></span><span>Set the name, the acronym, the order, and the kind of your activity.</span></li>
+            <li><span><span class="libelle">Add a group</span></span><span>Declare the groups of areas: sports and departments, teams and departments, committees and board.</span></li>
+            <li><span><span class="libelle">Add a phase</span></span><span>Split the period into phases: a label and a last day per phase, counted from the first day of the period (D-120, D+30). The last phase receives all the tasks that follow. Tasks are filed into phases by their due date. A task with no due date falls into no phase: it stays in a “No due date” group.</span></li>
+            <li><span><span class="libelle">Own identity</span></span><span>Give the activity its own contact, team page, logo, and two colors. An empty field takes the organization’s value.</span></li>
+            <li><span><span class="libelle">Open to interests</span></span><span>Let the people of the team state their own interests in “All areas”. Otherwise, only activity admins record interests. This setting does not show the activity to members outside its team. Interests arrive in “Team”.</span></li>
+            <li><span><span class="libelle">Addresses in the org chart</span></span><span>Choose which personal addresses the org chart may display: none, those of admins and main contacts, or those of the whole team of the areas. Each address also requires the person’s consent, in their preferences. The activity’s contact always appears.</span></li>
+          </ul>
+          <p class="note">Creating and archiving an activity belong to organization admins.</p>
+          <figure>
+            <img src="../../captures/activites-phases.webp" data-mobile="../../captures/mobile/activites-phases.webp" width="1440" height="900" loading="lazy" alt="Edit the activity window: the list of phases, with the key, the label, and the last day of each phase." />
+            <figcaption>The phases of an activity, on the sample organization.</figcaption>
+          </figure>
+          <p class="note">An activity you do not set up keeps four phases: Launch, Preparation, Final adjustments, Execution and review. Editing the phases changes no task: only the filing of dated tasks changes, in the timeline and in each area.</p>
+          <p>The same window sets up the activity’s <strong>public form</strong>. A person outside the organization fills it in, without an account, to join the team. Their request arrives in the “Join requests” tab of the “People” screen.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Form open</span></span><span>Open or close the form. The address to share appears under the switch. The form does not open without a contact for the activity or the organization.</span></li>
+            <li><span><span class="libelle">Introduction</span></span><span>Write the text that opens the form.</span></li>
+            <li><span><span class="libelle">Follow-up question</span></span><span>Ask a question specific to your organization, for example “Your club”.</span></li>
+            <li><span><span class="libelle">Availability levels</span></span><span>Offer up to eight levels, for example “A few hours during the event”.</span></li>
+          </ul>
+          <p class="note">The form is public: do not write any personal contact details in it. It presents the areas of the activity with their description. It states that it is used to join the team that prepares the activity. When a volunteer call is open for the whole period, the form shows its link for the people who come to help on the day itself. Otherwise, it gives the activity’s contact. To keep a period-wide call confidential, close it or close the public form. The person receives no email before your decision, and their answers are deleted when the period is archived.</p>
+          <figure>
+            <img src="../../captures/rejoindre.webp" data-mobile="../../captures/mobile/rejoindre.webp" width="1440" height="900" loading="lazy" alt="Public form to join the team: the name, the address, a follow-up question, and the areas of the activity with their description." />
+            <figcaption>Public form of an activity, on the sample organization.</figcaption>
+          </figure>
+          <figure>
+            <img src="../../captures/activites.webp" data-mobile="../../captures/mobile/activites.webp" width="1440" height="900" loading="lazy" alt="Activities screen: the administered activity, with its ID, its kind, its groups, and its status." />
+            <figcaption>Activities screen, on the sample organization.</figcaption>
+          </figure>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-limites">
+        <div class="entete">
+          <span class="etiquette">Good to know</span>
+          <h2 id="t-limites">The limits of your role</h2>
+        </div>
+        <div class="grille-2">
+          <article class="verre panneau">
+            <h3>One activity at a time</h3>
+            <p>An activity that you do not administer and where you are not appointed does not exist for you: not in the selector, not in the lists, not in the search. Neither do its people: you read and appoint your own team only.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>You appoint admins of your activity only</h3>
+            <p>On the “People” screen, the “Admins” filter gathers the organization’s admins and those of your activity. In the window of an account, you make a person of your team an admin of your activity, and you remove that role, except your own. You do not appoint organization admins, and you do not edit their appointments or their interests.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>The accounts do not belong to you</h3>
+            <p>Archiving and restoring a person is up to organization admins. Each person edits their own name in their preferences. An account is shared across the whole organization: a person you invite may already have one there, which you cannot read before they join your team. The organizations of one installation are kept separate: an account known elsewhere joins yours only with the person’s consent.</p>
+          </article>
+          <article class="verre panneau">
+            <h3>The organization’s identity is out of your reach</h3>
+            <p>The name, the logo, the theme, and the content download of the organization are set on the Organization page, reserved for organization admins.</p>
+          </article>
+        </div>
+        <div class="alerte">
+          <span class="etiquette">If the organization becomes read-only</span>
+          <p>A banner appears at the top of the workspace: you can view and export the data, but not edit it. The buttons stay visible, and any attempt to save returns this message.</p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">The other roles</span>
+          <h2 id="t-autres">The other user guides</h2>
+          <p class="texte">Your team uses the coordinator user guide. The organization’s board uses the organization admin guide.</p>
+        </div>
+        <div class="grille-2">
+          <a class="verre panneau lien-guide" href="referent.html">
+            <span class="role">Coordinator</span>
+            <h3>Follow your tasks and your sheets</h3>
+            <p>Signing in, My space, the timeline, the sheets, and the preferences. These screens concern you too.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="admin-organisation.html">
+            <span class="role">Organization admin</span>
+            <h3>Run the organization</h3>
+            <p>The organization’s identity, the creation of activities, the accounts, and the roles.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.20.0.
+      </footer>
+    </main>
+    <script src="../../bascule.js"></script>
+    <script src="../../sommaire.js"></script>
+  </body>
+</html>

@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Relaytour · prepare a recurring community event, edition after edition</title>
+    <meta
+      name="description"
+      content="Relaytour is free software that helps a nonprofit prepare a recurring event: areas, a timeline anchored to the event day, and how-to sheets handed on from one edition to the next."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../jetons.css" />
+    <link rel="stylesheet" href="../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Site navigation">
+        <a class="marque" href="./">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="./" aria-current="page">Overview</a></li>
+          <li><a href="../design-system.html" hreflang="fr">Design system</a></li>
+          <li><a href="modes-d-emploi/">User guides</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
+          <li><a href="../" hreflang="fr" lang="fr">Français</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="etiquette">Free software · AGPL-3.0</span>
+        <h1>Prepare a community event with a tool that keeps your method from one edition to the next</h1>
+        <p class="chapo">
+          Relaytour organizes the preparation of a recurring event run by volunteers. Each sport and each department finds its coordinators, its tasks dated relative to the event day and its how-to sheets in one place.
+        </p>
+        <div class="reperes">
+          <span class="repere">Preparation from D-330 to D+90</span>
+          <span class="repere">Sign-in with a code received by email</span>
+          <span class="repere">Content kept in the organization’s repository</span>
+        </div>
+        <div class="actions">
+          <a class="bouton bouton-primaire" href="https://github.com/relaytour/relaytour/blob/main/README.en.md">Install Relaytour</a>
+          <a class="bouton bouton-verre" href="../design-system.html" hreflang="fr">View the design system</a>
+        </div>
+      </header>
+
+      <section aria-labelledby="t-constat">
+        <div class="entete">
+          <span class="etiquette">The problem</span>
+          <h2 id="t-constat">Three difficulties that come back every edition</h2>
+          <p class="texte">
+            A community event is often prepared over nearly a year. The volunteers who run it change from one year to the next.
+          </p>
+        </div>
+        <div class="grille-3">
+          <article class="verre panneau">
+            <span class="etiquette">Workload</span>
+            <h3>Too much work rests on too few people</h3>
+            <p>One or two people often carry the logistics and the relations with partners. This overload leads to a loss of coordination.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">Continuity</span>
+            <h3>The team drifts apart between two milestones</h3>
+            <p>A team formed in the fall can drift apart until spring. Without a regular check-in, it quickly loses members.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">Handover</span>
+            <h3>The method is lost at every change of team</h3>
+            <p>The know-how of one edition stays in the memory of a few people. The next team often starts the procedures over from scratch.</p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-fonctions">
+        <div class="entete">
+          <span class="etiquette">The answer</span>
+          <h2 id="t-fonctions">What Relaytour does</h2>
+          <p class="texte">
+            Relaytour runs in a browser. Members sign in with a code received by email, without a password. An admin invites each person and assigns them to their area.
+          </p>
+        </div>
+        <div class="fonctions">
+          <div class="fonction">
+            <span class="mono">areas</span>
+            <div><h3>Sports and departments</h3><p>Areas stay the same from one edition to the next. Each edition assigns new people to them.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">D-120</span>
+            <div><h3>A timeline anchored to the event day</h3><p>Each task template carries a relative due date, for example D-120. Relaytour recalculates every date from the date of the edition.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">sheets</span>
+            <div><h3>Versioned how-to sheets</h3><p>Each sheet describes how to carry out a procedure. Coordinators correct it during the edition, and the history keeps every version.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">seats</span>
+            <div><h3>Open seats</h3><p>Each area has a target headcount. Admins see the seats still open and the interests of members.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">reminders</span>
+            <div><h3>Reminders by email</h3><p>Relaytour sends a reminder before each due date and a periodic digest. Each person sets how often they receive these emails.</p></div>
+          </div>
+          <div class="fonction">
+            <span class="mono">search</span>
+            <div><h3>Find everything from the top bar</h3><p>Search finds tasks, sheets and people. Each person only finds what they can already view.</p></div>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-captures">
+        <div class="entete">
+          <span class="etiquette">Preview</span>
+          <h2 id="t-captures">The main screens</h2>
+          <p class="texte">
+            The screenshots show the sample organization shipped with Relaytour, in its French interface. The people and the data are fictional.
+          </p>
+        </div>
+        <div class="grille-2">
+          <figure class="verre capture">
+            <a href="../captures/mon-espace.webp"><img src="../captures/mon-espace.webp" data-mobile="../captures/mobile/mon-espace.webp" width="1440" height="900" loading="lazy" alt="Screenshot of the “My space” screen of the organizer workspace, with the sample organization." /></a>
+            <figcaption>
+              <h3>My space</h3>
+              <p>A coordinator’s home page lists their tasks, their areas and their contribution.</p>
+            </figcaption>
+          </figure>
+          <figure class="verre capture">
+            <a href="../captures/retroplanning.webp"><img src="../captures/retroplanning.webp" data-mobile="../captures/mobile/retroplanning.webp" width="1440" height="900" loading="lazy" alt="Screenshot of the “Timeline” screen of the organizer workspace, with the sample organization." /></a>
+            <figcaption>
+              <h3>The timeline</h3>
+              <p>The timeline groups the tasks of all areas by month. Filters limit the display to one type of area or to your own tasks.</p>
+            </figcaption>
+          </figure>
+          <figure class="verre capture">
+            <a href="../captures/perimetre.webp"><img src="../captures/perimetre.webp" data-mobile="../captures/mobile/perimetre.webp" width="1440" height="900" loading="lazy" alt="Screenshot of an area page of the organizer workspace, with the sample organization." /></a>
+            <figcaption>
+              <h3>An area</h3>
+              <p>An area page shows its tasks, its progress, its how-to sheets and the people assigned to it.</p>
+            </figcaption>
+          </figure>
+          <figure class="verre capture">
+            <a href="../captures/fiche.webp"><img src="../captures/fiche.webp" data-mobile="../captures/mobile/fiche.webp" width="1440" height="900" loading="lazy" alt="Screenshot of a how-to sheet in the organizer workspace, with the sample organization." /></a>
+            <figcaption>
+              <h3>A how-to sheet</h3>
+              <p>A sheet describes a procedure step by step. It lists the tasks of the edition that cite it.</p>
+            </figcaption>
+          </figure>
+          <figure class="verre capture">
+            <a href="../captures/fiches-cartes.webp"><img src="../captures/fiches-cartes.webp" data-mobile="../captures/mobile/fiches-cartes.webp" width="1440" height="900" loading="lazy" alt="Screenshot of the “Sheets” screen of the organizer workspace, with the sample organization." /></a>
+            <figcaption>
+              <h3>The sheets</h3>
+              <p>Sheets can be filtered by area and displayed as cards or as a compact list.</p>
+            </figcaption>
+          </figure>
+          <figure class="verre capture">
+            <a href="../captures/avancement.webp"><img src="../captures/avancement.webp" data-mobile="../captures/mobile/avancement.webp" width="1440" height="900" loading="lazy" alt="Screenshot of the “Progress” view of the “Team” screen of the organizer workspace, with the sample organization." /></a>
+            <figcaption>
+              <h3>Overall progress</h3>
+              <p>Admins follow the progress of each area, the overdue tasks and the tasks nobody has picked up.</p>
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-comparaison">
+        <div class="entete">
+          <span class="etiquette">Comparison</span>
+          <h2 id="t-comparaison">Why a dedicated tool</h2>
+          <p class="texte">
+            Common tools cover part of the need. No category covers the preparation of a recurring event by a volunteer team, all the way to the handover to the next edition.
+          </p>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau comparaison">
+            <thead>
+              <tr>
+                <th scope="col">Type of tool</th>
+                <th scope="col">Dates recalculated from the event day</th>
+                <th scope="col">Method handed on to the next edition</th>
+                <th scope="col">Seats per sport and per department</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Spreadsheet and shared folder</th>
+                <td><span class="non">No</span><br />Every date is redone by hand.</td>
+                <td><span class="partiel">Partial</span><br />Documents exist, with no validated version.</td>
+                <td><span class="non">No</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Project boards</th>
+                <td><span class="non">No</span><br />A copied board keeps the old dates.</td>
+                <td><span class="partiel">Partial</span><br />Pages go out of date and nobody validates them.</td>
+                <td><span class="non">No</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Advanced project management</th>
+                <td><span class="oui">Yes</span><br />Often in a paid plan.</td>
+                <td><span class="non">No</span></td>
+                <td><span class="non">No</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Association management</th>
+                <td><span class="non">No</span></td>
+                <td><span class="non">No</span></td>
+                <td><span class="non">No</span></td>
+              </tr>
+              <tr>
+                <th scope="row">Day-of volunteer scheduling</th>
+                <td><span class="non">No</span><br />Reminders the day before a slot.</td>
+                <td><span class="non">No</span></td>
+                <td><span class="partiel">Partial</span><br />Day-of slots, not the preparation.</td>
+              </tr>
+              <tr class="relaytour">
+                <th scope="row">Relaytour</th>
+                <td><span class="oui">Yes</span><br />Task templates are recalculated for each edition.</td>
+                <td><span class="oui">Yes</span><br />Sheets are versioned and written back to the organization’s repository.</td>
+                <td><span class="oui">Yes</span><br />Target headcounts, appointments and interests.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="grille-2">
+          <div class="verre panneau">
+            <h3>What Relaytour does not replace</h3>
+            <p>Ticketing, memberships and accounting stay in association management tools. Match brackets and day-of slots stay in specialized tools.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>What Relaytour costs</h3>
+            <p>The software is free. Only the server that hosts it has a cost. The reference deployment runs on a small server.</p>
+          </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-perennite">
+        <div class="entete">
+          <span class="etiquette">Longevity</span>
+          <h2 id="t-perennite">Why the tool will last</h2>
+          <p class="texte">
+            A community tool often disappears with the person who set it up, or with a vendor’s free plan. Relaytour is designed to avoid both situations.
+          </p>
+        </div>
+        <div class="grille-2">
+          <article class="verre panneau">
+            <span class="etiquette">Content</span>
+            <h3>The content belongs to the organization</h3>
+            <p>Areas, sheets and task templates live in a repository owned by the organization. They are text files, readable and editable without Relaytour.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">License</span>
+            <h3>The code is free and will stay free</h3>
+            <p>The AGPL-3.0 license forbids closing the code. Nobody can withdraw the published version or make it paid.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">Handover</span>
+            <h3>Someone else can take over the tool</h3>
+            <p>The code, the architecture decisions and the installation are publicly documented. A volunteer developer can take over the maintenance.</p>
+          </article>
+          <article class="verre panneau">
+            <span class="etiquette">Renewal</span>
+            <h3>Each edition starts from the previous one</h3>
+            <p>When you create an edition, Relaytour recreates the task templates with their new dates. The sheets corrected during the edition become the basis of the next one.</p>
+          </article>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-etapes">
+        <div class="entete">
+          <span class="etiquette">Get started</span>
+          <h2 id="t-etapes">Put Relaytour into service</h2>
+        </div>
+        <ol class="etapes">
+          <li class="etape">
+            <code>organisation-modele</code>
+            <h3>Create the content repository</h3>
+            <p>The organization creates its repository from the template, then describes its areas, its theme and its sheets in it.</p>
+          </li>
+          <li class="etape">
+            <code>docker compose</code>
+            <h3>Install the server</h3>
+            <p>The reference deployment runs as a Compose stack on a small server.</p>
+          </li>
+          <li class="etape">
+            <code>orga:importer</code>
+            <h3>Import an edition</h3>
+            <p>The import creates the areas, the sheets and the dated tasks of the edition.</p>
+          </li>
+          <li class="etape">
+            <code>admin</code>
+            <h3>Invite the team</h3>
+            <p>Admins invite members and assign them to their areas.</p>
+          </li>
+        </ol>
+      </section>
+
+      <footer>
+        Relaytour is free software distributed under the GNU AGPL-3.0 license. The code, the documentation and the contribution rules are on
+        <a href="https://github.com/relaytour/relaytour">GitHub</a>.
+      </footer>
+    </main>
+    <script src="../bascule.js"></script>
+  </body>
+</html>

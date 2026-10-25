@@ -192,6 +192,18 @@ const EnvSchema = z
         .regex(/^https:\/\//, 'MODES_D_EMPLOI_URL : adresse https attendue')
         .default('https://relaytour.org/modes-d-emploi/')
     ),
+    // Liste des modes d'emploi en anglais (ADR 0047). Vide : la version anglaise du
+    // site de Relaytour quand MODES_D_EMPLOI_URL garde sa valeur par défaut, sinon
+    // la liste de MODES_D_EMPLOI_URL.
+    MODES_D_EMPLOI_URL_EN: z.preprocess(
+      v => (typeof v === 'string' && v.trim() === '' ? undefined : v),
+      z
+        .string()
+        .trim()
+        .url()
+        .regex(/^https:\/\//, 'MODES_D_EMPLOI_URL_EN : adresse https attendue')
+        .optional()
+    ),
   })
   .superRefine((v, ctx) => {
     const vapid = [

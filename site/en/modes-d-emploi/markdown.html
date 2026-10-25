@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Write a sheet in Markdown · User guides · Relaytour</title>
+    <meta
+      name="description"
+      content="The guide to the Relaytour sheet editor: visual mode, Markdown mode, the formatting bar, then headings, lists, checkboxes, links, and tables."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/markdown.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/markdown.html" />
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../jetons.css" />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Site navigation">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Overview</a></li>
+          <li><a href="../../design-system.html" hreflang="fr">Design system</a></li>
+          <li><a href="./" aria-current="true">User guides</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
+          <li><a href="../../modes-d-emploi/markdown.html" hreflang="fr" lang="fr">Français</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">All roles</span>
+        <h1>Write a sheet in Markdown</h1>
+        <p class="chapo">
+          How-to sheets are written in Markdown. A few symbols placed in the text create headings, lists, links, and tables. This guide presents all the symbols that sheets display.
+        </p>
+        <p class="renvoi">
+          This guide complements the “A how-to sheet” section of the <a href="referent.html#e-fiche">coordinators’ user guide</a>. Writing a sheet requires an editing right, granted by an admin.
+        </p>
+        <p class="renvoi">
+          The screenshots show the French interface with the sample organization.
+        </p>
+      </header>
+
+      <section aria-labelledby="t-editeur">
+        <div class="entete">
+          <span class="etiquette">Starting point</span>
+          <h2 id="t-editeur">The sheet editor</h2>
+          <p class="texte">
+            The <span class="libelle">Edit</span> button on a sheet opens the editor in <span class="libelle">Visual</span> mode: you write directly in the sheet as it is displayed. The <span class="libelle">Markdown</span> mode shows the source text, with the symbols of this guide. Your browser remembers the mode you chose.
+          </p>
+          <p class="texte">
+            The editor keeps a draft in your browser. A page reloaded by mistake therefore does not lose your text.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Contents">
+          <span class="etiquette">In this guide</span>
+          <ol>
+            <li><a href="#m-barre">The formatting bar</a></li>
+            <li><a href="#m-concerne">The “Also concerns” list</a></li>
+            <li><a href="#m-paragraphes">Paragraphs and line breaks</a></li>
+            <li><a href="#m-titres">Headings</a></li>
+            <li><a href="#m-emphase">Bold, italic, and strikethrough</a></li>
+            <li><a href="#m-listes">Lists</a></li>
+            <li><a href="#m-cases">Checkboxes</a></li>
+            <li><a href="#m-liens">Links</a></li>
+            <li><a href="#m-tableaux">Tables</a></li>
+            <li><a href="#m-citations">Callouts</a></li>
+            <li><a href="#m-separation">Divider line</a></li>
+            <li><a href="#m-code">Text as written</a></li>
+            <li><a href="#m-mentions">Mentions</a></li>
+            <li><a href="#m-caracteres">Reserved characters</a></li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-barre">
+        <div class="entete">
+          <span class="etiquette">No need to memorize</span>
+          <h2 id="t-barre">The formatting bar</h2>
+          <p class="texte">
+            The bar above the text formats your selection, in both modes. In Markdown mode, it writes the symbols for you. Pressing the same button a second time removes the formatting.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="m-barre">
+          <ul class="gestes">
+            <li><span><span class="libelle">Bold</span><span class="libelle">Italic</span></span><span>Emphasize the selection. In Markdown mode, with no selection, the button inserts an example to replace.</span></li>
+            <li><span><span class="libelle">Heading</span><span class="libelle">Subtitle</span></span><span>Turn the cursor’s line into a section heading or a subheading.</span></li>
+            <li><span><span class="libelle">Bulleted list</span><span class="libelle">Numbered list</span><span class="libelle">Checkboxes</span></span><span>Turn each selected line into a list item. Another list button changes the list type.</span></li>
+            <li><span><span class="libelle">Link</span></span><span>Make the selection the text of a link. In visual mode, the editor asks for the address. In Markdown mode, it selects the address, which you replace with yours.</span></li>
+            <li><span><span class="libelle">Table</span></span><span>Add a two-column table below the cursor’s line.</span></li>
+            <li><span><span class="libelle">Help</span></span><span>Open this guide next to your text, without leaving the editor.</span></li>
+            <li><span><span class="libelle">@</span></span><span>Type an at sign: the editor suggests the activity’s areas and groups. Tab picks the first suggestion.</span></li>
+          </ul>
+          <p class="note">On a computer, three shortcuts exist: ⌘B or Ctrl+B for bold, ⌘I or Ctrl+I for italic, ⌘K or Ctrl+K for a link. ⌘Z or Ctrl+Z undoes a formatting change. In visual mode, a click on a checkbox checks or unchecks it.</p>
+          <figure>
+            <img src="../../captures/fiche-editeur.webp" data-mobile="../../captures/mobile/fiche-editeur.webp" width="1440" height="900" loading="lazy" alt="Sheet editor in visual mode: the title, the identifier, then the formatting bar above the text." />
+            <figcaption>The sheet editor and its formatting bar, on the sample organization.</figcaption>
+          </figure>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-concerne">
+        <div class="entete">
+          <span class="etiquette">Several areas</span>
+          <h2 id="t-concerne">The “Also concerns” list</h2>
+          <p class="texte">
+            A sheet belongs to one area. It can also concern others: the coordinators of Logistics then read the Volunteers sheet on slots, without editing it.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="m-concerne">
+          <ul class="gestes">
+            <li><span><span class="libelle">Also concerns</span></span><span>Choose, below the sheet text, areas and groups of the activity. A group also concerns the areas that will join it.</span></li>
+            <li><span><span class="libelle">Add</span></span><span>Accept, on save, the areas that the text mentions. A dismissed mention does not come back while you are writing.</span></li>
+            <li><span><span class="libelle">Confirm the list</span></span><span>Confirm a wide distribution: at least four areas, and more than half of the activity’s areas. If the sheet concerns the whole activity, a shared sheet is a better fit.</span></li>
+          </ul>
+          <p class="note">The page of each area in the list shows the sheet in its “Related sheets” panel, read-only. Its coordinators hide it when it is of no use to them. The <a href="referent.html#e-perimetre">coordinators’ user guide</a> describes this panel.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-syntaxe">
+        <div class="entete">
+          <span class="etiquette">Twelve topics</span>
+          <h2 id="t-syntaxe">Sheet syntax</h2>
+          <p class="texte">
+            Each example shows the text to write, then how the sheet displays it. Sheets display neither images nor HTML code.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="m-paragraphes">
+          <div class="ecran-tete"><h3>Paragraphs and line breaks</h3></div>
+          <p>An empty line separates two paragraphs. Two consecutive lines with no empty line between them form a single paragraph.</p>
+          <p>A backslash (\) at the end of a line moves to the next line without starting a new paragraph.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">The gym opens at 8 a.m.
+This line continues the previous sentence.
+
+An empty line starts a new paragraph.\
+This line starts below the previous one.</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<p>The gym opens at 8 a.m.
+This line continues the previous sentence.</p>
+<p>An empty line starts a new paragraph.<br/>
+This line starts below the previous one.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-titres">
+          <div class="ecran-tete"><h3>Headings</h3></div>
+          <p>A heading starts with hash signs followed by a space. Two hash signs make a section heading, three make a subheading.</p>
+          <p>The sheet title already appears at the top of the page, so start your sections with two hash signs.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">## Before the day
+
+### Equipment to reserve
+
+The section text follows the heading.</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<h2>Before the day</h2>
+<h3>Equipment to reserve</h3>
+<p>The section text follows the heading.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-emphase">
+          <div class="ecran-tete"><h3>Bold, italic, and strikethrough</h3></div>
+          <p>Two asterisks on each side make a passage bold. An underscore on each side makes it italic. Two tildes strike it through.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">The room closes **at 7 p.m. sharp**.
+Remember to _sign the attendance sheet_.
+The meeting is held ~~at the stadium~~ in the gym.</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<p>The room closes <strong>at 7 p.m. sharp</strong>.
+Remember to <em>sign the attendance sheet</em>.
+The meeting is held <del>at the stadium</del> in the gym.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-listes">
+          <div class="ecran-tete"><h3>Lists</h3></div>
+          <p>A bulleted list starts each line with a hyphen followed by a space. A numbered list starts each line with a number followed by a period.</p>
+          <p>Under a bullet, two spaces at the start of a line place the item in a sublist.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">- Room keys
+- Bibs
+  - 20 red
+  - 20 blue
+
+1. Open the gym
+2. Set up the nets
+3. Welcome the teams</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<ul>
+<li>Room keys</li>
+<li>Bibs
+<ul>
+<li>20 red</li>
+<li>20 blue</li>
+</ul>
+</li>
+</ul>
+<ol>
+<li>Open the gym</li>
+<li>Set up the nets</li>
+<li>Welcome the teams</li>
+</ol>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-cases">
+          <div class="ecran-tete"><h3>Checkboxes</h3></div>
+          <p>A checkbox starts with a hyphen, then square brackets around a space. An x between the brackets checks the box.</p>
+          <p>The box is checked by editing the sheet, not by a click. A sheet checkbox does not create a task.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">- [x] Reserve the gym
+- [ ] Order the medals
+- [ ] Notify city hall</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<ul class="contains-task-list">
+<li class="task-list-item"><input type="checkbox" disabled="" checked=""/> Reserve the gym</li>
+<li class="task-list-item"><input type="checkbox" disabled=""/> Order the medals</li>
+<li class="task-list-item"><input type="checkbox" disabled=""/> Notify city hall</li>
+</ul>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-liens">
+          <div class="ecran-tete"><h3>Links</h3></div>
+          <p>A link puts its text in square brackets, then its address in parentheses. An address written on its own also becomes a link.</p>
+          <p>A link in a sheet opens in a new tab.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">See the [tournament rules](https://example.org/rules).
+
+Directions: https://example.org/map</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<p>See the <a href="https://example.org/rules" target="_blank" rel="noopener noreferrer">tournament rules</a>.</p>
+<p>Directions: <a href="https://example.org/map" target="_blank" rel="noopener noreferrer">https://example.org/map</a></p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-tableaux">
+          <div class="ecran-tete"><h3>Tables</h3></div>
+          <p>A vertical bar separates the columns. The second line, made of hyphens, separates the header from the rest of the table.</p>
+          <p>The columns do not need to be aligned in the text: the display aligns them.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">| Slot | Field | Role |
+| --- | --- | --- |
+| 9 a.m. | Field 1 | Refereeing |
+| 2 p.m. | Field 2 | Welcome desk |</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<table><thead><tr><th>Slot</th><th>Field</th><th>Role</th></tr></thead><tbody><tr><td>9 a.m.</td><td>Field 1</td><td>Refereeing</td></tr><tr><td>2 p.m.</td><td>Field 2</td><td>Welcome desk</td></tr></tbody></table>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-citations">
+          <div class="ecran-tete"><h3>Callouts</h3></div>
+          <p>A greater-than sign followed by a space puts the line in a callout. A callout highlights an instruction to remember.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">&gt; Keys go back to the welcome desk before 7 p.m.</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<blockquote>
+<p>Keys go back to the welcome desk before 7 p.m.</p>
+</blockquote>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-separation">
+          <div class="ecran-tete"><h3>Divider line</h3></div>
+          <p>Three hyphens alone on a line draw a divider line. An empty line must come before them: without it, the text above becomes a heading.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">End of the morning part.
+
+---
+
+Start of the afternoon.</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<p>End of the morning part.</p>
+<hr/>
+<p>Start of the afternoon.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-code">
+          <div class="ecran-tete"><h3>Text as written</h3></div>
+          <p>Backticks around a text display it as written, in a monospaced font: a file name, a reference.</p>
+          <p>Three backticks on a line open a block of several lines, and three more close it.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">The file is called `schedule-2027.xlsx`.
+
+```
+Field 1: 9 a.m. - 12 p.m.
+Field 2: 2 p.m. - 6 p.m.
+```</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<p>The file is called <code>schedule-2027.xlsx</code>.</p>
+<pre><code>Field 1: 9 a.m. - 12 p.m.
+Field 2: 2 p.m. - 6 p.m.
+</code></pre>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-mentions">
+          <div class="ecran-tete"><h3>Mentions</h3></div>
+          <p>An at sign followed by an area’s identifier mentions it, for example @logistique. A mention @groupe: followed by a group’s key mentions the whole group.</p>
+          <p>A mention is displayed as a label. A group’s label lists its areas on hover or tap. In the editor, an at sign suggests the activity’s areas and groups.</p>
+          <p>A mention does not share the sheet. On save, the editor offers to add the mentioned areas to the “Also concerns” list.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">@logistique prepares the venues, and each @groupe:sport sends its schedules.</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<p><span class="etiquette-mention">Logistique</span> prepares the venues, and each <span class="etiquette-mention etiquette-groupe">Sports</span> sends its schedules.</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+
+        <article class="verre ecran" id="m-caracteres">
+          <div class="ecran-tete"><h3>Reserved characters</h3></div>
+          <p>A backslash in front of a formatting character displays it as written: asterisk, underscore, hash sign, bracket.</p>
+          <p>An HTML tag is displayed as text. Sheets accept only the Markdown syntax of this guide.</p>
+          <div class="exemple-markdown">
+            <figure>
+              <figcaption>You write</figcaption>
+              <pre class="source-markdown">The reduced rate\* applies to people under 18.
+
+\* On presentation of an ID.
+
+&lt;b&gt;This tag stays text.&lt;/b&gt;</pre>
+            </figure>
+            <figure>
+              <figcaption>The sheet shows</figcaption>
+              <div class="rendu-markdown">
+<p>The reduced rate* applies to people under 18.</p>
+<p>* On presentation of an ID.</p>
+<p>&lt;b&gt;This tag stays text.&lt;/b&gt;</p>
+              </div>
+            </figure>
+          </div>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-suite">
+        <div class="entete">
+          <span class="etiquette">Next steps</span>
+          <h2 id="t-suite">Other user guides</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="referent.html">
+            <span class="role">Coordinator</span>
+            <h3>Follow your tasks and sheets</h3>
+            <p>The screens common to all roles: My space, the timeline, sheets, and preferences.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">All roles</span>
+            <h3>Choose a user guide</h3>
+            <p>The list of user guides for the organizer workspace.</p>
+            <span class="suite">See the list</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, organizer workspace. This user guide is up to date with version 0.18.0.
+      </footer>
+    </main>
+    <script src="../../sommaire.js"></script>
+  </body>
+</html>

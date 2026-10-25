@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Choose your mail app · User guides · Relaytour</title>
+    <meta
+      name="description"
+      content="The user guide for choosing your mail app in the Relaytour organizer workspace: each system’s default mail app, online mail services and apps."
+    />
+    <link rel="alternate" hreflang="fr" href="https://relaytour.org/modes-d-emploi/messagerie.html" />
+    <link rel="alternate" hreflang="en" href="https://relaytour.org/en/modes-d-emploi/messagerie.html" />
+    <link rel="icon" href="../../favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="../../jetons.css" />
+    <link rel="stylesheet" href="../../style.css" />
+  </head>
+  <body>
+    <div class="halo halo-1" aria-hidden="true"></div>
+    <div class="halo halo-2" aria-hidden="true"></div>
+
+    <main class="page">
+      <nav class="barre" aria-label="Site navigation">
+        <a class="marque" href="../">
+          <svg width="30" height="30" viewBox="0 0 64 64" fill="none" stroke-width="8" stroke-linecap="round" aria-hidden="true">
+            <path d="M 10 37 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+            <path d="M 24 27 A 15 15 0 0 0 54 27" stroke="var(--rt-accent)" />
+            <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke="var(--rt-primaire)" />
+          </svg>
+          <span class="logotype">Relay<span>tour</span></span>
+        </a>
+        <ul class="liens">
+          <li><a href="../">Overview</a></li>
+          <li><a href="../../design-system.html" hreflang="fr">Design system</a></li>
+          <li><a href="./" aria-current="true">User guides</a></li>
+          <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
+          <li><a href="../../modes-d-emploi/messagerie.html" hreflang="fr" lang="fr">Français</a></li>
+        </ul>
+      </nav>
+
+      <header class="tete">
+        <span class="role">Admins</span>
+        <h1>Choose your mail app</h1>
+        <p class="chapo">
+          You prepare a message in Relaytour, then send it from your own mail app. This guide explains how Relaytour opens that mail app, and how you choose the one that opens.
+        </p>
+        <p class="renvoi">
+          This guide complements the “Messages to your team” section of the <a href="admin-activite.html#e-messages">activity admin guide</a>. It is meant for admins, who are the only people who write a message.
+        </p>
+        <p class="renvoi">The screenshots show the French interface with the sample organization.</p>
+      </header>
+
+      <section aria-labelledby="t-principe">
+        <div class="entete">
+          <span class="etiquette">Starting point</span>
+          <h2 id="t-principe">How Relaytour opens your mail app</h2>
+          <p class="texte">
+            Relaytour sends no message. It opens your mail app through a <span class="route">mailto:</span> link, which carries the recipients, the subject and the text. Your device alone decides which app answers this link: its default mail app.
+          </p>
+          <p class="texte">
+            A web page cannot name any other app than that one. Relaytour therefore offers two other ways: open an online mail service in a new tab, or open an app through a link specific to that app.
+          </p>
+        </div>
+        <nav class="verre sommaire" aria-label="Contents">
+          <span class="etiquette">In this guide</span>
+          <ol>
+            <li><a href="#t-cibles">The mail apps offered</a>: what each one keeps from the message.</li>
+            <li><a href="#t-reglage">Set your choice</a>: in your preferences, or for a single message.</li>
+            <li><a href="#t-systeme">Change the default mail app</a>: the setting for each system and each browser.</li>
+            <li><a href="#t-applications">The apps to try</a>: Gmail and Outlook on a phone or tablet.</li>
+            <li><a href="#t-secours">If nothing opens</a>: copy the message by hand.</li>
+          </ol>
+        </nav>
+      </section>
+
+      <section aria-labelledby="t-cibles">
+        <div class="entete">
+          <span class="etiquette">Eight choices</span>
+          <h2 id="t-cibles">The mail apps offered</h2>
+          <p class="texte">
+            Online mail services open in a new tab, with the account already signed in to your browser. If you use several accounts, check the sender before sending.
+          </p>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau">
+            <thead>
+              <tr><th>Choice</th><th>What opens</th><th>Devices</th><th>Cc and Bcc fields</th></tr>
+            </thead>
+            <tbody>
+              <tr><th>Device default mail app</th><td>The default mail app of your system, or the online mail service that your browser associates with <span class="route">mailto:</span> links.</td><td>All</td><td>Kept</td></tr>
+              <tr><th>Gmail</th><td>A new message in Gmail, in a new tab.</td><td>All, in a browser</td><td>Kept</td></tr>
+              <tr><th>Outlook (work or association account)</th><td>A new message in Outlook on the web (Microsoft 365), in a new tab.</td><td>All, in a browser</td><td>Kept</td></tr>
+              <tr><th>Outlook.com (personal account)</th><td>A new message in Outlook.com, in a new tab.</td><td>All, in a browser</td><td>To check</td></tr>
+              <tr><th>Yahoo Mail</th><td>A new message in Yahoo Mail, in a new tab.</td><td>All, in a browser</td><td>To check</td></tr>
+              <tr><th>Proton Mail</th><td>A new message in Proton Mail, in a new tab.</td><td>All, in a browser</td><td>Kept</td></tr>
+              <tr><th>Gmail app</th><td>The Gmail app installed on the device.</td><td>iPhone and iPad only</td><td>To check</td></tr>
+              <tr><th>Outlook app</th><td>The Outlook app installed on the device.</td><td>iPhone, iPad and Android, not Mac or Windows</td><td>To check</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">“To check” means that the mail app’s publisher does not document this field. Relaytour passes it on, and the mail app may ignore it. The “Write a message” window reminds you of this and offers to copy the addresses.</p>
+        <p class="note">A mail app that ignores the Bcc field exposes no address: the message opens without these recipients, and you paste them yourself into the Bcc field.</p>
+      </section>
+
+      <section aria-labelledby="t-reglage">
+        <div class="entete">
+          <span class="etiquette">Two places</span>
+          <h2 id="t-reglage">Set your choice</h2>
+        </div>
+
+        <article class="verre ecran" id="e-preferences">
+          <div class="ecran-tete"><h3>In your preferences</h3><span class="route">/&lt;activity&gt;/preferences</span></div>
+          <p>The “Your mail app” panel sets the mail app that Relaytour offers you for each message. Your browser keeps this choice: it applies to this browser, on this device. You can therefore choose an app on your phone and an online mail service on your computer.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Mail app</span></span><span>Choose one of the eight mail apps. An information icon accompanies the default mail app, and a warning icon accompanies the apps. The button to the right of the field opens the explanation of the displayed choice.</span></li>
+            <li><span><span class="libelle">Separator for copied addresses</span></span><span>Choose the comma or the semicolon, for the device default mail app. Choose the semicolon if that mail app is Outlook.</span></li>
+            <li><span><span class="libelle">Try</span></span><span>Open a test message, addressed only to you. Your address appears in the “To” and “Bcc” fields. You close this message without sending it.</span></li>
+            <li><span><span class="libelle">Yes, the message opened</span></span><span>Confirm the test. Relaytour cannot tell on its own whether an app answered: your answer is what counts.</span></li>
+            <li><span><span class="libelle">Save</span></span><span>Keep this choice. For an app, the button stays inactive until you have confirmed a test.</span></li>
+          </ul>
+          <figure>
+            <img src="../../captures/preferences-messagerie.webp" data-mobile="../../captures/mobile/preferences-messagerie.webp" width="1440" height="900" loading="lazy" alt="An admin’s Preferences screen: the Your mail app panel, with the selector, the Try button and the Save button." />
+            <figcaption>The “Your mail app” panel, on the sample organization.</figcaption>
+          </figure>
+          <p class="note">During the test of an app, Relaytour observes whether your browser leaves the page. If nothing happens, a warning tells you that the app does not seem to be installed.</p>
+        </article>
+
+        <article class="verre ecran" id="e-message">
+          <div class="ecran-tete"><h3>For a single message</h3><span class="route">“Write a message” window</span></div>
+          <p>The “Mail app” field, at the bottom of the window, uses the choice from your preferences. You can choose another one for this message. This change does not modify your preferences.</p>
+          <figure>
+            <img src="../../captures/message-messagerie.webp" data-mobile="../../captures/mobile/message-messagerie.webp" width="1440" height="900" loading="lazy" alt="Write a message window: the Mail app field, above the Open in your mail app button." />
+            <figcaption>The “Mail app” field of the window, on the sample organization. The people are fictional.</figcaption>
+          </figure>
+          <p class="note">A message reopened from the message history opens in the mail app from your preferences.</p>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-systeme">
+        <div class="entete">
+          <span class="etiquette">Default mail app</span>
+          <h2 id="t-systeme">Change your device’s default mail app</h2>
+          <p class="texte">
+            The “Device default mail app” choice opens the app that your system associates with <span class="route">mailto:</span> links. If an app you do not use opens, change this setting in your system. The labels below vary slightly from one version to another.
+          </p>
+        </div>
+
+        <article class="verre ecran" id="s-macos">
+          <div class="ecran-tete"><h3>Mac</h3><span class="route">macOS</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">1</span></span><span>Open the Mail app, even if you do not use it.</span></li>
+            <li><span><span class="libelle">2</span></span><span>Open the “Mail” menu, then “Settings”, then the “General” tab.</span></li>
+            <li><span><span class="libelle">3</span></span><span>Choose your app in “Default email reader”: Outlook, Thunderbird or another installed app.</span></li>
+          </ul>
+        </article>
+
+        <article class="verre ecran" id="s-windows">
+          <div class="ecran-tete"><h3>PC</h3><span class="route">Windows 10 and 11</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">1</span></span><span>Open “Settings”, then “Apps”, then “Default apps”.</span></li>
+            <li><span><span class="libelle">2</span></span><span>Type “mailto” in the search field for link types.</span></li>
+            <li><span><span class="libelle">3</span></span><span>Choose your mail app from the list offered.</span></li>
+          </ul>
+        </article>
+
+        <article class="verre ecran" id="s-ios">
+          <div class="ecran-tete"><h3>iPhone and iPad</h3><span class="route">iOS and iPadOS</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">1</span></span><span>Open “Settings”, then “Apps”, then “Default Apps”.</span></li>
+            <li><span><span class="libelle">2</span></span><span>Open “Email”, then choose your app.</span></li>
+          </ul>
+          <p class="note">On an older version of the system, this setting is in “Settings”, on the line of your mail app, under “Default Mail App”.</p>
+        </article>
+
+        <article class="verre ecran" id="s-android">
+          <div class="ecran-tete"><h3>Android phone and tablet</h3><span class="route">Android</span></div>
+          <p>Android asks which app to open the first time you follow a mail link. You choose your app, then “Always”.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Change</span></span><span>Open “Settings”, then “Apps”, then the app that opens today. Open “Open by default”, then clear the defaults. Android asks you again at the next message.</span></li>
+          </ul>
+        </article>
+
+        <article class="verre ecran" id="s-linux">
+          <div class="ecran-tete"><h3>Linux computer</h3><span class="route">GNOME</span></div>
+          <ul class="gestes">
+            <li><span><span class="libelle">1</span></span><span>Open “Settings”, then “Default Applications”.</span></li>
+            <li><span><span class="libelle">2</span></span><span>Choose your app on the “Mail” line.</span></li>
+          </ul>
+        </article>
+
+        <article class="verre ecran" id="s-navigateur">
+          <div class="ecran-tete"><h3>An online mail service as the default</h3><span class="route">Chrome, Edge, Firefox</span></div>
+          <p>Your browser can hand <span class="route">mailto:</span> links to an online mail service. The “Device default mail app” choice then opens that service, with all the message fields.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Chrome and Edge</span></span><span>Open your online mail service. Click the double-diamond icon on the right of the address bar, then “Allow”. You can find the setting again in the browser settings, under protocol handlers.</span></li>
+            <li><span><span class="libelle">Firefox</span></span><span>Open “Settings”, then “General”, then “Applications”. Search for “mailto”, then choose your mail service in the “Action” column.</span></li>
+            <li><span><span class="libelle">Safari</span></span><span>Safari does not hand mail links to an online mail service. Choose the online mail service in your Relaytour preferences.</span></li>
+          </ul>
+        </article>
+      </section>
+
+      <section aria-labelledby="t-applications">
+        <div class="entete">
+          <span class="etiquette">To try</span>
+          <h2 id="t-applications">The Gmail and Outlook apps</h2>
+          <p class="texte">
+            The “Gmail app” and “Outlook app” choices open the app through a link specific to that app. Google and Microsoft do not document these links, and their behavior may change with an update.
+          </p>
+        </div>
+        <div class="grille-3">
+          <div class="verre panneau">
+            <h3>Depending on the device</h3>
+            <p>The Gmail app answers only on iPhone and iPad. The Outlook app answers on iPhone, iPad and Android. On Mac, it opens and rejects the link. On Windows, it does not open.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Depending on the field</h3>
+            <p>The recipient, subject and text are kept. The Cc and Bcc fields are not guaranteed: check them in the message before sending.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Without the app</h3>
+            <p>If the app is not installed, the browser does nothing or shows an error. Go back to the default mail app or to an online mail service.</p>
+          </div>
+          <div class="verre panneau">
+            <h3>Outlook on a computer</h3>
+            <p>To open your messages in Outlook on Mac or Windows, set Outlook as the <a href="#t-systeme">default mail app of your system</a>, then keep the “Device default mail app” choice.</p>
+          </div>
+        </div>
+        <p class="note">For these reasons, your preferences save an app only after a test confirmed on the device.</p>
+      </section>
+
+      <section aria-labelledby="t-secours">
+        <div class="entete">
+          <span class="etiquette">As a last resort</span>
+          <h2 id="t-secours">If nothing opens</h2>
+          <p class="texte">
+            The “Write a message” window always offers to copy the addresses, the subject and the text. You open your mail app yourself, then paste each part into a new message.
+          </p>
+          <p class="texte">
+            Copied addresses are separated by a comma, or by a semicolon for Outlook, which does not split a list pasted with commas. The “Address separator” choice, below the copy buttons, changes this sign for the current message.
+          </p>
+          <p class="texte">
+            A very long text or a very large number of recipients exceeds what a link can carry, whatever the mail app. The window then asks you to copy the text, or the addresses.
+          </p>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-autres">
+        <div class="entete">
+          <span class="etiquette">Other user guides</span>
+          <h2 id="t-autres">Keep reading</h2>
+        </div>
+        <div class="grille-3">
+          <a class="verre panneau lien-guide" href="admin-activite.html#e-messages">
+            <span class="role">Activity admin</span>
+            <h3>Write to your team</h3>
+            <p>Templates, the Cc and Bcc fields, the message history and its status.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="referent.html#e-preferences">
+            <span class="role">Coordinator</span>
+            <h3>Set your preferences</h3>
+            <p>The emails and notifications you receive from the organizer workspace.</p>
+            <span class="suite">Read the user guide</span>
+          </a>
+          <a class="verre panneau lien-guide" href="./">
+            <span class="role">All roles</span>
+            <h3>Choose a user guide</h3>
+            <p>The list of user guides for the organizer workspace.</p>
+            <span class="suite">See the list</span>
+          </a>
+        </div>
+      </section>
+
+      <footer>
+        Relaytour, organizer workspace. The screenshots come from the sample organization, which is fictional and anonymous. User guide up to date with version 0.18.0.
+      </footer>
+    </main>
+    <script src="../../bascule.js"></script>
+    <script src="../../sommaire.js"></script>
+  </body>
+</html>
