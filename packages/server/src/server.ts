@@ -21,6 +21,13 @@ import { creerGestionnaireFlux } from './flux-http.ts'
 import { manifestApplication, slugDuManifest } from './lib/application.ts'
 import { lireAbonnement } from './lib/abonnements-agenda.ts'
 import { adresseClient, ENTETE_IP_CLIENT } from './lib/adresse-client.ts'
+import {
+  CHEMIN_DESABONNEMENT,
+  desabonnementValide,
+  desabonner,
+  lireJetonDesabonnement,
+  pageDesabonnement,
+} from './lib/desabonnement.ts'
 import { fermerLesFlux } from './lib/flux.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
@@ -250,6 +257,78 @@ app.get('/agenda/:fichier', (req, res) => {
     }
   )
 })
+
+// Désabonnement en un clic (ADR 0050, RFC 8058) : la messagerie envoie un POST sans
+// session ni cookie, et le jeton signé suffit. Un GET affiche une confirmation et
+// n'écrit rien. Le jeton ne sort jamais dans le journal.
+// Seuls les jetons refusés s'accumulent, comme pour le jeton d'administration : les
+// messageries envoient leurs POST depuis quelques adresses partagées par beaucoup de
+// comptes, et une rafale légitime après un résumé ne doit pas recevoir de 429.
+const REFUS_DE_DESABONNEMENT = { max: 30, fenetreSecondes: 15 * 60 }
+const servirDesabonnement =
+  (methode: 'GET' | 'POST') =>
+  (req: express.Request, res: express.Response) => {
+    res.set({
+      'Cache-Control': 'no-store',
+      'X-Robots-Tag': 'noindex, nofollow',
+      'Referrer-Policy': 'no-referrer',
+      'Content-Security-Policy':
+        "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
+    })
+    const jeton = String(req.params.jeton)
+    const navigateur = languesDuNavigateur(req.get('accept-language'))
+    void (async () => {
+      // La tentative se réserve avant la lecture du jeton, puis se rend si le jeton
+      // désigne un compte et une organisation qui existent.
+      const cleRefus = `desabonnement-refuse:${adresseClient(req)}`
+      const permis = await limiterParCle(
+        cleRefus,
+        REFUS_DE_DESABONNEMENT.max,
+        REFUS_DE_DESABONNEMENT.fenetreSecondes,
+        { libelle: 'la limite des désabonnements' }
+      )
+      if (!permis) {
+        res.status(429).end()
+        return
+      }
+      const lu = lireJetonDesabonnement(env.BETTER_AUTH_SECRET, jeton)
+      if (lu === null || !(await desabonnementValide(prisma, lu))) {
+        res
+          .status(404)
+          .type('html')
+          .send(await pageDesabonnement(prisma, 'invalide', null, navigateur))
+        return
+      }
+      await rendreTentative(cleRefus)
+      if (methode === 'GET') {
+        res.type('html').send(await pageDesabonnement(prisma, 'confirmer', lu))
+        return
+      }
+      if (!(await desabonner(prisma, lu))) {
+        res
+          .status(404)
+          .type('html')
+          .send(await pageDesabonnement(prisma, 'invalide', null, navigateur))
+        return
+      }
+      journal.info(
+        { evenement: 'desabonnement', sorte: lu.sorte, userId: lu.userId },
+        'Une personne s’est désabonnée d’un mail.'
+      )
+      res.type('html').send(await pageDesabonnement(prisma, 'fait', lu))
+    })().catch((erreur: unknown) => {
+      journal.error(
+        {
+          evenement: 'desabonnement-en-echec',
+          message: (erreur as Error).message,
+        },
+        'Un désabonnement n’a pas pu être traité.'
+      )
+      res.status(503).end()
+    })
+  }
+app.get(`${CHEMIN_DESABONNEMENT}/:jeton`, servirDesabonnement('GET'))
+app.post(`${CHEMIN_DESABONNEMENT}/:jeton`, servirDesabonnement('POST'))
 
 // Better Auth lit lui-même le corps des requêtes : son routeur passe avant express.json().
 const gestionnaireAuth = toNodeHandler(auth)

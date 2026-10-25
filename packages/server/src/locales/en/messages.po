@@ -1521,6 +1521,72 @@ msgid "Le mot compte {max} caractères au plus."
 msgstr "The note is {max} characters at most."
 
 #. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Modification de vos tâches"
+msgstr "Changes to your tasks"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Échéances"
+msgstr "Due dates"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Résumé par mail"
+msgstr "Email summary"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+#: src/lib/desabonnement.ts
+msgid "Demandes pour rejoindre l’équipe"
+msgstr "Requests to join the team"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Vous ne recevrez plus les mails « {libelle} » de {organisation}."
+msgstr "You will no longer receive “{libelle}” emails from {organisation}."
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Lien non valide"
+msgstr "Invalid link"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Ce lien de désabonnement n’est pas valide. Vous réglez vos mails dans les préférences de l’espace organisateur."
+msgstr "This unsubscribe link is not valid. You can manage your emails in your organizer workspace preferences."
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Désabonnement enregistré"
+msgstr "You are unsubscribed"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Vous pouvez les réactiver dans vos préférences."
+msgstr "You can turn them back on in your preferences."
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Se désabonner"
+msgstr "Unsubscribe"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Confirmer le désabonnement"
+msgstr "Confirm unsubscribe"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Gérer vos préférences"
+msgstr "Manage your preferences"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Désabonnement"
+msgstr "Unsubscribe"
+
+#. js-lingui-explicit-id
 #: src/lib/editions.ts
 msgid "Les dates attendues ont la forme AAAA-MM-JJ."
 msgstr "Dates must be in the format YYYY-MM-DD."
@@ -2588,11 +2654,6 @@ msgstr "Reply in the calendar"
 #: src/courriel/gabarits.genere.ts
 msgid "Répondre dans l’agenda : {lienAgenda}"
 msgstr "Reply in the calendar: {lienAgenda}"
-
-#. js-lingui-explicit-id
-#: src/courriel/gabarits.genere.ts
-msgid "Demandes pour rejoindre l’équipe"
-msgstr "Requests to join the team"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
