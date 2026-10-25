@@ -14,6 +14,14 @@ fr:
     et indiquez si besoin qui l'a réalisée. « Mon espace » regroupe vos tâches
     et celles à prendre, et les admins suivent l'avancement de tous les
     périmètres.
+en:
+  titre: >-
+    Each area has its task list and its progress
+  texte: >-
+    An area’s page shows its tasks, sorted by due date, and the progress of the
+    edition. You take a task, mark it as done, and state who completed it if
+    needed. “My space” gathers your tasks and those to take, and admins follow
+    the progress of all areas.
 ---
 
 Pages Perimetre, MonEspace (refaite) et admin/AvancementGlobal.

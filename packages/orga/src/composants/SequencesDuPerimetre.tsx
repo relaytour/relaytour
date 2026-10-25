@@ -1,5 +1,7 @@
 import { ProjectOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { t } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react/macro'
 import { Link } from 'react-router'
 
 import { graphql } from '../gql'
@@ -29,6 +31,12 @@ const PROGRAMME = graphql(`
   }
 `)
 
+/** Une personne placée, avec « (resp.) » pour un responsable. */
+function personne(p: { role: string; nom: string }): string {
+  const nomPersonne = p.nom
+  return p.role === 'RESPONSABLE' ? t`${nomPersonne} (resp.)` : nomPersonne
+}
+
 /** Les séquences du jour J d'un périmètre, dans la colonne de sa page (ADR 0040). */
 export default function SequencesDuPerimetre({
   perimetreId,
@@ -38,14 +46,23 @@ export default function SequencesDuPerimetre({
   editionId: string
 }) {
   const { lien } = useActivite()
+  const { t } = useLingui()
   const { data } = useQuery(PROGRAMME, {
     variables: { editionId, perimetreId },
     fetchPolicy: 'cache-and-network',
   })
   const sequences = data?.programme ?? []
+  const horaire = (s: (typeof sequences)[number]) => {
+    const jour = libelleJours(s.jour)
+    const debut = s.heureDebut
+    const fin = s.heureFin
+    if (!s.lieu) return t`${jour} · ${debut} → ${fin}`
+    const nomLieu = s.lieu.nom
+    return t`${jour} · ${debut} → ${fin} · ${nomLieu}`
+  }
   if (sequences.length === 0) return null
   return (
-    <Panneau titre="Jour J" icone={<ProjectOutlined aria-hidden />}>
+    <Panneau titre={t`Jour J`} icone={<ProjectOutlined aria-hidden />}>
       <ul className="rt-liste-liens">
         {sequences.map(s => (
           <li key={s.id}>
@@ -59,16 +76,11 @@ export default function SequencesDuPerimetre({
               <span className="rt-agenda-compacte-texte">
                 <span>{s.titre}</span>
                 <span className="rt-note" style={{ fontWeight: 400 }}>
-                  {libelleJours(s.jour)} · {s.heureDebut} → {s.heureFin}
-                  {s.lieu ? ` · ${s.lieu.nom}` : ''}
+                  {horaire(s)}
                 </span>
                 {s.places.length > 0 && (
                   <span className="rt-note" style={{ fontWeight: 400 }}>
-                    {s.places
-                      .map(p =>
-                        p.role === 'RESPONSABLE' ? `${p.nom} (resp.)` : p.nom
-                      )
-                      .join(', ')}
+                    {s.places.map(personne).join(', ')}
                   </span>
                 )}
               </span>

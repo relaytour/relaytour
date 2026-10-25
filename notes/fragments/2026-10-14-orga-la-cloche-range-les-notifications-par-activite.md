@@ -15,6 +15,15 @@ fr:
     Un encadré signale les nouvelles de vos autres organisations : chacune
     s'ouvre dans un nouvel onglet. Les préférences de notification se règlent
     désormais dans chaque organisation.
+en:
+  titre: >-
+    The bell groups notifications by activity
+  texte: >-
+    The bell counts the notifications of the organization you are viewing. Its
+    drawer groups them by activity, in collapsible groups that each show an
+    unread count. Each notification shows its area above its text. A box points
+    to news from your other organizations, and each one opens in a new tab.
+    Notification preferences are now set in each organization.
 ---
 
 ADR 0032. `ListeNotifications` range par activité (`lib/rangement-notifications.ts`).

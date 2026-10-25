@@ -1,5 +1,6 @@
 import { ClusterOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Switch } from 'antd'
 
 import { graphql } from '../gql'
@@ -27,6 +28,7 @@ const MODIFIER = graphql(`
 `)
 
 export default function PreferenceOrganigramme() {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const { data } = useQuery(ACCORD)
   const [modifier, modification] = useMutation(MODIFIER, {
@@ -39,8 +41,8 @@ export default function PreferenceOrganigramme() {
       await modifier({ variables: { visible: valeur } })
       message.success(
         valeur
-          ? 'Votre adresse peut s’afficher dans l’organigramme.'
-          : 'Votre adresse ne s’affiche plus dans l’organigramme.'
+          ? t`Votre adresse peut s’afficher dans l’organigramme.`
+          : t`Votre adresse ne s’affiche plus dans l’organigramme.`
       )
     } catch (e) {
       message.error(messageErreur(e))
@@ -49,13 +51,15 @@ export default function PreferenceOrganigramme() {
 
   return (
     <Panneau
-      titre="Votre adresse dans l’organigramme"
+      titre={t`Votre adresse dans l’organigramme`}
       icone={<ClusterOutlined />}
     >
       <p className="rt-texte-secondaire">
-        L’organigramme présente l’équipe de chaque activité. Votre adresse s’y
-        affiche seulement avec votre accord, et si les admins de l’activité
-        l’autorisent.
+        <Trans>
+          L’organigramme présente l’équipe de chaque activité. Votre adresse s’y
+          affiche seulement avec votre accord, et si les admins de l’activité
+          l’autorisent.
+        </Trans>
       </p>
       <label
         style={{
@@ -66,7 +70,7 @@ export default function PreferenceOrganigramme() {
         }}
       >
         <span style={{ fontWeight: 600 }}>
-          Afficher mon adresse dans l’organigramme
+          <Trans>Afficher mon adresse dans l’organigramme</Trans>
         </span>
         <Switch
           checked={visible}
@@ -76,9 +80,11 @@ export default function PreferenceOrganigramme() {
         />
       </label>
       <p className="rt-note">
-        Seules les personnes de l’activité lisent votre adresse. Vous pouvez
-        retirer votre accord à tout moment. Une adresse déjà copiée par une
-        autre personne reste en sa possession.
+        <Trans>
+          Seules les personnes de l’activité lisent votre adresse. Vous pouvez
+          retirer votre accord à tout moment. Une adresse déjà copiée par une
+          autre personne reste en sa possession.
+        </Trans>
       </p>
     </Panneau>
   )

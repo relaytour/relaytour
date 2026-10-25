@@ -1,6 +1,8 @@
 // Le bouton « Support » du menu du compte (ADR 0021). Le serveur donne le lien :
 // l'adresse de support de l'organisation en mailto:, ou l'action de l'hébergeur.
 
+import { t } from '@lingui/core/macro'
+
 /**
  * Le lien à ouvrir. Un mailto: sans objet reçoit un objet qui nomme
  * l'organisation et la version, pour situer la demande. Un lien qui porte déjà
@@ -13,7 +15,7 @@ export function lienSupport(
 ): string {
   if (!support.startsWith('mailto:') || support.includes('?')) return support
   const relaytour = version === undefined ? 'Relaytour' : `Relaytour ${version}`
-  const objet = `Support ${organisation} (${relaytour})`
+  const objet = t`Support ${organisation} (${relaytour})`
   return `${support}?subject=${encodeURIComponent(objet)}`
 }
 

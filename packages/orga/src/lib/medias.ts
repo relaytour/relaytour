@@ -1,4 +1,5 @@
 import { useMutation } from '@apollo/client/react'
+import { t } from '@lingui/core/macro'
 
 import { graphql } from '../gql'
 import type { FormatMedia } from '../gql/graphql'
@@ -37,7 +38,7 @@ function enBase64(fichier: File): Promise<string> {
       resoudre(resultat.slice(resultat.indexOf(',') + 1))
     }
     lecteur.onerror = () =>
-      rejeter(new Error('Le fichier ne peut pas être lu.'))
+      rejeter(new Error(t`Le fichier ne peut pas être lu.`))
     lecteur.readAsDataURL(fichier)
   })
 }
@@ -53,7 +54,7 @@ export function useTeleverserImage(): [
       const r = await televerser({
         variables: { format, donnees: await enBase64(fichier) },
       })
-      if (!r.data) throw new Error('Le téléversement a échoué.')
+      if (!r.data) throw new Error(t`Le téléversement a échoué.`)
       return r.data.televerserMedia
     },
     loading,

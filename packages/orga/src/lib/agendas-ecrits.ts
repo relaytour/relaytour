@@ -1,4 +1,5 @@
 import { useQuery } from '@apollo/client/react'
+import { t } from '@lingui/core/macro'
 import { useMemo } from 'react'
 
 import { graphql } from '../gql'
@@ -32,7 +33,7 @@ export interface AgendaEcrit {
 
 export function useAgendasEcrits(
   editionId: string | undefined,
-  libelleGlobal = 'Toute l’activité'
+  libelleGlobal = t`Toute l’activité`
 ): AgendaEcrit[] {
   const { gere } = useActivite()
   const { data: perimetres } = useQuery(PERIMETRES)

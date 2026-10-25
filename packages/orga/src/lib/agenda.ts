@@ -139,13 +139,11 @@ export function quantieme(jour: string): string {
   return String(Number(jour.slice(8, 10)))
 }
 
-/** Les jours de la semaine, du lundi au dimanche, en abrégé. */
-export const JOURS_DE_LA_SEMAINE = [
-  'lun.',
-  'mar.',
-  'mer.',
-  'jeu.',
-  'ven.',
-  'sam.',
-  'dim.',
-] as const
+/** Les jours de la semaine, du lundi au dimanche, en abrégé, dans la langue active. */
+export function joursDeLaSemaine(): string[] {
+  const format = formatDate({ weekday: 'short', timeZone: 'UTC' })
+  // Le 1er mars 2027 est un lundi.
+  return Array.from({ length: 7 }, (_, rang) =>
+    format.format(new Date(instantDuJour(decalerJour('2027-03-01', rang))))
+  )
+}

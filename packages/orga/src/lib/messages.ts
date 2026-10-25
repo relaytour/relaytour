@@ -5,6 +5,12 @@
 //
 // Un message groupé porte le même texte pour chaque destinataire : aucune
 // information ne change d'une personne à l'autre.
+//
+// Les textes de ce module (statuts, libellés, modèles) se traduisent (ADR 0047). Les
+// constantes exportées portent des accesseurs : chaque lecture traduit dans la langue
+// active, et leur forme reste celle d'un objet de chaînes.
+
+import { plural, t } from '@lingui/core/macro'
 
 export type ChampDestinataires = 'A' | 'CC' | 'CCI'
 export type StatutMessage = 'EN_COURS' | 'ENVOYE' | 'ANNULE'
@@ -13,15 +19,45 @@ export const STATUTS_MESSAGE: Record<
   StatutMessage,
   { libelle: string; couleur?: string }
 > = {
-  EN_COURS: { libelle: 'En cours', couleur: 'gold' },
-  ENVOYE: { libelle: 'Envoyé', couleur: 'green' },
-  ANNULE: { libelle: 'Annulé' },
+  EN_COURS: {
+    get libelle() {
+      return t({ message: 'En cours', comment: 'Statut d’un message préparé' })
+    },
+    couleur: 'gold',
+  },
+  ENVOYE: {
+    get libelle() {
+      return t({ message: 'Envoyé', comment: 'Statut d’un message préparé' })
+    },
+    couleur: 'green',
+  },
+  ANNULE: {
+    get libelle() {
+      return t({ message: 'Annulé', comment: 'Statut d’un message préparé' })
+    },
+  },
 }
 
+/** Le nom de chaque champ de destinataires d'une messagerie. */
 export const CHAMPS: Record<ChampDestinataires, string> = {
-  A: 'À',
-  CC: 'Cc',
-  CCI: 'Cci',
+  get A() {
+    return t({
+      message: 'À',
+      comment: 'Champ des destinataires d’un mail (« To »)',
+    })
+  },
+  get CC() {
+    return t({
+      message: 'Cc',
+      comment: 'Champ des destinataires en copie d’un mail',
+    })
+  },
+  get CCI() {
+    return t({
+      message: 'Cci',
+      comment: 'Champ des destinataires en copie cachée d’un mail (« Bcc »)',
+    })
+  },
 }
 
 /** Bornes de saisie, identiques à celles du serveur. */
@@ -58,21 +94,51 @@ export type CleInformation = keyof Informations
 
 /** Le libellé de chaque information, dans le menu d'insertion et dans un passage à compléter. */
 export const LIBELLES: Record<CleInformation, string> = {
-  salutation: 'formule de salutation',
-  signature: 'signature',
-  organisation: 'nom de l’organisation',
-  activite: 'nom de l’activité',
-  periode: 'nom de la période',
-  dates: 'dates de la période',
-  perimetre: 'nom du périmètre',
-  lienEspace: 'adresse de l’espace organisateur',
-  lienPerimetre: 'adresse du périmètre',
-  tachesEnCours: 'tâches en cours',
-  tachesEnRetard: 'tâches en retard',
-  postesAPourvoir: 'périmètres à pourvoir',
-  invitationFormulaire: 'lien du formulaire public',
-  contact: 'adresse de contact',
-  pageEquipe: 'page de l’équipe',
+  get salutation() {
+    return t`formule de salutation`
+  },
+  get signature() {
+    return t`signature`
+  },
+  get organisation() {
+    return t`nom de l’organisation`
+  },
+  get activite() {
+    return t`nom de l’activité`
+  },
+  get periode() {
+    return t`nom de la période`
+  },
+  get dates() {
+    return t`dates de la période`
+  },
+  get perimetre() {
+    return t`nom du périmètre`
+  },
+  get lienEspace() {
+    return t`adresse de l’espace organisateur`
+  },
+  get lienPerimetre() {
+    return t`adresse du périmètre`
+  },
+  get tachesEnCours() {
+    return t`tâches en cours`
+  },
+  get tachesEnRetard() {
+    return t`tâches en retard`
+  },
+  get postesAPourvoir() {
+    return t`périmètres à pourvoir`
+  },
+  get invitationFormulaire() {
+    return t`lien du formulaire public`
+  },
+  get contact() {
+    return t`adresse de contact`
+  },
+  get pageEquipe() {
+    return t`page de l’équipe`
+  },
 }
 
 /** Les informations proposées dans le menu d'insertion, dans cet ordre. */
@@ -94,7 +160,7 @@ export const INSERABLES: CleInformation[] = [
 
 /** Le passage qui remplace une information manquante. */
 export function aCompleter(libelle: string): string {
-  return `[à compléter : ${libelle}]`
+  return t`[à compléter : ${libelle}]`
 }
 
 /** La valeur d'une information dans le texte, ou son passage à compléter. */
@@ -127,7 +193,7 @@ export function passagesACompleter(texte: string): string[] {
 
 /** La formule de salutation : le prénom pour une seule personne. */
 export function salutation(prenom: string | null): string {
-  return prenom ? `Bonjour ${prenom},` : 'Bonjour à toutes et à tous,'
+  return prenom ? t`Bonjour ${prenom},` : t`Bonjour à toutes et à tous,`
 }
 
 /** Nombre de tâches listées dans un message ; les suivantes se résument en une ligne. */
@@ -144,14 +210,17 @@ export interface TacheListee {
 /** Une liste de tâches, une par ligne. */
 export function listerTaches(taches: TacheListee[], aucune: string): string {
   if (taches.length === 0) return aucune
-  const lignes = taches.slice(0, TACHES_MAX).map(t => {
-    const titre = t.perimetre ? `${t.perimetre} : ${t.titre}` : t.titre
-    return t.echeance ? `- ${titre} (échéance : ${t.echeance})` : `- ${titre}`
+  const lignes = taches.slice(0, TACHES_MAX).map(tache => {
+    const perimetre = tache.perimetre
+    const titreTache = tache.titre
+    const titre = perimetre ? t`${perimetre} : ${titreTache}` : titreTache
+    const echeance = tache.echeance
+    return echeance ? `- ${t`${titre} (échéance : ${echeance})`}` : `- ${titre}`
   })
   const reste = taches.length - lignes.length
   if (reste > 0) {
     lignes.push(
-      reste === 1 ? '- et une autre tâche' : `- et ${reste} autres tâches`
+      `- ${t`${plural(reste, { one: 'et une autre tâche', other: 'et # autres tâches' })}`}`
     )
   }
   return lignes.join('\n')
@@ -171,30 +240,53 @@ export interface Modele {
 export const MODELE_LIBRE = 'message-libre'
 export const MODELE_PERIMETRE = 'perimetre'
 
+/**
+ * Les jetons de `composer`, écrits dans un modèle sous forme de variables : une
+ * traduction garde ainsi le nom de l'information, et ne peut pas abîmer les accolades.
+ */
+const JETONS = Object.fromEntries(
+  Object.keys(LIBELLES).map(cle => [cle, `{{${cle}}}`])
+) as Record<CleInformation, string>
+
 export const MODELES: Modele[] = [
   {
     cle: MODELE_LIBRE,
-    libelle: 'Message libre',
-    description: 'Un message sans texte préparé.',
+    get libelle() {
+      return t`Message libre`
+    },
+    get description() {
+      return t`Un message sans texte préparé.`
+    },
     objet: '',
-    corps: `{{salutation}}
+    get corps() {
+      const { salutation, signature } = JETONS
+      return t`${salutation}
 
 [Écrivez ici votre message.]
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'presentation-outil',
-    libelle: 'Présentation de l’espace organisateur',
-    description:
-      'Vous présentez l’outil et la façon de s’y connecter à des personnes qui le découvrent.',
-    objet: '{{organisation}} : votre accès à l’espace organisateur',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Présentation de l’espace organisateur`
+    },
+    get description() {
+      return t`Vous présentez l’outil et la façon de s’y connecter à des personnes qui le découvrent.`
+    },
+    get objet() {
+      const { organisation } = JETONS
+      return t`${organisation} : votre accès à l’espace organisateur`
+    },
+    get corps() {
+      const { salutation, activite, lienEspace, signature } = JETONS
+      return t`${salutation}
 
-Nous préparons {{activite}} avec un espace organisateur en ligne. Vous y trouvez les tâches de votre périmètre, leurs échéances et les fiches qui expliquent comment les réaliser.
+Nous préparons ${activite} avec un espace organisateur en ligne. Vous y trouvez les tâches de votre périmètre, leurs échéances et les fiches qui expliquent comment les réaliser.
 
 Vous vous connectez à cette adresse :
-{{lienEspace}}
+${lienEspace}
 
 L’espace ne demande pas de mot de passe. Vous saisissez votre adresse mail, puis vous recevez un code de connexion par mail.
 
@@ -205,19 +297,29 @@ L’espace ne demande pas de mot de passe. Vous saisissez votre adresse mail, pu
 
 Vous pouvez répondre à ce message pour toute question.
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'lancement',
-    libelle: 'Lancement de la période',
-    description: 'Vous annoncez à l’équipe le début de la préparation.',
-    objet: '{{periode}} : la préparation commence',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Lancement de la période`
+    },
+    get description() {
+      return t`Vous annoncez à l’équipe le début de la préparation.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : la préparation commence`
+    },
+    get corps() {
+      const { salutation, periode, dates, lienEspace, signature } = JETONS
+      return t`${salutation}
 
-La préparation de {{periode}} commence. Les dates retenues sont les suivantes : {{dates}}.
+La préparation de ${periode} commence. Les dates retenues sont les suivantes : ${dates}.
 
 L’espace organisateur liste les tâches de chaque périmètre, avec leurs échéances :
-{{lienEspace}}
+${lienEspace}
 
 Nous vous invitons à consulter les tâches de votre périmètre et à signaler ce qui manque.
 
@@ -225,32 +327,52 @@ Nous vous invitons à consulter les tâches de votre périmètre et à signaler 
 
 Merci pour votre engagement.
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'equipe',
-    libelle: 'Nouvelles de l’équipe',
-    description: 'Vous partagez l’avancement et les prochaines dates.',
-    objet: '{{periode}} : des nouvelles de l’équipe',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Nouvelles de l’équipe`
+    },
+    get description() {
+      return t`Vous partagez l’avancement et les prochaines dates.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : des nouvelles de l’équipe`
+    },
+    get corps() {
+      const { salutation, periode, lienEspace, signature } = JETONS
+      return t`${salutation}
 
-Voici les nouvelles de l’équipe de {{periode}}.
+Voici les nouvelles de l’équipe de ${periode}.
 
 [Écrivez ici les informations à partager : avancement, décisions, prochaines dates.]
 
 Vous retrouvez les tâches et les fiches dans l’espace organisateur :
-{{lienEspace}}
+${lienEspace}
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'reunion',
-    libelle: 'Invitation à une réunion',
-    description: 'Vous invitez l’équipe à une réunion.',
-    objet: '{{periode}} : réunion d’équipe',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Invitation à une réunion`
+    },
+    get description() {
+      return t`Vous invitez l’équipe à une réunion.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : réunion d’équipe`
+    },
+    get corps() {
+      const { salutation, periode, signature } = JETONS
+      return t`${salutation}
 
-Nous vous invitons à une réunion de l’équipe de {{periode}}.
+Nous vous invitons à une réunion de l’équipe de ${periode}.
 
 - Date : [date et heure]
 - Lieu : [lieu ou lien de visioconférence]
@@ -258,71 +380,110 @@ Nous vous invitons à une réunion de l’équipe de {{periode}}.
 
 Pouvez-vous confirmer votre présence par retour de mail ?
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: MODELE_PERIMETRE,
-    libelle: 'Message à un périmètre',
-    description: 'Vous écrivez aux référentes et aux référents d’un périmètre.',
-    objet: '{{periode}} : point sur le périmètre {{perimetre}}',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Message à un périmètre`
+    },
+    get description() {
+      return t`Vous écrivez aux référentes et aux référents d’un périmètre.`
+    },
+    get objet() {
+      const { periode, perimetre } = JETONS
+      return t`${periode} : point sur le périmètre ${perimetre}`
+    },
+    get corps() {
+      const { salutation, periode, perimetre, lienPerimetre, signature } =
+        JETONS
+      return t`${salutation}
 
-Ce message concerne le périmètre {{perimetre}} pour {{periode}}.
+Ce message concerne le périmètre ${perimetre} pour ${periode}.
 
 [Écrivez ici votre message.]
 
 Vous retrouvez les tâches et les fiches du périmètre à cette adresse :
-{{lienPerimetre}}
+${lienPerimetre}
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'taches-en-cours',
-    libelle: 'Rappel des tâches en cours',
-    description:
-      'Le message liste les tâches encore ouvertes du périmètre choisi, ou de toute la période.',
-    objet: '{{periode}} : rappel des tâches en cours',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Rappel des tâches en cours`
+    },
+    get description() {
+      return t`Le message liste les tâches encore ouvertes du périmètre choisi, ou de toute la période.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : rappel des tâches en cours`
+    },
+    get corps() {
+      const { salutation, periode, tachesEnCours, lienEspace, signature } =
+        JETONS
+      return t`${salutation}
 
-Voici les tâches encore ouvertes pour {{periode}} :
+Voici les tâches encore ouvertes pour ${periode} :
 
-{{tachesEnCours}}
+${tachesEnCours}
 
 Vous pouvez indiquer l’avancement de chaque tâche dans l’espace organisateur :
-{{lienEspace}}
+${lienEspace}
 
 Merci pour votre aide.
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'taches-en-retard',
-    libelle: 'Rappel des tâches en retard',
-    description:
-      'Le message liste les tâches qui ont dépassé leur échéance, pour le périmètre choisi ou pour toute la période.',
-    objet: '{{periode}} : des tâches ont dépassé leur échéance',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Rappel des tâches en retard`
+    },
+    get description() {
+      return t`Le message liste les tâches qui ont dépassé leur échéance, pour le périmètre choisi ou pour toute la période.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : des tâches ont dépassé leur échéance`
+    },
+    get corps() {
+      const { salutation, tachesEnRetard, lienEspace, signature } = JETONS
+      return t`${salutation}
 
 Ces tâches ont dépassé leur échéance :
 
-{{tachesEnRetard}}
+${tachesEnRetard}
 
 Pouvez-vous indiquer leur avancement dans l’espace organisateur ?
-{{lienEspace}}
+${lienEspace}
 
 Si une tâche ne peut plus être réalisée, vous pouvez l’abandonner ou nous prévenir par retour de mail.
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'jour-j',
-    libelle: 'Arrivée le jour J',
-    description:
-      'Vous donnez à l’équipe les informations pratiques du premier jour.',
-    objet: '{{periode}} : informations pour le jour J',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Arrivée le jour J`
+    },
+    get description() {
+      return t`Vous donnez à l’équipe les informations pratiques du premier jour.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : informations pour le jour J`
+    },
+    get corps() {
+      const { salutation, periode, dates, lienEspace, signature } = JETONS
+      return t`${salutation}
 
-{{periode}} approche. Les dates retenues sont les suivantes : {{dates}}.
+${periode} approche. Les dates retenues sont les suivantes : ${dates}.
 
 Voici les informations pratiques pour votre arrivée :
 - Heure d’arrivée : [heure]
@@ -330,38 +491,63 @@ Voici les informations pratiques pour votre arrivée :
 - Personne à contacter sur place : [nom et numéro]
 
 Vous retrouvez vos tâches dans l’espace organisateur :
-{{lienEspace}}
+${lienEspace}
 
 Merci pour votre présence.
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'appel-equipe',
-    libelle: 'Appel à rejoindre l’équipe',
-    description:
-      'Le message liste les périmètres qui manquent de référentes et de référents.',
-    objet: '{{periode}} : rejoignez l’équipe d’organisation',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Appel à rejoindre l’équipe`
+    },
+    get description() {
+      return t`Le message liste les périmètres qui manquent de référentes et de référents.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : rejoignez l’équipe d’organisation`
+    },
+    get corps() {
+      const {
+        salutation,
+        periode,
+        postesAPourvoir,
+        invitationFormulaire,
+        signature,
+      } = JETONS
+      return t`${salutation}
 
-Nous préparons {{periode}}. Nous cherchons encore des référentes et des référents pour ces périmètres :
+Nous préparons ${periode}. Nous cherchons encore des référentes et des référents pour ces périmètres :
 
-{{postesAPourvoir}}
+${postesAPourvoir}
 
-{{invitationFormulaire}}
+${invitationFormulaire}
 
 Vous pouvez aussi répondre à ce message pour proposer votre aide.
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'appel-benevoles',
-    libelle: 'Appel à bénévoles',
-    description: 'Vous cherchez des bénévoles pour aider pendant l’événement.',
-    objet: '{{periode}} : nous cherchons des bénévoles',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Appel à bénévoles`
+    },
+    get description() {
+      return t`Vous cherchez des bénévoles pour aider pendant l’événement.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : nous cherchons des bénévoles`
+    },
+    get corps() {
+      const { salutation, periode, dates, signature } = JETONS
+      return t`${salutation}
 
-Nous cherchons des bénévoles pour {{periode}}. Les dates retenues sont les suivantes : {{dates}}.
+Nous cherchons des bénévoles pour ${periode}. Les dates retenues sont les suivantes : ${dates}.
 
 Nous avons besoin d’aide pour ces missions :
 - [mission, jour et horaire]
@@ -371,22 +557,33 @@ Vous pouvez transmettre ce message aux personnes de votre entourage.
 
 Pour proposer votre aide, vous pouvez répondre à ce message.
 
-{{signature}}`,
+${signature}`
+    },
   },
   {
     cle: 'remerciements',
-    libelle: 'Remerciements',
-    description: 'Vous remerciez l’équipe à la fin de la période.',
-    objet: '{{periode}} : merci',
-    corps: `{{salutation}}
+    get libelle() {
+      return t`Remerciements`
+    },
+    get description() {
+      return t`Vous remerciez l’équipe à la fin de la période.`
+    },
+    get objet() {
+      const { periode } = JETONS
+      return t`${periode} : merci`
+    },
+    get corps() {
+      const { salutation, periode, signature } = JETONS
+      return t`${salutation}
 
-Nous arrivons au terme de {{periode}}. Nous vous remercions pour le temps et l’énergie que vous y avez consacrés.
+Nous arrivons au terme de ${periode}. Nous vous remercions pour le temps et l’énergie que vous y avez consacrés.
 
 [Ajoutez ici un bilan en quelques lignes : participation, points forts, suites prévues.]
 
 Vos remarques nous aideront à préparer la suite. Vous pouvez les noter dans les fiches de votre périmètre ou nous répondre par mail.
 
-{{signature}}`,
+${signature}`
+    },
   },
 ]
 

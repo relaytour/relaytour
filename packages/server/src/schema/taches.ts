@@ -41,6 +41,7 @@ import {
 import { builder } from './builder.ts'
 import { EditionRef, PerimetreRef } from './organisation.ts'
 import { PersonneRef } from './personnes.ts'
+import { i18n } from '../lib/langue.ts'
 
 export const StatutTacheEnum = builder.enumType(StatutTache, {
   name: 'StatutTache',
@@ -681,11 +682,15 @@ function exigerDeclinaisonAcceptee(tache: {
 }) {
   if (tache.accord === 'EN_ATTENTE') {
     throw erreurSaisie(
-      'Cette déclinaison attend l’accord de son périmètre : acceptez-la d’abord.'
+      i18n._(
+        'Cette déclinaison attend l’accord de son périmètre : acceptez-la d’abord.'
+      )
     )
   }
   if (tache.accord === 'REFUSE') {
-    throw erreurSaisie('Cette déclinaison a été refusée par son périmètre.')
+    throw erreurSaisie(
+      i18n._('Cette déclinaison a été refusée par son périmètre.')
+    )
   }
 }
 
@@ -708,12 +713,15 @@ async function exigerConfirmation(
       select: { name: true },
       orderBy: { name: 'asc' },
     })
-    throw new GraphQLError('Cette tâche est assignée à d’autres personnes.', {
-      extensions: {
-        code: 'CONFIRMATION_REQUISE',
-        personnes: personnes.map(p => p.name),
-      },
-    })
+    throw new GraphQLError(
+      i18n._('Cette tâche est assignée à d’autres personnes.'),
+      {
+        extensions: {
+          code: 'CONFIRMATION_REQUISE',
+          personnes: personnes.map(p => p.name),
+        },
+      }
+    )
   }
   return autres
 }
@@ -751,7 +759,7 @@ async function conflitDeContenu(tacheId: string): Promise<GraphQLError> {
     { isolationLevel: 'RepeatableRead' }
   )
   return conflitDeVersion(
-    'Une autre personne a modifié cette tâche depuis votre lecture.',
+    i18n._('Une autre personne a modifié cette tâche depuis votre lecture.'),
     {
       versionCourante: tache.version,
       modifieeLe: (derniere?.createdAt ?? tache.updatedAt).toISOString(),
@@ -766,7 +774,7 @@ async function conflitDeContenu(tacheId: string): Promise<GraphQLError> {
  */
 function conflitDeStatut(statut: StatutTache): GraphQLError {
   return conflitDeVersion(
-    'Le statut de cette tâche a changé depuis votre lecture.',
+    i18n._('Le statut de cette tâche a changé depuis votre lecture.'),
     { statutCourant: statut }
   )
 }
@@ -785,7 +793,9 @@ async function exigerAffectee(
   })
   if (affectation === null) {
     throw erreurSaisie(
-      'Cette personne n’est pas affectée à ce périmètre pour cette édition.'
+      i18n._(
+        'Cette personne n’est pas affectée à ce périmètre pour cette édition.'
+      )
     )
   }
 }
@@ -818,7 +828,9 @@ async function ficheValide(
       fiche.perimetreId !== perimetreId &&
       fiche.id !== ficheDeLOrigine)
   ) {
-    throw erreurSaisie('Cette fiche ne peut pas être liée à cette tâche.')
+    throw erreurSaisie(
+      i18n._('Cette fiche ne peut pas être liée à cette tâche.')
+    )
   }
   return fiche.id
 }
@@ -865,15 +877,19 @@ async function ciblesValides(
 ): Promise<CibleValide[]> {
   const ids = [...new Set(perimetreIds.map(String))]
   if (ids.length === 0) {
-    throw erreurSaisie('Choisissez au moins un périmètre.')
+    throw erreurSaisie(i18n._('Choisissez au moins un périmètre.'))
   }
   if (ids.length > CIBLES_MAX) {
     throw erreurSaisie(
-      `Une tâche se décline dans ${CIBLES_MAX} périmètres au plus.`
+      i18n._('Une tâche se décline dans {max} périmètres au plus.', {
+        max: CIBLES_MAX,
+      })
     )
   }
   if (ids.includes(origine.perimetreId)) {
-    throw erreurSaisie('Une tâche ne se décline pas dans son propre périmètre.')
+    throw erreurSaisie(
+      i18n._('Une tâche ne se décline pas dans son propre périmètre.')
+    )
   }
   const activiteId = await activiteDuPerimetre(origine.perimetreId)
   const perimetres = await prisma.perimetre.findMany({
@@ -887,7 +903,9 @@ async function ciblesValides(
   if (perimetres.length !== ids.length) throw accesRefuse()
   const archive = perimetres.find(p => p.archivedAt !== null)
   if (archive !== undefined) {
-    throw erreurSaisie(`Le périmètre « ${archive.nom} » est archivé.`)
+    throw erreurSaisie(
+      i18n._('Le périmètre « {nom} » est archivé.', { nom: archive.nom })
+    )
   }
   const parAdmin = await ctx.estAdminDe(activiteId)
   return Promise.all(
@@ -921,14 +939,14 @@ async function creerDeclinaisons(
   acteurId: string
 ): Promise<(CibleValide & { tacheId: string })[]> {
   const titre = textes.titre?.trim()
-    ? texteRequis(textes.titre, 'Le titre de la déclinaison', TITRE_MAX)
+    ? texteRequis(textes.titre, i18n._('Le titre de la déclinaison'), TITRE_MAX)
     : origine.titre
   const description =
     textes.description === undefined || textes.description === null
       ? origine.description
       : texteFacultatif(
           textes.description,
-          'La description',
+          i18n._('La description'),
           DESCRIPTION_TACHE_MAX
         )
   const echeance =
@@ -1034,10 +1052,10 @@ builder.mutationFields(t => ({
           data: {
             perimetreId,
             editionId,
-            titre: texteRequis(args.titre, 'Le titre', TITRE_MAX),
+            titre: texteRequis(args.titre, i18n._('Le titre'), TITRE_MAX),
             description: texteFacultatif(
               args.description,
-              'La description',
+              i18n._('La description'),
               DESCRIPTION_TACHE_MAX
             ),
             echeance: echeanceValide(args.echeance),
@@ -1118,13 +1136,19 @@ builder.mutationFields(t => ({
       const donnees = {
         ...(args.titre === undefined
           ? {}
-          : { titre: texteRequis(args.titre ?? '', 'Le titre', TITRE_MAX) }),
+          : {
+              titre: texteRequis(
+                args.titre ?? '',
+                i18n._('Le titre'),
+                TITRE_MAX
+              ),
+            }),
         ...(args.description === undefined
           ? {}
           : {
               description: texteFacultatif(
                 args.description,
-                'La description',
+                i18n._('La description'),
                 DESCRIPTION_TACHE_MAX
               ),
             }),
@@ -1441,7 +1465,7 @@ builder.mutationFields(t => ({
         tache.editionId
       )
       if (tache.origineId !== null) {
-        throw erreurSaisie('Une déclinaison ne se décline pas.')
+        throw erreurSaisie(i18n._('Une déclinaison ne se décline pas.'))
       }
       const voulues = await ciblesValides(ctx, args.perimetreIds, tache)
       const relire = () =>
@@ -1493,7 +1517,7 @@ builder.mutationFields(t => ({
         tache.editionId
       )
       if (tache.origine === null) {
-        throw erreurSaisie('Cette tâche n’est pas une déclinaison.')
+        throw erreurSaisie(i18n._('Cette tâche n’est pas une déclinaison.'))
       }
       const accord = args.accepter ? 'ACCEPTE' : 'REFUSE'
       const relire = () =>
@@ -1501,8 +1525,12 @@ builder.mutationFields(t => ({
       const dejaRepondu = (actuel: AccordDeclinaison | null) =>
         erreurSaisie(
           actuel === 'ACCEPTE'
-            ? 'Cette déclinaison est déjà acceptée. Abandonnez la tâche si elle ne concerne pas votre périmètre.'
-            : 'Cette déclinaison a déjà été refusée. Un admin de l’activité peut l’imposer.'
+            ? i18n._(
+                'Cette déclinaison est déjà acceptée. Abandonnez la tâche si elle ne concerne pas votre périmètre.'
+              )
+            : i18n._(
+                'Cette déclinaison a déjà été refusée. Un admin de l’activité peut l’imposer.'
+              )
         )
       // La même réponse une seconde fois ne change rien.
       if (tache.accord === accord) return relire()
@@ -1606,7 +1634,7 @@ builder.mutationFields(t => ({
         throw accesRefuse()
       }
       if (tache.origine === null) {
-        throw erreurSaisie('Cette tâche n’est pas une déclinaison.')
+        throw erreurSaisie(i18n._('Cette tâche n’est pas une déclinaison.'))
       }
       const relire = () =>
         prisma.tache.findUniqueOrThrow({ ...query, where: { id: tache.id } })

@@ -1,5 +1,7 @@
 import { PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { t } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react/macro'
 import {
   App,
   Button,
@@ -20,6 +22,7 @@ import { useActivite } from '../../lib/activite'
 import { graphql } from '../../gql'
 import type { EditionsQuery, StatutEdition } from '../../gql/graphql'
 import { dateCourte, messageErreur } from '../../lib/erreurs'
+import { majusculeInitiale } from '../../lib/langue'
 import { EDITION_COURANTE, EDITIONS } from '../../lib/requetes'
 
 const CREER = graphql(`
@@ -64,10 +67,19 @@ type Edition = EditionsQuery['editions'][number]
 const statuts = (
   archivee: string
 ): Record<StatutEdition, { libelle: string; couleur: string }> => ({
-  PREPARATION: { libelle: 'En préparation', couleur: 'blue' },
-  EN_COURS: { libelle: 'En cours', couleur: 'green' },
+  PREPARATION: {
+    libelle: t({
+      message: 'En préparation',
+      comment: 'Statut d’une période',
+    }),
+    couleur: 'blue',
+  },
+  EN_COURS: {
+    libelle: t({ message: 'En cours', comment: 'Statut d’une période' }),
+    couleur: 'green',
+  },
   ARCHIVEE: {
-    libelle: archivee.charAt(0).toUpperCase() + archivee.slice(1),
+    libelle: majusculeInitiale(archivee),
     couleur: 'default',
   },
 })
@@ -81,8 +93,18 @@ interface Valeurs {
 }
 
 export default function Editions() {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const { periode } = useActivite()
+  // Les formes du mot qui désigne une période arrivent accordées dans la langue active.
+  const {
+    nom: mot,
+    Nom: Mot,
+    la: laPeriode,
+    une: unePeriode,
+    creee,
+    enregistree,
+  } = periode
   const STATUTS = statuts(periode.archivee)
   const { data, loading } = useQuery(EDITIONS)
   const [enEdition, setEnEdition] = useState<Edition | 'nouvelle' | null>(null)
@@ -119,7 +141,7 @@ export default function Editions() {
         await creer({
           variables: { annee: valeurs.annee, nom: valeurs.nom, debut, fin },
         })
-        message.success(`${periode.Nom} ${periode.creee}.`)
+        message.success(t`${Mot} ${creee}.`)
       } else if (enEdition) {
         await modifier({
           variables: {
@@ -130,7 +152,7 @@ export default function Editions() {
             statut: valeurs.statut,
           },
         })
-        message.success(`${periode.Nom} ${periode.enregistree}.`)
+        message.success(t`${Mot} ${enregistree}.`)
       }
       setEnEdition(null)
     } catch (e) {
@@ -141,7 +163,7 @@ export default function Editions() {
   return (
     <>
       <Titre
-        sousTitre={`Chaque ${periode.nom} sert de repère aux échéances des tâches.`}
+        sousTitre={t`Chaque ${mot} sert de repère aux échéances des tâches.`}
       >
         {periode.Pluriel}
       </Titre>
@@ -160,31 +182,38 @@ export default function Editions() {
         dataSource={data?.editions ?? []}
         pagination={false}
         ouvrir={ouvrir}
-        libelleOuvrir={e => `Modifier ${e.nom}`}
+        libelleOuvrir={e => {
+          const nom = e.nom
+          return t`Modifier ${nom}`
+        }}
         colonnes={[
           {
             key: 'annee',
-            title: 'Année',
+            title: t`Année`,
             dataIndex: 'annee',
             width: 110,
             tri: e => e.annee,
           },
           {
             key: 'nom',
-            title: 'Nom',
+            title: t`Nom`,
             dataIndex: 'nom',
             tri: e => e.nom,
             recherche: e => e.nom,
           },
           {
             key: 'dates',
-            title: 'Dates',
-            render: (_, e) => `${dateCourte(e.debut)} au ${dateCourte(e.fin)}`,
+            title: t`Dates`,
+            render: (_, e) => {
+              const debut = dateCourte(e.debut)
+              const fin = dateCourte(e.fin)
+              return t`${debut} au ${fin}`
+            },
             tri: e => e.debut,
           },
           {
             key: 'statut',
-            title: 'Statut',
+            title: t`Statut`,
             dataIndex: 'statut',
             render: (s: StatutEdition) => (
               <Tag color={STATUTS[s].couleur}>{STATUTS[s].libelle}</Tag>
@@ -203,10 +232,10 @@ export default function Editions() {
       <Modal
         open={enEdition !== null}
         title={
-          enEdition === 'nouvelle' ? periode.Nouvelle : `Modifier ${periode.la}`
+          enEdition === 'nouvelle' ? periode.Nouvelle : t`Modifier ${laPeriode}`
         }
-        okText="Enregistrer"
-        cancelText="Annuler"
+        okText={t`Enregistrer`}
+        cancelText={t`Annuler`}
         confirmLoading={creation.loading || modification.loading}
         onOk={() => form.submit()}
         onCancel={() => setEnEdition(null)}
@@ -218,7 +247,7 @@ export default function Editions() {
           onFinish={v => void enregistrer(v)}
           requiredMark={false}
         >
-          <Form.Item label="Année" name="annee" rules={[{ required: true }]}>
+          <Form.Item label={t`Année`} name="annee" rules={[{ required: true }]}>
             <InputNumber
               min={2020}
               max={2100}
@@ -226,35 +255,35 @@ export default function Editions() {
             />
           </Form.Item>
           <Form.Item
-            label="Nom"
+            label={t`Nom`}
             name="nom"
-            rules={[{ required: true, message: 'Saisissez un nom.' }]}
+            rules={[{ required: true, message: t`Saisissez un nom.` }]}
           >
-            <Input placeholder={`${periode.Nom} 2027`} />
+            <Input placeholder={t`${Mot} 2027`} />
           </Form.Item>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
-                label="Premier jour"
+                label={t`Premier jour`}
                 name="debut"
-                rules={[{ required: true, message: 'Choisissez une date.' }]}
+                rules={[{ required: true, message: t`Choisissez une date.` }]}
               >
                 <Input type="date" />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
               <Form.Item
-                label="Dernier jour"
+                label={t`Dernier jour`}
                 name="fin"
                 dependencies={['debut']}
                 rules={[
-                  { required: true, message: 'Choisissez une date.' },
+                  { required: true, message: t`Choisissez une date.` },
                   ({ getFieldValue }) => ({
                     validator: (_, fin: string) =>
                       !fin || fin >= (getFieldValue('debut') as string)
                         ? Promise.resolve()
                         : Promise.reject(
-                            new Error('Le dernier jour suit le premier.')
+                            new Error(t`Le dernier jour suit le premier.`)
                           ),
                   }),
                 ]}
@@ -265,9 +294,9 @@ export default function Editions() {
           </Row>
           {enEdition !== 'nouvelle' && (
             <Form.Item
-              label="Statut"
+              label={t`Statut`}
               name="statut"
-              extra={`Archiver ${periode.une} passe ses tâches en lecture seule. Ses demandes pour rejoindre l’équipe sont supprimées la nuit suivante ; les comptes et les affectations restent.`}
+              extra={t`Archiver ${unePeriode} passe ses tâches en lecture seule. Ses demandes pour rejoindre l’équipe sont supprimées la nuit suivante ; les comptes et les affectations restent.`}
             >
               <Select
                 options={Object.entries(STATUTS).map(

@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Empty, Skeleton } from 'antd'
 import { useNavigate } from 'react-router'
 
@@ -17,6 +18,7 @@ import {
  * encore.
  */
 export default function NotificationsAdmin() {
+  const { t } = useLingui()
   const navigate = useNavigate()
   const liste = useQuery(LISTE_NOTIFICATIONS_ADMIN, {
     fetchPolicy: 'cache-and-network',
@@ -32,13 +34,15 @@ export default function NotificationsAdmin() {
 
   return (
     <>
-      <Titre sousTitre="Les nouvelles de vos rôles d’admin : demandes, invitations et équipe, rangées par activité puis par périmètre.">
-        Notifications d’admin
+      <Titre
+        sousTitre={t`Les nouvelles de vos rôles d’admin : demandes, invitations et équipe, rangées par activité puis par périmètre.`}
+      >
+        <Trans>Notifications d’admin</Trans>
       </Titre>
       {liste.loading && !liste.data ? (
         <Skeleton active />
       ) : notifications.length === 0 ? (
-        <Empty description="Aucune notification d’admin." />
+        <Empty description={t`Aucune notification d’admin.`} />
       ) : (
         <div
           className="rt-verre rt-panneau"
@@ -52,12 +56,12 @@ export default function NotificationsAdmin() {
                 void marquer({ variables: { ids: null, admin: true } })
               }
             >
-              Tout marquer comme lu
+              <Trans>Tout marquer comme lu</Trans>
             </Button>
           )}
           <ListeNotifications
             notifications={notifications}
-            sansActivite="Organisation"
+            sansActivite={t`Organisation`}
             parPerimetre
             avecRole
             onOuvrir={n => {

@@ -9,16 +9,18 @@ import {
   type CouleursTheme,
   type Theme,
 } from '@relaytour/tokens'
+import { LANGUES, type Langue } from '@relaytour/commun'
 import { z } from 'zod'
 
 import type { Env } from '../env.ts'
 
-import { GROUPES_PAR_DEFAUT, SLUGS_RESERVES } from './activites.ts'
+import { groupesParDefaut, SLUGS_RESERVES } from './activites.ts'
 import {
   adresseDeRole,
   domainesAutorises,
   messagerieGrandPublic,
 } from './contenu.ts'
+import { i18n } from './langue.ts'
 
 // Configuration de l'organisation (ADR 0006, lot commun). Un seul objet, lu par
 // l'API, les mails et les scripts. Sources, dans l'ordre : la ligne `Organisation`
@@ -36,7 +38,9 @@ const COULEUR = /^#[0-9A-Fa-f]{6}$/
 const ADRESSE = /^[^\s@]+@([^\s@]+\.[^\s@]+)$/
 const URL_PUBLIQUE = /^(https:\/\/|\/)/
 
-const Couleur = z.string().regex(COULEUR, 'couleur au format #RRGGBB')
+const Couleur = z.string().regex(COULEUR, {
+  error: () => i18n._('couleur au format #RRGGBB'),
+})
 const Police = z.enum(POLICES_DISPONIBLES)
 
 const CLES_COULEURS = [
@@ -62,7 +66,10 @@ const Halo = z.strictObject({
   intensite: z
     .number()
     .min(0)
-    .max(INTENSITE_HALO_MAX, `intensité entre 0 et ${INTENSITE_HALO_MAX}`)
+    .max(INTENSITE_HALO_MAX, {
+      error: () =>
+        i18n._('intensité entre 0 et {max}', { max: INTENSITE_HALO_MAX }),
+    })
     .optional(),
 })
 
@@ -93,7 +100,9 @@ export const ThemeDeclareSchema = z.strictObject({
       graisseCorps: z.number().int().min(100).max(900).optional(),
       espacementTitre: z
         .string()
-        .regex(/^-?\d+(\.\d+)?em$/, 'espacement en em, par exemple -0.02em')
+        .regex(/^-?\d+(\.\d+)?em$/, {
+          error: () => i18n._('espacement en em, par exemple -0.02em'),
+        })
         .optional(),
       echelleTitre: z.number().min(0.5).max(2).optional(),
     })
@@ -180,7 +189,10 @@ export function resoudreTheme(declare: ThemeDeclare | undefined): Theme {
 function manquementsContraste(theme: ThemeDeclare | undefined) {
   return verifierAccessibilite(resoudreTheme(theme)).map(m => ({
     path: ['theme', 'couleurs', m.couleur],
-    message: `contraste ${m.rapport.toFixed(2)} sur ${m.fond}, 4,5 attendu`,
+    message: i18n._('contraste {rapport} sur {fond}, 4,5 attendu', {
+      rapport: m.rapport.toFixed(2),
+      fond: m.fond,
+    }),
   }))
 }
 
@@ -190,13 +202,15 @@ const PageHttps = z
   .string()
   .trim()
   .url()
-  .regex(/^https:\/\//, 'La page d’équipe est une adresse https.')
+  .regex(/^https:\/\//, {
+    error: () => i18n._('La page d’équipe est une adresse https.'),
+  })
 
 const Adresse = z
   .string()
   .trim()
   .toLowerCase()
-  .regex(ADRESSE, 'adresse mail attendue')
+  .regex(ADRESSE, { error: () => i18n._('adresse mail attendue') })
 
 /**
  * Une image de l'organisation ou d'une activité. Dans le dossier de contenu, un
@@ -243,17 +257,24 @@ export const DeclarationOrganisationSchema = z
     // un segment réservé de l'espace organisateur (ADR 0008).
     slug: z
       .string()
-      .regex(SLUG, 'minuscules, chiffres et tirets seulement')
+      .regex(SLUG, {
+        error: () => i18n._('minuscules, chiffres et tirets seulement'),
+      })
       .max(60)
       .refine(s => !SLUGS_RESERVES.has(s), {
-        message: 'identifiant réservé par l’espace organisateur',
+        error: () => i18n._('identifiant réservé par l’espace organisateur'),
       }),
     nom: z.string().trim().min(1).max(120),
     sigle: z.string().trim().min(1).max(20).optional(),
     fuseauHoraire: z
       .string()
       .default('Europe/Paris')
-      .refine(fuseauValide, 'fuseau horaire inconnu (forme Europe/Paris)'),
+      .refine(fuseauValide, {
+        error: () => i18n._('fuseau horaire inconnu (forme Europe/Paris)'),
+      }),
+    // Langue par défaut des membres qui n'en ont pas choisi (ADR 0047). Sans elle,
+    // le français s'applique.
+    langue: z.enum(LANGUES).optional(),
     // Domaines des adresses de rôle : une adresse de ces domaines passe pour
     // institutionnelle. Aucune messagerie grand public (ADR 0009).
     domainesCourrielAutorises: z
@@ -262,10 +283,12 @@ export const DeclarationOrganisationSchema = z
           .string()
           .trim()
           .toLowerCase()
-          .regex(DOMAINE, 'domaine attendu')
+          .regex(DOMAINE, { error: () => i18n._('domaine attendu') })
           .refine(d => !messagerieGrandPublic(d), {
-            message:
-              'messagerie grand public refusée : déclarez plutôt l’adresse complète dans adressesRoleAutorisees',
+            error: () =>
+              i18n._(
+                'messagerie grand public refusée : déclarez plutôt l’adresse complète dans adressesRoleAutorisees'
+              ),
           })
       )
       .max(20)
@@ -284,12 +307,16 @@ export const DeclarationOrganisationSchema = z
     logoUrl: z
       .string()
       .trim()
-      .regex(URL_PUBLIQUE, 'adresse https ou chemin absolu')
+      .regex(URL_PUBLIQUE, {
+        error: () => i18n._('adresse https ou chemin absolu'),
+      })
       .optional(),
     faviconUrl: z
       .string()
       .trim()
-      .regex(URL_PUBLIQUE, 'adresse https ou chemin absolu')
+      .regex(URL_PUBLIQUE, {
+        error: () => i18n._('adresse https ou chemin absolu'),
+      })
       .optional(),
     theme: ThemeDeclareSchema.optional(),
   })
@@ -304,7 +331,10 @@ export const DeclarationOrganisationSchema = z
         ctx.addIssue({
           code: 'custom',
           path: [champ],
-          message: `le domaine ${adresse.split('@')[1] ?? ''} n'est pas dans domainesCourrielAutorises, et l'adresse n'est pas dans adressesRoleAutorisees`,
+          message: i18n._(
+            "le domaine {domaine} n'est pas dans domainesCourrielAutorises, et l'adresse n'est pas dans adressesRoleAutorisees",
+            { domaine: adresse.split('@')[1] ?? '' }
+          ),
         })
       }
     }
@@ -352,7 +382,10 @@ export function manquementsIdentiteActivite(
   ) {
     manquements.push({
       path: ['contactRecrutement'],
-      message: `le domaine ${identite.contactRecrutement.split('@')[1] ?? ''} n'est pas dans les domainesCourrielAutorises de l'organisation, et l'adresse n'est pas dans ses adressesRoleAutorisees`,
+      message: i18n._(
+        "le domaine {domaine} n'est pas dans les domainesCourrielAutorises de l'organisation, et l'adresse n'est pas dans ses adressesRoleAutorisees",
+        { domaine: identite.contactRecrutement.split('@')[1] ?? '' }
+      ),
     })
   }
   manquements.push(
@@ -379,6 +412,8 @@ export interface ConfigurationOrganisation {
   /** Le sigle s'il existe, sinon le nom : en-tête, sujets de mail, appel aux référent·es. */
   nomCourt: string
   fuseauHoraire: string
+  /** Langue par défaut des membres, déclarée par l'organisation (ADR 0047). */
+  langue: Langue | undefined
   expediteur: string
   origineOrga: string
   domainesCourrielAutorises: string[]
@@ -447,6 +482,7 @@ export function resoudreConfiguration(
     sigle: declaration.sigle,
     nomCourt,
     fuseauHoraire: declaration.fuseauHoraire,
+    langue: declaration.langue,
     expediteur: env.COURRIEL_EXPEDITEUR ?? `${nomCourt} <relaytour@localhost>`,
     origineOrga: env.ORIGINE_ORGA,
     domainesCourrielAutorises: declaration.domainesCourrielAutorises,
@@ -786,7 +822,7 @@ export async function assurerOrganisationParDefaut(): Promise<string> {
         nom: organisation.nom,
         sigle: organisation.sigle,
         nature: 'EVENEMENT',
-        groupes: GROUPES_PAR_DEFAUT,
+        groupes: groupesParDefaut(),
       },
     })
   }

@@ -5,6 +5,7 @@ import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { perimetresLisibles } from '../lib/droits.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { conditionsConnexes } from '../lib/fiches-connexes.ts'
+import { i18n } from '../lib/langue.ts'
 
 import { builder } from './builder.ts'
 import { FicheRef } from './fiches.ts'
@@ -166,11 +167,17 @@ builder.queryFields(t => ({
       const nettoye = texte.trim()
       if (nettoye.length < LONGUEUR_MIN) {
         throw erreurSaisie(
-          `La recherche demande au moins ${LONGUEUR_MIN} caractères.`
+          i18n._('La recherche demande au moins {min} caractères.', {
+            min: LONGUEUR_MIN,
+          })
         )
       }
       if (nettoye.length > LONGUEUR_MAX) {
-        throw erreurSaisie(`La recherche dépasse ${LONGUEUR_MAX} caractères.`)
+        throw erreurSaisie(
+          i18n._('La recherche dépasse {max} caractères.', {
+            max: LONGUEUR_MAX,
+          })
+        )
       }
       return {
         texte: nettoye,

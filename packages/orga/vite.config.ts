@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { createHash } from 'node:crypto'
 
 import { lingui } from '@lingui/vite-plugin'
@@ -69,6 +70,9 @@ export default defineConfig({
     lingui(),
     serviceWorker(),
   ],
+  // Les tests chargent le catalogue français et activent la langue source : une
+  // fonction qui traduit (`t` de Lingui) renvoie le texte français attendu.
+  test: { setupFiles: ['src/lib/langue.ts'] },
   // Une dépendance remontée à la racine du monorepo ne doit jamais charger une
   // seconde copie de React dans cette SPA.
   resolve: { dedupe: ['react', 'react-dom'] },

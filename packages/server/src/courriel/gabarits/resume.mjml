@@ -1,7 +1,7 @@
 <mjml>
   <mj-head>
-    <mj-title>Votre résumé</mj-title>
-    <mj-preview>Les nouvelles de vos périmètres et vos prochaines échéances.</mj-preview>
+    <mj-title>[[Votre résumé]]</mj-title>
+    <mj-preview>[[Les nouvelles de vos périmètres et vos prochaines échéances.]]</mj-preview>
     <mj-attributes>
       <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
       <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
@@ -14,19 +14,19 @@
     <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
       <mj-column>
         <mj-text font-size="20px" line-height="28px" font-weight="700">
-          Bonjour {{nom}},
+          [[Bonjour {{nom}},]]
         </mj-text>
         <mj-text>
-          Voici les nouvelles de vos périmètres {{periode}}.
+          {{introduction}}
         </mj-text>
         <mj-text font-size="17px" font-weight="700" padding="8px 0 8px">
-          Nouvelles non lues
+          [[Nouvelles non lues]]
         </mj-text>
         <mj-text>
           {{nouvelles}}
         </mj-text>
         <mj-text font-size="17px" font-weight="700" padding="8px 0 8px">
-          Vos échéances des 14 prochains jours
+          [[Vos échéances des 14 prochains jours]]
         </mj-text>
         <mj-text>
           {{echeances}}
@@ -34,10 +34,10 @@
         <mj-button href="{{lienConnexion}}" background-color="#010101" color="#FFFFFF"
                    border-radius="10px" font-size="15px" font-weight="700"
                    padding="8px 0 16px" inner-padding="13px 24px">
-          Ouvrir mon espace
+          [[Ouvrir mon espace]]
         </mj-button>
         <mj-text font-size="13px" line-height="20px" color="#5B6670" padding="0">
-          Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences : {{lienPreferences}}
+          [[Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences :]] {{lienPreferences}}
         </mj-text>
       </mj-column>
     </mj-section>

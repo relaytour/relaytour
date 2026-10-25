@@ -1,8 +1,16 @@
 import { i18n, type Messages } from '@lingui/core'
+import {
+  estUneLangue,
+  LANGUE_SOURCE,
+  LANGUES,
+  resoudreLangue,
+  type Langue,
+} from '@relaytour/commun'
 import enUS from 'antd/locale/en_US'
 import frFR from 'antd/locale/fr_FR'
 import type { Locale } from 'antd/es/locale'
 
+import etatDesCatalogues from '../locales/etat.json'
 import { messages as messagesFr } from '../locales/fr/messages.po'
 
 /**
@@ -13,9 +21,13 @@ import { messages as messagesFr } from '../locales/fr/messages.po'
  * il lit la langue ici, pour qu'un changement de langue touche tout l'écran.
  */
 
-export const LANGUES = ['fr', 'en'] as const
-export type Langue = (typeof LANGUES)[number]
-export const LANGUE_SOURCE: Langue = 'fr'
+export {
+  estUneLangue,
+  LANGUE_SOURCE,
+  LANGUES,
+  resoudreLangue,
+  type Langue,
+} from '@relaytour/commun'
 
 /** Nom de chaque langue, écrit dans cette langue, pour le sélecteur. */
 export const NOMS_DES_LANGUES: Record<Langue, string> = {
@@ -30,6 +42,55 @@ const CHARGEURS: Record<
   () => Promise<{ messages: Messages }>
 > = { en: () => import('../locales/en/messages.po') }
 
+/**
+ * Taux de traduction à partir duquel une langue se propose (ADR 0047). La même
+ * valeur vaut dans `outils/langues.mjs`, qui écrit `locales/etat.json`.
+ */
+const SEUIL = 90
+
+/** Les langues proposées : la langue source, et celles traduites à SEUIL % au moins. */
+export const LANGUES_PROPOSEES: readonly Langue[] = LANGUES.filter(langue => {
+  if (langue === LANGUE_SOURCE) return true
+  const etat = (
+    etatDesCatalogues as Record<string, { messages: number; traduits: number }>
+  )[langue]
+  return (
+    etat !== undefined &&
+    etat.messages > 0 &&
+    etat.traduits * 100 >= etat.messages * SEUIL
+  )
+})
+
+/** Première langue proposée d'une liste de préférences, sinon le français. */
+function premiereProposee(preferences: readonly (string | null | undefined)[]) {
+  const proposees = preferences.filter(
+    p => !!p && LANGUES_PROPOSEES.includes(resoudreLangue([p]))
+  )
+  return resoudreLangue(proposees)
+}
+
+/**
+ * Langue d'une personne connectée : son choix, sinon la langue de l'organisation,
+ * sinon le français (ADR 0047).
+ */
+export function langueDeLaSession(
+  choix: string | null | undefined,
+  langueOrganisation: string | null | undefined
+): Langue {
+  return premiereProposee([choix, langueOrganisation])
+}
+
+/**
+ * Langue d'un visiteur sans session (connexion, formulaire public, espace
+ * bénévole) : la langue de son navigateur, sinon celle de l'organisation.
+ */
+export function langueDuVisiteur(
+  langueOrganisation: string | null | undefined,
+  navigateur: readonly string[] = globalThis.navigator?.languages ?? []
+): Langue {
+  return premiereProposee([...navigateur, langueOrganisation])
+}
+
 const LOCALES_ANTD: Record<Langue, Locale> = { fr: frFR, en: enUS }
 
 const chargees = new Set<Langue>([LANGUE_SOURCE])
@@ -38,40 +99,26 @@ const chargees = new Set<Langue>([LANGUE_SOURCE])
 i18n.load(LANGUE_SOURCE, messagesFr)
 i18n.activate(LANGUE_SOURCE)
 
-export function estUneLangue(valeur: string): valeur is Langue {
-  return (LANGUES as readonly string[]).includes(valeur)
-}
-
-/**
- * Première langue connue d'une liste de préférences, comme `navigator.languages`.
- * Une balise régionale vaut sa langue : `en-GB` donne `en`.
- */
-export function resoudreLangue(
-  preferences: readonly (string | null | undefined)[]
-): Langue {
-  for (const preference of preferences) {
-    if (!preference) continue
-    const langue = preference.toLowerCase().split(/[-_]/)[0]!
-    if (estUneLangue(langue)) return langue
-  }
-  return LANGUE_SOURCE
-}
-
 export function langueActive(): Langue {
   const langue = i18n.locale
   return estUneLangue(langue) ? langue : LANGUE_SOURCE
 }
 
+// La dernière langue demandée. Deux demandes rapprochées chargent chacune leur
+// catalogue : seule la plus récente s'active, quel que soit l'ordre des chargements.
+let demandee: Langue = LANGUE_SOURCE
+
 /** Charge le catalogue d'une langue s'il manque, puis l'active. */
 export async function activerLangue(langue: Langue): Promise<void> {
-  if (langue === langueActive()) return
+  demandee = langue
   if (langue !== 'fr' && !chargees.has(langue)) {
     const { messages } = await CHARGEURS[langue]()
     i18n.load(langue, messages)
     chargees.add(langue)
   }
+  if (demandee !== langue || langue === langueActive()) return
   i18n.activate(langue)
-  document.documentElement.lang = langue
+  if (typeof document !== 'undefined') document.documentElement.lang = langue
 }
 
 export function localeAntd(langue: Langue = langueActive()): Locale {

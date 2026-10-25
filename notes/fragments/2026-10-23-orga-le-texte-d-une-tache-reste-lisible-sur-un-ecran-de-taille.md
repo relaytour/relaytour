@@ -13,6 +13,14 @@ fr:
     panneau latéral, les boutons d'une tâche s'affichent désormais en colonne
     à droite. Le titre et la description de la tâche disposent ainsi de plus
     de largeur. Sur un téléphone, les boutons restent alignés sous la tâche.
+en:
+  titre: >-
+    Task text stays readable on a medium-sized screen
+  texte: >-
+    On a tablet, a small computer, or an area page with its side panel, the
+    buttons of a task now appear in a column on the right. The title and
+    description of the task get more width. On a phone, the buttons stay in a
+    row below the task.
 ---
 
 Requête de conteneur `carte-tache` sur `.rt-carte-tache` : en dessous de

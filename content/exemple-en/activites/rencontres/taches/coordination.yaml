@@ -1,0 +1,34 @@
+# Task templates of the Coordination department.
+taches:
+  - modele: fixer-les-dates-de-l-edition
+    titre: Set the dates and sites of the edition
+    description: >-
+      The department proposes the dates to the association’s board and checks the availability of the sites.
+    echeance: J-365
+  - modele: nommer-les-referentes-et-referents
+    titre: Appoint the coordinators of each area
+    description: >-
+      The department collects applications and proposes the appointments to the board.
+    echeance: J-300
+  - modele: reunion-de-lancement
+    titre: Bring all the coordinators together
+    description: >-
+      The department presents the calendar, the how-to sheets, and the tools of the edition.
+    echeance: J-240
+  - modele: point-d-avancement-mensuel
+    titre: Hold the monthly progress meeting
+    description: >-
+      The department reviews the progress of each area and the overdue tasks.
+    echeance: J-30
+  - modele: reunion-de-bilan
+    titre: Lead the review meeting
+    description: >-
+      The department brings the areas together and collects feedback on the edition.
+    echeance: J+14
+    fiche: preparer-le-bilan
+  - modele: mettre-a-jour-les-fiches
+    titre: Check the update of the how-to sheets
+    description: >-
+      The department reviews the sheets edited after the review and exports the content to the organization’s repository.
+    echeance: J+30
+    fiche: preparer-le-bilan

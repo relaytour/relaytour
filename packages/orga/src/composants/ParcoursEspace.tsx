@@ -1,5 +1,6 @@
 import { FolderOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { useLingui } from '@lingui/react/macro'
 import { Alert, Breadcrumb, Empty, Form, Select, Skeleton } from 'antd'
 import type { ReactNode } from 'react'
 
@@ -27,6 +28,7 @@ export default function ParcoursEspace({
   onChange: (valeur: PositionChoisie) => void
   aide: (chemin: string[]) => ReactNode
 }) {
+  const { t } = useLingui()
   const { emplacement, chemin } = valeur
   const emplacements = useQuery(EMPLACEMENTS, { skip: !actif })
   const dossiers = useQuery(PARCOURIR, {
@@ -40,12 +42,12 @@ export default function ParcoursEspace({
 
   return (
     <>
-      <Form.Item label="Bibliothèque de documents">
+      <Form.Item label={t`Bibliothèque de documents`}>
         <Select
           value={emplacement}
           onChange={id => onChange({ emplacement: id, chemin: [] })}
           loading={emplacements.loading}
-          placeholder="Choisissez une bibliothèque"
+          placeholder={t`Choisissez une bibliothèque`}
           showSearch
           optionFilterProp="label"
           options={(emplacements.data?.emplacementsFichiers ?? []).map(e => ({
@@ -93,7 +95,7 @@ export default function ParcoursEspace({
           ) : elements.length === 0 ? (
             <Empty
               image={Empty.PRESENTED_IMAGE_SIMPLE}
-              description="Aucun sous-dossier."
+              description={t`Aucun sous-dossier.`}
             />
           ) : (
             <ul className="rt-explorateur">
@@ -119,7 +121,7 @@ export default function ParcoursEspace({
             <Alert
               type="info"
               showIcon
-              message="Ce dossier compte trop de sous-dossiers pour les afficher tous. Rangez le dossier voulu plus haut dans la bibliothèque."
+              message={t`Ce dossier compte trop de sous-dossiers pour les afficher tous. Rangez le dossier voulu plus haut dans la bibliothèque.`}
             />
           )}
           <p className="rt-texte-secondaire" style={{ marginBottom: 0 }}>

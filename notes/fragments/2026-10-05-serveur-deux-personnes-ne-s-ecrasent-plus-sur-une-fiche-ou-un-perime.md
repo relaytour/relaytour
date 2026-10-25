@@ -15,6 +15,15 @@ fr:
     le vôtre. L'éditeur garde aussi votre texte en brouillon dans votre
     navigateur : une page rechargée ne le perd plus. Le réglage d'un périmètre
     et la restauration d'une version de fiche signalent le même conflit.
+en:
+  titre: >-
+    Two people no longer overwrite each other on a sheet or an area
+  texte: >-
+    When another person has saved a sheet while you were writing, the editor
+    keeps your text and tells you. You view the current version, copy your text,
+    or overwrite the current version with yours. The editor also keeps your text
+    as a draft in your browser: a reloaded page no longer loses it. An area’s
+    settings and the restoration of a sheet version report the same conflict.
 ---
 
 `modifierFiche` et `restaurerVersionFiche` reçoivent `versionDeDepart` ;

@@ -1,12 +1,21 @@
+import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+
 import { graphql } from '../gql'
 import type { SourceFiche } from '../gql/graphql'
 import gabaritBrut from '../../../../content/exemple/modeles/fiche.md?raw'
 
 /** D'où vient une version de fiche : dépôt, application ou espace de fichiers (ADR 0038). */
-export const LIBELLES_SOURCE: Record<SourceFiche, string> = {
-  GIT: 'Dépôt',
-  APP: 'Application',
-  ESPACE_FICHIERS: 'Fournisseur cloud',
+export const LIBELLES_SOURCE: Record<SourceFiche, MessageDescriptor> = {
+  GIT: msg({
+    message: 'Dépôt',
+    comment: 'Origine d’une version de fiche : le dépôt Git',
+  }),
+  APP: msg({
+    message: 'Application',
+    comment: 'Origine d’une version de fiche : rédigée dans Relaytour',
+  }),
+  ESPACE_FICHIERS: msg`Fournisseur cloud`,
 }
 
 /** Le gabarit commun (content/orga/modeles/fiche.md), sans son en-tête. */

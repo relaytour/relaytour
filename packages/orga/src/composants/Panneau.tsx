@@ -1,4 +1,5 @@
 import { DoubleLeftOutlined, DoubleRightOutlined } from '@ant-design/icons'
+import { useLingui } from '@lingui/react/macro'
 import { Button } from 'antd'
 import { useRef, useState, type ReactNode } from 'react'
 
@@ -61,14 +62,15 @@ export function DeuxColonnes({
   // Le volet latéral se replie en une tranche, pour laisser sa largeur au
   // contenu (docs/design-system.md, « Volets »). L'état vaut pour l'écran
   // affiché : il ne se retient pas d'un écran à l'autre.
+  const { t } = useLingui()
   const [replie, setReplie] = useState(false)
   // Sous cette largeur, les deux colonnes s'empilent : le volet suit le contenu.
   const coteACote = useLargeurAuMoins(LARGEUR_VOLET_DEPLIE)
   const volet = useRef<HTMLElement>(null)
   useVoletCollant(volet, HAUT_SOUS_LA_BARRE, coteACote)
   const libelle = replie
-    ? 'Déplier le volet latéral'
-    : 'Replier le volet latéral'
+    ? t`Déplier le volet latéral`
+    : t`Replier le volet latéral`
   return (
     <div
       className={

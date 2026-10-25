@@ -2,6 +2,7 @@ import type { AppContext } from '../context.ts'
 
 import { erreurSaisie } from './erreurs.ts'
 import { joursRelatifs, type Phase } from './phases.ts'
+import { i18n } from './langue.ts'
 
 // Agenda d'une activité (ADR 0037).
 //
@@ -90,16 +91,22 @@ export function joursDeDateCle(
     j < decalerJour(periode.debut, -730) || j > decalerJour(periode.fin, 730)
   if (horsFenetre(jour) || (jourFin !== null && horsFenetre(jourFin))) {
     throw erreurSaisie(
-      'Une date clé se place dans les deux ans qui entourent la période.'
+      i18n._(
+        'Une date clé se place dans les deux ans qui entourent la période.'
+      )
     )
   }
   if (jourFin === null || jourFin === jour) return { jour, jourFin: null }
   if (jourFin < jour) {
-    throw erreurSaisie('Le dernier jour suit le premier.')
+    throw erreurSaisie(i18n._('Le dernier jour suit le premier.'))
   }
   // Le premier et le dernier jour comptent tous les deux.
   if (ecartEnJours(jour, jourFin) + 1 > DATE_CLE_JOURS_MAX) {
-    throw erreurSaisie(`Une date clé dure ${DATE_CLE_JOURS_MAX} jours au plus.`)
+    throw erreurSaisie(
+      i18n._('Une date clé dure {max} jours au plus.', {
+        max: DATE_CLE_JOURS_MAX,
+      })
+    )
   }
   return { jour, jourFin }
 }
@@ -116,7 +123,7 @@ export async function exigerEcritureGlobale(
   await ctx.exigerAdminDe(edition.activiteId)
   if (edition.statut === 'ARCHIVEE') {
     throw erreurSaisie(
-      'Cette période est archivée : son agenda est en lecture seule.'
+      i18n._('Cette période est archivée : son agenda est en lecture seule.')
     )
   }
   return edition

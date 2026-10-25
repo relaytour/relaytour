@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, Form, Input, Modal } from 'antd'
 import { useEffect } from 'react'
 
@@ -25,11 +26,22 @@ interface Valeurs {
 export function AideDeclinaison({ estAdmin }: { estAdmin: boolean }) {
   return (
     <p className="rt-texte-secondaire" style={{ marginTop: 0 }}>
-      Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses
-      personnes assignées. Vous suivez leur avancement depuis cette tâche.{' '}
-      {estAdmin
-        ? 'Comme admin de l’activité, vous ajoutez ces tâches sans attendre l’accord des périmètres.'
-        : 'Les référentes et référents de chaque périmètre acceptent ou refusent la tâche. Elle entre sans attendre dans un périmètre où vous êtes vous-même affecté·e.'}
+      {estAdmin ? (
+        <Trans>
+          Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses
+          personnes assignées. Vous suivez leur avancement depuis cette tâche.
+          Comme admin de l’activité, vous ajoutez ces tâches sans attendre
+          l’accord des périmètres.
+        </Trans>
+      ) : (
+        <Trans>
+          Chaque périmètre choisi reçoit sa propre tâche, avec son statut et ses
+          personnes assignées. Vous suivez leur avancement depuis cette tâche.
+          Les référentes et référents de chaque périmètre acceptent ou refusent
+          la tâche. Elle entre sans attendre dans un périmètre où vous êtes
+          vous-même affecté·e.
+        </Trans>
+      )}
     </p>
   )
 }
@@ -52,6 +64,7 @@ export default function DeclinerTache({
   estAdmin: boolean
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const [form] = Form.useForm<Valeurs>()
   const executer = useActionTache()
   const { data, error } = useQuery(DECLINAISONS_TACHE, {
@@ -87,18 +100,19 @@ export default function DeclinerTache({
           },
         }),
       estAdmin
-        ? 'La tâche est ajoutée aux périmètres choisis.'
-        : 'La tâche est partagée avec les périmètres choisis.'
+        ? t`La tâche est ajoutée aux périmètres choisis.`
+        : t`La tâche est partagée avec les périmètres choisis.`
     )
     if (ok) onFermer()
   }
 
+  const titreTache = tache?.titre
   return (
     <Modal
       open={tache !== null}
-      title="Décliner dans d’autres périmètres"
-      okText={estAdmin ? 'Ajouter' : 'Proposer'}
-      cancelText="Annuler"
+      title={t`Décliner dans d’autres périmètres`}
+      okText={estAdmin ? t`Ajouter` : t`Proposer`}
+      cancelText={t`Annuler`}
       confirmLoading={declinaison.loading}
       okButtonProps={{ disabled: !servisConnus }}
       onOk={() => form.submit()}
@@ -108,15 +122,17 @@ export default function DeclinerTache({
     >
       {tache !== null && (
         <>
-          <p style={{ fontWeight: 600 }}>« {tache.titre} »</p>
+          <p style={{ fontWeight: 600 }}>
+            <Trans>« {titreTache} »</Trans>
+          </p>
           <AideDeclinaison estAdmin={estAdmin} />
           {!servisConnus && error && (
             <Alert
               type="warning"
               showIcon
               style={{ marginBottom: 16 }}
-              title="Les périmètres qui portent déjà cette tâche n’ont pas pu être chargés."
-              description="Fermez cette fenêtre et réessayez dans un instant."
+              title={t`Les périmètres qui portent déjà cette tâche n’ont pas pu être chargés.`}
+              description={t`Fermez cette fenêtre et réessayez dans un instant.`}
             />
           )}
           <Form
@@ -126,11 +142,11 @@ export default function DeclinerTache({
             onFinish={v => void enregistrer(v)}
           >
             <Form.Item
-              label="Périmètres"
+              label={t`Périmètres`}
               name="cibles"
               extra={
                 libres.length === 0
-                  ? 'Tous les périmètres de l’activité portent déjà cette tâche.'
+                  ? t`Tous les périmètres de l’activité portent déjà cette tâche.`
                   : undefined
               }
               rules={[
@@ -138,7 +154,7 @@ export default function DeclinerTache({
                   required: true,
                   type: 'array',
                   min: 1,
-                  message: 'Choisissez au moins un périmètre.',
+                  message: t`Choisissez au moins un périmètre.`,
                 },
               ]}
             >
@@ -148,22 +164,22 @@ export default function DeclinerTache({
               />
             </Form.Item>
             <Form.Item
-              label="Titre dans ces périmètres (facultatif)"
+              label={t`Titre dans ces périmètres (facultatif)`}
               name="titre"
-              extra="Sans titre, les périmètres reçoivent celui de cette tâche."
+              extra={t`Sans titre, les périmètres reçoivent celui de cette tâche.`}
               rules={[
                 {
                   max: TITRE_MAX,
-                  message: `Le titre dépasse ${TITRE_MAX} caractères.`,
+                  message: t`Le titre dépasse ${TITRE_MAX} caractères.`,
                 },
               ]}
             >
               <Input placeholder={tache.titre} />
             </Form.Item>
             <Form.Item
-              label="Échéance dans ces périmètres (facultatif)"
+              label={t`Échéance dans ces périmètres (facultatif)`}
               name="echeance"
-              extra="Sans date, les périmètres reçoivent l’échéance de cette tâche."
+              extra={t`Sans date, les périmètres reçoivent l’échéance de cette tâche.`}
             >
               <Input type="date" style={{ maxWidth: 200 }} />
             </Form.Item>

@@ -1,5 +1,8 @@
 import { DownloadOutlined } from '@ant-design/icons'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   POLICES_DISPONIBLES,
   themeParDefaut,
@@ -25,6 +28,11 @@ import { Panneau } from '../../composants/Panneau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
 import { jourDeLInstant, messageErreur } from '../../lib/erreurs'
+import {
+  LANGUE_SOURCE,
+  LANGUES_PROPOSEES,
+  NOMS_DES_LANGUES,
+} from '../../lib/langue'
 import { ORGANISATION } from '../../lib/organisation'
 import { ACTIVITES } from '../../lib/requetes'
 
@@ -41,6 +49,7 @@ const IDENTITE = graphql(`
       contactRecrutement
       contactSupport
       pageEquipe
+      langue
       domainesCourrielAutorises
       adressesRoleAutorisees
       logoPng
@@ -61,6 +70,7 @@ const MODIFIER = graphql(`
     $contactRecrutement: String
     $contactSupport: String
     $pageEquipe: String
+    $langue: String
     $domainesCourrielAutorises: [String!]!
     $adressesRoleAutorisees: [String!]!
     $logoPng: String
@@ -75,6 +85,7 @@ const MODIFIER = graphql(`
       contactRecrutement: $contactRecrutement
       contactSupport: $contactSupport
       pageEquipe: $pageEquipe
+      langue: $langue
       domainesCourrielAutorises: $domainesCourrielAutorises
       adressesRoleAutorisees: $adressesRoleAutorisees
       logoPng: $logoPng
@@ -98,13 +109,19 @@ const EXPORT = graphql(`
 `)
 
 /** Couleurs que la page propose de modifier ; les autres gardent leur valeur déclarée. */
-const COULEURS: { cle: keyof CouleursTheme; libelle: string }[] = [
-  { cle: 'primaire', libelle: 'Primaire' },
-  { cle: 'accent', libelle: 'Accent' },
-  { cle: 'encre', libelle: 'Encre (texte)' },
-  { cle: 'sol1', libelle: 'Sol, haut' },
-  { cle: 'sol2', libelle: 'Sol, milieu' },
-  { cle: 'sol3', libelle: 'Sol, bas' },
+const COULEURS: { cle: keyof CouleursTheme; libelle: MessageDescriptor }[] = [
+  {
+    cle: 'primaire',
+    libelle: msg({ message: 'Primaire', comment: 'Couleur du thème' }),
+  },
+  {
+    cle: 'accent',
+    libelle: msg({ message: 'Accent', comment: 'Couleur du thème' }),
+  },
+  { cle: 'encre', libelle: msg`Encre (texte)` },
+  { cle: 'sol1', libelle: msg`Sol, haut` },
+  { cle: 'sol2', libelle: msg`Sol, milieu` },
+  { cle: 'sol3', libelle: msg`Sol, bas` },
 ]
 
 type ThemeDeclare = {
@@ -124,6 +141,7 @@ interface Valeurs {
   contactRecrutement?: string
   contactSupport?: string
   pageEquipe?: string
+  langue?: string
   domainesCourrielAutorises: string[]
   adressesRoleAutorisees: string[]
   logoPng: string | null
@@ -177,6 +195,7 @@ function themeDepuisFormulaire(
 }
 
 export default function Organisation() {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const apollo = useApolloClient()
   const { data, loading } = useQuery(IDENTITE)
@@ -198,6 +217,7 @@ export default function Organisation() {
       contactRecrutement: identite.contactRecrutement ?? '',
       contactSupport: identite.contactSupport ?? '',
       pageEquipe: identite.pageEquipe ?? '',
+      langue: identite.langue ?? LANGUE_SOURCE,
       domainesCourrielAutorises: identite.domainesCourrielAutorises,
       adressesRoleAutorisees: identite.adressesRoleAutorisees,
       logoPng: identite.logoPng ?? null,
@@ -224,6 +244,8 @@ export default function Organisation() {
           contactRecrutement: v.contactRecrutement || null,
           contactSupport: v.contactSupport || null,
           pageEquipe: v.pageEquipe || null,
+          // Sans choix possible, la langue déclarée ne change pas (ADR 0047).
+          langue: LANGUES_PROPOSEES.length > 1 ? v.langue : undefined,
           domainesCourrielAutorises: v.domainesCourrielAutorises,
           adressesRoleAutorisees: v.adressesRoleAutorisees,
           logoPng: v.logoPng,
@@ -233,7 +255,7 @@ export default function Organisation() {
           theme: themeDepuisFormulaire(declare, v),
         },
       })
-      message.success('Identité enregistrée.')
+      message.success(t`Identité enregistrée.`)
     } catch (e) {
       setErreur(messageErreur(e))
     }
@@ -246,7 +268,7 @@ export default function Organisation() {
         query: EXPORT,
         fetchPolicy: 'no-cache',
       })
-      if (!resultat) throw new Error('L’export a échoué.')
+      if (!resultat) throw new Error(t`L’export a échoué.`)
       const { nomFichier, donnees } = resultat.exportContenu
       const octets = Uint8Array.from(atob(donnees), c => c.charCodeAt(0))
       const lien = document.createElement('a')
@@ -268,12 +290,22 @@ export default function Organisation() {
     (identite.contenuSynchroniseLe == null ||
       identite.contenuModifieLe > identite.contenuSynchroniseLe)
 
+  const identifiant = identite?.slug
+  const dateModification = identite?.contenuModifieLe
+    ? jourDeLInstant(identite.contenuModifieLe)
+    : ''
+  const dateSynchronisation = identite?.contenuSynchroniseLe
+    ? jourDeLInstant(identite.contenuSynchroniseLe)
+    : ''
+
   if (loading && !data) return <Skeleton active />
 
   return (
     <>
-      <Titre sousTitre="Le nom, les contacts, le logo et le thème de l’organisation. Chaque activité peut surcharger les contacts, le logo, les couleurs et le fond.">
-        Organisation
+      <Titre
+        sousTitre={t`Le nom, les contacts, le logo et le thème de l’organisation. Chaque activité peut surcharger les contacts, le logo, les couleurs et le fond.`}
+      >
+        <Trans>Organisation</Trans>
       </Titre>
 
       {erreur && (
@@ -293,66 +325,86 @@ export default function Organisation() {
         className="rt-colonne"
         style={{ gap: 24, marginBottom: 40 }}
       >
-        <Panneau titre="Identité">
+        <Panneau titre={t`Identité`}>
           <Row gutter={16}>
             <Col xs={24} md={14}>
               <Form.Item
-                label="Nom"
+                label={t`Nom`}
                 name="nom"
-                rules={[{ required: true, message: 'Saisissez un nom.' }]}
+                rules={[{ required: true, message: t`Saisissez un nom.` }]}
               >
                 <Input />
               </Form.Item>
             </Col>
             <Col xs={24} md={10}>
-              <Form.Item label="Sigle (facultatif)" name="sigle">
+              <Form.Item label={t`Sigle (facultatif)`} name="sigle">
                 <Input maxLength={20} />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
-                label="Contact de l’organisation (facultatif)"
+                label={t`Contact de l’organisation (facultatif)`}
                 name="contactRecrutement"
-                extra="Une adresse de rôle, citée dans l’appel aux référentes et référents. Elle reçoit les réponses aux mails de l’organisation."
+                extra={t`Une adresse de rôle, citée dans l’appel aux référentes et référents. Elle reçoit les réponses aux mails de l’organisation.`}
               >
                 <Input type="email" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
-                label="Adresse de support (facultatif)"
+                label={t`Adresse de support (facultatif)`}
                 name="contactSupport"
-                extra="Une adresse de rôle. Le bouton « Support » du menu du compte ouvre un mail à cette adresse."
+                extra={t`Une adresse de rôle. Le bouton « Support » du menu du compte ouvre un mail à cette adresse.`}
               >
                 <Input type="email" />
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
               <Form.Item
-                label="Page de l’équipe (facultatif)"
+                label={t`Page de l’équipe (facultatif)`}
                 name="pageEquipe"
               >
                 <Input type="url" placeholder="https://" />
               </Form.Item>
             </Col>
+            {LANGUES_PROPOSEES.length > 1 && (
+              <Col xs={24} md={12}>
+                <Form.Item
+                  label={t`Langue de l’organisation`}
+                  name="langue"
+                  extra={t`L’espace organisateur, les mails et les notifications s’affichent dans cette langue pour les membres qui n’en ont pas choisi.`}
+                >
+                  <Select
+                    options={LANGUES_PROPOSEES.map(langue => ({
+                      value: langue,
+                      label: NOMS_DES_LANGUES[langue],
+                    }))}
+                  />
+                </Form.Item>
+              </Col>
+            )}
           </Row>
           <p className="rt-texte-secondaire" style={{ margin: 0 }}>
-            L’identifiant « {identite?.slug} » ne change pas ici : il dépend de
-            l’hébergement.
+            <Trans>
+              L’identifiant « {identifiant} » ne change pas ici : il dépend de
+              l’hébergement.
+            </Trans>
           </p>
         </Panneau>
 
-        <Panneau titre="Adresses de rôle">
+        <Panneau titre={t`Adresses de rôle`}>
           <p className="rt-texte-secondaire">
-            Une adresse de rôle appartient à l’organisation, pas à une personne.
-            Relaytour l’accepte dans les fiches et dans l’export du contenu. Il
-            signale toute autre adresse comme une donnée personnelle. Ces
-            réglages ne limitent pas les invitations.
+            <Trans>
+              Une adresse de rôle appartient à l’organisation, pas à une
+              personne. Relaytour l’accepte dans les fiches et dans l’export du
+              contenu. Il signale toute autre adresse comme une donnée
+              personnelle. Ces réglages ne limitent pas les invitations.
+            </Trans>
           </p>
           <Form.Item
-            label="Domaines des adresses de rôle"
+            label={t`Domaines des adresses de rôle`}
             name="domainesCourrielAutorises"
-            extra="Toute adresse de ces domaines passe pour une adresse de rôle. Relaytour refuse les messageries grand public."
+            extra={t`Toute adresse de ces domaines passe pour une adresse de rôle. Relaytour refuse les messageries grand public.`}
           >
             <Select
               mode="tags"
@@ -362,9 +414,9 @@ export default function Organisation() {
             />
           </Form.Item>
           <Form.Item
-            label="Adresses de rôle chez une messagerie grand public"
+            label={t`Adresses de rôle chez une messagerie grand public`}
             name="adressesRoleAutorisees"
-            extra="Ajoutez ici une boîte partagée de l’organisation hébergée chez une messagerie grand public, adresse par adresse."
+            extra={t`Ajoutez ici une boîte partagée de l’organisation hébergée chez une messagerie grand public, adresse par adresse.`}
           >
             <Select
               mode="tags"
@@ -376,75 +428,79 @@ export default function Organisation() {
           <Alert
             type="warning"
             showIcon
-            title="Une adresse de rôle passe pour institutionnelle."
-            description="Relaytour la publie alors sans avertissement dans les fiches et dans l’export du contenu. N’ajoutez jamais l’adresse d’une personne : le RGPD protège une adresse nominative comme une donnée personnelle, même hébergée chez une messagerie grand public."
+            title={t`Une adresse de rôle passe pour institutionnelle.`}
+            description={t`Relaytour la publie alors sans avertissement dans les fiches et dans l’export du contenu. N’ajoutez jamais l’adresse d’une personne : le RGPD protège une adresse nominative comme une donnée personnelle, même hébergée chez une messagerie grand public.`}
           />
         </Panneau>
 
-        <Panneau titre="Logo et favicon">
+        <Panneau titre={t`Logo et favicon`}>
           <p className="rt-texte-secondaire">
-            Le logo PNG s’affiche partout, y compris dans les mails. Le logo
-            SVG, facultatif, le remplace à l’écran. Sans logo, l’espace affiche
-            le pictogramme de Relaytour.
+            <Trans>
+              Le logo PNG s’affiche partout, y compris dans les mails. Le logo
+              SVG, facultatif, le remplace à l’écran. Sans logo, l’espace
+              affiche le pictogramme de Relaytour.
+            </Trans>
           </p>
           <Row gutter={16}>
             <Col xs={24} md={8}>
-              <Form.Item label="Logo PNG (512 Ko au plus)" name="logoPng">
-                <ChampImage format="PNG" libelle="Logo PNG" />
+              <Form.Item label={t`Logo PNG (512 Ko au plus)`} name="logoPng">
+                <ChampImage format="PNG" libelle={t`Logo PNG`} />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item label="Logo SVG (facultatif)" name="logoSvg">
-                <ChampImage format="SVG" libelle="Logo SVG" />
+              <Form.Item label={t`Logo SVG (facultatif)`} name="logoSvg">
+                <ChampImage format="SVG" libelle={t`Logo SVG`} />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
-              <Form.Item label="Favicon PNG (facultatif)" name="favicon">
-                <ChampImage format="PNG" libelle="Favicon" />
+              <Form.Item label={t`Favicon PNG (facultatif)`} name="favicon">
+                <ChampImage format="PNG" libelle={t`Favicon`} />
               </Form.Item>
             </Col>
             <Col xs={24} md={8}>
               <Form.Item
-                label="Icône d’application (facultatif)"
+                label={t`Icône d’application (facultatif)`}
                 name="iconeApplication"
-                extra="PNG carré de 512 pixels de côté. Elle s’affiche sur l’écran d’accueil d’un téléphone qui installe l’application."
+                extra={t`PNG carré de 512 pixels de côté. Elle s’affiche sur l’écran d’accueil d’un téléphone qui installe l’application.`}
               >
-                <ChampImage format="PNG" libelle="Icône d’application" />
+                <ChampImage format="PNG" libelle={t`Icône d’application`} />
               </Form.Item>
             </Col>
           </Row>
         </Panneau>
 
-        <Panneau titre="Thème">
+        <Panneau titre={t`Thème`}>
           <p className="rt-texte-secondaire">
-            Une couleur vide reprend celle de Relaytour. Relaytour vérifie le
-            contraste avant d’enregistrer.
+            <Trans>
+              Une couleur vide reprend celle de Relaytour. Relaytour vérifie le
+              contraste avant d’enregistrer.
+            </Trans>
           </p>
           <Row gutter={16}>
             {COULEURS.map(({ cle, libelle }) => (
               <Col xs={24} sm={12} md={8} key={cle}>
-                <Form.Item label={libelle} name={['couleurs', cle]}>
+                <Form.Item label={t(libelle)} name={['couleurs', cle]}>
                   <ChampCouleur heritee={themeParDefaut.couleurs[cle]} />
                 </Form.Item>
               </Col>
             ))}
             <Col xs={24} sm={12} md={8}>
-              <Form.Item label="Halo, premier" name="halo1">
+              <Form.Item label={t`Halo, premier`} name="halo1">
                 <ChampCouleur heritee={themeParDefaut.fond.halo1.couleur} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12} md={8}>
-              <Form.Item label="Halo, second" name="halo2">
+              <Form.Item label={t`Halo, second`} name="halo2">
                 <ChampCouleur heritee={themeParDefaut.fond.halo2.couleur} />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col xs={24} md={12}>
-              <Form.Item label="Police du texte" name="policeTexte">
+              <Form.Item label={t`Police du texte`} name="policeTexte">
                 <Select
                   allowClear
-                  placeholder="Police de Relaytour"
+                  placeholder={t`Police de Relaytour`}
                   options={POLICES_DISPONIBLES.map(p => ({
                     value: p,
                     label: p,
@@ -453,10 +509,10 @@ export default function Organisation() {
               </Form.Item>
             </Col>
             <Col xs={24} md={12}>
-              <Form.Item label="Police des titres" name="policeTitre">
+              <Form.Item label={t`Police des titres`} name="policeTitre">
                 <Select
                   allowClear
-                  placeholder="Police de Relaytour"
+                  placeholder={t`Police de Relaytour`}
                   options={POLICES_DISPONIBLES.map(p => ({
                     value: p,
                     label: p,
@@ -473,24 +529,26 @@ export default function Organisation() {
           loading={modification.loading}
           style={{ alignSelf: 'flex-start' }}
         >
-          Enregistrer l’identité
+          <Trans>Enregistrer l’identité</Trans>
         </Button>
       </Form>
 
-      <Panneau titre="Contenu de l’organisation">
+      <Panneau titre={t`Contenu de l’organisation`}>
         <p className="rt-texte-secondaire">
-          L’archive contient l’identité, les activités, les périmètres, les
-          fiches, les tâches types et les images, dans la forme du dépôt
-          organisation-modele. Elle ne contient aucune personne, aucune
-          affectation ni aucune tâche datée.
+          <Trans>
+            L’archive contient l’identité, les activités, les périmètres, les
+            fiches, les tâches types et les images, dans la forme du dépôt
+            organisation-modele. Elle ne contient aucune personne, aucune
+            affectation ni aucune tâche datée.
+          </Trans>
         </p>
         {aExporter && (
           <Alert
             type="info"
             showIcon
             style={{ marginBottom: 16 }}
-            title="Le dossier de contenu ne reflète pas les dernières modifications."
-            description={`Des admins ont modifié le contenu le ${jourDeLInstant(identite!.contenuModifieLe!)}. Exportez-le avant tout import, sinon l’import refusera d’écraser ces modifications.`}
+            title={t`Le dossier de contenu ne reflète pas les dernières modifications.`}
+            description={t`Des admins ont modifié le contenu le ${dateModification}. Exportez-le avant tout import, sinon l’import refusera d’écraser ces modifications.`}
           />
         )}
         <Space wrap>
@@ -499,12 +557,11 @@ export default function Organisation() {
             loading={exportEnCours}
             onClick={() => void telecharger()}
           >
-            Télécharger le contenu (zip)
+            <Trans>Télécharger le contenu (zip)</Trans>
           </Button>
           {identite?.contenuSynchroniseLe && (
             <span className="rt-texte-secondaire">
-              Dernier import ou export :{' '}
-              {jourDeLInstant(identite.contenuSynchroniseLe)}
+              <Trans>Dernier import ou export : {dateSynchronisation}</Trans>
             </span>
           )}
         </Space>

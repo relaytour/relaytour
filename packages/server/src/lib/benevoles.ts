@@ -4,6 +4,7 @@ import type { AppContext } from '../context.ts'
 
 import { erreurSaisie } from './erreurs.ts'
 import { journal } from './journal.ts'
+import { i18n } from './langue.ts'
 
 // Fiches bénévoles (ADR 0040) : des personnes qui aident l'activité sans compte.
 // Une fiche ne donne aucun accès. Ses coordonnées ne sortent du serveur que pour
@@ -29,7 +30,9 @@ export function courrielValide(brut: string | null | undefined): string | null {
   const texte = (brut ?? '').trim()
   if (texte === '') return null
   if (texte.length > 254 || !COURRIEL.test(texte)) {
-    throw erreurSaisie('L’adresse de la ou du bénévole n’est pas valide.')
+    throw erreurSaisie(
+      i18n._('L’adresse de la ou du bénévole n’est pas valide.')
+    )
   }
   return texte.toLowerCase()
 }
@@ -45,7 +48,9 @@ export function telephoneValide(
   if (texte === '') return null
   const chiffres = texte.replace(/[^0-9]/g, '').length
   if (texte.length > TELEPHONE_MAX || chiffres < 6 || !TELEPHONE.test(texte)) {
-    throw erreurSaisie('Le téléphone de la ou du bénévole n’est pas valide.')
+    throw erreurSaisie(
+      i18n._('Le téléphone de la ou du bénévole n’est pas valide.')
+    )
   }
   return texte
 }

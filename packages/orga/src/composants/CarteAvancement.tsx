@@ -1,4 +1,5 @@
 import { SolutionOutlined } from '@ant-design/icons'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Card, Space, Tag, Tooltip } from 'antd'
 import type { ReactNode } from 'react'
 import { Link } from 'react-router'
@@ -34,6 +35,8 @@ export default function CarteAvancement({
   versPerimetre,
   gererEquipe,
 }: Props) {
+  const { t } = useLingui()
+  const nomPerimetre = perimetre.nom
   return (
     <Card
       title={
@@ -45,12 +48,12 @@ export default function CarteAvancement({
       extra={
         <Space size={4}>
           {compte}
-          <Tooltip title="Gérer l’équipe de ce périmètre">
+          <Tooltip title={t`Gérer l’équipe de ce périmètre`}>
             <Button
               type="text"
               size="small"
               icon={<SolutionOutlined />}
-              aria-label={`Gérer l’équipe du périmètre ${perimetre.nom}`}
+              aria-label={t`Gérer l’équipe du périmètre ${nomPerimetre}`}
               onClick={gererEquipe}
             />
           </Tooltip>
@@ -62,20 +65,23 @@ export default function CarteAvancement({
       }}
     >
       {avancement === undefined ? (
-        <span style={{ color: 'var(--rt-encre-70)' }}>Aucune tâche.</span>
+        <span style={{ color: 'var(--rt-encre-70)' }}>
+          <Trans>Aucune tâche.</Trans>
+        </span>
       ) : (
         <Avancement avancement={avancement} compact />
       )}
       <div style={{ marginTop: 8, fontSize: 13, opacity: 0.75 }}>
         {affectations.length > 0
           ? affectations
-              .map(a =>
-                a.contactPrincipal
-                  ? `${a.personne.nom} (contact principal)`
-                  : a.personne.nom
-              )
+              .map(a => {
+                const nomPersonne = a.personne.nom
+                return a.contactPrincipal
+                  ? t`${nomPersonne} (contact principal)`
+                  : nomPersonne
+              })
               .join(', ')
-          : 'Aucune personne affectée'}
+          : t`Aucune personne affectée`}
       </div>
     </Card>
   )

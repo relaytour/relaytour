@@ -1,5 +1,7 @@
 import { CheckOutlined, StarOutlined, TeamOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { plural, t as traduire } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Col, Empty, Row, Skeleton, Tag } from 'antd'
 import { Link } from 'react-router'
 
@@ -58,13 +60,15 @@ const RETIRER = graphql(`
 type Ligne = TousLesPerimetresQuery['tousLesPerimetres']['perimetres'][number]
 
 function libelleRecherche(nombre: number): string {
-  if (nombre === 0) return 'L’équipe est au complet.'
-  return nombre === 1
-    ? '1 personne recherchée'
-    : `${nombre} personnes recherchées`
+  if (nombre === 0) return traduire`L’équipe est au complet.`
+  return traduire`${plural(nombre, {
+    one: '# personne recherchée',
+    other: '# personnes recherchées',
+  })}`
 }
 
 export default function TousLesPerimetres() {
+  const { t } = useLingui()
   const { activite, lien, libelleGroupe, decouverte, gere } = useActivite()
   const souhaitsLibres = activite.souhaitsOuverts || gere
   const { message } = App.useApp()
@@ -76,6 +80,8 @@ export default function TousLesPerimetres() {
   if (loading && data === undefined) return <Skeleton active />
   const edition = data?.tousLesPerimetres.edition ?? null
   const lignes = data?.tousLesPerimetres.perimetres ?? []
+  const nomActivite = activite.nom
+  const nomPeriode = edition?.nom
 
   const executer = async (action: () => Promise<unknown>, succes: string) => {
     try {
@@ -88,13 +94,14 @@ export default function TousLesPerimetres() {
 
   const carte = (ligne: Ligne) => {
     const { perimetre } = ligne
+    const nomPerimetre = perimetre.nom
     const variables =
       edition === null
         ? null
         : { perimetreId: perimetre.id, editionId: edition.id }
     const action = ligne.affecte ? (
       <Link to={lien(`/perimetres/${perimetre.slug}`)}>
-        Ouvrir le périmètre
+        <Trans>Ouvrir le périmètre</Trans>
       </Link>
     ) : ligne.souhaite ? (
       <Button
@@ -105,11 +112,11 @@ export default function TousLesPerimetres() {
           variables &&
           void executer(
             () => retirer({ variables }),
-            'Votre souhait est retiré.'
+            t`Votre souhait est retiré.`
           )
         }
       >
-        Retirer mon souhait
+        <Trans>Retirer mon souhait</Trans>
       </Button>
     ) : !souhaitsLibres ? null : (
       <Button
@@ -118,16 +125,16 @@ export default function TousLesPerimetres() {
         icon={<StarOutlined aria-hidden />}
         loading={formulation.loading}
         disabled={variables === null}
-        aria-label={`Je suis intéressé·e par ${perimetre.nom}`}
+        aria-label={t`Je suis intéressé·e par ${nomPerimetre}`}
         onClick={() =>
           variables &&
           void executer(
             () => formuler({ variables }),
-            'Votre souhait est noté. Un admin confirme ensuite les affectations.'
+            t`Votre souhait est noté. Un admin confirme ensuite les affectations.`
           )
         }
       >
-        Je suis intéressé·e
+        <Trans>Je suis intéressé·e</Trans>
       </Button>
     )
     return (
@@ -160,11 +167,15 @@ export default function TousLesPerimetres() {
             </h3>
             {ligne.affecte ? (
               <Tag color="green" icon={<CheckOutlined aria-hidden />}>
-                Affecté·e
+                <Trans>Affecté·e</Trans>
               </Tag>
             ) : ligne.souhaite ? (
               <Tag color="gold" icon={<StarOutlined aria-hidden />}>
-                Souhait
+                {t({
+                  message: 'Souhait',
+                  comment:
+                    'Étiquette d’un périmètre que la personne souhaite rejoindre',
+                })}
               </Tag>
             ) : (
               <span className="rt-libelle">
@@ -178,7 +189,7 @@ export default function TousLesPerimetres() {
             }
             style={{ margin: 0, flex: 1 }}
           >
-            {perimetre.description ?? 'Aucune description pour ce périmètre.'}
+            {perimetre.description ?? t`Aucune description pour ce périmètre.`}
           </p>
           {ligne.personnesRecherchees !== null && (
             <p
@@ -206,9 +217,9 @@ export default function TousLesPerimetres() {
             {!decouverte && !ligne.affecte && (
               <Link
                 to={lien(`/perimetres/${perimetre.slug}`)}
-                aria-label={`Consulter les tâches de ${perimetre.nom}`}
+                aria-label={t`Consulter les tâches de ${nomPerimetre}`}
               >
-                Consulter les tâches
+                <Trans>Consulter les tâches</Trans>
               </Link>
             )}
           </div>
@@ -253,20 +264,20 @@ export default function TousLesPerimetres() {
       <Titre
         sousTitre={
           edition === null
-            ? `Les périmètres de ${activite.nom}.`
+            ? t`Les périmètres de ${nomActivite}.`
             : souhaitsLibres
-              ? `Les périmètres de ${edition.nom}. Choisissez ceux qui vous intéressent : un admin confirme ensuite les affectations.`
-              : `Les périmètres de ${edition.nom}. Les admins de l’activité notent les souhaits et confirment les affectations.`
+              ? t`Les périmètres de ${nomPeriode}. Choisissez ceux qui vous intéressent : un admin confirme ensuite les affectations.`
+              : t`Les périmètres de ${nomPeriode}. Les admins de l’activité notent les souhaits et confirment les affectations.`
         }
       >
-        Tous les périmètres
+        <Trans>Tous les périmètres</Trans>
       </Titre>
       {edition === null && (
         <Alert
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="Aucune période n’est en préparation. Les souhaits se formulent quand une période s’ouvre."
+          title={t`Aucune période n’est en préparation. Les souhaits se formulent quand une période s’ouvre.`}
         />
       )}
       {decouverte && affectes.length === 0 && (
@@ -276,23 +287,23 @@ export default function TousLesPerimetres() {
           style={{ marginBottom: 16 }}
           title={
             souhaitsLibres
-              ? 'Vous n’avez pas encore de périmètre dans cette activité. Formulez vos souhaits : un admin vous affectera ensuite.'
-              : 'Vous n’avez pas encore de périmètre dans cette activité. Un admin vous affectera à l’un d’eux.'
+              ? t`Vous n’avez pas encore de périmètre dans cette activité. Formulez vos souhaits : un admin vous affectera ensuite.`
+              : t`Vous n’avez pas encore de périmètre dans cette activité. Un admin vous affectera à l’un d’eux.`
           }
         />
       )}
       {lignes.length === 0 ? (
-        <Empty description="Cette activité n’a encore aucun périmètre." />
+        <Empty description={t`Cette activité n’a encore aucun périmètre.`} />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {bloc('Vos périmètres', affectes)}
-          {bloc('Vos souhaits', souhaites)}
+          {bloc(t`Vos périmètres`, affectes)}
+          {bloc(t`Vos souhaits`, souhaites)}
           {bloc(
             affectes.length + souhaites.length > 0
-              ? 'Autres périmètres'
-              : 'Les périmètres',
+              ? t`Autres périmètres`
+              : t`Les périmètres`,
             autres,
-            'Vous suivez déjà tous les périmètres de cette activité.'
+            t`Vous suivez déjà tous les périmètres de cette activité.`
           )}
         </div>
       )}

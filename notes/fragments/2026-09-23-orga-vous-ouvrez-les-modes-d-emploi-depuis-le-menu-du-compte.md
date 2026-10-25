@@ -12,6 +12,13 @@ fr:
     L'entrée « Modes d'emploi » apparaît sous « Préférences », dans le menu du
     compte. Elle ouvre dans un nouvel onglet la liste des modes d'emploi publiés
     sur le site de Relaytour, un par rôle.
+en:
+  titre: >-
+    You open the user guides from the account menu
+  texte: >-
+    The “User guides” entry appears under “Preferences” in the account menu. It
+    opens, in a new tab, the list of user guides published on the Relaytour
+    site, one per role.
 ---
 
 - `MenuCompte.tsx` : entrée externe, adresse lue dans le champ `modesDEmploi`
