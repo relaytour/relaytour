@@ -8,6 +8,7 @@ import { Link, useNavigate } from 'react-router'
 import Avancement from '../composants/Avancement'
 import Contribution from '../composants/Contribution'
 import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
+import PremiersPas from '../composants/PremiersPas'
 import TacheCarte from '../composants/TacheCarte'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
@@ -78,6 +79,7 @@ export default function MonEspace() {
   const nombreMesTaches = mesTaches.length
   const nombreAPrendre = aPrendre.length
   const cettePeriode = periode.cette
+  const laPeriode = periode.la
   const aucunePeriode = periode.Aucune
   const nomEdition = edition?.nom ?? ''
   const debutEdition = edition ? dateCourte(edition.debut) : ''
@@ -118,9 +120,23 @@ export default function MonEspace() {
         <Trans>Bonjour {prenomPersonne}</Trans>
       </Titre>
 
+      {gere && (
+        <div style={{ marginBottom: 16 }}>
+          <PremiersPas />
+        </div>
+      )}
+
       {(loading && !data) || (chargementEdition && !courante) ? (
         <Skeleton active />
-      ) : !edition ? null : (
+      ) : !edition ? (
+        !gere && (
+          <Panneau etiquette={t`Préparation`}>
+            <p className="rt-texte-secondaire" style={{ margin: 0 }}>
+              {t`Les admins de l’activité préparent ${laPeriode} à venir.`}
+            </p>
+          </Panneau>
+        )
+      ) : (
         <DeuxColonnes
           cote={
             <>

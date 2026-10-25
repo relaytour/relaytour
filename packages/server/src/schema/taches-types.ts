@@ -118,7 +118,6 @@ async function appliquer(
           ficheDe: slug =>
             slug === undefined ? null : (fiches.get(slug) ?? null),
           origines: new Set(retenus.map(p => p.slug)),
-          auteurId: ctx.personne!.id,
           ecrire,
         },
         rapport
@@ -156,7 +155,7 @@ builder.mutationFields(t => ({
     type: RapportTachesTypesRef,
     authScopes: { gestion: true },
     description:
-      'Crée les effectifs et les tâches d’une période à partir des tâches types de ses périmètres. Une tâche déjà créée depuis sa tâche type ne change pas.',
+      'Crée les effectifs et les tâches d’une période à partir des tâches types de ses périmètres. Une tâche déjà créée depuis sa tâche type ne change pas. Avec `perimetreIds`, seuls ces périmètres d’origine sont appliqués ; une tâche partagée se décline dans tous ses périmètres cibles.',
     args: {
       editionId: t.arg.id({ required: true }),
       perimetreIds: t.arg.idList(),

@@ -17,7 +17,7 @@ Cette liste décrit les évolutions envisagées après la première version. Ell
 
 ## Propositions à valider avec les référentes et référents
 
-- **Transmission d'une période à la suivante.** Ce chantier suit l'ADR 0008 : il donne sa valeur à la période. À la création d'une période, un admin choisit les tâches de l'édition passée à reconduire, avec leurs échéances recalculées. Un·e référent·e sortant·e laisse une note de passation à la personne qui lui succède.
+- **Note de passation.** Un·e référent·e sortant·e laisse une note de passation à la personne qui lui succède. La reprise des tâches d'une période à la suivante est réalisée par l'ADR 0048.
 - **Éditeur de tâches types.** Les admins modifient les tâches types d'un périmètre dans l'espace organisateur. Elles ne changent aujourd'hui que dans le dossier de contenu (ADR 0009).
 - **Tâches.** Sous-tâches sous forme de cases à cocher ; dépendances entre tâches (une tâche attend la fin d'une autre) ; pièces jointes sur une tâche. Une fiche cite déjà les documents de l'espace de fichiers par ses ressources liées (ADR 0038).
 - **Commentaires.** Mention d'une personne dans un commentaire ; mise en forme ; fil commun à une tâche partagée et à ses déclinaisons ; recherche dans les commentaires (ADR 0029).

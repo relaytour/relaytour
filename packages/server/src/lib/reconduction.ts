@@ -8,6 +8,8 @@ import { i18n } from './langue.ts'
 // assignation, sans commentaire ni journal. Une tâche partagée revient avec ses
 // déclinaisons, sauf celles qui avaient été refusées : la reconduction est faite par
 // un admin, ses déclinaisons sont donc acceptées d'office (ADR 0026).
+// Une tâche reprise n'a pas d'auteur : elle ne rapporte aucun point de création à
+// l'admin qui la reprend (score).
 
 type Transaction = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0]
 
@@ -65,6 +67,45 @@ export function ecartEnJours(source: Date, cible: Date): number {
   return Math.round((jour(cible) - jour(source)) / JOUR_MS)
 }
 
+const FICHE = {
+  id: true,
+  archivedAt: true,
+  activiteId: true,
+  perimetreId: true,
+} as const
+
+interface FicheLue {
+  id: string
+  archivedAt: Date | null
+  activiteId: string
+  perimetreId: string | null
+}
+
+/**
+ * La fiche d'une tâche reprise, si la règle de `ficheValide` l'accepte encore :
+ * une fiche commune de l'activité, une fiche du périmètre de la tâche ou, pour une
+ * déclinaison, la fiche de sa tâche partagée (ADR 0039). Une fiche archivée, ou
+ * rangée depuis dans un autre périmètre, n'est pas reprise.
+ */
+function ficheReprise(
+  fiche: FicheLue | null,
+  activiteId: string,
+  perimetreId: string,
+  ficheDeLOrigine: string | null = null
+): string | null {
+  if (
+    fiche === null ||
+    fiche.archivedAt !== null ||
+    fiche.activiteId !== activiteId
+  )
+    return null
+  return fiche.perimetreId === null ||
+    fiche.perimetreId === perimetreId ||
+    fiche.id === ficheDeLOrigine
+    ? fiche.id
+    : null
+}
+
 /** Calcule la reconduction et, avec `ecrire`, crée les tâches et les effectifs qui manquent. */
 export async function reconduire(
   tx: Transaction,
@@ -78,6 +119,13 @@ export async function reconduire(
     ignorees: 0,
   }
 
+  // Deux reprises simultanées vers la même période ne créent pas deux fois les
+  // mêmes tâches : la seconde attend la fin de la première, puis les trouve. Une
+  // simulation ne verrouille rien.
+  if (ecrire) {
+    await tx.$queryRaw`SELECT id FROM Edition WHERE id = ${cible.id} FOR UPDATE`
+  }
+
   const taches = await tx.tache.findMany({
     where: { editionId: source.id, origineId: null },
     orderBy: [{ echeance: 'asc' }, { titre: 'asc' }],
@@ -89,8 +137,8 @@ export async function reconduire(
       statut: true,
       modeleSlug: true,
       perimetreId: true,
-      perimetre: { select: { nom: true, archivedAt: true } },
-      fiche: { select: { id: true, archivedAt: true } },
+      perimetre: { select: { nom: true, archivedAt: true, activiteId: true } },
+      fiche: { select: FICHE },
       declinaisons: {
         where: { accord: { not: 'REFUSE' } },
         orderBy: { perimetreId: 'asc' },
@@ -101,7 +149,7 @@ export async function reconduire(
           modeleSlug: true,
           perimetreId: true,
           perimetre: { select: { archivedAt: true } },
-          fiche: { select: { id: true, archivedAt: true } },
+          fiche: { select: FICHE },
         },
       },
     },
@@ -129,9 +177,6 @@ export async function reconduire(
   const dejaLa = new Set(
     presentes.map(t => cle(t.perimetreId, t.modeleSlug, t.titre))
   )
-  const ficheValide = (
-    fiche: { id: string; archivedAt: Date | null } | null
-  ) => (fiche === null || fiche.archivedAt !== null ? null : fiche.id)
 
   for (const tache of taches) {
     const parDefaut = tache.statut !== 'ABANDONNEE'
@@ -166,6 +211,8 @@ export async function reconduire(
     if (!retenue) continue
     dejaLa.add(cleTache)
     if (!ecrire) continue
+    const activiteId = tache.perimetre.activiteId
+    const ficheId = ficheReprise(tache.fiche, activiteId, tache.perimetreId)
     const creee = await tx.tache.create({
       data: {
         editionId: cible.id,
@@ -174,8 +221,7 @@ export async function reconduire(
         description: tache.description,
         echeance: ligne.echeance,
         modeleSlug: tache.modeleSlug,
-        ficheId: ficheValide(tache.fiche),
-        creeParId: auteurId,
+        ficheId,
       },
       select: { id: true },
     })
@@ -189,8 +235,12 @@ export async function reconduire(
           description: declinaison.description,
           echeance: decaler(declinaison.echeance, jours),
           modeleSlug: declinaison.modeleSlug,
-          ficheId: ficheValide(declinaison.fiche),
-          creeParId: auteurId,
+          ficheId: ficheReprise(
+            declinaison.fiche,
+            activiteId,
+            declinaison.perimetreId,
+            ficheId
+          ),
           origineId: creee.id,
           accord: 'ACCEPTE',
           accordParId: auteurId,

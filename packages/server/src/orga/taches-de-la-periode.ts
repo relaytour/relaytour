@@ -49,10 +49,12 @@ export interface OptionsTachesDeLaPeriode {
   taches: ReadonlyMap<string, readonly TacheModele[]>
   /** L'identifiant d'une fiche citée par son slug, ou null. */
   ficheDe: (slug: string | undefined) => string | null
-  /** Sans valeur, tous les périmètres reçoivent leurs effectifs et leurs tâches. */
+  /**
+   * Les périmètres d'origine retenus : seuls leurs effectifs et leurs tâches types
+   * sont créés. Une tâche partagée d'un périmètre retenu se décline dans tous ses
+   * périmètres cibles, retenus ou non. Sans valeur, tous les périmètres.
+   */
   origines?: ReadonlySet<string>
-  /** La personne qui applique les tâches types depuis l'espace organisateur. */
-  auteurId?: string | null
   ecrire: boolean
 }
 
@@ -64,11 +66,12 @@ export function rapportTachesVide(): RapportTachesDeLaPeriode {
 }
 
 /**
- * La fiche d'une déclinaison, jugée en base : une fiche commune de l'activité, ou
- * une fiche du périmètre d'origine. Une fiche en conflit garde le périmètre qu'elle
- * avait, même quand le dossier la range ailleurs.
+ * La fiche d'une tâche ou d'une déclinaison, jugée en base : une fiche commune de
+ * l'activité, ou une fiche du périmètre d'origine. Une fiche en conflit garde le
+ * périmètre qu'elle avait, même quand le dossier la range ailleurs. Une tâche ne
+ * reçoit donc jamais une fiche que les personnes de son périmètre ne lisent pas.
  */
-async function ficheDeDeclinaisonEnBase(
+async function ficheEnBase(
   tx: Transaction,
   ficheId: string | null,
   activiteId: string,
@@ -95,7 +98,13 @@ export async function creerTachesDeLaPeriode(
   const { periode, activiteId, perimetres, ficheDe, origines, ecrire } = options
   const retenu = (slug: string) => origines === undefined || origines.has(slug)
   const parSlug = new Map(perimetres.map(p => [p.slug, p]))
-  const creeParId = options.auteurId ?? null
+
+  // Deux applications simultanées à la même période ne créent pas deux fois les
+  // mêmes tâches : la seconde attend la fin de la première, puis les trouve. Une
+  // simulation ne verrouille rien.
+  if (ecrire) {
+    await tx.$queryRaw`SELECT id FROM Edition WHERE id = ${periode.id} FOR UPDATE`
+  }
 
   // Effectifs de la période
   const effectifsExistants = new Set(
@@ -157,8 +166,12 @@ export async function creerTachesDeLaPeriode(
               titre: tache.titre,
               description: tache.description?.trim() || null,
               echeance: dateEcheance(tache.echeance, periode.debut),
-              ficheId: ficheDe(tache.fiche),
-              creeParId,
+              ficheId: await ficheEnBase(
+                tx,
+                ficheDe(tache.fiche),
+                activiteId,
+                perimetreId
+              ),
             },
             select: { id: true },
           })
@@ -171,7 +184,7 @@ export async function creerTachesDeLaPeriode(
       // qu'elle déclare, sinon celle de sa tâche partagée (ADR 0039).
       if (tache.declinaison === undefined) continue
       const textes = textesDeLaDeclinaison(tache)
-      const ficheId = await ficheDeDeclinaisonEnBase(
+      const ficheId = await ficheEnBase(
         tx,
         ficheDe(tache.declinaison.fiche ?? tache.fiche),
         activiteId,
@@ -229,7 +242,6 @@ export async function creerTachesDeLaPeriode(
               description: textes.description?.trim() || null,
               echeance: dateEcheance(textes.echeance, periode.debut),
               ficheId,
-              creeParId,
               origineId: tacheId,
               accord: 'ACCEPTE',
               accordLe: new Date(),

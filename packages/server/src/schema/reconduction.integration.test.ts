@@ -34,6 +34,10 @@ const ids = {
   autrePeriode: '',
   fiche: '',
   ficheArchivee: '',
+  ficheLieux: '',
+  ficheLieuxRevue: '',
+  ficheNatation: '',
+  ficheAilleurs: '',
   plan: '',
   salles: '',
   besoins: '',
@@ -157,15 +161,19 @@ beforeAll(async () => {
       })
     ).id
   }
-  for (const [cle, archivedAt] of [
-    ['fiche', null],
-    ['ficheArchivee', new Date()],
+  for (const [cle, archivedAt, perimetreId] of [
+    ['fiche', null, null],
+    ['ficheArchivee', new Date(), null],
+    ['ficheLieux', null, ids.lieux],
+    ['ficheLieuxRevue', null, ids.lieux],
+    ['ficheNatation', null, ids.natation],
   ] as const) {
     ids[cle] = (
       await prisma.fiche.create({
         data: {
           organisationId: ids.org,
           activiteId: ids.activite,
+          perimetreId,
           slug: `${cle}-${s}`,
           archivedAt,
         },
@@ -229,21 +237,28 @@ beforeAll(async () => {
   ids.salles = await tache(ids.lieux, 'Réserver les salles', {
     statut: 'ABANDONNEE',
   })
+  // La tâche partagée est passée de la fiche de lieux à sa version revue : seule
+  // la déclinaison qui cite la fiche actuelle de l'origine la garde.
   ids.besoins = await tache(ids.lieux, 'Recenser les besoins', {
     echeance: new Date('2026-04-14'),
+    ficheId: ids.ficheLieuxRevue,
   })
-  for (const [perimetreId, accord] of [
-    [ids.natation, 'ACCEPTE'],
-    [ids.volley, 'EN_ATTENTE'],
-    [ids.escrime, 'REFUSE'],
-    [ids.archive, 'ACCEPTE'],
+  for (const [perimetreId, accord, ficheId] of [
+    [ids.natation, 'ACCEPTE', ids.ficheLieux],
+    [ids.volley, 'EN_ATTENTE', ids.ficheLieuxRevue],
+    [ids.escrime, 'REFUSE', null],
+    [ids.archive, 'ACCEPTE', null],
   ] as const) {
     await tache(perimetreId, 'Besoins du périmètre', {
       echeance: new Date('2026-04-29'),
       origineId: ids.besoins,
       accord,
+      ficheId,
     })
   }
+  ids.ficheAilleurs = await tache(ids.lieux, 'Lire la fiche du bassin', {
+    ficheId: ids.ficheNatation,
+  })
   ids.perimetreArchive = await tache(
     ids.archive,
     'Tâche d’un périmètre archivé'
@@ -313,7 +328,7 @@ describe('reconduction d’une période', () => {
 
   it('simule sans rien écrire et écarte les tâches abandonnées par défaut', async () => {
     const rapport = await rapportDe(SIMULER, { s: ids.source, c: ids.cible })
-    expect(rapport.lignes).toHaveLength(5)
+    expect(rapport.lignes).toHaveLength(6)
     expect(ligne(rapport, ids.plan)).toMatchObject({
       perimetre: 'lieux',
       statutSource: 'FAITE',
@@ -357,6 +372,7 @@ describe('reconduction d’une période', () => {
       'Besoins du périmètre',
       'Dessiner le plan',
       'Lire l’ancienne fiche',
+      'Lire la fiche du bassin',
       'Recenser les besoins',
     ])
     const plan = taches.find(t => t.titre === 'Dessiner le plan')!
@@ -366,7 +382,7 @@ describe('reconduction d’une période', () => {
       statut: 'A_FAIRE',
       modeleSlug: 'plan',
       ficheId: ids.fiche,
-      creeParId: ids.admin,
+      creeParId: null,
       termineeLe: null,
       assignations: [],
     })
@@ -380,6 +396,13 @@ describe('reconduction d’une période', () => {
     expect(declinaisons.map(t => t.perimetreId).sort()).toEqual(
       [ids.natation, ids.volley].sort()
     )
+    expect(partagee.ficheId).toBe(ids.ficheLieuxRevue)
+    expect(
+      Object.fromEntries(declinaisons.map(d => [d.perimetreId, d.ficheId]))
+    ).toEqual({ [ids.natation]: null, [ids.volley]: ids.ficheLieuxRevue })
+    expect(
+      taches.find(t => t.titre === 'Lire la fiche du bassin')!.ficheId
+    ).toBeNull()
     for (const declinaison of declinaisons) {
       expect(declinaison.accord).toBe('ACCEPTE')
       expect(declinaison.echeance?.toISOString().slice(0, 10)).toBe(
@@ -402,6 +425,6 @@ describe('reconduction d’une période', () => {
     expect(ligne(deuxieme, ids.besoins).etat).toBe('DEJA_PRESENTE')
     expect(ligne(deuxieme, ids.salles).etat).toBe('A_CREER')
     expect(deuxieme.effectifsDejaPresents).toEqual(['lieux'])
-    expect(await tachesCible()).toHaveLength(6)
+    expect(await tachesCible()).toHaveLength(7)
   })
 })

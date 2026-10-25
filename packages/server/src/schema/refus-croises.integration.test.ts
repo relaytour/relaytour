@@ -1875,6 +1875,56 @@ const CAS: Cas[] = [
     variables: () => ({ e: b.edition, p: [a.perimetre] }),
     attente: REFUSE,
   },
+  // Import de l'équipe depuis un tableur (ADR 0049).
+  ...(
+    [
+      ['simulerImportEquipe', 'query'],
+      ['importerEquipe', 'mutation'],
+    ] as const
+  ).map(([operation, sorte]) => ({
+    operation,
+    query: `${sorte} ($e: ID!) { ${operation}(editionId: $e, lignes: []) { personnes } }`,
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  })),
+  // Import des tâches depuis un tableur (ADR 0049).
+  ...(
+    [
+      ['simulerImportTaches', 'query'],
+      ['importerTaches', 'mutation'],
+    ] as const
+  ).map(([operation, sorte]) => ({
+    operation,
+    query: `${sorte} ($e: ID!) { ${operation}(editionId: $e, lignes: []) { tachesTypesAjoutees } }`,
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  })),
+  // Modèle de départ (ADR 0048).
+  ...(
+    [
+      ['simulerModeleDeDepart', 'query'],
+      ['appliquerModeleDeDepart', 'mutation'],
+    ] as const
+  ).map(([operation, sorte]) => ({
+    operation,
+    query: `${sorte} ($a: ID!) { ${operation}(activiteId: $a, modele: EVENEMENT_MULTISPORTS) { periode } }`,
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  })),
+  // Premiers pas d'une activité (ADR 0048).
+  ...(
+    [
+      ['premiersPas', 'query'],
+      ['confirmerActivite', 'mutation'],
+      ['masquerPremiersPas', 'mutation'],
+      ['afficherPremiersPas', 'mutation'],
+    ] as const
+  ).map(([operation, sorte]) => ({
+    operation,
+    query: `${sorte} ($a: ID!) { ${operation}(activiteId: $a) { masques } }`,
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  })),
   {
     operation: 'simulerReconduction',
     query:

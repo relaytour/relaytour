@@ -5,17 +5,20 @@ import {
   LogoutOutlined,
   MailOutlined,
   QuestionCircleOutlined,
+  RocketOutlined,
   SettingOutlined,
   TagOutlined,
 } from '@ant-design/icons'
-import { useQuery } from '@apollo/client/react'
+import { useMutation, useQuery } from '@apollo/client/react'
 import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Badge, Dropdown } from 'antd'
+import { App, Badge, Dropdown } from 'antd'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
+import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
+import { messageErreur } from '../lib/erreurs'
 import { estInstallee } from '../lib/installation'
 import { useMesInvitations } from '../lib/invitations'
 import { VERSION } from '../lib/notes-de-version'
@@ -26,12 +29,21 @@ import {
   useSession,
 } from '../lib/session'
 
+import { PREMIERS_PAS } from '../lib/requetes'
 import { lienSupport, ouvreUnOnglet } from '../lib/support'
 
 import InstallerApplication from './InstallerApplication'
 import MesInvitations from './MesInvitations'
 import NotesDeVersion from './NotesDeVersion'
 import { Avatar } from './Personne'
+
+const AFFICHER_PREMIERS_PAS = graphql(`
+  mutation AfficherPremiersPas {
+    afficherPremiersPas {
+      masques
+    }
+  }
+`)
 
 /**
  * Le compte de la barre haute : initiales, nom, préférences, modes d'emploi,
@@ -50,7 +62,24 @@ export default function MenuCompte({
   const deconnecter = useDeconnexion()
   const { organisations } = useSession()
   const changerOrganisation = useChangerOrganisation()
-  const { lien } = useActivite()
+  const { message } = App.useApp()
+  const { lien, gere } = useActivite()
+  // La liste « Premiers pas » masquée se réaffiche d'ici, tant qu'une étape reste
+  // à faire (ADR 0048).
+  const premiersPas = useQuery(PREMIERS_PAS, { skip: !gere }).data?.premiersPas
+  const [afficherPremiersPas] = useMutation(AFFICHER_PREMIERS_PAS, {
+    refetchQueries: [PREMIERS_PAS],
+  })
+  const entreePremiersPas =
+    premiersPas?.masques && !premiersPas.termines
+      ? [
+          {
+            key: 'premiers-pas',
+            icon: <RocketOutlined />,
+            label: t`Afficher les premiers pas`,
+          },
+        ]
+      : []
   const { modesDEmploi, support, nomCourt } = useOrganisation()
   const version = useQuery(VERSION).data?.versionInstallation
   const [notesOuvertes, setNotesOuvertes] = useState(false)
@@ -148,6 +177,7 @@ export default function MenuCompte({
                 </a>
               ),
             },
+            ...entreePremiersPas,
             ...entreeInstallation,
             ...entreeSupport,
             {
@@ -174,6 +204,11 @@ export default function MenuCompte({
             if (key === 'notes-de-version') setNotesOuvertes(true)
             if (key === 'installer') setInstallationOuverte(true)
             if (key === 'invitations') setInvitationsOuvertes(true)
+            if (key === 'premiers-pas') {
+              afficherPremiersPas()
+                .then(() => navigate(lien('/')))
+                .catch((e: unknown) => message.error(messageErreur(e)))
+            }
             if (key === 'deconnexion') void deconnecter()
             if (key.startsWith('organisation:')) {
               const slug = key.slice('organisation:'.length)
