@@ -1,4 +1,5 @@
 import { useMutation } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Modal, Popconfirm, Space, Tag, Typography } from 'antd'
 
 import { graphql } from '../gql'
@@ -24,6 +25,7 @@ const REFUSER = graphql(`
  * Refuser efface l'invitation, sans rien dire à l'organisation.
  */
 export function InvitationsRecues() {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const invitations = useMesInvitations()
   const changerOrganisation = useChangerOrganisation()
@@ -35,72 +37,82 @@ export function InvitationsRecues() {
   if (invitations.length === 0) {
     return (
       <Typography.Paragraph type="secondary">
-        Aucune invitation n’attend votre accord.
+        <Trans>Aucune invitation n’attend votre accord.</Trans>
       </Typography.Paragraph>
     )
   }
   return (
     <>
       <Typography.Paragraph>
-        Vous avez déjà un compte. Une organisation qui vous invite ne lit rien
-        de ce compte et ne vous compte pas dans son équipe avant votre accord.
+        <Trans>
+          Vous avez déjà un compte. Une organisation qui vous invite ne lit rien
+          de ce compte et ne vous compte pas dans son équipe avant votre accord.
+        </Trans>
       </Typography.Paragraph>
       <ul className="rt-invitations">
-        {invitations.map(i => (
-          <li key={i.id}>
-            <div>
-              <span style={{ fontWeight: 600 }}>{i.organisationNom}</span>
-              <div style={{ marginTop: 4 }}>
-                <Space size={[4, 4]} wrap>
-                  {i.estAdmin && <Tag>Rôle d’admin</Tag>}
-                  {i.perimetres.map(p => (
-                    <Tag key={p}>{p}</Tag>
-                  ))}
-                  <Typography.Text type="secondary">
-                    Expire le {jourDeLInstant(i.expireLe)}
-                  </Typography.Text>
-                </Space>
+        {invitations.map(i => {
+          const nomOrganisation = i.organisationNom
+          const jourExpiration = jourDeLInstant(i.expireLe)
+          return (
+            <li key={i.id}>
+              <div>
+                <span style={{ fontWeight: 600 }}>{i.organisationNom}</span>
+                <div style={{ marginTop: 4 }}>
+                  <Space size={[4, 4]} wrap>
+                    {i.estAdmin && (
+                      <Tag>
+                        <Trans>Rôle d’admin</Trans>
+                      </Tag>
+                    )}
+                    {i.perimetres.map(p => (
+                      <Tag key={p}>{p}</Tag>
+                    ))}
+                    <Typography.Text type="secondary">
+                      <Trans>Expire le {jourExpiration}</Trans>
+                    </Typography.Text>
+                  </Space>
+                </div>
               </div>
-            </div>
-            <Space wrap>
-              <Button
-                type="primary"
-                size="small"
-                loading={acceptation.loading}
-                onClick={() =>
-                  void accepter({ variables: { id: i.id } }).then(
-                    r => {
-                      const slug = r.data?.accepterInvitation
-                      message.success(
-                        `Vous faites partie de ${i.organisationNom}.`
-                      )
-                      if (slug !== undefined) return changerOrganisation(slug)
-                    },
-                    (e: unknown) => message.error(messageErreur(e))
-                  )
-                }
-              >
-                Accepter
-              </Button>
-              <Popconfirm
-                title="Refuser cette invitation ?"
-                description="L’organisation n’en est pas informée."
-                okText="Refuser"
-                cancelText="Annuler"
-                onConfirm={() =>
-                  refuser({ variables: { id: i.id } }).then(
-                    () => message.success('L’invitation est refusée.'),
-                    (e: unknown) => message.error(messageErreur(e))
-                  )
-                }
-              >
-                <Button size="small" loading={refus.loading}>
-                  Refuser
+              <Space wrap>
+                <Button
+                  type="primary"
+                  size="small"
+                  loading={acceptation.loading}
+                  onClick={() =>
+                    void accepter({ variables: { id: i.id } }).then(
+                      r => {
+                        const slug = r.data?.accepterInvitation
+                        message.success(
+                          t`Vous faites partie de ${nomOrganisation}.`
+                        )
+                        if (slug !== undefined) return changerOrganisation(slug)
+                      },
+                      (e: unknown) => message.error(messageErreur(e))
+                    )
+                  }
+                >
+                  <Trans>Accepter</Trans>
                 </Button>
-              </Popconfirm>
-            </Space>
-          </li>
-        ))}
+                <Popconfirm
+                  title={t`Refuser cette invitation ?`}
+                  description={t`L’organisation n’en est pas informée.`}
+                  okText={t`Refuser`}
+                  cancelText={t`Annuler`}
+                  onConfirm={() =>
+                    refuser({ variables: { id: i.id } }).then(
+                      () => message.success(t`L’invitation est refusée.`),
+                      (e: unknown) => message.error(messageErreur(e))
+                    )
+                  }
+                >
+                  <Button size="small" loading={refus.loading}>
+                    <Trans>Refuser</Trans>
+                  </Button>
+                </Popconfirm>
+              </Space>
+            </li>
+          )
+        })}
       </ul>
     </>
   )
@@ -114,9 +126,10 @@ export default function MesInvitations({
   ouvert: boolean
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   return (
     <Modal
-      title="Vos invitations"
+      title={t`Vos invitations`}
       open={ouvert}
       onCancel={onFermer}
       footer={null}

@@ -27,6 +27,14 @@ msgstr ""
 msgid "{auteur} a modifié cette tâche. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne."
 msgstr ""
 
+#: src/composants/ChampCouleur.tsx
+msgid "{heritee} (héritée)"
+msgstr ""
+
+#: src/composants/Tableau.tsx
+msgid "{largeur} pixels"
+msgstr ""
+
 #. Participe accordé avec le mot qui désigne la période.
 #: src/lib/activite.ts
 msgid "{nature, select, EVENEMENT {archivée} SAISON {archivée} other {archivé}}"
@@ -83,6 +91,38 @@ msgstr ""
 msgid "{nature, select, EVENEMENT {une édition} SAISON {une saison} other {un mandat}}"
 msgstr ""
 
+#: src/composants/Avancement.tsx
+msgid "{nbAbandonnees, plural, one {# abandonnée} other {# abandonnées}}"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "{nbAFaire} à faire"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "{nbEnCours} en cours"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "{nbEnRetard} en retard"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "{nbFaites, plural, one {# faite} other {# faites}}"
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+msgid "{nbInvitations, plural, one {# invitation attend un accord} other {# invitations attendent un accord}}"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "{nbSansPersonne} sans personne"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "{nbTaches, plural, one {La tâche est abandonnée} other {Les # tâches sont abandonnées}}"
+msgstr ""
+
 #: src/pages/MonEspace.tsx
 msgid "{nombreAPrendre, plural, one {# tâche sans personne} other {# tâches sans personne}}"
 msgstr ""
@@ -111,8 +151,28 @@ msgstr ""
 msgid "{nomEdition}, du {debutEdition} au {finEdition}. {nombreMesTaches, plural, one {# tâche ouverte vous est assignée} other {# tâches ouvertes vous sont assignées}}."
 msgstr ""
 
+#: src/composants/CarteAvancement.tsx
+msgid "{nomPersonne} (contact principal)"
+msgstr ""
+
 #: src/composants/ListeNotifications.tsx
 msgid "{nonLues, plural, one {# non lue} other {# non lues}}"
+msgstr ""
+
+#: src/composants/Contribution.tsx
+msgid "{points, plural, one {point} other {points}} pour {nomEdition}"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "{pourcentage} % des tâches faites"
+msgstr ""
+
+#: src/composants/Jauge.tsx
+msgid "{renforts} / {besoin} renforts"
+msgstr ""
+
+#: src/composants/Jauge.tsx
+msgid "À confirmer"
 msgstr ""
 
 #. Statut d’une tâche
@@ -137,6 +197,18 @@ msgstr ""
 msgid "Abandonnée"
 msgstr ""
 
+#: src/composants/MesInvitations.tsx
+msgid "Accepter"
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Activer sur cet appareil"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Activité de vos périmètres"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Activités"
 msgstr ""
@@ -145,6 +217,7 @@ msgstr ""
 msgid "Admin de l’activité"
 msgstr ""
 
+#: src/composants/InvitationsEnAttente.tsx
 #: src/composants/ListeNotifications.tsx
 msgid "Admin de l’organisation"
 msgstr ""
@@ -165,6 +238,10 @@ msgstr ""
 msgid "Adresse mail"
 msgstr ""
 
+#: src/composants/PreferenceOrganigramme.tsx
+msgid "Afficher mon adresse dans l’organigramme"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Agenda"
 msgstr ""
@@ -177,6 +254,12 @@ msgstr ""
 msgid "Annuaire"
 msgstr ""
 
+#: src/composants/InvitationsEnAttente.tsx
+#: src/composants/MesInvitations.tsx
+#: src/pages/Preferences.tsx
+msgid "Annuler"
+msgstr ""
+
 #: src/composants/Recherche.tsx
 msgid "Aucun résultat."
 msgstr ""
@@ -185,8 +268,17 @@ msgstr ""
 msgid "Aucun sous-dossier."
 msgstr ""
 
+#. Aperçu d’une image : aucune image enregistrée
+#: src/composants/ChampImage.tsx
+msgid "Aucune"
+msgstr ""
+
 #: src/composants/FournisseurActivite.tsx
 msgid "Aucune activité ne vous est encore ouverte."
+msgstr ""
+
+#: src/composants/MesInvitations.tsx
+msgid "Aucune invitation n’attend votre accord."
 msgstr ""
 
 #: src/composants/NotesDeVersion.tsx
@@ -201,8 +293,24 @@ msgstr ""
 msgid "Aucune notification."
 msgstr ""
 
+#: src/composants/CarteAvancement.tsx
+msgid "Aucune personne affectée"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "Aucune tâche"
+msgstr ""
+
 #: src/pages/MonEspace.tsx
 msgid "Aucune tâche ouverte ne vous est assignée."
+msgstr ""
+
+#: src/composants/CarteAvancement.tsx
+msgid "Aucune tâche."
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Autorisez-les dans les réglages de votre navigateur ou de votre téléphone, puis revenez sur cet écran."
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -217,8 +325,16 @@ msgstr ""
 msgid "Bonjour {prenomPersonne}"
 msgstr ""
 
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le changer pour un message dans la fenêtre « Écrire un message »."
+msgstr ""
+
 #: src/composants/ParcoursEspace.tsx
 msgid "Ce dossier compte trop de sous-dossiers pour les afficher tous. Rangez le dossier voulu plus haut dans la bibliothèque."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Ce nom s’affiche dans toutes vos organisations."
 msgstr ""
 
 #: src/lib/conflit.ts
@@ -231,6 +347,18 @@ msgstr ""
 
 #: src/lib/conflit.ts
 msgid "Ce périmètre a été modifié. « Écraser » enregistre votre réglage à la place du réglage actuel. « Recharger » abandonne votre saisie et affiche le réglage actuel."
+msgstr ""
+
+#: src/composants/Contribution.tsx
+msgid "Ce score n’est visible que par vous et par les admins."
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+msgid "Ces adresses ont déjà un compte hors de votre organisation. Chaque personne accepte ou refuse l’invitation depuis son compte. Rien n’est créé en son nom avant son accord, et elle n’apparaît pas dans l’équipe."
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Ces réglages valent pour tous vos appareils, dans cette organisation. Vos mails ne changent pas."
 msgstr ""
 
 #: src/composants/AvisRelecture.tsx
@@ -253,6 +381,14 @@ msgstr ""
 msgid "Cette organisation n’a encore aucune activité."
 msgstr ""
 
+#: src/composants/ReserveAdmin.tsx
+msgid "Cette page est réservée aux admins de l’activité."
+msgstr ""
+
+#: src/composants/ReserveAdmin.tsx
+msgid "Cette page est réservée aux admins de l’organisation."
+msgstr ""
+
 #: src/lib/conflit.ts
 msgid "Cette tâche a changé depuis votre lecture"
 msgstr ""
@@ -273,13 +409,37 @@ msgstr ""
 msgid "Changer d’adresse ou demander un nouveau code"
 msgstr ""
 
+#: src/pages/Preferences.tsx
+msgid "Chaque jour"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Chaque lundi"
+msgstr ""
+
 #: src/composants/FournisseurActivite.tsx
 #: src/composants/GardeSession.tsx
 msgid "Chargement"
 msgstr ""
 
+#: src/composants/ChampImage.tsx
+msgid "Choisir un fichier {format}"
+msgstr ""
+
 #: src/composants/GardeSession.tsx
 msgid "Choisir une organisation"
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Choisissez le point-virgule si votre messagerie par défaut est Outlook : il ne découpe pas des adresses collées avec des virgules. Vous pouvez changer ce signe à côté des boutons de copie de chaque message."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Choisissez les mails et les notifications que vous recevez de {nomOrganisation}. Vos autres organisations gardent leurs propres réglages."
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Choisissez une autre messagerie"
 msgstr ""
 
 #: src/composants/ParcoursEspace.tsx
@@ -306,6 +466,10 @@ msgstr ""
 msgid "Code source de Relaytour"
 msgstr ""
 
+#: src/composants/Contribution.tsx
+msgid "Comment les points se calculent"
+msgstr ""
+
 #. Étiquette d’une fiche partagée, qui n’appartient à aucun périmètre
 #: src/composants/Recherche.tsx
 msgid "Commune"
@@ -315,12 +479,57 @@ msgstr ""
 msgid "Compte de {nom}"
 msgstr ""
 
+#: src/composants/Jauge.tsx
+msgid "Confirmée"
+msgstr ""
+
+#: src/composants/Personne.tsx
+msgid "Contact principal"
+msgstr ""
+
 #: src/lib/notes-de-version.ts
 msgid "Correctif"
 msgstr ""
 
+#: src/pages/Preferences.tsx
+msgid "Dans l’espace organisateur"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Dans le résumé par mail"
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Demandes et invitations"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Demandes pour rejoindre l’équipe"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Déplier le menu"
+msgstr ""
+
+#: src/composants/Panneau.tsx
+msgid "Déplier le volet latéral"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "des tâches faites"
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Désactiver"
+msgstr ""
+
+#: src/composants/Contribution.tsx
+msgid "Dont à temps"
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+#: src/pages/Preferences.tsx
+msgid "Échéances"
 msgstr ""
 
 #: src/pages/AideMarkdown.tsx
@@ -332,16 +541,47 @@ msgstr ""
 msgid "En cours"
 msgstr ""
 
+#: src/composants/PreferenceMessagerie.tsx
+#: src/pages/Preferences.tsx
+msgid "Enregistrer"
+msgstr ""
+
 #: src/composants/AvisMiseAJour.tsx
 msgid "Enregistrez votre travail en cours, puis rechargez l’application pour l’utiliser."
+msgstr ""
+
+#: src/composants/Tableau.tsx
+msgid "Épingler les premières colonnes"
 msgstr ""
 
 #: src/composants/Coquille.tsx
 msgid "Équipe"
 msgstr ""
 
+#: src/composants/InvitationsEnAttente.tsx
+msgid "Équipe : {nom}"
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+#: src/pages/Preferences.tsx
+msgid "Équipe de vos activités"
+msgstr ""
+
 #: src/pages/Connexion.tsx
 msgid "Espace organisateur"
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Essayer"
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils."
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+#: src/composants/MesInvitations.tsx
+msgid "Expire le {jourExpiration}"
 msgstr ""
 
 #. Statut d’une tâche
@@ -349,10 +589,23 @@ msgstr ""
 msgid "Faite"
 msgstr ""
 
+#: src/composants/Tableau.tsx
+msgid "Faites glisser pour ajuster la largeur. Un double-clic rétablit la largeur automatique."
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Fermer la recherche"
 msgstr ""
 
+#: src/composants/Contribution.tsx
+msgid "Fiche créée : {pointsFicheCreee} points."
+msgstr ""
+
+#: src/composants/Contribution.tsx
+msgid "Fiche modifiée : {pointsFicheModifiee} points, une fois par jour au plus."
+msgstr ""
+
+#: src/composants/Contribution.tsx
 #: src/composants/Recherche.tsx
 msgid "Fiches"
 msgstr ""
@@ -365,8 +618,20 @@ msgstr ""
 msgid "Fournisseur cloud"
 msgstr ""
 
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Gardez la messagerie par défaut de l’appareil, ou choisissez une messagerie en ligne."
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Gérer l’activité"
+msgstr ""
+
+#: src/composants/CarteAvancement.tsx
+msgid "Gérer l’équipe de ce périmètre"
+msgstr ""
+
+#: src/composants/CarteAvancement.tsx
+msgid "Gérer l’équipe du périmètre {nomPerimetre}"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -375,6 +640,10 @@ msgstr ""
 
 #: src/composants/HorsConnexion.tsx
 msgid "Hors connexion"
+msgstr ""
+
+#: src/composants/Jauge.tsx
+msgid "Il manque {manque, plural, one {# renfort} other {# renforts}}."
 msgstr ""
 
 #: src/composants/ListeNotifications.tsx
@@ -394,12 +663,24 @@ msgstr ""
 msgid "Installer l’application"
 msgstr ""
 
+#: src/composants/PreferencePush.tsx
+msgid "Installez d’abord l’application."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Jamais"
+msgstr ""
+
 #: src/composants/InstallerApplication.tsx
 msgid "L’application est installée."
 msgstr ""
 
 #: src/composants/InstallerApplication.tsx
 msgid "L’application installée s’ouvre depuis l’écran d’accueil, sous le nom « {nomCourt} », sans barre d’adresse."
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "L’application ne semble pas s’être ouverte"
 msgstr ""
 
 #: src/composants/HorsConnexion.tsx
@@ -422,8 +703,36 @@ msgstr ""
 msgid "L’espace organisateur, vos mails et vos notifications s’affichent dans cette langue. Le contenu écrit par votre organisation garde la sienne."
 msgstr ""
 
+#: src/composants/PreferenceMessagerie.tsx
+msgid "L’essai a réussi"
+msgstr ""
+
+#: src/composants/MesInvitations.tsx
+msgid "L’invitation est refusée."
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+msgid "L’invitation est renvoyée."
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+msgid "L’invitation est retirée."
+msgstr ""
+
 #: src/lib/erreurs.ts
 msgid "L’opération a échoué. Réessayez dans un instant."
+msgstr ""
+
+#: src/composants/PreferenceOrganigramme.tsx
+msgid "L’organigramme présente l’équipe de chaque activité. Votre adresse s’y affiche seulement avec votre accord, et si les admins de l’activité l’autorisent."
+msgstr ""
+
+#: src/composants/MesInvitations.tsx
+msgid "L’organisation n’en est pas informée."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "La cloche de la barre haute affiche les nouvelles de vos tâches, quel que soit votre choix pour les mails. Elle se met à jour sans recharger la page."
 msgstr ""
 
 #: src/pages/Connexion.tsx
@@ -434,6 +743,14 @@ msgstr ""
 msgid "La connexion a échoué. Réessayez."
 msgstr ""
 
+#: src/composants/Jauge.tsx
+msgid "La personne n’a pas confirmé depuis sept jours, ou la séquence arrive demain."
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+msgid "La personne ne pourra plus l’accepter."
+msgstr ""
+
 #: src/composants/PreferenceLangue.tsx
 msgid "Langue"
 msgstr ""
@@ -442,8 +759,28 @@ msgstr ""
 msgid "Langue de {nomCourt}"
 msgstr ""
 
+#: src/composants/Tableau.tsx
+msgid "Largeur automatique"
+msgstr ""
+
+#: src/composants/Tableau.tsx
+msgid "Largeur de la colonne"
+msgstr ""
+
+#: src/composants/Tableau.tsx
+msgid "Largeur de la colonne {libelle}"
+msgstr ""
+
 #: src/lib/conflit.ts
 msgid "le {jour} à {heure} h {minute}"
+msgstr ""
+
+#: src/composants/Jauge.tsx
+msgid "Le besoin est atteint."
+msgstr ""
+
+#: src/composants/Jauge.tsx
+msgid "Le besoin est dépassé."
 msgstr ""
 
 #: src/lib/connexion.ts
@@ -454,20 +791,73 @@ msgstr ""
 msgid "Le lien du mail ouvre votre navigateur, pas l’application installée."
 msgstr ""
 
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Le mode d’emploi décrit chaque choix."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Le résumé regroupe les nouvelles non lues de vos périmètres et vos échéances des 14 prochains jours. Il part à 7 h, à l’heure de votre organisation."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Le résumé reprend aussi vos notifications d’admin non lues, dans une section à part."
+msgstr ""
+
 #: src/lib/conflit.ts
 msgid "Le statut de cette tâche a changé"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Les admins gèrent votre adresse et vos affectations."
 msgstr ""
 
 #: src/pages/AideMarkdown.tsx
 msgid "Les fiches s’écrivent en Markdown : quelques signes placés dans le texte donnent les titres, les listes et les liens. Ce guide présente tous les signes que les fiches affichent."
 msgstr ""
 
+#: src/pages/Preferences.tsx
+msgid "Les mails de connexion et d’invitation partent toujours : ils sont nécessaires pour accéder à l’espace."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Les notifications d’admin ont leur écran, à part de la cloche. Les demandes et les invitations s’y affichent toujours."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Les notifications dans l’espace"
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Les notifications sont activées sur cet appareil."
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Les notifications sont bloquées pour ce site."
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Les notifications sont désactivées sur cet appareil."
+msgstr ""
+
 #: src/pages/admin/NotificationsAdmin.tsx
 msgid "Les nouvelles de vos rôles d’admin : demandes, invitations et équipe, rangées par activité puis par périmètre."
 msgstr ""
 
+#: src/composants/Tableau.tsx
+msgid "Libérer les premières colonnes"
+msgstr ""
+
 #: src/composants/InstallerApplication.tsx
+#: src/composants/PreferencePush.tsx
 msgid "Lire le guide d’installation"
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Lire le mode d’emploi « Choisir votre messagerie »"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Mails immédiats"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -478,12 +868,32 @@ msgstr ""
 msgid "Modes d’emploi"
 msgstr ""
 
+#: src/pages/Preferences.tsx
+msgid "Modification de vos tâches"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Modifier mon nom"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Mon espace"
 msgstr ""
 
 #: src/composants/Coquille.tsx
 msgid "Navigation principale"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Nom enregistré."
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Non"
+msgstr ""
+
+#: src/composants/Jauge.tsx
+msgid "Non confirmée"
 msgstr ""
 
 #: src/composants/MenuCompte.tsx
@@ -498,6 +908,10 @@ msgstr ""
 #: src/composants/Coquille.tsx
 #: src/pages/admin/NotificationsAdmin.tsx
 msgid "Notifications d’admin"
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Notifications sur cet appareil"
 msgstr ""
 
 #: src/composants/Notifications.tsx
@@ -522,6 +936,10 @@ msgstr ""
 msgid "Organisation"
 msgstr ""
 
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Oui, le message s’est ouvert"
+msgstr ""
+
 #: src/composants/InstallerApplication.tsx
 msgid "Ouvrez cette page dans Chrome ou dans Edge."
 msgstr ""
@@ -532,6 +950,15 @@ msgstr ""
 
 #: src/composants/InstallerApplication.tsx
 msgid "Ouvrez cette page dans Safari."
+msgstr ""
+
+#. En-tête masqué de la colonne du bouton d’ouverture
+#: src/composants/Tableau.tsx
+msgid "Ouvrir"
+msgstr ""
+
+#: src/composants/Tableau.tsx
+msgid "Ouvrir la fiche"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -553,7 +980,16 @@ msgstr ""
 
 #: src/composants/Coquille.tsx
 #: src/composants/MenuCompte.tsx
+#: src/pages/Preferences.tsx
 msgid "Préférences"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Préférences enregistrées."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Prénom et nom"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -566,6 +1002,10 @@ msgstr ""
 
 #: src/composants/Marque.tsx
 msgid "Propulsé par Relaytour : code source"
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Quand vous préparez un message, l’espace organisateur ouvre votre messagerie par un lien <0>mailto:</0>. Ce lien ouvre l’application de mail réglée par défaut sur votre appareil. Vous pouvez choisir ici une autre messagerie."
 msgstr ""
 
 #: src/pages/Connexion.tsx
@@ -582,7 +1022,16 @@ msgstr ""
 
 #: src/composants/Coquille.tsx
 #: src/composants/Recherche.tsx
+#: src/composants/Tableau.tsx
 msgid "Rechercher"
+msgstr ""
+
+#: src/composants/Tableau.tsx
+msgid "Rechercher dans la colonne"
+msgstr ""
+
+#: src/composants/Tableau.tsx
+msgid "Rechercher dans la colonne {libelle}"
 msgstr ""
 
 #: src/composants/Recherche.tsx
@@ -601,8 +1050,32 @@ msgstr ""
 msgid "Réessayer"
 msgstr ""
 
+#: src/composants/MesInvitations.tsx
+msgid "Refuser"
+msgstr ""
+
+#: src/composants/MesInvitations.tsx
+msgid "Refuser cette invitation ?"
+msgstr ""
+
+#: src/composants/Tableau.tsx
+msgid "Réinitialiser"
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+msgid "Relancer"
+msgstr ""
+
+#: src/composants/ChampImage.tsx
+msgid "Remplacer"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Replier le menu"
+msgstr ""
+
+#: src/composants/Panneau.tsx
+msgid "Replier le volet latéral"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -610,8 +1083,33 @@ msgstr ""
 msgid "Ressources"
 msgstr ""
 
+#: src/pages/Preferences.tsx
+msgid "Résumé par mail"
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+msgid "Retirer"
+msgstr ""
+
+#: src/composants/ChampImage.tsx
+msgid "Retirer : {libelle}"
+msgstr ""
+
+#: src/composants/PastillePerimetre.tsx
+#: src/composants/Personne.tsx
+msgid "Retirer {nom}"
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+msgid "Retirer cette invitation ?"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Rétroplanning"
+msgstr ""
+
+#: src/composants/MesInvitations.tsx
+msgid "Rôle d’admin"
 msgstr ""
 
 #: src/composants/Notifications.tsx
@@ -620,6 +1118,10 @@ msgstr ""
 
 #: src/pages/Connexion.tsx
 msgid "Saisissez ici le code du mail. Le lien du mail ouvre votre navigateur, pas l’application installée."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Saisissez un nom."
 msgstr ""
 
 #: src/pages/Connexion.tsx
@@ -632,6 +1134,7 @@ msgstr ""
 
 #: src/composants/GardeSession.tsx
 #: src/composants/MenuCompte.tsx
+#: src/pages/Preferences.tsx
 msgid "Se déconnecter"
 msgstr ""
 
@@ -639,8 +1142,20 @@ msgstr ""
 msgid "Sécurité"
 msgstr ""
 
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Séparateur des adresses copiées"
+msgstr ""
+
+#: src/composants/PreferenceOrganigramme.tsx
+msgid "Seules les personnes de l’activité lisent votre adresse. Vous pouvez retirer votre accord à tout moment. Une adresse déjà copiée par une autre personne reste en sa possession."
+msgstr ""
+
 #: src/pages/Connexion.tsx
 msgid "Si cette adresse a un accès, un code vient de lui être envoyé. Il est valable 10 minutes."
+msgstr ""
+
+#: src/composants/InvitationsEnAttente.tsx
+msgid "Souhait : {nomPerimetre}"
 msgstr ""
 
 #: src/composants/MenuCompte.tsx
@@ -651,8 +1166,32 @@ msgstr ""
 msgid "Support {organisation} ({relaytour})"
 msgstr ""
 
+#: src/composants/PreferencePush.tsx
+msgid "Sur iPhone et iPad, les notifications n’existent que dans l’application installée sur l’écran d’accueil."
+msgstr ""
+
+#: src/composants/Contribution.tsx
+msgid "Tâche créée : {pointsTacheCreee} point."
+msgstr ""
+
+#: src/composants/Contribution.tsx
+msgid "Tâche réalisée : {pointsTacheRealisee} points, +{pointsBonusATemps} si elle est faite à temps."
+msgstr ""
+
 #: src/composants/Recherche.tsx
 msgid "Tâches"
+msgstr ""
+
+#: src/composants/Contribution.tsx
+msgid "Tâches créées"
+msgstr ""
+
+#: src/composants/Avancement.tsx
+msgid "Tâches faites"
+msgstr ""
+
+#: src/composants/Contribution.tsx
+msgid "Tâches réalisées"
 msgstr ""
 
 #: src/composants/InstallerApplication.tsx
@@ -712,6 +1251,38 @@ msgstr ""
 msgid "Un admin vous ouvre une activité en vous affectant à l’un de ses périmètres."
 msgstr ""
 
+#: src/composants/PreferencePush.tsx
+msgid "Un autre admin affecte ou nomme une personne, ou une personne formule un souhait."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Un mail chaque matin, s’il y a du nouveau."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Un mail immédiat quand une autre personne modifie une tâche qui vous est assignée."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Un mail le matin quand une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou qu’elle est en retard."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Un mail par heure au plus quand une activité que vous administrez reçoit des demandes."
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Un message d’essai s’est-il ouvert dans « {libelleMessagerie} » ?"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Un seul mail pour la semaine."
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Une activité que vous administrez reçoit une demande, ou une personne accepte une invitation."
+msgstr ""
+
 #: src/lib/conflit.ts
 msgid "Une autre personne"
 msgstr ""
@@ -724,8 +1295,36 @@ msgstr ""
 msgid "Une autre version de cette fiche a été enregistrée."
 msgstr ""
 
+#: src/composants/PreferencePush.tsx
+msgid "Une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou elle est en retard."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Une notification quand un autre admin affecte, retire ou nomme une personne, ou quand une personne formule un souhait. Aucun mail ne part."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Une notification quand une autre personne crée, modifie ou termine une tâche ou une fiche de vos périmètres. Aucun mail ne part."
+msgstr ""
+
 #: src/composants/AvisMiseAJour.tsx
 msgid "Une nouvelle version est disponible."
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule."
+msgstr ""
+
+#: src/composants/Contribution.tsx
+msgid "Une tâche rouverte ou abandonnée perd ses points."
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Une tâche vous est assignée ou retirée, ou une autre personne modifie une de vos tâches."
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Vérifiez que votre adresse figure dans le champ « Cci » du message d’essai. Si ce champ est vide, cette messagerie ne reprend pas les adresses cachées : vous les collerez vous-même."
 msgstr ""
 
 #: src/composants/GardeSession.tsx
@@ -746,6 +1345,7 @@ msgstr ""
 
 #: src/composants/FournisseurActivite.tsx
 #: src/composants/GardeSession.tsx
+#: src/composants/MesInvitations.tsx
 msgid "Vos invitations"
 msgstr ""
 
@@ -753,16 +1353,45 @@ msgstr ""
 msgid "Vos périmètres"
 msgstr ""
 
+#: src/composants/PreferencePush.tsx
+msgid "Vos réunions"
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Vos rôles d’admin"
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
 #: src/pages/MonEspace.tsx
 msgid "Vos tâches"
+msgstr ""
+
+#: src/composants/PreferenceOrganigramme.tsx
+msgid "Votre adresse dans l’organigramme"
+msgstr ""
+
+#: src/composants/PreferenceOrganigramme.tsx
+msgid "Votre adresse ne s’affiche plus dans l’organigramme."
+msgstr ""
+
+#: src/composants/PreferenceOrganigramme.tsx
+msgid "Votre adresse peut s’afficher dans l’organigramme."
 msgstr ""
 
 #: src/composants/HorsConnexion.tsx
 msgid "Votre appareil n’a pas de réseau. L’espace organisateur a besoin d’une connexion pour afficher vos tâches et vos fiches."
 msgstr ""
 
+#: src/lib/push.ts
+msgid "Votre appareil n’a pas pu s’abonner aux notifications. Vérifiez votre connexion, puis réessayez."
+msgstr ""
+
 #: src/composants/HorsConnexion.tsx
 msgid "Votre appareil n’a plus de réseau, et vos modifications ne s’enregistrent pas. Gardez cet écran ouvert, puis réessayez au retour du réseau."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Votre compte"
 msgstr ""
 
 #: src/composants/GardeSession.tsx
@@ -773,12 +1402,36 @@ msgstr ""
 msgid "Votre compte n’appartient à aucune organisation ouverte."
 msgstr ""
 
+#: src/composants/Contribution.tsx
+msgid "Votre contribution"
+msgstr ""
+
 #: src/composants/NotesDeVersion.tsx
 msgid "Votre installation utilise Relaytour {version}. Cette fenêtre liste les changements de chaque version. Vous y lisez les notes qui concernent votre rôle."
 msgstr ""
 
 #: src/composants/PreferenceLangue.tsx
 msgid "Votre langue est enregistrée."
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Votre messagerie"
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Votre messagerie est enregistrée pour ce navigateur."
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Votre navigateur n’a pas quitté cette page. L’application n’est peut-être pas installée sur cet appareil, ou ne répond pas à ce lien."
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message."
+msgstr ""
+
+#: src/composants/PreferencePush.tsx
+msgid "Votre téléphone ou votre ordinateur affiche une notification, même quand l’espace organisateur est fermé."
 msgstr ""
 
 #: src/composants/Notifications.tsx
@@ -789,10 +1442,26 @@ msgstr ""
 msgid "Vous avez d’autres notifications dans vos organisations"
 msgstr ""
 
+#: src/composants/MesInvitations.tsx
+msgid "Vous avez déjà un compte. Une organisation qui vous invite ne lit rien de ce compte et ne vous compte pas dans son équipe avant votre accord."
+msgstr ""
+
+#: src/pages/Preferences.tsx
+msgid "Vous consultez l’espace vous-même."
+msgstr ""
+
+#: src/composants/MesInvitations.tsx
+msgid "Vous faites partie de {nomOrganisation}."
+msgstr ""
+
 #: src/lib/erreurs.ts
 msgid "Vous n’avez pas accès à cette action."
 msgstr ""
 
 #: src/pages/MonEspace.tsx
 msgid "Vous n’êtes affecté·e à aucun périmètre pour {cettePeriode}. Les admins gèrent les affectations. Dans <0>Tous les périmètres</0>, vous découvrez les périmètres et formulez vos souhaits."
+msgstr ""
+
+#: src/composants/PreferenceMessagerie.tsx
+msgid "Vous pouvez fermer le message d’essai sans l’envoyer."
 msgstr ""
