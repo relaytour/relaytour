@@ -1484,6 +1484,72 @@ msgid "Le mot compte {max} caractères au plus."
 msgstr "Le mot compte {max} caractères au plus."
 
 #. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Modification de vos tâches"
+msgstr "Modification de vos tâches"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Échéances"
+msgstr "Échéances"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Résumé par mail"
+msgstr "Résumé par mail"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+#: src/lib/desabonnement.ts
+msgid "Demandes pour rejoindre l’équipe"
+msgstr "Demandes pour rejoindre l’équipe"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Vous ne recevrez plus les mails « {libelle} » de {organisation}."
+msgstr "Vous ne recevrez plus les mails « {libelle} » de {organisation}."
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Lien non valide"
+msgstr "Lien non valide"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Ce lien de désabonnement n’est pas valide. Vous réglez vos mails dans les préférences de l’espace organisateur."
+msgstr "Ce lien de désabonnement n’est pas valide. Vous réglez vos mails dans les préférences de l’espace organisateur."
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Désabonnement enregistré"
+msgstr "Désabonnement enregistré"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Vous pouvez les réactiver dans vos préférences."
+msgstr "Vous pouvez les réactiver dans vos préférences."
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Se désabonner"
+msgstr "Se désabonner"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Confirmer le désabonnement"
+msgstr "Confirmer le désabonnement"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Gérer vos préférences"
+msgstr "Gérer vos préférences"
+
+#. js-lingui-explicit-id
+#: src/lib/desabonnement.ts
+msgid "Désabonnement"
+msgstr "Désabonnement"
+
+#. js-lingui-explicit-id
 #: src/lib/droits.ts
 msgid "Cette édition est archivée : ses tâches sont en lecture seule."
 msgstr "Cette édition est archivée : ses tâches sont en lecture seule."
@@ -2551,11 +2617,6 @@ msgstr "Répondre dans l’agenda"
 #: src/courriel/gabarits.genere.ts
 msgid "Répondre dans l’agenda : {lienAgenda}"
 msgstr "Répondre dans l’agenda : {lienAgenda}"
-
-#. js-lingui-explicit-id
-#: src/courriel/gabarits.genere.ts
-msgid "Demandes pour rejoindre l’équipe"
-msgstr "Demandes pour rejoindre l’équipe"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts

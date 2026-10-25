@@ -51,5 +51,6 @@
 | [0047](0047-langues-de-l-interface-et-traduction-communautaire.md) | Langues de l'interface et traduction communautaire | Acceptée, réalisée |
 | [0048](0048-premiers-pas-et-reconduction-d-une-edition.md) | Premiers pas d'une activité et reconduction d'une édition | Proposée |
 | [0049](0049-imports-depuis-l-espace-organisateur.md) | Imports depuis l'espace organisateur | Proposée |
+| [0050](0050-desabonnement-en-un-clic.md) | Désabonnement en un clic | Acceptée, réalisée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
