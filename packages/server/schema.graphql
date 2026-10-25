@@ -1347,6 +1347,16 @@ type LigneClassement {
   score: Score!
 }
 
+input LigneEquipeImport {
+  adresse: String!
+  contactPrincipal: Boolean!
+  ligne: Int!
+  nom: String!
+
+  """Les noms ou les identifiants des périmètres."""
+  perimetres: [String!]!
+}
+
 type LigneImport {
   cle: String!
 
@@ -1847,6 +1857,11 @@ type Mutation {
     prevenirParMail: Boolean = true
     source: String!
   ): RapportImportBenevoles!
+
+  """
+  Importe un lot de lignes de l’équipe : comptes, rattachements, affectations et contacts principaux qui manquent. Rien n’est retiré, et aucun mail ne part sans `envoyerMails`.
+  """
+  importerEquipe(editionId: ID!, envoyerMails: Boolean, lignes: [LigneEquipeImport!]!): RapportImportEquipe!
 
   """
   Importe les fiches des dossiers sources dans l’activité. Une fiche modifiée dans Relaytour n’est pas remplacée.
@@ -3070,6 +3085,11 @@ type Query {
   ): RapportImportBenevoles!
 
   """
+  Simule l’import d’un lot de lignes de l’équipe : rien ne change en base.
+  """
+  simulerImportEquipe(editionId: ID!, lignes: [LigneEquipeImport!]!): RapportImportEquipe!
+
+  """
   Simule l’import des fiches depuis l’espace de fichiers : rien ne change en base.
   """
   simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
@@ -3144,6 +3164,20 @@ type RapportImportBenevoles {
   personnes: Int!
   places: Int!
   simulation: Boolean!
+}
+
+"""
+Ce que l’import de l’équipe fait, ou ferait. Les nombres ne distinguent pas une personne nouvelle d’une personne déjà membre (ADR 0018).
+"""
+type RapportImportEquipe {
+  affectationsCreees: Int!
+  contactsPrincipaux: Int!
+  invitationsEnAttente: Int!
+  lignes: [LigneImportTableur!]!
+  mailsEquipe: Int!
+  mailsInvitations: Int!
+  personnes: Int!
+  rattachements: Int!
 }
 
 """

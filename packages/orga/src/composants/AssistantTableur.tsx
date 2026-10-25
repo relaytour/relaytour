@@ -72,6 +72,10 @@ interface Props<C extends string, L extends { ligne: number }> {
   cleReglages?: string
   simuler: (lot: L[]) => Promise<LigneRapportTableur[]>
   importer: (lot: L[]) => Promise<LigneRapportTableur[]>
+  /** Appelé avant le premier lot d'une vérification ou d'un import. */
+  onDebut?: (ecrire: boolean) => void
+  /** Ce que la vérification annonce en plus des lignes, par exemple les créations. */
+  resumeVerification?: ReactNode
   /** Le résumé propre à l'import, affiché à la fin. */
   bilan?: ReactNode
   /** L'action qui suit l'import, par exemple un lien vers l'écran concerné. */
@@ -129,6 +133,8 @@ export default function AssistantTableur<
   cleReglages = '',
   simuler,
   importer,
+  onDebut,
+  resumeVerification,
   bilan,
   suite,
 }: Props<C, L>) {
@@ -151,6 +157,8 @@ export default function AssistantTableur<
   const [enCours, setEnCours] = useState(false)
   const [progression, setProgression] = useState(0)
   const [fini, setFini] = useState(false)
+  // Le message d'un import arrêté en cours de route : les lots déjà écrits restent.
+  const [echec, setEchec] = useState<string | null>(null)
 
   const feuille = feuilles.find(f => f.nom === nomFeuille) ?? feuilles[0]
   const tableau = feuille?.tableau
@@ -206,9 +214,11 @@ export default function AssistantTableur<
     if (!construction) return
     setEnCours(true)
     setProgression(0)
+    setEchec(null)
+    onDebut?.(ecrire)
+    const sorties: LigneRapportTableur[] = []
     try {
       const lots = enLots(construction.lignes)
-      const sorties: LigneRapportTableur[] = []
       for (const [rang, lot] of lots.entries()) {
         sorties.push(...(await appel(lot)))
         setProgression(Math.round(((rang + 1) / lots.length) * 100))
@@ -216,7 +226,15 @@ export default function AssistantTableur<
       setRapport({ lignes: sorties, cle: cleReglages })
       if (ecrire) setFini(true)
     } catch (e) {
-      message.error(messageErreur(e))
+      if (ecrire) {
+        // Les lots déjà écrits le restent : l'écran les montre, et un nouvel
+        // import ne les recrée pas.
+        setRapport({ lignes: sorties, cle: cleReglages })
+        setEchec(messageErreur(e))
+        setFini(true)
+      } else {
+        message.error(messageErreur(e))
+      }
     } finally {
       setEnCours(false)
     }
@@ -464,6 +482,7 @@ export default function AssistantTableur<
                 showIcon
                 title={t`${plural(aImporter, { one: '# ligne à importer', other: '# lignes à importer' })}, ${plural(deja, { one: '# déjà importée', other: '# déjà importées' })}, ${plural(ecartees, { one: '# écartée', other: '# écartées' })}.`}
               />
+              {resumeVerification}
               {tableauRapport}
               <Space wrap>
                 {ecartees > 0 && (
@@ -496,8 +515,28 @@ export default function AssistantTableur<
             <Progress percent={progression} />
           ) : (
             <>
+              {echec !== null && (
+                <Alert
+                  type="error"
+                  showIcon
+                  title={t`L’import s’est arrêté avant la fin : ${echec}`}
+                  description={t`Les lignes ci-dessous sont écrites. Revenez à la vérification pour relancer l’import : une ligne déjà importée ne sera pas recréée.`}
+                  action={
+                    <Button
+                      onClick={() => {
+                        setFini(false)
+                        setEchec(null)
+                        setRapport(null)
+                        setEtape(2)
+                      }}
+                    >
+                      <Trans>Revenir à la vérification</Trans>
+                    </Button>
+                  }
+                />
+              )}
               <Result
-                status="success"
+                status={echec === null ? 'success' : 'warning'}
                 title={t`${plural(importees, { one: '# ligne importée', other: '# lignes importées' })}.`}
                 subTitle={
                   deja + ecartees > 0
