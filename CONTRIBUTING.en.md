@@ -19,8 +19,9 @@ This file summarizes the repository rules in English. The French [CONTRIBUTING.m
 - `packages/tokens`: theme model and default themes. `packages/commun`: rules shared by the server and the organizer workspace.
 - `packages/database`: Prisma 6 on MariaDB 11.8.
 - `content/exemple`: a fictional sample organization. Real organization content lives outside this repository.
+- `content/exemple-en`: the same sample organization in English, with the same identifiers. The English screenshots of the website use it.
 - `infra/`: minimal reference deployment. Real operations live in a separate repository (ADR 0007).
-- `site/`: the website published on GitHub Pages, with its English version in `site/en/`.
+- `site/`: the website published on GitHub Pages, with its English version in `site/en/`. `outils/captures.mjs --langue en` takes the English screenshots (`site/en/captures/`).
 
 ## Commands
 

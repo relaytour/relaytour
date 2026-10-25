@@ -158,6 +158,26 @@ describe('imitation d’un export de billetterie', () => {
     expect(sensibles).toEqual(['Genre', 'Montant'])
   })
 
+  it('reconnaît les en-têtes anglais, colonnes sensibles comprises', async () => {
+    const tableau = await lireCsv(essai('ticketing.csv'))
+    expect(champsDe(tableau)).toMatchObject({
+      'Ticket number': 'REF_EXTERNE',
+      'Participant last name': 'NOM',
+      'Participant first name': 'PRENOM',
+      Email: 'COURRIEL',
+      Phone: 'TELEPHONE',
+      Gender: 'IGNORER',
+      Amount: 'IGNORER',
+      'Order date': 'DATE_ACCORD',
+      Services: 'VALEURS',
+      'I add details in writing': 'PRECISIONS',
+    })
+    const sensibles = detecterColonnes(tableau)
+      .filter(c => c.sensible)
+      .map(c => c.entete)
+    expect(sensibles).toEqual(['Gender', 'Amount'])
+  })
+
   it('écarte le lot de billets, lit « 0 » comme choisi et associe les postes aux séquences', async () => {
     const tableau = await lireCsv(essai('billetterie.csv'))
     const champs = detecterColonnes(tableau).map(c => c.champ)
