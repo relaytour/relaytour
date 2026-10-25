@@ -2921,7 +2921,7 @@ msgstr "Choisissez toute l’activité, ou au moins un périmètre ou un groupe.
 msgid "Choisissez un dossier lié. Les lecteurs de la fiche lisent ses documents."
 msgstr "Choisissez un dossier lié. Les lecteurs de la fiche lisent ses documents."
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Choisissez un fichier CSV ou Excel (.xlsx)."
 msgstr "Choisissez un fichier CSV ou Excel (.xlsx)."
 
@@ -3062,7 +3062,7 @@ msgstr "Collez le texte dans le message"
 msgid "Collez les adresses et le texte dans le message"
 msgstr "Collez les adresses et le texte dans le message"
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Colonne {numero}"
 msgstr "Colonne {numero}"
 
@@ -6216,7 +6216,7 @@ msgid "Lieux de l’activité"
 msgstr "Lieux de l’activité"
 
 #. En-tête d’une colonne du fichier des lignes écartées
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Ligne"
 msgstr "Ligne"
 
@@ -6627,7 +6627,7 @@ msgid "Mot pour les admins (facultatif)"
 msgstr "Mot pour les admins (facultatif)"
 
 #. En-tête d’une colonne du fichier des lignes écartées
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Motif"
 msgstr "Motif"
 
@@ -9353,15 +9353,15 @@ msgstr "Un dossier source compte trop d’éléments pour les lire tous. Rangez 
 msgid "Un événement, une section ou une instance : chaque activité a ses périodes, ses périmètres, ses fiches et ses tâches types."
 msgstr "Un événement, une section ou une instance : chaque activité a ses périodes, ses périmètres, ses fiches et ses tâches types."
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Un fichier compte {COLONNES_MAX} colonnes au plus."
 msgstr "Un fichier compte {COLONNES_MAX} colonnes au plus."
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Un fichier compte {LIGNES_MAX} lignes au plus."
 msgstr "Un fichier compte {LIGNES_MAX} lignes au plus."
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Un fichier pèse 2 Mo au plus."
 msgstr "Un fichier pèse 2 Mo au plus."
 

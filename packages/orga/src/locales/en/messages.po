@@ -2921,7 +2921,7 @@ msgstr "Choose the whole activity, or at least one area or group."
 msgid "Choisissez un dossier lié. Les lecteurs de la fiche lisent ses documents."
 msgstr "Choose a linked folder. Readers of the sheet can read its documents."
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Choisissez un fichier CSV ou Excel (.xlsx)."
 msgstr "Choose a CSV or Excel (.xlsx) file."
 
@@ -3062,7 +3062,7 @@ msgstr "Paste the text into the message"
 msgid "Collez les adresses et le texte dans le message"
 msgstr "Paste the addresses and the text into the message"
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Colonne {numero}"
 msgstr "Column {numero}"
 
@@ -6216,7 +6216,7 @@ msgid "Lieux de l’activité"
 msgstr "Activity venues"
 
 #. En-tête d’une colonne du fichier des lignes écartées
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Ligne"
 msgstr "Row"
 
@@ -6627,7 +6627,7 @@ msgid "Mot pour les admins (facultatif)"
 msgstr "Note for admins (optional)"
 
 #. En-tête d’une colonne du fichier des lignes écartées
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Motif"
 msgstr "Reason"
 
@@ -9353,15 +9353,15 @@ msgstr "A source folder contains too many items to read them all. Spread its she
 msgid "Un événement, une section ou une instance : chaque activité a ses périodes, ses périmètres, ses fiches et ses tâches types."
 msgstr "An event, a section or an instance: each activity has its own periods, areas, sheets and task templates."
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Un fichier compte {COLONNES_MAX} colonnes au plus."
 msgstr "A file can have up to {COLONNES_MAX} columns."
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Un fichier compte {LIGNES_MAX} lignes au plus."
 msgstr "A file can have up to {LIGNES_MAX} rows."
 
-#: src/lib/import-benevoles.ts
+#: src/lib/import-tableur.ts
 msgid "Un fichier pèse 2 Mo au plus."
 msgstr "A file can be up to 2 MB."
 
