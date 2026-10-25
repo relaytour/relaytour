@@ -18,7 +18,8 @@ import { cheminManifest } from '../lib/application.ts'
 import { validerDates, validerEdition } from '../lib/editions.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
-import { i18n } from '../lib/langue.ts'
+import { i18n, langueCourante } from '../lib/langue.ts'
+import { listeDesModesDEmploi } from '../lib/modes-d-emploi.ts'
 import {
   couleurValide,
   descriptionValide,
@@ -483,7 +484,12 @@ const OrganisationRef = builder
       modesDEmploi: t.string({
         description:
           'Adresse de la liste des modes d’emploi de l’espace organisateur, un par rôle.',
-        resolve: async () => (await import('../env.ts')).env.MODES_D_EMPLOI_URL,
+        // La liste suit la langue de la requête (ADR 0047).
+        resolve: async () =>
+          listeDesModesDEmploi(
+            (await import('../env.ts')).env,
+            langueCourante()
+          ),
       }),
     }),
   })

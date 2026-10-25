@@ -13,6 +13,13 @@ fr:
     rôle : admin de l'organisation, admin d'activité, ou référente et
     référent. Une invitation renvoyée après une nomination contient le mode
     d'emploi du nouveau rôle.
+en:
+  titre: >-
+    The invitation email contains the link to the user guide for your role
+  texte: >-
+    An invited person receives the link to the user guide that matches their
+    role: organization admin, activity admin, or coordinator. An invitation
+    resent after a naming contains the user guide for the new role.
 ---
 
 - `lib/modes-d-emploi.ts` : le rôle se lit au moment de l'envoi, dans

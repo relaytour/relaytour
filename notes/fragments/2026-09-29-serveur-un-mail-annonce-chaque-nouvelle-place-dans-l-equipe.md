@@ -15,6 +15,16 @@ fr:
     arrivent dans un seul mail. L'invitation liste aussi les périmètres de la
     personne ; sans périmètre, elle explique comment en obtenir un. Un souhait,
     un contact principal ou un retrait n'envoient aucun mail.
+en:
+  titre: >-
+    An email announces each new place in the team
+  texte: >-
+    A person appointed to an area or named admin receives the “Your place in the
+    team changed” email, with the description of each new area and the user
+    guide for their role. Changes made within ten minutes arrive in a single
+    email. The invitation also lists the person’s areas; without an area, it
+    explains how to get one. An interest, a main contact, or a removal sends no
+    email.
 ---
 
 - `lib/equipe.ts` : fenêtres fixes de dix minutes, job différé

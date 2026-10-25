@@ -11,6 +11,12 @@ fr:
   texte: >-
     L'écran de connexion ouvre le clavier numérique, et le téléphone propose le
     code reçu quand il le reconnaît.
+en:
+  titre: >-
+    The sign-in code is quicker to enter on a phone
+  texte: >-
+    The sign-in screen opens the numeric keypad, and the phone suggests the code
+    it received when it recognizes it.
 ---
 
 Lot 2 de l'ADR 0023. `Input.OTP` reçoit `inputMode="numeric"` et

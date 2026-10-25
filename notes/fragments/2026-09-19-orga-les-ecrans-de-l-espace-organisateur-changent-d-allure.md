@@ -14,6 +14,14 @@ fr:
     vos périmètres et votre contribution. Les fiches s'affichent en cartes ou en
     liste condensée, selon votre choix. Chaque périmètre indique ses personnes
     affectées et leur nombre de tâches ouvertes.
+en:
+  titre: >-
+    The organizer workspace screens get a new look
+  texte: >-
+    My space, the timeline, sheets, areas, and preferences follow the new design
+    system. A right column summarizes progress, your areas, and your
+    contribution. Sheets appear as cards or as a condensed list, as you choose.
+    Each area shows its appointed people and their number of open tasks.
 ---
 
 - Composants partagés dans `packages/orga/src/composants` : `Panneau`, `DeuxColonnes`, `Section`, `Puces`, `PuceBascule`, `PastilleEtat`, `PastilleStatut`, `EtiquettePerimetre`, `Avatar`, `PersonneNommee`, `ChoixEdition`, `LigneTache`.

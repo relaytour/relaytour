@@ -13,6 +13,14 @@ fr:
     recrutement et sa page d'équipe. Les mails d'une tâche prennent l'identité
     de son activité. L'export écrit tout le contenu de l'organisation, et un
     import ne remplace plus une modification faite dans l'application.
+en:
+  titre: >-
+    Each activity has its own identity, and the export includes all the content
+  texte: >-
+    An activity can have its own logo, colors, recruitment contact, and team
+    page. Task emails take the identity of their activity. The export writes all
+    the organization’s content, and an import no longer replaces a change made
+    in the application.
 ---
 
 - ADR 0009 : l'application devient la source de vérité du contenu ; export

@@ -13,6 +13,14 @@ fr:
     bulles et les messages s'affichent sur un verre blanc presque opaque et
     très flou. Le contenu de la page ne gêne plus la lecture. Le voile sous
     une fenêtre floute la page au lieu de l'assombrir.
+en:
+  titre: >-
+    Windows and lists appear in frosted white glass
+  texte: >-
+    Modal windows, drawers, dropdown lists, menus, tooltips, and messages appear
+    on an almost opaque, heavily blurred white glass. The page content no longer
+    interferes with reading. The overlay behind a window blurs the page instead
+    of darkening it.
 ---
 
 - `--rt-verre-depoli` et `--rt-flou-depoli` dans `global.css`.

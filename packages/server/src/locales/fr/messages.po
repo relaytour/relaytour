@@ -2498,9 +2498,19 @@ msgstr "Cet espace est propulsé par Relaytour, logiciel libre."
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "Ouvrir l’agenda : {lienAgenda}"
+msgstr "Ouvrir l’agenda : {lienAgenda}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 #: src/courriel/messages.ts
 msgid "Ouvrir mon espace"
 msgstr "Ouvrir mon espace"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ouvrir mon espace : {lienEspace}"
+msgstr "Ouvrir mon espace : {lienEspace}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -2529,8 +2539,18 @@ msgstr "Si vous n’avez pas demandé ce code, ignorez ce message. Personne ne p
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "Se connecter avec ce code : {lienConnexion}"
+msgstr "Se connecter avec ce code : {lienConnexion}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 msgid "Répondre dans l’agenda"
 msgstr "Répondre dans l’agenda"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Répondre dans l’agenda : {lienAgenda}"
+msgstr "Répondre dans l’agenda : {lienAgenda}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -2564,6 +2584,11 @@ msgstr "Vous pouvez désactiver ces mails dans vos préférences :"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "Voir les demandes : {lienDemandes}"
+msgstr "Voir les demandes : {lienDemandes}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 msgid "Votre place dans l’équipe a changé"
 msgstr "Votre place dans l’équipe a changé"
 
@@ -2591,6 +2616,16 @@ msgstr "Le mode d’emploi {roleModeDEmploi} présente vos écrans et vos action
 #: src/courriel/gabarits.genere.ts
 msgid "Lire le mode d’emploi"
 msgstr "Lire le mode d’emploi"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ouvrir l’espace organisateur : {lienConnexion}"
+msgstr "Ouvrir l’espace organisateur : {lienConnexion}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Lire le mode d’emploi : {lienModeDEmploi}"
+msgstr "Lire le mode d’emploi : {lienModeDEmploi}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -2635,6 +2670,11 @@ msgstr "Se connecter"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "Se connecter : {lienConnexion}"
+msgstr "Se connecter : {lienConnexion}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 msgid "Échéances de vos tâches"
 msgstr "Échéances de vos tâches"
 
@@ -2652,6 +2692,11 @@ msgstr "Ces tâches vous sont assignées et demandent votre attention :"
 #: src/courriel/gabarits.genere.ts
 msgid "Vous pouvez désactiver ces rappels dans vos préférences :"
 msgstr "Vous pouvez désactiver ces rappels dans vos préférences :"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ouvrir mon espace : {lienConnexion}"
+msgstr "Ouvrir mon espace : {lienConnexion}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -2702,6 +2747,11 @@ msgstr "Vous recevez ce message parce que cette tâche vous est assignée."
 #: src/courriel/gabarits.genere.ts
 msgid "Voir le périmètre"
 msgstr "Voir le périmètre"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Voir le périmètre : {lienPerimetre}"
+msgstr "Voir le périmètre : {lienPerimetre}"
 
 #. Statut d’une tâche
 #. js-lingui-explicit-id

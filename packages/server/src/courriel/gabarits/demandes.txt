@@ -6,7 +6,7 @@
 
 [[Aucun compte n’existe avant votre décision. Vous acceptez ou refusez chaque demande dans l’onglet « Demandes » de l’écran « Personnes ».]]
 
-[[Voir les demandes]] : {{lienDemandes}}
+[[Voir les demandes : {{lienDemandes}}]]
 
 [[Vous pouvez désactiver ces mails dans vos préférences :]] {{lienPreferences}}
 

@@ -8,10 +8,10 @@
 
 [[Vos périmètres, vos tâches et leurs fiches méthode vous attendent dans l’espace organisateur.]]
 
-[[Ouvrir l’espace organisateur]] : {{lienConnexion}}
+[[Ouvrir l’espace organisateur : {{lienConnexion}}]]
 
 [[Le mode d’emploi {{roleModeDEmploi}} présente vos écrans et vos actions.]]
-[[Lire le mode d’emploi]] : {{lienModeDEmploi}}
+[[Lire le mode d’emploi : {{lienModeDEmploi}}]]
 
 --
 [[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace

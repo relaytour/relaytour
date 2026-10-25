@@ -8,7 +8,7 @@
 
 {{consigne}}
 
-[[Ouvrir l’agenda]] : {{lienAgenda}}
+[[Ouvrir l’agenda : {{lienAgenda}}]]
 
 --
 [[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
