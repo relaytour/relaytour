@@ -1,0 +1,17 @@
+# Task templates of the Logistics department.
+taches:
+  - modele: inventorier-le-materiel
+    titre: Take stock of the available equipment
+    description: >-
+      The coordinators count the stored equipment (tables, marquees, sound system) and list what each sport is missing.
+    echeance: J-120
+  - modele: commander-le-materiel-manquant
+    titre: Order or rent the missing equipment
+    description: >-
+      The coordinators request quotes, have the treasury approve them, and confirm the deliveries.
+    echeance: J-60
+  - modele: planifier-le-montage
+    titre: Plan the setup and teardown
+    description: >-
+      The coordinators set the setup and teardown slots and request volunteers from the Volunteers department.
+    echeance: J-14

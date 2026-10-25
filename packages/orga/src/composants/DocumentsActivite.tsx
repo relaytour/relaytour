@@ -1,4 +1,6 @@
 import { CloudOutlined, FolderOutlined, TeamOutlined } from '@ant-design/icons'
+import { plural, t } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react/macro'
 import { Empty } from 'antd'
 import { useMemo, useState } from 'react'
 
@@ -7,10 +9,15 @@ import { useActivite } from '../lib/activite'
 import EtiquettePerimetre from './EtiquettePerimetre'
 import ExplorateurDossier from './ExplorateurDossier'
 import { Section } from './Panneau'
-import { langueActive } from '../lib/langue'
+import { comparerTextes } from '../lib/langue'
 
 type Dossier = DossiersLiesQuery['dossiersLies'][number]
 type PerimetreLu = Dossier['lecteursLus']['perimetres'][number]
+
+/** « 3 dossiers ». */
+function nombreDeDossiers(nombre: number): string {
+  return t`${plural(nombre, { one: '# dossier', other: '# dossiers' })}`
+}
 
 /** Une section de la vue : toute l'activité, un groupe ou un périmètre. */
 interface SectionDossiers {
@@ -32,6 +39,7 @@ export default function DocumentsActivite({
 }: {
   dossiers: Dossier[]
 }) {
+  const { t } = useLingui()
   const { lien, libelleGroupe } = useActivite()
   const [ouvert, setOuvert] = useState<string | null>(null)
 
@@ -73,7 +81,7 @@ export default function DocumentsActivite({
       }
     }
     return [...map.values()].sort(
-      (a, b) => a.ordre - b.ordre || a.tri.localeCompare(b.tri, langueActive())
+      (a, b) => a.ordre - b.ordre || comparerTextes(a.tri, b.tri)
     )
   }, [dossiers, libelleGroupe])
 
@@ -91,7 +99,9 @@ export default function DocumentsActivite({
   if (dossiers.length === 0) {
     return (
       <div className="rt-verre rt-panneau">
-        <Empty description="Aucun dossier du fournisseur cloud n’est lié à vos périmètres." />
+        <Empty
+          description={t`Aucun dossier du fournisseur cloud n’est lié à vos périmètres.`}
+        />
       </div>
     )
   }
@@ -115,10 +125,10 @@ export default function DocumentsActivite({
                 {libelleGroupe(groupe.groupe, true)}
               </span>
             ) : (
-              'Toute l’activité'
+              t`Toute l’activité`
             )
           }
-          compte={`${groupe.dossiers.length} ${groupe.dossiers.length > 1 ? 'dossiers' : 'dossier'}`}
+          compte={nombreDeDossiers(groupe.dossiers.length)}
         >
           <ul className="rt-grille-fiches">
             {groupe.dossiers.map(d => (
@@ -140,8 +150,8 @@ export default function DocumentsActivite({
                   <span className="rt-date">
                     <CloudOutlined aria-hidden />{' '}
                     {d.disponible
-                      ? 'Fournisseur cloud'
-                      : 'Fournisseur déconnecté'}
+                      ? t`Fournisseur cloud`
+                      : t`Fournisseur déconnecté`}
                   </span>
                 </button>
               </li>

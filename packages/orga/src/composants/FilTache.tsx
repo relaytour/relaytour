@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Drawer, Input, Skeleton } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
@@ -70,6 +71,7 @@ export default function FilTache({
   ouvert: boolean
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { message, modal } = App.useApp()
   const { data, error, loading } = useQuery(FIL_TACHE, {
     variables: { id: tache.id },
@@ -103,6 +105,8 @@ export default function FilTache({
   const fil = data?.filTache
   const elements = fil ? composerFil(fil, avecHistorique) : []
   const fin = useRef<HTMLDivElement>(null)
+  const nombreAffiche = fil?.commentaires.length
+  const nombreTotal = fil?.nombreCommentaires
   const nombre = elements.length
   // Le fil s'ouvre sur son dernier élément, et y revient à chaque ajout.
   useEffect(() => {
@@ -133,18 +137,23 @@ export default function FilTache({
     }
   }
 
+  const titreModification = (iso: string) => {
+    const dateModification = instantDuFil(iso)
+    return t`Modifié le ${dateModification}`
+  }
+
   const retirer = async (commentaire: Commentaire) => {
     const confirme = await modal.confirm({
-      title: 'Supprimer ce commentaire ?',
-      content: 'La suppression est définitive.',
-      okText: 'Supprimer',
+      title: t`Supprimer ce commentaire ?`,
+      content: t`La suppression est définitive.`,
+      okText: t`Supprimer`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
     })
     if (!confirme) return
     try {
       await supprimer({ variables: { id: commentaire.id } })
-      message.success('Le commentaire est supprimé.')
+      message.success(t`Le commentaire est supprimé.`)
     } catch (erreur) {
       message.error(messageErreur(erreur))
     }
@@ -159,7 +168,7 @@ export default function FilTache({
       className="rt-fil-volet"
       extra={
         <PuceBascule actif={avecHistorique} onChange={setAvecHistorique}>
-          Historique
+          <Trans>Historique</Trans>
         </PuceBascule>
       }
       footer={
@@ -183,8 +192,8 @@ export default function FilTache({
               }}
               autoSize={{ minRows: 2, maxRows: 8 }}
               maxLength={COMMENTAIRE_MAX}
-              placeholder="Écrire un commentaire : un compte rendu, une information, une question."
-              aria-label="Votre commentaire"
+              placeholder={t`Écrire un commentaire : un compte rendu, une information, une question.`}
+              aria-label={t`Votre commentaire`}
             />
             <Button
               type="primary"
@@ -192,12 +201,12 @@ export default function FilTache({
               loading={envoi.loading}
               disabled={texte.trim() === ''}
             >
-              Publier
+              <Trans>Publier</Trans>
             </Button>
           </form>
         ) : fil ? (
           <p className="rt-note" style={{ margin: 0 }}>
-            Vous lisez ce fil sans pouvoir y écrire.
+            <Trans>Vous lisez ce fil sans pouvoir y écrire.</Trans>
           </p>
         ) : undefined
       }
@@ -205,7 +214,9 @@ export default function FilTache({
       {fil === undefined ? (
         error ? (
           <p className="rt-note">
-            Le fil n’a pas pu être chargé. Rechargez la page dans un instant.
+            <Trans>
+              Le fil n’a pas pu être chargé. Rechargez la page dans un instant.
+            </Trans>
           </p>
         ) : (
           loading && <Skeleton active />
@@ -214,15 +225,17 @@ export default function FilTache({
         <>
           {fil.nombreCommentaires > fil.commentaires.length && (
             <p className="rt-note">
-              Le fil affiche les {fil.commentaires.length} derniers commentaires
-              sur {fil.nombreCommentaires}.
+              <Trans>
+                Le fil affiche les {nombreAffiche} derniers commentaires sur{' '}
+                {nombreTotal}.
+              </Trans>
             </p>
           )}
           {elements.length === 0 ? (
             <p className="rt-note">
-              Aucun commentaire pour l’instant.
+              <Trans>Aucun commentaire pour l’instant.</Trans>
               {fil.peutCommenter &&
-                ' Notez ici où vous en êtes : toute l’équipe du périmètre le lira.'}
+                ` ${t`Notez ici où vous en êtes : toute l’équipe du périmètre le lira.`}`}
             </p>
           ) : (
             <ol className="rt-fil">
@@ -247,9 +260,9 @@ export default function FilTache({
                       <p className="rt-fil-commentaire-tete">
                         <strong>
                           {element.commentaire.auteur === null
-                            ? 'Compte supprimé'
+                            ? t`Compte supprimé`
                             : element.commentaire.auteur.id === moiId
-                              ? 'Vous'
+                              ? t`Vous`
                               : element.commentaire.auteur.nom}
                         </strong>
                         <time dateTime={element.le}>
@@ -257,9 +270,15 @@ export default function FilTache({
                         </time>
                         {element.commentaire.modifieLe && (
                           <span
-                            title={`Modifié le ${instantDuFil(element.commentaire.modifieLe)}`}
+                            title={titreModification(
+                              element.commentaire.modifieLe
+                            )}
                           >
-                            modifié
+                            {t({
+                              message: 'modifié',
+                              comment:
+                                'Mention sur un commentaire modifié après sa publication',
+                            })}
                           </span>
                         )}
                       </p>
@@ -276,7 +295,7 @@ export default function FilTache({
                             }
                             autoSize={{ minRows: 2, maxRows: 10 }}
                             maxLength={COMMENTAIRE_MAX}
-                            aria-label="Modifier votre commentaire"
+                            aria-label={t`Modifier votre commentaire`}
                           />
                           <div className="rt-fil-actions">
                             <Button
@@ -286,13 +305,13 @@ export default function FilTache({
                               disabled={enEdition.texte.trim() === ''}
                               onClick={() => void enregistrer()}
                             >
-                              Enregistrer
+                              <Trans>Enregistrer</Trans>
                             </Button>
                             <Button
                               size="small"
                               onClick={() => setEnEdition(undefined)}
                             >
-                              Annuler
+                              <Trans>Annuler</Trans>
                             </Button>
                           </div>
                         </div>
@@ -313,7 +332,7 @@ export default function FilTache({
                                     })
                                   }
                                 >
-                                  Modifier
+                                  <Trans>Modifier</Trans>
                                 </Button>
                               )}
                               {element.commentaire.peutSupprimer && (
@@ -325,7 +344,7 @@ export default function FilTache({
                                     void retirer(element.commentaire)
                                   }
                                 >
-                                  Supprimer
+                                  <Trans>Supprimer</Trans>
                                 </Button>
                               )}
                             </div>

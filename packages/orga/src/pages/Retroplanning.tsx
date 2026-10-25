@@ -1,4 +1,6 @@
 import { useQuery } from '@apollo/client/react'
+import { plural, t as traduire } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Empty, Result, Select, Skeleton } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
@@ -24,7 +26,7 @@ import { grouperParMois, libelleMois } from '../lib/retroplanning'
 import { estOuverte } from '../lib/taches'
 import { useActivite } from '../lib/activite'
 import { regrouperDeclinaisons } from '../lib/declinaisons'
-import { langueActive } from '../lib/langue'
+import { comparerTextes } from '../lib/langue'
 
 const RETROPLANNING = graphql(`
   query Retroplanning($editionId: ID!) {
@@ -72,15 +74,17 @@ type FiltreStatut = 'ouvertes' | 'retard' | 'toutes'
 type Regroupement = 'mois' | 'phase'
 const REGROUPEMENTS = ['mois', 'phase'] as const
 
-const compteTaches = (n: number) => `${n} ${n > 1 ? 'tâches' : 'tâche'}`
+const compteTaches = (n: number) =>
+  traduire`${plural(n, { one: '# tâche', other: '# tâches' })}`
 
 function titreGroupe(mois: string | null): string {
-  if (mois === null) return 'Sans échéance'
+  if (mois === null) return traduire`Sans échéance`
   const libelle = libelleMois(mois)
   return libelle.charAt(0).toUpperCase() + libelle.slice(1)
 }
 
 export default function Retroplanning() {
+  const { t } = useLingui()
   const { lien, periode, activite, gere } = useActivite()
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
@@ -112,10 +116,10 @@ export default function Retroplanning() {
   // groupe dans l'ordre que déclare l'activité.
   const options = useMemo(() => {
     const presents = [
-      ...new Map((toutes ?? []).map(t => [t.perimetre.id, t.perimetre])),
+      ...new Map((toutes ?? []).map(x => [x.perimetre.id, x.perimetre])),
     ]
       .map(([, p]) => p)
-      .sort((a, b) => a.nom.localeCompare(b.nom, langueActive()))
+      .sort((a, b) => comparerTextes(a.nom, b.nom))
     return activite.groupes
       .map(groupe => ({
         label: groupe.libellePluriel,
@@ -128,7 +132,7 @@ export default function Retroplanning() {
 
   const couleurDe = useMemo(
     () =>
-      new Map((toutes ?? []).map(t => [t.perimetre.id, t.perimetre.couleur])),
+      new Map((toutes ?? []).map(x => [x.perimetre.id, x.perimetre.couleur])),
     [toutes]
   )
 
@@ -140,13 +144,13 @@ export default function Retroplanning() {
   const taches = useMemo(
     () =>
       (toutes ?? []).filter(
-        t =>
-          (perimetres.length === 0 || perimetres.includes(t.perimetre.id)) &&
-          (type === 'tous' || t.perimetre.groupe === type) &&
+        x =>
+          (perimetres.length === 0 || perimetres.includes(x.perimetre.id)) &&
+          (type === 'tous' || x.perimetre.groupe === type) &&
           (statut === 'toutes' ||
-            (statut === 'retard' ? t.enRetard : estOuverte(t))) &&
-          (!mesPerimetres || affectes.has(t.perimetre.id)) &&
-          (!assigneesAMoi || t.assignes.some(p => p.id === moi?.id))
+            (statut === 'retard' ? x.enRetard : estOuverte(x))) &&
+          (!mesPerimetres || affectes.has(x.perimetre.id)) &&
+          (!assigneesAMoi || x.assignes.some(p => p.id === moi?.id))
       ),
     [
       toutes,
@@ -176,7 +180,7 @@ export default function Retroplanning() {
   }, [taches, activite.phases, activite.groupes, debut])
   // Un seul périmètre dans la sélection : son nom ne se répète pas sous chaque phase.
   const plusieursPerimetres = useMemo(
-    () => new Set(taches.map(t => t.perimetre.id)).size > 1,
+    () => new Set(taches.map(x => x.perimetre.id)).size > 1,
     [taches]
   )
 
@@ -185,25 +189,28 @@ export default function Retroplanning() {
   const aPrendre = useMemo(
     () =>
       (toutes ?? []).filter(
-        t =>
-          estOuverte(t) &&
-          t.assignes.length === 0 &&
-          affectes.has(t.perimetre.id)
+        x =>
+          estOuverte(x) &&
+          x.assignes.length === 0 &&
+          affectes.has(x.perimetre.id)
       ),
     [toutes, affectes]
   )
 
+  const aucunePeriode = periode.Aucune
+  const cettePeriode = periode.cette
+  const dePeriode = periode.de
   if (editionId === undefined && courante && !courante.editionCourante) {
     return (
-      <Result status="info" title={`${periode.Aucune} n’est en préparation.`} />
+      <Result status="info" title={t`${aucunePeriode} n’est en préparation.`} />
     )
   }
   if (error && !data) {
     return (
       <Result
         status="warning"
-        title="Le rétroplanning n’a pas pu être chargé."
-        subTitle="Rechargez la page dans un instant."
+        title={t`Le rétroplanning n’a pas pu être chargé.`}
+        subTitle={t`Rechargez la page dans un instant.`}
       />
     )
   }
@@ -246,38 +253,55 @@ export default function Retroplanning() {
     </ul>
   )
 
-  const enRetard = taches.filter(t => t.enRetard).length
+  const enRetard = taches.filter(x => x.enRetard).length
+  const nombreTaches = taches.length
+  const nombreAPrendre = aPrendre.length
   const repartition = [
     {
-      nom: 'À faire',
-      nombre: taches.filter(t => t.statut === 'A_FAIRE').length,
+      cle: 'A_FAIRE',
+      nom: t({ message: 'À faire', comment: 'Statut d’une tâche' }),
+      nombre: taches.filter(x => x.statut === 'A_FAIRE').length,
       couleur: 'var(--rt-encre-40)',
     },
     {
-      nom: 'En cours',
-      nombre: taches.filter(t => t.statut === 'EN_COURS').length,
+      cle: 'EN_COURS',
+      nom: t({ message: 'En cours', comment: 'Statut d’une tâche' }),
+      nombre: taches.filter(x => x.statut === 'EN_COURS').length,
       couleur: 'var(--rt-primaire)',
     },
     {
-      nom: 'Faites',
-      nombre: taches.filter(t => t.statut === 'FAITE').length,
+      cle: 'FAITE',
+      nom: t({
+        message: 'Faites',
+        comment: 'Nombre de tâches faites, au pluriel',
+      }),
+      nombre: taches.filter(x => x.statut === 'FAITE').length,
       couleur: 'var(--rt-succes)',
     },
     {
-      nom: 'Abandonnées',
-      nombre: taches.filter(t => t.statut === 'ABANDONNEE').length,
+      cle: 'ABANDONNEE',
+      nom: t({
+        message: 'Abandonnées',
+        comment: 'Nombre de tâches abandonnées, au pluriel',
+      }),
+      nombre: taches.filter(x => x.statut === 'ABANDONNEE').length,
       couleur: 'var(--rt-encre-14)',
     },
-    { nom: 'En retard', nombre: enRetard, couleur: 'var(--rt-erreur)' },
-  ].filter(r => r.nombre > 0 || r.nom === 'En retard')
+    {
+      cle: 'RETARD',
+      nom: t`En retard`,
+      nombre: enRetard,
+      couleur: 'var(--rt-erreur)',
+    },
+  ].filter(r => r.nombre > 0 || r.cle === 'RETARD')
 
   return (
     <>
       <Titre
         sousTitre={
           regroupement === 'phase'
-            ? `Les tâches ${periode.de} sont rangées par phase, puis par périmètre.`
-            : `Les tâches ${periode.de} sont regroupées par mois, de la plus proche à la plus lointaine.`
+            ? t`Les tâches ${dePeriode} sont rangées par phase, puis par périmètre.`
+            : t`Les tâches ${dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine.`
         }
         actions={
           <ChoixEdition
@@ -289,26 +313,32 @@ export default function Retroplanning() {
           />
         }
       >
-        Rétroplanning
+        <Trans>Rétroplanning</Trans>
       </Titre>
 
       <div className="rt-puces" style={{ marginBottom: 22, rowGap: 10 }}>
         <Puces<Regroupement>
-          libelle="Regroupement des tâches"
+          libelle={t`Regroupement des tâches`}
           valeur={regroupementChoisi}
           onChange={changerRegroupement}
           options={[
-            { valeur: 'mois', libelle: 'Par mois' },
-            { valeur: 'phase', libelle: 'Par phase' },
+            { valeur: 'mois', libelle: t`Par mois` },
+            { valeur: 'phase', libelle: t`Par phase` },
           ]}
         />
         <SeparateurPuces />
         <Puces<FiltreType>
-          libelle="Groupe de périmètres"
+          libelle={t`Groupe de périmètres`}
           valeur={type}
           onChange={setType}
           options={[
-            { valeur: 'tous', libelle: 'Tous' },
+            {
+              valeur: 'tous',
+              libelle: t({
+                message: 'Tous',
+                comment: 'Tous les groupes de périmètres',
+              }),
+            },
             ...activite.groupes.map(g => ({
               valeur: g.cle,
               libelle: g.libellePluriel,
@@ -317,28 +347,40 @@ export default function Retroplanning() {
         />
         <SeparateurPuces />
         <Puces<FiltreStatut>
-          libelle="Statut des tâches"
+          libelle={t`Statut des tâches`}
           valeur={statut}
           onChange={setStatut}
           options={[
-            { valeur: 'ouvertes', libelle: 'Ouvertes' },
-            { valeur: 'retard', libelle: 'En retard' },
-            { valeur: 'toutes', libelle: 'Toutes' },
+            {
+              valeur: 'ouvertes',
+              libelle: t({
+                message: 'Ouvertes',
+                comment: 'Filtre : les tâches ni faites ni abandonnées',
+              }),
+            },
+            { valeur: 'retard', libelle: t`En retard` },
+            {
+              valeur: 'toutes',
+              libelle: t({
+                message: 'Toutes',
+                comment: 'Filtre : toutes les tâches',
+              }),
+            },
           ]}
         />
         <SeparateurPuces />
         <PuceBascule actif={mesPerimetres} onChange={setMesPerimetres}>
-          Mes périmètres
+          <Trans>Mes périmètres</Trans>
         </PuceBascule>
         <PuceBascule actif={assigneesAMoi} onChange={setAssigneesAMoi}>
-          Assignées à moi
+          <Trans>Assignées à moi</Trans>
         </PuceBascule>
         <Select
           mode="multiple"
           maxTagCount="responsive"
           allowClear
-          aria-label="Périmètres"
-          placeholder="Tous les périmètres"
+          aria-label={t`Périmètres`}
+          placeholder={t`Tous les périmètres`}
           style={{
             flex: '1 1 240px',
             minWidth: 0,
@@ -372,16 +414,16 @@ export default function Retroplanning() {
           cote={
             <>
               <Panneau
-                titre="Sur cette sélection"
+                titre={t`Sur cette sélection`}
                 extra={
                   <span className="rt-compte">
-                    {taches.length} {taches.length > 1 ? 'tâches' : 'tâche'}
+                    {compteTaches(taches.length)}
                   </span>
                 }
               >
                 {repartition.map(r => (
                   <div
-                    key={r.nom}
+                    key={r.cle}
                     style={{ display: 'flex', flexDirection: 'column', gap: 5 }}
                   >
                     <div
@@ -421,23 +463,25 @@ export default function Retroplanning() {
               {aPrendre.length > 0 && (
                 <Panneau
                   teinte
-                  titre={
-                    aPrendre.length > 1
-                      ? `${aPrendre.length} tâches attendent une personne`
-                      : 'Une tâche attend une personne'
-                  }
+                  titre={t`${plural(nombreAPrendre, {
+                    one: 'Une tâche attend une personne',
+                    other: '# tâches attendent une personne',
+                  })}`}
                 >
                   <p className="rt-texte-secondaire">
-                    Ces tâches ouvertes de vos périmètres n’ont aucune personne
-                    assignée. Vous pouvez les prendre depuis leur périmètre.
+                    <Trans>
+                      Ces tâches ouvertes de vos périmètres n’ont aucune
+                      personne assignée. Vous pouvez les prendre depuis leur
+                      périmètre.
+                    </Trans>
                   </p>
                   <ul className="rt-liste-liens">
-                    {aPrendre.slice(0, 5).map(t => (
-                      <li key={t.id}>
+                    {aPrendre.slice(0, 5).map(x => (
+                      <li key={x.id}>
                         <Link
                           className="rt-ligne-lien"
                           to={lien(
-                            `/perimetres/${t.perimetre.slug}?edition=${editionId}`
+                            `/perimetres/${x.perimetre.slug}?edition=${editionId}`
                           )}
                           style={{ fontSize: 13.5 }}
                         >
@@ -453,10 +497,10 @@ export default function Retroplanning() {
                               className="rt-point"
                               style={{
                                 background:
-                                  t.perimetre.couleur ?? 'var(--rt-primaire)',
+                                  x.perimetre.couleur ?? 'var(--rt-primaire)',
                               }}
                             />
-                            {t.titre}
+                            {x.titre}
                           </span>
                         </Link>
                       </li>
@@ -471,24 +515,41 @@ export default function Retroplanning() {
           (mesPerimetres || (!gere && toutes?.length === 0)) ? (
             <div className="rt-verre rt-panneau">
               <Empty
-                description={`Vous n’êtes affecté·e à aucun périmètre pour ${periode.cette}.`}
+                description={t`Vous n’êtes affecté·e à aucun périmètre pour ${cettePeriode}.`}
               />
             </div>
           ) : taches.length === 0 ? (
             <div className="rt-verre rt-panneau">
-              <Empty description="Aucune tâche ne correspond à ces filtres." />
+              <Empty
+                description={t`Aucune tâche ne correspond à ces filtres.`}
+              />
             </div>
           ) : (
             <>
               <p style={{ margin: '0 6px', fontWeight: 600 }}>
-                {taches.length} {taches.length > 1 ? 'tâches' : 'tâche'}, dont{' '}
-                <span
-                  style={{
-                    color: enRetard > 0 ? 'var(--rt-erreur)' : undefined,
-                  }}
-                >
-                  {enRetard} en retard
-                </span>
+                {taches.length === 1 ? (
+                  <Trans>
+                    1 tâche, dont{' '}
+                    <span
+                      style={{
+                        color: enRetard > 0 ? 'var(--rt-erreur)' : undefined,
+                      }}
+                    >
+                      {enRetard} en retard
+                    </span>
+                  </Trans>
+                ) : (
+                  <Trans>
+                    {nombreTaches} tâches, dont{' '}
+                    <span
+                      style={{
+                        color: enRetard > 0 ? 'var(--rt-erreur)' : undefined,
+                      }}
+                    >
+                      {enRetard} en retard
+                    </span>
+                  </Trans>
+                )}
               </p>
               {regroupement === 'phase' && debut
                 ? phases.map(groupe => (
@@ -500,7 +561,7 @@ export default function Retroplanning() {
                           ? 'sans-echeance'
                           : `phase:${groupe.phase.cle}`
                       }
-                      titre={groupe.phase?.libelle ?? 'Sans échéance'}
+                      titre={groupe.phase?.libelle ?? t`Sans échéance`}
                       compte={compteTaches(groupe.taches.length)}
                       extra={
                         groupe.phase && (
@@ -511,24 +572,29 @@ export default function Retroplanning() {
                       }
                     >
                       {plusieursPerimetres
-                        ? groupe.perimetres.map(({ perimetre, taches: t }) => (
-                            <div key={perimetre.id} className="rt-sous-section">
-                              <h3 className="rt-sous-section-titre">
-                                <EtiquettePerimetre
-                                  nom={perimetre.nom}
-                                  couleur={perimetre.couleur}
-                                  lien={lien(
-                                    `/perimetres/${perimetre.slug}?edition=${editionId}`
-                                  )}
-                                  point
-                                />
-                                <span className="rt-compte">
-                                  {compteTaches(t.length)}
-                                </span>
-                              </h3>
-                              {lignes(t, true)}
-                            </div>
-                          ))
+                        ? groupe.perimetres.map(
+                            ({ perimetre, taches: duPerimetre }) => (
+                              <div
+                                key={perimetre.id}
+                                className="rt-sous-section"
+                              >
+                                <h3 className="rt-sous-section-titre">
+                                  <EtiquettePerimetre
+                                    nom={perimetre.nom}
+                                    couleur={perimetre.couleur}
+                                    lien={lien(
+                                      `/perimetres/${perimetre.slug}?edition=${editionId}`
+                                    )}
+                                    point
+                                  />
+                                  <span className="rt-compte">
+                                    {compteTaches(duPerimetre.length)}
+                                  </span>
+                                </h3>
+                                {lignes(duPerimetre, true)}
+                              </div>
+                            )
+                          )
                         : lignes(groupe.taches)}
                     </Section>
                   ))

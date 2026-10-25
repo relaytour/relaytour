@@ -15,6 +15,15 @@ fr:
     le texte, puis votre propre messagerie s'ouvre avec le message :
     l'application n'envoie rien. L'onglet « Messages » garde chaque message
     préparé et l'état que vous déclarez : en cours, envoyé ou annulé.
+en:
+  titre: >-
+    An admin writes to their team from the organizer workspace
+  texte: >-
+    In “People”, you select people, or you write to a single person. In “Team”,
+    you write to the whole team or to the coordinators of an area. You choose a
+    template, complete the text, and your own mail app opens with the message.
+    The application sends nothing. The “Messages” tab keeps each prepared
+    message and the status you declare: in progress, sent, or canceled.
 ---
 
 ADR 0020. Fenêtre `EcrireMessage` (modèles et informations de l'application dans

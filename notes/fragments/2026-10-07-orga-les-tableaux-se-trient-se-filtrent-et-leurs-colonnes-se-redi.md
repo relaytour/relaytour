@@ -14,6 +14,15 @@ fr:
     faisant glisser son bord droit ; un double-clic rétablit la largeur
     automatique. Un clic sur une ligne des tableaux Personnes, Périodes et
     Activités ouvre sa fiche, comme le bouton placé au début de la ligne.
+en:
+  titre: >-
+    Tables can be sorted, filtered, and have resizable columns
+  texte: >-
+    You sort a table by clicking a column header, and you filter it with the
+    icon in that header. You adjust a column’s width by dragging its right edge,
+    and a double-click restores the automatic width. Clicking a row in the
+    People, Periods, and Activities tables opens its details, like the button at
+    the start of the row.
 ---
 
 Composant commun `packages/orga/src/composants/Tableau.tsx`, utilisé par les six

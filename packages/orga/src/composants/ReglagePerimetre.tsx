@@ -1,5 +1,6 @@
 import type { ApolloCache } from '@apollo/client'
 import { useApolloClient, useMutation } from '@apollo/client/react'
+import { useLingui } from '@lingui/react/macro'
 import {
   App,
   ColorPicker,
@@ -134,6 +135,7 @@ export default function ReglagePerimetre({
   perimetre: PerimetreRegle | 'nouveau' | null
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { message, modal } = App.useApp()
   const client = useApolloClient()
   // Les groupes de périmètres viennent de l'activité (ADR 0008).
@@ -188,7 +190,7 @@ export default function ReglagePerimetre({
             ordre: v.ordre,
           },
         })
-        message.success('Périmètre créé.')
+        message.success(t`Périmètre créé.`)
       } else if (perimetre) {
         const envoyer = (versionAttendue: number) =>
           modifier({
@@ -220,21 +222,21 @@ export default function ReglagePerimetre({
           const ecraser = await modal.confirm({
             title: titre,
             content: texte,
-            okText: 'Écraser',
-            cancelText: 'Recharger',
+            okText: t`Écraser`,
+            cancelText: t`Recharger`,
           })
           if (!ecraser) {
             if (await relireLesVues(client, LISTES)) onFermer()
             else {
               message.error(
-                'Le périmètre n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant.'
+                t`Le périmètre n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant.`
               )
             }
             return
           }
           await envoyer(conflit.versionCourante)
         }
-        message.success('Périmètre enregistré.')
+        message.success(t`Périmètre enregistré.`)
       }
       onFermer()
     } catch (e) {
@@ -246,10 +248,10 @@ export default function ReglagePerimetre({
     <Modal
       open={perimetre !== null}
       title={
-        perimetre === 'nouveau' ? 'Nouveau périmètre' : 'Régler le périmètre'
+        perimetre === 'nouveau' ? t`Nouveau périmètre` : t`Régler le périmètre`
       }
-      okText="Enregistrer"
-      cancelText="Annuler"
+      okText={t`Enregistrer`}
+      cancelText={t`Annuler`}
       confirmLoading={creation.loading || modification.loading}
       onOk={() => form.submit()}
       onCancel={onFermer}
@@ -262,30 +264,30 @@ export default function ReglagePerimetre({
         requiredMark={false}
       >
         <Form.Item
-          label="Nom"
+          label={t`Nom`}
           name="nom"
-          rules={[{ required: true, message: 'Saisissez un nom.' }]}
+          rules={[{ required: true, message: t`Saisissez un nom.` }]}
         >
-          <Input placeholder="Natation" />
+          <Input placeholder={t`Natation`} />
         </Form.Item>
         <Form.Item
-          label="Identifiant"
+          label={t`Identifiant`}
           name="slug"
-          extra="Minuscules, chiffres et tirets. Il ne change plus après la création."
+          extra={t`Minuscules, chiffres et tirets. Il ne change plus après la création.`}
           rules={[
-            { required: true, message: 'Saisissez un identifiant.' },
+            { required: true, message: t`Saisissez un identifiant.` },
             {
               pattern: /^[a-z0-9]+(-[a-z0-9]+)*$/,
-              message: 'Minuscules, chiffres et tirets seulement.',
+              message: t`Minuscules, chiffres et tirets seulement.`,
             },
           ]}
         >
-          <Input placeholder="natation" disabled={perimetre !== 'nouveau'} />
+          <Input placeholder={t`natation`} disabled={perimetre !== 'nouveau'} />
         </Form.Item>
         <Form.Item
-          label="Groupe"
+          label={t`Groupe`}
           name="groupe"
-          rules={[{ required: true, message: 'Choisissez un groupe.' }]}
+          rules={[{ required: true, message: t`Choisissez un groupe.` }]}
         >
           <Segmented
             options={activite.groupes.map(g => ({
@@ -295,33 +297,33 @@ export default function ReglagePerimetre({
           />
         </Form.Item>
         <Form.Item
-          label="Description"
+          label={t`Description`}
           name="description"
-          extra="Une ou deux phrases qui présentent le périmètre aux membres de l’équipe."
+          extra={t`Une ou deux phrases qui présentent le périmètre aux membres de l’équipe.`}
         >
           <Input.TextArea
             rows={3}
             maxLength={400}
             showCount
-            placeholder="Le pôle obtient les gymnases, la piscine et les autorisations."
+            placeholder={t`Le pôle obtient les gymnases, la piscine et les autorisations.`}
           />
         </Form.Item>
-        <Form.Item label="Couleur" name="couleur">
+        <Form.Item label={t`Couleur`} name="couleur">
           <ColorPicker format="hex" allowClear />
         </Form.Item>
         <Form.Item
-          label="Ordre d’affichage"
+          label={t`Ordre d’affichage`}
           name="ordre"
-          extra="Dans chaque groupe, les périmètres se rangent par ordre croissant, puis par nom."
+          extra={t`Dans chaque groupe, les périmètres se rangent par ordre croissant, puis par nom.`}
         >
           <InputNumber min={0} max={999} />
         </Form.Item>
         {perimetre !== 'nouveau' && (
           <Form.Item
-            label="Archivé"
+            label={t`Archivé`}
             name="archive"
             valuePropName="checked"
-            extra="Un périmètre archivé disparaît des listes, mais son historique reste consultable."
+            extra={t`Un périmètre archivé disparaît des listes, mais son historique reste consultable.`}
           >
             <Switch />
           </Form.Item>

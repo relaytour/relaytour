@@ -24,6 +24,7 @@ import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { peutLireFiche, peutRedigerFiche } from '../lib/fiches.ts'
 import { perimetresConcernes, publierFiche } from '../lib/fiches-connexes.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 
@@ -347,7 +348,7 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, { ficheId, dossierLieId, chemin }, ctx) => {
       const fiche = await ficheRedigeable(ctx, String(ficheId))
       if (fiche.archivedAt !== null) {
-        throw erreurSaisie('Cette fiche est archivée.')
+        throw erreurSaisie(i18n._('Cette fiche est archivée.'))
       }
       const dossier = await prisma.dossierLie.findFirst({
         where: {
@@ -368,7 +369,7 @@ builder.mutationFields(t => ({
       ) {
         throw accesRefuse()
       }
-      if (!cheminValide(chemin)) throw erreurSaisie('Chemin invalide.')
+      if (!cheminValide(chemin)) throw erreurSaisie(i18n._('Chemin invalide.'))
       const empreinte = empreinteChemin(chemin)
       // La lecture chez le fournisseur se fait hors du verrou.
       let element: ElementEspace | null
@@ -395,7 +396,7 @@ builder.mutationFields(t => ({
       }
       if (element === null) {
         throw erreurSaisie(
-          'Cet élément n’existe pas chez le fournisseur cloud.'
+          i18n._('Cet élément n’existe pas chez le fournisseur cloud.')
         )
       }
       const trouve = element
@@ -420,7 +421,10 @@ builder.mutationFields(t => ({
           })
           if (nombre >= RESSOURCES_MAX) {
             throw erreurSaisie(
-              `Une fiche porte ${RESSOURCES_MAX} documents liés au plus. Retirez-en un avant d’en lier un autre.`
+              i18n._(
+                'Une fiche porte {max} documents liés au plus. Retirez-en un avant d’en lier un autre.',
+                { max: RESSOURCES_MAX }
+              )
             )
           }
           const creee = await tx.ressourceFiche.create({
@@ -479,7 +483,9 @@ builder.mutationFields(t => ({
       // Le dossier lié entier n'est pas un document : ses lecteurs s'étendent.
       if (ouvert && lireChemin(ressource.chemin).length === 0) {
         throw erreurSaisie(
-          'Ce document est le dossier lié entier. Étendez plutôt les lecteurs du dossier.'
+          i18n._(
+            'Ce document est le dossier lié entier. Étendez plutôt les lecteurs du dossier.'
+          )
         )
       }
       await prisma.ressourceFiche.update({

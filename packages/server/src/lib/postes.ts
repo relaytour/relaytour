@@ -1,4 +1,5 @@
 import { GROUPES_PAR_DEFAUT, type GroupePerimetres } from './activites.ts'
+import { i18n } from './langue.ts'
 
 // Postes à pourvoir : places de référent·e encore libres pour une édition.
 //
@@ -84,15 +85,25 @@ export function texteAppel(
 
   const { nom, contact, pageEquipe } = organisation
   return [
-    `${nom} ${annee} : rejoignez l’équipe d’organisation`,
-    `Nous préparons ${nom} ${annee}. Nous cherchons encore des référentes et des référents pour ces périmètres :`,
+    i18n._('{nom} {annee} : rejoignez l’équipe d’organisation', { nom, annee }),
+    i18n._(
+      'Nous préparons {nom} {annee}. Nous cherchons encore des référentes et des référents pour ces périmètres :',
+      { nom, annee }
+    ),
     ...groupes,
     ...(contact
-      ? [`Vous pouvez proposer votre aide par mail :\n${contact}`]
+      ? [
+          i18n._('Vous pouvez proposer votre aide par mail :\n{contact}', {
+            contact,
+          }),
+        ]
       : []),
     ...(pageEquipe
       ? [
-          `Vous trouverez plus d’informations sur la page de l’équipe :\n${pageEquipe}`,
+          i18n._(
+            'Vous trouverez plus d’informations sur la page de l’équipe :\n{pageEquipe}',
+            { pageEquipe }
+          ),
         ]
       : []),
   ].join('\n\n')

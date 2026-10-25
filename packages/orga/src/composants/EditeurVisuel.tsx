@@ -1,3 +1,4 @@
+import { Trans, useLingui } from '@lingui/react/macro'
 import type { Editor } from '@milkdown/core'
 import { Button, Form, Input, Modal } from 'antd'
 import {
@@ -44,6 +45,7 @@ export default function EditeurVisuel({
   libelle: string
   ref?: Ref<PoigneeVisuel>
 }) {
+  const { t } = useLingui()
   const racine = useRef<HTMLDivElement>(null)
   const editeur = useRef<Editor | null>(null)
   const surChangement = useRef(onChange)
@@ -124,7 +126,7 @@ export default function EditeurVisuel({
         onKeyDownCapture={surTouche}
       />
       <Modal
-        title="Lien"
+        title={t`Lien`}
         open={lien !== null}
         onCancel={() => setLien(null)}
         destroyOnHidden
@@ -133,11 +135,11 @@ export default function EditeurVisuel({
           // à retirer serait vide.
           lien?.dejaLie && !lien.empty && (
             <Button key="retirer" onClick={() => poser('')}>
-              Retirer le lien
+              <Trans>Retirer le lien</Trans>
             </Button>
           ),
           <Button key="annuler" onClick={() => setLien(null)}>
-            Annuler
+            <Trans>Annuler</Trans>
           </Button>,
           <Button
             key="poser"
@@ -145,17 +147,17 @@ export default function EditeurVisuel({
             disabled={adresse.trim() === ''}
             onClick={() => poser(adresse.trim())}
           >
-            Poser le lien
+            <Trans>Poser le lien</Trans>
           </Button>,
         ]}
       >
         <Form layout="vertical" onFinish={() => poser(adresse.trim())}>
           <Form.Item
-            label="Adresse"
+            label={t`Adresse`}
             extra={
               lien?.empty
-                ? 'L’adresse s’insère à l’emplacement du curseur.'
-                : 'Le texte sélectionné devient le texte du lien.'
+                ? t`L’adresse s’insère à l’emplacement du curseur.`
+                : t`Le texte sélectionné devient le texte du lien.`
             }
           >
             <Input

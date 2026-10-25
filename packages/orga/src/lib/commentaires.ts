@@ -1,4 +1,6 @@
 import { useQuery } from '@apollo/client/react'
+import { i18n, type MessageDescriptor } from '@lingui/core'
+import { msg, t } from '@lingui/core/macro'
 
 import { graphql } from '../gql'
 import type {
@@ -132,56 +134,60 @@ export function composerFil(
   )
 }
 
-const STATUT_VOUS: Record<StatutTache, string> = {
-  A_FAIRE: 'Vous avez remis la tâche à faire.',
-  EN_COURS: 'Vous avez commencé la tâche.',
-  FAITE: 'Vous avez marqué la tâche comme faite.',
-  ABANDONNEE: 'Vous avez abandonné la tâche.',
+const STATUT_VOUS: Record<StatutTache, MessageDescriptor> = {
+  A_FAIRE: msg`Vous avez remis la tâche à faire.`,
+  EN_COURS: msg`Vous avez commencé la tâche.`,
+  FAITE: msg`Vous avez marqué la tâche comme faite.`,
+  ABANDONNEE: msg`Vous avez abandonné la tâche.`,
 }
-const STATUT_AUTRE: Record<StatutTache, string> = {
-  A_FAIRE: 'a remis la tâche à faire.',
-  EN_COURS: 'a commencé la tâche.',
-  FAITE: 'a marqué la tâche comme faite.',
-  ABANDONNEE: 'a abandonné la tâche.',
+const STATUT_AUTRE: Record<StatutTache, (acteur: string) => string> = {
+  A_FAIRE: acteur => t`${acteur} a remis la tâche à faire.`,
+  EN_COURS: acteur => t`${acteur} a commencé la tâche.`,
+  FAITE: acteur => t`${acteur} a marqué la tâche comme faite.`,
+  ABANDONNEE: acteur => t`${acteur} a abandonné la tâche.`,
 }
 
 /** La phrase d'un événement du fil, pour la personne qui le lit. */
 export function texteEvenement(e: Evenement, moiId: string): string {
   const moi = e.acteur?.id === moiId
-  const acteur = e.acteur?.nom ?? 'Une personne'
-  const cible = e.personne?.id === moiId ? 'vous' : e.personne?.nom
+  const acteur = e.acteur?.nom ?? t`Une personne`
+  const vousEtesConcerne = e.personne?.id === moiId
+  const personneConcernee = e.personne?.nom ?? ''
   // La personne s'est assignée ou retirée elle-même.
   const soi = e.personne !== null && e.personne?.id === e.acteur?.id
+  const aucuneCible = !vousEtesConcerne && !personneConcernee
   switch (e.type) {
     case 'CREEE':
-      return moi ? 'Vous avez créé la tâche.' : `${acteur} a créé la tâche.`
+      return moi ? t`Vous avez créé la tâche.` : t`${acteur} a créé la tâche.`
     case 'MODIFIEE':
       return moi
-        ? 'Vous avez modifié la tâche.'
-        : `${acteur} a modifié la tâche.`
+        ? t`Vous avez modifié la tâche.`
+        : t`${acteur} a modifié la tâche.`
     case 'ASSIGNEE':
-      if (soi || !cible)
+      if (soi || aucuneCible)
         return moi
-          ? 'Vous vous occupez de la tâche.'
-          : `${acteur} s’occupe de la tâche.`
-      return moi
-        ? `Vous avez assigné la tâche à ${cible}.`
-        : `${acteur} ${cible === 'vous' ? 'vous a assigné la tâche' : `a assigné la tâche à ${cible}`}.`
+          ? t`Vous vous occupez de la tâche.`
+          : t`${acteur} s’occupe de la tâche.`
+      if (moi) return t`Vous avez assigné la tâche à ${personneConcernee}.`
+      return vousEtesConcerne
+        ? t`${acteur} vous a assigné la tâche.`
+        : t`${acteur} a assigné la tâche à ${personneConcernee}.`
     case 'RETIREE':
-      if (soi || !cible)
+      if (soi || aucuneCible)
         return moi
-          ? 'Vous ne vous occupez plus de la tâche.'
-          : `${acteur} ne s’occupe plus de la tâche.`
-      return moi
-        ? `Vous avez retiré ${cible} de la tâche.`
-        : `${acteur} ${cible === 'vous' ? 'vous a retiré·e de la tâche' : `a retiré ${cible} de la tâche`}.`
+          ? t`Vous ne vous occupez plus de la tâche.`
+          : t`${acteur} ne s’occupe plus de la tâche.`
+      if (moi) return t`Vous avez retiré ${personneConcernee} de la tâche.`
+      return vousEtesConcerne
+        ? t`${acteur} vous a retiré·e de la tâche.`
+        : t`${acteur} a retiré ${personneConcernee} de la tâche.`
     case 'STATUT': {
-      if (!e.statut) return `${acteur} a changé le statut de la tâche.`
-      if (moi) return STATUT_VOUS[e.statut]
+      if (!e.statut) return t`${acteur} a changé le statut de la tâche.`
+      if (moi) return i18n._(STATUT_VOUS[e.statut])
       // Qui a coché une tâche reste réservé : le serveur ne nomme alors personne.
       if (e.acteur === null && e.statut === 'FAITE')
-        return 'La tâche est faite.'
-      return `${acteur} ${STATUT_AUTRE[e.statut]}`
+        return t`La tâche est faite.`
+      return STATUT_AUTRE[e.statut](acteur)
     }
   }
 }

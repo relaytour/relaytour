@@ -1,0 +1,24 @@
+# Identity of the sample organization. An absent theme means the Relaytour theme.
+slug: rencontres-de-la-vallee
+nom: The Valley Games
+sigle: Valley Games
+fuseauHoraire: Europe/London
+# Default language of the organization's members (ADR 0047).
+langue: en
+domainesCourrielAutorises: [exemple.org]
+contactRecrutement: contact@exemple.org
+# Address opened by the "Support" button of the organizer workspace (optional).
+contactSupport: support@exemple.org
+pageEquipe: https://exemple.org/equipe
+# Role addresses hosted by a consumer mail provider: they are authorized one by
+# one, never by their domain (ADR 0009).
+adressesRoleAutorisees: [running.club.games@messagerie.example]
+# Images of the folder, relative to this file. The PNG is required: emails do
+# not display the SVG.
+logo:
+  png: medias/logo.png
+  svg: medias/logo.svg
+favicon: medias/favicon.png
+# Icon of the app installed on a phone: a square PNG, 512 pixels on each side
+# (optional). Without it, the app uses the Relaytour icon.
+iconeApplication: medias/icone-application.png

@@ -1,3 +1,5 @@
+import { plural, t } from '@lingui/core/macro'
+
 // Tâches partagées et déclinaisons (ADR 0026) : libellés et regroupements, sans
 // accès au réseau.
 
@@ -14,8 +16,6 @@ export interface ResumeDeclinaisons {
   abandonnees: number
 }
 
-const perimetres = (n: number) => `${n} ${n > 1 ? 'périmètres' : 'périmètre'}`
-
 /**
  * Le résumé d'une tâche partagée en deux temps : où elle est déclinée, puis où en
  * sont ses déclinaisons. Une déclinaison abandonnée ne reste pas à faire : le
@@ -28,37 +28,65 @@ export function libelleDeclinaisons(resume: ResumeDeclinaisons): {
   const details: string[] = []
   const gardees = resume.acceptees - resume.abandonnees
   if (gardees > 0) {
+    const faites = resume.faites
     details.push(
-      resume.faites === gardees
-        ? gardees > 1
-          ? 'toutes faites'
-          : 'faite'
-        : `${resume.faites} ${resume.faites > 1 ? 'faites' : 'faite'} sur ${gardees}`
+      faites === gardees
+        ? t`${plural(gardees, { one: 'faite', other: 'toutes faites' })}`
+        : t`${plural(faites, {
+            one: `# faite sur ${gardees}`,
+            other: `# faites sur ${gardees}`,
+          })}`
     )
   }
   if (resume.abandonnees > 0) {
+    const abandonnees = resume.abandonnees
     details.push(
-      `${resume.abandonnees} ${resume.abandonnees > 1 ? 'abandonnées' : 'abandonnée'}`
+      t`${plural(abandonnees, { one: '# abandonnée', other: '# abandonnées' })}`
     )
   }
   if (resume.enAttente > 0) {
-    details.push(`${resume.enAttente} en attente d’accord`)
+    const enAttente = resume.enAttente
+    details.push(t`${enAttente} en attente d’accord`)
   }
   if (resume.refusees > 0) {
+    const refusees = resume.refusees
     details.push(
-      `${resume.refusees} ${resume.refusees > 1 ? 'refusées' : 'refusée'}`
+      t`${plural(refusees, { one: '# refusée', other: '# refusées' })}`
     )
   }
-  return { titre: `Déclinée dans ${perimetres(resume.total)}`, details }
+  const total = resume.total
+  return {
+    titre: t`${plural(total, {
+      one: 'Déclinée dans # périmètre',
+      other: 'Déclinée dans # périmètres',
+    })}`,
+    details,
+  }
 }
 
-/** Les étapes de l'accord d'une déclinaison, pour l'historique lu par les admins. */
-export const ETAPES_ACCORD = {
-  PROPOSEE: 'Proposée',
-  ACCEPTEE: 'Acceptée',
-  REFUSEE: 'Refusée',
-  IMPOSEE: 'Ajoutée sans accord',
-} as const
+export type EtapeAccordDeclinaison =
+  'PROPOSEE' | 'ACCEPTEE' | 'REFUSEE' | 'IMPOSEE'
+
+/**
+ * Une étape de l'accord d'une déclinaison, pour l'historique lu par les admins :
+ * l'étape, la personne qui l'a franchie et le jour.
+ */
+export function libelleEtapeAccord(
+  etape: EtapeAccordDeclinaison,
+  personne: string,
+  jour: string
+): string {
+  switch (etape) {
+    case 'PROPOSEE':
+      return t`Proposée par ${personne} le ${jour}`
+    case 'ACCEPTEE':
+      return t`Acceptée par ${personne} le ${jour}`
+    case 'REFUSEE':
+      return t`Refusée par ${personne} le ${jour}`
+    case 'IMPOSEE':
+      return t`Ajoutée sans accord par ${personne} le ${jour}`
+  }
+}
 
 export interface LigneRegroupable {
   id: string

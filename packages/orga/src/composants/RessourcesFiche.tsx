@@ -5,6 +5,8 @@ import {
   LinkOutlined,
 } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   App,
   Button,
@@ -30,6 +32,7 @@ import {
   OUVRIR_DOCUMENT,
   RESSOURCES_FICHE,
 } from '../lib/espace-fichiers'
+import { langueActive } from '../lib/langue'
 import { MOI } from '../lib/requetes'
 import { useMentions } from '../lib/useMentions'
 import ExplorateurDossier, { type DossierAffiche } from './ExplorateurDossier'
@@ -55,6 +58,7 @@ function LierRessource({
   ouvert: boolean
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { activite, libelleGroupe } = useActivite()
   const { message } = App.useApp()
   const [dossier, setDossier] = useState<DossierAffiche | null>(null)
@@ -83,7 +87,7 @@ function LierRessource({
       await lier({
         variables: { ficheId, dossierLieId: dossier.id, chemin },
       })
-      message.success(`« ${nom} » est lié à la fiche.`)
+      message.success(t`« ${nom} » est lié à la fiche.`)
       fermer()
     } catch (e) {
       message.error(messageErreur(e))
@@ -94,7 +98,7 @@ function LierRessource({
     <Modal
       open={ouvert}
       onCancel={fermer}
-      title="Lier un document"
+      title={t`Lier un document`}
       footer={null}
       width={640}
       destroyOnHidden
@@ -103,12 +107,16 @@ function LierRessource({
         dossiers.loading && !dossiers.data ? (
           <Skeleton active paragraph={{ rows: 3 }} />
         ) : compatibles.length === 0 ? (
-          <Empty description="Aucun dossier du fournisseur cloud ne sert ce périmètre ni toute l’activité." />
+          <Empty
+            description={t`Aucun dossier du fournisseur cloud ne sert ce périmètre ni toute l’activité.`}
+          />
         ) : (
           <>
             <p className="rt-texte-secondaire">
-              Choisissez un dossier lié. Les lecteurs de la fiche lisent ses
-              documents.
+              <Trans>
+                Choisissez un dossier lié. Les lecteurs de la fiche lisent ses
+                documents.
+              </Trans>
             </p>
             <ul className="rt-explorateur">
               {compatibles.map(d => (
@@ -122,7 +130,7 @@ function LierRessource({
                       {d.nom}
                       <span className="rt-explorateur-detail">
                         {d.touteActivite
-                          ? 'Toute l’activité'
+                          ? t`Toute l’activité`
                           : [
                               ...d.groupes.map(g => libelleGroupe(g, true)),
                               ...d.perimetres.map(p => p.nom),
@@ -138,7 +146,7 @@ function LierRessource({
       ) : (
         <>
           <p className="rt-texte-secondaire">
-            Choisissez un fichier, ou liez un dossier entier.
+            <Trans>Choisissez un fichier, ou liez un dossier entier.</Trans>
           </p>
           <ExplorateurDossier
             dossier={dossier}
@@ -152,10 +160,12 @@ function LierRessource({
   )
 }
 
-/** « Basket », « Basket et Accueil », « Basket, Accueil et Voile ». */
+/** « Basket », « Basket et Accueil », « Basket, Accueil et Voile », dans la langue active. */
 function enumerer(noms: string[]): string {
-  if (noms.length <= 1) return noms.join('')
-  return `${noms.slice(0, -1).join(', ')} et ${noms[noms.length - 1]}`
+  return new Intl.ListFormat(langueActive(), {
+    style: 'long',
+    type: 'conjunction',
+  }).format(noms)
 }
 
 /**
@@ -173,6 +183,7 @@ function AccesDocument({
   groupesDeLaFiche: string[]
   admin: boolean
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const { libelleGroupe } = useActivite()
   const mentions = useMentions()
@@ -208,6 +219,11 @@ function AccesDocument({
       .map(p => p.nom),
   ])
 
+  const nomDossierLie = r.dossierLie.nom
+  const perimetresSansAcces = enumerer(sans.map(p => p.nom))
+  const nomDocument = r.nom
+  const nombreSans = sans.length
+
   const etendre = () =>
     modifier({
       variables: {
@@ -217,7 +233,7 @@ function AccesDocument({
       },
     })
       .then(() =>
-        message.success(`« ${r.dossierLie.nom} » est aussi lu par ${ajouts}.`)
+        message.success(t`« ${nomDossierLie} » est aussi lu par ${ajouts}.`)
       )
       .catch((e: unknown) => message.error(messageErreur(e)))
   const basculer = (ouvert: boolean) =>
@@ -225,8 +241,8 @@ function AccesDocument({
       .then(() =>
         message.success(
           ouvert
-            ? 'Le document s’ouvre pour tous les lecteurs de la fiche.'
-            : 'Le document est réservé aux lecteurs de son dossier lié.'
+            ? t`Le document s’ouvre pour tous les lecteurs de la fiche.`
+            : t`Le document est réservé aux lecteurs de son dossier lié.`
         )
       )
       .catch((e: unknown) => message.error(messageErreur(e)))
@@ -234,9 +250,11 @@ function AccesDocument({
   const contenu = r.ouverteAuxLecteurs ? (
     <div className="rt-acces-document">
       <p>
-        Un admin de l’organisation a ouvert ce document à toutes les personnes
-        qui lisent la fiche. Le reste du dossier lié reste réservé à ses
-        lecteurs.
+        <Trans>
+          Un admin de l’organisation a ouvert ce document à toutes les personnes
+          qui lisent la fiche. Le reste du dossier lié reste réservé à ses
+          lecteurs.
+        </Trans>
       </p>
       {admin && (
         <Button
@@ -244,28 +262,29 @@ function AccesDocument({
           loading={ouverture}
           onClick={() => void basculer(false)}
         >
-          Réserver de nouveau
+          <Trans>Réserver de nouveau</Trans>
         </Button>
       )}
     </div>
   ) : (
     <div className="rt-acces-document">
       <p>
-        Les lecteurs de {enumerer(sans.map(p => p.nom))} n’ouvriront pas ce
-        document : le dossier lié « {r.dossierLie.nom} » ne sert pas ces
-        périmètres.
+        <Trans>
+          Les lecteurs de {perimetresSansAcces} n’ouvriront pas ce document : le
+          dossier lié « {nomDossierLie} » ne sert pas ces périmètres.
+        </Trans>
       </p>
       {admin ? (
         <Space wrap>
           <Popconfirm
-            title={`Étendre « ${r.dossierLie.nom} » ?`}
-            description={`Les lecteurs de ${ajouts} liront tout le dossier, et pas seulement ce document.`}
-            okText="Étendre"
-            cancelText="Annuler"
+            title={t`Étendre « ${nomDossierLie} » ?`}
+            description={t`Les lecteurs de ${ajouts} liront tout le dossier, et pas seulement ce document.`}
+            okText={t`Étendre`}
+            cancelText={t`Annuler`}
             onConfirm={() => void etendre()}
           >
             <Button size="small" loading={extension}>
-              Étendre le dossier lié
+              <Trans>Étendre le dossier lié</Trans>
             </Button>
           </Popconfirm>
           {/* Le dossier lié entier n'est pas un document : ses lecteurs s'étendent. */}
@@ -275,14 +294,16 @@ function AccesDocument({
               loading={ouverture}
               onClick={() => void basculer(true)}
             >
-              Ouvrir ce document aux lecteurs de la fiche
+              <Trans>Ouvrir ce document aux lecteurs de la fiche</Trans>
             </Button>
           )}
         </Space>
       ) : (
         <p className="rt-texte-secondaire">
-          Un admin de l’organisation peut étendre le dossier lié, ou ouvrir ce
-          seul document aux lecteurs de la fiche.
+          <Trans>
+            Un admin de l’organisation peut étendre le dossier lié, ou ouvrir ce
+            seul document aux lecteurs de la fiche.
+          </Trans>
         </p>
       )}
     </div>
@@ -290,7 +311,7 @@ function AccesDocument({
   return (
     <Popover
       trigger="click"
-      title={r.ouverteAuxLecteurs ? 'Document ouvert' : 'Document réservé'}
+      title={r.ouverteAuxLecteurs ? t`Document ouvert` : t`Document réservé`}
       content={contenu}
     >
       <Button
@@ -305,8 +326,8 @@ function AccesDocument({
         }
         aria-label={
           r.ouverteAuxLecteurs
-            ? `${r.nom} : ouvert aux lecteurs de la fiche`
-            : `${r.nom} : réservé, fermé pour ${sans.length > 1 ? `${sans.length} périmètres` : 'un périmètre'}`
+            ? t`${nomDocument} : ouvert aux lecteurs de la fiche`
+            : t`${nomDocument} : réservé, fermé pour ${plural(nombreSans, { one: 'un périmètre', other: '# périmètres' })}`
         }
       />
     </Popover>
@@ -320,12 +341,13 @@ function NomRessource({
   ressource: Ressource
   mention?: string
 }) {
+  const { t } = useLingui()
   return (
     <span className="rt-explorateur-nom">
       {r.nom}
       <span className="rt-explorateur-detail">
         {r.chemin.length === 0
-          ? 'Dossier lié'
+          ? t`Dossier lié`
           : [r.dossierLie.nom, ...r.chemin.slice(0, -1)].join(' / ')}
       </span>
       {/* Sous le nom : une étiquette à droite écraserait le nom sur un téléphone. */}
@@ -354,6 +376,7 @@ export default function RessourcesFiche({
   perimetreId: string | null
   peutModifier: boolean
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const { activite } = useActivite()
   const admin = useQuery(MOI).data?.moi?.estAdmin === true
@@ -397,7 +420,7 @@ export default function RessourcesFiche({
 
   return (
     <Panneau
-      titre="Documents liés"
+      titre={t`Documents liés`}
       extra={
         peutModifier && (
           <Button
@@ -405,7 +428,7 @@ export default function RessourcesFiche({
             icon={<LinkOutlined />}
             onClick={() => setChoix(true)}
           >
-            Lier un document
+            <Trans>Lier un document</Trans>
           </Button>
         )
       }
@@ -415,11 +438,12 @@ export default function RessourcesFiche({
       ) : ressources.length === 0 ? (
         <Empty
           image={Empty.PRESENTED_IMAGE_SIMPLE}
-          description="Aucun document du fournisseur cloud n’est lié à cette fiche."
+          description={t`Aucun document du fournisseur cloud n’est lié à cette fiche.`}
         />
       ) : (
         <ul className="rt-explorateur">
           {ressources.map(r => {
+            const nomDocument = r.nom
             const Icone =
               r.type === 'DOSSIER' ? FolderOutlined : ICONES_APERCU[r.apercu]
             return (
@@ -431,15 +455,19 @@ export default function RessourcesFiche({
                       ressource={r}
                       mention={
                         r.ouverteAuxLecteurs && (peutModifier || admin)
-                          ? 'Ouvert aux lecteurs de la fiche'
+                          ? t`Ouvert aux lecteurs de la fiche`
                           : undefined
                       }
                     />
                     {r.existe === false && (
-                      <Tag color="warning">Introuvable</Tag>
+                      <Tag color="warning">
+                        <Trans>Introuvable</Trans>
+                      </Tag>
                     )}
                     {!r.dossierLie.disponible && (
-                      <Tag color="warning">Indisponible</Tag>
+                      <Tag color="warning">
+                        <Trans>Indisponible</Trans>
+                      </Tag>
                     )}
                   </button>
                 ) : (
@@ -449,7 +477,7 @@ export default function RessourcesFiche({
                     <Icone aria-hidden className="rt-explorateur-icone" />
                     <NomRessource
                       ressource={r}
-                      mention="Réservée au périmètre d’origine"
+                      mention={t`Réservée au périmètre d’origine`}
                     />
                   </div>
                 )}
@@ -462,10 +490,10 @@ export default function RessourcesFiche({
                 )}
                 {peutModifier && (
                   <Popconfirm
-                    title="Retirer ce document lié ?"
-                    description="Le document reste chez le fournisseur cloud. La fiche ne le cite plus."
-                    okText="Retirer"
-                    cancelText="Annuler"
+                    title={t`Retirer ce document lié ?`}
+                    description={t`Le document reste chez le fournisseur cloud. La fiche ne le cite plus.`}
+                    okText={t`Retirer`}
+                    cancelText={t`Annuler`}
                     onConfirm={() =>
                       delier({ variables: { id: r.id } }).catch((e: unknown) =>
                         message.error(messageErreur(e))
@@ -476,7 +504,7 @@ export default function RessourcesFiche({
                       type="text"
                       size="small"
                       icon={<DeleteOutlined />}
-                      aria-label={`Retirer ${r.nom}`}
+                      aria-label={t`Retirer ${nomDocument}`}
                     />
                   </Popconfirm>
                 )}

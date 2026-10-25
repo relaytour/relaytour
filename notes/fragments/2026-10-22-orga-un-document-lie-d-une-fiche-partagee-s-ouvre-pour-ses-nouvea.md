@@ -16,6 +16,16 @@ fr:
     admin de l'organisation étend alors le dossier lié aux périmètres et aux
     groupes de la fiche. Il peut aussi ouvrir ce seul document à toutes les
     personnes qui lisent la fiche.
+en:
+  titre: >-
+    An admin opens a linked document to the readers of a shared sheet
+  texte: >-
+    When a sheet also concerns other areas, the person who writes it sees which
+    linked documents those areas cannot open. The warning appears below the
+    “Also concerns” list in the editor. In the sheet, you read the details with
+    the alert button on the document. An organization admin can then extend the
+    linked folder to the areas and groups of the sheet. They can also open that
+    one document to everyone who reads the sheet.
 ---
 
 ADR 0043 : champs `RessourceFiche.ouverteAuxLecteurs`, `ouverteParId` et

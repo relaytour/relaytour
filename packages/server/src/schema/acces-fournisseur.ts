@@ -16,6 +16,7 @@ import { planifierVerificationAcces } from '../espace-fichiers/acces.ts'
 import { erreurEspace, ouvrirEspace } from '../espace-fichiers/index.ts'
 import { appliquerProposition } from '../espace-fichiers/propositions.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { membreActif } from '../lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { adresseValide } from '../lib/saisie.ts'
@@ -224,9 +225,17 @@ const VerificationDossierRef = builder
           ])
           const groupe = (id: string) => ({
             parGroupe: true,
-            cible: `groupe « ${id === dossier.groupeFournisseurId ? (dossier.groupeFournisseurNom ?? id) : id} »`,
+            cible: i18n._('groupe « {nom} »', {
+              nom:
+                id === dossier.groupeFournisseurId
+                  ? (dossier.groupeFournisseurNom ?? id)
+                  : id,
+            }),
           })
-          const partage = { parGroupe: false, cible: 'partage du dossier' }
+          const partage = {
+            parGroupe: false,
+            cible: i18n._('partage du dossier'),
+          }
           const cible = (action: ActionProposition, userId: string) => {
             if (action === 'RETIRER') {
               const creee = creees.find(c => c.userId === userId)
@@ -294,7 +303,7 @@ async function fournisseurConnecte(organisationId: string) {
     select: { fournisseur: true },
   })
   if (connexion === null) {
-    throw erreurSaisie('Aucun fournisseur cloud n’est connecté.')
+    throw erreurSaisie(i18n._('Aucun fournisseur cloud n’est connecté.'))
   }
   return connexion.fournisseur
 }
@@ -466,7 +475,9 @@ builder.mutationFields(t => ({
         })
         if (connexion?.etat !== 'ACTIVE' || connexion.portee !== 'GESTION') {
           throw erreurSaisie(
-            'Activez d’abord la gestion des accès en reconnectant le fournisseur.'
+            i18n._(
+              'Activez d’abord la gestion des accès en reconnectant le fournisseur.'
+            )
           )
         }
       }
@@ -477,7 +488,7 @@ builder.mutationFields(t => ({
           null
         if (groupe === null) {
           throw erreurSaisie(
-            'Choisissez un groupe qui a déjà un droit sur ce dossier.'
+            i18n._('Choisissez un groupe qui a déjà un droit sur ce dossier.')
           )
         }
       }
@@ -597,11 +608,11 @@ builder.mutationFields(t => ({
         select: { etat: true, portee: true },
       })
       if (connexion?.etat !== 'ACTIVE') {
-        throw erreurSaisie('Aucun fournisseur cloud n’est connecté.')
+        throw erreurSaisie(i18n._('Aucun fournisseur cloud n’est connecté.'))
       }
       if (connexion.portee === 'FICHIERS') {
         throw erreurSaisie(
-          'Reconnectez le fournisseur avec la vérification des accès.'
+          i18n._('Reconnectez le fournisseur avec la vérification des accès.')
         )
       }
       planifierVerificationAcces(organisationId)

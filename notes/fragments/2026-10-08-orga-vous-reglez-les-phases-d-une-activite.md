@@ -16,6 +16,16 @@ fr:
     de phase dès l'enregistrement, sans être modifiées. Une activité que vous
     ne réglez pas garde quatre phases : Lancement, Préparation, Derniers
     réglages, Déroulement et bilan.
+en:
+  titre: >-
+    You set the phases of an activity
+  texte: >-
+    The “Activities” screen lets you edit an activity’s phases: their name,
+    their order, and their last day. The last day is counted from the first day
+    of the period, for example D-120 for 120 days before. The last phase
+    receives all the tasks that follow. Tasks move to their phase as soon as you
+    save, without being modified. An activity you do not configure keeps four
+    phases: Launch, Preparation, Final adjustments, and Event and review.
 ---
 
 ADR 0025. La fenêtre de modification d'une activité porte une liste « Phases ».

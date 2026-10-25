@@ -1,0 +1,5 @@
+Ticket number;Participant last name;Participant first name;Email;Phone;Gender;Amount;Order date;Services;Bar service - 18:00 - 19:00;Welcome desk - 17:00 - 18:00;I add details in writing
+300101;Durand;Alix;alix.durand@exemple.org;+44 7700 900101;F;0;2026-03-12;"Bar service
+18:00 - 19:00";0;;
+300102;Leroy;Tom;tom.leroy@exemple.org;+44 7700 900102;M;0;2026-03-13;"Welcome desk
+17:00 - 18:00";;0;From 6 pm, any role except photos

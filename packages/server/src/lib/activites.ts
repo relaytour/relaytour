@@ -3,6 +3,7 @@
 
 import type { TypePerimetre } from '@relaytour/database'
 import { erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 import { slugValide, texteRequis } from './saisie.ts'
 
 // Un type plutôt qu'une interface : Prisma exige une valeur JSON indexable.
@@ -13,10 +14,49 @@ export type GroupePerimetres = {
 }
 
 // Groupes de la disposition plate du contenu, repris par la migration de remplissage.
+// Les libellés se traduisent à la lecture : l'activité qui les reçoit à sa création
+// les écrit dans la langue de la requête, puis ils sont des données (ADR 0047).
 export const GROUPES_PAR_DEFAUT: GroupePerimetres[] = [
-  { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },
-  { cle: 'pole', libelle: 'Pôle', libellePluriel: 'Pôles' },
+  {
+    cle: 'sport',
+    get libelle() {
+      return i18n._(
+        'Sport',
+        {},
+        { comment: 'Groupe de périmètres par défaut, au singulier' }
+      )
+    },
+    get libellePluriel() {
+      return i18n._(
+        'Sports',
+        {},
+        { comment: 'Groupe de périmètres par défaut, au pluriel' }
+      )
+    },
+  },
+  {
+    cle: 'pole',
+    get libelle() {
+      return i18n._(
+        'Pôle',
+        {},
+        { comment: 'Groupe de périmètres par défaut, au singulier' }
+      )
+    },
+    get libellePluriel() {
+      return i18n._(
+        'Pôles',
+        {},
+        { comment: 'Groupe de périmètres par défaut, au pluriel' }
+      )
+    },
+  },
 ]
+
+/** Les groupes par défaut, libellés écrits dans la langue courante : des données prêtes à stocker. */
+export function groupesParDefaut(): GroupePerimetres[] {
+  return GROUPES_PAR_DEFAUT.map(groupe => ({ ...groupe }))
+}
 
 // Tant que le contenu déclare un type, le groupe s'en déduit : SPORT donne sport,
 // POLE donne pole, comme dans la migration de remplissage.
@@ -55,7 +95,10 @@ export function slugActiviteValide(brut: string): string {
   const slug = slugValide(brut)
   if (SLUGS_RESERVES.has(slug)) {
     throw erreurSaisie(
-      `« ${slug} » est réservé par l’espace organisateur : choisissez un autre identifiant.`
+      i18n._(
+        '« {slug} » est réservé par l’espace organisateur : choisissez un autre identifiant.',
+        { slug }
+      )
     )
   }
   return slug
@@ -72,22 +115,26 @@ export function groupesValides(
 ): GroupePerimetres[] {
   if (groupes.length === 0 || groupes.length > GROUPES_MAX) {
     throw erreurSaisie(
-      `Une activité déclare entre 1 et ${GROUPES_MAX} groupes de périmètres.`
+      i18n._('Une activité déclare entre 1 et {max} groupes de périmètres.', {
+        max: GROUPES_MAX,
+      })
     )
   }
   const cles = new Set<string>()
   return groupes.map(groupe => {
     const cle = slugValide(groupe.cle)
     if (cles.has(cle)) {
-      throw erreurSaisie(`Le groupe « ${cle} » est déclaré deux fois.`)
+      throw erreurSaisie(
+        i18n._('Le groupe « {cle} » est déclaré deux fois.', { cle })
+      )
     }
     cles.add(cle)
     return {
       cle,
-      libelle: texteRequis(groupe.libelle, 'Le libellé du groupe', 60),
+      libelle: texteRequis(groupe.libelle, i18n._('Le libellé du groupe'), 60),
       libellePluriel: texteRequis(
         groupe.libellePluriel,
-        'Le libellé pluriel du groupe',
+        i18n._('Le libellé pluriel du groupe'),
         60
       ),
     }
