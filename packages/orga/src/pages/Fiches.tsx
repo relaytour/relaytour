@@ -25,7 +25,7 @@ import { useOrganisation } from '../lib/organisation'
 import { normaliser } from '../lib/recherche'
 import { teinteLisible } from '../lib/theme'
 import { useActivite } from '../lib/activite'
-import { langueActive } from '../lib/langue'
+import { comparerTextes } from '../lib/langue'
 
 type FicheListe = ListeFichesQuery['fiches'][number]
 type Affichage = 'cartes' | 'liste'
@@ -112,11 +112,7 @@ export default function Fiches() {
       map.set(cle, groupe)
     }
     return [...map.values()].sort((a, b) =>
-      a.slug === null
-        ? -1
-        : b.slug === null
-          ? 1
-          : a.nom.localeCompare(b.nom, langueActive())
+      a.slug === null ? -1 : b.slug === null ? 1 : comparerTextes(a.nom, b.nom)
     )
   }, [data, t])
 

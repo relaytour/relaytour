@@ -1,3 +1,5 @@
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, t } from '@lingui/core/macro'
 import {
   nomVide,
   regrouper,
@@ -61,13 +63,15 @@ export function tableauDepuis(lignes: readonly unknown[][]): Tableau {
   const [entetes = [], ...reste] = textes
   const largeur = Math.max(entetes.length, ...reste.map(l => l.length))
   if (largeur > COLONNES_MAX) {
-    throw new Error(`Un fichier compte ${COLONNES_MAX} colonnes au plus.`)
+    throw new Error(t`Un fichier compte ${COLONNES_MAX} colonnes au plus.`)
   }
   if (reste.length > LIGNES_MAX) {
-    throw new Error(`Un fichier compte ${LIGNES_MAX} lignes au plus.`)
+    throw new Error(t`Un fichier compte ${LIGNES_MAX} lignes au plus.`)
   }
-  const nommer = (e: string | undefined, i: number) =>
-    e && e !== '' ? e : `Colonne ${i + 1}`
+  const nommer = (e: string | undefined, i: number) => {
+    const numero = i + 1
+    return e && e !== '' ? e : t`Colonne ${numero}`
+  }
   return {
     entetes: Array.from({ length: largeur }, (_, i) => nommer(entetes[i], i)),
     lignes: reste.map(l =>
@@ -92,7 +96,7 @@ export async function lireCsv(texte: string): Promise<Tableau> {
 /** Lit un fichier CSV ou XLSX : une feuille par feuille du classeur. */
 export async function lireFichier(fichier: File): Promise<Feuille[]> {
   if (fichier.size > TAILLE_MAX) {
-    throw new Error('Un fichier pèse 2 Mo au plus.')
+    throw new Error(t`Un fichier pèse 2 Mo au plus.`)
   }
   const octets = await fichier.arrayBuffer()
   if (/\.xlsx$/i.test(fichier.name)) {
@@ -106,7 +110,7 @@ export async function lireFichier(fichier: File): Promise<Feuille[]> {
   if (/\.(csv|txt)$/i.test(fichier.name)) {
     return [{ nom: fichier.name, tableau: await lireCsv(decoderTexte(octets)) }]
   }
-  throw new Error('Choisissez un fichier CSV ou Excel (.xlsx).')
+  throw new Error(t`Choisissez un fichier CSV ou Excel (.xlsx).`)
 }
 
 // ── Colonnes ─────────────────────────────────────────────────────────────────
@@ -125,19 +129,36 @@ export type Champ =
   | 'REGROUPEMENT'
   | 'DATE_ACCORD'
 
-export const LIBELLES_CHAMP: Record<Champ, string> = {
-  IGNORER: 'Ignorer',
-  PRENOM: 'Prénom',
-  NOM: 'Nom',
-  NOM_COMPLET: 'Prénom et nom',
-  COURRIEL: 'Adresse mail',
-  TELEPHONE: 'Téléphone',
-  PRECISIONS: 'Précisions de disponibilité',
-  CHOIX: 'Un poste ou un créneau (une colonne par choix)',
-  VALEURS: 'Postes et créneaux (plusieurs par cellule)',
-  REF_EXTERNE: 'Identifiant externe',
-  REGROUPEMENT: 'Regroupement des lignes',
-  DATE_ACCORD: 'Date de l’accord',
+/** Les libellés des champs, à traduire à l'affichage : `t(LIBELLES_CHAMP[champ])`. */
+export const LIBELLES_CHAMP: Record<Champ, MessageDescriptor> = {
+  IGNORER: msg({
+    message: 'Ignorer',
+    comment:
+      'Champ à associer à une colonne d’un fichier : ne pas importer la colonne',
+  }),
+  PRENOM: msg({
+    message: 'Prénom',
+    comment: 'Champ à associer à une colonne d’un fichier',
+  }),
+  NOM: msg({
+    message: 'Nom',
+    comment: 'Champ à associer à une colonne d’un fichier : nom de famille',
+  }),
+  NOM_COMPLET: msg`Prénom et nom`,
+  COURRIEL: msg({
+    message: 'Adresse mail',
+    comment: 'Champ à associer à une colonne d’un fichier',
+  }),
+  TELEPHONE: msg({
+    message: 'Téléphone',
+    comment: 'Champ à associer à une colonne d’un fichier',
+  }),
+  PRECISIONS: msg`Précisions de disponibilité`,
+  CHOIX: msg`Un poste ou un créneau (une colonne par choix)`,
+  VALEURS: msg`Postes et créneaux (plusieurs par cellule)`,
+  REF_EXTERNE: msg`Identifiant externe`,
+  REGROUPEMENT: msg`Regroupement des lignes`,
+  DATE_ACCORD: msg`Date de l’accord`,
 }
 
 /** Les champs qu'une seule colonne reçoit. */
@@ -152,7 +173,7 @@ const UNIQUES: Champ[] = [
   'DATE_ACCORD',
 ]
 
-/** Les synonymes d'en-tête, comparés sans accent ni casse. */
+/** Les synonymes d'en-tête, en français et en anglais (ADR 0047), comparés sans accent ni casse. */
 const SYNONYMES: [Champ, RegExp][] = [
   ['COURRIEL', /\b(e-?mail|courriel|mail|adresse electronique)\b/],
   ['TELEPHONE', /\b(tel|telephone|portable|mobile|gsm|phone)\b/],
@@ -161,23 +182,32 @@ const SYNONYMES: [Champ, RegExp][] = [
     'NOM_COMPLET',
     /^(nom complet|nom et prenom|prenom et nom|participant|name|full name)$/,
   ],
-  ['NOM', /\b(nom|last ?name|nom de famille)\b/],
+  ['NOM', /\b(nom|last ?name|nom de famille|surname|family name)\b/],
   [
     'PRECISIONS',
-    /\b(disponibilites?|precisions?|commentaires?|remarques?|precise)\b/,
+    // En anglais, seules des formes explicites : « notes » ou « details » seuls
+    // désignent aussi une adresse (« Billing details ») ou un régime (« Dietary notes »).
+    /\b(disponibilites?|precisions?|commentaires?|remarques?|precise|availability|availabilities|additional (notes|details|information)|in writing|comments?|remarks?)\b/,
   ],
-  ['VALEURS', /\b(prestations?|postes?|creneaux|missions?)\b/],
+  [
+    'VALEURS',
+    /\b(prestations?|postes?|creneaux|missions?|services?|shifts?|positions?|slots?)\b/,
+  ],
   [
     'DATE_ACCORD',
-    /\b(date (de )?(la )?commande|date (de )?creation|date d'inscription|inscrit le)\b/,
+    /\b(date (de )?(la )?commande|date (de )?creation|date d'inscription|inscrit le|order date|registration date|registered on|signed up)\b/,
   ],
   ['REF_EXTERNE', /\b(billet|ticket|numero de billet|identifiant|id)\b/],
-  ['REGROUPEMENT', /\b(commande|transaction|numero de commande)\b/],
+  [
+    'REGROUPEMENT',
+    // « Order » seul désignerait aussi « Order status » : seul le numéro regroupe.
+    /\b(commande|transaction|numero de commande|order (number|no))\b|\border #/,
+  ],
 ]
 
 /** Les colonnes qui ne doivent jamais partir : elles restent ignorées. */
 const SENSIBLES =
-  /\b(genre|sexe|civilite|pronom|sante|allergie|handicap|paiement|montant|prix|moyen de paiement|tarif|iban|carte)\b/
+  /\b(genre|sexe|civilite|pronom|sante|allergie|handicap|paiement|montant|prix|moyen de paiement|tarif|iban|carte|gender|sex|pronouns?|health|medical|allerg(y|ies)|disability|payment|amount|price|fee|card)\b/
 
 export type Confiance = 'HAUTE' | 'MOYENNE' | 'BASSE'
 
@@ -194,7 +224,7 @@ export interface Colonne {
 
 const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const HORAIRE =
-  /(\d{1,2})\s*(?:h|:)\s*(\d{2})?\s*(?:-|–|à|a|\/)\s*(\d{1,2})\s*(?:h|:)?\s*(\d{2})?/i
+  /(\d{1,2})\s*(?:h|:)\s*(\d{2})?\s*(?:-|–|à|a|to|\/)\s*(\d{1,2})\s*(?:h|:)?\s*(\d{2})?/i
 
 /** La part de cellules non vides d'une colonne qui vérifie un test. */
 function part(valeurs: readonly string[], test: (v: string) => boolean) {
@@ -543,7 +573,7 @@ export function construirePersonnes(
     ) {
       ecartees.push({
         ligne: numero,
-        motif: 'La ligne ne porte ni nom, ni adresse, ni téléphone.',
+        motif: t`La ligne ne porte ni nom, ni adresse, ni téléphone.`,
         valeurs: ligne,
       })
       return
@@ -634,8 +664,7 @@ export function construirePersonnes(
     for (const numero of l.lignes) {
       ecartees.push({
         ligne: numero,
-        motif:
-          'Le groupe de la ligne ne porte ni nom, ni adresse, ni téléphone.',
+        motif: t`Le groupe de la ligne ne porte ni nom, ni adresse, ni téléphone.`,
         valeurs: tableau.lignes[numero - 2] ?? [],
       })
     }
@@ -695,7 +724,17 @@ export async function csvDesEcartees(
   const { default: Papa } = await import('papaparse')
   return Papa.unparse(
     {
-      fields: ['Ligne', 'Motif', ...entetes],
+      fields: [
+        t({
+          message: 'Ligne',
+          comment: 'En-tête d’une colonne du fichier des lignes écartées',
+        }),
+        t({
+          message: 'Motif',
+          comment: 'En-tête d’une colonne du fichier des lignes écartées',
+        }),
+        ...entetes,
+      ],
       data: ecartees.map(e => [String(e.ligne), e.motif, ...e.valeurs]),
     },
     // Le séparateur du fichier d'origine ; un point-virgule pour un classeur,

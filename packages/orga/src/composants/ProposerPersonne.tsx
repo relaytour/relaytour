@@ -1,5 +1,8 @@
 import { UserAddOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Form, Input, Modal, Popconfirm, Tag } from 'antd'
 import { useState } from 'react'
 
@@ -47,10 +50,30 @@ const RETIRER = graphql(`
   }
 `)
 
-const STATUTS: Record<StatutDemande, { libelle: string; couleur?: string }> = {
-  EN_ATTENTE: { libelle: 'En attente', couleur: 'gold' },
-  ACCEPTEE: { libelle: 'Acceptée', couleur: 'green' },
-  REFUSEE: { libelle: 'Refusée' },
+const STATUTS: Record<
+  StatutDemande,
+  { libelle: MessageDescriptor; couleur?: string }
+> = {
+  EN_ATTENTE: {
+    libelle: msg({
+      message: 'En attente',
+      comment: 'Statut d’une demande pour rejoindre l’équipe',
+    }),
+    couleur: 'gold',
+  },
+  ACCEPTEE: {
+    libelle: msg({
+      message: 'Acceptée',
+      comment: 'Statut d’une demande pour rejoindre l’équipe',
+    }),
+    couleur: 'green',
+  },
+  REFUSEE: {
+    libelle: msg({
+      message: 'Refusée',
+      comment: 'Statut d’une demande pour rejoindre l’équipe',
+    }),
+  },
 }
 
 interface Valeurs {
@@ -68,6 +91,7 @@ export default function ProposerPersonne({
   perimetreNom: string
   editionId: string
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const [ouvert, setOuvert] = useState(false)
   const [form] = Form.useForm<Valeurs>()
@@ -90,7 +114,7 @@ export default function ProposerPersonne({
           mot: v.mot ?? null,
         },
       })
-      message.success('Votre proposition est transmise aux admins.')
+      message.success(t`Votre proposition est transmise aux admins.`)
       setOuvert(false)
       form.resetFields()
     } catch (e) {
@@ -99,14 +123,16 @@ export default function ProposerPersonne({
   }
 
   return (
-    <Panneau titre="Proposer une personne">
+    <Panneau titre={t`Proposer une personne`}>
       <p className="rt-texte-secondaire" style={{ margin: 0 }}>
-        Vous pouvez proposer une personne pour ce périmètre. Un admin examine la
-        proposition, puis invite la personne.
+        <Trans>
+          Vous pouvez proposer une personne pour ce périmètre. Un admin examine
+          la proposition, puis invite la personne.
+        </Trans>
       </p>
       <div>
         <Button icon={<UserAddOutlined />} onClick={() => setOuvert(true)}>
-          Proposer une personne
+          <Trans>Proposer une personne</Trans>
         </Button>
       </div>
       {propositions.length > 0 && (
@@ -115,7 +141,7 @@ export default function ProposerPersonne({
             id="vos-propositions"
             style={{ margin: 0, fontSize: 14, fontWeight: 700 }}
           >
-            Vos propositions
+            <Trans>Vos propositions</Trans>
           </h3>
           <ul
             aria-labelledby="vos-propositions"
@@ -128,56 +154,59 @@ export default function ProposerPersonne({
               listStyle: 'none',
             }}
           >
-            {propositions.map(p => (
-              <li
-                key={p.id}
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  alignItems: 'center',
-                  gap: 8,
-                  fontSize: 14,
-                }}
-              >
-                <span style={{ fontWeight: 600 }}>{p.nom}</span>
-                <Tag
-                  color={STATUTS[p.statut].couleur}
-                  style={{ marginInlineEnd: 0 }}
+            {propositions.map(p => {
+              const nomPersonne = p.nom
+              return (
+                <li
+                  key={p.id}
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    alignItems: 'center',
+                    gap: 8,
+                    fontSize: 14,
+                  }}
                 >
-                  {STATUTS[p.statut].libelle}
-                </Tag>
-                {p.statut === 'EN_ATTENTE' && (
-                  <Popconfirm
-                    title="Retirer cette proposition ?"
-                    okText="Retirer"
-                    cancelText="Annuler"
-                    onConfirm={() =>
-                      retirer({ variables: { id: p.id } }).catch((e: unknown) =>
-                        message.error(messageErreur(e))
-                      )
-                    }
+                  <span style={{ fontWeight: 600 }}>{p.nom}</span>
+                  <Tag
+                    color={STATUTS[p.statut].couleur}
+                    style={{ marginInlineEnd: 0 }}
                   >
-                    <Button
-                      size="small"
-                      type="link"
-                      aria-label={`Retirer la proposition de ${p.nom}`}
-                      style={{ marginInlineStart: 'auto' }}
+                    {t(STATUTS[p.statut].libelle)}
+                  </Tag>
+                  {p.statut === 'EN_ATTENTE' && (
+                    <Popconfirm
+                      title={t`Retirer cette proposition ?`}
+                      okText={t`Retirer`}
+                      cancelText={t`Annuler`}
+                      onConfirm={() =>
+                        retirer({ variables: { id: p.id } }).catch(
+                          (e: unknown) => message.error(messageErreur(e))
+                        )
+                      }
                     >
-                      Retirer
-                    </Button>
-                  </Popconfirm>
-                )}
-              </li>
-            ))}
+                      <Button
+                        size="small"
+                        type="link"
+                        aria-label={t`Retirer la proposition de ${nomPersonne}`}
+                        style={{ marginInlineStart: 'auto' }}
+                      >
+                        <Trans>Retirer</Trans>
+                      </Button>
+                    </Popconfirm>
+                  )}
+                </li>
+              )
+            })}
           </ul>
         </>
       )}
 
       <Modal
         open={ouvert}
-        title={`Proposer une personne pour ${perimetreNom}`}
-        okText="Envoyer la proposition"
-        cancelText="Annuler"
+        title={t`Proposer une personne pour ${perimetreNom}`}
+        okText={t`Envoyer la proposition`}
+        cancelText={t`Annuler`}
         confirmLoading={proposition.loading}
         onOk={() => form.submit()}
         onCancel={() => setOuvert(false)}
@@ -190,30 +219,30 @@ export default function ProposerPersonne({
           requiredMark={false}
         >
           <Form.Item
-            label="Prénom et nom"
+            label={t`Prénom et nom`}
             name="nom"
-            rules={[{ required: true, message: 'Saisissez un nom.' }]}
+            rules={[{ required: true, message: t`Saisissez un nom.` }]}
           >
             <Input maxLength={120} autoComplete="off" />
           </Form.Item>
           <Form.Item
-            label="Adresse mail"
+            label={t`Adresse mail`}
             name="email"
-            extra="La personne ne reçoit aucun mail avant la décision d’un admin."
+            extra={t`La personne ne reçoit aucun mail avant la décision d’un admin.`}
             rules={[
               {
                 required: true,
                 type: 'email',
-                message: 'Saisissez une adresse mail valide.',
+                message: t`Saisissez une adresse mail valide.`,
               },
             ]}
           >
             <Input type="email" autoComplete="off" />
           </Form.Item>
           <Form.Item
-            label="Mot pour les admins (facultatif)"
+            label={t`Mot pour les admins (facultatif)`}
             name="mot"
-            extra="Par exemple sa disponibilité. Les admins de l’activité lisent ce mot."
+            extra={t`Par exemple sa disponibilité. Les admins de l’activité lisent ce mot.`}
           >
             <Input.TextArea rows={2} maxLength={280} showCount />
           </Form.Item>

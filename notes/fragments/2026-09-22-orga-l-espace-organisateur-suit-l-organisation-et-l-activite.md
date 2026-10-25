@@ -15,6 +15,15 @@ fr:
     périmètres se rangent dans les groupes de l'activité, et la période prend
     le nom d'édition, de saison ou de mandat. Les admins gèrent les activités
     dans une nouvelle page.
+en:
+  titre: >-
+    The organizer workspace follows the chosen organization and activity
+  texte: >-
+    An activity’s pages live under its identifier, for example
+    /rencontres/retroplanning. A selector switches activities, and the account
+    menu switches organizations for a person who belongs to several. Areas are
+    sorted into the activity’s groups, and the period takes the name of edition,
+    season, or term. Admins manage activities on a new page.
 ---
 
 - Garde de session : connexion, choix de l'organisation, choix mémorisé

@@ -79,6 +79,7 @@ export default function LigneTache({
               <PastilleEtat variante="alerte" sansPoint>
                 {t({
                   message: 'Personne',
+                  context: 'aucune personne',
                   comment: 'Aucune personne n’est assignée à la tâche',
                 })}
               </PastilleEtat>

@@ -1,5 +1,6 @@
 import { CalendarOutlined, PlusOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button } from 'antd'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -36,6 +37,7 @@ export default function ReunionsDuPerimetre({
   peutModifier: boolean
   onNouvelle: () => void
 }) {
+  const { t } = useLingui()
   const { lien } = useActivite()
   const { data } = useQuery(REUNIONS, {
     variables: { editionId, perimetreId },
@@ -54,19 +56,19 @@ export default function ReunionsDuPerimetre({
 
   return (
     <Panneau
-      titre="Prochaines réunions"
+      titre={t`Prochaines réunions`}
       icone={<CalendarOutlined aria-hidden />}
       extra={
         peutModifier && (
           <Button size="small" icon={<PlusOutlined />} onClick={onNouvelle}>
-            Nouvelle
+            {t({ message: 'Nouvelle', comment: 'Bouton : créer une réunion' })}
           </Button>
         )
       }
     >
       {prochaines.length === 0 ? (
         <p className="rt-texte-secondaire">
-          Aucune réunion à venir pour ce périmètre.
+          <Trans>Aucune réunion à venir pour ce périmètre.</Trans>
         </p>
       ) : (
         <ul className="rt-liste-liens">
@@ -94,7 +96,7 @@ export default function ReunionsDuPerimetre({
         to={lien(`/agenda?edition=${editionId}`)}
         style={{ alignSelf: 'flex-start' }}
       >
-        Voir l’agenda
+        <Trans>Voir l’agenda</Trans>
       </Link>
     </Panneau>
   )

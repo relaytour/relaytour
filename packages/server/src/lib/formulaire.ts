@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { donneesPersonnelles, type AdressesDeRole } from './contenu.ts'
 import { erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 // Formulaire public pour rejoindre l'équipe d'une activité (ADR 0015).
 //
@@ -95,10 +96,14 @@ export function texteLibre(
   const texte = (brut ?? '').trim()
   if (texte === '') return null
   if (texte.length > max) {
-    throw erreurSaisie(`${nom} compte ${max} caractères au plus.`)
+    throw erreurSaisie(
+      i18n._('{nom} compte {max} caractères au plus.', { nom, max })
+    )
   }
   if (contientUnLien(texte)) {
-    throw erreurSaisie('Les liens ne sont pas acceptés dans ce formulaire.')
+    throw erreurSaisie(
+      i18n._('Les liens ne sont pas acceptés dans ce formulaire.')
+    )
   }
   return texte
 }

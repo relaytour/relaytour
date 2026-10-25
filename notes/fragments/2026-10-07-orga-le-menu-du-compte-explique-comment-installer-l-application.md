@@ -13,6 +13,14 @@ fr:
     affiche les étapes de votre appareil : iPhone, Android ou ordinateur. Quand
     le navigateur le permet, un bouton installe l'application en un appui. Un
     mode d'emploi public décrit les mêmes étapes.
+en:
+  titre: >-
+    The account menu explains how to install the app
+  texte: >-
+    The account menu has a new “Install the app” entry. The window shows the
+    steps for your device: iPhone, Android, or computer. When the browser allows
+    it, a button installs the app with one tap. A public user guide describes
+    the same steps.
 ---
 
 Lot 5 de l'ADR 0023. `InstallerApplication`, `lib/installation.ts`

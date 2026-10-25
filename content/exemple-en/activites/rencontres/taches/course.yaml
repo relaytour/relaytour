@@ -1,0 +1,17 @@
+# Task templates of the running area.
+taches:
+  - modele: declarer-le-parcours
+    titre: Register the route with the town hall
+    description: >-
+      The coordinators submit the route and the race schedule to the town and request the necessary orders.
+    echeance: J-150
+  - modele: organiser-le-balisage
+    titre: Organize the route marking and the safety posts
+    description: >-
+      The coordinators list the marking points and the marshal posts, then request volunteers from the Volunteers department.
+    echeance: J-45
+  - modele: publier-les-resultats
+    titre: Publish the results
+    description: >-
+      The coordinators check the timing and send the ranking to the Communication department.
+    echeance: J+1

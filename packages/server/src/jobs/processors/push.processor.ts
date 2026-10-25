@@ -5,6 +5,8 @@ import { prisma } from '@relaytour/database'
 
 import { env } from '../../env.ts'
 import { journal, sansAdresses } from '../../lib/journal.ts'
+import { avecLangue } from '../../lib/langue.ts'
+import { langueDuDestinataire } from '../../lib/langue-destinataire.ts'
 import {
   composerNotification,
   SELECTION_NOTIFICATION,
@@ -78,8 +80,10 @@ export async function pushProcessor(job: Job<PushJobData>): Promise<void> {
   })
   if (abonnements.length === 0) return
 
+  // Le texte se compose dans la langue du destinataire (ADR 0047).
+  const langue = await langueDuDestinataire(prisma, n.userId, n.organisationId)
   const [composee, organisation, nonLues] = await Promise.all([
-    composerNotification(prisma, n, n.userId),
+    avecLangue(langue, () => composerNotification(prisma, n, n.userId)),
     configurationOrganisation(n.organisationId),
     // La pastille de l'application compte les notifications non lues de la cloche
     // et celles des rôles d'admin que la personne tient encore.

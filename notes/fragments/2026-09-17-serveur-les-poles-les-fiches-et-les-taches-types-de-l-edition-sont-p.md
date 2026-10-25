@@ -14,6 +14,15 @@ fr:
     issues du bilan de l'édition 2025 et d'une liste de tâches datées. Après
     l'import d'une édition, les référentes et référents retrouvent ces tâches
     avec leurs échéances.
+en:
+  titre: >-
+    The departments, sheets, and task templates of the edition are ready to
+    import
+  texte: >-
+    The organizer workspace now has eleven departments in addition to the eight
+    sports, including an Inclusion and welcome department. Each area has how-to
+    sheets drawn from the review of the 2025 edition and a list of dated tasks.
+    After an edition import, coordinators find these tasks with their due dates.
 ---
 
 Contenu de `content/orga` (ADR 0003) : 11 pôles dans `perimetres.yaml`,

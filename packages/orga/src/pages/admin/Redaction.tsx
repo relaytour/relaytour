@@ -12,7 +12,7 @@ import { messageErreur } from '../../lib/erreurs'
 import { PERIMETRES } from '../../lib/requetes'
 import { useSession } from '../../lib/session'
 import { comparer } from '../../lib/tableau'
-import { langueActive } from '../../lib/langue'
+import { comparerTextes, langueActive } from '../../lib/langue'
 
 const DROITS = graphql(`
   query DroitsRedaction($annuaire: Boolean!) {
@@ -74,7 +74,7 @@ interface Admin {
 const TOUTES = 'toutes'
 
 const parNom = (a: { nom: string }, b: { nom: string }) =>
-  a.nom.localeCompare(b.nom, langueActive())
+  comparerTextes(a.nom, b.nom)
 
 export default function Redaction() {
   const { t } = useLingui()

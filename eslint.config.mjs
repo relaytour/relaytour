@@ -11,6 +11,8 @@ export default tseslint.config(
       '**/dist-*/**',
       '**/node_modules/**',
       '**/generated/**',
+      // Catalogues compilés par Lingui (ADR 0047).
+      'packages/server/src/locales/**',
       'packages/orga/**',
       '.yarn/**',
       '.claude/worktrees/**',

@@ -58,6 +58,14 @@ function fragment(racine, nom, champs) {
     `  titre: Titre de ${nom}`,
     `  texte: Texte de ${nom}.`,
     ...(champs.type === 'rupture' ? [`  migration: Migration de ${nom}.`] : []),
+    ...(champs.en
+      ? [
+          'en:',
+          ...Object.entries(champs.en).map(
+            ([cle, valeur]) => `  ${cle}: ${valeur}`
+          ),
+        ]
+      : []),
     '---',
     '',
   ]
@@ -149,7 +157,7 @@ test('publier rattache les fragments, relève les trois paquets et groupe le jou
   )
 
   const serveur = journal(racine, 'serveur')
-  assert.equal(serveur.schemaVersion, 4)
+  assert.equal(serveur.schemaVersion, 5)
   assert.equal(serveur.version, '0.2.0')
   assert.deepEqual(
     serveur.versions.map(v => [v.version, v.notes.map(n => n.id)]),
@@ -426,4 +434,134 @@ test('noter écrit le rôle demandé, et « referent » sans option', () => {
     .map(nom => lire(racine, `notes/fragments/${nom}`))
   assert.match(admins, /^role: admin-organisation$/m)
   assert.match(tous, /^role: referent$/m)
+})
+
+/** La version d'un package.json du dépôt temporaire. */
+const lireVersion = (racine, relatif) =>
+  JSON.parse(readFileSync(join(racine, relatif), 'utf8')).version
+
+/** Les catalogues de l'espace organisateur et du serveur, l'anglais traduit ou non. */
+function catalogues(racine, anglaisComplet) {
+  const po = traduit =>
+    `msgid ""\nmsgstr ""\n\nmsgid "Bonjour"\nmsgstr "${traduit}"\n`
+  for (const paquet of ['orga', 'server']) {
+    for (const [langue, traduit] of [
+      ['fr', 'Bonjour'],
+      ['en', anglaisComplet ? 'Hello' : ''],
+    ]) {
+      const dossier = join(racine, `packages/${paquet}/src/locales/${langue}`)
+      mkdirSync(dossier, { recursive: true })
+      writeFileSync(join(dossier, 'messages.po'), po(traduit))
+    }
+  }
+}
+
+test('publier refuse une version dont le catalogue anglais est incomplet', () => {
+  const racine = depot('0.4.0')
+  fragment(racine, '2026-09-20-orga-nouveau', { type: 'fonctionnalite' })
+  catalogues(racine, false)
+  const { code, erreur } = lancer(racine, 'publier')
+  assert.notEqual(code, 0)
+  assert.match(erreur, /orga : 1 messages restent à traduire/)
+  assert.match(erreur, /catalogue anglais doit être complet/)
+  // Rien n'a été écrit.
+  assert.equal(lireVersion(racine, 'package.json'), '0.4.0')
+})
+
+test('publier accepte une version dont le catalogue anglais est complet', () => {
+  const racine = depot('0.4.0')
+  fragment(racine, '2026-09-20-orga-nouveau', { type: 'fonctionnalite' })
+  catalogues(racine, true)
+  assert.equal(lancer(racine, 'publier').code, 0)
+  assert.equal(lireVersion(racine, 'package.json'), '0.5.0')
+})
+
+test('compiler porte la version anglaise d’une note, null sans elle', () => {
+  const racine = depot('0.2.0')
+  fragment(racine, '2026-01-01-orga-traduite', {
+    type: 'correctif',
+    version: '0.2.0',
+    en: { titre: 'English title', texte: 'English text.' },
+  })
+  fragment(racine, '2026-01-02-orga-francaise', {
+    type: 'correctif',
+    version: '0.2.0',
+  })
+  assert.equal(lancer(racine, 'valider').code, 0)
+  assert.equal(lancer(racine, 'compiler').code, 0)
+  assert.deepEqual(
+    journal(racine, 'orga').versions[0].notes.map(n => [n.id, n.en]),
+    [
+      ['2026-01-02-orga-francaise', null],
+      [
+        '2026-01-01-orga-traduite',
+        { titre: 'English title', texte: 'English text.', migration: null },
+      ],
+    ]
+  )
+})
+
+test('valider refuse une version anglaise incomplète', () => {
+  const racine = depot('0.2.0')
+  fragment(racine, '2026-01-01-orga-sans-texte', {
+    type: 'correctif',
+    en: { titre: 'English title' },
+  })
+  fragment(racine, '2026-01-02-orga-rupture', {
+    type: 'rupture',
+    en: { titre: 'Breaking', texte: 'Text.' },
+  })
+  const { code, sortie } = lancer(racine, 'valider')
+  assert.equal(code, 1)
+  assert.ok(sortie.includes('« en.texte » manquant'), sortie)
+  assert.ok(
+    sortie.includes('« en.migration » obligatoire quand type est « rupture »'),
+    sortie
+  )
+})
+
+test('noter amorce la version anglaise avec --titre-en', () => {
+  const racine = depot('0.2.0')
+  const { code } = lancerAvec(
+    racine,
+    { VERSIONNER_MAINTENANT: '2026-01-05T10:00:00' },
+    'noter',
+    '--cible',
+    'orga',
+    '--type',
+    'correctif',
+    '--audience',
+    'organisateurs',
+    '--titre',
+    'Un titre',
+    '--titre-en',
+    'A title'
+  )
+  assert.equal(code, 0)
+  const texte = lire(racine, 'notes/fragments/2026-01-05-orga-un-titre.md')
+  assert.ok(
+    texte.includes('\nen:\n  titre: >-\n    A title\n  texte: >-\n'),
+    texte
+  )
+})
+
+test('valider signale sans échouer une note des organisateurs sans version anglaise', () => {
+  const racine = depot('0.2.0')
+  fragment(racine, '2026-01-01-orga-francaise', { type: 'correctif' })
+  fragment(racine, '2026-01-02-orga-traduite', {
+    type: 'correctif',
+    en: { titre: 'English title', texte: 'English text.' },
+  })
+  fragment(racine, '2026-01-03-orga-interne', {
+    type: 'interne',
+    audience: 'interne',
+  })
+  const { code, sortie } = lancer(racine, 'valider')
+  assert.equal(code, 0)
+  assert.ok(
+    sortie.includes('1 note des organisateurs sans version anglaise'),
+    sortie
+  )
+  assert.ok(sortie.includes('· 2026-01-01-orga-francaise'), sortie)
+  assert.ok(!sortie.includes('· 2026-01-03-orga-interne'), sortie)
 })
