@@ -3,7 +3,11 @@ import path from 'node:path'
 import type { PrismaClient } from '@relaytour/database'
 import type { Langue } from '@relaytour/commun'
 
-import { lireGroupes, typeDepuisGroupe } from '../lib/activites.ts'
+import {
+  groupesValides,
+  lireGroupes,
+  typeDepuisGroupe,
+} from '../lib/activites.ts'
 import { marquerContenuModifie } from '../lib/synchronisation.ts'
 
 import { importerFiches, type RapportFiches } from './import-fiches.ts'
@@ -95,6 +99,10 @@ export async function appliquerModeleDeDepart(
   const groupes = lireGroupes(activite.groupes)
   const cles = new Set(groupes.map(g => g.cle))
   const ajoutes = modele.declaration.groupes.filter(g => !cles.has(g.cle))
+  // Les groupes ajoutés respectent la borne de l'activité : au-delà de dix, la
+  // simulation et l'application refusent, avant toute écriture.
+  const fusionnes =
+    ajoutes.length === 0 ? groupes : groupesValides([...groupes, ...ajoutes])
   const rapport: RapportModeleDeDepart = {
     ...rapportTachesVide(),
     groupesAjoutes: ajoutes.map(g => g.cle),
@@ -105,7 +113,7 @@ export async function appliquerModeleDeDepart(
   if (ecrire && ajoutes.length > 0) {
     await tx.activite.update({
       where: { id: activiteId },
-      data: { groupes: [...groupes, ...ajoutes] },
+      data: { groupes: fusionnes },
     })
   }
 

@@ -2594,6 +2594,10 @@ msgstr "Ces fiches appartiennent à d’autres périmètres et concernent aussi 
 msgid "Ces fiches avaient été modifiées chez le fournisseur cloud. Relaytour les a réécrites."
 msgstr "Ces fiches avaient été modifiées chez le fournisseur cloud. Relaytour les a réécrites."
 
+#: src/composants/ModeleDeDepart.tsx
+msgid "Ces fiches existent déjà dans l’organisation et ne seront pas reprises : {conflits}."
+msgstr "Ces fiches existent déjà dans l’organisation et ne seront pas reprises : {conflits}."
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Ces fiches ne sont pas exportées."
 msgstr "Ces fiches ne sont pas exportées."
@@ -9496,10 +9500,6 @@ msgstr "Une affectation rend la personne référent·e du périmètre : elle y m
 #: src/lib/guide-markdown.ts
 msgid "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 msgstr "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
-
-#: src/composants/ModeleDeDepart.tsx
-msgid "Une autre activité porte déjà ces fiches, qui ne seront pas reprises : {conflits}."
-msgstr "Une autre activité porte déjà ces fiches, qui ne seront pas reprises : {conflits}."
 
 #: src/lib/conflit.ts
 msgid "Une autre personne"

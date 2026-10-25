@@ -170,7 +170,7 @@ describe('modèle de départ', () => {
     )
     expect(rapport.perimetres.some(p => p.tachesTypes > 0)).toBe(true)
     expect(rapport.groupesAjoutes).toEqual(['pole'])
-    expect(rapport.fichesEnConflit).toEqual([ficheCommune.slug])
+    expect(rapport.fichesEnConflit).toEqual([ficheCommune.titre])
     expect(rapport.periode).toBe('Tournoi 2027')
     expect(rapport.tachesCreees.length).toBeGreaterThan(0)
     expect(
@@ -213,6 +213,25 @@ describe('modèle de départ', () => {
   })
 
   it('refuse une activité qui a déjà des périmètres', async () => {
+    expect(code(await executer(ids.admin, APPLIQUER))).toBe('SAISIE_INVALIDE')
+  })
+
+  it('refuse de dépasser dix groupes, dès la simulation', async () => {
+    ids.activite = (
+      await prisma.activite.create({
+        data: {
+          organisationId: ids.org,
+          slug: 'neuf-groupes',
+          nom: 'Neuf groupes',
+          groupes: Array.from({ length: 9 }, (_, i) => ({
+            cle: `groupe-${i}`,
+            libelle: `Groupe ${i}`,
+            libellePluriel: `Groupes ${i}`,
+          })),
+        },
+      })
+    ).id
+    expect(code(await executer(ids.admin, SIMULER))).toBe('SAISIE_INVALIDE')
     expect(code(await executer(ids.admin, APPLIQUER))).toBe('SAISIE_INVALIDE')
   })
 })

@@ -3121,6 +3121,10 @@ Ce qu’un modèle de départ apporte à une activité, ou apporterait en simula
 type RapportModeleDeDepart {
   effectifsCrees: [String!]!
   fiches: [String!]!
+
+  """
+  Les titres des fiches du modèle qui existent déjà dans l’organisation : elles ne sont pas reprises.
+  """
   fichesEnConflit: [String!]!
   groupesAjoutes: [String!]!
   perimetres: [ApercuPerimetreModele!]!

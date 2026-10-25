@@ -2594,6 +2594,10 @@ msgstr "These sheets belong to other areas and also concern this one."
 msgid "Ces fiches avaient été modifiées chez le fournisseur cloud. Relaytour les a réécrites."
 msgstr "These sheets had been edited at the cloud provider. Relaytour overwrote them."
 
+#: src/composants/ModeleDeDepart.tsx
+msgid "Ces fiches existent déjà dans l’organisation et ne seront pas reprises : {conflits}."
+msgstr "These sheets already exist in the organization and will not be carried over: {conflits}."
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Ces fiches ne sont pas exportées."
 msgstr "These sheets are not exported."
@@ -9496,10 +9500,6 @@ msgstr "An appointment makes the person a coordinator of the area: they edit its
 #: src/lib/guide-markdown.ts
 msgid "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 msgstr "An at sign followed by an area’s identifier mentions it, for example @logistique. A @groupe: mention followed by a group’s key mentions the whole group."
-
-#: src/composants/ModeleDeDepart.tsx
-msgid "Une autre activité porte déjà ces fiches, qui ne seront pas reprises : {conflits}."
-msgstr "Another activity already holds these sheets, which will not be carried over: {conflits}."
 
 #: src/lib/conflit.ts
 msgid "Une autre personne"

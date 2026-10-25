@@ -45,7 +45,11 @@ export default function PremiersPas() {
   const { message } = App.useApp()
   const { lien, periode } = useActivite()
   const { une: unePeriode, nom: mot } = periode
-  const { data, refetch } = useQuery(PREMIERS_PAS)
+  // L'état change aussi depuis les autres écrans : la liste se relit à chaque
+  // retour sur Mon espace.
+  const { data, refetch } = useQuery(PREMIERS_PAS, {
+    fetchPolicy: 'cache-and-network',
+  })
   const { data: courante } = useQuery(EDITION_COURANTE)
   const edition = courante?.editionCourante
   const [fenetre, setFenetre] = useState<Fenetre | null>(null)
