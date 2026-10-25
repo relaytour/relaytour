@@ -47,6 +47,7 @@ import ReglagePerimetre, {
   type PerimetreRegle,
 } from '../../composants/ReglagePerimetre'
 import Titre from '../../composants/Titre'
+import VersPremiersPas from '../../composants/VersPremiersPas'
 import { graphql } from '../../gql'
 import type { EtatPostes } from '../../gql/graphql'
 import { messageErreur } from '../../lib/erreurs'
@@ -534,7 +535,9 @@ export default function Equipe() {
       </div>
 
       {editionId === undefined ? (
-        <Empty description={t`Créez d’abord ${periodeUne}.`} />
+        <Empty description={t`Créez d’abord ${periodeUne}.`}>
+          <VersPremiersPas />
+        </Empty>
       ) : (loading && data === undefined) ||
         (chargementTaches && taches === undefined) ? (
         <Skeleton active />

@@ -8,6 +8,78 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-25-orga-une-edition-reprend-les-taches-de-la-precedente",
+          "date": "2026-10-25",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une nouvelle édition reprend les tâches de la précédente ou les tâches types",
+            "texte": "À la création d’une édition, vous choisissez son point de départ : aucune tâche, les tâches types des périmètres, ou les tâches d’une édition passée. Vous décochez les tâches que vous ne reprenez pas. Chaque échéance garde le même écart avec le premier jour, et une tâche reprise repart à faire. Le menu « Ajouter des tâches » de l’écran Éditions fait la même chose plus tard.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A new edition carries over the previous edition’s tasks or the task templates",
+            "texte": "When you create an edition, you choose its starting point: no tasks, the areas’ task templates, or the tasks of a past edition. You uncheck the tasks you do not carry over. Each due date keeps the same gap from the first day, and a carried-over task starts again as to do. The “Add tasks” menu of the Editions screen does the same later.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-25-orga-une-activite-vide-part-d-un-modele",
+          "date": "2026-10-25",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une activité vide peut partir d’un modèle d’événement multisports",
+            "texte": "Dans la liste « Premiers pas », l’étape des périmètres propose un modèle de départ : sept périmètres d’un rassemblement sportif fictif, leurs tâches types et trois fiches. Les tâches de l’édition en cours sont créées dans la foulée. Vous renommez, archivez ou complétez ensuite chaque élément. Le modèle ne s’applique qu’à une activité qui n’a encore aucun périmètre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An empty activity can start from a multisport event template",
+            "texte": "In the “First steps” list, the areas step offers a starter template: seven areas of a fictional sports gathering, their task templates, and three sheets. The tasks of the current edition are created at the same time. You then rename, archive, or complete each item. The template only applies to an activity that has no areas yet.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-25-orga-mon-espace-guide-les-premiers-pas-d-une-activite",
+          "date": "2026-10-25",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Mon espace guide les premiers pas d’une activité",
+            "texte": "Les admins d’une activité qui démarre trouvent une liste « Premiers pas » sur Mon espace : décrire l’activité, créer l’édition, les périmètres et les tâches, puis inviter l’équipe. Chaque étape ouvre sa fenêtre sans quitter Mon espace, et se coche dès qu’elle est faite, quel que soit l’écran utilisé. Vous masquez la liste pour toute l’activité, et vous la réaffichez depuis le menu du compte.",
+            "migration": null
+          },
+          "en": {
+            "titre": "My space guides an activity’s first steps",
+            "texte": "The admins of a new activity find a “First steps” list in My space: describe the activity, create the edition, the areas, and the tasks, then invite the team. Each step opens its window without leaving My space, and is checked as soon as it is done, whatever screen was used. You hide the list for the whole activity, and show it again from the account menu.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-25-orga-les-taches-s-importent-depuis-un-tableur",
+          "date": "2026-10-25",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les tâches d’une édition s’importent depuis un tableur",
+            "texte": "Le bouton « Importer des tâches » du rétroplanning lit un fichier CSV ou Excel. Vous associez les colonnes (périmètre, titre, échéance, fiche, responsable), puis l’import vérifie chaque ligne avant d’écrire. Une échéance s’écrit en date, en J-30 ou en « 30 jours avant ». Un périmètre inconnu est créé dans le groupe de votre choix, ou sa ligne est écartée. Une option enregistre aussi les tâches comme tâches types. Une tâche déjà présente n’est jamais recréée.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An edition’s tasks can be imported from a spreadsheet",
+            "texte": "The “Import tasks” button of the timeline reads a CSV or Excel file. You map the columns (area, title, due date, sheet, owner), then the import checks each row before writing. A due date is written as a date, as D-30, or as “30 days before”. An unknown area is created in the group of your choice, or its row is set aside. An option also saves the tasks as task templates. A task that is already present is never created again.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-25-orga-l-import-d-une-liste-de-benevoles-reconnait-les-colonnes-en-",
           "date": "2026-10-25",
           "type": "fonctionnalite",
@@ -40,6 +112,24 @@
           "en": {
             "titre": "The organizer workspace is available in English",
             "texte": "You choose your language in your preferences: French, English, or your organization’s language. The organizer workspace, your emails, and your notifications appear in that language. Content written by your organization keeps its own language. Organization admins set the default language in the “Organization” screen.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-25-orga-l-equipe-s-importe-depuis-un-tableur",
+          "date": "2026-10-25",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L’équipe d’une édition s’importe depuis un tableur",
+            "texte": "Le bouton « Importer une liste » de l’écran Personnes lit un fichier CSV ou Excel : nom, adresse, périmètres et contact principal. L’import vérifie chaque ligne, puis crée les comptes, les rattachements et les affectations qui manquent, sans rien retirer. Une personne sans périmètre rejoint l’équipe de l’activité. Aucun mail ne part, sauf si vous cochez « Envoyer les invitations ».",
+            "migration": null
+          },
+          "en": {
+            "titre": "An edition’s team can be imported from a spreadsheet",
+            "texte": "The “Import a list” button of the People screen reads a CSV or Excel file: name, address, areas, and main contact. The import checks each row, then creates the missing accounts, affiliations, and appointments, without removing anything. A person without an area joins the activity’s team. No email is sent unless you check “Send the invitations”.",
             "migration": null
           }
         }

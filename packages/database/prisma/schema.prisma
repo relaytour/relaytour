@@ -282,6 +282,9 @@ model Activite {
   // Adresses personnelles que l'organigramme peut afficher (ADR 0036), avec
   // l'accord de chaque personne. En base seulement : un import ne le change jamais.
   adressesOrganigramme AdressesOrganigramme @default(AUCUNE)
+  // Liste « Premiers pas » de Mon espace (ADR 0048) : { activiteConfirmeeLe,
+  // masqueeLe }, en dates ISO. En base seulement : un import ne la change jamais.
+  premiersPas          Json?
   archivedAt           DateTime?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt

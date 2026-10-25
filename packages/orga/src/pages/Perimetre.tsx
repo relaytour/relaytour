@@ -27,6 +27,7 @@ import { Puces } from '../composants/Puces'
 import TacheCarte from '../composants/TacheCarte'
 import TacheFormulaire from '../composants/TacheFormulaire'
 import Titre from '../composants/Titre'
+import VersPremiersPas from '../composants/VersPremiersPas'
 import { graphql } from '../gql'
 import type { PagePerimetreQuery, TacheChampsFragment } from '../gql/graphql'
 import {
@@ -308,7 +309,11 @@ export default function Perimetre() {
   }
   if (editionId === undefined && courante && !courante.editionCourante) {
     return (
-      <Result status="info" title={t`${aucunePeriode} n’est en préparation.`} />
+      <Result
+        status="info"
+        title={t`${aucunePeriode} n’est en préparation.`}
+        extra={<VersPremiersPas />}
+      />
     )
   }
   // L'écran garde son contenu pendant une relecture : seul un premier chargement

@@ -161,6 +161,13 @@ type Agenda {
   peutGerer: Boolean!
 }
 
+type ApercuPerimetreModele {
+  groupe: String!
+  nom: String!
+  slug: String!
+  tachesTypes: Int!
+}
+
 """
 Un appel à bénévoles : une adresse publique ouverte entre deux dates (ADR 0041).
 """
@@ -906,6 +913,14 @@ type EtapeAccordDeclinaison {
   par: Personne!
 }
 
+enum EtapePremiersPas {
+  ACTIVITE
+  EQUIPE
+  PERIMETRES
+  PERIODE
+  TACHES
+}
+
 """
 A_ACCES : un droit couvre la personne. SANS_COMPTE : l’annuaire du fournisseur ne la connaît pas. SANS_ACCES : aucun droit ne la couvre. INCONNU : un groupe illisible la couvre peut-être. EN_TROP : un compte a un droit sans être attendu.
 """
@@ -932,6 +947,11 @@ enum EtatCompteFournisseur {
 enum EtatConnexionFichiers {
   ACTIVE
   A_RECONNECTER
+}
+
+type EtatEtapePremiersPas {
+  etape: EtapePremiersPas!
+  faite: Boolean!
 }
 
 enum EtatLigneImport {
@@ -962,6 +982,12 @@ enum EtatProposition {
   ECHEC
   EN_ATTENTE
   EN_COURS
+}
+
+enum EtatReconduction {
+  A_CREER
+  DEJA_PRESENTE
+  ECARTEE
 }
 
 """
@@ -1321,6 +1347,16 @@ type LigneClassement {
   score: Score!
 }
 
+input LigneEquipeImport {
+  adresse: String!
+  contactPrincipal: Boolean!
+  ligne: Int!
+  nom: String!
+
+  """Les noms ou les identifiants des périmètres."""
+  perimetres: [String!]!
+}
+
 type LigneImport {
   cle: String!
 
@@ -1332,6 +1368,51 @@ type LigneImport {
   motif: String
   rapprochement: RapprochementImport
   rattacheeA: ID
+}
+
+"""
+Ce que l’import fait d’une ligne du fichier, numérotée en-têtes compris.
+"""
+type LigneImportTableur {
+  avertissements: [String!]!
+  etat: EtatLigneImport!
+  ligne: Int!
+  raison: String
+}
+
+"""
+Une tâche de la période source et ce que la reconduction en fait. Une tâche partagée compte ses déclinaisons recréées.
+"""
+type LigneReconduction {
+  declinaisons: Int!
+  echeance: Date
+  etat: EtatReconduction!
+  parDefaut: Boolean!
+  perimetre: String!
+  perimetreId: ID!
+  raison: String
+  retenue: Boolean!
+  statutSource: StatutTache!
+  tacheId: ID!
+  titre: String!
+}
+
+input LigneTacheImport {
+  description: String
+
+  """
+  Une date AAAA-MM-JJ, ou un décalage depuis le premier jour : J-30, J+3.
+  """
+  echeance: String
+
+  """Le titre ou l’identifiant d’une fiche."""
+  fiche: String
+  ligne: Int!
+  perimetre: String!
+
+  """L’adresse d’une personne affectée au périmètre."""
+  responsable: String
+  titre: String!
 }
 
 """
@@ -1442,6 +1523,10 @@ enum ModeImport {
   PLACES_DIRECTES
 }
 
+enum ModeleDeDepart {
+  EVENEMENT_MULTISPORTS
+}
+
 type Mutation {
   """
   Enregistre l’abonnement push de cet appareil pour la personne connectée. Reste possible dans une organisation en lecture seule.
@@ -1473,7 +1558,15 @@ type Mutation {
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
   afficherFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
+
+  """Affiche de nouveau la liste « Premiers pas » de l’activité."""
+  afficherPremiersPas(activiteId: ID): PremiersPas!
   annulerReunion(id: ID!): Reunion!
+
+  """
+  Crée dans une activité sans périmètre les périmètres, les tâches types et les fiches d’un modèle de départ, puis les tâches de la période courante.
+  """
+  appliquerModeleDeDepart(activiteId: ID, modele: ModeleDeDepart!): RapportModeleDeDepart!
 
   """
   Applique une proposition chez le fournisseur. Rend APPLIQUEE, ou ECHEC avec son message dans la proposition.
@@ -1486,7 +1579,7 @@ type Mutation {
   appliquerPropositionsDossier(dossierId: ID!): Int!
 
   """
-  Crée les effectifs et les tâches d’une période à partir des tâches types de ses périmètres. Une tâche déjà créée depuis sa tâche type ne change pas.
+  Crée les effectifs et les tâches d’une période à partir des tâches types de ses périmètres. Une tâche déjà créée depuis sa tâche type ne change pas. Avec `perimetreIds`, seuls ces périmètres d’origine sont appliqués ; une tâche partagée se décline dans tous ses périmètres cibles.
   """
   appliquerTachesTypes(editionId: ID!, perimetreIds: [ID!]): RapportTachesTypes!
   archiverActivite(archive: Boolean!, id: ID!): Activite!
@@ -1530,6 +1623,11 @@ type Mutation {
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
+
+  """
+  Coche l’étape « Décrire l’activité » : un admin confirme le nom, la nature et les groupes.
+  """
+  confirmerActivite(activiteId: ID): PremiersPas!
 
   """
   Confirme l’adresse de la fiche et toutes ses places à confirmer. Utilisable sans session.
@@ -1761,9 +1859,19 @@ type Mutation {
   ): RapportImportBenevoles!
 
   """
+  Importe un lot de lignes de l’équipe : comptes, rattachements, affectations et contacts principaux qui manquent. Rien n’est retiré, et aucun mail ne part sans `envoyerMails`.
+  """
+  importerEquipe(editionId: ID!, envoyerMails: Boolean, lignes: [LigneEquipeImport!]!): RapportImportEquipe!
+
+  """
   Importe les fiches des dossiers sources dans l’activité. Une fiche modifiée dans Relaytour n’est pas remplacée.
   """
   importerFichesEspace(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
+
+  """
+  Importe un lot de lignes de tâches dans une période. Une tâche déjà présente (même périmètre, même titre, même échéance) n’est pas recréée.
+  """
+  importerTaches(editionId: ID!, enregistrerTachesTypes: Boolean, groupeNouveaux: String, lignes: [LigneTacheImport!]!): RapportImportTaches!
 
   """
   Ajoute une déclinaison aux tâches de son périmètre sans son accord, même après un refus. Réservé aux admins de l’activité.
@@ -1810,6 +1918,9 @@ type Mutation {
     perimetreId: ID
   ): Int!
   masquerFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
+
+  """Masque la liste « Premiers pas » pour toute l’activité."""
+  masquerPremiersPas(activiteId: ID): PremiersPas!
   modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierAppelBenevoles(fermeLe: DateTime!, id: ID!, introduction: String, nom: String!, ouvertLe: DateTime!, versionAttendue: Int!): AppelBenevoles!
   modifierBenevole(
@@ -2021,6 +2132,11 @@ type Mutation {
   """
   quitterPlace(jeton: String!, ref: String!): Boolean!
   rattacherALActivite(activiteId: ID!, userId: ID!): Boolean!
+
+  """
+  Recrée dans la période cible les tâches choisies de la période source, avec le même écart en jours depuis le premier jour, et les effectifs souhaités. Une tâche déjà présente n’est pas recréée.
+  """
+  reconduireEdition(cibleId: ID!, sourceId: ID!, tacheIds: [ID!]): RapportReconduction!
 
   """
   Refuse tous les choix en attente d’une candidature et la clôt. Réservé aux personnes qui gèrent l’appel. Aucun mail ne part.
@@ -2668,6 +2784,19 @@ type PreferencesNotification {
   resumeAdmin: Boolean!
 }
 
+"""
+Les étapes qui mènent une activité vide à une période prête : la décrire, créer la première période, les périmètres et les tâches, inviter l’équipe.
+"""
+type PremiersPas {
+  etapes: [EtatEtapePremiersPas!]!
+
+  """Un admin a masqué la liste pour toute l’activité."""
+  masques: Boolean!
+
+  """Toutes les étapes sont faites."""
+  termines: Boolean!
+}
+
 type Proposition {
   creeLe: DateTime!
   id: ID!
@@ -2912,6 +3041,7 @@ type Query {
   ): [PersonneConvocable!]!
   peutRedigerFichesCommunes(activiteId: ID): Boolean!
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
+  premiersPas(activiteId: ID): PremiersPas!
 
   """
   Les séquences d’une période, par début. Les filtres gardent un périmètre, ou les séquences où la personne connectée est placée.
@@ -2955,9 +3085,36 @@ type Query {
   ): RapportImportBenevoles!
 
   """
+  Simule l’import d’un lot de lignes de l’équipe : rien ne change en base.
+  """
+  simulerImportEquipe(editionId: ID!, lignes: [LigneEquipeImport!]!): RapportImportEquipe!
+
+  """
   Simule l’import des fiches depuis l’espace de fichiers : rien ne change en base.
   """
   simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
+
+  """Simule l’import d’un lot de lignes de tâches : rien ne change en base."""
+  simulerImportTaches(
+    editionId: ID!
+    enregistrerTachesTypes: Boolean
+
+    """
+    Le groupe des périmètres inconnus, créés par l’import. Sans valeur, leurs lignes sont écartées.
+    """
+    groupeNouveaux: String
+    lignes: [LigneTacheImport!]!
+  ): RapportImportTaches!
+
+  """
+  Décrit un modèle de départ et ce qu’il créerait dans l’activité : rien ne change en base.
+  """
+  simulerModeleDeDepart(activiteId: ID, modele: ModeleDeDepart!): RapportModeleDeDepart!
+
+  """
+  Simule la reconduction des tâches d’une période vers une autre de la même activité : rien ne change en base. Sans `tacheIds`, toutes les tâches qui n’ont pas été abandonnées.
+  """
+  simulerReconduction(cibleId: ID!, sourceId: ID!, tacheIds: [ID!]): RapportReconduction!
 
   """
   Simule l’application des tâches types à une période : rien ne change en base. Sans `perimetreIds`, tous les périmètres actifs de l’activité.
@@ -3010,6 +3167,20 @@ type RapportImportBenevoles {
 }
 
 """
+Ce que l’import de l’équipe fait, ou ferait. Les nombres ne distinguent pas une personne nouvelle d’une personne déjà membre (ADR 0018).
+"""
+type RapportImportEquipe {
+  affectationsCreees: Int!
+  contactsPrincipaux: Int!
+  invitationsEnAttente: Int!
+  lignes: [LigneImportTableur!]!
+  mailsEquipe: Int!
+  mailsInvitations: Int!
+  personnes: Int!
+  rattachements: Int!
+}
+
+"""
 Ce que l’import des fiches depuis l’espace de fichiers fait, ou ferait en simulation.
 """
 type RapportImportFiches {
@@ -3021,6 +3192,39 @@ type RapportImportFiches {
   nonImportes: [FichierEcarte!]!
   nouvellesVersions: [String!]!
   refusees: [FichierEcarte!]!
+}
+
+type RapportImportTaches {
+  lignes: [LigneImportTableur!]!
+  perimetresCrees: [String!]!
+  tachesTypesAjoutees: Int!
+}
+
+"""
+Ce qu’un modèle de départ apporte à une activité, ou apporterait en simulation.
+"""
+type RapportModeleDeDepart {
+  effectifsCrees: [String!]!
+  fiches: [String!]!
+
+  """
+  Les titres des fiches du modèle qui existent déjà dans l’organisation : elles ne sont pas reprises.
+  """
+  fichesEnConflit: [String!]!
+  groupesAjoutes: [String!]!
+  perimetres: [ApercuPerimetreModele!]!
+  periode: String
+  tachesCreees: [String!]!
+}
+
+"""
+Ce que la reconduction fait à la période cible, ou ferait en simulation.
+"""
+type RapportReconduction {
+  effectifsCrees: [String!]!
+  effectifsDejaPresents: [String!]!
+  ignorees: Int!
+  lignes: [LigneReconduction!]!
 }
 
 """
