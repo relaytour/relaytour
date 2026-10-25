@@ -9,6 +9,8 @@
 
 [[Voir le périmètre : {{lienPerimetre}}]]
 
+[[Vous pouvez désactiver ces mails dans vos préférences :]] {{lienPreferences}}
+
 --
 [[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
 organisateur de {{organisation}}. Pour toute question, répondez à ce mail.]]
