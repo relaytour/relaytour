@@ -549,9 +549,9 @@ section {
   color: var(--rt-encre-55);
 }
 
-/* Trois façons d'utiliser Relaytour : même tableau que relaytour.com. */
+/* Deux façons d'utiliser Relaytour (docs/communication.md de l'hébergeur). */
 .voies {
-  min-width: 720px;
+  min-width: 520px;
 }
 
 .voies thead th {
@@ -681,6 +681,14 @@ code {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+/* Mentions du pied de page, en retrait du texte principal. */
+.pied-mentions {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--rt-encre-55);
 }
 
 footer {
