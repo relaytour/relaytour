@@ -1,6 +1,6 @@
 # ADR 0050 — Désabonnement en un clic
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-25
 - Complète l'ADR 0016 (mail des demandes), l'ADR 0032 (préférences par organisation) et l'ADR 0047 (langues).
 
