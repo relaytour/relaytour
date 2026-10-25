@@ -70,7 +70,7 @@ Each rule comes from a real incident or an identified risk. The French file give
 Each pull request brings:
 
 - `yarn check` and `yarn test` passing; `test:integration` too for a server change.
-- A release note fragment for a visible change (`yarn versionner noter …`, see the French file).
+- A release note fragment for a visible change (`yarn versionner noter …`, see the French file). A note for the organizers also carries its English version in an `en:` block, with the same fields as `fr:`; `--titre-en` starts it.
 - A screenshot for an interface change, taken with the sample content and fictional accounts.
 - A refusal test for an access-control change.
 - Up-to-date generated contracts and translation catalogs.

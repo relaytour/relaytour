@@ -13,6 +13,14 @@ fr:
     d'icônes collée au bord de l'écran. Votre navigateur retient ce choix. Dans
     les écrans à deux colonnes, la colonne de droite se replie aussi, et elle
     reste à l'écran pendant que vous faites défiler la page.
+en:
+  titre: >-
+    The menu and side panel collapse to leave room for content
+  texte: >-
+    A button next to the organization’s name reduces the menu to a column of
+    icons along the edge of the screen. Your browser remembers this choice. In
+    two-column screens, the right column also collapses, and it stays on screen
+    while you scroll the page.
 ---
 
 `lib/volets.ts` : état du volet de navigation (rail sous 1100 px par défaut),

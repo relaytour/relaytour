@@ -14,6 +14,15 @@ fr:
     par activité que vous administrez. Chaque champ porte sur l'édition en
     cours de son activité et liste ses propres périmètres. Auparavant, seuls
     les périmètres de l'activité affichée étaient proposés.
+en:
+  titre: >-
+    Interests are recorded in each activity
+  texte: >-
+    In an organization with several activities, the dialog for inviting and
+    editing an account offers an interests field for each activity you
+    administer. Each field applies to the current edition of its activity and
+    lists its own areas. Previously, only the areas of the displayed activity
+    were offered.
 ---
 
 `ChampSouhaits` lit l'édition en cours et les périmètres de son activité

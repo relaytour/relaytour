@@ -13,6 +13,14 @@ fr:
     admins reçoivent un mail, une fois par heure au plus. Le mail donne le
     nombre de demandes en attente et un lien vers l'onglet « Demandes ». Il ne
     cite aucune personne. Chaque admin le désactive dans ses préférences.
+en:
+  titre: >-
+    A grouped email notifies admins of received requests
+  texte: >-
+    When an activity receives join requests, its admins receive an email, at
+    most once an hour. The email gives the number of pending requests and a link
+    to the “Join requests” tab. It names no one. Each admin can turn it off in
+    their preferences.
 ---
 
 `signalerDemande` (`lib/demandes.ts`) met en file un mail de sorte `demandes` par

@@ -79,6 +79,10 @@ Les mails partent dans la langue de leur destinataire. En local, Mailpit les aff
 - Un texte fixe d'un gabarit de mail (`packages/server/src/courriel/gabarits/`) s'écrit entre doubles crochets, `[[Bonjour {{nom}},]]`, et arrive dans le catalogue du serveur. Traduisez-le dans le catalogue, pas dans le gabarit.
 - Le site existe en anglais sous `site/en/`. Une nouvelle langue du site se crée en copiant `site/en/` vers `site/<langue>/`, puis en traduisant chaque page. Les liens relatifs et les captures restent valables.
 
+## Notes de version
+
+Une note de version affichée dans l'espace organisateur (`notes/fragments/`, audience `organisateurs`) porte sa version anglaise dans un bloc `en:`, avec les mêmes champs que `fr:`. Une autre langue n’a pas encore de bloc : ses lecteurs voient la note en français.
+
 ## Relecture
 
 Une traduction se relit comme du code. Un lien, une adresse ou une consigne trompeuse dans un catalogue bloque la PR (ADR 0047).
