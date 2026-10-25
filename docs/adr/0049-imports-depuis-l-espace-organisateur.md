@@ -57,7 +57,7 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 ### Dépôt du dossier de contenu
 
 - Un admin de l'organisation dépose une archive zip au format de l'export (ADR 0009). Le dépôt vaut `orga:importer` sans `--edition`.
-- Un admin d'activité dépose une archive pour son activité seulement. Le serveur ne lit alors que `activites/<slug>/` de cette activité, ou le dossier entier dans la disposition plate. Il ignore `organisation.yaml` et les autres activités.
+- Un admin d'activité dépose une archive pour son activité seulement. Le serveur ne lit alors que `activites/<slug>/` de cette activité, ou le dossier entier dans la disposition plate. Il ignore `organisation.yaml` et les autres activités. Une fiche d'une autre activité qui porte le même slug n'est ni déplacée ni remplacée : elle se signale en conflit.
 - Le slug de l'organisation reste celui de la base. Celui que déclare `organisation.yaml` est ignoré, et le rapport le signale.
 - L'archive se simule d'abord. Le rapport reprend celui de la commande : éléments créés, modifiés, absents de l'archive, et conflits de fiches. Il liste aussi les fichiers de l'archive que l'import n'a pas lus.
 - L'archive part vers une route dédiée, `POST /medias/contenu/depot`, et non vers GraphQL : une requête GraphQL est bornée à 1 Mo. Le serveur vérifie la session, l'origine et les droits avant de lire le corps de la requête.

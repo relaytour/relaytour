@@ -253,10 +253,11 @@ describe('route du dépôt de fiches', () => {
     personne: string,
     activite: string,
     perimetre: string | null,
-    origine: string | null = ORIGINE
+    origine: string | null = ORIGINE,
+    simulation = true
   ) =>
     fetch(
-      `${adresse}${ROUTE_DEPOT_FICHES}?simulation=1&activite=${activite}${perimetre === null ? '' : `&perimetre=${perimetre}`}`,
+      `${adresse}${ROUTE_DEPOT_FICHES}?${simulation ? 'simulation=1&' : ''}activite=${activite}${perimetre === null ? '' : `&perimetre=${perimetre}`}`,
       {
         method: 'POST',
         headers: {
@@ -299,5 +300,27 @@ describe('route du dépôt de fiches', () => {
       (await envoyer(ids.admin, ids.activite, null, 'https://ailleurs.example'))
         .status
     ).toBe(403)
+  })
+
+  it('écrit les fiches déposées par la route, au nom de la personne', async () => {
+    const reponse = await envoyer(
+      ids.admin,
+      ids.activite,
+      ids.perimetre,
+      ORIGINE,
+      false
+    )
+    expect(reponse.status).toBe(200)
+    const fiche = await prisma.fiche.findFirstOrThrow({
+      where: { organisationId: ids.org, slug: 'consignes' },
+      select: {
+        perimetreId: true,
+        versionCourante: { select: { source: true, auteurId: true } },
+      },
+    })
+    expect(fiche).toEqual({
+      perimetreId: ids.perimetre,
+      versionCourante: { source: 'DEPOT', auteurId: ids.admin },
+    })
   })
 })

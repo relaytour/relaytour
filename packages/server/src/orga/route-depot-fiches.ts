@@ -39,8 +39,9 @@ const Corps = z.object({
         donnees: z.string(),
       })
     )
-    .min(1)
-    .max(200),
+    // Au-delà de 50 fichiers, le rapport écarte les suivants avec leur raison :
+    // seule la taille totale borne la requête.
+    .min(1),
 })
 
 export function routeDepotFiches(

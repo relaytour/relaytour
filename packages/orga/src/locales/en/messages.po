@@ -5061,8 +5061,8 @@ msgid "J’accepte que {nomOrganisation} enregistre ces informations pour organi
 msgstr "I agree that {nomOrganisation} stores this information to organize the activity."
 
 #: src/composants/DepotContenu.tsx
-msgid "J’accepte que l’import remplace ces modifications."
-msgstr "I accept that the import replaces these changes."
+msgid "J’accepte que l’import remplace ces modifications. Les fiches modifiées dans Relaytour restent telles quelles."
+msgstr "I accept that the import replaces these changes. Sheets changed in Relaytour stay as they are."
 
 #: src/pages/Preferences.tsx
 msgid "Jamais"
