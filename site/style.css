@@ -253,6 +253,11 @@ section,
   color: var(--rt-encre);
 }
 
+/* Le choix de langue porte un simple contour : il se distingue des rubriques. */
+.liens a.langue {
+  box-shadow: inset 0 0 0 1px var(--rt-encre-14);
+}
+
 .liens a[aria-current='page'],
 .liens a[aria-current='true'] {
   background: var(--rt-encre);
@@ -494,6 +499,97 @@ section {
   color: var(--rt-primaire);
 }
 
+/* Étiquettes teintées des cas d'usage : couleurs des périmètres de l'exemple, fond à 13 %
+   et texte assombri jusqu'à 4,5:1, comme l'étiquette d'un périmètre. */
+.teinte {
+  justify-self: start;
+  padding: 3px 12px;
+  border-radius: 999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.teinte-primaire {
+  background: #e2eaeb;
+  color: #1e5a63;
+}
+
+.teinte-vert {
+  background: #e4ece8;
+  color: #2f6b4f;
+}
+
+.teinte-violet {
+  background: #ece7f3;
+  color: #6f4aa3;
+}
+
+.teinte-lagon {
+  background: #def4f6;
+  color: #0c7782;
+}
+
+.teinte-ocre {
+  background: #fef0e5;
+  color: #965e33;
+}
+
+.teinte-neutre {
+  background: var(--rt-encre-08);
+  color: var(--rt-encre-70);
+}
+
+.natures {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.natures span {
+  padding: 1px 9px;
+  border-radius: 999px;
+  box-shadow: inset 0 0 0 1px var(--rt-encre-14);
+  font-family: var(--rt-mono);
+  font-size: 0.75rem;
+  color: var(--rt-encre-55);
+}
+
+/* Deux façons d'utiliser Relaytour (docs/communication.md de l'hébergeur). */
+.voies {
+  min-width: 520px;
+}
+
+.voies thead th {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--rt-encre);
+}
+
+.voies tbody th {
+  color: var(--rt-encre-55);
+}
+
+.voies .voie-cloud {
+  background: var(--rt-primaire-clair);
+}
+
+.voies .voie-precision {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--rt-encre-55);
+}
+
+.voies tr:last-child td {
+  border-bottom: 0;
+}
+
+.voies .bouton {
+  white-space: nowrap;
+}
+
 .oui,
 .partiel,
 .non {
@@ -590,6 +686,14 @@ code {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+}
+
+/* Mentions du pied de page, en retrait du texte principal. */
+.pied-mentions {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.8rem;
+  color: var(--rt-encre-55);
 }
 
 footer {
