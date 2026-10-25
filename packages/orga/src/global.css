@@ -4142,3 +4142,70 @@ button.rt-carte-fiche {
   margin-bottom: 6px;
   color: var(--rt-erreur);
 }
+
+/* Liste « Premiers pas » de Mon espace (ADR 0048) : une étape par ligne, son
+   rang ou sa coche, son texte, puis ses actions, qui passent dessous sur un
+   téléphone. */
+.rt-premiers-pas {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rt-premiers-pas > li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 14px;
+  padding: 12px 0;
+  border-top: 1px solid var(--rt-encre-08);
+}
+
+.rt-premiers-pas > li:first-child {
+  border-top: none;
+}
+
+.rt-premiers-pas-rang {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--rt-primaire);
+  background: var(--rt-surface-interne);
+}
+
+.rt-premiers-pas-faite .rt-premiers-pas-rang {
+  font-size: 22px;
+  color: var(--rt-succes);
+  background: none;
+}
+
+.rt-premiers-pas-corps {
+  flex: 1 1 260px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.rt-premiers-pas-faite .rt-premiers-pas-corps strong {
+  color: var(--rt-encre-55);
+}
+
+.rt-premiers-pas-actions {
+  flex-shrink: 0;
+}
+
+@media (max-width: 575px) {
+  .rt-premiers-pas-actions {
+    flex-basis: 100%;
+    padding-left: 42px;
+  }
+}

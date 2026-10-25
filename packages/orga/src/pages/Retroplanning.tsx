@@ -12,6 +12,7 @@ import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
 import { PuceBascule, Puces, SeparateurPuces } from '../composants/Puces'
 import Titre from '../composants/Titre'
+import VersPremiersPas from '../composants/VersPremiersPas'
 import { graphql } from '../gql'
 import {
   CLE_REGROUPEMENT_RETROPLANNING,
@@ -202,7 +203,11 @@ export default function Retroplanning() {
   const dePeriode = periode.de
   if (editionId === undefined && courante && !courante.editionCourante) {
     return (
-      <Result status="info" title={t`${aucunePeriode} n’est en préparation.`} />
+      <Result
+        status="info"
+        title={t`${aucunePeriode} n’est en préparation.`}
+        extra={<VersPremiersPas />}
+      />
     )
   }
   if (error && !data) {

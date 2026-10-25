@@ -2,23 +2,11 @@ import { DownOutlined, PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { t } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react/macro'
-import {
-  App,
-  Button,
-  Col,
-  Dropdown,
-  Form,
-  Input,
-  InputNumber,
-  Modal,
-  Radio,
-  Row,
-  Select,
-  Space,
-  Tag,
-} from 'antd'
+import { App, Button, Dropdown, Form, Modal, Select, Space, Tag } from 'antd'
 import { useState } from 'react'
 
+import ChampsEdition from '../../composants/ChampsEdition'
+import NouvelleEdition from '../../composants/NouvelleEdition'
 import ReconductionEdition, {
   type PeriodeReconduction,
 } from '../../composants/ReconductionEdition'
@@ -31,19 +19,6 @@ import type { EditionsQuery, StatutEdition } from '../../gql/graphql'
 import { dateCourte, messageErreur } from '../../lib/erreurs'
 import { majusculeInitiale } from '../../lib/langue'
 import { EDITION_COURANTE, EDITIONS } from '../../lib/requetes'
-
-const CREER = graphql(`
-  mutation CreerEdition(
-    $annee: Int!
-    $nom: String!
-    $debut: Date!
-    $fin: Date!
-  ) {
-    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {
-      id
-    }
-  }
-`)
 
 const MODIFIER = graphql(`
   mutation ModifierEdition(
@@ -91,17 +66,12 @@ const statuts = (
   },
 })
 
-/** Point de départ d'une nouvelle période (ADR 0048). */
-type Depart = 'vide' | 'types' | 'reprendre'
-
 interface Valeurs {
   annee: number
   nom: string
   debut: string
   fin: string
   statut: StatutEdition
-  depart: Depart
-  source?: string
 }
 
 export default function Editions() {
@@ -114,16 +84,16 @@ export default function Editions() {
     Nom: Mot,
     la: laPeriode,
     une: unePeriode,
-    creee,
     enregistree,
   } = periode
   const STATUTS = statuts(periode.archivee)
   const { data, loading } = useQuery(EDITIONS)
-  const [enEdition, setEnEdition] = useState<Edition | 'nouvelle' | null>(null)
+  const [enEdition, setEnEdition] = useState<Edition | null>(null)
+  const [nouvelle, setNouvelle] = useState(false)
   const [form] = Form.useForm<Valeurs>()
-  const rafraichir = { refetchQueries: [EDITIONS, EDITION_COURANTE] }
-  const [creer, creation] = useMutation(CREER, rafraichir)
-  const [modifier, modification] = useMutation(MODIFIER, rafraichir)
+  const [modifier, modification] = useMutation(MODIFIER, {
+    refetchQueries: [EDITIONS, EDITION_COURANTE],
+  })
   const [tachesTypesPour, setTachesTypesPour] =
     useState<PeriodeReconduction | null>(null)
   const [reconduction, setReconduction] = useState<{
@@ -135,47 +105,21 @@ export default function Editions() {
     nom: e.nom,
   }))
 
-  const ouvrir = (edition: Edition | 'nouvelle') => {
+  const ouvrir = (edition: Edition) => {
     setEnEdition(edition)
-    form.setFieldsValue(
-      edition === 'nouvelle'
-        ? {
-            annee: new Date().getFullYear() + 1,
-            nom: '',
-            debut: '',
-            fin: '',
-            statut: 'PREPARATION',
-            depart: periodes.length > 0 ? 'reprendre' : 'vide',
-            source: periodes[0]?.id,
-          }
-        : {
-            annee: edition.annee,
-            nom: edition.nom,
-            debut: edition.debut.slice(0, 10),
-            fin: edition.fin.slice(0, 10),
-            statut: edition.statut,
-            depart: 'vide',
-          }
-    )
+    form.setFieldsValue({
+      annee: edition.annee,
+      nom: edition.nom,
+      debut: edition.debut.slice(0, 10),
+      fin: edition.fin.slice(0, 10),
+      statut: edition.statut,
+    })
   }
 
   const enregistrer = async (valeurs: Valeurs) => {
     const { debut, fin } = valeurs
     try {
-      if (enEdition === 'nouvelle') {
-        const resultat = await creer({
-          variables: { annee: valeurs.annee, nom: valeurs.nom, debut, fin },
-        })
-        message.success(t`${Mot} ${creee}.`)
-        const id = resultat.data?.creerEdition.id
-        if (id !== undefined) {
-          const nouvelle = { id, nom: valeurs.nom }
-          if (valeurs.depart === 'types') setTachesTypesPour(nouvelle)
-          if (valeurs.depart === 'reprendre') {
-            setReconduction({ cible: nouvelle, source: valeurs.source })
-          }
-        }
-      } else if (enEdition) {
+      if (enEdition) {
         await modifier({
           variables: {
             id: enEdition.id,
@@ -204,7 +148,7 @@ export default function Editions() {
         type="primary"
         icon={<PlusOutlined />}
         style={{ marginBottom: 16 }}
-        onClick={() => ouvrir('nouvelle')}
+        onClick={() => setNouvelle(true)}
       >
         {periode.Nouvelle}
       </Button>
@@ -300,12 +244,10 @@ export default function Editions() {
 
       <Modal
         open={enEdition !== null}
-        title={
-          enEdition === 'nouvelle' ? periode.Nouvelle : t`Modifier ${laPeriode}`
-        }
+        title={t`Modifier ${laPeriode}`}
         okText={t`Enregistrer`}
         cancelText={t`Annuler`}
-        confirmLoading={creation.loading || modification.loading}
+        confirmLoading={modification.loading}
         onOk={() => form.submit()}
         onCancel={() => setEnEdition(null)}
         destroyOnHidden
@@ -316,101 +258,23 @@ export default function Editions() {
           onFinish={v => void enregistrer(v)}
           requiredMark={false}
         >
-          <Form.Item label={t`Année`} name="annee" rules={[{ required: true }]}>
-            <InputNumber
-              min={2020}
-              max={2100}
-              disabled={enEdition !== 'nouvelle'}
+          <ChampsEdition anneeModifiable={false} />
+          <Form.Item
+            label={t`Statut`}
+            name="statut"
+            extra={t`Archiver ${unePeriode} passe ses tâches en lecture seule. Ses demandes pour rejoindre l’équipe sont supprimées la nuit suivante ; les comptes et les affectations restent.`}
+          >
+            <Select
+              options={Object.entries(STATUTS).map(([value, { libelle }]) => ({
+                value,
+                label: libelle,
+              }))}
             />
           </Form.Item>
-          <Form.Item
-            label={t`Nom`}
-            name="nom"
-            rules={[{ required: true, message: t`Saisissez un nom.` }]}
-          >
-            <Input placeholder={t`${Mot} 2027`} />
-          </Form.Item>
-          <Row gutter={16}>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                label={t`Premier jour`}
-                name="debut"
-                rules={[{ required: true, message: t`Choisissez une date.` }]}
-              >
-                <Input type="date" />
-              </Form.Item>
-            </Col>
-            <Col xs={24} sm={12}>
-              <Form.Item
-                label={t`Dernier jour`}
-                name="fin"
-                dependencies={['debut']}
-                rules={[
-                  { required: true, message: t`Choisissez une date.` },
-                  ({ getFieldValue }) => ({
-                    validator: (_, fin: string) =>
-                      !fin || fin >= (getFieldValue('debut') as string)
-                        ? Promise.resolve()
-                        : Promise.reject(
-                            new Error(t`Le dernier jour suit le premier.`)
-                          ),
-                  }),
-                ]}
-              >
-                <Input type="date" />
-              </Form.Item>
-            </Col>
-          </Row>
-          {enEdition === 'nouvelle' && (
-            <Form.Item
-              label={t`Partir de`}
-              name="depart"
-              extra={t`Vous pourrez aussi ajouter des tâches plus tard, depuis cet écran.`}
-            >
-              <Radio.Group>
-                <Space orientation="vertical">
-                  <Radio value="vide">{t`Aucune tâche`}</Radio>
-                  <Radio value="types">{t`Les tâches types des périmètres`}</Radio>
-                  {periodes.length > 0 && (
-                    <Radio value="reprendre">
-                      <Space wrap>
-                        {t`Les tâches de`}
-                        <Form.Item name="source" noStyle>
-                          <Select
-                            aria-label={t`Reprendre les tâches de`}
-                            style={{ minWidth: 200 }}
-                            options={periodes.map(p => ({
-                              value: p.id,
-                              label: p.nom,
-                            }))}
-                          />
-                        </Form.Item>
-                      </Space>
-                    </Radio>
-                  )}
-                </Space>
-              </Radio.Group>
-            </Form.Item>
-          )}
-          {enEdition !== 'nouvelle' && (
-            <Form.Item
-              label={t`Statut`}
-              name="statut"
-              extra={t`Archiver ${unePeriode} passe ses tâches en lecture seule. Ses demandes pour rejoindre l’équipe sont supprimées la nuit suivante ; les comptes et les affectations restent.`}
-            >
-              <Select
-                options={Object.entries(STATUTS).map(
-                  ([value, { libelle }]) => ({
-                    value,
-                    label: libelle,
-                  })
-                )}
-              />
-            </Form.Item>
-          )}
         </Form>
       </Modal>
 
+      <NouvelleEdition ouverte={nouvelle} onFermer={() => setNouvelle(false)} />
       <TachesTypesEdition
         edition={tachesTypesPour}
         onFermer={() => setTachesTypesPour(null)}

@@ -39,8 +39,11 @@ type Documents = {
     "\n  query SouhaitsEnAttente($editionId: ID!) {\n    postesAPourvoir(editionId: $editionId) {\n      perimetre {\n        id\n      }\n      souhaits {\n        id\n      }\n    }\n  }\n": typeof types.SouhaitsEnAttenteDocument,
     "\n  mutation AccepterDemande($id: ID!, $affecter: [ID!]!) {\n    accepterDemande(id: $id, affecter: $affecter) {\n      id\n      statut\n    }\n  }\n": typeof types.AccepterDemandeDocument,
     "\n  mutation RefuserDemande($id: ID!) {\n    refuserDemande(id: $id) {\n      id\n      statut\n    }\n  }\n": typeof types.RefuserDemandeDocument,
+    "\n  mutation DecrireActivite(\n    $id: ID!\n    $nom: String!\n    $sigle: String\n    $nature: NatureActivite!\n    $groupes: [GroupePerimetresInput!]!\n    $ordre: Int!\n  ) {\n    modifierActivite(\n      id: $id\n      nom: $nom\n      sigle: $sigle\n      nature: $nature\n      groupes: $groupes\n      ordre: $ordre\n    ) {\n      id\n    }\n  }\n": typeof types.DecrireActiviteDocument,
+    "\n  mutation ConfirmerActivite($activiteId: ID) {\n    confirmerActivite(activiteId: $activiteId) {\n      masques\n    }\n  }\n": typeof types.ConfirmerActiviteDocument,
     "\n  mutation MasquerFicheConnexe($ficheId: ID!, $perimetreId: ID!) {\n    masquerFicheConnexe(ficheId: $ficheId, perimetreId: $perimetreId) {\n      id\n    }\n  }\n": typeof types.MasquerFicheConnexeDocument,
     "\n  mutation AfficherFicheConnexe($ficheId: ID!, $perimetreId: ID!) {\n    afficherFicheConnexe(ficheId: $ficheId, perimetreId: $perimetreId) {\n      id\n    }\n  }\n": typeof types.AfficherFicheConnexeDocument,
+    "\n  mutation InviterDansLActivite(\n    $email: String!\n    $nom: String!\n    $activiteId: ID\n    $editionId: ID\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      activiteId: $activiteId\n      editionId: $editionId\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n    }\n  }\n": typeof types.InviterDansLActiviteDocument,
     "\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n": typeof types.RelancerInvitationDocument,
     "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": typeof types.RetirerInvitationDocument,
     "\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n": typeof types.LienEspaceBenevoleDocument,
@@ -48,8 +51,10 @@ type Documents = {
     "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n    }\n  }\n": typeof types.LieuxTousDocument,
     "\n  mutation CreerLieu($activiteId: ID!, $nom: String!, $ordre: Int) {\n    creerLieu(activiteId: $activiteId, nom: $nom, ordre: $ordre) {\n      id\n    }\n  }\n": typeof types.CreerLieuDocument,
     "\n  mutation ModifierLieu(\n    $id: ID!\n    $nom: String!\n    $description: String\n    $ordre: Int!\n    $archive: Boolean!\n  ) {\n    modifierLieu(\n      id: $id\n      nom: $nom\n      description: $description\n      ordre: $ordre\n      archive: $archive\n    ) {\n      id\n      nom\n      ordre\n      archive\n    }\n  }\n": typeof types.ModifierLieuDocument,
+    "\n  mutation AfficherPremiersPas {\n    afficherPremiersPas {\n      masques\n    }\n  }\n": typeof types.AfficherPremiersPasDocument,
     "\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n": typeof types.AccepterInvitationDocument,
     "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n": typeof types.RefuserInvitationDocument,
+    "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": typeof types.CreerEditionDocument,
     "\n  mutation ModifierMaLangue($langue: String) {\n    modifierMaLangue(langue: $langue) {\n      id\n      langue\n    }\n  }\n": typeof types.ModifierMaLangueDocument,
     "\n  query MonAdresseVisible {\n    moi {\n      id\n      adresseVisible\n    }\n  }\n": typeof types.MonAdresseVisibleDocument,
     "\n  mutation ModifierMonAdresseVisible($visible: Boolean!) {\n    modifierMonAdresseVisible(visible: $visible)\n  }\n": typeof types.ModifierMonAdresseVisibleDocument,
@@ -57,6 +62,7 @@ type Documents = {
     "\n  query AbonnePush($adresse: String!) {\n    abonnePush(adresse: $adresse)\n  }\n": typeof types.AbonnePushDocument,
     "\n  mutation AbonnerPush(\n    $adresse: String!\n    $p256dh: String!\n    $auth: String!\n    $agent: String\n  ) {\n    abonnerPush(adresse: $adresse, p256dh: $p256dh, auth: $auth, agent: $agent)\n  }\n": typeof types.AbonnerPushDocument,
     "\n  mutation ModifierPreferencesPush(\n    $frequenceResume: FrequenceResume!\n    $mailModification: Boolean!\n    $mailEcheance: Boolean!\n    $pushTaches: Boolean\n    $pushEcheances: Boolean\n    $pushDemandes: Boolean\n    $pushEquipe: Boolean\n    $pushAgenda: Boolean\n  ) {\n    modifierPreferencesNotification(\n      frequenceResume: $frequenceResume\n      mailModification: $mailModification\n      mailEcheance: $mailEcheance\n      pushTaches: $pushTaches\n      pushEcheances: $pushEcheances\n      pushDemandes: $pushDemandes\n      pushEquipe: $pushEquipe\n      pushAgenda: $pushAgenda\n    ) {\n      pushTaches\n      pushEcheances\n      pushDemandes\n      pushEquipe\n      pushAgenda\n    }\n  }\n": typeof types.ModifierPreferencesPushDocument,
+    "\n  mutation MasquerPremiersPas {\n    masquerPremiersPas {\n      masques\n    }\n  }\n": typeof types.MasquerPremiersPasDocument,
     "\n  query MesPropositions($perimetreId: ID!, $editionId: ID!) {\n    mesPropositions(perimetreId: $perimetreId, editionId: $editionId) {\n      id\n      nom\n      statut\n    }\n  }\n": typeof types.MesPropositionsDocument,
     "\n  mutation ProposerPersonne(\n    $perimetreId: ID!\n    $editionId: ID!\n    $nom: String!\n    $email: String!\n    $mot: String\n  ) {\n    proposerPersonne(\n      perimetreId: $perimetreId\n      editionId: $editionId\n      nom: $nom\n      email: $email\n      mot: $mot\n    )\n  }\n": typeof types.ProposerPersonneDocument,
     "\n  mutation RetirerProposition($id: ID!) {\n    retirerProposition(id: $id)\n  }\n": typeof types.RetirerPropositionDocument,
@@ -181,6 +187,7 @@ type Documents = {
     "\n  query PersonnesConvocables($editionId: ID!, $perimetreId: ID) {\n    personnesConvocables(editionId: $editionId, perimetreId: $perimetreId) {\n      personneId\n      nom\n      duPerimetre\n    }\n  }\n": typeof types.PersonnesConvocablesDocument,
     "\n  query Lieux($activiteId: ID!) {\n    lieux(activiteId: $activiteId) {\n      id\n      nom\n      description\n      ordre\n      archive\n    }\n  }\n": typeof types.LieuxDocument,
     "\n  query Benevoles($activiteId: ID!) {\n    benevoles(activiteId: $activiteId) {\n      id\n      nom\n      courriel\n      telephone\n      note\n      coordonneesVisibles\n      peutModifier\n      places\n      accordLe\n      origine\n      prevenirParMail\n      confirmeeLe\n      lienEnvoyeLe\n      lienRenvoyable\n      lienEspace\n    }\n  }\n": typeof types.BenevolesDocument,
+    "\n  query PremiersPas {\n    premiersPas {\n      etapes {\n        etape\n        faite\n      }\n      masques\n      termines\n    }\n  }\n": typeof types.PremiersPasDocument,
     "\n  fragment TacheChamps on Tache {\n    id\n    titre\n    description\n    echeance\n    statut\n    version\n    enRetard\n    termineeLe\n    peutModifier\n    perimetre {\n      id\n      slug\n      nom\n      couleur\n    }\n    assignes {\n      id\n      nom\n    }\n    clotureePar {\n      id\n      nom\n    }\n    realiseePar {\n      id\n      nom\n    }\n    fiche {\n      id\n      slug\n      titre\n    }\n  }\n": typeof types.TacheChampsFragmentDoc,
     "\n  query DeclinaisonsProposees($slug: String!, $editionId: ID!) {\n    perimetre(slug: $slug) {\n      id\n      declinaisonsProposees(editionId: $editionId) {\n        id\n        titre\n        description\n        echeance\n        origine {\n          id\n          perimetre {\n            slug\n            nom\n            couleur\n          }\n        }\n      }\n    }\n  }\n": typeof types.DeclinaisonsProposeesDocument,
     "\n  query DeclinaisonsTache($id: ID!) {\n    tache(id: $id) {\n      id\n      declinaisons {\n        id\n        titre\n        echeance\n        statut\n        enRetard\n        accord\n        perimetre {\n          id\n          slug\n          nom\n          couleur\n        }\n        historiqueAccord {\n          etape\n          le\n          par {\n            id\n            nom\n          }\n        }\n      }\n    }\n  }\n": typeof types.DeclinaisonsTacheDocument,
@@ -229,7 +236,6 @@ type Documents = {
     "\n  query AdminsActivite($activiteId: ID!) {\n    equipe(activiteId: $activiteId) {\n      id\n      nom\n      activitesAdministrees\n    }\n  }\n": typeof types.AdminsActiviteDocument,
     "\n  mutation DefinirAdminOrganisation(\n    $id: ID!\n    $nom: String!\n    $estAdmin: Boolean!\n  ) {\n    modifierPersonne(id: $id, nom: $nom, estAdmin: $estAdmin) {\n      id\n      estAdmin\n    }\n  }\n": typeof types.DefinirAdminOrganisationDocument,
     "\n  query Classement($editionId: ID!) {\n    classement(editionId: $editionId) {\n      rang\n      personne {\n        id\n        nom\n      }\n      score {\n        points\n        tachesRealisees\n        tachesATemps\n        tachesCreees\n        fichesCreees\n        fichesModifiees\n      }\n    }\n  }\n": typeof types.ClassementDocument,
-    "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": typeof types.CreerEditionDocument,
     "\n  mutation ModifierEdition(\n    $id: ID!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n    $statut: StatutEdition!\n  ) {\n    modifierEdition(\n      id: $id\n      nom: $nom\n      debut: $debut\n      fin: $fin\n      statut: $statut\n    ) {\n      id\n      nom\n      debut\n      fin\n      statut\n    }\n  }\n": typeof types.ModifierEditionDocument,
     "\n  query PostesAPourvoir($editionId: ID!, $annuaire: Boolean!) {\n    postesAPourvoir(editionId: $editionId) {\n      effectif\n      aPourvoir\n      etat\n      demandesEnAttente\n      perimetre {\n        id\n        slug\n        nom\n        groupe\n        couleur\n        description\n        ordre\n        archive\n        version\n      }\n      affectations {\n        id\n        contactPrincipal\n        personne {\n          id\n          nom\n        }\n      }\n      souhaits {\n        id\n        personne {\n          id\n          nom\n        }\n      }\n    }\n    appelPostes(editionId: $editionId)\n    equipe {\n      id\n      nom\n      estAdmin\n    }\n    personnes @include(if: $annuaire) {\n      id\n      nom\n      attributions {\n        activiteId\n      }\n    }\n  }\n": typeof types.PostesAPourvoirDocument,
     "\n  mutation DefinirEffectif(\n    $perimetreId: ID!\n    $editionId: ID!\n    $effectif: Int!\n  ) {\n    definirEffectif(\n      perimetreId: $perimetreId\n      editionId: $editionId\n      effectif: $effectif\n    )\n  }\n": typeof types.DefinirEffectifDocument,
@@ -280,8 +286,11 @@ const documents: Documents = {
     "\n  query SouhaitsEnAttente($editionId: ID!) {\n    postesAPourvoir(editionId: $editionId) {\n      perimetre {\n        id\n      }\n      souhaits {\n        id\n      }\n    }\n  }\n": types.SouhaitsEnAttenteDocument,
     "\n  mutation AccepterDemande($id: ID!, $affecter: [ID!]!) {\n    accepterDemande(id: $id, affecter: $affecter) {\n      id\n      statut\n    }\n  }\n": types.AccepterDemandeDocument,
     "\n  mutation RefuserDemande($id: ID!) {\n    refuserDemande(id: $id) {\n      id\n      statut\n    }\n  }\n": types.RefuserDemandeDocument,
+    "\n  mutation DecrireActivite(\n    $id: ID!\n    $nom: String!\n    $sigle: String\n    $nature: NatureActivite!\n    $groupes: [GroupePerimetresInput!]!\n    $ordre: Int!\n  ) {\n    modifierActivite(\n      id: $id\n      nom: $nom\n      sigle: $sigle\n      nature: $nature\n      groupes: $groupes\n      ordre: $ordre\n    ) {\n      id\n    }\n  }\n": types.DecrireActiviteDocument,
+    "\n  mutation ConfirmerActivite($activiteId: ID) {\n    confirmerActivite(activiteId: $activiteId) {\n      masques\n    }\n  }\n": types.ConfirmerActiviteDocument,
     "\n  mutation MasquerFicheConnexe($ficheId: ID!, $perimetreId: ID!) {\n    masquerFicheConnexe(ficheId: $ficheId, perimetreId: $perimetreId) {\n      id\n    }\n  }\n": types.MasquerFicheConnexeDocument,
     "\n  mutation AfficherFicheConnexe($ficheId: ID!, $perimetreId: ID!) {\n    afficherFicheConnexe(ficheId: $ficheId, perimetreId: $perimetreId) {\n      id\n    }\n  }\n": types.AfficherFicheConnexeDocument,
+    "\n  mutation InviterDansLActivite(\n    $email: String!\n    $nom: String!\n    $activiteId: ID\n    $editionId: ID\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      activiteId: $activiteId\n      editionId: $editionId\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n    }\n  }\n": types.InviterDansLActiviteDocument,
     "\n  mutation RelancerInvitation($id: ID!) {\n    relancerInvitation(id: $id)\n  }\n": types.RelancerInvitationDocument,
     "\n  mutation RetirerInvitation($id: ID!) {\n    retirerInvitation(id: $id)\n  }\n": types.RetirerInvitationDocument,
     "\n  mutation LienEspaceBenevole($benevoleId: ID!, $nouveau: Boolean) {\n    lienEspaceBenevole(benevoleId: $benevoleId, nouveau: $nouveau)\n  }\n": types.LienEspaceBenevoleDocument,
@@ -289,8 +298,10 @@ const documents: Documents = {
     "\n  query LieuxTous($activiteId: ID!) {\n    lieux(activiteId: $activiteId, inclureArchives: true) {\n      id\n      nom\n      description\n      ordre\n      archive\n    }\n  }\n": types.LieuxTousDocument,
     "\n  mutation CreerLieu($activiteId: ID!, $nom: String!, $ordre: Int) {\n    creerLieu(activiteId: $activiteId, nom: $nom, ordre: $ordre) {\n      id\n    }\n  }\n": types.CreerLieuDocument,
     "\n  mutation ModifierLieu(\n    $id: ID!\n    $nom: String!\n    $description: String\n    $ordre: Int!\n    $archive: Boolean!\n  ) {\n    modifierLieu(\n      id: $id\n      nom: $nom\n      description: $description\n      ordre: $ordre\n      archive: $archive\n    ) {\n      id\n      nom\n      ordre\n      archive\n    }\n  }\n": types.ModifierLieuDocument,
+    "\n  mutation AfficherPremiersPas {\n    afficherPremiersPas {\n      masques\n    }\n  }\n": types.AfficherPremiersPasDocument,
     "\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n": types.AccepterInvitationDocument,
     "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n": types.RefuserInvitationDocument,
+    "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": types.CreerEditionDocument,
     "\n  mutation ModifierMaLangue($langue: String) {\n    modifierMaLangue(langue: $langue) {\n      id\n      langue\n    }\n  }\n": types.ModifierMaLangueDocument,
     "\n  query MonAdresseVisible {\n    moi {\n      id\n      adresseVisible\n    }\n  }\n": types.MonAdresseVisibleDocument,
     "\n  mutation ModifierMonAdresseVisible($visible: Boolean!) {\n    modifierMonAdresseVisible(visible: $visible)\n  }\n": types.ModifierMonAdresseVisibleDocument,
@@ -298,6 +309,7 @@ const documents: Documents = {
     "\n  query AbonnePush($adresse: String!) {\n    abonnePush(adresse: $adresse)\n  }\n": types.AbonnePushDocument,
     "\n  mutation AbonnerPush(\n    $adresse: String!\n    $p256dh: String!\n    $auth: String!\n    $agent: String\n  ) {\n    abonnerPush(adresse: $adresse, p256dh: $p256dh, auth: $auth, agent: $agent)\n  }\n": types.AbonnerPushDocument,
     "\n  mutation ModifierPreferencesPush(\n    $frequenceResume: FrequenceResume!\n    $mailModification: Boolean!\n    $mailEcheance: Boolean!\n    $pushTaches: Boolean\n    $pushEcheances: Boolean\n    $pushDemandes: Boolean\n    $pushEquipe: Boolean\n    $pushAgenda: Boolean\n  ) {\n    modifierPreferencesNotification(\n      frequenceResume: $frequenceResume\n      mailModification: $mailModification\n      mailEcheance: $mailEcheance\n      pushTaches: $pushTaches\n      pushEcheances: $pushEcheances\n      pushDemandes: $pushDemandes\n      pushEquipe: $pushEquipe\n      pushAgenda: $pushAgenda\n    ) {\n      pushTaches\n      pushEcheances\n      pushDemandes\n      pushEquipe\n      pushAgenda\n    }\n  }\n": types.ModifierPreferencesPushDocument,
+    "\n  mutation MasquerPremiersPas {\n    masquerPremiersPas {\n      masques\n    }\n  }\n": types.MasquerPremiersPasDocument,
     "\n  query MesPropositions($perimetreId: ID!, $editionId: ID!) {\n    mesPropositions(perimetreId: $perimetreId, editionId: $editionId) {\n      id\n      nom\n      statut\n    }\n  }\n": types.MesPropositionsDocument,
     "\n  mutation ProposerPersonne(\n    $perimetreId: ID!\n    $editionId: ID!\n    $nom: String!\n    $email: String!\n    $mot: String\n  ) {\n    proposerPersonne(\n      perimetreId: $perimetreId\n      editionId: $editionId\n      nom: $nom\n      email: $email\n      mot: $mot\n    )\n  }\n": types.ProposerPersonneDocument,
     "\n  mutation RetirerProposition($id: ID!) {\n    retirerProposition(id: $id)\n  }\n": types.RetirerPropositionDocument,
@@ -422,6 +434,7 @@ const documents: Documents = {
     "\n  query PersonnesConvocables($editionId: ID!, $perimetreId: ID) {\n    personnesConvocables(editionId: $editionId, perimetreId: $perimetreId) {\n      personneId\n      nom\n      duPerimetre\n    }\n  }\n": types.PersonnesConvocablesDocument,
     "\n  query Lieux($activiteId: ID!) {\n    lieux(activiteId: $activiteId) {\n      id\n      nom\n      description\n      ordre\n      archive\n    }\n  }\n": types.LieuxDocument,
     "\n  query Benevoles($activiteId: ID!) {\n    benevoles(activiteId: $activiteId) {\n      id\n      nom\n      courriel\n      telephone\n      note\n      coordonneesVisibles\n      peutModifier\n      places\n      accordLe\n      origine\n      prevenirParMail\n      confirmeeLe\n      lienEnvoyeLe\n      lienRenvoyable\n      lienEspace\n    }\n  }\n": types.BenevolesDocument,
+    "\n  query PremiersPas {\n    premiersPas {\n      etapes {\n        etape\n        faite\n      }\n      masques\n      termines\n    }\n  }\n": types.PremiersPasDocument,
     "\n  fragment TacheChamps on Tache {\n    id\n    titre\n    description\n    echeance\n    statut\n    version\n    enRetard\n    termineeLe\n    peutModifier\n    perimetre {\n      id\n      slug\n      nom\n      couleur\n    }\n    assignes {\n      id\n      nom\n    }\n    clotureePar {\n      id\n      nom\n    }\n    realiseePar {\n      id\n      nom\n    }\n    fiche {\n      id\n      slug\n      titre\n    }\n  }\n": types.TacheChampsFragmentDoc,
     "\n  query DeclinaisonsProposees($slug: String!, $editionId: ID!) {\n    perimetre(slug: $slug) {\n      id\n      declinaisonsProposees(editionId: $editionId) {\n        id\n        titre\n        description\n        echeance\n        origine {\n          id\n          perimetre {\n            slug\n            nom\n            couleur\n          }\n        }\n      }\n    }\n  }\n": types.DeclinaisonsProposeesDocument,
     "\n  query DeclinaisonsTache($id: ID!) {\n    tache(id: $id) {\n      id\n      declinaisons {\n        id\n        titre\n        echeance\n        statut\n        enRetard\n        accord\n        perimetre {\n          id\n          slug\n          nom\n          couleur\n        }\n        historiqueAccord {\n          etape\n          le\n          par {\n            id\n            nom\n          }\n        }\n      }\n    }\n  }\n": types.DeclinaisonsTacheDocument,
@@ -470,7 +483,6 @@ const documents: Documents = {
     "\n  query AdminsActivite($activiteId: ID!) {\n    equipe(activiteId: $activiteId) {\n      id\n      nom\n      activitesAdministrees\n    }\n  }\n": types.AdminsActiviteDocument,
     "\n  mutation DefinirAdminOrganisation(\n    $id: ID!\n    $nom: String!\n    $estAdmin: Boolean!\n  ) {\n    modifierPersonne(id: $id, nom: $nom, estAdmin: $estAdmin) {\n      id\n      estAdmin\n    }\n  }\n": types.DefinirAdminOrganisationDocument,
     "\n  query Classement($editionId: ID!) {\n    classement(editionId: $editionId) {\n      rang\n      personne {\n        id\n        nom\n      }\n      score {\n        points\n        tachesRealisees\n        tachesATemps\n        tachesCreees\n        fichesCreees\n        fichesModifiees\n      }\n    }\n  }\n": types.ClassementDocument,
-    "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n": types.CreerEditionDocument,
     "\n  mutation ModifierEdition(\n    $id: ID!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n    $statut: StatutEdition!\n  ) {\n    modifierEdition(\n      id: $id\n      nom: $nom\n      debut: $debut\n      fin: $fin\n      statut: $statut\n    ) {\n      id\n      nom\n      debut\n      fin\n      statut\n    }\n  }\n": types.ModifierEditionDocument,
     "\n  query PostesAPourvoir($editionId: ID!, $annuaire: Boolean!) {\n    postesAPourvoir(editionId: $editionId) {\n      effectif\n      aPourvoir\n      etat\n      demandesEnAttente\n      perimetre {\n        id\n        slug\n        nom\n        groupe\n        couleur\n        description\n        ordre\n        archive\n        version\n      }\n      affectations {\n        id\n        contactPrincipal\n        personne {\n          id\n          nom\n        }\n      }\n      souhaits {\n        id\n        personne {\n          id\n          nom\n        }\n      }\n    }\n    appelPostes(editionId: $editionId)\n    equipe {\n      id\n      nom\n      estAdmin\n    }\n    personnes @include(if: $annuaire) {\n      id\n      nom\n      attributions {\n        activiteId\n      }\n    }\n  }\n": types.PostesAPourvoirDocument,
     "\n  mutation DefinirEffectif(\n    $perimetreId: ID!\n    $editionId: ID!\n    $effectif: Int!\n  ) {\n    definirEffectif(\n      perimetreId: $perimetreId\n      editionId: $editionId\n      effectif: $effectif\n    )\n  }\n": types.DefinirEffectifDocument,
@@ -613,11 +625,23 @@ export function graphql(source: "\n  mutation RefuserDemande($id: ID!) {\n    re
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation DecrireActivite(\n    $id: ID!\n    $nom: String!\n    $sigle: String\n    $nature: NatureActivite!\n    $groupes: [GroupePerimetresInput!]!\n    $ordre: Int!\n  ) {\n    modifierActivite(\n      id: $id\n      nom: $nom\n      sigle: $sigle\n      nature: $nature\n      groupes: $groupes\n      ordre: $ordre\n    ) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation DecrireActivite(\n    $id: ID!\n    $nom: String!\n    $sigle: String\n    $nature: NatureActivite!\n    $groupes: [GroupePerimetresInput!]!\n    $ordre: Int!\n  ) {\n    modifierActivite(\n      id: $id\n      nom: $nom\n      sigle: $sigle\n      nature: $nature\n      groupes: $groupes\n      ordre: $ordre\n    ) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation ConfirmerActivite($activiteId: ID) {\n    confirmerActivite(activiteId: $activiteId) {\n      masques\n    }\n  }\n"): (typeof documents)["\n  mutation ConfirmerActivite($activiteId: ID) {\n    confirmerActivite(activiteId: $activiteId) {\n      masques\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation MasquerFicheConnexe($ficheId: ID!, $perimetreId: ID!) {\n    masquerFicheConnexe(ficheId: $ficheId, perimetreId: $perimetreId) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation MasquerFicheConnexe($ficheId: ID!, $perimetreId: ID!) {\n    masquerFicheConnexe(ficheId: $ficheId, perimetreId: $perimetreId) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation AfficherFicheConnexe($ficheId: ID!, $perimetreId: ID!) {\n    afficherFicheConnexe(ficheId: $ficheId, perimetreId: $perimetreId) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation AfficherFicheConnexe($ficheId: ID!, $perimetreId: ID!) {\n    afficherFicheConnexe(ficheId: $ficheId, perimetreId: $perimetreId) {\n      id\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation InviterDansLActivite(\n    $email: String!\n    $nom: String!\n    $activiteId: ID\n    $editionId: ID\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      activiteId: $activiteId\n      editionId: $editionId\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n    }\n  }\n"): (typeof documents)["\n  mutation InviterDansLActivite(\n    $email: String!\n    $nom: String!\n    $activiteId: ID\n    $editionId: ID\n    $perimetresAffectes: [ID!]\n  ) {\n    inviterPersonne(\n      email: $email\n      nom: $nom\n      activiteId: $activiteId\n      editionId: $editionId\n      perimetresAffectes: $perimetresAffectes\n    ) {\n      enAttente\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -649,11 +673,19 @@ export function graphql(source: "\n  mutation ModifierLieu(\n    $id: ID!\n    $
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  mutation AfficherPremiersPas {\n    afficherPremiersPas {\n      masques\n    }\n  }\n"): (typeof documents)["\n  mutation AfficherPremiersPas {\n    afficherPremiersPas {\n      masques\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n"): (typeof documents)["\n  mutation AccepterInvitation($id: ID!) {\n    accepterInvitation(id: $id)\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n"): (typeof documents)["\n  mutation RefuserInvitation($id: ID!) {\n    refuserInvitation(id: $id)\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -682,6 +714,10 @@ export function graphql(source: "\n  mutation AbonnerPush(\n    $adresse: String
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  mutation ModifierPreferencesPush(\n    $frequenceResume: FrequenceResume!\n    $mailModification: Boolean!\n    $mailEcheance: Boolean!\n    $pushTaches: Boolean\n    $pushEcheances: Boolean\n    $pushDemandes: Boolean\n    $pushEquipe: Boolean\n    $pushAgenda: Boolean\n  ) {\n    modifierPreferencesNotification(\n      frequenceResume: $frequenceResume\n      mailModification: $mailModification\n      mailEcheance: $mailEcheance\n      pushTaches: $pushTaches\n      pushEcheances: $pushEcheances\n      pushDemandes: $pushDemandes\n      pushEquipe: $pushEquipe\n      pushAgenda: $pushAgenda\n    ) {\n      pushTaches\n      pushEcheances\n      pushDemandes\n      pushEquipe\n      pushAgenda\n    }\n  }\n"): (typeof documents)["\n  mutation ModifierPreferencesPush(\n    $frequenceResume: FrequenceResume!\n    $mailModification: Boolean!\n    $mailEcheance: Boolean!\n    $pushTaches: Boolean\n    $pushEcheances: Boolean\n    $pushDemandes: Boolean\n    $pushEquipe: Boolean\n    $pushAgenda: Boolean\n  ) {\n    modifierPreferencesNotification(\n      frequenceResume: $frequenceResume\n      mailModification: $mailModification\n      mailEcheance: $mailEcheance\n      pushTaches: $pushTaches\n      pushEcheances: $pushEcheances\n      pushDemandes: $pushDemandes\n      pushEquipe: $pushEquipe\n      pushAgenda: $pushAgenda\n    ) {\n      pushTaches\n      pushEcheances\n      pushDemandes\n      pushEquipe\n      pushAgenda\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
+export function graphql(source: "\n  mutation MasquerPremiersPas {\n    masquerPremiersPas {\n      masques\n    }\n  }\n"): (typeof documents)["\n  mutation MasquerPremiersPas {\n    masquerPremiersPas {\n      masques\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
@@ -1181,6 +1217,10 @@ export function graphql(source: "\n  query Benevoles($activiteId: ID!) {\n    be
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
+export function graphql(source: "\n  query PremiersPas {\n    premiersPas {\n      etapes {\n        etape\n        faite\n      }\n      masques\n      termines\n    }\n  }\n"): (typeof documents)["\n  query PremiersPas {\n    premiersPas {\n      etapes {\n        etape\n        faite\n      }\n      masques\n      termines\n    }\n  }\n"];
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ */
 export function graphql(source: "\n  fragment TacheChamps on Tache {\n    id\n    titre\n    description\n    echeance\n    statut\n    version\n    enRetard\n    termineeLe\n    peutModifier\n    perimetre {\n      id\n      slug\n      nom\n      couleur\n    }\n    assignes {\n      id\n      nom\n    }\n    clotureePar {\n      id\n      nom\n    }\n    realiseePar {\n      id\n      nom\n    }\n    fiche {\n      id\n      slug\n      titre\n    }\n  }\n"): (typeof documents)["\n  fragment TacheChamps on Tache {\n    id\n    titre\n    description\n    echeance\n    statut\n    version\n    enRetard\n    termineeLe\n    peutModifier\n    perimetre {\n      id\n      slug\n      nom\n      couleur\n    }\n    assignes {\n      id\n      nom\n    }\n    clotureePar {\n      id\n      nom\n    }\n    realiseePar {\n      id\n      nom\n    }\n    fiche {\n      id\n      slug\n      titre\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
@@ -1370,10 +1410,6 @@ export function graphql(source: "\n  mutation DefinirAdminOrganisation(\n    $id
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query Classement($editionId: ID!) {\n    classement(editionId: $editionId) {\n      rang\n      personne {\n        id\n        nom\n      }\n      score {\n        points\n        tachesRealisees\n        tachesATemps\n        tachesCreees\n        fichesCreees\n        fichesModifiees\n      }\n    }\n  }\n"): (typeof documents)["\n  query Classement($editionId: ID!) {\n    classement(editionId: $editionId) {\n      rang\n      personne {\n        id\n        nom\n      }\n      score {\n        points\n        tachesRealisees\n        tachesATemps\n        tachesCreees\n        fichesCreees\n        fichesModifiees\n      }\n    }\n  }\n"];
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- */
-export function graphql(source: "\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n"): (typeof documents)["\n  mutation CreerEdition(\n    $annee: Int!\n    $nom: String!\n    $debut: Date!\n    $fin: Date!\n  ) {\n    creerEdition(annee: $annee, nom: $nom, debut: $debut, fin: $fin) {\n      id\n    }\n  }\n"];
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */

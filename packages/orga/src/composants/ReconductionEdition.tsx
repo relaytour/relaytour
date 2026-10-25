@@ -164,9 +164,7 @@ export default function ReconductionEdition({
             </Form.Item>
           </Form>
         )}
-        {error && (
-          <Alert type="error" showIcon title={messageErreur(error)} />
-        )}
+        {error && <Alert type="error" showIcon title={messageErreur(error)} />}
         {effectifs > 0 && (
           <Alert
             type="info"
