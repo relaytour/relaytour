@@ -1,30 +1,43 @@
-name: Proposer une évolution
-description: Une idée pour mieux préparer un événement avec Relaytour.
+name: Proposer une évolution · Suggest a feature
+description: Une idée pour mieux préparer un événement avec Relaytour. · An idea to better prepare an event with Relaytour.
 title: 'Évolution : '
 labels: ['évolution']
 body:
+  - type: markdown
+    attributes:
+      value: >-
+        Vous pouvez écrire en français ou en anglais. · You can write in French or
+        English.
   - type: textarea
     id: besoin
     attributes:
-      label: Le besoin
-      description: Quelle difficulté rencontrez-vous aujourd'hui, et qui la rencontre ?
+      label: Le besoin · The need
+      description: >-
+        Quelle difficulté rencontrez-vous aujourd'hui, et qui la rencontre ? · What
+        difficulty do you face today, and who faces it?
     validations:
       required: true
   - type: textarea
     id: proposition
     attributes:
-      label: La proposition
-      description: Ce que Relaytour pourrait faire. Une maquette ou un exemple fictif aide.
+      label: La proposition · The proposal
+      description: >-
+        Ce que Relaytour pourrait faire. Une maquette ou un exemple fictif aide. ·
+        What Relaytour could do. A mockup or a fictional example helps.
     validations:
       required: true
   - type: textarea
     id: alternatives
     attributes:
-      label: Les solutions actuelles
-      description: Comment faites-vous sans cette évolution ?
+      label: Les solutions actuelles · Current workarounds
+      description: >-
+        Comment faites-vous sans cette évolution ? · How do you manage without this
+        feature?
   - type: checkboxes
     id: contribution
     attributes:
       label: Contribution
       options:
-        - label: Je peux participer à la réalisation de cette évolution.
+        - label: >-
+            Je peux participer à la réalisation de cette évolution. · I can help
+            build this feature.

@@ -13,6 +13,13 @@ fr:
     La page « Postes à pourvoir » affiche ces souhaits sur chaque périmètre,
     avec un bouton « Affecter ». La page des personnes montre les souhaits de
     l'édition choisie.
+en:
+  titre: >-
+    Interests guide appointments
+  texte: >-
+    Inviting a person accepts one or more areas of interest. The “Open seats”
+    page shows these interests on each area, with an “Appoint” button. The
+    People page shows the interests of the chosen edition.
 ---
 
 - admin/Postes : section « Intéressé·es » en liste HTML, bouton « Affecter »,

@@ -11,6 +11,7 @@ import { lireGroupes, type GroupePerimetres } from '../lib/activites.ts'
 import { configurationActivite } from '../lib/organisation.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import {
   EFFECTIF_MAX,
   etatPostes,
@@ -222,7 +223,9 @@ builder.mutationFields(t => ({
         args.effectif > EFFECTIF_MAX
       ) {
         throw erreurSaisie(
-          `L’effectif est un nombre entier entre 0 et ${EFFECTIF_MAX}.`
+          i18n._('L’effectif est un nombre entier entre 0 et {max}.', {
+            max: EFFECTIF_MAX,
+          })
         )
       }
       const perimetreId = String(args.perimetreId)
@@ -235,7 +238,9 @@ builder.mutationFields(t => ({
       if (perimetre === null) throw accesRefuse()
       if (edition.statut === 'ARCHIVEE') {
         throw erreurSaisie(
-          'Cette édition est archivée : ses effectifs ne se modifient plus.'
+          i18n._(
+            'Cette édition est archivée : ses effectifs ne se modifient plus.'
+          )
         )
       }
       const ligne = await prisma.effectifPerimetre.upsert({

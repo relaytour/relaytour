@@ -11,8 +11,7 @@ export default tseslint.config(
     extends: [
       js.configs.recommended,
       ...tseslint.configs.recommended,
-      // Règles d'écriture des messages traduits (ADR 0047). La règle qui signale un
-      // texte écrit en dur s'activera dossier par dossier, au fil de l'extraction.
+      // Règles d'écriture des messages traduits (ADR 0047).
       lingui.configs['flat/recommended'],
     ],
     files: ['**/*.{ts,tsx}'],
@@ -34,6 +33,45 @@ export default tseslint.config(
       'no-irregular-whitespace': [
         'error',
         { skipTemplates: true, skipJSXText: true, skipStrings: true },
+      ],
+    },
+  },
+  {
+    // Un texte affiché passe par Lingui (ADR 0047). La règle lit les composants et
+    // les pages ; les modules de lib/ portent surtout des valeurs techniques
+    // (couleurs, sélecteurs), et la relecture y suffit. Un texte sans espace
+    // (nom de requête, valeur, marque) ne se signale pas : un libellé d'un seul
+    // mot écrit en dur échappe donc à la règle.
+    files: ['src/**/*.tsx'],
+    rules: {
+      'lingui/no-unlocalized-strings': [
+        'error',
+        {
+          ignore: [
+            '^\\S+$',
+            // Classes, couleurs et dates techniques.
+            '(^|\\s)rt-',
+            'color-mix\\(',
+            'T\\d\\d:\\d\\d',
+          ],
+          ignoreNames: [
+            {
+              regex: {
+                pattern:
+                  '^(className|style|key|type|id|href|src|rel|target|role|htmlType|refetchQueries|include)$',
+              },
+            },
+          ],
+          ignoreFunctions: [
+            'graphql',
+            'console.*',
+            'Error',
+            '*.closest',
+            '*.querySelector',
+            '*.querySelectorAll',
+            'useSansRafraichissement',
+          ],
+        },
       ],
     },
   }

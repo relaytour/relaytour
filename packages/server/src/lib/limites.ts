@@ -2,6 +2,7 @@ import { prisma, type Prisma } from '@relaytour/database'
 import { z } from 'zod'
 
 import { limiteAtteinte } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 // Limites d'une organisation (ADR 0008).
 //
@@ -71,7 +72,10 @@ export async function exigerPlaceActivite(
   })
   if (nombre >= activites) {
     throw limiteAtteinte(
-      `Votre organisation a atteint sa limite de ${activites} activité${activites > 1 ? 's' : ''}. Archivez une activité ou demandez une limite plus haute.`,
+      i18n._(
+        '{activites, plural, one {Votre organisation a atteint sa limite de # activité. Archivez une activité ou demandez une limite plus haute.} other {Votre organisation a atteint sa limite de # activités. Archivez une activité ou demandez une limite plus haute.}}',
+        { activites }
+      ),
       await contactHebergeur()
     )
   }
@@ -89,7 +93,10 @@ export async function exigerPlacePeriode(
   })
   if (nombre >= periodesOuvertes) {
     throw limiteAtteinte(
-      `Votre organisation a atteint sa limite de ${periodesOuvertes} période${periodesOuvertes > 1 ? 's' : ''} ouverte${periodesOuvertes > 1 ? 's' : ''}. Archivez une période terminée ou demandez une limite plus haute. Les périodes archivées restent consultables.`,
+      i18n._(
+        '{periodes, plural, one {Votre organisation a atteint sa limite de # période ouverte. Archivez une période terminée ou demandez une limite plus haute. Les périodes archivées restent consultables.} other {Votre organisation a atteint sa limite de # périodes ouvertes. Archivez une période terminée ou demandez une limite plus haute. Les périodes archivées restent consultables.}}',
+        { periodes: periodesOuvertes }
+      ),
       await contactHebergeur()
     )
   }

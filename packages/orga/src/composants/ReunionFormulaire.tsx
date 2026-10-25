@@ -488,6 +488,7 @@ export default function ReunionFormulaire({
                 value: 'AUCUNE',
                 label: t({
                   message: 'Personne',
+                  context: 'aucune personne',
                   comment: 'Aucune personne convoquée',
                 }),
               },

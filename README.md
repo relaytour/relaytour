@@ -1,5 +1,7 @@
 # Relaytour
 
+[English version](README.en.md)
+
 Relaytour aide une association ou un collectif bénévole à organiser ses activités récurrentes. Une activité peut être un événement (tournoi, rencontre sportive, festival), une section qui vit à la saison, ou une instance comme un conseil d'administration. Relaytour garde la méthode d'une période à l'autre.
 
 - **Activités** : les événements, sections et instances d'une organisation. Chacune a ses périodes (édition, saison ou mandat) et ses groupes de périmètres.
@@ -12,6 +14,7 @@ Relaytour aide une association ou un collectif bénévole à organiser ses activ
 - **Programme du jour J** : les séquences de la journée par lieu et par heure, avec les personnes en responsabilité ou en renfort. Une fiche bénévole recense une personne qui aide sans compte.
 - **Fournisseur cloud** : les documents de l'association, rangés dans SharePoint, Google Drive, Dropbox ou Nextcloud, se lisent dans Relaytour sans copie. Les fiches s'y exportent en Markdown et s'en importent.
 - **Plusieurs organisations** : une installation peut servir plusieurs associations. Un hébergeur les administre par script ou par API. L'API ne renvoie aucune donnée d'une organisation ; seul l'export d'une organisation, écrit sur le serveur, contient ses noms et ses adresses (ADR 0008).
+- **Langues** : l'espace organisateur, les mails et les notifications existent en français et en anglais. Chaque personne choisit sa langue, et une organisation déclare sa langue par défaut. La communauté peut ajouter une langue ([TRADUIRE.md](TRADUIRE.md)).
 
 Relaytour est un logiciel libre (AGPL-3.0). Vous pouvez l'héberger vous-même. Le contenu de votre organisation reste chez vous : le dépôt ne contient qu'une organisation d'exemple.
 
@@ -27,7 +30,7 @@ Relaytour est un logiciel libre (AGPL-3.0). Vous pouvez l'héberger vous-même. 
 | `docs/adr/` | Décisions d'architecture. |
 | `docs/feuille-de-route.md` | Évolutions envisagées après la première version. |
 
-Les règles du dépôt (décisions, invariants, style d'écriture, proposition d'une PR) sont dans [CONTRIBUTING.md](CONTRIBUTING.md). Chaque participation suit le [code de conduite](CODE_OF_CONDUCT.md). Une faille de sécurité se signale en privé ([SECURITY.md](SECURITY.md)).
+La langue de travail du dépôt est le français : code, commentaires, décisions et messages de commit. Les issues et les PR sont acceptées en anglais. Les règles du dépôt (décisions, invariants, style d'écriture, proposition d'une PR) sont dans [CONTRIBUTING.md](CONTRIBUTING.md), résumées en anglais dans [CONTRIBUTING.en.md](CONTRIBUTING.en.md). Chaque participation suit le [code de conduite](CODE_OF_CONDUCT.md). Une faille de sécurité se signale en privé ([SECURITY.md](SECURITY.md)).
 
 ## Prérequis
 

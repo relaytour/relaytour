@@ -1,5 +1,8 @@
 import journalOrga from '../../../../notes/notes-de-version.orga.json'
 import journalServeur from '../../../../notes/notes-de-version.serveur.json'
+import type { Langue } from '@relaytour/commun'
+
+import { langueCourante } from './langue.ts'
 
 // Notes de version lues dans l'espace organisateur (ADR 0021).
 //
@@ -35,6 +38,8 @@ interface NoteCompilee {
   role: string | null
   etat: string
   fr: { titre: string; texte: string }
+  /** Version anglaise facultative (ADR 0047). */
+  en?: { titre: string; texte: string } | null
 }
 
 export interface Journal {
@@ -88,7 +93,8 @@ function estUnRole(role: string | null): role is RoleNote {
  */
 export function notesPourLeRole(
   role: RoleNote,
-  journaux: Journal[] = JOURNAUX
+  journaux: Journal[] = JOURNAUX,
+  langue: Langue = langueCourante()
 ): VersionPubliee[] {
   const rang = ROLES_NOTE.indexOf(role)
   const versions = new Map<string, { date: string; notes: NoteDeVersion[] }>()
@@ -108,13 +114,15 @@ export function notesPourLeRole(
         ) {
           continue
         }
+        // Une note sans version anglaise s'affiche en français.
+        const texte = langue === 'en' && note.en ? note.en : note.fr
         version.notes.push({
           id: note.id,
           date: note.date,
           type: note.type,
           role: note.role,
-          titre: note.fr.titre,
-          texte: note.fr.texte,
+          titre: texte.titre,
+          texte: texte.texte,
         })
       }
     }

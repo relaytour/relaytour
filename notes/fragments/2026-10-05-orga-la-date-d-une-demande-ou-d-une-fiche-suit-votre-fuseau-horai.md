@@ -15,6 +15,15 @@ fr:
     s'affichait avec la date de la veille. Ces écrans affichent désormais le
     jour dans le fuseau horaire de votre navigateur. Les échéances des tâches et
     les dates des périodes ne changent pas.
+en:
+  titre: >-
+    The date of a join request or a sheet follows your time zone
+  texte: >-
+    The “Join requests” tab of “People”, the sheet list, and the “Organization
+    content” panel calculated the day from universal time (UTC). In France, a
+    join request submitted between midnight and 2 a.m. showed the previous day’s
+    date. These screens now show the day in your browser’s time zone. Task due
+    dates and period dates do not change.
 ---
 
 `dateCourte` (`lib/erreurs.ts`) garde les dix premiers caractères de la chaîne :

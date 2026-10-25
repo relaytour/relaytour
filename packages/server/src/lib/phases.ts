@@ -1,6 +1,7 @@
 import { z } from 'zod'
 
 import { erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 // Phases d'une activité (ADR 0025).
 //
@@ -27,16 +28,20 @@ export function joursRelatifs(relative: string): number {
 const PhaseSchema = z.strictObject({
   cle: z
     .string()
-    .max(60, 'clé de 60 caractères au plus')
-    .regex(SLUG, 'minuscules, chiffres et tirets seulement'),
+    .max(60, { error: () => i18n._('clé de 60 caractères au plus') })
+    .regex(SLUG, {
+      error: () => i18n._('minuscules, chiffres et tirets seulement'),
+    }),
   libelle: z
     .string()
     .trim()
-    .min(1, 'libellé attendu')
-    .max(60, 'libellé de 60 caractères au plus'),
+    .min(1, { error: () => i18n._('libellé attendu') })
+    .max(60, { error: () => i18n._('libellé de 60 caractères au plus') }),
   jusquA: z
     .string()
-    .regex(ECHEANCE_RELATIVE, 'borne attendue de la forme J-120 ou J+3')
+    .regex(ECHEANCE_RELATIVE, {
+      error: () => i18n._('borne attendue de la forme J-120 ou J+3'),
+    })
     .optional(),
 })
 
@@ -45,8 +50,10 @@ export type Phase = z.infer<typeof PhaseSchema>
 
 export const PhasesSchema = z
   .array(PhaseSchema)
-  .min(1, 'une phase au moins')
-  .max(PHASES_MAX, `${PHASES_MAX} phases au plus`)
+  .min(1, { error: () => i18n._('une phase au moins') })
+  .max(PHASES_MAX, {
+    error: () => i18n._('{max} phases au plus', { max: PHASES_MAX }),
+  })
   .superRefine((phases, ctx) => {
     const cles = new Set<string>()
     let precedente: number | null = null
@@ -55,7 +62,9 @@ export const PhasesSchema = z
         ctx.addIssue({
           code: 'custom',
           path: [rang, 'cle'],
-          message: `la clé ${phase.cle} est déclarée deux fois`,
+          message: i18n._('la clé {cle} est déclarée deux fois', {
+            cle: phase.cle,
+          }),
         })
       }
       cles.add(phase.cle)
@@ -65,8 +74,9 @@ export const PhasesSchema = z
           ctx.addIssue({
             code: 'custom',
             path: [rang, 'jusquA'],
-            message:
-              'la dernière phase ne porte pas de borne : elle reçoit tout ce qui suit',
+            message: i18n._(
+              'la dernière phase ne porte pas de borne : elle reçoit tout ce qui suit'
+            ),
           })
         }
         return
@@ -75,7 +85,9 @@ export const PhasesSchema = z
         ctx.addIssue({
           code: 'custom',
           path: [rang, 'jusquA'],
-          message: 'borne attendue : seule la dernière phase n’en porte pas',
+          message: i18n._(
+            'borne attendue : seule la dernière phase n’en porte pas'
+          ),
         })
         return
       }
@@ -84,7 +96,7 @@ export const PhasesSchema = z
         ctx.addIssue({
           code: 'custom',
           path: [rang, 'jusquA'],
-          message: 'les bornes se suivent dans l’ordre croissant',
+          message: i18n._('les bornes se suivent dans l’ordre croissant'),
         })
       }
       precedente = borne
@@ -93,12 +105,59 @@ export const PhasesSchema = z
 
 // Phases d'une activité qui n'en déclare pas : quatre temps génériques, valables pour
 // un événement, une saison ou un mandat.
+//
+// Les libellés se traduisent à la lecture : l'activité qui les reçoit à sa création
+// les écrit dans la langue de la requête, puis ils sont des données (ADR 0047).
 export const PHASES_PAR_DEFAUT: Phase[] = [
-  { cle: 'lancement', libelle: 'Lancement', jusquA: 'J-120' },
-  { cle: 'preparation', libelle: 'Préparation', jusquA: 'J-30' },
-  { cle: 'derniers-reglages', libelle: 'Derniers réglages', jusquA: 'J-1' },
-  { cle: 'deroulement-et-bilan', libelle: 'Déroulement et bilan' },
+  {
+    cle: 'lancement',
+    get libelle() {
+      return i18n._(
+        'Lancement',
+        {},
+        { comment: 'Phase par défaut d’une activité' }
+      )
+    },
+    jusquA: 'J-120',
+  },
+  {
+    cle: 'preparation',
+    get libelle() {
+      return i18n._(
+        'Préparation',
+        {},
+        { comment: 'Phase par défaut d’une activité' }
+      )
+    },
+    jusquA: 'J-30',
+  },
+  {
+    cle: 'derniers-reglages',
+    get libelle() {
+      return i18n._(
+        'Derniers réglages',
+        {},
+        { comment: 'Phase par défaut d’une activité' }
+      )
+    },
+    jusquA: 'J-1',
+  },
+  {
+    cle: 'deroulement-et-bilan',
+    get libelle() {
+      return i18n._(
+        'Déroulement et bilan',
+        {},
+        { comment: 'Dernière phase par défaut d’une activité' }
+      )
+    },
+  },
 ]
+
+/** Les phases par défaut, libellés écrits dans la langue courante : des données prêtes à stocker. */
+export function phasesParDefaut(): Phase[] {
+  return PHASES_PAR_DEFAUT.map(phase => ({ ...phase }))
+}
 
 /**
  * Les phases déclarées par la colonne JSON, ou `null` quand l'activité n'en déclare
@@ -141,7 +200,12 @@ export function phasesValides(
   const rang = manquement.path[0]
   throw erreurSaisie(
     typeof rang === 'number'
-      ? `La phase ${rang + 1} n’est pas valide : ${manquement.message}.`
-      : `Les phases ne sont pas valides : ${manquement.message}.`
+      ? i18n._('La phase {numero} n’est pas valide : {motif}.', {
+          numero: rang + 1,
+          motif: manquement.message,
+        })
+      : i18n._('Les phases ne sont pas valides : {motif}.', {
+          motif: manquement.message,
+        })
   )
 }

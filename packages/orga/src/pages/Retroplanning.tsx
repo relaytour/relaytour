@@ -26,7 +26,7 @@ import { grouperParMois, libelleMois } from '../lib/retroplanning'
 import { estOuverte } from '../lib/taches'
 import { useActivite } from '../lib/activite'
 import { regrouperDeclinaisons } from '../lib/declinaisons'
-import { langueActive } from '../lib/langue'
+import { comparerTextes } from '../lib/langue'
 
 const RETROPLANNING = graphql(`
   query Retroplanning($editionId: ID!) {
@@ -119,7 +119,7 @@ export default function Retroplanning() {
       ...new Map((toutes ?? []).map(x => [x.perimetre.id, x.perimetre])),
     ]
       .map(([, p]) => p)
-      .sort((a, b) => a.nom.localeCompare(b.nom, langueActive()))
+      .sort((a, b) => comparerTextes(a.nom, b.nom))
     return activite.groupes
       .map(groupe => ({
         label: groupe.libellePluriel,

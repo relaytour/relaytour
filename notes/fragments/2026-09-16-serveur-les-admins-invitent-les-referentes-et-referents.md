@@ -13,6 +13,13 @@ fr:
     affectations. Chaque personne invitée reçoit un mail, puis se connecte
     avec un code reçu par mail, sans mot de passe. Un compte archivé perd
     aussitôt l'accès.
+en:
+  titre: >-
+    Admins invite coordinators
+  texte: >-
+    Admins create accounts, editions, areas, and appointments. Each invited
+    person receives an email, then signs in with a code received by email,
+    without a password. An archived account loses access immediately.
 ---
 
 Phase 1 du plan de l'espace organisateur.

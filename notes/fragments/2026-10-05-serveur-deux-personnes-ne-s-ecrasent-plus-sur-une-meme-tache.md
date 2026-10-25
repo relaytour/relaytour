@@ -16,6 +16,16 @@ fr:
     depuis l'affichage de votre écran. Deux personnes qui cochent la même tâche
     en même temps ne produisent plus deux mails : la première garde les points
     de la réalisation.
+en:
+  titre: >-
+    Two people no longer overwrite each other on the same task
+  texte: >-
+    When another person has edited a task while you were typing, a window tells
+    you before you save. It names the person and the time of their edit. You
+    choose to reload the task or overwrite their version. The same window opens
+    when a task’s status has changed since your screen was displayed. Two people
+    checking off the same task at the same time no longer produce two emails:
+    the first keeps the points for completing it.
 ---
 
 `Tache.version` compte les modifications du contenu (migration additive

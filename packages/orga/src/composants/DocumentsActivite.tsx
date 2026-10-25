@@ -9,7 +9,7 @@ import { useActivite } from '../lib/activite'
 import EtiquettePerimetre from './EtiquettePerimetre'
 import ExplorateurDossier from './ExplorateurDossier'
 import { Section } from './Panneau'
-import { langueActive } from '../lib/langue'
+import { comparerTextes } from '../lib/langue'
 
 type Dossier = DossiersLiesQuery['dossiersLies'][number]
 type PerimetreLu = Dossier['lecteursLus']['perimetres'][number]
@@ -81,7 +81,7 @@ export default function DocumentsActivite({
       }
     }
     return [...map.values()].sort(
-      (a, b) => a.ordre - b.ordre || a.tri.localeCompare(b.tri, langueActive())
+      (a, b) => a.ordre - b.ordre || comparerTextes(a.tri, b.tri)
     )
   }, [dossiers, libelleGroupe])
 
