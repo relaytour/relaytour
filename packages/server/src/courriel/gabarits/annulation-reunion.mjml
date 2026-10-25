@@ -28,7 +28,7 @@
         <mj-button href="{{lienAgenda}}" background-color="#010101" color="#FFFFFF"
                    border-radius="10px" font-size="15px" font-weight="700"
                    padding="8px 0 16px" inner-padding="13px 24px">
-          Ouvrir l’agenda
+          [[Ouvrir l’agenda]]
         </mj-button>
       </mj-column>
     </mj-section>

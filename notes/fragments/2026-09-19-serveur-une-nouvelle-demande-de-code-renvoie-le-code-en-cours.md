@@ -14,6 +14,15 @@ fr:
     qui demande des codes sur votre adresse ne peut plus invalider celui que vous
     attendez. Les codes envoyés avant la mise à jour ne sont plus acceptés :
     demandez un nouveau code.
+en:
+  titre: >-
+    A new code request returns the current code
+  texte: >-
+    If you request a new sign-in code while the previous one is still valid, you
+    receive the same code and its validity restarts at 10 minutes. A person who
+    requests codes for your email address can no longer invalidate the one you
+    are waiting for. Codes sent before the update are no longer accepted:
+    request a new code.
 ---
 
 - `storeOTP: 'encrypted'` et `resendStrategy: 'reuse'` dans `packages/server/src/auth.ts` ; Better Auth ne réutilise un code que s'il peut le relire.

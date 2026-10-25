@@ -7,6 +7,8 @@
 // dépend de l'appareil : une application installée sur un téléphone ne l'est pas
 // sur un ordinateur.
 
+import { t } from '@lingui/core/macro'
+
 import { lienMailto, type Envoi } from './messages'
 
 export type CleMessagerie =
@@ -54,8 +56,12 @@ export interface Messagerie {
 export type Separateur = ',' | ';'
 
 export const SEPARATEURS: Record<Separateur, string> = {
-  ',': 'Virgule',
-  ';': 'Point-virgule',
+  get ','() {
+    return t`Virgule`
+  },
+  get ';'() {
+    return t`Point-virgule`
+  },
 }
 
 export const MESSAGERIE_PAR_DEFAUT: CleMessagerie = 'defaut'
@@ -63,10 +69,13 @@ export const MESSAGERIE_PAR_DEFAUT: CleMessagerie = 'defaut'
 export const MESSAGERIES: readonly Messagerie[] = [
   {
     cle: 'defaut',
-    libelle: 'Messagerie par défaut de l’appareil',
+    get libelle() {
+      return t`Messagerie par défaut de l’appareil`
+    },
     genre: 'poste',
-    detail:
-      'Votre appareil ouvre l’application de mail réglée par défaut dans votre système ou dans votre navigateur.',
+    get detail() {
+      return t`Votre appareil ouvre l’application de mail réglée par défaut dans votre système ou dans votre navigateur.`
+    },
     copiesEtablies: true,
     separateur: null,
   },
@@ -74,26 +83,33 @@ export const MESSAGERIES: readonly Messagerie[] = [
     cle: 'gmail',
     libelle: 'Gmail',
     genre: 'web',
-    detail:
-      'Gmail s’ouvre dans un nouvel onglet, avec le compte Google connecté dans ce navigateur.',
+    get detail() {
+      return t`Gmail s’ouvre dans un nouvel onglet, avec le compte Google connecté dans ce navigateur.`
+    },
     copiesEtablies: true,
     separateur: ',',
   },
   {
     cle: 'outlook',
-    libelle: 'Outlook (compte professionnel ou associatif)',
+    get libelle() {
+      return t`Outlook (compte professionnel ou associatif)`
+    },
     genre: 'web',
-    detail:
-      'Outlook sur le web s’ouvre dans un nouvel onglet, avec le compte Microsoft 365 connecté dans ce navigateur.',
+    get detail() {
+      return t`Outlook sur le web s’ouvre dans un nouvel onglet, avec le compte Microsoft 365 connecté dans ce navigateur.`
+    },
     copiesEtablies: true,
     separateur: ';',
   },
   {
     cle: 'outlook-perso',
-    libelle: 'Outlook.com (compte personnel)',
+    get libelle() {
+      return t`Outlook.com (compte personnel)`
+    },
     genre: 'web',
-    detail:
-      'Outlook.com s’ouvre dans un nouvel onglet, avec le compte Microsoft personnel connecté dans ce navigateur.',
+    get detail() {
+      return t`Outlook.com s’ouvre dans un nouvel onglet, avec le compte Microsoft personnel connecté dans ce navigateur.`
+    },
     copiesEtablies: false,
     separateur: ';',
   },
@@ -101,8 +117,9 @@ export const MESSAGERIES: readonly Messagerie[] = [
     cle: 'yahoo',
     libelle: 'Yahoo Mail',
     genre: 'web',
-    detail:
-      'Yahoo Mail s’ouvre dans un nouvel onglet, avec le compte connecté dans ce navigateur.',
+    get detail() {
+      return t`Yahoo Mail s’ouvre dans un nouvel onglet, avec le compte connecté dans ce navigateur.`
+    },
     copiesEtablies: false,
     separateur: ',',
   },
@@ -110,38 +127,55 @@ export const MESSAGERIES: readonly Messagerie[] = [
     cle: 'proton',
     libelle: 'Proton Mail',
     genre: 'web',
-    detail:
-      'Proton Mail s’ouvre dans un nouvel onglet, avec le compte connecté dans ce navigateur.',
+    get detail() {
+      return t`Proton Mail s’ouvre dans un nouvel onglet, avec le compte connecté dans ce navigateur.`
+    },
     copiesEtablies: true,
     separateur: ',',
   },
   {
     cle: 'app-gmail',
-    libelle: 'Application Gmail',
+    get libelle() {
+      return t`Application Gmail`
+    },
     genre: 'application',
-    detail:
-      'Le lien ouvre l’application Gmail installée sur l’appareil. Google ne documente pas ce lien.',
+    get detail() {
+      return t`Le lien ouvre l’application Gmail installée sur l’appareil. Google ne documente pas ce lien.`
+    },
     copiesEtablies: false,
-    systemes: 'iPhone et iPad seulement',
+    get systemes() {
+      return t`iPhone et iPad seulement`
+    },
     separateur: ',',
   },
   {
     cle: 'app-outlook',
-    libelle: 'Application Outlook',
+    get libelle() {
+      return t`Application Outlook`
+    },
     genre: 'application',
-    detail:
-      'Le lien ouvre l’application Outlook installée sur l’appareil. Microsoft ne documente pas ce lien.',
+    get detail() {
+      return t`Le lien ouvre l’application Outlook installée sur l’appareil. Microsoft ne documente pas ce lien.`
+    },
     copiesEtablies: false,
-    systemes: 'iPhone, iPad et Android, ni Mac ni Windows',
+    get systemes() {
+      return t`iPhone, iPad et Android, ni Mac ni Windows`
+    },
     separateur: ';',
   },
 ]
 
 /** Les titres des groupes d'un sélecteur de messagerie. */
 export const GENRES: Record<GenreMessagerie, string> = {
-  poste: 'Votre appareil',
-  web: 'Messageries en ligne',
-  application: 'Applications (à essayer)',
+  get poste() {
+    return t`Votre appareil`
+  },
+  get web() {
+    return t`Messageries en ligne`
+  },
+  get application() {
+    return t`Applications (à essayer)`
+  },
 }
 
 export function messagerie(cle: CleMessagerie): Messagerie {
@@ -376,9 +410,10 @@ export function envoiDEssai(adresse: string): Envoi {
     a: [adresse],
     cc: [],
     cci: [adresse],
-    objet: 'Essai de votre messagerie',
-    corps:
-      'Ce message d’essai vérifie que votre messagerie s’ouvre depuis l’espace organisateur.\n\nVotre adresse figure dans les champs « À » et « Cci ». Vous pouvez fermer ce message sans l’envoyer.',
+    objet: t`Essai de votre messagerie`,
+    corps: t`Ce message d’essai vérifie que votre messagerie s’ouvre depuis l’espace organisateur.
+
+Votre adresse figure dans les champs « À » et « Cci ». Vous pouvez fermer ce message sans l’envoyer.`,
   }
 }
 

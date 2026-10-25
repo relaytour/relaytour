@@ -19,9 +19,11 @@ import {
   placesAVenir,
 } from '../lib/espace-benevole.ts'
 import { invitationEnAttente } from '../lib/invitations.ts'
+import { i18n, langueCourante } from '../lib/langue.ts'
 import {
   LIBELLES_ROLE,
   lienModeDEmploi,
+  listeDesModesDEmploi,
   roleDuModeDEmploi,
 } from '../lib/modes-d-emploi.ts'
 import {
@@ -42,11 +44,20 @@ import {
 
 import { rendre, type Variables } from './rendu.ts'
 
-const LIBELLES_STATUT: Record<string, string> = {
-  A_FAIRE: 'À faire',
-  EN_COURS: 'En cours',
-  FAITE: 'Faite',
-  ABANDONNEE: 'Abandonnée',
+/** Le libellé d'un statut de tâche, dans la langue de l'envoi. */
+function libelleStatut(statut: string): string | undefined {
+  switch (statut) {
+    case 'A_FAIRE':
+      return i18n._('À faire', {}, { comment: 'Statut d’une tâche' })
+    case 'EN_COURS':
+      return i18n._('En cours', {}, { comment: 'Statut d’une tâche' })
+    case 'FAITE':
+      return i18n._('Faite', {}, { comment: 'Statut d’une tâche' })
+    case 'ABANDONNEE':
+      return i18n._('Abandonnée', {}, { comment: 'Statut d’une tâche' })
+    default:
+      return undefined
+  }
 }
 
 /**
@@ -60,18 +71,26 @@ export function sujets(
 ): Record<SorteCourriel, string> {
   const tete = activite === undefined ? nomCourt : `${nomCourt} · ${activite}`
   return {
-    essai: 'Essai d’envoi du serveur Relaytour',
-    invitation: `${tete} : votre accès à l’espace organisateur`,
-    'code-connexion': `${nomCourt} : votre code de connexion`,
-    'tache-modifiee': `${tete} : une de vos tâches a été modifiée`,
-    'rappels-echeance': `${tete} : échéances de vos tâches`,
-    resume: `${nomCourt} : votre résumé`,
-    equipe: `${tete} : votre place dans l’équipe a changé`,
-    demandes: `${tete} : demandes pour rejoindre l’équipe`,
-    'convocation-reunion': `${tete} : convocation à une réunion`,
-    'annulation-reunion': `${tete} : réunion annulée`,
-    'benevole-lien': `${tete} : votre participation`,
-    'benevole-places': `${tete} : vos places ont changé`,
+    essai: i18n._('Essai d’envoi du serveur Relaytour'),
+    invitation: i18n._('{tete} : votre accès à l’espace organisateur', {
+      tete,
+    }),
+    'code-connexion': i18n._('{nomCourt} : votre code de connexion', {
+      nomCourt,
+    }),
+    'tache-modifiee': i18n._('{tete} : une de vos tâches a été modifiée', {
+      tete,
+    }),
+    'rappels-echeance': i18n._('{tete} : échéances de vos tâches', { tete }),
+    resume: i18n._('{nomCourt} : votre résumé', { nomCourt }),
+    equipe: i18n._('{tete} : votre place dans l’équipe a changé', { tete }),
+    demandes: i18n._('{tete} : demandes pour rejoindre l’équipe', { tete }),
+    'convocation-reunion': i18n._('{tete} : convocation à une réunion', {
+      tete,
+    }),
+    'annulation-reunion': i18n._('{tete} : réunion annulée', { tete }),
+    'benevole-lien': i18n._('{tete} : votre participation', { tete }),
+    'benevole-places': i18n._('{tete} : vos places ont changé', { tete }),
   }
 }
 
@@ -104,20 +123,28 @@ export interface MessageCompose {
 export function situationSansPerimetre(
   activites: { nom: string; souhaitsOuverts: boolean }[]
 ): string {
-  const attente =
+  const attente = i18n._(
     'En attendant, le mode d’emploi vous aide à découvrir l’espace.'
+  )
   if (activites.length === 0) {
-    return `Vous n’avez pas encore de périmètre : un admin vous affectera à l’un d’eux. ${attente}`
+    return `${i18n._('Vous n’avez pas encore de périmètre : un admin vous affectera à l’un d’eux.')} ${attente}`
   }
-  const noms = activites.map(a => `« ${a.nom} »`)
-  const liste =
-    noms.length === 1
-      ? `de l’activité ${noms[0]}`
-      : `des activités ${noms.slice(0, -1).join(', ')} et ${noms.at(-1)}`
-  const souhaits = activites.some(a => a.souhaitsOuverts)
-    ? ' et formulez vos souhaits'
-    : ''
-  return `Vous faites partie de l’équipe ${liste}, sans périmètre pour l’instant. Dans « Tous les périmètres », vous découvrez les périmètres${souhaits}. Un admin vous affectera ensuite. ${attente}`
+  // Le français sépare les noms par une virgule et « et » devant le dernier.
+  const noms = new Intl.ListFormat(langueCourante(), {
+    style: 'long',
+    type: 'conjunction',
+  }).format(activites.map(a => `« ${a.nom} »`))
+  // Chaque phrase se traduit en entier ; le mail les range dans l'ordre.
+  const equipe = i18n._(
+    '{n, plural, one {Vous faites partie de l’équipe de l’activité {noms}, sans périmètre pour l’instant.} other {Vous faites partie de l’équipe des activités {noms}, sans périmètre pour l’instant.}}',
+    { n: activites.length, noms }
+  )
+  const decouverte = activites.some(a => a.souhaitsOuverts)
+    ? i18n._(
+        'Dans « Tous les périmètres », vous découvrez les périmètres et formulez vos souhaits.'
+      )
+    : i18n._('Dans « Tous les périmètres », vous découvrez les périmètres.')
+  return `${equipe} ${decouverte} ${i18n._('Un admin vous affectera ensuite.')} ${attente}`
 }
 
 /**
@@ -177,8 +204,9 @@ export async function composer(
     })
     variables.nom = user.name
     variables.lienConnexion = lienVers('/connexion')
-    variables.accroche =
+    variables.accroche = i18n._(
       'L’équipe d’organisation vous a ouvert un accès à l’espace organisateur. Vous y retrouverez vos périmètres, vos tâches et les fiches méthode des éditions précédentes.'
+    )
     // Le rôle se lit à l'envoi : une invitation renvoyée après une nomination
     // lie le mode d'emploi du nouveau rôle.
     const role = await roleDuModeDEmploi(
@@ -188,7 +216,10 @@ export async function composer(
     )
     const { env } = await import('../env.ts')
     variables.roleModeDEmploi = LIBELLES_ROLE[role]
-    variables.lienModeDEmploi = lienModeDEmploi(env.MODES_D_EMPLOI_URL, role)
+    variables.lienModeDEmploi = lienModeDEmploi(
+      listeDesModesDEmploi(env, langueCourante()),
+      role
+    )
     // Les périmètres de la personne, avec leur description (ADR 0012). Sans
     // périmètre, le mail explique comment en obtenir un.
     const idOrganisation = organisationId ?? configuration.id
@@ -207,8 +238,17 @@ export async function composer(
     if (attente === 'aucune') return null
     if (attente !== 'membre') {
       const activite = activiteDuSujet(configuration)
-      sujet = `${activite === undefined ? configuration.nomCourt : `${configuration.nomCourt} · ${activite}`} : invitation à rejoindre l’espace organisateur`
-      variables.accroche = `${configuration.nomCourt} vous invite à rejoindre son espace organisateur. Vous avez déjà un compte à cette adresse : après connexion, vous acceptez ou refusez cette invitation depuis le menu de votre compte. Rien n’est partagé avec cette organisation avant votre accord.`
+      const tete =
+        activite === undefined
+          ? configuration.nomCourt
+          : `${configuration.nomCourt} · ${activite}`
+      sujet = i18n._('{tete} : invitation à rejoindre l’espace organisateur', {
+        tete,
+      })
+      variables.accroche = i18n._(
+        '{nomCourt} vous invite à rejoindre son espace organisateur. Vous avez déjà un compte à cette adresse : après connexion, vous acceptez ou refusez cette invitation depuis le menu de votre compte. Rien n’est partagé avec cette organisation avant votre accord.',
+        { nomCourt: configuration.nomCourt }
+      )
       variables.perimetres = attente.perimetres
       // La personne n'a encore aucun rôle dans l'organisation : le mode d'emploi
       // lié est celui du rôle que l'invitation propose.
@@ -216,17 +256,19 @@ export async function composer(
         attente.role === 'ADMIN' ? 'admin-organisation' : 'referent'
       variables.roleModeDEmploi = LIBELLES_ROLE[propose]
       variables.lienModeDEmploi = lienModeDEmploi(
-        env.MODES_D_EMPLOI_URL,
+        listeDesModesDEmploi(env, langueCourante()),
         propose
       )
     }
     variables.situation =
       attente !== 'membre'
         ? attente.perimetres.length > 0
-          ? 'L’invitation vous propose ces périmètres :'
-          : 'Vous choisirez vos périmètres avec l’équipe après votre accord.'
+          ? i18n._('L’invitation vous propose ces périmètres :')
+          : i18n._(
+              'Vous choisirez vos périmètres avec l’équipe après votre accord.'
+            )
         : perimetres.length > 0
-          ? 'Vous faites partie de l’équipe de ces périmètres :'
+          ? i18n._('Vous faites partie de l’équipe de ces périmètres :')
           : situationSansPerimetre(
               idOrganisation === null
                 ? []
@@ -259,7 +301,10 @@ export async function composer(
     const role = await roleDuModeDEmploi(prisma, user.id, idOrganisation)
     const { env } = await import('../env.ts')
     variables.roleModeDEmploi = LIBELLES_ROLE[role]
-    variables.lienModeDEmploi = lienModeDEmploi(env.MODES_D_EMPLOI_URL, role)
+    variables.lienModeDEmploi = lienModeDEmploi(
+      listeDesModesDEmploi(env, langueCourante()),
+      role
+    )
   }
 
   if (job.sorte === 'demandes') {
@@ -296,10 +341,10 @@ export async function composer(
       select: { name: true },
     })
     variables.nom = personne.name
-    variables.annonce =
-      nombre === 1
-        ? `Une demande pour rejoindre l’équipe de l’activité ${activite.nom} attend votre décision.`
-        : `${nombre} demandes pour rejoindre l’équipe de l’activité ${activite.nom} attendent votre décision.`
+    variables.annonce = i18n._(
+      '{n, plural, one {Une demande pour rejoindre l’équipe de l’activité {activite} attend votre décision.} other {# demandes pour rejoindre l’équipe de l’activité {activite} attendent votre décision.}}',
+      { n: nombre, activite: activite.nom }
+    )
     variables.lienDemandes = lienVers(
       `/${activite.slug}/admin/personnes?onglet=demandes`
     )
@@ -323,7 +368,11 @@ export async function composer(
       throw new Error('Le mail « code-connexion » exige un code.')
     }
     variables.code = job.code
-    variables.validite = `${CODE_VALIDITE_SECONDES / 60} minutes`
+    // Une durée, insérée dans « Il est valable {validite}. » du gabarit.
+    variables.validite = i18n._(
+      '{n, plural, one {# minute} other {# minutes}}',
+      { n: CODE_VALIDITE_SECONDES / 60 }
+    )
     // Le code et l'adresse sont placés après « # » : le navigateur ne les envoie
     // jamais au serveur, et l'écran de connexion remplit les deux champs.
     const compte = job.userId
@@ -365,7 +414,7 @@ export async function composer(
       }),
       // Un passage à « faite » arrive sans auteur : le mail ne nomme personne.
       job.tache.acteurId === undefined
-        ? { name: 'Une autre personne' }
+        ? { name: i18n._('Une autre personne') }
         : prisma.user.findUniqueOrThrow({
             where: { id: job.tache.acteurId },
             select: { name: true },
@@ -377,8 +426,12 @@ export async function composer(
     variables.perimetre = tache.perimetre.nom
     variables.changement =
       job.tache.changement === 'statut'
-        ? `Le nouveau statut de la tâche est « ${LIBELLES_STATUT[tache.statut]} ».`
-        : 'Le titre, la description ou l’échéance de la tâche ont changé.'
+        ? i18n._('Le nouveau statut de la tâche est « {statut} ».', {
+            statut: libelleStatut(tache.statut),
+          })
+        : i18n._(
+            'Le titre, la description ou l’échéance de la tâche ont changé.'
+          )
     // Les pages d'un périmètre vivent sous le slug de son activité (ADR 0008).
     variables.lienPerimetre = lienVers(
       `/${tache.perimetre.activite.slug}/perimetres/${tache.perimetre.slug}`
@@ -504,10 +557,10 @@ export async function composer(
       composerNotifications(prisma, notificationsAdmin, userId),
     ])
     variables.nom = personne.name
-    variables.periode =
+    variables.introduction =
       preferences.frequenceResume === 'QUOTIDIEN'
-        ? 'depuis hier'
-        : 'de la semaine'
+        ? i18n._('Voici les nouvelles de vos périmètres depuis hier.')
+        : i18n._('Voici les nouvelles de vos périmètres de la semaine.')
     // Les nouvelles se rangent par activité, puis viennent celles des rôles
     // d'admin, sous un intertitre qui le dit (ADR 0032 et 0033).
     const groupes = [
@@ -515,28 +568,35 @@ export async function composer(
       ...grouperParActivite(
         composeesAdmin,
         configuration.nomCourt,
-        'Pour vos rôles d’admin · '
+        `${i18n._('Pour vos rôles d’admin')} · `
       ),
     ]
-    variables.nouvelles = groupes.length > 0 ? groupes : ['Aucune nouvelle.']
+    variables.nouvelles =
+      groupes.length > 0 ? groupes : [i18n._('Aucune nouvelle.')]
     // Les échéances se rangent aussi par activité.
     const parActivite = new Map<string, { titre: string; elements: string[] }>()
     for (const t of taches) {
-      const date = t.echeance!.toLocaleDateString('fr-FR', {
+      const date = t.echeance!.toLocaleDateString(langueCourante(), {
         day: 'numeric',
         month: 'long',
         timeZone: 'UTC',
       })
-      const retard = t.echeance! < jour ? ' (en retard)' : ''
+      const valeurs = { date, titre: t.titre, perimetre: t.perimetre.nom }
       const groupe = parActivite.get(t.perimetre.activite.id) ?? {
         titre: t.perimetre.activite.nom,
         elements: [],
       }
-      groupe.elements.push(`${date} : ${t.titre} (${t.perimetre.nom})${retard}`)
+      groupe.elements.push(
+        t.echeance! < jour
+          ? i18n._('{date} : {titre} ({perimetre}) (en retard)', valeurs)
+          : i18n._('{date} : {titre} ({perimetre})', valeurs)
+      )
       parActivite.set(t.perimetre.activite.id, groupe)
     }
     variables.echeances =
-      parActivite.size > 0 ? [...parActivite.values()] : ['Aucune échéance.']
+      parActivite.size > 0
+        ? [...parActivite.values()]
+        : [i18n._('Aucune échéance.')]
     variables.lienConnexion = lienVers('/')
     variables.lienPreferences = lienPreferences
     desabonnement = lienPreferences
@@ -625,7 +685,10 @@ export async function composer(
       `/${reunion.activite.slug}/agenda?edition=${reunion.editionId}&reunion=${reunion.id}`
     )
     const agenda =
-      reunion.perimetre?.nom ?? `l’agenda de ${reunion.activite.nom}`
+      reunion.perimetre?.nom ??
+      i18n._('l’agenda de {activite}', { activite: reunion.activite.nom })
+    const titre = reunion.titre
+    const teteReunion = `${configuration.nomCourt} · ${reunion.activite.nom}`
     const miseAJour =
       job.sorte === 'convocation-reunion' &&
       convocation?.sequenceEnvoyee !== null &&
@@ -637,36 +700,59 @@ export async function composer(
     variables.intitule =
       job.sorte === 'annulation-reunion'
         ? annulee
-          ? 'Réunion annulée'
-          : 'Vous n’êtes plus convoqué·e'
+          ? i18n._('Réunion annulée')
+          : i18n._('Vous n’êtes plus convoqué·e')
         : miseAJour
-          ? 'Réunion modifiée'
-          : 'Convocation à une réunion'
+          ? i18n._('Réunion modifiée')
+          : i18n._('Convocation à une réunion')
     variables.intro =
       job.sorte === 'annulation-reunion'
         ? annulee
-          ? `La réunion « ${reunion.titre} » (${agenda}) est annulée.`
-          : `Vous ne faites plus partie des personnes convoquées à la réunion « ${reunion.titre} » (${agenda}).`
+          ? i18n._('La réunion « {titre} » ({agenda}) est annulée.', {
+              titre,
+              agenda,
+            })
+          : i18n._(
+              'Vous ne faites plus partie des personnes convoquées à la réunion « {titre} » ({agenda}).',
+              { titre, agenda }
+            )
         : miseAJour
-          ? `La réunion « ${reunion.titre} » (${agenda}) a changé. Voici son horaire et son lieu à jour.`
-          : `Vous êtes convoqué·e à la réunion « ${reunion.titre} » (${agenda}).`
+          ? i18n._(
+              'La réunion « {titre} » ({agenda}) a changé. Voici son horaire et son lieu à jour.',
+              { titre, agenda }
+            )
+          : i18n._(
+              'Vous êtes convoqué·e à la réunion « {titre} » ({agenda}).',
+              {
+                titre,
+                agenda,
+              }
+            )
     variables.details = [
-      `Quand : ${horaireEnClair(reunion.debut, reunion.fin, fuseau)}`,
-      ...(reunion.lieu && !retrait ? [`Lieu : ${reunion.lieu}`] : []),
+      i18n._('Quand : {horaire}', {
+        horaire: horaireEnClair(reunion.debut, reunion.fin, fuseau),
+      }),
+      ...(reunion.lieu && !retrait
+        ? [i18n._('Lieu : {lieu}', { lieu: reunion.lieu })]
+        : []),
       ...(reunion.lienVisio && !retrait
-        ? [`Visio : ${reunion.lienVisio}`]
+        ? [i18n._('Visio : {lien}', { lien: reunion.lienVisio })]
         : []),
     ]
     variables.consigne =
       job.sorte === 'annulation-reunion'
-        ? 'Le fichier joint retire la réunion de votre agenda.'
-        : 'Le fichier joint ajoute la réunion à votre agenda. Indiquez si vous serez présente ou présent dans l’espace organisateur : une réponse envoyée depuis votre agenda n’y arrive pas.'
+        ? i18n._('Le fichier joint retire la réunion de votre agenda.')
+        : i18n._(
+            'Le fichier joint ajoute la réunion à votre agenda. Indiquez si vous serez présente ou présent dans l’espace organisateur : une réponse envoyée depuis votre agenda n’y arrive pas.'
+          )
     variables.lienAgenda = lienAgenda
     if (miseAJour) {
-      sujet = `${configuration.nomCourt} · ${reunion.activite.nom} : réunion modifiée`
+      sujet = i18n._('{tete} : réunion modifiée', { tete: teteReunion })
     }
     if (job.sorte === 'annulation-reunion' && !annulee) {
-      sujet = `${configuration.nomCourt} · ${reunion.activite.nom} : vous n’êtes plus convoqué·e`
+      sujet = i18n._('{tete} : vous n’êtes plus convoqué·e', {
+        tete: teteReunion,
+      })
     }
     const expediteur = (await configurationOrganisation()).expediteur
     const adresseOrganisateur =
@@ -746,38 +832,74 @@ export async function composer(
       origine,
       await jetonEspace(prisma, fiche.id)
     )
+    // La marque d'une place que la personne doit confirmer : la liste et la
+    // consigne la citent de la même façon.
+    const aConfirmer = i18n._(
+      'à confirmer',
+      {},
+      { comment: 'Marque d’une place que la personne doit encore confirmer' }
+    )
     variables.places =
       places.length === 0
-        ? ['Vous n’avez plus de place à venir.']
-        : places.map(
-            p =>
-              `${horaireEnClair(p.sequence.debut, p.sequence.fin, fuseau)} · ${p.sequence.titre}` +
-              (p.sequence.lieu ? ` (${p.sequence.lieu.nom})` : '') +
-              (p.confirmeeLe === null ? ' · à confirmer' : '')
-          )
+        ? [i18n._('Vous n’avez plus de place à venir.')]
+        : places.map(p => {
+            const valeurs = {
+              horaire: horaireEnClair(p.sequence.debut, p.sequence.fin, fuseau),
+              titre: p.sequence.titre,
+              lieu: p.sequence.lieu?.nom ?? '',
+              aConfirmer,
+            }
+            if (p.sequence.lieu) {
+              return p.confirmeeLe === null
+                ? i18n._('{horaire} · {titre} ({lieu}) · {aConfirmer}', valeurs)
+                : i18n._('{horaire} · {titre} ({lieu})', valeurs)
+            }
+            return p.confirmeeLe === null
+              ? i18n._('{horaire} · {titre} · {aConfirmer}', valeurs)
+              : i18n._('{horaire} · {titre}', valeurs)
+          })
     const activite = fiche.activite.nom
     if (job.sorte === 'benevole-lien' && !confirmee) {
-      variables.intitule = 'Votre candidature est retenue'
-      variables.intro = `L’équipe d’organisation vous propose les places suivantes pour « ${activite} ».`
-      variables.consigne =
+      variables.intitule = i18n._('Votre candidature est retenue')
+      variables.intro = i18n._(
+        'L’équipe d’organisation vous propose les places suivantes pour « {activite} ».',
+        { activite }
+      )
+      variables.consigne = i18n._(
         'Confirmez votre participation depuis votre espace. Vous pouvez aussi y décliner une place.'
-      variables.libelleBouton = 'Confirmer ma participation'
-      variables.avertissement =
+      )
+      variables.libelleBouton = i18n._('Confirmer ma participation')
+      variables.avertissement = i18n._(
         'Si vous n’êtes pas à l’origine de cette inscription, ignorez ce message. Vos données seront supprimées.'
+      )
     } else if (job.sorte === 'benevole-lien') {
-      variables.intitule = 'Votre espace bénévole'
-      variables.intro = `Voici le lien de votre espace bénévole pour « ${activite} ».`
-      variables.consigne =
+      variables.intitule = i18n._('Votre espace bénévole')
+      variables.intro = i18n._(
+        'Voici le lien de votre espace bénévole pour « {activite} ».',
+        { activite }
+      )
+      variables.consigne = i18n._(
         'Vous y retrouvez vos places, leurs consignes et le fichier pour votre agenda.'
-      variables.libelleBouton = 'Ouvrir mon espace'
-      variables.avertissement = 'Gardez ce lien : il reste le même.'
+      )
+      variables.libelleBouton = i18n._('Ouvrir mon espace')
+      variables.avertissement = i18n._('Gardez ce lien : il reste le même.')
     } else {
-      variables.intitule = 'Vos places ont changé'
-      variables.intro = `L’équipe d’organisation a modifié vos places pour « ${activite} ». Voici la liste à jour.`
+      variables.intitule = i18n._('Vos places ont changé')
+      variables.intro = i18n._(
+        'L’équipe d’organisation a modifié vos places pour « {activite} ». Voici la liste à jour.',
+        { activite }
+      )
       variables.consigne = places.some(p => p.confirmeeLe === null)
-        ? 'Confirmez les places marquées « à confirmer » depuis votre espace.'
-        : 'Vous retrouvez vos places et leurs consignes dans votre espace.'
-      variables.avertissement = 'Votre lien personnel reste le même.'
+        ? i18n._(
+            'Confirmez les places marquées « {aConfirmer} » depuis votre espace.',
+            {
+              aConfirmer,
+            }
+          )
+        : i18n._(
+            'Vous retrouvez vos places et leurs consignes dans votre espace.'
+          )
+      variables.avertissement = i18n._('Votre lien personnel reste le même.')
     }
   }
 

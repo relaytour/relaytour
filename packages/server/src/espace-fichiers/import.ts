@@ -4,6 +4,7 @@ import { donneesPersonnelles } from '../lib/contenu.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 import { importerFiches, type RapportFiches } from '../orga/import-fiches.ts'
 
@@ -101,10 +102,11 @@ export async function importerDepuisEspace(
   const vus = new Set<string | null>()
   for (const source of sources) {
     if (source.perimetreId !== null && !slugsPerimetres.has(source.perimetreId))
-      throw erreurSaisie('Ce périmètre n’appartient pas à l’activité.')
+      throw erreurSaisie(i18n._('Ce périmètre n’appartient pas à l’activité.'))
     if (vus.has(source.perimetreId))
-      throw erreurSaisie('Un périmètre reçoit un seul dossier source.')
-    if (!cheminValide(source.chemin)) throw erreurSaisie('Chemin invalide.')
+      throw erreurSaisie(i18n._('Un périmètre reçoit un seul dossier source.'))
+    if (!cheminValide(source.chemin))
+      throw erreurSaisie(i18n._('Chemin invalide.'))
     vus.add(source.perimetreId)
   }
 
@@ -138,13 +140,16 @@ export async function importerDepuisEspace(
       )
     ) {
       throw erreurSaisie(
-        'Le dossier d’export des fiches ne sert pas de source : ses fichiers sont des copies écrites par Relaytour.'
+        i18n._(
+          'Le dossier d’export des fiches ne sert pas de source : ses fichiers sont des copies écrites par Relaytour.'
+        )
       )
     }
     const liste = await espace.lister(position)
-    if (liste === null) throw erreurSaisie('Un dossier source est introuvable.')
+    if (liste === null)
+      throw erreurSaisie(i18n._('Un dossier source est introuvable.'))
     if (!liste.complet) rapport.incomplet = true
-    const nomSource = source.chemin.join(' / ') || 'racine'
+    const nomSource = source.chemin.join(' / ') || i18n._('racine')
     const fichiers = liste.elements
       .filter((e: ElementEspace) => !e.dossier)
       .sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
@@ -164,15 +169,17 @@ export async function importerDepuisEspace(
           ? null
           : formatImport(fichier.nom)
       if (format === null) {
-        ecarter('format que Relaytour n’importe pas')
+        ecarter(i18n._('format que Relaytour n’importe pas'))
         continue
       }
       if (lus >= FICHIERS_MAX) {
-        ecarter(`au-delà de ${FICHIERS_MAX} fichiers par import`)
+        ecarter(
+          i18n._('au-delà de {max} fichiers par import', { max: FICHIERS_MAX })
+        )
         continue
       }
       if (fichier.taille !== null && fichier.taille > TAILLE_MAX) {
-        ecarter('plus de 2 Mo')
+        ecarter(i18n._('plus de 2 Mo'))
         continue
       }
       lus += 1
@@ -185,7 +192,7 @@ export async function importerDepuisEspace(
           })
           rapport.converties.push({
             fichier: nomComplet,
-            raison: 'document Google exporté en Markdown',
+            raison: i18n._('document Google exporté en Markdown'),
           })
           if (texte.length > TAILLE_MAX) throw new Error('Document trop long.')
         } else {
@@ -199,9 +206,10 @@ export async function importerDepuisEspace(
             rapport.converties.push({
               fichier: nomComplet,
               raison:
+                // La conversion ne perd aujourd'hui que les images.
                 converti.pertes.length === 0
-                  ? 'converti en Markdown'
-                  : `converti en Markdown, sans les ${converti.pertes.join(', ')}`,
+                  ? i18n._('converti en Markdown')
+                  : i18n._('converti en Markdown, sans les images'),
             })
           } else {
             texte = octets.toString('utf8')
@@ -216,7 +224,7 @@ export async function importerDepuisEspace(
           },
           'Un fichier de l’espace de fichiers n’a pas pu être lu.'
         )
-        ecarter('fichier illisible')
+        ecarter(i18n._('fichier illisible'))
         continue
       }
       // Le nom d'un document Google n'a pas d'extension : la lecture en ajoute une.
@@ -225,16 +233,16 @@ export async function importerDepuisEspace(
         texte
       )
       if (!SLUG.test(fiche.slug) || fiche.slug.length > 60) {
-        ecarter('nom de fichier sans identifiant utilisable')
+        ecarter(i18n._('nom de fichier sans identifiant utilisable'))
         continue
       }
       if (fiche.contenu.length > CONTENU_MAX) {
-        ecarter('plus de 200 000 caractères')
+        ecarter(i18n._('plus de 200 000 caractères'))
         continue
       }
       const deja = provenance.get(fiche.slug)
       if (deja !== undefined) {
-        ecarter(`même identifiant que ${deja}`)
+        ecarter(i18n._('même identifiant que {fichier}', { fichier: deja }))
         continue
       }
       const personnelles = donneesPersonnelles(
@@ -244,7 +252,9 @@ export async function importerDepuisEspace(
       if (personnelles.length > 0) {
         rapport.refusees.push({
           fichier: nomComplet,
-          raison: `coordonnées personnelles (${personnelles.join(', ')})`,
+          raison: i18n._('coordonnées personnelles ({valeurs})', {
+            valeurs: personnelles.join(', '),
+          }),
         })
         continue
       }
@@ -285,7 +295,7 @@ export async function importerDepuisEspace(
   rapport.inchangees = rapportFiches.inchangees
   rapport.conflits = rapportFiches.conflits.map(fiche => ({
     fiche,
-    raison: raisons.get(fiche) ?? 'conflit',
+    raison: raisons.get(fiche) ?? i18n._('conflit'),
   }))
 
   if (options.ecrire) {

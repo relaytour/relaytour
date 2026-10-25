@@ -3,6 +3,7 @@ import { prisma, type Prisma, type RoleOrganisation } from '@relaytour/database'
 import type { AppContext } from '../context.ts'
 
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 // Appartenances (ADR 0008) : un compte est global, il appartient à une ou plusieurs
 // organisations avec un rôle dans chacune. Un admin n'agit que sur les membres de
@@ -35,8 +36,11 @@ export async function exigerMembre(
   return { role: ici.role, archive: ici.archiveLe !== null }
 }
 
-const PERSONNE_ARCHIVEE =
-  'Cette personne est archivée dans votre organisation : un admin de l’organisation la rétablit depuis l’annuaire.'
+function messagePersonneArchivee(): string {
+  return i18n._(
+    'Cette personne est archivée dans votre organisation : un admin de l’organisation la rétablit depuis l’annuaire.'
+  )
+}
 
 /**
  * Refuse d'affecter, de nommer ou d'accorder un droit à une personne archivée dans
@@ -44,7 +48,7 @@ const PERSONNE_ARCHIVEE =
  * permis : un admin range ainsi la place d'une personne partie.
  */
 export function refuserArchivee(membre: Membre): void {
-  if (membre.archive) throw erreurSaisie(PERSONNE_ARCHIVEE)
+  if (membre.archive) throw erreurSaisie(messagePersonneArchivee())
 }
 
 /**
@@ -120,8 +124,11 @@ export async function synchroniserArchivageDuCompte(
   })
 }
 
-const ADMIN_DE_L_ORGANISATION =
-  'Seul un admin de l’organisation agit sur le compte d’un admin de l’organisation.'
+function messageAdminDeLOrganisation(): string {
+  return i18n._(
+    'Seul un admin de l’organisation agit sur le compte d’un admin de l’organisation.'
+  )
+}
 
 /**
  * Refuse à un admin d'activité d'agir sur un admin de l'organisation (ADR 0019) :
@@ -142,7 +149,7 @@ export async function refuserAdminDeLOrganisation(
     select: { role: true },
   })
   if (appartenance?.role === 'ADMIN')
-    throw erreurSaisie(ADMIN_DE_L_ORGANISATION)
+    throw erreurSaisie(messageAdminDeLOrganisation())
 }
 
 /**
@@ -158,7 +165,7 @@ export async function exigerMembreGere(
 ): Promise<Membre> {
   const membre = await exigerMembre(ctx, userId)
   if (ctx.personne?.estAdmin === true) return membre
-  if (membre.role === 'ADMIN') throw erreurSaisie(ADMIN_DE_L_ORGANISATION)
+  if (membre.role === 'ADMIN') throw erreurSaisie(messageAdminDeLOrganisation())
   if (!(await ctx.equipeAdministree()).has(userId)) throw accesRefuse()
   return membre
 }

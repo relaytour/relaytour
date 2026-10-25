@@ -1,5 +1,8 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Signaler une faille de sécurité
+  - name: Signaler une faille de sécurité · Report a security issue
     url: https://github.com/relaytour/relaytour/security/advisories/new
-    about: Une faille se signale en privé, jamais dans un ticket public (voir SECURITY.md).
+    about: >-
+      Une faille se signale en privé, jamais dans un ticket public (voir SECURITY.md).
+      · A security issue is reported privately, never in a public issue (see
+      SECURITY.md).

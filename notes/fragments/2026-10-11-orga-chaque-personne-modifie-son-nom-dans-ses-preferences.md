@@ -14,6 +14,15 @@ fr:
     l'organisation corrige encore le nom d'une personne tant qu'elle ne s'est
     jamais connectée. L'annuaire parle de « personnes archivées » : archiver une
     personne ferme son accès à votre organisation, et elle garde son compte.
+en:
+  titre: >-
+    Everyone can edit their own name in their preferences
+  texte: >-
+    The “Your account” panel in the preferences has an “Edit my name” button.
+    This name appears in all your organizations. An organization admin can still
+    correct a person’s name until they have signed in for the first time. The
+    directory refers to “archived people”: archiving a person closes their
+    access to your organization, and they keep their account.
 ---
 
 ADR 0031. `Preferences.tsx` appelle `modifierMonNom`. `Personnes.tsx` lit

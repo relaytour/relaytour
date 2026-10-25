@@ -13,6 +13,14 @@ fr:
     lieu et par heure, ou par lieu sur un téléphone. Chaque séquence nomme ses
     responsables et ses renforts, membres de l'équipe ou bénévoles. « Mon jour
     J » liste vos séquences, et la page de votre périmètre montre les siennes.
+en:
+  titre: >-
+    The event-day schedule arranges teams by venue and by time
+  texte: >-
+    The “Schedule” screen shows the event-day slots in a grid by venue and by
+    time, or by venue on a phone. Each slot names its leads and helpers, who are
+    team members or volunteers. “My day-of schedule” lists your slots, and your
+    area’s page shows its own.
 ---
 
 ADR 0040 : requêtes `programme` et `lieux`, mutations des séquences et des

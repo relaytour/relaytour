@@ -16,6 +16,16 @@ fr:
     choisissent des séquences et donnent leurs disponibilités. Vous acceptez ou
     refusez chaque séquence dans l'onglet « Candidatures » de l'écran
     « Bénévoles ». Aucun mail ne part au dépôt.
+en:
+  titre: >-
+    Volunteers sign up through the public address of a call
+  texte: >-
+    A slot in the schedule states the helpers it needs and public instructions.
+    You open a call for your area or for a slot, then share its address.
+    Activity admins can also open a call for the whole period. Volunteers choose
+    slots there and give their availability. You accept or decline each slot in
+    the “Applications” tab of the “Volunteers” screen. No email is sent when an
+    application is submitted.
 ---
 
 ADR 0041 : `AppelBenevoles`, `Candidature`, `ChoixCandidature`,

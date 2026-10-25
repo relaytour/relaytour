@@ -14,6 +14,14 @@ fr:
     toutes les fiches. Les modèles du dépôt (périmètres, fiches, tâches types)
     s'importent pour chaque édition, sans jamais écraser une fiche modifiée dans
     l'application.
+en:
+  titre: >-
+    How-to sheets are versioned and imported from the repository
+  texte: >-
+    Each sheet keeps all its versions, and admins can restore one. Admins grant
+    the right to edit the sheets of an area or all sheets. The repository
+    templates (areas, sheets, task templates) are imported for each edition,
+    never overwriting a sheet edited in the application.
 ---
 
 Phase 3 du plan de l'espace organisateur (ADR 0003).

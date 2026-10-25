@@ -1,5 +1,8 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -118,21 +121,25 @@ const MODIFIER_IDENTITE = graphql(`
   }
 `)
 
-const NATURES: { value: NatureActivite; label: string; aide: string }[] = [
+const NATURES: {
+  value: NatureActivite
+  label: MessageDescriptor
+  aide: MessageDescriptor
+}[] = [
   {
     value: 'EVENEMENT',
-    label: 'Événement',
-    aide: 'Une manifestation qui revient, une édition à la fois.',
+    label: msg({ message: 'Événement', comment: 'Nature d’une activité' }),
+    aide: msg`Une manifestation qui revient, une édition à la fois.`,
   },
   {
     value: 'SAISON',
-    label: 'Section',
-    aide: 'Une activité permanente, une saison à la fois.',
+    label: msg({ message: 'Section', comment: 'Nature d’une activité' }),
+    aide: msg`Une activité permanente, une saison à la fois.`,
   },
   {
     value: 'MANDAT',
-    label: 'Instance',
-    aide: 'Un bureau ou un conseil, un mandat à la fois.',
+    label: msg({ message: 'Instance', comment: 'Nature d’une activité' }),
+    aide: msg`Un bureau ou un conseil, un mandat à la fois.`,
   },
 ]
 
@@ -198,12 +205,18 @@ interface Valeurs {
   accent: string | null
 }
 
-const GROUPES_PAR_DEFAUT: Groupe[] = [
-  { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },
-  { cle: 'pole', libelle: 'Pôle', libellePluriel: 'Pôles' },
+/** Les groupes proposés à la création d'une activité, dans la langue active. */
+const groupesParDefaut = (): Groupe[] => [
+  { cle: 'sport', libelle: t`Sport`, libellePluriel: t`Sports` },
+  {
+    cle: 'pole',
+    libelle: t({ message: 'Pôle', comment: 'Groupe de périmètres' }),
+    libellePluriel: t({ message: 'Pôles', comment: 'Groupe de périmètres' }),
+  },
 ]
 
 export default function Activites() {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const navigate = useNavigate()
   const { activite: affichee } = useActivite()
@@ -236,7 +249,7 @@ export default function Activites() {
             sigle: '',
             nature: 'SAISON',
             ordre: (data?.activites.length ?? 0) + 1,
-            groupes: GROUPES_PAR_DEFAUT,
+            groupes: groupesParDefaut(),
             // Une activité nouvelle garde les phases par défaut : elles se règlent
             // après sa création.
             phases: [],
@@ -321,7 +334,7 @@ export default function Activites() {
         if (creee) {
           await modifierIdentite({ variables: identite(creee.id) })
         }
-        message.success('Activité créée.')
+        message.success(t`Activité créée.`)
         setEnEdition(null)
         const slug = creee?.slug
         if (slug) navigate(`/${slug}/`)
@@ -356,7 +369,7 @@ export default function Activites() {
             formulaireOuvert: v.formulaireOuvert,
           },
         })
-        message.success('Activité enregistrée.')
+        message.success(t`Activité enregistrée.`)
         setEnEdition(null)
       }
     } catch (e) {
@@ -368,8 +381,10 @@ export default function Activites() {
 
   return (
     <>
-      <Titre sousTitre="Un événement, une section ou une instance : chaque activité a ses périodes, ses périmètres, ses fiches et ses tâches types.">
-        Activités
+      <Titre
+        sousTitre={t`Un événement, une section ou une instance : chaque activité a ses périodes, ses périmètres, ses fiches et ses tâches types.`}
+      >
+        <Trans>Activités</Trans>
       </Titre>
       {gereOrganisation && (
         <Button
@@ -378,7 +393,7 @@ export default function Activites() {
           style={{ marginBottom: 16 }}
           onClick={() => ouvrir('nouvelle')}
         >
-          Nouvelle activité
+          <Trans>Nouvelle activité</Trans>
         </Button>
       )}
       <Tableau<Activite>
@@ -389,11 +404,14 @@ export default function Activites() {
         pagination={false}
         ouvrir={ouvrir}
         peutOuvrir={a => a.estAdministree}
-        libelleOuvrir={a => `Modifier ${a.nom}`}
+        libelleOuvrir={a => {
+          const nom = a.nom
+          return t`Modifier ${nom}`
+        }}
         colonnes={[
           {
             key: 'nom',
-            title: 'Nom',
+            title: t`Nom`,
             dataIndex: 'nom',
             tri: a => a.nom,
             recherche: a => a.nom,
@@ -401,48 +419,77 @@ export default function Activites() {
               <>
                 {nom}
                 {a.id === affichee.id && (
-                  <Tag style={{ marginInlineStart: 8 }}>Affichée</Tag>
+                  <Tag style={{ marginInlineStart: 8 }}>
+                    <Trans>Affichée</Trans>
+                  </Tag>
                 )}
               </>
             ),
           },
           {
             key: 'slug',
-            title: 'Identifiant',
+            title: t`Identifiant`,
             dataIndex: 'slug',
             tri: a => a.slug,
           },
           {
             key: 'nature',
-            title: 'Nature',
+            title: t`Nature`,
             dataIndex: 'nature',
-            render: (n: NatureActivite) =>
-              `${NATURES.find(x => x.value === n)?.label ?? n} (${formesPeriode(n).nom})`,
+            render: (n: NatureActivite) => {
+              const nature = NATURES.find(x => x.value === n)
+              const libelle = nature ? t(nature.label) : n
+              const mot = formesPeriode(n).nom
+              return t`${libelle} (${mot})`
+            },
             filtre: {
-              options: NATURES.map(n => ({ text: n.label, value: n.value })),
+              options: NATURES.map(n => ({ text: t(n.label), value: n.value })),
               valeurs: a => a.nature,
             },
           },
           {
             key: 'groupes',
-            title: 'Groupes',
+            title: t`Groupes`,
             render: (_, a) => a.groupes.map(g => g.libellePluriel).join(', '),
           },
           {
             key: 'phases',
-            title: 'Phases',
+            title: t`Phases`,
             render: (_, a) => a.phases.map(p => p.libelle).join(', '),
           },
           {
             key: 'etat',
-            title: 'État',
+            title: t({
+              message: 'État',
+              comment: 'Colonne : état d’une activité',
+            }),
             dataIndex: 'archive',
             render: (archive: boolean) =>
-              archive ? <Tag>Archivée</Tag> : <Tag color="green">Ouverte</Tag>,
+              archive ? (
+                <Tag>
+                  {t({ message: 'Archivée', comment: 'Statut d’une activité' })}
+                </Tag>
+              ) : (
+                <Tag color="green">
+                  {t({ message: 'Ouverte', comment: 'Statut d’une activité' })}
+                </Tag>
+              ),
             filtre: {
               options: [
-                { text: 'Ouverte', value: 'ouverte' },
-                { text: 'Archivée', value: 'archivee' },
+                {
+                  text: t({
+                    message: 'Ouverte',
+                    comment: 'Statut d’une activité',
+                  }),
+                  value: 'ouverte',
+                },
+                {
+                  text: t({
+                    message: 'Archivée',
+                    comment: 'Statut d’une activité',
+                  }),
+                  value: 'archivee',
+                },
               ],
               valeurs: a => (a.archive ? 'archivee' : 'ouverte'),
             },
@@ -453,10 +500,12 @@ export default function Activites() {
       <Modal
         open={enEdition !== null}
         title={
-          enEdition === 'nouvelle' ? 'Nouvelle activité' : 'Modifier l’activité'
+          enEdition === 'nouvelle'
+            ? t`Nouvelle activité`
+            : t`Modifier l’activité`
         }
-        okText="Enregistrer"
-        cancelText="Annuler"
+        okText={t`Enregistrer`}
+        cancelText={t`Annuler`}
         confirmLoading={
           creation.loading ||
           modification.loading ||
@@ -485,63 +534,69 @@ export default function Activites() {
           <Row gutter={16}>
             <Col xs={24} sm={14}>
               <Form.Item
-                label="Nom"
+                label={t`Nom`}
                 name="nom"
-                rules={[{ required: true, message: 'Saisissez un nom.' }]}
+                rules={[{ required: true, message: t`Saisissez un nom.` }]}
               >
-                <Input placeholder="Section natation" />
+                <Input placeholder={t`Section natation`} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={10}>
-              <Form.Item label="Sigle (facultatif)" name="sigle">
-                <Input placeholder="Natation" maxLength={20} />
+              <Form.Item label={t`Sigle (facultatif)`} name="sigle">
+                <Input placeholder={t`Natation`} maxLength={20} />
               </Form.Item>
             </Col>
           </Row>
           <Row gutter={16}>
             <Col xs={24} sm={14}>
               <Form.Item
-                label="Identifiant"
+                label={t`Identifiant`}
                 name="slug"
-                extra="Il apparaît dans l’adresse des pages et ne change plus."
+                extra={t`Il apparaît dans l’adresse des pages et ne change plus.`}
                 rules={[
-                  { required: true, message: 'Saisissez un identifiant.' },
+                  { required: true, message: t`Saisissez un identifiant.` },
                   {
                     pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-                    message: 'Minuscules, chiffres et tirets seulement.',
+                    message: t`Minuscules, chiffres et tirets seulement.`,
                   },
                 ]}
               >
                 <Input
-                  placeholder="section-natation"
+                  placeholder={t`section-natation`}
                   disabled={enEdition !== 'nouvelle'}
                 />
               </Form.Item>
             </Col>
             <Col xs={24} sm={10}>
-              <Form.Item label="Ordre" name="ordre">
+              <Form.Item label={t`Ordre`} name="ordre">
                 <InputNumber min={0} max={999} style={{ width: '100%' }} />
               </Form.Item>
             </Col>
           </Row>
           <Form.Item
-            label="Nature"
+            label={t`Nature`}
             name="nature"
             extra={
               <Form.Item noStyle shouldUpdate>
-                {({ getFieldValue }) =>
-                  NATURES.find(n => n.value === getFieldValue('nature'))?.aide
-                }
+                {({ getFieldValue }) => {
+                  const aide = NATURES.find(
+                    n => n.value === getFieldValue('nature')
+                  )?.aide
+                  return aide ? t(aide) : undefined
+                }}
               </Form.Item>
             }
           >
             <Select
-              options={NATURES.map(({ value, label }) => ({ value, label }))}
+              options={NATURES.map(({ value, label }) => ({
+                value,
+                label: t(label),
+              }))}
             />
           </Form.Item>
           <Form.Item
-            label="Groupes de périmètres"
-            extra="Chaque périmètre appartient à un groupe : un sport, un pôle, une équipe, une commission…"
+            label={t`Groupes de périmètres`}
+            extra={t`Chaque périmètre appartient à un groupe : un sport, un pôle, une équipe, une commission…`}
           >
             <Form.List name="groupes">
               {(champs, { add, remove }) => (
@@ -552,26 +607,29 @@ export default function Activites() {
                         <Form.Item
                           name={[champ.name, 'cle']}
                           rules={[
-                            { required: true, message: 'Clé requise.' },
+                            { required: true, message: t`Clé requise.` },
                             {
                               pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-                              message: 'Minuscules, chiffres, tirets.',
+                              message: t`Minuscules, chiffres, tirets.`,
                             },
                           ]}
                         >
-                          <Input placeholder="clé" aria-label="Clé du groupe" />
+                          <Input
+                            placeholder={t`clé`}
+                            aria-label={t`Clé du groupe`}
+                          />
                         </Form.Item>
                       </Col>
                       <Col xs={11} sm={7}>
                         <Form.Item
                           name={[champ.name, 'libelle']}
                           rules={[
-                            { required: true, message: 'Libellé requis.' },
+                            { required: true, message: t`Libellé requis.` },
                           ]}
                         >
                           <Input
-                            placeholder="Équipe"
-                            aria-label="Libellé du groupe"
+                            placeholder={t`Équipe`}
+                            aria-label={t`Libellé du groupe`}
                           />
                         </Form.Item>
                       </Col>
@@ -579,19 +637,19 @@ export default function Activites() {
                         <Form.Item
                           name={[champ.name, 'libellePluriel']}
                           rules={[
-                            { required: true, message: 'Pluriel requis.' },
+                            { required: true, message: t`Pluriel requis.` },
                           ]}
                         >
                           <Input
-                            placeholder="Équipes"
-                            aria-label="Libellé pluriel du groupe"
+                            placeholder={t`Équipes`}
+                            aria-label={t`Libellé pluriel du groupe`}
                           />
                         </Form.Item>
                       </Col>
                       <Col xs={2} sm={2}>
                         <Button
                           icon={<DeleteOutlined />}
-                          aria-label="Retirer le groupe"
+                          aria-label={t`Retirer le groupe`}
                           disabled={champs.length === 1}
                           onClick={() => remove(champ.name)}
                         />
@@ -605,7 +663,7 @@ export default function Activites() {
                     }
                     disabled={champs.length >= 10}
                   >
-                    Ajouter un groupe
+                    <Trans>Ajouter un groupe</Trans>
                   </Button>
                 </>
               )}
@@ -613,8 +671,8 @@ export default function Activites() {
           </Form.Item>
           {enEdition !== 'nouvelle' && (
             <Form.Item
-              label="Phases"
-              extra="Une tâche se range par son échéance dans la première phase dont la borne n’est pas dépassée. La borne compte les jours depuis le premier jour de la période : J-120 pour 120 jours avant, J+30 pour 30 jours après. La dernière phase reçoit tout ce qui suit."
+              label={t`Phases`}
+              extra={t`Une tâche se range par son échéance dans la première phase dont la borne n’est pas dépassée. La borne compte les jours depuis le premier jour de la période : J-120 pour 120 jours avant, J+30 pour 30 jours après. La dernière phase reçoit tout ce qui suit.`}
             >
               <Form.List name="phases">
                 {(champs, { add, remove }) => (
@@ -625,16 +683,16 @@ export default function Activites() {
                           <Form.Item
                             name={[champ.name, 'cle']}
                             rules={[
-                              { required: true, message: 'Clé requise.' },
+                              { required: true, message: t`Clé requise.` },
                               {
                                 pattern: /^[a-z0-9]+(?:-[a-z0-9]+)*$/,
-                                message: 'Minuscules, chiffres, tirets.',
+                                message: t`Minuscules, chiffres, tirets.`,
                               },
                             ]}
                           >
                             <Input
-                              placeholder="clé"
-                              aria-label="Clé de la phase"
+                              placeholder={t`clé`}
+                              aria-label={t`Clé de la phase`}
                             />
                           </Form.Item>
                         </Col>
@@ -642,13 +700,16 @@ export default function Activites() {
                           <Form.Item
                             name={[champ.name, 'libelle']}
                             rules={[
-                              { required: true, message: 'Libellé requis.' },
+                              { required: true, message: t`Libellé requis.` },
                             ]}
                           >
                             <Input
-                              placeholder="Préparation"
+                              placeholder={t({
+                                message: 'Préparation',
+                                comment: 'Exemple de nom de phase',
+                              })}
                               maxLength={60}
-                              aria-label="Libellé de la phase"
+                              aria-label={t`Libellé de la phase`}
                             />
                           </Form.Item>
                         </Col>
@@ -657,8 +718,8 @@ export default function Activites() {
                             <Form.Item>
                               <Input
                                 disabled
-                                placeholder="sans borne"
-                                aria-label="Dernier jour de la phase : aucun, la dernière phase reçoit tout ce qui suit"
+                                placeholder={t`sans borne`}
+                                aria-label={t`Dernier jour de la phase : aucun, la dernière phase reçoit tout ce qui suit`}
                               />
                             </Form.Item>
                           ) : (
@@ -670,10 +731,10 @@ export default function Activites() {
                                   : [['phases', rang - 1, 'jusquA']]
                               }
                               rules={[
-                                { required: true, message: 'Borne requise.' },
+                                { required: true, message: t`Borne requise.` },
                                 {
                                   pattern: BORNE,
-                                  message: 'Forme J-120 ou J+30.',
+                                  message: t`Forme J-120 ou J+30.`,
                                 },
                                 // Le serveur applique la même règle : ce contrôle
                                 // place le message sous le champ concerné.
@@ -696,7 +757,7 @@ export default function Activites() {
                                       ? Promise.resolve()
                                       : Promise.reject(
                                           new Error(
-                                            'La borne doit dépasser la précédente.'
+                                            t`La borne doit dépasser la précédente.`
                                           )
                                         )
                                   },
@@ -705,7 +766,7 @@ export default function Activites() {
                             >
                               <Input
                                 placeholder="J-120"
-                                aria-label="Dernier jour de la phase"
+                                aria-label={t`Dernier jour de la phase`}
                               />
                             </Form.Item>
                           )}
@@ -713,7 +774,7 @@ export default function Activites() {
                         <Col xs={2} sm={2}>
                           <Button
                             icon={<DeleteOutlined />}
-                            aria-label="Retirer la phase"
+                            aria-label={t`Retirer la phase`}
                             disabled={champs.length === 1}
                             onClick={() => remove(champ.name)}
                           />
@@ -725,7 +786,7 @@ export default function Activites() {
                       onClick={() => add({ cle: '', libelle: '', jusquA: '' })}
                       disabled={champs.length >= PHASES_MAX}
                     >
-                      Ajouter une phase
+                      <Trans>Ajouter une phase</Trans>
                     </Button>
                   </>
                 )}
@@ -733,49 +794,51 @@ export default function Activites() {
             </Form.Item>
           )}
           <Divider titlePlacement="start" plain>
-            Identité propre (facultatif)
+            <Trans>Identité propre (facultatif)</Trans>
           </Divider>
           <p className="rt-texte-secondaire">
-            Un champ vide reprend la valeur de l’organisation. Le contact reste
-            une adresse de rôle de l’organisation.
+            <Trans>
+              Un champ vide reprend la valeur de l’organisation. Le contact
+              reste une adresse de rôle de l’organisation.
+            </Trans>
           </p>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
               <Form.Item
-                label="Contact de l’activité"
+                label={t`Contact de l’activité`}
                 name="contactRecrutement"
-                extra="Cette adresse reçoit les réponses aux mails de l’activité."
+                extra={t`Cette adresse reçoit les réponses aux mails de l’activité.`}
               >
-                <Input type="email" placeholder="Celui de l’organisation" />
+                <Input type="email" placeholder={t`Celui de l’organisation`} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item label="Page de l’équipe" name="pageEquipe">
+              <Form.Item label={t`Page de l’équipe`} name="pageEquipe">
                 <Input type="url" placeholder="https://" />
               </Form.Item>
             </Col>
           </Row>
-          <Form.Item label="Logo PNG" name="logoPng">
-            <ChampImage format="PNG" libelle="Logo de l’activité" />
+          <Form.Item label={t`Logo PNG`} name="logoPng">
+            <ChampImage format="PNG" libelle={t`Logo de l’activité`} />
           </Form.Item>
           <Row gutter={16}>
             <Col xs={24} sm={12}>
-              <Form.Item label="Couleur primaire" name="primaire">
+              <Form.Item label={t`Couleur primaire`} name="primaire">
                 <ChampCouleur heritee={organisation.theme.couleurs.primaire} />
               </Form.Item>
             </Col>
             <Col xs={24} sm={12}>
-              <Form.Item label="Couleur d’accent" name="accent">
+              <Form.Item label={t`Couleur d’accent`} name="accent">
                 <ChampCouleur heritee={organisation.theme.couleurs.accent} />
               </Form.Item>
             </Col>
           </Row>
           {enEdition !== 'nouvelle' && (
             <Form.Item
-              label="Ouverte aux souhaits"
+              label={t`Ouverte aux souhaits`}
               name="souhaitsOuverts"
               valuePropName="checked"
-              extra="Les personnes de l’équipe de l’activité formulent elles-mêmes leurs souhaits dans « Tous les périmètres ». Sinon, seuls les admins de l’activité notent les souhaits. Le réglage ne montre pas l’activité aux membres hors de son équipe."
+              extra={t`Les personnes de l’équipe de l’activité formulent elles-mêmes leurs souhaits dans « Tous les périmètres ». Sinon, seuls les admins de l’activité notent les souhaits. Le réglage ne montre pas l’activité aux membres hors de son équipe.`}
             >
               <Switch />
             </Form.Item>
@@ -783,32 +846,42 @@ export default function Activites() {
           {enEdition !== 'nouvelle' && (
             <Form.Item
               className="rt-choix"
-              label="Adresses dans l’organigramme"
+              label={t`Adresses dans l’organigramme`}
               name="adressesOrganigramme"
-              extra="Une adresse s’affiche seulement si la personne l’accepte dans ses préférences. Seules les personnes de l’activité la lisent."
+              extra={t`Une adresse s’affiche seulement si la personne l’accepte dans ses préférences. Seules les personnes de l’activité la lisent.`}
             >
               <Radio.Group>
                 <Radio value="AUCUNE">
-                  <span className="rt-choix-titre">Aucune</span>
+                  <span className="rt-choix-titre">
+                    {t({
+                      message: 'Aucune',
+                      comment: 'Adresses de l’organigramme : aucune adresse',
+                    })}
+                  </span>
                   <span className="rt-choix-detail">
-                    L’organigramme montre les noms et le contact de l’activité.
+                    <Trans>
+                      L’organigramme montre les noms et le contact de
+                      l’activité.
+                    </Trans>
                   </span>
                 </Radio>
                 <Radio value="CONTACTS">
                   <span className="rt-choix-titre">
-                    Admins et contacts principaux
+                    <Trans>Admins et contacts principaux</Trans>
                   </span>
                   <span className="rt-choix-detail">
-                    Les personnes à solliciter en premier.
+                    <Trans>Les personnes à solliciter en premier.</Trans>
                   </span>
                 </Radio>
                 <Radio value="REFERENTS">
                   <span className="rt-choix-titre">
-                    Toute l’équipe des périmètres
+                    <Trans>Toute l’équipe des périmètres</Trans>
                   </span>
                   <span className="rt-choix-detail">
-                    Les admins, les contacts principaux, les référentes et les
-                    référents.
+                    <Trans>
+                      Les admins, les contacts principaux, les référentes et les
+                      référents.
+                    </Trans>
                   </span>
                 </Radio>
               </Radio.Group>
@@ -817,21 +890,23 @@ export default function Activites() {
           {enEdition !== null && enEdition !== 'nouvelle' && (
             <>
               <Divider titlePlacement="start" plain>
-                Formulaire public
+                <Trans>Formulaire public</Trans>
               </Divider>
               <p className="rt-texte-secondaire">
-                Une personne extérieure remplit ce formulaire pour rejoindre
-                l’équipe. Sa demande arrive dans l’onglet « Demandes » de
-                l’écran « Personnes ». Aucun compte n’existe avant votre
-                décision.
+                <Trans>
+                  Une personne extérieure remplit ce formulaire pour rejoindre
+                  l’équipe. Sa demande arrive dans l’onglet « Demandes » de
+                  l’écran « Personnes ». Aucun compte n’existe avant votre
+                  décision.
+                </Trans>
               </p>
               <Form.Item
-                label="Formulaire ouvert"
+                label={t`Formulaire ouvert`}
                 name="formulaireOuvert"
                 valuePropName="checked"
                 extra={
                   <>
-                    Adresse à partager :{' '}
+                    <Trans>Adresse à partager :</Trans>{' '}
                     <Typography.Text copyable>
                       {`${window.location.origin}/rejoindre/${organisation.slug}/${enEdition.slug}`}
                     </Typography.Text>
@@ -841,40 +916,43 @@ export default function Activites() {
                 <Switch />
               </Form.Item>
               <Form.Item
-                label="Introduction"
+                label={t`Introduction`}
                 name="introduction"
-                extra="Ce texte ouvre le formulaire. Il est public : n’y écrivez aucune coordonnée personnelle."
+                extra={t`Ce texte ouvre le formulaire. Il est public : n’y écrivez aucune coordonnée personnelle.`}
               >
                 <Input.TextArea rows={3} maxLength={600} showCount />
               </Form.Item>
               <Form.Item
-                label="Question complémentaire"
+                label={t`Question complémentaire`}
                 name="question"
-                extra="Le libellé d’une question propre à votre organisation, par exemple « Votre club ». Un champ vide ne pose aucune question."
+                extra={t`Le libellé d’une question propre à votre organisation, par exemple « Votre club ». Un champ vide ne pose aucune question.`}
               >
                 <Input maxLength={120} />
               </Form.Item>
               <Form.Item
-                label="Paliers de disponibilité"
+                label={t`Paliers de disponibilité`}
                 name="paliers"
-                extra="Saisissez un palier, puis validez avec Entrée. Le formulaire en propose huit au plus."
+                extra={t`Saisissez un palier, puis validez avec Entrée. Le formulaire en propose huit au plus.`}
               >
                 <Select
                   mode="tags"
                   maxCount={8}
                   open={false}
                   suffixIcon={null}
-                  placeholder="Quelques heures pendant l’événement"
+                  placeholder={t`Quelques heures pendant l’événement`}
                 />
               </Form.Item>
             </>
           )}
           {enEdition !== 'nouvelle' && gereOrganisation && (
             <Form.Item
-              label="Archivée"
+              label={t({
+                message: 'Archivée',
+                comment: 'Statut d’une activité',
+              })}
               name="archive"
               valuePropName="checked"
-              extra="Une activité archivée disparaît du sélecteur et reste consultable."
+              extra={t`Une activité archivée disparaît du sélecteur et reste consultable.`}
             >
               <Switch />
             </Form.Item>

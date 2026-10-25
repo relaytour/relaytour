@@ -13,6 +13,14 @@ fr:
     dedans. Sur ces versions, elle ne pose plus aucun flou. La barre haute, le menu, les fenêtres
     en plein écran et les messages de confirmation commencent 14 pixels plus
     bas.
+en:
+  titre: >-
+    The top bar escapes the blur iOS adds at the top of the installed app
+  texte: >-
+    Since iOS 26, the iPhone blurs the top of an installed app on its own. The
+    app added its own blur, and its top bar stayed caught inside it. On these
+    versions, the app no longer adds any blur. The top bar, the menu,
+    full-screen windows, and confirmation messages start 14 pixels lower.
 ---
 
 `packages/orga/src/global.css` : les voiles `body::before` et `body::after`

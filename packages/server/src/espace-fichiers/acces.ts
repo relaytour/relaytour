@@ -9,6 +9,7 @@ import { membreActif } from '../lib/appartenances.ts'
 import { avecDelai } from '../lib/delai.ts'
 import { publierChangement } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 
 import {
   perimetresDesLecteurs,
@@ -114,7 +115,7 @@ const cleAdresse = (adresse: string) => `adr:${adresse.toLowerCase()}`
 
 /** Un nom d'accès en trop, sans adresse : un compte sans nom affiché reste anonyme. */
 const nomSansAdresse = (nom: string) =>
-  nom.includes('@') ? 'Compte sans nom affiché' : nom.slice(0, 255)
+  nom.includes('@') ? i18n._('Compte sans nom affiché') : nom.slice(0, 255)
 
 /** Les droits d'un dossier, ou null quand le fournisseur ne les rend pas en entier. */
 async function lireDroits(
@@ -482,7 +483,10 @@ export async function verifierAcces(organisationId: string): Promise<void> {
         accesErreur:
           illisibles === 0
             ? null
-            : `Relaytour ne lit pas les droits de ${illisibles > 1 ? `${illisibles} dossiers liés` : 'un dossier lié'} chez le fournisseur. Leurs personnes restent « Inconnu ».`,
+            : i18n._(
+                '{nombre, plural, one {Relaytour ne lit pas les droits de un dossier lié chez le fournisseur. Leurs personnes restent « Inconnu ».} other {Relaytour ne lit pas les droits de # dossiers liés chez le fournisseur. Leurs personnes restent « Inconnu ».}}',
+                { nombre: illisibles }
+              ),
       },
     })
     journal.info(
@@ -497,8 +501,9 @@ export async function verifierAcces(organisationId: string): Promise<void> {
     await prisma.connexionFichiers.updateMany({
       where: { organisationId },
       data: {
-        accesErreur:
-          'Le fournisseur n’a pas permis la vérification. Réessayez, ou reconnectez le fournisseur avec la vérification des accès.',
+        accesErreur: i18n._(
+          'Le fournisseur n’a pas permis la vérification. Réessayez, ou reconnectez le fournisseur avec la vérification des accès.'
+        ),
       },
     })
     journal.warn(

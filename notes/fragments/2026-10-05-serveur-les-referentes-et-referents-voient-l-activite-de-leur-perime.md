@@ -17,6 +17,18 @@ fr:
     évidence dans la page du périmètre. Vous coupez ces notifications dans vos
     préférences. Quand une autre personne coche une tâche qui vous est
     assignée, le mail et la notification vous l'annoncent sans la nommer.
+en:
+  titre: >-
+    Coordinators see the activity of their area
+  texte: >-
+    When another person edits a task in your area, changes its status, or
+    creates or edits one of its sheets, the bell notifies you, even if the task
+    is not assigned to you. No email is sent for these notifications: the digest
+    includes them. The bell shows the number of unread notifications, and a
+    notification leads to the task, highlighted on the area’s page. You turn
+    these notifications off in your preferences. When another person checks off
+    a task assigned to you, the email and the notification announce it without
+    naming that person.
 ---
 
 `notifierLePerimetre` (`lib/notifications.ts`) prévient les personnes affectées au

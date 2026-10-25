@@ -3,6 +3,7 @@ import { prisma } from '@relaytour/database'
 import type { AppContext, EditionDuContexte } from '../context.ts'
 
 import { erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 // Souhaits : intérêt d'une personne pour un périmètre d'une édition, noté par un admin
 // ou formulé par la personne elle-même (ADR 0012).
@@ -25,7 +26,7 @@ export async function exigerEditionOuverte(
   const edition = await ctx.exigerEdition(editionId)
   if (edition.statut === 'ARCHIVEE') {
     throw erreurSaisie(
-      'Cette édition est archivée : ses souhaits ne se modifient plus.'
+      i18n._('Cette édition est archivée : ses souhaits ne se modifient plus.')
     )
   }
   return edition
@@ -37,7 +38,9 @@ export function identifiantsSouhaites(
 ): string[] {
   const uniques = [...new Set(ids.map(String))]
   if (uniques.length > SOUHAITS_MAX) {
-    throw erreurSaisie(`Choisissez ${SOUHAITS_MAX} périmètres au plus.`)
+    throw erreurSaisie(
+      i18n._('Choisissez {max} périmètres au plus.', { max: SOUHAITS_MAX })
+    )
   }
   return uniques
 }
@@ -57,7 +60,9 @@ export async function perimetresSouhaitesValides(
     where: { id: { in: uniques }, activiteId, archivedAt: null },
   })
   if (valides !== uniques.length) {
-    throw erreurSaisie('Un périmètre choisi est introuvable ou archivé.')
+    throw erreurSaisie(
+      i18n._('Un périmètre choisi est introuvable ou archivé.')
+    )
   }
   return uniques
 }

@@ -13,6 +13,14 @@ fr:
     et « Modifier l'activité » occupent tout l'écran. Un appui affiche les
     destinataires d'un message et l'explication « Déjà membre » d'une demande.
     Un tableau défile au doigt sans déplacer la largeur de ses colonnes.
+en:
+  titre: >-
+    Admin screens stay usable on a phone
+  texte: >-
+    On a phone, the “Write a message”, “Release notes”, and “Edit the activity”
+    windows fill the whole screen. A tap shows the recipients of a message and
+    the “Already a member” explanation on a request. A table scrolls with your
+    finger without changing its column widths.
 ---
 
 Lot 3 de l'ADR 0023. Classe `rt-modale-pleine`, bulles d'aide ouvertes à
