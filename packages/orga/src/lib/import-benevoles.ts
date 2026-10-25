@@ -185,7 +185,9 @@ const SYNONYMES: [Champ, RegExp][] = [
   ['NOM', /\b(nom|last ?name|nom de famille|surname|family name)\b/],
   [
     'PRECISIONS',
-    /\b(disponibilites?|precisions?|commentaires?|remarques?|precise|availability|availabilities|notes?|details?|comments?|remarks?)\b/,
+    // En anglais, seules des formes explicites : « notes » ou « details » seuls
+    // désignent aussi une adresse (« Billing details ») ou un régime (« Dietary notes »).
+    /\b(disponibilites?|precisions?|commentaires?|remarques?|precise|availability|availabilities|additional (notes|details|information)|in writing|comments?|remarks?)\b/,
   ],
   [
     'VALEURS',
@@ -198,7 +200,8 @@ const SYNONYMES: [Champ, RegExp][] = [
   ['REF_EXTERNE', /\b(billet|ticket|numero de billet|identifiant|id)\b/],
   [
     'REGROUPEMENT',
-    /\b(commande|transaction|numero de commande|order|order number)\b/,
+    // « Order » seul désignerait aussi « Order status » : seul le numéro regroupe.
+    /\b(commande|transaction|numero de commande|order (number|no))\b|\border #/,
   ],
 ]
 
