@@ -49,8 +49,8 @@
 | [0045](0045-rattachement-a-une-activite.md) | Rattachement à une activité et visibilité limitée à ses activités | Acceptée, réalisée |
 | [0046](0046-appel-a-benevoles-sur-le-formulaire-de-l-equipe.md) | Appel à bénévoles indiqué sur le formulaire de l'équipe | Acceptée, réalisée |
 | [0047](0047-langues-de-l-interface-et-traduction-communautaire.md) | Langues de l'interface et traduction communautaire | Acceptée, réalisée |
-| [0048](0048-premiers-pas-et-reconduction-d-une-edition.md) | Premiers pas d'une activité et reconduction d'une édition | Proposée |
-| [0049](0049-imports-depuis-l-espace-organisateur.md) | Imports depuis l'espace organisateur | Proposée |
+| [0048](0048-premiers-pas-et-reconduction-d-une-edition.md) | Premiers pas d'une activité et reconduction d'une édition | Acceptée |
+| [0049](0049-imports-depuis-l-espace-organisateur.md) | Imports depuis l'espace organisateur | Acceptée |
 | [0050](0050-desabonnement-en-un-clic.md) | Désabonnement en un clic | Acceptée, réalisée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.
