@@ -969,6 +969,12 @@ msgid "Vous avez déjà {max} souhaits pour cette période."
 msgstr "You already have {max} interests for this period."
 
 #. js-lingui-explicit-id
+#: src/lib/droits.ts
+#: src/schema/taches-types.ts
+msgid "Cette édition est archivée : ses tâches sont en lecture seule."
+msgstr "This edition is archived: its tasks are read-only."
+
+#. js-lingui-explicit-id
 #: src/schema/taches.ts
 msgid "Cette déclinaison attend l’accord de son périmètre : acceptez-la d’abord."
 msgstr "This derived task is waiting for its area’s approval: accept it first."
@@ -1057,6 +1063,31 @@ msgstr "a sheet from another activity has this slug"
 #: src/orga/import-fiches.ts
 msgid "la fiche a été modifiée dans Relaytour"
 msgstr "the sheet was changed in Relaytour"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "{cible} (déclinaison de {cle})"
+msgstr "{cible} (derived task of {cle})"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "{cle} est déjà la déclinaison d'une autre tâche"
+msgstr "{cle} is already a derived task of another task"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "le périmètre est archivé"
+msgstr "the area is archived"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "la tâche du périmètre est déjà liée à une autre tâche partagée"
+msgstr "the area’s task is already linked to another shared task"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "la tâche du périmètre porte déjà ses propres déclinaisons"
+msgstr "the area’s task already has its own derived tasks"
 
 #. js-lingui-explicit-id
 #: src/lib/abonnements.ts
@@ -1482,11 +1513,6 @@ msgstr "{acteur} updated the task “{titre}”{lieu}"
 #: src/lib/demandes.ts
 msgid "Le mot compte {max} caractères au plus."
 msgstr "The note is {max} characters at most."
-
-#. js-lingui-explicit-id
-#: src/lib/droits.ts
-msgid "Cette édition est archivée : ses tâches sont en lecture seule."
-msgstr "This edition is archived: its tasks are read-only."
 
 #. js-lingui-explicit-id
 #: src/lib/editions.ts

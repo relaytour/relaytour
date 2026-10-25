@@ -9,16 +9,14 @@ import {
   type Logo,
 } from '../lib/organisation.ts'
 
-import {
-  ciblesDeLaDeclinaison,
-  dateEcheance,
-  textesDeLaDeclinaison,
-  type ActiviteModele,
-  type Modeles,
-} from './modeles.ts'
+import { type ActiviteModele, type Modeles } from './modeles.ts'
 import { importerFiches } from './import-fiches.ts'
+import {
+  creerTachesDeLaPeriode,
+  type RapportTachesDeLaPeriode,
+} from './taches-de-la-periode.ts'
 
-export interface RapportActivite {
+export interface RapportActivite extends RapportTachesDeLaPeriode {
   slug: string
   etat: 'creee' | 'mise-a-jour'
   perimetres: { crees: string[]; modifies: string[]; absentsDuDepot: string[] }
@@ -30,19 +28,6 @@ export interface RapportActivite {
   }
   /** Période de l'année demandée : importée, absente, ou null sans année. */
   periode: 'importee' | 'absente' | null
-  effectifs: { crees: string[]; dejaPresents: string[] }
-  /**
-   * Tâches de la période. `rattachees` : des tâches déjà présentes dans un
-   * périmètre cible, liées à leur tâche partagée sans autre changement.
-   * `conflits` : des déclinaisons que l'import ne crée ni ne lie, avec la raison
-   * (ADR 0026).
-   */
-  taches: {
-    creees: string[]
-    dejaPresentes: string[]
-    rattachees: string[]
-    conflits: string[]
-  }
 }
 
 export interface RapportImport {
@@ -478,30 +463,6 @@ async function activiteVide(tx: Transaction, activiteId: string) {
 }
 
 /**
- * La fiche d'une déclinaison, si elle est en base commune à l'activité ou rangée
- * dans le périmètre de la tâche partagée. Une fiche du périmètre d'origine devient
- * connexe pour chaque cible (ADR 0039). Une fiche d'un autre périmètre ne se lie
- * pas : les personnes des périmètres cibles ne la liraient pas.
- */
-async function ficheDeDeclinaisonEnBase(
-  tx: Transaction,
-  ficheId: string | null,
-  activiteId: string,
-  perimetreOrigineId: string | undefined
-): Promise<string | null> {
-  if (ficheId === null) return null
-  const fiche = await tx.fiche.findUnique({
-    where: { id: ficheId },
-    select: { perimetreId: true, activiteId: true },
-  })
-  return fiche !== null &&
-    fiche.activiteId === activiteId &&
-    (fiche.perimetreId === null || fiche.perimetreId === perimetreOrigineId)
-    ? ficheId
-    : null
-}
-
-/**
  * Applique la liste « Concerne aussi » d'une fiche (ADR 0039). Une fiche commune
  * n'en garde aucune. Le masquage vit en base seulement : l'import n'y touche pas.
  */
@@ -729,171 +690,25 @@ async function importerActivite(
 
   if (periode === null) return rapport
 
-  // Effectifs de la période
-  const effectifsExistants = new Set(
-    (
-      await tx.effectifPerimetre.findMany({
-        where: { editionId: periode.id },
-        select: { perimetreId: true },
-      })
-    ).map(e => e.perimetreId)
+  // Effectifs et tâches de la période, depuis les tâches types du dossier.
+  await creerTachesDeLaPeriode(
+    tx,
+    {
+      periode,
+      activiteId,
+      perimetres: modele.perimetres.map(p => ({
+        slug: p.slug,
+        groupe: p.groupe,
+        id: idsPerimetres.get(p.slug),
+        archive: existants.get(p.slug)?.archivedAt != null,
+        effectif: p.effectif,
+      })),
+      taches: modele.taches,
+      ficheDe: slug =>
+        slug === undefined ? null : (idsFiches.get(slug) ?? null),
+      ecrire,
+    },
+    rapport
   )
-  for (const perimetre of modele.perimetres) {
-    if (perimetre.effectif === undefined) continue
-    const perimetreId = idsPerimetres.get(perimetre.slug)
-    if (perimetreId !== undefined && effectifsExistants.has(perimetreId)) {
-      rapport.effectifs.dejaPresents.push(perimetre.slug)
-      continue
-    }
-    rapport.effectifs.crees.push(`${perimetre.slug} (${perimetre.effectif})`)
-    if (!ecrire || perimetreId === undefined) continue
-    await tx.effectifPerimetre.create({
-      data: {
-        perimetreId,
-        editionId: periode.id,
-        effectif: perimetre.effectif,
-      },
-    })
-  }
-
-  // Tâches types. Une tâche se retrouve par sa période, son périmètre et son
-  // modèle : déjà présente, elle n'est jamais modifiée.
-  const ficheDe = (slug: string | undefined) =>
-    slug === undefined ? null : (idsFiches.get(slug) ?? null)
-  for (const [slugPerimetre, taches] of modele.taches) {
-    const perimetreId = idsPerimetres.get(slugPerimetre)
-    for (const tache of taches) {
-      const cle = `${slugPerimetre}/${tache.modele}`
-      const existante =
-        perimetreId === undefined
-          ? null
-          : await tx.tache.findFirst({
-              where: {
-                editionId: periode.id,
-                perimetreId,
-                modeleSlug: tache.modele,
-              },
-              select: { id: true, origineId: true },
-            })
-      // L'identifiant de la tâche, pour y lier ses déclinaisons. Une simulation
-      // qui la crée ne le connaît pas.
-      let tacheId = existante?.id ?? null
-      if (existante !== null) {
-        rapport.taches.dejaPresentes.push(cle)
-      } else {
-        rapport.taches.creees.push(cle)
-        if (ecrire && perimetreId !== undefined) {
-          const creee = await tx.tache.create({
-            data: {
-              editionId: periode.id,
-              perimetreId,
-              modeleSlug: tache.modele,
-              titre: tache.titre,
-              description: tache.description?.trim() || null,
-              echeance: dateEcheance(tache.echeance, periode.debut),
-              ficheId: ficheDe(tache.fiche),
-            },
-            select: { id: true },
-          })
-          tacheId = creee.id
-        }
-      }
-
-      // Tâche partagée (ADR 0026) : une déclinaison par périmètre cible, acceptée
-      // d'office puisque le contenu la déclare. Une déclinaison cite la fiche
-      // qu'elle déclare, sinon celle de sa tâche partagée (ADR 0039).
-      if (tache.declinaison === undefined) continue
-      const textes = textesDeLaDeclinaison(tache)
-      const fiche = tache.declinaison.fiche ?? tache.fiche
-      // La fiche se juge en base : une fiche en conflit garde le périmètre qu'elle
-      // avait, même quand le dossier la range ailleurs.
-      const ficheId = await ficheDeDeclinaisonEnBase(
-        tx,
-        ficheDe(fiche),
-        activiteId,
-        perimetreId
-      )
-      for (const cible of ciblesDeLaDeclinaison(
-        tache,
-        slugPerimetre,
-        modele.perimetres
-      )) {
-        const cleCible = `${cible}/${tache.modele} (déclinaison de ${cle})`
-        const conflit = (raison: string) =>
-          rapport.taches.conflits.push(`${cleCible} : ${raison}`)
-        // Le lien garde un seul niveau : une tâche qui est déjà la déclinaison
-        // d'une autre ne se décline pas. Le contenu a pu changer de sens depuis
-        // un import précédent.
-        if (existante !== null && existante.origineId !== null) {
-          conflit(`${cle} est déjà la déclinaison d'une autre tâche`)
-          continue
-        }
-        if (existants.get(cible)?.archivedAt != null) {
-          conflit('le périmètre est archivé')
-          continue
-        }
-        const cibleId = idsPerimetres.get(cible)
-        const declinaison =
-          cibleId === undefined
-            ? null
-            : await tx.tache.findFirst({
-                where: {
-                  editionId: periode.id,
-                  perimetreId: cibleId,
-                  modeleSlug: tache.modele,
-                },
-                select: {
-                  id: true,
-                  origineId: true,
-                  _count: { select: { declinaisons: true } },
-                },
-              })
-        if (declinaison === null) {
-          rapport.taches.creees.push(cleCible)
-          if (!ecrire || cibleId === undefined || tacheId === null) continue
-          await tx.tache.create({
-            data: {
-              editionId: periode.id,
-              perimetreId: cibleId,
-              modeleSlug: tache.modele,
-              titre: textes.titre,
-              description: textes.description?.trim() || null,
-              echeance: dateEcheance(textes.echeance, periode.debut),
-              ficheId,
-              origineId: tacheId,
-              accord: 'ACCEPTE',
-              accordLe: new Date(),
-            },
-          })
-          continue
-        }
-        if (declinaison.origineId !== null) {
-          // Déjà liée : à cette tâche partagée, ou à une autre que le contenu ne
-          // déclare plus. L'import ne déplace pas un lien.
-          if (declinaison.origineId === tacheId) {
-            rapport.taches.dejaPresentes.push(cleCible)
-          } else {
-            conflit(
-              'la tâche du périmètre est déjà liée à une autre tâche partagée'
-            )
-          }
-          continue
-        }
-        if (declinaison._count.declinaisons > 0) {
-          conflit('la tâche du périmètre porte déjà ses propres déclinaisons')
-          continue
-        }
-        // Une tâche importée avant que le contenu ne la partage : elle se lie à sa
-        // tâche partagée. Son titre, son échéance, son statut et ses personnes
-        // assignées ne changent pas.
-        rapport.taches.rattachees.push(cleCible)
-        if (!ecrire || tacheId === null) continue
-        await tx.tache.update({
-          where: { id: declinaison.id },
-          data: { origineId: tacheId, accord: 'ACCEPTE', accordLe: new Date() },
-        })
-      }
-    }
-  }
   return rapport
 }

@@ -969,6 +969,12 @@ msgid "Vous avez déjà {max} souhaits pour cette période."
 msgstr "Vous avez déjà {max} souhaits pour cette période."
 
 #. js-lingui-explicit-id
+#: src/lib/droits.ts
+#: src/schema/taches-types.ts
+msgid "Cette édition est archivée : ses tâches sont en lecture seule."
+msgstr "Cette édition est archivée : ses tâches sont en lecture seule."
+
+#. js-lingui-explicit-id
 #: src/schema/taches.ts
 msgid "Cette déclinaison attend l’accord de son périmètre : acceptez-la d’abord."
 msgstr "Cette déclinaison attend l’accord de son périmètre : acceptez-la d’abord."
@@ -1057,6 +1063,31 @@ msgstr "une fiche d’une autre activité porte ce slug"
 #: src/orga/import-fiches.ts
 msgid "la fiche a été modifiée dans Relaytour"
 msgstr "la fiche a été modifiée dans Relaytour"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "{cible} (déclinaison de {cle})"
+msgstr "{cible} (déclinaison de {cle})"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "{cle} est déjà la déclinaison d'une autre tâche"
+msgstr "{cle} est déjà la déclinaison d'une autre tâche"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "le périmètre est archivé"
+msgstr "le périmètre est archivé"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "la tâche du périmètre est déjà liée à une autre tâche partagée"
+msgstr "la tâche du périmètre est déjà liée à une autre tâche partagée"
+
+#. js-lingui-explicit-id
+#: src/orga/taches-de-la-periode.ts
+msgid "la tâche du périmètre porte déjà ses propres déclinaisons"
+msgstr "la tâche du périmètre porte déjà ses propres déclinaisons"
 
 #. js-lingui-explicit-id
 #: src/lib/abonnements.ts
@@ -1482,11 +1513,6 @@ msgstr "{acteur} a agi sur la tâche « {titre} »{lieu}"
 #: src/lib/demandes.ts
 msgid "Le mot compte {max} caractères au plus."
 msgstr "Le mot compte {max} caractères au plus."
-
-#. js-lingui-explicit-id
-#: src/lib/droits.ts
-msgid "Cette édition est archivée : ses tâches sont en lecture seule."
-msgstr "Cette édition est archivée : ses tâches sont en lecture seule."
 
 #. js-lingui-explicit-id
 #: src/lib/editions.ts

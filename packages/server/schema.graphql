@@ -1484,6 +1484,11 @@ type Mutation {
   Applique les propositions en attente d’un dossier lié, cinquante au plus. Rend le nombre de propositions appliquées.
   """
   appliquerPropositionsDossier(dossierId: ID!): Int!
+
+  """
+  Crée les effectifs et les tâches d’une période à partir des tâches types de ses périmètres. Une tâche déjà créée depuis sa tâche type ne change pas.
+  """
+  appliquerTachesTypes(editionId: ID!, perimetreIds: [ID!]): RapportTachesTypes!
   archiverActivite(archive: Boolean!, id: ID!): Activite!
   archiverFiche(archive: Boolean!, id: ID!): Fiche!
   archiverPersonne(archive: Boolean!, id: ID!): Personne!
@@ -2953,6 +2958,11 @@ type Query {
   Simule l’import des fiches depuis l’espace de fichiers : rien ne change en base.
   """
   simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
+
+  """
+  Simule l’application des tâches types à une période : rien ne change en base. Sans `perimetreIds`, tous les périmètres actifs de l’activité.
+  """
+  simulerTachesTypes(editionId: ID!, perimetreIds: [ID!]): RapportTachesTypes!
   sondage(id: ID!): Sondage!
 
   """
@@ -3011,6 +3021,19 @@ type RapportImportFiches {
   nonImportes: [FichierEcarte!]!
   nouvellesVersions: [String!]!
   refusees: [FichierEcarte!]!
+}
+
+"""
+Ce que l’application des tâches types fait à une période, ou ferait en simulation. Une tâche se nomme « périmètre/modèle ».
+"""
+type RapportTachesTypes {
+  conflits: [String!]!
+  effectifsCrees: [String!]!
+  effectifsDejaPresents: [String!]!
+  illisibles: [String!]!
+  tachesCreees: [String!]!
+  tachesDejaPresentes: [String!]!
+  tachesRattachees: [String!]!
 }
 
 type RapprochementImport {
