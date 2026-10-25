@@ -14,6 +14,8 @@ import {
 
 import { buildContext, type AppContext } from '../context.ts'
 import { composer } from '../courriel/messages.ts'
+import { env } from '../env.ts'
+import { lireJetonDesabonnement } from '../lib/desabonnement.ts'
 import {
   PROPOSITIONS_EN_ATTENTE_MAX,
   purgerDemandes,
@@ -21,6 +23,13 @@ import {
 } from '../lib/demandes.ts'
 
 import { schema } from './index.ts'
+
+// Le désabonnement qu'une adresse List-Unsubscribe désigne (ADR 0050).
+const desabonnementDe = (adresse: string | undefined) =>
+  lireJetonDesabonnement(
+    env.BETTER_AUTH_SECRET,
+    adresse?.split('/').at(-1) ?? ''
+  )
 
 // Demandes pour rejoindre l'équipe (ADR 0015) : proposition par un·e référent·e, file
 // de revue des admins, acceptation et refus. Les contrôles d'accès se prouvent par le
@@ -993,7 +1002,11 @@ describe('mail regroupé aux admins', () => {
     expect(message?.texte).toContain(
       `/${gala.slug}/admin/personnes?onglet=demandes`
     )
-    expect(message?.desabonnement).toMatch(/\/preferences\?organisation=/)
+    expect(desabonnementDe(message?.desabonnement)).toEqual({
+      sorte: 'demandes',
+      userId: ids.admin,
+      organisationId: ids.org,
+    })
     for (const corps of [message?.texte, message?.html]) {
       expect(corps).not.toContain('Secret')
       expect(corps).not.toContain('@exemple.fr')
