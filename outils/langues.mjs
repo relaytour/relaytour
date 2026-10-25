@@ -15,7 +15,10 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const RACINE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// Les tests de versionner lancent ce script sur un dépôt temporaire (LANGUES_RACINE).
+const RACINE =
+  process.env.LANGUES_RACINE ??
+  resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const CATALOGUES = join(RACINE, 'packages/orga/src/locales')
 const CATALOGUES_SERVEUR = join(RACINE, 'packages/server/src/locales')
 export const SEUIL = 90

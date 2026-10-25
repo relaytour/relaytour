@@ -289,7 +289,10 @@ export default function Benevoles() {
         activeKey={onglet}
         onChange={cle => changer('onglet', cle === 'fiches' ? null : cle)}
         items={[
-          { key: 'fiches', label: t`Fiches` },
+          {
+            key: 'fiches',
+            label: t({ message: 'Fiches', context: 'fiches bénévoles' }),
+          },
           {
             key: 'candidatures',
             label:

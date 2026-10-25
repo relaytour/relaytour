@@ -427,3 +427,43 @@ test('noter écrit le rôle demandé, et « referent » sans option', () => {
   assert.match(admins, /^role: admin-organisation$/m)
   assert.match(tous, /^role: referent$/m)
 })
+
+/** La version d'un package.json du dépôt temporaire. */
+const lireVersion = (racine, relatif) =>
+  JSON.parse(readFileSync(join(racine, relatif), 'utf8')).version
+
+/** Les catalogues de l'espace organisateur et du serveur, l'anglais traduit ou non. */
+function catalogues(racine, anglaisComplet) {
+  const po = traduit =>
+    `msgid ""\nmsgstr ""\n\nmsgid "Bonjour"\nmsgstr "${traduit}"\n`
+  for (const paquet of ['orga', 'server']) {
+    for (const [langue, traduit] of [
+      ['fr', 'Bonjour'],
+      ['en', anglaisComplet ? 'Hello' : ''],
+    ]) {
+      const dossier = join(racine, `packages/${paquet}/src/locales/${langue}`)
+      mkdirSync(dossier, { recursive: true })
+      writeFileSync(join(dossier, 'messages.po'), po(traduit))
+    }
+  }
+}
+
+test('publier refuse une version dont le catalogue anglais est incomplet', () => {
+  const racine = depot('0.4.0')
+  fragment(racine, '2026-09-20-orga-nouveau', { type: 'fonctionnalite' })
+  catalogues(racine, false)
+  const { code, erreur } = lancer(racine, 'publier')
+  assert.notEqual(code, 0)
+  assert.match(erreur, /orga : 1 messages restent à traduire/)
+  assert.match(erreur, /catalogue anglais doit être complet/)
+  // Rien n'a été écrit.
+  assert.equal(lireVersion(racine, 'package.json'), '0.4.0')
+})
+
+test('publier accepte une version dont le catalogue anglais est complet', () => {
+  const racine = depot('0.4.0')
+  fragment(racine, '2026-09-20-orga-nouveau', { type: 'fonctionnalite' })
+  catalogues(racine, true)
+  assert.equal(lancer(racine, 'publier').code, 0)
+  assert.equal(lireVersion(racine, 'package.json'), '0.5.0')
+})

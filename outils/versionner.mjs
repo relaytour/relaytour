@@ -549,8 +549,12 @@ function commandePublier(options) {
   if (existsSync(join(RACINE, 'packages/orga/src/locales'))) {
     const verification = spawnSync(
       process.execPath,
-      [join(RACINE, 'outils/langues.mjs'), 'verifier', 'en'],
-      { stdio: 'inherit' }
+      [
+        join(dirname(fileURLToPath(import.meta.url)), 'langues.mjs'),
+        'verifier',
+        'en',
+      ],
+      { stdio: 'inherit', env: { ...process.env, LANGUES_RACINE: RACINE } }
     )
     if (verification.status !== 0) {
       mourir('le catalogue anglais doit être complet avant une publication')
