@@ -30,7 +30,7 @@ import {
   Typography,
 } from 'antd'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Navigate, useSearchParams } from 'react-router'
+import { Navigate, useNavigate, useSearchParams } from 'react-router'
 
 import Demandes from '../../composants/Demandes'
 import InvitationsEnAttente from '../../composants/InvitationsEnAttente'
@@ -553,6 +553,7 @@ export default function Personnes({
 }) {
   const { t } = useLingui()
   const { activite, periode, libelleGroupe, lien } = useActivite()
+  const navigate = useNavigate()
   const periodeUne = periode.une
   const periodeCette = periode.cette
   const nomActivite = activite.nom
@@ -1138,13 +1139,21 @@ export default function Personnes({
               width: '100%',
             }}
           >
-            <Button
-              type="primary"
-              icon={<UserAddOutlined />}
-              onClick={() => ouvrir('nouvelle')}
-            >
-              <Trans>Inviter une personne</Trans>
-            </Button>
+            <Space wrap>
+              <Button
+                type="primary"
+                icon={<UserAddOutlined />}
+                onClick={() => ouvrir('nouvelle')}
+              >
+                <Trans>Inviter une personne</Trans>
+              </Button>
+              {/* L'import vise l'équipe d'une activité (ADR 0049), pas l'annuaire. */}
+              {!modeAnnuaire && (
+                <Button onClick={() => navigate(lien('/admin/import/equipe'))}>
+                  <Trans>Importer une liste</Trans>
+                </Button>
+              )}
+            </Space>
             {modeAnnuaire && (
               <Space>
                 <Switch

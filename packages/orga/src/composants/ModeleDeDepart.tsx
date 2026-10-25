@@ -6,7 +6,12 @@ import { Alert, App, Modal, Space, Spin, Tag, Typography } from 'antd'
 import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
-import { ACTIVITES, EDITION_COURANTE, PERIMETRES } from '../lib/requetes'
+import {
+  ACTIVITES,
+  EDITION_COURANTE,
+  PERIMETRES,
+  PREMIERS_PAS,
+} from '../lib/requetes'
 
 // Modèle de départ (ADR 0048) : la fenêtre décrit les périmètres, les tâches types
 // et les fiches du modèle, puis les crée dans l'activité, qui n'a encore aucun
@@ -60,7 +65,7 @@ export default function ModeleDeDepart({
     fetchPolicy: 'network-only',
   })
   const [appliquer, application] = useMutation(APPLIQUER, {
-    refetchQueries: [ACTIVITES, PERIMETRES, EDITION_COURANTE],
+    refetchQueries: [ACTIVITES, PERIMETRES, EDITION_COURANTE, PREMIERS_PAS],
   })
   const rapport = data?.simulerModeleDeDepart
   const nombreTaches = rapport?.tachesCreees.length ?? 0
@@ -129,7 +134,7 @@ export default function ModeleDeDepart({
             <Alert
               type="warning"
               showIcon
-              title={t`Une autre activité porte déjà ces fiches, qui ne seront pas reprises : ${conflits}.`}
+              title={t`Ces fiches existent déjà dans l’organisation et ne seront pas reprises : ${conflits}.`}
             />
           )}
         </Space>

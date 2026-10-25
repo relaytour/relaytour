@@ -45,7 +45,11 @@ export default function PremiersPas() {
   const { message } = App.useApp()
   const { lien, periode } = useActivite()
   const { une: unePeriode, nom: mot } = periode
-  const { data, refetch } = useQuery(PREMIERS_PAS)
+  // L'état change aussi depuis les autres écrans : la liste se relit à chaque
+  // retour sur Mon espace.
+  const { data, refetch } = useQuery(PREMIERS_PAS, {
+    fetchPolicy: 'cache-and-network',
+  })
   const { data: courante } = useQuery(EDITION_COURANTE)
   const edition = courante?.editionCourante
   const [fenetre, setFenetre] = useState<Fenetre | null>(null)
@@ -108,6 +112,9 @@ export default function PremiersPas() {
       actions: edition && (
         <Space wrap>
           {bouton('TACHES', t`Appliquer les tâches types`, 'taches')}
+          <Link to={lien('/admin/import/taches')}>
+            <Trans>Importer un tableur</Trans>
+          </Link>
           <Link to={lien('/perimetres')}>
             <Trans>Tous les périmètres</Trans>
           </Link>
@@ -117,7 +124,14 @@ export default function PremiersPas() {
     EQUIPE: {
       titre: t`Inviter l’équipe`,
       texte: t`Invitez les référentes et les référents de chaque périmètre.`,
-      actions: bouton('EQUIPE', t`Inviter`, 'equipe'),
+      actions: (
+        <Space wrap>
+          {bouton('EQUIPE', t`Inviter`, 'equipe')}
+          <Link to={lien('/admin/import/equipe')}>
+            <Trans>Importer un tableur</Trans>
+          </Link>
+        </Space>
+      ),
     },
   }
 

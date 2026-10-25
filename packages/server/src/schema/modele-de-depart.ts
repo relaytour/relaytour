@@ -1,3 +1,5 @@
+import { prisma, type Prisma } from '@relaytour/database'
+
 import type { AppContext } from '../context.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { publierPourActivite } from '../lib/flux.ts'
@@ -31,6 +33,8 @@ interface ApercuPerimetre {
 interface ResultatModele extends RapportModeleDeDepart {
   apercu: ApercuPerimetre[]
   titresFiches: string[]
+  /** Le titre de chaque fiche du modèle, par slug. */
+  titres: Map<string, string>
 }
 
 const ApercuPerimetreRef = builder
@@ -56,7 +60,11 @@ const RapportModeleRef = builder
       }),
       fiches: t.exposeStringList('titresFiches'),
       groupesAjoutes: t.exposeStringList('groupesAjoutes'),
-      fichesEnConflit: t.stringList({ resolve: r => r.fiches.conflits }),
+      fichesEnConflit: t.stringList({
+        description:
+          'Les titres des fiches du modèle qui existent déjà dans l’organisation : elles ne sont pas reprises.',
+        resolve: r => r.fiches.conflits.map(slug => r.titres.get(slug) ?? slug),
+      }),
       periode: t.exposeString('periode', { nullable: true }),
       tachesCreees: t.stringList({ resolve: r => r.taches.creees }),
       effectifsCrees: t.stringList({ resolve: r => r.effectifs.crees }),
@@ -73,28 +81,30 @@ async function executer(
   await ctx.exigerAdminDe(id)
   const organisationId = ctx.organisation!.id
   const lu = lireModeleDeDepart(modele, langueCourante())
-  const rapport = await sousVerrouOrganisation(
-    organisationId,
-    async tx => {
-      // Un modèle ne fusionne jamais avec un contenu existant.
-      const perimetres = await tx.perimetre.count({ where: { activiteId: id } })
-      if (perimetres > 0) {
-        throw erreurSaisie(
-          i18n._(
-            'Un modèle de départ s’applique à une activité sans périmètre.'
-          )
-        )
-      }
-      return appliquerModeleDeDepart(tx, {
-        organisationId,
-        activiteId: id,
-        modele: lu,
-        auteurId: ctx.personne!.id,
-        ecrire,
-      })
-    },
-    { timeout: 60_000 }
-  )
+  // Seule l'application verrouille l'organisation : la simulation, relancée à
+  // chaque ouverture de la fenêtre, ne bloque aucune écriture.
+  const executerSous = <T>(
+    operation: (tx: Prisma.TransactionClient) => Promise<T>
+  ) =>
+    ecrire
+      ? sousVerrouOrganisation(organisationId, operation, { timeout: 60_000 })
+      : prisma.$transaction(operation, { timeout: 60_000 })
+  const rapport = await executerSous(async tx => {
+    // Un modèle ne fusionne jamais avec un contenu existant.
+    const perimetres = await tx.perimetre.count({ where: { activiteId: id } })
+    if (perimetres > 0) {
+      throw erreurSaisie(
+        i18n._('Un modèle de départ s’applique à une activité sans périmètre.')
+      )
+    }
+    return appliquerModeleDeDepart(tx, {
+      organisationId,
+      activiteId: id,
+      modele: lu,
+      auteurId: ctx.personne!.id,
+      ecrire,
+    })
+  })
   if (ecrire) {
     publierPourActivite('PERIMETRE', organisationId, id)
     publierPourActivite('TACHE', organisationId, id)
@@ -108,6 +118,7 @@ async function executer(
       tachesTypes: lu.taches.get(p.slug)?.length ?? 0,
     })),
     titresFiches: lu.fiches.map(f => f.titre),
+    titres: new Map(lu.fiches.map(f => [f.slug, f.titre])),
   }
 }
 
