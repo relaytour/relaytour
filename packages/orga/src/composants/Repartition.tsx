@@ -1,5 +1,8 @@
 import { CloseOutlined, HolderOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   App,
   Button,
@@ -128,11 +131,32 @@ const RELIRE = [
   'Benevoles',
 ]
 
-const ADEQUATION = {
-  TOTALE: { libelle: 'Disponible', couleur: 'success' },
-  PARTIELLE: { libelle: 'En partie', couleur: 'warning' },
-  AUCUNE: { libelle: 'Hors plages', couleur: 'default' },
-} as const
+const ADEQUATION: Record<
+  'TOTALE' | 'PARTIELLE' | 'AUCUNE',
+  { libelle: MessageDescriptor; couleur: string }
+> = {
+  TOTALE: {
+    libelle: msg({
+      message: 'Disponible',
+      comment: 'Une personne est libre sur toute la séquence',
+    }),
+    couleur: 'success',
+  },
+  PARTIELLE: {
+    libelle: msg({
+      message: 'En partie',
+      comment: 'Une personne est libre sur une partie de la séquence',
+    }),
+    couleur: 'warning',
+  },
+  AUCUNE: {
+    libelle: msg({
+      message: 'Hors plages',
+      comment: 'Une personne n’est libre à aucun moment de la séquence',
+    }),
+    couleur: 'default',
+  },
+}
 
 const TOUS = '__tous'
 const SANS_PERIMETRE = '__activite'
@@ -190,6 +214,7 @@ export default function Repartition({
   onOuvrir: (sequenceId: string) => void
 }) {
   const { message, modal } = App.useApp()
+  const { t } = useLingui()
   const ecrans = Grid.useBreakpoint()
   const admin = agendas.some(a => a.perimetreId === null)
   // Tant que la personne n'a rien choisi, le filtre suit ses agendas : ils
@@ -250,8 +275,10 @@ export default function Repartition({
   const parId = new Map(sequences.map(s => [s.id, s] as const))
   const personnes = data?.benevolesARepartir ?? []
   const tranches = (couverture?.couvertureProgramme ?? []).filter(
-    t => t.jour === jour
+    tranche => tranche.jour === jour
   )
+  const libelleRetrait = (nom: string, titre: string) =>
+    t`Retirer ${nom} de « ${titre} »`
 
   // Les plages du jour affiché, pour dessiner la piste de la personne.
   const plagesDuJour = (p: Personne) => intervallesDuJour(p.plages, jour)
@@ -266,6 +293,8 @@ export default function Repartition({
   })
 
   const executerPlacement = async (p: Personne, s: Sequence) => {
+    const nomPersonne = p.nom
+    const titreSequence = s.titre
     try {
       await placer({
         variables: {
@@ -277,7 +306,7 @@ export default function Repartition({
         },
       })
       message.success(
-        `${p.nom} est placé·e dans « ${s.titre} ». La place attend sa confirmation si la personne reçoit les mails.`
+        t`${nomPersonne} est placé·e dans « ${titreSequence} ». La place attend sa confirmation si la personne reçoit les mails.`
       )
     } catch (e) {
       message.error(messageErreur(e))
@@ -295,38 +324,41 @@ export default function Repartition({
       void executerPlacement(p, s)
       return
     }
+    const nomPersonne = p.nom
+    const titreSequence = s.titre
     void modal.confirm({
-      title: `Placer ${p.nom} dans « ${s.titre} » ?`,
+      title: t`Placer ${nomPersonne} dans « ${titreSequence} » ?`,
       content: (
         <ul className="rt-liste-simple">
           {liste.map(a => (
-            <li key={a}>{LIBELLES_AVERTISSEMENT[a]}</li>
+            <li key={a}>{t(LIBELLES_AVERTISSEMENT[a])}</li>
           ))}
         </ul>
       ),
-      okText: 'Placer quand même',
-      cancelText: 'Annuler',
+      okText: t`Placer quand même`,
+      cancelText: t`Annuler`,
       onOk: () => executerPlacement(p, s),
     })
   }
 
-  const confirmerRetrait = (s: Sequence, placeId: string, nom: string) =>
+  const confirmerRetrait = (s: Sequence, placeId: string, nom: string) => {
+    const titreSequence = s.titre
     void modal.confirm({
-      title: `Retirer ${nom} de « ${s.titre} » ?`,
-      content:
-        'La personne revient dans les bénévoles à répartir. Une adresse confirmée reçoit le mail de ses places.',
-      okText: 'Retirer',
+      title: t`Retirer ${nom} de « ${titreSequence} » ?`,
+      content: t`La personne revient dans les bénévoles à répartir. Une adresse confirmée reçoit le mail de ses places.`,
+      okText: t`Retirer`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await retirer({ variables: { id: placeId } })
-          message.success('Place retirée.')
+          message.success(t`Place retirée.`)
         } catch (e) {
           message.error(messageErreur(e))
         }
       },
     })
+  }
 
   const deposer = (s: Sequence) => (e: DragEvent) => {
     e.preventDefault()
@@ -336,59 +368,90 @@ export default function Repartition({
     if (p) proposerPlacement(p, s)
   }
 
-  const details = (p: Personne) => (
-    <div className="rt-repartition-details">
-      {p.plages.length > 0 && (
-        <p>
-          <span className="rt-libelle">Disponible</span>{' '}
-          {p.plages
-            .map(
-              pl =>
-                `${libelleJours(pl.jour)}, ${pl.heureDebut} → ${pl.jourFin !== pl.jour ? `${libelleJours(pl.jourFin)}, ` : ''}${pl.heureFin}`
-            )
-            .join(' ; ')}
-        </p>
-      )}
-      {p.precisionsDisponibilite && (
-        <p>
-          <span className="rt-libelle">Précisions</span>{' '}
-          {p.precisionsDisponibilite}
-        </p>
-      )}
-      {p.message && (
-        <p>
-          <span className="rt-libelle">Message</span> {p.message}
-        </p>
-      )}
-      {p.note && (
-        <p>
-          <span className="rt-libelle">Note</span> {p.note}
-        </p>
-      )}
-      {p.origine && <p className="rt-note">Candidature : {p.origine}</p>}
-      {p.choix.length > 0 && (
-        <p>
-          <span className="rt-libelle">A choisi</span>{' '}
-          {p.choix
-            .map(c => parId.get(c.sequenceId)?.titre)
-            .filter(Boolean)
-            .join(', ')}
-        </p>
-      )}
-      {p.places.length > 0 && (
-        <p>
-          <span className="rt-libelle">Placé·e</span>{' '}
-          {p.places
-            .map(pl => parId.get(pl.sequenceId)?.titre)
-            .filter(Boolean)
-            .join(', ')}
-        </p>
-      )}
-      {p.ouAilleurs && (
-        <p className="rt-note">Aide là où il manque du monde.</p>
-      )}
-    </div>
-  )
+  const libellePlage = (pl: Personne['plages'][number]) => {
+    const jourDebut = libelleJours(pl.jour)
+    const debut = pl.heureDebut
+    const fin = pl.heureFin
+    if (pl.jourFin !== pl.jour) {
+      const jourFin = libelleJours(pl.jourFin)
+      return t`${jourDebut}, ${debut} → ${jourFin}, ${fin}`
+    }
+    return t`${jourDebut}, ${debut} → ${fin}`
+  }
+
+  const details = (p: Personne) => {
+    const origine = p.origine
+    return (
+      <div className="rt-repartition-details">
+        {p.plages.length > 0 && (
+          <p>
+            <span className="rt-libelle">
+              <Trans comment="Les plages où la personne est libre">
+                Disponible
+              </Trans>
+            </span>{' '}
+            {p.plages.map(libellePlage).join(' ; ')}
+          </p>
+        )}
+        {p.precisionsDisponibilite && (
+          <p>
+            <span className="rt-libelle">
+              <Trans>Précisions</Trans>
+            </span>{' '}
+            {p.precisionsDisponibilite}
+          </p>
+        )}
+        {p.message && (
+          <p>
+            <span className="rt-libelle">
+              <Trans>Message</Trans>
+            </span>{' '}
+            {p.message}
+          </p>
+        )}
+        {p.note && (
+          <p>
+            <span className="rt-libelle">
+              <Trans>Note</Trans>
+            </span>{' '}
+            {p.note}
+          </p>
+        )}
+        {origine && (
+          <p className="rt-note">
+            <Trans>Candidature : {origine}</Trans>
+          </p>
+        )}
+        {p.choix.length > 0 && (
+          <p>
+            <span className="rt-libelle">
+              <Trans>A choisi</Trans>
+            </span>{' '}
+            {p.choix
+              .map(c => parId.get(c.sequenceId)?.titre)
+              .filter(Boolean)
+              .join(', ')}
+          </p>
+        )}
+        {p.places.length > 0 && (
+          <p>
+            <span className="rt-libelle">
+              <Trans>Placé·e</Trans>
+            </span>{' '}
+            {p.places
+              .map(pl => parId.get(pl.sequenceId)?.titre)
+              .filter(Boolean)
+              .join(', ')}
+          </p>
+        )}
+        {p.ouAilleurs && (
+          <p className="rt-note">
+            <Trans>Aide là où il manque du monde.</Trans>
+          </p>
+        )}
+      </div>
+    )
+  }
 
   const lignePersonne = (p: Personne, mobile = false) => {
     const plages = plagesDuJour(p)
@@ -429,12 +492,12 @@ export default function Repartition({
           </Popover>
           {p.adequation && (
             <Tag color={ADEQUATION[p.adequation].couleur}>
-              {ADEQUATION[p.adequation].libelle}
+              {t(ADEQUATION[p.adequation].libelle)}
             </Tag>
           )}
-          {choisieIci && <Tag color="processing">A choisi</Tag>}
-          {attente && <Tag color="warning">Liste d’attente</Tag>}
-          {occupe && <Tag color="error">Déjà placé·e</Tag>}
+          {choisieIci && <Tag color="processing">{t`A choisi`}</Tag>}
+          {attente && <Tag color="warning">{t`Liste d’attente`}</Tag>}
+          {occupe && <Tag color="error">{t`Déjà placé·e`}</Tag>}
           {selection !== null && ecrite(selection.s) && (
             <Button
               size="small"
@@ -443,7 +506,7 @@ export default function Repartition({
               loading={placement.loading}
               onClick={() => proposerPlacement(p, selection.s)}
             >
-              Placer
+              <Trans>Placer</Trans>
             </Button>
           )}
         </div>
@@ -470,39 +533,53 @@ export default function Repartition({
     )
   }
 
-  const panneau = (mobile = false) => (
-    <section
-      className="rt-repartition-panneau"
-      aria-label="Bénévoles à répartir"
-    >
-      <h3 className="rt-reunion-intertitre">
-        {selection
-          ? `Pour « ${selection.s.titre} », ${selection.s.heureDebut} → ${selection.s.heureFin}`
-          : 'Bénévoles à répartir'}
-      </h3>
-      {!selection && (
-        <p className="rt-note">
-          Choisissez une séquence pour classer les personnes selon leurs
-          disponibilités.
-        </p>
-      )}
-      {loading && !data ? (
-        <Skeleton active />
-      ) : personnes.length === 0 ? (
-        <Empty description="Personne n’attend de place." />
-      ) : (
-        <ul className="rt-repartition-personnes">
-          {personnes.map(p => lignePersonne(p, mobile))}
-        </ul>
-      )}
-    </section>
-  )
+  const horaireDe = (s: Sequence) => {
+    const debut = s.heureDebut
+    const fin = s.heureFin
+    if (!s.lieu) return t`${debut} → ${fin}`
+    const nomLieu = s.lieu.nom
+    return t`${debut} → ${fin} · ${nomLieu}`
+  }
+
+  const panneau = (mobile = false) => {
+    const titreSequence = selection?.s.titre
+    const debut = selection?.s.heureDebut
+    const fin = selection?.s.heureFin
+    const intitulePourSequence = t`Pour « ${titreSequence} », ${debut} → ${fin}`
+    return (
+      <section
+        className="rt-repartition-panneau"
+        aria-label={t`Bénévoles à répartir`}
+      >
+        <h3 className="rt-reunion-intertitre">
+          {selection ? intitulePourSequence : t`Bénévoles à répartir`}
+        </h3>
+        {!selection && (
+          <p className="rt-note">
+            <Trans>
+              Choisissez une séquence pour classer les personnes selon leurs
+              disponibilités.
+            </Trans>
+          </p>
+        )}
+        {loading && !data ? (
+          <Skeleton active />
+        ) : personnes.length === 0 ? (
+          <Empty description={t`Personne n’attend de place.`} />
+        ) : (
+          <ul className="rt-repartition-personnes">
+            {personnes.map(p => lignePersonne(p, mobile))}
+          </ul>
+        )}
+      </section>
+    )
+  }
 
   const filtres = (
     <div className="rt-repartition-filtres">
       <Select
         mode="multiple"
-        aria-label="Périmètres"
+        aria-label={t`Périmètres`}
         style={{ minWidth: 220, maxWidth: '100%' }}
         value={filtre}
         onChange={v =>
@@ -517,10 +594,10 @@ export default function Repartition({
           )
         }
         options={[
-          ...(admin ? [{ value: TOUS, label: 'Tous les périmètres' }] : []),
+          ...(admin ? [{ value: TOUS, label: t`Tous les périmètres` }] : []),
           ...agendas.map(a => ({
             value: a.perimetreId ?? SANS_PERIMETRE,
-            label: a.perimetreId ? a.nom : 'Toute l’activité',
+            label: a.perimetreId ? a.nom : t`Toute l’activité`,
           })),
         ]}
       />
@@ -529,8 +606,8 @@ export default function Repartition({
           value={regroupement}
           onChange={v => setRegroupement(v)}
           options={[
-            { value: 'perimetre', label: 'Par périmètre' },
-            { value: 'lieu', label: 'Par lieu' },
+            { value: 'perimetre', label: t`Par périmètre` },
+            { value: 'lieu', label: t`Par lieu` },
           ]}
         />
       )}
@@ -546,7 +623,9 @@ export default function Repartition({
       <div className="rt-repartition">
         {filtres}
         {enManqueIci.length === 0 ? (
-          <Empty description="Aucune séquence de ce jour ne manque de bénévoles." />
+          <Empty
+            description={t`Aucune séquence de ce jour ne manque de bénévoles.`}
+          />
         ) : (
           <ul className="rt-repartition-manques">
             {enManqueIci.map(({ s }) => (
@@ -557,10 +636,7 @@ export default function Repartition({
                   onClick={() => setChoisie(s.id)}
                 >
                   <strong>{s.titre}</strong>
-                  <span className="rt-note">
-                    {s.heureDebut} → {s.heureFin}
-                    {s.lieu && ` · ${s.lieu.nom}`}
-                  </span>
+                  <span className="rt-note">{horaireDe(s)}</span>
                   <Jauge renforts={s.renforts} besoin={s.besoinBenevoles!} />
                 </button>
               </li>
@@ -589,8 +665,8 @@ export default function Repartition({
         : (d.s.lieu?.id ?? 'sans-lieu')
     const nom =
       regroupement === 'perimetre'
-        ? (d.s.perimetre?.nom ?? 'Toute l’activité')
-        : (d.s.lieu?.nom ?? 'Sans lieu')
+        ? (d.s.perimetre?.nom ?? t`Toute l’activité`)
+        : (d.s.lieu?.nom ?? t`Sans lieu`)
     if (!groupes.has(cle)) groupes.set(cle, { nom, lignes: [] })
     groupes.get(cle)!.lignes.push(d)
   }
@@ -603,7 +679,9 @@ export default function Repartition({
     <div className="rt-repartition">
       {filtres}
       {duJour.length === 0 ? (
-        <Empty description="Aucune séquence de ce jour ne cherche de bénévoles. Fixez des renforts recherchés dans une séquence." />
+        <Empty
+          description={t`Aucune séquence de ce jour ne cherche de bénévoles. Fixez des renforts recherchés dans une séquence.`}
+        />
       ) : (
         <div className="rt-repartition-corps">
           <div className="rt-verre rt-repartition-frise">
@@ -625,17 +703,23 @@ export default function Repartition({
             </div>
             <div
               className="rt-repartition-ligne"
-              aria-label="Couverture par tranche de 30 minutes"
+              aria-label={t`Couverture par tranche de 30 minutes`}
             >
-              <span className="rt-note">Couverture</span>
+              <span className="rt-note">
+                <Trans comment="Le bandeau qui montre les effectifs par tranche de 30 minutes">
+                  Couverture
+                </Trans>
+              </span>
               <div className="rt-repartition-piste rt-repartition-bandeau">
-                {tranches.map(t => {
-                  const debut = minutes(t.heure)
-                  const manque = enManque(t)
-                  const libelle = `${t.heure} : besoin ${t.besoin}, ${t.confirmees} confirmée${t.confirmees > 1 ? 's' : ''}, ${t.aConfirmer} à confirmer, ${t.disponibles} disponible${t.disponibles > 1 ? 's' : ''}`
+                {tranches.map(tranche => {
+                  const debut = minutes(tranche.heure)
+                  const manque = enManque(tranche)
+                  const { heure, besoin, confirmees, aConfirmer, disponibles } =
+                    tranche
+                  const libelle = t`${heure} : besoin ${besoin}, ${plural(confirmees, { one: '# confirmée', other: '# confirmées' })}, ${aConfirmer} à confirmer, ${plural(disponibles, { one: '# disponible', other: '# disponibles' })}`
                   return (
                     <Barre
-                      key={t.heure}
+                      key={tranche.heure}
                       intervalle={{ debut, fin: debut + 30 }}
                       axe={axe}
                       className={`rt-repartition-tranche${manque ? ' rt-manque' : ''}`}
@@ -681,7 +765,7 @@ export default function Repartition({
                           size="small"
                           onClick={() => onOuvrir(s.id)}
                         >
-                          Détail
+                          <Trans>Détail</Trans>
                         </Button>
                       </div>
                       <div className="rt-repartition-colonne">
@@ -710,7 +794,10 @@ export default function Repartition({
                                     <button
                                       type="button"
                                       className="rt-lien-texte"
-                                      aria-label={`Retirer ${p.nom} de « ${s.titre} »`}
+                                      aria-label={libelleRetrait(
+                                        p.nom,
+                                        s.titre
+                                      )}
                                       onClick={() =>
                                         confirmerRetrait(s, p.id, p.nom)
                                       }

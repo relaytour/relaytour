@@ -7,6 +7,10 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: en\n"
 
+#: src/composants/SequenceDetail.tsx
+msgid "· bénévole"
+msgstr ""
+
 #: src/composants/RessourcesFiche.tsx
 msgid "« {nom} » est lié à la fiche."
 msgstr ""
@@ -21,6 +25,10 @@ msgstr ""
 
 #: src/pages/Agenda.tsx
 msgid "« {titreDateCle} » disparaît de l’agenda de chaque personne."
+msgstr ""
+
+#: src/composants/SequenceDetail.tsx
+msgid "« {titreSequence} » quitte le programme, avec ses personnes placées."
 msgstr ""
 
 #: src/composants/DeclinerTache.tsx
@@ -114,6 +122,7 @@ msgstr ""
 
 #: src/pages/MonEspace.tsx
 #: src/pages/Perimetre.tsx
+#: src/pages/Programme.tsx
 #: src/pages/Retroplanning.tsx
 msgid "{aucunePeriode} n’est en préparation."
 msgstr ""
@@ -150,6 +159,14 @@ msgstr ""
 msgid "{creneau}. Les réponses ne changent plus. Vous créez ensuite la réunion."
 msgstr ""
 
+#: src/composants/Repartition.tsx
+msgid "{debut} → {fin}"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "{debut} → {fin} · {nomLieu}"
+msgstr ""
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "{ecrites, plural, one {# fiche écrite} other {# fiches écrites}}"
 msgstr ""
@@ -174,16 +191,52 @@ msgstr ""
 msgid "{gardees, plural, one {faite} other {toutes faites}}"
 msgstr ""
 
+#: src/lib/programme.ts
+msgid "{h} h"
+msgstr ""
+
+#: src/lib/programme.ts
+msgid "{h} h {minutesDeuxChiffres}"
+msgstr ""
+
 #: src/composants/ChampCouleur.tsx
 msgid "{heritee} (héritée)"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "{heure} : besoin {besoin}, {confirmees, plural, one {# confirmée} other {# confirmées}}, {aConfirmer} à confirmer, {disponibles, plural, one {# disponible} other {# disponibles}}"
 msgstr ""
 
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "{inchangees, plural, one {# inchangée} other {# inchangées}}"
 msgstr ""
 
+#: src/composants/SequencesDuPerimetre.tsx
+msgid "{jour} · {debut} → {fin}"
+msgstr ""
+
+#: src/composants/SequencesDuPerimetre.tsx
+msgid "{jour} · {debut} → {fin} · {nomLieu}"
+msgstr ""
+
+#: src/composants/SequenceDetail.tsx
+msgid "{jour}, {debut} → {fin}"
+msgstr ""
+
+#: src/composants/SequenceDetail.tsx
+msgid "{jour}, {debut} → {jourFin} {fin}"
+msgstr ""
+
 #: src/composants/ConnexionEspace.tsx
 msgid "{jourConnexion} par {auteurConnexion}"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "{jourDebut}, {debut} → {fin}"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "{jourDebut}, {debut} → {jourFin}, {fin}"
 msgstr ""
 
 #: src/pages/admin/EspaceFichiers.tsx
@@ -307,6 +360,10 @@ msgstr ""
 msgid "{nom} ({raccourci})"
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "{nomBenevole} · bénévole"
+msgstr ""
+
 #: src/composants/DocumentsActivite.tsx
 msgid "{nombre, plural, one {# dossier} other {# dossiers}}"
 msgstr ""
@@ -317,6 +374,10 @@ msgstr ""
 
 #: src/pages/TousLesPerimetres.tsx
 msgid "{nombre, plural, one {# personne recherchée} other {# personnes recherchées}}"
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "{nombre, plural, one {# séquence} other {# séquences}}"
 msgstr ""
 
 #: src/composants/DeclinaisonsProposees.tsx
@@ -407,8 +468,21 @@ msgstr ""
 msgid "{nomPerimetre} (archivé)"
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "{nomPersonne} · du périmètre"
+msgstr ""
+
 #: src/composants/CarteAvancement.tsx
 msgid "{nomPersonne} (contact principal)"
+msgstr ""
+
+#: src/composants/SequencesDuPerimetre.tsx
+#: src/pages/Programme.tsx
+msgid "{nomPersonne} (resp.)"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "{nomPersonne} est placé·e dans « {titreSequence} ». La place attend sa confirmation si la personne reçoit les mails."
 msgstr ""
 
 #: src/composants/TacheCarte.tsx
@@ -501,6 +575,10 @@ msgstr ""
 
 #: src/composants/VerificationAcces.tsx
 msgid "A accès"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "A choisi"
 msgstr ""
 
 #: src/composants/Jauge.tsx
@@ -725,6 +803,10 @@ msgstr ""
 msgid "Affichage des fiches"
 msgstr ""
 
+#: src/pages/Programme.tsx
+msgid "Affichage du programme"
+msgstr ""
+
 #: src/composants/FichesConnexes.tsx
 msgid "Afficher de nouveau cette fiche"
 msgstr ""
@@ -755,6 +837,10 @@ msgstr ""
 msgid "Aide"
 msgstr ""
 
+#: src/composants/Repartition.tsx
+msgid "Aide là où il manque du monde."
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Aide Markdown"
 msgstr ""
@@ -768,6 +854,7 @@ msgid "Ajoutée sans accord par {personne} le {jour}"
 msgstr ""
 
 #: src/composants/DeclinerTache.tsx
+#: src/composants/LieuxFenetre.tsx
 #: src/pages/Agenda.tsx
 #: src/pages/FicheEditeur.tsx
 msgid "Ajouter"
@@ -821,8 +908,11 @@ msgstr ""
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/MesInvitations.tsx
 #: src/composants/ReglagePerimetre.tsx
+#: src/composants/Repartition.tsx
 #: src/composants/RessourcesFiche.tsx
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceDetail.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageDetail.tsx
 #: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheCarte.tsx
@@ -866,12 +956,18 @@ msgstr ""
 msgid "Arbitrage"
 msgstr ""
 
+#. Statut d’un lieu mis de côté
+#: src/composants/LieuxFenetre.tsx
 #: src/composants/ReglagePerimetre.tsx
 msgid "Archivé"
 msgstr ""
 
 #: src/pages/Fiche.tsx
 msgid "Archivée"
+msgstr ""
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Archiver le lieu"
 msgstr ""
 
 #: src/pages/admin/EspaceFichiers.tsx
@@ -1020,6 +1116,14 @@ msgstr ""
 msgid "Aucune réunion à venir pour ce périmètre."
 msgstr ""
 
+#: src/composants/Repartition.tsx
+msgid "Aucune séquence de ce jour ne cherche de bénévoles. Fixez des renforts recherchés dans une séquence."
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Aucune séquence de ce jour ne manque de bénévoles."
+msgstr ""
+
 #: src/composants/Avancement.tsx
 msgid "Aucune tâche"
 msgstr ""
@@ -1077,7 +1181,13 @@ msgid "Avec cette connexion, Relaytour vérifie les accès sans pouvoir les chan
 msgstr ""
 
 #: src/composants/Coquille.tsx
+#: src/composants/SequenceDetail.tsx
+#: src/composants/SequenceFormulaire.tsx
 msgid "Bénévoles"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Bénévoles à répartir"
 msgstr ""
 
 #: src/composants/ParcoursEspace.tsx
@@ -1090,6 +1200,10 @@ msgstr ""
 
 #: src/composants/FichesConnexes.tsx
 msgid "Cacher les fiches masquées"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Candidature : {origine}"
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -1174,6 +1288,10 @@ msgstr ""
 
 #: src/composants/SondageDetail.tsx
 msgid "Ce sondage n’existe pas ou ne vous est pas accessible."
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Ce texte est public : la page d’un appel l’affiche. Il ne doit contenir aucune coordonnée personnelle."
 msgstr ""
 
 #: src/composants/InvitationsEnAttente.tsx
@@ -1387,6 +1505,10 @@ msgstr ""
 msgid "Choisir un fichier {format}"
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "Choisir un lieu"
+msgstr ""
+
 #: src/composants/GardeSession.tsx
 msgid "Choisir une organisation"
 msgstr ""
@@ -1438,6 +1560,7 @@ msgstr ""
 
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 msgid "Choisissez un jour."
 msgstr ""
@@ -1458,8 +1581,13 @@ msgstr ""
 msgid "Choisissez une heure."
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
 #: src/pages/admin/Redaction.tsx
 msgid "Choisissez une personne."
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Choisissez une séquence pour classer les personnes selon leurs disponibilités."
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -1630,6 +1758,10 @@ msgstr ""
 msgid "Connexion et dossiers"
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "Consignes pour les bénévoles (facultatives)"
+msgstr ""
+
 #: src/pages/TousLesPerimetres.tsx
 msgid "Consulter les tâches"
 msgstr ""
@@ -1672,6 +1804,15 @@ msgstr ""
 
 #: src/composants/ReglagePerimetre.tsx
 msgid "Couleur"
+msgstr ""
+
+#. Le bandeau qui montre les effectifs par tranche de 30 minutes
+#: src/composants/Repartition.tsx
+msgid "Couverture"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Couverture par tranche de 30 minutes"
 msgstr ""
 
 #: src/composants/AbonnementAgenda.tsx
@@ -1754,6 +1895,7 @@ msgstr ""
 #. Libellé : heure de début d’un créneau
 #. Libellé : heure de début d’une réunion
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 msgid "Début"
 msgstr ""
@@ -1777,6 +1919,10 @@ msgstr ""
 
 #: src/composants/ConnexionEspace.tsx
 msgid "Déconnecter le fournisseur cloud ?"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Déjà placé·e"
 msgstr ""
 
 #: src/composants/DeclinaisonsProposees.tsx
@@ -1866,6 +2012,7 @@ msgstr ""
 
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 msgid "Description (facultative)"
 msgstr ""
@@ -1874,12 +2021,22 @@ msgstr ""
 msgid "Description dans ces périmètres (facultatif)"
 msgstr ""
 
+#: src/composants/Repartition.tsx
+msgid "Détail"
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Deux astérisques de chaque côté mettent un passage en gras. Un tiret bas de chaque côté le met en italique. Deux tildes le barrent."
 msgstr ""
 
 #: src/lib/espace-fichiers.ts
 msgid "Directement"
+msgstr ""
+
+#. Les plages où la personne est libre
+#. Une personne est libre sur toute la séquence
+#: src/composants/Repartition.tsx
+msgid "Disponible"
 msgstr ""
 
 #. Nom d’un fichier téléchargé sans nom connu
@@ -2023,6 +2180,15 @@ msgstr ""
 msgid "En cours"
 msgstr ""
 
+#. Une personne est libre sur une partie de la séquence
+#: src/composants/Repartition.tsx
+msgid "En partie"
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "en renfort"
+msgstr ""
+
 #: src/composants/DeclinaisonsTache.tsx
 #: src/composants/LigneTache.tsx
 #: src/pages/Perimetre.tsx
@@ -2046,6 +2212,7 @@ msgstr ""
 #: src/composants/PreferenceMessagerie.tsx
 #: src/composants/ReglagePerimetre.tsx
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/admin/EspaceFichiers.tsx
@@ -2071,6 +2238,7 @@ msgid "Épingler les premières colonnes"
 msgstr ""
 
 #: src/composants/Coquille.tsx
+#: src/composants/SequenceFormulaire.tsx
 msgid "Équipe"
 msgstr ""
 
@@ -2145,6 +2313,7 @@ msgid "Faites glisser pour ajuster la largeur. Un double-clic rétablit la large
 msgstr ""
 
 #: src/composants/ImportFiches.tsx
+#: src/composants/LieuxFenetre.tsx
 #: src/composants/Liseuse.tsx
 msgid "Fermer"
 msgstr ""
@@ -2238,6 +2407,7 @@ msgstr ""
 #. Libellé : heure de fin d’un créneau
 #. Libellé : heure de fin d’une réunion
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 msgid "Fin"
 msgstr ""
@@ -2309,6 +2479,10 @@ msgstr ""
 msgid "Gras, italique et texte barré"
 msgstr ""
 
+#: src/pages/Programme.tsx
+msgid "Grille"
+msgstr ""
+
 #. Groupe chez le fournisseur cloud
 #: src/composants/GestionAcces.tsx
 #: src/composants/ReglagePerimetre.tsx
@@ -2347,6 +2521,11 @@ msgstr ""
 
 #: src/composants/HorsConnexion.tsx
 msgid "Hors connexion"
+msgstr ""
+
+#. Une personne n’est libre à aucun moment de la séquence
+#: src/composants/Repartition.tsx
+msgid "Hors plages"
 msgstr ""
 
 #: src/composants/ConnexionEspace.tsx
@@ -2397,6 +2576,10 @@ msgstr ""
 
 #: src/composants/ImportFiches.tsx
 msgid "Importer des fiches dans « {nomActivite} »"
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "Imprimer"
 msgstr ""
 
 #: src/composants/VerificationAcces.tsx
@@ -2459,8 +2642,17 @@ msgstr ""
 #. Libellé : jour d’une réunion
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 msgid "Jour"
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "Jour du programme"
+msgstr ""
+
+#: src/composants/SequencesDuPerimetre.tsx
+msgid "Jour J"
 msgstr ""
 
 #: src/pages/Agenda.tsx
@@ -2672,6 +2864,10 @@ msgstr ""
 msgid "La demande a expiré. Recommencez la connexion."
 msgstr ""
 
+#: src/lib/repartition.ts
+msgid "La disponibilité de la personne ne couvre qu’une partie de la séquence."
+msgstr ""
+
 #: src/composants/GuideMarkdown.tsx
 msgid "La fiche affiche"
 msgstr ""
@@ -2708,6 +2904,14 @@ msgstr ""
 msgid "La liste ne compte que les groupes qui ont déjà un droit sur le dossier. Une personne qui entre dans un groupe reçoit tous les droits de ce groupe chez le fournisseur."
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "La mission, le point de rendez-vous, la tenue."
+msgstr ""
+
+#: src/lib/repartition.ts
+msgid "La personne n’a donné aucune disponibilité sur cet horaire."
+msgstr ""
+
 #: src/composants/Jauge.tsx
 msgid "La personne n’a pas confirmé depuis sept jours, ou la séquence arrive demain."
 msgstr ""
@@ -2718,6 +2922,14 @@ msgstr ""
 
 #: src/composants/GestionAcces.tsx
 msgid "La personne quitte le groupe pour tout ce que ce groupe ouvre chez le fournisseur."
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "La personne revient dans les bénévoles à répartir. Une adresse confirmée reçoit le mail de ses places."
+msgstr ""
+
+#: src/lib/repartition.ts
+msgid "La personne tient déjà une place à la même heure."
 msgstr ""
 
 #: src/composants/ImportFiches.tsx
@@ -2738,6 +2950,10 @@ msgstr ""
 
 #: src/composants/ReunionDetail.tsx
 msgid "La réunion reste dans l’agenda, marquée annulée. Chaque personne convoquée reçoit un mail d’annulation."
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "La séquence n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 msgstr ""
 
 #: src/composants/FilTache.tsx
@@ -2812,6 +3028,10 @@ msgstr ""
 msgid "le {jour} à {heure} h {minute}"
 msgstr ""
 
+#: src/lib/repartition.ts
+msgid "Le besoin de la séquence est déjà atteint."
+msgstr ""
+
 #: src/composants/Jauge.tsx
 msgid "Le besoin est atteint."
 msgstr ""
@@ -2835,6 +3055,10 @@ msgstr ""
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/ReunionFormulaire.tsx
 msgid "Le dernier jour suit le premier."
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "Le déroulé du jour J {dePeriode}, par lieu et par heure."
 msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
@@ -2933,6 +3157,10 @@ msgstr ""
 msgid "Le gymnase ouvre à 8 h."
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "Le lendemain (facultatif)"
+msgstr ""
+
 #: src/composants/Liseuse.tsx
 msgid "Le lien « Ouvrir dans {nomFournisseur} » fonctionne si votre compte {nomFournisseur} a accès à ce document."
 msgstr ""
@@ -2967,6 +3195,14 @@ msgstr ""
 
 #: src/composants/ReglagePerimetre.tsx
 msgid "Le pôle obtient les gymnases, la piscine et les autorisations."
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "Le programme {dePeriode} n’a encore aucune séquence."
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "Le programme n’a pas pu être chargé."
 msgstr ""
 
 #: src/composants/GestionAcces.tsx
@@ -3043,6 +3279,7 @@ msgstr ""
 msgid "Le titre dépasse {TITRE_MAX} caractères."
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 msgid "Le titre dépasse 200 caractères."
 msgstr ""
@@ -3067,12 +3304,20 @@ msgstr ""
 msgid "Les admins rédigent toutes les fiches. Les autres personnes ont besoin d’un droit de rédaction."
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "Les appels à bénévoles proposent la séquence tant que ce nombre n’est pas atteint. Les responsables n’y comptent pas."
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Les clés se rendent à l’accueil avant 19 h."
 msgstr ""
 
 #: src/lib/guide-markdown.ts
 msgid "Les colonnes n’ont pas besoin d’être alignées dans le texte : l’affichage les aligne."
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Les consignes dépassent 2 000 caractères."
 msgstr ""
 
 #: src/pages/admin/EspaceFichiers.tsx
@@ -3117,6 +3362,10 @@ msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
 msgid "Les lecteurs de {perimetresSansAcces} n’ouvriront pas ce document : le dossier lié « {nomDossierLie} » ne sert pas ces périmètres."
+msgstr ""
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus."
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -3250,7 +3499,16 @@ msgid "Lier une fiche (facultatif)"
 msgstr ""
 
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 msgid "Lieu (facultatif)"
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "Lieux"
+msgstr ""
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Lieux de l’activité"
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -3282,6 +3540,10 @@ msgstr ""
 
 #: src/pages/Fiches.tsx
 msgid "Liste condensée"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Liste d’attente"
 msgstr ""
 
 #: src/composants/EditeurMarkdown.tsx
@@ -3340,6 +3602,10 @@ msgstr ""
 msgid "Masquer les noms"
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "Matchs de poule"
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Matériel à réserver"
 msgstr ""
@@ -3358,6 +3624,10 @@ msgstr ""
 
 #: src/pages/Retroplanning.tsx
 msgid "Mes périmètres"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Message"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -3412,6 +3682,7 @@ msgstr ""
 
 #: src/composants/FilTache.tsx
 #: src/composants/ReunionDetail.tsx
+#: src/composants/SequenceDetail.tsx
 #: src/composants/SondageDetail.tsx
 #: src/composants/TacheCarte.tsx
 #: src/pages/Fiche.tsx
@@ -3436,6 +3707,10 @@ msgstr ""
 
 #: src/composants/ReunionFormulaire.tsx
 msgid "Modifier la réunion"
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Modifier la séquence"
 msgstr ""
 
 #: src/composants/TacheFormulaire.tsx
@@ -3475,6 +3750,10 @@ msgstr ""
 msgid "Mon espace"
 msgstr ""
 
+#: src/pages/Programme.tsx
+msgid "Mon jour J"
+msgstr ""
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "natation"
 msgstr ""
@@ -3504,6 +3783,10 @@ msgstr ""
 msgid "Nom affiché"
 msgstr ""
 
+#: src/composants/LieuxFenetre.tsx
+msgid "Nom du lieu"
+msgstr ""
+
 #: src/pages/Preferences.tsx
 msgid "Nom enregistré."
 msgstr ""
@@ -3524,6 +3807,10 @@ msgstr ""
 
 #: src/composants/Jauge.tsx
 msgid "Non confirmée"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Note"
 msgstr ""
 
 #: src/composants/MenuCompte.tsx
@@ -3555,6 +3842,10 @@ msgstr ""
 #. Bouton : créer un sondage de dates
 #: src/pages/Agenda.tsx
 msgid "Nouveau"
+msgstr ""
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Nouveau lieu"
 msgstr ""
 
 #: src/composants/ReglagePerimetre.tsx
@@ -3604,6 +3895,11 @@ msgstr ""
 msgid "Nouvelle réunion"
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+#: src/pages/Programme.tsx
+msgid "Nouvelle séquence"
+msgstr ""
+
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/Perimetre.tsx
 msgid "Nouvelle tâche"
@@ -3619,6 +3915,10 @@ msgstr ""
 
 #: src/composants/ReglagePerimetre.tsx
 msgid "Ordre d’affichage"
+msgstr ""
+
+#: src/composants/LieuxFenetre.tsx
+msgid "Ordre du lieu"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -3733,8 +4033,17 @@ msgstr ""
 msgid "Par le groupe « {nomGroupe} »"
 msgstr ""
 
+#: src/composants/Repartition.tsx
+#: src/pages/Programme.tsx
+msgid "Par lieu"
+msgstr ""
+
 #: src/pages/Retroplanning.tsx
 msgid "Par mois"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Par périmètre"
 msgstr ""
 
 #: src/pages/Perimetre.tsx
@@ -3791,6 +4100,7 @@ msgstr ""
 msgid "Performance"
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
 #: src/pages/Fiche.tsx
 msgid "Périmètre"
 msgstr ""
@@ -3811,6 +4121,7 @@ msgstr ""
 #: src/composants/ChoixPerimetresCibles.tsx
 #: src/composants/Coquille.tsx
 #: src/composants/DeclinerTache.tsx
+#: src/composants/Repartition.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Périmètres"
 msgstr ""
@@ -3829,12 +4140,21 @@ msgstr ""
 #. Aucune personne n’est assignée à la tâche
 #: src/composants/LigneTache.tsx
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/pages/admin/Redaction.tsx
 msgid "Personne"
 msgstr ""
 
+#: src/composants/Repartition.tsx
+msgid "Personne n’attend de place."
+msgstr ""
+
 #: src/composants/TacheCarte.tsx
 msgid "Personne n’est assigné·e"
+msgstr ""
+
+#: src/composants/SequenceDetail.tsx
+msgid "Personne n’est encore placé dans cette séquence."
 msgstr ""
 
 #: src/composants/ComptesFournisseur.tsx
@@ -3862,6 +4182,11 @@ msgstr ""
 msgid "Personnes convoquées"
 msgstr ""
 
+#: src/composants/SequenceDetail.tsx
+#: src/composants/SequenceFormulaire.tsx
+msgid "Personnes placées"
+msgstr ""
+
 #: src/composants/SondageFormulaire.tsx
 msgid "Personnes visées"
 msgstr ""
@@ -3885,6 +4210,30 @@ msgstr ""
 msgid "Phases"
 msgstr ""
 
+#: src/composants/Repartition.tsx
+msgid "Place retirée."
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Placé·e"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Placer"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Placer {nomPersonne} dans « {titreSequence} » ?"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Placer quand même"
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Placer une personne"
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Plan d’accès : https://exemple.org/plan"
 msgstr ""
@@ -3901,8 +4250,20 @@ msgstr ""
 msgid "Poser le lien"
 msgstr ""
 
+#: src/composants/Repartition.tsx
+msgid "Pour « {titreSequence} », {debut} → {fin}"
+msgstr ""
+
 #: src/composants/GestionAcces.tsx
 msgid "Pour appliquer des propositions, activez la gestion des accès. Chez Microsoft et Dropbox, elle demande une reconnexion ; chez Microsoft, un admin Microsoft Entra accepte une autorisation de plus."
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Pour une séquence qui passe minuit."
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Précisions"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -3942,7 +4303,12 @@ msgid "Prochaines réunions"
 msgstr ""
 
 #: src/composants/Coquille.tsx
+#: src/pages/Programme.tsx
 msgid "Programme"
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "Programme du {libelleJourChoisi}"
 msgstr ""
 
 #: src/lib/declinaisons.ts
@@ -4008,6 +4374,7 @@ msgid "Recharger la page"
 msgstr ""
 
 #: src/pages/Agenda.tsx
+#: src/pages/Programme.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Rechargez la page dans un instant."
 msgstr ""
@@ -4166,6 +4533,21 @@ msgstr ""
 msgid "Remplacer"
 msgstr ""
 
+#. Rôle d’une personne placée dans une séquence
+#. Rôle d’une personne placée dans une séquence
+#: src/composants/SequenceDetail.tsx
+#: src/composants/SequenceFormulaire.tsx
+msgid "Renfort"
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Renforts recherchés (facultatif)"
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "Répartition"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Replier le menu"
 msgstr ""
@@ -4206,6 +4588,13 @@ msgstr ""
 msgid "Réserver les lignes d’eau"
 msgstr ""
 
+#. Rôle d’une personne placée dans une séquence
+#. Rôle d’une personne placée dans une séquence
+#: src/composants/SequenceDetail.tsx
+#: src/composants/SequenceFormulaire.tsx
+msgid "Responsable"
+msgstr ""
+
 #: src/composants/Coquille.tsx
 #: src/pages/AideMarkdown.tsx
 #: src/pages/Fiche.tsx
@@ -4239,6 +4628,7 @@ msgid "Retenu"
 msgstr ""
 
 #: src/composants/InvitationsEnAttente.tsx
+#: src/composants/Repartition.tsx
 #: src/composants/RessourcesFiche.tsx
 #: src/composants/TacheCarte.tsx
 #: src/pages/admin/EspaceFichiers.tsx
@@ -4253,6 +4643,14 @@ msgstr ""
 #: src/composants/PastillePerimetre.tsx
 #: src/composants/Personne.tsx
 msgid "Retirer {nom}"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Retirer {nom} de « {titre} »"
+msgstr ""
+
+#: src/composants/Repartition.tsx
+msgid "Retirer {nom} de « {titreSequence} » ?"
 msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
@@ -4281,6 +4679,10 @@ msgstr ""
 
 #: src/composants/InvitationsEnAttente.tsx
 msgid "Retirer cette invitation ?"
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Retirer cette personne"
 msgstr ""
 
 #: src/composants/GestionAcces.tsx
@@ -4410,6 +4812,7 @@ msgstr ""
 
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/FicheEditeur.tsx
@@ -4450,6 +4853,11 @@ msgstr ""
 msgid "Sans fiche"
 msgstr ""
 
+#: src/composants/Repartition.tsx
+#: src/pages/Programme.tsx
+msgid "Sans lieu"
+msgstr ""
+
 #: src/composants/ReunionDetail.tsx
 msgid "Sans réponse"
 msgstr ""
@@ -4475,6 +4883,22 @@ msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Séparateur des adresses copiées"
+msgstr ""
+
+#: src/composants/SequenceDetail.tsx
+msgid "Séquence"
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Séquence ajoutée au programme."
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Séquence enregistrée."
+msgstr ""
+
+#: src/composants/SequenceDetail.tsx
+msgid "Séquence supprimée."
 msgstr ""
 
 #: src/composants/AbonnementAgenda.tsx
@@ -4573,6 +4997,7 @@ msgid "Support {organisation} ({relaytour})"
 msgstr ""
 
 #: src/composants/FilTache.tsx
+#: src/composants/SequenceDetail.tsx
 #: src/composants/SondageDetail.tsx
 #: src/pages/Agenda.tsx
 msgid "Supprimer"
@@ -4592,6 +5017,14 @@ msgstr ""
 
 #: src/pages/Agenda.tsx
 msgid "Supprimer cette date clé ?"
+msgstr ""
+
+#: src/composants/SequenceDetail.tsx
+msgid "Supprimer cette séquence ?"
+msgstr ""
+
+#: src/composants/SequenceDetail.tsx
+msgid "Supprimer la séquence"
 msgstr ""
 
 #: src/pages/FicheEditeur.tsx
@@ -4728,6 +5161,10 @@ msgstr ""
 msgid "Terrain 2 : 14 h - 18 h"
 msgstr ""
 
+#: src/composants/LieuxFenetre.tsx
+msgid "Terrain 2, bassin, salle des fêtes…"
+msgstr ""
+
 #. Cellule d’un tableau d’exemple inséré dans une fiche.
 #: src/lib/mise-en-forme.ts
 msgid "Texte"
@@ -4756,6 +5193,7 @@ msgstr ""
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/EditeurMarkdown.tsx
 #: src/composants/ReunionFormulaire.tsx
+#: src/composants/SequenceFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/FicheEditeur.tsx
@@ -4805,6 +5243,7 @@ msgid "Tous les membres des périmètres lecteurs"
 msgstr ""
 
 #: src/composants/Coquille.tsx
+#: src/composants/Repartition.tsx
 #: src/pages/Retroplanning.tsx
 #: src/pages/TousLesPerimetres.tsx
 msgid "Tous les périmètres"
@@ -4840,7 +5279,9 @@ msgstr ""
 #: src/composants/DocumentsActivite.tsx
 #: src/composants/EtiquettesLecteurs.tsx
 #: src/composants/ListeNotifications.tsx
+#: src/composants/Repartition.tsx
 #: src/composants/RessourcesFiche.tsx
+#: src/composants/SequenceDetail.tsx
 #: src/lib/agendas-ecrits.ts
 msgid "Toute l’activité"
 msgstr ""
@@ -5038,6 +5479,10 @@ msgstr ""
 msgid "Une autre personne a modifié cette réunion depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification."
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "Une autre personne a modifié cette séquence depuis votre lecture. Le programme affiche maintenant sa version : reprenez votre modification."
+msgstr ""
+
 #: src/lib/conflit.ts
 msgid "Une autre version de cette fiche a été enregistrée {moment}."
 msgstr ""
@@ -5110,8 +5555,16 @@ msgstr ""
 msgid "Une ou deux phrases qui présentent le périmètre aux membres de l’équipe."
 msgstr ""
 
+#: src/composants/SequenceFormulaire.tsx
+msgid "Une ou un bénévole sans compte se crée d’abord dans l’écran « Bénévoles »."
+msgstr ""
+
 #: src/lib/commentaires.ts
 msgid "Une personne"
+msgstr ""
+
+#: src/composants/SequenceFormulaire.tsx
+msgid "Une personne de l’équipe, ou une ou un bénévole"
 msgstr ""
 
 #: src/composants/PreferencePush.tsx
@@ -5358,6 +5811,7 @@ msgstr ""
 
 #: src/composants/FilTache.tsx
 #: src/composants/LigneTache.tsx
+#: src/composants/SequenceDetail.tsx
 #: src/composants/TacheCarte.tsx
 #: src/pages/Perimetre.tsx
 msgid "Vous"
@@ -5431,6 +5885,10 @@ msgstr ""
 msgid "Vous êtes convoqué·e, sans réponse"
 msgstr ""
 
+#: src/pages/Programme.tsx
+msgid "vous êtes responsable"
+msgstr ""
+
 #: src/composants/TacheCarte.tsx
 msgid "Vous êtes retiré·e de la tâche."
 msgstr ""
@@ -5481,6 +5939,10 @@ msgstr ""
 
 #: src/pages/MonEspace.tsx
 msgid "Vous n’êtes affecté·e à aucun périmètre pour {cettePeriode}. Les admins gèrent les affectations. Dans <0>Tous les périmètres</0>, vous découvrez les périmètres et formulez vos souhaits."
+msgstr ""
+
+#: src/pages/Programme.tsx
+msgid "Vous n’êtes placé·e dans aucune séquence du programme."
 msgstr ""
 
 #: src/lib/commentaires.ts

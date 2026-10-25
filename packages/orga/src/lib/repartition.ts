@@ -1,3 +1,6 @@
+import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+
 import { minutes, segmentDuJour } from './programme'
 
 // Vue « Répartition » du programme (ADR 0041), côté navigateur : l'axe des heures
@@ -105,13 +108,13 @@ export function avertissements(entree: {
   return liste
 }
 
-export const LIBELLES_AVERTISSEMENT: Record<Avertissement, string> = {
-  HORS_PLAGES: 'La personne n’a donné aucune disponibilité sur cet horaire.',
-  PLAGE_PARTIELLE:
-    'La disponibilité de la personne ne couvre qu’une partie de la séquence.',
-  CHEVAUCHEMENT: 'La personne tient déjà une place à la même heure.',
-  BESOIN_ATTEINT: 'Le besoin de la séquence est déjà atteint.',
-}
+export const LIBELLES_AVERTISSEMENT: Record<Avertissement, MessageDescriptor> =
+  {
+    HORS_PLAGES: msg`La personne n’a donné aucune disponibilité sur cet horaire.`,
+    PLAGE_PARTIELLE: msg`La disponibilité de la personne ne couvre qu’une partie de la séquence.`,
+    CHEVAUCHEMENT: msg`La personne tient déjà une place à la même heure.`,
+    BESOIN_ATTEINT: msg`Le besoin de la séquence est déjà atteint.`,
+  }
 
 /** Une tranche de couverture manque de monde quand ses renforts restent sous le besoin. */
 export function enManque(t: {
