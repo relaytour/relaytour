@@ -91,6 +91,8 @@ export default function ImportTaches() {
     perimetres: string[]
     types: number
   }>()
+  // Les périmètres que la vérification créerait, réunis sur tous les lots.
+  const [aCreer, setACreer] = useState<string[]>([])
 
   const CHAMPS: ChampTableur<Champ>[] = useMemo(
     () => [
@@ -125,7 +127,11 @@ export default function ImportTaches() {
       variables: variables(lignes),
       fetchPolicy: 'network-only',
     })
-    return r.data?.simulerImportTaches.lignes ?? []
+    const rapport = r.data?.simulerImportTaches
+    if (rapport && rapport.perimetresCrees.length > 0) {
+      setACreer(avant => [...new Set([...avant, ...rapport.perimetresCrees])])
+    }
+    return rapport?.lignes ?? []
   }
   const importer = async (
     lignes: LigneTacheImport[]
@@ -147,6 +153,7 @@ export default function ImportTaches() {
   }
 
   const perimetresCrees = resume?.perimetres.join(', ') ?? ''
+  const listeACreer = aCreer.join(', ')
   const typesAjoutes = resume?.types ?? 0
 
   return (
@@ -230,6 +237,24 @@ export default function ImportTaches() {
         }
         simuler={simuler}
         importer={importer}
+        onDebut={ecrire => {
+          if (ecrire) {
+            bilan.current = { perimetres: [], types: 0 }
+            setResume(undefined)
+          } else {
+            setACreer([])
+          }
+        }}
+        resumeVerification={
+          aCreer.length > 0 && (
+            <Alert
+              type="info"
+              showIcon
+              title={t`Périmètres qui seront créés : ${listeACreer}.`}
+              description={t`Vérifiez l’orthographe : un nom mal écrit créerait un périmètre de plus.`}
+            />
+          )
+        }
         bilan={
           resume &&
           (resume.perimetres.length > 0 || typesAjoutes > 0) && (

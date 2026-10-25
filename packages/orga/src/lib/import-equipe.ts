@@ -29,7 +29,7 @@ export const REGLES_EQUIPE: ReglesDetection<ChampEquipe> = {
   ignorer: 'IGNORER',
   synonymes: [
     ['ADRESSE', /\b(e-?mail|courriel|mail|adresse)\b/],
-    ['CONTACT', /\b(contact principal|principal|main contact|lead)\b/],
+    ['CONTACT', /\b(contact principal|main contact)\b/],
     ['PRENOM', /\b(prenom|first ?name)\b/],
     [
       'NOM_COMPLET',
@@ -79,7 +79,7 @@ export function lignesDeEquipe(
       nom,
       adresse,
       perimetres: valeur(brute, 'PERIMETRES')
-        .split(/[,;/\n]/)
+        .split(/[,;\n]/)
         .map(p => p.trim())
         .filter(Boolean),
       contactPrincipal: OUI.test(valeur(brute, 'CONTACT')),

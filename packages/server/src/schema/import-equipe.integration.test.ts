@@ -24,7 +24,9 @@ const ids = {
   edition: '',
   archivee: '',
   admin: '',
+  adminActivite: '',
   membre: '',
+  personneArchivee: '',
 }
 const adresse = (nom: string) => `${nom}-${slug}@exemple.fr`
 
@@ -190,7 +192,9 @@ beforeAll(async () => {
   }
   for (const [cle, role] of [
     ['admin', 'ADMIN'],
+    ['adminActivite', 'MEMBRE'],
     ['membre', 'MEMBRE'],
+    ['personneArchivee', 'MEMBRE'],
   ] as const) {
     ids[cle] = randomUUID()
     await prisma.user.create({
@@ -198,16 +202,30 @@ beforeAll(async () => {
         id: ids[cle],
         email: adresse(cle),
         name: cle,
-        appartenances: { create: { organisationId: ids.org, role } },
+        appartenances: {
+          create: {
+            organisationId: ids.org,
+            role,
+            archiveLe: cle === 'personneArchivee' ? new Date() : null,
+          },
+        },
       },
     })
   }
+  await prisma.adminActivite.create({
+    data: {
+      userId: ids.adminActivite,
+      activiteId: ids.activite,
+      organisationId: ids.org,
+    },
+  })
 })
 
 afterAll(async () => {
   const dansLOrg = { organisationId: ids.org }
   await prisma.affectation.deleteMany({ where: { edition: dansLOrg } })
   await prisma.rattachementActivite.deleteMany({ where: dansLOrg })
+  await prisma.adminActivite.deleteMany({ where: dansLOrg })
   await prisma.edition.deleteMany({ where: dansLOrg })
   await prisma.perimetre.deleteMany({ where: dansLOrg })
   await prisma.activite.deleteMany({ where: dansLOrg })
@@ -289,8 +307,66 @@ describe('import de l’équipe depuis un tableur', () => {
       })
     ).toBe(1)
 
-    // Rejouer l'import ne crée rien de plus.
+    // Rejouer l'import ne crée rien de plus, et chaque ligne valide le dit.
     const deuxieme = await rapportDe(IMPORTER, { e: ids.edition, l: LIGNES() })
     expect(deuxieme).toMatchObject({ affectationsCreees: 0, rattachements: 0 })
+    expect(
+      deuxieme.lignes.filter(l => l.etat === 'DEJA_IMPORTEE').map(l => l.ligne)
+    ).toEqual([2, 3, 8, 9])
+  })
+
+  it('garde le contact principal déjà en place, et le signale', async () => {
+    const rapport = await rapportDe(IMPORTER, {
+      e: ids.edition,
+      l: [
+        {
+          ligne: 2,
+          nom: 'Nouvelle contact',
+          adresse: adresse('nouvelle'),
+          perimetres: ['Natation'],
+          contactPrincipal: true,
+        },
+      ],
+    })
+    expect(rapport.lignes[0]!.avertissements).toEqual([
+      'Le périmètre « Natation » a déjà un contact principal : il le reste.',
+    ])
+    expect(rapport.contactsPrincipaux).toBe(0)
+    const contact = await prisma.affectation.findFirstOrThrow({
+      where: {
+        editionId: ids.edition,
+        perimetreId: ids.natation,
+        contactPrincipal: true,
+      },
+      select: { user: { select: { email: true } } },
+    })
+    expect(contact.user.email).toBe(adresse('camille'))
+  })
+
+  it('écarte une personne archivée, sans le dire à un admin d’activité', async () => {
+    const ligne = {
+      ligne: 2,
+      nom: 'Archivée',
+      adresse: adresse('personneArchivee'),
+      perimetres: [],
+      contactPrincipal: false,
+    }
+    const pourAdmin = await rapportDe(SIMULER, { e: ids.edition, l: [ligne] })
+    expect(pourAdmin.lignes[0]).toMatchObject({
+      etat: 'ECARTEE',
+      raison:
+        'Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire.',
+    })
+    const r = await executer(ids.adminActivite, SIMULER, {
+      e: ids.edition,
+      l: [ligne],
+    })
+    expect(r.errors).toBeUndefined()
+    const pourAdminActivite = (r.data as { simulerImportEquipe: Rapport })
+      .simulerImportEquipe
+    expect(pourAdminActivite.lignes[0]).toMatchObject({
+      etat: 'ECARTEE',
+      raison: 'Cette adresse ne peut pas être importée.',
+    })
   })
 })

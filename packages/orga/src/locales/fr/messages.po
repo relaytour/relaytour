@@ -5219,6 +5219,10 @@ msgstr "L’identifiant « {identifiant} » ne change pas ici : il dépend de l�
 msgid "L’import s’est arrêté : {nbNonTraitees, plural, one {# personne n’a pas été traitée} other {# personnes n’ont pas été traitées}}."
 msgstr "L’import s’est arrêté : {nbNonTraitees, plural, one {# personne n’a pas été traitée} other {# personnes n’ont pas été traitées}}."
 
+#: src/composants/AssistantTableur.tsx
+msgid "L’import s’est arrêté avant la fin : {echec}"
+msgstr "L’import s’est arrêté avant la fin : {echec}"
+
 #: src/composants/AppelsBenevoles.tsx
 msgid "L’introduction dépasse 2 000 caractères."
 msgstr "L’introduction dépasse 2 000 caractères."
@@ -6137,6 +6141,10 @@ msgstr "Les lecteurs de {perimetresSansAcces} n’ouvriront pas ce document : le
 #: src/composants/LieuxFenetre.tsx
 msgid "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus."
 msgstr "Les lieux servent d’une période à l’autre. Le programme les affiche par ordre croissant. Un lieu archivé ne se propose plus."
+
+#: src/composants/AssistantTableur.tsx
+msgid "Les lignes ci-dessous sont écrites. Revenez à la vérification pour relancer l’import : une ligne déjà importée ne sera pas recréée."
+msgstr "Les lignes ci-dessous sont écrites. Revenez à la vérification pour relancer l’import : une ligne déjà importée ne sera pas recréée."
 
 #: src/pages/Preferences.tsx
 msgid "Les mails de connexion et d’invitation partent toujours : ils sont nécessaires pour accéder à l’espace."
@@ -7491,6 +7499,10 @@ msgstr "Périmètres demandés"
 msgid "Périmètres inconnus"
 msgstr "Périmètres inconnus"
 
+#: src/pages/admin/ImportTaches.tsx
+msgid "Périmètres qui seront créés : {listeACreer}."
+msgstr "Périmètres qui seront créés : {listeACreer}."
+
 #: src/pages/admin/Equipe.tsx
 msgid "Périmètres sans personne"
 msgstr "Périmètres sans personne"
@@ -8569,6 +8581,10 @@ msgstr "Réunion enregistrée."
 #: src/pages/FicheEditeur.tsx
 msgid "Revenir à l’éditeur"
 msgstr "Revenir à l’éditeur"
+
+#: src/composants/AssistantTableur.tsx
+msgid "Revenir à la vérification"
+msgstr "Revenir à la vérification"
 
 #: src/composants/ExplorateurDossier.tsx
 #: src/composants/ImportFiches.tsx
@@ -9966,6 +9982,10 @@ msgstr "Vérifier maintenant"
 #: src/lib/espace-fichiers.ts
 msgid "Vérifier seulement"
 msgstr "Vérifier seulement"
+
+#: src/pages/admin/ImportTaches.tsx
+msgid "Vérifiez l’orthographe : un nom mal écrit créerait un périmètre de plus."
+msgstr "Vérifiez l’orthographe : un nom mal écrit créerait un périmètre de plus."
 
 #: src/composants/EcrireMessage.tsx
 msgid "Vérifiez les champs « Cc » et « Cci » avant d’envoyer"

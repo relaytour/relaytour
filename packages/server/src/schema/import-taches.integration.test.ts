@@ -371,4 +371,69 @@ describe('import des tâches depuis un tableur', () => {
       await prisma.tache.count({ where: { editionId: ids.edition } })
     ).toBe(5)
   })
+
+  it('refuse un groupe que l’activité ne déclare pas', async () => {
+    expect(
+      code(
+        await executer(ids.admin, SIMULER, {
+          e: ids.edition,
+          l: [],
+          g: 'inexistant',
+        })
+      )
+    ).toBe('SAISIE_INVALIDE')
+  })
+
+  it('retrouve d’un lot à l’autre le périmètre créé et la tâche importée, puis enregistre les tâches types au deuxième passage', async () => {
+    const premier = await rapportDe(IMPORTER, {
+      e: ids.edition,
+      l: [{ ligne: 2, perimetre: 'Tir à l’arc', titre: 'Régler les cibles' }],
+      g: 'sport',
+    })
+    expect(premier.perimetresCrees).toEqual(['Tir à l’arc'])
+    const lotSuivant = {
+      e: ids.edition,
+      l: [
+        { ligne: 3, perimetre: 'tir a l’arc', titre: 'Commander les flèches' },
+        { ligne: 4, perimetre: 'Tir à l’arc', titre: 'Régler les cibles' },
+      ],
+      g: 'sport',
+    }
+    const second = await rapportDe(IMPORTER, lotSuivant)
+    expect(second.perimetresCrees).toEqual([])
+    expect(etats(second)).toEqual([
+      [3, 'IMPORTEE'],
+      [4, 'DEJA_IMPORTEE'],
+    ])
+    const avecTypes = await rapportDe(IMPORTER, { ...lotSuivant, t: true })
+    expect(etats(avecTypes)).toEqual([
+      [3, 'DEJA_IMPORTEE'],
+      [4, 'DEJA_IMPORTEE'],
+    ])
+    expect(avecTypes.tachesTypesAjoutees).toBe(2)
+  })
+
+  it('ne remplace pas des tâches types illisibles', async () => {
+    await prisma.perimetre.update({
+      where: { id: ids.natation },
+      data: { tachesTypes: { pas: 'valide' } },
+    })
+    const rapport = await rapportDe(IMPORTER, {
+      e: ids.edition,
+      l: [{ ligne: 2, perimetre: 'Natation', titre: 'Compter les bouées' }],
+      t: true,
+    })
+    expect(rapport.lignes[0]!.avertissements).toEqual([
+      'Les tâches types de ce périmètre sont illisibles : la tâche type n’est pas enregistrée.',
+    ])
+    expect(rapport.tachesTypesAjoutees).toBe(0)
+    expect(
+      (
+        await prisma.perimetre.findUniqueOrThrow({
+          where: { id: ids.natation },
+          select: { tachesTypes: true },
+        })
+      ).tachesTypes
+    ).toEqual({ pas: 'valide' })
+  })
 })

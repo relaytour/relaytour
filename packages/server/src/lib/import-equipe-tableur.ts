@@ -46,25 +46,37 @@ export async function importerEquipeDuTableur(
   options: {
     organisationId: string
     activiteId: string
-    annee: number
+    edition: { id: string; annee: number }
+    /** Seul l'admin de l'organisation apprend qu'une adresse est archivée (ADR 0031). */
+    adminOrganisation: boolean
     envoyerMails: boolean
     ecrire: boolean
   }
 ): Promise<RapportImportEquipe> {
+  const { organisationId, activiteId, edition } = options
   const perimetres = await prisma.perimetre.findMany({
-    where: { activiteId: options.activiteId, archivedAt: null },
+    where: { activiteId, archivedAt: null },
     select: { slug: true, nom: true },
   })
   const slugDe = new Map<string, string>()
+  const nomDe = new Map<string, string>()
   for (const p of perimetres) {
     slugDe.set(sansAccent(p.nom), p.slug)
     slugDe.set(p.slug, p.slug)
+    nomDe.set(p.slug, p.nom)
   }
 
+  // Première passe : ce que la ligne dit d'elle-même.
+  interface Candidat {
+    sortie: LigneRapport
+    nom: string
+    adresse: string
+    slugs: string[]
+    contact: boolean
+  }
   const sorties: LigneRapport[] = []
-  const personnes: PersonneEquipe[] = []
+  const candidats: Candidat[] = []
   const adresses = new Set<string>()
-  const contacts = new Set<string>()
   for (const ligne of lignes) {
     const sortie: LigneRapport = {
       ligne: ligne.ligne,
@@ -112,26 +124,109 @@ export async function importerEquipeDuTableur(
       continue
     }
     adresses.add(adresse)
-    // Un seul contact principal par périmètre : le premier du fichier le reste.
+    candidats.push({
+      sortie,
+      nom: nom.slice(0, 120),
+      adresse,
+      slugs,
+      contact: ligne.contactPrincipal,
+    })
+  }
+
+  // Seconde passe : ce que la base sait déjà des adresses du fichier, et les
+  // contacts principaux de la période.
+  const comptes = await prisma.user.findMany({
+    where: { email: { in: [...adresses] } },
+    select: { id: true, email: true },
+  })
+  const idDe = new Map(comptes.map(c => [c.email.toLowerCase(), c.id]))
+  const ids = comptes.map(c => c.id)
+  const [appartenances, rattachements, affectations, contactsEnBase] =
+    await Promise.all([
+      prisma.appartenance.findMany({
+        where: { organisationId, userId: { in: ids } },
+        select: { userId: true, archiveLe: true },
+      }),
+      prisma.rattachementActivite.findMany({
+        where: { activiteId, userId: { in: ids } },
+        select: { userId: true },
+      }),
+      prisma.affectation.findMany({
+        where: { editionId: edition.id, userId: { in: ids } },
+        select: { userId: true, perimetre: { select: { slug: true } } },
+      }),
+      prisma.affectation.findMany({
+        where: { editionId: edition.id, contactPrincipal: true },
+        select: { userId: true, perimetre: { select: { slug: true } } },
+      }),
+    ])
+  const appartenanceDe = new Map(appartenances.map(a => [a.userId, a]))
+  const rattaches = new Set(rattachements.map(r => r.userId))
+  const affecte = new Set(
+    affectations.map(a => `${a.userId}|${a.perimetre.slug}`)
+  )
+  const contactDe = new Map(
+    contactsEnBase.map(c => [c.perimetre.slug, c.userId])
+  )
+
+  const personnes: PersonneEquipe[] = []
+  const contactsDuFichier = new Set<string>()
+  for (const candidat of candidats) {
+    const { sortie, slugs } = candidat
+    const userId = idDe.get(candidat.adresse)
+    const appartenance =
+      userId === undefined ? undefined : appartenanceDe.get(userId)
+    if (appartenance?.archiveLe != null) {
+      sortie.etat = 'ECARTEE'
+      sortie.raison = options.adminOrganisation
+        ? i18n._(
+            'Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire.'
+          )
+        : i18n._('Cette adresse ne peut pas être importée.')
+      continue
+    }
+    // Un seul contact principal par périmètre : celui de la base le reste, puis le
+    // premier du fichier.
     const contactPrincipal: string[] = []
-    if (ligne.contactPrincipal) {
+    if (candidat.contact) {
       for (const slug of slugs) {
-        if (contacts.has(slug)) {
+        const nom = nomDe.get(slug) ?? slug
+        const enBase = contactDe.get(slug)
+        if (enBase !== undefined && enBase !== userId) {
+          sortie.avertissements.push(
+            i18n._(
+              'Le périmètre « {perimetre} » a déjà un contact principal : il le reste.',
+              { perimetre: nom }
+            )
+          )
+        } else if (contactsDuFichier.has(slug)) {
           sortie.avertissements.push(
             i18n._(
               'Le périmètre « {perimetre} » a déjà un contact principal plus haut dans le fichier.',
-              { perimetre: slug }
+              { perimetre: nom }
             )
           )
         } else {
-          contacts.add(slug)
+          contactsDuFichier.add(slug)
           contactPrincipal.push(slug)
         }
       }
     }
+    // Une personne déjà dans l'équipe, avec ces affectations et ce rôle de contact,
+    // n'a rien à recevoir : la ligne est déjà importée.
+    const deja =
+      userId !== undefined &&
+      appartenance !== undefined &&
+      rattaches.has(userId) &&
+      slugs.every(slug => affecte.has(`${userId}|${slug}`)) &&
+      contactPrincipal.every(slug => contactDe.get(slug) === userId)
+    if (deja) {
+      sortie.etat = 'DEJA_IMPORTEE'
+      continue
+    }
     personnes.push({
-      nom: nom.slice(0, 120),
-      adresse,
+      nom: candidat.nom,
+      adresse: candidat.adresse,
       affectations: slugs,
       contactPrincipal,
       souhaits: [],
@@ -151,9 +246,9 @@ export async function importerEquipeDuTableur(
   if (personnes.length === 0) return rapport
   try {
     const equipe = await importerEquipe(prisma, personnes, {
-      organisationId: options.organisationId,
-      activiteId: options.activiteId,
-      annee: options.annee,
+      organisationId,
+      activiteId,
+      annee: edition.annee,
       simulation: !options.ecrire,
       envoyerMails: options.envoyerMails,
     })
