@@ -1853,6 +1853,28 @@ const CAS: Cas[] = [
     variables: () => ({ a: a.activite }),
     attente: INTERDIT,
   },
+  // Tâches types et reconduction d'une période (ADR 0048).
+  {
+    operation: 'simulerTachesTypes',
+    query:
+      'query ($e: ID!) { simulerTachesTypes(editionId: $e) { tachesCreees } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'appliquerTachesTypes',
+    query:
+      'mutation ($e: ID!) { appliquerTachesTypes(editionId: $e) { tachesCreees } }',
+    variables: () => ({ e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'appliquerTachesTypes',
+    query:
+      'mutation ($e: ID!, $p: [ID!]) { appliquerTachesTypes(editionId: $e, perimetreIds: $p) { tachesCreees } }',
+    variables: () => ({ e: b.edition, p: [a.perimetre] }),
+    attente: REFUSE,
+  },
   {
     operation: 'delierDossier',
     query: 'mutation ($id: ID!) { delierDossier(id: $id) }',
