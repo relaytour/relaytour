@@ -1080,6 +1080,26 @@ msgid "Cette déclinaison a déjà été refusée. Un admin de l’activité peu
 msgstr "This derived task was already declined. An activity admin can enforce it."
 
 #. js-lingui-explicit-id
+#: src/orga/depot-contenu.ts
+msgid "L’archive ne contient pas le dossier activites/{slug}/."
+msgstr "The archive does not contain the activites/{slug}/ folder."
+
+#. js-lingui-explicit-id
+#: src/orga/depot-contenu.ts
+msgid "Le dossier de contenu contient des erreurs."
+msgstr "The content folder contains errors."
+
+#. js-lingui-explicit-id
+#: src/orga/depot-contenu.ts
+msgid "Des admins ont modifié le contenu dans l’application après la dernière synchronisation. Confirmez l’écrasement de ces modifications pour importer l’archive."
+msgstr "Admins changed the content in the application after the last synchronisation. Confirm that these changes may be overwritten to import the archive."
+
+#. js-lingui-explicit-id
+#: src/orga/depot-contenu.ts
+msgid "L’import a été refusé."
+msgstr "The import was refused."
+
+#. js-lingui-explicit-id
 #: src/orga/import-fiches.ts
 msgid "une fiche d’une autre activité porte ce slug"
 msgstr "a sheet from another activity has this slug"
@@ -1088,6 +1108,40 @@ msgstr "a sheet from another activity has this slug"
 #: src/orga/import-fiches.ts
 msgid "la fiche a été modifiée dans Relaytour"
 msgstr "the sheet was changed in Relaytour"
+
+#. js-lingui-explicit-id
+#: src/orga/route-depot-contenu.ts
+msgid "Erreur interne."
+msgstr "Internal error."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+#: src/orga/route-depot-contenu.ts
+msgid "Accès refusé."
+msgstr "Access denied."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+#: src/orga/route-depot-contenu.ts
+msgid "Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier."
+msgstr "This organization is read-only: you can view and export its data, but not change it."
+
+#. js-lingui-explicit-id
+#: src/orga/route-depot-contenu.ts
+msgid "Trop de dépôts en peu de temps. Réessayez dans quelques minutes."
+msgstr "Too many uploads in a short time. Try again in a few minutes."
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+#: src/orga/route-depot-contenu.ts
+msgid "L’archive dépasse {mo} Mo."
+msgstr "The archive exceeds {mo} MB."
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+#: src/orga/route-depot-contenu.ts
+msgid "Le fichier n’est pas une archive zip lisible."
+msgstr "The file is not a readable zip archive."
 
 #. js-lingui-explicit-id
 #: src/orga/taches-de-la-periode.ts
@@ -1644,16 +1698,6 @@ msgstr "You are becoming an admin of the activity {activite}: you manage its per
 #: src/lib/equipe.ts
 msgid "Vous devenez admin de l’organisation {organisation} : vous gérez toutes ses activités et ses comptes."
 msgstr "You are becoming an admin of the organization {organisation}: you manage all its activities and accounts."
-
-#. js-lingui-explicit-id
-#: src/lib/erreurs.ts
-msgid "Accès refusé."
-msgstr "Access denied."
-
-#. js-lingui-explicit-id
-#: src/lib/erreurs.ts
-msgid "Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier."
-msgstr "This organization is read-only: you can view and export its data, but not change it."
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
@@ -2337,6 +2381,51 @@ msgstr "This edition is archived. Its interests can no longer be edited."
 #: src/lib/souhaits.ts
 msgid "Un périmètre choisi est introuvable ou archivé."
 msgstr "A selected area cannot be found or is archived."
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+msgid "Le format zip64 n’est pas pris en charge."
+msgstr "The zip64 format is not supported."
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+msgid "L’archive contient plus de {nombre} fichiers."
+msgstr "The archive contains more than {nombre} files."
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+msgid "Chemin refusé dans l’archive : {nom}"
+msgstr "Path refused in the archive: {nom}"
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+msgid "Une archive chiffrée n’est pas prise en charge."
+msgstr "An encrypted archive is not supported."
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+msgid "Fichier en double dans l’archive : {nom}"
+msgstr "Duplicate file in the archive: {nom}"
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+msgid "L’archive dépasse {mo} Mo une fois décompressée."
+msgstr "The archive exceeds {mo} MB once decompressed."
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+msgid "Fichier illisible ou trop lourd dans l’archive : {nom}"
+msgstr "Unreadable or oversized file in the archive: {nom}"
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+msgid "Méthode de compression non prise en charge : {nom}"
+msgstr "Compression method not supported: {nom}"
+
+#. js-lingui-explicit-id
+#: src/lib/zip.ts
+msgid "Fichier abîmé dans l’archive : {nom}"
+msgstr "Damaged file in the archive: {nom}"
 
 #. js-lingui-explicit-id
 #: src/espace-fichiers/acces.ts

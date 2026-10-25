@@ -17,6 +17,7 @@ import {
 } from './context.ts'
 import { env } from './env.ts'
 import { routesEspaceFichiers } from './espace-fichiers/routes.ts'
+import { routeDepotContenu } from './orga/route-depot-contenu.ts'
 import { creerGestionnaireFlux } from './flux-http.ts'
 import { manifestApplication, slugDuManifest } from './lib/application.ts'
 import { lireAbonnement } from './lib/abonnements-agenda.ts'
@@ -396,6 +397,13 @@ async function contexteDeRequete(req: express.Request): Promise<AppContext> {
 // Espace de fichiers (ADR 0038) : retour de la connexion chez le fournisseur et
 // aperçu d'un document. Les routes vivent sous /medias/, déjà relayé par le proxy.
 routesEspaceFichiers(app, contexteDeRequete, env.ORIGINE_ORGA)
+
+// Dépôt d'un dossier de contenu (ADR 0049) : l'archive dépasse la borne d'une
+// requête GraphQL et passe par sa propre route.
+routeDepotContenu(app, contexteDeRequete, [
+  ...env.CORS_ORIGIN,
+  ...(env.ORIGINE_ORGA === undefined ? [] : [env.ORIGINE_ORGA]),
+])
 
 app.use(
   '/graphql',
