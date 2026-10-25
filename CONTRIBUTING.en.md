@@ -19,8 +19,9 @@ This file summarizes the repository rules in English. The French [CONTRIBUTING.m
 - `packages/tokens`: theme model and default themes. `packages/commun`: rules shared by the server and the organizer workspace.
 - `packages/database`: Prisma 6 on MariaDB 11.8.
 - `content/exemple`: a fictional sample organization. Real organization content lives outside this repository.
+- `content/exemple-en`: the same sample organization in English, with the same identifiers. The English screenshots of the website use it.
 - `infra/`: minimal reference deployment. Real operations live in a separate repository (ADR 0007).
-- `site/`: the website published on GitHub Pages, with its English version in `site/en/`.
+- `site/`: the website published on GitHub Pages, with its English version in `site/en/`. `outils/captures.mjs --langue en` takes the English screenshots (`site/en/captures/`).
 
 ## Commands
 
@@ -70,7 +71,7 @@ Each rule comes from a real incident or an identified risk. The French file give
 Each pull request brings:
 
 - `yarn check` and `yarn test` passing; `test:integration` too for a server change.
-- A release note fragment for a visible change (`yarn versionner noter …`, see the French file).
+- A release note fragment for a visible change (`yarn versionner noter …`, see the French file). A note for the organizers can carry its English version in an `en:` block, with the same fields as `fr:`; `--titre-en` starts it. Without it, the note shows in French, and `valider` reports it without failing.
 - A screenshot for an interface change, taken with the sample content and fictional accounts.
 - A refusal test for an access-control change.
 - Up-to-date generated contracts and translation catalogs.

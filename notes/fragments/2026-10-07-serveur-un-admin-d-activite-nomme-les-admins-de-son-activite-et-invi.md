@@ -13,6 +13,15 @@ fr:
     retire les admins de ses activités, parmi les personnes de son équipe. Il
     ne modifie ni les affectations ni les souhaits d'un admin de l'organisation.
     Une invitation peut porter une affectation, sans périmètre souhaité.
+en:
+  titre: >-
+    An activity admin names the admins of their activity and invites with an
+    appointment
+  texte: >-
+    An activity admin can now read who administers the organization. They name
+    and remove the admins of their activities, among the people of their team.
+    They do not change the appointments or interests of an organization admin.
+    An invitation can carry an appointment, without an area of interest.
 ---
 
 ADR 0019. Nouvelle requête `adminsOrganisation` (scope `gestion`). `estAdmin` se

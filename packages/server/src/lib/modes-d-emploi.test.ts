@@ -53,6 +53,13 @@ describe('listeDesModesDEmploi', () => {
     expect(listeDesModesDEmploi(site, 'en')).toBe(
       'https://relaytour.org/en/modes-d-emploi/'
     )
+    // Sans barre finale, l'adresse du site reste reconnue.
+    expect(
+      listeDesModesDEmploi(
+        { MODES_D_EMPLOI_URL: 'https://relaytour.org/modes-d-emploi' },
+        'en'
+      )
+    ).toBe('https://relaytour.org/en/modes-d-emploi/')
   })
 
   it('suit la liste anglaise d’un hébergeur, sinon sa liste française', () => {

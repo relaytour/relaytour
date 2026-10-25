@@ -13,6 +13,14 @@ fr:
     arrive au contact de l'activité concernée. Les mails de toute
     l'organisation renvoient les réponses au contact de l'organisation. Sans
     contact déclaré, les réponses arrivent toujours à l'adresse d'expédition.
+en:
+  titre: >-
+    Replies to emails reach the activity’s contact
+  texte: >-
+    When a member replies to an invitation or to a task email, the reply reaches
+    the contact of the activity concerned. Emails for the whole organization
+    send replies to the organization’s contact. With no contact declared,
+    replies always reach the sending address.
 ---
 
 - En-tête `Reply-To` posé par `expedier()` à partir de `contactRecrutement`,

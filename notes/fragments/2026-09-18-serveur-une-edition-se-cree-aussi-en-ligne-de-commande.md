@@ -13,6 +13,14 @@ fr:
     dates, sans passer par l'espace organisateur. Une installation neuve peut
     ainsi importer ses tâches types dès le premier démarrage. Une édition déjà
     présente n'est jamais modifiée.
+en:
+  titre: >-
+    An edition can also be created from the command line
+  texte: >-
+    The edition:creer command creates an edition with its year, name, and dates,
+    without using the organizer workspace. A new installation can thus import
+    its task templates from the first start. An existing edition is never
+    modified.
 ---
 
 - Script `packages/server/scripts/creer-edition.ts`, livré dans l'image sous

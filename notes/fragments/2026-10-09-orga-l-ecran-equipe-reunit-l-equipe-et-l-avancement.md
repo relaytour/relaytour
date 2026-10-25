@@ -16,6 +16,16 @@ fr:
     ces réglages en changeant de vue. Le nom d'une carte ouvre la page du
     périmètre, et le bouton « Gérer l'équipe » de cette page vous ramène à sa
     carte.
+en:
+  titre: >-
+    The Team screen combines the team and progress
+  texte: >-
+    The “Team” screen has two views: “Team” and “Progress”. The “Progress” entry
+    leaves the menu, and your old bookmarks lead to this view. Both views share
+    the period, a filter by area group, a search by area or person name, and a
+    sort order. You keep these settings when you switch views. The name on a
+    card opens the area’s page, and the “Manage the team” button on that page
+    brings you back to its card.
 ---
 
 `pages/admin/AvancementGlobal.tsx` est supprimée : `pages/admin/Equipe.tsx` lit

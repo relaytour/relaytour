@@ -14,6 +14,14 @@ fr:
     verre posées sur un fond clair. Les couleurs de vos périmètres restent
     celles de votre organisation. Aucune police n'est chargée depuis un
     site tiers.
+en:
+  titre: >-
+    The organizer workspace takes on the Relaytour identity
+  texte: >-
+    The organizer workspace adopts a neutral identity: a logo, a teal and
+    terracotta palette, the Hanken Grotesk font, and glass surfaces on a light
+    background. The colors of your areas remain those of your organization. No
+    font is loaded from a third-party site.
 ---
 
 Thème par défaut dans `@relaytour/tokens` (modèle `Theme`, variables CSS `--rt-*`,

@@ -79,6 +79,10 @@ Emails go out in the language of their recipient. Locally, Mailpit shows them at
 - A fixed text of an email template (`packages/server/src/courriel/gabarits/`) is written between double brackets, `[[Bonjour {{nom}},]]`, and lands in the server catalog. Translate it in the catalog, not in the template.
 - The website exists in English under `site/en/`. A new website language starts as a copy of `site/en/` into `site/<language>/`, then each page is translated. Relative links and screenshots keep working.
 
+## Release notes
+
+A release note shown in the organizer workspace (`notes/fragments/`, audience `organisateurs`) can carry its English version in an `en:` block, with the same fields as `fr:`. Without it, the note shows in French, and `yarn versionner valider` reports it. Other languages have no block yet: their readers see the note in French.
+
 ## Review
 
 A translation is reviewed like code. A misleading link, address or instruction in a catalog blocks the pull request (ADR 0047).

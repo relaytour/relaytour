@@ -10,6 +10,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `packages/orga` : espace organisateur, SPA React 19 + Vite + React Router 7 + Apollo Client 4 + antd 6. Types GraphQL générés dans `src/gql/`.
 - `packages/tokens` : modèle de thème, thème par défaut et thème alternatif de Relaytour, contraste. Le serveur le lit pour valider et compléter le thème d'une organisation ; l'espace organisateur le lit pour le thème de repli (ADR 0006).
 - `packages/commun` : règles pures partagées par le serveur et l'espace organisateur, comme le rapprochement des personnes d'un import (ADR 0042).
+- `content/exemple-en` : la même organisation d'exemple en anglais, avec les mêmes identifiants. Les captures anglaises du site l'utilisent.
 - `content/exemple` : organisation d'exemple, fictive et anonyme (`organisation.yaml`, deux activités, leurs périmètres, fiches et tâches types). Le contenu réel d'une organisation vit hors du dépôt (voir son README).
 - `packages/database` : Prisma 6 sur MariaDB 11.8. Le client généré (`src/generated/`) n'est jamais commité.
 - `infra/` : déploiement de référence minimal (Compose, Caddyfile d'exemple, étapes). L'exploitation réelle vit hors du dépôt (ADR 0007).
@@ -17,7 +18,7 @@ Ce fichier fixe les règles du dépôt : décisions arrêtées, invariants techn
 - `outils/versionner.mjs` et `notes/` : journal des changements et publication des versions (`noter`, `valider`, `compiler`, `publier`, `release`).
 - `docs/adr/` : décisions d'architecture. `docs/design-system.md` : identité, matériau et composants.
 - `site/` : site de présentation publié sur GitHub Pages. `outils/site.mjs` y écrit les jetons, les palettes et les polices ; la CI vérifie qu'il est à jour.
-- `site/captures/` et `site/captures/mobile/` : les écrans des modes d'emploi, en version ordinateur et en version téléphone. `outils/captures.mjs` produit les deux. La version téléphone se prend dans l'application installée sur un simulateur iOS (macOS, Xcode et `cwebp`) : le script relaie l'espace organisateur à l'adresse de `--origine` et pilote l'application par ce relais. Le bouton « Ordinateur / Téléphone » du site (`site/bascule.js`) passe de l'une à l'autre.
+- `site/captures/` et `site/captures/mobile/` : les écrans des modes d'emploi, en version ordinateur et en version téléphone. `outils/captures.mjs` produit les deux. La version téléphone se prend dans l'application installée sur un simulateur iOS (macOS, Xcode et `cwebp`) : le script relaie l'espace organisateur à l'adresse de `--origine` et pilote l'application par ce relais. Le bouton « Ordinateur / Téléphone » du site (`site/bascule.js`) passe de l'une à l'autre. Les captures anglaises vivent dans `site/en/captures/` : `--langue en` les prend sur une instance au contenu `content/exemple-en`.
 - `docs/feuille-de-route.md` et `docs/publication.md` : évolutions envisagées, liste de publication.
 
 ## Commandes
@@ -47,6 +48,7 @@ node outils/captures.mjs --compte referent --organisation rencontres-de-la-valle
 node outils/captures.mjs --compte admin-activite --appel <jeton> --espace <jeton>   # avec la page d'un appel à bénévoles et un espace bénévole, jetons copiés depuis l'écran « Bénévoles »
 node outils/captures.mjs --largeur 375 --hauteur 812 --mobile --sortie /tmp/captures-mobile   # mêmes écrans dans un navigateur de téléphone, pour un contrôle rapide
 node outils/captures.mjs --simulateur Relaytour --amont http://localhost:4571 --sortie site/captures/mobile   # captures téléphone du site, prises dans l'application installée sur un simulateur iOS
+node outils/captures.mjs --langue en --origine http://localhost:5305   # captures anglaises (site/en/captures/), sur une instance au contenu content/exemple-en
 yarn versionner valider
 yarn versionner compiler   # journaux commités
 yarn versionner publier --simulation   # numéro de la prochaine version, sans rien écrire
@@ -243,9 +245,10 @@ Relaytour accueille les contributions : correctifs, évolutions, documentation, 
   yarn versionner noter --cible orga --type fonctionnalite --audience organisateurs --titre "Les fiches s'affichent en liste condensée"
   ```
   La cible vaut `serveur` ou `orga`. Le type vaut `fonctionnalite`, `correctif`, `rupture`, `securite`, `performance` ou `interne`. Complétez ensuite le texte du fragment créé dans `notes/fragments/`.
+- Une note d'audience `organisateurs` peut porter sa version anglaise dans un bloc `en:`, avec les mêmes champs que `fr:` (ADR 0047). L'option `--titre-en` de `noter` l'amorce. Sans ce bloc, l'espace organisateur affiche la note en français aux personnes qui lisent l'anglais, et `yarn versionner valider` le signale sans échouer.
 - Une note d'audience `organisateurs` s'affiche dans l'espace organisateur (ADR 0021). Son champ `role` désigne le rôle le moins étendu qu'elle concerne : `referent` (valeur par défaut, lue par tous), `admin-activite` ou `admin-organisation`. L'option `--role` de `noter` l'écrit. Les audiences `interne` et `public` ne s'affichent pas dans l'application.
 - Un changement d'interface joint une capture de l'écran, faite avec le contenu d'exemple (`content/exemple`) et des comptes fictifs.
-- Un changement d'interface respecte les règles de la section « Mobile » de `docs/design-system.md`. Quand l'écran figure dans les modes d'emploi, la PR met à jour ses deux captures du site, `site/captures/` et `site/captures/mobile/`, et les cite dans sa description.
+- Un changement d'interface respecte les règles de la section « Mobile » de `docs/design-system.md`. Quand l'écran figure dans les modes d'emploi, la PR met à jour ses deux captures du site, `site/captures/` et `site/captures/mobile/`, et les cite dans sa description. Les captures anglaises de `site/en/captures/` se reprennent avec `--langue en`.
 - Un changement de contrôle d'accès joint un test qui prouve le refus (invariant 11).
 - Les contrats générés sont à jour (`yarn codegen`, invariant 9).
 - Aucun contenu d'organisation, aucune donnée personnelle, aucun secret (invariants 1 et 2).
