@@ -34,7 +34,7 @@ Les tâches types d'un périmètre ne deviennent des tâches datées que par la 
 | Inviter l'équipe | Une autre personne que l'admin fait partie de l'équipe (ADR 0045) |
 
 - Le serveur calcule l'état de chaque étape à partir des données, sauf pour la première étape. Une étape faite par un autre chemin (un autre écran, un import, la ligne de commande) est donc cochée.
-- Chaque étape ouvre un volet qui contient le formulaire de l'écran concerné. L'admin n'a pas besoin de quitter « Mon espace ».
+- Chaque étape ouvre une fenêtre qui contient le formulaire de l'écran concerné. L'admin n'a pas besoin de quitter « Mon espace ».
 - L'étape « Préparer les tâches » propose plusieurs voies : appliquer les tâches types, importer un tableur (ADR 0049) ou créer une tâche dans un périmètre.
 - Un admin masque la liste pour toute l'activité, et peut l'afficher de nouveau depuis le menu du compte. La liste disparaît d'elle-même quand toutes les étapes sont faites.
 - Un admin de l'organisation lit aussi un lien vers l'écran « Activités », pour créer une autre activité.
@@ -44,8 +44,10 @@ Les tâches types d'un périmètre ne deviennent des tâches datées que par la 
 ### Le modèle de départ
 
 - L'étape « Créer les périmètres » propose un modèle de départ, ou un départ à vide.
-- Un modèle de départ est un dossier de contenu au format des dossiers d'organisation (ADR 0003), livré avec le logiciel sous `content/modeles-de-depart/`. Il contient des périmètres, leurs tâches types et des fiches communes.
-- Le premier modèle décrit un événement multisports fictif. Il reste générique et ne reprend le contenu d'aucune organisation réelle (invariant du dépôt public).
+- Un modèle de départ est une activité d'un dossier de contenu au format des dossiers d'organisation (ADR 0003), livrée avec le logiciel. Elle apporte des périmètres, leurs tâches types et des fiches.
+- Le premier modèle décrit un événement multisports fictif : c'est l'activité « rencontres » du contenu d'exemple (`content/exemple`, et `content/exemple-en` pour une requête en anglais). La CI valide déjà ces dossiers, et aucune copie n'est à tenir à jour. Le modèle reste générique et ne reprend le contenu d'aucune organisation réelle (invariant du dépôt public).
+- Les groupes du modèle que l'activité ne déclare pas s'ajoutent à ses groupes. Les libellés déjà choisis par l'admin ne changent pas.
+- Une fiche d'une autre activité qui porte le même slug n'est ni déplacée ni remplacée : elle se signale en conflit, et le modèle s'applique sans elle.
 - Un admin applique un modèle de départ seulement à une activité sans périmètre. Le modèle ne fusionne donc jamais avec un contenu existant.
 - L'application passe par l'import des modèles, restreint à l'activité. Elle ne modifie ni l'identité de l'organisation ni les autres activités.
 - Si une période existe déjà, les tâches de cette période sont créées dans la foulée, à partir des tâches types du modèle.
@@ -63,6 +65,8 @@ Les tâches types d'un périmètre ne deviennent des tâches datées que par la 
 - Une tâche reconduite garde son titre, sa description, sa fiche liée, son périmètre et sa tâche type d'origine.
 - Son échéance garde le même écart en jours avec le premier jour de la période. Sa phase suit donc cette nouvelle date (ADR 0025). Une tâche sans échéance reste sans échéance.
 - Une tâche reconduite repart à faire. Elle ne garde ni son statut, ni ses assignations, ni ses commentaires, ni son journal.
+- Une tâche créée depuis une tâche type ou reconduite n'a pas d'auteur, comme une tâche importée par la commande. Elle ne rapporte donc aucun point de création à l'admin qui l'applique.
+- Une tâche ne garde sa fiche que si la règle de liaison l'accepte encore : une fiche commune de l'activité, une fiche de son périmètre ou, pour une déclinaison, la fiche de sa tâche partagée.
 - Une tâche partagée est reconduite avec ses déclinaisons, sauf celles qui avaient été refusées. La reconduction est faite par un admin : ses déclinaisons sont donc acceptées d'office (ADR 0026).
 - Les effectifs souhaités des périmètres sont reconduits.
 - Les affectations ne sont pas reconduites. Une personne change souvent de rôle d'une année à l'autre, et une affectation envoie un mail d'équipe.
@@ -79,10 +83,10 @@ Les tâches types d'un périmètre ne deviennent des tâches datées que par la 
   - la requête `simulerModeleDeDepart` et la mutation `appliquerModeleDeDepart(activiteId, modele)`.
 - Comme pour l'import des fiches, la simulation est une requête qui suit le même chemin que la mutation, sans rien écrire.
 - La création des tâches à partir des tâches types sort de `orga/importer.ts` dans une fonction partagée par la commande et par l'API.
-- Trois formulaires deviennent des composants partagés avec les volets des « Premiers pas » : la création d'une période, le réglage d'un périmètre et l'invitation.
-- La CI valide chaque modèle de départ avec `orga:valider`.
+- Les fenêtres de création d'une période et de réglage d'un périmètre sont partagées avec les « Premiers pas ». Une invitation courte (nom, adresse, périmètres facultatifs) complète l'écran Personnes, qui garde les autres réglages.
+- La CI valide chaque modèle de départ avec `orga:valider`, puisqu'il appartient au contenu d'exemple. Le Dockerfile copie `content/exemple` et `content/exemple-en` dans l'image du serveur.
 - La feuille de route ne garde que la note de passation du point « Transmission d'une période à la suivante ».
-- Les modes d'emploi des admins décrivent les premiers pas et la reconduction. Le glossaire gagne « reconduire » et « modèle de départ ».
+- Les modes d'emploi des admins décrivent les premiers pas et la reconduction. Le glossaire gagne « reprise des tâches », le mot affiché par l'interface, et « modèle de départ ».
 
 ## Revue de sécurité
 
