@@ -62,13 +62,19 @@ describe('avecLangue', () => {
     expect(langueCourante()).toBe('fr')
   })
 
-  it('traduit avec ses variables, et se replie sur le français', () => {
+  it('traduit avec ses variables dans la langue de l’appel', () => {
     const texte = (langue: 'fr' | 'en') =>
       avecLangue(langue, () =>
-        i18n._('{libelle} est obligatoire.', { libelle: 'Le nom' })
+        i18n._('{libelle} est obligatoire.', { libelle: 'Name' })
       )
-    expect(texte('fr')).toBe('Le nom est obligatoire.')
-    // Un message absent du catalogue anglais garde son texte français.
-    expect(texte('en')).toMatch(/obligatoire/)
+    expect(texte('fr')).toBe('Name est obligatoire.')
+    expect(texte('en')).toBe('Name is required.')
+  })
+
+  it('garde le texte français d’un message absent du catalogue', () => {
+    const texte = avecLangue('en', () =>
+      i18n._('Message absent du catalogue : {valeur}.', { valeur: 42 })
+    )
+    expect(texte).toBe('Message absent du catalogue : 42.')
   })
 })

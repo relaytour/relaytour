@@ -7,7 +7,7 @@
 
 [[Vous recevez ce message parce que cette tâche vous est assignée.]]
 
-[[Voir le périmètre]] : {{lienPerimetre}}
+[[Voir le périmètre : {{lienPerimetre}}]]
 
 --
 [[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace

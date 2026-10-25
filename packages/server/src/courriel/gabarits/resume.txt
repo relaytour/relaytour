@@ -12,7 +12,7 @@
 
 {{echeances}}
 
-[[Ouvrir mon espace]] : {{lienConnexion}}
+[[Ouvrir mon espace : {{lienConnexion}}]]
 
 [[Vous pouvez changer la fréquence de ce résumé ou le désactiver dans vos préférences :]] {{lienPreferences}}
 

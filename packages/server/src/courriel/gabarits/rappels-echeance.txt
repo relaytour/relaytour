@@ -6,7 +6,7 @@
 
 {{rappels}}
 
-[[Ouvrir mon espace]] : {{lienConnexion}}
+[[Ouvrir mon espace : {{lienConnexion}}]]
 
 [[Vous pouvez désactiver ces rappels dans vos préférences :]] {{lienPreferences}}
 

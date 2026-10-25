@@ -12,6 +12,7 @@
 // fragment sans champ `version` appartient à la prochaine version ; `publier`
 // lui attribue le numéro qu'elle calcule.
 
+import { spawnSync } from 'node:child_process'
 import {
   existsSync,
   mkdirSync,
@@ -542,6 +543,19 @@ function commandePublier(options) {
       console.log(`    ${f.champs.type.padEnd(15)} ${f.id}`)
   }
   if (simulation) return
+
+  // Une version ne part qu'avec un catalogue anglais complet (ADR 0047). Un dépôt
+  // sans catalogues (les tests de cet outil) n'a rien à vérifier.
+  if (existsSync(join(RACINE, 'packages/orga/src/locales'))) {
+    const verification = spawnSync(
+      process.execPath,
+      [join(RACINE, 'outils/langues.mjs'), 'verifier', 'en'],
+      { stdio: 'inherit' }
+    )
+    if (verification.status !== 0) {
+      mourir('le catalogue anglais doit être complet avant une publication')
+    }
+  }
 
   for (const fragment of aPublier) rattacher(fragment, version)
   for (const relatif of PAQUETS_VERSIONNES) relever(relatif, version)
