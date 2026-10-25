@@ -1,5 +1,7 @@
 import { ArrowRightOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Empty, Skeleton } from 'antd'
 import { Link, useNavigate } from 'react-router'
 
@@ -49,10 +51,8 @@ const MES_TACHES = graphql(`
   }
 `)
 
-const pluriel = (n: number, un: string, plusieurs: string) =>
-  `${n} ${n > 1 ? plusieurs : un}`
-
 export default function MonEspace() {
+  const { t } = useLingui()
   const { lien, periode, libelleGroupe, gere } = useActivite()
   const navigate = useNavigate()
   const { data: session } = useQuery(MOI)
@@ -64,28 +64,43 @@ export default function MonEspace() {
     skip: !edition,
   })
   const moiId = session?.moi?.id ?? ''
+  const prenomPersonne = prenom(session?.moi?.nom)
   // Les admins de l'activité gèrent les assignations de toute personne.
   const estAdmin = gere
   const affectations = data?.moi?.affectations ?? []
   const mesTaches = data?.mesTaches ?? []
   const aPrendre = data?.tachesAPrendre ?? []
-  const enRetard = mesTaches.filter(t => t.enRetard).length
+  const enRetard = mesTaches.filter(tache => tache.enRetard).length
   const referentsDe = (perimetreId: string) =>
     affectations.find(a => a.perimetre.id === perimetreId)?.perimetre
       .referents ?? []
 
+  const nombreMesTaches = mesTaches.length
+  const nombreAPrendre = aPrendre.length
+  const cettePeriode = periode.cette
+  const aucunePeriode = periode.Aucune
+  const nomEdition = edition?.nom ?? ''
+  const debutEdition = edition ? dateCourte(edition.debut) : ''
+  const finEdition = edition ? dateCourte(edition.fin) : ''
+
   const sousTitre = edition
-    ? `${edition.nom}, du ${dateCourte(edition.debut)} au ${dateCourte(edition.fin)}.`
+    ? t`${nomEdition}, du ${debutEdition} au ${finEdition}.`
     : chargementEdition
       ? ' '
-      : `${periode.Aucune} n’est en préparation.`
+      : t`${aucunePeriode} n’est en préparation.`
 
   return (
     <>
       <Titre
         sousTitre={
           data && edition
-            ? `${sousTitre} ${pluriel(mesTaches.length, 'tâche ouverte vous est assignée', 'tâches ouvertes vous sont assignées')}.`
+            ? t`${nomEdition}, du ${debutEdition} au ${finEdition}. ${plural(
+                nombreMesTaches,
+                {
+                  one: '# tâche ouverte vous est assignée',
+                  other: '# tâches ouvertes vous sont assignées',
+                }
+              )}.`
             : sousTitre
         }
         actions={
@@ -95,12 +110,12 @@ export default function MonEspace() {
               iconPlacement="end"
               onClick={() => navigate(lien('/retroplanning'))}
             >
-              Voir le rétroplanning
+              <Trans>Voir le rétroplanning</Trans>
             </Button>
           )
         }
       >
-        Bonjour {prenom(session?.moi?.nom)}
+        <Trans>Bonjour {prenomPersonne}</Trans>
       </Titre>
 
       {(loading && !data) || (chargementEdition && !courante) ? (
@@ -110,15 +125,17 @@ export default function MonEspace() {
           cote={
             <>
               <Panneau
-                titre="Vos périmètres"
+                titre={t`Vos périmètres`}
                 extra={<span className="rt-compte">{edition.annee}</span>}
               >
                 {affectations.length === 0 ? (
                   <p className="rt-texte-secondaire">
-                    Vous n’êtes affecté·e à aucun périmètre pour {periode.cette}
-                    . Les admins gèrent les affectations. Dans{' '}
-                    <Link to={lien('/perimetres')}>Tous les périmètres</Link>,
-                    vous découvrez les périmètres et formulez vos souhaits.
+                    <Trans>
+                      Vous n’êtes affecté·e à aucun périmètre pour{' '}
+                      {cettePeriode}. Les admins gèrent les affectations. Dans{' '}
+                      <Link to={lien('/perimetres')}>Tous les périmètres</Link>,
+                      vous découvrez les périmètres et formulez vos souhaits.
+                    </Trans>
                   </p>
                 ) : (
                   affectations.map(({ id, perimetre }) => (
@@ -174,12 +191,18 @@ export default function MonEspace() {
           }
         >
           <Section
-            titre="Vos tâches"
-            compte={`${pluriel(mesTaches.length, 'ouverte', 'ouvertes')}${enRetard > 0 ? ` · ${enRetard} en retard` : ''}`}
+            titre={t`Vos tâches`}
+            compte={
+              enRetard > 0
+                ? t`${plural(nombreMesTaches, { one: '# ouverte', other: '# ouvertes' })} · ${enRetard} en retard`
+                : t`${plural(nombreMesTaches, { one: '# ouverte', other: '# ouvertes' })}`
+            }
           >
             {mesTaches.length === 0 ? (
               <div className="rt-verre rt-panneau">
-                <Empty description="Aucune tâche ouverte ne vous est assignée." />
+                <Empty
+                  description={t`Aucune tâche ouverte ne vous est assignée.`}
+                />
               </div>
             ) : (
               mesTaches.map(tache => (
@@ -199,12 +222,11 @@ export default function MonEspace() {
 
           {aPrendre.length > 0 && (
             <Section
-              titre="À prendre dans vos périmètres"
-              compte={pluriel(
-                aPrendre.length,
-                'tâche sans personne',
-                'tâches sans personne'
-              )}
+              titre={t`À prendre dans vos périmètres`}
+              compte={t`${plural(nombreAPrendre, {
+                one: '# tâche sans personne',
+                other: '# tâches sans personne',
+              })}`}
             >
               {aPrendre.map(tache => (
                 <TacheCarte

@@ -1,4 +1,5 @@
 import { useApolloClient, useQuery } from '@apollo/client/react'
+import { useLingui } from '@lingui/react/macro'
 import { Card, ConfigProvider, Result, Spin } from 'antd'
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import { Navigate, useLocation, useParams } from 'react-router'
@@ -27,6 +28,7 @@ const PAGES = new Set([
 ])
 
 function AucuneActivite() {
+  const { t } = useLingui()
   // La session est déjà en cache : la garde de session l'a chargée.
   const moi = useQuery(MOI).data?.moi
   const invitations = useMesInvitations()
@@ -36,21 +38,21 @@ function AucuneActivite() {
     moi?.estAdmin ? (
       <Result
         status="info"
-        title="Cette organisation n’a encore aucune activité."
-        subTitle="Un admin de l’organisation crée la première activité, ou l’import du dépôt d’organisation la crée."
+        title={t`Cette organisation n’a encore aucune activité.`}
+        subTitle={t`Un admin de l’organisation crée la première activité, ou l’import du dépôt d’organisation la crée.`}
       />
     ) : (
       <>
         <Result
           status="info"
-          title="Aucune activité ne vous est encore ouverte."
-          subTitle="Un admin vous ouvre une activité en vous affectant à l’un de ses périmètres."
+          title={t`Aucune activité ne vous est encore ouverte.`}
+          subTitle={t`Un admin vous ouvre une activité en vous affectant à l’un de ses périmètres.`}
         />
         {/* Cet écran n'a pas de menu du compte : une invitation d'une autre
             organisation (ADR 0030) se lit et se décide ici. */}
         {invitations.length > 0 && (
           <Card
-            title="Vos invitations"
+            title={t`Vos invitations`}
             style={{ maxWidth: 560, margin: '0 auto 24px' }}
           >
             <InvitationsRecues />
@@ -66,9 +68,10 @@ function AucuneActivite() {
  * lien de mail) vers la même page de l'activité par défaut.
  */
 export function VersActivite() {
+  const { t } = useLingui()
   const { data, loading } = useQuery(ACTIVITES)
   const { pathname, search, hash } = useLocation()
-  if (loading) return <Spin fullscreen description="Chargement" />
+  if (loading) return <Spin fullscreen description={t`Chargement`} />
   const cible = activiteParDefaut(data?.activites ?? [])
   if (cible === undefined) return <AucuneActivite />
   // Une adresse inconnue qui porte déjà une activité mène à l'accueil de cette
@@ -90,6 +93,7 @@ export default function FournisseurActivite({
 }: {
   children: ReactNode
 }) {
+  const { t } = useLingui()
   const apollo = useApolloClient()
   const { activite: slug = '' } = useParams()
   const { pathname, search, hash } = useLocation()
@@ -135,7 +139,7 @@ export default function FournisseurActivite({
   )
 
   if (loading && data === undefined) {
-    return <Spin fullscreen description="Chargement" />
+    return <Spin fullscreen description={t`Chargement`} />
   }
   if (valeur === null) {
     const cible = activiteParDefaut(activites)

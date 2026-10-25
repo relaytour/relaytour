@@ -7,9 +7,432 @@ msgstr ""
 "X-Generator: @lingui/cli\n"
 "Language: fr\n"
 
+#: src/pages/MonEspace.tsx
+msgid "{aucunePeriode} n’est en préparation."
+msgstr "{aucunePeriode} n’est en préparation."
+
+#: src/lib/conflit.ts
+msgid "{auteur} a enregistré une autre version de cette fiche {moment}."
+msgstr "{auteur} a enregistré une autre version de cette fiche {moment}."
+
+#: src/lib/conflit.ts
+msgid "{auteur} a enregistré une autre version de cette fiche."
+msgstr "{auteur} a enregistré une autre version de cette fiche."
+
+#: src/lib/conflit.ts
+msgid "{auteur} a modifié cette tâche {moment}. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne."
+msgstr "{auteur} a modifié cette tâche {moment}. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne."
+
+#: src/lib/conflit.ts
+msgid "{auteur} a modifié cette tâche. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne."
+msgstr "{auteur} a modifié cette tâche. « Écraser » enregistre votre version à la place de la sienne. « Recharger » abandonne votre saisie et affiche la sienne."
+
+#. Participe accordé avec le mot qui désigne la période.
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {archivée} SAISON {archivée} other {archivé}}"
+msgstr "{nature, select, EVENEMENT {archivée} SAISON {archivée} other {archivé}}"
+
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {Aucune édition} SAISON {Aucune saison} other {Aucun mandat}}"
+msgstr "{nature, select, EVENEMENT {Aucune édition} SAISON {Aucune saison} other {Aucun mandat}}"
+
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {cette édition} SAISON {cette saison} other {ce mandat}}"
+msgstr "{nature, select, EVENEMENT {cette édition} SAISON {cette saison} other {ce mandat}}"
+
+#. Participe accordé avec le mot qui désigne la période.
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {créée} SAISON {créée} other {créé}}"
+msgstr "{nature, select, EVENEMENT {créée} SAISON {créée} other {créé}}"
+
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {d’une édition à l’autre} SAISON {d’une saison à l’autre} other {d’un mandat à l’autre}}"
+msgstr "{nature, select, EVENEMENT {d’une édition à l’autre} SAISON {d’une saison à l’autre} other {d’un mandat à l’autre}}"
+
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {de l’édition} SAISON {de la saison} other {du mandat}}"
+msgstr "{nature, select, EVENEMENT {de l’édition} SAISON {de la saison} other {du mandat}}"
+
+#. Le mot qui désigne une période d’une activité, en minuscules.
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {édition} SAISON {saison} other {mandat}}"
+msgstr "{nature, select, EVENEMENT {édition} SAISON {saison} other {mandat}}"
+
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {Édition} SAISON {Saison} other {Mandat}}"
+msgstr "{nature, select, EVENEMENT {Édition} SAISON {Saison} other {Mandat}}"
+
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {Éditions} SAISON {Saisons} other {Mandats}}"
+msgstr "{nature, select, EVENEMENT {Éditions} SAISON {Saisons} other {Mandats}}"
+
+#. Participe accordé avec le mot qui désigne la période.
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {enregistrée} SAISON {enregistrée} other {enregistré}}"
+msgstr "{nature, select, EVENEMENT {enregistrée} SAISON {enregistrée} other {enregistré}}"
+
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {l’édition} SAISON {la saison} other {le mandat}}"
+msgstr "{nature, select, EVENEMENT {l’édition} SAISON {la saison} other {le mandat}}"
+
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {Nouvelle édition} SAISON {Nouvelle saison} other {Nouveau mandat}}"
+msgstr "{nature, select, EVENEMENT {Nouvelle édition} SAISON {Nouvelle saison} other {Nouveau mandat}}"
+
+#: src/lib/activite.ts
+msgid "{nature, select, EVENEMENT {une édition} SAISON {une saison} other {un mandat}}"
+msgstr "{nature, select, EVENEMENT {une édition} SAISON {une saison} other {un mandat}}"
+
+#: src/pages/MonEspace.tsx
+msgid "{nombreAPrendre, plural, one {# tâche sans personne} other {# tâches sans personne}}"
+msgstr "{nombreAPrendre, plural, one {# tâche sans personne} other {# tâches sans personne}}"
+
+#: src/composants/MenuCompte.tsx
+msgid "{nombreInvitations, plural, one {# invitation en attente} other {# invitations en attente}}"
+msgstr "{nombreInvitations, plural, one {# invitation en attente} other {# invitations en attente}}"
+
+#: src/pages/MonEspace.tsx
+msgid "{nombreMesTaches, plural, one {# ouverte} other {# ouvertes}}"
+msgstr "{nombreMesTaches, plural, one {# ouverte} other {# ouvertes}}"
+
+#: src/pages/MonEspace.tsx
+msgid "{nombreMesTaches, plural, one {# ouverte} other {# ouvertes}} · {enRetard} en retard"
+msgstr "{nombreMesTaches, plural, one {# ouverte} other {# ouvertes}} · {enRetard} en retard"
+
+#: src/composants/OrganisationProvider.tsx
+msgid "{nomCourt} · Espace organisateur"
+msgstr "{nomCourt} · Espace organisateur"
+
+#: src/pages/MonEspace.tsx
+msgid "{nomEdition}, du {debutEdition} au {finEdition}."
+msgstr "{nomEdition}, du {debutEdition} au {finEdition}."
+
+#: src/pages/MonEspace.tsx
+msgid "{nomEdition}, du {debutEdition} au {finEdition}. {nombreMesTaches, plural, one {# tâche ouverte vous est assignée} other {# tâches ouvertes vous sont assignées}}."
+msgstr "{nomEdition}, du {debutEdition} au {finEdition}. {nombreMesTaches, plural, one {# tâche ouverte vous est assignée} other {# tâches ouvertes vous sont assignées}}."
+
+#: src/composants/ListeNotifications.tsx
+msgid "{nonLues, plural, one {# non lue} other {# non lues}}"
+msgstr "{nonLues, plural, one {# non lue} other {# non lues}}"
+
+#. Statut d’une tâche
+#: src/lib/conflit.ts
+msgid "À faire"
+msgstr "À faire"
+
+#: src/composants/ListeNotifications.tsx
+msgid "à l’instant"
+msgstr "à l’instant"
+
+#: src/composants/InstallerApplication.tsx
+msgid "À la première ouverture, saisissez le code reçu par mail."
+msgstr "À la première ouverture, saisissez le code reçu par mail."
+
+#: src/pages/MonEspace.tsx
+msgid "À prendre dans vos périmètres"
+msgstr "À prendre dans vos périmètres"
+
+#. Statut d’une tâche
+#: src/lib/conflit.ts
+msgid "Abandonnée"
+msgstr "Abandonnée"
+
+#: src/composants/Coquille.tsx
+msgid "Activités"
+msgstr "Activités"
+
+#: src/composants/ListeNotifications.tsx
+msgid "Admin de l’activité"
+msgstr "Admin de l’activité"
+
+#: src/composants/ListeNotifications.tsx
+msgid "Admin de l’organisation"
+msgstr "Admin de l’organisation"
+
+#: src/composants/Coquille.tsx
+msgid "Admins"
+msgstr "Admins"
+
+#: src/lib/notes-de-version.ts
+msgid "Admins d’activité"
+msgstr "Admins d’activité"
+
+#: src/lib/notes-de-version.ts
+msgid "Admins de l’organisation"
+msgstr "Admins de l’organisation"
+
+#: src/pages/Connexion.tsx
+msgid "Adresse mail"
+msgstr "Adresse mail"
+
+#: src/composants/Coquille.tsx
+msgid "Agenda"
+msgstr "Agenda"
+
+#: src/pages/AideMarkdown.tsx
+msgid "Aide"
+msgstr "Aide"
+
+#: src/composants/Coquille.tsx
+msgid "Annuaire"
+msgstr "Annuaire"
+
+#: src/composants/Recherche.tsx
+msgid "Aucun résultat."
+msgstr "Aucun résultat."
+
+#: src/composants/ParcoursEspace.tsx
+msgid "Aucun sous-dossier."
+msgstr "Aucun sous-dossier."
+
+#: src/composants/FournisseurActivite.tsx
+msgid "Aucune activité ne vous est encore ouverte."
+msgstr "Aucune activité ne vous est encore ouverte."
+
+#: src/composants/NotesDeVersion.tsx
+msgid "Aucune note de version ne concerne votre rôle pour le moment."
+msgstr "Aucune note de version ne concerne votre rôle pour le moment."
+
+#: src/pages/admin/NotificationsAdmin.tsx
+msgid "Aucune notification d’admin."
+msgstr "Aucune notification d’admin."
+
+#: src/composants/Notifications.tsx
+msgid "Aucune notification."
+msgstr "Aucune notification."
+
+#: src/pages/MonEspace.tsx
+msgid "Aucune tâche ouverte ne vous est assignée."
+msgstr "Aucune tâche ouverte ne vous est assignée."
+
+#: src/composants/Coquille.tsx
+msgid "Bénévoles"
+msgstr "Bénévoles"
+
+#: src/composants/ParcoursEspace.tsx
+msgid "Bibliothèque de documents"
+msgstr "Bibliothèque de documents"
+
+#: src/pages/MonEspace.tsx
+msgid "Bonjour {prenomPersonne}"
+msgstr "Bonjour {prenomPersonne}"
+
+#: src/composants/ParcoursEspace.tsx
+msgid "Ce dossier compte trop de sous-dossiers pour les afficher tous. Rangez le dossier voulu plus haut dans la bibliothèque."
+msgstr "Ce dossier compte trop de sous-dossiers pour les afficher tous. Rangez le dossier voulu plus haut dans la bibliothèque."
+
+#: src/lib/conflit.ts
+msgid "Ce périmètre a changé depuis votre lecture"
+msgstr "Ce périmètre a changé depuis votre lecture"
+
+#: src/lib/conflit.ts
+msgid "Ce périmètre a été modifié {moment}. « Écraser » enregistre votre réglage à la place du réglage actuel. « Recharger » abandonne votre saisie et affiche le réglage actuel."
+msgstr "Ce périmètre a été modifié {moment}. « Écraser » enregistre votre réglage à la place du réglage actuel. « Recharger » abandonne votre saisie et affiche le réglage actuel."
+
+#: src/lib/conflit.ts
+msgid "Ce périmètre a été modifié. « Écraser » enregistre votre réglage à la place du réglage actuel. « Recharger » abandonne votre saisie et affiche le réglage actuel."
+msgstr "Ce périmètre a été modifié. « Écraser » enregistre votre réglage à la place du réglage actuel. « Recharger » abandonne votre saisie et affiche le réglage actuel."
+
+#: src/composants/AvisRelecture.tsx
+msgid "Cet écran affiche peut-être des données que vous ne pouvez plus relire. Rechargez la page pour retrouver vos accès actuels."
+msgstr "Cet écran affiche peut-être des données que vous ne pouvez plus relire. Rechargez la page pour retrouver vos accès actuels."
+
+#: src/composants/Coquille.tsx
+msgid "Cette activité est archivée : elle reste consultable."
+msgstr "Cette activité est archivée : elle reste consultable."
+
+#: src/composants/NotesDeVersion.tsx
+msgid "Cette fenêtre liste les changements de chaque version de Relaytour. Vous y lisez les notes qui concernent votre rôle."
+msgstr "Cette fenêtre liste les changements de chaque version de Relaytour. Vous y lisez les notes qui concernent votre rôle."
+
+#: src/composants/Coquille.tsx
+msgid "Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier."
+msgstr "Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier."
+
+#: src/composants/FournisseurActivite.tsx
+msgid "Cette organisation n’a encore aucune activité."
+msgstr "Cette organisation n’a encore aucune activité."
+
+#: src/lib/conflit.ts
+msgid "Cette tâche a changé depuis votre lecture"
+msgstr "Cette tâche a changé depuis votre lecture"
+
+#: src/lib/conflit.ts
+msgid "Cette tâche est maintenant « {statutCourant} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel."
+msgstr "Cette tâche est maintenant « {statutCourant} ». « Écraser » applique quand même votre changement. « Recharger » affiche son état actuel."
+
+#: src/lib/notes-de-version.ts
+msgid "Changement important"
+msgstr "Changement important"
+
+#: src/composants/ChoixActivite.tsx
+msgid "Changer d’activité"
+msgstr "Changer d’activité"
+
+#: src/pages/Connexion.tsx
+msgid "Changer d’adresse ou demander un nouveau code"
+msgstr "Changer d’adresse ou demander un nouveau code"
+
+#: src/composants/FournisseurActivite.tsx
+#: src/composants/GardeSession.tsx
+msgid "Chargement"
+msgstr "Chargement"
+
+#: src/composants/GardeSession.tsx
+msgid "Choisir une organisation"
+msgstr "Choisir une organisation"
+
+#: src/composants/ParcoursEspace.tsx
+msgid "Choisissez une bibliothèque"
+msgstr "Choisissez une bibliothèque"
+
+#: src/composants/Coquille.tsx
+msgid "Classement"
+msgstr "Classement"
+
+#: src/composants/InstallerApplication.tsx
+msgid "Cliquez sur « Installer »."
+msgstr "Cliquez sur « Installer »."
+
+#: src/composants/InstallerApplication.tsx
+msgid "Cliquez sur l’icône d’installation, à droite de la barre d’adresse."
+msgstr "Cliquez sur l’icône d’installation, à droite de la barre d’adresse."
+
+#: src/pages/Connexion.tsx
+msgid "Code à 6 chiffres"
+msgstr "Code à 6 chiffres"
+
+#: src/composants/Marque.tsx
+msgid "Code source de Relaytour"
+msgstr "Code source de Relaytour"
+
+#. Étiquette d’une fiche partagée, qui n’appartient à aucun périmètre
+#: src/composants/Recherche.tsx
+msgid "Commune"
+msgstr "Commune"
+
+#: src/composants/MenuCompte.tsx
+msgid "Compte de {nom}"
+msgstr "Compte de {nom}"
+
+#: src/lib/notes-de-version.ts
+msgid "Correctif"
+msgstr "Correctif"
+
+#: src/composants/Coquille.tsx
+msgid "Déplier le menu"
+msgstr "Déplier le menu"
+
+#: src/pages/AideMarkdown.tsx
+msgid "Écrire une fiche en Markdown"
+msgstr "Écrire une fiche en Markdown"
+
+#. Statut d’une tâche
+#: src/lib/conflit.ts
+msgid "En cours"
+msgstr "En cours"
+
+#: src/composants/AvisMiseAJour.tsx
+msgid "Enregistrez votre travail en cours, puis rechargez l’application pour l’utiliser."
+msgstr "Enregistrez votre travail en cours, puis rechargez l’application pour l’utiliser."
+
+#: src/composants/Coquille.tsx
+msgid "Équipe"
+msgstr "Équipe"
+
+#: src/pages/Connexion.tsx
+msgid "Espace organisateur"
+msgstr "Espace organisateur"
+
+#. Statut d’une tâche
+#: src/lib/conflit.ts
+msgid "Faite"
+msgstr "Faite"
+
+#: src/composants/Coquille.tsx
+msgid "Fermer la recherche"
+msgstr "Fermer la recherche"
+
+#: src/composants/Recherche.tsx
+msgid "Fiches"
+msgstr "Fiches"
+
+#: src/pages/AideMarkdown.tsx
+msgid "Fil d’Ariane"
+msgstr "Fil d’Ariane"
+
+#: src/composants/Coquille.tsx
+msgid "Fournisseur cloud"
+msgstr "Fournisseur cloud"
+
+#: src/composants/Coquille.tsx
+msgid "Gérer l’activité"
+msgstr "Gérer l’activité"
+
+#: src/composants/Coquille.tsx
+msgid "Gérer l’organisation"
+msgstr "Gérer l’organisation"
+
+#: src/composants/HorsConnexion.tsx
+msgid "Hors connexion"
+msgstr "Hors connexion"
+
+#: src/composants/ListeNotifications.tsx
+msgid "il y a {heures} h"
+msgstr "il y a {heures} h"
+
+#: src/composants/ListeNotifications.tsx
+msgid "il y a {minutes} min"
+msgstr "il y a {minutes} min"
+
+#: src/composants/InstallerApplication.tsx
+msgid "Installer"
+msgstr "Installer"
+
+#: src/composants/InstallerApplication.tsx
+#: src/composants/MenuCompte.tsx
+msgid "Installer l’application"
+msgstr "Installer l’application"
+
+#: src/composants/InstallerApplication.tsx
+msgid "L’application est installée."
+msgstr "L’application est installée."
+
+#: src/composants/InstallerApplication.tsx
+msgid "L’application installée s’ouvre depuis l’écran d’accueil, sous le nom « {nomCourt} », sans barre d’adresse."
+msgstr "L’application installée s’ouvre depuis l’écran d’accueil, sous le nom « {nomCourt} », sans barre d’adresse."
+
+#: src/composants/HorsConnexion.tsx
+msgid "L’application reprend dès le retour du réseau."
+msgstr "L’application reprend dès le retour du réseau."
+
+#: src/pages/Connexion.tsx
+msgid "L’envoi du code a échoué."
+msgstr "L’envoi du code a échoué."
+
+#: src/pages/Connexion.tsx
+msgid "L’espace ne demande pas de mot de passe. Vous recevez un code par mail à chaque connexion."
+msgstr "L’espace ne demande pas de mot de passe. Vous recevez un code par mail à chaque connexion."
+
+#: src/composants/GardeSession.tsx
+msgid "L’espace organisateur ne répond pas."
+msgstr "L’espace organisateur ne répond pas."
+
 #: src/composants/PreferenceLangue.tsx
 msgid "L’espace organisateur, vos mails et vos notifications s’affichent dans cette langue. Le contenu écrit par votre organisation garde la sienne."
 msgstr "L’espace organisateur, vos mails et vos notifications s’affichent dans cette langue. Le contenu écrit par votre organisation garde la sienne."
+
+#: src/lib/erreurs.ts
+msgid "L’opération a échoué. Réessayez dans un instant."
+msgstr "L’opération a échoué. Réessayez dans un instant."
+
+#: src/pages/Connexion.tsx
+msgid "La connexion a échoué."
+msgstr "La connexion a échoué."
+
+#: src/lib/connexion.ts
+msgid "La connexion a échoué. Réessayez."
+msgstr "La connexion a échoué. Réessayez."
 
 #: src/composants/PreferenceLangue.tsx
 msgid "Langue"
@@ -19,6 +442,357 @@ msgstr "Langue"
 msgid "Langue de {nomCourt}"
 msgstr "Langue de {nomCourt}"
 
+#: src/lib/conflit.ts
+msgid "le {jour} à {heure} h {minute}"
+msgstr "le {jour} à {heure} h {minute}"
+
+#: src/lib/connexion.ts
+msgid "Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code."
+msgstr "Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code."
+
+#: src/composants/InstallerApplication.tsx
+msgid "Le lien du mail ouvre votre navigateur, pas l’application installée."
+msgstr "Le lien du mail ouvre votre navigateur, pas l’application installée."
+
+#: src/lib/conflit.ts
+msgid "Le statut de cette tâche a changé"
+msgstr "Le statut de cette tâche a changé"
+
+#: src/pages/AideMarkdown.tsx
+msgid "Les fiches s’écrivent en Markdown : quelques signes placés dans le texte donnent les titres, les listes et les liens. Ce guide présente tous les signes que les fiches affichent."
+msgstr "Les fiches s’écrivent en Markdown : quelques signes placés dans le texte donnent les titres, les listes et les liens. Ce guide présente tous les signes que les fiches affichent."
+
+#: src/pages/admin/NotificationsAdmin.tsx
+msgid "Les nouvelles de vos rôles d’admin : demandes, invitations et équipe, rangées par activité puis par périmètre."
+msgstr "Les nouvelles de vos rôles d’admin : demandes, invitations et équipe, rangées par activité puis par périmètre."
+
+#: src/composants/InstallerApplication.tsx
+msgid "Lire le guide d’installation"
+msgstr "Lire le guide d’installation"
+
+#: src/composants/Coquille.tsx
+msgid "Messages"
+msgstr "Messages"
+
+#: src/composants/MenuCompte.tsx
+msgid "Modes d’emploi"
+msgstr "Modes d’emploi"
+
+#: src/composants/Coquille.tsx
+msgid "Mon espace"
+msgstr "Mon espace"
+
+#: src/composants/Coquille.tsx
+msgid "Navigation principale"
+msgstr "Navigation principale"
+
+#: src/composants/MenuCompte.tsx
+#: src/composants/NotesDeVersion.tsx
+msgid "Notes de version"
+msgstr "Notes de version"
+
+#: src/composants/Notifications.tsx
+msgid "Notifications"
+msgstr "Notifications"
+
+#: src/composants/Coquille.tsx
+#: src/pages/admin/NotificationsAdmin.tsx
+msgid "Notifications d’admin"
+msgstr "Notifications d’admin"
+
+#: src/composants/Notifications.tsx
+msgid "Notifications, {nonLues, plural, one {# non lue} other {# non lues}}"
+msgstr "Notifications, {nonLues, plural, one {# non lue} other {# non lues}}"
+
+#: src/lib/notes-de-version.ts
+msgid "Nouveauté"
+msgstr "Nouveauté"
+
+#: src/composants/InstallerApplication.tsx
+msgid "Ordinateur"
+msgstr "Ordinateur"
+
+#: src/composants/Coquille.tsx
+msgid "Organigramme"
+msgstr "Organigramme"
+
+#: src/composants/Coquille.tsx
+#: src/composants/MenuCompte.tsx
+#: src/pages/admin/NotificationsAdmin.tsx
+msgid "Organisation"
+msgstr "Organisation"
+
+#: src/composants/InstallerApplication.tsx
+msgid "Ouvrez cette page dans Chrome ou dans Edge."
+msgstr "Ouvrez cette page dans Chrome ou dans Edge."
+
+#: src/composants/InstallerApplication.tsx
+msgid "Ouvrez cette page dans Chrome."
+msgstr "Ouvrez cette page dans Chrome."
+
+#: src/composants/InstallerApplication.tsx
+msgid "Ouvrez cette page dans Safari."
+msgstr "Ouvrez cette page dans Safari."
+
+#: src/composants/Coquille.tsx
+msgid "Ouvrir le menu"
+msgstr "Ouvrir le menu"
+
+#: src/lib/notes-de-version.ts
+msgid "Performance"
+msgstr "Performance"
+
+#: src/composants/Coquille.tsx
+msgid "Périmètres"
+msgstr "Périmètres"
+
+#: src/composants/Coquille.tsx
+#: src/composants/Recherche.tsx
+msgid "Personnes"
+msgstr "Personnes"
+
+#: src/composants/Coquille.tsx
+#: src/composants/MenuCompte.tsx
+msgid "Préférences"
+msgstr "Préférences"
+
+#: src/composants/Coquille.tsx
+msgid "Programme"
+msgstr "Programme"
+
+#: src/composants/Marque.tsx
+msgid "Propulsé par <0>Relaytour</0>"
+msgstr "Propulsé par <0>Relaytour</0>"
+
+#: src/composants/Marque.tsx
+msgid "Propulsé par Relaytour : code source"
+msgstr "Propulsé par Relaytour : code source"
+
+#: src/pages/Connexion.tsx
+msgid "Recevoir un code"
+msgstr "Recevoir un code"
+
+#: src/composants/AvisMiseAJour.tsx
+msgid "Recharger"
+msgstr "Recharger"
+
+#: src/composants/AvisRelecture.tsx
+msgid "Recharger la page"
+msgstr "Recharger la page"
+
+#: src/composants/Coquille.tsx
+#: src/composants/Recherche.tsx
+msgid "Rechercher"
+msgstr "Rechercher"
+
+#: src/composants/Recherche.tsx
+msgid "Rechercher une tâche, une fiche ou une personne"
+msgstr "Rechercher une tâche, une fiche ou une personne"
+
+#: src/composants/Recherche.tsx
+msgid "Rechercher une tâche, une fiche, une personne"
+msgstr "Rechercher une tâche, une fiche, une personne"
+
+#: src/composants/Coquille.tsx
+msgid "Rédaction"
+msgstr "Rédaction"
+
+#: src/composants/HorsConnexion.tsx
+msgid "Réessayer"
+msgstr "Réessayer"
+
+#: src/composants/Coquille.tsx
+msgid "Replier le menu"
+msgstr "Replier le menu"
+
+#: src/composants/Coquille.tsx
+#: src/pages/AideMarkdown.tsx
+msgid "Ressources"
+msgstr "Ressources"
+
+#: src/composants/Coquille.tsx
+msgid "Rétroplanning"
+msgstr "Rétroplanning"
+
+#: src/composants/Notifications.tsx
+msgid "S’ouvre dans un nouvel onglet"
+msgstr "S’ouvre dans un nouvel onglet"
+
+#: src/pages/Connexion.tsx
+msgid "Saisissez ici le code du mail. Le lien du mail ouvre votre navigateur, pas l’application installée."
+msgstr "Saisissez ici le code du mail. Le lien du mail ouvre votre navigateur, pas l’application installée."
+
+#: src/pages/Connexion.tsx
+msgid "Saisissez une adresse mail valide."
+msgstr "Saisissez une adresse mail valide."
+
+#: src/pages/Connexion.tsx
+msgid "Se connecter"
+msgstr "Se connecter"
+
+#: src/composants/GardeSession.tsx
+#: src/composants/MenuCompte.tsx
+msgid "Se déconnecter"
+msgstr "Se déconnecter"
+
+#: src/lib/notes-de-version.ts
+msgid "Sécurité"
+msgstr "Sécurité"
+
+#: src/pages/Connexion.tsx
+msgid "Si cette adresse a un accès, un code vient de lui être envoyé. Il est valable 10 minutes."
+msgstr "Si cette adresse a un accès, un code vient de lui être envoyé. Il est valable 10 minutes."
+
+#: src/composants/MenuCompte.tsx
+msgid "Support"
+msgstr "Support"
+
+#: src/lib/support.ts
+msgid "Support {organisation} ({relaytour})"
+msgstr "Support {organisation} ({relaytour})"
+
+#: src/composants/Recherche.tsx
+msgid "Tâches"
+msgstr "Tâches"
+
+#: src/composants/InstallerApplication.tsx
+msgid "Touchez « Ajouter »."
+msgstr "Touchez « Ajouter »."
+
+#: src/composants/InstallerApplication.tsx
+msgid "Touchez « Ajouter à l’écran d’accueil », puis « Installer »."
+msgstr "Touchez « Ajouter à l’écran d’accueil », puis « Installer »."
+
+#: src/composants/InstallerApplication.tsx
+msgid "Touchez « En voir plus » si la liste est repliée, puis « Sur l’écran d’accueil »."
+msgstr "Touchez « En voir plus » si la liste est repliée, puis « Sur l’écran d’accueil »."
+
+#: src/composants/InstallerApplication.tsx
+msgid "Touchez « Partager ». Sur iOS 26, ce bouton se trouve dans le menu « ··· », en bas à droite."
+msgstr "Touchez « Partager ». Sur iOS 26, ce bouton se trouve dans le menu « ··· », en bas à droite."
+
+#: src/composants/InstallerApplication.tsx
+msgid "Touchez le menu « ⋮ », en haut à droite."
+msgstr "Touchez le menu « ⋮ », en haut à droite."
+
+#: src/composants/Coquille.tsx
+msgid "Tous les périmètres"
+msgstr "Tous les périmètres"
+
+#: src/composants/ListeNotifications.tsx
+msgid "Tout lire"
+msgstr "Tout lire"
+
+#: src/composants/Notifications.tsx
+#: src/pages/admin/NotificationsAdmin.tsx
+msgid "Tout marquer comme lu"
+msgstr "Tout marquer comme lu"
+
+#: src/composants/ListeNotifications.tsx
+msgid "Toute l’activité"
+msgstr "Toute l’activité"
+
+#: src/pages/Connexion.tsx
+msgid "Transmettez le savoir-faire de votre organisation d’une période à l’autre."
+msgstr "Transmettez le savoir-faire de votre organisation d’une période à l’autre."
+
+#: src/lib/connexion.ts
+msgid "Trop de demandes. Réessayez dans quelques minutes."
+msgstr "Trop de demandes. Réessayez dans quelques minutes."
+
+#: src/composants/FournisseurActivite.tsx
+msgid "Un admin de l’organisation crée la première activité, ou l’import du dépôt d’organisation la crée."
+msgstr "Un admin de l’organisation crée la première activité, ou l’import du dépôt d’organisation la crée."
+
+#: src/composants/GardeSession.tsx
+msgid "Un admin de votre organisation peut vous inviter de nouveau."
+msgstr "Un admin de votre organisation peut vous inviter de nouveau."
+
+#: src/composants/FournisseurActivite.tsx
+msgid "Un admin vous ouvre une activité en vous affectant à l’un de ses périmètres."
+msgstr "Un admin vous ouvre une activité en vous affectant à l’un de ses périmètres."
+
+#: src/lib/conflit.ts
+msgid "Une autre personne"
+msgstr "Une autre personne"
+
+#: src/lib/conflit.ts
+msgid "Une autre version de cette fiche a été enregistrée {moment}."
+msgstr "Une autre version de cette fiche a été enregistrée {moment}."
+
+#: src/lib/conflit.ts
+msgid "Une autre version de cette fiche a été enregistrée."
+msgstr "Une autre version de cette fiche a été enregistrée."
+
+#: src/composants/AvisMiseAJour.tsx
+msgid "Une nouvelle version est disponible."
+msgstr "Une nouvelle version est disponible."
+
+#: src/composants/GardeSession.tsx
+msgid "Vérifiez votre connexion, puis rechargez la page."
+msgstr "Vérifiez votre connexion, puis rechargez la page."
+
+#: src/composants/NotesDeVersion.tsx
+msgid "Version {numero}"
+msgstr "Version {numero}"
+
+#: src/pages/MonEspace.tsx
+msgid "Voir le rétroplanning"
+msgstr "Voir le rétroplanning"
+
+#: src/composants/AvisRelecture.tsx
+msgid "Vos accès ont changé, ou votre session a pris fin."
+msgstr "Vos accès ont changé, ou votre session a pris fin."
+
+#: src/composants/FournisseurActivite.tsx
+#: src/composants/GardeSession.tsx
+msgid "Vos invitations"
+msgstr "Vos invitations"
+
+#: src/pages/MonEspace.tsx
+msgid "Vos périmètres"
+msgstr "Vos périmètres"
+
+#: src/pages/MonEspace.tsx
+msgid "Vos tâches"
+msgstr "Vos tâches"
+
+#: src/composants/HorsConnexion.tsx
+msgid "Votre appareil n’a pas de réseau. L’espace organisateur a besoin d’une connexion pour afficher vos tâches et vos fiches."
+msgstr "Votre appareil n’a pas de réseau. L’espace organisateur a besoin d’une connexion pour afficher vos tâches et vos fiches."
+
+#: src/composants/HorsConnexion.tsx
+msgid "Votre appareil n’a plus de réseau, et vos modifications ne s’enregistrent pas. Gardez cet écran ouvert, puis réessayez au retour du réseau."
+msgstr "Votre appareil n’a plus de réseau, et vos modifications ne s’enregistrent pas. Gardez cet écran ouvert, puis réessayez au retour du réseau."
+
+#: src/composants/GardeSession.tsx
+msgid "Votre compte appartient à plusieurs organisations. Vous pourrez en changer depuis le menu de votre compte."
+msgstr "Votre compte appartient à plusieurs organisations. Vous pourrez en changer depuis le menu de votre compte."
+
+#: src/composants/GardeSession.tsx
+msgid "Votre compte n’appartient à aucune organisation ouverte."
+msgstr "Votre compte n’appartient à aucune organisation ouverte."
+
+#: src/composants/NotesDeVersion.tsx
+msgid "Votre installation utilise Relaytour {version}. Cette fenêtre liste les changements de chaque version. Vous y lisez les notes qui concernent votre rôle."
+msgstr "Votre installation utilise Relaytour {version}. Cette fenêtre liste les changements de chaque version. Vous y lisez les notes qui concernent votre rôle."
+
 #: src/composants/PreferenceLangue.tsx
 msgid "Votre langue est enregistrée."
 msgstr "Votre langue est enregistrée."
+
+#: src/composants/Notifications.tsx
+msgid "Vous avez {nonLuesAdmin, plural, one {# notification d’admin non lue} other {# notifications d’admin non lues}}."
+msgstr "Vous avez {nonLuesAdmin, plural, one {# notification d’admin non lue} other {# notifications d’admin non lues}}."
+
+#: src/composants/Notifications.tsx
+msgid "Vous avez d’autres notifications dans vos organisations"
+msgstr "Vous avez d’autres notifications dans vos organisations"
+
+#: src/lib/erreurs.ts
+msgid "Vous n’avez pas accès à cette action."
+msgstr "Vous n’avez pas accès à cette action."
+
+#: src/pages/MonEspace.tsx
+msgid "Vous n’êtes affecté·e à aucun périmètre pour {cettePeriode}. Les admins gèrent les affectations. Dans <0>Tous les périmètres</0>, vous découvrez les périmètres et formulez vos souhaits."
+msgstr "Vous n’êtes affecté·e à aucun périmètre pour {cettePeriode}. Les admins gèrent les affectations. Dans <0>Tous les périmètres</0>, vous découvrez les périmètres et formulez vos souhaits."
