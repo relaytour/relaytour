@@ -14,6 +14,15 @@ fr:
     après chaque modification, puis chaque nuit. Les fiches se modifient
     toujours dans Relaytour : l'écran signale une fiche modifiée dans le
     dossier, puis réécrite.
+en:
+  titre: >-
+    Sheets are exported to the file space
+  texte: >-
+    In the “Cloud provider” screen, you choose where Relaytour creates the
+    “Fiches Relaytour” folder. Relaytour writes the sheets there as Markdown
+    after each change, then every night. Sheets are always edited in Relaytour.
+    The screen flags a sheet that was modified in the folder and then
+    overwritten.
 ---
 
 ADR 0038 : table `FicheExportee`, champs d'export de `ConnexionFichiers`,

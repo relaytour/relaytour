@@ -86,6 +86,7 @@ jobs:
           node outils/versionner.mjs valider
           node outils/versionner.mjs compiler
           yarn workspace @relaytour/server orga:valider
+          yarn workspace @relaytour/server orga:valider ../../content/exemple-en
           node outils/site.mjs
           yarn workspace @relaytour/orga langues:extraire
           yarn workspace @relaytour/server langues:extraire

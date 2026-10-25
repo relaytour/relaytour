@@ -1,6 +1,7 @@
 import type { PrismaClient, SourceFiche } from '@relaytour/database'
 
 import { empreinte } from '../lib/contenu.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Import de fiches dans une activité, commun au dépôt de contenu (`orga:importer`)
 // et à l'espace de fichiers (ADR 0009 et 0038). Une version ne se crée que si
@@ -104,7 +105,10 @@ export async function importerFiches(
       existante.activiteId !== activiteId
     ) {
       rapport.conflits.push(fiche.slug)
-      raisons.set(fiche.slug, 'une fiche d’une autre activité porte ce slug')
+      raisons.set(
+        fiche.slug,
+        i18n._('une fiche d’une autre activité porte ce slug')
+      )
       continue
     }
     const inchangee = existante.versionCourante?.empreinte === nouvelleEmpreinte
@@ -116,7 +120,7 @@ export async function importerFiches(
       options.protegees.includes(existante.versionCourante.source)
     ) {
       rapport.conflits.push(fiche.slug)
-      raisons.set(fiche.slug, 'la fiche a été modifiée dans Relaytour')
+      raisons.set(fiche.slug, i18n._('la fiche a été modifiée dans Relaytour'))
       continue
     }
     if (

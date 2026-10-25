@@ -6,6 +6,7 @@ import type {
 } from '@relaytour/database'
 
 import { lecteurDeLaFiche } from './fiches-connexes.ts'
+import { i18n, langueCourante } from './langue.ts'
 
 // Texte, lien et contexte des notifications (ADR 0032 et 0033). Une notification ne
 // stocke que des identifiants : ce module relit les noms à jour et compose, pour un
@@ -128,7 +129,7 @@ export interface NotificationComposee {
 }
 
 function dateLongue(date: Date): string {
-  return date.toLocaleDateString('fr-FR', {
+  return date.toLocaleDateString(langueCourante(), {
     day: 'numeric',
     month: 'long',
     timeZone: 'UTC',
@@ -270,156 +271,322 @@ function phrase(
   lieu: string,
   activite: string
 ): string {
-  const acteur = (n.acteurId && c.noms.get(n.acteurId)) ?? 'Une personne'
+  const acteur =
+    (n.acteurId && c.noms.get(n.acteurId)) ?? i18n._('Une personne')
   const personne =
     n.personneId === moiId
-      ? 'vous'
-      : ((n.personneId && c.noms.get(n.personneId)) ?? 'une personne')
+      ? i18n._(
+          'vous',
+          {},
+          {
+            comment:
+              'Complément d’une phrase de notification, à la place du nom de la personne qui lit',
+          }
+        )
+      : ((n.personneId && c.noms.get(n.personneId)) ?? i18n._('une personne'))
   const perimetre =
     (perimetreIdDe(n) && c.perimetres.get(perimetreIdDe(n)!)?.nom) ??
-    'un périmètre'
+    i18n._('un périmètre')
 
   switch (n.type) {
     // Une demande porte le nom d'une personne qui n'est pas membre : la notification
     // ne le cite pas (ADR 0015).
     case 'DEMANDE_RECUE':
-      return `Une demande pour rejoindre l’équipe attend votre revue${activite}`
+      return i18n._(
+        'Une demande pour rejoindre l’équipe attend votre revue{activite}',
+        { activite }
+      )
     // Une candidature porte le nom d'une personne sans compte : la notification ne
     // le cite pas (ADR 0041).
     case 'CANDIDATURE_RECUE':
-      return `Une candidature de bénévole attend votre revue${activite}`
+      return i18n._(
+        'Une candidature de bénévole attend votre revue{activite}',
+        { activite }
+      )
     // Les propositions ne nomment personne ici : l'écran les détaille (ADR 0044).
     case 'ACCES_FOURNISSEUR_A_VALIDER':
-      return 'Des accès chez le fournisseur cloud attendent votre validation'
+      return i18n._(
+        'Des accès chez le fournisseur cloud attendent votre validation'
+      )
     case 'DEMANDE_ACCEPTEE':
-      return `${acteur} a accepté une demande pour rejoindre l’équipe${activite}`
+      return i18n._(
+        '{acteur} a accepté une demande pour rejoindre l’équipe{activite}',
+        { acteur, activite }
+      )
     case 'DEMANDE_REFUSEE':
-      return `${acteur} a refusé une demande pour rejoindre l’équipe${activite}`
+      return i18n._(
+        '{acteur} a refusé une demande pour rejoindre l’équipe{activite}',
+        { acteur, activite }
+      )
     // La personne a accepté : elle est membre, et son nom se lit désormais (ADR 0030).
     case 'INVITATION_ACCEPTEE':
-      return `${acteur} a accepté l’invitation et rejoint l’organisation${activite}`
+      return i18n._(
+        '{acteur} a accepté l’invitation et rejoint l’organisation{activite}',
+        { acteur, activite }
+      )
     case 'AFFECTATION_AJOUTEE':
-      return `${acteur} a affecté ${personne} au périmètre ${perimetre}${activite}`
+      return i18n._(
+        '{acteur} a affecté {personne} au périmètre {perimetre}{activite}',
+        { acteur, personne, perimetre, activite }
+      )
     case 'AFFECTATION_RETIREE':
-      return `${acteur} a retiré ${personne} du périmètre ${perimetre}${activite}`
+      return i18n._(
+        '{acteur} a retiré {personne} du périmètre {perimetre}{activite}',
+        { acteur, personne, perimetre, activite }
+      )
     case 'SOUHAIT_FORMULE':
-      return `${acteur} souhaite rejoindre le périmètre ${perimetre}${activite}`
+      return i18n._(
+        '{acteur} souhaite rejoindre le périmètre {perimetre}{activite}',
+        { acteur, perimetre, activite }
+      )
     case 'ADMIN_ACTIVITE_NOMME':
-      return `${acteur} a nommé ${personne} admin de l’activité${activite}`
+      return i18n._(
+        '{acteur} a nommé {personne} admin de l’activité{activite}',
+        { acteur, personne, activite }
+      )
     case 'ADMIN_ACTIVITE_RETIRE':
-      return `${acteur} a retiré à ${personne} le rôle d’admin de l’activité${activite}`
+      return i18n._(
+        '{acteur} a retiré à {personne} le rôle d’admin de l’activité{activite}',
+        { acteur, personne, activite }
+      )
     case 'ADMIN_ORGANISATION_NOMME':
-      return `${acteur} a nommé ${personne} admin de l’organisation`
+      return i18n._('{acteur} a nommé {personne} admin de l’organisation', {
+        acteur,
+        personne,
+      })
     case 'ADMIN_ORGANISATION_RETIRE':
-      return `${acteur} a retiré à ${personne} le rôle d’admin de l’organisation`
+      return i18n._(
+        '{acteur} a retiré à {personne} le rôle d’admin de l’organisation',
+        { acteur, personne }
+      )
     case 'PERSONNE_ARCHIVEE':
-      return `${acteur} a archivé ${personne} dans l’organisation`
+      return i18n._('{acteur} a archivé {personne} dans l’organisation', {
+        acteur,
+        personne,
+      })
     case 'PERSONNE_RETABLIE':
-      return `${acteur} a rétabli ${personne} dans l’organisation`
+      return i18n._('{acteur} a rétabli {personne} dans l’organisation', {
+        acteur,
+        personne,
+      })
     case 'PLACE_MODIFIEE':
-      return `Votre place dans l’équipe a changé${activite}`
+      return i18n._('Votre place dans l’équipe a changé{activite}', {
+        activite,
+      })
     case 'REUNION_CONVOQUEE':
     case 'REUNION_MODIFIEE':
     case 'REUNION_ANNULEE': {
-      if (!n.reunion) return 'Cette réunion n’existe plus'
-      const reunion = `« ${n.reunion.titre} »${lieu}`
+      if (!n.reunion) return i18n._('Cette réunion n’existe plus')
+      const titre = n.reunion.titre
       if (n.type === 'REUNION_CONVOQUEE') {
-        return `${acteur} vous convoque à la réunion ${reunion}`
+        return i18n._('{acteur} vous convoque à la réunion « {titre} »{lieu}', {
+          acteur,
+          titre,
+          lieu,
+        })
       }
       return n.type === 'REUNION_MODIFIEE'
-        ? `${acteur} a modifié la réunion ${reunion}`
-        : `${acteur} a annulé la réunion ${reunion}`
+        ? i18n._('{acteur} a modifié la réunion « {titre} »{lieu}', {
+            acteur,
+            titre,
+            lieu,
+          })
+        : i18n._('{acteur} a annulé la réunion « {titre} »{lieu}', {
+            acteur,
+            titre,
+            lieu,
+          })
     }
     case 'SONDAGE_OUVERT':
       return n.sondage
-        ? `${acteur} vous demande vos disponibilités : « ${n.sondage.titre} »${lieu}`
-        : 'Ce sondage n’existe plus'
+        ? i18n._(
+            '{acteur} vous demande vos disponibilités : « {titre} »{lieu}',
+            { acteur, titre: n.sondage.titre, lieu }
+          )
+        : i18n._('Ce sondage n’existe plus')
     // Les personnes qui écrivent dans le périmètre lisent déjà son nom dans le
     // programme (ADR 0040).
     case 'BENEVOLE_RETIRE': {
-      const qui = n.benevole?.nom ?? 'Une personne bénévole'
+      const qui = n.benevole?.nom ?? i18n._('Une personne bénévole')
       return n.sequence
-        ? `${qui} a quitté la séquence « ${n.sequence.titre} »${lieu}`
-        : `${qui} a quitté une séquence du programme${lieu}`
+        ? i18n._('{qui} a quitté la séquence « {titre} »{lieu}', {
+            qui,
+            titre: n.sequence.titre,
+            lieu,
+          })
+        : i18n._('{qui} a quitté une séquence du programme{lieu}', {
+            qui,
+            lieu,
+          })
     }
     case 'FICHE_CONNEXE': {
-      if (n.fiche === null) return 'Cette fiche n’existe plus'
+      if (n.fiche === null) return i18n._('Cette fiche n’existe plus')
       if (c.illisibles.has(n.id))
-        return `Une fiche d’un autre périmètre ne concerne plus votre périmètre${lieu}`
+        return i18n._(
+          'Une fiche d’un autre périmètre ne concerne plus votre périmètre{lieu}',
+          { lieu }
+        )
       const origine =
         (n.fiche.perimetreId && c.perimetres.get(n.fiche.perimetreId)?.nom) ??
-        'un autre périmètre'
-      return `La fiche « ${n.fiche.versionCourante?.titre ?? n.fiche.slug} » de ${origine} concerne aussi votre périmètre${lieu}`
+        i18n._('un autre périmètre')
+      return i18n._(
+        'La fiche « {titre} » de {origine} concerne aussi votre périmètre{lieu}',
+        {
+          titre: n.fiche.versionCourante?.titre ?? n.fiche.slug,
+          origine,
+          lieu,
+        }
+      )
     }
     case 'FICHE_CREEE':
     case 'FICHE_MODIFIEE': {
-      if (n.fiche === null) return 'Cette fiche n’existe plus'
-      const fiche = `« ${n.fiche.versionCourante?.titre ?? n.fiche.slug} »${lieu}`
+      if (n.fiche === null) return i18n._('Cette fiche n’existe plus')
+      const titre = n.fiche.versionCourante?.titre ?? n.fiche.slug
       return n.type === 'FICHE_CREEE'
-        ? `${acteur} a créé la fiche ${fiche}`
-        : `${acteur} a modifié la fiche ${fiche}`
+        ? i18n._('{acteur} a créé la fiche « {titre} »{lieu}', {
+            acteur,
+            titre,
+            lieu,
+          })
+        : i18n._('{acteur} a modifié la fiche « {titre} »{lieu}', {
+            acteur,
+            titre,
+            lieu,
+          })
     }
     default:
       break
   }
 
   const tache = n.tache
-  if (tache === null) return 'Cette tâche n’existe plus'
-  const titre = `« ${tache.titre} »${lieu}`
+  if (tache === null) return i18n._('Cette tâche n’existe plus')
+  const titre = tache.titre
   // Une déclinaison nomme le périmètre qui la demande (ADR 0026).
   const demandeur = tache.origine?.perimetre.nom
   switch (n.type) {
     case 'TACHE_CREEE':
       return demandeur === undefined
-        ? `${acteur} a créé la tâche ${titre}`
-        : `${acteur} a ajouté la tâche ${titre}, demandée par ${demandeur}`
+        ? i18n._('{acteur} a créé la tâche « {titre} »{lieu}', {
+            acteur,
+            titre,
+            lieu,
+          })
+        : i18n._(
+            '{acteur} a ajouté la tâche « {titre} »{lieu}, demandée par {demandeur}',
+            { acteur, titre, lieu, demandeur }
+          )
     case 'DECLINAISON_PROPOSEE':
-      return `${acteur} propose la tâche ${titre}${demandeur === undefined ? '' : `, demandée par ${demandeur}`}. Elle attend l’accord du périmètre`
+      return demandeur === undefined
+        ? i18n._(
+            '{acteur} propose la tâche « {titre} »{lieu}. Elle attend l’accord du périmètre',
+            { acteur, titre, lieu }
+          )
+        : i18n._(
+            '{acteur} propose la tâche « {titre} »{lieu}, demandée par {demandeur}. Elle attend l’accord du périmètre',
+            { acteur, titre, lieu, demandeur }
+          )
     case 'DECLINAISON_ACCEPTEE':
-      return `${acteur} a accepté la tâche ${titre}`
+      return i18n._('{acteur} a accepté la tâche « {titre} »{lieu}', {
+        acteur,
+        titre,
+        lieu,
+      })
     case 'DECLINAISON_REFUSEE':
-      return `${acteur} a refusé la tâche ${titre}`
+      return i18n._('{acteur} a refusé la tâche « {titre} »{lieu}', {
+        acteur,
+        titre,
+        lieu,
+      })
     case 'TACHE_MODIFIEE':
-      return `${acteur} a modifié la tâche ${titre}`
+      return i18n._('{acteur} a modifié la tâche « {titre} »{lieu}', {
+        acteur,
+        titre,
+        lieu,
+      })
     // Le texte du commentaire ne figure jamais dans une notification (ADR 0029).
     case 'TACHE_COMMENTEE':
-      return `${acteur} a commenté la tâche ${titre}`
+      return i18n._('{acteur} a commenté la tâche « {titre} »{lieu}', {
+        acteur,
+        titre,
+        lieu,
+      })
     case 'TACHE_ASSIGNEE':
       return n.personneId === n.acteurId
-        ? `${acteur} s’occupe de la tâche ${titre}`
+        ? i18n._('{acteur} s’occupe de la tâche « {titre} »{lieu}', {
+            acteur,
+            titre,
+            lieu,
+          })
         : n.personneId === moiId
-          ? `${acteur} vous a assigné la tâche ${titre}`
-          : `${acteur} a assigné la tâche ${titre} à ${personne}`
+          ? i18n._('{acteur} vous a assigné la tâche « {titre} »{lieu}', {
+              acteur,
+              titre,
+              lieu,
+            })
+          : i18n._(
+              '{acteur} a assigné la tâche « {titre} »{lieu} à {personne}',
+              { acteur, titre, lieu, personne }
+            )
     case 'TACHE_DESASSIGNEE':
       return n.personneId === n.acteurId
-        ? `${acteur} ne s’occupe plus de la tâche ${titre}`
+        ? i18n._('{acteur} ne s’occupe plus de la tâche « {titre} »{lieu}', {
+            acteur,
+            titre,
+            lieu,
+          })
         : n.personneId === moiId
-          ? `${acteur} vous a retiré·e de la tâche ${titre}`
-          : `${acteur} a retiré ${personne} de la tâche ${titre}`
+          ? i18n._('{acteur} vous a retiré·e de la tâche « {titre} »{lieu}', {
+              acteur,
+              titre,
+              lieu,
+            })
+          : i18n._(
+              '{acteur} a retiré {personne} de la tâche « {titre} »{lieu}',
+              { acteur, titre, lieu, personne }
+            )
     case 'ECHEANCE_PROCHE':
-      return n.jours === 0
-        ? `La tâche ${titre} arrive à échéance aujourd’hui`
-        : n.jours === 1
-          ? `La tâche ${titre} arrive à échéance demain`
-          : `La tâche ${titre} arrive à échéance dans ${n.jours ?? 7} jours`
+      return i18n._(
+        '{jours, plural, =0 {La tâche « {titre} »{lieu} arrive à échéance aujourd’hui} =1 {La tâche « {titre} »{lieu} arrive à échéance demain} other {La tâche « {titre} »{lieu} arrive à échéance dans # jours}}',
+        { jours: n.jours ?? 7, titre, lieu }
+      )
     case 'TACHE_EN_RETARD':
       return tache.echeance
-        ? `La tâche ${titre} est en retard depuis le ${dateLongue(tache.echeance)}`
-        : `La tâche ${titre} est en retard`
+        ? i18n._('La tâche « {titre} »{lieu} est en retard depuis le {date}', {
+            titre,
+            lieu,
+            date: dateLongue(tache.echeance),
+          })
+        : i18n._('La tâche « {titre} »{lieu} est en retard', { titre, lieu })
     case 'TACHE_STATUT':
       switch (n.statut) {
         // Qui a coché reste réservé : la phrase ne nomme personne.
         case 'FAITE':
-          return `La tâche ${titre} est faite`
+          return i18n._('La tâche « {titre} »{lieu} est faite', { titre, lieu })
         case 'EN_COURS':
-          return `${acteur} a commencé la tâche ${titre}`
+          return i18n._('{acteur} a commencé la tâche « {titre} »{lieu}', {
+            acteur,
+            titre,
+            lieu,
+          })
         case 'ABANDONNEE':
-          return `${acteur} a abandonné la tâche ${titre}`
+          return i18n._('{acteur} a abandonné la tâche « {titre} »{lieu}', {
+            acteur,
+            titre,
+            lieu,
+          })
         default:
-          return `${acteur} a remis la tâche ${titre} à faire`
+          return i18n._('{acteur} a remis la tâche « {titre} »{lieu} à faire', {
+            acteur,
+            titre,
+            lieu,
+          })
       }
     default:
-      return `${acteur} a agi sur la tâche ${titre}`
+      return i18n._('{acteur} a agi sur la tâche « {titre} »{lieu}', {
+        acteur,
+        titre,
+        lieu,
+      })
   }
 }
 

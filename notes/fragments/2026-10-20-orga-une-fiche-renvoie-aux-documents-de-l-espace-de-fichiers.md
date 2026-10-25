@@ -15,6 +15,15 @@ fr:
     périmètre ne peut pas être proposé. Dans une fiche connexe, une ressource
     d'un dossier que vous ne lisez pas porte la mention « Réservée au périmètre
     d'origine » et ne s'ouvre pas.
+en:
+  titre: >-
+    A sheet links to documents in the file space
+  texte: >-
+    People who write a sheet link folders or files from the file space to it,
+    using the “Linked documents” block. You open these documents from the sheet,
+    in the viewer. A folder linked to another area cannot be proposed. In a
+    related sheet, a resource from a folder you cannot read shows the label
+    “Restricted to the original area” and does not open.
 ---
 
 ADR 0038 : table `RessourceFiche` (dossier lié et chemin de noms), champ

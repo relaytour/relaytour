@@ -1,9 +1,11 @@
 #!/usr/bin/env node
-// langues : état des catalogues de traduction de l'espace organisateur (ADR 0047).
+// langues : état des catalogues de traduction de l'espace organisateur et du serveur
+// (ADR 0047).
 //
 //   node outils/langues.mjs etat            affiche le taux de traduction de chaque langue
 //   node outils/langues.mjs etat --ecrire   écrit aussi packages/orga/src/locales/etat.json
-//   node outils/langues.mjs verifier en     échoue si un message anglais reste à traduire
+//   node outils/langues.mjs verifier en     échoue si un message anglais reste à traduire,
+//                                           dans l'espace organisateur ou dans le serveur
 //
 // L'espace organisateur lit etat.json pour ne proposer que les langues traduites à
 // SEUIL % au moins. `yarn workspace @relaytour/orga langues:extraire` le réécrit
@@ -13,8 +15,12 @@ import { readdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
-const RACINE = resolve(dirname(fileURLToPath(import.meta.url)), '..')
+// Les tests de versionner lancent ce script sur un dépôt temporaire (LANGUES_RACINE).
+const RACINE =
+  process.env.LANGUES_RACINE ??
+  resolve(dirname(fileURLToPath(import.meta.url)), '..')
 const CATALOGUES = join(RACINE, 'packages/orga/src/locales')
+const CATALOGUES_SERVEUR = join(RACINE, 'packages/server/src/locales')
 export const SEUIL = 90
 
 /** Décode une chaîne PO entre guillemets : `"a\"b"` donne `a"b`. */
@@ -82,11 +88,17 @@ export function taux({ messages, traduits }) {
 function main(argv) {
   const [commande, ...reste] = argv
   const etat = etatDesCatalogues()
+  const paquets = {
+    orga: etat,
+    serveur: etatDesCatalogues(CATALOGUES_SERVEUR),
+  }
   if (commande === 'etat') {
-    for (const [langue, e] of Object.entries(etat)) {
-      console.log(
-        `${langue.padEnd(6)} ${String(taux(e)).padStart(3)} %  ${e.traduits} / ${e.messages}`
-      )
+    for (const [paquet, etats] of Object.entries(paquets)) {
+      for (const [langue, e] of Object.entries(etats)) {
+        console.log(
+          `${paquet.padEnd(8)} ${langue.padEnd(6)} ${String(taux(e)).padStart(3)} %  ${e.traduits} / ${e.messages}`
+        )
+      }
     }
     if (reste.includes('--ecrire')) {
       writeFileSync(
@@ -98,19 +110,26 @@ function main(argv) {
   }
   if (commande === 'verifier') {
     const langue = reste[0]
-    const e = etat[langue]
-    if (e === undefined) {
-      console.error(`✖ Aucun catalogue pour la langue « ${langue} ».`)
-      return 1
+    let echec = false
+    for (const [paquet, etats] of Object.entries(paquets)) {
+      const e = etats[langue]
+      if (e === undefined) {
+        console.error(
+          `✖ ${paquet} : aucun catalogue pour la langue « ${langue} ».`
+        )
+        echec = true
+      } else if (e.traduits < e.messages) {
+        console.error(
+          `✖ ${paquet} : ${e.messages - e.traduits} messages restent à traduire en « ${langue} ».`
+        )
+        echec = true
+      } else {
+        console.log(
+          `✔ ${paquet} : catalogue « ${langue} » complet, ${e.messages} messages.`
+        )
+      }
     }
-    if (e.traduits < e.messages) {
-      console.error(
-        `✖ ${e.messages - e.traduits} messages restent à traduire en « ${langue} ».`
-      )
-      return 1
-    }
-    console.log(`✔ Catalogue « ${langue} » complet : ${e.messages} messages.`)
-    return 0
+    return echec ? 1 : 0
   }
   console.error(
     'Usage : node outils/langues.mjs etat [--ecrire] | verifier <langue>'

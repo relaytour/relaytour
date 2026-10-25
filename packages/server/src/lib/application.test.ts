@@ -19,6 +19,7 @@ const organisation = {
   nomCourt: 'Rencontres',
   theme: themeParDefaut,
   iconeApplicationUrl: undefined,
+  langue: undefined,
 }
 
 /** Un en-tête PNG aux dimensions données : la vérification ne lit que l'IHDR. */

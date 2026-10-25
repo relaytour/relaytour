@@ -17,6 +17,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
 import { EditionRef } from './organisation.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Agenda d'une activité (ADR 0037) : pour une période, ses phases, son premier et
 // son dernier jour, ses dates clés et, en option, les échéances des tâches. Toute
@@ -159,7 +160,8 @@ async function perimetresDesEcheances(
     return [...(await ctx.perimetresAffectes(edition.id))]
   }
   const ids = [...new Set(demandes.map(String))]
-  if (ids.length > 60) throw erreurSaisie('Choisissez 60 périmètres au plus.')
+  if (ids.length > 60)
+    throw erreurSaisie(i18n._('Choisissez 60 périmètres au plus.'))
   const perimetres = await prisma.perimetre.findMany({
     where: {
       id: { in: ids },
@@ -229,13 +231,13 @@ builder.queryFields(t => ({
         elementBase({
           cle: 'debut',
           sorte: 'DEBUT_PERIODE',
-          titre: `Premier jour · ${edition.nom}`,
+          titre: i18n._('Premier jour · {nom}', { nom: edition.nom }),
           jour: debut,
         }),
         elementBase({
           cle: 'fin',
           sorte: 'FIN_PERIODE',
-          titre: `Dernier jour · ${edition.nom}`,
+          titre: i18n._('Dernier jour · {nom}', { nom: edition.nom }),
           jour: fin,
         })
       )
@@ -372,7 +374,9 @@ builder.mutationFields(t => ({
           })
           if (nombre >= DATES_CLES_MAX) {
             throw erreurSaisie(
-              `Une période compte ${DATES_CLES_MAX} dates clés au plus.`
+              i18n._('Une période compte {max} dates clés au plus.', {
+                max: DATES_CLES_MAX,
+              })
             )
           }
           return tx.dateCle.create({
@@ -381,12 +385,16 @@ builder.mutationFields(t => ({
               organisationId: ctx.organisation!.id,
               activiteId: edition.activiteId,
               editionId: edition.id,
-              titre: texteRequis(args.titre, 'Le titre', TITRE_DATE_CLE_MAX),
+              titre: texteRequis(
+                args.titre,
+                i18n._('Le titre'),
+                TITRE_DATE_CLE_MAX
+              ),
               jour: enDate(jours.jour)!,
               jourFin: enDate(jours.jourFin),
               description: texteFacultatif(
                 args.description,
-                'La description',
+                i18n._('La description'),
                 DESCRIPTION_DATE_CLE_MAX
               ),
               creeParId: ctx.personne!.id,
@@ -429,12 +437,16 @@ builder.mutationFields(t => ({
         where: { id: actuelle.id, version: args.versionAttendue },
         data: {
           version: { increment: 1 },
-          titre: texteRequis(args.titre, 'Le titre', TITRE_DATE_CLE_MAX),
+          titre: texteRequis(
+            args.titre,
+            i18n._('Le titre'),
+            TITRE_DATE_CLE_MAX
+          ),
           jour: enDate(jours.jour)!,
           jourFin: enDate(jours.jourFin),
           description: texteFacultatif(
             args.description,
-            'La description',
+            i18n._('La description'),
             DESCRIPTION_DATE_CLE_MAX
           ),
         },
@@ -445,7 +457,7 @@ builder.mutationFields(t => ({
           select: { version: true, updatedAt: true },
         })
         throw conflitDeVersion(
-          'Cette date clé a été modifiée depuis votre lecture.',
+          i18n._('Cette date clé a été modifiée depuis votre lecture.'),
           { versionCourante: version, modifieeLe: updatedAt.toISOString() }
         )
       }

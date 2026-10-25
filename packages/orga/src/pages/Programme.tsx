@@ -34,7 +34,7 @@ import {
   TRANCHE_MINUTES,
 } from '../lib/programme'
 import { EDITION_COURANTE, LIEUX } from '../lib/requetes'
-import { langueActive } from '../lib/langue'
+import { comparerTextes } from '../lib/langue'
 
 /** « 3 séquences ». */
 function nombreDeSequences(nombre: number): string {
@@ -145,9 +145,7 @@ export default function Programme() {
         s.lieu && !actifs.some(l => l.id === s.lieu!.id) ? [s.lieu.id] : []
       )
     ),
-  ].sort((a, b) =>
-    nomLieu.get(a)!.localeCompare(nomLieu.get(b)!, langueActive())
-  )
+  ].sort((a, b) => comparerTextes(nomLieu.get(a)!, nomLieu.get(b)!))
   const ordreLieux = [...actifs.map(l => l.id), ...archives]
 
   const changer = (cle: string, valeur: string | null) => {

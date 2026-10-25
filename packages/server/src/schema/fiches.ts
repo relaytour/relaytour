@@ -4,6 +4,7 @@ import type { AppContext } from '../context.ts'
 import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { perimetresLisibles, peutLirePerimetre } from '../lib/droits.ts'
 import { accesRefuse, conflitDeVersion, erreurSaisie } from '../lib/erreurs.ts'
+import { i18n } from '../lib/langue.ts'
 import {
   donneesPersonnelles,
   empreinte,
@@ -185,7 +186,9 @@ async function conflitDeFiche(ficheId: string) {
     { isolationLevel: 'RepeatableRead' }
   )
   return conflitDeVersion(
-    'Une autre version de cette fiche a été enregistrée depuis votre lecture.',
+    i18n._(
+      'Une autre version de cette fiche a été enregistrée depuis votre lecture.'
+    ),
     {
       versionCourante: fiche.versionCouranteId,
       modifieeLe: (
@@ -219,9 +222,9 @@ async function prevenirLePerimetre(
 function contenuValide(contenu: string): string {
   const normalise = normaliserContenu(contenu)
   if (normalise.trim().length === 0)
-    throw erreurSaisie('Le contenu est obligatoire.')
+    throw erreurSaisie(i18n._('Le contenu est obligatoire.'))
   if (normalise.length > TAILLE_MAX_CONTENU) {
-    throw erreurSaisie('Le contenu dépasse la taille autorisée.')
+    throw erreurSaisie(i18n._('Le contenu dépasse la taille autorisée.'))
   }
   return normalise
 }
@@ -413,7 +416,7 @@ builder.mutationFields(t => ({
       const activiteId =
         perimetre?.activiteId ?? (await ctx.exigerActivite(args.activiteId))
       const auteur = await exigerRedaction(ctx, perimetreId, activiteId)
-      const titre = texteRequis(args.titre, 'Le titre', TITRE_MAX)
+      const titre = texteRequis(args.titre, i18n._('Le titre'), TITRE_MAX)
       const contenu = contenuValide(args.contenu)
       const slug = slugValide(args.slug)
       const creee = await sansDoublon(
@@ -450,7 +453,7 @@ builder.mutationFields(t => ({
             data: { versionCouranteId: version.id },
           })
         }),
-        'Une fiche utilise déjà cet identifiant.'
+        i18n._('Une fiche utilise déjà cet identifiant.')
       )
       publierPourActivite('FICHE', ctx.organisation!.id, activiteId, {
         id: creee.id,
@@ -485,7 +488,7 @@ builder.mutationFields(t => ({
         fiche.perimetreId,
         fiche.activiteId
       )
-      const titre = texteRequis(args.titre, 'Le titre', TITRE_MAX)
+      const titre = texteRequis(args.titre, i18n._('Le titre'), TITRE_MAX)
       const contenu = contenuValide(args.contenu)
       const nouvelleEmpreinte = empreinte(titre, contenu)
 
@@ -523,7 +526,11 @@ builder.mutationFields(t => ({
             contenu,
             empreinte: nouvelleEmpreinte,
             source: 'APP',
-            resume: texteFacultatif(args.resume, 'Le résumé', RESUME_MAX),
+            resume: texteFacultatif(
+              args.resume,
+              i18n._('Le résumé'),
+              RESUME_MAX
+            ),
             auteurId: auteur.id,
           },
         })
@@ -585,7 +592,7 @@ builder.mutationFields(t => ({
         },
       })
       if (ancienne === null)
-        throw erreurSaisie('Cette version est introuvable.')
+        throw erreurSaisie(i18n._('Cette version est introuvable.'))
       await ctx.exigerAdminDe(ancienne.fiche.activiteId)
       const versionDeDepart = args.versionDeDepart
         ? String(args.versionDeDepart)
@@ -694,7 +701,9 @@ builder.mutationFields(t => ({
         where: { userId, perimetreId, organisationId },
       })
       if (existant !== null) {
-        throw erreurSaisie('Cette personne a déjà ce droit de rédaction.')
+        throw erreurSaisie(
+          i18n._('Cette personne a déjà ce droit de rédaction.')
+        )
       }
       return prisma.droitRedaction.create({
         ...query,

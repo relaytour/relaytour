@@ -1,0 +1,18 @@
+# Task templates of the beginners group. Due dates are counted from the first day of the season.
+taches:
+  - modele: preparer-le-calendrier
+    titre: Prepare the schedule of training sessions
+    description: >-
+      The coordinators set the days, times, and places of the season’s training sessions.
+    echeance: J-30
+  - modele: accueillir-les-nouvelles-personnes
+    titre: Organize the welcome of new members
+    description: >-
+      The coordinators name a contact person for each September session.
+    echeance: J-7
+    fiche: accueillir-une-nouvelle-personne
+  - modele: faire-le-bilan-de-saison
+    titre: Review the season
+    description: >-
+      The coordinators collect the group’s feedback and send the review to the Club life area.
+    echeance: J+300

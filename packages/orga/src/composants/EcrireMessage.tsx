@@ -67,7 +67,7 @@ import { estOuverte } from '../lib/taches'
 
 import ChoixMessagerie from './ChoixMessagerie'
 import CopierAdresses from './CopierAdresses'
-import { langueActive } from '../lib/langue'
+import { majusculeInitiale } from '../lib/langue'
 
 // Fenêtre de rédaction d'un message (ADR 0020). L'admin choisit un modèle, complète
 // le texte, puis ouvre sa propre messagerie : l'application n'envoie rien. Elle
@@ -98,9 +98,6 @@ interface Props {
    */
   contactsPrincipaux?: readonly string[]
 }
-
-const majuscule = (texte: string) =>
-  texte.charAt(0).toLocaleUpperCase(langueActive()) + texte.slice(1)
 
 export default function EcrireMessage({ cible, fermer, ...reste }: Props) {
   const { t } = useLingui()
@@ -656,7 +653,7 @@ ${adresseFormulaire}`
               menu={{
                 items: INSERABLES.map(cle => ({
                   key: cle,
-                  label: majuscule(LIBELLES[cle]),
+                  label: majusculeInitiale(LIBELLES[cle]),
                   disabled: !informations[cle],
                 })),
                 onClick: ({ key }) =>

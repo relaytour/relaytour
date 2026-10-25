@@ -2,6 +2,8 @@ import { createHash } from 'node:crypto'
 
 import type { TypeNotification } from '@relaytour/database'
 
+import { i18n } from './langue.ts'
+
 // Notifications push (ADR 0024). Ce module est pur : il n'importe ni Prisma ni
 // l'environnement, pour que le schéma s'imprime sans `.env`.
 
@@ -131,7 +133,11 @@ export function libelleAppareil(agent: string | undefined): string {
   if (/Macintosh/.test(a)) return 'Mac'
   if (/Windows/.test(a)) return 'Windows'
   if (/Linux/.test(a)) return 'Linux'
-  return 'Appareil'
+  return i18n._(
+    'Appareil',
+    {},
+    { comment: 'Libellé d’un appareil dont le système n’est pas reconnu' }
+  )
 }
 
 /** Abonnements gardés par personne : au-delà, le plus ancien est retiré. */

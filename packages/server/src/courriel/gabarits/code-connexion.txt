@@ -1,19 +1,19 @@
 {{marque}}
 
-Votre code de connexion
+[[Votre code de connexion]]
 
-Saisissez ce code dans l’espace organisateur. Il est valable {{validite}}.
+[[Saisissez ce code dans l’espace organisateur. Il est valable {{validite}}.]]
 
     {{code}}
 
-Se connecter avec ce code : {{lienConnexion}}
+[[Se connecter avec ce code : {{lienConnexion}}]]
 
-Si vous n’avez pas demandé ce code, ignorez ce message. Personne ne peut se connecter
-sans accès à votre boîte mail.
+[[Si vous n’avez pas demandé ce code, ignorez ce message. Personne ne peut se connecter
+sans accès à votre boîte mail.]]
 
 --
-Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
-organisateur de {{organisation}}. Pour toute question, répondez à ce mail.
+[[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}. Pour toute question, répondez à ce mail.]]
 
-Cet espace est propulsé par Relaytour, logiciel libre.
+[[Cet espace est propulsé par Relaytour, logiciel libre.]]
 https://github.com/relaytour/relaytour

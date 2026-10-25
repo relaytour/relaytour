@@ -16,6 +16,16 @@ fr:
     relecture, et l'éditeur de fiche garde votre texte. Quand vos accès
     changent ou que votre session prend fin, un avis vous propose de recharger
     la page.
+en:
+  titre: >-
+    Screens update while you work
+  texte: >-
+    Tasks, progress, sheets, the team, and the bell refresh when you return to
+    the tab, when the network comes back, and every minute while the tab is
+    visible. You see other people’s changes without reloading the page. The
+    screen keeps its content during the refresh, and the sheet editor keeps your
+    text. When your access changes or your session ends, a notice offers to
+    reload the page.
 ---
 
 `lib/rafraichissement.ts` relit en silence les requêtes de `REQUETES_RAFRAICHIES`

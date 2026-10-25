@@ -1,3 +1,6 @@
+import { LANGUE_SOURCE } from '@relaytour/commun'
+
+import { avecLangue, i18n } from './langue.ts'
 import type { ConfigurationOrganisation } from './organisation.ts'
 
 // Application installée (ADR 0023) : le manifest d'une organisation. Ce module
@@ -49,16 +52,20 @@ export interface ManifestApplication {
 export function manifestApplication(
   c: Pick<
     ConfigurationOrganisation,
-    'slug' | 'nom' | 'nomCourt' | 'theme' | 'iconeApplicationUrl'
+    'slug' | 'nom' | 'nomCourt' | 'theme' | 'iconeApplicationUrl' | 'langue'
   >
 ): ManifestApplication {
   const ouverture = adresseOuverture(c.slug)
+  // Le manifest est servi sans session : il suit la langue de l'organisation (ADR 0047).
+  const langue = c.langue ?? LANGUE_SOURCE
   return {
     id: ouverture,
     name: c.nom,
     short_name: c.nomCourt,
-    description: `Espace organisateur · ${c.nom}`,
-    lang: 'fr',
+    description: avecLangue(langue, () =>
+      i18n._('Espace organisateur · {nom}', { nom: c.nom })
+    ),
+    lang: langue,
     start_url: ouverture,
     scope: '/',
     display: 'standalone',

@@ -75,6 +75,7 @@ import { perimetresLisiblesActifs } from '../lib/fiches-connexes.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
 import { publierChangement } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 
 import { builder } from './builder.ts'
@@ -483,7 +484,8 @@ function trier(elements: ElementVue[]): ElementVue[] {
 }
 
 function exigerChemin(chemin: readonly string[]): void {
-  if (!cheminValide(chemin)) throw erreurSaisie('Chemin de dossier invalide.')
+  if (!cheminValide(chemin))
+    throw erreurSaisie(i18n._('Chemin de dossier invalide.'))
 }
 
 /** Les lecteurs actuels d'un dossier lié, sous la forme que lit `validerLecteurs`. */
@@ -533,17 +535,21 @@ async function validerLecteurs(
   if (saisie.touteActivite) {
     if (perimetreIds.length + groupes.length > 0) {
       throw erreurSaisie(
-        'Choisissez toute l’activité, ou une liste de périmètres et de groupes.'
+        i18n._(
+          'Choisissez toute l’activité, ou une liste de périmètres et de groupes.'
+        )
       )
     }
     return { touteActivite: true, perimetreIds: [], groupes: [], designes: [] }
   }
   if (perimetreIds.length + groupes.length === 0) {
-    throw erreurSaisie('Choisissez au moins un périmètre ou un groupe.')
+    throw erreurSaisie(i18n._('Choisissez au moins un périmètre ou un groupe.'))
   }
   if (perimetreIds.length + groupes.length > LECTEURS_MAX) {
     throw erreurSaisie(
-      `Un dossier lié compte au plus ${LECTEURS_MAX} périmètres et groupes.`
+      i18n._('Un dossier lié compte au plus {max} périmètres et groupes.', {
+        max: LECTEURS_MAX,
+      })
     )
   }
   const trouves = await prisma.perimetre.count({
@@ -562,7 +568,11 @@ async function validerLecteurs(
   const declares = new Set(lireGroupes(activite.groupes).map(g => g.cle))
   const inconnu = groupes.find(g => !declares.has(g))
   if (inconnu !== undefined) {
-    throw erreurSaisie(`L’activité ne déclare pas le groupe « ${inconnu} ».`)
+    throw erreurSaisie(
+      i18n._('L’activité ne déclare pas le groupe « {groupe} ».', {
+        groupe: inconnu,
+      })
+    )
   }
   const membres =
     groupes.length === 0
@@ -576,7 +586,11 @@ async function validerLecteurs(
     g => !existants.groupes.includes(g) && !membres.some(m => m.groupe === g)
   )
   if (vide !== undefined) {
-    throw erreurSaisie(`Le groupe « ${vide} » ne compte aucun périmètre.`)
+    throw erreurSaisie(
+      i18n._('Le groupe « {groupe} » ne compte aucun périmètre.', {
+        groupe: vide,
+      })
+    )
   }
   const parGroupe = groupes.flatMap(g =>
     membres.filter(m => m.groupe === g).map(m => m.id)
@@ -617,7 +631,9 @@ async function perimetreHistorique(
   const libre = lecteurs.designes.find(id => !pris.has(id))
   if (libre === undefined) {
     throw erreurSaisie(
-      'Ce dossier est aussi lié à ces périmètres par un autre lien. Retirez l’autre lien, puis recommencez.'
+      i18n._(
+        'Ce dossier est aussi lié à ces périmètres par un autre lien. Retirez l’autre lien, puis recommencez.'
+      )
     )
   }
   return libre
@@ -692,7 +708,7 @@ builder.queryFields(t => ({
           base: null,
           chemin,
         })
-        if (liste === null) throw erreurSaisie('Dossier introuvable.')
+        if (liste === null) throw erreurSaisie(i18n._('Dossier introuvable.'))
         return {
           elements: trier(
             liste.elements.filter(e => e.dossier).map(e => vue(espace, e))
@@ -781,7 +797,7 @@ builder.queryFields(t => ({
           base: dossier.element,
           chemin,
         })
-        if (liste === null) throw erreurSaisie('Dossier introuvable.')
+        if (liste === null) throw erreurSaisie(i18n._('Dossier introuvable.'))
         return {
           elements: trier(
             liste.elements
@@ -813,7 +829,9 @@ builder.mutationFields(t => ({
     resolve: async (_root, { fournisseur, portee: demandee }, ctx) => {
       const portee = demandee ?? 'FICHIERS'
       const fermee = () =>
-        erreurSaisie('Ce fournisseur n’est pas ouvert sur cette installation.')
+        erreurSaisie(
+          i18n._('Ce fournisseur n’est pas ouvert sur cette installation.')
+        )
       const microsoft =
         fournisseur === 'SHAREPOINT' ? await configurationMicrosoft() : null
       const google =
@@ -852,14 +870,16 @@ builder.mutationFields(t => ({
         select: { fournisseur: true },
       })
       if (connexion === null) {
-        throw erreurSaisie('Aucun fournisseur cloud n’est connecté.')
+        throw erreurSaisie(i18n._('Aucun fournisseur cloud n’est connecté.'))
       }
       if (
         connexion.fournisseur !== 'GOOGLE_DRIVE' &&
         connexion.fournisseur !== 'NEXTCLOUD'
       ) {
         throw erreurSaisie(
-          'Ce fournisseur demande une reconnexion pour changer ses autorisations.'
+          i18n._(
+            'Ce fournisseur demande une reconnexion pour changer ses autorisations.'
+          )
         )
       }
       void publierChangement({ entite: 'FICHIERS', organisationId })
@@ -884,10 +904,13 @@ builder.mutationFields(t => ({
       )
       if (!possible) {
         throw erreurSaisie(
-          'Le compte de service n’est pas ouvert sur cette installation.'
+          i18n._(
+            'Le compte de service n’est pas ouvert sur cette installation.'
+          )
         )
       }
-      if (cle.length > 10_000) throw erreurSaisie('Cette clé est trop longue.')
+      if (cle.length > 10_000)
+        throw erreurSaisie(i18n._('Cette clé est trop longue.'))
       let compteService
       try {
         compteService = lireCleCompteService(cle)
@@ -901,7 +924,9 @@ builder.mutationFields(t => ({
           premier = await jetonCompteService(compteService)
         } catch {
           throw erreurSaisie(
-            'Google refuse cette clé. Vérifiez que le compte de service existe et que l’API Google Drive est activée dans son projet.'
+            i18n._(
+              'Google refuse cette clé. Vérifiez que le compte de service existe et que l’API Google Drive est activée dans son projet.'
+            )
           )
         }
       }
@@ -943,16 +968,22 @@ builder.mutationFields(t => ({
     resolve: async (_root, { adresse }, ctx) => {
       const configuration = await configurationNextcloud()
       if (configuration === null) {
-        throw erreurSaisie('Nextcloud n’est pas ouvert sur cette installation.')
+        throw erreurSaisie(
+          i18n._('Nextcloud n’est pas ouvert sur cette installation.')
+        )
       }
       if (adresse.length > 500)
-        throw erreurSaisie('Cette adresse est trop longue.')
+        throw erreurSaisie(i18n._('Cette adresse est trop longue.'))
       const base = baseAdmise(adresse, configuration)
       if (base === null) {
         throw erreurSaisie(
           configuration.tous
-            ? 'Saisissez l’adresse https de votre Nextcloud, sans port, par exemple https://cloud.exemple.org.'
-            : 'L’hébergeur de cette installation n’admet pas cette adresse. Demandez-lui d’ajouter votre Nextcloud.'
+            ? i18n._(
+                'Saisissez l’adresse https de votre Nextcloud, sans port, par exemple https://cloud.exemple.org.'
+              )
+            : i18n._(
+                'L’hébergeur de cette installation n’admet pas cette adresse. Demandez-lui d’ajouter votre Nextcloud.'
+              )
         )
       }
       let debut
@@ -981,7 +1012,9 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
       const configuration = await configurationNextcloud()
       if (configuration === null) {
-        throw erreurSaisie('Nextcloud n’est pas ouvert sur cette installation.')
+        throw erreurSaisie(
+          i18n._('Nextcloud n’est pas ouvert sur cette installation.')
+        )
       }
       // L'état appartient à la personne qui a commencé, dans cette organisation.
       const enCours = await lireConnexionNextcloud(etat)
@@ -990,7 +1023,7 @@ builder.mutationFields(t => ({
         enCours.organisationId !== organisationId ||
         enCours.userId !== ctx.personne!.id
       ) {
-        throw erreurSaisie('Cette connexion a expiré. Recommencez.')
+        throw erreurSaisie(i18n._('Cette connexion a expiré. Recommencez.'))
       }
       let accorde
       try {
@@ -1096,7 +1129,8 @@ builder.mutationFields(t => ({
       const organisationId = ctx.organisation!.id
       exigerChemin(chemin)
       // Une bibliothèque entière ne se lie pas : l'admin choisit un dossier.
-      if (chemin.length === 0) throw erreurSaisie('Choisissez un dossier.')
+      if (chemin.length === 0)
+        throw erreurSaisie(i18n._('Choisissez un dossier.'))
       const activite = await prisma.activite.findFirst({
         where: { id: String(activiteId), organisationId },
         select: { id: true },
@@ -1112,7 +1146,9 @@ builder.mutationFields(t => ({
         element: await espace.element({ emplacement, base: null, chemin }),
       }))
       if (element === null || !element.dossier) {
-        throw erreurSaisie('Ce dossier n’existe pas chez le fournisseur cloud.')
+        throw erreurSaisie(
+          i18n._('Ce dossier n’existe pas chez le fournisseur cloud.')
+        )
       }
       // Le dossier d'export contient les fiches de tous les périmètres : ni lui,
       // ni un dossier qui le contient, ni un de ses sous-dossiers ne se lie.
@@ -1137,7 +1173,9 @@ builder.mutationFields(t => ({
           parcours.includes(exportElement)
         ) {
           throw erreurSaisie(
-            'Ce dossier contient le dossier d’export des fiches, ou s’y trouve. Choisissez un autre dossier.'
+            i18n._(
+              'Ce dossier contient le dossier d’export des fiches, ou s’y trouve. Choisissez un autre dossier.'
+            )
           )
         }
       }
@@ -1162,12 +1200,14 @@ builder.mutationFields(t => ({
           (exportation?.exportElement ?? null)
         ) {
           throw erreurSaisie(
-            'Le dossier d’export vient de changer. Recommencez le lien.'
+            i18n._('Le dossier d’export vient de changer. Recommencez le lien.')
           )
         }
         if ((await tx.dossierLie.findFirst({ where: cle })) !== null) {
           throw erreurSaisie(
-            'Ce dossier est déjà lié à cette activité. Modifiez ses lecteurs.'
+            i18n._(
+              'Ce dossier est déjà lié à cette activité. Modifiez ses lecteurs.'
+            )
           )
         }
         const cree = await tx.dossierLie.create({
@@ -1219,7 +1259,9 @@ builder.mutationFields(t => ({
         ids: await lignee(espace, emplacement, chemin),
       }))
       if (parent === null || !parent.dossier) {
-        throw erreurSaisie('Ce dossier n’existe pas chez le fournisseur cloud.')
+        throw erreurSaisie(
+          i18n._('Ce dossier n’existe pas chez le fournisseur cloud.')
+        )
       }
       // Un compte de service Google n'a pas d'espace de stockage : il n'écrit que
       // dans un Drive partagé.
@@ -1233,12 +1275,16 @@ builder.mutationFields(t => ({
         (emplacement === MON_DRIVE || emplacement === PARTAGES)
       ) {
         throw erreurSaisie(
-          'Un compte de service n’écrit que dans un Drive partagé. Choisissez un dossier d’un Drive partagé dont il est membre.'
+          i18n._(
+            'Un compte de service n’écrit que dans un Drive partagé. Choisissez un dossier d’un Drive partagé dont il est membre.'
+          )
         )
       }
       const refus = () =>
         erreurSaisie(
-          'Ce dossier est lié à une activité, ou se trouve dans un dossier lié. Les membres y liraient les fiches de tous les périmètres : choisissez un autre dossier.'
+          i18n._(
+            'Ce dossier est lié à une activité, ou se trouve dans un dossier lié. Les membres y liraient les fiches de tous les périmètres : choisissez un autre dossier.'
+          )
         )
       const lies = (tx: Prisma.TransactionClient | typeof prisma) =>
         tx.dossierLie.count({
@@ -1328,13 +1374,15 @@ builder.mutationFields(t => ({
         select: { exportElement: true, etat: true },
       })
       if (connexion?.exportElement == null || connexion.etat !== 'ACTIVE') {
-        throw erreurSaisie('Aucun dossier d’export n’est choisi.')
+        throw erreurSaisie(i18n._('Aucun dossier d’export n’est choisi.'))
       }
       try {
         await lancerExportFiches(organisationId)
       } catch {
         throw erreurSaisie(
-          'L’export n’a pas pu être lancé. Réessayez dans quelques instants.'
+          i18n._(
+            'L’export n’a pas pu être lancé. Réessayez dans quelques instants.'
+          )
         )
       }
       return true
@@ -1366,7 +1414,10 @@ builder.mutationFields(t => ({
       })
       if (crees > 0 && oublierAcces !== true) {
         throw erreurSaisie(
-          `Relaytour a créé ${crees > 1 ? `${crees} accès` : 'un accès'} chez le fournisseur pour ce dossier. Retirez-les d’abord, ou confirmez qu’ils restent sans suivi.`
+          i18n._(
+            '{crees, plural, one {Relaytour a créé un accès chez le fournisseur pour ce dossier. Retirez-les d’abord, ou confirmez qu’ils restent sans suivi.} other {Relaytour a créé # accès chez le fournisseur pour ce dossier. Retirez-les d’abord, ou confirmez qu’ils restent sans suivi.}}',
+            { crees }
+          )
         )
       }
       await prisma.dossierLie.delete({ where: { id: dossier.id } })
@@ -1421,7 +1472,7 @@ builder.mutationFields(t => ({
         (nomAffiche.length === 0 || nomAffiche.length > 255)
       ) {
         throw erreurSaisie(
-          'Le nom d’un dossier lié compte de 1 à 255 caractères.'
+          i18n._('Le nom d’un dossier lié compte de 1 à 255 caractères.')
         )
       }
       const apres = await sousVerrouOrganisation(organisationId, async tx => {
