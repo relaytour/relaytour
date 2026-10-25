@@ -31,7 +31,10 @@ export default function PreferenceLangue() {
   const { message } = App.useApp()
   const { nomCourt } = useOrganisation()
   const { data } = useQuery(LANGUE_DE_MOI)
-  const [modifier, modification] = useMutation(MODIFIER)
+  // L'organisation se relit : le lien des modes d'emploi suit la langue (ADR 0047).
+  const [modifier, modification] = useMutation(MODIFIER, {
+    refetchQueries: ['Organisation'],
+  })
 
   // Une seule langue proposée : aucun choix à faire.
   if (LANGUES_PROPOSEES.length < 2) return null

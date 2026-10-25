@@ -58,7 +58,9 @@ export function listeDesModesDEmploi(
 ): string {
   if (langue !== 'en') return env.MODES_D_EMPLOI_URL
   if (env.MODES_D_EMPLOI_URL_EN !== undefined) return env.MODES_D_EMPLOI_URL_EN
-  return env.MODES_D_EMPLOI_URL === LISTE_PAR_DEFAUT
+  // La barre finale est facultative dans MODES_D_EMPLOI_URL.
+  const sansBarre = (adresse: string) => adresse.replace(/\/+$/, '')
+  return sansBarre(env.MODES_D_EMPLOI_URL) === sansBarre(LISTE_PAR_DEFAUT)
     ? LISTE_ANGLAISE_PAR_DEFAUT
     : env.MODES_D_EMPLOI_URL
 }
