@@ -853,6 +853,18 @@ msgid "La recherche dépasse {max} caractères."
 msgstr "The search exceeds {max} characters."
 
 #. js-lingui-explicit-id
+#: src/schema/reconduction.ts
+msgid "Choisissez une autre édition comme source."
+msgstr "Choose another edition as the source."
+
+#. js-lingui-explicit-id
+#: src/lib/droits.ts
+#: src/schema/reconduction.ts
+#: src/schema/taches-types.ts
+msgid "Cette édition est archivée : ses tâches sont en lecture seule."
+msgstr "This edition is archived: its tasks are read-only."
+
+#. js-lingui-explicit-id
 #: src/schema/repartition.ts
 msgid "Choisissez une candidature ou une fiche bénévole."
 msgstr "Choose an application or a volunteer record."
@@ -967,12 +979,6 @@ msgstr "This period is archived: its interests are locked."
 #: src/schema/souhaits.ts
 msgid "Vous avez déjà {max} souhaits pour cette période."
 msgstr "You already have {max} interests for this period."
-
-#. js-lingui-explicit-id
-#: src/lib/droits.ts
-#: src/schema/taches-types.ts
-msgid "Cette édition est archivée : ses tâches sont en lecture seule."
-msgstr "This edition is archived: its tasks are read-only."
 
 #. js-lingui-explicit-id
 #: src/schema/taches.ts
@@ -2034,6 +2040,11 @@ msgstr "A place is a team member or a volunteer record."
 #: src/lib/push.ts
 msgid "Appareil"
 msgstr "Device"
+
+#. js-lingui-explicit-id
+#: src/lib/reconduction.ts
+msgid "Le périmètre est archivé."
+msgstr "The area is archived."
 
 #. js-lingui-explicit-id
 #: src/lib/reunions.ts

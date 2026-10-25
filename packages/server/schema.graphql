@@ -964,6 +964,12 @@ enum EtatProposition {
   EN_COURS
 }
 
+enum EtatReconduction {
+  A_CREER
+  DEJA_PRESENTE
+  ECARTEE
+}
+
 """
 Un événement du journal d’une tâche : création, modification, assignation, retrait ou changement de statut.
 """
@@ -1332,6 +1338,23 @@ type LigneImport {
   motif: String
   rapprochement: RapprochementImport
   rattacheeA: ID
+}
+
+"""
+Une tâche de la période source et ce que la reconduction en fait. Une tâche partagée compte ses déclinaisons recréées.
+"""
+type LigneReconduction {
+  declinaisons: Int!
+  echeance: Date
+  etat: EtatReconduction!
+  parDefaut: Boolean!
+  perimetre: String!
+  perimetreId: ID!
+  raison: String
+  retenue: Boolean!
+  statutSource: StatutTache!
+  tacheId: ID!
+  titre: String!
 }
 
 """
@@ -2021,6 +2044,11 @@ type Mutation {
   """
   quitterPlace(jeton: String!, ref: String!): Boolean!
   rattacherALActivite(activiteId: ID!, userId: ID!): Boolean!
+
+  """
+  Recrée dans la période cible les tâches choisies de la période source, avec le même écart en jours depuis le premier jour, et les effectifs souhaités. Une tâche déjà présente n’est pas recréée.
+  """
+  reconduireEdition(cibleId: ID!, sourceId: ID!, tacheIds: [ID!]): RapportReconduction!
 
   """
   Refuse tous les choix en attente d’une candidature et la clôt. Réservé aux personnes qui gèrent l’appel. Aucun mail ne part.
@@ -2960,6 +2988,11 @@ type Query {
   simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
 
   """
+  Simule la reconduction des tâches d’une période vers une autre de la même activité : rien ne change en base. Sans `tacheIds`, toutes les tâches qui n’ont pas été abandonnées.
+  """
+  simulerReconduction(cibleId: ID!, sourceId: ID!, tacheIds: [ID!]): RapportReconduction!
+
+  """
   Simule l’application des tâches types à une période : rien ne change en base. Sans `perimetreIds`, tous les périmètres actifs de l’activité.
   """
   simulerTachesTypes(editionId: ID!, perimetreIds: [ID!]): RapportTachesTypes!
@@ -3021,6 +3054,16 @@ type RapportImportFiches {
   nonImportes: [FichierEcarte!]!
   nouvellesVersions: [String!]!
   refusees: [FichierEcarte!]!
+}
+
+"""
+Ce que la reconduction fait à la période cible, ou ferait en simulation.
+"""
+type RapportReconduction {
+  effectifsCrees: [String!]!
+  effectifsDejaPresents: [String!]!
+  ignorees: Int!
+  lignes: [LigneReconduction!]!
 }
 
 """

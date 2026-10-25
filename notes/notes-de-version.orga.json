@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-25-orga-une-edition-reprend-les-taches-de-la-precedente",
+          "date": "2026-10-25",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une nouvelle édition reprend les tâches de la précédente ou les tâches types",
+            "texte": "À la création d’une édition, vous choisissez son point de départ : aucune tâche, les tâches types des périmètres, ou les tâches d’une édition passée. Vous décochez les tâches que vous ne reprenez pas. Chaque échéance garde le même écart avec le premier jour, et une tâche reprise repart à faire. Le menu « Ajouter des tâches » de l’écran Éditions fait la même chose plus tard.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A new edition carries over the previous edition’s tasks or the task templates",
+            "texte": "When you create an edition, you choose its starting point: no tasks, the areas’ task templates, or the tasks of a past edition. You uncheck the tasks you do not carry over. Each due date keeps the same gap from the first day, and a carried-over task starts again as to do. The “Add tasks” menu of the Editions screen does the same later.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-25-orga-l-import-d-une-liste-de-benevoles-reconnait-les-colonnes-en-",
           "date": "2026-10-25",
           "type": "fonctionnalite",

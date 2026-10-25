@@ -1,4 +1,4 @@
-import { PlusOutlined } from '@ant-design/icons'
+import { DownOutlined, PlusOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
 import { t } from '@lingui/core/macro'
 import { useLingui } from '@lingui/react/macro'
@@ -6,17 +6,24 @@ import {
   App,
   Button,
   Col,
+  Dropdown,
   Form,
   Input,
   InputNumber,
   Modal,
+  Radio,
   Row,
   Select,
+  Space,
   Tag,
 } from 'antd'
 import { useState } from 'react'
 
+import ReconductionEdition, {
+  type PeriodeReconduction,
+} from '../../composants/ReconductionEdition'
 import Tableau from '../../composants/Tableau'
+import TachesTypesEdition from '../../composants/TachesTypesEdition'
 import Titre from '../../composants/Titre'
 import { useActivite } from '../../lib/activite'
 import { graphql } from '../../gql'
@@ -84,12 +91,17 @@ const statuts = (
   },
 })
 
+/** Point de départ d'une nouvelle période (ADR 0048). */
+type Depart = 'vide' | 'types' | 'reprendre'
+
 interface Valeurs {
   annee: number
   nom: string
   debut: string
   fin: string
   statut: StatutEdition
+  depart: Depart
+  source?: string
 }
 
 export default function Editions() {
@@ -112,6 +124,16 @@ export default function Editions() {
   const rafraichir = { refetchQueries: [EDITIONS, EDITION_COURANTE] }
   const [creer, creation] = useMutation(CREER, rafraichir)
   const [modifier, modification] = useMutation(MODIFIER, rafraichir)
+  const [tachesTypesPour, setTachesTypesPour] =
+    useState<PeriodeReconduction | null>(null)
+  const [reconduction, setReconduction] = useState<{
+    cible: PeriodeReconduction
+    source?: string
+  } | null>(null)
+  const periodes: PeriodeReconduction[] = (data?.editions ?? []).map(e => ({
+    id: e.id,
+    nom: e.nom,
+  }))
 
   const ouvrir = (edition: Edition | 'nouvelle') => {
     setEnEdition(edition)
@@ -123,6 +145,8 @@ export default function Editions() {
             debut: '',
             fin: '',
             statut: 'PREPARATION',
+            depart: periodes.length > 0 ? 'reprendre' : 'vide',
+            source: periodes[0]?.id,
           }
         : {
             annee: edition.annee,
@@ -130,6 +154,7 @@ export default function Editions() {
             debut: edition.debut.slice(0, 10),
             fin: edition.fin.slice(0, 10),
             statut: edition.statut,
+            depart: 'vide',
           }
     )
   }
@@ -138,10 +163,18 @@ export default function Editions() {
     const { debut, fin } = valeurs
     try {
       if (enEdition === 'nouvelle') {
-        await creer({
+        const resultat = await creer({
           variables: { annee: valeurs.annee, nom: valeurs.nom, debut, fin },
         })
         message.success(t`${Mot} ${creee}.`)
+        const id = resultat.data?.creerEdition.id
+        if (id !== undefined) {
+          const nouvelle = { id, nom: valeurs.nom }
+          if (valeurs.depart === 'types') setTachesTypesPour(nouvelle)
+          if (valeurs.depart === 'reprendre') {
+            setReconduction({ cible: nouvelle, source: valeurs.source })
+          }
+        }
       } else if (enEdition) {
         await modifier({
           variables: {
@@ -226,6 +259,42 @@ export default function Editions() {
               valeurs: e => e.statut,
             },
           },
+          {
+            title: '',
+            key: 'actions',
+            redimensionnable: false,
+            render: (_, e) =>
+              e.statut !== 'ARCHIVEE' && (
+                <Dropdown
+                  trigger={['click']}
+                  menu={{
+                    items: [
+                      { key: 'types', label: t`Appliquer les tâches types` },
+                      ...(periodes.length > 1
+                        ? [
+                            {
+                              key: 'reprendre',
+                              label: t`Reprendre des tâches existantes`,
+                            },
+                          ]
+                        : []),
+                    ],
+                    onClick: ({ key }) => {
+                      const cible = { id: e.id, nom: e.nom }
+                      if (key === 'types') setTachesTypesPour(cible)
+                      else setReconduction({ cible })
+                    },
+                  }}
+                >
+                  <Button size="small">
+                    <Space size={4}>
+                      {t`Ajouter des tâches`}
+                      <DownOutlined />
+                    </Space>
+                  </Button>
+                </Dropdown>
+              ),
+          },
         ]}
       />
 
@@ -292,6 +361,37 @@ export default function Editions() {
               </Form.Item>
             </Col>
           </Row>
+          {enEdition === 'nouvelle' && (
+            <Form.Item
+              label={t`Partir de`}
+              name="depart"
+              extra={t`Vous pourrez aussi ajouter des tâches plus tard, depuis cet écran.`}
+            >
+              <Radio.Group>
+                <Space orientation="vertical">
+                  <Radio value="vide">{t`Aucune tâche`}</Radio>
+                  <Radio value="types">{t`Les tâches types des périmètres`}</Radio>
+                  {periodes.length > 0 && (
+                    <Radio value="reprendre">
+                      <Space wrap>
+                        {t`Les tâches de`}
+                        <Form.Item name="source" noStyle>
+                          <Select
+                            aria-label={t`Reprendre les tâches de`}
+                            style={{ minWidth: 200 }}
+                            options={periodes.map(p => ({
+                              value: p.id,
+                              label: p.nom,
+                            }))}
+                          />
+                        </Form.Item>
+                      </Space>
+                    </Radio>
+                  )}
+                </Space>
+              </Radio.Group>
+            </Form.Item>
+          )}
           {enEdition !== 'nouvelle' && (
             <Form.Item
               label={t`Statut`}
@@ -310,6 +410,18 @@ export default function Editions() {
           )}
         </Form>
       </Modal>
+
+      <TachesTypesEdition
+        edition={tachesTypesPour}
+        onFermer={() => setTachesTypesPour(null)}
+      />
+      <ReconductionEdition
+        key={reconduction?.cible.id ?? 'fermee'}
+        cible={reconduction?.cible ?? null}
+        periodes={periodes}
+        sourceInitiale={reconduction?.source}
+        onFermer={() => setReconduction(null)}
+      />
     </>
   )
 }

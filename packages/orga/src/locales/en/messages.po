@@ -199,6 +199,14 @@ msgstr "{champCc} (visible addresses)"
 msgid "{champCci} (adresses cachées)"
 msgstr "{champCci} (hidden addresses)"
 
+#: src/composants/TachesTypesEdition.tsx
+msgid "{creees, plural, one {# tâche créée.} other {# tâches créées.}}"
+msgstr "{creees, plural, one {# task created.} other {# tasks created.}}"
+
+#: src/composants/ReconductionEdition.tsx
+msgid "{creees, plural, one {# tâche reprise.} other {# tâches reprises.}}"
+msgstr "{creees, plural, one {# task carried over.} other {# tasks carried over.}}"
+
 #: src/composants/SondageDetail.tsx
 msgid "{creneau}. Les réponses ne changent plus. Vous créez ensuite la réunion."
 msgstr "{creneau}. Responses no longer change. You then create the meeting."
@@ -327,6 +335,10 @@ msgstr "{largeur} pixels"
 msgid "{libelle} ({mot})"
 msgstr "{libelle} ({mot})"
 
+#: src/composants/TachesTypesEdition.tsx
+msgid "{libelleACreer} à créer, {presentes, plural, one {# déjà présente} other {# déjà présentes}}. Une tâche déjà présente ne change pas."
+msgstr "{libelleACreer} to create, {presentes, plural, one {# already present} other {# already present}}. A task that is already present does not change."
+
 #: src/composants/ChoixLecteurs.tsx
 msgid "{libelleGroupe} (tout le groupe)"
 msgstr "{libelleGroupe} (whole group)"
@@ -359,6 +371,8 @@ msgstr "{Mot} 2027"
 msgid "{n, plural, one {# élément} other {# éléments}}"
 msgstr "{n, plural, one {# item} other {# items}}"
 
+#: src/composants/ReconductionEdition.tsx
+#: src/composants/TachesTypesEdition.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "{n, plural, one {# tâche} other {# tâches}}"
@@ -1246,6 +1260,7 @@ msgstr "Your reply needed"
 
 #. Statut d’une tâche
 #. Statut d’une tâche
+#: src/composants/ReconductionEdition.tsx
 #: src/lib/conflit.ts
 #: src/lib/taches.ts
 msgid "Abandonnée"
@@ -1657,6 +1672,10 @@ msgstr "Add to my calendar"
 msgid "Ajouter au {cible}"
 msgstr "Add to {cible}"
 
+#: src/pages/admin/Editions.tsx
+msgid "Ajouter des tâches"
+msgstr "Add tasks"
+
 #: src/pages/FicheEditeur.tsx
 msgid "Ajouter les mentions à « Concerne aussi » ?"
 msgstr "Add the mentions to “Also concerns”?"
@@ -1736,6 +1755,7 @@ msgstr "Canceled"
 #: src/composants/LienBenevole.tsx
 #: src/composants/MesInvitations.tsx
 #: src/composants/ProposerPersonne.tsx
+#: src/composants/ReconductionEdition.tsx
 #: src/composants/ReglagePerimetre.tsx
 #: src/composants/Repartition.tsx
 #: src/composants/RessourcesFiche.tsx
@@ -1746,6 +1766,7 @@ msgstr "Canceled"
 #: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheCarte.tsx
 #: src/composants/TacheFormulaire.tsx
+#: src/composants/TachesTypesEdition.tsx
 #: src/lib/taches.ts
 #: src/pages/admin/Activites.tsx
 #: src/pages/admin/Admins.tsx
@@ -1837,6 +1858,14 @@ msgstr "Apply"
 #: src/composants/GestionAcces.tsx
 msgid "Appliquer les ajouts sans attendre"
 msgstr "Apply additions without waiting"
+
+#: src/pages/admin/Editions.tsx
+msgid "Appliquer les tâches types"
+msgstr "Apply task templates"
+
+#: src/composants/TachesTypesEdition.tsx
+msgid "Appliquer les tâches types à {nomEdition}"
+msgstr "Apply task templates to {nomEdition}"
 
 #: src/composants/GestionAcces.tsx
 msgid "Appliquer toutes les propositions de ce dossier ?"
@@ -2204,8 +2233,13 @@ msgid "Aucune séquence ne cherche de bénévoles."
 msgstr "No slot is looking for volunteers."
 
 #: src/composants/Avancement.tsx
+#: src/pages/admin/Editions.tsx
 msgid "Aucune tâche"
 msgstr "No tasks"
+
+#: src/composants/ReconductionEdition.tsx
+msgid "Aucune tâche dans {cette}."
+msgstr "No tasks in {cette}."
 
 #: src/pages/Perimetre.tsx
 msgid "Aucune tâche dans cette catégorie."
@@ -2501,6 +2535,10 @@ msgstr "This text opens the form. It is public: do not write any personal contac
 msgid "Celui de l’organisation"
 msgstr "The organization’s"
 
+#: src/composants/TachesTypesEdition.tsx
+msgid "Certaines tâches partagées ne seront pas déclinées."
+msgstr "Some shared tasks will not be derived."
+
 #: src/composants/InvitationsEnAttente.tsx
 msgid "Ces adresses ont déjà un compte hors de votre organisation. Chaque personne accepte ou refuse l’invitation depuis son compte. Rien n’est créé en son nom avant son accord, et elle n’apparaît pas dans l’équipe."
 msgstr "These addresses already have an account outside your organization. Each person accepts or declines the invitation from their account. Nothing is created in their name before they agree, and they do not appear in the team."
@@ -2705,6 +2743,10 @@ msgstr "Each card shows an area’s done, overdue, and unassigned tasks."
 #: src/composants/EcrireMessage.tsx
 msgid "Chaque destinataire voit l’adresse des autres"
 msgstr "Each recipient sees the others’ addresses"
+
+#: src/composants/ReconductionEdition.tsx
+msgid "Chaque échéance garde le même écart avec le premier jour. Une tâche reprise repart à faire, sans personne assignée ni commentaire."
+msgstr "Each due date keeps the same gap from the first day. A carried-over task starts again as to do, with no assignee and no comments."
 
 #: src/pages/FicheEditeur.tsx
 msgid "Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique."
@@ -3251,6 +3293,14 @@ msgstr "Coverage"
 msgid "Couverture par tranche de 30 minutes"
 msgstr "Coverage per 30-minute interval"
 
+#: src/composants/TachesTypesEdition.tsx
+msgid "Créer"
+msgstr "Create"
+
+#: src/composants/TachesTypesEdition.tsx
+msgid "Créer {libelleACreer}"
+msgstr "Create {libelleACreer}"
+
 #: src/composants/LienBenevole.tsx
 msgid "Créer et copier le lien"
 msgstr "Create and copy link"
@@ -3404,6 +3454,10 @@ msgstr "Already a member"
 #: src/composants/Repartition.tsx
 msgid "Déjà placé·e"
 msgstr "Already placed"
+
+#: src/composants/ReconductionEdition.tsx
+msgid "Déjà présente"
+msgstr "Already present"
 
 #: src/composants/Demandes.tsx
 msgid "Demande acceptée. La personne est affectée."
@@ -3684,6 +3738,7 @@ msgid "Écarter"
 msgstr "Dismiss"
 
 #. Sorte d’élément de l’agenda : l’échéance d’une tâche
+#: src/composants/ReconductionEdition.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/Agenda.tsx
 msgid "Échéance"
@@ -4730,6 +4785,10 @@ msgstr "The access already granted to Nextcloud is enough. Group members can be 
 msgid "L’activité est gérée par les admins de l’organisation."
 msgstr "The activity is managed by the organization admins."
 
+#: src/composants/ReconductionEdition.tsx
+msgid "L’activité n’a pas d’autre {mot}."
+msgstr "The activity has no other {mot}."
+
 #: src/pages/ImportBenevoles.tsx
 msgid "L’activité peut encore recevoir {fichesRestantes} fiches : réduisez la liste."
 msgstr "The activity can still receive {fichesRestantes} volunteer records. Shorten the list."
@@ -5750,6 +5809,14 @@ msgstr "Possible duplicates are found by email address, phone number and name. T
 msgid "Les échéances des tâches qui me sont assignées"
 msgstr "Due dates of tasks assigned to me"
 
+#: src/composants/TachesTypesEdition.tsx
+msgid "Les effectifs souhaités de {effectifs, plural, one {# périmètre} other {# périmètres}} sont aussi créés."
+msgstr "The target headcounts of {effectifs, plural, one {# area} other {# areas}} are created too."
+
+#: src/composants/ReconductionEdition.tsx
+msgid "Les effectifs souhaités de {effectifs, plural, one {# périmètre} other {# périmètres}} sont aussi repris."
+msgstr "The target headcounts of {effectifs, plural, one {# area} other {# areas}} are carried over too."
+
 #: src/pages/Benevoles.tsx
 msgid "Les fiches bénévoles n’ont pas pu être chargées."
 msgstr "The volunteer records couldn’t be loaded."
@@ -5843,6 +5910,10 @@ msgstr "The areas of {nomPeriode}. Choose the ones that interest you. An admin t
 msgid "Les périmètres de {nomPeriode}. Les admins de l’activité notent les souhaits et confirment les affectations."
 msgstr "The areas of {nomPeriode}. Activity admins record interests and confirm appointments."
 
+#: src/composants/TachesTypesEdition.tsx
+msgid "Les périmètres de l’activité n’ont aucune tâche type."
+msgstr "The activity’s areas have no task templates."
+
 #: src/composants/DeclinerTache.tsx
 msgid "Les périmètres qui portent déjà cette tâche n’ont pas pu être chargés."
 msgstr "The areas that already carry this task couldn’t be loaded."
@@ -5891,6 +5962,10 @@ msgstr "Tasks {dePeriode} are sorted by phase, then by area."
 msgid "Les tâches {dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine."
 msgstr "Tasks {dePeriode} are grouped by month, from the nearest to the furthest."
 
+#: src/pages/admin/Editions.tsx
+msgid "Les tâches de"
+msgstr "The tasks of"
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les tâches proposées à ce périmètre n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr "The tasks proposed to this area couldn’t be loaded. Reload the page in a moment."
@@ -5906,6 +5981,14 @@ msgstr "Tasks are sorted by phase, then by due date. A task goes into a phase ac
 #: src/pages/Perimetre.tsx
 msgid "Les tâches sont triées par échéance. Une tâche ne se supprime pas : elle s’abandonne."
 msgstr "Tasks are sorted by due date. A task can’t be deleted: it is abandoned."
+
+#: src/composants/TachesTypesEdition.tsx
+msgid "Les tâches types de ces périmètres sont illisibles et ne seront pas créées : {illisibles}."
+msgstr "The task templates of these areas cannot be read and will not be created: {illisibles}."
+
+#: src/pages/admin/Editions.tsx
+msgid "Les tâches types des périmètres"
+msgstr "The areas’ task templates"
 
 #: src/pages/FicheEditeur.tsx
 msgid "Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux."
@@ -6953,6 +7036,10 @@ msgstr "Folder shared with read access"
 msgid "Partage du dossier en lecture, ajouts automatiques"
 msgstr "Folder shared with read access, automatic additions"
 
+#: src/composants/ReconductionEdition.tsx
+msgid "partagée avec {n, plural, one {# périmètre} other {# périmètres}}"
+msgstr "shared with {n, plural, one {# area} other {# areas}}"
+
 #: src/composants/GestionAcces.tsx
 #: src/lib/espace-fichiers.ts
 msgid "Partager le dossier"
@@ -6974,6 +7061,10 @@ msgstr "Participation"
 msgid "Participation confirmée le {jourConfirmation}."
 msgstr "Participation confirmed on {jourConfirmation}."
 
+#: src/pages/admin/Editions.tsx
+msgid "Partir de"
+msgstr "Start from"
+
 #: src/lib/guide-markdown.ts
 msgid "Pensez à _signer la feuille de présence_."
 msgstr "Remember to _sign the attendance sheet_."
@@ -6986,6 +7077,7 @@ msgstr "Performance"
 #. Portée d’un appel à bénévoles dont le périmètre est inconnu
 #: src/composants/AppelsBenevoles.tsx
 #: src/composants/EcrireMessage.tsx
+#: src/composants/ReconductionEdition.tsx
 #: src/composants/SequenceFormulaire.tsx
 #: src/pages/Fiche.tsx
 msgid "Périmètre"
@@ -7809,9 +7901,30 @@ msgstr "Reply later"
 msgid "Réponses"
 msgstr "Responses"
 
+#: src/composants/ReconductionEdition.tsx
+msgid "Reprendre {aReprendre}"
+msgstr "Carry over {aReprendre}"
+
+#: src/composants/ReconductionEdition.tsx
+msgid "Reprendre {titre}"
+msgstr "Carry over {titre}"
+
+#: src/composants/ReconductionEdition.tsx
+msgid "Reprendre des tâches dans {nomCible}"
+msgstr "Carry over tasks into {nomCible}"
+
+#: src/pages/admin/Editions.tsx
+msgid "Reprendre des tâches existantes"
+msgstr "Carry over existing tasks"
+
 #: src/pages/FicheEditeur.tsx
 msgid "Reprendre le brouillon"
 msgstr "Resume draft"
+
+#: src/composants/ReconductionEdition.tsx
+#: src/pages/admin/Editions.tsx
+msgid "Reprendre les tâches de"
+msgstr "Carry over the tasks of"
 
 #: src/composants/ComptesFournisseur.tsx
 msgid "Reprendre son adresse Relaytour"
@@ -8594,6 +8707,10 @@ msgstr "Table"
 #: src/lib/guide-markdown.ts
 msgid "Tableaux"
 msgstr "Tables"
+
+#: src/composants/ReconductionEdition.tsx
+msgid "Tâche"
+msgstr "Task"
 
 #: src/composants/TacheCarte.tsx
 msgid "Tâche abandonnée."
@@ -9881,6 +9998,10 @@ msgstr "You are no longer working on the task."
 #: src/lib/messages.ts
 msgid "Vous partagez l’avancement et les prochaines dates."
 msgstr "You share progress and upcoming dates."
+
+#: src/pages/admin/Editions.tsx
+msgid "Vous pourrez aussi ajouter des tâches plus tard, depuis cet écran."
+msgstr "You can also add tasks later, from this screen."
 
 #: src/composants/EcrireMessage.tsx
 msgid "Vous pouvez déposer votre demande par ce formulaire :\n"
