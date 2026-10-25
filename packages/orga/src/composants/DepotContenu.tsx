@@ -132,7 +132,24 @@ export default function DepotContenu({
       recommencer()
       await apollo.refetchQueries({ include: 'active' })
     } catch (e) {
-      setErreur(e instanceof ErreurDepot ? e : new ErreurDepot(String(e)))
+      const refus = e instanceof ErreurDepot ? e : new ErreurDepot(String(e))
+      setErreur(refus)
+      // Une modification faite entre la simulation et l'import : une nouvelle
+      // simulation affiche la date et la case de confirmation.
+      if (refus.code === 'MODIFIE_DANS_APPLICATION') {
+        setConfirme(false)
+        try {
+          setRapport(
+            await deposerContenu(fichier, {
+              activiteId,
+              simulation: true,
+              forcer: false,
+            })
+          )
+        } catch {
+          // Le refus déjà affiché suffit.
+        }
+      }
     } finally {
       setEnCours(null)
     }
@@ -275,7 +292,8 @@ export default function DepotContenu({
                   onChange={e => setConfirme(e.target.checked)}
                 >
                   <Trans>
-                    J’accepte que l’import remplace ces modifications.
+                    J’accepte que l’import remplace ces modifications. Les
+                    fiches modifiées dans Relaytour restent telles quelles.
                   </Trans>
                 </Checkbox>
               }

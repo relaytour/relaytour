@@ -16,6 +16,10 @@ export const LIBELLES_SOURCE: Record<SourceFiche, MessageDescriptor> = {
     comment: 'Origine d’une version de fiche : rédigée dans Relaytour',
   }),
   ESPACE_FICHIERS: msg`Fournisseur cloud`,
+  DEPOT: msg({
+    message: 'Fichier déposé',
+    comment: 'Origine d’une version de fiche : un fichier déposé dans Relaytour',
+  }),
 }
 
 /** Le gabarit commun (content/orga/modeles/fiche.md), sans son en-tête. */

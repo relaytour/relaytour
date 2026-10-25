@@ -57,7 +57,7 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 ### Dépôt du dossier de contenu
 
 - Un admin de l'organisation dépose une archive zip au format de l'export (ADR 0009). Le dépôt vaut `orga:importer` sans `--edition`.
-- Un admin d'activité dépose une archive pour son activité seulement. Le serveur ne lit alors que `activites/<slug>/` de cette activité, ou le dossier entier dans la disposition plate. Il ignore `organisation.yaml` et les autres activités.
+- Un admin d'activité dépose une archive pour son activité seulement. Le serveur ne lit alors que `activites/<slug>/` de cette activité, ou le dossier entier dans la disposition plate. Il ignore `organisation.yaml` et les autres activités. Une fiche d'une autre activité qui porte le même slug n'est ni déplacée ni remplacée : elle se signale en conflit.
 - Le slug de l'organisation reste celui de la base. Celui que déclare `organisation.yaml` est ignoré, et le rapport le signale.
 - L'archive se simule d'abord. Le rapport reprend celui de la commande : éléments créés, modifiés, absents de l'archive, et conflits de fiches. Il liste aussi les fichiers de l'archive que l'import n'a pas lus.
 - L'archive part vers une route dédiée, `POST /medias/contenu/depot`, et non vers GraphQL : une requête GraphQL est bornée à 1 Mo. Le serveur vérifie la session, l'origine et les droits avant de lire le corps de la requête.
@@ -74,8 +74,9 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 ### Dépôt direct de fiches
 
 - Un admin de l'activité dépose des fichiers `.md`, `.markdown`, `.txt` ou `.docx` depuis l'écran « Ressources », pour un périmètre ou pour les fiches communes.
-- Le dépôt suit les règles de l'import depuis l'espace de fichiers (ADR 0038) : même conversion, mêmes limites, même traitement des conflits.
-- Une version déposée porte la source nouvelle `DEPOT`. Elle se distingue ainsi d'une version écrite dans l'éditeur ou lue dans l'espace de fichiers.
+- Le dépôt suit les règles de l'import depuis l'espace de fichiers (ADR 0038) : même conversion, même limite de 2 Mo par fichier, même traitement des conflits. Un dépôt lit 50 fichiers et 20 Mo au plus.
+- Les fichiers partent vers la route `POST /medias/fiches/depot`, leur contenu en base64, pour la même raison que l'archive du contenu. Le dépôt se simule avec le paramètre `simulation=1`.
+- Une version déposée porte la source nouvelle `DEPOT`. Elle se distingue ainsi d'une version écrite dans l'éditeur ou lue dans l'espace de fichiers. Comme une version de l'espace de fichiers, elle n'est pas remplacée par `orga:importer`.
 - L'ADR 0038 réserve aux admins de l'organisation le lien d'un dossier cloud, parce que le choix d'un dossier montre tous les dossiers du compte connecté. Le dépôt direct ne montre aucun dossier : il est donc ouvert aux admins d'activité.
 - L'import depuis l'espace de fichiers reste réservé aux admins de l'organisation. Les modes d'emploi le décrivent désormais ainsi, à la place de la phrase de l'ADR 0038 qui l'attribuait aux admins d'activité.
 
@@ -91,9 +92,8 @@ L'archive zip du contenu se télécharge depuis l'espace organisateur (ADR 0009)
 - Les nouveaux imports partagent un assistant en quatre étapes (fichier, colonnes, vérification, import). L'assistant des bénévoles garde ses étapes propres (portée, choix, doublons).
 - Le contrat GraphQL gagne :
   - `simulerImportTaches` et `importerTaches` ;
-  - `simulerImportEquipe` et `importerEquipe` ;
-  - `simulerDepotFiches` et `deposerFiches`.
-- Le dépôt du dossier de contenu passe par la route `POST /medias/contenu/depot`, simulée avec le paramètre `simulation=1`.
+  - `simulerImportEquipe` et `importerEquipe`.
+- Le dépôt du dossier de contenu passe par la route `POST /medias/contenu/depot`, et le dépôt de fiches par la route `POST /medias/fiches/depot`. Chacun se simule avec le paramètre `simulation=1`.
 - `lireModeles` lit un dossier de contenu depuis le disque ou depuis une liste de fichiers en mémoire. `importerModeles` gagne une option qui ignore `organisation.yaml`.
 - Une migration additive ajoute la valeur `DEPOT` à l'énumération `SourceFiche`.
 - Les classeurs modèles sont livrés comme fichiers statiques de l'espace organisateur.

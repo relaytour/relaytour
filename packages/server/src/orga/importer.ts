@@ -69,8 +69,9 @@ export interface OptionsImport {
   /**
    * Laisse l'organisation telle qu'elle est en base : ni son identité ni sa
    * configuration ne suivent organisation.yaml, et la date de synchronisation ne
-   * bouge pas. Sert au dépôt d'une archive par un admin d'activité (ADR 0049), avec
-   * `activite`.
+   * bouge pas. Une fiche d'une autre activité qui porte le même slug n'est ni
+   * déplacée ni remplacée : elle se signale en conflit. Sert au dépôt d'une archive
+   * par un admin d'activité (ADR 0049), avec `activite`.
    */
   ignorerOrganisation?: boolean
 }
@@ -323,7 +324,10 @@ export async function importerModeles(
           ligne?.id ?? null,
           options.annee,
           ecrire,
-          empreintes
+          empreintes,
+          // Un import limité à une activité ne touche pas aux fiches des autres :
+          // un slug déjà pris ailleurs se signale en conflit (ADR 0049).
+          options.ignorerOrganisation === true ? 'conflit' : 'suivre'
         )
         if (resultat.periode === 'importee') periodesTrouvees += 1
         rapport.activites.push(resultat)
@@ -515,7 +519,8 @@ async function importerActivite(
   ligneId: string | null,
   annee: number | undefined,
   ecrire: boolean,
-  empreintes: Empreintes
+  empreintes: Empreintes,
+  autreActivite: 'suivre' | 'conflit'
 ): Promise<RapportActivite> {
   const declaration = modele.implicite
     ? {
@@ -637,8 +642,9 @@ async function importerActivite(
     .sort()
 
   // Fiches. Le slug est unique dans l'organisation : une fiche passée d'une activité
-  // à une autre dans le dépôt suit ce changement. Une version écrite dans
-  // l'application, ou importée de l'espace de fichiers, n'est pas remplacée.
+  // à une autre dans le dépôt suit ce changement, sauf dans un import limité à une
+  // activité. Une version écrite dans l'application, importée de l'espace de
+  // fichiers ou déposée n'est pas remplacée.
   const { ids: idsFiches } = await importerFiches(
     tx,
     modele.fiches.map(fiche => ({
@@ -655,8 +661,8 @@ async function importerActivite(
       activiteId,
       source: 'GIT',
       resume: 'Import depuis le dépôt',
-      protegees: ['APP', 'ESPACE_FICHIERS'],
-      autreActivite: 'suivre',
+      protegees: ['APP', 'ESPACE_FICHIERS', 'DEPOT'],
+      autreActivite,
       ecrire,
     },
     rapport.fiches

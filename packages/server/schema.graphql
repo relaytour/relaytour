@@ -3544,6 +3544,7 @@ type Souhait {
 
 enum SourceFiche {
   APP
+  DEPOT
   ESPACE_FICHIERS
   GIT
 }

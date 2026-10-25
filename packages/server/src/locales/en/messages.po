@@ -1100,6 +1100,30 @@ msgid "L’import a été refusé."
 msgstr "The import was refused."
 
 #. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+#: src/orga/depot-fiches.ts
+msgid "format que Relaytour n’importe pas"
+msgstr "format that Relaytour does not import"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+#: src/orga/depot-fiches.ts
+msgid "au-delà de {max} fichiers par import"
+msgstr "beyond {max} files per import"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+#: src/orga/depot-fiches.ts
+msgid "plus de 2 Mo"
+msgstr "over 2 MB"
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/import.ts
+#: src/orga/depot-fiches.ts
+msgid "fichier illisible"
+msgstr "unreadable file"
+
+#. js-lingui-explicit-id
 #: src/orga/import-fiches.ts
 msgid "une fiche d’une autre activité porte ce slug"
 msgstr "a sheet from another activity has this slug"
@@ -1117,6 +1141,7 @@ msgstr "Internal error."
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
 #: src/orga/route-depot-contenu.ts
+#: src/orga/route-depot-fiches.ts
 msgid "Accès refusé."
 msgstr "Access denied."
 
@@ -1132,6 +1157,12 @@ msgid "Trop de dépôts en peu de temps. Réessayez dans quelques minutes."
 msgstr "Too many uploads in a short time. Try again in a few minutes."
 
 #. js-lingui-explicit-id
+#: src/orga/route-depot-contenu.ts
+#: src/orga/route-depot-fiches.ts
+msgid "La requête est illisible."
+msgstr "The request is unreadable."
+
+#. js-lingui-explicit-id
 #: src/lib/zip.ts
 #: src/orga/route-depot-contenu.ts
 msgid "L’archive dépasse {mo} Mo."
@@ -1142,6 +1173,11 @@ msgstr "The archive exceeds {mo} MB."
 #: src/orga/route-depot-contenu.ts
 msgid "Le fichier n’est pas une archive zip lisible."
 msgstr "The file is not a readable zip archive."
+
+#. js-lingui-explicit-id
+#: src/orga/route-depot-fiches.ts
+msgid "Les fichiers déposés dépassent {mo} Mo au total."
+msgstr "The uploaded files exceed {mo} MB in total."
 
 #. js-lingui-explicit-id
 #: src/orga/taches-de-la-periode.ts
@@ -2570,21 +2606,6 @@ msgstr "root"
 
 #. js-lingui-explicit-id
 #: src/espace-fichiers/import.ts
-msgid "format que Relaytour n’importe pas"
-msgstr "format that Relaytour does not import"
-
-#. js-lingui-explicit-id
-#: src/espace-fichiers/import.ts
-msgid "au-delà de {max} fichiers par import"
-msgstr "beyond {max} files per import"
-
-#. js-lingui-explicit-id
-#: src/espace-fichiers/import.ts
-msgid "plus de 2 Mo"
-msgstr "over 2 MB"
-
-#. js-lingui-explicit-id
-#: src/espace-fichiers/import.ts
 msgid "document Google exporté en Markdown"
 msgstr "Google document exported as Markdown"
 
@@ -2597,11 +2618,6 @@ msgstr "converted to Markdown"
 #: src/espace-fichiers/import.ts
 msgid "converti en Markdown, sans les images"
 msgstr "converted to Markdown, without the images"
-
-#. js-lingui-explicit-id
-#: src/espace-fichiers/import.ts
-msgid "fichier illisible"
-msgstr "unreadable file"
 
 #. js-lingui-explicit-id
 #: src/espace-fichiers/import.ts

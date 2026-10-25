@@ -67,7 +67,7 @@
           </p>
         </div>
         <nav class="verre sommaire" aria-label="Contents">
-          <span class="etiquette">Your nine screens</span>
+          <span class="etiquette">Your ten screens</span>
           <ol>
             <li><a href="#e-notifications-admin">Admin notifications</a>: news from your team, sorted by area.</li>
             <li><a href="#e-equipe">Team</a>: target headcounts, interests, appointments, area settings, and the progress of each area.</li>
@@ -77,7 +77,8 @@
             <li><a href="#e-redaction">Sheet editing</a>: grant the right to edit the sheets of an area.</li>
             <li><a href="#e-editions">Editions</a>: open and date the activity’s periods, place their key dates.</li>
             <li><a href="#e-historique">Sheet history</a>: view and restore a version.</li>
-            <li><a href="#e-activite">Activities</a>: set the name, groups, and identity of your activity.</li>
+            <li><a href="#e-depot-fiches">Resources</a>: upload files that become sheets.</li>
+            <li><a href="#e-activite">Activities</a>: set the name, groups, and identity of your activity, import its content.</li>
           </ol>
         </nav>
       </section>
@@ -290,6 +291,16 @@
           <p class="note">Coordinators who have an editing right edit the sheet, but do not see this history.</p>
         </article>
 
+        <article class="verre ecran" id="e-depot-fiches">
+          <div class="ecran-tete"><h3>Upload sheets</h3><span class="route">/&lt;activity&gt;/fiches</span></div>
+          <p>The <strong>Upload files</strong> button of the Resources screen turns your documents into sheets. You choose the destination (an area or the shared sheets), then Markdown, text, or Word (.docx) files.</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Check</span></span><span>Read what the upload would do: the sheets to create, those to update, the converted Word documents, and the files set aside with their reason.</span></li>
+            <li><span><span class="libelle">Import the sheets</span></span><span>Write the checked sheets. A new upload of the same file creates a version only if its text changes.</span></li>
+          </ul>
+          <p class="note">A Word document loses its images in the conversion. A sheet changed in Relaytour is never replaced, and a file that contains personal contact details is refused. An upload holds 50 files and 20 MB at most, and 2 MB per file. The import from the cloud provider remains reserved for organization admins.</p>
+        </article>
+
         <article class="verre ecran" id="e-activite">
           <div class="ecran-tete"><h3>Activities</h3><span class="route">/&lt;activity&gt;/admin/activites</span></div>
           <p>The table lists the activities you can see. The edit button appears only on those you administer.</p>
@@ -300,6 +311,7 @@
             <li><span><span class="libelle">Own identity</span></span><span>Give the activity its own contact, team page, logo, and two colors. An empty field takes the organization’s value.</span></li>
             <li><span><span class="libelle">Open to interests</span></span><span>Let the people of the team state their own interests in “All areas”. Otherwise, only activity admins record interests. This setting does not show the activity to members outside its team. Interests arrive in “Team”.</span></li>
             <li><span><span class="libelle">Addresses in the org chart</span></span><span>Choose which personal addresses the org chart may display: none, those of admins and main contacts, or those of the whole team of the areas. Each address also requires the person’s consent, in their preferences. The activity’s contact always appears.</span></li>
+            <li><span><span class="libelle">Import an activity’s content</span></span><span>Upload, below the table, a zip archive that contains your activity’s folder: the organization export, or the activity folder alone. Relaytour reads only that folder (areas, sheets, and task templates) and ignores the organization’s identity and the other activities. The import is checked before writing.</span></li>
           </ul>
           <p class="note">Creating and archiving an activity belong to organization admins.</p>
           <figure>

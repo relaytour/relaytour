@@ -67,7 +67,7 @@
           </p>
         </div>
         <nav class="verre sommaire" aria-label="Sommaire">
-          <span class="etiquette">Vos neuf écrans</span>
+          <span class="etiquette">Vos dix écrans</span>
           <ol>
             <li><a href="#e-notifications-admin">Notifications d'admin</a> : les nouvelles de votre équipe, rangées par périmètre.</li>
             <li><a href="#e-equipe">Équipe</a> : effectifs, souhaits, affectations, réglage des périmètres et avancement de chaque périmètre.</li>
@@ -77,7 +77,8 @@
             <li><a href="#e-redaction">Rédaction</a> : accorder un droit d'écriture sur les fiches d'un périmètre.</li>
             <li><a href="#e-editions">Éditions</a> : ouvrir et dater les périodes de l'activité, placer leurs dates clés.</li>
             <li><a href="#e-historique">Historique d'une fiche</a> : consulter et restaurer une version.</li>
-            <li><a href="#e-activite">Activités</a> : régler le nom, les groupes et l'identité de votre activité.</li>
+            <li><a href="#e-depot-fiches">Ressources</a> : déposer des fichiers qui deviennent des fiches.</li>
+            <li><a href="#e-activite">Activités</a> : régler le nom, les groupes et l'identité de votre activité, importer son contenu.</li>
           </ol>
         </nav>
       </section>
@@ -290,6 +291,16 @@
           <p class="note">Les référentes et référents qui ont un droit de rédaction modifient la fiche, mais ne voient pas cet historique.</p>
         </article>
 
+        <article class="verre ecran" id="e-depot-fiches">
+          <div class="ecran-tete"><h3>Déposer des fiches</h3><span class="route">/&lt;activité&gt;/fiches</span></div>
+          <p>Le bouton <strong>Déposer des fichiers</strong> de l'écran Ressources transforme vos documents en fiches. Vous choisissez la destination (un périmètre ou les fiches communes), puis des fichiers Markdown, texte ou Word (.docx).</p>
+          <ul class="gestes">
+            <li><span><span class="libelle">Vérifier</span></span><span>Lire ce que le dépôt ferait : les fiches à créer, celles à mettre à jour, les documents Word convertis et les fichiers écartés avec leur raison.</span></li>
+            <li><span><span class="libelle">Importer les fiches</span></span><span>Écrire les fiches vérifiées. Un nouveau dépôt du même fichier crée une version seulement si son texte change.</span></li>
+          </ul>
+          <p class="note">Un document Word perd ses images à la conversion. Une fiche modifiée dans Relaytour n'est jamais remplacée, et un fichier qui contient une coordonnée personnelle est refusé. Un dépôt compte 50 fichiers et 20 Mo au plus, et 2 Mo par fichier. L'import depuis le fournisseur cloud reste réservé aux admins de l'organisation.</p>
+        </article>
+
         <article class="verre ecran" id="e-activite">
           <div class="ecran-tete"><h3>Activités</h3><span class="route">/&lt;activité&gt;/admin/activites</span></div>
           <p>Le tableau liste les activités que vous voyez. Le bouton de modification n'apparaît que sur celles que vous administrez.</p>
@@ -300,6 +311,7 @@
             <li><span><span class="libelle">Identité propre</span></span><span>Donner à l'activité son contact, sa page d'équipe, son logo et ses deux couleurs. Un champ vide reprend la valeur de l'organisation.</span></li>
             <li><span><span class="libelle">Ouverte aux souhaits</span></span><span>Laisser les personnes de l'équipe formuler elles-mêmes leurs souhaits dans « Tous les périmètres ». Sinon, seuls les admins de l'activité notent les souhaits. Le réglage ne montre pas l'activité aux membres hors de son équipe. Les souhaits arrivent dans « Équipe ».</span></li>
             <li><span><span class="libelle">Adresses dans l'organigramme</span></span><span>Choisir les adresses personnelles que l'organigramme peut afficher : aucune, celles des admins et des contacts principaux, ou celles de toute l'équipe des périmètres. Chaque adresse demande aussi l'accord de la personne, dans ses préférences. Le contact de l'activité s'affiche toujours.</span></li>
+            <li><span><span class="libelle">Importer le contenu d'une activité</span></span><span>Déposer, sous le tableau, une archive zip qui contient le dossier de votre activité : l'export de l'organisation, ou le seul dossier de l'activité. Relaytour ne lit que ce dossier (périmètres, fiches et tâches types) et ignore l'identité de l'organisation et les autres activités. L'import se vérifie avant d'écrire.</span></li>
           </ul>
           <p class="note">La création et l'archivage d'une activité appartiennent aux admins de l'organisation.</p>
           <figure>

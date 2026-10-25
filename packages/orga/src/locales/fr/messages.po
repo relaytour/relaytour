@@ -555,6 +555,10 @@ msgstr "{nomBenevole} · bénévole"
 msgid "{nombre, plural, one {# dossier} other {# dossiers}}"
 msgstr "{nombre, plural, one {# dossier} other {# dossiers}}"
 
+#: src/composants/DepotFiches.tsx
+msgid "{nombre, plural, one {# fiche importée.} other {# fiches importées.}}"
+msgstr "{nombre, plural, one {# fiche importée.} other {# fiches importées.}}"
+
 #: src/pages/Fiches.tsx
 msgid "{nombre, plural, one {# fiche} other {# fiches}}"
 msgstr "{nombre, plural, one {# fiche} other {# fiches}}"
@@ -1201,6 +1205,10 @@ msgstr "1 tâche, dont <0>{enRetard} en retard</0>"
 #: src/lib/guide-markdown.ts
 msgid "14 h"
 msgstr "14 h"
+
+#: src/composants/DepotFiches.tsx
+msgid "2 Mo par fichier, 50 fichiers et 20 Mo par dépôt au plus."
+msgstr "2 Mo par fichier, 50 fichiers et 20 Mo par dépôt au plus."
 
 #: src/composants/AssistantTableur.tsx
 #: src/pages/ImportBenevoles.tsx
@@ -2869,6 +2877,10 @@ msgstr "Chaque échéance garde le même écart avec le premier jour. Une tâche
 msgid "Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique."
 msgstr "Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique."
 
+#: src/composants/DepotFiches.tsx
+msgid "Chaque fichier devient une fiche. Un document Word est converti en Markdown, sans ses images. Une fiche modifiée dans Relaytour n’est pas remplacée."
+msgstr "Chaque fichier devient une fiche. Un document Word est converti en Markdown, sans ses images. Une fiche modifiée dans Relaytour n’est pas remplacée."
+
 #: src/pages/Preferences.tsx
 msgid "Chaque jour"
 msgstr "Chaque jour"
@@ -3669,9 +3681,18 @@ msgstr "Déplier le menu"
 msgid "Déplier le volet latéral"
 msgstr "Déplier le volet latéral"
 
+#: src/composants/DepotFiches.tsx
+#: src/pages/Fiches.tsx
+msgid "Déposer des fichiers"
+msgstr "Déposer des fichiers"
+
 #: src/composants/ConnexionEspace.tsx
 msgid "Déposez ce fichier ici, ou collez son contenu."
 msgstr "Déposez ce fichier ici, ou collez son contenu."
+
+#: src/composants/DepotFiches.tsx
+msgid "Déposez des fichiers Markdown, texte ou Word (.docx), ou cliquez pour les choisir."
+msgstr "Déposez des fichiers Markdown, texte ou Word (.docx), ou cliquez pour les choisir."
 
 #: src/composants/DepotContenu.tsx
 msgid "Déposez l’archive zip du contenu ou du seul dossier de l’activité, ou cliquez pour la choisir."
@@ -3805,6 +3826,14 @@ msgstr "Destinataires : {destinataires}"
 #: src/composants/EcrireMessage.tsx
 msgid "Destinataires ({nombreDestinataires})"
 msgstr "Destinataires ({nombreDestinataires})"
+
+#: src/composants/DepotFiches.tsx
+msgid "Destination"
+msgstr "Destination"
+
+#: src/composants/DepotFiches.tsx
+msgid "Destination des fiches"
+msgstr "Destination des fiches"
 
 #: src/composants/AssistantTableur.tsx
 #: src/composants/Repartition.tsx
@@ -4464,6 +4493,7 @@ msgstr "Fiches à créer"
 msgid "Fiches à mettre à jour"
 msgstr "Fiches à mettre à jour"
 
+#: src/composants/DepotFiches.tsx
 #: src/composants/ImportFiches.tsx
 #: src/pages/Fiche.tsx
 #: src/pages/Fiches.tsx
@@ -4520,6 +4550,11 @@ msgstr "Fiches proches"
 #: src/pages/ImportBenevoles.tsx
 msgid "Fichier"
 msgstr "Fichier"
+
+#. Origine d’une version de fiche : un fichier déposé dans Relaytour
+#: src/lib/fiches.ts
+msgid "Fichier déposé"
+msgstr "Fichier déposé"
 
 #: src/pages/AideMarkdown.tsx
 #: src/pages/Fiche.tsx
@@ -4867,6 +4902,10 @@ msgstr "Importer l’équipe"
 msgid "Importer le contenu d’une activité"
 msgstr "Importer le contenu d’une activité"
 
+#: src/composants/DepotFiches.tsx
+msgid "Importer les fiches"
+msgstr "Importer les fiches"
+
 #: src/composants/PremiersPas.tsx
 #: src/pages/admin/Organisation.tsx
 msgid "Importer un dossier de contenu"
@@ -5022,8 +5061,8 @@ msgid "J’accepte que {nomOrganisation} enregistre ces informations pour organi
 msgstr "J’accepte que {nomOrganisation} enregistre ces informations pour organiser l’activité."
 
 #: src/composants/DepotContenu.tsx
-msgid "J’accepte que l’import remplace ces modifications."
-msgstr "J’accepte que l’import remplace ces modifications."
+msgid "J’accepte que l’import remplace ces modifications. Les fiches modifiées dans Relaytour restent telles quelles."
+msgstr "J’accepte que l’import remplace ces modifications. Les fiches modifiées dans Relaytour restent telles quelles."
 
 #: src/pages/Preferences.tsx
 msgid "Jamais"
@@ -6237,6 +6276,10 @@ msgstr "Les fiches sont importées."
 msgid "Les fichiers déjà écrits restent chez le fournisseur cloud."
 msgstr "Les fichiers déjà écrits restent chez le fournisseur cloud."
 
+#: src/lib/depot-fiches.ts
+msgid "Les fichiers déposés dépassent 20 Mo au total."
+msgstr "Les fichiers déposés dépassent 20 Mo au total."
+
 #: src/composants/RessourcesFiche.tsx
 msgid "Les lecteurs de {ajouts} liront tout le dossier, et pas seulement ce document."
 msgstr "Les lecteurs de {ajouts} liront tout le dossier, et pas seulement ce document."
@@ -6876,6 +6919,10 @@ msgstr "Modifier la séquence"
 #: src/composants/TacheFormulaire.tsx
 msgid "Modifier la tâche"
 msgstr "Modifier la tâche"
+
+#: src/composants/DepotFiches.tsx
+msgid "Modifier le choix"
+msgstr "Modifier le choix"
 
 #: src/pages/admin/Personnes.tsx
 msgid "Modifier le compte"
@@ -10091,6 +10138,7 @@ msgid "Vérification des accès"
 msgstr "Vérification des accès"
 
 #: src/composants/AssistantTableur.tsx
+#: src/composants/DepotFiches.tsx
 msgid "Vérifier"
 msgstr "Vérifier"
 
