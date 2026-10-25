@@ -906,6 +906,14 @@ type EtapeAccordDeclinaison {
   par: Personne!
 }
 
+enum EtapePremiersPas {
+  ACTIVITE
+  EQUIPE
+  PERIMETRES
+  PERIODE
+  TACHES
+}
+
 """
 A_ACCES : un droit couvre la personne. SANS_COMPTE : l’annuaire du fournisseur ne la connaît pas. SANS_ACCES : aucun droit ne la couvre. INCONNU : un groupe illisible la couvre peut-être. EN_TROP : un compte a un droit sans être attendu.
 """
@@ -932,6 +940,11 @@ enum EtatCompteFournisseur {
 enum EtatConnexionFichiers {
   ACTIVE
   A_RECONNECTER
+}
+
+type EtatEtapePremiersPas {
+  etape: EtapePremiersPas!
+  faite: Boolean!
 }
 
 enum EtatLigneImport {
@@ -1496,6 +1509,9 @@ type Mutation {
   accorderDroitRedaction(perimetreId: ID, personneId: ID!): DroitRedaction!
   affecter(editionId: ID!, perimetreId: ID!, personneId: ID!): Affectation!
   afficherFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
+
+  """Affiche de nouveau la liste « Premiers pas » de l’activité."""
+  afficherPremiersPas(activiteId: ID): PremiersPas!
   annulerReunion(id: ID!): Reunion!
 
   """
@@ -1553,6 +1569,11 @@ type Mutation {
   Écrit un commentaire sur une tâche et rend son fil. Toute personne qui écrit dans le périmètre de la tâche commente.
   """
   commenterTache(id: ID!, texte: String!): FilTache!
+
+  """
+  Coche l’étape « Décrire l’activité » : un admin confirme le nom, la nature et les groupes.
+  """
+  confirmerActivite(activiteId: ID): PremiersPas!
 
   """
   Confirme l’adresse de la fiche et toutes ses places à confirmer. Utilisable sans session.
@@ -1833,6 +1854,9 @@ type Mutation {
     perimetreId: ID
   ): Int!
   masquerFicheConnexe(ficheId: ID!, perimetreId: ID!): Fiche!
+
+  """Masque la liste « Premiers pas » pour toute l’activité."""
+  masquerPremiersPas(activiteId: ID): PremiersPas!
   modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierAppelBenevoles(fermeLe: DateTime!, id: ID!, introduction: String, nom: String!, ouvertLe: DateTime!, versionAttendue: Int!): AppelBenevoles!
   modifierBenevole(
@@ -2696,6 +2720,19 @@ type PreferencesNotification {
   resumeAdmin: Boolean!
 }
 
+"""
+Les étapes qui mènent une activité vide à une période prête : la décrire, créer la première période, les périmètres et les tâches, inviter l’équipe.
+"""
+type PremiersPas {
+  etapes: [EtatEtapePremiersPas!]!
+
+  """Un admin a masqué la liste pour toute l’activité."""
+  masques: Boolean!
+
+  """Toutes les étapes sont faites."""
+  termines: Boolean!
+}
+
 type Proposition {
   creeLe: DateTime!
   id: ID!
@@ -2940,6 +2977,7 @@ type Query {
   ): [PersonneConvocable!]!
   peutRedigerFichesCommunes(activiteId: ID): Boolean!
   postesAPourvoir(editionId: ID!): [PostesPerimetre!]!
+  premiersPas(activiteId: ID): PremiersPas!
 
   """
   Les séquences d’une période, par début. Les filtres gardent un périmètre, ou les séquences où la personne connectée est placée.

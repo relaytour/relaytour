@@ -1875,6 +1875,20 @@ const CAS: Cas[] = [
     variables: () => ({ e: b.edition, p: [a.perimetre] }),
     attente: REFUSE,
   },
+  // Premiers pas d'une activité (ADR 0048).
+  ...(
+    [
+      ['premiersPas', 'query'],
+      ['confirmerActivite', 'mutation'],
+      ['masquerPremiersPas', 'mutation'],
+      ['afficherPremiersPas', 'mutation'],
+    ] as const
+  ).map(([operation, sorte]) => ({
+    operation,
+    query: `${sorte} ($a: ID!) { ${operation}(activiteId: $a) { masques } }`,
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  })),
   {
     operation: 'simulerReconduction',
     query:
