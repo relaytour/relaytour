@@ -12,12 +12,13 @@ import {
 import { useMutation, useQuery } from '@apollo/client/react'
 import { plural } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Badge, Dropdown } from 'antd'
+import { App, Badge, Dropdown } from 'antd'
 import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
+import { messageErreur } from '../lib/erreurs'
 import { estInstallee } from '../lib/installation'
 import { useMesInvitations } from '../lib/invitations'
 import { VERSION } from '../lib/notes-de-version'
@@ -61,6 +62,7 @@ export default function MenuCompte({
   const deconnecter = useDeconnexion()
   const { organisations } = useSession()
   const changerOrganisation = useChangerOrganisation()
+  const { message } = App.useApp()
   const { lien, gere } = useActivite()
   // La liste « Premiers pas » masquée se réaffiche d'ici, tant qu'une étape reste
   // à faire (ADR 0048).
@@ -203,7 +205,9 @@ export default function MenuCompte({
             if (key === 'installer') setInstallationOuverte(true)
             if (key === 'invitations') setInvitationsOuvertes(true)
             if (key === 'premiers-pas') {
-              void afficherPremiersPas().then(() => navigate(lien('/')))
+              afficherPremiersPas()
+                .then(() => navigate(lien('/')))
+                .catch((e: unknown) => message.error(messageErreur(e)))
             }
             if (key === 'deconnexion') void deconnecter()
             if (key.startsWith('organisation:')) {

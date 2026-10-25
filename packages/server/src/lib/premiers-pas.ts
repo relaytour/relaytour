@@ -57,7 +57,10 @@ export async function etatPremiersPas(
     prisma.perimetre.count({ where: { activiteId, archivedAt: null } }),
     courante === null
       ? 0
-      : prisma.tache.count({ where: { editionId: courante.id } }),
+      : prisma.tache.count({
+          // Une tâche abandonnée ne prépare rien : elle ne coche pas l'étape.
+          where: { editionId: courante.id, statut: { not: 'ABANDONNEE' } },
+        }),
     prisma.rattachementActivite.count({ where: { activiteId, ...autres } }),
     prisma.adminActivite.count({ where: { activiteId, ...autres } }),
     prisma.affectation.count({ where: { edition: { activiteId }, ...autres } }),

@@ -4209,3 +4209,16 @@ button.rt-carte-fiche {
     padding-left: 42px;
   }
 }
+
+/* Périmètres d'un modèle de départ (ADR 0048). */
+.rt-liste-modele {
+  margin: 0;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.rt-liste-modele .rt-texte-secondaire {
+  margin-left: 4px;
+}

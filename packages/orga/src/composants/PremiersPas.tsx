@@ -7,6 +7,7 @@ import { Link } from 'react-router'
 
 import DescriptionActivite from './DescriptionActivite'
 import InvitationRapide from './InvitationRapide'
+import ModeleDeDepart from './ModeleDeDepart'
 import NouvelleEdition from './NouvelleEdition'
 import { Panneau } from './Panneau'
 import ReglagePerimetre from './ReglagePerimetre'
@@ -30,7 +31,8 @@ const MASQUER = graphql(`
   }
 `)
 
-type Fenetre = 'activite' | 'periode' | 'perimetre' | 'taches' | 'equipe'
+type Fenetre =
+  'activite' | 'periode' | 'perimetre' | 'modele' | 'taches' | 'equipe'
 
 interface Etape {
   titre: string
@@ -43,7 +45,11 @@ export default function PremiersPas() {
   const { message } = App.useApp()
   const { lien, periode } = useActivite()
   const { une: unePeriode, nom: mot } = periode
-  const { data, refetch } = useQuery(PREMIERS_PAS)
+  // L'état change aussi depuis les autres écrans : la liste se relit à chaque
+  // retour sur Mon espace.
+  const { data, refetch } = useQuery(PREMIERS_PAS, {
+    fetchPolicy: 'cache-and-network',
+  })
   const { data: courante } = useQuery(EDITION_COURANTE)
   const edition = courante?.editionCourante
   const [fenetre, setFenetre] = useState<Fenetre | null>(null)
@@ -85,10 +91,13 @@ export default function PremiersPas() {
     },
     PERIMETRES: {
       titre: t`Créer les périmètres`,
-      texte: t`Un périmètre regroupe les tâches d’un sport, d’un pôle ou d’une commission.`,
+      texte: t`Un périmètre regroupe les tâches d’un sport, d’un pôle ou d’une commission. Un modèle propose des périmètres, leurs tâches types et des fiches.`,
       actions: (
         <Space wrap>
-          {bouton('PERIMETRES', t`Nouveau périmètre`, 'perimetre')}
+          {bouton('PERIMETRES', t`Partir d’un modèle`, 'modele')}
+          <Button onClick={() => setFenetre('perimetre')}>
+            <Trans>Nouveau périmètre</Trans>
+          </Button>
           <Link to={lien('/admin/equipe')}>
             <Trans>Ouvrir l’écran Équipe</Trans>
           </Link>
@@ -103,6 +112,9 @@ export default function PremiersPas() {
       actions: edition && (
         <Space wrap>
           {bouton('TACHES', t`Appliquer les tâches types`, 'taches')}
+          <Link to={lien('/admin/import/taches')}>
+            <Trans>Importer un tableur</Trans>
+          </Link>
           <Link to={lien('/perimetres')}>
             <Trans>Tous les périmètres</Trans>
           </Link>
@@ -112,7 +124,14 @@ export default function PremiersPas() {
     EQUIPE: {
       titre: t`Inviter l’équipe`,
       texte: t`Invitez les référentes et les référents de chaque périmètre.`,
-      actions: bouton('EQUIPE', t`Inviter`, 'equipe'),
+      actions: (
+        <Space wrap>
+          {bouton('EQUIPE', t`Inviter`, 'equipe')}
+          <Link to={lien('/admin/import/equipe')}>
+            <Trans>Importer un tableur</Trans>
+          </Link>
+        </Space>
+      ),
     },
   }
 
@@ -167,6 +186,7 @@ export default function PremiersPas() {
 
       <DescriptionActivite ouverte={fenetre === 'activite'} onFermer={fermer} />
       <NouvelleEdition ouverte={fenetre === 'periode'} onFermer={fermer} />
+      <ModeleDeDepart ouverte={fenetre === 'modele'} onFermer={fermer} />
       <ReglagePerimetre
         perimetre={fenetre === 'perimetre' ? 'nouveau' : null}
         onFermer={fermer}
