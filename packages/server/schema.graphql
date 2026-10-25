@@ -1509,7 +1509,7 @@ type Mutation {
   appliquerPropositionsDossier(dossierId: ID!): Int!
 
   """
-  Crée les effectifs et les tâches d’une période à partir des tâches types de ses périmètres. Une tâche déjà créée depuis sa tâche type ne change pas.
+  Crée les effectifs et les tâches d’une période à partir des tâches types de ses périmètres. Une tâche déjà créée depuis sa tâche type ne change pas. Avec `perimetreIds`, seuls ces périmètres d’origine sont appliqués ; une tâche partagée se décline dans tous ses périmètres cibles.
   """
   appliquerTachesTypes(editionId: ID!, perimetreIds: [ID!]): RapportTachesTypes!
   archiverActivite(archive: Boolean!, id: ID!): Activite!

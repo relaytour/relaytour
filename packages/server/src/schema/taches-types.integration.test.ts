@@ -51,6 +51,12 @@ const TACHES_LIEUX = [
     echeance: 'J-60',
     declinaison: { groupe: 'sport', echeance: 'J-45' },
   },
+  // La fiche citée appartient à un autre périmètre : la tâche est créée sans elle.
+  {
+    modele: 'consignes-du-bassin',
+    titre: 'Relire les consignes du bassin',
+    fiche: 'bassin',
+  },
 ]
 
 const RAPPORT = `effectifsCrees effectifsDejaPresents tachesCreees tachesDejaPresentes tachesRattachees conflits illisibles`
@@ -184,6 +190,14 @@ beforeAll(async () => {
       data: { organisationId: ids.org, activiteId: ids.activite, slug: 'plan' },
     })
   ).id
+  await prisma.fiche.create({
+    data: {
+      organisationId: ids.org,
+      activiteId: ids.activite,
+      perimetreId: ids.natation,
+      slug: 'bassin',
+    },
+  })
   for (const [cle, annee, statut] of [
     ['edition', 2027, 'PREPARATION'],
     ['editionArchivee', 2026, 'ARCHIVEE'],
@@ -284,6 +298,7 @@ describe('tâches types appliquées depuis l’espace organisateur', () => {
       'lieux/besoins-de-lieux',
       'natation/besoins-de-lieux (déclinaison de lieux/besoins-de-lieux)',
       'volley/besoins-de-lieux (déclinaison de lieux/besoins-de-lieux)',
+      'lieux/consignes-du-bassin',
     ])
     expect(rapport.conflits).toEqual([
       'archive/besoins-de-lieux (déclinaison de lieux/besoins-de-lieux) : le périmètre est archivé',
@@ -301,10 +316,17 @@ describe('tâches types appliquées depuis l’espace organisateur', () => {
   it('limite l’application aux périmètres demandés', async () => {
     const rapport = await rapportDe(SIMULER, {
       e: ids.edition,
-      p: [ids.natation],
+      p: [ids.volley],
     })
     expect(rapport.tachesCreees).toEqual([])
-    expect(rapport.effectifsCrees).toEqual([])
+    expect(rapport.effectifsCrees).toEqual(['volley (1)'])
+
+    // Une tâche partagée d'un périmètre retenu se décline aussi hors de la sélection.
+    const lieux = await rapportDe(SIMULER, { e: ids.edition, p: [ids.lieux] })
+    expect(lieux.tachesCreees).toContain(
+      'volley/besoins-de-lieux (déclinaison de lieux/besoins-de-lieux)'
+    )
+    expect(lieux.effectifsCrees).toEqual(['lieux (2)'])
   })
 
   it('crée les tâches, leurs déclinaisons et les effectifs, puis ne recrée rien', async () => {
@@ -313,7 +335,7 @@ describe('tâches types appliquées depuis l’espace organisateur', () => {
       { e: ids.edition },
       ids.adminActivite
     )
-    expect(rapport.tachesCreees).toHaveLength(4)
+    expect(rapport.tachesCreees).toHaveLength(5)
 
     const taches = await tachesDeLaPeriode()
     const plan = taches.find(t => t.modeleSlug === 'plan-des-lieux')!
@@ -322,10 +344,13 @@ describe('tâches types appliquées depuis l’espace organisateur', () => {
       titre: 'Dessiner le plan des lieux',
       description: 'Avec les entrées et les secours.',
       ficheId: ids.fiche,
-      creeParId: ids.adminActivite,
+      creeParId: null,
       statut: 'A_FAIRE',
     })
     expect(plan.echeance?.toISOString().slice(0, 10)).toBe('2027-05-13')
+    expect(
+      taches.find(t => t.modeleSlug === 'consignes-du-bassin')!.ficheId
+    ).toBeNull()
     const partagee = taches.find(
       t => t.modeleSlug === 'besoins-de-lieux' && t.perimetreId === ids.lieux
     )!
@@ -357,11 +382,31 @@ describe('tâches types appliquées depuis l’espace organisateur', () => {
     })
     const deuxieme = await rapportDe(APPLIQUER, { e: ids.edition })
     expect(deuxieme.tachesCreees).toEqual([])
-    expect(deuxieme.tachesDejaPresentes).toHaveLength(4)
+    expect(deuxieme.tachesDejaPresentes).toHaveLength(5)
     expect(deuxieme.effectifsDejaPresents).toEqual(['lieux', 'volley'])
-    expect(await tachesDeLaPeriode()).toHaveLength(4)
+    expect(await tachesDeLaPeriode()).toHaveLength(5)
     expect(
       (await prisma.tache.findUniqueOrThrow({ where: { id: plan.id } })).titre
     ).toBe('Plan revu par l’équipe')
+  })
+  it('ne double rien quand deux applications arrivent en même temps', async () => {
+    const edition = await prisma.edition.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        annee: 2028,
+        nom: 'Édition 2028',
+        debut: new Date('2028-06-10'),
+        fin: new Date('2028-06-11'),
+      },
+    })
+    const rapports = await Promise.all([
+      rapportDe(APPLIQUER, { e: edition.id }),
+      rapportDe(APPLIQUER, { e: edition.id }),
+    ])
+    expect(rapports.map(r => r.tachesCreees.length).sort()).toEqual([0, 5])
+    expect(await prisma.tache.count({ where: { editionId: edition.id } })).toBe(
+      5
+    )
   })
 })
