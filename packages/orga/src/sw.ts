@@ -58,6 +58,16 @@ interface MessagePush {
   nonLues: number
 }
 
+// Textes de repli d'une notification sans texte (ADR 0047). Le serveur compose
+// le titre et le corps dans la langue du destinataire ; le service worker, sans
+// catalogue, suit la langue du navigateur.
+const REPLI = sw.navigator.language.toLowerCase().startsWith('en')
+  ? {
+      titre: 'Organizer workspace',
+      corps: 'A notification is waiting for you.',
+    }
+  : { titre: 'Espace organisateur', corps: 'Une notification vous attend.' }
+
 sw.addEventListener('push', evenement => {
   let message: Partial<MessagePush> = {}
   try {
@@ -70,8 +80,8 @@ sw.addEventListener('push', evenement => {
   }
   evenement.waitUntil(
     Promise.all([
-      sw.registration.showNotification(message.titre ?? 'Espace organisateur', {
-        body: message.corps ?? 'Une notification vous attend.',
+      sw.registration.showNotification(message.titre ?? REPLI.titre, {
+        body: message.corps ?? REPLI.corps,
         tag: message.etiquette,
         icon: message.icone ?? '/icon.png',
         data: { lien: message.lien ?? '/', organisation: message.organisation },
