@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client/react'
 import { plural, t as traduire } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Empty, Result, Select, Skeleton } from 'antd'
+import { Button, Empty, Result, Select, Skeleton, Space } from 'antd'
 import { useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 
 import ChoixEdition from '../composants/ChoixEdition'
 import EtiquettePerimetre from '../composants/EtiquettePerimetre'
@@ -87,6 +87,7 @@ function titreGroupe(mois: string | null): string {
 export default function Retroplanning() {
   const { t } = useLingui()
   const { lien, periode, activite, gere } = useActivite()
+  const navigate = useNavigate()
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
   const { data: editions } = useQuery(EDITIONS)
@@ -309,13 +310,20 @@ export default function Retroplanning() {
             : t`Les tâches ${dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine.`
         }
         actions={
-          <ChoixEdition
-            valeur={editionId}
-            onChange={id => {
-              setPerimetres([])
-              setParametres({ edition: id })
-            }}
-          />
+          <Space wrap>
+            <ChoixEdition
+              valeur={editionId}
+              onChange={id => {
+                setPerimetres([])
+                setParametres({ edition: id })
+              }}
+            />
+            {gere && (
+              <Button onClick={() => navigate(lien('/admin/import/taches'))}>
+                <Trans>Importer des tâches</Trans>
+              </Button>
+            )}
+          </Space>
         }
       >
         <Trans>Rétroplanning</Trans>

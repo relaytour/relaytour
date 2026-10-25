@@ -112,6 +112,9 @@ export default function PremiersPas() {
       actions: edition && (
         <Space wrap>
           {bouton('TACHES', t`Appliquer les tâches types`, 'taches')}
+          <Link to={lien('/admin/import/taches')}>
+            <Trans>Importer un tableur</Trans>
+          </Link>
           <Link to={lien('/perimetres')}>
             <Trans>Tous les périmètres</Trans>
           </Link>
@@ -121,7 +124,14 @@ export default function PremiersPas() {
     EQUIPE: {
       titre: t`Inviter l’équipe`,
       texte: t`Invitez les référentes et les référents de chaque périmètre.`,
-      actions: bouton('EQUIPE', t`Inviter`, 'equipe'),
+      actions: (
+        <Space wrap>
+          {bouton('EQUIPE', t`Inviter`, 'equipe')}
+          <Link to={lien('/admin/import/equipe')}>
+            <Trans>Importer un tableur</Trans>
+          </Link>
+        </Space>
+      ),
     },
   }
 

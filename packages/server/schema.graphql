@@ -1347,6 +1347,16 @@ type LigneClassement {
   score: Score!
 }
 
+input LigneEquipeImport {
+  adresse: String!
+  contactPrincipal: Boolean!
+  ligne: Int!
+  nom: String!
+
+  """Les noms ou les identifiants des périmètres."""
+  perimetres: [String!]!
+}
+
 type LigneImport {
   cle: String!
 
@@ -1358,6 +1368,16 @@ type LigneImport {
   motif: String
   rapprochement: RapprochementImport
   rattacheeA: ID
+}
+
+"""
+Ce que l’import fait d’une ligne du fichier, numérotée en-têtes compris.
+"""
+type LigneImportTableur {
+  avertissements: [String!]!
+  etat: EtatLigneImport!
+  ligne: Int!
+  raison: String
 }
 
 """
@@ -1374,6 +1394,24 @@ type LigneReconduction {
   retenue: Boolean!
   statutSource: StatutTache!
   tacheId: ID!
+  titre: String!
+}
+
+input LigneTacheImport {
+  description: String
+
+  """
+  Une date AAAA-MM-JJ, ou un décalage depuis le premier jour : J-30, J+3.
+  """
+  echeance: String
+
+  """Le titre ou l’identifiant d’une fiche."""
+  fiche: String
+  ligne: Int!
+  perimetre: String!
+
+  """L’adresse d’une personne affectée au périmètre."""
+  responsable: String
   titre: String!
 }
 
@@ -1821,9 +1859,19 @@ type Mutation {
   ): RapportImportBenevoles!
 
   """
+  Importe un lot de lignes de l’équipe : comptes, rattachements, affectations et contacts principaux qui manquent. Rien n’est retiré, et aucun mail ne part sans `envoyerMails`.
+  """
+  importerEquipe(editionId: ID!, envoyerMails: Boolean, lignes: [LigneEquipeImport!]!): RapportImportEquipe!
+
+  """
   Importe les fiches des dossiers sources dans l’activité. Une fiche modifiée dans Relaytour n’est pas remplacée.
   """
   importerFichesEspace(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
+
+  """
+  Importe un lot de lignes de tâches dans une période. Une tâche déjà présente (même périmètre, même titre, même échéance) n’est pas recréée.
+  """
+  importerTaches(editionId: ID!, enregistrerTachesTypes: Boolean, groupeNouveaux: String, lignes: [LigneTacheImport!]!): RapportImportTaches!
 
   """
   Ajoute une déclinaison aux tâches de son périmètre sans son accord, même après un refus. Réservé aux admins de l’activité.
@@ -3037,9 +3085,26 @@ type Query {
   ): RapportImportBenevoles!
 
   """
+  Simule l’import d’un lot de lignes de l’équipe : rien ne change en base.
+  """
+  simulerImportEquipe(editionId: ID!, lignes: [LigneEquipeImport!]!): RapportImportEquipe!
+
+  """
   Simule l’import des fiches depuis l’espace de fichiers : rien ne change en base.
   """
   simulerImportFiches(activiteId: ID!, sources: [SourceImportFiches!]!): RapportImportFiches!
+
+  """Simule l’import d’un lot de lignes de tâches : rien ne change en base."""
+  simulerImportTaches(
+    editionId: ID!
+    enregistrerTachesTypes: Boolean
+
+    """
+    Le groupe des périmètres inconnus, créés par l’import. Sans valeur, leurs lignes sont écartées.
+    """
+    groupeNouveaux: String
+    lignes: [LigneTacheImport!]!
+  ): RapportImportTaches!
 
   """
   Décrit un modèle de départ et ce qu’il créerait dans l’activité : rien ne change en base.
@@ -3102,6 +3167,20 @@ type RapportImportBenevoles {
 }
 
 """
+Ce que l’import de l’équipe fait, ou ferait. Les nombres ne distinguent pas une personne nouvelle d’une personne déjà membre (ADR 0018).
+"""
+type RapportImportEquipe {
+  affectationsCreees: Int!
+  contactsPrincipaux: Int!
+  invitationsEnAttente: Int!
+  lignes: [LigneImportTableur!]!
+  mailsEquipe: Int!
+  mailsInvitations: Int!
+  personnes: Int!
+  rattachements: Int!
+}
+
+"""
 Ce que l’import des fiches depuis l’espace de fichiers fait, ou ferait en simulation.
 """
 type RapportImportFiches {
@@ -3113,6 +3192,12 @@ type RapportImportFiches {
   nonImportes: [FichierEcarte!]!
   nouvellesVersions: [String!]!
   refusees: [FichierEcarte!]!
+}
+
+type RapportImportTaches {
+  lignes: [LigneImportTableur!]!
+  perimetresCrees: [String!]!
+  tachesTypesAjoutees: Int!
 }
 
 """
