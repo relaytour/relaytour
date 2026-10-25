@@ -5,6 +5,7 @@ import { NOTE_BENEVOLE_MAX } from './benevoles.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { journal } from './journal.ts'
 import { sousVerrouOrganisation } from './limites.ts'
+import { i18n } from './langue.ts'
 
 // Fusion de deux fiches bénévoles (ADR 0042). La fiche gardée reçoit les places,
 // les plages, les candidatures et les notifications de l'autre fiche, qui
@@ -45,7 +46,7 @@ export async function fusionnerFiches(entree: {
 }): Promise<string> {
   const { gardeeId, autreId } = entree
   if (gardeeId === autreId) {
-    throw erreurSaisie('Choisissez deux fiches différentes.')
+    throw erreurSaisie(i18n._('Choisissez deux fiches différentes.'))
   }
   // Les séquences des deux fiches se lisent hors de la transaction : les verrous
   // passent avant toute lecture ordinaire (MariaDB 11.8).
@@ -72,7 +73,7 @@ export async function fusionnerFiches(entree: {
       )
     )
     if (!gardee || !autre) {
-      throw erreurSaisie('Une des deux fiches n’existe plus.')
+      throw erreurSaisie(i18n._('Une des deux fiches n’existe plus.'))
     }
 
     // Les places : une seule par séquence. « Responsable » l'emporte sur

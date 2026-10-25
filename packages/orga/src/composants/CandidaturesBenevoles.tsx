@@ -1,5 +1,8 @@
 import { CheckOutlined, CloseOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Empty, Result, Segmented, Skeleton, Tag } from 'antd'
 import { useState } from 'react'
 
@@ -46,11 +49,38 @@ const ECARTER = graphql(`
 
 type Candidature = CandidaturesQuery['candidatures'][number]
 
-const STATUTS: Record<StatutChoix, { libelle: string; couleur: string }> = {
-  EN_ATTENTE: { libelle: 'En attente', couleur: 'processing' },
-  LISTE_ATTENTE: { libelle: 'Liste d’attente', couleur: 'warning' },
-  ACCEPTE: { libelle: 'Acceptée', couleur: 'success' },
-  REFUSE: { libelle: 'Refusée', couleur: 'default' },
+const STATUTS: Record<
+  StatutChoix,
+  { libelle: MessageDescriptor; couleur: string }
+> = {
+  EN_ATTENTE: {
+    libelle: msg({
+      message: 'En attente',
+      comment: 'Statut du choix de séquence d’une candidature de bénévole',
+    }),
+    couleur: 'processing',
+  },
+  LISTE_ATTENTE: {
+    libelle: msg({
+      message: 'Liste d’attente',
+      comment: 'Statut du choix de séquence d’une candidature de bénévole',
+    }),
+    couleur: 'warning',
+  },
+  ACCEPTE: {
+    libelle: msg({
+      message: 'Acceptée',
+      comment: 'Statut du choix de séquence d’une candidature de bénévole',
+    }),
+    couleur: 'success',
+  },
+  REFUSE: {
+    libelle: msg({
+      message: 'Refusée',
+      comment: 'Statut du choix de séquence d’une candidature de bénévole',
+    }),
+    couleur: 'default',
+  },
 }
 
 const RELIRE = [
@@ -64,9 +94,35 @@ const RELIRE = [
 
 /** Une plage de disponibilité en clair : « sam. 5 juin, 8:00 → 13:00 ». */
 function plageEnClair(p: Candidature['plages'][number]): string {
+  const jourDebut = libelleJours(p.jour)
+  const jourFin = libelleJours(p.jourFin)
+  const heureDebut = p.heureDebut
+  const heureFin = p.heureFin
   return p.jourFin !== p.jour
-    ? `${libelleJours(p.jour)} ${p.heureDebut} → ${libelleJours(p.jourFin)} ${p.heureFin}`
-    : `${libelleJours(p.jour)}, ${p.heureDebut} → ${p.heureFin}`
+    ? t`${jourDebut} ${heureDebut} → ${jourFin} ${heureFin}`
+    : t`${jourDebut}, ${heureDebut} → ${heureFin}`
+}
+
+/** Le dépôt d'une candidature en clair : « Association · déposée le 4 juin ». */
+function depotEnClair(c: Candidature): string {
+  const appelNom = c.appelNom
+  const jourDepot = jourDeLInstant(c.deposeeLe)
+  return c.origine === 'IMPORT'
+    ? t`${appelNom} · importée le ${jourDepot}`
+    : t`${appelNom} · déposée le ${jourDepot}`
+}
+
+/** L'horaire d'une séquence choisie, jusqu'au lieu s'il existe. */
+function horaireSequence(x: Candidature['choix'][number]): string {
+  const jourDebut = libelleJours(x.jour)
+  const jourFin = libelleJours(x.jourFin)
+  const heureDebut = x.heureDebut
+  const heureFin = x.heureFin
+  const horaire =
+    x.jourFin !== x.jour
+      ? t`${jourDebut}, ${heureDebut} → ${jourFin}, ${heureFin}`
+      : t`${jourDebut}, ${heureDebut} → ${heureFin}`
+  return x.lieu ? `${horaire} · ${x.lieu}` : horaire
 }
 
 export default function CandidaturesBenevoles({
@@ -76,6 +132,7 @@ export default function CandidaturesBenevoles({
   editionId: string
   archivee: boolean
 }) {
+  const { t } = useLingui()
   const { message, modal } = App.useApp()
   const [statut, setStatut] = useState<StatutCandidature>('EN_ATTENTE')
   const { data, loading, error } = useQuery(CANDIDATURES, {
@@ -104,27 +161,28 @@ export default function CandidaturesBenevoles({
     }
   }
 
-  const confirmerEcart = (c: Candidature) =>
+  const confirmerEcart = (c: Candidature) => {
+    const nomCandidat = c.nom
     void modal.confirm({
-      title: `Refuser toute la candidature de ${c.nom} ?`,
-      content:
-        'Les séquences encore en attente sont refusées. Aucun mail ne part, et la personne peut déposer de nouveau.',
-      okText: 'Refuser la candidature',
+      title: t`Refuser toute la candidature de ${nomCandidat} ?`,
+      content: t`Les séquences encore en attente sont refusées. Aucun mail ne part, et la personne peut déposer de nouveau.`,
+      okText: t`Refuser la candidature`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
       onOk: () =>
         agir(
           `ecarter-${c.id}`,
           () => ecarter({ variables: { id: c.id } }),
-          'Candidature refusée.'
+          t`Candidature refusée.`
         ),
     })
+  }
 
   if (error && !data) {
     return (
       <Result
         status="warning"
-        title="Les candidatures n’ont pas pu être chargées."
+        title={t`Les candidatures n’ont pas pu être chargées.`}
         subTitle={messageErreur(error)}
       />
     )
@@ -138,9 +196,9 @@ export default function CandidaturesBenevoles({
         value={statut}
         onChange={setStatut}
         options={[
-          { value: 'EN_ATTENTE', label: 'À traiter' },
-          { value: 'TRAITEE', label: 'Traitées' },
-          { value: 'RETIREE', label: 'Retirées' },
+          { value: 'EN_ATTENTE', label: t`À traiter` },
+          { value: 'TRAITEE', label: t`Traitées` },
+          { value: 'RETIREE', label: t`Retirées` },
         ]}
       />
       {loading && !data ? (
@@ -149,8 +207,8 @@ export default function CandidaturesBenevoles({
         <Empty
           description={
             statut === 'EN_ATTENTE'
-              ? 'Aucune candidature n’attend votre revue.'
-              : 'Aucune candidature ici.'
+              ? t`Aucune candidature n’attend votre revue.`
+              : t`Aucune candidature ici.`
           }
         />
       ) : (
@@ -159,11 +217,7 @@ export default function CandidaturesBenevoles({
             <li key={c.id} className="rt-verre rt-candidature">
               <header className="rt-candidature-tete">
                 <strong>{c.nom}</strong>
-                <span className="rt-note">
-                  {c.appelNom} ·{' '}
-                  {c.origine === 'IMPORT' ? 'importée' : 'déposée'} le{' '}
-                  {jourDeLInstant(c.deposeeLe)}
-                </span>
+                <span className="rt-note">{depotEnClair(c)}</span>
               </header>
               <p className="rt-candidature-contact">
                 {c.courriel && (
@@ -177,7 +231,7 @@ export default function CandidaturesBenevoles({
               </p>
               {c.plages.length > 0 && (
                 <p className="rt-candidature-plages">
-                  <span className="rt-libelle">Disponible</span>
+                  <span className="rt-libelle">{t`Disponible`}</span>
                   {c.plages.map(p => (
                     <Tag key={`${p.jour}-${p.heureDebut}`}>
                       {plageEnClair(p)}
@@ -187,19 +241,21 @@ export default function CandidaturesBenevoles({
               )}
               {c.precisionsDisponibilite && (
                 <p className="rt-candidature-texte">
-                  <span className="rt-libelle">Précisions</span>{' '}
+                  <span className="rt-libelle">{t`Précisions`}</span>{' '}
                   {c.precisionsDisponibilite}
                 </p>
               )}
               {c.message && (
                 <p className="rt-candidature-texte">
-                  <span className="rt-libelle">Message</span> {c.message}
+                  <span className="rt-libelle">{t`Message`}</span> {c.message}
                 </p>
               )}
               {c.ouAilleurs && (
                 <p className="rt-note">
-                  Aide là où il manque du monde : placez la personne depuis la
-                  vue « Répartition » du programme.
+                  <Trans>
+                    Aide là où il manque du monde : placez la personne depuis la
+                    vue « Répartition » du programme.
+                  </Trans>
                 </p>
               )}
               {c.choix.length > 0 && (
@@ -214,11 +270,7 @@ export default function CandidaturesBenevoles({
                             {x.titre}
                             <span className="rt-note">
                               {' '}
-                              · {libelleJours(x.jour)}, {x.heureDebut} →{' '}
-                              {x.jourFin !== x.jour &&
-                                `${libelleJours(x.jourFin)}, `}
-                              {x.heureFin}
-                              {x.lieu && ` · ${x.lieu}`}
+                              · {horaireSequence(x)}
                             </span>
                           </span>
                           {x.perimetre && (
@@ -228,7 +280,7 @@ export default function CandidaturesBenevoles({
                             />
                           )}
                           <Tag color={STATUTS[x.statut].couleur}>
-                            {STATUTS[x.statut].libelle}
+                            {t(STATUTS[x.statut].libelle)}
                           </Tag>
                         </span>
                         {x.peutTraiter &&
@@ -244,11 +296,11 @@ export default function CandidaturesBenevoles({
                                   void agir(
                                     `accepter-${x.id}`,
                                     () => accepter({ variables: { id: x.id } }),
-                                    'Séquence acceptée : la place attend la confirmation de la personne.'
+                                    t`Séquence acceptée : la place attend la confirmation de la personne.`
                                   )
                                 }
                               >
-                                Accepter
+                                {t`Accepter`}
                               </Button>
                               {enAttente && (
                                 <Button
@@ -260,11 +312,11 @@ export default function CandidaturesBenevoles({
                                       `refuser-${x.id}`,
                                       () =>
                                         refuser({ variables: { id: x.id } }),
-                                      'Séquence refusée.'
+                                      t`Séquence refusée.`
                                     )
                                   }
                                 >
-                                  Refuser
+                                  {t`Refuser`}
                                 </Button>
                               )}
                             </span>
@@ -282,7 +334,7 @@ export default function CandidaturesBenevoles({
                     loading={enCours === `ecarter-${c.id}`}
                     onClick={() => confirmerEcart(c)}
                   >
-                    Refuser toute la candidature
+                    {t`Refuser toute la candidature`}
                   </Button>
                 </footer>
               )}
@@ -291,10 +343,12 @@ export default function CandidaturesBenevoles({
         </ul>
       )}
       <p className="rt-note">
-        Accepter une séquence crée la fiche bénévole avec une place à confirmer.
-        La première place envoie à la personne un mail avec son lien personnel.
-        Refuser n’envoie rien. Les candidatures disparaissent à l’archivage de
-        la période.
+        <Trans>
+          Accepter une séquence crée la fiche bénévole avec une place à
+          confirmer. La première place envoie à la personne un mail avec son
+          lien personnel. Refuser n’envoie rien. Les candidatures disparaissent
+          à l’archivage de la période.
+        </Trans>
       </p>
     </div>
   )

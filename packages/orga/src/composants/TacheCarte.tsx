@@ -10,6 +10,8 @@ import {
   UserAddOutlined,
 } from '@ant-design/icons'
 import { useMutation } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Dropdown, Form, Modal, Select, Typography } from 'antd'
 import { useEffect, useRef, useState } from 'react'
 
@@ -97,6 +99,7 @@ export default function TacheCarte({
   useEffect(() => {
     if (enEvidence) racine.current?.scrollIntoView({ block: 'center' })
   }, [enEvidence])
+  const { t } = useLingui()
   const executer = useActionTache()
   const { message, modal } = App.useApp()
   const { lien } = useActivite()
@@ -123,6 +126,7 @@ export default function TacheCarte({
     if (filOuvert) setFil(true)
   }
   const resume = tache.resumeDeclinaisons
+  const titreTache = tache.titre
   // Une déclinaison ne se décline pas : seule une tâche du périmètre se partage.
   const declinable =
     peutModifier &&
@@ -143,24 +147,27 @@ export default function TacheCarte({
     r => r.id !== moiId && !tache.assignes.some(p => p.id === r.id)
   )
   const echeance = etatEcheance(tache)
+  const nomCloture = tache.clotureePar?.nom
+  const nomRealisation = tache.realiseePar?.nom
+  const dateEcheance = tache.echeance ? dateCourte(tache.echeance) : ''
   // Le menu « Autres actions » ne s'affiche que s'il propose au moins une entrée :
   // une tâche faite ou abandonnée, hors page du périmètre, n'en a aucune.
   const autresActions = [
     ...(onModifier
-      ? [{ key: 'modifier', icon: <EditOutlined />, label: 'Modifier' }]
+      ? [{ key: 'modifier', icon: <EditOutlined />, label: t`Modifier` }]
       : []),
     ...(tache.statut === 'A_FAIRE'
-      ? [{ key: 'EN_COURS', label: 'Marquer en cours' }]
+      ? [{ key: 'EN_COURS', label: t`Marquer en cours` }]
       : []),
     ...(tache.statut === 'EN_COURS'
-      ? [{ key: 'A_FAIRE', label: 'Remettre à faire' }]
+      ? [{ key: 'A_FAIRE', label: t`Remettre à faire` }]
       : []),
     ...(onPlanifierReunion && peutModifier && ouverte
       ? [
           {
             key: 'reunion',
             icon: <CalendarOutlined />,
-            label: 'Planifier une réunion',
+            label: t`Planifier une réunion`,
           },
         ]
       : []),
@@ -169,12 +176,12 @@ export default function TacheCarte({
           {
             key: 'decliner',
             icon: <ShareAltOutlined />,
-            label: 'Décliner dans d’autres périmètres',
+            label: t`Décliner dans d’autres périmètres`,
           },
         ]
       : []),
     ...(ouverte
-      ? [{ key: 'ABANDONNEE', label: 'Abandonner', danger: true }]
+      ? [{ key: 'ABANDONNEE', label: t`Abandonner`, danger: true }]
       : []),
   ]
 
@@ -193,6 +200,7 @@ export default function TacheCarte({
   const assignerAutre = async (personne: Referent) => {
     if (!(await assignerPersonne(personne.id, true))) return
     const cle = `assignation-${tache.id}-${personne.id}`
+    const nomPersonne = personne.nom
     message.open({
       key: cle,
       type: 'success',
@@ -201,7 +209,7 @@ export default function TacheCarte({
       duration: 10,
       content: (
         <>
-          Tâche assignée à {personne.nom}.
+          <Trans>Tâche assignée à {nomPersonne}.</Trans>
           <Button
             type="link"
             size="small"
@@ -210,11 +218,11 @@ export default function TacheCarte({
               void assignerPersonne(
                 personne.id,
                 false,
-                'L’assignation est annulée.'
+                t`L’assignation est annulée.`
               )
             }}
           >
-            Annuler
+            <Trans>Annuler</Trans>
           </Button>
         </>
       ),
@@ -224,20 +232,21 @@ export default function TacheCarte({
   // Retirer une autre personne demande une confirmation, se retirer soi-même non.
   const retirerPersonne = async (personne: { id: string; nom: string }) => {
     if (personne.id === moiId) {
-      await assignerPersonne(moiId, false, 'Vous êtes retiré·e de la tâche.')
+      await assignerPersonne(moiId, false, t`Vous êtes retiré·e de la tâche.`)
       return
     }
+    const nomPersonne = personne.nom
     const confirme = await modal.confirm({
-      title: `Retirer ${personne.nom} de cette tâche ?`,
-      content: `« ${tache.titre} ». ${personne.nom} en sera prévenu·e.`,
-      okText: 'Retirer',
-      cancelText: 'Annuler',
+      title: t`Retirer ${nomPersonne} de cette tâche ?`,
+      content: t`« ${titreTache} ». ${nomPersonne} en sera prévenu·e.`,
+      okText: t`Retirer`,
+      cancelText: t`Annuler`,
     })
     if (confirme) {
       await assignerPersonne(
         personne.id,
         false,
-        `${personne.nom} est retiré·e de la tâche.`
+        t`${nomPersonne} est retiré·e de la tâche.`
       )
     }
   }
@@ -264,7 +273,7 @@ export default function TacheCarte({
     )
 
   const terminer = async () => {
-    if (await statut('FAITE', 'Tâche marquée comme faite.', realiseeParId)) {
+    if (await statut('FAITE', t`Tâche marquée comme faite.`, realiseeParId)) {
       setCloture(false)
       setRealiseeParId(null)
     }
@@ -302,7 +311,7 @@ export default function TacheCarte({
             ellipsis={{
               rows: 2,
               expandable: 'collapsible',
-              symbol: e => (e ? 'Réduire' : 'Lire la suite'),
+              symbol: e => (e ? t`Réduire` : t`Lire la suite`),
             }}
           >
             {tache.description}
@@ -310,7 +319,7 @@ export default function TacheCarte({
         )}
         {tache.origine && (
           <p className="rt-demandee-par">
-            Demandée par
+            <Trans>Demandée par</Trans>
             <EtiquettePerimetre
               nom={tache.origine.perimetre.nom}
               couleur={tache.origine.perimetre.couleur}
@@ -336,19 +345,20 @@ export default function TacheCarte({
             <span
               className={`rt-date${echeance === 'retard' ? ' rt-date-retard' : echeance === 'proche' ? ' rt-date-proche' : ''}`}
             >
-              {echeance === 'retard' ? 'En retard : ' : 'Échéance '}
-              {dateCourte(tache.echeance)}
+              {echeance === 'retard'
+                ? t`En retard : ${dateEcheance}`
+                : t`Échéance ${dateEcheance}`}
             </span>
           )}
           {tache.assignes.length === 0 && ouverte ? (
             <PastilleEtat variante="alerte" sansPoint>
-              Personne n’est assigné·e
+              <Trans>Personne n’est assigné·e</Trans>
             </PastilleEtat>
           ) : (
             tache.assignes.map(p => (
               <PersonneNommee
                 key={p.id}
-                nom={p.id === moiId ? 'Vous' : p.nom}
+                nom={p.id === moiId ? t`Vous` : p.nom}
                 initialesDe={p.nom}
                 desactive={enAction}
                 retirer={
@@ -364,23 +374,29 @@ export default function TacheCarte({
               onClick={() => setFil(true)}
             >
               <MessageOutlined aria-hidden />
-              {nombreCommentaires > 1
-                ? `${nombreCommentaires} commentaires`
-                : nombreCommentaires === 1
-                  ? '1 commentaire'
-                  : peutModifier
-                    ? 'Commenter'
-                    : 'Historique'}
+              {nombreCommentaires > 0
+                ? t`${plural(nombreCommentaires, { one: '# commentaire', other: '# commentaires' })}`
+                : peutModifier
+                  ? t`Commenter`
+                  : t`Historique`}
             </button>
           )}
         </div>
         {tache.statut === 'FAITE' &&
           (tache.clotureePar || tache.realiseePar) && (
             <p className="rt-note" style={{ margin: 0 }}>
-              {tache.clotureePar &&
-                `Cochée par ${tache.clotureePar.id === moiId ? 'vous' : tache.clotureePar.nom}. `}
-              {tache.realiseePar &&
-                `Réalisée par ${tache.realiseePar.id === moiId ? 'vous' : tache.realiseePar.nom}.`}
+              {[
+                tache.clotureePar &&
+                  (tache.clotureePar.id === moiId
+                    ? t`Cochée par vous.`
+                    : t`Cochée par ${nomCloture}.`),
+                tache.realiseePar &&
+                  (tache.realiseePar.id === moiId
+                    ? t`Réalisée par vous.`
+                    : t`Réalisée par ${nomRealisation}.`),
+              ]
+                .filter(Boolean)
+                .join(' ')}
             </p>
           )}
         {resume && resume.total > 0 && (
@@ -405,7 +421,7 @@ export default function TacheCarte({
                 autoFocus
                 defaultOpen
                 value={null}
-                placeholder="Assigner une personne"
+                placeholder={t`Assigner une personne`}
                 optionFilterProp="label"
                 style={{ minWidth: 190 }}
                 disabled={enAction}
@@ -427,7 +443,7 @@ export default function TacheCarte({
                 disabled={enAction}
                 onClick={() => setChoixAssignation(true)}
               >
-                Assigner
+                <Trans>Assigner</Trans>
               </Button>
             ))}
           {ouverte && (assignee || affectee) && (
@@ -442,12 +458,12 @@ export default function TacheCarte({
                       variables: { id: tache.id, assigne: !assignee },
                     }),
                   assignee
-                    ? 'Vous êtes retiré·e de la tâche.'
-                    : 'La tâche vous est assignée.'
+                    ? t`Vous êtes retiré·e de la tâche.`
+                    : t`La tâche vous est assignée.`
                 )
               }
             >
-              {assignee ? 'Me retirer' : 'Je m’en occupe'}
+              {assignee ? t`Me retirer` : t`Je m’en occupe`}
             </Button>
           )}
           {ouverte ? (
@@ -458,16 +474,19 @@ export default function TacheCarte({
               disabled={enAction}
               onClick={() => setCloture(true)}
             >
-              Faite
+              {t({
+                message: 'Faite',
+                comment: 'Bouton qui marque une tâche comme faite',
+              })}
             </Button>
           ) : (
             <Button
               size="small"
               icon={<UndoOutlined />}
               disabled={enAction}
-              onClick={() => void statut('A_FAIRE', 'Tâche rouverte.')}
+              onClick={() => void statut('A_FAIRE', t`Tâche rouverte.`)}
             >
-              Rouvrir
+              <Trans>Rouvrir</Trans>
             </Button>
           )}
           {autresActions.length > 0 && (
@@ -480,18 +499,18 @@ export default function TacheCarte({
                   if (key === 'decliner') setADecliner(true)
                   if (key === 'reunion') onPlanifierReunion?.(tache)
                   if (key === 'EN_COURS')
-                    void statut('EN_COURS', 'Tâche marquée en cours.')
+                    void statut('EN_COURS', t`Tâche marquée en cours.`)
                   if (key === 'A_FAIRE')
-                    void statut('A_FAIRE', 'Tâche remise à faire.')
+                    void statut('A_FAIRE', t`Tâche remise à faire.`)
                   if (key === 'ABANDONNEE')
-                    void statut('ABANDONNEE', 'Tâche abandonnée.')
+                    void statut('ABANDONNEE', t`Tâche abandonnée.`)
                 },
               }}
             >
               <Button
                 size="small"
                 icon={<MoreOutlined />}
-                aria-label="Autres actions"
+                aria-label={t`Autres actions`}
               />
             </Dropdown>
           )}
@@ -500,28 +519,30 @@ export default function TacheCarte({
 
       <Modal
         open={cloture}
-        title="Marquer la tâche comme faite"
-        okText="Marquer comme faite"
-        cancelText="Annuler"
+        title={t`Marquer la tâche comme faite`}
+        okText={t`Marquer comme faite`}
+        cancelText={t`Annuler`}
         confirmLoading={changement.loading}
         onOk={() => void terminer()}
         onCancel={() => setCloture(false)}
         destroyOnHidden
       >
-        <Typography.Paragraph>« {tache.titre} »</Typography.Paragraph>
+        <Typography.Paragraph>
+          <Trans>« {titreTache} »</Trans>
+        </Typography.Paragraph>
         <Form layout="vertical">
           <Form.Item
-            label="Réalisée par (facultatif)"
-            extra="Cette information n’est visible que par vous et par les admins."
+            label={t`Réalisée par (facultatif)`}
+            extra={t`Cette information n’est visible que par vous et par les admins.`}
           >
             <Select
               allowClear
-              placeholder="Choisir une personne"
+              placeholder={t`Choisir une personne`}
               value={realiseeParId}
               onChange={v => setRealiseeParId(v ?? null)}
               options={referents.map(r => ({
                 value: r.id,
-                label: r.id === moiId ? 'Vous' : r.nom,
+                label: r.id === moiId ? t`Vous` : r.nom,
               }))}
             />
           </Form.Item>

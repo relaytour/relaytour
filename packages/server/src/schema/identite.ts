@@ -4,6 +4,7 @@ import type { z } from 'zod'
 
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
+import { i18n } from '../lib/langue.ts'
 import {
   EXTENSIONS,
   verifierIconeApplication,
@@ -41,7 +42,10 @@ function messageValidation(
   issues: readonly { path: readonly PropertyKey[]; message: string }[]
 ): string {
   return issues
-    .map(i => `${i.path.map(String).join('.') || 'identité'} : ${i.message}`)
+    .map(
+      i =>
+        `${i.path.map(String).join('.') || i18n._('identité')} : ${i.message}`
+    )
     .join(' ; ')
 }
 
@@ -62,7 +66,9 @@ async function declarationEnBase(
   const r = lireDeclaration(ligne.configuration)
   if (r.etat !== 'valide') {
     throw erreurSaisie(
-      'La configuration de l’organisation est invalide : l’hébergeur doit la réimporter.'
+      i18n._(
+        'La configuration de l’organisation est invalide : l’hébergeur doit la réimporter.'
+      )
     )
   }
   return r.declaration
@@ -83,8 +89,8 @@ async function exigerMedia(
   if (media === null || EXTENSIONS[media.type as TypeMedia] !== format) {
     throw erreurSaisie(
       format === 'png'
-        ? 'Choisissez une image PNG téléversée pour cette organisation.'
-        : 'Choisissez une image SVG téléversée pour cette organisation.'
+        ? i18n._('Choisissez une image PNG téléversée pour cette organisation.')
+        : i18n._('Choisissez une image SVG téléversée pour cette organisation.')
     )
   }
   return empreinte
@@ -343,10 +349,14 @@ builder.queryFields(t => ({
       const organisationId = ctx.organisation!.id
       const contenu = await construireContenu(prisma, organisationId)
       if (contenu.refusees.length > 0) {
+        const fichiers = contenu.refusees
+          .map(r => `${r.fichier} (${r.raison})`)
+          .join(' ; ')
         throw erreurSaisie(
-          `L’export est incomplet : ${contenu.refusees
-            .map(r => `${r.fichier} (${r.raison})`)
-            .join(' ; ')}. Corrigez ces fichiers, puis relancez l’export.`
+          i18n._(
+            'L’export est incomplet : {fichiers}. Corrigez ces fichiers, puis relancez l’export.',
+            { fichiers }
+          )
         )
       }
       const date = new Date().toISOString().slice(0, 10)
@@ -392,7 +402,10 @@ builder.mutationFields(t => ({
           const total = await tx.media.count({ where: { organisationId } })
           if (total >= MEDIAS_MAX) {
             throw erreurSaisie(
-              `L’organisation a déjà ${MEDIAS_MAX} images : les images que l’identité ne cite plus sont retirées chaque nuit.`
+              i18n._(
+                'L’organisation a déjà {max} images : les images que l’identité ne cite plus sont retirées chaque nuit.',
+                { max: MEDIAS_MAX }
+              )
             )
           }
         }
@@ -449,14 +462,16 @@ builder.mutationFields(t => ({
         args.langue !== null &&
         !estUneLangue(args.langue)
       ) {
-        throw erreurSaisie('Cette langue n’est pas proposée.')
+        throw erreurSaisie(i18n._('Cette langue n’est pas proposée.'))
       }
       const actuelle = await declarationEnBase(organisationId)
       const logoPng = await exigerMedia(organisationId, args.logoPng, 'png')
       const logoSvg = await exigerMedia(organisationId, args.logoSvg, 'svg')
       if (logoSvg !== undefined && logoPng === undefined) {
         throw erreurSaisie(
-          'Un logo SVG s’accompagne d’un logo PNG : les mails n’affichent pas le SVG.'
+          i18n._(
+            'Un logo SVG s’accompagne d’un logo PNG : les mails n’affichent pas le SVG.'
+          )
         )
       }
       const favicon = await exigerMedia(organisationId, args.favicon, 'png')
@@ -466,7 +481,7 @@ builder.mutationFields(t => ({
       )
       const declaration = valider(DeclarationOrganisationSchema, {
         ...actuelle,
-        nom: texteRequis(args.nom, 'Le nom'),
+        nom: texteRequis(args.nom, i18n._('Le nom')),
         sigle: texteFacultatif(args.sigle),
         contactRecrutement: texteFacultatif(args.contactRecrutement),
         contactSupport: texteFacultatif(args.contactSupport),
@@ -500,7 +515,10 @@ builder.mutationFields(t => ({
         const manquements = manquementsIdentiteActivite(identite, declaration)
         if (manquements.length > 0) {
           throw erreurSaisie(
-            `L’activité « ${activite.nom} » ne serait plus valide : ${messageValidation(manquements)}.`
+            i18n._('L’activité « {nom} » ne serait plus valide : {details}.', {
+              nom: activite.nom,
+              details: messageValidation(manquements),
+            })
           )
         }
         // Un formulaire public ouvert cite un contact (ADR 0015).
@@ -510,7 +528,10 @@ builder.mutationFields(t => ({
           identite.contactRecrutement === undefined
         ) {
           throw erreurSaisie(
-            `Le formulaire public de l’activité « ${activite.nom} » cite ce contact : fermez d’abord le formulaire, ou gardez un contact.`
+            i18n._(
+              'Le formulaire public de l’activité « {nom} » cite ce contact : fermez d’abord le formulaire, ou gardez un contact.',
+              { nom: activite.nom }
+            )
           )
         }
       }
@@ -550,7 +571,9 @@ builder.mutationFields(t => ({
       const logoSvg = await exigerMedia(organisationId, args.logoSvg, 'svg')
       if (logoSvg !== undefined && logoPng === undefined) {
         throw erreurSaisie(
-          'Un logo SVG s’accompagne d’un logo PNG : les mails n’affichent pas le SVG.'
+          i18n._(
+            'Un logo SVG s’accompagne d’un logo PNG : les mails n’affichent pas le SVG.'
+          )
         )
       }
       const identite = valider(IdentiteActiviteSchema, {
@@ -580,7 +603,9 @@ builder.mutationFields(t => ({
         })) > 0
       ) {
         throw erreurSaisie(
-          'Le formulaire public de l’activité cite ce contact : fermez d’abord le formulaire, ou gardez un contact.'
+          i18n._(
+            'Le formulaire public de l’activité cite ce contact : fermez d’abord le formulaire, ou gardez un contact.'
+          )
         )
       }
       const vide = Object.values(identite).every(v => v === undefined)

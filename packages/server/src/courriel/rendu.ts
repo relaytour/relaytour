@@ -82,6 +82,14 @@ export function rendre(
       ? echapperHtml(organisation.organisation)
       : `<img src="${echapperHtml(organisation.logoUrl)}" alt="${echapperHtml(organisation.organisation)}" height="48" style="display:inline-block;height:48px;max-width:200px;border:0" />`
   const toutes: Variables = { ...organisation, ...variables }
+  // Les textes fixes du gabarit, dans la langue de l'envoi (ADR 0047). Une variable
+  // de liste n'entre pas dans un texte traduit.
+  const valeursTexte = Object.fromEntries(
+    Object.entries(toutes).filter(
+      (e): e is [string, string] => typeof e[1] === 'string'
+    )
+  )
+  const textes = gabarit.textes(valeursTexte)
   const estGroupee = (v: string[] | GroupeDeListe[]): v is GroupeDeListe[] =>
     v.length > 0 && typeof v[0] !== 'string'
   const poser = (
@@ -90,7 +98,8 @@ export function rendre(
     liste: (v: string[]) => string,
     groupes: (v: GroupeDeListe[]) => string
   ): string =>
-    source.replaceAll(/\{\{(\w+)\}\}/g, (_m, cle: string) => {
+    source.replaceAll(/\{\{(\w+|§\d+)\}\}/g, (_m, cle: string) => {
+      if (cle.startsWith('§')) return texte(textes[Number(cle.slice(1))] ?? '')
       if (cle === 'marque')
         return texte === echapperHtml ? marque : organisation.organisation
       const valeur = toutes[cle] ?? ''

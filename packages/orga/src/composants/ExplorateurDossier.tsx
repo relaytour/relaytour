@@ -4,6 +4,7 @@ import {
   LinkOutlined,
 } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, Breadcrumb, Button, Empty, Skeleton } from 'antd'
 import { useState } from 'react'
 
@@ -51,6 +52,7 @@ export default function ExplorateurDossier({
   /** Sans le panneau de verre, dans une fenêtre par exemple. */
   sansCadre?: boolean
 }) {
+  const { t } = useLingui()
   const [chemin, setChemin] = useState<string[]>(cheminInitial)
   const [ouvert, setOuvert] = useState<DocumentOuvert | null>(null)
   const { data, loading, error } = useQuery(CONTENU_DOSSIER, {
@@ -91,7 +93,7 @@ export default function ExplorateurDossier({
             type="text"
             icon={<ArrowLeftOutlined />}
             onClick={onRetour}
-            aria-label="Revenir aux dossiers"
+            aria-label={t`Revenir aux dossiers`}
           />
         )}
         <Breadcrumb
@@ -122,7 +124,7 @@ export default function ExplorateurDossier({
             style={{ marginInlineStart: 'auto' }}
             onClick={() => onChoisir(chemin, nomCourant)}
           >
-            Lier ce dossier
+            <Trans>Lier ce dossier</Trans>
           </Button>
         )}
       </div>
@@ -131,18 +133,19 @@ export default function ExplorateurDossier({
         <Alert
           type="warning"
           showIcon
-          message="Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau."
+          message={t`Le fournisseur cloud n’est pas connecté. Un admin de l’organisation doit le connecter de nouveau.`}
         />
       ) : error ? (
         <Alert type="error" showIcon message={messageErreur(error)} />
       ) : loading && !data ? (
         <Skeleton active />
       ) : elements.length === 0 ? (
-        <Empty description="Ce dossier est vide." />
+        <Empty description={t`Ce dossier est vide.`} />
       ) : (
         <ul className="rt-explorateur">
           {elements.map(e => {
             const Icone = e.dossier ? FolderOutlined : ICONES_APERCU[e.apercu]
+            const nomElement = e.nom
             return (
               <li key={e.elementId} className="rt-explorateur-element">
                 <button type="button" onClick={() => ouvrir(e)}>
@@ -162,7 +165,7 @@ export default function ExplorateurDossier({
                     size="small"
                     type="text"
                     icon={<LinkOutlined />}
-                    aria-label={`Lier le dossier ${e.nom}`}
+                    aria-label={t`Lier le dossier ${nomElement}`}
                     onClick={() => onChoisir([...chemin, e.nom], e.nom)}
                   />
                 )}
@@ -177,7 +180,7 @@ export default function ExplorateurDossier({
           type="info"
           showIcon
           style={{ marginTop: 12 }}
-          message="Ce dossier compte trop d’éléments pour les afficher tous ici. Ouvrez-le chez le fournisseur cloud pour voir la suite."
+          message={t`Ce dossier compte trop d’éléments pour les afficher tous ici. Ouvrez-le chez le fournisseur cloud pour voir la suite.`}
         />
       )}
 

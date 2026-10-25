@@ -1,0 +1,54 @@
+# Areas of The Valley Games: the sports and the cross-cutting departments.
+# The slug never changes: it links the sheets, the task templates, and the history.
+# Each area belongs to a group declared in activite.yaml.
+
+perimetres:
+  - slug: football
+    nom: Soccer
+    description: The 7-a-side tournament brings together the Saturday teams on two pitches.
+    groupe: sport
+    couleur: '#8FC9B7'
+    ordre: 1
+    effectif: 2
+  - slug: volley
+    nom: Volleyball
+    description: The mixed tournament is played by level in the valley gym.
+    groupe: sport
+    couleur: '#F32988'
+    ordre: 2
+    effectif: 2
+  - slug: course
+    nom: Running
+    description: A 10 km loop and a children’s race start on Sunday morning.
+    groupe: sport
+    couleur: '#FB8B36'
+    ordre: 3
+    effectif: 2
+  - slug: coordination
+    nom: Coordination
+    description: The department trains the team, keeps the calendar, and prepares the board’s decisions.
+    groupe: pole
+    couleur: '#2F6B4F'
+    ordre: 10
+    effectif: 2
+  - slug: benevoles
+    nom: Volunteers
+    description: The department recruits volunteers and plans their slots during the edition.
+    groupe: pole
+    couleur: '#FC685F'
+    ordre: 11
+    effectif: 2
+  - slug: logistique
+    nom: Logistics
+    description: The department stores and transports the equipment, then sets it up at each site.
+    groupe: pole
+    couleur: '#6F4AA3'
+    ordre: 12
+    effectif: 1
+  - slug: communication
+    nom: Communication
+    description: The department announces the games and informs the participants.
+    groupe: pole
+    couleur: '#02ADB8'
+    ordre: 13
+    effectif: 1

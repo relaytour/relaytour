@@ -13,6 +13,14 @@ fr:
     l'ordre se recalcule au chargement de la page. Le menu sépare la gestion de
     l'activité et celle de l'organisation. Les sections de la page Organisation
     sont espacées.
+en:
+  titre: >-
+    Cards on the Team screen keep their place during changes
+  texte: >-
+    On the Team screen, an appointment no longer moves the area’s card: the
+    order is recalculated when the page loads. The menu separates activity
+    management from organization management. The sections of the Organization
+    page are spaced out.
 ---
 
 `lib/ordre.ts` : `usePremiereReception` garde l'ordre de première réception des

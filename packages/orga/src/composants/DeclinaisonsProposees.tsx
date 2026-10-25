@@ -1,5 +1,6 @@
 import { CheckOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Typography } from 'antd'
 
 import { useActivite } from '../lib/activite'
@@ -41,6 +42,7 @@ export default function DeclinaisonsProposees({
   editionId: string
   peutRepondre: boolean
 }) {
+  const { t } = useLingui()
   const { lien } = useActivite()
   const { modal } = App.useApp()
   const executer = useActionTache()
@@ -56,10 +58,12 @@ export default function DeclinaisonsProposees({
   // personne ne croie qu'aucune tâche n'attend.
   if (data === undefined) {
     return error ? (
-      <Section titre="Tâches proposées à ce périmètre">
+      <Section titre={t`Tâches proposées à ce périmètre`}>
         <p className="rt-note" style={{ margin: '0 6px' }}>
-          Les tâches proposées à ce périmètre n’ont pas pu être chargées.
-          Rechargez la page dans un instant.
+          <Trans>
+            Les tâches proposées à ce périmètre n’ont pas pu être chargées.
+            Rechargez la page dans un instant.
+          </Trans>
         </p>
       </Section>
     ) : null
@@ -72,27 +76,32 @@ export default function DeclinaisonsProposees({
     executer(
       () => accorder({ variables: { id, accepter } }),
       accepter
-        ? 'La tâche est ajoutée à votre périmètre.'
-        : 'La tâche est refusée.'
+        ? t`La tâche est ajoutée à votre périmètre.`
+        : t`La tâche est refusée.`
     )
 
   const refuser = async (d: DeclinaisonProposee) => {
-    const demandeur = d.origine
-      ? `Le périmètre ${d.origine.perimetre.nom}`
-      : 'Le périmètre qui la propose'
+    const nomPerimetreDemandeur = d.origine?.perimetre.nom
     const confirme = await modal.confirm({
-      title: 'Refuser cette tâche ?',
-      content: `${demandeur} apprend votre refus. Un admin de l’activité peut ajouter la tâche à votre périmètre malgré ce refus.`,
-      okText: 'Refuser',
-      cancelText: 'Annuler',
+      title: t`Refuser cette tâche ?`,
+      content: d.origine
+        ? t`Le périmètre ${nomPerimetreDemandeur} apprend votre refus. Un admin de l’activité peut ajouter la tâche à votre périmètre malgré ce refus.`
+        : t`Le périmètre qui la propose apprend votre refus. Un admin de l’activité peut ajouter la tâche à votre périmètre malgré ce refus.`,
+      okText: t`Refuser`,
+      cancelText: t`Annuler`,
     })
     if (confirme) await repondre(d.id, false)
   }
 
+  const nombreAAccepter = declinaisons.length
+  const libelleEcheance = (iso: string) => {
+    const dateEcheance = dateCourte(iso)
+    return t`Échéance ${dateEcheance}`
+  }
   return (
     <Section
-      titre="Tâches proposées à ce périmètre"
-      compte={`${declinaisons.length} à accepter`}
+      titre={t`Tâches proposées à ce périmètre`}
+      compte={t`${nombreAAccepter} à accepter`}
     >
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         {declinaisons.map(d => (
@@ -120,7 +129,7 @@ export default function DeclinaisonsProposees({
                   ellipsis={{
                     rows: 2,
                     expandable: 'collapsible',
-                    symbol: e => (e ? 'Réduire' : 'Lire la suite'),
+                    symbol: e => (e ? t`Réduire` : t`Lire la suite`),
                   }}
                 >
                   {d.description}
@@ -129,7 +138,7 @@ export default function DeclinaisonsProposees({
               <div className="rt-meta">
                 {d.origine && (
                   <span className="rt-demandee-par">
-                    Demandée par
+                    <Trans>Demandée par</Trans>
                     <EtiquettePerimetre
                       nom={d.origine.perimetre.nom}
                       couleur={d.origine.perimetre.couleur}
@@ -141,9 +150,7 @@ export default function DeclinaisonsProposees({
                   </span>
                 )}
                 {d.echeance && (
-                  <span className="rt-date">
-                    Échéance {dateCourte(d.echeance)}
-                  </span>
+                  <span className="rt-date">{libelleEcheance(d.echeance)}</span>
                 )}
               </div>
             </div>
@@ -154,7 +161,7 @@ export default function DeclinaisonsProposees({
                   disabled={accord.loading}
                   onClick={() => void refuser(d)}
                 >
-                  Refuser
+                  <Trans>Refuser</Trans>
                 </Button>
                 <Button
                   size="small"
@@ -163,7 +170,7 @@ export default function DeclinaisonsProposees({
                   disabled={accord.loading}
                   onClick={() => void repondre(d.id, true)}
                 >
-                  Accepter
+                  <Trans>Accepter</Trans>
                 </Button>
               </div>
             )}
@@ -172,8 +179,8 @@ export default function DeclinaisonsProposees({
       </div>
       <p className="rt-note" style={{ margin: '0 6px' }}>
         {peutRepondre
-          ? 'Une tâche acceptée entre parmi les tâches du périmètre. Une tâche refusée n’y entre pas.'
-          : 'Les référentes et référents du périmètre acceptent ou refusent ces tâches.'}
+          ? t`Une tâche acceptée entre parmi les tâches du périmètre. Une tâche refusée n’y entre pas.`
+          : t`Les référentes et référents du périmètre acceptent ou refusent ces tâches.`}
       </p>
     </Section>
   )

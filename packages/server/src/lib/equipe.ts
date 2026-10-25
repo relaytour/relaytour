@@ -4,6 +4,7 @@ import { mettreEnFile } from '../courriel/file.ts'
 
 import { publierNotification } from './flux.ts'
 import { journal } from './journal.ts'
+import { i18n } from './langue.ts'
 
 // Mails d'équipe (ADR 0012) : l'invitation liste les périmètres de la personne, et un
 // mail « Votre place dans l'équipe a changé » annonce une nouvelle affectation ou un
@@ -112,10 +113,15 @@ function lignePerimetre(p: {
   perimetre: { nom: string; description: string | null }
   edition: { nom: string }
 }): string {
-  const titre = `${p.perimetre.nom} (${p.edition.nom})`
+  const perimetre = p.perimetre.nom
+  const edition = p.edition.nom
   return p.perimetre.description === null
-    ? titre
-    : `${titre} : ${p.perimetre.description}`
+    ? i18n._('{perimetre} ({edition})', { perimetre, edition })
+    : i18n._('{perimetre} ({edition}) : {description}', {
+        perimetre,
+        edition,
+        description: p.perimetre.description,
+      })
 }
 
 /**
@@ -195,12 +201,17 @@ export async function changementsEquipe(
       },
     }),
   ])
-  const changements = affectations.map(
-    a => `Vous rejoignez le périmètre ${lignePerimetre(a)}`
+  const changements = affectations.map(a =>
+    i18n._('Vous rejoignez le périmètre {perimetre}', {
+      perimetre: lignePerimetre(a),
+    })
   )
   for (const admin of admins) {
     changements.push(
-      `Vous devenez admin de l’activité ${admin.activite.nom} : vous gérez ses périodes, ses périmètres et son équipe.`
+      i18n._(
+        'Vous devenez admin de l’activité {activite} : vous gérez ses périodes, ses périmètres et son équipe.',
+        { activite: admin.activite.nom }
+      )
     )
   }
   // Une appartenance créée pendant la fenêtre est une invitation, déjà annoncée par
@@ -214,7 +225,10 @@ export async function changementsEquipe(
     appartenance.updatedAt < new Date(fenetre.fin)
   ) {
     changements.push(
-      `Vous devenez admin de l’organisation ${appartenance.organisation.nom} : vous gérez toutes ses activités et ses comptes.`
+      i18n._(
+        'Vous devenez admin de l’organisation {organisation} : vous gérez toutes ses activités et ses comptes.',
+        { organisation: appartenance.organisation.nom }
+      )
     )
   }
   return changements

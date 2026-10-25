@@ -13,6 +13,7 @@ import {
 } from '../lib/abonnements-agenda.ts'
 import { perimetresLisibles } from '../lib/droits.ts'
 import { accesRefuse, erreurSaisie } from '../lib/erreurs.ts'
+import { i18n } from '../lib/langue.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 
 import { builder } from './builder.ts'
@@ -86,7 +87,9 @@ async function perimetresChoisis(
   const uniques = [...new Set(ids.map(String))]
   if (uniques.length > PERIMETRES_CHOISIS_MAX) {
     throw erreurSaisie(
-      `Choisissez ${PERIMETRES_CHOISIS_MAX} périmètres au plus.`
+      i18n._('Choisissez {max} périmètres au plus.', {
+        max: PERIMETRES_CHOISIS_MAX,
+      })
     )
   }
   const lisibles = new Set(await perimetresLisibles(ctx))
@@ -215,7 +218,7 @@ builder.mutationFields(t => ({
         },
       })
       if (actuel === null) {
-        throw erreurSaisie('Créez d’abord votre abonnement.')
+        throw erreurSaisie(i18n._('Créez d’abord votre abonnement.'))
       }
       const perimetreIds = await perimetresChoisis(ctx, args.perimetreIds)
       return prisma.abonnementAgenda.update({

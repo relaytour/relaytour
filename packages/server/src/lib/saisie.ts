@@ -1,4 +1,5 @@
 import { erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 const ADRESSE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -7,7 +8,7 @@ const COULEUR = /^#[0-9a-fA-F]{6}$/
 export function adresseValide(brute: string): string {
   const adresse = brute.trim().toLowerCase()
   if (!ADRESSE.test(adresse) || adresse.length > 191) {
-    throw erreurSaisie('L’adresse mail n’est pas valide.')
+    throw erreurSaisie(i18n._('L’adresse mail n’est pas valide.'))
   }
   return adresse
 }
@@ -21,9 +22,12 @@ export const DESCRIPTION_TACHE_MAX = 5000
 
 export function texteRequis(brut: string, libelle: string, max = 120): string {
   const texte = brut.trim()
-  if (texte.length === 0) throw erreurSaisie(`${libelle} est obligatoire.`)
+  if (texte.length === 0)
+    throw erreurSaisie(i18n._('{libelle} est obligatoire.', { libelle }))
   if (texte.length > max) {
-    throw erreurSaisie(`${libelle} dépasse ${max} caractères.`)
+    throw erreurSaisie(
+      i18n._('{libelle} dépasse {max} caractères.', { libelle, max })
+    )
   }
   return texte
 }
@@ -38,7 +42,11 @@ export function descriptionValide(
   const texte = (brute ?? '').trim()
   if (texte.length === 0) return null
   if (texte.length > DESCRIPTION_MAX) {
-    throw erreurSaisie(`La description dépasse ${DESCRIPTION_MAX} caractères.`)
+    throw erreurSaisie(
+      i18n._('La description dépasse {max} caractères.', {
+        max: DESCRIPTION_MAX,
+      })
+    )
   }
   return texte
 }
@@ -52,7 +60,9 @@ export function texteFacultatif(
   const texte = (brut ?? '').trim()
   if (texte.length === 0) return null
   if (texte.length > max) {
-    throw erreurSaisie(`${libelle} dépasse ${max} caractères.`)
+    throw erreurSaisie(
+      i18n._('{libelle} dépasse {max} caractères.', { libelle, max })
+    )
   }
   return texte
 }
@@ -61,7 +71,9 @@ export function slugValide(brut: string): string {
   const slug = brut.trim()
   if (!SLUG.test(slug) || slug.length > 60) {
     throw erreurSaisie(
-      'L’identifiant ne contient que des minuscules, des chiffres et des tirets.'
+      i18n._(
+        'L’identifiant ne contient que des minuscules, des chiffres et des tirets.'
+      )
     )
   }
   return slug
@@ -70,7 +82,7 @@ export function slugValide(brut: string): string {
 export function couleurValide(brute: string | null | undefined): string | null {
   if (brute === null || brute === undefined || brute.trim() === '') return null
   if (!COULEUR.test(brute.trim())) {
-    throw erreurSaisie('La couleur attendue a la forme #RRGGBB.')
+    throw erreurSaisie(i18n._('La couleur attendue a la forme #RRGGBB.'))
   }
   return brute.trim().toUpperCase()
 }

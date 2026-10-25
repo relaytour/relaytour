@@ -1,3 +1,5 @@
+import { useLingui } from '@lingui/react/macro'
+
 import { useOrganisation } from '../lib/organisation'
 import { texteSur } from '../lib/theme'
 
@@ -15,6 +17,7 @@ export default function PastillePerimetre({
   /** Présent dans un champ à choix multiples : une croix retire le périmètre. */
   fermer?: () => void
 }) {
+  const { t } = useLingui()
   const { theme } = useOrganisation()
   const fond = couleur ?? theme.couleurs.primaire
   const texte = texteSur(fond)
@@ -29,7 +32,7 @@ export default function PastillePerimetre({
         <button
           type="button"
           className="rt-pastille-fermer"
-          aria-label={`Retirer ${nom}`}
+          aria-label={t`Retirer ${nom}`}
           style={{ color: texte }}
           onClick={fermer}
         >

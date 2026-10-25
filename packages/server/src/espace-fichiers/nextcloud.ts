@@ -2,6 +2,8 @@ import { isIP } from 'node:net'
 
 import { DOMParser, type Element as ElementXml } from '@xmldom/xmldom'
 
+import { i18n } from '../lib/langue.ts'
+
 import { adressePublique, agentNomme, agentPublic } from './reseau.ts'
 import {
   AccesRetire,
@@ -109,7 +111,7 @@ export async function appelNextcloud(
 ): Promise<Response> {
   if (baseAdmise(base, c) !== base || !adresse.startsWith(`${base}/`)) {
     throw new FournisseurIndisponible(
-      'L’hébergeur n’admet plus l’adresse de ce Nextcloud.'
+      i18n._('L’hébergeur n’admet plus l’adresse de ce Nextcloud.')
     )
   }
   const { delaiMs = DELAI_MS, headers, ...options } = init
@@ -125,13 +127,17 @@ export async function appelNextcloud(
   } catch (erreur) {
     const cause = (erreur as { cause?: Error }).cause
     throw new FournisseurIndisponible(
-      `Nextcloud ne répond pas : ${(cause ?? (erreur as Error)).message}`
+      i18n._('Nextcloud ne répond pas : {detail}', {
+        detail: (cause ?? (erreur as Error)).message,
+      })
     )
   }
   if (reponse.status >= 300 && reponse.status < 400) {
     await reponse.body?.cancel()
     throw new FournisseurIndisponible(
-      'Nextcloud renvoie vers une autre adresse. Vérifiez l’adresse saisie.'
+      i18n._(
+        'Nextcloud renvoie vers une autre adresse. Vérifiez l’adresse saisie.'
+      )
     )
   }
   return reponse
@@ -150,7 +156,9 @@ async function texteBorne(reponse: Response, max = XML_MAX): Promise<string> {
     total += value.length
     if (total > max) {
       await lecteur.cancel().catch(() => undefined)
-      throw new FournisseurIndisponible('Nextcloud répond trop longuement.')
+      throw new FournisseurIndisponible(
+        i18n._('Nextcloud répond trop longuement.')
+      )
     }
     morceaux.push(value)
   }
@@ -200,14 +208,18 @@ export async function commencerLoginNextcloud(
     typeof poll.endpoint !== 'string'
   ) {
     throw new FournisseurIndisponible(
-      `Cette adresse ne répond pas comme un Nextcloud (${reponse.status}).`
+      i18n._('Cette adresse ne répond pas comme un Nextcloud ({statut}).', {
+        statut: reponse.status,
+      })
     )
   }
   // Nextcloud annonce ses adresses d'après son propre réglage : elles doivent
   // rester sous la base que l'admin a saisie.
   if (!login.startsWith(`${base}/`) || !poll.endpoint.startsWith(`${base}/`)) {
     throw new FournisseurIndisponible(
-      'Ce Nextcloud annonce une autre adresse que celle saisie. Saisissez l’adresse qu’il utilise (réglage overwrite.cli.url).'
+      i18n._(
+        'Ce Nextcloud annonce une autre adresse que celle saisie. Saisissez l’adresse qu’il utilise (réglage overwrite.cli.url).'
+      )
     )
   }
   return { connexion: login, sondage: poll.endpoint, jeton: poll.token }
@@ -239,7 +251,9 @@ export async function sonderLoginNextcloud(
     typeof donnees.appPassword !== 'string'
   ) {
     throw new FournisseurIndisponible(
-      `Nextcloud refuse la connexion (${reponse.status}).`
+      i18n._('Nextcloud refuse la connexion ({statut}).', {
+        statut: reponse.status,
+      })
     )
   }
   // Nextcloud indique aussi l'adresse où l'admin a accordé l'accès (`server`).
@@ -279,7 +293,9 @@ export async function compteNextcloud(
   const id = donnees.ocs?.data?.id
   if (!reponse.ok || typeof id !== 'string' || id === '') {
     throw new FournisseurIndisponible(
-      `Nextcloud ne décrit pas le compte (${reponse.status}).`
+      i18n._('Nextcloud ne décrit pas le compte ({statut}).', {
+        statut: reponse.status,
+      })
     )
   }
   return {
@@ -421,7 +437,13 @@ const ECRITURE = 1 | 2 | 4 | 8
 /** Un partage de Nextcloud, dans les mots de Relaytour. */
 export function droitNextcloud(p: PartageNextcloud): DroitElement | null {
   const nom =
-    p.share_with_displayname?.trim() || p.share_with?.trim() || 'Partage'
+    p.share_with_displayname?.trim() ||
+    p.share_with?.trim() ||
+    i18n._(
+      'Partage',
+      {},
+      { comment: 'Nom d’un droit de partage sans nom affiché' }
+    )
   const unique = p.share_with_displayname_unique?.toLowerCase() ?? null
   let beneficiaire: Beneficiaire
   switch (p.share_type) {
@@ -449,7 +471,7 @@ export function droitNextcloud(p: PartageNextcloud): DroitElement | null {
       }
       break
     default:
-      beneficiaire = { type: 'lien', nom: 'Lien de partage' }
+      beneficiaire = { type: 'lien', nom: i18n._('Lien de partage') }
   }
   return {
     identifiant: String(p.id),
@@ -578,7 +600,7 @@ export function espaceNextcloud(
 
   const versElement = (s: SecretNextcloud, e: EntreeDav): ElementEspace => ({
     id: e.fileid,
-    nom: e.chemin[e.chemin.length - 1] ?? 'Fichiers',
+    nom: e.chemin[e.chemin.length - 1] ?? i18n._('Fichiers'),
     dossier: e.dossier,
     taille: e.taille,
     modifieLe: e.modifieLe,
@@ -771,7 +793,9 @@ export function espaceNextcloud(
           async ajouterAuGroupe(groupe, compte) {
             if (groupe === GROUPE_ADMINS) {
               throw new FournisseurIndisponible(
-                'Relaytour ne modifie pas le groupe des admins de Nextcloud.'
+                i18n._(
+                  'Relaytour ne modifie pas le groupe des admins de Nextcloud.'
+                )
               )
             }
             const { statut } = await ocs(
@@ -809,7 +833,9 @@ export function espaceNextcloud(
 
     async emplacements(): Promise<Emplacement[]> {
       const s = await secret(false)
-      return [{ id: s.base, nom: 'Fichiers', site: new URL(s.base).host }]
+      return [
+        { id: s.base, nom: i18n._('Fichiers'), site: new URL(s.base).host },
+      ]
     },
 
     async ancetres(emplacement, element) {
@@ -824,7 +850,10 @@ export function espaceNextcloud(
       ) {
         const entree = (await propfind(chemin.slice(0, i), 0))?.[0]
         if (entree === undefined) break
-        chaine.push({ id: entree.fileid, nom: chemin[i - 1] ?? 'Fichiers' })
+        chaine.push({
+          id: entree.fileid,
+          nom: chemin[i - 1] ?? i18n._('Fichiers'),
+        })
       }
       return chaine.length === 0 ? null : chaine
     },

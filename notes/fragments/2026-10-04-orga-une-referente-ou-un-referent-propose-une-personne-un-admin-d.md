@@ -18,6 +18,18 @@ fr:
     Il peut aussi la refuser, sans qu'aucun mail ne parte. Aucun compte
     n'existe avant sa décision. L'écran « Équipe » compte les demandes en
     attente de chaque périmètre.
+en:
+  titre: >-
+    A coordinator refers a person, an admin decides
+  texte: >-
+    An area’s page has a “Refer a person” panel. You enter the first and last
+    name of a person who wants to join your area, their email address, and an
+    optional note. Admins find the join request in the “Join requests” tab of
+    the “People” screen, and the bell notifies them. An admin accepts the
+    request and chooses the areas to appoint: the account is then created and
+    the person receives their invitation. An admin can also decline it, and no
+    email is sent. No account exists before their decision. The “Team” screen
+    counts the pending join requests of each area.
 ---
 
 `composants/ProposerPersonne.tsx` porte le panneau de la page d'un périmètre et

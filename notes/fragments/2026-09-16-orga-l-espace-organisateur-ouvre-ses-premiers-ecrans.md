@@ -13,6 +13,13 @@ fr:
     lien du mail. L'écran « Mon espace » affiche vos périmètres de l'édition
     en cours. Les admins gèrent les éditions, les périmètres, les personnes
     et les affectations.
+en:
+  titre: >-
+    The organizer workspace opens its first screens
+  texte: >-
+    You sign in with a code received by email, or in one click from the link in
+    the email. The “My space” screen shows your areas for the current edition.
+    Admins manage editions, areas, people, and appointments.
 ---
 
 SPA React 19, Vite 7, React Router 7, Apollo Client 4, antd 6, tokens 2027.
