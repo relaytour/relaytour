@@ -253,6 +253,11 @@ section,
   color: var(--rt-encre);
 }
 
+/* Le choix de langue porte un simple contour : il se distingue des rubriques. */
+.liens a.langue {
+  box-shadow: inset 0 0 0 1px var(--rt-encre-14);
+}
+
 .liens a[aria-current='page'],
 .liens a[aria-current='true'] {
   background: var(--rt-encre);

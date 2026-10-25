@@ -30,10 +30,11 @@
         </a>
         <ul class="liens">
           <li><a href="./" aria-current="page">Overview</a></li>
+          <li><a href="hebergement.html">Hosting</a></li>
           <li><a href="../design-system.html" hreflang="fr">Design system</a></li>
           <li><a href="modes-d-emploi/">User guides</a></li>
           <li><a href="https://github.com/relaytour/relaytour">Source code</a></li>
-          <li><a href="../" hreflang="fr" lang="fr">Français</a></li>
+          <li><a href="../" hreflang="fr" lang="fr" class="langue">Français</a></li>
         </ul>
       </nav>
 
@@ -49,8 +50,8 @@
           <span class="repere">Content kept in the organization’s repository</span>
         </div>
         <div class="actions">
-          <a class="bouton bouton-primaire" href="https://github.com/relaytour/relaytour/blob/main/README.en.md">Install Relaytour</a>
-          <a class="bouton bouton-verre" href="../design-system.html" hreflang="fr">View the design system</a>
+          <a class="bouton bouton-primaire" href="#demarrer">Install Relaytour</a>
+          <a class="bouton bouton-verre" href="https://relaytour.com/en/">Try Relaytour Cloud</a>
         </div>
       </header>
 
@@ -114,6 +115,48 @@
             <span class="mono">search</span>
             <div><h3>Find everything from the top bar</h3><p>Search finds tasks, sheets and people. Each person only finds what they can already view.</p></div>
           </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="t-cas">
+        <div class="entete">
+          <span class="etiquette">Who it is for</span>
+          <h2 id="t-cas">Born in a nonprofit, useful far beyond</h2>
+          <p class="texte">
+            Relaytour was born to prepare a nonprofit multisport gathering. It serves any organization that prepares recurring activities with a team that changes: an event, a season or a term.
+          </p>
+        </div>
+        <div class="grille-3">
+          <article class="verre-teinte panneau">
+            <span class="teinte teinte-primaire">Nonprofits</span>
+            <p>A tournament, a neighborhood party or a festival is prepared every year with volunteers who change.</p>
+            <p class="natures"><span>Event</span><span>Season</span></p>
+          </article>
+          <article class="verre panneau">
+            <span class="teinte teinte-vert">Federations and leagues</span>
+            <p>A championship season or a regional camp involves several clubs, which find their tasks and sheets again.</p>
+            <p class="natures"><span>Season</span><span>Event</span></p>
+          </article>
+          <article class="verre panneau">
+            <span class="teinte teinte-violet">Local authorities and public bodies</span>
+            <p>A city festival, heritage days or a neighborhood council share the work between several departments.</p>
+            <p class="natures"><span>Event</span><span>Term</span></p>
+          </article>
+          <article class="verre panneau">
+            <span class="teinte teinte-lagon">Schools and universities</span>
+            <p>An open day or a student gala changes team every year. The method stays in Relaytour.</p>
+            <p class="natures"><span>Event</span><span>Term</span></p>
+          </article>
+          <article class="verre panneau">
+            <span class="teinte teinte-ocre">Companies and works councils</span>
+            <p>An annual seminar, a trade show or a year-end party starts from the previous edition instead of a blank page.</p>
+            <p class="natures"><span>Event</span></p>
+          </article>
+          <article class="verre panneau">
+            <span class="teinte teinte-neutre">Your organization</span>
+            <p>An activity is declared as an event, a season or a term. Its areas, how-to sheets and task templates follow.</p>
+            <p class="natures"><span>Event</span><span>Season</span><span>Term</span></p>
+          </article>
         </div>
       </section>
 
@@ -229,16 +272,87 @@
             </tbody>
           </table>
         </div>
-        <div class="grille-2">
-          <div class="verre panneau">
-            <h3>What Relaytour does not replace</h3>
-            <p>Ticketing, memberships and accounting stay in association management tools. Match brackets and day-of slots stay in specialized tools.</p>
-          </div>
-          <div class="verre panneau">
-            <h3>What Relaytour costs</h3>
-            <p>The software is free. Only the server that hosts it has a cost. The reference deployment runs on a small server.</p>
-          </div>
+        <div class="verre panneau">
+          <h3>What Relaytour does not replace</h3>
+          <p>Ticketing, memberships and accounting stay in association management tools. Match brackets and day-of slots stay in specialized tools.</p>
         </div>
+      </section>
+
+      <section id="utiliser" aria-labelledby="t-voies">
+        <div class="entete">
+          <span class="etiquette">Using Relaytour</span>
+          <h2 id="t-voies">Two ways to use Relaytour</h2>
+          <p class="texte">
+            Relaytour is free software. All its features are available, whether you host it yourself or choose Relaytour Cloud.
+          </p>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau voies">
+            <thead>
+              <tr>
+                <td></td>
+                <th scope="col">Self-hosted<br /><span class="voie-precision">On your server</span></th>
+                <th scope="col" class="voie-cloud">Relaytour Cloud<br /><span class="voie-precision">Hosted for you</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Software features</th>
+                <td>All</td>
+                <td class="voie-cloud">All</td>
+              </tr>
+              <tr>
+                <th scope="row">Server</th>
+                <td>Yours</td>
+                <td class="voie-cloud">Provided, in France</td>
+              </tr>
+              <tr>
+                <th scope="row">Installation</th>
+                <td>Public guide</td>
+                <td class="voie-cloud">Included</td>
+              </tr>
+              <tr>
+                <th scope="row">Updates</th>
+                <td>By you</td>
+                <td class="voie-cloud">Included</td>
+              </tr>
+              <tr>
+                <th scope="row">Daily backups</th>
+                <td>By you</td>
+                <td class="voie-cloud">Included</td>
+              </tr>
+              <tr>
+                <th scope="row">Sending emails</th>
+                <td>By your provider</td>
+                <td class="voie-cloud">Included</td>
+              </tr>
+              <tr>
+                <th scope="row">Address</th>
+                <td>Yours</td>
+                <td class="voie-cloud">your-organization.relaytour.app or your domain</td>
+              </tr>
+              <tr>
+                <th scope="row">Support</th>
+                <td>Public questions on GitHub</td>
+                <td class="voie-cloud">Reply within five business days</td>
+              </tr>
+              <tr>
+                <th scope="row">Price</th>
+                <td>Free</td>
+                <td class="voie-cloud">See relaytour.com</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td><a class="bouton bouton-primaire" href="#demarrer">Install Relaytour</a></td>
+                <td class="voie-cloud"><a class="bouton bouton-verre" href="https://relaytour.com/en/">Discover Relaytour Cloud</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          An organization that leaves Relaytour Cloud receives, on request, the export of its content and a full backup of its database. It can then run its installation on its own server.
+          The <a href="hebergement.html">Hosting</a> page presents the official host and the criteria it meets.
+        </p>
       </section>
 
       <section aria-labelledby="t-perennite">
@@ -273,10 +387,13 @@
         </div>
       </section>
 
-      <section aria-labelledby="t-etapes">
+      <section id="demarrer" aria-labelledby="t-etapes">
         <div class="entete">
           <span class="etiquette">Get started</span>
-          <h2 id="t-etapes">Put Relaytour into service</h2>
+          <h2 id="t-etapes">Put Relaytour into service on your server</h2>
+          <p class="texte">
+            The reference deployment and its steps are described in the <a href="https://github.com/relaytour/relaytour/tree/main/infra">infra folder</a> of the repository.
+          </p>
         </div>
         <ol class="etapes">
           <li class="etape">
@@ -305,6 +422,7 @@
       <footer>
         Relaytour is free software distributed under the GNU AGPL-3.0 license. The code, the documentation and the contribution rules are on
         <a href="https://github.com/relaytour/relaytour">GitHub</a>.
+        <span class="pied-mentions"><a href="https://designhorizon.io">Design Horizon</a> provides the relaytour.org domain to the project. Relaytour Cloud is a service provided by <a href="https://designhorizon.io">Design Horizon</a>.</span>
       </footer>
     </main>
     <script src="../bascule.js"></script>
