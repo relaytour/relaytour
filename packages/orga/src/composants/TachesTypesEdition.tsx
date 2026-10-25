@@ -5,7 +5,7 @@ import { Alert, App, Modal, Space, Spin, Typography } from 'antd'
 
 import { graphql } from '../gql'
 import { messageErreur } from '../lib/erreurs'
-import { EDITION_COURANTE } from '../lib/requetes'
+import { EDITION_COURANTE, PREMIERS_PAS } from '../lib/requetes'
 
 // Tâches types appliquées à une période (ADR 0048) : la fenêtre montre d'abord la
 // simulation, puis crée les tâches et les effectifs qui manquent. Une tâche déjà
@@ -50,7 +50,7 @@ export default function TachesTypesEdition({ edition, onFermer }: Props) {
     fetchPolicy: 'network-only',
   })
   const [appliquer, application] = useMutation(APPLIQUER, {
-    refetchQueries: [EDITION_COURANTE],
+    refetchQueries: [EDITION_COURANTE, PREMIERS_PAS],
   })
   const rapport = data?.simulerTachesTypes
   const aCreer = rapport?.tachesCreees.length ?? 0

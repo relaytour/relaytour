@@ -226,3 +226,107 @@ describe('premiers pas d’une activité', () => {
     expect(faites(affiches)).toContain('ACTIVITE')
   })
 })
+
+describe('chaque chemin de calcul des premiers pas', () => {
+  // Une activité neuve, lue par l'admin de l'organisation : chaque cas ajoute une
+  // donnée et vérifie l'étape qu'elle coche, ou qu'elle ne coche pas.
+  const etapes = async () => faites(await etat(LIRE, ids.admin))
+  const editions: string[] = []
+
+  beforeAll(async () => {
+    ids.activite = (
+      await prisma.activite.create({
+        data: {
+          organisationId: ids.org,
+          slug: 'club',
+          nom: 'Club',
+          groupes: [
+            { cle: 'sport', libelle: 'Sport', libellePluriel: 'Sports' },
+          ],
+        },
+      })
+    ).id
+  })
+
+  const edition = (annee: number, statut: 'ARCHIVEE' | 'PREPARATION') =>
+    prisma.edition.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        annee,
+        nom: `Club ${annee}`,
+        debut: new Date(`${annee}-09-01`),
+        fin: new Date(`${annee + 1}-06-30`),
+        statut,
+      },
+    })
+
+  it('ne compte ni une période archivée, ni un périmètre archivé', async () => {
+    editions.push((await edition(2025, 'ARCHIVEE')).id)
+    await prisma.perimetre.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        slug: 'ancien',
+        nom: 'Ancien',
+        type: 'SPORT',
+        groupe: 'sport',
+        archivedAt: new Date(),
+      },
+    })
+    expect(await etapes()).toEqual([])
+  })
+
+  it('ne compte ni une tâche abandonnée, ni une tâche d’une autre période', async () => {
+    const perimetre = await prisma.perimetre.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        slug: 'judo',
+        nom: 'Judo',
+        type: 'SPORT',
+        groupe: 'sport',
+      },
+    })
+    const courante = await edition(2026, 'PREPARATION')
+    await prisma.tache.createMany({
+      data: [
+        {
+          editionId: editions[0]!,
+          perimetreId: perimetre.id,
+          titre: 'Tâche de la saison passée',
+        },
+        {
+          editionId: courante.id,
+          perimetreId: perimetre.id,
+          titre: 'Tâche abandonnée',
+          statut: 'ABANDONNEE',
+        },
+      ],
+    })
+    expect(await etapes()).toEqual(['PERIODE', 'PERIMETRES'])
+  })
+
+  it('compte le rattachement ou le rôle d’admin d’une autre personne', async () => {
+    await prisma.rattachementActivite.create({
+      data: {
+        userId: ids.membre,
+        activiteId: ids.activite,
+        organisationId: ids.org,
+      },
+    })
+    expect(await etapes()).toContain('EQUIPE')
+    await prisma.rattachementActivite.deleteMany({
+      where: { activiteId: ids.activite },
+    })
+    expect(await etapes()).not.toContain('EQUIPE')
+    await prisma.adminActivite.create({
+      data: {
+        userId: ids.adminActivite,
+        activiteId: ids.activite,
+        organisationId: ids.org,
+      },
+    })
+    expect(await etapes()).toContain('EQUIPE')
+  })
+})

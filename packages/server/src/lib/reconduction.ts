@@ -120,8 +120,11 @@ export async function reconduire(
   }
 
   // Deux reprises simultanées vers la même période ne créent pas deux fois les
-  // mêmes tâches : la seconde attend la fin de la première, puis les trouve.
-  await tx.$queryRaw`SELECT id FROM Edition WHERE id = ${cible.id} FOR UPDATE`
+  // mêmes tâches : la seconde attend la fin de la première, puis les trouve. Une
+  // simulation ne verrouille rien.
+  if (ecrire) {
+    await tx.$queryRaw`SELECT id FROM Edition WHERE id = ${cible.id} FOR UPDATE`
+  }
 
   const taches = await tx.tache.findMany({
     where: { editionId: source.id, origineId: null },
