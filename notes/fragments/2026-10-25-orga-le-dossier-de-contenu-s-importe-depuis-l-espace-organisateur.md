@@ -14,7 +14,8 @@ fr:
     que ce dossier. L’archive est vérifiée avant tout import, et le rapport
     indique les périmètres et les fiches créés ou modifiés. Une modification
     faite dans l’application depuis le dernier export demande une confirmation
-    avant d’être remplacée.
+    avant d’être remplacée. Une fiche modifiée dans Relaytour n’est jamais
+    remplacée.
 en:
   titre: >-
     The content folder can be imported from the organiser space
@@ -24,7 +25,8 @@ en:
     Activities page: the import only reads that folder. The archive is checked
     before any import, and the report lists the areas and sheets that are
     created or changed. A change made in the application since the last export
-    asks for a confirmation before it is replaced.
+    asks for a confirmation before it is replaced. A sheet changed in Relaytour
+    is never replaced.
 ---
 
 ADR 0049. Route `POST /medias/contenu/depot` (`packages/server/src/orga/route-depot-contenu.ts`) :

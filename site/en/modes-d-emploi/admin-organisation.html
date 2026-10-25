@@ -64,7 +64,7 @@
           <span class="etiquette">Your seven controls</span>
           <ol>
             <li><a href="#e-organisation">Organization</a>: identity, role addresses, logo and theme.</li>
-            <li><a href="#e-contenu">Organization content</a>: download the archive before any import.</li>
+            <li><a href="#e-contenu">Organization content</a>: download the archive, or import a content folder.</li>
             <li><a href="#e-activites">Activities</a>: create and archive an activity.</li>
             <li><a href="#e-roles">Directory</a>: manage accounts and write to members.</li>
             <li><a href="#e-admins">Admins</a>: appoint the admins of the organization and of each activity.</li>
@@ -100,8 +100,10 @@
           <p>The application is the source of truth for the content. The panel at the bottom of the Organization page shows the date of the last import or export, and reports whether admins have changed the content since.</p>
           <ul class="gestes">
             <li><span><span class="libelle">Download the content (zip)</span></span><span>Get the identity, activities, areas, sheets and task templates in one archive.</span></li>
+            <li><span><span class="libelle">Import a content folder</span></span><span>Upload a zip archive in the export format: one from another installation, or a folder changed outside the application. Relaytour checks the archive, then shows what the import creates and changes. Nothing is written before the “Import the archive” button.</span></li>
           </ul>
           <p class="note">The archive contains no people, no appointments and no dated tasks. Download it before any import: an import refuses to overwrite more recent changes.</p>
+          <p class="note">The import creates or updates the identity, activities, areas, sheets and task templates. It removes nothing, and the organization keeps its identifier. An archive weighs 20 MB at most. When admins have changed the content since the last export, the import asks for your confirmation before it replaces their changes. A sheet changed in Relaytour is never replaced: it appears as a conflict in the report. Activity admins import the folder of their own activity from the Activities screen.</p>
           <figure>
             <img src="../captures/organisation-contenu.webp" data-mobile="../captures/mobile/organisation-contenu.webp" width="1440" height="900" loading="lazy" alt="Bottom of the Organization page: the theme and the Organization content panel, with the download button." />
             <figcaption>The Organization content panel, on the sample organization.</figcaption>

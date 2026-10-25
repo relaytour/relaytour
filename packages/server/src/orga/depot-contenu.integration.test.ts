@@ -267,6 +267,39 @@ describe('dépôt du dossier d’une activité', () => {
     ).toBe(perimetreClub.nom)
   })
 
+  it('ne déplace ni ne remplace une fiche d’une autre activité', async () => {
+    const avant = await prisma.fiche.findFirstOrThrow({
+      where: { organisationId, slug: 'accueillir-une-nouvelle-personne' },
+      select: { id: true, activiteId: true, versionCouranteId: true },
+    })
+    expect(avant.activiteId).toBe(clubId)
+    const fichiers = exemple()
+    fichiers.set(
+      'activites/rencontres/fiches/communes/accueillir-une-nouvelle-personne.md',
+      Buffer.from(
+        '---\nslug: accueillir-une-nouvelle-personne\ntitre: Fiche détournée\n---\n\nUn autre texte.\n'
+      )
+    )
+    const rapport = await deposerContenu(
+      prisma,
+      demande(archiveZip(fichiers), {
+        activite: { id: rencontresId, slug: 'rencontres' },
+        simulation: false,
+      })
+    )
+    expect(rapport.activites[0]!.fiches.conflits).toContain(
+      'accueillir-une-nouvelle-personne'
+    )
+    const apres = await prisma.fiche.findUniqueOrThrow({
+      where: { id: avant.id },
+      select: { activiteId: true, versionCouranteId: true },
+    })
+    expect(apres).toEqual({
+      activiteId: clubId,
+      versionCouranteId: avant.versionCouranteId,
+    })
+  })
+
   it('accepte le dossier de l’activité seul', async () => {
     const dossier = new Map(
       [...exemple()]
