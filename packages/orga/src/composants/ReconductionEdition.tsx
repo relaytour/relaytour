@@ -9,7 +9,7 @@ import { graphql } from '../gql'
 import type { SimulerReconductionQuery } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { dateCourte, messageErreur } from '../lib/erreurs'
-import { EDITION_COURANTE } from '../lib/requetes'
+import { EDITION_COURANTE, PREMIERS_PAS } from '../lib/requetes'
 
 // Reconduction d'une période (ADR 0048) : l'admin choisit la période source, lit
 // ses tâches, toutes retenues sauf les tâches abandonnées, et décoche celles qu'il
@@ -100,7 +100,7 @@ export default function ReconductionEdition({
     lignes.filter(l => l.retenue && l.etat === 'A_CREER').map(l => l.tacheId)
 
   const [reconduire, reconduction] = useMutation(RECONDUIRE, {
-    refetchQueries: [EDITION_COURANTE],
+    refetchQueries: [EDITION_COURANTE, PREMIERS_PAS],
   })
 
   const valider = async () => {
@@ -164,9 +164,7 @@ export default function ReconductionEdition({
             </Form.Item>
           </Form>
         )}
-        {error && (
-          <Alert type="error" showIcon title={messageErreur(error)} />
-        )}
+        {error && <Alert type="error" showIcon title={messageErreur(error)} />}
         {effectifs > 0 && (
           <Alert
             type="info"

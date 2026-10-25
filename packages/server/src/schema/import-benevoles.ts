@@ -16,6 +16,7 @@ import { texteRequis } from '../lib/saisie.ts'
 
 import { AVEC_PLACES, BenevoleRef, lireBenevoles } from './benevoles.ts'
 import { builder } from './builder.ts'
+import { EtatLigneImportEnum } from './import-commun.ts'
 import { PlageInput } from './repartition.ts'
 import { i18n } from '../lib/langue.ts'
 
@@ -30,9 +31,6 @@ const ModeImportEnum = builder.enumType('ModeImport', {
   values: ['A_REPARTIR', 'PLACES_DIRECTES'] as const,
 })
 
-const EtatLigneEnum = builder.enumType('EtatLigneImport', {
-  values: ['A_IMPORTER', 'IMPORTEE', 'DEJA_IMPORTEE', 'ECARTEE'] as const,
-})
 
 const NiveauEnum = builder.enumType('NiveauRapprochement', {
   description:
@@ -89,7 +87,7 @@ const RapprochementRef = builder
 const LigneRef = builder.objectRef<LigneRapport>('LigneImport').implement({
   fields: t => ({
     cle: t.exposeString('cle'),
-    etat: t.field({ type: EtatLigneEnum, resolve: l => l.etat }),
+    etat: t.field({ type: EtatLigneImportEnum, resolve: l => l.etat }),
     motif: t.exposeString('motif', { nullable: true }),
     rapprochement: t.field({
       type: RapprochementRef,

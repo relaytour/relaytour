@@ -1,9 +1,9 @@
 import { useQuery } from '@apollo/client/react'
 import { plural, t as traduire } from '@lingui/core/macro'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { Empty, Result, Select, Skeleton } from 'antd'
+import { Button, Empty, Result, Select, Skeleton, Space } from 'antd'
 import { useMemo, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 
 import ChoixEdition from '../composants/ChoixEdition'
 import EtiquettePerimetre from '../composants/EtiquettePerimetre'
@@ -12,6 +12,7 @@ import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
 import { PuceBascule, Puces, SeparateurPuces } from '../composants/Puces'
 import Titre from '../composants/Titre'
+import VersPremiersPas from '../composants/VersPremiersPas'
 import { graphql } from '../gql'
 import {
   CLE_REGROUPEMENT_RETROPLANNING,
@@ -86,6 +87,7 @@ function titreGroupe(mois: string | null): string {
 export default function Retroplanning() {
   const { t } = useLingui()
   const { lien, periode, activite, gere } = useActivite()
+  const navigate = useNavigate()
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
   const { data: editions } = useQuery(EDITIONS)
@@ -202,7 +204,11 @@ export default function Retroplanning() {
   const dePeriode = periode.de
   if (editionId === undefined && courante && !courante.editionCourante) {
     return (
-      <Result status="info" title={t`${aucunePeriode} n’est en préparation.`} />
+      <Result
+        status="info"
+        title={t`${aucunePeriode} n’est en préparation.`}
+        extra={<VersPremiersPas />}
+      />
     )
   }
   if (error && !data) {
@@ -304,13 +310,20 @@ export default function Retroplanning() {
             : t`Les tâches ${dePeriode} sont regroupées par mois, de la plus proche à la plus lointaine.`
         }
         actions={
-          <ChoixEdition
-            valeur={editionId}
-            onChange={id => {
-              setPerimetres([])
-              setParametres({ edition: id })
-            }}
-          />
+          <Space wrap>
+            <ChoixEdition
+              valeur={editionId}
+              onChange={id => {
+                setPerimetres([])
+                setParametres({ edition: id })
+              }}
+            />
+            {gere && (
+              <Button onClick={() => navigate(lien('/admin/import/taches'))}>
+                <Trans>Importer des tâches</Trans>
+              </Button>
+            )}
+          </Space>
         }
       >
         <Trans>Rétroplanning</Trans>
