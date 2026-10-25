@@ -14,6 +14,14 @@ fr:
     d'application pour Relaytour, que vous pouvez révoquer dans ses
     paramètres de sécurité. Les documents s'ouvrent dans la liseuse ou se
     téléchargent.
+en:
+  titre: >-
+    Nextcloud joins the file space
+  texte: >-
+    You enter the address of the association’s Nextcloud, then grant access with
+    your account. Nextcloud creates an app password for Relaytour, which you can
+    revoke in its security settings. Documents open in the viewer or can be
+    downloaded.
 ---
 
 ADR 0038 : fournisseur `NEXTCLOUD` (WebDAV), connexion par le Login Flow v2

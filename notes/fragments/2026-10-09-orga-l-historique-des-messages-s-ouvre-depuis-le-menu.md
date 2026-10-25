@@ -17,6 +17,17 @@ fr:
     Le menu « Gérer l'activité » range ses écrans du plus fréquent au plus
     rare : Équipe, Personnes, Messages, Classement, Rédaction, puis les
     périodes.
+en:
+  titre: >-
+    The message history opens from the menu
+  texte: >-
+    The “Manage the activity” menu has a “Messages” entry that lists the
+    messages prepared for the activity’s team. The “Messages” tab leaves the
+    “People” screen, and your old bookmarks lead to the new screen. The “Team”
+    screen also leads there, through the “Message history” link. The directory
+    keeps its “Messages” tab for organization admins. The “Manage the activity”
+    menu lists its screens from most to least frequent: Team, People, Messages,
+    Ranking, Sheet editing, then the periods.
 ---
 
 Nouvelle page `pages/admin/MessagesActivite.tsx`, sur la route `admin/messages`.

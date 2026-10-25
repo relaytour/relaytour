@@ -1,5 +1,7 @@
 import { CopyOutlined, MailOutlined, ReloadOutlined } from '@ant-design/icons'
 import { useMutation } from '@apollo/client/react'
+import { t } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react/macro'
 import { App, Button, Space, Typography } from 'antd'
 
 import { graphql } from '../gql'
@@ -27,16 +29,21 @@ type Fiche = BenevolesQuery['benevoles'][number]
 
 /** L'état du lien d'une fiche, en une ligne. */
 function etatDuLien(f: Fiche): string {
-  if (f.confirmeeLe)
-    return `Participation confirmée le ${jourDeLInstant(f.confirmeeLe)}.`
-  if (f.lienEnvoyeLe)
-    return `Lien envoyé le ${jourDeLInstant(f.lienEnvoyeLe)}, sans confirmation.`
+  if (f.confirmeeLe) {
+    const jourConfirmation = jourDeLInstant(f.confirmeeLe)
+    return t`Participation confirmée le ${jourConfirmation}.`
+  }
+  if (f.lienEnvoyeLe) {
+    const jourEnvoi = jourDeLInstant(f.lienEnvoyeLe)
+    return t`Lien envoyé le ${jourEnvoi}, sans confirmation.`
+  }
   if (f.prevenirParMail && f.courriel)
-    return 'Le lien partira par mail à sa première place.'
-  return 'Aucun mail ne part vers cette fiche.'
+    return t`Le lien partira par mail à sa première place.`
+  return t`Aucun mail ne part vers cette fiche.`
 }
 
 export default function LienBenevole({ fiche }: { fiche: Fiche }) {
+  const { t } = useLingui()
   const { message, modal } = App.useApp()
   const relire = { refetchQueries: ['Benevoles'] }
   const [lien, obtention] = useMutation(LIEN, relire)
@@ -53,19 +60,20 @@ export default function LienBenevole({ fiche }: { fiche: Fiche }) {
         await navigator.clipboard.writeText(adresse)
         message.success(
           nouveau
-            ? 'Nouveau lien copié. L’ancien ne répond plus.'
-            : 'Lien copié. Vous pouvez l’envoyer par SMS ou par message.'
+            ? t`Nouveau lien copié. L’ancien ne répond plus.`
+            : t`Lien copié. Vous pouvez l’envoyer par SMS ou par message.`
         )
       } catch {
         // Un navigateur peut refuser le presse-papiers : le lien s'affiche.
+        const nomBenevole = fiche.nom
         void modal.info({
-          title: `Lien personnel de ${fiche.nom}`,
+          title: t`Lien personnel de ${nomBenevole}`,
           content: (
             <Typography.Paragraph copyable={{ text: adresse }}>
               <code>{adresse}</code>
             </Typography.Paragraph>
           ),
-          okText: 'Fermer',
+          okText: t`Fermer`,
         })
       }
     } catch (e) {
@@ -75,11 +83,10 @@ export default function LienBenevole({ fiche }: { fiche: Fiche }) {
 
   const confirmerNouveau = () =>
     void modal.confirm({
-      title: 'Tirer un nouveau lien ?',
-      content:
-        'L’ancien lien cesse de répondre, y compris celui des mails déjà reçus. Aucun mail ne part : envoyez le nouveau lien vous-même.',
-      okText: 'Nouveau lien',
-      cancelText: 'Annuler',
+      title: t`Tirer un nouveau lien ?`,
+      content: t`L’ancien lien cesse de répondre, y compris celui des mails déjà reçus. Aucun mail ne part : envoyez le nouveau lien vous-même.`,
+      okText: t`Nouveau lien`,
+      cancelText: t`Annuler`,
       onOk: () => copier(true),
     })
 
@@ -87,7 +94,7 @@ export default function LienBenevole({ fiche }: { fiche: Fiche }) {
     try {
       await renvoyer({ variables: { benevoleId: fiche.id } })
       message.success(
-        'Le lien repart par mail. Ce renvoi ne se fait qu’une fois.'
+        t`Le lien repart par mail. Ce renvoi ne se fait qu’une fois.`
       )
     } catch (e) {
       message.error(messageErreur(e))
@@ -95,7 +102,7 @@ export default function LienBenevole({ fiche }: { fiche: Fiche }) {
   }
 
   return (
-    <section className="rt-lien-benevole" aria-label="Lien personnel">
+    <section className="rt-lien-benevole" aria-label={t`Lien personnel`}>
       <p className="rt-note">{etatDuLien(fiche)}</p>
       <Space wrap>
         <Button
@@ -103,7 +110,7 @@ export default function LienBenevole({ fiche }: { fiche: Fiche }) {
           loading={obtention.loading}
           onClick={() => void copier()}
         >
-          {fiche.lienEspace ? 'Copier le lien' : 'Créer et copier le lien'}
+          {fiche.lienEspace ? t`Copier le lien` : t`Créer et copier le lien`}
         </Button>
         {fiche.lienRenvoyable && (
           <Button
@@ -111,12 +118,12 @@ export default function LienBenevole({ fiche }: { fiche: Fiche }) {
             loading={renvoi.loading}
             onClick={() => void renvoyerParMail()}
           >
-            Renvoyer par mail
+            {t`Renvoyer par mail`}
           </Button>
         )}
         {fiche.lienEspace && (
           <Button icon={<ReloadOutlined />} onClick={confirmerNouveau}>
-            Nouveau lien
+            {t`Nouveau lien`}
           </Button>
         )}
       </Space>

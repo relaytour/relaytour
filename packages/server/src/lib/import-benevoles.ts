@@ -34,6 +34,7 @@ import { journal } from './journal.ts'
 import { sousVerrouOrganisation } from './limites.ts'
 import { empreinte, nouveauSel } from './liens.ts'
 import { texteFacultatif, texteRequis } from './saisie.ts'
+import { i18n } from './langue.ts'
 
 // Import de listes de bénévoles (ADR 0042). Le navigateur lit le fichier, associe
 // les colonnes et réunit les lignes d'une même personne ; il envoie ensuite les
@@ -155,7 +156,7 @@ export async function porteeImport(
     organisationId: ctx.organisation!.id,
   }
   if (lue.statut === 'ARCHIVEE') {
-    throw erreurSaisie('Cette période est archivée.')
+    throw erreurSaisie(i18n._('Cette période est archivée.'))
   }
   const ecrits = await perimetresEcrits(ctx, lue)
   const admin = ecrits === 'TOUS'
@@ -186,29 +187,33 @@ function valider(
   const cle = String(saisie.cle).slice(0, CLE_MAX)
   try {
     if (nomVide(saisie.nom)) {
-      throw erreurSaisie('La ligne ne porte aucun nom.')
+      throw erreurSaisie(i18n._('La ligne ne porte aucun nom.'))
     }
     const sequenceIds = [...new Set((saisie.sequenceIds ?? []).map(String))]
     if (sequenceIds.length > CHOIX_MAX) {
-      throw erreurSaisie(`Une personne choisit ${CHOIX_MAX} séquences au plus.`)
+      throw erreurSaisie(
+        i18n._('Une personne choisit {max} séquences au plus.', {
+          max: CHOIX_MAX,
+        })
+      )
     }
     const accordLe = saisie.accordLe ?? maintenant
     if (accordLe.getTime() > maintenant.getTime()) {
-      throw erreurSaisie('La date de l’accord ne peut pas être future.')
+      throw erreurSaisie(i18n._('La date de l’accord ne peut pas être future.'))
     }
     return {
       cle,
-      nom: texteRequis(saisie.nom, 'Le nom', NOM_BENEVOLE_MAX),
+      nom: texteRequis(saisie.nom, i18n._('Le nom'), NOM_BENEVOLE_MAX),
       courriel: courrielValide(saisie.courriel),
       telephone: telephoneValide(saisie.telephone),
       precisions: texteFacultatif(
         saisie.precisions,
-        'Les précisions',
+        i18n._('Les précisions'),
         PRECISIONS_MAX
       ),
       refExterne: texteFacultatif(
         saisie.refExterne,
-        'L’identifiant externe',
+        i18n._('L’identifiant externe'),
         REF_EXTERNE_MAX
       ),
       accordLe,
@@ -253,16 +258,20 @@ export async function importerLot(
   const { edition } = portee
   if (!demande.accord) {
     throw erreurSaisie(
-      'Un import exige que les personnes du fichier aient donné leur accord.'
+      i18n._(
+        'Un import exige que les personnes du fichier aient donné leur accord.'
+      )
     )
   }
-  const source = texteRequis(demande.source, 'La source', SOURCE_MAX)
+  const source = texteRequis(demande.source, i18n._('La source'), SOURCE_MAX)
   if (demande.personnes.length === 0 || demande.personnes.length > LOT_MAX) {
-    throw erreurSaisie(`Un lot compte de 1 à ${LOT_MAX} personnes.`)
+    throw erreurSaisie(
+      i18n._('Un lot compte de 1 à {max} personnes.', { max: LOT_MAX })
+    )
   }
   const cles = demande.personnes.map(p => String(p.cle).slice(0, CLE_MAX))
   if (new Set(cles).size !== cles.length) {
-    throw erreurSaisie('Chaque personne d’un lot porte une clé unique.')
+    throw erreurSaisie(i18n._('Chaque personne d’un lot porte une clé unique.'))
   }
   const maintenant = new Date()
   const fuseau = ctx.organisation!.fuseauHoraire
@@ -310,7 +319,9 @@ export async function importerLot(
         ligneVide(
           resultat.cle,
           'ECARTEE',
-          'Une séquence associée n’appartient pas à la portée de l’import.'
+          i18n._(
+            'Une séquence associée n’appartient pas à la portée de l’import.'
+          )
         )
       )
       continue
@@ -322,7 +333,9 @@ export async function importerLot(
     !valides.some(p => p.sequenceIds.length > 0)
   ) {
     throw erreurSaisie(
-      'Le mode « places directes » exige au moins une colonne associée à une séquence.'
+      i18n._(
+        'Le mode « places directes » exige au moins une colonne associée à une séquence.'
+      )
     )
   }
 
@@ -346,7 +359,9 @@ export async function importerLot(
     (!appel.sansAdresse || appel.perimetreId !== portee.perimetreId)
   ) {
     throw erreurSaisie(
-      'Cette source sert déjà à un autre appel. Choisissez une autre source.'
+      i18n._(
+        'Cette source sert déjà à un autre appel. Choisissez une autre source.'
+      )
     )
   }
   const refsDeja = new Set(
@@ -449,7 +464,11 @@ export async function importerLot(
     if (p.rattachement !== null && !fichesConnues.has(p.rattachement)) {
       lignes.set(
         p.cle,
-        ligneVide(p.cle, 'ECARTEE', 'La fiche à rattacher n’existe plus.')
+        ligneVide(
+          p.cle,
+          'ECARTEE',
+          i18n._('La fiche à rattacher n’existe plus.')
+        )
       )
       continue
     }
@@ -482,7 +501,10 @@ export async function importerLot(
   const fichesRestantes = Math.max(0, BENEVOLES_MAX - fiches.length)
   if (fichesCreees > fichesRestantes && ecrire) {
     throw erreurSaisie(
-      `Une activité compte ${BENEVOLES_MAX} fiches bénévoles au plus : ce lot en créerait ${fichesCreees}, il en reste ${fichesRestantes}.`
+      i18n._(
+        'Une activité compte {max} fiches bénévoles au plus : ce lot en créerait {fichesCreees}, il en reste {fichesRestantes}.',
+        { max: BENEVOLES_MAX, fichesCreees, fichesRestantes }
+      )
     )
   }
   const depassements = [...renfortsApres.entries()].flatMap(([id, ajout]) => {
@@ -649,7 +671,9 @@ async function ecrireLot(
         })
         if (nombre + fichesNouvelles > BENEVOLES_MAX) {
           throw erreurSaisie(
-            `Une activité compte ${BENEVOLES_MAX} fiches bénévoles au plus.`
+            i18n._('Une activité compte {max} fiches bénévoles au plus.', {
+              max: BENEVOLES_MAX,
+            })
           )
         }
       }

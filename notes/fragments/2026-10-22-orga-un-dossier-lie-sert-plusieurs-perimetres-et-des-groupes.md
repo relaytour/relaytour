@@ -17,6 +17,17 @@ fr:
     Relaytour annonce les documents liés que les lecteurs de leur fiche ne
     liraient plus. Dans la vue « Documents », chaque personne retrouve un
     dossier sous son groupe ou sous son périmètre.
+en:
+  titre: >-
+    A linked folder can serve several areas and groups
+  texte: >-
+    In the “Cloud provider” screen, you choose the readers of a linked folder:
+    the whole activity, or a list of areas and groups. A group, such as sports
+    or departments, also covers the areas that join it later. With the “Edit”
+    button, you change the readers and the displayed name of a folder without
+    removing it. Before you save, Relaytour lists the linked documents that
+    readers of their sheet would no longer be able to read. In the “Documents”
+    view, each person finds a folder under their group or their area.
 ---
 
 ADR 0043 : `DossierLie.touteActivite`, tables `DossierLiePerimetre` et

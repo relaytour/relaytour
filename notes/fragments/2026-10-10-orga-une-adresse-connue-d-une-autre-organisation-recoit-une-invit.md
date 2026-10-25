@@ -15,6 +15,16 @@ fr:
     avec le nom et l'adresse que vous avez saisis et les périmètres proposés. Vous
     relancez une invitation une fois par heure, ou vous la retirez. La personne
     apparaît dans l'équipe après son accord. Une invitation expire après 30 jours.
+en:
+  titre: >-
+    An address known to another organization receives an invitation to accept
+  texte: >-
+    When you invite an email address that already has an account outside your
+    organization, the person no longer joins your team automatically. The
+    “People” and “Team” screens show a “Pending invitations” box, with the name
+    and email address you entered and the proposed areas. You resend an
+    invitation once an hour, or you withdraw it. The person appears in the team
+    after they agree. An invitation expires after 30 days.
 ---
 
 ADR 0030. L'invitation en attente garde le rôle d'admin de l'organisation et les

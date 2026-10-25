@@ -71,6 +71,33 @@ const lire = (role: Parameters<typeof notesPourLeRole>[0]) =>
   ])
 
 describe('notesPourLeRole', () => {
+  it('affiche la version anglaise d’une note, et le français sans elle', () => {
+    const journal: Journal = {
+      version: '0.3.0',
+      versions: [
+        {
+          version: '0.3.0',
+          notes: [
+            note('2026-02-02-orga-traduite', {
+              en: { titre: 'English title', texte: 'English text.' },
+            }),
+            note('2026-02-01-orga-francaise'),
+          ],
+        },
+      ],
+    }
+    const titres = (langue: 'fr' | 'en') =>
+      notesPourLeRole('referent', [journal], langue)[0]!.notes.map(n => n.titre)
+    expect(titres('en')).toEqual([
+      'English title',
+      'Titre de 2026-02-01-orga-francaise',
+    ])
+    expect(titres('fr')).toEqual([
+      'Titre de 2026-02-02-orga-traduite',
+      'Titre de 2026-02-01-orga-francaise',
+    ])
+  })
+
   it('donne à une référente ou un référent les seules notes de son rôle', () => {
     expect(lire('referent')).toEqual([
       ['0.10.0', ['2026-04-01-serveur-plus-tard']],

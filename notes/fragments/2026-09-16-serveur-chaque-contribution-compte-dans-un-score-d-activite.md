@@ -13,6 +13,14 @@ fr:
     donnent des points pour chaque édition. Une tâche faite à temps rapporte un
     point de plus, et une tâche rouverte perd ses points. Chaque personne voit
     son propre score ; seuls les admins voient le classement.
+en:
+  titre: >-
+    Each contribution counts toward a participation score
+  texte: >-
+    Completed tasks, created tasks, and work on sheets earn points for each
+    edition. A task done on time earns one extra point, and a reopened task
+    loses its points. Each person sees their own score; only admins see the
+    ranking.
 ---
 
 Phase 5 du plan de l'espace organisateur.

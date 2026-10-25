@@ -1,0 +1,27 @@
+# Task templates of the football area.
+taches:
+  - modele: reserver-les-terrains
+    titre: Book the pitches
+    description: >-
+      The coordinators request the pitches from the town’s sports department, in writing.
+    echeance: J-180
+  - modele: ouvrir-les-inscriptions
+    titre: Open team registration
+    description: >-
+      The coordinators publish the registration form with the Communication department.
+    echeance: J-120
+  - modele: recruter-les-arbitres
+    titre: Recruit the referees
+    description: >-
+      The coordinators contact the partner clubs and agree on pay or expenses with the board.
+    echeance: J-90
+  - modele: etablir-le-planning-des-matchs
+    titre: Draw up the match schedule
+    description: >-
+      The coordinators build the pools and the schedule from the closed registrations.
+    echeance: J-21
+  - modele: transmettre-les-resultats
+    titre: Send the results to the Communication department
+    description: >-
+      The coordinators send the ranking and a few photos as soon as the matches end.
+    echeance: J+1

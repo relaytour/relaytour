@@ -41,6 +41,7 @@ import { adresseValide, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
 import { PlageInput } from './repartition.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Page publique d'un appel à bénévoles (ADR 0041). Ces deux opérations se lisent
 // sans session : elles ne servent que des champs publics, et vérifient elles-mêmes
@@ -54,8 +55,6 @@ const DEPOTS_PAR_IP_ET_PAR_JOUR = 20
 const DEPOTS_PAR_ADRESSE_ET_PAR_JOUR = 3
 const DEPOTS_PAR_APPEL_ET_PAR_HEURE = 60
 
-const FERME = 'Cet appel n’est pas ouvert.'
-const TROP = 'Trop de candidatures ont été envoyées. Réessayez plus tard.'
 const JETON = /^[A-Za-z0-9_-]{43}$/
 
 interface SequencePublique {
@@ -324,7 +323,10 @@ async function exigerDebitRaisonnable(
     3600,
     refuser
   )
-  if (!parIp || !parAdresse || !parAppel) throw erreurSaisie(TROP)
+  if (!parIp || !parAdresse || !parAppel)
+    throw erreurSaisie(
+      i18n._('Trop de candidatures ont été envoyées. Réessayez plus tard.')
+    )
 }
 
 builder.mutationField('deposerCandidature', t =>
@@ -355,41 +357,50 @@ builder.mutationField('deposerCandidature', t =>
     resolve: async (_root, args, ctx) => {
       const maintenant = new Date()
       const appel = await appelOuvert(args.jeton, maintenant)
-      if (appel === null) throw erreurSaisie(FERME)
+      if (appel === null)
+        throw erreurSaisie(i18n._('Cet appel n’est pas ouvert.'))
       // Un dépôt piégé reçoit la même réponse qu'un dépôt accepté, sans écriture.
       if ((args.siteWeb ?? '').trim() !== '') return true
 
       if (!args.accord) {
         throw erreurSaisie(
-          'Une candidature ne s’enregistre qu’avec votre accord.'
+          i18n._('Une candidature ne s’enregistre qu’avec votre accord.')
         )
       }
       const email = adresseValide(args.email)
-      const nom = texteRequis(args.nom, 'Le nom', NOM_BENEVOLE_MAX)
+      const nom = texteRequis(args.nom, i18n._('Le nom'), NOM_BENEVOLE_MAX)
       if (contientUnLien(nom)) {
-        throw erreurSaisie('Les liens ne sont pas acceptés dans ce formulaire.')
+        throw erreurSaisie(
+          i18n._('Les liens ne sont pas acceptés dans ce formulaire.')
+        )
       }
       const telephone = telephoneValide(args.telephone)
       const precisions = texteLibre(
         args.precisions,
-        'Les précisions',
+        i18n._('Les précisions'),
         PRECISIONS_MAX
       )
-      const message = texteLibre(args.message, 'Le message', MESSAGE_MAX)
+      const message = texteLibre(
+        args.message,
+        i18n._('Le message'),
+        MESSAGE_MAX
+      )
       const ouAilleurs = appel.ouAilleurs && (args.ouAilleurs ?? false)
       const refs = [...new Set(args.sequences)]
       if (refs.length > CHOIX_MAX) {
         throw erreurSaisie(
-          `Une candidature choisit ${CHOIX_MAX} séquences au plus.`
+          i18n._('Une candidature choisit {max} séquences au plus.', {
+            max: CHOIX_MAX,
+          })
         )
       }
       const parRef = new Map(appel.sequences.map(s => [s.ref, s.id]))
       const sequenceIds = refs.map(ref => parRef.get(ref))
       if (sequenceIds.some(id => id === undefined)) {
-        throw erreurSaisie('Une séquence choisie n’est plus proposée.')
+        throw erreurSaisie(i18n._('Une séquence choisie n’est plus proposée.'))
       }
       if (sequenceIds.length === 0 && !ouAilleurs) {
-        throw erreurSaisie('Choisissez au moins une séquence.')
+        throw erreurSaisie(i18n._('Choisissez au moins une séquence.'))
       }
       const plages = plagesValides(
         (args.plages ?? []).map(p => ({
@@ -434,7 +445,7 @@ builder.mutationField('deposerCandidature', t =>
           courant.empreinte !== empreinteJeton(args.jeton) ||
           etatAppel(courant, new Date()) !== 'OUVERT'
         ) {
-          throw erreurSaisie(FERME)
+          throw erreurSaisie(i18n._('Cet appel n’est pas ouvert.'))
         }
         // La candidature en attente de l'adresse, verrouillée : une décision
         // validée entre-temps l'a clôturée et libérée.
@@ -457,7 +468,9 @@ builder.mutationField('deposerCandidature', t =>
               sequence.perimetreId !== appel.perimetreId) ||
             (appel.portee === 'SEQUENCE' && sequenceId !== appel.sequenceCible)
           ) {
-            throw erreurSaisie('Une séquence choisie n’est plus proposée.')
+            throw erreurSaisie(
+              i18n._('Une séquence choisie n’est plus proposée.')
+            )
           }
           etats.set(sequenceId, sequence)
         }
@@ -466,7 +479,12 @@ builder.mutationField('deposerCandidature', t =>
         const enAttente = await tx.candidature.count({
           where: { appelId: appel.appelId, statut: 'EN_ATTENTE' },
         })
-        if (enAttente >= CANDIDATURES_EN_ATTENTE_MAX) throw erreurSaisie(TROP)
+        if (enAttente >= CANDIDATURES_EN_ATTENTE_MAX)
+          throw erreurSaisie(
+            i18n._(
+              'Trop de candidatures ont été envoyées. Réessayez plus tard.'
+            )
+          )
         const existante =
           trouvee[0] === undefined
             ? null
