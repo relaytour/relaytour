@@ -1174,6 +1174,10 @@ msgstr "{total, plural, one {Derived in # area} other {Derived in # areas}}"
 msgid "← Bénévoles"
 msgstr "← Volunteers"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "← Personnes"
+msgstr "← People"
+
 #: src/pages/admin/ImportTaches.tsx
 msgid "← Rétroplanning"
 msgstr "← Timeline"
@@ -1570,6 +1574,7 @@ msgstr "area address"
 #: src/composants/InvitationRapide.tsx
 #: src/composants/ProposerPersonne.tsx
 #: src/lib/import-benevoles.ts
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/Personnes.tsx
 #: src/pages/AppelBenevoles.tsx
 #: src/pages/Connexion.tsx
@@ -3009,6 +3014,7 @@ msgstr "Choose a date."
 msgid "Choisissez une heure."
 msgstr "Choose a time."
 
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/ImportTaches.tsx
 msgid "Choisissez une période."
 msgstr "Choose a period."
@@ -3291,9 +3297,14 @@ msgid "Contact de l’organisation (facultatif)"
 msgstr "Organization contact (optional)"
 
 #: src/composants/Personne.tsx
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/Organigramme.tsx
 msgid "Contact principal"
 msgstr "Main contact"
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Contact principal (oui ou non)"
+msgstr "Main contact (yes or no)"
 
 #: src/pages/admin/Equipe.tsx
 msgid "Contact principal. Cliquez pour retirer la désignation."
@@ -4138,6 +4149,10 @@ msgstr "Send the invitation"
 msgid "Envoyer la proposition"
 msgstr "Send the referral"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Envoyer les invitations et les mails d’équipe à la fin de l’import"
+msgstr "Send the invitations and team emails at the end of the import"
+
 #: src/pages/AppelBenevoles.tsx
 msgid "Envoyer ma candidature"
 msgstr "Send my application"
@@ -4481,6 +4496,10 @@ msgstr "End"
 msgid "Fin de la partie matinale."
 msgstr "End of the morning part."
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Football, Logistique"
+msgstr "Football, Logistics"
+
 #: src/pages/admin/Activites.tsx
 msgid "Forme J-120 ou J+30."
 msgstr "Format: D-120 or D+30."
@@ -4701,6 +4720,7 @@ msgstr "Own identity (optional)"
 
 #. Champ à associer à une colonne d’un fichier : ne pas importer la colonne
 #: src/lib/import-benevoles.ts
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/ImportTaches.tsx
 msgid "Ignorer"
 msgstr "Ignore"
@@ -4777,10 +4797,15 @@ msgstr "Import sheets into “{nomActivite}”"
 msgid "Importer des tâches"
 msgstr "Import tasks"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Importer l’équipe"
+msgstr "Import the team"
+
 #: src/composants/PremiersPas.tsx
 msgid "Importer un tableur"
 msgstr "Import a spreadsheet"
 
+#: src/pages/admin/Personnes.tsx
 #: src/pages/Benevoles.tsx
 msgid "Importer une liste"
 msgstr "Import a list"
@@ -5041,6 +5066,10 @@ msgstr "The address is copied."
 #: src/composants/ComptesFournisseur.tsx
 msgid "L’adresse est enregistrée. Relaytour cherche le compte de nouveau."
 msgstr "The address is saved. Relaytour is looking for the account again."
+
+#: src/lib/import-equipe.ts
+msgid "L’adresse est vide."
+msgstr "The address is empty."
 
 #: src/composants/EditeurVisuel.tsx
 msgid "L’adresse s’insère à l’emplacement du curseur."
@@ -5793,6 +5822,10 @@ msgstr "The template replaces the subject and text you edited."
 msgid "Le nom dépasse 120 caractères."
 msgstr "The name exceeds 120 characters."
 
+#: src/lib/import-equipe.ts
+msgid "Le nom est vide."
+msgstr "The name is empty."
+
 #: src/pages/admin/Organisation.tsx
 msgid "Le nom, les contacts, le logo et le thème de l’organisation. Chaque activité peut surcharger les contacts, le logo, les couleurs et le fond."
 msgstr "The organization’s name, contacts, logo and theme. Each activity can override the contacts, logo, colors and background."
@@ -6173,6 +6206,10 @@ msgstr "The people to contact first."
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes."
 msgstr "People with an appointment in the chosen areas can read the folder, just as they read their sheets, and so can the activity admins. A group also applies to areas that join it later. Choosing the whole activity gives the same readers as common sheets."
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Les personnes d’un tableur rejoignent l’équipe de l’activité, avec leurs périmètres. L’import ajoute sans rien retirer."
+msgstr "The people of a spreadsheet join the activity’s team, with their areas. The import adds without removing anything."
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Les personnes de cette liste ont accepté que leurs coordonnées soient enregistrées pour organiser l’activité."
@@ -6633,6 +6670,10 @@ msgstr "Formatting"
 msgid "Modèle"
 msgstr "Template"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "modele-equipe.csv"
+msgstr "team-template.csv"
+
 #: src/pages/admin/ImportTaches.tsx
 msgid "modele-taches.csv"
 msgstr "tasks-template.csv"
@@ -6820,6 +6861,7 @@ msgstr "Nextcloud is connected."
 #: src/pages/admin/Activites.tsx
 #: src/pages/admin/Editions.tsx
 #: src/pages/admin/Equipe.tsx
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/Organisation.tsx
 #: src/pages/admin/Personnes.tsx
 #: src/pages/Benevoles.tsx
@@ -6829,6 +6871,10 @@ msgstr "Name"
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Nom affiché"
 msgstr "Display name"
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Nom de famille"
+msgstr "Last name"
 
 #: src/lib/messages.ts
 msgid "nom de l’activité"
@@ -7088,6 +7134,10 @@ msgstr "Org chart"
 msgid "Organisation"
 msgstr "Organization"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "oui"
+msgstr "yes"
+
 #. Réponse à un créneau d’un sondage de dates
 #: src/composants/SondageDetail.tsx
 msgid "Oui"
@@ -7200,6 +7250,7 @@ msgid "Ouvrir l’appel"
 msgstr "Open the call"
 
 #: src/composants/PremiersPas.tsx
+#: src/pages/admin/ImportEquipe.tsx
 msgid "Ouvrir l’écran Équipe"
 msgstr "Open the Team screen"
 
@@ -7395,9 +7446,14 @@ msgstr "Area saved."
 #: src/composants/DeclinerTache.tsx
 #: src/composants/Repartition.tsx
 #: src/pages/admin/Equipe.tsx
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Périmètres"
 msgstr "Areas"
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Périmètres (plusieurs par cellule)"
+msgstr "Areas (several per cell)"
 
 #: src/composants/Demandes.tsx
 msgid "Périmètres à affecter"
@@ -7521,6 +7577,10 @@ msgstr "Expected people: the members of the reader areas for the period."
 #: src/composants/ReunionFormulaire.tsx
 msgid "Personnes convoquées"
 msgstr "People invited"
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Personnes invitées ou déjà membres : {personnes}. Affectations créées : {affectations}. Contacts principaux : {contacts}. Invitations en attente d’accord : {enAttente}. Mails mis en file : {mails}."
+msgstr "People invited or already members: {personnes}. Appointments created: {affectations}. Main contacts: {contacts}. Invitations awaiting approval: {enAttente}. Emails queued: {mails}."
 
 #: src/composants/SequenceDetail.tsx
 #: src/composants/SequenceFormulaire.tsx
@@ -7719,11 +7779,13 @@ msgstr "Use this folder"
 
 #. Champ à associer à une colonne d’un fichier
 #: src/lib/import-benevoles.ts
+#: src/pages/admin/ImportEquipe.tsx
 msgid "Prénom"
 msgstr "First name"
 
 #: src/composants/ProposerPersonne.tsx
 #: src/lib/import-benevoles.ts
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/Personnes.tsx
 #: src/pages/AppelBenevoles.tsx
 #: src/pages/Benevoles.tsx
@@ -9821,6 +9883,10 @@ msgstr "An outside person fills in this form to join the team. Their join reques
 #: src/composants/AppelsBenevoles.tsx
 msgid "Une personne qui ouvre l’adresse choisit les séquences qui cherchent des bénévoles et donne ses disponibilités. Aucun mail ne part au dépôt : la candidature attend votre revue dans l’onglet « Candidatures »."
 msgstr "A person who opens the link chooses the slots that need volunteers and gives their availability. No email is sent on submission: the application waits for your review in the “Applications” tab."
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Une personne sans périmètre rejoint l’équipe de l’activité. Les rôles d’admin se donnent ensuite depuis l’écran Personnes."
+msgstr "A person without an area joins the activity’s team. Admin roles are then given from the People screen."
 
 #: src/composants/PreferencePush.tsx
 msgid "Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule."

@@ -1174,6 +1174,10 @@ msgstr "{total, plural, one {Déclinée dans # périmètre} other {Déclinée da
 msgid "← Bénévoles"
 msgstr "← Bénévoles"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "← Personnes"
+msgstr "← Personnes"
+
 #: src/pages/admin/ImportTaches.tsx
 msgid "← Rétroplanning"
 msgstr "← Rétroplanning"
@@ -1570,6 +1574,7 @@ msgstr "adresse du périmètre"
 #: src/composants/InvitationRapide.tsx
 #: src/composants/ProposerPersonne.tsx
 #: src/lib/import-benevoles.ts
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/Personnes.tsx
 #: src/pages/AppelBenevoles.tsx
 #: src/pages/Connexion.tsx
@@ -3009,6 +3014,7 @@ msgstr "Choisissez une date."
 msgid "Choisissez une heure."
 msgstr "Choisissez une heure."
 
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/ImportTaches.tsx
 msgid "Choisissez une période."
 msgstr "Choisissez une période."
@@ -3291,9 +3297,14 @@ msgid "Contact de l’organisation (facultatif)"
 msgstr "Contact de l’organisation (facultatif)"
 
 #: src/composants/Personne.tsx
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/Organigramme.tsx
 msgid "Contact principal"
 msgstr "Contact principal"
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Contact principal (oui ou non)"
+msgstr "Contact principal (oui ou non)"
 
 #: src/pages/admin/Equipe.tsx
 msgid "Contact principal. Cliquez pour retirer la désignation."
@@ -4138,6 +4149,10 @@ msgstr "Envoyer l’invitation"
 msgid "Envoyer la proposition"
 msgstr "Envoyer la proposition"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Envoyer les invitations et les mails d’équipe à la fin de l’import"
+msgstr "Envoyer les invitations et les mails d’équipe à la fin de l’import"
+
 #: src/pages/AppelBenevoles.tsx
 msgid "Envoyer ma candidature"
 msgstr "Envoyer ma candidature"
@@ -4481,6 +4496,10 @@ msgstr "Fin"
 msgid "Fin de la partie matinale."
 msgstr "Fin de la partie matinale."
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Football, Logistique"
+msgstr "Football, Logistique"
+
 #: src/pages/admin/Activites.tsx
 msgid "Forme J-120 ou J+30."
 msgstr "Forme J-120 ou J+30."
@@ -4701,6 +4720,7 @@ msgstr "Identité propre (facultatif)"
 
 #. Champ à associer à une colonne d’un fichier : ne pas importer la colonne
 #: src/lib/import-benevoles.ts
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/ImportTaches.tsx
 msgid "Ignorer"
 msgstr "Ignorer"
@@ -4777,10 +4797,15 @@ msgstr "Importer des fiches dans « {nomActivite} »"
 msgid "Importer des tâches"
 msgstr "Importer des tâches"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Importer l’équipe"
+msgstr "Importer l’équipe"
+
 #: src/composants/PremiersPas.tsx
 msgid "Importer un tableur"
 msgstr "Importer un tableur"
 
+#: src/pages/admin/Personnes.tsx
 #: src/pages/Benevoles.tsx
 msgid "Importer une liste"
 msgstr "Importer une liste"
@@ -5041,6 +5066,10 @@ msgstr "L’adresse est copiée."
 #: src/composants/ComptesFournisseur.tsx
 msgid "L’adresse est enregistrée. Relaytour cherche le compte de nouveau."
 msgstr "L’adresse est enregistrée. Relaytour cherche le compte de nouveau."
+
+#: src/lib/import-equipe.ts
+msgid "L’adresse est vide."
+msgstr "L’adresse est vide."
 
 #: src/composants/EditeurVisuel.tsx
 msgid "L’adresse s’insère à l’emplacement du curseur."
@@ -5793,6 +5822,10 @@ msgstr "Le modèle remplace l’objet et le texte que vous avez modifiés."
 msgid "Le nom dépasse 120 caractères."
 msgstr "Le nom dépasse 120 caractères."
 
+#: src/lib/import-equipe.ts
+msgid "Le nom est vide."
+msgstr "Le nom est vide."
+
 #: src/pages/admin/Organisation.tsx
 msgid "Le nom, les contacts, le logo et le thème de l’organisation. Chaque activité peut surcharger les contacts, le logo, les couleurs et le fond."
 msgstr "Le nom, les contacts, le logo et le thème de l’organisation. Chaque activité peut surcharger les contacts, le logo, les couleurs et le fond."
@@ -6173,6 +6206,10 @@ msgstr "Les personnes à solliciter en premier."
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes."
 msgstr "Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes."
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Les personnes d’un tableur rejoignent l’équipe de l’activité, avec leurs périmètres. L’import ajoute sans rien retirer."
+msgstr "Les personnes d’un tableur rejoignent l’équipe de l’activité, avec leurs périmètres. L’import ajoute sans rien retirer."
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Les personnes de cette liste ont accepté que leurs coordonnées soient enregistrées pour organiser l’activité."
@@ -6633,6 +6670,10 @@ msgstr "Mise en forme"
 msgid "Modèle"
 msgstr "Modèle"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "modele-equipe.csv"
+msgstr "modele-equipe.csv"
+
 #: src/pages/admin/ImportTaches.tsx
 msgid "modele-taches.csv"
 msgstr "modele-taches.csv"
@@ -6820,6 +6861,7 @@ msgstr "Nextcloud est connecté."
 #: src/pages/admin/Activites.tsx
 #: src/pages/admin/Editions.tsx
 #: src/pages/admin/Equipe.tsx
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/Organisation.tsx
 #: src/pages/admin/Personnes.tsx
 #: src/pages/Benevoles.tsx
@@ -6829,6 +6871,10 @@ msgstr "Nom"
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Nom affiché"
 msgstr "Nom affiché"
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Nom de famille"
+msgstr "Nom de famille"
 
 #: src/lib/messages.ts
 msgid "nom de l’activité"
@@ -7088,6 +7134,10 @@ msgstr "Organigramme"
 msgid "Organisation"
 msgstr "Organisation"
 
+#: src/pages/admin/ImportEquipe.tsx
+msgid "oui"
+msgstr "oui"
+
 #. Réponse à un créneau d’un sondage de dates
 #: src/composants/SondageDetail.tsx
 msgid "Oui"
@@ -7200,6 +7250,7 @@ msgid "Ouvrir l’appel"
 msgstr "Ouvrir l’appel"
 
 #: src/composants/PremiersPas.tsx
+#: src/pages/admin/ImportEquipe.tsx
 msgid "Ouvrir l’écran Équipe"
 msgstr "Ouvrir l’écran Équipe"
 
@@ -7395,9 +7446,14 @@ msgstr "Périmètre enregistré."
 #: src/composants/DeclinerTache.tsx
 #: src/composants/Repartition.tsx
 #: src/pages/admin/Equipe.tsx
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Périmètres"
 msgstr "Périmètres"
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Périmètres (plusieurs par cellule)"
+msgstr "Périmètres (plusieurs par cellule)"
 
 #: src/composants/Demandes.tsx
 msgid "Périmètres à affecter"
@@ -7521,6 +7577,10 @@ msgstr "Personnes attendues : les membres des périmètres lecteurs pour la pér
 #: src/composants/ReunionFormulaire.tsx
 msgid "Personnes convoquées"
 msgstr "Personnes convoquées"
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Personnes invitées ou déjà membres : {personnes}. Affectations créées : {affectations}. Contacts principaux : {contacts}. Invitations en attente d’accord : {enAttente}. Mails mis en file : {mails}."
+msgstr "Personnes invitées ou déjà membres : {personnes}. Affectations créées : {affectations}. Contacts principaux : {contacts}. Invitations en attente d’accord : {enAttente}. Mails mis en file : {mails}."
 
 #: src/composants/SequenceDetail.tsx
 #: src/composants/SequenceFormulaire.tsx
@@ -7719,11 +7779,13 @@ msgstr "Prendre ce dossier"
 
 #. Champ à associer à une colonne d’un fichier
 #: src/lib/import-benevoles.ts
+#: src/pages/admin/ImportEquipe.tsx
 msgid "Prénom"
 msgstr "Prénom"
 
 #: src/composants/ProposerPersonne.tsx
 #: src/lib/import-benevoles.ts
+#: src/pages/admin/ImportEquipe.tsx
 #: src/pages/admin/Personnes.tsx
 #: src/pages/AppelBenevoles.tsx
 #: src/pages/Benevoles.tsx
@@ -9821,6 +9883,10 @@ msgstr "Une personne extérieure remplit ce formulaire pour rejoindre l’équip
 #: src/composants/AppelsBenevoles.tsx
 msgid "Une personne qui ouvre l’adresse choisit les séquences qui cherchent des bénévoles et donne ses disponibilités. Aucun mail ne part au dépôt : la candidature attend votre revue dans l’onglet « Candidatures »."
 msgstr "Une personne qui ouvre l’adresse choisit les séquences qui cherchent des bénévoles et donne ses disponibilités. Aucun mail ne part au dépôt : la candidature attend votre revue dans l’onglet « Candidatures »."
+
+#: src/pages/admin/ImportEquipe.tsx
+msgid "Une personne sans périmètre rejoint l’équipe de l’activité. Les rôles d’admin se donnent ensuite depuis l’écran Personnes."
+msgstr "Une personne sans périmètre rejoint l’équipe de l’activité. Les rôles d’admin se donnent ensuite depuis l’écran Personnes."
 
 #: src/composants/PreferencePush.tsx
 msgid "Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule."

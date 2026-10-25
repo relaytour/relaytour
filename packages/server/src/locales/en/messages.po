@@ -656,6 +656,7 @@ msgstr "Choose two different records."
 
 #. js-lingui-explicit-id
 #: src/lib/droits.ts
+#: src/schema/import-equipe.ts
 #: src/schema/import-taches.ts
 #: src/schema/reconduction.ts
 #: src/schema/taches-types.ts
@@ -663,6 +664,7 @@ msgid "Cette édition est archivée : ses tâches sont en lecture seule."
 msgstr "This edition is archived: its tasks are read-only."
 
 #. js-lingui-explicit-id
+#: src/schema/import-equipe.ts
 #: src/schema/import-taches.ts
 msgid "Un envoi compte {max} lignes au plus."
 msgstr "A batch has at most {max} rows."
@@ -1720,6 +1722,32 @@ msgid "Une activité compte {max} fiches bénévoles au plus : ce lot en créera
 msgstr "An activity has at most {max} volunteer records. This batch would create {fichesCreees}, and {fichesRestantes} remain."
 
 #. js-lingui-explicit-id
+#: src/lib/import-equipe-tableur.ts
+msgid "Le nom est vide."
+msgstr "The name is empty."
+
+#. js-lingui-explicit-id
+#: src/lib/import-equipe-tableur.ts
+msgid "Adresse invalide : « {adresse} »."
+msgstr "Invalid address: “{adresse}”."
+
+#. js-lingui-explicit-id
+#: src/lib/import-equipe-tableur.ts
+msgid "Cette adresse figure déjà plus haut dans le fichier."
+msgstr "This address already appears higher up in the file."
+
+#. js-lingui-explicit-id
+#: src/lib/import-equipe-tableur.ts
+#: src/lib/import-taches.ts
+msgid "Périmètre inconnu : « {perimetre} »."
+msgstr "Unknown area: “{perimetre}”."
+
+#. js-lingui-explicit-id
+#: src/lib/import-equipe-tableur.ts
+msgid "Le périmètre « {perimetre} » a déjà un contact principal plus haut dans le fichier."
+msgstr "The area “{perimetre}” already has a main contact higher up in the file."
+
+#. js-lingui-explicit-id
 #: src/lib/import-taches.ts
 msgid "Le titre est vide."
 msgstr "The title is empty."
@@ -1744,11 +1772,6 @@ msgstr "Unreadable due date: “{echeance}”."
 #: src/lib/import-taches.ts
 msgid "Le périmètre est vide."
 msgstr "The area is empty."
-
-#. js-lingui-explicit-id
-#: src/lib/import-taches.ts
-msgid "Périmètre inconnu : « {perimetre} »."
-msgstr "Unknown area: “{perimetre}”."
 
 #. js-lingui-explicit-id
 #: src/lib/import-taches.ts

@@ -10,6 +10,7 @@ import Admins from './pages/admin/Admins'
 import Classement from './pages/admin/Classement'
 import Editions from './pages/admin/Editions'
 import Equipe from './pages/admin/Equipe'
+import ImportEquipe from './pages/admin/ImportEquipe'
 import ImportTaches from './pages/admin/ImportTaches'
 import EspaceFichiers from './pages/admin/EspaceFichiers'
 import Organisation from './pages/admin/Organisation'
@@ -91,6 +92,7 @@ const routeur = createBrowserRouter([
           },
           { path: 'classement', element: <Classement /> },
           { path: 'editions', element: <Editions /> },
+          { path: 'import/equipe', element: <ImportEquipe /> },
           { path: 'import/taches', element: <ImportTaches /> },
           {
             path: 'organisation',
