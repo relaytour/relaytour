@@ -24,6 +24,7 @@ Gmail et Yahoo exigent depuis 2024 un désabonnement en un clic (RFC 8058) des e
 ## Conséquences
 
 - Changer le secret du serveur invalide les adresses des mails déjà envoyés. La page indique alors que le lien n'est pas valide et renvoie aux préférences.
+- Un jeton dont le compte ou l'organisation a été supprimé vaut un lien non valide, dès la page de confirmation.
 - Une adresse ne s'expire pas. Une personne qui retrouve un ancien mail se désabonne encore. Le jeton ne fait que couper un mail, et la personne le réactive dans ses préférences.
 - L'exploitant vérifie que son relais SMTP signe les en-têtes `List-Unsubscribe` et `List-Unsubscribe-Post` dans la signature DKIM. La RFC 8058 le demande, et Gmail ignore sinon le désabonnement en un clic.
 - Une nouvelle préférence de mail ajoute sa sorte à `MAILS_DESABONNABLES` (`packages/server/src/lib/desabonnement.ts`).
@@ -33,5 +34,5 @@ Gmail et Yahoo exigent depuis 2024 un désabonnement en un clic (RFC 8058) des e
 - Un jeton se forge seulement avec le secret du serveur. Une charge modifiée, une sorte de mail inconnue ou une signature d'un autre usage sont refusées, et la comparaison se fait en temps constant.
 - Le POST n'agit que sur la préférence de la personne et de l'organisation du jeton. Il ne lit ni n'affiche aucune donnée de la personne.
 - La page de confirmation affiche le nom de l'organisation et le libellé du mail, sans l'adresse de la personne.
-- Une adresse IP traite trente désabonnements par quart d'heure au plus. Le jeton ne s'écrit jamais dans le journal.
+- Une adresse IP présente trente jetons refusés par quart d'heure au plus, puis reçoit une réponse 429. Un jeton valide ne compte pas : les messageries envoient leurs POST depuis quelques adresses partagées par beaucoup de comptes. Le jeton ne s'écrit jamais dans le journal.
 - La page porte sa propre politique de contenu : aucun script, des styles en ligne seulement, et un formulaire qui ne vise que la même origine.

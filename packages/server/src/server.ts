@@ -23,6 +23,7 @@ import { lireAbonnement } from './lib/abonnements-agenda.ts'
 import { adresseClient, ENTETE_IP_CLIENT } from './lib/adresse-client.ts'
 import {
   CHEMIN_DESABONNEMENT,
+  desabonnementValide,
   desabonner,
   lireJetonDesabonnement,
   pageDesabonnement,
@@ -260,7 +261,10 @@ app.get('/agenda/:fichier', (req, res) => {
 // Désabonnement en un clic (ADR 0050, RFC 8058) : la messagerie envoie un POST sans
 // session ni cookie, et le jeton signé suffit. Un GET affiche une confirmation et
 // n'écrit rien. Le jeton ne sort jamais dans le journal.
-const DESABONNEMENTS = { max: 30, fenetreSecondes: 15 * 60 }
+// Seuls les jetons refusés s'accumulent, comme pour le jeton d'administration : les
+// messageries envoient leurs POST depuis quelques adresses partagées par beaucoup de
+// comptes, et une rafale légitime après un résumé ne doit pas recevoir de 429.
+const REFUS_DE_DESABONNEMENT = { max: 30, fenetreSecondes: 15 * 60 }
 const servirDesabonnement =
   (methode: 'GET' | 'POST') =>
   (req: express.Request, res: express.Response) => {
@@ -274,10 +278,13 @@ const servirDesabonnement =
     const jeton = String(req.params.jeton)
     const navigateur = languesDuNavigateur(req.get('accept-language'))
     void (async () => {
+      // La tentative se réserve avant la lecture du jeton, puis se rend si le jeton
+      // désigne un compte et une organisation qui existent.
+      const cleRefus = `desabonnement-refuse:${adresseClient(req)}`
       const permis = await limiterParCle(
-        `desabonnement:${adresseClient(req)}`,
-        DESABONNEMENTS.max,
-        DESABONNEMENTS.fenetreSecondes,
+        cleRefus,
+        REFUS_DE_DESABONNEMENT.max,
+        REFUS_DE_DESABONNEMENT.fenetreSecondes,
         { libelle: 'la limite des désabonnements' }
       )
       if (!permis) {
@@ -285,13 +292,14 @@ const servirDesabonnement =
         return
       }
       const lu = lireJetonDesabonnement(env.BETTER_AUTH_SECRET, jeton)
-      if (lu === null) {
+      if (lu === null || !(await desabonnementValide(prisma, lu))) {
         res
           .status(404)
           .type('html')
           .send(await pageDesabonnement(prisma, 'invalide', null, navigateur))
         return
       }
+      await rendreTentative(cleRefus)
       if (methode === 'GET') {
         res.type('html').send(await pageDesabonnement(prisma, 'confirmer', lu))
         return

@@ -6,7 +6,11 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { expedier } from '../courriel/transport.ts'
 
-import { desabonner, pageDesabonnement } from './desabonnement.ts'
+import {
+  desabonnementValide,
+  desabonner,
+  pageDesabonnement,
+} from './desabonnement.ts'
 import { preferencesDe } from './notifications.ts'
 
 // Désabonnement en un clic (ADR 0050) : la préférence coupée, l'organisation du
@@ -85,6 +89,31 @@ describe('desabonner', () => {
   })
 
   it('refuse un compte ou une organisation qui n’existe plus', async () => {
+    // La page de confirmation fait le même contrôle : elle ne propose rien.
+    expect(
+      await desabonnementValide(prisma, {
+        sorte: 'demandes',
+        userId: ids.user,
+        organisationId: ids.org,
+      })
+    ).toBe(true)
+    const supprimee = (
+      await prisma.organisation.create({
+        data: {
+          slug: `desab-supprimee-${s}`,
+          nom: 'Supprimée',
+          configuration: {},
+        },
+      })
+    ).id
+    await prisma.organisation.delete({ where: { id: supprimee } })
+    expect(
+      await desabonnementValide(prisma, {
+        sorte: 'demandes',
+        userId: ids.user,
+        organisationId: supprimee,
+      })
+    ).toBe(false)
     expect(
       await desabonner(prisma, {
         sorte: 'demandes',

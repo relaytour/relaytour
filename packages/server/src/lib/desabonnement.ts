@@ -107,10 +107,10 @@ export function adresseDesabonnement(origine: string, jeton: string): string {
 }
 
 /**
- * Coupe la préférence d'un mail dans l'organisation du jeton (ADR 0032). Renvoie
- * faux quand le compte ou l'organisation n'existent plus.
+ * Vrai quand le compte et l'organisation d'un jeton existent encore. Un jeton
+ * correctement signé d'un compte supprimé vaut alors un lien non valide, dès le GET.
  */
-export async function desabonner(
+export async function desabonnementValide(
   prisma: PrismaClient,
   d: Desabonnement
 ): Promise<boolean> {
@@ -121,7 +121,18 @@ export async function desabonner(
       select: { id: true },
     }),
   ])
-  if (user === null || organisation === null) return false
+  return user !== null && organisation !== null
+}
+
+/**
+ * Coupe la préférence d'un mail dans l'organisation du jeton (ADR 0032). Renvoie
+ * faux quand le compte ou l'organisation n'existent plus.
+ */
+export async function desabonner(
+  prisma: PrismaClient,
+  d: Desabonnement
+): Promise<boolean> {
+  if (!(await desabonnementValide(prisma, d))) return false
   const reglage = MAILS_DESABONNABLES[d.sorte]
   await prisma.preferenceOrganisation.upsert({
     where: {
