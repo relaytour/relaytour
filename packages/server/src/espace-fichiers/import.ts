@@ -1,4 +1,4 @@
-import { prisma } from '@relaytour/database'
+import { prisma, type SourceFiche } from '@relaytour/database'
 
 import { donneesPersonnelles } from '../lib/contenu.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
@@ -14,6 +14,7 @@ import {
   lireFiche,
   wordVersMarkdown,
   type FicheLue,
+  type FormatImport,
 } from './conversion.ts'
 import { planifierExportFiches } from './export.ts'
 import { DOCUMENT_GOOGLE } from './google.ts'
@@ -51,7 +52,7 @@ export interface RapportImportEspace extends Omit<RapportFiches, 'conflits'> {
   incomplet: boolean
 }
 
-const TAILLE_MAX = 2 * 1024 * 1024
+export const TAILLE_MAX = 2 * 1024 * 1024
 const CONTENU_MAX = 200_000
 const FICHIERS_MAX = 300
 const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/
@@ -200,19 +201,13 @@ export async function importerDepuisEspace(
             ...position,
             chemin: [...source.chemin, fichier.nom],
           })
-          if (format === 'WORD') {
-            const converti = await wordVersMarkdown(octets)
-            texte = converti.texte
+          const lu = await texteDuFichier(octets, format)
+          texte = lu.texte
+          if (lu.conversion !== null) {
             rapport.converties.push({
               fichier: nomComplet,
-              raison:
-                // La conversion ne perd aujourd'hui que les images.
-                converti.pertes.length === 0
-                  ? i18n._('converti en Markdown')
-                  : i18n._('converti en Markdown, sans les images'),
+              raison: lu.conversion,
             })
-          } else {
-            texte = octets.toString('utf8')
           }
         }
       } catch (erreur) {
@@ -232,37 +227,101 @@ export async function importerDepuisEspace(
         format === 'GOOGLE' ? `${fichier.nom}.gdoc` : fichier.nom,
         texte
       )
-      if (!SLUG.test(fiche.slug) || fiche.slug.length > 60) {
-        ecarter(i18n._('nom de fichier sans identifiant utilisable'))
-        continue
+      if (accepterFiche(fiche, nomComplet, role, provenance, rapport)) {
+        fiches.push({ ...fiche, perimetreId: source.perimetreId })
       }
-      if (fiche.contenu.length > CONTENU_MAX) {
-        ecarter(i18n._('plus de 200 000 caractères'))
-        continue
-      }
-      const deja = provenance.get(fiche.slug)
-      if (deja !== undefined) {
-        ecarter(i18n._('même identifiant que {fichier}', { fichier: deja }))
-        continue
-      }
-      const personnelles = donneesPersonnelles(
-        `${fiche.titre}\n${fiche.contenu}`,
-        role
-      )
-      if (personnelles.length > 0) {
-        rapport.refusees.push({
-          fichier: nomComplet,
-          raison: i18n._('coordonnées personnelles ({valeurs})', {
-            valeurs: personnelles.join(', '),
-          }),
-        })
-        continue
-      }
-      provenance.set(fiche.slug, nomComplet)
-      fiches.push({ ...fiche, perimetreId: source.perimetreId })
     }
   }
 
+  await ecrireFiches(organisationId, activiteId, fiches, rapport, {
+    ...options,
+    source: 'ESPACE_FICHIERS',
+    resume: 'Import depuis le fournisseur cloud',
+    evenement: 'fiches-importees-espace',
+    messageJournal: 'Des fiches ont été importées de l’espace de fichiers.',
+  })
+  return rapport
+}
+
+/** Le texte d'un fichier Markdown, texte ou Word, avec la conversion faite. */
+export async function texteDuFichier(
+  octets: Buffer,
+  format: FormatImport
+): Promise<{ texte: string; conversion: string | null }> {
+  if (format !== 'WORD')
+    return { texte: octets.toString('utf8'), conversion: null }
+  const converti = await wordVersMarkdown(octets)
+  return {
+    texte: converti.texte,
+    // La conversion ne perd aujourd'hui que les images.
+    conversion:
+      converti.pertes.length === 0
+        ? i18n._('converti en Markdown')
+        : i18n._('converti en Markdown, sans les images'),
+  }
+}
+
+/**
+ * Vrai quand une fiche lue peut s'importer : un identifiant utilisable, une
+ * longueur permise, aucun doublon dans l'import, aucune coordonnée personnelle.
+ * Sinon, le rapport reçoit le fichier avec sa raison.
+ */
+export function accepterFiche(
+  fiche: FicheLue,
+  nomComplet: string,
+  role: { domaines: readonly string[]; adresses: readonly string[] },
+  provenance: Map<string, string>,
+  rapport: Pick<RapportImportEspace, 'nonImportes' | 'refusees'>
+): boolean {
+  const ecarter = (raison: string) => {
+    rapport.nonImportes.push({ fichier: nomComplet, raison })
+    return false
+  }
+  if (!SLUG.test(fiche.slug) || fiche.slug.length > 60) {
+    return ecarter(i18n._('nom de fichier sans identifiant utilisable'))
+  }
+  if (fiche.contenu.length > CONTENU_MAX) {
+    return ecarter(i18n._('plus de 200 000 caractères'))
+  }
+  const deja = provenance.get(fiche.slug)
+  if (deja !== undefined) {
+    return ecarter(i18n._('même identifiant que {fichier}', { fichier: deja }))
+  }
+  const personnelles = donneesPersonnelles(
+    `${fiche.titre}\n${fiche.contenu}`,
+    role
+  )
+  if (personnelles.length > 0) {
+    rapport.refusees.push({
+      fichier: nomComplet,
+      raison: i18n._('coordonnées personnelles ({valeurs})', {
+        valeurs: personnelles.join(', '),
+      }),
+    })
+    return false
+  }
+  provenance.set(fiche.slug, nomComplet)
+  return true
+}
+
+/**
+ * Écrit les fiches retenues, ou calcule seulement le rapport sans `ecrire`. Une
+ * fiche écrite dans Relaytour l'emporte et se signale en conflit.
+ */
+export async function ecrireFiches(
+  organisationId: string,
+  activiteId: string,
+  fiches: readonly (FicheLue & { perimetreId: string | null })[],
+  rapport: RapportImportEspace,
+  options: {
+    ecrire: boolean
+    auteurId: string
+    source: SourceFiche
+    resume: string
+    evenement: string
+    messageJournal: string
+  }
+): Promise<void> {
   const rapportFiches: RapportFiches = {
     creees: [],
     nouvellesVersions: [],
@@ -277,8 +336,8 @@ export async function importerDepuisEspace(
         {
           organisationId,
           activiteId,
-          source: 'ESPACE_FICHIERS',
-          resume: 'Import depuis le fournisseur cloud',
+          source: options.source,
+          resume: options.resume,
           // Une fiche écrite dans Relaytour l'emporte ; une fiche venue du dépôt
           // ou d'un import précédent se met à jour.
           protegees: ['APP'],
@@ -301,19 +360,18 @@ export async function importerDepuisEspace(
   if (options.ecrire) {
     journal.info(
       {
-        evenement: 'fiches-importees-espace',
+        evenement: options.evenement,
         organisationId,
         activiteId,
         acteurId: options.auteurId,
         creees: rapport.creees.length,
         nouvellesVersions: rapport.nouvellesVersions.length,
       },
-      'Des fiches ont été importées de l’espace de fichiers.'
+      options.messageJournal
     )
     if (rapport.creees.length + rapport.nouvellesVersions.length > 0) {
       publierPourActivite('FICHE', organisationId, activiteId)
       planifierExportFiches(organisationId)
     }
   }
-  return rapport
 }

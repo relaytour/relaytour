@@ -159,7 +159,7 @@ export async function appliquerModeleDeDepart(
       activiteId,
       source: 'GIT',
       resume: 'Modèle de départ',
-      protegees: ['APP', 'ESPACE_FICHIERS'],
+      protegees: ['APP', 'ESPACE_FICHIERS', 'DEPOT'],
       autreActivite: 'conflit',
       auteurId: options.auteurId,
       ecrire,

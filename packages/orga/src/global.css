@@ -4023,6 +4023,24 @@ button.rt-carte-fiche {
   align-items: center;
   gap: 4px;
 }
+/* Dépôt d'un dossier de contenu (ADR 0049). */
+.rt-depot-contenu ul {
+  margin: 4px 0 0;
+  padding-inline-start: 0;
+  list-style: none;
+  overflow-wrap: anywhere;
+}
+.rt-depot-contenu li + li {
+  margin-top: 2px;
+}
+.rt-depot-activite {
+  padding: 10px 12px;
+  border-radius: var(--rt-rayon-champ);
+  background: var(--rt-surface-interne);
+}
+.rt-depot-activite p {
+  margin: 4px 0 0;
+}
 /* Import de listes de bénévoles et doublons (ADR 0042). */
 .rt-import-etape {
   display: flex;

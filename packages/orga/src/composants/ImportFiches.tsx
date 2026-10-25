@@ -24,6 +24,18 @@ import ParcoursEspace, { type PositionChoisie } from './ParcoursEspace'
 
 type Rapport = SimulerImportFichesQuery['simulerImportFiches']
 
+/** Le rapport d'un import de fiches : depuis l'espace de fichiers, ou déposées. */
+export interface RapportFichesAffiche {
+  creees: string[]
+  nouvellesVersions: string[]
+  inchangees: string[]
+  conflits: { fiche: string; raison: string }[]
+  refusees: { fichier: string; raison: string }[]
+  converties: { fichier: string; raison: string }[]
+  nonImportes: { fichier: string; raison: string }[]
+  incomplet?: boolean
+}
+
 interface Source {
   emplacement: string
   chemin: string[]
@@ -33,7 +45,13 @@ const COMMUNES = ''
 const AUCUNE: PositionChoisie = { emplacement: null, chemin: [] }
 
 /** Le rapport d'un import, simulé ou réel, rubrique par rubrique. */
-function RapportImport({ rapport, fait }: { rapport: Rapport; fait: boolean }) {
+export function RapportImport({
+  rapport,
+  fait,
+}: {
+  rapport: RapportFichesAffiche
+  fait: boolean
+}) {
   const { t } = useLingui()
   const liste = (titre: string, elements: string[], couleur?: string) =>
     elements.length > 0 && (

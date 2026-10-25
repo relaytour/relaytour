@@ -555,6 +555,10 @@ msgstr "{nomBenevole} · bénévole"
 msgid "{nombre, plural, one {# dossier} other {# dossiers}}"
 msgstr "{nombre, plural, one {# dossier} other {# dossiers}}"
 
+#: src/composants/DepotFiches.tsx
+msgid "{nombre, plural, one {# fiche importée.} other {# fiches importées.}}"
+msgstr "{nombre, plural, one {# fiche importée.} other {# fiches importées.}}"
+
 #: src/pages/Fiches.tsx
 msgid "{nombre, plural, one {# fiche} other {# fiches}}"
 msgstr "{nombre, plural, one {# fiche} other {# fiches}}"
@@ -598,6 +602,10 @@ msgstr "{nombreEnAttente} en attente"
 #: src/composants/VerificationAcces.tsx
 msgid "{nombreEnTrop, plural, one {# compte} other {# comptes}}"
 msgstr "{nombreEnTrop, plural, one {# compte} other {# comptes}}"
+
+#: src/composants/DepotContenu.tsx
+msgid "{nombreIgnores, plural, one {# fichier de l’archive ignoré} other {# fichiers de l’archive ignorés}}"
+msgstr "{nombreIgnores, plural, one {# fichier de l’archive ignoré} other {# fichiers de l’archive ignorés}}"
 
 #: src/composants/MenuCompte.tsx
 msgid "{nombreInvitations, plural, one {# invitation en attente} other {# invitations en attente}}"
@@ -1198,6 +1206,10 @@ msgstr "1 tâche, dont <0>{enRetard} en retard</0>"
 msgid "14 h"
 msgstr "14 h"
 
+#: src/composants/DepotFiches.tsx
+msgid "2 Mo par fichier, 50 fichiers et 20 Mo par dépôt au plus."
+msgstr "2 Mo par fichier, 50 fichiers et 20 Mo par dépôt au plus."
+
 #: src/composants/AssistantTableur.tsx
 #: src/pages/ImportBenevoles.tsx
 msgid "2 Mo, 5 000 lignes et 200 colonnes au plus."
@@ -1206,6 +1218,10 @@ msgstr "2 Mo, 5 000 lignes et 200 colonnes au plus."
 #: src/lib/guide-markdown.ts
 msgid "20 bleues"
 msgstr "20 bleues"
+
+#: src/composants/DepotContenu.tsx
+msgid "20 Mo au plus. Le contenu est vérifié avant tout import."
+msgstr "20 Mo au plus. Le contenu est vérifié avant tout import."
 
 #: src/lib/guide-markdown.ts
 msgid "20 rouges"
@@ -1437,8 +1453,21 @@ msgstr "Activer sur cet appareil"
 
 #: src/composants/ChoixLecteurs.tsx
 #: src/composants/Messages.tsx
+#: src/pages/admin/Activites.tsx
 msgid "Activité"
 msgstr "Activité"
+
+#: src/composants/DepotContenu.tsx
+msgid "Activité {slug} : créée"
+msgstr "Activité {slug} : créée"
+
+#: src/composants/DepotContenu.tsx
+msgid "Activité {slug} : mise à jour"
+msgstr "Activité {slug} : mise à jour"
+
+#: src/pages/admin/Activites.tsx
+msgid "Activité à importer"
+msgstr "Activité à importer"
 
 #: src/pages/admin/Activites.tsx
 msgid "Activité créée."
@@ -1458,6 +1487,10 @@ msgstr "Activité enregistrée."
 #: src/pages/admin/Personnes.tsx
 msgid "Activités"
 msgstr "Activités"
+
+#: src/composants/DepotContenu.tsx
+msgid "Activités absentes de l’archive (gardées) :"
+msgstr "Activités absentes de l’archive (gardées) :"
 
 #: src/pages/Fiche.tsx
 msgid "Actuelle"
@@ -1803,6 +1836,7 @@ msgstr "Annulée"
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/DeclinerTache.tsx
 #: src/composants/Demandes.tsx
+#: src/composants/DepotContenu.tsx
 #: src/composants/DescriptionActivite.tsx
 #: src/composants/DoublonsBenevoles.tsx
 #: src/composants/EcrireMessage.tsx
@@ -2063,6 +2097,10 @@ msgstr "Aucun autre périmètre"
 #: src/composants/ConnexionsFiche.tsx
 msgid "Aucun autre périmètre dans ce groupe."
 msgstr "Aucun autre périmètre dans ce groupe."
+
+#: src/composants/DepotContenu.tsx
+msgid "Aucun changement."
+msgstr "Aucun changement."
 
 #: src/composants/FilTache.tsx
 msgid "Aucun commentaire pour l’instant."
@@ -2839,6 +2877,10 @@ msgstr "Chaque échéance garde le même écart avec le premier jour. Une tâche
 msgid "Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique."
 msgstr "Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique."
 
+#: src/composants/DepotFiches.tsx
+msgid "Chaque fichier devient une fiche. Un document Word est converti en Markdown, sans ses images. Une fiche modifiée dans Relaytour n’est pas remplacée."
+msgstr "Chaque fichier devient une fiche. Un document Word est converti en Markdown, sans ses images. Une fiche modifiée dans Relaytour n’est pas remplacée."
+
 #: src/pages/Preferences.tsx
 msgid "Chaque jour"
 msgstr "Chaque jour"
@@ -2922,6 +2964,10 @@ msgstr "Choisir un fichier {format}"
 #: src/composants/SequenceFormulaire.tsx
 msgid "Choisir un lieu"
 msgstr "Choisir un lieu"
+
+#: src/composants/DepotContenu.tsx
+msgid "Choisir une autre archive"
+msgstr "Choisir une autre archive"
 
 #: src/composants/GardeSession.tsx
 msgid "Choisir une organisation"
@@ -3635,9 +3681,26 @@ msgstr "Déplier le menu"
 msgid "Déplier le volet latéral"
 msgstr "Déplier le volet latéral"
 
+#: src/composants/DepotFiches.tsx
+#: src/pages/Fiches.tsx
+msgid "Déposer des fichiers"
+msgstr "Déposer des fichiers"
+
 #: src/composants/ConnexionEspace.tsx
 msgid "Déposez ce fichier ici, ou collez son contenu."
 msgstr "Déposez ce fichier ici, ou collez son contenu."
+
+#: src/composants/DepotFiches.tsx
+msgid "Déposez des fichiers Markdown, texte ou Word (.docx), ou cliquez pour les choisir."
+msgstr "Déposez des fichiers Markdown, texte ou Word (.docx), ou cliquez pour les choisir."
+
+#: src/composants/DepotContenu.tsx
+msgid "Déposez l’archive zip du contenu ou du seul dossier de l’activité, ou cliquez pour la choisir."
+msgstr "Déposez l’archive zip du contenu ou du seul dossier de l’activité, ou cliquez pour la choisir."
+
+#: src/composants/DepotContenu.tsx
+msgid "Déposez l’archive zip du contenu, ou cliquez pour la choisir."
+msgstr "Déposez l’archive zip du contenu, ou cliquez pour la choisir."
 
 #: src/composants/AssistantTableur.tsx
 #: src/pages/ImportBenevoles.tsx
@@ -3702,6 +3765,10 @@ msgstr "Dernière vérification le {derniereVerification}. Relaytour vérifie au
 msgid "Des accents graves entourent un texte qui s’affiche tel quel, en police à chasse fixe : un nom de fichier, une référence."
 msgstr "Des accents graves entourent un texte qui s’affiche tel quel, en police à chasse fixe : un nom de fichier, une référence."
 
+#: src/composants/DepotContenu.tsx
+msgid "Des admins ont modifié le contenu le {dateModification}, après la dernière synchronisation."
+msgstr "Des admins ont modifié le contenu le {dateModification}, après la dernière synchronisation."
+
 #: src/pages/admin/Organisation.tsx
 msgid "Des admins ont modifié le contenu le {dateModification}. Exportez-le avant tout import, sinon l’import refusera d’écraser ces modifications."
 msgstr "Des admins ont modifié le contenu le {dateModification}. Exportez-le avant tout import, sinon l’import refusera d’écraser ces modifications."
@@ -3759,6 +3826,14 @@ msgstr "Destinataires : {destinataires}"
 #: src/composants/EcrireMessage.tsx
 msgid "Destinataires ({nombreDestinataires})"
 msgstr "Destinataires ({nombreDestinataires})"
+
+#: src/composants/DepotFiches.tsx
+msgid "Destination"
+msgstr "Destination"
+
+#: src/composants/DepotFiches.tsx
+msgid "Destination des fiches"
+msgstr "Destination des fiches"
 
 #: src/composants/AssistantTableur.tsx
 #: src/composants/Repartition.tsx
@@ -4418,6 +4493,7 @@ msgstr "Fiches à créer"
 msgid "Fiches à mettre à jour"
 msgstr "Fiches à mettre à jour"
 
+#: src/composants/DepotFiches.tsx
 #: src/composants/ImportFiches.tsx
 #: src/pages/Fiche.tsx
 #: src/pages/Fiches.tsx
@@ -4440,9 +4516,17 @@ msgstr "Fiches connexes"
 msgid "Fiches créées"
 msgstr "Fiches créées"
 
+#: src/composants/DepotContenu.tsx
+msgid "Fiches créées :"
+msgstr "Fiches créées :"
+
 #: src/pages/admin/Classement.tsx
 msgid "Fiches créées ou modifiées"
 msgstr "Fiches créées ou modifiées"
+
+#: src/composants/DepotContenu.tsx
+msgid "Fiches en conflit (non remplacées) :"
+msgstr "Fiches en conflit (non remplacées) :"
 
 #: src/composants/ImportFiches.tsx
 msgid "Fiches inchangées"
@@ -4451,6 +4535,10 @@ msgstr "Fiches inchangées"
 #: src/pages/Perimetre.tsx
 msgid "Fiches méthode"
 msgstr "Fiches méthode"
+
+#: src/composants/DepotContenu.tsx
+msgid "Fiches mises à jour :"
+msgstr "Fiches mises à jour :"
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Fiches proches"
@@ -4462,6 +4550,11 @@ msgstr "Fiches proches"
 #: src/pages/ImportBenevoles.tsx
 msgid "Fichier"
 msgstr "Fichier"
+
+#. Origine d’une version de fiche : un fichier déposé dans Relaytour
+#: src/lib/fiches.ts
+msgid "Fichier déposé"
+msgstr "Fichier déposé"
 
 #: src/pages/AideMarkdown.tsx
 #: src/pages/Fiche.tsx
@@ -4797,9 +4890,26 @@ msgstr "Importer des fiches dans « {nomActivite} »"
 msgid "Importer des tâches"
 msgstr "Importer des tâches"
 
+#: src/composants/DepotContenu.tsx
+msgid "Importer l’archive"
+msgstr "Importer l’archive"
+
 #: src/pages/admin/ImportEquipe.tsx
 msgid "Importer l’équipe"
 msgstr "Importer l’équipe"
+
+#: src/pages/admin/Activites.tsx
+msgid "Importer le contenu d’une activité"
+msgstr "Importer le contenu d’une activité"
+
+#: src/composants/DepotFiches.tsx
+msgid "Importer les fiches"
+msgstr "Importer les fiches"
+
+#: src/composants/PremiersPas.tsx
+#: src/pages/admin/Organisation.tsx
+msgid "Importer un dossier de contenu"
+msgstr "Importer un dossier de contenu"
 
 #: src/composants/PremiersPas.tsx
 msgid "Importer un tableur"
@@ -4950,6 +5060,10 @@ msgstr "Italique"
 msgid "J’accepte que {nomOrganisation} enregistre ces informations pour organiser l’activité."
 msgstr "J’accepte que {nomOrganisation} enregistre ces informations pour organiser l’activité."
 
+#: src/composants/DepotContenu.tsx
+msgid "J’accepte que l’import remplace ces modifications. Les fiches modifiées dans Relaytour restent telles quelles."
+msgstr "J’accepte que l’import remplace ces modifications. Les fiches modifiées dans Relaytour restent telles quelles."
+
 #: src/pages/Preferences.tsx
 msgid "Jamais"
 msgstr "Jamais"
@@ -5033,6 +5147,10 @@ msgstr "L’accès déjà accordé à Google Drive suffit : aucune reconnexion n
 #: src/lib/espace-fichiers.ts
 msgid "L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe."
 msgstr "L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe."
+
+#: src/composants/DepotContenu.tsx
+msgid "L’activité créée avec l’organisation est vide et absente de l’archive : l’import la retire."
+msgstr "L’activité créée avec l’organisation est vide et absente de l’archive : l’import la retire."
 
 #: src/pages/Organigramme.tsx
 msgid "L’activité est gérée par les admins de l’organisation."
@@ -5127,6 +5245,14 @@ msgstr "L’application reprend dès le retour du réseau."
 msgid "L’archive contient l’identité, les activités, les périmètres, les fiches, les tâches types et les images, dans la forme du dépôt organisation-modele. Elle ne contient aucune personne, aucune affectation ni aucune tâche datée."
 msgstr "L’archive contient l’identité, les activités, les périmètres, les fiches, les tâches types et les images, dans la forme du dépôt organisation-modele. Elle ne contient aucune personne, aucune affectation ni aucune tâche datée."
 
+#: src/composants/DepotContenu.tsx
+msgid "L’archive déclare l’identifiant « {slugIgnore} ». L’organisation garde le sien."
+msgstr "L’archive déclare l’identifiant « {slugIgnore} ». L’organisation garde le sien."
+
+#: src/lib/depot-contenu.ts
+msgid "L’archive dépasse 20 Mo."
+msgstr "L’archive dépasse 20 Mo."
+
 #: src/composants/TacheCarte.tsx
 msgid "L’assignation est annulée."
 msgstr "L’assignation est annulée."
@@ -5214,6 +5340,14 @@ msgstr "L’heure de fin suit l’heure de début."
 #: src/pages/admin/Organisation.tsx
 msgid "L’identifiant « {identifiant} » ne change pas ici : il dépend de l’hébergement."
 msgstr "L’identifiant « {identifiant} » ne change pas ici : il dépend de l’hébergement."
+
+#: src/pages/admin/Activites.tsx
+msgid "L’import ne lit que le dossier de l’activité choisie : ses périmètres, ses fiches et ses tâches types. Il ignore l’identité de l’organisation et les autres activités."
+msgstr "L’import ne lit que le dossier de l’activité choisie : ses périmètres, ses fiches et ses tâches types. Il ignore l’identité de l’organisation et les autres activités."
+
+#: src/pages/admin/Organisation.tsx
+msgid "L’import reprend une archive au format de l’export : celle d’une autre installation, ou un dossier modifié hors de l’application. Il crée ou met à jour les activités, les périmètres, les fiches et les tâches types. Il ne retire rien et ne change pas l’identifiant de l’organisation."
+msgstr "L’import reprend une archive au format de l’export : celle d’une autre installation, ou un dossier modifié hors de l’application. Il crée ou met à jour les activités, les périmètres, les fiches et les tâches types. Il ne retire rien et ne change pas l’identifiant de l’organisation."
 
 #: src/pages/ImportBenevoles.tsx
 msgid "L’import s’est arrêté : {nbNonTraitees, plural, one {# personne n’a pas été traitée} other {# personnes n’ont pas été traitées}}."
@@ -5611,6 +5745,10 @@ msgstr "Le commentaire est supprimé."
 msgid "Le compte est créé et l’invitation est envoyée. Une partie des rôles ou des souhaits n’a pas été enregistrée : vérifiez-les, puis enregistrez de nouveau."
 msgstr "Le compte est créé et l’invitation est envoyée. Une partie des rôles ou des souhaits n’a pas été enregistrée : vérifiez-les, puis enregistrez de nouveau."
 
+#: src/lib/depot-contenu.ts
+msgid "Le dépôt a échoué."
+msgstr "Le dépôt a échoué."
+
 #: src/composants/ChampsEdition.tsx
 #: src/composants/DateCleFormulaire.tsx
 #: src/composants/ReunionFormulaire.tsx
@@ -5652,6 +5790,10 @@ msgstr "Le dossier « Fiches Relaytour » sera créé dans « {dernier} »."
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Le dossier d’export est créé. Le premier export part."
 msgstr "Le dossier d’export est créé. Le premier export part."
+
+#: src/composants/DepotContenu.tsx
+msgid "Le dossier de contenu est importé."
+msgstr "Le dossier de contenu est importé."
 
 #: src/pages/admin/Organisation.tsx
 msgid "Le dossier de contenu ne reflète pas les dernières modifications."
@@ -5898,6 +6040,10 @@ msgstr "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie 
 msgid "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie depuis l’écran Personnes."
 msgstr "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie depuis l’écran Personnes."
 
+#: src/lib/depot-contenu.ts
+msgid "Le serveur ne répond pas. Réessayez plus tard."
+msgstr "Le serveur ne répond pas. Réessayez plus tard."
+
 #: src/composants/SondageDetail.tsx
 msgid "Le sondage et ses réponses disparaissent. Une réunion déjà créée reste dans l’agenda."
 msgstr "Le sondage et ses réponses disparaissent. Une réunion déjà créée reste dans l’agenda."
@@ -6129,6 +6275,10 @@ msgstr "Les fiches sont importées."
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Les fichiers déjà écrits restent chez le fournisseur cloud."
 msgstr "Les fichiers déjà écrits restent chez le fournisseur cloud."
+
+#: src/lib/depot-fiches.ts
+msgid "Les fichiers déposés dépassent 20 Mo au total."
+msgstr "Les fichiers déposés dépassent 20 Mo au total."
 
 #: src/composants/RessourcesFiche.tsx
 msgid "Les lecteurs de {ajouts} liront tout le dossier, et pas seulement ce document."
@@ -6769,6 +6919,10 @@ msgstr "Modifier la séquence"
 #: src/composants/TacheFormulaire.tsx
 msgid "Modifier la tâche"
 msgstr "Modifier la tâche"
+
+#: src/composants/DepotFiches.tsx
+msgid "Modifier le choix"
+msgstr "Modifier le choix"
 
 #: src/pages/admin/Personnes.tsx
 msgid "Modifier le compte"
@@ -7471,6 +7625,10 @@ msgstr "Périmètres à affecter"
 msgid "périmètres à pourvoir"
 msgstr "périmètres à pourvoir"
 
+#: src/composants/DepotContenu.tsx
+msgid "Périmètres absents de l’archive (gardés) :"
+msgstr "Périmètres absents de l’archive (gardés) :"
+
 #: src/pages/admin/Personnes.tsx
 msgid "Périmètres affectés"
 msgstr "Périmètres affectés"
@@ -7482,6 +7640,10 @@ msgstr "Périmètres affectés pour {nomEdition}"
 #: src/pages/admin/Equipe.tsx
 msgid "Périmètres archivés ({nbArchives})"
 msgstr "Périmètres archivés ({nbArchives})"
+
+#: src/composants/DepotContenu.tsx
+msgid "Périmètres créés :"
+msgstr "Périmètres créés :"
 
 #: src/pages/admin/ImportTaches.tsx
 msgid "Périmètres créés : {perimetresCrees}. "
@@ -7498,6 +7660,10 @@ msgstr "Périmètres demandés"
 #: src/pages/admin/ImportTaches.tsx
 msgid "Périmètres inconnus"
 msgstr "Périmètres inconnus"
+
+#: src/composants/DepotContenu.tsx
+msgid "Périmètres modifiés :"
+msgstr "Périmètres modifiés :"
 
 #: src/pages/admin/ImportTaches.tsx
 msgid "Périmètres qui seront créés : {listeACreer}."
@@ -9957,6 +10123,14 @@ msgstr "Valeurs qui signifient non"
 msgid "Vérification"
 msgstr "Vérification"
 
+#: src/composants/DepotContenu.tsx
+msgid "Vérification de {nomFichier} terminée. Rien n’est encore importé."
+msgstr "Vérification de {nomFichier} terminée. Rien n’est encore importé."
+
+#: src/composants/DepotContenu.tsx
+msgid "Vérification de {nomFichier}…"
+msgstr "Vérification de {nomFichier}…"
+
 #: src/composants/ConnexionEspace.tsx
 #: src/composants/VerificationAcces.tsx
 #: src/pages/admin/EspaceFichiers.tsx
@@ -9964,6 +10138,7 @@ msgid "Vérification des accès"
 msgstr "Vérification des accès"
 
 #: src/composants/AssistantTableur.tsx
+#: src/composants/DepotFiches.tsx
 msgid "Vérifier"
 msgstr "Vérifier"
 

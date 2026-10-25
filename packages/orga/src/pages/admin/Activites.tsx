@@ -25,6 +25,8 @@ import { useNavigate } from 'react-router'
 import ChampCouleur from '../../composants/ChampCouleur'
 import { ChampGroupes, ChampNature } from '../../composants/ChampsActivite'
 import ChampImage from '../../composants/ChampImage'
+import DepotContenu from '../../composants/DepotContenu'
+import { Panneau } from '../../composants/Panneau'
 import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
@@ -210,6 +212,17 @@ export default function Activites() {
     MODIFIER_IDENTITE,
     rafraichir
   )
+  // Le dépôt d'un dossier de contenu porte sur une activité ouverte que la
+  // personne administre, l'activité affichée par défaut (ADR 0049).
+  const importables = (data?.activites ?? []).filter(
+    a => a.estAdministree && !a.archive
+  )
+  const [activiteImportee, setActiviteImportee] = useState<string | null>(null)
+  const aImporter =
+    importables.find(a => a.id === activiteImportee)?.id ??
+    importables.find(a => a.id === affichee.id)?.id ??
+    importables[0]?.id ??
+    null
 
   const ouvrir = (activite: Activite | 'nouvelle') => {
     setErreur(null)
@@ -465,6 +478,36 @@ export default function Activites() {
           },
         ]}
       />
+
+      {importables.length > 0 && (
+        <div style={{ marginTop: 24 }}>
+          <Panneau titre={t`Importer le contenu d’une activité`}>
+            <p className="rt-texte-secondaire">
+              <Trans>
+                L’import ne lit que le dossier de l’activité choisie : ses
+                périmètres, ses fiches et ses tâches types. Il ignore l’identité
+                de l’organisation et les autres activités.
+              </Trans>
+            </p>
+            {importables.length > 1 && (
+              <label className="rt-import-champ" style={{ marginBottom: 16 }}>
+                <span className="rt-libelle">{t`Activité`}</span>
+                <Select
+                  aria-label={t`Activité à importer`}
+                  value={aImporter}
+                  onChange={setActiviteImportee}
+                  options={importables.map(a => ({
+                    value: a.id,
+                    label: a.nom,
+                  }))}
+                  style={{ maxWidth: 360 }}
+                />
+              </label>
+            )}
+            <DepotContenu key={aImporter} activiteId={aImporter} />
+          </Panneau>
+        </div>
+      )}
 
       <Modal
         open={enEdition !== null}
