@@ -494,6 +494,42 @@ section {
   color: var(--rt-primaire);
 }
 
+/* Trois façons d'utiliser Relaytour : même tableau que relaytour.com. */
+.voies {
+  min-width: 720px;
+}
+
+.voies thead th {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--rt-encre);
+}
+
+.voies tbody th {
+  color: var(--rt-encre-55);
+}
+
+.voies .voie-cloud {
+  background: var(--rt-primaire-clair);
+}
+
+.voies .voie-precision {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: var(--rt-encre-55);
+}
+
+.voies tr:last-child td {
+  border-bottom: 0;
+}
+
+.voies .bouton {
+  white-space: nowrap;
+}
+
 .oui,
 .partiel,
 .non {

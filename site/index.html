@@ -30,6 +30,7 @@
         </a>
         <ul class="liens">
           <li><a href="./" aria-current="page">Présentation</a></li>
+          <li><a href="hebergement.html">Hébergement</a></li>
           <li><a href="design-system.html">Design system</a></li>
           <li><a href="modes-d-emploi/">Modes d'emploi</a></li>
           <li><a href="https://github.com/relaytour/relaytour">Code source</a></li>
@@ -49,8 +50,8 @@
           <span class="repere">Contenu dans le dépôt de l'organisation</span>
         </div>
         <div class="actions">
-          <a class="bouton bouton-primaire" href="https://github.com/relaytour/relaytour#readme">Installer Relaytour</a>
-          <a class="bouton bouton-verre" href="design-system.html">Voir le design system</a>
+          <a class="bouton bouton-primaire" href="#demarrer">Installer Relaytour</a>
+          <a class="bouton bouton-verre" href="https://relaytour.com">Essayer Relaytour Cloud</a>
         </div>
       </header>
 
@@ -229,16 +230,98 @@
             </tbody>
           </table>
         </div>
-        <div class="grille-2">
-          <div class="verre panneau">
-            <h3>Ce que Relaytour ne remplace pas</h3>
-            <p>La billetterie, les adhésions et la comptabilité restent dans les outils de gestion associative. Les tableaux de matchs et les créneaux du jour J restent dans les outils spécialisés.</p>
-          </div>
-          <div class="verre panneau">
-            <h3>Ce que Relaytour coûte</h3>
-            <p>Le logiciel est gratuit. Seul le serveur qui l'héberge a un coût. Le déploiement de référence tient sur un petit serveur.</p>
-          </div>
+        <div class="verre panneau">
+          <h3>Ce que Relaytour ne remplace pas</h3>
+          <p>La billetterie, les adhésions et la comptabilité restent dans les outils de gestion associative. Les tableaux de matchs et les créneaux du jour J restent dans les outils spécialisés.</p>
         </div>
+      </section>
+
+      <section id="utiliser" aria-labelledby="t-voies">
+        <div class="entete">
+          <span class="etiquette">Utiliser Relaytour</span>
+          <h2 id="t-voies">Trois façons d'utiliser Relaytour</h2>
+          <p class="texte">
+            Relaytour est un logiciel libre. Toutes ses fonctions sont disponibles quelle que soit la façon de l'utiliser.
+          </p>
+        </div>
+        <div class="verre panneau defilement">
+          <table class="tableau voies">
+            <thead>
+              <tr>
+                <td></td>
+                <th scope="col" class="voie-cloud">Relaytour Cloud<br /><span class="voie-precision">par Design Horizon</span></th>
+                <th scope="col">Auto-hébergé avec accompagnement</th>
+                <th scope="col">Auto-hébergé</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th scope="row">Fonctions du logiciel</th>
+                <td class="voie-cloud">Toutes</td>
+                <td>Toutes</td>
+                <td>Toutes</td>
+              </tr>
+              <tr>
+                <th scope="row">Serveur</th>
+                <td class="voie-cloud">Fourni, en France ou dans l'Union européenne</td>
+                <td>Le vôtre</td>
+                <td>Le vôtre</td>
+              </tr>
+              <tr>
+                <th scope="row">Installation</th>
+                <td class="voie-cloud">Incluse</td>
+                <td>Faite avec vous</td>
+                <td>Guide public</td>
+              </tr>
+              <tr>
+                <th scope="row">Mises à jour</th>
+                <td class="voie-cloud">Incluses</td>
+                <td>Selon le devis</td>
+                <td>Par vous</td>
+              </tr>
+              <tr>
+                <th scope="row">Sauvegardes quotidiennes</th>
+                <td class="voie-cloud">Incluses</td>
+                <td>Selon le devis</td>
+                <td>Par vous</td>
+              </tr>
+              <tr>
+                <th scope="row">Envoi des mails</th>
+                <td class="voie-cloud">Inclus</td>
+                <td>Par votre prestataire</td>
+                <td>Par votre prestataire</td>
+              </tr>
+              <tr>
+                <th scope="row">Adresse</th>
+                <td class="voie-cloud">votre-organisation.relaytour.app ou votre domaine</td>
+                <td>La vôtre</td>
+                <td>La vôtre</td>
+              </tr>
+              <tr>
+                <th scope="row">Assistance</th>
+                <td class="voie-cloud">Réponse sous cinq jours ouvrés</td>
+                <td>Selon le devis</td>
+                <td>Questions publiques sur GitHub</td>
+              </tr>
+              <tr>
+                <th scope="row">Prix</th>
+                <td class="voie-cloud">Voir relaytour.com</td>
+                <td>Sur devis</td>
+                <td>Gratuit</td>
+              </tr>
+              <tr>
+                <td></td>
+                <td class="voie-cloud"><a class="bouton bouton-primaire" href="https://relaytour.com">Découvrir Relaytour Cloud</a></td>
+                <td><a class="bouton bouton-verre" href="https://relaytour.com/#accompagnement">Demander un devis</a></td>
+                <td><a class="bouton bouton-verre" href="#demarrer">Installer Relaytour</a></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="note">
+          Une organisation qui quitte Relaytour Cloud reçoit sur demande l'export de son contenu et une sauvegarde complète de sa base. Elle peut ainsi reprendre son installation sur son propre serveur.
+          La page <a href="hebergement.html">Hébergement</a> présente l'hébergeur officiel et les critères qu'il respecte.
+        </p>
       </section>
 
       <section aria-labelledby="t-perennite">
@@ -273,10 +356,13 @@
         </div>
       </section>
 
-      <section aria-labelledby="t-etapes">
+      <section id="demarrer" aria-labelledby="t-etapes">
         <div class="entete">
           <span class="etiquette">Démarrer</span>
-          <h2 id="t-etapes">Mettre Relaytour en service</h2>
+          <h2 id="t-etapes">Mettre Relaytour en service sur votre serveur</h2>
+          <p class="texte">
+            Le déploiement de référence et ses étapes sont décrits dans le <a href="https://github.com/relaytour/relaytour/tree/main/infra">dossier infra</a> du dépôt.
+          </p>
         </div>
         <ol class="etapes">
           <li class="etape">
@@ -305,6 +391,7 @@
       <footer>
         Relaytour est un logiciel libre distribué sous licence GNU AGPL-3.0. Le code, la documentation et les règles de contribution sont sur
         <a href="https://github.com/relaytour/relaytour">GitHub</a>.
+        Design Horizon, la société de l'auteur, met le domaine relaytour.org à la disposition du projet.
       </footer>
     </main>
     <script src="bascule.js"></script>
