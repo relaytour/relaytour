@@ -4,7 +4,10 @@
 // jours depuis le premier jour de la période. Les deux dates sont des jours
 // calendaires, lus dans leur texte : aucun fuseau horaire ne peut les décaler.
 
+import { t } from '@lingui/core/macro'
+
 import { dateCourte } from './erreurs'
+import { comparerTextes } from './langue'
 
 /** Une phase déclarée par l'activité. La dernière ne porte pas de borne. */
 export interface Phase {
@@ -111,13 +114,15 @@ export function libelleBorne(
 ): string {
   const borne = joursRelatifs(phase.jusquA)
   if (borne !== null) {
-    return `jusqu’au ${dateCourte(jourRelatif(debut, borne))} · ${phase.jusquA}`
+    const dateDeFin = dateCourte(jourRelatif(debut, borne))
+    const borneRelative = phase.jusquA ?? ''
+    return t`jusqu’au ${dateDeFin} · ${borneRelative}`
   }
   const rang = phases.findIndex(p => p.cle === phase.cle)
   const precedente = rang > 0 ? joursRelatifs(phases[rang - 1]?.jusquA) : null
-  return precedente === null
-    ? 'toute la période'
-    : `à partir du ${dateCourte(jourRelatif(debut, precedente + 1))}`
+  if (precedente === null) return t`toute la période`
+  const dateDeDebut = dateCourte(jourRelatif(debut, precedente + 1))
+  return t`à partir du ${dateDeDebut}`
 }
 
 export interface FicheLiee {
@@ -196,7 +201,7 @@ export function grouperParPerimetre<T extends { perimetre: PerimetreRange }>(
     (a, b) =>
       rang(a.perimetre.groupe) - rang(b.perimetre.groupe) ||
       (a.perimetre.ordre ?? 0) - (b.perimetre.ordre ?? 0) ||
-      a.perimetre.nom.localeCompare(b.perimetre.nom, 'fr')
+      comparerTextes(a.perimetre.nom, b.perimetre.nom)
   )
 }
 

@@ -1,12 +1,13 @@
 import { DownOutlined, ShareAltOutlined, UpOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Skeleton } from 'antd'
 import { useId, useState } from 'react'
 
 import { useActivite } from '../lib/activite'
 import {
-  ETAPES_ACCORD,
   libelleDeclinaisons,
+  libelleEtapeAccord,
   type ResumeDeclinaisons,
 } from '../lib/declinaisons'
 import { jourDeLInstant } from '../lib/erreurs'
@@ -40,6 +41,7 @@ export default function DeclinaisonsTache({
   editionId?: string
   estAdmin: boolean
 }) {
+  const { t } = useLingui()
   const { lien } = useActivite()
   const executer = useActionTache()
   const [ouvert, setOuvert] = useState(false)
@@ -51,6 +53,8 @@ export default function DeclinaisonsTache({
   const [imposer, imposition] = useMutation(IMPOSER_DECLINAISON, {
     refetchQueries: VUES_TACHES,
   })
+  const succesImposition = (nomPerimetre: string) =>
+    t`La tâche est ajoutée au périmètre ${nomPerimetre}.`
   const { titre, details } = libelleDeclinaisons(resume)
   const declinaisons = data?.tache?.declinaisons
   // Les déclinaisons portent le plus souvent un même titre, différent de celui de
@@ -81,8 +85,10 @@ export default function DeclinaisonsTache({
             <li>
               {error ? (
                 <span className="rt-note">
-                  Les déclinaisons n’ont pas pu être chargées. Rechargez la page
-                  dans un instant.
+                  <Trans>
+                    Les déclinaisons n’ont pas pu être chargées. Rechargez la
+                    page dans un instant.
+                  </Trans>
                 </span>
               ) : (
                 <Skeleton active title={false} paragraph={{ rows: 2 }} />
@@ -92,7 +98,9 @@ export default function DeclinaisonsTache({
             <>
               {titreCommun !== undefined && (
                 <li className="rt-note">
-                  Tâche reçue par ces périmètres : « {titreCommun} »
+                  <Trans>
+                    Tâche reçue par ces périmètres : « {titreCommun} »
+                  </Trans>
                 </li>
               )}
               {declinaisons.map(d => (
@@ -108,16 +116,22 @@ export default function DeclinaisonsTache({
                     />
                     {d.accord === 'EN_ATTENTE' ? (
                       <PastilleEtat variante="alerte" sansPoint>
-                        En attente d’accord
+                        <Trans>En attente d’accord</Trans>
                       </PastilleEtat>
                     ) : d.accord === 'REFUSE' ? (
-                      <PastilleEtat variante="abandonnee">Refusée</PastilleEtat>
+                      <PastilleEtat variante="abandonnee">
+                        {t({
+                          message: 'Refusée',
+                          comment:
+                            'État d’une déclinaison de tâche refusée par un périmètre',
+                        })}
+                      </PastilleEtat>
                     ) : (
                       <>
                         <PastilleStatut statut={d.statut} />
                         {d.enRetard && (
                           <PastilleEtat variante="retard">
-                            En retard
+                            <Trans>En retard</Trans>
                           </PastilleEtat>
                         )}
                       </>
@@ -132,20 +146,23 @@ export default function DeclinaisonsTache({
                         onClick={() =>
                           void executer(
                             () => imposer({ variables: { id: d.id } }),
-                            `La tâche est ajoutée au périmètre ${d.perimetre.nom}.`
+                            succesImposition(d.perimetre.nom)
                           )
                         }
                       >
-                        Ajouter sans accord
+                        <Trans>Ajouter sans accord</Trans>
                       </Button>
                     )}
                   </div>
                   {d.historiqueAccord.length > 0 && (
                     <p className="rt-note" style={{ margin: '4px 0 0' }}>
                       {d.historiqueAccord
-                        .map(
-                          e =>
-                            `${ETAPES_ACCORD[e.etape]} par ${e.par.nom} le ${jourDeLInstant(e.le)}`
+                        .map(e =>
+                          libelleEtapeAccord(
+                            e.etape,
+                            e.par.nom,
+                            jourDeLInstant(e.le)
+                          )
                         )
                         .join(' · ')}
                     </p>

@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Card, Form, Popconfirm, Select, Space, Tag } from 'antd'
 
 import { Section } from '../../composants/Panneau'
@@ -11,8 +12,7 @@ import { messageErreur } from '../../lib/erreurs'
 import { PERIMETRES } from '../../lib/requetes'
 import { useSession } from '../../lib/session'
 import { comparer } from '../../lib/tableau'
-
-const TOUTES_LES_FICHES = 'Toutes les fiches'
+import { comparerTextes, langueActive } from '../../lib/langue'
 
 const DROITS = graphql(`
   query DroitsRedaction($annuaire: Boolean!) {
@@ -74,9 +74,11 @@ interface Admin {
 const TOUTES = 'toutes'
 
 const parNom = (a: { nom: string }, b: { nom: string }) =>
-  a.nom.localeCompare(b.nom, 'fr')
+  comparerTextes(a.nom, b.nom)
 
 export default function Redaction() {
+  const { t } = useLingui()
+  const toutesLesFiches = t`Toutes les fiches`
   // Un droit sur toutes les fiches vaut pour toute l'organisation : seul un admin de
   // l'organisation l'accorde (ADR 0010).
   const gereOrganisation = useSession().moi.estAdmin === true
@@ -122,7 +124,10 @@ export default function Redaction() {
     .sort(
       (a, b) =>
         parNom(a.personne, b.personne) ||
-        (a.perimetre?.nom ?? '').localeCompare(b.perimetre?.nom ?? '', 'fr')
+        (a.perimetre?.nom ?? '').localeCompare(
+          b.perimetre?.nom ?? '',
+          langueActive()
+        )
     )
 
   const ajouter = async (v: { personneId: string; perimetre: string }) => {
@@ -133,7 +138,7 @@ export default function Redaction() {
           perimetreId: v.perimetre === TOUTES ? null : v.perimetre,
         },
       })
-      message.success('Droit accordé.')
+      message.success(t`Droit accordé.`)
       form.resetFields()
     } catch (e) {
       message.error(messageErreur(e))
@@ -142,8 +147,10 @@ export default function Redaction() {
 
   return (
     <>
-      <Titre sousTitre="Les admins rédigent toutes les fiches. Les autres personnes ont besoin d’un droit de rédaction.">
-        Rédaction des fiches
+      <Titre
+        sousTitre={t`Les admins rédigent toutes les fiches. Les autres personnes ont besoin d’un droit de rédaction.`}
+      >
+        <Trans>Rédaction des fiches</Trans>
       </Titre>
 
       <Card style={{ marginBottom: 16 }}>
@@ -155,12 +162,12 @@ export default function Redaction() {
         >
           <Form.Item
             name="personneId"
-            rules={[{ required: true, message: 'Choisissez une personne.' }]}
+            rules={[{ required: true, message: t`Choisissez une personne.` }]}
           >
             <Select
               showSearch
               optionFilterProp="label"
-              placeholder="Personne"
+              placeholder={t`Personne`}
               style={{ minWidth: 200 }}
               options={autres.map(p => ({
                 value: p.id,
@@ -170,17 +177,17 @@ export default function Redaction() {
           </Form.Item>
           <Form.Item
             name="perimetre"
-            rules={[{ required: true, message: 'Choisissez un périmètre.' }]}
+            rules={[{ required: true, message: t`Choisissez un périmètre.` }]}
           >
             <Select
-              placeholder="Fiches concernées"
+              placeholder={t`Fiches concernées`}
               style={{ minWidth: 220 }}
               options={[
                 ...(gereOrganisation
                   ? [
                       {
                         value: TOUTES,
-                        label: 'Toutes les fiches, communes comprises',
+                        label: t`Toutes les fiches, communes comprises`,
                       },
                     ]
                   : []),
@@ -193,14 +200,14 @@ export default function Redaction() {
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit" loading={accord.loading}>
-              Accorder
+              <Trans>Accorder</Trans>
             </Button>
           </Form.Item>
         </Form>
       </Card>
 
       <div className="rt-colonne" style={{ gap: 26 }}>
-        <Section titre="Droits accordés" compte={droits.length}>
+        <Section titre={t`Droits accordés`} compte={droits.length}>
           <Tableau<Droit>
             id="redaction"
             rowKey="id"
@@ -210,16 +217,16 @@ export default function Redaction() {
             colonnes={[
               {
                 key: 'personne',
-                title: 'Personne',
+                title: t`Personne`,
                 render: (_, d) => d.personne.nom,
                 tri: d => d.personne.nom,
                 recherche: d => d.personne.nom,
               },
               {
                 key: 'fiches',
-                title: 'Fiches',
-                render: (_, d) => d.perimetre?.nom ?? TOUTES_LES_FICHES,
-                tri: d => d.perimetre?.nom ?? TOUTES_LES_FICHES,
+                title: t`Fiches`,
+                render: (_, d) => d.perimetre?.nom ?? toutesLesFiches,
+                tri: d => d.perimetre?.nom ?? toutesLesFiches,
                 filtre: {
                   // La valeur est l'identifiant du périmètre : deux périmètres
                   // de même nom restent deux options.
@@ -227,7 +234,7 @@ export default function Redaction() {
                     ...new Map(
                       droits.map(d => [
                         d.perimetre?.id ?? TOUTES,
-                        d.perimetre?.nom ?? TOUTES_LES_FICHES,
+                        d.perimetre?.nom ?? toutesLesFiches,
                       ])
                     ),
                   ]
@@ -243,20 +250,20 @@ export default function Redaction() {
                 render: (_, d) => (
                   <Space>
                     <Popconfirm
-                      title="Retirer ce droit ?"
-                      okText="Retirer"
-                      cancelText="Annuler"
+                      title={t`Retirer ce droit ?`}
+                      okText={t`Retirer`}
+                      cancelText={t`Annuler`}
                       onConfirm={async () => {
                         try {
                           await retirer({ variables: { id: d.id } })
-                          message.success('Droit retiré.')
+                          message.success(t`Droit retiré.`)
                         } catch (e) {
                           message.error(messageErreur(e))
                         }
                       }}
                     >
                       <Button size="small" danger>
-                        Retirer
+                        <Trans>Retirer</Trans>
                       </Button>
                     </Popconfirm>
                   </Space>
@@ -266,10 +273,19 @@ export default function Redaction() {
           />
         </Section>
 
-        <Section titre="Admins" compte={admins.length}>
+        <Section titre={t`Admins`} compte={admins.length}>
           <p className="rt-texte-secondaire">
-            Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie
-            depuis l’écran {gereOrganisation ? 'Admins' : 'Personnes'}.
+            {gereOrganisation ? (
+              <Trans>
+                Le rôle d’admin donne déjà la rédaction des fiches. Il se
+                modifie depuis l’écran Admins.
+              </Trans>
+            ) : (
+              <Trans>
+                Le rôle d’admin donne déjà la rédaction des fiches. Il se
+                modifie depuis l’écran Personnes.
+              </Trans>
+            )}
           </p>
           <Tableau<Admin>
             id="redaction-admins"
@@ -280,34 +296,38 @@ export default function Redaction() {
             colonnes={[
               {
                 key: 'personne',
-                title: 'Personne',
+                title: t`Personne`,
                 dataIndex: 'nom',
                 tri: p => p.nom,
               },
               {
-                title: 'Rôle',
+                title: t`Rôle`,
                 key: 'role',
                 filtre: {
                   options: [
-                    { text: 'Admin de l’organisation', value: 'organisation' },
-                    { text: 'Admin de l’activité', value: 'activite' },
+                    { text: t`Admin de l’organisation`, value: 'organisation' },
+                    { text: t`Admin de l’activité`, value: 'activite' },
                   ],
                   valeurs: p => (p.organisation ? 'organisation' : 'activite'),
                 },
                 render: (_, p) =>
                   p.organisation ? (
-                    <Tag color="blue">Admin de l’organisation</Tag>
+                    <Tag color="blue">
+                      <Trans>Admin de l’organisation</Trans>
+                    </Tag>
                   ) : (
-                    <Tag color="geekblue">Admin de l’activité</Tag>
+                    <Tag color="geekblue">
+                      <Trans>Admin de l’activité</Trans>
+                    </Tag>
                   ),
               },
               {
-                title: 'Fiches',
+                title: t`Fiches`,
                 key: 'fiches',
                 render: (_, p) =>
                   p.organisation
-                    ? 'Toutes les fiches de l’organisation'
-                    : 'Toutes les fiches de l’activité',
+                    ? t`Toutes les fiches de l’organisation`
+                    : t`Toutes les fiches de l’activité`,
               },
               {
                 title: '',
@@ -315,7 +335,7 @@ export default function Redaction() {
                 redimensionnable: false,
                 render: () => (
                   <Button size="small" disabled>
-                    Rédaction déjà accordée
+                    <Trans>Rédaction déjà accordée</Trans>
                   </Button>
                 ),
               },

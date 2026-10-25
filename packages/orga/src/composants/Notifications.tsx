@@ -1,5 +1,7 @@
 import { BellOutlined, ExportOutlined } from '@ant-design/icons'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Badge, Button, Drawer, Empty, Skeleton, Typography } from 'antd'
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -26,6 +28,7 @@ import ListeNotifications from './ListeNotifications'
  * signale les nouvelles des autres organisations.
  */
 export default function Notifications() {
+  const { t } = useLingui()
   const navigate = useNavigate()
   const apollo = useApolloClient()
   const { activite, activites, gere } = useActivite()
@@ -95,8 +98,8 @@ export default function Notifications() {
           icon={<BellOutlined />}
           aria-label={
             nonLues > 0
-              ? `Notifications, ${nonLues} non lue${nonLues > 1 ? 's' : ''}`
-              : 'Notifications'
+              ? t`Notifications, ${plural(nonLues, { one: '# non lue', other: '# non lues' })}`
+              : t`Notifications`
           }
           onClick={() => setOuvert(true)}
         />
@@ -104,7 +107,7 @@ export default function Notifications() {
       <Drawer
         open={ouvert}
         onClose={() => setOuvert(false)}
-        title="Notifications"
+        title={t`Notifications`}
         size={420}
         extra={
           nonLues > 0 && (
@@ -112,7 +115,7 @@ export default function Notifications() {
               size="small"
               onClick={() => void marquer({ variables: { ids: null } })}
             >
-              Tout marquer comme lu
+              <Trans>Tout marquer comme lu</Trans>
             </Button>
           )
         }
@@ -130,9 +133,10 @@ export default function Notifications() {
                   }}
                 >
                   <span>
-                    Vous avez {nonLuesAdmin} notification
-                    {nonLuesAdmin > 1 ? 's' : ''} d’admin non lue
-                    {nonLuesAdmin > 1 ? 's' : ''}.
+                    {t`Vous avez ${plural(nonLuesAdmin, {
+                      one: '# notification d’admin non lue',
+                      other: '# notifications d’admin non lues',
+                    })}.`}
                   </span>
                 </button>
               </li>
@@ -141,7 +145,7 @@ export default function Notifications() {
           {liste.loading && !liste.data ? (
             <Skeleton active />
           ) : (liste.data?.notifications ?? []).length === 0 ? (
-            <Empty description="Aucune notification." />
+            <Empty description={t`Aucune notification.`} />
           ) : (
             <ListeNotifications
               notifications={liste.data!.notifications}
@@ -168,7 +172,9 @@ export default function Notifications() {
               style={{ padding: 16, gap: 8 }}
             >
               <Typography.Text strong id="autres-organisations">
-                Vous avez d’autres notifications dans vos organisations
+                <Trans>
+                  Vous avez d’autres notifications dans vos organisations
+                </Trans>
               </Typography.Text>
               <ul className="rt-liste-liens">
                 {autresOrganisations.map(o => (
@@ -196,7 +202,7 @@ export default function Notifications() {
                         />
                         {!estInstallee() && (
                           <ExportOutlined
-                            aria-label="S’ouvre dans un nouvel onglet"
+                            aria-label={t`S’ouvre dans un nouvel onglet`}
                             style={{ fontSize: 12, opacity: 0.6 }}
                           />
                         )}

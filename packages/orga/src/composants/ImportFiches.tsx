@@ -1,5 +1,6 @@
 import { FolderOutlined, ImportOutlined } from '@ant-design/icons'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Form, Modal, Result, Space, Tag } from 'antd'
 import { useState } from 'react'
 
@@ -33,6 +34,7 @@ const AUCUNE: PositionChoisie = { emplacement: null, chemin: [] }
 
 /** Le rapport d'un import, simulé ou réel, rubrique par rubrique. */
 function RapportImport({ rapport, fait }: { rapport: Rapport; fait: boolean }) {
+  const { t } = useLingui()
   const liste = (titre: string, elements: string[], couleur?: string) =>
     elements.length > 0 && (
       <div style={{ marginBottom: 12 }}>
@@ -71,33 +73,33 @@ function RapportImport({ rapport, fait }: { rapport: Rapport; fait: boolean }) {
   return (
     <>
       {liste(
-        fait ? 'Fiches créées' : 'Fiches à créer',
+        fait ? t`Fiches créées` : t`Fiches à créer`,
         rapport.creees,
         'green'
       )}
       {liste(
-        fait ? 'Nouvelles versions' : 'Fiches à mettre à jour',
+        fait ? t`Nouvelles versions` : t`Fiches à mettre à jour`,
         rapport.nouvellesVersions,
         'blue'
       )}
-      {liste('Fiches inchangées', rapport.inchangees)}
+      {liste(t`Fiches inchangées`, rapport.inchangees)}
       {lignes(
-        'Ces fiches restent telles quelles dans Relaytour.',
+        t`Ces fiches restent telles quelles dans Relaytour.`,
         rapport.conflits.map(c => ({ cle: c.fiche, raison: c.raison })),
         'warning'
       )}
       {lignes(
-        'Ces fichiers contiennent une coordonnée personnelle : ils ne s’importent pas.',
+        t`Ces fichiers contiennent une coordonnée personnelle : ils ne s’importent pas.`,
         rapport.refusees.map(f => ({ cle: f.fichier, raison: f.raison })),
         'warning'
       )}
       {lignes(
-        'Ces documents Word sont convertis en Markdown.',
+        t`Ces documents Word sont convertis en Markdown.`,
         rapport.converties.map(f => ({ cle: f.fichier, raison: f.raison })),
         'info'
       )}
       {lignes(
-        'Ces fichiers ne s’importent pas.',
+        t`Ces fichiers ne s’importent pas.`,
         rapport.nonImportes.map(f => ({ cle: f.fichier, raison: f.raison })),
         'info'
       )}
@@ -105,7 +107,7 @@ function RapportImport({ rapport, fait }: { rapport: Rapport; fait: boolean }) {
         <Alert
           type="warning"
           showIcon
-          message="Un dossier source compte trop d’éléments pour les lire tous. Rangez ses fiches dans plusieurs dossiers."
+          message={t`Un dossier source compte trop d’éléments pour les lire tous. Rangez ses fiches dans plusieurs dossiers.`}
         />
       )}
     </>
@@ -120,6 +122,7 @@ function AssistantImport({
   ouvert: boolean
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { activite } = useActivite()
   const { message } = App.useApp()
   const client = useApolloClient()
@@ -140,7 +143,7 @@ function AssistantImport({
   })
 
   const lignes = [
-    { cle: COMMUNES, nom: 'Fiches communes' },
+    { cle: COMMUNES, nom: t`Fiches communes` },
     ...(perimetres.data?.perimetres ?? []).map(p => ({
       cle: p.id,
       nom: p.nom,
@@ -185,6 +188,7 @@ function AssistantImport({
               }
         )
       }
+      // eslint-disable-next-line lingui/no-unlocalized-strings -- Nom de dossier cherché dans l'espace de fichiers de l'association, pas un texte affiché.
       const communes = trouver('communes', 'fiches communes')
       proposees.set(
         COMMUNES,
@@ -239,7 +243,7 @@ function AssistantImport({
       const r = await importer({ variables: variables() })
       setRapport(r.data?.importerFichesEspace ?? null)
       setFait(true)
-      message.success('Les fiches sont importées.')
+      message.success(t`Les fiches sont importées.`)
     } catch (e) {
       message.error(messageErreur(e))
     } finally {
@@ -250,6 +254,7 @@ function AssistantImport({
   const aImporter =
     rapport !== null &&
     rapport.creees.length + rapport.nouvellesVersions.length > 0
+  const nomActivite = activite.nom
   const nbSources = [...sources.values()].filter(s => s !== null).length
 
   const pied =
@@ -260,28 +265,30 @@ function AssistantImport({
         loading={enCours}
         onClick={() => void proposer()}
       >
-        Suivant
+        <Trans>Suivant</Trans>
       </Button>
     ) : etape === 'sources' ? (
       <Space>
-        <Button onClick={() => setEtape('racine')}>Retour</Button>
+        <Button onClick={() => setEtape('racine')}>
+          <Trans>Retour</Trans>
+        </Button>
         <Button
           type="primary"
           disabled={nbSources === 0}
           loading={enCours}
           onClick={() => void simuler()}
         >
-          Simuler l’import
+          <Trans>Simuler l’import</Trans>
         </Button>
       </Space>
     ) : fait ? (
       <Button type="primary" onClick={fermer}>
-        Fermer
+        <Trans>Fermer</Trans>
       </Button>
     ) : (
       <Space>
         <Button onClick={() => setEtape('sources')}>
-          Revenir aux dossiers
+          <Trans>Revenir aux dossiers</Trans>
         </Button>
         <Button
           type="primary"
@@ -289,7 +296,7 @@ function AssistantImport({
           loading={enCours}
           onClick={() => void lancer()}
         >
-          Importer
+          <Trans>Importer</Trans>
         </Button>
       </Space>
     )
@@ -298,7 +305,7 @@ function AssistantImport({
     <Modal
       open={ouvert}
       onCancel={fermer}
-      title={`Importer des fiches dans « ${activite.nom} »`}
+      title={t`Importer des fiches dans « ${nomActivite} »`}
       width={720}
       footer={pied}
       destroyOnHidden
@@ -306,19 +313,22 @@ function AssistantImport({
       {etape === 'racine' && (
         <Form layout="vertical" component="div">
           <p className="rt-texte-secondaire">
-            Ouvrez le dossier qui range les fiches de l’activité. Relaytour y
-            cherche un sous-dossier par périmètre, à son nom, et un sous-dossier
-            « communes » pour les fiches communes.
+            <Trans>
+              Ouvrez le dossier qui range les fiches de l’activité. Relaytour y
+              cherche un sous-dossier par périmètre, à son nom, et un
+              sous-dossier « communes » pour les fiches communes.
+            </Trans>
           </p>
           <ParcoursEspace
             actif={ouvert}
             valeur={racine}
             onChange={setRacine}
-            aide={chemin =>
-              chemin.length === 0
-                ? 'La racine de la bibliothèque sera le dossier des fiches.'
-                : `Le dossier « ${chemin[chemin.length - 1]} » sera le dossier des fiches.`
-            }
+            aide={chemin => {
+              const dernierDossier = chemin[chemin.length - 1]
+              return dernierDossier === undefined
+                ? t`La racine de la bibliothèque sera le dossier des fiches.`
+                : t`Le dossier « ${dernierDossier} » sera le dossier des fiches.`
+            }}
           />
         </Form>
       )}
@@ -326,8 +336,10 @@ function AssistantImport({
       {etape === 'sources' && (
         <>
           <p className="rt-texte-secondaire">
-            Chaque périmètre reçoit les fiches Markdown, texte et Word de son
-            dossier. Les sous-dossiers ne sont pas lus.
+            <Trans>
+              Chaque périmètre reçoit les fiches Markdown, texte et Word de son
+              dossier. Les sous-dossiers ne sont pas lus.
+            </Trans>
           </p>
           <ul className="rt-explorateur">
             {lignes.map(l => {
@@ -342,8 +354,8 @@ function AssistantImport({
                     {l.nom}
                     <span className="rt-explorateur-detail">
                       {source === null
-                        ? 'Aucun dossier'
-                        : source.chemin.join(' / ') || 'Racine'}
+                        ? t`Aucun dossier`
+                        : source.chemin.join(' / ') || t`Racine`}
                     </span>
                   </span>
                   <Button
@@ -360,7 +372,7 @@ function AssistantImport({
                       setChangement(l.cle)
                     }}
                   >
-                    Changer
+                    <Trans>Changer</Trans>
                   </Button>
                   {source !== null && (
                     <Button
@@ -370,7 +382,7 @@ function AssistantImport({
                         setSources(new Map(sources).set(l.cle, null))
                       }
                     >
-                      Aucun
+                      <Trans>Aucun</Trans>
                     </Button>
                   )}
                 </li>
@@ -385,16 +397,16 @@ function AssistantImport({
           {fait ? (
             <Result
               status="success"
-              title="Import terminé"
-              subTitle="L’export suivant écrit ces fiches en Markdown dans le dossier d’export."
+              title={t`Import terminé`}
+              subTitle={t`L’export suivant écrit ces fiches en Markdown dans le dossier d’export.`}
             />
           ) : (
             <Alert
               type="info"
               showIcon
               style={{ marginBottom: 16 }}
-              message="Simulation : rien n’a encore changé."
-              description="La conversion d’un document Word perd une partie de sa mise en forme. Les fiches s’écrivent ensuite en Markdown, et l’export vers le fournisseur cloud aussi."
+              message={t`Simulation : rien n’a encore changé.`}
+              description={t`La conversion d’un document Word perd une partie de sa mise en forme. Les fiches s’écrivent ensuite en Markdown, et l’export vers le fournisseur cloud aussi.`}
             />
           )}
           <RapportImport rapport={rapport} fait={fait} />
@@ -404,8 +416,8 @@ function AssistantImport({
       <Modal
         open={changement !== null}
         onCancel={() => setChangement(null)}
-        title="Choisir le dossier source"
-        okText="Prendre ce dossier"
+        title={t`Choisir le dossier source`}
+        okText={t`Prendre ce dossier`}
         okButtonProps={{ disabled: choixSource.emplacement === null }}
         onOk={() => {
           if (changement === null || choixSource.emplacement === null) return
@@ -425,9 +437,10 @@ function AssistantImport({
             actif={changement !== null}
             valeur={choixSource}
             onChange={setChoixSource}
-            aide={chemin =>
-              `Les fiches de « ${chemin[chemin.length - 1] ?? 'la racine'} » seront importées.`
-            }
+            aide={chemin => {
+              const dossierSource = chemin[chemin.length - 1] ?? t`la racine`
+              return t`Les fiches de « ${dossierSource} » seront importées.`
+            }}
           />
         </Form>
       </Modal>
@@ -437,20 +450,23 @@ function AssistantImport({
 
 /** Le panneau de l'écran d'admin qui ouvre l'assistant d'import. */
 export default function ImportFiches({ actif }: { actif: boolean }) {
+  const { t } = useLingui()
   const [ouvert, setOuvert] = useState(false)
   return (
-    <Panneau titre="Importer des fiches" icone={<ImportOutlined />}>
+    <Panneau titre={t`Importer des fiches`} icone={<ImportOutlined />}>
       <p className="rt-texte-secondaire">
-        Reprenez les fiches que l’association range déjà chez son fournisseur
-        cloud : des fichiers Markdown, texte ou Word. L’import se simule
-        d’abord. Une fiche modifiée dans Relaytour n’est jamais remplacée.
+        <Trans>
+          Reprenez les fiches que l’association range déjà chez son fournisseur
+          cloud : des fichiers Markdown, texte ou Word. L’import se simule
+          d’abord. Une fiche modifiée dans Relaytour n’est jamais remplacée.
+        </Trans>
       </p>
       <Button
         icon={<ImportOutlined />}
         disabled={!actif}
         onClick={() => setOuvert(true)}
       >
-        Importer des fiches
+        <Trans>Importer des fiches</Trans>
       </Button>
       <AssistantImport ouvert={ouvert} onFermer={() => setOuvert(false)} />
     </Panneau>

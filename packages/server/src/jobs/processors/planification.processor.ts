@@ -8,6 +8,8 @@ import { purgerBenevoles } from '../../lib/benevoles.ts'
 import { revoquerEspaces } from '../../lib/espace-benevole.ts'
 import { verifierAcces } from '../../espace-fichiers/acces.ts'
 import { exporterFiches } from '../../espace-fichiers/export.ts'
+import { avecLangue } from '../../lib/langue.ts'
+import { langueDeLOrganisation } from '../../lib/langue-destinataire.ts'
 import { renouvelerAcces } from '../../espace-fichiers/index.ts'
 import { purgerDemandes } from '../../lib/demandes.ts'
 import { aujourdhui } from '../../lib/droits.ts'
@@ -49,7 +51,9 @@ export async function planificationProcessor(
   // Sans organisation (lancement manuel), toutes les organisations actives.
   if (job.name === 'export-fiches') {
     for (const organisation of await organisationsVisees(job.data)) {
-      await exporterFiches(organisation.id, { verifier: false })
+      await avecLangue(await langueDeLOrganisation(organisation.id), () =>
+        exporterFiches(organisation.id, { verifier: false })
+      )
     }
     return
   }
@@ -57,7 +61,9 @@ export async function planificationProcessor(
   // à la demande d'un admin ou après un changement.
   if (job.name === 'acces-fournisseur') {
     for (const organisation of await organisationsVisees(job.data)) {
-      await verifierAcces(organisation.id)
+      await avecLangue(await langueDeLOrganisation(organisation.id), () =>
+        verifierAcces(organisation.id)
+      )
     }
     return
   }
@@ -77,10 +83,17 @@ export async function planificationProcessor(
     })
     for (const { organisationId } of connexions) {
       try {
-        await renouvelerAcces(organisationId)
-        await exporterFiches(organisationId, { verifier: true })
-        // Une connexion qui lit l'annuaire vérifie aussi les accès (ADR 0044).
-        await verifierAcces(organisationId)
+        // Les raisons et les erreurs écrites en base suivent la langue de
+        // l'organisation (ADR 0047).
+        await avecLangue(
+          await langueDeLOrganisation(organisationId),
+          async () => {
+            await renouvelerAcces(organisationId)
+            await exporterFiches(organisationId, { verifier: true })
+            // Une connexion qui lit l'annuaire vérifie aussi les accès (ADR 0044).
+            await verifierAcces(organisationId)
+          }
+        )
       } catch (erreur) {
         journal.warn(
           {

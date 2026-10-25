@@ -1,0 +1,21 @@
+# The Valley Games running club: a permanent section, one season per year.
+slug: club-de-course
+nom: Valley Running Club
+nature: SAISON
+groupes:
+  - cle: groupe
+    libelle: Training group
+    libellePluriel: Training groups
+  - cle: pole
+    libelle: Department
+    libellePluriel: Departments
+ordre: 2
+# The club's own identity (ADR 0009). Each absent field takes the value of the
+# organization. The theme only changes the colors and the background.
+contactRecrutement: running.club.games@messagerie.example
+pageEquipe: https://exemple.org/club-de-course
+logo:
+  png: medias/logo.png
+theme:
+  couleurs:
+    primaire: '#2E5B3B'

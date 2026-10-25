@@ -1,7 +1,7 @@
 import { useQuery } from '@apollo/client/react'
+import { useLingui } from '@lingui/react/macro'
 import { ConfigProvider, Spin } from 'antd'
-import frFR from 'antd/locale/fr_FR'
-import { useEffect, useMemo, type ReactNode } from 'react'
+import { Fragment, useEffect, useMemo, type ReactNode } from 'react'
 
 import {
   ContexteOrganisation,
@@ -11,6 +11,14 @@ import {
   type Organisation,
 } from '../lib/organisation'
 import { declarerApplication } from '../lib/application'
+import {
+  activerLangue,
+  estUneLangue,
+  langueDeLaSession,
+  langueDuVisiteur,
+  localeAntd,
+} from '../lib/langue'
+import { LANGUE_DE_MOI } from '../lib/requetes'
 import { organisationChoisie } from '../lib/selection'
 import { appliquerTheme, construireTheme } from '../lib/theme'
 
@@ -20,9 +28,15 @@ import { appliquerTheme, construireTheme } from '../lib/theme'
  * couvre l'écran ; si elle ne répond pas, le thème de Relaytour reste en place.
  */
 export function OrganisationProvider({ children }: { children: ReactNode }) {
+  // La locale d'antd suit la langue active : `useLingui` rend à nouveau le
+  // composant quand elle change.
+  const { i18n, t } = useLingui()
+  const locale = localeAntd(estUneLangue(i18n.locale) ? i18n.locale : undefined)
   const { data, loading } = useQuery(ORGANISATION, {
     variables: { slug: organisationChoisie() },
   })
+  // Sans session, `moi` vaut null : le visiteur reçoit la langue de son navigateur.
+  const session = useQuery(LANGUE_DE_MOI)
 
   const organisation = useMemo<Organisation>(() => {
     if (!data) return ORGANISATION_PAR_DEFAUT
@@ -37,6 +51,7 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
       iconeApplicationUrl: o.iconeApplicationUrl ?? null,
       manifestUrl: o.manifestUrl,
       pageEquipe: o.pageEquipe ?? null,
+      langue: o.langue ?? null,
       codeSource: o.codeSource,
       modesDEmploi: o.modesDEmploi,
       support: o.support ?? null,
@@ -44,9 +59,18 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
     }
   }, [data])
 
+  const moi = session.data?.moi
+  const langue = moi
+    ? langueDeLaSession(moi.langue, organisation.langue)
+    : langueDuVisiteur(organisation.langue)
+  useEffect(() => {
+    void activerLangue(langue)
+  }, [langue])
+
   useEffect(() => {
     appliquerTheme(organisation.theme)
-    document.title = `${organisation.nomCourt} · Espace organisateur`
+    const nomCourt = organisation.nomCourt
+    document.title = t`${nomCourt} · Espace organisateur`
     if (organisation.faviconUrl !== null) {
       for (const lien of document.querySelectorAll<HTMLLinkElement>(
         'link[rel="icon"]'
@@ -55,7 +79,7 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
       }
     }
     declarerApplication(organisation)
-  }, [organisation])
+  }, [organisation, t])
 
   const theme = useMemo(
     () => construireTheme(organisation.theme),
@@ -63,9 +87,16 @@ export function OrganisationProvider({ children }: { children: ReactNode }) {
   )
 
   return (
-    <ConfigProvider locale={frFR} theme={theme}>
+    <ConfigProvider locale={locale} theme={theme}>
       <ContexteOrganisation.Provider value={organisation}>
-        {loading && !data ? <Spin fullscreen /> : children}
+        {(loading && !data) || (session.loading && !session.data) ? (
+          <Spin fullscreen />
+        ) : (
+          // Un changement de langue remonte les écrans : un texte traduit hors
+          // d'un composant qui lit la langue (`t` d'un module, libellé calculé
+          // une fois) se relit ainsi dans la nouvelle langue.
+          <Fragment key={i18n.locale}>{children}</Fragment>
+        )}
       </ContexteOrganisation.Provider>
     </ConfigProvider>
   )

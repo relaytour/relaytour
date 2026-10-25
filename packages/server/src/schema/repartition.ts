@@ -34,6 +34,7 @@ import {
   sequenceVisible,
   signal,
 } from './programme.ts'
+import { i18n } from '../lib/langue.ts'
 
 // Répartition des bénévoles (ADR 0041). La vue « Répartition » de l'écran
 // « Programme » montre les manques par tranche de 30 minutes, et les bénévoles à
@@ -449,7 +450,9 @@ builder.mutationFields(t => ({
     },
     resolve: async (_root, args, ctx) => {
       if (!args.candidatureId === !args.benevoleId) {
-        throw erreurSaisie('Choisissez une candidature ou une fiche bénévole.')
+        throw erreurSaisie(
+          i18n._('Choisissez une candidature ou une fiche bénévole.')
+        )
       }
       const sequence = await sequenceEcrite(ctx, String(args.sequenceId))
       const edition = await ctx.exigerEdition(sequence.editionId)
@@ -516,14 +519,16 @@ builder.mutationFields(t => ({
             select: { id: true },
           })
           if (deja !== null) {
-            throw erreurSaisie('Cette personne est déjà placée ici.')
+            throw erreurSaisie(i18n._('Cette personne est déjà placée ici.'))
           }
           const nombre = await tx.placeSequence.count({
             where: { sequenceId: sequence.id },
           })
           if (nombre >= PLACES_MAX) {
             throw erreurSaisie(
-              `Une séquence compte ${PLACES_MAX} places au plus.`
+              i18n._('Une séquence compte {max} places au plus.', {
+                max: PLACES_MAX,
+              })
             )
           }
           await tx.placeSequence.create({
@@ -578,7 +583,7 @@ builder.mutationFields(t => ({
         })
         if (count === 0) {
           throw erreurSaisie(
-            'Cette place a changé entre-temps. Rechargez le programme.'
+            i18n._('Cette place a changé entre-temps. Rechargez le programme.')
           )
         }
         await incrementer(tx, sequence.id)
@@ -615,7 +620,7 @@ builder.mutationFields(t => ({
       const admin = await ctx.estAdminDe(benevole.activiteId)
       if (!admin && benevole.creeParId !== ctx.personne!.id) throw accesRefuse()
       if (edition.statut === 'ARCHIVEE') {
-        throw erreurSaisie('Cette période est archivée.')
+        throw erreurSaisie(i18n._('Cette période est archivée.'))
       }
       const fuseau = ctx.organisation!.fuseauHoraire
       const sequences = await prisma.sequence.findMany({

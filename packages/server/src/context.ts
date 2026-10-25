@@ -7,6 +7,8 @@ import {
 
 import { dansLEquipe } from './lib/appartenances.ts'
 import { accesRefuse, erreurSaisie } from './lib/erreurs.ts'
+import { langueDe, preciserLangue } from './lib/langue.ts'
+import { configurationOrganisation } from './lib/organisation.ts'
 
 // Contexte de chaque requête GraphQL.
 //
@@ -171,6 +173,7 @@ export async function buildContext(
             id: true,
             name: true,
             email: true,
+            langue: true,
             // Seules les appartenances actives comptent : une personne archivée dans
             // une organisation ne peut plus la choisir, et garde les autres (ADR 0031).
             appartenances: {
@@ -204,6 +207,18 @@ export async function buildContext(
         estAdmin: organisation?.role === 'ADMIN',
       }
     : null
+
+  // La langue de la requête (ADR 0047) : le choix de la personne, sinon la langue
+  // de son organisation active, sinon le français. Sans personne, ou pour un compte
+  // sans choix ni organisation active, la langue du navigateur, posée avant le
+  // contexte, reste en place.
+  if (user !== null && (user.langue !== null || organisation !== null)) {
+    const langueOrganisation =
+      user.langue === null && organisation !== null
+        ? (await configurationOrganisation(organisation.id)).langue
+        : undefined
+    preciserLangue(langueDe(user.langue, langueOrganisation))
+  }
 
   const cache = new Map<string, Promise<Set<string>>>()
   const perimetresAffectes = (editionId: string) => {

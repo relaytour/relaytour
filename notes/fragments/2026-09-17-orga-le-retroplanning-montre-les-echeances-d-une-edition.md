@@ -13,6 +13,13 @@ fr:
     à la plus lointaine. Vous filtrez par périmètre, par type ou par statut,
     ou gardez seulement vos périmètres et vos tâches. Les tâches en retard
     ressortent en rouge.
+en:
+  titre: >-
+    The timeline shows the due dates of an edition
+  texte: >-
+    The “Timeline” page groups tasks by month, from the nearest to the furthest.
+    You filter by area, type, or status, or keep only your areas and your tasks.
+    Overdue tasks stand out in red.
 ---
 
 Page `pages/Retroplanning.tsx`, route `/retroplanning`, entrée de menu après

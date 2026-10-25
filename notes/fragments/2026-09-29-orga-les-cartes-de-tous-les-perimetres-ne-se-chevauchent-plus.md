@@ -11,6 +11,12 @@ fr:
   texte: >-
     Chaque carte de la page « Tous les périmètres » reste dans sa colonne. Les
     titres des groupes et les cartes de la rangée suivante restent visibles.
+en:
+  titre: >-
+    The cards on “All areas” no longer overlap
+  texte: >-
+    Each card on the “All areas” page stays in its column. Group titles and the
+    cards of the next row remain visible.
 ---
 
 La carte prenait `height: 100%` en `content-box` : sa marge interne et sa bande

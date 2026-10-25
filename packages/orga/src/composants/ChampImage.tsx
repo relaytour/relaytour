@@ -1,4 +1,5 @@
 import { DeleteOutlined, UploadOutlined } from '@ant-design/icons'
+import { useLingui } from '@lingui/react/macro'
 import { App, Button, Space } from 'antd'
 import { useRef } from 'react'
 
@@ -21,6 +22,7 @@ export default function ChampImage({
   format: FormatMedia
   libelle: string
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const [televerser, enCours] = useTeleverserImage()
   const selecteur = useRef<HTMLInputElement>(null)
@@ -60,7 +62,10 @@ export default function ChampImage({
           />
         ) : (
           <span className="rt-texte-secondaire" style={{ fontSize: 12 }}>
-            Aucune
+            {t({
+              message: 'Aucune',
+              comment: 'Aperçu d’une image : aucune image enregistrée',
+            })}
           </span>
         )}
       </span>
@@ -77,12 +82,12 @@ export default function ChampImage({
         loading={enCours}
         onClick={() => selecteur.current?.click()}
       >
-        {apercu ? 'Remplacer' : `Choisir un fichier ${format}`}
+        {apercu ? t`Remplacer` : t`Choisir un fichier ${format}`}
       </Button>
       {apercu && (
         <Button
           icon={<DeleteOutlined />}
-          aria-label={`Retirer : ${libelle}`}
+          aria-label={t`Retirer : ${libelle}`}
           onClick={() => onChange?.(null)}
         />
       )}

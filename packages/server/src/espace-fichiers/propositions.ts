@@ -6,6 +6,7 @@ import {
 } from '@relaytour/database'
 
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { notifierLesAdmins } from '../lib/notifications-admin.ts'
 
 import { ouvrirEspace } from './index.ts'
@@ -35,7 +36,9 @@ class Refus extends Error {}
 const message = (erreur: unknown) =>
   (erreur instanceof Refus
     ? erreur.message
-    : `Le fournisseur a refusé l’opération : ${(erreur as Error).message}`
+    : i18n._('Le fournisseur a refusé l’opération : {detail}', {
+        detail: (erreur as Error).message,
+      })
   ).slice(0, 255)
 
 export interface DossierAGerer {
@@ -315,7 +318,9 @@ export async function appliquerProposition(
     const { espace } = await ouvrirEspace(organisationId)
     const annuaire = espace.annuaire
     if (annuaire === undefined || espace.fournisseur !== d.fournisseur) {
-      throw new Refus('La connexion ne permet pas la gestion des accès.')
+      throw new Refus(
+        i18n._('La connexion ne permet pas la gestion des accès.')
+      )
     }
     const compte = await prisma.compteFournisseur.findUnique({
       where: {
@@ -335,7 +340,9 @@ export async function appliquerProposition(
       const droits = await annuaire.droits(position)
       if (droits === null) {
         throw new Refus(
-          'Relaytour ne lit pas les droits de ce dossier : rien n’a changé.'
+          i18n._(
+            'Relaytour ne lit pas les droits de ce dossier : rien n’a changé.'
+          )
         )
       }
       return droits
@@ -344,7 +351,9 @@ export async function appliquerProposition(
       const membres = await annuaire.membresDuGroupe(groupe)
       if (membres === null) {
         throw new Refus(
-          'Relaytour ne lit pas les membres de ce groupe : rien n’a changé.'
+          i18n._(
+            'Relaytour ne lit pas les membres de ce groupe : rien n’a changé.'
+          )
         )
       }
       return membres
@@ -366,7 +375,7 @@ export async function appliquerProposition(
     if (p.action === 'AJOUTER') {
       if (d.accesFournisseur === 'PARTAGE') {
         if (annuaire.partager === undefined) {
-          throw new Refus('La connexion ne permet pas le partage.')
+          throw new Refus(i18n._('La connexion ne permet pas le partage.'))
         }
         // Un droit posé entre-temps, à la main, reste celui de l'association.
         if ((await relireDroits()).some(x => vise(x.beneficiaire, cible))) {
@@ -383,10 +392,12 @@ export async function appliquerProposition(
           annuaire.ajouterAuGroupe === undefined ||
           d.groupeFournisseurId === null
         ) {
-          throw new Refus('Aucun groupe n’est choisi pour ce dossier.')
+          throw new Refus(i18n._('Aucun groupe n’est choisi pour ce dossier.'))
         }
         if (cible.compte === null) {
-          throw new Refus('La personne n’a pas de compte dans l’annuaire.')
+          throw new Refus(
+            i18n._('La personne n’a pas de compte dans l’annuaire.')
+          )
         }
         const groupe = d.groupeFournisseurId
         if (
@@ -401,7 +412,7 @@ export async function appliquerProposition(
           ...cible,
         })
       } else {
-        throw new Refus('Le dossier ne propose plus d’accès.')
+        throw new Refus(i18n._('Le dossier ne propose plus d’accès.'))
       }
     } else {
       const creee = await prisma.permissionCreee.findUnique({
@@ -413,7 +424,9 @@ export async function appliquerProposition(
         if (creee.identifiant.startsWith(PREFIXE_GROUPE)) {
           const groupe = creee.identifiant.slice(PREFIXE_GROUPE.length)
           if (annuaire.retirerDuGroupe === undefined) {
-            throw new Refus('La connexion ne permet pas le retrait du groupe.')
+            throw new Refus(
+              i18n._('La connexion ne permet pas le retrait du groupe.')
+            )
           }
           const present =
             creee.compte !== null &&
@@ -426,7 +439,9 @@ export async function appliquerProposition(
           }
         } else {
           if (annuaire.retirerPartage === undefined) {
-            throw new Refus('La connexion ne permet pas le retrait du partage.')
+            throw new Refus(
+              i18n._('La connexion ne permet pas le retrait du partage.')
+            )
           }
           const droits = await relireDroits()
           if (partageIntact(creee, droits)) {
@@ -437,7 +452,9 @@ export async function appliquerProposition(
             await prisma.permissionCreee.deleteMany({ where: { id: creee.id } })
             return await terminer(
               'ECHEC',
-              'Ce droit a changé chez le fournisseur depuis sa création : Relaytour ne le retire pas.'
+              i18n._(
+                'Ce droit a changé chez le fournisseur depuis sa création : Relaytour ne le retire pas.'
+              )
             )
           }
         }

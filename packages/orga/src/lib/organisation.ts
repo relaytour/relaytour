@@ -66,6 +66,7 @@ export const ORGANISATION = graphql(`
       iconeApplicationUrl
       manifestUrl
       pageEquipe
+      langue
       theme {
         ...ThemeChamps
       }
@@ -89,6 +90,8 @@ export interface Organisation {
   /** Manifest de l'application installée, null avant la réponse de l'API. */
   manifestUrl: string | null
   pageEquipe: string | null
+  /** Langue par défaut des membres, null quand l'organisation n'en déclare pas (ADR 0047). */
+  langue: string | null
   /** Adresse du code source de l'installation (AGPL, article 13). */
   codeSource: string
   /** Liste des modes d'emploi de l'espace organisateur, un par rôle. */
@@ -109,6 +112,7 @@ export const ORGANISATION_PAR_DEFAUT: Organisation = {
   iconeApplicationUrl: null,
   manifestUrl: null,
   pageEquipe: null,
+  langue: null,
   codeSource: 'https://github.com/relaytour/relaytour',
   modesDEmploi: 'https://relaytour.org/modes-d-emploi/',
   support: null,

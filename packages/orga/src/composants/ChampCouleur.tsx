@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react/macro'
 import { ColorPicker } from 'antd'
 
 /**
@@ -13,13 +14,14 @@ export default function ChampCouleur({
   onChange?: (valeur: string | null) => void
   heritee: string
 }) {
+  const { t } = useLingui()
   return (
     <ColorPicker
       value={value ?? heritee}
       allowClear
       showText={() => (
         <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-          {value ?? `${heritee} (héritée)`}
+          {value ?? t`${heritee} (héritée)`}
         </span>
       )}
       disabledAlpha

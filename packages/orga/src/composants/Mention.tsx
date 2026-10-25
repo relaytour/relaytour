@@ -1,4 +1,5 @@
 import { TeamOutlined } from '@ant-design/icons'
+import { Trans } from '@lingui/react/macro'
 import { Popover } from 'antd'
 import type { ReactNode } from 'react'
 
@@ -45,7 +46,7 @@ export default function Mention({
       content={
         groupe.perimetres.length === 0 ? (
           <span className="rt-texte-secondaire">
-            Ce groupe ne compte aucun périmètre.
+            <Trans>Ce groupe ne compte aucun périmètre.</Trans>
           </span>
         ) : (
           <span className="rt-mention-membres">

@@ -1,5 +1,6 @@
 import { MailOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, Col, Empty, Row, Skeleton, Tag } from 'antd'
 import { Link } from 'react-router'
 
@@ -56,10 +57,11 @@ type Lu = OrganigrammeQuery['organigramme']
 type Membre = Lu['admins'][number] & { contactPrincipal?: boolean }
 
 function Ecrire({ adresse, nom }: { adresse: string; nom: string }) {
+  const { t } = useLingui()
   return (
     <a
       href={`mailto:${adresse}`}
-      aria-label={`Écrire à ${nom}`}
+      aria-label={t`Écrire à ${nom}`}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -94,8 +96,16 @@ function Personne({ membre }: { membre: Membre }) {
           }}
         >
           <span style={{ fontWeight: 600 }}>{membre.nom}</span>
-          {membre.moi && <span className="rt-compte">(vous)</span>}
-          {membre.contactPrincipal && <Tag color="blue">Contact principal</Tag>}
+          {membre.moi && (
+            <span className="rt-compte">
+              <Trans>(vous)</Trans>
+            </span>
+          )}
+          {membre.contactPrincipal && (
+            <Tag color="blue">
+              <Trans>Contact principal</Trans>
+            </Tag>
+          )}
         </span>
         {membre.adresse && <Ecrire adresse={membre.adresse} nom={membre.nom} />}
       </span>
@@ -113,6 +123,7 @@ const listeSimple = {
 } as const
 
 export default function Organigramme() {
+  const { t } = useLingui()
   const { activite, lien, libelleGroupe } = useActivite()
   // Relire le serveur à chaque ouverture : un accord retiré ou un réglage changé
   // depuis la dernière visite ne doit pas réafficher une adresse du cache.
@@ -147,8 +158,8 @@ export default function Organigramme() {
           {referents.length === 0 ? (
             <p className="rt-texte-secondaire" style={{ margin: 0 }}>
               {o.complet
-                ? 'Aucune personne n’est affectée à ce périmètre pour la période.'
-                : 'Aucun contact principal n’est désigné pour ce périmètre.'}
+                ? t`Aucune personne n’est affectée à ce périmètre pour la période.`
+                : t`Aucun contact principal n’est désigné pour ce périmètre.`}
             </p>
           ) : (
             <ul style={listeSimple}>
@@ -162,6 +173,8 @@ export default function Organigramme() {
     )
   }
 
+  const nomActivite = activite.nom
+  const nomEdition = o.edition?.nom ?? ''
   const groupes = activite.groupes
     .map(g => ({
       groupe: g,
@@ -174,18 +187,18 @@ export default function Organigramme() {
       <Titre
         sousTitre={
           o.edition === null
-            ? `L’équipe de ${activite.nom}.`
-            : `L’équipe de ${o.edition.nom}, périmètre par périmètre.`
+            ? t`L’équipe de ${nomActivite}.`
+            : t`L’équipe de ${nomEdition}, périmètre par périmètre.`
         }
       >
-        Organigramme
+        {t`Organigramme`}
       </Titre>
       {!o.complet && (
         <Alert
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="Vous voyez les admins de l’activité et le contact principal de chaque périmètre. Les autres membres de l’équipe s’affichent quand un admin vous affecte à un périmètre."
+          title={t`Vous voyez les admins de l’activité et le contact principal de chaque périmètre. Les autres membres de l’équipe s’affichent quand un admin vous affecte à un périmètre.`}
         />
       )}
       {o.edition === null && (
@@ -193,11 +206,11 @@ export default function Organigramme() {
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="Aucune période n’est en préparation. Les référentes et référents s’affichent quand une période s’ouvre."
+          title={t`Aucune période n’est en préparation. Les référentes et référents s’affichent quand une période s’ouvre.`}
         />
       )}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <Section titre="Contacter l’activité">
+        <Section titre={t`Contacter l’activité`}>
           <Row gutter={[12, 12]}>
             {o.contactActivite && (
               <Col xs={24} md={12} xl={8}>
@@ -206,11 +219,13 @@ export default function Organigramme() {
                   style={{ height: '100%', boxSizing: 'border-box' }}
                 >
                   <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
-                    Contact de l’activité
+                    <Trans>Contact de l’activité</Trans>
                   </h3>
                   <Ecrire adresse={o.contactActivite} nom={activite.nom} />
                   <p className="rt-note" style={{ margin: 0 }}>
-                    Cette adresse partagée reçoit les questions sur l’équipe.
+                    <Trans>
+                      Cette adresse partagée reçoit les questions sur l’équipe.
+                    </Trans>
                   </p>
                 </div>
               </Col>
@@ -221,11 +236,13 @@ export default function Organigramme() {
                 style={{ height: '100%', boxSizing: 'border-box' }}
               >
                 <h3 style={{ margin: 0, fontSize: 15, fontWeight: 600 }}>
-                  Admins de l’activité
+                  <Trans>Admins de l’activité</Trans>
                 </h3>
                 {o.admins.length === 0 ? (
                   <p className="rt-texte-secondaire" style={{ margin: 0 }}>
-                    L’activité est gérée par les admins de l’organisation.
+                    <Trans>
+                      L’activité est gérée par les admins de l’organisation.
+                    </Trans>
                   </p>
                 ) : (
                   <ul style={listeSimple}>
@@ -238,9 +255,11 @@ export default function Organigramme() {
             </Col>
           </Row>
         </Section>
-        <Section titre="Les périmètres" compte={o.perimetres.length}>
+        <Section titre={t`Les périmètres`} compte={o.perimetres.length}>
           {groupes.length === 0 ? (
-            <Empty description="Cette activité n’a encore aucun périmètre." />
+            <Empty
+              description={t`Cette activité n’a encore aucun périmètre.`}
+            />
           ) : (
             groupes.map(({ groupe, lignes }) => (
               <section key={groupe.cle} style={{ marginBottom: 12 }}>
@@ -254,9 +273,11 @@ export default function Organigramme() {
         </Section>
         {o.complet && o.adresses !== 'AUCUNE' && (
           <p className="rt-note" style={{ margin: 0 }}>
-            Une adresse s’affiche avec l’accord de chaque personne. Vous réglez
-            le vôtre dans les <Link to={lien('/preferences')}>préférences</Link>
-            .
+            <Trans>
+              Une adresse s’affiche avec l’accord de chaque personne. Vous
+              réglez le vôtre dans les{' '}
+              <Link to={lien('/preferences')}>préférences</Link>.
+            </Trans>
           </p>
         )}
       </div>

@@ -16,6 +16,16 @@ fr:
     quand elle ne leur sert pas, puis l’affichent de nouveau. Dans le texte d’une
     fiche, une mention @périmètre ou @groupe:clé s’affiche comme une étiquette ;
     celle d’un groupe liste ses périmètres.
+en:
+  titre: >-
+    A sheet from another area can also concern yours
+  texte: >-
+    A sheet can concern areas other than its own. Its page lists the areas and
+    groups it concerns. In a concerned area, the “Related sheets” panel shows it
+    as read-only, with its original area. Coordinators of that area hide it when
+    it is not useful to them, and show it again later. In the text of a sheet,
+    an @area or @group:key mention appears as a label, and a group’s label lists
+    its areas.
 ---
 
 ADR 0039. `composants/FichesConnexes.tsx` (panneau du périmètre, masquage),

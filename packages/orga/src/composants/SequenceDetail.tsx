@@ -1,5 +1,6 @@
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Drawer, Tag } from 'antd'
 
 import { graphql } from '../gql'
@@ -64,6 +65,7 @@ export default function SequenceDetail({
 }) {
   const { activite } = useActivite()
   const { message, modal } = App.useApp()
+  const { t } = useLingui()
   const { data: benevoles } = useQuery(BENEVOLES, {
     variables: { activiteId: activite.id },
     skip: sequence === null || !lisible,
@@ -82,16 +84,17 @@ export default function SequenceDetail({
 
   const confirmerSuppression = () => {
     if (!sequence) return
+    const titreSequence = sequence.titre
     void modal.confirm({
-      title: 'Supprimer cette séquence ?',
-      content: `« ${sequence.titre} » quitte le programme, avec ses personnes placées.`,
-      okText: 'Supprimer',
+      title: t`Supprimer cette séquence ?`,
+      content: t`« ${titreSequence} » quitte le programme, avec ses personnes placées.`,
+      okText: t`Supprimer`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await supprimer({ variables: { id: sequence.id } })
-          message.success('Séquence supprimée.')
+          message.success(t`Séquence supprimée.`)
           onFermer()
         } catch (e) {
           message.error(messageErreur(e))
@@ -100,11 +103,24 @@ export default function SequenceDetail({
     })
   }
 
+  let quand = ''
+  if (sequence) {
+    const jour = libelleJours(sequence.jour)
+    const debut = sequence.heureDebut
+    const fin = sequence.heureFin
+    if (sequence.jourFin !== sequence.jour) {
+      const jourFin = libelleJours(sequence.jourFin)
+      quand = t`${jour}, ${debut} → ${jourFin} ${fin}`
+    } else {
+      quand = t`${jour}, ${debut} → ${fin}`
+    }
+  }
+
   return (
     <Drawer
       open={sequence !== null}
       onClose={onFermer}
-      title={sequence?.titre ?? 'Séquence'}
+      title={sequence?.titre ?? t`Séquence`}
       size={460}
       extra={
         sequence?.peutModifier && (
@@ -113,12 +129,12 @@ export default function SequenceDetail({
               icon={<EditOutlined />}
               onClick={() => onModifier(saisieDe(sequence))}
             >
-              Modifier
+              <Trans>Modifier</Trans>
             </Button>
             <Button
               danger
               icon={<DeleteOutlined />}
-              aria-label="Supprimer la séquence"
+              aria-label={t`Supprimer la séquence`}
               onClick={confirmerSuppression}
             />
           </span>
@@ -127,12 +143,7 @@ export default function SequenceDetail({
     >
       {sequence && (
         <div className="rt-reunion">
-          <p className="rt-reunion-quand">
-            {libelleJours(sequence.jour)}, {sequence.heureDebut} →{' '}
-            {sequence.jourFin !== sequence.jour &&
-              `${libelleJours(sequence.jourFin)} `}
-            {sequence.heureFin}
-          </p>
+          <p className="rt-reunion-quand">{quand}</p>
           <p style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
             {sequence.lieu && <Tag>{sequence.lieu.nom}</Tag>}
             {sequence.perimetre ? (
@@ -141,7 +152,9 @@ export default function SequenceDetail({
                 couleur={sequence.perimetre.couleur}
               />
             ) : (
-              <span className="rt-note">Toute l’activité</span>
+              <span className="rt-note">
+                <Trans>Toute l’activité</Trans>
+              </span>
             )}
           </p>
           {sequence.description && (
@@ -150,7 +163,9 @@ export default function SequenceDetail({
           {(sequence.besoinBenevoles !== null ||
             sequence.consignesBenevoles) && (
             <section>
-              <h3 className="rt-reunion-intertitre">Bénévoles</h3>
+              <h3 className="rt-reunion-intertitre">
+                <Trans>Bénévoles</Trans>
+              </h3>
               {sequence.besoinBenevoles !== null && (
                 <p>
                   <Jauge
@@ -167,10 +182,12 @@ export default function SequenceDetail({
             </section>
           )}
           <section>
-            <h3 className="rt-reunion-intertitre">Personnes placées</h3>
+            <h3 className="rt-reunion-intertitre">
+              <Trans>Personnes placées</Trans>
+            </h3>
             {sequence.places.length === 0 ? (
               <p className="rt-texte-secondaire">
-                Personne n’est encore placé dans cette séquence.
+                <Trans>Personne n’est encore placé dans cette séquence.</Trans>
               </p>
             ) : (
               <ul className="rt-reunion-convocations">
@@ -181,9 +198,9 @@ export default function SequenceDetail({
                   return (
                     <li key={p.id}>
                       <span>
-                        {p.estMoi ? 'Vous' : p.nom}
+                        {p.estMoi ? t`Vous` : p.nom}
                         {p.benevoleId && (
-                          <span className="rt-note"> · bénévole</span>
+                          <span className="rt-note"> {t`· bénévole`}</span>
                         )}
                         {fiche?.coordonneesVisibles &&
                           (fiche.telephone || fiche.courriel) && (
@@ -204,7 +221,17 @@ export default function SequenceDetail({
                           )}
                       </span>
                       <span className="rt-note">
-                        {p.role === 'RESPONSABLE' ? 'Responsable' : 'Renfort'}
+                        {p.role === 'RESPONSABLE'
+                          ? t({
+                              message: 'Responsable',
+                              comment:
+                                'Rôle d’une personne placée dans une séquence',
+                            })
+                          : t({
+                              message: 'Renfort',
+                              comment:
+                                'Rôle d’une personne placée dans une séquence',
+                            })}
                         {p.etat !== 'CONFIRMEE' && (
                           <>
                             {' '}

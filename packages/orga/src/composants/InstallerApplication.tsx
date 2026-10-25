@@ -1,3 +1,6 @@
+import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Modal, Segmented, Typography } from 'antd'
 import { useState, useSyncExternalStore } from 'react'
 
@@ -11,30 +14,24 @@ import {
 } from '../lib/installation'
 import { useOrganisation } from '../lib/organisation'
 
-const ETAPES: Record<Appareil, string[]> = {
+const ETAPES: Record<Appareil, MessageDescriptor[]> = {
   iphone: [
-    'Ouvrez cette page dans Safari.',
-    'Touchez « Partager ». Sur iOS 26, ce bouton se trouve dans le menu « ··· », en bas à droite.',
-    'Touchez « En voir plus » si la liste est repliée, puis « Sur l’écran d’accueil ».',
-    'Touchez « Ajouter ».',
+    msg`Ouvrez cette page dans Safari.`,
+    msg`Touchez « Partager ». Sur iOS 26, ce bouton se trouve dans le menu « ··· », en bas à droite.`,
+    msg`Touchez « En voir plus » si la liste est repliée, puis « Sur l’écran d’accueil ».`,
+    msg`Touchez « Ajouter ».`,
   ],
   android: [
-    'Ouvrez cette page dans Chrome.',
-    'Touchez le menu « ⋮ », en haut à droite.',
-    'Touchez « Ajouter à l’écran d’accueil », puis « Installer ».',
+    msg`Ouvrez cette page dans Chrome.`,
+    msg`Touchez le menu « ⋮ », en haut à droite.`,
+    msg`Touchez « Ajouter à l’écran d’accueil », puis « Installer ».`,
   ],
   ordinateur: [
-    'Ouvrez cette page dans Chrome ou dans Edge.',
-    'Cliquez sur l’icône d’installation, à droite de la barre d’adresse.',
-    'Cliquez sur « Installer ».',
+    msg`Ouvrez cette page dans Chrome ou dans Edge.`,
+    msg`Cliquez sur l’icône d’installation, à droite de la barre d’adresse.`,
+    msg`Cliquez sur « Installer ».`,
   ],
 }
-
-const CHOIX: { value: Appareil; label: string }[] = [
-  { value: 'iphone', label: 'iPhone' },
-  { value: 'android', label: 'Android' },
-  { value: 'ordinateur', label: 'Ordinateur' },
-]
 
 /**
  * Fenêtre « Installer l'application » du menu du compte (ADR 0023). Elle montre
@@ -48,7 +45,13 @@ export default function InstallerApplication({
   ouvert: boolean
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { nomCourt, modesDEmploi } = useOrganisation()
+  const choix: { value: Appareil; label: string }[] = [
+    { value: 'iphone', label: 'iPhone' },
+    { value: 'android', label: 'Android' },
+    { value: 'ordinateur', label: t`Ordinateur` },
+  ]
   const { message } = App.useApp()
   const [choisi, setChoisi] = useState<Appareil>(() => appareil())
   const invite = useSyncExternalStore(
@@ -59,14 +62,16 @@ export default function InstallerApplication({
   return (
     <Modal
       open={ouvert}
-      title="Installer l’application"
+      title={t`Installer l’application`}
       footer={null}
       onCancel={onFermer}
       destroyOnHidden
     >
       <Typography.Paragraph>
-        L’application installée s’ouvre depuis l’écran d’accueil, sous le nom «{' '}
-        {nomCourt} », sans barre d’adresse.
+        <Trans>
+          L’application installée s’ouvre depuis l’écran d’accueil, sous le nom
+          « {nomCourt} », sans barre d’adresse.
+        </Trans>
       </Typography.Paragraph>
       {invite && (
         <Button
@@ -76,24 +81,24 @@ export default function InstallerApplication({
           onClick={() =>
             void installer().then(acceptee => {
               if (!acceptee) return
-              message.success('L’application est installée.')
+              message.success(t`L’application est installée.`)
               onFermer()
             })
           }
         >
-          Installer
+          <Trans>Installer</Trans>
         </Button>
       )}
       <Segmented
         block
-        options={CHOIX}
+        options={choix}
         value={choisi}
         onChange={setChoisi}
         style={{ marginBottom: 12 }}
       />
       <ol className="rt-etapes-installation">
         {ETAPES[choisi].map(etape => (
-          <li key={etape}>{etape}</li>
+          <li key={etape.id}>{t(etape)}</li>
         ))}
       </ol>
       {choisi === 'iphone' && (
@@ -101,8 +106,8 @@ export default function InstallerApplication({
           type="info"
           showIcon
           style={{ marginBottom: 12 }}
-          title="À la première ouverture, saisissez le code reçu par mail."
-          description="Le lien du mail ouvre votre navigateur, pas l’application installée."
+          title={t`À la première ouverture, saisissez le code reçu par mail.`}
+          description={t`Le lien du mail ouvre votre navigateur, pas l’application installée.`}
         />
       )}
       <Typography.Paragraph type="secondary" style={{ marginBottom: 0 }}>
@@ -111,7 +116,7 @@ export default function InstallerApplication({
           target="_blank"
           rel="noopener noreferrer"
         >
-          Lire le guide d’installation
+          <Trans>Lire le guide d’installation</Trans>
         </a>
       </Typography.Paragraph>
     </Modal>

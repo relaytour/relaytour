@@ -27,6 +27,7 @@ import {
   UsergroupAddOutlined,
 } from '@ant-design/icons'
 import { useApolloClient, useQuery } from '@apollo/client/react'
+import { useLingui } from '@lingui/react/macro'
 import { Alert, Badge, Button, Drawer, Grid, Menu } from 'antd'
 import { useCallback, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
@@ -56,6 +57,7 @@ import { Pictogramme, SignatureRelaytour } from './Marque'
 import MenuCompte from './MenuCompte'
 import Notifications from './Notifications'
 import Recherche from './Recherche'
+import { comparerTextes } from '../lib/langue'
 
 const MENU_PERIMETRES = graphql(`
   query MenuPerimetres {
@@ -101,6 +103,7 @@ export default function Coquille() {
 }
 
 function Mise({ session }: { session: Session }) {
+  const { t } = useLingui()
   const { moi, active } = session
   const { activite, lien, periode, gere, decouverte } = useActivite()
   const { data: menu } = useQuery(MENU_PERIMETRES)
@@ -146,7 +149,7 @@ function Mise({ session }: { session: Session }) {
         .filter(a => a.perimetre.activite.id === activite.id)
         .map(a => [a.perimetre.id, a.perimetre])
     ).values(),
-  ].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'))
+  ].sort((a, b) => comparerTextes(a.nom, b.nom))
 
   // Les fiches bénévoles s'ouvrent aux admins de l'activité et aux personnes
   // affectées à un périmètre actif pour une période non archivée : la règle du
@@ -166,51 +169,55 @@ function Mise({ session }: { session: Session }) {
     ...(decouverte
       ? []
       : [
-          { key: lien('/'), icon: <HomeOutlined />, label: 'Mon espace' },
+          { key: lien('/'), icon: <HomeOutlined />, label: t`Mon espace` },
           {
             key: lien('/retroplanning'),
             icon: <ScheduleOutlined />,
-            label: 'Rétroplanning',
+            label: t`Rétroplanning`,
           },
           {
             key: lien('/agenda'),
             icon: <CarryOutOutlined />,
-            label: 'Agenda',
+            label: t`Agenda`,
           },
           {
             key: lien('/programme'),
             icon: <ProjectOutlined />,
-            label: 'Programme',
+            label: t`Programme`,
           },
           ...(tientLesBenevoles
             ? [
                 {
                   key: lien('/benevoles'),
                   icon: <UsergroupAddOutlined />,
-                  label: 'Bénévoles',
+                  label: t`Bénévoles`,
                 },
               ]
             : []),
-          { key: lien('/fiches'), icon: <BookOutlined />, label: 'Ressources' },
+          {
+            key: lien('/fiches'),
+            icon: <BookOutlined />,
+            label: t`Ressources`,
+          },
         ]),
     {
       key: lien('/preferences'),
       icon: <SettingOutlined />,
-      label: 'Préférences',
+      label: t`Préférences`,
     },
     {
       type: 'group' as const,
-      label: 'Périmètres',
+      label: t`Périmètres`,
       children: [
         {
           key: lien('/perimetres'),
           icon: <CompassOutlined />,
-          label: 'Tous les périmètres',
+          label: t`Tous les périmètres`,
         },
         {
           key: lien('/organigramme'),
           icon: <ClusterOutlined />,
-          label: 'Organigramme',
+          label: t`Organigramme`,
         },
         ...perimetres.map(p => ({
           key: lien(`/perimetres/${p.slug}`),
@@ -234,7 +241,7 @@ function Mise({ session }: { session: Session }) {
       ? [
           {
             type: 'group' as const,
-            label: 'Gérer l’activité',
+            label: t`Gérer l’activité`,
             // Du plus fréquent au plus rare : l'équipe et ses messages au fil de
             // la période, les réglages d'une période en dernier.
             children: [
@@ -244,7 +251,7 @@ function Mise({ session }: { session: Session }) {
                 icon: <NotificationOutlined />,
                 label: (
                   <span className="rt-entree-compteur">
-                    Notifications d’admin
+                    {t`Notifications d’admin`}
                     <Badge
                       count={nonLuesAdmin}
                       size="small"
@@ -256,27 +263,27 @@ function Mise({ session }: { session: Session }) {
               {
                 key: lien('/admin/equipe'),
                 icon: <SolutionOutlined />,
-                label: 'Équipe',
+                label: t`Équipe`,
               },
               {
                 key: lien('/admin/personnes'),
                 icon: <TeamOutlined />,
-                label: 'Personnes',
+                label: t`Personnes`,
               },
               {
                 key: lien('/admin/messages'),
                 icon: <MailOutlined />,
-                label: 'Messages',
+                label: t`Messages`,
               },
               {
                 key: lien('/admin/classement'),
                 icon: <TrophyOutlined />,
-                label: 'Classement',
+                label: t`Classement`,
               },
               {
                 key: lien('/admin/redaction'),
                 icon: <EditOutlined />,
-                label: 'Rédaction',
+                label: t`Rédaction`,
               },
               {
                 key: lien('/admin/editions'),
@@ -287,38 +294,38 @@ function Mise({ session }: { session: Session }) {
           },
           {
             type: 'group' as const,
-            label: 'Gérer l’organisation',
+            label: t`Gérer l’organisation`,
             children: [
               ...(moi.estAdmin
                 ? [
                     {
                       key: lien('/admin/organisation'),
                       icon: <BankOutlined />,
-                      label: 'Organisation',
+                      label: t`Organisation`,
                     },
                   ]
                 : []),
               {
                 key: lien('/admin/activites'),
                 icon: <ApartmentOutlined />,
-                label: 'Activités',
+                label: t`Activités`,
               },
               ...(moi.estAdmin
                 ? [
                     {
                       key: lien('/admin/annuaire'),
                       icon: <ContactsOutlined />,
-                      label: 'Annuaire',
+                      label: t`Annuaire`,
                     },
                     {
                       key: lien('/admin/admins'),
                       icon: <SafetyCertificateOutlined />,
-                      label: 'Admins',
+                      label: t`Admins`,
                     },
                     {
                       key: lien('/admin/espace-fichiers'),
                       icon: <CloudOutlined />,
-                      label: 'Fournisseur cloud',
+                      label: t`Fournisseur cloud`,
                     },
                   ]
                 : []),
@@ -375,16 +382,16 @@ function Mise({ session }: { session: Session }) {
               ? 'rt-verre-barre rt-barre-laterale rt-rail'
               : 'rt-verre-barre rt-barre-laterale'
           }
-          aria-label="Navigation principale"
+          aria-label={t`Navigation principale`}
         >
           <Button
             className="rt-bascule-volet"
             type="text"
             size="small"
             icon={rail ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            aria-label={rail ? 'Déplier le menu' : 'Replier le menu'}
+            aria-label={rail ? t`Déplier le menu` : t`Replier le menu`}
             aria-expanded={!rail}
-            title={rail ? 'Déplier le menu' : 'Replier le menu'}
+            title={rail ? t`Déplier le menu` : t`Replier le menu`}
             onClick={basculerVolet}
           />
           <ChoixActivite />
@@ -423,7 +430,7 @@ function Mise({ session }: { session: Session }) {
               <Button
                 type="text"
                 icon={<CloseOutlined />}
-                aria-label="Fermer la recherche"
+                aria-label={t`Fermer la recherche`}
                 onClick={() => {
                   setRechercheOuverte(false)
                   // Le bouton fermé disparaît : le focus revient au bouton qui
@@ -437,7 +444,7 @@ function Mise({ session }: { session: Session }) {
               {!ecrans.md && (
                 <Button
                   icon={<MenuOutlined />}
-                  aria-label="Ouvrir le menu"
+                  aria-label={t`Ouvrir le menu`}
                   onClick={() => setTiroirOuvert(true)}
                 />
               )}
@@ -452,7 +459,7 @@ function Mise({ session }: { session: Session }) {
                 <Button
                   type="text"
                   icon={<SearchOutlined />}
-                  aria-label="Rechercher"
+                  aria-label={t`Rechercher`}
                   ref={boutonRecherche}
                   onClick={() => setRechercheOuverte(true)}
                 />
@@ -470,7 +477,7 @@ function Mise({ session }: { session: Session }) {
             <Alert
               type="warning"
               showIcon
-              title="Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier."
+              title={t`Cette organisation est en lecture seule : vous pouvez consulter et exporter ses données, pas les modifier.`}
               style={{ marginBottom: 16 }}
             />
           )}
@@ -478,7 +485,7 @@ function Mise({ session }: { session: Session }) {
             <Alert
               type="info"
               showIcon
-              title="Cette activité est archivée : elle reste consultable."
+              title={t`Cette activité est archivée : elle reste consultable.`}
               style={{ marginBottom: 16 }}
             />
           )}

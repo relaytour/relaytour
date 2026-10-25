@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   Button,
@@ -85,6 +86,7 @@ interface Valeurs {
 }
 
 export default function Rejoindre() {
+  const { t } = useLingui()
   const { organisation, activite = '' } = useParams()
   const variables = { organisation: organisation ?? null, activite }
   const { data, loading } = useQuery(FORMULAIRE, { variables })
@@ -92,6 +94,9 @@ export default function Rejoindre() {
   const [erreur, setErreur] = useState<string | null>(null)
   const [envoyee, setEnvoyee] = useState(false)
   const formulaire = data?.formulaireRejoindre
+  const nomOrganisation = formulaire?.organisation ?? ''
+  const nomPeriode = formulaire?.periode ?? ''
+  const contact = formulaire?.contact ?? ''
 
   const deposer = async (v: Valeurs) => {
     setErreur(null)
@@ -135,14 +140,14 @@ export default function Rejoindre() {
         ) : !formulaire ? (
           <Result
             status="info"
-            title="Ce formulaire n’est pas ouvert."
-            subTitle="Contactez l’organisation pour rejoindre son équipe."
+            title={t`Ce formulaire n’est pas ouvert.`}
+            subTitle={t`Contactez l’organisation pour rejoindre son équipe.`}
           />
         ) : envoyee ? (
           <Result
             status="success"
-            title="Votre demande est enregistrée."
-            subTitle="L’équipe l’examine, puis vous écrit à l’adresse indiquée."
+            title={t`Votre demande est enregistrée.`}
+            subTitle={t`L’équipe l’examine, puis vous écrit à l’adresse indiquée.`}
           />
         ) : (
           <>
@@ -153,7 +158,7 @@ export default function Rejoindre() {
                 margin: '0 0 6px',
               }}
             >
-              Rejoindre l’équipe d’organisation
+              <Trans>Rejoindre l’équipe d’organisation</Trans>
             </h1>
             <Typography.Paragraph style={{ color: 'var(--rt-encre-70)' }}>
               {formulaire.activite}, {formulaire.periode}
@@ -167,24 +172,21 @@ export default function Rejoindre() {
               type="info"
               showIcon
               style={{ marginBottom: 16 }}
-              title="Ce formulaire sert à rejoindre l’équipe qui prépare l’activité."
+              title={t`Ce formulaire sert à rejoindre l’équipe qui prépare l’activité.`}
               description={
                 formulaire.appelBenevoles ? (
-                  <>
+                  <Trans>
                     Vous souhaitez aider seulement le jour J ?{' '}
                     <Link to={`/benevoles/${formulaire.appelBenevoles}`}>
                       Inscrivez-vous comme bénévole
                     </Link>
                     .
-                  </>
+                  </Trans>
                 ) : (
-                  <>
+                  <Trans>
                     Vous souhaitez aider seulement le jour J ? Écrivez à{' '}
-                    <a href={`mailto:${formulaire.contact}`}>
-                      {formulaire.contact}
-                    </a>
-                    .
-                  </>
+                    <a href={`mailto:${contact}`}>{contact}</a>.
+                  </Trans>
                 )
               }
             />
@@ -204,25 +206,25 @@ export default function Rejoindre() {
               requiredMark={false}
             >
               <Form.Item
-                label="Prénom et nom"
+                label={t`Prénom et nom`}
                 name="nom"
                 rules={[
                   {
                     required: true,
-                    message: 'Saisissez votre prénom et votre nom.',
+                    message: t`Saisissez votre prénom et votre nom.`,
                   },
                 ]}
               >
                 <Input maxLength={120} autoComplete="name" />
               </Form.Item>
               <Form.Item
-                label="Adresse mail"
+                label={t`Adresse mail`}
                 name="email"
                 rules={[
                   {
                     required: true,
                     type: 'email',
-                    message: 'Saisissez une adresse mail valide.',
+                    message: t`Saisissez une adresse mail valide.`,
                   },
                 ]}
               >
@@ -236,9 +238,9 @@ export default function Rejoindre() {
 
               {formulaire.groupes.length > 0 && (
                 <Form.Item
-                  label="Ce qui vous intéresse (plusieurs choix possibles)"
+                  label={t`Ce qui vous intéresse (plusieurs choix possibles)`}
                   name="perimetres"
-                  extra="Sans choix de votre part, l’équipe vous propose un rôle."
+                  extra={t`Sans choix de votre part, l’équipe vous propose un rôle.`}
                 >
                   <Checkbox.Group style={{ display: 'block' }}>
                     {formulaire.groupes.map(groupe => (
@@ -280,7 +282,7 @@ export default function Rejoindre() {
               )}
 
               {formulaire.paliers.length > 0 && (
-                <Form.Item label="Votre disponibilité" name="disponibilite">
+                <Form.Item label={t`Votre disponibilité`} name="disponibilite">
                   <Radio.Group
                     style={{ display: 'flex', flexDirection: 'column', gap: 8 }}
                     options={formulaire.paliers.map(palier => ({
@@ -292,7 +294,7 @@ export default function Rejoindre() {
               )}
 
               <Form.Item
-                label="Ce que vous aimez faire ou savez faire"
+                label={t`Ce que vous aimez faire ou savez faire`}
                 name="texte"
               >
                 <Input.TextArea rows={3} maxLength={600} showCount />
@@ -308,7 +310,7 @@ export default function Rejoindre() {
                   overflow: 'hidden',
                 }}
               >
-                <Form.Item label="Site web" name="siteWeb">
+                <Form.Item label={t`Site web`} name="siteWeb">
                   <Input tabIndex={-1} autoComplete="off" />
                 </Form.Item>
               </div>
@@ -317,15 +319,14 @@ export default function Rejoindre() {
                 className="rt-note"
                 style={{ marginBottom: 16 }}
               >
-                {formulaire.organisation} utilise ces informations pour
-                constituer l’équipe de {formulaire.periode} et vous contacter à
-                ce sujet. Les admins de l’activité les lisent. Elles sont
-                supprimées à l’archivage de la période. Vous pouvez demander
-                l’accès à vos informations ou leur suppression à{' '}
-                <a href={`mailto:${formulaire.contact}`}>
-                  {formulaire.contact}
-                </a>
-                .
+                <Trans>
+                  {nomOrganisation} utilise ces informations pour constituer
+                  l’équipe de {nomPeriode} et vous contacter à ce sujet. Les
+                  admins de l’activité les lisent. Elles sont supprimées à
+                  l’archivage de la période. Vous pouvez demander l’accès à vos
+                  informations ou leur suppression à{' '}
+                  <a href={`mailto:${contact}`}>{contact}</a>.
+                </Trans>
               </Typography.Paragraph>
 
               <Button
@@ -335,7 +336,7 @@ export default function Rejoindre() {
                 loading={envoi.loading}
                 block
               >
-                Envoyer ma demande
+                <Trans>Envoyer ma demande</Trans>
               </Button>
             </Form>
           </>

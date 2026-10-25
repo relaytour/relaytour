@@ -13,6 +13,13 @@ fr:
     édition. Les admins sont les seules personnes à le voir, et il ne donne
     aucun accès. L'affectation de la personne à ce périmètre satisfait le
     souhait.
+en:
+  titre: >-
+    Admins record the interests of invited people
+  texte: >-
+    An interest indicates that a person is interested in an area for an edition.
+    Admins are the only people who see it, and it grants no access. Appointing
+    the person to that area fulfills the interest.
 ---
 
 - Table `Souhait` (migration additive `souhaits`), en cascade sur la personne,

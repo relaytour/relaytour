@@ -4,6 +4,7 @@ import {
   LinkOutlined,
 } from '@ant-design/icons'
 import { useMutation } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Tooltip } from 'antd'
 import { useState } from 'react'
 import { Link } from 'react-router'
@@ -53,6 +54,7 @@ export default function FichesConnexes({
   fiches: FicheConnexeLue[]
   peutMasquer: boolean
 }) {
+  const { t } = useLingui()
   const { lien } = useActivite()
   const { message } = App.useApp()
   const [voirMasquees, setVoirMasquees] = useState(false)
@@ -63,6 +65,7 @@ export default function FichesConnexes({
     f.connexions.some(c => c.perimetre.id === perimetreId && c.masquee)
   const visibles = fiches.filter(f => !estMasquee(f))
   const masquees = fiches.filter(estMasquee)
+  const nombreMasquees = masquees.length
   if (fiches.length === 0) return null
 
   const basculer = async (fiche: FicheConnexeLue, cacher: boolean) => {
@@ -72,8 +75,8 @@ export default function FichesConnexes({
       else await afficher({ variables })
       message.success(
         cacher
-          ? 'La fiche quitte les fiches connexes de ce périmètre.'
-          : 'La fiche revient dans les fiches connexes de ce périmètre.'
+          ? t`La fiche quitte les fiches connexes de ce périmètre.`
+          : t`La fiche revient dans les fiches connexes de ce périmètre.`
       )
     } catch (e) {
       message.error(messageErreur(e))
@@ -96,19 +99,21 @@ export default function FichesConnexes({
             couleur={fiche.perimetre.couleur}
           />
         )}
-        <span className="rt-texte-secondaire">Lecture seule</span>
+        <span className="rt-texte-secondaire">
+          <Trans>Lecture seule</Trans>
+        </span>
         {peutMasquer && (
           <Tooltip
             title={
               cacher
-                ? 'Masquer cette fiche pour ce périmètre'
-                : 'Afficher de nouveau cette fiche'
+                ? t`Masquer cette fiche pour ce périmètre`
+                : t`Afficher de nouveau cette fiche`
             }
           >
             <Button
               size="small"
               type="text"
-              aria-label={cacher ? 'Masquer la fiche' : 'Afficher la fiche'}
+              aria-label={cacher ? t`Masquer la fiche` : t`Afficher la fiche`}
               icon={cacher ? <EyeInvisibleOutlined /> : <EyeOutlined />}
               loading={masquage.loading || affichage.loading}
               onClick={() => void basculer(fiche, cacher)}
@@ -121,18 +126,22 @@ export default function FichesConnexes({
 
   return (
     <Panneau
-      titre="Fiches connexes"
+      titre={t`Fiches connexes`}
       icone={<LinkOutlined aria-hidden />}
       extra={<span className="rt-compte">{visibles.length}</span>}
     >
       <p className="rt-texte-secondaire">
-        Ces fiches appartiennent à d’autres périmètres et concernent aussi
-        celui-ci.
+        <Trans>
+          Ces fiches appartiennent à d’autres périmètres et concernent aussi
+          celui-ci.
+        </Trans>
       </p>
       {visibles.length > 0 ? (
         <ul className="rt-liste-liens">{visibles.map(f => ligne(f, true))}</ul>
       ) : (
-        <p className="rt-texte-secondaire">Toutes les fiches sont masquées.</p>
+        <p className="rt-texte-secondaire">
+          <Trans>Toutes les fiches sont masquées.</Trans>
+        </p>
       )}
       {masquees.length > 0 && (
         <>
@@ -143,8 +152,8 @@ export default function FichesConnexes({
             onClick={() => setVoirMasquees(v => !v)}
           >
             {voirMasquees
-              ? 'Cacher les fiches masquées'
-              : `Voir les fiches masquées (${masquees.length})`}
+              ? t`Cacher les fiches masquées`
+              : t`Voir les fiches masquées (${nombreMasquees})`}
           </Button>
           {voirMasquees && (
             <ul className="rt-liste-liens">

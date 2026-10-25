@@ -1,3 +1,4 @@
+import { useLingui } from '@lingui/react/macro'
 import { Select } from 'antd'
 
 import { depuisValeurs, versValeurs } from '../lib/concerne'
@@ -34,32 +35,39 @@ export default function ChoixLecteurs({
   placeholder: string
   ariaLabel: string
 }) {
+  const { t } = useLingui()
   const options = [
     ...(toutPossible
       ? [
           {
-            label: 'Activité',
-            options: [{ value: TOUT, label: 'Toute l’activité' }],
+            label: t`Activité`,
+            options: [{ value: TOUT, label: t`Toute l’activité` }],
           },
         ]
       : []),
     {
-      label: 'Groupes',
-      options: [...mentions.groupes].map(([cle, g]) => ({
-        value: `g:${cle}`,
-        label: `${g.libelle} (tout le groupe)`,
-      })),
+      label: t`Groupes`,
+      options: [...mentions.groupes].map(([cle, g]) => {
+        const libelleGroupe = g.libelle
+        return {
+          value: `g:${cle}`,
+          label: t`${libelleGroupe} (tout le groupe)`,
+        }
+      }),
     },
     {
-      label: 'Périmètres',
+      label: t`Périmètres`,
       options: [
         ...[...mentions.perimetres.values()]
           .filter(p => p.id !== exclure)
           .map(p => ({ value: `p:${p.id}`, label: p.nom })),
-        ...archives.map(p => ({
-          value: `p:${p.id}`,
-          label: `${p.nom} (archivé)`,
-        })),
+        ...archives.map(p => {
+          const nomPerimetre = p.nom
+          return {
+            value: `p:${p.id}`,
+            label: t`${nomPerimetre} (archivé)`,
+          }
+        }),
       ],
     },
   ]

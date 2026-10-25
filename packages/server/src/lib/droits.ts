@@ -3,6 +3,7 @@ import { prisma, type StatutEdition } from '@relaytour/database'
 import type { AppContext, PersonneConnectee } from '../context.ts'
 
 import { accesRefuse, erreurSaisie } from './erreurs.ts'
+import { i18n } from './langue.ts'
 
 // Droits sur un périmètre.
 //
@@ -199,7 +200,7 @@ export async function exigerEcriture(
     const edition = await editionEtPerimetre(ctx, perimetreId, editionId)
     if (edition?.statut === 'ARCHIVEE') {
       throw erreurSaisie(
-        'Cette édition est archivée : ses tâches sont en lecture seule.'
+        i18n._('Cette édition est archivée : ses tâches sont en lecture seule.')
       )
     }
     throw accesRefuse()

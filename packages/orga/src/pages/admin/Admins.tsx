@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Popconfirm, Select, Space, Tag } from 'antd'
 import { useState } from 'react'
 
@@ -88,6 +89,7 @@ function ListeAdmins({
   nommer: (personne: Ligne) => Promise<boolean>
   retirer: (admin: Ligne) => Promise<boolean>
 }) {
+  const { t } = useLingui()
   const moiId = useSession().moi.id
   const [choix, setChoix] = useState<string | null>(null)
   const [enCours, setEnCours] = useState(false)
@@ -99,12 +101,12 @@ function ListeAdmins({
         <Select
           showSearch
           optionFilterProp="label"
-          placeholder="Personne"
-          aria-label={`Personne à nommer : ${titre}`}
+          placeholder={t`Personne`}
+          aria-label={t`Personne à nommer : ${titre}`}
           style={{ minWidth: 240 }}
           value={choix}
           onChange={setChoix}
-          notFoundContent="Aucune personne à nommer."
+          notFoundContent={t`Aucune personne à nommer.`}
           options={candidats.map(p => ({ value: p.id, label: p.nom }))}
         />
         <Button
@@ -118,7 +120,7 @@ function ListeAdmins({
             setEnCours(false)
           }}
         >
-          Nommer
+          <Trans>Nommer</Trans>
         </Button>
       </Space>
       <Tableau<Ligne>
@@ -131,12 +133,16 @@ function ListeAdmins({
         colonnes={[
           {
             key: 'personne',
-            title: 'Personne',
+            title: t`Personne`,
             tri: p => p.nom,
             render: (_, p) => (
               <Space>
                 {p.nom}
-                {p.id === moiId && <Tag>Vous</Tag>}
+                {p.id === moiId && (
+                  <Tag>
+                    <Trans>Vous</Trans>
+                  </Tag>
+                )}
               </Space>
             ),
           },
@@ -145,20 +151,22 @@ function ListeAdmins({
             key: 'actions',
             align: 'end',
             redimensionnable: false,
-            render: (_, p) =>
-              retirable(p) ? (
+            render: (_, p) => {
+              const nomPersonne = p.nom
+              return retirable(p) ? (
                 <Popconfirm
-                  title={`Retirer ce rôle à ${p.nom} ?`}
-                  description="La personne garde son compte, ses affectations et ses souhaits."
-                  okText="Retirer"
-                  cancelText="Annuler"
+                  title={t`Retirer ce rôle à ${nomPersonne} ?`}
+                  description={t`La personne garde son compte, ses affectations et ses souhaits.`}
+                  okText={t`Retirer`}
+                  cancelText={t`Annuler`}
                   onConfirm={() => retirer(p)}
                 >
                   <Button size="small" danger>
-                    Retirer
+                    <Trans>Retirer</Trans>
                   </Button>
                 </Popconfirm>
-              ) : null,
+              ) : null
+            },
           },
         ]}
       />
@@ -177,6 +185,7 @@ function AdminsActivite({
   annuaire: Ligne[]
   executer: (action: () => Promise<unknown>, succes: string) => Promise<boolean>
 }) {
+  const { t } = useLingui()
   const { data, loading } = useQuery(EQUIPE, {
     variables: { activiteId: activite.id },
   })
@@ -187,8 +196,10 @@ function AdminsActivite({
   )
   const dejaAdmins = new Set(admins.map(p => p.id))
   const candidats = annuaire.filter(p => !dejaAdmins.has(p.id))
-  const definirAdmin = (personne: Ligne, admin: boolean) =>
-    executer(
+  const nomActivite = activite.nom
+  const definirAdmin = (personne: Ligne, admin: boolean) => {
+    const nomPersonne = personne.nom
+    return executer(
       () =>
         definir({
           variables: {
@@ -198,17 +209,18 @@ function AdminsActivite({
           },
         }),
       admin
-        ? `${personne.nom} administre ${activite.nom}.`
-        : `${personne.nom} n’administre plus ${activite.nom}.`
+        ? t`${nomPersonne} administre ${nomActivite}.`
+        : t`${nomPersonne} n’administre plus ${nomActivite}.`
     )
+  }
   return (
     <ListeAdmins
       titre={activite.nom}
-      aide="Un admin d’activité gère ses périodes, ses périmètres, ses affectations et ses fiches. Il ne voit pas les autres activités. Il nomme les autres admins de son activité depuis l’écran Personnes."
+      aide={t`Un admin d’activité gère ses périodes, ses périmètres, ses affectations et ses fiches. Il ne voit pas les autres activités. Il nomme les autres admins de son activité depuis l’écran Personnes.`}
       admins={admins}
       candidats={candidats}
       chargement={loading && !data}
-      vide="Cette activité n’a aucun admin. Les admins de l’organisation la gèrent."
+      vide={t`Cette activité n’a aucun admin. Les admins de l’organisation la gèrent.`}
       retirable={() => true}
       nommer={p => definirAdmin(p, true)}
       retirer={p => definirAdmin(p, false)}
@@ -222,6 +234,7 @@ function AdminsActivite({
  * d'activité nomme ceux de son activité depuis l'écran « Personnes ».
  */
 export default function Admins() {
+  const { t } = useLingui()
   const { moi } = useSession()
   const { message } = App.useApp()
   const { data, loading } = useQuery(ADMINS_ORGANISATION)
@@ -240,35 +253,39 @@ export default function Admins() {
     }
   }
 
-  const definirAdmin = (personne: Ligne, estAdmin: boolean) =>
-    executer(
+  const definirAdmin = (personne: Ligne, estAdmin: boolean) => {
+    const nomPersonne = personne.nom
+    return executer(
       () =>
         definir({
           variables: { id: personne.id, nom: personne.nom, estAdmin },
         }),
       estAdmin
-        ? `${personne.nom} administre l’organisation.`
-        : `${personne.nom} n’administre plus l’organisation.`
+        ? t`${nomPersonne} administre l’organisation.`
+        : t`${nomPersonne} n’administre plus l’organisation.`
     )
+  }
   const administrees = (activites?.activites ?? []).filter(
     a => a.estAdministree && !a.archive
   )
 
   return (
     <>
-      <Titre sousTitre="Les admins de l’organisation, puis les admins de chaque activité. Vous nommez et retirez les uns et les autres.">
-        Admins
+      <Titre
+        sousTitre={t`Les admins de l’organisation, puis les admins de chaque activité. Vous nommez et retirez les uns et les autres.`}
+      >
+        {t`Admins`}
       </Titre>
       <div className="rt-colonne" style={{ gap: 32 }}>
         <ListeAdmins
-          titre="Organisation"
-          aide="Un admin de l’organisation gère toutes les activités, les comptes et l’identité de l’organisation."
+          titre={t`Organisation`}
+          aide={t`Un admin de l’organisation gère toutes les activités, les comptes et l’identité de l’organisation.`}
           admins={data?.adminsOrganisation ?? []}
           candidats={(annuaire?.personnes ?? []).filter(
             p => p.estAdmin !== true
           )}
           chargement={loading && !data}
-          vide="Aucun admin."
+          vide={t`Aucun admin.`}
           // Un admin ne retire pas ses propres droits : il ne pourrait plus les
           // rétablir.
           retirable={p => p.id !== moi.id}

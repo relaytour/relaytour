@@ -1,4 +1,5 @@
 import { CopyOutlined } from '@ant-design/icons'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Segmented, Space } from 'antd'
 import { useState, type ReactNode } from 'react'
 
@@ -30,6 +31,7 @@ export default function CopierAdresses({
   cible,
   children,
 }: Props) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   // Null : le séparateur suit la cible. Un choix de l'admin le fige.
   const [choisi, setChoisi] = useState<Separateur | null>(null)
@@ -41,14 +43,15 @@ export default function CopierAdresses({
   const copier = async (liste: string[]) => {
     try {
       await navigator.clipboard.writeText(adressesACopier(liste, separateur))
+      const nombre = liste.length
       message.success(
-        liste.length === 1
-          ? 'L’adresse est copiée.'
-          : `Les ${liste.length} adresses sont copiées.`
+        nombre === 1
+          ? t`L’adresse est copiée.`
+          : t`Les ${nombre} adresses sont copiées.`
       )
     } catch {
       message.error(
-        'La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même.'
+        t`La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même.`
       )
     }
   }
@@ -58,9 +61,9 @@ export default function CopierAdresses({
       <Space wrap>
         {(
           [
-            ['a', seul ? 'Copier l’adresse' : null],
-            ['cc', 'Copier les adresses en Cc'],
-            ['cci', 'Copier les adresses en Cci'],
+            ['a', seul ? t`Copier l’adresse` : null],
+            ['cc', t`Copier les adresses en Cc`],
+            ['cci', t`Copier les adresses en Cci`],
           ] as const
         ).map(
           ([cle, libelle]) =>
@@ -80,7 +83,9 @@ export default function CopierAdresses({
       {plusieurs && (
         <div className="rt-separateur-adresses">
           <Space wrap size={8}>
-            <span id="rt-separateur-adresses">Séparateur des adresses</span>
+            <span id="rt-separateur-adresses">
+              <Trans>Séparateur des adresses</Trans>
+            </span>
             <Segmented<Separateur>
               aria-labelledby="rt-separateur-adresses"
               size="small"
@@ -93,9 +98,11 @@ export default function CopierAdresses({
             />
           </Space>
           <p className="rt-note">
-            Outlook attend un point-virgule entre deux adresses collées. Les
-            autres messageries acceptent une virgule. Vos préférences fixent le
-            séparateur proposé pour la messagerie par défaut.
+            <Trans>
+              Outlook attend un point-virgule entre deux adresses collées. Les
+              autres messageries acceptent une virgule. Vos préférences fixent
+              le séparateur proposé pour la messagerie par défaut.
+            </Trans>
           </p>
         </div>
       )}

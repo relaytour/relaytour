@@ -1,4 +1,7 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural, t } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Empty, Modal, Radio, Skeleton, Tag } from 'antd'
 import { useState } from 'react'
 
@@ -15,11 +18,21 @@ type Doublon = DoublonsBenevolesQuery['doublonsBenevoles'][number]
 type Fiche = Doublon['a']
 type Cote = 'GARDEE' | 'AUTRE'
 
-const NIVEAUX = {
-  FORT: { libelle: 'Même adresse', couleur: 'error' },
-  MOYEN: { libelle: 'Même téléphone', couleur: 'warning' },
-  FAIBLE: { libelle: 'Nom proche', couleur: 'default' },
-} as const
+const NIVEAUX: Record<
+  Doublon['niveau'],
+  { libelle: MessageDescriptor; couleur: string }
+> = {
+  FORT: {
+    libelle: msg({
+      message: 'Même adresse',
+      comment:
+        'Raison pour laquelle deux fiches bénévoles semblent identiques : même adresse de courriel',
+    }),
+    couleur: 'error',
+  },
+  MOYEN: { libelle: msg`Même téléphone`, couleur: 'warning' },
+  FAIBLE: { libelle: msg`Nom proche`, couleur: 'default' },
+}
 
 const RELIRE = [
   'DoublonsBenevoles',
@@ -30,17 +43,20 @@ const RELIRE = [
 ]
 
 function resume(f: Fiche) {
+  const places = f.places
+  const sourceImport = f.sourceImport
   return [
     f.courriel,
     f.telephone,
-    `${f.places} séquence${f.places > 1 ? 's' : ''}`,
-    f.sourceImport ? `import « ${f.sourceImport} »` : null,
+    t`${plural(places, { one: '# séquence', other: '# séquences' })}`,
+    sourceImport ? t`import « ${sourceImport} »` : null,
   ]
     .filter(Boolean)
     .join(' · ')
 }
 
 export default function DoublonsBenevoles() {
+  const { t } = useLingui()
   const { activite } = useActivite()
   const { message, modal } = App.useApp()
   const { data, loading, error } = useQuery(DOUBLONS, {
@@ -78,41 +94,45 @@ export default function DoublonsBenevoles() {
           telephoneDe: choix.telephone,
         },
       })
-      message.success('Les deux fiches n’en font plus qu’une.')
+      message.success(t`Les deux fiches n’en font plus qu’une.`)
       setPaire(null)
     } catch (e) {
       message.error(messageErreur(e))
     }
   }
 
-  const ecarter = (d: Doublon) =>
+  const ecarter = (d: Doublon) => {
+    const nomPremiereFiche = d.a.nom
+    const nomSecondeFiche = d.b.nom
     void modal.confirm({
-      title: `« ${d.a.nom} » et « ${d.b.nom} » sont deux personnes ?`,
-      content:
-        'Cette paire ne sera plus proposée. L’écran ne permet pas de revenir sur ce choix.',
-      okText: 'Ce ne sont pas des doublons',
-      cancelText: 'Annuler',
+      title: t`« ${nomPremiereFiche} » et « ${nomSecondeFiche} » sont deux personnes ?`,
+      content: t`Cette paire ne sera plus proposée. L’écran ne permet pas de revenir sur ce choix.`,
+      okText: t`Ce ne sont pas des doublons`,
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await distincts({ variables: { aId: d.a.id, bId: d.b.id } })
-          message.success('Cette paire ne sera plus proposée.')
+          message.success(t`Cette paire ne sera plus proposée.`)
         } catch (e) {
           message.error(messageErreur(e))
         }
       },
     })
+  }
 
   if (error) {
     return (
       <Alert
         type="error"
         showIcon
-        title="Les doublons possibles n’ont pas pu être chargés."
+        title={t`Les doublons possibles n’ont pas pu être chargés.`}
       />
     )
   }
   if (loading && !data) return <Skeleton active />
   const doublons = data?.doublonsBenevoles ?? []
+  const nomFicheGardee = paire?.a.nom
+  const nomFicheAbsorbee = paire?.b.nom
 
   const ligneChoix = (
     champ: 'nom' | 'courriel' | 'telephone',
@@ -140,7 +160,7 @@ export default function DoublonsBenevoles() {
   return (
     <div className="rt-doublons">
       {doublons.length === 0 ? (
-        <Empty description="Aucun doublon possible parmi les fiches." />
+        <Empty description={t`Aucun doublon possible parmi les fiches.`} />
       ) : (
         <ul className="rt-doublons-liste">
           {doublons.map(d => {
@@ -155,13 +175,13 @@ export default function DoublonsBenevoles() {
                     </div>
                   ))}
                 </div>
-                <Tag color={niveau.couleur}>{niveau.libelle}</Tag>
+                <Tag color={niveau.couleur}>{t(niveau.libelle)}</Tag>
                 <div className="rt-doublon-actions">
                   <Button type="primary" onClick={() => ouvrir(d)}>
-                    Fusionner
+                    <Trans>Fusionner</Trans>
                   </Button>
                   <Button onClick={() => ecarter(d)}>
-                    Ce ne sont pas des doublons
+                    <Trans>Ce ne sont pas des doublons</Trans>
                   </Button>
                 </div>
               </li>
@@ -170,31 +190,55 @@ export default function DoublonsBenevoles() {
         </ul>
       )}
       <p className="rt-note">
-        Les doublons possibles se calculent sur l’adresse, le téléphone et le
-        nom. La fusion garde la première fiche de la paire et y réunit les
-        places, les disponibilités et les candidatures de la seconde.
+        <Trans>
+          Les doublons possibles se calculent sur l’adresse, le téléphone et le
+          nom. La fusion garde la première fiche de la paire et y réunit les
+          places, les disponibilités et les candidatures de la seconde.
+        </Trans>
       </p>
       <Modal
         open={paire !== null}
-        title="Fusionner deux fiches"
-        okText="Fusionner"
-        cancelText="Annuler"
+        title={t`Fusionner deux fiches`}
+        okText={t`Fusionner`}
+        cancelText={t`Annuler`}
         confirmLoading={fusion.loading}
         onOk={() => void confirmerFusion()}
         onCancel={() => setPaire(null)}
         destroyOnHidden
       >
         <p>
-          La fiche de « {paire?.a.nom} » reçoit les places, les disponibilités
-          et les candidatures de « {paire?.b.nom} », qui disparaît. Choisissez
-          les valeurs gardées.
+          <Trans>
+            La fiche de « {nomFicheGardee} » reçoit les places, les
+            disponibilités et les candidatures de « {nomFicheAbsorbee} », qui
+            disparaît. Choisissez les valeurs gardées.
+          </Trans>
         </p>
-        {ligneChoix('nom', 'Nom')}
-        {ligneChoix('courriel', 'Adresse')}
-        {ligneChoix('telephone', 'Téléphone')}
+        {ligneChoix(
+          'nom',
+          t({
+            message: 'Nom',
+            comment: 'Champ d’une fiche bénévole à fusionner',
+          })
+        )}
+        {ligneChoix(
+          'courriel',
+          t({
+            message: 'Adresse',
+            comment: 'Adresse de courriel d’une fiche bénévole à fusionner',
+          })
+        )}
+        {ligneChoix(
+          'telephone',
+          t({
+            message: 'Téléphone',
+            comment: 'Champ d’une fiche bénévole à fusionner',
+          })
+        )}
         <p className="rt-note">
-          Le lien personnel et la confirmation suivent l’adresse gardée. Les
-          notes se mettent bout à bout.
+          <Trans>
+            Le lien personnel et la confirmation suivent l’adresse gardée. Les
+            notes se mettent bout à bout.
+          </Trans>
         </p>
       </Modal>
     </div>

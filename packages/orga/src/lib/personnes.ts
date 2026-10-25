@@ -1,9 +1,11 @@
+import { langueActive } from './langue'
+
 /** Les initiales d'un nom : la première lettre des deux premiers mots. */
 export function initiales(nom: string): string {
   const mots = nom.trim().split(/\s+/).filter(Boolean)
   return mots
     .slice(0, 2)
-    .map(mot => mot.charAt(0).toLocaleUpperCase('fr'))
+    .map(mot => mot.charAt(0).toLocaleUpperCase(langueActive()))
     .join('')
 }
 

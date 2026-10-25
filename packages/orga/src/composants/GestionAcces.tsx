@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -48,6 +49,7 @@ export function ReglageAcces({
   onActiverGestion: (() => void) | null
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const [mode, setMode] = useState<AccesFournisseurDossier>(
     dossier.accesFournisseur
@@ -78,17 +80,18 @@ export function ReglageAcces({
       },
     })
       .then(() => {
-        message.success('Le réglage des accès est enregistré.')
+        message.success(t`Le réglage des accès est enregistré.`)
         onFermer()
       })
       .catch((e: unknown) => message.error(messageErreur(e)))
 
+  const nomDossier = dossier.nom
   return (
     <Modal
       open
-      title={`Accès chez le fournisseur : « ${dossier.nom} »`}
+      title={t`Accès chez le fournisseur : « ${nomDossier} »`}
       onCancel={onFermer}
-      okText="Enregistrer"
+      okText={t`Enregistrer`}
       okButtonProps={{ loading, disabled: !gestion || !pret }}
       onOk={() => void enregistrer()}
       width={600}
@@ -98,20 +101,22 @@ export function ReglageAcces({
           type="info"
           showIcon
           style={{ marginBottom: 16 }}
-          title="Avec cette connexion, Relaytour vérifie les accès sans pouvoir les changer."
+          title={t`Avec cette connexion, Relaytour vérifie les accès sans pouvoir les changer.`}
           description={
             onActiverGestion === null ? (
-              'Ce fournisseur ne propose pas encore la gestion des accès.'
+              t`Ce fournisseur ne propose pas encore la gestion des accès.`
             ) : (
               <>
                 <p style={{ marginTop: 0 }}>
-                  Pour appliquer des propositions, activez la gestion des accès.
-                  Chez Microsoft et Dropbox, elle demande une reconnexion ; chez
-                  Microsoft, un admin Microsoft Entra accepte une autorisation
-                  de plus.
+                  <Trans>
+                    Pour appliquer des propositions, activez la gestion des
+                    accès. Chez Microsoft et Dropbox, elle demande une
+                    reconnexion ; chez Microsoft, un admin Microsoft Entra
+                    accepte une autorisation de plus.
+                  </Trans>
                 </p>
                 <Button onClick={onActiverGestion}>
-                  Activer la gestion des accès
+                  {t`Activer la gestion des accès`}
                 </Button>
               </>
             )
@@ -119,52 +124,55 @@ export function ReglageAcces({
         />
       )}
       <Form layout="vertical" component="div" disabled={!gestion}>
-        <Form.Item label="Relaytour propose">
+        <Form.Item label={t`Relaytour propose`}>
           <Radio.Group
             value={mode}
             onChange={e => setMode(e.target.value as AccesFournisseurDossier)}
             options={(Object.keys(MODES) as AccesFournisseurDossier[]).map(
-              m => ({ value: m, label: MODES[m] })
+              m => ({ value: m, label: t(MODES[m]) })
             )}
           />
         </Form.Item>
         {mode === 'GROUPE' && (
           <Form.Item
-            label="Groupe"
-            extra="La liste ne compte que les groupes qui ont déjà un droit sur le dossier. Une personne qui entre dans un groupe reçoit tous les droits de ce groupe chez le fournisseur."
+            label={t({
+              message: 'Groupe',
+              comment: 'Groupe chez le fournisseur cloud',
+            })}
+            extra={t`La liste ne compte que les groupes qui ont déjà un droit sur le dossier. Une personne qui entre dans un groupe reçoit tous les droits de ce groupe chez le fournisseur.`}
           >
             <Select
               value={groupeId}
               onChange={setGroupeId}
               loading={groupes.loading}
               placeholder={
-                dossier.groupeFournisseurNom ?? 'Choisissez un groupe'
+                dossier.groupeFournisseurNom ?? t`Choisissez un groupe`
               }
               options={(groupes.data?.groupesDuDossier ?? []).map(g => ({
                 value: g.identifiant,
                 label: g.nom,
               }))}
-              notFoundContent="Aucun groupe du fournisseur n’a de droit sur ce dossier."
+              notFoundContent={t`Aucun groupe du fournisseur n’a de droit sur ce dossier.`}
             />
           </Form.Item>
         )}
         {mode === 'PARTAGE' && (
           <>
-            <Form.Item label="Rôle">
+            <Form.Item label={t`Rôle`}>
               <Radio.Group
                 value={role}
                 onChange={e => setRole(e.target.value as RoleFournisseur)}
                 options={[
-                  { value: 'LECTURE', label: 'Lecture' },
-                  { value: 'ECRITURE', label: 'Écriture' },
+                  { value: 'LECTURE', label: t`Lecture` },
+                  { value: 'ECRITURE', label: t`Écriture` },
                 ]}
               />
             </Form.Item>
             {/* Nextcloud prévient la personne selon ses propres réglages. */}
             {dossier.fournisseur !== 'NEXTCLOUD' && (
               <Form.Item
-                label="Mail d’invitation du fournisseur"
-                extra="Le fournisseur prévient la personne du partage."
+                label={t`Mail d’invitation du fournisseur`}
+                extra={t`Le fournisseur prévient la personne du partage.`}
               >
                 <Switch checked={invitation} onChange={setInvitation} />
               </Form.Item>
@@ -173,8 +181,8 @@ export function ReglageAcces({
         )}
         {mode !== 'AUCUN' && (
           <Form.Item
-            label="Appliquer les ajouts sans attendre"
-            extra="Un retrait attend toujours la décision d’un admin. Relaytour ne retire que les accès qu’il a lui-même créés."
+            label={t`Appliquer les ajouts sans attendre`}
+            extra={t`Un retrait attend toujours la décision d’un admin. Relaytour ne retire que les accès qu’il a lui-même créés.`}
           >
             <Switch checked={auto} onChange={setAuto} />
           </Form.Item>
@@ -186,6 +194,7 @@ export function ReglageAcces({
 
 /** Les propositions d'un dossier : à appliquer, à écarter, ou en échec. */
 export function PropositionsDossier({ v }: { v: Verification }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const relire = { refetchQueries: ['VerificationAcces'] }
   const [appliquer, { loading: application }] = useMutation(
@@ -201,34 +210,55 @@ export function PropositionsDossier({ v }: { v: Verification }) {
   const enAttente = v.propositions.filter(p => p.etat === 'EN_ATTENTE')
   // La cible vient du serveur : un retrait vise le droit que Relaytour a créé,
   // quel que soit le mode actuel du dossier.
-  const libelle = (p: { action: string; cible: string; parGroupe: boolean }) =>
-    p.action === 'AJOUTER'
+  const libelle = (p: {
+    action: string
+    cible: string
+    parGroupe: boolean
+  }) => {
+    const cible = p.cible
+    return p.action === 'AJOUTER'
       ? p.parGroupe
-        ? `Ajouter au ${p.cible}`
-        : 'Partager le dossier'
+        ? t`Ajouter au ${cible}`
+        : t`Partager le dossier`
       : p.parGroupe
-        ? `Retirer du ${p.cible}`
-        : 'Retirer le partage'
+        ? t`Retirer du ${cible}`
+        : t`Retirer le partage`
+  }
+  const titreApplication = (
+    p: Parameters<typeof libelle>[0] & {
+      personne: { nom: string }
+    }
+  ) => {
+    const action = libelle(p)
+    const personne = p.personne.nom
+    return t`${action} pour ${personne} ?`
+  }
+  const echecProposition = (erreur: string | null | undefined) => {
+    const raison = erreur ?? t`Échec`
+    return t`${raison} Relaytour le proposera de nouveau à la prochaine vérification.`
+  }
+  const nombreEnAttente = enAttente.length
   return (
-    <Section titre="Propositions" compte={`${enAttente.length} en attente`}>
+    <Section titre={t`Propositions`} compte={t`${nombreEnAttente} en attente`}>
       {enAttente.length > 1 && (
         <Popconfirm
-          title="Appliquer toutes les propositions de ce dossier ?"
-          description="Relaytour les applique une à une chez le fournisseur."
-          okText="Appliquer"
-          cancelText="Annuler"
+          title={t`Appliquer toutes les propositions de ce dossier ?`}
+          description={t`Relaytour les applique une à une chez le fournisseur.`}
+          okText={t`Appliquer`}
+          cancelText={t`Annuler`}
           onConfirm={() =>
             toutAppliquer({ variables: { dossierId: v.dossier.id } })
-              .then(r =>
-                message.success(
-                  `${r.data?.appliquerPropositionsDossier ?? 0} proposition(s) appliquée(s).`
+              .then(r => {
+                const appliquees = r.data?.appliquerPropositionsDossier ?? 0
+                return message.success(
+                  t`${appliquees} proposition(s) appliquée(s).`
                 )
-              )
+              })
               .catch((e: unknown) => message.error(messageErreur(e)))
           }
         >
           <Button size="small" loading={lot} style={{ marginBottom: 8 }}>
-            Tout appliquer
+            {t`Tout appliquer`}
           </Button>
         </Popconfirm>
       )}
@@ -241,40 +271,38 @@ export function PropositionsDossier({ v }: { v: Verification }) {
                 {[
                   libelle(p),
                   p.personne.email,
-                  p.etat === 'ECHEC'
-                    ? `${p.erreur ?? 'Échec'} Relaytour le proposera de nouveau à la prochaine vérification.`
-                    : null,
+                  p.etat === 'ECHEC' ? echecProposition(p.erreur) : null,
                 ]
                   .filter(Boolean)
                   .join(' · ')}
               </span>
             </span>
             {p.etat === 'ECHEC' ? (
-              <Tag color="error">Échec</Tag>
+              <Tag color="error">{t`Échec`}</Tag>
             ) : (
               <Popconfirm
-                title={`${libelle(p)} pour ${p.personne.nom} ?`}
+                title={titreApplication(p)}
                 description={
                   p.parGroupe && p.action === 'RETIRER'
-                    ? 'La personne quitte le groupe pour tout ce que ce groupe ouvre chez le fournisseur.'
-                    : 'Relaytour applique le changement chez le fournisseur.'
+                    ? t`La personne quitte le groupe pour tout ce que ce groupe ouvre chez le fournisseur.`
+                    : t`Relaytour applique le changement chez le fournisseur.`
                 }
-                okText="Appliquer"
-                cancelText="Annuler"
+                okText={t`Appliquer`}
+                cancelText={t`Annuler`}
                 onConfirm={() =>
                   appliquer({ variables: { id: p.id } })
                     .then(r =>
                       r.data?.appliquerPropositionAcces === 'APPLIQUEE'
-                        ? message.success('Le changement est appliqué.')
+                        ? message.success(t`Le changement est appliqué.`)
                         : message.error(
-                            'Le fournisseur a refusé le changement.'
+                            t`Le fournisseur a refusé le changement.`
                           )
                     )
                     .catch((e: unknown) => message.error(messageErreur(e)))
                 }
               >
                 <Button size="small" type="primary" loading={application}>
-                  Appliquer
+                  {t`Appliquer`}
                 </Button>
               </Popconfirm>
             )}
@@ -286,7 +314,7 @@ export function PropositionsDossier({ v }: { v: Verification }) {
                 )
               }
             >
-              Écarter
+              {t`Écarter`}
             </Button>
           </li>
         ))}

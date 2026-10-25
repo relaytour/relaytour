@@ -685,6 +685,41 @@ describe('personne membre de deux organisations', () => {
     )
     expect(code(anonyme)).toBe('FORBIDDEN')
   })
+
+  it('laisse la personne choisir sa langue, lue par elle seule (ADR 0047)', async () => {
+    const LANGUE =
+      'mutation ($l: String) { modifierMaLangue(langue: $l) { id langue } }'
+    const choix = await executer(ids.double, LANGUE, { l: 'en' }, slugA)
+    expect(choix.data?.modifierMaLangue).toEqual({
+      id: ids.double,
+      langue: 'en',
+    })
+    // Le choix vaut dans ses deux organisations.
+    const lu = await executer(ids.double, '{ moi { langue } }', {}, slugB)
+    expect(lu.data).toEqual({ moi: { langue: 'en' } })
+    // Un admin ne lit pas la langue d'un membre.
+    const parAdmin = await executer(
+      ids.adminA,
+      '{ personnes { id langue } }',
+      {},
+      slugA
+    )
+    expect(
+      (parAdmin.data as { personnes: { id: string; langue: string | null }[] })
+        .personnes
+    ).toContainEqual({ id: ids.double, langue: null })
+    // Une langue absente du logiciel est refusée, et rien ne change.
+    const inconnue = await executer(ids.double, LANGUE, { l: 'de' }, slugA)
+    expect(code(inconnue)).toBe('SAISIE_INVALIDE')
+    // Nulle, la langue suit de nouveau celle de l'organisation.
+    const efface = await executer(ids.double, LANGUE, { l: null }, slugA)
+    expect(efface.data?.modifierMaLangue).toEqual({
+      id: ids.double,
+      langue: null,
+    })
+    const anonyme = await executer(null, LANGUE, { l: 'en' })
+    expect(code(anonyme)).toBe('FORBIDDEN')
+  })
 })
 
 describe('statut de l’organisation', () => {

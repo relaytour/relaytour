@@ -14,6 +14,14 @@ fr:
     notification qui porte votre nom. Le message de confirmation propose
     d'annuler. Retirer une autre personne demande une confirmation. Ce geste
     était réservé aux admins de l'activité.
+en:
+  titre: >-
+    Everyone in an area can assign their tasks to others
+  texte: >-
+    You assign a task of your area to another person on its team, using the
+    task’s “Assign” button. That person receives a notification with your name.
+    The confirmation message offers to undo. Removing another person asks for
+    confirmation. Only activity admins could do this before.
 ---
 
 `assignerTache` accepte `personneId` pour toute personne qui écrit dans le

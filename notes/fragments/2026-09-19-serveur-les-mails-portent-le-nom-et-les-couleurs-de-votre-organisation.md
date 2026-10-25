@@ -13,6 +13,14 @@ fr:
     de votre organisation. Le texte, les boutons et le fond reprennent les
     couleurs de son thème. Le pied garde un crédit « propulsé par Relaytour,
     logiciel libre ». Les mails n'appellent aucune police web.
+en:
+  titre: >-
+    Emails carry your organization’s name and colors
+  texte: >-
+    The header, subjects, and footer of each email show your organization’s
+    short name. The text, buttons, and background take the colors of its theme.
+    The footer keeps a “powered by Relaytour, free software” credit. Emails load
+    no web fonts.
 ---
 
 - Couleurs sentinelles dans les `.mjml`, remplacées par `{{couleurEncre}}`,

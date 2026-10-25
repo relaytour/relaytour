@@ -5,6 +5,9 @@ import {
   StopOutlined,
   VideoCameraOutlined,
 } from '@ant-design/icons'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Drawer, Radio, Skeleton, Tag } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link } from 'react-router'
@@ -86,13 +89,42 @@ const ANNULER = graphql(`
   }
 `)
 
-const LIBELLES_REPONSE: Record<ReponseConvocation, string> = {
-  PRESENT: 'Présent·e',
-  ABSENT: 'Absent·e',
-  PEUT_ETRE: 'Peut-être',
+const LIBELLES_REPONSE: Record<ReponseConvocation, MessageDescriptor> = {
+  PRESENT: msg({
+    message: 'Présent·e',
+    comment: 'Réponse à une convocation à une réunion',
+  }),
+  ABSENT: msg({
+    message: 'Absent·e',
+    comment: 'Réponse à une convocation à une réunion',
+  }),
+  PEUT_ETRE: msg({
+    message: 'Peut-être',
+    comment: 'Réponse à une convocation à une réunion',
+  }),
 }
 
 const RELIRE = ['Agenda', 'Reunions', 'ReunionsDuPerimetre', 'Reunion']
+
+/** Le décompte des réponses d'une réunion, en une phrase. */
+function ResumeReponses({
+  reponses,
+}: {
+  reponses: {
+    presentes: number
+    absentes: number
+    peutEtre: number
+    sansReponse: number
+  }
+}) {
+  const { t } = useLingui()
+  const { presentes, absentes, peutEtre, sansReponse } = reponses
+  return (
+    <>
+      {t`${plural(presentes, { one: '# présence', other: '# présences' })}, ${plural(absentes, { one: '# absence', other: '# absences' })}, ${peutEtre} peut-être, ${sansReponse} sans réponse.`}
+    </>
+  )
+}
 
 /** Volet d'une réunion de l'agenda (ADR 0037). */
 export default function ReunionDetail({
@@ -105,6 +137,7 @@ export default function ReunionDetail({
   agendas: AgendaEcrit[]
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { lien } = useActivite()
   const { message, modal } = App.useApp()
   const { data, loading, error } = useQuery(REUNION, {
@@ -126,16 +159,15 @@ export default function ReunionDetail({
   const confirmerAnnulation = () => {
     if (!reunion) return
     void modal.confirm({
-      title: 'Annuler cette réunion ?',
-      content:
-        'La réunion reste dans l’agenda, marquée annulée. Chaque personne convoquée reçoit un mail d’annulation.',
-      okText: 'Annuler la réunion',
+      title: t`Annuler cette réunion ?`,
+      content: t`La réunion reste dans l’agenda, marquée annulée. Chaque personne convoquée reçoit un mail d’annulation.`,
+      okText: t`Annuler la réunion`,
       okButtonProps: { danger: true },
-      cancelText: 'Garder',
+      cancelText: t`Garder`,
       onOk: async () => {
         try {
           await annuler({ variables: { id: reunion.id } })
-          message.success('Réunion annulée.')
+          message.success(t`Réunion annulée.`)
         } catch (e) {
           message.error(messageErreur(e))
         }
@@ -156,7 +188,7 @@ export default function ReunionDetail({
       lieu: reunion.lieu,
       lienVisio: reunion.lienVisio,
       description: reunion.description,
-      tacheIds: reunion.taches.map(t => t.id),
+      tacheIds: reunion.taches.map(tache => tache.id),
       cible: reunion.cible,
       personneIds: (reunion.convocations ?? []).map(c => c.personneId),
       version: reunion.version,
@@ -168,18 +200,18 @@ export default function ReunionDetail({
       <Drawer
         open={reunionId !== null && saisie === null}
         onClose={onFermer}
-        title={reunion?.titre ?? 'Réunion'}
+        title={reunion?.titre ?? t`Réunion`}
         size={460}
         extra={
           reunion?.peutModifier && (
             <span style={{ display: 'inline-flex', gap: 6 }}>
               <Button icon={<EditOutlined />} onClick={modifier}>
-                Modifier
+                <Trans>Modifier</Trans>
               </Button>
               <Button
                 danger
                 icon={<StopOutlined />}
-                aria-label="Annuler la réunion"
+                aria-label={t`Annuler la réunion`}
                 onClick={confirmerAnnulation}
               />
             </span>
@@ -188,14 +220,16 @@ export default function ReunionDetail({
       >
         {error && !data ? (
           <p className="rt-texte-secondaire">
-            Cette réunion n’existe pas ou ne vous est pas accessible.
+            <Trans>
+              Cette réunion n’existe pas ou ne vous est pas accessible.
+            </Trans>
           </p>
         ) : loading && !reunion ? (
           <Skeleton active />
         ) : reunion ? (
           <div className="rt-reunion">
             <p className="rt-reunion-quand">
-              {annulee && <Tag color="error">Annulée</Tag>}
+              {annulee && <Tag color="error">{t`Annulée`}</Tag>}
               <span className={annulee ? 'rt-agenda-faite' : undefined}>
                 {reunion.jourFin === reunion.jour
                   ? `${libelleJours(reunion.jour)}, ${reunion.heureDebut} → ${reunion.heureFin}`
@@ -209,15 +243,19 @@ export default function ReunionDetail({
                   couleur={reunion.perimetre.couleur}
                 />
               ) : (
-                <span className="rt-note">Agenda global de l’activité</span>
+                <span className="rt-note">
+                  <Trans>Agenda global de l’activité</Trans>
+                </span>
               )}
             </p>
 
             {reunion.detailMasque ? (
               <p className="rt-note">
-                Vous consultez ce périmètre. Le lieu, le lien de visio et la
-                description restent réservés à ses personnes et aux personnes
-                convoquées.
+                <Trans>
+                  Vous consultez ce périmètre. Le lieu, le lien de visio et la
+                  description restent réservés à ses personnes et aux personnes
+                  convoquées.
+                </Trans>
               </p>
             ) : (
               <>
@@ -234,7 +272,7 @@ export default function ReunionDetail({
                       target="_blank"
                       rel="noopener noreferrer"
                     >
-                      Rejoindre la visio
+                      <Trans>Rejoindre la visio</Trans>
                     </Button>
                   </p>
                 )}
@@ -245,24 +283,26 @@ export default function ReunionDetail({
                 )}
                 {reunion.taches.length > 0 && (
                   <section>
-                    <h3 className="rt-reunion-intertitre">Tâches liées</h3>
+                    <h3 className="rt-reunion-intertitre">
+                      <Trans>Tâches liées</Trans>
+                    </h3>
                     <ul className="rt-liste-liens">
-                      {reunion.taches.map(t => {
-                        const slug = slugDe.get(t.perimetreId)
+                      {reunion.taches.map(tache => {
+                        const slug = slugDe.get(tache.perimetreId)
                         return (
-                          <li key={t.id}>
+                          <li key={tache.id}>
                             {slug ? (
                               <Link
                                 className="rt-ligne-lien"
                                 style={{ fontSize: 13.5 }}
                                 to={lien(
-                                  `/perimetres/${slug}?edition=${reunion.editionId}&tache=${t.id}`
+                                  `/perimetres/${slug}?edition=${reunion.editionId}&tache=${tache.id}`
                                 )}
                               >
-                                {t.titre}
+                                {tache.titre}
                               </Link>
                             ) : (
-                              t.titre
+                              tache.titre
                             )}
                           </li>
                         )
@@ -275,7 +315,9 @@ export default function ReunionDetail({
 
             {reunion.estConvoquee && !annulee && (
               <section>
-                <h3 className="rt-reunion-intertitre">Votre réponse</h3>
+                <h3 className="rt-reunion-intertitre">
+                  <Trans>Votre réponse</Trans>
+                </h3>
                 <Radio.Group
                   optionType="button"
                   buttonStyle="solid"
@@ -294,7 +336,7 @@ export default function ReunionDetail({
                   options={(['PRESENT', 'ABSENT', 'PEUT_ETRE'] as const).map(
                     valeur => ({
                       value: valeur,
-                      label: LIBELLES_REPONSE[valeur],
+                      label: t(LIBELLES_REPONSE[valeur]),
                     })
                   )}
                 />
@@ -305,14 +347,11 @@ export default function ReunionDetail({
               reunion.cible !== null &&
               reunion.cible !== undefined && (
                 <section>
-                  <h3 className="rt-reunion-intertitre">Réponses</h3>
+                  <h3 className="rt-reunion-intertitre">
+                    <Trans>Réponses</Trans>
+                  </h3>
                   <p className="rt-texte-secondaire">
-                    {reunion.reponses.presentes} présence
-                    {reunion.reponses.presentes > 1 ? 's' : ''},{' '}
-                    {reunion.reponses.absentes} absence
-                    {reunion.reponses.absentes > 1 ? 's' : ''},{' '}
-                    {reunion.reponses.peutEtre} peut-être,{' '}
-                    {reunion.reponses.sansReponse} sans réponse.
+                    <ResumeReponses reponses={reunion.reponses} />
                   </p>
                   {reunion.convocations && (
                     <ul className="rt-reunion-convocations">
@@ -321,9 +360,11 @@ export default function ReunionDetail({
                           <span>{c.nom}</span>
                           <span className="rt-note">
                             {c.reponse
-                              ? LIBELLES_REPONSE[c.reponse]
-                              : 'Sans réponse'}
-                            {!c.envoyee && !annulee && ' · envoi en attente'}
+                              ? t(LIBELLES_REPONSE[c.reponse])
+                              : t`Sans réponse`}
+                            {!c.envoyee && !annulee && (
+                              <> · {t`envoi en attente`}</>
+                            )}
                           </span>
                         </li>
                       ))}

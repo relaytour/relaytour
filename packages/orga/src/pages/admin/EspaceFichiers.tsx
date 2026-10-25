@@ -6,6 +6,9 @@ import {
   LinkOutlined,
 } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -71,25 +74,20 @@ type Connexion = NonNullable<EspaceFichiersQuery['espaceFichiers']['connexion']>
 
 const ISSUES: Record<
   string,
-  { type: 'success' | 'warning' | 'error'; texte: string }
+  { type: 'success' | 'warning' | 'error'; texte: MessageDescriptor }
 > = {
-  reussie: { type: 'success', texte: 'Le fournisseur cloud est connecté.' },
+  reussie: { type: 'success', texte: msg`Le fournisseur cloud est connecté.` },
   refusee: {
     type: 'warning',
-    texte: 'La connexion a été annulée chez le fournisseur.',
+    texte: msg`La connexion a été annulée chez le fournisseur.`,
   },
   echec: {
     type: 'error',
-    texte:
-      'La connexion a échoué. Recommencez depuis cette page, avec un compte admin de l’organisation.',
+    texte: msg`La connexion a échoué. Recommencez depuis cette page, avec un compte admin de l’organisation.`,
   },
 }
 
 const AUCUNE: PositionChoisie = { emplacement: null, chemin: [] }
-
-/** « 1 fiche écrite », « 3 fiches écrites ». */
-const accorder = (n: number, singulier: string, pluriel: string) =>
-  `${n} ${n > 1 ? pluriel : singulier}`
 
 type DossierLie = DossiersLiesQuery['dossiersLies'][number]
 
@@ -116,6 +114,7 @@ function LierDossier({
   verification: boolean
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { activite } = useActivite()
   const { message } = App.useApp()
   const mentions = useMentions()
@@ -160,7 +159,7 @@ function LierDossier({
             attendus: verification ? attendus : null,
           },
         })
-        message.success('Le dossier lié est modifié.')
+        message.success(t`Le dossier lié est modifié.`)
       } else if (position.emplacement !== null) {
         await lier({
           variables: {
@@ -170,7 +169,7 @@ function LierDossier({
             chemin: position.chemin,
           },
         })
-        message.success('Le dossier est lié.')
+        message.success(t`Le dossier est lié.`)
       }
       onFermer()
     } catch (e) {
@@ -179,14 +178,19 @@ function LierDossier({
   }
 
   const masques = effets.data?.effetsLecteursDossier
+  const nomDossier = dossier?.nom ?? ''
+  const nombreMasques = masques?.documentsMasques ?? 0
+  const fichesConcernees = (masques?.fiches ?? [])
+    .map(f => `« ${f.titre} »`)
+    .join(', ')
   return (
     <Modal
       open={ouvert}
       onCancel={onFermer}
       title={
-        dossier === null ? 'Lier un dossier' : `Modifier « ${dossier.nom} »`
+        dossier === null ? t`Lier un dossier` : t`Modifier « ${nomDossier} »`
       }
-      okText={modification ? 'Enregistrer' : 'Lier ce dossier'}
+      okText={modification ? t`Enregistrer` : t`Lier ce dossier`}
       okButtonProps={{ disabled: !pret, loading: liaison || enregistrement }}
       onOk={() => void valider()}
       destroyOnHidden
@@ -195,8 +199,8 @@ function LierDossier({
       <Form layout="vertical" component="div">
         {modification && (
           <Form.Item
-            label="Nom affiché"
-            extra="Relaytour affiche ce nom quand le fournisseur ne répond pas. Le dossier garde son nom chez le fournisseur."
+            label={t`Nom affiché`}
+            extra={t`Relaytour affiche ce nom quand le fournisseur ne répond pas. Le dossier garde son nom chez le fournisseur.`}
           >
             <Input
               value={nom}
@@ -206,13 +210,13 @@ function LierDossier({
           </Form.Item>
         )}
         <Form.Item
-          label="Lu par"
-          extra="Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes."
+          label={t`Lu par`}
+          extra={t`Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes.`}
           validateStatus={valides ? undefined : 'error'}
           help={
             valides
               ? undefined
-              : 'Choisissez toute l’activité, ou au moins un périmètre ou un groupe.'
+              : t`Choisissez toute l’activité, ou au moins un périmètre ou un groupe.`
           }
         >
           <ChoixLecteurs
@@ -221,14 +225,14 @@ function LierDossier({
             mentions={mentions}
             toutPossible
             archives={dossier?.perimetres.filter(p => p.archive) ?? []}
-            placeholder="Choisissez les lecteurs"
-            ariaLabel="Lu par"
+            placeholder={t`Choisissez les lecteurs`}
+            ariaLabel={t`Lu par`}
           />
         </Form.Item>
         {modification && verification && (
           <Form.Item
-            label="Attendus chez le fournisseur"
-            extra="La vérification des accès compare ces personnes aux droits du dossier chez le fournisseur."
+            label={t`Attendus chez le fournisseur`}
+            extra={t`La vérification des accès compare ces personnes aux droits du dossier chez le fournisseur.`}
           >
             <Select
               value={attendus}
@@ -236,11 +240,11 @@ function LierDossier({
               options={[
                 {
                   value: 'MEMBRES',
-                  label: 'Tous les membres des périmètres lecteurs',
+                  label: t`Tous les membres des périmètres lecteurs`,
                 },
                 {
                   value: 'CONTACTS_PRINCIPAUX',
-                  label: 'Les contacts principaux seulement',
+                  label: t`Les contacts principaux seulement`,
                 },
               ]}
             />
@@ -251,8 +255,12 @@ function LierDossier({
             type="warning"
             showIcon
             style={{ marginBottom: 16 }}
-            title={`${accorder(masques.documentsMasques, 'document lié ne sera plus lisible depuis sa fiche', 'documents liés ne seront plus lisibles depuis leur fiche')}.`}
-            description={`${masques.fiches.length > 1 ? 'Fiches concernées' : 'Fiche concernée'} : ${masques.fiches.map(f => `« ${f.titre} »`).join(', ')}. Une fiche masque ces documents tant que le dossier ne sert pas son périmètre.`}
+            title={t`${plural(nombreMasques, { one: '# document lié ne sera plus lisible depuis sa fiche.', other: '# documents liés ne seront plus lisibles depuis leur fiche.' })}`}
+            description={
+              masques.fiches.length > 1
+                ? t`Fiches concernées : ${fichesConcernees}. Une fiche masque ces documents tant que le dossier ne sert pas son périmètre.`
+                : t`Fiche concernée : ${fichesConcernees}. Une fiche masque ces documents tant que le dossier ne sert pas son périmètre.`
+            }
           />
         )}
         {!modification && (
@@ -260,11 +268,12 @@ function LierDossier({
             actif={ouvert}
             valeur={position}
             onChange={setPosition}
-            aide={chemin =>
-              chemin.length === 0
-                ? 'Ouvrez le dossier à lier. Une bibliothèque entière ne se lie pas.'
-                : `Le dossier « ${chemin[chemin.length - 1]} » sera lié.`
-            }
+            aide={chemin => {
+              const dernier = chemin[chemin.length - 1]
+              return chemin.length === 0
+                ? t`Ouvrez le dossier à lier. Une bibliothèque entière ne se lie pas.`
+                : t`Le dossier « ${dernier} » sera lié.`
+            }}
           />
         )}
       </Form>
@@ -280,6 +289,7 @@ function ChoisirDossierExport({
   ouvert: boolean
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const [position, setPosition] = useState<PositionChoisie>(AUCUNE)
   const [choisir, { loading: enCours }] = useMutation(CHOISIR_DOSSIER_EXPORT, {
@@ -295,7 +305,7 @@ function ChoisirDossierExport({
           chemin: position.chemin,
         },
       })
-      message.success('Le dossier d’export est créé. Le premier export part.')
+      message.success(t`Le dossier d’export est créé. Le premier export part.`)
       setPosition(AUCUNE)
       onFermer()
     } catch (e) {
@@ -307,8 +317,8 @@ function ChoisirDossierExport({
     <Modal
       open={ouvert}
       onCancel={onFermer}
-      title="Choisir le dossier d’export"
-      okText="Créer le dossier d’export ici"
+      title={t`Choisir le dossier d’export`}
+      okText={t`Créer le dossier d’export ici`}
       okButtonProps={{
         disabled: position.emplacement === null,
         loading: enCours,
@@ -318,21 +328,24 @@ function ChoisirDossierExport({
       width={640}
     >
       <p className="rt-texte-secondaire">
-        Relaytour crée un dossier « Fiches Relaytour » dans le dossier choisi,
-        et y écrit les fiches de toutes les activités. Ce dossier ne doit pas se
-        trouver dans un dossier lié : les membres y liraient les fiches de tous
-        les périmètres.
+        <Trans>
+          Relaytour crée un dossier « Fiches Relaytour » dans le dossier choisi,
+          et y écrit les fiches de toutes les activités. Ce dossier ne doit pas
+          se trouver dans un dossier lié : les membres y liraient les fiches de
+          tous les périmètres.
+        </Trans>
       </p>
       <Form layout="vertical" component="div">
         <ParcoursEspace
           actif={ouvert}
           valeur={position}
           onChange={setPosition}
-          aide={chemin =>
-            chemin.length === 0
-              ? 'Le dossier « Fiches Relaytour » sera créé à la racine de la bibliothèque.'
-              : `Le dossier « Fiches Relaytour » sera créé dans « ${chemin[chemin.length - 1]} ».`
-          }
+          aide={chemin => {
+            const dernier = chemin[chemin.length - 1]
+            return chemin.length === 0
+              ? t`Le dossier « Fiches Relaytour » sera créé à la racine de la bibliothèque.`
+              : t`Le dossier « Fiches Relaytour » sera créé dans « ${dernier} ».`
+          }}
         />
       </Form>
     </Modal>
@@ -341,6 +354,7 @@ function ChoisirDossierExport({
 
 /** L'export des fiches : le dossier, le dernier résultat et les actions. */
 function ExportFiches({ connexion }: { connexion: Connexion }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const [choix, setChoix] = useState(false)
   const [exporter, { loading: enCours }] = useMutation(
@@ -351,12 +365,19 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
   })
   const rapport = connexion.exportRapport
   const active = connexion.etat === 'ACTIVE'
+  const jourExport = rapport ? jourDeLInstant(rapport.exporteLe) : ''
+  const ecrites = rapport?.ecrites ?? 0
+  const inchangees = rapport?.inchangees ?? 0
+  const retirees = rapport?.supprimees ?? 0
+  const fichesEcrites = t`${plural(ecrites, { one: '# fiche écrite', other: '# fiches écrites' })}`
+  const fichesInchangees = t`${plural(inchangees, { one: '# inchangée', other: '# inchangées' })}`
+  const fichesRetirees = t`${plural(retirees, { one: '# retirée', other: '# retirées' })}`
 
   const lancer = async () => {
     try {
       await exporter()
       message.success(
-        'L’export part. Son résultat s’affiche ici dans quelques instants.'
+        t`L’export part. Son résultat s’affiche ici dans quelques instants.`
       )
     } catch (e) {
       message.error(messageErreur(e))
@@ -364,12 +385,14 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
   }
 
   return (
-    <Panneau titre="Export des fiches" icone={<CloudUploadOutlined />}>
+    <Panneau titre={t`Export des fiches`} icone={<CloudUploadOutlined />}>
       <p className="rt-texte-secondaire">
-        Relaytour écrit les fiches en Markdown dans un dossier du fournisseur
-        cloud, après chaque modification et chaque nuit. Les fiches se modifient
-        toujours dans Relaytour : une modification faite dans ce dossier est
-        remplacée à l’export suivant.
+        <Trans>
+          Relaytour écrit les fiches en Markdown dans un dossier du fournisseur
+          cloud, après chaque modification et chaque nuit. Les fiches se
+          modifient toujours dans Relaytour : une modification faite dans ce
+          dossier est remplacée à l’export suivant.
+        </Trans>
       </p>
       {connexion.exportDossier === null ? (
         <Button
@@ -377,7 +400,7 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
           disabled={!active}
           onClick={() => setChoix(true)}
         >
-          Choisir le dossier d’export
+          {t`Choisir le dossier d’export`}
         </Button>
       ) : (
         <>
@@ -387,15 +410,15 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
             items={[
               {
                 key: 'dossier',
-                label: 'Dossier',
+                label: t`Dossier`,
                 children: connexion.exportDossier,
               },
               {
                 key: 'dernier',
-                label: 'Dernier export',
+                label: t`Dernier export`,
                 children: rapport
-                  ? `${jourDeLInstant(rapport.exporteLe)} : ${accorder(rapport.ecrites, 'fiche écrite', 'fiches écrites')}, ${accorder(rapport.inchangees, 'inchangée', 'inchangées')}, ${accorder(rapport.supprimees, 'retirée', 'retirées')}`
-                  : 'En attente',
+                  ? t`${jourExport} : ${fichesEcrites}, ${fichesInchangees}, ${fichesRetirees}`
+                  : t`En attente`,
               },
             ]}
           />
@@ -412,14 +435,20 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
               type="warning"
               showIcon
               style={{ marginTop: 12 }}
-              message="Ces fiches ne sont pas exportées."
+              message={t`Ces fiches ne sont pas exportées.`}
               description={
                 <ul style={{ margin: 0, paddingInlineStart: 18 }}>
-                  {rapport.refusees.map(r => (
-                    <li key={r.fiche}>
-                      {r.fiche} : {r.raison}
-                    </li>
-                  ))}
+                  {rapport.refusees.map(r => {
+                    const fiche = r.fiche
+                    const raison = r.raison
+                    return (
+                      <li key={r.fiche}>
+                        <Trans>
+                          {fiche} : {raison}
+                        </Trans>
+                      </li>
+                    )
+                  })}
                 </ul>
               }
             />
@@ -429,7 +458,7 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
               type="info"
               showIcon
               style={{ marginTop: 12 }}
-              message="Ces fiches avaient été modifiées chez le fournisseur cloud. Relaytour les a réécrites."
+              message={t`Ces fiches avaient été modifiées chez le fournisseur cloud. Relaytour les a réécrites.`}
               description={rapport.modifieesALaMain.join(', ')}
             />
           )}
@@ -441,21 +470,21 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
               disabled={!active}
               onClick={() => void lancer()}
             >
-              Exporter maintenant
+              {t`Exporter maintenant`}
             </Button>
             <Button disabled={!active} onClick={() => setChoix(true)}>
-              Changer de dossier
+              {t`Changer de dossier`}
             </Button>
             <Popconfirm
-              title="Arrêter l’export des fiches ?"
-              description="Les fichiers déjà écrits restent chez le fournisseur cloud."
-              okText="Arrêter"
-              cancelText="Annuler"
+              title={t`Arrêter l’export des fiches ?`}
+              description={t`Les fichiers déjà écrits restent chez le fournisseur cloud.`}
+              okText={t`Arrêter`}
+              cancelText={t`Annuler`}
               onConfirm={() =>
                 retirer().catch((e: unknown) => message.error(messageErreur(e)))
               }
             >
-              <Button danger>Arrêter l’export</Button>
+              <Button danger>{t`Arrêter l’export`}</Button>
             </Popconfirm>
           </div>
         </>
@@ -466,6 +495,7 @@ function ExportFiches({ connexion }: { connexion: Connexion }) {
 }
 
 export default function EspaceFichiers() {
+  const { t } = useLingui()
   const { activite } = useActivite()
   const { message } = App.useApp()
   const [parametres, setParametres] = useSearchParams()
@@ -488,9 +518,9 @@ export default function EspaceFichiers() {
   useEffect(() => {
     if (issue === null) return
     const avis = ISSUES[issue] ?? ISSUES.echec!
-    message.open({ type: avis.type, content: avis.texte })
+    message.open({ type: avis.type, content: t(avis.texte) })
     setParametres({}, { replace: true })
-  }, [issue, message, setParametres])
+  }, [issue, message, setParametres, t])
 
   const espace = data?.espaceFichiers
   const connexion = espace?.connexion ?? null
@@ -509,8 +539,8 @@ export default function EspaceFichiers() {
         await reglerPortee({ variables: { portee } })
         message.success(
           portee === 'GESTION'
-            ? 'La gestion des accès est activée.'
-            : 'La vérification des accès est activée.'
+            ? t`La gestion des accès est activée.`
+            : t`La vérification des accès est activée.`
         )
         return
       }
@@ -524,6 +554,7 @@ export default function EspaceFichiers() {
     }
   }
   const onglet = parametres.get('onglet') ?? 'connexion'
+  const nomActivite = activite.nom
 
   const connexionEtDossiers = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
@@ -536,7 +567,7 @@ export default function EspaceFichiers() {
       )}
 
       <Panneau
-        titre={`Dossiers liés de l’activité « ${activite.nom} »`}
+        titre={t`Dossiers liés de l’activité « ${nomActivite} »`}
         icone={<FolderOutlined />}
         extra={
           <Button
@@ -544,7 +575,7 @@ export default function EspaceFichiers() {
             disabled={connexion?.etat !== 'ACTIVE'}
             onClick={() => setChoix(true)}
           >
-            Lier un dossier
+            {t`Lier un dossier`}
           </Button>
         }
       >
@@ -553,49 +584,58 @@ export default function EspaceFichiers() {
         ) : (liens.data?.dossiersLies ?? []).length === 0 ? (
           <Empty
             image={Empty.PRESENTED_IMAGE_SIMPLE}
-            description="Aucun dossier n’est lié à cette activité."
+            description={t`Aucun dossier n’est lié à cette activité.`}
           />
         ) : (
           <ul className="rt-explorateur">
-            {liens.data?.dossiersLies.map(d => (
-              <li key={d.id} className="rt-explorateur-ligne">
-                <FolderOutlined aria-hidden className="rt-explorateur-icone" />
-                <span className="rt-explorateur-nom">{d.nom}</span>
-                <EtiquettesLecteurs
-                  touteActivite={d.touteActivite}
-                  perimetres={d.perimetres}
-                  groupes={d.groupes}
-                />
-                {!d.disponible && <Tag color="warning">Indisponible</Tag>}
-                <Button
-                  type="text"
-                  icon={<EditOutlined />}
-                  aria-label={`Modifier le dossier ${d.nom}`}
-                  onClick={() => setModifie(d)}
-                />
-                <Popconfirm
-                  title="Retirer ce dossier ?"
-                  description={
-                    d.accesCrees > 0
-                      ? `Le dossier reste chez le fournisseur cloud. Relaytour y a créé ${d.accesCrees > 1 ? `${d.accesCrees} accès, qui restent` : 'un accès, qui reste'} sans suivi.`
-                      : 'Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour.'
-                  }
-                  okText="Retirer"
-                  cancelText="Annuler"
-                  onConfirm={() =>
-                    delier({
-                      variables: { id: d.id, oublierAcces: d.accesCrees > 0 },
-                    }).catch((e: unknown) => message.error(messageErreur(e)))
-                  }
-                >
+            {liens.data?.dossiersLies.map(d => {
+              const nomDossierLie = d.nom
+              const accesCrees = d.accesCrees
+              return (
+                <li key={d.id} className="rt-explorateur-ligne">
+                  <FolderOutlined
+                    aria-hidden
+                    className="rt-explorateur-icone"
+                  />
+                  <span className="rt-explorateur-nom">{d.nom}</span>
+                  <EtiquettesLecteurs
+                    touteActivite={d.touteActivite}
+                    perimetres={d.perimetres}
+                    groupes={d.groupes}
+                  />
+                  {!d.disponible && (
+                    <Tag color="warning">{t`Indisponible`}</Tag>
+                  )}
                   <Button
                     type="text"
-                    icon={<DeleteOutlined />}
-                    aria-label={`Retirer le dossier ${d.nom}`}
+                    icon={<EditOutlined />}
+                    aria-label={t`Modifier le dossier ${nomDossierLie}`}
+                    onClick={() => setModifie(d)}
                   />
-                </Popconfirm>
-              </li>
-            ))}
+                  <Popconfirm
+                    title={t`Retirer ce dossier ?`}
+                    description={
+                      accesCrees > 0
+                        ? t`Le dossier reste chez le fournisseur cloud. Relaytour y a créé ${plural(accesCrees, { one: 'un accès, qui reste', other: '# accès, qui restent' })} sans suivi.`
+                        : t`Le dossier reste chez le fournisseur cloud. Les membres ne le lisent plus dans Relaytour.`
+                    }
+                    okText={t`Retirer`}
+                    cancelText={t`Annuler`}
+                    onConfirm={() =>
+                      delier({
+                        variables: { id: d.id, oublierAcces: d.accesCrees > 0 },
+                      }).catch((e: unknown) => message.error(messageErreur(e)))
+                    }
+                  >
+                    <Button
+                      type="text"
+                      icon={<DeleteOutlined />}
+                      aria-label={t`Retirer le dossier ${nomDossierLie}`}
+                    />
+                  </Popconfirm>
+                </li>
+              )
+            })}
           </ul>
         )}
       </Panneau>
@@ -604,8 +644,10 @@ export default function EspaceFichiers() {
 
   return (
     <>
-      <Titre sousTitre="Les membres lisent les documents de l’association depuis Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document.">
-        Fournisseur cloud
+      <Titre
+        sousTitre={t`Les membres lisent les documents de l’association depuis Relaytour, sans compte chez le fournisseur. Relaytour ne copie aucun document.`}
+      >
+        {t`Fournisseur cloud`}
       </Titre>
 
       {connexion === null ? (
@@ -621,12 +663,12 @@ export default function EspaceFichiers() {
           items={[
             {
               key: 'connexion',
-              label: 'Connexion et dossiers',
+              label: t`Connexion et dossiers`,
               children: connexionEtDossiers,
             },
             {
               key: 'acces',
-              label: 'Vérification des accès',
+              label: t`Vérification des accès`,
               children: (
                 <VerificationAcces
                   connexion={connexion}
@@ -641,7 +683,7 @@ export default function EspaceFichiers() {
               ? [
                   {
                     key: 'comptes',
-                    label: 'Comptes',
+                    label: t`Comptes`,
                     children: (
                       <ComptesFournisseur
                         annuaire={AVEC_ANNUAIRE.has(connexion.fournisseur)}

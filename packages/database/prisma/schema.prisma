@@ -331,6 +331,9 @@ model User {
   // qu'aucune lecture ne le prenne pour l'archivage d'une personne ; la colonne garde
   // le sien.
   sansAppartenanceActiveLe DateTime? @map("archivedAt")
+  // Langue choisie par la personne pour l'interface, les mails et les notifications
+  // (ADR 0047). Sans choix, la langue de l'organisation s'applique.
+  langue                   String?   @db.VarChar(16)
 
   sessions                Session[]
   accounts                Account[]

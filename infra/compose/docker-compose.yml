@@ -43,6 +43,7 @@ x-environnement-app: &environnement-app
   SUPPORT_URL: '${SUPPORT_URL:-}'
   CODE_SOURCE_URL: '${CODE_SOURCE_URL:-}'
   MODES_D_EMPLOI_URL: '${MODES_D_EMPLOI_URL:-}'
+  MODES_D_EMPLOI_URL_EN: '${MODES_D_EMPLOI_URL_EN:-}'
   # Notifications push (ADR 0024) : l'API donne la clé publique, le worker envoie.
   PUSH_VAPID_PUBLIQUE: '${PUSH_VAPID_PUBLIQUE:-}'
   PUSH_VAPID_PRIVEE: '${PUSH_VAPID_PRIVEE:-}'

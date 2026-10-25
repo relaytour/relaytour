@@ -1,4 +1,5 @@
 import { PlusOutlined } from '@ant-design/icons'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Select } from 'antd'
 
 import { useActivite } from '../lib/activite'
@@ -30,6 +31,7 @@ export default function ChoixPerimetresCibles({
   onChange?: (ids: string[]) => void
   disabled?: boolean
 }) {
+  const { t } = useLingui()
   const { activite } = useActivite()
   const groupes = activite.groupes
     .map(groupe => ({
@@ -46,8 +48,8 @@ export default function ChoixPerimetresCibles({
         // Le serveur refuse une liste plus longue : le champ s'arrête avant.
         maxCount={CIBLES_MAX}
         allowClear
-        aria-label="Périmètres"
-        placeholder="Choisir des périmètres"
+        aria-label={t`Périmètres`}
+        placeholder={t`Choisir des périmètres`}
         disabled={disabled}
         value={value}
         onChange={onChange}
@@ -81,6 +83,7 @@ export default function ChoixPerimetresCibles({
               ...new Set([...value, ...g.perimetres.map(p => p.id)]),
             ]
             const tropLong = avecLeGroupe.length > CIBLES_MAX
+            const nomDuGroupe = g.groupe.libellePluriel
             return (
               <Button
                 key={g.groupe.cle}
@@ -93,10 +96,10 @@ export default function ChoixPerimetresCibles({
                 }
                 title={
                   tropLong
-                    ? `Une tâche se décline dans ${CIBLES_MAX} périmètres au plus.`
+                    ? t`Une tâche se décline dans ${CIBLES_MAX} périmètres au plus.`
                     : undefined
                 }
-                aria-label={`Ajouter tous les périmètres du groupe ${g.groupe.libellePluriel}`}
+                aria-label={t`Ajouter tous les périmètres du groupe ${nomDuGroupe}`}
                 onClick={() => onChange?.(avecLeGroupe)}
               >
                 {g.groupe.libellePluriel}
@@ -107,7 +110,10 @@ export default function ChoixPerimetresCibles({
       )}
       {value.length >= CIBLES_MAX && (
         <span className="rt-note">
-          Une tâche se décline dans {CIBLES_MAX} périmètres au plus en une fois.
+          <Trans>
+            Une tâche se décline dans {CIBLES_MAX} périmètres au plus en une
+            fois.
+          </Trans>
         </span>
       )}
     </div>

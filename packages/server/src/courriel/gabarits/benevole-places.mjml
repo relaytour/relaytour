@@ -28,7 +28,7 @@
         <mj-button href="{{lienEspace}}" background-color="#010101" color="#FFFFFF"
                    border-radius="10px" font-size="15px" font-weight="700"
                    padding="8px 0 16px" inner-padding="13px 24px">
-          Ouvrir mon espace
+          [[Ouvrir mon espace]]
         </mj-button>
         <mj-text font-size="13px" line-height="20px" color="#5B6670">
           {{avertissement}}
