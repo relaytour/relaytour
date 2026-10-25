@@ -75,4 +75,4 @@ yarn workspace @relaytour/server orga:exporter --dossier /path/to/your/content  
 
 ## License
 
-Relaytour is distributed under the [GNU AGPL-3.0](LICENSE) license. Copyright Quentin Fremeaux. The name and the logo are not covered by this license ([MARQUE.md](MARQUE.md), in French).
+Relaytour is distributed under the [GNU AGPL-3.0](LICENSE) license. Copyright Quentin Fremeaux. Relaytour is a trademark of Quentin Fremeaux, filed in France. The name and the logo are not covered by this license ([MARQUE.md](MARQUE.md), in French).

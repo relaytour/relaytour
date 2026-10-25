@@ -2,6 +2,8 @@
 
 La licence AGPL-3.0 couvre le code de Relaytour. Elle ne couvre ni le nom « Relaytour », ni le pictogramme aux deux arcs, ni les fichiers qui les portent (`packages/orga/public/favicon.svg`, `favicon.png`, `icon*.png`). Ces éléments restent la propriété de Quentin Fremeaux.
 
+Le nom « Relaytour » est une marque déposée à l'INPI au nom de Quentin Fremeaux (demande n° 5313120 du 25 octobre 2026), pour les logiciels et les services en ligne. Le pictogramme est protégé par le droit d'auteur.
+
 ## Ce que vous pouvez faire sans demander
 
 - Installer et héberger Relaytour tel que publié, avec son nom et son pictogramme, pour votre organisation ou pour des tiers.
