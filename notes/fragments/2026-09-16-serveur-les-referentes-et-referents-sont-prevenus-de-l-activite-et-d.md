@@ -14,6 +14,14 @@ fr:
     personne modifie une de vos tâches, et chaque matin pour les échéances à
     7 jours, à la veille et les retards. Un résumé regroupe le reste, chaque
     lundi ou chaque jour.
+en:
+  titre: >-
+    Coordinators are notified of activity and due dates
+  texte: >-
+    Each task creation, claim, or edit notifies the other people in the area. An
+    email is sent immediately when another person edits one of your tasks, and
+    each morning for due dates 7 days out, the day before, and overdue tasks. A
+    digest groups the rest, each Monday or each day.
 ---
 
 Phase 4 du plan de l'espace organisateur.

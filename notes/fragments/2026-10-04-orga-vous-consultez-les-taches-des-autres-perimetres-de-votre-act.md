@@ -17,6 +17,17 @@ fr:
     l'activité : la bascule « Mes périmètres » le ramène à vos périmètres. La
     page d'un périmètre et le rétroplanning filtrent aussi les tâches en
     retard.
+en:
+  titre: >-
+    You view the tasks of the other areas in your activity
+  texte: >-
+    As soon as you have your first appointment in an activity, you can open
+    every area of that activity from “All areas”. You read the tasks, the
+    progress, the overdue tasks, and the people appointed. You cannot edit
+    anything there, and sheets stay reserved for people appointed to the area.
+    The timeline now covers the whole activity: the “My areas” toggle brings it
+    back to your areas. An area’s page and the timeline also filter overdue
+    tasks.
 ---
 
 `Perimetre.tsx` lit `Perimetre.acces`. En consultation, la page affiche un

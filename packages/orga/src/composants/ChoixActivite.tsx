@@ -1,4 +1,5 @@
 import { CheckOutlined, SwapOutlined } from '@ant-design/icons'
+import { useLingui } from '@lingui/react/macro'
 import { Button, Dropdown } from 'antd'
 import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router'
@@ -22,6 +23,7 @@ export default function ChoixActivite({
   /** Ferme le tiroir de la vue mobile après un changement d'activité. */
   apresChoix?: () => void
 }) {
+  const { t } = useLingui()
   const { activite, activites } = useActivite()
   const organisation = useOrganisation()
   const navigate = useNavigate()
@@ -90,8 +92,8 @@ export default function ChoixActivite({
               ref={bouton}
               type="text"
               icon={<SwapOutlined />}
-              aria-label="Changer d’activité"
-              title="Changer d’activité"
+              aria-label={t`Changer d’activité`}
+              title={t`Changer d’activité`}
             />
           </Dropdown>
         )}

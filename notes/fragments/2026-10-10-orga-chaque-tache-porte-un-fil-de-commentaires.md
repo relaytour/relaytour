@@ -15,6 +15,16 @@ fr:
     et changements de statut. Une adresse web écrite dans un commentaire devient
     un lien. Les personnes assignées à la tâche reçoivent une notification, sans
     mail immédiat. Vous modifiez et supprimez vos propres commentaires.
+en:
+  titre: >-
+    Each task has a comment thread
+  texte: >-
+    The “Comment” button on a task opens its thread. You write a report, a piece
+    of information, or a question there, with your name and the date. The thread
+    also shows the task’s history: creation, edits, assignments, and status
+    changes. A web address written in a comment becomes a link. The task’s
+    assignees receive a notification, with no immediate email. You edit and
+    delete your own comments.
 ---
 
 ADR 0029. `FilTache` lit `filTache` à l'ouverture du volet ; la carte lit le

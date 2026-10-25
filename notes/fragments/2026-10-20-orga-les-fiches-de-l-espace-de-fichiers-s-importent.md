@@ -14,6 +14,14 @@ fr:
     Word. Relaytour propose un dossier par périmètre, d'après son nom, et
     simule l'import avant d'écrire. Une fiche modifiée dans Relaytour n'est
     jamais remplacée.
+en:
+  titre: >-
+    Sheets stored in the file space can be imported
+  texte: >-
+    In the “Cloud provider” screen, you import the sheets the association
+    already stores in its cloud: Markdown, text, or Word files. Relaytour
+    proposes one folder per area, based on its name, and simulates the import
+    before writing anything. A sheet edited in Relaytour is never replaced.
 ---
 
 ADR 0038 : requête `simulerImportFiches` et mutation `importerFichesEspace`,

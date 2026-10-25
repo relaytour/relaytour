@@ -30,6 +30,7 @@ import {
 import { fermerLesFlux } from './lib/flux.ts'
 import { jetonValide } from './lib/jeton.ts'
 import { journal } from './lib/journal.ts'
+import { avecLangue, langueDe, languesDuNavigateur } from './lib/langue.ts'
 import { formaterErreur } from './lib/erreurs.ts'
 import { limiterParCle, rendreTentative } from './lib/limite.ts'
 import { EXTENSIONS, type TypeMedia } from './lib/medias.ts'
@@ -271,6 +272,7 @@ const servirDesabonnement =
         "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'; base-uri 'none'",
     })
     const jeton = String(req.params.jeton)
+    const navigateur = languesDuNavigateur(req.get('accept-language'))
     void (async () => {
       const permis = await limiterParCle(
         `desabonnement:${adresseClient(req)}`,
@@ -287,25 +289,25 @@ const servirDesabonnement =
         res
           .status(404)
           .type('html')
-          .send(await pageDesabonnement('invalide', null))
+          .send(await pageDesabonnement(prisma, 'invalide', null, navigateur))
         return
       }
       if (methode === 'GET') {
-        res.type('html').send(await pageDesabonnement('confirmer', lu))
+        res.type('html').send(await pageDesabonnement(prisma, 'confirmer', lu))
         return
       }
       if (!(await desabonner(prisma, lu))) {
         res
           .status(404)
           .type('html')
-          .send(await pageDesabonnement('invalide', null))
+          .send(await pageDesabonnement(prisma, 'invalide', null, navigateur))
         return
       }
       journal.info(
         { evenement: 'desabonnement', sorte: lu.sorte, userId: lu.userId },
         'Une personne s’est désabonnée d’un mail.'
       )
-      res.type('html').send(await pageDesabonnement('fait', lu))
+      res.type('html').send(await pageDesabonnement(prisma, 'fait', lu))
     })().catch((erreur: unknown) => {
       journal.error(
         {
@@ -391,6 +393,13 @@ app.use(
   '/graphql',
   cors({ origin: env.CORS_ORIGIN, credentials: true }),
   express.json({ limit: '1mb' }),
+  // La requête s'exécute dans la langue du navigateur ; le contexte la remplace par
+  // celle de la personne connectée (ADR 0047).
+  (req, _res, suite) =>
+    avecLangue(
+      langueDe(null, null, languesDuNavigateur(req.get('accept-language'))),
+      suite
+    ),
   // Les abonnements partent en SSE (ADR 0017) ; le reste continue vers Apollo.
   creerGestionnaireFlux({ contexte: contexteDeRequete }),
   expressMiddleware(apollo, { context: ({ req }) => contexteDeRequete(req) })

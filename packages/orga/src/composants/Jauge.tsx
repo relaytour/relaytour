@@ -1,3 +1,6 @@
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react/macro'
 import { Tag } from 'antd'
 
 import type { EtatPlace as Etat } from '../gql/graphql'
@@ -16,29 +19,32 @@ export function Jauge({
   /** « 2/6 » seulement, pour une carte du programme. */
   court?: boolean
 }) {
+  const { t } = useLingui()
   const couleur =
     renforts < besoin ? 'warning' : renforts > besoin ? 'processing' : 'success'
+  const manque = besoin - renforts
   const titre =
     renforts < besoin
-      ? `Il manque ${besoin - renforts} renfort${besoin - renforts > 1 ? 's' : ''}.`
+      ? t`Il manque ${plural(manque, { one: '# renfort', other: '# renforts' })}.`
       : renforts > besoin
-        ? 'Le besoin est dépassé.'
-        : 'Le besoin est atteint.'
+        ? t`Le besoin est dépassé.`
+        : t`Le besoin est atteint.`
   return (
     <Tag color={couleur} title={titre} className="rt-jauge">
-      {court ? `${renforts}/${besoin}` : `${renforts} / ${besoin} renforts`}
+      {court ? `${renforts}/${besoin}` : t`${renforts} / ${besoin} renforts`}
     </Tag>
   )
 }
 
-const LIBELLES: Record<Etat, string> = {
-  CONFIRMEE: 'Confirmée',
-  A_CONFIRMER: 'À confirmer',
-  NON_CONFIRMEE: 'Non confirmée',
+const LIBELLES: Record<Etat, MessageDescriptor> = {
+  CONFIRMEE: msg`Confirmée`,
+  A_CONFIRMER: msg`À confirmer`,
+  NON_CONFIRMEE: msg`Non confirmée`,
 }
 
 /** L'état d'une place qui attend la confirmation de la personne. */
 export function EtatPlace({ etat }: { etat: Etat }) {
+  const { t } = useLingui()
   return (
     <Tag
       color={
@@ -50,11 +56,11 @@ export function EtatPlace({ etat }: { etat: Etat }) {
       }
       title={
         etat === 'NON_CONFIRMEE'
-          ? 'La personne n’a pas confirmé depuis sept jours, ou la séquence arrive demain.'
+          ? t`La personne n’a pas confirmé depuis sept jours, ou la séquence arrive demain.`
           : undefined
       }
     >
-      {LIBELLES[etat]}
+      {t(LIBELLES[etat])}
     </Tag>
   )
 }

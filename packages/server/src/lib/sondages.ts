@@ -1,6 +1,7 @@
 import { decalerJour } from './agenda.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { HEURE } from './heures.ts'
+import { i18n } from './langue.ts'
 
 // Sondages de dates (ADR 0037). Ce module ne lit pas la base.
 
@@ -32,10 +33,14 @@ export function creneauxValides(
   periode: { debut: string; fin: string }
 ): CreneauValide[] {
   if (creneaux.length === 0) {
-    throw erreurSaisie('Proposez au moins un créneau.')
+    throw erreurSaisie(i18n._('Proposez au moins un créneau.'))
   }
   if (creneaux.length > CRENEAUX_MAX) {
-    throw erreurSaisie(`Un sondage propose ${CRENEAUX_MAX} créneaux au plus.`)
+    throw erreurSaisie(
+      i18n._('Un sondage propose {max} créneaux au plus.', {
+        max: CRENEAUX_MAX,
+      })
+    )
   }
   const vus = new Set<string>()
   const valides: Omit<CreneauValide, 'ordre'>[] = []
@@ -45,22 +50,26 @@ export function creneauxValides(
       c.jour > decalerJour(periode.fin, 730)
     ) {
       throw erreurSaisie(
-        'Un créneau se place dans les deux ans qui entourent la période.'
+        i18n._(
+          'Un créneau se place dans les deux ans qui entourent la période.'
+        )
       )
     }
     const debut = c.heureDebut?.trim() || null
     const fin = c.heureFin?.trim() || null
     if ((debut === null) !== (fin === null)) {
       throw erreurSaisie(
-        'Un créneau porte une heure de début et une heure de fin, ou aucune.'
+        i18n._(
+          'Un créneau porte une heure de début et une heure de fin, ou aucune.'
+        )
       )
     }
     if (debut !== null && fin !== null) {
       if (!HEURE.test(debut) || !HEURE.test(fin)) {
-        throw erreurSaisie('L’heure attendue est au format HH:MM.')
+        throw erreurSaisie(i18n._('L’heure attendue est au format HH:MM.'))
       }
       if (fin <= debut) {
-        throw erreurSaisie('L’heure de fin suit l’heure de début.')
+        throw erreurSaisie(i18n._('L’heure de fin suit l’heure de début.'))
       }
     }
     const cle = `${c.jour} ${debut ?? ''} ${fin ?? ''}`
@@ -77,7 +86,7 @@ export function creneauxValides(
   // même identifiant écraseraient l'un l'autre.
   const ids = valides.flatMap(c => (c.id === null ? [] : [c.id]))
   if (new Set(ids).size !== ids.length) {
-    throw erreurSaisie('Un créneau existant figure deux fois.')
+    throw erreurSaisie(i18n._('Un créneau existant figure deux fois.'))
   }
   return valides
     .sort(

@@ -1,5 +1,7 @@
 import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { useApolloClient } from '@apollo/client/react'
+import { plural, t } from '@lingui/core/macro'
+import { useLingui } from '@lingui/react/macro'
 import { App } from 'antd'
 
 import { graphql } from '../gql'
@@ -12,14 +14,35 @@ import { relireLesVues, VUES_TACHES } from './rafraichissement'
 /** Longueur maximale d'un titre de tâche ou de fiche, celle de sa colonne en base. */
 export const TITRE_MAX = 191
 
+// Le libellé se lit à l'affichage : il suit la langue active.
 export const STATUTS: Record<
   StatutTache,
-  { libelle: string; couleur: string }
+  { readonly libelle: string; couleur: string }
 > = {
-  A_FAIRE: { libelle: 'À faire', couleur: 'default' },
-  EN_COURS: { libelle: 'En cours', couleur: 'blue' },
-  FAITE: { libelle: 'Faite', couleur: 'green' },
-  ABANDONNEE: { libelle: 'Abandonnée', couleur: 'default' },
+  A_FAIRE: {
+    get libelle() {
+      return t({ message: 'À faire', comment: 'Statut d’une tâche' })
+    },
+    couleur: 'default',
+  },
+  EN_COURS: {
+    get libelle() {
+      return t({ message: 'En cours', comment: 'Statut d’une tâche' })
+    },
+    couleur: 'blue',
+  },
+  FAITE: {
+    get libelle() {
+      return t({ message: 'Faite', comment: 'Statut d’une tâche' })
+    },
+    couleur: 'green',
+  },
+  ABANDONNEE: {
+    get libelle() {
+      return t({ message: 'Abandonnée', comment: 'Statut d’une tâche' })
+    },
+    couleur: 'default',
+  },
 }
 
 /** Classe CSS de la pastille d'état de chaque statut (global.css, `.rt-etat-*`). */
@@ -295,6 +318,7 @@ export interface Reprise {
  */
 export function useActionTache() {
   const { message, modal } = App.useApp()
+  const { t } = useLingui()
   const client = useApolloClient()
 
   return async function executer(
@@ -320,8 +344,8 @@ export function useActionTache() {
           const ecraser = await modal.confirm({
             title: titre,
             content: texte,
-            okText: 'Écraser',
-            cancelText: 'Recharger',
+            okText: t`Écraser`,
+            cancelText: t`Recharger`,
           })
           if (!ecraser) {
             // La saisie ne se ferme qu'après une relecture réussie : sans réponse
@@ -330,7 +354,7 @@ export function useActionTache() {
               options.apresRechargement?.()
             } else {
               message.error(
-                'La tâche n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.'
+                t`La tâche n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.`
               )
             }
             return false
@@ -351,19 +375,22 @@ export function useActionTache() {
         }
         const personnes =
           (premiere.extensions.personnes as string[] | undefined) ?? []
+        const nomsDesPersonnes = personnes.join(', ')
+        const nombreDePersonnes = personnes.length
         const confirme = await modal.confirm({
-          title: 'Cette tâche est assignée à d’autres personnes',
-          content: `${personnes.join(', ')} ${
-            personnes.length > 1 ? 'recevront' : 'recevra'
-          } un mail pour les prévenir de votre modification.`,
-          okText: 'Confirmer',
-          cancelText: 'Annuler',
+          title: t`Cette tâche est assignée à d’autres personnes`,
+          content: t`${plural(nombreDePersonnes, {
+            one: `${nomsDesPersonnes} recevra un mail pour les prévenir de votre modification.`,
+            other: `${nomsDesPersonnes} recevront un mail pour les prévenir de votre modification.`,
+          })}`,
+          okText: t`Confirmer`,
+          cancelText: t`Annuler`,
         })
         if (!confirme) return false
         reprise.confirmer = true
       }
     }
-    message.error('L’opération a échoué. Rechargez la page, puis réessayez.')
+    message.error(t`L’opération a échoué. Rechargez la page, puis réessayez.`)
     return false
   }
 }

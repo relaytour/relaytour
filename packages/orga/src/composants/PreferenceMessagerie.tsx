@@ -1,4 +1,5 @@
 import { MailOutlined } from '@ant-design/icons'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Segmented, Space } from 'antd'
 import { useState } from 'react'
 
@@ -34,6 +35,7 @@ interface Essai {
 }
 
 export default function PreferenceMessagerie() {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const { moi } = useSession()
   const [enregistree, setEnregistree] = useState(lireMessagerie)
@@ -48,6 +50,7 @@ export default function PreferenceMessagerie() {
   const application = cible.genre === 'application'
   const essaiDuChoix = essai?.cle === choix ? essai : null
   // Une application déjà enregistrée a passé son essai sur ce navigateur.
+  const libelleMessagerie = cible.libelle
   const aEssayer =
     application && choix !== enregistree && essaiDuChoix?.reponse !== 'oui'
 
@@ -73,22 +76,24 @@ export default function PreferenceMessagerie() {
     if (separateurGarde) setSeparateurEnregistre(separateur)
     if (!cibleGardee || !separateurGarde) {
       message.error(
-        'Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message.'
+        t`Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message.`
       )
       return
     }
-    message.success('Votre messagerie est enregistrée pour ce navigateur.')
+    message.success(t`Votre messagerie est enregistrée pour ce navigateur.`)
   }
 
   return (
-    <Panneau titre="Votre messagerie" icone={<MailOutlined />}>
+    <Panneau titre={t`Votre messagerie`} icone={<MailOutlined />}>
       <p className="rt-texte-secondaire">
-        Quand vous préparez un message, l’espace organisateur ouvre votre
-        messagerie par un lien <code>mailto:</code>. Ce lien ouvre l’application
-        de mail réglée par défaut sur votre appareil. Vous pouvez choisir ici
-        une autre messagerie.{' '}
+        <Trans>
+          Quand vous préparez un message, l’espace organisateur ouvre votre
+          messagerie par un lien <code>mailto:</code>. Ce lien ouvre
+          l’application de mail réglée par défaut sur votre appareil. Vous
+          pouvez choisir ici une autre messagerie.
+        </Trans>{' '}
         <LienGuideMessagerie>
-          Lire le mode d’emploi « Choisir votre messagerie »
+          {t`Lire le mode d’emploi « Choisir votre messagerie »`}
         </LienGuideMessagerie>
       </p>
       <ChoixMessagerie
@@ -101,7 +106,7 @@ export default function PreferenceMessagerie() {
         <div>
           <Space wrap size={8}>
             <span id="rt-preference-separateur">
-              Séparateur des adresses copiées
+              <Trans>Séparateur des adresses copiées</Trans>
             </span>
             <Segmented<Separateur>
               aria-labelledby="rt-preference-separateur"
@@ -114,10 +119,12 @@ export default function PreferenceMessagerie() {
             />
           </Space>
           <p className="rt-note" style={{ marginTop: 6 }}>
-            Choisissez le point-virgule si votre messagerie par défaut est
-            Outlook : il ne découpe pas des adresses collées avec des virgules.
-            Vous pouvez changer ce signe à côté des boutons de copie de chaque
-            message.
+            <Trans>
+              Choisissez le point-virgule si votre messagerie par défaut est
+              Outlook : il ne découpe pas des adresses collées avec des
+              virgules. Vous pouvez changer ce signe à côté des boutons de copie
+              de chaque message.
+            </Trans>
           </p>
         </div>
       )}
@@ -128,20 +135,25 @@ export default function PreferenceMessagerie() {
             <Alert
               type="warning"
               showIcon
-              title="L’application ne semble pas s’être ouverte"
-              description={`Votre navigateur n’a pas quitté cette page. L’application n’est peut-être pas installée sur cet appareil, ou ne répond pas à ce lien.`}
+              title={t`L’application ne semble pas s’être ouverte`}
+              description={t`Votre navigateur n’a pas quitté cette page. L’application n’est peut-être pas installée sur cet appareil, ou ne répond pas à ce lien.`}
             />
           )}
           {essaiDuChoix.reponse === null && (
             <div>
               <p style={{ margin: '0 0 8px', fontWeight: 600 }}>
-                Un message d’essai s’est-il ouvert dans « {cible.libelle} » ?
+                <Trans>
+                  Un message d’essai s’est-il ouvert dans « {libelleMessagerie}{' '}
+                  » ?
+                </Trans>
               </p>
               <Space wrap>
                 <Button onClick={() => repondre('oui')}>
-                  Oui, le message s’est ouvert
+                  <Trans>Oui, le message s’est ouvert</Trans>
                 </Button>
-                <Button onClick={() => repondre('non')}>Non</Button>
+                <Button onClick={() => repondre('non')}>
+                  <Trans>Non</Trans>
+                </Button>
               </Space>
             </div>
           )}
@@ -149,11 +161,11 @@ export default function PreferenceMessagerie() {
             <Alert
               type="success"
               showIcon
-              title="L’essai a réussi"
+              title={t`L’essai a réussi`}
               description={
                 cible.copiesEtablies
-                  ? 'Vous pouvez fermer le message d’essai sans l’envoyer.'
-                  : 'Vérifiez que votre adresse figure dans le champ « Cci » du message d’essai. Si ce champ est vide, cette messagerie ne reprend pas les adresses cachées : vous les collerez vous-même.'
+                  ? t`Vous pouvez fermer le message d’essai sans l’envoyer.`
+                  : t`Vérifiez que votre adresse figure dans le champ « Cci » du message d’essai. Si ce champ est vide, cette messagerie ne reprend pas les adresses cachées : vous les collerez vous-même.`
               }
             />
           )}
@@ -161,13 +173,15 @@ export default function PreferenceMessagerie() {
             <Alert
               type="info"
               showIcon
-              title="Choisissez une autre messagerie"
+              title={t`Choisissez une autre messagerie`}
               description={
                 <>
-                  Gardez la messagerie par défaut de l’appareil, ou choisissez
-                  une messagerie en ligne.{' '}
+                  <Trans>
+                    Gardez la messagerie par défaut de l’appareil, ou choisissez
+                    une messagerie en ligne.
+                  </Trans>{' '}
                   <LienGuideMessagerie>
-                    Le mode d’emploi décrit chaque choix.
+                    {t`Le mode d’emploi décrit chaque choix.`}
                   </LienGuideMessagerie>
                 </>
               }
@@ -187,15 +201,15 @@ export default function PreferenceMessagerie() {
       >
         <p className="rt-note" style={{ maxWidth: 400, margin: 0 }}>
           {aEssayer
-            ? 'Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils.'
-            : 'Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le changer pour un message dans la fenêtre « Écrire un message ».'}
+            ? t`Essayez cette application avant d’enregistrer : elle ne répond pas sur tous les appareils.`
+            : t`Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le changer pour un message dans la fenêtre « Écrire un message ».`}
         </p>
         <Space wrap>
           <Button
             loading={essaiDuChoix?.observee === null}
             onClick={() => void essayer()}
           >
-            Essayer
+            <Trans>Essayer</Trans>
           </Button>
           <Button
             type="primary"
@@ -205,7 +219,7 @@ export default function PreferenceMessagerie() {
             }
             onClick={enregistrer}
           >
-            Enregistrer
+            <Trans>Enregistrer</Trans>
           </Button>
         </Space>
       </div>

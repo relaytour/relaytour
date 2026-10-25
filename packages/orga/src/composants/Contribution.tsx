@@ -1,5 +1,7 @@
 import { InfoCircleOutlined } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Popover, Skeleton } from 'antd'
 
 import { graphql } from '../gql'
@@ -34,31 +36,50 @@ export default function Contribution({
   editionId: string
   nomEdition: string
 }) {
+  const { t } = useLingui()
   const { data, loading } = useQuery(MON_SCORE, { variables: { editionId } })
   const score = data?.monScore
   const bareme = data?.baremeScore
+  const pointsTacheRealisee = bareme?.tacheRealisee
+  const pointsBonusATemps = bareme?.bonusATemps
+  const pointsTacheCreee = bareme?.tacheCreee
+  const pointsFicheCreee = bareme?.ficheCreee
+  const pointsFicheModifiee = bareme?.ficheModifiee
+  const points = score?.points ?? 0
 
   return (
     <Panneau
-      titre="Votre contribution"
+      titre={t`Votre contribution`}
       extra={
         bareme && (
           <Popover
             trigger={['hover', 'click']}
-            title="Comment les points se calculent"
+            title={t`Comment les points se calculent`}
             content={
               <ul style={{ margin: 0, paddingInlineStart: 18, maxWidth: 320 }}>
                 <li>
-                  Tâche réalisée : {bareme.tacheRealisee} points, +
-                  {bareme.bonusATemps} si elle est faite à temps.
+                  <Trans>
+                    Tâche réalisée : {pointsTacheRealisee} points, +
+                    {pointsBonusATemps} si elle est faite à temps.
+                  </Trans>
                 </li>
-                <li>Tâche créée : {bareme.tacheCreee} point.</li>
-                <li>Fiche créée : {bareme.ficheCreee} points.</li>
                 <li>
-                  Fiche modifiée : {bareme.ficheModifiee} points, une fois par
-                  jour au plus.
+                  <Trans>Tâche créée : {pointsTacheCreee} point.</Trans>
                 </li>
-                <li>Une tâche rouverte ou abandonnée perd ses points.</li>
+                <li>
+                  <Trans>Fiche créée : {pointsFicheCreee} points.</Trans>
+                </li>
+                <li>
+                  <Trans>
+                    Fiche modifiée : {pointsFicheModifiee} points, une fois par
+                    jour au plus.
+                  </Trans>
+                </li>
+                <li>
+                  <Trans>
+                    Une tâche rouverte ou abandonnée perd ses points.
+                  </Trans>
+                </li>
               </ul>
             }
           >
@@ -67,7 +88,7 @@ export default function Contribution({
               shape="circle"
               size="small"
               icon={<InfoCircleOutlined aria-hidden />}
-              aria-label="Comment les points se calculent"
+              aria-label={t`Comment les points se calculent`}
             />
           </Popover>
         )
@@ -85,15 +106,15 @@ export default function Contribution({
               {score.points}
             </span>
             <span className="rt-texte-secondaire">
-              {score.points > 1 ? 'points' : 'point'} pour {nomEdition}
+              {t`${plural(points, { one: 'point', other: 'points' })} pour ${nomEdition}`}
             </span>
           </div>
           <dl className="rt-tuiles" style={{ margin: 0 }}>
             {[
-              ['Tâches réalisées', score.tachesRealisees],
-              ['Dont à temps', score.tachesATemps],
-              ['Tâches créées', score.tachesCreees],
-              ['Fiches', score.fichesCreees + score.fichesModifiees],
+              [t`Tâches réalisées`, score.tachesRealisees],
+              [t`Dont à temps`, score.tachesATemps],
+              [t`Tâches créées`, score.tachesCreees],
+              [t`Fiches`, score.fichesCreees + score.fichesModifiees],
             ].map(([libelle, valeur]) => (
               <div key={libelle} className="rt-tuile">
                 <dt className="rt-libelle">{libelle}</dt>
@@ -106,7 +127,7 @@ export default function Contribution({
         </>
       )}
       <p className="rt-note">
-        Ce score n’est visible que par vous et par les admins.
+        <Trans>Ce score n’est visible que par vous et par les admins.</Trans>
       </p>
     </Panneau>
   )

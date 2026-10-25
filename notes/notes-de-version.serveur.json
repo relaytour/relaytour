@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "serveur",
   "version": "0.21.0",
@@ -18,7 +18,8 @@
             "titre": "Les mails désactivables se désabonnent en un clic",
             "texte": "Votre messagerie affiche un bouton « Se désabonner » sur les mails que vous pouvez désactiver : modification de vos tâches, échéances, résumé et demandes pour rejoindre l’équipe. Un clic coupe ce mail dans l’organisation qui l’a envoyé, sans connexion. Le mail de modification d’une tâche donne aussi le lien vers vos préférences. Vous réactivez un mail dans vos préférences.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -36,6 +37,11 @@
             "titre": "Chaque personne ne voit que les activités de son équipe",
             "texte": "Vous voyez les activités que vous administrez, celles où vous êtes affecté·e et celles auxquelles un admin vous a rattaché·e. Une autre activité de l'organisation n'apparaît plus, même ouverte aux souhaits. À l'ouverture, l'espace organisateur affiche une activité où vous avez un périmètre avant une activité que vous découvrez seulement.",
             "migration": null
+          },
+          "en": {
+            "titre": "Each person sees only the activities of their team",
+            "texte": "You see the activities you administer, those where you are appointed, and those you were affiliated with by an admin. Another activity of the organization no longer appears, even if it is open to interests. On opening, the organizer workspace shows an activity where you have an area before an activity you only discover.",
+            "migration": null
           }
         },
         {
@@ -49,7 +55,8 @@
             "titre": "Chaque personne affectée est rattachée à son activité",
             "texte": "La migration rattache chaque personne à chaque activité où elle a une affectation, toutes périodes confondues, puis à l'activité de chaque demande acceptée. Une personne invitée sans périmètre avant cette version se rattache depuis l'annuaire.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -67,7 +74,8 @@
             "titre": "Les liens des bénévoles dépendent du secret du serveur",
             "texte": "Les adresses des appels à bénévoles (/benevoles/) et des espaces bénévoles (/benevole/) sont des pages de l'espace organisateur : un proxy qui renvoie les chemins inconnus vers l'application les sert sans réglage. Leurs jetons dérivent de BETTER_AUTH_SECRET : changer ce secret change tous ces liens.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -85,7 +93,8 @@
             "titre": "Une fiche de périmètre se lit aussi dans les périmètres qu’elle concerne",
             "texte": "Une fiche de périmètre porte une liste « Concerne aussi » : des périmètres et des groupes de son activité. Les référentes et référents de ces périmètres lisent la fiche sans la modifier. Une déclinaison acceptée rend aussi connexe la fiche de sa tâche partagée. Un périmètre cible masque une fiche connexe de sa liste. Le dossier de contenu porte la liste dans les clés `concerne` et `concerneGroupes` de l’en-tête de la fiche.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-20-serveur-les-abonnements-a-l-agenda-passent-par-agenda",
@@ -98,7 +107,8 @@
             "titre": "Les abonnements à l'agenda passent par /agenda/",
             "texte": "L'API sert les abonnements iCalendar de l'agenda sous /agenda/. Le proxy de l'installation relaie ce chemin vers l'API, comme /graphql et /medias/ : le Caddyfile de référence le fait déjà.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-20-serveur-le-code-de-connexion-compte-dans-le-plafond-des-mails-et-pas",
@@ -111,7 +121,8 @@
             "titre": "Le code de connexion compte dans le plafond des mails et passe en tête de la file",
             "texte": "Le code de connexion entre désormais dans le plafond quotidien des mails, sans jamais être reporté. Le total du jour reste ainsi sous le quota du fournisseur de mail, qui pourrait sinon bloquer tous les envois. Le code passe aussi devant les autres mails de la file : il arrive avant d'expirer, même après l'invitation d'une longue liste. Gardez un écart entre `COURRIEL_PLAFOND_QUOTIDIEN` et le quota de votre fournisseur.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -129,7 +140,8 @@
             "titre": "Les notifications se règlent par organisation et nomment leur activité",
             "texte": "Les préférences de notification se règlent désormais dans chaque organisation : couper le résumé dans l'une ne le coupe plus dans les autres. Les mails et les notifications push nomment l'organisation et l'activité, et leurs liens ouvrent la bonne organisation. Les admins reçoivent de nouvelles notifications sur leur équipe, à part de celles de leurs tâches. Avant un retour à une version antérieure, suivez la consigne d'`infra/README.md`.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-14-serveur-la-lecture-de-session-ne-renvoie-plus-le-jeton-de-session",
@@ -142,7 +154,8 @@
             "titre": "La lecture de session ne renvoie plus le jeton de session",
             "texte": "La route `/api/auth/get-session` ne renvoie plus le jeton de session dans le corps de sa réponse. Seul le cookie le transporte, comme pour la connexion. Un script injecté dans la page ne peut donc plus lire ce jeton.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-11-serveur-une-installation-peut-plafonner-ses-mails-par-jour",
@@ -155,7 +168,8 @@
             "titre": "Une installation peut plafonner ses mails par jour",
             "texte": "La variable facultative `COURRIEL_PLAFOND_QUOTIDIEN` fixe le nombre de mails qu'une installation envoie par jour. Au-delà, le worker reporte le mail au lendemain. Le code de connexion part toujours. Sans cette variable, rien ne change.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-11-serveur-l-archivage-d-une-personne-ne-vaut-que-dans-son-organisation",
@@ -168,7 +182,8 @@
             "titre": "L'archivage d'une personne ne vaut que dans son organisation",
             "texte": "Un admin qui archive une personne lui ferme l'accès à son organisation seulement. La personne garde son compte, se connecte encore et reste membre de ses autres organisations, qui n'apprennent rien de cet archivage. Le nom appartient à la personne : elle le modifie dans ses préférences, et un admin ne le corrige que tant qu'elle ne s'est jamais connectée. Sur une installation qui porte une seule organisation, une personne archivée reçoit encore son code de connexion. Elle se connecte alors sans accès à aucune donnée, et l'application lui indique qu'elle n'appartient à aucune organisation ouverte.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-valkey-exige-un-mot-de-passe-et-la-pile-tourne-sur-un-reseau",
@@ -181,7 +196,8 @@
             "titre": "Valkey exige un mot de passe et la pile tourne sur un réseau interne",
             "texte": "La pile Compose de référence donne un mot de passe à Valkey, dont la file contient des codes de connexion en clair pendant quelques minutes, et place la base, le cache et les services de l'application sur un réseau interne. Le service `orga` n'a plus de réseau.",
             "migration": "Ajoutez `VALKEY_MOT_DE_PASSE` à votre `.env` (`openssl rand -hex 24`, lettres et chiffres seulement) avant `docker compose up -d`. La file en attente dans Valkey est conservée : le mot de passe s'applique au démarrage suivant."
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-un-titre-de-tache-ou-de-fiche-compte-191-caracteres-au-plus",
@@ -193,6 +209,11 @@
           "fr": {
             "titre": "Un titre de tâche ou de fiche compte 191 caractères au plus",
             "texte": "Un titre de tâche ou de fiche de 192 à 200 caractères était accepté par l'écran et refusé par la base, avec une erreur incompréhensible. La limite est désormais 191 caractères, annoncée par un message clair. Le résumé d'une version de fiche compte 191 caractères au plus, et la description d'une tâche 5 000.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A task or sheet title is at most 191 characters",
+            "texte": "A task or sheet title of 192 to 200 characters was accepted by the screen and rejected by the database, with an unclear error. The limit is now 191 characters, announced by a clear message. The summary of a sheet version is at most 191 characters, and a task’s description at most 5,000.",
             "migration": null
           }
         },
@@ -207,7 +228,8 @@
             "titre": "Les organisations d'une installation partagée sont cloisonnées",
             "texte": "Une adresse qui a déjà un compte hors d'une organisation n'y est plus rattachée d'office. Elle reçoit une invitation : aucune appartenance, aucune affectation et aucun souhait ne sont créés avant que la personne l'accepte, et l'organisation ne lit ni le nom ni aucune donnée de son compte. La règle vaut pour l'invitation par un admin, l'acceptation d'une demande, la commande `equipe-importer` et le premier admin d'une organisation. Une installation qui porte une seule organisation ne voit aucun changement.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-les-erreurs-internes-ne-sortent-plus-du-serveur",
@@ -220,7 +242,8 @@
             "titre": "Les erreurs internes ne sortent plus du serveur",
             "texte": "Une erreur que l'API n'a pas prévue (base de données, exécution) répond par un message générique et une référence de huit caractères. Le journal du serveur garde le message et la pile sous cette référence. Les erreurs de saisie, de droits, de conflit et de limite ne changent pas.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-les-dependances-et-les-images-sont-suivies-et-l-installation",
@@ -233,7 +256,8 @@
             "titre": "Les dépendances et les images sont suivies, et l'installation n'exécute que les scripts autorisés",
             "texte": "Dependabot propose chaque mois les mises à jour des paquets npm, groupées par usage, et celles des images Docker de l'image publiée et des piles Compose. La CI refuse une dépendance d'exécution qui porte une faille connue de gravité élevée ou critique. L'installation des paquets n'exécute plus que les scripts d'installation explicitement autorisés, ceux de Prisma et d'esbuild, listés dans le package.json racine.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-les-conteneurs-tournent-sans-privilege-et-l-image-des-migrat",
@@ -246,7 +270,8 @@
             "titre": "Les conteneurs tournent sans privilège et l'image des migrations s'allège",
             "texte": "Dans la pile de référence, chaque service abandonne toutes les capacités et refuse toute élévation de privilège ; l'API, le worker et les migrations tournent sur un système de fichiers en lecture seule. L'image `-migrate` ne contient plus ni source ni build : les dépendances installées (dont le CLI Prisma), le schéma et les migrations, sous l'utilisateur `node`. Les images publiées portent une attestation de provenance et un inventaire des composants (SBOM). Le `.env` d'exemple propose une version précise plutôt que l'étiquette mouvante `main`.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-le-journal-le-formulaire-public-la-recherche-et-les-relances",
@@ -259,7 +284,8 @@
             "titre": "Le journal, le formulaire public, la recherche et les relances se resserrent",
             "texte": "Les messages d'erreur SMTP, de push et de job entrent dans le journal avec leurs adresses tronquées. Le formulaire public n'accepte plus que vingt dépôts par adresse IP et par jour. La recherche ne remonte plus les personnes affectées seulement dans une période archivée. Une invitation ne se relance qu'une fois par heure et par personne. Un mail parti n'est plus renvoyé quand la suite de l'envoi échoue. Le filtre des SVG lit aussi les entités encodées.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-le-jeton-d-administration-n-est-accepte-qu-en-local-par-defa",
@@ -272,7 +298,8 @@
             "titre": "Le jeton d'administration n'est accepté qu'en local par défaut",
             "texte": "Sans réglage, le jeton `JETON_ADMINISTRATION` n'est accepté que sur une requête locale, qui n'est pas passée par Caddy, et depuis une adresse locale ou privée. Dix jetons refusés en quinze minutes depuis une même adresse ferment l'API d'administration à cette adresse pour la fenêtre.",
             "migration": "Une installation qui appelle l'API d'administration à travers Caddy, depuis une autre machine, écrit `JETON_ADMINISTRATION_LOCAL=false` dans son `.env`. Une installation qui l'appelle depuis la machine (`http://127.0.0.1:4400`), ou qui n'a pas de jeton, ne change rien."
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-le-demarrage-et-les-compteurs-de-limite-se-durcissent",
@@ -285,7 +312,8 @@
             "titre": "Le démarrage et les compteurs de limite se durcissent",
             "texte": "Le serveur refuse de démarrer en `NODE_ENV=production` sans `APP_ENV`, et hors du poste local avec une `ORIGINE_ORGA` qui n'est pas en https. Les compteurs de limite dans Redis posent leur fenêtre dans la même commande que l'incrément. L'API lit l'adresse du client dans l'en-tête `X-Relaytour-Ip`, que Caddy remplit avec `{client_ip}`.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-le-compte-d-une-personne-ne-laisse-plus-rien-passer-d-une-or",
@@ -298,7 +326,8 @@
             "titre": "Le compte d'une personne ne laisse plus rien passer d'une organisation à l'autre",
             "texte": "Sur une installation qui porte plusieurs organisations, six points se resserrent. La date lue d'une personne est celle de son arrivée dans l'organisation, plus celle de la création de son compte. La limite d'un mail d'invitation par heure se compte par organisation. Un mail sans organisation désignée, comme le code de connexion d'une personne membre de plusieurs organisations, ne prend plus le nom ni le logo d'une organisation. La commande `creer-admin` n'accorde à un compte connu d'une autre organisation qu'une invitation à accepter. Un appareil ne garde l'abonnement push que d'un compte. Un admin ne lit l'adresse que d'un membre de son organisation. Une installation à une seule organisation ne voit aucun changement.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-la-purge-nocturne-retire-les-donnees-techniques-echues-et-le",
@@ -310,6 +339,11 @@
           "fr": {
             "titre": "La purge nocturne retire les données techniques échues et les images sans usage",
             "texte": "Chaque nuit, le serveur supprime les sessions et les codes de connexion expirés, les compteurs de la veille, les notifications lues depuis plus de 90 jours, et les images que l'identité de l'organisation ou d'une activité ne cite plus depuis 30 jours (la purge note la date à laquelle une image cesse d'être citée). Une organisation garde 50 images au plus ; au-delà, l'écran « Organisation » refuse une nouvelle image et renvoie à cette purge.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The nightly purge removes expired technical data and unused images",
+            "texte": "Every night, the server deletes expired sessions and sign-in codes, the previous day’s counters, notifications read more than 90 days ago, and images that the identity of the organization or of an activity has not cited for 30 days (the purge records the date an image stops being cited). An organization keeps at most 50 images. Beyond that, the “Organization” screen refuses a new image and points to this purge.",
             "migration": null
           }
         },
@@ -324,7 +358,8 @@
             "titre": "La connexion ne révèle plus si une adresse a un compte",
             "texte": "Un code refusé reçoit la même réponse pour une adresse qui a un compte et pour une adresse inconnue, quel que soit le nombre d'essais. Une adresse ne reçoit plus que vingt codes par jour, en plus des cinq codes par quart d'heure. La réponse d'une connexion réussie ne porte plus le jeton de session : seul le cookie le transporte.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-la-bibliotheque-d-envoi-des-mails-est-mise-a-jour",
@@ -337,7 +372,8 @@
             "titre": "La bibliothèque d'envoi des mails est mise à jour",
             "texte": "Le serveur passe à la version 10 de nodemailer, qui corrige deux failles de déni de service dans l'analyse des adresses (GHSA-v53p-9fqp-m79j et GHSA-prgh-xp8r-p3m5) et trois faiblesses de gravité modérée. Les mails partent comme avant ; aucune action n'est attendue des installations.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-10-serveur-l-api-et-l-espace-organisateur-posent-des-en-tetes-de-securite",
@@ -350,7 +386,8 @@
             "titre": "L'API et l'espace organisateur posent des en-têtes de sécurité",
             "texte": "L'API pose elle-même `X-Content-Type-Options`, `Referrer-Policy`, `X-Frame-Options`, `Permissions-Policy` et `Cross-Origin-Opener-Policy`, et une politique de contenu fermée en production. Le `Caddyfile` d'exemple pose les mêmes en-têtes sur les deux hôtes, y compris sur les chemins relayés vers l'API, et une politique de contenu pour l'espace organisateur. `/health` ne rend l'empreinte du commit et la date du build qu'à une requête locale.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -368,7 +405,8 @@
             "titre": "Une tâche porte un fil de commentaires",
             "texte": "L'API porte les commentaires d'une tâche : la requête `filTache` rend les commentaires et les événements du journal, `commentairesDeLaPeriode` compte les commentaires par tâche, et trois mutations écrivent, modifient et suppriment un commentaire. Une migration additive crée la table `CommentaireTache`.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -386,7 +424,8 @@
             "titre": "Une tâche type se décline dans d'autres périmètres",
             "texte": "Dans un dossier de contenu, une tâche type accepte une clé `declinaison`. Elle désigne un groupe de périmètres ou une liste de périmètres. L'import crée alors la tâche dans son périmètre, puis une déclinaison dans chaque périmètre cible. Chaque déclinaison garde son statut, ses personnes assignées et son échéance. Un périmètre cible qui porte déjà une tâche de même modèle la garde : l'import la rattache à sa tâche partagée et le signale. Un contenu existant reste valide sans changement.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-08-serveur-une-activite-declare-ses-phases",
@@ -399,7 +438,8 @@
             "titre": "Une activité déclare ses phases",
             "texte": "Le fichier `activite.yaml` d'un dossier de contenu accepte une clé `phases`. Chaque phase porte une clé, un libellé et une borne en jours depuis le premier jour de la période, par exemple `J-120`. La dernière phase ne porte pas de borne. Une activité qui ne déclare rien garde quatre phases par défaut. L'import écrit les phases en base et l'export les réécrit. Une tâche ne déclare pas sa phase : elle s'y range par son échéance.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-08-serveur-l-api-propose-accorde-et-impose-une-declinaison",
@@ -412,7 +452,8 @@
             "titre": "L'API propose, accorde et impose une déclinaison",
             "texte": "Une personne qui écrit dans un périmètre crée une tâche partagée et la propose à d'autres périmètres de l'activité. Chaque déclinaison attend l'accord du périmètre cible, qui l'accepte ou la refuse. Tant qu'elle n'est pas acceptée, elle ne compte ni dans ses tâches, ni dans son avancement, ni dans les rappels, ni dans le score. Un admin de l'activité ajoute une déclinaison sans accord, et impose une déclinaison refusée. Une tâche lit le résumé de ses déclinaisons, et les admins lisent l'historique de chaque accord.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -430,7 +471,8 @@
             "titre": "Un retour à une version antérieure ne remplace plus l'identité d'une organisation",
             "texte": "Au démarrage, le serveur remplaçait par les valeurs d'amorçage une configuration d'organisation qu'il ne savait pas lire. Un champ écrit par une version plus récente suffisait à déclencher ce remplacement. Le serveur écarte maintenant un champ inconnu et garde le reste, et il n'écrase plus jamais une configuration illisible. Les versions 0.12.1 et antérieures gardent l'ancien comportement : la note pour les exploitants décrit la précaution à prendre avant d'y revenir.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-08-serveur-le-serveur-envoie-des-notifications-push-sur-activation-par-",
@@ -443,7 +485,8 @@
             "titre": "Le serveur envoie des notifications push, sur activation par l'exploitant",
             "texte": "Une installation peut ouvrir les notifications push. L'exploitant crée une paire de clés VAPID et renseigne `PUSH_VAPID_PUBLIQUE`, `PUSH_VAPID_PRIVEE` et `PUSH_VAPID_SUJET`. Sans ces variables, rien ne change. Le worker sort alors en HTTPS vers les services de push de Google, d'Apple, de Mozilla et de Microsoft. La mise à jour applique une migration additive.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-07-serveur-une-organisation-declare-l-icone-de-son-application",
@@ -455,6 +498,11 @@
           "fr": {
             "titre": "Une organisation déclare l'icône de son application",
             "texte": "L'écran « Organisation » reçoit le champ « Icône d'application » : un PNG carré de 512 pixels de côté. Cette icône s'affiche sur l'écran d'accueil d'un téléphone qui installe l'espace organisateur. Sans elle, l'application porte l'icône de Relaytour. Le fichier `organisation.yaml` la déclare par le champ `iconeApplication`.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An organization declares its app icon",
+            "texte": "The “Organization” screen gains an “App icon” field: a square PNG, 512 pixels per side. This icon appears on the home screen of a phone that installs the organizer workspace. Without it, the app uses the Relaytour icon. The `organisation.yaml` file declares it in the `iconeApplication` field.",
             "migration": null
           }
         }
@@ -474,7 +522,8 @@
             "titre": "Un hébergeur règle l'action du bouton Support",
             "texte": "La variable `SUPPORT_URL` indique l'action du bouton « Support » pour les organisations qui n'ont pas déclaré leur adresse de support : une page en `https://` ou une adresse en `mailto:`. Sans cette variable, le bouton n'apparaît que dans les organisations qui ont déclaré leur adresse.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-07-serveur-un-admin-d-activite-nomme-les-admins-de-son-activite-et-invi",
@@ -486,6 +535,11 @@
           "fr": {
             "titre": "Un admin d'activité nomme les admins de son activité et invite avec une affectation",
             "texte": "Un admin d'activité lit désormais qui administre l'organisation. Il nomme et retire les admins de ses activités, parmi les personnes de son équipe. Il ne modifie ni les affectations ni les souhaits d'un admin de l'organisation. Une invitation peut porter une affectation, sans périmètre souhaité.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An activity admin names the admins of their activity and invites with an appointment",
+            "texte": "An activity admin can now read who administers the organization. They name and remove the admins of their activities, among the people of their team. They do not change the appointments or interests of an organization admin. An invitation can carry an appointment, without an area of interest.",
             "migration": null
           }
         },
@@ -500,7 +554,8 @@
             "titre": "Les fragments de note portent le rôle qu'ils concernent",
             "texte": "Un fragment d'audience `organisateurs` porte un champ `role` : `referent`, `admin-activite` ou `admin-organisation`. `yarn versionner noter` reçoit l'option `--role`. Le journal compilé passe en `schemaVersion: 4`, et le build du serveur embarque les deux journaux.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-07-serveur-les-admins-declarent-l-adresse-de-support-de-l-organisation",
@@ -512,6 +567,11 @@
           "fr": {
             "titre": "Les admins déclarent l'adresse de support de l'organisation",
             "texte": "L'écran « Organisation » reçoit le champ « Adresse de support ». L'adresse suit la règle des adresses de rôle. Le bouton « Support » du menu du compte ouvre un mail à cette adresse pour chaque membre. Le champ `contactSupport` d'`organisation.yaml` porte la même adresse dans le dépôt de contenu.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Admins declare the organization’s support address",
+            "texte": "The “Organization” screen gains a “Support address” field. The address follows the role address rule. The “Support” button in the account menu opens an email to this address for each member. The `contactSupport` field of `organisation.yaml` carries the same address in the content repository.",
             "migration": null
           }
         },
@@ -526,7 +586,8 @@
             "titre": "Le serveur garde l'historique des messages des admins",
             "texte": "Le serveur enregistre les messages que les admins préparent pour leur équipe, avec leurs destinataires et le statut déclaré par l'auteur. Il n'envoie aucun de ces messages.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -544,6 +605,11 @@
             "titre": "Un admin d'activité rattache à son équipe une personne déjà membre",
             "texte": "Un admin d'activité invite une personne par son adresse, avec au moins un périmètre souhaité. Si la personne a déjà un compte, ce compte rejoint l'équipe et garde son nom : aucune erreur ne s'affiche. Une personne sans compte reçoit son invitation par mail. Une demande s'accepte désormais avec au moins un périmètre, pour que la personne rejoigne l'équipe de l'activité.",
             "migration": null
+          },
+          "en": {
+            "titre": "An activity admin affiliates a person who is already a member to their team",
+            "texte": "An activity admin invites a person by email address, with at least one area of interest. If the person already has an account, that account joins the team and keeps its name: no error appears. A person without an account receives their invitation by email. A join request is now accepted with at least one area, so that the person joins the activity’s team.",
+            "migration": null
           }
         },
         {
@@ -556,6 +622,11 @@
           "fr": {
             "titre": "Un admin d'activité ne lit plus que l'équipe de ses activités",
             "texte": "Un admin d'activité lisait l'annuaire de toute l'organisation, noms et adresses, et pouvait affecter n'importe quel membre. Il lit désormais l'équipe de ses activités seulement : les personnes affectées, intéressées ou admins. Il n'affecte, ne note un souhait et n'accorde un droit de rédaction que pour ces personnes. L'annuaire complet reste lisible par les admins de l'organisation. L'adresse d'une personne ne se lit plus depuis une activité où vous êtes simple référente ou référent, même si vous administrez une autre activité.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An activity admin now reads only the team of their activities",
+            "texte": "An activity admin used to read the directory of the whole organization, names and email addresses, and could appoint any member. They now read only the team of their activities: the appointed, interested, or admin people. They appoint, record an interest, or grant editing rights only for these people. Organization admins can still read the full directory. A person’s email address can no longer be read from an activity where you are only a coordinator, even if you administer another activity.",
             "migration": null
           }
         }
@@ -575,7 +646,8 @@
             "titre": "Un proxy laisse passer le flux des changements sans tampon ni compression",
             "texte": "La note d'auto-hébergement décrit le passage du flux des changements par un proxy. Le Caddyfile d'exemple le relaie sans réglage. Un autre proxy transmet la réponse sans tampon ni compression, et garde ouverte une réponse silencieuse pendant 30 secondes. La note donne deux vérifications à faire après une mise à jour. Sans ce flux, les écrans se relisent chaque minute.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-05-serveur-les-referentes-et-referents-voient-l-activite-de-leur-perime",
@@ -587,6 +659,11 @@
           "fr": {
             "titre": "Les référentes et référents voient l'activité de leur périmètre",
             "texte": "Quand une autre personne modifie une tâche de votre périmètre, change son statut, ou crée et modifie une de ses fiches, la cloche vous prévient, même si la tâche ne vous est pas assignée. Aucun mail ne part pour ces notifications : le résumé les reprend. La cloche affiche le nombre de notifications non lues, et une notification mène à la tâche, mise en évidence dans la page du périmètre. Vous coupez ces notifications dans vos préférences. Quand une autre personne coche une tâche qui vous est assignée, le mail et la notification vous l'annoncent sans la nommer.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Coordinators see the activity of their area",
+            "texte": "When another person edits a task in your area, changes its status, or creates or edits one of its sheets, the bell notifies you, even if the task is not assigned to you. No email is sent for these notifications: the digest includes them. The bell shows the number of unread notifications, and a notification leads to the task, highlighted on the area’s page. You turn these notifications off in your preferences. When another person checks off a task assigned to you, the email and the notification announce it without naming that person.",
             "migration": null
           }
         },
@@ -601,7 +678,8 @@
             "titre": "Le serveur pousse les changements par un flux SSE",
             "texte": "Le serveur signale chaque changement aux navigateurs abonnés : une tâche, une fiche, un périmètre, l'équipe, une demande ou une notification. Le signal ne porte aucune donnée, et l'espace organisateur s'en servira pour relire ses écrans sans attendre. Le flux passe par l'adresse de l'API : aucun réglage de proxy ne s'ajoute.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-05-serveur-deux-personnes-ne-s-ecrasent-plus-sur-une-meme-tache",
@@ -613,6 +691,11 @@
           "fr": {
             "titre": "Deux personnes ne s'écrasent plus sur une même tâche",
             "texte": "Quand une autre personne a modifié une tâche pendant votre saisie, une fenêtre vous le dit avant d'enregistrer. Elle nomme la personne et l'heure de sa modification. Vous choisissez de recharger la tâche ou d'écraser sa version. La même fenêtre s'ouvre quand le statut d'une tâche a changé depuis l'affichage de votre écran. Deux personnes qui cochent la même tâche en même temps ne produisent plus deux mails : la première garde les points de la réalisation.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Two people no longer overwrite each other on the same task",
+            "texte": "When another person has edited a task while you were typing, a window tells you before you save. It names the person and the time of their edit. You choose to reload the task or overwrite their version. The same window opens when a task’s status has changed since your screen was displayed. Two people checking off the same task at the same time no longer produce two emails: the first keeps the points for completing it.",
             "migration": null
           }
         },
@@ -627,6 +710,11 @@
             "titre": "Deux personnes ne s'écrasent plus sur une fiche ou un périmètre",
             "texte": "Quand une autre personne a enregistré une fiche pendant votre rédaction, l'éditeur garde votre texte et vous le dit. Vous consultez la version actuelle, vous copiez votre texte, ou vous écrasez la version actuelle avec le vôtre. L'éditeur garde aussi votre texte en brouillon dans votre navigateur : une page rechargée ne le perd plus. Le réglage d'un périmètre et la restauration d'une version de fiche signalent le même conflit.",
             "migration": null
+          },
+          "en": {
+            "titre": "Two people no longer overwrite each other on a sheet or an area",
+            "texte": "When another person has saved a sheet while you were writing, the editor keeps your text and tells you. You view the current version, copy your text, or overwrite the current version with yours. The editor also keeps your text as a draft in your browser: a reloaded page no longer loses it. An area’s settings and the restoration of a sheet version report the same conflict.",
+            "migration": null
           }
         },
         {
@@ -640,7 +728,8 @@
             "titre": "Une personne de l'activité consulte les tâches de chaque périmètre",
             "texte": "Une personne qui voit une activité lit les tâches, l'avancement, les référentes et référents et le contact principal de chacun de ses périmètres. Le rétroplanning renvoie les tâches de tous les périmètres non archivés de l'activité. Les fiches, la recherche, les tâches à prendre et toutes les écritures gardent leur règle. Le champ `Perimetre.acces` vaut `COMPLET`, `CONSULTATION` ou `AUCUN`.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-04-serveur-un-mail-regroupe-previent-les-admins-des-demandes-recues",
@@ -652,6 +741,11 @@
           "fr": {
             "titre": "Un mail regroupé prévient les admins des demandes reçues",
             "texte": "Quand une activité reçoit des demandes pour rejoindre son équipe, ses admins reçoivent un mail, une fois par heure au plus. Le mail donne le nombre de demandes en attente et un lien vers l'onglet « Demandes ». Il ne cite aucune personne. Chaque admin le désactive dans ses préférences.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A grouped email notifies admins of received requests",
+            "texte": "When an activity receives join requests, its admins receive an email, at most once an hour. The email gives the number of pending requests and a link to the “Join requests” tab. It names no one. Each admin can turn it off in their preferences.",
             "migration": null
           }
         },
@@ -666,7 +760,8 @@
             "titre": "Les demandes pour rejoindre l'équipe attendent la décision d'un admin",
             "texte": "Une demande porte le nom et l'adresse d'une personne qui veut rejoindre l'équipe d'une période. Une personne affectée à un périmètre la propose par `proposerPersonne`. Les admins de l'activité la lisent par `demandes`, puis l'acceptent ou la refusent. `accepterDemande` crée ou rattache le compte, crée les affectations choisies et note les autres périmètres en souhaits, dans une même transaction. Une migration additive crée les tables `Demande` et `DemandePerimetre`.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-04-serveur-les-demandes-d-une-periode-archivee-sont-supprimees",
@@ -678,6 +773,11 @@
           "fr": {
             "titre": "Les demandes d'une période archivée sont supprimées",
             "texte": "Les admins lisent les demandes pour rejoindre l'équipe jusqu'à l'archivage de leur période. La nuit suivante, Relaytour supprime toutes les demandes de cette période, quel que soit leur état. Les comptes, les affectations et les souhaits créés par une demande acceptée restent. L'écran des périodes le rappelle au moment d'archiver. L'export d'une organisation contient désormais les demandes de ses périodes ouvertes.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The join requests of an archived period are deleted",
+            "texte": "Admins read join requests until their period is archived. The following night, Relaytour deletes all the join requests of that period, whatever their state. The accounts, appointments, and interests created by an accepted request remain. The periods screen reminds you of this when you archive. An organization’s export now contains the join requests of its open periods.",
             "migration": null
           }
         },
@@ -692,7 +792,8 @@
             "titre": "Le formulaire public d'une activité dépose des demandes sans session",
             "texte": "La requête `formulaireRejoindre` et la mutation `envoyerDemande` se lisent sans session. Elles ne répondent que pour une organisation active, une activité non archivée, un formulaire ouvert, une période non archivée et un contact déclaré. Un dépôt crée une demande en attente, sans compte ni mail. `modifierActivite` reçoit le réglage du formulaire et son ouverture. Le réglage s'importe et s'exporte avec le contenu ; l'ouverture vit en base seulement. Le segment d'adresse `rejoindre` devient réservé : une activité ne peut plus le prendre comme identifiant.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-10-04-serveur-la-creation-de-compte-et-l-affectation-passent-par-deux-fonc",
@@ -705,7 +806,8 @@
             "titre": "La création de compte et l'affectation passent par deux fonctions partagées",
             "texte": "L'invitation par un admin, l'import d'une équipe et l'invitation du premier admin créent ou rattachent un compte par la même fonction. L'affectation par un admin et l'import créent leurs affectations par une seconde fonction. Les deux écrivent dans le client ou la transaction de l'appelant. Le comportement ne change pas.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -723,7 +825,8 @@
             "titre": "Une commande importe l'équipe d'une période depuis le serveur",
             "texte": "La commande equipe-importer lit un fichier qui décrit les personnes d'une activité : affectations, contacts principaux et souhaits. Elle crée ce qui manque, ne retire rien et n'envoie aucun mail sans l'option --envoyer-mails. JETON_ADMINISTRATION_LOCAL limite le jeton de l'hébergeur aux requêtes locales.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-29-serveur-une-activite-peut-s-ouvrir-aux-souhaits-de-tous-les-membres",
@@ -736,7 +839,8 @@
             "titre": "Une activité peut s'ouvrir aux souhaits de tous les membres",
             "texte": "Une personne découvre une activité ouverte aux souhaits, ou une activité où elle a un souhait. Elle y voit les périmètres et formule ses propres souhaits, sans lire les tâches ni les fiches.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-29-serveur-un-mail-annonce-chaque-nouvelle-place-dans-l-equipe",
@@ -748,6 +852,11 @@
           "fr": {
             "titre": "Un mail annonce chaque nouvelle place dans l'équipe",
             "texte": "Une personne affectée à un périmètre ou nommée admin reçoit le mail « Votre place dans l'équipe a changé », avec la description de chaque nouveau périmètre et le mode d'emploi de son rôle. Les changements de dix minutes arrivent dans un seul mail. L'invitation liste aussi les périmètres de la personne ; sans périmètre, elle explique comment en obtenir un. Un souhait, un contact principal ou un retrait n'envoient aucun mail.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An email announces each new place in the team",
+            "texte": "A person appointed to an area or named admin receives the “Your place in the team changed” email, with the description of each new area and the user guide for their role. Changes made within ten minutes arrive in a single email. The invitation also lists the person’s areas; without an area, it explains how to get one. An interest, a main contact, or a removal sends no email.",
             "migration": null
           }
         }
@@ -767,7 +876,8 @@
             "titre": "Une affectation peut porter la marque de contact principal",
             "texte": "Un admin d'activité désigne le contact principal d'un périmètre pour une édition. Un périmètre en a un seul par édition. La marque ne donne aucun droit et figure dans l'export de l'organisation.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     },
@@ -784,6 +894,11 @@
           "fr": {
             "titre": "Le mail d'invitation contient le lien du mode d'emploi de votre rôle",
             "texte": "Une personne invitée reçoit le lien du mode d'emploi qui correspond à son rôle : admin de l'organisation, admin d'activité, ou référente et référent. Une invitation renvoyée après une nomination contient le mode d'emploi du nouveau rôle.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The invitation email contains the link to the user guide for your role",
+            "texte": "An invited person receives the link to the user guide that matches their role: organization admin, activity admin, or coordinator. An invitation resent after a naming contains the user guide for the new role.",
             "migration": null
           }
         }
@@ -803,6 +918,11 @@
             "titre": "Les réponses aux mails arrivent au contact de l'activité",
             "texte": "Quand un membre répond à une invitation ou à un mail de tâche, sa réponse arrive au contact de l'activité concernée. Les mails de toute l'organisation renvoient les réponses au contact de l'organisation. Sans contact déclaré, les réponses arrivent toujours à l'adresse d'expédition.",
             "migration": null
+          },
+          "en": {
+            "titre": "Replies to emails reach the activity’s contact",
+            "texte": "When a member replies to an invitation or to a task email, the reply reaches the contact of the activity concerned. Emails for the whole organization send replies to the organization’s contact. With no contact declared, replies always reach the sending address.",
+            "migration": null
           }
         }
       ]
@@ -821,7 +941,8 @@
             "titre": "Une table prouve les refus entre organisations",
             "texte": "Chaque requête et chaque mutation qui reçoit un identifiant est éprouvée avec les identifiants d'une autre organisation : elle refuse, et aucune donnée ne change. Un garde-fou exige qu'une opération nouvelle entre dans la table.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-22-serveur-un-hebergeur-administre-les-organisations-sans-acces-aux-donnees",
@@ -834,7 +955,8 @@
             "titre": "Un hébergeur administre les organisations sans accès à leurs données",
             "texte": "Un script et une API à jeton créent une organisation et sa première activité, invitent son premier admin, changent son statut ou ses limites et écrivent son export complet sur le serveur. Le jeton ne donne accès à aucune donnée d'une organisation, et l'export ne transite jamais par l'API.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-22-serveur-un-depot-d-organisation-decrit-plusieurs-activites",
@@ -846,6 +968,11 @@
           "fr": {
             "titre": "Un dépôt d'organisation décrit plusieurs activités",
             "texte": "Un dépôt d'organisation peut décrire plusieurs activités dans un dossier activites/, chacune avec sa nature, ses groupes de périmètres, ses fiches et ses tâches types. La disposition plate reste valide pour une seule activité. Un périmètre déclare son groupe ; le type SPORT ou POLE reste accepté.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An organization repository describes several activities",
+            "texte": "An organization repository can describe several activities in an activites/ folder, each with its kind, its area groups, its sheets, and its task templates. The flat layout remains valid for a single activity. An area declares its group; the SPORT or POLE type is still accepted.",
             "migration": null
           }
         },
@@ -860,6 +987,11 @@
             "titre": "Les rappels et les résumés suivent chaque organisation",
             "texte": "Chaque organisation reçoit ses rappels d'échéance et ses résumés à l'heure de son fuseau. Un mail porte le nom et les couleurs de son organisation. Une personne membre de plusieurs organisations reçoit le résumé de chacune, limité à ses tâches et à ses notifications.",
             "migration": null
+          },
+          "en": {
+            "titre": "Reminders and digests follow each organization",
+            "texte": "Each organization receives its due date reminders and digests at the time of its own time zone. An email carries the name and colors of its organization. A person who belongs to several organizations receives the digest of each, limited to their tasks and notifications.",
+            "migration": null
           }
         },
         {
@@ -873,7 +1005,8 @@
             "titre": "Les activités et les appartenances entrent dans le schéma",
             "texte": "Une organisation porte désormais une ou plusieurs activités. Chaque période, périmètre et fiche appartient à une activité, et chaque périmètre à un groupe. Une table d'appartenances porte le rôle de chaque compte dans une organisation. L'application utilise encore une seule activité par organisation (ADR 0008, premier chantier).",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-22-serveur-l-application-porte-le-contenu-et-l-identite-des-activites",
@@ -885,6 +1018,11 @@
           "fr": {
             "titre": "Chaque activité a son identité, et l'export reprend tout le contenu",
             "texte": "Une activité peut avoir son propre logo, ses couleurs, son contact de recrutement et sa page d'équipe. Les mails d'une tâche prennent l'identité de son activité. L'export écrit tout le contenu de l'organisation, et un import ne remplace plus une modification faite dans l'application.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Each activity has its own identity, and the export includes all the content",
+            "texte": "An activity can have its own logo, colors, recruitment contact, and team page. Task emails take the identity of their activity. The export writes all the organization’s content, and an import no longer replaces a change made in the application.",
             "migration": null
           }
         },
@@ -899,7 +1037,8 @@
             "titre": "L'API sert le choix d'organisation et d'activité de l'espace organisateur",
             "texte": "L'API liste les organisations de la personne connectée, suit l'activité désignée par un en-tête et range un périmètre dans un groupe de son activité. Les liens des mails portent l'activité, et le résumé parle des nouvelles de vos périmètres.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-22-serveur-chaque-version-se-publie-depuis-main-avec-ses-images-et-sa-r",
@@ -912,7 +1051,8 @@
             "titre": "Chaque version se publie depuis main, avec ses images et sa release",
             "texte": "Relaytour porte désormais un seul numéro de version. Chaque version publiée reçoit un tag, une release GitHub rédigée depuis les notes, et trois images marquées de son numéro. Une installation suit une version (IMAGE_TAG=x.y.z) ou la série de ses correctifs (IMAGE_TAG=x.y), au lieu de suivre l'empreinte d'un commit.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-22-serveur-chaque-requete-se-limite-a-l-organisation-active",
@@ -925,7 +1065,8 @@
             "titre": "Chaque requête se limite à l'organisation active",
             "texte": "Le contexte porte l'organisation active, choisie par un en-tête ou par l'unique appartenance de la personne. Le rôle d'admin vaut dans cette organisation. Toute lecture et toute écriture se limitent à ses données, et une organisation en lecture seule refuse les modifications. Les activités se lisent et se gèrent par l'API, dans les limites fixées par l'hébergeur.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-22-serveur-chaque-activite-a-ses-admins",
@@ -937,6 +1078,11 @@
           "fr": {
             "titre": "Chaque activité peut avoir ses admins, et chacun ne voit que ses activités",
             "texte": "Un admin de l'organisation nomme des admins pour une activité. Ils gèrent ses périodes, ses périmètres, ses affectations et ses fiches, sans voir les autres activités. Une personne ne voit que les activités où elle est affectée.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Each activity can have its admins, and each person sees only their activities",
+            "texte": "An organization admin names admins for an activity. They manage its periods, areas, appointments, and sheets, without seeing the other activities. A person sees only the activities where they are appointed.",
             "migration": null
           }
         },
@@ -951,6 +1097,11 @@
             "titre": "Une recherche globale trouve les tâches, les fiches et les personnes",
             "texte": "La barre haute de l'espace organisateur propose une recherche. Elle trouve les tâches de l'édition en cours, les fiches et les personnes de vos périmètres. Vous ne trouvez que ce que vous pouvez déjà consulter. La page d'une fiche liste aussi les tâches qui la citent.",
             "migration": null
+          },
+          "en": {
+            "titre": "A global search finds tasks, sheets, and people",
+            "texte": "The top bar of the organizer workspace offers a search. It finds the tasks of the current edition and the sheets and people of your areas. You find only what you can already view. A sheet’s page also lists the tasks that cite it.",
+            "migration": null
           }
         },
         {
@@ -963,6 +1114,11 @@
           "fr": {
             "titre": "Une nouvelle demande de code renvoie le code en cours",
             "texte": "Si vous demandez un nouveau code alors que le précédent est encore valable, vous recevez le même code et sa validité repart de 10 minutes. Une personne qui demande des codes sur votre adresse ne peut plus invalider celui que vous attendez. Les codes envoyés avant la mise à jour ne sont plus acceptés : demandez un nouveau code.",
+            "migration": null
+          },
+          "en": {
+            "titre": "A new code request returns the current code",
+            "texte": "If you request a new sign-in code while the previous one is still valid, you receive the same code and its validity restarts at 10 minutes. A person who requests codes for your email address can no longer invalidate the one you are waiting for. Codes sent before the update are no longer accepted: request a new code.",
             "migration": null
           }
         },
@@ -977,6 +1133,11 @@
             "titre": "Les mails portent le nom et les couleurs de votre organisation",
             "texte": "L'en-tête, les sujets et le pied de chaque mail affichent le nom court de votre organisation. Le texte, les boutons et le fond reprennent les couleurs de son thème. Le pied garde un crédit « propulsé par Relaytour, logiciel libre ». Les mails n'appellent aucune police web.",
             "migration": null
+          },
+          "en": {
+            "titre": "Emails carry your organization’s name and colors",
+            "texte": "The header, subjects, and footer of each email show your organization’s short name. The text, buttons, and background take the colors of its theme. The footer keeps a “powered by Relaytour, free software” credit. Emails load no web fonts.",
+            "migration": null
           }
         },
         {
@@ -990,7 +1151,8 @@
             "titre": "Le mode recette quitte le logiciel",
             "texte": "APP_ENV ne connaît plus que local et prod. Les variables COURRIEL_DELIVRABILITE et COURRIEL_CAPTURE disparaissent, ainsi que le service Mailpit de la pile de référence. Hors du poste local, l'application parle au SMTP renseigné, et à rien d'autre.",
             "migration": "Une installation d'essai passe en APP_ENV=prod et pointe COURRIEL_SMTP_HOTE sur une boîte de capture qu'elle déclare elle-même, dans sa surcharge Compose. Retirer COURRIEL_DELIVRABILITE du .env."
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-19-serveur-la-table-organisation-devient-la-racine-des-donnees",
@@ -1003,7 +1165,8 @@
             "titre": "La table Organisation devient la racine des données",
             "texte": "Une ligne Organisation porte le slug, le nom, le sigle, le fuseau horaire et la déclaration complète de l'organisation. Les éditions, périmètres, fiches, notifications et préférences reçoivent sa clé. L'import crée ou met à jour cette ligne depuis organisation.yaml ; l'API, les mails et l'espace organisateur lisent désormais la configuration en base.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-19-serveur-la-table-newsletter-est-supprimee",
@@ -1016,7 +1179,8 @@
             "titre": "La table Newsletter est supprimée",
             "texte": "La table Newsletter, héritée du projet précédent et sans usage dans Relaytour, disparaît du schéma. La migration la supprime avec les adresses qu'elle contient encore.",
             "migration": "Exporter la table Newsletter avant de déployer si ses adresses doivent être conservées ailleurs. La migration exécute DROP TABLE."
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-19-serveur-la-configuration-de-l-organisation-se-lit-en-un-seul-objet",
@@ -1029,7 +1193,8 @@
             "titre": "La configuration de l'organisation se lit en un seul objet",
             "texte": "Le nom, le sigle, les domaines de mail, le contact, la page équipe et le thème de l'organisation forment une configuration unique, validée par un schéma strict. Les sujets de mail, l'expéditeur, l'appel aux référentes et référents et la détection des données personnelles la lisent. Les variables d'environnement restent un amorçage avant le premier import.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-19-serveur-la-base-et-le-cache-de-la-pile-de-reference-ne-publient-plus",
@@ -1042,7 +1207,8 @@
             "titre": "La base et le cache de la pile de référence ne publient plus de port",
             "texte": "Dans la pile Compose de référence, MariaDB et Valkey ne sont plus joignables que par les conteneurs de la pile. La file des mails contient des codes de connexion en clair pendant quelques minutes, et un port publié les rendait lisibles par tout processus de la machine.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-19-serveur-l-api-refuse-les-requetes-trop-profondes",
@@ -1055,7 +1221,8 @@
             "titre": "L'API refuse les requêtes trop profondes",
             "texte": "L'API rejette désormais une requête GraphQL trop profonde, trop large ou trop coûteuse avant d'exécuter le moindre résolveur. Le schéma comporte des cycles (périmètre et tâches, personne et affectations) qu'une personne connectée pouvait exploiter pour saturer le serveur avec une requête imbriquée. Les requêtes de l'espace organisateur restent bien en dessous des limites.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-19-serveur-l-api-passe-sur-apollo-server-5-et-express-5",
@@ -1068,7 +1235,8 @@
             "titre": "L'API passe sur Apollo Server 5 et Express 5",
             "texte": "L'API tourne sur Apollo Server 5 et Express 5, deux versions maintenues. Apollo Server 4 n'est plus maintenu depuis janvier 2026. Ce passage retire de l'image de production les bibliothèques form-data, path-to-regexp et qs, signalées par l'audit, et corrige sha.js. Les routes, le contrôle CSRF et l'arrêt propre fonctionnent comme avant.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-19-serveur-chaque-organisation-decrit-son-identite-dans-son-depot",
@@ -1080,6 +1248,11 @@
           "fr": {
             "titre": "Chaque organisation décrit son identité dans son dépôt",
             "texte": "Le dossier de contenu porte un fichier organisation.yaml : nom, sigle, fuseau horaire, domaines de mail autorisés, contact de recrutement, page équipe et thème. La validation le lit avec les périmètres, les fiches et les tâches types, et n'a plus besoin de variable d'environnement pour les domaines autorisés.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Each organization describes its identity in its repository",
+            "texte": "The content folder carries an organisation.yaml file: name, acronym, time zone, allowed email domains, recruitment contact, team page, and theme. Validation reads it along with the areas, sheets, and task templates, and no longer needs an environment variable for the allowed domains.",
             "migration": null
           }
         },
@@ -1094,6 +1267,11 @@
             "titre": "Une édition se crée aussi en ligne de commande",
             "texte": "La commande edition:creer crée une édition avec son année, son nom et ses dates, sans passer par l'espace organisateur. Une installation neuve peut ainsi importer ses tâches types dès le premier démarrage. Une édition déjà présente n'est jamais modifiée.",
             "migration": null
+          },
+          "en": {
+            "titre": "An edition can also be created from the command line",
+            "texte": "The edition:creer command creates an edition with its year, name, and dates, without using the organizer workspace. A new installation can thus import its task templates from the first start. An existing edition is never modified.",
+            "migration": null
           }
         },
         {
@@ -1107,7 +1285,8 @@
             "titre": "Le serveur refuse de démarrer sans ORIGINE_ORGA hors du poste local",
             "texte": "En recette et en production, une origine absente faisait pointer les liens des mails et l'origine de confiance de la connexion sur un hôte d'exemple, sans avertissement. Le démarrage exige désormais la variable.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-18-serveur-le-deploiement-de-reference-demarre-le-worker-apres-les-migrations",
@@ -1120,7 +1299,8 @@
             "titre": "Le déploiement de référence démarre le worker après les migrations",
             "texte": "Dans la pile Compose de référence, le worker attendait seulement la base et le cache : il pouvait démarrer sur un schéma pas encore migré. Il attend désormais la fin du service de migration, comme l'API. Sa sonde de vie lit le port configuré au lieu d'une valeur en dur.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-18-serveur-la-validation-d-un-dossier-de-contenu-tourne-dans-l-image",
@@ -1133,7 +1313,8 @@
             "titre": "La validation et l'export d'un dossier de contenu tournent dans l'image",
             "texte": "L'image Docker embarque désormais orga-valider, orga-exporter et essai-courriel, en plus des commandes déjà livrées. Le workflow de validation d'un dépôt d'organisation et l'export des fiches en fin d'édition fonctionnent sans installer Node sur le serveur.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-18-serveur-la-newsletter-quitte-le-perimetre-publie",
@@ -1146,7 +1327,8 @@
             "titre": "La newsletter quitte le périmètre publié",
             "texte": "La mutation d'inscription à la newsletter et le compteur d'abonnés, hérités du projet précédent, disparaissent de l'API. La table reste en base sans usage ; sa suppression fera l'objet d'une migration à part.",
             "migration": "Un client qui appelait subscribeNewsletter ou nombreAbonnesNewsletter doit retirer ces appels. Aucune action en base."
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-18-serveur-l-organisation-d-exemple-a-des-taches-types-pour-chaque-perimetre",
@@ -1159,7 +1341,8 @@
             "titre": "L'organisation d'exemple a des tâches types pour chaque périmètre",
             "texte": "Les périmètres volley, course à pied, logistique et communication de l'organisation d'exemple reçoivent chacun trois tâches types. Un premier import donne un rétroplanning complet sur les sept périmètres.",
             "migration": null
-          }
+          },
+          "en": null
         },
         {
           "id": "2026-09-17-serveur-les-poles-les-fiches-et-les-taches-types-de-l-edition-sont-p",
@@ -1171,6 +1354,11 @@
           "fr": {
             "titre": "Les pôles, les fiches et les tâches types de l'édition sont prêts à importer",
             "texte": "L'espace organisateur compte désormais onze pôles en plus des huit sports, dont un pôle Inclusion et accueil. Chaque périmètre dispose de fiches méthode issues du bilan de l'édition 2025 et d'une liste de tâches datées. Après l'import d'une édition, les référentes et référents retrouvent ces tâches avec leurs échéances.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The departments, sheets, and task templates of the edition are ready to import",
+            "texte": "The organizer workspace now has eleven departments in addition to the eight sports, including an Inclusion and welcome department. Each area has how-to sheets drawn from the review of the 2025 edition and a list of dated tasks. After an edition import, coordinators find these tasks with their due dates.",
             "migration": null
           }
         },
@@ -1185,6 +1373,11 @@
             "titre": "Les admins notent les souhaits des personnes invitées",
             "texte": "Un souhait indique qu'une personne s'intéresse à un périmètre pour une édition. Les admins sont les seules personnes à le voir, et il ne donne aucun accès. L'affectation de la personne à ce périmètre satisfait le souhait.",
             "migration": null
+          },
+          "en": {
+            "titre": "Admins record the interests of invited people",
+            "texte": "An interest indicates that a person is interested in an area for an edition. Admins are the only people who see it, and it grants no access. Appointing the person to that area fulfills the interest.",
+            "migration": null
           }
         },
         {
@@ -1197,6 +1390,11 @@
           "fr": {
             "titre": "Les admins fixent l'effectif de chaque périmètre",
             "texte": "Chaque périmètre peut indiquer dans le dépôt le nombre de référentes et de référents souhaité. L'import d'une édition crée cette valeur si elle manque et ne la remplace jamais. Les admins la modifient ensuite dans l'espace organisateur.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Admins set the target headcount of each area",
+            "texte": "Each area can state in the repository the number of coordinators wanted. An edition import creates this value if it is missing and never replaces it. Admins then change it in the organizer workspace.",
             "migration": null
           }
         },
@@ -1211,6 +1409,11 @@
             "titre": "Le rétroplanning respecte les droits de lecture",
             "texte": "Les tâches d'une édition se lisent en une fois, triées par échéance. Chaque personne reçoit seulement les tâches des périmètres qu'elle peut consulter.",
             "migration": null
+          },
+          "en": {
+            "titre": "The timeline respects read rights",
+            "texte": "The tasks of an edition are read in one go, sorted by due date. Each person receives only the tasks of the areas they can view.",
+            "migration": null
           }
         },
         {
@@ -1223,6 +1426,11 @@
           "fr": {
             "titre": "Les référentes et référents suivent les tâches de leurs périmètres",
             "texte": "Chaque périmètre a ses tâches pour une édition, avec une échéance, un statut et les personnes qui s'en occupent. Modifier la tâche d'une autre personne demande une confirmation, et cette personne reçoit un mail. Les éditions archivées restent consultables en lecture seule.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Coordinators follow the tasks of their areas",
+            "texte": "Each area has its tasks for an edition, with a due date, a status, and the people handling them. Editing another person’s task requires a confirmation, and that person receives an email. Archived editions remain viewable in read-only mode.",
             "migration": null
           }
         },
@@ -1237,6 +1445,11 @@
             "titre": "Les référentes et référents sont prévenus de l'activité et des échéances",
             "texte": "Chaque création, prise en charge ou modification de tâche prévient les autres personnes du périmètre. Un mail part tout de suite quand une autre personne modifie une de vos tâches, et chaque matin pour les échéances à 7 jours, à la veille et les retards. Un résumé regroupe le reste, chaque lundi ou chaque jour.",
             "migration": null
+          },
+          "en": {
+            "titre": "Coordinators are notified of activity and due dates",
+            "texte": "Each task creation, claim, or edit notifies the other people in the area. An email is sent immediately when another person edits one of your tasks, and each morning for due dates 7 days out, the day before, and overdue tasks. A digest groups the rest, each Monday or each day.",
+            "migration": null
           }
         },
         {
@@ -1249,6 +1462,11 @@
           "fr": {
             "titre": "Les fiches méthode sont versionnées et importées depuis le dépôt",
             "texte": "Chaque fiche garde toutes ses versions, et les admins peuvent en restaurer une. Les admins accordent le droit de rédiger les fiches d'un périmètre ou toutes les fiches. Les modèles du dépôt (périmètres, fiches, tâches types) s'importent pour chaque édition, sans jamais écraser une fiche modifiée dans l'application.",
+            "migration": null
+          },
+          "en": {
+            "titre": "How-to sheets are versioned and imported from the repository",
+            "texte": "Each sheet keeps all its versions, and admins can restore one. Admins grant the right to edit the sheets of an area or all sheets. The repository templates (areas, sheets, task templates) are imported for each edition, never overwriting a sheet edited in the application.",
             "migration": null
           }
         },
@@ -1263,6 +1481,11 @@
             "titre": "Les admins invitent les référentes et référents",
             "texte": "Les admins créent les comptes, les éditions, les périmètres et les affectations. Chaque personne invitée reçoit un mail, puis se connecte avec un code reçu par mail, sans mot de passe. Un compte archivé perd aussitôt l'accès.",
             "migration": null
+          },
+          "en": {
+            "titre": "Admins invite coordinators",
+            "texte": "Admins create accounts, editions, areas, and appointments. Each invited person receives an email, then signs in with a code received by email, without a password. An archived account loses access immediately.",
+            "migration": null
           }
         },
         {
@@ -1275,6 +1498,11 @@
           "fr": {
             "titre": "Chaque contribution compte dans un score d'activité",
             "texte": "Les tâches réalisées, les tâches créées et le travail sur les fiches donnent des points pour chaque édition. Une tâche faite à temps rapporte un point de plus, et une tâche rouverte perd ses points. Chaque personne voit son propre score ; seuls les admins voient le classement.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Each contribution counts toward a participation score",
+            "texte": "Completed tasks, created tasks, and work on sheets earn points for each edition. A task done on time earns one extra point, and a reopened task loses its points. Each person sees their own score; only admins see the ranking.",
             "migration": null
           }
         },
@@ -1289,7 +1517,8 @@
             "titre": "Le serveur repose sur un socle maintenu",
             "texte": "L'API tourne sur Node 24 avec un seul schéma GraphQL, une file de mails et une sonde de santé. Aucune liste de personnes n'est lisible sans authentification. Cette base porte l'espace organisateur.",
             "migration": null
-          }
+          },
+          "en": null
         }
       ]
     }

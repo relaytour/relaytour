@@ -1,5 +1,6 @@
 import { CopyOutlined, DownOutlined, MailOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   Alert,
   App,
@@ -66,6 +67,7 @@ import { estOuverte } from '../lib/taches'
 
 import ChoixMessagerie from './ChoixMessagerie'
 import CopierAdresses from './CopierAdresses'
+import { majusculeInitiale } from '../lib/langue'
 
 // Fenêtre de rédaction d'un message (ADR 0020). L'admin choisit un modèle, complète
 // le texte, puis ouvre sa propre messagerie : l'application n'envoie rien. Elle
@@ -97,17 +99,15 @@ interface Props {
   contactsPrincipaux?: readonly string[]
 }
 
-const majuscule = (texte: string) =>
-  texte.charAt(0).toLocaleUpperCase('fr') + texte.slice(1)
-
 export default function EcrireMessage({ cible, fermer, ...reste }: Props) {
+  const { t } = useLingui()
   // La dernière cible reste affichée pendant la fermeture de la fenêtre.
   const [gardee, setGardee] = useState(cible)
   if (cible !== null && cible !== gardee) setGardee(cible)
   return (
     <Modal
       open={cible !== null}
-      title="Écrire un message"
+      title={t`Écrire un message`}
       footer={null}
       onCancel={fermer}
       destroyOnHidden
@@ -126,6 +126,7 @@ function Redaction({
   editionId,
   contactsPrincipaux = [],
 }: Props & { cible: CibleMessage }) {
+  const { t } = useLingui()
   const { message, modal } = App.useApp()
   const { activite, lien } = useActivite()
   const organisation = useOrganisation()
@@ -185,19 +186,31 @@ function Redaction({
   const informations = useMemo<Informations>(() => {
     const origine = window.location.origin
     const taches = [...(lues?.retroplanning ?? [])]
-      .filter(t => perimetreId === undefined || t.perimetre.id === perimetreId)
+      .filter(
+        tache => perimetreId === undefined || tache.perimetre.id === perimetreId
+      )
       .sort((a, b) => comparer(a.echeance, b.echeance))
     const lister = (liste: typeof taches, aucune: string) =>
       lues === undefined
         ? null
         : listerTaches(
-            liste.map(t => ({
-              titre: t.titre,
-              echeance: t.echeance ? dateCourte(t.echeance) : null,
-              perimetre: perimetreId === undefined ? t.perimetre.nom : null,
+            liste.map(tache => ({
+              titre: tache.titre,
+              echeance: tache.echeance ? dateCourte(tache.echeance) : null,
+              perimetre: perimetreId === undefined ? tache.perimetre.nom : null,
             })),
             aucune
           )
+    let dates: string | null = null
+    if (edition !== undefined) {
+      const debut = dateCourte(edition.debut)
+      const fin = dateCourte(edition.fin)
+      dates =
+        edition.debut === edition.fin
+          ? t`le ${debut}`
+          : t`du ${debut} au ${fin}`
+    }
+    const adresseFormulaire = `${origine}/rejoindre/${organisation.slug}/${activite.slug}`
     const aPourvoir = (lues?.postesAPourvoir ?? [])
       .filter(p => p.aPourvoir > 0)
       .map(p => p.perimetre)
@@ -207,12 +220,7 @@ function Redaction({
       organisation: organisation.nom,
       activite: activite.nom,
       periode: edition?.nom ?? null,
-      dates:
-        edition === undefined
-          ? null
-          : edition.debut === edition.fin
-            ? `le ${dateCourte(edition.debut)}`
-            : `du ${dateCourte(edition.debut)} au ${dateCourte(edition.fin)}`,
+      dates,
       perimetre: perimetre?.nom ?? null,
       lienEspace: origine + lien('/'),
       lienPerimetre: perimetre
@@ -220,17 +228,17 @@ function Redaction({
         : null,
       tachesEnCours: lister(
         taches.filter(estOuverte),
-        'Aucune tâche n’est en cours.'
+        t`Aucune tâche n’est en cours.`
       ),
       tachesEnRetard: lister(
-        taches.filter(t => t.enRetard),
-        'Aucune tâche n’a dépassé son échéance.'
+        taches.filter(tache => tache.enRetard),
+        t`Aucune tâche n’a dépassé son échéance.`
       ),
       postesAPourvoir:
         lues === undefined
           ? null
           : aPourvoir.length === 0
-            ? 'Aucun périmètre n’est à pourvoir.'
+            ? t`Aucun périmètre n’est à pourvoir.`
             : activite.groupes
                 .map(g => ({
                   titre: g.libellePluriel,
@@ -242,7 +250,8 @@ function Redaction({
                 )
                 .join('\n\n'),
       invitationFormulaire: activite.formulaireOuvert
-        ? `Vous pouvez déposer votre demande par ce formulaire :\n${origine}/rejoindre/${organisation.slug}/${activite.slug}`
+        ? t`Vous pouvez déposer votre demande par ce formulaire :
+${adresseFormulaire}`
         : '',
       contact: activite.contactRecrutement ?? null,
       pageEquipe: activite.pageEquipe ?? organisation.pageEquipe,
@@ -257,6 +266,7 @@ function Redaction({
     perimetre,
     perimetreId,
     seul,
+    t,
   ])
 
   const modele = MODELES.find(m => m.cle === cleModele) ?? MODELES[0]!
@@ -267,6 +277,18 @@ function Redaction({
   const enCopie = new Set(
     champ === 'CCI' && copieContacts ? contacts.map(d => d.id) : []
   )
+  const nomsContacts = contacts.map(d => d.nom).join(', ')
+  const nombreDestinataires = destinataires.length
+  const destinatairesMax = DESTINATAIRES_MAX
+  const champCc = CHAMPS.CC
+  const champCci = CHAMPS.CCI
+  const objetLibelle = t({
+    message: 'Objet',
+    comment: 'Objet (sujet) d’un mail',
+  })
+  // Le nom d'un destinataire, suivi de « (Cc) » quand il reçoit le message en copie visible.
+  const copieVisible = (id: string, nom: string) =>
+    enCopie.has(id) ? t`${nom} (Cc)` : nom
   const adresses = repartir(destinataires, champ, enCopie, moi.email)
   const { lien: lienMessagerie, omis } = preparerLien(
     { ...adresses, objet, corps },
@@ -277,14 +299,15 @@ function Redaction({
     !messagerie(cleMessagerie).copiesEtablies &&
     omis !== 'adresses' &&
     adresses.cc.length + adresses.cci.length > 0
+  const nomMessagerie = messagerie(cleMessagerie).libelle
   const avisCopies = (suite: string) =>
     copiesAVerifier && (
       <Alert
         type="warning"
         showIcon
         style={{ marginBottom: 16 }}
-        title="Vérifiez les champs « Cc » et « Cci » avant d’envoyer"
-        description={`« ${messagerie(cleMessagerie).libelle} » ne reprend pas toujours ces champs. ${suite}`}
+        title={t`Vérifiez les champs « Cc » et « Cci » avant d’envoyer`}
+        description={`${t`« ${nomMessagerie} » ne reprend pas toujours ces champs.`} ${suite}`}
       />
     )
   const restes = passagesACompleter(`${objet}\n${corps}`)
@@ -295,7 +318,7 @@ function Redaction({
       message.success(succes)
     } catch {
       message.error(
-        'La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même.'
+        t`La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même.`
       )
     }
   }
@@ -306,10 +329,10 @@ function Redaction({
       return
     }
     modal.confirm({
-      title: 'Remplacer le texte par le modèle ?',
-      content: 'Le modèle remplace l’objet et le texte que vous avez modifiés.',
-      okText: 'Remplacer',
-      cancelText: 'Garder mon texte',
+      title: t`Remplacer le texte par le modèle ?`,
+      content: t`Le modèle remplace l’objet et le texte que vous avez modifiés.`,
+      okText: t`Remplacer`,
+      cancelText: t`Garder mon texte`,
       onOk: () => {
         setCleModele(cle)
         setSaisie(null)
@@ -334,11 +357,11 @@ function Redaction({
 
   const preparer = async () => {
     if (objet.trim() === '') {
-      message.error('Saisissez l’objet du message.')
+      message.error(t`Saisissez l’objet du message.`)
       return
     }
     if (corps.trim() === '') {
-      message.error('Saisissez le texte du message.')
+      message.error(t`Saisissez le texte du message.`)
       return
     }
     // L'onglet d'une messagerie en ligne se réserve pendant le clic : ouvert après
@@ -388,8 +411,8 @@ function Redaction({
       await definirStatut({ variables: { id: suivi, statut } })
       message.success(
         statut === 'ENVOYE'
-          ? 'Le message est noté comme envoyé.'
-          : 'Le message est noté comme annulé.'
+          ? t`Le message est noté comme envoyé.`
+          : t`Le message est noté comme annulé.`
       )
       fermer()
     } catch (e) {
@@ -405,15 +428,15 @@ function Redaction({
     >
       <Button
         icon={<CopyOutlined />}
-        onClick={() => void copier(objet, 'L’objet est copié.')}
+        onClick={() => void copier(objet, t`L’objet est copié.`)}
       >
-        Copier l’objet
+        <Trans>Copier l’objet</Trans>
       </Button>
       <Button
         icon={<CopyOutlined />}
-        onClick={() => void copier(corps, 'Le texte est copié.')}
+        onClick={() => void copier(corps, t`Le texte est copié.`)}
       >
-        Copier le texte
+        <Trans>Copier le texte</Trans>
       </Button>
     </CopierAdresses>
   )
@@ -423,8 +446,8 @@ function Redaction({
       <Alert
         type="info"
         showIcon
-        title="Aucune personne à qui écrire"
-        description="La sélection ne contient que votre propre compte, ou aucune personne."
+        title={t`Aucune personne à qui écrire`}
+        description={t`La sélection ne contient que votre propre compte, ou aucune personne.`}
       />
     )
   }
@@ -435,18 +458,18 @@ function Redaction({
         <Alert
           type="success"
           showIcon
-          title="Le message est prêt dans votre messagerie"
-          description="L’application n’envoie rien : vous relisez le message dans votre messagerie, puis vous l’envoyez."
+          title={t`Le message est prêt dans votre messagerie`}
+          description={t`L’application n’envoie rien : vous relisez le message dans votre messagerie, puis vous l’envoyez.`}
         />
         {omis === 'texte' && (
           <Alert
             type="warning"
             showIcon
-            title="Collez le texte dans le message"
+            title={t`Collez le texte dans le message`}
             description={
               texteCopie
-                ? 'Le texte est trop long pour le lien vers la messagerie. L’application l’a copié : collez-le dans le corps du message.'
-                : 'Le texte est trop long pour le lien vers la messagerie, et la copie automatique a échoué. Copiez le texte avec le bouton ci-dessous, puis collez-le dans le corps du message.'
+                ? t`Le texte est trop long pour le lien vers la messagerie. L’application l’a copié : collez-le dans le corps du message.`
+                : t`Le texte est trop long pour le lien vers la messagerie, et la copie automatique a échoué. Copiez le texte avec le bouton ci-dessous, puis collez-le dans le corps du message.`
             }
           />
         )}
@@ -454,17 +477,19 @@ function Redaction({
           <Alert
             type="warning"
             showIcon
-            title="Collez les adresses et le texte dans le message"
-            description="Les destinataires sont trop nombreux pour le lien vers la messagerie. La messagerie s’ouvre avec l’objet seulement. Copiez les adresses et le texte avec les boutons ci-dessous."
+            title={t`Collez les adresses et le texte dans le message`}
+            description={t`Les destinataires sont trop nombreux pour le lien vers la messagerie. La messagerie s’ouvre avec l’objet seulement. Copiez les adresses et le texte avec les boutons ci-dessous.`}
           />
         )}
         {avisCopies(
-          'S’ils sont vides dans votre message, copiez les adresses avec les boutons ci-dessous.'
+          t`S’ils sont vides dans votre message, copiez les adresses avec les boutons ci-dessous.`
         )}
         <div>
           <Typography.Paragraph type="secondary">
-            Si votre messagerie ne s’est pas ouverte, rouvrez-la, ou copiez
-            chaque partie du message.
+            <Trans>
+              Si votre messagerie ne s’est pas ouverte, rouvrez-la, ou copiez
+              chaque partie du message.
+            </Trans>
           </Typography.Paragraph>
           <Space orientation="vertical" size={8}>
             <Button
@@ -474,18 +499,20 @@ function Redaction({
                 ? { target: '_blank', rel: 'noopener noreferrer' }
                 : {})}
             >
-              Rouvrir la messagerie
+              <Trans>Rouvrir la messagerie</Trans>
             </Button>
             {copies}
           </Space>
         </div>
         <div>
           <Typography.Title level={5} style={{ marginTop: 0 }}>
-            Avez-vous envoyé ce message ?
+            <Trans>Avez-vous envoyé ce message ?</Trans>
           </Typography.Title>
           <Typography.Paragraph type="secondary">
-            Votre réponse met à jour l’historique des messages. Sans réponse, le
-            message y reste « En cours » et vous répondez plus tard.
+            <Trans>
+              Votre réponse met à jour l’historique des messages. Sans réponse,
+              le message y reste « En cours » et vous répondez plus tard.
+            </Trans>
           </Typography.Paragraph>
           <Space wrap>
             <Button
@@ -493,16 +520,16 @@ function Redaction({
               loading={declaration.loading}
               onClick={() => void declarer('ENVOYE')}
             >
-              Le message est envoyé
+              <Trans>Le message est envoyé</Trans>
             </Button>
             <Button
               disabled={declaration.loading}
               onClick={() => void declarer('ANNULE')}
             >
-              Je n’envoie pas ce message
+              <Trans>Je n’envoie pas ce message</Trans>
             </Button>
             <Button type="text" onClick={fermer}>
-              Répondre plus tard
+              <Trans>Répondre plus tard</Trans>
             </Button>
           </Space>
         </div>
@@ -514,14 +541,13 @@ function Redaction({
     <Form layout="vertical" component="div" requiredMark={false}>
       <Form.Item
         label={
-          seul ? 'Destinataire' : `Destinataires (${destinataires.length})`
+          seul ? t`Destinataire` : t`Destinataires (${nombreDestinataires})`
         }
       >
         <div className="rt-destinataires">
           {destinataires.map(d => (
             <Tag key={d.id} style={{ marginInlineEnd: 0 }}>
-              {d.nom}
-              {enCopie.has(d.id) && ' (Cc)'}
+              {copieVisible(d.id, d.nom)}
             </Tag>
           ))}
         </div>
@@ -531,16 +557,16 @@ function Redaction({
           type="error"
           showIcon
           style={{ marginBottom: 16 }}
-          title={`Un message compte ${DESTINATAIRES_MAX} destinataires au plus. Réduisez la sélection.`}
+          title={t`Un message compte ${destinatairesMax} destinataires au plus. Réduisez la sélection.`}
         />
       )}
 
       {!seul && (
         <Form.Item
-          label="Champ des destinataires"
+          label={t`Champ des destinataires`}
           extra={
             champ === 'CCI'
-              ? 'Le message vous est adressé. Chaque destinataire le reçoit sans voir l’adresse des autres.'
+              ? t`Le message vous est adressé. Chaque destinataire le reçoit sans voir l’adresse des autres.`
               : undefined
           }
         >
@@ -549,16 +575,16 @@ function Redaction({
               value={champ}
               onChange={setChamp}
               options={[
-                { value: 'CC', label: `${CHAMPS.CC} (adresses visibles)` },
-                { value: 'CCI', label: `${CHAMPS.CCI} (adresses cachées)` },
+                { value: 'CC', label: t`${champCc} (adresses visibles)` },
+                { value: 'CCI', label: t`${champCci} (adresses cachées)` },
               ]}
             />
             {champ === 'CC' && (
               <Alert
                 type="warning"
                 showIcon
-                title="Chaque destinataire voit l’adresse des autres"
-                description="Le champ Cc affiche toutes les adresses. Nous vous conseillons le champ Cci, sauf pour des personnes qui travaillent déjà ensemble."
+                title={t`Chaque destinataire voit l’adresse des autres`}
+                description={t`Le champ Cc affiche toutes les adresses. Nous vous conseillons le champ Cci, sauf pour des personnes qui travaillent déjà ensemble.`}
               />
             )}
             {champ === 'CCI' && contacts.length > 0 && (
@@ -566,11 +592,9 @@ function Redaction({
                 checked={copieContacts}
                 onChange={e => setCopieContacts(e.target.checked)}
               >
-                Garder en copie visible (Cc){' '}
                 {contacts.length === 1
-                  ? 'le contact principal'
-                  : 'les contacts principaux'}{' '}
-                : {contacts.map(d => d.nom).join(', ')}
+                  ? t`Garder en copie visible (Cc) le contact principal : ${nomsContacts}`
+                  : t`Garder en copie visible (Cc) les contacts principaux : ${nomsContacts}`}
               </Checkbox>
             )}
           </Space>
@@ -579,9 +603,9 @@ function Redaction({
 
       <Row gutter={16}>
         <Col xs={24} sm={14}>
-          <Form.Item label="Modèle" extra={modele.description}>
+          <Form.Item label={t`Modèle`} extra={modele.description}>
             <Select
-              aria-label="Modèle"
+              aria-label={t`Modèle`}
               value={modele.cle}
               onChange={choisirModele}
               options={MODELES.map(m => ({ value: m.cle, label: m.libelle }))}
@@ -590,15 +614,15 @@ function Redaction({
         </Col>
         <Col xs={24} sm={10}>
           <Form.Item
-            label="Périmètre"
-            extra="Le périmètre choisi alimente son nom, son adresse et ses tâches."
+            label={t`Périmètre`}
+            extra={t`Le périmètre choisi alimente son nom, son adresse et ses tâches.`}
           >
             <Select
-              aria-label="Périmètre"
+              aria-label={t`Périmètre`}
               allowClear
               showSearch
               optionFilterProp="label"
-              placeholder="Tous les périmètres"
+              placeholder={t`Tous les périmètres`}
               value={perimetreId}
               onChange={(id?: string) => setPerimetreId(id)}
               options={(perimetres?.perimetres ?? []).map(p => ({
@@ -610,9 +634,9 @@ function Redaction({
         </Col>
       </Row>
 
-      <Form.Item label="Objet">
+      <Form.Item label={objetLibelle}>
         <Input
-          aria-label="Objet"
+          aria-label={objetLibelle}
           maxLength={OBJET_MAX}
           value={objet}
           onChange={e => setSaisie({ objet: e.target.value, corps })}
@@ -621,13 +645,15 @@ function Redaction({
       <Form.Item
         label={
           <Space size={16}>
-            <span>Texte</span>
+            <span>
+              <Trans>Texte</Trans>
+            </span>
             <Dropdown
               trigger={['click']}
               menu={{
                 items: INSERABLES.map(cle => ({
                   key: cle,
-                  label: majuscule(LIBELLES[cle]),
+                  label: majusculeInitiale(LIBELLES[cle]),
                   disabled: !informations[cle],
                 })),
                 onClick: ({ key }) =>
@@ -635,7 +661,7 @@ function Redaction({
               }}
             >
               <Button size="small">
-                Insérer une information <DownOutlined />
+                <Trans>Insérer une information</Trans> <DownOutlined />
               </Button>
             </Dropdown>
           </Space>
@@ -643,12 +669,12 @@ function Redaction({
         extra={
           seul
             ? undefined
-            : 'Tous les destinataires reçoivent le même texte : il ne porte aucune information propre à une personne.'
+            : t`Tous les destinataires reçoivent le même texte : il ne porte aucune information propre à une personne.`
         }
       >
         <Input.TextArea
           ref={zone}
-          aria-label="Texte"
+          aria-label={t`Texte`}
           rows={14}
           maxLength={CORPS_MAX}
           value={corps}
@@ -661,7 +687,7 @@ function Redaction({
           type="warning"
           showIcon
           style={{ marginBottom: 16 }}
-          title="Le message contient des passages à compléter"
+          title={t`Le message contient des passages à compléter`}
           description={restes.join(' · ')}
         />
       )}
@@ -672,24 +698,24 @@ function Redaction({
           style={{ marginBottom: 16 }}
           title={
             omis === 'texte'
-              ? 'Le texte est trop long pour s’ouvrir seul dans la messagerie'
-              : 'Les destinataires sont trop nombreux pour s’ouvrir seuls dans la messagerie'
+              ? t`Le texte est trop long pour s’ouvrir seul dans la messagerie`
+              : t`Les destinataires sont trop nombreux pour s’ouvrir seuls dans la messagerie`
           }
           description={
             omis === 'texte'
-              ? 'La messagerie s’ouvre avec les destinataires et l’objet. L’application copie le texte : vous le collez dans le message.'
-              : 'La messagerie s’ouvre avec l’objet. Vous copiez ensuite les adresses et le texte depuis cette fenêtre.'
+              ? t`La messagerie s’ouvre avec les destinataires et l’objet. L’application copie le texte : vous le collez dans le message.`
+              : t`La messagerie s’ouvre avec l’objet. Vous copiez ensuite les adresses et le texte depuis cette fenêtre.`
           }
         />
       )}
 
       {avisCopies(
-        'Après l’ouverture, cette fenêtre propose de copier les adresses.'
+        t`Après l’ouverture, cette fenêtre propose de copier les adresses.`
       )}
 
       <Form.Item
-        label="Messagerie"
-        extra="Vos préférences fixent la messagerie proposée. Ce choix ne vaut que pour ce message."
+        label={t`Messagerie`}
+        extra={t`Vos préférences fixent la messagerie proposée. Ce choix ne vaut que pour ce message.`}
       >
         <ChoixMessagerie
           valeur={cleMessagerie}
@@ -699,7 +725,9 @@ function Redaction({
       </Form.Item>
 
       <Space style={{ width: '100%', justifyContent: 'flex-end' }}>
-        <Button onClick={fermer}>Annuler</Button>
+        <Button onClick={fermer}>
+          <Trans>Annuler</Trans>
+        </Button>
         <Button
           type="primary"
           icon={<MailOutlined />}
@@ -707,7 +735,7 @@ function Redaction({
           disabled={destinataires.length > DESTINATAIRES_MAX}
           onClick={() => void preparer()}
         >
-          Ouvrir dans votre messagerie
+          <Trans>Ouvrir dans votre messagerie</Trans>
         </Button>
       </Space>
     </Form>

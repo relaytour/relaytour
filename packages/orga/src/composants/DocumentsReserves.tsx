@@ -1,4 +1,6 @@
 import { useQuery } from '@apollo/client/react'
+import { plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert } from 'antd'
 
 import { perimetresConcernes, type Concerne } from '../lib/concerne'
@@ -22,6 +24,7 @@ export default function DocumentsReserves({
   mentions: Mentions
   perimetreDeLaFiche: string
 }) {
+  const { t } = useLingui()
   const { data } = useQuery(RESSOURCES_FICHE, { variables: { slug } })
   const concernes = perimetresConcernes(concerne, mentions, perimetreDeLaFiche)
   if (concernes.size === 0) return null
@@ -41,27 +44,36 @@ export default function DocumentsReserves({
     return manquants.length === 0 ? [] : [{ nom: r.nom, manquants }]
   })
   if (reserves.length === 0) return null
+  const nombreReserves = reserves.length
   return (
     <Alert
       type="warning"
       showIcon
       style={{ marginTop: 12 }}
-      title={
-        reserves.length > 1
-          ? `${reserves.length} documents liés ne s’ouvriront pas pour tous les périmètres concernés.`
-          : 'Un document lié ne s’ouvrira pas pour tous les périmètres concernés.'
-      }
+      title={t`${plural(nombreReserves, {
+        one: 'Un document lié ne s’ouvrira pas pour tous les périmètres concernés.',
+        other:
+          '# documents liés ne s’ouvriront pas pour tous les périmètres concernés.',
+      })}`}
       description={
         <>
           <ul className="rt-liste-simple">
-            {reserves.map(r => (
-              <li key={r.nom}>
-                «&nbsp;{r.nom}&nbsp;» : {r.manquants.join(', ')}
-              </li>
-            ))}
+            {reserves.map(r => {
+              const nomDocument = r.nom
+              const perimetresManquants = r.manquants.join(', ')
+              return (
+                <li key={r.nom}>
+                  <Trans>
+                    «&nbsp;{nomDocument}&nbsp;» : {perimetresManquants}
+                  </Trans>
+                </li>
+              )
+            })}
           </ul>
-          Un admin de l’organisation peut étendre le dossier lié, ou ouvrir le
-          document aux lecteurs de la fiche, depuis la fiche.
+          <Trans>
+            Un admin de l’organisation peut étendre le dossier lié, ou ouvrir le
+            document aux lecteurs de la fiche, depuis la fiche.
+          </Trans>
         </>
       }
     />

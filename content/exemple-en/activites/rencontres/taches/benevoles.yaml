@@ -1,0 +1,52 @@
+# Task templates of the Volunteers department.
+# Due dates are counted from the first day of the edition.
+taches:
+  - modele: recueillir-les-besoins-en-benevoles
+    titre: Collect the volunteer needs of each sport
+    description: >-
+      The department collects the needs of each sport and each department, by site and by slot.
+      It gathers these needs in a single table.
+    echeance: J-150
+    fiche: planifier-les-creneaux
+    # Shared task (ADR 0026): each sport receives its derived task, with its
+    # own status. The department reads the progress of each one on its task.
+    declinaison:
+      groupe: sport
+      titre: Send the volunteer needs to the Volunteers department
+      description: >-
+        The coordinators list the positions to fill, by site and by slot,
+        and send this list to the Volunteers department.
+      echeance: J-160
+  - modele: lancer-l-appel-aux-benevoles
+    titre: Launch the volunteer call
+    description: >-
+      The department distributes the call with the Communication department.
+      Volunteers sign up in a tool of the association.
+    echeance: J-120
+    fiche: planifier-les-creneaux
+  - modele: planifier-les-creneaux-des-benevoles
+    titre: Plan the volunteer slots
+    description: >-
+      The department fills in the attendance table by site and by slot.
+      It reports empty slots to the sports and departments concerned.
+    echeance: J-60
+    fiche: planifier-les-creneaux
+  - modele: confirmer-la-presence-des-benevoles
+    titre: Confirm the attendance of each volunteer
+    description: >-
+      The department asks each volunteer to confirm their slots.
+      It covers absences with a reserve of available people.
+    echeance: J-21
+    fiche: planifier-les-creneaux
+  - modele: envoyer-le-planning-aux-benevoles
+    titre: Send the schedule and instructions to the volunteers
+    description: >-
+      The department sends each volunteer their slots, their venue, and their arrival time.
+    echeance: J-10
+    fiche: planifier-les-creneaux
+  - modele: remercier-les-benevoles
+    titre: Thank the volunteers
+    description: >-
+      The department sends a thank-you message to each volunteer and collects their feedback.
+      It passes the summary to the Coordination department for the review.
+    echeance: J+14

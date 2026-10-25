@@ -1,5 +1,7 @@
 import { CopyOutlined, LinkOutlined } from '@ant-design/icons'
 import { useMutation, useQuery } from '@apollo/client/react'
+import { msg } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Checkbox, Radio, Select, Space } from 'antd'
 import { useState } from 'react'
 
@@ -7,6 +9,7 @@ import { graphql } from '../gql'
 import { messageErreur } from '../lib/erreurs'
 
 import { Panneau } from './Panneau'
+import { langueActive } from '../lib/langue'
 
 // Les périmètres qu'un abonnement peut suivre : ceux que la personne lit, comme
 // le serveur l'exige (`perimetresLisibles`). Une consultation ne suffit pas.
@@ -105,7 +108,7 @@ const REVOQUER_ACTIVITE = graphql(`
 `)
 
 const dateCourte = (iso: string) =>
-  new Date(iso).toLocaleDateString('fr-FR', {
+  new Date(iso).toLocaleDateString(langueActive(), {
     day: 'numeric',
     month: 'long',
     year: 'numeric',
@@ -116,37 +119,40 @@ const dateCourte = (iso: string) =>
  * dans l'agenda de l'appareil par le protocole webcal.
  */
 function AdresseUnique({ adresse }: { adresse: string }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const webcal = adresse.replace(/^https?:/, 'webcal:')
   return (
     <Alert
       type="success"
       showIcon
-      title="Votre adresse d’abonnement"
+      title={t`Votre adresse d’abonnement`}
       description={
         <div className="rt-abonnement-adresse">
           <code>{adresse}</code>
           <p className="rt-note">
-            Cette adresse ne s’affichera plus. Copiez-la maintenant et gardez-la
-            pour vous : elle donne accès au contenu de l’agenda.
+            <Trans>
+              Cette adresse ne s’affichera plus. Copiez-la maintenant et
+              gardez-la pour vous : elle donne accès au contenu de l’agenda.
+            </Trans>
           </p>
           <Space wrap>
             <Button
               icon={<CopyOutlined />}
               onClick={() => {
                 void navigator.clipboard.writeText(adresse).then(
-                  () => message.success('L’adresse est copiée.'),
+                  () => message.success(t`L’adresse est copiée.`),
                   () =>
                     message.error(
-                      'La copie a échoué : sélectionnez l’adresse à la main.'
+                      t`La copie a échoué : sélectionnez l’adresse à la main.`
                     )
                 )
               }}
             >
-              Copier l’adresse
+              <Trans>Copier l’adresse</Trans>
             </Button>
             <Button icon={<LinkOutlined />} href={webcal}>
-              Ouvrir dans mon agenda
+              <Trans>Ouvrir dans mon agenda</Trans>
             </Button>
           </Space>
         </div>
@@ -155,11 +161,11 @@ function AdresseUnique({ adresse }: { adresse: string }) {
   )
 }
 
-const AIDE =
-  'Dans Google Agenda, choisissez « Autres agendas », puis « À partir de l’URL ». Dans Outlook, choisissez « Ajouter un agenda », puis « S’abonner à partir du web ». Votre agenda relit l’adresse à son rythme, parfois une seule fois par jour.'
+const AIDE = msg`Dans Google Agenda, choisissez « Autres agendas », puis « À partir de l’URL ». Dans Outlook, choisissez « Ajouter un agenda », puis « S’abonner à partir du web ». Votre agenda relit l’adresse à son rythme, parfois une seule fois par jour.`
 
 /** L'abonnement personnel à l'agenda, dans les préférences (ADR 0037). */
 export function PreferenceAgenda() {
+  const { t } = useLingui()
   const { message, modal } = App.useApp()
   const { data, loading, error, refetch } = useQuery(MON_ABONNEMENT)
   const { data: perimetres } = useQuery(PERIMETRES_ABONNABLES)
@@ -187,6 +193,12 @@ export function PreferenceAgenda() {
     setEcheances(abonnement.inclureEcheances)
   }
 
+  const creeLe = abonnement ? dateCourte(abonnement.creeLe) : ''
+  const finAdresse = abonnement?.fin ?? ''
+  const derniereLecture = abonnement?.dernierAccesLe
+    ? dateCourte(abonnement.dernierAccesLe)
+    : null
+
   const reglages = {
     perimetreIds: tous ? null : choisis,
     inclureGlobal: global,
@@ -205,28 +217,26 @@ export function PreferenceAgenda() {
 
   const nouvelleAdresse = () =>
     void modal.confirm({
-      title: 'Créer une nouvelle adresse ?',
-      content:
-        'L’adresse actuelle cesse aussitôt de servir. Vous devrez abonner de nouveau vos agendas.',
-      okText: 'Nouvelle adresse',
-      cancelText: 'Annuler',
+      title: t`Créer une nouvelle adresse ?`,
+      content: t`L’adresse actuelle cesse aussitôt de servir. Vous devrez abonner de nouveau vos agendas.`,
+      okText: t`Nouvelle adresse`,
+      cancelText: t`Annuler`,
       onOk: creerAdresse,
     })
 
   const revoquerAdresse = () =>
     void modal.confirm({
-      title: 'Révoquer votre abonnement ?',
-      content:
-        'L’adresse cesse aussitôt de servir. Vos agendas gardent les événements déjà lus jusqu’à leur prochaine relecture.',
-      okText: 'Révoquer',
+      title: t`Révoquer votre abonnement ?`,
+      content: t`L’adresse cesse aussitôt de servir. Vos agendas gardent les événements déjà lus jusqu’à leur prochaine relecture.`,
+      okText: t`Révoquer`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await revoquer()
           setAdresse(null)
           await refetch()
-          message.success('Abonnement révoqué.')
+          message.success(t`Abonnement révoqué.`)
         } catch (e) {
           message.error(messageErreur(e))
         }
@@ -234,25 +244,27 @@ export function PreferenceAgenda() {
     })
 
   return (
-    <Panneau titre="Votre agenda dans Outlook, Google ou Apple">
+    <Panneau titre={t`Votre agenda dans Outlook, Google ou Apple`}>
       <p className="rt-texte-secondaire">
-        Une adresse secrète ajoute vos dates à votre agenda personnel, en
-        lecture seule : l’agenda global de vos activités, les réunions de vos
-        périmètres et vos convocations.
+        <Trans>
+          Une adresse secrète ajoute vos dates à votre agenda personnel, en
+          lecture seule : l’agenda global de vos activités, les réunions de vos
+          périmètres et vos convocations.
+        </Trans>
       </p>
       <Radio.Group
         value={tous ? 'tous' : 'choix'}
         onChange={e => setTous(e.target.value === 'tous')}
         options={[
-          { value: 'tous', label: 'Tous les périmètres que je lis' },
-          { value: 'choix', label: 'Seulement ces périmètres' },
+          { value: 'tous', label: t`Tous les périmètres que je lis` },
+          { value: 'choix', label: t`Seulement ces périmètres` },
         ]}
       />
       {!tous && (
         <Select
           mode="multiple"
-          aria-label="Périmètres de l’abonnement"
-          placeholder="Choisir des périmètres"
+          aria-label={t`Périmètres de l’abonnement`}
+          placeholder={t`Choisir des périmètres`}
           optionFilterProp="label"
           value={choisis}
           onChange={setChoisis}
@@ -262,23 +274,27 @@ export function PreferenceAgenda() {
         />
       )}
       <Checkbox checked={global} onChange={e => setGlobal(e.target.checked)}>
-        L’agenda global : phases, dates clés et réunions de l’activité
+        <Trans>
+          L’agenda global : phases, dates clés et réunions de l’activité
+        </Trans>
       </Checkbox>
       <Checkbox
         checked={echeances}
         onChange={e => setEcheances(e.target.checked)}
       >
-        Les échéances des tâches qui me sont assignées
+        <Trans>Les échéances des tâches qui me sont assignées</Trans>
       </Checkbox>
       {adresse && <AdresseUnique adresse={adresse} />}
       {abonnement ? (
         <>
           <p className="rt-note">
-            Adresse active, créée le {dateCourte(abonnement.creeLe)}, se
-            terminant par « {abonnement.fin} ».{' '}
-            {abonnement.dernierAccesLe
-              ? `Dernière lecture par un agenda le ${dateCourte(abonnement.dernierAccesLe)}.`
-              : 'Aucun agenda ne l’a encore lue.'}
+            <Trans>
+              Adresse active, créée le {creeLe}, se terminant par « {finAdresse}{' '}
+              ».
+            </Trans>{' '}
+            {derniereLecture
+              ? t`Dernière lecture par un agenda le ${derniereLecture}.`
+              : t`Aucun agenda ne l’a encore lue.`}
           </p>
           <Space wrap>
             <Button
@@ -286,16 +302,18 @@ export function PreferenceAgenda() {
               loading={reglage.loading}
               onClick={() => {
                 void regler({ variables: reglages }).then(
-                  () => message.success('Abonnement enregistré.'),
+                  () => message.success(t`Abonnement enregistré.`),
                   (e: unknown) => message.error(messageErreur(e))
                 )
               }}
             >
-              Enregistrer
+              <Trans>Enregistrer</Trans>
             </Button>
-            <Button onClick={nouvelleAdresse}>Nouvelle adresse</Button>
+            <Button onClick={nouvelleAdresse}>
+              <Trans>Nouvelle adresse</Trans>
+            </Button>
             <Button danger onClick={revoquerAdresse}>
-              Révoquer
+              <Trans>Révoquer</Trans>
             </Button>
           </Space>
         </>
@@ -309,16 +327,18 @@ export function PreferenceAgenda() {
           onClick={() => void creerAdresse()}
           style={{ alignSelf: 'flex-start' }}
         >
-          Créer mon adresse
+          <Trans>Créer mon adresse</Trans>
         </Button>
       )}
       {error && !data && !loading && (
         <p className="rt-note">
-          Votre abonnement n’a pas pu être lu. Rechargez la page dans un
-          instant.
+          <Trans>
+            Votre abonnement n’a pas pu être lu. Rechargez la page dans un
+            instant.
+          </Trans>
         </p>
       )}
-      <p className="rt-note">{AIDE}</p>
+      <p className="rt-note">{t(AIDE)}</p>
     </Panneau>
   )
 }
@@ -331,6 +351,7 @@ export function AbonnementActivite({
   activiteId: string
   nom: string
 }) {
+  const { t } = useLingui()
   const { message, modal } = App.useApp()
   const { data, loading, error, refetch } = useQuery(ABONNEMENT_ACTIVITE, {
     variables: { activiteId },
@@ -339,6 +360,10 @@ export function AbonnementActivite({
   const [revoquer] = useMutation(REVOQUER_ACTIVITE)
   const [adresse, setAdresse] = useState<string | null>(null)
   const abonnement = data?.abonnementAgendaActivite ?? null
+  const finAdresse = abonnement?.fin ?? ''
+  const derniereLecture = abonnement?.dernierAccesLe
+    ? dateCourte(abonnement.dernierAccesLe)
+    : null
 
   const creerAdresse = async () => {
     try {
@@ -351,46 +376,47 @@ export function AbonnementActivite({
   }
 
   return (
-    <Panneau titre="Abonnement de l’activité">
+    <Panneau titre={t`Abonnement de l’activité`}>
       <p className="rt-texte-secondaire">
-        Une adresse secrète publie l’agenda global de {nom} : phases, dates clés
-        et réunions globales. Un agenda partagé de l’association s’y abonne,
-        sans les réunions des périmètres.
+        <Trans>
+          Une adresse secrète publie l’agenda global de {nom} : phases, dates
+          clés et réunions globales. Un agenda partagé de l’association s’y
+          abonne, sans les réunions des périmètres.
+        </Trans>
       </p>
       {adresse && <AdresseUnique adresse={adresse} />}
       {abonnement ? (
         <>
           <p className="rt-note">
-            Adresse active, se terminant par « {abonnement.fin} ».{' '}
-            {abonnement.dernierAccesLe
-              ? `Dernière lecture le ${dateCourte(abonnement.dernierAccesLe)}.`
-              : 'Aucun agenda ne l’a encore lue.'}
+            <Trans>Adresse active, se terminant par « {finAdresse} ».</Trans>{' '}
+            {derniereLecture
+              ? t`Dernière lecture le ${derniereLecture}.`
+              : t`Aucun agenda ne l’a encore lue.`}
           </p>
           <Space wrap>
             <Button
               size="small"
               onClick={() =>
                 void modal.confirm({
-                  title: 'Créer une nouvelle adresse ?',
-                  content:
-                    'L’adresse actuelle cesse aussitôt de servir pour tous les agendas abonnés.',
-                  okText: 'Nouvelle adresse',
-                  cancelText: 'Annuler',
+                  title: t`Créer une nouvelle adresse ?`,
+                  content: t`L’adresse actuelle cesse aussitôt de servir pour tous les agendas abonnés.`,
+                  okText: t`Nouvelle adresse`,
+                  cancelText: t`Annuler`,
                   onOk: creerAdresse,
                 })
               }
             >
-              Nouvelle adresse
+              <Trans>Nouvelle adresse</Trans>
             </Button>
             <Button
               size="small"
               danger
               onClick={() =>
                 void modal.confirm({
-                  title: 'Révoquer l’abonnement de l’activité ?',
-                  okText: 'Révoquer',
+                  title: t`Révoquer l’abonnement de l’activité ?`,
+                  okText: t`Révoquer`,
                   okButtonProps: { danger: true },
-                  cancelText: 'Annuler',
+                  cancelText: t`Annuler`,
                   // Un échec garde la fenêtre ouverte, pour réessayer.
                   onOk: async () => {
                     try {
@@ -401,12 +427,12 @@ export function AbonnementActivite({
                     }
                     setAdresse(null)
                     await refetch()
-                    message.success('Abonnement révoqué.')
+                    message.success(t`Abonnement révoqué.`)
                   },
                 })
               }
             >
-              Révoquer
+              <Trans>Révoquer</Trans>
             </Button>
           </Space>
         </>
@@ -418,13 +444,15 @@ export function AbonnementActivite({
           onClick={() => void creerAdresse()}
           style={{ alignSelf: 'flex-start' }}
         >
-          Créer l’adresse
+          <Trans>Créer l’adresse</Trans>
         </Button>
       )}
       {error && !data && !loading && (
         <p className="rt-note">
-          L’abonnement de l’activité n’a pas pu être lu. Rechargez la page dans
-          un instant.
+          <Trans>
+            L’abonnement de l’activité n’a pas pu être lu. Rechargez la page
+            dans un instant.
+          </Trans>
         </p>
       )}
     </Panneau>

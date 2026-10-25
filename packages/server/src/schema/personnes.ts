@@ -1,3 +1,4 @@
+import { estUneLangue } from '@relaytour/commun'
 import { prisma } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
@@ -32,6 +33,7 @@ import {
   inviterCompteExterne,
 } from '../lib/invitations.ts'
 import { journal } from '../lib/journal.ts'
+import { i18n } from '../lib/langue.ts'
 import { limiterParCle } from '../lib/limite.ts'
 import {
   retirerDesReunionsDeLOrganisation,
@@ -103,6 +105,14 @@ export const PersonneRef = builder.prismaObject('User', {
         (ctx.personne?.estAdmin === true &&
           (await membresDeLOrganisation(ctx)).has(personne.id)) ||
         (await ctx.equipeAdministree()).has(personne.id),
+    }),
+    // La langue choisie ne se lit que par la personne elle-même (ADR 0047).
+    langue: t.string({
+      nullable: true,
+      description:
+        'Langue choisie par la personne, lue par elle seule. Nulle quand elle suit la langue de l’organisation.',
+      select: { langue: true },
+      resolve: (u, _args, ctx) => (ctx.personne?.id === u.id ? u.langue : null),
     }),
     // Rôle ADMIN dans l'organisation active (ADR 0008), pas un droit global. Il se
     // lit par la personne elle-même, par les admins de l'organisation et par les
@@ -459,7 +469,7 @@ builder.mutationFields(t => ({
       // Seul un admin de l'organisation invite un autre admin de l'organisation.
       if (args.estAdmin && !ctx.personne!.estAdmin) throw accesRefuse()
       const email = adresseValide(args.email)
-      const name = texteRequis(args.nom, 'Le nom')
+      const name = texteRequis(args.nom, i18n._('Le nom'))
       // Les périmètres sont validés avant toute création de compte.
       let souhaits: { perimetreId: string; editionId: string }[] = []
       let affectes: string[] = []
@@ -469,7 +479,7 @@ builder.mutationFields(t => ({
         (args.perimetresAffectes ?? []).length > 0
       ) {
         if (!args.editionId) {
-          throw erreurSaisie('Choisissez l’édition des périmètres.')
+          throw erreurSaisie(i18n._('Choisissez l’édition des périmètres.'))
         }
         const edition = await exigerEditionOuverte(ctx, args.editionId)
         await ctx.exigerAdminDe(edition.activiteId)
@@ -496,7 +506,7 @@ builder.mutationFields(t => ({
         const choisie = await ctx.exigerActivite(args.activiteId)
         if (activite !== null && activite !== choisie) {
           throw erreurSaisie(
-            'Les périmètres choisis relèvent d’une autre activité.'
+            i18n._('Les périmètres choisis relèvent d’une autre activité.')
           )
         }
         await ctx.exigerAdminDe(choisie)
@@ -505,7 +515,7 @@ builder.mutationFields(t => ({
           select: { archivedAt: true },
         })
         if (archivedAt !== null) {
-          throw erreurSaisie('Cette activité est archivée.')
+          throw erreurSaisie(i18n._('Cette activité est archivée.'))
         }
         activite = choisie
       }
@@ -514,12 +524,14 @@ builder.mutationFields(t => ({
       // de l'adresse.
       if (activite === null && !ctx.personne!.estAdmin) {
         throw erreurSaisie(
-          'Choisissez l’activité : la personne rejoint l’équipe de cette activité.'
+          i18n._(
+            'Choisissez l’activité : la personne rejoint l’équipe de cette activité.'
+          )
         )
       }
       const organisationId = ctx.organisation!.id
       const role = args.estAdmin ? 'ADMIN' : 'MEMBRE'
-      const dejaLa = 'Un compte existe déjà pour cette adresse.'
+      const dejaLa = i18n._('Un compte existe déjà pour cette adresse.')
       const instant = new Date()
       // Le compte, son appartenance et ses souhaits s'écrivent ensemble. Une adresse
       // déjà connue hors de l'organisation ne reçoit qu'une invitation en attente
@@ -533,13 +545,15 @@ builder.mutationFields(t => ({
             organisationId,
             role,
           })
-          const refusee = 'Cette adresse ne peut pas être invitée.'
+          const refusee = i18n._('Cette adresse ne peut pas être invitée.')
           // La personne est archivée dans cette organisation (ADR 0031). Seul l'admin
           // de l'organisation, qui lit l'annuaire et peut la rétablir, l'apprend.
           if (compte.issue === 'archive') {
             throw erreurSaisie(
               ctx.personne!.estAdmin
-                ? 'Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire.'
+                ? i18n._(
+                    'Cette personne est archivée dans votre organisation : rétablissez-la depuis l’annuaire.'
+                  )
                 : refusee
             )
           }
@@ -609,7 +623,10 @@ builder.mutationFields(t => ({
             ])
             if (reunion.size > SOUHAITS_MAX) {
               throw erreurSaisie(
-                `Une personne a ${SOUHAITS_MAX} souhaits au plus pour une période.`
+                i18n._(
+                  'Une personne a {max} souhaits au plus pour une période.',
+                  { max: SOUHAITS_MAX }
+                )
               )
             }
             await tx.souhait.createMany({
@@ -703,7 +720,7 @@ builder.mutationFields(t => ({
       const membre = await exigerMembreGere(ctx, String(id))
       if (membre.archive) {
         throw erreurSaisie(
-          'Cette personne est archivée dans votre organisation.'
+          i18n._('Cette personne est archivée dans votre organisation.')
         )
       }
       const personne = { id: String(id) }
@@ -716,7 +733,7 @@ builder.mutationFields(t => ({
         ))
       ) {
         throw erreurSaisie(
-          'Cette personne a déjà été relancée il y a moins d’une heure.'
+          i18n._('Cette personne a déjà été relancée il y a moins d’une heure.')
         )
       }
       await mettreEnFile(
@@ -747,13 +764,13 @@ builder.mutationFields(t => ({
       // Un admin ne retire pas ses propres droits : il ne pourrait plus les rétablir.
       if (id === ctx.personne?.id && !args.estAdmin) {
         throw erreurSaisie(
-          'Vous ne pouvez pas retirer vos propres droits d’admin.'
+          i18n._('Vous ne pouvez pas retirer vos propres droits d’admin.')
         )
       }
       const membre = await exigerMembre(ctx, id)
       // Une personne archivée ne devient pas admin : elle se rétablit d'abord.
       if (args.estAdmin && membre.role !== 'ADMIN') refuserArchivee(membre)
-      const nom = texteRequis(args.nom, 'Le nom')
+      const nom = texteRequis(args.nom, i18n._('Le nom'))
       const organisationId = ctx.organisation!.id
       const [actuel, appartenance] = await Promise.all([
         prisma.user.findUniqueOrThrow({
@@ -770,7 +787,9 @@ builder.mutationFields(t => ({
       // autre organisation du compte.
       if (nom !== actuel.name && actuel.emailVerified) {
         throw erreurSaisie(
-          'Cette personne s’est déjà connectée : elle seule modifie son nom, dans ses préférences.'
+          i18n._(
+            'Cette personne s’est déjà connectée : elle seule modifie son nom, dans ses préférences.'
+          )
         )
       }
       // Le rôle ne s'écrit que s'il change : la date de mise à jour de
@@ -829,8 +848,30 @@ builder.mutationFields(t => ({
       prisma.user.update({
         ...query,
         where: { id: ctx.personne!.id },
-        data: { name: texteRequis(args.nom, 'Le nom') },
+        data: { name: texteRequis(args.nom, i18n._('Le nom')) },
       }),
+  }),
+
+  modifierMaLangue: t.prismaField({
+    type: PersonneRef,
+    authScopes: { authentifie: true },
+    // La langue appartient à la personne, comme son nom : le statut de
+    // l'organisation active ne l'empêche pas de la changer.
+    skipTypeScopes: true,
+    description:
+      'La personne choisit la langue de son interface, de ses mails et de ses notifications (ADR 0047). Nulle, elle suit la langue de l’organisation.',
+    args: { langue: t.arg.string() },
+    resolve: (query, _root, args, ctx) => {
+      const langue = args.langue ?? null
+      if (langue !== null && !estUneLangue(langue)) {
+        throw erreurSaisie(i18n._('Cette langue n’est pas proposée.'))
+      }
+      return prisma.user.update({
+        ...query,
+        where: { id: ctx.personne!.id },
+        data: { langue },
+      })
+    },
   }),
 
   archiverPersonne: t.prismaField({
@@ -843,7 +884,9 @@ builder.mutationFields(t => ({
     resolve: async (query, _root, args, ctx) => {
       const id = String(args.id)
       if (id === ctx.personne?.id) {
-        throw erreurSaisie('Vous ne pouvez pas archiver votre propre compte.')
+        throw erreurSaisie(
+          i18n._('Vous ne pouvez pas archiver votre propre compte.')
+        )
       }
       // L'archivage porte sur l'appartenance (ADR 0031) : la personne quitte cette
       // organisation, son compte et ses autres organisations ne changent pas.
@@ -929,8 +972,9 @@ builder.mutationFields(t => ({
       await exigerEcriture(ctx, perimetreId, editionId)
       // Le même instant date l'affectation et choisit la fenêtre du mail d'équipe.
       const instant = new Date()
-      const dejaAffectee =
+      const dejaAffectee = i18n._(
         'Cette personne est déjà affectée à ce périmètre pour cette édition.'
+      )
       const { creees } = await sansDoublon(
         creerAffectations(prisma, {
           userId,
@@ -1058,7 +1102,7 @@ builder.mutationFields(t => ({
         select: { archivedAt: true },
       })
       if (archivedAt !== null) {
-        throw erreurSaisie('Cette activité est archivée.')
+        throw erreurSaisie(i18n._('Cette activité est archivée.'))
       }
       const organisationId = ctx.organisation!.id
       const nouveaux = await rattacher(prisma, {
@@ -1113,12 +1157,16 @@ builder.mutationFields(t => ({
         ])
         if (affectations > 0) {
           throw erreurSaisie(
-            'Retirez d’abord les affectations de cette personne dans les périodes en cours.'
+            i18n._(
+              'Retirez d’abord les affectations de cette personne dans les périodes en cours.'
+            )
           )
         }
         if (admin > 0) {
           throw erreurSaisie(
-            'Retirez d’abord le rôle d’admin de cette personne dans l’activité.'
+            i18n._(
+              'Retirez d’abord le rôle d’admin de cette personne dans l’activité.'
+            )
           )
         }
         const rattachements = await tx.rattachementActivite.deleteMany({
@@ -1235,7 +1283,9 @@ builder.mutationFields(t => ({
         !ctx.personne!.estAdmin
       ) {
         throw erreurSaisie(
-          'Vous ne pouvez pas retirer votre propre rôle d’admin de l’activité.'
+          i18n._(
+            'Vous ne pouvez pas retirer votre propre rôle d’admin de l’activité.'
+          )
         )
       }
       // Seul un vrai changement de rôle prévient les autres admins (ADR 0033).

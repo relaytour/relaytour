@@ -2,7 +2,7 @@
 
 - **Statut** : proposée
 - **Date** : 2026-10-25
-- Complète l'ADR 0016 (mail des demandes) et l'ADR 0032 (préférences par organisation).
+- Complète l'ADR 0016 (mail des demandes), l'ADR 0032 (préférences par organisation) et l'ADR 0047 (langues).
 
 ## Contexte
 
@@ -18,6 +18,7 @@ Gmail et Yahoo exigent depuis 2024 un désabonnement en un clic (RFC 8058) des e
 - L'adresse vit sous `/medias/desabonnement/`, que le proxy relaie déjà vers l'API, comme les routes de l'espace de fichiers (ADR 0038). Aucune installation n'a à modifier son proxy.
 - Un POST sur l'adresse coupe la préférence dans l'organisation du jeton, sans session ni cookie, comme le demande la RFC 8058. Les autres réglages et les autres organisations ne changent pas.
 - Un GET n'écrit rien. Il affiche une page qui nomme le mail et l'organisation, avec un bouton de confirmation et un lien vers les préférences. Les filtres de sécurité des messageries ouvrent les liens des mails, et un GET qui désabonnerait les déclencherait.
+- La page s'affiche dans la langue du compte, sinon dans celle de l'organisation (ADR 0047). Un lien non valide ne désigne aucun compte : sa page suit les langues du navigateur.
 - Le texte des mails désactivables garde son lien vers l'écran « Préférences ». Le mail de modification d'une tâche reçoit ce lien à son tour.
 
 ## Conséquences

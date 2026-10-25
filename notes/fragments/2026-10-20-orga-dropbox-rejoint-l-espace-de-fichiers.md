@@ -13,6 +13,13 @@ fr:
     parcourez l'espace de l'équipe, qui contient aussi votre dossier. Les
     documents Word et PowerPoint s'ouvrent dans la liseuse, convertis en PDF
     par Dropbox.
+en:
+  titre: >-
+    Dropbox joins the file space
+  texte: >-
+    You connect Dropbox with your account. With a team account, you browse the
+    team space, which also contains your own folder. Word and PowerPoint
+    documents open in the viewer, converted to PDF by Dropbox.
 ---
 
 ADR 0038 : fournisseur `DROPBOX` (API v2), méthode de connexion `COMPTE`

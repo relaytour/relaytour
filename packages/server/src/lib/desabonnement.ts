@@ -4,6 +4,8 @@ import type { PrismaClient } from '@relaytour/database'
 
 import { avecOrganisation } from './composition-notifications.ts'
 import { echapperHtml } from './html.ts'
+import { avecLangue, i18n, langueDe } from './langue.ts'
+import { langueDuDestinataire } from './langue-destinataire.ts'
 import { configurationOrganisation } from './organisation.ts'
 
 // Désabonnement en un clic (ADR 0050, RFC 8058).
@@ -17,27 +19,29 @@ import { configurationOrganisation } from './organisation.ts'
 // n'écrit rien : il affiche une page de confirmation, car les filtres de sécurité
 // des messageries ouvrent les liens des mails.
 
-/** Les mails désactivables, la préférence que chacun coupe et son libellé. */
+/** Les mails désactivables et la préférence que chacun coupe. */
 export const MAILS_DESABONNABLES = {
-  'tache-modifiee': {
-    libelle: 'Modification de vos tâches',
-    reglage: { mailModification: false },
-  },
-  'rappels-echeance': {
-    libelle: 'Échéances',
-    reglage: { mailEcheance: false },
-  },
-  resume: {
-    libelle: 'Résumé par mail',
-    reglage: { frequenceResume: 'AUCUN' },
-  },
-  demandes: {
-    libelle: 'Demandes pour rejoindre l’équipe',
-    reglage: { mailDemandes: false },
-  },
+  'tache-modifiee': { mailModification: false },
+  'rappels-echeance': { mailEcheance: false },
+  resume: { frequenceResume: 'AUCUN' },
+  demandes: { mailDemandes: false },
 } as const
 
 export type MailDesabonnable = keyof typeof MAILS_DESABONNABLES
+
+/** Le libellé d'un mail, celui de l'écran « Préférences », dans la langue courante. */
+function libelleDuMail(sorte: MailDesabonnable): string {
+  switch (sorte) {
+    case 'tache-modifiee':
+      return i18n._('Modification de vos tâches')
+    case 'rappels-echeance':
+      return i18n._('Échéances')
+    case 'resume':
+      return i18n._('Résumé par mail')
+    case 'demandes':
+      return i18n._('Demandes pour rejoindre l’équipe')
+  }
+}
 
 export interface Desabonnement {
   sorte: MailDesabonnable
@@ -118,7 +122,7 @@ export async function desabonner(
     }),
   ])
   if (user === null || organisation === null) return false
-  const { reglage } = MAILS_DESABONNABLES[d.sorte]
+  const reglage = MAILS_DESABONNABLES[d.sorte]
   await prisma.preferenceOrganisation.upsert({
     where: {
       userId_organisationId: {
@@ -138,44 +142,61 @@ export async function desabonner(
 
 export type EtatPage = 'confirmer' | 'fait' | 'invalide'
 
-/** La page servie à une personne qui ouvre l'adresse dans un navigateur. */
+/**
+ * La page servie à une personne qui ouvre l'adresse dans un navigateur, dans la
+ * langue du compte (ADR 0047). Un lien non valide ne désigne aucun compte : la page
+ * suit alors les langues du navigateur.
+ */
 export async function pageDesabonnement(
+  prisma: PrismaClient,
   etat: EtatPage,
-  d: Desabonnement | null
+  d: Desabonnement | null,
+  navigateur: readonly string[] = []
 ): Promise<string> {
   const configuration =
     d === null ? null : await configurationOrganisation(d.organisationId)
-  const libelle = d === null ? '' : MAILS_DESABONNABLES[d.sorte].libelle
-  const organisation = configuration?.nom ?? ''
+  const langue =
+    d === null
+      ? langueDe(null, null, navigateur)
+      : await langueDuDestinataire(prisma, d.userId, d.organisationId)
   const preferences =
     configuration === null
       ? null
       : `${configuration.origineOrga}${avecOrganisation('/preferences', configuration.slug)}`
-  const corps =
-    etat === 'invalide'
-      ? `<h1>Lien non valide</h1>
-<p>Ce lien de désabonnement n’est pas valide. Vous réglez vos mails dans les préférences de l’espace organisateur.</p>`
-      : etat === 'fait'
-        ? `<h1>Désabonnement enregistré</h1>
-<p>Vous ne recevrez plus les mails « ${echapperHtml(libelle)} » de ${echapperHtml(organisation)}.</p>
-<p>Vous pouvez les réactiver dans vos préférences.</p>`
-        : `<h1>Se désabonner</h1>
-<p>Vous ne recevrez plus les mails « ${echapperHtml(libelle)} » de ${echapperHtml(organisation)}.</p>
+  return avecLangue(langue, () => {
+    const valeurs = {
+      libelle: d === null ? '' : echapperHtml(libelleDuMail(d.sorte)),
+      organisation: echapperHtml(configuration?.nom ?? ''),
+    }
+    const annonce = i18n._(
+      'Vous ne recevrez plus les mails « {libelle} » de {organisation}.',
+      valeurs
+    )
+    const corps =
+      etat === 'invalide'
+        ? `<h1>${i18n._('Lien non valide')}</h1>
+<p>${i18n._('Ce lien de désabonnement n’est pas valide. Vous réglez vos mails dans les préférences de l’espace organisateur.')}</p>`
+        : etat === 'fait'
+          ? `<h1>${i18n._('Désabonnement enregistré')}</h1>
+<p>${annonce}</p>
+<p>${i18n._('Vous pouvez les réactiver dans vos préférences.')}</p>`
+          : `<h1>${i18n._('Se désabonner')}</h1>
+<p>${annonce}</p>
 <form method="post">
 <input type="hidden" name="List-Unsubscribe" value="One-Click">
-<button type="submit">Confirmer le désabonnement</button>
+<button type="submit">${i18n._('Confirmer le désabonnement')}</button>
 </form>`
-  const lien =
-    preferences === null
-      ? ''
-      : `<p><a href="${echapperHtml(preferences)}">Gérer vos préférences</a></p>`
-  return `<!doctype html>
-<html lang="fr">
+    const lien =
+      preferences === null
+        ? ''
+        : `<p><a href="${echapperHtml(preferences)}">${i18n._('Gérer vos préférences')}</a></p>`
+    return `<!doctype html>
+<html lang="${langue}">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
-<title>Désabonnement</title>
+<title>${i18n._('Désabonnement')}</title>
 <style>
 body { font-family: -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif; background: #F4F5F6; color: #1A1F24; margin: 0; padding: 48px 16px; }
 main { max-width: 480px; margin: 0 auto; background: #FFFFFF; border-radius: 12px; padding: 28px 24px; }
@@ -193,4 +214,5 @@ ${lien}
 </body>
 </html>
 `
+  })
 }

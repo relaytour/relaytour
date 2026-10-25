@@ -15,6 +15,16 @@ fr:
     pose un titre, une liste, une case à cocher, un lien ou un tableau. Le
     bouton « Aide » ouvre un guide de la syntaxe Markdown des fiches, sans
     quitter l’éditeur.
+en:
+  titre: >-
+    The sheet editor opens in visual mode, with a formatting bar and a Markdown
+    guide
+  texte: >-
+    In visual mode, you write directly in the sheet as it will appear. Markdown
+    mode shows the source text, and your browser remembers your choice. A bar
+    above the text applies bold or italic and inserts a heading, a list, a
+    checkbox, a link, or a table. The “Help” button opens a guide to the
+    Markdown syntax for sheets without leaving the editor.
 ---
 
 `composants/EditeurMarkdown.tsx` et `lib/mise-en-forme.ts` (fonctions pures,

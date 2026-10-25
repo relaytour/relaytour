@@ -14,6 +14,14 @@ fr:
     une ligne cliquable, et chaque sport ou pôle comme une pastille à sa
     couleur. Le texte des pastilles passe en gras et suit le contraste perçu
     plutôt que la formule WCAG 2.
+en:
+  titre: >-
+    Clickable elements and badges are easier to read
+  texte: >-
+    Buttons without a solid fill have a glass outline, and their background
+    darkens on hover. On the Sheets page, each sheet appears as a clickable row,
+    and each sport or department as a badge in its color. Badge text is now bold
+    and follows perceived contrast instead of the WCAG 2 formula.
 ---
 
 - `contrastePercu` et `texteSurCouleur` (APCA 0.0.98G) dans `packages/tokens`.

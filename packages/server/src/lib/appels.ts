@@ -9,6 +9,7 @@ import { journal } from './journal.ts'
 import { empreinte, jetonDe } from './liens.ts'
 import { heureLocale, instantDepuisHeureLocale } from './heures.ts'
 import { PLACES_MAX } from './programme.ts'
+import { i18n } from './langue.ts'
 
 // Appels à bénévoles, candidatures et répartition (ADR 0041).
 //
@@ -68,7 +69,9 @@ export function besoinValide(brut: number | null | undefined): number | null {
   if (brut === null || brut === undefined || brut === 0) return null
   if (!Number.isInteger(brut) || brut < 0 || brut > BESOIN_MAX) {
     throw erreurSaisie(
-      `Le besoin en bénévoles est un nombre entier de 0 à ${BESOIN_MAX}.`
+      i18n._('Le besoin en bénévoles est un nombre entier de 0 à {max}.', {
+        max: BESOIN_MAX,
+      })
     )
   }
   return brut
@@ -108,7 +111,7 @@ export function datesAppelValides(
   fuseau: string
 ): void {
   if (fermeLe.getTime() <= ouvertLe.getTime()) {
-    throw erreurSaisie('La fermeture de l’appel suit son ouverture.')
+    throw erreurSaisie(i18n._('La fermeture de l’appel suit son ouverture.'))
   }
   const limite = instantDepuisHeureLocale(
     decalerJour(finPeriode, 1),
@@ -117,7 +120,9 @@ export function datesAppelValides(
   )
   if (fermeLe.getTime() > limite.getTime()) {
     throw erreurSaisie(
-      'L’appel se ferme au plus tard à la fin du dernier jour de la période.'
+      i18n._(
+        'L’appel se ferme au plus tard à la fin du dernier jour de la période.'
+      )
     )
   }
 }
@@ -162,7 +167,11 @@ export function plagesValides(
 ): Plage[] {
   const liste = saisies ?? []
   if (liste.length > PLAGES_MAX) {
-    throw erreurSaisie(`Une disponibilité compte ${PLAGES_MAX} plages au plus.`)
+    throw erreurSaisie(
+      i18n._('Une disponibilité compte {max} plages au plus.', {
+        max: PLAGES_MAX,
+      })
+    )
   }
   const plages = liste.map(saisie => {
     const debut = instantDepuisHeureLocale(
@@ -176,17 +185,19 @@ export function plagesValides(
       fuseau
     )
     if (fin.getTime() <= debut.getTime()) {
-      throw erreurSaisie('La fin d’une plage suit son début.')
+      throw erreurSaisie(i18n._('La fin d’une plage suit son début.'))
     }
     if (fin.getTime() - debut.getTime() > PLAGE_DUREE_MAX_MS) {
-      throw erreurSaisie('Une plage dure 24 heures au plus.')
+      throw erreurSaisie(i18n._('Une plage dure 24 heures au plus.'))
     }
     if (
       !jours.includes(saisie.jour) ||
       !jours.includes(saisie.jourFin || saisie.jour)
     ) {
       throw erreurSaisie(
-        'Une plage tombe dans les jours de la période ou de son programme.'
+        i18n._(
+          'Une plage tombe dans les jours de la période ou de son programme.'
+        )
       )
     }
     return { debut, fin }
@@ -498,7 +509,9 @@ export async function accepterSurSequence(
     })
     if (nombre >= BENEVOLES_MAX) {
       throw erreurSaisie(
-        `Une activité compte ${BENEVOLES_MAX} fiches bénévoles au plus.`
+        i18n._('Une activité compte {max} fiches bénévoles au plus.', {
+          max: BENEVOLES_MAX,
+        })
       )
     }
     benevoleId = (
@@ -564,7 +577,9 @@ export async function accepterSurSequence(
     const joignable = fiche.courriel !== null && fiche.prevenirParMail
     const nombre = await tx.placeSequence.count({ where: { sequenceId } })
     if (nombre >= PLACES_MAX) {
-      throw erreurSaisie(`Une séquence compte ${PLACES_MAX} places au plus.`)
+      throw erreurSaisie(
+        i18n._('Une séquence compte {max} places au plus.', { max: PLACES_MAX })
+      )
     }
     await tx.placeSequence.create({
       data: {

@@ -6,7 +6,7 @@ import {
 } from '@relaytour/database'
 
 import {
-  GROUPES_PAR_DEFAUT,
+  groupesParDefaut,
   groupesValides,
   lireGroupes,
   slugActiviteValide,
@@ -24,6 +24,7 @@ import {
 import { exigerPlaceActivite, sousVerrouOrganisation } from '../lib/limites.ts'
 import { lirePhases, phasesValides, type Phase } from '../lib/phases.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { i18n } from '../lib/langue.ts'
 import { configurationActivite } from '../lib/organisation.ts'
 import { sansDoublon, texteRequis } from '../lib/saisie.ts'
 import { marquerContenuModifie } from '../lib/synchronisation.ts'
@@ -228,7 +229,9 @@ async function reglageDuFormulaire(
       })
       if (!lu.success) {
         throw erreurSaisie(
-          'Le formulaire accepte une introduction de 600 caractères, une question de 120 caractères et 8 paliers de 80 caractères au plus.'
+          i18n._(
+            'Le formulaire accepte une introduction de 600 caractères, une question de 120 caractères et 8 paliers de 80 caractères au plus.'
+          )
         )
       }
       const role = {
@@ -241,14 +244,18 @@ async function reglageDuFormulaire(
         )
       ) {
         throw erreurSaisie(
-          'Le formulaire est public : n’y écrivez ni adresse personnelle ni numéro de téléphone.'
+          i18n._(
+            'Le formulaire est public : n’y écrivez ni adresse personnelle ni numéro de téléphone.'
+          )
         )
       }
       donnees.formulaire = formulaireVide(lu.data) ? Prisma.DbNull : lu.data
     }
     if (ouvrir && configuration.contactRecrutement === undefined) {
       throw erreurSaisie(
-        'Renseignez d’abord le contact de l’activité ou de l’organisation : le formulaire le cite pour l’accès aux données et leur suppression.'
+        i18n._(
+          'Renseignez d’abord le contact de l’activité ou de l’organisation : le formulaire le cite pour l’accès aux données et leur suppression.'
+        )
       )
     }
   }
@@ -277,12 +284,12 @@ builder.mutationFields(t => ({
       const donnees = {
         organisationId,
         slug: slugActiviteValide(args.slug),
-        nom: texteRequis(args.nom, 'Le nom'),
+        nom: texteRequis(args.nom, i18n._('Le nom')),
         sigle: args.sigle?.trim()
-          ? texteRequis(args.sigle, 'Le sigle', 20)
+          ? texteRequis(args.sigle, i18n._('Le sigle'), 20)
           : null,
         nature: args.nature,
-        groupes: groupesValides(args.groupes ?? GROUPES_PAR_DEFAUT),
+        groupes: groupesValides(args.groupes ?? groupesParDefaut()),
         ...(args.phases === null || args.phases === undefined
           ? {}
           : { phases: phasesValides(args.phases) }),
@@ -292,7 +299,7 @@ builder.mutationFields(t => ({
         await exigerPlaceActivite(organisationId, tx)
         const activite = await sansDoublon(
           tx.activite.create({ ...query, data: donnees }),
-          'Une activité utilise déjà cet identifiant.'
+          i18n._('Une activité utilise déjà cet identifiant.')
         )
         await marquerContenuModifie(organisationId, tx)
         return activite
@@ -351,9 +358,9 @@ builder.mutationFields(t => ({
         throw erreurGroupeUtilise(manquant.groupe)
       }
       const donnees = {
-        nom: texteRequis(args.nom, 'Le nom'),
+        nom: texteRequis(args.nom, i18n._('Le nom')),
         sigle: args.sigle?.trim()
-          ? texteRequis(args.sigle, 'Le sigle', 20)
+          ? texteRequis(args.sigle, i18n._('Le sigle'), 20)
           : null,
         nature: args.nature,
         groupes,
@@ -468,10 +475,15 @@ async function archivage(
 
 function erreurGroupeUtilise(cle: string) {
   return erreurSaisie(
-    `Des périmètres appartiennent encore au groupe « ${cle} » : changez-les de groupe avant de le retirer.`
+    i18n._(
+      'Des périmètres appartiennent encore au groupe « {cle} » : changez-les de groupe avant de le retirer.',
+      { cle }
+    )
   )
 }
 
 function erreurDerniereActivite() {
-  return erreurSaisie('Une organisation garde au moins une activité ouverte.')
+  return erreurSaisie(
+    i18n._('Une organisation garde au moins une activité ouverte.')
+  )
 }

@@ -2,6 +2,7 @@ import { prisma } from '@relaytour/database'
 
 import { abonnerAppareil } from '../lib/abonnements.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
+import { i18n } from '../lib/langue.ts'
 import {
   ABONNEMENTS_MAX,
   adressePushAcceptee,
@@ -69,14 +70,16 @@ builder.mutationFields(t => ({
       ])
       if (clesVapid(env) === null)
         throw erreurSaisie(
-          'Les notifications push ne sont pas activées sur cette installation.'
+          i18n._(
+            'Les notifications push ne sont pas activées sur cette installation.'
+          )
         )
       if (!adressePushAcceptee(args.adresse))
         throw erreurSaisie(
-          'Cet abonnement ne vient pas d’un service de push reconnu.'
+          i18n._('Cet abonnement ne vient pas d’un service de push reconnu.')
         )
       if (!clePushValide(args.p256dh) || !clePushValide(args.auth))
-        throw erreurSaisie('Les clés de cet abonnement sont invalides.')
+        throw erreurSaisie(i18n._('Les clés de cet abonnement sont invalides.'))
       const userId = ctx.personne!.id
       const empreinte = empreinteAdresse(args.adresse)
       const donnees = {

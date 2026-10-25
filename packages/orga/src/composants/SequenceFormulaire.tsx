@@ -1,5 +1,6 @@
 import { DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import {
   App,
   Button,
@@ -146,6 +147,7 @@ export default function SequenceFormulaire({
   onFermer: () => void
 }) {
   const { message } = App.useApp()
+  const { t } = useLingui()
   const client = useApolloClient()
   const { activite } = useActivite()
   const [form] = Form.useForm<Valeurs>()
@@ -212,18 +214,24 @@ export default function SequenceFormulaire({
 
   const optionsPersonnes = [
     {
-      label: 'Équipe',
-      options: (equipe?.personnesConvocables ?? []).map(p => ({
-        value: `p:${p.personneId}`,
-        label: p.duPerimetre ? `${p.nom} · du périmètre` : p.nom,
-      })),
+      label: t`Équipe`,
+      options: (equipe?.personnesConvocables ?? []).map(p => {
+        const nomPersonne = p.nom
+        return {
+          value: `p:${p.personneId}`,
+          label: p.duPerimetre ? t`${nomPersonne} · du périmètre` : nomPersonne,
+        }
+      }),
     },
     {
-      label: 'Bénévoles',
-      options: (benevoles?.benevoles ?? []).map(b => ({
-        value: `b:${b.id}`,
-        label: `${b.nom} · bénévole`,
-      })),
+      label: t`Bénévoles`,
+      options: (benevoles?.benevoles ?? []).map(b => {
+        const nomBenevole = b.nom
+        return {
+          value: `b:${b.id}`,
+          label: t`${nomBenevole} · bénévole`,
+        }
+      }),
     },
   ]
 
@@ -255,7 +263,7 @@ export default function SequenceFormulaire({
             ...champs,
           },
         })
-        message.success('Séquence enregistrée.')
+        message.success(t`Séquence enregistrée.`)
       } else {
         await creer({
           variables: {
@@ -264,7 +272,7 @@ export default function SequenceFormulaire({
             ...champs,
           },
         })
-        message.success('Séquence ajoutée au programme.')
+        message.success(t`Séquence ajoutée au programme.`)
       }
       onFermer()
     } catch (e) {
@@ -274,9 +282,8 @@ export default function SequenceFormulaire({
           relire.refetchQueries,
           texte => message.error(texte),
           {
-            relu: 'Une autre personne a modifié cette séquence depuis votre lecture. Le programme affiche maintenant sa version : reprenez votre modification.',
-            echec:
-              'La séquence n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.',
+            relu: t`Une autre personne a modifié cette séquence depuis votre lecture. Le programme affiche maintenant sa version : reprenez votre modification.`,
+            echec: t`La séquence n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.`,
           },
           onFermer
         )
@@ -289,9 +296,9 @@ export default function SequenceFormulaire({
   return (
     <Modal
       open={ouvert}
-      title={existante ? 'Modifier la séquence' : 'Nouvelle séquence'}
-      okText="Enregistrer"
-      cancelText="Annuler"
+      title={existante ? t`Modifier la séquence` : t`Nouvelle séquence`}
+      okText={t`Enregistrer`}
+      cancelText={t`Annuler`}
       confirmLoading={creation.loading || modification.loading}
       onOk={() => form.submit()}
       onCancel={onFermer}
@@ -304,7 +311,7 @@ export default function SequenceFormulaire({
         onFinish={v => void enregistrer(v)}
         requiredMark={false}
       >
-        <Form.Item label="Périmètre" name="agenda">
+        <Form.Item label={t`Périmètre`} name="agenda">
           <Select
             disabled={existante !== null}
             options={agendas.map(a => ({
@@ -314,101 +321,109 @@ export default function SequenceFormulaire({
           />
         </Form.Item>
         <Form.Item
-          label="Titre"
+          label={t`Titre`}
           name="titre"
           rules={[
             {
               required: true,
               whitespace: true,
-              message: 'Saisissez un titre.',
+              message: t`Saisissez un titre.`,
             },
-            { max: 200, message: 'Le titre dépasse 200 caractères.' },
+            { max: 200, message: t`Le titre dépasse 200 caractères.` },
           ]}
         >
-          <Input placeholder="Matchs de poule" />
+          <Input placeholder={t`Matchs de poule`} />
         </Form.Item>
         <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 16 }}>
           <Form.Item
-            label="Jour"
+            label={t`Jour`}
             name="jour"
-            rules={[{ required: true, message: 'Choisissez un jour.' }]}
+            rules={[{ required: true, message: t`Choisissez un jour.` }]}
           >
             <Input type="date" style={{ maxWidth: 180 }} />
           </Form.Item>
           <Form.Item
-            label="Début"
+            label={t`Début`}
             name="heureDebut"
             rules={[{ required: true }]}
           >
             <Input type="time" style={{ maxWidth: 130 }} />
           </Form.Item>
-          <Form.Item label="Fin" name="heureFin" rules={[{ required: true }]}>
+          <Form.Item
+            label={t`Fin`}
+            name="heureFin"
+            rules={[{ required: true }]}
+          >
             <Input type="time" style={{ maxWidth: 130 }} />
           </Form.Item>
           <Form.Item
-            label="Le lendemain (facultatif)"
+            label={t`Le lendemain (facultatif)`}
             name="jourFin"
-            extra="Pour une séquence qui passe minuit."
+            extra={t`Pour une séquence qui passe minuit.`}
           >
             <Input type="date" style={{ maxWidth: 180 }} />
           </Form.Item>
         </div>
-        <Form.Item label="Lieu (facultatif)" name="lieuId">
+        <Form.Item label={t`Lieu (facultatif)`} name="lieuId">
           <Select
             allowClear
-            placeholder="Choisir un lieu"
+            placeholder={t`Choisir un lieu`}
             options={(lieux?.lieux ?? []).map(l => ({
               value: l.id,
               label: l.nom,
             }))}
           />
         </Form.Item>
-        <Form.Item label="Description (facultative)" name="description">
+        <Form.Item label={t`Description (facultative)`} name="description">
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} />
         </Form.Item>
         <fieldset className="rt-sondage-creneaux">
-          <legend>Bénévoles</legend>
+          <legend>
+            <Trans>Bénévoles</Trans>
+          </legend>
           <Form.Item
-            label="Renforts recherchés (facultatif)"
+            label={t`Renforts recherchés (facultatif)`}
             name="besoinBenevoles"
-            extra="Les appels à bénévoles proposent la séquence tant que ce nombre n’est pas atteint. Les responsables n’y comptent pas."
+            extra={t`Les appels à bénévoles proposent la séquence tant que ce nombre n’est pas atteint. Les responsables n’y comptent pas.`}
           >
             <InputNumber min={0} max={200} precision={0} inputMode="numeric" />
           </Form.Item>
           <Form.Item
-            label="Consignes pour les bénévoles (facultatives)"
+            label={t`Consignes pour les bénévoles (facultatives)`}
             name="consignesBenevoles"
-            extra="Ce texte est public : la page d’un appel l’affiche. Il ne doit contenir aucune coordonnée personnelle."
+            extra={t`Ce texte est public : la page d’un appel l’affiche. Il ne doit contenir aucune coordonnée personnelle.`}
             rules={[
               {
                 max: 2000,
-                message: 'Les consignes dépassent 2 000 caractères.',
+                message: t`Les consignes dépassent 2 000 caractères.`,
               },
             ]}
           >
             <Input.TextArea
               autoSize={{ minRows: 2, maxRows: 6 }}
-              placeholder="La mission, le point de rendez-vous, la tenue."
+              placeholder={t`La mission, le point de rendez-vous, la tenue.`}
             />
           </Form.Item>
         </fieldset>
         <Form.List name="places">
           {(champs, { add, remove }) => (
             <fieldset className="rt-sondage-creneaux">
-              <legend>Personnes placées</legend>
+              <legend>
+                <Trans>Personnes placées</Trans>
+              </legend>
               {champs.map(champ => (
                 <div key={champ.key} className="rt-sequence-place">
                   <Form.Item
                     name={[champ.name, 'personne']}
                     rules={[
-                      { required: true, message: 'Choisissez une personne.' },
+                      { required: true, message: t`Choisissez une personne.` },
                     ]}
                   >
                     <Select
                       showSearch
                       optionFilterProp="label"
-                      placeholder="Une personne de l’équipe, ou une ou un bénévole"
-                      aria-label="Personne"
+                      placeholder={t`Une personne de l’équipe, ou une ou un bénévole`}
+                      aria-label={t`Personne`}
                       options={optionsPersonnes}
                     />
                   </Form.Item>
@@ -417,15 +432,29 @@ export default function SequenceFormulaire({
                       optionType="button"
                       size="small"
                       options={[
-                        { value: 'RESPONSABLE', label: 'Responsable' },
-                        { value: 'RENFORT', label: 'Renfort' },
+                        {
+                          value: 'RESPONSABLE',
+                          label: t({
+                            message: 'Responsable',
+                            comment:
+                              'Rôle d’une personne placée dans une séquence',
+                          }),
+                        },
+                        {
+                          value: 'RENFORT',
+                          label: t({
+                            message: 'Renfort',
+                            comment:
+                              'Rôle d’une personne placée dans une séquence',
+                          }),
+                        },
                       ]}
                     />
                   </Form.Item>
                   <Button
                     type="text"
                     icon={<DeleteOutlined />}
-                    aria-label="Retirer cette personne"
+                    aria-label={t`Retirer cette personne`}
                     onClick={() => remove(champ.name)}
                   />
                 </div>
@@ -435,11 +464,13 @@ export default function SequenceFormulaire({
                 disabled={champs.length >= 50}
                 onClick={() => add({ personne: undefined, role: 'RENFORT' })}
               >
-                Placer une personne
+                <Trans>Placer une personne</Trans>
               </Button>
               <p className="rt-note">
-                Une ou un bénévole sans compte se crée d’abord dans l’écran «
-                Bénévoles ».
+                <Trans>
+                  Une ou un bénévole sans compte se crée d’abord dans l’écran «
+                  Bénévoles ».
+                </Trans>
               </p>
             </fieldset>
           )}

@@ -1,4 +1,7 @@
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import type { DocumentNode } from 'graphql'
 import { Alert, App, Button, Switch } from 'antd'
 import { useEffect, useState } from 'react'
@@ -95,36 +98,35 @@ type Famille =
 /** Les familles d'admin ne s'affichent qu'aux personnes qui administrent (ADR 0033). */
 const FAMILLES_ADMIN: Famille[] = ['pushDemandes', 'pushEquipe']
 
-const FAMILLES: { cle: Famille; titre: string; detail: string }[] = [
+const FAMILLES: {
+  cle: Famille
+  titre: MessageDescriptor
+  detail: MessageDescriptor
+}[] = [
   {
     cle: 'pushTaches',
-    titre: 'Vos tâches',
-    detail:
-      'Une tâche vous est assignée ou retirée, ou une autre personne modifie une de vos tâches.',
+    titre: msg`Vos tâches`,
+    detail: msg`Une tâche vous est assignée ou retirée, ou une autre personne modifie une de vos tâches.`,
   },
   {
     cle: 'pushEcheances',
-    titre: 'Échéances',
-    detail:
-      'Une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou elle est en retard.',
+    titre: msg`Échéances`,
+    detail: msg`Une de vos tâches arrive à échéance dans 7 jours ou le lendemain, ou elle est en retard.`,
   },
   {
     cle: 'pushAgenda',
-    titre: 'Vos réunions',
-    detail:
-      'Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule.',
+    titre: msg`Vos réunions`,
+    detail: msg`Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule.`,
   },
   {
     cle: 'pushDemandes',
-    titre: 'Demandes et invitations',
-    detail:
-      'Une activité que vous administrez reçoit une demande, ou une personne accepte une invitation.',
+    titre: msg`Demandes et invitations`,
+    detail: msg`Une activité que vous administrez reçoit une demande, ou une personne accepte une invitation.`,
   },
   {
     cle: 'pushEquipe',
-    titre: 'Équipe de vos activités',
-    detail:
-      'Un autre admin affecte ou nomme une personne, ou une personne formule un souhait.',
+    titre: msg`Équipe de vos activités`,
+    detail: msg`Un autre admin affecte ou nomme une personne, ou une personne formule un souhait.`,
   },
 ]
 
@@ -139,6 +141,7 @@ export default function PreferencePush({
   /** Requête des préférences, relue après un réglage. */
   requeteARelire: DocumentNode
 }) {
+  const { t } = useLingui()
   const { message } = App.useApp()
   const apollo = useApolloClient()
   const { modesDEmploi } = useOrganisation()
@@ -194,7 +197,7 @@ export default function PreferencePush({
         variables: { ...abonnement, agent: navigator.userAgent },
       })
       setAbonne(true)
-      message.success('Les notifications sont activées sur cet appareil.')
+      message.success(t`Les notifications sont activées sur cet appareil.`)
     } catch (e) {
       message.error(
         e instanceof ErreurAbonnement ? e.message : messageErreur(e)
@@ -210,7 +213,7 @@ export default function PreferencePush({
       const adresse = await desabonner()
       if (adresse !== null) await desabonnerPush({ variables: { adresse } })
       setAbonne(false)
-      message.success('Les notifications sont désactivées sur cet appareil.')
+      message.success(t`Les notifications sont désactivées sur cet appareil.`)
     } catch (e) {
       message.error(messageErreur(e))
     } finally {
@@ -234,26 +237,30 @@ export default function PreferencePush({
   }
 
   return (
-    <Panneau titre="Notifications sur cet appareil">
+    <Panneau titre={t`Notifications sur cet appareil`}>
       <p className="rt-texte-secondaire">
-        Votre téléphone ou votre ordinateur affiche une notification, même quand
-        l’espace organisateur est fermé.
+        <Trans>
+          Votre téléphone ou votre ordinateur affiche une notification, même
+          quand l’espace organisateur est fermé.
+        </Trans>
       </p>
       {etat === 'installation-requise' && (
         <Alert
           type="info"
           showIcon
-          title="Installez d’abord l’application."
+          title={t`Installez d’abord l’application.`}
           description={
             <>
-              Sur iPhone et iPad, les notifications n’existent que dans
-              l’application installée sur l’écran d’accueil.{' '}
+              <Trans>
+                Sur iPhone et iPad, les notifications n’existent que dans
+                l’application installée sur l’écran d’accueil.
+              </Trans>{' '}
               <a
                 href={lienGuideInstallation(modesDEmploi)}
                 target="_blank"
                 rel="noopener noreferrer"
               >
-                Lire le guide d’installation
+                <Trans>Lire le guide d’installation</Trans>
               </a>
             </>
           }
@@ -263,8 +270,8 @@ export default function PreferencePush({
         <Alert
           type="warning"
           showIcon
-          title="Les notifications sont bloquées pour ce site."
-          description="Autorisez-les dans les réglages de votre navigateur ou de votre téléphone, puis revenez sur cet écran."
+          title={t`Les notifications sont bloquées pour ce site.`}
+          description={t`Autorisez-les dans les réglages de votre navigateur ou de votre téléphone, puis revenez sur cet écran.`}
         />
       )}
       {etat === 'a-activer' && (
@@ -274,7 +281,7 @@ export default function PreferencePush({
           style={{ alignSelf: 'flex-start' }}
           onClick={() => void activer()}
         >
-          Activer sur cet appareil
+          <Trans>Activer sur cet appareil</Trans>
         </Button>
       )}
       {etat === 'active' && (
@@ -282,10 +289,10 @@ export default function PreferencePush({
           <Alert
             type="success"
             showIcon
-            title="Les notifications sont activées sur cet appareil."
+            title={t`Les notifications sont activées sur cet appareil.`}
             action={
               <Button loading={enCours} onClick={() => void desactiver()}>
-                Désactiver
+                <Trans>Désactiver</Trans>
               </Button>
             }
           />
@@ -295,8 +302,8 @@ export default function PreferencePush({
             ).map(f => (
               <div className="rt-reglage" key={f.cle}>
                 <label htmlFor={f.cle}>
-                  <span className="rt-choix-titre">{f.titre}</span>
-                  <span className="rt-choix-detail">{f.detail}</span>
+                  <span className="rt-choix-titre">{t(f.titre)}</span>
+                  <span className="rt-choix-detail">{t(f.detail)}</span>
                 </label>
                 <Switch
                   id={f.cle}
@@ -307,8 +314,10 @@ export default function PreferencePush({
             ))}
           </div>
           <p className="rt-note">
-            Ces réglages valent pour tous vos appareils, dans cette
-            organisation. Vos mails ne changent pas.
+            <Trans>
+              Ces réglages valent pour tous vos appareils, dans cette
+              organisation. Vos mails ne changent pas.
+            </Trans>
           </p>
         </>
       )}

@@ -6,7 +6,7 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { expedier } from '../courriel/transport.ts'
 
-import { desabonner } from './desabonnement.ts'
+import { desabonner, pageDesabonnement } from './desabonnement.ts'
 import { preferencesDe } from './notifications.ts'
 
 // Désabonnement en un clic (ADR 0050) : la préférence coupée, l'organisation du
@@ -138,5 +138,33 @@ describe('en-têtes du transport', () => {
     const brut = await envoyer()
     expect(brut).not.toContain('List-Unsubscribe')
     expect(brut).toContain('Auto-Submitted: auto-generated')
+  })
+})
+
+describe('page de confirmation', () => {
+  it('s’affiche dans la langue du compte, et suit le navigateur pour un lien non valide', async () => {
+    const d = {
+      sorte: 'rappels-echeance',
+      userId: ids.user,
+      organisationId: ids.org,
+    } as const
+    const francaise = await pageDesabonnement(prisma, 'confirmer', d)
+    expect(francaise).toContain('<html lang="fr">')
+    expect(francaise).toContain('mails « Échéances » de ')
+    expect(francaise).toContain('List-Unsubscribe" value="One-Click"')
+
+    await prisma.user.update({
+      where: { id: ids.user },
+      data: { langue: 'en' },
+    })
+    const anglaise = await pageDesabonnement(prisma, 'fait', d)
+    expect(anglaise).toContain('<html lang="en">')
+    expect(anglaise).toContain('“Due dates” emails from ')
+
+    const invalide = await pageDesabonnement(prisma, 'invalide', null, [
+      'en-GB',
+    ])
+    expect(invalide).toContain('<html lang="en">')
+    expect(invalide).toContain('Invalid link')
   })
 })

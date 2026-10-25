@@ -1,4 +1,5 @@
 import { useApolloClient, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { Button, Card, Result, Spin, Typography } from 'antd'
 import { useEffect, type ReactNode } from 'react'
 import { Navigate } from 'react-router'
@@ -27,6 +28,7 @@ export default function GardeSession({
 }: {
   children: (session: Session) => ReactNode
 }) {
+  const { t } = useLingui()
   const apollo = useApolloClient()
   const { data, loading, error } = useQuery(MOI)
   const {
@@ -49,15 +51,15 @@ export default function GardeSession({
   }, [choixPerime, apollo])
 
   if (loading || chargementOrgs || choixPerime) {
-    return <Spin fullscreen description="Chargement" />
+    return <Spin fullscreen description={t`Chargement`} />
   }
   // Une erreur sur la liste des organisations ne se lit pas comme une liste vide.
   if (error || erreurOrgs) {
     return (
       <Result
         status="warning"
-        title="L’espace organisateur ne répond pas."
-        subTitle="Vérifiez votre connexion, puis rechargez la page."
+        title={t`L’espace organisateur ne répond pas.`}
+        subTitle={t`Vérifiez votre connexion, puis rechargez la page.`}
       />
     )
   }
@@ -82,6 +84,7 @@ export default function GardeSession({
  * attente (ADR 0030), il les lit ici et peut en accepter une.
  */
 function SansOrganisation() {
+  const { t } = useLingui()
   const invitations = useMesInvitations()
   if (invitations.length > 0) {
     return (
@@ -97,7 +100,7 @@ function SansOrganisation() {
             margin: '0 0 6px',
           }}
         >
-          Vos invitations
+          <Trans>Vos invitations</Trans>
         </h1>
         <InvitationsRecues />
         <BoutonDeconnexion />
@@ -107,8 +110,8 @@ function SansOrganisation() {
   return (
     <Result
       status="info"
-      title="Votre compte n’appartient à aucune organisation ouverte."
-      subTitle="Un admin de votre organisation peut vous inviter de nouveau."
+      title={t`Votre compte n’appartient à aucune organisation ouverte.`}
+      subTitle={t`Un admin de votre organisation peut vous inviter de nouveau.`}
       extra={<BoutonDeconnexion />}
     />
   )
@@ -129,7 +132,11 @@ function EcranCentre({ children }: { children: ReactNode }) {
 
 function BoutonDeconnexion() {
   const deconnecter = useDeconnexion()
-  return <Button onClick={() => void deconnecter()}>Se déconnecter</Button>
+  return (
+    <Button onClick={() => void deconnecter()}>
+      <Trans>Se déconnecter</Trans>
+    </Button>
+  )
 }
 
 function ChoixOrganisation({
@@ -152,11 +159,13 @@ function ChoixOrganisation({
             margin: '0 0 6px',
           }}
         >
-          Choisir une organisation
+          <Trans>Choisir une organisation</Trans>
         </h1>
         <Typography.Paragraph style={{ color: 'var(--rt-encre-70)' }}>
-          Votre compte appartient à plusieurs organisations. Vous pourrez en
-          changer depuis le menu de votre compte.
+          <Trans>
+            Votre compte appartient à plusieurs organisations. Vous pourrez en
+            changer depuis le menu de votre compte.
+          </Trans>
         </Typography.Paragraph>
         <ul
           style={{

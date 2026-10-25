@@ -13,6 +13,14 @@ fr:
     ses périodes, ses périmètres, ses affectations et ses fiches, sans voir les
     autres activités. Une personne ne voit que les activités où elle est
     affectée.
+en:
+  titre: >-
+    Each activity can have its admins, and each person sees only their
+    activities
+  texte: >-
+    An organization admin names admins for an activity. They manage its periods,
+    areas, appointments, and sheets, without seeing the other activities. A
+    person sees only the activities where they are appointed.
 ---
 
 - ADR 0010 : table `AdminActivite`, scope `gestion`, `exigerAdminDe` dans
