@@ -555,6 +555,10 @@ msgstr "{nomBenevole} · volunteer"
 msgid "{nombre, plural, one {# dossier} other {# dossiers}}"
 msgstr "{nombre, plural, one {# folder} other {# folders}}"
 
+#: src/composants/DepotFiches.tsx
+msgid "{nombre, plural, one {# fiche importée.} other {# fiches importées.}}"
+msgstr "{nombre, plural, one {# sheet imported.} other {# sheets imported.}}"
+
 #: src/pages/Fiches.tsx
 msgid "{nombre, plural, one {# fiche} other {# fiches}}"
 msgstr "{nombre, plural, one {# sheet} other {# sheets}}"
@@ -1201,6 +1205,10 @@ msgstr "1 task, including <0>{enRetard} overdue</0>"
 #: src/lib/guide-markdown.ts
 msgid "14 h"
 msgstr "2:00 PM"
+
+#: src/composants/DepotFiches.tsx
+msgid "2 Mo par fichier, 50 fichiers et 20 Mo par dépôt au plus."
+msgstr "2 MB per file, 50 files and 20 MB per upload at most."
 
 #: src/composants/AssistantTableur.tsx
 #: src/pages/ImportBenevoles.tsx
@@ -2869,6 +2877,10 @@ msgstr "Each due date keeps the same gap from the first day. A carried-over task
 msgid "Chaque enregistrement crée une nouvelle version. Les admins consultent l’historique."
 msgstr "Each save creates a new version. Admins can view the history."
 
+#: src/composants/DepotFiches.tsx
+msgid "Chaque fichier devient une fiche. Un document Word est converti en Markdown, sans ses images. Une fiche modifiée dans Relaytour n’est pas remplacée."
+msgstr "Each file becomes a sheet. A Word document is converted to Markdown, without its images. A sheet changed in Relaytour is not replaced."
+
 #: src/pages/Preferences.tsx
 msgid "Chaque jour"
 msgstr "Every day"
@@ -3669,9 +3681,18 @@ msgstr "Expand menu"
 msgid "Déplier le volet latéral"
 msgstr "Expand side panel"
 
+#: src/composants/DepotFiches.tsx
+#: src/pages/Fiches.tsx
+msgid "Déposer des fichiers"
+msgstr "Upload files"
+
 #: src/composants/ConnexionEspace.tsx
 msgid "Déposez ce fichier ici, ou collez son contenu."
 msgstr "Drop this file here, or paste its contents."
+
+#: src/composants/DepotFiches.tsx
+msgid "Déposez des fichiers Markdown, texte ou Word (.docx), ou cliquez pour les choisir."
+msgstr "Drop Markdown, text or Word (.docx) files, or click to choose them."
 
 #: src/composants/DepotContenu.tsx
 msgid "Déposez l’archive zip du contenu ou du seul dossier de l’activité, ou cliquez pour la choisir."
@@ -3805,6 +3826,14 @@ msgstr "Recipients: {destinataires}"
 #: src/composants/EcrireMessage.tsx
 msgid "Destinataires ({nombreDestinataires})"
 msgstr "Recipients ({nombreDestinataires})"
+
+#: src/composants/DepotFiches.tsx
+msgid "Destination"
+msgstr "Destination"
+
+#: src/composants/DepotFiches.tsx
+msgid "Destination des fiches"
+msgstr "Destination of the sheets"
 
 #: src/composants/AssistantTableur.tsx
 #: src/composants/Repartition.tsx
@@ -4464,6 +4493,7 @@ msgstr "Sheets to create"
 msgid "Fiches à mettre à jour"
 msgstr "Sheets to update"
 
+#: src/composants/DepotFiches.tsx
 #: src/composants/ImportFiches.tsx
 #: src/pages/Fiche.tsx
 #: src/pages/Fiches.tsx
@@ -4520,6 +4550,11 @@ msgstr "Similar records"
 #: src/pages/ImportBenevoles.tsx
 msgid "Fichier"
 msgstr "File"
+
+#. Origine d’une version de fiche : un fichier déposé dans Relaytour
+#: src/lib/fiches.ts
+msgid "Fichier déposé"
+msgstr "Uploaded file"
 
 #: src/pages/AideMarkdown.tsx
 #: src/pages/Fiche.tsx
@@ -4866,6 +4901,10 @@ msgstr "Import the team"
 #: src/pages/admin/Activites.tsx
 msgid "Importer le contenu d’une activité"
 msgstr "Import an activity’s content"
+
+#: src/composants/DepotFiches.tsx
+msgid "Importer les fiches"
+msgstr "Import the sheets"
 
 #: src/composants/PremiersPas.tsx
 #: src/pages/admin/Organisation.tsx
@@ -6237,6 +6276,10 @@ msgstr "The sheets are imported."
 msgid "Les fichiers déjà écrits restent chez le fournisseur cloud."
 msgstr "Files already written stay with the cloud provider."
 
+#: src/lib/depot-fiches.ts
+msgid "Les fichiers déposés dépassent 20 Mo au total."
+msgstr "The uploaded files exceed 20 MB in total."
+
 #: src/composants/RessourcesFiche.tsx
 msgid "Les lecteurs de {ajouts} liront tout le dossier, et pas seulement ce document."
 msgstr "Readers of {ajouts} will read the whole folder, not only this document."
@@ -6876,6 +6919,10 @@ msgstr "Edit the slot"
 #: src/composants/TacheFormulaire.tsx
 msgid "Modifier la tâche"
 msgstr "Edit the task"
+
+#: src/composants/DepotFiches.tsx
+msgid "Modifier le choix"
+msgstr "Change the selection"
 
 #: src/pages/admin/Personnes.tsx
 msgid "Modifier le compte"
@@ -10091,6 +10138,7 @@ msgid "Vérification des accès"
 msgstr "Access check"
 
 #: src/composants/AssistantTableur.tsx
+#: src/composants/DepotFiches.tsx
 msgid "Vérifier"
 msgstr "Check"
 

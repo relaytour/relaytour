@@ -358,6 +358,7 @@ export type SorteElementAgenda =
 
 export type SourceFiche =
   | 'APP'
+  | 'DEPOT'
   | 'ESPACE_FICHIERS'
   | 'GIT';
 

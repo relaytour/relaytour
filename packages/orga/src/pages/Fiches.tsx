@@ -4,14 +4,16 @@ import {
   PlusOutlined,
   SearchOutlined,
   UnorderedListOutlined,
+  UploadOutlined,
 } from '@ant-design/icons'
 import { useQuery } from '@apollo/client/react'
 import { plural, t } from '@lingui/core/macro'
 import { Plural, Trans, useLingui } from '@lingui/react/macro'
-import { Button, Empty, Input, Segmented, Skeleton } from 'antd'
+import { Button, Empty, Input, Segmented, Skeleton, Space } from 'antd'
 import { useMemo, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router'
 
+import DepotFiches from '../composants/DepotFiches'
 import DocumentsActivite from '../composants/DocumentsActivite'
 import EtiquettePerimetre from '../composants/EtiquettePerimetre'
 import { Section } from '../composants/Panneau'
@@ -61,9 +63,11 @@ function miseAJour(fiche: FicheListe): string {
 
 export default function Fiches() {
   const { t } = useLingui()
-  const { lien, activite } = useActivite()
+  const { lien, activite, gere } = useActivite()
   const navigate = useNavigate()
   const { theme } = useOrganisation()
+  // Le dépôt direct de fichiers est ouvert aux admins de l'activité (ADR 0049).
+  const [depot, setDepot] = useState(false)
   const { data, loading } = useQuery(LISTE_FICHES)
   // Les documents de l'espace de fichiers (ADR 0038) : l'onglet n'apparaît que
   // si au moins un dossier lié est lisible.
@@ -140,21 +144,41 @@ export default function Fiches() {
             : t`Les fiches méthode expliquent comment mener chaque étape de l’organisation.`
         }
         actions={
-          !vueDocuments &&
-          data?.peutRedigerFichesCommunes && (
-            <Button
-              type="primary"
-              size="large"
-              icon={<PlusOutlined />}
-              onClick={() => navigate(lien('/fiches/nouvelle'))}
-            >
-              <Trans>Nouvelle fiche commune</Trans>
-            </Button>
+          !vueDocuments && (
+            <Space wrap>
+              {gere && (
+                <Button
+                  size="large"
+                  icon={<UploadOutlined />}
+                  onClick={() => setDepot(true)}
+                >
+                  <Trans>Déposer des fichiers</Trans>
+                </Button>
+              )}
+              {data?.peutRedigerFichesCommunes && (
+                <Button
+                  type="primary"
+                  size="large"
+                  icon={<PlusOutlined />}
+                  onClick={() => navigate(lien('/fiches/nouvelle'))}
+                >
+                  <Trans>Nouvelle fiche commune</Trans>
+                </Button>
+              )}
+            </Space>
           )
         }
       >
         <Trans>Ressources</Trans>
       </Titre>
+      {depot && (
+        <DepotFiches
+          fermer={() => setDepot(false)}
+          perimetreInitial={
+            perimetre === TOUTES || perimetre === COMMUNES ? null : perimetre
+          }
+        />
+      )}
 
       {dossiers.length > 0 && (
         <Segmented

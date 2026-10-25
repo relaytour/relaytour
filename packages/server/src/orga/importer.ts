@@ -655,7 +655,7 @@ async function importerActivite(
       activiteId,
       source: 'GIT',
       resume: 'Import depuis le dépôt',
-      protegees: ['APP', 'ESPACE_FICHIERS'],
+      protegees: ['APP', 'ESPACE_FICHIERS', 'DEPOT'],
       autreActivite: 'suivre',
       ecrire,
     },

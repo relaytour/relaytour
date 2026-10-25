@@ -1548,11 +1548,13 @@ model Journal {
 // ── Fiches méthode ───────────────────────────────────────────────────────────
 
 // GIT : dépôt de contenu. APP : écrite dans l'application. ESPACE_FICHIERS :
-// importée de l'espace de fichiers de l'organisation (ADR 0038).
+// importée de l'espace de fichiers de l'organisation (ADR 0038). DEPOT : fichier
+// déposé depuis l'écran « Ressources » (ADR 0049).
 enum SourceFiche {
   GIT
   APP
   ESPACE_FICHIERS
+  DEPOT
 }
 
 // Fiche « comment faire » d'un périmètre, ou fiche commune (perimetreId null).
