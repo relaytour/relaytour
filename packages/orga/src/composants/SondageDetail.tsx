@@ -1,5 +1,8 @@
 import { useMutation, useQuery } from '@apollo/client/react'
 import { DeleteOutlined, EditOutlined } from '@ant-design/icons'
+import type { MessageDescriptor } from '@lingui/core'
+import { msg, plural } from '@lingui/core/macro'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Drawer, Radio, Skeleton, Tag } from 'antd'
 import { useState } from 'react'
 
@@ -80,10 +83,28 @@ const SUPPRIMER = graphql(`
 
 type Creneau = NonNullable<SondageQuery['sondage']>['creneaux'][number]
 
-const CHOIX: { valeur: ChoixSondage; libelle: string }[] = [
-  { valeur: 'OUI', libelle: 'Oui' },
-  { valeur: 'SI_BESOIN', libelle: 'Si besoin' },
-  { valeur: 'NON', libelle: 'Non' },
+const CHOIX: { valeur: ChoixSondage; libelle: MessageDescriptor }[] = [
+  {
+    valeur: 'OUI',
+    libelle: msg({
+      message: 'Oui',
+      comment: 'Réponse à un créneau d’un sondage de dates',
+    }),
+  },
+  {
+    valeur: 'SI_BESOIN',
+    libelle: msg({
+      message: 'Si besoin',
+      comment: 'Réponse à un créneau d’un sondage de dates',
+    }),
+  },
+  {
+    valeur: 'NON',
+    libelle: msg({
+      message: 'Non',
+      comment: 'Réponse à un créneau d’un sondage de dates',
+    }),
+  },
 ]
 
 const RELIRE = ['Sondages', 'Sondage']
@@ -97,6 +118,39 @@ const libelleCreneau = (c: {
     ? `${libelleJours(c.jour)}, ${c.heureDebut} → ${c.heureFin}`
     : libelleJours(c.jour)
 
+/** Les réponses d'un créneau, comptées par choix. */
+function CompteCreneau({
+  oui,
+  siBesoin,
+  non,
+}: {
+  oui: number
+  siBesoin: number
+  non: number
+}) {
+  const { t } = useLingui()
+  return <>{t`${oui} oui · ${siBesoin} si besoin · ${non} non`}</>
+}
+
+/** Le nombre de personnes qui ont répondu au sondage. */
+function CompteRepondants({
+  repondants,
+  participants,
+}: {
+  repondants: number
+  participants: number
+}) {
+  const { t } = useLingui()
+  return (
+    <>
+      {t`${plural(participants, {
+        one: `${repondants} sur # personne a répondu.`,
+        other: `${repondants} sur # personnes ont répondu.`,
+      })}`}
+    </>
+  )
+}
+
 /** Volet d'un sondage de dates (ADR 0037). */
 export default function SondageDetail({
   sondageId,
@@ -107,6 +161,7 @@ export default function SondageDetail({
   agendas: AgendaEcrit[]
   onFermer: () => void
 }) {
+  const { t } = useLingui()
   const { message, modal } = App.useApp()
   const { data, loading, error } = useQuery(SONDAGE, {
     variables: { id: sondageId ?? '' },
@@ -120,6 +175,10 @@ export default function SondageDetail({
   const [noms, setNoms] = useState(false)
   const [saisie, setSaisie] = useState<SondageSaisi | null>(null)
   const [reunion, setReunion] = useState<NouvelleReunion | null>(null)
+  const libelleChoix = (valeur: ChoixSondage) => {
+    const trouve = CHOIX.find(o => o.valeur === valeur)
+    return trouve ? t(trouve.libelle).toLowerCase() : ''
+  }
   const sondage = data?.sondage
   const ouvert = sondage?.statut === 'OUVERT'
 
@@ -144,7 +203,7 @@ export default function SondageDetail({
         },
       })
       setChoix({})
-      message.success('Vos réponses sont enregistrées.')
+      message.success(t`Vos réponses sont enregistrées.`)
     } catch (e) {
       message.error(messageErreur(e))
     }
@@ -152,15 +211,16 @@ export default function SondageDetail({
 
   const retenir = (c: Creneau) => {
     if (!sondage) return
+    const creneau = libelleCreneau(c)
     void modal.confirm({
-      title: 'Clore le sondage sur ce créneau ?',
-      content: `${libelleCreneau(c)}. Les réponses ne changent plus. Vous créez ensuite la réunion.`,
-      okText: 'Clore',
-      cancelText: 'Annuler',
+      title: t`Clore le sondage sur ce créneau ?`,
+      content: t`${creneau}. Les réponses ne changent plus. Vous créez ensuite la réunion.`,
+      okText: t`Clore`,
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await clore({ variables: { id: sondage.id, creneauId: c.id } })
-          message.success('Sondage clos.')
+          message.success(t`Sondage clos.`)
         } catch (e) {
           message.error(messageErreur(e))
         }
@@ -171,16 +231,15 @@ export default function SondageDetail({
   const confirmerSuppression = () => {
     if (!sondage) return
     void modal.confirm({
-      title: 'Supprimer ce sondage ?',
-      content:
-        'Le sondage et ses réponses disparaissent. Une réunion déjà créée reste dans l’agenda.',
-      okText: 'Supprimer',
+      title: t`Supprimer ce sondage ?`,
+      content: t`Le sondage et ses réponses disparaissent. Une réunion déjà créée reste dans l’agenda.`,
+      okText: t`Supprimer`,
       okButtonProps: { danger: true },
-      cancelText: 'Annuler',
+      cancelText: t`Annuler`,
       onOk: async () => {
         try {
           await supprimer({ variables: { id: sondage.id } })
-          message.success('Sondage supprimé.')
+          message.success(t`Sondage supprimé.`)
           onFermer()
         } catch (e) {
           message.error(messageErreur(e))
@@ -214,7 +273,7 @@ export default function SondageDetail({
           setChoix({})
           onFermer()
         }}
-        title={sondage?.titre ?? 'Sondage'}
+        title={sondage?.titre ?? t`Sondage`}
         size={520}
         extra={
           sondage?.peutModifier && (
@@ -233,13 +292,13 @@ export default function SondageDetail({
                     })
                   }
                 >
-                  Modifier
+                  <Trans>Modifier</Trans>
                 </Button>
               )}
               <Button
                 danger
                 icon={<DeleteOutlined />}
-                aria-label="Supprimer le sondage"
+                aria-label={t`Supprimer le sondage`}
                 onClick={confirmerSuppression}
               />
             </span>
@@ -248,7 +307,9 @@ export default function SondageDetail({
       >
         {error && !data ? (
           <p className="rt-texte-secondaire">
-            Ce sondage n’existe pas ou ne vous est pas accessible.
+            <Trans>
+              Ce sondage n’existe pas ou ne vous est pas accessible.
+            </Trans>
           </p>
         ) : loading && !sondage ? (
           <Skeleton active />
@@ -256,7 +317,9 @@ export default function SondageDetail({
           <div className="rt-reunion">
             <p className="rt-reunion-quand">
               <Tag color={ouvert ? 'processing' : 'default'}>
-                {ouvert ? 'Ouvert' : 'Clos'}
+                {ouvert
+                  ? t({ message: 'Ouvert', comment: 'Statut d’un sondage' })
+                  : t({ message: 'Clos', comment: 'Statut d’un sondage' })}
               </Tag>
               {sondage.perimetre ? (
                 <PastillePerimetre
@@ -264,80 +327,90 @@ export default function SondageDetail({
                   couleur={sondage.perimetre.couleur}
                 />
               ) : (
-                <span className="rt-note">Agenda global de l’activité</span>
+                <span className="rt-note">
+                  <Trans>Agenda global de l’activité</Trans>
+                </span>
               )}
             </p>
             {sondage.description && (
               <p className="rt-reunion-description">{sondage.description}</p>
             )}
             <p className="rt-texte-secondaire">
-              {sondage.repondants} sur {sondage.participants}{' '}
-              {sondage.participants > 1 ? 'personnes ont' : 'personne a'}{' '}
-              répondu.
+              <CompteRepondants
+                repondants={sondage.repondants}
+                participants={sondage.participants}
+              />
             </p>
             <ul className="rt-sondage-liste">
-              {sondage.creneaux.map(c => (
-                <li
-                  key={c.id}
-                  className={c.retenu ? 'rt-sondage-retenu' : undefined}
-                >
-                  <div className="rt-sondage-ligne">
-                    <span style={{ fontWeight: 600 }}>
-                      {libelleCreneau(c)}
-                      {c.retenu && (
-                        <Tag color="success" style={{ marginInlineStart: 8 }}>
-                          Retenu
-                        </Tag>
-                      )}
-                    </span>
-                    <span className="rt-compte">
-                      {c.oui} oui · {c.siBesoin} si besoin · {c.non} non
-                    </span>
-                  </div>
-                  {sondage.estParticipant && ouvert && (
-                    <Radio.Group
-                      size="small"
-                      optionType="button"
-                      buttonStyle="solid"
-                      aria-label={`Votre réponse pour le créneau ${libelleCreneau(c)}`}
-                      // Une réponse changée pendant l'enregistrement serait
-                      // effacée avec le brouillon : les boutons attendent.
-                      disabled={reponse.loading}
-                      value={choixDe(c)}
-                      onChange={e =>
-                        setChoix(actuels => ({
-                          ...actuels,
-                          [c.id]: e.target.value as ChoixSondage,
-                        }))
-                      }
-                      options={CHOIX.map(o => ({
-                        value: o.valeur,
-                        label: o.libelle,
-                      }))}
-                    />
-                  )}
-                  {noms && c.reponses.length > 0 && (
-                    <p className="rt-note">
-                      {c.reponses
-                        .map(
-                          r =>
-                            `${r.nom} (${CHOIX.find(o => o.valeur === r.choix)?.libelle.toLowerCase()})`
-                        )
-                        .join(', ')}
-                    </p>
-                  )}
-                  {sondage.peutModifier && ouvert && (
-                    <Button
-                      size="small"
-                      type="link"
-                      style={{ padding: 0, alignSelf: 'flex-start' }}
-                      onClick={() => retenir(c)}
-                    >
-                      Retenir ce créneau
-                    </Button>
-                  )}
-                </li>
-              ))}
+              {sondage.creneaux.map(c => {
+                const creneau = libelleCreneau(c)
+                return (
+                  <li
+                    key={c.id}
+                    className={c.retenu ? 'rt-sondage-retenu' : undefined}
+                  >
+                    <div className="rt-sondage-ligne">
+                      <span style={{ fontWeight: 600 }}>
+                        {creneau}
+                        {c.retenu && (
+                          <Tag color="success" style={{ marginInlineStart: 8 }}>
+                            {t({
+                              message: 'Retenu',
+                              comment: 'Créneau retenu d’un sondage',
+                            })}
+                          </Tag>
+                        )}
+                      </span>
+                      <span className="rt-compte">
+                        <CompteCreneau
+                          oui={c.oui}
+                          siBesoin={c.siBesoin}
+                          non={c.non}
+                        />
+                      </span>
+                    </div>
+                    {sondage.estParticipant && ouvert && (
+                      <Radio.Group
+                        size="small"
+                        optionType="button"
+                        buttonStyle="solid"
+                        aria-label={t`Votre réponse pour le créneau ${creneau}`}
+                        // Une réponse changée pendant l'enregistrement serait
+                        // effacée avec le brouillon : les boutons attendent.
+                        disabled={reponse.loading}
+                        value={choixDe(c)}
+                        onChange={e =>
+                          setChoix(actuels => ({
+                            ...actuels,
+                            [c.id]: e.target.value as ChoixSondage,
+                          }))
+                        }
+                        options={CHOIX.map(o => ({
+                          value: o.valeur,
+                          label: t(o.libelle),
+                        }))}
+                      />
+                    )}
+                    {noms && c.reponses.length > 0 && (
+                      <p className="rt-note">
+                        {c.reponses
+                          .map(r => `${r.nom} (${libelleChoix(r.choix)})`)
+                          .join(', ')}
+                      </p>
+                    )}
+                    {sondage.peutModifier && ouvert && (
+                      <Button
+                        size="small"
+                        type="link"
+                        style={{ padding: 0, alignSelf: 'flex-start' }}
+                        onClick={() => retenir(c)}
+                      >
+                        <Trans>Retenir ce créneau</Trans>
+                      </Button>
+                    )}
+                  </li>
+                )
+              })}
             </ul>
             <span style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {sondage.estParticipant && ouvert && (
@@ -347,24 +420,26 @@ export default function SondageDetail({
                   loading={reponse.loading}
                   onClick={() => void enregistrerReponses()}
                 >
-                  Enregistrer mes réponses
+                  <Trans>Enregistrer mes réponses</Trans>
                 </Button>
               )}
               <Button onClick={() => setNoms(n => !n)}>
-                {noms ? 'Masquer les noms' : 'Voir les noms'}
+                {noms ? t`Masquer les noms` : t`Voir les noms`}
               </Button>
               {sondage.peutModifier &&
                 !ouvert &&
                 sondage.reunionId === null && (
                   <Button type="primary" onClick={creerReunion}>
-                    Créer la réunion
+                    <Trans>Créer la réunion</Trans>
                   </Button>
                 )}
             </span>
             {!ouvert && sondage.reunionId !== null && (
               <p className="rt-note">
-                La réunion a été créée depuis ce sondage. Elle figure dans
-                l’agenda.
+                <Trans>
+                  La réunion a été créée depuis ce sondage. Elle figure dans
+                  l’agenda.
+                </Trans>
               </p>
             )}
           </div>

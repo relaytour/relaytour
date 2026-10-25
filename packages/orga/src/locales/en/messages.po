@@ -19,6 +19,10 @@ msgstr ""
 msgid "« {nomDossierLie} » est aussi lu par {ajouts}."
 msgstr ""
 
+#: src/pages/Agenda.tsx
+msgid "« {titreDateCle} » disparaît de l’agenda de chaque personne."
+msgstr ""
+
 #: src/composants/DeclinerTache.tsx
 #: src/composants/TacheCarte.tsx
 msgid "« {titreTache} »"
@@ -142,6 +146,10 @@ msgstr ""
 msgid "{cettePeriodeMajuscule} est {periodeArchivee}. Ses tâches sont consultables en lecture seule."
 msgstr ""
 
+#: src/composants/SondageDetail.tsx
+msgid "{creneau}. Les réponses ne changent plus. Vous créez ensuite la réunion."
+msgstr ""
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "{ecrites, plural, one {# fiche écrite} other {# fiches écrites}}"
 msgstr ""
@@ -196,6 +204,10 @@ msgstr ""
 
 #: src/composants/VerificationAcces.tsx
 msgid "{manques} n’ont pas d’accès certain."
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "{n, plural, one {# élément} other {# éléments}}"
 msgstr ""
 
 #: src/pages/Perimetre.tsx
@@ -351,6 +363,10 @@ msgstr ""
 msgid "{nombreMesTaches, plural, one {# ouverte} other {# ouvertes}} · {enRetard} en retard"
 msgstr ""
 
+#: src/pages/Agenda.tsx
+msgid "{nombrePhases, plural, one {Phase : {listePhases}} other {Phases : {listePhases}}}"
+msgstr ""
+
 #: src/composants/DocumentsReserves.tsx
 msgid "{nombreReserves, plural, one {Un document lié ne s’ouvrira pas pour tous les périmètres concernés.} other {# documents liés ne s’ouvriront pas pour tous les périmètres concernés.}}"
 msgstr ""
@@ -407,12 +423,28 @@ msgstr ""
 msgid "{octets} o"
 msgstr ""
 
+#: src/composants/SondageDetail.tsx
+msgid "{oui} oui · {siBesoin} si besoin · {non} non"
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "{participants, plural, one {{repondants} sur # personne a répondu.} other {{repondants} sur # personnes ont répondu.}}"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "{periodeAucune} n’est en préparation."
+msgstr ""
+
 #: src/composants/Contribution.tsx
 msgid "{points, plural, one {point} other {points}} pour {nomEdition}"
 msgstr ""
 
 #: src/composants/Avancement.tsx
 msgid "{pourcentage} % des tâches faites"
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "{presentes, plural, one {# présence} other {# présences}}, {absentes, plural, one {# absence} other {# absences}}, {peutEtre} peut-être, {sansReponse} sans réponse."
 msgstr ""
 
 #: src/composants/GestionAcces.tsx
@@ -425,6 +457,10 @@ msgstr ""
 
 #: src/composants/Jauge.tsx
 msgid "{renforts} / {besoin} renforts"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "{repondants} sur {participants} réponses"
 msgstr ""
 
 #: src/pages/admin/EspaceFichiers.tsx
@@ -504,6 +540,10 @@ msgstr ""
 msgid "À reconnecter"
 msgstr ""
 
+#: src/pages/Agenda.tsx
+msgid "À vous de répondre"
+msgstr ""
+
 #. Statut d’une tâche
 #. Statut d’une tâche
 #: src/lib/conflit.ts
@@ -522,8 +562,30 @@ msgstr ""
 msgid "Abandonner"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Abonnement de l’activité"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Abonnement enregistré."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Abonnement révoqué."
+msgstr ""
+
 #: src/composants/ComptesFournisseur.tsx
 msgid "Absent de l’annuaire"
+msgstr ""
+
+#. Réponse à une convocation, en minuscules, après « Vous êtes convoqué·e, »
+#: src/pages/Agenda.tsx
+msgid "absent·e"
+msgstr ""
+
+#. Réponse à une convocation à une réunion
+#: src/composants/ReunionDetail.tsx
+msgid "Absent·e"
 msgstr ""
 
 #: src/lib/declinaisons.ts
@@ -623,6 +685,14 @@ msgstr ""
 msgid "Adresse"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Adresse active, créée le {creeLe}, se terminant par « {finAdresse} »."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Adresse active, se terminant par « {finAdresse} »."
+msgstr ""
+
 #: src/composants/ComptesFournisseur.tsx
 msgid "Adresse chez le fournisseur"
 msgstr ""
@@ -647,6 +717,10 @@ msgstr ""
 msgid "Affecté·e"
 msgstr ""
 
+#: src/pages/Agenda.tsx
+msgid "Affichage de l’agenda"
+msgstr ""
+
 #: src/pages/Fiches.tsx
 msgid "Affichage des fiches"
 msgstr ""
@@ -664,7 +738,16 @@ msgid "Afficher mon adresse dans l’organigramme"
 msgstr ""
 
 #: src/composants/Coquille.tsx
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+#: src/pages/Agenda.tsx
 msgid "Agenda"
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+#: src/composants/SondageDetail.tsx
+#: src/pages/Agenda.tsx
+msgid "Agenda global de l’activité"
 msgstr ""
 
 #: src/composants/EditeurMarkdown.tsx
@@ -685,6 +768,7 @@ msgid "Ajoutée sans accord par {personne} le {jour}"
 msgstr ""
 
 #: src/composants/DeclinerTache.tsx
+#: src/pages/Agenda.tsx
 #: src/pages/FicheEditeur.tsx
 msgid "Ajouter"
 msgstr ""
@@ -709,11 +793,26 @@ msgstr ""
 msgid "Ajouter tous les périmètres du groupe {nomDuGroupe}"
 msgstr ""
 
+#: src/composants/SondageFormulaire.tsx
+msgid "Ajouter un créneau"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Ajoutez les jours qui comptent pour toute l’équipe {periodeDe} : un dossier à déposer, une assemblée, une visite."
+msgstr ""
+
 #: src/composants/Coquille.tsx
 msgid "Annuaire"
 msgstr ""
 
+#: src/composants/ReunionDetail.tsx
+#: src/pages/Agenda.tsx
+msgid "Annulée"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
 #: src/composants/ConnexionEspace.tsx
+#: src/composants/DateCleFormulaire.tsx
 #: src/composants/DeclinaisonsProposees.tsx
 #: src/composants/DeclinerTache.tsx
 #: src/composants/EditeurVisuel.tsx
@@ -723,15 +822,27 @@ msgstr ""
 #: src/composants/MesInvitations.tsx
 #: src/composants/ReglagePerimetre.tsx
 #: src/composants/RessourcesFiche.tsx
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageDetail.tsx
+#: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheCarte.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/lib/taches.ts
 #: src/pages/admin/EspaceFichiers.tsx
 #: src/pages/admin/Redaction.tsx
+#: src/pages/Agenda.tsx
 #: src/pages/Fiche.tsx
 #: src/pages/FicheEditeur.tsx
 #: src/pages/Preferences.tsx
 msgid "Annuler"
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "Annuler cette réunion ?"
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "Annuler la réunion"
 msgstr ""
 
 #. Origine d’une version de fiche : rédigée dans Relaytour
@@ -795,6 +906,10 @@ msgstr ""
 msgid "Aucun"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Aucun agenda ne l’a encore lue."
+msgstr ""
+
 #: src/composants/ChampConcerneAussi.tsx
 msgid "Aucun autre périmètre"
 msgstr ""
@@ -849,6 +964,10 @@ msgstr ""
 msgid "Aucune activité ne vous est encore ouverte."
 msgstr ""
 
+#: src/pages/Agenda.tsx
+msgid "Aucune date à venir dans l’agenda."
+msgstr ""
+
 #: src/pages/TousLesPerimetres.tsx
 msgid "Aucune description pour ce périmètre."
 msgstr ""
@@ -897,6 +1016,10 @@ msgstr ""
 msgid "Aucune personne n’est attendue pour ce dossier."
 msgstr ""
 
+#: src/composants/ReunionsDuPerimetre.tsx
+msgid "Aucune réunion à venir pour ce périmètre."
+msgstr ""
+
 #: src/composants/Avancement.tsx
 msgid "Aucune tâche"
 msgstr ""
@@ -923,6 +1046,10 @@ msgstr ""
 
 #: src/composants/VerificationAcces.tsx
 msgid "Aucune vérification pour l’instant. Relaytour vérifie aussi chaque nuit."
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Aujourd’hui"
 msgstr ""
 
 #: src/composants/PreferencePush.tsx
@@ -1045,6 +1172,10 @@ msgstr ""
 msgid "Ce score n’est visible que par vous et par les admins."
 msgstr ""
 
+#: src/composants/SondageDetail.tsx
+msgid "Ce sondage n’existe pas ou ne vous est pas accessible."
+msgstr ""
+
 #: src/composants/InvitationsEnAttente.tsx
 msgid "Ces adresses ont déjà un compte hors de votre organisation. Chaque personne accepte ou refuse l’invitation depuis son compte. Rien n’est créé en son nom avant son accord, et elle n’apparaît pas dans l’équipe."
 msgstr ""
@@ -1101,6 +1232,10 @@ msgstr ""
 msgid "Cette activité n’a encore aucun périmètre."
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Cette adresse ne s’affichera plus. Copiez-la maintenant et gardez-la pour vous : elle donne accès au contenu de l’agenda."
+msgstr ""
+
 #: src/composants/NotesDeVersion.tsx
 msgid "Cette fenêtre liste les changements de chaque version de Relaytour. Vous y lisez les notes qui concernent votre rôle."
 msgstr ""
@@ -1143,6 +1278,10 @@ msgstr ""
 
 #: src/composants/ReserveAdmin.tsx
 msgid "Cette page est réservée aux admins de l’organisation."
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "Cette réunion n’existe pas ou ne vous est pas accessible."
 msgstr ""
 
 #: src/lib/conflit.ts
@@ -1201,6 +1340,10 @@ msgstr ""
 msgid "Chaque périmètre reçoit les fiches Markdown, texte et Word de son dossier. Les sous-dossiers ne sont pas lus."
 msgstr ""
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Chaque personne convoquée reçoit un mail avec la réunion à ajouter à son agenda, et répond dans l’espace organisateur."
+msgstr ""
+
 #: src/composants/FournisseurActivite.tsx
 #: src/composants/GardeSession.tsx
 msgid "Chargement"
@@ -1214,8 +1357,18 @@ msgstr ""
 msgid "Chercher une personne"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
 #: src/composants/ChoixPerimetresCibles.tsx
 msgid "Choisir des périmètres"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Choisir des personnes de l’équipe"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Choisir des tâches de la période"
 msgstr ""
 
 #: src/pages/admin/EspaceFichiers.tsx
@@ -1244,6 +1397,11 @@ msgstr ""
 
 #: src/composants/DeclinerTache.tsx
 msgid "Choisissez au moins un périmètre."
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Choisissez au moins une personne."
 msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
@@ -1278,6 +1436,12 @@ msgstr ""
 msgid "Choisissez un groupe."
 msgstr ""
 
+#: src/composants/DateCleFormulaire.tsx
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Choisissez un jour."
+msgstr ""
+
 #: src/pages/admin/Redaction.tsx
 msgid "Choisissez un périmètre."
 msgstr ""
@@ -1288,6 +1452,10 @@ msgstr ""
 
 #: src/composants/ParcoursEspace.tsx
 msgid "Choisissez une bibliothèque"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Choisissez une heure."
 msgstr ""
 
 #: src/pages/admin/Redaction.tsx
@@ -1312,6 +1480,21 @@ msgstr ""
 
 #: src/composants/InstallerApplication.tsx
 msgid "Cliquez sur l’icône d’installation, à droite de la barre d’adresse."
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Clore"
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Clore le sondage sur ce créneau ?"
+msgstr ""
+
+#. Statut d’un sondage
+#. Statut d’un sondage
+#: src/composants/SondageDetail.tsx
+#: src/pages/Agenda.tsx
+msgid "Clos"
 msgstr ""
 
 #: src/composants/TacheCarte.tsx
@@ -1475,6 +1658,10 @@ msgstr ""
 msgid "Contenu de la fiche"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Copier l’adresse"
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Copier mon texte"
 msgstr ""
@@ -1487,8 +1674,24 @@ msgstr ""
 msgid "Couleur"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Créer l’adresse"
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Créer la réunion"
+msgstr ""
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Créer le dossier d’export ici"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Créer mon adresse"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Créer une nouvelle adresse ?"
 msgstr ""
 
 #: src/composants/ConnexionEspace.tsx
@@ -1499,8 +1702,16 @@ msgstr ""
 msgid "Créneau"
 msgstr ""
 
+#: src/composants/SondageFormulaire.tsx
+msgid "Créneaux proposés"
+msgstr ""
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "Dans chaque groupe, les périmètres se rangent par ordre croissant, puis par nom."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Dans Google Agenda, choisissez « Autres agendas », puis « À partir de l’URL ». Dans Outlook, choisissez « Ajouter un agenda », puis « S’abonner à partir du web ». Votre agenda relit l’adresse à son rythme, parfois une seule fois par jour."
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -1513,6 +1724,38 @@ msgstr ""
 
 #: src/pages/Preferences.tsx
 msgid "Dans le résumé par mail"
+msgstr ""
+
+#. Sorte d’élément de l’agenda
+#: src/pages/Agenda.tsx
+msgid "Date clé"
+msgstr ""
+
+#: src/composants/DateCleFormulaire.tsx
+msgid "Date clé ajoutée."
+msgstr ""
+
+#: src/composants/DateCleFormulaire.tsx
+msgid "Date clé enregistrée."
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Date clé supprimée."
+msgstr ""
+
+#: src/composants/SondageFormulaire.tsx
+msgid "Date du point d’étape"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Dates clés"
+msgstr ""
+
+#. Libellé : heure de début d’un créneau
+#. Libellé : heure de début d’une réunion
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Début"
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -1566,6 +1809,10 @@ msgstr ""
 msgid "Dépôt"
 msgstr ""
 
+#: src/composants/DateCleFormulaire.tsx
+msgid "Dépôt du dossier en préfecture"
+msgstr ""
+
 #: src/pages/Fiches.tsx
 msgid "Depuis le dépôt · {date}"
 msgstr ""
@@ -1578,12 +1825,30 @@ msgstr ""
 msgid "Dernier export"
 msgstr ""
 
+#: src/composants/DateCleFormulaire.tsx
+#: src/composants/ReunionFormulaire.tsx
+msgid "Dernier jour (facultatif)"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Dernière lecture le {derniereLecture}."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Dernière lecture par un agenda le {derniereLecture}."
+msgstr ""
+
 #: src/composants/VerificationAcces.tsx
 msgid "Dernière vérification le {derniereVerification}. Relaytour vérifie aussi chaque nuit."
 msgstr ""
 
 #: src/lib/guide-markdown.ts
 msgid "Des accents graves entourent un texte qui s’affiche tel quel, en police à chasse fixe : un nom de fichier, une référence."
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Des personnes choisies"
 msgstr ""
 
 #: src/composants/Avancement.tsx
@@ -1597,6 +1862,12 @@ msgstr ""
 #: src/composants/ReglagePerimetre.tsx
 #: src/composants/TacheFormulaire.tsx
 msgid "Description"
+msgstr ""
+
+#: src/composants/DateCleFormulaire.tsx
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Description (facultative)"
 msgstr ""
 
 #: src/composants/TacheFormulaire.tsx
@@ -1660,11 +1931,18 @@ msgstr ""
 msgid "Droits accordés"
 msgstr ""
 
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "du périmètre"
+msgstr ""
+
 #: src/composants/GestionAcces.tsx
 msgid "Écarter"
 msgstr ""
 
+#. Sorte d’élément de l’agenda : l’échéance d’une tâche
 #: src/composants/TacheFormulaire.tsx
+#: src/pages/Agenda.tsx
 msgid "Échéance"
 msgstr ""
 
@@ -1681,6 +1959,10 @@ msgstr ""
 #: src/composants/PreferencePush.tsx
 #: src/pages/Preferences.tsx
 msgid "Échéances"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Échéances de mes périmètres"
 msgstr ""
 
 #: src/composants/GestionAcces.tsx
@@ -1756,11 +2038,15 @@ msgstr ""
 msgid "Encadrés"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
 #: src/composants/ComptesFournisseur.tsx
+#: src/composants/DateCleFormulaire.tsx
 #: src/composants/FilTache.tsx
 #: src/composants/GestionAcces.tsx
 #: src/composants/PreferenceMessagerie.tsx
 #: src/composants/ReglagePerimetre.tsx
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/admin/EspaceFichiers.tsx
 #: src/pages/FicheEditeur.tsx
@@ -1768,8 +2054,16 @@ msgstr ""
 msgid "Enregistrer"
 msgstr ""
 
+#: src/composants/SondageDetail.tsx
+msgid "Enregistrer mes réponses"
+msgstr ""
+
 #: src/composants/AvisMiseAJour.tsx
 msgid "Enregistrez votre travail en cours, puis rechargez l’application pour l’utiliser."
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "envoi en attente"
 msgstr ""
 
 #: src/composants/Tableau.tsx
@@ -1941,6 +2235,13 @@ msgstr ""
 msgid "Fil d’Ariane"
 msgstr ""
 
+#. Libellé : heure de fin d’un créneau
+#. Libellé : heure de fin d’une réunion
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Fin"
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Fin de la partie matinale."
 msgstr ""
@@ -1958,6 +2259,10 @@ msgstr ""
 
 #: src/composants/DocumentsActivite.tsx
 msgid "Fournisseur déconnecté"
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "Garder"
 msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
@@ -2149,8 +2454,29 @@ msgstr ""
 msgid "Je suis intéressé·e par {nomPerimetre}"
 msgstr ""
 
+#. Libellé : jour d’un créneau
+#. Libellé : jour d’une date clé
+#. Libellé : jour d’une réunion
+#: src/composants/DateCleFormulaire.tsx
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Jour"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Jours du mois"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Jours passés"
+msgstr ""
+
 #: src/lib/regroupement.ts
 msgid "jusqu’au {dateDeFin} · {borneRelative}"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "L’abonnement de l’activité n’a pas pu être lu. Rechargez la page dans un instant."
 msgstr ""
 
 #: src/lib/espace-fichiers.ts
@@ -2161,12 +2487,40 @@ msgstr ""
 msgid "L’accès déjà accordé à Nextcloud suffit. Les membres d’un groupe ne se lisent que si le compte connecté administre ce groupe."
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "L’adresse actuelle cesse aussitôt de servir pour tous les agendas abonnés."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "L’adresse actuelle cesse aussitôt de servir. Vous devrez abonner de nouveau vos agendas."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "L’adresse cesse aussitôt de servir. Vos agendas gardent les événements déjà lus jusqu’à leur prochaine relecture."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "L’adresse est copiée."
+msgstr ""
+
 #: src/composants/ComptesFournisseur.tsx
 msgid "L’adresse est enregistrée. Relaytour cherche le compte de nouveau."
 msgstr ""
 
 #: src/composants/EditeurVisuel.tsx
 msgid "L’adresse s’insère à l’emplacement du curseur."
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "L’agenda {periodeDe} est vide."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "L’agenda global : phases, dates clés et réunions de l’activité"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "L’agenda n’a pas pu être chargé."
 msgstr ""
 
 #: src/composants/VerificationAcces.tsx
@@ -2227,6 +2581,10 @@ msgstr ""
 
 #: src/composants/ConnexionEspace.tsx
 msgid "L’hébergeur de cette installation n’a ouvert aucun fournisseur cloud."
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "L’heure de fin suit l’heure de début."
 msgstr ""
 
 #: src/composants/MesInvitations.tsx
@@ -2298,8 +2656,16 @@ msgstr ""
 msgid "La conversion d’un document Word perd une partie de sa mise en forme. Les fiches s’écrivent ensuite en Markdown, et l’export vers le fournisseur cloud aussi."
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "La copie a échoué : sélectionnez l’adresse à la main."
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "La copie a échoué. Sélectionnez le texte, puis copiez-le vous-même."
+msgstr ""
+
+#: src/composants/DateCleFormulaire.tsx
+msgid "La date clé n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
 msgstr ""
 
 #: src/composants/ConnexionEspace.tsx
@@ -2360,6 +2726,18 @@ msgstr ""
 
 #: src/composants/ImportFiches.tsx
 msgid "La racine de la bibliothèque sera le dossier des fiches."
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "La réunion a été créée depuis ce sondage. Elle figure dans l’agenda."
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "La réunion n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant."
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "La réunion reste dans l’agenda, marquée annulée. Chaque personne convoquée reçoit un mail d’annulation."
 msgstr ""
 
 #: src/composants/FilTache.tsx
@@ -2452,6 +2830,11 @@ msgstr ""
 
 #: src/composants/FilTache.tsx
 msgid "Le commentaire est supprimé."
+msgstr ""
+
+#: src/composants/DateCleFormulaire.tsx
+#: src/composants/ReunionFormulaire.tsx
+msgid "Le dernier jour suit le premier."
 msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
@@ -2614,6 +2997,14 @@ msgstr ""
 msgid "Le rôle d’admin donne déjà la rédaction des fiches. Il se modifie depuis l’écran Personnes."
 msgstr ""
 
+#: src/composants/SondageDetail.tsx
+msgid "Le sondage et ses réponses disparaissent. Une réunion déjà créée reste dans l’agenda."
+msgstr ""
+
+#: src/composants/SondageFormulaire.tsx
+msgid "Le sondage n’a pas pu être rechargé. Votre saisie reste à l’écran : réessayez dans un instant."
+msgstr ""
+
 #: src/lib/conflit.ts
 msgid "Le statut de cette tâche a changé"
 msgstr ""
@@ -2642,9 +3033,18 @@ msgstr ""
 msgid "Le titre de la fiche s’affiche déjà en haut de la page : commencez donc vos sections par deux dièses."
 msgstr ""
 
+#: src/composants/DateCleFormulaire.tsx
+#: src/composants/ReunionFormulaire.tsx
+msgid "Le titre dépasse {longueurMaxTitre} caractères."
+msgstr ""
+
 #: src/composants/DeclinerTache.tsx
 #: src/composants/TacheFormulaire.tsx
 msgid "Le titre dépasse {TITRE_MAX} caractères."
+msgstr ""
+
+#: src/composants/SondageFormulaire.tsx
+msgid "Le titre dépasse 200 caractères."
 msgstr ""
 
 #: src/composants/GestionAcces.tsx
@@ -2653,6 +3053,10 @@ msgstr ""
 
 #: src/composants/FichesConnexes.tsx
 msgid "Lecture seule"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Les admins de l’activité n’ont placé aucune date clé dans {periodeCette}."
 msgstr ""
 
 #: src/pages/Preferences.tsx
@@ -2681,6 +3085,10 @@ msgstr ""
 
 #: src/composants/ConnexionEspace.tsx
 msgid "Les dossiers liés restent, mais les membres ne lisent plus leurs documents jusqu’à une nouvelle connexion. L’export des fiches s’arrête."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Les échéances des tâches qui me sont assignées"
 msgstr ""
 
 #: src/composants/ImportFiches.tsx
@@ -2767,6 +3175,10 @@ msgstr ""
 msgid "Les personnes affectées aux périmètres choisis lisent le dossier, comme leurs fiches, ainsi que les admins de l’activité. Un groupe vaut aussi pour les périmètres qui le rejoindront. Toute l’activité se lit comme les fiches communes."
 msgstr ""
 
+#: src/pages/Agenda.tsx
+msgid "Les phases, les dates clés, les réunions et les échéances {periodeDe}."
+msgstr ""
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
 msgstr ""
@@ -2808,6 +3220,10 @@ msgstr ""
 msgid "Lien"
 msgstr ""
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Lien de visio (facultatif)"
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Liens"
 msgstr ""
@@ -2833,6 +3249,10 @@ msgstr ""
 msgid "Lier une fiche (facultatif)"
 msgstr ""
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Lieu (facultatif)"
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Ligne de séparation"
 msgstr ""
@@ -2849,6 +3269,11 @@ msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Lire le mode d’emploi « Choisir votre messagerie »"
+msgstr ""
+
+#. Affichage de l’agenda en liste
+#: src/pages/Agenda.tsx
+msgid "Liste"
 msgstr ""
 
 #: src/composants/EditeurMarkdown.tsx
@@ -2909,6 +3334,10 @@ msgstr ""
 
 #: src/composants/FichesConnexes.tsx
 msgid "Masquer la fiche"
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Masquer les noms"
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -2982,6 +3411,8 @@ msgid "Modifié le {dateModification}"
 msgstr ""
 
 #: src/composants/FilTache.tsx
+#: src/composants/ReunionDetail.tsx
+#: src/composants/SondageDetail.tsx
 #: src/composants/TacheCarte.tsx
 #: src/pages/Fiche.tsx
 msgid "Modifier"
@@ -2991,8 +3422,20 @@ msgstr ""
 msgid "Modifier « {nomDossier} »"
 msgstr ""
 
+#: src/pages/Agenda.tsx
+msgid "Modifier « {titreDateCle} »"
+msgstr ""
+
+#: src/composants/DateCleFormulaire.tsx
+msgid "Modifier la date clé"
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Modifier la fiche"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Modifier la réunion"
 msgstr ""
 
 #: src/composants/TacheFormulaire.tsx
@@ -3003,12 +3446,29 @@ msgstr ""
 msgid "Modifier le dossier {nomDossierLie}"
 msgstr ""
 
+#: src/composants/SondageFormulaire.tsx
+msgid "Modifier le sondage"
+msgstr ""
+
 #: src/pages/Preferences.tsx
 msgid "Modifier mon nom"
 msgstr ""
 
 #: src/composants/FilTache.tsx
 msgid "Modifier votre commentaire"
+msgstr ""
+
+#. Affichage de l’agenda en grille du mois
+#: src/pages/Agenda.tsx
+msgid "Mois"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Mois précédent"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Mois suivant"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -3048,7 +3508,9 @@ msgstr ""
 msgid "Nom enregistré."
 msgstr ""
 
+#. Réponse à un créneau d’un sondage de dates
 #: src/composants/PreferenceMessagerie.tsx
+#: src/composants/SondageDetail.tsx
 msgid "Non"
 msgstr ""
 
@@ -3090,12 +3552,34 @@ msgstr ""
 msgid "Notifications, {nonLues, plural, one {# non lue} other {# non lues}}"
 msgstr ""
 
+#. Bouton : créer un sondage de dates
+#: src/pages/Agenda.tsx
+msgid "Nouveau"
+msgstr ""
+
 #: src/composants/ReglagePerimetre.tsx
 msgid "Nouveau périmètre"
 msgstr ""
 
+#: src/composants/SondageFormulaire.tsx
+msgid "Nouveau sondage de dates"
+msgstr ""
+
 #: src/lib/notes-de-version.ts
 msgid "Nouveauté"
+msgstr ""
+
+#. Bouton : créer une réunion
+#: src/composants/ReunionsDuPerimetre.tsx
+msgid "Nouvelle"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Nouvelle adresse"
+msgstr ""
+
+#: src/composants/DateCleFormulaire.tsx
+msgid "Nouvelle date clé"
 msgstr ""
 
 #: src/pages/FicheEditeur.tsx
@@ -3113,6 +3597,11 @@ msgstr ""
 
 #: src/pages/FicheEditeur.tsx
 msgid "Nouvelle fiche du périmètre {nomPerimetre}"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+#: src/pages/Agenda.tsx
+msgid "Nouvelle réunion"
 msgstr ""
 
 #: src/composants/TacheFormulaire.tsx
@@ -3142,8 +3631,18 @@ msgstr ""
 msgid "Organisation"
 msgstr ""
 
+#. Réponse à un créneau d’un sondage de dates
+#: src/composants/SondageDetail.tsx
+msgid "Oui"
+msgstr ""
+
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Oui, le message s’est ouvert"
+msgstr ""
+
+#. Statut d’un sondage
+#: src/composants/SondageDetail.tsx
+msgid "Ouvert"
 msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
@@ -3188,6 +3687,10 @@ msgstr ""
 
 #: src/composants/Liseuse.tsx
 msgid "Ouvrir dans {nomFournisseur}"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Ouvrir dans mon agenda"
 msgstr ""
 
 #: src/pages/FicheEditeur.tsx
@@ -3312,8 +3815,20 @@ msgstr ""
 msgid "Périmètres"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Périmètres de l’abonnement"
+msgstr ""
+
+#. Sorte d’élément de l’agenda : la fin de la période
+#. Sorte d’élément de l’agenda : le début de la période
+#: src/pages/Agenda.tsx
+msgid "Période"
+msgstr ""
+
+#. Aucune personne convoquée
 #. Aucune personne n’est assignée à la tâche
 #: src/composants/LigneTache.tsx
+#: src/composants/ReunionFormulaire.tsx
 #: src/pages/admin/Redaction.tsx
 msgid "Personne"
 msgstr ""
@@ -3343,12 +3858,43 @@ msgstr ""
 msgid "Personnes attendues : les membres des périmètres lecteurs pour la période."
 msgstr ""
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Personnes convoquées"
+msgstr ""
+
+#: src/composants/SondageFormulaire.tsx
+msgid "Personnes visées"
+msgstr ""
+
+#. Réponse à une convocation, en minuscules, après « Vous êtes convoqué·e, »
+#: src/pages/Agenda.tsx
+msgid "peut-être"
+msgstr ""
+
+#. Réponse à une convocation à une réunion
+#: src/composants/ReunionDetail.tsx
+msgid "Peut-être"
+msgstr ""
+
+#. Sorte d’élément de l’agenda
+#: src/pages/Agenda.tsx
+msgid "Phase"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Phases"
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Plan d’accès : https://exemple.org/plan"
 msgstr ""
 
 #: src/composants/TacheCarte.tsx
 msgid "Planifier une réunion"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Point d’étape du pôle"
 msgstr ""
 
 #: src/composants/EditeurVisuel.tsx
@@ -3377,8 +3923,22 @@ msgstr ""
 msgid "Prénom et nom"
 msgstr ""
 
+#. Réponse à une convocation, en minuscules, après « Vous êtes convoqué·e, »
+#: src/pages/Agenda.tsx
+msgid "présent·e"
+msgstr ""
+
+#. Réponse à une convocation à une réunion
+#: src/composants/ReunionDetail.tsx
+msgid "Présent·e"
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Prévenir la mairie"
+msgstr ""
+
+#: src/composants/ReunionsDuPerimetre.tsx
+msgid "Prochaines réunions"
 msgstr ""
 
 #: src/composants/Coquille.tsx
@@ -3391,6 +3951,10 @@ msgstr ""
 
 #: src/composants/DeclinerTache.tsx
 msgid "Proposer"
+msgstr ""
+
+#: src/composants/SondageFormulaire.tsx
+msgid "Proposez au moins un créneau."
 msgstr ""
 
 #: src/composants/GestionAcces.tsx
@@ -3443,6 +4007,7 @@ msgstr ""
 msgid "Recharger la page"
 msgstr ""
 
+#: src/pages/Agenda.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Rechargez la page dans un instant."
 msgstr ""
@@ -3537,6 +4102,10 @@ msgstr ""
 msgid "Réinitialiser"
 msgstr ""
 
+#: src/composants/ReunionDetail.tsx
+msgid "Rejoindre la visio"
+msgstr ""
+
 #: src/composants/InvitationsEnAttente.tsx
 msgid "Relancer"
 msgstr ""
@@ -3605,6 +4174,10 @@ msgstr ""
 msgid "Replier le volet latéral"
 msgstr ""
 
+#: src/composants/ReunionDetail.tsx
+msgid "Réponses"
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Reprendre le brouillon"
 msgstr ""
@@ -3656,6 +4229,15 @@ msgstr ""
 msgid "Résumé par mail"
 msgstr ""
 
+#: src/composants/SondageDetail.tsx
+msgid "Retenir ce créneau"
+msgstr ""
+
+#. Créneau retenu d’un sondage
+#: src/composants/SondageDetail.tsx
+msgid "Retenu"
+msgstr ""
+
 #: src/composants/InvitationsEnAttente.tsx
 #: src/composants/RessourcesFiche.tsx
 #: src/composants/TacheCarte.tsx
@@ -3679,6 +4261,10 @@ msgstr ""
 
 #: src/composants/TacheCarte.tsx
 msgid "Retirer {nomPersonne} de cette tâche ?"
+msgstr ""
+
+#: src/composants/SondageFormulaire.tsx
+msgid "Retirer ce créneau"
 msgstr ""
 
 #: src/composants/RessourcesFiche.tsx
@@ -3717,6 +4303,10 @@ msgstr ""
 msgid "Retirer mon souhait"
 msgstr ""
 
+#: src/composants/SondageFormulaire.tsx
+msgid "Retirer un créneau efface les réponses qu’il a reçues."
+msgstr ""
+
 #: src/composants/ImportFiches.tsx
 msgid "Retour"
 msgstr ""
@@ -3730,8 +4320,34 @@ msgstr ""
 msgid "Rétroplanning"
 msgstr ""
 
+#. Sorte d’élément de l’agenda
+#: src/composants/ReunionDetail.tsx
+#: src/pages/Agenda.tsx
+msgid "Réunion"
+msgstr ""
+
 #: src/pages/Perimetre.tsx
 msgid "Réunion : {titreTache}"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Réunion · {heureReunion} · {titreEvenement}"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Réunion ajoutée à l’agenda."
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Réunion ajoutée. Les convocations partent dans deux minutes."
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "Réunion annulée."
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Réunion enregistrée."
 msgstr ""
 
 #: src/pages/FicheEditeur.tsx
@@ -3741,6 +4357,18 @@ msgstr ""
 #: src/composants/ExplorateurDossier.tsx
 #: src/composants/ImportFiches.tsx
 msgid "Revenir aux dossiers"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Révoquer"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Révoquer l’abonnement de l’activité ?"
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Révoquer votre abonnement ?"
 msgstr ""
 
 #. En-tête de colonne d’un tableau d’exemple : rôle d’un bénévole
@@ -3780,13 +4408,24 @@ msgstr ""
 msgid "Saisissez un nom."
 msgstr ""
 
+#: src/composants/DateCleFormulaire.tsx
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/FicheEditeur.tsx
 msgid "Saisissez un titre."
 msgstr ""
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Saisissez une adresse complète, en https://."
+msgstr ""
+
 #: src/pages/Connexion.tsx
 msgid "Saisissez une adresse mail valide."
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Salle des associations"
 msgstr ""
 
 #: src/composants/VerificationAcces.tsx
@@ -3809,6 +4448,10 @@ msgstr ""
 
 #: src/pages/Perimetre.tsx
 msgid "Sans fiche"
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "Sans réponse"
 msgstr ""
 
 #: src/composants/DeclinerTache.tsx
@@ -3834,8 +4477,17 @@ msgstr ""
 msgid "Séparateur des adresses copiées"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Seulement ces périmètres"
+msgstr ""
+
 #: src/composants/PreferenceOrganigramme.tsx
 msgid "Seules les personnes de l’activité lisent votre adresse. Vous pouvez retirer votre accord à tout moment. Une adresse déjà copiée par une autre personne reste en sa possession."
+msgstr ""
+
+#. Réponse à un créneau d’un sondage de dates
+#: src/composants/SondageDetail.tsx
+msgid "Si besoin"
 msgstr ""
 
 #: src/pages/Connexion.tsx
@@ -3852,6 +4504,30 @@ msgstr ""
 
 #: src/composants/VerificationAcces.tsx
 msgid "Son compte existe, mais aucun droit ne couvre ce dossier."
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Sondage"
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Sondage clos."
+msgstr ""
+
+#: src/composants/SondageFormulaire.tsx
+msgid "Sondage enregistré."
+msgstr ""
+
+#: src/composants/SondageFormulaire.tsx
+msgid "Sondage ouvert. Les personnes visées le trouvent dans leur agenda."
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Sondage supprimé."
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Sondages de dates"
 msgstr ""
 
 #. Étiquette d’un périmètre que la personne souhaite rejoindre
@@ -3897,15 +4573,33 @@ msgid "Support {organisation} ({relaytour})"
 msgstr ""
 
 #: src/composants/FilTache.tsx
+#: src/composants/SondageDetail.tsx
+#: src/pages/Agenda.tsx
 msgid "Supprimer"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Supprimer « {titreDateCle} »"
 msgstr ""
 
 #: src/composants/FilTache.tsx
 msgid "Supprimer ce commentaire ?"
 msgstr ""
 
+#: src/composants/SondageDetail.tsx
+msgid "Supprimer ce sondage ?"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Supprimer cette date clé ?"
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Supprimer le brouillon"
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Supprimer le sondage"
 msgstr ""
 
 #: src/pages/Retroplanning.tsx
@@ -3992,8 +4686,13 @@ msgstr ""
 msgid "Tâches faites"
 msgstr ""
 
+#: src/composants/ReunionDetail.tsx
 #: src/pages/Fiche.tsx
 msgid "Tâches liées"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Tâches liées (facultatives)"
 msgstr ""
 
 #: src/composants/DeclinaisonsProposees.tsx
@@ -4054,7 +4753,10 @@ msgid "Texte tel quel"
 msgstr ""
 
 #. Bouton de la barre de mise en forme : titre de section
+#: src/composants/DateCleFormulaire.tsx
 #: src/composants/EditeurMarkdown.tsx
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
 #: src/composants/TacheFormulaire.tsx
 #: src/pages/FicheEditeur.tsx
 msgid "Titre"
@@ -4112,8 +4814,17 @@ msgstr ""
 msgid "Tous les périmètres de l’activité portent déjà cette tâche."
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Tous les périmètres que je lis"
+msgstr ""
+
 #: src/composants/GestionAcces.tsx
 msgid "Tout appliquer"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Tout le périmètre"
 msgstr ""
 
 #: src/composants/ListeNotifications.tsx
@@ -4130,7 +4841,13 @@ msgstr ""
 #: src/composants/EtiquettesLecteurs.tsx
 #: src/composants/ListeNotifications.tsx
 #: src/composants/RessourcesFiche.tsx
+#: src/lib/agendas-ecrits.ts
 msgid "Toute l’activité"
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+#: src/composants/SondageFormulaire.tsx
+msgid "Toute l’équipe"
 msgstr ""
 
 #: src/lib/regroupement.ts
@@ -4229,6 +4946,10 @@ msgstr ""
 msgid "Un chevron fermant suivi d’une espace place la ligne dans un encadré. Un encadré met en avant une consigne à retenir."
 msgstr ""
 
+#: src/composants/SondageFormulaire.tsx
+msgid "Un créneau est un jour, avec un horaire facultatif."
+msgstr ""
+
 #: src/composants/ImportFiches.tsx
 msgid "Un dossier source compte trop d’éléments pour les lire tous. Rangez ses fiches dans plusieurs dossiers."
 msgstr ""
@@ -4277,6 +4998,10 @@ msgstr ""
 msgid "Un seul mail pour la semaine."
 msgstr ""
 
+#: src/pages/Agenda.tsx
+msgid "Un sondage propose plusieurs créneaux, puis donne la réunion qui convient au plus grand nombre."
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Un titre commence par des dièses suivis d’une espace. Deux dièses font un titre de section, trois dièses un sous-titre."
 msgstr ""
@@ -4285,12 +5010,32 @@ msgstr ""
 msgid "Une activité que vous administrez reçoit une demande, ou une personne accepte une invitation."
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Une adresse secrète ajoute vos dates à votre agenda personnel, en lecture seule : l’agenda global de vos activités, les réunions de vos périmètres et vos convocations."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Une adresse secrète publie l’agenda global de {nom} : phases, dates clés et réunions globales. Un agenda partagé de l’association s’y abonne, sans les réunions des périmètres."
+msgstr ""
+
 #: src/lib/guide-markdown.ts
 msgid "Une arobase suivie de l’identifiant d’un périmètre le mentionne, par exemple @logistique. Une mention @groupe: suivie de la clé d’un groupe mentionne tout le groupe."
 msgstr ""
 
 #: src/lib/conflit.ts
 msgid "Une autre personne"
+msgstr ""
+
+#: src/composants/SondageFormulaire.tsx
+msgid "Une autre personne a modifié ce sondage depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification."
+msgstr ""
+
+#: src/composants/DateCleFormulaire.tsx
+msgid "Une autre personne a modifié cette date clé depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification."
+msgstr ""
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Une autre personne a modifié cette réunion depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification."
 msgstr ""
 
 #: src/lib/conflit.ts
@@ -4373,6 +5118,10 @@ msgstr ""
 msgid "Une personne vous convoque à une réunion, ou une de vos réunions change ou s’annule."
 msgstr ""
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Une réunion lie 20 tâches au plus."
+msgstr ""
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Une tâche acceptée entre parmi les tâches du périmètre. Une tâche refusée n’y entre pas."
 msgstr ""
@@ -4435,6 +5184,10 @@ msgstr ""
 msgid "Voir"
 msgstr ""
 
+#: src/composants/ReunionsDuPerimetre.tsx
+msgid "Voir l’agenda"
+msgstr ""
+
 #: src/pages/FicheEditeur.tsx
 msgid "Voir la version actuelle"
 msgstr ""
@@ -4445,6 +5198,10 @@ msgstr ""
 
 #: src/composants/FichesConnexes.tsx
 msgid "Voir les fiches masquées ({nombreMasquees})"
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Voir les noms"
 msgstr ""
 
 #: src/lib/guide-markdown.ts
@@ -4466,6 +5223,10 @@ msgstr ""
 msgid "Vos périmètres"
 msgstr ""
 
+#: src/composants/SondageDetail.tsx
+msgid "Vos réponses sont enregistrées."
+msgstr ""
+
 #: src/composants/PreferencePush.tsx
 msgid "Vos réunions"
 msgstr ""
@@ -4483,6 +5244,14 @@ msgstr ""
 msgid "Vos tâches"
 msgstr ""
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Votre abonnement n’a pas pu être lu. Rechargez la page dans un instant."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Votre adresse d’abonnement"
+msgstr ""
+
 #: src/composants/PreferenceOrganigramme.tsx
 msgid "Votre adresse dans l’organigramme"
 msgstr ""
@@ -4493,6 +5262,10 @@ msgstr ""
 
 #: src/composants/PreferenceOrganigramme.tsx
 msgid "Votre adresse peut s’afficher dans l’organigramme."
+msgstr ""
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Votre agenda dans Outlook, Google ou Apple"
 msgstr ""
 
 #: src/composants/HorsConnexion.tsx
@@ -4549,6 +5322,14 @@ msgstr ""
 
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Votre navigateur refuse de garder ce choix. Vous pouvez choisir la messagerie dans la fenêtre de chaque message."
+msgstr ""
+
+#: src/composants/ReunionDetail.tsx
+msgid "Votre réponse"
+msgstr ""
+
+#: src/composants/SondageDetail.tsx
+msgid "Votre réponse pour le créneau {creneau}"
 msgstr ""
 
 #: src/lib/espace-fichiers.ts
@@ -4630,12 +5411,24 @@ msgstr ""
 msgid "Vous consultez ce périmètre sans y être affecté·e."
 msgstr ""
 
+#: src/composants/ReunionDetail.tsx
+msgid "Vous consultez ce périmètre. Le lieu, le lien de visio et la description restent réservés à ses personnes et aux personnes convoquées."
+msgstr ""
+
 #: src/pages/Preferences.tsx
 msgid "Vous consultez l’espace vous-même."
 msgstr ""
 
 #: src/composants/GuideMarkdown.tsx
 msgid "Vous écrivez"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Vous êtes convoqué·e, {reponseConvocation}"
+msgstr ""
+
+#: src/pages/Agenda.tsx
+msgid "Vous êtes convoqué·e, sans réponse"
 msgstr ""
 
 #: src/composants/TacheCarte.tsx

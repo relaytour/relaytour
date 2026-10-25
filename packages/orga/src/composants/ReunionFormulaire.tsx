@@ -1,4 +1,5 @@
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
+import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Form, Input, Modal, Radio, Select } from 'antd'
 import { useEffect } from 'react'
 
@@ -173,6 +174,8 @@ export default function ReunionFormulaire({
   reunion: ReunionSaisie | NouvelleReunion | null
   onFermer: () => void
 }) {
+  const { t } = useLingui()
+  const longueurMaxTitre = TITRE_REUNION_MAX
   const { message } = App.useApp()
   const client = useApolloClient()
   const [form] = Form.useForm<Valeurs>()
@@ -242,10 +245,13 @@ export default function ReunionFormulaire({
   }, [form, reunion])
 
   const optionsTaches = (taches?.retroplanning ?? [])
-    .filter(t => perimetreId === null || t.perimetre.id === perimetreId)
-    .map(t => ({
-      value: t.id,
-      label: perimetreId === null ? `${t.titre} · ${t.perimetre.nom}` : t.titre,
+    .filter(tache => perimetreId === null || tache.perimetre.id === perimetreId)
+    .map(tache => ({
+      value: tache.id,
+      label:
+        perimetreId === null
+          ? `${tache.titre} · ${tache.perimetre.nom}`
+          : tache.titre,
     }))
 
   const enregistrer = async (v: Valeurs) => {
@@ -271,7 +277,7 @@ export default function ReunionFormulaire({
             ...champs,
           },
         })
-        message.success('Réunion enregistrée.')
+        message.success(t`Réunion enregistrée.`)
       } else {
         await creer({
           variables: {
@@ -286,8 +292,8 @@ export default function ReunionFormulaire({
         })
         message.success(
           champs.cible === null
-            ? 'Réunion ajoutée à l’agenda.'
-            : 'Réunion ajoutée. Les convocations partent dans deux minutes.'
+            ? t`Réunion ajoutée à l’agenda.`
+            : t`Réunion ajoutée. Les convocations partent dans deux minutes.`
         )
       }
       onFermer()
@@ -298,9 +304,8 @@ export default function ReunionFormulaire({
           relire.refetchQueries,
           texte => message.error(texte),
           {
-            relu: 'Une autre personne a modifié cette réunion depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.',
-            echec:
-              'La réunion n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.',
+            relu: t`Une autre personne a modifié cette réunion depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.`,
+            echec: t`La réunion n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.`,
           },
           onFermer
         )
@@ -313,9 +318,9 @@ export default function ReunionFormulaire({
   return (
     <Modal
       open={reunion !== null}
-      title={existante ? 'Modifier la réunion' : 'Nouvelle réunion'}
-      okText="Enregistrer"
-      cancelText="Annuler"
+      title={existante ? t`Modifier la réunion` : t`Nouvelle réunion`}
+      okText={t`Enregistrer`}
+      cancelText={t`Annuler`}
       confirmLoading={creation.loading || modification.loading}
       onOk={() => form.submit()}
       onCancel={onFermer}
@@ -328,7 +333,7 @@ export default function ReunionFormulaire({
         onFinish={v => void enregistrer(v)}
         requiredMark={false}
       >
-        <Form.Item label="Agenda" name="agenda">
+        <Form.Item label={t`Agenda`} name="agenda">
           <Select
             // Une réunion existante, ou née d'un sondage, garde son agenda : le
             // serveur exige l'agenda du sondage.
@@ -352,32 +357,35 @@ export default function ReunionFormulaire({
           />
         </Form.Item>
         <Form.Item
-          label="Titre"
+          label={t`Titre`}
           name="titre"
           rules={[
             {
               required: true,
               whitespace: true,
-              message: 'Saisissez un titre.',
+              message: t`Saisissez un titre.`,
             },
             {
               max: TITRE_REUNION_MAX,
-              message: `Le titre dépasse ${TITRE_REUNION_MAX} caractères.`,
+              message: t`Le titre dépasse ${longueurMaxTitre} caractères.`,
             },
           ]}
         >
-          <Input placeholder="Point d’étape du pôle" />
+          <Input placeholder={t`Point d’étape du pôle`} />
         </Form.Item>
         <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 16 }}>
           <Form.Item
-            label="Jour"
+            label={t({
+              message: 'Jour',
+              comment: 'Libellé : jour d’une réunion',
+            })}
             name="jour"
-            rules={[{ required: true, message: 'Choisissez un jour.' }]}
+            rules={[{ required: true, message: t`Choisissez un jour.` }]}
           >
             <Input type="date" style={{ maxWidth: 180 }} />
           </Form.Item>
           <Form.Item
-            label="Dernier jour (facultatif)"
+            label={t`Dernier jour (facultatif)`}
             name="jourFin"
             dependencies={['jour']}
             rules={[
@@ -386,7 +394,7 @@ export default function ReunionFormulaire({
                   !valeur || valeur >= String(getFieldValue('jour'))
                     ? Promise.resolve()
                     : Promise.reject(
-                        new Error('Le dernier jour suit le premier.')
+                        new Error(t`Le dernier jour suit le premier.`)
                       ),
               }),
             ]}
@@ -396,18 +404,24 @@ export default function ReunionFormulaire({
         </div>
         <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 16 }}>
           <Form.Item
-            label="Début"
+            label={t({
+              message: 'Début',
+              comment: 'Libellé : heure de début d’une réunion',
+            })}
             name="heureDebut"
-            rules={[{ required: true, message: 'Choisissez une heure.' }]}
+            rules={[{ required: true, message: t`Choisissez une heure.` }]}
           >
             <Input type="time" style={{ maxWidth: 130 }} />
           </Form.Item>
           <Form.Item
-            label="Fin"
+            label={t({
+              message: 'Fin',
+              comment: 'Libellé : heure de fin d’une réunion',
+            })}
             name="heureFin"
             dependencies={['heureDebut', 'jour', 'jourFin']}
             rules={[
-              { required: true, message: 'Choisissez une heure.' },
+              { required: true, message: t`Choisissez une heure.` },
               ({ getFieldValue }) => ({
                 // Sur plusieurs jours, l'heure de fin vaut pour le dernier jour.
                 validator: (_regle, valeur?: string) =>
@@ -417,7 +431,7 @@ export default function ReunionFormulaire({
                   valeur > String(getFieldValue('heureDebut'))
                     ? Promise.resolve()
                     : Promise.reject(
-                        new Error('L’heure de fin suit l’heure de début.')
+                        new Error(t`L’heure de fin suit l’heure de début.`)
                       ),
               }),
             ]}
@@ -425,32 +439,32 @@ export default function ReunionFormulaire({
             <Input type="time" style={{ maxWidth: 130 }} />
           </Form.Item>
         </div>
-        <Form.Item label="Lieu (facultatif)" name="lieu">
-          <Input placeholder="Salle des associations" />
+        <Form.Item label={t`Lieu (facultatif)`} name="lieu">
+          <Input placeholder={t`Salle des associations`} />
         </Form.Item>
         <Form.Item
-          label="Lien de visio (facultatif)"
+          label={t`Lien de visio (facultatif)`}
           name="lienVisio"
           rules={[
             {
               type: 'url',
-              message: 'Saisissez une adresse complète, en https://.',
+              message: t`Saisissez une adresse complète, en https://.`,
             },
           ]}
         >
           <Input placeholder="https://" inputMode="url" />
         </Form.Item>
-        <Form.Item label="Description (facultative)" name="description">
+        <Form.Item label={t`Description (facultative)`} name="description">
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 8 }} />
         </Form.Item>
         <Form.Item
-          label="Tâches liées (facultatives)"
+          label={t`Tâches liées (facultatives)`}
           name="tacheIds"
           rules={[
             {
               type: 'array',
               max: 20,
-              message: 'Une réunion lie 20 tâches au plus.',
+              message: t`Une réunion lie 20 tâches au plus.`,
             },
           ]}
         >
@@ -458,19 +472,25 @@ export default function ReunionFormulaire({
             mode="multiple"
             allowClear
             optionFilterProp="label"
-            placeholder="Choisir des tâches de la période"
+            placeholder={t`Choisir des tâches de la période`}
             options={optionsTaches}
           />
         </Form.Item>
-        <Form.Item label="Personnes convoquées" name="cible">
+        <Form.Item label={t`Personnes convoquées`} name="cible">
           <Radio.Group
             options={[
               ...(perimetreId === null
                 ? []
-                : [{ value: 'PERIMETRE', label: 'Tout le périmètre' }]),
-              { value: 'EQUIPE', label: 'Toute l’équipe' },
-              { value: 'CHOIX', label: 'Des personnes choisies' },
-              { value: 'AUCUNE', label: 'Personne' },
+                : [{ value: 'PERIMETRE', label: t`Tout le périmètre` }]),
+              { value: 'EQUIPE', label: t`Toute l’équipe` },
+              { value: 'CHOIX', label: t`Des personnes choisies` },
+              {
+                value: 'AUCUNE',
+                label: t({
+                  message: 'Personne',
+                  comment: 'Aucune personne convoquée',
+                }),
+              },
             ]}
           />
         </Form.Item>
@@ -482,25 +502,27 @@ export default function ReunionFormulaire({
                 required: true,
                 type: 'array',
                 min: 1,
-                message: 'Choisissez au moins une personne.',
+                message: t`Choisissez au moins une personne.`,
               },
             ]}
           >
             <Select
               mode="multiple"
               optionFilterProp="label"
-              placeholder="Choisir des personnes de l’équipe"
+              placeholder={t`Choisir des personnes de l’équipe`}
               options={(convocables?.personnesConvocables ?? []).map(p => ({
                 value: p.personneId,
-                label: p.duPerimetre ? `${p.nom} · du périmètre` : p.nom,
+                label: p.duPerimetre ? `${p.nom} · ${t`du périmètre`}` : p.nom,
               }))}
             />
           </Form.Item>
         )}
         {cible !== 'AUCUNE' && (
           <p className="rt-note" style={{ marginTop: -8 }}>
-            Chaque personne convoquée reçoit un mail avec la réunion à ajouter à
-            son agenda, et répond dans l’espace organisateur.
+            <Trans>
+              Chaque personne convoquée reçoit un mail avec la réunion à ajouter
+              à son agenda, et répond dans l’espace organisateur.
+            </Trans>
           </p>
         )}
       </Form>

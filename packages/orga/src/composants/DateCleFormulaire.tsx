@@ -1,4 +1,5 @@
 import { useApolloClient, useMutation } from '@apollo/client/react'
+import { useLingui } from '@lingui/react/macro'
 import { App, Form, Input, Modal } from 'antd'
 import { useEffect } from 'react'
 
@@ -82,6 +83,8 @@ export default function DateCleFormulaire({
   dateCle: DateCleSaisie | 'nouvelle' | null
   onFermer: () => void
 }) {
+  const { t } = useLingui()
+  const longueurMaxTitre = TITRE_DATE_CLE_MAX
   const { message } = App.useApp()
   const client = useApolloClient()
   const [form] = Form.useForm<Valeurs>()
@@ -113,7 +116,7 @@ export default function DateCleFormulaire({
     try {
       if (dateCle === 'nouvelle') {
         await creer({ variables: { editionId, ...champs } })
-        message.success('Date clé ajoutée.')
+        message.success(t`Date clé ajoutée.`)
       } else if (dateCle) {
         await modifier({
           variables: {
@@ -122,7 +125,7 @@ export default function DateCleFormulaire({
             ...champs,
           },
         })
-        message.success('Date clé enregistrée.')
+        message.success(t`Date clé enregistrée.`)
       }
       onFermer()
     } catch (e) {
@@ -132,9 +135,8 @@ export default function DateCleFormulaire({
           relire.refetchQueries,
           texte => message.error(texte),
           {
-            relu: 'Une autre personne a modifié cette date clé depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.',
-            echec:
-              'La date clé n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.',
+            relu: t`Une autre personne a modifié cette date clé depuis votre lecture. L’agenda affiche maintenant sa version : reprenez votre modification.`,
+            echec: t`La date clé n’a pas pu être rechargée. Votre saisie reste à l’écran : réessayez dans un instant.`,
           },
           onFermer
         )
@@ -148,10 +150,10 @@ export default function DateCleFormulaire({
     <Modal
       open={dateCle !== null}
       title={
-        dateCle === 'nouvelle' ? 'Nouvelle date clé' : 'Modifier la date clé'
+        dateCle === 'nouvelle' ? t`Nouvelle date clé` : t`Modifier la date clé`
       }
-      okText="Enregistrer"
-      cancelText="Annuler"
+      okText={t`Enregistrer`}
+      cancelText={t`Annuler`}
       confirmLoading={creation.loading || modification.loading}
       onOk={() => form.submit()}
       onCancel={onFermer}
@@ -165,32 +167,35 @@ export default function DateCleFormulaire({
         requiredMark={false}
       >
         <Form.Item
-          label="Titre"
+          label={t`Titre`}
           name="titre"
           rules={[
             {
               required: true,
               whitespace: true,
-              message: 'Saisissez un titre.',
+              message: t`Saisissez un titre.`,
             },
             {
               max: TITRE_DATE_CLE_MAX,
-              message: `Le titre dépasse ${TITRE_DATE_CLE_MAX} caractères.`,
+              message: t`Le titre dépasse ${longueurMaxTitre} caractères.`,
             },
           ]}
         >
-          <Input placeholder="Dépôt du dossier en préfecture" />
+          <Input placeholder={t`Dépôt du dossier en préfecture`} />
         </Form.Item>
         <div style={{ display: 'flex', flexWrap: 'wrap', columnGap: 16 }}>
           <Form.Item
-            label="Jour"
+            label={t({
+              message: 'Jour',
+              comment: 'Libellé : jour d’une date clé',
+            })}
             name="jour"
-            rules={[{ required: true, message: 'Choisissez un jour.' }]}
+            rules={[{ required: true, message: t`Choisissez un jour.` }]}
           >
             <Input type="date" style={{ maxWidth: 200 }} />
           </Form.Item>
           <Form.Item
-            label="Dernier jour (facultatif)"
+            label={t`Dernier jour (facultatif)`}
             name="jourFin"
             dependencies={['jour']}
             rules={[
@@ -199,7 +204,7 @@ export default function DateCleFormulaire({
                   !valeur || valeur >= String(getFieldValue('jour'))
                     ? Promise.resolve()
                     : Promise.reject(
-                        new Error('Le dernier jour suit le premier.')
+                        new Error(t`Le dernier jour suit le premier.`)
                       ),
               }),
             ]}
@@ -207,7 +212,7 @@ export default function DateCleFormulaire({
             <Input type="date" style={{ maxWidth: 200 }} />
           </Form.Item>
         </div>
-        <Form.Item label="Description (facultative)" name="description">
+        <Form.Item label={t`Description (facultative)`} name="description">
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 8 }} />
         </Form.Item>
       </Form>
