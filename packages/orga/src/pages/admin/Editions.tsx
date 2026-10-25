@@ -22,7 +22,7 @@ import { useActivite } from '../../lib/activite'
 import { graphql } from '../../gql'
 import type { EditionsQuery, StatutEdition } from '../../gql/graphql'
 import { dateCourte, messageErreur } from '../../lib/erreurs'
-import { langueActive } from '../../lib/langue'
+import { majusculeInitiale } from '../../lib/langue'
 import { EDITION_COURANTE, EDITIONS } from '../../lib/requetes'
 
 const CREER = graphql(`
@@ -79,8 +79,7 @@ const statuts = (
     couleur: 'green',
   },
   ARCHIVEE: {
-    libelle:
-      archivee.charAt(0).toLocaleUpperCase(langueActive()) + archivee.slice(1),
+    libelle: majusculeInitiale(archivee),
     couleur: 'default',
   },
 })

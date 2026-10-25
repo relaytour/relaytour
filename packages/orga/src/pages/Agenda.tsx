@@ -54,7 +54,7 @@ import { messageErreur } from '../lib/erreurs'
 import { ecrireRegroupement, lireRegroupement } from '../lib/regroupement'
 import { EDITION_COURANTE, PERIMETRES } from '../lib/requetes'
 import { libelleMois } from '../lib/retroplanning'
-import { langueActive } from '../lib/langue'
+import { comparerTextes } from '../lib/langue'
 
 const AGENDA = graphql(`
   query Agenda($editionId: ID!, $echeances: Boolean) {
@@ -310,7 +310,7 @@ export default function Agenda() {
         (a.reunion?.heureDebut ?? '').localeCompare(
           b.reunion?.heureDebut ?? ''
         ) ||
-        a.titre.localeCompare(b.titre, langueActive())
+        comparerTextes(a.titre, b.titre)
     )
   }, [elements, reunions])
   const groupes = useMemo(

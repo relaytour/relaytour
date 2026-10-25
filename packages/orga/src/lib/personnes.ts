@@ -1,5 +1,6 @@
-/** Les initiales d'un nom : la première lettre des deux premiers mots. */
 import { langueActive } from './langue'
+
+/** Les initiales d'un nom : la première lettre des deux premiers mots. */
 export function initiales(nom: string): string {
   const mots = nom.trim().split(/\s+/).filter(Boolean)
   return mots
