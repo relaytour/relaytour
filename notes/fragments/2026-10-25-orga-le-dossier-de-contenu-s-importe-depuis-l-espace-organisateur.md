@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.22.0
 fr:
   titre: >-
     Le dossier de contenu s’importe depuis l’espace organisateur

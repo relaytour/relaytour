@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.22.0
 fr:
   titre: >-
     Plusieurs installations partagent une adresse de retour pour l'espace de fichiers

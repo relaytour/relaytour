@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.22.0
 fr:
   titre: >-
     Une activité vide peut partir d’un modèle d’événement multisports

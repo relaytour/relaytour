@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.22.0
 fr:
   titre: >-
     Une nouvelle édition reprend les tâches de la précédente ou les tâches types

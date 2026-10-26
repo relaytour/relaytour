@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.22.0
 fr:
   titre: >-
     L’import d’une liste de bénévoles reconnaît les colonnes en anglais

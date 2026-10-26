@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.22.0
 fr:
   titre: >-
     L’espace organisateur existe en anglais
