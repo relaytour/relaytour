@@ -24,13 +24,14 @@ Un exploitant qui sert plusieurs installations inscrit en général une seule ap
 - Au retour, l'installation n'accepte qu'un état de la forme qu'elle émet : son étiquette, un point, puis l'aléa. Sans adresse commune, elle n'accepte que l'aléa seul.
 - Le logiciel ne fournit pas le relais. L'exploitant place à l'adresse commune un relais qui lit l'étiquette dans `state`. Le relais redirige ensuite vers `/medias/espace-fichiers/retour/<fournisseur>` de l'installation, avec la requête reçue intacte.
 - Le relais tire l'adresse de l'installation d'un gabarit fixe ou d'une liste qu'il tient lui-même. Il ne prend jamais une adresse dans la requête qu'il reçoit.
+- Le retour doit atteindre l'origine canonique de l'installation, où vit la session de l'admin. Pour une installation sur un domaine personnalisé, le relais y mène directement, ou par une redirection de l'adresse standard qui garde le chemin et la requête. L'exploitant fournit cette redirection.
 - Sans ces variables, rien ne change : une installation seule garde son adresse de retour sous son origine.
 - Nextcloud n'est pas concerné : sa connexion (Login Flow v2) n'utilise pas d'adresse de retour.
 
 ## Conséquences
 
 - Chaque application de fournisseur n'inscrit qu'une adresse de retour par fournisseur. La limite de Microsoft et le geste à chaque installation disparaissent.
-- Le relais ne garde aucune donnée et ne connaît aucun secret. Il voit passer un code et un état, et ne peut rien en faire : l'échange du code exige le secret de l'application et le vérificateur PKCE, que seule l'installation détient.
+- Le relais ne garde aucune donnée et ne détient aucun secret. Le code et l'état traversent le relais. L'échange du code exige pourtant le secret de l'application et le vérificateur PKCE, que seule l'installation détient.
 - Un code renvoyé à une autre installation échoue : cette installation ne trouve pas l'état dans son Valkey. L'étiquette ne donne aucun droit, elle ne fait que désigner l'installation.
 - Le relais devient un point de passage commun. Une panne du relais empêche les nouvelles connexions de toutes les installations qui en dépendent. Les connexions déjà établies continuent, car le renouvellement des jetons ne passe pas par l'adresse de retour.
 - Une organisation qui inscrit sa propre application chez un fournisseur y inscrit l'adresse commune de son installation, ou une installation sans adresse commune.

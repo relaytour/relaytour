@@ -12,6 +12,16 @@ const origine = optionnelle
   })
   .transform(s => s?.replace(/\/$/, ''))
 
+function adresseRetourValide(s: string): boolean {
+  if (/[\s?#@]/.test(s)) return false
+  try {
+    const u = new URL(s)
+    return u.protocol === 'https:' && u.hostname !== ''
+  } catch {
+    return false
+  }
+}
+
 // Variables lues hors de ce schéma, volontairement : DOMAINES_COURRIEL_AUTORISES
 // (lib/contenu.ts) et CONTENU_ORGA (scripts orga-*). Elles servent à des scripts qui
 // tournent sans base ni `.env` complet, comme `orga:valider` en CI (invariant 12).
@@ -184,12 +194,15 @@ const EnvSchema = z
     // applications de fournisseur (ADR 0051). Le serveur y ajoute le segment du
     // fournisseur (`/sharepoint`, `/google`, `/dropbox`). Vide : l'adresse de retour
     // est celle de l'installation, sous ORIGINE_ORGA.
+    // Le fournisseur compare l'adresse caractère par caractère : le démarrage refuse
+    // une adresse sans hôte, avec identifiants, requête ou fragment, et retire les
+    // barres finales.
     ESPACE_FICHIERS_RETOUR: optionnelle
       .refine(
-        s => s === undefined || /^https:\/\/[^\s?#]+$/.test(s),
-        'ESPACE_FICHIERS_RETOUR : adresse https sans requête attendue'
+        s => s === undefined || adresseRetourValide(s),
+        'ESPACE_FICHIERS_RETOUR : adresse https avec un hôte, sans identifiants, requête ni fragment'
       )
-      .transform(s => s?.replace(/\/$/, '')),
+      .transform(s => s?.replace(/\/+$/, '')),
     // Étiquette de l'installation, placée devant l'état de chaque connexion : le
     // relais de l'adresse commune la lit pour renvoyer le retour à l'installation.
     ESPACE_FICHIERS_RETOUR_ETIQUETTE: optionnelle.refine(
@@ -276,8 +289,8 @@ const EnvSchema = z
           'Un espace de fichiers exige CLE_CHIFFREMENT_ESPACE_FICHIERS, qui chiffre ses jetons en base.',
       })
     }
-    // Sans étiquette, le relais de l'adresse commune ne saurait pas à quelle
-    // installation rendre le retour (ADR 0051).
+    // Sans étiquette, le relais de l'adresse commune ne trouverait pas l'installation
+    // vers laquelle rediriger le retour (ADR 0051).
     if (
       v.ESPACE_FICHIERS_RETOUR !== undefined &&
       v.ESPACE_FICHIERS_RETOUR_ETIQUETTE === undefined

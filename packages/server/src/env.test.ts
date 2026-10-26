@@ -219,7 +219,7 @@ describe('resoudreEnv', () => {
   })
 
   it('demande l’étiquette avec l’adresse de retour commune', () => {
-    const retour = 'https://retour.exemple.org/espace-fichiers/'
+    const retour = 'https://retour.exemple.org/espace-fichiers//'
     expect(() =>
       resoudreEnv({ ...BASE, ESPACE_FICHIERS_RETOUR: retour })
     ).toThrow(/ESPACE_FICHIERS_RETOUR_ETIQUETTE/)
@@ -233,10 +233,14 @@ describe('resoudreEnv', () => {
     )
   })
 
-  it('refuse une adresse de retour commune en http ou avec une requête', () => {
+  it('refuse une adresse de retour commune sans hôte, en http, avec identifiants ou requête', () => {
     for (const ESPACE_FICHIERS_RETOUR of [
       'http://retour.exemple.org',
       'https://retour.exemple.org/?a=1',
+      'https://retour.exemple.org/#a',
+      'https:///',
+      'https://utilisateur@retour.exemple.org',
+      'https://retour.exemple.org/espace fichiers',
     ]) {
       expect(() =>
         resoudreEnv({

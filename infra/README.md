@@ -148,9 +148,9 @@ retour.exemple.org {
 ```
 
 - Le site ne porte pas de directive `log` : Caddy ne garde alors aucun journal d'accès, et le code reçu du fournisseur n'est écrit nulle part.
-- Le relais ne connaît aucun secret. Le code ne s'échange qu'avec le secret de l'application et le vérificateur PKCE, gardés par l'installation.
+- Le relais ne détient aucun secret. Le code ne s'échange qu'avec le secret de l'application et le vérificateur PKCE, gardés par l'installation.
 - Une installation refuse un état qui ne porte pas son étiquette. Une connexion commencée avant le changement d'adresse échoue donc au retour : l'admin la relance.
-- Une installation sur un domaine personnalisé garde son sous-domaine standard, qui redirige vers l'origine canonique avec la requête.
+- Le retour doit atteindre l'origine canonique de l'installation, où vit la session de l'admin. Pour une installation sur un domaine personnalisé, vous fournissez une redirection de `<étiquette>.exemple.org` vers ce domaine, qui garde le chemin et la requête. Sans elle, le retour arrive sans session et la connexion échoue.
 
 ## Adapter la pile à votre hébergement
 

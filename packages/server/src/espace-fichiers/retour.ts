@@ -23,7 +23,7 @@ const ALEA_ETAT = /^[A-Za-z0-9_-]{43}$/
 
 /**
  * L'étiquette que l'installation place devant ses états. Elle ne sert qu'avec
- * l'adresse de retour commune : son relais la lit pour rendre le retour à
+ * l'adresse de retour commune : son relais la lit pour rediriger le retour vers
  * l'installation (ADR 0051).
  */
 export function etiquetteRetour(env: {
