@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.22.0
 fr:
   titre: >-
     Mon espace guide les premiers pas d’une activité
