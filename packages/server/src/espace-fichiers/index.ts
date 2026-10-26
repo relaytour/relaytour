@@ -32,6 +32,12 @@ import {
   type SecretNextcloud,
 } from './nextcloud.ts'
 import {
+  adresseRetour,
+  composerEtat,
+  etatBienForme,
+  etiquetteRetour,
+} from './retour.ts'
+import {
   espaceSharePoint,
   rafraichir,
   type ConfigurationMicrosoft,
@@ -48,8 +54,7 @@ import {
 // fournisseurs, ouverture de l'espace connecté et jetons d'accès. L'environnement
 // se lit à la demande : le schéma s'imprime sans .env (invariant 12).
 
-/** Chemin des routes de l'espace, sous /medias/ que le proxy relaie déjà vers l'API. */
-export const PREFIXE_ROUTES = '/medias/espace-fichiers'
+export { PREFIXE_ROUTES } from './retour.ts'
 
 export async function cleDeChiffrement(): Promise<Buffer | null> {
   const { env } = await import('../env.ts')
@@ -69,7 +74,7 @@ export async function configurationMicrosoft(): Promise<ConfigurationMicrosoft |
     clientId: env.MICROSOFT_CLIENT_ID,
     clientSecret: env.MICROSOFT_CLIENT_SECRET,
     locataire: env.MICROSOFT_LOCATAIRE,
-    retour: `${env.ORIGINE_ORGA}${PREFIXE_ROUTES}/retour/sharepoint`,
+    retour: adresseRetour(env, 'sharepoint'),
   }
 }
 
@@ -85,7 +90,7 @@ export async function configurationGoogle(): Promise<ConfigurationGoogle | null>
   return {
     clientId: env.GOOGLE_CLIENT_ID,
     clientSecret: env.GOOGLE_CLIENT_SECRET,
-    retour: `${env.ORIGINE_ORGA}${PREFIXE_ROUTES}/retour/google`,
+    retour: adresseRetour(env, 'google'),
   }
 }
 
@@ -101,7 +106,7 @@ export async function configurationDropbox(): Promise<ConfigurationDropbox | nul
   return {
     clientId: env.DROPBOX_CLIENT_ID,
     clientSecret: env.DROPBOX_CLIENT_SECRET,
-    retour: `${env.ORIGINE_ORGA}${PREFIXE_ROUTES}/retour/dropbox`,
+    retour: adresseRetour(env, 'dropbox'),
   }
 }
 
@@ -564,12 +569,15 @@ const DUREE_ETAT_S = 10 * 60
 // Valkey, sur le chemin d'une requête, répond en une seconde ou échoue (invariant 17).
 const DELAI_VALKEY_MS = 1_000
 const cleEtat = (etat: string) => `espace-fichiers:etat:${etat}`
-
 /** Prépare une connexion : un état à usage unique et le défi PKCE qui l'accompagne. */
 export async function commencerConnexion(
   donnees: Omit<EtatConnexion, 'verificateur'>
 ): Promise<{ etat: string; defi: string }> {
-  const etat = randomBytes(32).toString('base64url')
+  const { env } = await import('../env.ts')
+  const etat = composerEtat(
+    randomBytes(32).toString('base64url'),
+    etiquetteRetour(env)
+  )
   const verificateur = randomBytes(32).toString('base64url')
   const { connection } = await import('../jobs/queues.ts')
   await avecDelai(
@@ -653,7 +661,8 @@ export async function oublierConnexionNextcloud(
 export async function reprendreConnexion(
   etat: string
 ): Promise<EtatConnexion | null> {
-  if (!/^[A-Za-z0-9_-]{43}$/.test(etat)) return null
+  const { env } = await import('../env.ts')
+  if (!etatBienForme(etat, etiquetteRetour(env))) return null
   const { connection } = await import('../jobs/queues.ts')
   const brut = await avecDelai(
     connection.getdel(cleEtat(etat)),

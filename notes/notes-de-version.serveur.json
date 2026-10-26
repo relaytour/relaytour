@@ -8,6 +8,20 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-26-serveur-plusieurs-installations-partagent-une-adresse-de-retour-pour",
+          "date": "2026-10-26",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "Plusieurs installations partagent une adresse de retour pour l'espace de fichiers",
+            "texte": "Si vous servez plusieurs installations avec les mêmes applications chez Microsoft, Google et Dropbox, vous pouvez leur donner une adresse de retour commune. Vous n'inscrivez alors plus chaque installation chez chaque fournisseur. Chaque installation place son étiquette devant l'état de la connexion, et votre relais redirige le retour vers elle. Sans réglage, rien ne change.",
+            "migration": null
+          },
+          "en": null
+        },
+        {
           "id": "2026-10-25-serveur-les-mails-desactivables-se-desabonnent-en-un-clic",
           "date": "2026-10-25",
           "type": "fonctionnalite",

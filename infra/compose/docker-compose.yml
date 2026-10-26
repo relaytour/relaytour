@@ -58,6 +58,8 @@ x-environnement-app: &environnement-app
   DROPBOX_CLIENT_ID: '${DROPBOX_CLIENT_ID:-}'
   DROPBOX_CLIENT_SECRET: '${DROPBOX_CLIENT_SECRET:-}'
   NEXTCLOUD_HOTES: '${NEXTCLOUD_HOTES:-}'
+  ESPACE_FICHIERS_RETOUR: '${ESPACE_FICHIERS_RETOUR:-}'
+  ESPACE_FICHIERS_RETOUR_ETIQUETTE: '${ESPACE_FICHIERS_RETOUR_ETIQUETTE:-}'
   # Les exports d'organisation s'écrivent dans le volume exports (ADR 0008).
   EXPORTS_DIR: /exports
 

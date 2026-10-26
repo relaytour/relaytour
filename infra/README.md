@@ -120,11 +120,37 @@ Google Drive se connecte de deux façons :
 
 Laissez l'API et le worker sortir en HTTPS vers `www.googleapis.com`, `oauth2.googleapis.com` et `accounts.google.com`.
 
-Dropbox se connecte par le compte d'un admin. Créez une application dans la console des développeurs Dropbox, avec l'accès « Full Dropbox ». Son adresse de retour est `<ORIGINE_ORGA>/medias/espace-fichiers/retour/dropbox`. Cochez les permissions `account_info.read`, `files.metadata.read`, `files.content.read` et `files.content.write`. Pour la vérification des accès (ADR 0044), cochez aussi `sharing.read`, puis `sharing.write` pour la gestion des accès : un admin de l'organisation les demande par une reconnexion. Renseignez `DROPBOX_CLIENT_ID` (la clé de l'application) et `DROPBOX_CLIENT_SECRET`. Une application en mode « développement » accepte cinquante comptes au plus ; au-delà, elle demande une validation à Dropbox. Laissez l'API et le worker sortir en HTTPS vers `api.dropboxapi.com` et `content.dropboxapi.com`.
+Dropbox se connecte par le compte d'un admin. Créez une application dans la console des développeurs Dropbox, avec l'accès « Full Dropbox ». Son adresse de retour est `<ORIGINE_ORGA>/medias/espace-fichiers/retour/dropbox`. Cochez les permissions `account_info.read`, `files.metadata.read`, `files.content.read` et `files.content.write`. Pour la vérification des accès (ADR 0044), cochez aussi `sharing.read`, puis `sharing.write` pour la gestion des accès : un admin de l'organisation les demande par une reconnexion. Renseignez `DROPBOX_CLIENT_ID` (la clé de l'application) et `DROPBOX_CLIENT_SECRET`. Une application en mode « développement » accepte 500 comptes au plus. Dès le cinquantième compte lié, Dropbox laisse deux semaines pour obtenir le statut « production », sans quoi plus aucun compte ne se lie. Laissez l'API et le worker sortir en HTTPS vers `api.dropboxapi.com` et `content.dropboxapi.com`.
 
 Nextcloud ne demande aucune application à inscrire : chaque association héberge le sien, et un admin de l'organisation saisit son adresse. Renseignez dans `NEXTCLOUD_HOTES` les hôtes admis, séparés par des virgules. La valeur `*` admet tout hôte en https, sans port, dont les adresses sont publiques : le serveur refuse une adresse privée, locale ou réservée, au moment même de la connexion. Un hôte nommé (`cloud.exemple.org`, `nuage.lan:8443`) est admis tel quel, même sur votre réseau privé : nommez seulement des Nextcloud de confiance. L'API et le worker sortent alors en HTTPS vers ces hôtes. L'admin se connecte avec son compte Nextcloud, qui crée un mot de passe d'application pour Relaytour.
 
 Les routes de l'espace de fichiers vivent sous `/medias/`, que le `Caddyfile` d'exemple relaie déjà vers l'API. Le secret client et la clé de chiffrement ne quittent pas le `.env`. Un secret client Microsoft expire : notez sa date et remplacez-le avant.
+
+#### Plusieurs installations, une adresse de retour
+
+Un exploitant qui sert plusieurs installations avec les mêmes applications de fournisseur peut leur donner une adresse de retour commune (ADR 0051). Chaque application n'inscrit alors qu'une adresse par fournisseur, au lieu d'une adresse par installation.
+
+1. Choisissez l'adresse commune, par exemple `https://retour.exemple.org/espace-fichiers`. Inscrivez chez chaque fournisseur cette adresse suivie de `/sharepoint`, `/google` ou `/dropbox`.
+2. Dans le `.env` de chaque installation, renseignez `ESPACE_FICHIERS_RETOUR` avec l'adresse commune, et `ESPACE_FICHIERS_RETOUR_ETIQUETTE` avec une étiquette propre à l'installation. L'étiquette s'écrit en minuscules, chiffres et tirets, comme un nom d'hôte.
+3. Placez à l'adresse commune un relais qui lit l'étiquette au début de `state`, puis renvoie la personne à son installation avec la requête intacte. Le relais tire l'adresse de l'installation d'un gabarit ou d'une liste fixe, jamais de la requête reçue.
+
+Avec des installations servies sous `<étiquette>.exemple.org`, ce site Caddy suffit :
+
+```caddyfile
+retour.exemple.org {
+	@retour {
+		path_regexp fournisseur ^/espace-fichiers/(sharepoint|google|dropbox)$
+		vars_regexp etat {query.state} ^([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)\.[A-Za-z0-9_-]{43}$
+	}
+	redir @retour https://{re.etat.1}.exemple.org/medias/espace-fichiers/retour/{re.fournisseur.1}?{query} 302
+	respond 404
+}
+```
+
+- Le site ne porte pas de directive `log` : Caddy ne garde alors aucun journal d'accès, et le code reçu du fournisseur n'est écrit nulle part.
+- Le relais ne détient aucun secret. Le code ne s'échange qu'avec le secret de l'application et le vérificateur PKCE, gardés par l'installation.
+- Une installation refuse un état qui ne porte pas son étiquette. Une connexion commencée avant le changement d'adresse échoue donc au retour : l'admin la relance.
+- Le retour doit atteindre l'origine canonique de l'installation, où vit la session de l'admin. Pour une installation sur un domaine personnalisé, vous fournissez une redirection de `<étiquette>.exemple.org` vers ce domaine, qui garde le chemin et la requête. Sans elle, le retour arrive sans session et la connexion échoue.
 
 ## Adapter la pile à votre hébergement
 
