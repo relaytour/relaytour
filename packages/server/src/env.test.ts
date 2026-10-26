@@ -218,6 +218,49 @@ describe('resoudreEnv', () => {
     )
   })
 
+  it('demande l’étiquette avec l’adresse de retour commune', () => {
+    const retour = 'https://retour.exemple.org/espace-fichiers/'
+    expect(() =>
+      resoudreEnv({ ...BASE, ESPACE_FICHIERS_RETOUR: retour })
+    ).toThrow(/ESPACE_FICHIERS_RETOUR_ETIQUETTE/)
+    const env = resoudreEnv({
+      ...BASE,
+      ESPACE_FICHIERS_RETOUR: retour,
+      ESPACE_FICHIERS_RETOUR_ETIQUETTE: 'club',
+    })
+    expect(env.ESPACE_FICHIERS_RETOUR).toBe(
+      'https://retour.exemple.org/espace-fichiers'
+    )
+  })
+
+  it('refuse une adresse de retour commune en http ou avec une requête', () => {
+    for (const ESPACE_FICHIERS_RETOUR of [
+      'http://retour.exemple.org',
+      'https://retour.exemple.org/?a=1',
+    ]) {
+      expect(() =>
+        resoudreEnv({
+          ...BASE,
+          ESPACE_FICHIERS_RETOUR,
+          ESPACE_FICHIERS_RETOUR_ETIQUETTE: 'club',
+        })
+      ).toThrow(/ESPACE_FICHIERS_RETOUR/)
+    }
+  })
+
+  it('refuse une étiquette qui ne serait pas un nom d’hôte', () => {
+    for (const ESPACE_FICHIERS_RETOUR_ETIQUETTE of [
+      'Club',
+      'club.x',
+      '-club',
+      'a'.repeat(64),
+    ]) {
+      expect(() =>
+        resoudreEnv({ ...BASE, ESPACE_FICHIERS_RETOUR_ETIQUETTE })
+      ).toThrow(/ESPACE_FICHIERS_RETOUR_ETIQUETTE/)
+    }
+  })
+
   it('ouvre Dropbox avec ses deux valeurs et la clé de chiffrement', () => {
     expect(() =>
       resoudreEnv({ ...BASE, DROPBOX_CLIENT_SECRET: 'secret' })

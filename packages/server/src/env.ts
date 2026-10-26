@@ -180,6 +180,22 @@ const EnvSchema = z
           l.every(h => h === '*' || /^[a-z0-9.-]+(:\d{1,5})?$/.test(h)),
         'NEXTCLOUD_HOTES : « * » ou des noms d’hôte séparés par des virgules'
       ),
+    // Adresse de retour commune à plusieurs installations qui partagent les mêmes
+    // applications de fournisseur (ADR 0051). Le serveur y ajoute le segment du
+    // fournisseur (`/sharepoint`, `/google`, `/dropbox`). Vide : l'adresse de retour
+    // est celle de l'installation, sous ORIGINE_ORGA.
+    ESPACE_FICHIERS_RETOUR: optionnelle
+      .refine(
+        s => s === undefined || /^https:\/\/[^\s?#]+$/.test(s),
+        'ESPACE_FICHIERS_RETOUR : adresse https sans requête attendue'
+      )
+      .transform(s => s?.replace(/\/$/, '')),
+    // Étiquette de l'installation, placée devant l'état de chaque connexion : le
+    // relais de l'adresse commune la lit pour renvoyer le retour à l'installation.
+    ESPACE_FICHIERS_RETOUR_ETIQUETTE: optionnelle.refine(
+      s => s === undefined || /^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$/.test(s),
+      'ESPACE_FICHIERS_RETOUR_ETIQUETTE : minuscules, chiffres et tirets, 63 caractères au plus'
+    ),
     // Liste des modes d'emploi, liée depuis le menu du compte et le mail
     // d'invitation : un dossier ou une page. Les pages des rôles se placent dans
     // le même dossier. Un hébergeur qui modifie Relaytour y indique les siens.
@@ -258,6 +274,19 @@ const EnvSchema = z
         path: ['CLE_CHIFFREMENT_ESPACE_FICHIERS'],
         message:
           'Un espace de fichiers exige CLE_CHIFFREMENT_ESPACE_FICHIERS, qui chiffre ses jetons en base.',
+      })
+    }
+    // Sans étiquette, le relais de l'adresse commune ne saurait pas à quelle
+    // installation rendre le retour (ADR 0051).
+    if (
+      v.ESPACE_FICHIERS_RETOUR !== undefined &&
+      v.ESPACE_FICHIERS_RETOUR_ETIQUETTE === undefined
+    ) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['ESPACE_FICHIERS_RETOUR_ETIQUETTE'],
+        message:
+          'ESPACE_FICHIERS_RETOUR exige ESPACE_FICHIERS_RETOUR_ETIQUETTE, l’étiquette de l’installation.',
       })
     }
     if (
