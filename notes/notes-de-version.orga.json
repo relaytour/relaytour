@@ -5,6 +5,29 @@
   "version": "0.22.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-27-orga-le-favicon-par-defaut-se-voit-dans-un-onglet-sombre",
+          "date": "2026-10-27",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le favicon par défaut se voit dans un onglet sombre",
+            "texte": "Sans favicon déclaré par votre organisation, l'onglet de l'espace organisateur affiche le pictogramme de Relaytour sur un cercle blanc. Vous le repérez ainsi dans un navigateur au thème sombre.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The default favicon stands out in a dark tab",
+            "texte": "When your organization declares no favicon, the organizer space tab shows the Relaytour symbol on a white circle. You can spot it in a browser with a dark theme.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.22.0",
       "notes": [
         {
