@@ -3,6 +3,7 @@ cible: serveur
 type: fonctionnalite
 audience: public
 etat: prevu
+version: 0.23.0
 fr:
   titre: >-
     L'administration de l'installation peut restreindre les modules d'une organisation

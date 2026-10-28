@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.23.0
 fr:
   titre: >-
     Les tâches d'un périmètre se rangent par phase par défaut, dans des groupes repliables
