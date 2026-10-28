@@ -43,7 +43,9 @@ Un hébergeur peut aussi vouloir proposer une offre sans certains écrans, par e
 
 - Le menu n'affiche pas son écran. Une adresse directe redirige vers « Mon espace » avec un message.
 - Le serveur refuse ses requêtes et ses mutations avec le code `MODULE_INACTIF`.
-- Ses pages publiques (appel à bénévoles, espace bénévole) répondent comme pour un lien inconnu. Un abonnement iCalendar de l'activité répond 404.
+- L'adresse publique d'un appel à bénévoles répond comme un lien inconnu, et le formulaire public n'indique plus d'appel. Un abonnement iCalendar de l'activité répond 404, et un abonnement personnel omet l'activité.
+- L'espace bénévole reste ouvert par son lien personnel : chaque personne y garde l'accès à ses données et peut les supprimer. L'équipe ne crée ni ne renvoie plus de lien.
+- Un admin de l'organisation lit encore les dossiers liés de l'activité dans l'écran du fournisseur cloud, pour les régler.
 - Le worker n'envoie pas un mail en attente qui concerne une réunion ou une fiche bénévole de ce module.
 - Les données restent en base et réapparaissent à la réactivation. L'export complet de l'organisation les contient. Les purges planifiées continuent.
 
