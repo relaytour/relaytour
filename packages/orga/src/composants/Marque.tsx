@@ -8,7 +8,8 @@ import { ORGANISATION_PAR_DEFAUT, useOrganisation } from '../lib/organisation'
 // Le premier prend la primaire du thème, le second son accent. Le second arc
 // recouvre le premier, puis l'extrémité droite du premier repasse au-dessus.
 // Le trait de 8 reste lisible à 16 px ; les grandes icônes portent un trait
-// de 9 (packages/orga/public/icon.png).
+// de 9 (packages/orga/public/icon.png). La version monochrome prend deux gris
+// opaques : une transparence laisserait voir le croisement des arcs.
 export function Pictogramme({
   taille = 28,
   monochrome = false,
@@ -16,7 +17,7 @@ export function Pictogramme({
   taille?: number
   monochrome?: boolean
 }) {
-  const premier = monochrome ? 'currentColor' : 'var(--rt-primaire)'
+  const premier = monochrome ? 'var(--rt-picto-gris)' : 'var(--rt-primaire)'
   return (
     <svg
       width={taille}
@@ -31,8 +32,7 @@ export function Pictogramme({
       <path d="M 10 37 A 15 15 0 0 1 40 37" stroke={premier} />
       <path
         d="M 24 27 A 15 15 0 0 0 54 27"
-        stroke={monochrome ? 'currentColor' : 'var(--rt-accent)'}
-        opacity={monochrome ? 0.55 : 1}
+        stroke={monochrome ? 'var(--rt-picto-gris-clair)' : 'var(--rt-accent)'}
       />
       <path d="M 37.99 29.5 A 15 15 0 0 1 40 37" stroke={premier} />
     </svg>
@@ -113,7 +113,7 @@ export function SignatureRelaytour({
           rel="noreferrer"
           aria-label={t`Propulsé par Relaytour : code source`}
           title={t`Propulsé par Relaytour : code source`}
-          style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}
+          style={{ display: 'inline-flex' }}
         >
           <Pictogramme taille={16} monochrome />
         </a>
@@ -121,7 +121,7 @@ export function SignatureRelaytour({
     )
   return (
     <div className="rt-pied-marque">
-      <span style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}>
+      <span style={{ display: 'inline-flex' }}>
         <Pictogramme taille={14} monochrome />
       </span>
       <span>

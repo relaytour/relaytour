@@ -62,6 +62,24 @@
           }
         },
         {
+          "id": "2026-10-28-orga-le-pictogramme-de-relaytour-en-pied-de-menu-est-gris-opaque",
+          "date": "2026-10-28",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Le pictogramme de Relaytour en pied de menu est d'un gris opaque",
+            "texte": "La mention « Propulsé par Relaytour » affiche ses deux arcs en gris plein. Leur croisement ne forme plus de zone plus foncée.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The Relaytour symbol at the foot of the menu is solid grey",
+            "texte": "The \"Powered by Relaytour\" mention shows its two arcs in solid grey. Their crossing no longer forms a darker area.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-28-orga-l-avis-de-nouvelle-version-ne-s-affiche-plus-apres-un-rechar",
           "date": "2026-10-28",
           "type": "correctif",

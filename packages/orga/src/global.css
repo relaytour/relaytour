@@ -42,6 +42,10 @@
   --rt-encre-40: rgba(var(--rt-encre-rgb), 0.38);
   --rt-encre-14: rgba(var(--rt-encre-rgb), 0.12);
   --rt-encre-08: rgba(var(--rt-encre-rgb), 0.07);
+  /* Le pictogramme monochrome : deux gris opaques, aux teintes de l'encre à
+     38 % et à 21 % sur du blanc. */
+  --rt-picto-gris: color-mix(in srgb, var(--rt-encre) 38%, #ffffff);
+  --rt-picto-gris-clair: color-mix(in srgb, var(--rt-encre) 21%, #ffffff);
   --rt-sol: linear-gradient(
     138deg,
     var(--rt-sol-1) 0%,
