@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  ecrireGroupesReplies,
   ecrireRegroupement,
   grouperParFiche,
   grouperParPerimetre,
@@ -9,6 +10,7 @@ import {
   joursDepuisDebut,
   joursRelatifs,
   libelleBorne,
+  lireGroupesReplies,
   lireRegroupement,
   phaseDe,
   type Phase,
@@ -259,5 +261,33 @@ describe('regroupement gardé par le navigateur', () => {
     } as Storage
     expect(lireRegroupement('cle', ADMIS, 'echeance', refus)).toBe('echeance')
     expect(() => ecrireRegroupement('cle', 'phase', refus)).not.toThrow()
+  })
+})
+
+describe('groupes repliés gardés par le navigateur', () => {
+  it('relit les clés écrites', () => {
+    const d = depot()
+    ecrireGroupesReplies('cle', ['phase:cadrage', 'sans-fiche'], d)
+    expect(lireGroupesReplies('cle', d)).toEqual([
+      'phase:cadrage',
+      'sans-fiche',
+    ])
+  })
+
+  it('rend une liste vide pour une valeur absente ou illisible', () => {
+    expect(lireGroupesReplies('cle', depot())).toEqual([])
+    expect(lireGroupesReplies('cle', depot({ cle: '{' }))).toEqual([])
+    expect(lireGroupesReplies('cle', depot({ cle: '"phase"' }))).toEqual([])
+    expect(lireGroupesReplies('cle', depot({ cle: '["a", 3]' }))).toEqual(['a'])
+    expect(lireGroupesReplies('cle', null)).toEqual([])
+  })
+
+  it('garde les cent dernières clés', () => {
+    const d = depot()
+    const cles = Array.from({ length: 120 }, (_, i) => `fiche:${i}`)
+    ecrireGroupesReplies('cle', cles, d)
+    const lues = lireGroupesReplies('cle', d)
+    expect(lues).toHaveLength(100)
+    expect(lues[0]).toBe('fiche:20')
   })
 })

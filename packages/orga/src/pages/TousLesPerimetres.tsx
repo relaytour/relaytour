@@ -5,12 +5,13 @@ import { Trans, useLingui } from '@lingui/react/macro'
 import { Alert, App, Button, Col, Empty, Row, Skeleton, Tag } from 'antd'
 import { Link } from 'react-router'
 
-import { Section } from '../composants/Panneau'
+import { Groupe } from '../composants/Panneau'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import type { TousLesPerimetresQuery } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
+import { useGroupesReplies } from '../lib/groupes-replies'
 import { signalerLocalement } from '../lib/rafraichissement'
 
 // Tous les périmètres de l'activité affichée (ADR 0012) : les affectations de la
@@ -70,6 +71,7 @@ function libelleRecherche(nombre: number): string {
 
 export default function TousLesPerimetres() {
   const { t } = useLingui()
+  const replies = useGroupesReplies('perimetres')
   const { activite, lien, libelleGroupe, decouverte, gere } = useActivite()
   const souhaitsLibres = activite.souhaitsOuverts || gere
   const { message } = App.useApp()
@@ -233,12 +235,23 @@ export default function TousLesPerimetres() {
   }
 
   // Un bloc range ses périmètres par groupe, dans l'ordre déclaré par l'activité.
-  const bloc = (titre: string, contenu: Ligne[], vide?: string) => {
+  const bloc = (
+    cle: string,
+    titre: string,
+    contenu: Ligne[],
+    vide?: string
+  ) => {
     if (contenu.length === 0 && vide === undefined) return null
     return (
-      <Section titre={titre} compte={contenu.length}>
+      <Groupe
+        titre={titre}
+        nom={titre}
+        compte={contenu.length}
+        replie={replies.estReplie(cle)}
+        onBasculer={() => replies.basculer(cle)}
+      >
         {contenu.length === 0 ? (
-          <p className="rt-texte-secondaire">{vide}</p>
+          <p className="rt-texte-secondaire rt-dans-le-cadre">{vide}</p>
         ) : (
           activite.groupes
             .map(g => ({
@@ -247,15 +260,18 @@ export default function TousLesPerimetres() {
             }))
             .filter(g => g.lignes.length > 0)
             .map(({ groupe, lignes: duGroupe }) => (
-              <section key={groupe.cle} style={{ marginBottom: 12 }}>
-                <h3 className="rt-libelle" style={{ margin: '4px 0 10px' }}>
+              <section key={groupe.cle}>
+                <h3
+                  className="rt-libelle rt-dans-le-cadre"
+                  style={{ margin: '4px 0 10px' }}
+                >
                   {libelleGroupe(groupe.cle, true)}
                 </h3>
                 <Row gutter={[12, 12]}>{duGroupe.map(carte)}</Row>
               </section>
             ))
         )}
-      </Section>
+      </Groupe>
     )
   }
 
@@ -300,9 +316,10 @@ export default function TousLesPerimetres() {
         <Empty description={t`Cette activité n’a encore aucun périmètre.`} />
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {bloc(t`Vos périmètres`, affectes)}
-          {bloc(t`Vos souhaits`, souhaites)}
+          {bloc('affectes', t`Vos périmètres`, affectes)}
+          {bloc('souhaites', t`Vos souhaits`, souhaites)}
           {bloc(
+            'autres',
             affectes.length + souhaites.length > 0
               ? t`Autres périmètres`
               : t`Les périmètres`,

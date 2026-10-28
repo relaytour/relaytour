@@ -14,7 +14,7 @@ import ChoixEdition from '../composants/ChoixEdition'
 import { Jauge } from '../composants/Jauge'
 import Repartition from '../composants/Repartition'
 import LieuxFenetre from '../composants/LieuxFenetre'
-import { Section } from '../composants/Panneau'
+import { Groupe } from '../composants/Panneau'
 import { Puces, SeparateurPuces } from '../composants/Puces'
 import SequenceDetail, { type SequenceLue } from '../composants/SequenceDetail'
 import SequenceFormulaire, {
@@ -26,6 +26,7 @@ import { graphql } from '../gql'
 import { useActivite } from '../lib/activite'
 import { jourLocal, libelleJours } from '../lib/agenda'
 import { useAgendasEcrits } from '../lib/agendas-ecrits'
+import { useGroupesReplies } from '../lib/groupes-replies'
 import {
   grilleDuJour,
   heureCourte,
@@ -84,6 +85,7 @@ type Vue = 'grille' | 'liste' | 'moi' | 'repartition'
 /** Programme du jour J d'une période (ADR 0040). */
 export default function Programme() {
   const { t } = useLingui()
+  const replies = useGroupesReplies('programme')
   const { activite, gere, periode, aModule } = useActivite()
   /** Les personnes d'une séquence, responsables en tête, en une ligne. */
   const personnes = (s: SequenceLue): string => {
@@ -282,13 +284,16 @@ export default function Programme() {
   ].filter(g => g.sequences.length > 0)
 
   const vueListe = groupesLieux.map(g => (
-    <Section
+    <Groupe
       key={g.cle}
       titre={g.titre}
+      nom={g.titre}
       compte={nombreDeSequences(g.sequences.length)}
+      replie={replies.estReplie(`lieu:${g.cle}`)}
+      onBasculer={() => replies.basculer(`lieu:${g.cle}`)}
     >
       <div className="rt-sequences">{g.sequences.map(s => carte(s))}</div>
-    </Section>
+    </Groupe>
   ))
 
   const vueMoi =
@@ -300,7 +305,13 @@ export default function Programme() {
       </div>
     ) : (
       jours.map(jour => (
-        <Section key={jour} titre={libelleJours(jour)}>
+        <Groupe
+          key={jour}
+          titre={libelleJours(jour)}
+          nom={libelleJours(jour)}
+          replie={replies.estReplie(`jour:${jour}`)}
+          onBasculer={() => replies.basculer(`jour:${jour}`)}
+        >
           <div className="rt-sequences">
             {sequences
               .filter(s => s.jour === jour)
@@ -324,7 +335,7 @@ export default function Programme() {
                 </div>
               ))}
           </div>
-        </Section>
+        </Groupe>
       ))
     )
 

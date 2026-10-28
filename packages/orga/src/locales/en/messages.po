@@ -3679,6 +3679,10 @@ msgstr "Join requests and invitations"
 msgid "Demandes pour rejoindre l’équipe"
 msgstr "Requests to join the team"
 
+#: src/composants/Panneau.tsx
+msgid "Déplier le groupe {nom}"
+msgstr "Expand the group {nom}"
+
 #: src/composants/Coquille.tsx
 msgid "Déplier le menu"
 msgstr "Expand menu"
@@ -8458,6 +8462,10 @@ msgstr "Place in the schedule"
 #: src/pages/Programme.tsx
 msgid "Répartition"
 msgstr "Placement"
+
+#: src/composants/Panneau.tsx
+msgid "Replier le groupe {nom}"
+msgstr "Collapse the group {nom}"
 
 #: src/composants/Coquille.tsx
 msgid "Replier le menu"
