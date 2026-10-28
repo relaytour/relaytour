@@ -84,6 +84,60 @@ function retenir(worker: ServiceWorker | null) {
   for (const prevenir of abonnes) prevenir()
 }
 
+/**
+ * Vrai quand la page a chargé tous ses scripts et ses styles du build parmi les
+ * fichiers d'une coquille : elle tourne déjà sur cette version.
+ */
+export function pageAJour(
+  fichiersPage: string[],
+  fichiersCoquille: string[]
+): boolean {
+  const coquille = new Set(fichiersCoquille)
+  return fichiersPage.length > 0 && fichiersPage.every(f => coquille.has(f))
+}
+
+/** Les scripts et les styles du build que la page a chargés. */
+function fichiersDeLaPage(): string[] {
+  return [
+    ...document.querySelectorAll<HTMLScriptElement | HTMLLinkElement>(
+      'script[src], link[rel="stylesheet"], link[rel="modulepreload"]'
+    ),
+  ]
+    .map(e => new URL(e instanceof HTMLScriptElement ? e.src : e.href).pathname)
+    .filter(chemin => /^\/assets\/.+\.(?:js|css)$/.test(chemin))
+}
+
+/** Demande à un service worker les fichiers de sa coquille. */
+function coquilleDe(worker: ServiceWorker): Promise<string[] | null> {
+  return new Promise(resoudre => {
+    const canal = new MessageChannel()
+    const delai = setTimeout(() => resoudre(null), 2000)
+    canal.port1.onmessage = evenement => {
+      clearTimeout(delai)
+      const fichiers = (evenement.data as { fichiers?: unknown } | null)
+        ?.fichiers
+      resoudre(
+        Array.isArray(fichiers) && fichiers.every(f => typeof f === 'string')
+          ? fichiers
+          : null
+      )
+    }
+    worker.postMessage({ type: 'COQUILLE' }, [canal.port2])
+  })
+}
+
+/**
+ * Annonce un service worker en attente, sauf si la page tourne déjà sur sa
+ * version. Une navigation passe par le réseau : la page rechargée est la
+ * nouvelle, alors que l'ancien service worker la contrôle encore et que le
+ * nouveau attend. Sans réponse du service worker, l'avis s'affiche.
+ */
+async function annoncer(worker: ServiceWorker) {
+  const fichiers = await coquilleDe(worker)
+  if (fichiers !== null && pageAJour(fichiersDeLaPage(), fichiers)) return
+  retenir(worker)
+}
+
 /** Suit un service worker en cours d'installation jusqu'à son attente. */
 function suivre(enregistrement: ServiceWorkerRegistration) {
   const nouveau = enregistrement.installing
@@ -91,7 +145,7 @@ function suivre(enregistrement: ServiceWorkerRegistration) {
   nouveau.addEventListener('statechange', () => {
     // Sans contrôleur, c'est la première installation : rien à annoncer.
     if (nouveau.state === 'installed' && navigator.serviceWorker.controller)
-      retenir(nouveau)
+      void annoncer(nouveau)
   })
 }
 
@@ -105,7 +159,7 @@ export function enregistrerServiceWorker(): void {
     navigator.serviceWorker.register('/sw.js').then(
       enregistrement => {
         if (enregistrement.waiting && navigator.serviceWorker.controller)
-          retenir(enregistrement.waiting)
+          void annoncer(enregistrement.waiting)
         enregistrement.addEventListener('updatefound', () =>
           suivre(enregistrement)
         )
