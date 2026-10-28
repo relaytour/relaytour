@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { ApolloServer } from '@apollo/server'
-import { prisma } from '@relaytour/database'
+import { Prisma, prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
@@ -372,6 +372,35 @@ describe('page publique', () => {
     expect(await lire(jetons.ferme)).toBeNull()
     expect(await lire(nouveauJeton())).toBeNull()
     expect(await lire('court')).toBeNull()
+  })
+
+  it('répond comme un lien inconnu sans le module bénévoles (ADR 0052)', async () => {
+    await prisma.activite.update({
+      where: { id: ids.activite },
+      data: { modules: ['AGENDA'] },
+    })
+    try {
+      expect(await lire(jetons.periode)).toBeNull()
+      const reponse = await executer(DEPOSER, {
+        j: jetons.periode,
+        n: 'Sacha Module',
+        e: `sacha-${s}@exemple.fr`,
+        sq: [],
+        a: true,
+      })
+      expect(reponse.errors?.[0]?.extensions?.code).toBe('SAISIE_INVALIDE')
+      expect(
+        await prisma.candidature.count({
+          where: { courriel: `sacha-${s}@exemple.fr` },
+        })
+      ).toBe(0)
+    } finally {
+      await prisma.activite.update({
+        where: { id: ids.activite },
+        data: { modules: Prisma.DbNull },
+      })
+    }
+    expect(await lire(jetons.periode)).not.toBeNull()
   })
 })
 

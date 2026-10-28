@@ -2,11 +2,15 @@ import { randomUUID } from 'node:crypto'
 
 import { ApolloServer } from '@apollo/server'
 import { prisma } from '@relaytour/database'
-import { afterAll, beforeAll, describe, expect, it } from 'vitest'
+import type { Job } from 'bullmq'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { courrielProcessor } from '../jobs/processors/courriel.processor.ts'
+import type { CourrielJobData } from '../jobs/queues.ts'
 import { lireAbonnement } from '../lib/abonnements-agenda.ts'
 import { modifierOrganisation } from '../lib/installation.ts'
+import { journal } from '../lib/journal.ts'
 
 import { schema } from './index.ts'
 
@@ -15,6 +19,9 @@ import { schema } from './index.ts'
 // restreint ceux de l'organisation. Un module inactif ferme ses requêtes, ses
 // mutations et ses adresses publiques. Les contrôles se prouvent par le refus
 // (invariant 11).
+
+const expedier = vi.hoisted(() => vi.fn())
+vi.mock('../courriel/transport.ts', () => ({ expedier }))
 
 const s = randomUUID().slice(0, 8)
 const slug = `modules-${s}`
@@ -148,6 +155,7 @@ beforeAll(async () => {
 })
 
 afterAll(async () => {
+  await prisma.benevole.deleteMany({ where: { organisationId: ids.org } })
   await prisma.abonnementAgenda.deleteMany({
     where: { organisationId: ids.org },
   })
@@ -227,6 +235,37 @@ describe('modules d’une activité', () => {
     expect((await lire()).statut).toBe(404)
   })
 
+  it('n’envoie pas le mail d’une fiche bénévole sans le module bénévoles', async () => {
+    await regler(ids.adminActivite, ['AGENDA'])
+    const fiche = await prisma.benevole.create({
+      data: {
+        organisationId: ids.org,
+        activiteId: ids.activite,
+        nom: 'Sacha Bénévole',
+        courriel: `sacha-${slug}@exemple.fr`,
+        accordLe: new Date(),
+      },
+    })
+    const info = vi.spyOn(journal, 'info')
+    try {
+      await courrielProcessor({
+        data: {
+          sorte: 'benevole-lien',
+          organisationId: ids.org,
+          benevoleId: fiche.id,
+        },
+        timestamp: Date.now(),
+      } as Job<CourrielJobData>)
+      expect(expedier).not.toHaveBeenCalled()
+      expect(info).toHaveBeenCalledWith(
+        expect.objectContaining({ evenement: 'courriel-module-inactif' }),
+        expect.any(String)
+      )
+    } finally {
+      info.mockRestore()
+    }
+  })
+
   it('démarre une activité créée sans module', async () => {
     const r = await executer(ids.adminOrg, CREER_ACTIVITE, {
       slug: `${slug}-saison`,
@@ -269,6 +308,22 @@ describe('modules autorisés par l’hébergeur', () => {
     expect((await regler(ids.adminActivite, ['AGENDA'])).errors).toBeUndefined()
     await modifierOrganisation(slug, { modulesAutorises: null })
     expect(await modulesDe(ids.adminActivite)).toEqual(['AGENDA', 'DOCUMENTS'])
+  })
+
+  it('nomme l’hébergeur dans le refus d’un module qu’il n’autorise pas', async () => {
+    await regler(ids.adminActivite, ['AGENDA', 'BENEVOLES'])
+    await modifierOrganisation(slug, { modulesAutorises: ['AGENDA'] })
+    try {
+      const r = await executer(ids.referent, BENEVOLES, { a: ids.activite })
+      expect(code(r)).toBe('MODULE_INACTIF')
+      expect(r.errors?.[0]?.message).toMatch(/hébergeur/)
+    } finally {
+      await modifierOrganisation(slug, { modulesAutorises: null })
+    }
+    await regler(ids.adminActivite, ['AGENDA'])
+    const r = await executer(ids.referent, BENEVOLES, { a: ids.activite })
+    expect(code(r)).toBe('MODULE_INACTIF')
+    expect(r.errors?.[0]?.message).toMatch(/écran « Activités »/)
   })
 
   it('refuse un module inconnu dans la liste de l’hébergeur', async () => {

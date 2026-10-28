@@ -3,7 +3,7 @@ import type { AddressInfo } from 'node:net'
 import type { Server } from 'node:http'
 
 import { ApolloServer } from '@apollo/server'
-import { prisma } from '@relaytour/database'
+import { Prisma, prisma } from '@relaytour/database'
 import express from 'express'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
@@ -861,6 +861,44 @@ describe('ressources liées à une fiche', () => {
       where: { id: ids.ficheNatation },
       data: { perimetreId: ids.natation },
     })
+  })
+
+  it('se ferment sans le module documents, sauf pour un admin de l’organisation (ADR 0052)', async () => {
+    const lus = async (qui: string) => {
+      const r = await executer(qui, DOSSIERS, { a: ids.activite })
+      expect(r.errors).toBeUndefined()
+      return (r.data as { dossiersLies: { nom: string }[] }).dossiersLies
+    }
+    await prisma.activite.update({
+      where: { id: ids.activite },
+      data: { modules: ['AGENDA'] },
+    })
+    try {
+      expect(await lus(ids.nageuse)).toEqual([])
+      expect(await lus(ids.adminActivite)).toEqual([])
+      // L'écran du fournisseur cloud garde les dossiers liés de l'activité.
+      expect((await lus(ids.admin)).length).toBeGreaterThan(0)
+      expect(
+        code(
+          await executer(ids.nageuse, CONTENU, {
+            id: ids.dossierNatation,
+            c: [],
+          })
+        )
+      ).toBe('FORBIDDEN')
+      expect(
+        (await apercu(ids.nageuse, ids.dossierNatation, 'Plan.pdf')).status
+      ).not.toBe(200)
+      expect(await ressourcesLues(ids.nageuse, ficheNatation)).toEqual([])
+    } finally {
+      await prisma.activite.update({
+        where: { id: ids.activite },
+        data: { modules: Prisma.DbNull },
+      })
+    }
+    expect(
+      (await ressourcesLues(ids.nageuse, ficheNatation)).length
+    ).toBeGreaterThan(0)
   })
 
   it('se lisent dans une fiche connexe, et ne s’ouvrent que depuis un dossier lisible', async () => {

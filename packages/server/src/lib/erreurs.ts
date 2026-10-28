@@ -42,13 +42,18 @@ export function organisationEnLectureSeule(): GraphQLError {
 
 /**
  * Refus d'une requête sur un module inactif de l'activité (ADR 0052). L'interface
- * renvoie alors vers « Mon espace ».
+ * renvoie alors vers « Mon espace ». Un module que l'hébergeur n'autorise pas ne
+ * s'active pas dans l'écran « Activités » : le message le dit.
  */
-export function moduleInactif(): GraphQLError {
+export function moduleInactif(
+  cause: 'activite' | 'hebergeur' = 'activite'
+): GraphQLError {
   return new GraphQLError(
-    i18n._(
-      'Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités ».'
-    ),
+    cause === 'hebergeur'
+      ? i18n._('Votre hébergeur ne propose pas ce module à votre organisation.')
+      : i18n._(
+          'Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités ».'
+        ),
     { extensions: { code: 'MODULE_INACTIF' } }
   )
 }

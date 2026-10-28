@@ -1747,6 +1747,11 @@ msgstr "Vous devenez admin de l’organisation {organisation} : vous gérez tout
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
+msgid "Votre hébergeur ne propose pas ce module à votre organisation."
+msgstr "Votre hébergeur ne propose pas ce module à votre organisation."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
 msgid "Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités »."
 msgstr "Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités »."
 
