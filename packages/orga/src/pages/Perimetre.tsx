@@ -203,6 +203,9 @@ export default function Perimetre() {
     )
   )
   const groupes = useGroupesReplies('taches')
+  // Le groupe replié de la tâche visée s'affiche déplié. Le premier clic le
+  // replie sans changer le choix gardé par le navigateur.
+  const [repliForce, setRepliForce] = useState<string | null>(null)
   const changerRegroupement = (valeur: Regroupement) => {
     setRegroupement(valeur)
     ecrireRegroupement(CLE_REGROUPEMENT_TACHES, valeur)
@@ -345,6 +348,14 @@ export default function Perimetre() {
   const edition = editions?.editions.find(e => e.id === editionId)
   const a = perimetre.avancement
   const titreDeReunion = (titreTache: string) => t`Réunion : ${titreTache}`
+  // La tâche visée par une notification reste visible, jusqu'à ce que la
+  // personne replie son groupe.
+  const deplieDeForce = (section: SectionTaches) =>
+    groupes.estReplie(section.cle) &&
+    repliForce !== section.cle &&
+    section.taches.some(x => x.id === tacheVisee)
+  const replie = (section: SectionTaches) =>
+    groupes.estReplie(section.cle) && !deplieDeForce(section)
   const cartes = (liste: TacheDuPerimetre[]) => (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
       {liste.map(tache => (
@@ -735,12 +746,12 @@ export default function Perimetre() {
                   <span className="rt-note">{section.extra}</span>
                 )
               }
-              // La tâche visée par une notification reste visible.
-              replie={
-                groupes.estReplie(section.cle) &&
-                !section.taches.some(x => x.id === tacheVisee)
+              replie={replie(section)}
+              onBasculer={() =>
+                deplieDeForce(section)
+                  ? setRepliForce(section.cle)
+                  : groupes.basculer(section.cle)
               }
-              onBasculer={() => groupes.basculer(section.cle)}
             >
               {cartes(section.taches)}
             </Groupe>
