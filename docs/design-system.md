@@ -92,7 +92,7 @@ Les noms des variables datent des premières valeurs. Les gris ont été relevé
 | Panneau | `.rt-verre` | panneaux, cartes de fiche, formulaires ; blanc de 80 à 44 %, flou de 22 px |
 | Barre | `.rt-verre-barre` | barre latérale, barre haute ; plus opaque en haut, flou de 38 px |
 | Teinté | `.rt-verre-teinte` | un seul élément mis en avant par écran ; voile blanc sur la primaire à 16 % |
-| Carte | `--rt-verre-carte` | cartes de tâche, lignes du rétroplanning ; blanc de 92 à 76 % |
+| Carte | `--rt-verre-carte` | cartes de tâche, lignes du rétroplanning et de l'agenda, séquences du programme ; blanc de 92 à 76 % |
 | Groupe | `--rt-verre-groupe` | cadre d'un groupe de cartes (`Groupe`) ; blanc de 46 à 14 % sur la primaire à 7 %, en retrait derrière les cartes |
 | Dépoli | `--rt-verre-depoli` | fenêtres modales, tiroirs, menus, bulles ; blanc de 94 à 86 % |
 
@@ -120,6 +120,7 @@ Un bloc posé dans un panneau (choix, réglage, tuile, ligne cliquable) prend un
 - **Boutons.** La primaire en aplat crée et valide. Le verre porte les actions secondaires. Le bouton sans fond porte les actions tertiaires. L'accent est réservé à l'engagement d'une personne.
 - **Puces de filtre.** Un groupe exclusif se lit en encre pleine. Une bascule active se lit en primaire clair avec une coche.
 - **Étiquette de périmètre.** La couleur du périmètre teinte le fond à 13 %. Le texte reprend cette couleur, assombrie vers l'encre jusqu'à 4,5:1 (`teinteLisible` dans `packages/orga/src/lib/theme.ts`).
+- **Étiquette de verre.** Un groupe sans couleur propre, comme les fiches communes, prend une étiquette transparente (`.rt-etiquette-verre`) : un contour blanc, un filet d'encre à 12 % et le flou du verre.
 
 ## Composants partagés
 

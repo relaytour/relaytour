@@ -32,7 +32,6 @@ import { graphql } from '../gql'
 import type { PagePerimetreQuery, TacheChampsFragment } from '../gql/graphql'
 import { useGroupesReplies } from '../lib/groupes-replies'
 import {
-  CLE_GROUPES_REPLIES_TACHES,
   CLE_REGROUPEMENT_TACHES,
   ecrireRegroupement,
   grouperParFiche,
@@ -202,7 +201,7 @@ export default function Perimetre() {
       parPhase ? 'phase' : 'echeance'
     )
   )
-  const groupes = useGroupesReplies(CLE_GROUPES_REPLIES_TACHES)
+  const groupes = useGroupesReplies('taches')
   const changerRegroupement = (valeur: Regroupement) => {
     setRegroupement(valeur)
     ecrireRegroupement(CLE_REGROUPEMENT_TACHES, valeur)

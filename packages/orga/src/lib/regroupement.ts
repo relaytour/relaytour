@@ -250,8 +250,9 @@ export function ecrireRegroupement(
   }
 }
 
-/** Clé des groupes repliés dans la liste des tâches d'un périmètre. */
-export const CLE_GROUPES_REPLIES_TACHES = 'relaytour.taches.groupes-replies'
+/** Clé des groupes repliés d'un écran (`taches`, `retroplanning`…). */
+export const cleGroupesReplies = (ecran: string) =>
+  `relaytour.${ecran}.groupes-replies`
 
 // Les clés des fiches s'accumulent d'un périmètre à l'autre : le navigateur
 // garde les derniers groupes repliés seulement.

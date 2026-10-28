@@ -16,12 +16,13 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import DepotFiches from '../composants/DepotFiches'
 import DocumentsActivite from '../composants/DocumentsActivite'
 import EtiquettePerimetre from '../composants/EtiquettePerimetre'
-import { Section } from '../composants/Panneau'
+import { Groupe } from '../composants/Panneau'
 import { Puces } from '../composants/Puces'
 import Titre from '../composants/Titre'
 import type { ListeFichesQuery } from '../gql/graphql'
 import { jourDeLInstant } from '../lib/erreurs'
 import { DOSSIERS_LIES } from '../lib/espace-fichiers'
+import { useGroupesReplies } from '../lib/groupes-replies'
 import { LISTE_FICHES } from '../lib/fiches'
 import { useOrganisation } from '../lib/organisation'
 import { normaliser } from '../lib/recherche'
@@ -66,6 +67,7 @@ export default function Fiches() {
   const { lien, activite, gere } = useActivite()
   const navigate = useNavigate()
   const { theme } = useOrganisation()
+  const replies = useGroupesReplies('fiches')
   // Le dépôt direct de fichiers est ouvert aux admins de l'activité (ADR 0049).
   const [depot, setDepot] = useState(false)
   const { data, loading } = useQuery(LISTE_FICHES)
@@ -304,8 +306,11 @@ export default function Fiches() {
                       : teinteLisible(couleur, theme.couleurs.encre),
                 }
                 return (
-                  <Section
+                  <Groupe
                     key={groupe.cle}
+                    nom={groupe.nom}
+                    replie={replies.estReplie(groupe.cle)}
+                    onBasculer={() => replies.basculer(groupe.cle)}
                     titre={
                       groupe.slug ? (
                         <EtiquettePerimetre
@@ -315,7 +320,9 @@ export default function Fiches() {
                           point
                         />
                       ) : (
-                        groupe.nom
+                        <span className="rt-etiquette rt-etiquette-verre">
+                          {groupe.nom}
+                        </span>
                       )
                     }
                     compte={nombreDeFiches(groupe.fiches.length)}
@@ -344,7 +351,7 @@ export default function Fiches() {
                         </li>
                       ))}
                     </ul>
-                  </Section>
+                  </Groupe>
                 )
               })}
             </div>

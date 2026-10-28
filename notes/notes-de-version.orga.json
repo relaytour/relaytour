@@ -16,12 +16,30 @@
           "etat": "prevu",
           "fr": {
             "titre": "Les tâches d'un périmètre se rangent par phase par défaut, dans des groupes repliables",
-            "texte": "Le regroupement « Par phase » vient en premier et s'applique par défaut quand l'activité déclare des phases. Chaque phase ou chaque fiche forme un groupe dans un cadre de verre. Vous repliez un groupe par sa flèche ou par son titre, et votre navigateur garde ce choix.",
+            "texte": "Le regroupement « Par phase » vient en premier et s'applique par défaut quand l'activité déclare des phases. Chaque phase ou chaque fiche forme un groupe dans un cadre de verre. Le rétroplanning, Mon espace, les ressources, Tous les périmètres, le programme et l'agenda reçoivent les mêmes groupes. Vous repliez un groupe par sa flèche ou par son titre, et votre navigateur garde ce choix.",
             "migration": null
           },
           "en": {
             "titre": "Tasks in an area are grouped by phase by default, in collapsible groups",
-            "texte": "The \"By phase\" grouping comes first and applies by default when the activity declares phases. Each phase or sheet forms a group inside a glass frame. You collapse a group with its arrow or its title, and your browser remembers this choice.",
+            "texte": "The \"By phase\" grouping comes first and applies by default when the activity declares phases. Each phase or sheet forms a group inside a glass frame. The timeline, My space, resources, All areas, the schedule and the calendar get the same groups. You collapse a group with its arrow or its title, and your browser remembers this choice.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-28-orga-les-lignes-de-l-agenda-et-les-sequences-du-programme-se-lise",
+          "date": "2026-10-28",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les lignes de l'agenda et les séquences du programme se lisent mieux sur le fond",
+            "texte": "Les lignes de l'agenda et les séquences du programme prennent le même verre que les cartes de tâche. Le fond de la page ne gêne plus la lecture, en liste comme en grille.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Calendar rows and schedule slots are easier to read on the background",
+            "texte": "Calendar rows and schedule slots now use the same glass as task cards. The page background no longer gets in the way of reading, in the list and in the grid.",
             "migration": null
           }
         },

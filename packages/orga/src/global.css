@@ -112,6 +112,11 @@
     rgba(255, 255, 255, 0.92),
     rgba(255, 255, 255, 0.76)
   );
+  --rt-verre-carte-survol: linear-gradient(
+    155deg,
+    rgba(255, 255, 255, 0.98),
+    rgba(255, 255, 255, 0.86)
+  );
   --rt-verre-carte-teinte:
     linear-gradient(
       155deg,
@@ -1321,6 +1326,23 @@ button.rt-ligne-lien {
   letter-spacing: -0.01em;
 }
 
+/* Le contenu d'un groupe : ses cartes, ou ses sous-groupes. Un sous-titre
+   rentre dans le cadre, comme le titre du groupe. */
+.rt-groupe-contenu {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.rt-groupe-contenu[hidden] {
+  display: none;
+}
+
+.rt-groupe-contenu .rt-sous-section-titre,
+.rt-groupe-contenu .rt-dans-le-cadre {
+  padding-inline: calc(var(--rt-groupe-retrait) + 8px);
+}
+
 .rt-groupe-bascule .anticon {
   transition: transform var(--rt-duree) var(--rt-ease-fluide);
 }
@@ -1570,6 +1592,19 @@ a.rt-etat:hover {
   overflow: hidden;
   text-overflow: ellipsis;
   text-decoration: none;
+}
+
+/* Étiquette sans couleur propre (les fiches communes) : un verre transparent
+   dessiné par son seul contour. */
+.rt-etiquette.rt-etiquette-verre {
+  color: var(--rt-encre);
+  background: rgba(255, 255, 255, 0.16);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.9),
+    0 0 0 1px rgba(var(--rt-encre-rgb), 0.12),
+    var(--rt-ombre-interne);
+  backdrop-filter: var(--rt-flou);
+  -webkit-backdrop-filter: var(--rt-flou);
 }
 
 a.rt-etiquette:hover {
@@ -2800,7 +2835,8 @@ button.rt-ligne-declinaisons {
 }
 
 /* Agenda d'une période (ADR 0037) : une ligne par élément, le jour à gauche et
-   un liseré de couleur par sorte ; sur un écran large, une grille du mois. */
+   un liseré de couleur par sorte ; sur un écran large, une grille du mois. La
+   ligne est posée sur le fond de la page : elle prend le verre des cartes. */
 .rt-agenda-liste {
   display: flex;
   flex-direction: column;
@@ -2816,11 +2852,13 @@ button.rt-ligne-declinaisons {
   align-items: start;
   gap: 4px 12px;
   padding: 10px 14px;
-  border: var(--rt-bord-interne);
+  border: 0;
   border-inline-start: 4px solid var(--rt-encre-14);
   border-radius: var(--rt-rayon-chip);
-  background: var(--rt-surface-interne);
-  box-shadow: var(--rt-ombre-interne);
+  background: var(--rt-verre-carte);
+  backdrop-filter: var(--rt-flou);
+  -webkit-backdrop-filter: var(--rt-flou);
+  box-shadow: var(--rt-liseret), var(--rt-ombre-flottante);
 }
 
 .rt-agenda-ligne.rt-agenda-phase {
@@ -3206,11 +3244,15 @@ button.rt-agenda-evenement {
   height: 100%;
   min-width: 0;
   padding: 8px 10px;
-  border: var(--rt-bord-interne);
+  border: 0;
   border-inline-start: 4px solid var(--rt-primaire);
   border-radius: var(--rt-rayon-chip);
-  background: var(--rt-surface-interne);
-  box-shadow: var(--rt-ombre-interne);
+  /* Posée sur le fond de la page, en liste comme en grille : le verre des
+     cartes. */
+  background: var(--rt-verre-carte);
+  backdrop-filter: var(--rt-flou);
+  -webkit-backdrop-filter: var(--rt-flou);
+  box-shadow: var(--rt-liseret), var(--rt-ombre-flottante);
   color: var(--rt-encre);
   font: inherit;
   text-align: start;
@@ -3219,7 +3261,7 @@ button.rt-agenda-evenement {
 }
 
 .rt-sequence:hover {
-  background: var(--rt-surface-interne-survol);
+  background: var(--rt-verre-carte-survol);
 }
 
 .rt-sequence-titre {
@@ -3249,6 +3291,15 @@ button.rt-agenda-evenement {
 
 .rt-sequence-ligne > .rt-note {
   grid-column: 2;
+}
+
+/* Dans un groupe, l'heure rentre dans le cadre ; la carte en dépasse à droite. */
+.rt-groupe-contenu .rt-sequence-ligne {
+  grid-template-columns: calc(128px + var(--rt-groupe-retrait)) minmax(0, 1fr);
+}
+
+.rt-groupe-contenu .rt-sequence-ligne > .rt-agenda-jour {
+  padding-inline-start: calc(var(--rt-groupe-retrait) + 8px);
 }
 
 .rt-sequence-place {
@@ -3328,12 +3379,17 @@ button.rt-agenda-evenement {
 }
 
 @media (max-width: 767px) {
-  .rt-sequence-ligne {
+  .rt-sequence-ligne,
+  .rt-groupe-contenu .rt-sequence-ligne {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .rt-sequence-ligne > .rt-note {
     grid-column: 1;
+  }
+
+  .rt-groupe-contenu .rt-sequence-ligne > .rt-note {
+    padding-inline-start: calc(var(--rt-groupe-retrait) + 8px);
   }
 }
 

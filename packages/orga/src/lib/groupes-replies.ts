@@ -1,12 +1,17 @@
 import { useCallback, useState } from 'react'
 
-import { ecrireGroupesReplies, lireGroupesReplies } from './regroupement'
+import {
+  cleGroupesReplies,
+  ecrireGroupesReplies,
+  lireGroupesReplies,
+} from './regroupement'
 
 /**
- * Les groupes repliés d'une liste, gardés par le navigateur sous `cle`. Un
- * groupe replié le reste d'un écran à l'autre tant que sa clé ne change pas.
+ * Les groupes repliés des listes d'un écran, gardés par le navigateur. Un
+ * groupe replié le reste d'une visite à l'autre tant que sa clé ne change pas.
  */
-export function useGroupesReplies(cle: string) {
+export function useGroupesReplies(ecran: string) {
+  const cle = cleGroupesReplies(ecran)
   const [replies, setReplies] = useState(() => lireGroupesReplies(cle))
   const basculer = useCallback(
     (groupe: string) =>
