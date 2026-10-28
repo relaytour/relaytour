@@ -15,6 +15,7 @@ import { accesRefuse, erreurSaisie } from './erreurs.ts'
 import { instantDepuisHeureLocale } from './heures.ts'
 import { journal } from './journal.ts'
 import { i18n } from './langue.ts'
+import { exigerModule } from './modules.ts'
 
 // Réunions de l'agenda (ADR 0037).
 //
@@ -72,8 +73,9 @@ export async function exigerEcritureReunion(
     const edition = await exigerEcritureGlobale(ctx, lieu.editionId)
     return { activiteId: edition.activiteId }
   }
-  await exigerEcriture(ctx, lieu.perimetreId, lieu.editionId)
   const edition = await ctx.exigerEdition(lieu.editionId)
+  await exigerModule(edition.activiteId, 'AGENDA')
+  await exigerEcriture(ctx, lieu.perimetreId, lieu.editionId)
   return { activiteId: edition.activiteId }
 }
 

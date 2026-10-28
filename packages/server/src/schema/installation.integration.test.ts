@@ -157,6 +157,7 @@ describe('accès à l’administration de l’installation', () => {
         'activites',
         'creeLe',
         'limites',
+        'modulesAutorises',
         'nom',
         'nombreMembres',
         'slug',

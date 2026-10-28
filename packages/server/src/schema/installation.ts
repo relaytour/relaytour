@@ -14,6 +14,7 @@ import {
   type PeriodeInstallation,
 } from '../lib/installation.ts'
 
+import { ModuleActiviteEnum } from './activites.ts'
 import { builder } from './builder.ts'
 
 // Administration de l'installation (ADR 0008).
@@ -84,6 +85,12 @@ const OrganisationInstallationRef = builder
       nom: t.exposeString('nom'),
       statut: t.expose('statut', { type: StatutOrganisationEnum }),
       limites: t.field({ type: LimitesRef, resolve: o => o.limites }),
+      modulesAutorises: t.field({
+        type: [ModuleActiviteEnum],
+        description:
+          'Modules que les activités de l’organisation peuvent activer (ADR 0052).',
+        resolve: o => o.modulesAutorises,
+      }),
       creeLe: t.expose('creeLe', { type: 'DateTime' }),
       nombreMembres: t.exposeInt('nombreMembres'),
       activites: t.field({
@@ -124,9 +131,12 @@ builder.mutationFields(t => ({
       fuseauHoraire: t.arg.string(),
       domainesCourrielAutorises: t.arg.stringList(),
       limites: t.arg({ type: LimitesInput }),
+      // Absents, tous les modules sont autorisés (ADR 0052).
+      modulesAutorises: t.arg({ type: [ModuleActiviteEnum] }),
     },
     resolve: async (_root, args) => {
       await creerOrganisation({
+        modulesAutorises: args.modulesAutorises ?? undefined,
         slug: args.slug,
         nom: args.nom,
         sigle: args.sigle ?? undefined,
@@ -183,10 +193,29 @@ builder.mutationFields(t => ({
       slug: t.arg.string({ required: true }),
       statut: t.arg({ type: StatutOrganisationEnum }),
       limites: t.arg({ type: LimitesInput }),
+      // Absents, les modules autorisés ne changent pas ; une liste vide les ferme
+      // tous. `autoriserTousLesModules` revient à aucune restriction (ADR 0052).
+      modulesAutorises: t.arg({ type: [ModuleActiviteEnum] }),
+      autoriserTousLesModules: t.arg.boolean(),
     },
     resolve: async (_root, args) => {
+      if (
+        args.autoriserTousLesModules === true &&
+        args.modulesAutorises !== null &&
+        args.modulesAutorises !== undefined
+      ) {
+        throw erreurSaisie(
+          i18n._(
+            'Donnez soit la liste des modules autorisés, soit autoriserTousLesModules.'
+          )
+        )
+      }
       await modifierOrganisation(args.slug, {
         statut: args.statut ?? undefined,
+        modulesAutorises:
+          args.autoriserTousLesModules === true
+            ? null
+            : (args.modulesAutorises ?? undefined),
         limites:
           args.limites === null || args.limites === undefined
             ? undefined
@@ -198,6 +227,7 @@ builder.mutationFields(t => ({
           organisation: args.slug,
           statut: args.statut ?? undefined,
           limites: args.limites ?? undefined,
+          modulesAutorises: args.modulesAutorises ?? undefined,
         },
         'Une organisation a été modifiée par l’administration de l’installation.'
       )

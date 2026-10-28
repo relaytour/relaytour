@@ -30,6 +30,7 @@ import {
 import { PlageRef } from './appels.ts'
 import { builder } from './builder.ts'
 import { i18n } from '../lib/langue.ts'
+import { exigerModule } from '../lib/modules.ts'
 
 // Espace bénévole (ADR 0041). Le lien personnel d'une fiche ouvre ses places à
 // venir, sans session. La personne y confirme sa participation, quitte une place
@@ -238,6 +239,7 @@ async function ficheDontLesCoordonneesSeLisent(ctx: AppContext, id: string) {
   })
   if (fiche === null) throw accesRefuse()
   await ctx.exigerActivite(fiche.activiteId)
+  await exigerModule(fiche.activiteId, 'BENEVOLES')
   const lisibles = await coordonneesLisibles(ctx, fiche.activiteId, [fiche.id])
   if (!lisibles.has(fiche.id)) throw accesRefuse()
   return fiche

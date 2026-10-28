@@ -42,6 +42,7 @@ import { adresseValide, texteRequis } from '../lib/saisie.ts'
 import { builder } from './builder.ts'
 import { PlageInput } from './repartition.ts'
 import { i18n } from '../lib/langue.ts'
+import { moduleActif } from '../lib/modules.ts'
 
 // Page publique d'un appel à bénévoles (ADR 0041). Ces deux opérations se lisent
 // sans session : elles ne servent que des champs publics, et vérifient elles-mêmes
@@ -125,7 +126,9 @@ async function appelOuvert(
   if (
     appel === null ||
     etatAppel(appel, maintenant) !== 'OUVERT' ||
-    !jetonValide(jeton, await jetonDe('appel', appel.sel))
+    !jetonValide(jeton, await jetonDe('appel', appel.sel)) ||
+    // Sans le module bénévoles, l'adresse répond comme un lien inconnu (ADR 0052).
+    !(await moduleActif(appel.activiteId, 'BENEVOLES'))
   ) {
     return null
   }

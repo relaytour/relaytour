@@ -65,6 +65,11 @@ msgid "Renseignez d’abord le contact de l’activité ou de l’organisation :
 msgstr "Renseignez d’abord le contact de l’activité ou de l’organisation : le formulaire le cite pour l’accès aux données et leur suppression."
 
 #. js-lingui-explicit-id
+#: src/schema/activites.ts
+msgid "Votre hébergeur n’autorise pas ce module pour votre organisation."
+msgstr "Votre hébergeur n’autorise pas ce module pour votre organisation."
+
+#. js-lingui-explicit-id
 #: src/lib/editions.ts
 #: src/lib/import-benevoles.ts
 #: src/lib/installation.ts
@@ -680,6 +685,11 @@ msgstr "Cette édition est archivée : ses tâches sont en lecture seule."
 #: src/schema/installation.ts
 msgid "Aucune organisation ne porte le slug « {slug} »."
 msgstr "Aucune organisation ne porte le slug « {slug} »."
+
+#. js-lingui-explicit-id
+#: src/schema/installation.ts
+msgid "Donnez soit la liste des modules autorisés, soit autoriserTousLesModules."
+msgstr "Donnez soit la liste des modules autorisés, soit autoriserTousLesModules."
 
 #. js-lingui-explicit-id
 #: src/schema/invitations.ts
@@ -1737,6 +1747,11 @@ msgstr "Vous devenez admin de l’organisation {organisation} : vous gérez tout
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
+msgid "Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités »."
+msgstr "Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités »."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
 msgid "Contactez votre hébergeur : {contact}."
 msgstr "Contactez votre hébergeur : {contact}."
 
@@ -2092,6 +2107,11 @@ msgstr "de l’admin d’activité"
 #: src/lib/modes-d-emploi.ts
 msgid "des référentes et référents"
 msgstr "des référentes et référents"
+
+#. js-lingui-explicit-id
+#: src/lib/modules.ts
+msgid "Cette liste contient un module inconnu."
+msgstr "Cette liste contient un module inconnu."
 
 #. js-lingui-explicit-id
 #: src/lib/organisation.ts

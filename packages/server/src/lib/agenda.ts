@@ -3,6 +3,7 @@ import type { AppContext } from '../context.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { joursRelatifs, type Phase } from './phases.ts'
 import { i18n } from './langue.ts'
+import { exigerModule } from './modules.ts'
 
 // Agenda d'une activité (ADR 0037).
 //
@@ -120,6 +121,7 @@ export async function exigerEcritureGlobale(
   editionId: string
 ): Promise<{ id: string; activiteId: string }> {
   const edition = await ctx.exigerEdition(editionId)
+  await exigerModule(edition.activiteId, 'AGENDA')
   await ctx.exigerAdminDe(edition.activiteId)
   if (edition.statut === 'ARCHIVEE') {
     throw erreurSaisie(

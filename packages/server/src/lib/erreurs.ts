@@ -41,6 +41,19 @@ export function organisationEnLectureSeule(): GraphQLError {
 }
 
 /**
+ * Refus d'une requête sur un module inactif de l'activité (ADR 0052). L'interface
+ * renvoie alors vers « Mon espace ».
+ */
+export function moduleInactif(): GraphQLError {
+  return new GraphQLError(
+    i18n._(
+      'Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités ».'
+    ),
+    { extensions: { code: 'MODULE_INACTIF' } }
+  )
+}
+
+/**
  * Refus d'une création au-delà d'une limite fixée par l'administration de
  * l'installation (ADR 0008). Le message renvoie vers l'hébergeur s'il est connu.
  */
