@@ -155,7 +155,7 @@ export default function Editions() {
       <Tableau<Edition>
         id="editions"
         rowKey="id"
-        loading={loading}
+        loading={loading && !data}
         dataSource={data?.editions ?? []}
         pagination={false}
         ouvrir={ouvrir}

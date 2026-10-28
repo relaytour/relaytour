@@ -3,7 +3,7 @@ import { CombinedGraphQLErrors } from '@apollo/client/errors'
 import { useApolloClient } from '@apollo/client/react'
 import { useEffect, useSyncExternalStore } from 'react'
 
-import { creerFlux } from './flux'
+import { creerFlux, type EntiteChangee } from './flux'
 import { ouvrirLeFluxSse } from './flux-sse'
 
 // Rafraîchissement des écrans. Les données d'un écran viennent aussi d'autres
@@ -16,7 +16,8 @@ import { ouvrirLeFluxSse } from './flux-sse'
 // rattraper un signal perdu.
 //
 // La relecture passe par une liste de requêtes, jamais par toutes les requêtes
-// actives : les requêtes de session et les écrans de réglage n'y figurent pas.
+// actives : les écrans de réglage et les simulations n'y figurent pas. Les requêtes
+// de session y figurent pour les rôles qu'elles portent (`Moi`, `Activites`).
 //
 // Une relecture est silencieuse. Elle n'appelle pas `refetch()` sur la requête d'un
 // écran : `refetch()` passe `loading` à vrai, et une panne de réseau y pose une
@@ -90,6 +91,21 @@ export const REQUETES_RAFRAICHIES: ReadonlySet<string> = new Set([
   'DemandesEnAttente',
   'SouhaitsEnAttente',
   'MesPropositions',
+  // L'annuaire, l'équipe d'une activité et ses souhaits (ADR 0018).
+  'Personnes',
+  'PersonnesEquipe',
+  'SouhaitsActivite',
+  'SouhaitsEdition',
+  // Les rôles d'admin (ADR 0019). `Moi` se relit sans risque : une session
+  // terminée se lit comme un refus, jamais écrite dans le cache.
+  'Moi',
+  'MesOrganisations',
+  'Activites',
+  'AdminsActivite',
+  'AdminsOrganisation',
+  'AnnuaireAdmins',
+  // L'historique des messages (ADR 0020).
+  'Messages',
   // Invitations entre organisations (ADR 0030).
   'InvitationsEnAttente',
   'MesInvitations',
@@ -263,6 +279,18 @@ export function useSansRafraichissement(nom: string): void {
   }, [nom])
 }
 
+// Le flux de la coquille reçoit les signaux émis par l'espace organisateur lui-même.
+let fluxCourant: { signaler: (entite: EntiteChangee) => void } | null = null
+
+/**
+ * Annonce une écriture que la personne vient de faire, comme le ferait le serveur.
+ * Les écrans concernés se relisent sans attendre le signal du flux : celui-ci peut
+ * être fermé, en reprise ou privé de Valkey. L'écho du serveur rejoint le même lot.
+ */
+export function signalerLocalement(...entites: EntiteChangee[]): void {
+  for (const entite of entites) fluxCourant?.signaler(entite)
+}
+
 /**
  * Relit les écrans au retour sur l'onglet, au retour du réseau et chaque minute, et
  * tient le flux des changements ouvert tant que l'onglet est visible et en ligne.
@@ -297,6 +325,7 @@ export function useRafraichissement(organisation: string): void {
       // rattrape, sans attendre l'écart minimal entre deux relectures.
       apresOuverture: () => rafraichir(0),
     })
+    fluxCourant = flux
     // Un onglet caché ou hors ligne ne garde pas de flux ouvert.
     const suivreLOnglet = () => {
       if (document.visibilityState === 'visible' && navigator.onLine) {
@@ -320,6 +349,7 @@ export function useRafraichissement(organisation: string): void {
       window.removeEventListener('offline', suivreLOnglet)
       window.clearInterval(minuteur)
       flux.arreter()
+      if (fluxCourant === flux) fluxCourant = null
     }
   }, [client, organisation])
 }

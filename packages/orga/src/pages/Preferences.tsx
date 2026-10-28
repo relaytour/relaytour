@@ -103,7 +103,7 @@ export default function Preferences() {
   // activité ou l'organisation (ADR 0033).
   const administre =
     activites.some(a => a.estAdministree) || session?.moi?.estAdmin === true
-  const { data, loading } = useQuery(PREFERENCES)
+  const { data } = useQuery(PREFERENCES)
   const [modifier, modification] = useMutation(MODIFIER, {
     refetchQueries: [PREFERENCES],
   })
@@ -147,7 +147,7 @@ export default function Preferences() {
       >
         <Trans>Préférences</Trans>
       </Titre>
-      {loading || !data ? (
+      {!data ? (
         <Skeleton active />
       ) : (
         <DeuxColonnes

@@ -252,6 +252,18 @@ describe('droit de recevoir un signal', () => {
       false
     )
   })
+
+  it('réserve un rôle d’admin de l’organisation à la personne concernée', async () => {
+    const role: Changement = {
+      entite: 'EQUIPE',
+      organisationId: ids.org,
+      destinataireId: ids.alice,
+    }
+    expect(await peutRecevoir(await contexte(ids.alice), role)).toBe(true)
+    expect(await peutRecevoir(await contexte(ids.admin), role)).toBe(false)
+    expect(await peutRecevoir(await contexte(ids.emma), role)).toBe(false)
+    expect(await peutRecevoir(await contexte(null), role)).toBe(false)
+  })
 })
 
 describe('abonnement aux changements', () => {
@@ -523,6 +535,61 @@ describe('signal d’une écriture', () => {
     expect(recus.find(c => c.entite === 'NOTIFICATION')).toMatchObject({
       destinataireId: ids.alice,
     })
+  })
+
+  /** Exécute une mutation en admin de l'organisation, sans erreur. */
+  async function enAdmin(query: string, variables: Record<string, unknown>) {
+    const reponse = await apollo.executeOperation(
+      { query, variables },
+      { contextValue: await contexte(ids.admin) }
+    )
+    expect(
+      reponse.body.kind === 'single' && reponse.body.singleResult.errors
+    ).toBeUndefined()
+  }
+
+  /** Le prochain signal d'équipe du flux, après ceux de la cloche. */
+  async function prochainSignalEquipe(
+    flux: AsyncIterableIterator<Changement>
+  ): Promise<Changement> {
+    for (;;) {
+      const changement = (await flux.next()).value as Changement
+      if (changement.entite === 'EQUIPE') return changement
+    }
+  }
+
+  it('publie un rôle d’admin d’activité et de l’organisation', async () => {
+    const flux = (await ouvrirLeFlux(await contexte(ids.alice), {
+      relireLeContexte: () => contexte(ids.alice),
+    }))!
+    try {
+      await enAdmin(
+        `mutation ($p: ID!, $a: ID!) { definirAdminActivite(personneId: $p, activiteId: $a, admin: true) }`,
+        { p: ids.alice, a: ids.activite }
+      )
+      expect(await prochainSignalEquipe(flux)).toMatchObject({
+        activiteId: ids.activite,
+      })
+
+      const { name } = await prisma.user.findUniqueOrThrow({
+        where: { id: ids.alice },
+        select: { name: true },
+      })
+      await enAdmin(
+        `mutation ($id: ID!, $nom: String!) { modifierPersonne(id: $id, nom: $nom, estAdmin: true) { id } }`,
+        { id: ids.alice, nom: name }
+      )
+      expect(await prochainSignalEquipe(flux)).toMatchObject({
+        destinataireId: ids.alice,
+      })
+    } finally {
+      await flux.return?.()
+      await prisma.adminActivite.deleteMany({ where: { userId: ids.alice } })
+      await prisma.appartenance.updateMany({
+        where: { userId: ids.alice, organisationId: ids.org },
+        data: { role: 'MEMBRE' },
+      })
+    }
   })
 })
 

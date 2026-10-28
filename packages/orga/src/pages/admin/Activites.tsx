@@ -396,7 +396,7 @@ export default function Activites() {
       <Tableau<Activite>
         id="activites"
         rowKey="id"
-        loading={loading}
+        loading={loading && !data}
         dataSource={data?.activites ?? []}
         pagination={false}
         ouvrir={ouvrir}

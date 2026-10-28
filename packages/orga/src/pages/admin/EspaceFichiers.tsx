@@ -558,7 +558,7 @@ export default function EspaceFichiers() {
 
   const connexionEtDossiers = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-      <ConnexionEspace espace={espace} chargement={loading} />
+      <ConnexionEspace espace={espace} chargement={loading && !data} />
 
       {connexion !== null && <ExportFiches connexion={connexion} />}
 

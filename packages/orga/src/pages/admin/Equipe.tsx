@@ -76,6 +76,7 @@ import {
 } from '../../lib/requetes'
 import { useActivite } from '../../lib/activite'
 import { useSession } from '../../lib/session'
+import { signalerLocalement } from '../../lib/rafraichissement'
 
 const POSTES = graphql(`
   query PostesAPourvoir($editionId: ID!, $annuaire: Boolean!) {
@@ -321,7 +322,11 @@ export default function Equipe() {
       skip: editionId === undefined,
     }
   )
-  const rafraichir = { refetchQueries: ['PostesAPourvoir'] }
+  // Les autres écrans de l'équipe se relisent sans attendre le flux.
+  const rafraichir = {
+    refetchQueries: ['PostesAPourvoir'],
+    onCompleted: () => signalerLocalement('EQUIPE'),
+  }
   const [definirEffectif] = useMutation(DEFINIR_EFFECTIF, rafraichir)
   const [affecter] = useMutation(AFFECTER, rafraichir)
   const [retirer] = useMutation(RETIRER_AFFECTATION, rafraichir)

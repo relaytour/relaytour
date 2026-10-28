@@ -8,18 +8,22 @@
 // quand l'onglet est caché, et se rouvre au retour. Sans lui, les écrans gardent leur
 // relecture périodique : rien ne dépend de son ouverture.
 
-export type EntiteChangee =
-  | 'TACHE'
-  | 'FICHE'
-  | 'PERIMETRE'
-  | 'EQUIPE'
-  | 'DEMANDE'
-  | 'NOTIFICATION'
-  | 'MESSAGE'
-  | 'AGENDA'
-  | 'PROGRAMME'
-  | 'FICHIERS'
-  | 'CANDIDATURE'
+/** Les entités que le serveur signale. */
+export const ENTITES = [
+  'TACHE',
+  'FICHE',
+  'PERIMETRE',
+  'EQUIPE',
+  'DEMANDE',
+  'NOTIFICATION',
+  'MESSAGE',
+  'AGENDA',
+  'PROGRAMME',
+  'FICHIERS',
+  'CANDIDATURE',
+] as const
+
+export type EntiteChangee = (typeof ENTITES)[number]
 
 // Les requêtes qui affichent des tâches, et celles qui affichent des fiches.
 const VUES_DES_TACHES = [
@@ -80,6 +84,19 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
     'SouhaitsEnAttente',
     // Une invitation acceptée ou retirée quitte la liste d'attente (ADR 0030).
     'InvitationsEnAttente',
+    // L'annuaire, l'équipe d'une activité et ses souhaits (ADR 0018).
+    'Personnes',
+    'PersonnesEquipe',
+    'SouhaitsActivite',
+    'SouhaitsEdition',
+    // Un rôle d'admin change les menus, les droits et les écrans « Admins »
+    // (ADR 0019).
+    'Moi',
+    'MesOrganisations',
+    'Activites',
+    'AdminsActivite',
+    'AdminsOrganisation',
+    'AnnuaireAdmins',
   ],
   DEMANDE: [
     'Demandes',
@@ -213,6 +230,11 @@ export function creerFlux(options: {
       })
   }
 
+  const recevoir = (entite: EntiteChangee) => {
+    enAttente.add(entite)
+    regroupement ??= setTimeout(relireLeLot, REGROUPEMENT_MS)
+  }
+
   const ouvrir = () => {
     if (!voulu || fermer !== null) return
     // Une fin tardive d'un flux déjà remplacé ne compte pas.
@@ -226,8 +248,7 @@ export function creerFlux(options: {
       },
       signal: entite => {
         if (!courant) return
-        enAttente.add(entite)
-        regroupement ??= setTimeout(relireLeLot, REGROUPEMENT_MS)
+        recevoir(entite)
       },
       fin: cause => {
         if (!courant) return
@@ -276,5 +297,11 @@ export function creerFlux(options: {
     },
     /** Vrai quand le serveur a accepté le flux et ne l'a pas fermé. */
     actif: () => actif,
+    /**
+     * Reçoit un signal émis par l'espace organisateur lui-même, après une écriture.
+     * Il rejoint le lot des signaux du serveur : l'écho de la même écriture, arrivé
+     * pendant le regroupement, ne relit rien de plus. Fonctionne flux fermé.
+     */
+    signaler: recevoir,
   }
 }

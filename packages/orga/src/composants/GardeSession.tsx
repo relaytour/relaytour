@@ -50,7 +50,7 @@ export default function GardeSession({
     }
   }, [choixPerime, apollo])
 
-  if (loading || chargementOrgs || choixPerime) {
+  if ((loading && !data) || (chargementOrgs && !orgs) || choixPerime) {
     return <Spin fullscreen description={t`Chargement`} />
   }
   // Une erreur sur la liste des organisations ne se lit pas comme une liste vide.
