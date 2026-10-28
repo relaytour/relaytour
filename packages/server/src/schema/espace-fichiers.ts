@@ -882,12 +882,14 @@ builder.mutationFields(t => ({
           )
         )
       }
-      void publierChangement({ entite: 'FICHIERS', organisationId })
-      return prisma.connexionFichiers.update({
+      const connexionReglee = await prisma.connexionFichiers.update({
         ...query,
         where: { organisationId },
-        data: { portee },
+        data: { portee, accesErreur: null },
       })
+      void publierChangement({ entite: 'FICHIERS', organisationId })
+      planifierVerificationAcces(organisationId)
+      return connexionReglee
     },
   }),
 

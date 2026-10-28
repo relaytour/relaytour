@@ -211,6 +211,9 @@ export async function enregistrerConnexion(donnees: {
       etat: 'ACTIVE' as const,
       connecteParId: donnees.connecteParId,
       portee: donnees.portee ?? 'FICHIERS',
+      // Une nouvelle connexion repart sans l'erreur de la précédente : la
+      // vérification qui suit la remplace.
+      accesErreur: null,
       ...(autreFournisseur
         ? {
             exportEmplacement: null,

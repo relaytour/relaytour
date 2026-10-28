@@ -17,6 +17,7 @@ import type {
 import { useActivite } from '../lib/activite'
 import { jourDeLInstant, messageErreur } from '../lib/erreurs'
 import {
+  ACTIVATION_ACCES,
   AVEC_ANNUAIRE,
   CONSENTEMENT,
   resumeMode,
@@ -298,6 +299,14 @@ export default function VerificationAcces({
       )
       .catch((e: unknown) => message.error(messageErreur(e)))
 
+  // Chez SharePoint et Dropbox, une vérification refusée se reprend par une
+  // nouvelle connexion, avec la même portée et un autre compte au besoin.
+  const reconnecter =
+    ACTIVATION_ACCES[connexion.fournisseur] !== 'reconnexion'
+      ? null
+      : connexion.portee === 'GESTION'
+        ? onActiverGestion
+        : onActiver
   const verifications = data?.verificationAcces ?? []
   const derniereVerification = connexion.accesVerifieLe
     ? jourDeLInstant(connexion.accesVerifieLe)
@@ -329,7 +338,23 @@ export default function VerificationAcces({
         />
       )}
       {connexion.accesErreur && (
-        <Alert type="warning" showIcon title={connexion.accesErreur} />
+        <Alert
+          type="warning"
+          showIcon
+          title={connexion.accesErreur}
+          description={
+            reconnecter === null || consentement === undefined
+              ? undefined
+              : i18n._(consentement)
+          }
+          action={
+            reconnecter === null ? undefined : (
+              <Button size="small" onClick={reconnecter}>
+                {t`Reconnecter le fournisseur`}
+              </Button>
+            )
+          }
+        />
       )}
       {loading && !data ? (
         <Skeleton active paragraph={{ rows: 4 }} />

@@ -4,6 +4,7 @@ import { convertibleParMicrosoft } from './chemin.ts'
 import { appelSortant, type HotesAdmis } from './sortant.ts'
 import {
   AccesRetire,
+  AnnuaireRefuse,
   FournisseurIndisponible,
   type AnnuaireFournisseur,
   type Beneficiaire,
@@ -46,6 +47,36 @@ export const PORTEES_MICROSOFT: Record<Portee, string> = {
   ANNUAIRE: `${FICHIERS} User.Read.All GroupMember.Read.All`,
   GESTION: `${FICHIERS} User.Read.All GroupMember.ReadWrite.All`,
 }
+
+const RANG: Record<Portee, number> = { FICHIERS: 0, ANNUAIRE: 1, GESTION: 2 }
+
+/**
+ * La portée que Microsoft a réellement accordée, d'après le champ `scope` de sa
+ * réponse, sans dépasser la portée demandée. Un compte qui n'obtient pas la
+ * lecture de l'annuaire garde les fichiers seuls. Sans champ `scope`, la portée
+ * demandée reste.
+ */
+export function porteeAccordee(
+  demandee: Portee,
+  scope: string | undefined
+): Portee {
+  if (scope === undefined) return demandee
+  // Microsoft préfixe parfois chaque autorisation par l'adresse de Graph.
+  const accordees = new Set(
+    scope
+      .split(' ')
+      .filter(a => a !== '')
+      .map(a => a.slice(a.lastIndexOf('/') + 1).toLowerCase())
+  )
+  const lecture = accordees.has('user.read.all')
+  const accordee: Portee =
+    lecture && accordees.has('groupmember.readwrite.all')
+      ? 'GESTION'
+      : lecture && accordees.has('groupmember.read.all')
+        ? 'ANNUAIRE'
+        : 'FICHIERS'
+  return RANG[accordee] < RANG[demandee] ? accordee : demandee
+}
 const GRAPH = 'https://graph.microsoft.com/v1.0'
 const DELAI_MS = 15_000
 const DELAI_CONTENU_MS = 120_000
@@ -83,6 +114,8 @@ export interface Jetons {
   acces: string
   rafraichissement: string
   expireLe: number
+  /** La portée accordée par Microsoft, au plus la portée demandée. */
+  portee: Portee
 }
 
 async function demanderJetons(
@@ -109,6 +142,7 @@ async function demanderJetons(
     access_token?: string
     refresh_token?: string
     expires_in?: number
+    scope?: string
     error?: string
   }
   if (
@@ -130,6 +164,7 @@ async function demanderJetons(
     acces: donnees.access_token,
     rafraichissement: donnees.refresh_token,
     expireLe: Date.now() + (donnees.expires_in ?? 3600) * 1000,
+    portee: porteeAccordee(portee, donnees.scope),
   }
 }
 
@@ -593,6 +628,13 @@ export function annuaireSharePoint(
           for (const r of corps.responses) {
             const adresse = lot[Number(r.id)]
             if (adresse === undefined || r.status === 429) continue
+            // Un compte sans la lecture de l'annuaire : un compte invité, ou
+            // une autorisation que l'admin Microsoft Entra n'a pas accordée.
+            if (r.status === 401 || r.status === 403) {
+              throw new AnnuaireRefuse(
+                `Microsoft Graph refuse la lecture de l’annuaire (${r.status}).`
+              )
+            }
             if (r.status !== 200) {
               throw new FournisseurIndisponible(
                 `Microsoft Graph refuse la recherche d’un compte (${r.status}).`

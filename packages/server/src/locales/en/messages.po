@@ -2475,6 +2475,11 @@ msgstr "{nombre, plural, one {Relaytour does not read the permissions of # linke
 
 #. js-lingui-explicit-id
 #: src/espace-fichiers/acces.ts
+msgid "Le compte connecté ne lit pas l’annuaire du fournisseur. Reconnectez le fournisseur avec un compte qui en a le droit."
+msgstr "The connected account cannot read the provider’s directory. Reconnect the provider with an account that has this right."
+
+#. js-lingui-explicit-id
+#: src/espace-fichiers/acces.ts
 msgid "Le fournisseur n’a pas permis la vérification. Réessayez, ou reconnectez le fournisseur avec la vérification des accès."
 msgstr "The provider did not allow the check. Try again, or reconnect the provider with the access check enabled."
 

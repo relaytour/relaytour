@@ -217,3 +217,9 @@ export class AccesRetire extends Error {}
 
 /** Le fournisseur ne répond pas, ou répond une erreur inattendue. */
 export class FournisseurIndisponible extends Error {}
+
+/**
+ * Le fournisseur refuse au compte connecté la lecture de son annuaire : il faut
+ * reconnecter l'espace avec un compte qui en a le droit (ADR 0044).
+ */
+export class AnnuaireRefuse extends FournisseurIndisponible {}

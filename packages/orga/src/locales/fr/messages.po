@@ -5840,6 +5840,10 @@ msgid "le fournisseur cloud"
 msgstr "le fournisseur cloud"
 
 #: src/pages/admin/EspaceFichiers.tsx
+msgid "Le fournisseur cloud est connecté sans la vérification des accès. Le compte utilisé n’a pas obtenu la lecture de l’annuaire."
+msgstr "Le fournisseur cloud est connecté sans la vérification des accès. Le compte utilisé n’a pas obtenu la lecture de l’annuaire."
+
+#: src/pages/admin/EspaceFichiers.tsx
 msgid "Le fournisseur cloud est connecté."
 msgstr "Le fournisseur cloud est connecté."
 
@@ -8189,6 +8193,10 @@ msgstr "Rechercher une tâche, une fiche, une personne"
 #: src/composants/ConnexionEspace.tsx
 msgid "Reconnecter {nomFournisseur}"
 msgstr "Reconnecter {nomFournisseur}"
+
+#: src/composants/VerificationAcces.tsx
+msgid "Reconnecter le fournisseur"
+msgstr "Reconnecter le fournisseur"
 
 #: src/composants/Demandes.tsx
 msgid "Reçue le"

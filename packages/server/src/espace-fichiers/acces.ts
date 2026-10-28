@@ -24,6 +24,7 @@ import {
 } from './propositions.ts'
 import {
   AccesRetire,
+  AnnuaireRefuse,
   type AnnuaireFournisseur,
   type CompteAnnuaire,
   type DroitElement,
@@ -501,9 +502,14 @@ export async function verifierAcces(organisationId: string): Promise<void> {
     await prisma.connexionFichiers.updateMany({
       where: { organisationId },
       data: {
-        accesErreur: i18n._(
-          'Le fournisseur n’a pas permis la vérification. Réessayez, ou reconnectez le fournisseur avec la vérification des accès.'
-        ),
+        accesErreur:
+          erreur instanceof AnnuaireRefuse
+            ? i18n._(
+                'Le compte connecté ne lit pas l’annuaire du fournisseur. Reconnectez le fournisseur avec un compte qui en a le droit.'
+              )
+            : i18n._(
+                'Le fournisseur n’a pas permis la vérification. Réessayez, ou reconnectez le fournisseur avec la vérification des accès.'
+              ),
       },
     })
     journal.warn(

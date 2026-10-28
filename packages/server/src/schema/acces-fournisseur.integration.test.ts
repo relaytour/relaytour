@@ -12,7 +12,10 @@ import {
   espaceEnMemoire,
   type AnnuaireMemoire,
 } from '../espace-fichiers/memoire.ts'
-import type { CompteAnnuaire } from '../espace-fichiers/types.ts'
+import {
+  AnnuaireRefuse,
+  type CompteAnnuaire,
+} from '../espace-fichiers/types.ts'
 
 import { schema } from './index.ts'
 
@@ -763,6 +766,40 @@ describe('fournisseur sans annuaire', () => {
         espaceEnMemoire([], annuaireEnMemoire(donnees))
       )
     }
+  })
+})
+
+describe('annuaire refusé au compte connecté', () => {
+  it('garde une erreur qui demande un autre compte, puis l’efface à la vérification suivante', async () => {
+    const annuaire = annuaireEnMemoire(donnees)
+    remplacerEspacePourLesTests(() =>
+      espaceEnMemoire([], {
+        ...annuaire,
+        chercherComptes: () =>
+          Promise.reject(
+            new AnnuaireRefuse('Microsoft Graph refuse la lecture (403).')
+          ),
+      })
+    )
+    const erreur = async () =>
+      (
+        await prisma.connexionFichiers.findUniqueOrThrow({
+          where: { organisationId: ids.org },
+          select: { accesErreur: true },
+        })
+      ).accesErreur
+    try {
+      await expect(verifierAcces(ids.org)).rejects.toBeInstanceOf(
+        AnnuaireRefuse
+      )
+      expect(await erreur()).toMatch(/ne lit pas l’annuaire/)
+    } finally {
+      remplacerEspacePourLesTests(() =>
+        espaceEnMemoire([], annuaireEnMemoire(donnees))
+      )
+    }
+    await verifierAcces(ids.org)
+    expect(await erreur()).toBeNull()
   })
 })
 
