@@ -35,6 +35,7 @@ import { sousVerrouOrganisation } from './limites.ts'
 import { empreinte, nouveauSel } from './liens.ts'
 import { texteFacultatif, texteRequis } from './saisie.ts'
 import { i18n } from './langue.ts'
+import { exigerModule } from './modules.ts'
 
 // Import de listes de bénévoles (ADR 0042). Le navigateur lit le fichier, associe
 // les colonnes et réunit les lignes d'une même personne ; il envoie ensuite les
@@ -150,6 +151,7 @@ export async function porteeImport(
   perimetreId: string | number | null | undefined
 ): Promise<Portee> {
   const lue = await ctx.exigerEdition(editionId)
+  await exigerModule(lue.activiteId, 'BENEVOLES')
   const edition = {
     id: lue.id,
     activiteId: lue.activiteId,

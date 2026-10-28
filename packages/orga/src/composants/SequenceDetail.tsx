@@ -63,12 +63,12 @@ export default function SequenceDetail({
   onModifier: (s: SequenceSaisie) => void
   onFermer: () => void
 }) {
-  const { activite } = useActivite()
+  const { activite, aModule } = useActivite()
   const { message, modal } = App.useApp()
   const { t } = useLingui()
   const { data: benevoles } = useQuery(BENEVOLES, {
     variables: { activiteId: activite.id },
-    skip: sequence === null || !lisible,
+    skip: sequence === null || !lisible || !aModule('BENEVOLES'),
   })
   const [supprimer] = useMutation(SUPPRIMER, {
     refetchQueries: [
@@ -160,27 +160,28 @@ export default function SequenceDetail({
           {sequence.description && (
             <p className="rt-reunion-description">{sequence.description}</p>
           )}
-          {(sequence.besoinBenevoles !== null ||
-            sequence.consignesBenevoles) && (
-            <section>
-              <h3 className="rt-reunion-intertitre">
-                <Trans>Bénévoles</Trans>
-              </h3>
-              {sequence.besoinBenevoles !== null && (
-                <p>
-                  <Jauge
-                    renforts={sequence.renforts}
-                    besoin={sequence.besoinBenevoles}
-                  />
-                </p>
-              )}
-              {sequence.consignesBenevoles && (
-                <p className="rt-reunion-description">
-                  {sequence.consignesBenevoles}
-                </p>
-              )}
-            </section>
-          )}
+          {aModule('BENEVOLES') &&
+            (sequence.besoinBenevoles !== null ||
+              sequence.consignesBenevoles) && (
+              <section>
+                <h3 className="rt-reunion-intertitre">
+                  <Trans>Bénévoles</Trans>
+                </h3>
+                {sequence.besoinBenevoles !== null && (
+                  <p>
+                    <Jauge
+                      renforts={sequence.renforts}
+                      besoin={sequence.besoinBenevoles}
+                    />
+                  </p>
+                )}
+                {sequence.consignesBenevoles && (
+                  <p className="rt-reunion-description">
+                    {sequence.consignesBenevoles}
+                  </p>
+                )}
+              </section>
+            )}
           <section>
             <h3 className="rt-reunion-intertitre">
               <Trans>Personnes placées</Trans>

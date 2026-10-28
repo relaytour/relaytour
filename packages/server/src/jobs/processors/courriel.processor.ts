@@ -10,6 +10,7 @@ import { CODE_VALIDITE_SECONDES } from '../../lib/connexion.ts'
 import { courrielTronque, journal, sansAdresses } from '../../lib/journal.ts'
 import { avecLangue } from '../../lib/langue.ts'
 import { langueDuDestinataire } from '../../lib/langue-destinataire.ts'
+import { moduleActif } from '../../lib/modules.ts'
 import {
   attenteJusquAuLendemain,
   rendreEnvoi,
@@ -34,6 +35,16 @@ export async function courrielProcessor(
     journal.info(
       { evenement: 'courriel-code-expire', userId: userId ?? null },
       'Code de connexion expiré avant l’envoi : rien n’est envoyé.'
+    )
+    return
+  }
+
+  // Un mail d'une réunion ou d'une fiche bénévole ne part plus quand son module
+  // a été désactivé entre-temps (ADR 0052).
+  if (!(await moduleDuJobActif(job.data))) {
+    journal.info(
+      { evenement: 'courriel-module-inactif', sorte },
+      'Le module de ce mail est désactivé : rien n’est envoyé.'
     )
     return
   }
@@ -169,6 +180,32 @@ export async function courrielProcessor(
     },
     'Mail traité.'
   )
+}
+
+/** Faux quand le mail concerne un module désactivé dans son activité. */
+async function moduleDuJobActif(donnees: CourrielJobData): Promise<boolean> {
+  if (donnees.reunionId !== undefined) {
+    const reunion = await prisma.reunion.findUnique({
+      where: { id: donnees.reunionId },
+      select: { activiteId: true },
+    })
+    if (
+      reunion !== null &&
+      !(await moduleActif(reunion.activiteId, 'AGENDA'))
+    ) {
+      return false
+    }
+  }
+  if (donnees.benevoleId !== undefined) {
+    const fiche = await prisma.benevole.findUnique({
+      where: { id: donnees.benevoleId },
+      select: { activiteId: true },
+    })
+    if (fiche !== null && !(await moduleActif(fiche.activiteId, 'BENEVOLES'))) {
+      return false
+    }
+  }
+  return true
 }
 
 /** L'organisation qui écrit : celle du job, sinon celle de la tâche qu'il annonce. */

@@ -32,6 +32,7 @@ import { builder } from './builder.ts'
 import { DossierLieRef, FormatApercuEnum } from './espace-fichiers.ts'
 import { FicheRef } from './fiches.ts'
 import { PerimetreRef } from './organisation.ts'
+import { exigerModule, moduleActif } from '../lib/modules.ts'
 
 // Documents liés à une fiche (ADR 0038, 0043). Une personne qui rédige une fiche y
 // lie un dossier ou un fichier d'un dossier lié qui sert le périmètre de la fiche,
@@ -270,6 +271,8 @@ builder.prismaObjectField(FicheRef, 'ressources', t =>
       perimetre: { select: { groupe: true, archivedAt: true } },
     },
     resolve: async (query, fiche) => {
+      // Sans le module documents, la fiche ne montre aucun document (ADR 0052).
+      if (!(await moduleActif(fiche.activiteId, 'DOCUMENTS'))) return []
       // Une fiche déplacée vers un autre périmètre, ou un dossier dont les
       // lecteurs ont changé, ne montre plus les ressources d'un dossier que les
       // lecteurs de la fiche ne lisent pas.
@@ -331,6 +334,7 @@ async function ficheRedigeable(ctx: AppContext, ficheId: string) {
   ) {
     throw accesRefuse()
   }
+  await exigerModule(fiche.activiteId, 'DOCUMENTS')
   return fiche
 }
 
@@ -480,6 +484,7 @@ builder.mutationFields(t => ({
         },
       })
       if (ressource === null) throw accesRefuse()
+      await exigerModule(ressource.fiche.activiteId, 'DOCUMENTS')
       // Le dossier lié entier n'est pas un document : ses lecteurs s'étendent.
       if (ouvert && lireChemin(ressource.chemin).length === 0) {
         throw erreurSaisie(

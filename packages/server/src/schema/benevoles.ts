@@ -20,6 +20,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 
 import { builder } from './builder.ts'
 import { i18n } from '../lib/langue.ts'
+import { exigerModule } from '../lib/modules.ts'
 
 // Fiches bénévoles (ADR 0040). Les admins de l'activité et les personnes qui
 // écrivent dans un de ses périmètres lisent la liste des fiches et en créent. Les
@@ -145,6 +146,7 @@ export async function lireBenevoles(
 /** L'activité, si la personne y écrit : admin, ou affectée à un périmètre. */
 async function activiteEcrite(ctx: AppContext, id: string | number) {
   const activiteId = await ctx.exigerActivite(id)
+  await exigerModule(activiteId, 'BENEVOLES')
   if (!(await ecritDansLActivite(ctx, activiteId))) throw accesRefuse()
   return activiteId
 }
@@ -156,6 +158,7 @@ async function ficheModifiable(ctx: AppContext, id: string) {
   })
   if (benevole === null) throw accesRefuse()
   await ctx.exigerActivite(benevole.activiteId)
+  await exigerModule(benevole.activiteId, 'BENEVOLES')
   if (
     !(await ctx.estAdminDe(benevole.activiteId)) &&
     benevole.creeParId !== ctx.personne!.id
@@ -329,6 +332,7 @@ builder.mutationFields(t => ({
       })
       if (benevole === null) throw accesRefuse()
       await ctx.exigerActivite(benevole.activiteId)
+      await exigerModule(benevole.activiteId, 'BENEVOLES')
       await ctx.exigerAdminDe(benevole.activiteId)
       await prisma.benevole.delete({ where: { id: benevole.id } })
       publierPourActivite(
