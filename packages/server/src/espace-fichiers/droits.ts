@@ -5,6 +5,7 @@ import { perimetresLisibles } from '../lib/droits.ts'
 import { peutLireFiche } from '../lib/fiches.ts'
 import { perimetresLisiblesActifs } from '../lib/fiches-connexes.ts'
 import { publierPourActivite } from '../lib/flux.ts'
+import { moduleActif } from '../lib/modules.ts'
 
 // Droits du fournisseur cloud (ADR 0038, 0043). Un dossier lié sert toute son
 // activité, ou une liste de périmètres et de groupes. Une personne le lit quand elle
@@ -94,6 +95,23 @@ export async function dossierLisible(
  * lui-même. `ressourceId` désigne ce document.
  */
 export async function dossierLisiblePour(
+  ctx: AppContext,
+  dossierId: string,
+  chemin: readonly string[],
+  ressourceId: string | null | undefined
+): Promise<DossierLie | null> {
+  const dossier = await lecteurDuChemin(ctx, dossierId, chemin, ressourceId)
+  // Sans le module documents, aucun document de l'activité ne se lit (ADR 0052).
+  if (
+    dossier === null ||
+    !(await moduleActif(dossier.activiteId, 'DOCUMENTS'))
+  ) {
+    return null
+  }
+  return dossier
+}
+
+async function lecteurDuChemin(
   ctx: AppContext,
   dossierId: string,
   chemin: readonly string[],

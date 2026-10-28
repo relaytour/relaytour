@@ -36,6 +36,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
 import { i18n } from '../lib/langue.ts'
+import { exigerModule } from '../lib/modules.ts'
 
 // Réunions de l'agenda (ADR 0037). Une réunion appartient à l'agenda global d'une
 // activité ou à l'agenda d'un périmètre, pour une période. Elle ne se supprime
@@ -289,7 +290,8 @@ async function reunionVisible(
     include: REUNION_CHARGEE,
   })
   if (reunion === null) throw accesRefuse()
-  await ctx.exigerEdition(reunion.editionId)
+  const edition = await ctx.exigerEdition(reunion.editionId)
+  await exigerModule(edition.activiteId, 'AGENDA')
   return reunion
 }
 
@@ -381,6 +383,7 @@ builder.queryFields(t => ({
     },
     resolve: async (_root, args, ctx) => {
       const edition = await ctx.exigerEdition(args.editionId)
+      await exigerModule(edition.activiteId, 'AGENDA')
       const reunions = await prisma.reunion.findMany({
         where: {
           organisationId: ctx.organisation!.id,
@@ -770,6 +773,7 @@ builder.mutationFields(t => {
           throw erreurSaisie(i18n._('Cette réunion est annulée.'))
         }
         const edition = await ctx.exigerEdition(reunion.editionId)
+        await exigerModule(edition.activiteId, 'AGENDA')
         if (edition.statut === 'ARCHIVEE') {
           throw erreurSaisie(
             i18n._(

@@ -480,7 +480,11 @@ export default function Preferences() {
             requeteARelire={PREFERENCES}
           />
           <PreferenceLangue />
-          <PreferenceAgenda />
+          {/* L'abonnement personnel ne sert que les activités au module agenda
+              actif (ADR 0052). */}
+          {activites.some(a => a.modules.includes('AGENDA')) && (
+            <PreferenceAgenda />
+          )}
           <PreferenceOrganigramme />
           {/* Seuls les admins écrivent un message (ADR 0020). */}
           {(administre || session?.moi?.estAdmin) && <PreferenceMessagerie />}

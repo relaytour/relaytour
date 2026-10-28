@@ -34,6 +34,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
 import { i18n } from '../lib/langue.ts'
+import { exigerModule } from '../lib/modules.ts'
 
 // Appels à bénévoles et candidatures (ADR 0041). Un admin de l'activité ouvre un
 // appel de toute portée ; une personne qui écrit dans un périmètre ouvre un appel
@@ -150,6 +151,7 @@ export function adresseAppel(origine: string, jeton: string): string {
 /** L'édition, et les périmètres où la personne écrit. Refuse sans aucun. */
 async function editionEcrite(ctx: AppContext, editionId: string | number) {
   const edition = await ctx.exigerEdition(editionId)
+  await exigerModule(edition.activiteId, 'BENEVOLES')
   const ecrits = await perimetresEcrits(ctx, edition)
   if (ecrits !== 'TOUS' && ecrits.size === 0) throw accesRefuse()
   return { edition, ecrits }
@@ -163,6 +165,7 @@ async function appelGere(ctx: AppContext, id: string): Promise<AppelCharge> {
   })
   if (appel === null) throw accesRefuse()
   const edition = await ctx.exigerEdition(appel.editionId)
+  await exigerModule(edition.activiteId, 'BENEVOLES')
   if (!gereLAppel(await perimetresEcrits(ctx, edition), appel)) {
     throw accesRefuse()
   }
@@ -933,7 +936,8 @@ async function choixTraitable(ctx: AppContext, id: string) {
     },
   })
   if (choix === null) throw accesRefuse()
-  await ctx.exigerEdition(choix.sequence.editionId)
+  const edition = await ctx.exigerEdition(choix.sequence.editionId)
+  await exigerModule(edition.activiteId, 'BENEVOLES')
   if (!(await peutEcrireSequence(ctx, choix.sequence))) throw accesRefuse()
   if (choix.candidature.statut === 'RETIREE') {
     throw erreurSaisie(i18n._('La personne a retiré cette candidature.'))

@@ -47,6 +47,9 @@ model Organisation {
   // { activites?: number, periodesOuvertes?: number }. Nul ou vide : aucune limite.
   // Une limite bloque une création, jamais la lecture ni l'export.
   limites              Json?
+  // Modules que l'administration de l'installation autorise (ADR 0052). Nul : tous.
+  // Hors de `limites`, dont le schéma strict refuserait une clé inconnue.
+  modulesAutorises     Json?
   // Source de vérité du contenu (ADR 0009) : dernière modification faite dans
   // l'application, et dernier import ou export du dossier de contenu. Un import
   // refuse d'écraser une modification plus récente que la dernière synchronisation.
@@ -285,6 +288,9 @@ model Activite {
   // Liste « Premiers pas » de Mon espace (ADR 0048) : { activiteConfirmeeLe,
   // masqueeLe }, en dates ISO. En base seulement : un import ne la change jamais.
   premiersPas          Json?
+  // Modules actifs (ADR 0052) : liste parmi AGENDA, BENEVOLES et DOCUMENTS. Nul :
+  // tous actifs. En base seulement : un import ne la change jamais.
+  modules              Json?
   archivedAt           DateTime?
   createdAt            DateTime             @default(now())
   updatedAt            DateTime             @updatedAt

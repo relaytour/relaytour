@@ -11,7 +11,7 @@ import {
   Radio,
   Select,
 } from 'antd'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 
 import { graphql } from '../gql'
 import type { RolePlace } from '../gql/graphql'
@@ -149,7 +149,8 @@ export default function SequenceFormulaire({
   const { message } = App.useApp()
   const { t } = useLingui()
   const client = useApolloClient()
-  const { activite } = useActivite()
+  const { activite, aModule } = useActivite()
+  const avecBenevoles = aModule('BENEVOLES')
   const [form] = Form.useForm<Valeurs>()
   // La vue « Répartition » suit les besoins et les horaires des séquences.
   const relire = {
@@ -176,11 +177,19 @@ export default function SequenceFormulaire({
   })
   const { data: benevoles } = useQuery(BENEVOLES, {
     variables: { activiteId: activite.id },
-    skip: !ouvert,
+    skip: !ouvert || !avecBenevoles,
   })
+
+  // Sans le module bénévoles, les places des bénévoles ne s'affichent pas : elles
+  // se gardent à part et repartent telles quelles à l'enregistrement (ADR 0052).
+  const placesCachees = useRef<PlaceSaisie[]>([])
 
   useEffect(() => {
     if (sequence === null) return
+    const places = 'id' in sequence ? sequence.places : []
+    placesCachees.current = avecBenevoles
+      ? []
+      : places.filter(p => p.personne.startsWith('b:'))
     form.setFieldsValue(
       'id' in sequence
         ? {
@@ -194,7 +203,9 @@ export default function SequenceFormulaire({
             description: sequence.description ?? '',
             besoinBenevoles: sequence.besoinBenevoles ?? null,
             consignesBenevoles: sequence.consignesBenevoles ?? '',
-            places: sequence.places,
+            places: avecBenevoles
+              ? places
+              : places.filter(p => !p.personne.startsWith('b:')),
           }
         : {
             agenda: sequence.perimetreId ?? GLOBAL,
@@ -210,7 +221,7 @@ export default function SequenceFormulaire({
             places: [],
           }
     )
-  }, [form, sequence])
+  }, [form, sequence, avecBenevoles])
 
   const optionsPersonnes = [
     {
@@ -223,16 +234,20 @@ export default function SequenceFormulaire({
         }
       }),
     },
-    {
-      label: t`Bénévoles`,
-      options: (benevoles?.benevoles ?? []).map(b => {
-        const nomBenevole = b.nom
-        return {
-          value: `b:${b.id}`,
-          label: t`${nomBenevole} · bénévole`,
-        }
-      }),
-    },
+    ...(avecBenevoles
+      ? [
+          {
+            label: t`Bénévoles`,
+            options: (benevoles?.benevoles ?? []).map(b => {
+              const nomBenevole = b.nom
+              return {
+                value: `b:${b.id}`,
+                label: t`${nomBenevole} · bénévole`,
+              }
+            }),
+          },
+        ]
+      : []),
   ]
 
   const enregistrer = async (v: Valeurs) => {
@@ -246,7 +261,7 @@ export default function SequenceFormulaire({
       description: v.description ?? '',
       besoinBenevoles: v.besoinBenevoles ?? 0,
       consignesBenevoles: v.consignesBenevoles ?? '',
-      places: (v.places ?? [])
+      places: [...(v.places ?? []), ...placesCachees.current]
         .filter(p => p?.personne)
         .map(p =>
           p.personne.startsWith('b:')
@@ -377,7 +392,12 @@ export default function SequenceFormulaire({
         <Form.Item label={t`Description (facultative)`} name="description">
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} />
         </Form.Item>
-        <fieldset className="rt-sondage-creneaux">
+        {/* Sans le module bénévoles, les champs restent dans le formulaire pour
+            garder leurs valeurs, sans s'afficher (ADR 0052). */}
+        <fieldset
+          className="rt-sondage-creneaux"
+          style={avecBenevoles ? undefined : { display: 'none' }}
+        >
           <legend>
             <Trans>Bénévoles</Trans>
           </legend>
@@ -392,12 +412,17 @@ export default function SequenceFormulaire({
             label={t`Consignes pour les bénévoles (facultatives)`}
             name="consignesBenevoles"
             extra={t`Ce texte est public : la page d’un appel l’affiche. Il ne doit contenir aucune coordonnée personnelle.`}
-            rules={[
-              {
-                max: 2000,
-                message: t`Les consignes dépassent 2 000 caractères.`,
-              },
-            ]}
+            // Un champ caché ne bloque pas l'enregistrement sans message visible.
+            rules={
+              avecBenevoles
+                ? [
+                    {
+                      max: 2000,
+                      message: t`Les consignes dépassent 2 000 caractères.`,
+                    },
+                  ]
+                : []
+            }
           >
             <Input.TextArea
               autoSize={{ minRows: 2, maxRows: 6 }}

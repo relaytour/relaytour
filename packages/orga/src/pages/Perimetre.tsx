@@ -176,7 +176,8 @@ const compteTaches = (n: number) =>
 
 export default function Perimetre() {
   const { t, i18n } = useLingui()
-  const { lien, periode, libelleGroupe, gere, activite } = useActivite()
+  const { lien, periode, libelleGroupe, gere, activite, aModule } =
+    useActivite()
   const { slug = '' } = useParams()
   const [parametres, setParametres] = useSearchParams()
   const navigate = useNavigate()
@@ -611,7 +612,7 @@ export default function Perimetre() {
               />
             )}
 
-            {editionId && (
+            {editionId && aModule('AGENDA') && (
               <ReunionsDuPerimetre
                 perimetreId={perimetre.id}
                 editionId={editionId}

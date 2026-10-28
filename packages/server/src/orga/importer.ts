@@ -556,6 +556,8 @@ async function importerActivite(
                 organisationId,
                 nature: 'EVENEMENT',
                 groupes: modele.declaration.groupes,
+                // Une activité nouvelle démarre sans module (ADR 0052).
+                modules: [],
                 ...declaration,
               },
               select: { id: true },

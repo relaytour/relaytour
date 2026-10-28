@@ -65,6 +65,11 @@ msgid "Renseignez d’abord le contact de l’activité ou de l’organisation :
 msgstr "First enter the contact for the activity or the organization: the form names this contact for data access and deletion requests."
 
 #. js-lingui-explicit-id
+#: src/schema/activites.ts
+msgid "Votre hébergeur n’autorise pas ce module pour votre organisation."
+msgstr "Your host does not allow this module for your organization."
+
+#. js-lingui-explicit-id
 #: src/lib/editions.ts
 #: src/lib/import-benevoles.ts
 #: src/lib/installation.ts
@@ -680,6 +685,11 @@ msgstr "This edition is archived: its tasks are read-only."
 #: src/schema/installation.ts
 msgid "Aucune organisation ne porte le slug « {slug} »."
 msgstr "No organization has the slug “{slug}”."
+
+#. js-lingui-explicit-id
+#: src/schema/installation.ts
+msgid "Donnez soit la liste des modules autorisés, soit autoriserTousLesModules."
+msgstr "Give either the list of allowed modules or autoriserTousLesModules."
 
 #. js-lingui-explicit-id
 #: src/schema/invitations.ts
@@ -1737,6 +1747,16 @@ msgstr "You are becoming an admin of the organization {organisation}: you manage
 
 #. js-lingui-explicit-id
 #: src/lib/erreurs.ts
+msgid "Votre hébergeur ne propose pas ce module à votre organisation."
+msgstr "Your host does not offer this module to your organization."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
+msgid "Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités »."
+msgstr "This module is turned off for this activity. An activity admin can turn it on in the “Activities” screen."
+
+#. js-lingui-explicit-id
+#: src/lib/erreurs.ts
 msgid "Contactez votre hébergeur : {contact}."
 msgstr "Contact your host: {contact}."
 
@@ -2092,6 +2112,11 @@ msgstr "of the activity admin"
 #: src/lib/modes-d-emploi.ts
 msgid "des référentes et référents"
 msgstr "of coordinators"
+
+#. js-lingui-explicit-id
+#: src/lib/modules.ts
+msgid "Cette liste contient un module inconnu."
+msgstr "This list contains an unknown module."
 
 #. js-lingui-explicit-id
 #: src/lib/organisation.ts

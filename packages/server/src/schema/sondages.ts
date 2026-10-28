@@ -25,6 +25,7 @@ import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
 import { CibleConvocationEnum } from './reunions.ts'
 import { i18n } from '../lib/langue.ts'
+import { exigerModule } from '../lib/modules.ts'
 
 // Sondages de dates (ADR 0037). Un sondage propose des créneaux pour une réunion à
 // venir, dans l'agenda global d'une activité ou dans l'agenda d'un périmètre. Les
@@ -268,7 +269,8 @@ async function sondageVisible(
     include: SONDAGE_CHARGE,
   })
   if (sondage === null) throw accesRefuse()
-  await ctx.exigerEdition(sondage.editionId)
+  const edition = await ctx.exigerEdition(sondage.editionId)
+  await exigerModule(edition.activiteId, 'AGENDA')
   if (!(await sondageLisible(ctx, sondage))) throw accesRefuse()
   return sondage
 }
@@ -386,6 +388,7 @@ builder.queryFields(t => ({
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
       const edition = await ctx.exigerEdition(args.editionId)
+      await exigerModule(edition.activiteId, 'AGENDA')
       const sondages = await prisma.sondage.findMany({
         where: { organisationId: ctx.organisation!.id, editionId: edition.id },
         include: SONDAGE_CHARGE,

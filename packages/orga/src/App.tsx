@@ -3,6 +3,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router'
 import Coquille from './composants/Coquille'
 import ReserveAdmin from './composants/ReserveAdmin'
 import ReserveEquipe from './composants/ReserveEquipe'
+import ReserveModule from './composants/ReserveModule'
 import { VersActivite } from './composants/FournisseurActivite'
 import GardeSession from './composants/GardeSession'
 import Activites from './pages/admin/Activites'
@@ -66,10 +67,19 @@ const routeur = createBrowserRouter([
         children: [
           { index: true, element: <MonEspace /> },
           { path: 'retroplanning', element: <Retroplanning /> },
-          { path: 'agenda', element: <Agenda /> },
+          // Un module inactif mène à « Mon espace » (ADR 0052).
+          {
+            element: <ReserveModule module="AGENDA" />,
+            children: [{ path: 'agenda', element: <Agenda /> }],
+          },
           { path: 'programme', element: <Programme /> },
-          { path: 'benevoles', element: <Benevoles /> },
-          { path: 'benevoles/import', element: <ImportBenevoles /> },
+          {
+            element: <ReserveModule module="BENEVOLES" />,
+            children: [
+              { path: 'benevoles', element: <Benevoles /> },
+              { path: 'benevoles/import', element: <ImportBenevoles /> },
+            ],
+          },
           { path: 'perimetres/:slug', element: <Perimetre /> },
           { path: 'fiches', element: <Fiches /> },
           { path: 'fiches/nouvelle', element: <FicheEditeur /> },

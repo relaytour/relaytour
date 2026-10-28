@@ -24,6 +24,20 @@
             "texte": "A connection whose account does not obtain read access to the directory stays limited to files, and a notice tells you so. When the check fails, the “Access check” panel offers to reconnect the provider. A new connection clears the previous error and starts the check again.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-28-serveur-l-administration-de-l-installation-peut-restreindre-les-modu",
+          "date": "2026-10-28",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'administration de l'installation peut restreindre les modules d'une organisation",
+            "texte": "Si vous hébergez plusieurs organisations, vous pouvez choisir les modules que leurs activités peuvent activer : agenda, bénévoles et documents. Un module retiré se ferme dans toutes les activités de l'organisation, sans supprimer leurs données. Sans réglage, tous les modules restent autorisés.",
+            "migration": null
+          },
+          "en": null
         }
       ]
     },

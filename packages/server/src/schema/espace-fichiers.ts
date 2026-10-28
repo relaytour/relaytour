@@ -80,6 +80,7 @@ import { sousVerrouOrganisation } from '../lib/limites.ts'
 
 import { builder } from './builder.ts'
 import { PerimetreRef } from './organisation.ts'
+import { moduleActif } from '../lib/modules.ts'
 
 // Espace de fichiers d'une organisation (ADR 0038). Un admin de l'organisation le
 // connecte et lie ses dossiers aux périmètres. Une personne lit un dossier lié
@@ -730,6 +731,14 @@ builder.queryFields(t => ({
     },
     resolve: async (query, _root, { activiteId, perimetreId }, ctx) => {
       const activite = await ctx.exigerActivite(activiteId)
+      // Sans le module documents, seul l'admin de l'organisation lit encore les
+      // dossiers liés, pour l'écran du fournisseur cloud (ADR 0052).
+      if (
+        !ctx.personne!.estAdmin &&
+        !(await moduleActif(activite, 'DOCUMENTS'))
+      ) {
+        return []
+      }
       const lisibles = await conditionDossiersLisibles(ctx, activite)
       if (lisibles === null) return []
       let servi: Prisma.DossierLieWhereInput = {}
