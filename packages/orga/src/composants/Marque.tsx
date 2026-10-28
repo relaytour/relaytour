@@ -113,7 +113,7 @@ export function SignatureRelaytour({
           rel="noreferrer"
           aria-label={t`Propulsé par Relaytour : code source`}
           title={t`Propulsé par Relaytour : code source`}
-          style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}
+          style={{ display: 'inline-flex' }}
         >
           <Pictogramme taille={16} monochrome />
         </a>
@@ -121,7 +121,7 @@ export function SignatureRelaytour({
     )
   return (
     <div className="rt-pied-marque">
-      <span style={{ display: 'inline-flex', color: 'var(--rt-encre-40)' }}>
+      <span style={{ display: 'inline-flex' }}>
         <Pictogramme taille={14} monochrome />
       </span>
       <span>
