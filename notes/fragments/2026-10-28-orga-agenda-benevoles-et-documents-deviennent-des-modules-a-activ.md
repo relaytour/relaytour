@@ -4,6 +4,7 @@ type: fonctionnalite
 audience: organisateurs
 role: admin-activite
 etat: prevu
+version: 0.23.0
 fr:
   titre: >-
     Agenda, bénévoles et documents deviennent des modules à activer

@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.23.0
 fr:
   titre: >-
     Le pictogramme de Relaytour en pied de menu est d'un gris opaque

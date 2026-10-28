@@ -1,6 +1,6 @@
 # ADR 0052 — Modules d'une activité
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-28
 - Complète l'ADR 0008 (activités et administration de l'installation). Ne change pas sa section « Frontière des extensions ».
 

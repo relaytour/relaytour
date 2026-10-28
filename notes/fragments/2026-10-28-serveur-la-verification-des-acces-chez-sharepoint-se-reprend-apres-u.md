@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: admin-organisation
 etat: prevu
+version: 0.23.0
 fr:
   titre: >-
     La vérification des accès chez SharePoint se reprend après un refus de l’annuaire

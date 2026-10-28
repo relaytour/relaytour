@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.23.0
 fr:
   titre: >-
     Les écrans affichent sans délai une affectation ou un rôle d'admin

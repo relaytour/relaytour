@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.23.0
 fr:
   titre: >-
     Les lignes de l'agenda et les séquences du programme se lisent mieux sur le fond

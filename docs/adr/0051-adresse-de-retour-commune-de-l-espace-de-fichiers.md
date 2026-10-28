@@ -1,6 +1,6 @@
 # ADR 0051 — Adresse de retour commune de l'espace de fichiers
 
-- **Statut** : proposée
+- **Statut** : acceptée
 - **Date** : 2026-10-26
 - Complète l'ADR 0038 (espace de fichiers) et respecte l'ADR 0007 (frontière entre le logiciel et son exploitation).
 

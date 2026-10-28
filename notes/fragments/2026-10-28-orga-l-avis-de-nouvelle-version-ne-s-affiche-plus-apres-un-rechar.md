@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.23.0
 fr:
   titre: >-
     L'avis de nouvelle version ne s'affiche plus après un rechargement

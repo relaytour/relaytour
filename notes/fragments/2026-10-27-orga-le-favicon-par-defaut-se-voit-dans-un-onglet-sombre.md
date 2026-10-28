@@ -4,6 +4,7 @@ type: correctif
 audience: organisateurs
 role: referent
 etat: prevu
+version: 0.23.0
 fr:
   titre: >-
     Le favicon par défaut se voit dans un onglet sombre

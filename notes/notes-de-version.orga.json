@@ -2,10 +2,10 @@
   "schemaVersion": 5,
   "projet": "relaytour",
   "cible": "orga",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "versions": [
     {
-      "version": null,
+      "version": "0.23.0",
       "notes": [
         {
           "id": "2026-10-28-orga-les-taches-d-un-perimetre-se-rangent-par-phase-par-defaut-da",
