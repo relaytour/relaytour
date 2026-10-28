@@ -12,7 +12,10 @@ import {
   espaceEnMemoire,
   type AnnuaireMemoire,
 } from '../espace-fichiers/memoire.ts'
-import type { CompteAnnuaire } from '../espace-fichiers/types.ts'
+import {
+  AnnuaireRefuse,
+  type CompteAnnuaire,
+} from '../espace-fichiers/types.ts'
 
 import { schema } from './index.ts'
 
@@ -763,6 +766,62 @@ describe('fournisseur sans annuaire', () => {
         espaceEnMemoire([], annuaireEnMemoire(donnees))
       )
     }
+  })
+})
+
+describe('annuaire refusé au compte connecté', () => {
+  it('efface l’erreur précédente quand un admin règle la portée', async () => {
+    await prisma.connexionFichiers.update({
+      where: { organisationId: ids.org },
+      data: { fournisseur: 'GOOGLE_DRIVE', accesErreur: 'Erreur précédente.' },
+    })
+    try {
+      expect((await executer(ids.admin, PORTEE)).errors).toBeUndefined()
+      expect(
+        (
+          await prisma.connexionFichiers.findUniqueOrThrow({
+            where: { organisationId: ids.org },
+          })
+        ).accesErreur
+      ).toBeNull()
+    } finally {
+      await prisma.connexionFichiers.update({
+        where: { organisationId: ids.org },
+        data: { fournisseur: 'SHAREPOINT', portee: 'ANNUAIRE' },
+      })
+    }
+  })
+
+  it('garde une erreur qui demande un autre compte, puis l’efface à la vérification suivante', async () => {
+    const annuaire = annuaireEnMemoire(donnees)
+    remplacerEspacePourLesTests(() =>
+      espaceEnMemoire([], {
+        ...annuaire,
+        chercherComptes: () =>
+          Promise.reject(
+            new AnnuaireRefuse('Microsoft Graph refuse la lecture (403).')
+          ),
+      })
+    )
+    const erreur = async () =>
+      (
+        await prisma.connexionFichiers.findUniqueOrThrow({
+          where: { organisationId: ids.org },
+          select: { accesErreur: true },
+        })
+      ).accesErreur
+    try {
+      await expect(verifierAcces(ids.org)).rejects.toBeInstanceOf(
+        AnnuaireRefuse
+      )
+      expect(await erreur()).toMatch(/ne lit pas l’annuaire/)
+    } finally {
+      remplacerEspacePourLesTests(() =>
+        espaceEnMemoire([], annuaireEnMemoire(donnees))
+      )
+    }
+    await verifierAcces(ids.org)
+    expect(await erreur()).toBeNull()
   })
 })
 

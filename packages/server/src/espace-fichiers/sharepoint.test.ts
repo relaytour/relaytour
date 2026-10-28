@@ -5,7 +5,9 @@ import {
   attenteDemandee,
   beneficiaires,
   espaceSharePoint,
+  porteeAccordee,
 } from './sharepoint.ts'
+import { AnnuaireRefuse, FournisseurIndisponible } from './types.ts'
 
 // Lecture des droits d'un élément par Microsoft Graph (ADR 0044).
 
@@ -126,6 +128,51 @@ describe('SharePoint, autorisations demandées', () => {
   })
 })
 
+describe('SharePoint, autorisations accordées', () => {
+  const FICHIERS = 'Files.ReadWrite.All Sites.Read.All User.Read profile openid'
+
+  it('garde la portée demandée quand Microsoft accorde tout', () => {
+    expect(
+      porteeAccordee(
+        'ANNUAIRE',
+        `${FICHIERS} User.Read.All GroupMember.Read.All`
+      )
+    ).toBe('ANNUAIRE')
+    expect(
+      porteeAccordee(
+        'GESTION',
+        'https://graph.microsoft.com/User.Read.All https://graph.microsoft.com/GroupMember.ReadWrite.All'
+      )
+    ).toBe('GESTION')
+  })
+
+  it('redescend aux fichiers sans la lecture de l’annuaire', () => {
+    expect(porteeAccordee('ANNUAIRE', FICHIERS)).toBe('FICHIERS')
+    expect(porteeAccordee('GESTION', `${FICHIERS} User.Read.All`)).toBe(
+      'FICHIERS'
+    )
+  })
+
+  it('redescend à la vérification sans l’écriture des groupes', () => {
+    expect(
+      porteeAccordee(
+        'GESTION',
+        `${FICHIERS} User.Read.All GroupMember.Read.All`
+      )
+    ).toBe('ANNUAIRE')
+  })
+
+  it('ne dépasse jamais la portée demandée, et la garde sans champ scope', () => {
+    expect(
+      porteeAccordee(
+        'FICHIERS',
+        `${FICHIERS} User.Read.All GroupMember.ReadWrite.All`
+      )
+    ).toBe('FICHIERS')
+    expect(porteeAccordee('ANNUAIRE', undefined)).toBe('ANNUAIRE')
+  })
+})
+
 describe('SharePoint, limites de débit', () => {
   afterEach(() => {
     vi.unstubAllGlobals()
@@ -183,5 +230,35 @@ describe('SharePoint, limites de débit', () => {
       Promise.resolve(new Response('', { status: 403 }))
     )
     expect(await annuaire().droits(position)).toBeNull()
+  })
+
+  it('signale un annuaire refusé au compte connecté', async () => {
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(
+        Response.json({ responses: [{ id: '0', status: 403, body: {} }] })
+      )
+    )
+    await expect(
+      annuaire().chercherComptes(['camille@exemple.fr'])
+    ).rejects.toBeInstanceOf(AnnuaireRefuse)
+  })
+
+  it('tient un refus isolé dans le lot pour une panne, pas pour un annuaire refusé', async () => {
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(
+        Response.json({
+          responses: [
+            { id: '0', status: 200, body: { value: [] } },
+            { id: '1', status: 403, body: {} },
+          ],
+        })
+      )
+    )
+    const refus = annuaire().chercherComptes([
+      'camille@exemple.fr',
+      'dominique@exemple.fr',
+    ])
+    await expect(refus).rejects.toBeInstanceOf(FournisseurIndisponible)
+    await expect(refus).rejects.not.toBeInstanceOf(AnnuaireRefuse)
   })
 })

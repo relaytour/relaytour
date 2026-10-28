@@ -77,6 +77,14 @@ const ISSUES: Record<
   { type: 'success' | 'warning' | 'error'; texte: MessageDescriptor }
 > = {
   reussie: { type: 'success', texte: msg`Le fournisseur cloud est connecté.` },
+  'sans-annuaire': {
+    type: 'warning',
+    texte: msg`Le fournisseur cloud est connecté sans la vérification des accès. Le compte utilisé n’a pas obtenu la lecture de l’annuaire.`,
+  },
+  'sans-gestion': {
+    type: 'warning',
+    texte: msg`Le fournisseur cloud est connecté avec la vérification des accès, sans leur gestion. Le compte utilisé n’a pas obtenu la modification des groupes.`,
+  },
   refusee: {
     type: 'warning',
     texte: msg`La connexion a été annulée chez le fournisseur.`,

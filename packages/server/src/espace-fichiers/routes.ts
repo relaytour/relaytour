@@ -8,6 +8,7 @@ import type { AppContext } from '../context.ts'
 import { publierChangement } from '../lib/flux.ts'
 import { journal } from '../lib/journal.ts'
 
+import { planifierVerificationAcces } from './acces.ts'
 import { cheminValide, disposition, formatApercu, typeServi } from './chemin.ts'
 import { dossierLisiblePour } from './droits.ts'
 import { cheminDeLExportSous, dansLExport } from './isolement.ts'
@@ -92,12 +93,15 @@ export function routesEspaceFichiers(
  */
 interface ConnecteurOAuth {
   fournisseur: Fournisseur
-  /** Échange le code contre des jetons, ou null si le fournisseur est fermé. */
+  /**
+   * Échange le code contre des jetons, ou null si le fournisseur est fermé. Un
+   * fournisseur qui dit ce qu'il a accordé rend aussi la portée accordée.
+   */
   echanger: (
     code: string,
     verificateur: string,
     portee: Portee
-  ) => Promise<Jetons | null>
+  ) => Promise<(Jetons & { portee?: Portee }) | null>
   nomDuCompte: (acces: string) => Promise<string>
 }
 
@@ -138,7 +142,7 @@ async function retourOAuth(
   req: express.Request,
   contexte: Contexte,
   connecteur: ConnecteurOAuth
-): Promise<'reussie' | 'refusee' | 'echec'> {
+): Promise<IssueRetour> {
   const etat = typeof req.query.state === 'string' ? req.query.state : ''
   const code = typeof req.query.code === 'string' ? req.query.code : ''
   const reprise = await reprendreConnexion(etat)
@@ -159,9 +163,12 @@ async function retourOAuth(
   })
   if (admin === null) return 'echec'
 
-  const portee = reprise.portee ?? 'FICHIERS'
-  const jetons = await connecteur.echanger(code, reprise.verificateur, portee)
+  const demandee = reprise.portee ?? 'FICHIERS'
+  const jetons = await connecteur.echanger(code, reprise.verificateur, demandee)
   if (jetons === null) return 'echec'
+  // Un compte qui n'obtient pas toutes les autorisations demandées garde ce qui
+  // lui est accordé : la connexion ne promet pas une vérification impossible.
+  const portee = jetons.portee ?? demandee
   const connexion = await enregistrerConnexion({
     organisationId: reprise.organisationId,
     fournisseur: connecteur.fournisseur,
@@ -178,6 +185,8 @@ async function retourOAuth(
       organisationId: reprise.organisationId,
       acteurId: reprise.userId,
       fournisseur: connecteur.fournisseur,
+      portee,
+      porteeDemandee: demandee,
     },
     'Un espace de fichiers a été connecté.'
   )
@@ -185,7 +194,21 @@ async function retourOAuth(
     entite: 'FICHIERS',
     organisationId: reprise.organisationId,
   })
-  return 'reussie'
+  // La vérification des accès reprend avec le compte qui vient de se connecter.
+  planifierVerificationAcces(reprise.organisationId)
+  return issueAccordee(demandee, portee)
+}
+
+export type IssueRetour =
+  'reussie' | 'sans-annuaire' | 'sans-gestion' | 'refusee' | 'echec'
+
+/**
+ * L'issue d'une connexion réussie, d'après la portée accordée : l'écran dit
+ * quelle autorisation manque quand le fournisseur en accorde moins.
+ */
+export function issueAccordee(demandee: Portee, accordee: Portee): IssueRetour {
+  if (accordee === demandee) return 'reussie'
+  return accordee === 'FICHIERS' ? 'sans-annuaire' : 'sans-gestion'
 }
 
 /**
