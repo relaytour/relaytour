@@ -149,7 +149,8 @@ export default function SequenceFormulaire({
   const { message } = App.useApp()
   const { t } = useLingui()
   const client = useApolloClient()
-  const { activite } = useActivite()
+  const { activite, aModule } = useActivite()
+  const avecBenevoles = aModule('BENEVOLES')
   const [form] = Form.useForm<Valeurs>()
   // La vue « Répartition » suit les besoins et les horaires des séquences.
   const relire = {
@@ -176,7 +177,7 @@ export default function SequenceFormulaire({
   })
   const { data: benevoles } = useQuery(BENEVOLES, {
     variables: { activiteId: activite.id },
-    skip: !ouvert,
+    skip: !ouvert || !avecBenevoles,
   })
 
   useEffect(() => {
@@ -223,16 +224,20 @@ export default function SequenceFormulaire({
         }
       }),
     },
-    {
-      label: t`Bénévoles`,
-      options: (benevoles?.benevoles ?? []).map(b => {
-        const nomBenevole = b.nom
-        return {
-          value: `b:${b.id}`,
-          label: t`${nomBenevole} · bénévole`,
-        }
-      }),
-    },
+    ...(avecBenevoles
+      ? [
+          {
+            label: t`Bénévoles`,
+            options: (benevoles?.benevoles ?? []).map(b => {
+              const nomBenevole = b.nom
+              return {
+                value: `b:${b.id}`,
+                label: t`${nomBenevole} · bénévole`,
+              }
+            }),
+          },
+        ]
+      : []),
   ]
 
   const enregistrer = async (v: Valeurs) => {
@@ -377,7 +382,12 @@ export default function SequenceFormulaire({
         <Form.Item label={t`Description (facultative)`} name="description">
           <Input.TextArea autoSize={{ minRows: 2, maxRows: 6 }} />
         </Form.Item>
-        <fieldset className="rt-sondage-creneaux">
+        {/* Sans le module bénévoles, les champs restent dans le formulaire pour
+            garder leurs valeurs, sans s'afficher (ADR 0052). */}
+        <fieldset
+          className="rt-sondage-creneaux"
+          style={avecBenevoles ? undefined : { display: 'none' }}
+        >
           <legend>
             <Trans>Bénévoles</Trans>
           </legend>

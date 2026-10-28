@@ -1704,6 +1704,7 @@ msgstr "Afficher les premiers pas"
 msgid "Afficher mon adresse dans l’organigramme"
 msgstr "Afficher mon adresse dans l’organigramme"
 
+#: src/composants/ChampsActivite.tsx
 #: src/composants/Coquille.tsx
 #: src/composants/ReunionFormulaire.tsx
 #: src/composants/SondageFormulaire.tsx
@@ -2429,6 +2430,7 @@ msgstr "Avec une adresse, la première place envoie à la personne un mail avec 
 msgid "Avez-vous envoyé ce message ?"
 msgstr "Avez-vous envoyé ce message ?"
 
+#: src/composants/ChampsActivite.tsx
 #: src/composants/Coquille.tsx
 #: src/composants/SequenceDetail.tsx
 #: src/composants/SequenceFormulaire.tsx
@@ -2585,6 +2587,10 @@ msgid "Ce message d’essai vérifie que votre messagerie s’ouvre depuis l’e
 msgstr "Ce message d’essai vérifie que votre messagerie s’ouvre depuis l’espace organisateur.\n"
 "\n"
 "Votre adresse figure dans les champs « À » et « Cci ». Vous pouvez fermer ce message sans l’envoyer."
+
+#: src/composants/ReserveModule.tsx
+msgid "Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités »."
+msgstr "Ce module est désactivé pour cette activité. Un admin de l’activité peut l’activer dans l’écran « Activités »."
 
 #: src/composants/DoublonsBenevoles.tsx
 msgid "Ce ne sont pas des doublons"
@@ -3884,9 +3890,14 @@ msgstr "Document ouvert"
 msgid "Document réservé"
 msgstr "Document réservé"
 
+#: src/composants/ChampsActivite.tsx
 #: src/pages/Fiches.tsx
 msgid "Documents"
 msgstr "Documents"
+
+#: src/composants/ChampsActivite.tsx
+msgid "Documents du fournisseur cloud dans « Ressources » et documents liés aux fiches."
+msgstr "Documents du fournisseur cloud dans « Ressources » et documents liés aux fiches."
 
 #: src/composants/RessourcesFiche.tsx
 msgid "Documents liés"
@@ -4492,6 +4503,10 @@ msgstr "Fiches à créer"
 #: src/composants/ImportFiches.tsx
 msgid "Fiches à mettre à jour"
 msgstr "Fiches à mettre à jour"
+
+#: src/composants/ChampsActivite.tsx
+msgid "Fiches bénévoles, appels à bénévoles, candidatures et répartition dans le programme."
+msgstr "Fiches bénévoles, appels à bénévoles, candidatures et répartition dans le programme."
 
 #: src/composants/DepotFiches.tsx
 #: src/composants/ImportFiches.tsx
@@ -6948,6 +6963,10 @@ msgstr "Modifier mon nom"
 msgid "Modifier votre commentaire"
 msgstr "Modifier votre commentaire"
 
+#: src/composants/ChampsActivite.tsx
+msgid "Modules"
+msgstr "Modules"
+
 #: src/pages/admin/Equipe.tsx
 msgid "Moins avancés d’abord"
 msgstr "Moins avancés d’abord"
@@ -8744,6 +8763,10 @@ msgstr "Réunion annulée."
 msgid "Réunion enregistrée."
 msgstr "Réunion enregistrée."
 
+#: src/composants/ChampsActivite.tsx
+msgid "Réunions, sondages de dates, dates clés et abonnements à un agenda externe."
+msgstr "Réunions, sondages de dates, dates clés et abonnements à un agenda externe."
+
 #: src/pages/FicheEditeur.tsx
 msgid "Revenir à l’éditeur"
 msgstr "Revenir à l’éditeur"
@@ -9834,6 +9857,10 @@ msgstr "Un message sans texte préparé."
 msgid "Un message se prépare ici, puis part de la messagerie de son auteur. L’application n’envoie rien : l’état de chaque message est celui que son auteur a déclaré."
 msgstr "Un message se prépare ici, puis part de la messagerie de son auteur. L’application n’envoie rien : l’état de chaque message est celui que son auteur a déclaré."
 
+#: src/composants/ChampsActivite.tsx
+msgid "Un module désactivé quitte le menu de toute l’équipe. Ses données restent enregistrées et réapparaissent quand vous le réactivez."
+msgstr "Un module désactivé quitte le menu de toute l’équipe. Ses données restent enregistrées et réapparaissent quand vous le réactivez."
+
 #: src/pages/AppelBenevoles.tsx
 msgid "Un mot pour l’équipe (facultatif)"
 msgstr "Un mot pour l’équipe (facultatif)"
@@ -10171,8 +10198,8 @@ msgid "Vérifiez que votre adresse figure dans le champ « Cci » du message d�
 msgstr "Vérifiez que votre adresse figure dans le champ « Cci » du message d’essai. Si ce champ est vide, cette messagerie ne reprend pas les adresses cachées : vous les collerez vous-même."
 
 #: src/composants/PremiersPas.tsx
-msgid "Vérifiez son nom, sa nature et ses groupes de périmètres."
-msgstr "Vérifiez son nom, sa nature et ses groupes de périmètres."
+msgid "Vérifiez son nom, sa nature et ses groupes de périmètres, puis choisissez ses modules : agenda, bénévoles, documents."
+msgstr "Vérifiez son nom, sa nature et ses groupes de périmètres, puis choisissez ses modules : agenda, bénévoles, documents."
 
 #: src/composants/GardeSession.tsx
 msgid "Vérifiez votre connexion, puis rechargez la page."
@@ -10382,6 +10409,10 @@ msgstr "Votre disponibilité"
 #: src/pages/EspaceBenevole.tsx
 msgid "Votre fiche de bénévole et vos disponibilités disparaissent. Ce lien cessera de fonctionner."
 msgstr "Votre fiche de bénévole et vos disponibilités disparaissent. Ce lien cessera de fonctionner."
+
+#: src/composants/ChampsActivite.tsx
+msgid "Votre hébergeur ne propose pas ce module à votre organisation."
+msgstr "Votre hébergeur ne propose pas ce module à votre organisation."
 
 #: src/composants/NotesDeVersion.tsx
 msgid "Votre installation utilise Relaytour {version}. Cette fenêtre liste les changements de chaque version. Vous y lisez les notes qui concernent votre rôle."

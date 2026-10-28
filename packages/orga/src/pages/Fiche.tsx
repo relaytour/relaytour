@@ -50,7 +50,7 @@ function dateHeure(iso: string) {
 
 export default function Fiche() {
   const { t } = useLingui()
-  const { lien, gere } = useActivite()
+  const { lien, gere, aModule } = useActivite()
   const mentions = useMentions()
   const { slug = '' } = useParams()
   const navigate = useNavigate()
@@ -274,12 +274,14 @@ export default function Fiche() {
           <Markdown contenu={fiche.contenu} mentions={mentions} />
         </article>
 
-        <RessourcesFiche
-          slug={fiche.slug}
-          ficheId={fiche.id}
-          perimetreId={fiche.perimetre?.id ?? null}
-          peutModifier={fiche.peutModifier && !fiche.archive}
-        />
+        {aModule('DOCUMENTS') && (
+          <RessourcesFiche
+            slug={fiche.slug}
+            ficheId={fiche.id}
+            perimetreId={fiche.perimetre?.id ?? null}
+            peutModifier={fiche.peutModifier && !fiche.archive}
+          />
+        )}
       </DeuxColonnes>
 
       <Drawer
