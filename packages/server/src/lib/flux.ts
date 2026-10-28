@@ -358,7 +358,10 @@ export async function ecouterLesChangements(
 export const FLUX_PAR_PERSONNE = 4
 /** Durée d'un flux. Le serveur le ferme ensuite, et le navigateur en rouvre un. */
 export const DUREE_FLUX_MS = 15 * 60 * 1000
-/** Rythme auquel un flux relit les droits de sa personne. */
+/**
+ * Rythme auquel un flux relit les droits de sa personne. Un signal d'équipe les
+ * relit aussitôt.
+ */
 export const RELECTURE_DROITS_MS = 60 * 1000
 
 const ouverts = new Map<string, Set<AbortController>>()
@@ -395,7 +398,7 @@ const FILE_MAX = 200
  * `dureeMs`, ou quand la personne n'a plus de contexte : personne archivée dans l'organisation,
  * organisation suspendue, appartenance retirée. `relireLeContexte` reconstruit le
  * contexte, dont les droits se mémorisent par requête : le flux l'appelle au plus
- * une fois par `relectureMs`.
+ * une fois par `relectureMs`, et à chaque signal d'équipe.
  */
 export async function ouvrirLeFlux(
   contexte: AppContext,
@@ -459,7 +462,14 @@ export async function ouvrirLeFlux(
           reveiller = null
           continue
         }
-        if (Date.now() - droitsLusLe >= relectureMs) {
+        // Un signal d'équipe annonce une affectation ou un rôle qui a pu changer
+        // les droits de la personne : ses droits se relisent avant de le trier.
+        // Sans cela, une personne affectée à une activité qu'elle ne voyait pas
+        // ne recevrait le signal qu'à la relecture suivante.
+        if (
+          changement.entite === 'EQUIPE' ||
+          Date.now() - droitsLusLe >= relectureMs
+        ) {
           ctx = await options.relireLeContexte()
           droitsLusLe = Date.now()
           if (ctx.personne === null || ctx.organisation === null) {
