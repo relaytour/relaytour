@@ -8,7 +8,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router'
 import ChoixEdition from '../composants/ChoixEdition'
 import EtiquettePerimetre from '../composants/EtiquettePerimetre'
 import LigneTache, { LigneDeclinaisons } from '../composants/LigneTache'
-import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
+import { DeuxColonnes, Groupe, Panneau } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
 import { PuceBascule, Puces, SeparateurPuces } from '../composants/Puces'
 import Titre from '../composants/Titre'
@@ -23,6 +23,7 @@ import {
   lireRegroupement,
 } from '../lib/regroupement'
 import { EDITION_COURANTE, EDITIONS } from '../lib/requetes'
+import { useGroupesReplies } from '../lib/groupes-replies'
 import { grouperParMois, libelleMois } from '../lib/retroplanning'
 import { estOuverte } from '../lib/taches'
 import { useActivite } from '../lib/activite'
@@ -106,6 +107,7 @@ export default function Retroplanning() {
   const [regroupementChoisi, setRegroupement] = useState<Regroupement>(() =>
     lireRegroupement(CLE_REGROUPEMENT_RETROPLANNING, REGROUPEMENTS, 'mois')
   )
+  const replies = useGroupesReplies('retroplanning')
   const changerRegroupement = (valeur: Regroupement) => {
     setRegroupement(valeur)
     ecrireRegroupement(CLE_REGROUPEMENT_RETROPLANNING, valeur)
@@ -565,61 +567,81 @@ export default function Retroplanning() {
                 )}
               </p>
               {regroupement === 'phase' && debut
-                ? phases.map(groupe => (
-                    <Section
-                      // Le préfixe garde la clé du groupe sans échéance distincte
-                      // d'une phase qui porterait ce nom.
-                      key={
-                        groupe.phase === null
-                          ? 'sans-echeance'
-                          : `phase:${groupe.phase.cle}`
-                      }
-                      titre={groupe.phase?.libelle ?? t`Sans échéance`}
-                      compte={compteTaches(groupe.taches.length)}
-                      extra={
-                        groupe.phase && (
-                          <span className="rt-note">
-                            {libelleBorne(groupe.phase, activite.phases, debut)}
-                          </span>
-                        )
-                      }
-                    >
-                      {plusieursPerimetres
-                        ? groupe.perimetres.map(
-                            ({ perimetre, taches: duPerimetre }) => (
-                              <div
-                                key={perimetre.id}
-                                className="rt-sous-section"
-                              >
-                                <h3 className="rt-sous-section-titre">
-                                  <EtiquettePerimetre
-                                    nom={perimetre.nom}
-                                    couleur={perimetre.couleur}
-                                    lien={lien(
-                                      `/perimetres/${perimetre.slug}?edition=${editionId}`
-                                    )}
-                                    point
-                                  />
-                                  <span className="rt-compte">
-                                    {compteTaches(duPerimetre.length)}
-                                  </span>
-                                </h3>
-                                {lignes(duPerimetre, true)}
-                              </div>
-                            )
+                ? phases.map(groupe => {
+                    // Le préfixe garde la clé du groupe sans échéance distincte
+                    // d'une phase qui porterait ce nom.
+                    const cle =
+                      groupe.phase === null
+                        ? 'sans-echeance'
+                        : `phase:${groupe.phase.cle}`
+                    const titre = groupe.phase?.libelle ?? t`Sans échéance`
+                    return (
+                      <Groupe
+                        key={cle}
+                        titre={titre}
+                        nom={titre}
+                        replie={replies.estReplie(cle)}
+                        onBasculer={() => replies.basculer(cle)}
+                        compte={compteTaches(groupe.taches.length)}
+                        extra={
+                          groupe.phase && (
+                            <span className="rt-note">
+                              {libelleBorne(
+                                groupe.phase,
+                                activite.phases,
+                                debut
+                              )}
+                            </span>
                           )
-                        : lignes(groupe.taches)}
-                    </Section>
-                  ))
-                : groupes.map(groupe => (
-                    <Section
-                      key={groupe.mois ?? 'sans-echeance'}
-                      titre={titreGroupe(groupe.mois)}
-                      compte={compteTaches(groupe.taches.length)}
-                    >
-                      {lignesDuMois(groupe.taches)}
-                    </Section>
-                  ))}
+                        }
+                      >
+                        {plusieursPerimetres
+                          ? groupe.perimetres.map(
+                              ({ perimetre, taches: duPerimetre }) => (
+                                <div
+                                  key={perimetre.id}
+                                  className="rt-sous-section"
+                                >
+                                  <h3 className="rt-sous-section-titre">
+                                    <EtiquettePerimetre
+                                      nom={perimetre.nom}
+                                      couleur={perimetre.couleur}
+                                      lien={lien(
+                                        `/perimetres/${perimetre.slug}?edition=${editionId}`
+                                      )}
+                                      point
+                                    />
+                                    <span className="rt-compte">
+                                      {compteTaches(duPerimetre.length)}
+                                    </span>
+                                  </h3>
+                                  {lignes(duPerimetre, true)}
+                                </div>
+                              )
+                            )
+                          : lignes(groupe.taches)}
+                      </Groupe>
+                    )
+                  })
+                : groupes.map(groupe => {
+                    const cle =
+                      groupe.mois === null
+                        ? 'sans-echeance'
+                        : `mois:${groupe.mois}`
+                    const titre = titreGroupe(groupe.mois)
+                    return (
+                      <Groupe
+                        key={cle}
+                        titre={titre}
+                        nom={titre}
+                        compte={compteTaches(groupe.taches.length)}
+                        replie={replies.estReplie(cle)}
+                        onBasculer={() => replies.basculer(cle)}
+                      >
+                        {lignesDuMois(groupe.taches)}
+                      </Groupe>
+                    )
+                  })}
             </>
           )}
         </DeuxColonnes>

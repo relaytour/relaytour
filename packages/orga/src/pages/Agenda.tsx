@@ -18,7 +18,7 @@ import ChoixEdition from '../composants/ChoixEdition'
 import DateCleFormulaire, {
   type DateCleSaisie,
 } from '../composants/DateCleFormulaire'
-import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
+import { DeuxColonnes, Groupe, Panneau, Section } from '../composants/Panneau'
 import PastillePerimetre from '../composants/PastillePerimetre'
 import ReunionDetail from '../composants/ReunionDetail'
 import SondageDetail from '../composants/SondageDetail'
@@ -51,6 +51,7 @@ import {
 } from '../lib/agenda'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
+import { useGroupesReplies } from '../lib/groupes-replies'
 import { ecrireRegroupement, lireRegroupement } from '../lib/regroupement'
 import { EDITION_COURANTE, PERIMETRES } from '../lib/requetes'
 import { libelleMois } from '../lib/retroplanning'
@@ -230,6 +231,7 @@ const compteElements = (n: number) =>
 
 export default function Agenda() {
   const { t } = useLingui()
+  const replies = useGroupesReplies('agenda')
   const { lien, periode, activite, gere } = useActivite()
   const periodeAucune = periode.Aucune
   const periodeDe = periode.de
@@ -514,15 +516,21 @@ export default function Agenda() {
         />
       </div>
     ) : (
-      groupes.map(groupe => (
-        <Section
-          key={groupe.mois}
-          titre={majuscule(libelleMois(groupe.mois))}
-          compte={compteElements(groupe.elements.length)}
-        >
-          <ul className="rt-agenda-liste">{groupe.elements.map(ligne)}</ul>
-        </Section>
-      ))
+      groupes.map(groupe => {
+        const titre = majuscule(libelleMois(groupe.mois))
+        return (
+          <Groupe
+            key={groupe.mois}
+            titre={titre}
+            nom={titre}
+            compte={compteElements(groupe.elements.length)}
+            replie={replies.estReplie(groupe.mois)}
+            onBasculer={() => replies.basculer(groupe.mois)}
+          >
+            <ul className="rt-agenda-liste">{groupe.elements.map(ligne)}</ul>
+          </Groupe>
+        )
+      })
     )
 
   const elementsDuMois = lignes.filter(

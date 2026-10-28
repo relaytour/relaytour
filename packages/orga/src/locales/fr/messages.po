@@ -3679,6 +3679,10 @@ msgstr "Demandes et invitations"
 msgid "Demandes pour rejoindre l’équipe"
 msgstr "Demandes pour rejoindre l’équipe"
 
+#: src/composants/Panneau.tsx
+msgid "Déplier le groupe {nom}"
+msgstr "Déplier le groupe {nom}"
+
 #: src/composants/Coquille.tsx
 msgid "Déplier le menu"
 msgstr "Déplier le menu"
@@ -8470,6 +8474,10 @@ msgstr "Répartir dans le programme"
 #: src/pages/Programme.tsx
 msgid "Répartition"
 msgstr "Répartition"
+
+#: src/composants/Panneau.tsx
+msgid "Replier le groupe {nom}"
+msgstr "Replier le groupe {nom}"
 
 #: src/composants/Coquille.tsx
 msgid "Replier le menu"

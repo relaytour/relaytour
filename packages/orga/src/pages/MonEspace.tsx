@@ -7,12 +7,13 @@ import { Link, useNavigate } from 'react-router'
 
 import Avancement from '../composants/Avancement'
 import Contribution from '../composants/Contribution'
-import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
+import { DeuxColonnes, Groupe, Panneau } from '../composants/Panneau'
 import PremiersPas from '../composants/PremiersPas'
 import TacheCarte from '../composants/TacheCarte'
 import Titre from '../composants/Titre'
 import { graphql } from '../gql'
 import { dateCourte } from '../lib/erreurs'
+import { useGroupesReplies } from '../lib/groupes-replies'
 import { prenom } from '../lib/personnes'
 import { EDITION_COURANTE, MOI } from '../lib/requetes'
 import { useActivite } from '../lib/activite'
@@ -56,6 +57,7 @@ export default function MonEspace() {
   const { t } = useLingui()
   const { lien, periode, libelleGroupe, gere } = useActivite()
   const navigate = useNavigate()
+  const replies = useGroupesReplies('mon-espace')
   const { data: session } = useQuery(MOI)
   const { data: courante, loading: chargementEdition } =
     useQuery(EDITION_COURANTE)
@@ -206,8 +208,11 @@ export default function MonEspace() {
             </>
           }
         >
-          <Section
+          <Groupe
             titre={t`Vos tâches`}
+            nom={t`Vos tâches`}
+            replie={replies.estReplie('mes-taches')}
+            onBasculer={() => replies.basculer('mes-taches')}
             compte={
               enRetard > 0
                 ? t`${plural(nombreMesTaches, { one: '# ouverte', other: '# ouvertes' })} · ${enRetard} en retard`
@@ -234,11 +239,14 @@ export default function MonEspace() {
                 />
               ))
             )}
-          </Section>
+          </Groupe>
 
           {aPrendre.length > 0 && (
-            <Section
+            <Groupe
               titre={t`À prendre dans vos périmètres`}
+              nom={t`À prendre dans vos périmètres`}
+              replie={replies.estReplie('a-prendre')}
+              onBasculer={() => replies.basculer('a-prendre')}
               compte={t`${plural(nombreAPrendre, {
                 one: '# tâche sans personne',
                 other: '# tâches sans personne',
@@ -257,7 +265,7 @@ export default function MonEspace() {
                   teinte
                 />
               ))}
-            </Section>
+            </Groupe>
           )}
         </DeuxColonnes>
       )}
