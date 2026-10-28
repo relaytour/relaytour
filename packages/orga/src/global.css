@@ -1289,7 +1289,7 @@ button.rt-ligne-lien {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  padding: 14px 0 20px;
+  padding: 14px 0 8px;
 }
 
 .rt-groupe::before {
@@ -1306,7 +1306,7 @@ button.rt-ligne-lien {
 }
 
 .rt-groupe.rt-groupe-replie {
-  padding-bottom: 14px;
+  padding-bottom: 12px;
 }
 
 .rt-groupe-titre {
@@ -4345,6 +4345,7 @@ button.rt-carte-fiche {
 @media (max-width: 575px) {
   .rt-premiers-pas-actions {
     flex-basis: 100%;
+    box-sizing: border-box;
     padding-left: 42px;
   }
 }
