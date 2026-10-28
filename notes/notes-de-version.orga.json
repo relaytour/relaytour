@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-28-orga-l-avis-de-nouvelle-version-ne-s-affiche-plus-apres-un-rechar",
+          "date": "2026-10-28",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'avis de nouvelle version ne s'affiche plus après un rechargement",
+            "texte": "Quand vous rechargez la page après une mise à jour, l'application utilise déjà la dernière version. L'avis « Une nouvelle version est disponible » ne vous demande donc plus de recharger une seconde fois.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The new version notice no longer appears after a reload",
+            "texte": "When you reload the page after an update, the app already runs the latest version. The \"A new version is available\" notice no longer asks you to reload a second time.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-27-orga-le-favicon-par-defaut-se-voit-dans-un-onglet-sombre",
           "date": "2026-10-27",
           "type": "correctif",
