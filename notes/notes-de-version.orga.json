@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-28-orga-les-taches-d-un-perimetre-se-rangent-par-phase-par-defaut-da",
+          "date": "2026-10-28",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les tâches d'un périmètre se rangent par phase par défaut, dans des groupes repliables",
+            "texte": "Le regroupement « Par phase » vient en premier et s'applique par défaut quand l'activité déclare des phases. Chaque phase ou chaque fiche forme un groupe dans un cadre de verre. Vous repliez un groupe par sa flèche ou par son titre, et votre navigateur garde ce choix.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Tasks in an area are grouped by phase by default, in collapsible groups",
+            "texte": "The \"By phase\" grouping comes first and applies by default when the activity declares phases. Each phase or sheet forms a group inside a glass frame. You collapse a group with its arrow or its title, and your browser remembers this choice.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-27-orga-le-favicon-par-defaut-se-voit-dans-un-onglet-sombre",
           "date": "2026-10-27",
           "type": "correctif",

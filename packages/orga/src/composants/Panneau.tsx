@@ -1,7 +1,11 @@
-import { DoubleLeftOutlined, DoubleRightOutlined } from '@ant-design/icons'
+import {
+  DoubleLeftOutlined,
+  DoubleRightOutlined,
+  RightOutlined,
+} from '@ant-design/icons'
 import { useLingui } from '@lingui/react/macro'
 import { Button } from 'antd'
-import { useRef, useState, type ReactNode } from 'react'
+import { useId, useRef, useState, type ReactNode } from 'react'
 
 import {
   HAUT_SOUS_LA_BARRE,
@@ -108,6 +112,64 @@ export function DeuxColonnes({
         </div>
       </aside>
     </div>
+  )
+}
+
+/**
+ * Un groupe de cartes repliable : un cadre de verre teinté, plus étroit que
+ * les cartes, passe derrière elles. Les cartes dépassent du cadre de chaque côté.
+ */
+export function Groupe({
+  titre,
+  nom,
+  compte,
+  extra,
+  replie,
+  onBasculer,
+  children,
+}: {
+  titre: ReactNode
+  /** Le nom du groupe en texte, pour le bouton qui le replie. */
+  nom: string
+  compte?: ReactNode
+  extra?: ReactNode
+  replie: boolean
+  onBasculer: () => void
+  children: ReactNode
+}) {
+  const { t } = useLingui()
+  const id = useId()
+  return (
+    <section className={replie ? 'rt-groupe rt-groupe-replie' : 'rt-groupe'}>
+      <div
+        className="rt-groupe-titre"
+        // Un clic sur l'en-tête bascule le groupe, sauf sur un lien ou un
+        // bouton qu'il contient. Le clavier passe par le bouton.
+        onClick={evenement => {
+          if (!(evenement.target as Element).closest('a, button')) onBasculer()
+        }}
+      >
+        <Button
+          type="text"
+          size="small"
+          shape="circle"
+          className="rt-groupe-bascule"
+          icon={<RightOutlined rotate={replie ? 0 : 90} />}
+          aria-expanded={!replie}
+          aria-controls={id}
+          aria-label={
+            replie ? t`Déplier le groupe ${nom}` : t`Replier le groupe ${nom}`
+          }
+          onClick={onBasculer}
+        />
+        <h2>{titre}</h2>
+        {compte !== undefined && <span className="rt-compte">{compte}</span>}
+        {extra && <span style={{ marginInlineStart: 'auto' }}>{extra}</span>}
+      </div>
+      <div id={id} className="rt-groupe-contenu" hidden={replie}>
+        {children}
+      </div>
+    </section>
   )
 }
 

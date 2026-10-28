@@ -11,7 +11,7 @@ import Avancement from '../composants/Avancement'
 import ChoixEdition from '../composants/ChoixEdition'
 import DeclinaisonsProposees from '../composants/DeclinaisonsProposees'
 import FichesConnexes from '../composants/FichesConnexes'
-import { DeuxColonnes, Panneau, Section } from '../composants/Panneau'
+import { DeuxColonnes, Groupe, Panneau } from '../composants/Panneau'
 import {
   Avatar,
   MentionContactPrincipal,
@@ -30,7 +30,9 @@ import Titre from '../composants/Titre'
 import VersPremiersPas from '../composants/VersPremiersPas'
 import { graphql } from '../gql'
 import type { PagePerimetreQuery, TacheChampsFragment } from '../gql/graphql'
+import { useGroupesReplies } from '../lib/groupes-replies'
 import {
+  CLE_GROUPES_REPLIES_TACHES,
   CLE_REGROUPEMENT_TACHES,
   ecrireRegroupement,
   grouperParFiche,
@@ -149,9 +151,11 @@ const FILTRES: Record<Filtre, (t: TacheChampsFragment) => boolean> = {
 }
 
 // Regroupement de la liste (ADR 0025) : par échéance, la liste reste d'un seul
-// tenant ; par phase ou par fiche, elle se découpe en sections.
-type Regroupement = 'echeance' | 'phase' | 'fiche'
-const REGROUPEMENTS = ['echeance', 'phase', 'fiche'] as const
+// tenant ; par phase ou par fiche, elle se découpe en groupes repliables. Le
+// regroupement par phase vient en premier, et vaut par défaut quand l'activité
+// déclare des phases.
+type Regroupement = 'phase' | 'echeance' | 'fiche'
+const REGROUPEMENTS = ['phase', 'echeance', 'fiche'] as const
 
 const NOTE_REGROUPEMENT: Record<Regroupement, MessageDescriptor> = {
   echeance: msg`Les tâches sont triées par échéance. Une tâche ne se supprime pas : elle s’abandonne.`,
@@ -167,6 +171,8 @@ type TacheDuPerimetre = NonNullable<
 interface SectionTaches {
   cle: string
   titre: ReactNode
+  /** Le titre en texte, pour le bouton qui replie le groupe. */
+  nom: string
   extra?: string
   taches: TacheDuPerimetre[]
 }
@@ -188,9 +194,15 @@ export default function Perimetre() {
     skip: editionId === undefined,
   })
   const [filtre, setFiltre] = useState<Filtre>('ouvertes')
+  const parPhase = activite.phases.length > 0
   const [regroupementChoisi, setRegroupement] = useState<Regroupement>(() =>
-    lireRegroupement(CLE_REGROUPEMENT_TACHES, REGROUPEMENTS, 'echeance')
+    lireRegroupement(
+      CLE_REGROUPEMENT_TACHES,
+      REGROUPEMENTS,
+      parPhase ? 'phase' : 'echeance'
+    )
   )
+  const groupes = useGroupesReplies(CLE_GROUPES_REPLIES_TACHES)
   const changerRegroupement = (valeur: Regroupement) => {
     setRegroupement(valeur)
     ecrireRegroupement(CLE_REGROUPEMENT_TACHES, valeur)
@@ -245,7 +257,8 @@ export default function Perimetre() {
   // par fiche n'est proposé qu'avec un accès complet.
   const parFiche = perimetre?.acces === 'COMPLET'
   const regroupement: Regroupement =
-    regroupementChoisi === 'fiche' && !parFiche
+    (regroupementChoisi === 'fiche' && !parFiche) ||
+    (regroupementChoisi === 'phase' && !parPhase)
       ? 'echeance'
       : regroupementChoisi
   // Le premier jour de la période : les bornes des phases se comptent depuis lui.
@@ -253,20 +266,24 @@ export default function Perimetre() {
   const sections = useMemo((): SectionTaches[] | null => {
     if (regroupement === 'phase' && debut) {
       return grouperParPhase(tachesParEcheance, activite.phases, debut).map(
-        groupe => ({
-          // Une activité peut déclarer une phase « sans-echeance » : le préfixe
-          // garde la clé du groupe sans échéance distincte.
-          cle:
-            groupe.phase === null
-              ? 'sans-echeance'
-              : `phase:${groupe.phase.cle}`,
-          titre: groupe.phase?.libelle ?? t`Sans échéance`,
-          extra:
-            groupe.phase === null
-              ? undefined
-              : libelleBorne(groupe.phase, activite.phases, debut),
-          taches: groupe.taches,
-        })
+        groupe => {
+          const titre = groupe.phase?.libelle ?? t`Sans échéance`
+          return {
+            // Une activité peut déclarer une phase « sans-echeance » : le préfixe
+            // garde la clé du groupe sans échéance distincte.
+            cle:
+              groupe.phase === null
+                ? 'sans-echeance'
+                : `phase:${groupe.phase.cle}`,
+            titre,
+            nom: titre,
+            extra:
+              groupe.phase === null
+                ? undefined
+                : libelleBorne(groupe.phase, activite.phases, debut),
+            taches: groupe.taches,
+          }
+        }
       )
     }
     if (regroupement === 'fiche') {
@@ -280,6 +297,7 @@ export default function Perimetre() {
               {groupe.fiche.titre}
             </Link>
           ),
+        nom: groupe.fiche?.titre ?? t`Sans fiche`,
         taches: groupe.taches,
       }))
     }
@@ -688,8 +706,10 @@ export default function Perimetre() {
             valeur={regroupement}
             onChange={changerRegroupement}
             options={[
+              ...(parPhase
+                ? [{ valeur: 'phase' as const, libelle: t`Par phase` }]
+                : []),
               { valeur: 'echeance', libelle: t`Par échéance` },
-              { valeur: 'phase', libelle: t`Par phase` },
               ...(parFiche
                 ? [{ valeur: 'fiche' as const, libelle: t`Par fiche` }]
                 : []),
@@ -705,18 +725,25 @@ export default function Perimetre() {
           cartes(taches)
         ) : (
           sections.map(section => (
-            <Section
+            <Groupe
               key={section.cle}
               titre={section.titre}
+              nom={section.nom}
               compte={compteTaches(section.taches.length)}
               extra={
                 section.extra && (
                   <span className="rt-note">{section.extra}</span>
                 )
               }
+              // La tâche visée par une notification reste visible.
+              replie={
+                groupes.estReplie(section.cle) &&
+                !section.taches.some(x => x.id === tacheVisee)
+              }
+              onBasculer={() => groupes.basculer(section.cle)}
             >
               {cartes(section.taches)}
-            </Section>
+            </Groupe>
           ))
         )}
 

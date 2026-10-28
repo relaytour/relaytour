@@ -93,6 +93,7 @@ Les noms des variables datent des premières valeurs. Les gris ont été relevé
 | Barre | `.rt-verre-barre` | barre latérale, barre haute ; plus opaque en haut, flou de 38 px |
 | Teinté | `.rt-verre-teinte` | un seul élément mis en avant par écran ; voile blanc sur la primaire à 16 % |
 | Carte | `--rt-verre-carte` | cartes de tâche, lignes du rétroplanning ; blanc de 92 à 76 % |
+| Groupe | `--rt-verre-groupe` | cadre d'un groupe de cartes (`Groupe`) ; blanc de 46 à 14 % sur la primaire à 7 %, en retrait derrière les cartes |
 | Dépoli | `--rt-verre-depoli` | fenêtres modales, tiroirs, menus, bulles ; blanc de 94 à 86 % |
 
 Aucune surface de verre ne porte de bordure. Un liseré blanc et une ombre d'encre suffisent.
@@ -128,6 +129,7 @@ Les composants de `packages/orga/src/composants` servent aux écrans publics et 
 |---|---|
 | `Titre` | en-tête de page : titre, sous-titre, actions à droite, fil d'Ariane au-dessus |
 | `DeuxColonnes`, `Panneau`, `Section` | mise en page à deux colonnes, panneau de verre, section titrée avec un compte |
+| `Groupe` | groupe de cartes repliable : un cadre de verre en retrait de 28 px (10 px sous `md`) passe derrière les cartes, qui en dépassent de chaque côté |
 | `Puces`, `PuceBascule`, `SeparateurPuces` | filtres exclusifs et bascules |
 | `PastilleEtat`, `PastilleStatut` | états et statut d'une tâche |
 | `EtiquettePerimetre`, `PastillePerimetre` | nom d'un périmètre sur sa couleur, teintée ou pleine |

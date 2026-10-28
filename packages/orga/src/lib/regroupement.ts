@@ -249,3 +249,35 @@ export function ecrireRegroupement(
     // pour l'écran affiché seulement.
   }
 }
+
+/** Clé des groupes repliés dans la liste des tâches d'un périmètre. */
+export const CLE_GROUPES_REPLIES_TACHES = 'relaytour.taches.groupes-replies'
+
+// Les clés des fiches s'accumulent d'un périmètre à l'autre : le navigateur
+// garde les derniers groupes repliés seulement.
+const GROUPES_REPLIES_MAX = 100
+
+/** Lit les clés des groupes repliés. Une valeur illisible vaut une liste vide. */
+export function lireGroupesReplies(cle: string, depot = stockage()): string[] {
+  try {
+    const lu: unknown = JSON.parse(depot?.getItem(cle) ?? '[]')
+    return Array.isArray(lu)
+      ? lu.filter((x): x is string => typeof x === 'string')
+      : []
+  } catch {
+    return []
+  }
+}
+
+/** Garde les clés des groupes repliés, les plus récentes en dernier. */
+export function ecrireGroupesReplies(
+  cle: string,
+  cles: readonly string[],
+  depot = stockage()
+): void {
+  try {
+    depot?.setItem(cle, JSON.stringify(cles.slice(-GROUPES_REPLIES_MAX)))
+  } catch {
+    // Le choix vaut pour l'écran affiché seulement.
+  }
+}

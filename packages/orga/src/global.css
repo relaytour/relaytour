@@ -119,6 +119,15 @@
       rgba(255, 255, 255, 0.7)
     ),
     rgba(var(--rt-primaire-rgb), 0.14);
+  /* Verre d'un groupe de cartes (Groupe) : un cadre presque transparent,
+     teinté de la primaire, posé derrière les cartes. */
+  --rt-verre-groupe:
+    linear-gradient(
+      155deg,
+      rgba(255, 255, 255, 0.46),
+      rgba(255, 255, 255, 0.14)
+    ),
+    rgba(var(--rt-primaire-rgb), 0.07);
   --rt-liseret:
     inset 0 1px 1px rgba(255, 255, 255, 0.85),
     inset 0 -1px 2px rgba(255, 255, 255, 0.3);
@@ -1264,6 +1273,62 @@ button.rt-ligne-lien {
   font-size: 19px;
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+
+/* Groupe de cartes repliable (Groupe) : le cadre de verre passe derrière les
+   cartes, en retrait de chaque côté, et les cartes en dépassent. */
+.rt-groupe {
+  --rt-groupe-retrait: 28px;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 14px 0 20px;
+}
+
+.rt-groupe::before {
+  content: '';
+  position: absolute;
+  inset: 0 var(--rt-groupe-retrait);
+  z-index: -1;
+  border-radius: var(--rt-rayon-panneau);
+  background: var(--rt-verre-groupe);
+  backdrop-filter: var(--rt-flou);
+  -webkit-backdrop-filter: var(--rt-flou);
+  box-shadow: var(--rt-liseret), var(--rt-ombre-flottante);
+  pointer-events: none;
+}
+
+.rt-groupe.rt-groupe-replie {
+  padding-bottom: 14px;
+}
+
+.rt-groupe-titre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 10px;
+  padding: 0 calc(var(--rt-groupe-retrait) + 14px) 0
+    calc(var(--rt-groupe-retrait) + 8px);
+  cursor: pointer;
+}
+
+.rt-groupe-titre h2 {
+  margin: 0;
+  font-size: 19px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.rt-groupe-bascule .anticon {
+  transition: transform var(--rt-duree) var(--rt-ease-fluide);
+}
+
+@media (max-width: 767px) {
+  .rt-groupe {
+    --rt-groupe-retrait: 10px;
+  }
 }
 
 /* Dans une section, un sous-groupe et son titre : un périmètre dans une phase
