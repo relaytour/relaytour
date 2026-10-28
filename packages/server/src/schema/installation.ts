@@ -227,7 +227,11 @@ builder.mutationFields(t => ({
           organisation: args.slug,
           statut: args.statut ?? undefined,
           limites: args.limites ?? undefined,
-          modulesAutorises: args.modulesAutorises ?? undefined,
+          // La levée de la restriction se consigne aussi : `tous`.
+          modulesAutorises:
+            args.autoriserTousLesModules === true
+              ? 'tous'
+              : (args.modulesAutorises ?? undefined),
         },
         'Une organisation a été modifiée par l’administration de l’installation.'
       )

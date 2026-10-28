@@ -65,13 +65,27 @@ export async function moduleActif(
   return modulesActifs(activite, activite.organisation).includes(module)
 }
 
-/** Refuse une requête sur un module inactif (`MODULE_INACTIF`). */
+/**
+ * Refuse une requête sur un module inactif (`MODULE_INACTIF`). Le message nomme
+ * l'hébergeur quand c'est lui qui n'autorise pas le module.
+ */
 export async function exigerModule(
   activiteId: string,
   module: Module,
   db: Client = prisma
 ): Promise<void> {
-  if (!(await moduleActif(activiteId, module, db))) throw moduleInactif()
+  const activite = await db.activite.findUnique({
+    where: { id: activiteId },
+    select: {
+      modules: true,
+      organisation: { select: { modulesAutorises: true } },
+    },
+  })
+  if (activite === null) throw moduleInactif()
+  if (!lireModules(activite.organisation.modulesAutorises).includes(module)) {
+    throw moduleInactif('hebergeur')
+  }
+  if (!lireModules(activite.modules).includes(module)) throw moduleInactif()
 }
 
 /** Les activités de la liste où le module est actif, dans le même ordre. */

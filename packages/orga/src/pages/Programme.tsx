@@ -84,7 +84,7 @@ type Vue = 'grille' | 'liste' | 'moi' | 'repartition'
 /** Programme du jour J d'une période (ADR 0040). */
 export default function Programme() {
   const { t } = useLingui()
-  const { activite, gere, periode } = useActivite()
+  const { activite, gere, periode, aModule } = useActivite()
   /** Les personnes d'une séquence, responsables en tête, en une ligne. */
   const personnes = (s: SequenceLue): string => {
     return s.places
@@ -101,7 +101,10 @@ export default function Programme() {
   const [parametres, setParametres] = useSearchParams()
   const { data: courante } = useQuery(EDITION_COURANTE)
   const editionId = parametres.get('edition') ?? courante?.editionCourante?.id
-  const vueDemandee = (parametres.get('vue') as Vue | null) ?? 'grille'
+  const vueLue = (parametres.get('vue') as Vue | null) ?? 'grille'
+  // La répartition des bénévoles suit le module bénévoles (ADR 0052).
+  const vueDemandee =
+    vueLue === 'repartition' && !aModule('BENEVOLES') ? 'grille' : vueLue
   const vue: Vue =
     vueDemandee === 'grille' && !ecrans.md ? 'liste' : vueDemandee
   const { data, error } = useQuery(PROGRAMME, {
@@ -189,7 +192,7 @@ export default function Programme() {
       {s.perimetre && (
         <span className="rt-sequence-perimetre">{s.perimetre.nom}</span>
       )}
-      {s.besoinBenevoles !== null && (
+      {s.besoinBenevoles !== null && aModule('BENEVOLES') && (
         <Jauge renforts={s.renforts} besoin={s.besoinBenevoles} court />
       )}
       {s.places.length > 0 && (
@@ -372,7 +375,7 @@ export default function Programme() {
             { valeur: 'moi', libelle: t`Mon jour J` },
             // La répartition des bénévoles, pour les personnes qui écrivent une
             // séquence (ADR 0041).
-            ...(agendas.length > 0
+            ...(agendas.length > 0 && aModule('BENEVOLES')
               ? [{ valeur: 'repartition' as const, libelle: t`Répartition` }]
               : []),
           ]}

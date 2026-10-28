@@ -20,6 +20,8 @@ const activite = (slug: string, options: Partial<Activite> = {}): Activite => ({
   souhaitsOuverts: false,
   adressesOrganigramme: 'AUCUNE',
   formulaireOuvert: false,
+  modules: ['AGENDA', 'BENEVOLES', 'DOCUMENTS'],
+  modulesAutorises: ['AGENDA', 'BENEVOLES', 'DOCUMENTS'],
   formulaire: { introduction: null, question: null, paliers: [] },
   acces: 'COMPLET',
   groupes: [
@@ -72,6 +74,17 @@ describe('construireContexte', () => {
     expect(contexte.libelleGroupe('pole')).toBe('Pôle')
     expect(contexte.libelleGroupe('sport', true)).toBe('Sports')
     expect(contexte.libelleGroupe('inconnu')).toBe('inconnu')
+  })
+
+  it('dit si un module est actif dans l’activité (ADR 0052)', () => {
+    expect(contexte.aModule('AGENDA')).toBe(true)
+    const sansModule = construireContexte(
+      activite('saison', { modules: ['DOCUMENTS'] }),
+      []
+    )
+    expect(sansModule.aModule('AGENDA')).toBe(false)
+    expect(sansModule.aModule('BENEVOLES')).toBe(false)
+    expect(sansModule.aModule('DOCUMENTS')).toBe(true)
   })
 
   it('garde les activités archivées hors du sélecteur, sauf l’affichée', () => {

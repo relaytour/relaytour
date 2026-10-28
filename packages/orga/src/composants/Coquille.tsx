@@ -105,7 +105,7 @@ export default function Coquille() {
 function Mise({ session }: { session: Session }) {
   const { t } = useLingui()
   const { moi, active } = session
-  const { activite, lien, periode, gere, decouverte } = useActivite()
+  const { activite, lien, periode, gere, decouverte, aModule } = useActivite()
   const { data: menu } = useQuery(MENU_PERIMETRES)
   // Le nombre des notifications d'admin, distinct de celui de la cloche (ADR 0033).
   const { data: nombreAdmin } = useQuery(NOMBRE_NOTIFICATIONS_ADMIN, {
@@ -175,17 +175,22 @@ function Mise({ session }: { session: Session }) {
             icon: <ScheduleOutlined />,
             label: t`Rétroplanning`,
           },
-          {
-            key: lien('/agenda'),
-            icon: <CarryOutOutlined />,
-            label: t`Agenda`,
-          },
+          // Les modules inactifs de l'activité quittent le menu (ADR 0052).
+          ...(aModule('AGENDA')
+            ? [
+                {
+                  key: lien('/agenda'),
+                  icon: <CarryOutOutlined />,
+                  label: t`Agenda`,
+                },
+              ]
+            : []),
           {
             key: lien('/programme'),
             icon: <ProjectOutlined />,
             label: t`Programme`,
           },
-          ...(tientLesBenevoles
+          ...(tientLesBenevoles && aModule('BENEVOLES')
             ? [
                 {
                   key: lien('/benevoles'),
