@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-28-serveur-une-affectation-a-une-nouvelle-activite-s-affiche-sans-delai",
+          "date": "2026-10-28",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Une affectation à une nouvelle activité s'affiche sans délai",
+            "texte": "Quand une autre personne vous affecte à une activité que vous ne voyiez pas encore, l'activité apparaît aussitôt dans votre menu. Vous n'attendez plus la mise à jour périodique, qui pouvait prendre cinq minutes.",
+            "migration": null
+          },
+          "en": {
+            "titre": "An appointment to a new activity shows right away",
+            "texte": "When another person appoints you to an activity you could not see yet, the activity appears in your menu at once. You no longer wait for the periodic update, which could take five minutes.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-28-serveur-l-administration-de-l-installation-peut-restreindre-les-modu",
           "date": "2026-10-28",
           "type": "fonctionnalite",

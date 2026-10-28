@@ -380,6 +380,35 @@ describe('abonnement aux changements', () => {
     expect(nombreDeFlux()).toBe(0)
   })
 
+  it('relit les droits dès un signal d’équipe, sans attendre la relecture', async () => {
+    // Le flux est déjà en cours : ses droits sont lus et mémorisés.
+    const ctx = await contexte(ids.emma)
+    await ctx.activitesVisibles()
+    const flux = await ouvrirLeFlux(ctx, {
+      relireLeContexte: () => contexte(ids.emma),
+    })
+    const lire = async () => (await flux!.next()).value as Changement
+
+    // Emma ne voit aucune activité : la tâche ne lui parvient pas.
+    await publierChangement(tache({ id: 'avant' }))
+    // Une autre personne l'affecte à la natation, dans le délai de relecture.
+    await prisma.affectation.create({
+      data: {
+        userId: ids.emma,
+        perimetreId: ids.natation,
+        editionId: ids.edition,
+      },
+    })
+    await publierChangement(
+      tache({ entite: 'EQUIPE', id: undefined, editionId: ids.edition })
+    )
+    await publierChangement(tache({ id: 'apres' }))
+    expect((await lire()).entite).toBe('EQUIPE')
+    expect((await lire()).id).toBe('apres')
+
+    await prisma.affectation.deleteMany({ where: { userId: ids.emma } })
+  })
+
   it('relit les droits de la personne pendant le flux', async () => {
     const flux = await ouvrirLeFlux(await contexte(ids.alice), {
       relireLeContexte: () => contexte(ids.alice),
