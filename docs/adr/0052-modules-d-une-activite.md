@@ -27,7 +27,7 @@ Un hébergeur peut aussi vouloir proposer une offre sans certains écrans, par e
 ### Activation par l'activité
 
 - `Activite.modules` (Json, en base seulement) porte la liste des modules actifs. Un import ou un export du contenu n'y touche jamais.
-- Une valeur nulle active tous les modules. Les activités créées avant cette décision gardent ainsi tous leurs écrans.
+- Une valeur nulle active tous les modules. Les activités créées avant cette décision gardent ainsi tous leurs écrans. L'activité `defaut`, que les migrations créent dans une installation neuve, les garde aussi.
 - Une activité créée ensuite, dans l'espace organisateur ou par `orga:importer`, démarre sans module.
 - Les admins de l'activité activent et désactivent ses modules dans l'écran « Activités ».
 
