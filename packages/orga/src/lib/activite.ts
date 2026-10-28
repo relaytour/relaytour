@@ -1,7 +1,11 @@
 import { select, t } from '@lingui/core/macro'
 import { createContext, useContext } from 'react'
 
-import type { ActivitesQuery, NatureActivite } from '../gql/graphql'
+import type {
+  ActivitesQuery,
+  ModuleActivite,
+  NatureActivite,
+} from '../gql/graphql'
 
 import { derniereActivite } from './selection'
 
@@ -110,6 +114,11 @@ export interface ContexteActiviteValeur {
   lien: (chemin: string) => string
   /** Libellé d'un groupe de périmètres, au singulier ou au pluriel. */
   libelleGroupe: (cle: string, pluriel?: boolean) => string
+  /**
+   * Vrai quand le module est actif dans l'activité affichée (ADR 0052). Le serveur
+   * refuse aussi les requêtes d'un module inactif.
+   */
+  aModule: (module: ModuleActivite) => boolean
 }
 
 export const ContexteActivite = createContext<ContexteActiviteValeur | null>(
@@ -138,6 +147,7 @@ export function construireContexte(
     periode: formesPeriode(activite.nature),
     lien: chemin =>
       `/${activite.slug}${chemin === '/' ? '/' : chemin.startsWith('/') ? chemin : `/${chemin}`}`,
+    aModule: module => activite.modules.includes(module),
     libelleGroupe: (cle, pluriel = false) => {
       const groupe = groupes.get(cle)
       if (groupe === undefined) return cle

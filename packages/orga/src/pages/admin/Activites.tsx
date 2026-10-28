@@ -23,14 +23,22 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router'
 
 import ChampCouleur from '../../composants/ChampCouleur'
-import { ChampGroupes, ChampNature } from '../../composants/ChampsActivite'
+import {
+  ChampGroupes,
+  ChampModules,
+  ChampNature,
+} from '../../composants/ChampsActivite'
 import ChampImage from '../../composants/ChampImage'
 import DepotContenu from '../../composants/DepotContenu'
 import { Panneau } from '../../composants/Panneau'
 import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
-import type { AdressesOrganigramme, NatureActivite } from '../../gql/graphql'
+import type {
+  AdressesOrganigramme,
+  ModuleActivite,
+  NatureActivite,
+} from '../../gql/graphql'
 import { formesPeriode, useActivite, type Activite } from '../../lib/activite'
 import { messageErreur } from '../../lib/erreurs'
 import { useOrganisation } from '../../lib/organisation'
@@ -82,6 +90,7 @@ const MODIFIER = graphql(`
     $formulaire: FormulaireInput
     $formulaireOuvert: Boolean
     $adressesOrganigramme: AdressesOrganigramme
+    $modules: [ModuleActivite!]
   ) {
     modifierActivite(
       id: $id
@@ -96,6 +105,7 @@ const MODIFIER = graphql(`
       formulaire: $formulaire
       formulaireOuvert: $formulaireOuvert
       adressesOrganigramme: $adressesOrganigramme
+      modules: $modules
     ) {
       id
     }
@@ -166,6 +176,8 @@ interface Valeurs {
   souhaitsOuverts: boolean
   // Adresses de l'organigramme (ADR 0036).
   adressesOrganigramme: AdressesOrganigramme
+  // Modules actifs de l'activité (ADR 0052).
+  modules: ModuleActivite[]
   // Formulaire public pour rejoindre l'équipe (ADR 0015).
   formulaireOuvert: boolean
   introduction?: string
@@ -242,6 +254,7 @@ export default function Activites() {
             archive: false,
             souhaitsOuverts: false,
             adressesOrganigramme: 'AUCUNE',
+            modules: [],
             formulaireOuvert: false,
             introduction: '',
             question: '',
@@ -263,6 +276,7 @@ export default function Activites() {
             archive: activite.archive,
             souhaitsOuverts: activite.souhaitsOuverts,
             adressesOrganigramme: activite.adressesOrganigramme,
+            modules: activite.modules,
             formulaireOuvert: activite.formulaireOuvert,
             introduction: activite.formulaire.introduction ?? '',
             question: activite.formulaire.question ?? '',
@@ -343,6 +357,7 @@ export default function Activites() {
             archive: v.archive === enEdition.archive ? null : v.archive,
             souhaitsOuverts: v.souhaitsOuverts,
             adressesOrganigramme: v.adressesOrganigramme,
+            modules: v.modules,
             formulaire: {
               introduction: v.introduction ?? '',
               question: v.question ?? '',
@@ -381,7 +396,7 @@ export default function Activites() {
       <Tableau<Activite>
         id="activites"
         rowKey="id"
-        loading={loading}
+        loading={loading && !data}
         dataSource={data?.activites ?? []}
         pagination={false}
         ouvrir={ouvrir}
@@ -751,6 +766,9 @@ export default function Activites() {
               </Form.Item>
             </Col>
           </Row>
+          {enEdition !== null && enEdition !== 'nouvelle' && (
+            <ChampModules autorises={enEdition.modulesAutorises} />
+          )}
           {enEdition !== 'nouvelle' && (
             <Form.Item
               label={t`Ouverte aux souhaits`}

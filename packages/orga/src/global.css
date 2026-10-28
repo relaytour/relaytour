@@ -2153,15 +2153,18 @@ button.rt-ligne-declinaisons {
   white-space: nowrap;
 }
 
-/* Choix exclusif présenté en cartes (Préférences). */
-.rt-choix .ant-radio-group {
+/* Choix présenté en cartes : exclusif (Préférences) ou multiple (modules d'une
+   activité). */
+.rt-choix .ant-radio-group,
+.rt-choix .ant-checkbox-group {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
   gap: 10px;
   width: 100%;
 }
 
-.rt-choix .ant-radio-wrapper {
+.rt-choix .ant-radio-wrapper,
+.rt-choix .ant-checkbox-wrapper {
   margin: 0;
   padding: 14px 16px;
   border: var(--rt-bord-interne);
@@ -2174,13 +2177,16 @@ button.rt-ligne-declinaisons {
     border-color var(--rt-duree) var(--rt-ease-fluide);
 }
 
-.rt-choix .ant-radio-wrapper:hover {
+.rt-choix .ant-radio-wrapper:hover,
+.rt-choix .ant-checkbox-wrapper:hover {
   border-color: rgba(var(--rt-encre-rgb), 0.2);
   background: var(--rt-surface-interne-survol);
 }
 
 .rt-choix .ant-radio-wrapper-checked,
-.rt-choix .ant-radio-wrapper-checked:hover {
+.rt-choix .ant-radio-wrapper-checked:hover,
+.rt-choix .ant-checkbox-wrapper-checked,
+.rt-choix .ant-checkbox-wrapper-checked:hover {
   border-color: var(--rt-primaire);
   background: var(--rt-primaire-clair);
   box-shadow:
@@ -2200,6 +2206,10 @@ button.rt-ligne-declinaisons {
   font-size: 12.5px;
   line-height: 1.45;
   color: var(--rt-encre-70);
+}
+
+.rt-choix .ant-checkbox-wrapper-disabled {
+  opacity: 0.6;
 }
 
 /* Réglage à bascule : le texte à gauche, l'interrupteur à droite. */

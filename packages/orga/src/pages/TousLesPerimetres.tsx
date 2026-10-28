@@ -12,6 +12,7 @@ import type { TousLesPerimetresQuery } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
 import { useGroupesReplies } from '../lib/groupes-replies'
+import { signalerLocalement } from '../lib/rafraichissement'
 
 // Tous les périmètres de l'activité affichée (ADR 0012) : les affectations de la
 // personne, ses souhaits, puis les autres périmètres, chacun avec sa description.
@@ -75,7 +76,10 @@ export default function TousLesPerimetres() {
   const souhaitsLibres = activite.souhaitsOuverts || gere
   const { message } = App.useApp()
   const { data, loading } = useQuery(TOUS)
-  const rafraichir = { refetchQueries: ['TousLesPerimetres'] }
+  const rafraichir = {
+    refetchQueries: ['TousLesPerimetres'],
+    onCompleted: () => signalerLocalement('EQUIPE'),
+  }
   const [formuler, formulation] = useMutation(FORMULER, rafraichir)
   const [retirer, retrait] = useMutation(RETIRER, rafraichir)
 

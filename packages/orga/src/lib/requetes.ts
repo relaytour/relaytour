@@ -83,6 +83,8 @@ export const ACTIVITES = graphql(`
       souhaitsOuverts
       adressesOrganigramme
       formulaireOuvert
+      modules
+      modulesAutorises
       formulaire {
         introduction
         question

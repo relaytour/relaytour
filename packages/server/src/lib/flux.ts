@@ -44,7 +44,10 @@ export interface Changement {
   activiteId?: string | null
   perimetreId?: string | null
   editionId?: string | null
-  /** Pour une notification : son seul destinataire. */
+  /**
+   * Pour une notification, ou pour un rôle d'admin de l'organisation : la seule
+   * personne qui reçoit le signal.
+   */
   destinataireId?: string | null
 }
 
@@ -194,11 +197,23 @@ export function publierNotification(
 }
 
 /**
+ * Publie le changement du rôle d'admin de l'organisation d'une personne, pour elle
+ * seule. Le signal est un `EQUIPE` sans activité.
+ */
+export function publierRoleOrganisation(
+  organisationId: string,
+  destinataireId: string
+): void {
+  void publierChangement({ entite: 'EQUIPE', organisationId, destinataireId })
+}
+
+/**
  * Vrai quand la personne du contexte peut recevoir ce signal. Le signal ne porte
  * aucune donnée, mais il dit qu'une chose existe et vient de changer : il suit donc
  * les droits de lecture.
  *
- * - Une notification va à son seul destinataire.
+ * - Une notification va à son seul destinataire, comme un rôle d'admin de
+ *   l'organisation.
  * - Une demande va aux admins de son activité, qui seuls lisent les demandes.
  * - Un message va aux admins de son activité, ou aux admins de l'organisation
  *   quand il vient de l'annuaire.
@@ -218,6 +233,15 @@ export async function peutRecevoir(
   if (ctx.personne === null || ctx.organisation === null) return false
   if (changement.organisationId !== ctx.organisation.id) return false
   if (changement.entite === 'NOTIFICATION') {
+    return changement.destinataireId === ctx.personne.id
+  }
+  // Un rôle d'admin de l'organisation ne relève d'aucune activité : son signal ne
+  // va qu'à la personne nommée ou retirée, qui relit ses menus et ses droits.
+  if (
+    changement.entite === 'EQUIPE' &&
+    changement.destinataireId !== null &&
+    changement.destinataireId !== undefined
+  ) {
     return changement.destinataireId === ctx.personne.id
   }
   const activiteId = changement.activiteId

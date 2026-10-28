@@ -103,7 +103,7 @@ export default function Preferences() {
   // activité ou l'organisation (ADR 0033).
   const administre =
     activites.some(a => a.estAdministree) || session?.moi?.estAdmin === true
-  const { data, loading } = useQuery(PREFERENCES)
+  const { data } = useQuery(PREFERENCES)
   const [modifier, modification] = useMutation(MODIFIER, {
     refetchQueries: [PREFERENCES],
   })
@@ -147,7 +147,7 @@ export default function Preferences() {
       >
         <Trans>Préférences</Trans>
       </Titre>
-      {loading || !data ? (
+      {!data ? (
         <Skeleton active />
       ) : (
         <DeuxColonnes
@@ -480,7 +480,11 @@ export default function Preferences() {
             requeteARelire={PREFERENCES}
           />
           <PreferenceLangue />
-          <PreferenceAgenda />
+          {/* L'abonnement personnel ne sert que les activités au module agenda
+              actif (ADR 0052). */}
+          {activites.some(a => a.modules.includes('AGENDA')) && (
+            <PreferenceAgenda />
+          )}
           <PreferenceOrganigramme />
           {/* Seuls les admins écrivent un message (ADR 0020). */}
           {(administre || session?.moi?.estAdmin) && <PreferenceMessagerie />}

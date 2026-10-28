@@ -2,17 +2,18 @@ import { useMutation } from '@apollo/client/react'
 import { useLingui } from '@lingui/react/macro'
 import { App, Col, Form, Input, Modal, Row } from 'antd'
 
-import { ChampGroupes, ChampNature } from './ChampsActivite'
+import { ChampGroupes, ChampModules, ChampNature } from './ChampsActivite'
 import { graphql } from '../gql'
-import type { NatureActivite } from '../gql/graphql'
+import type { ModuleActivite, NatureActivite } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
 import { groupesSaisis, type Groupe } from '../lib/natures'
 import { ACTIVITES } from '../lib/requetes'
 
 // Première étape de la liste « Premiers pas » (ADR 0048) : l'admin vérifie le nom,
-// la nature et les groupes de l'activité créée avec l'organisation, puis confirme.
-// Les autres réglages restent dans l'écran Activités.
+// la nature et les groupes de l'activité créée avec l'organisation, choisit ses
+// modules (ADR 0052), puis confirme. Les autres réglages restent dans l'écran
+// Activités.
 
 const DECRIRE = graphql(`
   mutation DecrireActivite(
@@ -22,6 +23,7 @@ const DECRIRE = graphql(`
     $nature: NatureActivite!
     $groupes: [GroupePerimetresInput!]!
     $ordre: Int!
+    $modules: [ModuleActivite!]
   ) {
     modifierActivite(
       id: $id
@@ -30,6 +32,7 @@ const DECRIRE = graphql(`
       nature: $nature
       groupes: $groupes
       ordre: $ordre
+      modules: $modules
     ) {
       id
     }
@@ -49,6 +52,7 @@ interface Valeurs {
   sigle?: string
   nature: NatureActivite
   groupes: Groupe[]
+  modules: ModuleActivite[]
 }
 
 export default function DescriptionActivite({
@@ -76,6 +80,7 @@ export default function DescriptionActivite({
           nature: v.nature,
           groupes: groupesSaisis(v.groupes),
           ordre: activite.ordre,
+          modules: v.modules,
         },
       })
       await confirmer({ variables: { activiteId: activite.id } })
@@ -111,6 +116,7 @@ export default function DescriptionActivite({
             libelle: g.libelle,
             libellePluriel: g.libellePluriel,
           })),
+          modules: activite.modules,
         }}
         onFinish={v => void enregistrer(v)}
       >
@@ -132,6 +138,7 @@ export default function DescriptionActivite({
         </Row>
         <ChampNature />
         <ChampGroupes />
+        <ChampModules autorises={activite.modulesAutorises} />
       </Form>
     </Modal>
   )

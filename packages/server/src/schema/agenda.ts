@@ -18,6 +18,7 @@ import { texteFacultatif, texteRequis } from '../lib/saisie.ts'
 import { builder } from './builder.ts'
 import { EditionRef } from './organisation.ts'
 import { i18n } from '../lib/langue.ts'
+import { exigerModule } from '../lib/modules.ts'
 
 // Agenda d'une activité (ADR 0037) : pour une période, ses phases, son premier et
 // son dernier jour, ses dates clés et, en option, les échéances des tâches. Toute
@@ -197,6 +198,7 @@ builder.queryFields(t => ({
     },
     resolve: async (_root, args, ctx) => {
       const lue = await ctx.exigerEdition(args.editionId)
+      await exigerModule(lue.activiteId, 'AGENDA')
       const [edition, activite, datesCles] = await Promise.all([
         prisma.edition.findUniqueOrThrow({ where: { id: lue.id } }),
         prisma.activite.findUniqueOrThrow({

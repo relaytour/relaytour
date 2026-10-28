@@ -19,6 +19,7 @@ import { builder } from './builder.ts'
 import { EtatLigneImportEnum } from './import-commun.ts'
 import { PlageInput } from './repartition.ts'
 import { i18n } from '../lib/langue.ts'
+import { exigerModule } from '../lib/modules.ts'
 
 // Import de listes de bénévoles, correspondances d'import, doublons possibles et
 // fusion des fiches (ADR 0042). Les admins de l'activité importent pour le
@@ -30,7 +31,6 @@ const ModeImportEnum = builder.enumType('ModeImport', {
     'A_REPARTIR : chaque personne devient une candidature à traiter. PLACES_DIRECTES : chaque personne reçoit sa fiche et ses places.',
   values: ['A_REPARTIR', 'PLACES_DIRECTES'] as const,
 })
-
 
 const NiveauEnum = builder.enumType('NiveauRapprochement', {
   description:
@@ -199,6 +199,7 @@ const CorrespondanceRef = builder
 /** L'activité, si la personne y importe : admin, ou affectée à un périmètre. */
 async function activiteImportable(ctx: AppContext, id: string | number) {
   const activiteId = await ctx.exigerActivite(id)
+  await exigerModule(activiteId, 'BENEVOLES')
   if (!(await ecritDansLActivite(ctx, activiteId))) throw accesRefuse()
   return activiteId
 }
@@ -293,6 +294,7 @@ builder.queryFields(t => ({
     args: { activiteId: t.arg.id({ required: true }) },
     resolve: async (_root, args, ctx) => {
       const activiteId = await ctx.exigerActivite(args.activiteId)
+      await exigerModule(activiteId, 'BENEVOLES')
       await ctx.exigerAdminDe(activiteId)
       const [fiches, distinctes] = await Promise.all([
         prisma.benevole.findMany({
@@ -417,6 +419,7 @@ builder.mutationFields(t => ({
       })
       if (correspondance === null) throw accesRefuse()
       await ctx.exigerActivite(correspondance.activiteId)
+      await exigerModule(correspondance.activiteId, 'BENEVOLES')
       if (
         !(await ctx.estAdminDe(correspondance.activiteId)) &&
         correspondance.creeParId !== ctx.personne!.id
@@ -456,6 +459,7 @@ builder.mutationFields(t => ({
         throw accesRefuse()
       }
       await ctx.exigerActivite(gardee.activiteId)
+      await exigerModule(gardee.activiteId, 'BENEVOLES')
       await ctx.exigerAdminDe(gardee.activiteId)
       await fusionnerFiches({
         organisationId: ctx.organisation!.id,
@@ -512,6 +516,7 @@ builder.mutationFields(t => ({
       }
       const activiteId = fiches[0]!.activiteId
       await ctx.exigerActivite(activiteId)
+      await exigerModule(activiteId, 'BENEVOLES')
       await ctx.exigerAdminDe(activiteId)
       await prisma.paireDistincte.upsert({
         where: {

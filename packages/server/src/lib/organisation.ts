@@ -823,6 +823,8 @@ export async function assurerOrganisationParDefaut(): Promise<string> {
         sigle: organisation.sigle,
         nature: 'EVENEMENT',
         groupes: groupesParDefaut(),
+        // Une activité nouvelle démarre sans module (ADR 0052).
+        modules: [],
       },
     })
   }

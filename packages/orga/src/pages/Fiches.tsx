@@ -64,7 +64,7 @@ function miseAJour(fiche: FicheListe): string {
 
 export default function Fiches() {
   const { t } = useLingui()
-  const { lien, activite, gere } = useActivite()
+  const { lien, activite, gere, aModule } = useActivite()
   const navigate = useNavigate()
   const { theme } = useOrganisation()
   const replies = useGroupesReplies('fiches')
@@ -73,10 +73,12 @@ export default function Fiches() {
   const { data, loading } = useQuery(LISTE_FICHES)
   // Les documents de l'espace de fichiers (ADR 0038) : l'onglet n'apparaît que
   // si au moins un dossier lié est lisible.
+  // Sans le module documents, ni la requête ni l'onglet (ADR 0052).
   const { data: documents } = useQuery(DOSSIERS_LIES, {
     variables: { activiteId: activite.id },
+    skip: !aModule('DOCUMENTS'),
   })
-  const dossiers = documents?.dossiersLies ?? []
+  const dossiers = aModule('DOCUMENTS') ? (documents?.dossiersLies ?? []) : []
   const [parametres, setParametres] = useSearchParams()
   const vueDocuments =
     parametres.get('vue') === 'documents' && dossiers.length > 0

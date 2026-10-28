@@ -51,7 +51,11 @@ import {
   SOUHAITS_MAX,
 } from '../lib/souhaits.ts'
 
-import { publierPourActivite, publierPourPerimetre } from '../lib/flux.ts'
+import {
+  publierPourActivite,
+  publierPourPerimetre,
+  publierRoleOrganisation,
+} from '../lib/flux.ts'
 import { planifierVerificationAcces } from '../espace-fichiers/acces.ts'
 
 import { builder } from './builder.ts'
@@ -818,6 +822,9 @@ builder.mutationFields(t => ({
       if (role === 'ADMIN' && appartenance.role !== 'ADMIN') {
         await annoncerChangementEquipe(id, { organisationId, instant })
       }
+      // La personne relit ses menus et ses droits sans attendre (ADR 0017).
+      if (role !== appartenance.role)
+        publierRoleOrganisation(organisationId, id)
       // Les autres admins de l'organisation apprennent la nomination ou le retrait
       // (ADR 0033).
       if (role !== appartenance.role) {
@@ -1319,6 +1326,8 @@ builder.mutationFields(t => ({
         })
       }
       if (dejaAdmin !== args.admin) {
+        // L'équipe de l'activité relit ses menus, ses droits et l'écran « Admins ».
+        publierPourActivite('EQUIPE', organisationId, activiteId)
         await notifierLesAdmins(prisma, {
           type: args.admin ? 'ADMIN_ACTIVITE_NOMME' : 'ADMIN_ACTIVITE_RETIRE',
           organisationId,

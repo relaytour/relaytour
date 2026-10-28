@@ -71,7 +71,7 @@ export function VersActivite() {
   const { t } = useLingui()
   const { data, loading } = useQuery(ACTIVITES)
   const { pathname, search, hash } = useLocation()
-  if (loading) return <Spin fullscreen description={t`Chargement`} />
+  if (loading && !data) return <Spin fullscreen description={t`Chargement`} />
   const cible = activiteParDefaut(data?.activites ?? [])
   if (cible === undefined) return <AucuneActivite />
   // Une adresse inconnue qui porte déjà une activité mène à l'accueil de cette

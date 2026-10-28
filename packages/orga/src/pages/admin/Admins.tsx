@@ -11,6 +11,7 @@ import type { Activite } from '../../lib/activite'
 import { messageErreur } from '../../lib/erreurs'
 import { ACTIVITES, DEFINIR_ADMIN_ACTIVITE } from '../../lib/requetes'
 import { useSession } from '../../lib/session'
+import { signalerLocalement } from '../../lib/rafraichissement'
 
 // Les admins de l'organisation (ADR 0019).
 const ADMINS_ORGANISATION = graphql(`
@@ -62,8 +63,11 @@ interface Ligne {
   nom: string
 }
 
+// Un rôle d'admin change les menus et les droits : les autres écrans se relisent
+// sans attendre le flux.
 const RELIRE = {
   refetchQueries: ['AdminsOrganisation', 'AnnuaireAdmins', 'AdminsActivite'],
+  onCompleted: () => signalerLocalement('EQUIPE'),
 }
 
 /** Une liste d'admins : les noms, un retrait par ligne et un champ pour nommer. */

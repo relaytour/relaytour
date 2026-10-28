@@ -44,6 +44,60 @@
           }
         },
         {
+          "id": "2026-10-28-orga-les-ecrans-affichent-sans-delai-une-affectation-ou-un-role-d",
+          "date": "2026-10-28",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les écrans affichent sans délai une affectation ou un rôle d'admin",
+            "texte": "Quand vous affectez une personne, vous-même compris, le menu, la liste des périmètres et la page du périmètre l'affichent aussitôt. Un écran que vous rouvrez se met à jour pendant que vous le lisez. Vous n'avez plus besoin de recharger la page.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Screens show a new appointment or admin role right away",
+            "texte": "When you appoint someone, yourself included, the menu, the area list and the area page show it at once. A screen you open again updates while you read it. You no longer need to reload the page.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-28-orga-l-avis-de-nouvelle-version-ne-s-affiche-plus-apres-un-rechar",
+          "date": "2026-10-28",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'avis de nouvelle version ne s'affiche plus après un rechargement",
+            "texte": "Quand vous rechargez la page après une mise à jour, l'application utilise déjà la dernière version. L'avis « Une nouvelle version est disponible » ne vous demande donc plus de recharger une seconde fois.",
+            "migration": null
+          },
+          "en": {
+            "titre": "The new version notice no longer appears after a reload",
+            "texte": "When you reload the page after an update, the app already runs the latest version. The \"A new version is available\" notice no longer asks you to reload a second time.",
+            "migration": null
+          }
+        },
+        {
+          "id": "2026-10-28-orga-agenda-benevoles-et-documents-deviennent-des-modules-a-activ",
+          "date": "2026-10-28",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "admin-activite",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Agenda, bénévoles et documents deviennent des modules à activer",
+            "texte": "Dans l'écran « Activités », vous choisissez les modules de chaque activité : agenda, bénévoles et documents. Un module désactivé quitte le menu de toute l'équipe, et ses données restent enregistrées. Vos activités actuelles gardent tous leurs modules. Une nouvelle activité démarre sans module.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Calendar, volunteers and documents become modules to turn on",
+            "texte": "In the “Activities” screen, you choose the modules of each activity: calendar, volunteers and documents. A turned-off module leaves the menu for the whole team, and its data stays saved. Your current activities keep all their modules. A new activity starts without any module.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-27-orga-le-favicon-par-defaut-se-voit-dans-un-onglet-sombre",
           "date": "2026-10-27",
           "type": "correctif",

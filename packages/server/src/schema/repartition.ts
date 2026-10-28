@@ -35,6 +35,7 @@ import {
   signal,
 } from './programme.ts'
 import { i18n } from '../lib/langue.ts'
+import { exigerModule } from '../lib/modules.ts'
 
 // Répartition des bénévoles (ADR 0041). La vue « Répartition » de l'écran
 // « Programme » montre les manques par tranche de 30 minutes, et les bénévoles à
@@ -331,6 +332,7 @@ builder.queryFields(t => ({
     },
     resolve: async (_root, args, ctx) => {
       const { edition, ecrits } = await editionRepartie(ctx, args.editionId)
+      await exigerModule(edition.activiteId, 'BENEVOLES')
       const fuseau = ctx.organisation!.fuseauHoraire
       const liste = await benevolesARepartir(ctx, edition, ecrits)
       if (!args.sequenceId) return liste.map(r => ({ ...r, fuseau }))
@@ -456,6 +458,7 @@ builder.mutationFields(t => ({
       }
       const sequence = await sequenceEcrite(ctx, String(args.sequenceId))
       const edition = await ctx.exigerEdition(sequence.editionId)
+      await exigerModule(edition.activiteId, 'BENEVOLES')
       const ecrits = await perimetresEcrits(ctx, edition)
       const maintenant = new Date()
       if (args.candidatureId) {
@@ -617,6 +620,7 @@ builder.mutationFields(t => ({
       if (benevole === null) throw accesRefuse()
       const edition = await ctx.exigerEdition(args.editionId)
       if (edition.activiteId !== benevole.activiteId) throw accesRefuse()
+      await exigerModule(edition.activiteId, 'BENEVOLES')
       const admin = await ctx.estAdminDe(benevole.activiteId)
       if (!admin && benevole.creeParId !== ctx.personne!.id) throw accesRefuse()
       if (edition.statut === 'ARCHIVEE') {

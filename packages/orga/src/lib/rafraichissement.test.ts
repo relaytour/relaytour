@@ -131,7 +131,7 @@ describe('relireLesRequetes', () => {
 
   it('ne relit pas une requête hors de la liste', async () => {
     const { client, etat, observer } = banc()
-    await observer('Moi')
+    await observer('MesPreferencesNotification')
     await observer('Fiche')
     etat.lectures.length = 0
     expect(await relireLesRequetes(client)).toBe(1)
@@ -182,9 +182,9 @@ describe('relecture après un signal du flux', () => {
     expect(etat.lectures).toEqual(['MesTaches'])
     expect(avis()).not.toBe('')
     // Une requête hors de la liste ne se relit pas, même nommée.
-    await observer('Moi')
+    await observer('MesPreferencesNotification')
     etat.lectures.length = 0
-    expect(await relireLesRequetes(client, ['Moi'])).toBe(0)
+    expect(await relireLesRequetes(client, ['MesPreferencesNotification'])).toBe(0)
     expect(etat.lectures).toEqual([])
 
     // La relecture complète suivante, sans refus, retire l'avis.
