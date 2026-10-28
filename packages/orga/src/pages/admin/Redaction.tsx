@@ -211,7 +211,7 @@ export default function Redaction() {
           <Tableau<Droit>
             id="redaction"
             rowKey="id"
-            loading={loading}
+            loading={loading && !data}
             dataSource={droits}
             pagination={false}
             colonnes={[
@@ -290,7 +290,7 @@ export default function Redaction() {
           <Tableau<Admin>
             id="redaction-admins"
             rowKey="id"
-            loading={loading}
+            loading={loading && !data}
             dataSource={admins}
             pagination={false}
             colonnes={[

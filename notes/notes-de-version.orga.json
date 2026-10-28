@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-28-orga-les-ecrans-affichent-sans-delai-une-affectation-ou-un-role-d",
+          "date": "2026-10-28",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les écrans affichent sans délai une affectation ou un rôle d'admin",
+            "texte": "Quand vous affectez une personne, vous-même compris, le menu, la liste des périmètres et la page du périmètre l'affichent aussitôt. Un écran que vous rouvrez se met à jour pendant que vous le lisez. Vous n'avez plus besoin de recharger la page.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Screens show a new appointment or admin role right away",
+            "texte": "When you appoint someone, yourself included, the menu, the area list and the area page show it at once. A screen you open again updates while you read it. You no longer need to reload the page.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-28-orga-l-avis-de-nouvelle-version-ne-s-affiche-plus-apres-un-rechar",
           "date": "2026-10-28",
           "type": "correctif",

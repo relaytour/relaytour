@@ -79,7 +79,7 @@ export default function Classement() {
         <Tableau<Ligne>
           id="classement"
           rowKey={l => l.personne.id}
-          loading={loading}
+          loading={loading && !data}
           dataSource={data?.classement ?? []}
           pagination={false}
           locale={{ emptyText: t`Aucune contribution pour ${periodeCette}.` }}

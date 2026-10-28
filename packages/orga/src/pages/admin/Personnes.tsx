@@ -60,6 +60,7 @@ import {
   RETIRER_AFFECTATION,
 } from '../../lib/requetes'
 import { comparer } from '../../lib/tableau'
+import { signalerLocalement } from '../../lib/rafraichissement'
 
 // Un admin de l'organisation lit l'annuaire ; un admin d'activité lit l'équipe de
 // l'activité affichée (ADR 0018). Les deux listes portent les mêmes champs, et
@@ -595,7 +596,8 @@ export default function Personnes({
   const liste: Personne[] | undefined = modeAnnuaire
     ? annuaire.data?.personnes
     : equipe.data?.equipe
-  const loading = modeAnnuaire ? annuaire.loading : equipe.loading
+  const loading =
+    liste === undefined && (modeAnnuaire ? annuaire.loading : equipe.loading)
   const { data: demandes } = useQuery(DEMANDES_EN_ATTENTE, {
     variables: { editionId: editionId ?? '' },
     skip: editionId === undefined || modeAnnuaire,
@@ -627,10 +629,13 @@ export default function Personnes({
     enEdition !== 'nouvelle' &&
     enEdition.nomModifiable === false
   const [form] = Form.useForm<Valeurs>()
+  // Les autres écrans de l'équipe se relisent sans attendre le flux.
   const rafraichir = {
     refetchQueries: [modeAnnuaire ? PERSONNES : EQUIPE],
+    onCompleted: () => signalerLocalement('EQUIPE'),
   }
   const [inviter, invitation] = useMutation(INVITER, {
+    ...rafraichir,
     refetchQueries: [...rafraichir.refetchQueries, INVITATIONS_EN_ATTENTE],
   })
   const [modifier, modification] = useMutation(MODIFIER, rafraichir)

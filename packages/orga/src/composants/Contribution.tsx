@@ -94,7 +94,7 @@ export default function Contribution({
         )
       }
     >
-      {loading || !score ? (
+      {(loading && !data) || !score ? (
         <Skeleton active paragraph={{ rows: 3 }} />
       ) : (
         <>

@@ -4,6 +4,7 @@ import {
   ATTENTE_TROP_DE_FLUX_MS,
   creerFlux,
   delaiDeReprise,
+  ENTITES,
   REGROUPEMENT_MS,
   requetesPour,
   type Ecoute,
@@ -46,21 +47,17 @@ function banc() {
 
 describe('requetesPour', () => {
   it('ne nomme que des requêtes que la relecture connaît', () => {
-    const entites = [
-      'TACHE',
-      'FICHE',
-      'PERIMETRE',
-      'EQUIPE',
-      'DEMANDE',
-      'NOTIFICATION',
-      'FICHIERS',
-      'PROGRAMME',
-      'AGENDA',
-      'CANDIDATURE',
-    ] as const
-    for (const nom of requetesPour(entites)) {
+    // Une requête absente de la liste serait écartée en silence.
+    for (const nom of requetesPour(ENTITES)) {
       expect(REQUETES_RAFRAICHIES.has(nom), nom).toBe(true)
     }
+  })
+
+  it('relit au moins une requête pour chaque entité', () => {
+    for (const entite of ENTITES) {
+      expect(requetesPour([entite]).length, entite).toBeGreaterThan(0)
+    }
+    expect(requetesPour(['MESSAGE'])).toEqual(['Messages'])
   })
 
   it('réunit les requêtes d’un lot sans doublon, et ignore une entité inconnue', () => {
@@ -99,6 +96,17 @@ describe('requetesPour', () => {
         'ListeFiches',
         'Fiche',
         'FichesDuPerimetre',
+      ])
+    )
+    // Une affectation ou un rôle d'admin change les menus et les listes d'équipe.
+    expect(requetesPour(['EQUIPE'])).toEqual(
+      expect.arrayContaining([
+        'MenuPerimetres',
+        'TousLesPerimetres',
+        'Activites',
+        'Moi',
+        'PersonnesEquipe',
+        'AdminsActivite',
       ])
     )
     // Une tâche ou une notification ne relit pas tout.
@@ -144,6 +152,23 @@ describe('creerFlux', () => {
     await finirLaRelecture()
     vi.advanceTimersByTime(REGROUPEMENT_MS)
     expect(relectures[1]).toEqual(requetesPour(['FICHE']))
+  })
+
+  it('relit après un signal local, flux fermé, et y joint l’écho du serveur', () => {
+    const { flux, relectures } = banc()
+    // Flux fermé : la relecture part quand même.
+    flux.signaler('EQUIPE')
+    vi.advanceTimersByTime(REGROUPEMENT_MS)
+    expect(relectures).toEqual([requetesPour(['EQUIPE'])])
+
+    // Flux ouvert : l'écho du serveur rejoint le lot du signal local.
+    const suite = banc()
+    suite.flux.demarrer()
+    suite.derniere().ouvert()
+    suite.flux.signaler('EQUIPE')
+    suite.derniere().signal('EQUIPE')
+    vi.advanceTimersByTime(REGROUPEMENT_MS)
+    expect(suite.relectures).toEqual([requetesPour(['EQUIPE'])])
   })
 
   it('rouvre aussitôt un flux que le serveur a fermé après sa durée', () => {
