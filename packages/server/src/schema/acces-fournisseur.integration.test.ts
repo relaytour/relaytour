@@ -770,6 +770,28 @@ describe('fournisseur sans annuaire', () => {
 })
 
 describe('annuaire refusé au compte connecté', () => {
+  it('efface l’erreur précédente quand un admin règle la portée', async () => {
+    await prisma.connexionFichiers.update({
+      where: { organisationId: ids.org },
+      data: { fournisseur: 'GOOGLE_DRIVE', accesErreur: 'Erreur précédente.' },
+    })
+    try {
+      expect((await executer(ids.admin, PORTEE)).errors).toBeUndefined()
+      expect(
+        (
+          await prisma.connexionFichiers.findUniqueOrThrow({
+            where: { organisationId: ids.org },
+          })
+        ).accesErreur
+      ).toBeNull()
+    } finally {
+      await prisma.connexionFichiers.update({
+        where: { organisationId: ids.org },
+        data: { fournisseur: 'SHAREPOINT', portee: 'ANNUAIRE' },
+      })
+    }
+  })
+
   it('garde une erreur qui demande un autre compte, puis l’efface à la vérification suivante', async () => {
     const annuaire = annuaireEnMemoire(donnees)
     remplacerEspacePourLesTests(() =>

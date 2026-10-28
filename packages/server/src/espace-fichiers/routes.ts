@@ -142,7 +142,7 @@ async function retourOAuth(
   req: express.Request,
   contexte: Contexte,
   connecteur: ConnecteurOAuth
-): Promise<'reussie' | 'partielle' | 'refusee' | 'echec'> {
+): Promise<IssueRetour> {
   const etat = typeof req.query.state === 'string' ? req.query.state : ''
   const code = typeof req.query.code === 'string' ? req.query.code : ''
   const reprise = await reprendreConnexion(etat)
@@ -196,7 +196,19 @@ async function retourOAuth(
   })
   // La vérification des accès reprend avec le compte qui vient de se connecter.
   planifierVerificationAcces(reprise.organisationId)
-  return portee === demandee ? 'reussie' : 'partielle'
+  return issueAccordee(demandee, portee)
+}
+
+export type IssueRetour =
+  'reussie' | 'sans-annuaire' | 'sans-gestion' | 'refusee' | 'echec'
+
+/**
+ * L'issue d'une connexion réussie, d'après la portée accordée : l'écran dit
+ * quelle autorisation manque quand le fournisseur en accorde moins.
+ */
+export function issueAccordee(demandee: Portee, accordee: Portee): IssueRetour {
+  if (accordee === demandee) return 'reussie'
+  return accordee === 'FICHIERS' ? 'sans-annuaire' : 'sans-gestion'
 }
 
 /**

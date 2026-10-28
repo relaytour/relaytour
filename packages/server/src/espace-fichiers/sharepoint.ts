@@ -625,16 +625,20 @@ export function annuaireSharePoint(
             }[]
           }>(reponse, 'la recherche de comptes')
           const limitees = corps.responses.filter(r => r.status === 429)
+          // Un refus de tout le lot vient du compte connecté, qui ne lit pas
+          // l'annuaire : un compte invité, ou une autorisation que l'admin
+          // Microsoft Entra n'a pas accordée. Un refus isolé reste une panne.
+          if (
+            corps.responses.length > 0 &&
+            corps.responses.every(r => r.status === 401 || r.status === 403)
+          ) {
+            throw new AnnuaireRefuse(
+              `Microsoft Graph refuse la lecture de l’annuaire (${corps.responses[0]!.status}).`
+            )
+          }
           for (const r of corps.responses) {
             const adresse = lot[Number(r.id)]
             if (adresse === undefined || r.status === 429) continue
-            // Un compte sans la lecture de l'annuaire : un compte invité, ou
-            // une autorisation que l'admin Microsoft Entra n'a pas accordée.
-            if (r.status === 401 || r.status === 403) {
-              throw new AnnuaireRefuse(
-                `Microsoft Graph refuse la lecture de l’annuaire (${r.status}).`
-              )
-            }
             if (r.status !== 200) {
               throw new FournisseurIndisponible(
                 `Microsoft Graph refuse la recherche d’un compte (${r.status}).`

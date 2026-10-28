@@ -7,7 +7,7 @@ import {
   espaceSharePoint,
   porteeAccordee,
 } from './sharepoint.ts'
-import { AnnuaireRefuse } from './types.ts'
+import { AnnuaireRefuse, FournisseurIndisponible } from './types.ts'
 
 // Lecture des droits d'un élément par Microsoft Graph (ADR 0044).
 
@@ -241,5 +241,24 @@ describe('SharePoint, limites de débit', () => {
     await expect(
       annuaire().chercherComptes(['camille@exemple.fr'])
     ).rejects.toBeInstanceOf(AnnuaireRefuse)
+  })
+
+  it('tient un refus isolé dans le lot pour une panne, pas pour un annuaire refusé', async () => {
+    vi.stubGlobal('fetch', () =>
+      Promise.resolve(
+        Response.json({
+          responses: [
+            { id: '0', status: 200, body: { value: [] } },
+            { id: '1', status: 403, body: {} },
+          ],
+        })
+      )
+    )
+    const refus = annuaire().chercherComptes([
+      'camille@exemple.fr',
+      'dominique@exemple.fr',
+    ])
+    await expect(refus).rejects.toBeInstanceOf(FournisseurIndisponible)
+    await expect(refus).rejects.not.toBeInstanceOf(AnnuaireRefuse)
   })
 })

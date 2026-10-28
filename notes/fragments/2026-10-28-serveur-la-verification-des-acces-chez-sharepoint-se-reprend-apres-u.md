@@ -24,8 +24,9 @@ en:
 ---
 
 Au retour de Microsoft, la portée enregistrée suit le champ `scope` de la
-réponse de jeton (`porteeAccordee`), au plus la portée demandée, et l'issue
-devient `partielle` quand elle redescend. Un refus 401 ou 403 de Graph sur la
-recherche de comptes lève `AnnuaireRefuse`, qui donne une erreur propre.
+réponse de jeton (`porteeAccordee`), au plus la portée demandée. Quand elle
+redescend, l'issue nomme l'autorisation qui manque (`sans-annuaire` ou
+`sans-gestion`). Un refus 401 ou 403 de Graph sur tout un lot de la recherche
+de comptes lève `AnnuaireRefuse`, qui donne une erreur propre.
 `enregistrerConnexion` et `reglerPorteeConnexion` effacent `accesErreur`, puis
 planifient la vérification.

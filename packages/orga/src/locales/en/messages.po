@@ -5855,6 +5855,10 @@ msgid "le fournisseur cloud"
 msgstr "the cloud provider"
 
 #: src/pages/admin/EspaceFichiers.tsx
+msgid "Le fournisseur cloud est connecté avec la vérification des accès, sans leur gestion. Le compte utilisé n’a pas obtenu la modification des groupes."
+msgstr "The cloud provider is connected with the access check, without access management. The account used did not obtain permission to modify groups."
+
+#: src/pages/admin/EspaceFichiers.tsx
 msgid "Le fournisseur cloud est connecté sans la vérification des accès. Le compte utilisé n’a pas obtenu la lecture de l’annuaire."
 msgstr "The cloud provider is connected without the access check. The account used did not obtain read access to the directory."
 
