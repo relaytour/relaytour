@@ -34,3 +34,8 @@ l'équipe, les souhaits et les écrans « Admins ». `Messages`, signalé par
 `MESSAGE`, entre dans la liste des requêtes relues : le filtre l'écartait.
 `ENTITES` liste les entités du flux, et un test vérifie que chacune relit au
 moins une requête connue de la relecture.
+
+Côté serveur, `definirAdminActivite` publie `EQUIPE` pour son activité quand le
+rôle change. `modifierPersonne` publie un `EQUIPE` sans activité, adressé à la
+seule personne nommée ou retirée (`publierRoleOrganisation`), que
+`peutRecevoir` ne livre qu'à elle.
