@@ -39,10 +39,13 @@ sw.addEventListener('activate', evenement => {
   )
 })
 
-// La personne a demandé la nouvelle version : elle remplace l'ancienne.
+// La personne a demandé la nouvelle version : elle remplace l'ancienne. La page
+// demande aussi les fichiers de la coquille, pour savoir si elle les a déjà.
 sw.addEventListener('message', evenement => {
-  if ((evenement.data as { type?: string } | null)?.type === 'ACTIVER')
-    void sw.skipWaiting()
+  const type = (evenement.data as { type?: string } | null)?.type
+  if (type === 'ACTIVER') void sw.skipWaiting()
+  if (type === 'COQUILLE')
+    evenement.ports[0]?.postMessage({ fichiers: __FICHIERS_COQUILLE__ })
 })
 
 // Notification push (ADR 0024). Le serveur envoie un texte déjà composé : le
