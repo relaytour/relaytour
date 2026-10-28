@@ -5,6 +5,25 @@
   "version": "0.22.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-28-serveur-l-administration-de-l-installation-peut-restreindre-les-modu",
+          "date": "2026-10-28",
+          "type": "fonctionnalite",
+          "audience": "public",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "L'administration de l'installation peut restreindre les modules d'une organisation",
+            "texte": "Si vous hébergez plusieurs organisations, vous pouvez choisir les modules que leurs activités peuvent activer : agenda, bénévoles et documents. Un module retiré se ferme dans toutes les activités de l'organisation, sans supprimer leurs données. Sans réglage, tous les modules restent autorisés.",
+            "migration": null
+          },
+          "en": null
+        }
+      ]
+    },
+    {
       "version": "0.22.0",
       "notes": [
         {

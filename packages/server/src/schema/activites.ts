@@ -22,6 +22,12 @@ import {
   type Formulaire,
 } from '../lib/formulaire.ts'
 import { exigerPlaceActivite, sousVerrouOrganisation } from '../lib/limites.ts'
+import {
+  lireModules,
+  MODULES,
+  modulesActifs,
+  modulesValides,
+} from '../lib/modules.ts'
 import { lirePhases, phasesValides, type Phase } from '../lib/phases.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 import { i18n } from '../lib/langue.ts'
@@ -112,6 +118,12 @@ export const AdressesOrganigrammeEnum = builder.enumType(AdressesOrganigramme, {
     'Adresses personnelles que l’organigramme d’une activité peut afficher, avec l’accord de chaque personne (ADR 0036).',
 })
 
+export const ModuleActiviteEnum = builder.enumType('ModuleActivite', {
+  values: MODULES,
+  description:
+    'Écran facultatif d’une activité, avec ses données et ses envois (ADR 0052).',
+})
+
 const AccesActiviteEnum = builder.enumType('AccesActivite', {
   values: ['COMPLET', 'DECOUVERTE'] as const,
 })
@@ -153,6 +165,23 @@ export const ActiviteRef = builder.prismaObject('Activite', {
     }),
     adressesOrganigramme: t.expose('adressesOrganigramme', {
       type: AdressesOrganigrammeEnum,
+    }),
+    modules: t.field({
+      type: [ModuleActiviteEnum],
+      description:
+        'Les modules actifs : ceux que l’activité active et que l’hébergeur autorise (ADR 0052).',
+      select: {
+        modules: true,
+        organisation: { select: { modulesAutorises: true } },
+      },
+      resolve: a => modulesActifs(a, a.organisation),
+    }),
+    modulesAutorises: t.field({
+      type: [ModuleActiviteEnum],
+      description:
+        'Les modules que l’administration de l’installation autorise pour l’organisation (ADR 0052).',
+      select: { organisation: { select: { modulesAutorises: true } } },
+      resolve: a => lireModules(a.organisation.modulesAutorises),
     }),
     acces: t.field({
       type: AccesActiviteEnum,
@@ -265,6 +294,38 @@ async function reglageDuFormulaire(
   return donnees
 }
 
+/**
+ * Les modules à écrire quand un admin règle ceux d'une activité. Il ne peut
+ * activer qu'un module que l'hébergeur autorise. Un module déjà actif mais retiré
+ * par l'hébergeur reste dans la liste : il revient si l'hébergeur l'autorise de
+ * nouveau (ADR 0052).
+ */
+async function modulesDeLActivite(
+  activiteId: string,
+  demandes: readonly string[]
+): Promise<string[]> {
+  const modules = modulesValides(demandes)
+  const activite = await prisma.activite.findUniqueOrThrow({
+    where: { id: activiteId },
+    select: {
+      modules: true,
+      organisation: { select: { modulesAutorises: true } },
+    },
+  })
+  const autorises = lireModules(activite.organisation.modulesAutorises)
+  if (modules.some(m => !autorises.includes(m))) {
+    throw erreurSaisie(
+      i18n._(
+        'Votre hébergeur n’autorise pas ce module pour votre organisation.'
+      )
+    )
+  }
+  const gardes = lireModules(activite.modules).filter(
+    m => !autorises.includes(m)
+  )
+  return MODULES.filter(m => modules.includes(m) || gardes.includes(m))
+}
+
 builder.mutationFields(t => ({
   creerActivite: t.prismaField({
     type: ActiviteRef,
@@ -294,6 +355,8 @@ builder.mutationFields(t => ({
           ? {}
           : { phases: phasesValides(args.phases) }),
         ordre: args.ordre ?? 0,
+        // Une activité nouvelle démarre sans module (ADR 0052).
+        modules: [],
       }
       return sousVerrouOrganisation(organisationId, async tx => {
         await exigerPlaceActivite(organisationId, tx)
@@ -330,11 +393,17 @@ builder.mutationFields(t => ({
       formulaireOuvert: t.arg.boolean(),
       // Absent, le réglage ne change pas (ADR 0036).
       adressesOrganigramme: t.arg({ type: AdressesOrganigrammeEnum }),
+      // Absents, les modules ne changent pas (ADR 0052).
+      modules: t.arg({ type: [ModuleActiviteEnum] }),
     },
     resolve: async (query, _root, args, ctx) => {
       const organisationId = ctx.organisation!.id
       const id = await ctx.exigerActivite(args.id)
       await ctx.exigerAdminDe(id)
+      const modules =
+        args.modules === null || args.modules === undefined
+          ? undefined
+          : await modulesDeLActivite(id, args.modules)
       const formulaire = await reglageDuFormulaire(id, args)
       // Archiver ou rouvrir une activité touche aux limites de l'organisation :
       // seul un admin de l'organisation le fait.
@@ -375,6 +444,7 @@ builder.mutationFields(t => ({
         args.adressesOrganigramme === undefined
           ? {}
           : { adressesOrganigramme: args.adressesOrganigramme }),
+        ...(modules === undefined ? {} : { modules }),
         ...formulaire,
       }
       const avant = await prisma.activite.findUniqueOrThrow({

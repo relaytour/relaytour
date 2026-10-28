@@ -23,6 +23,7 @@ import { identifiantsSouhaites } from '../lib/souhaits.ts'
 import { publierPourActivite } from '../lib/flux.ts'
 
 import { builder } from './builder.ts'
+import { moduleActif } from '../lib/modules.ts'
 
 // Formulaire public pour rejoindre l'équipe d'une activité (ADR 0015). Ces deux
 // opérations se lisent sans session : elles ne servent que des champs publics, et le
@@ -173,9 +174,11 @@ async function jetonDeLAppelDuProgramme(
       fermeLe: { gt: maintenant },
     },
     orderBy: [{ ouvertLe: 'desc' }, { id: 'asc' }],
-    select: { sel: true, empreinte: true },
+    select: { sel: true, empreinte: true, activiteId: true },
   })
   if (appel === null) return null
+  // Sans le module bénévoles, le formulaire n'indique aucun appel (ADR 0052).
+  if (!(await moduleActif(appel.activiteId, 'BENEVOLES'))) return null
   try {
     const jeton = await jetonDe('appel', appel.sel)
     return empreinte(jeton) === appel.empreinte ? jeton : null

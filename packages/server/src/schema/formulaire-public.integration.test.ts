@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { ApolloServer } from '@apollo/server'
-import { prisma } from '@relaytour/database'
+import { Prisma, prisma } from '@relaytour/database'
 import {
   afterAll,
   beforeAll,
@@ -350,7 +350,21 @@ describe('lire le formulaire sans session', () => {
         })
       ).empreinte
     ).toBe('0'.repeat(64))
-    await prisma.appelBenevoles.deleteMany({ where: { organisationId: ids.org } })
+    // Sans le module bénévoles, le formulaire n'affiche plus l'appel (ADR 0052).
+    await prisma.appelBenevoles.delete({ where: { id: perimee.id } })
+    expect(await lireAppel()).toBe(jeton)
+    await prisma.activite.update({
+      where: { id: ids.activite },
+      data: { modules: ['AGENDA'] },
+    })
+    expect(await lireAppel()).toBeNull()
+    await prisma.activite.update({
+      where: { id: ids.activite },
+      data: { modules: Prisma.DbNull },
+    })
+    await prisma.appelBenevoles.deleteMany({
+      where: { organisationId: ids.org },
+    })
   })
 
   it('refuse un champ réservé demandé dans la même requête', async () => {

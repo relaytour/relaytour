@@ -1,4 +1,4 @@
-import { prisma, type StatutOrganisation } from '@relaytour/database'
+import { Prisma, prisma, type StatutOrganisation } from '@relaytour/database'
 
 import { mettreEnFile } from '../courriel/file.ts'
 
@@ -8,6 +8,7 @@ import { creerOuRattacherCompte } from './comptes.ts'
 import { annoncerInvitation, inviterCompteExterne } from './invitations.ts'
 import { erreurSaisie } from './erreurs.ts'
 import { i18n } from './langue.ts'
+import { lireModules, modulesValides, type Module } from './modules.ts'
 import {
   LimitesSchema,
   lireLimites,
@@ -41,6 +42,8 @@ export interface NouvelleOrganisation {
   fuseauHoraire?: string
   domainesCourrielAutorises?: string[]
   limites?: Limites
+  /** Modules autorisés (ADR 0052). Absents : tous. */
+  modulesAutorises?: string[]
 }
 
 function messageValidation(issues: { path: PropertyKey[]; message: string }[]) {
@@ -76,6 +79,10 @@ export async function creerOrganisation(
   if (!limites.success) {
     throw erreurSaisie(messageValidation(limites.error.issues))
   }
+  const modulesAutorises =
+    donnees.modulesAutorises === undefined
+      ? undefined
+      : modulesValides(donnees.modulesAutorises)
   const d = declaration.data
   // La contrainte d'unicité tranche : deux créations simultanées du même slug
   // donnent une erreur de saisie, jamais une erreur de base.
@@ -88,6 +95,7 @@ export async function creerOrganisation(
         fuseauHoraire: d.fuseauHoraire,
         configuration: d,
         limites: limites.data,
+        ...(modulesAutorises === undefined ? {} : { modulesAutorises }),
         activites: {
           create: {
             slug: d.slug,
@@ -95,6 +103,8 @@ export async function creerOrganisation(
             sigle: d.sigle ?? null,
             nature: 'EVENEMENT',
             groupes: groupesParDefaut(),
+            // Une activité nouvelle démarre sans module (ADR 0052).
+            modules: [],
           },
         },
       },
@@ -269,12 +279,16 @@ export async function inviterAdmin(
   return admin
 }
 
-/** Change le statut ou les limites d'une organisation. Une limite nulle se retire. */
+/**
+ * Change le statut, les limites ou les modules autorisés d'une organisation. Une
+ * limite nulle se retire ; une liste de modules nulle les autorise tous (ADR 0052).
+ */
 export async function modifierOrganisation(
   slug: string,
   changement: {
     statut?: StatutOrganisation
     limites?: { activites?: number | null; periodesOuvertes?: number | null }
+    modulesAutorises?: string[] | null
   }
 ): Promise<void> {
   const organisation = await prisma.organisation.findUnique({
@@ -304,6 +318,14 @@ export async function modifierOrganisation(
     data: {
       ...(changement.statut === undefined ? {} : { statut: changement.statut }),
       ...(limites === undefined ? {} : { limites }),
+      ...(changement.modulesAutorises === undefined
+        ? {}
+        : {
+            modulesAutorises:
+              changement.modulesAutorises === null
+                ? Prisma.DbNull
+                : modulesValides(changement.modulesAutorises),
+          }),
     },
   })
   invaliderConfigurationOrganisation()
@@ -330,6 +352,7 @@ export interface OrganisationInstallation {
   nom: string
   statut: StatutOrganisation
   limites: Limites
+  modulesAutorises: Module[]
   creeLe: Date
   nombreMembres: number
   activites: ActiviteInstallation[]
@@ -350,6 +373,7 @@ export async function organisationsInstallation(): Promise<
       nom: true,
       statut: true,
       limites: true,
+      modulesAutorises: true,
       createdAt: true,
       _count: { select: { appartenances: true } },
       activites: {
@@ -379,6 +403,7 @@ export async function organisationsInstallation(): Promise<
     nom: o.nom,
     statut: o.statut,
     limites: lireLimites(o.limites),
+    modulesAutorises: lireModules(o.modulesAutorises),
     creeLe: o.createdAt,
     nombreMembres: o._count.appartenances,
     activites: o.activites.map(a => ({

@@ -81,7 +81,7 @@ export default function PremiersPas() {
   const ETAPES: Record<EtapePremiersPas, Etape> = {
     ACTIVITE: {
       titre: t`Décrire l’activité`,
-      texte: t`Vérifiez son nom, sa nature et ses groupes de périmètres.`,
+      texte: t`Vérifiez son nom, sa nature et ses groupes de périmètres, puis choisissez ses modules : agenda, bénévoles, documents.`,
       actions: bouton('ACTIVITE', t`Décrire`, 'activite'),
     },
     PERIODE: {

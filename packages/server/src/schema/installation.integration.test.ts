@@ -157,6 +157,7 @@ describe('accès à l’administration de l’installation', () => {
         'activites',
         'creeLe',
         'limites',
+        'modulesAutorises',
         'nom',
         'nombreMembres',
         'slug',
@@ -251,6 +252,32 @@ describe('cycle de vie d’une organisation', () => {
       statut: 'LECTURE_SEULE',
       limites: { activites: 1, periodesOuvertes: null },
     })
+  })
+
+  it('restreint les modules, refuse une demande contradictoire, puis lève la restriction', async () => {
+    const MODULES = `mutation ($s: String!, $m: [ModuleActivite!], $t: Boolean) {
+      modifierOrganisationInstallation(slug: $s, modulesAutorises: $m, autoriserTousLesModules: $t) { modulesAutorises }
+    }`
+    const lus = (r: Awaited<ReturnType<typeof executer>>) =>
+      (
+        r.data as {
+          modifierOrganisationInstallation: { modulesAutorises: string[] }
+        }
+      ).modifierOrganisationInstallation.modulesAutorises
+    expect(
+      lus(
+        await executer('administration', MODULES, { s: slugA, m: ['AGENDA'] })
+      )
+    ).toEqual(['AGENDA'])
+    const contradictoire = await executer('administration', MODULES, {
+      s: slugA,
+      m: ['AGENDA'],
+      t: true,
+    })
+    expect(contradictoire.errors?.[0]?.extensions?.code).toBe('SAISIE_INVALIDE')
+    expect(
+      lus(await executer('administration', MODULES, { s: slugA, t: true }))
+    ).toEqual(['AGENDA', 'BENEVOLES', 'DOCUMENTS'])
   })
 
   it('liste les organisations avec leurs compteurs', async () => {

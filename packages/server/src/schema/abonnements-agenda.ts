@@ -17,6 +17,7 @@ import { i18n } from '../lib/langue.ts'
 import { configurationOrganisation } from '../lib/organisation.ts'
 
 import { builder } from './builder.ts'
+import { exigerModule } from '../lib/modules.ts'
 
 // Abonnements à l'agenda (ADR 0037). Une adresse secrète sert un agenda au format
 // iCalendar, en lecture seule. L'adresse complète ne sort qu'une fois, dans la
@@ -137,6 +138,7 @@ async function creerAbonnement(
 async function activiteAdministree(ctx: AppContext, id: string | number) {
   const activiteId = await ctx.exigerActivite(id)
   await ctx.exigerAdminDe(activiteId)
+  await exigerModule(activiteId, 'AGENDA')
   return activiteId
 }
 

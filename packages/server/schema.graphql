@@ -70,6 +70,16 @@ type Activite {
 
   """Le logo de l’activité, sinon celui de l’organisation."""
   logoUrl: String
+
+  """
+  Les modules actifs : ceux que l’activité active et que l’hébergeur autorise (ADR 0052).
+  """
+  modules: [ModuleActivite!]!
+
+  """
+  Les modules que l’administration de l’installation autorise pour l’organisation (ADR 0052).
+  """
+  modulesAutorises: [ModuleActivite!]!
   nature: NatureActivite!
   nom: String!
   ordre: Int!
@@ -1527,6 +1537,15 @@ enum ModeleDeDepart {
   EVENEMENT_MULTISPORTS
 }
 
+"""
+Écran facultatif d’une activité, avec ses données et ses envois (ADR 0052).
+"""
+enum ModuleActivite {
+  AGENDA
+  BENEVOLES
+  DOCUMENTS
+}
+
 type Mutation {
   """
   Enregistre l’abonnement push de cet appareil pour la personne connectée. Reste possible dans une organisation en lecture seule.
@@ -1688,7 +1707,7 @@ type Mutation {
   Crée l’abonnement personnel, et révoque le précédent : son adresse cesse de servir.
   """
   creerMonAbonnementAgenda(inclureEcheances: Boolean = false, inclureGlobal: Boolean = true, perimetreIds: [ID!]): AdresseAbonnement!
-  creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, nom: String!, sigle: String, slug: String!): OrganisationInstallation!
+  creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, modulesAutorises: [ModuleActivite!], nom: String!, sigle: String, slug: String!): OrganisationInstallation!
   creerPerimetre(activiteId: ID, couleur: String, description: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
   creerReunion(
     cible: CibleConvocation
@@ -1921,7 +1940,7 @@ type Mutation {
 
   """Masque la liste « Premiers pas » pour toute l’activité."""
   masquerPremiersPas(activiteId: ID): PremiersPas!
-  modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
+  modifierActivite(adressesOrganigramme: AdressesOrganigramme, archive: Boolean, formulaire: FormulaireInput, formulaireOuvert: Boolean, groupes: [GroupePerimetresInput!]!, id: ID!, modules: [ModuleActivite!], nature: NatureActivite!, nom: String!, ordre: Int!, phases: [PhaseInput!], sigle: String, souhaitsOuverts: Boolean): Activite!
   modifierAppelBenevoles(fermeLe: DateTime!, id: ID!, introduction: String, nom: String!, ouvertLe: DateTime!, versionAttendue: Int!): AppelBenevoles!
   modifierBenevole(
     courriel: String
@@ -1994,7 +2013,7 @@ type Mutation {
   La personne modifie son propre nom, qui vaut dans toutes ses organisations (ADR 0031).
   """
   modifierMonNom(nom: String!): Personne!
-  modifierOrganisationInstallation(limites: LimitesOrganisationInput, slug: String!, statut: StatutOrganisation): OrganisationInstallation!
+  modifierOrganisationInstallation(autoriserTousLesModules: Boolean, limites: LimitesOrganisationInput, modulesAutorises: [ModuleActivite!], slug: String!, statut: StatutOrganisation): OrganisationInstallation!
 
   """
   Modifie le réglage d’un périmètre. Avec `versionAttendue`, le serveur refuse d’écraser une modification faite depuis cette version (code `CONFLIT_VERSION`).
@@ -2424,6 +2443,11 @@ type OrganisationInstallation {
   activites: [ActiviteInstallation!]!
   creeLe: DateTime!
   limites: LimitesOrganisation!
+
+  """
+  Modules que les activités de l’organisation peuvent activer (ADR 0052).
+  """
+  modulesAutorises: [ModuleActivite!]!
   nom: String!
   nombreMembres: Int!
   slug: String!

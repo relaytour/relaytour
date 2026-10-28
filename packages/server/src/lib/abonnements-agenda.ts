@@ -10,6 +10,7 @@ import { bornesDesJours } from './heures.ts'
 import { calendrier, type EvenementIcs } from './ics.ts'
 import { configurationOrganisation } from './organisation.ts'
 import { lirePhases } from './phases.ts'
+import { activitesAvecModule, moduleActif } from './modules.ts'
 
 // Abonnements à l'agenda (ADR 0037).
 //
@@ -192,7 +193,11 @@ export async function evenementsPersonnels(
   const origine = configuration.origineOrga.replace(/\/$/, '')
   const hote = new URL(origine).hostname
   const f = fenetre(maintenant, organisation.fuseauHoraire)
-  const activites = [...(await ctx.activitesVisibles())]
+  // Une activité sans le module agenda ne sert rien à l'abonnement (ADR 0052).
+  const activites = await activitesAvecModule(
+    [...(await ctx.activitesVisibles())],
+    'AGENDA'
+  )
   const lisibles = new Set(await perimetresLisibles(ctx))
   const choisis = Array.isArray(abonnement.perimetreIds)
     ? (abonnement.perimetreIds as unknown[])
@@ -389,7 +394,11 @@ export async function lireAbonnement(
   let nom: string
   if (abonnement.sorte === 'ACTIVITE') {
     const activite = abonnement.activite
-    if (activite === null || activite.archivedAt !== null) {
+    if (
+      activite === null ||
+      activite.archivedAt !== null ||
+      !(await moduleActif(activite.id, 'AGENDA'))
+    ) {
       return { statut: 404 }
     }
     evenements = await evenementsActivite(
