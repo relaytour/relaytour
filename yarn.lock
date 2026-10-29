@@ -4076,7 +4076,7 @@ __metadata:
     cors: "npm:^2.8.6"
     express: "npm:^5.3.0"
     graphql: "npm:^16.14.0"
-    graphql-scalars: "npm:^1.24.0"
+    graphql-scalars: "npm:^2.0.1"
     graphql-sse: "npm:^2.6.3"
     ioredis: "npm:^5.11.0"
     mammoth: "npm:^1.13.0"
@@ -8014,14 +8014,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"graphql-scalars@npm:^1.24.0":
-  version: 1.24.2
-  resolution: "graphql-scalars@npm:1.24.2"
+"graphql-scalars@npm:^2.0.1":
+  version: 2.0.1
+  resolution: "graphql-scalars@npm:2.0.1"
   dependencies:
     tslib: "npm:^2.5.0"
   peerDependencies:
-    graphql: ^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0
-  checksum: 10/740747ca0191d17f593ea747b02df5fedd778a1376ea235a815bd80b69356efacf5b32412b2461d9ae3edadd1a56bfba8df0a75ae2c5ea2932a126b3e513cca6
+    graphql: ^16.0.0 || ^17.0.0
+  checksum: 10/e3a4e5cf0ecf2b056c0395ba05d06f75f7f876945a68bce9c9074885b10a3ed548ceb7f70891f6ffe5e84fdf2e0d3736cfef4cc3ddc4462ab0c305d8afc14432
   languageName: node
   linkType: hard
 
