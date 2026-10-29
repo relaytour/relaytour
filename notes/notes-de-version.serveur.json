@@ -24,6 +24,20 @@
             "texte": "Without a contact address, some installations send from an address that does not receive mail. The email footer then points to the organizer workspace instead of asking for a reply. The Organization screen shows when no contact is set: set a role address to receive members' replies.",
             "migration": null
           }
+        },
+        {
+          "id": "2026-10-29-serveur-graphql-scalars-passe-en-version-2-0-1",
+          "date": "2026-10-29",
+          "type": "securite",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "graphql-scalars passe en version 2.0.1",
+            "texte": "L'API passe sur graphql-scalars 2.0.1. Les versions 2.0.0 et antérieures exposent le scalaire PhoneNumber à un déni de service par expression régulière (GHSA-x8rm-f576-gq67). L'API n'emploie pas ce scalaire, mais l'audit des dépendances de la CI bloquait toute PR.",
+            "migration": null
+          },
+          "en": null
         }
       ]
     },
