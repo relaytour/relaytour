@@ -5,6 +5,29 @@
   "version": "0.23.0",
   "versions": [
     {
+      "version": null,
+      "notes": [
+        {
+          "id": "2026-10-29-serveur-les-mails-n-invitent-plus-a-repondre-quand-personne-ne-recoi",
+          "date": "2026-10-29",
+          "type": "correctif",
+          "audience": "organisateurs",
+          "role": "admin-organisation",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les mails n'invitent plus à répondre quand personne ne reçoit la réponse",
+            "texte": "Sans adresse de contact, certaines installations envoient depuis une adresse qui ne reçoit pas de courrier. Le pied des mails renvoie alors vers l'espace organisateur au lieu d'inviter à répondre. L'écran « Organisation » signale l'absence de contact : déclarez une adresse de rôle pour recevoir les réponses des membres.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Emails no longer ask for a reply when no one receives it",
+            "texte": "Without a contact address, some installations send from an address that does not receive mail. The email footer then points to the organizer workspace instead of asking for a reply. The Organization screen shows when no contact is set: set a role address to receive members' replies.",
+            "migration": null
+          }
+        }
+      ]
+    },
+    {
       "version": "0.23.0",
       "notes": [
         {

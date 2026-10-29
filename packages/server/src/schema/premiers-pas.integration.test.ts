@@ -5,6 +5,7 @@ import { prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { buildContext, type AppContext } from '../context.ts'
+import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
 import { schema } from './index.ts'
 
@@ -70,7 +71,13 @@ beforeAll(async () => {
         data: {
           slug: slugOrg,
           nom: `Organisation ${slugOrg}`,
-          configuration: {},
+          // Une déclaration valide, sans contact : l'amorçage du poste n'entre pas
+          // dans l'étape « Déclarer une adresse de contact ».
+          configuration: {
+            slug: slugOrg,
+            nom: `Organisation ${slugOrg}`,
+            domainesCourrielAutorises: ['exemple.fr'],
+          },
         },
       })
     ).id
@@ -153,6 +160,7 @@ describe('premiers pas d’une activité', () => {
       'PERIODE',
       'PERIMETRES',
       'TACHES',
+      'CONTACT',
       'EQUIPE',
     ])
     expect(faites(depart)).toEqual([])
@@ -198,8 +206,17 @@ describe('premiers pas d’une activité', () => {
         perimetreId: perimetre.id,
       },
     })
+    const sansContact = await etat()
+    expect(faites(sansContact)).not.toContain('CONTACT')
+    expect(sansContact.termines).toBe(false)
+
+    // Le contact de l'activité coche l'étape (ADR 0053).
+    await prisma.activite.update({
+      where: { id: ids.activite },
+      data: { identite: { contactRecrutement: 'contact@exemple.fr' } },
+    })
     const fin = await etat()
-    expect(faites(fin)).toHaveLength(5)
+    expect(faites(fin)).toHaveLength(6)
     expect(fin.termines).toBe(true)
 
     // Une deuxième confirmation garde la date de la première.
@@ -328,5 +345,22 @@ describe('chaque chemin de calcul des premiers pas', () => {
       },
     })
     expect(await etapes()).toContain('EQUIPE')
+  })
+
+  it('coche le contact par celui de l’organisation (ADR 0053)', async () => {
+    expect(await etapes()).not.toContain('CONTACT')
+    await prisma.organisation.update({
+      where: { id: ids.org },
+      data: {
+        configuration: {
+          slug,
+          nom: `Organisation ${slug}`,
+          domainesCourrielAutorises: ['exemple.fr'],
+          contactRecrutement: 'bureau@exemple.fr',
+        },
+      },
+    })
+    invaliderConfigurationOrganisation()
+    expect(await etapes()).toContain('CONTACT')
   })
 })

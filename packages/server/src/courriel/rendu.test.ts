@@ -10,6 +10,7 @@ const ORGANISATION: VariablesOrganisation = {
   couleurPrimaire: '#1E5A63',
   couleurAccent: '#AD412B',
   couleurSol: '#F4F6F7',
+  consigneReponse: 'Pour toute question, répondez à ce mail.',
 }
 
 /** Une valeur pour chaque variable d'un gabarit : une adresse pour un lien. */
@@ -29,6 +30,10 @@ describe('gabarits', () => {
       )
       expect(pied.html, nom).toContain(ORGANISATION.organisation)
       expect(pied.texte, nom).toContain(ORGANISATION.organisation)
+      // La consigne de réponse se compose à l'envoi (ADR 0053).
+      expect(pied.html, nom).toContain(ORGANISATION.consigneReponse)
+      expect(pied.texte, nom).toContain(ORGANISATION.consigneReponse)
+      expect(gabarit.variables, nom).not.toContain('consigneReponse')
       expect(gabarit.html, nom).toContain('github.com/relaytour/relaytour')
       expect(gabarit.texte, nom).toContain('github.com/relaytour/relaytour')
       expect(gabarit.html, nom).not.toMatch(/#0[1-4]0[1-4]0[1-4]/i)

@@ -108,6 +108,64 @@ function activiteDuSujet(
 
 const SANS_REPONSE = new Set<SorteCourriel>(['essai', 'code-connexion'])
 
+/** L'adresse nue d'un expéditeur « Nom <adresse> ». */
+function adresseNue(expediteur: string): string {
+  return /<([^>]+)>/.exec(expediteur)?.[1] ?? expediteur
+}
+
+/**
+ * Où vont les réponses d'un mail (ADR 0053) : le contact de l'activité ou de
+ * l'organisation en Reply-To, sauf pour un code de connexion et un essai. Le pied
+ * propose de répondre quand une boîte reçoit la réponse : ce contact, sinon
+ * l'expéditeur s'il reçoit du courrier.
+ */
+export function reponsesDuMail(
+  configuration: Pick<
+    ConfigurationOrganisation,
+    'contactRecrutement' | 'expediteurRecoitReponses'
+  >,
+  sorte: SorteCourriel
+): { repondreA: string | undefined; repondre: boolean } {
+  const repondreA = SANS_REPONSE.has(sorte)
+    ? undefined
+    : configuration.contactRecrutement
+  return {
+    repondreA,
+    repondre: repondreA !== undefined || configuration.expediteurRecoitReponses,
+  }
+}
+
+/**
+ * L'adresse de l'organisateur d'une réunion (ADR 0053) : le contact, sinon
+ * l'expéditeur s'il reçoit du courrier. Sans l'un ni l'autre, le fichier
+ * iCalendar ne nomme pas d'organisateur.
+ */
+export function adresseOrganisateur(
+  configuration: Pick<
+    ConfigurationOrganisation,
+    'contactRecrutement' | 'expediteur' | 'expediteurRecoitReponses'
+  >
+): string | undefined {
+  return (
+    configuration.contactRecrutement ??
+    (configuration.expediteurRecoitReponses
+      ? adresseNue(configuration.expediteur)
+      : undefined)
+  )
+}
+
+/** La dernière phrase du pied : répondre au mail, ou passer par un espace. */
+function consigneReponse(repondre: boolean, sorte: SorteCourriel): string {
+  if (repondre) return i18n._('Pour toute question, répondez à ce mail.')
+  return sorte === 'benevole-lien' || sorte === 'benevole-places'
+    ? i18n._(
+        'Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, adressez-vous à l’équipe d’organisation de l’activité.'
+      )
+    : i18n._(
+        'Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, contactez l’équipe d’organisation depuis l’espace organisateur.'
+      )
+}
+
 export interface MessageCompose {
   sujet: string
   html: string
@@ -792,11 +850,7 @@ export async function composer(
         tete: teteReunion,
       })
     }
-    const expediteur = (await configurationOrganisation()).expediteur
-    const adresseOrganisateur =
-      configuration.contactRecrutement ??
-      /<([^>]+)>/.exec(expediteur)?.[1] ??
-      expediteur
+    const organisateur = adresseOrganisateur(configuration)
     const description = retrait
       ? null
       : [
@@ -822,10 +876,10 @@ export async function composer(
             sequence: reunion.sequence,
             annule: job.sorte === 'annulation-reunion',
             modifieLe: reunion.updatedAt,
-            organisateur: {
-              nom: configuration.nomCourt,
-              adresse: adresseOrganisateur,
-            },
+            organisateur:
+              organisateur === undefined
+                ? undefined
+                : { nom: configuration.nomCourt, adresse: organisateur },
             participant: { nom: personne.name, adresse: personne.email },
           },
         ],
@@ -941,11 +995,11 @@ export async function composer(
     }
   }
 
-  const { html, texte } = rendre(
-    job.sorte,
-    variables,
-    variablesOrganisation(configuration)
-  )
+  const { repondreA, repondre } = reponsesDuMail(configuration, job.sorte)
+  const { html, texte } = rendre(job.sorte, variables, {
+    ...variablesOrganisation(configuration),
+    consigneReponse: consigneReponse(repondre, job.sorte),
+  })
   return {
     sujet:
       sujet ??
@@ -953,10 +1007,7 @@ export async function composer(
     html,
     texte,
     desabonnement,
-    // Un code de connexion et un essai n'appellent pas de réponse.
-    repondreA: SANS_REPONSE.has(job.sorte)
-      ? undefined
-      : configuration.contactRecrutement,
+    repondreA,
     apresEnvoi,
     icalEvent,
   }

@@ -30,6 +30,7 @@ import {
 } from '../../composants/ChampsActivite'
 import ChampImage from '../../composants/ChampImage'
 import DepotContenu from '../../composants/DepotContenu'
+import ReprendreMonAdresse from '../../composants/ReprendreMonAdresse'
 import { Panneau } from '../../composants/Panneau'
 import Tableau from '../../composants/Tableau'
 import Titre from '../../composants/Titre'
@@ -740,7 +741,16 @@ export default function Activites() {
               <Form.Item
                 label={t`Contact de l’activité`}
                 name="contactRecrutement"
-                extra={t`Cette adresse reçoit les réponses aux mails de l’activité.`}
+                extra={
+                  <>
+                    {t`Cette adresse reçoit les réponses aux mails de l’activité.`}{' '}
+                    <ReprendreMonAdresse
+                      onReprendre={adresse =>
+                        form.setFieldsValue({ contactRecrutement: adresse })
+                      }
+                    />
+                  </>
+                }
               >
                 <Input type="email" placeholder={t`Celui de l’organisation`} />
               </Form.Item>

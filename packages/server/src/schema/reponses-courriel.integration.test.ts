@@ -14,13 +14,19 @@ import {
 
 import { buildContext, type AppContext } from '../context.ts'
 import type { CourrielJobData } from '../jobs/queues.ts'
-import { composer } from '../courriel/messages.ts'
+import {
+  adresseOrganisateur,
+  composer,
+  reponsesDuMail,
+} from '../courriel/messages.ts'
+import { env } from '../env.ts'
 import { invaliderConfigurationOrganisation } from '../lib/organisation.ts'
 
 import { schema } from './index.ts'
 
 // Réponses aux mails : une invitation portée par une activité renvoie les réponses
 // au contact de cette activité, les autres mails au contact de l'organisation.
+// Le pied ne propose de répondre que si une boîte reçoit la réponse (ADR 0053).
 
 const enFile = vi.hoisted(() => [] as { sorte: string; options: unknown }[])
 vi.mock('../courriel/file.ts', () => ({
@@ -288,5 +294,102 @@ describe('réponses aux mails', () => {
       organisationId: ids.org,
     })
     expect(message?.repondreA).toBeUndefined()
+  })
+})
+
+describe('adresse de réponse et pied (ADR 0053)', () => {
+  const REPONDRE = 'Pour toute question, répondez à ce mail.'
+  const SANS_REPONSE = 'Cette adresse d’envoi ne reçoit pas de réponse.'
+  const configuration = (
+    contactRecrutement: string | undefined,
+    expediteurRecoitReponses: boolean
+  ) => ({
+    contactRecrutement,
+    expediteurRecoitReponses,
+    expediteur: 'Les Rencontres <rencontres@envoi.exemple.org>',
+  })
+
+  it('propose de répondre quand le mail porte un contact', () => {
+    expect(
+      reponsesDuMail(configuration(CONTACT_ORGA, false), 'invitation')
+    ).toEqual({ repondreA: CONTACT_ORGA, repondre: true })
+  })
+
+  it('propose de répondre sans contact quand l’expéditeur reçoit du courrier', () => {
+    expect(reponsesDuMail(configuration(undefined, true), 'resume')).toEqual({
+      repondreA: undefined,
+      repondre: true,
+    })
+  })
+
+  it('ne propose pas de répondre sans contact ni boîte d’expédition', () => {
+    expect(reponsesDuMail(configuration(undefined, false), 'resume')).toEqual({
+      repondreA: undefined,
+      repondre: false,
+    })
+    // Un code de connexion n'a jamais de Reply-To, même avec un contact.
+    expect(
+      reponsesDuMail(configuration(CONTACT_ORGA, false), 'code-connexion')
+    ).toEqual({ repondreA: undefined, repondre: false })
+  })
+
+  it('choisit l’organisateur d’une réunion selon la même règle', () => {
+    expect(adresseOrganisateur(configuration(CONTACT_ORGA, false))).toBe(
+      CONTACT_ORGA
+    )
+    expect(adresseOrganisateur(configuration(undefined, true))).toBe(
+      'rencontres@envoi.exemple.org'
+    )
+    expect(adresseOrganisateur(configuration(undefined, false))).toBeUndefined()
+  })
+
+  it('ne dit qu’à la personne elle-même si son adresse est une adresse de rôle', async () => {
+    const data = await executer(
+      ids.adminOrg,
+      '{ moi { id adresseDeRole } personnes { id adresseDeRole } }'
+    )
+    expect(data.moi).toEqual({ id: ids.adminOrg, adresseDeRole: true })
+    const autres = (
+      data.personnes as { id: string; adresseDeRole: boolean | null }[]
+    ).filter(p => p.id !== ids.adminOrg)
+    expect(autres.length).toBeGreaterThan(0)
+    expect(autres.every(p => p.adresseDeRole === null)).toBe(true)
+  })
+
+  it('compose le pied selon le réglage de l’installation', async () => {
+    const initial = env.COURRIEL_EXPEDITEUR_SANS_REPONSE
+    const code = () =>
+      composer(prisma, {
+        sorte: 'code-connexion',
+        userId: ids.adminA1,
+        code: '123456',
+        organisationId: ids.org,
+      })
+    try {
+      env.COURRIEL_EXPEDITEUR_SANS_REPONSE = false
+      invaliderConfigurationOrganisation()
+      const avecBoite = await code()
+      expect(avecBoite?.texte).toContain(REPONDRE)
+      expect(avecBoite?.html).toContain(REPONDRE)
+
+      env.COURRIEL_EXPEDITEUR_SANS_REPONSE = true
+      invaliderConfigurationOrganisation()
+      const sansBoite = await code()
+      expect(sansBoite?.texte).toContain(SANS_REPONSE)
+      expect(sansBoite?.texte).not.toContain(REPONDRE)
+      expect(sansBoite?.html).toContain(SANS_REPONSE)
+
+      // Une invitation garde le contact de l'organisation et propose de répondre.
+      const invitation = await composer(prisma, {
+        sorte: 'invitation',
+        userId: ids.adminA1,
+        organisationId: ids.org,
+      })
+      expect(invitation?.repondreA).toBe(CONTACT_ORGA)
+      expect(invitation?.texte).toContain(REPONDRE)
+    } finally {
+      env.COURRIEL_EXPEDITEUR_SANS_REPONSE = initial
+      invaliderConfigurationOrganisation()
+    }
   })
 })

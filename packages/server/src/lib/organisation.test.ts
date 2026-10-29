@@ -18,6 +18,7 @@ const ENV = {
   CONTACT_RECRUTEMENT: 'Contact@Exemple.org',
   PAGE_EQUIPE: 'https://exemple.org/equipe',
   COURRIEL_EXPEDITEUR: undefined,
+  COURRIEL_EXPEDITEUR_SANS_REPONSE: false,
   ORIGINE_ORGA: 'https://orga.exemple.org',
 }
 
@@ -46,6 +47,7 @@ describe('resoudreConfiguration', () => {
       'Les Rencontres de la Vallée <relaytour@localhost>'
     )
     expect(c.origineOrga).toBe('https://orga.exemple.org')
+    expect(c.expediteurRecoitReponses).toBe(true)
     expect(c.theme).toEqual(themeParDefaut)
     expect(c.id).toBeNull()
   })
@@ -61,6 +63,14 @@ describe('resoudreConfiguration', () => {
     )
     expect(c.nomCourt).toBe('FSV')
     expect(c.expediteur).toBe('FSV <fsv@exemple.org>')
+  })
+
+  it('note un expéditeur qui ne reçoit pas de courrier (ADR 0053)', () => {
+    const c = resoudreConfiguration(
+      { ...ENV, COURRIEL_EXPEDITEUR_SANS_REPONSE: true },
+      declarationDepuisEnv(ENV, {})
+    )
+    expect(c.expediteurRecoitReponses).toBe(false)
   })
 })
 

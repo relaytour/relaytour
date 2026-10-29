@@ -2822,8 +2822,8 @@ msgstr "Open the calendar"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
-msgid "Vous recevez ce message parce que votre adresse est enregistrée dans l’espace organisateur de {organisation}. Pour toute question, répondez à ce mail."
-msgstr "You are receiving this email because your email address is registered in the organizer workspace of {organisation}. If you have any questions, reply to this email."
+msgid "Vous recevez ce message parce que votre adresse est enregistrée dans l’espace organisateur de {organisation}."
+msgstr "You are receiving this email because your email address is registered in the organizer workspace of {organisation}."
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -3160,6 +3160,21 @@ msgstr "{tete}: your participation"
 #: src/courriel/messages.ts
 msgid "{tete} : vos places ont changé"
 msgstr "{tete}: your places have changed"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Pour toute question, répondez à ce mail."
+msgstr "If you have any questions, reply to this email."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, adressez-vous à l’équipe d’organisation de l’activité."
+msgstr "This sending address does not receive replies. If you have any questions, contact the activity’s organizing team."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, contactez l’équipe d’organisation depuis l’espace organisateur."
+msgstr "This sending address does not receive replies. If you have any questions, contact the organizing team from the organizer workspace."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

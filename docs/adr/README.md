@@ -54,5 +54,6 @@
 | [0050](0050-desabonnement-en-un-clic.md) | Désabonnement en un clic | Acceptée, réalisée |
 | [0051](0051-adresse-de-retour-commune-de-l-espace-de-fichiers.md) | Adresse de retour commune de l'espace de fichiers | Acceptée |
 | [0052](0052-modules-d-une-activite.md) | Modules d'une activité | Acceptée |
+| [0053](0053-adresse-de-reponse-des-mails.md) | Adresse de réponse des mails | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

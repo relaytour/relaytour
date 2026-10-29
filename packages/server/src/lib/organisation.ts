@@ -415,6 +415,8 @@ export interface ConfigurationOrganisation {
   /** Langue par défaut des membres, déclarée par l'organisation (ADR 0047). */
   langue: Langue | undefined
   expediteur: string
+  /** La boîte de l'expéditeur reçoit les réponses (ADR 0053). */
+  expediteurRecoitReponses: boolean
   origineOrga: string
   domainesCourrielAutorises: string[]
   adressesRoleAutorisees: string[]
@@ -440,6 +442,7 @@ type SourceEnv = Pick<
   | 'CONTACT_RECRUTEMENT'
   | 'PAGE_EQUIPE'
   | 'COURRIEL_EXPEDITEUR'
+  | 'COURRIEL_EXPEDITEUR_SANS_REPONSE'
   | 'ORIGINE_ORGA'
 >
 
@@ -484,6 +487,7 @@ export function resoudreConfiguration(
     fuseauHoraire: declaration.fuseauHoraire,
     langue: declaration.langue,
     expediteur: env.COURRIEL_EXPEDITEUR ?? `${nomCourt} <relaytour@localhost>`,
+    expediteurRecoitReponses: !env.COURRIEL_EXPEDITEUR_SANS_REPONSE,
     origineOrga: env.ORIGINE_ORGA,
     domainesCourrielAutorises: declaration.domainesCourrielAutorises,
     adressesRoleAutorisees: declaration.adressesRoleAutorisees,

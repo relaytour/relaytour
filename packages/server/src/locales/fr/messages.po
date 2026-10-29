@@ -2822,8 +2822,8 @@ msgstr "Ouvrir l’agenda"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
-msgid "Vous recevez ce message parce que votre adresse est enregistrée dans l’espace organisateur de {organisation}. Pour toute question, répondez à ce mail."
-msgstr "Vous recevez ce message parce que votre adresse est enregistrée dans l’espace organisateur de {organisation}. Pour toute question, répondez à ce mail."
+msgid "Vous recevez ce message parce que votre adresse est enregistrée dans l’espace organisateur de {organisation}."
+msgstr "Vous recevez ce message parce que votre adresse est enregistrée dans l’espace organisateur de {organisation}."
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -3160,6 +3160,21 @@ msgstr "{tete} : votre participation"
 #: src/courriel/messages.ts
 msgid "{tete} : vos places ont changé"
 msgstr "{tete} : vos places ont changé"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Pour toute question, répondez à ce mail."
+msgstr "Pour toute question, répondez à ce mail."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, adressez-vous à l’équipe d’organisation de l’activité."
+msgstr "Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, adressez-vous à l’équipe d’organisation de l’activité."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, contactez l’équipe d’organisation depuis l’espace organisateur."
+msgstr "Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, contactez l’équipe d’organisation depuis l’espace organisateur."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts

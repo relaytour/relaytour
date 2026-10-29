@@ -18,7 +18,10 @@ export interface GroupeDeListe {
 
 export type Variables = Record<string, string | string[] | GroupeDeListe[]>
 
-/** Ce que l'organisation apporte à chaque mail : son nom court, son logo et ses couleurs. */
+/**
+ * Ce que l'organisation apporte à chaque mail : son nom court, son logo, ses
+ * couleurs et la consigne de réponse de son pied.
+ */
 export interface VariablesOrganisation {
   organisation: string
   /** Logo PNG en adresse https, ou chaîne vide : l'en-tête affiche alors le nom. */
@@ -27,6 +30,8 @@ export interface VariablesOrganisation {
   couleurPrimaire: string
   couleurAccent: string
   couleurSol: string
+  /** La dernière phrase du pied : répondre au mail, ou passer par un espace (ADR 0053). */
+  consigneReponse: string
 }
 
 const COULEUR = /^#[0-9A-F]{6}$/i

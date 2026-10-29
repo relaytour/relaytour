@@ -2215,6 +2215,10 @@ msgstr "Aucune activité"
 msgid "Aucune activité ne vous est encore ouverte."
 msgstr "Aucune activité ne vous est encore ouverte."
 
+#: src/pages/admin/Organisation.tsx
+msgid "Aucune adresse de contact n’est déclarée."
+msgstr "Aucune adresse de contact n’est déclarée."
+
 #: src/pages/admin/Personnes.tsx
 msgid "Aucune affectation"
 msgstr "Aucune affectation"
@@ -3603,6 +3607,10 @@ msgstr "Début"
 #: src/lib/guide-markdown.ts
 msgid "Début de l’après-midi."
 msgstr "Début de l’après-midi."
+
+#: src/composants/PremiersPas.tsx
+msgid "Déclarer une adresse de contact"
+msgstr "Déclarer une adresse de contact"
 
 #: src/composants/DeclinerTache.tsx
 #: src/composants/TacheCarte.tsx
@@ -5195,6 +5203,10 @@ msgstr "L’adresse actuelle cesse aussitôt de servir. Vous devrez abonner de n
 msgid "L’adresse cesse aussitôt de servir. Vos agendas gardent les événements déjà lus jusqu’à leur prochaine relecture."
 msgstr "L’adresse cesse aussitôt de servir. Vos agendas gardent les événements déjà lus jusqu’à leur prochaine relecture."
 
+#: src/pages/admin/Organisation.tsx
+msgid "L’adresse d’envoi de l’installation ne reçoit pas de réponse : les mails invitent les membres à passer par l’espace organisateur. Déclarez une adresse de rôle dans le champ « Contact de l’organisation »."
+msgstr "L’adresse d’envoi de l’installation ne reçoit pas de réponse : les mails invitent les membres à passer par l’espace organisateur. Déclarez une adresse de rôle dans le champ « Contact de l’organisation »."
+
 #: src/composants/AbonnementAgenda.tsx
 #: src/composants/CopierAdresses.tsx
 msgid "L’adresse est copiée."
@@ -6420,6 +6432,10 @@ msgstr "Les phases, les dates clés, les réunions et les échéances {periodeDe
 msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
 msgstr "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
 
+#: src/pages/admin/Organisation.tsx
+msgid "Les réponses des membres aux mails arrivent à l’adresse d’envoi de l’installation. Déclarez une adresse de rôle dans le champ « Contact de l’organisation »."
+msgstr "Les réponses des membres aux mails arrivent à l’adresse d’envoi de l’installation. Déclarez une adresse de rôle dans le champ « Contact de l’organisation »."
+
 #: src/composants/CandidaturesBenevoles.tsx
 msgid "Les séquences encore en attente sont refusées. Aucun mail ne part, et la personne peut déposer de nouveau."
 msgstr "Les séquences encore en attente sont refusées. Aucun mail ne part, et la personne peut déposer de nouveau."
@@ -7443,9 +7459,17 @@ msgid "Ouvrir l’appel"
 msgstr "Ouvrir l’appel"
 
 #: src/composants/PremiersPas.tsx
+msgid "Ouvrir l’écran Activités"
+msgstr "Ouvrir l’écran Activités"
+
+#: src/composants/PremiersPas.tsx
 #: src/pages/admin/ImportEquipe.tsx
 msgid "Ouvrir l’écran Équipe"
 msgstr "Ouvrir l’écran Équipe"
+
+#: src/composants/PremiersPas.tsx
+msgid "Ouvrir l’écran Organisation"
+msgstr "Ouvrir l’écran Organisation"
 
 #: src/composants/Tableau.tsx
 msgid "Ouvrir la fiche"
@@ -8519,6 +8543,10 @@ msgstr "Reprendre le brouillon"
 #: src/composants/ReconductionEdition.tsx
 msgid "Reprendre les tâches de"
 msgstr "Reprendre les tâches de"
+
+#: src/composants/ReprendreMonAdresse.tsx
+msgid "Reprendre mon adresse ({adresse})"
+msgstr "Reprendre mon adresse ({adresse})"
 
 #: src/composants/ComptesFournisseur.tsx
 msgid "Reprendre son adresse Relaytour"
@@ -9944,6 +9972,10 @@ msgstr "Une adresse de rôle appartient à l’organisation, pas à une personne
 #: src/pages/admin/Organisation.tsx
 msgid "Une adresse de rôle passe pour institutionnelle."
 msgstr "Une adresse de rôle passe pour institutionnelle."
+
+#: src/composants/PremiersPas.tsx
+msgid "Une adresse de rôle reçoit les réponses des membres aux mails de l’activité. L’activité reprend sinon le contact de l’organisation."
+msgstr "Une adresse de rôle reçoit les réponses des membres aux mails de l’activité. L’activité reprend sinon le contact de l’organisation."
 
 #: src/pages/admin/Organisation.tsx
 msgid "Une adresse de rôle, citée dans l’appel aux référentes et référents. Elle reçoit les réponses aux mails de l’organisation."

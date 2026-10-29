@@ -25,6 +25,7 @@ import { useEffect, useState } from 'react'
 import ChampCouleur from '../../composants/ChampCouleur'
 import ChampImage from '../../composants/ChampImage'
 import DepotContenu from '../../composants/DepotContenu'
+import ReprendreMonAdresse from '../../composants/ReprendreMonAdresse'
 import { Panneau } from '../../composants/Panneau'
 import Titre from '../../composants/Titre'
 import { graphql } from '../../gql'
@@ -53,6 +54,7 @@ const IDENTITE = graphql(`
       langue
       domainesCourrielAutorises
       adressesRoleAutorisees
+      expediteurRecoitReponses
       logoPng
       logoSvg
       favicon
@@ -203,8 +205,9 @@ export default function Organisation() {
   const [form] = Form.useForm<Valeurs>()
   const [erreur, setErreur] = useState<string | null>(null)
   const [exportEnCours, setExportEnCours] = useState(false)
+  // Un domaine de rôle ajouté peut faire apparaître « Reprendre mon adresse ».
   const [modifier, modification] = useMutation(MODIFIER, {
-    refetchQueries: [IDENTITE, ORGANISATION, ACTIVITES],
+    refetchQueries: [IDENTITE, ORGANISATION, ACTIVITES, 'MonAdresseDeRole'],
   })
   const identite = data?.identiteOrganisation
   const declare = (identite?.theme ?? {}) as ThemeDeclare
@@ -318,6 +321,22 @@ export default function Organisation() {
         />
       )}
 
+      {identite && !identite.contactRecrutement && (
+        // Sans contact, les réponses aux mails de l'organisation arrivent à
+        // l'expéditeur, ou se perdent s'il ne reçoit pas de courrier (ADR 0053).
+        <Alert
+          type="warning"
+          showIcon
+          title={t`Aucune adresse de contact n’est déclarée.`}
+          description={
+            identite.expediteurRecoitReponses
+              ? t`Les réponses des membres aux mails arrivent à l’adresse d’envoi de l’installation. Déclarez une adresse de rôle dans le champ « Contact de l’organisation ».`
+              : t`L’adresse d’envoi de l’installation ne reçoit pas de réponse : les mails invitent les membres à passer par l’espace organisateur. Déclarez une adresse de rôle dans le champ « Contact de l’organisation ».`
+          }
+          style={{ marginBottom: 16 }}
+        />
+      )}
+
       <Form
         form={form}
         layout="vertical"
@@ -346,7 +365,16 @@ export default function Organisation() {
               <Form.Item
                 label={t`Contact de l’organisation (facultatif)`}
                 name="contactRecrutement"
-                extra={t`Une adresse de rôle, citée dans l’appel aux référentes et référents. Elle reçoit les réponses aux mails de l’organisation.`}
+                extra={
+                  <>
+                    {t`Une adresse de rôle, citée dans l’appel aux référentes et référents. Elle reçoit les réponses aux mails de l’organisation.`}{' '}
+                    <ReprendreMonAdresse
+                      onReprendre={adresse =>
+                        form.setFieldsValue({ contactRecrutement: adresse })
+                      }
+                    />
+                  </>
+                }
               >
                 <Input type="email" />
               </Form.Item>
