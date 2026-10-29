@@ -89,6 +89,11 @@ type Activite {
   Les phases de l’activité, dans l’ordre : celles qu’elle déclare, sinon les phases par défaut (ADR 0025).
   """
   phases: [Phase!]!
+
+  """
+  Une boîte reçoit les réponses aux mails de l’activité : son contact, celui de l’organisation, ou l’expéditeur de l’installation (ADR 0053).
+  """
+  reponsesRecues: Boolean!
   sigle: String
   slug: String!
 
@@ -925,6 +930,7 @@ type EtapeAccordDeclinaison {
 
 enum EtapePremiersPas {
   ACTIVITE
+  CONTACT
   EQUIPE
   PERIMETRES
   PERIODE
@@ -1222,6 +1228,11 @@ type IdentiteOrganisation {
   Domaines des adresses de rôle. Une adresse de ces domaines passe pour institutionnelle. Ils ne limitent pas les invitations.
   """
   domainesCourrielAutorises: [String!]!
+
+  """
+  La boîte de l’expéditeur des mails reçoit les réponses. Faux quand l’installation déclare COURRIEL_EXPEDITEUR_SANS_REPONSE (ADR 0053).
+  """
+  expediteurRecoitReponses: Boolean!
   favicon: String
   faviconUrl: String
 
@@ -2562,6 +2573,11 @@ type PeriodeInstallation {
 
 type Personne {
   activitesAdministrees: [ID!]!
+
+  """
+  L’adresse de la personne est une adresse de rôle de son organisation active. Lue par la personne seule.
+  """
+  adresseDeRole: Boolean
   adresseVisible: Boolean
   affectations(editionId: ID): [Affectation!]!
 

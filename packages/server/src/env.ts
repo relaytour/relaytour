@@ -70,6 +70,12 @@ const EnvSchema = z
     COURRIEL_SMTP_MOT_DE_PASSE: optionnelle,
     // Sans expéditeur, la configuration compose « <nom court> <relaytour@localhost> ».
     COURRIEL_EXPEDITEUR: optionnelle,
+    // Vrai quand la boîte de l'expéditeur ne reçoit pas de courrier (ADR 0053) : un
+    // mail sans Reply-To n'invite alors plus à répondre.
+    COURRIEL_EXPEDITEUR_SANS_REPONSE: z
+      .enum(['true', 'false', ''])
+      .optional()
+      .transform(v => v === 'true'),
     // Plafond quotidien des mails de l'installation (ADR 0034). Absent, aucun
     // plafond : c'est le cas d'une installation auto-hébergée. Au-delà, un mail est
     // reporté au lendemain ; le code de connexion part toujours.

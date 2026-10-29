@@ -1,6 +1,8 @@
 import { Prisma, prisma } from '@relaytour/database'
 import { z } from 'zod'
 
+import { configurationActivite } from './organisation.ts'
+
 // Liste « Premiers pas » d'une activité (ADR 0048). L'état de chaque étape se
 // calcule à partir des données, sauf la première : seul un admin confirme que
 // l'activité est bien décrite. Une étape faite par un autre chemin (un autre écran,
@@ -11,6 +13,7 @@ export const ETAPES = [
   'PERIODE',
   'PERIMETRES',
   'TACHES',
+  'CONTACT',
   'EQUIPE',
 ] as const
 
@@ -53,23 +56,30 @@ export async function etatPremiersPas(
     select: { id: true },
   })
   const autres = { userId: { not: moiId } }
-  const [perimetres, taches, rattaches, admins, affectes] = await Promise.all([
-    prisma.perimetre.count({ where: { activiteId, archivedAt: null } }),
-    courante === null
-      ? 0
-      : prisma.tache.count({
-          // Une tâche abandonnée ne prépare rien : elle ne coche pas l'étape.
-          where: { editionId: courante.id, statut: { not: 'ABANDONNEE' } },
-        }),
-    prisma.rattachementActivite.count({ where: { activiteId, ...autres } }),
-    prisma.adminActivite.count({ where: { activiteId, ...autres } }),
-    prisma.affectation.count({ where: { edition: { activiteId }, ...autres } }),
-  ])
+  const [perimetres, taches, rattaches, admins, affectes, configuration] =
+    await Promise.all([
+      prisma.perimetre.count({ where: { activiteId, archivedAt: null } }),
+      courante === null
+        ? 0
+        : prisma.tache.count({
+            // Une tâche abandonnée ne prépare rien : elle ne coche pas l'étape.
+            where: { editionId: courante.id, statut: { not: 'ABANDONNEE' } },
+          }),
+      prisma.rattachementActivite.count({ where: { activiteId, ...autres } }),
+      prisma.adminActivite.count({ where: { activiteId, ...autres } }),
+      prisma.affectation.count({
+        where: { edition: { activiteId }, ...autres },
+      }),
+      configurationActivite(activiteId),
+    ])
   const faites: Record<Etape, boolean> = {
     ACTIVITE: reglage.activiteConfirmeeLe !== undefined,
     PERIODE: courante !== null,
     PERIMETRES: perimetres > 0,
     TACHES: taches > 0,
+    // Le contact de l'activité, sinon celui de l'organisation, reçoit les
+    // réponses aux mails (ADR 0053).
+    CONTACT: configuration.contactRecrutement !== undefined,
     EQUIPE: rattaches + admins + affectes > 0,
   }
   const etapes = ETAPES.map(etape => ({ etape, faite: faites[etape] }))

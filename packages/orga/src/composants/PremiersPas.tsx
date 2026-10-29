@@ -3,7 +3,7 @@ import { useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
 import { App, Button, Space } from 'antd'
 import { useState, type ReactNode } from 'react'
-import { Link } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 
 import DescriptionActivite from './DescriptionActivite'
 import InvitationRapide from './InvitationRapide'
@@ -17,6 +17,7 @@ import type { EtapePremiersPas } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
 import { messageErreur } from '../lib/erreurs'
 import { EDITION_COURANTE, PREMIERS_PAS } from '../lib/requetes'
+import { useSession } from '../lib/session'
 
 // Liste « Premiers pas » de Mon espace (ADR 0048). Elle mène un admin d'une
 // activité vide à une période prête. Le serveur coche chaque étape à partir des
@@ -44,6 +45,9 @@ export default function PremiersPas() {
   const { t } = useLingui()
   const { message } = App.useApp()
   const { lien, periode } = useActivite()
+  const navigate = useNavigate()
+  // L'écran « Organisation » est réservé aux admins de l'organisation.
+  const gereOrganisation = useSession().moi.estAdmin
   const { une: unePeriode, nom: mot } = periode
   // L'état change aussi depuis les autres écrans : la liste se relit à chaque
   // retour sur Mon espace.
@@ -121,6 +125,25 @@ export default function PremiersPas() {
           <Link to={lien('/perimetres')}>
             <Trans>Tous les périmètres</Trans>
           </Link>
+        </Space>
+      ),
+    },
+    CONTACT: {
+      titre: t`Déclarer une adresse de contact`,
+      texte: t`Une adresse de rôle reçoit les réponses des membres aux mails de l’activité. L’activité reprend sinon le contact de l’organisation.`,
+      actions: (
+        <Space wrap>
+          <Button
+            type={prochaine === 'CONTACT' ? 'primary' : 'default'}
+            onClick={() => void navigate(lien('/admin/activites'))}
+          >
+            <Trans>Ouvrir l’écran Activités</Trans>
+          </Button>
+          {gereOrganisation && (
+            <Link to={lien('/admin/organisation')}>
+              <Trans>Ouvrir l’écran Organisation</Trans>
+            </Link>
+          )}
         </Space>
       ),
     },

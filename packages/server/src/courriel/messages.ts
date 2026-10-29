@@ -108,6 +108,66 @@ function activiteDuSujet(
 
 const SANS_REPONSE = new Set<SorteCourriel>(['essai', 'code-connexion'])
 
+/** L'adresse nue d'un expéditeur « Nom <adresse> ». */
+function adresseNue(expediteur: string): string {
+  return /<([^>]+)>/.exec(expediteur)?.[1] ?? expediteur
+}
+
+/**
+ * Où vont les réponses d'un mail (ADR 0053) : le contact de l'activité ou de
+ * l'organisation en Reply-To, sauf pour un code de connexion et un essai. Le pied
+ * propose de répondre quand une boîte reçoit la réponse : ce contact, sinon
+ * l'expéditeur s'il reçoit du courrier.
+ */
+export function reponsesDuMail(
+  configuration: Pick<
+    ConfigurationOrganisation,
+    'contactRecrutement' | 'expediteurRecoitReponses'
+  >,
+  sorte: SorteCourriel
+): { repondreA: string | undefined; repondre: boolean } {
+  const repondreA = SANS_REPONSE.has(sorte)
+    ? undefined
+    : configuration.contactRecrutement
+  return {
+    repondreA,
+    repondre: repondreA !== undefined || configuration.expediteurRecoitReponses,
+  }
+}
+
+/**
+ * L'adresse de l'organisateur d'une réunion (ADR 0053) : le contact, sinon
+ * l'expéditeur. La RFC 5546 exige un organisateur pour une convocation et une
+ * annulation : l'expéditeur le reste même s'il ne reçoit pas de courrier. La
+ * personne répond dans l'application, et la convocation le dit.
+ */
+export function adresseOrganisateur(
+  configuration: Pick<
+    ConfigurationOrganisation,
+    'contactRecrutement' | 'expediteur'
+  >
+): string {
+  return (
+    configuration.contactRecrutement ?? adresseNue(configuration.expediteur)
+  )
+}
+
+/** La dernière phrase du pied : répondre au mail, ou passer par un espace. */
+function consigneReponse(repondre: boolean, sorte: SorteCourriel): string {
+  if (repondre) return i18n._('Pour toute question, répondez à ce mail.')
+  // Une personne qui reçoit un code ou un essai n'a peut-être pas encore accès à
+  // l'espace : le pied ne l'y renvoie pas.
+  if (SANS_REPONSE.has(sorte))
+    return i18n._('Cette adresse d’envoi ne reçoit pas de réponse.')
+  return sorte === 'benevole-lien' || sorte === 'benevole-places'
+    ? i18n._(
+        'Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, adressez-vous à l’équipe d’organisation de l’activité.'
+      )
+    : i18n._(
+        'Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, contactez l’équipe d’organisation depuis l’espace organisateur.'
+      )
+}
+
 export interface MessageCompose {
   sujet: string
   html: string
@@ -792,11 +852,7 @@ export async function composer(
         tete: teteReunion,
       })
     }
-    const expediteur = (await configurationOrganisation()).expediteur
-    const adresseOrganisateur =
-      configuration.contactRecrutement ??
-      /<([^>]+)>/.exec(expediteur)?.[1] ??
-      expediteur
+    const organisateur = adresseOrganisateur(configuration)
     const description = retrait
       ? null
       : [
@@ -824,7 +880,7 @@ export async function composer(
             modifieLe: reunion.updatedAt,
             organisateur: {
               nom: configuration.nomCourt,
-              adresse: adresseOrganisateur,
+              adresse: organisateur,
             },
             participant: { nom: personne.name, adresse: personne.email },
           },
@@ -941,11 +997,11 @@ export async function composer(
     }
   }
 
-  const { html, texte } = rendre(
-    job.sorte,
-    variables,
-    variablesOrganisation(configuration)
-  )
+  const { repondreA, repondre } = reponsesDuMail(configuration, job.sorte)
+  const { html, texte } = rendre(job.sorte, variables, {
+    ...variablesOrganisation(configuration),
+    consigneReponse: consigneReponse(repondre, job.sorte),
+  })
   return {
     sujet:
       sujet ??
@@ -953,10 +1009,7 @@ export async function composer(
     html,
     texte,
     desabonnement,
-    // Un code de connexion et un essai n'appellent pas de réponse.
-    repondreA: SANS_REPONSE.has(job.sorte)
-      ? undefined
-      : configuration.contactRecrutement,
+    repondreA,
     apresEnvoi,
     icalEvent,
   }

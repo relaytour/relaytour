@@ -16,7 +16,15 @@ Vous choisissez un service SMTP : la boîte mail de votre hébergeur de domaine,
 
 ## Réponses des membres
 
-Un mail qui concerne une activité porte l'en-tête `Reply-To` avec le contact de cette activité (`contactRecrutement` de `activite.yaml`). Un mail qui concerne toute l'organisation porte le contact de l'organisation. Sans contact déclaré, les réponses arrivent à l'expéditeur. Les codes de connexion et le mail d'essai n'ont pas d'en-tête `Reply-To`.
+Un mail qui concerne une activité porte l'en-tête `Reply-To` avec le contact de cette activité (`contactRecrutement` de `activite.yaml`). Une activité sans contact reprend celui de l'organisation. Un mail qui concerne toute l'organisation porte le contact de l'organisation. Les admins modifient ces contacts dans les écrans « Organisation » et « Activités ». Les codes de connexion et le mail d'essai n'ont pas d'en-tête `Reply-To`.
+
+Sans contact déclaré, les réponses arrivent à l'expéditeur (`COURRIEL_EXPEDITEUR`). Si la boîte de l'expéditeur ne reçoit pas de courrier, déclarez `COURRIEL_EXPEDITEUR_SANS_REPONSE=true` (ADR 0053). C'est le cas d'un domaine d'envoi dédié dont l'enregistrement MX ne mène à aucune boîte. Avec ce réglage :
+
+- le pied d'un mail sans `Reply-To` n'invite plus à répondre, et renvoie vers l'espace organisateur ;
+- une convocation à une réunion sans contact nomme encore l'expéditeur comme organisateur, comme l'exige la RFC 5546, et le formulaire de la réunion avertit que les réponses depuis un agenda se perdent ;
+- l'écran « Organisation » signale l'absence de contact, et la liste « Premiers pas » propose d'en déclarer un.
+
+Relaytour ne prend jamais l'adresse personnelle d'un admin comme adresse de réponse par défaut. `CONTACT_RECRUTEMENT` n'amorce que le contact d'une organisation créée depuis l'environnement, avant le premier import de son `organisation.yaml`.
 
 Une invitation concerne une activité quand la personne invitée y a un souhait, une affectation ou un rôle d'admin, et dans aucune autre activité. Une invitation envoyée par un admin d'activité, sans autre lien, concerne l'activité qu'il administre.
 

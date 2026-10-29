@@ -47,6 +47,8 @@ const VARIABLES_ORGANISATION = new Set([
   // son nom. rendre() la compose ; la partie texte garde le nom.
   'marque',
   'logoUrl',
+  // La dernière phrase du pied, composée à l'envoi selon l'adresse de réponse (ADR 0053).
+  'consigneReponse',
   ...Object.values(COULEURS_SENTINELLES),
 ])
 

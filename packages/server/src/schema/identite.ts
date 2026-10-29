@@ -2,6 +2,7 @@ import { estUneLangue } from '@relaytour/commun'
 import { Prisma, prisma, type Activite } from '@relaytour/database'
 import type { z } from 'zod'
 
+import { adresseDeRole } from '../lib/contenu.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { i18n } from '../lib/langue.ts'
@@ -33,6 +34,7 @@ import { construireContenu } from '../orga/exporter.ts'
 import { ActiviteRef } from './activites.ts'
 import { builder } from './builder.ts'
 import { ThemeRef } from './organisation.ts'
+import { PersonneRef } from './personnes.ts'
 
 // Identité de l'organisation et de ses activités (ADR 0009) : les admins la
 // modifient dans l'application, sans passer par l'hébergeur. Le slug, le statut
@@ -187,6 +189,12 @@ const IdentiteOrganisationRef = builder
           'Adresses de rôle hébergées chez une messagerie grand public, autorisées une par une.',
         resolve: i => i.declaration.adressesRoleAutorisees,
       }),
+      expediteurRecoitReponses: t.boolean({
+        description:
+          'La boîte de l’expéditeur des mails reçoit les réponses. Faux quand l’installation déclare COURRIEL_EXPEDITEUR_SANS_REPONSE (ADR 0053).',
+        resolve: async () =>
+          (await configurationOrganisation()).expediteurRecoitReponses,
+      }),
       logoPng: t.string({
         nullable: true,
         resolve: i => i.declaration.logo?.png,
@@ -297,6 +305,17 @@ builder.prismaObjectFields('Activite', t => ({
     nullable: true,
     resolve: async a =>
       (await configurationDe(a, a.organisationId)).contactRecrutement,
+  }),
+  reponsesRecues: t.boolean({
+    description:
+      'Une boîte reçoit les réponses aux mails de l’activité : son contact, celui de l’organisation, ou l’expéditeur de l’installation (ADR 0053).',
+    resolve: async a => {
+      const configuration = await configurationDe(a, a.organisationId)
+      return (
+        configuration.contactRecrutement !== undefined ||
+        configuration.expediteurRecoitReponses
+      )
+    },
   }),
   pageEquipe: t.string({
     nullable: true,
@@ -616,6 +635,26 @@ builder.mutationFields(t => ({
       })
       await marquerContenuModifie(organisationId)
       return activite
+    },
+  }),
+}))
+
+// Une personne reprend sa propre adresse comme contact seulement si elle passe
+// déjà pour une adresse de rôle de l'organisation (ADR 0053). Elle seule le lit :
+// toute autre personne lit null.
+builder.prismaObjectFields(PersonneRef, t => ({
+  adresseDeRole: t.boolean({
+    nullable: true,
+    description:
+      'L’adresse de la personne est une adresse de rôle de son organisation active. Lue par la personne seule.',
+    select: { email: true },
+    resolve: async (u, _args, ctx) => {
+      if (ctx.personne?.id !== u.id || ctx.organisation === null) return null
+      const configuration = await configurationOrganisation(ctx.organisation.id)
+      return adresseDeRole(u.email, {
+        domaines: configuration.domainesCourrielAutorises,
+        adresses: configuration.adressesRoleAutorisees,
+      })
     },
   }),
 }))

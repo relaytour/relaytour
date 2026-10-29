@@ -2215,6 +2215,14 @@ msgstr "No activity"
 msgid "Aucune activité ne vous est encore ouverte."
 msgstr "No activity is open to you yet."
 
+#: src/pages/admin/Organisation.tsx
+msgid "Aucune adresse de contact n’est déclarée."
+msgstr "No contact address is set."
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Aucune adresse ne reçoit les réponses des personnes convoquées."
+msgstr "No address receives the replies of the people invited."
+
 #: src/pages/admin/Personnes.tsx
 msgid "Aucune affectation"
 msgstr "No appointments"
@@ -3603,6 +3611,10 @@ msgstr "Start"
 #: src/lib/guide-markdown.ts
 msgid "Début de l’après-midi."
 msgstr "Early afternoon."
+
+#: src/composants/PremiersPas.tsx
+msgid "Déclarer une adresse de contact"
+msgstr "Set a contact address"
 
 #: src/composants/DeclinerTache.tsx
 #: src/composants/TacheCarte.tsx
@@ -5195,6 +5207,10 @@ msgstr "The current address stops working immediately. You will need to subscrib
 msgid "L’adresse cesse aussitôt de servir. Vos agendas gardent les événements déjà lus jusqu’à leur prochaine relecture."
 msgstr "The address stops working immediately. Your calendars keep the events already loaded until their next refresh."
 
+#: src/pages/admin/Organisation.tsx
+msgid "L’adresse d’envoi de l’installation ne reçoit pas de réponse : les mails invitent les membres à passer par l’espace organisateur. Déclarez une adresse de rôle dans le champ « Contact de l’organisation »."
+msgstr "The sending address of this installation does not receive replies, so emails ask members to use the organizer workspace. Set a role address in the “Organization contact” field."
+
 #: src/composants/AbonnementAgenda.tsx
 #: src/composants/CopierAdresses.tsx
 msgid "L’adresse est copiée."
@@ -6420,6 +6436,10 @@ msgstr "The phases, key dates, meetings and due dates {periodeDe}."
 msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
 msgstr "The area’s coordinators accept or decline these tasks."
 
+#: src/pages/admin/Organisation.tsx
+msgid "Les réponses des membres aux mails arrivent à l’adresse d’envoi de l’installation. Déclarez une adresse de rôle dans le champ « Contact de l’organisation »."
+msgstr "Members’ replies to emails go to the sending address of this installation. Set a role address in the “Organization contact” field."
+
 #: src/composants/CandidaturesBenevoles.tsx
 msgid "Les séquences encore en attente sont refusées. Aucun mail ne part, et la personne peut déposer de nouveau."
 msgstr "Slots still pending are declined. No email is sent, and the person can apply again."
@@ -6463,6 +6483,14 @@ msgstr "The task templates of these areas cannot be read and will not be created
 #: src/composants/NouvelleEdition.tsx
 msgid "Les tâches types des périmètres"
 msgstr "The areas’ task templates"
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Déclarez une adresse de contact dans l’écran « Activités »."
+msgstr "Their calendar will show the sending address of this installation as the organizer, and this address does not receive replies. Set a contact address in the Activities screen."
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Un admin de l’activité peut déclarer une adresse de contact."
+msgstr "Their calendar will show the sending address of this installation as the organizer, and this address does not receive replies. An activity admin can set a contact address."
 
 #: src/pages/FicheEditeur.tsx
 msgid "Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux."
@@ -7443,9 +7471,17 @@ msgid "Ouvrir l’appel"
 msgstr "Open the call"
 
 #: src/composants/PremiersPas.tsx
+msgid "Ouvrir l’écran Activités"
+msgstr "Open the Activities screen"
+
+#: src/composants/PremiersPas.tsx
 #: src/pages/admin/ImportEquipe.tsx
 msgid "Ouvrir l’écran Équipe"
 msgstr "Open the Team screen"
+
+#: src/composants/PremiersPas.tsx
+msgid "Ouvrir l’écran Organisation"
+msgstr "Open the Organization screen"
 
 #: src/composants/Tableau.tsx
 msgid "Ouvrir la fiche"
@@ -8519,6 +8555,10 @@ msgstr "Resume draft"
 #: src/composants/ReconductionEdition.tsx
 msgid "Reprendre les tâches de"
 msgstr "Carry over the tasks of"
+
+#: src/composants/ReprendreMonAdresse.tsx
+msgid "Reprendre mon adresse ({adresse})"
+msgstr "Use my address ({adresse})"
 
 #: src/composants/ComptesFournisseur.tsx
 msgid "Reprendre son adresse Relaytour"
@@ -9944,6 +9984,10 @@ msgstr "A role address belongs to the organization, not to a person. Relaytour a
 #: src/pages/admin/Organisation.tsx
 msgid "Une adresse de rôle passe pour institutionnelle."
 msgstr "A role address counts as institutional."
+
+#: src/composants/PremiersPas.tsx
+msgid "Une adresse de rôle reçoit les réponses des membres aux mails de l’activité. L’activité reprend sinon le contact de l’organisation."
+msgstr "A role address receives members’ replies to the activity’s emails. Without one, the activity uses the organization contact."
 
 #: src/pages/admin/Organisation.tsx
 msgid "Une adresse de rôle, citée dans l’appel aux référentes et référents. Elle reçoit les réponses aux mails de l’organisation."
