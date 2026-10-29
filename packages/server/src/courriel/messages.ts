@@ -157,6 +157,10 @@ export function adresseOrganisateur(
 /** La dernière phrase du pied : répondre au mail, ou passer par un espace. */
 function consigneReponse(repondre: boolean, sorte: SorteCourriel): string {
   if (repondre) return i18n._('Pour toute question, répondez à ce mail.')
+  // Une personne qui reçoit un code ou un essai n'a peut-être pas encore accès à
+  // l'espace : le pied ne l'y renvoie pas.
+  if (SANS_REPONSE.has(sorte))
+    return i18n._('Cette adresse d’envoi ne reçoit pas de réponse.')
   return sorte === 'benevole-lien' || sorte === 'benevole-places'
     ? i18n._(
         'Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, adressez-vous à l’équipe d’organisation de l’activité.'

@@ -3168,6 +3168,11 @@ msgstr "If you have any questions, reply to this email."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "Cette adresse d’envoi ne reçoit pas de réponse."
+msgstr "This sending address does not receive replies."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, adressez-vous à l’équipe d’organisation de l’activité."
 msgstr "This sending address does not receive replies. If you have any questions, contact the activity’s organizing team."
 

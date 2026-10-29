@@ -378,6 +378,9 @@ describe('adresse de réponse et pied (ADR 0053)', () => {
       expect(sansBoite?.texte).toContain(SANS_REPONSE)
       expect(sansBoite?.texte).not.toContain(REPONDRE)
       expect(sansBoite?.html).toContain(SANS_REPONSE)
+      // Le code de connexion ne renvoie pas vers un espace où la personne ne
+      // peut pas encore entrer.
+      expect(sansBoite?.texte).not.toContain('depuis l’espace organisateur')
 
       // Une invitation garde le contact de l'organisation et propose de répondre.
       const invitation = await composer(prisma, {

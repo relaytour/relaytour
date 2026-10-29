@@ -24,13 +24,14 @@ Le contact d'une activité se rabat déjà sur celui de l'organisation. `CONTACT
 ### Le pied d'un mail
 
 - Le pied propose de répondre au mail dans deux cas : le mail porte un `Reply-To`, ou l'expéditeur reçoit du courrier.
-- Sinon, le pied indique que l'adresse d'envoi ne reçoit pas de réponse. Il renvoie vers l'espace organisateur, ou vers l'espace bénévole pour un mail adressé à une fiche bénévole.
-- La règle s'applique à toutes les sortes de mail, y compris le code de connexion et le mail d'essai, qui n'ont jamais de `Reply-To`.
+- Sinon, le pied indique que l'adresse d'envoi ne reçoit pas de réponse. Il renvoie vers l'espace organisateur, ou vers l'équipe de l'activité pour un mail adressé à une fiche bénévole.
+- La règle s'applique à toutes les sortes de mail, y compris le code de connexion et le mail d'essai, qui n'ont jamais de `Reply-To`. Leur pied ne renvoie pas vers l'espace : la personne n'y a peut-être pas encore accès.
 
 ### L'organisateur d'une convocation
 
 - L'organisateur d'une réunion, dans le fichier iCalendar d'une convocation ou d'une annulation, suit la même règle : le contact de l'activité ou de l'organisation, sinon l'expéditeur s'il reçoit du courrier.
 - Sans l'un ni l'autre, le fichier ne porte pas de ligne `ORGANIZER`. Le participant garde `RSVP=FALSE`, et la personne répond dans l'application (ADR 0037). Certains agendas affichent alors la personne comme organisatrice de l'événement ; une adresse de contact déclarée évite ce cas.
+- La RFC 5546 exige `ORGANIZER` pour les méthodes `REQUEST` et `CANCEL`. Un agenda strict peut donc ignorer une convocation ou une annulation sans organisateur. Si la recette le constate, l'organisateur reprend l'adresse de l'expéditeur, comme avant cette décision : une réponse depuis l'agenda est alors perdue, ce que la convocation annonce déjà.
 
 ### Signaler l'absence de contact
 

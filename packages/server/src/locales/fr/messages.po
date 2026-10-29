@@ -3168,6 +3168,11 @@ msgstr "Pour toute question, répondez à ce mail."
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
+msgid "Cette adresse d’envoi ne reçoit pas de réponse."
+msgstr "Cette adresse d’envoi ne reçoit pas de réponse."
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
 msgid "Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, adressez-vous à l’équipe d’organisation de l’activité."
 msgstr "Cette adresse d’envoi ne reçoit pas de réponse. Pour toute question, adressez-vous à l’équipe d’organisation de l’activité."
 
