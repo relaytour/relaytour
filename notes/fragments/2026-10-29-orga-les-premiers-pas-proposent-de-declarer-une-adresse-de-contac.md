@@ -12,7 +12,9 @@ fr:
     contact », avant l'invitation de l'équipe. Cette adresse de rôle reçoit les
     réponses des membres aux mails de l'activité. Les écrans « Organisation » et
     « Activités » proposent aussi de reprendre votre adresse, quand elle est
-    déjà une adresse de rôle de l'organisation.
+    déjà une adresse de rôle de l'organisation. Le formulaire d'une réunion
+    avertit quand aucune adresse ne reçoit les réponses des personnes
+    convoquées.
 en:
   titre: >-
     First steps suggest setting a contact address
@@ -20,7 +22,8 @@ en:
     The First steps list has a new step, "Set a contact address", before
     inviting the team. This role address receives members' replies to the
     activity's emails. The Organization and Activities screens also offer to
-    use your address, when it is already a role address of the organization.
+    use your address, when it is already a role address of the organization. The meeting form warns
+    when no address receives the replies of the people invited.
 ---
 
 ADR 0053. L'étape `CONTACT` se coche dès que l'activité a un contact, le sien

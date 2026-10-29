@@ -89,6 +89,11 @@ type Activite {
   Les phases de l’activité, dans l’ordre : celles qu’elle déclare, sinon les phases par défaut (ADR 0025).
   """
   phases: [Phase!]!
+
+  """
+  Une boîte reçoit les réponses aux mails de l’activité : son contact, celui de l’organisation, ou l’expéditeur de l’installation (ADR 0053).
+  """
+  reponsesRecues: Boolean!
   sigle: String
   slug: String!
 

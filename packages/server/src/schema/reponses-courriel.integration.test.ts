@@ -333,14 +333,62 @@ describe('adresse de réponse et pied (ADR 0053)', () => {
     ).toEqual({ repondreA: undefined, repondre: false })
   })
 
-  it('choisit l’organisateur d’une réunion selon la même règle', () => {
+  it('nomme toujours un organisateur de réunion, comme l’exige la RFC 5546', () => {
     expect(adresseOrganisateur(configuration(CONTACT_ORGA, false))).toBe(
       CONTACT_ORGA
     )
-    expect(adresseOrganisateur(configuration(undefined, true))).toBe(
-      'rencontres@envoi.exemple.org'
-    )
-    expect(adresseOrganisateur(configuration(undefined, false))).toBeUndefined()
+    // Sans contact, l'expéditeur reste l'organisateur, même sans boîte.
+    for (const recoit of [true, false]) {
+      expect(adresseOrganisateur(configuration(undefined, recoit))).toBe(
+        'rencontres@envoi.exemple.org'
+      )
+    }
+  })
+
+  it('dit si une boîte reçoit les réponses aux mails d’une activité', async () => {
+    const initial = env.COURRIEL_EXPEDITEUR_SANS_REPONSE
+    const lire = async () =>
+      Object.fromEntries(
+        (
+          (await executer(ids.adminOrg, '{ activites { id reponsesRecues } }'))
+            .activites as { id: string; reponsesRecues: boolean }[]
+        ).map(a => [a.id, a.reponsesRecues])
+      )
+    try {
+      env.COURRIEL_EXPEDITEUR_SANS_REPONSE = true
+      invaliderConfigurationOrganisation()
+      // Les deux activités ont un contact, le leur ou celui de l'organisation.
+      expect(await lire()).toMatchObject({ [ids.a1]: true, [ids.a2]: true })
+      await prisma.organisation.update({
+        where: { id: ids.org },
+        data: {
+          configuration: {
+            slug,
+            nom: `Organisation ${s}`,
+            domainesCourrielAutorises: ['exemple.fr'],
+          },
+        },
+      })
+      invaliderConfigurationOrganisation()
+      expect(await lire()).toMatchObject({ [ids.a1]: true, [ids.a2]: false })
+      env.COURRIEL_EXPEDITEUR_SANS_REPONSE = false
+      invaliderConfigurationOrganisation()
+      expect(await lire()).toMatchObject({ [ids.a2]: true })
+    } finally {
+      await prisma.organisation.update({
+        where: { id: ids.org },
+        data: {
+          configuration: {
+            slug,
+            nom: `Organisation ${s}`,
+            domainesCourrielAutorises: ['exemple.fr'],
+            contactRecrutement: CONTACT_ORGA,
+          },
+        },
+      })
+      env.COURRIEL_EXPEDITEUR_SANS_REPONSE = initial
+      invaliderConfigurationOrganisation()
+    }
   })
 
   it('ne dit qu’à la personne elle-même si son adresse est une adresse de rôle', async () => {

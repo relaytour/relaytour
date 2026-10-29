@@ -76,31 +76,6 @@ describe('calendrier', () => {
     expect(lignes.filter(l => l.startsWith('ATTENDEE'))).toHaveLength(1)
   })
 
-  it('écrit une convocation sans organisateur quand aucune boîte ne reçoit de réponse (ADR 0053)', () => {
-    const lignes = deplier(
-      calendrier({
-        methode: 'REQUEST',
-        maintenant: MAINTENANT,
-        evenements: [
-          {
-            uid: 'reunion-abc@orga.exemple.org',
-            titre: 'Point natation',
-            horaire: {
-              debut: new Date('2027-03-01T17:30:00.000Z'),
-              fin: new Date('2027-03-01T19:00:00.000Z'),
-            },
-            participant: { nom: 'Alex Durand', adresse: 'alex@exemple.org' },
-          },
-        ],
-      })
-    )
-    expect(lignes).toContain('METHOD:REQUEST')
-    expect(lignes.some(l => l.startsWith('ORGANIZER'))).toBe(false)
-    expect(lignes).toContain(
-      'ATTENDEE;CN="Alex Durand";ROLE=REQ-PARTICIPANT;PARTSTAT=NEEDS-ACTION;RSVP=FALSE:mailto:alex@exemple.org'
-    )
-  })
-
   it('écrit une annulation', () => {
     const lignes = deplier(
       calendrier({

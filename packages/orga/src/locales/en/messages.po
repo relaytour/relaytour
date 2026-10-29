@@ -2219,6 +2219,10 @@ msgstr "No activity is open to you yet."
 msgid "Aucune adresse de contact n’est déclarée."
 msgstr "No contact address is set."
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Aucune adresse ne reçoit les réponses des personnes convoquées."
+msgstr "No address receives the replies of the people invited."
+
 #: src/pages/admin/Personnes.tsx
 msgid "Aucune affectation"
 msgstr "No appointments"
@@ -6479,6 +6483,14 @@ msgstr "The task templates of these areas cannot be read and will not be created
 #: src/composants/NouvelleEdition.tsx
 msgid "Les tâches types des périmètres"
 msgstr "The areas’ task templates"
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Déclarez une adresse de contact dans l’écran « Activités »."
+msgstr "Their calendar will show the sending address of this installation as the organizer, and this address does not receive replies. Set a contact address in the Activities screen."
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Un admin de l’activité peut déclarer une adresse de contact."
+msgstr "Their calendar will show the sending address of this installation as the organizer, and this address does not receive replies. An activity admin can set a contact address."
 
 #: src/pages/FicheEditeur.tsx
 msgid "Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux."

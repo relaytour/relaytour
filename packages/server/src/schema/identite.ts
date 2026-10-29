@@ -306,6 +306,17 @@ builder.prismaObjectFields('Activite', t => ({
     resolve: async a =>
       (await configurationDe(a, a.organisationId)).contactRecrutement,
   }),
+  reponsesRecues: t.boolean({
+    description:
+      'Une boîte reçoit les réponses aux mails de l’activité : son contact, celui de l’organisation, ou l’expéditeur de l’installation (ADR 0053).',
+    resolve: async a => {
+      const configuration = await configurationDe(a, a.organisationId)
+      return (
+        configuration.contactRecrutement !== undefined ||
+        configuration.expediteurRecoitReponses
+      )
+    },
+  }),
   pageEquipe: t.string({
     nullable: true,
     resolve: async a => (await configurationDe(a, a.organisationId)).pageEquipe,

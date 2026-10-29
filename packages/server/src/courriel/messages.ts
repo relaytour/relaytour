@@ -137,20 +137,18 @@ export function reponsesDuMail(
 
 /**
  * L'adresse de l'organisateur d'une réunion (ADR 0053) : le contact, sinon
- * l'expéditeur s'il reçoit du courrier. Sans l'un ni l'autre, le fichier
- * iCalendar ne nomme pas d'organisateur.
+ * l'expéditeur. La RFC 5546 exige un organisateur pour une convocation et une
+ * annulation : l'expéditeur le reste même s'il ne reçoit pas de courrier. La
+ * personne répond dans l'application, et la convocation le dit.
  */
 export function adresseOrganisateur(
   configuration: Pick<
     ConfigurationOrganisation,
-    'contactRecrutement' | 'expediteur' | 'expediteurRecoitReponses'
+    'contactRecrutement' | 'expediteur'
   >
-): string | undefined {
+): string {
   return (
-    configuration.contactRecrutement ??
-    (configuration.expediteurRecoitReponses
-      ? adresseNue(configuration.expediteur)
-      : undefined)
+    configuration.contactRecrutement ?? adresseNue(configuration.expediteur)
   )
 }
 
@@ -880,10 +878,10 @@ export async function composer(
             sequence: reunion.sequence,
             annule: job.sorte === 'annulation-reunion',
             modifieLe: reunion.updatedAt,
-            organisateur:
-              organisateur === undefined
-                ? undefined
-                : { nom: configuration.nomCourt, adresse: organisateur },
+            organisateur: {
+              nom: configuration.nomCourt,
+              adresse: organisateur,
+            },
             participant: { nom: personne.name, adresse: personne.email },
           },
         ],

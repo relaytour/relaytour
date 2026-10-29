@@ -2219,6 +2219,10 @@ msgstr "Aucune activité ne vous est encore ouverte."
 msgid "Aucune adresse de contact n’est déclarée."
 msgstr "Aucune adresse de contact n’est déclarée."
 
+#: src/composants/ReunionFormulaire.tsx
+msgid "Aucune adresse ne reçoit les réponses des personnes convoquées."
+msgstr "Aucune adresse ne reçoit les réponses des personnes convoquées."
+
 #: src/pages/admin/Personnes.tsx
 msgid "Aucune affectation"
 msgstr "Aucune affectation"
@@ -6479,6 +6483,14 @@ msgstr "Les tâches types de ces périmètres sont illisibles et ne seront pas c
 #: src/composants/NouvelleEdition.tsx
 msgid "Les tâches types des périmètres"
 msgstr "Les tâches types des périmètres"
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Déclarez une adresse de contact dans l’écran « Activités »."
+msgstr "Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Déclarez une adresse de contact dans l’écran « Activités »."
+
+#: src/composants/ReunionFormulaire.tsx
+msgid "Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Un admin de l’activité peut déclarer une adresse de contact."
+msgstr "Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Un admin de l’activité peut déclarer une adresse de contact."
 
 #: src/pages/FicheEditeur.tsx
 msgid "Leurs référentes et référents la liront dans leurs fiches connexes, sans pouvoir la modifier. Si elle concerne toute l’activité, une fiche commune convient mieux."

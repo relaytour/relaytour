@@ -29,9 +29,10 @@ Le contact d'une activité se rabat déjà sur celui de l'organisation. `CONTACT
 
 ### L'organisateur d'une convocation
 
-- L'organisateur d'une réunion, dans le fichier iCalendar d'une convocation ou d'une annulation, suit la même règle : le contact de l'activité ou de l'organisation, sinon l'expéditeur s'il reçoit du courrier.
-- Sans l'un ni l'autre, le fichier ne porte pas de ligne `ORGANIZER`. Le participant garde `RSVP=FALSE`, et la personne répond dans l'application (ADR 0037). Certains agendas affichent alors la personne comme organisatrice de l'événement ; une adresse de contact déclarée évite ce cas.
-- La RFC 5546 exige `ORGANIZER` pour les méthodes `REQUEST` et `CANCEL`. Un agenda strict peut donc ignorer une convocation ou une annulation sans organisateur. Si la recette le constate, l'organisateur reprend l'adresse de l'expéditeur, comme avant cette décision : une réponse depuis l'agenda est alors perdue, ce que la convocation annonce déjà.
+- L'organisateur d'une réunion, dans le fichier iCalendar d'une convocation ou d'une annulation, est le contact de l'activité ou de l'organisation, sinon l'expéditeur.
+- L'expéditeur reste l'organisateur même s'il ne reçoit pas de courrier. La RFC 5546 exige une ligne `ORGANIZER` pour les méthodes `REQUEST` et `CANCEL`, et un agenda strict ignore une convocation ou une annulation qui n'en porte pas. Une mise à jour ou une annulation manquée laisserait une réunion fausse dans l'agenda des personnes convoquées.
+- Une réponse envoyée depuis l'agenda à cet organisateur est alors perdue. Le participant garde `RSVP=FALSE`, la convocation indique déjà que la personne répond dans l'application (ADR 0037), et l'agenda de Relaytour reste la source des réponses.
+- Le formulaire d'une réunion avertit la personne qui convoque quand aucune boîte ne reçoit les réponses. L'avertissement invite un admin de l'activité à déclarer une adresse de contact. Il ne bloque pas la convocation.
 
 ### Signaler l'absence de contact
 
@@ -50,4 +51,4 @@ Le contact d'une activité se rabat déjà sur celui de l'organisation. `CONTACT
 - Une installation qui déclare `COURRIEL_EXPEDITEUR_SANS_REPONSE` ne promet plus une réponse qui se perd.
 - Une installation existante ne change pas de comportement tant que le réglage est absent.
 - Les membres d'une organisation sans contact passent par l'espace organisateur, où l'organigramme et le bouton « Support » donnent les contacts.
-- Le contrôle des agendas sans ligne `ORGANIZER` reste à faire en recette, sur les messageries courantes.
+- Une convocation reste conforme à la RFC 5546 dans tous les cas. Sans contact, une réponse envoyée depuis un agenda se perd, et le formulaire de la réunion le signale.

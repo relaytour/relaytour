@@ -1,13 +1,25 @@
 import { useApolloClient, useMutation, useQuery } from '@apollo/client/react'
 import { Trans, useLingui } from '@lingui/react/macro'
-import { App, Form, Input, Modal, Radio, Select } from 'antd'
+import { Alert, App, Form, Input, Modal, Radio, Select } from 'antd'
 import { useEffect } from 'react'
 
 import { graphql } from '../gql'
 import type { CibleConvocation } from '../gql/graphql'
+import { useActivite } from '../lib/activite'
 import { lireConflit, relireApresConflit } from '../lib/conflit'
 import { messageErreur } from '../lib/erreurs'
 import { CONVOCABLES } from '../lib/requetes'
+
+// Sans boîte qui reçoit les réponses, l'agenda des personnes convoquées nomme
+// l'adresse d'envoi comme organisatrice, qui ne lit rien (ADR 0053).
+const REPONSES = graphql(`
+  query ReponsesDesMembres {
+    activites {
+      id
+      reponsesRecues
+    }
+  }
+`)
 
 const CREER = graphql(`
   mutation CreerReunion(
@@ -199,6 +211,11 @@ export default function ReunionFormulaire({
     variables: { editionId },
     skip: reunion === null,
   })
+  const { activite, gere } = useActivite()
+  const { data: reponses } = useQuery(REPONSES, { skip: reunion === null })
+  const sansReponse =
+    reponses?.activites.find(a => a.id === activite.id)?.reponsesRecues ===
+    false
   const { data: convocables } = useQuery(CONVOCABLES, {
     variables: { editionId, perimetreId },
     skip: reunion === null || cible !== 'CHOIX',
@@ -525,6 +542,18 @@ export default function ReunionFormulaire({
               à son agenda, et répond dans l’espace organisateur.
             </Trans>
           </p>
+        )}
+        {cible !== 'AUCUNE' && sansReponse && (
+          <Alert
+            type="warning"
+            showIcon
+            title={t`Aucune adresse ne reçoit les réponses des personnes convoquées.`}
+            description={
+              gere
+                ? t`Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Déclarez une adresse de contact dans l’écran « Activités ».`
+                : t`Leur agenda indiquera comme organisatrice l’adresse d’envoi de l’installation, qui ne reçoit pas de réponse. Un admin de l’activité peut déclarer une adresse de contact.`
+            }
+          />
         )}
       </Form>
     </Modal>

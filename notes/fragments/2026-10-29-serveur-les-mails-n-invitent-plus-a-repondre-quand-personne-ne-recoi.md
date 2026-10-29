@@ -26,7 +26,8 @@ en:
 ADR 0053. `COURRIEL_EXPEDITEUR_SANS_REPONSE=true` déclare que la boîte de
 l'expéditeur ne reçoit pas de courrier. Le pied propose de répondre si le mail
 porte un `Reply-To` ou si l'expéditeur reçoit du courrier. L'organisateur d'une
-convocation iCalendar suit la même règle ; sans adresse, le fichier ne porte
-pas de ligne `ORGANIZER`. Le champ `IdentiteOrganisation.expediteurRecoitReponses`
+convocation iCalendar reste le contact, sinon l'expéditeur, comme l'exige la
+RFC 5546. Le formulaire d'une réunion avertit quand aucune boîte ne reçoit les
+réponses (`Activite.reponsesRecues`). Le champ `IdentiteOrganisation.expediteurRecoitReponses`
 expose le réglage à l'écran « Organisation ». Sans la variable, le comportement
 ne change pas.

@@ -21,7 +21,7 @@ Un mail qui concerne une activité porte l'en-tête `Reply-To` avec le contact d
 Sans contact déclaré, les réponses arrivent à l'expéditeur (`COURRIEL_EXPEDITEUR`). Si la boîte de l'expéditeur ne reçoit pas de courrier, déclarez `COURRIEL_EXPEDITEUR_SANS_REPONSE=true` (ADR 0053). C'est le cas d'un domaine d'envoi dédié dont l'enregistrement MX ne mène à aucune boîte. Avec ce réglage :
 
 - le pied d'un mail sans `Reply-To` n'invite plus à répondre, et renvoie vers l'espace organisateur ;
-- une convocation à une réunion sans contact ne nomme pas d'organisateur dans son fichier iCalendar ;
+- une convocation à une réunion sans contact nomme encore l'expéditeur comme organisateur, comme l'exige la RFC 5546, et le formulaire de la réunion avertit que les réponses depuis un agenda se perdent ;
 - l'écran « Organisation » signale l'absence de contact, et la liste « Premiers pas » propose d'en déclarer un.
 
 Relaytour ne prend jamais l'adresse personnelle d'un admin comme adresse de réponse par défaut. `CONTACT_RECRUTEMENT` n'amorce que le contact d'une organisation créée depuis l'environnement, avant le premier import de son `organisation.yaml`.
