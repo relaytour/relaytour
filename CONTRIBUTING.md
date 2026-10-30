@@ -321,6 +321,7 @@ Une release ne se publie qu'après ses images : une relance du workflow ne crée
 - Dans `Coquille`, le contenu principal porte `minWidth: 0` : sans lui, un tableau large élargit toute la page au-delà de l'écran.
 - antd 6.6 déprécie aussi `List` : utiliser une liste HTML simple.
 - antd 6.6 nomme `.ant-drawer-section` le conteneur du tiroir et `.ant-modal-container` celui de la fenêtre modale ; `.ant-drawer-content` et `.ant-modal-content` n'existent plus. Le verre dépoli de `global.css` les cible ainsi. Après une montée de version d'antd, vérifier ces classes dans le navigateur.
+- Les boutons de l'adresse d'un abonnement (`.rt-abonnement-boutons`) remontent sous l'icône de l'`Alert` par une marge négative, calculée sur `--ant-alert-with-description-icon-size` et `--ant-margin-sm`. Après une montée de version d'antd, vérifier à 375 pixels qu'ils restent dans l'encadré.
 - antd 6 nomme `.ant-collapse-body` le contenu d'un panneau repliable ; `.ant-collapse-content-box` n'existe plus. Les groupes de notifications le ciblent dans `global.css`.
 - Prettier ne lit `.prettierignore` que dans le dossier courant : le lancer depuis la racine, sinon il reformate `packages/orga/src/gql`.
 - Le sol se pose sur `html` seul, jamais sur `body` : un fond sur `body` se peint au-dessus des halos en `z-index: -1` et les cache.

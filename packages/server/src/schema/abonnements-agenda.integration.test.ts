@@ -459,6 +459,22 @@ describe('séquences du programme (ADR 0040)', () => {
 })
 
 describe('abonnement d’activité', () => {
+  it('crée l’adresse avec les types choisis', async () => {
+    const r = await executer(
+      ids.adminActivite,
+      `mutation ($a: ID!) { creerAbonnementAgendaActivite(activiteId: $a, inclurePhases: true, inclureDatesCles: false, inclureReunions: false) { adresse } }`,
+      { a: ids.activite }
+    )
+    expect(r.errors).toBeUndefined()
+    const ics = await contenu(
+      (r.data as { creerAbonnementAgendaActivite: { adresse: string } })
+        .creerAbonnementAgendaActivite.adresse
+    )
+    expect(ics).toContain('SUMMARY:Tournoi · phase Lancement')
+    expect(ics).not.toContain('Dossier en préfecture')
+    expect(ics).not.toContain(`UID:reunion-${ids.reunionGlobale}@`)
+  })
+
   it('sert l’agenda global d’une activité à ses admins seulement', async () => {
     const r = await executer(ids.adminActivite, CREER_ACTIVITE, {
       a: ids.activite,

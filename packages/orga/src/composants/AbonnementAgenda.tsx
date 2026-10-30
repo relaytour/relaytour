@@ -221,6 +221,19 @@ const TYPES_PAR_DEFAUT: Types = {
   inclureReunions: true,
 }
 
+const memesTypes = (a: Types, b: Types) =>
+  a.inclurePhases === b.inclurePhases &&
+  a.inclureDatesCles === b.inclureDatesCles &&
+  a.inclureReunions === b.inclureReunions
+
+const memesPerimetres = (
+  a: readonly string[] | null,
+  b: readonly string[] | null
+) =>
+  a === null || b === null
+    ? a === b
+    : a.length === b.length && [...a].sort().join() === [...b].sort().join()
+
 /** Les cases des types d'événements, communes aux deux abonnements. */
 function CasesTypes({
   types,
@@ -306,6 +319,14 @@ export function PreferenceAgenda() {
     ...types,
     inclureEcheances: echeances,
   }
+  // « Enregistrer » reste désactivé tant que le formulaire suit le serveur.
+  const modifie =
+    abonnement !== null &&
+    !(
+      memesTypes(types, abonnement) &&
+      echeances === abonnement.inclureEcheances &&
+      memesPerimetres(reglages.perimetreIds, abonnement.perimetreIds ?? null)
+    )
 
   const creerAdresse = async () => {
     try {
@@ -398,6 +419,7 @@ export function PreferenceAgenda() {
             <Button
               type="primary"
               loading={reglage.loading}
+              disabled={!modifie}
               onClick={() => {
                 void regler({ variables: reglages }).then(
                   () => message.success(t`Abonnement enregistré.`),
@@ -480,6 +502,8 @@ export function AbonnementActivite({
     })
   }
 
+  const modifie = abonnement !== null && !memesTypes(types, abonnement)
+
   const creerAdresse = async () => {
     try {
       const r = await creer({ variables: { activiteId, ...types } })
@@ -514,6 +538,7 @@ export function AbonnementActivite({
               size="small"
               type="primary"
               loading={reglage.loading}
+              disabled={!modifie}
               onClick={() => {
                 void regler({ variables: { activiteId, ...types } }).then(
                   () => message.success(t`Abonnement enregistré.`),
