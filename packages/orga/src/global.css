@@ -3169,6 +3169,21 @@ button.rt-agenda-evenement {
   font-size: 12.5px;
 }
 
+/* Les boutons partent du bord gauche de l'encadré, sous l'icône, et non du
+   retrait du texte : sinon ils débordent à 375 pixels de large. */
+.rt-abonnement-boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-inline-start: calc(
+    -1 *
+      (
+        var(--ant-alert-with-description-icon-size, 26px) +
+          var(--ant-margin-sm, 12px)
+      )
+  );
+}
+
 /* Sondage de dates (ADR 0037) : un créneau par ligne, ses décomptes, la réponse
    de la personne. */
 .rt-sondage-creneaux {

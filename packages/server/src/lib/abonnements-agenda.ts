@@ -65,14 +65,22 @@ function fenetre(maintenant: Date, fuseau: string): Fenetre {
 const dansLaFenetre = (f: Fenetre, du: string, au: string | null) =>
   du <= f.jusqua && (au ?? du) >= f.depuis
 
+/** Les types d'événements qu'un abonnement sert. */
+export type TypesEvenements = Pick<
+  AbonnementAgenda,
+  'inclurePhases' | 'inclureDatesCles' | 'inclureReunions'
+>
+
 /** Les repères d'une période : phases, premier et dernier jour, dates clés. */
 async function reperesDesPeriodes(
   activiteIds: string[],
   f: Fenetre,
   hote: string,
-  fuseau: string
+  fuseau: string,
+  types: TypesEvenements
 ): Promise<EvenementIcs[]> {
   if (activiteIds.length === 0) return []
+  if (!types.inclurePhases && !types.inclureDatesCles) return []
   const editions = await prisma.edition.findMany({
     where: { activiteId: { in: activiteIds }, statut: { not: 'ARCHIVEE' } },
     include: {
@@ -84,11 +92,14 @@ async function reperesDesPeriodes(
   for (const edition of editions) {
     const debut = jourISO(edition.debut)
     const fin = jourISO(edition.fin)
-    for (const phase of bornesDesPhases(lirePhases(edition.activite.phases), {
-      debut,
-      fin,
-      ouverture: aujourdhui(edition.createdAt, fuseau),
-    })) {
+    const phases = types.inclurePhases
+      ? bornesDesPhases(lirePhases(edition.activite.phases), {
+          debut,
+          fin,
+          ouverture: aujourdhui(edition.createdAt, fuseau),
+        })
+      : []
+    for (const phase of phases) {
       if (!dansLaFenetre(f, phase.du, phase.au)) continue
       evenements.push({
         uid: `phase-${edition.id}-${phase.cle}@${hote}`,
@@ -96,6 +107,7 @@ async function reperesDesPeriodes(
         horaire: { jour: phase.du, jourFin: phase.au },
       })
     }
+    if (!types.inclureDatesCles) continue
     if (dansLaFenetre(f, debut, fin)) {
       evenements.push({
         uid: `periode-${edition.id}@${hote}`,
@@ -175,16 +187,15 @@ function evenementDeReunion(
 }
 
 /**
- * L'agenda d'une personne, avec ses droits du moment : l'agenda global des
- * activités qu'elle voit, les réunions des périmètres choisis qu'elle lit, ses
- * convocations et, en option, les échéances de ses tâches.
+ * L'agenda d'une personne, avec ses droits du moment : les types choisis de
+ * l'agenda global des activités qu'elle voit, les réunions des périmètres
+ * choisis qu'elle lit, ses convocations et, en option, les échéances de ses
+ * tâches.
  */
 export async function evenementsPersonnels(
   ctx: AppContext,
-  abonnement: Pick<
-    AbonnementAgenda,
-    'perimetreIds' | 'inclureGlobal' | 'inclureEcheances'
-  >,
+  abonnement: TypesEvenements &
+    Pick<AbonnementAgenda, 'perimetreIds' | 'inclureEcheances'>,
   maintenant: Date
 ): Promise<EvenementIcs[]> {
   const organisation = ctx.organisation!
@@ -210,9 +221,13 @@ export async function evenementsPersonnels(
     fin: { gte: f.depuisInstant },
   }
   const [reperes, reunions, taches, sequences] = await Promise.all([
-    abonnement.inclureGlobal
-      ? reperesDesPeriodes(activites, f, hote, organisation.fuseauHoraire)
-      : [],
+    reperesDesPeriodes(
+      activites,
+      f,
+      hote,
+      organisation.fuseauHoraire,
+      abonnement
+    ),
     prisma.reunion.findMany({
       where: {
         organisationId: organisation.id,
@@ -220,7 +235,7 @@ export async function evenementsPersonnels(
         edition: periodeOuverte,
         ...fenetreReunion,
         OR: [
-          ...(abonnement.inclureGlobal ? [{ perimetreId: null }] : []),
+          ...(abonnement.inclureReunions ? [{ perimetreId: null }] : []),
           { perimetreId: { in: choisis } },
           { convocations: { some: { userId: moi } } },
         ],
@@ -302,9 +317,13 @@ export async function evenementsPersonnels(
   ].slice(0, EVENEMENTS_MAX)
 }
 
-/** L'agenda global d'une activité : repères des périodes et réunions globales. */
+/**
+ * L'agenda global d'une activité, selon les types choisis : repères des périodes
+ * et réunions globales.
+ */
 export async function evenementsActivite(
   activite: { id: string; organisationId: string },
+  types: TypesEvenements,
   fuseau: string,
   maintenant: Date
 ): Promise<EvenementIcs[]> {
@@ -313,20 +332,22 @@ export async function evenementsActivite(
   const hote = new URL(origine).hostname
   const f = fenetre(maintenant, fuseau)
   const [reperes, reunions] = await Promise.all([
-    reperesDesPeriodes([activite.id], f, hote, fuseau),
-    prisma.reunion.findMany({
-      where: {
-        organisationId: activite.organisationId,
-        activiteId: activite.id,
-        perimetreId: null,
-        edition: { statut: { not: 'ARCHIVEE' } },
-        debut: { lte: f.jusquaInstant },
-        fin: { gte: f.depuisInstant },
-      },
-      select: SELECTION_REUNION,
-      orderBy: { debut: 'asc' },
-      take: EVENEMENTS_MAX,
-    }),
+    reperesDesPeriodes([activite.id], f, hote, fuseau, types),
+    types.inclureReunions
+      ? prisma.reunion.findMany({
+          where: {
+            organisationId: activite.organisationId,
+            activiteId: activite.id,
+            perimetreId: null,
+            edition: { statut: { not: 'ARCHIVEE' } },
+            debut: { lte: f.jusquaInstant },
+            fin: { gte: f.depuisInstant },
+          },
+          select: SELECTION_REUNION,
+          orderBy: { debut: 'asc' },
+          take: EVENEMENTS_MAX,
+        })
+      : [],
   ])
   return [
     ...reperes,
@@ -403,6 +424,7 @@ export async function lireAbonnement(
     }
     evenements = await evenementsActivite(
       activite,
+      abonnement,
       abonnement.organisation.fuseauHoraire,
       maintenant
     )

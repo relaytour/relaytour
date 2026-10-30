@@ -10,8 +10,20 @@ type AbonnementAgenda {
   """Les derniers caractères de l’adresse, pour la reconnaître."""
   fin: String!
   id: ID!
+
+  """Les dates clés et les jours de chaque période."""
+  inclureDatesCles: Boolean!
+
+  """
+  Abonnement personnel : les échéances des tâches assignées à la personne.
+  """
   inclureEcheances: Boolean!
-  inclureGlobal: Boolean!
+
+  """Les phases des périodes."""
+  inclurePhases: Boolean!
+
+  """Les réunions de l’activité, hors réunions de périmètre."""
+  inclureReunions: Boolean!
 
   """Les périmètres choisis. Nul : tous les périmètres que la personne lit."""
   perimetreIds: [ID!]
@@ -1672,7 +1684,7 @@ type Mutation {
   """
   Crée l’abonnement à l’agenda global d’une activité, et révoque le précédent.
   """
-  creerAbonnementAgendaActivite(activiteId: ID!): AdresseAbonnement!
+  creerAbonnementAgendaActivite(activiteId: ID!, inclureDatesCles: Boolean = true, inclurePhases: Boolean = false, inclureReunions: Boolean = true): AdresseAbonnement!
   creerActivite(groupes: [GroupePerimetresInput!], nature: NatureActivite!, nom: String!, ordre: Int = 0, phases: [PhaseInput!], sigle: String, slug: String!): Activite!
 
   """Ouvre un appel à bénévoles, et rend son adresse publique."""
@@ -1717,7 +1729,7 @@ type Mutation {
   """
   Crée l’abonnement personnel, et révoque le précédent : son adresse cesse de servir.
   """
-  creerMonAbonnementAgenda(inclureEcheances: Boolean = false, inclureGlobal: Boolean = true, perimetreIds: [ID!]): AdresseAbonnement!
+  creerMonAbonnementAgenda(inclureDatesCles: Boolean = true, inclureEcheances: Boolean = false, inclurePhases: Boolean = false, inclureReunions: Boolean = true, perimetreIds: [ID!]): AdresseAbonnement!
   creerOrganisation(domainesCourrielAutorises: [String!], fuseauHoraire: String, limites: LimitesOrganisationInput, modulesAutorises: [ModuleActivite!], nom: String!, sigle: String, slug: String!): OrganisationInstallation!
   creerPerimetre(activiteId: ID, couleur: String, description: String, groupe: String, nom: String!, ordre: Int = 0, slug: String!, type: TypePerimetre): Perimetre!
   creerReunion(
@@ -2185,13 +2197,18 @@ type Mutation {
   refuserInvitation(id: ID!): Boolean!
 
   """
+  Change les types d’événements de l’abonnement d’une activité. L’adresse ne change pas.
+  """
+  reglerAbonnementAgendaActivite(activiteId: ID!, inclureDatesCles: Boolean!, inclurePhases: Boolean!, inclureReunions: Boolean!): AbonnementAgenda!
+
+  """
   Règle comment Relaytour propose les accès d’un dossier lié chez le fournisseur. Un partage ou un groupe exige une connexion qui gère les accès (ADR 0044).
   """
   reglerAccesFournisseur(ajoutsAutomatiques: Boolean!, groupeId: ID, id: ID!, invitation: Boolean!, mode: AccesFournisseurDossier!, role: RoleFournisseur!): DossierLie!
   reglerConcerneAussi(ficheId: ID!, groupes: [String!]!, perimetreIds: [ID!]!): Fiche!
 
   """Change le contenu de l’abonnement personnel. L’adresse ne change pas."""
-  reglerMonAbonnementAgenda(inclureEcheances: Boolean!, inclureGlobal: Boolean!, perimetreIds: [ID!]): AbonnementAgenda!
+  reglerMonAbonnementAgenda(inclureDatesCles: Boolean!, inclureEcheances: Boolean!, inclurePhases: Boolean!, inclureReunions: Boolean!, perimetreIds: [ID!]): AbonnementAgenda!
 
   """
   Active ou coupe la vérification et la gestion des accès sans reconnexion, pour un fournisseur dont l’accès accordé les couvre déjà : Google Drive et Nextcloud (ADR 0044).

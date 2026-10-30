@@ -51,8 +51,19 @@ const AbonnementAgendaRef = builder
             ? (a.perimetreIds as unknown[]).map(String)
             : null,
       }),
-      inclureGlobal: t.exposeBoolean('inclureGlobal'),
-      inclureEcheances: t.exposeBoolean('inclureEcheances'),
+      inclurePhases: t.exposeBoolean('inclurePhases', {
+        description: 'Les phases des périodes.',
+      }),
+      inclureDatesCles: t.exposeBoolean('inclureDatesCles', {
+        description: 'Les dates clés et les jours de chaque période.',
+      }),
+      inclureReunions: t.exposeBoolean('inclureReunions', {
+        description: 'Les réunions de l’activité, hors réunions de périmètre.',
+      }),
+      inclureEcheances: t.exposeBoolean('inclureEcheances', {
+        description:
+          'Abonnement personnel : les échéances des tâches assignées à la personne.',
+      }),
       creeLe: t.field({ type: 'DateTime', resolve: a => a.createdAt }),
       dernierAccesLe: t.field({
         type: 'DateTime',
@@ -104,8 +115,10 @@ async function creerAbonnement(
   cible: { userId: string } | { activiteId: string },
   reglages: {
     perimetreIds?: string[] | null
-    inclureGlobal?: boolean
-    inclureEcheances?: boolean
+    inclurePhases?: boolean | null
+    inclureDatesCles?: boolean | null
+    inclureReunions?: boolean | null
+    inclureEcheances?: boolean | null
   } = {}
 ) {
   const organisationId = ctx.organisation!.id
@@ -124,7 +137,9 @@ async function creerAbonnement(
         empreinte: empreinteJeton(jeton),
         fin: jeton.slice(-6),
         perimetreIds: reglages.perimetreIds ?? undefined,
-        inclureGlobal: reglages.inclureGlobal ?? true,
+        inclurePhases: reglages.inclurePhases ?? false,
+        inclureDatesCles: reglages.inclureDatesCles ?? true,
+        inclureReunions: reglages.inclureReunions ?? true,
         inclureEcheances: reglages.inclureEcheances ?? false,
         creeParId: ctx.personne!.id,
       },
@@ -186,7 +201,10 @@ builder.mutationFields(t => ({
       'Crée l’abonnement personnel, et révoque le précédent : son adresse cesse de servir.',
     args: {
       perimetreIds: t.arg.idList(),
-      inclureGlobal: t.arg.boolean({ defaultValue: true }),
+      // Les phases sont décochées par défaut : elles chargent beaucoup un agenda.
+      inclurePhases: t.arg.boolean({ defaultValue: false }),
+      inclureDatesCles: t.arg.boolean({ defaultValue: true }),
+      inclureReunions: t.arg.boolean({ defaultValue: true }),
       inclureEcheances: t.arg.boolean({ defaultValue: false }),
     },
     resolve: async (_root, args, ctx) =>
@@ -194,9 +212,8 @@ builder.mutationFields(t => ({
         ctx,
         { userId: ctx.personne!.id },
         {
+          ...args,
           perimetreIds: await perimetresChoisis(ctx, args.perimetreIds),
-          inclureGlobal: args.inclureGlobal ?? true,
-          inclureEcheances: args.inclureEcheances ?? false,
         }
       ),
   }),
@@ -208,7 +225,9 @@ builder.mutationFields(t => ({
       'Change le contenu de l’abonnement personnel. L’adresse ne change pas.',
     args: {
       perimetreIds: t.arg.idList(),
-      inclureGlobal: t.arg.boolean({ required: true }),
+      inclurePhases: t.arg.boolean({ required: true }),
+      inclureDatesCles: t.arg.boolean({ required: true }),
+      inclureReunions: t.arg.boolean({ required: true }),
       inclureEcheances: t.arg.boolean({ required: true }),
     },
     resolve: async (_root, args, ctx) => {
@@ -228,7 +247,9 @@ builder.mutationFields(t => ({
         data: {
           // Null en base : tous les périmètres que la personne lit.
           perimetreIds: perimetreIds ?? Prisma.DbNull,
-          inclureGlobal: args.inclureGlobal,
+          inclurePhases: args.inclurePhases,
+          inclureDatesCles: args.inclureDatesCles,
+          inclureReunions: args.inclureReunions,
           inclureEcheances: args.inclureEcheances,
         },
       })
@@ -260,11 +281,48 @@ builder.mutationFields(t => ({
     authScopes: { gestion: true },
     description:
       'Crée l’abonnement à l’agenda global d’une activité, et révoque le précédent.',
-    args: { activiteId: t.arg.id({ required: true }) },
-    resolve: async (_root, args, ctx) =>
-      creerAbonnement(ctx, {
-        activiteId: await activiteAdministree(ctx, args.activiteId),
-      }),
+    args: {
+      activiteId: t.arg.id({ required: true }),
+      inclurePhases: t.arg.boolean({ defaultValue: false }),
+      inclureDatesCles: t.arg.boolean({ defaultValue: true }),
+      inclureReunions: t.arg.boolean({ defaultValue: true }),
+    },
+    resolve: async (_root, { activiteId, ...types }, ctx) =>
+      creerAbonnement(
+        ctx,
+        { activiteId: await activiteAdministree(ctx, activiteId) },
+        types
+      ),
+  }),
+
+  reglerAbonnementAgendaActivite: t.field({
+    type: AbonnementAgendaRef,
+    authScopes: { gestion: true },
+    description:
+      'Change les types d’événements de l’abonnement d’une activité. L’adresse ne change pas.',
+    args: {
+      activiteId: t.arg.id({ required: true }),
+      inclurePhases: t.arg.boolean({ required: true }),
+      inclureDatesCles: t.arg.boolean({ required: true }),
+      inclureReunions: t.arg.boolean({ required: true }),
+    },
+    resolve: async (_root, { activiteId: id, ...types }, ctx) => {
+      const activiteId = await activiteAdministree(ctx, id)
+      const actuel = await prisma.abonnementAgenda.findFirst({
+        where: {
+          organisationId: ctx.organisation!.id,
+          activiteId,
+          revoqueLe: null,
+        },
+      })
+      if (actuel === null) {
+        throw erreurSaisie(i18n._('Créez d’abord l’adresse de l’activité.'))
+      }
+      return prisma.abonnementAgenda.update({
+        where: { id: actuel.id },
+        data: types,
+      })
+    },
   }),
 
   revoquerAbonnementAgendaActivite: t.boolean({

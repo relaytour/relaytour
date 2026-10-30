@@ -67,6 +67,7 @@ Plusieurs options de synchronisation ont été envisagées. Une synchronisation 
 - Un **abonnement** est une adresse secrète qui sert l'agenda au format iCalendar, en lecture seule. Outlook, Google et Apple s'y abonnent et la relisent régulièrement.
 - Chaque personne a au plus un abonnement personnel par organisation. Elle y choisit les périmètres et l'agenda global des activités qu'elle voit, et les échéances en option.
 - Les admins d'une activité créent un abonnement d'activité. Il contient l'agenda global, les dates clés, les phases et les dates de la période. Il ne contient aucune réunion de périmètre.
+- Mise à jour du 30 octobre 2026 : chaque abonnement choisit les types d'événements de l'agenda global. Les réunions globales, les dates clés avec les jours de la période et les phases se cochent séparément. Les phases sont décochées à la création, car elles occupent plusieurs semaines d'un agenda. Les abonnements existants gardent leur contenu.
 - L'adresse contient un jeton aléatoire de 32 octets. Le serveur garde seulement son empreinte. L'adresse complète s'affiche une seule fois, à sa création.
 - Une personne régénère ou révoque son abonnement à tout moment. Un admin de l'activité régénère ou révoque l'abonnement de l'activité.
 - Le serveur vérifie les droits de la personne à chaque lecture. Une personne archivée, ou retirée d'un périmètre, perd aussitôt le contenu correspondant.

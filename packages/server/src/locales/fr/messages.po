@@ -19,6 +19,11 @@ msgid "Créez d’abord votre abonnement."
 msgstr "Créez d’abord votre abonnement."
 
 #. js-lingui-explicit-id
+#: src/schema/abonnements-agenda.ts
+msgid "Créez d’abord l’adresse de l’activité."
+msgstr "Créez d’abord l’adresse de l’activité."
+
+#. js-lingui-explicit-id
 #: src/schema/acces-fournisseur.ts
 msgid "groupe « {nom} »"
 msgstr "groupe « {nom} »"
