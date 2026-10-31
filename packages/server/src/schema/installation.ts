@@ -13,6 +13,10 @@ import {
   type OrganisationInstallation,
   type PeriodeInstallation,
 } from '../lib/installation.ts'
+import {
+  envoyerLienDExport,
+  preparerExportPourAdmin,
+} from '../lib/export-pour-admin.ts'
 import { rappelerAdresses } from '../lib/rappel-adresses.ts'
 
 import { ModuleActiviteEnum } from './activites.ts'
@@ -98,6 +102,17 @@ const OrganisationInstallationRef = builder
         type: [ActiviteInstallationRef],
         resolve: o => o.activites,
       }),
+    }),
+  })
+
+const ExportPourAdminRef = builder
+  .objectRef<{ fichier: string; jeton: string }>('ExportPourAdmin')
+  .implement({
+    description:
+      'Un export écrit dans EXPORTS_DIR pour un admin d’une installation en sommeil (ADR 0057), et le jeton de son lien de téléchargement.',
+    fields: t => ({
+      fichier: t.exposeString('fichier'),
+      jeton: t.exposeString('jeton'),
     }),
   })
 
@@ -275,6 +290,41 @@ builder.mutationFields(t => ({
     args: { courriel: t.arg.string({ required: true }) },
     resolve: async (_root, args) => {
       await rappelerAdresses(prisma, args.courriel)
+      return true
+    },
+  }),
+
+  preparerExportPourAdmin: t.field({
+    type: ExportPourAdminRef,
+    nullable: true,
+    authScopes: { administration: true },
+    description:
+      'Écrit l’export complet d’une organisation pour l’admin qui porte cette adresse, et tire le jeton de son lien (ADR 0057). Nul quand l’adresse n’appartient à aucun admin actif, ou quand un lien est parti depuis moins de 24 heures. Sans adresse, prépare le dernier export pour tous les admins, sans limite.',
+    args: {
+      organisation: t.arg.string({ required: true }),
+      courriel: t.arg.string(),
+    },
+    resolve: async (_root, args) => {
+      const { env } = await import('../env.ts')
+      return preparerExportPourAdmin(
+        prisma,
+        args.organisation,
+        args.courriel,
+        env.EXPORTS_DIR
+      )
+    },
+  }),
+
+  envoyerLienDExport: t.boolean({
+    authScopes: { administration: true },
+    description:
+      'Envoie tout de suite, sans la file du worker, le lien de téléchargement d’un export préparé par preparerExportPourAdmin (ADR 0057). Le lien reste valable 7 jours.',
+    args: {
+      organisation: t.arg.string({ required: true }),
+      jeton: t.arg.string({ required: true }),
+    },
+    resolve: async (_root, args) => {
+      await envoyerLienDExport(prisma, args.organisation, args.jeton)
       return true
     },
   }),

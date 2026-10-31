@@ -1102,6 +1102,22 @@ type EvenementTache {
   type: TypeEvenementTache!
 }
 
+"""
+Export complet de l’organisation au format JSON (ADR 0008) : activités, fiches, tâches, membres et affectations. Il contient des noms et des adresses.
+"""
+type ExportOrganisation {
+  donnees: String!
+  nomFichier: String!
+}
+
+"""
+Un export écrit dans EXPORTS_DIR pour un admin d’une installation en sommeil (ADR 0057), et le jeton de son lien de téléchargement.
+"""
+type ExportPourAdmin {
+  fichier: String!
+  jeton: String!
+}
+
 type Fiche {
   activite: Activite!
   archive: Boolean!
@@ -1942,6 +1958,11 @@ type Mutation {
   envoyerDemande(activite: String!, disponibilite: String, email: String!, nom: String!, organisation: String, perimetres: [String!]!, reponse: String, siteWeb: String, texte: String): Boolean!
 
   """
+  Envoie tout de suite, sans la file du worker, le lien de téléchargement d’un export préparé par preparerExportPourAdmin (ADR 0057). Le lien reste valable 7 jours.
+  """
+  envoyerLienDExport(jeton: String!, organisation: String!): Boolean!
+
+  """
   Lance tout de suite l’export des fiches vers l’espace de fichiers. Le résultat arrive dans le rapport d’export.
   """
   exporterFichesMaintenant: Boolean!
@@ -2246,6 +2267,11 @@ type Mutation {
   Place une personne à répartir dans une séquence, en renfort. Une candidature y est acceptée ; une fiche y reçoit une place, à confirmer si elle est née d’une candidature.
   """
   placerBenevole(benevoleId: ID, candidatureId: ID, sequenceId: ID!): Sequence!
+
+  """
+  Écrit l’export complet d’une organisation pour l’admin qui porte cette adresse, et tire le jeton de son lien (ADR 0057). Nul quand l’adresse n’appartient à aucun admin actif, ou quand un lien est parti depuis moins de 24 heures. Sans adresse, prépare le dernier export pour tous les admins, sans limite.
+  """
+  preparerExportPourAdmin(courriel: String, organisation: String!): ExportPourAdmin
   proposerPersonne(editionId: ID!, email: String!, mot: String, nom: String!, perimetreId: ID!): Boolean!
 
   """
@@ -3094,6 +3120,7 @@ type Query {
   espaceBenevole(jeton: String!): EspaceBenevole
   espaceFichiers: EspaceFichiers!
   exportContenu: ArchiveContenu!
+  exportOrganisation: ExportOrganisation!
   fiche(activiteId: ID, slug: String!): Fiche
   fiches(activiteId: ID, inclureArchives: Boolean = false): [Fiche!]!
 

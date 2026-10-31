@@ -1,0 +1,22 @@
+{{marque}}
+
+[[Bonjour {{nom}},]]
+
+{{intro}}
+
+[[Le fichier contient les activités, les fiches, les tâches, les membres et
+leurs affectations. Il porte des noms et des adresses : conservez-le dans un
+lieu sûr.]]
+
+[[Télécharger l’export : {{lienExport}}]]
+
+[[Le lien reste valable 7 jours. Le fichier est ensuite supprimé.]]
+
+{{avertissement}}
+
+--
+[[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}.]] {{consigneReponse}}
+
+[[Cet espace est propulsé par Relaytour, logiciel libre.]]
+https://github.com/relaytour/relaytour

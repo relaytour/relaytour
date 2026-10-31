@@ -6,12 +6,14 @@ import { limiterParCle, rendreTentative } from './limite.ts'
  */
 
 /**
- * Sortes de mail qui partent toujours : une personne doit pouvoir se connecter.
+ * Sortes de mail qui partent toujours : une personne doit pouvoir se connecter, et
+ * un admin doit recevoir l'export d'une installation en sommeil (ADR 0057).
  * Elles entrent dans le compteur du jour, pour que le total reste sous le quota du
  * fournisseur, mais ne sont jamais reportées.
  */
 export const SORTES_JAMAIS_REPORTEES: ReadonlySet<string> = new Set([
   'code-connexion',
+  'lien-export',
 ])
 
 // Le compteur d'un jour garde sa clé deux jours : il couvre le jour entier, quel

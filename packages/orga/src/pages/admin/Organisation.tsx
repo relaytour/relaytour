@@ -111,6 +111,24 @@ const EXPORT = graphql(`
   }
 `)
 
+const EXPORT_COMPLET = graphql(`
+  query ExportOrganisation {
+    exportOrganisation {
+      nomFichier
+      donnees
+    }
+  }
+`)
+
+/** Fait télécharger un fichier construit dans le navigateur. */
+function faireTelecharger(contenu: BlobPart, type: string, nomFichier: string) {
+  const lien = document.createElement('a')
+  lien.href = URL.createObjectURL(new Blob([contenu], { type }))
+  lien.download = nomFichier
+  lien.click()
+  URL.revokeObjectURL(lien.href)
+}
+
 /** Couleurs que la page propose de modifier ; les autres gardent leur valeur déclarée. */
 const COULEURS: { cle: keyof CouleursTheme; libelle: MessageDescriptor }[] = [
   {
@@ -205,6 +223,7 @@ export default function Organisation() {
   const [form] = Form.useForm<Valeurs>()
   const [erreur, setErreur] = useState<string | null>(null)
   const [exportEnCours, setExportEnCours] = useState(false)
+  const [exportCompletEnCours, setExportCompletEnCours] = useState(false)
   // Un domaine de rôle ajouté peut faire apparaître « Reprendre mon adresse ».
   const [modifier, modification] = useMutation(MODIFIER, {
     refetchQueries: [IDENTITE, ORGANISATION, ACTIVITES, 'MonAdresseDeRole'],
@@ -275,17 +294,28 @@ export default function Organisation() {
       if (!resultat) throw new Error(t`L’export a échoué.`)
       const { nomFichier, donnees } = resultat.exportContenu
       const octets = Uint8Array.from(atob(donnees), c => c.charCodeAt(0))
-      const lien = document.createElement('a')
-      lien.href = URL.createObjectURL(
-        new Blob([octets], { type: 'application/zip' })
-      )
-      lien.download = nomFichier
-      lien.click()
-      URL.revokeObjectURL(lien.href)
+      faireTelecharger(octets, 'application/zip', nomFichier)
     } catch (e) {
       void message.error(messageErreur(e))
     } finally {
       setExportEnCours(false)
+    }
+  }
+
+  const telechargerExportComplet = async () => {
+    setExportCompletEnCours(true)
+    try {
+      const { data: resultat } = await apollo.query({
+        query: EXPORT_COMPLET,
+        fetchPolicy: 'no-cache',
+      })
+      if (!resultat) throw new Error(t`L’export a échoué.`)
+      const { nomFichier, donnees } = resultat.exportOrganisation
+      faireTelecharger(donnees, 'application/json', nomFichier)
+    } catch (e) {
+      void message.error(messageErreur(e))
+    } finally {
+      setExportCompletEnCours(false)
     }
   }
 
@@ -595,6 +625,25 @@ export default function Organisation() {
               </span>
             )}
           </Space>
+        </Panneau>
+
+        <Panneau titre={t`Export complet de l’organisation`}>
+          <p className="rt-texte-secondaire">
+            <Trans>
+              Le fichier JSON contient les activités, les périodes, les fiches
+              avec leur historique, les tâches, les membres et leurs
+              affectations. Il porte des noms et des adresses : conservez-le
+              dans un lieu sûr. L’export reste possible quand l’organisation est
+              en lecture seule.
+            </Trans>
+          </p>
+          <Button
+            icon={<DownloadOutlined />}
+            loading={exportCompletEnCours}
+            onClick={() => void telechargerExportComplet()}
+          >
+            <Trans>Télécharger l’export complet (JSON)</Trans>
+          </Button>
         </Panneau>
 
         <Panneau titre={t`Importer un dossier de contenu`}>

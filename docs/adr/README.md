@@ -58,5 +58,6 @@
 | [0054](0054-rappel-des-adresses-d-un-membre.md) | Rappel des adresses d'un membre | Proposée |
 | [0055](0055-charge-de-l-equipe-et-co-realisation.md) | Charge de l'équipe et co-réalisation des tâches | Proposée |
 | [0056](0056-module-classement.md) | Module « Classement » | Proposée |
+| [0057](0057-export-pour-un-admin-d-une-installation-en-sommeil.md) | Export pour un admin d'une installation en sommeil | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

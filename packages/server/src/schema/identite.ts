@@ -5,6 +5,8 @@ import type { z } from 'zod'
 import { adresseDeRole } from '../lib/contenu.ts'
 import { sousVerrouOrganisation } from '../lib/limites.ts'
 import { erreurSaisie } from '../lib/erreurs.ts'
+import { construireExport } from '../lib/export.ts'
+import { journal } from '../lib/journal.ts'
 import { i18n } from '../lib/langue.ts'
 import {
   EXTENSIONS,
@@ -340,6 +342,17 @@ const ArchiveContenuRef = builder
     }),
   })
 
+const ExportOrganisationRef = builder
+  .objectRef<{ nomFichier: string; donnees: string }>('ExportOrganisation')
+  .implement({
+    description:
+      'Export complet de l’organisation au format JSON (ADR 0008) : activités, fiches, tâches, membres et affectations. Il contient des noms et des adresses.',
+    fields: t => ({
+      nomFichier: t.exposeString('nomFichier'),
+      donnees: t.exposeString('donnees'),
+    }),
+  })
+
 // ── Requêtes ───────────────────────────────────────────────────────────────
 
 builder.queryFields(t => ({
@@ -382,6 +395,34 @@ builder.queryFields(t => ({
       return {
         nomFichier: `contenu-${ctx.organisation!.slug}-${date}.zip`,
         donnees: archiveZip(contenu.fichiers).toString('base64'),
+      }
+    },
+  }),
+
+  // Un admin de l'organisation télécharge l'export complet, même en lecture seule :
+  // une limite ou la fin d'un essai ne bloque jamais l'export (ADR 0057).
+  exportOrganisation: t.field({
+    type: ExportOrganisationRef,
+    authScopes: { admin: true },
+    resolve: async (_root, _args, ctx) => {
+      const organisation = ctx.organisation!
+      const donnees = JSON.stringify(
+        await construireExport(organisation.id),
+        null,
+        2
+      )
+      journal.info(
+        {
+          evenement: 'export-telecharge',
+          organisation: organisation.slug,
+          octets: Buffer.byteLength(donnees),
+        },
+        'Un admin a téléchargé l’export de son organisation.'
+      )
+      const date = new Date().toISOString().slice(0, 10)
+      return {
+        nomFichier: `export-${organisation.slug}-${date}.json`,
+        donnees: donnees + '\n',
       }
     },
   }),
