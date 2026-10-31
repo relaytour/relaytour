@@ -1966,6 +1966,29 @@ const CAS: Cas[] = [
     variables: () => ({ a: a.activite }),
     attente: INTERDIT,
   },
+  // La charge d'une personne de A, lue depuis une autre activité ou organisation
+  // (ADR 0055) : les tâches se refusent, le cumul ne montre aucune activité de A.
+  {
+    operation: 'tachesDe',
+    query:
+      'query ($p: ID!, $e: ID!) { tachesDe(personneId: $p, editionId: $e, temps: EDITION) { id } }',
+    variables: () => ({ p: a.referente, e: a.edition }),
+    attente: INTERDIT,
+  },
+  {
+    operation: 'chargeCumulee',
+    query:
+      'query ($p: ID!) { chargeCumulee(personneId: $p) { activite { id } } }',
+    variables: () => ({ p: a.referente }),
+    attente: {
+      sansEffet: d =>
+        expect(
+          (d.chargeCumulee as { activite: { id: string } }[]).map(
+            c => c.activite.id
+          )
+        ).not.toContain(a.activite),
+    },
+  },
   {
     operation: 'mesPropositions',
     query:
@@ -1992,6 +2015,8 @@ const CAS: Cas[] = [
       ],
       ['retroplanning', 'retroplanning(editionId: $e) { id }'],
       ['tachesAPrendre', 'tachesAPrendre(editionId: $e) { id }'],
+      // La charge de l'équipe (ADR 0055).
+      ['chargeEquipe', 'chargeEquipe(editionId: $e) { personne { id } }'],
     ] as const
   ).map(([operation, champ]) => ({
     operation,

@@ -176,6 +176,11 @@ type Affectation {
   personne: Personne!
 }
 
+type AffectationCharge {
+  contactPrincipal: Boolean!
+  perimetre: Perimetre!
+}
+
 type Agenda {
   edition: Edition!
 
@@ -453,6 +458,68 @@ type Changement {
   entite: EntiteChangee!
   id: ID
   perimetreId: ID
+}
+
+"""
+La charge d’une personne dans une activité, pour son édition en cours ou à venir.
+"""
+type ChargeCumulee {
+  activite: Activite!
+  edition: Edition!
+  enRetard: Int!
+  ouvertes: Int!
+  perimetres: Int!
+  placesAVenir: Int!
+}
+
+"""Toutes les tâches assignées à une personne dans l’édition."""
+type ChargeEdition {
+  aFaire: Int!
+  abandonnees: Int!
+  enCours: Int!
+  faites: Int!
+  parPhase: [ChargePhase!]!
+  total: Int!
+}
+
+"""Les tâches ouvertes d’une personne, selon leur échéance."""
+type ChargeMaintenant {
+  enRetard: Int!
+
+  """Tâches ouvertes qui ont aussi d’autres personnes assignées."""
+  partagees: Int!
+  plusTard: Int!
+
+  """Échéance dans les 7 jours, aujourd’hui compris."""
+  proches: Int!
+  sansEcheance: Int!
+  total: Int!
+}
+
+type ChargePersonne {
+  affectations: [AffectationCharge!]!
+  edition: ChargeEdition!
+  maintenant: ChargeMaintenant!
+  personne: Personne!
+  places: ChargePlaces!
+
+  """
+  Tâches faites où la personne est créditée. Lisible par elle-même et par les admins de l’activité ; null pour les autres.
+  """
+  realisees: Int
+}
+
+type ChargePhase {
+  """Clé de la phase ; null pour les tâches sans échéance."""
+  cle: String
+  total: Int!
+}
+
+"""Les places d’une personne au programme de l’édition."""
+type ChargePlaces {
+  aVenir: Int!
+  prochaine: DateTime
+  total: Int!
 }
 
 type ChoixARepartir {
@@ -2953,6 +3020,16 @@ type Query {
   Les candidatures d’une période que la personne peut traiter, des plus anciennes aux plus récentes.
   """
   candidatures(appelId: ID, editionId: ID!, statut: StatutCandidature = EN_ATTENTE): [Candidature!]!
+
+  """
+  La charge d’une personne dans chaque activité que la personne connectée voit, pour l’édition en cours ou à venir de chacune (ADR 0055).
+  """
+  chargeCumulee(personneId: ID!): [ChargeCumulee!]!
+
+  """
+  La charge de chaque personne de l’édition : affectée, assignée à une tâche ou placée au programme (ADR 0055). Triée par charge actuelle décroissante.
+  """
+  chargeEquipe(editionId: ID!): [ChargePersonne!]!
   classement(editionId: ID!): [LigneClassement!]!
 
   """
@@ -3201,6 +3278,11 @@ type Query {
   sondages(editionId: ID!): [Sondage!]!
   tache(id: ID!): Tache!
   tachesAPrendre(editionId: ID!): [Tache!]!
+
+  """
+  Les tâches assignées à une personne dans l’édition : ouvertes (MAINTENANT) ou toutes (EDITION), dans les périmètres non archivés (ADR 0055).
+  """
+  tachesDe(editionId: ID!, personneId: ID!, temps: TempsCharge!): [Tache!]!
   tousLesPerimetres(activiteId: ID): TousLesPerimetres!
 
   """
@@ -3743,6 +3825,14 @@ type TacheLieeReunion {
   id: ID!
   perimetreId: ID!
   titre: String!
+}
+
+"""
+MAINTENANT : les tâches ouvertes. EDITION : toutes les tâches assignées de l’édition.
+"""
+enum TempsCharge {
+  EDITION
+  MAINTENANT
 }
 
 """
