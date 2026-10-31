@@ -1,5 +1,7 @@
 import { prisma, type User } from '@relaytour/database'
 
+import { accesRefuse } from '../lib/erreurs.ts'
+import { moduleActif } from '../lib/modules.ts'
 import { BAREME, calculerScores, type Score } from '../lib/score.ts'
 
 import { builder } from './builder.ts'
@@ -40,8 +42,10 @@ const BaremeRef = builder.objectRef<typeof BAREME>('BaremeScore').implement({
   }),
 })
 
-// Le score d'une personne n'est visible que par elle et par les admins.
-// `monScore` ne prend aucun identifiant de personne : il lit la session.
+// Le score d'une personne n'est visible que par elle et par les admins. Le module
+// « Classement » ouvre le classement à toute l'équipe qui voit les tâches de
+// l'activité (ADR 0056). `monScore` ne prend aucun identifiant de personne : il lit
+// la session.
 
 builder.queryFields(t => ({
   monScore: t.field({
@@ -77,11 +81,18 @@ builder.queryFields(t => ({
 
   classement: t.field({
     type: [LigneClassementRef],
-    authScopes: { gestion: true },
+    authScopes: { connecte: true },
     args: { editionId: t.arg.id({ required: true }) },
     resolve: async (_root, { editionId }, ctx) => {
+      // `exigerEdition` refuse une activité invisible, donc une personne en
+      // découverte. Sans le module, seuls les admins de l'activité lisent.
       const edition = await ctx.exigerEdition(editionId)
-      await ctx.exigerAdminDe(edition.activiteId)
+      if (
+        !(await ctx.estAdminDe(edition.activiteId)) &&
+        !(await moduleActif(edition.activiteId, 'CLASSEMENT'))
+      ) {
+        throw accesRefuse()
+      }
       const scores = [
         ...(
           await calculerScores(

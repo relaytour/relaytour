@@ -244,6 +244,7 @@ export type ModeImport =
 export type ModuleActivite =
   | 'AGENDA'
   | 'BENEVOLES'
+  | 'CLASSEMENT'
   | 'DOCUMENTS';
 
 /** Fixe le libellé de la période : édition pour un événement, saison pour une section, mandat pour une instance. */

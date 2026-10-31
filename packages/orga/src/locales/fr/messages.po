@@ -2583,6 +2583,10 @@ msgid "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le change
 msgstr "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le changer pour un message dans la fenêtre « Écrire un message »."
 
 #: src/pages/admin/Classement.tsx
+msgid "Ce classement est visible par toute l’équipe de l’activité."
+msgstr "Ce classement est visible par toute l’équipe de l’activité."
+
+#: src/pages/admin/Classement.tsx
 msgid "Ce classement n’est visible que par les admins."
 msgstr "Ce classement n’est visible que par les admins."
 
@@ -2974,8 +2978,8 @@ msgid "Chaque personne convoquée reçoit un mail avec la réunion à ajouter à
 msgstr "Chaque personne convoquée reçoit un mail avec la réunion à ajouter à son agenda, et répond dans l’espace organisateur."
 
 #: src/pages/admin/Classement.tsx
-msgid "Chaque personne voit seulement son propre score. Un palmarès public se décide en fin {periodeDe}."
-msgstr "Chaque personne voit seulement son propre score. Un palmarès public se décide en fin {periodeDe}."
+msgid "Chaque personne voit seulement son propre score. Le module « Classement », dans l’écran « Activités », ouvre ce classement à toute l’équipe."
+msgstr "Chaque personne voit seulement son propre score. Le module « Classement », dans l’écran « Activités », ouvre ce classement à toute l’équipe."
 
 #. Menu : la charge de travail des personnes de l’équipe
 #: src/composants/Coquille.tsx
@@ -3153,6 +3157,7 @@ msgstr "Choisissez une séquence pour classer les personnes selon leurs disponib
 msgid "Choisissez une séquence."
 msgstr "Choisissez une séquence."
 
+#: src/composants/ChampsActivite.tsx
 #: src/composants/Coquille.tsx
 #: src/pages/admin/Classement.tsx
 msgid "Classement"
@@ -5855,6 +5860,10 @@ msgstr "Le champ Cc affiche toutes les adresses. Nous vous conseillons le champ 
 msgid "Le changement est appliqué."
 msgstr "Le changement est appliqué."
 
+#: src/composants/ChampsActivite.tsx
+msgid "Le classement des scores de participation devient visible par toute l’équipe. Sans ce module, seuls les admins le lisent."
+msgstr "Le classement des scores de participation devient visible par toute l’équipe. Sans ce module, seuls les admins le lisent."
+
 #: src/lib/connexion.ts
 msgid "Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code."
 msgstr "Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code."
@@ -6269,6 +6278,10 @@ msgstr "Les admins de l’activité et les personnes affectées à un de ses pé
 #: src/pages/Agenda.tsx
 msgid "Les admins de l’activité n’ont placé aucune date clé dans {periodeCette}."
 msgstr "Les admins de l’activité n’ont placé aucune date clé dans {periodeCette}."
+
+#: src/pages/admin/Classement.tsx
+msgid "Les admins de l’activité ont activé le module « Classement ». Le classement montre des totaux par personne, jamais le détail des tâches."
+msgstr "Les admins de l’activité ont activé le module « Classement ». Le classement montre des totaux par personne, jamais le détail des tâches."
 
 #: src/pages/MonEspace.tsx
 msgid "Les admins de l’activité préparent {laPeriode} à venir."

@@ -24,6 +24,7 @@ import {
 import { exigerPlaceActivite, sousVerrouOrganisation } from '../lib/limites.ts'
 import {
   lireModules,
+  lireModulesActivite,
   MODULES,
   modulesActifs,
   modulesValides,
@@ -320,7 +321,7 @@ async function modulesDeLActivite(
       )
     )
   }
-  const gardes = lireModules(activite.modules).filter(
+  const gardes = lireModulesActivite(activite.modules).filter(
     m => !autorises.includes(m)
   )
   return MODULES.filter(m => modules.includes(m) || gardes.includes(m))

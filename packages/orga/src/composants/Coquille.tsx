@@ -213,6 +213,16 @@ function Mise({ session }: { session: Session }) {
             icon: <BookOutlined />,
             label: t`Ressources`,
           },
+          // Les admins lisent le classement dans « Gérer l'activité » (ADR 0056).
+          ...(aModule('CLASSEMENT') && !gere
+            ? [
+                {
+                  key: lien('/classement'),
+                  icon: <TrophyOutlined />,
+                  label: t`Classement`,
+                },
+              ]
+            : []),
         ]),
     {
       key: lien('/preferences'),
