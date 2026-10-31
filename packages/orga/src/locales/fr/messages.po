@@ -5232,10 +5232,6 @@ msgstr "L’adresse s’insère à l’emplacement du curseur."
 msgid "L’agenda {periodeDe} est vide."
 msgstr "L’agenda {periodeDe} est vide."
 
-#: src/composants/AbonnementAgenda.tsx
-msgid "L’agenda global : phases, dates clés et réunions de l’activité"
-msgstr "L’agenda global : phases, dates clés et réunions de l’activité"
-
 #: src/pages/Agenda.tsx
 msgid "L’agenda n’a pas pu être chargé."
 msgstr "L’agenda n’a pas pu être chargé."
@@ -6247,6 +6243,10 @@ msgstr "Les coordonnées d’une fiche se lisent par les admins de l’activité
 msgid "Les créer : {nom}"
 msgstr "Les créer : {nom}"
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Les dates clés et les jours de chaque période"
+msgstr "Les dates clés et les jours de chaque période"
+
 #: src/composants/DeclinaisonsTache.tsx
 msgid "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr "Les déclinaisons n’ont pas pu être chargées. Rechargez la page dans un instant."
@@ -6432,6 +6432,10 @@ msgstr "Les personnes qui aident sans compte dans l’application. Une fiche ne 
 msgid "Les phases, les dates clés, les réunions et les échéances {periodeDe}."
 msgstr "Les phases, les dates clés, les réunions et les échéances {periodeDe}."
 
+#: src/composants/AbonnementAgenda.tsx
+msgid "Les phases, qui occupent chacune plusieurs semaines de l’agenda"
+msgstr "Les phases, qui occupent chacune plusieurs semaines de l’agenda"
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
 msgstr "Les référentes et référents du périmètre acceptent ou refusent ces tâches."
@@ -6439,6 +6443,10 @@ msgstr "Les référentes et référents du périmètre acceptent ou refusent ces
 #: src/pages/admin/Organisation.tsx
 msgid "Les réponses des membres aux mails arrivent à l’adresse d’envoi de l’installation. Déclarez une adresse de rôle dans le champ « Contact de l’organisation »."
 msgstr "Les réponses des membres aux mails arrivent à l’adresse d’envoi de l’installation. Déclarez une adresse de rôle dans le champ « Contact de l’organisation »."
+
+#: src/composants/AbonnementAgenda.tsx
+msgid "Les réunions de l’agenda global"
+msgstr "Les réunions de l’agenda global"
 
 #: src/composants/CandidaturesBenevoles.tsx
 msgid "Les séquences encore en attente sont refusées. Aucun mail ne part, et la personne peut déposer de nouveau."
@@ -10010,8 +10018,8 @@ msgid "Une adresse secrète ajoute vos dates à votre agenda personnel, en lectu
 msgstr "Une adresse secrète ajoute vos dates à votre agenda personnel, en lecture seule : l’agenda global de vos activités, les réunions de vos périmètres et vos convocations."
 
 #: src/composants/AbonnementAgenda.tsx
-msgid "Une adresse secrète publie l’agenda global de {nom} : phases, dates clés et réunions globales. Un agenda partagé de l’association s’y abonne, sans les réunions des périmètres."
-msgstr "Une adresse secrète publie l’agenda global de {nom} : phases, dates clés et réunions globales. Un agenda partagé de l’association s’y abonne, sans les réunions des périmètres."
+msgid "Une adresse secrète publie l’agenda global de {nom}, sans les réunions des périmètres. Un agenda partagé de l’association s’y abonne. Vous choisissez les types d’événements qu’il reçoit."
+msgstr "Une adresse secrète publie l’agenda global de {nom}, sans les réunions des périmètres. Un agenda partagé de l’association s’y abonne. Vous choisissez les types d’événements qu’il reçoit."
 
 #: src/pages/admin/Personnes.tsx
 msgid "Une affectation rend la personne référent·e du périmètre : elle y modifie les tâches et reçoit un mail qui l’annonce. Un souhait note seulement un intérêt : il ne donne aucun accès, et seuls les admins le voient."

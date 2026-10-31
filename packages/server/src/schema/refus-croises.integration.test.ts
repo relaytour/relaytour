@@ -1320,6 +1320,13 @@ const CAS: Cas[] = [
     attente: INTERDIT,
   },
   {
+    operation: 'reglerAbonnementAgendaActivite',
+    query:
+      'mutation ($a: ID!) { reglerAbonnementAgendaActivite(activiteId: $a, inclurePhases: true, inclureDatesCles: true, inclureReunions: true) { id } }',
+    variables: () => ({ a: a.activite }),
+    attente: INTERDIT,
+  },
+  {
     operation: 'revoquerAbonnementAgendaActivite',
     query:
       'mutation ($a: ID!) { revoquerAbonnementAgendaActivite(activiteId: $a) }',
@@ -1336,7 +1343,7 @@ const CAS: Cas[] = [
   {
     operation: 'reglerMonAbonnementAgenda',
     query:
-      'mutation ($p: [ID!]) { reglerMonAbonnementAgenda(perimetreIds: $p, inclureGlobal: true, inclureEcheances: false) { id } }',
+      'mutation ($p: [ID!]) { reglerMonAbonnementAgenda(perimetreIds: $p, inclurePhases: false, inclureDatesCles: true, inclureReunions: true, inclureEcheances: false) { id } }',
     variables: () => ({ p: [a.perimetre] }),
     attente: REFUSE,
   },

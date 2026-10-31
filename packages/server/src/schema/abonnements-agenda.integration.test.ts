@@ -74,12 +74,14 @@ async function contenu(adresse: string): Promise<string> {
   return lecture.statut === 200 ? lecture.contenu.replace(/\r\n /g, '') : ''
 }
 
-const CREER = `mutation ($p: [ID!], $g: Boolean, $e: Boolean) {
-  creerMonAbonnementAgenda(perimetreIds: $p, inclureGlobal: $g, inclureEcheances: $e) { adresse abonnement { id fin perimetreIds } }
+const CREER = `mutation ($p: [ID!], $ph: Boolean, $d: Boolean, $r: Boolean, $e: Boolean) {
+  creerMonAbonnementAgenda(perimetreIds: $p, inclurePhases: $ph, inclureDatesCles: $d, inclureReunions: $r, inclureEcheances: $e) { adresse abonnement { id fin perimetreIds } }
 }`
-const REGLER = `mutation ($p: [ID!], $g: Boolean!, $e: Boolean!) {
-  reglerMonAbonnementAgenda(perimetreIds: $p, inclureGlobal: $g, inclureEcheances: $e) { id perimetreIds inclureGlobal }
+const REGLER = `mutation ($p: [ID!], $ph: Boolean!, $d: Boolean!, $r: Boolean!, $e: Boolean!) {
+  reglerMonAbonnementAgenda(perimetreIds: $p, inclurePhases: $ph, inclureDatesCles: $d, inclureReunions: $r, inclureEcheances: $e) { id perimetreIds inclurePhases }
 }`
+/** Tous les types de l'agenda global, sans les échéances. */
+const TOUT = { ph: true, d: true, r: true, e: false }
 
 async function creer(
   userId: string,
@@ -294,10 +296,20 @@ afterAll(async () => {
 })
 
 const CREER_ACTIVITE = `mutation ($a: ID!) { creerAbonnementAgendaActivite(activiteId: $a) { adresse } }`
+const REGLER_ACTIVITE = `mutation ($a: ID!, $ph: Boolean!, $d: Boolean!, $r: Boolean!) {
+  reglerAbonnementAgendaActivite(activiteId: $a, inclurePhases: $ph, inclureDatesCles: $d, inclureReunions: $r) { id inclurePhases }
+}`
 
 describe('abonnement personnel', () => {
-  it('sert l’agenda global, les réunions lues et les convocations, sans liste de personnes', async () => {
+  it('sert l’agenda global sans les phases, par défaut', async () => {
     const ics = await contenu(await creer(ids.referent))
+    expect(ics).toContain('SUMMARY:Dossier en préfecture')
+    expect(ics).toContain(`UID:reunion-${ids.reunionGlobale}@`)
+    expect(ics).not.toContain('phase Lancement')
+  })
+
+  it('sert l’agenda global, les réunions lues et les convocations, sans liste de personnes', async () => {
+    const ics = await contenu(await creer(ids.referent, TOUT))
     expect(ics).toContain('BEGIN:VCALENDAR')
     expect(ics).toContain('SUMMARY:Dossier en préfecture')
     expect(ics).toContain('SUMMARY:Tournoi · phase Lancement')
@@ -309,10 +321,12 @@ describe('abonnement personnel', () => {
     expect(ics).not.toContain('Réserver le bassin')
   })
 
-  it('suit les périmètres choisis, l’agenda global et les échéances', async () => {
+  it('suit les périmètres choisis, les types d’événements et les échéances', async () => {
     const adresse = await creer(ids.referent, {
       p: [ids.basket],
-      g: false,
+      ph: false,
+      d: false,
+      r: false,
       e: true,
     })
     const ics = await contenu(adresse)
@@ -321,23 +335,28 @@ describe('abonnement personnel', () => {
     expect(ics).toContain(`UID:reunion-${ids.reunionNatation}@`)
     expect(ics).not.toContain(`UID:reunion-${ids.reunionGlobale}@`)
     expect(ics).not.toContain('Dossier en préfecture')
+    expect(ics).not.toContain('phase Lancement')
     expect(ics).toContain('Échéance · Réserver le bassin')
     const r = await executer(ids.referent, REGLER, {
       p: null,
-      g: true,
+      ph: false,
+      d: true,
+      r: false,
       e: false,
     })
     expect(r.errors).toBeUndefined()
     // L'adresse ne change pas : son contenu suit le réglage.
-    expect(await contenu(adresse)).toContain('Dossier en préfecture')
+    const regle = await contenu(adresse)
+    expect(regle).toContain('Dossier en préfecture')
+    expect(regle).not.toContain(`UID:reunion-${ids.reunionGlobale}@`)
+    expect(regle).not.toContain('phase Lancement')
   })
 
   it('refuse un périmètre que la personne ne lit pas', async () => {
     for (const requete of [CREER, REGLER]) {
       const r = await executer(ids.referent, requete, {
         p: [ids.tennis],
-        g: true,
-        e: false,
+        ...TOUT,
       })
       expect(code(r)).toBe('FORBIDDEN')
     }
@@ -440,6 +459,22 @@ describe('séquences du programme (ADR 0040)', () => {
 })
 
 describe('abonnement d’activité', () => {
+  it('crée l’adresse avec les types choisis', async () => {
+    const r = await executer(
+      ids.adminActivite,
+      `mutation ($a: ID!) { creerAbonnementAgendaActivite(activiteId: $a, inclurePhases: true, inclureDatesCles: false, inclureReunions: false) { adresse } }`,
+      { a: ids.activite }
+    )
+    expect(r.errors).toBeUndefined()
+    const ics = await contenu(
+      (r.data as { creerAbonnementAgendaActivite: { adresse: string } })
+        .creerAbonnementAgendaActivite.adresse
+    )
+    expect(ics).toContain('SUMMARY:Tournoi · phase Lancement')
+    expect(ics).not.toContain('Dossier en préfecture')
+    expect(ics).not.toContain(`UID:reunion-${ids.reunionGlobale}@`)
+  })
+
   it('sert l’agenda global d’une activité à ses admins seulement', async () => {
     const r = await executer(ids.adminActivite, CREER_ACTIVITE, {
       a: ids.activite,
@@ -452,11 +487,22 @@ describe('abonnement d’activité', () => {
     expect(ics).toContain('X-WR-CALNAME:')
     expect(ics).toContain(`UID:reunion-${ids.reunionGlobale}@`)
     expect(ics).toContain('Dossier en préfecture')
+    expect(ics).not.toContain('phase Lancement')
     expect(ics).not.toContain(`UID:reunion-${ids.reunionNatation}@`)
     expect(ics).not.toContain('ATTENDEE')
     for (const qui of [ids.referent, ids.etrangere]) {
       expect(
         code(await executer(qui, CREER_ACTIVITE, { a: ids.activite }))
+      ).toBe('FORBIDDEN')
+      expect(
+        code(
+          await executer(qui, REGLER_ACTIVITE, {
+            a: ids.activite,
+            ph: true,
+            d: true,
+            r: true,
+          })
+        )
       ).toBe('FORBIDDEN')
       expect(
         code(
@@ -468,6 +514,18 @@ describe('abonnement d’activité', () => {
         )
       ).toBe('FORBIDDEN')
     }
+    // Les types d'événements se règlent sans changer l'adresse.
+    const r2 = await executer(ids.adminActivite, REGLER_ACTIVITE, {
+      a: ids.activite,
+      ph: true,
+      d: false,
+      r: false,
+    })
+    expect(r2.errors).toBeUndefined()
+    const regle = await contenu(adresse)
+    expect(regle).toContain('SUMMARY:Tournoi · phase Lancement')
+    expect(regle).not.toContain('Dossier en préfecture')
+    expect(regle).not.toContain(`UID:reunion-${ids.reunionGlobale}@`)
     // Une activité archivée ne sert plus rien.
     await prisma.activite.update({
       where: { id: ids.activite },

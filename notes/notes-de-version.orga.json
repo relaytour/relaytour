@@ -8,6 +8,24 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-30-orga-les-abonnements-a-l-agenda-choisissent-leurs-types-d-eveneme",
+          "date": "2026-10-30",
+          "type": "fonctionnalite",
+          "audience": "organisateurs",
+          "role": "referent",
+          "etat": "prevu",
+          "fr": {
+            "titre": "Les abonnements à l'agenda choisissent leurs types d'événements",
+            "texte": "Votre abonnement personnel et l'abonnement d'une activité choisissent séparément les réunions de l'agenda global, les dates clés et les phases. Les phases sont décochées à la création, car elles occupent plusieurs semaines d'un agenda. Un admin de l'activité modifie ces types sans changer l'adresse. Les boutons de la nouvelle adresse ne débordent plus de leur encadré sur un téléphone.",
+            "migration": null
+          },
+          "en": {
+            "titre": "Calendar subscriptions choose their event types",
+            "texte": "Your personal subscription and an activity subscription choose global calendar meetings, key dates and phases separately. Phases are unchecked when a subscription is created, because they fill several weeks of a calendar. An activity admin changes these types without changing the address. The buttons of a new address no longer overflow their box on a phone.",
+            "migration": null
+          }
+        },
+        {
           "id": "2026-10-29-orga-les-premiers-pas-proposent-de-declarer-une-adresse-de-contac",
           "date": "2026-10-29",
           "type": "fonctionnalite",

@@ -30,7 +30,9 @@ const MON_ABONNEMENT = graphql(`
       id
       fin
       perimetreIds
-      inclureGlobal
+      inclurePhases
+      inclureDatesCles
+      inclureReunions
       inclureEcheances
       creeLe
       dernierAccesLe
@@ -41,12 +43,16 @@ const MON_ABONNEMENT = graphql(`
 const CREER = graphql(`
   mutation CreerMonAbonnementAgenda(
     $perimetreIds: [ID!]
-    $inclureGlobal: Boolean
+    $inclurePhases: Boolean
+    $inclureDatesCles: Boolean
+    $inclureReunions: Boolean
     $inclureEcheances: Boolean
   ) {
     creerMonAbonnementAgenda(
       perimetreIds: $perimetreIds
-      inclureGlobal: $inclureGlobal
+      inclurePhases: $inclurePhases
+      inclureDatesCles: $inclureDatesCles
+      inclureReunions: $inclureReunions
       inclureEcheances: $inclureEcheances
     ) {
       adresse
@@ -60,17 +66,23 @@ const CREER = graphql(`
 const REGLER = graphql(`
   mutation ReglerMonAbonnementAgenda(
     $perimetreIds: [ID!]
-    $inclureGlobal: Boolean!
+    $inclurePhases: Boolean!
+    $inclureDatesCles: Boolean!
+    $inclureReunions: Boolean!
     $inclureEcheances: Boolean!
   ) {
     reglerMonAbonnementAgenda(
       perimetreIds: $perimetreIds
-      inclureGlobal: $inclureGlobal
+      inclurePhases: $inclurePhases
+      inclureDatesCles: $inclureDatesCles
+      inclureReunions: $inclureReunions
       inclureEcheances: $inclureEcheances
     ) {
       id
       perimetreIds
-      inclureGlobal
+      inclurePhases
+      inclureDatesCles
+      inclureReunions
       inclureEcheances
     }
   }
@@ -87,6 +99,9 @@ const ABONNEMENT_ACTIVITE = graphql(`
     abonnementAgendaActivite(activiteId: $activiteId) {
       id
       fin
+      inclurePhases
+      inclureDatesCles
+      inclureReunions
       creeLe
       dernierAccesLe
     }
@@ -94,9 +109,40 @@ const ABONNEMENT_ACTIVITE = graphql(`
 `)
 
 const CREER_ACTIVITE = graphql(`
-  mutation CreerAbonnementAgendaActivite($activiteId: ID!) {
-    creerAbonnementAgendaActivite(activiteId: $activiteId) {
+  mutation CreerAbonnementAgendaActivite(
+    $activiteId: ID!
+    $inclurePhases: Boolean
+    $inclureDatesCles: Boolean
+    $inclureReunions: Boolean
+  ) {
+    creerAbonnementAgendaActivite(
+      activiteId: $activiteId
+      inclurePhases: $inclurePhases
+      inclureDatesCles: $inclureDatesCles
+      inclureReunions: $inclureReunions
+    ) {
       adresse
+    }
+  }
+`)
+
+const REGLER_ACTIVITE = graphql(`
+  mutation ReglerAbonnementAgendaActivite(
+    $activiteId: ID!
+    $inclurePhases: Boolean!
+    $inclureDatesCles: Boolean!
+    $inclureReunions: Boolean!
+  ) {
+    reglerAbonnementAgendaActivite(
+      activiteId: $activiteId
+      inclurePhases: $inclurePhases
+      inclureDatesCles: $inclureDatesCles
+      inclureReunions: $inclureReunions
+    ) {
+      id
+      inclurePhases
+      inclureDatesCles
+      inclureReunions
     }
   }
 `)
@@ -136,7 +182,7 @@ function AdresseUnique({ adresse }: { adresse: string }) {
               gardez-la pour vous : elle donne accès au contenu de l’agenda.
             </Trans>
           </p>
-          <Space wrap>
+          <div className="rt-abonnement-boutons">
             <Button
               icon={<CopyOutlined />}
               onClick={() => {
@@ -154,10 +200,75 @@ function AdresseUnique({ adresse }: { adresse: string }) {
             <Button icon={<LinkOutlined />} href={webcal}>
               <Trans>Ouvrir dans mon agenda</Trans>
             </Button>
-          </Space>
+          </div>
         </div>
       }
     />
+  )
+}
+
+/** Les types d'événements de l'agenda global qu'un abonnement sert. */
+interface Types {
+  inclurePhases: boolean
+  inclureDatesCles: boolean
+  inclureReunions: boolean
+}
+
+/** Les phases sont décochées par défaut : elles chargent beaucoup un agenda. */
+const TYPES_PAR_DEFAUT: Types = {
+  inclurePhases: false,
+  inclureDatesCles: true,
+  inclureReunions: true,
+}
+
+const memesTypes = (a: Types, b: Types) =>
+  a.inclurePhases === b.inclurePhases &&
+  a.inclureDatesCles === b.inclureDatesCles &&
+  a.inclureReunions === b.inclureReunions
+
+const memesPerimetres = (
+  a: readonly string[] | null,
+  b: readonly string[] | null
+) =>
+  a === null || b === null
+    ? a === b
+    : a.length === b.length && [...a].sort().join() === [...b].sort().join()
+
+/** Les cases des types d'événements, communes aux deux abonnements. */
+function CasesTypes({
+  types,
+  onChange,
+}: {
+  types: Types
+  onChange: (types: Types) => void
+}) {
+  return (
+    <>
+      <Checkbox
+        checked={types.inclureReunions}
+        onChange={e =>
+          onChange({ ...types, inclureReunions: e.target.checked })
+        }
+      >
+        <Trans>Les réunions de l’agenda global</Trans>
+      </Checkbox>
+      <Checkbox
+        checked={types.inclureDatesCles}
+        onChange={e =>
+          onChange({ ...types, inclureDatesCles: e.target.checked })
+        }
+      >
+        <Trans>Les dates clés et les jours de chaque période</Trans>
+      </Checkbox>
+      <Checkbox
+        checked={types.inclurePhases}
+        onChange={e => onChange({ ...types, inclurePhases: e.target.checked })}
+      >
+        <Trans>
+          Les phases, qui occupent chacune plusieurs semaines de l’agenda
+        </Trans>
+      </Checkbox>
+    </>
   )
 }
 
@@ -176,20 +287,24 @@ export function PreferenceAgenda() {
   const abonnement = data?.monAbonnementAgenda ?? null
   const [tous, setTous] = useState(true)
   const [choisis, setChoisis] = useState<string[]>([])
-  const [global, setGlobal] = useState(true)
+  const [types, setTypes] = useState<Types>(TYPES_PAR_DEFAUT)
   const [echeances, setEcheances] = useState(false)
 
   // Les réglages lus se recopient dans le formulaire quand ils changent sur le
   // serveur : une autre fenêtre a pu les enregistrer.
   const cleLue = abonnement
-    ? `${abonnement.id}:${JSON.stringify(abonnement.perimetreIds)}:${abonnement.inclureGlobal}:${abonnement.inclureEcheances}`
+    ? `${abonnement.id}:${JSON.stringify(abonnement.perimetreIds)}:${abonnement.inclurePhases}:${abonnement.inclureDatesCles}:${abonnement.inclureReunions}:${abonnement.inclureEcheances}`
     : null
   const [lue, setLue] = useState<string | null>(null)
   if (abonnement && cleLue !== lue) {
     setLue(cleLue)
     setTous(abonnement.perimetreIds === null)
     setChoisis(abonnement.perimetreIds ?? [])
-    setGlobal(abonnement.inclureGlobal)
+    setTypes({
+      inclurePhases: abonnement.inclurePhases,
+      inclureDatesCles: abonnement.inclureDatesCles,
+      inclureReunions: abonnement.inclureReunions,
+    })
     setEcheances(abonnement.inclureEcheances)
   }
 
@@ -201,9 +316,17 @@ export function PreferenceAgenda() {
 
   const reglages = {
     perimetreIds: tous ? null : choisis,
-    inclureGlobal: global,
+    ...types,
     inclureEcheances: echeances,
   }
+  // « Enregistrer » reste désactivé tant que le formulaire suit le serveur.
+  const modifie =
+    abonnement !== null &&
+    !(
+      memesTypes(types, abonnement) &&
+      echeances === abonnement.inclureEcheances &&
+      memesPerimetres(reglages.perimetreIds, abonnement.perimetreIds ?? null)
+    )
 
   const creerAdresse = async () => {
     try {
@@ -273,11 +396,7 @@ export function PreferenceAgenda() {
             .map(p => ({ value: p.id, label: p.nom }))}
         />
       )}
-      <Checkbox checked={global} onChange={e => setGlobal(e.target.checked)}>
-        <Trans>
-          L’agenda global : phases, dates clés et réunions de l’activité
-        </Trans>
-      </Checkbox>
+      <CasesTypes types={types} onChange={setTypes} />
       <Checkbox
         checked={echeances}
         onChange={e => setEcheances(e.target.checked)}
@@ -300,6 +419,7 @@ export function PreferenceAgenda() {
             <Button
               type="primary"
               loading={reglage.loading}
+              disabled={!modifie}
               onClick={() => {
                 void regler({ variables: reglages }).then(
                   () => message.success(t`Abonnement enregistré.`),
@@ -357,6 +477,7 @@ export function AbonnementActivite({
     variables: { activiteId },
   })
   const [creer, creation] = useMutation(CREER_ACTIVITE)
+  const [regler, reglage] = useMutation(REGLER_ACTIVITE)
   const [revoquer] = useMutation(REVOQUER_ACTIVITE)
   const [adresse, setAdresse] = useState<string | null>(null)
   const abonnement = data?.abonnementAgendaActivite ?? null
@@ -364,10 +485,28 @@ export function AbonnementActivite({
   const derniereLecture = abonnement?.dernierAccesLe
     ? dateCourte(abonnement.dernierAccesLe)
     : null
+  const [types, setTypes] = useState<Types>(TYPES_PAR_DEFAUT)
+
+  // Les réglages lus se recopient dans le formulaire quand ils changent sur le
+  // serveur : un autre admin a pu les enregistrer.
+  const cleLue = abonnement
+    ? `${abonnement.id}:${abonnement.inclurePhases}:${abonnement.inclureDatesCles}:${abonnement.inclureReunions}`
+    : null
+  const [lue, setLue] = useState<string | null>(null)
+  if (abonnement && cleLue !== lue) {
+    setLue(cleLue)
+    setTypes({
+      inclurePhases: abonnement.inclurePhases,
+      inclureDatesCles: abonnement.inclureDatesCles,
+      inclureReunions: abonnement.inclureReunions,
+    })
+  }
+
+  const modifie = abonnement !== null && !memesTypes(types, abonnement)
 
   const creerAdresse = async () => {
     try {
-      const r = await creer({ variables: { activiteId } })
+      const r = await creer({ variables: { activiteId, ...types } })
       setAdresse(r.data?.creerAbonnementAgendaActivite.adresse ?? null)
       await refetch()
     } catch (e) {
@@ -379,11 +518,12 @@ export function AbonnementActivite({
     <Panneau titre={t`Abonnement de l’activité`}>
       <p className="rt-texte-secondaire">
         <Trans>
-          Une adresse secrète publie l’agenda global de {nom} : phases, dates
-          clés et réunions globales. Un agenda partagé de l’association s’y
-          abonne, sans les réunions des périmètres.
+          Une adresse secrète publie l’agenda global de {nom}, sans les réunions
+          des périmètres. Un agenda partagé de l’association s’y abonne. Vous
+          choisissez les types d’événements qu’il reçoit.
         </Trans>
       </p>
+      <CasesTypes types={types} onChange={setTypes} />
       {adresse && <AdresseUnique adresse={adresse} />}
       {abonnement ? (
         <>
@@ -394,6 +534,20 @@ export function AbonnementActivite({
               : t`Aucun agenda ne l’a encore lue.`}
           </p>
           <Space wrap>
+            <Button
+              size="small"
+              type="primary"
+              loading={reglage.loading}
+              disabled={!modifie}
+              onClick={() => {
+                void regler({ variables: { activiteId, ...types } }).then(
+                  () => message.success(t`Abonnement enregistré.`),
+                  (e: unknown) => message.error(messageErreur(e))
+                )
+              }}
+            >
+              <Trans>Enregistrer</Trans>
+            </Button>
             <Button
               size="small"
               onClick={() =>

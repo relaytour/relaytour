@@ -1478,9 +1478,14 @@ model AbonnementAgenda {
   // Abonnement personnel : les périmètres choisis. Null : tous les périmètres
   // que la personne lit.
   perimetreIds     Json?
-  // Abonnement personnel : l'agenda global des activités, et les échéances des
-  // tâches assignées à la personne.
+  // Ancien réglage de l'agenda global, remplacé par les trois champs suivants.
   inclureGlobal    Boolean         @default(true)
+  // Les types d'événements servis : les phases, les dates clés avec les jours
+  // de la période, et les réunions de l'activité (sans périmètre).
+  inclurePhases    Boolean         @default(false)
+  inclureDatesCles Boolean         @default(true)
+  inclureReunions  Boolean         @default(true)
+  // Abonnement personnel : les échéances des tâches assignées à la personne.
   inclureEcheances Boolean         @default(false)
   // Dernière lecture par un agenda, posée au plus une fois par heure.
   dernierAccesLe   DateTime?
