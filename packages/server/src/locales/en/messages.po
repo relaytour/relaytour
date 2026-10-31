@@ -1077,6 +1077,11 @@ msgstr "The title of the derived task"
 
 #. js-lingui-explicit-id
 #: src/schema/taches.ts
+msgid "Une tâche porte au plus {max} personnes réalisatrices."
+msgstr "A task can be done by {max} people at most."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
 msgid "Une déclinaison ne se décline pas."
 msgstr "A derived task cannot have derived tasks."
 

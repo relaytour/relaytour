@@ -1077,6 +1077,11 @@ msgstr "Le titre de la déclinaison"
 
 #. js-lingui-explicit-id
 #: src/schema/taches.ts
+msgid "Une tâche porte au plus {max} personnes réalisatrices."
+msgstr "Une tâche porte au plus {max} personnes réalisatrices."
+
+#. js-lingui-explicit-id
+#: src/schema/taches.ts
 msgid "Une déclinaison ne se décline pas."
 msgstr "Une déclinaison ne se décline pas."
 

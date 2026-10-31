@@ -114,7 +114,7 @@ function activiteDuSujet(
 
 // Un mail demandé par la personne elle-même ne reçoit pas de réponse : l'équipe
 // d'organisation n'en est pas à l'origine (ADR 0054). Le lien d'export part d'une
-// installation en sommeil, dont l'équipe ne lit peut-être plus le contact (ADR 0055).
+// installation en sommeil, dont l'équipe ne lit peut-être plus le contact (ADR 0057).
 const SANS_REPONSE = new Set<SorteCourriel>([
   'essai',
   'code-connexion',

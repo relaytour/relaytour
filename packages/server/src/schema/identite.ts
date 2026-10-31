@@ -400,7 +400,7 @@ builder.queryFields(t => ({
   }),
 
   // Un admin de l'organisation télécharge l'export complet, même en lecture seule :
-  // une limite ou la fin d'un essai ne bloque jamais l'export (ADR 0055).
+  // une limite ou la fin d'un essai ne bloque jamais l'export (ADR 0057).
   exportOrganisation: t.field({
     type: ExportOrganisationRef,
     authScopes: { admin: true },

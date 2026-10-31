@@ -18,7 +18,7 @@ import {
 } from './export-pour-admin.ts'
 import { invaliderConfigurationOrganisation } from './organisation.ts'
 
-// Export pour un admin d'une installation en sommeil (ADR 0055) : seule une adresse
+// Export pour un admin d'une installation en sommeil (ADR 0057) : seule une adresse
 // d'admin actif mène à un export, un lien part au plus une fois par 24 heures, et
 // le dernier export part à tous les admins. Seul le jeton de l'installation ouvre
 // les deux mutations. Un admin exporte aussi depuis l'application en lecture seule.

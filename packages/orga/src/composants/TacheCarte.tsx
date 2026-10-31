@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from 'react'
 
 import type { TacheChampsFragment } from '../gql/graphql'
 import { useActivite } from '../lib/activite'
+import { enumerer } from '../lib/langue'
 import { useCommentairesDeLaPeriode } from '../lib/commentaires'
 import type { ResumeDeclinaisons } from '../lib/declinaisons'
 import { dateCourte } from '../lib/erreurs'
@@ -110,7 +111,7 @@ export default function TacheCarte({
     refetchQueries: VUES_TACHES,
   })
   const [cloture, setCloture] = useState(false)
-  const [realiseeParId, setRealiseeParId] = useState<string | null>(null)
+  const [realisateurs, setRealisateurs] = useState<string[]>([])
   const [choixAssignation, setChoixAssignation] = useState(false)
   const [aDecliner, setADecliner] = useState(false)
   // Le fil s'ouvre quand la personne lit le périmètre de la tâche (ADR 0029).
@@ -148,7 +149,10 @@ export default function TacheCarte({
   )
   const echeance = etatEcheance(tache)
   const nomCloture = tache.clotureePar?.nom
-  const nomRealisation = tache.realiseePar?.nom
+  // « Réalisée par vous et Bruno » : la personne connectée se nomme « vous ».
+  const nomsRealisation = enumerer(
+    tache.realisateurs.map(p => (p.id === moiId ? t`vous` : p.nom))
+  )
   const dateEcheance = tache.echeance ? dateCourte(tache.echeance) : ''
   // Le menu « Autres actions » ne s'affiche que s'il propose au moins une entrée :
   // une tâche faite ou abandonnée, hors page du périmètre, n'en a aucune.
@@ -254,7 +258,7 @@ export default function TacheCarte({
   const statut = (
     nouveau: TacheChampsFragment['statut'],
     succes: string,
-    realisee?: string | null
+    realises: string[] = []
   ) =>
     executer(
       reprise =>
@@ -262,7 +266,7 @@ export default function TacheCarte({
           variables: {
             id: tache.id,
             statut: nouveau,
-            realiseeParId: realisee ?? null,
+            realisateurs: realises,
             confirmer: reprise.confirmer,
             // Le statut affiché : le serveur refuse de changer un statut qu'une
             // autre personne a modifié entre-temps.
@@ -273,10 +277,21 @@ export default function TacheCarte({
     )
 
   const terminer = async () => {
-    if (await statut('FAITE', t`Tâche marquée comme faite.`, realiseeParId)) {
+    if (await statut('FAITE', t`Tâche marquée comme faite.`, realisateurs)) {
       setCloture(false)
-      setRealiseeParId(null)
+      setRealisateurs([])
     }
+  }
+
+  // Les personnes assignées et affectées au périmètre sont proposées comme
+  // personnes réalisatrices (ADR 0055) ; la liste reste modifiable.
+  const ouvrirCloture = () => {
+    setRealisateurs(
+      tache.assignes
+        .filter(p => referents.some(r => r.id === p.id))
+        .map(p => p.id)
+    )
+    setCloture(true)
   }
 
   return (
@@ -383,17 +398,15 @@ export default function TacheCarte({
           )}
         </div>
         {tache.statut === 'FAITE' &&
-          (tache.clotureePar || tache.realiseePar) && (
+          (tache.clotureePar || tache.realisateurs.length > 0) && (
             <p className="rt-note" style={{ margin: 0 }}>
               {[
                 tache.clotureePar &&
                   (tache.clotureePar.id === moiId
                     ? t`Cochée par vous.`
                     : t`Cochée par ${nomCloture}.`),
-                tache.realiseePar &&
-                  (tache.realiseePar.id === moiId
-                    ? t`Réalisée par vous.`
-                    : t`Réalisée par ${nomRealisation}.`),
+                tache.realisateurs.length > 0 &&
+                  t`Réalisée par ${nomsRealisation}.`,
               ]
                 .filter(Boolean)
                 .join(' ')}
@@ -472,7 +485,7 @@ export default function TacheCarte({
               type="primary"
               icon={<CheckOutlined />}
               disabled={enAction}
-              onClick={() => setCloture(true)}
+              onClick={ouvrirCloture}
             >
               {t({
                 message: 'Faite',
@@ -533,13 +546,15 @@ export default function TacheCarte({
         <Form layout="vertical">
           <Form.Item
             label={t`Réalisée par (facultatif)`}
-            extra={t`Cette information n’est visible que par vous et par les admins.`}
+            extra={t`Sans personne choisie, la tâche vous est attribuée. Cette information n’est visible que par vous et par les admins.`}
           >
             <Select
+              mode="multiple"
               allowClear
-              placeholder={t`Choisir une personne`}
-              value={realiseeParId}
-              onChange={v => setRealiseeParId(v ?? null)}
+              optionFilterProp="label"
+              placeholder={t`Choisir une ou plusieurs personnes`}
+              value={realisateurs}
+              onChange={(v: string[]) => setRealisateurs(v)}
               options={referents.map(r => ({
                 value: r.id,
                 label: r.id === moiId ? t`Vous` : r.nom,

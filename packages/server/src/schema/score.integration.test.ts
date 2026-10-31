@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { ApolloServer } from '@apollo/server'
-import { prisma } from '@relaytour/database'
+import { Prisma, prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { AppContext } from '../context.ts'
@@ -41,7 +41,7 @@ async function tacheFaite(donnees: {
   echeance: string
   termineeLe: string
   clotureeParId: string
-  realiseeParId?: string
+  realisateurs?: string[]
   creeParId?: string
 }) {
   return prisma.tache.create({
@@ -53,8 +53,10 @@ async function tacheFaite(donnees: {
       echeance: new Date(donnees.echeance),
       termineeLe: new Date(donnees.termineeLe),
       clotureeParId: donnees.clotureeParId,
-      realiseeParId: donnees.realiseeParId ?? null,
       creeParId: donnees.creeParId ?? null,
+      realisations: {
+        create: (donnees.realisateurs ?? []).map(userId => ({ userId })),
+      },
     },
   })
 }
@@ -140,7 +142,7 @@ describe('barème', () => {
       echeance: '2099-08-10',
       termineeLe: '2099-08-10T20:00:00Z',
       clotureeParId: ids.alice,
-      realiseeParId: ids.bruno,
+      realisateurs: [ids.bruno],
       creeParId: ids.alice,
     })
     const scores = await calculerScores(prisma, ids.edition)
@@ -154,6 +156,28 @@ describe('barème', () => {
       tachesCreees: 1,
       tachesRealisees: 0,
     })
+  })
+
+  it('donne les points pleins à chaque personne réalisatrice', async () => {
+    const tache = await tacheFaite({
+      titre: 'À deux',
+      echeance: '2099-08-10',
+      termineeLe: '2099-08-09T20:00:00Z',
+      clotureeParId: ids.admin,
+      realisateurs: [ids.alice, ids.bruno],
+    })
+    const avant = await calculerScores(prisma, ids.edition)
+    await prisma.tache.delete({ where: { id: tache.id } })
+    const apres = await calculerScores(prisma, ids.edition)
+    for (const id of [ids.alice, ids.bruno]) {
+      expect(avant.get(id)!.points - (apres.get(id)?.points ?? 0)).toBe(4)
+      expect(
+        avant.get(id)!.tachesRealisees - (apres.get(id)?.tachesRealisees ?? 0)
+      ).toBe(1)
+    }
+    expect(avant.get(ids.admin)?.tachesRealisees ?? 0).toBe(
+      apres.get(ids.admin)?.tachesRealisees ?? 0
+    )
   })
 
   it('ne donne pas de bonus à une tâche faite en retard', async () => {
@@ -254,6 +278,51 @@ describe('visibilité', () => {
       { e: ids.edition }
     )
     expect(r.data).toEqual({ monScore: { points: 1 } })
+  })
+
+  it('ouvre le classement à l’équipe avec le module « Classement » seulement', async () => {
+    const Q = `query ($e: ID!) { classement(editionId: $e) { rang } }`
+    const avant = await prisma.activite.findUniqueOrThrow({
+      where: { id: ACTIVITE },
+      select: { modules: true },
+    })
+    // Une personne en découverte : rattachée à l'activité, sans affectation.
+    const noa = randomUUID()
+    await prisma.user.create({
+      data: { id: noa, email: `noa-${s}@exemple.fr`, name: 'noa' },
+    })
+    await prisma.rattachementActivite.create({
+      data: { userId: noa, activiteId: ACTIVITE, organisationId: ORGANISATION },
+    })
+    try {
+      // Une liste nulle n'active pas le classement (ADR 0056).
+      await prisma.activite.update({
+        where: { id: ACTIVITE },
+        data: { modules: Prisma.DbNull },
+      })
+      expect(
+        (await executer(ids.alice, Q, { e: ids.edition })).errors?.[0]
+          ?.extensions?.code
+      ).toBe('FORBIDDEN')
+
+      await prisma.activite.update({
+        where: { id: ACTIVITE },
+        data: { modules: ['CLASSEMENT'] },
+      })
+      expect(
+        (await executer(ids.alice, Q, { e: ids.edition })).errors
+      ).toBeUndefined()
+      expect(
+        (await executer(noa, Q, { e: ids.edition })).errors?.[0]?.extensions
+          ?.code
+      ).toBe('FORBIDDEN')
+    } finally {
+      await prisma.activite.update({
+        where: { id: ACTIVITE },
+        data: { modules: avant.modules ?? Prisma.DbNull },
+      })
+      await prisma.user.delete({ where: { id: noa } })
+    }
   })
 
   it('bonus refusé pour une tâche cochée après minuit à Paris', async () => {

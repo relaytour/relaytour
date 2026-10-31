@@ -109,7 +109,7 @@ const ExportPourAdminRef = builder
   .objectRef<{ fichier: string; jeton: string }>('ExportPourAdmin')
   .implement({
     description:
-      'Un export écrit dans EXPORTS_DIR pour un admin d’une installation en sommeil (ADR 0055), et le jeton de son lien de téléchargement.',
+      'Un export écrit dans EXPORTS_DIR pour un admin d’une installation en sommeil (ADR 0057), et le jeton de son lien de téléchargement.',
     fields: t => ({
       fichier: t.exposeString('fichier'),
       jeton: t.exposeString('jeton'),
@@ -299,7 +299,7 @@ builder.mutationFields(t => ({
     nullable: true,
     authScopes: { administration: true },
     description:
-      'Écrit l’export complet d’une organisation pour l’admin qui porte cette adresse, et tire le jeton de son lien (ADR 0055). Nul quand l’adresse n’appartient à aucun admin actif, ou quand un lien est parti depuis moins de 24 heures. Sans adresse, prépare le dernier export pour tous les admins, sans limite.',
+      'Écrit l’export complet d’une organisation pour l’admin qui porte cette adresse, et tire le jeton de son lien (ADR 0057). Nul quand l’adresse n’appartient à aucun admin actif, ou quand un lien est parti depuis moins de 24 heures. Sans adresse, prépare le dernier export pour tous les admins, sans limite.',
     args: {
       organisation: t.arg.string({ required: true }),
       courriel: t.arg.string(),
@@ -318,7 +318,7 @@ builder.mutationFields(t => ({
   envoyerLienDExport: t.boolean({
     authScopes: { administration: true },
     description:
-      'Envoie tout de suite, sans la file du worker, le lien de téléchargement d’un export préparé par preparerExportPourAdmin (ADR 0055). Le lien reste valable 7 jours.',
+      'Envoie tout de suite, sans la file du worker, le lien de téléchargement d’un export préparé par preparerExportPourAdmin (ADR 0057). Le lien reste valable 7 jours.',
     args: {
       organisation: t.arg.string({ required: true }),
       jeton: t.arg.string({ required: true }),

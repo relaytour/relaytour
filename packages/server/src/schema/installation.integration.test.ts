@@ -277,7 +277,7 @@ describe('cycle de vie d’une organisation', () => {
     expect(contradictoire.errors?.[0]?.extensions?.code).toBe('SAISIE_INVALIDE')
     expect(
       lus(await executer('administration', MODULES, { s: slugA, t: true }))
-    ).toEqual(['AGENDA', 'BENEVOLES', 'DOCUMENTS'])
+    ).toEqual(['AGENDA', 'BENEVOLES', 'DOCUMENTS', 'CLASSEMENT'])
   })
 
   it('liste les organisations avec leurs compteurs', async () => {

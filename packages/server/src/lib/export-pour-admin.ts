@@ -16,7 +16,7 @@ import { langueDuDestinataire } from './langue-destinataire.ts'
 import { reserverEnvoi, rendreEnvoi } from './plafond-courriel.ts'
 import { adresseDuRappel } from './rappel-adresses.ts'
 
-// Export pour un admin d'une installation en sommeil (ADR 0055).
+// Export pour un admin d'une installation en sommeil (ADR 0057).
 //
 // La pile d'une installation en sommeil est arrêtée. Pour un export, l'hébergeur la
 // réveille brièvement, sans le worker, et appelle deux mutations d'administration :

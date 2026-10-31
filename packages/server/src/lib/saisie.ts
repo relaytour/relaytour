@@ -19,6 +19,8 @@ export const TITRE_MAX = 191
 export const RESUME_MAX = 191
 /** Longueur maximale de la description d'une tâche. */
 export const DESCRIPTION_TACHE_MAX = 5000
+/** Nombre maximal de personnes réalisatrices d'une tâche (ADR 0055). */
+export const REALISATEURS_MAX = 20
 
 export function texteRequis(brut: string, libelle: string, max = 120): string {
   const texte = brut.trim()

@@ -1,4 +1,4 @@
-# ADR 0055 — Export pour un admin d'une installation en sommeil
+# ADR 0057 — Export pour un admin d'une installation en sommeil
 
 - **Statut** : proposée
 - **Date** : 2026-10-31

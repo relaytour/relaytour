@@ -22,6 +22,6 @@ en:
     read-only, for example after a trial ends.
 ---
 
-ADR 0055. Nouvelle requête `exportOrganisation`, réservée aux admins de
+ADR 0057. Nouvelle requête `exportOrganisation`, réservée aux admins de
 l'organisation, qui rend le JSON de `construireExport` (ADR 0008). Une requête
 n'exige pas le droit d'écriture : la lecture seule ne la bloque pas.

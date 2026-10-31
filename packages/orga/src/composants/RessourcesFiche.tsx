@@ -32,7 +32,7 @@ import {
   OUVRIR_DOCUMENT,
   RESSOURCES_FICHE,
 } from '../lib/espace-fichiers'
-import { langueActive } from '../lib/langue'
+import { enumerer } from '../lib/langue'
 import { MOI } from '../lib/requetes'
 import { useMentions } from '../lib/useMentions'
 import ExplorateurDossier, { type DossierAffiche } from './ExplorateurDossier'
@@ -158,14 +158,6 @@ function LierRessource({
       )}
     </Modal>
   )
-}
-
-/** « Basket », « Basket et Accueil », « Basket, Accueil et Voile », dans la langue active. */
-function enumerer(noms: string[]): string {
-  return new Intl.ListFormat(langueActive(), {
-    style: 'long',
-    type: 'conjunction',
-  }).format(noms)
 }
 
 /**

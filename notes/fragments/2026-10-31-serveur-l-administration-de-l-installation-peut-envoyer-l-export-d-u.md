@@ -13,7 +13,7 @@ fr:
     quand un lien est parti depuis moins de 24 heures. Sans adresse, elle prépare
     le dernier export pour tous les admins. La mutation
     `envoyerLienDExport(organisation, jeton)` envoie tout de suite le lien de
-    téléchargement, sans le worker, dans la langue de chaque admin (ADR 0055).
+    téléchargement, sans le worker, dans la langue de chaque admin (ADR 0057).
 ---
 
 `lib/export-pour-admin.ts`. Valkey garde l'empreinte du jeton une heure, et la
