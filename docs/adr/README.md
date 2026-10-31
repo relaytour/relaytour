@@ -55,5 +55,6 @@
 | [0051](0051-adresse-de-retour-commune-de-l-espace-de-fichiers.md) | Adresse de retour commune de l'espace de fichiers | Acceptée |
 | [0052](0052-modules-d-une-activite.md) | Modules d'une activité | Acceptée |
 | [0053](0053-adresse-de-reponse-des-mails.md) | Adresse de réponse des mails | Proposée |
+| [0054](0054-rappel-des-adresses-d-un-membre.md) | Rappel des adresses d'un membre | Proposée |
 
 Une décision acceptée ne se modifie pas : une nouvelle ADR la remplace et le dit dans son en-tête.

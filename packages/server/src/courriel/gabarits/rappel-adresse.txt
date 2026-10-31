@@ -1,0 +1,23 @@
+{{marque}}
+
+[[Bonjour {{nom}},]]
+
+[[Vous avez demandé l’adresse de votre espace. Votre compte vous donne accès à
+l’espace organisateur des organisations suivantes :]]
+
+{{organisations}}
+
+[[Gardez ce lien dans vos favoris. À chaque connexion, vous saisissez votre
+adresse et vous recevez un code par mail.]]
+
+[[Ouvrir mon espace : {{lienConnexion}}]]
+
+[[Si vous n’êtes pas à l’origine de cette demande, ignorez ce message. Votre
+compte ne change pas.]]
+
+--
+[[Vous recevez ce message parce que votre adresse est enregistrée dans l’espace
+organisateur de {{organisation}}.]] {{consigneReponse}}
+
+[[Cet espace est propulsé par Relaytour, logiciel libre.]]
+https://github.com/relaytour/relaytour

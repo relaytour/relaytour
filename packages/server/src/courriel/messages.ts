@@ -96,6 +96,9 @@ export function sujets(
     'annulation-reunion': i18n._('{tete} : réunion annulée', { tete }),
     'benevole-lien': i18n._('{tete} : votre participation', { tete }),
     'benevole-places': i18n._('{tete} : vos places ont changé', { tete }),
+    'rappel-adresse': i18n._('{nomCourt} : l’adresse de votre espace', {
+      nomCourt,
+    }),
   }
 }
 
@@ -106,7 +109,13 @@ function activiteDuSujet(
   return (configuration as Partial<ConfigurationActivite>).activite?.nom
 }
 
-const SANS_REPONSE = new Set<SorteCourriel>(['essai', 'code-connexion'])
+// Un mail demandé par la personne elle-même ne reçoit pas de réponse : l'équipe
+// d'organisation n'en est pas à l'origine (ADR 0054).
+const SANS_REPONSE = new Set<SorteCourriel>([
+  'essai',
+  'code-connexion',
+  'rappel-adresse',
+])
 
 /** L'adresse nue d'un expéditeur « Nom <adresse> ». */
 function adresseNue(expediteur: string): string {
@@ -470,6 +479,28 @@ export async function composer(
     const fragment = new URLSearchParams({ code: job.code })
     if (compte !== null) fragment.set('adresse', compte.email)
     variables.lienConnexion = `${origine}/connexion#${fragment.toString()}`
+  }
+
+  if (job.sorte === 'rappel-adresse') {
+    const user = await prisma.user.findUniqueOrThrow({
+      where: { id: job.userId },
+      select: {
+        name: true,
+        appartenances: {
+          where: {
+            archiveLe: null,
+            organisation: { statut: { in: ['ACTIVE', 'LECTURE_SEULE'] } },
+          },
+          select: { organisation: { select: { nom: true } } },
+          orderBy: { organisation: { nom: 'asc' } },
+        },
+      },
+    })
+    // Les organisations ont pu fermer ou archiver la personne depuis la demande.
+    if (user.appartenances.length === 0) return null
+    variables.nom = user.name
+    variables.organisations = user.appartenances.map(a => a.organisation.nom)
+    variables.lienConnexion = `${origine}/connexion`
   }
 
   if (job.sorte === 'tache-modifiee') {

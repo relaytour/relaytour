@@ -2173,6 +2173,11 @@ type Mutation {
   Retire la personne d’une place à venir et prévient l’équipe. Une fiche non confirmée qu’aucune place ne retient est supprimée. Utilisable sans session.
   """
   quitterPlace(jeton: String!, ref: String!): Boolean!
+
+  """
+  Envoie à une adresse le rappel de ses espaces dans cette installation, si elle appartient à un membre (ADR 0054). Répond toujours vrai : la réponse ne dit jamais si l’adresse est connue.
+  """
+  rappelerAdresses(courriel: String!): Boolean!
   rattacherALActivite(activiteId: ID!, userId: ID!): Boolean!
 
   """

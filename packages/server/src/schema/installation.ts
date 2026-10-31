@@ -1,4 +1,4 @@
-import { StatutOrganisation } from '@relaytour/database'
+import { prisma, StatutOrganisation } from '@relaytour/database'
 
 import { erreurSaisie } from '../lib/erreurs.ts'
 import { journal } from '../lib/journal.ts'
@@ -13,6 +13,7 @@ import {
   type OrganisationInstallation,
   type PeriodeInstallation,
 } from '../lib/installation.ts'
+import { rappelerAdresses } from '../lib/rappel-adresses.ts'
 
 import { ModuleActiviteEnum } from './activites.ts'
 import { builder } from './builder.ts'
@@ -264,6 +265,17 @@ builder.mutationFields(t => ({
         'Un export d’organisation a été écrit.'
       )
       return path.basename(chemin)
+    },
+  }),
+
+  rappelerAdresses: t.boolean({
+    authScopes: { administration: true },
+    description:
+      'Envoie à une adresse le rappel de ses espaces dans cette installation, si elle appartient à un membre (ADR 0054). Répond toujours vrai : la réponse ne dit jamais si l’adresse est connue.',
+    args: { courriel: t.arg.string({ required: true }) },
+    resolve: async (_root, args) => {
+      await rappelerAdresses(prisma, args.courriel)
+      return true
     },
   }),
 }))

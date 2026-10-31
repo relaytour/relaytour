@@ -3009,6 +3009,36 @@ msgstr "Se connecter : {lienConnexion}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
+msgid "L’adresse de votre espace"
+msgstr "L’adresse de votre espace"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous avez demandé l’adresse de votre espace organisateur."
+msgstr "Vous avez demandé l’adresse de votre espace organisateur."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Vous avez demandé l’adresse de votre espace. Votre compte vous donne accès à l’espace organisateur des organisations suivantes :"
+msgstr "Vous avez demandé l’adresse de votre espace. Votre compte vous donne accès à l’espace organisateur des organisations suivantes :"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Gardez ce lien dans vos favoris. À chaque connexion, vous saisissez votre adresse et vous recevez un code par mail."
+msgstr "Gardez ce lien dans vos favoris. À chaque connexion, vous saisissez votre adresse et vous recevez un code par mail."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Si vous n’êtes pas à l’origine de cette demande, ignorez ce message. Votre compte ne change pas."
+msgstr "Si vous n’êtes pas à l’origine de cette demande, ignorez ce message. Votre compte ne change pas."
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
+msgid "Ouvrir mon espace : {lienConnexion}"
+msgstr "Ouvrir mon espace : {lienConnexion}"
+
+#. js-lingui-explicit-id
+#: src/courriel/gabarits.genere.ts
 msgid "Échéances de vos tâches"
 msgstr "Échéances de vos tâches"
 
@@ -3026,11 +3056,6 @@ msgstr "Ces tâches vous sont assignées et demandent votre attention :"
 #: src/courriel/gabarits.genere.ts
 msgid "Vous pouvez désactiver ces rappels dans vos préférences :"
 msgstr "Vous pouvez désactiver ces rappels dans vos préférences :"
-
-#. js-lingui-explicit-id
-#: src/courriel/gabarits.genere.ts
-msgid "Ouvrir mon espace : {lienConnexion}"
-msgstr "Ouvrir mon espace : {lienConnexion}"
 
 #. js-lingui-explicit-id
 #: src/courriel/gabarits.genere.ts
@@ -3165,6 +3190,11 @@ msgstr "{tete} : votre participation"
 #: src/courriel/messages.ts
 msgid "{tete} : vos places ont changé"
 msgstr "{tete} : vos places ont changé"
+
+#. js-lingui-explicit-id
+#: src/courriel/messages.ts
+msgid "{nomCourt} : l’adresse de votre espace"
+msgstr "{nomCourt} : l’adresse de votre espace"
 
 #. js-lingui-explicit-id
 #: src/courriel/messages.ts
