@@ -70,13 +70,27 @@ export function PersonneNommee({
  * La mention du contact principal d'un périmètre (ADR 0011). C'est une information
  * pour l'organisation : elle ne donne aucun droit.
  */
-export function MentionContactPrincipal() {
+export function MentionContactPrincipal({
+  compacte = false,
+}: {
+  /** Une version plus petite, placée sous un nom dans une liste. */
+  compacte?: boolean
+}) {
   const { t } = useLingui()
   return (
     <Tag
       icon={<StarFilled aria-hidden />}
       color="gold"
-      style={{ marginInlineEnd: 0 }}
+      style={
+        compacte
+          ? {
+              marginInlineEnd: 0,
+              fontSize: 11,
+              lineHeight: '18px',
+              paddingInline: 6,
+            }
+          : { marginInlineEnd: 0 }
+      }
     >
       {t`Contact principal`}
     </Tag>

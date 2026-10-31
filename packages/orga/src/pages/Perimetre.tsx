@@ -610,13 +610,30 @@ export default function Perimetre() {
                         }}
                       >
                         <Avatar nom={r.nom} taille={28} />
-                        <span style={{ fontWeight: 600 }}>
-                          {r.id === moiId ? t`Vous` : r.nom}
+                        {/* La mention passe sous le nom, pour laisser au nom toute la largeur. */}
+                        <span
+                          style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'flex-start',
+                            gap: 2,
+                            minWidth: 0,
+                          }}
+                        >
+                          <span style={{ fontWeight: 600 }}>
+                            {r.id === moiId ? t`Vous` : r.nom}
+                          </span>
+                          {r.id === contactId && (
+                            <MentionContactPrincipal compacte />
+                          )}
                         </span>
-                        {r.id === contactId && <MentionContactPrincipal />}
                         <span
                           className="rt-compte"
-                          style={{ marginInlineStart: 'auto' }}
+                          style={{
+                            marginInlineStart: 'auto',
+                            flexShrink: 0,
+                            whiteSpace: 'nowrap',
+                          }}
                         >
                           {compteTaches(charge)}
                         </span>
