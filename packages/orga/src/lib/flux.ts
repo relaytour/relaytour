@@ -38,6 +38,9 @@ const VUES_DES_TACHES = [
   'FilTache',
   // Les échéances de l'agenda (ADR 0037).
   'Agenda',
+  // La charge de l'équipe et le détail d'une personne (ADR 0055).
+  'ChargeEquipe',
+  'TachesDe',
 ] as const
 const VUES_DES_FICHES = [
   'ListeFiches',
@@ -116,6 +119,8 @@ const REQUETES_PAR_ENTITE: Record<EntiteChangee, readonly string[]> = {
   // Les lieux, les séquences et les fiches bénévoles (ADR 0040).
   PROGRAMME: [
     'Programme',
+    // Les places au programme comptent dans la charge (ADR 0055).
+    'ChargeEquipe',
     'ProgrammePerimetre',
     'Lieux',
     'LieuxTous',
