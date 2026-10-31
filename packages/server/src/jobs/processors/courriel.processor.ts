@@ -115,6 +115,14 @@ export async function courrielProcessor(
   // qui franchit minuit UTC rend sa place au jour où il l'a prise.
   const reserveLe = new Date()
   if ((await reserverEnvoi(sorte, plafond, reserveLe)) === 'atteint') {
+    // Un rappel reporté au lendemain ne sert plus : il ne part pas (ADR 0054).
+    if (sorte === 'rappel-adresse') {
+      journal.warn(
+        { evenement: 'courriel-plafond-atteint', sorte, plafond },
+        'Plafond quotidien des mails atteint : le rappel ne part pas.'
+      )
+      return
+    }
     const maintenant = reserveLe
     journal.warn(
       {

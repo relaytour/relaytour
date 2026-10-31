@@ -20,7 +20,7 @@ export const BENEVOLES_MAX = 2000
 /** Une fiche inutilisée et inchangée depuis 24 mois est purgée. */
 export const MOIS_AVANT_PURGE = 24
 
-const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+export const COURRIEL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const TELEPHONE = /^\+?[0-9 .()-]+$/
 /** La colonne `Benevole.telephone` compte 40 caractères. */
 const TELEPHONE_MAX = 40

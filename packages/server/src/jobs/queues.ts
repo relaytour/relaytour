@@ -25,6 +25,8 @@ export type SorteCourriel =
   // Mails aux bénévoles (ADR 0041) : le lien personnel, et les places changées.
   | 'benevole-lien'
   | 'benevole-places'
+  // Rappel de l'adresse de l'espace, demandé par l'hébergeur (ADR 0054).
+  | 'rappel-adresse'
 
 // La charge utile ne contient ni corps de mail ni jeton. Le processeur relit l'adresse
 // en base au moment de l'envoi. `destinataire` sert seulement quand aucun compte n'existe.

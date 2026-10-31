@@ -1,0 +1,44 @@
+<mjml>
+  <mj-head>
+    <mj-title>[[L’adresse de votre espace]]</mj-title>
+    <mj-preview>[[Vous avez demandé l’adresse de votre espace organisateur.]]</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" />
+      <mj-text font-size="15px" line-height="24px" color="#010101" padding="0 0 16px" />
+    </mj-attributes>
+  </mj-head>
+
+  <mj-body background-color="#040404" width="480px">
+    <mj-include path="./_entete.mjml" />
+
+    <mj-section background-color="#FFFFFF" border-radius="12px" padding="28px 24px 20px">
+      <mj-column>
+        <mj-text font-size="20px" line-height="28px" font-weight="700">
+          [[Bonjour {{nom}},]]
+        </mj-text>
+        <mj-text>
+          [[Vous avez demandé l’adresse de votre espace. Votre compte vous donne accès à
+          l’espace organisateur des organisations suivantes :]]
+        </mj-text>
+        <mj-text>
+          {{organisations}}
+        </mj-text>
+        <mj-text>
+          [[Gardez ce lien dans vos favoris. À chaque connexion, vous saisissez votre
+          adresse et vous recevez un code par mail.]]
+        </mj-text>
+        <mj-button href="{{lienConnexion}}" background-color="#030303" color="#FFFFFF"
+                   border-radius="10px" font-size="15px" font-weight="700"
+                   padding="8px 0 16px" inner-padding="13px 24px">
+          [[Ouvrir mon espace]]
+        </mj-button>
+        <mj-text padding="0 0 4px" font-size="13px" line-height="20px">
+          [[Si vous n’êtes pas à l’origine de cette demande, ignorez ce message. Votre
+          compte ne change pas.]]
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-include path="./_pied.mjml" />
+  </mj-body>
+</mjml>
