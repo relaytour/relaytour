@@ -199,7 +199,7 @@ Un seul mot par notion. La colonne « Anglais » fixe le terme du catalogue angl
 | annuaire | directory | La liste de tous les membres de l'organisation, lue par ses admins seulement (ADR 0018). |
 | charge | workload | Ce qu'une personne porte dans une édition : ses tâches assignées, ses places au programme et ses affectations. Elle se compte en tâches et en places, sans estimation d'effort (ADR 0055). |
 | personne réalisatrice | completed by | Personne indiquée comme ayant réalisé une tâche faite. Une tâche en porte une ou plusieurs ; chacune reçoit les points de la tâche (ADR 0055). |
-| classement | leaderboard | Liste des personnes d'une édition rangées par score de participation. Les admins le lisent ; le module « Classement » l'ouvre à l'équipe (ADR 0056). |
+| classement | ranking | Liste des personnes d'une édition rangées par score de participation. Les admins le lisent ; le module « Classement » l'ouvre à l'équipe (ADR 0056). |
 | journal | activity log | Trace de qui a fait quoi, et quand. Le journal alimente les notifications et le score de participation. |
 | administration de l'installation | instance administration | Actions d'hébergement, par script ou par jeton, sans accès aux données : créer, suspendre, limiter, exporter une organisation. |
 | identité | identity | Nom, sigle, contacts, logo, favicon et thème d'une organisation. Une activité en surcharge les contacts, le logo, les couleurs et le fond (ADR 0009). |

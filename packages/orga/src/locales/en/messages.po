@@ -160,6 +160,11 @@ msgstr "{arrondi} KB"
 msgid "{arrondi} Mo"
 msgstr "{arrondi} MB"
 
+#: src/pages/Charge.tsx
+msgid "{assignees, plural, one {# tâche assignée} other {# tâches assignées}}"
+msgstr "{assignees, plural, one {# assigned task} other {# assigned tasks}}"
+
+#: src/pages/Charge.tsx
 #: src/pages/MonEspace.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Programme.tsx
@@ -190,6 +195,10 @@ msgstr "{avecAcces} of {total} has access"
 #: src/composants/VerificationAcces.tsx
 msgid "{avecAcces} sur {total} ont accès"
 msgstr "{avecAcces} of {total} have access"
+
+#: src/pages/Charge.tsx
+msgid "{aVenir, plural, one {# place à venir} other {# places à venir}}"
+msgstr "{aVenir, plural, one {# upcoming place} other {# upcoming places}}"
 
 #: src/pages/Perimetre.tsx
 msgid "{cettePeriodeMajuscule} est {periodeArchivee}. Ses tâches sont consultables en lecture seule."
@@ -243,6 +252,10 @@ msgstr "{ecrites, plural, one {# sheet written} other {# sheets written}}"
 msgid "{enAttente} en attente d’accord"
 msgstr "{enAttente} awaiting approval"
 
+#: src/pages/Charge.tsx
+msgid "{enRetard} en retard"
+msgstr "{enRetard} overdue"
+
 #: src/composants/LigneTache.tsx
 msgid "{faites, plural, one {{nombrePerimetres} périmètres · # faite} other {{nombrePerimetres} périmètres · # faites}}"
 msgstr "{faites, plural, one {{nombrePerimetres} areas · # done} other {{nombrePerimetres} areas · # done}}"
@@ -250,6 +263,10 @@ msgstr "{faites, plural, one {{nombrePerimetres} areas · # done} other {{nombre
 #: src/lib/declinaisons.ts
 msgid "{faites, plural, one {# faite sur {gardees}} other {# faites sur {gardees}}}"
 msgstr "{faites, plural, one {# done out of {gardees}} other {# done out of {gardees}}}"
+
+#: src/pages/Charge.tsx
+msgid "{faites, plural, one {# faite} other {# faites}}"
+msgstr "{faites, plural, one {# done} other {# done}}"
 
 #: src/composants/PremiersPas.tsx
 msgid "{faites} sur {total}"
@@ -518,6 +535,10 @@ msgstr "{nbInvitations, plural, one {# invitation awaits approval} other {# invi
 msgid "{nbLignesLues} lignes et {nbColonnesLues} colonnes lues."
 msgstr "{nbLignesLues} rows and {nbColonnesLues} columns read."
 
+#: src/pages/Charge.tsx
+msgid "{nbPersonnes, plural, one {# personne} other {# personnes}}"
+msgstr "{nbPersonnes, plural, one {# person} other {# people}}"
+
 #: src/pages/ImportBenevoles.tsx
 msgid "{nbPersonnes, plural, one {# personne} other {# personnes}}, {nbEcarteesNavigateur, plural, one {# ligne écartée} other {# lignes écartées}}."
 msgstr "{nbPersonnes, plural, one {# person} other {# people}}, {nbEcarteesNavigateur, plural, one {# row skipped} other {# rows skipped}}."
@@ -542,6 +563,10 @@ msgstr "{nom} ({raccourci})"
 #: src/composants/Messages.tsx
 msgid "{nom} (Cc)"
 msgstr "{nom} (Cc)"
+
+#: src/pages/Charge.tsx
+msgid "{nom} (vous)"
+msgstr "{nom} (you)"
 
 #: src/pages/admin/Personnes.tsx
 msgid "{nomAffiche} (archivée)"
@@ -732,6 +757,14 @@ msgstr "{organisation}: your access to the organizer workspace"
 msgid "{oui} oui · {siBesoin} si besoin · {non} non"
 msgstr "{oui} yes · {siBesoin} if needed · {non} no"
 
+#: src/pages/Charge.tsx
+msgid "{ouvertes, plural, one {# tâche ouverte} other {# tâches ouvertes}}"
+msgstr "{ouvertes, plural, one {# open task} other {# open tasks}}"
+
+#: src/pages/Charge.tsx
+msgid "{partagees, plural, one {# partagée} other {# partagées}}"
+msgstr "{partagees, plural, one {# shared} other {# shared}}"
+
 #: src/composants/SondageDetail.tsx
 msgid "{participants, plural, one {{repondants} sur # personne a répondu.} other {{repondants} sur # personnes ont répondu.}}"
 msgstr "{participants, plural, one {{repondants} of # person has responded.} other {{repondants} of # people have responded.}}"
@@ -796,6 +829,10 @@ msgstr "{personnes} out of {effectif, plural, one {# wanted} other {# wanted}}."
 msgid "{personnes}. Effectif à définir."
 msgstr "{personnes}. Target headcount to be set."
 
+#: src/pages/Charge.tsx
+msgid "{places, plural, one {# place au programme} other {# places au programme}}"
+msgstr "{places, plural, one {# place in the schedule} other {# places in the schedule}}"
+
 #: src/pages/AppelBenevoles.tsx
 msgid "{places, plural, one {# place recherchée} other {# places recherchées}}"
 msgstr "{places, plural, one {# place wanted} other {# places wanted}}"
@@ -827,6 +864,10 @@ msgstr "{quoi} ({champ})"
 #: src/composants/GestionAcces.tsx
 msgid "{raison} Relaytour le proposera de nouveau à la prochaine vérification."
 msgstr "{raison} Relaytour will propose it again at the next access check."
+
+#: src/pages/Charge.tsx
+msgid "{realisees, plural, one {# tâche réalisée sur cette période.} other {# tâches réalisées sur cette période.}}"
+msgstr "{realisees, plural, one {# task done in this period.} other {# tasks done in this period.}}"
 
 #: src/lib/declinaisons.ts
 msgid "{refusees, plural, one {# refusée} other {# refusées}}"
@@ -1174,6 +1215,10 @@ msgstr "{titreSequence} · {jourSequence}, {heureSequence}"
 msgid "{total, plural, one {# fiche} other {# fiches}}"
 msgstr "{total, plural, one {# sheet} other {# sheets}}"
 
+#: src/pages/Charge.tsx
+msgid "{total, plural, one {# tâche} other {# tâches}}"
+msgstr "{total, plural, one {# task} other {# tasks}}"
+
 #: src/lib/declinaisons.ts
 msgid "{total, plural, one {Déclinée dans # périmètre} other {Déclinée dans # périmètres}}"
 msgstr "{total, plural, one {Derived in # area} other {Derived in # areas}}"
@@ -1255,8 +1300,10 @@ msgstr "To confirm"
 #. Statut d’une tâche
 #. Statut d’une tâche
 #. Statut d’une tâche
+#. Statut d’une tâche
 #: src/lib/conflit.ts
 #: src/lib/taches.ts
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "À faire"
 msgstr "To do"
@@ -1329,6 +1376,8 @@ msgstr "Abandoned"
 
 #. Filtre : les tâches abandonnées
 #. Nombre de tâches abandonnées, au pluriel
+#. Nombre de tâches abandonnées, au pluriel
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Abandonnées"
@@ -2336,6 +2385,10 @@ msgstr "No one is appointed to this area for the period."
 msgid "Aucune personne n’est attendue pour ce dossier."
 msgstr "No one is expected for this folder."
 
+#: src/pages/Charge.tsx
+msgid "Aucune personne ne correspond à ces filtres."
+msgstr "No one matches these filters."
+
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Aucune réunion à venir pour ce périmètre."
 msgstr "No upcoming meetings for this area."
@@ -2386,6 +2439,7 @@ msgid "Aucune tâche ouverte ne vous est assignée."
 msgstr "No open task is assigned to you."
 
 #: src/composants/CarteAvancement.tsx
+#: src/pages/Charge.tsx
 msgid "Aucune tâche."
 msgstr "No tasks."
 
@@ -2527,6 +2581,10 @@ msgstr "Bcc"
 #: src/composants/PreferenceMessagerie.tsx
 msgid "Ce choix vaut pour ce navigateur, sur cet appareil. Vous pouvez le changer pour un message dans la fenêtre « Écrire un message »."
 msgstr "This choice applies to this browser on this device. You can change it for one message in the “Write a message” window."
+
+#: src/pages/admin/Classement.tsx
+msgid "Ce classement est visible par toute l’équipe de l’activité."
+msgstr "This ranking is visible to the whole team of the activity."
 
 #: src/pages/admin/Classement.tsx
 msgid "Ce classement n’est visible que par les admins."
@@ -2920,8 +2978,19 @@ msgid "Chaque personne convoquée reçoit un mail avec la réunion à ajouter à
 msgstr "Each invited person receives an email with the meeting to add to their calendar, and replies in the organizer workspace."
 
 #: src/pages/admin/Classement.tsx
-msgid "Chaque personne voit seulement son propre score. Un palmarès public se décide en fin {periodeDe}."
-msgstr "Each person sees only their own score. A public leaderboard is decided at the end of {periodeDe}."
+msgid "Chaque personne voit seulement son propre score. Le module « Classement », dans l’écran « Activités », ouvre ce classement à toute l’équipe."
+msgstr "Each person sees only their own score. The Ranking module, in the Activities screen, opens this ranking to the whole team."
+
+#. Menu : la charge de travail des personnes de l’équipe
+#: src/composants/Coquille.tsx
+msgid "Charge"
+msgstr "Workload"
+
+#: src/pages/admin/Equipe.tsx
+#: src/pages/Charge.tsx
+#: src/pages/MonEspace.tsx
+msgid "Charge de l’équipe"
+msgstr "Team workload"
 
 #: src/composants/FournisseurActivite.tsx
 #: src/composants/GardeSession.tsx
@@ -3088,6 +3157,7 @@ msgstr "Choose a slot to rank people by their availability."
 msgid "Choisissez une séquence."
 msgstr "Choose a slot."
 
+#: src/composants/ChampsActivite.tsx
 #: src/composants/Coquille.tsx
 #: src/pages/admin/Classement.tsx
 msgid "Classement"
@@ -3223,6 +3293,10 @@ msgstr "Shared"
 #: src/pages/admin/ImportTaches.tsx
 msgid "Communication"
 msgstr "Communication"
+
+#: src/pages/MonEspace.tsx
+msgid "Comparez les tâches ouvertes et les places au programme de chaque personne avant de répartir le travail."
+msgstr "Compare each person's open tasks and schedule places before you share out the work."
 
 #: src/pages/AppelBenevoles.tsx
 msgid "Complet : liste d’attente"
@@ -3549,6 +3623,10 @@ msgstr "In your association’s Google Cloud console, create a project and enabl
 #: src/pages/Preferences.tsx
 msgid "Dans le résumé par mail"
 msgstr "In the email digest"
+
+#: src/pages/Charge.tsx
+msgid "Dans les autres activités"
+msgstr "In other activities"
 
 #. Sorte d’élément de l’agenda
 #: src/pages/Agenda.tsx
@@ -3932,6 +4010,10 @@ msgstr "Give this call a new address?"
 msgid "Dont à temps"
 msgstr "Of which on time"
 
+#: src/pages/Charge.tsx
+msgid "Dont en retard"
+msgstr "Of which overdue"
+
 #: src/pages/admin/EspaceFichiers.tsx
 msgid "Dossier"
 msgstr "Folder"
@@ -4006,6 +4088,14 @@ msgstr "Due {dateEcheance}"
 #: src/composants/TacheFormulaire.tsx
 msgid "Échéance dans ces périmètres (facultatif)"
 msgstr "Due date in these areas (optional)"
+
+#: src/pages/Charge.tsx
+msgid "Échéance plus lointaine"
+msgstr "Later due date"
+
+#: src/pages/Charge.tsx
+msgid "Échéance sous 7 jours"
+msgstr "Due within 7 days"
 
 #: src/composants/PreferencePush.tsx
 #: src/pages/Preferences.tsx
@@ -4142,10 +4232,12 @@ msgstr "Waiting for your approval in Nextcloud. <0>Reopen the Nextcloud page</0>
 #. Statut d’une tâche
 #. Statut d’une tâche
 #. Statut d’une tâche
+#. Statut d’une tâche
 #: src/lib/conflit.ts
 #: src/lib/messages.ts
 #: src/lib/taches.ts
 #: src/pages/admin/Editions.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "En cours"
 msgstr "In progress"
@@ -4167,6 +4259,7 @@ msgstr "as helper"
 #: src/composants/DeclinaisonsTache.tsx
 #: src/composants/LigneTache.tsx
 #: src/pages/admin/Equipe.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "En retard"
@@ -4386,6 +4479,8 @@ msgstr "Done"
 
 #. Filtre : les tâches faites
 #. Nombre de tâches faites, au pluriel
+#. Nombre de tâches faites, au pluriel
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Faites"
@@ -4751,6 +4846,7 @@ msgid "Groupe « {nomGroupe} », ajouts automatiques"
 msgstr "Group “{nomGroupe}”, automatic additions"
 
 #: src/pages/admin/Equipe.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Groupe de périmètres"
 msgstr "Area group"
@@ -5437,6 +5533,10 @@ msgstr "The limit must be greater than the previous one."
 msgid "La case se coche en modifiant la fiche, et non d’un clic. Une case de fiche ne crée pas de tâche."
 msgstr "A checkbox is checked by editing the sheet, not by clicking it. A sheet checkbox does not create a task."
 
+#: src/pages/Charge.tsx
+msgid "La charge de l’équipe n’a pas pu être chargée."
+msgstr "The team workload could not be loaded."
+
 #: src/pages/Preferences.tsx
 msgid "La cloche de la barre haute affiche les nouvelles de vos tâches, quel que soit votre choix pour les mails. Elle se met à jour sans recharger la page."
 msgstr "The bell in the top bar shows news about your tasks, whatever you chose for emails. It updates without reloading the page."
@@ -5759,6 +5859,10 @@ msgstr "The Cc field shows all email addresses. We recommend the Bcc field, exce
 #: src/composants/GestionAcces.tsx
 msgid "Le changement est appliqué."
 msgstr "The change is applied."
+
+#: src/composants/ChampsActivite.tsx
+msgid "Le classement des scores de participation devient visible par toute l’équipe. Sans ce module, seuls les admins le lisent."
+msgstr "The participation score ranking becomes visible to the whole team. Without this module, only the admins can read it."
 
 #: src/lib/connexion.ts
 msgid "Le code est incorrect, expiré ou épuisé. Vérifiez-le, ou demandez un nouveau code."
@@ -6175,6 +6279,10 @@ msgstr "Activity admins and people with an appointment in one of its areas can r
 msgid "Les admins de l’activité n’ont placé aucune date clé dans {periodeCette}."
 msgstr "The activity admins haven’t placed any key date in {periodeCette}."
 
+#: src/pages/admin/Classement.tsx
+msgid "Les admins de l’activité ont activé le module « Classement ». Le classement montre des totaux par personne, jamais le détail des tâches."
+msgstr "The activity admins have turned on the Ranking module. The ranking shows totals per person, never the detail of tasks."
+
 #: src/pages/MonEspace.tsx
 msgid "Les admins de l’activité préparent {laPeriode} à venir."
 msgstr "The activity admins are preparing {laPeriode}."
@@ -6464,6 +6572,10 @@ msgstr "The tasks of a spreadsheet join a period. A task that is already present
 msgid "Les tâches de"
 msgstr "The tasks of"
 
+#: src/pages/Charge.tsx
+msgid "Les tâches ouvertes et les places à venir de chaque personne {dePeriode}."
+msgstr "The open tasks and upcoming places of each person {dePeriode}."
+
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Les tâches proposées à ce périmètre n’ont pas pu être chargées. Rechargez la page dans un instant."
 msgstr "The tasks proposed to this area couldn’t be loaded. Reload the page in a moment."
@@ -6727,6 +6839,10 @@ msgstr "Provider invitation email"
 #: src/pages/Preferences.tsx
 msgid "Mails immédiats"
 msgstr "Immediate emails"
+
+#: src/pages/Charge.tsx
+msgid "Maintenant"
+msgstr "Now"
 
 #: src/composants/TacheCarte.tsx
 msgid "Marquer comme faite"
@@ -7539,6 +7655,10 @@ msgstr "Availability levels"
 msgid "par {nomDecideur}"
 msgstr "by {nomDecideur}"
 
+#: src/pages/Charge.tsx
+msgid "Par charge"
+msgstr "By workload"
+
 #: src/pages/Perimetre.tsx
 msgid "Par échéance"
 msgstr "By due date"
@@ -7564,10 +7684,15 @@ msgstr "By venue"
 msgid "Par mois"
 msgstr "By month"
 
+#: src/pages/Charge.tsx
+msgid "Par nom"
+msgstr "By name"
+
 #: src/composants/Repartition.tsx
 msgid "Par périmètre"
 msgstr "By area"
 
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Par phase"
@@ -7758,6 +7883,10 @@ msgstr "Areas of interest for {nomEdition}"
 msgid "Période"
 msgstr "Period"
 
+#: src/pages/Charge.tsx
+msgid "Période de lecture"
+msgstr "Time frame"
+
 #: src/composants/SequenceFormulaire.tsx
 #: src/pages/admin/Admins.tsx
 #: src/pages/admin/Classement.tsx
@@ -7883,6 +8012,10 @@ msgstr "Place anyway"
 #: src/composants/SequenceFormulaire.tsx
 msgid "Placer une personne"
 msgstr "Place a person"
+
+#: src/pages/Charge.tsx
+msgid "Places à venir au programme"
+msgstr "Upcoming places in the schedule"
 
 #: src/pages/ImportBenevoles.tsx
 msgid "Places directes : chaque personne reçoit sa fiche et ses places."
@@ -8088,6 +8221,10 @@ msgstr "Notify by email: a person’s first place sends them their personal link
 msgid "Primaire"
 msgstr "Primary"
 
+#: src/pages/Charge.tsx
+msgid "Prochaine place au programme : {dateProchaine}."
+msgstr "Next place in the schedule: {dateProchaine}."
+
 #: src/composants/ReunionsDuPerimetre.tsx
 msgid "Prochaines réunions"
 msgstr "Upcoming meetings"
@@ -8214,6 +8351,7 @@ msgid "Recharger la page"
 msgstr "Reload the page"
 
 #: src/pages/Agenda.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Programme.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Rechargez la page dans un instant."
@@ -8244,6 +8382,10 @@ msgstr "Search for an area or a person"
 #: src/pages/Fiches.tsx
 msgid "Rechercher une fiche"
 msgstr "Search for a sheet"
+
+#: src/pages/Charge.tsx
+msgid "Rechercher une personne ou un périmètre"
+msgstr "Search for a person or an area"
 
 #: src/composants/Recherche.tsx
 msgid "Rechercher une tâche, une fiche ou une personne"
@@ -8999,6 +9141,7 @@ msgid "Sans date, les périmètres reçoivent l’échéance de cette tâche."
 msgstr "Without a date, areas get this task’s due date."
 
 #: src/composants/LigneTache.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Perimetre.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Sans échéance"
@@ -9344,6 +9487,7 @@ msgstr "Delete my information"
 msgid "Supprimer vos informations ?"
 msgstr "Delete your information?"
 
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Sur cette sélection"
 msgstr "On this selection"
@@ -9429,6 +9573,10 @@ msgstr "Task reopened."
 msgid "Tâches"
 msgstr "Tasks"
 
+#: src/pages/Charge.tsx
+msgid "Tâches assignées"
+msgstr "Assigned tasks"
+
 #: src/composants/Contribution.tsx
 #: src/pages/admin/Classement.tsx
 msgid "Tâches créées"
@@ -9463,6 +9611,14 @@ msgstr "Linked tasks"
 #: src/composants/ReunionFormulaire.tsx
 msgid "Tâches liées (facultatives)"
 msgstr "Linked tasks (optional)"
+
+#: src/pages/Charge.tsx
+msgid "Tâches ouvertes"
+msgstr "Open tasks"
+
+#: src/pages/Charge.tsx
+msgid "Tâches ouvertes assignées"
+msgstr "Assigned open tasks"
 
 #: src/composants/DeclinaisonsProposees.tsx
 msgid "Tâches proposées à ce périmètre"
@@ -9626,8 +9782,10 @@ msgstr "Tap the “⋮” menu at the top right."
 #. Filtre : tous les périmètres
 #. Filtre : toutes les personnes, quel que soit le rôle
 #. Tous les groupes de périmètres
+#. Tous les groupes de périmètres
 #: src/pages/admin/Equipe.tsx
 #: src/pages/admin/Personnes.tsx
+#: src/pages/Charge.tsx
 #: src/pages/Retroplanning.tsx
 msgid "Tous"
 msgstr "All"
@@ -9717,6 +9875,7 @@ msgid "toute la période"
 msgstr "whole period"
 
 #: src/composants/AppelsBenevoles.tsx
+#: src/pages/Charge.tsx
 msgid "Toute la période"
 msgstr "Whole period"
 
@@ -9752,6 +9911,10 @@ msgstr "All sheets are hidden."
 msgid "Toutes les fiches, communes comprises"
 msgstr "All sheets, including shared ones"
 
+#: src/pages/Charge.tsx
+msgid "Toutes les tâches assignées et les places de chaque personne sur {laPeriode}."
+msgstr "All assigned tasks and places of each person over {laPeriode}."
+
 #: src/composants/VerificationAcces.tsx
 msgid "Toutes ont accès chez le fournisseur."
 msgstr "All have access with the provider."
@@ -9772,6 +9935,10 @@ msgstr "Send the needs to the department"
 #: src/pages/admin/Equipe.tsx
 msgid "Tri des périmètres"
 msgstr "Area order"
+
+#: src/pages/Charge.tsx
+msgid "Tri des personnes"
+msgstr "Sort people"
 
 #: src/lib/guide-markdown.ts
 msgid "Trois accents graves sur une ligne ouvrent un bloc de plusieurs lignes, et trois autres le ferment."
@@ -10181,6 +10348,10 @@ msgstr "A slot"
 msgid "Une tâche acceptée entre parmi les tâches du périmètre. Une tâche refusée n’y entre pas."
 msgstr "An accepted task is added to the area’s tasks. A rejected task is not added."
 
+#: src/pages/Charge.tsx
+msgid "Une tâche assignée à plusieurs personnes compte pour chacune d’elles."
+msgstr "A task assigned to several people counts for each of them."
+
 #: src/composants/Contribution.tsx
 msgid "Une tâche rouverte ou abandonnée perd ses points."
 msgstr "A reopened or abandoned task loses its points."
@@ -10304,6 +10475,10 @@ msgstr "View calendar"
 #: src/pages/ImportBenevoles.tsx
 msgid "Voir l’aperçu"
 msgstr "View preview"
+
+#: src/pages/MonEspace.tsx
+msgid "Voir la charge de l’équipe"
+msgstr "See the team workload"
 
 #: src/pages/FicheEditeur.tsx
 msgid "Voir la version actuelle"

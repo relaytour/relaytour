@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto'
 
 import { ApolloServer } from '@apollo/server'
-import { prisma } from '@relaytour/database'
+import { Prisma, prisma } from '@relaytour/database'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import type { AppContext } from '../context.ts'
@@ -278,6 +278,51 @@ describe('visibilité', () => {
       { e: ids.edition }
     )
     expect(r.data).toEqual({ monScore: { points: 1 } })
+  })
+
+  it('ouvre le classement à l’équipe avec le module « Classement » seulement', async () => {
+    const Q = `query ($e: ID!) { classement(editionId: $e) { rang } }`
+    const avant = await prisma.activite.findUniqueOrThrow({
+      where: { id: ACTIVITE },
+      select: { modules: true },
+    })
+    // Une personne en découverte : rattachée à l'activité, sans affectation.
+    const noa = randomUUID()
+    await prisma.user.create({
+      data: { id: noa, email: `noa-${s}@exemple.fr`, name: 'noa' },
+    })
+    await prisma.rattachementActivite.create({
+      data: { userId: noa, activiteId: ACTIVITE, organisationId: ORGANISATION },
+    })
+    try {
+      // Une liste nulle n'active pas le classement (ADR 0056).
+      await prisma.activite.update({
+        where: { id: ACTIVITE },
+        data: { modules: Prisma.DbNull },
+      })
+      expect(
+        (await executer(ids.alice, Q, { e: ids.edition })).errors?.[0]
+          ?.extensions?.code
+      ).toBe('FORBIDDEN')
+
+      await prisma.activite.update({
+        where: { id: ACTIVITE },
+        data: { modules: ['CLASSEMENT'] },
+      })
+      expect(
+        (await executer(ids.alice, Q, { e: ids.edition })).errors
+      ).toBeUndefined()
+      expect(
+        (await executer(noa, Q, { e: ids.edition })).errors?.[0]?.extensions
+          ?.code
+      ).toBe('FORBIDDEN')
+    } finally {
+      await prisma.activite.update({
+        where: { id: ACTIVITE },
+        data: { modules: avant.modules ?? Prisma.DbNull },
+      })
+      await prisma.user.delete({ where: { id: noa } })
+    }
   })
 
   it('bonus refusé pour une tâche cochée après minuit à Paris', async () => {

@@ -537,7 +537,9 @@ export async function construireExport(organisationId: string) {
           accord: t.accord,
           creePar: t.creePar?.email ?? null,
           clotureePar: t.clotureePar?.email ?? null,
-          // Les personnes réalisatrices (ADR 0055) remplacent `realiseePar`.
+          // Les personnes réalisatrices (ADR 0055). `realiseePar` reste pour un
+          // outil qui lit l'ancien format : la première personne, ou null.
+          realiseePar: t.realisations[0]?.user.email ?? null,
           realisateurs: t.realisations.map(r => r.user.email),
           termineeLe: t.termineeLe?.toISOString() ?? null,
           assignes: t.assignations.map(x => x.user.email),

@@ -34,9 +34,8 @@ type Ligne = ClassementQuery['classement'][number]
 
 export default function Classement() {
   const { t } = useLingui()
-  const { periode } = useActivite()
+  const { periode, aModule } = useActivite()
   const periodeUne = periode.une
-  const periodeDe = periode.de
   const periodeCette = periode.cette
   const { data: editions } = useQuery(EDITIONS)
   const [choix, setChoix] = useState<string | undefined>()
@@ -54,13 +53,24 @@ export default function Classement() {
       >
         {t`Classement`}
       </Titre>
-      <Alert
-        type="info"
-        showIcon
-        style={{ marginBottom: 16 }}
-        title={t`Ce classement n’est visible que par les admins.`}
-        description={t`Chaque personne voit seulement son propre score. Un palmarès public se décide en fin ${periodeDe}.`}
-      />
+      {/* Le module « Classement » ouvre la page à toute l'équipe (ADR 0056). */}
+      {aModule('CLASSEMENT') ? (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          title={t`Ce classement est visible par toute l’équipe de l’activité.`}
+          description={t`Les admins de l’activité ont activé le module « Classement ». Le classement montre des totaux par personne, jamais le détail des tâches.`}
+        />
+      ) : (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          title={t`Ce classement n’est visible que par les admins.`}
+          description={t`Chaque personne voit seulement son propre score. Le module « Classement », dans l’écran « Activités », ouvre ce classement à toute l’équipe.`}
+        />
+      )}
       <Space style={{ marginBottom: 16 }}>
         <span>{periode.Nom}</span>
         <Select

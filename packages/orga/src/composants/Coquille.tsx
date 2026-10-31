@@ -19,6 +19,7 @@ import {
   NotificationOutlined,
   ProjectOutlined,
   ScheduleOutlined,
+  BarChartOutlined,
   SearchOutlined,
   SettingOutlined,
   SolutionOutlined,
@@ -175,6 +176,14 @@ function Mise({ session }: { session: Session }) {
             icon: <ScheduleOutlined />,
             label: t`Rétroplanning`,
           },
+          {
+            key: lien('/charge'),
+            icon: <BarChartOutlined />,
+            label: t({
+              message: 'Charge',
+              comment: 'Menu : la charge de travail des personnes de l’équipe',
+            }),
+          },
           // Les modules inactifs de l'activité quittent le menu (ADR 0052).
           ...(aModule('AGENDA')
             ? [
@@ -204,6 +213,16 @@ function Mise({ session }: { session: Session }) {
             icon: <BookOutlined />,
             label: t`Ressources`,
           },
+          // Les admins lisent le classement dans « Gérer l'activité » (ADR 0056).
+          ...(aModule('CLASSEMENT') && !gere
+            ? [
+                {
+                  key: lien('/classement'),
+                  icon: <TrophyOutlined />,
+                  label: t`Classement`,
+                },
+              ]
+            : []),
         ]),
     {
       key: lien('/preferences'),

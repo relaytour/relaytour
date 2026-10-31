@@ -36,7 +36,7 @@ import {
   type SelectProps,
 } from 'antd'
 import { useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router'
+import { Link, useNavigate, useSearchParams } from 'react-router'
 
 import Avancement from '../../composants/Avancement'
 import CarteAvancement from '../../composants/CarteAvancement'
@@ -274,6 +274,7 @@ function ChampEffectif({
 export default function Equipe() {
   const { t } = useLingui()
   const { activite, periode, libelleGroupe, lien } = useActivite()
+  const navigate = useNavigate()
   const periodeUne = periode.une
   // Un admin d'activité affecte les personnes de son équipe. Seul un admin de
   // l'organisation lit l'annuaire et choisit hors de l'équipe (ADR 0018).
@@ -422,14 +423,26 @@ export default function Equipe() {
       <Titre
         sousTitre={t(SOUS_TITRES[vue])}
         actions={
-          <Button
-            type="primary"
-            size="large"
-            icon={<PlusOutlined />}
-            onClick={() => setEnReglage('nouveau')}
-          >
-            <Trans>Nouveau périmètre</Trans>
-          </Button>
+          <Space wrap>
+            <Button
+              size="large"
+              onClick={() =>
+                navigate(
+                  lien(`/charge${editionId ? `?edition=${editionId}` : ''}`)
+                )
+              }
+            >
+              <Trans>Charge de l’équipe</Trans>
+            </Button>
+            <Button
+              type="primary"
+              size="large"
+              icon={<PlusOutlined />}
+              onClick={() => setEnReglage('nouveau')}
+            >
+              <Trans>Nouveau périmètre</Trans>
+            </Button>
+          </Space>
         }
       >
         {t`Équipe`}

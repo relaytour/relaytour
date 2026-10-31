@@ -380,7 +380,7 @@ function contactsDeLEdition(
   return contacts
 }
 
-const ORDRE_TACHES: Prisma.TacheOrderByWithRelationInput[] = [
+export const ORDRE_TACHES: Prisma.TacheOrderByWithRelationInput[] = [
   { echeance: { sort: 'asc', nulls: 'last' } },
   { createdAt: 'asc' },
 ]

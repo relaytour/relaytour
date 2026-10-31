@@ -39,6 +39,9 @@ export const VUES_TACHES = [
   'MesTaches',
   'AvancementGlobal',
   'Retroplanning',
+  // La charge de l'équipe et le détail d'une personne (ADR 0055).
+  'ChargeEquipe',
+  'TachesDe',
   // Tâches partagées (ADR 0026) : les tâches proposées à un périmètre, et le détail
   // des déclinaisons d'une tâche quand il est ouvert.
   'DeclinaisonsProposees',
