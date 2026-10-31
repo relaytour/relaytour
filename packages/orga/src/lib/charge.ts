@@ -25,13 +25,15 @@ function parmi<T extends string>(
   return valeurs.includes(valeur as T) ? (valeur as T) : defaut
 }
 
+/** Les réglages lus dans l'adresse. Un groupe inconnu de l'activité vaut « tous ». */
 export function lireReglagesCharge(
-  parametres: URLSearchParams
+  parametres: URLSearchParams,
+  groupes: readonly string[]
 ): ReglagesCharge {
   return {
     temps: parmi(parametres.get('temps'), TEMPS, 'maintenant'),
     tri: parmi(parametres.get('tri'), TRIS, 'charge'),
-    groupe: parametres.get('groupe') ?? 'tous',
+    groupe: parmi(parametres.get('groupe'), ['tous', ...groupes], 'tous'),
     q: parametres.get('q') ?? '',
   }
 }
