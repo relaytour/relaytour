@@ -2769,10 +2769,6 @@ msgstr "Cette fiche contient une adresse ou un numéro personnel."
 msgid "Cette fiche est introuvable."
 msgstr "Cette fiche est introuvable."
 
-#: src/composants/TacheCarte.tsx
-msgid "Cette information n’est visible que par vous et par les admins."
-msgstr "Cette information n’est visible que par vous et par les admins."
-
 #: src/lib/guide-markdown.ts
 msgid "Cette ligne commence sous la précédente."
 msgstr "Cette ligne commence sous la précédente."
@@ -2988,8 +2984,8 @@ msgid "Choisir une organisation"
 msgstr "Choisir une organisation"
 
 #: src/composants/TacheCarte.tsx
-msgid "Choisir une personne"
-msgstr "Choisir une personne"
+msgid "Choisir une ou plusieurs personnes"
+msgstr "Choisir une ou plusieurs personnes"
 
 #: src/pages/AppelBenevoles.tsx
 msgid "Choisissez au moins un moment, ou proposez votre aide là où il manque du monde."
@@ -8200,12 +8196,8 @@ msgid "Réalisée par (facultatif)"
 msgstr "Réalisée par (facultatif)"
 
 #: src/composants/TacheCarte.tsx
-msgid "Réalisée par {nomRealisation}."
-msgstr "Réalisée par {nomRealisation}."
-
-#: src/composants/TacheCarte.tsx
-msgid "Réalisée par vous."
-msgstr "Réalisée par vous."
+msgid "Réalisée par {nomsRealisation}."
+msgstr "Réalisée par {nomsRealisation}."
 
 #: src/pages/Connexion.tsx
 msgid "Recevoir un code"
@@ -9037,6 +9029,10 @@ msgstr "Sans périmètre"
 #: src/pages/admin/Equipe.tsx
 msgid "Sans personne"
 msgstr "Sans personne"
+
+#: src/composants/TacheCarte.tsx
+msgid "Sans personne choisie, la tâche vous est attribuée. Cette information n’est visible que par vous et par les admins."
+msgstr "Sans personne choisie, la tâche vous est attribuée. Cette information n’est visible que par vous et par les admins."
 
 #: src/composants/ReunionDetail.tsx
 msgid "Sans réponse"
@@ -10553,6 +10549,10 @@ msgstr "Votre texte est copié."
 #: src/pages/FicheEditeur.tsx
 msgid "Votre texte reste à l’écran et n’est pas enregistré. Consultez la version actuelle avant de choisir."
 msgstr "Votre texte reste à l’écran et n’est pas enregistré. Consultez la version actuelle avant de choisir."
+
+#: src/composants/TacheCarte.tsx
+msgid "vous"
+msgstr "vous"
 
 #: src/composants/FilTache.tsx
 #: src/composants/LigneTache.tsx

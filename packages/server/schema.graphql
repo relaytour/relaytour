@@ -1632,7 +1632,18 @@ type Mutation {
   """
   Change le statut d’une tâche. Demander le statut qu’elle a déjà ne change rien. Avec `statutAttendu`, le serveur refuse de changer un statut qu’une autre personne a modifié entre-temps (code `CONFLIT_VERSION`).
   """
-  changerStatutTache(confirmer: Boolean = false, id: ID!, realiseeParId: ID, statut: StatutTache!, statutAttendu: StatutTache): Tache!
+  changerStatutTache(
+    confirmer: Boolean = false
+    id: ID!
+
+    """
+    Pour un passage à « faite » : les personnes qui ont réalisé la tâche, affectées au périmètre (20 au plus). Vide ou absent : la personne qui coche.
+    """
+    realisateurs: [ID!]
+    realiseeParId: ID @deprecated(reason: "Remplacé par `realisateurs` (ADR 0055).")
+    statut: StatutTache!
+    statutAttendu: StatutTache
+  ): Tache!
 
   """
   Crée le dossier d’export des fiches dans le dossier choisi, puis lance un premier export. Le dossier choisi ne doit être ni lié, ni dans un dossier lié.
@@ -3711,7 +3722,8 @@ type Tache {
   origine: Tache
   perimetre: Perimetre!
   peutModifier: Boolean!
-  realiseePar: Personne
+  realisateurs: [Personne!]!
+  realiseePar: Personne @deprecated(reason: "Remplacé par `realisateurs` (ADR 0055).")
 
   """
   L’état des déclinaisons de cette tâche partagée, en nombres. Tous à zéro pour une tâche ordinaire et pour une déclinaison.

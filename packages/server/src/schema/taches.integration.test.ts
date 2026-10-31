@@ -503,56 +503,93 @@ describe('assignation d’une autre personne', () => {
 })
 
 describe('clôture', () => {
+  const FAIRE = `mutation ($id: ID!, $r: [ID!]) { changerStatutTache(id: $id, statut: FAITE, realisateurs: $r) { id } }`
+  const LIRE = `query ($s: String!, $e: ID!) {
+    perimetre(slug: $s) { taches(editionId: $e) { id clotureePar { id } realisateurs { id } } }
+  }`
+  type Cloture = {
+    id: string
+    clotureePar: { id: string } | null
+    realisateurs: { id: string }[]
+  }
+  const trouver = async (userId: string, tacheId: string) => {
+    const r = await executer(userId, LIRE, {
+      s: `natation-${suffixe}`,
+      e: ids.edition,
+    })
+    const taches = (r.data as { perimetre: { taches: Cloture[] } }).perimetre
+      .taches
+    return taches.find(t => t.id === tacheId)
+  }
+
   it('cache qui a coché et réalisé la tâche aux autres référent·es', async () => {
     const tache = await creerTache(ids.alice, 'Envoyer le programme')
-    const FAIRE = `mutation ($id: ID!, $r: ID) { changerStatutTache(id: $id, statut: FAITE, realiseeParId: $r) { id } }`
     expect(
-      (await executer(ids.alice, FAIRE, { id: tache.id, r: ids.bruno })).errors
+      (await executer(ids.alice, FAIRE, { id: tache.id, r: [ids.bruno] }))
+        .errors
     ).toBeUndefined()
 
-    const LIRE = `query ($s: String!, $e: ID!) {
-      perimetre(slug: $s) { taches(editionId: $e) { id clotureePar { id } realiseePar { id } } }
-    }`
-    const trouver = async (userId: string) => {
-      const r = await executer(userId, LIRE, {
-        s: `natation-${suffixe}`,
-        e: ids.edition,
-      })
-      const taches = (
-        r.data as {
-          perimetre: {
-            taches: {
-              id: string
-              clotureePar: { id: string } | null
-              realiseePar: { id: string } | null
-            }[]
-          }
-        }
-      ).perimetre.taches
-      return taches.find(t => t.id === tache.id)
-    }
-    expect(await trouver(ids.alice)).toMatchObject({
+    expect(await trouver(ids.alice, tache.id)).toMatchObject({
       clotureePar: { id: ids.alice },
-      realiseePar: { id: ids.bruno },
+      realisateurs: [{ id: ids.bruno }],
     })
-    expect(await trouver(ids.admin)).toMatchObject({
+    expect(await trouver(ids.admin, tache.id)).toMatchObject({
       clotureePar: { id: ids.alice },
-      realiseePar: { id: ids.bruno },
+      realisateurs: [{ id: ids.bruno }],
     })
-    expect(await trouver(ids.bruno)).toMatchObject({
+    expect(await trouver(ids.bruno, tache.id)).toMatchObject({
       clotureePar: null,
-      realiseePar: null,
+      realisateurs: [],
+    })
+  })
+
+  it('garde plusieurs personnes réalisatrices et les retire à la réouverture', async () => {
+    const tache = await creerTache(ids.alice, 'Monter les stands')
+    expect(
+      (
+        await executer(ids.alice, FAIRE, {
+          id: tache.id,
+          r: [ids.bruno, ids.alice, ids.bruno],
+        })
+      ).errors
+    ).toBeUndefined()
+    const lue = await trouver(ids.admin, tache.id)
+    expect(lue?.realisateurs.map(p => p.id).sort()).toEqual(
+      [ids.alice, ids.bruno].sort()
+    )
+
+    const ROUVRIR = `mutation ($id: ID!) { changerStatutTache(id: $id, statut: A_FAIRE) { id } }`
+    expect(
+      (await executer(ids.alice, ROUVRIR, { id: tache.id })).errors
+    ).toBeUndefined()
+    expect(
+      await prisma.tacheRealisation.count({ where: { tacheId: tache.id } })
+    ).toBe(0)
+  })
+
+  it('accepte encore l’ancien argument d’une seule personne', async () => {
+    const tache = await creerTache(ids.alice, 'Rendre les clés')
+    const r = await executer(
+      ids.alice,
+      `mutation ($id: ID!, $r: ID) { changerStatutTache(id: $id, statut: FAITE, realiseeParId: $r) { id realiseePar { id } } }`,
+      { id: tache.id, r: ids.bruno }
+    )
+    expect(r.errors).toBeUndefined()
+    expect(r.data).toMatchObject({
+      changerStatutTache: { realiseePar: { id: ids.bruno } },
     })
   })
 
   it('refuse une personne non affectée comme réalisatrice', async () => {
     const tache = await creerTache(ids.alice, 'Ranger le matériel')
-    const r = await executer(
-      ids.alice,
-      `mutation ($id: ID!, $r: ID) { changerStatutTache(id: $id, statut: FAITE, realiseeParId: $r) { id } }`,
-      { id: tache.id, r: ids.chloe }
-    )
+    const r = await executer(ids.alice, FAIRE, {
+      id: tache.id,
+      r: [ids.bruno, ids.chloe],
+    })
     expect(code(r)).toBe('SAISIE_INVALIDE')
+    expect(
+      await prisma.tacheRealisation.count({ where: { tacheId: tache.id } })
+    ).toBe(0)
   })
 })
 

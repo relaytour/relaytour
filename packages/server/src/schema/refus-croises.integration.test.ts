@@ -701,7 +701,7 @@ const MELES: Cas[] = [
   {
     operation: 'changerStatutTache',
     query:
-      'mutation ($id: ID!, $u: ID) { changerStatutTache(id: $id, statut: FAITE, realiseeParId: $u, confirmer: true) { id } }',
+      'mutation ($id: ID!, $u: ID!) { changerStatutTache(id: $id, statut: FAITE, realisateurs: [$u], confirmer: true) { id } }',
     variables: () => ({ id: b.tache, u: a.referente }),
     attente: REFUSE,
   },
@@ -956,7 +956,7 @@ const CAS: Cas[] = [
   {
     operation: 'changerStatutTache',
     query:
-      'mutation ($id: ID!, $r: ID) { changerStatutTache(id: $id, statut: FAITE, realiseeParId: $r) { id } }',
+      'mutation ($id: ID!, $r: ID!) { changerStatutTache(id: $id, statut: FAITE, realisateurs: [$r]) { id } }',
     variables: () => ({ id: a.tache, r: a.referente }),
     attente: INTERDIT,
   },

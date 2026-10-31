@@ -364,6 +364,7 @@ model User {
   preferencesOrganisation PreferenceOrganisation[]
   abonnementsPush         AbonnementPush[]
   assignations            TacheAssignation[]
+  realisations            TacheRealisation[]
   journal                 Journal[]                @relation("JournalActeur")
   souhaits                Souhait[]
   appartenances           Appartenance[]
@@ -800,10 +801,12 @@ model Tache {
   modeleSlug    String?
   ficheId       String?
   creeParId     String?
-  // Personne qui a coché la tâche, et personne qui l'a réalisée si elle l'a indiqué.
-  // Ces deux champs ne sont lisibles que par la personne qui a coché et par les admins.
+  // Personne qui a coché la tâche. Elle n'est lisible, comme les personnes
+  // réalisatrices (`realisations`), que par la personne qui a coché et par les admins.
   termineeLe    DateTime?
   clotureeParId String?
+  // Ancienne personne réalisatrice unique, recopiée dans `TacheRealisation` (ADR 0055).
+  // Plus lue ni écrite ; sa suppression attend une migration distincte.
   realiseeParId String?
   // Compte les modifications du contenu (titre, description, échéance, fiche). Une
   // modification porte la version lue : le serveur refuse d'écraser un changement
@@ -831,6 +834,7 @@ model Tache {
   declinaisons  Tache[]            @relation("Declinaisons")
   accordPar     User?              @relation("TacheAccord", fields: [accordParId], references: [id], onDelete: SetNull)
   assignations  TacheAssignation[]
+  realisations  TacheRealisation[]
   commentaires  CommentaireTache[]
   journal       Journal[]
   notifications Notification[]
@@ -851,6 +855,21 @@ model TacheAssignation {
 
   tache Tache @relation(fields: [tacheId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Restrict)
+
+  @@unique([tacheId, userId])
+  @@index([userId])
+}
+
+// Personne réalisatrice d'une tâche faite (ADR 0055). Une tâche en porte une ou
+// plusieurs ; rouvrir la tâche supprime ses lignes.
+model TacheRealisation {
+  id        String   @id @default(cuid())
+  tacheId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  tache Tache @relation(fields: [tacheId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([tacheId, userId])
   @@index([userId])

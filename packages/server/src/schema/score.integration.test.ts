@@ -41,7 +41,7 @@ async function tacheFaite(donnees: {
   echeance: string
   termineeLe: string
   clotureeParId: string
-  realiseeParId?: string
+  realisateurs?: string[]
   creeParId?: string
 }) {
   return prisma.tache.create({
@@ -53,8 +53,10 @@ async function tacheFaite(donnees: {
       echeance: new Date(donnees.echeance),
       termineeLe: new Date(donnees.termineeLe),
       clotureeParId: donnees.clotureeParId,
-      realiseeParId: donnees.realiseeParId ?? null,
       creeParId: donnees.creeParId ?? null,
+      realisations: {
+        create: (donnees.realisateurs ?? []).map(userId => ({ userId })),
+      },
     },
   })
 }
@@ -140,7 +142,7 @@ describe('barème', () => {
       echeance: '2099-08-10',
       termineeLe: '2099-08-10T20:00:00Z',
       clotureeParId: ids.alice,
-      realiseeParId: ids.bruno,
+      realisateurs: [ids.bruno],
       creeParId: ids.alice,
     })
     const scores = await calculerScores(prisma, ids.edition)
@@ -154,6 +156,28 @@ describe('barème', () => {
       tachesCreees: 1,
       tachesRealisees: 0,
     })
+  })
+
+  it('donne les points pleins à chaque personne réalisatrice', async () => {
+    const tache = await tacheFaite({
+      titre: 'À deux',
+      echeance: '2099-08-10',
+      termineeLe: '2099-08-09T20:00:00Z',
+      clotureeParId: ids.admin,
+      realisateurs: [ids.alice, ids.bruno],
+    })
+    const avant = await calculerScores(prisma, ids.edition)
+    await prisma.tache.delete({ where: { id: tache.id } })
+    const apres = await calculerScores(prisma, ids.edition)
+    for (const id of [ids.alice, ids.bruno]) {
+      expect(avant.get(id)!.points - (apres.get(id)?.points ?? 0)).toBe(4)
+      expect(
+        avant.get(id)!.tachesRealisees - (apres.get(id)?.tachesRealisees ?? 0)
+      ).toBe(1)
+    }
+    expect(avant.get(ids.admin)?.tachesRealisees ?? 0).toBe(
+      apres.get(ids.admin)?.tachesRealisees ?? 0
+    )
   })
 
   it('ne donne pas de bonus à une tâche faite en retard', async () => {

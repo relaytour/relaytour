@@ -104,6 +104,14 @@ export function langueActive(): Langue {
   return estUneLangue(langue) ? langue : LANGUE_SOURCE
 }
 
+/** « Basket », « Basket et Accueil », « Basket, Accueil et Voile », dans la langue active. */
+export function enumerer(noms: string[]): string {
+  return new Intl.ListFormat(langueActive(), {
+    style: 'long',
+    type: 'conjunction',
+  }).format(noms)
+}
+
 // La dernière langue demandée. Deux demandes rapprochées chargent chacune leur
 // catalogue : seule la plus récente s'active, quel que soit l'ordre des chargements.
 let demandee: Langue = LANGUE_SOURCE

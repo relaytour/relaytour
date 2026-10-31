@@ -33,6 +33,7 @@ import {
 } from '../lib/notifications.ts'
 import {
   DESCRIPTION_TACHE_MAX,
+  REALISATEURS_MAX,
   texteFacultatif,
   texteRequis,
   TITRE_MAX,
@@ -150,13 +151,39 @@ export const TacheRef = builder.prismaObject('Tache', {
           ? prisma.user.findUnique({ where: { id: tache.clotureeParId } })
           : null,
     }),
+    // Les personnes réalisatrices (ADR 0055), sous la même garde. Elles se chargent
+    // avec la tâche : une liste de tâches ne fait pas une requête par tâche.
+    realisateurs: t.field({
+      type: [PersonneRef],
+      select: (_args, _ctx, selection) => ({
+        perimetre: { select: { activiteId: true } },
+        realisations: {
+          select: { user: selection(true) },
+          orderBy: { user: { name: 'asc' } },
+        },
+      }),
+      resolve: async (tache, _args, ctx) =>
+        tache.realisations.length > 0 && (await voitLaCloture(ctx, tache))
+          ? tache.realisations.map(r => r.user)
+          : [],
+    }),
+    // Une application installée garde l'ancienne coquille jusqu'à son rechargement
+    // (ADR 0023) : le champ reste lisible pour elle.
     realiseePar: t.field({
       type: PersonneRef,
       nullable: true,
-      select: { perimetre: { select: { activiteId: true } } },
+      deprecationReason: 'Remplacé par `realisateurs` (ADR 0055).',
+      select: (_args, _ctx, selection) => ({
+        perimetre: { select: { activiteId: true } },
+        realisations: {
+          select: { user: selection(true) },
+          orderBy: { user: { name: 'asc' } },
+          take: 1,
+        },
+      }),
       resolve: async (tache, _args, ctx) =>
-        tache.realiseeParId !== null && (await voitLaCloture(ctx, tache))
-          ? prisma.user.findUnique({ where: { id: tache.realiseeParId } })
+        tache.realisations.length > 0 && (await voitLaCloture(ctx, tache))
+          ? tache.realisations[0]!.user
           : null,
     }),
     // Les droits d'écriture sur la tâche, pour n'afficher que les actions permises.
@@ -1234,7 +1261,13 @@ builder.mutationFields(t => ({
     args: {
       id: t.arg.id({ required: true }),
       statut: t.arg({ type: StatutTacheEnum, required: true }),
-      realiseeParId: t.arg.id(),
+      realisateurs: t.arg.idList({
+        description:
+          'Pour un passage à « faite » : les personnes qui ont réalisé la tâche, affectées au périmètre (20 au plus). Vide ou absent : la personne qui coche.',
+      }),
+      realiseeParId: t.arg.id({
+        deprecationReason: 'Remplacé par `realisateurs` (ADR 0055).',
+      }),
       statutAttendu: t.arg({ type: StatutTacheEnum }),
       confirmer: t.arg.boolean({ defaultValue: false }),
     },
@@ -1262,9 +1295,24 @@ builder.mutationFields(t => ({
         args.confirmer ?? false
       )
       const faite = args.statut === 'FAITE'
-      const realiseeParId =
-        faite && args.realiseeParId ? String(args.realiseeParId) : null
-      if (realiseeParId !== null) await exigerAffectee(realiseeParId, tache)
+      const realisateurs = faite
+        ? [
+            ...new Set(
+              (
+                args.realisateurs ??
+                (args.realiseeParId ? [args.realiseeParId] : [])
+              ).map(String)
+            ),
+          ]
+        : []
+      if (realisateurs.length > REALISATEURS_MAX) {
+        throw erreurSaisie(
+          i18n._('Une tâche porte au plus {max} personnes réalisatrices.', {
+            max: REALISATEURS_MAX,
+          })
+        )
+      }
+      for (const id of realisateurs) await exigerAffectee(id, tache)
 
       const ecrite = await prisma.$transaction(async tx => {
         // L'écriture porte le statut lu : un changement simultané ne trouve plus la
@@ -1276,10 +1324,15 @@ builder.mutationFields(t => ({
             // Rouvrir une tâche efface qui l'avait cochée et réalisée.
             termineeLe: faite ? new Date() : null,
             clotureeParId: faite ? acteur.id : null,
-            realiseeParId,
           },
         })
         if (count === 0) return false
+        await tx.tacheRealisation.deleteMany({ where: { tacheId: tache.id } })
+        if (realisateurs.length > 0) {
+          await tx.tacheRealisation.createMany({
+            data: realisateurs.map(userId => ({ tacheId: tache.id, userId })),
+          })
+        }
         await tx.journal.create({
           data: {
             type: 'TACHE_STATUT',
@@ -1288,7 +1341,9 @@ builder.mutationFields(t => ({
             perimetreId: tache.perimetreId,
             tacheId: tache.id,
             statut: args.statut,
-            realiseeParId,
+            // Le journal ne porte qu'une personne : il la nomme quand elle est seule.
+            // La liste complète vit dans `TacheRealisation`.
+            realiseeParId: realisateurs.length === 1 ? realisateurs[0] : null,
           },
         })
         return true

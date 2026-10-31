@@ -2769,10 +2769,6 @@ msgstr "This sheet contains a personal address or number."
 msgid "Cette fiche est introuvable."
 msgstr "This sheet cannot be found."
 
-#: src/composants/TacheCarte.tsx
-msgid "Cette information n’est visible que par vous et par les admins."
-msgstr "Only you and admins can see this information."
-
 #: src/lib/guide-markdown.ts
 msgid "Cette ligne commence sous la précédente."
 msgstr "This line starts below the previous one."
@@ -2988,8 +2984,8 @@ msgid "Choisir une organisation"
 msgstr "Choose an organization"
 
 #: src/composants/TacheCarte.tsx
-msgid "Choisir une personne"
-msgstr "Choose a person"
+msgid "Choisir une ou plusieurs personnes"
+msgstr "Choose one or more people"
 
 #: src/pages/AppelBenevoles.tsx
 msgid "Choisissez au moins un moment, ou proposez votre aide là où il manque du monde."
@@ -8200,12 +8196,8 @@ msgid "Réalisée par (facultatif)"
 msgstr "Done by (optional)"
 
 #: src/composants/TacheCarte.tsx
-msgid "Réalisée par {nomRealisation}."
-msgstr "Done by {nomRealisation}."
-
-#: src/composants/TacheCarte.tsx
-msgid "Réalisée par vous."
-msgstr "Done by you."
+msgid "Réalisée par {nomsRealisation}."
+msgstr "Done by {nomsRealisation}."
 
 #: src/pages/Connexion.tsx
 msgid "Recevoir un code"
@@ -9037,6 +9029,10 @@ msgstr "No area"
 #: src/pages/admin/Equipe.tsx
 msgid "Sans personne"
 msgstr "No one"
+
+#: src/composants/TacheCarte.tsx
+msgid "Sans personne choisie, la tâche vous est attribuée. Cette information n’est visible que par vous et par les admins."
+msgstr "If you choose nobody, the task is credited to you. Only you and the admins can see this information."
 
 #: src/composants/ReunionDetail.tsx
 msgid "Sans réponse"
@@ -10553,6 +10549,10 @@ msgstr "Your text is copied."
 #: src/pages/FicheEditeur.tsx
 msgid "Votre texte reste à l’écran et n’est pas enregistré. Consultez la version actuelle avant de choisir."
 msgstr "Your text stays on screen and is not saved. View the current version before choosing."
+
+#: src/composants/TacheCarte.tsx
+msgid "vous"
+msgstr "you"
 
 #: src/composants/FilTache.tsx
 #: src/composants/LigneTache.tsx
