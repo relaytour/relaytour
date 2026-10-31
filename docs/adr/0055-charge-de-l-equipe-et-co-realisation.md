@@ -62,7 +62,7 @@ Seule la requête `mesTaches` liste des tâches par personne, et seulement pour 
 
 - Une table `TacheRealisation` relie une tâche et ses personnes réalisatrices. La migration recopie la personne réalisatrice actuelle de chaque tâche. La colonne `realiseeParId` reste en place jusqu'à une migration de suppression distincte.
 - `changerStatutTache` reçoit `realisateurs`, une liste de 20 personnes au plus. Le type `Tache` expose `realisateurs`. L'argument `realiseeParId` et le champ `realiseePar` restent, dépréciés, pour une application installée qui garde l'ancienne coquille jusqu'à son rechargement (ADR 0023).
-- L'export complet d'une organisation écrit `realisateurs`, une liste d'adresses, à la place de `realiseePar`. Aucun import ne lit cette clé.
+- L'export complet d'une organisation écrit `realisateurs`, une liste d'adresses. Il garde `realiseePar`, la première personne réalisatrice, pour un outil qui lit l'ancien format. Aucun import ne lit ces clés.
 - Trois requêtes s'ajoutent : `chargeEquipe` pour une édition, `tachesDe` pour le détail d'une personne et `chargeCumulee` pour le cumul.
 - L'espace organisateur reçoit une page « Charge », ouverte à l'équipe. L'écran Équipe et « Mon espace » y renvoient.
 

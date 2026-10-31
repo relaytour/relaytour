@@ -132,6 +132,11 @@ export function ChampModules({
       titre: t`Documents`,
       detail: t`Documents du fournisseur cloud dans « Ressources » et documents liés aux fiches.`,
     },
+    {
+      cle: 'CLASSEMENT',
+      titre: t`Classement`,
+      detail: t`Le classement des scores de participation devient visible par toute l’équipe. Sans ce module, seuls les admins le lisent.`,
+    },
   ]
   return (
     <Form.Item

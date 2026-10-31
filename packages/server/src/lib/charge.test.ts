@@ -80,13 +80,13 @@ describe('calculerCharges', () => {
     expect(b!.realisees).toBe(1)
   })
 
-  it('crédite une tâche faite à chaque personne réalisatrice, même non assignée', () => {
+  it('crédite une tâche faite aux personnes listées, sans lister une personne seulement créditée', () => {
     const charges = calculerCharges({
       ...base,
       taches: [tache('2027-07-01', ['a'], 'FAITE', ['a', 'c'])],
     })
-    expect(charges.find(c => c.userId === 'c')?.realisees).toBe(1)
     expect(charges.find(c => c.userId === 'a')?.realisees).toBe(1)
+    expect(charges.find(c => c.userId === 'c')).toBeUndefined()
   })
 
   it('range les tâches assignées par phase, les tâches sans échéance à part', () => {

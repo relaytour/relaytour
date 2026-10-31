@@ -16,6 +16,7 @@ import {
 } from '../lib/charge.ts'
 import { TACHES_ACTIVES } from '../lib/declinaisons.ts'
 import { aujourdhui } from '../lib/droits.ts'
+import { moduleActif } from '../lib/modules.ts'
 import { lirePhases } from '../lib/phases.ts'
 
 import { ActiviteRef } from './activites.ts'
@@ -27,7 +28,8 @@ import { ORDRE_TACHES, TacheRef } from './taches.ts'
 // Charge de l'équipe (ADR 0055). Toute personne qui voit les tâches de l'activité
 // lit la charge de chacun : `exigerEdition` refuse l'édition d'une activité
 // invisible, donc à une personne en découverte. Le nombre de tâches réalisées suit
-// la règle de la clôture : la personne elle-même et les admins de l'activité.
+// la règle du score : la personne elle-même et les admins de l'activité, ou toute
+// l'équipe avec le module « Classement » (ADR 0056).
 
 const OUVERTES = ['A_FAIRE', 'EN_COURS'] as const
 
@@ -134,7 +136,7 @@ const ChargePersonneRef = builder
       realisees: t.int({
         nullable: true,
         description:
-          'Tâches faites où la personne est créditée. Lisible par elle-même et par les admins de l’activité ; null pour les autres.',
+          'Tâches faites où la personne est créditée. Lisible par elle-même, par les admins de l’activité, et par toute l’équipe avec le module CLASSEMENT ; null pour les autres.',
         resolve: c => (c.realiseesLisibles ? c.realisees : null),
       }),
     }),
@@ -164,13 +166,18 @@ const ChargeCumuleeRef = builder
     }),
   })
 
-/** Qui lit le nombre de tâches réalisées d'une personne : elle-même et les admins. */
+/**
+ * Qui lit le nombre de tâches réalisées d'une personne : elle-même et les admins,
+ * ou toute l'équipe avec le module « Classement » (ADR 0056).
+ */
 async function lisibilitesDesRealisations(
   ctx: AppContext,
   activiteId: string
 ): Promise<(userId: string) => boolean> {
-  const admin = await ctx.estAdminDe(activiteId)
-  return userId => admin || ctx.personne?.id === userId
+  const tous =
+    (await ctx.estAdminDe(activiteId)) ||
+    (await moduleActif(activiteId, 'CLASSEMENT'))
+  return userId => tous || ctx.personne?.id === userId
 }
 
 builder.queryFields(t => ({
