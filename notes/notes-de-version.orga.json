@@ -8,6 +8,20 @@
       "version": null,
       "notes": [
         {
+          "id": "2026-10-31-orga-la-mention-du-contact-principal-s-affiche-sous-le-nom-dans-l",
+          "date": "2026-10-31",
+          "type": "correctif",
+          "audience": "interne",
+          "role": null,
+          "etat": "prevu",
+          "fr": {
+            "titre": "La mention du contact principal s'affiche sous le nom dans le panneau des personnes affectées",
+            "texte": "Dans la page d'un périmètre, la mention « Contact principal » s'affiche sous le nom de la personne. Le nom garde ainsi toute la largeur du panneau, et le nombre de tâches reste sur une ligne.",
+            "migration": null
+          },
+          "en": null
+        },
+        {
           "id": "2026-10-30-orga-les-abonnements-a-l-agenda-choisissent-leurs-types-d-eveneme",
           "date": "2026-10-30",
           "type": "fonctionnalite",
